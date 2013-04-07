@@ -1,0 +1,323 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>8.0.50727</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{185ED218-A74F-4F57-85A5-30647495E615}</ProjectGuid>
+    <ProjectTypeGuids>{A1591282-1198-4647-A2B1-27E5FF5F6F3B};{fae04ec0-301f-11d3-bf4b-00c04f79efbc}</ProjectTypeGuids>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>SharpCompress</RootNamespace>
+    <AssemblyName>SharpCompress.Silverlight</AssemblyName>
+    <TargetFrameworkIdentifier>Silverlight</TargetFrameworkIdentifier>
+    <TargetFrameworkVersion>v5.0</TargetFrameworkVersion>
+    <SilverlightVersion>$(TargetFrameworkVersion)</SilverlightVersion>
+    <SilverlightApplication>false</SilverlightApplication>
+    <ValidateXaml>true</ValidateXaml>
+    <ThrowErrorsInValidation>true</ThrowErrorsInValidation>
+    <SccProjectName>
+    </SccProjectName>
+    <SccLocalPath>
+    </SccLocalPath>
+    <SccAuxPath>
+    </SccAuxPath>
+    <SccProvider>
+    </SccProvider>
+    <TargetFrameworkProfile />
+    <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\..\sharpcompress\</SolutionDir>
+    <RestorePackages>true</RestorePackages>
+  </PropertyGroup>
+  <!-- This property group is only here to support building this project using the 
+       MSBuild 3.5 toolset. In order to work correctly with this older toolset, it needs 
+       to set the TargetFrameworkVersion to v3.5 -->
+  <PropertyGroup Condition="'$(MSBuildToolsVersion)' == '3.5'">
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>..\bin\</OutputPath>
+    <DefineConstants>DEBUG;TRACE;SILVERLIGHT</DefineConstants>
+    <NoStdLib>true</NoStdLib>
+    <NoConfig>true</NoConfig>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>..\bin\</OutputPath>
+    <DefineConstants>TRACE;SILVERLIGHT</DefineConstants>
+    <NoStdLib>true</NoStdLib>
+    <NoConfig>true</NoConfig>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+  </PropertyGroup>
+  <PropertyGroup>
+    <SignAssembly>true</SignAssembly>
+  </PropertyGroup>
+  <PropertyGroup>
+    <AssemblyOriginatorKeyFile>SharpCompress.pfx</AssemblyOriginatorKeyFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="mscorlib" />
+    <Reference Include="system" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Net" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Archive\AbstractArchive.cs" />
+    <Compile Include="Archive\AbstractWritableArchive.cs" />
+    <Compile Include="Archive\AbstractWritableArchive.Extensions.cs" />
+    <Compile Include="Archive\ArchiveFactory.cs" />
+    <Compile Include="Archive\GZip\GZipArchive.cs" />
+    <Compile Include="Archive\GZip\GZipArchiveEntry.cs" />
+    <Compile Include="Archive\GZip\GZipWritableArchiveEntry.cs" />
+    <Compile Include="Archive\IArchive.cs" />
+    <Compile Include="Archive\IArchiveEntry.cs" />
+    <Compile Include="Archive\IArchiveEntry.Extensions.cs" />
+    <Compile Include="Archive\Rar\FileInfoRarArchiveVolume.cs" />
+    <Compile Include="Archive\Rar\FileInfoRarFilePart.cs" />
+    <Compile Include="Archive\Rar\RarArchive.cs" />
+    <Compile Include="Archive\Rar\RarArchive.Extensions.cs" />
+    <Compile Include="Archive\Rar\RarArchiveEntry.cs" />
+    <Compile Include="Archive\Rar\RarArchiveEntryFactory.cs" />
+    <Compile Include="Archive\Rar\RarArchiveVolumeFactory.cs" />
+    <Compile Include="Archive\Rar\SeekableStreamFilePart.cs" />
+    <Compile Include="Archive\Rar\StreamRarArchiveVolume.cs" />
+    <Compile Include="Archive\SevenZip\SevenZipArchive.cs" />
+    <Compile Include="Archive\SevenZip\SevenZipArchiveEntry.cs" />
+    <Compile Include="Archive\Tar\TarArchive.cs" />
+    <Compile Include="Archive\Tar\TarArchiveEntry.cs" />
+    <Compile Include="Archive\Tar\TarWritableArchiveEntry.cs" />
+    <Compile Include="Archive\Zip\ZipArchive.cs" />
+    <Compile Include="Archive\Zip\ZipArchiveEntry.cs" />
+    <Compile Include="Archive\Zip\ZipWritableArchiveEntry.cs" />
+    <Compile Include="AssemblyInfo.cs" />
+    <Compile Include="Common\ArchiveEncoding.cs" />
+    <Compile Include="Common\ArchiveException.cs" />
+    <Compile Include="Common\ArchiveExtractionEventArgs.cs" />
+    <Compile Include="Common\ArchiveType.cs" />
+    <Compile Include="Common\CompressedBytesReadEventArgs.cs" />
+    <Compile Include="Common\CompressionInfo.cs" />
+    <Compile Include="Common\CompressionType.cs" />
+    <Compile Include="Common\CryptographicException.cs" />
+    <Compile Include="Common\Entry.cs" />
+    <Compile Include="Common\EntryStream.cs" />
+    <Compile Include="Common\ExtractionException.cs" />
+    <Compile Include="Common\ExtractOptions.cs" />
+    <Compile Include="Common\FilePart.cs" />
+    <Compile Include="Common\FilePartExtractionBeginEventArgs.cs" />
+    <Compile Include="Common\FlagUtility.cs" />
+    <Compile Include="Common\GenericVolume.cs" />
+    <Compile Include="Common\GZip\GZipEntry.cs" />
+    <Compile Include="Common\GZip\GZipFilePart.cs" />
+    <Compile Include="Common\GZip\GZipVolume.cs" />
+    <Compile Include="Common\IEntry.cs" />
+    <Compile Include="Common\IncompleteArchiveException.cs" />
+    <Compile Include="Common\InvalidFormatException.cs" />
+    <Compile Include="Common\IStreamListener.cs" />
+    <Compile Include="Common\IVolume.cs" />
+    <Compile Include="Common\MultipartStreamRequiredException.cs" />
+    <Compile Include="Common\MultiVolumeExtractionException.cs" />
+    <Compile Include="Common\Options.cs" />
+    <Compile Include="Common\PasswordProtectedException.cs" />
+    <Compile Include="Common\Rar\Headers\ArchiveHeader.cs" />
+    <Compile Include="Common\Rar\Headers\AVHeader.cs" />
+    <Compile Include="Common\Rar\Headers\CommentHeader.cs" />
+    <Compile Include="Common\Rar\Headers\EndArchiveHeader.cs" />
+    <Compile Include="Common\Rar\Headers\FileHeader.cs" />
+    <Compile Include="Common\Rar\Headers\FileNameDecoder.cs" />
+    <Compile Include="Common\Rar\Headers\Flags.cs" />
+    <Compile Include="Common\Rar\Headers\MarkHeader.cs" />
+    <Compile Include="Common\Rar\Headers\NewSubHeader.cs" />
+    <Compile Include="Common\Rar\Headers\RarHeader.cs" />
+    <Compile Include="Common\Rar\Headers\RarHeaderFactory.cs" />
+    <Compile Include="Common\Rar\Headers\SignHeader.cs" />
+    <Compile Include="Common\Rar\RarEntry.cs" />
+    <Compile Include="Common\Rar\RarFilePart.cs" />
+    <Compile Include="Common\Rar\RarVolume.cs" />
+    <Compile Include="Common\SevenZip\FileEntry.cs" />
+    <Compile Include="Common\SevenZip\Folder.cs" />
+    <Compile Include="Common\SevenZip\HeaderBuffer.cs" />
+    <Compile Include="Common\SevenZip\HeaderProperty.cs" />
+    <Compile Include="Common\SevenZip\SevenZipEntry.cs" />
+    <Compile Include="Common\SevenZip\SevenZipFilePart.cs" />
+    <Compile Include="Common\SevenZip\SevenZipHeaderFactory.cs" />
+    <Compile Include="Common\SevenZip\SevenZipVolume.cs" />
+    <Compile Include="Common\SevenZip\StreamsInfo.cs" />
+    <Compile Include="Common\Tar\Headers\TarHeader.cs" />
+    <Compile Include="Common\Tar\TarEntry.cs" />
+    <Compile Include="Common\Tar\TarFilePart.cs" />
+    <Compile Include="Common\Tar\TarHeaderFactory.cs" />
+    <Compile Include="Common\Tar\TarReadOnlySubStream.cs" />
+    <Compile Include="Common\Tar\TarVolume.cs" />
+    <Compile Include="Common\Volume.cs" />
+    <Compile Include="Common\Zip\Headers\DirectoryEndHeader.cs" />
+    <Compile Include="Common\Zip\Headers\DirectoryEntryHeader.cs" />
+    <Compile Include="Common\Zip\Headers\HeaderFlags.cs" />
+    <Compile Include="Common\Zip\Headers\LocalEntryHeader.cs" />
+    <Compile Include="Common\Zip\Headers\SplitHeader.cs" />
+    <Compile Include="Common\Zip\Headers\ZipFileEntry..cs" />
+    <Compile Include="Common\Zip\Headers\ZipHeader.cs" />
+    <Compile Include="Common\Zip\Headers\ZipHeaderType.cs" />
+    <Compile Include="Common\Zip\PkwareTraditionalCryptoStream.cs" />
+    <Compile Include="Common\Zip\PkwareTraditionalEncryptionData.cs" />
+    <Compile Include="Common\Zip\SeekableZipFilePart.cs" />
+    <Compile Include="Common\Zip\SeekableZipHeaderFactory.cs" />
+    <Compile Include="Common\Zip\StreamingZipFilePart.cs" />
+    <Compile Include="Common\Zip\StreamingZipHeaderFactory.cs" />
+    <Compile Include="Common\Zip\WinzipAesCryptoStream.cs" />
+    <Compile Include="Common\Zip\WinzipAesEncryptionData.cs" />
+    <Compile Include="Common\Zip\WinzipAesKeySize.cs" />
+    <Compile Include="Common\Zip\ZipCompressionMethod.cs" />
+    <Compile Include="Common\Zip\ZipEntry.cs" />
+    <Compile Include="Common\Zip\ZipFilePart.cs" />
+    <Compile Include="Common\Zip\ZipHeaderFactory.cs" />
+    <Compile Include="Common\Zip\ZipVolume.cs" />
+    <Compile Include="Compressor\BZip2\BZip2Constants.cs" />
+    <Compile Include="Compressor\BZip2\BZip2Stream.cs" />
+    <Compile Include="Compressor\BZip2\CBZip2InputStream.cs" />
+    <Compile Include="Compressor\BZip2\CBZip2OutputStream.cs" />
+    <Compile Include="Compressor\BZip2\CRC.cs" />
+    <Compile Include="Compressor\CompressionMode.cs" />
+    <Compile Include="Compressor\Deflate\Crc32.cs" />
+    <Compile Include="Compressor\Deflate\DeflateManager.cs" />
+    <Compile Include="Compressor\Deflate\DeflateStream.cs" />
+    <Compile Include="Compressor\Deflate\FlushType.cs" />
+    <Compile Include="Compressor\Deflate\GZipStream.cs" />
+    <Compile Include="Compressor\Deflate\Inflate.cs" />
+    <Compile Include="Compressor\Deflate\InfTree.cs" />
+    <Compile Include="Compressor\Deflate\ParallelDeflateOutputStream.cs" />
+    <Compile Include="Compressor\Deflate\Tree.cs" />
+    <Compile Include="Compressor\Deflate\Zlib.cs" />
+    <Compile Include="Compressor\Deflate\ZlibBaseStream.cs" />
+    <Compile Include="Compressor\Deflate\ZlibCodec.cs" />
+    <Compile Include="Compressor\Deflate\ZlibConstants.cs" />
+    <Compile Include="Compressor\Deflate\ZlibStream.cs" />
+    <Compile Include="Compressor\Filters\BCJ2Filter.cs" />
+    <Compile Include="Compressor\Filters\BCJFilter.cs" />
+    <Compile Include="Compressor\Filters\Filter.cs" />
+    <Compile Include="Compressor\LZMA\CRC.cs" />
+    <Compile Include="Compressor\LZMA\ICoder.cs" />
+    <Compile Include="Compressor\LZMA\LzmaEncoderProperties.cs" />
+    <Compile Include="Compressor\LZMA\LzmaStream.cs" />
+    <Compile Include="Compressor\LZMA\LZ\LzBinTree.cs" />
+    <Compile Include="Compressor\LZMA\LZ\LzInWindow.cs" />
+    <Compile Include="Compressor\LZMA\LzmaBase.cs" />
+    <Compile Include="Compressor\LZMA\LzmaDecoder.cs" />
+    <Compile Include="Compressor\LZMA\LzmaEncoder.cs" />
+    <Compile Include="Compressor\LZMA\LZ\LzOutWindow.cs" />
+    <Compile Include="Compressor\LZMA\RangeCoder\RangeCoder.cs" />
+    <Compile Include="Compressor\LZMA\RangeCoder\RangeCoderBit.cs" />
+    <Compile Include="Compressor\LZMA\RangeCoder\RangeCoderBitTree.cs" />
+    <Compile Include="Compressor\PPMd\H\FreqData.cs" />
+    <Compile Include="Compressor\PPMd\H\ModelPPM.cs" />
+    <Compile Include="Compressor\PPMd\H\Pointer.cs" />
+    <Compile Include="Compressor\PPMd\H\PPMContext.cs" />
+    <Compile Include="Compressor\PPMd\H\RangeCoder.cs" />
+    <Compile Include="Compressor\PPMd\H\RarMemBlock.cs" />
+    <Compile Include="Compressor\PPMd\H\RarNode.cs" />
+    <Compile Include="Compressor\PPMd\H\SEE2Context.cs" />
+    <Compile Include="Compressor\PPMd\H\State.cs" />
+    <Compile Include="Compressor\PPMd\H\StateRef.cs" />
+    <Compile Include="Compressor\PPMd\H\SubAllocator.cs" />
+    <Compile Include="Compressor\PPMd\I1\Allocator.cs" />
+    <Compile Include="Compressor\PPMd\I1\Coder.cs" />
+    <Compile Include="Compressor\PPMd\I1\MemoryNode.cs" />
+    <Compile Include="Compressor\PPMd\I1\Model.cs" />
+    <Compile Include="Compressor\PPMd\I1\ModelRestorationMethod.cs" />
+    <Compile Include="Compressor\PPMd\I1\Pointer.cs" />
+    <Compile Include="Compressor\PPMd\I1\PpmContext.cs" />
+    <Compile Include="Compressor\PPMd\I1\PpmState.cs" />
+    <Compile Include="Compressor\PPMd\I1\See2Context.cs" />
+    <Compile Include="Compressor\PPMd\PpmdProperties.cs" />
+    <Compile Include="Compressor\PPMd\PpmdStream.cs" />
+    <Compile Include="Compressor\Rar\Decode\AudioVariables.cs" />
+    <Compile Include="Compressor\Rar\Decode\BitDecode.cs" />
+    <Compile Include="Compressor\Rar\Decode\CodeType.cs" />
+    <Compile Include="Compressor\Rar\Decode\Compress.cs" />
+    <Compile Include="Compressor\Rar\Decode\Decode.cs" />
+    <Compile Include="Compressor\Rar\Decode\DistDecode.cs" />
+    <Compile Include="Compressor\Rar\Decode\FilterType.cs" />
+    <Compile Include="Compressor\Rar\Decode\LitDecode.cs" />
+    <Compile Include="Compressor\Rar\Decode\LowDistDecode.cs" />
+    <Compile Include="Compressor\Rar\Decode\MultDecode.cs" />
+    <Compile Include="Compressor\Rar\Decode\RepDecode.cs" />
+    <Compile Include="Compressor\Rar\MultiVolumeReadOnlyStream.cs" />
+    <Compile Include="Compressor\Rar\PPM\BlockTypes.cs" />
+    <Compile Include="Compressor\Rar\RarCRC.cs" />
+    <Compile Include="Compressor\Rar\RarStream.cs" />
+    <Compile Include="Compressor\Rar\Unpack.cs" />
+    <Compile Include="Compressor\Rar\Unpack15.cs" />
+    <Compile Include="Compressor\Rar\Unpack20.cs" />
+    <Compile Include="Compressor\Rar\UnpackFilter.cs" />
+    <Compile Include="Compressor\Rar\UnpackUtility.cs" />
+    <Compile Include="Compressor\Rar\VM\BitInput.cs" />
+    <Compile Include="Compressor\Rar\VM\RarVM.cs" />
+    <Compile Include="Compressor\Rar\VM\VMCmdFlags.cs" />
+    <Compile Include="Compressor\Rar\VM\VMCommands.cs" />
+    <Compile Include="Compressor\Rar\VM\VMFlags.cs" />
+    <Compile Include="Compressor\Rar\VM\VMOpType.cs" />
+    <Compile Include="Compressor\Rar\VM\VMPreparedCommand.cs" />
+    <Compile Include="Compressor\Rar\VM\VMPreparedOperand.cs" />
+    <Compile Include="Compressor\Rar\VM\VMPreparedProgram.cs" />
+    <Compile Include="Compressor\Rar\VM\VMStandardFilters.cs" />
+    <Compile Include="Compressor\Rar\VM\VMStandardFilterSignature.cs" />
+    <Compile Include="IO\CountingWritableSubStream.cs" />
+    <Compile Include="IO\ListeningStream.cs" />
+    <Compile Include="IO\MarkingBinaryReader.cs" />
+    <Compile Include="IO\NonDisposingStream.cs" />
+    <Compile Include="IO\ReadOnlySubStream.cs" />
+    <Compile Include="IO\RewindableStream.cs" />
+    <Compile Include="IO\StreamingMode.cs" />
+    <Compile Include="LazyReadOnlyCollection.cs" />
+    <Compile Include="Reader\AbstractReader.cs" />
+    <Compile Include="Reader\GZip\GZipReader.cs" />
+    <Compile Include="Reader\IReader.cs" />
+    <Compile Include="Reader\IReader.Extensions.cs" />
+    <Compile Include="Reader\Rar\MultiVolumeRarReader.cs" />
+    <Compile Include="Reader\Rar\NonSeekableStreamFilePart.cs" />
+    <Compile Include="Reader\Rar\RarReader.cs" />
+    <Compile Include="Reader\Rar\RarReaderEntry.cs" />
+    <Compile Include="Reader\Rar\RarReaderVolume.cs" />
+    <Compile Include="Reader\Rar\SingleVolumeRarReader.cs" />
+    <Compile Include="Reader\ReaderFactory.cs" />
+    <Compile Include="Reader\Tar\TarReader.cs" />
+    <Compile Include="Reader\Zip\ZipReader.cs" />
+    <Compile Include="ReadOnlyCollection.cs" />
+    <Compile Include="Utility.cs" />
+    <Compile Include="VersionInfo.cs" />
+    <Compile Include="Writer\AbstractWriter.cs" />
+    <Compile Include="Writer\GZip\GZipWriter.cs" />
+    <Compile Include="Writer\IWriter.cs" />
+    <Compile Include="Writer\IWriter.Extensions.cs" />
+    <Compile Include="Writer\Tar\TarWriter.cs" />
+    <Compile Include="Writer\WriterFactory.cs" />
+    <Compile Include="Writer\Zip\ZipCentralDirectoryEntry.cs" />
+    <Compile Include="Writer\Zip\ZipWriter.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="SharpCompress.pfx" />
+  </ItemGroup>
+  <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Silverlight\$(SilverlightVersion)\Microsoft.Silverlight.CSharp.targets" />
+  <ProjectExtensions>
+    <VisualStudio>
+      <FlavorProperties GUID="{A1591282-1198-4647-A2B1-27E5FF5F6F3B}">
+        <SilverlightProjectProperties />
+      </FlavorProperties>
+    </VisualStudio>
+  </ProjectExtensions>
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>
