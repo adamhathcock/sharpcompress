@@ -57,6 +57,7 @@
     <Compile Include="GZip\GZipWriterTests.cs" />
     <Compile Include="GZip\GZipArchiveTests.cs" />
     <Compile Include="SevenZip\SevenZipArchiveTests.cs" />
+    <Compile Include="Streams\StreamTests.cs" />
     <Compile Include="Tar\TarWriterTests.cs" />
     <Compile Include="Tar\TarReaderTests.cs" />
     <Compile Include="Zip\ZipWriterTests.cs" />
