@@ -1,5 +1,4 @@
 ﻿using System.IO;
-using System.Linq;
 using SharpCompress.Common;
 using SharpCompress.Common.SevenZip;
 
@@ -17,7 +16,7 @@ namespace SharpCompress.Archive.SevenZip
 
         public Stream OpenEntryStream()
         {
-            return Parts.Single().GetCompressedStream();
+            return FilePart.GetCompressedStream();
         }
 
         public void WriteTo(Stream stream)
@@ -35,6 +34,14 @@ namespace SharpCompress.Archive.SevenZip
             {
                 return true;
             }
+        }
+
+        /// <summary>
+        /// This is a 7Zip Anti item
+        /// </summary>
+        public bool IsAnti
+        {
+            get { return FilePart.Header.IsAnti; }
         }
     }
 }
