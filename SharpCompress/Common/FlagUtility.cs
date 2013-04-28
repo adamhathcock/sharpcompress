@@ -100,7 +100,6 @@ namespace SharpCompress.Common
         /// <summary>
         /// Sets a bit-field to either on or off for the specified flag.
         /// </summary>
-        /// <typeparam name="T">Enumeration with Flags attribute</typeparam>
         /// <param name="bitField">Flagged variable</param>
         /// <param name="flag">Flag to change</param>
         /// <param name="on">bool</param>
