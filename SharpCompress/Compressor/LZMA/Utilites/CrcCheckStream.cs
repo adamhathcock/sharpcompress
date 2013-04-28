@@ -15,7 +15,7 @@ namespace SharpCompress.Compressor.LZMA.Utilites
         public CrcCheckStream(uint crc)
         {
             mExpectedCRC = crc;
-            mCurrentCRC = ManagedLzma.LZMA.Master.SevenZip.CRC.kInitCRC;
+            mCurrentCRC = CRC.kInitCRC;
         }
 
         protected override void Dispose(bool disposing)
@@ -27,7 +27,7 @@ namespace SharpCompress.Compressor.LZMA.Utilites
                 if(disposing && !mClosed)
                 {
                     mClosed = true;
-                    mCurrentCRC = ManagedLzma.LZMA.Master.SevenZip.CRC.Finish(mCurrentCRC);
+                    mCurrentCRC = CRC.Finish(mCurrentCRC);
 #if DEBUG
                     if(mCurrentCRC == mExpectedCRC)
                         System.Diagnostics.Debug.WriteLine("CRC ok: " + mExpectedCRC.ToString("x8"));
@@ -108,7 +108,7 @@ namespace SharpCompress.Compressor.LZMA.Utilites
             for(int i = 0; i < count; i++)
                 mBytes[buffer[offset + i]]++;
 
-            mCurrentCRC = ManagedLzma.LZMA.Master.SevenZip.CRC.Update(mCurrentCRC, buffer, offset, count);
+            mCurrentCRC = CRC.Update(mCurrentCRC, buffer, offset, count);
         }
     }
 }

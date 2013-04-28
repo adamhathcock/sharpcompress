@@ -172,7 +172,7 @@
     <Compile Include="Compressor\LZMA\BitVector.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Compressor\LZMA\CRC2.cs" />
+    <Compile Include="Compressor\LZMA\LZ\CRC.cs" />
     <Compile Include="Compressor\LZMA\CRC.cs" />
     <Compile Include="Common\SevenZip\ArchiveDatabase.cs" />
     <Compile Include="Common\SevenZip\ArchiveReader.cs" />

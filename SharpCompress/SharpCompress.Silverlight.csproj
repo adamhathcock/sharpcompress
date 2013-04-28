@@ -210,12 +210,12 @@
     <Compile Include="Compressor\LZMA\Bcj2DecoderStream.cs" />
     <Compile Include="Compressor\LZMA\BitVector.cs" />
     <Compile Include="Compressor\LZMA\CRC.cs" />
-    <Compile Include="Compressor\LZMA\CRC2.cs" />
     <Compile Include="Compressor\LZMA\DecoderStream.cs" />
     <Compile Include="Compressor\LZMA\ICoder.cs" />
     <Compile Include="Compressor\LZMA\Log.cs" />
     <Compile Include="Compressor\LZMA\LzmaEncoderProperties.cs" />
     <Compile Include="Compressor\LZMA\LzmaStream.cs" />
+    <Compile Include="Compressor\LZMA\LZ\CRC.cs" />
     <Compile Include="Compressor\LZMA\LZ\LzBinTree.cs" />
     <Compile Include="Compressor\LZMA\LZ\LzInWindow.cs" />
     <Compile Include="Compressor\LZMA\LzmaBase.cs" />

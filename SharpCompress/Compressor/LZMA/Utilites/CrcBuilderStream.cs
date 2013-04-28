@@ -13,7 +13,7 @@ namespace SharpCompress.Compressor.LZMA.Utilites
         public CrcBuilderStream(Stream target)
         {
             mTarget = target;
-            mCRC = ManagedLzma.LZMA.Master.SevenZip.CRC.kInitCRC;
+            mCRC = CRC.kInitCRC;
         }
 
         public long Processed
@@ -26,7 +26,7 @@ namespace SharpCompress.Compressor.LZMA.Utilites
             if(!mFinished)
             {
                 mFinished = true;
-                mCRC = ManagedLzma.LZMA.Master.SevenZip.CRC.Finish(mCRC);
+                mCRC = CRC.Finish(mCRC);
             }
 
             return mCRC;
@@ -83,7 +83,7 @@ namespace SharpCompress.Compressor.LZMA.Utilites
                 throw new InvalidOperationException("CRC calculation has been finished.");
 
             mProcessed += count;
-            mCRC = ManagedLzma.LZMA.Master.SevenZip.CRC.Update(mCRC, buffer, offset, count);
+            mCRC = CRC.Update(mCRC, buffer, offset, count);
             mTarget.Write(buffer, offset, count);
         }
     }
@@ -98,7 +98,7 @@ namespace SharpCompress.Compressor.LZMA.Utilites
         public ReadingCrcBuilderStream(Stream source)
         {
             mSource = source;
-            mCRC = ManagedLzma.LZMA.Master.SevenZip.CRC.kInitCRC;
+            mCRC = CRC.kInitCRC;
         }
 
         protected override void Dispose(bool disposing)
@@ -124,7 +124,7 @@ namespace SharpCompress.Compressor.LZMA.Utilites
             if(!mFinished)
             {
                 mFinished = true;
-                mCRC = ManagedLzma.LZMA.Master.SevenZip.CRC.Finish(mCRC);
+                mCRC = CRC.Finish(mCRC);
             }
 
             return mCRC;
@@ -169,7 +169,7 @@ namespace SharpCompress.Compressor.LZMA.Utilites
                 if(read > 0)
                 {
                     mProcessed += read;
-                    mCRC = ManagedLzma.LZMA.Master.SevenZip.CRC.Update(mCRC, buffer, offset, read);
+                    mCRC = CRC.Update(mCRC, buffer, offset, read);
                     return read;
                 }
 

@@ -1,4 +1,4 @@
-namespace SharpCompress.Compressor.LZMA
+namespace SharpCompress.Compressor.LZMA.LZ
 {
     internal class CRC
     {

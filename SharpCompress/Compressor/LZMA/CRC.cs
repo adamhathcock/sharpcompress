@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 
-namespace ManagedLzma.LZMA.Master.SevenZip
+namespace SharpCompress.Compressor.LZMA
 {
     internal static class CRC
     {

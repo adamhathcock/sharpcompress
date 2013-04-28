@@ -5,7 +5,7 @@ using System.Linq;
 using SharpCompress.Compressor.LZMA;
 using SharpCompress.Compressor.LZMA.Utilites;
 using SharpCompress.IO;
-using CRC = ManagedLzma.LZMA.Master.SevenZip.CRC;
+using CRC = SharpCompress.Compressor.LZMA.CRC;
 
 namespace SharpCompress.Common.SevenZip
 {
