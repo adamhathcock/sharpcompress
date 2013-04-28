@@ -20,7 +20,7 @@ namespace SharpCompress.Common.Tar
             get { return Header.Name; }
         }
 
-        internal override Stream GetStream()
+        internal override Stream GetCompressedStream()
         {
             if (seekableStream != null)
             {
@@ -28,6 +28,11 @@ namespace SharpCompress.Common.Tar
                 return new ReadOnlySubStream(seekableStream, Header.Size);
             }
             return Header.PackedStream;
+        }
+
+        internal override Stream GetRawStream()
+        {
+            return null;
         }
     }
 }

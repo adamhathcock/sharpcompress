@@ -13,8 +13,6 @@ namespace SharpCompress.Reader.Rar
             IsSolid = solid;
         }
 
-        internal bool IsSolid { get; private set; }
-
         internal RarFilePart Part { get; private set; }
 
         internal override IEnumerable<FilePart> Parts

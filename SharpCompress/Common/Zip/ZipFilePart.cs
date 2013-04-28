@@ -29,7 +29,7 @@ namespace SharpCompress.Common.Zip
             get { return Header.Name; }
         }
 
-        internal override Stream GetStream()
+        internal override Stream GetCompressedStream()
         {
             if (!Header.HasData)
             {
@@ -41,6 +41,15 @@ namespace SharpCompress.Common.Zip
                 return new NonDisposingStream(decompressionStream);
             }
             return decompressionStream;
+        }
+
+        internal override Stream GetRawStream()
+        {
+            if (!Header.HasData)
+            {
+                return Stream.Null;
+            }
+            return CreateBaseStream();
         }
 
         protected abstract Stream CreateBaseStream();

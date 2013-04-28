@@ -55,7 +55,7 @@ namespace SharpCompress.Compressor.Rar
             {
                 currentStream.Dispose();
             }
-            currentStream = filePartEnumerator.Current.GetStream();
+            currentStream = filePartEnumerator.Current.GetCompressedStream();
 
             currentPartTotalReadBytes = 0;
 

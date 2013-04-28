@@ -5,6 +5,8 @@ namespace SharpCompress.Common
 {
     public abstract class Entry : SharpCompress.Common.IEntry
     {
+        internal bool IsSolid { get; set; }
+
         /// <summary>
         /// The File's 32 bit CRC Hash
         /// </summary>

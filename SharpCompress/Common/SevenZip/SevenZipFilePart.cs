@@ -22,7 +22,7 @@ namespace SharpCompress.Common.SevenZip
             get { return Header.Name; }
         }
 
-        internal override Stream GetStream()
+        internal override Stream GetCompressedStream()
         {
             if (!Header.HasStream)
             {
@@ -34,6 +34,11 @@ namespace SharpCompress.Common.SevenZip
                 stream.Skip((long)Header.FolderOffset);
             }
             return new ReadOnlySubStream(stream, (long)Header.Size);
+        }
+
+        internal override Stream GetRawStream()
+        {
+            return null;
         }
 
         public CompressionType CompressionType

@@ -11,7 +11,7 @@ namespace SharpCompress.Reader.Rar
         {
         }
 
-        internal override Stream GetStream()
+        internal override Stream GetCompressedStream()
         {
             return FileHeader.PackedStream;
         }

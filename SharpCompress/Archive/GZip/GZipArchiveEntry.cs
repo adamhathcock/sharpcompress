@@ -17,7 +17,7 @@ namespace SharpCompress.Archive.GZip
 
         public virtual Stream OpenEntryStream()
         {
-            return Parts.Single().GetStream();
+            return Parts.Single().GetCompressedStream();
         }
 
         #region IArchiveEntry Members

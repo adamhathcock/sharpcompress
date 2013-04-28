@@ -19,7 +19,7 @@ namespace SharpCompress.Common.Zip
             return Header.PackedStream;
         }
 
-        internal override Stream GetStream()
+        internal override Stream GetCompressedStream()
         {
             if (!Header.HasData)
             {
@@ -43,7 +43,7 @@ namespace SharpCompress.Common.Zip
             {
                 if (decompressionStream == null)
                 {
-                    decompressionStream = GetStream();
+                    decompressionStream = GetCompressedStream();
                 }
                 decompressionStream.SkipAll();
 

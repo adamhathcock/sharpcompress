@@ -18,7 +18,7 @@ namespace SharpCompress.Archive.Rar
             private set;
         }
 
-        internal override Stream GetStream()
+        internal override Stream GetCompressedStream()
         {
             Stream.Position = FileHeader.DataStartPosition;
             return Stream;

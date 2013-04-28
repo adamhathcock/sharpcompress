@@ -136,12 +136,28 @@ namespace SharpCompress.Reader
             }
         }
 
-        internal void Skip()
+        readonly byte[] skipBuffer = new byte[4096];
+
+        private void Skip()
         {
-            var buffer = new byte[4096];
-            using (Stream s = OpenEntryStream())
+            if (!Entry.IsSolid)
             {
-                while (s.Read(buffer, 0, buffer.Length) > 0)
+                var rawStream = Entry.Parts.First().GetRawStream();
+
+                if (rawStream != null)
+                {
+                    var bytesToAdvance = Entry.CompressedSize;
+                    for (var i = 0; i < bytesToAdvance / skipBuffer.Length; i++)
+                    {
+                        rawStream.Read(skipBuffer, 0, skipBuffer.Length);
+                    }
+                    rawStream.Read(skipBuffer, 0, (int)(bytesToAdvance % skipBuffer.Length));
+                    return;
+                }
+            }
+            using (var s = OpenEntryStream())
+            {
+                while (s.Read(skipBuffer, 0, skipBuffer.Length) > 0)
                 {
                 }
             }
@@ -183,7 +199,7 @@ namespace SharpCompress.Reader
 
         protected virtual EntryStream GetEntryStream()
         {
-           return new EntryStream(Entry.Parts.First().GetStream());
+            return new EntryStream(Entry.Parts.First().GetCompressedStream());
         }
 
         #endregion

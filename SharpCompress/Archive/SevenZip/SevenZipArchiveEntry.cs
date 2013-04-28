@@ -17,7 +17,7 @@ namespace SharpCompress.Archive.SevenZip
 
         public Stream OpenEntryStream()
         {
-            return Parts.Single().GetStream();
+            return Parts.Single().GetCompressedStream();
         }
 
         public void WriteTo(Stream stream)

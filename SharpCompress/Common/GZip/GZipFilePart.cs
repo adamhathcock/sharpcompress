@@ -9,12 +9,12 @@ namespace SharpCompress.Common.GZip
     internal class GZipFilePart : FilePart
     {
         private string name;
-        private Stream stream;
+        private readonly Stream stream;
 
         internal GZipFilePart(Stream stream)
         {
             ReadAndValidateGzipHeader(stream);
-            this.stream = new DeflateStream(stream, CompressionMode.Decompress, CompressionLevel.Default, false);
+            this.stream = stream;
         }
 
         internal DateTime? DateModified { get; private set; }
@@ -24,15 +24,18 @@ namespace SharpCompress.Common.GZip
             get { return name; }
         }
 
-        internal override Stream GetStream()
+        internal override Stream GetCompressedStream()
+        {
+            return new DeflateStream(stream, CompressionMode.Decompress, CompressionLevel.Default, false);
+        }
+
+        internal override Stream GetRawStream()
         {
             return stream;
         }
 
-
         private void ReadAndValidateGzipHeader(Stream stream)
         {
-            int totalBytesRead = 0;
             // read the header on the first read
             byte[] header = new byte[10];
             int n = stream.Read(header, 0, header.Length);
@@ -49,19 +52,18 @@ namespace SharpCompress.Common.GZip
 
             Int32 timet = BitConverter.ToInt32(header, 4);
             DateModified = TarHeader.Epoch.AddSeconds(timet);
-            totalBytesRead += n;
             if ((header[3] & 0x04) == 0x04)
             {
                 // read and discard extra field
                 n = stream.Read(header, 0, 2); // 2-byte length field
-                totalBytesRead += n;
 
                 Int16 extraLength = (Int16)(header[0] + header[1] * 256);
                 byte[] extra = new byte[extraLength];
                 n = stream.Read(extra, 0, extra.Length);
                 if (n != extraLength)
+                {
                     throw new ZlibException("Unexpected end-of-file reading GZIP header.");
-                totalBytesRead += n;
+                }
             }
             if ((header[3] & 0x08) == 0x08)
                 name = ReadZeroTerminatedString(stream);
@@ -72,7 +74,7 @@ namespace SharpCompress.Common.GZip
         }
 
 
-        private string ReadZeroTerminatedString(Stream stream)
+        private static string ReadZeroTerminatedString(Stream stream)
         {
             byte[] buf1 = new byte[1];
             var list = new System.Collections.Generic.List<byte>();
@@ -82,13 +84,16 @@ namespace SharpCompress.Common.GZip
                 // workitem 7740
                 int n = stream.Read(buf1, 0, 1);
                 if (n != 1)
+                {
                     throw new ZlibException("Unexpected EOF reading GZIP header.");
+                }
+                if (buf1[0] == 0)
+                {
+                    done = true;
+                }
                 else
                 {
-                    if (buf1[0] == 0)
-                        done = true;
-                    else
-                        list.Add(buf1[0]);
+                    list.Add(buf1[0]);
                 }
             } while (!done);
             byte[] a = list.ToArray();
