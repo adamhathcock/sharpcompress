@@ -11,7 +11,7 @@ namespace SharpCompress.Compressor.Rar
         private Stream readStream;
 
         private bool fetch = false;
-        
+
         private byte[] tmpBuffer = new byte[65536];
         private int tmpOffset = 0;
         private int tmpCount = 0;
@@ -53,22 +53,13 @@ namespace SharpCompress.Compressor.Rar
 
         public override long Length
         {
-            get
-            {
-                return fileHeader.UncompressedSize;
-            }
+            get { return fileHeader.UncompressedSize; }
         }
 
         public override long Position
         {
-            get
-            {
-                return fileHeader.UncompressedSize - unpack.DestSize;
-            }
-            set
-            {
-                throw new NotImplementedException();
-            }
+            get { return fileHeader.UncompressedSize - unpack.DestSize; }
+            set { throw new NotImplementedException(); }
         }
 
         public override int Read(byte[] buffer, int offset, int count)
@@ -124,7 +115,8 @@ namespace SharpCompress.Compressor.Rar
             {
                 if (tmpBuffer.Length < tmpCount + count)
                 {
-                    byte[] newBuffer = new byte[tmpBuffer.Length*2 > tmpCount + count ? tmpBuffer.Length*2 : tmpCount + count];
+                    byte[] newBuffer =
+                        new byte[tmpBuffer.Length*2 > tmpCount + count ? tmpBuffer.Length*2 : tmpCount + count];
                     Buffer.BlockCopy(tmpBuffer, 0, newBuffer, 0, tmpCount);
                     tmpBuffer = newBuffer;
                 }

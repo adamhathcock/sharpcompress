@@ -8,7 +8,7 @@ namespace SharpCompress.Common.Zip
     internal class PkwareTraditionalEncryptionData
     {
         private static readonly CRC32 crc32 = new CRC32();
-        private readonly UInt32[] _Keys = { 0x12345678, 0x23456789, 0x34567890 };
+        private readonly UInt32[] _Keys = {0x12345678, 0x23456789, 0x34567890};
 
         private PkwareTraditionalEncryptionData(string password)
         {
@@ -19,22 +19,23 @@ namespace SharpCompress.Common.Zip
         {
             get
             {
-                ushort t = (ushort)((ushort)(_Keys[2] & 0xFFFF) | 2);
-                return (byte)((t * (t ^ 1)) >> 8);
+                ushort t = (ushort) ((ushort) (_Keys[2] & 0xFFFF) | 2);
+                return (byte) ((t*(t ^ 1)) >> 8);
             }
         }
 
-        public static PkwareTraditionalEncryptionData ForRead(string password, ZipFileEntry header, byte[] encryptionHeader)
+        public static PkwareTraditionalEncryptionData ForRead(string password, ZipFileEntry header,
+                                                              byte[] encryptionHeader)
         {
             var encryptor = new PkwareTraditionalEncryptionData(password);
             byte[] plainTextHeader = encryptor.Decrypt(encryptionHeader, encryptionHeader.Length);
-            if (plainTextHeader[11] != (byte)((header.Crc >> 24) & 0xff))
+            if (plainTextHeader[11] != (byte) ((header.Crc >> 24) & 0xff))
             {
                 if (!FlagUtility.HasFlag(header.Flags, HeaderFlags.UsePostDataDescriptor))
                 {
                     throw new CryptographicException("The password did not match.");
                 }
-                if (plainTextHeader[11] != (byte)((header.LastModifiedTime >> 8) & 0xff))
+                if (plainTextHeader[11] != (byte) ((header.LastModifiedTime >> 8) & 0xff))
                 {
                     throw new CryptographicException("The password did not match.");
                 }
@@ -52,7 +53,7 @@ namespace SharpCompress.Common.Zip
             var plainText = new byte[length];
             for (int i = 0; i < length; i++)
             {
-                var C = (byte)(cipherText[i] ^ MagicByte);
+                var C = (byte) (cipherText[i] ^ MagicByte);
                 UpdateKeys(C);
                 plainText[i] = C;
             }
@@ -72,7 +73,7 @@ namespace SharpCompress.Common.Zip
             for (int i = 0; i < length; i++)
             {
                 byte C = plainText[i];
-                cipherText[i] = (byte)(plainText[i] ^ MagicByte);
+                cipherText[i] = (byte) (plainText[i] ^ MagicByte);
                 UpdateKeys(C);
             }
             return cipherText;
@@ -98,10 +99,10 @@ namespace SharpCompress.Common.Zip
 
         private void UpdateKeys(byte byteValue)
         {
-            _Keys[0] = (UInt32)crc32.ComputeCrc32((int)_Keys[0], byteValue);
-            _Keys[1] = _Keys[1] + (byte)_Keys[0];
-            _Keys[1] = _Keys[1] * 0x08088405 + 1;
-            _Keys[2] = (UInt32)crc32.ComputeCrc32((int)_Keys[2], (byte)(_Keys[1] >> 24));
+            _Keys[0] = (UInt32) crc32.ComputeCrc32((int) _Keys[0], byteValue);
+            _Keys[1] = _Keys[1] + (byte) _Keys[0];
+            _Keys[1] = _Keys[1]*0x08088405 + 1;
+            _Keys[2] = (UInt32) crc32.ComputeCrc32((int) _Keys[2], (byte) (_Keys[1] >> 24));
         }
     }
 }

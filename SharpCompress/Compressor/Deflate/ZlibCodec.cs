@@ -173,7 +173,10 @@ namespace SharpCompress.Compressor.Deflate
         /// <summary>
         /// The Adler32 checksum on the data transferred through the codec so far. You probably don't need to look at this.
         /// </summary>
-        public int Adler32 { get { return (int)_Adler32; } }
+        public int Adler32
+        {
+            get { return (int) _Adler32; }
+        }
 
 
         /// <summary>
@@ -184,7 +187,9 @@ namespace SharpCompress.Compressor.Deflate
         /// InitializeInflate() or InitializeDeflate() before using the ZlibCodec to compress 
         /// or decompress. 
         /// </remarks>
-        public ZlibCodec() { }
+        public ZlibCodec()
+        {
+        }
 
         /// <summary>
         /// Create a ZlibCodec that either compresses or decompresses.
@@ -277,7 +282,8 @@ namespace SharpCompress.Compressor.Deflate
         public int InitializeInflate(int windowBits, bool expectRfc1950Header)
         {
             this.WindowBits = windowBits;
-            if (dstate != null) throw new ZlibException("You may not call InitializeInflate() after calling InitializeDeflate().");
+            if (dstate != null)
+                throw new ZlibException("You may not call InitializeInflate() after calling InitializeDeflate().");
             istate = new InflateManager(expectRfc1950Header);
             return istate.Initialize(this, windowBits);
         }
@@ -500,7 +506,8 @@ namespace SharpCompress.Compressor.Deflate
 
         private int _InternalInitializeDeflate(bool wantRfc1950Header)
         {
-            if (istate != null) throw new ZlibException("You may not call InitializeDeflate() after calling InitializeInflate().");
+            if (istate != null)
+                throw new ZlibException("You may not call InitializeDeflate() after calling InitializeInflate().");
             dstate = new DeflateManager();
             dstate.WantRfc1950HeaderBytes = wantRfc1950Header;
 
@@ -665,7 +672,7 @@ namespace SharpCompress.Compressor.Deflate
                 OutputBuffer.Length < (NextOut + len))
             {
                 throw new ZlibException(String.Format("Invalid State. (pending.Length={0}, pendingCount={1})",
-                    dstate.pending.Length, dstate.pendingCount));
+                                                      dstate.pending.Length, dstate.pendingCount));
             }
 
             Array.Copy(dstate.pending, dstate.nextPending, OutputBuffer, NextOut, len);
@@ -706,6 +713,5 @@ namespace SharpCompress.Compressor.Deflate
             TotalBytesIn += len;
             return len;
         }
-
     }
 }

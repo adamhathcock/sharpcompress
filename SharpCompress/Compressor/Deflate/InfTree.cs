@@ -179,10 +179,14 @@ namespace SharpCompress.Compressor.Deflate
         internal static readonly int[] fixed_td = new[]
                                                       {
                                                           80, 5, 1, 87, 5, 257, 83, 5, 17, 91, 5, 4097, 81, 5, 5, 89, 5,
-                                                          1025, 85, 5, 65, 93, 5, 16385, 80, 5, 3, 88, 5, 513, 84, 5, 33,
-                                                          92, 5, 8193, 82, 5, 9, 90, 5, 2049, 86, 5, 129, 192, 5, 24577, 80
-                                                          , 5, 2, 87, 5, 385, 83, 5, 25, 91, 5, 6145, 81, 5, 7, 89, 5, 1537
-                                                          , 85, 5, 97, 93, 5, 24577, 80, 5, 4, 88, 5, 769, 84, 5, 49, 92, 5
+                                                          1025, 85, 5, 65, 93, 5, 16385, 80, 5, 3, 88, 5, 513, 84, 5, 33
+                                                          ,
+                                                          92, 5, 8193, 82, 5, 9, 90, 5, 2049, 86, 5, 129, 192, 5, 24577,
+                                                          80
+                                                          , 5, 2, 87, 5, 385, 83, 5, 25, 91, 5, 6145, 81, 5, 7, 89, 5,
+                                                          1537
+                                                          , 85, 5, 97, 93, 5, 24577, 80, 5, 4, 88, 5, 769, 84, 5, 49, 92
+                                                          , 5
                                                           , 12289, 82, 5, 13, 90, 5, 3073, 86, 5, 193, 192, 5, 24577
                                                       };
 
@@ -190,7 +194,8 @@ namespace SharpCompress.Compressor.Deflate
         //UPGRADE_NOTE: Final was removed from the declaration of 'cplens'. "ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?index='!DefaultContextWindowIndex'&keyword='jlca1003'"
         internal static readonly int[] cplens = new[]
                                                     {
-                                                        3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 15, 17, 19, 23, 27, 31, 35, 43, 51
+                                                        3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 15, 17, 19, 23, 27, 31, 35, 43,
+                                                        51
                                                         , 59, 67, 83, 99, 115, 131, 163, 195, 227, 258, 0, 0
                                                     };
 
@@ -198,22 +203,26 @@ namespace SharpCompress.Compressor.Deflate
         //UPGRADE_NOTE: Final was removed from the declaration of 'cplext'. "ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?index='!DefaultContextWindowIndex'&keyword='jlca1003'"
         internal static readonly int[] cplext = new[]
                                                     {
-                                                        0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4
+                                                        0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4
+                                                        , 4
                                                         , 4, 5, 5, 5, 5, 0, 112, 112
                                                     };
 
         //UPGRADE_NOTE: Final was removed from the declaration of 'cpdist'. "ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?index='!DefaultContextWindowIndex'&keyword='jlca1003'"
         internal static readonly int[] cpdist = new[]
                                                     {
-                                                        1, 2, 3, 4, 5, 7, 9, 13, 17, 25, 33, 49, 65, 97, 129, 193, 257, 385
-                                                        , 513, 769, 1025, 1537, 2049, 3073, 4097, 6145, 8193, 12289, 16385,
+                                                        1, 2, 3, 4, 5, 7, 9, 13, 17, 25, 33, 49, 65, 97, 129, 193, 257,
+                                                        385
+                                                        , 513, 769, 1025, 1537, 2049, 3073, 4097, 6145, 8193, 12289,
+                                                        16385,
                                                         24577
                                                     };
 
         //UPGRADE_NOTE: Final was removed from the declaration of 'cpdext'. "ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?index='!DefaultContextWindowIndex'&keyword='jlca1003'"
         internal static readonly int[] cpdext = new[]
                                                     {
-                                                        0, 0, 0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9,
+                                                        0, 0, 0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9
+                                                        ,
                                                         10, 10, 11, 11, 12, 12, 13, 13
                                                     };
 
@@ -386,11 +395,11 @@ namespace SharpCompress.Compressor.Deflate
                         if (h != 0)
                         {
                             x[h] = i; // save pattern for backing up
-                            r[0] = (sbyte)j; // bits in this table
-                            r[1] = (sbyte)l; // bits to dump before this table
+                            r[0] = (sbyte) j; // bits in this table
+                            r[1] = (sbyte) l; // bits to dump before this table
                             j = SharedUtils.URShift(i, (w - l));
                             r[2] = (q - u[h - 1] - j); // offset to this table
-                            Array.Copy(r, 0, hp, (u[h - 1] + j) * 3, 3); // connect to last table
+                            Array.Copy(r, 0, hp, (u[h - 1] + j)*3, 3); // connect to last table
                         }
                         else
                         {
@@ -399,19 +408,19 @@ namespace SharpCompress.Compressor.Deflate
                     }
 
                     // set up table entry in r
-                    r[1] = (sbyte)(k - w);
+                    r[1] = (sbyte) (k - w);
                     if (p >= n)
                     {
                         r[0] = 128 + 64; // out of values--invalid code
                     }
                     else if (v[p] < s)
                     {
-                        r[0] = (sbyte)(v[p] < 256 ? 0 : 32 + 64); // 256 is end-of-block
+                        r[0] = (sbyte) (v[p] < 256 ? 0 : 32 + 64); // 256 is end-of-block
                         r[2] = v[p++]; // simple code is just the value
                     }
                     else
                     {
-                        r[0] = (sbyte)(e[v[p] - s] + 16 + 64); // non-simple--look up in lists
+                        r[0] = (sbyte) (e[v[p] - s] + 16 + 64); // non-simple--look up in lists
                         r[2] = d[v[p++] - s];
                     }
 
@@ -419,7 +428,7 @@ namespace SharpCompress.Compressor.Deflate
                     f = 1 << (k - w);
                     for (j = SharedUtils.URShift(i, w); j < z; j += f)
                     {
-                        Array.Copy(r, 0, hp, (q + j) * 3, 3);
+                        Array.Copy(r, 0, hp, (q + j)*3, 3);
                     }
 
                     // backwards increment the k-bit code i

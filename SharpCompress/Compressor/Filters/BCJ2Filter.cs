@@ -89,14 +89,8 @@ namespace SharpCompress.Compressor.Filters
 
         public override long Position
         {
-            get
-            {
-                return position;
-            }
-            set
-            {
-                throw new NotImplementedException();
-            }
+            get { return position; }
+            set { throw new NotImplementedException(); }
         }
 
         public override int Read(byte[] buffer, int offset, int count)
@@ -171,9 +165,15 @@ namespace SharpCompress.Compressor.Filters
 
                         uint dest;
                         if (b == 0xE8)
-                            dest = (uint)((data1[data1Pos++] << 24) | (data1[data1Pos++] << 16) | (data1[data1Pos++] << 8) | data1[data1Pos++]);
+                            dest =
+                                (uint)
+                                ((data1[data1Pos++] << 24) | (data1[data1Pos++] << 16) | (data1[data1Pos++] << 8) |
+                                 data1[data1Pos++]);
                         else
-                            dest = (uint)((data2[data2Pos++] << 24) | (data2[data2Pos++] << 16) | (data2[data2Pos++] << 8) | data2[data2Pos++]);
+                            dest =
+                                (uint)
+                                ((data2[data2Pos++] << 24) | (data2[data2Pos++] << 16) | (data2[data2Pos++] << 8) |
+                                 data2[data2Pos++]);
                         dest -= (uint)(position + 4);
 
                         output[0] = (byte)dest;

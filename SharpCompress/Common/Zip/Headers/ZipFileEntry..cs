@@ -66,10 +66,10 @@ namespace SharpCompress.Common.Zip.Headers
 
         protected void LoadExtra(byte[] extra)
         {
-            for (int i = 0; i < extra.Length; )
+            for (int i = 0; i < extra.Length;)
             {
-                ExtraDataType type = (ExtraDataType)BitConverter.ToUInt16(extra, i);
-                if (!Enum.IsDefined(typeof(ExtraDataType), type))
+                ExtraDataType type = (ExtraDataType) BitConverter.ToUInt16(extra, i);
+                if (!Enum.IsDefined(typeof (ExtraDataType), type))
                 {
                     return;
                 }
@@ -77,14 +77,15 @@ namespace SharpCompress.Common.Zip.Headers
                 byte[] data = new byte[length];
                 Buffer.BlockCopy(extra, i + 4, data, 0, length);
                 Extra.Add(new ExtraData
-                {
-                    Type = type,
-                    Length = length,
-                    DataBytes = data
-                });
+                              {
+                                  Type = type,
+                                  Length = length,
+                                  DataBytes = data
+                              });
                 i += length + 4;
             }
         }
+
         internal ZipFilePart Part { get; set; }
     }
 }

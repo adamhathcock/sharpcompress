@@ -152,7 +152,7 @@ namespace SharpCompress.Compressor.Rar
                 }
             }
             input.AddBits(bits);
-            int N = dec.DecodePos[bits] + (Utility.URShift(((int)bitField - decodeLen[bits - 1]), (16 - bits)));
+            int N = dec.DecodePos[bits] + (Utility.URShift(((int) bitField - decodeLen[bits - 1]), (16 - bits)));
             if (N >= dec.MaxNum)
             {
                 N = 0;
@@ -173,18 +173,18 @@ namespace SharpCompress.Compressor.Rar
 
             for (i = 0; i < size; i++)
             {
-                lenCount[(int)(lenTab[offset + i] & 0xF)]++;
+                lenCount[(int) (lenTab[offset + i] & 0xF)]++;
             }
             lenCount[0] = 0;
             for (tmpPos[0] = 0, dec.DecodePos[0] = 0, dec.DecodeLen[0] = 0, N = 0, i = 1; i < 16; i++)
             {
-                N = 2 * (N + lenCount[i]);
+                N = 2*(N + lenCount[i]);
                 M = N << (15 - i);
                 if (M > 0xFFFF)
                 {
                     M = 0xFFFF;
                 }
-                dec.DecodeLen[i] = (int)M;
+                dec.DecodeLen[i] = (int) M;
                 tmpPos[i] = dec.DecodePos[i] = dec.DecodePos[i - 1] + lenCount[i - 1];
             }
 

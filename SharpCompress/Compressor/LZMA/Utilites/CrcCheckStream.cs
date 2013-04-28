@@ -3,7 +3,7 @@ using System.IO;
 
 namespace SharpCompress.Compressor.LZMA.Utilites
 {
-    class CrcCheckStream: Stream
+    internal class CrcCheckStream : Stream
     {
         private readonly uint mExpectedCRC;
         private uint mCurrentCRC;
@@ -24,12 +24,12 @@ namespace SharpCompress.Compressor.LZMA.Utilites
                 throw new InvalidOperationException();
             try
             {
-                if(disposing && !mClosed)
+                if (disposing && !mClosed)
                 {
                     mClosed = true;
                     mCurrentCRC = CRC.Finish(mCurrentCRC);
 #if DEBUG
-                    if(mCurrentCRC == mExpectedCRC)
+                    if (mCurrentCRC == mExpectedCRC)
                         System.Diagnostics.Debug.WriteLine("CRC ok: " + mExpectedCRC.ToString("x8"));
                     else
                     {
@@ -37,17 +37,17 @@ namespace SharpCompress.Compressor.LZMA.Utilites
                         System.Diagnostics.Debug.WriteLine("bad CRC");
                     }
 
-                    double lengthInv = 1.0 / mLength;
+                    double lengthInv = 1.0/mLength;
                     double entropy = 0;
-                    for(int i = 0; i < 256; i++)
+                    for (int i = 0; i < 256; i++)
                     {
-                        if(mBytes[i] != 0)
+                        if (mBytes[i] != 0)
                         {
-                            double p = lengthInv * mBytes[i];
-                            entropy -= p * Math.Log(p, 256);
+                            double p = lengthInv*mBytes[i];
+                            entropy -= p*Math.Log(p, 256);
                         }
                     }
-                    System.Diagnostics.Debug.WriteLine("entropy: " + (int)(entropy * 100) + "%");
+                    System.Diagnostics.Debug.WriteLine("entropy: " + (int) (entropy*100) + "%");
 #endif
                 }
             }
@@ -105,7 +105,7 @@ namespace SharpCompress.Compressor.LZMA.Utilites
         public override void Write(byte[] buffer, int offset, int count)
         {
             mLength += count;
-            for(int i = 0; i < count; i++)
+            for (int i = 0; i < count; i++)
                 mBytes[buffer[offset + i]]++;
 
             mCurrentCRC = CRC.Update(mCurrentCRC, buffer, offset, count);

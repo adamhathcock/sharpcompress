@@ -153,7 +153,7 @@ namespace SharpCompress.Archive
         /// Extract to specific directory, retaining filename
         /// </summary>
         public static void WriteToDirectory(string sourceArchive, string destinationDirectory,
-            ExtractOptions options = ExtractOptions.Overwrite)
+                                            ExtractOptions options = ExtractOptions.Overwrite)
         {
             using (IArchive archive = Open(sourceArchive))
             {

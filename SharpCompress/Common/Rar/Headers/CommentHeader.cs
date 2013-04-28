@@ -12,27 +12,11 @@ namespace SharpCompress.Common.Rar.Headers
             CommCRC = reader.ReadInt16();
         }
 
-        internal short UnpSize
-        {
-            get;
-            private set;
-        }
+        internal short UnpSize { get; private set; }
 
-        internal byte UnpVersion
-        {
-            get;
-            private set;
-        }
+        internal byte UnpVersion { get; private set; }
 
-        internal byte UnpMethod
-        {
-            get;
-            private set;
-        }
-        internal short CommCRC
-        {
-            get;
-            private set;
-        }
+        internal byte UnpMethod { get; private set; }
+        internal short CommCRC { get; private set; }
     }
 }

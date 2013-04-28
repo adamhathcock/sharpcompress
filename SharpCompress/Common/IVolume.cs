@@ -1,6 +1,7 @@
 ﻿using System;
 #if !PORTABLE
 using System.IO;
+
 #endif
 
 namespace SharpCompress.Common
@@ -11,10 +12,7 @@ namespace SharpCompress.Common
         /// <summary>
         /// File that backs this volume, if it not stream based
         /// </summary>
-        FileInfo VolumeFile
-        {
-            get;
-        }
+        FileInfo VolumeFile { get; }
 #endif
     }
 }

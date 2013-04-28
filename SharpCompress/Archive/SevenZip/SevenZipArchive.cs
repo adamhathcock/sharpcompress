@@ -74,6 +74,7 @@ namespace SharpCompress.Archive.SevenZip
             stream.CheckNotNull("stream");
             return new SevenZipArchive(stream, options);
         }
+
 #if !PORTABLE
         internal SevenZipArchive(FileInfo fileInfo, Options options)
             : base(ArchiveType.SevenZip, fileInfo, options)
@@ -133,10 +134,10 @@ namespace SharpCompress.Archive.SevenZip
             for (int i = 0; i < database.Files.Count; i++)
             {
                 var file = database.Files[i];
-               if (!file.IsDir)
-               {
-                  yield return new SevenZipArchiveEntry(this, new SevenZipFilePart(stream, database, i, file));
-               }
+                if (!file.IsDir)
+                {
+                    yield return new SevenZipArchiveEntry(this, new SevenZipFilePart(stream, database, i, file));
+                }
             }
         }
 
@@ -163,12 +164,14 @@ namespace SharpCompress.Archive.SevenZip
                 return false;
             }
         }
-        private static readonly byte[] SIGNATURE = new byte[] { (byte)'7', (byte)'z', 0xBC, 0xAF, 0x27, 0x1C };
+
+        private static readonly byte[] SIGNATURE = new byte[] {(byte) '7', (byte) 'z', 0xBC, 0xAF, 0x27, 0x1C};
+
         private static bool SignatureMatch(Stream stream)
         {
-           BinaryReader reader = new BinaryReader(stream);
-           byte[] signatureBytes = reader.ReadBytes(6);
-           return signatureBytes.BinaryEquals(SIGNATURE);
+            BinaryReader reader = new BinaryReader(stream);
+            byte[] signatureBytes = reader.ReadBytes(6);
+            return signatureBytes.BinaryEquals(SIGNATURE);
         }
 
         protected override IReader CreateReaderForSolidExtraction()
@@ -178,10 +181,7 @@ namespace SharpCompress.Archive.SevenZip
 
         public override bool IsSolid
         {
-            get
-            {
-                return Entries.Where(x => !x.IsDirectory).GroupBy(x => x.FilePart.Folder).Count() > 1;
-            }
+            get { return Entries.Where(x => !x.IsDirectory).GroupBy(x => x.FilePart.Folder).Count() > 1; }
         }
 
         private class SevenZipReader : AbstractReader<SevenZipEntry, SevenZipVolume>
@@ -213,26 +213,26 @@ namespace SharpCompress.Archive.SevenZip
                 }
                 foreach (var group in entries.Where(x => !x.IsDirectory).GroupBy(x => x.FilePart.Folder))
                 {
-                     currentFolder = group.Key;
-                     if (group.Key == null)
-                     {
+                    currentFolder = group.Key;
+                    if (group.Key == null)
+                    {
                         currentStream = Stream.Null;
-                     }
-                     else
-                     {
+                    }
+                    else
+                    {
                         currentStream = archive.database.GetFolderStream(stream, currentFolder, null);
-                     }
-                     foreach (var entry in group)
-                     {
+                    }
+                    foreach (var entry in group)
+                    {
                         currentItem = entry.FilePart.Header;
                         yield return entry;
-                     }
+                    }
                 }
             }
 
             protected override EntryStream GetEntryStream()
             {
-               return new EntryStream(new ReadOnlySubStream(currentStream, currentItem.Size));
+                return new EntryStream(new ReadOnlySubStream(currentStream, currentItem.Size));
             }
         }
     }

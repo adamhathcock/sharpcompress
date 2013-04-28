@@ -40,14 +40,8 @@ namespace SharpCompress.IO
 
         public override long Position
         {
-            get
-            {
-                throw new NotImplementedException();
-            }
-            set
-            {
-                throw new NotImplementedException();
-            }
+            get { throw new NotImplementedException(); }
+            set { throw new NotImplementedException(); }
         }
 
         public override int Read(byte[] buffer, int offset, int count)
@@ -68,7 +62,7 @@ namespace SharpCompress.IO
         public override void Write(byte[] buffer, int offset, int count)
         {
             writableStream.Write(buffer, offset, count);
-            Count += (uint)count;
+            Count += (uint) count;
         }
     }
 }

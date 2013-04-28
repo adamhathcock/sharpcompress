@@ -40,10 +40,10 @@ namespace SharpCompress.Compressor.Deflate
         {
             buffer = new byte[size];
             // alloc 5 bytes overhead for every block (margin of safety= 2)
-            int n = size + ((size / 32768) + 1) * 5 * 2;
+            int n = size + ((size/32768) + 1)*5*2;
             compressed = new byte[n];
 
-            status = (int)Status.None;
+            status = (int) Status.None;
             compressor = new ZlibCodec();
             compressor.InitializeDeflate(compressLevel, false);
             compressor.OutputBuffer = compressed;
@@ -107,7 +107,7 @@ namespace SharpCompress.Compressor.Deflate
     /// <seealso cref="DeflateStream" />
     internal class ParallelDeflateOutputStream : Stream
     {
-        private static readonly int IO_BUFFER_SIZE_DEFAULT = 64 * 1024; // 128k
+        private static readonly int IO_BUFFER_SIZE_DEFAULT = 64*1024; // 128k
         private readonly CompressionLevel _compressLevel;
         private readonly object _eLock = new Object(); // protects _pendingException
 
@@ -471,7 +471,7 @@ namespace SharpCompress.Compressor.Deflate
         private void _InitializePoolOfWorkItems()
         {
             _pool = new List<WorkItem>();
-            for (int i = 0; i < BuffersPerCore * Environment.ProcessorCount; i++)
+            for (int i = 0; i < BuffersPerCore*Environment.ProcessorCount; i++)
                 _pool.Add(new WorkItem(_bufferSize, _compressLevel, Strategy));
             _pc = _pool.Count;
 
@@ -546,7 +546,7 @@ namespace SharpCompress.Compressor.Deflate
 
             do
             {
-                int ix = _nextToFill % _pc;
+                int ix = _nextToFill%_pc;
                 WorkItem workitem = _pool[ix];
                 lock (workitem)
                 {
@@ -559,11 +559,11 @@ namespace SharpCompress.Compressor.Deflate
                         );
 
                     // If the status is what we want, then use the workitem.
-                    if (workitem.status == (int)WorkItem.Status.None ||
-                        workitem.status == (int)WorkItem.Status.Done ||
-                        workitem.status == (int)WorkItem.Status.Filling)
+                    if (workitem.status == (int) WorkItem.Status.None ||
+                        workitem.status == (int) WorkItem.Status.Done ||
+                        workitem.status == (int) WorkItem.Status.Filling)
                     {
-                        workitem.status = (int)WorkItem.Status.Filling;
+                        workitem.status = (int) WorkItem.Status.Filling;
                         int limit = ((workitem.buffer.Length - workitem.inputBytesAvailable) > count)
                                         ? count
                                         : (workitem.buffer.Length - workitem.inputBytesAvailable);
@@ -577,7 +577,7 @@ namespace SharpCompress.Compressor.Deflate
                         workitem.inputBytesAvailable += limit;
                         if (workitem.inputBytesAvailable == workitem.buffer.Length)
                         {
-                            workitem.status = (int)WorkItem.Status.Filled;
+                            workitem.status = (int) WorkItem.Status.Filled;
                             // No need for interlocked.increment: the Write() method
                             // is documented as not multi-thread safe, so we can assume Write()
                             // calls come in from only one thread.
@@ -599,9 +599,9 @@ namespace SharpCompress.Compressor.Deflate
                     {
                         int wcycles = 0;
 
-                        while (workitem.status != (int)WorkItem.Status.None &&
-                               workitem.status != (int)WorkItem.Status.Done &&
-                               workitem.status != (int)WorkItem.Status.Filling)
+                        while (workitem.status != (int) WorkItem.Status.None &&
+                               workitem.status != (int) WorkItem.Status.Done &&
+                               workitem.status != (int) WorkItem.Status.Filling)
                         {
                             TraceOutput(TraceBits.Fill,
                                         "Fill     waiting  wi({0}) stat({1}) nf({2})",
@@ -614,9 +614,9 @@ namespace SharpCompress.Compressor.Deflate
                             Monitor.Pulse(workitem);
                             Monitor.Wait(workitem);
 
-                            if (workitem.status == (int)WorkItem.Status.None ||
-                                workitem.status == (int)WorkItem.Status.Done ||
-                                workitem.status == (int)WorkItem.Status.Filling)
+                            if (workitem.status == (int) WorkItem.Status.None ||
+                                workitem.status == (int) WorkItem.Status.Done ||
+                                workitem.status == (int) WorkItem.Status.Filling)
                                 TraceOutput(TraceBits.Fill,
                                             "Fill     A-OK     wi({0}) stat({1}) iba({2}) cyc({3})",
                                             workitem.index,
@@ -647,12 +647,12 @@ namespace SharpCompress.Compressor.Deflate
                 throw new NotSupportedException();
 
             // pass any partial buffer out to the compressor workers:
-            WorkItem workitem = _pool[_nextToFill % _pc];
+            WorkItem workitem = _pool[_nextToFill%_pc];
             lock (workitem)
             {
-                if (workitem.status == (int)WorkItem.Status.Filling)
+                if (workitem.status == (int) WorkItem.Status.Filling)
                 {
-                    workitem.status = (int)WorkItem.Status.Filled;
+                    workitem.status = (int) WorkItem.Status.Filled;
                     _nextToFill++;
 
                     // When flush is called from Close(), we set _noMore.
@@ -718,7 +718,7 @@ namespace SharpCompress.Compressor.Deflate
             //System.Console.WriteLine(st.ToString());
 
             // need to get Writer off the workitem, in case he's waiting forever
-            WorkItem workitem = _pool[_nextToFill % _pc];
+            WorkItem workitem = _pool[_nextToFill%_pc];
             lock (workitem)
             {
                 Monitor.PulseAll(workitem);
@@ -749,7 +749,6 @@ namespace SharpCompress.Compressor.Deflate
 
 
         // workitem 10030 - implement a new Dispose method
-
 
 
         /// <summary>
@@ -804,7 +803,7 @@ namespace SharpCompress.Compressor.Deflate
 
                 // reset all status
                 foreach (WorkItem workitem in _pool)
-                    workitem.status = (int)WorkItem.Status.None;
+                    workitem.status = (int) WorkItem.Status.None;
 
                 _noMoreInputForThisSegment = false;
                 _nextToFill = _nextToWrite = 0;
@@ -851,7 +850,7 @@ namespace SharpCompress.Compressor.Deflate
                     var c = new CRC32();
                     do
                     {
-                        workitem = _pool[_nextToWrite % _pc];
+                        workitem = _pool[_nextToWrite%_pc];
                         lock (workitem)
                         {
                             if (_noMoreInputForThisSegment)
@@ -859,12 +858,12 @@ namespace SharpCompress.Compressor.Deflate
                                             "Write    drain    wi({0}) stat({1}) canuse({2})  cba({3})",
                                             workitem.index,
                                             workitem.status,
-                                            (workitem.status == (int)WorkItem.Status.Compressed),
+                                            (workitem.status == (int) WorkItem.Status.Compressed),
                                             workitem.compressedBytesAvailable);
 
                             do
                             {
-                                if (workitem.status == (int)WorkItem.Status.Compressed)
+                                if (workitem.status == (int) WorkItem.Status.Compressed)
                                 {
                                     TraceOutput(TraceBits.WriteBegin,
                                                 "Write    begin    wi({0}) stat({1})              cba({2})",
@@ -872,13 +871,13 @@ namespace SharpCompress.Compressor.Deflate
                                                 workitem.status,
                                                 workitem.compressedBytesAvailable);
 
-                                    workitem.status = (int)WorkItem.Status.Writing;
+                                    workitem.status = (int) WorkItem.Status.Writing;
                                     _outStream.Write(workitem.compressed, 0, workitem.compressedBytesAvailable);
                                     c.Combine(workitem.crc, workitem.inputBytesAvailable);
                                     _totalBytesProcessed += workitem.inputBytesAvailable;
                                     _nextToWrite++;
                                     workitem.inputBytesAvailable = 0;
-                                    workitem.status = (int)WorkItem.Status.Done;
+                                    workitem.status = (int) WorkItem.Status.Done;
 
                                     TraceOutput(TraceBits.WriteDone,
                                                 "Write    done     wi({0}) stat({1})              cba({2})",
@@ -895,7 +894,7 @@ namespace SharpCompress.Compressor.Deflate
                                     int wcycles = 0;
                                     // I've locked a workitem I cannot use.
                                     // Therefore, wake someone else up, and then release the lock.
-                                    while (workitem.status != (int)WorkItem.Status.Compressed)
+                                    while (workitem.status != (int) WorkItem.Status.Compressed)
                                     {
                                         TraceOutput(TraceBits.WriteWait,
                                                     "Write    waiting  wi({0}) stat({1}) nw({2}) nf({3}) nomore({4})",
@@ -914,7 +913,7 @@ namespace SharpCompress.Compressor.Deflate
                                         // release and wait
                                         Monitor.Wait(workitem);
 
-                                        if (workitem.status == (int)WorkItem.Status.Compressed)
+                                        if (workitem.status == (int) WorkItem.Status.Compressed)
                                             TraceOutput(TraceBits.WriteWait,
                                                         "Write    A-OK     wi({0}) stat({1}) iba({2}) cba({3}) cyc({4})",
                                                         workitem.index,
@@ -995,7 +994,7 @@ namespace SharpCompress.Compressor.Deflate
 
         private void _DeflateOne(Object wi)
         {
-            var workitem = (WorkItem)wi;
+            var workitem = (WorkItem) wi;
             try
             {
                 // compress one buffer
@@ -1003,7 +1002,7 @@ namespace SharpCompress.Compressor.Deflate
 
                 lock (workitem)
                 {
-                    if (workitem.status != (int)WorkItem.Status.Filled)
+                    if (workitem.status != (int) WorkItem.Status.Filled)
                         throw new InvalidOperationException();
 
                     var crc = new CRC32();
@@ -1016,7 +1015,7 @@ namespace SharpCompress.Compressor.Deflate
                     DeflateOneSegment(workitem);
 
                     // update status
-                    workitem.status = (int)WorkItem.Status.Compressed;
+                    workitem.status = (int) WorkItem.Status.Compressed;
                     workitem.crc = crc.Crc32Result;
 
                     TraceOutput(TraceBits.Compress,
@@ -1062,7 +1061,7 @@ namespace SharpCompress.Compressor.Deflate
             // step 2: flush (sync)
             compressor.Deflate(FlushType.Sync);
 
-            workitem.compressedBytesAvailable = (int)compressor.TotalBytesOut;
+            workitem.compressedBytesAvailable = (int) compressor.TotalBytesOut;
             return true;
         }
 
@@ -1076,7 +1075,7 @@ namespace SharpCompress.Compressor.Deflate
                 {
                     int tid = Thread.CurrentThread.GetHashCode();
 #if !SILVERLIGHT
-                    Console.ForegroundColor = (ConsoleColor)(tid % 8 + 8);
+                    Console.ForegroundColor = (ConsoleColor) (tid%8 + 8);
 #endif
                     Console.Write("{0:000} PDOS ", tid);
                     Console.WriteLine(format, varParams);
@@ -1136,4 +1135,5 @@ namespace SharpCompress.Compressor.Deflate
         #endregion
     }
 }
+
 #endif

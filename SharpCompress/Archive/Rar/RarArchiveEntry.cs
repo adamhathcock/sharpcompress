@@ -23,26 +23,16 @@ namespace SharpCompress.Archive.Rar
             get { return CompressionType.Rar; }
         }
 
-        private RarArchive Archive
-        {
-            get;
-            set;
-        }
+        private RarArchive Archive { get; set; }
 
         internal override IEnumerable<FilePart> Parts
         {
-            get
-            {
-                return parts.Cast<FilePart>();
-            }
+            get { return parts.Cast<FilePart>(); }
         }
 
         internal override FileHeader FileHeader
         {
-            get
-            {
-                return parts.First().FileHeader;
-            }
+            get { return parts.First().FileHeader; }
         }
 
         public override uint Crc
@@ -51,8 +41,8 @@ namespace SharpCompress.Archive.Rar
             {
                 CheckIncomplete();
                 return parts.Select(fp => fp.FileHeader)
-                    .Where(fh => !fh.FileFlags.HasFlag(FileFlags.SPLIT_AFTER))
-                    .Single().FileCRC;
+                            .Where(fh => !fh.FileFlags.HasFlag(FileFlags.SPLIT_AFTER))
+                            .Single().FileCRC;
             }
         }
 
@@ -71,10 +61,7 @@ namespace SharpCompress.Archive.Rar
             get
             {
                 CheckIncomplete();
-                return parts.Aggregate(0L, (total, fp) =>
-                {
-                    return total + fp.FileHeader.CompressedSize;
-                });
+                return parts.Aggregate(0L, (total, fp) => { return total + fp.FileHeader.CompressedSize; });
             }
         }
 
@@ -100,10 +87,7 @@ namespace SharpCompress.Archive.Rar
 
         public bool IsComplete
         {
-            get
-            {
-                return parts.Select(fp => fp.FileHeader).Any(fh => !fh.FileFlags.HasFlag(FileFlags.SPLIT_AFTER));
-            }
+            get { return parts.Select(fp => fp.FileHeader).Any(fh => !fh.FileFlags.HasFlag(FileFlags.SPLIT_AFTER)); }
         }
 
         private void CheckIncomplete()

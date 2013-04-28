@@ -14,10 +14,7 @@ namespace SharpCompress.Common.SevenZip
 
         public override CompressionType CompressionType
         {
-            get
-            {
-                return FilePart.CompressionType;
-            }
+            get { return FilePart.CompressionType; }
         }
 
         public override uint Crc
@@ -37,7 +34,7 @@ namespace SharpCompress.Common.SevenZip
 
         public override long Size
         {
-            get { return (long)FilePart.Header.Size; }
+            get { return (long) FilePart.Header.Size; }
         }
 
         public override DateTime? LastModifiedTime

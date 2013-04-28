@@ -7,6 +7,7 @@ using System.IO;
 
 // This is a port of Dmitry Shkarin's PPMd Variant I Revision 1.
 // Ported by Michael Bone (mjbone03@yahoo.com.au).
+
 namespace SharpCompress.Compressor.PPMd.I1
 {
     /// <summary>
@@ -16,7 +17,7 @@ namespace SharpCompress.Compressor.PPMd.I1
     {
         public const uint Signature = 0x84acaf8fU;
         public const char Variant = 'I';
-        public const int MaximumOrder = 16;  // maximum allowed model order
+        public const int MaximumOrder = 16; // maximum allowed model order
 
         private const byte UpperFrequency = 5;
         private const byte IntervalBitCount = 7;
@@ -30,7 +31,7 @@ namespace SharpCompress.Compressor.PPMd.I1
         private See2Context[,] see2Contexts;
         private See2Context emptySee2Context;
         private PpmContext maximumContext;
-        private ushort[,] binarySummary = new ushort[25, 64];  // binary SEE-contexts
+        private ushort[,] binarySummary = new ushort[25,64]; // binary SEE-contexts
         private byte[] numberStatisticsToBinarySummaryIndex = new byte[256];
         private byte[] probabilities = new byte[260];
         private byte[] characterMask = new byte[256];
@@ -43,7 +44,7 @@ namespace SharpCompress.Compressor.PPMd.I1
         private byte previousSuccess;
         private byte numberMasked;
         private ModelRestorationMethod method;
-        private PpmState foundState;  // found next state transition
+        private PpmState foundState; // found next state transition
 
         private Allocator Allocator;
         private Coder Coder;
@@ -51,8 +52,13 @@ namespace SharpCompress.Compressor.PPMd.I1
         private byte numberStatistics;
         private PpmState[] decodeStates = new PpmState[256];
 
-        private static readonly ushort[] InitialBinaryEscapes = { 0x3CDD, 0x1F3F, 0x59BF, 0x48F3, 0x64A1, 0x5ABC, 0x6632, 0x6051 };
-        private static readonly byte[] ExponentialEscapes = { 25, 14, 9, 7, 5, 5, 4, 4, 4, 3, 3, 3, 2, 2, 2, 2 };
+        private static readonly ushort[] InitialBinaryEscapes =
+            {
+                0x3CDD, 0x1F3F, 0x59BF, 0x48F3, 0x64A1, 0x5ABC, 0x6632,
+                0x6051
+            };
+
+        private static readonly byte[] ExponentialEscapes = {25, 14, 9, 7, 5, 5, 4, 4, 4, 3, 3, 3, 2, 2, 2, 2};
 
         #region Public Methods
 
@@ -69,12 +75,12 @@ namespace SharpCompress.Compressor.PPMd.I1
             // 6 6 6 6 6 6 6 6 6 6 6 6 6 6 6 6 6 6 6 6 6 6 6 6 6 6 6 6 6 6 6 6
             // 6 6 6 6 6 6 6 6 6 6 6 6 6 6 6 6 6 6 6 6 6 6 6 6 6 6 6 6 6 6 6 6
 
-            numberStatisticsToBinarySummaryIndex[0] = 2 * 0;
-            numberStatisticsToBinarySummaryIndex[1] = 2 * 1;
+            numberStatisticsToBinarySummaryIndex[0] = 2*0;
+            numberStatisticsToBinarySummaryIndex[1] = 2*1;
             for (int index = 2; index < 11; index++)
-                numberStatisticsToBinarySummaryIndex[index] = 2 * 2;
+                numberStatisticsToBinarySummaryIndex[index] = 2*2;
             for (int index = 11; index < 256; index++)
-                numberStatisticsToBinarySummaryIndex[index] = 2 * 3;
+                numberStatisticsToBinarySummaryIndex[index] = 2*3;
 
             // Construct the probability table.  Initially it will contain the following values (depending on the value of
             // the upper frequency).
@@ -94,11 +100,11 @@ namespace SharpCompress.Compressor.PPMd.I1
             uint probability = UpperFrequency;
 
             for (int index = 0; index < UpperFrequency; index++)
-                probabilities[index] = (byte)index;
+                probabilities[index] = (byte) index;
 
             for (int index = UpperFrequency; index < 260; index++)
             {
-                probabilities[index] = (byte)probability;
+                probabilities[index] = (byte) probability;
                 count--;
                 if (count == 0)
                 {
@@ -110,7 +116,7 @@ namespace SharpCompress.Compressor.PPMd.I1
 
             // Create the context array.
 
-            see2Contexts = new See2Context[24, 32];
+            see2Contexts = new See2Context[24,32];
             for (int index1 = 0; index1 < 24; index1++)
                 for (int index2 = 0; index2 < 32; index2++)
                     see2Contexts[index1, index2] = new See2Context();
@@ -118,9 +124,9 @@ namespace SharpCompress.Compressor.PPMd.I1
             // Set the signature (identifying the algorithm).
 
             emptySee2Context = new See2Context();
-            emptySee2Context.Summary = (ushort)(Signature & 0x0000ffff);
-            emptySee2Context.Shift = (byte)((Signature >> 16) & 0x000000ff);
-            emptySee2Context.Count = (byte)(Signature >> 24);
+            emptySee2Context.Summary = (ushort) (Signature & 0x0000ffff);
+            emptySee2Context.Shift = (byte) ((Signature >> 16) & 0x000000ff);
+            emptySee2Context.Count = (byte) (Signature >> 24);
         }
 
         /// <summary>
@@ -183,7 +189,7 @@ namespace SharpCompress.Compressor.PPMd.I1
                     Coder.RangeEncodeSymbol();
                 }
 
-                if (orderFall == 0 && (Pointer)foundState.Successor >= Allocator.BaseUnit)
+                if (orderFall == 0 && (Pointer) foundState.Successor >= Allocator.BaseUnit)
                 {
                     maximumContext = foundState.Successor;
                 }
@@ -197,7 +203,7 @@ namespace SharpCompress.Compressor.PPMd.I1
                 Coder.RangeEncoderNormalize(target);
             }
 
-        StopEncoding:
+            StopEncoding:
             Coder.RangeEncoderFlush(target);
         }
 
@@ -266,7 +272,7 @@ namespace SharpCompress.Compressor.PPMd.I1
                 offset++;
                 total++;
 
-                if (orderFall == 0 && (Pointer)foundState.Successor >= Allocator.BaseUnit)
+                if (orderFall == 0 && (Pointer) foundState.Successor >= Allocator.BaseUnit)
                 {
                     maximumContext = foundState.Successor;
                 }
@@ -282,7 +288,7 @@ namespace SharpCompress.Compressor.PPMd.I1
                 Coder.RangeDecoderNormalize(source);
             }
 
-        StopDecoding:
+            StopDecoding:
             return total;
         }
 
@@ -322,14 +328,15 @@ namespace SharpCompress.Compressor.PPMd.I1
             maximumContext = Allocator.AllocateContext();
             maximumContext.Suffix = PpmContext.Zero;
             maximumContext.NumberStatistics = 255;
-            maximumContext.SummaryFrequency = (ushort)(maximumContext.NumberStatistics + 2);
-            maximumContext.Statistics = Allocator.AllocateUnits(256 / 2);  // allocates enough space for 256 PPM states (each is 6 bytes)
+            maximumContext.SummaryFrequency = (ushort) (maximumContext.NumberStatistics + 2);
+            maximumContext.Statistics = Allocator.AllocateUnits(256/2);
+                // allocates enough space for 256 PPM states (each is 6 bytes)
 
             previousSuccess = 0;
             for (int index = 0; index < 256; index++)
             {
                 PpmState state = maximumContext.Statistics[index];
-                state.Symbol = (byte)index;
+                state.Symbol = (byte) index;
                 state.Frequency = 1;
                 state.Successor = PpmContext.Zero;
             }
@@ -340,7 +347,8 @@ namespace SharpCompress.Compressor.PPMd.I1
                 while (probabilities[index1] == probability)
                     index1++;
                 for (int index2 = 0; index2 < 8; index2++)
-                    binarySummary[probability, index2] = (ushort)(BinaryScale - InitialBinaryEscapes[index2] / (index1 + 1));
+                    binarySummary[probability, index2] =
+                        (ushort) (BinaryScale - InitialBinaryEscapes[index2]/(index1 + 1));
                 for (int index2 = 8; index2 < 64; index2 += 8)
                     for (int index3 = 0; index3 < 8; index3++)
                         binarySummary[probability, index2 + index3] = binarySummary[probability, index3];
@@ -352,7 +360,7 @@ namespace SharpCompress.Compressor.PPMd.I1
                 while (probabilities[index1 + 3] == probability + 3)
                     index1++;
                 for (int index2 = 0; index2 < 32; index2++)
-                    see2Contexts[probability, index2].Initialize(2 * index1 + 5);
+                    see2Contexts[probability, index2].Initialize(2*index1 + 5);
             }
         }
 
@@ -374,7 +382,7 @@ namespace SharpCompress.Compressor.PPMd.I1
             PpmContext foundStateSuccessor = foundState.Successor;
             PpmContext context = minimumContext.Suffix;
 
-            if ((foundStateFrequency < MaximumFrequency / 4) && (context != PpmContext.Zero))
+            if ((foundStateFrequency < MaximumFrequency/4) && (context != PpmContext.Zero))
             {
                 if (context.NumberStatistics != 0)
                 {
@@ -392,14 +400,14 @@ namespace SharpCompress.Compressor.PPMd.I1
                             state--;
                         }
                     }
-                    cf = (uint)((state.Frequency < MaximumFrequency - 9) ? 2 : 0);
-                    state.Frequency += (byte)cf;
-                    context.SummaryFrequency += (byte)cf;
+                    cf = (uint) ((state.Frequency < MaximumFrequency - 9) ? 2 : 0);
+                    state.Frequency += (byte) cf;
+                    context.SummaryFrequency += (byte) cf;
                 }
                 else
                 {
                     state = context.FirstState;
-                    state.Frequency += (byte)((state.Frequency < 32) ? 1 : 0);
+                    state.Frequency += (byte) ((state.Frequency < 32) ? 1 : 0);
                 }
             }
 
@@ -446,7 +454,7 @@ namespace SharpCompress.Compressor.PPMd.I1
 
             numberStatistics = minimumContext.NumberStatistics;
             s0 = minimumContext.SummaryFrequency - numberStatistics - foundStateFrequency;
-            flag = (byte)((foundStateSymbol >= 0x40) ? 0x08 : 0x00);
+            flag = (byte) ((foundStateSymbol >= 0x40) ? 0x08 : 0x00);
             for (; currentContext != minimumContext; currentContext = currentContext.Suffix)
             {
                 ns1 = currentContext.NumberStatistics;
@@ -459,7 +467,7 @@ namespace SharpCompress.Compressor.PPMd.I1
                             goto RestartModel;
                         currentContext.Statistics = state;
                     }
-                    currentContext.SummaryFrequency += (ushort)((3 * ns1 + 1 < numberStatistics) ? 1 : 0);
+                    currentContext.SummaryFrequency += (ushort) ((3*ns1 + 1 < numberStatistics) ? 1 : 0);
                 }
                 else
                 {
@@ -468,38 +476,39 @@ namespace SharpCompress.Compressor.PPMd.I1
                         goto RestartModel;
                     Copy(state, currentContext.FirstState);
                     currentContext.Statistics = state;
-                    if (state.Frequency < MaximumFrequency / 4 - 1)
+                    if (state.Frequency < MaximumFrequency/4 - 1)
                         state.Frequency += state.Frequency;
                     else
-                        state.Frequency = (byte)(MaximumFrequency - 4);
-                    currentContext.SummaryFrequency = (ushort)(state.Frequency + initialEscape + ((numberStatistics > 2) ? 1 : 0));
+                        state.Frequency = (byte) (MaximumFrequency - 4);
+                    currentContext.SummaryFrequency =
+                        (ushort) (state.Frequency + initialEscape + ((numberStatistics > 2) ? 1 : 0));
                 }
 
-                cf = (uint)(2 * foundStateFrequency * (currentContext.SummaryFrequency + 6));
+                cf = (uint) (2*foundStateFrequency*(currentContext.SummaryFrequency + 6));
                 sf = s0 + currentContext.SummaryFrequency;
 
-                if (cf < 6 * sf)
+                if (cf < 6*sf)
                 {
-                    cf = (uint)(1 + ((cf > sf) ? 1 : 0) + ((cf >= 4 * sf) ? 1 : 0));
+                    cf = (uint) (1 + ((cf > sf) ? 1 : 0) + ((cf >= 4*sf) ? 1 : 0));
                     currentContext.SummaryFrequency += 4;
                 }
                 else
                 {
-                    cf = (uint)(4 + ((cf > 9 * sf) ? 1 : 0) + ((cf > 12 * sf) ? 1 : 0) + ((cf > 15 * sf) ? 1 : 0));
-                    currentContext.SummaryFrequency += (ushort)cf;
+                    cf = (uint) (4 + ((cf > 9*sf) ? 1 : 0) + ((cf > 12*sf) ? 1 : 0) + ((cf > 15*sf) ? 1 : 0));
+                    currentContext.SummaryFrequency += (ushort) cf;
                 }
 
                 state = currentContext.Statistics + (++currentContext.NumberStatistics);
                 state.Successor = Successor;
                 state.Symbol = foundStateSymbol;
-                state.Frequency = (byte)cf;
+                state.Frequency = (byte) cf;
                 currentContext.Flags |= flag;
             }
 
             maximumContext = foundStateSuccessor;
             return;
 
-        RestartModel:
+            RestartModel:
             RestoreModel(currentContext, minimumContext, foundStateSuccessor);
         }
 
@@ -545,17 +554,18 @@ namespace SharpCompress.Compressor.PPMd.I1
                             state++;
                         } while (temporary != symbol);
                     }
-                    temporary = (byte)((state.Frequency < MaximumFrequency - 9) ? 1 : 0);
+                    temporary = (byte) ((state.Frequency < MaximumFrequency - 9) ? 1 : 0);
                     state.Frequency += temporary;
                     context.SummaryFrequency += temporary;
                 }
                 else
                 {
                     state = context.FirstState;
-                    state.Frequency += (byte)(((context.Suffix.NumberStatistics == 0) ? 1 : 0) & ((state.Frequency < 24) ? 1 : 0));
+                    state.Frequency +=
+                        (byte) (((context.Suffix.NumberStatistics == 0) ? 1 : 0) & ((state.Frequency < 24) ? 1 : 0));
                 }
 
-            LoopEntry:
+                LoopEntry:
                 if (state.Successor != upBranch)
                 {
                     context = state.Successor;
@@ -564,17 +574,17 @@ namespace SharpCompress.Compressor.PPMd.I1
                 states[stateIndex++] = state;
             } while (context.Suffix != PpmContext.Zero);
 
-        NoLoop:
+            NoLoop:
             if (stateIndex == 0)
                 return context;
 
             byte localNumberStatistics = 0;
-            byte localFlags = (byte)((symbol >= 0x40) ? 0x10 : 0x00);
+            byte localFlags = (byte) ((symbol >= 0x40) ? 0x10 : 0x00);
             symbol = upBranch.NumberStatistics;
             byte localSymbol = symbol;
             byte localFrequency;
-            PpmContext localSuccessor = ((Pointer)upBranch) + 1;
-            localFlags |= (byte)((symbol >= 0x40) ? 0x08 : 0x00);
+            PpmContext localSuccessor = ((Pointer) upBranch) + 1;
+            localFlags |= (byte) ((symbol >= 0x40) ? 0x08 : 0x00);
 
             if (context.NumberStatistics != 0)
             {
@@ -588,9 +598,9 @@ namespace SharpCompress.Compressor.PPMd.I1
                         state++;
                     } while (temporary != symbol);
                 }
-                uint cf = (uint)(state.Frequency - 1);
-                uint s0 = (uint)(context.SummaryFrequency - context.NumberStatistics - cf);
-                localFrequency = (byte)(1 + ((2 * cf <= s0) ? (uint)((5 * cf > s0) ? 1 : 0) : ((cf + 2 * s0 - 3) / s0)));
+                uint cf = (uint) (state.Frequency - 1);
+                uint s0 = (uint) (context.SummaryFrequency - context.NumberStatistics - cf);
+                localFrequency = (byte) (1 + ((2*cf <= s0) ? (uint) ((5*cf > s0) ? 1 : 0) : ((cf + 2*s0 - 3)/s0)));
             }
             else
             {
@@ -670,17 +680,17 @@ namespace SharpCompress.Compressor.PPMd.I1
                             state++;
                         } while (temporary != symbol);
                     }
-                    temporary = (byte)((state.Frequency < MaximumFrequency - 9) ? 2 : 0);
+                    temporary = (byte) ((state.Frequency < MaximumFrequency - 9) ? 2 : 0);
                     state.Frequency += temporary;
                     context.SummaryFrequency += temporary;
                 }
                 else
                 {
                     state = context.FirstState;
-                    state.Frequency += (byte)((state.Frequency < 32) ? 1 : 0);
+                    state.Frequency += (byte) ((state.Frequency < 32) ? 1 : 0);
                 }
 
-            LoopEntry:
+                LoopEntry:
                 if (state.Successor != PpmContext.Zero)
                     break;
                 states[stateIndex++] = state;
@@ -725,30 +735,32 @@ namespace SharpCompress.Compressor.PPMd.I1
             {
                 if (--currentContext.NumberStatistics == 0)
                 {
-                    currentContext.Flags = (byte)((currentContext.Flags & 0x10) + ((currentContext.Statistics.Symbol >= 0x40) ? 0x08 : 0x00));
+                    currentContext.Flags =
+                        (byte)
+                        ((currentContext.Flags & 0x10) + ((currentContext.Statistics.Symbol >= 0x40) ? 0x08 : 0x00));
                     PpmState state = currentContext.Statistics;
                     Copy(currentContext.FirstState, state);
                     Allocator.SpecialFreeUnits(state);
-                    currentContext.FirstStateFrequency = (byte)((currentContext.FirstStateFrequency + 11) >> 3);
+                    currentContext.FirstStateFrequency = (byte) ((currentContext.FirstStateFrequency + 11) >> 3);
                 }
                 else
                 {
-                    Refresh((uint)((currentContext.NumberStatistics + 3) >> 1), false, currentContext);
+                    Refresh((uint) ((currentContext.NumberStatistics + 3) >> 1), false, currentContext);
                 }
             }
 
             for (; currentContext != minimumContext; currentContext = currentContext.Suffix)
             {
                 if (currentContext.NumberStatistics == 0)
-                    currentContext.FirstStateFrequency -= (byte)(currentContext.FirstStateFrequency >> 1);
-                else if ((currentContext.SummaryFrequency += 4) > 128 + 4 * currentContext.NumberStatistics)
-                    Refresh((uint)((currentContext.NumberStatistics + 2) >> 1), true, currentContext);
+                    currentContext.FirstStateFrequency -= (byte) (currentContext.FirstStateFrequency >> 1);
+                else if ((currentContext.SummaryFrequency += 4) > 128 + 4*currentContext.NumberStatistics)
+                    Refresh((uint) ((currentContext.NumberStatistics + 2) >> 1), true, currentContext);
             }
 
             if (method > ModelRestorationMethod.Freeze)
             {
                 maximumContext = foundStateSuccessor;
-                Allocator.GlueCount += (uint)(((Allocator.MemoryNodes[1].Stamp & 1) == 0) ? 1 : 0);
+                Allocator.GlueCount += (uint) (((Allocator.MemoryNodes[1].Stamp & 1) == 0) ? 1 : 0);
             }
             else if (method == ModelRestorationMethod.Freeze)
             {
@@ -756,11 +768,12 @@ namespace SharpCompress.Compressor.PPMd.I1
                     maximumContext = maximumContext.Suffix;
 
                 RemoveBinaryContexts(0, maximumContext);
-                method = (ModelRestorationMethod)(method + 1);
+                method = (ModelRestorationMethod) (method + 1);
                 Allocator.GlueCount = 0;
                 orderFall = modelOrder;
             }
-            else if (method == ModelRestorationMethod.Restart || Allocator.GetMemoryUsed() < (Allocator.AllocatorSize >> 1))
+            else if (method == ModelRestorationMethod.Restart ||
+                     Allocator.GetMemoryUsed() < (Allocator.AllocatorSize >> 1))
             {
                 StartModel(modelOrder, method);
                 escapeCount = 0;
@@ -774,7 +787,7 @@ namespace SharpCompress.Compressor.PPMd.I1
                 {
                     CutOff(0, maximumContext);
                     Allocator.ExpandText();
-                } while (Allocator.GetMemoryUsed() > 3 * (Allocator.AllocatorSize >> 2));
+                } while (Allocator.GetMemoryUsed() > 3*(Allocator.AllocatorSize >> 2));
 
                 Allocator.GlueCount = 0;
                 orderFall = modelOrder;

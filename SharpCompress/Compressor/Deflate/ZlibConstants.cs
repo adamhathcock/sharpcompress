@@ -61,7 +61,6 @@
 // -----------------------------------------------------------------------
 
 
-
 namespace SharpCompress.Compressor.Deflate
 {
     /// <summary>
@@ -117,11 +116,10 @@ namespace SharpCompress.Compressor.Deflate
 #else
         public const int WorkingBufferSizeDefault = 16384;
 #endif
+
         /// <summary>
         /// The minimum size of the working buffer used in the ZlibCodec class.  Currently it is 128 bytes.
         /// </summary>
         public const int WorkingBufferSizeMin = 1024;
     }
-
 }
-

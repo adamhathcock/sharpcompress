@@ -14,7 +14,7 @@ namespace SharpCompress.Archive.Tar
         private bool closeStream;
 
         internal TarWritableArchiveEntry(TarArchive archive, Stream stream, CompressionType compressionType,
-            string path, long size, DateTime? lastModified, bool closeStream)
+                                         string path, long size, DateTime? lastModified, bool closeStream)
             : base(archive, null, compressionType)
         {
             this.Stream = stream;
@@ -29,14 +29,20 @@ namespace SharpCompress.Archive.Tar
             get { return 0; }
         }
 
-        public override string FilePath { get { return path; } }
+        public override string FilePath
+        {
+            get { return path; }
+        }
 
         public override long CompressedSize
         {
             get { return 0; }
         }
 
-        public override long Size { get { return size; } }
+        public override long Size
+        {
+            get { return size; }
+        }
 
         public override DateTime? LastModifiedTime
         {
@@ -87,10 +93,10 @@ namespace SharpCompress.Archive.Tar
 
         internal override void Close()
         {
-           if (closeStream)
-           {
-              Stream.Dispose();
-           }
+            if (closeStream)
+            {
+                Stream.Dispose();
+            }
         }
     }
 }

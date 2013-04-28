@@ -28,7 +28,7 @@ namespace SharpCompress.Archive
             {
                 throw new ArgumentException("File does not exist: " + fileInfo.FullName);
             }
-            options = (Options)FlagUtility.SetFlag(options, Options.KeepStreamsOpen, false);
+            options = (Options) FlagUtility.SetFlag(options, Options.KeepStreamsOpen, false);
             lazyVolumes = new LazyReadOnlyCollection<TVolume>(LoadVolumes(fileInfo, options));
             lazyEntries = new LazyReadOnlyCollection<TEntry>(LoadEntries(Volumes));
         }
@@ -40,7 +40,8 @@ namespace SharpCompress.Archive
         internal AbstractArchive(ArchiveType type, IEnumerable<Stream> streams, Options options)
         {
             this.Type = type;
-            lazyVolumes = new LazyReadOnlyCollection<TVolume>(LoadVolumes(streams.Select<Stream, Stream>(CheckStreams), options));
+            lazyVolumes =
+                new LazyReadOnlyCollection<TVolume>(LoadVolumes(streams.Select<Stream, Stream>(CheckStreams), options));
             lazyEntries = new LazyReadOnlyCollection<TEntry>(LoadEntries(Volumes));
         }
 
@@ -141,10 +142,10 @@ namespace SharpCompress.Archive
             if (CompressedBytesRead != null)
             {
                 CompressedBytesRead(this, new CompressedBytesReadEventArgs()
-                    {
-                        CurrentFilePartCompressedBytesRead = currentPartCompressedBytes,
-                        CompressedBytesRead = compressedReadBytes
-                    });
+                                              {
+                                                  CurrentFilePartCompressedBytesRead = currentPartCompressedBytes,
+                                                  CompressedBytesRead = compressedReadBytes
+                                              });
             }
         }
 
@@ -153,11 +154,11 @@ namespace SharpCompress.Archive
             if (FilePartExtractionBegin != null)
             {
                 FilePartExtractionBegin(this, new FilePartExtractionBeginEventArgs()
-                {
-                    CompressedSize = compressedSize,
-                    Size = size,
-                    Name = name,
-                });
+                                                  {
+                                                      CompressedSize = compressedSize,
+                                                      Size = size,
+                                                      Name = name,
+                                                  });
             }
         }
 
@@ -185,10 +186,7 @@ namespace SharpCompress.Archive
         /// </summary>
         public virtual bool IsSolid
         {
-            get
-            {
-                return false;
-            }
+            get { return false; }
         }
 
 

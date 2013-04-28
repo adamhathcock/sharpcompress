@@ -6,10 +6,12 @@ namespace SharpCompress.Common
     public enum ExtractOptions
     {
         None,
+
         /// <summary>
         /// overwrite target if it exists
         /// </summary>
         Overwrite,
+
         /// <summary>
         /// extract with internal directory structure
         /// </summary>

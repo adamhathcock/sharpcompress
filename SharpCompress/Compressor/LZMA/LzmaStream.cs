@@ -46,7 +46,7 @@ namespace SharpCompress.Compressor.LZMA
         }
 
         public LzmaStream(byte[] properties, Stream inputStream, long inputSize, long outputSize,
-            Stream presetDictionary, bool isLZMA2)
+                          Stream presetDictionary, bool isLZMA2)
         {
             this.inputStream = inputStream;
             this.inputSize = inputSize;
@@ -147,14 +147,8 @@ namespace SharpCompress.Compressor.LZMA
 
         public override long Position
         {
-            get
-            {
-                return position;
-            }
-            set
-            {
-                throw new NotImplementedException();
-            }
+            get { return position; }
+            set { throw new NotImplementedException(); }
         }
 
         public override int Read(byte[] buffer, int offset, int count)
@@ -185,7 +179,7 @@ namespace SharpCompress.Compressor.LZMA
                     inputPosition += outWindow.CopyStream(inputStream, toProcess);
                 }
                 else if (decoder.Code(dictionarySize, outWindow, rangeDecoder)
-                        && outputSize < 0)
+                         && outputSize < 0)
                 {
                     availableBytes = outWindow.AvailableBytes;
                 }
@@ -296,10 +290,7 @@ namespace SharpCompress.Compressor.LZMA
 
         public byte[] Properties
         {
-            get
-            {
-                return props;
-            }
+            get { return props; }
         }
     }
 }

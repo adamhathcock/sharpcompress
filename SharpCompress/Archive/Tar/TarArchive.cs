@@ -102,7 +102,7 @@ namespace SharpCompress.Archive.Tar
             {
                 TarHeader tar = new TarHeader();
                 tar.Read(new BinaryReader(stream));
-                return tar.Name.Length > 0 && Enum.IsDefined(typeof(EntryType), tar.EntryType);
+                return tar.Name.Length > 0 && Enum.IsDefined(typeof (EntryType), tar.EntryType);
             }
             catch
             {
@@ -163,7 +163,8 @@ namespace SharpCompress.Archive.Tar
                     {
                         if (previousHeader != null)
                         {
-                            var entry = new TarArchiveEntry(this, new TarFilePart(previousHeader, stream), CompressionType.None);
+                            var entry = new TarArchiveEntry(this, new TarFilePart(previousHeader, stream),
+                                                            CompressionType.None);
                             var memoryStream = new MemoryStream();
                             entry.WriteTo(memoryStream);
                             memoryStream.Position = 0;
@@ -183,19 +184,20 @@ namespace SharpCompress.Archive.Tar
         }
 
         protected override TarArchiveEntry CreateEntry(string filePath, Stream source,
-            long size, DateTime? modified, bool closeStream)
+                                                       long size, DateTime? modified, bool closeStream)
         {
-            return new TarWritableArchiveEntry(this, source, CompressionType.Unknown, filePath, size, modified, closeStream);
+            return new TarWritableArchiveEntry(this, source, CompressionType.Unknown, filePath, size, modified,
+                                               closeStream);
         }
 
         protected override void SaveTo(Stream stream, CompressionInfo compressionInfo,
-            IEnumerable<TarArchiveEntry> oldEntries,
-            IEnumerable<TarArchiveEntry> newEntries)
+                                       IEnumerable<TarArchiveEntry> oldEntries,
+                                       IEnumerable<TarArchiveEntry> newEntries)
         {
             using (var writer = new TarWriter(stream, compressionInfo))
             {
                 foreach (var entry in oldEntries.Concat(newEntries)
-                    .Where(x => !x.IsDirectory))
+                                                .Where(x => !x.IsDirectory))
                 {
                     using (var entryStream = entry.OpenEntryStream())
                     {

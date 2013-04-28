@@ -85,10 +85,11 @@ namespace SharpCompress.Common.Zip
                         reader.ReadUInt16(); //LZMA version
                         var props = new byte[reader.ReadUInt16()];
                         reader.Read(props, 0, props.Length);
-                        return new LzmaStream(props, stream, Header.CompressedSize > 0 ? Header.CompressedSize - 4 - props.Length : -1,
+                        return new LzmaStream(props, stream,
+                                              Header.CompressedSize > 0 ? Header.CompressedSize - 4 - props.Length : -1,
                                               FlagUtility.HasFlag(Header.Flags, HeaderFlags.Bit1)
                                                   ? -1
-                                                  : (long)Header.UncompressedSize);
+                                                  : (long) Header.UncompressedSize);
                     }
                 case ZipCompressionMethod.PPMd:
                     {
@@ -119,7 +120,7 @@ namespace SharpCompress.Common.Zip
                         {
                             throw new InvalidFormatException("Unexpected vendor ID for WinZip AES metadata");
                         }
-                        Header.CompressionMethod = (ZipCompressionMethod)BitConverter.ToUInt16(data.DataBytes, 5);
+                        Header.CompressionMethod = (ZipCompressionMethod) BitConverter.ToUInt16(data.DataBytes, 5);
                         return CreateDecompressionStream(stream);
                     }
                 default:
@@ -133,8 +134,8 @@ namespace SharpCompress.Common.Zip
         {
             if ((Header.CompressedSize == 0)
 #if !PORTABLE
- && ((Header.PkwareTraditionalEncryptionData != null)
-                || (Header.WinzipAesEncryptionData != null)))
+                && ((Header.PkwareTraditionalEncryptionData != null)
+                    || (Header.WinzipAesEncryptionData != null)))
 #else 
                 && (Header.PkwareTraditionalEncryptionData != null))
 #endif
@@ -166,5 +167,4 @@ namespace SharpCompress.Common.Zip
             return plainStream;
         }
     }
-
 }

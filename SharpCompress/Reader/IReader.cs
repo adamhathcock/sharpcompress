@@ -9,15 +9,9 @@ namespace SharpCompress.Reader
         event EventHandler<CompressedBytesReadEventArgs> CompressedBytesRead;
         event EventHandler<FilePartExtractionBeginEventArgs> FilePartExtractionBegin;
 
-        ArchiveType ArchiveType
-        {
-            get;
-        }
+        ArchiveType ArchiveType { get; }
 
-        IEntry Entry
-        {
-            get;
-        }
+        IEntry Entry { get; }
 
         /// <summary>
         /// Decompresses the current entry to the stream.  This cannot be called twice for the current entry.

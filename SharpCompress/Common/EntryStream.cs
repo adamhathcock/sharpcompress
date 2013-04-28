@@ -29,7 +29,8 @@ namespace SharpCompress.Common
         {
             if (!completed)
             {
-                throw new InvalidOperationException("EntryStream has not been fully consumed.  Read the entire stream or use SkipEntry.");
+                throw new InvalidOperationException(
+                    "EntryStream has not been fully consumed.  Read the entire stream or use SkipEntry.");
             }
             base.Dispose(disposing);
             stream.Dispose();
@@ -62,14 +63,8 @@ namespace SharpCompress.Common
 
         public override long Position
         {
-            get
-            {
-                throw new System.NotImplementedException();
-            }
-            set
-            {
-                throw new System.NotImplementedException();
-            }
+            get { throw new System.NotImplementedException(); }
+            set { throw new System.NotImplementedException(); }
         }
 
         public override int Read(byte[] buffer, int offset, int count)

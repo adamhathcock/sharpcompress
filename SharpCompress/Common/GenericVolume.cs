@@ -27,27 +27,18 @@ namespace SharpCompress.Common
         /// </summary>
         public override FileInfo VolumeFile
         {
-            get
-            {
-                return fileInfo;
-            }
+            get { return fileInfo; }
         }
 #endif
 
         public override bool IsFirstVolume
         {
-            get
-            {
-                return true;
-            }
+            get { return true; }
         }
 
         public override bool IsMultiVolume
         {
-            get
-            {
-                return true;
-            }
+            get { return true; }
         }
     }
 }

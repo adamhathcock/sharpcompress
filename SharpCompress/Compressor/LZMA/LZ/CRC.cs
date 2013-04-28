@@ -20,24 +20,30 @@ namespace SharpCompress.Compressor.LZMA.LZ
             }
         }
 
-        uint _value = 0xFFFFFFFF;
+        private uint _value = 0xFFFFFFFF;
 
-        public void Init() { _value = 0xFFFFFFFF; }
+        public void Init()
+        {
+            _value = 0xFFFFFFFF;
+        }
 
         public void UpdateByte(byte b)
         {
-            _value = Table[(((byte)(_value)) ^ b)] ^ (_value >> 8);
+            _value = Table[(((byte) (_value)) ^ b)] ^ (_value >> 8);
         }
 
         public void Update(byte[] data, uint offset, uint size)
         {
             for (uint i = 0; i < size; i++)
-                _value = Table[(((byte)(_value)) ^ data[offset + i])] ^ (_value >> 8);
+                _value = Table[(((byte) (_value)) ^ data[offset + i])] ^ (_value >> 8);
         }
 
-        public uint GetDigest() { return _value ^ 0xFFFFFFFF; }
+        public uint GetDigest()
+        {
+            return _value ^ 0xFFFFFFFF;
+        }
 
-        static uint CalculateDigest(byte[] data, uint offset, uint size)
+        private static uint CalculateDigest(byte[] data, uint offset, uint size)
         {
             CRC crc = new CRC();
             // crc.Init();
@@ -45,7 +51,7 @@ namespace SharpCompress.Compressor.LZMA.LZ
             return crc.GetDigest();
         }
 
-        static bool VerifyDigest(uint digest, byte[] data, uint offset, uint size)
+        private static bool VerifyDigest(uint digest, byte[] data, uint offset, uint size)
         {
             return (CalculateDigest(data, offset, size) == digest);
         }

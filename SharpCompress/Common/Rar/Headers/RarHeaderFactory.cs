@@ -15,17 +15,9 @@ namespace SharpCompress.Common.Rar.Headers
             Options = options;
         }
 
-        private Options Options
-        {
-            get;
-            set;
-        }
+        private Options Options { get; set; }
 
-        internal StreamingMode StreamingMode
-        {
-            get;
-            private set;
-        }
+        internal StreamingMode StreamingMode { get; private set; }
 
         internal IEnumerable<RarHeader> ReadHeaders(Stream stream)
         {

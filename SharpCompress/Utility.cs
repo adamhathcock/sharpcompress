@@ -37,7 +37,7 @@ namespace SharpCompress
         /// <returns>The resulting number from the shift operation</returns>
         public static int URShift(int number, long bits)
         {
-            return URShift(number, (int)bits);
+            return URShift(number, (int) bits);
         }
 
         /// <summary>
@@ -62,7 +62,7 @@ namespace SharpCompress
         /// <returns>The resulting number from the shift operation</returns>
         public static long URShift(long number, long bits)
         {
-            return URShift(number, (int)bits);
+            return URShift(number, (int) bits);
         }
 
         /// <summary>
@@ -82,7 +82,7 @@ namespace SharpCompress
             {
                 throw new ArgumentException();
             }
-            if ((fromindex < 0) || ((System.Array)array).Length < toindex)
+            if ((fromindex < 0) || ((System.Array) array).Length < toindex)
             {
                 throw new IndexOutOfRangeException();
             }
@@ -183,10 +183,10 @@ namespace SharpCompress
         /// </param>
         public static void writeIntBigEndian(byte[] array, int pos, int value)
         {
-            array[pos] = (byte)((Utility.URShift(value, 24)) & 0xff);
-            array[pos + 1] = (byte)((Utility.URShift(value, 16)) & 0xff);
-            array[pos + 2] = (byte)((Utility.URShift(value, 8)) & 0xff);
-            array[pos + 3] = (byte)((value) & 0xff);
+            array[pos] = (byte) ((Utility.URShift(value, 24)) & 0xff);
+            array[pos + 1] = (byte) ((Utility.URShift(value, 16)) & 0xff);
+            array[pos + 2] = (byte) ((Utility.URShift(value, 8)) & 0xff);
+            array[pos + 3] = (byte) ((value) & 0xff);
         }
 
         /// <summary> Write a short value into the byte array at the given position (little
@@ -206,11 +206,11 @@ namespace SharpCompress
             Array.Copy(newBytes, 0, array, pos, newBytes.Length);
         }
 #else
-        unsafe public static void WriteLittleEndian(byte[] array, int pos, short value)
+        public static unsafe void WriteLittleEndian(byte[] array, int pos, short value)
         {
             fixed (byte* numRef = &(array[pos]))
             {
-                *((short*)numRef) = value;
+                *((short*) numRef) = value;
             }
         }
 #endif
@@ -248,11 +248,11 @@ namespace SharpCompress
             Array.Copy(newBytes, 0, array, pos, newBytes.Length);
         }
 #else
-        unsafe public static void WriteLittleEndian(byte[] array, int pos, int value)
+        public static unsafe void WriteLittleEndian(byte[] array, int pos, int value)
         {
             fixed (byte* numRef = &(array[pos]))
             {
-                *((int*)numRef) = value;
+                *((int*) numRef) = value;
             }
         }
 #endif
@@ -305,7 +305,7 @@ namespace SharpCompress
 
         public static void Skip(this Stream source, long advanceAmount)
         {
-            byte[] buffer = new byte[32 * 1024];
+            byte[] buffer = new byte[32*1024];
             int read = 0;
             int readCount = 0;
             do
@@ -313,7 +313,7 @@ namespace SharpCompress
                 readCount = buffer.Length;
                 if (readCount > advanceAmount)
                 {
-                    readCount = (int)advanceAmount;
+                    readCount = (int) advanceAmount;
                 }
                 read = source.Read(buffer, 0, readCount);
                 if (read < 0)
@@ -330,7 +330,7 @@ namespace SharpCompress
 
         public static void SkipAll(this Stream source)
         {
-            byte[] buffer = new byte[32 * 1024];
+            byte[] buffer = new byte[32*1024];
             do
             {
             } while (source.Read(buffer, 0, buffer.Length) == buffer.Length);
@@ -339,21 +339,23 @@ namespace SharpCompress
 
         public static byte[] UInt32ToBigEndianBytes(uint x)
         {
-            return new byte[] { 
-                (byte)((x >> 24) & 0xff), 
-                (byte)((x >> 16) & 0xff), 
-                (byte)((x >> 8) & 0xff), 
-                (byte)(x & 0xff) };
+            return new byte[]
+                       {
+                           (byte) ((x >> 24) & 0xff),
+                           (byte) ((x >> 16) & 0xff),
+                           (byte) ((x >> 8) & 0xff),
+                           (byte) (x & 0xff)
+                       };
         }
 
         public static DateTime DosDateToDateTime(UInt16 iDate, UInt16 iTime)
         {
-            int year = iDate / 512 + 1980;
-            int month = iDate % 512 / 32;
-            int day = iDate % 512 % 32;
-            int hour = iTime / 2048;
-            int minute = iTime % 2048 / 32;
-            int second = iTime % 2048 % 32 * 2;
+            int year = iDate/512 + 1980;
+            int month = iDate%512/32;
+            int day = iDate%512%32;
+            int hour = iTime/2048;
+            int minute = iTime%2048/32;
+            int second = iTime%2048%32*2;
 
             if (iDate == UInt16.MaxValue || month == 0 || day == 0)
             {
@@ -385,21 +387,22 @@ namespace SharpCompress
             {
                 return 0;
             }
-            return (uint)(
-                (dateTime.Value.Second / 2) | (dateTime.Value.Minute << 5) | (dateTime.Value.Hour << 11) |
-                (dateTime.Value.Day << 16) | (dateTime.Value.Month << 21) | ((dateTime.Value.Year - 1980) << 25));
+            return (uint) (
+                              (dateTime.Value.Second/2) | (dateTime.Value.Minute << 5) | (dateTime.Value.Hour << 11) |
+                              (dateTime.Value.Day << 16) | (dateTime.Value.Month << 21) |
+                              ((dateTime.Value.Year - 1980) << 25));
         }
 
 
         public static DateTime DosDateToDateTime(UInt32 iTime)
         {
-            return DosDateToDateTime((UInt16)(iTime / 65536),
-                                     (UInt16)(iTime % 65536));
+            return DosDateToDateTime((UInt16) (iTime/65536),
+                                     (UInt16) (iTime%65536));
         }
 
         public static DateTime DosDateToDateTime(Int32 iTime)
         {
-            return DosDateToDateTime((UInt32)iTime);
+            return DosDateToDateTime((UInt32) iTime);
         }
 
         public static long TransferTo(this Stream source, Stream destination)
@@ -453,7 +456,7 @@ namespace SharpCompress
 
 
         internal static void Extract<TEntry, TVolume>(this TEntry entry,
-            AbstractArchive<TEntry, TVolume> archive, Stream streamToWriteTo)
+                                                      AbstractArchive<TEntry, TVolume> archive, Stream streamToWriteTo)
             where TEntry : IArchiveEntry
             where TVolume : IVolume
         {
@@ -464,7 +467,7 @@ namespace SharpCompress
 
             archive.EnsureEntriesLoaded();
             archive.FireEntryExtractionBegin(entry);
-            ((IStreamListener)archive).FireFilePartExtractionBegin(entry.FilePath, entry.Size, entry.CompressedSize);
+            ((IStreamListener) archive).FireFilePartExtractionBegin(entry.FilePath, entry.Size, entry.CompressedSize);
             using (Stream s = new ListeningStream(archive, entry.OpenEntryStream()))
             {
                 s.TransferTo(streamToWriteTo);

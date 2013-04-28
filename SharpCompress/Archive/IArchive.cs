@@ -13,18 +13,9 @@ namespace SharpCompress.Archive
         event EventHandler<CompressedBytesReadEventArgs> CompressedBytesRead;
         event EventHandler<FilePartExtractionBeginEventArgs> FilePartExtractionBegin;
 
-        IEnumerable<IArchiveEntry> Entries
-        {
-            get;
-        }
-        long TotalSize
-        {
-            get;
-        }
-        IEnumerable<IVolume> Volumes
-        {
-            get;
-        }
+        IEnumerable<IArchiveEntry> Entries { get; }
+        long TotalSize { get; }
+        IEnumerable<IVolume> Volumes { get; }
 
         ArchiveType Type { get; }
 
@@ -40,10 +31,7 @@ namespace SharpCompress.Archive
         /// Archive is SOLID (this means the Archive saved bytes by reusing information which helps for archives containing many small files).
         /// Rar Archives can be SOLID while all 7Zip archives are considered SOLID.
         /// </summary>
-        bool IsSolid
-        {
-            get;
-        }
+        bool IsSolid { get; }
 
         /// <summary>
         /// This checks to see if all the known entries have IsComplete = true

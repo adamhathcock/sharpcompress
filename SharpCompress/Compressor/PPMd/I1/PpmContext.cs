@@ -1,7 +1,5 @@
 #region Using
 
-
-
 #endregion
 
 namespace SharpCompress.Compressor.PPMd.I1
@@ -60,11 +58,11 @@ namespace SharpCompress.Compressor.PPMd.I1
             /// </summary>
             public ushort SummaryFrequency
             {
-                get { return (ushort)(((ushort)Memory[Address + 2]) | ((ushort)Memory[Address + 3]) << 8); }
+                get { return (ushort) (((ushort) Memory[Address + 2]) | ((ushort) Memory[Address + 3]) << 8); }
                 set
                 {
-                    Memory[Address + 2] = (byte)value;
-                    Memory[Address + 3] = (byte)(value >> 8);
+                    Memory[Address + 2] = (byte) value;
+                    Memory[Address + 3] = (byte) (value >> 8);
                 }
             }
 
@@ -73,13 +71,19 @@ namespace SharpCompress.Compressor.PPMd.I1
             /// </summary>
             public PpmState Statistics
             {
-                get { return new PpmState(((uint)Memory[Address + 4]) | ((uint)Memory[Address + 5]) << 8 | ((uint)Memory[Address + 6]) << 16 | ((uint)Memory[Address + 7]) << 24, Memory); }
+                get
+                {
+                    return
+                        new PpmState(
+                            ((uint) Memory[Address + 4]) | ((uint) Memory[Address + 5]) << 8 |
+                            ((uint) Memory[Address + 6]) << 16 | ((uint) Memory[Address + 7]) << 24, Memory);
+                }
                 set
                 {
-                    Memory[Address + 4] = (byte)value.Address;
-                    Memory[Address + 5] = (byte)(value.Address >> 8);
-                    Memory[Address + 6] = (byte)(value.Address >> 16);
-                    Memory[Address + 7] = (byte)(value.Address >> 24);
+                    Memory[Address + 4] = (byte) value.Address;
+                    Memory[Address + 5] = (byte) (value.Address >> 8);
+                    Memory[Address + 6] = (byte) (value.Address >> 16);
+                    Memory[Address + 7] = (byte) (value.Address >> 24);
                 }
             }
 
@@ -88,13 +92,19 @@ namespace SharpCompress.Compressor.PPMd.I1
             /// </summary>
             public PpmContext Suffix
             {
-                get { return new PpmContext(((uint)Memory[Address + 8]) | ((uint)Memory[Address + 9]) << 8 | ((uint)Memory[Address + 10]) << 16 | ((uint)Memory[Address + 11]) << 24, Memory); }
+                get
+                {
+                    return
+                        new PpmContext(
+                            ((uint) Memory[Address + 8]) | ((uint) Memory[Address + 9]) << 8 |
+                            ((uint) Memory[Address + 10]) << 16 | ((uint) Memory[Address + 11]) << 24, Memory);
+                }
                 set
                 {
-                    Memory[Address + 8] = (byte)value.Address;
-                    Memory[Address + 9] = (byte)(value.Address >> 8);
-                    Memory[Address + 10] = (byte)(value.Address >> 16);
-                    Memory[Address + 11] = (byte)(value.Address >> 24);
+                    Memory[Address + 8] = (byte) value.Address;
+                    Memory[Address + 9] = (byte) (value.Address >> 8);
+                    Memory[Address + 10] = (byte) (value.Address >> 16);
+                    Memory[Address + 11] = (byte) (value.Address >> 24);
                 }
             }
 
@@ -133,7 +143,8 @@ namespace SharpCompress.Compressor.PPMd.I1
             /// information can be obtained using the Symbol property on the PPM state provided by the
             /// <see cref="FirstState"/> property.
             /// </summary>
-            [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode", Justification = "The property getter is provided for completeness.")]
+            [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode",
+                Justification = "The property getter is provided for completeness.")]
             public byte FirstStateSymbol
             {
                 get { return Memory[Address + 2]; }
@@ -155,16 +166,23 @@ namespace SharpCompress.Compressor.PPMd.I1
             /// Gets or sets the successor of the first PPM state.  This is provided for convenience.  The same
             /// information can be obtained using the Successor property on the PPM state provided by the
             /// </summary>
-            [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode", Justification = "The property getter is provided for completeness.")]
+            [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode",
+                Justification = "The property getter is provided for completeness.")]
             public PpmContext FirstStateSuccessor
             {
-                get { return new PpmContext(((uint)Memory[Address + 4]) | ((uint)Memory[Address + 5]) << 8 | ((uint)Memory[Address + 6]) << 16 | ((uint)Memory[Address + 7]) << 24, Memory); }
+                get
+                {
+                    return
+                        new PpmContext(
+                            ((uint) Memory[Address + 4]) | ((uint) Memory[Address + 5]) << 8 |
+                            ((uint) Memory[Address + 6]) << 16 | ((uint) Memory[Address + 7]) << 24, Memory);
+                }
                 set
                 {
-                    Memory[Address + 4] = (byte)value.Address;
-                    Memory[Address + 5] = (byte)(value.Address >> 8);
-                    Memory[Address + 6] = (byte)(value.Address >> 16);
-                    Memory[Address + 7] = (byte)(value.Address >> 24);
+                    Memory[Address + 4] = (byte) value.Address;
+                    Memory[Address + 5] = (byte) (value.Address >> 8);
+                    Memory[Address + 6] = (byte) (value.Address >> 16);
+                    Memory[Address + 7] = (byte) (value.Address >> 24);
                 }
             }
 
@@ -186,7 +204,7 @@ namespace SharpCompress.Compressor.PPMd.I1
             /// <returns></returns>
             public static PpmContext operator +(PpmContext context, int offset)
             {
-                context.Address = (uint)(context.Address + offset * Size);
+                context.Address = (uint) (context.Address + offset*Size);
                 return context;
             }
 
@@ -198,7 +216,7 @@ namespace SharpCompress.Compressor.PPMd.I1
             /// <returns></returns>
             public static PpmContext operator -(PpmContext context, int offset)
             {
-                context.Address = (uint)(context.Address - offset * Size);
+                context.Address = (uint) (context.Address - offset*Size);
                 return context;
             }
 
@@ -255,7 +273,7 @@ namespace SharpCompress.Compressor.PPMd.I1
             {
                 if (obj is PpmContext)
                 {
-                    PpmContext context = (PpmContext)obj;
+                    PpmContext context = (PpmContext) obj;
                     return context.Address == Address;
                 }
                 return base.Equals(obj);
@@ -275,22 +293,24 @@ namespace SharpCompress.Compressor.PPMd.I1
         {
             PpmState state = context.FirstState;
             int index1 = probabilities[state.Frequency - 1];
-            int index2 = numberStatisticsToBinarySummaryIndex[context.Suffix.NumberStatistics] + previousSuccess + context.Flags + ((runLength >> 26) & 0x20);
+            int index2 = numberStatisticsToBinarySummaryIndex[context.Suffix.NumberStatistics] + previousSuccess +
+                         context.Flags + ((runLength >> 26) & 0x20);
 
             if (state.Symbol == symbol)
             {
                 foundState = state;
-                state.Frequency += (byte)((state.Frequency < 196) ? 1 : 0);
+                state.Frequency += (byte) ((state.Frequency < 196) ? 1 : 0);
                 Coder.LowCount = 0;
                 Coder.HighCount = binarySummary[index1, index2];
-                binarySummary[index1, index2] += (ushort)(Interval - Mean(binarySummary[index1, index2], PeriodBitCount, 2));
+                binarySummary[index1, index2] +=
+                    (ushort) (Interval - Mean(binarySummary[index1, index2], PeriodBitCount, 2));
                 previousSuccess = 1;
                 runLength++;
             }
             else
             {
                 Coder.LowCount = binarySummary[index1, index2];
-                binarySummary[index1, index2] -= (ushort)Mean(binarySummary[index1, index2], PeriodBitCount, 2);
+                binarySummary[index1, index2] -= (ushort) Mean(binarySummary[index1, index2], PeriodBitCount, 2);
                 Coder.HighCount = BinaryScale;
                 initialEscape = ExponentialEscapes[binarySummary[index1, index2] >> 10];
                 characterMask[state.Symbol] = escapeCount;
@@ -309,7 +329,7 @@ namespace SharpCompress.Compressor.PPMd.I1
             if (index == symbol)
             {
                 Coder.HighCount = state.Frequency;
-                previousSuccess = (byte)((2 * Coder.HighCount >= Coder.Scale) ? 1 : 0);
+                previousSuccess = (byte) ((2*Coder.HighCount >= Coder.Scale) ? 1 : 0);
                 foundState = state;
                 foundState.Frequency += 4;
                 context.SummaryFrequency += 4;
@@ -350,7 +370,7 @@ namespace SharpCompress.Compressor.PPMd.I1
             See2Context see2Context = MakeEscapeFrequency(context);
             uint currentSymbol;
             uint lowCount = 0;
-            uint index = (uint)(context.NumberStatistics - numberMasked);
+            uint index = (uint) (context.NumberStatistics - numberMasked);
             PpmState state = context.Statistics - 1;
 
             do
@@ -369,15 +389,15 @@ namespace SharpCompress.Compressor.PPMd.I1
             Coder.LowCount = lowCount;
             Coder.Scale += Coder.LowCount;
             Coder.HighCount = Coder.Scale;
-            see2Context.Summary += (ushort)Coder.Scale;
+            see2Context.Summary += (ushort) Coder.Scale;
             numberMasked = context.NumberStatistics;
             return;
 
-        SymbolFound:
+            SymbolFound:
             Coder.LowCount = lowCount;
             lowCount += state.Frequency;
             Coder.HighCount = lowCount;
-            for (PpmState p1 = state; --index != 0; )
+            for (PpmState p1 = state; --index != 0;)
             {
                 do
                 {
@@ -395,22 +415,24 @@ namespace SharpCompress.Compressor.PPMd.I1
         {
             PpmState state = context.FirstState;
             int index1 = probabilities[state.Frequency - 1];
-            int index2 = numberStatisticsToBinarySummaryIndex[context.Suffix.NumberStatistics] + previousSuccess + context.Flags + ((runLength >> 26) & 0x20);
+            int index2 = numberStatisticsToBinarySummaryIndex[context.Suffix.NumberStatistics] + previousSuccess +
+                         context.Flags + ((runLength >> 26) & 0x20);
 
             if (Coder.RangeGetCurrentShiftCount(TotalBitCount) < binarySummary[index1, index2])
             {
                 foundState = state;
-                state.Frequency += (byte)((state.Frequency < 196) ? 1 : 0);
+                state.Frequency += (byte) ((state.Frequency < 196) ? 1 : 0);
                 Coder.LowCount = 0;
                 Coder.HighCount = binarySummary[index1, index2];
-                binarySummary[index1, index2] += (ushort)(Interval - Mean(binarySummary[index1, index2], PeriodBitCount, 2));
+                binarySummary[index1, index2] +=
+                    (ushort) (Interval - Mean(binarySummary[index1, index2], PeriodBitCount, 2));
                 previousSuccess = 1;
                 runLength++;
             }
             else
             {
                 Coder.LowCount = binarySummary[index1, index2];
-                binarySummary[index1, index2] -= (ushort)Mean(binarySummary[index1, index2], PeriodBitCount, 2);
+                binarySummary[index1, index2] -= (ushort) Mean(binarySummary[index1, index2], PeriodBitCount, 2);
                 Coder.HighCount = BinaryScale;
                 initialEscape = ExponentialEscapes[binarySummary[index1, index2] >> 10];
                 characterMask[state.Symbol] = escapeCount;
@@ -432,10 +454,10 @@ namespace SharpCompress.Compressor.PPMd.I1
             if (count < highCount)
             {
                 Coder.HighCount = highCount;
-                previousSuccess = (byte)((2 * Coder.HighCount >= Coder.Scale) ? 1 : 0);
+                previousSuccess = (byte) ((2*Coder.HighCount >= Coder.Scale) ? 1 : 0);
                 foundState = state;
                 highCount += 4;
-                foundState.Frequency = (byte)highCount;
+                foundState.Frequency = (byte) highCount;
                 context.SummaryFrequency += 4;
                 runLength += previousSuccess;
                 if (highCount > MaximumFrequency)
@@ -474,7 +496,7 @@ namespace SharpCompress.Compressor.PPMd.I1
             uint currentSymbol;
             uint count;
             uint highCount = 0;
-            uint index = (uint)(context.NumberStatistics - numberMasked);
+            uint index = (uint) (context.NumberStatistics - numberMasked);
             uint stateIndex = 0;
             PpmState state = context.Statistics - 1;
 
@@ -486,7 +508,8 @@ namespace SharpCompress.Compressor.PPMd.I1
                     state++;
                 } while (characterMask[currentSymbol] == escapeCount);
                 highCount += state.Frequency;
-                decodeStates[stateIndex++] = state;  // note that decodeStates is a static array that is re-used on each call to this method (for performance reasons)
+                decodeStates[stateIndex++] = state;
+                    // note that decodeStates is a static array that is re-used on each call to this method (for performance reasons)
             } while (--index != 0);
 
             Coder.Scale += highCount;
@@ -507,14 +530,14 @@ namespace SharpCompress.Compressor.PPMd.I1
             {
                 Coder.LowCount = highCount;
                 Coder.HighCount = Coder.Scale;
-                index = (uint)(context.NumberStatistics - numberMasked);
+                index = (uint) (context.NumberStatistics - numberMasked);
                 numberMasked = context.NumberStatistics;
                 do
                 {
                     characterMask[decodeStates[stateIndex].Symbol] = escapeCount;
                     stateIndex++;
                 } while (--index != 0);
-                see2Context.Summary += (ushort)Coder.Scale;
+                see2Context.Summary += (ushort) Coder.Scale;
             }
         }
 
@@ -545,7 +568,7 @@ namespace SharpCompress.Compressor.PPMd.I1
 
         private See2Context MakeEscapeFrequency(PpmContext context)
         {
-            uint numberStatistics = (uint)2 * context.NumberStatistics;
+            uint numberStatistics = (uint) 2*context.NumberStatistics;
             See2Context see2Context;
 
             if (context.NumberStatistics != 0xff)
@@ -555,7 +578,8 @@ namespace SharpCompress.Compressor.PPMd.I1
 
                 numberStatistics = context.Suffix.NumberStatistics;
                 int index1 = probabilities[context.NumberStatistics + 2] - 3;
-                int index2 = ((context.SummaryFrequency > 11 * (context.NumberStatistics + 1)) ? 1 : 0) + ((2 * context.NumberStatistics < numberStatistics + numberMasked) ? 2 : 0) + context.Flags;
+                int index2 = ((context.SummaryFrequency > 11*(context.NumberStatistics + 1)) ? 1 : 0) +
+                             ((2*context.NumberStatistics < numberStatistics + numberMasked) ? 2 : 0) + context.Flags;
                 see2Context = see2Contexts[index1, index2];
                 Coder.Scale = see2Context.Mean();
             }
@@ -586,15 +610,15 @@ namespace SharpCompress.Compressor.PPMd.I1
 
             state.Frequency += 4;
             context.SummaryFrequency += 4;
-            escapeFrequency = (uint)(context.SummaryFrequency - state.Frequency);
+            escapeFrequency = (uint) (context.SummaryFrequency - state.Frequency);
             adder = (orderFall != 0 || method > ModelRestorationMethod.Freeze) ? 1 : 0;
-            state.Frequency = (byte)((state.Frequency + adder) >> 1);
+            state.Frequency = (byte) ((state.Frequency + adder) >> 1);
             context.SummaryFrequency = state.Frequency;
 
             do
             {
                 escapeFrequency -= (++state).Frequency;
-                state.Frequency = (byte)((state.Frequency + adder) >> 1);
+                state.Frequency = (byte) ((state.Frequency + adder) >> 1);
                 context.SummaryFrequency += state.Frequency;
                 if (state[0].Frequency > state[-1].Frequency)
                 {
@@ -620,38 +644,39 @@ namespace SharpCompress.Compressor.PPMd.I1
                 } while ((--state).Frequency == 0);
 
                 escapeFrequency += index;
-                oldUnitCount = (uint)((context.NumberStatistics + 2) >> 1);
-                context.NumberStatistics -= (byte)index;
+                oldUnitCount = (uint) ((context.NumberStatistics + 2) >> 1);
+                context.NumberStatistics -= (byte) index;
                 if (context.NumberStatistics == 0)
                 {
                     localSymbol = context.Statistics.Symbol;
                     localFrequency = context.Statistics.Frequency;
                     localSuccessor = context.Statistics.Successor;
-                    localFrequency = (byte)((2 * localFrequency + escapeFrequency - 1) / escapeFrequency);
-                    if (localFrequency > MaximumFrequency / 3)
-                        localFrequency = (byte)(MaximumFrequency / 3);
+                    localFrequency = (byte) ((2*localFrequency + escapeFrequency - 1)/escapeFrequency);
+                    if (localFrequency > MaximumFrequency/3)
+                        localFrequency = (byte) (MaximumFrequency/3);
                     Allocator.FreeUnits(context.Statistics, oldUnitCount);
                     context.FirstStateSymbol = localSymbol;
                     context.FirstStateFrequency = localFrequency;
                     context.FirstStateSuccessor = localSuccessor;
-                    context.Flags = (byte)((context.Flags & 0x10) + ((localSymbol >= 0x40) ? 0x08 : 0x00));
+                    context.Flags = (byte) ((context.Flags & 0x10) + ((localSymbol >= 0x40) ? 0x08 : 0x00));
                     foundState = context.FirstState;
                     return;
                 }
 
-                context.Statistics = Allocator.ShrinkUnits(context.Statistics, oldUnitCount, (uint)((context.NumberStatistics + 2) >> 1));
+                context.Statistics = Allocator.ShrinkUnits(context.Statistics, oldUnitCount,
+                                                           (uint) ((context.NumberStatistics + 2) >> 1));
                 context.Flags &= 0xf7;
                 index = context.NumberStatistics;
                 state = context.Statistics;
-                context.Flags |= (byte)((state.Symbol >= 0x40) ? 0x08 : 0x00);
+                context.Flags |= (byte) ((state.Symbol >= 0x40) ? 0x08 : 0x00);
                 do
                 {
-                    context.Flags |= (byte)(((++state).Symbol >= 0x40) ? 0x08 : 0x00);
+                    context.Flags |= (byte) (((++state).Symbol >= 0x40) ? 0x08 : 0x00);
                 } while (--index != 0);
             }
 
             escapeFrequency -= (escapeFrequency >> 1);
-            context.SummaryFrequency += (ushort)escapeFrequency;
+            context.SummaryFrequency += (ushort) escapeFrequency;
             context.Flags |= 0x04;
             foundState = context.Statistics;
         }
@@ -662,23 +687,24 @@ namespace SharpCompress.Compressor.PPMd.I1
             int escapeFrequency;
             int scaleValue = (scale ? 1 : 0);
 
-            context.Statistics = Allocator.ShrinkUnits(context.Statistics, oldUnitCount, (uint)((index + 2) >> 1));
+            context.Statistics = Allocator.ShrinkUnits(context.Statistics, oldUnitCount, (uint) ((index + 2) >> 1));
             PpmState statistics = context.Statistics;
-            context.Flags = (byte)((context.Flags & (0x10 + (scale ? 0x04 : 0x00))) + ((statistics.Symbol >= 0x40) ? 0x08 : 0x00));
+            context.Flags =
+                (byte) ((context.Flags & (0x10 + (scale ? 0x04 : 0x00))) + ((statistics.Symbol >= 0x40) ? 0x08 : 0x00));
             escapeFrequency = context.SummaryFrequency - statistics.Frequency;
-            statistics.Frequency = (byte)((statistics.Frequency + scaleValue) >> scaleValue);
+            statistics.Frequency = (byte) ((statistics.Frequency + scaleValue) >> scaleValue);
             context.SummaryFrequency = statistics.Frequency;
 
             do
             {
                 escapeFrequency -= (++statistics).Frequency;
-                statistics.Frequency = (byte)((statistics.Frequency + scaleValue) >> scaleValue);
+                statistics.Frequency = (byte) ((statistics.Frequency + scaleValue) >> scaleValue);
                 context.SummaryFrequency += statistics.Frequency;
-                context.Flags |= (byte)((statistics.Symbol >= 0x40) ? 0x08 : 0x00);
+                context.Flags |= (byte) ((statistics.Symbol >= 0x40) ? 0x08 : 0x00);
             } while (--index != 0);
 
             escapeFrequency = (escapeFrequency + scaleValue) >> scaleValue;
-            context.SummaryFrequency += (ushort)escapeFrequency;
+            context.SummaryFrequency += (ushort) escapeFrequency;
         }
 
         private PpmContext CutOff(int order, PpmContext context)
@@ -689,7 +715,7 @@ namespace SharpCompress.Compressor.PPMd.I1
             if (context.NumberStatistics == 0)
             {
                 state = context.FirstState;
-                if ((Pointer)state.Successor >= Allocator.BaseUnit)
+                if ((Pointer) state.Successor >= Allocator.BaseUnit)
                 {
                     if (order < modelOrder)
                         state.Successor = CutOff(order + 1, state.Successor);
@@ -711,7 +737,7 @@ namespace SharpCompress.Compressor.PPMd.I1
                 }
             }
 
-            uint unitCount = (uint)((context.NumberStatistics + 2) >> 1);
+            uint unitCount = (uint) ((context.NumberStatistics + 2) >> 1);
             context.Statistics = Allocator.MoveUnitsUp(context.Statistics, unitCount);
             index = context.NumberStatistics;
             for (state = context.Statistics + index; state >= context.Statistics; state--)
@@ -729,7 +755,7 @@ namespace SharpCompress.Compressor.PPMd.I1
 
             if (index != context.NumberStatistics && order != 0)
             {
-                context.NumberStatistics = (byte)index;
+                context.NumberStatistics = (byte) index;
                 state = context.Statistics;
                 if (index < 0)
                 {
@@ -739,14 +765,14 @@ namespace SharpCompress.Compressor.PPMd.I1
                 }
                 else if (index == 0)
                 {
-                    context.Flags = (byte)((context.Flags & 0x10) + ((state.Symbol >= 0x40) ? 0x08 : 0x00));
+                    context.Flags = (byte) ((context.Flags & 0x10) + ((state.Symbol >= 0x40) ? 0x08 : 0x00));
                     Copy(context.FirstState, state);
                     Allocator.FreeUnits(state, unitCount);
-                    context.FirstStateFrequency = (byte)((context.FirstStateFrequency + 11) >> 3);
+                    context.FirstStateFrequency = (byte) ((context.FirstStateFrequency + 11) >> 3);
                 }
                 else
                 {
-                    Refresh(unitCount, context.SummaryFrequency > 16 * index, context);
+                    Refresh(unitCount, context.SummaryFrequency > 16*index, context);
                 }
             }
 
@@ -758,11 +784,12 @@ namespace SharpCompress.Compressor.PPMd.I1
             if (context.NumberStatistics == 0)
             {
                 PpmState state = context.FirstState;
-                if ((Pointer)state.Successor >= Allocator.BaseUnit && order < modelOrder)
+                if ((Pointer) state.Successor >= Allocator.BaseUnit && order < modelOrder)
                     state.Successor = RemoveBinaryContexts(order + 1, state.Successor);
                 else
                     state.Successor = PpmContext.Zero;
-                if ((state.Successor == PpmContext.Zero) && (context.Suffix.NumberStatistics == 0 || context.Suffix.Flags == 0xff))
+                if ((state.Successor == PpmContext.Zero) &&
+                    (context.Suffix.NumberStatistics == 0 || context.Suffix.Flags == 0xff))
                 {
                     Allocator.FreeUnits(context, 1);
                     return PpmContext.Zero;
@@ -775,7 +802,7 @@ namespace SharpCompress.Compressor.PPMd.I1
 
             for (PpmState state = context.Statistics + context.NumberStatistics; state >= context.Statistics; state--)
             {
-                if ((Pointer)state.Successor >= Allocator.BaseUnit && order < modelOrder)
+                if ((Pointer) state.Successor >= Allocator.BaseUnit && order < modelOrder)
                     state.Successor = RemoveBinaryContexts(order + 1, state.Successor);
                 else
                     state.Successor = PpmContext.Zero;

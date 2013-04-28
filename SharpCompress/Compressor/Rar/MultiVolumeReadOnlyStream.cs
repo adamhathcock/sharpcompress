@@ -60,8 +60,8 @@ namespace SharpCompress.Compressor.Rar
             currentPartTotalReadBytes = 0;
 
             streamListener.FireFilePartExtractionBegin(filePartEnumerator.Current.FilePartName,
-                 filePartEnumerator.Current.FileHeader.CompressedSize,
-                filePartEnumerator.Current.FileHeader.UncompressedSize);
+                                                       filePartEnumerator.Current.FileHeader.CompressedSize,
+                                                       filePartEnumerator.Current.FileHeader.UncompressedSize);
         }
 
         public override int Read(byte[] buffer, int offset, int count)
@@ -72,7 +72,7 @@ namespace SharpCompress.Compressor.Rar
                 int readSize = count;
                 if (count > maxPosition - currentPosition)
                 {
-                    readSize = (int)(maxPosition - currentPosition);
+                    readSize = (int) (maxPosition - currentPosition);
                 }
 
                 int read = currentStream.Read(buffer, offset, readSize);
@@ -91,7 +91,8 @@ namespace SharpCompress.Compressor.Rar
                     string fileName = filePartEnumerator.Current.FileHeader.FileName;
                     if (!filePartEnumerator.MoveNext())
                     {
-                        throw new InvalidFormatException("Multi-part rar file is incomplete.  Entry expects a new volume: " + fileName);
+                        throw new InvalidFormatException(
+                            "Multi-part rar file is incomplete.  Entry expects a new volume: " + fileName);
                     }
                     InitializeNextFilePart();
                 }
@@ -108,26 +109,17 @@ namespace SharpCompress.Compressor.Rar
 
         public override bool CanRead
         {
-            get
-            {
-                return true;
-            }
+            get { return true; }
         }
 
         public override bool CanSeek
         {
-            get
-            {
-                return false;
-            }
+            get { return false; }
         }
 
         public override bool CanWrite
         {
-            get
-            {
-                return false;
-            }
+            get { return false; }
         }
 
         public override void Flush()
@@ -137,22 +129,13 @@ namespace SharpCompress.Compressor.Rar
 
         public override long Length
         {
-            get
-            {
-                throw new NotImplementedException();
-            }
+            get { throw new NotImplementedException(); }
         }
 
         public override long Position
         {
-            get
-            {
-                throw new NotImplementedException();
-            }
-            set
-            {
-                throw new NotImplementedException();
-            }
+            get { throw new NotImplementedException(); }
+            set { throw new NotImplementedException(); }
         }
 
         public override long Seek(long offset, SeekOrigin origin)

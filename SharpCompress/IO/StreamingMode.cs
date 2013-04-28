@@ -1,5 +1,4 @@
-﻿
-namespace SharpCompress.IO
+﻿namespace SharpCompress.IO
 {
     internal enum StreamingMode
     {

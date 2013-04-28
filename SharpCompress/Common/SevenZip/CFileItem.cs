@@ -11,8 +11,16 @@ namespace SharpCompress.Common.SevenZip
 
         public bool HasStream { get; internal set; }
         public bool IsDir { get; internal set; }
-        public bool CrcDefined { get { return Crc != null; } }
-        public bool AttribDefined { get { return Attrib != null; } }
+
+        public bool CrcDefined
+        {
+            get { return Crc != null; }
+        }
+
+        public bool AttribDefined
+        {
+            get { return Attrib != null; }
+        }
 
         public void SetAttrib(uint attrib)
         {

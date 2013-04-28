@@ -22,10 +22,7 @@ namespace SharpCompress.Common.Rar
 
         internal StreamingMode Mode
         {
-            get
-            {
-                return headerFactory.StreamingMode;
-            }
+            get { return headerFactory.StreamingMode; }
         }
 
         internal abstract IEnumerable<RarFilePart> ReadFileParts();
@@ -60,11 +57,7 @@ namespace SharpCompress.Common.Rar
             }
         }
 
-        internal ArchiveHeader ArchiveHeader
-        {
-            get;
-            private set;
-        }
+        internal ArchiveHeader ArchiveHeader { get; private set; }
 
         private void EnsureArchiveHeaderLoaded()
         {

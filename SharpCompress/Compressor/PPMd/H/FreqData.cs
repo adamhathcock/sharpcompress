@@ -1,4 +1,5 @@
 using System.Text;
+
 namespace SharpCompress.Compressor.PPMd.H
 {
     internal class FreqData : Pointer
@@ -18,16 +19,9 @@ namespace SharpCompress.Compressor.PPMd.H
 
         internal int SummFreq
         {
-            get
-            {
-                return Utility.readShortLittleEndian(Memory, Address) & 0xffff;
-            }
+            get { return Utility.readShortLittleEndian(Memory, Address) & 0xffff; }
 
-            set
-            {
-                Utility.WriteLittleEndian(Memory, Address, (short)value);
-            }
-
+            set { Utility.WriteLittleEndian(Memory, Address, (short) value); }
         }
 
         internal FreqData Initialize(byte[] mem)
@@ -37,7 +31,7 @@ namespace SharpCompress.Compressor.PPMd.H
 
         internal void IncrementSummFreq(int dSummFreq)
         {
-            Utility.incShortLittleEndian(Memory, Address, (short)dSummFreq);
+            Utility.incShortLittleEndian(Memory, Address, (short) dSummFreq);
         }
 
         internal int GetStats()

@@ -2,13 +2,13 @@ namespace SharpCompress.Compressor.LZMA.LZ
 {
     internal class OutWindow
     {
-        byte[] _buffer = null;
-        int _windowSize = 0;
-        int _pos;
-        int _streamPos;
-        int _pendingLen;
-        int _pendingDist;
-        System.IO.Stream _stream;
+        private byte[] _buffer = null;
+        private int _windowSize = 0;
+        private int _pos;
+        private int _streamPos;
+        private int _pendingLen;
+        private int _pendingDist;
+        private System.IO.Stream _stream;
 
         public long Total;
         public long Limit;
@@ -41,7 +41,7 @@ namespace SharpCompress.Compressor.LZMA.LZ
         public void Train(System.IO.Stream stream)
         {
             long len = stream.Length;
-            int size = (len < _windowSize) ? (int)len : _windowSize;
+            int size = (len < _windowSize) ? (int) len : _windowSize;
             stream.Position = len - size;
             Total = 0;
             Limit = size;
@@ -113,7 +113,7 @@ namespace SharpCompress.Compressor.LZMA.LZ
             {
                 int curSize = _windowSize - _pos;
                 if (curSize > Limit - Total)
-                    curSize = (int)(Limit - Total);
+                    curSize = (int) (Limit - Total);
                 if (curSize > size)
                     curSize = size;
                 int numReadBytes = stream.Read(_buffer, _pos, curSize);
@@ -135,18 +135,12 @@ namespace SharpCompress.Compressor.LZMA.LZ
 
         public bool HasSpace
         {
-            get
-            {
-                return _pos < _windowSize && Total < Limit;
-            }
+            get { return _pos < _windowSize && Total < Limit; }
         }
 
         public bool HasPending
         {
-            get
-            {
-                return _pendingLen > 0;
-            }
+            get { return _pendingLen > 0; }
         }
 
         public int Read(byte[] buffer, int offset, int count)
@@ -175,10 +169,7 @@ namespace SharpCompress.Compressor.LZMA.LZ
 
         public int AvailableBytes
         {
-            get
-            {
-                return _pos - _streamPos;
-            }
+            get { return _pos - _streamPos; }
         }
     }
 }

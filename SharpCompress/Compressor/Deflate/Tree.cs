@@ -71,13 +71,14 @@ namespace SharpCompress.Compressor.Deflate
 
         private sealed class Tree
         {
-            internal const int Buf_size = 8 * 2;
-            private static readonly int HEAP_SIZE = (2 * InternalConstants.L_CODES + 1);
+            internal const int Buf_size = 8*2;
+            private static readonly int HEAP_SIZE = (2*InternalConstants.L_CODES + 1);
 
 
             internal static readonly sbyte[] bl_order = new sbyte[]
                                                             {
-                                                                16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14,
+                                                                16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2,
+                                                                14,
                                                                 1, 15
                                                             };
 
@@ -251,18 +252,18 @@ namespace SharpCompress.Compressor.Deflate
 
                 // In a first pass, compute the optimal bit lengths (which may
                 // overflow in the case of the bit length tree).
-                tree[s.heap[s.heap_max] * 2 + 1] = 0; // root of the heap
+                tree[s.heap[s.heap_max]*2 + 1] = 0; // root of the heap
 
                 for (h = s.heap_max + 1; h < HEAP_SIZE; h++)
                 {
                     n = s.heap[h];
-                    bits = tree[tree[n * 2 + 1] * 2 + 1] + 1;
+                    bits = tree[tree[n*2 + 1]*2 + 1] + 1;
                     if (bits > max_length)
                     {
                         bits = max_length;
                         overflow++;
                     }
-                    tree[n * 2 + 1] = (short)bits;
+                    tree[n*2 + 1] = (short) bits;
                     // We overwrite tree[n*2+1] which is no longer needed
 
                     if (n > max_code)
@@ -272,10 +273,10 @@ namespace SharpCompress.Compressor.Deflate
                     xbits = 0;
                     if (n >= base_Renamed)
                         xbits = extra[n - base_Renamed];
-                    f = tree[n * 2];
-                    s.opt_len += f * (bits + xbits);
+                    f = tree[n*2];
+                    s.opt_len += f*(bits + xbits);
                     if (stree != null)
-                        s.static_len += f * (stree[n * 2 + 1] + xbits);
+                        s.static_len += f*(stree[n*2 + 1] + xbits);
                 }
                 if (overflow == 0)
                     return;
@@ -288,7 +289,7 @@ namespace SharpCompress.Compressor.Deflate
                     while (s.bl_count[bits] == 0)
                         bits--;
                     s.bl_count[bits]--; // move one leaf down the tree
-                    s.bl_count[bits + 1] = (short)(s.bl_count[bits + 1] + 2); // move one overflow item as its brother
+                    s.bl_count[bits + 1] = (short) (s.bl_count[bits + 1] + 2); // move one overflow item as its brother
                     s.bl_count[max_length]--;
                     // The brother of the overflow item also moves one step up,
                     // but this does not affect bl_count[max_length]
@@ -303,10 +304,10 @@ namespace SharpCompress.Compressor.Deflate
                         m = s.heap[--h];
                         if (m > max_code)
                             continue;
-                        if (tree[m * 2 + 1] != bits)
+                        if (tree[m*2 + 1] != bits)
                         {
-                            s.opt_len = (int)(s.opt_len + (bits - (long)tree[m * 2 + 1]) * tree[m * 2]);
-                            tree[m * 2 + 1] = (short)bits;
+                            s.opt_len = (int) (s.opt_len + (bits - (long) tree[m*2 + 1])*tree[m*2]);
+                            tree[m*2 + 1] = (short) bits;
                         }
                         n--;
                     }
@@ -336,14 +337,14 @@ namespace SharpCompress.Compressor.Deflate
 
                 for (n = 0; n < elems; n++)
                 {
-                    if (tree[n * 2] != 0)
+                    if (tree[n*2] != 0)
                     {
                         s.heap[++s.heap_len] = max_code = n;
                         s.depth[n] = 0;
                     }
                     else
                     {
-                        tree[n * 2 + 1] = 0;
+                        tree[n*2 + 1] = 0;
                     }
                 }
 
@@ -354,11 +355,11 @@ namespace SharpCompress.Compressor.Deflate
                 while (s.heap_len < 2)
                 {
                     node = s.heap[++s.heap_len] = (max_code < 2 ? ++max_code : 0);
-                    tree[node * 2] = 1;
+                    tree[node*2] = 1;
                     s.depth[node] = 0;
                     s.opt_len--;
                     if (stree != null)
-                        s.static_len -= stree[node * 2 + 1];
+                        s.static_len -= stree[node*2 + 1];
                     // node is 0 or 1 so it does not have extra bits
                 }
                 this.max_code = max_code;
@@ -366,7 +367,7 @@ namespace SharpCompress.Compressor.Deflate
                 // The elements heap[heap_len/2+1 .. heap_len] are leaves of the tree,
                 // establish sub-heaps of increasing lengths:
 
-                for (n = s.heap_len / 2; n >= 1; n--)
+                for (n = s.heap_len/2; n >= 1; n--)
                     s.pqdownheap(tree, n);
 
                 // Construct the Huffman tree by repeatedly combining the least two
@@ -385,9 +386,9 @@ namespace SharpCompress.Compressor.Deflate
                     s.heap[--s.heap_max] = m;
 
                     // Create a new node father of n and m
-                    tree[node * 2] = unchecked((short)(tree[n * 2] + tree[m * 2]));
-                    s.depth[node] = (sbyte)(Math.Max((byte)s.depth[n], (byte)s.depth[m]) + 1);
-                    tree[n * 2 + 1] = tree[m * 2 + 1] = (short)node;
+                    tree[node*2] = unchecked((short) (tree[n*2] + tree[m*2]));
+                    s.depth[node] = (sbyte) (Math.Max((byte) s.depth[n], (byte) s.depth[m]) + 1);
+                    tree[n*2 + 1] = tree[m*2 + 1] = (short) node;
 
                     // and insert the new node in the heap
                     s.heap[1] = node++;
@@ -423,7 +424,7 @@ namespace SharpCompress.Compressor.Deflate
                 for (bits = 1; bits <= InternalConstants.MAX_BITS; bits++)
                     unchecked
                     {
-                        next_code[bits] = code = (short)((code + bl_count[bits - 1]) << 1);
+                        next_code[bits] = code = (short) ((code + bl_count[bits - 1]) << 1);
                     }
 
                 // Check that the bit counts in bl_count are consistent. The last code
@@ -434,11 +435,11 @@ namespace SharpCompress.Compressor.Deflate
 
                 for (n = 0; n <= max_code; n++)
                 {
-                    int len = tree[n * 2 + 1];
+                    int len = tree[n*2 + 1];
                     if (len == 0)
                         continue;
                     // Now reverse the bits
-                    tree[n * 2] = unchecked((short)(bi_reverse(next_code[len]++, len)));
+                    tree[n*2] = unchecked((short) (bi_reverse(next_code[len]++, len)));
                 }
             }
 

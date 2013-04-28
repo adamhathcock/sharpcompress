@@ -1,9 +1,10 @@
 using System.Text;
+
 namespace SharpCompress.Compressor.PPMd.H
 {
     internal class SEE2Context
     {
-        virtual public int Mean
+        public virtual int Mean
         {
             get
             {
@@ -11,47 +12,29 @@ namespace SharpCompress.Compressor.PPMd.H
                 summ -= retVal;
                 return retVal + ((retVal == 0) ? 1 : 0);
             }
-
         }
-        virtual public int Count
+
+        public virtual int Count
         {
-            get
-            {
-                return count;
-            }
+            get { return count; }
 
-            set
-            {
-                this.count = value & 0xff;
-            }
-
+            set { this.count = value & 0xff; }
         }
-        virtual public int Shift
+
+        public virtual int Shift
         {
-            get
-            {
-                return shift;
-            }
+            get { return shift; }
 
-            set
-            {
-                this.shift = value & 0xff;
-            }
-
+            set { this.shift = value & 0xff; }
         }
-        virtual public int Summ
+
+        public virtual int Summ
         {
-            get
-            {
-                return summ;
-            }
+            get { return summ; }
 
-            set
-            {
-                this.summ = value & 0xffff;
-            }
-
+            set { this.summ = value & 0xffff; }
         }
+
         public const int size = 4;
 
         // ushort Summ;

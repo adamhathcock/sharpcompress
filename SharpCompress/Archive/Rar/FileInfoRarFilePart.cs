@@ -15,11 +15,7 @@ namespace SharpCompress.Archive.Rar
             FileInfo = fi;
         }
 
-        internal FileInfo FileInfo
-        {
-            get;
-            private set;
-        }
+        internal FileInfo FileInfo { get; private set; }
 
         internal override Stream GetCompressedStream()
         {
@@ -33,7 +29,7 @@ namespace SharpCompress.Archive.Rar
             get
             {
                 return "Rar File: " + FileInfo.FullName
-                    + " File Entry: " + FileHeader.FileName;
+                       + " File Entry: " + FileHeader.FileName;
             }
         }
     }

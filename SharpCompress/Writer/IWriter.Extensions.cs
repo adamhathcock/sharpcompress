@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+
 namespace SharpCompress.Writer
 {
     public static class IWriterExtensions
@@ -16,10 +17,10 @@ namespace SharpCompress.Writer
             {
                 throw new ArgumentException("Source does not exist: " + source.FullName);
             }
-           using (var stream = source.OpenRead())
-           {
-              writer.Write(entryPath, stream, source.LastWriteTime);
-           }
+            using (var stream = source.OpenRead())
+            {
+                writer.Write(entryPath, stream, source.LastWriteTime);
+            }
         }
 
         public static void Write(this IWriter writer, string entryPath, string source)
@@ -27,7 +28,8 @@ namespace SharpCompress.Writer
             writer.Write(entryPath, new FileInfo(source));
         }
 
-        public static void WriteAll(this IWriter writer, string directory, string searchPattern = "*", SearchOption option = SearchOption.TopDirectoryOnly)
+        public static void WriteAll(this IWriter writer, string directory, string searchPattern = "*",
+                                    SearchOption option = SearchOption.TopDirectoryOnly)
         {
             if (!Directory.Exists(directory))
             {

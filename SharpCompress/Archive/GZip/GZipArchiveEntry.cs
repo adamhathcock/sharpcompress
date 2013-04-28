@@ -33,10 +33,7 @@ namespace SharpCompress.Archive.GZip
 
         public bool IsComplete
         {
-            get
-            {
-                return true;
-            }
+            get { return true; }
         }
 
         #endregion

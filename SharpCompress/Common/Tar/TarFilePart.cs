@@ -13,6 +13,7 @@ namespace SharpCompress.Common.Tar
             this.seekableStream = seekableStream;
             this.Header = header;
         }
+
         internal TarHeader Header { get; private set; }
 
         internal override string FilePartName

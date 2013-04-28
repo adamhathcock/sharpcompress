@@ -4,8 +4,8 @@ namespace SharpCompress.Compressor.LZMA.RangeCoder
 {
     internal struct BitTreeEncoder
     {
-        BitEncoder[] Models;
-        int NumBitLevels;
+        private BitEncoder[] Models;
+        private int NumBitLevels;
 
         public BitTreeEncoder(int numBitLevels)
         {
@@ -22,7 +22,7 @@ namespace SharpCompress.Compressor.LZMA.RangeCoder
         public void Encode(Encoder rangeEncoder, UInt32 symbol)
         {
             UInt32 m = 1;
-            for (int bitIndex = NumBitLevels; bitIndex > 0; )
+            for (int bitIndex = NumBitLevels; bitIndex > 0;)
             {
                 bitIndex--;
                 UInt32 bit = (symbol >> bitIndex) & 1;
@@ -47,7 +47,7 @@ namespace SharpCompress.Compressor.LZMA.RangeCoder
         {
             UInt32 price = 0;
             UInt32 m = 1;
-            for (int bitIndex = NumBitLevels; bitIndex > 0; )
+            for (int bitIndex = NumBitLevels; bitIndex > 0;)
             {
                 bitIndex--;
                 UInt32 bit = (symbol >> bitIndex) & 1;
@@ -72,7 +72,7 @@ namespace SharpCompress.Compressor.LZMA.RangeCoder
         }
 
         public static UInt32 ReverseGetPrice(BitEncoder[] Models, UInt32 startIndex,
-            int NumBitLevels, UInt32 symbol)
+                                             int NumBitLevels, UInt32 symbol)
         {
             UInt32 price = 0;
             UInt32 m = 1;
@@ -87,7 +87,7 @@ namespace SharpCompress.Compressor.LZMA.RangeCoder
         }
 
         public static void ReverseEncode(BitEncoder[] Models, UInt32 startIndex,
-            Encoder rangeEncoder, int NumBitLevels, UInt32 symbol)
+                                         Encoder rangeEncoder, int NumBitLevels, UInt32 symbol)
         {
             UInt32 m = 1;
             for (int i = 0; i < NumBitLevels; i++)
@@ -102,8 +102,8 @@ namespace SharpCompress.Compressor.LZMA.RangeCoder
 
     internal struct BitTreeDecoder
     {
-        BitDecoder[] Models;
-        int NumBitLevels;
+        private BitDecoder[] Models;
+        private int NumBitLevels;
 
         public BitTreeDecoder(int numBitLevels)
         {
@@ -122,7 +122,7 @@ namespace SharpCompress.Compressor.LZMA.RangeCoder
             uint m = 1;
             for (int bitIndex = NumBitLevels; bitIndex > 0; bitIndex--)
                 m = (m << 1) + Models[m].Decode(rangeDecoder);
-            return m - ((uint)1 << NumBitLevels);
+            return m - ((uint) 1 << NumBitLevels);
         }
 
         public uint ReverseDecode(RangeCoder.Decoder rangeDecoder)
@@ -140,7 +140,7 @@ namespace SharpCompress.Compressor.LZMA.RangeCoder
         }
 
         public static uint ReverseDecode(BitDecoder[] Models, UInt32 startIndex,
-            RangeCoder.Decoder rangeDecoder, int NumBitLevels)
+                                         RangeCoder.Decoder rangeDecoder, int NumBitLevels)
         {
             uint m = 1;
             uint symbol = 0;

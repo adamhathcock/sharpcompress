@@ -27,7 +27,7 @@ namespace SharpCompress.Common.Rar.Headers
             bytes = new byte[chars.Length];
             for (int i = 0; i < chars.Length; ++i)
             {
-                bytes[i] = (byte)chars[i];
+                bytes[i] = (byte) chars[i];
             }
         }
 

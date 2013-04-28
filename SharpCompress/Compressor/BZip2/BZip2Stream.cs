@@ -13,7 +13,8 @@ namespace SharpCompress.Compressor.BZip2
         /// <param name="compressionMode">Compression Mode</param>
         /// <param name="leaveOpen">Leave the underlying stream open when disposed.</param>
         /// <param name="decompressContacted">Should the BZip2 stream continue to decompress the stream when the End Marker is found.</param>
-        public BZip2Stream(Stream stream, CompressionMode compressionMode, bool leaveOpen = false, bool decompressContacted = false)
+        public BZip2Stream(Stream stream, CompressionMode compressionMode, bool leaveOpen = false,
+                           bool decompressContacted = false)
         {
             Mode = compressionMode;
             if (Mode == CompressionMode.Compress)

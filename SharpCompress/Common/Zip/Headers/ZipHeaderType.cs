@@ -1,5 +1,4 @@
-﻿
-namespace SharpCompress.Common.Zip.Headers
+﻿namespace SharpCompress.Common.Zip.Headers
 {
     internal enum ZipHeaderType
     {

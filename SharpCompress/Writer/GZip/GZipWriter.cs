@@ -19,12 +19,12 @@ namespace SharpCompress.Writer.GZip
 
         protected override void Dispose(bool isDisposing)
         {
-           if (isDisposing)
-           {
-              //dispose here to finish the GZip, GZip won't close the underlying stream
-              OutputStream.Dispose();
-           }
-           base.Dispose(isDisposing);
+            if (isDisposing)
+            {
+                //dispose here to finish the GZip, GZip won't close the underlying stream
+                OutputStream.Dispose();
+            }
+            base.Dispose(isDisposing);
         }
 
         public override void Write(string filename, Stream source, DateTime? modificationTime)

@@ -1,69 +1,46 @@
 using System;
 using System.Text;
+
 namespace SharpCompress.Compressor.PPMd.H
 {
     internal class SubAllocator
     {
-        virtual public int FakeUnitsStart
+        public virtual int FakeUnitsStart
         {
-            get
-            {
-                return fakeUnitsStart;
-            }
+            get { return fakeUnitsStart; }
 
-            set
-            {
-                this.fakeUnitsStart = value;
-            }
-
+            set { this.fakeUnitsStart = value; }
         }
-        virtual public int HeapEnd
+
+        public virtual int HeapEnd
         {
-            get
-            {
-                return heapEnd;
-            }
-
+            get { return heapEnd; }
         }
-        virtual public int PText
+
+        public virtual int PText
         {
-            get
-            {
-                return pText;
-            }
+            get { return pText; }
 
-            set
-            {
-                pText = value;
-            }
-
+            set { pText = value; }
         }
-        virtual public int UnitsStart
+
+        public virtual int UnitsStart
         {
-            get
-            {
-                return unitsStart;
-            }
+            get { return unitsStart; }
 
-            set
-            {
-                this.unitsStart = value;
-            }
-
+            set { this.unitsStart = value; }
         }
-        virtual public byte[] Heap
+
+        public virtual byte[] Heap
         {
-            get
-            {
-                return heap;
-            }
-
+            get { return heap; }
         }
+
         //UPGRADE_NOTE: Final was removed from the declaration of 'N4 '. "ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?index='!DefaultContextWindowIndex'&keyword='jlca1003'"
         public const int N1 = 4;
         public const int N2 = 4;
         public const int N3 = 4;
-        public static readonly int N4 = (128 + 3 - 1 * N1 - 2 * N2 - 3 * N3) / 4;
+        public static readonly int N4 = (128 + 3 - 1*N1 - 2*N2 - 3*N3)/4;
 
         //UPGRADE_NOTE: Final was removed from the declaration of 'N_INDEXES '. "ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?index='!DefaultContextWindowIndex'&keyword='jlca1003'"
         public static readonly int N_INDEXES = N1 + N2 + N3 + N4;
@@ -136,10 +113,11 @@ namespace SharpCompress.Compressor.PPMd.H
 
         private int U2B(int NU)
         {
-            return UNIT_SIZE * NU;
+            return UNIT_SIZE*NU;
         }
 
         /* memblockptr */
+
         private int MBPtr(int BasePtr, int Items)
         {
             return (BasePtr + U2B(Items));
@@ -189,11 +167,11 @@ namespace SharpCompress.Compressor.PPMd.H
                 return true;
             }
             stopSubAllocator();
-            int allocSize = t / FIXED_UNIT_SIZE * UNIT_SIZE + UNIT_SIZE;
+            int allocSize = t/FIXED_UNIT_SIZE*UNIT_SIZE + UNIT_SIZE;
 
             // adding space for freelist (needed for poiters)
             // 1+ for null pointer
-            int realAllocSize = 1 + allocSize + 4 * N_INDEXES;
+            int realAllocSize = 1 + allocSize + 4*N_INDEXES;
             // adding space for an additional memblock
             tempMemBlockPos = realAllocSize;
             realAllocSize += RarMemBlock.size;
@@ -295,7 +273,7 @@ namespace SharpCompress.Compressor.PPMd.H
                 {
                     glueCount--;
                     i = U2B(indx2Units[indx]);
-                    int j = FIXED_UNIT_SIZE * indx2Units[indx];
+                    int j = FIXED_UNIT_SIZE*indx2Units[indx];
                     if (fakeUnitsStart - pText > j)
                     {
                         fakeUnitsStart -= j;
@@ -304,8 +282,7 @@ namespace SharpCompress.Compressor.PPMd.H
                     }
                     return (0);
                 }
-            }
-            while (freeList[i].GetNext() == 0);
+            } while (freeList[i].GetNext() == 0);
             int retVal = removeNode(i);
             splitBlock(retVal, i, indx);
             return retVal;
@@ -398,14 +375,14 @@ namespace SharpCompress.Compressor.PPMd.H
         public virtual void initSubAllocator()
         {
             int i, k;
-            Utility.Fill(heap, freeListPos, freeListPos + sizeOfFreeList(), (byte)0);
+            Utility.Fill(heap, freeListPos, freeListPos + sizeOfFreeList(), (byte) 0);
 
             pText = heapStart;
 
-            int size2 = FIXED_UNIT_SIZE * (subAllocatorSize / 8 / FIXED_UNIT_SIZE * 7);
-            int realSize2 = size2 / FIXED_UNIT_SIZE * UNIT_SIZE;
+            int size2 = FIXED_UNIT_SIZE*(subAllocatorSize/8/FIXED_UNIT_SIZE*7);
+            int realSize2 = size2/FIXED_UNIT_SIZE*UNIT_SIZE;
             int size1 = subAllocatorSize - size2;
-            int realSize1 = size1 / FIXED_UNIT_SIZE * UNIT_SIZE + size1 % FIXED_UNIT_SIZE;
+            int realSize1 = size1/FIXED_UNIT_SIZE*UNIT_SIZE + size1%FIXED_UNIT_SIZE;
             hiUnit = heapStart + subAllocatorSize;
             loUnit = unitsStart = heapStart + realSize1;
             fakeUnitsStart = heapStart + size1;
@@ -437,7 +414,7 @@ namespace SharpCompress.Compressor.PPMd.H
 
         private int sizeOfFreeList()
         {
-            return freeList.Length * RarNode.size;
+            return freeList.Length*RarNode.size;
         }
 
         // Debug
@@ -480,6 +457,7 @@ namespace SharpCompress.Compressor.PPMd.H
             buffer.Append("\n]");
             return buffer.ToString();
         }
+
         static SubAllocator()
         {
             UNIT_SIZE = System.Math.Max(PPMContext.size, RarMemBlock.size);

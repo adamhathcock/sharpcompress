@@ -39,10 +39,10 @@ namespace SharpCompress.Common.SevenZip
         internal bool IsEmpty()
         {
             return PackSizes.Count == 0
-                && PackCRCs.Count == 0
-                && Folders.Count == 0
-                && NumUnpackStreamsVector.Count == 0
-                && Files.Count == 0;
+                   && PackCRCs.Count == 0
+                   && Folders.Count == 0
+                   && NumUnpackStreamsVector.Count == 0
+                   && Files.Count == 0;
         }
 
         private void FillStartPos()

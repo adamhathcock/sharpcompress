@@ -84,14 +84,8 @@ namespace SharpCompress.Compressor.PPMd
 
         public override long Position
         {
-            get
-            {
-                return position;
-            }
-            set
-            {
-                throw new NotImplementedException();
-            }
+            get { return position; }
+            set { throw new NotImplementedException(); }
         }
 
         public override int Read(byte[] buffer, int offset, int count)
@@ -106,7 +100,7 @@ namespace SharpCompress.Compressor.PPMd
                 int c;
                 while (size < count && (c = modelH.decodeChar()) >= 0)
                 {
-                    buffer[offset++] = (byte)c;
+                    buffer[offset++] = (byte) c;
                     size++;
                 }
             }
@@ -115,7 +109,7 @@ namespace SharpCompress.Compressor.PPMd
                 int c;
                 while (size < count && (c = modelH.decodeChar(decoder)) >= 0)
                 {
-                    buffer[offset++] = (byte)c;
+                    buffer[offset++] = (byte) c;
                     size++;
                 }
             }

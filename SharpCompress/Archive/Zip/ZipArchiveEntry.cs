@@ -28,20 +28,14 @@ namespace SharpCompress.Archive.Zip
 
         public bool IsComplete
         {
-            get
-            {
-                return true;
-            }
+            get { return true; }
         }
 
         #endregion
 
         public string Comment
         {
-            get
-            {
-                return (Parts.Single() as SeekableZipFilePart).Comment;
-            }
+            get { return (Parts.Single() as SeekableZipFilePart).Comment; }
         }
     }
 }

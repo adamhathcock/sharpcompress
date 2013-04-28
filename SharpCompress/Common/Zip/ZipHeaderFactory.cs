@@ -4,6 +4,7 @@ using SharpCompress.Common.Zip.Headers;
 using SharpCompress.IO;
 #if !SILVERLIGHT && !PORTABLE
 using System.Linq;
+
 #endif
 
 namespace SharpCompress.Common.Zip
@@ -116,7 +117,8 @@ namespace SharpCompress.Common.Zip
                     entryHeader.CompressedSize == 0 &&
                     FlagUtility.HasFlag(entryHeader.Flags, HeaderFlags.UsePostDataDescriptor))
                 {
-                    throw new NotSupportedException("SharpCompress cannot currently read non-seekable Zip Streams with encrypted data that has been written in a non-seekable manner.");
+                    throw new NotSupportedException(
+                        "SharpCompress cannot currently read non-seekable Zip Streams with encrypted data that has been written in a non-seekable manner.");
                 }
                 if (password == null)
                 {
@@ -126,7 +128,9 @@ namespace SharpCompress.Common.Zip
                 {
                     byte[] buffer = new byte[12];
                     stream.Read(buffer, 0, 12);
-                    entryHeader.PkwareTraditionalEncryptionData = PkwareTraditionalEncryptionData.ForRead(password, entryHeader, buffer);
+                    entryHeader.PkwareTraditionalEncryptionData = PkwareTraditionalEncryptionData.ForRead(password,
+                                                                                                          entryHeader,
+                                                                                                          buffer);
                     entryHeader.CompressedSize -= 12;
                 }
                 else
@@ -136,14 +140,15 @@ namespace SharpCompress.Common.Zip
 #else
 
                     var data = entryHeader.Extra.Where(x => x.Type == ExtraDataType.WinZipAes).SingleOrDefault();
-                    WinzipAesKeySize keySize = (WinzipAesKeySize)data.DataBytes[4];
+                    WinzipAesKeySize keySize = (WinzipAesKeySize) data.DataBytes[4];
 
-                    byte[] salt = new byte[WinzipAesEncryptionData.KeyLengthInBytes(keySize) / 2];
+                    byte[] salt = new byte[WinzipAesEncryptionData.KeyLengthInBytes(keySize)/2];
                     byte[] passwordVerifyValue = new byte[2];
                     stream.Read(salt, 0, salt.Length);
                     stream.Read(passwordVerifyValue, 0, 2);
-                    entryHeader.WinzipAesEncryptionData = new WinzipAesEncryptionData(keySize, salt, passwordVerifyValue, password);
-                    entryHeader.CompressedSize -= (uint)(salt.Length + 2);
+                    entryHeader.WinzipAesEncryptionData = new WinzipAesEncryptionData(keySize, salt, passwordVerifyValue,
+                                                                                      password);
+                    entryHeader.CompressedSize -= (uint) (salt.Length + 2);
 
 #endif
                 }

@@ -37,8 +37,8 @@ namespace SharpCompress.Compressor.Deflate
 
 
         public DeflateStream(Stream stream, CompressionMode mode,
-            CompressionLevel level = CompressionLevel.Default,
-            bool leaveOpen = false)
+                             CompressionLevel level = CompressionLevel.Default,
+                             bool leaveOpen = false)
         {
             _baseStream = new ZlibBaseStream(stream, mode, level, ZlibStreamFlavor.DEFLATE, leaveOpen);
         }

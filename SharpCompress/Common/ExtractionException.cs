@@ -1,5 +1,4 @@
-﻿
-using System;
+﻿using System;
 
 namespace SharpCompress.Common
 {
@@ -9,6 +8,7 @@ namespace SharpCompress.Common
             : base(message)
         {
         }
+
         public ExtractionException(string message, Exception inner)
             : base(message, inner)
         {

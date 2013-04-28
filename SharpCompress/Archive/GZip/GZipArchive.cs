@@ -161,7 +161,8 @@ namespace SharpCompress.Archive.GZip
             this.SaveTo(stream, CompressionType.GZip);
         }
 
-        protected override GZipArchiveEntry CreateEntry(string filePath, Stream source, long size, DateTime? modified, bool closeStream)
+        protected override GZipArchiveEntry CreateEntry(string filePath, Stream source, long size, DateTime? modified,
+                                                        bool closeStream)
         {
             if (Entries.Any())
             {
@@ -171,7 +172,8 @@ namespace SharpCompress.Archive.GZip
         }
 
         protected override void SaveTo(Stream stream, CompressionInfo compressionInfo,
-            IEnumerable<GZipArchiveEntry> oldEntries, IEnumerable<GZipArchiveEntry> newEntries)
+                                       IEnumerable<GZipArchiveEntry> oldEntries,
+                                       IEnumerable<GZipArchiveEntry> newEntries)
         {
             if (Entries.Count > 1)
             {
@@ -180,7 +182,7 @@ namespace SharpCompress.Archive.GZip
             using (var writer = new GZipWriter(stream))
             {
                 foreach (var entry in oldEntries.Concat(newEntries)
-                    .Where(x => !x.IsDirectory))
+                                                .Where(x => !x.IsDirectory))
                 {
                     using (var entryStream = entry.OpenEntryStream())
                     {

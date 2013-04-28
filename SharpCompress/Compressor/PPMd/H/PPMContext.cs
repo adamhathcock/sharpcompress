@@ -1,23 +1,21 @@
 using System.Text;
+
 namespace SharpCompress.Compressor.PPMd.H
 {
     internal class PPMContext : Pointer
     {
         internal FreqData FreqData
         {
-            get
-            {
-                return freqData;
-            }
+            get { return freqData; }
 
             set
             {
                 this.freqData.SummFreq = value.SummFreq;
                 this.freqData.SetStats(value.GetStats());
             }
-
         }
-        virtual public int NumStats
+
+        public virtual int NumStats
         {
             get
             {
@@ -33,10 +31,9 @@ namespace SharpCompress.Compressor.PPMd.H
                 this.numStats = value & 0xffff;
                 if (Memory != null)
                 {
-                    Utility.WriteLittleEndian(Memory, Address, (short)value);
+                    Utility.WriteLittleEndian(Memory, Address, (short) value);
                 }
             }
-
         }
 
         //UPGRADE_NOTE: Final was removed from the declaration of 'unionSize '. "ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?index='!DefaultContextWindowIndex'&keyword='jlca1003'"
@@ -61,7 +58,7 @@ namespace SharpCompress.Compressor.PPMd.H
         private int suffix; // pointer ppmcontext
 
         //UPGRADE_NOTE: Final was removed from the declaration of 'ExpEscape'. "ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?index='!DefaultContextWindowIndex'&keyword='jlca1003'"
-        public static readonly int[] ExpEscape = new int[] { 25, 14, 9, 7, 5, 5, 4, 4, 4, 3, 3, 3, 2, 2, 2, 2 };
+        public static readonly int[] ExpEscape = new int[] {25, 14, 9, 7, 5, 5, 4, 4, 4, 3, 3, 3, 2, 2, 2, 2};
 
         // Temp fields
         //UPGRADE_NOTE: Final was removed from the declaration of 'tempState1 '. "ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?index='!DefaultContextWindowIndex'&keyword='jlca1003'"
@@ -127,10 +124,7 @@ namespace SharpCompress.Compressor.PPMd.H
 
         internal override int Address
         {
-            get
-            {
-                return base.Address;
-            }
+            get { return base.Address; }
             set
             {
                 base.Address = value;
@@ -203,20 +197,17 @@ namespace SharpCompress.Compressor.PPMd.H
                         p1.SetValues(temp2);
                         p1.DecrementAddress();
                         temp3.Address = p1.Address - State.Size;
-                    }
-                    while (p1.Address != freqData.GetStats() && tmp.Freq > temp3.Freq);
+                    } while (p1.Address != freqData.GetStats() && tmp.Freq > temp3.Freq);
                     p1.SetValues(tmp);
                 }
-            }
-            while (--i != 0);
+            } while (--i != 0);
             if (p.Freq == 0)
             {
                 do
                 {
                     i++;
                     p.DecrementAddress();
-                }
-                while (p.Freq == 0);
+                } while (p.Freq == 0);
                 EscFreq += i;
                 NumStats = NumStats - i;
                 if (NumStats == 1)
@@ -230,8 +221,7 @@ namespace SharpCompress.Compressor.PPMd.H
                         // tmp.Freq-=(tmp.Freq >> 1)
                         tmp.DecrementFreq(Utility.URShift(tmp.Freq, 1));
                         EscFreq = Utility.URShift(EscFreq, 1);
-                    }
-                    while (EscFreq > 1);
+                    } while (EscFreq > 1);
                     model.SubAlloc.freeUnits(freqData.GetStats(), Utility.URShift((OldNS + 1), 1));
                     oneState.SetValues(tmp);
                     model.FoundState.Address = oneState.Address;
@@ -255,7 +245,7 @@ namespace SharpCompress.Compressor.PPMd.H
             int ret = 0;
             ret += Model.PrevSuccess;
             ret += Model.getNS2BSIndx()[tempSuffix.NumStats - 1];
-            ret += Model.HiBitsFlag + 2 * Model.getHB2Flag()[rs.Symbol];
+            ret += Model.HiBitsFlag + 2*Model.getHB2Flag()[rs.Symbol];
             ret += ((Utility.URShift(Model.RunLength, 26)) & 0x20);
             return ret;
         }
@@ -335,7 +325,7 @@ namespace SharpCompress.Compressor.PPMd.H
         internal void update1_0(ModelPPM model, int p)
         {
             model.FoundState.Address = p;
-            model.PrevSuccess = 2 * model.FoundState.Freq > freqData.SummFreq ? 1 : 0;
+            model.PrevSuccess = 2*model.FoundState.Freq > freqData.SummFreq ? 1 : 0;
             model.incRunLength(model.PrevSuccess);
             freqData.IncrementSummFreq(4);
             model.FoundState.IncrementFreq(4);
@@ -361,12 +351,10 @@ namespace SharpCompress.Compressor.PPMd.H
                 do
                 {
                     p.IncrementAddress(); // p++;
-                }
-                while (model.CharMask[p.Symbol] == model.EscCount);
+                } while (model.CharMask[p.Symbol] == model.EscCount);
                 hiCnt += p.Freq;
                 ps[pps++] = p.Address;
-            }
-            while (--i != 0);
+            } while (--i != 0);
             coder.SubRange.incScale(hiCnt);
             count = coder.CurrentCount;
             if (count >= coder.SubRange.Scale)
@@ -397,9 +385,8 @@ namespace SharpCompress.Compressor.PPMd.H
                 {
                     temp.Address = ps[++pps]; // (*++pps)
                     model.CharMask[temp.Symbol] = model.EscCount;
-                }
-                while (--i != 0);
-                psee2c.incSumm((int)coder.SubRange.Scale);
+                } while (--i != 0);
+                psee2c.incSumm((int) coder.SubRange.Scale);
                 model.NumMasked = NumStats;
             }
             return (true);
@@ -431,8 +418,8 @@ namespace SharpCompress.Compressor.PPMd.H
                 int idx1 = model.getNS2Indx()[Diff - 1];
                 int idx2 = 0;
                 idx2 += ((Diff < suff.NumStats - numStats) ? 1 : 0);
-                idx2 += 2 * ((freqData.SummFreq < 11 * numStats) ? 1 : 0);
-                idx2 += 4 * ((model.NumMasked > Diff) ? 1 : 0);
+                idx2 += 2*((freqData.SummFreq < 11*numStats) ? 1 : 0);
+                idx2 += 4*((model.NumMasked > Diff) ? 1 : 0);
                 idx2 += model.HiBitsFlag;
                 psee2c = model.getSEE2Cont()[idx1][idx2];
                 model.Coder.SubRange.Scale = psee2c.Mean;
@@ -457,8 +444,8 @@ namespace SharpCompress.Compressor.PPMd.H
                 int idx1 = model.getNS2Indx()[nonMasked - 1];
                 int idx2 = 0;
                 idx2 += ((nonMasked < suff.NumStats - numStats) ? 1 : 0);
-                idx2 += 2 * ((freqData.SummFreq < 11 * numStats) ? 1 : 0);
-                idx2 += 4 * ((numMasked > nonMasked) ? 1 : 0);
+                idx2 += 2*((freqData.SummFreq < 11*numStats) ? 1 : 0);
+                idx2 += 4*((numMasked > nonMasked) ? 1 : 0);
                 idx2 += model.HiBitsFlag;
                 psee2c = model.getSEE2Cont()[idx1][idx2];
                 escFreq = psee2c.Mean;
@@ -473,7 +460,6 @@ namespace SharpCompress.Compressor.PPMd.H
 
         internal bool decodeSymbol1(ModelPPM model)
         {
-
             RangeCoder coder = model.Coder;
             coder.SubRange.Scale = freqData.SummFreq;
             State p = new State(model.Heap);
@@ -487,7 +473,7 @@ namespace SharpCompress.Compressor.PPMd.H
             if (count < (HiCnt = p.Freq))
             {
                 coder.SubRange.HighCount = HiCnt;
-                model.PrevSuccess = (2 * HiCnt > coder.SubRange.Scale) ? 1 : 0;
+                model.PrevSuccess = (2*HiCnt > coder.SubRange.Scale) ? 1 : 0;
                 model.incRunLength(model.PrevSuccess);
                 HiCnt += 4;
                 model.FoundState.Address = p.Address;
@@ -523,8 +509,7 @@ namespace SharpCompress.Compressor.PPMd.H
                     do
                     {
                         model.CharMask[p.DecrementAddress().Symbol] = model.EscCount;
-                    }
-                    while (--i != 0);
+                    } while (--i != 0);
                     coder.SubRange.HighCount = coder.SubRange.Scale;
                     return (true);
                 }
@@ -554,6 +539,7 @@ namespace SharpCompress.Compressor.PPMd.H
             buffer.Append("\n]");
             return buffer.ToString();
         }
+
         static PPMContext()
         {
             unionSize = System.Math.Max(FreqData.Size, State.Size);

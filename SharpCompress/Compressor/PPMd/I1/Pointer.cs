@@ -45,18 +45,18 @@ namespace SharpCompress.Compressor.PPMd.I1
         {
             get
             {
-                #if DEBUG
+#if DEBUG
                 if (Address == 0)
                     throw new InvalidOperationException("The pointer being indexed is a null pointer.");
-                #endif
+#endif
                 return Memory[Address + offset];
             }
             set
             {
-                #if DEBUG
+#if DEBUG
                 if (Address == 0)
                     throw new InvalidOperationException("The pointer being indexed is a null pointer.");
-                #endif
+#endif
                 Memory[Address + offset] = value;
             }
         }
@@ -99,10 +99,10 @@ namespace SharpCompress.Compressor.PPMd.I1
         /// <returns></returns>
         public static Pointer operator +(Pointer pointer, int offset)
         {
-            #if DEBUG
+#if DEBUG
             if (pointer.Address == 0)
                 throw new InvalidOperationException("The pointer is a null pointer.");
-            #endif
+#endif
             pointer.Address = (uint) (pointer.Address + offset);
             return pointer;
         }
@@ -115,10 +115,10 @@ namespace SharpCompress.Compressor.PPMd.I1
         /// <returns></returns>
         public static Pointer operator +(Pointer pointer, uint offset)
         {
-            #if DEBUG
+#if DEBUG
             if (pointer.Address == 0)
                 throw new InvalidOperationException("The pointer is a null pointer.");
-            #endif
+#endif
             pointer.Address += offset;
             return pointer;
         }
@@ -130,10 +130,10 @@ namespace SharpCompress.Compressor.PPMd.I1
         /// <returns></returns>
         public static Pointer operator ++(Pointer pointer)
         {
-            #if DEBUG
+#if DEBUG
             if (pointer.Address == 0)
                 throw new InvalidOperationException("The pointer being incremented is a null pointer.");
-            #endif
+#endif
             pointer.Address++;
             return pointer;
         }
@@ -146,10 +146,10 @@ namespace SharpCompress.Compressor.PPMd.I1
         /// <returns></returns>
         public static Pointer operator -(Pointer pointer, int offset)
         {
-            #if DEBUG
+#if DEBUG
             if (pointer.Address == 0)
                 throw new InvalidOperationException("The pointer is a null pointer.");
-            #endif
+#endif
             pointer.Address = (uint) (pointer.Address - offset);
             return pointer;
         }
@@ -162,10 +162,10 @@ namespace SharpCompress.Compressor.PPMd.I1
         /// <returns></returns>
         public static Pointer operator -(Pointer pointer, uint offset)
         {
-            #if DEBUG
+#if DEBUG
             if (pointer.Address == 0)
                 throw new InvalidOperationException("The pointer is a null pointer.");
-            #endif
+#endif
             pointer.Address -= offset;
             return pointer;
         }
@@ -177,10 +177,10 @@ namespace SharpCompress.Compressor.PPMd.I1
         /// <returns></returns>
         public static Pointer operator --(Pointer pointer)
         {
-            #if DEBUG
+#if DEBUG
             if (pointer.Address == 0)
                 throw new InvalidOperationException("The pointer being decremented is a null pointer.");
-            #endif
+#endif
             pointer.Address--;
             return pointer;
         }
@@ -193,12 +193,14 @@ namespace SharpCompress.Compressor.PPMd.I1
         /// <returns>The number of bytes between the two pointers.</returns>
         public static uint operator -(Pointer pointer1, Pointer pointer2)
         {
-            #if DEBUG
+#if DEBUG
             if (pointer1.Address == 0)
-                throw new InvalidOperationException("The pointer to the left of the subtraction operator is a null pointer.");
+                throw new InvalidOperationException(
+                    "The pointer to the left of the subtraction operator is a null pointer.");
             if (pointer2.Address == 0)
-                throw new InvalidOperationException("The pointer to the right of the subtraction operator is a null pointer.");
-            #endif
+                throw new InvalidOperationException(
+                    "The pointer to the right of the subtraction operator is a null pointer.");
+#endif
             return pointer1.Address - pointer2.Address;
         }
 
@@ -210,12 +212,14 @@ namespace SharpCompress.Compressor.PPMd.I1
         /// <returns></returns>
         public static bool operator <(Pointer pointer1, Pointer pointer2)
         {
-            #if DEBUG
+#if DEBUG
             if (pointer1.Address == 0)
-                throw new InvalidOperationException("The pointer to the left of the less than operator is a null pointer.");
+                throw new InvalidOperationException(
+                    "The pointer to the left of the less than operator is a null pointer.");
             if (pointer2.Address == 0)
-                throw new InvalidOperationException("The pointer to the right of the less than operator is a null pointer.");
-            #endif
+                throw new InvalidOperationException(
+                    "The pointer to the right of the less than operator is a null pointer.");
+#endif
             return pointer1.Address < pointer2.Address;
         }
 
@@ -227,12 +231,14 @@ namespace SharpCompress.Compressor.PPMd.I1
         /// <returns></returns>
         public static bool operator <=(Pointer pointer1, Pointer pointer2)
         {
-            #if DEBUG
+#if DEBUG
             if (pointer1.Address == 0)
-                throw new InvalidOperationException("The pointer to the left of the less than or equal to operator is a null pointer.");
+                throw new InvalidOperationException(
+                    "The pointer to the left of the less than or equal to operator is a null pointer.");
             if (pointer2.Address == 0)
-                throw new InvalidOperationException("The pointer to the right of the less than or equal to operator is a null pointer.");
-            #endif
+                throw new InvalidOperationException(
+                    "The pointer to the right of the less than or equal to operator is a null pointer.");
+#endif
             return pointer1.Address <= pointer2.Address;
         }
 
@@ -244,12 +250,14 @@ namespace SharpCompress.Compressor.PPMd.I1
         /// <returns></returns>
         public static bool operator >(Pointer pointer1, Pointer pointer2)
         {
-            #if DEBUG
+#if DEBUG
             if (pointer1.Address == 0)
-                throw new InvalidOperationException("The pointer to the left of the greater than operator is a null pointer.");
+                throw new InvalidOperationException(
+                    "The pointer to the left of the greater than operator is a null pointer.");
             if (pointer2.Address == 0)
-                throw new InvalidOperationException("The pointer to the right of the greater than operator is a null pointer.");
-            #endif
+                throw new InvalidOperationException(
+                    "The pointer to the right of the greater than operator is a null pointer.");
+#endif
             return pointer1.Address > pointer2.Address;
         }
 
@@ -261,12 +269,14 @@ namespace SharpCompress.Compressor.PPMd.I1
         /// <returns></returns>
         public static bool operator >=(Pointer pointer1, Pointer pointer2)
         {
-            #if DEBUG
+#if DEBUG
             if (pointer1.Address == 0)
-                throw new InvalidOperationException("The pointer to the left of the greater than or equal to operator is a null pointer.");
+                throw new InvalidOperationException(
+                    "The pointer to the left of the greater than or equal to operator is a null pointer.");
             if (pointer2.Address == 0)
-                throw new InvalidOperationException("The pointer to the right of the greater than or equal to operator is a null pointer.");
-            #endif
+                throw new InvalidOperationException(
+                    "The pointer to the right of the greater than or equal to operator is a null pointer.");
+#endif
             return pointer1.Address >= pointer2.Address;
         }
 

@@ -26,10 +26,7 @@ namespace SharpCompress.Common.Zip
 
         internal string Comment
         {
-            get
-            {
-                return (Header as DirectoryEntryHeader).Comment;
-            }
+            get { return (Header as DirectoryEntryHeader).Comment; }
         }
 
         private void LoadLocalHeader()

@@ -52,7 +52,7 @@ namespace SharpCompress.Reader.Zip
                         case ZipHeaderType.LocalEntry:
                             {
                                 yield return new ZipEntry(new StreamingZipFilePart(h as LocalEntryHeader,
-                                    stream));
+                                                                                   stream));
                             }
                             break;
                         case ZipHeaderType.DirectoryEnd:

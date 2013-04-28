@@ -11,17 +11,18 @@ namespace SharpCompress.Compressor.LZMA
 {
     internal static class DecoderRegistry
     {
-        const uint k_Copy = 0x0;
-        const uint k_Delta = 3;
-        const uint k_LZMA2 = 0x21;
-        const uint k_LZMA = 0x030101;
-        const uint k_PPMD = 0x030401;
-        const uint k_BCJ = 0x03030103;
-        const uint k_BCJ2 = 0x0303011B;
-        const uint k_Deflate = 0x040108;
-        const uint k_BZip2 = 0x040202;
+        private const uint k_Copy = 0x0;
+        private const uint k_Delta = 3;
+        private const uint k_LZMA2 = 0x21;
+        private const uint k_LZMA = 0x030101;
+        private const uint k_PPMD = 0x030401;
+        private const uint k_BCJ = 0x03030103;
+        private const uint k_BCJ2 = 0x0303011B;
+        private const uint k_Deflate = 0x040108;
+        private const uint k_BZip2 = 0x040202;
 
-        internal static Stream CreateDecoderStream(CMethodId id, Stream[] inStreams, byte[] info, IPasswordProvider pass, long limit)
+        internal static Stream CreateDecoderStream(CMethodId id, Stream[] inStreams, byte[] info, IPasswordProvider pass,
+                                                   long limit)
         {
             switch (id.Id)
             {

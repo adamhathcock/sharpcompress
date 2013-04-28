@@ -1,4 +1,3 @@
-
 namespace SharpCompress.Compressor.Rar.decode
 {
     internal class Compress

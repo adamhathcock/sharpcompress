@@ -32,9 +32,10 @@ namespace SharpCompress.Common.Zip
                 signature = reader.ReadUInt32();
                 offset--;
                 iterationCount++;
-                if(iterationCount > MAX_ITERATIONS_FOR_DIRECTORY_HEADER)
+                if (iterationCount > MAX_ITERATIONS_FOR_DIRECTORY_HEADER)
                 {
-                   throw new ArchiveException("Could not find Zip file Directory at the end of the file.  File may be corrupted.");
+                    throw new ArchiveException(
+                        "Could not find Zip file Directory at the end of the file.  File may be corrupted.");
                 }
             } while (signature != DIRECTORY_END_HEADER_BYTES);
 

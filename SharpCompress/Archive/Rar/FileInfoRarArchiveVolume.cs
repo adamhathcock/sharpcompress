@@ -24,22 +24,14 @@ namespace SharpCompress.Archive.Rar
             //make sure we're closing streams with fileinfo
             if (options.HasFlag(Options.KeepStreamsOpen))
             {
-                options = (Options)FlagUtility.SetFlag(options, Options.KeepStreamsOpen, false);
+                options = (Options) FlagUtility.SetFlag(options, Options.KeepStreamsOpen, false);
             }
             return options;
         }
 
-        internal ReadOnlyCollection<RarFilePart> FileParts
-        {
-            get;
-            private set;
-        }
+        internal ReadOnlyCollection<RarFilePart> FileParts { get; private set; }
 
-        internal FileInfo FileInfo
-        {
-            get;
-            private set;
-        }
+        internal FileInfo FileInfo { get; private set; }
 
         internal override RarFilePart CreateFilePart(FileHeader fileHeader, MarkHeader markHeader)
         {
@@ -53,10 +45,7 @@ namespace SharpCompress.Archive.Rar
 
         public override FileInfo VolumeFile
         {
-            get
-            {
-                return FileInfo;
-            }
+            get { return FileInfo; }
         }
     }
 }

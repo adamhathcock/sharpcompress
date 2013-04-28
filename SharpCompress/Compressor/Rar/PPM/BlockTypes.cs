@@ -1,4 +1,3 @@
-
 namespace SharpCompress.Compressor.Rar.PPM
 {
     internal enum BlockTypes

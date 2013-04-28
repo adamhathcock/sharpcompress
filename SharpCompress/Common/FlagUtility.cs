@@ -50,12 +50,12 @@ namespace SharpCompress.Common
         }
 
 #if PORTABLE
-        /// <summary>
-        /// Generically checks enums in a Windows Phone 7 enivronment
-        /// </summary>
-        /// <param name="enumVal"></param>
-        /// <param name="flag"></param>
-        /// <returns></returns>
+    /// <summary>
+    /// Generically checks enums in a Windows Phone 7 enivronment
+    /// </summary>
+    /// <param name="enumVal"></param>
+    /// <param name="flag"></param>
+    /// <returns></returns>
         public static bool HasFlag(this Enum enumVal, Enum flag)
         {
             if (enumVal.GetHashCode() > 0) //GetHashCode returns the enum value. But it's something very crazy if not set beforehand
@@ -71,12 +71,12 @@ namespace SharpCompress.Common
 #endif
 
 #if THREEFIVE
-        /// <summary>
-        /// Generically checks enums in a .NET 3.5
-        /// </summary>
-        /// <param name="enumVal"></param>
-        /// <param name="flag"></param>
-        /// <returns></returns>
+    /// <summary>
+    /// Generically checks enums in a .NET 3.5
+    /// </summary>
+    /// <param name="enumVal"></param>
+    /// <param name="flag"></param>
+    /// <returns></returns>
         public static bool HasFlag(this Enum enumVal, Enum flag)
         {
             return (Convert.ToInt32(enumVal) & Convert.ToInt32(flag)) == Convert.ToInt32(flag);

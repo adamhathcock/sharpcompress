@@ -26,7 +26,7 @@
 
         public override bool Equals(object obj)
         {
-            return obj is CMethodId && (CMethodId)obj == this;
+            return obj is CMethodId && (CMethodId) obj == this;
         }
 
         public bool Equals(CMethodId other)
@@ -47,7 +47,7 @@
         public int GetLength()
         {
             int bytes = 0;
-            for(ulong value = Id; value != 0; value >>= 8)
+            for (ulong value = Id; value != 0; value >>= 8)
                 bytes++;
             return bytes;
         }

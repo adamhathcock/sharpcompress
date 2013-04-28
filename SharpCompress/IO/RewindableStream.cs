@@ -55,7 +55,7 @@ namespace SharpCompress.IO
                 byte[] data = bufferStream.ToArray();
                 long position = bufferStream.Position;
                 bufferStream.SetLength(0);
-                bufferStream.Write(data, (int)position, data.Length - (int)position);
+                bufferStream.Write(data, (int) position, data.Length - (int) position);
                 bufferStream.Position = 0;
             }
             IsRecording = true;
@@ -88,10 +88,7 @@ namespace SharpCompress.IO
 
         public override long Position
         {
-            get
-            {
-                return stream.Position + bufferStream.Position - bufferStream.Length;
-            }
+            get { return stream.Position + bufferStream.Position - bufferStream.Length; }
             set
             {
                 if (!isRewound)

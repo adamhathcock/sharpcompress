@@ -423,7 +423,7 @@ namespace SharpCompress.Compressor.Deflate
             if (!LastModified.HasValue)
                 LastModified = DateTime.Now;
             TimeSpan delta = LastModified.Value - UnixEpoch;
-            var timet = (Int32)delta.TotalSeconds;
+            var timet = (Int32) delta.TotalSeconds;
             Array.Copy(BitConverter.GetBytes(timet), 0, header, i, 4);
             i += 4;
 

@@ -5,6 +5,7 @@ namespace SharpCompress.Compressor.Filters
     internal class BCJFilter : Filter
     {
         private static readonly bool[] MASK_TO_ALLOWED_STATUS = new bool[] { true, true, true, false, true, false, false, false };
+
         private static readonly int[] MASK_TO_BIT_NUMBER = new int[] { 0, 1, 2, 2, 3, 3, 3, 3 };
 
         private int pos;
@@ -34,7 +35,8 @@ namespace SharpCompress.Compressor.Filters
 
                 prevPos = i - prevPos;
                 if ((prevPos & ~3) != 0)
-                { // (unsigned)prevPos > 3
+                {
+                    // (unsigned)prevPos > 3
                     prevMask = 0;
                 }
                 else
@@ -43,7 +45,7 @@ namespace SharpCompress.Compressor.Filters
                     if (prevMask != 0)
                     {
                         if (!MASK_TO_ALLOWED_STATUS[prevMask] || test86MSByte(
-                                buffer[i + 4 - MASK_TO_BIT_NUMBER[prevMask]]))
+                            buffer[i + 4 - MASK_TO_BIT_NUMBER[prevMask]]))
                         {
                             prevPos = i;
                             prevMask = (prevMask << 1) | 1;

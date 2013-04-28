@@ -9,6 +9,7 @@ namespace SharpCompress.Compressor.Rar.VM
         VM_JZ = 4,
         VM_JNZ = 5,
         VM_INC = 6,
+
         VM_DEC =
             7,
         VM_JMP = 8,
@@ -16,6 +17,7 @@ namespace SharpCompress.Compressor.Rar.VM
         VM_AND = 10,
         VM_OR = 11,
         VM_TEST = 12,
+
         VM_JS =
             13,
         VM_JNS = 14,
@@ -23,6 +25,7 @@ namespace SharpCompress.Compressor.Rar.VM
         VM_JBE = 16,
         VM_JA = 17,
         VM_JAE = 18,
+
         VM_PUSH =
             19,
         VM_POP = 20,
@@ -30,6 +33,7 @@ namespace SharpCompress.Compressor.Rar.VM
         VM_RET = 22,
         VM_NOT = 23,
         VM_SHL = 24,
+
         VM_SHR =
             25,
         VM_SAR = 26,
@@ -37,6 +41,7 @@ namespace SharpCompress.Compressor.Rar.VM
         VM_PUSHA = 28,
         VM_POPA = 29,
         VM_PUSHF = 30,
+
         VM_POPF =
             31,
         VM_MOVZX = 32,
@@ -44,6 +49,7 @@ namespace SharpCompress.Compressor.Rar.VM
         VM_XCHG = 34,
         VM_MUL = 35,
         VM_DIV = 36,
+
         VM_ADC =
             37,
         VM_SBB = 38,
@@ -60,6 +66,7 @@ namespace SharpCompress.Compressor.Rar.VM
         VM_SUBD = 47,
         VM_INCB = 48,
         VM_INCD = 49,
+
         VM_DECB =
             50,
         VM_DECD = 51,

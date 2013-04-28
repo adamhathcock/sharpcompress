@@ -1,4 +1,3 @@
-
 namespace SharpCompress.Compressor.PPMd.H
 {
     internal class RarMemBlock : Pointer
@@ -30,10 +29,9 @@ namespace SharpCompress.Compressor.PPMd.H
                 this.stamp = value;
                 if (Memory != null)
                 {
-                    Utility.WriteLittleEndian(Memory, Address, (short)value);
+                    Utility.WriteLittleEndian(Memory, Address, (short) value);
                 }
             }
-
         }
 
         internal void InsertAt(RarMemBlock p)
@@ -95,7 +93,7 @@ namespace SharpCompress.Compressor.PPMd.H
             NU = nu & 0xffff;
             if (Memory != null)
             {
-                Utility.WriteLittleEndian(Memory, Address + 2, (short)nu);
+                Utility.WriteLittleEndian(Memory, Address + 2, (short) nu);
             }
         }
 

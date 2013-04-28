@@ -1,5 +1,4 @@
-﻿
-namespace SharpCompress.Compressor
+﻿namespace SharpCompress.Compressor
 {
     public enum CompressionMode
     {

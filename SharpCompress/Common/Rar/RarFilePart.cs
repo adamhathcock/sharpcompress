@@ -14,17 +14,9 @@ namespace SharpCompress.Common.Rar
             FileHeader = fh;
         }
 
-        internal MarkHeader MarkHeader
-        {
-            get;
-            private set;
-        }
+        internal MarkHeader MarkHeader { get; private set; }
 
-        internal FileHeader FileHeader
-        {
-            get;
-            private set;
-        }
+        internal FileHeader FileHeader { get; private set; }
 
         internal override Stream GetRawStream()
         {

@@ -1,5 +1,4 @@
-﻿
-namespace SharpCompress.Compressor.Deflate
+﻿namespace SharpCompress.Compressor.Deflate
 {
     /// <summary>
     /// Describes how to flush the current deflate operation. 

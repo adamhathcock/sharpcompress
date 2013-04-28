@@ -16,7 +16,7 @@ namespace SharpCompress.Common.Tar
         {
             if (disposing)
             {
-                int skipBytes = this.amountRead % 512;
+                int skipBytes = this.amountRead%512;
                 if (skipBytes == 0)
                 {
                     return;
@@ -31,40 +31,23 @@ namespace SharpCompress.Common.Tar
             }
         }
 
-        private long BytesLeftToRead
-        {
-            get;
-            set;
-        }
+        private long BytesLeftToRead { get; set; }
 
-        public Stream Stream
-        {
-            get;
-            private set;
-        }
+        public Stream Stream { get; private set; }
 
         public override bool CanRead
         {
-            get
-            {
-                return true;
-            }
+            get { return true; }
         }
 
         public override bool CanSeek
         {
-            get
-            {
-                return false;
-            }
+            get { return false; }
         }
 
         public override bool CanWrite
         {
-            get
-            {
-                return false;
-            }
+            get { return false; }
         }
 
         public override void Flush()
@@ -74,29 +57,20 @@ namespace SharpCompress.Common.Tar
 
         public override long Length
         {
-            get
-            {
-                throw new System.NotImplementedException();
-            }
+            get { throw new System.NotImplementedException(); }
         }
 
         public override long Position
         {
-            get
-            {
-                throw new System.NotImplementedException();
-            }
-            set
-            {
-                throw new System.NotImplementedException();
-            }
+            get { throw new System.NotImplementedException(); }
+            set { throw new System.NotImplementedException(); }
         }
 
         public override int Read(byte[] buffer, int offset, int count)
         {
             if (this.BytesLeftToRead < count)
             {
-                count = (int)this.BytesLeftToRead;
+                count = (int) this.BytesLeftToRead;
             }
             int read = this.Stream.Read(buffer, offset, count);
             if (read > 0)

@@ -57,7 +57,7 @@ namespace SharpCompress.Common.GZip
                 // read and discard extra field
                 n = stream.Read(header, 0, 2); // 2-byte length field
 
-                Int16 extraLength = (Int16)(header[0] + header[1] * 256);
+                Int16 extraLength = (Int16) (header[0] + header[1]*256);
                 byte[] extra = new byte[extraLength];
                 n = stream.Read(extra, 0, extra.Length);
                 if (n != extraLength)

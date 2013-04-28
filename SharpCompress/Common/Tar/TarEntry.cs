@@ -82,7 +82,8 @@ namespace SharpCompress.Common.Tar
             get { return filePart.AsEnumerable<FilePart>(); }
         }
 
-        internal static IEnumerable<TarEntry> GetEntries(StreamingMode mode, Stream stream, CompressionType compressionType)
+        internal static IEnumerable<TarEntry> GetEntries(StreamingMode mode, Stream stream,
+                                                         CompressionType compressionType)
         {
             foreach (TarHeader h in TarHeaderFactory.ReadHeader(mode, stream))
             {

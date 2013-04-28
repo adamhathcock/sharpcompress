@@ -14,11 +14,7 @@ namespace SharpCompress.Compressor.Rar.VM
 
 
         //}
-        internal byte[] Mem
-        {
-            get;
-            private set;
-        }
+        internal byte[] Mem { get; private set; }
 
         public const int VM_MEMSIZE = 0x40000;
 
@@ -96,11 +92,11 @@ namespace SharpCompress.Compressor.Rar.VM
             {
                 if (IsVMMem(mem))
                 {
-                    mem[offset] = (byte)value;
+                    mem[offset] = (byte) value;
                 }
                 else
                 {
-                    mem[offset] = (byte)((mem[offset] & 0x00) | (byte)(value & 0xff));
+                    mem[offset] = (byte) ((mem[offset] & 0x00) | (byte) (value & 0xff));
                 }
             }
             else
@@ -128,10 +124,10 @@ namespace SharpCompress.Compressor.Rar.VM
 
         internal void SetLowEndianValue(List<byte> mem, int offset, int value)
         {
-            mem[offset + 0] = (byte)(value & 0xff);
-            mem[offset + 1] = (byte)(Utility.URShift(value, 8) & 0xff);
-            mem[offset + 2] = (byte)(Utility.URShift(value, 16) & 0xff);
-            mem[offset + 3] = (byte)(Utility.URShift(value, 24) & 0xff);
+            mem[offset + 0] = (byte) (value & 0xff);
+            mem[offset + 1] = (byte) (Utility.URShift(value, 8) & 0xff);
+            mem[offset + 2] = (byte) (Utility.URShift(value, 16) & 0xff);
+            mem[offset + 3] = (byte) (Utility.URShift(value, 24) & 0xff);
         }
 
         private int GetOperand(VMPreparedOperand cmdOp)
@@ -153,36 +149,37 @@ namespace SharpCompress.Compressor.Rar.VM
         public void execute(VMPreparedProgram prg)
         {
             for (int i = 0; i < prg.InitR.Length; i++)
-            // memcpy(R,Prg->InitR,sizeof(Prg->InitR));
+                // memcpy(R,Prg->InitR,sizeof(Prg->InitR));
             {
                 R[i] = prg.InitR[i];
             }
 
-            long globalSize = (long)(Math.Min(prg.GlobalData.Count, VM_GLOBALMEMSIZE)) & 0xffFFffFF;
+            long globalSize = (long) (Math.Min(prg.GlobalData.Count, VM_GLOBALMEMSIZE)) & 0xffFFffFF;
             if (globalSize != 0)
             {
                 for (int i = 0; i < globalSize; i++)
-                // memcpy(Mem+VM_GLOBALMEMADDR,&Prg->GlobalData[0],GlobalSize);
+                    // memcpy(Mem+VM_GLOBALMEMADDR,&Prg->GlobalData[0],GlobalSize);
                 {
                     Mem[VM_GLOBALMEMADDR + i] = prg.GlobalData[i];
                 }
             }
-            long staticSize = (long)(Math.Min(prg.StaticData.Count, VM_GLOBALMEMSIZE - globalSize)) & 0xffFFffFF;
+            long staticSize = (long) (Math.Min(prg.StaticData.Count, VM_GLOBALMEMSIZE - globalSize)) & 0xffFFffFF;
             if (staticSize != 0)
             {
                 for (int i = 0; i < staticSize; i++)
-                // memcpy(Mem+VM_GLOBALMEMADDR+GlobalSize,&Prg->StaticData[0],StaticSize);
+                    // memcpy(Mem+VM_GLOBALMEMADDR+GlobalSize,&Prg->StaticData[0],StaticSize);
                 {
-                    Mem[VM_GLOBALMEMADDR + (int)globalSize + i] = prg.StaticData[i];
+                    Mem[VM_GLOBALMEMADDR + (int) globalSize + i] = prg.StaticData[i];
                 }
             }
             R[7] = VM_MEMSIZE;
             flags = 0;
 
             //UPGRADE_NOTE: There is an untranslated Statement.  Please refer to original code. "ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?index='!DefaultContextWindowIndex'&keyword='jlca1153'"
-            List<VMPreparedCommand> preparedCode = prg.AltCommands.Count != 0 ? prg
-                .AltCommands
-                : prg.Commands;
+            List<VMPreparedCommand> preparedCode = prg.AltCommands.Count != 0
+                                                       ? prg
+                                                             .AltCommands
+                                                       : prg.Commands;
 
             if (!ExecuteCode(preparedCode, prg.CommandCount))
             {
@@ -208,7 +205,7 @@ namespace SharpCompress.Compressor.Rar.VM
                 // ->GlobalData.Add(dataSize+VM_FIXEDGLOBALSIZE);
                 prg.GlobalData.SetSize(dataSize + VM_FIXEDGLOBALSIZE);
                 for (int i = 0; i < dataSize + VM_FIXEDGLOBALSIZE; i++)
-                // memcpy(&Prg->GlobalData[0],&Mem[VM_GLOBALMEMADDR],DataSize+VM_FIXEDGLOBALSIZE);
+                    // memcpy(&Prg->GlobalData[0],&Mem[VM_GLOBALMEMADDR],DataSize+VM_FIXEDGLOBALSIZE);
                 {
                     prg.GlobalData[i] = Mem[VM_GLOBALMEMADDR + i];
                 }
@@ -232,7 +229,7 @@ namespace SharpCompress.Compressor.Rar.VM
         }
 
         private bool ExecuteCode(List<VMPreparedCommand> preparedCode,
-        int cmdCount)
+                                 int cmdCount)
         {
             maxOpCount = 25000000;
             this.codeSize = cmdCount;
@@ -245,9 +242,9 @@ namespace SharpCompress.Compressor.Rar.VM
                 int op2 = GetOperand(cmd.Op2);
                 switch (cmd.OpCode)
                 {
-
                     case VMCommands.VM_MOV:
-                        SetValue(cmd.IsByteMode, Mem, op1, GetValue(cmd.IsByteMode, Mem, op2)); // SET_VALUE(Cmd->ByteMode,Op1,GET_VALUE(Cmd->ByteMode,Op2));
+                        SetValue(cmd.IsByteMode, Mem, op1, GetValue(cmd.IsByteMode, Mem, op2));
+                            // SET_VALUE(Cmd->ByteMode,Op1,GET_VALUE(Cmd->ByteMode,Op2));
                         break;
 
                     case VMCommands.VM_MOVB:
@@ -261,7 +258,7 @@ namespace SharpCompress.Compressor.Rar.VM
 
                     case VMCommands.VM_CMP:
                         {
-                            VMFlags value1 = (VMFlags)GetValue(cmd.IsByteMode, Mem, op1);
+                            VMFlags value1 = (VMFlags) GetValue(cmd.IsByteMode, Mem, op1);
                             VMFlags result = value1 - GetValue(cmd.IsByteMode, Mem, op2);
 
                             if (result == 0)
@@ -270,7 +267,7 @@ namespace SharpCompress.Compressor.Rar.VM
                             }
                             else
                             {
-                                flags = (VMFlags)((result > value1) ? 1 : 0 | (int)(result & VMFlags.VM_FS));
+                                flags = (VMFlags) ((result > value1) ? 1 : 0 | (int) (result & VMFlags.VM_FS));
                             }
                         }
                         break;
@@ -278,7 +275,7 @@ namespace SharpCompress.Compressor.Rar.VM
 
                     case VMCommands.VM_CMPB:
                         {
-                            VMFlags value1 = (VMFlags)GetValue(true, Mem, op1);
+                            VMFlags value1 = (VMFlags) GetValue(true, Mem, op1);
                             VMFlags result = value1 - GetValue(true, Mem, op2);
                             if (result == 0)
                             {
@@ -286,14 +283,14 @@ namespace SharpCompress.Compressor.Rar.VM
                             }
                             else
                             {
-                                flags = (VMFlags)((result > value1) ? 1 : 0 | (int)(result & VMFlags.VM_FS));
+                                flags = (VMFlags) ((result > value1) ? 1 : 0 | (int) (result & VMFlags.VM_FS));
                             }
                         }
                         break;
 
                     case VMCommands.VM_CMPD:
                         {
-                            VMFlags value1 = (VMFlags)GetValue(false, Mem, op1);
+                            VMFlags value1 = (VMFlags) GetValue(false, Mem, op1);
                             VMFlags result = value1 - GetValue(false, Mem, op2);
                             if (result == 0)
                             {
@@ -301,7 +298,7 @@ namespace SharpCompress.Compressor.Rar.VM
                             }
                             else
                             {
-                                flags = (VMFlags)((result > value1) ? 1 : 0 | (int)(result & VMFlags.VM_FS));
+                                flags = (VMFlags) ((result > value1) ? 1 : 0 | (int) (result & VMFlags.VM_FS));
                             }
                         }
                         break;
@@ -310,46 +307,79 @@ namespace SharpCompress.Compressor.Rar.VM
                     case VMCommands.VM_ADD:
                         {
                             int value1 = GetValue(cmd.IsByteMode, Mem, op1);
-                            int result = (int)((((long)value1 + (long)GetValue(cmd.IsByteMode, Mem, op2))) & unchecked((int)0xffffffff));
+                            int result =
+                                (int)
+                                ((((long) value1 + (long) GetValue(cmd.IsByteMode, Mem, op2))) &
+                                 unchecked((int) 0xffffffff));
                             if (cmd.IsByteMode)
                             {
                                 result &= 0xff;
-                                flags = (VMFlags)((result < value1) ? 1 : 0 | (result == 0 ? (int)VMFlags.VM_FZ : (((result & 0x80) != 0) ? (int)VMFlags.VM_FS : 0)));
+                                flags =
+                                    (VMFlags)
+                                    ((result < value1)
+                                         ? 1
+                                         : 0 |
+                                           (result == 0
+                                                ? (int) VMFlags.VM_FZ
+                                                : (((result & 0x80) != 0) ? (int) VMFlags.VM_FS : 0)));
                                 // Flags=(Result<Value1)|(Result==0 ? VM_FZ:((Result&0x80) ?
                                 // VM_FS:0));
                             }
                             else
-                                flags = (VMFlags)((result < value1) ? 1 : 0 | (result == 0 ? (int)VMFlags.VM_FZ : (result & (int)VMFlags.VM_FS)));
+                                flags =
+                                    (VMFlags)
+                                    ((result < value1)
+                                         ? 1
+                                         : 0 | (result == 0 ? (int) VMFlags.VM_FZ : (result & (int) VMFlags.VM_FS)));
                             SetValue(cmd.IsByteMode, Mem, op1, result);
                         }
                         break;
 
 
                     case VMCommands.VM_ADDB:
-                        SetValue(true, Mem, op1, (int)((long)GetValue(true, Mem, op1) & 0xFFffFFff + (long)GetValue(true, Mem, op2) & unchecked((int)0xFFffFFff)));
+                        SetValue(true, Mem, op1,
+                                 (int)
+                                 ((long) GetValue(true, Mem, op1) & 0xFFffFFff + (long) GetValue(true, Mem, op2) &
+                                  unchecked((int) 0xFFffFFff)));
                         break;
 
                     case VMCommands.VM_ADDD:
-                        SetValue(false, Mem, op1, (int)((long)GetValue(false, Mem, op1) & 0xFFffFFff + (long)GetValue(false, Mem, op2) & unchecked((int)0xFFffFFff)));
+                        SetValue(false, Mem, op1,
+                                 (int)
+                                 ((long) GetValue(false, Mem, op1) & 0xFFffFFff + (long) GetValue(false, Mem, op2) &
+                                  unchecked((int) 0xFFffFFff)));
                         break;
 
 
                     case VMCommands.VM_SUB:
                         {
                             int value1 = GetValue(cmd.IsByteMode, Mem, op1);
-                            int result = (int)((long)value1 & 0xffFFffFF - (long)GetValue(cmd.IsByteMode, Mem, op2) & unchecked((int)0xFFffFFff));
-                            flags = (VMFlags)((result == 0) ? (int)VMFlags.VM_FZ : ((result > value1) ? 1 : 0 | (result & (int)VMFlags.VM_FS)));
+                            int result =
+                                (int)
+                                ((long) value1 & 0xffFFffFF - (long) GetValue(cmd.IsByteMode, Mem, op2) &
+                                 unchecked((int) 0xFFffFFff));
+                            flags =
+                                (VMFlags)
+                                ((result == 0)
+                                     ? (int) VMFlags.VM_FZ
+                                     : ((result > value1) ? 1 : 0 | (result & (int) VMFlags.VM_FS)));
                             SetValue(cmd.IsByteMode, Mem, op1, result); // (Cmd->ByteMode,Op1,Result);
                         }
                         break;
 
 
                     case VMCommands.VM_SUBB:
-                        SetValue(true, Mem, op1, (int)((long)GetValue(true, Mem, op1) & 0xFFffFFff - (long)GetValue(true, Mem, op2) & unchecked((int)0xFFffFFff)));
+                        SetValue(true, Mem, op1,
+                                 (int)
+                                 ((long) GetValue(true, Mem, op1) & 0xFFffFFff - (long) GetValue(true, Mem, op2) &
+                                  unchecked((int) 0xFFffFFff)));
                         break;
 
                     case VMCommands.VM_SUBD:
-                        SetValue(false, Mem, op1, (int)((long)GetValue(false, Mem, op1) & 0xFFffFFff - (long)GetValue(false, Mem, op2) & unchecked((int)0xFFffFFff)));
+                        SetValue(false, Mem, op1,
+                                 (int)
+                                 ((long) GetValue(false, Mem, op1) & 0xFFffFFff - (long) GetValue(false, Mem, op2) &
+                                  unchecked((int) 0xFFffFFff)));
                         break;
 
 
@@ -371,42 +401,42 @@ namespace SharpCompress.Compressor.Rar.VM
 
                     case VMCommands.VM_INC:
                         {
-                            int result = (int)((long)GetValue(cmd.IsByteMode, Mem, op1) & 0xFFffFFffL + 1L);
+                            int result = (int) ((long) GetValue(cmd.IsByteMode, Mem, op1) & 0xFFffFFffL + 1L);
                             if (cmd.IsByteMode)
                             {
                                 result &= 0xff;
                             }
 
                             SetValue(cmd.IsByteMode, Mem, op1, result);
-                            flags = (VMFlags)(result == 0 ? (int)VMFlags.VM_FZ : result & (int)VMFlags.VM_FS);
+                            flags = (VMFlags) (result == 0 ? (int) VMFlags.VM_FZ : result & (int) VMFlags.VM_FS);
                         }
                         break;
 
 
                     case VMCommands.VM_INCB:
-                        SetValue(true, Mem, op1, (int)((long)GetValue(true, Mem, op1) & 0xFFffFFffL + 1L));
+                        SetValue(true, Mem, op1, (int) ((long) GetValue(true, Mem, op1) & 0xFFffFFffL + 1L));
                         break;
 
                     case VMCommands.VM_INCD:
-                        SetValue(false, Mem, op1, (int)((long)GetValue(false, Mem, op1) & 0xFFffFFffL + 1L));
+                        SetValue(false, Mem, op1, (int) ((long) GetValue(false, Mem, op1) & 0xFFffFFffL + 1L));
                         break;
 
 
                     case VMCommands.VM_DEC:
                         {
-                            int result = (int)((long)GetValue(cmd.IsByteMode, Mem, op1) & 0xFFffFFff - 1);
+                            int result = (int) ((long) GetValue(cmd.IsByteMode, Mem, op1) & 0xFFffFFff - 1);
                             SetValue(cmd.IsByteMode, Mem, op1, result);
-                            flags = (VMFlags)(result == 0 ? (int)VMFlags.VM_FZ : result & (int)VMFlags.VM_FS);
+                            flags = (VMFlags) (result == 0 ? (int) VMFlags.VM_FZ : result & (int) VMFlags.VM_FS);
                         }
                         break;
 
 
                     case VMCommands.VM_DECB:
-                        SetValue(true, Mem, op1, (int)((long)GetValue(true, Mem, op1) & 0xFFffFFff - 1));
+                        SetValue(true, Mem, op1, (int) ((long) GetValue(true, Mem, op1) & 0xFFffFFff - 1));
                         break;
 
                     case VMCommands.VM_DECD:
-                        SetValue(false, Mem, op1, (int)((long)GetValue(false, Mem, op1) & 0xFFffFFff - 1));
+                        SetValue(false, Mem, op1, (int) ((long) GetValue(false, Mem, op1) & 0xFFffFFff - 1));
                         break;
 
 
@@ -417,7 +447,7 @@ namespace SharpCompress.Compressor.Rar.VM
                     case VMCommands.VM_XOR:
                         {
                             int result = GetValue(cmd.IsByteMode, Mem, op1) ^ GetValue(cmd.IsByteMode, Mem, op2);
-                            flags = (VMFlags)(result == 0 ? (int)VMFlags.VM_FZ : result & (int)VMFlags.VM_FS);
+                            flags = (VMFlags) (result == 0 ? (int) VMFlags.VM_FZ : result & (int) VMFlags.VM_FS);
                             SetValue(cmd.IsByteMode, Mem, op1, result);
                         }
                         break;
@@ -425,7 +455,7 @@ namespace SharpCompress.Compressor.Rar.VM
                     case VMCommands.VM_AND:
                         {
                             int result = GetValue(cmd.IsByteMode, Mem, op1) & GetValue(cmd.IsByteMode, Mem, op2);
-                            flags = (VMFlags)(result == 0 ? (int)VMFlags.VM_FZ : result & (int)VMFlags.VM_FS);
+                            flags = (VMFlags) (result == 0 ? (int) VMFlags.VM_FZ : result & (int) VMFlags.VM_FS);
                             SetValue(cmd.IsByteMode, Mem, op1, result);
                         }
                         break;
@@ -433,7 +463,7 @@ namespace SharpCompress.Compressor.Rar.VM
                     case VMCommands.VM_OR:
                         {
                             int result = GetValue(cmd.IsByteMode, Mem, op1) | GetValue(cmd.IsByteMode, Mem, op2);
-                            flags = (VMFlags)(result == 0 ? (int)VMFlags.VM_FZ : result & (int)VMFlags.VM_FS);
+                            flags = (VMFlags) (result == 0 ? (int) VMFlags.VM_FZ : result & (int) VMFlags.VM_FS);
                             SetValue(cmd.IsByteMode, Mem, op1, result);
                         }
                         break;
@@ -441,7 +471,7 @@ namespace SharpCompress.Compressor.Rar.VM
                     case VMCommands.VM_TEST:
                         {
                             int result = GetValue(cmd.IsByteMode, Mem, op1) & GetValue(cmd.IsByteMode, Mem, op2);
-                            flags = (VMFlags)(result == 0 ? (int)VMFlags.VM_FZ : result & (int)VMFlags.VM_FS);
+                            flags = (VMFlags) (result == 0 ? (int) VMFlags.VM_FZ : result & (int) VMFlags.VM_FS);
                         }
                         break;
 
@@ -518,7 +548,12 @@ namespace SharpCompress.Compressor.Rar.VM
                             int value1 = GetValue(cmd.IsByteMode, Mem, op1);
                             int value2 = GetValue(cmd.IsByteMode, Mem, op2);
                             int result = value1 << value2;
-                            flags = (VMFlags)((result == 0 ? (int)VMFlags.VM_FZ : (result & (int)VMFlags.VM_FS)) | (((value1 << (value2 - 1)) & unchecked((int)0x80000000)) != 0 ? (int)VMFlags.VM_FC : 0));
+                            flags =
+                                (VMFlags)
+                                ((result == 0 ? (int) VMFlags.VM_FZ : (result & (int) VMFlags.VM_FS)) |
+                                 (((value1 << (value2 - 1)) & unchecked((int) 0x80000000)) != 0
+                                      ? (int) VMFlags.VM_FC
+                                      : 0));
                             SetValue(cmd.IsByteMode, Mem, op1, result);
                         }
                         break;
@@ -528,7 +563,10 @@ namespace SharpCompress.Compressor.Rar.VM
                             int value1 = GetValue(cmd.IsByteMode, Mem, op1);
                             int value2 = GetValue(cmd.IsByteMode, Mem, op2);
                             int result = Utility.URShift(value1, value2);
-                            flags = (VMFlags)((result == 0 ? (int)VMFlags.VM_FZ : (result & (int)VMFlags.VM_FS)) | ((Utility.URShift(value1, (value2 - 1))) & (int)VMFlags.VM_FC));
+                            flags =
+                                (VMFlags)
+                                ((result == 0 ? (int) VMFlags.VM_FZ : (result & (int) VMFlags.VM_FS)) |
+                                 ((Utility.URShift(value1, (value2 - 1))) & (int) VMFlags.VM_FC));
                             SetValue(cmd.IsByteMode, Mem, op1, result);
                         }
                         break;
@@ -537,8 +575,11 @@ namespace SharpCompress.Compressor.Rar.VM
                         {
                             int value1 = GetValue(cmd.IsByteMode, Mem, op1);
                             int value2 = GetValue(cmd.IsByteMode, Mem, op2);
-                            int result = ((int)value1) >> value2;
-                            flags = (VMFlags)((result == 0 ? (int)VMFlags.VM_FZ : (result & (int)VMFlags.VM_FS)) | ((value1 >> (value2 - 1)) & (int)VMFlags.VM_FC));
+                            int result = ((int) value1) >> value2;
+                            flags =
+                                (VMFlags)
+                                ((result == 0 ? (int) VMFlags.VM_FZ : (result & (int) VMFlags.VM_FS)) |
+                                 ((value1 >> (value2 - 1)) & (int) VMFlags.VM_FC));
                             SetValue(cmd.IsByteMode, Mem, op1, result);
                         }
                         break;
@@ -546,7 +587,11 @@ namespace SharpCompress.Compressor.Rar.VM
                     case VMCommands.VM_NEG:
                         {
                             int result = -GetValue(cmd.IsByteMode, Mem, op1);
-                            flags = (VMFlags)(result == 0 ? (int)VMFlags.VM_FZ : (int)VMFlags.VM_FC | (result & (int)VMFlags.VM_FS));
+                            flags =
+                                (VMFlags)
+                                (result == 0
+                                     ? (int) VMFlags.VM_FZ
+                                     : (int) VMFlags.VM_FC | (result & (int) VMFlags.VM_FS));
                             SetValue(cmd.IsByteMode, Mem, op1, result);
                         }
                         break;
@@ -566,7 +611,7 @@ namespace SharpCompress.Compressor.Rar.VM
                             {
                                 SetValue(false, Mem, SP & VM_MEMMASK, R[i]);
                             }
-                            R[7] -= regCount * 4;
+                            R[7] -= regCount*4;
                         }
                         break;
 
@@ -579,11 +624,11 @@ namespace SharpCompress.Compressor.Rar.VM
 
                     case VMCommands.VM_PUSHF:
                         R[7] -= 4;
-                        SetValue(false, Mem, R[7] & VM_MEMMASK, (int)flags);
+                        SetValue(false, Mem, R[7] & VM_MEMMASK, (int) flags);
                         break;
 
                     case VMCommands.VM_POPF:
-                        flags = (VMFlags)GetValue(false, Mem, R[7] & VM_MEMMASK);
+                        flags = (VMFlags) GetValue(false, Mem, R[7] & VM_MEMMASK);
                         R[7] += 4;
                         break;
 
@@ -592,7 +637,7 @@ namespace SharpCompress.Compressor.Rar.VM
                         break;
 
                     case VMCommands.VM_MOVSX:
-                        SetValue(false, Mem, op1, (byte)GetValue(true, Mem, op2));
+                        SetValue(false, Mem, op1, (byte) GetValue(true, Mem, op2));
                         break;
 
                     case VMCommands.VM_XCHG:
@@ -605,7 +650,11 @@ namespace SharpCompress.Compressor.Rar.VM
 
                     case VMCommands.VM_MUL:
                         {
-                            int result = (int)(((long)GetValue(cmd.IsByteMode, Mem, op1) & 0xFFffFFff * (long)GetValue(cmd.IsByteMode, Mem, op2) & unchecked((int)0xFFffFFff)) & unchecked((int)0xFFffFFff));
+                            int result =
+                                (int)
+                                (((long) GetValue(cmd.IsByteMode, Mem, op1) &
+                                  0xFFffFFff*(long) GetValue(cmd.IsByteMode, Mem, op2) & unchecked((int) 0xFFffFFff)) &
+                                 unchecked((int) 0xFFffFFff));
                             SetValue(cmd.IsByteMode, Mem, op1, result);
                         }
                         break;
@@ -615,7 +664,7 @@ namespace SharpCompress.Compressor.Rar.VM
                             int divider = GetValue(cmd.IsByteMode, Mem, op2);
                             if (divider != 0)
                             {
-                                int result = GetValue(cmd.IsByteMode, Mem, op1) / divider;
+                                int result = GetValue(cmd.IsByteMode, Mem, op1)/divider;
                                 SetValue(cmd.IsByteMode, Mem, op1, result);
                             }
                         }
@@ -624,14 +673,21 @@ namespace SharpCompress.Compressor.Rar.VM
                     case VMCommands.VM_ADC:
                         {
                             int value1 = GetValue(cmd.IsByteMode, Mem, op1);
-                            int FC = (int)(flags & VMFlags.VM_FC);
-                            int result = (int)((long)value1 & 0xFFffFFff + (long)GetValue(cmd.IsByteMode, Mem, op2) & 0xFFffFFff + (long)FC & unchecked((int)0xFFffFFff));
+                            int FC = (int) (flags & VMFlags.VM_FC);
+                            int result =
+                                (int)
+                                ((long) value1 & 0xFFffFFff + (long) GetValue(cmd.IsByteMode, Mem, op2) &
+                                 0xFFffFFff + (long) FC & unchecked((int) 0xFFffFFff));
                             if (cmd.IsByteMode)
                             {
                                 result &= 0xff;
                             }
 
-                            flags = (VMFlags)((result < value1 || result == value1 && FC != 0) ? 1 : 0 | (result == 0 ? (int)VMFlags.VM_FZ : (result & (int)VMFlags.VM_FS)));
+                            flags =
+                                (VMFlags)
+                                ((result < value1 || result == value1 && FC != 0)
+                                     ? 1
+                                     : 0 | (result == 0 ? (int) VMFlags.VM_FZ : (result & (int) VMFlags.VM_FS)));
                             SetValue(cmd.IsByteMode, Mem, op1, result);
                         }
                         break;
@@ -639,13 +695,20 @@ namespace SharpCompress.Compressor.Rar.VM
                     case VMCommands.VM_SBB:
                         {
                             int value1 = GetValue(cmd.IsByteMode, Mem, op1);
-                            int FC = (int)(flags & VMFlags.VM_FC);
-                            int result = (int)((long)value1 & 0xFFffFFff - (long)GetValue(cmd.IsByteMode, Mem, op2) & 0xFFffFFff - (long)FC & unchecked((int)0xFFffFFff));
+                            int FC = (int) (flags & VMFlags.VM_FC);
+                            int result =
+                                (int)
+                                ((long) value1 & 0xFFffFFff - (long) GetValue(cmd.IsByteMode, Mem, op2) &
+                                 0xFFffFFff - (long) FC & unchecked((int) 0xFFffFFff));
                             if (cmd.IsByteMode)
                             {
                                 result &= 0xff;
                             }
-                            flags = (VMFlags)((result > value1 || result == value1 && FC != 0) ? 1 : 0 | (result == 0 ? (int)VMFlags.VM_FZ : (result & (int)VMFlags.VM_FS)));
+                            flags =
+                                (VMFlags)
+                                ((result > value1 || result == value1 && FC != 0)
+                                     ? 1
+                                     : 0 | (result == 0 ? (int) VMFlags.VM_FZ : (result & (int) VMFlags.VM_FS)));
                             SetValue(cmd.IsByteMode, Mem, op1, result);
                         }
                         break;
@@ -662,7 +725,7 @@ namespace SharpCompress.Compressor.Rar.VM
 
 
                     case VMCommands.VM_STANDARD:
-                        ExecuteStandardFilter((VMStandardFilters)(cmd.Op1.Data));
+                        ExecuteStandardFilter((VMStandardFilters) (cmd.Op1.Data));
                         break;
 
                     case VMCommands.VM_PRINT:
@@ -697,10 +760,9 @@ namespace SharpCompress.Compressor.Rar.VM
                 VMStandardFilters filterType = IsStandardFilter(code, codeSize);
                 if (filterType != VMStandardFilters.VMSF_NONE)
                 {
-
                     VMPreparedCommand curCmd = new VMPreparedCommand();
                     curCmd.OpCode = VMCommands.VM_STANDARD;
-                    curCmd.Op1.Data = (int)filterType;
+                    curCmd.Op1.Data = (int) filterType;
                     curCmd.Op1.Type = VMOpType.VM_OPNONE;
                     curCmd.Op2.Type = VMOpType.VM_OPNONE;
                     codeSize = 0;
@@ -723,10 +785,10 @@ namespace SharpCompress.Compressor.Rar.VM
 
                 if ((dataFlag & 0x8000) != 0)
                 {
-                    long dataSize = (long)((long)ReadData(this) & 0xffFFffFFL + 1L);
+                    long dataSize = (long) ((long) ReadData(this) & 0xffFFffFFL + 1L);
                     for (int i = 0; inAddr < codeSize && i < dataSize; i++)
                     {
-                        prg.StaticData.Add((byte)(GetBits() >> 8));
+                        prg.StaticData.Add((byte) (GetBits() >> 8));
                         AddBits(8);
                     }
                 }
@@ -737,15 +799,15 @@ namespace SharpCompress.Compressor.Rar.VM
                     int data = GetBits();
                     if ((data & 0x8000) == 0)
                     {
-                        curCmd.OpCode = (VMCommands)((data >> 12));
+                        curCmd.OpCode = (VMCommands) ((data >> 12));
                         AddBits(4);
                     }
                     else
                     {
-                        curCmd.OpCode = (VMCommands)((data >> 10) - 24);
+                        curCmd.OpCode = (VMCommands) ((data >> 10) - 24);
                         AddBits(6);
                     }
-                    if ((VMCmdFlags.VM_CmdFlags[(int)curCmd.OpCode] & VMCmdFlags.VMCF_BYTEMODE) != 0)
+                    if ((VMCmdFlags.VM_CmdFlags[(int) curCmd.OpCode] & VMCmdFlags.VMCF_BYTEMODE) != 0)
                     {
                         curCmd.IsByteMode = (GetBits() >> 15) == 1 ? true : false;
                         AddBits(1);
@@ -757,7 +819,7 @@ namespace SharpCompress.Compressor.Rar.VM
                     curCmd.Op1.Type = VMOpType.VM_OPNONE;
                     curCmd.Op2.Type = VMOpType.VM_OPNONE;
 
-                    int opNum = (VMCmdFlags.VM_CmdFlags[(int)curCmd.OpCode] & VMCmdFlags.VMCF_OPMASK);
+                    int opNum = (VMCmdFlags.VM_CmdFlags[(int) curCmd.OpCode] & VMCmdFlags.VMCF_OPMASK);
                     // TODO >>> CurCmd->Op1.Addr=CurCmd->Op2.Addr=NULL; <<<???
                     if (opNum > 0)
                     {
@@ -766,7 +828,9 @@ namespace SharpCompress.Compressor.Rar.VM
                             decodeArg(curCmd.Op2, curCmd.IsByteMode);
                         else
                         {
-                            if (curCmd.Op1.Type == VMOpType.VM_OPINT && (VMCmdFlags.VM_CmdFlags[(int)curCmd.OpCode] & (VMCmdFlags.VMCF_JUMP | VMCmdFlags.VMCF_PROC)) != 0)
+                            if (curCmd.Op1.Type == VMOpType.VM_OPINT &&
+                                (VMCmdFlags.VM_CmdFlags[(int) curCmd.OpCode] &
+                                 (VMCmdFlags.VMCF_JUMP | VMCmdFlags.VMCF_PROC)) != 0)
                             {
                                 int distance = curCmd.Op1.Data;
                                 if (distance >= 256)
@@ -891,7 +955,6 @@ namespace SharpCompress.Compressor.Rar.VM
             {
                 switch (cmd.OpCode)
                 {
-
                     case VMCommands.VM_MOV:
                         cmd.OpCode = cmd.IsByteMode ? VMCommands.VM_MOVB : VMCommands.VM_MOVD;
                         continue;
@@ -900,7 +963,7 @@ namespace SharpCompress.Compressor.Rar.VM
                         cmd.OpCode = cmd.IsByteMode ? VMCommands.VM_CMPB : VMCommands.VM_CMPD;
                         continue;
                 }
-                if ((VMCmdFlags.VM_CmdFlags[(int)cmd.OpCode] & VMCmdFlags.VMCF_CHFLAGS) == 0)
+                if ((VMCmdFlags.VM_CmdFlags[(int) cmd.OpCode] & VMCmdFlags.VMCF_CHFLAGS) == 0)
                 {
                     continue;
                 }
@@ -908,7 +971,7 @@ namespace SharpCompress.Compressor.Rar.VM
 
                 for (int i = commands.IndexOf(cmd) + 1; i < commands.Count; i++)
                 {
-                    int flags = VMCmdFlags.VM_CmdFlags[(int)commands[i].OpCode];
+                    int flags = VMCmdFlags.VM_CmdFlags[(int) commands[i].OpCode];
                     if ((flags & (VMCmdFlags.VMCF_JUMP | VMCmdFlags.VMCF_PROC | VMCmdFlags.VMCF_USEFLAGS)) != 0)
                     {
                         flagsRequired = true;
@@ -925,7 +988,6 @@ namespace SharpCompress.Compressor.Rar.VM
                 }
                 switch (cmd.OpCode)
                 {
-
                     case VMCommands.VM_ADD:
                         cmd.OpCode = cmd.IsByteMode ? VMCommands.VM_ADDB : VMCommands.VM_ADDD;
                         continue;
@@ -954,7 +1016,6 @@ namespace SharpCompress.Compressor.Rar.VM
             int data = rarVM.GetBits();
             switch (data & 0xc000)
             {
-
                 case 0:
                     rarVM.AddBits(6);
                     return ((data >> 10) & 0xf);
@@ -962,7 +1023,7 @@ namespace SharpCompress.Compressor.Rar.VM
                 case 0x4000:
                     if ((data & 0x3c00) == 0)
                     {
-                        data = unchecked((int)0xffffff00) | ((data >> 2) & 0xff);
+                        data = unchecked((int) 0xffffff00) | ((data >> 2) & 0xff);
                         rarVM.AddBits(14);
                     }
                     else
@@ -985,20 +1046,28 @@ namespace SharpCompress.Compressor.Rar.VM
                     data |= rarVM.GetBits();
                     rarVM.AddBits(16);
                     return (data);
-
             }
         }
 
         private VMStandardFilters IsStandardFilter(byte[] code, int codeSize)
         {
-            VMStandardFilterSignature[] stdList = new VMStandardFilterSignature[]{
-                new VMStandardFilterSignature(53, 0xad576887, VMStandardFilters.VMSF_E8), 
-                new VMStandardFilterSignature(57, 0x3cd7e57e, VMStandardFilters.VMSF_E8E9), 
-                new VMStandardFilterSignature(120, 0x3769893f, VMStandardFilters.VMSF_ITANIUM), 
-                new VMStandardFilterSignature(29, 0x0e06077d, VMStandardFilters.VMSF_DELTA), 
-                new VMStandardFilterSignature(149, 0x1c2c5dc8, VMStandardFilters.VMSF_RGB), 
-                new VMStandardFilterSignature(216, 0xbc85e701, VMStandardFilters.VMSF_AUDIO), 
-                new VMStandardFilterSignature(40, 0x46b9c560, VMStandardFilters.VMSF_UPCASE)};
+            VMStandardFilterSignature[] stdList = new VMStandardFilterSignature[]
+                                                      {
+                                                          new VMStandardFilterSignature(53, 0xad576887,
+                                                                                        VMStandardFilters.VMSF_E8),
+                                                          new VMStandardFilterSignature(57, 0x3cd7e57e,
+                                                                                        VMStandardFilters.VMSF_E8E9),
+                                                          new VMStandardFilterSignature(120, 0x3769893f,
+                                                                                        VMStandardFilters.VMSF_ITANIUM),
+                                                          new VMStandardFilterSignature(29, 0x0e06077d,
+                                                                                        VMStandardFilters.VMSF_DELTA),
+                                                          new VMStandardFilterSignature(149, 0x1c2c5dc8,
+                                                                                        VMStandardFilters.VMSF_RGB),
+                                                          new VMStandardFilterSignature(216, 0xbc85e701,
+                                                                                        VMStandardFilters.VMSF_AUDIO),
+                                                          new VMStandardFilterSignature(40, 0x46b9c560,
+                                                                                        VMStandardFilters.VMSF_UPCASE)
+                                                      };
             uint CodeCRC = RarCRC.CheckCrc(0xffffffff, code, 0, code.Length) ^ 0xffffffff;
             for (int i = 0; i < stdList.Length; i++)
             {
@@ -1014,20 +1083,19 @@ namespace SharpCompress.Compressor.Rar.VM
         {
             switch (filterType)
             {
-
                 case VMStandardFilters.VMSF_E8:
                 case VMStandardFilters.VMSF_E8E9:
                     {
                         int dataSize = R[4];
-                        long fileOffset = R[6] & unchecked((int)0xFFffFFff);
+                        long fileOffset = R[6] & unchecked((int) 0xFFffFFff);
 
                         if (dataSize >= VM_GLOBALMEMADDR)
                         {
                             break;
                         }
                         int fileSize = 0x1000000;
-                        byte cmpByte2 = (byte)((filterType == VMStandardFilters.VMSF_E8E9) ? 0xe9 : 0xe8);
-                        for (int curPos = 0; curPos < dataSize - 4; )
+                        byte cmpByte2 = (byte) ((filterType == VMStandardFilters.VMSF_E8E9) ? 0xe9 : 0xe8);
+                        for (int curPos = 0; curPos < dataSize - 4;)
                         {
                             byte curByte = Mem[curPos++];
                             if (curByte == 0xe8 || curByte == cmpByte2)
@@ -1046,16 +1114,16 @@ namespace SharpCompress.Compressor.Rar.VM
                                 //		#else
                                 long offset = curPos + fileOffset;
                                 long Addr = GetValue(false, Mem, curPos);
-                                if ((Addr & unchecked((int)0x80000000)) != 0)
+                                if ((Addr & unchecked((int) 0x80000000)) != 0)
                                 {
-                                    if (((Addr + offset) & unchecked((int)0x80000000)) == 0)
-                                        SetValue(false, Mem, curPos, (int)Addr + fileSize);
+                                    if (((Addr + offset) & unchecked((int) 0x80000000)) == 0)
+                                        SetValue(false, Mem, curPos, (int) Addr + fileSize);
                                 }
                                 else
                                 {
-                                    if (((Addr - fileSize) & unchecked((int)0x80000000)) != 0)
+                                    if (((Addr - fileSize) & unchecked((int) 0x80000000)) != 0)
                                     {
-                                        SetValue(false, Mem, curPos, (int)(Addr - offset));
+                                        SetValue(false, Mem, curPos, (int) (Addr - offset));
                                     }
                                 }
                                 //		#endif
@@ -1067,9 +1135,8 @@ namespace SharpCompress.Compressor.Rar.VM
 
                 case VMStandardFilters.VMSF_ITANIUM:
                     {
-
                         int dataSize = R[4];
-                        long fileOffset = R[6] & unchecked((int)0xFFffFFff);
+                        long fileOffset = R[6] & unchecked((int) 0xFFffFFff);
 
                         if (dataSize >= VM_GLOBALMEMADDR)
                         {
@@ -1077,7 +1144,7 @@ namespace SharpCompress.Compressor.Rar.VM
                         }
                         int curPos = 0;
                         //UPGRADE_NOTE: Final was removed from the declaration of 'Masks '. "ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?index='!DefaultContextWindowIndex'&keyword='jlca1003'"
-                        byte[] Masks = new byte[] { 4, 4, 6, 6, 0, 0, 7, 7, 4, 4, 0, 0, 4, 4, 0, 0 };
+                        byte[] Masks = new byte[] {4, 4, 6, 6, 0, 0, 7, 7, 4, 4, 0, 0, 4, 4, 0, 0};
                         fileOffset = Utility.URShift(fileOffset, 4);
 
                         while (curPos < dataSize - 21)
@@ -1085,18 +1152,18 @@ namespace SharpCompress.Compressor.Rar.VM
                             int Byte = (Mem[curPos] & 0x1f) - 0x10;
                             if (Byte >= 0)
                             {
-
                                 byte cmdMask = Masks[Byte];
                                 if (cmdMask != 0)
                                     for (int i = 0; i <= 2; i++)
                                         if ((cmdMask & (1 << i)) != 0)
                                         {
-                                            int startPos = i * 41 + 5;
+                                            int startPos = i*41 + 5;
                                             int opType = filterItanium_GetBits(curPos, startPos + 37, 4);
                                             if (opType == 5)
                                             {
                                                 int offset = filterItanium_GetBits(curPos, startPos + 13, 20);
-                                                filterItanium_SetBits(curPos, (int)(offset - fileOffset) & 0xfffff, startPos + 13, 20);
+                                                filterItanium_SetBits(curPos, (int) (offset - fileOffset) & 0xfffff,
+                                                                      startPos + 13, 20);
                                             }
                                         }
                             }
@@ -1108,12 +1175,12 @@ namespace SharpCompress.Compressor.Rar.VM
 
                 case VMStandardFilters.VMSF_DELTA:
                     {
-                        int dataSize = R[4] & unchecked((int)0xFFffFFff);
-                        int channels = R[0] & unchecked((int)0xFFffFFff);
+                        int dataSize = R[4] & unchecked((int) 0xFFffFFff);
+                        int channels = R[0] & unchecked((int) 0xFFffFFff);
                         int srcPos = 0;
-                        int border = (dataSize * 2) & unchecked((int)0xFFffFFff);
-                        SetValue(false, Mem, VM_GLOBALMEMADDR + 0x20, (int)dataSize);
-                        if (dataSize >= VM_GLOBALMEMADDR / 2)
+                        int border = (dataSize*2) & unchecked((int) 0xFFffFFff);
+                        SetValue(false, Mem, VM_GLOBALMEMADDR + 0x20, (int) dataSize);
+                        if (dataSize >= VM_GLOBALMEMADDR/2)
                         {
                             break;
                         }
@@ -1125,7 +1192,7 @@ namespace SharpCompress.Compressor.Rar.VM
                             byte PrevByte = 0;
                             for (int destPos = dataSize + curChannel; destPos < border; destPos += channels)
                             {
-                                Mem[destPos] = (PrevByte = (byte)(PrevByte - Mem[srcPos++]));
+                                Mem[destPos] = (PrevByte = (byte) (PrevByte - Mem[srcPos++]));
                             }
                         }
                     }
@@ -1139,7 +1206,7 @@ namespace SharpCompress.Compressor.Rar.VM
                         int srcPos = 0;
                         int destDataPos = dataSize;
                         SetValue(false, Mem, VM_GLOBALMEMADDR + 0x20, dataSize);
-                        if (dataSize >= VM_GLOBALMEMADDR / 2 || posR < 0)
+                        if (dataSize >= VM_GLOBALMEMADDR/2 || posR < 0)
                         {
                             break;
                         }
@@ -1154,12 +1221,12 @@ namespace SharpCompress.Compressor.Rar.VM
                                 if (upperPos >= 3)
                                 {
                                     int upperDataPos = destDataPos + upperPos;
-                                    int upperByte = Mem[(int)upperDataPos] & 0xff;
+                                    int upperByte = Mem[(int) upperDataPos] & 0xff;
                                     int upperLeftByte = Mem[upperDataPos - 3] & 0xff;
                                     predicted = prevByte + upperByte - upperLeftByte;
-                                    int pa = System.Math.Abs((int)(predicted - prevByte));
-                                    int pb = System.Math.Abs((int)(predicted - upperByte));
-                                    int pc = System.Math.Abs((int)(predicted - upperLeftByte));
+                                    int pa = System.Math.Abs((int) (predicted - prevByte));
+                                    int pb = System.Math.Abs((int) (predicted - upperByte));
+                                    int pc = System.Math.Abs((int) (predicted - upperLeftByte));
                                     if (pa <= pb && pa <= pc)
                                     {
                                         predicted = prevByte;
@@ -1182,14 +1249,14 @@ namespace SharpCompress.Compressor.Rar.VM
                                 }
 
                                 prevByte = (predicted - Mem[srcPos++] & 0xff) & 0xff;
-                                Mem[destDataPos + i] = (byte)(prevByte & 0xff);
+                                Mem[destDataPos + i] = (byte) (prevByte & 0xff);
                             }
                         }
                         for (int i = posR, border = dataSize - 2; i < border; i += 3)
                         {
                             byte G = Mem[destDataPos + i + 1];
-                            Mem[destDataPos + i] = (byte)(Mem[destDataPos + i] + G);
-                            Mem[destDataPos + i + 2] = (byte)(Mem[destDataPos + i + 2] + G);
+                            Mem[destDataPos + i] = (byte) (Mem[destDataPos + i] + G);
+                            Mem[destDataPos + i + 2] = (byte) (Mem[destDataPos + i + 2] + G);
                         }
                     }
                     break;
@@ -1201,7 +1268,7 @@ namespace SharpCompress.Compressor.Rar.VM
                         int destDataPos = dataSize;
                         //byte *SrcData=Mem,*DestData=SrcData+DataSize;
                         SetValue(false, Mem, VM_GLOBALMEMADDR + 0x20, dataSize);
-                        if (dataSize >= VM_GLOBALMEMADDR / 2)
+                        if (dataSize >= VM_GLOBALMEMADDR/2)
                         {
                             break;
                         }
@@ -1216,17 +1283,17 @@ namespace SharpCompress.Compressor.Rar.VM
                             for (int i = curChannel, byteCount = 0; i < dataSize; i += channels, byteCount++)
                             {
                                 D3 = D2;
-                                D2 = (int)(prevDelta - D1);
-                                D1 = (int)prevDelta;
+                                D2 = (int) (prevDelta - D1);
+                                D1 = (int) prevDelta;
 
-                                long predicted = 8 * prevByte + K1 * D1 + K2 * D2 + K3 * D3;
+                                long predicted = 8*prevByte + K1*D1 + K2*D2 + K3*D3;
                                 predicted = Utility.URShift(predicted, 3) & 0xff;
 
-                                long curByte = (long)(Mem[srcPos++]);
+                                long curByte = (long) (Mem[srcPos++]);
 
                                 predicted -= curByte;
-                                Mem[destDataPos + i] = (byte)predicted;
-                                prevDelta = (byte)(predicted - prevByte);
+                                Mem[destDataPos + i] = (byte) predicted;
+                                prevDelta = (byte) (predicted - prevByte);
                                 //fix java byte
                                 if (prevDelta >= 128)
                                 {
@@ -1238,7 +1305,7 @@ namespace SharpCompress.Compressor.Rar.VM
                                 {
                                     curByte = 0 - (256 - curByte);
                                 }
-                                int D = ((int)curByte) << 3;
+                                int D = ((int) curByte) << 3;
 
                                 Dif[0] += System.Math.Abs(D);
                                 Dif[1] += System.Math.Abs(D - D1);
@@ -1261,9 +1328,8 @@ namespace SharpCompress.Compressor.Rar.VM
                                         }
                                         Dif[j] = 0;
                                     }
-                                    switch ((int)numMinDif)
+                                    switch ((int) numMinDif)
                                     {
-
                                         case 1:
                                             if (K1 >= -16)
                                                 K1--;
@@ -1303,7 +1369,7 @@ namespace SharpCompress.Compressor.Rar.VM
                 case VMStandardFilters.VMSF_UPCASE:
                     {
                         int dataSize = R[4], srcPos = 0, destPos = dataSize;
-                        if (dataSize >= VM_GLOBALMEMADDR / 2)
+                        if (dataSize >= VM_GLOBALMEMADDR/2)
                         {
                             break;
                         }
@@ -1312,7 +1378,7 @@ namespace SharpCompress.Compressor.Rar.VM
                             byte curByte = Mem[srcPos++];
                             if (curByte == 2 && (curByte = Mem[srcPos++]) != 2)
                             {
-                                curByte = (byte)(curByte - 32);
+                                curByte = (byte) (curByte - 32);
                             }
                             Mem[destPos++] = curByte;
                         }
@@ -1325,32 +1391,32 @@ namespace SharpCompress.Compressor.Rar.VM
 
         private void filterItanium_SetBits(int curPos, int bitField, int bitPos, int bitCount)
         {
-            int inAddr = bitPos / 8;
+            int inAddr = bitPos/8;
             int inBit = bitPos & 7;
-            int andMask = Utility.URShift(unchecked((int)0xffffffff), (32 - bitCount));
+            int andMask = Utility.URShift(unchecked((int) 0xffffffff), (32 - bitCount));
             andMask = ~(andMask << inBit);
 
             bitField <<= inBit;
 
             for (int i = 0; i < 4; i++)
             {
-                Mem[curPos + inAddr + i] &= (byte)(andMask);
-                Mem[curPos + inAddr + i] |= (byte)(bitField);
-                andMask = (Utility.URShift(andMask, 8)) | unchecked((int)0xff000000);
+                Mem[curPos + inAddr + i] &= (byte) (andMask);
+                Mem[curPos + inAddr + i] |= (byte) (bitField);
+                andMask = (Utility.URShift(andMask, 8)) | unchecked((int) 0xff000000);
                 bitField = Utility.URShift(bitField, 8);
             }
         }
 
         private int filterItanium_GetBits(int curPos, int bitPos, int bitCount)
         {
-            int inAddr = bitPos / 8;
+            int inAddr = bitPos/8;
             int inBit = bitPos & 7;
-            int bitField = (int)(Mem[curPos + inAddr++] & 0xff);
-            bitField |= (int)((Mem[curPos + inAddr++] & 0xff) << 8);
-            bitField |= (int)((Mem[curPos + inAddr++] & 0xff) << 16);
-            bitField |= (int)((Mem[curPos + inAddr] & 0xff) << 24);
+            int bitField = (int) (Mem[curPos + inAddr++] & 0xff);
+            bitField |= (int) ((Mem[curPos + inAddr++] & 0xff) << 8);
+            bitField |= (int) ((Mem[curPos + inAddr++] & 0xff) << 16);
+            bitField |= (int) ((Mem[curPos + inAddr] & 0xff) << 24);
             bitField = Utility.URShift(bitField, inBit);
-            return (bitField & (Utility.URShift(unchecked((int)0xffffffff), (32 - bitCount))));
+            return (bitField & (Utility.URShift(unchecked((int) 0xffffffff), (32 - bitCount))));
         }
 
 

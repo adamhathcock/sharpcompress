@@ -20,7 +20,6 @@ using SharpCompress.Compressor.Rar.decode;
 
 namespace SharpCompress.Compressor.Rar
 {
-
     /// <summary> DOCUMENT ME
     /// 
     /// </summary>
@@ -34,9 +33,10 @@ namespace SharpCompress.Compressor.Rar
         {
             InitBlock();
         }
+
         private void InitBlock()
         {
-            UnpOldTable20 = new byte[Compress.MC20 * 4];
+            UnpOldTable20 = new byte[Compress.MC20*4];
         }
 
         protected internal MultDecode[] MD = new MultDecode[4];
@@ -59,26 +59,45 @@ namespace SharpCompress.Compressor.Rar
         protected internal BitDecode BD = new BitDecode();
 
         //UPGRADE_NOTE: Final was removed from the declaration of 'LDecode'. "ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?index='!DefaultContextWindowIndex'&keyword='jlca1003'"
-        public static readonly int[] LDecode = new int[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 10, 12, 14, 16, 20, 24, 28, 32, 40, 48, 56, 64, 80, 96, 112, 128, 160, 192, 224 };
+        public static readonly int[] LDecode = new int[]
+                                                   {
+                                                       0, 1, 2, 3, 4, 5, 6, 7, 8, 10, 12, 14, 16, 20, 24, 28, 32, 40, 48,
+                                                       56, 64, 80, 96, 112, 128, 160, 192, 224
+                                                   };
 
         //UPGRADE_NOTE: Final was removed from the declaration of 'LBits'. "ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?index='!DefaultContextWindowIndex'&keyword='jlca1003'"
-        public static readonly byte[] LBits = new byte[] { 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5 };
+        public static readonly byte[] LBits = new byte[]
+                                                  {
+                                                      0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4,
+                                                      4, 5, 5, 5, 5
+                                                  };
 
         //UPGRADE_NOTE: Final was removed from the declaration of 'DDecode'. "ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?index='!DefaultContextWindowIndex'&keyword='jlca1003'"
-        public static readonly int[] DDecode = new int[] { 0, 1, 2, 3, 4, 6, 8, 12, 16, 24, 32, 48, 64, 96, 128, 192, 256, 384, 512, 768, 1024, 1536, 2048, 3072, 4096, 6144, 8192, 12288, 16384, 24576, 32768, 49152, 65536, 98304, 131072, 196608, 262144, 327680, 393216, 458752, 524288, 589824, 655360, 720896, 786432, 851968, 917504, 983040 };
+        public static readonly int[] DDecode = new int[]
+                                                   {
+                                                       0, 1, 2, 3, 4, 6, 8, 12, 16, 24, 32, 48, 64, 96, 128, 192, 256, 384,
+                                                       512, 768, 1024, 1536, 2048, 3072, 4096, 6144, 8192, 12288, 16384,
+                                                       24576, 32768, 49152, 65536, 98304, 131072, 196608, 262144, 327680,
+                                                       393216, 458752, 524288, 589824, 655360, 720896, 786432, 851968,
+                                                       917504, 983040
+                                                   };
 
         //UPGRADE_NOTE: Final was removed from the declaration of 'DBits'. "ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?index='!DefaultContextWindowIndex'&keyword='jlca1003'"
-        public static readonly int[] DBits = new int[] { 0, 0, 0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 10, 10, 11, 11, 12, 12, 13, 13, 14, 14, 15, 15, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16 };
+        public static readonly int[] DBits = new int[]
+                                                 {
+                                                     0, 0, 0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 10,
+                                                     10, 11, 11, 12, 12, 13, 13, 14, 14, 15, 15, 16, 16, 16, 16, 16, 16, 16
+                                                     , 16, 16, 16, 16, 16, 16, 16
+                                                 };
 
         //UPGRADE_NOTE: Final was removed from the declaration of 'SDDecode'. "ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?index='!DefaultContextWindowIndex'&keyword='jlca1003'"
-        public static readonly int[] SDDecode = new int[] { 0, 4, 8, 16, 32, 64, 128, 192 };
+        public static readonly int[] SDDecode = new int[] {0, 4, 8, 16, 32, 64, 128, 192};
 
         //UPGRADE_NOTE: Final was removed from the declaration of 'SDBits'. "ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?index='!DefaultContextWindowIndex'&keyword='jlca1003'"
-        public static readonly int[] SDBits = new int[] { 2, 2, 3, 4, 5, 6, 6, 6 };
+        public static readonly int[] SDBits = new int[] {2, 2, 3, 4, 5, 6, 6, 6};
 
         internal void unpack20(bool solid)
         {
-
             int Bits;
 
             if (suspended)
@@ -135,7 +154,7 @@ namespace SharpCompress.Compressor.Rar
                 int Number = this.decodeNumber(LD);
                 if (Number < 256)
                 {
-                    window[unpPtr++] = (byte)Number;
+                    window[unpPtr++] = (byte) Number;
                     --destUnpSize;
                     continue;
                 }
@@ -244,12 +263,10 @@ namespace SharpCompress.Compressor.Rar
         }
 
 
-
-
         private bool ReadTables20()
         {
             byte[] BitLength = new byte[Compress.BC20];
-            byte[] Table = new byte[Compress.MC20 * 4];
+            byte[] Table = new byte[Compress.MC20*4];
             int TableSize, N, I;
             if (inAddr > readTop - 25)
             {
@@ -264,7 +281,7 @@ namespace SharpCompress.Compressor.Rar
             if (0 == (BitField & 0x4000))
             {
                 // memset(UnpOldTable20,0,sizeof(UnpOldTable20));
-                Utility.Fill(UnpOldTable20, (byte)0);
+                Utility.Fill(UnpOldTable20, (byte) 0);
             }
             AddBits(2);
 
@@ -276,7 +293,7 @@ namespace SharpCompress.Compressor.Rar
                     UnpCurChannel = 0;
                 }
                 AddBits(2);
-                TableSize = Compress.MC20 * UnpChannels;
+                TableSize = Compress.MC20*UnpChannels;
             }
             else
             {
@@ -284,7 +301,7 @@ namespace SharpCompress.Compressor.Rar
             }
             for (I = 0; I < Compress.BC20; I++)
             {
-                BitLength[I] = (byte)(Utility.URShift(GetBits(), 12));
+                BitLength[I] = (byte) (Utility.URShift(GetBits(), 12));
                 AddBits(4);
             }
             UnpackUtility.makeDecodeTables(BitLength, 0, BD, Compress.BC20);
@@ -301,7 +318,7 @@ namespace SharpCompress.Compressor.Rar
                 int Number = this.decodeNumber(BD);
                 if (Number < 16)
                 {
-                    Table[I] = (byte)((Number + UnpOldTable20[I]) & 0xf);
+                    Table[I] = (byte) ((Number + UnpOldTable20[I]) & 0xf);
                     I++;
                 }
                 else if (Number == 16)
@@ -336,7 +353,7 @@ namespace SharpCompress.Compressor.Rar
             }
             if (UnpAudioBlock != 0)
                 for (I = 0; I < UnpChannels; I++)
-                    UnpackUtility.makeDecodeTables(Table, I * Compress.MC20, MD[I], Compress.MC20);
+                    UnpackUtility.makeDecodeTables(Table, I*Compress.MC20, MD[I], Compress.MC20);
             else
             {
                 UnpackUtility.makeDecodeTables(Table, 0, LD, Compress.NC20);
@@ -363,7 +380,7 @@ namespace SharpCompress.Compressor.Rar
                 AudV[2] = new AudioVariables();
                 AudV[3] = new AudioVariables();
                 // memset(UnpOldTable20,0,sizeof(UnpOldTable20));
-                Utility.Fill(UnpOldTable20, (byte)0);
+                Utility.Fill(UnpOldTable20, (byte) 0);
             }
         }
 
@@ -398,14 +415,14 @@ namespace SharpCompress.Compressor.Rar
             v.D1 = v.LastDelta; // V->D1=V->LastDelta;
             // int PCh=8*V->LastChar+V->K1*V->D1 +V->K2*V->D2 +V->K3*V->D3
             // +V->K4*V->D4+ V->K5*UnpChannelDelta;
-            int PCh = 8 * v.LastChar + v.K1 * v.D1;
-            PCh += v.K2 * v.D2 + v.K3 * v.D3;
-            PCh += v.K4 * v.D4 + v.K5 * UnpChannelDelta;
+            int PCh = 8*v.LastChar + v.K1*v.D1;
+            PCh += v.K2*v.D2 + v.K3*v.D3;
+            PCh += v.K4*v.D4 + v.K5*UnpChannelDelta;
             PCh = (Utility.URShift(PCh, 3)) & 0xFF;
 
             int Ch = PCh - Delta;
 
-            int D = ((byte)Delta) << 3;
+            int D = ((byte) Delta) << 3;
 
             v.Dif[0] += System.Math.Abs(D); // V->Dif[0]+=abs(D);
             v.Dif[1] += System.Math.Abs(D - v.D1); // V->Dif[1]+=abs(D-V->D1);
@@ -419,7 +436,7 @@ namespace SharpCompress.Compressor.Rar
             v.Dif[9] += System.Math.Abs(D - UnpChannelDelta); // V->Dif[9]+=abs(D-UnpChannelDelta);
             v.Dif[10] += System.Math.Abs(D + UnpChannelDelta); // V->Dif[10]+=abs(D+UnpChannelDelta);
 
-            v.LastDelta = (byte)(Ch - v.LastChar);
+            v.LastDelta = (byte) (Ch - v.LastChar);
             UnpChannelDelta = v.LastDelta;
             v.LastChar = Ch; // V->LastChar=Ch;
 
@@ -438,7 +455,6 @@ namespace SharpCompress.Compressor.Rar
                 }
                 switch (NumMinDif)
                 {
-
                     case 1:
                         if (v.K1 >= -16)
                         {
@@ -510,7 +526,7 @@ namespace SharpCompress.Compressor.Rar
                         break;
                 }
             }
-            return ((byte)Ch);
+            return ((byte) Ch);
         }
     }
 }

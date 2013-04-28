@@ -15,7 +15,7 @@ namespace SharpCompress.Common.Rar.Headers
         {
             uint lowUncompressedSize = reader.ReadUInt32();
 
-            HostOS = (HostOS)(int)reader.ReadByte();
+            HostOS = (HostOS) (int) reader.ReadByte();
 
             FileCRC = reader.ReadUInt32();
 
@@ -39,16 +39,14 @@ namespace SharpCompress.Common.Rar.Headers
             {
                 if (lowUncompressedSize == 0xffffffff)
                 {
-
                     lowUncompressedSize = 0xffffffff;
                     highUncompressedkSize = int.MaxValue;
                 }
-
             }
             CompressedSize = UInt32To64(highCompressedSize, AdditionalSize);
             UncompressedSize = UInt32To64(highUncompressedkSize, lowUncompressedSize);
 
-            nameSize = nameSize > 4 * 1024 ? (short)(4 * 1024) : nameSize;
+            nameSize = nameSize > 4*1024 ? (short) (4*1024) : nameSize;
 
             byte[] fileNameBytes = reader.ReadBytes(nameSize);
 
@@ -60,7 +58,7 @@ namespace SharpCompress.Common.Rar.Headers
                         {
                             int length = 0;
                             while (length < fileNameBytes.Length
-                                    && fileNameBytes[length] != 0)
+                                   && fileNameBytes[length] != 0)
                             {
                                 length++;
                             }
@@ -96,7 +94,7 @@ namespace SharpCompress.Common.Rar.Headers
                         if (NewSubHeaderType.SUBHEAD_TYPE_RR.Equals(fileNameBytes))
                         {
                             RecoverySectors = SubData[8] + (SubData[9] << 8)
-                                    + (SubData[10] << 16) + (SubData[11] << 24);
+                                              + (SubData[10] << 16) + (SubData[11] << 24);
                         }
                     }
                     break;
@@ -129,9 +127,10 @@ namespace SharpCompress.Common.Rar.Headers
             return l + y;
         }
 
-        private static DateTime? ProcessExtendedTime(ushort extendedFlags, DateTime? time, MarkingBinaryReader reader, int i)
+        private static DateTime? ProcessExtendedTime(ushort extendedFlags, DateTime? time, MarkingBinaryReader reader,
+                                                     int i)
         {
-            uint rmode = (uint)extendedFlags >> (3 - i) * 4;
+            uint rmode = (uint) extendedFlags >> (3 - i)*4;
             if ((rmode & 8) == 0)
             {
                 return null;
@@ -146,14 +145,14 @@ namespace SharpCompress.Common.Rar.Headers
                 time = time.Value.AddSeconds(1);
             }
             uint nanosecondHundreds = 0;
-            int count = (int)rmode & 3;
+            int count = (int) rmode & 3;
             for (int j = 0; j < count; j++)
             {
                 byte b = reader.ReadByte();
-                nanosecondHundreds |= (((uint)b) << ((j + 3 - count) * 8));
+                nanosecondHundreds |= (((uint) b) << ((j + 3 - count)*8));
             }
             //10^-7 to 10^-3
-            return time.Value.AddMilliseconds(nanosecondHundreds * Math.Pow(10, -4));
+            return time.Value.AddMilliseconds(nanosecondHundreds*Math.Pow(10, -4));
         }
 
         private static string ConvertPath(string path, HostOS os)
@@ -185,117 +184,46 @@ namespace SharpCompress.Common.Rar.Headers
 #endif
         }
 
-        internal long DataStartPosition
-        {
-            get;
-            set;
-        }
-        internal HostOS HostOS
-        {
-            get;
-            private set;
-        }
+        internal long DataStartPosition { get; set; }
+        internal HostOS HostOS { get; private set; }
 
-        internal uint FileCRC
-        {
-            get;
-            private set;
-        }
+        internal uint FileCRC { get; private set; }
 
-        internal DateTime? FileLastModifiedTime
-        {
-            get;
-            private set;
-        }
+        internal DateTime? FileLastModifiedTime { get; private set; }
 
-        internal DateTime? FileCreatedTime
-        {
-            get;
-            private set;
-        }
+        internal DateTime? FileCreatedTime { get; private set; }
 
-        internal DateTime? FileLastAccessedTime
-        {
-            get;
-            private set;
-        }
+        internal DateTime? FileLastAccessedTime { get; private set; }
 
-        internal DateTime? FileArchivedTime
-        {
-            get;
-            private set;
-        }
+        internal DateTime? FileArchivedTime { get; private set; }
 
-        internal byte RarVersion
-        {
-            get;
-            private set;
-        }
+        internal byte RarVersion { get; private set; }
 
-        internal byte PackingMethod
-        {
-            get;
-            private set;
-        }
+        internal byte PackingMethod { get; private set; }
 
-        internal int FileAttributes
-        {
-            get;
-            private set;
-        }
+        internal int FileAttributes { get; private set; }
 
         internal FileFlags FileFlags
         {
-            get
-            {
-                return (FileFlags)base.Flags;
-            }
+            get { return (FileFlags) base.Flags; }
         }
 
-        internal long CompressedSize
-        {
-            get;
-            private set;
-        }
-        internal long UncompressedSize
-        {
-            get;
-            private set;
-        }
+        internal long CompressedSize { get; private set; }
+        internal long UncompressedSize { get; private set; }
 
-        internal string FileName
-        {
-            get;
-            private set;
-        }
+        internal string FileName { get; private set; }
 
-        internal byte[] SubData
-        {
-            get;
-            private set;
-        }
+        internal byte[] SubData { get; private set; }
 
-        internal int RecoverySectors
-        {
-            get;
-            private set;
-        }
+        internal int RecoverySectors { get; private set; }
 
-        internal byte[] Salt
-        {
-            get;
-            private set;
-        }
+        internal byte[] Salt { get; private set; }
 
         public override string ToString()
         {
             return FileName;
         }
 
-        public Stream PackedStream
-        {
-            get;
-            set;
-        }
+        public Stream PackedStream { get; set; }
     }
 }

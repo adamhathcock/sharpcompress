@@ -103,9 +103,9 @@ namespace SharpCompress.Writer.Zip
                                 Comment = comment,
                                 FileName = entryPath,
                                 ModificationTime = modificationTime,
-                                HeaderOffset = (uint)streamPosition,
+                                HeaderOffset = (uint) streamPosition,
                             };
-            var headersize = (uint)WriteHeader(entryPath, modificationTime);
+            var headersize = (uint) WriteHeader(entryPath, modificationTime);
             streamPosition += headersize;
             return new ZipWritingStream(this, OutputStream, entry);
         }
@@ -126,7 +126,7 @@ namespace SharpCompress.Writer.Zip
             byte[] encodedFilename = Encoding.UTF8.GetBytes(filename);
 
             OutputStream.Write(BitConverter.GetBytes(ZipHeaderFactory.ENTRY_HEADER_BYTES), 0, 4);
-            OutputStream.Write(new byte[] { 63, 0 }, 0, 2); //version
+            OutputStream.Write(new byte[] {63, 0}, 0, 2); //version
             HeaderFlags flags = HeaderFlags.UTF8;
             if (!OutputStream.CanSeek)
             {
@@ -136,14 +136,14 @@ namespace SharpCompress.Writer.Zip
                     flags |= HeaderFlags.Bit1; // eos marker
                 }
             }
-            OutputStream.Write(BitConverter.GetBytes((ushort)flags), 0, 2);
-            OutputStream.Write(BitConverter.GetBytes((ushort)compression), 0, 2); // zipping method
+            OutputStream.Write(BitConverter.GetBytes((ushort) flags), 0, 2);
+            OutputStream.Write(BitConverter.GetBytes((ushort) compression), 0, 2); // zipping method
             OutputStream.Write(BitConverter.GetBytes(modificationTime.DateTimeToDosTime()), 0, 4);
             // zipping date and time
-            OutputStream.Write(new byte[] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, 0, 12);
+            OutputStream.Write(new byte[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, 0, 12);
             // unused CRC, un/compressed size, updated later
-            OutputStream.Write(BitConverter.GetBytes((ushort)encodedFilename.Length), 0, 2); // filename length
-            OutputStream.Write(BitConverter.GetBytes((ushort)0), 0, 2); // extra length
+            OutputStream.Write(BitConverter.GetBytes((ushort) encodedFilename.Length), 0, 2); // filename length
+            OutputStream.Write(BitConverter.GetBytes((ushort) 0), 0, 2); // extra length
             OutputStream.Write(encodedFilename, 0, encodedFilename.Length);
 
             return 6 + 2 + 2 + 4 + 12 + 2 + 2 + encodedFilename.Length;
@@ -160,12 +160,12 @@ namespace SharpCompress.Writer.Zip
         {
             byte[] encodedComment = Encoding.UTF8.GetBytes(zipComment);
 
-            OutputStream.Write(new byte[] { 80, 75, 5, 6, 0, 0, 0, 0 }, 0, 8);
-            OutputStream.Write(BitConverter.GetBytes((ushort)entries.Count), 0, 2);
-            OutputStream.Write(BitConverter.GetBytes((ushort)entries.Count), 0, 2);
+            OutputStream.Write(new byte[] {80, 75, 5, 6, 0, 0, 0, 0}, 0, 8);
+            OutputStream.Write(BitConverter.GetBytes((ushort) entries.Count), 0, 2);
+            OutputStream.Write(BitConverter.GetBytes((ushort) entries.Count), 0, 2);
             OutputStream.Write(BitConverter.GetBytes(size), 0, 4);
-            OutputStream.Write(BitConverter.GetBytes((uint)streamPosition), 0, 4);
-            OutputStream.Write(BitConverter.GetBytes((ushort)encodedComment.Length), 0, 2);
+            OutputStream.Write(BitConverter.GetBytes((uint) streamPosition), 0, 4);
+            OutputStream.Write(BitConverter.GetBytes((ushort) encodedComment.Length), 0, 2);
             OutputStream.Write(encodedComment, 0, encodedComment.Length);
         }
 
@@ -228,7 +228,8 @@ namespace SharpCompress.Writer.Zip
                         }
                     case ZipCompressionMethod.Deflate:
                         {
-                            return new DeflateStream(counting, CompressionMode.Compress, writer.deflateCompressionLevel, true);
+                            return new DeflateStream(counting, CompressionMode.Compress, writer.deflateCompressionLevel,
+                                                     true);
                         }
                     case ZipCompressionMethod.BZip2:
                         {
@@ -241,7 +242,8 @@ namespace SharpCompress.Writer.Zip
                             counting.WriteByte(5);
                             counting.WriteByte(0);
 
-                            LzmaStream lzmaStream = new LzmaStream(new LzmaEncoderProperties(!originalStream.CanSeek), false, counting);
+                            LzmaStream lzmaStream = new LzmaStream(new LzmaEncoderProperties(!originalStream.CanSeek),
+                                                                   false, counting);
                             counting.Write(lzmaStream.Properties, 0, lzmaStream.Properties.Length);
                             return lzmaStream;
                         }
@@ -263,7 +265,7 @@ namespace SharpCompress.Writer.Zip
                 if (disposing)
                 {
                     writeStream.Dispose();
-                    entry.Crc = (uint)crc.Crc32Result;
+                    entry.Crc = (uint) crc.Crc32Result;
                     entry.Compressed = counting.Count;
                     entry.Decompressed = decompressed;
                     if (originalStream.CanSeek)
@@ -307,7 +309,7 @@ namespace SharpCompress.Writer.Zip
 
             public override void Write(byte[] buffer, int offset, int count)
             {
-                decompressed += (uint)count;
+                decompressed += (uint) count;
                 crc.SlurpBlock(buffer, offset, count);
                 writeStream.Write(buffer, offset, count);
             }

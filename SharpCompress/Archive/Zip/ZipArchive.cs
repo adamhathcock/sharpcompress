@@ -121,7 +121,7 @@ namespace SharpCompress.Archive.Zip
                 {
                     return false;
                 }
-                return Enum.IsDefined(typeof(ZipHeaderType), header.ZipHeaderType);
+                return Enum.IsDefined(typeof (ZipHeaderType), header.ZipHeaderType);
             }
             catch (CryptographicException)
             {
@@ -187,7 +187,9 @@ namespace SharpCompress.Archive.Zip
                         case ZipHeaderType.DirectoryEntry:
                             {
                                 yield return new ZipArchiveEntry(this,
-                                    new SeekableZipFilePart(headerFactory, h as DirectoryEntryHeader, stream));
+                                                                 new SeekableZipFilePart(headerFactory,
+                                                                                         h as DirectoryEntryHeader,
+                                                                                         stream));
                             }
                             break;
                         case ZipHeaderType.DirectoryEnd:
@@ -202,15 +204,15 @@ namespace SharpCompress.Archive.Zip
         }
 
         protected override void SaveTo(Stream stream, CompressionInfo compressionInfo,
-            IEnumerable<ZipArchiveEntry> oldEntries,
-            IEnumerable<ZipArchiveEntry> newEntries)
+                                       IEnumerable<ZipArchiveEntry> oldEntries,
+                                       IEnumerable<ZipArchiveEntry> newEntries)
         {
             using (var writer = new ZipWriter(stream, compressionInfo, string.Empty))
             {
                 foreach (var entry in oldEntries.Concat(newEntries)
-                    .Where(x => !x.IsDirectory))
+                                                .Where(x => !x.IsDirectory))
                 {
-                    using(var entryStream = entry.OpenEntryStream())
+                    using (var entryStream = entry.OpenEntryStream())
                     {
                         writer.Write(entry.FilePath, entryStream, entry.LastModifiedTime, string.Empty);
                     }
@@ -218,7 +220,8 @@ namespace SharpCompress.Archive.Zip
             }
         }
 
-        protected override ZipArchiveEntry CreateEntry(string filePath, Stream source, long size, DateTime? modified, bool closeStream)
+        protected override ZipArchiveEntry CreateEntry(string filePath, Stream source, long size, DateTime? modified,
+                                                       bool closeStream)
         {
             return new ZipWritableArchiveEntry(this, source, filePath, size, modified, closeStream);
         }

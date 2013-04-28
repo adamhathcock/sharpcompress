@@ -19,28 +19,13 @@ namespace SharpCompress.Common.Rar.Headers
 
         internal ArchiveFlags ArchiveHeaderFlags
         {
-            get
-            {
-                return (ArchiveFlags)base.Flags;
-            }
+            get { return (ArchiveFlags) base.Flags; }
         }
 
-        internal short HighPosAv
-        {
-            get;
-            private set;
-        }
+        internal short HighPosAv { get; private set; }
 
-        internal int PosAv
-        {
-            get;
-            private set;
-        }
+        internal int PosAv { get; private set; }
 
-        internal byte EncryptionVersion
-        {
-            get;
-            private set;
-        }
+        internal byte EncryptionVersion { get; private set; }
     }
 }

@@ -20,7 +20,7 @@ namespace SharpCompress.Compressor.LZMA
 
         public static void PopIndent()
         {
-            if(_indent.Count == 1)
+            if (_indent.Count == 1)
                 throw new InvalidOperationException();
 
             _indent.Pop();
@@ -28,7 +28,7 @@ namespace SharpCompress.Compressor.LZMA
 
         private static void EnsureIndent()
         {
-            if(_needsIndent)
+            if (_needsIndent)
             {
                 _needsIndent = false;
 #if !SILVERLIGHT && !PORTABLE

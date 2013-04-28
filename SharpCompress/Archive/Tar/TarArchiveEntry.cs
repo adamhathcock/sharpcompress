@@ -8,6 +8,7 @@ namespace SharpCompress.Archive.Tar
     public class TarArchiveEntry : TarEntry, IArchiveEntry
     {
         private TarArchive archive;
+
         internal TarArchiveEntry(TarArchive archive, TarFilePart part, CompressionType compressionType)
             : base(part, compressionType)
         {
@@ -32,10 +33,7 @@ namespace SharpCompress.Archive.Tar
 
         public bool IsComplete
         {
-            get
-            {
-                return true;
-            }
+            get { return true; }
         }
 
         #endregion

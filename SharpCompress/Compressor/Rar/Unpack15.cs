@@ -15,6 +15,7 @@
 * ">":  "&#062;" or "&gt;"
 * "@":  "&#064;" 
 */
+
 using System;
 using System.IO;
 using SharpCompress.Compressor.Rar.decode;
@@ -22,7 +23,6 @@ using SharpCompress.Compressor.Rar.VM;
 
 namespace SharpCompress.Compressor.Rar
 {
-
     /// <summary> DOCUMENT ME
     /// 
     /// </summary>
@@ -32,7 +32,6 @@ namespace SharpCompress.Compressor.Rar
     /// </version>
     internal abstract class Unpack15 : BitInput
     {
-
         protected internal int readBorder;
 
         protected internal bool suspended;
@@ -58,9 +57,15 @@ namespace SharpCompress.Compressor.Rar
 
         protected internal int oldDistPtr;
 
-        protected internal int[] ChSet = new int[256], ChSetA = new int[256], ChSetB = new int[256], ChSetC = new int[256];
+        protected internal int[] ChSet = new int[256],
+                                 ChSetA = new int[256],
+                                 ChSetB = new int[256],
+                                 ChSetC = new int[256];
 
-        protected internal int[] Place = new int[256], PlaceA = new int[256], PlaceB = new int[256], PlaceC = new int[256];
+        protected internal int[] Place = new int[256],
+                                 PlaceA = new int[256],
+                                 PlaceB = new int[256],
+                                 PlaceC = new int[256];
 
         protected internal int[] NToPl = new int[256], NToPlB = new int[256], NToPlC = new int[256];
 
@@ -74,53 +79,68 @@ namespace SharpCompress.Compressor.Rar
 
         private const int STARTL1 = 2;
 
-        private static int[] DecL1 = new int[] { 0x8000, 0xa000, 0xc000, 0xd000, 0xe000, 0xea00, 0xee00, 0xf000, 0xf200, 0xf200, 0xffff };
+        private static int[] DecL1 = new int[]
+                                         {
+                                             0x8000, 0xa000, 0xc000, 0xd000, 0xe000, 0xea00, 0xee00, 0xf000, 0xf200, 0xf200
+                                             , 0xffff
+                                         };
 
-        private static int[] PosL1 = new int[] { 0, 0, 0, 2, 3, 5, 7, 11, 16, 20, 24, 32, 32 };
+        private static int[] PosL1 = new int[] {0, 0, 0, 2, 3, 5, 7, 11, 16, 20, 24, 32, 32};
 
         private const int STARTL2 = 3;
 
-        private static int[] DecL2 = new int[] { 0xa000, 0xc000, 0xd000, 0xe000, 0xea00, 0xee00, 0xf000, 0xf200, 0xf240, 0xffff };
+        private static int[] DecL2 = new int[]
+                                         {
+                                             0xa000, 0xc000, 0xd000, 0xe000, 0xea00, 0xee00, 0xf000, 0xf200, 0xf240, 0xffff
+                                         };
 
-        private static int[] PosL2 = new int[] { 0, 0, 0, 0, 5, 7, 9, 13, 18, 22, 26, 34, 36 };
+        private static int[] PosL2 = new int[] {0, 0, 0, 0, 5, 7, 9, 13, 18, 22, 26, 34, 36};
 
         private const int STARTHF0 = 4;
 
-        private static int[] DecHf0 = new int[] { 0x8000, 0xc000, 0xe000, 0xf200, 0xf200, 0xf200, 0xf200, 0xf200, 0xffff };
+        private static int[] DecHf0 = new int[] {0x8000, 0xc000, 0xe000, 0xf200, 0xf200, 0xf200, 0xf200, 0xf200, 0xffff};
 
-        private static int[] PosHf0 = new int[] { 0, 0, 0, 0, 0, 8, 16, 24, 33, 33, 33, 33, 33 };
+        private static int[] PosHf0 = new int[] {0, 0, 0, 0, 0, 8, 16, 24, 33, 33, 33, 33, 33};
 
         private const int STARTHF1 = 5;
 
-        private static int[] DecHf1 = new int[] { 0x2000, 0xc000, 0xe000, 0xf000, 0xf200, 0xf200, 0xf7e0, 0xffff };
+        private static int[] DecHf1 = new int[] {0x2000, 0xc000, 0xe000, 0xf000, 0xf200, 0xf200, 0xf7e0, 0xffff};
 
-        private static int[] PosHf1 = new int[] { 0, 0, 0, 0, 0, 0, 4, 44, 60, 76, 80, 80, 127 };
+        private static int[] PosHf1 = new int[] {0, 0, 0, 0, 0, 0, 4, 44, 60, 76, 80, 80, 127};
 
         private const int STARTHF2 = 5;
 
-        private static int[] DecHf2 = new int[] { 0x1000, 0x2400, 0x8000, 0xc000, 0xfa00, 0xffff, 0xffff, 0xffff };
+        private static int[] DecHf2 = new int[] {0x1000, 0x2400, 0x8000, 0xc000, 0xfa00, 0xffff, 0xffff, 0xffff};
 
-        private static int[] PosHf2 = new int[] { 0, 0, 0, 0, 0, 0, 2, 7, 53, 117, 233, 0, 0 };
+        private static int[] PosHf2 = new int[] {0, 0, 0, 0, 0, 0, 2, 7, 53, 117, 233, 0, 0};
 
         private const int STARTHF3 = 6;
 
-        private static int[] DecHf3 = new int[] { 0x800, 0x2400, 0xee00, 0xfe80, 0xffff, 0xffff, 0xffff };
+        private static int[] DecHf3 = new int[] {0x800, 0x2400, 0xee00, 0xfe80, 0xffff, 0xffff, 0xffff};
 
-        private static int[] PosHf3 = new int[] { 0, 0, 0, 0, 0, 0, 0, 2, 16, 218, 251, 0, 0 };
+        private static int[] PosHf3 = new int[] {0, 0, 0, 0, 0, 0, 0, 2, 16, 218, 251, 0, 0};
 
         private const int STARTHF4 = 8;
 
-        private static int[] DecHf4 = new int[] { 0xff00, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff };
+        private static int[] DecHf4 = new int[] {0xff00, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff};
 
-        private static int[] PosHf4 = new int[] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 255, 0, 0, 0 };
+        private static int[] PosHf4 = new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 255, 0, 0, 0};
 
-        internal static int[] ShortLen1 = new int[] { 1, 3, 4, 4, 5, 6, 7, 8, 8, 4, 4, 5, 6, 6, 4, 0 };
+        internal static int[] ShortLen1 = new int[] {1, 3, 4, 4, 5, 6, 7, 8, 8, 4, 4, 5, 6, 6, 4, 0};
 
-        internal static int[] ShortXor1 = new int[] { 0, 0xa0, 0xd0, 0xe0, 0xf0, 0xf8, 0xfc, 0xfe, 0xff, 0xc0, 0x80, 0x90, 0x98, 0x9c, 0xb0 };
+        internal static int[] ShortXor1 = new int[]
+                                              {
+                                                  0, 0xa0, 0xd0, 0xe0, 0xf0, 0xf8, 0xfc, 0xfe, 0xff, 0xc0, 0x80, 0x90, 0x98
+                                                  , 0x9c, 0xb0
+                                              };
 
-        internal static int[] ShortLen2 = new int[] { 2, 3, 3, 3, 4, 4, 5, 6, 6, 4, 4, 5, 6, 6, 4, 0 };
+        internal static int[] ShortLen2 = new int[] {2, 3, 3, 3, 4, 4, 5, 6, 6, 4, 4, 5, 6, 6, 4, 0};
 
-        internal static int[] ShortXor2 = new int[] { 0, 0x40, 0x60, 0xa0, 0xd0, 0xe0, 0xf0, 0xf8, 0xfc, 0xc0, 0x80, 0x90, 0x98, 0x9c, 0xb0 };
+        internal static int[] ShortXor2 = new int[]
+                                              {
+                                                  0, 0x40, 0x60, 0xa0, 0xd0, 0xe0, 0xf0, 0xf8, 0xfc, 0xc0, 0x80, 0x90, 0x98
+                                                  , 0x9c, 0xb0
+                                              };
 
         protected internal abstract void unpInitData(bool solid);
 
@@ -223,7 +243,6 @@ namespace SharpCompress.Compressor.Rar
         }
 
 
-
         protected bool unpReadBuf()
         {
             int dataSize = readTop - inAddr;
@@ -231,7 +250,7 @@ namespace SharpCompress.Compressor.Rar
             {
                 return (false);
             }
-            if (inAddr > BitInput.MAX_SIZE / 2)
+            if (inAddr > BitInput.MAX_SIZE/2)
             {
                 if (dataSize > 0)
                 {
@@ -291,7 +310,7 @@ namespace SharpCompress.Compressor.Rar
             BitField = Utility.URShift(BitField, 8);
             if (AvrLn1 < 37)
             {
-                for (Length = 0; ; Length++)
+                for (Length = 0;; Length++)
                 {
                     if (((BitField ^ ShortXor1[Length]) & (~(Utility.URShift(0xff, getShortLen1(Length))))) == 0)
                     {
@@ -302,7 +321,7 @@ namespace SharpCompress.Compressor.Rar
             }
             else
             {
-                for (Length = 0; ; Length++)
+                for (Length = 0;; Length++)
                 {
                     if (((BitField ^ ShortXor2[Length]) & (~(0xff >> getShortLen2(Length)))) == 0)
                     {
@@ -583,7 +602,7 @@ namespace SharpCompress.Compressor.Rar
                 Nlzb = Utility.URShift(Nlzb, 1);
             }
 
-            window[unpPtr++] = (byte)(Utility.URShift(ChSet[BytePlace], 8));
+            window[unpPtr++] = (byte) (Utility.URShift(ChSet[BytePlace], 8));
             --destUnpSize;
 
             while (true)
@@ -672,7 +691,7 @@ namespace SharpCompress.Compressor.Rar
             Utility.Fill(NumToPlace, 0); // memset(NumToPlace,0,sizeof(NToPl));
             for (I = 6; I >= 0; I--)
             {
-                NumToPlace[I] = (7 - I) * 32;
+                NumToPlace[I] = (7 - I)*32;
             }
         }
 

@@ -15,10 +15,7 @@ namespace SharpCompress.Common
 
         internal Stream Stream
         {
-            get
-            {
-                return new NonDisposingStream(actualStream);
-            }
+            get { return new NonDisposingStream(actualStream); }
         }
 
         internal Options Options { get; private set; }
@@ -27,27 +24,19 @@ namespace SharpCompress.Common
         /// RarArchive is the first volume of a multi-part archive.
         /// Only Rar 3.0 format and higher
         /// </summary>
-        public abstract bool IsFirstVolume
-        {
-            get;
-        }
+        public abstract bool IsFirstVolume { get; }
 
         /// <summary>
         /// RarArchive is part of a multi-part archive.
         /// </summary>
-        public abstract bool IsMultiVolume
-        {
-            get;
-        }
+        public abstract bool IsMultiVolume { get; }
 
 #if !PORTABLE
-        public abstract FileInfo VolumeFile
-        {
-            get;
-        }
+        public abstract FileInfo VolumeFile { get; }
 #endif
 
         private bool disposed;
+
         public void Dispose()
         {
             if (!Options.HasFlag(Options.KeepStreamsOpen) && !disposed)

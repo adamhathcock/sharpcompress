@@ -1,4 +1,3 @@
-
 namespace SharpCompress.Compressor.PPMd.H
 {
     internal abstract class Pointer
@@ -11,17 +10,9 @@ namespace SharpCompress.Compressor.PPMd.H
             Memory = mem;
         }
 
-        internal byte[] Memory
-        {
-            get;
-            private set;
-        }
+        internal byte[] Memory { get; private set; }
 
-        internal virtual int Address
-        {
-            get;
-            set;
-        }
+        internal virtual int Address { get; set; }
 
         protected T Initialize<T>(byte[] mem)
             where T : Pointer

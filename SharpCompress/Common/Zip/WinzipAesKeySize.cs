@@ -1,5 +1,4 @@
-﻿
-namespace SharpCompress.Common.Zip
+﻿namespace SharpCompress.Common.Zip
 {
     internal enum WinzipAesKeySize
     {

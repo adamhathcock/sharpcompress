@@ -10,7 +10,7 @@ namespace SharpCompress.Archive
         /// Extract to specific directory, retaining filename
         /// </summary>
         public static void WriteToDirectory(this IArchive archive, string destinationDirectory,
-            ExtractOptions options = ExtractOptions.Overwrite)
+                                            ExtractOptions options = ExtractOptions.Overwrite)
         {
             foreach (IArchiveEntry entry in archive.Entries.Where(x => !x.IsDirectory))
             {

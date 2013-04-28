@@ -13,7 +13,8 @@ namespace SharpCompress.Archive.Zip
         private DateTime? lastModified;
         private bool closeStream;
 
-        internal ZipWritableArchiveEntry(ZipArchive archive, Stream stream, string path, long size, DateTime? lastModified, bool closeStream)
+        internal ZipWritableArchiveEntry(ZipArchive archive, Stream stream, string path, long size,
+                                         DateTime? lastModified, bool closeStream)
             : base(archive, null)
         {
             this.Stream = stream;
@@ -28,14 +29,20 @@ namespace SharpCompress.Archive.Zip
             get { return 0; }
         }
 
-        public override string FilePath { get { return path; } }
+        public override string FilePath
+        {
+            get { return path; }
+        }
 
         public override long CompressedSize
         {
             get { return 0; }
         }
 
-        public override long Size { get { return size; } }
+        public override long Size
+        {
+            get { return size; }
+        }
 
         public override DateTime? LastModifiedTime
         {
@@ -81,15 +88,15 @@ namespace SharpCompress.Archive.Zip
 
         public override Stream OpenEntryStream()
         {
-           return new NonDisposingStream(Stream);
+            return new NonDisposingStream(Stream);
         }
 
         internal override void Close()
         {
-           if (closeStream)
-           {
-              Stream.Dispose();
-           }
+            if (closeStream)
+            {
+                Stream.Dispose();
+            }
         }
     }
 }

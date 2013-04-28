@@ -12,29 +12,16 @@ namespace SharpCompress.Compressor.PPMd.H
 
         internal int Symbol
         {
-            get
-            {
-                return symbol;
-            }
+            get { return symbol; }
 
-            set
-            {
-                this.symbol = value & 0xff;
-            }
-
+            set { this.symbol = value & 0xff; }
         }
+
         internal int Freq
         {
-            get
-            {
-                return freq;
-            }
+            get { return freq; }
 
-            set
-            {
-                this.freq = value & 0xff;
-            }
-
+            set { this.freq = value & 0xff; }
         }
 
         internal State Values

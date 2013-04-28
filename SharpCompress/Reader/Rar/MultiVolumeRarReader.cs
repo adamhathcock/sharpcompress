@@ -58,7 +58,8 @@ namespace SharpCompress.Reader.Rar
             private Stream tempStream;
             private bool isFirst = true;
 
-            internal MultiVolumeStreamEnumerator(MultiVolumeRarReader r, IEnumerator<Stream> nextReadableStreams, Stream tempStream)
+            internal MultiVolumeStreamEnumerator(MultiVolumeRarReader r, IEnumerator<Stream> nextReadableStreams,
+                                                 Stream tempStream)
             {
                 reader = r;
                 this.nextReadableStreams = nextReadableStreams;
@@ -75,11 +76,7 @@ namespace SharpCompress.Reader.Rar
                 return this;
             }
 
-            public FilePart Current
-            {
-                get;
-                private set;
-            }
+            public FilePart Current { get; private set; }
 
             public void Dispose()
             {
@@ -87,10 +84,7 @@ namespace SharpCompress.Reader.Rar
 
             object System.Collections.IEnumerator.Current
             {
-                get
-                {
-                    return Current;
-                }
+                get { return Current; }
             }
 
             public bool MoveNext()

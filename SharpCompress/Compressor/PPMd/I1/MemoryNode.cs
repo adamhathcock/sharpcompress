@@ -48,7 +48,11 @@ namespace SharpCompress.Compressor.PPMd.I1
         /// </summary>
         public uint Stamp
         {
-            get { return ((uint) Memory[Address]) | ((uint) Memory[Address + 1]) << 8 | ((uint) Memory[Address + 2]) << 16 | ((uint) Memory[Address + 3]) << 24; }
+            get
+            {
+                return ((uint) Memory[Address]) | ((uint) Memory[Address + 1]) << 8 | ((uint) Memory[Address + 2]) << 16 |
+                       ((uint) Memory[Address + 3]) << 24;
+            }
             set
             {
                 Memory[Address] = (byte) value;
@@ -63,7 +67,13 @@ namespace SharpCompress.Compressor.PPMd.I1
         /// </summary>
         public MemoryNode Next
         {
-            get { return new MemoryNode(((uint) Memory[Address + 4]) | ((uint) Memory[Address + 5]) << 8 | ((uint) Memory[Address + 6]) << 16 | ((uint) Memory[Address + 7]) << 24, Memory); }
+            get
+            {
+                return
+                    new MemoryNode(
+                        ((uint) Memory[Address + 4]) | ((uint) Memory[Address + 5]) << 8 |
+                        ((uint) Memory[Address + 6]) << 16 | ((uint) Memory[Address + 7]) << 24, Memory);
+            }
             set
             {
                 Memory[Address + 4] = (byte) value.Address;
@@ -78,7 +88,11 @@ namespace SharpCompress.Compressor.PPMd.I1
         /// </summary>
         public uint UnitCount
         {
-            get { return ((uint) Memory[Address + 8]) | ((uint) Memory[Address + 9]) << 8 | ((uint) Memory[Address + 10]) << 16 | ((uint) Memory[Address + 11]) << 24; }
+            get
+            {
+                return ((uint) Memory[Address + 8]) | ((uint) Memory[Address + 9]) << 8 |
+                       ((uint) Memory[Address + 10]) << 16 | ((uint) Memory[Address + 11]) << 24;
+            }
             set
             {
                 Memory[Address + 8] = (byte) value;
@@ -157,7 +171,7 @@ namespace SharpCompress.Compressor.PPMd.I1
         /// <returns></returns>
         public static MemoryNode operator +(MemoryNode memoryNode, int offset)
         {
-            memoryNode.Address = (uint) (memoryNode.Address + offset * Size);
+            memoryNode.Address = (uint) (memoryNode.Address + offset*Size);
             return memoryNode;
         }
 
@@ -169,7 +183,7 @@ namespace SharpCompress.Compressor.PPMd.I1
         /// <returns></returns>
         public static MemoryNode operator +(MemoryNode memoryNode, uint offset)
         {
-            memoryNode.Address += offset * Size;
+            memoryNode.Address += offset*Size;
             return memoryNode;
         }
 
@@ -181,7 +195,7 @@ namespace SharpCompress.Compressor.PPMd.I1
         /// <returns></returns>
         public static MemoryNode operator -(MemoryNode memoryNode, int offset)
         {
-            memoryNode.Address = (uint) (memoryNode.Address - offset * Size);
+            memoryNode.Address = (uint) (memoryNode.Address - offset*Size);
             return memoryNode;
         }
 
@@ -193,7 +207,7 @@ namespace SharpCompress.Compressor.PPMd.I1
         /// <returns></returns>
         public static MemoryNode operator -(MemoryNode memoryNode, uint offset)
         {
-            memoryNode.Address -= offset * Size;
+            memoryNode.Address -= offset*Size;
             return memoryNode;
         }
 

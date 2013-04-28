@@ -4,6 +4,7 @@ using System.Runtime.InteropServices;
 
 [assembly: ComVisible(false)]
 #endif
+
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]

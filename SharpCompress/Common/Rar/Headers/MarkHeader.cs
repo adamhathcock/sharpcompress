@@ -4,7 +4,6 @@ namespace SharpCompress.Common.Rar.Headers
 {
     internal class MarkHeader : RarHeader
     {
-
         protected override void ReadFromReader(MarkingBinaryReader reader)
         {
         }
@@ -55,10 +54,6 @@ namespace SharpCompress.Common.Rar.Headers
             return valid;
         }
 
-        internal bool OldFormat
-        {
-            get;
-            private set;
-        }
+        internal bool OldFormat { get; private set; }
     }
 }

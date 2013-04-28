@@ -89,7 +89,7 @@ namespace SharpCompress
 
         internal IEnumerable<T> GetLoaded()
         {
-           return backing;
+            return backing;
         }
 
         #region ICollection<T> Members
@@ -112,7 +112,6 @@ namespace SharpCompress
 
         public void CopyTo(T[] array, int arrayIndex)
         {
-
             EnsureFullyLoaded();
             backing.CopyTo(array, arrayIndex);
         }

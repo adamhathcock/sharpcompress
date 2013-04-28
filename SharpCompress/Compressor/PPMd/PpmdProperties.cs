@@ -42,7 +42,7 @@ namespace SharpCompress.Compressor.PPMd
                 ushort props = BitConverter.ToUInt16(properties, 0);
                 AllocatorSize = (((props >> 4) & 0xff) + 1) << 20;
                 ModelOrder = (props & 0x0f) + 1;
-                ModelRestorationMethod = (I1.ModelRestorationMethod)(props >> 12);
+                ModelRestorationMethod = (I1.ModelRestorationMethod) (props >> 12);
             }
             else if (properties.Length == 5)
             {
@@ -54,10 +54,7 @@ namespace SharpCompress.Compressor.PPMd
 
         public int AllocatorSize
         {
-            get
-            {
-                return allocatorSize;
-            }
+            get { return allocatorSize; }
             set
             {
                 allocatorSize = value;
@@ -74,7 +71,10 @@ namespace SharpCompress.Compressor.PPMd
         {
             get
             {
-                return BitConverter.GetBytes((ushort)((ModelOrder - 1) + (((AllocatorSize >> 20) - 1) << 4) + ((ushort)ModelRestorationMethod << 12)));
+                return
+                    BitConverter.GetBytes(
+                        (ushort)
+                        ((ModelOrder - 1) + (((AllocatorSize >> 20) - 1) << 4) + ((ushort) ModelRestorationMethod << 12)));
             }
         }
     }

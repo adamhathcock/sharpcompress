@@ -8,6 +8,7 @@ namespace SharpCompress.Common
             : base(message)
         {
         }
+
         public MultiVolumeExtractionException(string message, Exception inner)
             : base(message, inner)
         {

@@ -11,22 +11,10 @@ namespace SharpCompress.Common.Rar.Headers
             UserNameSize = reader.ReadInt16();
         }
 
-        internal int CreationTime
-        {
-            get;
-            private set;
-        }
+        internal int CreationTime { get; private set; }
 
-        internal short ArcNameSize
-        {
-            get;
-            private set;
-        }
+        internal short ArcNameSize { get; private set; }
 
-        internal short UserNameSize
-        {
-            get;
-            private set;
-        }
+        internal short UserNameSize { get; private set; }
     }
 }

@@ -43,10 +43,9 @@ namespace SharpCompress.Compressor.PPMd.H
         {
             get
             {
-                range = (range / SubRange.Scale) & UintMask;
-                return (int)((code - low) / (range));
+                range = (range/SubRange.Scale) & UintMask;
+                return (int) ((code - low)/(range));
             }
-
         }
 
         private long Char
@@ -59,26 +58,21 @@ namespace SharpCompress.Compressor.PPMd.H
                     return stream.ReadByte();
                 return -1;
             }
-
         }
 
-        internal SubRange SubRange
-        {
-            get;
-            private set;
-        }
+        internal SubRange SubRange { get; private set; }
 
 
         internal long GetCurrentShiftCount(int SHIFT)
         {
             range = Utility.URShift(range, SHIFT);
-            return ((code - low) / (range)) & UintMask;
+            return ((code - low)/(range)) & UintMask;
         }
 
         internal void Decode()
         {
-            low = (low + (range * SubRange.LowCount)) & UintMask;
-            range = (range * (SubRange.HighCount - SubRange.LowCount)) & UintMask;
+            low = (low + (range*SubRange.LowCount)) & UintMask;
+            range = (range*(SubRange.HighCount - SubRange.LowCount)) & UintMask;
         }
 
         internal void AriDecNormalize()
@@ -135,44 +129,23 @@ namespace SharpCompress.Compressor.PPMd.H
 
         internal long HighCount
         {
-            get
-            {
-                return highCount;
-            }
+            get { return highCount; }
 
-            set
-            {
-                this.highCount = value & RangeCoder.UintMask;
-            }
-
+            set { this.highCount = value & RangeCoder.UintMask; }
         }
 
         internal long LowCount
         {
-            get
-            {
-                return lowCount & RangeCoder.UintMask;
-            }
+            get { return lowCount & RangeCoder.UintMask; }
 
-            set
-            {
-                this.lowCount = value & RangeCoder.UintMask;
-            }
-
+            set { this.lowCount = value & RangeCoder.UintMask; }
         }
 
         internal long Scale
         {
-            get
-            {
-                return scale;
-            }
+            get { return scale; }
 
-            set
-            {
-                this.scale = value & RangeCoder.UintMask;
-            }
-
+            set { this.scale = value & RangeCoder.UintMask; }
         }
 
         // Debug

@@ -12,28 +12,12 @@ namespace SharpCompress.Common.Rar.Headers
             AVInfoCRC = reader.ReadInt32();
         }
 
-        internal int AVInfoCRC
-        {
-            get;
-            private set;
-        }
+        internal int AVInfoCRC { get; private set; }
 
-        internal byte UnpackVersion
-        {
-            get;
-            private set;
-        }
+        internal byte UnpackVersion { get; private set; }
 
-        internal byte Method
-        {
-            get;
-            private set;
-        }
+        internal byte Method { get; private set; }
 
-        internal byte AVVersion
-        {
-            get;
-            private set;
-        }
+        internal byte AVVersion { get; private set; }
     }
 }

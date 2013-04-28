@@ -10,18 +10,19 @@ namespace SharpCompress.Common.Tar.Headers
     internal enum EntryType : byte
     {
         File = 0,
-        OldFile = (byte)'0',
-        HardLink = (byte)'1',
-        SymLink = (byte)'2',
-        CharDevice = (byte)'3',
-        BlockDevice = (byte)'4',
-        Directory = (byte)'5',
-        Fifo = (byte)'6',
-        LongLink = (byte)'K',
-        LongName = (byte)'L',
-        SparseFile = (byte)'S',
-        VolumeHeader = (byte)'V',
+        OldFile = (byte) '0',
+        HardLink = (byte) '1',
+        SymLink = (byte) '2',
+        CharDevice = (byte) '3',
+        BlockDevice = (byte) '4',
+        Directory = (byte) '5',
+        Fifo = (byte) '6',
+        LongLink = (byte) 'K',
+        LongName = (byte) 'L',
+        SparseFile = (byte) 'S',
+        VolumeHeader = (byte) 'V',
     }
+
     internal class TarHeader
     {
         internal static readonly DateTime Epoch = new DateTime(1970, 1, 1, 0, 0, 0);
@@ -55,10 +56,10 @@ namespace SharpCompress.Common.Tar.Headers
             WriteOctalBytes(0, buffer, 108, 8);
             WriteOctalBytes(0, buffer, 116, 8);
             WriteOctalBytes(Size, buffer, 124, 12);
-            var time = (long)(LastModifiedTime - Epoch).TotalSeconds;
+            var time = (long) (LastModifiedTime - Epoch).TotalSeconds;
             WriteOctalBytes(time, buffer, 136, 12);
 
-            buffer[156] = (byte)EntryType;
+            buffer[156] = (byte) EntryType;
 
             //Encoding.UTF8.GetBytes("magic").CopyTo(buffer, 257);
             if (Name.Length > 100)
@@ -99,7 +100,7 @@ namespace SharpCompress.Common.Tar.Headers
             //Mode = ReadASCIIInt32Base8(buffer, 100, 7);
             //UserId = ReadASCIIInt32Base8(buffer, 108, 7);
             //GroupId = ReadASCIIInt32Base8(buffer, 116, 7);
-            EntryType = (EntryType)buffer[156];
+            EntryType = (EntryType) buffer[156];
             if ((buffer[124] & 0x80) == 0x80) // if size in binary
             {
                 long sizeBigEndian = BitConverter.ToInt64(buffer, 0x80);
@@ -141,7 +142,7 @@ namespace SharpCompress.Common.Tar.Headers
 
             for (i = 0; i < length - 1 && i < name.Length; ++i)
             {
-                buffer[offset + i] = (byte)name[i];
+                buffer[offset + i] = (byte) name[i];
             }
 
             for (; i < length; ++i)
@@ -156,11 +157,11 @@ namespace SharpCompress.Common.Tar.Headers
             int shift = length - val.Length - 1;
             for (int i = 0; i < shift; i++)
             {
-                buffer[offset + i] = (byte)' ';
+                buffer[offset + i] = (byte) ' ';
             }
             for (int i = 0; i < val.Length; i++)
             {
-                buffer[offset + i + shift] = (byte)val[i];
+                buffer[offset + i + shift] = (byte) val[i];
             }
             buffer[offset + length] = 0;
         }
@@ -226,6 +227,7 @@ namespace SharpCompress.Common.Tar.Headers
             }
             return headerChecksum;
         }
+
         public long? DataStartPosition { get; set; }
 
         public string Magic { get; set; }

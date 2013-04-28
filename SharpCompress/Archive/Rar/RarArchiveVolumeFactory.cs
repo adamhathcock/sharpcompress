@@ -55,7 +55,7 @@ namespace SharpCompress.Archive.Rar
                 return null;
             }
             bool oldNumbering = !ah.ArchiveHeaderFlags.HasFlag(ArchiveFlags.NEWNUMBERING)
-                || currentFilePart.MarkHeader.OldFormat;
+                                || currentFilePart.MarkHeader.OldFormat;
             if (oldNumbering)
             {
                 return FindNextFileWithOldNumbering(currentFilePart.FileInfo);
@@ -73,7 +73,7 @@ namespace SharpCompress.Archive.Rar
 
             StringBuilder buffer = new StringBuilder(currentFileInfo.FullName.Length);
             buffer.Append(currentFileInfo.FullName.Substring(0,
-            currentFileInfo.FullName.Length - extension.Length));
+                                                             currentFileInfo.FullName.Length - extension.Length));
             if (string.Compare(extension, ".rar", StringComparison.InvariantCultureIgnoreCase) == 0)
             {
                 buffer.Append(".r00");
@@ -116,7 +116,8 @@ namespace SharpCompress.Archive.Rar
             buffer.Append(currentFileInfo.FullName, 0, startIndex);
             int num = 0;
             string numString = currentFileInfo.FullName.Substring(startIndex + 5,
-                currentFileInfo.FullName.IndexOf('.', startIndex + 5) - startIndex - 5);
+                                                                  currentFileInfo.FullName.IndexOf('.', startIndex + 5) -
+                                                                  startIndex - 5);
             buffer.Append(".part");
             if (int.TryParse(numString, out num))
             {
@@ -138,7 +139,7 @@ namespace SharpCompress.Archive.Rar
         private static void ThrowInvalidFileName(FileInfo fileInfo)
         {
             throw new ArgumentException("Filename invalid or next archive could not be found:"
-                + fileInfo.FullName);
+                                        + fileInfo.FullName);
         }
 
 #endif

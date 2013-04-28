@@ -1,6 +1,4 @@
-﻿
-
-using System;
+﻿using System;
 
 namespace SharpCompress.Common.Zip
 {
@@ -15,7 +13,8 @@ namespace SharpCompress.Common.Zip
 
         private byte[] generatedVerifyValue;
 
-        internal WinzipAesEncryptionData(WinzipAesKeySize keySize, byte[] salt, byte[] passwordVerifyValue, string password)
+        internal WinzipAesEncryptionData(WinzipAesKeySize keySize, byte[] salt, byte[] passwordVerifyValue,
+                                         string password)
         {
             this.keySize = keySize;
             this.salt = salt;
@@ -48,7 +47,6 @@ namespace SharpCompress.Common.Zip
 
         private void Initialize()
         {
-
             System.Security.Cryptography.Rfc2898DeriveBytes rfc2898 =
                 new System.Security.Cryptography.Rfc2898DeriveBytes(password, salt, RFC2898_ITERATIONS);
 

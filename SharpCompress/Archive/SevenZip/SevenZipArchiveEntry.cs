@@ -30,10 +30,7 @@ namespace SharpCompress.Archive.SevenZip
 
         public bool IsComplete
         {
-            get
-            {
-                return true;
-            }
+            get { return true; }
         }
 
         /// <summary>

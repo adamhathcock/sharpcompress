@@ -30,6 +30,7 @@ namespace SharpCompress.Archive
                 anyNotWritable = true;
             }
         }
+
 #if !PORTABLE
         internal AbstractWritableArchive(ArchiveType type, FileInfo fileInfo, Options options)
             : base(type, fileInfo, options)
@@ -66,10 +67,7 @@ namespace SharpCompress.Archive
 
         private IEnumerable<TEntry> OldEntries
         {
-            get
-            {
-                return base.Entries.Where(x => !removedEntries.Contains(x));
-            }
+            get { return base.Entries.Where(x => !removedEntries.Contains(x)); }
         }
 
         public void RemoveEntry(TEntry entry)
@@ -83,7 +81,7 @@ namespace SharpCompress.Archive
         }
 
         public void AddEntry(string filePath, Stream source,
-            long size = 0, DateTime? modified = null)
+                             long size = 0, DateTime? modified = null)
         {
             CheckWritable();
             newEntries.Add(CreateEntry(filePath, source, size, modified, false));
@@ -91,14 +89,14 @@ namespace SharpCompress.Archive
         }
 
         public void AddEntry(string filePath, Stream source, bool closeStream,
-             long size = 0, DateTime? modified = null)
+                             long size = 0, DateTime? modified = null)
         {
-           CheckWritable();
-           newEntries.Add(CreateEntry(filePath, source, size, modified, closeStream));
-           RebuildModifiedCollection();
+            CheckWritable();
+            newEntries.Add(CreateEntry(filePath, source, size, modified, closeStream));
+            RebuildModifiedCollection();
         }
 
-        #if !PORTABLE
+#if !PORTABLE
         public void AddEntry(string filePath, FileInfo fileInfo)
         {
             if (!fileInfo.Exists)
@@ -107,15 +105,17 @@ namespace SharpCompress.Archive
             }
             AddEntry(filePath, fileInfo.OpenRead(), true, fileInfo.Length, fileInfo.LastWriteTime);
         }
-        #endif
+#endif
 
         public void SaveTo(Stream stream, CompressionInfo compressionType)
         {
             SaveTo(stream, compressionType, OldEntries, newEntries);
         }
 
-        protected abstract TEntry CreateEntry(string filePath, Stream source, long size, DateTime? modified, bool closeStream);
+        protected abstract TEntry CreateEntry(string filePath, Stream source, long size, DateTime? modified,
+                                              bool closeStream);
+
         protected abstract void SaveTo(Stream stream, CompressionInfo compressionType,
-            IEnumerable<TEntry> oldEntries, IEnumerable<TEntry> newEntries);
+                                       IEnumerable<TEntry> oldEntries, IEnumerable<TEntry> newEntries);
     }
 }

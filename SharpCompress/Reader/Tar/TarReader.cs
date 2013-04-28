@@ -18,7 +18,7 @@ namespace SharpCompress.Reader.Tar
         private readonly CompressionType compressionType;
 
         internal TarReader(Stream stream, CompressionType compressionType,
-            Options options)
+                           Options options)
             : base(options, ArchiveType.Tar)
         {
             this.compressionType = compressionType;
@@ -97,7 +97,6 @@ namespace SharpCompress.Reader.Tar
         }
 
         #endregion
-
 
         internal override IEnumerable<TarEntry> GetEntries(Stream stream)
         {

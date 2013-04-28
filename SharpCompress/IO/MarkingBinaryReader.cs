@@ -10,11 +10,7 @@ namespace SharpCompress.IO
         {
         }
 
-        public long CurrentReadByteCount
-        {
-            get;
-            private set;
-        }
+        public long CurrentReadByteCount { get; private set; }
 
         public void Mark()
         {
@@ -63,7 +59,6 @@ namespace SharpCompress.IO
 
         public override char[] ReadChars(int count)
         {
-
             throw new NotImplementedException();
         }
 

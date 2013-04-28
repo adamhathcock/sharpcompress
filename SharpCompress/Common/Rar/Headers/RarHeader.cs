@@ -39,7 +39,7 @@ namespace SharpCompress.Common.Rar.Headers
         protected virtual void ReadFromReader(MarkingBinaryReader reader)
         {
             HeadCRC = reader.ReadInt16();
-            HeaderType = (HeaderType)(int)(reader.ReadByte() & 0xff);
+            HeaderType = (HeaderType) (int) (reader.ReadByte() & 0xff);
             Flags = reader.ReadInt16();
             HeaderSize = reader.ReadInt16();
             if (FlagUtility.HasFlag(Flags, LONG_BLOCK))
@@ -58,7 +58,7 @@ namespace SharpCompress.Common.Rar.Headers
             header.ReadFromReader(reader);
             header.ReadBytes += reader.CurrentReadByteCount;
 
-            int headerSizeDiff = header.HeaderSize - (int)header.ReadBytes;
+            int headerSizeDiff = header.HeaderSize - (int) header.ReadBytes;
 
             if (headerSizeDiff > 0)
             {
@@ -75,46 +75,22 @@ namespace SharpCompress.Common.Rar.Headers
         /// <summary>
         /// This is the number of bytes read when reading the header
         /// </summary>
-        protected long ReadBytes
-        {
-            get;
-            private set;
-        }
+        protected long ReadBytes { get; private set; }
 
-        protected short HeadCRC
-        {
-            get;
-            private set;
-        }
+        protected short HeadCRC { get; private set; }
 
-        internal HeaderType HeaderType
-        {
-            get;
-            private set;
-        }
+        internal HeaderType HeaderType { get; private set; }
 
         /// <summary>
         /// Untyped flags.  These should be typed when Promoting to another header
         /// </summary>
-        protected short Flags
-        {
-            get;
-            private set;
-        }
+        protected short Flags { get; private set; }
 
-        protected short HeaderSize
-        {
-            get;
-            private set;
-        }
+        protected short HeaderSize { get; private set; }
 
         /// <summary>
         /// This additional size of the header could be file data
         /// </summary>
-        protected uint AdditionalSize
-        {
-            get;
-            private set;
-        }
+        protected uint AdditionalSize { get; private set; }
     }
 }

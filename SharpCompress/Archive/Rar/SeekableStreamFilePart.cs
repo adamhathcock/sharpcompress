@@ -12,11 +12,7 @@ namespace SharpCompress.Archive.Rar
             Stream = stream;
         }
 
-        internal Stream Stream
-        {
-            get;
-            private set;
-        }
+        internal Stream Stream { get; private set; }
 
         internal override Stream GetCompressedStream()
         {
@@ -26,10 +22,7 @@ namespace SharpCompress.Archive.Rar
 
         internal override string FilePartName
         {
-            get
-            {
-                return "Unknown Stream - File Entry: " + base.FileHeader.FileName;
-            }
+            get { return "Unknown Stream - File Entry: " + base.FileHeader.FileName; }
         }
     }
 }

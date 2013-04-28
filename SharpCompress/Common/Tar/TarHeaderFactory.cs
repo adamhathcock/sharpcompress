@@ -50,7 +50,7 @@ namespace SharpCompress.Common.Tar
 
         private static long PadTo512(long size)
         {
-            int zeros = (int)(size % 512);
+            int zeros = (int) (size%512);
             if (zeros == 0)
             {
                 return size;

@@ -102,7 +102,7 @@ namespace SharpCompress.Compressor.Deflate
             get
             {
                 // return one's complement of the running result
-                return unchecked((Int32)(~runningCrc32Result));
+                return unchecked((Int32) (~runningCrc32Result));
             }
         }
 
@@ -147,7 +147,7 @@ namespace SharpCompress.Compressor.Deflate
                     totalBytesRead += count;
                 }
 
-                return (Int32)(~runningCrc32Result);
+                return (Int32) (~runningCrc32Result);
             }
         }
 
@@ -161,12 +161,12 @@ namespace SharpCompress.Compressor.Deflate
         /// <returns>The CRC-ized result.</returns>
         public Int32 ComputeCrc32(Int32 W, byte B)
         {
-            return _InternalComputeCrc32((UInt32)W, B);
+            return _InternalComputeCrc32((UInt32) W, B);
         }
 
         internal Int32 _InternalComputeCrc32(UInt32 W, byte B)
         {
-            return (Int32)(crc32Table[(W ^ B) & 0xFF] ^ (W >> 8));
+            return (Int32) (crc32Table[(W ^ B) & 0xFF] ^ (W >> 8));
         }
 
         /// <summary>
@@ -185,7 +185,7 @@ namespace SharpCompress.Compressor.Deflate
             {
                 int x = offset + i;
                 runningCrc32Result = ((runningCrc32Result) >> 8) ^
-                                      crc32Table[(block[x]) ^ ((runningCrc32Result) & 0x000000FF)];
+                                     crc32Table[(block[x]) ^ ((runningCrc32Result) & 0x000000FF)];
             }
             totalBytesRead += count;
         }
@@ -234,7 +234,7 @@ namespace SharpCompress.Compressor.Deflate
                 return;
 
             uint crc1 = ~runningCrc32Result;
-            var crc2 = (uint)crc;
+            var crc2 = (uint) crc;
 
             // put operator for one zero bit in odd
             odd[0] = 0xEDB88320; // the CRC-32 polynomial
@@ -251,7 +251,7 @@ namespace SharpCompress.Compressor.Deflate
             // put operator for four zero bits in odd
             gf2_matrix_square(odd, even);
 
-            var len2 = (uint)length;
+            var len2 = (uint) length;
 
             // apply len2 zeros to crc1 (first square will put the operator for one
             // zero byte, eight zero bits, in even)

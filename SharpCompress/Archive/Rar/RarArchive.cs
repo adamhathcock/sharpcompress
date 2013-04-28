@@ -18,10 +18,7 @@ namespace SharpCompress.Archive.Rar
 
         internal Unpack Unpack
         {
-            get
-            {
-                return unpack;
-            }
+            get { return unpack; }
         }
 
 #if !PORTABLE
@@ -70,10 +67,7 @@ namespace SharpCompress.Archive.Rar
 
         public override bool IsSolid
         {
-            get
-            {
-                return Volumes.First().IsSolidArchive;
-            }
+            get { return Volumes.First().IsSolidArchive; }
         }
 
         #region Creation
@@ -196,7 +190,7 @@ namespace SharpCompress.Archive.Rar
                 {
                     return false;
                 }
-                return Enum.IsDefined(typeof(HeaderType), header.HeaderType);
+                return Enum.IsDefined(typeof (HeaderType), header.HeaderType);
             }
             catch
             {

@@ -31,21 +31,20 @@ namespace SharpCompress.Common.Rar.Headers
                 }
                 switch (flags >> 6)
                 {
-
                     case 0:
-                        buf.Append((char)(GetChar(name, encPos++)));
+                        buf.Append((char) (GetChar(name, encPos++)));
                         ++decPos;
                         break;
 
                     case 1:
-                        buf.Append((char)(GetChar(name, encPos++) + (highByte << 8)));
+                        buf.Append((char) (GetChar(name, encPos++) + (highByte << 8)));
                         ++decPos;
                         break;
 
                     case 2:
                         low = GetChar(name, encPos);
                         high = GetChar(name, encPos + 1);
-                        buf.Append((char)((high << 8) + low));
+                        buf.Append((char) ((high << 8) + low));
                         ++decPos;
                         encPos += 2;
                         break;
@@ -58,14 +57,14 @@ namespace SharpCompress.Common.Rar.Headers
                             for (length = (length & 0x7f) + 2; length > 0 && decPos < name.Length; length--, decPos++)
                             {
                                 low = (GetChar(name, decPos) + correction) & 0xff;
-                                buf.Append((char)((highByte << 8) + low));
+                                buf.Append((char) ((highByte << 8) + low));
                             }
                         }
                         else
                         {
                             for (length += 2; length > 0 && decPos < name.Length; length--, decPos++)
                             {
-                                buf.Append((char)(GetChar(name, decPos)));
+                                buf.Append((char) (GetChar(name, decPos)));
                             }
                         }
                         break;

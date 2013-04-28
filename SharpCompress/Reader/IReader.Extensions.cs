@@ -1,5 +1,6 @@
 ﻿using System.IO;
 using SharpCompress.Common;
+
 #if THREEFIVE
 using SharpCompress.Common.Rar.Headers;
 #endif
@@ -16,6 +17,7 @@ namespace SharpCompress.Reader
                 reader.WriteEntryTo(stream);
             }
         }
+
         public static void WriteEntryTo(this IReader reader, FileInfo filePath)
         {
             using (Stream stream = filePath.Open(FileMode.Create))
@@ -28,7 +30,7 @@ namespace SharpCompress.Reader
         /// Extract all remaining unread entries to specific directory, retaining filename
         /// </summary>
         public static void WriteAllToDirectory(this IReader reader, string destinationDirectory,
-            ExtractOptions options = ExtractOptions.Overwrite)
+                                               ExtractOptions options = ExtractOptions.Overwrite)
         {
             while (reader.MoveToNextEntry())
             {
@@ -40,7 +42,7 @@ namespace SharpCompress.Reader
         /// Extract to specific directory, retaining filename
         /// </summary>
         public static void WriteEntryToDirectory(this IReader reader, string destinationDirectory,
-            ExtractOptions options = ExtractOptions.Overwrite)
+                                                 ExtractOptions options = ExtractOptions.Overwrite)
         {
             string destinationFileName = string.Empty;
             string file = Path.GetFileName(reader.Entry.FilePath);
@@ -75,7 +77,7 @@ namespace SharpCompress.Reader
         /// Extract to specific file
         /// </summary>
         public static void WriteEntryToFile(this IReader reader, string destinationFileName,
-            ExtractOptions options = ExtractOptions.Overwrite)
+                                            ExtractOptions options = ExtractOptions.Overwrite)
         {
             FileMode fm = FileMode.Create;
 

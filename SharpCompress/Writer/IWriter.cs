@@ -6,10 +6,7 @@ namespace SharpCompress.Writer
 {
     public interface IWriter : IDisposable
     {
-        ArchiveType WriterType
-        {
-            get;
-        }
+        ArchiveType WriterType { get; }
         void Write(string filename, Stream source, DateTime? modificationTime);
     }
 }

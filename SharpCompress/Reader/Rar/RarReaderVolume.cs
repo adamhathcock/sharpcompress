@@ -13,6 +13,7 @@ namespace SharpCompress.Reader.Rar
             : base(StreamingMode.Streaming, stream, options)
         {
         }
+
         internal override RarFilePart CreateFilePart(FileHeader fileHeader, MarkHeader markHeader)
         {
             return new NonSeekableStreamFilePart(markHeader, fileHeader);
@@ -27,10 +28,7 @@ namespace SharpCompress.Reader.Rar
 #if !PORTABLE
         public override FileInfo VolumeFile
         {
-            get
-            {
-                return null;
-            }
+            get { return null; }
         }
 #endif
     }

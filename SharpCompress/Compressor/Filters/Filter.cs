@@ -49,14 +49,8 @@ namespace SharpCompress.Compressor.Filters
 
         public override long Position
         {
-            get
-            {
-                return baseStream.Position;
-            }
-            set
-            {
-                throw new NotImplementedException();
-            }
+            get { return baseStream.Position; }
+            set { throw new NotImplementedException(); }
         }
 
         public override int Read(byte[] buffer, int offset, int count)

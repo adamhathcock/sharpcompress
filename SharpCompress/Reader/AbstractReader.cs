@@ -33,29 +33,19 @@ namespace SharpCompress.Reader
 
         internal Options Options { get; private set; }
 
-        public ArchiveType ArchiveType
-        {
-            get;
-            private set;
-        }
+        public ArchiveType ArchiveType { get; private set; }
 
         /// <summary>
         /// Current volume that the current entry resides in
         /// </summary>
-        public abstract TVolume Volume
-        {
-            get;
-        }
+        public abstract TVolume Volume { get; }
 
         /// <summary>
         /// Current file entry 
         /// </summary>
         public TEntry Entry
         {
-            get
-            {
-                return entriesForCurrentReadStream.Current;
-            }
+            get { return entriesForCurrentReadStream.Current; }
         }
 
         #region IDisposable Members
@@ -136,7 +126,7 @@ namespace SharpCompress.Reader
             }
         }
 
-        readonly byte[] skipBuffer = new byte[4096];
+        private readonly byte[] skipBuffer = new byte[4096];
 
         private void Skip()
         {
@@ -147,11 +137,11 @@ namespace SharpCompress.Reader
                 if (rawStream != null)
                 {
                     var bytesToAdvance = Entry.CompressedSize;
-                    for (var i = 0; i < bytesToAdvance / skipBuffer.Length; i++)
+                    for (var i = 0; i < bytesToAdvance/skipBuffer.Length; i++)
                     {
                         rawStream.Read(skipBuffer, 0, skipBuffer.Length);
                     }
-                    rawStream.Read(skipBuffer, 0, (int)(bytesToAdvance % skipBuffer.Length));
+                    rawStream.Read(skipBuffer, 0, (int) (bytesToAdvance%skipBuffer.Length));
                     return;
                 }
             }
@@ -206,10 +196,7 @@ namespace SharpCompress.Reader
 
         IEntry IReader.Entry
         {
-            get
-            {
-                return Entry;
-            }
+            get { return Entry; }
         }
 
         void IStreamListener.FireCompressedBytesRead(long currentPartCompressedBytes, long compressedReadBytes)
@@ -217,10 +204,10 @@ namespace SharpCompress.Reader
             if (CompressedBytesRead != null)
             {
                 CompressedBytesRead(this, new CompressedBytesReadEventArgs()
-                {
-                    CurrentFilePartCompressedBytesRead = currentPartCompressedBytes,
-                    CompressedBytesRead = compressedReadBytes
-                });
+                                              {
+                                                  CurrentFilePartCompressedBytesRead = currentPartCompressedBytes,
+                                                  CompressedBytesRead = compressedReadBytes
+                                              });
             }
         }
 
@@ -229,11 +216,11 @@ namespace SharpCompress.Reader
             if (FilePartExtractionBegin != null)
             {
                 FilePartExtractionBegin(this, new FilePartExtractionBeginEventArgs()
-                {
-                    CompressedSize = compressedSize,
-                    Size = size,
-                    Name = name,
-                });
+                                                  {
+                                                      CompressedSize = compressedSize,
+                                                      Size = size,
+                                                      Name = name,
+                                                  });
             }
         }
     }

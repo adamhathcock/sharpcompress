@@ -8,6 +8,7 @@ namespace SharpCompress.Common
             : base(message)
         {
         }
+
         public PasswordProtectedException(string message, Exception inner)
             : base(message, inner)
         {

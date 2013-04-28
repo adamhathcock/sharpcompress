@@ -29,7 +29,7 @@ namespace SharpCompress.Reader.GZip
         /// <param name="options"></param>
         /// <returns></returns>
         public static GZipReader Open(Stream stream,
-                                     Options options = Options.KeepStreamsOpen)
+                                      Options options = Options.KeepStreamsOpen)
         {
             stream.CheckNotNull("stream");
             return new GZipReader(stream, options);

@@ -30,8 +30,12 @@ using SharpCompress.Common;
 
 namespace SharpCompress.Compressor.Deflate
 {
-
-    internal enum ZlibStreamFlavor { ZLIB = 1950, DEFLATE = 1951, GZIP = 1952 }
+    internal enum ZlibStreamFlavor
+    {
+        ZLIB = 1950,
+        DEFLATE = 1951,
+        GZIP = 1952
+    }
 
     internal class ZlibBaseStream : System.IO.Stream
     {
@@ -51,13 +55,20 @@ namespace SharpCompress.Compressor.Deflate
         protected internal CompressionStrategy Strategy = CompressionStrategy.Default;
 
         // workitem 7159
-        CRC32 crc;
+        private CRC32 crc;
         protected internal string _GzipFileName;
         protected internal string _GzipComment;
         protected internal DateTime _GzipMtime;
         protected internal int _gzipHeaderByteCount;
 
-        internal int Crc32 { get { if (crc == null) return 0; return crc.Crc32Result; } }
+        internal int Crc32
+        {
+            get
+            {
+                if (crc == null) return 0;
+                return crc.Crc32Result;
+            }
+        }
 
         public ZlibBaseStream(System.IO.Stream stream,
                               CompressionMode compressionMode,
@@ -83,10 +94,7 @@ namespace SharpCompress.Compressor.Deflate
 
         protected internal bool _wantCompress
         {
-            get
-            {
-                return (this._compressionMode == CompressionMode.Compress);
-            }
+            get { return (this._compressionMode == CompressionMode.Compress); }
         }
 
         private ZlibCodec z
@@ -112,7 +120,6 @@ namespace SharpCompress.Compressor.Deflate
         }
 
 
-
         private byte[] workingBuffer
         {
             get
@@ -122,7 +129,6 @@ namespace SharpCompress.Compressor.Deflate
                 return _workingBuffer;
             }
         }
-
 
 
         public override void Write(System.Byte[] buffer, int offset, int count)
@@ -151,8 +157,8 @@ namespace SharpCompress.Compressor.Deflate
                 _z.NextOut = 0;
                 _z.AvailableBytesOut = _workingBuffer.Length;
                 int rc = (_wantCompress)
-                    ? _z.Deflate(_flushMode)
-                    : _z.Inflate(_flushMode);
+                             ? _z.Deflate(_flushMode)
+                             : _z.Inflate(_flushMode);
                 if (rc != ZlibConstants.Z_OK && rc != ZlibConstants.Z_STREAM_END)
                     throw new ZlibException((_wantCompress ? "de" : "in") + "flating: " + _z.Message);
 
@@ -164,11 +170,8 @@ namespace SharpCompress.Compressor.Deflate
                 // If GZIP and de-compress, we're done when 8 bytes remain.
                 if (_flavor == ZlibStreamFlavor.GZIP && !_wantCompress)
                     done = (_z.AvailableBytesIn == 8 && _z.AvailableBytesOut != 0);
-
-            }
-            while (!done);
+            } while (!done);
         }
-
 
 
         private void finish()
@@ -184,8 +187,8 @@ namespace SharpCompress.Compressor.Deflate
                     _z.NextOut = 0;
                     _z.AvailableBytesOut = _workingBuffer.Length;
                     int rc = (_wantCompress)
-                        ? _z.Deflate(FlushType.Finish)
-                        : _z.Inflate(FlushType.Finish);
+                                 ? _z.Deflate(FlushType.Finish)
+                                 : _z.Inflate(FlushType.Finish);
 
                     if (rc != ZlibConstants.Z_STREAM_END && rc != ZlibConstants.Z_OK)
                     {
@@ -205,9 +208,7 @@ namespace SharpCompress.Compressor.Deflate
                     // If GZIP and de-compress, we're done when 8 bytes remain.
                     if (_flavor == ZlibStreamFlavor.GZIP && !_wantCompress)
                         done = (_z.AvailableBytesIn == 8 && _z.AvailableBytesOut != 0);
-
-                }
-                while (!done);
+                } while (!done);
 
                 Flush();
 
@@ -219,7 +220,7 @@ namespace SharpCompress.Compressor.Deflate
                         // Emit the GZIP trailer: CRC32 and  size mod 2^32
                         int c1 = crc.Crc32Result;
                         _stream.Write(BitConverter.GetBytes(c1), 0, 4);
-                        int c2 = (Int32)(crc.TotalBytesRead & 0x00000000FFFFFFFF);
+                        int c2 = (Int32) (crc.TotalBytesRead & 0x00000000FFFFFFFF);
                         _stream.Write(BitConverter.GetBytes(c2), 0, 4);
                     }
                     else
@@ -228,7 +229,7 @@ namespace SharpCompress.Compressor.Deflate
                     }
                 }
             }
-            // workitem 7159
+                // workitem 7159
             else if (_streamMode == StreamMode.Reader)
             {
                 if (_flavor == ZlibStreamFlavor.GZIP)
@@ -253,8 +254,9 @@ namespace SharpCompress.Compressor.Deflate
                                                          bytesNeeded);
                             if (bytesNeeded != bytesRead)
                             {
-                                throw new ZlibException(String.Format("Protocol error. AvailableBytesIn={0}, expected 8",
-                                                                      _z.AvailableBytesIn + bytesRead));
+                                throw new ZlibException(String.Format(
+                                    "Protocol error. AvailableBytesIn={0}, expected 8",
+                                    _z.AvailableBytesIn + bytesRead));
                             }
                         }
                         else
@@ -266,14 +268,17 @@ namespace SharpCompress.Compressor.Deflate
                         Int32 crc32_expected = BitConverter.ToInt32(trailer, 0);
                         Int32 crc32_actual = crc.Crc32Result;
                         Int32 isize_expected = BitConverter.ToInt32(trailer, 4);
-                        Int32 isize_actual = (Int32)(_z.TotalBytesOut & 0x00000000FFFFFFFF);
+                        Int32 isize_actual = (Int32) (_z.TotalBytesOut & 0x00000000FFFFFFFF);
 
                         if (crc32_actual != crc32_expected)
-                            throw new ZlibException(String.Format("Bad CRC32 in GZIP stream. (actual({0:X8})!=expected({1:X8}))", crc32_actual, crc32_expected));
+                            throw new ZlibException(
+                                String.Format("Bad CRC32 in GZIP stream. (actual({0:X8})!=expected({1:X8}))",
+                                              crc32_actual, crc32_expected));
 
                         if (isize_actual != isize_expected)
-                            throw new ZlibException(String.Format("Bad size in GZIP stream. (actual({0})!=expected({1}))", isize_actual, isize_expected));
-
+                            throw new ZlibException(
+                                String.Format("Bad size in GZIP stream. (actual({0})!=expected({1}))", isize_actual,
+                                              isize_expected));
                     }
                     else
                     {
@@ -330,6 +335,7 @@ namespace SharpCompress.Compressor.Deflate
             throw new NotImplementedException();
             //_outStream.Seek(offset, origin);
         }
+
         public override void SetLength(System.Int64 value)
         {
             _stream.SetLength(value);
@@ -349,7 +355,6 @@ namespace SharpCompress.Compressor.Deflate
 #endif
 
         private bool nomoreinput = false;
-
 
 
         private string ReadZeroTerminatedString()
@@ -401,7 +406,7 @@ namespace SharpCompress.Compressor.Deflate
                 n = _stream.Read(header, 0, 2); // 2-byte length field
                 totalBytesRead += n;
 
-                Int16 extraLength = (Int16)(header[0] + header[1] * 256);
+                Int16 extraLength = (Int16) (header[0] + header[1]*256);
                 byte[] extra = new byte[extraLength];
                 n = _stream.Read(extra, 0, extra.Length);
                 if (n != extraLength)
@@ -417,7 +422,6 @@ namespace SharpCompress.Compressor.Deflate
 
             return totalBytesRead;
         }
-
 
 
         public override System.Int32 Read(System.Byte[] buffer, System.Int32 offset, System.Int32 count)
@@ -449,7 +453,7 @@ namespace SharpCompress.Compressor.Deflate
                 throw new ZlibException("Cannot Read after Writing.");
 
             if (count == 0) return 0;
-            if (nomoreinput && _wantCompress) return 0;  // workitem 8557
+            if (nomoreinput && _wantCompress) return 0; // workitem 8557
             if (buffer == null) throw new ArgumentNullException("buffer");
             if (count < 0) throw new ArgumentOutOfRangeException("count");
             if (offset < buffer.GetLowerBound(0)) throw new ArgumentOutOfRangeException("offset");
@@ -477,23 +481,22 @@ namespace SharpCompress.Compressor.Deflate
                     _z.AvailableBytesIn = _stream.Read(_workingBuffer, 0, _workingBuffer.Length);
                     if (_z.AvailableBytesIn == 0)
                         nomoreinput = true;
-
                 }
                 // we have data in InputBuffer; now compress or decompress as appropriate
                 rc = (_wantCompress)
-                    ? _z.Deflate(_flushMode)
-                    : _z.Inflate(_flushMode);
+                         ? _z.Deflate(_flushMode)
+                         : _z.Inflate(_flushMode);
 
                 if (nomoreinput && (rc == ZlibConstants.Z_BUF_ERROR))
                     return 0;
 
                 if (rc != ZlibConstants.Z_OK && rc != ZlibConstants.Z_STREAM_END)
-                    throw new ZlibException(String.Format("{0}flating:  rc={1}  msg={2}", (_wantCompress ? "de" : "in"), rc, _z.Message));
+                    throw new ZlibException(String.Format("{0}flating:  rc={1}  msg={2}", (_wantCompress ? "de" : "in"),
+                                                          rc, _z.Message));
 
                 if ((nomoreinput || rc == ZlibConstants.Z_STREAM_END) && (_z.AvailableBytesOut == count))
                     break; // nothing more to read
-            }
-            //while (_z.AvailableBytesOut == count && rc == ZlibConstants.Z_OK);
+            } //while (_z.AvailableBytesOut == count && rc == ZlibConstants.Z_OK);
             while (_z.AvailableBytesOut > 0 && !nomoreinput && rc == ZlibConstants.Z_OK);
 
 
@@ -531,7 +534,6 @@ namespace SharpCompress.Compressor.Deflate
 
             return rc;
         }
-
 
 
         public override System.Boolean CanRead

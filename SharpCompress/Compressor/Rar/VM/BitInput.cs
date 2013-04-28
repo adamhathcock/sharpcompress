@@ -4,6 +4,7 @@ namespace SharpCompress.Compressor.Rar.VM
     {
         /// <summary> the max size of the input</summary>
         internal const int MAX_SIZE = 0x8000;
+
         protected int inAddr;
         protected int inBit;
 
@@ -13,11 +14,7 @@ namespace SharpCompress.Compressor.Rar.VM
             InBuf = new byte[MAX_SIZE];
         }
 
-        internal byte[] InBuf
-        {
-            get;
-            private set;
-        }
+        internal byte[] InBuf { get; private set; }
 
         internal void InitBitInput()
         {
@@ -51,8 +48,8 @@ namespace SharpCompress.Compressor.Rar.VM
             //      BitField >>>= (8-inBit);
             //      return (BitField & 0xffff);
             return ((Utility.URShift((((InBuf[inAddr] & 0xff) << 16)
-                + ((InBuf[inAddr + 1] & 0xff) << 8)
-                + ((InBuf[inAddr + 2] & 0xff))), (8 - inBit))) & 0xffff);
+                                      + ((InBuf[inAddr + 1] & 0xff) << 8)
+                                      + ((InBuf[inAddr + 2] & 0xff))), (8 - inBit))) & 0xffff);
         }
 
         /// <summary> Indicates an Overfow</summary>

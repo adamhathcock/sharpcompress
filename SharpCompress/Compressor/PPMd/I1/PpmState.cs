@@ -58,7 +58,13 @@ namespace SharpCompress.Compressor.PPMd.I1
         /// </summary>
         public Model.PpmContext Successor
         {
-            get { return new Model.PpmContext(((uint) Memory[Address + 2]) | ((uint) Memory[Address + 3]) << 8 | ((uint) Memory[Address + 4]) << 16 | ((uint) Memory[Address + 5]) << 24, Memory); }
+            get
+            {
+                return
+                    new Model.PpmContext(
+                        ((uint) Memory[Address + 2]) | ((uint) Memory[Address + 3]) << 8 |
+                        ((uint) Memory[Address + 4]) << 16 | ((uint) Memory[Address + 5]) << 24, Memory);
+            }
             set
             {
                 Memory[Address + 2] = (byte) value.Address;
@@ -76,7 +82,7 @@ namespace SharpCompress.Compressor.PPMd.I1
         /// <returns></returns>
         public PpmState this[int offset]
         {
-            get { return new PpmState((uint) (Address + offset * Size), Memory); }
+            get { return new PpmState((uint) (Address + offset*Size), Memory); }
         }
 
         /// <summary>
@@ -97,7 +103,7 @@ namespace SharpCompress.Compressor.PPMd.I1
         /// <returns></returns>
         public static PpmState operator +(PpmState state, int offset)
         {
-            state.Address = (uint) (state.Address + offset * Size);
+            state.Address = (uint) (state.Address + offset*Size);
             return state;
         }
 
@@ -120,7 +126,7 @@ namespace SharpCompress.Compressor.PPMd.I1
         /// <returns></returns>
         public static PpmState operator -(PpmState state, int offset)
         {
-            state.Address = (uint) (state.Address - offset * Size);
+            state.Address = (uint) (state.Address - offset*Size);
             return state;
         }
 

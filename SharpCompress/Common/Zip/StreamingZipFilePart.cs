@@ -57,6 +57,5 @@ namespace SharpCompress.Common.Zip
             decompressionStream = null;
             return reader;
         }
-
     }
 }
