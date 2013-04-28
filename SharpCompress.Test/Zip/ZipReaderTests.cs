@@ -16,6 +16,12 @@ namespace SharpCompress.Test
             UseExtensionInsteadOfNameToVerify = true;
         }
         [TestMethod]
+        public void Zip_ZipX_Streamed_Read()
+        {
+            Read("Zip.Zipx", CompressionType.LZMA);
+        }
+
+        [TestMethod]
         public void Zip_BZip2_Streamed_Read()
         {
             Read("Zip.bzip2.dd.zip", CompressionType.BZip2);
