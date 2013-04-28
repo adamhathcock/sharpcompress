@@ -179,13 +179,15 @@ namespace SharpCompress.Compressor.LZMA
                 if (toProcess > availableBytes)
                     toProcess = (int)availableBytes;
 
+                outWindow.SetLimit(toProcess);
                 if (uncompressedChunk)
-                    inputPosition += outWindow.CopyStream(inputStream, toProcess);
-                else
                 {
-                    outWindow.SetLimit(toProcess);
-                    if (decoder.Code(dictionarySize, outWindow, rangeDecoder) && outputSize < 0)
-                        availableBytes = outWindow.AvailableBytes;
+                    inputPosition += outWindow.CopyStream(inputStream, toProcess);
+                }
+                else if (decoder.Code(dictionarySize, outWindow, rangeDecoder)
+                        && outputSize < 0)
+                {
+                    availableBytes = outWindow.AvailableBytes;
                 }
 
                 int read = outWindow.Read(buffer, offset, toProcess);

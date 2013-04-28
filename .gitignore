@@ -3,5 +3,6 @@
 _ReSharper.SharpCompress/
 bin/
 *.suo
+*.user
 TestArchives/Scratch/
 TestArchives/Scratch2/
