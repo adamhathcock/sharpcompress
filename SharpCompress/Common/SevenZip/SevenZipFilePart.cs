@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Linq;
 using SharpCompress.IO;
 
@@ -7,19 +8,34 @@ namespace SharpCompress.Common.SevenZip
     internal class SevenZipFilePart : FilePart
     {
         private CompressionType? type;
+        private Stream stream;
+        private ArchiveDatabase database;
 
-        internal SevenZipFilePart(SevenZipHeaderFactory factory, int index, HeaderEntry fileEntry, Stream stream)
+        internal SevenZipFilePart(Stream stream, ArchiveDatabase database, int index, CFileItem fileEntry)
         {
+            this.stream = stream;
+            this.database = database;
+            Index = index;
             Header = fileEntry;
-            this.BaseStream = stream;
+            if (Header.HasStream)
+            {
+                Folder = database.Folders[database.FileIndexToFolderIndexMap[index]];
+            }
         }
 
         internal Stream BaseStream { get; private set; }
-        internal HeaderEntry Header { get; set; }
+        internal CFileItem Header { get; private set; }
+        internal CFolder Folder { get; private set; }
+        internal int Index { get; private set; }
 
         internal override string FilePartName
         {
             get { return Header.Name; }
+        }
+
+        internal override Stream GetRawStream()
+        {
+            return null;
         }
 
         internal override Stream GetCompressedStream()
@@ -28,17 +44,20 @@ namespace SharpCompress.Common.SevenZip
             {
                 return null;
             }
-            var stream = Header.Folder.GetStream();
-            if (Header.FolderOffset > 0)
-            {
-                stream.Skip((long)Header.FolderOffset);
-            }
-            return new ReadOnlySubStream(stream, (long)Header.Size);
-        }
+            var folderStream = database.GetFolderStream(stream, Folder, null);
 
-        internal override Stream GetRawStream()
-        {
-            return null;
+            int firstFileIndex = database.FolderStartFileIndex[database.Folders.IndexOf(Folder)];
+            int skipCount = Index - firstFileIndex;
+            long skipSize = 0;
+            for (int i = 0; i < skipCount; i++)
+            {
+                skipSize += database.Files[firstFileIndex + i].Size;
+            }
+            if (skipSize > 0)
+            {
+                folderStream.Skip(skipSize);
+            }
+            return new ReadOnlySubStream(folderStream, Header.Size);
         }
 
         public CompressionType CompressionType
@@ -47,9 +66,43 @@ namespace SharpCompress.Common.SevenZip
             {
                 if (type == null)
                 {
-                    this.type = Header.Folder.GetCompressions().First().CompressionType;
+                    type = GetCompression();
                 }
                 return type.Value;
+            }
+        }
+
+        //copied from DecoderRegistry
+        const uint k_Copy = 0x0;
+        const uint k_Delta = 3;
+        const uint k_LZMA2 = 0x21;
+        const uint k_LZMA = 0x030101;
+        const uint k_PPMD = 0x030401;
+        const uint k_BCJ = 0x03030103;
+        const uint k_BCJ2 = 0x0303011B;
+        const uint k_Deflate = 0x040108;
+        const uint k_BZip2 = 0x040202;
+
+        internal CompressionType GetCompression()
+        {
+            var coder = Folder.Coders.First();
+            switch (coder.MethodId.Id)
+            {
+                case k_LZMA:
+                case k_LZMA2:
+                    {
+                        return CompressionType.LZMA;
+                    }
+                case k_PPMD:
+                    {
+                        return CompressionType.PPMd;
+                    }
+                case k_BZip2:
+                    {
+                        return CompressionType.BZip2;
+                    }
+                default:
+                    throw new NotImplementedException();
             }
         }
     }

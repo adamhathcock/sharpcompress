@@ -22,7 +22,7 @@ namespace SharpCompress.Common.SevenZip
 
         public override uint Crc
         {
-            get { return (uint)FilePart.Header.FileCRC; }
+            get { return FilePart.Header.Crc ?? 0; }
         }
 
         public override string FilePath
@@ -67,7 +67,7 @@ namespace SharpCompress.Common.SevenZip
 
         public override bool IsDirectory
         {
-            get { return FilePart.Header.IsDirectory; }
+            get { return FilePart.Header.IsDir; }
         }
 
         public override bool IsSplit

@@ -50,7 +50,7 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>..\bin\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;DISABLE_TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
@@ -116,13 +116,6 @@
     <Compile Include="Common\IncompleteArchiveException.cs" />
     <Compile Include="Common\MultiVolumeExtractionException.cs" />
     <Compile Include="Common\PasswordProtectedException.cs" />
-    <Compile Include="Common\SevenZip\FileEntry.cs" />
-    <Compile Include="Common\SevenZip\Folder.cs" />
-    <Compile Include="Common\SevenZip\HeaderBuffer.cs" />
-    <Compile Include="Common\SevenZip\HeaderProperty.cs" />
-    <Compile Include="Common\SevenZip\SevenZipEntry.cs" />
-    <Compile Include="Common\SevenZip\SevenZipFilePart.cs" />
-    <Compile Include="Common\SevenZip\SevenZipHeaderFactory.cs" />
     <Compile Include="Common\CryptographicException.cs" />
     <Compile Include="Common\FlagUtility.cs" />
     <Compile Include="Common\GZip\GZipEntry.cs" />
@@ -133,7 +126,14 @@
     <Compile Include="Common\Entry.cs" />
     <Compile Include="Common\IEntry.cs" />
     <Compile Include="Common\IVolume.cs" />
-    <Compile Include="Common\SevenZip\StreamsInfo.cs" />
+    <Compile Include="Common\SevenZip\CBindPair.cs" />
+    <Compile Include="Common\SevenZip\CCoderInfo.cs" />
+    <Compile Include="Common\SevenZip\CFileItem.cs" />
+    <Compile Include="Common\SevenZip\CFolder.cs" />
+    <Compile Include="Common\SevenZip\CStreamSwitch.cs" />
+    <Compile Include="Common\SevenZip\DataReader.cs" />
+    <Compile Include="Common\SevenZip\SevenZipEntry.cs" />
+    <Compile Include="Common\SevenZip\SevenZipFilePart.cs" />
     <Compile Include="Common\SevenZip\SevenZipVolume.cs" />
     <Compile Include="Common\Tar\Headers\TarHeader.cs" />
     <Compile Include="Common\Tar\TarReadOnlySubStream.cs" />
@@ -169,9 +169,48 @@
     <Compile Include="Compressor\Filters\BCJ2Filter.cs" />
     <Compile Include="Compressor\Filters\BCJFilter.cs" />
     <Compile Include="Compressor\Filters\Filter.cs" />
+    <Compile Include="Compressor\LZMA\BitVector.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Compressor\LZMA\CRC2.cs" />
     <Compile Include="Compressor\LZMA\CRC.cs" />
+    <Compile Include="Common\SevenZip\ArchiveDatabase.cs" />
+    <Compile Include="Common\SevenZip\ArchiveReader.cs" />
+    <Compile Include="Common\SevenZip\CMethodId.cs" />
+    <Compile Include="Compressor\LZMA\AesDecoderStream.cs" />
+    <Compile Include="Compressor\LZMA\Bcj2DecoderStream.cs" />
+    <Compile Include="Compressor\LZMA\DecoderStream.cs" />
+    <Compile Include="Compressor\LZMA\Registry.cs" />
+    <Compile Include="Compressor\LZMA\ICoder.cs" />
+    <Compile Include="Compressor\LZMA\Log.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Compressor\LZMA\LzmaBase.cs" />
+    <Compile Include="Compressor\LZMA\LzmaDecoder.cs" />
+    <Compile Include="Compressor\LZMA\LzmaEncoder.cs" />
     <Compile Include="Compressor\LZMA\LzmaEncoderProperties.cs" />
     <Compile Include="Compressor\LZMA\LzmaStream.cs" />
+    <Compile Include="Compressor\LZMA\LZ\LzBinTree.cs" />
+    <Compile Include="Compressor\LZMA\LZ\LzInWindow.cs" />
+    <Compile Include="Compressor\LZMA\LZ\LzOutWindow.cs" />
+    <Compile Include="Compressor\LZMA\RangeCoder\RangeCoder.cs" />
+    <Compile Include="Compressor\LZMA\RangeCoder\RangeCoderBit.cs" />
+    <Compile Include="Compressor\LZMA\RangeCoder\RangeCoderBitTree.cs" />
+    <Compile Include="Compressor\LZMA\Utilites\CrcBuilderStream.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Compressor\LZMA\Utilites\CrcCheckStream.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Compressor\LZMA\Utilites\IPasswordProvider.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Compressor\LZMA\Utilites\SyncStreamView.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Compressor\LZMA\Utilites\Utils.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="Compressor\PPMd\H\FreqData.cs" />
     <Compile Include="Compressor\PPMd\H\ModelPPM.cs" />
     <Compile Include="Compressor\PPMd\H\Pointer.cs" />
@@ -218,16 +257,6 @@
     <Compile Include="Compressor\Deflate\ZlibCodec.cs" />
     <Compile Include="Compressor\Deflate\ZlibConstants.cs" />
     <Compile Include="Compressor\Deflate\ZlibStream.cs" />
-    <Compile Include="Compressor\LZMA\ICoder.cs" />
-    <Compile Include="Compressor\LZMA\LZ\LzBinTree.cs" />
-    <Compile Include="Compressor\LZMA\LZ\LzInWindow.cs" />
-    <Compile Include="Compressor\LZMA\LzmaBase.cs" />
-    <Compile Include="Compressor\LZMA\LzmaDecoder.cs" />
-    <Compile Include="Compressor\LZMA\LzmaEncoder.cs" />
-    <Compile Include="Compressor\LZMA\LZ\LzOutWindow.cs" />
-    <Compile Include="Compressor\LZMA\RangeCoder\RangeCoder.cs" />
-    <Compile Include="Compressor\LZMA\RangeCoder\RangeCoderBit.cs" />
-    <Compile Include="Compressor\LZMA\RangeCoder\RangeCoderBitTree.cs" />
     <Compile Include="Common\Rar\Headers\FileNameDecoder.cs" />
     <Compile Include="Common\InvalidFormatException.cs" />
     <Compile Include="IO\ReadOnlySubStream.cs" />
@@ -342,6 +371,7 @@
   <ItemGroup>
     <None Include="SharpCompress.pfx" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
