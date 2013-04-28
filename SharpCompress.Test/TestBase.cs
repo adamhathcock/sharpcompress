@@ -2,7 +2,6 @@
 using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using SharpCompress.Archive;
 using SharpCompress.Common;
 using SharpCompress.Reader;
 
@@ -10,7 +9,7 @@ namespace SharpCompress.Test
 {
     public class TestBase
     {
-        protected const string TEST_BASE_PATH = @"C:\Users\Adam\Documents\Hg\sharpcompress";
+        protected const string TEST_BASE_PATH = @"C:\Git\sharpcompress";
         protected static readonly string TEST_ARCHIVES_PATH = Path.Combine(TEST_BASE_PATH, "TestArchives", "Archives");
         protected static readonly string ORIGINAL_FILES_PATH = Path.Combine(TEST_BASE_PATH, "TestArchives", "Original");
         protected static readonly string MISC_TEST_FILES_PATH = Path.Combine(TEST_BASE_PATH, "TestArchives", "MiscTest");
