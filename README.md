@@ -20,3 +20,5 @@ TODOs (always lots):
 * RAR Decryption
 * Zip64
 * Multi-volume Zip support.
+
+7Zip implementation based on: https://code.google.com/p/managed-lzma/
