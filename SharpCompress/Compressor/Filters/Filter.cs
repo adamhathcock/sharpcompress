@@ -1,12 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.IO;
 
 namespace SharpCompress.Compressor.Filters
 {
-    public abstract class Filter : Stream
+    internal abstract class Filter : Stream
     {
         protected bool isEncoder;
         protected Stream baseStream;
@@ -22,7 +19,7 @@ namespace SharpCompress.Compressor.Filters
             this.isEncoder = isEncoder;
             this.baseStream = baseStream;
             tail = new byte[lookahead - 1];
-            window = new byte[tail.Length*2];
+            window = new byte[tail.Length * 2];
         }
 
         public override bool CanRead
@@ -66,7 +63,7 @@ namespace SharpCompress.Compressor.Filters
         {
             int size = 0;
 
-            if (transformed > 0) 
+            if (transformed > 0)
             {
                 int copySize = transformed;
                 if (copySize > count)

@@ -1,15 +1,12 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.IO;
 
 namespace SharpCompress.Compressor.Filters
 {
-    public class BCJ2Filter : Stream
+    internal class BCJ2Filter : Stream
     {
-        private Stream baseStream;
-        private byte[] input = new byte[4096];
+        private readonly Stream baseStream;
+        private readonly byte[] input = new byte[4096];
         private int inputOffset = 0;
         private int inputCount = 0;
         private bool endReached = false;
@@ -136,7 +133,7 @@ namespace SharpCompress.Compressor.Filters
                 buffer[offset++] = b;
                 size++;
                 position++;
-                
+
                 if (!IsJ(prevByte, b))
                     prevByte = b;
                 else

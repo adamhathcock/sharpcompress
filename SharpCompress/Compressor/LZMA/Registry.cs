@@ -23,29 +23,29 @@ namespace SharpCompress.Compressor.LZMA
 
         internal static Stream CreateDecoderStream(CMethodId id, Stream[] inStreams, byte[] info, IPasswordProvider pass, long limit)
         {
-            switch(id.Id)
+            switch (id.Id)
             {
-            case k_Copy:
-                if(info != null)
-                    throw new NotSupportedException();
-                return inStreams.Single();
-            case k_LZMA:
-            case k_LZMA2:
-                return new LzmaStream(info, inStreams.Single(), -1, limit);
+                case k_Copy:
+                    if (info != null)
+                        throw new NotSupportedException();
+                    return inStreams.Single();
+                case k_LZMA:
+                case k_LZMA2:
+                    return new LzmaStream(info, inStreams.Single(), -1, limit);
 #if !SILVERLIGHT && !PORTABLE
-            case CMethodId.kAESId:
-                return new AesDecoderStream(inStreams.Single(), info, pass, limit);
+                case CMethodId.kAESId:
+                    return new AesDecoderStream(inStreams.Single(), info, pass, limit);
 #endif
-            case k_BCJ:
-                return new BCJFilter(false, inStreams.Single());
-            case k_BCJ2:
-                return new Bcj2DecoderStream(inStreams, info, limit);
-            case k_BZip2: 
-                 return new BZip2Stream(inStreams.Single(), CompressionMode.Decompress, true);
-            case k_PPMD:
-                 return new PpmdStream(new PpmdProperties(info), inStreams.Single(), false );
-            default:
-                throw new NotSupportedException();
+                case k_BCJ:
+                    return new BCJFilter(false, inStreams.Single());
+                case k_BCJ2:
+                    return new Bcj2DecoderStream(inStreams, info, limit);
+                case k_BZip2:
+                    return new BZip2Stream(inStreams.Single(), CompressionMode.Decompress, true);
+                case k_PPMD:
+                    return new PpmdStream(new PpmdProperties(info), inStreams.Single(), false);
+                default:
+                    throw new NotSupportedException();
             }
         }
     }
