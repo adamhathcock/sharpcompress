@@ -26,7 +26,7 @@ namespace SharpCompress.Archive.Rar
             }
         }
 
-#if !PORTABLE
+#if !PORTABLE && !NETFX_CORE
         internal static IEnumerable<RarVolume> GetParts(FileInfo fileInfo, Options options)
         {
             FileInfoRarArchiveVolume part = new FileInfoRarArchiveVolume(fileInfo, options);

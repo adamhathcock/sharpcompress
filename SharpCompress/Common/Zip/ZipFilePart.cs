@@ -133,7 +133,7 @@ namespace SharpCompress.Common.Zip
         protected Stream GetCryptoStream(Stream plainStream)
         {
             if ((Header.CompressedSize == 0)
-#if !PORTABLE
+#if !PORTABLE && !NETFX_CORE
                 && ((Header.PkwareTraditionalEncryptionData != null)
                     || (Header.WinzipAesEncryptionData != null)))
 #else 
@@ -156,7 +156,7 @@ namespace SharpCompress.Common.Zip
                 return new PkwareTraditionalCryptoStream(plainStream, Header.PkwareTraditionalEncryptionData,
                                                          CryptoMode.Decrypt);
             }
-#if !PORTABLE
+#if !PORTABLE && !NETFX_CORE
             if (Header.WinzipAesEncryptionData != null)
             {
                 //only read 10 less because the last ten are auth bytes

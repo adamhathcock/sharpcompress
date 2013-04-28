@@ -69,7 +69,7 @@ namespace SharpCompress.Common.Tar.Headers
             }
             if (Size >= 0x1FFFFFFFF)
             {
-#if PORTABLE
+#if PORTABLE || NETFX_CORE
                 byte[] bytes = BitConverter.GetBytes(Utility.HostToNetworkOrder(Size));
 #else
                 byte[] bytes = BitConverter.GetBytes(IPAddress.HostToNetworkOrder(Size));
@@ -104,7 +104,7 @@ namespace SharpCompress.Common.Tar.Headers
             if ((buffer[124] & 0x80) == 0x80) // if size in binary
             {
                 long sizeBigEndian = BitConverter.ToInt64(buffer, 0x80);
-#if PORTABLE
+#if PORTABLE || NETFX_CORE
                     Size = Utility.NetworkToHostOrder(sizeBigEndian);
 #else
                 Size = IPAddress.NetworkToHostOrder(sizeBigEndian);

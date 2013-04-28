@@ -6,7 +6,7 @@ namespace SharpCompress.Compressor.LZMA
     internal static class CRC
     {
         public const uint kInitCRC = 0xFFFFFFFF;
-        private static uint[] kTable = new uint[4*256];
+        private static uint[] kTable = new uint[4 * 256];
 
         static CRC()
         {
@@ -34,7 +34,7 @@ namespace SharpCompress.Compressor.LZMA
             byte[] buffer = new byte[Math.Min(length, 4 << 10)];
             while (length > 0)
             {
-                int delta = stream.Read(buffer, 0, (int) Math.Min(length, buffer.Length));
+                int delta = stream.Read(buffer, 0, (int)Math.Min(length, buffer.Length));
                 if (delta == 0)
                     throw new EndOfStreamException();
                 crc = Update(crc, buffer, 0, delta);
@@ -64,12 +64,12 @@ namespace SharpCompress.Compressor.LZMA
 
         public static uint Update(uint crc, ulong value)
         {
-            return Update(Update(crc, (uint) value), (uint) (value >> 32));
+            return Update(Update(crc, (uint)value), (uint)(value >> 32));
         }
 
         public static uint Update(uint crc, long value)
         {
-            return Update(crc, (ulong) value);
+            return Update(crc, (ulong)value);
         }
 
         public static uint Update(uint crc, byte[] buffer, int offset, int length)
@@ -80,7 +80,7 @@ namespace SharpCompress.Compressor.LZMA
             return crc;
         }
 
-#if !PORTABLE
+#if !PORTABLE && !NETFX_CORE
         public static unsafe uint Update(uint crc, byte* buffer, int length)
         {
             while (length > 0 && ((int) buffer & 3) != 0)

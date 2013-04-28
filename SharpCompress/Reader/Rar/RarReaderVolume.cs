@@ -25,7 +25,7 @@ namespace SharpCompress.Reader.Rar
         }
 
 
-#if !PORTABLE
+#if !PORTABLE && !NETFX_CORE
         public override FileInfo VolumeFile
         {
             get { return null; }

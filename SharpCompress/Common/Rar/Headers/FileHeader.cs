@@ -157,7 +157,7 @@ namespace SharpCompress.Common.Rar.Headers
 
         private static string ConvertPath(string path, HostOS os)
         {
-#if PORTABLE
+#if PORTABLE || NETFX_CORE
             return path.Replace('\\', '/');
 #else
             switch (os)

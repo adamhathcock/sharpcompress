@@ -199,7 +199,7 @@ namespace SharpCompress
         /// </param>
         /// <param name="value">the value to write
         /// </param>
-#if PORTABLE
+#if PORTABLE || NETFX_CORE
         public static void WriteLittleEndian(byte[] array, int pos, short value)
         {
             byte[] newBytes = BitConverter.GetBytes(value);
@@ -241,7 +241,7 @@ namespace SharpCompress
         /// </param>
         /// <param name="value">the value to write
         /// </param>
-#if PORTABLE
+#if PORTABLE || NETFX_CORE
         public static void WriteLittleEndian(byte[] array, int pos, int value)
         {
             byte[] newBytes = BitConverter.GetBytes(value);
@@ -475,7 +475,7 @@ namespace SharpCompress
             archive.FireEntryExtractionEnd(entry);
         }
 
-#if PORTABLE
+#if PORTABLE || NETFX_CORE
         public static void CopyTo(this byte[] array, byte[] destination, int index)
         {
             Array.Copy(array, 0, destination, index, array.Length);

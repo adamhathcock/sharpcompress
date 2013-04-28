@@ -20,7 +20,7 @@ namespace SharpCompress.Archive
         public event EventHandler<CompressedBytesReadEventArgs> CompressedBytesRead;
         public event EventHandler<FilePartExtractionBeginEventArgs> FilePartExtractionBegin;
 
-#if !PORTABLE
+#if !PORTABLE && !NETFX_CORE
         internal AbstractArchive(ArchiveType type, FileInfo fileInfo, Options options)
         {
             this.Type = type;

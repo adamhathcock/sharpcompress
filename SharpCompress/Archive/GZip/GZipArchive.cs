@@ -12,7 +12,7 @@ namespace SharpCompress.Archive.GZip
 {
     public class GZipArchive : AbstractWritableArchive<GZipArchiveEntry, GZipVolume>
     {
-#if !PORTABLE
+#if !PORTABLE && !NETFX_CORE
         /// <summary>
         /// Constructor expects a filepath to an existing file.
         /// </summary>
@@ -75,7 +75,7 @@ namespace SharpCompress.Archive.GZip
             return new GZipArchive(stream, options);
         }
 
-#if !PORTABLE
+#if !PORTABLE && !NETFX_CORE
         /// <summary>
         /// Constructor with a FileInfo object to an existing file.
         /// </summary>

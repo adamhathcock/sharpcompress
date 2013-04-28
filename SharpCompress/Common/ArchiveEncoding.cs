@@ -17,7 +17,7 @@ namespace SharpCompress.Common
 
         static ArchiveEncoding()
         {
-#if PORTABLE
+#if PORTABLE || NETFX_CORE
             Default = Encoding.UTF8;
             Password = Encoding.UTF8;
 #else

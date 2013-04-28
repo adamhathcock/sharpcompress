@@ -5,7 +5,7 @@ namespace SharpCompress.Reader
 {
     public static class IReaderExtensions
     {
-#if !PORTABLE
+#if !PORTABLE && !NETFX_CORE
         public static void WriteEntryTo(this IReader reader, string filePath)
         {
             using (Stream stream = File.Open(filePath, FileMode.Create, FileAccess.Write))

@@ -9,7 +9,7 @@ namespace SharpCompress.Common.Zip
         {
         }
 
-#if !PORTABLE
+#if !PORTABLE && !NETFX_CORE
         public ZipVolume(FileInfo fileInfo, Options options)
             : base(fileInfo, options)
         {

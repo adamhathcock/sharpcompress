@@ -111,8 +111,6 @@
     <Compile Include="Archive\IArchive.Extensions.cs" />
     <Compile Include="Archive\IArchiveEntry.cs" />
     <Compile Include="Archive\IArchiveEntry.Extensions.cs" />
-    <Compile Include="Archive\Rar\FileInfoRarArchiveVolume.cs" />
-    <Compile Include="Archive\Rar\FileInfoRarFilePart.cs" />
     <Compile Include="Archive\Rar\RarArchive.cs" />
     <Compile Include="Archive\Rar\RarArchive.Extensions.cs" />
     <Compile Include="Archive\Rar\RarArchiveEntry.cs" />
@@ -206,9 +204,6 @@
     <Compile Include="Common\Zip\SeekableZipHeaderFactory.cs" />
     <Compile Include="Common\Zip\StreamingZipFilePart.cs" />
     <Compile Include="Common\Zip\StreamingZipHeaderFactory.cs" />
-    <Compile Include="Common\Zip\WinzipAesCryptoStream.cs" />
-    <Compile Include="Common\Zip\WinzipAesEncryptionData.cs" />
-    <Compile Include="Common\Zip\WinzipAesKeySize.cs" />
     <Compile Include="Common\Zip\ZipCompressionMethod.cs" />
     <Compile Include="Common\Zip\ZipEntry.cs" />
     <Compile Include="Common\Zip\ZipFilePart.cs" />
@@ -227,7 +222,6 @@
     <Compile Include="Compressor\Deflate\GZipStream.cs" />
     <Compile Include="Compressor\Deflate\Inflate.cs" />
     <Compile Include="Compressor\Deflate\InfTree.cs" />
-    <Compile Include="Compressor\Deflate\ParallelDeflateOutputStream.cs" />
     <Compile Include="Compressor\Deflate\Tree.cs" />
     <Compile Include="Compressor\Deflate\Zlib.cs" />
     <Compile Include="Compressor\Deflate\ZlibBaseStream.cs" />
@@ -354,6 +348,9 @@
   </ItemGroup>
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '11.0' ">
     <VisualStudioVersion>11.0</VisualStudioVersion>
+  </PropertyGroup>
+  <PropertyGroup>
+    <StartupObject />
   </PropertyGroup>
   <Import Project="$(MSBuildExtensionsPath)\Microsoft\WindowsXaml\v$(VisualStudioVersion)\Microsoft.Windows.UI.Xaml.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

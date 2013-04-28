@@ -76,7 +76,7 @@ namespace SharpCompress.Archive
             }
         }
 
-#if !PORTABLE
+#if !PORTABLE && !NETFX_CORE
         /// <summary>
         /// Constructor expects a filepath to an existing file.
         /// </summary>

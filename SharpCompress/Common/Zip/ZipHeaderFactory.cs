@@ -135,7 +135,7 @@ namespace SharpCompress.Common.Zip
                 }
                 else
                 {
-#if PORTABLE
+#if PORTABLE || NETFX_CORE
                     throw new NotSupportedException("Cannot decrypt Winzip AES with Silverlight or WP7.");
 #else
 

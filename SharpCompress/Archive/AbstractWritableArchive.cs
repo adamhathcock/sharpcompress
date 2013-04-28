@@ -31,7 +31,7 @@ namespace SharpCompress.Archive
             }
         }
 
-#if !PORTABLE
+#if !PORTABLE && !NETFX_CORE
         internal AbstractWritableArchive(ArchiveType type, FileInfo fileInfo, Options options)
             : base(type, fileInfo, options)
         {
@@ -96,7 +96,7 @@ namespace SharpCompress.Archive
             RebuildModifiedCollection();
         }
 
-#if !PORTABLE
+#if !PORTABLE && !NETFX_CORE
         public void AddEntry(string filePath, FileInfo fileInfo)
         {
             if (!fileInfo.Exists)

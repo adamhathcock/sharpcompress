@@ -14,7 +14,7 @@ namespace SharpCompress.Archive.Rar
         {
         }
 
-#if !PORTABLE
+#if !PORTABLE && !NETFX_CORE
         public override FileInfo VolumeFile
         {
             get { return null; }

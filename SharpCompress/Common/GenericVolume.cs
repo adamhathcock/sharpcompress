@@ -4,7 +4,7 @@ namespace SharpCompress.Common
 {
     public class GenericVolume : Volume
     {
-#if !PORTABLE
+#if !PORTABLE && !NETFX_CORE
         private FileInfo fileInfo;
 #endif
 
@@ -13,7 +13,7 @@ namespace SharpCompress.Common
         {
         }
 
-#if !PORTABLE
+#if !PORTABLE && !NETFX_CORE
         public GenericVolume(FileInfo fileInfo, Options options)
             : base(fileInfo.OpenRead(), options)
         {
@@ -21,7 +21,7 @@ namespace SharpCompress.Common
         }
 #endif
 
-#if !PORTABLE
+#if !PORTABLE && !NETFX_CORE
         /// <summary>
         /// File that backs this volume, if it not stream based
         /// </summary>

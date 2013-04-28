@@ -31,7 +31,7 @@ namespace SharpCompress.Common
         /// </summary>
         public abstract bool IsMultiVolume { get; }
 
-#if !PORTABLE
+#if !PORTABLE && !NETFX_CORE
         public abstract FileInfo VolumeFile { get; }
 #endif
 

@@ -13,9 +13,9 @@ namespace SharpCompress.Common
         /// <param name="flag">Flag to test</param>
         /// <returns></returns>
         public static bool HasFlag<T>(long bitField, T flag)
-            where T : struct, IConvertible
+            where T : struct
         {
-            return HasFlag(bitField, flag.ToInt64(null));
+            return HasFlag(bitField, flag);
         }
 
         /// <summary>
@@ -27,9 +27,9 @@ namespace SharpCompress.Common
         /// <param name="flag">Flag to test</param>
         /// <returns></returns>
         public static bool HasFlag<T>(ulong bitField, T flag)
-            where T : struct, IConvertible
+            where T : struct
         {
-            return HasFlag(bitField, flag.ToUInt64(null));
+            return HasFlag(bitField, flag);
         }
 
         /// <summary>
@@ -105,17 +105,13 @@ namespace SharpCompress.Common
         /// <param name="flag">Flag to change</param>
         /// <param name="on">bool</param>
         /// <returns>The flagged variable with the flag changed</returns>
-        public static long SetFlag<T>(long bitField, T flag, bool @on)
-            where T : struct, IConvertible
+        public static long SetFlag(long bitField, long flag, bool @on)
         {
             if (@on)
             {
-                return bitField | flag.ToInt64(null);
+                return bitField | flag;
             }
-            else
-            {
-                return bitField & (~flag.ToInt64(null));
-            }
+            return bitField & (~flag);
         }
 
         /// <summary>
@@ -127,9 +123,9 @@ namespace SharpCompress.Common
         /// <param name="on">bool</param>
         /// <returns>The flagged variable with the flag changed</returns>
         public static long SetFlag<T>(T bitField, T flag, bool @on)
-            where T : struct, IConvertible
+            where T : struct
         {
-            return SetFlag(bitField.ToInt64(null), flag, @on);
+            return SetFlag(Convert.ToInt64(bitField), Convert.ToInt64(flag), @on);
         }
     }
 }

@@ -4,7 +4,7 @@ namespace SharpCompress.Common.GZip
 {
     public class GZipVolume : Volume
     {
-#if !PORTABLE
+#if !PORTABLE && !NETFX_CORE
         private readonly FileInfo fileInfo;
 #endif
 
@@ -13,7 +13,7 @@ namespace SharpCompress.Common.GZip
         {
         }
 
-#if !PORTABLE
+#if !PORTABLE && !NETFX_CORE
         public GZipVolume(FileInfo fileInfo, Options options)
             : base(fileInfo.OpenRead(), options)
         {
@@ -21,7 +21,7 @@ namespace SharpCompress.Common.GZip
         }
 #endif
 
-#if !PORTABLE
+#if !PORTABLE && !NETFX_CORE
         /// <summary>
         /// File that backs this volume, if it not stream based
         /// </summary>

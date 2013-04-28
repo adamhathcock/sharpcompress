@@ -731,7 +731,7 @@ namespace SharpCompress.Compressor.Deflate
 
             TraceOutput(TraceBits.Session, "-------------------------------------------------------");
             if (!_leaveOpen)
-                _outStream.Close();
+                _outStream.Dispose();
 
             _isClosed = true;
         }

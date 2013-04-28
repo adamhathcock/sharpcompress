@@ -9,7 +9,7 @@ namespace SharpCompress.Common.SevenZip
         {
         }
 
-#if !PORTABLE
+#if !PORTABLE && !NETFX_CORE
         public SevenZipVolume(FileInfo fileInfo, Options options)
             : base(fileInfo, options)
         {

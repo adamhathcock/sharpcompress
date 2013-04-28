@@ -10,7 +10,7 @@ namespace SharpCompress.Writer
             writer.Write(entryPath, source, null);
         }
 
-#if !PORTABLE
+#if !PORTABLE && !NETFX_CORE
         public static void Write(this IWriter writer, string entryPath, FileInfo source)
         {
             if (!source.Exists)

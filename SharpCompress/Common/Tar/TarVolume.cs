@@ -9,7 +9,7 @@ namespace SharpCompress.Common.Tar
         {
         }
 
-#if !PORTABLE
+#if !PORTABLE && !NETFX_CORE
         public TarVolume(FileInfo fileInfo, Options options)
             : base(fileInfo, options)
         {

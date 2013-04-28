@@ -22,7 +22,7 @@ namespace SharpCompress.Archive.Zip
         /// </summary>
         public CompressionLevel DeflateCompressionLevel { get; set; }
 
-#if !PORTABLE
+#if !PORTABLE && !NETFX_CORE
         /// <summary>
         /// Constructor expects a filepath to an existing file.
         /// </summary>
@@ -91,7 +91,7 @@ namespace SharpCompress.Archive.Zip
             return new ZipArchive(stream, options, password);
         }
 
-#if !PORTABLE
+#if !PORTABLE && !NETFX_CORE
         public static bool IsZipFile(string filePath, string password = null)
         {
             return IsZipFile(new FileInfo(filePath), password);
@@ -133,7 +133,7 @@ namespace SharpCompress.Archive.Zip
             }
         }
 
-#if !PORTABLE
+#if !PORTABLE && !NETFX_CORE
         /// <summary>
         /// Constructor with a FileInfo object to an existing file.
         /// </summary>
