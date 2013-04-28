@@ -142,6 +142,7 @@
     <Compile Include="Common\Tar\TarFilePart.cs" />
     <Compile Include="Common\Tar\TarHeaderFactory.cs" />
     <Compile Include="Common\Zip\Headers\HeaderFlags.cs" />
+    <Compile Include="Common\Zip\Headers\IgnoreHeader.cs" />
     <Compile Include="Common\Zip\Headers\SplitHeader.cs" />
     <Compile Include="Common\Zip\Headers\ZipFileEntry..cs" />
     <Compile Include="Common\Zip\Headers\ZipHeaderType.cs" />

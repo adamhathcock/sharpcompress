@@ -133,6 +133,7 @@
     <Compile Include="Common\Zip\Headers\DirectoryEndHeader.cs" />
     <Compile Include="Common\Zip\Headers\DirectoryEntryHeader.cs" />
     <Compile Include="Common\Zip\Headers\HeaderFlags.cs" />
+    <Compile Include="Common\Zip\Headers\IgnoreHeader.cs" />
     <Compile Include="Common\Zip\Headers\LocalEntryHeader.cs" />
     <Compile Include="Common\Zip\Headers\SplitHeader.cs" />
     <Compile Include="Common\Zip\Headers\ZipFileEntry..cs" />

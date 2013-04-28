@@ -17,7 +17,9 @@ namespace SharpCompress.Common.Zip
         internal const uint DIGITAL_SIGNATURE = 0x05054b50;
         internal const uint SPLIT_ARCHIVE_HEADER_BYTES = 0x30304b50;
 
-        private const uint ZIP64_END_OF_CENTRAL_DIRECTORY = 0x07064b50;
+        private const uint ZIP64_END_OF_CENTRAL_DIRECTORY = 0x06064b50;
+        private const uint ZIP64_END_OF_CENTRAL_DIRECTORY_LOCATOR = 0x07064b50;
+
 
         protected LocalEntryHeader lastEntryHeader;
         private string password;
@@ -77,6 +79,12 @@ namespace SharpCompress.Common.Zip
                         return new SplitHeader();
                     }
                 case ZIP64_END_OF_CENTRAL_DIRECTORY:
+                case ZIP64_END_OF_CENTRAL_DIRECTORY_LOCATOR:
+                    {
+                        var entry = new IgnoreHeader(ZipHeaderType.Ignore);
+                        entry.Read(reader);
+                        return entry;
+                    }
                 default:
                     throw new NotSupportedException("Unknown header: " + headerBytes);
             }
@@ -93,6 +101,7 @@ namespace SharpCompress.Common.Zip
                 case DIRECTORY_END_HEADER_BYTES:
                 case SPLIT_ARCHIVE_HEADER_BYTES:
                 case ZIP64_END_OF_CENTRAL_DIRECTORY:
+                case ZIP64_END_OF_CENTRAL_DIRECTORY_LOCATOR:
                     return true;
                 default:
                     return false;
