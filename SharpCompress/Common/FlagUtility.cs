@@ -70,19 +70,6 @@ namespace SharpCompress.Common
         }
 #endif
 
-#if THREEFIVE
-    /// <summary>
-    /// Generically checks enums in a .NET 3.5
-    /// </summary>
-    /// <param name="enumVal"></param>
-    /// <param name="flag"></param>
-    /// <returns></returns>
-        public static bool HasFlag(this Enum enumVal, Enum flag)
-        {
-            return (Convert.ToInt32(enumVal) & Convert.ToInt32(flag)) == Convert.ToInt32(flag);
-        }
-#endif
-
         /// <summary>
         /// Returns true if the flag is set on the specified bit field.
         /// Currently only works with 32-bit bitfields. 

@@ -1,10 +1,6 @@
 ﻿using System.IO;
 using SharpCompress.Common;
 
-#if THREEFIVE
-using SharpCompress.Common.Rar.Headers;
-#endif
-
 namespace SharpCompress.Archive
 {
     public static class IArchiveEntryExtensions

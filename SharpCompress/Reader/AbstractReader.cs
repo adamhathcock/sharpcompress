@@ -5,7 +5,7 @@ using System.Linq;
 using SharpCompress.Common;
 
 
-#if THREEFIVE || PORTABLE
+#if PORTABLE
 using SharpCompress.Common.Rar.Headers;
 #endif
 
@@ -137,11 +137,11 @@ namespace SharpCompress.Reader
                 if (rawStream != null)
                 {
                     var bytesToAdvance = Entry.CompressedSize;
-                    for (var i = 0; i < bytesToAdvance/skipBuffer.Length; i++)
+                    for (var i = 0; i < bytesToAdvance / skipBuffer.Length; i++)
                     {
                         rawStream.Read(skipBuffer, 0, skipBuffer.Length);
                     }
-                    rawStream.Read(skipBuffer, 0, (int) (bytesToAdvance%skipBuffer.Length));
+                    rawStream.Read(skipBuffer, 0, (int)(bytesToAdvance % skipBuffer.Length));
                     return;
                 }
             }
