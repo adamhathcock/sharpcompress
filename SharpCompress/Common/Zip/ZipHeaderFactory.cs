@@ -2,7 +2,7 @@
 using System.IO;
 using SharpCompress.Common.Zip.Headers;
 using SharpCompress.IO;
-#if !SILVERLIGHT && !PORTABLE
+#if !PORTABLE
 using System.Linq;
 
 #endif
@@ -135,7 +135,7 @@ namespace SharpCompress.Common.Zip
                 }
                 else
                 {
-#if SILVERLIGHT || PORTABLE
+#if PORTABLE
                     throw new NotSupportedException("Cannot decrypt Winzip AES with Silverlight or WP7.");
 #else
 

@@ -3,24 +3,15 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProductVersion>9.0.30729</ProductVersion>
-    <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{43F219EC-21D3-4EA8-8379-151AF9580CB8}</ProjectGuid>
+    <ProjectGuid>{7FA7D133-1417-4F85-9998-4C618AC8FEDA}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>SharpCompress</RootNamespace>
-    <AssemblyName>SharpCompress.3.5</AssemblyName>
-    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <AssemblyName>SharpCompress.Portable</AssemblyName>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <TargetFrameworkProfile>Profile1</TargetFrameworkProfile>
     <FileAlignment>512</FileAlignment>
-    <TargetFrameworkProfile>Client</TargetFrameworkProfile>
-    <SccProjectName>
-    </SccProjectName>
-    <SccLocalPath>
-    </SccLocalPath>
-    <SccAuxPath>
-    </SccAuxPath>
-    <SccProvider>
-    </SccProvider>
+    <ProjectTypeGuids>{786C830F-07A1-408B-BD7F-6EE04809D6DB};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
     <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\..\sharpcompress\</SolutionDir>
     <RestorePackages>true</RestorePackages>
   </PropertyGroup>
@@ -29,21 +20,19 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>..\bin\</OutputPath>
-    <DefineConstants>TRACE;DEBUG;THREEFIVE</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;PORTABLE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>..\bin\</OutputPath>
-    <DefineConstants>TRACE;THREEFIVE</DefineConstants>
+    <DefineConstants>TRACE;PORTABLE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup>
     <SignAssembly>true</SignAssembly>
@@ -66,8 +55,6 @@
     <Compile Include="Archive\IArchive.cs" />
     <Compile Include="Archive\IArchiveEntry.cs" />
     <Compile Include="Archive\IArchiveEntry.Extensions.cs" />
-    <Compile Include="Archive\Rar\FileInfoRarArchiveVolume.cs" />
-    <Compile Include="Archive\Rar\FileInfoRarFilePart.cs" />
     <Compile Include="Archive\Rar\RarArchive.cs" />
     <Compile Include="Archive\Rar\RarArchive.Extensions.cs" />
     <Compile Include="Archive\Rar\RarArchiveEntry.cs" />
@@ -161,9 +148,6 @@
     <Compile Include="Common\Zip\SeekableZipHeaderFactory.cs" />
     <Compile Include="Common\Zip\StreamingZipFilePart.cs" />
     <Compile Include="Common\Zip\StreamingZipHeaderFactory.cs" />
-    <Compile Include="Common\Zip\WinzipAesCryptoStream.cs" />
-    <Compile Include="Common\Zip\WinzipAesEncryptionData.cs" />
-    <Compile Include="Common\Zip\WinzipAesKeySize.cs" />
     <Compile Include="Common\Zip\ZipCompressionMethod.cs" />
     <Compile Include="Common\Zip\ZipEntry.cs" />
     <Compile Include="Common\Zip\ZipFilePart.cs" />
@@ -192,7 +176,6 @@
     <Compile Include="Compressor\Filters\BCJ2Filter.cs" />
     <Compile Include="Compressor\Filters\BCJFilter.cs" />
     <Compile Include="Compressor\Filters\Filter.cs" />
-    <Compile Include="Compressor\LZMA\AesDecoderStream.cs" />
     <Compile Include="Compressor\LZMA\Bcj2DecoderStream.cs" />
     <Compile Include="Compressor\LZMA\BitVector.cs" />
     <Compile Include="Compressor\LZMA\CRC.cs" />
@@ -218,6 +201,17 @@
     <Compile Include="Compressor\LZMA\Utilites\SyncStreamView.cs" />
     <Compile Include="Compressor\LZMA\Utilites\UnpackSubStream.cs" />
     <Compile Include="Compressor\LZMA\Utilites\Utils.cs" />
+    <Compile Include="Compressor\PPMd\H\FreqData.cs" />
+    <Compile Include="Compressor\PPMd\H\ModelPPM.cs" />
+    <Compile Include="Compressor\PPMd\H\Pointer.cs" />
+    <Compile Include="Compressor\PPMd\H\PPMContext.cs" />
+    <Compile Include="Compressor\PPMd\H\RangeCoder.cs" />
+    <Compile Include="Compressor\PPMd\H\RarMemBlock.cs" />
+    <Compile Include="Compressor\PPMd\H\RarNode.cs" />
+    <Compile Include="Compressor\PPMd\H\SEE2Context.cs" />
+    <Compile Include="Compressor\PPMd\H\State.cs" />
+    <Compile Include="Compressor\PPMd\H\StateRef.cs" />
+    <Compile Include="Compressor\PPMd\H\SubAllocator.cs" />
     <Compile Include="Compressor\PPMd\I1\Allocator.cs" />
     <Compile Include="Compressor\PPMd\I1\Coder.cs" />
     <Compile Include="Compressor\PPMd\I1\MemoryNode.cs" />
@@ -225,10 +219,10 @@
     <Compile Include="Compressor\PPMd\I1\ModelRestorationMethod.cs" />
     <Compile Include="Compressor\PPMd\I1\Pointer.cs" />
     <Compile Include="Compressor\PPMd\I1\PpmContext.cs" />
-    <Compile Include="Compressor\PPMd\PpmdProperties.cs" />
-    <Compile Include="Compressor\PPMd\PpmdStream.cs" />
     <Compile Include="Compressor\PPMd\I1\PpmState.cs" />
     <Compile Include="Compressor\PPMd\I1\See2Context.cs" />
+    <Compile Include="Compressor\PPMd\PpmdProperties.cs" />
+    <Compile Include="Compressor\PPMd\PpmdStream.cs" />
     <Compile Include="Compressor\Rar\Decode\AudioVariables.cs" />
     <Compile Include="Compressor\Rar\Decode\BitDecode.cs" />
     <Compile Include="Compressor\Rar\Decode\CodeType.cs" />
@@ -242,17 +236,6 @@
     <Compile Include="Compressor\Rar\Decode\RepDecode.cs" />
     <Compile Include="Compressor\Rar\MultiVolumeReadOnlyStream.cs" />
     <Compile Include="Compressor\Rar\PPM\BlockTypes.cs" />
-    <Compile Include="Compressor\PPMd\H\FreqData.cs" />
-    <Compile Include="Compressor\PPMd\H\ModelPPM.cs" />
-    <Compile Include="Compressor\PPMd\H\Pointer.cs" />
-    <Compile Include="Compressor\PPMd\H\PPMContext.cs" />
-    <Compile Include="Compressor\PPMd\H\RangeCoder.cs" />
-    <Compile Include="Compressor\PPMd\H\RarMemBlock.cs" />
-    <Compile Include="Compressor\PPMd\H\RarNode.cs" />
-    <Compile Include="Compressor\PPMd\H\SEE2Context.cs" />
-    <Compile Include="Compressor\PPMd\H\State.cs" />
-    <Compile Include="Compressor\PPMd\H\StateRef.cs" />
-    <Compile Include="Compressor\PPMd\H\SubAllocator.cs" />
     <Compile Include="Compressor\Rar\RarCRC.cs" />
     <Compile Include="Compressor\Rar\RarStream.cs" />
     <Compile Include="Compressor\Rar\Unpack.cs" />
@@ -307,7 +290,7 @@
   <ItemGroup>
     <None Include="SharpCompress.pfx" />
   </ItemGroup>
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">

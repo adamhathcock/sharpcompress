@@ -41,7 +41,7 @@ namespace SharpCompress.Common.Zip
 
         private SymmetricAlgorithm CreateCipher(WinzipAesEncryptionData winzipAesEncryptionData)
         {
-#if !SILVERLIGHT && !PORTABLE
+#if !PORTABLE
             RijndaelManaged cipher = new RijndaelManaged();
             cipher.BlockSize = BLOCK_SIZE_IN_BYTES*8;
             cipher.KeySize = winzipAesEncryptionData.KeyBytes.Length*8;

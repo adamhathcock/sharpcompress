@@ -36,13 +36,6 @@ namespace SharpCompress.Compressor.Deflate
     public class GZipStream : Stream
     {
         internal static readonly DateTime UnixEpoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
-        /*
-        #if SILVERLIGHT || PORTABLE || MONO
-                internal static readonly Encoding Iso8859Dash1 = Encoding.UTF8;
-        #else
-                internal static readonly Encoding Iso8859Dash1 = Encoding.GetEncoding("iso-8859-1");
-        #endif
-        */
 
         public DateTime? LastModified { get; set; }
 

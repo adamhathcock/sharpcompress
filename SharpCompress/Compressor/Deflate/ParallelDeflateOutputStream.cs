@@ -1074,14 +1074,8 @@ namespace SharpCompress.Compressor.Deflate
                 lock (_outputLock)
                 {
                     int tid = Thread.CurrentThread.GetHashCode();
-#if !SILVERLIGHT
-                    Console.ForegroundColor = (ConsoleColor) (tid%8 + 8);
-#endif
                     Console.Write("{0:000} PDOS ", tid);
                     Console.WriteLine(format, varParams);
-#if !SILVERLIGHT
-                    Console.ResetColor();
-#endif
                 }
             }
         }

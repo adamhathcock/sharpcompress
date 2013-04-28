@@ -80,7 +80,7 @@ namespace SharpCompress.Compressor.LZMA
             return crc;
         }
 
-#if !SILVERLIGHT && !PORTABLE
+#if !PORTABLE
         public static unsafe uint Update(uint crc, byte* buffer, int length)
         {
             while (length > 0 && ((int) buffer & 3) != 0)

@@ -62,7 +62,7 @@ namespace SharpCompress.IO
             throw new NotImplementedException();
         }
 
-#if !SILVERLIGHT && !PORTABLE
+#if !PORTABLE
         public override decimal ReadDecimal()
         {
             CurrentReadByteCount += 16;

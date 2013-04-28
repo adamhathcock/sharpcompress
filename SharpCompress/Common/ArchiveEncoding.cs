@@ -17,7 +17,7 @@ namespace SharpCompress.Common
 
         static ArchiveEncoding()
         {
-#if SILVERLIGHT || PORTABLE
+#if PORTABLE
             Default = Encoding.UTF8;
             Password = Encoding.UTF8;
 #else
