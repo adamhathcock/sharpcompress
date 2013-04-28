@@ -2,3 +2,4 @@
 **/obj/*
 _ReSharper.SharpCompress/
 bin/
+*.suo

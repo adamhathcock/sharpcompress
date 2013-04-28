@@ -4,31 +4,13 @@ namespace SharpCompress.IO
 {
     internal class RewindableStream : Stream
     {
-        private Stream stream;
+        private readonly Stream stream;
         private MemoryStream bufferStream = new MemoryStream();
         private bool isRewound;
 
         public RewindableStream(Stream stream)
         {
             this.stream = stream;
-        }
-
-        public RewindableStream(Stream stream, MemoryStream bufferStream)
-        {
-            RewindableStream parent = stream as RewindableStream;
-            if (parent != null && !parent.isRewound)
-            {
-                this.stream = parent.stream;
-            }
-            else
-            {
-                this.stream = stream;
-            }
-            this.bufferStream = bufferStream;
-            if (bufferStream.Position != bufferStream.Length)
-            {
-                isRewound = true;
-            }
         }
 
         internal bool IsRecording { get; private set; }
@@ -72,7 +54,7 @@ namespace SharpCompress.IO
             {
                 byte[] data = bufferStream.ToArray();
                 long position = bufferStream.Position;
-                bufferStream = new MemoryStream();
+                bufferStream.SetLength(0);
                 bufferStream.Write(data, (int)position, data.Length - (int)position);
                 bufferStream.Position = 0;
             }
@@ -120,7 +102,7 @@ namespace SharpCompress.IO
                 {
                     stream.Position = value;
                     isRewound = false;
-                    bufferStream = new MemoryStream();
+                    bufferStream.SetLength(0);
                 }
                 else
                 {
@@ -147,7 +129,7 @@ namespace SharpCompress.IO
                 if (bufferStream.Position == bufferStream.Length && !IsRecording)
                 {
                     isRewound = false;
-                    bufferStream = new MemoryStream();
+                    bufferStream.SetLength(0);
                 }
                 return read;
             }
