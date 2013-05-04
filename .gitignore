@@ -6,3 +6,4 @@ bin/
 *.user
 TestArchives/Scratch/
 TestArchives/Scratch2/
+*.nupkg
