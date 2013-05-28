@@ -166,7 +166,6 @@
     <Compile Include="Compressor\Deflate\GZipStream.cs" />
     <Compile Include="Compressor\Deflate\Inflate.cs" />
     <Compile Include="Compressor\Deflate\InfTree.cs" />
-    <Compile Include="Compressor\Deflate\ParallelDeflateOutputStream.cs" />
     <Compile Include="Compressor\Deflate\Tree.cs" />
     <Compile Include="Compressor\Deflate\Zlib.cs" />
     <Compile Include="Compressor\Deflate\ZlibBaseStream.cs" />

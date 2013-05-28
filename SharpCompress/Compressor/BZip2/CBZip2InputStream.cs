@@ -65,8 +65,8 @@ namespace SharpCompress.Compressor.BZip2
             {
                 if (inUse[i])
                 {
-                    seqToUnseq[nInUse] = (char) i;
-                    unseqToSeq[i] = (char) nInUse;
+                    seqToUnseq[nInUse] = (char)i;
+                    unseqToSeq[i] = (char)nInUse;
                     nInUse++;
                 }
             }
@@ -145,6 +145,7 @@ namespace SharpCompress.Compressor.BZip2
         private int rTPos = 0;
         private int j2;
         private char z;
+        private bool isDisposed;
 
         public CBZip2InputStream(Stream zStream, bool decompressConcatenated, bool leaveOpen)
         {
@@ -155,6 +156,20 @@ namespace SharpCompress.Compressor.BZip2
             Initialize(true);
             InitBlock();
             SetupBlock();
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (isDisposed)
+            {
+                return;
+            }
+            isDisposed = true;
+            base.Dispose(disposing);
+            if (bsStream != null)
+            {
+                bsStream.Dispose();
+            }
         }
 
         internal static int[][] InitIntArray(int n1, int n2)
@@ -299,7 +314,7 @@ namespace SharpCompress.Compressor.BZip2
             }
 
             computedCombinedCRC = (computedCombinedCRC << 1)
-                                  | (int) (((uint) computedCombinedCRC) >> 31);
+                                  | (int)(((uint)computedCombinedCRC) >> 31);
             computedCombinedCRC ^= computedBlockCRC;
         }
 
@@ -372,7 +387,7 @@ namespace SharpCompress.Compressor.BZip2
                 int thech = '\0';
                 try
                 {
-                    thech = (char) bsStream.ReadByte();
+                    thech = (char)bsStream.ReadByte();
                 }
                 catch (IOException)
                 {
@@ -394,7 +409,7 @@ namespace SharpCompress.Compressor.BZip2
 
         private char BsGetUChar()
         {
-            return (char) BsR(8);
+            return (char)BsR(8);
         }
 
         private int BsGetint()
@@ -409,12 +424,12 @@ namespace SharpCompress.Compressor.BZip2
 
         private int BsGetIntVS(int numBits)
         {
-            return (int) BsR(numBits);
+            return (int)BsR(numBits);
         }
 
         private int BsGetInt32()
         {
-            return (int) BsGetint();
+            return (int)BsGetint();
         }
 
         private void HbCreateDecodeTables(int[] limit, int[] basev,
@@ -501,7 +516,7 @@ namespace SharpCompress.Compressor.BZip2
                     {
                         if (BsR(1) == 1)
                         {
-                            inUse[i*16 + j] = true;
+                            inUse[i * 16 + j] = true;
                         }
                     }
                 }
@@ -520,7 +535,7 @@ namespace SharpCompress.Compressor.BZip2
                 {
                     j++;
                 }
-                selectorMtf[i] = (char) j;
+                selectorMtf[i] = (char)j;
             }
 
             /* Undo the MTF values for the selectors. */
@@ -563,7 +578,7 @@ namespace SharpCompress.Compressor.BZip2
                             curr--;
                         }
                     }
-                    len[t][i] = (char) curr;
+                    len[t][i] = (char)curr;
                 }
             }
 
@@ -595,7 +610,7 @@ namespace SharpCompress.Compressor.BZip2
             int i, j, nextSym, limitLast;
             int EOB, groupNo, groupPos;
 
-            limitLast = BZip2Constants.baseBlockSize*blockSize100k;
+            limitLast = BZip2Constants.baseBlockSize * blockSize100k;
             origPtr = BsGetIntVS(24);
 
             RecvDecodingTables();
@@ -616,7 +631,7 @@ namespace SharpCompress.Compressor.BZip2
 
             for (i = 0; i <= 255; i++)
             {
-                yy[i] = (char) i;
+                yy[i] = (char)i;
             }
 
             last = -1;
@@ -643,7 +658,7 @@ namespace SharpCompress.Compressor.BZip2
                                 char thech = '\0';
                                 try
                                 {
-                                    thech = (char) bsStream.ReadByte();
+                                    thech = (char)bsStream.ReadByte();
                                 }
                                 catch (IOException)
                                 {
@@ -682,13 +697,13 @@ namespace SharpCompress.Compressor.BZip2
                     {
                         if (nextSym == BZip2Constants.RUNA)
                         {
-                            s = s + (0 + 1)*N;
+                            s = s + (0 + 1) * N;
                         }
                         else if (nextSym == BZip2Constants.RUNB)
                         {
-                            s = s + (1 + 1)*N;
+                            s = s + (1 + 1) * N;
                         }
-                        N = N*2;
+                        N = N * 2;
                         {
                             int zt, zn, zvec, zj;
                             if (groupPos == 0)
@@ -711,7 +726,7 @@ namespace SharpCompress.Compressor.BZip2
                                             char thech = '\0';
                                             try
                                             {
-                                                thech = (char) bsStream.ReadByte();
+                                                thech = (char)bsStream.ReadByte();
                                             }
                                             catch (IOException)
                                             {
@@ -808,7 +823,7 @@ namespace SharpCompress.Compressor.BZip2
                                         char thech = '\0';
                                         try
                                         {
-                                            thech = (char) bsStream.ReadByte();
+                                            thech = (char)bsStream.ReadByte();
                                         }
                                         catch (IOException)
                                         {
@@ -848,7 +863,7 @@ namespace SharpCompress.Compressor.BZip2
 
             for (i = 0; i <= last; i++)
             {
-                ch = (char) ll8[i];
+                ch = (char)ll8[i];
                 tt[cftab[ch]] = i;
                 cftab[ch]++;
             }
@@ -889,7 +904,7 @@ namespace SharpCompress.Compressor.BZip2
                     }
                 }
                 rNToGo--;
-                ch2 ^= (int) ((rNToGo == 1) ? 1 : 0);
+                ch2 ^= (int)((rNToGo == 1) ? 1 : 0);
                 i2++;
 
                 currentChar = ch2;
@@ -950,7 +965,7 @@ namespace SharpCompress.Compressor.BZip2
                         }
                     }
                     rNToGo--;
-                    z ^= (char) ((rNToGo == 1) ? 1 : 0);
+                    z ^= (char)((rNToGo == 1) ? 1 : 0);
                     j2 = 0;
                     currentState = RAND_PART_C_STATE;
                     SetupRandPartC();
@@ -965,7 +980,7 @@ namespace SharpCompress.Compressor.BZip2
 
         private void SetupRandPartC()
         {
-            if (j2 < (int) z)
+            if (j2 < (int)z)
             {
                 currentChar = ch2;
                 mCrc.UpdateCRC(ch2);
@@ -1009,7 +1024,7 @@ namespace SharpCompress.Compressor.BZip2
 
         private void SetupNoRandPartC()
         {
-            if (j2 < (int) z)
+            if (j2 < (int)z)
             {
                 currentChar = ch2;
                 mCrc.UpdateCRC(ch2);
@@ -1039,7 +1054,7 @@ namespace SharpCompress.Compressor.BZip2
                 return;
             }
 
-            int n = BZip2Constants.baseBlockSize*newSize100k;
+            int n = BZip2Constants.baseBlockSize * newSize100k;
             ll8 = new char[n];
             tt = new int[n];
         }
@@ -1057,7 +1072,7 @@ namespace SharpCompress.Compressor.BZip2
                 c = ReadByte();
                 if (c == -1)
                     break;
-                buffer[k + offset] = (byte) c;
+                buffer[k + offset] = (byte)c;
             }
             return k;
         }

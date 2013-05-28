@@ -13,6 +13,7 @@ namespace SharpCompress.Compressor.Filters
         private int transformed = 0;
         private int read = 0;
         private bool endReached = false;
+        private bool isDisposed;
 
         protected Filter(bool isEncoder, Stream baseStream, int lookahead)
         {
@@ -20,6 +21,17 @@ namespace SharpCompress.Compressor.Filters
             this.baseStream = baseStream;
             tail = new byte[lookahead - 1];
             window = new byte[tail.Length * 2];
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (isDisposed)
+            {
+                return;
+            }
+            isDisposed = true;
+            base.Dispose(disposing);
+            baseStream.Dispose();
         }
 
         public override bool CanRead

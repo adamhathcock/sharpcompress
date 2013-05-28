@@ -27,6 +27,7 @@ namespace SharpCompress.Compressor.Filters
         private ushort[] p = new ushort[256 + 2];
         private uint range, code;
         private byte prevByte = 0;
+        private bool isDisposed;
 
         private const int kNumTopBits = 24;
         private const int kTopValue = 1 << kNumTopBits;
@@ -60,6 +61,17 @@ namespace SharpCompress.Compressor.Filters
             range = 0xFFFFFFFF;
             for (i = 0; i < 5; i++)
                 code = (code << 8) | control[controlPos++];
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (isDisposed)
+            {
+                return;
+            }
+            isDisposed = true;
+            base.Dispose(disposing);
+            baseStream.Dispose();
         }
 
         public override bool CanRead

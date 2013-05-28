@@ -9,11 +9,23 @@ namespace SharpCompress.Compressor.LZMA.Utilites
         private Stream mTarget;
         private uint mCRC;
         private bool mFinished;
+        private bool isDisposed;
 
         public CrcBuilderStream(Stream target)
         {
             mTarget = target;
             mCRC = CRC.kInitCRC;
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (isDisposed)
+            {
+                return;
+            }
+            isDisposed = true;
+            mTarget.Dispose();
+            base.Dispose(disposing);
         }
 
         public long Processed

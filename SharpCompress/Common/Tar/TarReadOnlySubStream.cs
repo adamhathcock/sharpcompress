@@ -4,19 +4,25 @@ namespace SharpCompress.Common.Tar
 {
     internal class TarReadOnlySubStream : Stream
     {
+        private bool isDisposed;
         private int amountRead;
 
         public TarReadOnlySubStream(Stream stream, long bytesToRead)
         {
-            this.Stream = stream;
-            this.BytesLeftToRead = bytesToRead;
+            Stream = stream;
+            BytesLeftToRead = bytesToRead;
         }
 
         protected override void Dispose(bool disposing)
         {
+            if (isDisposed)
+            {
+                return;
+            }
+            isDisposed = true;
             if (disposing)
             {
-                int skipBytes = this.amountRead%512;
+                int skipBytes = this.amountRead % 512;
                 if (skipBytes == 0)
                 {
                     return;
@@ -70,7 +76,7 @@ namespace SharpCompress.Common.Tar
         {
             if (this.BytesLeftToRead < count)
             {
-                count = (int) this.BytesLeftToRead;
+                count = (int)this.BytesLeftToRead;
             }
             int read = this.Stream.Read(buffer, offset, count);
             if (read > 0)

@@ -29,7 +29,7 @@ namespace SharpCompress.Compressor.LZMA
                 if (bt < 0)
                     throw new EndOfStreamException();
 
-                return (byte) bt;
+                return (byte)bt;
             }
 
             public void Dispose()
@@ -49,7 +49,7 @@ namespace SharpCompress.Compressor.LZMA
 
             public StatusDecoder()
             {
-                Prob = kBitModelTotal/2;
+                Prob = kBitModelTotal / 2;
             }
 
             private void UpdateModel(uint symbol)
@@ -66,7 +66,7 @@ namespace SharpCompress.Compressor.LZMA
 
             public uint Decode(RangeDecoder decoder)
             {
-                uint newBound = (decoder.Range >> kNumBitModelTotalBits)*Prob;
+                uint newBound = (decoder.Range >> kNumBitModelTotalBits) * Prob;
                 if (decoder.Code < newBound)
                 {
                     decoder.Range = newBound;
@@ -102,6 +102,7 @@ namespace SharpCompress.Compressor.LZMA
         private long mLimit;
         private IEnumerator<byte> mIter;
         private bool mFinished;
+        private bool isDisposed;
 
         public Bcj2DecoderStream(Stream[] streams, byte[] info, long limit)
         {
@@ -122,6 +123,19 @@ namespace SharpCompress.Compressor.LZMA
                 mStatusDecoder[i] = new StatusDecoder();
 
             mIter = Run().GetEnumerator();
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (isDisposed)
+            {
+                return;
+            }
+            isDisposed = true;
+            base.Dispose(disposing);
+            mMainStream.Dispose();
+            mCallStream.Dispose();
+            mJumpStream.Dispose();
         }
 
         private static bool IsJcc(byte b0, byte b1)
@@ -171,7 +185,7 @@ namespace SharpCompress.Compressor.LZMA
 
             byte prevByte = 0;
             uint processedBytes = 0;
-            for (;;)
+            for (; ; )
             {
                 byte b = 0;
                 uint i;
@@ -181,7 +195,7 @@ namespace SharpCompress.Compressor.LZMA
                     if (tmp < 0)
                         yield break;
 
-                    b = (byte) tmp;
+                    b = (byte)tmp;
                     mWritten++;
                     yield return b;
                     if (IsJ(prevByte, b))
@@ -206,19 +220,19 @@ namespace SharpCompress.Compressor.LZMA
                             throw new EndOfStreamException();
 
                         src <<= 8;
-                        src |= (uint) b0;
+                        src |= (uint)b0;
                     }
 
-                    uint dest = src - (uint) (mWritten + 4);
+                    uint dest = src - (uint)(mWritten + 4);
                     mWritten++;
-                    yield return (byte) dest;
+                    yield return (byte)dest;
                     mWritten++;
-                    yield return (byte) (dest >> 8);
+                    yield return (byte)(dest >> 8);
                     mWritten++;
-                    yield return (byte) (dest >> 16);
+                    yield return (byte)(dest >> 16);
                     mWritten++;
-                    yield return (byte) (dest >> 24);
-                    prevByte = (byte) (dest >> 24);
+                    yield return (byte)(dest >> 24);
+                    prevByte = (byte)(dest >> 24);
                     processedBytes += 4;
                 }
                 else

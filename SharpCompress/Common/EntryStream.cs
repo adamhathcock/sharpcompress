@@ -7,6 +7,7 @@ namespace SharpCompress.Common
     {
         private Stream stream;
         private bool completed;
+        private bool isDisposed;
 
         internal EntryStream(Stream stream)
         {
@@ -32,6 +33,11 @@ namespace SharpCompress.Common
                 throw new InvalidOperationException(
                     "EntryStream has not been fully consumed.  Read the entire stream or use SkipEntry.");
             }
+            if (isDisposed)
+            {
+                return;
+            }
+            isDisposed = true;
             base.Dispose(disposing);
             stream.Dispose();
         }

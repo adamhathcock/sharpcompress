@@ -25,8 +25,8 @@
 // ------------------------------------------------------------------
 
 using System;
-using SharpCompress.Common.Tar.Headers;
 using SharpCompress.Common;
+using SharpCompress.Common.Tar.Headers;
 
 namespace SharpCompress.Compressor.Deflate
 {
@@ -65,7 +65,8 @@ namespace SharpCompress.Compressor.Deflate
         {
             get
             {
-                if (crc == null) return 0;
+                if (crc == null)
+                    return 0;
                 return crc.Crc32Result;
             }
         }
@@ -176,7 +177,8 @@ namespace SharpCompress.Compressor.Deflate
 
         private void finish()
         {
-            if (_z == null) return;
+            if (_z == null)
+                return;
 
             if (_streamMode == StreamMode.Writer)
             {
@@ -220,7 +222,7 @@ namespace SharpCompress.Compressor.Deflate
                         // Emit the GZIP trailer: CRC32 and  size mod 2^32
                         int c1 = crc.Crc32Result;
                         _stream.Write(BitConverter.GetBytes(c1), 0, 4);
-                        int c2 = (Int32) (crc.TotalBytesRead & 0x00000000FFFFFFFF);
+                        int c2 = (Int32)(crc.TotalBytesRead & 0x00000000FFFFFFFF);
                         _stream.Write(BitConverter.GetBytes(c2), 0, 4);
                     }
                     else
@@ -229,7 +231,7 @@ namespace SharpCompress.Compressor.Deflate
                     }
                 }
             }
-                // workitem 7159
+            // workitem 7159
             else if (_streamMode == StreamMode.Reader)
             {
                 if (_flavor == ZlibStreamFlavor.GZIP)
@@ -268,7 +270,7 @@ namespace SharpCompress.Compressor.Deflate
                         Int32 crc32_expected = BitConverter.ToInt32(trailer, 0);
                         Int32 crc32_actual = crc.Crc32Result;
                         Int32 isize_expected = BitConverter.ToInt32(trailer, 4);
-                        Int32 isize_actual = (Int32) (_z.TotalBytesOut & 0x00000000FFFFFFFF);
+                        Int32 isize_actual = (Int32)(_z.TotalBytesOut & 0x00000000FFFFFFFF);
 
                         if (crc32_actual != crc32_expected)
                             throw new ZlibException(
@@ -306,6 +308,11 @@ namespace SharpCompress.Compressor.Deflate
 
         protected override void Dispose(bool disposing)
         {
+            if (isDisposed)
+            {
+                return;
+            }
+            isDisposed = true;
             base.Dispose(disposing);
             if (disposing)
             {
@@ -355,6 +362,7 @@ namespace SharpCompress.Compressor.Deflate
 #endif
 
         private bool nomoreinput = false;
+        private bool isDisposed;
 
 
         private string ReadZeroTerminatedString()
@@ -406,7 +414,7 @@ namespace SharpCompress.Compressor.Deflate
                 n = _stream.Read(header, 0, 2); // 2-byte length field
                 totalBytesRead += n;
 
-                Int16 extraLength = (Int16) (header[0] + header[1]*256);
+                Int16 extraLength = (Int16)(header[0] + header[1] * 256);
                 byte[] extra = new byte[extraLength];
                 n = _stream.Read(extra, 0, extra.Length);
                 if (n != extraLength)
@@ -434,7 +442,8 @@ namespace SharpCompress.Compressor.Deflate
 
             if (_streamMode == StreamMode.Undefined)
             {
-                if (!this._stream.CanRead) throw new ZlibException("The stream is not readable.");
+                if (!this._stream.CanRead)
+                    throw new ZlibException("The stream is not readable.");
                 // for the first read, set up some controls.
                 _streamMode = StreamMode.Reader;
                 // (The first reference to _z goes through the private accessor which
@@ -452,12 +461,18 @@ namespace SharpCompress.Compressor.Deflate
             if (_streamMode != StreamMode.Reader)
                 throw new ZlibException("Cannot Read after Writing.");
 
-            if (count == 0) return 0;
-            if (nomoreinput && _wantCompress) return 0; // workitem 8557
-            if (buffer == null) throw new ArgumentNullException("buffer");
-            if (count < 0) throw new ArgumentOutOfRangeException("count");
-            if (offset < buffer.GetLowerBound(0)) throw new ArgumentOutOfRangeException("offset");
-            if ((offset + count) > buffer.GetLength(0)) throw new ArgumentOutOfRangeException("count");
+            if (count == 0)
+                return 0;
+            if (nomoreinput && _wantCompress)
+                return 0; // workitem 8557
+            if (buffer == null)
+                throw new ArgumentNullException("buffer");
+            if (count < 0)
+                throw new ArgumentOutOfRangeException("count");
+            if (offset < buffer.GetLowerBound(0))
+                throw new ArgumentOutOfRangeException("offset");
+            if ((offset + count) > buffer.GetLength(0))
+                throw new ArgumentOutOfRangeException("count");
 
             int rc = 0;
 

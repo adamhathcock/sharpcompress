@@ -29,6 +29,7 @@ namespace SharpCompress.Compressor.LZMA
         private byte[] props = new byte[5];
 
         private Encoder encoder;
+        private bool isDisposed;
 
         public LzmaStream(byte[] properties, Stream inputStream)
             : this(properties, inputStream, -1, -1, null, properties.Length < 5)
@@ -132,10 +133,21 @@ namespace SharpCompress.Compressor.LZMA
 
         protected override void Dispose(bool disposing)
         {
+            if (isDisposed)
+            {
+                return;
+            }
+            isDisposed = true;
             if (disposing)
             {
                 if (encoder != null)
+                {
                     position = encoder.Code(null, true);
+                }
+                if (inputStream != null)
+                {
+                    inputStream.Dispose();
+                }
             }
             base.Dispose(disposing);
         }

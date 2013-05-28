@@ -20,6 +20,7 @@ namespace SharpCompress.Compressor.Rar
         private int outOffset;
         private int outCount = 0;
         private int outTotal;
+        private bool isDisposed;
 
         public RarStream(Unpack unpack, FileHeader fileHeader, Stream readStream)
         {
@@ -29,6 +30,17 @@ namespace SharpCompress.Compressor.Rar
             fetch = true;
             unpack.doUnpack(fileHeader, readStream, this);
             fetch = false;
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (isDisposed)
+            {
+                return;
+            }
+            isDisposed = true;
+            base.Dispose(disposing);
+            readStream.Dispose();
         }
 
         public override bool CanRead
@@ -116,7 +128,7 @@ namespace SharpCompress.Compressor.Rar
                 if (tmpBuffer.Length < tmpCount + count)
                 {
                     byte[] newBuffer =
-                        new byte[tmpBuffer.Length*2 > tmpCount + count ? tmpBuffer.Length*2 : tmpCount + count];
+                        new byte[tmpBuffer.Length * 2 > tmpCount + count ? tmpBuffer.Length * 2 : tmpCount + count];
                     Buffer.BlockCopy(tmpBuffer, 0, newBuffer, 0, tmpCount);
                     tmpBuffer = newBuffer;
                 }

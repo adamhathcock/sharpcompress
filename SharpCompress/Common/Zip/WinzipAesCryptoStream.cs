@@ -17,6 +17,7 @@ namespace SharpCompress.Common.Zip
         private bool isFinalBlock;
         private CryptoMode mode;
         private long totalBytesLeftToRead;
+        private bool isDisposed;
 
         internal WinzipAesCryptoStream(Stream stream, WinzipAesEncryptionData winzipAesEncryptionData, long length,
                                        CryptoMode mode)
@@ -43,8 +44,8 @@ namespace SharpCompress.Common.Zip
         {
 #if !PORTABLE
             RijndaelManaged cipher = new RijndaelManaged();
-            cipher.BlockSize = BLOCK_SIZE_IN_BYTES*8;
-            cipher.KeySize = winzipAesEncryptionData.KeyBytes.Length*8;
+            cipher.BlockSize = BLOCK_SIZE_IN_BYTES * 8;
+            cipher.KeySize = winzipAesEncryptionData.KeyBytes.Length * 8;
             cipher.Mode = CipherMode.ECB;
             cipher.Padding = PaddingMode.None;
             return cipher;
@@ -81,6 +82,11 @@ namespace SharpCompress.Common.Zip
 
         protected override void Dispose(bool disposing)
         {
+            if (isDisposed)
+            {
+                return;
+            }
+            isDisposed = true;
             if (disposing)
             {
                 //read out last 10 auth bytes
@@ -104,7 +110,7 @@ namespace SharpCompress.Common.Zip
             int bytesToRead = count;
             if (count > totalBytesLeftToRead)
             {
-                bytesToRead = (int) totalBytesLeftToRead;
+                bytesToRead = (int)totalBytesLeftToRead;
             }
             int read = stream.Read(buffer, offset, bytesToRead);
             totalBytesLeftToRead -= read;
@@ -157,7 +163,7 @@ namespace SharpCompress.Common.Zip
         {
             for (int i = 0; i < count; i++)
             {
-                buffer[offset + i] = (byte) (counterOut[i] ^ buffer[offset + i]);
+                buffer[offset + i] = (byte)(counterOut[i] ^ buffer[offset + i]);
             }
         }
 

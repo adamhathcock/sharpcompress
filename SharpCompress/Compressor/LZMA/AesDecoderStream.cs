@@ -18,6 +18,7 @@ namespace SharpCompress.Compressor.LZMA
         private int mOffset;
         private int mEnding;
         private int mUnderflow;
+        private bool isDisposed;
 
         #endregion
 
@@ -28,7 +29,7 @@ namespace SharpCompress.Compressor.LZMA
             mStream = input;
             mLimit = limit;
 
-            if (((uint) input.Length & 15) != 0)
+            if (((uint)input.Length & 15) != 0)
                 throw new NotSupportedException("AES decoder does not support padding.");
 
             int numCyclesPower;
@@ -52,6 +53,11 @@ namespace SharpCompress.Compressor.LZMA
         {
             try
             {
+                if (isDisposed)
+                {
+                    return;
+                }
+                isDisposed = true;
                 if (disposing)
                 {
                     mStream.Dispose();
@@ -106,7 +112,7 @@ namespace SharpCompress.Compressor.LZMA
             // Currently this is handled by forcing an underflow if
             // the stream length is not a multiple of the block size.
             if (count > mLimit - mWritten)
-                count = (int) (mLimit - mWritten);
+                count = (int)(mLimit - mWritten);
 
             // We cannot transform less than 16 bytes into the target buffer,
             // but we also cannot return zero, so we need to handle this.

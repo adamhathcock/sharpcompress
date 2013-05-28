@@ -5,6 +5,7 @@ namespace SharpCompress.Compressor.BZip2
     public class BZip2Stream : Stream
     {
         private readonly Stream stream;
+        private bool isDisposed;
 
         /// <summary>
         /// Create a BZip2Stream
@@ -29,6 +30,11 @@ namespace SharpCompress.Compressor.BZip2
 
         protected override void Dispose(bool disposing)
         {
+            if (isDisposed)
+            {
+                return;
+            }
+            isDisposed = true;
             if (disposing)
             {
                 stream.Dispose();

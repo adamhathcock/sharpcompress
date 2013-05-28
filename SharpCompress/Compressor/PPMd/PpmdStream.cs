@@ -13,6 +13,7 @@ namespace SharpCompress.Compressor.PPMd
         private H.ModelPPM modelH;
         private LZMA.RangeCoder.Decoder decoder;
         private long position = 0;
+        private bool isDisposed;
 
         public PpmdStream(PpmdProperties properties, Stream stream, bool compress)
         {
@@ -69,6 +70,11 @@ namespace SharpCompress.Compressor.PPMd
 
         protected override void Dispose(bool isDisposing)
         {
+            if (isDisposed)
+            {
+                return;
+            }
+            isDisposed = true;
             if (isDisposing)
             {
                 if (compress)

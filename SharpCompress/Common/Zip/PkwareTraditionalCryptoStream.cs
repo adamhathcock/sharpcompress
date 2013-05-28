@@ -15,6 +15,7 @@ namespace SharpCompress.Common.Zip
         private readonly PkwareTraditionalEncryptionData encryptor;
         private readonly CryptoMode mode;
         private readonly Stream stream;
+        private bool isDisposed;
 
         public PkwareTraditionalCryptoStream(Stream stream, PkwareTraditionalEncryptionData encryptor, CryptoMode mode)
         {
@@ -103,6 +104,17 @@ namespace SharpCompress.Common.Zip
         public override void SetLength(long value)
         {
             throw new NotSupportedException();
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (isDisposed)
+            {
+                return;
+            }
+            isDisposed = true;
+            base.Dispose(disposing);
+            stream.Dispose();
         }
     }
 }

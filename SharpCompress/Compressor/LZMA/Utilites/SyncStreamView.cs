@@ -13,6 +13,7 @@ namespace SharpCompress.Compressor.LZMA.Utilites
         private long mOrigin;
         private long mEnding;
         private long mOffset;
+        private bool isDisposed;
 
         public SyncStreamView(object sync, Stream stream, long origin, long length)
         {
@@ -21,6 +22,17 @@ namespace SharpCompress.Compressor.LZMA.Utilites
             mOrigin = origin;
             mEnding = checked(origin + length);
             mOffset = 0;
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (isDisposed)
+            {
+                return;
+            }
+            isDisposed = true;
+            base.Dispose(disposing);
+            mStream.Dispose();
         }
 
         public override bool CanRead
@@ -64,7 +76,7 @@ namespace SharpCompress.Compressor.LZMA.Utilites
         {
             long remaining = mEnding - mOrigin - mOffset;
             if (count > remaining)
-                count = (int) remaining;
+                count = (int)remaining;
 
             if (count == 0)
                 return 0;

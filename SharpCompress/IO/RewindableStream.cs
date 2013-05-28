@@ -7,6 +7,7 @@ namespace SharpCompress.IO
         private readonly Stream stream;
         private MemoryStream bufferStream = new MemoryStream();
         private bool isRewound;
+        private bool isDisposed;
 
         public RewindableStream(Stream stream)
         {
@@ -17,6 +18,11 @@ namespace SharpCompress.IO
 
         protected override void Dispose(bool disposing)
         {
+            if (isDisposed)
+            {
+                return;
+            }
+            isDisposed = true;
             base.Dispose(disposing);
             if (disposing)
             {
@@ -55,7 +61,7 @@ namespace SharpCompress.IO
                 byte[] data = bufferStream.ToArray();
                 long position = bufferStream.Position;
                 bufferStream.SetLength(0);
-                bufferStream.Write(data, (int) position, data.Length - (int) position);
+                bufferStream.Write(data, (int)position, data.Length - (int)position);
                 bufferStream.Position = 0;
             }
             IsRecording = true;
