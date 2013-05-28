@@ -21,4 +21,7 @@ TODOs (always lots):
 * Zip64
 * Multi-volume Zip support.
 
+Some Help/Discussion:
+https://sharpcompress.codeplex.com/discussions
+
 7Zip implementation based on: https://code.google.com/p/managed-lzma/
