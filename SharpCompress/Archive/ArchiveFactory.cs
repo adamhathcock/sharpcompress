@@ -54,7 +54,7 @@ namespace SharpCompress.Archive
                 stream.Seek(0, SeekOrigin.Begin);
                 return GZipArchive.Open(stream, options);
             }
-            throw new InvalidOperationException("Cannot determine compressed stream type.");
+            throw new InvalidOperationException("Cannot determine compressed stream type.  Supported Archive Formats: Zip, GZip, Tar, Rar, 7Zip");
         }
 
         public static IArchive Create(ArchiveType type)

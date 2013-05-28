@@ -74,7 +74,7 @@ namespace SharpCompress.Reader
                 return RarReader.Open(rewindableStream, options);
             }
 
-            throw new InvalidOperationException("Cannot determine compressed stream type.");
+            throw new InvalidOperationException("Cannot determine compressed stream type.  Supported Reader Formats: Zip, GZip, BZip2, Tar, Rar");
         }
     }
 }
