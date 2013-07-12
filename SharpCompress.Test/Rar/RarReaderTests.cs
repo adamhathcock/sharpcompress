@@ -80,6 +80,12 @@ namespace SharpCompress.Test
         }
 
         [TestMethod]
+        public void Rar_Encrypted_Reader()
+        {
+            Read("Rar.Encrypted.rar", CompressionType.Rar);
+        }
+
+        [TestMethod]
         public void Rar_Entry_Stream()
         {
             ResetScratch();
