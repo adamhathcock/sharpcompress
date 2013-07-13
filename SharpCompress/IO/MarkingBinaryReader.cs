@@ -50,41 +50,25 @@ namespace SharpCompress.IO
                 rawPassword[i + rawLength] = _salt[i];
             }
 
-            // rawLength += 8;
-
-            // SHA-1
-
             var sha = new SHA1Managed();
 
             const int noOfRounds = (1 << 18);
-            const int xh = noOfRounds / 16;
-            //List<Byte> content = new ArrayList<Byte>();
             IList<byte> bytes = new List<byte>();
-            //byte[] input = null;
-            byte[] digest = null;
-            //			byte[] pswNum = new byte[3];
-            //long ax = System.currentTimeMillis();
+            byte[] digest;
             for (int i = 0; i < noOfRounds; i++)
             {
                 bytes.AddRange(rawPassword);
 
                 bytes.AddRange(new[] { (byte)i, (byte)(i >> 8), (byte)(i >> 16) });
-                if (i % xh == 0)
+                if (i % (noOfRounds / 16) == 0)
                 {
-
-                    //long bx = System.currentTimeMillis();
-
-
-                    //long cx = System.currentTimeMillis();
-                    //System.out.println(cx-bx);
                     digest = sha.ComputeHash(bytes.ToArray());
-                    //AESInit[i / xh] = digest[digest.length-1];
-                    _aesInitializationVector[i / xh] = digest[19];
+                    _aesInitializationVector[i / (noOfRounds / 16)] = digest[19];
                 }
             }
 
             digest = sha.ComputeHash(bytes.ToArray());
-            //System.out.println(System.currentTimeMillis()-ax);
+
             for (int i = 0; i < 4; i++)
                 for (int j = 0; j < 4; j++)
                     _aesKey[i * 4 + j] = (byte)
