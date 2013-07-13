@@ -110,12 +110,18 @@ namespace SharpCompress.Common.Rar.Headers
             return rewindableStream;
         }
 
+
         private RarHeader ReadNextHeader(Stream stream)
         {
-
             MarkingBinaryReader reader = new MarkingBinaryReader(stream);
+            
             if (IsEncrypted)
             {
+                reader.Salt = null;
+                reader.SkipQueue();
+                Console.WriteLine(reader.BaseStream.Position);
+                byte[] salt = reader.ReadBytes(8);
+                reader.Salt = salt;
 
             }
             RarHeader header = RarHeader.Create(reader);
@@ -161,6 +167,7 @@ namespace SharpCompress.Common.Rar.Headers
                     }
                 case HeaderType.FileHeader:
                     {
+                        Console.WriteLine(reader.BaseStream.Position);
                         FileHeader fh = header.PromoteHeader<FileHeader>(reader);
                         switch (StreamingMode)
                         {

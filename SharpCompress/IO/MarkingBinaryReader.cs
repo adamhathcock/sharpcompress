@@ -1,16 +1,103 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace SharpCompress.IO
 {
     internal class MarkingBinaryReader : BinaryReader
     {
+        private byte[] _salt;
+        private string _password = "test";
+        private byte[] _aesInitializationVector = new byte[16];
+        private byte[] _aesKey = new byte[16];
+        private Rijndael _rijndael;
+        private Queue<byte> _data = new Queue<byte>();
+
         public MarkingBinaryReader(Stream stream)
             : base(stream)
         {
         }
 
         public long CurrentReadByteCount { get; private set; }
+
+        internal byte[] Salt
+        {
+            get { return _salt; }
+            set
+            {
+                _salt = value;
+                if (value != null) InitializeAes();
+
+            }
+        }
+
+        private void InitializeAes()
+        {
+            _rijndael = new RijndaelManaged() {Padding = PaddingMode.None};
+            int rawLength = 2 * _password.Length;
+            byte[] rawPassword = new byte[rawLength + 8];
+            byte[] passwordBytes = Encoding.UTF8.GetBytes(_password);
+            for (int i = 0; i < _password.Length; i++)
+            {
+                rawPassword[i * 2] = passwordBytes[i];
+                rawPassword[i * 2 + 1] = 0;
+            }
+            for (int i = 0; i < _salt.Length; i++)
+            {
+                rawPassword[i + rawLength] = _salt[i];
+            }
+
+            // rawLength += 8;
+
+            // SHA-1
+
+            var sha = new SHA1Managed();
+
+            const int noOfRounds = (1 << 18);
+            const int xh = noOfRounds / 16;
+            //List<Byte> content = new ArrayList<Byte>();
+            IList<byte> bytes = new List<byte>();
+            //byte[] input = null;
+            byte[] digest = null;
+            //			byte[] pswNum = new byte[3];
+            //long ax = System.currentTimeMillis();
+            for (int i = 0; i < noOfRounds; i++)
+            {
+                bytes.AddRange(rawPassword);
+
+                bytes.AddRange(new[] { (byte)i, (byte)(i >> 8), (byte)(i >> 16) });
+                if (i % xh == 0)
+                {
+
+                    //long bx = System.currentTimeMillis();
+
+
+                    //long cx = System.currentTimeMillis();
+                    //System.out.println(cx-bx);
+                    digest = sha.ComputeHash(bytes.ToArray());
+                    //AESInit[i / xh] = digest[digest.length-1];
+                    _aesInitializationVector[i / xh] = digest[19];
+                }
+            }
+
+            digest = sha.ComputeHash(bytes.ToArray());
+            //System.out.println(System.currentTimeMillis()-ax);
+            for (int i = 0; i < 4; i++)
+                for (int j = 0; j < 4; j++)
+                    _aesKey[i * 4 + j] = (byte)
+                        (((digest[i * 4] * 0x1000000) & 0xff000000 | 
+                        ((digest[i * 4 + 1] * 0x10000) & 0xff0000) |
+                          ((digest[i * 4 + 2] * 0x100) & 0xff00) | 
+                          digest[i * 4 + 3] & 0xff) >> (j * 8));
+
+            _rijndael.IV = new byte[16];
+            _rijndael.Key = _aesKey;
+            _rijndael.BlockSize = 16*8;
+        }
+
 
         public void Mark()
         {
@@ -42,14 +129,66 @@ namespace SharpCompress.IO
 
         public override byte ReadByte()
         {
-            CurrentReadByteCount++;
-            return base.ReadByte();
+            return ReadBytes(1).Single();
         }
 
         public override byte[] ReadBytes(int count)
         {
             CurrentReadByteCount += count;
-            return base.ReadBytes(count);
+            return UseEncryption ?
+                ReadAndDecryptBytes(count)
+                : base.ReadBytes(count);
+        }
+
+        protected bool UseEncryption
+        {
+            get { return Salt != null; }
+        }
+
+        private byte[] ReadAndDecryptBytes(int count)
+        {
+            int queueSize = _data.Count;
+			int sizeToRead = count - queueSize;
+
+			if (sizeToRead > 0) {
+				int alignedSize = sizeToRead + ((~sizeToRead + 1) & 0xf);
+				for(int i=0;i<alignedSize/16;i++){
+					//long ax = System.currentTimeMillis();
+					byte[] cipherText = base.ReadBytes(16);
+
+					byte[] plainText = new byte[16];
+				    var decryptor = _rijndael.CreateDecryptor();
+                    using (MemoryStream msDecrypt = new MemoryStream(cipherText))
+                {
+                    using (CryptoStream csDecrypt = new CryptoStream(msDecrypt, decryptor, CryptoStreamMode.Read))
+                    {
+                      
+                        csDecrypt.ReadFully(plainText);
+
+                    }
+                }
+
+					
+					for(int j=0;j<plainText.Length;j++){
+                        _data.Enqueue((byte)(plainText[j] ^ _aesInitializationVector[j % 16])); //32:114, 33:101
+
+					}
+
+					for(int j=0;j<_aesInitializationVector.Length;j++){
+                        _aesInitializationVector[j] = cipherText[j];
+					}
+
+				}
+
+			}
+
+            var decryptedBytes = new byte[count];
+
+			for (int i = 0; i < count; i++)
+			{
+			    decryptedBytes[i] = _data.Dequeue();
+			}
+            return decryptedBytes;
         }
 
         public override char ReadChar()
@@ -65,45 +204,49 @@ namespace SharpCompress.IO
 #if !PORTABLE
         public override decimal ReadDecimal()
         {
-            CurrentReadByteCount += 16;
-            return base.ReadDecimal();
+            return ByteArrayToDecimal(ReadBytes(16), 0);
+        }
+
+        private decimal ByteArrayToDecimal(byte[] src, int offset)
+        {
+            //http://stackoverflow.com/a/16984356/385387
+            var i1 = BitConverter.ToInt32(src, offset);
+            var i2 = BitConverter.ToInt32(src, offset + 4);
+            var i3 = BitConverter.ToInt32(src, offset + 8);
+            var i4 = BitConverter.ToInt32(src, offset + 12);
+
+            return new decimal(new[] { i1, i2, i3, i4 });
         }
 #endif
 
         public override double ReadDouble()
         {
-            CurrentReadByteCount += 8;
-            return base.ReadDouble();
+            return BitConverter.ToDouble(ReadBytes(8), 0);
         }
 
         public override short ReadInt16()
         {
-            CurrentReadByteCount += 2;
-            return base.ReadInt16();
+            return BitConverter.ToInt16(ReadBytes(2), 0);
         }
 
         public override int ReadInt32()
         {
-            CurrentReadByteCount += 4;
-            return base.ReadInt32();
+            return BitConverter.ToInt32(ReadBytes(4), 0);
         }
 
         public override long ReadInt64()
         {
-            CurrentReadByteCount += 8;
-            return base.ReadInt64();
+            return BitConverter.ToInt64(ReadBytes(8), 0);
         }
 
         public override sbyte ReadSByte()
         {
-            CurrentReadByteCount++;
-            return base.ReadSByte();
+            return (sbyte) ReadByte();
         }
 
         public override float ReadSingle()
         {
-            CurrentReadByteCount += 4;
-            return base.ReadSingle();
+            return BitConverter.ToSingle(ReadBytes(4), 0);
         }
 
         public override string ReadString()
@@ -113,20 +256,29 @@ namespace SharpCompress.IO
 
         public override ushort ReadUInt16()
         {
-            CurrentReadByteCount += 2;
-            return base.ReadUInt16();
+            return BitConverter.ToUInt16(ReadBytes(2), 0);
         }
 
         public override uint ReadUInt32()
         {
-            CurrentReadByteCount += 4;
-            return base.ReadUInt32();
+            return BitConverter.ToUInt32(ReadBytes(4), 0);
         }
 
         public override ulong ReadUInt64()
         {
-            CurrentReadByteCount += 8;
-            return base.ReadUInt64();
+            return BitConverter.ToUInt64(ReadBytes(8), 0);
+        }
+
+        public void ClearQueue()
+        {
+           _data.Clear();
+        }
+
+        public void SkipQueue()
+        {
+            var position = BaseStream.Position;
+            BaseStream.Position = position + _data.Count;
+            ClearQueue();
         }
     }
 }
