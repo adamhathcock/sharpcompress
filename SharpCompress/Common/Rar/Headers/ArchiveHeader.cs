@@ -27,5 +27,10 @@ namespace SharpCompress.Common.Rar.Headers
         internal int PosAv { get; private set; }
 
         internal byte EncryptionVersion { get; private set; }
+
+        public bool HasPassword
+        {
+            get { return ArchiveHeaderFlags.HasFlag(ArchiveFlags.PASSWORD); }
+        }
     }
 }

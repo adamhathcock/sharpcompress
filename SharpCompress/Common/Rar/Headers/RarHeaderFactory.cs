@@ -19,12 +19,15 @@ namespace SharpCompress.Common.Rar.Headers
 
         internal StreamingMode StreamingMode { get; private set; }
 
+        internal bool IsEncrypted { get; set; }
+
         internal IEnumerable<RarHeader> ReadHeaders(Stream stream)
         {
             if (Options.HasFlag(Options.LookForHeader))
             {
                 stream = CheckSFX(stream);
             }
+
             RarHeader header;
             while ((header = ReadNextHeader(stream)) != null)
             {
@@ -109,7 +112,12 @@ namespace SharpCompress.Common.Rar.Headers
 
         private RarHeader ReadNextHeader(Stream stream)
         {
+
             MarkingBinaryReader reader = new MarkingBinaryReader(stream);
+            if (IsEncrypted)
+            {
+
+            }
             RarHeader header = RarHeader.Create(reader);
             if (header == null)
             {
@@ -119,7 +127,9 @@ namespace SharpCompress.Common.Rar.Headers
             {
                 case HeaderType.ArchiveHeader:
                     {
-                        return header.PromoteHeader<ArchiveHeader>(reader);
+                        var ah = header.PromoteHeader<ArchiveHeader>(reader);
+                        IsEncrypted = ah.HasPassword;
+                        return ah;
                     }
                 case HeaderType.MarkHeader:
                     {
