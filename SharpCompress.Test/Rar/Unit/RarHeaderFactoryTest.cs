@@ -31,7 +31,7 @@ namespace SharpCompress.Test.Rar.Unit
         public void ReadHeaders_RecognizeEncryptedFlag()
         {
 
-            ReadEncryptedFlag("Rar.Encrypted.rar", true);
+            ReadEncryptedFlag("Rar.Encrypted_filesAndHeader.rar", true);
             
             
 
