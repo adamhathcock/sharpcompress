@@ -80,9 +80,16 @@ namespace SharpCompress.Test
         }
 
         [TestMethod]
-        public void Rar_Encrypted_Reader()
+        public void Rar_EncryptedFileAndHeader_Reader()
         {
-            ReadRar("Rar.encrypted.rar", "test");
+            ReadRar("Rar.encrypted_filesAndHeader.rar", "test");
+
+        }
+
+        [TestMethod]
+        public void Rar_EncryptedFileOnly_Reader()
+        {
+            ReadRar("Rar.encrypted_filesOnly.rar", "test");
 
         }
 
