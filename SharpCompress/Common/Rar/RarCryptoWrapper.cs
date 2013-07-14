@@ -179,7 +179,7 @@ namespace SharpCompress.Common.Rar
 
         protected override void Dispose(bool disposing)
         {
-            _rijndael.Dispose();
+            if(_rijndael!= null) _rijndael.Dispose();
             base.Dispose(disposing);
         }
     }
