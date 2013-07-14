@@ -36,7 +36,7 @@ namespace SharpCompress.IO
 
         private void InitializeAes()
         {
-            _rijndael = new RijndaelManaged() {Padding = PaddingMode.None};
+            _rijndael = new RijndaelManaged() { Padding = PaddingMode.None };
             int rawLength = 2 * _password.Length;
             byte[] rawPassword = new byte[rawLength + 8];
             byte[] passwordBytes = Encoding.UTF8.GetBytes(_password);
@@ -72,14 +72,14 @@ namespace SharpCompress.IO
             for (int i = 0; i < 4; i++)
                 for (int j = 0; j < 4; j++)
                     _aesKey[i * 4 + j] = (byte)
-                        (((digest[i * 4] * 0x1000000) & 0xff000000 | 
+                        (((digest[i * 4] * 0x1000000) & 0xff000000 |
                         ((digest[i * 4 + 1] * 0x10000) & 0xff0000) |
-                          ((digest[i * 4 + 2] * 0x100) & 0xff00) | 
+                          ((digest[i * 4 + 2] * 0x100) & 0xff00) |
                           digest[i * 4 + 3] & 0xff) >> (j * 8));
 
             _rijndael.IV = new byte[16];
             _rijndael.Key = _aesKey;
-            _rijndael.BlockSize = 16*8;
+            _rijndael.BlockSize = 16 * 8;
         }
 
 
@@ -132,46 +132,53 @@ namespace SharpCompress.IO
         private byte[] ReadAndDecryptBytes(int count)
         {
             int queueSize = _data.Count;
-			int sizeToRead = count - queueSize;
+            int sizeToRead = count - queueSize;
 
-			if (sizeToRead > 0) {
-				int alignedSize = sizeToRead + ((~sizeToRead + 1) & 0xf);
-				for(int i=0;i<alignedSize/16;i++){
-					//long ax = System.currentTimeMillis();
-					byte[] cipherText = base.ReadBytes(16);
-
-					byte[] plainText = new byte[16];
-				    var decryptor = _rijndael.CreateDecryptor();
-                    using (MemoryStream msDecrypt = new MemoryStream(cipherText))
+            if (sizeToRead > 0)
+            {
+                int alignedSize = sizeToRead + ((~sizeToRead + 1) & 0xf);
+                for (int i = 0; i < alignedSize / 16; i++)
                 {
-                    using (CryptoStream csDecrypt = new CryptoStream(msDecrypt, decryptor, CryptoStreamMode.Read))
+                    //long ax = System.currentTimeMillis();
+                    byte[] cipherText = base.ReadBytes(16);
+
+                    byte[] plainText = new byte[16];
+                    var decryptor = _rijndael.CreateDecryptor();
+                    using (MemoryStream msDecrypt = new MemoryStream(cipherText))
                     {
-                      
-                        csDecrypt.ReadFully(plainText);
+                        using (CryptoStream csDecrypt = new CryptoStream(msDecrypt, decryptor, CryptoStreamMode.Read))
+                        {
 
+                            csDecrypt.ReadFully(plainText);
+
+                        }
                     }
-                }
 
-					
-					for(int j=0;j<plainText.Length;j++){
+
+                    for (int j = 0; j < plainText.Length; j++)
+                    {
                         _data.Enqueue((byte)(plainText[j] ^ _aesInitializationVector[j % 16])); //32:114, 33:101
 
-					}
+                    }
 
-					for(int j=0;j<_aesInitializationVector.Length;j++){
+                    for (int j = 0; j < _aesInitializationVector.Length; j++)
+                    {
                         _aesInitializationVector[j] = cipherText[j];
-					}
+                    }
 
-				}
+                }
 
-			}
+            }
 
             var decryptedBytes = new byte[count];
 
-			for (int i = 0; i < count; i++)
-			{
-			    decryptedBytes[i] = _data.Dequeue();
-			}
+            for (int i = 0; i < count; i++)
+            {
+
+                decryptedBytes[i] = _data.Dequeue();
+                Console.Write(decryptedBytes[i].ToString("x2") + " ");
+            }
+            Console.WriteLine("");
             return decryptedBytes;
         }
 
@@ -225,7 +232,7 @@ namespace SharpCompress.IO
 
         public override sbyte ReadSByte()
         {
-            return (sbyte) ReadByte();
+            return (sbyte)ReadByte();
         }
 
         public override float ReadSingle()
@@ -255,7 +262,7 @@ namespace SharpCompress.IO
 
         public void ClearQueue()
         {
-           _data.Clear();
+            _data.Clear();
         }
 
         public void SkipQueue()
