@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using SharpCompress.Compressor.Rar;
 using SharpCompress.IO;
 
 namespace SharpCompress.Common.Rar.Headers
@@ -181,7 +182,7 @@ namespace SharpCompress.Common.Rar.Headers
                                 {
                                     ReadOnlySubStream ms
                                         = new ReadOnlySubStream(reader.BaseStream, fh.CompressedSize);
-                                    fh.PackedStream = ms;
+                                    fh.PackedStream = new RarCryptoWrapper(ms) { Salt = fh.Salt};
                                 }
                                 break;
                             default:
