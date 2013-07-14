@@ -9,8 +9,10 @@ namespace SharpCompress.Reader.Rar
 {
     public class RarReaderVolume : RarVolume
     {
-        internal RarReaderVolume(Stream stream, Options options)
-            : base(StreamingMode.Streaming, stream, options)
+
+
+        internal RarReaderVolume(Stream stream, string password, Options options)
+            : base(StreamingMode.Streaming, stream, password, options)
         {
         }
 

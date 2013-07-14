@@ -82,7 +82,26 @@ namespace SharpCompress.Test
         [TestMethod]
         public void Rar_Encrypted_Reader()
         {
-            Read("Rar.Encrypted.rar", CompressionType.Rar);
+            ReadRar("Rar.encrypted.rar", "test");
+
+        }
+
+        private void ReadRar(string testArchive, string password)
+        {
+            ResetScratch();
+            using (Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, testArchive)))
+            using (var reader = RarReader.Open(stream, password))
+            {
+                while (reader.MoveToNextEntry())
+                {
+                    if (!reader.Entry.IsDirectory)
+                    {
+                        Assert.AreEqual(reader.Entry.CompressionType, CompressionType.Rar);
+                        reader.WriteEntryToDirectory(SCRATCH_FILES_PATH, ExtractOptions.ExtractFullPath | ExtractOptions.Overwrite);
+                    }
+                }
+            }
+            VerifyFiles();
         }
 
         [TestMethod]

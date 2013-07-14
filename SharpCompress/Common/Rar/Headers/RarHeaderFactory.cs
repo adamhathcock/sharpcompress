@@ -10,13 +10,15 @@ namespace SharpCompress.Common.Rar.Headers
     {
         private int MAX_SFX_SIZE = 0x80000 - 16; //archive.cpp line 136
 
-        internal RarHeaderFactory(StreamingMode mode, Options options)
+        internal RarHeaderFactory(StreamingMode mode, Options options, string password = null)
         {
             StreamingMode = mode;
             Options = options;
+            Password = password;
         }
 
         private Options Options { get; set; }
+        public string Password { get; set; }
 
         internal StreamingMode StreamingMode { get; private set; }
 
@@ -114,13 +116,12 @@ namespace SharpCompress.Common.Rar.Headers
 
         private RarHeader ReadNextHeader(Stream stream)
         {
-            MarkingBinaryReader reader = new MarkingBinaryReader(stream);
+            MarkingBinaryReader reader = new MarkingBinaryReader(stream, Password);
             
             if (IsEncrypted)
             {
                 reader.Salt = null;
                 reader.SkipQueue();
-                Console.WriteLine(reader.BaseStream.Position);
                 byte[] salt = reader.ReadBytes(8);
                 reader.Salt = salt;
 
@@ -168,7 +169,6 @@ namespace SharpCompress.Common.Rar.Headers
                     }
                 case HeaderType.FileHeader:
                     {
-                        Console.WriteLine(reader.BaseStream.Position);
                         FileHeader fh = header.PromoteHeader<FileHeader>(reader);
                         switch (StreamingMode)
                         {
@@ -182,7 +182,7 @@ namespace SharpCompress.Common.Rar.Headers
                                 {
                                     ReadOnlySubStream ms
                                         = new ReadOnlySubStream(reader.BaseStream, fh.CompressedSize);
-                                    fh.PackedStream = new RarCryptoWrapper(ms) { Salt = fh.Salt};
+                                    fh.PackedStream = new RarCryptoWrapper(ms, Password) { Salt = fh.Salt};
                                 }
                                 break;
                             default:

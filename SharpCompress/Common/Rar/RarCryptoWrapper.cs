@@ -12,15 +12,16 @@ namespace SharpCompress.Common.Rar
         private readonly Stream _actualStream;
         private byte[] _salt;
         private Rijndael _rijndael;
-        private string _password = "test";
+        private readonly string _password;
         private byte[] _aesInitializationVector = new byte[CryptoBlockSize];
         private byte[] _aesKey = new byte[CryptoBlockSize];
         private Queue<byte> _data = new Queue<byte>();
         private const int CryptoBlockSize = 16;
 
-        public RarCryptoWrapper(Stream actualStream)
+        public RarCryptoWrapper(Stream actualStream, string password)
         {
             _actualStream = actualStream;
+            _password = password;
         }
 
         internal byte[] Salt
@@ -143,9 +144,7 @@ namespace SharpCompress.Common.Rar
                 for (int i = 0; i < count; i++)
                 {
                     buffer[offset+i] = _data.Dequeue();
-                    Console.Write(buffer[i].ToString("x2") + " ");
                 }
-                Console.WriteLine();
             }
             return count;
 

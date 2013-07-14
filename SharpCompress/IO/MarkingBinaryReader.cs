@@ -10,15 +10,16 @@ namespace SharpCompress.IO
     internal class MarkingBinaryReader : BinaryReader
     {
         private byte[] _salt;
-        private string _password = "test";
+        private readonly string _password;
         private byte[] _aesInitializationVector = new byte[16];
         private byte[] _aesKey = new byte[16];
         private Rijndael _rijndael;
         private Queue<byte> _data = new Queue<byte>();
 
-        public MarkingBinaryReader(Stream stream)
+        public MarkingBinaryReader(Stream stream, string password = null)
             : base(stream)
         {
+            _password = password;
         }
 
         public long CurrentReadByteCount { get; private set; }
@@ -174,11 +175,8 @@ namespace SharpCompress.IO
 
             for (int i = 0; i < count; i++)
             {
-
                 decryptedBytes[i] = _data.Dequeue();
-                Console.Write(decryptedBytes[i].ToString("x2") + " ");
             }
-            Console.WriteLine("");
             return decryptedBytes;
         }
 
