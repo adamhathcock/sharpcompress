@@ -11,10 +11,7 @@ namespace SharpCompress.IO
 
         protected override void Dispose(bool disposing)
         {
-            if (disposing)
-            {
-                //Stream.Dispose();
-            }
+            //don't dispose anything
         }
 
         public Stream Stream { get; private set; }
