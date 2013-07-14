@@ -142,9 +142,10 @@ namespace SharpCompress.Common.Rar
 
                 for (int i = 0; i < count; i++)
                 {
-                    buffer[i] = _data.Dequeue();
+                    buffer[offset+i] = _data.Dequeue();
                     Console.Write(buffer[i].ToString("x2") + " ");
-                } 
+                }
+                Console.WriteLine();
             }
             return count;
 
