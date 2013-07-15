@@ -11,9 +11,8 @@ namespace SharpCompress.Common.Rar
     {
         private readonly Stream _actualStream;
         private byte[] _salt;
-        private Rijndael _rijndael;
+        private RarRijndael _rijndael;
         private readonly string _password;
-        private byte[] _aesInitializationVector;
         private Queue<byte> _data = new Queue<byte>();
 
         public RarCryptoWrapper(Stream actualStream, string password)
@@ -35,7 +34,7 @@ namespace SharpCompress.Common.Rar
 
         private void InitializeAes()
         {
-            _rijndael = RarRijndael.Initialize(out _aesInitializationVector, _password, _salt);
+            _rijndael = RarRijndael.InitializeFrom(_password, _salt);
         }
 
        
@@ -75,33 +74,16 @@ namespace SharpCompress.Common.Rar
                     byte[] cipherText = new byte[RarRijndael.CryptoBlockSize];
                     _actualStream.Read(cipherText, 0, RarRijndael.CryptoBlockSize);
 
-                    byte[] plainText = new byte[RarRijndael.CryptoBlockSize];
-                    var decryptor = _rijndael.CreateDecryptor();
-                    using (MemoryStream msDecrypt = new MemoryStream(cipherText))
-                    {
-                        using (CryptoStream csDecrypt = new CryptoStream(msDecrypt, decryptor, CryptoStreamMode.Read))
-                        {
-                            csDecrypt.ReadFully(plainText);
-                        }
-                    }
+
+                    var readBytes = _rijndael.ProcessBlock(cipherText);
+                    foreach(var readByte in readBytes)
+                        _data.Enqueue(readByte);
 
 
-                    for (int j = 0; j < plainText.Length; j++)
-                    {
-                        _data.Enqueue((byte) (plainText[j] ^ _aesInitializationVector[j%16])); //32:114, 33:101
-
-                    }
-
-                    for (int j = 0; j < _aesInitializationVector.Length; j++)
-                    {
-                        _aesInitializationVector[j] = cipherText[j];
-                    }
                 }
 
                 for (int i = 0; i < count; i++)
-                {
                     buffer[offset+i] = _data.Dequeue();
-                }
             }
             return count;
 

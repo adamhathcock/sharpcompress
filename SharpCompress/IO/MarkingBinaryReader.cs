@@ -14,7 +14,7 @@ namespace SharpCompress.IO
         private readonly string _password;
         private byte[] _aesInitializationVector;
         private byte[] _aesKey = new byte[16];
-        private Rijndael _rijndael;
+        private RarRijndael _rijndael;
         private Queue<byte> _data = new Queue<byte>();
 
         public MarkingBinaryReader(Stream stream, string password = null)
@@ -38,7 +38,7 @@ namespace SharpCompress.IO
 
         private void InitializeAes()
         {
-             _rijndael = RarRijndael.Initialize(out _aesInitializationVector, _password, _salt);
+             _rijndael = RarRijndael.InitializeFrom(_password, _salt);
         }
 
 
@@ -100,30 +100,9 @@ namespace SharpCompress.IO
                 {
                     //long ax = System.currentTimeMillis();
                     byte[] cipherText = base.ReadBytes(16);
-
-                    byte[] plainText = new byte[16];
-                    var decryptor = _rijndael.CreateDecryptor();
-                    using (MemoryStream msDecrypt = new MemoryStream(cipherText))
-                    {
-                        using (CryptoStream csDecrypt = new CryptoStream(msDecrypt, decryptor, CryptoStreamMode.Read))
-                        {
-
-                            csDecrypt.ReadFully(plainText);
-
-                        }
-                    }
-
-
-                    for (int j = 0; j < plainText.Length; j++)
-                    {
-                        _data.Enqueue((byte)(plainText[j] ^ _aesInitializationVector[j % 16])); //32:114, 33:101
-
-                    }
-
-                    for (int j = 0; j < _aesInitializationVector.Length; j++)
-                    {
-                        _aesInitializationVector[j] = cipherText[j];
-                    }
+                    var readBytes = _rijndael.ProcessBlock(cipherText);
+                    foreach (var readByte in readBytes)
+                        _data.Enqueue(readByte);
 
                 }
 
