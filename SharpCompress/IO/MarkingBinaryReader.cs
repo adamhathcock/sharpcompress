@@ -2,8 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Security.Cryptography;
-using System.Text;
 using SharpCompress.Common.Rar;
 
 namespace SharpCompress.IO
@@ -12,8 +10,6 @@ namespace SharpCompress.IO
     {
         private byte[] _salt;
         private readonly string _password;
-        private byte[] _aesInitializationVector;
-        private byte[] _aesKey = new byte[16];
         private RarRijndael _rijndael;
         private Queue<byte> _data = new Queue<byte>();
 

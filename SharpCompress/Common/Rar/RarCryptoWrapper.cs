@@ -1,9 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Security.Cryptography;
-using System.Text;
 
 namespace SharpCompress.Common.Rar
 {
@@ -13,7 +10,7 @@ namespace SharpCompress.Common.Rar
         private byte[] _salt;
         private RarRijndael _rijndael;
         private readonly string _password;
-        private Queue<byte> _data = new Queue<byte>();
+        private readonly Queue<byte> _data = new Queue<byte>();
 
         public RarCryptoWrapper(Stream actualStream, string password)
         {
@@ -28,7 +25,6 @@ namespace SharpCompress.Common.Rar
             {
                 _salt = value;
                 if (value != null) InitializeAes();
-
             }
         }
 
@@ -36,8 +32,6 @@ namespace SharpCompress.Common.Rar
         {
             _rijndael = RarRijndael.InitializeFrom(_password, _salt);
         }
-
-       
 
         public override void Flush()
         {
@@ -74,11 +68,9 @@ namespace SharpCompress.Common.Rar
                     byte[] cipherText = new byte[RarRijndael.CryptoBlockSize];
                     _actualStream.Read(cipherText, 0, RarRijndael.CryptoBlockSize);
 
-
                     var readBytes = _rijndael.ProcessBlock(cipherText);
                     foreach(var readByte in readBytes)
                         _data.Enqueue(readByte);
-
 
                 }
 
@@ -86,7 +78,6 @@ namespace SharpCompress.Common.Rar
                     buffer[offset+i] = _data.Dequeue();
             }
             return count;
-
         }
 
         public override void Write(byte[] buffer, int offset, int count)
