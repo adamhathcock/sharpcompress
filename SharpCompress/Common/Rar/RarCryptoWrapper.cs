@@ -13,10 +13,8 @@ namespace SharpCompress.Common.Rar
         private byte[] _salt;
         private Rijndael _rijndael;
         private readonly string _password;
-        private byte[] _aesInitializationVector = new byte[CryptoBlockSize];
-        private byte[] _aesKey = new byte[CryptoBlockSize];
+        private byte[] _aesInitializationVector;
         private Queue<byte> _data = new Queue<byte>();
-        private const int CryptoBlockSize = 16;
 
         public RarCryptoWrapper(Stream actualStream, string password)
         {
@@ -37,51 +35,10 @@ namespace SharpCompress.Common.Rar
 
         private void InitializeAes()
         {
-            _rijndael = new RijndaelManaged() { Padding = PaddingMode.None };
-            int rawLength = 2 * _password.Length;
-            byte[] rawPassword = new byte[rawLength + 8];
-            byte[] passwordBytes = Encoding.UTF8.GetBytes(_password);
-            for (int i = 0; i < _password.Length; i++)
-            {
-                rawPassword[i * 2] = passwordBytes[i];
-                rawPassword[i * 2 + 1] = 0;
-            }
-            for (int i = 0; i < _salt.Length; i++)
-            {
-                rawPassword[i + rawLength] = _salt[i];
-            }
-
-            var sha = new SHA1Managed();
-
-            const int noOfRounds = (1 << 18);
-            IList<byte> bytes = new List<byte>();
-            byte[] digest;
-            for (int i = 0; i < noOfRounds; i++)
-            {
-                bytes.AddRange(rawPassword);
-
-                bytes.AddRange(new[] { (byte)i, (byte)(i >> 8), (byte)(i >> CryptoBlockSize) });
-                if (i % (noOfRounds / CryptoBlockSize) == 0)
-                {
-                    digest = sha.ComputeHash(bytes.ToArray());
-                    _aesInitializationVector[i / (noOfRounds / CryptoBlockSize)] = digest[19];
-                }
-            }
-
-            digest = sha.ComputeHash(bytes.ToArray());
-
-            for (int i = 0; i < 4; i++)
-                for (int j = 0; j < 4; j++)
-                    _aesKey[i * 4 + j] = (byte)
-                        (((digest[i * 4] * 0x1000000) & 0xff000000 |
-                        ((digest[i * 4 + 1] * 0x10000) & 0xff0000) |
-                          ((digest[i * 4 + 2] * 0x100) & 0xff00) |
-                          digest[i * 4 + 3] & 0xff) >> (j * 8));
-
-            _rijndael.IV = new byte[CryptoBlockSize];
-            _rijndael.Key = _aesKey;
-            _rijndael.BlockSize = CryptoBlockSize * 8;
+            _rijndael = RarRijndael.Initialize(out _aesInitializationVector, _password, _salt);
         }
+
+       
 
         public override void Flush()
         {
@@ -115,10 +72,10 @@ namespace SharpCompress.Common.Rar
                 for (int i = 0; i < alignedSize/16; i++)
                 {
                     //long ax = System.currentTimeMillis();
-                    byte[] cipherText = new byte[CryptoBlockSize];
-                    _actualStream.Read(cipherText, 0, CryptoBlockSize);
+                    byte[] cipherText = new byte[RarRijndael.CryptoBlockSize];
+                    _actualStream.Read(cipherText, 0, RarRijndael.CryptoBlockSize);
 
-                    byte[] plainText = new byte[CryptoBlockSize];
+                    byte[] plainText = new byte[RarRijndael.CryptoBlockSize];
                     var decryptor = _rijndael.CreateDecryptor();
                     using (MemoryStream msDecrypt = new MemoryStream(cipherText))
                     {
