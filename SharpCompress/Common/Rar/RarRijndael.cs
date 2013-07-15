@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
@@ -24,6 +25,7 @@ namespace SharpCompress.Common.Rar
 
         private void Initialize()
         {
+
             _rijndael = new RijndaelManaged() { Padding = PaddingMode.None };
             _aesInitializationVector = new byte[CryptoBlockSize];
             int rawLength = 2 * _password.Length;
@@ -39,11 +41,13 @@ namespace SharpCompress.Common.Rar
                 rawPassword[i + rawLength] = _salt[i];
             }
 
-            var sha = new SHA1Managed();
+            SHA1 sha = new SHA1CryptoServiceProvider();
 
             const int noOfRounds = (1 << 18);
             IList<byte> bytes = new List<byte>();
             byte[] digest;
+
+            //TODO slow code below, find ways to optimize
             for (int i = 0; i < noOfRounds; i++)
             {
                 bytes.AddRange(rawPassword);
@@ -57,6 +61,7 @@ namespace SharpCompress.Common.Rar
             }
 
             digest = sha.ComputeHash(bytes.ToArray());
+            //slow code ends
 
             byte[] aesKey = new byte[CryptoBlockSize];
             for (int i = 0; i < 4; i++)
@@ -70,6 +75,7 @@ namespace SharpCompress.Common.Rar
             _rijndael.IV = new byte[CryptoBlockSize];
             _rijndael.Key = aesKey;
             _rijndael.BlockSize = CryptoBlockSize * 8;
+            
         }
 
         public static RarRijndael InitializeFrom(string password, byte[] salt)
@@ -97,7 +103,6 @@ namespace SharpCompress.Common.Rar
 
             for (int j = 0; j < _aesInitializationVector.Length; j++)
                 _aesInitializationVector[j] = cipherText[j];
-
             return decryptedBytes.ToArray();
         }
 
