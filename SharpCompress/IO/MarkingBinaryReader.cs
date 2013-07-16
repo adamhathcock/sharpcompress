@@ -1,42 +1,18 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using SharpCompress.Common.Rar;
 
 namespace SharpCompress.IO
 {
     internal class MarkingBinaryReader : BinaryReader
     {
-        private byte[] _salt;
-        private readonly string _password;
-        private RarRijndael _rijndael;
-        private Queue<byte> _data = new Queue<byte>();
 
-        public MarkingBinaryReader(Stream stream, string password = null)
+        public MarkingBinaryReader(Stream stream)
             : base(stream)
         {
-            _password = password;
         }
 
-        public long CurrentReadByteCount { get; private set; }
-
-        internal byte[] Salt
-        {
-            get { return _salt; }
-            set
-            {
-                _salt = value;
-                if (value != null) InitializeAes();
-
-            }
-        }
-
-        private void InitializeAes()
-        {
-             _rijndael = RarRijndael.InitializeFrom(_password, _salt);
-        }
-
+        public long CurrentReadByteCount { get; protected set; }
 
         public void Mark()
         {
@@ -74,43 +50,7 @@ namespace SharpCompress.IO
         public override byte[] ReadBytes(int count)
         {
             CurrentReadByteCount += count;
-            return UseEncryption ?
-                ReadAndDecryptBytes(count)
-                : base.ReadBytes(count);
-        }
-
-        protected bool UseEncryption
-        {
-            get { return Salt != null; }
-        }
-
-        private byte[] ReadAndDecryptBytes(int count)
-        {
-            int queueSize = _data.Count;
-            int sizeToRead = count - queueSize;
-
-            if (sizeToRead > 0)
-            {
-                int alignedSize = sizeToRead + ((~sizeToRead + 1) & 0xf);
-                for (int i = 0; i < alignedSize / 16; i++)
-                {
-                    //long ax = System.currentTimeMillis();
-                    byte[] cipherText = base.ReadBytes(16);
-                    var readBytes = _rijndael.ProcessBlock(cipherText);
-                    foreach (var readByte in readBytes)
-                        _data.Enqueue(readByte);
-
-                }
-
-            }
-
-            var decryptedBytes = new byte[count];
-
-            for (int i = 0; i < count; i++)
-            {
-                decryptedBytes[i] = _data.Dequeue();
-            }
-            return decryptedBytes;
+            return base.ReadBytes(count);
         }
 
         public override char ReadChar()
@@ -189,18 +129,6 @@ namespace SharpCompress.IO
         public override ulong ReadUInt64()
         {
             return BitConverter.ToUInt64(ReadBytes(8), 0);
-        }
-
-        public void ClearQueue()
-        {
-            _data.Clear();
-        }
-
-        public void SkipQueue()
-        {
-            var position = BaseStream.Position;
-            BaseStream.Position = position + _data.Count;
-            ClearQueue();
         }
     }
 }

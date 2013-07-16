@@ -1,14 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using SharpCompress.Compressor.Rar;
 using SharpCompress.IO;
 
 namespace SharpCompress.Common.Rar.Headers
 {
     internal class RarHeaderFactory
     {
-        private int MAX_SFX_SIZE = 0x80000 - 16; //archive.cpp line 136
+        private const int MAX_SFX_SIZE = 0x80000 - 16; //archive.cpp line 136
 
         internal RarHeaderFactory(StreamingMode mode, Options options, string password = null)
         {
@@ -20,9 +19,8 @@ namespace SharpCompress.Common.Rar.Headers
         private Options Options { get; set; }
         public string Password { get; private set; }
         internal StreamingMode StreamingMode { get; private set; }
-
-        internal bool IsEncrypted { get; set; }
-
+        internal bool IsEncrypted { get; private set; }
+        
         internal IEnumerable<RarHeader> ReadHeaders(Stream stream)
         {
             if (Options.HasFlag(Options.LookForHeader))
@@ -115,16 +113,19 @@ namespace SharpCompress.Common.Rar.Headers
 
         private RarHeader ReadNextHeader(Stream stream)
         {
-            MarkingBinaryReader reader = new MarkingBinaryReader(stream, Password);
+#if PORTABLE
+            var reader = new MarkingBinaryReader(stream);
+#else
+            var reader = new RarCryptoBinaryReader(stream, Password);
             
             if (IsEncrypted)
             {
-                reader.Salt = null;
                 reader.SkipQueue();
                 byte[] salt = reader.ReadBytes(8);
-                reader.Salt = salt;
-
+                reader.InitializeAes(salt);
             }
+#endif
+
             RarHeader header = RarHeader.Create(reader);
             if (header == null)
             {
@@ -179,9 +180,19 @@ namespace SharpCompress.Common.Rar.Headers
                                 break;
                             case StreamingMode.Streaming:
                                 {
-                                    ReadOnlySubStream ms
-                                        = new ReadOnlySubStream(reader.BaseStream, fh.CompressedSize);
-                                    fh.PackedStream =  fh.Salt == null? (Stream) ms : new RarCryptoWrapper(ms, Password) { Salt = fh.Salt};
+                                    var ms = new ReadOnlySubStream(reader.BaseStream, fh.CompressedSize);
+                                    if (fh.Salt == null)
+                                    {
+                                        fh.PackedStream = ms;
+                                    }
+                                    else
+                                    {
+#if PORTABLE
+                                        throw new NotSupportedException("Encrypted Rar files aren't supported in portable distro.");
+#else
+                                        fh.PackedStream = new RarCryptoWrapper(ms, Password,  fh.Salt);
+#endif
+                                    }
                                 }
                                 break;
                             default:

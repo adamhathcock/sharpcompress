@@ -242,6 +242,7 @@
     </Compile>
     <Compile Include="IO\ListeningStream.cs" />
     <Compile Include="IO\NonDisposingStream.cs" />
+    <Compile Include="Common\Rar\RarCryptoBinaryReader.cs" />
     <Compile Include="IO\RewindableStream.cs" />
     <Compile Include="Reader\GZip\GZipReader.cs" />
     <Compile Include="Reader\ReaderFactory.cs" />

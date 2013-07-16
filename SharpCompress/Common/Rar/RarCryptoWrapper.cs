@@ -9,27 +9,12 @@ namespace SharpCompress.Common.Rar
         private readonly Stream actualStream;
         private byte[] salt;
         private RarRijndael rijndael;
-        private readonly string password;
         private readonly Queue<byte> data = new Queue<byte>();
 
-        public RarCryptoWrapper(Stream actualStream, string password)
+        public RarCryptoWrapper(Stream actualStream, string password, byte[] salt)
         {
             this.actualStream = actualStream;
-            this.password = password;
-        }
-
-        internal byte[] Salt
-        {
-            get { return salt; }
-            set
-            {
-                salt = value;
-                if (value != null) InitializeAes();
-            }
-        }
-
-        private void InitializeAes()
-        {
+            this.salt = salt;
             rijndael = RarRijndael.InitializeFrom(password, salt);
         }
 
@@ -50,7 +35,10 @@ namespace SharpCompress.Common.Rar
 
         public override int Read(byte[] buffer, int offset, int count)
         {
-            if (Salt == null) return actualStream.Read(buffer, offset, count);
+            if (salt == null)
+            {
+                return actualStream.Read(buffer, offset, count);
+            }
             return ReadAndDecrypt(buffer, offset, count);
         }
 
@@ -62,20 +50,20 @@ namespace SharpCompress.Common.Rar
             if (sizeToRead > 0)
             {
                 int alignedSize = sizeToRead + ((~sizeToRead + 1) & 0xf);
-                for (int i = 0; i < alignedSize/16; i++)
+                for (int i = 0; i < alignedSize / 16; i++)
                 {
                     //long ax = System.currentTimeMillis();
                     byte[] cipherText = new byte[RarRijndael.CryptoBlockSize];
                     actualStream.Read(cipherText, 0, RarRijndael.CryptoBlockSize);
 
                     var readBytes = rijndael.ProcessBlock(cipherText);
-                    foreach(var readByte in readBytes)
+                    foreach (var readByte in readBytes)
                         data.Enqueue(readByte);
 
                 }
 
                 for (int i = 0; i < count; i++)
-                    buffer[offset+i] = data.Dequeue();
+                    buffer[offset + i] = data.Dequeue();
             }
             return count;
         }
@@ -109,7 +97,11 @@ namespace SharpCompress.Common.Rar
 
         protected override void Dispose(bool disposing)
         {
-            if(rijndael != null) rijndael.Dispose();
+            if (rijndael != null)
+            {
+                rijndael.Dispose();
+                rijndael = null;
+            }
             base.Dispose(disposing);
         }
     }

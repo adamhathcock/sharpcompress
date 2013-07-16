@@ -113,7 +113,6 @@
     <Compile Include="Common\Rar\Headers\SignHeader.cs" />
     <Compile Include="Common\Rar\RarEntry.cs" />
     <Compile Include="Common\Rar\RarFilePart.cs" />
-    <Compile Include="Common\Rar\RarRijndael.cs" />
     <Compile Include="Common\Rar\RarVolume.cs" />
     <Compile Include="Common\SevenZip\ArchiveDatabase.cs" />
     <Compile Include="Common\SevenZip\ArchiveReader.cs" />
