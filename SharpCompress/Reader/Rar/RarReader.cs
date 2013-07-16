@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using SharpCompress.Common;
@@ -12,6 +13,7 @@ namespace SharpCompress.Reader.Rar
     /// </summary>
     public abstract class RarReader : AbstractReader<RarReaderEntry, RarVolume>
     {
+        public string Password { get; set; }
         private RarVolume volume;
         private readonly Unpack pack = new Unpack();
 
@@ -37,8 +39,7 @@ namespace SharpCompress.Reader.Rar
         /// <returns></returns>
         public static RarReader Open(Stream stream, Options options = Options.KeepStreamsOpen)
         {
-            stream.CheckNotNull("stream");
-            return new SingleVolumeRarReader(stream, options);
+            return Open(stream, null, options);
         }
 
         /// <summary>
@@ -57,7 +58,7 @@ namespace SharpCompress.Reader.Rar
 
         internal override IEnumerable<RarReaderEntry> GetEntries(Stream stream)
         {
-            volume = new RarReaderVolume(stream, Options);
+            volume = new RarReaderVolume(stream, Password, Options);
             foreach (RarFilePart fp in volume.ReadFileParts())
             {
                 ValidateArchive(volume);
@@ -75,6 +76,12 @@ namespace SharpCompress.Reader.Rar
             return new EntryStream(new RarStream(pack, Entry.FileHeader,
                                                  new MultiVolumeReadOnlyStream(
                                                      CreateFilePartEnumerableForCurrentEntry().Cast<RarFilePart>(), this)));
+        }
+
+        public static RarReader Open(Stream stream, string password, Options options = Options.KeepStreamsOpen)
+        {
+            stream.CheckNotNull("stream");
+            return new SingleVolumeRarReader(stream, password, options);
         }
     }
 }

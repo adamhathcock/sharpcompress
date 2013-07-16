@@ -80,6 +80,38 @@ namespace SharpCompress.Test
         }
 
         [TestMethod]
+        public void Rar_EncryptedFileAndHeader_Reader()
+        {
+            ReadRar("Rar.encrypted_filesAndHeader.rar", "test");
+
+        }
+
+        [TestMethod]
+        public void Rar_EncryptedFileOnly_Reader()
+        {
+            ReadRar("Rar.encrypted_filesOnly.rar", "test");
+
+        }
+
+        private void ReadRar(string testArchive, string password)
+        {
+            ResetScratch();
+            using (Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, testArchive)))
+            using (var reader = RarReader.Open(stream, password))
+            {
+                while (reader.MoveToNextEntry())
+                {
+                    if (!reader.Entry.IsDirectory)
+                    {
+                        Assert.AreEqual(reader.Entry.CompressionType, CompressionType.Rar);
+                        reader.WriteEntryToDirectory(SCRATCH_FILES_PATH, ExtractOptions.ExtractFullPath | ExtractOptions.Overwrite);
+                    }
+                }
+            }
+            VerifyFiles();
+        }
+
+        [TestMethod]
         public void Rar_Entry_Stream()
         {
             ResetScratch();

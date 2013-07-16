@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using SharpCompress.Compressor.Rar;
 using SharpCompress.IO;
 
 namespace SharpCompress.Common.Rar.Headers
@@ -9,15 +10,18 @@ namespace SharpCompress.Common.Rar.Headers
     {
         private int MAX_SFX_SIZE = 0x80000 - 16; //archive.cpp line 136
 
-        internal RarHeaderFactory(StreamingMode mode, Options options)
+        internal RarHeaderFactory(StreamingMode mode, Options options, string password = null)
         {
             StreamingMode = mode;
             Options = options;
+            Password = password;
         }
 
         private Options Options { get; set; }
-
+        public string Password { get; private set; }
         internal StreamingMode StreamingMode { get; private set; }
+
+        internal bool IsEncrypted { get; set; }
 
         internal IEnumerable<RarHeader> ReadHeaders(Stream stream)
         {
@@ -25,6 +29,7 @@ namespace SharpCompress.Common.Rar.Headers
             {
                 stream = CheckSFX(stream);
             }
+
             RarHeader header;
             while ((header = ReadNextHeader(stream)) != null)
             {
@@ -107,9 +112,19 @@ namespace SharpCompress.Common.Rar.Headers
             return rewindableStream;
         }
 
+
         private RarHeader ReadNextHeader(Stream stream)
         {
-            MarkingBinaryReader reader = new MarkingBinaryReader(stream);
+            MarkingBinaryReader reader = new MarkingBinaryReader(stream, Password);
+            
+            if (IsEncrypted)
+            {
+                reader.Salt = null;
+                reader.SkipQueue();
+                byte[] salt = reader.ReadBytes(8);
+                reader.Salt = salt;
+
+            }
             RarHeader header = RarHeader.Create(reader);
             if (header == null)
             {
@@ -119,7 +134,9 @@ namespace SharpCompress.Common.Rar.Headers
             {
                 case HeaderType.ArchiveHeader:
                     {
-                        return header.PromoteHeader<ArchiveHeader>(reader);
+                        var ah = header.PromoteHeader<ArchiveHeader>(reader);
+                        IsEncrypted = ah.HasPassword;
+                        return ah;
                     }
                 case HeaderType.MarkHeader:
                     {
@@ -164,7 +181,7 @@ namespace SharpCompress.Common.Rar.Headers
                                 {
                                     ReadOnlySubStream ms
                                         = new ReadOnlySubStream(reader.BaseStream, fh.CompressedSize);
-                                    fh.PackedStream = ms;
+                                    fh.PackedStream =  fh.Salt == null? (Stream) ms : new RarCryptoWrapper(ms, Password) { Salt = fh.Salt};
                                 }
                                 break;
                             default:
