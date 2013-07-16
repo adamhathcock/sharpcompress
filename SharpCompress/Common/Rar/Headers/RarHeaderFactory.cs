@@ -18,8 +18,7 @@ namespace SharpCompress.Common.Rar.Headers
         }
 
         private Options Options { get; set; }
-        public string Password { get; set; }
-
+        public string Password { get; private set; }
         internal StreamingMode StreamingMode { get; private set; }
 
         internal bool IsEncrypted { get; set; }
@@ -182,7 +181,7 @@ namespace SharpCompress.Common.Rar.Headers
                                 {
                                     ReadOnlySubStream ms
                                         = new ReadOnlySubStream(reader.BaseStream, fh.CompressedSize);
-                                    fh.PackedStream = new RarCryptoWrapper(ms, Password) { Salt = fh.Salt};
+                                    fh.PackedStream =  fh.Salt == null? (Stream) ms : new RarCryptoWrapper(ms, Password) { Salt = fh.Salt};
                                 }
                                 break;
                             default:
