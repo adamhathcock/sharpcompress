@@ -35,11 +35,10 @@ namespace SharpCompress.Common.Rar.Headers
                 return null;
             }
         }
-
         protected virtual void ReadFromReader(MarkingBinaryReader reader)
         {
             HeadCRC = reader.ReadInt16();
-            HeaderType = (HeaderType) (int) (reader.ReadByte() & 0xff);
+            HeaderType = (HeaderType)(int)(reader.ReadByte() & 0xff);
             Flags = reader.ReadInt16();
             HeaderSize = reader.ReadInt16();
             if (FlagUtility.HasFlag(Flags, LONG_BLOCK))
@@ -58,7 +57,7 @@ namespace SharpCompress.Common.Rar.Headers
             header.ReadFromReader(reader);
             header.ReadBytes += reader.CurrentReadByteCount;
 
-            int headerSizeDiff = header.HeaderSize - (int) header.ReadBytes;
+            int headerSizeDiff = header.HeaderSize - (int)header.ReadBytes;
 
             if (headerSizeDiff > 0)
             {

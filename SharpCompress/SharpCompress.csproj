@@ -126,6 +126,8 @@
     <Compile Include="Common\Entry.cs" />
     <Compile Include="Common\IEntry.cs" />
     <Compile Include="Common\IVolume.cs" />
+    <Compile Include="Common\Rar\RarCryptoWrapper.cs" />
+    <Compile Include="Common\Rar\RarRijndael.cs" />
     <Compile Include="Common\SevenZip\CBindPair.cs" />
     <Compile Include="Common\SevenZip\CCoderInfo.cs" />
     <Compile Include="Common\SevenZip\CFileItem.cs" />
