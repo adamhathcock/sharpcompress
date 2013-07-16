@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
@@ -28,10 +27,10 @@ namespace SharpCompress.Common.Rar
 
             rijndael = new RijndaelManaged() { Padding = PaddingMode.None };
             aesInitializationVector = new byte[CryptoBlockSize];
-            int rawLength = 2 * this.password.Length;
+            int rawLength = 2 * password.Length;
             byte[] rawPassword = new byte[rawLength + 8];
-            byte[] passwordBytes = Encoding.UTF8.GetBytes(this.password);
-            for (int i = 0; i < this.password.Length; i++)
+            byte[] passwordBytes = Encoding.UTF8.GetBytes(password);
+            for (int i = 0; i < password.Length; i++)
             {
                 rawPassword[i * 2] = passwordBytes[i];
                 rawPassword[i * 2 + 1] = 0;
