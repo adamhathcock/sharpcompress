@@ -1,19 +1,21 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Security.Cryptography;
 using System.Text;
+using Org.BouncyCastle.Crypto.Digests;
+using Org.BouncyCastle.Crypto.Engines;
+using Org.BouncyCastle.Crypto.Parameters;
 
 namespace SharpCompress.Common.Rar
 {
     internal class RarRijndael : IDisposable
     {
         internal const int CRYPTO_BLOCK_SIZE = 16;
+
         private readonly string password;
         private readonly byte[] salt;
         private byte[] aesInitializationVector;
-        private Rijndael rijndael;
+        private RijndaelEngine rijndael;
 
         private RarRijndael(string password, byte[] salt)
         {
@@ -21,10 +23,19 @@ namespace SharpCompress.Common.Rar
             this.salt = salt;
         }
 
+        private byte[] ComputeHash(byte[] input)
+        {
+            var sha = new Sha1Digest();
+            sha.BlockUpdate(input, 0, input.Length);
+            byte[] result = new byte[sha.GetDigestSize()];
+            sha.DoFinal(result, 0);
+            return result;
+        }
+
         private void Initialize()
         {
 
-            rijndael = new RijndaelManaged() { Padding = PaddingMode.None };
+            rijndael = new RijndaelEngine();
             aesInitializationVector = new byte[CRYPTO_BLOCK_SIZE];
             int rawLength = 2 * password.Length;
             byte[] rawPassword = new byte[rawLength + 8];
@@ -39,7 +50,6 @@ namespace SharpCompress.Common.Rar
                 rawPassword[i + rawLength] = salt[i];
             }
 
-            SHA1 sha = new SHA1CryptoServiceProvider();
 
             const int noOfRounds = (1 << 18);
             IList<byte> bytes = new List<byte>();
@@ -53,12 +63,12 @@ namespace SharpCompress.Common.Rar
                 bytes.AddRange(new[] { (byte)i, (byte)(i >> 8), (byte)(i >> CRYPTO_BLOCK_SIZE) });
                 if (i % (noOfRounds / CRYPTO_BLOCK_SIZE) == 0)
                 {
-                    digest = sha.ComputeHash(bytes.ToArray());
+                    digest = ComputeHash(bytes.ToArray());
                     aesInitializationVector[i / (noOfRounds / CRYPTO_BLOCK_SIZE)] = digest[19];
                 }
             }
 
-            digest = sha.ComputeHash(bytes.ToArray());
+            digest = ComputeHash(bytes.ToArray());
             //slow code ends
 
             byte[] aesKey = new byte[CRYPTO_BLOCK_SIZE];
@@ -70,9 +80,8 @@ namespace SharpCompress.Common.Rar
                           (uint)((digest[i * 4 + 2] * 0x100) & 0xff00) |
                           (uint)(digest[i * 4 + 3] & 0xff)) >> (j * 8));
 
-            rijndael.IV = new byte[CRYPTO_BLOCK_SIZE];
-            rijndael.Key = aesKey;
-            rijndael.BlockSize = CRYPTO_BLOCK_SIZE * 8;
+
+            rijndael.Init(false, new KeyParameter(aesKey));
 
         }
 
@@ -87,14 +96,7 @@ namespace SharpCompress.Common.Rar
         {
             var plainText = new byte[CRYPTO_BLOCK_SIZE];
             var decryptedBytes = new List<byte>();
-            var decryptor = rijndael.CreateDecryptor();
-            using (var msDecrypt = new MemoryStream(cipherText))
-            {
-                using (var csDecrypt = new CryptoStream(msDecrypt, decryptor, CryptoStreamMode.Read))
-                {
-                    csDecrypt.ReadFully(plainText);
-                }
-            }
+            rijndael.ProcessBlock(cipherText, 0, plainText, 0);
 
             for (int j = 0; j < plainText.Length; j++)
                 decryptedBytes.Add((byte)(plainText[j] ^ aesInitializationVector[j % 16])); //32:114, 33:101
@@ -106,7 +108,6 @@ namespace SharpCompress.Common.Rar
 
         public void Dispose()
         {
-            rijndael.Dispose();
         }
     }
 }

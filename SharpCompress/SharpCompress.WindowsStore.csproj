@@ -167,8 +167,11 @@
     <Compile Include="Common\Rar\Headers\RarHeader.cs" />
     <Compile Include="Common\Rar\Headers\RarHeaderFactory.cs" />
     <Compile Include="Common\Rar\Headers\SignHeader.cs" />
+    <Compile Include="Common\Rar\RarCryptoBinaryReader.cs" />
+    <Compile Include="Common\Rar\RarCryptoWrapper.cs" />
     <Compile Include="Common\Rar\RarEntry.cs" />
     <Compile Include="Common\Rar\RarFilePart.cs" />
+    <Compile Include="Common\Rar\RarRijndael.Portable.cs" />
     <Compile Include="Common\Rar\RarVolume.cs" />
     <Compile Include="Common\SevenZip\ArchiveDatabase.cs" />
     <Compile Include="Common\SevenZip\ArchiveReader.cs" />
@@ -309,6 +312,7 @@
     <Compile Include="Compressor\Rar\VM\VMPreparedProgram.cs" />
     <Compile Include="Compressor\Rar\VM\VMStandardFilters.cs" />
     <Compile Include="Compressor\Rar\VM\VMStandardFilterSignature.cs" />
+    <Compile Include="Crypto\Rjindael.cs" />
     <Compile Include="IO\AppendingStream.cs" />
     <Compile Include="IO\CountingWritableSubStream.cs" />
     <Compile Include="IO\ListeningStream.cs" />

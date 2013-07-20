@@ -9,7 +9,7 @@ namespace SharpCompress.Test
 {
     public class TestBase
     {
-        protected const string TEST_BASE_PATH = @"D:\Codes\sharpcompress";
+        protected const string TEST_BASE_PATH = @"C:\Git\sharpcompress";
         protected static readonly string TEST_ARCHIVES_PATH = Path.Combine(TEST_BASE_PATH, "TestArchives", "Archives");
         protected static readonly string ORIGINAL_FILES_PATH = Path.Combine(TEST_BASE_PATH, "TestArchives", "Original");
         protected static readonly string MISC_TEST_FILES_PATH = Path.Combine(TEST_BASE_PATH, "TestArchives", "MiscTest");
@@ -124,12 +124,13 @@ namespace SharpCompress.Test
                 Assert.AreEqual(file1Stream.Length, file2Stream.Length);
                 int byte1 = 0;
                 int byte2 = 0;
-                for (int counter = 0; byte1 != -1; counter++ )
+                for (int counter = 0; byte1 != -1; counter++)
                 {
                     byte1 = file1Stream.ReadByte();
                     byte2 = file2Stream.ReadByte();
-                    if (byte1 != byte2) Assert.AreEqual(byte1, byte2, string.Format("Byte {0} differ between {1} and {2}",
-                        counter, file1, file2));
+                    if (byte1 != byte2)
+                        Assert.AreEqual(byte1, byte2, string.Format("Byte {0} differ between {1} and {2}",
+                            counter, file1, file2));
                 }
             }
         }

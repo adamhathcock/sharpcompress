@@ -7,7 +7,7 @@ namespace SharpCompress.Common.Rar
     internal class RarCryptoWrapper : Stream
     {
         private readonly Stream actualStream;
-        private byte[] salt;
+        private readonly byte[] salt;
         private RarRijndael rijndael;
         private readonly Queue<byte> data = new Queue<byte>();
 
@@ -53,8 +53,8 @@ namespace SharpCompress.Common.Rar
                 for (int i = 0; i < alignedSize / 16; i++)
                 {
                     //long ax = System.currentTimeMillis();
-                    byte[] cipherText = new byte[RarRijndael.CryptoBlockSize];
-                    actualStream.Read(cipherText, 0, RarRijndael.CryptoBlockSize);
+                    byte[] cipherText = new byte[RarRijndael.CRYPTO_BLOCK_SIZE];
+                    actualStream.Read(cipherText, 0, RarRijndael.CRYPTO_BLOCK_SIZE);
 
                     var readBytes = rijndael.ProcessBlock(cipherText);
                     foreach (var readByte in readBytes)
