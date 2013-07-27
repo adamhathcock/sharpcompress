@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using SharpCompress.Common;
 using SharpCompress.Reader;
@@ -147,6 +148,20 @@ namespace SharpCompress.Test
                 }
                 Assert.IsFalse(archive2.MoveToNextEntry());
             }
+        }
+
+        private static readonly object testLock = new object();
+
+        [TestInitialize]
+        public void TestSetup()
+        {
+            Monitor.Enter(testLock);
+        }
+
+        [TestCleanup]
+        public void TestCleanup()
+        {
+            Monitor.Exit(testLock);
         }
     }
 }
