@@ -1,15 +1,10 @@
-﻿using System;
-using System.IO;
-using System.Net.Security;
-using System.Text;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using SharpCompress.Common;
 using SharpCompress.Common.Rar.Headers;
 using SharpCompress.IO;
 
-namespace SharpCompress.Test.Rar.Unit
+namespace SharpCompress.Test.Rar
 {
     /// <summary>
     /// Summary description for RarFactoryReaderTest

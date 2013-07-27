@@ -36,7 +36,7 @@ namespace SharpCompress.Test
         [TestMethod]
         public void Rar_Multi_Reader_Delete_Files()
         {
-           var testArchives = new string[] { "Rar.multi.part01.rar",
+            var testArchives = new string[] { "Rar.multi.part01.rar",
                 "Rar.multi.part02.rar",
                 "Rar.multi.part03.rar",
                 "Rar.multi.part04.rar",
@@ -44,27 +44,27 @@ namespace SharpCompress.Test
                 "Rar.multi.part06.rar"};
 
 
-           ResetScratch();
+            ResetScratch();
 
-           foreach (var file in testArchives)
-           {
-              File.Copy(Path.Combine(TEST_ARCHIVES_PATH, file), Path.Combine(SCRATCH2_FILES_PATH, file));
-           }
+            foreach (var file in testArchives)
+            {
+                File.Copy(Path.Combine(TEST_ARCHIVES_PATH, file), Path.Combine(SCRATCH2_FILES_PATH, file));
+            }
 
-           using (var reader = RarReader.Open(testArchives.Select(s => Path.Combine(SCRATCH2_FILES_PATH, s))
-               .Select(p => File.OpenRead(p)), Options.None))
-           {
-              while (reader.MoveToNextEntry())
-              {
-                 reader.WriteEntryToDirectory(SCRATCH_FILES_PATH, ExtractOptions.ExtractFullPath | ExtractOptions.Overwrite);
-              }
-           }
-           VerifyFiles();
+            using (var reader = RarReader.Open(testArchives.Select(s => Path.Combine(SCRATCH2_FILES_PATH, s))
+                .Select(p => File.OpenRead(p)), Options.None))
+            {
+                while (reader.MoveToNextEntry())
+                {
+                    reader.WriteEntryToDirectory(SCRATCH_FILES_PATH, ExtractOptions.ExtractFullPath | ExtractOptions.Overwrite);
+                }
+            }
+            VerifyFiles();
 
-           foreach (var file in testArchives.Select(s => Path.Combine(SCRATCH2_FILES_PATH, s)))
-           {
-              File.Delete(file);
-           }
+            foreach (var file in testArchives.Select(s => Path.Combine(SCRATCH2_FILES_PATH, s)))
+            {
+                File.Delete(file);
+            }
         }
 
         [TestMethod]
@@ -90,6 +90,13 @@ namespace SharpCompress.Test
         public void Rar_EncryptedFileOnly_Reader()
         {
             ReadRar("Rar.encrypted_filesOnly.rar", "test");
+
+        }
+
+        [TestMethod]
+        public void Rar_Encrypted_Reader()
+        {
+            ReadRar("Encrypted.rar", "test");
 
         }
 
