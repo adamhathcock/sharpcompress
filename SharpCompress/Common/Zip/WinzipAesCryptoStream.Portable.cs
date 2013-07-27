@@ -1,16 +1,17 @@
 ﻿using System;
 using System.IO;
-using System.Security.Cryptography;
+using Org.BouncyCastle.Crypto;
+using Org.BouncyCastle.Crypto.Engines;
+using Org.BouncyCastle.Crypto.Parameters;
 
 namespace SharpCompress.Common.Zip
 {
     internal class WinzipAesCryptoStream : Stream
     {
         private const int BLOCK_SIZE_IN_BYTES = 16;
-        private readonly SymmetricAlgorithm cipher;
+        private readonly IBufferedCipher rijndael;
         private readonly byte[] counter = new byte[BLOCK_SIZE_IN_BYTES];
         private readonly Stream stream;
-        private readonly ICryptoTransform transform;
         private int nonce = 1;
         private byte[] counterOut = new byte[BLOCK_SIZE_IN_BYTES];
         private bool isFinalBlock;
@@ -22,20 +23,15 @@ namespace SharpCompress.Common.Zip
             this.stream = stream;
             totalBytesLeftToRead = length;
 
-            cipher = CreateCipher(winzipAesEncryptionData);
-
-            var iv = new byte[BLOCK_SIZE_IN_BYTES];
-            transform = cipher.CreateEncryptor(winzipAesEncryptionData.KeyBytes, iv);
+            rijndael = CreateRijndael(winzipAesEncryptionData);
         }
 
-        private SymmetricAlgorithm CreateCipher(WinzipAesEncryptionData winzipAesEncryptionData)
+        private IBufferedCipher CreateRijndael(WinzipAesEncryptionData winzipAesEncryptionData)
         {
-            RijndaelManaged cipher = new RijndaelManaged();
-            cipher.BlockSize = BLOCK_SIZE_IN_BYTES * 8;
-            cipher.KeySize = winzipAesEncryptionData.KeyBytes.Length * 8;
-            cipher.Mode = CipherMode.ECB;
-            cipher.Padding = PaddingMode.None;
-            return cipher;
+            var blockCipher = new BufferedBlockCipher(new RijndaelEngine());
+            var param = new KeyParameter(winzipAesEncryptionData.KeyBytes);
+            blockCipher.Init(true, param);
+            return blockCipher;
         }
 
         public override bool CanRead
@@ -122,20 +118,14 @@ namespace SharpCompress.Common.Zip
             // Determine if this is the final block
             if ((bytesToRead == bytesRemaining) && (totalBytesLeftToRead == 0))
             {
-                counterOut = transform.TransformFinalBlock(counter,
-                                                           0,
-                                                           BLOCK_SIZE_IN_BYTES);
+                counterOut = rijndael.DoFinal(counter, 0, BLOCK_SIZE_IN_BYTES);
+
                 isFinalBlock = true;
             }
             else
             {
-                transform.TransformBlock(counter,
-                                         0, // offset
-                                         BLOCK_SIZE_IN_BYTES,
-                                         counterOut,
-                                         0); // offset
+                rijndael.ProcessBytes(counter, 0, BLOCK_SIZE_IN_BYTES, counterOut, 0);
             }
-
             XorInPlace(buffer, offset, bytesToRead);
             return bytesToRead;
         }

@@ -1,5 +1,4 @@
-﻿using Org.BouncyCastle.Crypto.Parameters;
-
+﻿
 namespace Org.BouncyCastle.Crypto
 {
     /// <remarks>Base interface for a symmetric key block cipher.</remarks>
@@ -11,7 +10,7 @@ namespace Org.BouncyCastle.Crypto
         /// <summary>Initialise the cipher.</summary>
         /// <param name="forEncryption">Initialise for encryption if true, for decryption if false.</param>
         /// <param name="parameters">The key or other data required by the cipher.</param>
-        void Init(bool forEncryption, KeyParameter parameters);
+        void Init(bool forEncryption, ICipherParameters parameters);
 
         /// <returns>The block size for this cipher, in bytes.</returns>
         int GetBlockSize();

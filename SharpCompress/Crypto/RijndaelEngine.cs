@@ -566,10 +566,17 @@ namespace Org.BouncyCastle.Crypto.Engines
         */
         public void Init(
             bool forEncryption,
-            KeyParameter parameters)
+            ICipherParameters parameters)
         {
-            workingKey = GenerateWorkingKey(parameters.GetKey());
-            this.forEncryption = forEncryption;
+            var parameter = parameters as KeyParameter;
+            if (parameter != null)
+            {
+                workingKey = GenerateWorkingKey(parameter.GetKey());
+                this.forEncryption = forEncryption;
+                return;
+            }
+
+            throw new ArgumentException("invalid parameter passed to Rijndael init - " + parameters.GetType().ToString());
         }
 
         public string AlgorithmName

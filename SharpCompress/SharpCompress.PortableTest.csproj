@@ -5,7 +5,7 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProductVersion>9.0.30729</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{10A689CF-76A2-4A4F-96E4-553C33398438}</ProjectGuid>
+    <ProjectGuid>{EFDCAF57-FD4D-4E5D-A3D5-F26B875817ED}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>SharpCompress</RootNamespace>
@@ -127,7 +127,7 @@
     <Compile Include="Common\IEntry.cs" />
     <Compile Include="Common\IVolume.cs" />
     <Compile Include="Common\Rar\RarCryptoWrapper.cs" />
-    <Compile Include="Common\Rar\RarRijndael.cs" />
+    <Compile Include="Common\Rar\RarRijndael.Portable.cs" />
     <Compile Include="Common\SevenZip\CBindPair.cs" />
     <Compile Include="Common\SevenZip\CCoderInfo.cs" />
     <Compile Include="Common\SevenZip\CFileItem.cs" />
@@ -152,10 +152,8 @@
     <Compile Include="Common\Zip\SeekableZipHeaderFactory.cs" />
     <Compile Include="Common\Zip\StreamingZipFilePart.cs" />
     <Compile Include="Common\Zip\StreamingZipHeaderFactory.cs" />
-    <Compile Include="Common\Zip\WinzipAesCryptoStream.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Common\Zip\WinzipAesEncryptionData.cs" />
+    <Compile Include="Common\Zip\WinzipAesCryptoStream.Portable.cs" />
+    <Compile Include="Common\Zip\WinzipAesEncryptionData.Portable.cs" />
     <Compile Include="Common\Zip\WinzipAesKeySize.cs" />
     <Compile Include="Common\Zip\ZipVolume.cs" />
     <Compile Include="Compressor\BZip2\BZip2Constants.cs" />
@@ -238,6 +236,23 @@
     <Compile Include="Compressor\PPMd\PpmdProperties.cs" />
     <Compile Include="Compressor\PPMd\PpmdStream.cs" />
     <Compile Include="Compressor\Rar\RarStream.cs" />
+    <Compile Include="Crypto\BigInteger.cs" />
+    <Compile Include="Crypto\BufferedBlockCipher.cs" />
+    <Compile Include="Crypto\BufferedCipherBase.cs" />
+    <Compile Include="Crypto\CryptoException.cs" />
+    <Compile Include="Crypto\DataLengthException.cs" />
+    <Compile Include="Crypto\GeneralDigest.cs" />
+    <Compile Include="Crypto\HMac.cs" />
+    <Compile Include="Crypto\IBlockCipher.cs" />
+    <Compile Include="Crypto\IBufferedCipher.cs" />
+    <Compile Include="Crypto\ICipherParameters.cs" />
+    <Compile Include="Crypto\IDigest.cs" />
+    <Compile Include="Crypto\IMac.cs" />
+    <Compile Include="Crypto\KeyParameter.cs" />
+    <Compile Include="Crypto\Pack.cs" />
+    <Compile Include="Crypto\PBKDF2.cs" />
+    <Compile Include="Crypto\RijndaelEngine.cs" />
+    <Compile Include="Crypto\Sha1Digest.cs" />
     <Compile Include="IO\CountingWritableSubStream.cs" />
     <Compile Include="Common\EntryStream.cs">
       <SubType>Code</SubType>
