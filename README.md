@@ -16,10 +16,17 @@ Want to contribute?
 I'm always looking for help or ideas. Please submit code or email with ideas. Unfortunately, just letting me know you'd like to help is not enough because I really have no overall plan of what needs to be done. I'll definitely accept code submissions and add you as a member of the project!
 
 TODOs (always lots):
+* RAR 5 support
 * 7Zip writing
-* RAR Decryption
 * Zip64
 * Multi-volume Zip support.
+
+
+Version 0.10:
+==============
+- Added support for RAR Decryption (thanks to https://github.com/hrasyid)
+- Embedded some BouncyCastle crypto classes to allow RAR Decryption and Winzip AES Decryption in Portable and Windows Store DLLs
+- Built in Release (I think)
 
 Some Help/Discussion:
 https://sharpcompress.codeplex.com/discussions
