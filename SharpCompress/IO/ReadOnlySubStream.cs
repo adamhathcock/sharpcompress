@@ -5,8 +5,17 @@ namespace SharpCompress.IO
     internal class ReadOnlySubStream : Stream
     {
         public ReadOnlySubStream(Stream stream, long bytesToRead)
+            : this(stream, null, bytesToRead)
+        {
+        }
+
+        public ReadOnlySubStream(Stream stream, long? origin, long bytesToRead)
         {
             Stream = stream;
+            if (origin != null)
+            {
+                stream.Position = origin.Value;
+            }
             BytesLeftToRead = bytesToRead;
         }
 
@@ -57,7 +66,7 @@ namespace SharpCompress.IO
         {
             if (BytesLeftToRead < count)
             {
-                count = (int) BytesLeftToRead;
+                count = (int)BytesLeftToRead;
             }
             int read = Stream.Read(buffer, offset, count);
             if (read > 0)

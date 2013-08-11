@@ -209,9 +209,6 @@
     <Compile Include="Compressor\LZMA\Utilites\IPasswordProvider.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Compressor\LZMA\Utilites\SyncStreamView.cs">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="Compressor\LZMA\Utilites\Utils.cs">
       <SubType>Code</SubType>
     </Compile>
