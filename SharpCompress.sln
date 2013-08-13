@@ -15,6 +15,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharpCompress.Test.Portable
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Testing", "Testing", "{932BBFCC-76E3-45FF-90CA-6BE4FBF4A097}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{F18F1765-4A02-42FD-9BEF-F0E2FCBD9D17}"
+	ProjectSection(SolutionItems) = preProject
+		NuGet\sharpcompress.nuspec = NuGet\sharpcompress.nuspec
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -99,7 +104,7 @@ Global
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{EFDCAF57-FD4D-4E5D-A3D5-F26B875817ED} = {932BBFCC-76E3-45FF-90CA-6BE4FBF4A097}
-		{15679D7A-F22C-4943-87FF-BF5C76C4A6FD} = {932BBFCC-76E3-45FF-90CA-6BE4FBF4A097}
 		{E9C3C94B-FB27-4B4F-B225-57513C254D37} = {932BBFCC-76E3-45FF-90CA-6BE4FBF4A097}
+		{15679D7A-F22C-4943-87FF-BF5C76C4A6FD} = {932BBFCC-76E3-45FF-90CA-6BE4FBF4A097}
 	EndGlobalSection
 EndGlobal
