@@ -2,6 +2,7 @@
 using System.IO;
 using SharpCompress.Common.SevenZip;
 using SharpCompress.Compressor.LZMA.Utilites;
+using SharpCompress.IO;
 
 namespace SharpCompress.Compressor.LZMA
 {
@@ -158,12 +159,10 @@ namespace SharpCompress.Compressor.LZMA
             if (!folderInfo.CheckStructure())
                 throw new NotSupportedException("Unsupported stream binding structure.");
 
-            // We have multiple views into the same stream which will be used by several threads - need to sync those.
-            object sync = new object();
             Stream[] inStreams = new Stream[folderInfo.PackStreams.Count];
             for (int j = 0; j < folderInfo.PackStreams.Count; j++)
             {
-                inStreams[j] = new SyncStreamView(sync, inStream, startPos, packSizes[j]);
+                inStreams[j] = new ReadOnlySubStream(inStream, startPos, packSizes[j]);
                 startPos += packSizes[j];
             }
 

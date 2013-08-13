@@ -21,6 +21,9 @@ TODOs (always lots):
 * Zip64
 * Multi-volume Zip support.
 
+Version 0.10.1:
+==============
+- Fixed 7Zip extraction performance problem
 
 Version 0.10:
 ==============

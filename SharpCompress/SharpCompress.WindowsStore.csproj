@@ -259,7 +259,6 @@
     <Compile Include="Compressor\LZMA\Utilites\CrcBuilderStream.cs" />
     <Compile Include="Compressor\LZMA\Utilites\CrcCheckStream.cs" />
     <Compile Include="Compressor\LZMA\Utilites\IPasswordProvider.cs" />
-    <Compile Include="Compressor\LZMA\Utilites\SyncStreamView.cs" />
     <Compile Include="Compressor\LZMA\Utilites\UnpackSubStream.cs" />
     <Compile Include="Compressor\LZMA\Utilites\Utils.cs" />
     <Compile Include="Compressor\PPMd\H\FreqData.cs" />
