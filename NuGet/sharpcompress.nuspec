@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
     <metadata>
         <id>sharpcompress</id>
-        <version>0.10.1.1</version>
+        <version>0.10.1.2</version>
         <title>SharpCompress - Pure C# Decompression/Compression</title>
         <authors>Adam Hathcock</authors>
         <owners>Adam Hathcock</owners>
@@ -15,8 +15,8 @@
         <tags>rar unrar zip unzip bzip2 gzip tar 7zip .net40 .net35 sl4</tags>
     </metadata>
     <files>
-        <file src="..\bin\Full\SharpCompress.dll" target="lib\net40\SharpCompress.dll" />
-        <file src="..\bin\WindowsStore\SharpCompress.dll" target="lib\netcore45\SharpCompress.dll" />
-        <file src="..\bin\Portable\SharpCompress.dll" target="lib\portable-net4+sl4+wp7+win8\SharpCompress.dll" />
+        <file src="..\bin\SharpCompress.Full.dll" target="lib\net40\SharpCompress.dll" />
+        <file src="..\bin\SharpCompress.WindowsStore.dll" target="lib\netcore45\SharpCompress.dll" />
+        <file src="..\bin\SharpCompress.Portable.dll" target="lib\portable-net4+sl4+wp7+win8\SharpCompress.dll" />
     </files>
 </package>
