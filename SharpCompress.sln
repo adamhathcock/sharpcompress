@@ -6,10 +6,22 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharpCompress.Test", "SharpCompress.Test\SharpCompress.Test.csproj", "{15679D7A-F22C-4943-87FF-BF5C76C4A6FD}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharpCompress.Portable", "SharpCompress\SharpCompress.Portable.csproj", "{7FA7D133-1417-4F85-9998-4C618AC8FEDA}"
+	ProjectSection(ProjectDependencies) = postProject
+		{15679D7A-F22C-4943-87FF-BF5C76C4A6FD} = {15679D7A-F22C-4943-87FF-BF5C76C4A6FD}
+	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharpCompress.WindowsStore", "SharpCompress\SharpCompress.WindowsStore.csproj", "{1DF6D83C-31FF-47B6-82FE-C4603BE916B5}"
+	ProjectSection(ProjectDependencies) = postProject
+		{7FA7D133-1417-4F85-9998-4C618AC8FEDA} = {7FA7D133-1417-4F85-9998-4C618AC8FEDA}
+		{EFDCAF57-FD4D-4E5D-A3D5-F26B875817ED} = {EFDCAF57-FD4D-4E5D-A3D5-F26B875817ED}
+		{15679D7A-F22C-4943-87FF-BF5C76C4A6FD} = {15679D7A-F22C-4943-87FF-BF5C76C4A6FD}
+		{10A689CF-76A2-4A4F-96E4-553C33398438} = {10A689CF-76A2-4A4F-96E4-553C33398438}
+	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharpCompress.PortableTest", "SharpCompress\SharpCompress.PortableTest.csproj", "{EFDCAF57-FD4D-4E5D-A3D5-F26B875817ED}"
+	ProjectSection(ProjectDependencies) = postProject
+		{7FA7D133-1417-4F85-9998-4C618AC8FEDA} = {7FA7D133-1417-4F85-9998-4C618AC8FEDA}
+	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharpCompress.Test.Portable", "SharpCompress.Test\SharpCompress.Test.Portable.csproj", "{E9C3C94B-FB27-4B4F-B225-57513C254D37}"
 EndProject
