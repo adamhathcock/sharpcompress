@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -10,12 +11,13 @@ namespace SharpCompress.Test
 {
     public class TestBase
     {
-        protected const string TEST_BASE_PATH = @"C:\Git\sharpcompress";
-        protected static readonly string TEST_ARCHIVES_PATH = Path.Combine(TEST_BASE_PATH, "TestArchives", "Archives");
-        protected static readonly string ORIGINAL_FILES_PATH = Path.Combine(TEST_BASE_PATH, "TestArchives", "Original");
-        protected static readonly string MISC_TEST_FILES_PATH = Path.Combine(TEST_BASE_PATH, "TestArchives", "MiscTest");
-        protected static readonly string SCRATCH_FILES_PATH = Path.Combine(TEST_BASE_PATH, "TestArchives", "Scratch");
-        protected static readonly string SCRATCH2_FILES_PATH = Path.Combine(TEST_BASE_PATH, "TestArchives", "Scratch2");
+        //protected const string TEST_BASE_PATH = @"C:\Git\sharpcompress";
+        protected static string TEST_BASE_PATH=null;
+        protected static string TEST_ARCHIVES_PATH;
+        protected static string ORIGINAL_FILES_PATH;
+        protected static string MISC_TEST_FILES_PATH;
+        protected static string SCRATCH_FILES_PATH;
+        protected static string SCRATCH2_FILES_PATH;
 
         protected static IEnumerable<string> GetRarArchives()
         {
@@ -152,10 +154,26 @@ namespace SharpCompress.Test
 
         private static readonly object testLock = new object();
 
+        private TestContext ctx;
+        public TestContext TestContext {
+            get {
+                return ctx;
+            }
+            set {
+                ctx = value;
+            }
+        }
+
         [TestInitialize]
         public void TestSetup()
         {
             Monitor.Enter(testLock);
+            TEST_BASE_PATH = Path.GetDirectoryName(Path.GetDirectoryName(ctx.TestDir));
+            TEST_ARCHIVES_PATH = Path.Combine(TEST_BASE_PATH, "TestArchives", "Archives");
+            ORIGINAL_FILES_PATH = Path.Combine(TEST_BASE_PATH, "TestArchives", "Original");
+            MISC_TEST_FILES_PATH = Path.Combine(TEST_BASE_PATH, "TestArchives", "MiscTest");
+            SCRATCH_FILES_PATH = Path.Combine(TEST_BASE_PATH, "TestArchives", "Scratch");
+            SCRATCH2_FILES_PATH = Path.Combine(TEST_BASE_PATH, "TestArchives", "Scratch2");
         }
 
         [TestCleanup]

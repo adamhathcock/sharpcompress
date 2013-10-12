@@ -941,6 +941,7 @@ namespace SharpCompress.Common.SevenZip
 
         #region Public Methods
 
+        const int HEADER_SIZE=0x20;
         public void Open(Stream stream)
         {
             Close();
@@ -949,13 +950,14 @@ namespace SharpCompress.Common.SevenZip
             _streamEnding = stream.Length;
 
             // TODO: Check Signature!
-            _header = new byte[0x20];
-            for (int offset = 0; offset < 0x20; )
+            _header = new byte[HEADER_SIZE];
+            int delta;
+            for (int offset = 0; offset < HEADER_SIZE; offset += delta)
             {
-                int delta = stream.Read(_header, offset, 0x20 - offset);
+                delta = stream.Read(_header, offset, HEADER_SIZE - offset);
                 if (delta == 0)
-                    throw new EndOfStreamException();
-                offset += delta;
+                    throw new EndOfStreamException("ArchiveReader.Open : unable to read");
+                
             }
 
             _stream = stream;
@@ -995,7 +997,7 @@ namespace SharpCompress.Common.SevenZip
             crc = CRC.Finish(crc);
 
             if (crc != crcFromArchive)
-                throw new InvalidOperationException();
+                throw new InvalidOperationException("Bad CRC");
 
             db.StartPositionAfterHeader = _streamOrigin + 0x20;
 

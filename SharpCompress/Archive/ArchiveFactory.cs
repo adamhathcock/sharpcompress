@@ -43,10 +43,12 @@ namespace SharpCompress.Archive
                 return TarArchive.Open(stream, options);
             }
             stream.Seek(0, SeekOrigin.Begin);
-            if (SevenZipArchive.IsSevenZipFile(stream))
             {
-                stream.Seek(0, SeekOrigin.Begin);
-                return SevenZipArchive.Open(stream, options);
+                long offset = SevenZipArchive.FindSignature(stream);
+                if (offset > -1) {
+                    stream.Seek(offset, SeekOrigin.Begin);
+                    return SevenZipArchive.Open(stream, options);
+                }
             }
             stream.Seek(0, SeekOrigin.Begin);
             if (GZipArchive.IsGZipFile(stream))
