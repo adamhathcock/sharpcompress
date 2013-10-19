@@ -145,7 +145,7 @@ namespace SharpCompress.Archive.SevenZip
         {
             if (database == null)
             {
-                stream.Position = 0;
+                stream.Seek(FindSignature(stream),SeekOrigin.Begin);
                 var reader = new ArchiveReader();
                 reader.Open(stream);
                 database = reader.ReadDatabase(null);
@@ -157,7 +157,7 @@ namespace SharpCompress.Archive.SevenZip
         {
             try
             {
-                return SignatureMatch(stream);
+                return FindSignature(stream)>-1;
             }
             catch
             {
@@ -165,13 +165,27 @@ namespace SharpCompress.Archive.SevenZip
             }
         }
 
-        private static readonly byte[] SIGNATURE = new byte[] {(byte) '7', (byte) 'z', 0xBC, 0xAF, 0x27, 0x1C};
-
-        private static bool SignatureMatch(Stream stream)
-        {
+        private static readonly byte[] SIGNATURE = {(byte) '7', (byte) 'z', 0xBC, 0xAF, 0x27, 0x1C};
+        const int MAX_BYTES_TO_ARCHIVE = 0x40000;
+        public static long FindSignature(Stream stream){
             BinaryReader reader = new BinaryReader(stream);
-            byte[] signatureBytes = reader.ReadBytes(6);
-            return signatureBytes.BinaryEquals(SIGNATURE);
+            int j = 0;
+            long match=-1;
+            var maxPos = Math.Min(MAX_BYTES_TO_ARCHIVE+SIGNATURE.Length, stream.Length);
+            for (; stream.Position < maxPos; ) {
+                var bt = reader.ReadByte();
+                if (bt == SIGNATURE[j]){
+                    if (j == SIGNATURE.Length-1){
+                        match = stream.Position - j-1;
+                        break;
+                    }
+                    j++;
+                    continue;
+                }
+                
+                j = 0;
+            }
+            return match;
         }
 
         protected override IReader CreateReaderForSolidExtraction()

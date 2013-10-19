@@ -61,6 +61,17 @@ namespace SharpCompress.Test
             ArchiveFileRead("7Zip.BZip2.7z");
         }
 
+        [TestMethod]
+        public void SevenZipArchive_LZMA2_SFX_PathRead()
+        {
+            ArchiveFileRead("7Zip.LZMA2.sfx.exe");
+        }
+
+        [TestMethod]
+        public void SevenZipArchive_LZMA2_SFX_StreamRead() {
+            ArchiveStreamRead("7Zip.LZMA2.sfx.exe");
+        }
+
 
         [TestMethod]
         [ExpectedException(typeof(IndexOutOfRangeException))]
