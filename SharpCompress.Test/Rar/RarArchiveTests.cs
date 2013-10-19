@@ -15,10 +15,28 @@ namespace SharpCompress.Test
         {
             ArchiveStreamRead("Rar.none.rar");
         }
+
         [TestMethod]
         public void Rar_ArchiveStreamRead()
         {
             ArchiveStreamRead("Rar.rar");
+        }
+
+
+        [TestMethod]
+        public void Rar_test_invalid_exttime_ArchiveStreamRead()
+        {
+            ResetScratch();
+            using (var stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "test_invalid_exttime.rar")))
+            {
+                using (var archive = ArchiveFactory.Open(stream))
+                {
+                    foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
+                    {
+                        entry.WriteToDirectory(SCRATCH_FILES_PATH, ExtractOptions.ExtractFullPath | ExtractOptions.Overwrite);
+                    }
+                }
+            }
         }
 
         [TestMethod]

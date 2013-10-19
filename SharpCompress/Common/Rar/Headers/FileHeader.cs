@@ -1,6 +1,5 @@
 using System;
 using System.IO;
-using System.Text;
 using SharpCompress.IO;
 
 namespace SharpCompress.Common.Rar.Headers
@@ -15,7 +14,7 @@ namespace SharpCompress.Common.Rar.Headers
         {
             uint lowUncompressedSize = reader.ReadUInt32();
 
-            HostOS = (HostOS) (int) reader.ReadByte();
+            HostOS = (HostOS)(int)reader.ReadByte();
 
             FileCRC = reader.ReadUInt32();
 
@@ -46,7 +45,7 @@ namespace SharpCompress.Common.Rar.Headers
             CompressedSize = UInt32To64(highCompressedSize, AdditionalSize);
             UncompressedSize = UInt32To64(highUncompressedkSize, lowUncompressedSize);
 
-            nameSize = nameSize > 4*1024 ? (short) (4*1024) : nameSize;
+            nameSize = nameSize > 4 * 1024 ? (short)(4 * 1024) : nameSize;
 
             byte[] fileNameBytes = reader.ReadBytes(nameSize);
 
@@ -106,11 +105,16 @@ namespace SharpCompress.Common.Rar.Headers
             }
             if (FileFlags.HasFlag(FileFlags.EXTTIME))
             {
-                ushort extendedFlags = reader.ReadUInt16();
-                FileLastModifiedTime = ProcessExtendedTime(extendedFlags, FileLastModifiedTime, reader, 0);
-                FileCreatedTime = ProcessExtendedTime(extendedFlags, null, reader, 1);
-                FileLastAccessedTime = ProcessExtendedTime(extendedFlags, null, reader, 2);
-                FileArchivedTime = ProcessExtendedTime(extendedFlags, null, reader, 3);
+                // verify that the end of the header hasn't been reached before reading the Extended Time.
+                //  some tools incorrectly omit Extended Time despite specifying FileFlags.EXTTIME, which most parsers tolerate.
+                if (ReadBytes + reader.CurrentReadByteCount <= HeaderSize - 2)
+                {
+                    ushort extendedFlags = reader.ReadUInt16();
+                    FileLastModifiedTime = ProcessExtendedTime(extendedFlags, FileLastModifiedTime, reader, 0);
+                    FileCreatedTime = ProcessExtendedTime(extendedFlags, null, reader, 1);
+                    FileLastAccessedTime = ProcessExtendedTime(extendedFlags, null, reader, 2);
+                    FileArchivedTime = ProcessExtendedTime(extendedFlags, null, reader, 3);
+                }
             }
         }
 
@@ -130,7 +134,7 @@ namespace SharpCompress.Common.Rar.Headers
         private static DateTime? ProcessExtendedTime(ushort extendedFlags, DateTime? time, MarkingBinaryReader reader,
                                                      int i)
         {
-            uint rmode = (uint) extendedFlags >> (3 - i)*4;
+            uint rmode = (uint)extendedFlags >> (3 - i) * 4;
             if ((rmode & 8) == 0)
             {
                 return null;
@@ -145,14 +149,14 @@ namespace SharpCompress.Common.Rar.Headers
                 time = time.Value.AddSeconds(1);
             }
             uint nanosecondHundreds = 0;
-            int count = (int) rmode & 3;
+            int count = (int)rmode & 3;
             for (int j = 0; j < count; j++)
             {
                 byte b = reader.ReadByte();
-                nanosecondHundreds |= (((uint) b) << ((j + 3 - count)*8));
+                nanosecondHundreds |= (((uint)b) << ((j + 3 - count) * 8));
             }
             //10^-7 to 10^-3
-            return time.Value.AddMilliseconds(nanosecondHundreds*Math.Pow(10, -4));
+            return time.Value.AddMilliseconds(nanosecondHundreds * Math.Pow(10, -4));
         }
 
         private static string ConvertPath(string path, HostOS os)
@@ -205,7 +209,7 @@ namespace SharpCompress.Common.Rar.Headers
 
         internal FileFlags FileFlags
         {
-            get { return (FileFlags) base.Flags; }
+            get { return (FileFlags)base.Flags; }
         }
 
         internal long CompressedSize { get; private set; }
