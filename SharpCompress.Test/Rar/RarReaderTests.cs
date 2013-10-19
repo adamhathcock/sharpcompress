@@ -50,14 +50,17 @@ namespace SharpCompress.Test
             {
                 File.Copy(Path.Combine(TEST_ARCHIVES_PATH, file), Path.Combine(SCRATCH2_FILES_PATH, file));
             }
-
-            using (var reader = RarReader.Open(testArchives.Select(s => Path.Combine(SCRATCH2_FILES_PATH, s))
-                .Select(p => File.OpenRead(p)), Options.None))
+            var streams = testArchives.Select(s => Path.Combine(SCRATCH2_FILES_PATH, s)).Select(File.OpenRead).ToList();
+            using (var reader = RarReader.Open(streams))
             {
                 while (reader.MoveToNextEntry())
                 {
                     reader.WriteEntryToDirectory(SCRATCH_FILES_PATH, ExtractOptions.ExtractFullPath | ExtractOptions.Overwrite);
                 }
+            }
+            foreach (var stream in streams)
+            {
+                stream.Dispose();
             }
             VerifyFiles();
 
