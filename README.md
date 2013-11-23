@@ -21,6 +21,14 @@ TODOs (always lots):
 * Zip64
 * Multi-volume Zip support.
 
+Version 0.10.2:
+==============
+- Fixed Rar Header reading for invalid extended time headers.
+- Windows Store assembly is now strong named
+- Known issues with Long Tar names being worked on
+- Updated to VS2013
+	- Portable targets SL5 and Windows Phone 8 (up from SL4 and WP7)
+
 Version 0.10.1:
 ==============
 - Fixed 7Zip extraction performance problem

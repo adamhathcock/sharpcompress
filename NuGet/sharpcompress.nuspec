@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
     <metadata>
         <id>sharpcompress</id>
-        <version>0.10.1.3</version>
+        <version>0.10.2</version>
         <title>SharpCompress - Pure C# Decompression/Compression</title>
         <authors>Adam Hathcock</authors>
         <owners>Adam Hathcock</owners>
@@ -12,11 +12,11 @@
         <description>SharpCompress is a compression library for .NET/Mono/Silverlight/WP7/WindowsStore that can unrar, decompress 7zip, zip/unzip, tar/untar bzip2/unbzip2 and gzip/ungzip with forward-only reading and file random access APIs. Write support for zip/tar/bzip2/gzip is implemented.</description>
         <releaseNotes />
         <language>en-US</language>
-        <tags>rar unrar zip unzip bzip2 gzip tar 7zip .net40 .net35 sl4</tags>
+        <tags>rar unrar zip unzip bzip2 gzip tar 7zip</tags>
     </metadata>
     <files>
         <file src="..\bin\Full\SharpCompress.dll" target="lib\net40\SharpCompress.dll" />
         <file src="..\bin\WindowsStore\SharpCompress.dll" target="lib\netcore45\SharpCompress.dll" />
-        <file src="..\bin\Portable\SharpCompress.dll" target="lib\portable-net4+sl4+wp7+win8\SharpCompress.dll" />
+        <file src="..\bin\Portable\SharpCompress.dll" target="lib\portable-net4+sl5+wp8+win8\SharpCompress.dll" />
     </files>
 </package>
