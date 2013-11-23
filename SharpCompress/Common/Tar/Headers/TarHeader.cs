@@ -27,6 +27,11 @@ namespace SharpCompress.Common.Tar.Headers
     {
         internal static readonly DateTime Epoch = new DateTime(1970, 1, 1, 0, 0, 0);
 
+        internal TarHeader(EntryType entryType)
+        {
+            EntryType = entryType;
+        }
+
         internal string Name { get; set; }
         //internal int Mode { get; set; }
         //internal int UserId { get; set; }
@@ -37,7 +42,10 @@ namespace SharpCompress.Common.Tar.Headers
         internal DateTime LastModifiedTime { get; set; }
         internal EntryType EntryType { get; set; }
         internal Stream PackedStream { get; set; }
-
+        internal static bool IsPathSeparator(char ch)
+        {
+            return (ch == '\\' || ch == '/' || ch == '|'); // All the path separators I ever met.
+        }
         internal void Write(Stream output)
         {
             if (Name.Length > 255)
@@ -46,12 +54,29 @@ namespace SharpCompress.Common.Tar.Headers
             }
             byte[] buffer = new byte[512];
             string name = Name;
+            string namePrefix = null;
             if (name.Length > 100)
             {
-                name = Name.Substring(0, 100);
-            }
-            WriteStringBytes(name, buffer, 0, 100);
+                int position = Name.Length - 100;
 
+                // Find first path separator in the remaining 100 chars of the file name
+                while (!IsPathSeparator(Name[position]))
+                {
+                    ++position;
+                    if (position == Name.Length)
+                    {
+                        break;
+                    }
+                }
+                if (position == Name.Length)
+                {
+                    position = Name.Length - 100;
+                }
+                namePrefix = Name.Substring(0, position);
+                name = Name.Substring(position, Name.Length - position);
+            }
+
+            Encoding.ASCII.GetBytes(name.PadRight(100, '\0')).CopyTo(buffer, 0);
             WriteOctalBytes(511, buffer, 100, 8);
             WriteOctalBytes(0, buffer, 108, 8);
             WriteOctalBytes(0, buffer, 116, 8);
@@ -59,13 +84,16 @@ namespace SharpCompress.Common.Tar.Headers
             var time = (long) (LastModifiedTime - Epoch).TotalSeconds;
             WriteOctalBytes(time, buffer, 136, 12);
 
-            buffer[156] = (byte) EntryType;
 
-            //Encoding.UTF8.GetBytes("magic").CopyTo(buffer, 257);
-            if (Name.Length > 100)
+            if (namePrefix != null)
             {
-                name = Name.Substring(101, Name.Length);
-                ArchiveEncoding.Default.GetBytes(name).CopyTo(buffer, 345);
+                Encoding.ASCII.GetBytes(namePrefix).CopyTo(buffer, 347);
+                Encoding.ASCII.GetBytes("ustar").CopyTo(buffer, 0x101);
+                Encoding.ASCII.GetBytes(" ").CopyTo(buffer, 0x106);
+            }
+            else
+            {
+                buffer[156] = (byte)EntryType;
             }
             if (Size >= 0x1FFFFFFFF)
             {
@@ -95,7 +123,7 @@ namespace SharpCompress.Common.Tar.Headers
             {
                 throw new InvalidOperationException();
             }
-            Name = ArchiveEncoding.Default.GetString(buffer, 0, 100).TrimNulls();
+            Name = Encoding.ASCII.GetString(buffer, 0, 100).TrimNulls();
 
             //Mode = ReadASCIIInt32Base8(buffer, 100, 7);
             //UserId = ReadASCIIInt32Base8(buffer, 108, 7);
@@ -118,15 +146,15 @@ namespace SharpCompress.Common.Tar.Headers
             LastModifiedTime = Epoch.AddSeconds(unixTimeStamp);
 
 
-            Magic = ArchiveEncoding.Default.GetString(buffer, 257, 6).TrimNulls();
+            Magic = Encoding.ASCII.GetString(buffer, 257, 5).TrimNulls();
 
-            if (!string.IsNullOrEmpty(Magic) && "ustar ".Equals(Magic))
+            if (!string.IsNullOrEmpty(Magic) && "ustar".Equals(Magic))
             {
                 string namePrefix = ArchiveEncoding.Default.GetString(buffer, 345, 157);
                 namePrefix = namePrefix.TrimNulls();
                 if (!string.IsNullOrEmpty(namePrefix))
                 {
-                    Name = namePrefix + "/" + Name;
+                    Name = namePrefix + Name;
                 }
             }
             if (EntryType != EntryType.LongName && Name.Length == 0)
@@ -135,22 +163,7 @@ namespace SharpCompress.Common.Tar.Headers
             }
             return true;
         }
-
-        private static void WriteStringBytes(string name, byte[] buffer, int offset, int length)
-        {
-            int i;
-
-            for (i = 0; i < length - 1 && i < name.Length; ++i)
-            {
-                buffer[offset + i] = (byte) name[i];
-            }
-
-            for (; i < length; ++i)
-            {
-                buffer[offset + i] = 0;
-            }
-        }
-
+        
         private static void WriteOctalBytes(long value, byte[] buffer, int offset, int length)
         {
             string val = Convert.ToString(value, 8);
@@ -166,16 +179,6 @@ namespace SharpCompress.Common.Tar.Headers
             buffer[offset + length] = 0;
         }
 
-        private static int ReadASCIIInt32Base8(byte[] buffer, int offset, int count)
-        {
-            string s = Encoding.UTF8.GetString(buffer, offset, count).TrimNulls();
-            if (string.IsNullOrEmpty(s))
-            {
-                return 0;
-            }
-            return Convert.ToInt32(s, 8);
-        }
-
         private static long ReadASCIIInt64Base8(byte[] buffer, int offset, int count)
         {
             string s = Encoding.UTF8.GetString(buffer, offset, count).TrimNulls();
@@ -184,16 +187,6 @@ namespace SharpCompress.Common.Tar.Headers
                 return 0;
             }
             return Convert.ToInt64(s, 8);
-        }
-
-        private static long ReadASCIIInt64(byte[] buffer, int offset, int count)
-        {
-            string s = Encoding.UTF8.GetString(buffer, offset, count).TrimNulls();
-            if (string.IsNullOrEmpty(s))
-            {
-                return 0;
-            }
-            return Convert.ToInt64(s);
         }
 
         internal static int RecalculateChecksum(byte[] buf)

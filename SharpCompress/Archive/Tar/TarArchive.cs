@@ -100,7 +100,7 @@ namespace SharpCompress.Archive.Tar
         {
             try
             {
-                TarHeader tar = new TarHeader();
+                TarHeader tar = new TarHeader(EntryType.File);
                 tar.Read(new BinaryReader(stream));
                 return tar.Name.Length > 0 && Enum.IsDefined(typeof (EntryType), tar.EntryType);
             }

@@ -65,7 +65,7 @@ namespace SharpCompress.Writer.Tar
             long realSize = size ?? source.Length;
 
 
-            TarHeader header = new TarHeader();
+            TarHeader header = new TarHeader(EntryType.File);
             header.LastModifiedTime = modificationTime ?? TarHeader.Epoch;
             header.Name = NormalizeFilename(filename);
             header.Size = realSize;

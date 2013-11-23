@@ -15,7 +15,7 @@ namespace SharpCompress.Common.Tar
                 try
                 {
                     BinaryReader reader = new BinaryReader(stream);
-                    header = new TarHeader();
+                    header = new TarHeader(EntryType.File);
                     if (!header.Read(reader))
                     {
                         yield break;
