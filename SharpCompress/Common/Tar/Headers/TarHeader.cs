@@ -157,10 +157,6 @@ namespace SharpCompress.Common.Tar.Headers
                     Name = namePrefix + Name;
                 }
             }
-            if (EntryType != EntryType.LongName && Name.Length == 0)
-            {
-                return false;
-            }
             return true;
         }
         

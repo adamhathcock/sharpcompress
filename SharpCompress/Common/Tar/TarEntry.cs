@@ -85,17 +85,34 @@ namespace SharpCompress.Common.Tar
         internal static IEnumerable<TarEntry> GetEntries(StreamingMode mode, Stream stream,
                                                          CompressionType compressionType)
         {
+            string nextHeaderName = null;
             foreach (TarHeader h in TarHeaderFactory.ReadHeader(mode, stream))
             {
                 if (h != null)
                 {
-                    if (mode == StreamingMode.Seekable)
+                    if (h.EntryType == EntryType.LongName)
                     {
-                        yield return new TarEntry(new TarFilePart(h, stream), compressionType);
+                        var memoryStream = new MemoryStream();
+                        h.PackedStream.CopyTo(memoryStream);
+                        memoryStream.Position = 0;
+                        var bytes = memoryStream.ToArray();
+                        nextHeaderName = ArchiveEncoding.Default.GetString(bytes, 0, bytes.Length).TrimNulls();
                     }
                     else
                     {
-                        yield return new TarEntry(new TarFilePart(h, null), compressionType);
+                        if (nextHeaderName != null)
+                        {
+                            h.Name = nextHeaderName;
+                            nextHeaderName = null;
+                        }
+                        if (mode == StreamingMode.Seekable)
+                        {
+                            yield return new TarEntry(new TarFilePart(h, stream), compressionType);
+                        }
+                        else
+                        {
+                            yield return new TarEntry(new TarFilePart(h, null), compressionType);
+                        }
                     }
                 }
             }
