@@ -1,6 +1,15 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2012
+# Visual Studio 2013
+VisualStudioVersion = 12.0.21005.1
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Testing", "Testing", "{932BBFCC-76E3-45FF-90CA-6BE4FBF4A097}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{F18F1765-4A02-42FD-9BEF-F0E2FCBD9D17}"
+	ProjectSection(SolutionItems) = preProject
+		NuGet\sharpcompress.nuspec = NuGet\sharpcompress.nuspec
+	EndProjectSection
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharpCompress", "SharpCompress\SharpCompress.csproj", "{10A689CF-76A2-4A4F-96E4-553C33398438}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharpCompress.Test", "SharpCompress.Test\SharpCompress.Test.csproj", "{15679D7A-F22C-4943-87FF-BF5C76C4A6FD}"
@@ -12,13 +21,6 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharpCompress.PortableTest", "SharpCompress\SharpCompress.PortableTest.csproj", "{EFDCAF57-FD4D-4E5D-A3D5-F26B875817ED}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharpCompress.Test.Portable", "SharpCompress.Test\SharpCompress.Test.Portable.csproj", "{E9C3C94B-FB27-4B4F-B225-57513C254D37}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Testing", "Testing", "{932BBFCC-76E3-45FF-90CA-6BE4FBF4A097}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{F18F1765-4A02-42FD-9BEF-F0E2FCBD9D17}"
-	ProjectSection(SolutionItems) = preProject
-		NuGet\sharpcompress.nuspec = NuGet\sharpcompress.nuspec
-	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -55,8 +57,8 @@ Global
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
+		{15679D7A-F22C-4943-87FF-BF5C76C4A6FD} = {932BBFCC-76E3-45FF-90CA-6BE4FBF4A097}
 		{EFDCAF57-FD4D-4E5D-A3D5-F26B875817ED} = {932BBFCC-76E3-45FF-90CA-6BE4FBF4A097}
 		{E9C3C94B-FB27-4B4F-B225-57513C254D37} = {932BBFCC-76E3-45FF-90CA-6BE4FBF4A097}
-		{15679D7A-F22C-4943-87FF-BF5C76C4A6FD} = {932BBFCC-76E3-45FF-90CA-6BE4FBF4A097}
 	EndGlobalSection
 EndGlobal
