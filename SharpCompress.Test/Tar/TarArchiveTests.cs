@@ -54,6 +54,22 @@ namespace SharpCompress.Test
             }
             CompareArchivesByPath(unmodified, scratchPath);
         }
+
+        [TestMethod]
+        public void Tar_Create_New_Long_FileName()
+        {
+            string scratchPath = Path.Combine(SCRATCH_FILES_PATH, "very long filename very long filename very long filename very long filename very long filename very long filename very long filename very long filename very long filename very long filename.tar");
+            string unmodified = Path.Combine(TEST_ARCHIVES_PATH, "Tar.noEmptyDirs.tar");
+
+            base.ResetScratch();
+            using (var archive = TarArchive.Create())
+            {
+                archive.AddAllFromDirectory(ORIGINAL_FILES_PATH);
+                archive.SaveTo(scratchPath, CompressionType.None);
+            }
+            CompareArchivesByPath(unmodified, scratchPath);
+        }
+
         [TestMethod]
         public void Tar_Random_Write_Add()
         {
@@ -71,6 +87,23 @@ namespace SharpCompress.Test
             CompareArchivesByPath(modified, scratchPath);
         }
 
+                [TestMethod]
+        public void Tar_Random_Write_Add_Long_name()
+        {
+            string jpg = Path.Combine(ORIGINAL_FILES_PATH, "jpg\\test.jpg");
+            string scratchPath = Path.Combine(SCRATCH_FILES_PATH, "Tar.mod.tar");
+
+            base.ResetScratch();
+            using (var archive = TarArchive.Create())
+            {
+                archive.AddEntry(@"very long filename/very long filename very long filename very long filename very long filename very long filename very long filename very long filename very long filename very long filename very long filename.jpg", jpg);
+                archive.SaveTo(scratchPath, CompressionType.None);
+            }
+            string unmodified = Path.Combine(TEST_ARCHIVES_PATH, "very long filename.tar");
+
+
+            CompareArchivesByPath(unmodified, scratchPath);
+        }
         [TestMethod]
         public void Tar_Random_Write_Remove()
         {
