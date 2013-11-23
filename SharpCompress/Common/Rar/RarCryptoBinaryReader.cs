@@ -30,7 +30,6 @@ namespace SharpCompress.Common.Rar
 
         public override byte[] ReadBytes(int count)
         {
-            CurrentReadByteCount += count;
             if (UseEncryption)
             {
                 return ReadAndDecryptBytes(count);

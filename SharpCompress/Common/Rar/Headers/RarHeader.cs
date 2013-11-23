@@ -38,7 +38,7 @@ namespace SharpCompress.Common.Rar.Headers
         protected virtual void ReadFromReader(MarkingBinaryReader reader)
         {
             HeadCRC = reader.ReadInt16();
-            HeaderType = (HeaderType)(int)(reader.ReadByte() & 0xff);
+            HeaderType = (HeaderType)(reader.ReadByte() & 0xff);
             Flags = reader.ReadInt16();
             HeaderSize = reader.ReadInt16();
             if (FlagUtility.HasFlag(Flags, LONG_BLOCK))

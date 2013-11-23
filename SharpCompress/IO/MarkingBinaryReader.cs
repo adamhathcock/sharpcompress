@@ -12,7 +12,7 @@ namespace SharpCompress.IO
         {
         }
 
-        public long CurrentReadByteCount { get; protected set; }
+        public long CurrentReadByteCount { get; private set; }
 
         public void Mark()
         {

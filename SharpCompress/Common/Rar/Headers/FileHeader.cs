@@ -14,7 +14,7 @@ namespace SharpCompress.Common.Rar.Headers
         {
             uint lowUncompressedSize = reader.ReadUInt32();
 
-            HostOS = (HostOS)(int)reader.ReadByte();
+            HostOS = (HostOS)reader.ReadByte();
 
             FileCRC = reader.ReadUInt32();
 
