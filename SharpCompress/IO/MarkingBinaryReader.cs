@@ -21,14 +21,12 @@ namespace SharpCompress.IO
 
         public override int Read()
         {
-            CurrentReadByteCount += 4;
-            return base.Read();
+            throw new NotImplementedException();
         }
 
         public override int Read(byte[] buffer, int index, int count)
         {
-            CurrentReadByteCount += count;
-            return base.Read(buffer, index, count);
+            throw new NotImplementedException();
         }
 
         public override int Read(char[] buffer, int index, int count)
@@ -38,8 +36,7 @@ namespace SharpCompress.IO
 
         public override bool ReadBoolean()
         {
-            CurrentReadByteCount++;
-            return base.ReadBoolean();
+            return BitConverter.ToBoolean(ReadBytes(1), 0);
         }
 
         public override byte ReadByte()
@@ -50,7 +47,12 @@ namespace SharpCompress.IO
         public override byte[] ReadBytes(int count)
         {
             CurrentReadByteCount += count;
-            return base.ReadBytes(count);
+            var bytes = base.ReadBytes(count);
+            if (bytes.Length != count)
+            {
+                throw new EndOfStreamException(string.Format("Could not read the requested amount of bytes.  End of stream reached. Requested: {0} Read: {1}", count, bytes.Length));
+            }
+            return bytes;
         }
 
         public override char ReadChar()
