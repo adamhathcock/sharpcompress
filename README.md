@@ -21,6 +21,10 @@ TODOs (always lots):
 * Zip64
 * Multi-volume Zip support.
 
+Version 0.10.3:
+==============
+- Finally fixed Disposal issue when creating a new archive with the Archive API
+
 Version 0.10.2:
 ==============
 - Fixed Rar Header reading for invalid extended time headers.
