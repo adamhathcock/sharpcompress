@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace SharpCompress.Common
 {
-    public abstract class Entry : SharpCompress.Common.IEntry
+    public abstract class Entry : IEntry
     {
         internal bool IsSolid { get; set; }
 

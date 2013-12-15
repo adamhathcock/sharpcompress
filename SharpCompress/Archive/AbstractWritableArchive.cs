@@ -117,5 +117,13 @@ namespace SharpCompress.Archive
 
         protected abstract void SaveTo(Stream stream, CompressionInfo compressionType,
                                        IEnumerable<TEntry> oldEntries, IEnumerable<TEntry> newEntries);
+
+        public override void Dispose()
+        {
+            base.Dispose();
+            newEntries.Cast<Entry>().ForEach(x => x.Close());
+            removedEntries.Cast<Entry>().ForEach(x => x.Close());
+            modifiedEntries.Cast<Entry>().ForEach(x => x.Close());
+        }
     }
 }

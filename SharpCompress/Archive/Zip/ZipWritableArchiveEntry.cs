@@ -8,16 +8,17 @@ namespace SharpCompress.Archive.Zip
 {
     internal class ZipWritableArchiveEntry : ZipArchiveEntry
     {
-        private string path;
-        private long size;
-        private DateTime? lastModified;
-        private bool closeStream;
+        private readonly string path;
+        private readonly long size;
+        private readonly DateTime? lastModified;
+        private readonly bool closeStream;
+        private bool isDisposed;
 
         internal ZipWritableArchiveEntry(ZipArchive archive, Stream stream, string path, long size,
                                          DateTime? lastModified, bool closeStream)
             : base(archive, null)
         {
-            this.Stream = stream;
+            Stream = stream;
             this.path = path;
             this.size = size;
             this.lastModified = lastModified;
@@ -93,9 +94,10 @@ namespace SharpCompress.Archive.Zip
 
         internal override void Close()
         {
-            if (closeStream)
+            if (closeStream && !isDisposed)
             {
                 Stream.Dispose();
+                isDisposed = true;
             }
         }
     }

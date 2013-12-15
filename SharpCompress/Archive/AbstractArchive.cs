@@ -118,7 +118,7 @@ namespace SharpCompress.Archive
 
         private bool disposed;
 
-        public void Dispose()
+        public virtual void Dispose()
         {
             if (!disposed)
             {
