@@ -1,4 +1,5 @@
 ﻿
+using System;
 using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -184,16 +185,32 @@ namespace SharpCompress.Test
         [TestMethod]
         public void Zip_Create_New()
         {
-            string scratchPath = Path.Combine(SCRATCH_FILES_PATH, "Zip.deflate.noEmptyDirs.zip");
+            base.ResetScratch();
+            foreach (var file in Directory.EnumerateFiles(ORIGINAL_FILES_PATH, "*.*", SearchOption.AllDirectories))
+            {
+                var newFileName = file.Substring(ORIGINAL_FILES_PATH.Length);
+                if (newFileName.StartsWith(Path.DirectorySeparatorChar.ToString()))
+                {
+                    newFileName = newFileName.Substring(1);
+                }
+                newFileName = Path.Combine(SCRATCH_FILES_PATH, newFileName);
+                var newDir = Path.GetDirectoryName(newFileName);
+                if (!Directory.Exists(newDir))
+                {
+                    Directory.CreateDirectory(newDir);
+                }
+                File.Copy(file, newFileName);
+            }
+            string scratchPath = Path.Combine(SCRATCH2_FILES_PATH, "Zip.deflate.noEmptyDirs.zip");
             string unmodified = Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.noEmptyDirs.zip");
 
-            base.ResetScratch();
             using (var archive = ZipArchive.Create())
             {
-                archive.AddAllFromDirectory(ORIGINAL_FILES_PATH);
+                archive.AddAllFromDirectory(SCRATCH_FILES_PATH);
                 archive.SaveTo(scratchPath, CompressionType.Deflate);
             }
             CompareArchivesByPath(unmodified, scratchPath);
+            Directory.Delete(SCRATCH_FILES_PATH, true);
         }
 
         [TestMethod]
