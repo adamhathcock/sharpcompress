@@ -6,7 +6,7 @@ namespace SharpCompress.IO
 {
     public class ReadOnlyAppendingStream : Stream
     {
-        private Queue<Stream> streams;
+        private readonly Queue<Stream> streams;
         private Stream current;
 
         public ReadOnlyAppendingStream(IEnumerable<Stream> streams)
@@ -21,12 +21,12 @@ namespace SharpCompress.IO
 
         public override bool CanSeek
         {
-            get { throw new NotImplementedException(); }
+            get { return false; }
         }
 
         public override bool CanWrite
         {
-            get { throw new NotImplementedException(); }
+            get { return false; }
         }
 
         public override void Flush()

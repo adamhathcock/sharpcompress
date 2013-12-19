@@ -75,17 +75,17 @@ namespace SharpCompress.Common.Rar
 
         public override bool CanRead
         {
-            get { throw new NotImplementedException(); }
+            get { return true; }
         }
 
         public override bool CanSeek
         {
-            get { throw new NotImplementedException(); }
+            get { return false; }
         }
 
         public override bool CanWrite
         {
-            get { throw new NotImplementedException(); }
+            get { return false; }
         }
 
         public override long Length
