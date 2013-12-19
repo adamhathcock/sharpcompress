@@ -8,7 +8,7 @@ namespace SharpCompress.Compressor.Rar
     {
         private readonly Unpack unpack;
         private readonly FileHeader fileHeader;
-        private Stream readStream;
+        private readonly Stream readStream;
 
         private bool fetch = false;
 
@@ -45,22 +45,30 @@ namespace SharpCompress.Compressor.Rar
 
         public override bool CanRead
         {
-            get { throw new NotImplementedException(); }
+            get
+            {
+                return true;
+            }
         }
 
         public override bool CanSeek
         {
-            get { throw new NotImplementedException(); }
+            get
+            {
+                return false;
+            }
         }
 
         public override bool CanWrite
         {
-            get { throw new NotImplementedException(); }
+            get
+            {
+                return false;
+            }
         }
 
         public override void Flush()
         {
-            throw new NotImplementedException();
         }
 
         public override long Length
@@ -112,7 +120,9 @@ namespace SharpCompress.Compressor.Rar
         public override void Write(byte[] buffer, int offset, int count)
         {
             if (!fetch)
+            {
                 throw new NotImplementedException();
+            }
             if (outCount > 0)
             {
                 int toCopy = outCount < count ? outCount : count;
