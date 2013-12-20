@@ -6,19 +6,20 @@ using SharpCompress.IO;
 
 namespace SharpCompress.Archive.Zip
 {
-    internal class ZipWritableArchiveEntry : ZipArchiveEntry
+    internal class ZipWritableArchiveEntry : ZipArchiveEntry, IWritableArchiveEntry
     {
         private readonly string path;
         private readonly long size;
         private readonly DateTime? lastModified;
         private readonly bool closeStream;
+        private readonly Stream stream;
         private bool isDisposed;
 
         internal ZipWritableArchiveEntry(ZipArchive archive, Stream stream, string path, long size,
                                          DateTime? lastModified, bool closeStream)
             : base(archive, null)
         {
-            Stream = stream;
+            this.stream = stream;
             this.path = path;
             this.size = size;
             this.lastModified = lastModified;
@@ -85,18 +86,24 @@ namespace SharpCompress.Archive.Zip
             get { throw new NotImplementedException(); }
         }
 
-        internal Stream Stream { get; private set; }
+        Stream IWritableArchiveEntry.Stream
+        {
+            get
+            {
+                return stream;
+            }
+        }
 
         public override Stream OpenEntryStream()
         {
-            return new NonDisposingStream(Stream);
+            return new NonDisposingStream(stream);
         }
 
         internal override void Close()
         {
             if (closeStream && !isDisposed)
             {
-                Stream.Dispose();
+                stream.Dispose();
                 isDisposed = true;
             }
         }

@@ -88,6 +88,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Archive\IWritableArchiveEntry.cs" />
     <Compile Include="Common\ArchiveEncoding.cs" />
     <Compile Include="Archive\AbstractWritableArchive.cs" />
     <Compile Include="Archive\AbstractArchive.cs" />

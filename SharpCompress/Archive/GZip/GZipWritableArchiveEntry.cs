@@ -6,18 +6,19 @@ using SharpCompress.IO;
 
 namespace SharpCompress.Archive.GZip
 {
-    internal class GZipWritableArchiveEntry : GZipArchiveEntry
+    internal class GZipWritableArchiveEntry : GZipArchiveEntry, IWritableArchiveEntry
     {
-        private string path;
-        private long size;
-        private DateTime? lastModified;
-        private bool closeStream;
+        private readonly string path;
+        private readonly long size;
+        private readonly DateTime? lastModified;
+        private readonly bool closeStream;
+        private readonly Stream stream;
 
         internal GZipWritableArchiveEntry(GZipArchive archive, Stream stream,
                                           string path, long size, DateTime? lastModified, bool closeStream)
             : base(archive, null)
         {
-            this.Stream = stream;
+            this.stream = stream;
             this.path = path;
             this.size = size;
             this.lastModified = lastModified;
@@ -84,18 +85,24 @@ namespace SharpCompress.Archive.GZip
             get { throw new NotImplementedException(); }
         }
 
-        internal Stream Stream { get; private set; }
+        Stream IWritableArchiveEntry.Stream
+        {
+            get
+            {
+                return stream;
+            }
+        }
 
         public override Stream OpenEntryStream()
         {
-            return new NonDisposingStream(Stream);
+            return new NonDisposingStream(stream);
         }
 
         internal override void Close()
         {
             if (closeStream)
             {
-                Stream.Dispose();
+                stream.Dispose();
             }
         }
     }

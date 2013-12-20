@@ -2,6 +2,7 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using SharpCompress.Archive;
 using SharpCompress.Archive.Zip;
@@ -161,6 +162,25 @@ namespace SharpCompress.Test
                 archive.SaveTo(scratchPath, CompressionType.Deflate);
             }
             CompareArchivesByPath(modified, scratchPath);
+        }
+
+        [TestMethod]
+        public void Zip_Save_Twice()
+        {
+            string scratchPath1 = Path.Combine(SCRATCH_FILES_PATH, "a.zip");
+            string scratchPath2 = Path.Combine(SCRATCH_FILES_PATH, "b.zip");
+
+            ResetScratch();
+            using (var arc = ZipArchive.Create())
+            {
+                string str = "test.txt";
+                var source = new MemoryStream(Encoding.UTF8.GetBytes(str));
+                arc.AddEntry("test.txt", source, true, source.Length);
+                arc.SaveTo(scratchPath1, CompressionType.Deflate);
+                arc.SaveTo(scratchPath2, CompressionType.Deflate);
+            }
+
+            Assert.AreEqual(new FileInfo(scratchPath1).Length, new FileInfo(scratchPath2).Length);
         }
 
         [TestMethod]

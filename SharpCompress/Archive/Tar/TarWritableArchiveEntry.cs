@@ -6,18 +6,19 @@ using SharpCompress.IO;
 
 namespace SharpCompress.Archive.Tar
 {
-    internal class TarWritableArchiveEntry : TarArchiveEntry
+    internal class TarWritableArchiveEntry : TarArchiveEntry, IWritableArchiveEntry
     {
         private readonly string path;
         private readonly long size;
         private readonly DateTime? lastModified;
         private readonly bool closeStream;
+        private readonly Stream stream;
 
         internal TarWritableArchiveEntry(TarArchive archive, Stream stream, CompressionType compressionType,
                                          string path, long size, DateTime? lastModified, bool closeStream)
             : base(archive, null, compressionType)
         {
-            Stream = stream;
+            this.stream = stream;
             this.path = path;
             this.size = size;
             this.lastModified = lastModified;
@@ -83,19 +84,24 @@ namespace SharpCompress.Archive.Tar
         {
             get { throw new NotImplementedException(); }
         }
-
-        internal Stream Stream { get; private set; }
+        Stream IWritableArchiveEntry.Stream
+        {
+            get
+            {
+                return stream;
+            }
+        }
 
         public override Stream OpenEntryStream()
         {
-            return new NonDisposingStream(Stream);
+            return new NonDisposingStream(stream);
         }
 
         internal override void Close()
         {
             if (closeStream)
             {
-                Stream.Dispose();
+                stream.Dispose();
             }
         }
     }

@@ -14,7 +14,7 @@ namespace SharpCompress.Archive.Zip
 {
     public class ZipArchive : AbstractWritableArchive<ZipArchiveEntry, ZipVolume>
     {
-        private SeekableZipHeaderFactory headerFactory;
+        private readonly SeekableZipHeaderFactory headerFactory;
 
         /// <summary>
         /// Gets or sets the compression level applied to files added to the archive,

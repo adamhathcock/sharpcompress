@@ -94,6 +94,8 @@ namespace SharpCompress.Archive
 
         public void SaveTo(Stream stream, CompressionInfo compressionType)
         {
+            //reset streams of new entries
+            newEntries.Cast<IWritableArchiveEntry>().ForEach(x => x.Stream.Seek(0, SeekOrigin.Begin));
             SaveTo(stream, compressionType, OldEntries, newEntries);
         }
 
@@ -104,6 +106,8 @@ namespace SharpCompress.Archive
             {
                 throw new ArgumentException("Streams must be readable and seekable to use the Writing Archive API");
             }
+            //ensure new stream is at the start, this could be reset
+            source.Seek(0, SeekOrigin.Begin);
             return CreateEntryInternal(filePath, source, size, modified, closeStream);
         }
 

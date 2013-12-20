@@ -46,6 +46,7 @@
     <Compile Include="Archive\IArchive.Extensions.cs" />
     <Compile Include="Archive\IArchiveEntry.cs" />
     <Compile Include="Archive\IArchiveEntry.Extensions.cs" />
+    <Compile Include="Archive\IWritableArchiveEntry.cs" />
     <Compile Include="Archive\Rar\RarArchive.cs" />
     <Compile Include="Archive\Rar\RarArchive.Extensions.cs" />
     <Compile Include="Archive\Rar\RarArchiveEntry.cs" />
