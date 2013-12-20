@@ -214,6 +214,36 @@ namespace SharpCompress.Test
         }
 
         [TestMethod]
+        public void Zip_Create_New_Add_Remove()
+        {
+            base.ResetScratch();
+            foreach (var file in Directory.EnumerateFiles(ORIGINAL_FILES_PATH, "*.*", SearchOption.AllDirectories))
+            {
+                var newFileName = file.Substring(ORIGINAL_FILES_PATH.Length);
+                if (newFileName.StartsWith(Path.DirectorySeparatorChar.ToString()))
+                {
+                    newFileName = newFileName.Substring(1);
+                }
+                newFileName = Path.Combine(SCRATCH_FILES_PATH, newFileName);
+                var newDir = Path.GetDirectoryName(newFileName);
+                if (!Directory.Exists(newDir))
+                {
+                    Directory.CreateDirectory(newDir);
+                }
+                File.Copy(file, newFileName);
+            }
+            string scratchPath = Path.Combine(SCRATCH2_FILES_PATH, "Zip.deflate.noEmptyDirs.zip");
+
+            using (var archive = ZipArchive.Create())
+            {
+                archive.AddAllFromDirectory(SCRATCH_FILES_PATH);
+                archive.RemoveEntry(archive.Entries.Single(x => x.FilePath.EndsWith("jpg", StringComparison.OrdinalIgnoreCase)));
+                Assert.IsFalse(archive.Entries.Any(x => x.FilePath.EndsWith("jpg")));
+            }
+            Directory.Delete(SCRATCH_FILES_PATH, true);
+        }
+
+        [TestMethod]
         public void Zip_Deflate_WinzipAES_Read()
         {
             ResetScratch();

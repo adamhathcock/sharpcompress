@@ -22,10 +22,10 @@ namespace SharpCompress.Archive
         {
         }
 
-        internal AbstractWritableArchive(ArchiveType type, IEnumerable<Stream> streams, Options options)
-            : base(type, streams, options)
+        internal AbstractWritableArchive(ArchiveType type, Stream stream, Options options)
+            : base(type, stream.AsEnumerable(), options)
         {
-            if (streams.Any(x => !x.CanWrite))
+            if (!stream.CanWrite)
             {
                 anyNotWritable = true;
             }
@@ -61,6 +61,7 @@ namespace SharpCompress.Archive
         private void RebuildModifiedCollection()
         {
             hasModifications = true;
+            newEntries.RemoveAll(v => removedEntries.Contains(v));
             modifiedEntries.Clear();
             modifiedEntries.AddRange(OldEntries.Concat(newEntries));
         }

@@ -39,15 +39,15 @@ namespace SharpCompress.Archive
 
         internal AbstractArchive(ArchiveType type, IEnumerable<Stream> streams, Options options)
         {
-            this.Type = type;
+            Type = type;
             lazyVolumes =
-                new LazyReadOnlyCollection<TVolume>(LoadVolumes(streams.Select<Stream, Stream>(CheckStreams), options));
+                new LazyReadOnlyCollection<TVolume>(LoadVolumes(streams.Select(CheckStreams), options));
             lazyEntries = new LazyReadOnlyCollection<TEntry>(LoadEntries(Volumes));
         }
 
         internal AbstractArchive(ArchiveType type)
         {
-            this.Type = type;
+            Type = type;
             lazyVolumes = new LazyReadOnlyCollection<TVolume>(Enumerable.Empty<TVolume>());
             lazyEntries = new LazyReadOnlyCollection<TEntry>(Enumerable.Empty<TEntry>());
         }

@@ -147,7 +147,7 @@ namespace SharpCompress.Archive.GZip
         /// <param name="stream"></param>
         /// <param name="options"></param>
         internal GZipArchive(Stream stream, Options options)
-            : base(ArchiveType.GZip, stream.AsEnumerable(), options)
+            : base(ArchiveType.GZip, stream, options)
         {
         }
 

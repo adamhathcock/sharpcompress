@@ -133,7 +133,7 @@ namespace SharpCompress.Archive.Tar
         /// <param name="stream"></param>
         /// <param name="options"></param>
         internal TarArchive(Stream stream, Options options)
-            : base(ArchiveType.Tar, stream.AsEnumerable(), options)
+            : base(ArchiveType.Tar, stream, options)
         {
         }
 

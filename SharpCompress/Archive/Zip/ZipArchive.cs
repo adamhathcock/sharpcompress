@@ -164,7 +164,7 @@ namespace SharpCompress.Archive.Zip
         /// <param name="options"></param>
         /// <param name="password"></param>
         internal ZipArchive(Stream stream, Options options, string password = null)
-            : base(ArchiveType.Zip, stream.AsEnumerable(), options)
+            : base(ArchiveType.Zip, stream, options)
         {
             headerFactory = new SeekableZipHeaderFactory(password);
         }
