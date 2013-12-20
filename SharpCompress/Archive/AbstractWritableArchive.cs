@@ -15,7 +15,6 @@ namespace SharpCompress.Archive
 
         private readonly List<TEntry> modifiedEntries = new List<TEntry>();
         private bool hasModifications;
-        private readonly bool anyNotWritable;
 
         internal AbstractWritableArchive(ArchiveType type)
             : base(type)
@@ -25,10 +24,6 @@ namespace SharpCompress.Archive
         internal AbstractWritableArchive(ArchiveType type, Stream stream, Options options)
             : base(type, stream.AsEnumerable(), options)
         {
-            if (!stream.CanWrite)
-            {
-                anyNotWritable = true;
-            }
         }
 
 #if !PORTABLE && !NETFX_CORE
@@ -37,14 +32,6 @@ namespace SharpCompress.Archive
         {
         }
 #endif
-
-        private void CheckWritable()
-        {
-            if (anyNotWritable)
-            {
-                throw new ArchiveException("All Archive streams must be Writable to use Archive writing functionality.");
-            }
-        }
 
         public override ICollection<TEntry> Entries
         {
@@ -73,7 +60,6 @@ namespace SharpCompress.Archive
 
         public void RemoveEntry(TEntry entry)
         {
-            CheckWritable();
             if (!removedEntries.Contains(entry))
             {
                 removedEntries.Add(entry);
@@ -84,7 +70,6 @@ namespace SharpCompress.Archive
         public void AddEntry(string filePath, Stream source,
                              long size = 0, DateTime? modified = null)
         {
-            CheckWritable();
             newEntries.Add(CreateEntry(filePath, source, size, modified, false));
             RebuildModifiedCollection();
         }
@@ -92,7 +77,6 @@ namespace SharpCompress.Archive
         public void AddEntry(string filePath, Stream source, bool closeStream,
                              long size = 0, DateTime? modified = null)
         {
-            CheckWritable();
             newEntries.Add(CreateEntry(filePath, source, size, modified, closeStream));
             RebuildModifiedCollection();
         }
