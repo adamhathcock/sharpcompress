@@ -139,26 +139,7 @@ namespace SharpCompress.Test
             base.ResetScratch();
             using (var archive = ZipArchive.Open(unmodified))
             {
-                var entry = archive.Entries.Where(x => x.FilePath.EndsWith("jpg")).Single();
-                archive.RemoveEntry(entry);
-                archive.SaveTo(scratchPath, CompressionType.Deflate);
-            }
-            CompareArchivesByPath(modified, scratchPath);
-        }
-
-        [TestMethod]
-        [ExpectedException(typeof(ArchiveException))]
-        public void Zip_Random_Write_Remove_Fail()
-        {
-            string scratchPath = Path.Combine(SCRATCH_FILES_PATH, "Zip.deflate.mod.zip");
-            string unmodified = Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.noEmptyDirs.zip");
-            string modified = Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.mod.zip");
-
-            base.ResetScratch();
-            using (var stream = File.OpenRead(unmodified))
-            using (var archive = ZipArchive.Open(stream))
-            {
-                var entry = archive.Entries.Where(x => x.FilePath.EndsWith("jpg")).Single();
+                var entry = archive.Entries.Single(x => x.FilePath.EndsWith("jpg"));
                 archive.RemoveEntry(entry);
                 archive.SaveTo(scratchPath, CompressionType.Deflate);
             }
