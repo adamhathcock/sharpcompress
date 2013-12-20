@@ -97,7 +97,17 @@ namespace SharpCompress.Archive
             SaveTo(stream, compressionType, OldEntries, newEntries);
         }
 
-        protected abstract TEntry CreateEntry(string filePath, Stream source, long size, DateTime? modified,
+        protected TEntry CreateEntry(string filePath, Stream source, long size, DateTime? modified,
+            bool closeStream)
+        {
+            if (!source.CanRead || !source.CanSeek)
+            {
+                throw new ArgumentException("Streams must be readable and seekable to use the Writing Archive API");
+            }
+            return CreateEntryInternal(filePath, source, size, modified, closeStream);
+        }
+
+        protected abstract TEntry CreateEntryInternal(string filePath, Stream source, long size, DateTime? modified,
                                               bool closeStream);
 
         protected abstract void SaveTo(Stream stream, CompressionInfo compressionType,

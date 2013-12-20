@@ -6,7 +6,7 @@ namespace SharpCompress.Archive.Zip
 {
     public class ZipArchiveEntry : ZipEntry, IArchiveEntry
     {
-        private ZipArchive archive;
+        private readonly ZipArchive archive;
 
         internal ZipArchiveEntry(ZipArchive archive, SeekableZipFilePart part)
             : base(part)

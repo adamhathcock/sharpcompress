@@ -183,7 +183,7 @@ namespace SharpCompress.Archive.Tar
             return new TarArchive();
         }
 
-        protected override TarArchiveEntry CreateEntry(string filePath, Stream source,
+        protected override TarArchiveEntry CreateEntryInternal(string filePath, Stream source,
                                                        long size, DateTime? modified, bool closeStream)
         {
             return new TarWritableArchiveEntry(this, source, CompressionType.Unknown, filePath, size, modified,

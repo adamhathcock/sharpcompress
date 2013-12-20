@@ -7,7 +7,7 @@ namespace SharpCompress.Archive.Tar
 {
     public class TarArchiveEntry : TarEntry, IArchiveEntry
     {
-        private TarArchive archive;
+        private readonly TarArchive archive;
 
         internal TarArchiveEntry(TarArchive archive, TarFilePart part, CompressionType compressionType)
             : base(part, compressionType)

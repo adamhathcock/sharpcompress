@@ -220,7 +220,7 @@ namespace SharpCompress.Archive.Zip
             }
         }
 
-        protected override ZipArchiveEntry CreateEntry(string filePath, Stream source, long size, DateTime? modified,
+        protected override ZipArchiveEntry CreateEntryInternal(string filePath, Stream source, long size, DateTime? modified,
                                                        bool closeStream)
         {
             return new ZipWritableArchiveEntry(this, source, filePath, size, modified, closeStream);

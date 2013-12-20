@@ -8,16 +8,16 @@ namespace SharpCompress.Archive.Tar
 {
     internal class TarWritableArchiveEntry : TarArchiveEntry
     {
-        private string path;
-        private long size;
-        private DateTime? lastModified;
-        private bool closeStream;
+        private readonly string path;
+        private readonly long size;
+        private readonly DateTime? lastModified;
+        private readonly bool closeStream;
 
         internal TarWritableArchiveEntry(TarArchive archive, Stream stream, CompressionType compressionType,
                                          string path, long size, DateTime? lastModified, bool closeStream)
             : base(archive, null, compressionType)
         {
-            this.Stream = stream;
+            Stream = stream;
             this.path = path;
             this.size = size;
             this.lastModified = lastModified;

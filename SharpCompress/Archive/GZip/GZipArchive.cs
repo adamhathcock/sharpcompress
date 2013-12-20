@@ -158,10 +158,10 @@ namespace SharpCompress.Archive.GZip
 
         public void SaveTo(Stream stream)
         {
-            this.SaveTo(stream, CompressionType.GZip);
+            SaveTo(stream, CompressionType.GZip);
         }
 
-        protected override GZipArchiveEntry CreateEntry(string filePath, Stream source, long size, DateTime? modified,
+        protected override GZipArchiveEntry CreateEntryInternal(string filePath, Stream source, long size, DateTime? modified,
                                                         bool closeStream)
         {
             if (Entries.Any())
