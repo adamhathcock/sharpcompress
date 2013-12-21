@@ -183,6 +183,24 @@ namespace SharpCompress.Test
             Assert.AreEqual(new FileInfo(scratchPath1).Length, new FileInfo(scratchPath2).Length);
         }
 
+            [TestMethod]
+        public void Zip_Removal_Poly()
+        {
+            ResetScratch();
+
+            string scratchPath = Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.noEmptyDirs.zip");
+
+
+
+            using (ZipArchive vfs = (ZipArchive)ArchiveFactory.Open(scratchPath))
+            {
+                var e = vfs.Entries.First(v => v.FilePath.EndsWith("jpg"));
+                vfs.RemoveEntry(e);
+                Assert.IsNull(vfs.Entries.FirstOrDefault(v => v.FilePath.EndsWith("jpg")));
+                Assert.IsNull(((IArchive)vfs).Entries.FirstOrDefault(v => v.FilePath.EndsWith("jpg")));
+            }
+        }
+
         [TestMethod]
         public void Zip_Create_New()
         {

@@ -108,7 +108,7 @@ namespace SharpCompress.Archive
 
         IEnumerable<IArchiveEntry> IArchive.Entries
         {
-            get { return lazyEntries.Cast<IArchiveEntry>(); }
+            get { return Entries.Cast<IArchiveEntry>(); }
         }
 
         IEnumerable<IVolume> IArchive.Volumes
