@@ -67,28 +67,29 @@ namespace SharpCompress.Archive
             }
         }
 
-        public void AddEntry(string filePath, Stream source,
+        public TEntry AddEntry(string filePath, Stream source,
                              long size = 0, DateTime? modified = null)
         {
-            newEntries.Add(CreateEntry(filePath, source, size, modified, false));
-            RebuildModifiedCollection();
+            return AddEntry(filePath, source, false, size, modified);
         }
 
-        public void AddEntry(string filePath, Stream source, bool closeStream,
+        public TEntry AddEntry(string filePath, Stream source, bool closeStream,
                              long size = 0, DateTime? modified = null)
         {
-            newEntries.Add(CreateEntry(filePath, source, size, modified, closeStream));
+            var entry = CreateEntry(filePath, source, size, modified, closeStream);
+            newEntries.Add(entry);
             RebuildModifiedCollection();
+            return entry;
         }
 
 #if !PORTABLE && !NETFX_CORE
-        public void AddEntry(string filePath, FileInfo fileInfo)
+        public TEntry AddEntry(string filePath, FileInfo fileInfo)
         {
             if (!fileInfo.Exists)
             {
                 throw new ArgumentException("FileInfo does not exist.");
             }
-            AddEntry(filePath, fileInfo.OpenRead(), true, fileInfo.Length, fileInfo.LastWriteTime);
+            return AddEntry(filePath, fileInfo.OpenRead(), true, fileInfo.Length, fileInfo.LastWriteTime);
         }
 #endif
 
