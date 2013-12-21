@@ -67,29 +67,52 @@ namespace SharpCompress.Archive
             }
         }
 
-        public TEntry AddEntry(string filePath, Stream source,
+        public TEntry AddEntry(string key, Stream source,
                              long size = 0, DateTime? modified = null)
         {
-            return AddEntry(filePath, source, false, size, modified);
+            return AddEntry(key, source, false, size, modified);
         }
 
-        public TEntry AddEntry(string filePath, Stream source, bool closeStream,
+        public TEntry AddEntry(string key, Stream source, bool closeStream,
                              long size = 0, DateTime? modified = null)
         {
-            var entry = CreateEntry(filePath, source, size, modified, closeStream);
+            if (key.StartsWith("/")
+                || key.StartsWith("\\"))
+            {
+                key = key.Substring(1);
+            }
+            if (DoesKeyMatchExisting(key))
+            {
+                throw new ArchiveException("Cannot add entry with duplicate key: " + key);
+            }
+            var entry = CreateEntry(key, source, size, modified, closeStream);
             newEntries.Add(entry);
             RebuildModifiedCollection();
             return entry;
         }
 
+        private bool DoesKeyMatchExisting(string key)
+        {
+            foreach (var path in Entries.Select(x => x.FilePath))
+            {
+                var p = path.Replace('/','\\');
+                if (p.StartsWith("\\"))
+                {
+                    p = p.Substring(1);
+                }
+                return string.Equals(p, key, StringComparison.OrdinalIgnoreCase);
+            }
+            return false;
+        }
+
 #if !PORTABLE && !NETFX_CORE
-        public TEntry AddEntry(string filePath, FileInfo fileInfo)
+        public TEntry AddEntry(string key, FileInfo fileInfo)
         {
             if (!fileInfo.Exists)
             {
                 throw new ArgumentException("FileInfo does not exist.");
             }
-            return AddEntry(filePath, fileInfo.OpenRead(), true, fileInfo.Length, fileInfo.LastWriteTime);
+            return AddEntry(key, fileInfo.OpenRead(), true, fileInfo.Length, fileInfo.LastWriteTime);
         }
 #endif
 
@@ -100,7 +123,7 @@ namespace SharpCompress.Archive
             SaveTo(stream, compressionType, OldEntries, newEntries);
         }
 
-        protected TEntry CreateEntry(string filePath, Stream source, long size, DateTime? modified,
+        protected TEntry CreateEntry(string key, Stream source, long size, DateTime? modified,
             bool closeStream)
         {
             if (!source.CanRead || !source.CanSeek)
@@ -109,10 +132,10 @@ namespace SharpCompress.Archive
             }
             //ensure new stream is at the start, this could be reset
             source.Seek(0, SeekOrigin.Begin);
-            return CreateEntryInternal(filePath, source, size, modified, closeStream);
+            return CreateEntryInternal(key, source, size, modified, closeStream);
         }
 
-        protected abstract TEntry CreateEntryInternal(string filePath, Stream source, long size, DateTime? modified,
+        protected abstract TEntry CreateEntryInternal(string key, Stream source, long size, DateTime? modified,
                                               bool closeStream);
 
         protected abstract void SaveTo(Stream stream, CompressionInfo compressionType,

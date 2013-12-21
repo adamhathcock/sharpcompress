@@ -202,6 +202,17 @@ namespace SharpCompress.Test
         }
 
         [TestMethod]
+        [ExpectedException(typeof(ArchiveException))]
+        public void Zip_Create_NoDups()
+        {
+            using (var arc = ZipArchive.Create())
+            {
+                arc.AddEntry("1.txt", new MemoryStream());
+                arc.AddEntry("\\1.txt", new MemoryStream());
+            }
+        }
+
+        [TestMethod]
         public void Zip_Create_New()
         {
             base.ResetScratch();
