@@ -96,6 +96,8 @@ namespace SharpCompress.Archive.Zip
 
         public override Stream OpenEntryStream()
         {
+            //ensure new stream is at the start, this could be reset
+            stream.Seek(0, SeekOrigin.Begin);
             return new NonDisposingStream(stream);
         }
 

@@ -130,8 +130,6 @@ namespace SharpCompress.Archive
             {
                 throw new ArgumentException("Streams must be readable and seekable to use the Writing Archive API");
             }
-            //ensure new stream is at the start, this could be reset
-            source.Seek(0, SeekOrigin.Begin);
             return CreateEntryInternal(key, source, size, modified, closeStream);
         }
 

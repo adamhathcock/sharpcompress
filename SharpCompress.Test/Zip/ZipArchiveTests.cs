@@ -183,7 +183,7 @@ namespace SharpCompress.Test
             Assert.AreEqual(new FileInfo(scratchPath1).Length, new FileInfo(scratchPath2).Length);
         }
 
-            [TestMethod]
+        [TestMethod]
         public void Zip_Removal_Poly()
         {
             ResetScratch();
@@ -210,6 +210,27 @@ namespace SharpCompress.Test
                 arc.AddEntry("1.txt", new MemoryStream());
                 arc.AddEntry("\\1.txt", new MemoryStream());
             }
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(ArchiveException))]
+        public void Zip_Create_Same_Stream()
+        {
+            string scratchPath1 = Path.Combine(SCRATCH_FILES_PATH, "a.zip");
+            string scratchPath2 = Path.Combine(SCRATCH_FILES_PATH, "b.zip");
+
+            using (var arc = ZipArchive.Create())
+            {
+                using (var stream = new MemoryStream(Encoding.UTF8.GetBytes("qwert")))
+                {
+                    arc.AddEntry("1.txt", stream, false, stream.Length);
+                    arc.AddEntry("2.txt", stream, false, stream.Length);
+                    arc.SaveTo(scratchPath1, CompressionType.Deflate);
+                    arc.SaveTo(scratchPath2, CompressionType.Deflate);
+                }
+            }
+
+            Assert.AreEqual(new FileInfo(scratchPath1).Length, new FileInfo(scratchPath2).Length);
         }
 
         [TestMethod]
@@ -369,7 +390,7 @@ namespace SharpCompress.Test
 
             using (var zipArchive = ZipArchive.Open(stream))
             {
-                foreach(var entry in zipArchive.Entries)
+                foreach (var entry in zipArchive.Entries)
                 {
                     using (var entryStream = entry.OpenEntryStream())
                     {
