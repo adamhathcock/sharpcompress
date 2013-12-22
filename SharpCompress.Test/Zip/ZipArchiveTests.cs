@@ -213,7 +213,6 @@ namespace SharpCompress.Test
         }
 
         [TestMethod]
-        [ExpectedException(typeof(ArchiveException))]
         public void Zip_Create_Same_Stream()
         {
             string scratchPath1 = Path.Combine(SCRATCH_FILES_PATH, "a.zip");
