@@ -123,7 +123,11 @@ namespace SharpCompress.Archive.Tar
 
         protected override IEnumerable<TarVolume> LoadVolumes(FileInfo file, Options options)
         {
-            return new TarVolume(file, options).AsEnumerable();
+            if (FlagUtility.HasFlag(options, Options.KeepStreamsOpen))
+            {
+                options = (Options)FlagUtility.SetFlag(options, Options.KeepStreamsOpen, false);
+            }
+            return new TarVolume(file.OpenRead(), options).AsEnumerable();
         }
 #endif
 

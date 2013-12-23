@@ -65,7 +65,7 @@ namespace SharpCompress.Test
             {
                 using (var archive = RarArchive.Open(stream))
                 {
-                    Assert.IsFalse(archive.IsSolidArchive());
+                    Assert.IsFalse(archive.IsSolid);
                     foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
                     {
                         entry.WriteToDirectory(SCRATCH_FILES_PATH,
@@ -132,7 +132,7 @@ namespace SharpCompress.Test
             {
                 using (var archive = RarArchive.Open(stream))
                 {
-                    Assert.IsFalse(archive.IsSolidArchive());
+                    Assert.IsFalse(archive.IsSolid);
                     Assert.IsTrue(archive.Entries.Any(entry => entry.IsDirectory));
                 }
             }

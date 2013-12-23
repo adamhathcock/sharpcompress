@@ -8,14 +8,9 @@ namespace SharpCompress.Archive
     {
         public static void WriteTo(this IArchiveEntry archiveEntry, Stream streamToWriteTo)
         {
-            if (archiveEntry.Archive.IsSolid)
+            if (archiveEntry.Archive.Type == ArchiveType.Rar && archiveEntry.Archive.IsSolid)
             {
                 throw new InvalidFormatException("Cannot use Archive random access on SOLID Rar files.");
-            }
-
-            if (archiveEntry.IsEncrypted)
-            {
-                throw new PasswordProtectedException("Entry is password protected and cannot be extracted.");
             }
 
             if (archiveEntry.IsDirectory)

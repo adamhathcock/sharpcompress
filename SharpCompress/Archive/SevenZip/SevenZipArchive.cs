@@ -83,7 +83,11 @@ namespace SharpCompress.Archive.SevenZip
 
         protected override IEnumerable<SevenZipVolume> LoadVolumes(FileInfo file, Options options)
         {
-            return new SevenZipVolume(file, options).AsEnumerable();
+            if (FlagUtility.HasFlag(options, Options.KeepStreamsOpen))
+            {
+                options = (Options)FlagUtility.SetFlag(options, Options.KeepStreamsOpen, false);
+            }
+            return new SevenZipVolume(file.OpenRead(), options).AsEnumerable();
         }
 
         public static bool IsSevenZipFile(string filePath)

@@ -6,7 +6,7 @@ namespace SharpCompress.Archive.Rar
 {
     internal class FileInfoRarFilePart : RarFilePart
     {
-        private FileInfoRarArchiveVolume volume;
+        private readonly FileInfoRarArchiveVolume volume;
 
         internal FileInfoRarFilePart(FileInfoRarArchiveVolume volume, MarkHeader mh, FileHeader fh, FileInfo fi)
             : base(mh, fh)

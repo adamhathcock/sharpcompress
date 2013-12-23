@@ -42,10 +42,5 @@ namespace SharpCompress.Archive.Rar
         {
             return FileParts;
         }
-
-        public override FileInfo VolumeFile
-        {
-            get { return FileInfo; }
-        }
     }
 }

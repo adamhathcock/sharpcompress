@@ -16,6 +16,9 @@ namespace SharpCompress.Archive
         /// </summary>
         bool IsComplete { get; }
 
+        /// <summary>
+        /// The archive instance this entry belongs to
+        /// </summary>
         IArchive Archive { get; }
     }
 }

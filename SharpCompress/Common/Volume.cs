@@ -24,16 +24,18 @@ namespace SharpCompress.Common
         /// RarArchive is the first volume of a multi-part archive.
         /// Only Rar 3.0 format and higher
         /// </summary>
-        public abstract bool IsFirstVolume { get; }
+        public virtual bool IsFirstVolume
+        {
+            get { return true; }
+        }
 
         /// <summary>
         /// RarArchive is part of a multi-part archive.
         /// </summary>
-        public abstract bool IsMultiVolume { get; }
-
-#if !PORTABLE && !NETFX_CORE
-        public abstract FileInfo VolumeFile { get; }
-#endif
+        public virtual bool IsMultiVolume
+        {
+            get { return true; }
+        }
 
         private bool disposed;
 

@@ -2,18 +2,21 @@
 using SharpCompress.Common.Rar;
 using SharpCompress.Common.Rar.Headers;
 
-namespace SharpCompress.Reader.Rar
+namespace SharpCompress.Archive.Rar
 {
-    internal class NonSeekableStreamFilePart : RarFilePart
+    internal class StreamFilePart : RarFilePart
     {
-        internal NonSeekableStreamFilePart(MarkHeader mh, FileHeader fh)
+        private readonly Stream stream;
+        internal StreamFilePart(MarkHeader mh, FileHeader fh, Stream stream)
             : base(mh, fh)
         {
+            this.stream = stream;
         }
 
         internal override Stream GetCompressedStream()
         {
-            return FileHeader.PackedStream;
+            stream.Position = FileHeader.DataStartPosition;
+            return stream;
         }
 
         internal override string FilePartName

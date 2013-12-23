@@ -148,7 +148,11 @@ namespace SharpCompress.Archive.Zip
 
         protected override IEnumerable<ZipVolume> LoadVolumes(FileInfo file, Options options)
         {
-            return new ZipVolume(file, options).AsEnumerable();
+            if (FlagUtility.HasFlag(options, Options.KeepStreamsOpen))
+            {
+                options = (Options)FlagUtility.SetFlag(options, Options.KeepStreamsOpen, false);
+            }
+            return new ZipVolume(file.OpenRead(), options).AsEnumerable();
         }
 #endif
 

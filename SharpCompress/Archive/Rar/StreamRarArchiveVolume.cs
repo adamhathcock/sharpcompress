@@ -14,13 +14,6 @@ namespace SharpCompress.Archive.Rar
         {
         }
 
-#if !PORTABLE && !NETFX_CORE
-        public override FileInfo VolumeFile
-        {
-            get { return null; }
-        }
-#endif
-
         internal override IEnumerable<RarFilePart> ReadFileParts()
         {
             return GetVolumeFileParts();
@@ -28,7 +21,7 @@ namespace SharpCompress.Archive.Rar
 
         internal override RarFilePart CreateFilePart(FileHeader fileHeader, MarkHeader markHeader)
         {
-            return new SeekableStreamFilePart(markHeader, fileHeader, Stream);
+            return new StreamFilePart(markHeader, fileHeader, Stream);
         }
     }
 }

@@ -21,16 +21,6 @@ namespace SharpCompress.Common.GZip
         }
 #endif
 
-#if !PORTABLE && !NETFX_CORE
-        /// <summary>
-        /// File that backs this volume, if it not stream based
-        /// </summary>
-        public override FileInfo VolumeFile
-        {
-            get { return fileInfo; }
-        }
-#endif
-
         public override bool IsFirstVolume
         {
             get { return true; }

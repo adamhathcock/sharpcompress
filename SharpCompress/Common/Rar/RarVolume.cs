@@ -18,7 +18,6 @@ namespace SharpCompress.Common.Rar
         internal RarVolume(StreamingMode mode, Stream stream,  Options options)
             : this(mode, stream, null, options)
         {
-            
         }
             
         internal RarVolume(StreamingMode mode, Stream stream, string password, Options options)

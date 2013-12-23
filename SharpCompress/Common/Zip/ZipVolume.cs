@@ -2,19 +2,12 @@
 
 namespace SharpCompress.Common.Zip
 {
-    public class ZipVolume : GenericVolume
+    public class ZipVolume : Volume
     {
         public ZipVolume(Stream stream, Options options)
             : base(stream, options)
         {
         }
-
-#if !PORTABLE && !NETFX_CORE
-        public ZipVolume(FileInfo fileInfo, Options options)
-            : base(fileInfo, options)
-        {
-        }
-#endif
 
         public string Comment { get; internal set; }
     }

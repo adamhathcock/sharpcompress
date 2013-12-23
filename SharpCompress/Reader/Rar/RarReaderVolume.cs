@@ -9,8 +9,6 @@ namespace SharpCompress.Reader.Rar
 {
     public class RarReaderVolume : RarVolume
     {
-
-
         internal RarReaderVolume(Stream stream, string password, Options options)
             : base(StreamingMode.Streaming, stream, password, options)
         {
@@ -25,13 +23,5 @@ namespace SharpCompress.Reader.Rar
         {
             return GetVolumeFileParts();
         }
-
-
-#if !PORTABLE && !NETFX_CORE
-        public override FileInfo VolumeFile
-        {
-            get { return null; }
-        }
-#endif
     }
 }
