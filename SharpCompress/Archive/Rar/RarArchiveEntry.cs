@@ -11,11 +11,12 @@ namespace SharpCompress.Archive.Rar
     public class RarArchiveEntry : RarEntry, IArchiveEntry
     {
         private readonly ICollection<RarFilePart> parts;
+        private readonly RarArchive archive;
 
         internal RarArchiveEntry(RarArchive archive, IEnumerable<RarFilePart> parts)
         {
             this.parts = parts.ToList();
-            Archive = archive;
+            this.archive = archive;
         }
 
         public override CompressionType CompressionType
@@ -23,11 +24,17 @@ namespace SharpCompress.Archive.Rar
             get { return CompressionType.Rar; }
         }
 
-        private RarArchive Archive { get; set; }
+        public IArchive Archive
+        {
+            get
+            {
+                return archive;
+            }
+        }
 
         internal override IEnumerable<FilePart> Parts
         {
-            get { return parts.Cast<FilePart>(); }
+            get { return parts; }
         }
 
         internal override FileHeader FileHeader
@@ -41,8 +48,7 @@ namespace SharpCompress.Archive.Rar
             {
                 CheckIncomplete();
                 return parts.Select(fp => fp.FileHeader)
-                            .Where(fh => !fh.FileFlags.HasFlag(FileFlags.SPLIT_AFTER))
-                            .Single().FileCRC;
+                    .Single(fh => !fh.FileFlags.HasFlag(FileFlags.SPLIT_AFTER)).FileCRC;
             }
         }
 
@@ -67,22 +73,8 @@ namespace SharpCompress.Archive.Rar
 
         public Stream OpenEntryStream()
         {
-            return new RarStream(Archive.Unpack, FileHeader,
-                                 new MultiVolumeReadOnlyStream(Parts.Cast<RarFilePart>(), Archive));
-        }
-
-        public void WriteTo(Stream streamToWriteTo)
-        {
-            CheckIncomplete();
-            if (Archive.IsSolidArchive())
-            {
-                throw new InvalidFormatException("Cannot use Archive random access on SOLID Rar files.");
-            }
-            if (IsEncrypted)
-            {
-                throw new PasswordProtectedException("Entry is password protected and cannot be extracted.");
-            }
-            this.Extract(Archive, streamToWriteTo);
+            return new RarStream(archive.Unpack, FileHeader,
+                                 new MultiVolumeReadOnlyStream(Parts.Cast<RarFilePart>(), archive));
         }
 
         public bool IsComplete

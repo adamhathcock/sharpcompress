@@ -454,27 +454,6 @@ namespace SharpCompress
             return true;
         }
 
-
-        internal static void Extract<TEntry, TVolume>(this TEntry entry,
-                                                      AbstractArchive<TEntry, TVolume> archive, Stream streamToWriteTo)
-            where TEntry : IArchiveEntry
-            where TVolume : IVolume
-        {
-            if (entry.IsDirectory)
-            {
-                throw new ExtractionException("Entry is a file directory and cannot be extracted.");
-            }
-
-            archive.EnsureEntriesLoaded();
-            archive.FireEntryExtractionBegin(entry);
-            ((IStreamListener)archive).FireFilePartExtractionBegin(entry.FilePath, entry.Size, entry.CompressedSize);
-            using (Stream s = new ListeningStream(archive, entry.OpenEntryStream()))
-            {
-                s.TransferTo(streamToWriteTo);
-            }
-            archive.FireEntryExtractionEnd(entry);
-        }
-
 #if PORTABLE || NETFX_CORE
         public static void CopyTo(this byte[] array, byte[] destination, int index)
         {

@@ -4,7 +4,6 @@ using System.IO;
 using System.Linq;
 using SharpCompress.Common;
 
-
 #if PORTABLE
 using SharpCompress.Common.Rar.Headers;
 #endif
@@ -14,7 +13,7 @@ namespace SharpCompress.Reader
     /// <summary>
     /// A generic push reader that reads unseekable comrpessed streams.
     /// </summary>
-    public abstract class AbstractReader<TEntry, TVolume> : IReader, IStreamListener
+    public abstract class AbstractReader<TEntry, TVolume> : IReader, IExtractionListener
         where TEntry : Entry
         where TVolume : Volume
     {
@@ -199,7 +198,7 @@ namespace SharpCompress.Reader
             get { return Entry; }
         }
 
-        void IStreamListener.FireCompressedBytesRead(long currentPartCompressedBytes, long compressedReadBytes)
+        void IExtractionListener.FireCompressedBytesRead(long currentPartCompressedBytes, long compressedReadBytes)
         {
             if (CompressedBytesRead != null)
             {
@@ -211,7 +210,7 @@ namespace SharpCompress.Reader
             }
         }
 
-        void IStreamListener.FireFilePartExtractionBegin(string name, long size, long compressedSize)
+        void IExtractionListener.FireFilePartExtractionBegin(string name, long size, long compressedSize)
         {
             if (FilePartExtractionBegin != null)
             {

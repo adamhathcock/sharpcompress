@@ -117,6 +117,7 @@
     <Compile Include="Common\CompressionType.cs" />
     <Compile Include="Common\FilePartExtractionBeginEventArgs.cs" />
     <Compile Include="Common\GenericVolume.cs" />
+    <Compile Include="Archive\IArchiveExtractionListener.cs" />
     <Compile Include="Common\IncompleteArchiveException.cs" />
     <Compile Include="Common\MultiVolumeExtractionException.cs" />
     <Compile Include="Common\PasswordProtectedException.cs" />
@@ -266,7 +267,7 @@
     <Compile Include="Common\InvalidFormatException.cs" />
     <Compile Include="IO\ReadOnlySubStream.cs" />
     <Compile Include="IO\StreamingMode.cs" />
-    <Compile Include="Common\IStreamListener.cs" />
+    <Compile Include="Common\IExtractionListener.cs" />
     <Compile Include="Common\MultipartStreamRequiredException.cs" />
     <Compile Include="LazyReadOnlyCollection.cs" />
     <Compile Include="Archive\Rar\RarArchive.Extensions.cs" />

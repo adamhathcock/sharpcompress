@@ -7,12 +7,10 @@ namespace SharpCompress.Archive.Tar
 {
     public class TarArchiveEntry : TarEntry, IArchiveEntry
     {
-        private readonly TarArchive archive;
-
         internal TarArchiveEntry(TarArchive archive, TarFilePart part, CompressionType compressionType)
             : base(part, compressionType)
         {
-            this.archive = archive;
+            Archive = archive;
         }
 
         public virtual Stream OpenEntryStream()
@@ -21,15 +19,7 @@ namespace SharpCompress.Archive.Tar
         }
 
         #region IArchiveEntry Members
-
-        public void WriteTo(Stream streamToWriteTo)
-        {
-            if (IsEncrypted)
-            {
-                throw new PasswordProtectedException("Entry is password protected and cannot be extracted.");
-            }
-            this.Extract(archive, streamToWriteTo);
-        }
+        public IArchive Archive { get; private set; }
 
         public bool IsComplete
         {

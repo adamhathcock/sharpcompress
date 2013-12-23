@@ -7,7 +7,7 @@ using SharpCompress.Reader;
 
 namespace SharpCompress.Archive
 {
-    public abstract class AbstractArchive<TEntry, TVolume> : IArchive, IStreamListener
+    public abstract class AbstractArchive<TEntry, TVolume> : IArchive, IArchiveExtractionListener
         where TEntry : IArchiveEntry
         where TVolume : IVolume
     {
@@ -23,7 +23,7 @@ namespace SharpCompress.Archive
 #if !PORTABLE && !NETFX_CORE
         internal AbstractArchive(ArchiveType type, FileInfo fileInfo, Options options)
         {
-            this.Type = type;
+            Type = type;
             if (!fileInfo.Exists)
             {
                 throw new ArgumentException("File does not exist: " + fileInfo.FullName);
@@ -52,7 +52,7 @@ namespace SharpCompress.Archive
             lazyEntries = new LazyReadOnlyCollection<TEntry>(Enumerable.Empty<TEntry>());
         }
 
-        internal void FireEntryExtractionBegin(IArchiveEntry entry)
+        void IArchiveExtractionListener.FireEntryExtractionBegin(IArchiveEntry entry)
         {
             if (EntryExtractionBegin != null)
             {
@@ -60,7 +60,7 @@ namespace SharpCompress.Archive
             }
         }
 
-        internal void FireEntryExtractionEnd(IArchiveEntry entry)
+        void IArchiveExtractionListener.FireEntryExtractionEnd(IArchiveEntry entry)
         {
             if (EntryExtractionEnd != null)
             {
@@ -128,7 +128,7 @@ namespace SharpCompress.Archive
             }
         }
 
-        internal void EnsureEntriesLoaded()
+        void IArchiveExtractionListener.EnsureEntriesLoaded()
         {
             lazyEntries.EnsureFullyLoaded();
             lazyVolumes.EnsureFullyLoaded();
@@ -137,7 +137,7 @@ namespace SharpCompress.Archive
 
         public ArchiveType Type { get; private set; }
 
-        void IStreamListener.FireCompressedBytesRead(long currentPartCompressedBytes, long compressedReadBytes)
+        void IExtractionListener.FireCompressedBytesRead(long currentPartCompressedBytes, long compressedReadBytes)
         {
             if (CompressedBytesRead != null)
             {
@@ -149,7 +149,7 @@ namespace SharpCompress.Archive
             }
         }
 
-        void IStreamListener.FireFilePartExtractionBegin(string name, long size, long compressedSize)
+        void IExtractionListener.FireFilePartExtractionBegin(string name, long size, long compressedSize)
         {
             if (FilePartExtractionBegin != null)
             {
@@ -175,7 +175,7 @@ namespace SharpCompress.Archive
         /// <returns></returns>
         public IReader ExtractAllEntries()
         {
-            EnsureEntriesLoaded();
+            ((IArchiveExtractionListener)this).EnsureEntriesLoaded();
             return CreateReaderForSolidExtraction();
         }
 
@@ -197,7 +197,7 @@ namespace SharpCompress.Archive
         {
             get
             {
-                EnsureEntriesLoaded();
+                ((IArchiveExtractionListener)this).EnsureEntriesLoaded();
                 return Entries.All(x => x.IsComplete);
             }
         }

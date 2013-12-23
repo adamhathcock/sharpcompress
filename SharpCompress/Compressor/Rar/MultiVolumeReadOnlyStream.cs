@@ -15,12 +15,12 @@ namespace SharpCompress.Compressor.Rar
         private IEnumerator<RarFilePart> filePartEnumerator;
         private Stream currentStream;
 
-        private readonly IStreamListener streamListener;
+        private readonly IExtractionListener streamListener;
 
         private long currentPartTotalReadBytes;
         private long currentEntryTotalReadBytes;
 
-        internal MultiVolumeReadOnlyStream(IEnumerable<RarFilePart> parts, IStreamListener streamListener)
+        internal MultiVolumeReadOnlyStream(IEnumerable<RarFilePart> parts, IExtractionListener streamListener)
         {
             this.streamListener = streamListener;
 

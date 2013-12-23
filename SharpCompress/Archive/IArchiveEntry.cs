@@ -11,11 +11,11 @@ namespace SharpCompress.Archive
         /// </summary>
         Stream OpenEntryStream();
 
-        void WriteTo(Stream stream);
-
         /// <summary>
         /// The archive can find all the parts of the archive needed to extract this entry.
         /// </summary>
         bool IsComplete { get; }
+
+        IArchive Archive { get; }
     }
 }

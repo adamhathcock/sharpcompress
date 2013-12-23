@@ -6,9 +6,9 @@ namespace SharpCompress.IO
     internal class ListeningStream : Stream
     {
         private long currentEntryTotalReadBytes;
-        private IStreamListener listener;
+        private IExtractionListener listener;
 
-        public ListeningStream(IStreamListener listener, Stream stream)
+        public ListeningStream(IExtractionListener listener, Stream stream)
         {
             Stream = stream;
             this.listener = listener;

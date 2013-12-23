@@ -19,13 +19,5 @@ namespace SharpCompress.Archive.Rar
         {
             return archive.Volumes.First().IsMultiVolume;
         }
-
-        /// <summary>
-        /// RarArchive is SOLID (this means the Archive saved bytes by reusing information which helps for archives containing many small files).
-        /// </summary>
-        public static bool IsSolidArchive(this RarArchive archive)
-        {
-            return archive.IsSolid;
-        }
     }
 }

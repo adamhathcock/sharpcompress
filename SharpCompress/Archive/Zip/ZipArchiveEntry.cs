@@ -6,12 +6,10 @@ namespace SharpCompress.Archive.Zip
 {
     public class ZipArchiveEntry : ZipEntry, IArchiveEntry
     {
-        private readonly ZipArchive archive;
-
         internal ZipArchiveEntry(ZipArchive archive, SeekableZipFilePart part)
             : base(part)
         {
-            this.archive = archive;
+            Archive = archive;
         }
 
         public virtual Stream OpenEntryStream()
@@ -21,10 +19,7 @@ namespace SharpCompress.Archive.Zip
 
         #region IArchiveEntry Members
 
-        public void WriteTo(Stream streamToWriteTo)
-        {
-            this.Extract(archive, streamToWriteTo);
-        }
+        public IArchive Archive { get; private set; }
 
         public bool IsComplete
         {

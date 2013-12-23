@@ -1,10 +1,39 @@
 ﻿using System.IO;
 using SharpCompress.Common;
+using SharpCompress.IO;
 
 namespace SharpCompress.Archive
 {
     public static class IArchiveEntryExtensions
     {
+        public static void WriteTo(this IArchiveEntry archiveEntry, Stream streamToWriteTo)
+        {
+            if (archiveEntry.Archive.IsSolid)
+            {
+                throw new InvalidFormatException("Cannot use Archive random access on SOLID Rar files.");
+            }
+
+            if (archiveEntry.IsEncrypted)
+            {
+                throw new PasswordProtectedException("Entry is password protected and cannot be extracted.");
+            }
+
+            if (archiveEntry.IsDirectory)
+            {
+                throw new ExtractionException("Entry is a file directory and cannot be extracted.");
+            }
+
+            var streamListener = archiveEntry.Archive as IArchiveExtractionListener;
+            streamListener.EnsureEntriesLoaded();
+            streamListener.FireEntryExtractionBegin(archiveEntry);
+            streamListener.FireFilePartExtractionBegin(archiveEntry.FilePath, archiveEntry.Size, archiveEntry.CompressedSize);
+            using (Stream s = new ListeningStream(streamListener, archiveEntry.OpenEntryStream()))
+            {
+                s.TransferTo(streamToWriteTo);
+            }
+            streamListener.FireEntryExtractionEnd(archiveEntry);
+        }
+
 #if !PORTABLE && !NETFX_CORE
         /// <summary>
         /// Extract to specific directory, retaining filename
@@ -12,7 +41,7 @@ namespace SharpCompress.Archive
         public static void WriteToDirectory(this IArchiveEntry entry, string destinationDirectory,
                                             ExtractOptions options = ExtractOptions.Overwrite)
         {
-            string destinationFileName = string.Empty;
+            string destinationFileName;
             string file = Path.GetFileName(entry.FilePath);
 
 
@@ -50,9 +79,7 @@ namespace SharpCompress.Archive
                 fm = FileMode.CreateNew;
             }
             using (FileStream fs = File.Open(destinationFileName, fm))
-//            using (Stream entryStream = entry.OpenEntryStream())
             {
-                //entryStream.TransferTo(fs);
                 entry.WriteTo(fs);
             }
         }
