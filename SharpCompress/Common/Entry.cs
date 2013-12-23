@@ -66,6 +66,9 @@ namespace SharpCompress.Common
 
         internal abstract IEnumerable<FilePart> Parts { get; }
 
-        internal abstract void Close();
+        internal virtual void Close()
+        {
+            
+        }
     }
 }

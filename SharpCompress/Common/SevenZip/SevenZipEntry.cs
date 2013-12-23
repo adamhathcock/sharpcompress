@@ -76,9 +76,5 @@ namespace SharpCompress.Common.SevenZip
         {
             get { return FilePart.AsEnumerable<FilePart>(); }
         }
-
-        internal override void Close()
-        {
-        }
     }
 }

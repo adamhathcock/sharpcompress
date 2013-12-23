@@ -7,7 +7,7 @@ namespace SharpCompress.Archive.GZip
 {
     public class GZipArchiveEntry : GZipEntry, IArchiveEntry
     {
-        private GZipArchive archive;
+        private readonly GZipArchive archive;
 
         internal GZipArchiveEntry(GZipArchive archive, GZipFilePart part)
             : base(part)

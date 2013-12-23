@@ -97,9 +97,5 @@ namespace SharpCompress.Archive.Rar
                 throw new IncompleteArchiveException("ArchiveEntry is incomplete and cannot perform this operation.");
             }
         }
-
-        internal override void Close()
-        {
-        }
     }
 }

@@ -100,9 +100,5 @@ namespace SharpCompress.Common.Tar
                 }
             }
         }
-
-        internal override void Close()
-        {
-        }
     }
 }

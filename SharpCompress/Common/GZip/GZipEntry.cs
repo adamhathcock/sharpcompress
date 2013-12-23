@@ -82,9 +82,5 @@ namespace SharpCompress.Common.GZip
         {
             yield return new GZipEntry(new GZipFilePart(stream));
         }
-
-        internal override void Close()
-        {
-        }
     }
 }

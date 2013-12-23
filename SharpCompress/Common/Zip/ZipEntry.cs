@@ -112,9 +112,5 @@ namespace SharpCompress.Common.Zip
         {
             get { return filePart.AsEnumerable<FilePart>(); }
         }
-
-        internal override void Close()
-        {
-        }
     }
 }

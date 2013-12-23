@@ -45,9 +45,5 @@ namespace SharpCompress.Reader.Rar
         {
             get { return Part.FileHeader.UncompressedSize; }
         }
-
-        internal override void Close()
-        {
-        }
     }
 }
