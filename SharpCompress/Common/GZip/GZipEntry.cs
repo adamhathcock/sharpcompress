@@ -23,7 +23,7 @@ namespace SharpCompress.Common.GZip
             get { return 0; }
         }
 
-        public override string FilePath
+        public override string Key
         {
             get { return filePart.FilePartName; }
         }

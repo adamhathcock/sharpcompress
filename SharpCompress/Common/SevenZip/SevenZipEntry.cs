@@ -22,7 +22,7 @@ namespace SharpCompress.Common.SevenZip
             get { return FilePart.Header.Crc ?? 0; }
         }
 
-        public override string FilePath
+        public override string Key
         {
             get { return FilePart.Header.Name; }
         }

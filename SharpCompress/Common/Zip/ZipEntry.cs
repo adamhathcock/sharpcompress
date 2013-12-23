@@ -58,7 +58,7 @@ namespace SharpCompress.Common.Zip
             get { return filePart.Header.Crc; }
         }
 
-        public override string FilePath
+        public override string Key
         {
             get { return filePart.Header.Name; }
         }

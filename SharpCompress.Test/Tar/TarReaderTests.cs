@@ -46,8 +46,8 @@ namespace SharpCompress.Test
                         Assert.AreEqual(reader.Entry.CompressionType, CompressionType.BZip2);
                         using (var entryStream = reader.OpenEntryStream())
                         {
-                            string file = Path.GetFileName(reader.Entry.FilePath);
-                            string folder = Path.GetDirectoryName(reader.Entry.FilePath);
+                            string file = Path.GetFileName(reader.Entry.Key);
+                            string folder = Path.GetDirectoryName(reader.Entry.Key);
                             string destdir = Path.Combine(SCRATCH_FILES_PATH, folder);
                             if (!Directory.Exists(destdir))
                             {
@@ -81,7 +81,7 @@ namespace SharpCompress.Test
                         using (var entryStream = reader.OpenEntryStream())
                         {
                             entryStream.SkipEntry();
-                            names.Add(reader.Entry.FilePath);
+                            names.Add(reader.Entry.Key);
                         }
                     }
                 }

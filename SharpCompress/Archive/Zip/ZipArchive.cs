@@ -218,7 +218,7 @@ namespace SharpCompress.Archive.Zip
                 {
                     using (var entryStream = entry.OpenEntryStream())
                     {
-                        writer.Write(entry.FilePath, entryStream, entry.LastModifiedTime, string.Empty);
+                        writer.Write(entry.Key, entryStream, entry.LastModifiedTime, string.Empty);
                     }
                 }
             }

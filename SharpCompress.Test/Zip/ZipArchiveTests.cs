@@ -140,7 +140,7 @@ namespace SharpCompress.Test
             base.ResetScratch();
             using (var archive = ZipArchive.Open(unmodified))
             {
-                var entry = archive.Entries.Single(x => x.FilePath.EndsWith("jpg"));
+                var entry = archive.Entries.Single(x => x.Key.EndsWith("jpg"));
                 archive.RemoveEntry(entry);
                 archive.SaveTo(scratchPath, CompressionType.Deflate);
             }
@@ -194,10 +194,10 @@ namespace SharpCompress.Test
 
             using (ZipArchive vfs = (ZipArchive)ArchiveFactory.Open(scratchPath))
             {
-                var e = vfs.Entries.First(v => v.FilePath.EndsWith("jpg"));
+                var e = vfs.Entries.First(v => v.Key.EndsWith("jpg"));
                 vfs.RemoveEntry(e);
-                Assert.IsNull(vfs.Entries.FirstOrDefault(v => v.FilePath.EndsWith("jpg")));
-                Assert.IsNull(((IArchive)vfs).Entries.FirstOrDefault(v => v.FilePath.EndsWith("jpg")));
+                Assert.IsNull(vfs.Entries.FirstOrDefault(v => v.Key.EndsWith("jpg")));
+                Assert.IsNull(((IArchive)vfs).Entries.FirstOrDefault(v => v.Key.EndsWith("jpg")));
             }
         }
 
@@ -287,8 +287,8 @@ namespace SharpCompress.Test
             using (var archive = ZipArchive.Create())
             {
                 archive.AddAllFromDirectory(SCRATCH_FILES_PATH);
-                archive.RemoveEntry(archive.Entries.Single(x => x.FilePath.EndsWith("jpg", StringComparison.OrdinalIgnoreCase)));
-                Assert.IsFalse(archive.Entries.Any(x => x.FilePath.EndsWith("jpg")));
+                archive.RemoveEntry(archive.Entries.Single(x => x.Key.EndsWith("jpg", StringComparison.OrdinalIgnoreCase)));
+                Assert.IsFalse(archive.Entries.Any(x => x.Key.EndsWith("jpg")));
             }
             Directory.Delete(SCRATCH_FILES_PATH, true);
         }

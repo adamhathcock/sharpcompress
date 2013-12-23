@@ -41,12 +41,12 @@ namespace SharpCompress.Reader
                                                  ExtractOptions options = ExtractOptions.Overwrite)
         {
             string destinationFileName = string.Empty;
-            string file = Path.GetFileName(reader.Entry.FilePath);
+            string file = Path.GetFileName(reader.Entry.Key);
 
 
             if (options.HasFlag(ExtractOptions.ExtractFullPath))
             {
-                string folder = Path.GetDirectoryName(reader.Entry.FilePath);
+                string folder = Path.GetDirectoryName(reader.Entry.Key);
                 string destdir = Path.Combine(destinationDirectory, folder);
                 if (!Directory.Exists(destdir))
                 {

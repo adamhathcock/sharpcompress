@@ -120,7 +120,7 @@ namespace SharpCompress.Test
         void archive_EntryExtractionBegin(object sender, ArchiveExtractionEventArgs<IArchiveEntry> e)
         {
             this.entryTotal = e.Item.Size;
-            Console.WriteLine("Initializing File Entry Extraction: " + e.Item.FilePath);
+            Console.WriteLine("Initializing File Entry Extraction: " + e.Item.Key);
         }
 
         private long? entryTotal;

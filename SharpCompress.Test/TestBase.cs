@@ -144,7 +144,7 @@ namespace SharpCompress.Test
                 while (archive1.MoveToNextEntry())
                 {
                     Assert.IsTrue(archive2.MoveToNextEntry());
-                    Assert.AreEqual(archive1.Entry.FilePath, archive2.Entry.FilePath);
+                    Assert.AreEqual(archive1.Entry.Key, archive2.Entry.Key);
                 }
                 Assert.IsFalse(archive2.MoveToNextEntry());
             }

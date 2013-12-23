@@ -186,7 +186,7 @@ namespace SharpCompress.Archive.GZip
                 {
                     using (var entryStream = entry.OpenEntryStream())
                     {
-                        writer.Write(entry.FilePath, entryStream, entry.LastModifiedTime);
+                        writer.Write(entry.Key, entryStream, entry.LastModifiedTime);
                     }
                 }
             }

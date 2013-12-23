@@ -5,17 +5,15 @@ namespace SharpCompress.Common
 {
     public abstract class Entry : IEntry
     {
-        internal bool IsSolid { get; set; }
-
         /// <summary>
         /// The File's 32 bit CRC Hash
         /// </summary>
         public abstract uint Crc { get; }
 
         /// <summary>
-        /// The path of the file internal to the Rar Archive.
+        /// The string key of the file internal to the Archive.
         /// </summary>
-        public abstract string FilePath { get; }
+        public abstract string Key { get; }
 
         /// <summary>
         /// The compressed file size
@@ -62,9 +60,13 @@ namespace SharpCompress.Common
         /// </summary>
         public abstract bool IsDirectory { get; }
 
+        /// <summary>
+        /// Entry is split among multiple volumes
+        /// </summary>
         public abstract bool IsSplit { get; }
 
         internal abstract IEnumerable<FilePart> Parts { get; }
+        internal bool IsSolid { get; set; }
 
         internal virtual void Close()
         {

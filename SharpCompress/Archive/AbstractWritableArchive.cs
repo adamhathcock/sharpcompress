@@ -93,7 +93,7 @@ namespace SharpCompress.Archive
 
         private bool DoesKeyMatchExisting(string key)
         {
-            foreach (var path in Entries.Select(x => x.FilePath))
+            foreach (var path in Entries.Select(x => x.Key))
             {
                 var p = path.Replace('/','\\');
                 if (p.StartsWith("\\"))

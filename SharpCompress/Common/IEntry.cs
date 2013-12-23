@@ -9,7 +9,7 @@ namespace SharpCompress.Common
         long CompressedSize { get; }
         uint Crc { get; }
         DateTime? CreatedTime { get; }
-        string FilePath { get; }
+        string Key { get; }
         bool IsDirectory { get; }
         bool IsEncrypted { get; }
         bool IsSplit { get; }

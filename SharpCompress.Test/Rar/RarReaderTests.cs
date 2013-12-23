@@ -135,8 +135,8 @@ namespace SharpCompress.Test
                         Assert.AreEqual(reader.Entry.CompressionType, CompressionType.Rar);
                         using (var entryStream = reader.OpenEntryStream())
                         {
-                            string file = Path.GetFileName(reader.Entry.FilePath);
-                            string folder = Path.GetDirectoryName(reader.Entry.FilePath);
+                            string file = Path.GetFileName(reader.Entry.Key);
+                            string folder = Path.GetDirectoryName(reader.Entry.Key);
                             string destdir = Path.Combine(SCRATCH_FILES_PATH, folder);
                             if (!Directory.Exists(destdir))
                             {
@@ -203,7 +203,7 @@ namespace SharpCompress.Test
             {
                 while (reader.MoveToNextEntry())
                 {
-                    if (reader.Entry.FilePath.Contains("jpg"))
+                    if (reader.Entry.Key.Contains("jpg"))
                     {
                         Assert.AreEqual(reader.Entry.CompressionType, CompressionType.Rar);
                         reader.WriteEntryToDirectory(SCRATCH_FILES_PATH, ExtractOptions.ExtractFullPath | ExtractOptions.Overwrite);
@@ -221,7 +221,7 @@ namespace SharpCompress.Test
             {
                 while (reader.MoveToNextEntry())
                 {
-                    if (reader.Entry.FilePath.Contains("jpg"))
+                    if (reader.Entry.Key.Contains("jpg"))
                     {
                         Assert.AreEqual(reader.Entry.CompressionType, CompressionType.Rar);
                         reader.WriteEntryToDirectory(SCRATCH_FILES_PATH, ExtractOptions.ExtractFullPath | ExtractOptions.Overwrite);

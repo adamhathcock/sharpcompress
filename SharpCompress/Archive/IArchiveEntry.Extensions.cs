@@ -21,7 +21,7 @@ namespace SharpCompress.Archive
             var streamListener = archiveEntry.Archive as IArchiveExtractionListener;
             streamListener.EnsureEntriesLoaded();
             streamListener.FireEntryExtractionBegin(archiveEntry);
-            streamListener.FireFilePartExtractionBegin(archiveEntry.FilePath, archiveEntry.Size, archiveEntry.CompressedSize);
+            streamListener.FireFilePartExtractionBegin(archiveEntry.Key, archiveEntry.Size, archiveEntry.CompressedSize);
             using (Stream s = new ListeningStream(streamListener, archiveEntry.OpenEntryStream()))
             {
                 s.TransferTo(streamToWriteTo);
@@ -37,12 +37,12 @@ namespace SharpCompress.Archive
                                             ExtractOptions options = ExtractOptions.Overwrite)
         {
             string destinationFileName;
-            string file = Path.GetFileName(entry.FilePath);
+            string file = Path.GetFileName(entry.Key);
 
 
             if (options.HasFlag(ExtractOptions.ExtractFullPath))
             {
-                string folder = Path.GetDirectoryName(entry.FilePath);
+                string folder = Path.GetDirectoryName(entry.Key);
                 string destdir = Path.Combine(destinationDirectory, folder);
                 if (!Directory.Exists(destdir))
                 {

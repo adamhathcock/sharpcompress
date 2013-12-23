@@ -205,7 +205,7 @@ namespace SharpCompress.Archive.Tar
                 {
                     using (var entryStream = entry.OpenEntryStream())
                     {
-                        writer.Write(entry.FilePath, entryStream, entry.LastModifiedTime, entry.Size);
+                        writer.Write(entry.Key, entryStream, entry.LastModifiedTime, entry.Size);
                     }
                 }
             }

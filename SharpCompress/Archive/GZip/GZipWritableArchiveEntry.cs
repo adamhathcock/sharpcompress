@@ -30,7 +30,7 @@ namespace SharpCompress.Archive.GZip
             get { return 0; }
         }
 
-        public override string FilePath
+        public override string Key
         {
             get { return path; }
         }

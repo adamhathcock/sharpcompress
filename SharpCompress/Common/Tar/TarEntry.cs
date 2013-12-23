@@ -27,7 +27,7 @@ namespace SharpCompress.Common.Tar
             get { return 0; }
         }
 
-        public override string FilePath
+        public override string Key
         {
             get { return filePart.Header.Name; }
         }

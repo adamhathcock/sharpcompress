@@ -23,7 +23,7 @@ namespace SharpCompress.Test
             using (var archive = ArchiveFactory.Open(stream))
             {
                 var entry = archive.Entries.First();
-                entry.WriteToFile(Path.Combine(SCRATCH_FILES_PATH, entry.FilePath));
+                entry.WriteToFile(Path.Combine(SCRATCH_FILES_PATH, entry.Key));
             }
             CompareArchivesByPath(Path.Combine(SCRATCH_FILES_PATH, "Tar.tar"),
                 Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar"));
@@ -37,7 +37,7 @@ namespace SharpCompress.Test
             using (var archive = GZipArchive.Open(stream))
             {
                 var entry = archive.Entries.First();
-                entry.WriteToFile(Path.Combine(SCRATCH_FILES_PATH, entry.FilePath));
+                entry.WriteToFile(Path.Combine(SCRATCH_FILES_PATH, entry.Key));
             }
             CompareArchivesByPath(Path.Combine(SCRATCH_FILES_PATH, "Tar.tar"),
                 Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar"));

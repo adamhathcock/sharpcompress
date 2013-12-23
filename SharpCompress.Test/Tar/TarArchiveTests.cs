@@ -36,7 +36,7 @@ namespace SharpCompress.Test
             using (var archive = TarArchive.Open(unmodified))
             {
                 Assert.AreEqual(2, archive.Entries.Count);
-                Assert.AreEqual(archive.Entries.Last().FilePath, @"very long filename/very long filename very long filename very long filename very long filename very long filename very long filename very long filename very long filename very long filename very long filename.jpg");
+                Assert.AreEqual(archive.Entries.Last().Key, @"very long filename/very long filename very long filename very long filename very long filename very long filename very long filename very long filename very long filename very long filename very long filename.jpg");
             }
         }
 
@@ -81,7 +81,7 @@ namespace SharpCompress.Test
             base.ResetScratch();
             using (var archive = TarArchive.Open(unmodified))
             {
-                var entry = archive.Entries.Where(x => x.FilePath.EndsWith("jpg")).Single();
+                var entry = archive.Entries.Where(x => x.Key.EndsWith("jpg")).Single();
                 archive.RemoveEntry(entry);
                 archive.SaveTo(scratchPath, CompressionType.None);
             }

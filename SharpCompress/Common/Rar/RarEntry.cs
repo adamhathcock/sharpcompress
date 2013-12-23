@@ -18,7 +18,7 @@ namespace SharpCompress.Common.Rar
         /// <summary>
         /// The path of the file internal to the Rar Archive.
         /// </summary>
-        public override string FilePath
+        public override string Key
         {
             get { return FileHeader.FileName; }
         }
@@ -79,7 +79,7 @@ namespace SharpCompress.Common.Rar
         public override string ToString()
         {
             return string.Format("Entry Path: {0} Compressed Size: {1} Uncompressed Size: {2} CRC: {3}",
-                                 FilePath, CompressedSize, Size, Crc);
+                                 Key, CompressedSize, Size, Crc);
         }
     }
 }

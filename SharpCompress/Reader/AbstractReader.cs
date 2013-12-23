@@ -92,7 +92,7 @@ namespace SharpCompress.Reader
             if ((stream == null) || (!stream.CanRead))
             {
                 throw new MultipartStreamRequiredException("File is split into multiple archives: '"
-                                                           + Entry.FilePath +
+                                                           + Entry.Key +
                                                            "'. A new readable stream is required.  Use Cancel if it was intended.");
             }
             entriesForCurrentReadStream = GetEntries(stream).GetEnumerator();
