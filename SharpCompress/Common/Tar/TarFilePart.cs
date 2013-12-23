@@ -6,12 +6,12 @@ namespace SharpCompress.Common.Tar
 {
     internal class TarFilePart : FilePart
     {
-        private Stream seekableStream;
+        private readonly Stream seekableStream;
 
         internal TarFilePart(TarHeader header, Stream seekableStream)
         {
             this.seekableStream = seekableStream;
-            this.Header = header;
+            Header = header;
         }
 
         internal TarHeader Header { get; private set; }

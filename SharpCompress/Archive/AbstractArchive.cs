@@ -40,8 +40,7 @@ namespace SharpCompress.Archive
         internal AbstractArchive(ArchiveType type, IEnumerable<Stream> streams, Options options)
         {
             Type = type;
-            lazyVolumes =
-                new LazyReadOnlyCollection<TVolume>(LoadVolumes(streams.Select(CheckStreams), options));
+            lazyVolumes = new LazyReadOnlyCollection<TVolume>(LoadVolumes(streams.Select(CheckStreams), options));
             lazyEntries = new LazyReadOnlyCollection<TEntry>(LoadEntries(Volumes));
         }
 
@@ -51,6 +50,7 @@ namespace SharpCompress.Archive
             lazyVolumes = new LazyReadOnlyCollection<TVolume>(Enumerable.Empty<TVolume>());
             lazyEntries = new LazyReadOnlyCollection<TEntry>(Enumerable.Empty<TEntry>());
         }
+        public ArchiveType Type { get; private set; }
 
         void IArchiveExtractionListener.FireEntryExtractionBegin(IArchiveEntry entry)
         {
@@ -133,9 +133,6 @@ namespace SharpCompress.Archive
             lazyEntries.EnsureFullyLoaded();
             lazyVolumes.EnsureFullyLoaded();
         }
-
-
-        public ArchiveType Type { get; private set; }
 
         void IExtractionListener.FireCompressedBytesRead(long currentPartCompressedBytes, long compressedReadBytes)
         {

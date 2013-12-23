@@ -181,7 +181,7 @@ namespace SharpCompress.Archive.Zip
         protected override IEnumerable<ZipArchiveEntry> LoadEntries(IEnumerable<ZipVolume> volumes)
         {
             var volume = volumes.Single();
-            Stream stream = volumes.Single().Stream;
+            Stream stream = volume.Stream;
             foreach (ZipHeader h in headerFactory.ReadSeekableHeader(stream))
             {
                 if (h != null)

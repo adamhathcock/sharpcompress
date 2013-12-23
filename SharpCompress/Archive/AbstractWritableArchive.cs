@@ -105,17 +105,6 @@ namespace SharpCompress.Archive
             return false;
         }
 
-#if !PORTABLE && !NETFX_CORE
-        public TEntry AddEntry(string key, FileInfo fileInfo)
-        {
-            if (!fileInfo.Exists)
-            {
-                throw new ArgumentException("FileInfo does not exist.");
-            }
-            return AddEntry(key, fileInfo.OpenRead(), true, fileInfo.Length, fileInfo.LastWriteTime);
-        }
-#endif
-
         public void SaveTo(Stream stream, CompressionInfo compressionType)
         {
             //reset streams of new entries

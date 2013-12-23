@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using SharpCompress.Common;
 
 namespace SharpCompress.Archive
@@ -79,6 +80,16 @@ namespace SharpCompress.Archive
                 writableArchive.AddEntry(path.Substring(filePath.Length), fileInfo.OpenRead(), true, fileInfo.Length,
                                          fileInfo.LastWriteTime);
             }
+        }
+        public static TEntry AddEntry<TEntry, TVolume>(this AbstractWritableArchive<TEntry, TVolume> writableArchive, string key, FileInfo fileInfo)
+            where TEntry : IArchiveEntry
+            where TVolume : IVolume
+        {
+            if (!fileInfo.Exists)
+            {
+                throw new ArgumentException("FileInfo does not exist.");
+            }
+            return writableArchive.AddEntry(key, fileInfo.OpenRead(), true, fileInfo.Length, fileInfo.LastWriteTime);
         }
 #endif
     }
