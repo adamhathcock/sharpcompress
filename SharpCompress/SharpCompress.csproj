@@ -89,6 +89,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Archive\IWritableArchiveEntry.cs" />
+    <Compile Include="Archive\Rar\FileInfoRarFilePart.cs" />
     <Compile Include="Common\ArchiveEncoding.cs" />
     <Compile Include="Archive\AbstractWritableArchive.cs" />
     <Compile Include="Archive\AbstractArchive.cs" />
@@ -280,13 +281,12 @@
     <Compile Include="Reader\Rar\RarReader.cs" />
     <Compile Include="Reader\IReader.Extensions.cs" />
     <Compile Include="Reader\Rar\RarReaderEntry.cs" />
-    <Compile Include="Archive\Rar\StreamFilePart.cs" />
+    <Compile Include="Archive\Rar\SeekableFilePart.cs" />
     <Compile Include="Reader\Rar\SingleVolumeRarReader.cs" />
     <Compile Include="Common\ArchiveType.cs" />
     <Compile Include="Reader\Tar\TarReader.cs" />
     <Compile Include="ReadOnlyCollection.cs" />
     <Compile Include="VersionInfo.cs" />
-    <Compile Include="Archive\Rar\FileInfoRarFilePart.cs" />
     <Compile Include="Archive\Rar\FileInfoRarArchiveVolume.cs" />
     <Compile Include="Common\Rar\RarFilePart.cs" />
     <Compile Include="Common\Rar\Headers\AVHeader.cs" />

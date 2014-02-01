@@ -22,13 +22,13 @@ namespace SharpCompress.Archive
         }
 
         internal AbstractWritableArchive(ArchiveType type, Stream stream, Options options)
-            : base(type, stream.AsEnumerable(), options)
+            : base(type, stream.AsEnumerable(), options, null)
         {
         }
 
 #if !PORTABLE && !NETFX_CORE
         internal AbstractWritableArchive(ArchiveType type, FileInfo fileInfo, Options options)
-            : base(type, fileInfo, options)
+            : base(type, fileInfo, options, null)
         {
         }
 #endif

@@ -13,7 +13,7 @@ namespace SharpCompress.Archive.Rar
 {
     internal static class RarArchiveVolumeFactory
     {
-        internal static IEnumerable<RarVolume> GetParts(IEnumerable<Stream> streams, Options options)
+        internal static IEnumerable<RarVolume> GetParts(IEnumerable<Stream> streams, string password, Options options)
         {
             foreach (Stream s in streams)
             {
@@ -21,15 +21,15 @@ namespace SharpCompress.Archive.Rar
                 {
                     throw new ArgumentException("Stream is not readable and seekable");
                 }
-                StreamRarArchiveVolume part = new StreamRarArchiveVolume(s, options);
+                StreamRarArchiveVolume part = new StreamRarArchiveVolume(s, password, options);
                 yield return part;
             }
         }
 
 #if !PORTABLE && !NETFX_CORE
-        internal static IEnumerable<RarVolume> GetParts(FileInfo fileInfo, Options options)
+        internal static IEnumerable<RarVolume> GetParts(FileInfo fileInfo, string password, Options options)
         {
-            FileInfoRarArchiveVolume part = new FileInfoRarArchiveVolume(fileInfo, options);
+            FileInfoRarArchiveVolume part = new FileInfoRarArchiveVolume(fileInfo, password, options);
             yield return part;
 
             if (!part.ArchiveHeader.ArchiveHeaderFlags.HasFlag(ArchiveFlags.VOLUME))
@@ -41,7 +41,7 @@ namespace SharpCompress.Archive.Rar
             //we use fileinfo because rar is dumb and looks at file names rather than archive info for another volume
             while (fileInfo != null && fileInfo.Exists)
             {
-                part = new FileInfoRarArchiveVolume(fileInfo, options);
+                part = new FileInfoRarArchiveVolume(fileInfo, password, options);
 
                 fileInfo = GetNextFileInfo(ah, part.FileParts.FirstOrDefault() as FileInfoRarFilePart);
                 yield return part;

@@ -100,7 +100,6 @@ namespace SharpCompress.Test
         public void Rar_Encrypted_Reader()
         {
             ReadRar("Encrypted.rar", "test");
-
         }
 
         private void ReadRar(string testArchive, string password)

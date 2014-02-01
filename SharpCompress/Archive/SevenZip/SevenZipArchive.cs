@@ -77,7 +77,7 @@ namespace SharpCompress.Archive.SevenZip
 
 #if !PORTABLE && !NETFX_CORE
         internal SevenZipArchive(FileInfo fileInfo, Options options)
-            : base(ArchiveType.SevenZip, fileInfo, options)
+            : base(ArchiveType.SevenZip, fileInfo, options, null)
         {
         }
 
@@ -109,7 +109,7 @@ namespace SharpCompress.Archive.SevenZip
 #endif
 
         internal SevenZipArchive(Stream stream, Options options)
-            : base(ArchiveType.SevenZip, stream.AsEnumerable(), options)
+            : base(ArchiveType.SevenZip, stream.AsEnumerable(), options, null)
         {
         }
 

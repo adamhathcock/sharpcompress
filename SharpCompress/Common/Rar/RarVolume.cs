@@ -13,18 +13,15 @@ namespace SharpCompress.Common.Rar
     public abstract class RarVolume : Volume
     {
         private readonly RarHeaderFactory headerFactory;
-        public string Password { get; set; }
-
-        internal RarVolume(StreamingMode mode, Stream stream,  Options options)
-            : this(mode, stream, null, options)
-        {
-        }
             
         internal RarVolume(StreamingMode mode, Stream stream, string password, Options options)
             : base(stream, options)
         {
             headerFactory = new RarHeaderFactory(mode, options, password);
+            Password = password;
         }
+
+        internal string Password { get; private set; }
 
         internal StreamingMode Mode
         {

@@ -11,6 +11,43 @@ namespace SharpCompress.Test
     public class RarArchiveTests : ArchiveTests
     {
         [TestMethod]
+        public void Rar_EncryptedFileAndHeader_Archive()
+        {
+            ReadRar("Rar.encrypted_filesAndHeader.rar", "test");
+
+        }
+
+        [TestMethod]
+        public void Rar_EncryptedFileOnly_Archive()
+        {
+            ReadRar("Rar.encrypted_filesOnly.rar", "test");
+
+        }
+
+        [TestMethod]
+        public void Rar_Encrypted_Archive()
+        {
+            ReadRar("Encrypted.rar", "test");
+        }
+
+        private void ReadRar(string testArchive, string password)
+        {
+            ResetScratch();
+            using (Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, testArchive)))
+            using (var archive = RarArchive.Open(stream, Options.KeepStreamsOpen, password))
+            {
+                foreach (var entry in archive.Entries)
+                {
+                    if (!entry.IsDirectory)
+                    {
+                        Assert.AreEqual(entry.CompressionType, CompressionType.Rar);
+                        entry.WriteToDirectory(SCRATCH_FILES_PATH, ExtractOptions.ExtractFullPath | ExtractOptions.Overwrite);
+                    }
+                }
+            }
+            VerifyFiles();
+        }
+        [TestMethod]
         public void Rar_None_ArchiveStreamRead()
         {
             ArchiveStreamRead("Rar.none.rar");

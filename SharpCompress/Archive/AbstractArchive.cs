@@ -20,10 +20,13 @@ namespace SharpCompress.Archive
         public event EventHandler<CompressedBytesReadEventArgs> CompressedBytesRead;
         public event EventHandler<FilePartExtractionBeginEventArgs> FilePartExtractionBegin;
 
+        protected string Password { get; private set; }
+
 #if !PORTABLE && !NETFX_CORE
-        internal AbstractArchive(ArchiveType type, FileInfo fileInfo, Options options)
+        internal AbstractArchive(ArchiveType type, FileInfo fileInfo, Options options, string password)
         {
             Type = type;
+            Password = password;
             if (!fileInfo.Exists)
             {
                 throw new ArgumentException("File does not exist: " + fileInfo.FullName);
@@ -37,9 +40,10 @@ namespace SharpCompress.Archive
         protected abstract IEnumerable<TVolume> LoadVolumes(FileInfo file, Options options);
 #endif
 
-        internal AbstractArchive(ArchiveType type, IEnumerable<Stream> streams, Options options)
+        internal AbstractArchive(ArchiveType type, IEnumerable<Stream> streams, Options options, string password)
         {
             Type = type;
+            Password = password;
             lazyVolumes = new LazyReadOnlyCollection<TVolume>(LoadVolumes(streams.Select(CheckStreams), options));
             lazyEntries = new LazyReadOnlyCollection<TEntry>(LoadEntries(Volumes));
         }
