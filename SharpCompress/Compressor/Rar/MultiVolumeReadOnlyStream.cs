@@ -67,27 +67,33 @@ namespace SharpCompress.Compressor.Rar
         public override int Read(byte[] buffer, int offset, int count)
         {
             int totalRead = 0;
-            while (count > 0)
+            int currentOffset = offset;
+            int currentCount = count;
+            while (currentCount > 0)
             {
-                int readSize = count;
-                if (count > maxPosition - currentPosition)
+                int readSize = currentCount;
+                if (currentCount > maxPosition - currentPosition)
                 {
                     readSize = (int) (maxPosition - currentPosition);
                 }
 
-                int read = currentStream.Read(buffer, offset, readSize);
+                int read = currentStream.Read(buffer, currentOffset, readSize);
                 if (read < 0)
                 {
                     throw new EndOfStreamException();
                 }
 
                 currentPosition += read;
-                offset += read;
-                count -= read;
+                currentOffset += read;
+                currentCount -= read;
                 totalRead += read;
                 if (((maxPosition - currentPosition) == 0)
                     && filePartEnumerator.Current.FileHeader.FileFlags.HasFlag(FileFlags.SPLIT_AFTER))
                 {
+                    if (filePartEnumerator.Current.FileHeader.Salt != null)
+                    {
+                        throw new InvalidFormatException("Sharpcompress currently does not support multi-volume decryption.");
+                    }
                     string fileName = filePartEnumerator.Current.FileHeader.FileName;
                     if (!filePartEnumerator.MoveNext())
                     {

@@ -13,24 +13,24 @@ namespace SharpCompress.Test
         [TestMethod]
         public void Rar_EncryptedFileAndHeader_Archive()
         {
-            ReadRar("Rar.encrypted_filesAndHeader.rar", "test");
+            ReadRarPassword("Rar.encrypted_filesAndHeader.rar", "test");
 
         }
 
         [TestMethod]
         public void Rar_EncryptedFileOnly_Archive()
         {
-            ReadRar("Rar.encrypted_filesOnly.rar", "test");
+            ReadRarPassword("Rar.encrypted_filesOnly.rar", "test");
 
         }
 
         [TestMethod]
         public void Rar_Encrypted_Archive()
         {
-            ReadRar("Encrypted.rar", "test");
+            ReadRarPassword("Encrypted.rar", "test");
         }
 
-        private void ReadRar(string testArchive, string password)
+        private void ReadRarPassword(string testArchive, string password)
         {
             ResetScratch();
             using (Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, testArchive)))
@@ -47,6 +47,28 @@ namespace SharpCompress.Test
             }
             VerifyFiles();
         }
+
+        [TestMethod]
+        [ExpectedException(typeof(InvalidFormatException))]
+        public void Rar_Multi_Archive_Encrypted()
+        {
+            ArchiveFileReadPassword("EncryptedParts.part01.rar", "test");
+        }
+
+        protected void ArchiveFileReadPassword(string archiveName, string password)
+        {
+            ResetScratch();
+            using (var archive = RarArchive.Open(Path.Combine(TEST_ARCHIVES_PATH, archiveName), Options.None, password))
+            {
+                foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
+                {
+                    entry.WriteToDirectory(SCRATCH_FILES_PATH,
+                                            ExtractOptions.ExtractFullPath | ExtractOptions.Overwrite);
+                }
+            }
+            VerifyFiles();
+        }
+
         [TestMethod]
         public void Rar_None_ArchiveStreamRead()
         {
@@ -58,7 +80,6 @@ namespace SharpCompress.Test
         {
             ArchiveStreamRead("Rar.rar");
         }
-
 
         [TestMethod]
         public void Rar_test_invalid_exttime_ArchiveStreamRead()

@@ -120,6 +120,10 @@ namespace SharpCompress.Common.Rar.Headers
             
             if (IsEncrypted)
             {
+                if (Password == null)
+                {
+                    throw new CryptographicException("Encrypted Rar archive has no password specified.");
+                }
                 reader.SkipQueue();
                 byte[] salt = reader.ReadBytes(8);
                 reader.InitializeAes(salt);

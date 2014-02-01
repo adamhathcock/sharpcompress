@@ -407,7 +407,7 @@ namespace SharpCompress
 
         public static long TransferTo(this Stream source, Stream destination)
         {
-            byte[] array = new byte[4096];
+            byte[] array = new byte[81920];
             int count;
             long total = 0;
             while ((count = source.Read(array, 0, array.Length)) != 0)

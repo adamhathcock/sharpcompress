@@ -33,6 +33,29 @@ namespace SharpCompress.Test
             VerifyFiles();
         }
 
+        //[TestMethod]
+        public void Rar_Multi_Reader_Encrypted()
+        {
+            var testArchives = new string[] { "EncryptedParts.part01.rar",
+                "EncryptedParts.part02.rar",
+                "EncryptedParts.part03.rar",
+                "EncryptedParts.part04.rar",
+                "EncryptedParts.part05.rar",
+                "EncryptedParts.part06.rar"};
+
+
+            ResetScratch();
+            using (var reader = RarReader.Open(testArchives.Select(s => Path.Combine(TEST_ARCHIVES_PATH, s))
+                .Select(p => File.OpenRead(p))))
+            {
+                while (reader.MoveToNextEntry())
+                {
+                    reader.WriteEntryToDirectory(SCRATCH_FILES_PATH, ExtractOptions.ExtractFullPath | ExtractOptions.Overwrite);
+                }
+            }
+            VerifyFiles();
+        }
+
         [TestMethod]
         public void Rar_Multi_Reader_Delete_Files()
         {
