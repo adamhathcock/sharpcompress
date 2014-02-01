@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -15,6 +15,9 @@
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{BC8A1FFA-BEE3-4634-8014-F334798102B3};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
     <BaseIntermediateOutputPath>obj\WindowsStore\</BaseIntermediateOutputPath>
+    <TargetPlatformVersion>8.1</TargetPlatformVersion>
+    <MinimumVisualStudioVersion>12</MinimumVisualStudioVersion>
+    <TargetFrameworkVersion />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -46,13 +49,14 @@
     <Compile Include="Archive\IArchive.Extensions.cs" />
     <Compile Include="Archive\IArchiveEntry.cs" />
     <Compile Include="Archive\IArchiveEntry.Extensions.cs" />
+    <Compile Include="Archive\IArchiveExtractionListener.cs" />
     <Compile Include="Archive\IWritableArchiveEntry.cs" />
     <Compile Include="Archive\Rar\RarArchive.cs" />
     <Compile Include="Archive\Rar\RarArchive.Extensions.cs" />
     <Compile Include="Archive\Rar\RarArchiveEntry.cs" />
     <Compile Include="Archive\Rar\RarArchiveEntryFactory.cs" />
     <Compile Include="Archive\Rar\RarArchiveVolumeFactory.cs" />
-    <Compile Include="Archive\Rar\SeekableStreamFilePart.cs" />
+    <Compile Include="Archive\Rar\StreamFilePart.cs" />
     <Compile Include="Archive\Rar\StreamRarArchiveVolume.cs" />
     <Compile Include="Archive\SevenZip\SevenZipArchive.cs" />
     <Compile Include="Archive\SevenZip\SevenZipArchiveEntry.cs" />
@@ -78,14 +82,13 @@
     <Compile Include="Common\FilePart.cs" />
     <Compile Include="Common\FilePartExtractionBeginEventArgs.cs" />
     <Compile Include="Common\FlagUtility.cs" />
-    <Compile Include="Common\GenericVolume.cs" />
     <Compile Include="Common\GZip\GZipEntry.cs" />
     <Compile Include="Common\GZip\GZipFilePart.cs" />
     <Compile Include="Common\GZip\GZipVolume.cs" />
     <Compile Include="Common\IEntry.cs" />
+    <Compile Include="Common\IExtractionListener.cs" />
     <Compile Include="Common\IncompleteArchiveException.cs" />
     <Compile Include="Common\InvalidFormatException.cs" />
-    <Compile Include="Common\IStreamListener.cs" />
     <Compile Include="Common\IVolume.cs" />
     <Compile Include="Common\MultipartStreamRequiredException.cs" />
     <Compile Include="Common\MultiVolumeExtractionException.cs" />
@@ -306,8 +309,8 @@
   <ItemGroup>
     <None Include="SharpCompress.pfx" />
   </ItemGroup>
-  <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '11.0' ">
-    <VisualStudioVersion>11.0</VisualStudioVersion>
+  <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '12.0' ">
+    <VisualStudioVersion>12.0</VisualStudioVersion>
   </PropertyGroup>
   <PropertyGroup>
     <StartupObject />
