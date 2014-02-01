@@ -27,6 +27,7 @@ namespace SharpCompress.Archive.Rar
         /// </summary>
         /// <param name="fileInfo"></param>
         /// <param name="options"></param>
+        /// <param name="password"></param>
         internal RarArchive(FileInfo fileInfo, Options options, string password)
             : base(ArchiveType.Rar, fileInfo, options, password)
         {
@@ -43,6 +44,7 @@ namespace SharpCompress.Archive.Rar
         /// </summary>
         /// <param name="streams"></param>
         /// <param name="options"></param>
+        /// <param name="password"></param>
         internal RarArchive(IEnumerable<Stream> streams, Options options, string password)
             : base(ArchiveType.Rar, streams, options, password)
         {
@@ -78,6 +80,7 @@ namespace SharpCompress.Archive.Rar
         /// </summary>
         /// <param name="filePath"></param>
         /// <param name="options"></param>
+        /// <param name="password"></param>
         public static RarArchive Open(string filePath, Options options = Options.None, string password = null)
         {
             filePath.CheckNotNullOrEmpty("filePath");
@@ -89,6 +92,7 @@ namespace SharpCompress.Archive.Rar
         /// </summary>
         /// <param name="fileInfo"></param>
         /// <param name="options"></param>
+        /// <param name="password"></param>
         public static RarArchive Open(FileInfo fileInfo, Options options = Options.None, string password = null)
         {
             fileInfo.CheckNotNull("fileInfo");
@@ -100,6 +104,7 @@ namespace SharpCompress.Archive.Rar
         /// </summary>
         /// <param name="stream"></param>
         /// <param name="options"></param>
+        /// <param name="password"></param>
         public static RarArchive Open(Stream stream, Options options = Options.KeepStreamsOpen, string password = null)
         {
             stream.CheckNotNull("stream");
@@ -111,6 +116,7 @@ namespace SharpCompress.Archive.Rar
         /// </summary>
         /// <param name="streams"></param>
         /// <param name="options"></param>
+        /// <param name="password"></param>
         public static RarArchive Open(IEnumerable<Stream> streams, Options options = Options.KeepStreamsOpen, string password = null)
         {
             streams.CheckNotNull("streams");

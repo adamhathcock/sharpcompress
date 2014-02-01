@@ -56,7 +56,7 @@
     <Compile Include="Archive\Rar\RarArchiveEntry.cs" />
     <Compile Include="Archive\Rar\RarArchiveEntryFactory.cs" />
     <Compile Include="Archive\Rar\RarArchiveVolumeFactory.cs" />
-    <Compile Include="Archive\Rar\StreamFilePart.cs" />
+    <Compile Include="Archive\Rar\SeekableFilePart.cs" />
     <Compile Include="Archive\Rar\StreamRarArchiveVolume.cs" />
     <Compile Include="Archive\SevenZip\SevenZipArchive.cs" />
     <Compile Include="Archive\SevenZip\SevenZipArchiveEntry.cs" />

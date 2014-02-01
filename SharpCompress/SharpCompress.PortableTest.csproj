@@ -85,7 +85,9 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Archive\IArchiveExtractionListener.cs" />
     <Compile Include="Archive\IWritableArchiveEntry.cs" />
+    <Compile Include="Archive\Rar\SeekableFilePart.cs" />
     <Compile Include="Common\ArchiveEncoding.cs" />
     <Compile Include="Archive\AbstractWritableArchive.cs" />
     <Compile Include="Archive\AbstractArchive.cs" />
@@ -113,7 +115,7 @@
     <Compile Include="Common\CompressionInfo.cs" />
     <Compile Include="Common\CompressionType.cs" />
     <Compile Include="Common\FilePartExtractionBeginEventArgs.cs" />
-    <Compile Include="Common\GenericVolume.cs" />
+    <Compile Include="Common\IExtractionListener.cs" />
     <Compile Include="Common\IncompleteArchiveException.cs" />
     <Compile Include="Common\MultiVolumeExtractionException.cs" />
     <Compile Include="Common\PasswordProtectedException.cs" />
@@ -278,7 +280,6 @@
     <Compile Include="Common\InvalidFormatException.cs" />
     <Compile Include="IO\ReadOnlySubStream.cs" />
     <Compile Include="IO\StreamingMode.cs" />
-    <Compile Include="Common\IStreamListener.cs" />
     <Compile Include="Common\MultipartStreamRequiredException.cs" />
     <Compile Include="LazyReadOnlyCollection.cs" />
     <Compile Include="Archive\Rar\RarArchive.Extensions.cs" />
@@ -292,7 +293,6 @@
     <Compile Include="Reader\Rar\RarReader.cs" />
     <Compile Include="Reader\IReader.Extensions.cs" />
     <Compile Include="Reader\Rar\RarReaderEntry.cs" />
-    <Compile Include="Archive\Rar\SeekableStreamFilePart.cs" />
     <Compile Include="Reader\Rar\SingleVolumeRarReader.cs" />
     <Compile Include="Common\ArchiveType.cs" />
     <Compile Include="Reader\Tar\TarReader.cs" />
