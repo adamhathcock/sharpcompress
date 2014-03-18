@@ -93,7 +93,7 @@ namespace SharpCompress.Common.Rar.Headers
             {
                 if (!Options.HasFlag(Options.KeepStreamsOpen))
                 {
-                    reader.Dispose();
+                    reader.Close();
                 }
                 throw new InvalidFormatException("Error trying to read rar signature.", e);
             }

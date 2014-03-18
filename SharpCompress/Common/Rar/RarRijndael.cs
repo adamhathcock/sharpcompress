@@ -106,7 +106,7 @@ namespace SharpCompress.Common.Rar
 
         public void Dispose()
         {
-            rijndael.Dispose();
+            ((IDisposable)rijndael).Dispose();
         }
     }
 }
