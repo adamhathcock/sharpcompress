@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2013
-VisualStudioVersion = 12.0.30110.0
+VisualStudioVersion = 12.0.21005.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Testing", "Testing", "{932BBFCC-76E3-45FF-90CA-6BE4FBF4A097}"
 EndProject
@@ -22,7 +22,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharpCompress.PortableTest"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharpCompress.Test.Portable", "SharpCompress.Test\SharpCompress.Test.Portable.csproj", "{E9C3C94B-FB27-4B4F-B225-57513C254D37}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharpCompress.LinqBridge", "SharpCompress\SharpCompress.LinqBridge.csproj", "{9A6F69DC-258D-4EB4-859E-09EFC7A14A3F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharpCompress.NET2", "SharpCompress\SharpCompress.NET2.csproj", "{9A6F69DC-258D-4EB4-859E-09EFC7A14A3F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

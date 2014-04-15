@@ -35,7 +35,11 @@ namespace SharpCompress.Writer
             {
                 throw new ArgumentException("Directory does not exist: " + directory);
             }
-            foreach (string file in Directory.GetFiles(directory, searchPattern, option))
+#if NET2
+            foreach (var file in Directory.GetFiles(directory, searchPattern, option))
+#else
+            foreach (var file in Directory.EnumerateDirectories(directory, searchPattern, option))
+#endif
             {
                 writer.Write(file.Substring(directory.Length), file);
             }
