@@ -34,7 +34,7 @@ namespace SharpCompress.Archive.Rar
 
         internal override IEnumerable<FilePart> Parts
         {
-            get { return parts; }
+            get { return parts.Cast<FilePart>(); }
         }
 
         internal override FileHeader FileHeader

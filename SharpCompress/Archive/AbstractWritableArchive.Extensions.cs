@@ -74,7 +74,7 @@ namespace SharpCompress.Archive
             where TEntry : IArchiveEntry
             where TVolume : IVolume
         {
-            foreach (var path in Directory.EnumerateFiles(filePath, searchPattern, searchOption))
+            foreach (var path in Directory.GetFiles(filePath, searchPattern, searchOption))
             {
                 var fileInfo = new FileInfo(path);
                 writableArchive.AddEntry(path.Substring(filePath.Length), fileInfo.OpenRead(), true, fileInfo.Length,

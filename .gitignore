@@ -8,3 +8,4 @@ TestArchives/Scratch/
 TestArchives/Scratch2/
 TestResults/
 *.nupkg
+packages/*/

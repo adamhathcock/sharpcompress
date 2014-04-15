@@ -39,7 +39,7 @@ namespace SharpCompress.Compressor.LZMA
             byte[] password = Encoding.Unicode.GetBytes(pass.CryptoGetTextPassword());
             byte[] key = InitKey(numCyclesPower, salt, password);
 
-            using (var aes = Aes.Create())
+            using (var aes = Rijndael.Create())
             {
                 aes.Mode = CipherMode.CBC;
                 aes.Padding = PaddingMode.None;
