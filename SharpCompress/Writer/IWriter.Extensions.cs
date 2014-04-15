@@ -38,7 +38,7 @@ namespace SharpCompress.Writer
 #if NET2
             foreach (var file in Directory.GetFiles(directory, searchPattern, option))
 #else
-            foreach (var file in Directory.EnumerateDirectories(directory, searchPattern, option))
+            foreach (var file in Directory.EnumerateFiles(directory, searchPattern, option))
 #endif
             {
                 writer.Write(file.Substring(directory.Length), file);

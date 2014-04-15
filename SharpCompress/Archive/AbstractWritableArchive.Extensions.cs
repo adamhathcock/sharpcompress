@@ -77,7 +77,7 @@ namespace SharpCompress.Archive
 #if NET2
             foreach (var path in Directory.GetFiles(filePath, searchPattern, searchOption))
 #else
-            foreach (var path in Directory.EnumerateDirectories(filePath, searchPattern, searchOption))
+            foreach (var path in Directory.EnumerateFiles(filePath, searchPattern, searchOption))
 #endif
             {
                 var fileInfo = new FileInfo(path);
