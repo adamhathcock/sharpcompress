@@ -13,10 +13,17 @@
         <releaseNotes />
         <language>en-US</language>
         <tags>rar unrar zip unzip bzip2 gzip tar 7zip</tags>
+        <dependencies>
+            <group />
+            <group targetFramework="net20">
+                <dependency id="LinqBridge" version="1.3.0" />
+            </group>
+        </dependencies>
     </metadata>
     <files>
         <file src="..\bin\Full\SharpCompress.dll" target="lib\net40\SharpCompress.dll" />
         <file src="..\bin\WindowsStore\SharpCompress.dll" target="lib\netcore45\SharpCompress.dll" />
         <file src="..\bin\Portable\SharpCompress.dll" target="lib\portable-net4+sl5+wp8+win8\SharpCompress.dll" />
+        <file src="..\bin\LinqBridge\SharpCompress.dll" target="lib\net20\SharpCompress.dll" />
     </files>
 </package>
