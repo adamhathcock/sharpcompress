@@ -24,6 +24,6 @@
         <file src="..\bin\Full\SharpCompress.dll" target="lib\net40\SharpCompress.dll" />
         <file src="..\bin\WindowsStore\SharpCompress.dll" target="lib\netcore45\SharpCompress.dll" />
         <file src="..\bin\Portable\SharpCompress.dll" target="lib\portable-net4+sl5+wp8+win8\SharpCompress.dll" />
-        <file src="..\bin\LinqBridge\SharpCompress.dll" target="lib\net20\SharpCompress.dll" />
+        <file src="..\bin\NET2\SharpCompress.dll" target="lib\net20\SharpCompress.dll" />
     </files>
 </package>
