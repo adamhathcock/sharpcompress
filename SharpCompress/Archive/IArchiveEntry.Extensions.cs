@@ -22,7 +22,13 @@ namespace SharpCompress.Archive
             streamListener.EnsureEntriesLoaded();
             streamListener.FireEntryExtractionBegin(archiveEntry);
             streamListener.FireFilePartExtractionBegin(archiveEntry.Key, archiveEntry.Size, archiveEntry.CompressedSize);
-            using (Stream s = new ListeningStream(streamListener, archiveEntry.OpenEntryStream()))
+            var entryStream = archiveEntry.OpenEntryStream();
+            if (entryStream == null)
+            {
+                return;
+            }
+            using(entryStream)
+            using (Stream s = new ListeningStream(streamListener, entryStream))
             {
                 s.TransferTo(streamToWriteTo);
             }
