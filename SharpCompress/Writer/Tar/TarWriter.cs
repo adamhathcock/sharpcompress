@@ -91,7 +91,6 @@ namespace SharpCompress.Writer.Tar
             {
                 PadTo512(0, true);
                 PadTo512(0, true);
-                OutputStream.Dispose();
             }
             base.Dispose(isDisposing);
         }
