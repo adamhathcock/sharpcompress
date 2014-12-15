@@ -41,6 +41,22 @@ namespace SharpCompress.Test
         }
 
         [TestMethod]
+        public void Tar_UstarArchivePathReadLongName()
+        {
+            string unmodified = Path.Combine(TEST_ARCHIVES_PATH, "ustar with long names.tar");
+            using(var archive = TarArchive.Open(unmodified))
+            {
+                Assert.AreEqual(6, archive.Entries.Count);
+                Assert.IsTrue(archive.Entries.Any(entry => entry.Key == "Directory/"));
+                Assert.IsTrue(archive.Entries.Any(entry => entry.Key == "Directory/Some file with veeeeeeeeeery loooooooooong name"));
+                Assert.IsTrue(archive.Entries.Any(entry => entry.Key == "Directory/Directory with veeeeeeeeeery loooooooooong name/"));
+                Assert.IsTrue(archive.Entries.Any(entry => entry.Key == "Directory/Directory with veeeeeeeeeery loooooooooong name/Some file with veeeeeeeeeery loooooooooong name"));
+                Assert.IsTrue(archive.Entries.Any(entry => entry.Key == "Directory/Directory with veeeeeeeeeery loooooooooong name/Directory with veeeeeeeeeery loooooooooong name/"));
+                Assert.IsTrue(archive.Entries.Any(entry => entry.Key == "Directory/Directory with veeeeeeeeeery loooooooooong name/Directory with veeeeeeeeeery loooooooooong name/Some file with veeeeeeeeeery loooooooooong name"));
+            }
+        }
+
+        [TestMethod]
         public void Tar_Create_New()
         {
             string scratchPath = Path.Combine(SCRATCH_FILES_PATH, "Tar.tar");
