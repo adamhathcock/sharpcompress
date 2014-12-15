@@ -31,12 +31,6 @@ namespace SharpCompress.Archive
                 return ZipArchive.Open(stream, options, null);
             }
             stream.Seek(0, SeekOrigin.Begin);
-            if (RarArchive.IsRarFile(stream, Options.LookForHeader | Options.KeepStreamsOpen))
-            {
-                stream.Seek(0, SeekOrigin.Begin);
-                return RarArchive.Open(stream, options);
-            }
-            stream.Seek(0, SeekOrigin.Begin);
             if (TarArchive.IsTarFile(stream))
             {
                 stream.Seek(0, SeekOrigin.Begin);
@@ -54,7 +48,13 @@ namespace SharpCompress.Archive
                 stream.Seek(0, SeekOrigin.Begin);
                 return GZipArchive.Open(stream, options);
             }
-            throw new InvalidOperationException("Cannot determine compressed stream type.  Supported Archive Formats: Zip, GZip, Tar, Rar, 7Zip");
+            stream.Seek(0, SeekOrigin.Begin);
+            if(RarArchive.IsRarFile(stream, Options.LookForHeader | Options.KeepStreamsOpen))
+            {
+               stream.Seek(0, SeekOrigin.Begin);
+               return RarArchive.Open(stream, options);
+            }
+            throw new InvalidOperationException("Cannot determine compressed stream type. Supported Archive Formats: Zip, GZip, Tar, Rar, 7Zip");
         }
 
         public static IArchive Create(ArchiveType type)
@@ -122,12 +122,6 @@ namespace SharpCompress.Archive
                     return ZipArchive.Open(fileInfo, options, null);
                 }
                 stream.Seek(0, SeekOrigin.Begin);
-                if (RarArchive.IsRarFile(stream, Options.LookForHeader | Options.KeepStreamsOpen))
-                {
-                    stream.Dispose();
-                    return RarArchive.Open(fileInfo, options);
-                }
-                stream.Seek(0, SeekOrigin.Begin);
                 if (TarArchive.IsTarFile(stream))
                 {
                     stream.Dispose();
@@ -145,7 +139,13 @@ namespace SharpCompress.Archive
                     stream.Dispose();
                     return GZipArchive.Open(fileInfo, options);
                 }
-                throw new InvalidOperationException("Cannot determine compressed stream type.");
+                stream.Seek(0, SeekOrigin.Begin);
+                if(RarArchive.IsRarFile(stream, Options.LookForHeader | Options.KeepStreamsOpen))
+                {
+                   stream.Dispose();
+                   return RarArchive.Open(fileInfo, options);
+                }
+                throw new InvalidOperationException("Cannot determine compressed stream type. Supported Archive Formats: Zip, GZip, Tar, Rar, 7Zip");
             }
         }
 
