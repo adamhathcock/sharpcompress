@@ -28,11 +28,10 @@ namespace SharpCompress.Common.Rar
             aesInitializationVector = new byte[CRYPTO_BLOCK_SIZE];
             int rawLength = 2 * password.Length;
             byte[] rawPassword = new byte[rawLength + 8];
-            byte[] passwordBytes = Encoding.UTF8.GetBytes(password);
-            for (int i = 0; i < password.Length; i++)
+            byte[] passwordBytes = Encoding.Unicode.GetBytes(password);
+            for (int i = 0; i < rawLength; i++)
             {
-                rawPassword[i * 2] = passwordBytes[i];
-                rawPassword[i * 2 + 1] = 0;
+                rawPassword[i] = passwordBytes[i];
             }
             for (int i = 0; i < salt.Length; i++)
             {
