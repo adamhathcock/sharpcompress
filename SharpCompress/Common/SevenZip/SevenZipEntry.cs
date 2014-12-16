@@ -39,7 +39,7 @@ namespace SharpCompress.Common.SevenZip
 
         public override DateTime? LastModifiedTime
         {
-            get { throw new NotImplementedException(); }
+            get { return FilePart.Header.MTime; }
         }
 
         public override DateTime? CreatedTime
