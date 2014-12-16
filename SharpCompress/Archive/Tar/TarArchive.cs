@@ -169,11 +169,21 @@ namespace SharpCompress.Archive.Tar
                         {
                             var entry = new TarArchiveEntry(this, new TarFilePart(previousHeader, stream),
                                                             CompressionType.None);
-                            var memoryStream = new MemoryStream();
-                            entry.WriteTo(memoryStream);
-                            memoryStream.Position = 0;
-                            var bytes = memoryStream.ToArray();
-                            header.Name = ArchiveEncoding.Default.GetString(bytes, 0, bytes.Length).TrimNulls();
+
+                            var oldStreamPos = stream.Position;
+
+                            using(var entryStream = entry.OpenEntryStream())
+                            using(var memoryStream = new MemoryStream())
+                            {
+                                entryStream.TransferTo(memoryStream);
+                                memoryStream.Position = 0;
+                                var bytes = memoryStream.ToArray();
+
+                                header.Name = ArchiveEncoding.Default.GetString(bytes, 0, bytes.Length).TrimNulls();
+                            }
+
+                            stream.Position = oldStreamPos;
+
                             previousHeader = null;
                         }
                         yield return new TarArchiveEntry(this, new TarFilePart(header, stream), CompressionType.None);

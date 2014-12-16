@@ -30,13 +30,33 @@ namespace SharpCompress.Test
 
 
         [TestMethod]
-        public void TarArchivePathReadLongName()
+        public void Tar_NonUstarArchiveWithLongNameDoesNotSkipEntriesAfterTheLongOne()
         {
             string unmodified = Path.Combine(TEST_ARCHIVES_PATH, "very long filename.tar");
             using (var archive = TarArchive.Open(unmodified))
             {
-                Assert.AreEqual(2, archive.Entries.Count);
-                Assert.AreEqual(archive.Entries.Last().Key, @"very long filename/very long filename very long filename very long filename very long filename very long filename very long filename very long filename very long filename very long filename very long filename.jpg");
+                Assert.AreEqual(5, archive.Entries.Count);
+                Assert.IsTrue(archive.Entries.Any(entry => entry.Key == "very long filename/"));
+                Assert.IsTrue(archive.Entries.Any(entry => entry.Key == "very long filename/very long filename very long filename very long filename very long filename very long filename very long filename very long filename very long filename very long filename very long filename.jpg"));
+                Assert.IsTrue(archive.Entries.Any(entry => entry.Key == "z_file 1.txt"));
+                Assert.IsTrue(archive.Entries.Any(entry => entry.Key == "z_file 2.txt"));
+                Assert.IsTrue(archive.Entries.Any(entry => entry.Key == "z_file 3.txt"));
+            }
+        }
+
+        [TestMethod]
+        public void Tar_UstarArchivePathReadLongName()
+        {
+            string unmodified = Path.Combine(TEST_ARCHIVES_PATH, "ustar with long names.tar");
+            using(var archive = TarArchive.Open(unmodified))
+            {
+                Assert.AreEqual(6, archive.Entries.Count);
+                Assert.IsTrue(archive.Entries.Any(entry => entry.Key == "Directory/"));
+                Assert.IsTrue(archive.Entries.Any(entry => entry.Key == "Directory/Some file with veeeeeeeeeery loooooooooong name"));
+                Assert.IsTrue(archive.Entries.Any(entry => entry.Key == "Directory/Directory with veeeeeeeeeery loooooooooong name/"));
+                Assert.IsTrue(archive.Entries.Any(entry => entry.Key == "Directory/Directory with veeeeeeeeeery loooooooooong name/Some file with veeeeeeeeeery loooooooooong name"));
+                Assert.IsTrue(archive.Entries.Any(entry => entry.Key == "Directory/Directory with veeeeeeeeeery loooooooooong name/Directory with veeeeeeeeeery loooooooooong name/"));
+                Assert.IsTrue(archive.Entries.Any(entry => entry.Key == "Directory/Directory with veeeeeeeeeery loooooooooong name/Directory with veeeeeeeeeery loooooooooong name/Some file with veeeeeeeeeery loooooooooong name"));
             }
         }
 

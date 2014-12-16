@@ -120,7 +120,7 @@ namespace SharpCompress.Common.Tar.Headers
 
             Magic = ArchiveEncoding.Default.GetString(buffer, 257, 6).TrimNulls();
 
-            if (!string.IsNullOrEmpty(Magic) && "ustar ".Equals(Magic))
+            if (!string.IsNullOrEmpty(Magic) && "ustar".Equals(Magic))
             {
                 string namePrefix = ArchiveEncoding.Default.GetString(buffer, 345, 157);
                 namePrefix = namePrefix.TrimNulls();
