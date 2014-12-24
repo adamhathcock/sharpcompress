@@ -1,4 +1,5 @@
 ﻿using System.IO;
+using System.Linq;
 
 namespace SharpCompress.Common.Zip.Headers
 {
@@ -34,6 +35,12 @@ namespace SharpCompress.Common.Zip.Headers
             byte[] comment = reader.ReadBytes(commentLength);
             Comment = DecodeString(comment);
             LoadExtra(extra);
+
+            var unicodePathExtra = Extra.FirstOrDefault(u => u.Type == ExtraDataType.UnicodePathExtraField);
+            if (unicodePathExtra != null)
+            {
+                Name = ((ExtraUnicodePathExtraField)unicodePathExtra).UnicodeName;
+            }
         }
 
         internal override void Write(BinaryWriter writer)
