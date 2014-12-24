@@ -1,19 +1,8 @@
 ﻿using System.IO;
+using System.Linq;
 
 namespace SharpCompress.Common.Zip.Headers
 {
-    internal enum ExtraDataType : ushort
-    {
-        WinZipAes = 0x9901,
-    }
-
-    internal class ExtraData
-    {
-        internal ExtraDataType Type { get; set; }
-        internal ushort Length { get; set; }
-        internal byte[] DataBytes { get; set; }
-    }
-
     internal class LocalEntryHeader : ZipFileEntry
     {
         public LocalEntryHeader()
@@ -37,6 +26,12 @@ namespace SharpCompress.Common.Zip.Headers
             byte[] extra = reader.ReadBytes(extraLength);
             Name = DecodeString(name);
             LoadExtra(extra);
+
+            var unicodePathExtra = Extra.FirstOrDefault(u => u.Type == ExtraDataType.UnicodePathExtraField);
+            if (unicodePathExtra!=null)
+            {
+                Name = ((ExtraUnicodePathExtraField) unicodePathExtra).UnicodeName;
+            }
         }
 
         internal override void Write(BinaryWriter writer)
