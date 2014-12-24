@@ -2,18 +2,20 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using SharpCompress.Archive;
+using SharpCompress.Archive.Rar;
 using SharpCompress.Common;
-
 #if PORTABLE
 using SharpCompress.Common.Rar.Headers;
 #endif
+using SharpCompress.Reader.Rar;
 
 namespace SharpCompress.Reader
 {
     /// <summary>
     /// A generic push reader that reads unseekable comrpessed streams.
     /// </summary>
-    public abstract class AbstractReader<TEntry, TVolume> : IReader, IExtractionListener
+    public abstract class AbstractReader<TEntry, TVolume> : IReader, IReaderExtractionListener
         where TEntry : Entry
         where TVolume : Volume
     {
@@ -21,8 +23,13 @@ namespace SharpCompress.Reader
         private IEnumerator<TEntry> entriesForCurrentReadStream;
         private bool wroteCurrentEntry;
 
+        public event EventHandler<ReaderExtractionEventArgs<IEntry>> EntryExtractionBegin;
+        public event EventHandler<ReaderExtractionEventArgs<IEntry>> EntryExtractionEnd;
+
         public event EventHandler<CompressedBytesReadEventArgs> CompressedBytesRead;
         public event EventHandler<FilePartExtractionBeginEventArgs> FilePartExtractionBegin;
+
+
 
         internal AbstractReader(Options options, ArchiveType archiveType)
         {
@@ -163,7 +170,11 @@ namespace SharpCompress.Reader
                 throw new ArgumentNullException(
                     "A writable Stream was required.  Use Cancel if that was intended.");
             }
+
+            var streamListener = this as IReaderExtractionListener;
+            streamListener.FireEntryExtractionBegin(this.Entry);
             Write(writableStream);
+            streamListener.FireEntryExtractionEnd(this.Entry);
             wroteCurrentEntry = true;
         }
 
@@ -220,6 +231,22 @@ namespace SharpCompress.Reader
                                                       Size = size,
                                                       Name = name,
                                                   });
+            }
+        }
+
+        void IReaderExtractionListener.FireEntryExtractionBegin(Entry entry)
+        {
+            if (EntryExtractionBegin!=null)
+            {
+                EntryExtractionBegin(this, new ReaderExtractionEventArgs<IEntry>(entry));
+            }
+        }
+
+        void IReaderExtractionListener.FireEntryExtractionEnd(Entry entry)
+        {
+            if (EntryExtractionEnd!=null)
+            {
+                EntryExtractionEnd(this, new ReaderExtractionEventArgs<IEntry>(entry));
             }
         }
     }
