@@ -21,7 +21,7 @@ namespace SharpCompress.Common
             Default = Encoding.UTF8;
             Password = Encoding.UTF8;
 #else
-            Default = Encoding.GetEncoding(CultureInfo.CurrentCulture.TextInfo.OEMCodePage);
+            Default = Encoding.Default;
             Password = Encoding.Default;
 #endif
         }
