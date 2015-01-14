@@ -25,7 +25,7 @@ namespace SharpCompress.Common.Tar.Headers
 
     internal class TarHeader
     {
-        internal static readonly DateTime Epoch = new DateTime(1970, 1, 1, 0, 0, 0);
+        internal static readonly DateTime Epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 
         internal string Name { get; set; }
         //internal int Mode { get; set; }
@@ -42,7 +42,7 @@ namespace SharpCompress.Common.Tar.Headers
         {
             if (Name.Length > 255)
             {
-                throw new InvalidFormatException("UsTar fileName can not be longer thatn 255 chars");
+                throw new InvalidFormatException("UsTar fileName can not be longer than 255 chars");
             }
             byte[] buffer = new byte[512];
             string name = Name;
@@ -56,7 +56,7 @@ namespace SharpCompress.Common.Tar.Headers
             WriteOctalBytes(0, buffer, 108, 8);
             WriteOctalBytes(0, buffer, 116, 8);
             WriteOctalBytes(Size, buffer, 124, 12);
-            var time = (long) (LastModifiedTime - Epoch).TotalSeconds;
+            var time = (long) (LastModifiedTime.ToUniversalTime() - Epoch).TotalSeconds;
             WriteOctalBytes(time, buffer, 136, 12);
 
             buffer[156] = (byte) EntryType;
@@ -115,7 +115,7 @@ namespace SharpCompress.Common.Tar.Headers
                 Size = ReadASCIIInt64Base8(buffer, 124, 11);
             }
             long unixTimeStamp = ReadASCIIInt64Base8(buffer, 136, 11);
-            LastModifiedTime = Epoch.AddSeconds(unixTimeStamp);
+            LastModifiedTime = Epoch.AddSeconds(unixTimeStamp).ToLocalTime();
 
 
             Magic = ArchiveEncoding.Default.GetString(buffer, 257, 6).TrimNulls();
