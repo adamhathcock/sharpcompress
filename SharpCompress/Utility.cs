@@ -372,7 +372,7 @@ namespace SharpCompress
             DateTime dt;
             try
             {
-                dt = new DateTime(year, month, day, hour, minute, second);
+                dt = new DateTime(year, month, day, hour, minute, second, DateTimeKind.Local);
             }
             catch
             {
@@ -387,10 +387,13 @@ namespace SharpCompress
             {
                 return 0;
             }
+
+            var localDateTime = dateTime.Value.ToLocalTime();
+
             return (uint)(
-                              (dateTime.Value.Second / 2) | (dateTime.Value.Minute << 5) | (dateTime.Value.Hour << 11) |
-                              (dateTime.Value.Day << 16) | (dateTime.Value.Month << 21) |
-                              ((dateTime.Value.Year - 1980) << 25));
+                              (localDateTime.Second / 2) | (localDateTime.Minute << 5) | (localDateTime.Hour << 11) |
+                              (localDateTime.Day << 16) | (localDateTime.Month << 21) |
+                              ((localDateTime.Year - 1980) << 25));
         }
 
 

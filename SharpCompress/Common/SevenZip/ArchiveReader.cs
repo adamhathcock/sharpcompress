@@ -159,7 +159,7 @@ namespace SharpCompress.Common.SevenZip
         private DateTime TranslateTime(long time)
         {
             // FILETIME = 100-nanosecond intervals since January 1, 1601 (UTC)
-            return DateTime.FromFileTimeUtc(time);
+            return DateTime.FromFileTimeUtc(time).ToLocalTime();
         }
 
         private DateTime? TranslateTime(long? time)
