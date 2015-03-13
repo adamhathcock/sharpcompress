@@ -75,6 +75,11 @@ namespace SharpCompress.Archive.GZip
             return new GZipArchive(stream, options);
         }
 
+        public static GZipArchive Create()
+        {
+            return new GZipArchive();
+        }
+
 #if !PORTABLE && !NETFX_CORE
         /// <summary>
         /// Constructor with a FileInfo object to an existing file.

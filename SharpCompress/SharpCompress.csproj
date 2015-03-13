@@ -88,12 +88,13 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Archive\IWritableArchive.cs" />
     <Compile Include="Archive\IWritableArchiveEntry.cs" />
     <Compile Include="Archive\Rar\FileInfoRarFilePart.cs" />
     <Compile Include="Common\ArchiveEncoding.cs" />
     <Compile Include="Archive\AbstractWritableArchive.cs" />
     <Compile Include="Archive\AbstractArchive.cs" />
-    <Compile Include="Archive\AbstractWritableArchive.Extensions.cs" />
+    <Compile Include="Archive\IWritableArchive.Extensions.cs" />
     <Compile Include="Archive\ArchiveFactory.cs" />
     <Compile Include="Archive\GZip\GZipWritableArchiveEntry.cs" />
     <Compile Include="Archive\IArchive.Extensions.cs" />
