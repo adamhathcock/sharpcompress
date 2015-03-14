@@ -21,17 +21,17 @@ namespace SharpCompress.IO
 
         public override int Read()
         {
-            throw new NotImplementedException();
+            throw new NotSupportedException();
         }
 
         public override int Read(byte[] buffer, int index, int count)
         {
-            throw new NotImplementedException();
+            throw new NotSupportedException();
         }
 
         public override int Read(char[] buffer, int index, int count)
         {
-            throw new NotImplementedException();
+            throw new NotSupportedException();
         }
 
         public override bool ReadBoolean()
@@ -57,12 +57,12 @@ namespace SharpCompress.IO
 
         public override char ReadChar()
         {
-            throw new NotImplementedException();
+            throw new NotSupportedException();
         }
 
         public override char[] ReadChars(int count)
         {
-            throw new NotImplementedException();
+            throw new NotSupportedException();
         }
 
 #if !PORTABLE
@@ -115,7 +115,7 @@ namespace SharpCompress.IO
 
         public override string ReadString()
         {
-            throw new NotImplementedException();
+            throw new NotSupportedException();
         }
 
         public override ushort ReadUInt16()
