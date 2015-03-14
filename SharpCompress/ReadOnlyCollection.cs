@@ -14,12 +14,12 @@ namespace SharpCompress
 
         public void Add(T item)
         {
-            throw new NotImplementedException();
+            throw new NotSupportedException();
         }
 
         public void Clear()
         {
-            throw new NotImplementedException();
+            throw new NotSupportedException();
         }
 
         public bool Contains(T item)
@@ -44,7 +44,7 @@ namespace SharpCompress
 
         public bool Remove(T item)
         {
-            throw new NotImplementedException();
+            throw new NotSupportedException();
         }
 
         public IEnumerator<T> GetEnumerator()
@@ -54,7 +54,7 @@ namespace SharpCompress
 
         System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
         {
-            throw new NotImplementedException();
+            throw new NotSupportedException();
         }
     }
 }

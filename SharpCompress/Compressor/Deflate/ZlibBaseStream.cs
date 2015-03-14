@@ -339,7 +339,7 @@ namespace SharpCompress.Compressor.Deflate
 
         public override System.Int64 Seek(System.Int64 offset, System.IO.SeekOrigin origin)
         {
-            throw new NotImplementedException();
+            throw new NotSupportedException();
             //_outStream.Seek(offset, origin);
         }
 
@@ -573,8 +573,8 @@ namespace SharpCompress.Compressor.Deflate
 
         public override long Position
         {
-            get { throw new NotImplementedException(); }
-            set { throw new NotImplementedException(); }
+            get { throw new NotSupportedException(); }
+            set { throw new NotSupportedException(); }
         }
 
         internal enum StreamMode
