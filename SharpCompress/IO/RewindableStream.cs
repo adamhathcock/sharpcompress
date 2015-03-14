@@ -84,12 +84,12 @@ namespace SharpCompress.IO
 
         public override void Flush()
         {
-            throw new System.NotSupportedException();
+            throw new System.NotImplementedException();
         }
 
         public override long Length
         {
-            get { throw new System.NotSupportedException(); }
+            get { throw new System.NotImplementedException(); }
         }
 
         public override long Position
@@ -147,17 +147,17 @@ namespace SharpCompress.IO
 
         public override long Seek(long offset, SeekOrigin origin)
         {
-            throw new System.NotSupportedException();
+            throw new System.NotImplementedException();
         }
 
         public override void SetLength(long value)
         {
-            throw new System.NotSupportedException();
+            throw new System.NotImplementedException();
         }
 
         public override void Write(byte[] buffer, int offset, int count)
         {
-            throw new System.NotSupportedException();
+            throw new System.NotImplementedException();
         }
     }
 }
