@@ -25,7 +25,7 @@ namespace SharpCompress.Archive.GZip
             this.closeStream = closeStream;
         }
 
-        public override uint Crc
+        public override long Crc
         {
             get { return 0; }
         }

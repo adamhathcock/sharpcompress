@@ -17,7 +17,7 @@ namespace SharpCompress.Common.SevenZip
             get { return FilePart.CompressionType; }
         }
 
-        public override uint Crc
+        public override long Crc
         {
             get { return FilePart.Header.Crc ?? 0; }
         }

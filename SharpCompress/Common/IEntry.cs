@@ -7,7 +7,7 @@ namespace SharpCompress.Common
         CompressionType CompressionType { get; }
         DateTime? ArchivedTime { get; }
         long CompressedSize { get; }
-        uint Crc { get; }
+        long Crc { get; }
         DateTime? CreatedTime { get; }
         string Key { get; }
         bool IsDirectory { get; }
