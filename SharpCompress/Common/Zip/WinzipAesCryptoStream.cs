@@ -55,13 +55,13 @@ namespace SharpCompress.Common.Zip
 
         public override long Length
         {
-            get { throw new NotImplementedException(); }
+            get { throw new NotSupportedException(); }
         }
 
         public override long Position
         {
-            get { throw new NotImplementedException(); }
-            set { throw new NotImplementedException(); }
+            get { throw new NotSupportedException(); }
+            set { throw new NotSupportedException(); }
         }
 
         protected override void Dispose(bool disposing)
@@ -82,7 +82,7 @@ namespace SharpCompress.Common.Zip
 
         public override void Flush()
         {
-            throw new NotImplementedException();
+            throw new NotSupportedException();
         }
 
         public override int Read(byte[] buffer, int offset, int count)
@@ -164,17 +164,17 @@ namespace SharpCompress.Common.Zip
 
         public override long Seek(long offset, SeekOrigin origin)
         {
-            throw new NotImplementedException();
+            throw new NotSupportedException();
         }
 
         public override void SetLength(long value)
         {
-            throw new NotImplementedException();
+            throw new NotSupportedException();
         }
 
         public override void Write(byte[] buffer, int offset, int count)
         {
-            throw new NotImplementedException();
+            throw new NotSupportedException();
         }
     }
 }

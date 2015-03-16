@@ -57,7 +57,7 @@ namespace SharpCompress.Archive
             throw new InvalidOperationException("Cannot determine compressed stream type. Supported Archive Formats: Zip, GZip, Tar, Rar, 7Zip");
         }
 
-        public static IArchive Create(ArchiveType type)
+        public static IWritableArchive Create(ArchiveType type)
         {
             switch (type)
             {
@@ -68,6 +68,10 @@ namespace SharpCompress.Archive
                 case ArchiveType.Tar:
                     {
                         return TarArchive.Create();
+                    }
+                case ArchiveType.GZip:
+                    {
+                        return GZipArchive.Create();
                     }
                 default:
                     {

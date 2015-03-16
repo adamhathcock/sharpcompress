@@ -79,7 +79,7 @@ namespace SharpCompress.Compressor.Rar
         public override long Position
         {
             get { return fileHeader.UncompressedSize - unpack.DestSize; }
-            set { throw new NotImplementedException(); }
+            set { throw new NotSupportedException(); }
         }
 
         public override int Read(byte[] buffer, int offset, int count)
@@ -109,19 +109,19 @@ namespace SharpCompress.Compressor.Rar
 
         public override long Seek(long offset, SeekOrigin origin)
         {
-            throw new NotImplementedException();
+            throw new NotSupportedException();
         }
 
         public override void SetLength(long value)
         {
-            throw new NotImplementedException();
+            throw new NotSupportedException();
         }
 
         public override void Write(byte[] buffer, int offset, int count)
         {
             if (!fetch)
             {
-                throw new NotImplementedException();
+                throw new NotSupportedException();
             }
             if (outCount > 0)
             {

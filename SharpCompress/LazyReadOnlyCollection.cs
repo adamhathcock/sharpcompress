@@ -72,7 +72,7 @@ namespace SharpCompress
 
             public void Reset()
             {
-                throw new NotImplementedException();
+                throw new NotSupportedException();
             }
 
             #endregion
@@ -96,12 +96,12 @@ namespace SharpCompress
 
         public void Add(T item)
         {
-            throw new NotImplementedException();
+            throw new NotSupportedException();
         }
 
         public void Clear()
         {
-            throw new NotImplementedException();
+            throw new NotSupportedException();
         }
 
         public bool Contains(T item)
@@ -132,7 +132,7 @@ namespace SharpCompress
 
         public bool Remove(T item)
         {
-            throw new NotImplementedException();
+            throw new NotSupportedException();
         }
 
         #endregion

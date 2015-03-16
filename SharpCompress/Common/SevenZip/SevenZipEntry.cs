@@ -44,17 +44,17 @@ namespace SharpCompress.Common.SevenZip
 
         public override DateTime? CreatedTime
         {
-            get { throw new NotImplementedException(); }
+            get { return null; }
         }
 
         public override DateTime? LastAccessedTime
         {
-            get { throw new NotImplementedException(); }
+            get { return null; }
         }
 
         public override DateTime? ArchivedTime
         {
-            get { throw new NotImplementedException(); }
+            get { return null; }
         }
 
         public override bool IsEncrypted

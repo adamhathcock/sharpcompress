@@ -58,18 +58,18 @@ namespace SharpCompress.Common.Tar
 
         public override void Flush()
         {
-            throw new System.NotImplementedException();
+            throw new System.NotSupportedException();
         }
 
         public override long Length
         {
-            get { throw new System.NotImplementedException(); }
+            get { throw new System.NotSupportedException(); }
         }
 
         public override long Position
         {
-            get { throw new System.NotImplementedException(); }
-            set { throw new System.NotImplementedException(); }
+            get { throw new System.NotSupportedException(); }
+            set { throw new System.NotSupportedException(); }
         }
 
         public override int Read(byte[] buffer, int offset, int count)
@@ -89,17 +89,17 @@ namespace SharpCompress.Common.Tar
 
         public override long Seek(long offset, SeekOrigin origin)
         {
-            throw new System.NotImplementedException();
+            throw new System.NotSupportedException();
         }
 
         public override void SetLength(long value)
         {
-            throw new System.NotImplementedException();
+            throw new System.NotSupportedException();
         }
 
         public override void Write(byte[] buffer, int offset, int count)
         {
-            throw new System.NotImplementedException();
+            throw new System.NotSupportedException();
         }
     }
 }

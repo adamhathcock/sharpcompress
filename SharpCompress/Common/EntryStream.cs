@@ -59,18 +59,18 @@ namespace SharpCompress.Common
 
         public override void Flush()
         {
-            throw new System.NotImplementedException();
+            throw new NotSupportedException();
         }
 
         public override long Length
         {
-            get { throw new System.NotImplementedException(); }
+            get { throw new NotSupportedException(); }
         }
 
         public override long Position
         {
-            get { throw new System.NotImplementedException(); }
-            set { throw new System.NotImplementedException(); }
+            get { throw new NotSupportedException(); }
+            set { throw new NotSupportedException(); }
         }
 
         public override int Read(byte[] buffer, int offset, int count)
@@ -85,17 +85,17 @@ namespace SharpCompress.Common
 
         public override long Seek(long offset, SeekOrigin origin)
         {
-            throw new System.NotImplementedException();
+            throw new NotSupportedException();
         }
 
         public override void SetLength(long value)
         {
-            throw new System.NotImplementedException();
+            throw new NotSupportedException();
         }
 
         public override void Write(byte[] buffer, int offset, int count)
         {
-            throw new System.NotImplementedException();
+            throw new NotSupportedException();
         }
     }
 }
