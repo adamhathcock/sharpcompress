@@ -42,7 +42,7 @@ namespace SharpCompress.Archive.Rar
             get { return parts.First().FileHeader; }
         }
 
-        public override uint Crc
+        public override long Crc
         {
             get
             {

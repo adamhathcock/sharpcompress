@@ -8,7 +8,7 @@ namespace SharpCompress.Common
         /// <summary>
         /// The File's 32 bit CRC Hash
         /// </summary>
-        public abstract uint Crc { get; }
+        public abstract long Crc { get; }
 
         /// <summary>
         /// The string key of the file internal to the Archive.

@@ -53,7 +53,7 @@ namespace SharpCompress.Common.Zip
             }
         }
 
-        public override uint Crc
+        public override long Crc
         {
             get { return filePart.Header.Crc; }
         }

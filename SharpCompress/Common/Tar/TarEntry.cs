@@ -22,7 +22,7 @@ namespace SharpCompress.Common.Tar
             get { return type; }
         }
 
-        public override uint Crc
+        public override long Crc
         {
             get { return 0; }
         }

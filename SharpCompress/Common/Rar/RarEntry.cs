@@ -10,7 +10,7 @@ namespace SharpCompress.Common.Rar
         /// <summary>
         /// The File's 32 bit CRC Hash
         /// </summary>
-        public override uint Crc
+        public override long Crc
         {
             get { return FileHeader.FileCRC; }
         }
