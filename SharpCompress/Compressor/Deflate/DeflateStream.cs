@@ -174,7 +174,7 @@ namespace SharpCompress.Compressor.Deflate
         /// </summary>
         public override long Length
         {
-            get { throw new NotImplementedException(); }
+            get { throw new NotSupportedException(); }
         }
 
         /// <summary>
@@ -198,7 +198,7 @@ namespace SharpCompress.Compressor.Deflate
                     return _baseStream._z.TotalBytesIn;
                 return 0;
             }
-            set { throw new NotImplementedException(); }
+            set { throw new NotSupportedException(); }
         }
 
         /// <summary>
@@ -275,7 +275,7 @@ namespace SharpCompress.Compressor.Deflate
         /// <returns>irrelevant!</returns>
         public override long Seek(long offset, SeekOrigin origin)
         {
-            throw new NotImplementedException();
+            throw new NotSupportedException();
         }
 
         /// <summary>
@@ -284,7 +284,7 @@ namespace SharpCompress.Compressor.Deflate
         /// <param name="value">this is irrelevant, since it will always throw!</param>
         public override void SetLength(long value)
         {
-            throw new NotImplementedException();
+            throw new NotSupportedException();
         }
 
         /// <summary>

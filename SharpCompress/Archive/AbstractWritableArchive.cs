@@ -6,7 +6,7 @@ using SharpCompress.Common;
 
 namespace SharpCompress.Archive
 {
-    public abstract class AbstractWritableArchive<TEntry, TVolume> : AbstractArchive<TEntry, TVolume>
+    public abstract class AbstractWritableArchive<TEntry, TVolume> : AbstractArchive<TEntry, TVolume>, IWritableArchive
         where TEntry : IArchiveEntry
         where TVolume : IVolume
     {
@@ -66,11 +66,21 @@ namespace SharpCompress.Archive
                 RebuildModifiedCollection();
             }
         }
+        void IWritableArchive.RemoveEntry(IArchiveEntry entry)
+        {
+            RemoveEntry((TEntry)entry);
+        }
 
         public TEntry AddEntry(string key, Stream source,
                              long size = 0, DateTime? modified = null)
         {
             return AddEntry(key, source, false, size, modified);
+        }
+
+
+        IArchiveEntry IWritableArchive.AddEntry(string key, Stream source, bool closeStream, long size, DateTime? modified)
+        {
+            return AddEntry(key, source, closeStream, size, modified);
         }
 
         public TEntry AddEntry(string key, Stream source, bool closeStream,

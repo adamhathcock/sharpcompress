@@ -18,7 +18,7 @@ namespace SharpCompress.Common.GZip
             get { return CompressionType.GZip; }
         }
 
-        public override uint Crc
+        public override long Crc
         {
             get { return 0; }
         }

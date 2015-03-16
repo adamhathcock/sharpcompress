@@ -40,7 +40,6 @@
     <!-- A reference to the entire .Net Framework and Windows SDK are automatically included -->
     <Compile Include="Archive\AbstractArchive.cs" />
     <Compile Include="Archive\AbstractWritableArchive.cs" />
-    <Compile Include="Archive\AbstractWritableArchive.Extensions.cs" />
     <Compile Include="Archive\ArchiveFactory.cs" />
     <Compile Include="Archive\GZip\GZipArchive.cs" />
     <Compile Include="Archive\GZip\GZipArchiveEntry.cs" />
@@ -50,6 +49,8 @@
     <Compile Include="Archive\IArchiveEntry.cs" />
     <Compile Include="Archive\IArchiveEntry.Extensions.cs" />
     <Compile Include="Archive\IArchiveExtractionListener.cs" />
+    <Compile Include="Archive\IWritableArchive.cs" />
+    <Compile Include="Archive\IWritableArchive.Extensions.cs" />
     <Compile Include="Archive\IWritableArchiveEntry.cs" />
     <Compile Include="Archive\Rar\RarArchive.cs" />
     <Compile Include="Archive\Rar\RarArchive.Extensions.cs" />

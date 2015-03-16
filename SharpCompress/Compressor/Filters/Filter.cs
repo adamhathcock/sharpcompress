@@ -51,7 +51,7 @@ namespace SharpCompress.Compressor.Filters
 
         public override void Flush()
         {
-            throw new NotImplementedException();
+            throw new NotSupportedException();
         }
 
         public override long Length
@@ -62,7 +62,7 @@ namespace SharpCompress.Compressor.Filters
         public override long Position
         {
             get { return baseStream.Position; }
-            set { throw new NotImplementedException(); }
+            set { throw new NotSupportedException(); }
         }
 
         public override int Read(byte[] buffer, int offset, int count)
@@ -135,12 +135,12 @@ namespace SharpCompress.Compressor.Filters
 
         public override long Seek(long offset, SeekOrigin origin)
         {
-            throw new NotImplementedException();
+            throw new NotSupportedException();
         }
 
         public override void SetLength(long value)
         {
-            throw new NotImplementedException();
+            throw new NotSupportedException();
         }
 
         public override void Write(byte[] buffer, int offset, int count)
