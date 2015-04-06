@@ -91,6 +91,7 @@ namespace SharpCompress.Writer.Tar
             {
                 PadTo512(0, true);
                 PadTo512(0, true);
+                OutputStream.Dispose(); // required when bzip2 compression is used
             }
             base.Dispose(isDisposing);
         }
