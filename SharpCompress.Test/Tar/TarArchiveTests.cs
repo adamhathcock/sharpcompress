@@ -45,6 +45,44 @@ namespace SharpCompress.Test
         }
 
         [TestMethod]
+        public void Tar_VeryLongFilepathReadback()
+        {
+            string archive = "Tar_VeryLongFilepathReadback.tar";
+
+            ResetScratch();
+
+            // create a very long filename
+            string longFilename = "";
+            for (int i = 0; i < 600; i = longFilename.Length)
+                longFilename += i.ToString("D10") + "-";
+            longFilename += ".txt";
+
+            // Step 1: create a tar file containing a file with a long name
+            using (Stream stream = File.OpenWrite(Path.Combine(SCRATCH2_FILES_PATH, archive)))
+            using (var writer = SharpCompress.Writer.WriterFactory.Open(stream, ArchiveType.Tar, CompressionType.None))
+            using (Stream inputStream = new MemoryStream())
+            {
+                StreamWriter sw = new StreamWriter(inputStream);
+                sw.Write("dummy filecontent");
+                sw.Flush();
+
+                inputStream.Position = 0;
+                writer.Write(longFilename, inputStream, null);
+            }
+
+            // Step 2: check if the written tar file can be read correctly
+            string unmodified = Path.Combine(SCRATCH2_FILES_PATH, archive);
+            using (var archive2 = TarArchive.Open(unmodified))
+            {
+                Assert.AreEqual(1, archive2.Entries.Count);
+                Assert.IsTrue(archive2.Entries.Any(entry => entry.Key == longFilename));
+
+                foreach (var entry in archive2.Entries)
+                    Assert.AreEqual("dummy filecontent", new StreamReader(entry.OpenEntryStream()).ReadLine());
+            }
+        }
+
+        [TestMethod]
         public void Tar_UstarArchivePathReadLongName()
         {
             string unmodified = Path.Combine(TEST_ARCHIVES_PATH, "ustar with long names.tar");
