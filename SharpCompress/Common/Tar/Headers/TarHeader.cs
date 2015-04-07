@@ -179,7 +179,6 @@ namespace SharpCompress.Common.Tar.Headers
             {
                 buffer[offset + i + shift] = (byte) val[i];
             }
-            buffer[offset + length] = 0;
         }
 
         private static int ReadASCIIInt32Base8(byte[] buffer, int offset, int count)
