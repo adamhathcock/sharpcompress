@@ -40,48 +40,64 @@ namespace SharpCompress.Common.Tar.Headers
 
         internal void Write(Stream output)
         {
-            if (Name.Length > 255)
-            {
-                throw new InvalidFormatException("UsTar fileName can not be longer than 255 chars");
-            }
             byte[] buffer = new byte[512];
-            string name = Name;
-            if (name.Length > 100)
-            {
-                name = Name.Substring(0, 100);
-            }
-            WriteStringBytes(name, buffer, 0, 100);
 
-            WriteOctalBytes(511, buffer, 100, 8);
-            WriteOctalBytes(0, buffer, 108, 8);
-            WriteOctalBytes(0, buffer, 116, 8);
-            WriteOctalBytes(Size, buffer, 124, 12);
-            var time = (long) (LastModifiedTime.ToUniversalTime() - Epoch).TotalSeconds;
-            WriteOctalBytes(time, buffer, 136, 12);
-
-            buffer[156] = (byte) EntryType;
+            WriteOctalBytes(511, buffer, 100, 8);   // file mode
+            WriteOctalBytes(0, buffer, 108, 8);     // owner ID
+            WriteOctalBytes(0, buffer, 116, 8);     // group ID
 
             //Encoding.UTF8.GetBytes("magic").CopyTo(buffer, 257);
             if (Name.Length > 100)
             {
-                name = Name.Substring(101, Name.Length);
-                ArchiveEncoding.Default.GetBytes(name).CopyTo(buffer, 345);
+                // Set mock filename and filetype to indicate the next block is the actual name of the file
+                WriteStringBytes("././@LongLink", buffer, 0, 100);
+                buffer[156] = (byte)EntryType.LongName;
+                WriteOctalBytes(Name.Length + 1, buffer, 124, 12);
             }
-            if (Size >= 0x1FFFFFFFF)
+            else
             {
+                WriteStringBytes(Name, buffer, 0, 100);
+                WriteOctalBytes(Size, buffer, 124, 12);
+                var time = (long)(LastModifiedTime.ToUniversalTime() - Epoch).TotalSeconds;
+                WriteOctalBytes(time, buffer, 136, 12);
+                buffer[156] = (byte)EntryType;
+
+                if (Size >= 0x1FFFFFFFF)
+                {
 #if PORTABLE || NETFX_CORE
                 byte[] bytes = BitConverter.GetBytes(Utility.HostToNetworkOrder(Size));
 #else
-                byte[] bytes = BitConverter.GetBytes(IPAddress.HostToNetworkOrder(Size));
+                    byte[] bytes = BitConverter.GetBytes(IPAddress.HostToNetworkOrder(Size));
 #endif
-                var bytes12 = new byte[12];
-                bytes.CopyTo(bytes12, 12 - bytes.Length);
-                bytes12[0] |= 0x80;
-                bytes12.CopyTo(buffer, 124);
+                    var bytes12 = new byte[12];
+                    bytes.CopyTo(bytes12, 12 - bytes.Length);
+                    bytes12[0] |= 0x80;
+                    bytes12.CopyTo(buffer, 124);
+                }
             }
+
             int crc = RecalculateChecksum(buffer);
             WriteOctalBytes(crc, buffer, 148, 8);
+
             output.Write(buffer, 0, buffer.Length);
+
+            if (Name.Length > 100)
+            {
+                WriteLongFilenameHeader(output);
+                Name = Name.Substring(0, 100);
+                Write(output);
+            }
+        }
+        private void WriteLongFilenameHeader(Stream output)
+        {
+            byte[] nameBytes = ArchiveEncoding.Default.GetBytes(Name);
+            output.Write(nameBytes, 0, nameBytes.Length);
+
+            // pad to multiple of 512 bytes, and make sure a terminating null is added
+            int numPaddingBytes = 512 - (nameBytes.Length % 512);
+            if (numPaddingBytes == 0)
+                numPaddingBytes = 512;
+            output.Write(new byte[numPaddingBytes], 0, numPaddingBytes);
         }
 
         internal bool Read(BinaryReader reader)
@@ -163,7 +179,6 @@ namespace SharpCompress.Common.Tar.Headers
             {
                 buffer[offset + i + shift] = (byte) val[i];
             }
-            buffer[offset + length] = 0;
         }
 
         private static int ReadASCIIInt32Base8(byte[] buffer, int offset, int count)
