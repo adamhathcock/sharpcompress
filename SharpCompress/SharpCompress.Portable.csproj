@@ -118,6 +118,7 @@
     <Compile Include="Common\Rar\Headers\Flags.cs" />
     <Compile Include="Common\Rar\Headers\MarkHeader.cs" />
     <Compile Include="Common\Rar\Headers\NewSubHeader.cs" />
+    <Compile Include="Common\Rar\Headers\ProtectHeader.cs" />
     <Compile Include="Common\Rar\Headers\RarHeader.cs" />
     <Compile Include="Common\Rar\Headers\RarHeaderFactory.cs" />
     <Compile Include="Common\Rar\Headers\SignHeader.cs" />
