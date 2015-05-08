@@ -151,6 +151,33 @@ namespace SharpCompress.Common.Rar.Headers
                     {
                         return header.PromoteHeader<MarkHeader>(reader);
                     }
+
+                case HeaderType.ProtectHeader:
+                    {
+                        ProtectHeader ph = header.PromoteHeader<ProtectHeader>(reader);
+                        
+                        // skip the recovery record data, we do not use it.
+                        switch (StreamingMode)
+                        {
+                            case StreamingMode.Seekable:
+                                {
+                                    reader.BaseStream.Position += ph.DataSize;
+                                }
+                                break;
+                            case StreamingMode.Streaming:
+                                {
+                                    reader.BaseStream.Skip(ph.DataSize);
+                                }
+                                break;
+                            default:
+                                {
+                                    throw new InvalidFormatException("Invalid StreamingMode");
+                                }
+                        }
+
+                        return ph;
+                    }
+
                 case HeaderType.NewSubHeader:
                     {
                         FileHeader fh = header.PromoteHeader<FileHeader>(reader);
