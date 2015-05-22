@@ -66,7 +66,7 @@ namespace SharpCompress.Common.Zip.Headers
 
         protected void LoadExtra(byte[] extra)
         {
-            for (int i = 0; i < extra.Length;)
+            for (int i = 0; i < extra.Length-4;)
             {
                 ExtraDataType type = (ExtraDataType) BitConverter.ToUInt16(extra, i);
                 if (!Enum.IsDefined(typeof (ExtraDataType), type))
