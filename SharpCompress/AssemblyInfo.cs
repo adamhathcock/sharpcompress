@@ -2,6 +2,7 @@
 using System.Reflection;
 using System.Runtime.CompilerServices;
 
+
 #if PORTABLE
 [assembly: AssemblyTitle("SharpCompress.Portable")]
 [assembly: AssemblyProduct("SharpCompress.Portable")]
@@ -9,14 +10,11 @@ using System.Runtime.CompilerServices;
 
 [assembly: AssemblyTitle("SharpCompress")]
 [assembly: AssemblyProduct("SharpCompress")]
-[assembly:
-    InternalsVisibleTo(
-        "SharpCompress.Test"
-        )]
-[assembly:
-InternalsVisibleTo(
-        "SharpCompress.Test.Portable"
-        )]
+#endif
+
+#if !NET2 && !PORTABLE && !NETFX_CORE
+[assembly: InternalsVisibleTo("SharpCompress.Test")]
+[assembly: InternalsVisibleTo("SharpCompress.Test.Portable")]
 #endif
 
 [assembly: CLSCompliant(true)]

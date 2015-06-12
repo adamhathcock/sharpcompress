@@ -128,6 +128,7 @@
     <Compile Include="Common\Rar\RarFilePart.cs" />
     <Compile Include="Common\Rar\RarRijndael.Portable.cs" />
     <Compile Include="Common\Rar\RarVolume.cs" />
+    <Compile Include="Common\ReaderExtractionEventArgs.cs" />
     <Compile Include="Common\SevenZip\ArchiveDatabase.cs" />
     <Compile Include="Common\SevenZip\ArchiveReader.cs" />
     <Compile Include="Common\SevenZip\CBindPair.cs" />
@@ -147,6 +148,7 @@
     <Compile Include="Common\Tar\TarReadOnlySubStream.cs" />
     <Compile Include="Common\Tar\TarVolume.cs" />
     <Compile Include="Common\Volume.cs" />
+    <Compile Include="Common\Zip\Headers\LocalEntryHeaderExtraFactory.cs" />
     <Compile Include="Common\Zip\WinzipAesCryptoStream.Portable.cs" />
     <Compile Include="Common\Zip\Headers\DirectoryEndHeader.cs" />
     <Compile Include="Common\Zip\Headers\DirectoryEntryHeader.cs" />
@@ -154,7 +156,7 @@
     <Compile Include="Common\Zip\Headers\IgnoreHeader.cs" />
     <Compile Include="Common\Zip\Headers\LocalEntryHeader.cs" />
     <Compile Include="Common\Zip\Headers\SplitHeader.cs" />
-    <Compile Include="Common\Zip\Headers\ZipFileEntry..cs" />
+    <Compile Include="Common\Zip\Headers\ZipFileEntry.cs" />
     <Compile Include="Common\Zip\Headers\ZipHeader.cs" />
     <Compile Include="Common\Zip\Headers\ZipHeaderType.cs" />
     <Compile Include="Common\Zip\PkwareTraditionalCryptoStream.cs" />
@@ -297,6 +299,9 @@
     <Compile Include="Reader\GZip\GZipReader.cs" />
     <Compile Include="Reader\IReader.cs" />
     <Compile Include="Reader\IReader.Extensions.cs" />
+    <Compile Include="Reader\IReaderExtractionListener.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="Reader\Rar\MultiVolumeRarReader.cs" />
     <Compile Include="Reader\Rar\NonSeekableStreamFilePart.cs" />
     <Compile Include="Reader\Rar\RarReader.cs" />

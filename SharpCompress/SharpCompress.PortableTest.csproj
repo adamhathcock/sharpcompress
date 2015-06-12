@@ -91,7 +91,6 @@
     <Compile Include="Common\ArchiveEncoding.cs" />
     <Compile Include="Archive\AbstractWritableArchive.cs" />
     <Compile Include="Archive\AbstractArchive.cs" />
-    <Compile Include="Archive\AbstractWritableArchive.Extensions.cs" />
     <Compile Include="Archive\ArchiveFactory.cs" />
     <Compile Include="Archive\GZip\GZipWritableArchiveEntry.cs" />
     <Compile Include="Archive\IArchive.Extensions.cs" />
