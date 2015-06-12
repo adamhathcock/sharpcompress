@@ -73,7 +73,7 @@
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
   <PropertyGroup>
-    <SignAssembly>true</SignAssembly>
+    <SignAssembly>false</SignAssembly>
   </PropertyGroup>
   <PropertyGroup>
     <AssemblyOriginatorKeyFile>SharpCompress.pfx</AssemblyOriginatorKeyFile>
@@ -86,6 +86,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Archive\IArchiveExtractionListener.cs" />
+    <Compile Include="Archive\IWritableArchive.cs" />
+    <Compile Include="Archive\IWritableArchive.Extensions.cs" />
     <Compile Include="Archive\IWritableArchiveEntry.cs" />
     <Compile Include="Archive\Rar\SeekableFilePart.cs" />
     <Compile Include="Common\ArchiveEncoding.cs" />
@@ -130,6 +132,7 @@
     <Compile Include="Common\IVolume.cs" />
     <Compile Include="Common\Rar\RarCryptoWrapper.cs" />
     <Compile Include="Common\Rar\RarRijndael.Portable.cs" />
+    <Compile Include="Common\ReaderExtractionEventArgs.cs" />
     <Compile Include="Common\SevenZip\CBindPair.cs" />
     <Compile Include="Common\SevenZip\CCoderInfo.cs" />
     <Compile Include="Common\SevenZip\CFileItem.cs" />
@@ -147,6 +150,7 @@
     <Compile Include="Common\Tar\TarHeaderFactory.cs" />
     <Compile Include="Common\Zip\Headers\HeaderFlags.cs" />
     <Compile Include="Common\Zip\Headers\IgnoreHeader.cs" />
+    <Compile Include="Common\Zip\Headers\LocalEntryHeaderExtraFactory.cs" />
     <Compile Include="Common\Zip\Headers\SplitHeader.cs" />
     <Compile Include="Common\Zip\Headers\ZipFileEntry.cs" />
     <Compile Include="Common\Zip\Headers\ZipHeaderType.cs" />
@@ -261,6 +265,7 @@
     <Compile Include="Common\Rar\RarCryptoBinaryReader.cs" />
     <Compile Include="IO\RewindableStream.cs" />
     <Compile Include="Reader\GZip\GZipReader.cs" />
+    <Compile Include="Reader\IReaderExtractionListener.cs" />
     <Compile Include="Reader\ReaderFactory.cs" />
     <Compile Include="Reader\AbstractReader.cs" />
     <Compile Include="Common\Volume.cs" />
