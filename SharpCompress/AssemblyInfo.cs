@@ -12,7 +12,7 @@ using System.Runtime.CompilerServices;
 [assembly: AssemblyProduct("SharpCompress")]
 #endif
 
-#if !NET2 && !PORTABLE && !NETFX_CORE
+#if UNSIGNED
 [assembly: InternalsVisibleTo("SharpCompress.Test")]
 [assembly: InternalsVisibleTo("SharpCompress.Test.Portable")]
 #endif

@@ -97,9 +97,9 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\SharpCompress\SharpCompress.csproj">
-      <Project>{10A689CF-76A2-4A4F-96E4-553C33398438}</Project>
-      <Name>SharpCompress</Name>
+    <ProjectReference Include="..\SharpCompress\SharpCompress.Unsigned.csproj">
+      <Project>{27d535cb-2fd3-4621-8c9a-46161fc77a5d}</Project>
+      <Name>SharpCompress.Unsigned</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
