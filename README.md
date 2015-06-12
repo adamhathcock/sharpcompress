@@ -21,6 +21,13 @@ TODOs (always lots):
 * Zip64
 * Multi-volume Zip support.
 
+Version 0.11:
+==============
+- Been over a year, contains mainly fixes from contributors!  
+- Possible breaking change: ArchiveEncoding is UTF8 by default now.
+- TAR supports writing long names using longlink
+- RAR Protect Header added
+
 Version 0.10.3:
 ==============
 - Finally fixed Disposal issue when creating a new archive with the Archive API
