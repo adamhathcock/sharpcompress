@@ -6,7 +6,7 @@
         <title>SharpCompress - Pure C# Decompression/Compression</title>
         <authors>Adam Hathcock</authors>
         <owners>Adam Hathcock</owners>
-        <licenseUrl>http://sharpcompress.codeplex.com/license</licenseUrl>
+        <licenseUrl>https://github.com/adamhathcock/sharpcompress/blob/master/LICENSE.txt</licenseUrl>
         <projectUrl>https://github.com/adamhathcock/sharpcompress</projectUrl>
         <requireLicenseAcceptance>false</requireLicenseAcceptance>
         <description>SharpCompress is a compression library for .NET/Mono/Silverlight/WP7/WindowsStore that can unrar, decompress 7zip, zip/unzip, tar/untar bzip2/unbzip2 and gzip/ungzip with forward-only reading and file random access APIs. Write support for zip/tar/bzip2/gzip is implemented.</description>
