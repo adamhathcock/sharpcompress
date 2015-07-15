@@ -1,16 +1,19 @@
 ﻿using System;
 using System.IO;
+using SharpCompress.Reader;
 
 namespace SharpCompress.Common
 {
     public class EntryStream : Stream
     {
+        public IReader Reader { get; private set; }
         private Stream stream;
         private bool completed;
         private bool isDisposed;
 
-        internal EntryStream(Stream stream)
+        internal EntryStream(IReader reader, Stream stream)
         {
+            this.Reader = reader;
             this.stream = stream;
         }
 
@@ -26,25 +29,9 @@ namespace SharpCompress.Common
             completed = true;
         }
 
-        public bool Cancelled { get; private set; }
-
-        /// <summary>
-        /// Indicates that the remainder of the stream is not required.
-        /// On dispose, the entry will not be skipped, so it helps with efficiency.
-        /// The downside is that subsequent entries are not usable, as the compressed stream is not positioned at an entry boundary.
-        /// </summary>
-        public void Cancel()
-        {
-          if (!completed)
-          {
-            Cancelled = true;
-            stream.Close();
-          }
-        }
-
         protected override void Dispose(bool disposing)
         {
-            if (!(completed || Cancelled))
+            if (!(completed || Reader.Cancelled))
             {
                 SkipEntry();
             }

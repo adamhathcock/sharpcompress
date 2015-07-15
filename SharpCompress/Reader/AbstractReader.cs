@@ -67,22 +67,36 @@ namespace SharpCompress.Reader
 
         #endregion
 
+
+        public bool Cancelled { get; private set; }
+
+        /// <summary>
+        /// Indicates that the remaining entries are not required.
+        /// On dispose of an EntryStream, the stream will not skip to the end of the entry.
+        /// An attempt to move to the next entry will throw an exception, as the compressed stream is not positioned at an entry boundary.
+        /// </summary>
+        public void Cancel()
+        {
+          if (!completed)
+          {
+            Cancelled = true;
+          }
+        }
+
         public bool MoveToNextEntry()
         {
             if (completed)
             {
                 return false;
             }
+            if (Cancelled)
+            {
+                throw new InvalidOperationException("Reader has been cancelled.");
+            }
             if (entriesForCurrentReadStream == null)
             {
                 return LoadStreamForReading(RequestInitialStream());
             }
-
-            if (currentEntryStream != null && currentEntryStream.Cancelled)
-            {
-              throw new InvalidOperationException("EntryStream has not been fully consumed.  Read the entire stream or use SkipEntry.");
-            }
-
             if (!wroteCurrentEntry)
             {
                 SkipEntry();
@@ -203,14 +217,12 @@ namespace SharpCompress.Reader
             return stream;
         }
 
-        private EntryStream currentEntryStream;
-
         /// <summary>
         /// Retains a reference to the entry stream, so we can check whether it completed later.
         /// </summary>
         protected EntryStream CreateEntryStream(Stream decompressed)
         {
-          return currentEntryStream = new EntryStream(decompressed);
+          return new EntryStream(this, decompressed);
         }
 
         protected virtual EntryStream GetEntryStream()

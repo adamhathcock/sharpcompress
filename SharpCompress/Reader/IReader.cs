@@ -22,6 +22,9 @@ namespace SharpCompress.Reader
         /// <param name="writableStream"></param>
         void WriteEntryTo(Stream writableStream);
 
+        bool Cancelled { get; }
+        void Cancel();
+
         /// <summary>
         /// Moves to the next entry by reading more data from the underlying stream.  This skips if data has not been read.
         /// </summary>
