@@ -236,7 +236,7 @@ namespace SharpCompress.Archive.SevenZip
 
             protected override EntryStream GetEntryStream()
             {
-                return new EntryStream(new ReadOnlySubStream(currentStream, currentItem.Size));
+                return CreateEntryStream(new ReadOnlySubStream(currentStream, currentItem.Size));
             }
         }
     }

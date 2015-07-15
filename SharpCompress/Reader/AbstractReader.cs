@@ -77,6 +77,12 @@ namespace SharpCompress.Reader
             {
                 return LoadStreamForReading(RequestInitialStream());
             }
+
+            if (currentEntryStream != null && currentEntryStream.Cancelled)
+            {
+              throw new InvalidOperationException("EntryStream has not been fully consumed.  Read the entire stream or use SkipEntry.");
+            }
+
             if (!wroteCurrentEntry)
             {
                 SkipEntry();
@@ -197,9 +203,19 @@ namespace SharpCompress.Reader
             return stream;
         }
 
+        private EntryStream currentEntryStream;
+
+        /// <summary>
+        /// Retains a reference to the entry stream, so we can check whether it completed later.
+        /// </summary>
+        protected EntryStream CreateEntryStream(Stream decompressed)
+        {
+          return currentEntryStream = new EntryStream(decompressed);
+        }
+
         protected virtual EntryStream GetEntryStream()
         {
-            return new EntryStream(Entry.Parts.First().GetCompressedStream());
+          return CreateEntryStream(Entry.Parts.First().GetCompressedStream());
         }
 
         #endregion

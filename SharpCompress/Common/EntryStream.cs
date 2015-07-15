@@ -26,12 +26,27 @@ namespace SharpCompress.Common
             completed = true;
         }
 
+        public bool Cancelled { get; private set; }
+
+        /// <summary>
+        /// Indicates that the remainder of the stream is not required.
+        /// On dispose, the entry will not be skipped, so it helps with efficiency.
+        /// The downside is that subsequent entries are not usable, as the compressed stream is not positioned at an entry boundary.
+        /// </summary>
+        public void Cancel()
+        {
+          if (!completed)
+          {
+            Cancelled = true;
+            stream.Close();
+          }
+        }
+
         protected override void Dispose(bool disposing)
         {
-            if (!completed)
+            if (!(completed || Cancelled))
             {
-                throw new InvalidOperationException(
-                    "EntryStream has not been fully consumed.  Read the entire stream or use SkipEntry.");
+                SkipEntry();
             }
             if (isDisposed)
             {
