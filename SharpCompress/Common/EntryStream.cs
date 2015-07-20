@@ -1,16 +1,19 @@
 ﻿using System;
 using System.IO;
+using SharpCompress.Reader;
 
 namespace SharpCompress.Common
 {
     public class EntryStream : Stream
     {
+        public IReader Reader { get; private set; }
         private Stream stream;
         private bool completed;
         private bool isDisposed;
 
-        internal EntryStream(Stream stream)
+        internal EntryStream(IReader reader, Stream stream)
         {
+            this.Reader = reader;
             this.stream = stream;
         }
 
@@ -28,10 +31,9 @@ namespace SharpCompress.Common
 
         protected override void Dispose(bool disposing)
         {
-            if (!completed)
+            if (!(completed || Reader.Cancelled))
             {
-                throw new InvalidOperationException(
-                    "EntryStream has not been fully consumed.  Read the entire stream or use SkipEntry.");
+                SkipEntry();
             }
             if (isDisposed)
             {

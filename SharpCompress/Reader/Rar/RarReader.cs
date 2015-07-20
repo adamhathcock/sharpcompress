@@ -73,7 +73,7 @@ namespace SharpCompress.Reader.Rar
 
         protected override EntryStream GetEntryStream()
         {
-            return new EntryStream(new RarStream(pack, Entry.FileHeader,
+            return CreateEntryStream(new RarStream(pack, Entry.FileHeader,
                                                  new MultiVolumeReadOnlyStream(
                                                      CreateFilePartEnumerableForCurrentEntry().Cast<RarFilePart>(), this)));
         }
