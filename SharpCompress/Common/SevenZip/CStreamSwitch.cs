@@ -16,7 +16,9 @@ namespace SharpCompress.Common.SevenZip
             if (_active)
             {
                 _active = false;
+#if DEBUG
                 Log.WriteLine("[end of switch]");
+#endif
             }
 
             if (_needRemove)
@@ -47,7 +49,9 @@ namespace SharpCompress.Common.SevenZip
                 if (dataIndex < 0 || dataIndex >= dataVector.Count)
                     throw new InvalidOperationException();
 
+#if DEBUG
                 Log.WriteLine("[switch to stream {0}]", dataIndex);
+#endif
                 _archive = archive;
                 _archive.AddByteStream(dataVector[dataIndex], 0, dataVector[dataIndex].Length);
                 _needRemove = true;
@@ -55,7 +59,9 @@ namespace SharpCompress.Common.SevenZip
             }
             else
             {
+#if DEBUG
                 Log.WriteLine("[inline data]");
+#endif
             }
         }
     }

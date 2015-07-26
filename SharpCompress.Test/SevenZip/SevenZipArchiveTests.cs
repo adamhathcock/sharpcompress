@@ -61,6 +61,11 @@ namespace SharpCompress.Test
             ArchiveFileRead("7Zip.BZip2.7z");
         }
 
+        [TestMethod]
+        public void SevenZipArchive_LZMA_Time_Attributes_PathRead()
+        {
+            ArchiveFileReadEx("7Zip.LZMA.7z");
+        }
 
         [TestMethod]
         [ExpectedException(typeof(IndexOutOfRangeException))]

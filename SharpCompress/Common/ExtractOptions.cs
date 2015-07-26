@@ -16,5 +16,15 @@ namespace SharpCompress.Common
         /// extract with internal directory structure
         /// </summary>
         ExtractFullPath,
+
+        /// <summary>
+        /// preserve file time
+        /// </summary>
+        PreserveFileTime,
+
+        /// <summary>
+        /// preserve windows file attributes
+        /// </summary>
+        PreserveAttributes,
     }
 }

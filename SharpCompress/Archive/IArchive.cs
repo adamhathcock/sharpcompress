@@ -14,7 +14,6 @@ namespace SharpCompress.Archive
         event EventHandler<FilePartExtractionBeginEventArgs> FilePartExtractionBegin;
 
         IEnumerable<IArchiveEntry> Entries { get; }
-        long TotalSize { get; }
         IEnumerable<IVolume> Volumes { get; }
 
         ArchiveType Type { get; }
@@ -24,7 +23,6 @@ namespace SharpCompress.Archive
         /// This is primarily for SOLID Rar Archives or 7Zip Archives as they need to be 
         /// extracted sequentially for the best performance.
         /// </summary>
-        /// <returns></returns>
         IReader ExtractAllEntries();
 
         /// <summary>
@@ -37,5 +35,15 @@ namespace SharpCompress.Archive
         /// This checks to see if all the known entries have IsComplete = true
         /// </summary>
         bool IsComplete { get; }
+
+        /// <summary>
+        /// The total size of the files compressed in the archive.
+        /// </summary>
+        long TotalSize { get; }
+
+        /// <summary>
+        /// The total size of the files as uncompressed in the archive.
+        /// </summary>
+        long TotalUncompressSize { get; }
     }
 }

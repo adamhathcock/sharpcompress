@@ -72,6 +72,11 @@ namespace SharpCompress.Common.SevenZip
             get { return false; }
         }
 
+        public override int? Attrib
+        {
+            get { return (int) FilePart.Header.Attrib; }
+        }
+
         internal override IEnumerable<FilePart> Parts
         {
             get { return FilePart.AsEnumerable<FilePart>(); }
