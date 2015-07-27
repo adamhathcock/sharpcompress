@@ -16,5 +16,6 @@ namespace SharpCompress.Common
         DateTime? LastAccessedTime { get; }
         DateTime? LastModifiedTime { get; }
         long Size { get; }
+        int? Attrib { get; }
     }
 }

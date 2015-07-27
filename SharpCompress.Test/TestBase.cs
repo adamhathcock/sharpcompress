@@ -78,6 +78,21 @@ namespace SharpCompress.Test
             }
         }
 
+        /// <summary>
+        /// Verifies the files also check modified time and attributes.
+        /// </summary>
+        public void VerifyFilesEx()
+        {
+            if (UseExtensionInsteadOfNameToVerify)
+            {
+                VerifyFilesByExtensionEx();
+            }
+            else
+            {
+                VerifyFilesByNameEx();
+            }
+        }
+
         protected void VerifyFilesByName()
         {
             var extracted =
@@ -94,6 +109,52 @@ namespace SharpCompress.Test
                 Assert.IsTrue(extracted.Contains(orig.Key));
 
                 CompareFilesByPath(orig.Single(), extracted[orig.Key].Single());
+            }
+        }
+
+        /// <summary>
+        /// Verifies the files by name also check modified time and attributes.
+        /// </summary>
+        protected void VerifyFilesByNameEx()
+        {
+            var extracted =
+                Directory.EnumerateFiles(SCRATCH_FILES_PATH, "*.*", SearchOption.AllDirectories)
+                .ToLookup(path => path.Substring(SCRATCH_FILES_PATH.Length));
+            var original =
+                Directory.EnumerateFiles(ORIGINAL_FILES_PATH, "*.*", SearchOption.AllDirectories)
+                .ToLookup(path => path.Substring(ORIGINAL_FILES_PATH.Length));
+
+            Assert.AreEqual(extracted.Count, original.Count);
+
+            foreach (var orig in original)
+            {
+                Assert.IsTrue(extracted.Contains(orig.Key));
+
+                CompareFilesByPath(orig.Single(), extracted[orig.Key].Single());
+                CompareFilesByTimeAndAttribut(orig.Single(), extracted[orig.Key].Single());
+            }
+        }
+
+        /// <summary>
+        /// Verifies the files by extension also check modified time and attributes.
+        /// </summary>
+        protected void VerifyFilesByExtensionEx()
+        {
+            var extracted =
+                Directory.EnumerateFiles(SCRATCH_FILES_PATH, "*.*", SearchOption.AllDirectories)
+                .ToLookup(path => Path.GetExtension(path));
+            var original =
+                Directory.EnumerateFiles(ORIGINAL_FILES_PATH, "*.*", SearchOption.AllDirectories)
+                .ToLookup(path => Path.GetExtension(path));
+
+            Assert.AreEqual(extracted.Count, original.Count);
+
+            foreach (var orig in original)
+            {
+                Assert.IsTrue(extracted.Contains(orig.Key));
+
+                CompareFilesByPath(orig.Single(), extracted[orig.Key].Single());
+                CompareFilesByTimeAndAttribut(orig.Single(), extracted[orig.Key].Single());
             }
         }
 
@@ -135,6 +196,14 @@ namespace SharpCompress.Test
                             counter, file1, file2));
                 }
             }
+        }
+
+        protected void CompareFilesByTimeAndAttribut(string file1, string file2)
+        {
+            FileInfo fi1 = new FileInfo(file1);
+            FileInfo fi2 = new FileInfo(file2);
+            Assert.AreEqual(fi1.LastWriteTime, fi2.LastWriteTime);
+            Assert.AreEqual(fi1.Attributes, fi2.Attributes);
         }
 
         protected void CompareArchivesByPath(string file1, string file2)

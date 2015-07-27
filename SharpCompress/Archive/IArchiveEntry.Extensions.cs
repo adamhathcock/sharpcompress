@@ -83,6 +83,40 @@ namespace SharpCompress.Archive
             {
                 entry.WriteTo(fs);
             }
+
+            if (options.HasFlag(ExtractOptions.PreserveFileTime) || options.HasFlag(ExtractOptions.PreserveAttributes))
+            {
+                // update file time to original packed time
+                FileInfo nf = new FileInfo(destinationFileName);
+                if (nf.Exists)
+                {
+                    if (options.HasFlag(ExtractOptions.PreserveAttributes))
+                    {
+                        if (entry.CreatedTime.HasValue)
+                        {
+                            nf.CreationTime = entry.CreatedTime.Value;
+                        }
+
+                        if (entry.LastModifiedTime.HasValue)
+                        {
+                            nf.LastWriteTime = entry.LastModifiedTime.Value;
+                        }
+
+                        if (entry.LastAccessedTime.HasValue)
+                        {
+                            nf.LastAccessTime = entry.CreatedTime.Value;
+                        }
+                    }
+
+                    if (options.HasFlag(ExtractOptions.PreserveAttributes))
+                    {
+                        if (entry.Attrib.HasValue)
+                        {
+                            nf.Attributes = (FileAttributes)System.Enum.ToObject(typeof(FileAttributes), entry.Attrib.Value);
+                        }
+                    }
+                }
+            }
         }
 #endif
     }

@@ -78,7 +78,9 @@ namespace SharpCompress.Common.SevenZip
                 throw new EndOfStreamException();
 
             _offset += (int) size;
+#if DEBUG
             Log.WriteLine("SkipData {0}", size);
+#endif
         }
 
         public void SkipData()

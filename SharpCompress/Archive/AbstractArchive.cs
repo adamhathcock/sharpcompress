@@ -84,7 +84,6 @@ namespace SharpCompress.Archive
         /// <summary>
         /// Returns an ReadOnlyCollection of all the RarArchiveEntries across the one or many parts of the RarArchive.
         /// </summary>
-        /// <returns></returns>
         public virtual ICollection<TEntry> Entries
         {
             get { return lazyEntries; }
@@ -93,7 +92,6 @@ namespace SharpCompress.Archive
         /// <summary>
         /// Returns an ReadOnlyCollection of all the RarArchiveVolumes across the one or many parts of the RarArchive.
         /// </summary>
-        /// <returns></returns>
         public ICollection<TVolume> Volumes
         {
             get { return lazyVolumes; }
@@ -102,9 +100,17 @@ namespace SharpCompress.Archive
         /// <summary>
         /// The total size of the files compressed in the archive.
         /// </summary>
-        public long TotalSize
+        public virtual long TotalSize
         {
             get { return Entries.Aggregate(0L, (total, cf) => total + cf.CompressedSize); }
+        }
+
+        /// <summary>
+        /// The total size of the files as uncompressed in the archive.
+        /// </summary>
+        public virtual long TotalUncompressSize
+        {
+            get { return Entries.Aggregate(0L, (total, cf) => total + cf.Size); }
         }
 
         protected abstract IEnumerable<TVolume> LoadVolumes(IEnumerable<Stream> streams, Options options);

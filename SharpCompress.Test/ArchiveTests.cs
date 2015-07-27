@@ -125,6 +125,55 @@ namespace SharpCompress.Test
 
         private long? entryTotal;
         private long partTotal;
+        private long totalSize;
+
+        protected void ArchiveFileReadEx(string testArchive)
+        {
+            testArchive = Path.Combine(TEST_ARCHIVES_PATH, testArchive);
+            ArchiveFileReadEx(testArchive.AsEnumerable());
+        }
+        
+        /// <summary>
+        /// Demonstrate the TotalUncompressSize property, and the ExtractOptions.PreserveFileTime and ExtractOptions.PreserveAttributes extract options
+        /// </summary>
+        protected void ArchiveFileReadEx(IEnumerable<string> testArchives)
+        {
+            foreach (var path in testArchives)
+            {
+                ResetScratch();
+                using (var archive = ArchiveFactory.Open(path))
+                {
+                    this.totalSize = archive.TotalUncompressSize;
+                    archive.EntryExtractionBegin += Archive_EntryExtractionBeginEx;
+                    archive.EntryExtractionEnd += Archive_EntryExtractionEndEx;
+                    archive.CompressedBytesRead += Archive_CompressedBytesReadEx;
+
+                    foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
+                    {
+                        entry.WriteToDirectory(SCRATCH_FILES_PATH,
+                                               ExtractOptions.ExtractFullPath | ExtractOptions.Overwrite | ExtractOptions.PreserveFileTime | ExtractOptions.PreserveAttributes);
+                    }
+                }
+                VerifyFilesEx();
+            }
+        }
+
+        private void Archive_EntryExtractionEndEx(object sender, ArchiveExtractionEventArgs<IArchiveEntry> e)
+        {
+            this.partTotal += e.Item.Size;
+        }
+
+        private void Archive_CompressedBytesReadEx(object sender, CompressedBytesReadEventArgs e)
+        {
+            string percentage = this.entryTotal.HasValue ? this.CreatePercentage(e.CompressedBytesRead, this.entryTotal.Value).ToString() : "-";
+            string tortalPercentage = this.CreatePercentage(this.partTotal + e.CompressedBytesRead, this.totalSize).ToString();
+            Console.WriteLine(@"Read Compressed File Progress: {0}% Total Progress {1}%", percentage, tortalPercentage);
+        }
+
+        private void Archive_EntryExtractionBeginEx(object sender, ArchiveExtractionEventArgs<IArchiveEntry> e)
+        {
+            this.entryTotal = e.Item.Size;
+        }
 
         private int CreatePercentage(long n, long d)
         {
