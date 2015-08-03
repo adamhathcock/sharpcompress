@@ -241,9 +241,8 @@ namespace SharpCompress.Common.SevenZip
                             coder.NumInStreams = ReadNum();
                             coder.NumOutStreams = ReadNum();
 #if DEBUG
-                            Log.WriteLine("Complex Stream (In: " + coder.NumInStreams + " - Out: " + coder.NumOutStreams +
+                            Log.WriteLine("Complex Stream (In: " + coder.NumInStreams + " - Out: " + coder.NumOutStreams + ")");
 #endif
- ")");
                         }
                         else
                         {
