@@ -79,33 +79,5 @@ namespace SharpCompress.Compressor.LZMA
 
             return crc;
         }
-
-#if !PORTABLE && !NETFX_CORE
-        public static unsafe uint Update(uint crc, byte* buffer, int length)
-        {
-            while (length > 0 && ((int) buffer & 3) != 0)
-            {
-                crc = Update(crc, *buffer);
-                buffer++;
-                length--;
-            }
-
-            while (length >= 4)
-            {
-                crc = Update(crc, *(uint*) buffer);
-                buffer += 4;
-                length -= 4;
-            }
-
-            while (length > 0)
-            {
-                crc = Update(crc, *buffer);
-                length--;
-            }
-
-            return crc;
-        }
-
-#endif
     }
 }
