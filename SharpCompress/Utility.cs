@@ -199,21 +199,11 @@ namespace SharpCompress
         /// </param>
         /// <param name="value">the value to write
         /// </param>
-#if PORTABLE || NETFX_CORE
         public static void WriteLittleEndian(byte[] array, int pos, short value)
         {
             byte[] newBytes = BitConverter.GetBytes(value);
             Array.Copy(newBytes, 0, array, pos, newBytes.Length);
         }
-#else
-        public static unsafe void WriteLittleEndian(byte[] array, int pos, short value)
-        {
-            fixed (byte* numRef = &(array[pos]))
-            {
-                *((short*)numRef) = value;
-            }
-        }
-#endif
 
         /// <summary> Increment a short value at the specified position by the specified amount
         /// (little endian).
@@ -241,21 +231,11 @@ namespace SharpCompress
         /// </param>
         /// <param name="value">the value to write
         /// </param>
-#if PORTABLE || NETFX_CORE
         public static void WriteLittleEndian(byte[] array, int pos, int value)
         {
             byte[] newBytes = BitConverter.GetBytes(value);
             Array.Copy(newBytes, 0, array, pos, newBytes.Length);
         }
-#else
-        public static unsafe void WriteLittleEndian(byte[] array, int pos, int value)
-        {
-            fixed (byte* numRef = &(array[pos]))
-            {
-                *((int*)numRef) = value;
-            }
-        }
-#endif
 
         public static void Initialize<T>(this T[] array, Func<T> func)
         {
