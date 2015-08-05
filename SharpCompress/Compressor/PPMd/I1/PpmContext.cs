@@ -143,8 +143,6 @@ namespace SharpCompress.Compressor.PPMd.I1
             /// information can be obtained using the Symbol property on the PPM state provided by the
             /// <see cref="FirstState"/> property.
             /// </summary>
-            [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode",
-                Justification = "The property getter is provided for completeness.")]
             public byte FirstStateSymbol
             {
                 get { return Memory[Address + 2]; }
@@ -166,8 +164,6 @@ namespace SharpCompress.Compressor.PPMd.I1
             /// Gets or sets the successor of the first PPM state.  This is provided for convenience.  The same
             /// information can be obtained using the Successor property on the PPM state provided by the
             /// </summary>
-            [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode",
-                Justification = "The property getter is provided for completeness.")]
             public PpmContext FirstStateSuccessor
             {
                 get

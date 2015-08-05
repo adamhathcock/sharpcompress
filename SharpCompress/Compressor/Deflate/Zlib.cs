@@ -255,18 +255,6 @@ namespace SharpCompress.Compressor.Deflate
 
             return bytesRead;
         }
-
-
-        internal static byte[] ToByteArray(System.String sourceString)
-        {
-            return System.Text.UTF8Encoding.UTF8.GetBytes(sourceString);
-        }
-
-
-        internal static char[] ToCharArray(byte[] byteArray)
-        {
-            return System.Text.UTF8Encoding.UTF8.GetChars(byteArray);
-        }
     }
 
     internal static class InternalConstants
