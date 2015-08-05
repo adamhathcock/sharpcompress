@@ -202,6 +202,10 @@ namespace SharpCompress
         public static void WriteLittleEndian(byte[] array, int pos, short value)
         {
             byte[] newBytes = BitConverter.GetBytes(value);
+
+            if (!BitConverter.IsLittleEndian)
+                Array.Reverse(newBytes);
+
             Array.Copy(newBytes, 0, array, pos, newBytes.Length);
         }
 
@@ -234,6 +238,10 @@ namespace SharpCompress
         public static void WriteLittleEndian(byte[] array, int pos, int value)
         {
             byte[] newBytes = BitConverter.GetBytes(value);
+
+            if (!BitConverter.IsLittleEndian)
+                Array.Reverse(newBytes);
+
             Array.Copy(newBytes, 0, array, pos, newBytes.Length);
         }
 
