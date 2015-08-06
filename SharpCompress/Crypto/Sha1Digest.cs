@@ -1,8 +1,17 @@
 ﻿using System;
+
 using Org.BouncyCastle.Crypto.Utilities;
+using Org.BouncyCastle.Utilities;
 
 namespace Org.BouncyCastle.Crypto.Digests
 {
+
+    /**
+     * implementation of SHA-1 as outlined in "Handbook of Applied Cryptography", pages 346 - 349.
+     *
+     * It is interesting to ponder why the, apart from the extra IV, the other difference here from MD5
+     * is the "endianness" of the word processing!
+     */
     public class Sha1Digest
         : GeneralDigest
     {
@@ -25,6 +34,13 @@ namespace Org.BouncyCastle.Crypto.Digests
         public Sha1Digest(Sha1Digest t)
             : base(t)
         {
+            CopyIn(t);
+        }
+
+        private void CopyIn(Sha1Digest t)
+        {
+            base.CopyIn(t);
+
             H1 = t.H1;
             H2 = t.H2;
             H3 = t.H3;
@@ -251,5 +267,18 @@ namespace Org.BouncyCastle.Crypto.Digests
             xOff = 0;
             Array.Clear(X, 0, 16);
         }
+
+        public override IMemoable Copy()
+        {
+            return new Sha1Digest(this);
+        }
+
+        public override void Reset(IMemoable other)
+        {
+            Sha1Digest d = (Sha1Digest)other;
+
+            CopyIn(d);
+        }
+
     }
 }

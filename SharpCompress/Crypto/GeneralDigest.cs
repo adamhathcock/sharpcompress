@@ -1,9 +1,15 @@
 ﻿using System;
 
+using Org.BouncyCastle.Utilities;
+
 namespace Org.BouncyCastle.Crypto.Digests
 {
+    /**
+    * base implementation of MD4 family style digest as outlined in
+    * "Handbook of Applied Cryptography", pages 344 - 347.
+    */
     public abstract class GeneralDigest
-        : IDigest
+        : IDigest, IMemoable
     {
         private const int BYTE_LENGTH = 64;
 
@@ -20,6 +26,11 @@ namespace Org.BouncyCastle.Crypto.Digests
         internal GeneralDigest(GeneralDigest t)
         {
             xBuf = new byte[t.xBuf.Length];
+            CopyIn(t);
+        }
+
+        protected void CopyIn(GeneralDigest t)
+        {
             Array.Copy(t.xBuf, 0, xBuf, 0, t.xBuf.Length);
 
             xBufOff = t.xBufOff;
@@ -111,5 +122,7 @@ namespace Org.BouncyCastle.Crypto.Digests
         public abstract string AlgorithmName { get; }
         public abstract int GetDigestSize();
         public abstract int DoFinal(byte[] output, int outOff);
+        public abstract IMemoable Copy();
+        public abstract void Reset(IMemoable t);
     }
 }
