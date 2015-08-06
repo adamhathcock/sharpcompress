@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if !DNXCORE50
+using System;
 
 namespace SharpCompress.Common.Zip
 {
@@ -64,3 +65,4 @@ namespace SharpCompress.Common.Zip
         }
     }
 }
+#endif

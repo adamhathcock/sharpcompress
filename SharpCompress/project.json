@@ -12,11 +12,15 @@
         "dnxcore50": {
             "dependencies": {
                 "System.IO.FileSystem": "4.0.0-beta-23109",
+                "System.Net.Primitives": "4.0.10-beta-23109",
                 "System.Linq": "4.0.0-beta-23109",
                 "System.Security.Cryptography.DeriveBytes": "4.0.0-beta-23109",
                 "System.Security.Cryptography.Encryption.Aes": "4.0.0-beta-23109",
                 "System.Security.Cryptography.Hashing.Algorithms": "4.0.0-beta-23109"
-            }
+            },
+            "compilationOptions": {
+                "define": [ "DNXCORE50" ]
+            }        
         }
     }
 }
