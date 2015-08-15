@@ -22,8 +22,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharpCompress.PortableTest"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharpCompress.Test.Portable", "SharpCompress.Test\SharpCompress.Test.Portable.csproj", "{E9C3C94B-FB27-4B4F-B225-57513C254D37}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharpCompress.NET2", "SharpCompress\SharpCompress.NET2.csproj", "{9A6F69DC-258D-4EB4-859E-09EFC7A14A3F}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharpCompress.Unsigned", "SharpCompress\SharpCompress.Unsigned.csproj", "{27D535CB-2FD3-4621-8C9A-46161FC77A5D}"
 EndProject
 Global
@@ -56,10 +54,6 @@ Global
 		{E9C3C94B-FB27-4B4F-B225-57513C254D37}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E9C3C94B-FB27-4B4F-B225-57513C254D37}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E9C3C94B-FB27-4B4F-B225-57513C254D37}.Release|Any CPU.Build.0 = Release|Any CPU
-		{9A6F69DC-258D-4EB4-859E-09EFC7A14A3F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{9A6F69DC-258D-4EB4-859E-09EFC7A14A3F}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{9A6F69DC-258D-4EB4-859E-09EFC7A14A3F}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{9A6F69DC-258D-4EB4-859E-09EFC7A14A3F}.Release|Any CPU.Build.0 = Release|Any CPU
 		{27D535CB-2FD3-4621-8C9A-46161FC77A5D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{27D535CB-2FD3-4621-8C9A-46161FC77A5D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{27D535CB-2FD3-4621-8C9A-46161FC77A5D}.Release|Any CPU.ActiveCfg = Release|Any CPU
