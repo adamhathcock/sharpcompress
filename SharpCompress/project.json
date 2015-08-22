@@ -7,33 +7,17 @@
     "licenseUrl": "",
 
     "frameworks": {
-        "net35": { },
-        "net40": { },
-        "net45": { },
-        "netcore45": {
-            "frameworkAssemblies": {
-                "mscorlib":  "",
-                "System": "",
-                "System.Collections": "",
-                "System.IO": "",
-                "System.Linq": "",
-                "System.Reflection":  ""
-            },
-            "compilationOptions": {
-                "define": [ "NETFX_CORE" ]
-            }
-        },
-        "dnxcore50": {
+        "dotnet": {
             "dependencies": {
+                "Microsoft.CSharp": "4.0.0",
+                "System.Collections": "4.0.10",
+                "System.IO": "4.0.10",
                 "System.IO.FileSystem": "4.0.0-beta-23109",
-                "System.Net.Primitives": "4.0.10-beta-23109",
-                "System.Linq": "4.0.0-beta-23109",
+                "System.Linq": "4.0.0",
                 "System.Security.Cryptography.DeriveBytes": "4.0.0-beta-23109",
                 "System.Security.Cryptography.Encryption.Aes": "4.0.0-beta-23109",
-                "System.Security.Cryptography.Hashing.Algorithms": "4.0.0-beta-23109"
-            },
-            "compilationOptions": {
-                "define": [ "DNXCORE50" ]
+                "System.Security.Cryptography.Hashing.Algorithms": "4.0.0-beta-23109",
+                "System.Text.Encoding.Extensions": "4.0.10-beta-23019"
             }
         }
     }

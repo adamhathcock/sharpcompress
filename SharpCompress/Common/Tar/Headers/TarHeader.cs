@@ -1,28 +1,9 @@
 ﻿using System;
 using System.IO;
-#if !PORTABLE
-using System.Net;
-#endif
 using System.Text;
 
 namespace SharpCompress.Common.Tar.Headers
 {
-    internal enum EntryType : byte
-    {
-        File = 0,
-        OldFile = (byte) '0',
-        HardLink = (byte) '1',
-        SymLink = (byte) '2',
-        CharDevice = (byte) '3',
-        BlockDevice = (byte) '4',
-        Directory = (byte) '5',
-        Fifo = (byte) '6',
-        LongLink = (byte) 'K',
-        LongName = (byte) 'L',
-        SparseFile = (byte) 'S',
-        VolumeHeader = (byte) 'V',
-    }
-
     internal class TarHeader
     {
         internal static readonly DateTime Epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
@@ -64,11 +45,7 @@ namespace SharpCompress.Common.Tar.Headers
 
                 if (Size >= 0x1FFFFFFFF)
                 {
-#if PORTABLE || NETFX_CORE
                 byte[] bytes = BitConverter.GetBytes(Utility.HostToNetworkOrder(Size));
-#else
-                    byte[] bytes = BitConverter.GetBytes(IPAddress.HostToNetworkOrder(Size));
-#endif
                     var bytes12 = new byte[12];
                     bytes.CopyTo(bytes12, 12 - bytes.Length);
                     bytes12[0] |= 0x80;
@@ -120,11 +97,7 @@ namespace SharpCompress.Common.Tar.Headers
             if ((buffer[124] & 0x80) == 0x80) // if size in binary
             {
                 long sizeBigEndian = BitConverter.ToInt64(buffer, 0x80);
-#if PORTABLE || NETFX_CORE
                     Size = Utility.NetworkToHostOrder(sizeBigEndian);
-#else
-                Size = IPAddress.NetworkToHostOrder(sizeBigEndian);
-#endif
             }
             else
             {

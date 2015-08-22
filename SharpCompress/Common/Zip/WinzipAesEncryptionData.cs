@@ -1,5 +1,6 @@
-﻿#if !DNXCORE50
 using System;
+using System.Text;
+using SharpCompress.Crypto;
 
 namespace SharpCompress.Common.Zip
 {
@@ -24,12 +25,19 @@ namespace SharpCompress.Common.Zip
             Initialize();
         }
 
-        internal byte[] IvBytes { get; set; }
-        internal byte[] KeyBytes { get; set; }
+        internal byte[] IvBytes
+{
+    get; set;
+}
+        internal byte[] KeyBytes
+{
+    get; set;
+}
 
         private int KeySizeInBytes
         {
-            get { return KeyLengthInBytes(keySize); }
+            get { return KeyLengthInBytes(keySize);
+}
         }
 
         internal static int KeyLengthInBytes(WinzipAesKeySize keySize)
@@ -48,12 +56,12 @@ namespace SharpCompress.Common.Zip
 
         private void Initialize()
         {
-            System.Security.Cryptography.Rfc2898DeriveBytes rfc2898 =
-                new System.Security.Cryptography.Rfc2898DeriveBytes(password, salt, RFC2898_ITERATIONS);
+            var utf8 = new UTF8Encoding(false);
+            var paramz = new PBKDF2(utf8.GetBytes(password), salt, RFC2898_ITERATIONS);
+            KeyBytes = paramz.GetBytes(KeySizeInBytes);
+            IvBytes = paramz.GetBytes(KeySizeInBytes);
+            generatedVerifyValue = paramz.GetBytes(2);
 
-            KeyBytes = rfc2898.GetBytes(KeySizeInBytes); // 16 or 24 or 32 ???
-            IvBytes = rfc2898.GetBytes(KeySizeInBytes);
-            generatedVerifyValue = rfc2898.GetBytes(2);
 
             short verify = BitConverter.ToInt16(passwordVerifyValue, 0);
             if (password != null)
@@ -65,4 +73,3 @@ namespace SharpCompress.Common.Zip
         }
     }
 }
-#endif
