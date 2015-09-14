@@ -12,7 +12,7 @@ namespace SharpCompress
     static class _TestSharpCompress
     {
         public static void Main(string[] args) {
-            string SCRATCH_FILES_PATH = "zipcontext";
+            string SCRATCH_FILES_PATH = "ziptest";
             string scratchPath = "ziptest.zip";
 
              using (var archive = ZipArchive.Create()) 
@@ -40,9 +40,12 @@ namespace SharpCompress
                  byte[] buf = new byte[1024];
                  int offset=fs.Read(buf, 0, buf.Length);
                  System.Diagnostics.Debug.Assert(offset==1024);
-                 ZipArchive zip=ZipArchive.Open(fs, Options.LookForHeader);
+                 ZipArchive zip=ZipArchive.Open(fs, Options.LookForHeader);//cann't read
+                 //ZipArchive zip = ZipArchive.Open(fs, Options.None); //will throw exption
+                 //ZipArchive zip = ZipArchive.Open(fs, Options.KeepStreamsOpen);//cann't read
                  foreach (ZipArchiveEntry zf in zip.Entries) {
                      Console.WriteLine(zf.Key);
+                     //bug:the will not none in zipfile
                  }
              }
         }
