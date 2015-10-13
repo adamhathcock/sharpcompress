@@ -1,4 +1,5 @@
-﻿using System;
+﻿#define NET2
+using System;
 using System.IO;
 using SharpCompress.Common;
 

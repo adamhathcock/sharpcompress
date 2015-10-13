@@ -43,6 +43,7 @@ namespace SharpCompress
                  ZipArchive zip=ZipArchive.Open(fs, Options.LookForHeader);//cann't read
                  //ZipArchive zip = ZipArchive.Open(fs, Options.None); //will throw exption
                  //ZipArchive zip = ZipArchive.Open(fs, Options.KeepStreamsOpen);//cann't read
+                 
                  foreach (ZipArchiveEntry zf in zip.Entries) {
                      Console.WriteLine(zf.Key);
                      //bug:the will not none in zipfile

@@ -1,3 +1,4 @@
+#define NET2
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -23,7 +24,7 @@ namespace SharpCompress.Common.Rar.Headers
         
         internal IEnumerable<RarHeader> ReadHeaders(Stream stream)
         {
-            if (Options.HasFlag(Options.LookForHeader))
+            if (Options_HasFlag(Options.LookForHeader))
             {
                 stream = CheckSFX(stream);
             }
@@ -37,6 +38,10 @@ namespace SharpCompress.Common.Rar.Headers
                     yield break; // the end?
                 }
             }
+        }
+
+        private bool Options_HasFlag(Common.Options options) {
+            return (Options&options)==options;
         }
 
         private Stream CheckSFX(Stream stream)
@@ -91,7 +96,7 @@ namespace SharpCompress.Common.Rar.Headers
             }
             catch (Exception e)
             {
-                if (!Options.HasFlag(Options.KeepStreamsOpen))
+                if (!Options_HasFlag(Options.KeepStreamsOpen))
                 {
 #if NET2
                     reader.Close();

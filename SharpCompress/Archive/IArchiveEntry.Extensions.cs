@@ -46,7 +46,7 @@ namespace SharpCompress.Archive
             string file = Path.GetFileName(entry.Key);
 
 
-            if (options.HasFlag(ExtractOptions.ExtractFullPath))
+            if (options_HasFlag(options,ExtractOptions.ExtractFullPath))
             {
                 string folder = Path.GetDirectoryName(entry.Key);
                 string destdir = Path.Combine(destinationDirectory, folder);
@@ -63,6 +63,10 @@ namespace SharpCompress.Archive
             entry.WriteToFile(destinationFileName, options);
         }
 
+        private static bool options_HasFlag(ExtractOptions options,ExtractOptions extractOptions2) {
+            return (options&extractOptions2)==extractOptions2;
+        }
+
         /// <summary>
         /// Extract to specific file
         /// </summary>
@@ -75,7 +79,7 @@ namespace SharpCompress.Archive
             }
             FileMode fm = FileMode.Create;
 
-            if (!options.HasFlag(ExtractOptions.Overwrite))
+            if (!options_HasFlag(options,ExtractOptions.Overwrite))
             {
                 fm = FileMode.CreateNew;
             }
@@ -84,13 +88,13 @@ namespace SharpCompress.Archive
                 entry.WriteTo(fs);
             }
 
-            if (options.HasFlag(ExtractOptions.PreserveFileTime) || options.HasFlag(ExtractOptions.PreserveAttributes))
+            if (options_HasFlag(options,ExtractOptions.PreserveFileTime) || options_HasFlag(options,ExtractOptions.PreserveAttributes))
             {
                 // update file time to original packed time
                 FileInfo nf = new FileInfo(destinationFileName);
                 if (nf.Exists)
                 {
-                    if (options.HasFlag(ExtractOptions.PreserveAttributes))
+                    if (options_HasFlag(options,ExtractOptions.PreserveAttributes))
                     {
                         if (entry.CreatedTime.HasValue)
                         {
@@ -108,7 +112,7 @@ namespace SharpCompress.Archive
                         }
                     }
 
-                    if (options.HasFlag(ExtractOptions.PreserveAttributes))
+                    if (options_HasFlag(options,ExtractOptions.PreserveAttributes))
                     {
                         if (entry.Attrib.HasValue)
                         {

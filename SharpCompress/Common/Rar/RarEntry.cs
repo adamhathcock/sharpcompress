@@ -60,7 +60,11 @@ namespace SharpCompress.Common.Rar
         /// </summary>
         public override bool IsEncrypted
         {
-            get { return FileHeader.FileFlags.HasFlag(FileFlags.PASSWORD); }
+            get { return fileFlags_HasFlag(FileHeader.FileFlags,FileFlags.PASSWORD); }
+        }
+
+        private bool fileFlags_HasFlag(FileFlags fileFlags1, FileFlags fileFlags2) {
+            return (fileFlags1&fileFlags2)==fileFlags2;
         }
 
         /// <summary>
@@ -68,12 +72,16 @@ namespace SharpCompress.Common.Rar
         /// </summary>
         public override bool IsDirectory
         {
-            get { return FileHeader.FileFlags.HasFlag(FileFlags.DIRECTORY); }
+            get { return FileFlags_HasFlag( FileHeader.FileFlags,FileFlags.DIRECTORY); }
+        }
+
+        private bool FileFlags_HasFlag(FileFlags fileFlags1, FileFlags fileFlags2) {
+            return (fileFlags1&fileFlags2)==fileFlags2;
         }
 
         public override bool IsSplit
         {
-            get { return FileHeader.FileFlags.HasFlag(FileFlags.SPLIT_AFTER); }
+            get { return FileFlags_HasFlag(FileHeader.FileFlags,FileFlags.SPLIT_AFTER); }
         }
 
         public override string ToString()
