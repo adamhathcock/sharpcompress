@@ -1,4 +1,4 @@
-﻿namespace SharpCompress.Common
+namespace SharpCompress.Common
 {
     using System;
     using System.Collections.Generic;
@@ -7,7 +7,7 @@
     public abstract class Entry : IEntry
     {
         [CompilerGenerated]
-        private bool <IsSolid>k__BackingField;
+        private bool _IsSolid_k__BackingField;
 
         protected Entry()
         {
@@ -44,12 +44,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<IsSolid>k__BackingField;
+                return this._IsSolid_k__BackingField;
             }
             [CompilerGenerated]
             set
             {
-                this.<IsSolid>k__BackingField = value;
+                this._IsSolid_k__BackingField = value;
             }
         }
 

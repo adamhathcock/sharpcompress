@@ -6,6 +6,7 @@
     using SharpCompress.Writer;
     using System;
     using System.IO;
+    using SharpCompress.Common;
 
     public class GZipWriter : AbstractWriter
     {

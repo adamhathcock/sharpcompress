@@ -1,4 +1,4 @@
-﻿namespace SharpCompress.Archive.GZip
+namespace SharpCompress.Archive.GZip
 {
     using SharpCompress.Archive;
     using SharpCompress.Common;
@@ -11,7 +11,7 @@
     public class GZipArchiveEntry : GZipEntry, IArchiveEntry, IEntry
     {
         [CompilerGenerated]
-        private IArchive <Archive>k__BackingField;
+        private IArchive _Archive_k__BackingField;
 
         internal GZipArchiveEntry(GZipArchive archive, GZipFilePart part) : base(part)
         {
@@ -28,12 +28,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<Archive>k__BackingField;
+                return this._Archive_k__BackingField;
             }
             [CompilerGenerated]
             private set
             {
-                this.<Archive>k__BackingField = value;
+                this._Archive_k__BackingField = value;
             }
         }
 

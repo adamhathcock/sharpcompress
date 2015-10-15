@@ -18,7 +18,7 @@
     public abstract class RarReader : AbstractReader<RarReaderEntry, RarVolume>
     {
         [CompilerGenerated]
-        private string <Password>k__BackingField;
+        private string _Password_k__BackingField;
         private readonly Unpack pack;
         private RarVolume volume;
 
@@ -46,19 +46,25 @@
         {
             return base.CreateEntryStream(new RarStream(this.pack, base.Entry.FileHeader, new MultiVolumeReadOnlyStream(Enumerable.Cast<RarFilePart>(this.CreateFilePartEnumerableForCurrentEntry()), this)));
         }
-
-        public static RarReader Open(IEnumerable<Stream> streams, [Optional, DefaultParameterValue(1)] Options options)
+        public static RarReader Open(IEnumerable<Stream> streams) {
+            return Open(streams,Options.KeepStreamsOpen);
+        }
+        public static RarReader Open(IEnumerable<Stream> streams,  Options options)
         {
             Utility.CheckNotNull(streams, "streams");
             return new MultiVolumeRarReader(streams, options);
         }
-
-        public static RarReader Open(Stream stream, [Optional, DefaultParameterValue(1)] Options options)
+        public static RarReader Open(Stream stream) {
+            return Open(stream, Options.KeepStreamsOpen);
+        }
+        public static RarReader Open(Stream stream,  Options options)
         {
             return Open(stream, null, options);
         }
-
-        public static RarReader Open(Stream stream, string password, [Optional, DefaultParameterValue(1)] Options options)
+        public static RarReader Open(Stream stream, string password) {
+            return Open(stream,password, Options.KeepStreamsOpen);
+        }
+        public static RarReader Open(Stream stream, string password,  Options options)
         {
             Utility.CheckNotNull(stream, "stream");
             return new SingleVolumeRarReader(stream, password, options);
@@ -71,12 +77,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<Password>k__BackingField;
+                return this._Password_k__BackingField;
             }
             [CompilerGenerated]
             set
             {
-                this.<Password>k__BackingField = value;
+                this._Password_k__BackingField = value;
             }
         }
 

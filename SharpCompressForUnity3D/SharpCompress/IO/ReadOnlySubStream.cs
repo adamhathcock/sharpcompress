@@ -1,4 +1,4 @@
-﻿namespace SharpCompress.IO
+namespace SharpCompress.IO
 {
     using System;
     using System.IO;
@@ -7,9 +7,9 @@
     internal class ReadOnlySubStream : System.IO.Stream
     {
         [CompilerGenerated]
-        private long <BytesLeftToRead>k__BackingField;
+        private long _BytesLeftToRead_k__BackingField;
         [CompilerGenerated]
-        private System.IO.Stream <Stream>k__BackingField;
+        private System.IO.Stream _Stream_k__BackingField;
 
         public ReadOnlySubStream(System.IO.Stream stream, long bytesToRead) : this(stream, null, bytesToRead)
         {
@@ -71,12 +71,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<BytesLeftToRead>k__BackingField;
+                return this._BytesLeftToRead_k__BackingField;
             }
             [CompilerGenerated]
             set
             {
-                this.<BytesLeftToRead>k__BackingField = value;
+                this._BytesLeftToRead_k__BackingField = value;
             }
         }
 
@@ -129,12 +129,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<Stream>k__BackingField;
+                return this._Stream_k__BackingField;
             }
             [CompilerGenerated]
             private set
             {
-                this.<Stream>k__BackingField = value;
+                this._Stream_k__BackingField = value;
             }
         }
     }

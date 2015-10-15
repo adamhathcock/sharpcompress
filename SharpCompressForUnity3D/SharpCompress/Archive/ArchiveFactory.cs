@@ -28,8 +28,10 @@
             }
             throw new NotSupportedException("Cannot create Archives of type: " + type);
         }
-
-        public static IArchive Open(Stream stream, [Optional, DefaultParameterValue(1)] Options options)
+        public static IArchive Open(Stream stream) {
+            return Open(stream, Options.KeepStreamsOpen);
+        }
+        public static IArchive Open(Stream stream,  Options options)
         {
             Utility.CheckNotNull(stream, "stream");
             if (!(stream.CanRead && stream.CanSeek))

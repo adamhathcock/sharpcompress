@@ -7,11 +7,11 @@
     using System.IO;
     using System.Runtime.CompilerServices;
 
-    [Extension]
+    //[Extension]
     public static class IArchiveEntryExtensions
     {
-        [Extension]
-        public static void WriteTo(IArchiveEntry archiveEntry, Stream streamToWriteTo)
+        //[Extension]
+        public static void WriteTo( IArchiveEntry archiveEntry, Stream streamToWriteTo)
         {
             if ((archiveEntry.Archive.Type == ArchiveType.Rar) && archiveEntry.Archive.IsSolid)
             {

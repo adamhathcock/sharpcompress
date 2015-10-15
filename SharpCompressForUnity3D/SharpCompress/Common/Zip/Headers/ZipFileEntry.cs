@@ -1,4 +1,4 @@
-﻿namespace SharpCompress.Common.Zip.Headers
+namespace SharpCompress.Common.Zip.Headers
 {
     using SharpCompress.Common;
     using SharpCompress.Common.Zip;
@@ -11,31 +11,31 @@
     internal abstract class ZipFileEntry : ZipHeader
     {
         [CompilerGenerated]
-        private uint <CompressedSize>k__BackingField;
+        private uint _CompressedSize_k__BackingField;
         [CompilerGenerated]
-        private ZipCompressionMethod <CompressionMethod>k__BackingField;
+        private ZipCompressionMethod _CompressionMethod_k__BackingField;
         [CompilerGenerated]
-        private uint <Crc>k__BackingField;
+        private uint _Crc_k__BackingField;
         [CompilerGenerated]
-        private long? <DataStartPosition>k__BackingField;
+        private long? _DataStartPosition_k__BackingField;
         [CompilerGenerated]
-        private List<ExtraData> <Extra>k__BackingField;
+        private List<ExtraData> _Extra_k__BackingField;
         [CompilerGenerated]
-        private HeaderFlags <Flags>k__BackingField;
+        private HeaderFlags _Flags_k__BackingField;
         [CompilerGenerated]
-        private ushort <LastModifiedDate>k__BackingField;
+        private ushort _LastModifiedDate_k__BackingField;
         [CompilerGenerated]
-        private ushort <LastModifiedTime>k__BackingField;
+        private ushort _LastModifiedTime_k__BackingField;
         [CompilerGenerated]
-        private string <Name>k__BackingField;
+        private string _Name_k__BackingField;
         [CompilerGenerated]
-        private Stream <PackedStream>k__BackingField;
+        private Stream _PackedStream_k__BackingField;
         [CompilerGenerated]
-        private ZipFilePart <Part>k__BackingField;
+        private ZipFilePart _Part_k__BackingField;
         [CompilerGenerated]
-        private SharpCompress.Common.Zip.PkwareTraditionalEncryptionData <PkwareTraditionalEncryptionData>k__BackingField;
+        private SharpCompress.Common.Zip.PkwareTraditionalEncryptionData _PkwareTraditionalEncryptionData_k__BackingField;
         [CompilerGenerated]
-        private uint <UncompressedSize>k__BackingField;
+        private uint _UncompressedSize_k__BackingField;
 
         protected ZipFileEntry(ZipHeaderType type) : base(type)
         {
@@ -82,12 +82,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<CompressedSize>k__BackingField;
+                return this._CompressedSize_k__BackingField;
             }
             [CompilerGenerated]
             set
             {
-                this.<CompressedSize>k__BackingField = value;
+                this._CompressedSize_k__BackingField = value;
             }
         }
 
@@ -96,12 +96,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<CompressionMethod>k__BackingField;
+                return this._CompressionMethod_k__BackingField;
             }
             [CompilerGenerated]
             set
             {
-                this.<CompressionMethod>k__BackingField = value;
+                this._CompressionMethod_k__BackingField = value;
             }
         }
 
@@ -110,12 +110,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<Crc>k__BackingField;
+                return this._Crc_k__BackingField;
             }
             [CompilerGenerated]
             set
             {
-                this.<Crc>k__BackingField = value;
+                this._Crc_k__BackingField = value;
             }
         }
 
@@ -124,12 +124,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<DataStartPosition>k__BackingField;
+                return this._DataStartPosition_k__BackingField;
             }
             [CompilerGenerated]
             set
             {
-                this.<DataStartPosition>k__BackingField = value;
+                this._DataStartPosition_k__BackingField = value;
             }
         }
 
@@ -138,12 +138,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<Extra>k__BackingField;
+                return this._Extra_k__BackingField;
             }
             [CompilerGenerated]
             set
             {
-                this.<Extra>k__BackingField = value;
+                this._Extra_k__BackingField = value;
             }
         }
 
@@ -152,12 +152,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<Flags>k__BackingField;
+                return this._Flags_k__BackingField;
             }
             [CompilerGenerated]
             set
             {
-                this.<Flags>k__BackingField = value;
+                this._Flags_k__BackingField = value;
             }
         }
 
@@ -174,12 +174,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<LastModifiedDate>k__BackingField;
+                return this._LastModifiedDate_k__BackingField;
             }
             [CompilerGenerated]
             set
             {
-                this.<LastModifiedDate>k__BackingField = value;
+                this._LastModifiedDate_k__BackingField = value;
             }
         }
 
@@ -188,12 +188,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<LastModifiedTime>k__BackingField;
+                return this._LastModifiedTime_k__BackingField;
             }
             [CompilerGenerated]
             set
             {
-                this.<LastModifiedTime>k__BackingField = value;
+                this._LastModifiedTime_k__BackingField = value;
             }
         }
 
@@ -202,12 +202,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<Name>k__BackingField;
+                return this._Name_k__BackingField;
             }
             [CompilerGenerated]
             set
             {
-                this.<Name>k__BackingField = value;
+                this._Name_k__BackingField = value;
             }
         }
 
@@ -216,12 +216,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<PackedStream>k__BackingField;
+                return this._PackedStream_k__BackingField;
             }
             [CompilerGenerated]
             set
             {
-                this.<PackedStream>k__BackingField = value;
+                this._PackedStream_k__BackingField = value;
             }
         }
 
@@ -230,12 +230,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<Part>k__BackingField;
+                return this._Part_k__BackingField;
             }
             [CompilerGenerated]
             set
             {
-                this.<Part>k__BackingField = value;
+                this._Part_k__BackingField = value;
             }
         }
 
@@ -244,12 +244,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<PkwareTraditionalEncryptionData>k__BackingField;
+                return this._PkwareTraditionalEncryptionData_k__BackingField;
             }
             [CompilerGenerated]
             set
             {
-                this.<PkwareTraditionalEncryptionData>k__BackingField = value;
+                this._PkwareTraditionalEncryptionData_k__BackingField = value;
             }
         }
 
@@ -258,12 +258,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<UncompressedSize>k__BackingField;
+                return this._UncompressedSize_k__BackingField;
             }
             [CompilerGenerated]
             set
             {
-                this.<UncompressedSize>k__BackingField = value;
+                this._UncompressedSize_k__BackingField = value;
             }
         }
     }

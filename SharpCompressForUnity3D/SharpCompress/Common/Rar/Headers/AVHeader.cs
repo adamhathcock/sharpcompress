@@ -1,4 +1,4 @@
-﻿namespace SharpCompress.Common.Rar.Headers
+namespace SharpCompress.Common.Rar.Headers
 {
     using SharpCompress.IO;
     using System;
@@ -7,13 +7,13 @@
     internal class AVHeader : RarHeader
     {
         [CompilerGenerated]
-        private int <AVInfoCRC>k__BackingField;
+        private int _AVInfoCRC_k__BackingField;
         [CompilerGenerated]
-        private byte <AVVersion>k__BackingField;
+        private byte _AVVersion_k__BackingField;
         [CompilerGenerated]
-        private byte <Method>k__BackingField;
+        private byte _Method_k__BackingField;
         [CompilerGenerated]
-        private byte <UnpackVersion>k__BackingField;
+        private byte _UnpackVersion_k__BackingField;
 
         protected override void ReadFromReader(MarkingBinaryReader reader)
         {
@@ -28,12 +28,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<AVInfoCRC>k__BackingField;
+                return this._AVInfoCRC_k__BackingField;
             }
             [CompilerGenerated]
             private set
             {
-                this.<AVInfoCRC>k__BackingField = value;
+                this._AVInfoCRC_k__BackingField = value;
             }
         }
 
@@ -42,12 +42,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<AVVersion>k__BackingField;
+                return this._AVVersion_k__BackingField;
             }
             [CompilerGenerated]
             private set
             {
-                this.<AVVersion>k__BackingField = value;
+                this._AVVersion_k__BackingField = value;
             }
         }
 
@@ -56,12 +56,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<Method>k__BackingField;
+                return this._Method_k__BackingField;
             }
             [CompilerGenerated]
             private set
             {
-                this.<Method>k__BackingField = value;
+                this._Method_k__BackingField = value;
             }
         }
 
@@ -70,12 +70,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<UnpackVersion>k__BackingField;
+                return this._UnpackVersion_k__BackingField;
             }
             [CompilerGenerated]
             private set
             {
-                this.<UnpackVersion>k__BackingField = value;
+                this._UnpackVersion_k__BackingField = value;
             }
         }
     }

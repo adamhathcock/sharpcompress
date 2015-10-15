@@ -5,6 +5,7 @@
     using System;
     using System.Collections.Generic;
     using System.IO;
+    using SharpCompress.Common;
 
     internal class ZipWritableArchiveEntry : ZipArchiveEntry, IWritableArchiveEntry
     {

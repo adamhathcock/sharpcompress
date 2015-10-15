@@ -1,4 +1,4 @@
-﻿namespace SharpCompress.Compressor.Rar.decode
+namespace SharpCompress.Compressor.Rar.decode
 {
     using System;
     using System.Runtime.CompilerServices;
@@ -6,31 +6,31 @@
     internal class AudioVariables
     {
         [CompilerGenerated]
-        private int <ByteCount>k__BackingField;
+        private int _ByteCount_k__BackingField;
         [CompilerGenerated]
-        private int <D1>k__BackingField;
+        private int _D1_k__BackingField;
         [CompilerGenerated]
-        private int <D2>k__BackingField;
+        private int _D2_k__BackingField;
         [CompilerGenerated]
-        private int <D3>k__BackingField;
+        private int _D3_k__BackingField;
         [CompilerGenerated]
-        private int <D4>k__BackingField;
+        private int _D4_k__BackingField;
         [CompilerGenerated]
-        private int[] <Dif>k__BackingField;
+        private int[] _Dif_k__BackingField;
         [CompilerGenerated]
-        private int <K1>k__BackingField;
+        private int _K1_k__BackingField;
         [CompilerGenerated]
-        private int <K2>k__BackingField;
+        private int _K2_k__BackingField;
         [CompilerGenerated]
-        private int <K3>k__BackingField;
+        private int _K3_k__BackingField;
         [CompilerGenerated]
-        private int <K4>k__BackingField;
+        private int _K4_k__BackingField;
         [CompilerGenerated]
-        private int <K5>k__BackingField;
+        private int _K5_k__BackingField;
         [CompilerGenerated]
-        private int <LastChar>k__BackingField;
+        private int _LastChar_k__BackingField;
         [CompilerGenerated]
-        private int <LastDelta>k__BackingField;
+        private int _LastDelta_k__BackingField;
 
         internal AudioVariables()
         {
@@ -42,12 +42,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<ByteCount>k__BackingField;
+                return this._ByteCount_k__BackingField;
             }
             [CompilerGenerated]
             set
             {
-                this.<ByteCount>k__BackingField = value;
+                this._ByteCount_k__BackingField = value;
             }
         }
 
@@ -56,12 +56,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<D1>k__BackingField;
+                return this._D1_k__BackingField;
             }
             [CompilerGenerated]
             set
             {
-                this.<D1>k__BackingField = value;
+                this._D1_k__BackingField = value;
             }
         }
 
@@ -70,12 +70,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<D2>k__BackingField;
+                return this._D2_k__BackingField;
             }
             [CompilerGenerated]
             set
             {
-                this.<D2>k__BackingField = value;
+                this._D2_k__BackingField = value;
             }
         }
 
@@ -84,12 +84,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<D3>k__BackingField;
+                return this._D3_k__BackingField;
             }
             [CompilerGenerated]
             set
             {
-                this.<D3>k__BackingField = value;
+                this._D3_k__BackingField = value;
             }
         }
 
@@ -98,12 +98,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<D4>k__BackingField;
+                return this._D4_k__BackingField;
             }
             [CompilerGenerated]
             set
             {
-                this.<D4>k__BackingField = value;
+                this._D4_k__BackingField = value;
             }
         }
 
@@ -112,12 +112,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<Dif>k__BackingField;
+                return this._Dif_k__BackingField;
             }
             [CompilerGenerated]
             private set
             {
-                this.<Dif>k__BackingField = value;
+                this._Dif_k__BackingField = value;
             }
         }
 
@@ -126,12 +126,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<K1>k__BackingField;
+                return this._K1_k__BackingField;
             }
             [CompilerGenerated]
             set
             {
-                this.<K1>k__BackingField = value;
+                this._K1_k__BackingField = value;
             }
         }
 
@@ -140,12 +140,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<K2>k__BackingField;
+                return this._K2_k__BackingField;
             }
             [CompilerGenerated]
             set
             {
-                this.<K2>k__BackingField = value;
+                this._K2_k__BackingField = value;
             }
         }
 
@@ -154,12 +154,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<K3>k__BackingField;
+                return this._K3_k__BackingField;
             }
             [CompilerGenerated]
             set
             {
-                this.<K3>k__BackingField = value;
+                this._K3_k__BackingField = value;
             }
         }
 
@@ -168,12 +168,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<K4>k__BackingField;
+                return this._K4_k__BackingField;
             }
             [CompilerGenerated]
             set
             {
-                this.<K4>k__BackingField = value;
+                this._K4_k__BackingField = value;
             }
         }
 
@@ -182,12 +182,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<K5>k__BackingField;
+                return this._K5_k__BackingField;
             }
             [CompilerGenerated]
             set
             {
-                this.<K5>k__BackingField = value;
+                this._K5_k__BackingField = value;
             }
         }
 
@@ -196,12 +196,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<LastChar>k__BackingField;
+                return this._LastChar_k__BackingField;
             }
             [CompilerGenerated]
             set
             {
-                this.<LastChar>k__BackingField = value;
+                this._LastChar_k__BackingField = value;
             }
         }
 
@@ -210,12 +210,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<LastDelta>k__BackingField;
+                return this._LastDelta_k__BackingField;
             }
             [CompilerGenerated]
             set
             {
-                this.<LastDelta>k__BackingField = value;
+                this._LastDelta_k__BackingField = value;
             }
         }
     }

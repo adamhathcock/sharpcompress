@@ -1,4 +1,4 @@
-﻿namespace SharpCompress.Writer.Zip
+namespace SharpCompress.Writer.Zip
 {
     using SharpCompress;
     using SharpCompress.Common.Zip;
@@ -11,19 +11,19 @@
     internal class ZipCentralDirectoryEntry
     {
         [CompilerGenerated]
-        private string <Comment>k__BackingField;
+        private string _Comment_k__BackingField;
         [CompilerGenerated]
-        private uint <Compressed>k__BackingField;
+        private uint _Compressed_k__BackingField;
         [CompilerGenerated]
-        private uint <Crc>k__BackingField;
+        private uint _Crc_k__BackingField;
         [CompilerGenerated]
-        private uint <Decompressed>k__BackingField;
+        private uint _Decompressed_k__BackingField;
         [CompilerGenerated]
-        private string <FileName>k__BackingField;
+        private string _FileName_k__BackingField;
         [CompilerGenerated]
-        private uint <HeaderOffset>k__BackingField;
+        private uint _HeaderOffset_k__BackingField;
         [CompilerGenerated]
-        private DateTime? <ModificationTime>k__BackingField;
+        private DateTime? _ModificationTime_k__BackingField;
 
         internal uint Write(Stream outputStream, ZipCompressionMethod compression)
         {
@@ -63,12 +63,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<Comment>k__BackingField;
+                return this._Comment_k__BackingField;
             }
             [CompilerGenerated]
             set
             {
-                this.<Comment>k__BackingField = value;
+                this._Comment_k__BackingField = value;
             }
         }
 
@@ -77,12 +77,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<Compressed>k__BackingField;
+                return this._Compressed_k__BackingField;
             }
             [CompilerGenerated]
             set
             {
-                this.<Compressed>k__BackingField = value;
+                this._Compressed_k__BackingField = value;
             }
         }
 
@@ -91,12 +91,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<Crc>k__BackingField;
+                return this._Crc_k__BackingField;
             }
             [CompilerGenerated]
             set
             {
-                this.<Crc>k__BackingField = value;
+                this._Crc_k__BackingField = value;
             }
         }
 
@@ -105,12 +105,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<Decompressed>k__BackingField;
+                return this._Decompressed_k__BackingField;
             }
             [CompilerGenerated]
             set
             {
-                this.<Decompressed>k__BackingField = value;
+                this._Decompressed_k__BackingField = value;
             }
         }
 
@@ -119,12 +119,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<FileName>k__BackingField;
+                return this._FileName_k__BackingField;
             }
             [CompilerGenerated]
             set
             {
-                this.<FileName>k__BackingField = value;
+                this._FileName_k__BackingField = value;
             }
         }
 
@@ -133,12 +133,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<HeaderOffset>k__BackingField;
+                return this._HeaderOffset_k__BackingField;
             }
             [CompilerGenerated]
             set
             {
-                this.<HeaderOffset>k__BackingField = value;
+                this._HeaderOffset_k__BackingField = value;
             }
         }
 
@@ -147,12 +147,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<ModificationTime>k__BackingField;
+                return this._ModificationTime_k__BackingField;
             }
             [CompilerGenerated]
             set
             {
-                this.<ModificationTime>k__BackingField = value;
+                this._ModificationTime_k__BackingField = value;
             }
         }
     }

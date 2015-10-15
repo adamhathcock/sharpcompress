@@ -1,4 +1,4 @@
-﻿namespace SharpCompress.Common.Zip
+namespace SharpCompress.Common.Zip
 {
     using SharpCompress.Common;
     using System;
@@ -8,9 +8,9 @@
     internal class WinzipAesEncryptionData
     {
         [CompilerGenerated]
-        private byte[] <IvBytes>k__BackingField;
+        private byte[] _IvBytes_k__BackingField;
         [CompilerGenerated]
-        private byte[] <KeyBytes>k__BackingField;
+        private byte[] _KeyBytes_k__BackingField;
         private byte[] generatedVerifyValue;
         private WinzipAesKeySize keySize;
         private string password;
@@ -65,12 +65,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<IvBytes>k__BackingField;
+                return this._IvBytes_k__BackingField;
             }
             [CompilerGenerated]
             set
             {
-                this.<IvBytes>k__BackingField = value;
+                this._IvBytes_k__BackingField = value;
             }
         }
 
@@ -79,12 +79,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<KeyBytes>k__BackingField;
+                return this._KeyBytes_k__BackingField;
             }
             [CompilerGenerated]
             set
             {
-                this.<KeyBytes>k__BackingField = value;
+                this._KeyBytes_k__BackingField = value;
             }
         }
 

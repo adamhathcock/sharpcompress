@@ -1,4 +1,4 @@
-﻿namespace SharpCompress.Common.Zip.Headers
+namespace SharpCompress.Common.Zip.Headers
 {
     using System;
     using System.IO;
@@ -7,9 +7,9 @@
     internal abstract class ZipHeader
     {
         [CompilerGenerated]
-        private bool <HasData>k__BackingField;
+        private bool _HasData_k__BackingField;
         [CompilerGenerated]
-        private SharpCompress.Common.Zip.Headers.ZipHeaderType <ZipHeaderType>k__BackingField;
+        private SharpCompress.Common.Zip.Headers.ZipHeaderType _ZipHeaderType_k__BackingField;
 
         protected ZipHeader(SharpCompress.Common.Zip.Headers.ZipHeaderType type)
         {
@@ -25,12 +25,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<HasData>k__BackingField;
+                return this._HasData_k__BackingField;
             }
             [CompilerGenerated]
             set
             {
-                this.<HasData>k__BackingField = value;
+                this._HasData_k__BackingField = value;
             }
         }
 
@@ -39,12 +39,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<ZipHeaderType>k__BackingField;
+                return this._ZipHeaderType_k__BackingField;
             }
             [CompilerGenerated]
             private set
             {
-                this.<ZipHeaderType>k__BackingField = value;
+                this._ZipHeaderType_k__BackingField = value;
             }
         }
     }

@@ -1,4 +1,4 @@
-﻿namespace SharpCompress.Writer
+namespace SharpCompress.Writer
 {
     using SharpCompress.Common;
     using System;
@@ -8,9 +8,9 @@
     public abstract class AbstractWriter : IWriter, IDisposable
     {
         [CompilerGenerated]
-        private Stream <OutputStream>k__BackingField;
+        private Stream _OutputStream_k__BackingField;
         [CompilerGenerated]
-        private ArchiveType <WriterType>k__BackingField;
+        private ArchiveType _WriterType_k__BackingField;
         private bool closeStream;
         private bool isDisposed;
 
@@ -59,12 +59,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<OutputStream>k__BackingField;
+                return this._OutputStream_k__BackingField;
             }
             [CompilerGenerated]
             private set
             {
-                this.<OutputStream>k__BackingField = value;
+                this._OutputStream_k__BackingField = value;
             }
         }
 
@@ -73,12 +73,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<WriterType>k__BackingField;
+                return this._WriterType_k__BackingField;
             }
             [CompilerGenerated]
             private set
             {
-                this.<WriterType>k__BackingField = value;
+                this._WriterType_k__BackingField = value;
             }
         }
     }

@@ -1,4 +1,4 @@
-﻿namespace SharpCompress.Compressor.Rar.VM
+namespace SharpCompress.Compressor.Rar.VM
 {
     using System;
     using System.Runtime.CompilerServices;
@@ -6,25 +6,25 @@
     internal class VMPreparedOperand
     {
         [CompilerGenerated]
-        private int <Base>k__BackingField;
+        private int _Base_k__BackingField;
         [CompilerGenerated]
-        private int <Data>k__BackingField;
+        private int _Data_k__BackingField;
         [CompilerGenerated]
-        private int <Offset>k__BackingField;
+        private int _Offset_k__BackingField;
         [CompilerGenerated]
-        private VMOpType <Type>k__BackingField;
+        private VMOpType _Type_k__BackingField;
 
         internal int Base
         {
             [CompilerGenerated]
             get
             {
-                return this.<Base>k__BackingField;
+                return this._Base_k__BackingField;
             }
             [CompilerGenerated]
             set
             {
-                this.<Base>k__BackingField = value;
+                this._Base_k__BackingField = value;
             }
         }
 
@@ -33,12 +33,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<Data>k__BackingField;
+                return this._Data_k__BackingField;
             }
             [CompilerGenerated]
             set
             {
-                this.<Data>k__BackingField = value;
+                this._Data_k__BackingField = value;
             }
         }
 
@@ -47,12 +47,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<Offset>k__BackingField;
+                return this._Offset_k__BackingField;
             }
             [CompilerGenerated]
             set
             {
-                this.<Offset>k__BackingField = value;
+                this._Offset_k__BackingField = value;
             }
         }
 
@@ -61,12 +61,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<Type>k__BackingField;
+                return this._Type_k__BackingField;
             }
             [CompilerGenerated]
             set
             {
-                this.<Type>k__BackingField = value;
+                this._Type_k__BackingField = value;
             }
         }
     }

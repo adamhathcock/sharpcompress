@@ -1,4 +1,4 @@
-﻿namespace SharpCompress.IO
+namespace SharpCompress.IO
 {
     using System;
     using System.IO;
@@ -7,7 +7,7 @@
     internal class CountingWritableSubStream : Stream
     {
         [CompilerGenerated]
-        private uint <Count>k__BackingField;
+        private uint _Count_k__BackingField;
         private Stream writableStream;
 
         internal CountingWritableSubStream(Stream stream)
@@ -69,12 +69,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<Count>k__BackingField;
+                return this._Count_k__BackingField;
             }
             [CompilerGenerated]
             private set
             {
-                this.<Count>k__BackingField = value;
+                this._Count_k__BackingField = value;
             }
         }
 

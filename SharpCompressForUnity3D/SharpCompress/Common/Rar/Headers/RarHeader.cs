@@ -9,17 +9,17 @@
     internal class RarHeader
     {
         [CompilerGenerated]
-        private uint <AdditionalSize>k__BackingField;
+        private uint _AdditionalSize_k__BackingField;
         [CompilerGenerated]
-        private short <Flags>k__BackingField;
+        private short _Flags_k__BackingField;
         [CompilerGenerated]
-        private short <HeadCRC>k__BackingField;
+        private short _HeadCRC_k__BackingField;
         [CompilerGenerated]
-        private short <HeaderSize>k__BackingField;
+        private short _HeaderSize_k__BackingField;
         [CompilerGenerated]
-        private SharpCompress.Common.Rar.Headers.HeaderType <HeaderType>k__BackingField;
+        private SharpCompress.Common.Rar.Headers.HeaderType _HeaderType_k__BackingField;
         [CompilerGenerated]
-        private long <ReadBytes>k__BackingField;
+        private long _ReadBytes_k__BackingField;
         internal const short BaseBlockSize = 7;
         internal const short LONG_BLOCK = -32768;
 
@@ -74,7 +74,7 @@
             this.HeaderType = ((SharpCompress.Common.Rar.Headers.HeaderType) reader.ReadByte()) & ((SharpCompress.Common.Rar.Headers.HeaderType) 0xff);
             this.Flags = reader.ReadInt16();
             this.HeaderSize = reader.ReadInt16();
-            if (FlagUtility.HasFlag(this.Flags, -32768))
+            if (FlagUtility.HasFlag((short)this.Flags, (short)-32768))
             {
                 this.AdditionalSize = reader.ReadUInt32();
             }
@@ -85,12 +85,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<AdditionalSize>k__BackingField;
+                return this._AdditionalSize_k__BackingField;
             }
             [CompilerGenerated]
             private set
             {
-                this.<AdditionalSize>k__BackingField = value;
+                this._AdditionalSize_k__BackingField = value;
             }
         }
 
@@ -99,12 +99,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<Flags>k__BackingField;
+                return this._Flags_k__BackingField;
             }
             [CompilerGenerated]
             private set
             {
-                this.<Flags>k__BackingField = value;
+                this._Flags_k__BackingField = value;
             }
         }
 
@@ -113,12 +113,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<HeadCRC>k__BackingField;
+                return this._HeadCRC_k__BackingField;
             }
             [CompilerGenerated]
             private set
             {
-                this.<HeadCRC>k__BackingField = value;
+                this._HeadCRC_k__BackingField = value;
             }
         }
 
@@ -127,12 +127,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<HeaderSize>k__BackingField;
+                return this._HeaderSize_k__BackingField;
             }
             [CompilerGenerated]
             private set
             {
-                this.<HeaderSize>k__BackingField = value;
+                this._HeaderSize_k__BackingField = value;
             }
         }
 
@@ -141,12 +141,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<HeaderType>k__BackingField;
+                return this._HeaderType_k__BackingField;
             }
             [CompilerGenerated]
             private set
             {
-                this.<HeaderType>k__BackingField = value;
+                this._HeaderType_k__BackingField = value;
             }
         }
 
@@ -155,12 +155,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<ReadBytes>k__BackingField;
+                return this._ReadBytes_k__BackingField;
             }
             [CompilerGenerated]
             private set
             {
-                this.<ReadBytes>k__BackingField = value;
+                this._ReadBytes_k__BackingField = value;
             }
         }
     }

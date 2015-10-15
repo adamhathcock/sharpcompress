@@ -1,4 +1,4 @@
-﻿namespace SharpCompress.Reader.Rar
+namespace SharpCompress.Reader.Rar
 {
     using SharpCompress.Common;
     using SharpCompress.Common.Rar;
@@ -51,7 +51,7 @@
         private class MultiVolumeStreamEnumerator : IEnumerable<FilePart>, IEnumerable, IEnumerator<FilePart>, IDisposable, IEnumerator
         {
             [CompilerGenerated]
-            private FilePart <Current>k__BackingField;
+            private FilePart _Current_k__BackingField;
             private bool isFirst = true;
             private readonly IEnumerator<Stream> nextReadableStreams;
             private readonly MultiVolumeRarReader reader;
@@ -116,12 +116,12 @@
                 [CompilerGenerated]
                 get
                 {
-                    return this.<Current>k__BackingField;
+                    return this._Current_k__BackingField;
                 }
                 [CompilerGenerated]
                 private set
                 {
-                    this.<Current>k__BackingField = value;
+                    this._Current_k__BackingField = value;
                 }
             }
 

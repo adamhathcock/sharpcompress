@@ -1,4 +1,4 @@
-﻿namespace SharpCompress.Common.Zip
+namespace SharpCompress.Common.Zip
 {
     using SharpCompress.Common;
     using SharpCompress.Common.Zip.Headers;
@@ -16,9 +16,9 @@
     internal abstract class ZipFilePart : FilePart
     {
         [CompilerGenerated]
-        private Stream <BaseStream>k__BackingField;
+        private Stream _BaseStream_k__BackingField;
         [CompilerGenerated]
-        private ZipFileEntry <Header>k__BackingField;
+        private ZipFileEntry _Header_k__BackingField;
 
         internal ZipFilePart(ZipFileEntry header, Stream stream)
         {
@@ -137,12 +137,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<BaseStream>k__BackingField;
+                return this._BaseStream_k__BackingField;
             }
             [CompilerGenerated]
             private set
             {
-                this.<BaseStream>k__BackingField = value;
+                this._BaseStream_k__BackingField = value;
             }
         }
 
@@ -159,12 +159,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<Header>k__BackingField;
+                return this._Header_k__BackingField;
             }
             [CompilerGenerated]
             set
             {
-                this.<Header>k__BackingField = value;
+                this._Header_k__BackingField = value;
             }
         }
 

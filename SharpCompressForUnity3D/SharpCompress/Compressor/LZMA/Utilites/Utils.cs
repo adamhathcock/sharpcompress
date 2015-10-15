@@ -5,7 +5,7 @@
     using System.IO;
     using System.Runtime.CompilerServices;
 
-    [Extension]
+    //[Extension]
     internal static class Utils
     {
         [Conditional("DEBUG")]
@@ -21,7 +21,7 @@
             }
         }
 
-        [Extension]
+        //[Extension]
         public static void ReadExact(Stream stream, byte[] buffer, int offset, int length)
         {
             if (stream == null)

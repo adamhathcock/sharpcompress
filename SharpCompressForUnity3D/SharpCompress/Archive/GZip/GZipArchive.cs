@@ -91,7 +91,7 @@
 
         public void SaveTo(Stream stream)
         {
-            base.SaveTo(stream, 1);
+            SaveTo(stream, CompressionType.Deflate );
         }
 
         protected override void SaveTo(Stream stream, CompressionInfo compressionInfo, IEnumerable<GZipArchiveEntry> oldEntries, IEnumerable<GZipArchiveEntry> newEntries)

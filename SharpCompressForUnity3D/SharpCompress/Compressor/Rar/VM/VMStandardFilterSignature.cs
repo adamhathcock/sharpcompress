@@ -1,4 +1,4 @@
-﻿namespace SharpCompress.Compressor.Rar.VM
+namespace SharpCompress.Compressor.Rar.VM
 {
     using System;
     using System.Runtime.CompilerServices;
@@ -6,11 +6,11 @@
     internal class VMStandardFilterSignature
     {
         [CompilerGenerated]
-        private uint <CRC>k__BackingField;
+        private uint _CRC_k__BackingField;
         [CompilerGenerated]
-        private int <Length>k__BackingField;
+        private int _Length_k__BackingField;
         [CompilerGenerated]
-        private VMStandardFilters <Type>k__BackingField;
+        private VMStandardFilters _Type_k__BackingField;
 
         internal VMStandardFilterSignature(int length, uint crc, VMStandardFilters type)
         {
@@ -24,12 +24,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<CRC>k__BackingField;
+                return this._CRC_k__BackingField;
             }
             [CompilerGenerated]
             private set
             {
-                this.<CRC>k__BackingField = value;
+                this._CRC_k__BackingField = value;
             }
         }
 
@@ -38,12 +38,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<Length>k__BackingField;
+                return this._Length_k__BackingField;
             }
             [CompilerGenerated]
             private set
             {
-                this.<Length>k__BackingField = value;
+                this._Length_k__BackingField = value;
             }
         }
 
@@ -52,12 +52,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<Type>k__BackingField;
+                return this._Type_k__BackingField;
             }
             [CompilerGenerated]
             private set
             {
-                this.<Type>k__BackingField = value;
+                this._Type_k__BackingField = value;
             }
         }
     }

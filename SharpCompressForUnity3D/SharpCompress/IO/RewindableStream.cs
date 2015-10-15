@@ -1,4 +1,4 @@
-﻿namespace SharpCompress.IO
+namespace SharpCompress.IO
 {
     using SharpCompress;
     using System;
@@ -8,7 +8,7 @@
     internal class RewindableStream : Stream
     {
         [CompilerGenerated]
-        private bool <IsRecording>k__BackingField;
+        private bool _IsRecording_k__BackingField;
         private MemoryStream bufferStream = new MemoryStream();
         private bool isDisposed;
         private bool isRewound;
@@ -146,12 +146,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<IsRecording>k__BackingField;
+                return this._IsRecording_k__BackingField;
             }
             [CompilerGenerated]
             private set
             {
-                this.<IsRecording>k__BackingField = value;
+                this._IsRecording_k__BackingField = value;
             }
         }
 

@@ -1,4 +1,4 @@
-﻿namespace SharpCompress.Common
+namespace SharpCompress.Common
 {
     using SharpCompress.IO;
     using System;
@@ -8,7 +8,7 @@
     public abstract class Volume : IVolume, IDisposable
     {
         [CompilerGenerated]
-        private SharpCompress.Common.Options <Options>k__BackingField;
+        private SharpCompress.Common.Options _Options_k__BackingField;
         private readonly System.IO.Stream actualStream;
         private bool disposed;
 
@@ -53,12 +53,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<Options>k__BackingField;
+                return this._Options_k__BackingField;
             }
             [CompilerGenerated]
             private set
             {
-                this.<Options>k__BackingField = value;
+                this._Options_k__BackingField = value;
             }
         }
 

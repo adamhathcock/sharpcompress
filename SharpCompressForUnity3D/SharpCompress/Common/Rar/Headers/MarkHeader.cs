@@ -1,4 +1,4 @@
-﻿namespace SharpCompress.Common.Rar.Headers
+namespace SharpCompress.Common.Rar.Headers
 {
     using SharpCompress.IO;
     using System;
@@ -7,7 +7,7 @@
     internal class MarkHeader : RarHeader
     {
         [CompilerGenerated]
-        private bool <OldFormat>k__BackingField;
+        private bool _OldFormat_k__BackingField;
 
         internal bool IsSignature()
         {
@@ -44,12 +44,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<OldFormat>k__BackingField;
+                return this._OldFormat_k__BackingField;
             }
             [CompilerGenerated]
             private set
             {
-                this.<OldFormat>k__BackingField = value;
+                this._OldFormat_k__BackingField = value;
             }
         }
     }

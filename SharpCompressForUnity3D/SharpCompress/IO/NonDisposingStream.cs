@@ -1,4 +1,4 @@
-﻿namespace SharpCompress.IO
+namespace SharpCompress.IO
 {
     using System;
     using System.IO;
@@ -7,7 +7,7 @@
     internal class NonDisposingStream : System.IO.Stream
     {
         [CompilerGenerated]
-        private System.IO.Stream <Stream>k__BackingField;
+        private System.IO.Stream _Stream_k__BackingField;
 
         public NonDisposingStream(System.IO.Stream stream)
         {
@@ -92,12 +92,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<Stream>k__BackingField;
+                return this._Stream_k__BackingField;
             }
             [CompilerGenerated]
             private set
             {
-                this.<Stream>k__BackingField = value;
+                this._Stream_k__BackingField = value;
             }
         }
     }

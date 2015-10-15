@@ -1,4 +1,4 @@
-﻿namespace SharpCompress.Archive.Rar
+namespace SharpCompress.Archive.Rar
 {
     using SharpCompress.Common.Rar.Headers;
     using System;
@@ -8,7 +8,7 @@
     internal class FileInfoRarFilePart : SeekableFilePart
     {
         [CompilerGenerated]
-        private System.IO.FileInfo <FileInfo>k__BackingField;
+        private System.IO.FileInfo _FileInfo_k__BackingField;
         private readonly FileInfoRarArchiveVolume volume;
 
         internal FileInfoRarFilePart(FileInfoRarArchiveVolume volume, MarkHeader mh, FileHeader fh, System.IO.FileInfo fi) : base(mh, fh, volume.Stream, volume.Password)
@@ -22,12 +22,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<FileInfo>k__BackingField;
+                return this._FileInfo_k__BackingField;
             }
             [CompilerGenerated]
             private set
             {
-                this.<FileInfo>k__BackingField = value;
+                this._FileInfo_k__BackingField = value;
             }
         }
 

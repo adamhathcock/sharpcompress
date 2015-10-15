@@ -30,8 +30,10 @@
         {
             return TarEntry.GetEntries(StreamingMode.Streaming, stream, this.compressionType);
         }
-
-        public static TarReader Open(Stream stream, [Optional, DefaultParameterValue(1)] Options options)
+        public static TarReader Open(Stream stream) {
+            return Open(stream, Options.KeepStreamsOpen);
+        }
+        public static TarReader Open(Stream stream, Options options)
         {
             Utility.CheckNotNull(stream, "stream");
             RewindableStream stream2 = new RewindableStream(stream);

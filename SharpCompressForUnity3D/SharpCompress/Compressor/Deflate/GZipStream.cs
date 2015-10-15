@@ -1,4 +1,4 @@
-﻿namespace SharpCompress.Compressor.Deflate
+namespace SharpCompress.Compressor.Deflate
 {
     using SharpCompress.Common;
     using SharpCompress.Compressor;
@@ -9,7 +9,7 @@
     public class GZipStream : Stream
     {
         [CompilerGenerated]
-        private DateTime? <LastModified>k__BackingField;
+        private DateTime? _LastModified_k__BackingField;
         internal ZlibBaseStream BaseStream;
         private string comment;
         private int crc32;
@@ -288,12 +288,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<LastModified>k__BackingField;
+                return this._LastModified_k__BackingField;
             }
             [CompilerGenerated]
             set
             {
-                this.<LastModified>k__BackingField = value;
+                this._LastModified_k__BackingField = value;
             }
         }
 

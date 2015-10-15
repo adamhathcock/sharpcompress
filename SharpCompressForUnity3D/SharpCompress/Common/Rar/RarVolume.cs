@@ -1,4 +1,4 @@
-﻿namespace SharpCompress.Common.Rar
+namespace SharpCompress.Common.Rar
 {
     using SharpCompress.Common;
     using SharpCompress.Common.Rar.Headers;
@@ -15,9 +15,9 @@
     public abstract class RarVolume : Volume
     {
         [CompilerGenerated]
-        private SharpCompress.Common.Rar.Headers.ArchiveHeader <ArchiveHeader>k__BackingField;
+        private SharpCompress.Common.Rar.Headers.ArchiveHeader _ArchiveHeader_k__BackingField;
         [CompilerGenerated]
-        private string <Password>k__BackingField;
+        private string _Password_k__BackingField;
         private readonly RarHeaderFactory headerFactory;
 
         internal RarVolume(StreamingMode mode, Stream stream, string password, Options options) : base(stream, options)
@@ -84,12 +84,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<ArchiveHeader>k__BackingField;
+                return this._ArchiveHeader_k__BackingField;
             }
             [CompilerGenerated]
             private set
             {
-                this.<ArchiveHeader>k__BackingField = value;
+                this._ArchiveHeader_k__BackingField = value;
             }
         }
 
@@ -134,12 +134,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<Password>k__BackingField;
+                return this._Password_k__BackingField;
             }
             [CompilerGenerated]
             private set
             {
-                this.<Password>k__BackingField = value;
+                this._Password_k__BackingField = value;
             }
         }
 

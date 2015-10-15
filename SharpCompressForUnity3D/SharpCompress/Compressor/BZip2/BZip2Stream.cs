@@ -1,4 +1,4 @@
-﻿namespace SharpCompress.Compressor.BZip2
+namespace SharpCompress.Compressor.BZip2
 {
     using SharpCompress.Compressor;
     using System;
@@ -9,7 +9,7 @@
     public class BZip2Stream : Stream
     {
         [CompilerGenerated]
-        private CompressionMode <Mode>k__BackingField;
+        private CompressionMode _Mode_k__BackingField;
         private bool isDisposed;
         private readonly Stream stream;
 
@@ -110,12 +110,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<Mode>k__BackingField;
+                return this._Mode_k__BackingField;
             }
             [CompilerGenerated]
             private set
             {
-                this.<Mode>k__BackingField = value;
+                this._Mode_k__BackingField = value;
             }
         }
 

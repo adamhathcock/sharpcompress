@@ -6,10 +6,10 @@
     using System;
     using System.Runtime.CompilerServices;
 
-    [Extension]
+    //[Extension]
     internal static class UnpackUtility
     {
-        [Extension]
+        //[Extension]
         internal static int decodeNumber(BitInput input, Decode dec)
         {
             int num;

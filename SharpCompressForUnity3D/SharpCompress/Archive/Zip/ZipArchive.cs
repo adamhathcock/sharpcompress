@@ -1,4 +1,4 @@
-﻿namespace SharpCompress.Archive.Zip
+namespace SharpCompress.Archive.Zip
 {
     using SharpCompress;
     using SharpCompress.Archive;
@@ -22,7 +22,7 @@
     public class ZipArchive : AbstractWritableArchive<ZipArchiveEntry, ZipVolume>
     {
         [CompilerGenerated]
-        private CompressionLevel <DeflateCompressionLevel>k__BackingField;
+        private CompressionLevel _DeflateCompressionLevel_k__BackingField;
         private readonly SeekableZipHeaderFactory headerFactory;
 
         internal ZipArchive() : base(ArchiveType.Zip)
@@ -141,12 +141,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<DeflateCompressionLevel>k__BackingField;
+                return this._DeflateCompressionLevel_k__BackingField;
             }
             [CompilerGenerated]
             set
             {
-                this.<DeflateCompressionLevel>k__BackingField = value;
+                this._DeflateCompressionLevel_k__BackingField = value;
             }
         }
 

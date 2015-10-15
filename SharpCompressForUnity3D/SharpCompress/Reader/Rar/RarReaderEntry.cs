@@ -1,4 +1,4 @@
-﻿namespace SharpCompress.Reader.Rar
+namespace SharpCompress.Reader.Rar
 {
     using SharpCompress;
     using SharpCompress.Common;
@@ -11,7 +11,7 @@
     public class RarReaderEntry : RarEntry
     {
         [CompilerGenerated]
-        private RarFilePart <Part>k__BackingField;
+        private RarFilePart _Part_k__BackingField;
 
         internal RarReaderEntry(bool solid, RarFilePart part)
         {
@@ -48,12 +48,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<Part>k__BackingField;
+                return this._Part_k__BackingField;
             }
             [CompilerGenerated]
             private set
             {
-                this.<Part>k__BackingField = value;
+                this._Part_k__BackingField = value;
             }
         }
 

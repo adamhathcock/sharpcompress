@@ -9,7 +9,7 @@
     public class SevenZipEntry : Entry
     {
         [CompilerGenerated]
-        private SevenZipFilePart <FilePart>k__BackingField;
+        private SevenZipFilePart _FilePart_k__BackingField;
 
         internal SevenZipEntry(SevenZipFilePart filePart)
         {
@@ -28,7 +28,7 @@
         {
             get
             {
-                return new int?(this.FilePart.Header.Attrib.Value);
+                return new int?((int)this.FilePart.Header.Attrib.Value);
             }
         }
 
@@ -70,12 +70,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<FilePart>k__BackingField;
+                return this._FilePart_k__BackingField;
             }
             [CompilerGenerated]
             private set
             {
-                this.<FilePart>k__BackingField = value;
+                this._FilePart_k__BackingField = value;
             }
         }
 

@@ -1,4 +1,4 @@
-﻿namespace SharpCompress.Common.Tar.Headers
+namespace SharpCompress.Common.Tar.Headers
 {
     using SharpCompress;
     using SharpCompress.Common;
@@ -10,19 +10,19 @@
     internal class TarHeader
     {
         [CompilerGenerated]
-        private long? <DataStartPosition>k__BackingField;
+        private long? _DataStartPosition_k__BackingField;
         [CompilerGenerated]
-        private SharpCompress.Common.Tar.Headers.EntryType <EntryType>k__BackingField;
+        private SharpCompress.Common.Tar.Headers.EntryType _EntryType_k__BackingField;
         [CompilerGenerated]
-        private DateTime <LastModifiedTime>k__BackingField;
+        private DateTime _LastModifiedTime_k__BackingField;
         [CompilerGenerated]
-        private string <Magic>k__BackingField;
+        private string _Magic_k__BackingField;
         [CompilerGenerated]
-        private string <Name>k__BackingField;
+        private string _Name_k__BackingField;
         [CompilerGenerated]
-        private Stream <PackedStream>k__BackingField;
+        private Stream _PackedStream_k__BackingField;
         [CompilerGenerated]
-        private long <Size>k__BackingField;
+        private long _Size_k__BackingField;
         internal static readonly DateTime Epoch = new DateTime(0x7b2, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 
         internal bool Read(BinaryReader reader)
@@ -210,12 +210,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<DataStartPosition>k__BackingField;
+                return this._DataStartPosition_k__BackingField;
             }
             [CompilerGenerated]
             set
             {
-                this.<DataStartPosition>k__BackingField = value;
+                this._DataStartPosition_k__BackingField = value;
             }
         }
 
@@ -224,12 +224,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<EntryType>k__BackingField;
+                return this._EntryType_k__BackingField;
             }
             [CompilerGenerated]
             set
             {
-                this.<EntryType>k__BackingField = value;
+                this._EntryType_k__BackingField = value;
             }
         }
 
@@ -238,12 +238,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<LastModifiedTime>k__BackingField;
+                return this._LastModifiedTime_k__BackingField;
             }
             [CompilerGenerated]
             set
             {
-                this.<LastModifiedTime>k__BackingField = value;
+                this._LastModifiedTime_k__BackingField = value;
             }
         }
 
@@ -252,12 +252,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<Magic>k__BackingField;
+                return this._Magic_k__BackingField;
             }
             [CompilerGenerated]
             set
             {
-                this.<Magic>k__BackingField = value;
+                this._Magic_k__BackingField = value;
             }
         }
 
@@ -266,12 +266,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<Name>k__BackingField;
+                return this._Name_k__BackingField;
             }
             [CompilerGenerated]
             set
             {
-                this.<Name>k__BackingField = value;
+                this._Name_k__BackingField = value;
             }
         }
 
@@ -280,12 +280,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<PackedStream>k__BackingField;
+                return this._PackedStream_k__BackingField;
             }
             [CompilerGenerated]
             set
             {
-                this.<PackedStream>k__BackingField = value;
+                this._PackedStream_k__BackingField = value;
             }
         }
 
@@ -294,12 +294,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<Size>k__BackingField;
+                return this._Size_k__BackingField;
             }
             [CompilerGenerated]
             set
             {
-                this.<Size>k__BackingField = value;
+                this._Size_k__BackingField = value;
             }
         }
     }

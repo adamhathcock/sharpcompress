@@ -9,10 +9,10 @@
     using System.Runtime.CompilerServices;
     using System.Threading;
 
-    [Extension]
+    //[Extension]
     internal static class Utility
     {
-        [Extension]
+        //[Extension]
         public static void AddRange<T>(ICollection<T> destination, IEnumerable<T> source)
         {
             foreach (T local in source)
@@ -21,13 +21,13 @@
             }
         }
 
-        [Extension]
+        //[Extension]
         public static IEnumerable<T> AsEnumerable<T>(T item)
         {
             yield return item;
         }
 
-        [Extension]
+        //[Extension]
         public static bool BinaryEquals(byte[] source, byte[] target)
         {
             if (source.Length != target.Length)
@@ -44,7 +44,7 @@
             return true;
         }
 
-        [Extension]
+        //[Extension]
         public static void CheckNotNull(object obj, string name)
         {
             if (obj == null)
@@ -53,7 +53,7 @@
             }
         }
 
-        [Extension]
+        //[Extension]
         public static void CheckNotNullOrEmpty(string obj, string name)
         {
             CheckNotNull(obj, name);
@@ -63,13 +63,13 @@
             }
         }
 
-        [Extension]
+        //[Extension]
         public static void CopyTo(byte[] array, byte[] destination, int index)
         {
             Array.Copy(array, 0, destination, index, array.Length);
         }
 
-        [Extension]
+        //[Extension]
         public static uint DateTimeToDosTime(DateTime? dateTime)
         {
             if (!dateTime.HasValue)
@@ -143,7 +143,7 @@
             }
         }
 
-        [Extension]
+        //[Extension]
         public static void ForEach<T>(IEnumerable<T> items, Action<T> action)
         {
             foreach (T local in items)
@@ -173,7 +173,7 @@
             WriteLittleEndian(array, pos, num);
         }
 
-        [Extension]
+        //[Extension]
         public static void Initialize<T>(T[] array, Func<T> func)
         {
             for (int i = 0; i < array.Length; i++)
@@ -197,7 +197,7 @@
             return HostToNetworkOrder(network);
         }
 
-        [Extension]
+        //[Extension]
         public static bool ReadFully(Stream stream, byte[] buffer)
         {
             int num2;
@@ -235,7 +235,7 @@
             return BitConverter.ToInt16(array, pos);
         }
 
-        [Extension]
+        //[Extension]
         public static void SetSize(List<byte> list, int count)
         {
             if (count > list.Count)
@@ -254,7 +254,7 @@
             }
         }
 
-        [Extension]
+        //[Extension]
         public static void Skip(Stream source, long advanceAmount)
         {
             byte[] buffer = new byte[0x8000];
@@ -280,7 +280,7 @@
             }
         }
 
-        [Extension]
+        //[Extension]
         public static void SkipAll(Stream source)
         {
             byte[] buffer = new byte[0x8000];
@@ -289,13 +289,13 @@
             }
         }
 
-        [Extension]
+        //[Extension]
         public static ReadOnlyCollection<T> ToReadOnly<T>(IEnumerable<T> items)
         {
             return new ReadOnlyCollection<T>(Enumerable.ToList<T>(items));
         }
 
-        [Extension]
+        //[Extension]
         public static long TransferTo(Stream source, Stream destination)
         {
             int num;
@@ -309,7 +309,7 @@
             return num2;
         }
 
-        [Extension]
+        //[Extension]
         public static string TrimNulls(string source)
         {
             return source.Replace('\0', ' ').Trim();
@@ -376,90 +376,90 @@
             Array.Copy(bytes, 0, array, pos, bytes.Length);
         }
 
-        [CompilerGenerated]
-        private sealed class <AsEnumerable>d__0<T> : IEnumerable<T>, IEnumerable, IEnumerator<T>, IEnumerator, IDisposable
-        {
-            private int <>1__state;
-            private T <>2__current;
-            public T <>3__item;
-            private int <>l__initialThreadId;
-            public T item;
+        //[CompilerGenerated]
+        //private sealed class _AsEnumerable_d__0<T> : IEnumerable<T>, IEnumerable, IEnumerator<T>, IEnumerator, IDisposable
+        //{
+        //    private int __1__state;
+        //    private T __2__current;
+        //    public T __3__item;
+        //    private int __l__initialThreadId;
+        //    public T item;
 
-            [DebuggerHidden]
-            public <AsEnumerable>d__0(int <>1__state)
-            {
-                this.<>1__state = <>1__state;
-                this.<>l__initialThreadId = Thread.CurrentThread.ManagedThreadId;
-            }
+        //    [DebuggerHidden]
+        //    public _AsEnumerable_d__0(int __1__state)
+        //    {
+        //        this.__1__state = __1__state;
+        //        this.__l__initialThreadId = Thread.CurrentThread.ManagedThreadId;
+        //    }
 
-            private bool MoveNext()
-            {
-                switch (this.<>1__state)
-                {
-                    case 0:
-                        this.<>1__state = -1;
-                        this.<>2__current = this.item;
-                        this.<>1__state = 1;
-                        return true;
+        //    public bool MoveNext()
+        //    {
+        //        switch (this.__1__state)
+        //        {
+        //            case 0:
+        //                this.__1__state = -1;
+        //                this.__2__current = this.item;
+        //                this.__1__state = 1;
+        //                return true;
 
-                    case 1:
-                        this.<>1__state = -1;
-                        break;
-                }
-                return false;
-            }
+        //            case 1:
+        //                this.__1__state = -1;
+        //                break;
+        //        }
+        //        return false;
+        //    }
 
-            [DebuggerHidden]
-            IEnumerator<T> IEnumerable<T>.GetEnumerator()
-            {
-                Utility.<AsEnumerable>d__0<T> d__;
-                if ((Thread.CurrentThread.ManagedThreadId == this.<>l__initialThreadId) && (this.<>1__state == -2))
-                {
-                    this.<>1__state = 0;
-                    d__ = (Utility.<AsEnumerable>d__0<T>) this;
-                }
-                else
-                {
-                    d__ = new Utility.<AsEnumerable>d__0<T>(0);
-                }
-                d__.item = this.<>3__item;
-                return d__;
-            }
+        //    [DebuggerHidden]
+        //    IEnumerator<T> IEnumerable<T>.GetEnumerator()
+        //    {
+        //        Utility._AsEnumerable_d__0<T> d__;
+        //        if ((Thread.CurrentThread.ManagedThreadId == this.__l__initialThreadId) && (this.__1__state == -2))
+        //        {
+        //            this.__1__state = 0;
+        //            d__ = (Utility._AsEnumerable_d__0<T>) this;
+        //        }
+        //        else
+        //        {
+        //            d__ = new Utility._AsEnumerable_d__0<T>(0);
+        //        }
+        //        d__.item = this.__3__item;
+        //        return d__;
+        //    }
 
-            [DebuggerHidden]
-            IEnumerator IEnumerable.GetEnumerator()
-            {
-                return this.System.Collections.Generic.IEnumerable<T>.GetEnumerator();
-            }
+        //    [DebuggerHidden]
+        //    IEnumerator IEnumerable.GetEnumerator()
+        //    {
+        //        return this.System.Collections.Generic.IEnumerable<T>.GetEnumerator();
+        //    }
 
-            [DebuggerHidden]
-            void IEnumerator.Reset()
-            {
-                throw new NotSupportedException();
-            }
+        //    [DebuggerHidden]
+        //    void IEnumerator.Reset()
+        //    {
+        //        throw new NotSupportedException();
+        //    }
 
-            void IDisposable.Dispose()
-            {
-            }
+        //    void IDisposable.Dispose()
+        //    {
+        //    }
 
-            T IEnumerator<T>.Current
-            {
-                [DebuggerHidden]
-                get
-                {
-                    return this.<>2__current;
-                }
-            }
+        //    T IEnumerator<T>.Current
+        //    {
+        //        [DebuggerHidden]
+        //        get
+        //        {
+        //            return this.__2__current;
+        //        }
+        //    }
 
-            object IEnumerator.Current
-            {
-                [DebuggerHidden]
-                get
-                {
-                    return this.<>2__current;
-                }
-            }
-        }
+        //    object IEnumerator.Current
+        //    {
+        //        [DebuggerHidden]
+        //        get
+        //        {
+        //            return this.__2__current;
+        //        }
+        //    }
+        //}
     }
 }
 

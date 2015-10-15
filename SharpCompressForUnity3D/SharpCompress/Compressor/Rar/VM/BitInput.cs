@@ -1,4 +1,4 @@
-﻿namespace SharpCompress.Compressor.Rar.VM
+namespace SharpCompress.Compressor.Rar.VM
 {
     using SharpCompress;
     using System;
@@ -7,7 +7,7 @@
     internal class BitInput
     {
         [CompilerGenerated]
-        private byte[] <InBuf>k__BackingField;
+        private byte[] _InBuf_k__BackingField;
         protected int inAddr;
         protected int inBit;
         internal const int MAX_SIZE = 0x8000;
@@ -45,12 +45,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<InBuf>k__BackingField;
+                return this._InBuf_k__BackingField;
             }
             [CompilerGenerated]
             private set
             {
-                this.<InBuf>k__BackingField = value;
+                this._InBuf_k__BackingField = value;
             }
         }
     }

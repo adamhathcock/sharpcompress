@@ -1,4 +1,4 @@
-﻿namespace SharpCompress.Common.Zip.Headers
+namespace SharpCompress.Common.Zip.Headers
 {
     using SharpCompress.Common.Zip;
     using System;
@@ -9,7 +9,7 @@
     internal class LocalEntryHeader : ZipFileEntry
     {
         [CompilerGenerated]
-        private ushort <Version>k__BackingField;
+        private ushort _Version_k__BackingField;
 
         public LocalEntryHeader() : base(ZipHeaderType.LocalEntry)
         {
@@ -61,12 +61,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<Version>k__BackingField;
+                return this._Version_k__BackingField;
             }
             [CompilerGenerated]
             private set
             {
-                this.<Version>k__BackingField = value;
+                this._Version_k__BackingField = value;
             }
         }
     }

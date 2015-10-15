@@ -1,4 +1,4 @@
-﻿namespace SharpCompress.Common.Rar.Headers
+namespace SharpCompress.Common.Rar.Headers
 {
     using SharpCompress.IO;
     using System;
@@ -7,13 +7,13 @@
     internal class ProtectHeader : RarHeader
     {
         [CompilerGenerated]
-        private byte[] <Mark>k__BackingField;
+        private byte[] _Mark_k__BackingField;
         [CompilerGenerated]
-        private ushort <RecSectors>k__BackingField;
+        private ushort _RecSectors_k__BackingField;
         [CompilerGenerated]
-        private uint <TotalBlocks>k__BackingField;
+        private uint _TotalBlocks_k__BackingField;
         [CompilerGenerated]
-        private byte <Version>k__BackingField;
+        private byte _Version_k__BackingField;
 
         protected override void ReadFromReader(MarkingBinaryReader reader)
         {
@@ -36,12 +36,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<Mark>k__BackingField;
+                return this._Mark_k__BackingField;
             }
             [CompilerGenerated]
             private set
             {
-                this.<Mark>k__BackingField = value;
+                this._Mark_k__BackingField = value;
             }
         }
 
@@ -50,12 +50,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<RecSectors>k__BackingField;
+                return this._RecSectors_k__BackingField;
             }
             [CompilerGenerated]
             private set
             {
-                this.<RecSectors>k__BackingField = value;
+                this._RecSectors_k__BackingField = value;
             }
         }
 
@@ -64,12 +64,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<TotalBlocks>k__BackingField;
+                return this._TotalBlocks_k__BackingField;
             }
             [CompilerGenerated]
             private set
             {
-                this.<TotalBlocks>k__BackingField = value;
+                this._TotalBlocks_k__BackingField = value;
             }
         }
 
@@ -78,12 +78,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<Version>k__BackingField;
+                return this._Version_k__BackingField;
             }
             [CompilerGenerated]
             private set
             {
-                this.<Version>k__BackingField = value;
+                this._Version_k__BackingField = value;
             }
         }
     }

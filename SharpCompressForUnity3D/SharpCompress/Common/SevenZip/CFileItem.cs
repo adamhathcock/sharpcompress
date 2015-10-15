@@ -1,4 +1,4 @@
-﻿namespace SharpCompress.Common.SevenZip
+namespace SharpCompress.Common.SevenZip
 {
     using System;
     using System.Runtime.CompilerServices;
@@ -6,27 +6,27 @@
     internal class CFileItem
     {
         [CompilerGenerated]
-        private DateTime? <ATime>k__BackingField;
+        private DateTime? _ATime_k__BackingField;
         [CompilerGenerated]
-        private uint? <Attrib>k__BackingField;
+        private uint? _Attrib_k__BackingField;
         [CompilerGenerated]
-        private uint? <Crc>k__BackingField;
+        private uint? _Crc_k__BackingField;
         [CompilerGenerated]
-        private DateTime? <CTime>k__BackingField;
+        private DateTime? _CTime_k__BackingField;
         [CompilerGenerated]
-        private bool <HasStream>k__BackingField;
+        private bool _HasStream_k__BackingField;
         [CompilerGenerated]
-        private bool <IsAnti>k__BackingField;
+        private bool _IsAnti_k__BackingField;
         [CompilerGenerated]
-        private bool <IsDir>k__BackingField;
+        private bool _IsDir_k__BackingField;
         [CompilerGenerated]
-        private DateTime? <MTime>k__BackingField;
+        private DateTime? _MTime_k__BackingField;
         [CompilerGenerated]
-        private string <Name>k__BackingField;
+        private string _Name_k__BackingField;
         [CompilerGenerated]
-        private long <Size>k__BackingField;
+        private long _Size_k__BackingField;
         [CompilerGenerated]
-        private long? <StartPos>k__BackingField;
+        private long? _StartPos_k__BackingField;
 
         internal CFileItem()
         {
@@ -43,12 +43,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<ATime>k__BackingField;
+                return this._ATime_k__BackingField;
             }
             [CompilerGenerated]
             internal set
             {
-                this.<ATime>k__BackingField = value;
+                this._ATime_k__BackingField = value;
             }
         }
 
@@ -57,12 +57,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<Attrib>k__BackingField;
+                return this._Attrib_k__BackingField;
             }
             [CompilerGenerated]
             internal set
             {
-                this.<Attrib>k__BackingField = value;
+                this._Attrib_k__BackingField = value;
             }
         }
 
@@ -79,12 +79,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<Crc>k__BackingField;
+                return this._Crc_k__BackingField;
             }
             [CompilerGenerated]
             internal set
             {
-                this.<Crc>k__BackingField = value;
+                this._Crc_k__BackingField = value;
             }
         }
 
@@ -101,12 +101,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<CTime>k__BackingField;
+                return this._CTime_k__BackingField;
             }
             [CompilerGenerated]
             internal set
             {
-                this.<CTime>k__BackingField = value;
+                this._CTime_k__BackingField = value;
             }
         }
 
@@ -115,12 +115,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<HasStream>k__BackingField;
+                return this._HasStream_k__BackingField;
             }
             [CompilerGenerated]
             internal set
             {
-                this.<HasStream>k__BackingField = value;
+                this._HasStream_k__BackingField = value;
             }
         }
 
@@ -129,12 +129,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<IsAnti>k__BackingField;
+                return this._IsAnti_k__BackingField;
             }
             [CompilerGenerated]
             internal set
             {
-                this.<IsAnti>k__BackingField = value;
+                this._IsAnti_k__BackingField = value;
             }
         }
 
@@ -143,12 +143,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<IsDir>k__BackingField;
+                return this._IsDir_k__BackingField;
             }
             [CompilerGenerated]
             internal set
             {
-                this.<IsDir>k__BackingField = value;
+                this._IsDir_k__BackingField = value;
             }
         }
 
@@ -157,12 +157,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<MTime>k__BackingField;
+                return this._MTime_k__BackingField;
             }
             [CompilerGenerated]
             internal set
             {
-                this.<MTime>k__BackingField = value;
+                this._MTime_k__BackingField = value;
             }
         }
 
@@ -171,12 +171,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<Name>k__BackingField;
+                return this._Name_k__BackingField;
             }
             [CompilerGenerated]
             internal set
             {
-                this.<Name>k__BackingField = value;
+                this._Name_k__BackingField = value;
             }
         }
 
@@ -185,12 +185,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<Size>k__BackingField;
+                return this._Size_k__BackingField;
             }
             [CompilerGenerated]
             internal set
             {
-                this.<Size>k__BackingField = value;
+                this._Size_k__BackingField = value;
             }
         }
 
@@ -199,12 +199,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<StartPos>k__BackingField;
+                return this._StartPos_k__BackingField;
             }
             [CompilerGenerated]
             internal set
             {
-                this.<StartPos>k__BackingField = value;
+                this._StartPos_k__BackingField = value;
             }
         }
     }

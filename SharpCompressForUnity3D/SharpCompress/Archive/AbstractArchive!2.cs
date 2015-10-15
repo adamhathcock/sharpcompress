@@ -1,4 +1,4 @@
-﻿namespace SharpCompress.Archive
+namespace SharpCompress.Archive
 {
     using SharpCompress;
     using SharpCompress.Common;
@@ -13,9 +13,9 @@
     public abstract class AbstractArchive<TEntry, TVolume> : IArchive, IDisposable, IArchiveExtractionListener, IExtractionListener where TEntry: IArchiveEntry where TVolume: IVolume
     {
         [CompilerGenerated]
-        private string <Password>k__BackingField;
+        private string _Password_k__BackingField;
         [CompilerGenerated]
-        private ArchiveType <Type>k__BackingField;
+        private ArchiveType _Type_k__BackingField;
         private bool disposed;
         private readonly LazyReadOnlyCollection<TEntry> lazyEntries;
         private readonly LazyReadOnlyCollection<TVolume> lazyVolumes;
@@ -152,12 +152,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<Password>k__BackingField;
+                return this._Password_k__BackingField;
             }
             [CompilerGenerated]
             private set
             {
-                this.<Password>k__BackingField = value;
+                this._Password_k__BackingField = value;
             }
         }
 
@@ -202,12 +202,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<Type>k__BackingField;
+                return this._Type_k__BackingField;
             }
             [CompilerGenerated]
             private set
             {
-                this.<Type>k__BackingField = value;
+                this._Type_k__BackingField = value;
             }
         }
 

@@ -1,4 +1,4 @@
-﻿namespace SharpCompress.IO
+namespace SharpCompress.IO
 {
     using System;
     using System.IO;
@@ -8,7 +8,7 @@
     internal class MarkingBinaryReader : BinaryReader
     {
         [CompilerGenerated]
-        private long <CurrentReadByteCount>k__BackingField;
+        private long _CurrentReadByteCount_k__BackingField;
 
         public MarkingBinaryReader(Stream stream) : base(stream)
         {
@@ -134,12 +134,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<CurrentReadByteCount>k__BackingField;
+                return this._CurrentReadByteCount_k__BackingField;
             }
             [CompilerGenerated]
             private set
             {
-                this.<CurrentReadByteCount>k__BackingField = value;
+                this._CurrentReadByteCount_k__BackingField = value;
             }
         }
     }

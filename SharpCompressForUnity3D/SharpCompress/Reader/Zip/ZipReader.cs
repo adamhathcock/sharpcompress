@@ -46,8 +46,10 @@
         Label_00FC:
             yield break;
         }
-
-        public static ZipReader Open(Stream stream, [Optional, DefaultParameterValue(null)] string password, [Optional, DefaultParameterValue(1)] Options options)
+        public static ZipReader Open(Stream stream, string password) {
+            return Open(stream,null);
+        }
+        public static ZipReader Open(Stream stream,  string password,  Options options)
         {
             Utility.CheckNotNull(stream, "stream");
             return new ZipReader(stream, options, password);

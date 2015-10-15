@@ -10,7 +10,7 @@
         public const int Size = 1;
         public uint Address;
         public byte[] Memory;
-        public static readonly SharpCompress.Compressor.PPMd.I1.Pointer Zero;
+        public static readonly Pointer Zero = new Pointer(0, null);
         public Pointer(uint address, byte[] memory)
         {
             this.Address = address;
@@ -36,22 +36,22 @@
                 this.Memory[(int) ((IntPtr) (this.Address + offset))] = value;
             }
         }
-        public static implicit operator SharpCompress.Compressor.PPMd.I1.Pointer(MemoryNode memoryNode)
+        public static implicit operator Pointer(MemoryNode memoryNode)
         {
-            return new SharpCompress.Compressor.PPMd.I1.Pointer(memoryNode.Address, memoryNode.Memory);
+            return new Pointer(memoryNode.Address, memoryNode.Memory);
         }
 
-        public static implicit operator SharpCompress.Compressor.PPMd.I1.Pointer(Model.PpmContext context)
+        public static implicit operator Pointer(Model.PpmContext context)
         {
-            return new SharpCompress.Compressor.PPMd.I1.Pointer(context.Address, context.Memory);
+            return new Pointer(context.Address, context.Memory);
         }
 
-        public static implicit operator SharpCompress.Compressor.PPMd.I1.Pointer(PpmState state)
+        public static implicit operator Pointer(PpmState state)
         {
-            return new SharpCompress.Compressor.PPMd.I1.Pointer(state.Address, state.Memory);
+            return new Pointer(state.Address, state.Memory);
         }
 
-        public static SharpCompress.Compressor.PPMd.I1.Pointer operator +(SharpCompress.Compressor.PPMd.I1.Pointer pointer, int offset)
+        public static Pointer operator +(Pointer pointer, int offset)
         {
             if (pointer.Address == 0)
             {
@@ -61,7 +61,7 @@
             return pointer;
         }
 
-        public static SharpCompress.Compressor.PPMd.I1.Pointer operator +(SharpCompress.Compressor.PPMd.I1.Pointer pointer, uint offset)
+        public static Pointer operator +(Pointer pointer, uint offset)
         {
             if (pointer.Address == 0)
             {
@@ -71,7 +71,7 @@
             return pointer;
         }
 
-        public static SharpCompress.Compressor.PPMd.I1.Pointer operator ++(SharpCompress.Compressor.PPMd.I1.Pointer pointer)
+        public static Pointer operator ++(Pointer pointer)
         {
             if (pointer.Address == 0)
             {
@@ -81,7 +81,7 @@
             return pointer;
         }
 
-        public static SharpCompress.Compressor.PPMd.I1.Pointer operator -(SharpCompress.Compressor.PPMd.I1.Pointer pointer, int offset)
+        public static Pointer operator -(Pointer pointer, int offset)
         {
             if (pointer.Address == 0)
             {
@@ -91,7 +91,7 @@
             return pointer;
         }
 
-        public static SharpCompress.Compressor.PPMd.I1.Pointer operator -(SharpCompress.Compressor.PPMd.I1.Pointer pointer, uint offset)
+        public static Pointer operator -(Pointer pointer, uint offset)
         {
             if (pointer.Address == 0)
             {
@@ -101,7 +101,7 @@
             return pointer;
         }
 
-        public static SharpCompress.Compressor.PPMd.I1.Pointer operator --(SharpCompress.Compressor.PPMd.I1.Pointer pointer)
+        public static Pointer operator --(Pointer pointer)
         {
             if (pointer.Address == 0)
             {
@@ -111,7 +111,7 @@
             return pointer;
         }
 
-        public static uint operator -(SharpCompress.Compressor.PPMd.I1.Pointer pointer1, SharpCompress.Compressor.PPMd.I1.Pointer pointer2)
+        public static uint operator -(Pointer pointer1, Pointer pointer2)
         {
             if (pointer1.Address == 0)
             {
@@ -124,7 +124,7 @@
             return (pointer1.Address - pointer2.Address);
         }
 
-        public static bool operator <(SharpCompress.Compressor.PPMd.I1.Pointer pointer1, SharpCompress.Compressor.PPMd.I1.Pointer pointer2)
+        public static bool operator <(Pointer pointer1, Pointer pointer2)
         {
             if (pointer1.Address == 0)
             {
@@ -137,7 +137,7 @@
             return (pointer1.Address < pointer2.Address);
         }
 
-        public static bool operator <=(SharpCompress.Compressor.PPMd.I1.Pointer pointer1, SharpCompress.Compressor.PPMd.I1.Pointer pointer2)
+        public static bool operator <=(Pointer pointer1, Pointer pointer2)
         {
             if (pointer1.Address == 0)
             {
@@ -150,7 +150,7 @@
             return (pointer1.Address <= pointer2.Address);
         }
 
-        public static bool operator >(SharpCompress.Compressor.PPMd.I1.Pointer pointer1, SharpCompress.Compressor.PPMd.I1.Pointer pointer2)
+        public static bool operator >( Pointer pointer1, Pointer pointer2)
         {
             if (pointer1.Address == 0)
             {
@@ -163,7 +163,7 @@
             return (pointer1.Address > pointer2.Address);
         }
 
-        public static bool operator >=(SharpCompress.Compressor.PPMd.I1.Pointer pointer1, SharpCompress.Compressor.PPMd.I1.Pointer pointer2)
+        public static bool operator >=( Pointer pointer1,  Pointer pointer2)
         {
             if (pointer1.Address == 0)
             {
@@ -176,21 +176,21 @@
             return (pointer1.Address >= pointer2.Address);
         }
 
-        public static bool operator ==(SharpCompress.Compressor.PPMd.I1.Pointer pointer1, SharpCompress.Compressor.PPMd.I1.Pointer pointer2)
+        public static bool operator ==( Pointer pointer1,  Pointer pointer2)
         {
             return (pointer1.Address == pointer2.Address);
         }
 
-        public static bool operator !=(SharpCompress.Compressor.PPMd.I1.Pointer pointer1, SharpCompress.Compressor.PPMd.I1.Pointer pointer2)
+        public static bool operator !=( Pointer pointer1,  Pointer pointer2)
         {
             return (pointer1.Address != pointer2.Address);
         }
 
         public override bool Equals(object obj)
         {
-            if (obj is SharpCompress.Compressor.PPMd.I1.Pointer)
+            if (obj is  Pointer)
             {
-                SharpCompress.Compressor.PPMd.I1.Pointer pointer = (SharpCompress.Compressor.PPMd.I1.Pointer) obj;
+                Pointer pointer = ( Pointer) obj;
                 return (pointer.Address == this.Address);
             }
             return base.Equals(obj);
@@ -203,7 +203,7 @@
 
         static Pointer()
         {
-            Zero = new SharpCompress.Compressor.PPMd.I1.Pointer(0, null);
+            Zero = new Pointer(0, null);
         }
     }
 }

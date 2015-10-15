@@ -1,4 +1,4 @@
-﻿namespace SharpCompress.Reader
+namespace SharpCompress.Reader
 {
     using SharpCompress;
     using SharpCompress.Common;
@@ -12,11 +12,11 @@
     public abstract class AbstractReader<TEntry, TVolume> : IReader, IDisposable, IReaderExtractionListener, IExtractionListener where TEntry: SharpCompress.Common.Entry where TVolume: SharpCompress.Common.Volume
     {
         [CompilerGenerated]
-        private SharpCompress.Common.ArchiveType <ArchiveType>k__BackingField;
+        private SharpCompress.Common.ArchiveType _ArchiveType_k__BackingField;
         [CompilerGenerated]
-        private bool <Cancelled>k__BackingField;
+        private bool _Cancelled_k__BackingField;
         [CompilerGenerated]
-        private SharpCompress.Common.Options <Options>k__BackingField;
+        private SharpCompress.Common.Options _Options_k__BackingField;
         private bool completed;
         private IEnumerator<TEntry> entriesForCurrentReadStream;
         private readonly byte[] skipBuffer;
@@ -227,12 +227,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<ArchiveType>k__BackingField;
+                return this._ArchiveType_k__BackingField;
             }
             [CompilerGenerated]
             private set
             {
-                this.<ArchiveType>k__BackingField = value;
+                this._ArchiveType_k__BackingField = value;
             }
         }
 
@@ -241,12 +241,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<Cancelled>k__BackingField;
+                return this._Cancelled_k__BackingField;
             }
             [CompilerGenerated]
             private set
             {
-                this.<Cancelled>k__BackingField = value;
+                this._Cancelled_k__BackingField = value;
             }
         }
 
@@ -263,12 +263,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<Options>k__BackingField;
+                return this._Options_k__BackingField;
             }
             [CompilerGenerated]
             private set
             {
-                this.<Options>k__BackingField = value;
+                this._Options_k__BackingField = value;
             }
         }
 

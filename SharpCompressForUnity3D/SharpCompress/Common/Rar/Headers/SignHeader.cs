@@ -1,4 +1,4 @@
-﻿namespace SharpCompress.Common.Rar.Headers
+namespace SharpCompress.Common.Rar.Headers
 {
     using SharpCompress.IO;
     using System;
@@ -7,11 +7,11 @@
     internal class SignHeader : RarHeader
     {
         [CompilerGenerated]
-        private short <ArcNameSize>k__BackingField;
+        private short _ArcNameSize_k__BackingField;
         [CompilerGenerated]
-        private int <CreationTime>k__BackingField;
+        private int _CreationTime_k__BackingField;
         [CompilerGenerated]
-        private short <UserNameSize>k__BackingField;
+        private short _UserNameSize_k__BackingField;
 
         protected override void ReadFromReader(MarkingBinaryReader reader)
         {
@@ -25,12 +25,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<ArcNameSize>k__BackingField;
+                return this._ArcNameSize_k__BackingField;
             }
             [CompilerGenerated]
             private set
             {
-                this.<ArcNameSize>k__BackingField = value;
+                this._ArcNameSize_k__BackingField = value;
             }
         }
 
@@ -39,12 +39,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<CreationTime>k__BackingField;
+                return this._CreationTime_k__BackingField;
             }
             [CompilerGenerated]
             private set
             {
-                this.<CreationTime>k__BackingField = value;
+                this._CreationTime_k__BackingField = value;
             }
         }
 
@@ -53,12 +53,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<UserNameSize>k__BackingField;
+                return this._UserNameSize_k__BackingField;
             }
             [CompilerGenerated]
             private set
             {
-                this.<UserNameSize>k__BackingField = value;
+                this._UserNameSize_k__BackingField = value;
             }
         }
     }

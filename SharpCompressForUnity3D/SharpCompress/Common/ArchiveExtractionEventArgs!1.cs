@@ -1,4 +1,4 @@
-﻿namespace SharpCompress.Common
+namespace SharpCompress.Common
 {
     using System;
     using System.Runtime.CompilerServices;
@@ -6,7 +6,7 @@
     public class ArchiveExtractionEventArgs<T> : EventArgs
     {
         [CompilerGenerated]
-        private T <Item>k__BackingField;
+        private T _Item_k__BackingField;
 
         internal ArchiveExtractionEventArgs(T entry)
         {
@@ -18,12 +18,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<Item>k__BackingField;
+                return this._Item_k__BackingField;
             }
             [CompilerGenerated]
             private set
             {
-                this.<Item>k__BackingField = value;
+                this._Item_k__BackingField = value;
             }
         }
     }

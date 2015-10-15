@@ -1,4 +1,4 @@
-﻿namespace SharpCompress.Common.Zip.Headers
+namespace SharpCompress.Common.Zip.Headers
 {
     using System;
     using System.Runtime.CompilerServices;
@@ -6,23 +6,23 @@
     internal class ExtraData
     {
         [CompilerGenerated]
-        private byte[] <DataBytes>k__BackingField;
+        private byte[] _DataBytes_k__BackingField;
         [CompilerGenerated]
-        private ushort <Length>k__BackingField;
+        private ushort _Length_k__BackingField;
         [CompilerGenerated]
-        private ExtraDataType <Type>k__BackingField;
+        private ExtraDataType _Type_k__BackingField;
 
         internal byte[] DataBytes
         {
             [CompilerGenerated]
             get
             {
-                return this.<DataBytes>k__BackingField;
+                return this._DataBytes_k__BackingField;
             }
             [CompilerGenerated]
             set
             {
-                this.<DataBytes>k__BackingField = value;
+                this._DataBytes_k__BackingField = value;
             }
         }
 
@@ -31,12 +31,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<Length>k__BackingField;
+                return this._Length_k__BackingField;
             }
             [CompilerGenerated]
             set
             {
-                this.<Length>k__BackingField = value;
+                this._Length_k__BackingField = value;
             }
         }
 
@@ -45,12 +45,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<Type>k__BackingField;
+                return this._Type_k__BackingField;
             }
             [CompilerGenerated]
             set
             {
-                this.<Type>k__BackingField = value;
+                this._Type_k__BackingField = value;
             }
         }
     }

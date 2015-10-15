@@ -1,4 +1,4 @@
-﻿namespace SharpCompress.Compressor.PPMd.H
+namespace SharpCompress.Compressor.PPMd.H
 {
     using SharpCompress;
     using SharpCompress.Compressor.Rar;
@@ -10,7 +10,7 @@
     internal class RangeCoder
     {
         [CompilerGenerated]
-        private SharpCompress.Compressor.PPMd.H.SubRange <SubRange>k__BackingField;
+        private SharpCompress.Compressor.PPMd.H.SubRange _SubRange_k__BackingField;
         internal const int BOT = 0x8000;
         private long code;
         private long low;
@@ -117,12 +117,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<SubRange>k__BackingField;
+                return this._SubRange_k__BackingField;
             }
             [CompilerGenerated]
             private set
             {
-                this.<SubRange>k__BackingField = value;
+                this._SubRange_k__BackingField = value;
             }
         }
     }

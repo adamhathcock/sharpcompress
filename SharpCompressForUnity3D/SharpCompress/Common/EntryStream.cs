@@ -1,4 +1,4 @@
-﻿namespace SharpCompress.Common
+namespace SharpCompress.Common
 {
     using SharpCompress.Reader;
     using System;
@@ -8,7 +8,7 @@
     public class EntryStream : Stream
     {
         [CompilerGenerated]
-        private IReader <Reader>k__BackingField;
+        private IReader _Reader_k__BackingField;
         private bool completed;
         private bool isDisposed;
         private Stream stream;
@@ -121,12 +121,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<Reader>k__BackingField;
+                return this._Reader_k__BackingField;
             }
             [CompilerGenerated]
             private set
             {
-                this.<Reader>k__BackingField = value;
+                this._Reader_k__BackingField = value;
             }
         }
     }

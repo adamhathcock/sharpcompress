@@ -1,4 +1,4 @@
-﻿namespace SharpCompress.Writer.Zip
+namespace SharpCompress.Writer.Zip
 {
     using SharpCompress.Common;
     using SharpCompress.Common.Zip;
@@ -9,9 +9,9 @@
     internal class ZipCompressionInfo
     {
         [CompilerGenerated]
-        private ZipCompressionMethod <Compression>k__BackingField;
+        private ZipCompressionMethod _Compression_k__BackingField;
         [CompilerGenerated]
-        private CompressionLevel <DeflateCompressionLevel>k__BackingField;
+        private CompressionLevel _DeflateCompressionLevel_k__BackingField;
 
         public ZipCompressionInfo(CompressionInfo compressionInfo)
         {
@@ -46,12 +46,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<Compression>k__BackingField;
+                return this._Compression_k__BackingField;
             }
             [CompilerGenerated]
             private set
             {
-                this.<Compression>k__BackingField = value;
+                this._Compression_k__BackingField = value;
             }
         }
 
@@ -60,12 +60,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<DeflateCompressionLevel>k__BackingField;
+                return this._DeflateCompressionLevel_k__BackingField;
             }
             [CompilerGenerated]
             private set
             {
-                this.<DeflateCompressionLevel>k__BackingField = value;
+                this._DeflateCompressionLevel_k__BackingField = value;
             }
         }
     }

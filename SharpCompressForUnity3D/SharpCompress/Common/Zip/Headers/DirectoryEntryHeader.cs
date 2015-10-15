@@ -1,4 +1,4 @@
-﻿namespace SharpCompress.Common.Zip.Headers
+namespace SharpCompress.Common.Zip.Headers
 {
     using SharpCompress.Common.Zip;
     using System;
@@ -9,19 +9,19 @@
     internal class DirectoryEntryHeader : ZipFileEntry
     {
         [CompilerGenerated]
-        private string <Comment>k__BackingField;
+        private string _Comment_k__BackingField;
         [CompilerGenerated]
-        private ushort <DiskNumberStart>k__BackingField;
+        private ushort _DiskNumberStart_k__BackingField;
         [CompilerGenerated]
-        private uint <ExternalFileAttributes>k__BackingField;
+        private uint _ExternalFileAttributes_k__BackingField;
         [CompilerGenerated]
-        private ushort <InternalFileAttributes>k__BackingField;
+        private ushort _InternalFileAttributes_k__BackingField;
         [CompilerGenerated]
-        private uint <RelativeOffsetOfEntryHeader>k__BackingField;
+        private uint _RelativeOffsetOfEntryHeader_k__BackingField;
         [CompilerGenerated]
-        private ushort <Version>k__BackingField;
+        private ushort _Version_k__BackingField;
         [CompilerGenerated]
-        private ushort <VersionNeededToExtract>k__BackingField;
+        private ushort _VersionNeededToExtract_k__BackingField;
 
         public DirectoryEntryHeader() : base(ZipHeaderType.DirectoryEntry)
         {
@@ -88,12 +88,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<Comment>k__BackingField;
+                return this._Comment_k__BackingField;
             }
             [CompilerGenerated]
             private set
             {
-                this.<Comment>k__BackingField = value;
+                this._Comment_k__BackingField = value;
             }
         }
 
@@ -102,12 +102,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<DiskNumberStart>k__BackingField;
+                return this._DiskNumberStart_k__BackingField;
             }
             [CompilerGenerated]
             set
             {
-                this.<DiskNumberStart>k__BackingField = value;
+                this._DiskNumberStart_k__BackingField = value;
             }
         }
 
@@ -116,12 +116,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<ExternalFileAttributes>k__BackingField;
+                return this._ExternalFileAttributes_k__BackingField;
             }
             [CompilerGenerated]
             set
             {
-                this.<ExternalFileAttributes>k__BackingField = value;
+                this._ExternalFileAttributes_k__BackingField = value;
             }
         }
 
@@ -130,12 +130,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<InternalFileAttributes>k__BackingField;
+                return this._InternalFileAttributes_k__BackingField;
             }
             [CompilerGenerated]
             set
             {
-                this.<InternalFileAttributes>k__BackingField = value;
+                this._InternalFileAttributes_k__BackingField = value;
             }
         }
 
@@ -144,12 +144,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<RelativeOffsetOfEntryHeader>k__BackingField;
+                return this._RelativeOffsetOfEntryHeader_k__BackingField;
             }
             [CompilerGenerated]
             set
             {
-                this.<RelativeOffsetOfEntryHeader>k__BackingField = value;
+                this._RelativeOffsetOfEntryHeader_k__BackingField = value;
             }
         }
 
@@ -158,12 +158,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<Version>k__BackingField;
+                return this._Version_k__BackingField;
             }
             [CompilerGenerated]
             private set
             {
-                this.<Version>k__BackingField = value;
+                this._Version_k__BackingField = value;
             }
         }
 
@@ -172,12 +172,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<VersionNeededToExtract>k__BackingField;
+                return this._VersionNeededToExtract_k__BackingField;
             }
             [CompilerGenerated]
             set
             {
-                this.<VersionNeededToExtract>k__BackingField = value;
+                this._VersionNeededToExtract_k__BackingField = value;
             }
         }
     }

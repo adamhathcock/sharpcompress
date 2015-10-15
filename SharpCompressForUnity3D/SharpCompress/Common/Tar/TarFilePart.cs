@@ -1,4 +1,4 @@
-﻿namespace SharpCompress.Common.Tar
+namespace SharpCompress.Common.Tar
 {
     using SharpCompress.Common;
     using SharpCompress.Common.Tar.Headers;
@@ -10,7 +10,7 @@
     internal class TarFilePart : FilePart
     {
         [CompilerGenerated]
-        private TarHeader <Header>k__BackingField;
+        private TarHeader _Header_k__BackingField;
         private readonly Stream seekableStream;
 
         internal TarFilePart(TarHeader header, Stream seekableStream)
@@ -47,12 +47,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<Header>k__BackingField;
+                return this._Header_k__BackingField;
             }
             [CompilerGenerated]
             private set
             {
-                this.<Header>k__BackingField = value;
+                this._Header_k__BackingField = value;
             }
         }
     }

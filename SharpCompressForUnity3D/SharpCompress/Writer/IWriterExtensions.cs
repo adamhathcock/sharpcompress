@@ -4,10 +4,10 @@
     using System.IO;
     using System.Runtime.CompilerServices;
 
-    [Extension]
+    //[Extension]
     public static class IWriterExtensions
     {
-        [Extension]
+        //[Extension]
         public static void Write(IWriter writer, string entryPath, Stream source)
         {
             writer.Write(entryPath, source, null);

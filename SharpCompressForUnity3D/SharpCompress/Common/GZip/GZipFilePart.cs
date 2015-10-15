@@ -1,4 +1,4 @@
-﻿namespace SharpCompress.Common.GZip
+namespace SharpCompress.Common.GZip
 {
     using SharpCompress.Common;
     using SharpCompress.Common.Tar.Headers;
@@ -12,7 +12,7 @@
     internal class GZipFilePart : FilePart
     {
         [CompilerGenerated]
-        private DateTime? <DateModified>k__BackingField;
+        private DateTime? _DateModified_k__BackingField;
         private string name;
         private readonly Stream stream;
 
@@ -103,12 +103,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<DateModified>k__BackingField;
+                return this._DateModified_k__BackingField;
             }
             [CompilerGenerated]
             private set
             {
-                this.<DateModified>k__BackingField = value;
+                this._DateModified_k__BackingField = value;
             }
         }
 

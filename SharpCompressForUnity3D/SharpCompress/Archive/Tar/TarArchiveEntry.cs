@@ -1,4 +1,4 @@
-﻿namespace SharpCompress.Archive.Tar
+namespace SharpCompress.Archive.Tar
 {
     using SharpCompress.Archive;
     using SharpCompress.Common;
@@ -11,7 +11,7 @@
     public class TarArchiveEntry : TarEntry, IArchiveEntry, IEntry
     {
         [CompilerGenerated]
-        private IArchive <Archive>k__BackingField;
+        private IArchive _Archive_k__BackingField;
 
         internal TarArchiveEntry(TarArchive archive, TarFilePart part, CompressionType compressionType) : base(part, compressionType)
         {
@@ -28,12 +28,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<Archive>k__BackingField;
+                return this._Archive_k__BackingField;
             }
             [CompilerGenerated]
             private set
             {
-                this.<Archive>k__BackingField = value;
+                this._Archive_k__BackingField = value;
             }
         }
 

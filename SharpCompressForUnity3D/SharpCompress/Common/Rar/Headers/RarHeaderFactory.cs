@@ -1,4 +1,4 @@
-﻿namespace SharpCompress.Common.Rar.Headers
+namespace SharpCompress.Common.Rar.Headers
 {
     using SharpCompress;
     using SharpCompress.Common;
@@ -16,13 +16,13 @@
     internal class RarHeaderFactory
     {
         [CompilerGenerated]
-        private bool <IsEncrypted>k__BackingField;
+        private bool _IsEncrypted_k__BackingField;
         [CompilerGenerated]
-        private SharpCompress.Common.Options <Options>k__BackingField;
+        private SharpCompress.Common.Options _Options_k__BackingField;
         [CompilerGenerated]
-        private string <Password>k__BackingField;
+        private string _Password_k__BackingField;
         [CompilerGenerated]
-        private SharpCompress.IO.StreamingMode <StreamingMode>k__BackingField;
+        private SharpCompress.IO.StreamingMode _StreamingMode_k__BackingField;
         private const int MAX_SFX_SIZE = 0x7fff0;
 
         internal RarHeaderFactory(SharpCompress.IO.StreamingMode mode, SharpCompress.Common.Options options, [Optional, DefaultParameterValue(null)] string password)
@@ -220,12 +220,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<IsEncrypted>k__BackingField;
+                return this._IsEncrypted_k__BackingField;
             }
             [CompilerGenerated]
             private set
             {
-                this.<IsEncrypted>k__BackingField = value;
+                this._IsEncrypted_k__BackingField = value;
             }
         }
 
@@ -234,12 +234,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<Options>k__BackingField;
+                return this._Options_k__BackingField;
             }
             [CompilerGenerated]
             set
             {
-                this.<Options>k__BackingField = value;
+                this._Options_k__BackingField = value;
             }
         }
 
@@ -248,12 +248,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<Password>k__BackingField;
+                return this._Password_k__BackingField;
             }
             [CompilerGenerated]
             private set
             {
-                this.<Password>k__BackingField = value;
+                this._Password_k__BackingField = value;
             }
         }
 
@@ -262,12 +262,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<StreamingMode>k__BackingField;
+                return this._StreamingMode_k__BackingField;
             }
             [CompilerGenerated]
             private set
             {
-                this.<StreamingMode>k__BackingField = value;
+                this._StreamingMode_k__BackingField = value;
             }
         }
 

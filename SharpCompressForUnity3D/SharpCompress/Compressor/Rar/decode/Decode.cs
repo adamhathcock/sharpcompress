@@ -1,4 +1,4 @@
-﻿namespace SharpCompress.Compressor.Rar.decode
+namespace SharpCompress.Compressor.Rar.decode
 {
     using System;
     using System.Runtime.CompilerServices;
@@ -6,13 +6,13 @@
     internal class Decode
     {
         [CompilerGenerated]
-        private int[] <DecodeLen>k__BackingField;
+        private int[] _DecodeLen_k__BackingField;
         [CompilerGenerated]
-        private int[] <DecodeNum>k__BackingField;
+        private int[] _DecodeNum_k__BackingField;
         [CompilerGenerated]
-        private int[] <DecodePos>k__BackingField;
+        private int[] _DecodePos_k__BackingField;
         [CompilerGenerated]
-        private int <MaxNum>k__BackingField;
+        private int _MaxNum_k__BackingField;
 
         internal Decode() : this(new int[2])
         {
@@ -30,12 +30,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<DecodeLen>k__BackingField;
+                return this._DecodeLen_k__BackingField;
             }
             [CompilerGenerated]
             private set
             {
-                this.<DecodeLen>k__BackingField = value;
+                this._DecodeLen_k__BackingField = value;
             }
         }
 
@@ -44,12 +44,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<DecodeNum>k__BackingField;
+                return this._DecodeNum_k__BackingField;
             }
             [CompilerGenerated]
             private set
             {
-                this.<DecodeNum>k__BackingField = value;
+                this._DecodeNum_k__BackingField = value;
             }
         }
 
@@ -58,12 +58,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<DecodePos>k__BackingField;
+                return this._DecodePos_k__BackingField;
             }
             [CompilerGenerated]
             private set
             {
-                this.<DecodePos>k__BackingField = value;
+                this._DecodePos_k__BackingField = value;
             }
         }
 
@@ -72,12 +72,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<MaxNum>k__BackingField;
+                return this._MaxNum_k__BackingField;
             }
             [CompilerGenerated]
             set
             {
-                this.<MaxNum>k__BackingField = value;
+                this._MaxNum_k__BackingField = value;
             }
         }
     }

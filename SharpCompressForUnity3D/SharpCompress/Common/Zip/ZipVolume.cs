@@ -1,4 +1,4 @@
-﻿namespace SharpCompress.Common.Zip
+namespace SharpCompress.Common.Zip
 {
     using SharpCompress.Common;
     using System;
@@ -8,7 +8,7 @@
     public class ZipVolume : Volume
     {
         [CompilerGenerated]
-        private string <Comment>k__BackingField;
+        private string _Comment_k__BackingField;
 
         public ZipVolume(Stream stream, Options options) : base(stream, options)
         {
@@ -19,12 +19,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<Comment>k__BackingField;
+                return this._Comment_k__BackingField;
             }
             [CompilerGenerated]
             internal set
             {
-                this.<Comment>k__BackingField = value;
+                this._Comment_k__BackingField = value;
             }
         }
     }

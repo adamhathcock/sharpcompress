@@ -1,4 +1,4 @@
-﻿namespace SharpCompress.IO
+namespace SharpCompress.IO
 {
     using SharpCompress.Common;
     using System;
@@ -8,7 +8,7 @@
     internal class ListeningStream : System.IO.Stream
     {
         [CompilerGenerated]
-        private System.IO.Stream <Stream>k__BackingField;
+        private System.IO.Stream _Stream_k__BackingField;
         private long currentEntryTotalReadBytes;
         private IExtractionListener listener;
 
@@ -103,12 +103,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<Stream>k__BackingField;
+                return this._Stream_k__BackingField;
             }
             [CompilerGenerated]
             private set
             {
-                this.<Stream>k__BackingField = value;
+                this._Stream_k__BackingField = value;
             }
         }
     }

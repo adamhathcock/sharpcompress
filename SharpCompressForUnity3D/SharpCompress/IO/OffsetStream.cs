@@ -1,4 +1,4 @@
-﻿namespace SharpCompress.IO
+namespace SharpCompress.IO
 {
     using System;
     using System.Diagnostics;
@@ -12,7 +12,7 @@
         private long _os_originalCurrentPos;
         private long _os_originalOffset;
         [CompilerGenerated]
-        private bool <KeepStreamsOpen>k__BackingField;
+        private bool _KeepStreamsOpen_k__BackingField;
 
         public OffsetStream(Stream originalStream, long offset) : this(originalStream, offset, originalStream.Length - offset)
         {
@@ -136,12 +136,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<KeepStreamsOpen>k__BackingField;
+                return this._KeepStreamsOpen_k__BackingField;
             }
             [CompilerGenerated]
             private set
             {
-                this.<KeepStreamsOpen>k__BackingField = value;
+                this._KeepStreamsOpen_k__BackingField = value;
             }
         }
 

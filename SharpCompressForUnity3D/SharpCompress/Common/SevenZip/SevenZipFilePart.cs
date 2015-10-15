@@ -1,4 +1,4 @@
-﻿namespace SharpCompress.Common.SevenZip
+namespace SharpCompress.Common.SevenZip
 {
     using SharpCompress;
     using SharpCompress.Common;
@@ -11,13 +11,13 @@
     internal class SevenZipFilePart : FilePart
     {
         [CompilerGenerated]
-        private Stream <BaseStream>k__BackingField;
+        private Stream _BaseStream_k__BackingField;
         [CompilerGenerated]
-        private CFolder <Folder>k__BackingField;
+        private CFolder _Folder_k__BackingField;
         [CompilerGenerated]
-        private CFileItem <Header>k__BackingField;
+        private CFileItem _Header_k__BackingField;
         [CompilerGenerated]
-        private int <Index>k__BackingField;
+        private int _Index_k__BackingField;
         private ArchiveDatabase database;
         private const uint k_BCJ = 0x3030103;
         private const uint k_BCJ2 = 0x303011b;
@@ -91,12 +91,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<BaseStream>k__BackingField;
+                return this._BaseStream_k__BackingField;
             }
             [CompilerGenerated]
             private set
             {
-                this.<BaseStream>k__BackingField = value;
+                this._BaseStream_k__BackingField = value;
             }
         }
 
@@ -125,12 +125,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<Folder>k__BackingField;
+                return this._Folder_k__BackingField;
             }
             [CompilerGenerated]
             private set
             {
-                this.<Folder>k__BackingField = value;
+                this._Folder_k__BackingField = value;
             }
         }
 
@@ -139,12 +139,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<Header>k__BackingField;
+                return this._Header_k__BackingField;
             }
             [CompilerGenerated]
             private set
             {
-                this.<Header>k__BackingField = value;
+                this._Header_k__BackingField = value;
             }
         }
 
@@ -153,12 +153,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<Index>k__BackingField;
+                return this._Index_k__BackingField;
             }
             [CompilerGenerated]
             private set
             {
-                this.<Index>k__BackingField = value;
+                this._Index_k__BackingField = value;
             }
         }
     }

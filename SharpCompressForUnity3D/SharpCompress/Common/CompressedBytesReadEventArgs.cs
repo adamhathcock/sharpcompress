@@ -1,4 +1,4 @@
-﻿namespace SharpCompress.Common
+namespace SharpCompress.Common
 {
     using System;
     using System.Runtime.CompilerServices;
@@ -6,21 +6,21 @@
     public class CompressedBytesReadEventArgs : EventArgs
     {
         [CompilerGenerated]
-        private long <CompressedBytesRead>k__BackingField;
+        private long _CompressedBytesRead_k__BackingField;
         [CompilerGenerated]
-        private long <CurrentFilePartCompressedBytesRead>k__BackingField;
+        private long _CurrentFilePartCompressedBytesRead_k__BackingField;
 
         public long CompressedBytesRead
         {
             [CompilerGenerated]
             get
             {
-                return this.<CompressedBytesRead>k__BackingField;
+                return this._CompressedBytesRead_k__BackingField;
             }
             [CompilerGenerated]
             internal set
             {
-                this.<CompressedBytesRead>k__BackingField = value;
+                this._CompressedBytesRead_k__BackingField = value;
             }
         }
 
@@ -29,12 +29,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<CurrentFilePartCompressedBytesRead>k__BackingField;
+                return this._CurrentFilePartCompressedBytesRead_k__BackingField;
             }
             [CompilerGenerated]
             internal set
             {
-                this.<CurrentFilePartCompressedBytesRead>k__BackingField = value;
+                this._CurrentFilePartCompressedBytesRead_k__BackingField = value;
             }
         }
     }

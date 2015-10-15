@@ -1,4 +1,4 @@
-﻿namespace SharpCompress.Common
+namespace SharpCompress.Common
 {
     using System;
     using System.Runtime.CompilerServices;
@@ -6,23 +6,23 @@
     public class FilePartExtractionBeginEventArgs : EventArgs
     {
         [CompilerGenerated]
-        private long <CompressedSize>k__BackingField;
+        private long _CompressedSize_k__BackingField;
         [CompilerGenerated]
-        private string <Name>k__BackingField;
+        private string _Name_k__BackingField;
         [CompilerGenerated]
-        private long <Size>k__BackingField;
+        private long _Size_k__BackingField;
 
         public long CompressedSize
         {
             [CompilerGenerated]
             get
             {
-                return this.<CompressedSize>k__BackingField;
+                return this._CompressedSize_k__BackingField;
             }
             [CompilerGenerated]
             internal set
             {
-                this.<CompressedSize>k__BackingField = value;
+                this._CompressedSize_k__BackingField = value;
             }
         }
 
@@ -31,12 +31,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<Name>k__BackingField;
+                return this._Name_k__BackingField;
             }
             [CompilerGenerated]
             internal set
             {
-                this.<Name>k__BackingField = value;
+                this._Name_k__BackingField = value;
             }
         }
 
@@ -45,12 +45,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<Size>k__BackingField;
+                return this._Size_k__BackingField;
             }
             [CompilerGenerated]
             internal set
             {
-                this.<Size>k__BackingField = value;
+                this._Size_k__BackingField = value;
             }
         }
     }

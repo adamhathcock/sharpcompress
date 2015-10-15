@@ -1,4 +1,4 @@
-﻿namespace SharpCompress.Compressor.Rar.VM
+namespace SharpCompress.Compressor.Rar.VM
 {
     using System;
     using System.Collections.Generic;
@@ -7,11 +7,11 @@
     internal class VMPreparedProgram
     {
         [CompilerGenerated]
-        private int <CommandCount>k__BackingField;
+        private int _CommandCount_k__BackingField;
         [CompilerGenerated]
-        private int <FilteredDataOffset>k__BackingField;
+        private int _FilteredDataOffset_k__BackingField;
         [CompilerGenerated]
-        private int <FilteredDataSize>k__BackingField;
+        private int _FilteredDataSize_k__BackingField;
         internal List<VMPreparedCommand> AltCommands = new List<VMPreparedCommand>();
         internal List<VMPreparedCommand> Commands = new List<VMPreparedCommand>();
         internal List<byte> GlobalData = new List<byte>();
@@ -23,12 +23,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<CommandCount>k__BackingField;
+                return this._CommandCount_k__BackingField;
             }
             [CompilerGenerated]
             set
             {
-                this.<CommandCount>k__BackingField = value;
+                this._CommandCount_k__BackingField = value;
             }
         }
 
@@ -37,12 +37,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<FilteredDataOffset>k__BackingField;
+                return this._FilteredDataOffset_k__BackingField;
             }
             [CompilerGenerated]
             set
             {
-                this.<FilteredDataOffset>k__BackingField = value;
+                this._FilteredDataOffset_k__BackingField = value;
             }
         }
 
@@ -51,12 +51,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<FilteredDataSize>k__BackingField;
+                return this._FilteredDataSize_k__BackingField;
             }
             [CompilerGenerated]
             set
             {
-                this.<FilteredDataSize>k__BackingField = value;
+                this._FilteredDataSize_k__BackingField = value;
             }
         }
     }

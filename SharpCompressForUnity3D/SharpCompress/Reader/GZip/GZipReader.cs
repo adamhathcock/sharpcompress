@@ -22,8 +22,10 @@
         {
             return GZipEntry.GetEntries(stream);
         }
-
-        public static GZipReader Open(Stream stream, [Optional, DefaultParameterValue(1)] Options options)
+        public static GZipReader Open(Stream stream) {
+            return Open(stream, Options.KeepStreamsOpen);
+        }
+        public static GZipReader Open(Stream stream,  Options options)
         {
             Utility.CheckNotNull(stream, "stream");
             return new GZipReader(stream, options);

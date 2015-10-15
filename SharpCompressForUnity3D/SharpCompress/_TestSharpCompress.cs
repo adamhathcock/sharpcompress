@@ -26,14 +26,14 @@
                     archive.AddEntry(info2.Name, info2.OpenRead(), true, 0L, modified);
                 }
                 FileStream stream = new FileStream(str2, FileMode.OpenOrCreate, FileAccess.Write);
-                archive.SaveTo(stream, 4);
+                archive.SaveTo(stream,  CompressionType.Deflate);
                 stream.Close();
                 using (stream2 = new FileStream("ziphead.zip", FileMode.OpenOrCreate, FileAccess.ReadWrite))
                 {
                     buffer = new MyHead().Create();
                     stream2.Write(buffer, 0, buffer.Length);
                     OffsetStream stream3 = new OffsetStream(stream2, stream2.Position);
-                    archive.SaveTo(stream3, 4);
+                    archive.SaveTo(stream3, CompressionType.Deflate);
                 }
             }
             using (stream2 = new FileStream("mypack.data.zip", FileMode.Create, FileAccess.ReadWrite, FileShare.Read))

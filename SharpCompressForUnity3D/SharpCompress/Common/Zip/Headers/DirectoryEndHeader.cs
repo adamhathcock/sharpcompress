@@ -1,4 +1,4 @@
-﻿namespace SharpCompress.Common.Zip.Headers
+namespace SharpCompress.Common.Zip.Headers
 {
     using System;
     using System.IO;
@@ -7,21 +7,21 @@
     internal class DirectoryEndHeader : ZipHeader
     {
         [CompilerGenerated]
-        private byte[] <Comment>k__BackingField;
+        private byte[] _Comment_k__BackingField;
         [CompilerGenerated]
-        private ushort <CommentLength>k__BackingField;
+        private ushort _CommentLength_k__BackingField;
         [CompilerGenerated]
-        private uint <DirectorySize>k__BackingField;
+        private uint _DirectorySize_k__BackingField;
         [CompilerGenerated]
-        private uint <DirectoryStartOffsetRelativeToDisk>k__BackingField;
+        private uint _DirectoryStartOffsetRelativeToDisk_k__BackingField;
         [CompilerGenerated]
-        private ushort <FirstVolumeWithDirectory>k__BackingField;
+        private ushort _FirstVolumeWithDirectory_k__BackingField;
         [CompilerGenerated]
-        private ushort <TotalNumberOfEntries>k__BackingField;
+        private ushort _TotalNumberOfEntries_k__BackingField;
         [CompilerGenerated]
-        private ushort <TotalNumberOfEntriesInDisk>k__BackingField;
+        private ushort _TotalNumberOfEntriesInDisk_k__BackingField;
         [CompilerGenerated]
-        private ushort <VolumeNumber>k__BackingField;
+        private ushort _VolumeNumber_k__BackingField;
 
         public DirectoryEndHeader() : base(ZipHeaderType.DirectoryEnd)
         {
@@ -56,12 +56,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<Comment>k__BackingField;
+                return this._Comment_k__BackingField;
             }
             [CompilerGenerated]
             private set
             {
-                this.<Comment>k__BackingField = value;
+                this._Comment_k__BackingField = value;
             }
         }
 
@@ -70,12 +70,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<CommentLength>k__BackingField;
+                return this._CommentLength_k__BackingField;
             }
             [CompilerGenerated]
             private set
             {
-                this.<CommentLength>k__BackingField = value;
+                this._CommentLength_k__BackingField = value;
             }
         }
 
@@ -84,12 +84,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<DirectorySize>k__BackingField;
+                return this._DirectorySize_k__BackingField;
             }
             [CompilerGenerated]
             private set
             {
-                this.<DirectorySize>k__BackingField = value;
+                this._DirectorySize_k__BackingField = value;
             }
         }
 
@@ -98,12 +98,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<DirectoryStartOffsetRelativeToDisk>k__BackingField;
+                return this._DirectoryStartOffsetRelativeToDisk_k__BackingField;
             }
             [CompilerGenerated]
             private set
             {
-                this.<DirectoryStartOffsetRelativeToDisk>k__BackingField = value;
+                this._DirectoryStartOffsetRelativeToDisk_k__BackingField = value;
             }
         }
 
@@ -112,12 +112,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<FirstVolumeWithDirectory>k__BackingField;
+                return this._FirstVolumeWithDirectory_k__BackingField;
             }
             [CompilerGenerated]
             private set
             {
-                this.<FirstVolumeWithDirectory>k__BackingField = value;
+                this._FirstVolumeWithDirectory_k__BackingField = value;
             }
         }
 
@@ -126,12 +126,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<TotalNumberOfEntries>k__BackingField;
+                return this._TotalNumberOfEntries_k__BackingField;
             }
             [CompilerGenerated]
             private set
             {
-                this.<TotalNumberOfEntries>k__BackingField = value;
+                this._TotalNumberOfEntries_k__BackingField = value;
             }
         }
 
@@ -140,12 +140,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<TotalNumberOfEntriesInDisk>k__BackingField;
+                return this._TotalNumberOfEntriesInDisk_k__BackingField;
             }
             [CompilerGenerated]
             private set
             {
-                this.<TotalNumberOfEntriesInDisk>k__BackingField = value;
+                this._TotalNumberOfEntriesInDisk_k__BackingField = value;
             }
         }
 
@@ -154,12 +154,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<VolumeNumber>k__BackingField;
+                return this._VolumeNumber_k__BackingField;
             }
             [CompilerGenerated]
             private set
             {
-                this.<VolumeNumber>k__BackingField = value;
+                this._VolumeNumber_k__BackingField = value;
             }
         }
     }

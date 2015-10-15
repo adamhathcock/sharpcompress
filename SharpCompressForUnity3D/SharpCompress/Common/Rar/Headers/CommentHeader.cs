@@ -1,4 +1,4 @@
-﻿namespace SharpCompress.Common.Rar.Headers
+namespace SharpCompress.Common.Rar.Headers
 {
     using SharpCompress.IO;
     using System;
@@ -7,13 +7,13 @@
     internal class CommentHeader : RarHeader
     {
         [CompilerGenerated]
-        private short <CommCRC>k__BackingField;
+        private short _CommCRC_k__BackingField;
         [CompilerGenerated]
-        private byte <UnpMethod>k__BackingField;
+        private byte _UnpMethod_k__BackingField;
         [CompilerGenerated]
-        private short <UnpSize>k__BackingField;
+        private short _UnpSize_k__BackingField;
         [CompilerGenerated]
-        private byte <UnpVersion>k__BackingField;
+        private byte _UnpVersion_k__BackingField;
 
         protected override void ReadFromReader(MarkingBinaryReader reader)
         {
@@ -28,12 +28,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<CommCRC>k__BackingField;
+                return this._CommCRC_k__BackingField;
             }
             [CompilerGenerated]
             private set
             {
-                this.<CommCRC>k__BackingField = value;
+                this._CommCRC_k__BackingField = value;
             }
         }
 
@@ -42,12 +42,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<UnpMethod>k__BackingField;
+                return this._UnpMethod_k__BackingField;
             }
             [CompilerGenerated]
             private set
             {
-                this.<UnpMethod>k__BackingField = value;
+                this._UnpMethod_k__BackingField = value;
             }
         }
 
@@ -56,12 +56,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<UnpSize>k__BackingField;
+                return this._UnpSize_k__BackingField;
             }
             [CompilerGenerated]
             private set
             {
-                this.<UnpSize>k__BackingField = value;
+                this._UnpSize_k__BackingField = value;
             }
         }
 
@@ -70,12 +70,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<UnpVersion>k__BackingField;
+                return this._UnpVersion_k__BackingField;
             }
             [CompilerGenerated]
             private set
             {
-                this.<UnpVersion>k__BackingField = value;
+                this._UnpVersion_k__BackingField = value;
             }
         }
     }

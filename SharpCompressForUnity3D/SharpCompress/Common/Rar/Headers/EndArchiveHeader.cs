@@ -1,4 +1,4 @@
-﻿namespace SharpCompress.Common.Rar.Headers
+namespace SharpCompress.Common.Rar.Headers
 {
     using SharpCompress.IO;
     using System;
@@ -7,9 +7,9 @@
     internal class EndArchiveHeader : RarHeader
     {
         [CompilerGenerated]
-        private int? <ArchiveCRC>k__BackingField;
+        private int? _ArchiveCRC_k__BackingField;
         [CompilerGenerated]
-        private short? <VolumeNumber>k__BackingField;
+        private short? _VolumeNumber_k__BackingField;
 
         private bool EndArchiveFlags_HasFlag(SharpCompress.Common.Rar.Headers.EndArchiveFlags endArchiveFlags)
         {
@@ -33,12 +33,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<ArchiveCRC>k__BackingField;
+                return this._ArchiveCRC_k__BackingField;
             }
             [CompilerGenerated]
             private set
             {
-                this.<ArchiveCRC>k__BackingField = value;
+                this._ArchiveCRC_k__BackingField = value;
             }
         }
 
@@ -55,12 +55,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<VolumeNumber>k__BackingField;
+                return this._VolumeNumber_k__BackingField;
             }
             [CompilerGenerated]
             private set
             {
-                this.<VolumeNumber>k__BackingField = value;
+                this._VolumeNumber_k__BackingField = value;
             }
         }
     }

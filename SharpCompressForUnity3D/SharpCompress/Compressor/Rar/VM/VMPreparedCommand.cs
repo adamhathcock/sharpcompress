@@ -1,4 +1,4 @@
-﻿namespace SharpCompress.Compressor.Rar.VM
+namespace SharpCompress.Compressor.Rar.VM
 {
     using System;
     using System.Runtime.CompilerServices;
@@ -6,13 +6,13 @@
     internal class VMPreparedCommand
     {
         [CompilerGenerated]
-        private bool <IsByteMode>k__BackingField;
+        private bool _IsByteMode_k__BackingField;
         [CompilerGenerated]
-        private VMPreparedOperand <Op1>k__BackingField;
+        private VMPreparedOperand _Op1_k__BackingField;
         [CompilerGenerated]
-        private VMPreparedOperand <Op2>k__BackingField;
+        private VMPreparedOperand _Op2_k__BackingField;
         [CompilerGenerated]
-        private VMCommands <OpCode>k__BackingField;
+        private VMCommands _OpCode_k__BackingField;
 
         internal VMPreparedCommand()
         {
@@ -25,12 +25,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<IsByteMode>k__BackingField;
+                return this._IsByteMode_k__BackingField;
             }
             [CompilerGenerated]
             set
             {
-                this.<IsByteMode>k__BackingField = value;
+                this._IsByteMode_k__BackingField = value;
             }
         }
 
@@ -39,12 +39,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<Op1>k__BackingField;
+                return this._Op1_k__BackingField;
             }
             [CompilerGenerated]
             private set
             {
-                this.<Op1>k__BackingField = value;
+                this._Op1_k__BackingField = value;
             }
         }
 
@@ -53,12 +53,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<Op2>k__BackingField;
+                return this._Op2_k__BackingField;
             }
             [CompilerGenerated]
             private set
             {
-                this.<Op2>k__BackingField = value;
+                this._Op2_k__BackingField = value;
             }
         }
 
@@ -67,12 +67,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<OpCode>k__BackingField;
+                return this._OpCode_k__BackingField;
             }
             [CompilerGenerated]
             set
             {
-                this.<OpCode>k__BackingField = value;
+                this._OpCode_k__BackingField = value;
             }
         }
     }

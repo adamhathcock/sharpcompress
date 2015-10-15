@@ -28,13 +28,17 @@
             this.removedEntries = new List<TEntry>();
             this.modifiedEntries = new List<TEntry>();
         }
-
-        public TEntry AddEntry(string key, Stream source, [Optional, DefaultParameterValue(0L)] long size, [Optional, DefaultParameterValue(null)] DateTime? modified)
+        public TEntry AddEntry(string key, Stream source) {
+            return AddEntry(key,source,0,null);
+        }
+        public TEntry AddEntry(string key, Stream source,  long size,  DateTime? modified)
         {
             return this.AddEntry(key, source, false, size, modified);
         }
-
-        public TEntry AddEntry(string key, Stream source, bool closeStream, [Optional, DefaultParameterValue(0L)] long size, [Optional, DefaultParameterValue(null)] DateTime? modified)
+        public TEntry AddEntry(string key, Stream source, bool closeStream) {
+            return AddEntry(key,source,closeStream,0,null);
+        }
+        public TEntry AddEntry(string key, Stream source, bool closeStream,  long size,  DateTime? modified)
         {
             if (key.StartsWith("/") || key.StartsWith(@"\"))
             {
@@ -94,7 +98,7 @@
         {
             this.hasModifications = true;
             this.newEntries.RemoveAll(delegate (TEntry v) {
-                return base.removedEntries.Contains(v);
+                return removedEntries.Contains(v);
             });
             this.modifiedEntries.Clear();
             this.modifiedEntries.AddRange(Enumerable.Concat<TEntry>(this.OldEntries, this.newEntries));
@@ -145,7 +149,7 @@
             get
             {
                 return Enumerable.Where<TEntry>(base.Entries, delegate (TEntry x) {
-                    return !base.removedEntries.Contains(x);
+                    return !removedEntries.Contains(x);
                 });
             }
         }

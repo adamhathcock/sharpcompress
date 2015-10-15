@@ -8,13 +8,14 @@
     using System.Collections.Generic;
     using System.IO;
     using System.Runtime.CompilerServices;
+    using SharpCompress.IO;
 
     internal class FileInfoRarArchiveVolume : RarVolume
     {
         [CompilerGenerated]
-        private System.IO.FileInfo <FileInfo>k__BackingField;
+        private System.IO.FileInfo _FileInfo_k__BackingField;
         [CompilerGenerated]
-        private ReadOnlyCollection<RarFilePart> <FileParts>k__BackingField;
+        private ReadOnlyCollection<RarFilePart> _FileParts_k__BackingField;
 
         internal FileInfoRarArchiveVolume(System.IO.FileInfo fileInfo, string password, Options options) : base(StreamingMode.Seekable, fileInfo.OpenRead(), password, FixOptions(options))
         {
@@ -51,12 +52,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<FileInfo>k__BackingField;
+                return this._FileInfo_k__BackingField;
             }
             [CompilerGenerated]
             private set
             {
-                this.<FileInfo>k__BackingField = value;
+                this._FileInfo_k__BackingField = value;
             }
         }
 
@@ -65,12 +66,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<FileParts>k__BackingField;
+                return this._FileParts_k__BackingField;
             }
             [CompilerGenerated]
             private set
             {
-                this.<FileParts>k__BackingField = value;
+                this._FileParts_k__BackingField = value;
             }
         }
     }

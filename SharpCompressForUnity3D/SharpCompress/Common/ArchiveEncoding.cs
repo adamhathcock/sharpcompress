@@ -1,4 +1,4 @@
-﻿namespace SharpCompress.Common
+namespace SharpCompress.Common
 {
     using System;
     using System.Runtime.CompilerServices;
@@ -7,9 +7,9 @@
     public static class ArchiveEncoding
     {
         [CompilerGenerated]
-        private static Encoding <Default>k__BackingField;
+        private static Encoding _Default_k__BackingField;
         [CompilerGenerated]
-        private static Encoding <Password>k__BackingField;
+        private static Encoding _Password_k__BackingField;
 
         static ArchiveEncoding()
         {
@@ -22,12 +22,12 @@
             [CompilerGenerated]
             get
             {
-                return <Default>k__BackingField;
+                return _Default_k__BackingField;
             }
             [CompilerGenerated]
             set
             {
-                <Default>k__BackingField = value;
+                _Default_k__BackingField = value;
             }
         }
 
@@ -36,12 +36,12 @@
             [CompilerGenerated]
             get
             {
-                return <Password>k__BackingField;
+                return _Password_k__BackingField;
             }
             [CompilerGenerated]
             set
             {
-                <Password>k__BackingField = value;
+                _Password_k__BackingField = value;
             }
         }
     }

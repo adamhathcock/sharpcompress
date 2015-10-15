@@ -1,4 +1,4 @@
-﻿namespace SharpCompress.Common.Rar
+namespace SharpCompress.Common.Rar
 {
     using System;
     using System.Collections.Generic;
@@ -8,7 +8,7 @@
     internal class RarCryptoWrapper : Stream
     {
         [CompilerGenerated]
-        private long <Position>k__BackingField;
+        private long _Position_k__BackingField;
         private readonly Stream actualStream;
         private readonly Queue<byte> data = new Queue<byte>();
         private RarRijndael rijndael;
@@ -123,12 +123,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<Position>k__BackingField;
+                return this._Position_k__BackingField;
             }
             [CompilerGenerated]
             set
             {
-                this.<Position>k__BackingField = value;
+                this._Position_k__BackingField = value;
             }
         }
     }

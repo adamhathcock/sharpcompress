@@ -1,4 +1,4 @@
-﻿namespace SharpCompress.Common
+namespace SharpCompress.Common
 {
     using SharpCompress.Compressor.Deflate;
     using System;
@@ -7,9 +7,9 @@
     public class CompressionInfo
     {
         [CompilerGenerated]
-        private CompressionLevel <DeflateCompressionLevel>k__BackingField;
+        private CompressionLevel _DeflateCompressionLevel_k__BackingField;
         [CompilerGenerated]
-        private CompressionType <Type>k__BackingField;
+        private CompressionType _Type_k__BackingField;
 
         public CompressionInfo()
         {
@@ -28,12 +28,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<DeflateCompressionLevel>k__BackingField;
+                return this._DeflateCompressionLevel_k__BackingField;
             }
             [CompilerGenerated]
             set
             {
-                this.<DeflateCompressionLevel>k__BackingField = value;
+                this._DeflateCompressionLevel_k__BackingField = value;
             }
         }
 
@@ -42,12 +42,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<Type>k__BackingField;
+                return this._Type_k__BackingField;
             }
             [CompilerGenerated]
             set
             {
-                this.<Type>k__BackingField = value;
+                this._Type_k__BackingField = value;
             }
         }
     }

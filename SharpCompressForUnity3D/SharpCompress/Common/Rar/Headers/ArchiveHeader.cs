@@ -1,4 +1,4 @@
-﻿namespace SharpCompress.Common.Rar.Headers
+namespace SharpCompress.Common.Rar.Headers
 {
     using SharpCompress.IO;
     using System;
@@ -7,11 +7,11 @@
     internal class ArchiveHeader : RarHeader
     {
         [CompilerGenerated]
-        private byte <EncryptionVersion>k__BackingField;
+        private byte _EncryptionVersion_k__BackingField;
         [CompilerGenerated]
-        private short <HighPosAv>k__BackingField;
+        private short _HighPosAv_k__BackingField;
         [CompilerGenerated]
-        private int <PosAv>k__BackingField;
+        private int _PosAv_k__BackingField;
         internal const short mainHeaderSize = 6;
         internal const short mainHeaderSizeWithEnc = 7;
 
@@ -43,12 +43,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<EncryptionVersion>k__BackingField;
+                return this._EncryptionVersion_k__BackingField;
             }
             [CompilerGenerated]
             private set
             {
-                this.<EncryptionVersion>k__BackingField = value;
+                this._EncryptionVersion_k__BackingField = value;
             }
         }
 
@@ -65,12 +65,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<HighPosAv>k__BackingField;
+                return this._HighPosAv_k__BackingField;
             }
             [CompilerGenerated]
             private set
             {
-                this.<HighPosAv>k__BackingField = value;
+                this._HighPosAv_k__BackingField = value;
             }
         }
 
@@ -79,12 +79,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<PosAv>k__BackingField;
+                return this._PosAv_k__BackingField;
             }
             [CompilerGenerated]
             private set
             {
-                this.<PosAv>k__BackingField = value;
+                this._PosAv_k__BackingField = value;
             }
         }
     }

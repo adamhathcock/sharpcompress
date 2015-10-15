@@ -1,4 +1,4 @@
-﻿namespace SharpCompress.Archive.SevenZip
+namespace SharpCompress.Archive.SevenZip
 {
     using SharpCompress.Archive;
     using SharpCompress.Common;
@@ -10,7 +10,7 @@
     public class SevenZipArchiveEntry : SevenZipEntry, IArchiveEntry, IEntry
     {
         [CompilerGenerated]
-        private IArchive <Archive>k__BackingField;
+        private IArchive _Archive_k__BackingField;
 
         internal SevenZipArchiveEntry(SevenZipArchive archive, SevenZipFilePart part) : base(part)
         {
@@ -27,12 +27,12 @@
             [CompilerGenerated]
             get
             {
-                return this.<Archive>k__BackingField;
+                return this._Archive_k__BackingField;
             }
             [CompilerGenerated]
             private set
             {
-                this.<Archive>k__BackingField = value;
+                this._Archive_k__BackingField = value;
             }
         }
 
