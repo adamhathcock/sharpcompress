@@ -6,6 +6,7 @@ using Org.BouncyCastle.Crypto.Parameters;
 
 namespace SharpCompress.Common.Zip
 {
+#if PORTABLE
     internal class WinzipAesCryptoStream : Stream
     {
         private const int BLOCK_SIZE_IN_BYTES = 16;
@@ -167,4 +168,5 @@ namespace SharpCompress.Common.Zip
             throw new NotImplementedException();
         }
     }
+#endif
 }

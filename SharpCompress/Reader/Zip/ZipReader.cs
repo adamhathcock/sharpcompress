@@ -35,7 +35,8 @@ namespace SharpCompress.Reader.Zip
         public static ZipReader Open(Stream stream, string password = null,
                                      Options options = Options.KeepStreamsOpen)
         {
-            stream.CheckNotNull("stream");
+            //stream.CheckNotNull("stream");
+            Utility.CheckNotNull(stream,"stream");
             return new ZipReader(stream, options, password);
         }
 

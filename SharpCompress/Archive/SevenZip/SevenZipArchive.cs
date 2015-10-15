@@ -60,7 +60,8 @@ namespace SharpCompress.Archive.SevenZip
         /// <param name="stream"></param>
         public static SevenZipArchive Open(Stream stream)
         {
-            stream.CheckNotNull("stream");
+            //stream.CheckNotNull("stream");
+            Utility.CheckNotNull(stream,"stream");
             return Open(stream, Options.None);
         }
 
@@ -71,7 +72,8 @@ namespace SharpCompress.Archive.SevenZip
         /// <param name="options"></param>
         public static SevenZipArchive Open(Stream stream, Options options)
         {
-            stream.CheckNotNull("stream");
+            //stream.CheckNotNull("stream");
+            Utility.CheckNotNull(stream,"stream");
             return new SevenZipArchive(stream, options);
         }
 
@@ -109,7 +111,8 @@ namespace SharpCompress.Archive.SevenZip
 #endif
 
         internal SevenZipArchive(Stream stream, Options options)
-            : base(ArchiveType.SevenZip, stream.AsEnumerable(), options, null)
+            //: base(ArchiveType.SevenZip, stream.AsEnumerable(), options, null)
+            : base(ArchiveType.SevenZip, Utility.AsEnumerable<Stream>(stream), options, null)
         {
         }
 
@@ -175,7 +178,8 @@ namespace SharpCompress.Archive.SevenZip
         {
             BinaryReader reader = new BinaryReader(stream);
             byte[] signatureBytes = reader.ReadBytes(6);
-            return signatureBytes.BinaryEquals(SIGNATURE);
+            //return signatureBytes.BinaryEquals(SIGNATURE);
+           return Utility.BinaryEquals(signatureBytes,SIGNATURE);
         }
 
         protected override IReader CreateReaderForSolidExtraction()

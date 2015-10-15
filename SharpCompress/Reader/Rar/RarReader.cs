@@ -50,7 +50,8 @@ namespace SharpCompress.Reader.Rar
         /// <returns></returns>
         public static RarReader Open(IEnumerable<Stream> streams, Options options = Options.KeepStreamsOpen)
         {
-            streams.CheckNotNull("streams");
+            //streams.CheckNotNull("streams");
+            Utility.CheckNotNull(streams,"streams");
             return new MultiVolumeRarReader(streams, options);
         }
 
@@ -80,7 +81,8 @@ namespace SharpCompress.Reader.Rar
 
         public static RarReader Open(Stream stream, string password, Options options = Options.KeepStreamsOpen)
         {
-            stream.CheckNotNull("stream");
+            //stream.CheckNotNull("stream");
+            Utility.CheckNotNull(stream,"stream");
             return new SingleVolumeRarReader(stream, password, options);
         }
     }

@@ -15,7 +15,8 @@ namespace SharpCompress.Archive.Rar
 
         internal RarArchiveEntry(RarArchive archive, IEnumerable<RarFilePart> parts)
         {
-            this.parts = parts.ToList();
+            this.parts = parts.ToList<RarFilePart>();
+            
             this.archive = archive;
         }
 

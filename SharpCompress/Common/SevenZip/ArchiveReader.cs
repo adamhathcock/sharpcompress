@@ -766,7 +766,8 @@ namespace SharpCompress.Common.SevenZip
 
                     int unpackSize = checked((int)folder.GetUnpackSize());
                     byte[] data = new byte[unpackSize];
-                    outStream.ReadExact(data, 0, data.Length);
+                    //outStream.ReadExact(data, 0, data.Length);
+                    Utils.ReadExact(outStream,data, 0, data.Length);
                     if (outStream.ReadByte() >= 0)
                         throw new InvalidOperationException("Decoded stream is longer than expected.");
                     dataVector.Add(data);
@@ -1141,8 +1142,8 @@ namespace SharpCompress.Common.SevenZip
             _stream.Seek(nextHeaderOffset, SeekOrigin.Current);
 
             byte[] header = new byte[nextHeaderSize];
-            _stream.ReadExact(header, 0, header.Length);
-
+            //_stream.ReadExact(header, 0, header.Length);
+            Utils.ReadExact(_stream,header, 0, header.Length);
             if (CRC.Finish(CRC.Update(CRC.kInitCRC, header, 0, header.Length)) != nextHeaderCrc)
                 throw new InvalidOperationException();
 

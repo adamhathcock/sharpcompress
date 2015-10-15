@@ -60,7 +60,8 @@ namespace SharpCompress.Archive.GZip
         /// <param name="stream"></param>
         public static GZipArchive Open(Stream stream)
         {
-            stream.CheckNotNull("stream");
+            //stream.CheckNotNull("stream");
+            Utility.CheckNotNull(stream,"stream");
             return Open(stream, Options.None);
         }
 
@@ -71,7 +72,8 @@ namespace SharpCompress.Archive.GZip
         /// <param name="options"></param>
         public static GZipArchive Open(Stream stream, Options options)
         {
-            stream.CheckNotNull("stream");
+            //stream.CheckNotNull("stream");
+            Utility.CheckNotNull(stream,"stream");
             return new GZipArchive(stream, options);
         }
 
@@ -199,7 +201,8 @@ namespace SharpCompress.Archive.GZip
 
         protected override IEnumerable<GZipVolume> LoadVolumes(IEnumerable<Stream> streams, Options options)
         {
-            return new GZipVolume(streams.First(), options).AsEnumerable();
+            //return new GZipVolume(streams.First(), options).AsEnumerable();
+            return Utility.AsEnumerable<GZipVolume>(new GZipVolume(streams.First(), options));
         }
 
         protected override IEnumerable<GZipArchiveEntry> LoadEntries(IEnumerable<GZipVolume> volumes)

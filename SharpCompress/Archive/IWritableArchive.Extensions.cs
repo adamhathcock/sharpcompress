@@ -7,7 +7,7 @@ namespace SharpCompress.Archive
 {
     public static class IWritableArchiveExtensions
     {
-        public static void SaveTo(this IWritableArchive writableArchive,
+        public static void SaveTo(/*this*/ IWritableArchive writableArchive,
                                                    Stream stream, CompressionType compressionType)
         {
             writableArchive.SaveTo(stream, new CompressionInfo {Type = compressionType});

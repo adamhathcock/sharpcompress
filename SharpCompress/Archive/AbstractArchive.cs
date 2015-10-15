@@ -132,8 +132,10 @@ namespace SharpCompress.Archive
         {
             if (!disposed)
             {
-                lazyVolumes.ForEach(v => v.Dispose());
-                lazyEntries.GetLoaded().Cast<Entry>().ForEach(x => x.Close());
+                //lazyVolumes.ForEach(v => v.Dispose());
+                Utility.ForEach<TVolume>(lazyVolumes, (v )=> v.Dispose());
+                //lazyEntries.GetLoaded().Cast<Entry>().ForEach(x => x.Close());
+                Utility.ForEach<Entry>(lazyEntries.GetLoaded().Cast<Entry>(),(x )=> x.Close());
                 disposed = true;
             }
         }

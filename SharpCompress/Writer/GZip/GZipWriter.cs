@@ -36,7 +36,8 @@ namespace SharpCompress.Writer.GZip
             GZipStream stream = OutputStream as GZipStream;
             stream.FileName = filename;
             stream.LastModified = modificationTime;
-            source.TransferTo(stream);
+            //source.TransferTo(stream);
+            Utility.TransferTo(source,stream);
             wroteToStream = true;
         }
     }

@@ -4,6 +4,7 @@ using SharpCompress.Crypto;
 
 namespace SharpCompress.Common.Zip
 {
+#if PORTABLE
     internal class WinzipAesEncryptionData
     {
         private const int RFC2898_ITERATIONS = 1000;
@@ -65,4 +66,5 @@ namespace SharpCompress.Common.Zip
             }
         }
     }
+#endif
 }

@@ -16,7 +16,8 @@ namespace SharpCompress.Archive.Rar
             : base(StreamingMode.Seekable, fileInfo.OpenRead(), password, FixOptions(options))
         {
             FileInfo = fileInfo;
-            FileParts = base.GetVolumeFileParts().ToReadOnly();
+            //FileParts = base.GetVolumeFileParts().ToReadOnly();
+            FileParts =Utility.ToReadOnly<RarFilePart>( base.GetVolumeFileParts());
         }
 
         private static Options FixOptions(Options options)

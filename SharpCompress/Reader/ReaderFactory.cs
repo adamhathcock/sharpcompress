@@ -26,8 +26,8 @@ namespace SharpCompress.Reader
         /// <returns></returns>
         public static IReader Open(Stream stream, Options options = Options.KeepStreamsOpen)
         {
-            stream.CheckNotNull("stream");
-
+            //stream.CheckNotNull("stream");
+            Utility.CheckNotNull(stream,"stream");
             RewindableStream rewindableStream = new RewindableStream(stream);
             rewindableStream.StartRecording();
             if (ZipArchive.IsZipFile(rewindableStream, null))

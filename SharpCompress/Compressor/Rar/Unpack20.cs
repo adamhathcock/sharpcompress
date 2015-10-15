@@ -235,6 +235,22 @@ namespace SharpCompress.Compressor.Rar
             oldUnpWriteBuf();
         }
 
+        private int decodeNumber(Decode RD) {
+            return UnpackUtility.decodeNumber(this,RD);
+        }
+
+        //private int decodeNumber(DistDecode DD) {
+        //    return UnpackUtility.decodeNumber(this,DD);
+        //}
+
+        //private int decodeNumber(LitDecode LD) {
+        //    return UnpackUtility.decodeNumber(this,LD);
+        //}
+
+        //private int decodeNumber(MultDecode multDecode) {
+        //    return UnpackUtility.decodeNumber(this,multDecode);
+        //}
+
         private void CopyString20(int Length, int Distance)
         {
             lastDist = oldDist[oldDistPtr++ & 3] = Distance;

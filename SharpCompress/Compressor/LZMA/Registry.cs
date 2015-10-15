@@ -29,22 +29,22 @@ namespace SharpCompress.Compressor.LZMA
                 case k_Copy:
                     if (info != null)
                         throw new NotSupportedException();
-                    return inStreams.Single();
+                    return inStreams.Single<Stream>();
                 case k_LZMA:
                 case k_LZMA2:
-                    return new LzmaStream(info, inStreams.Single(), -1, limit);
+                    return new LzmaStream(info, inStreams.Single<Stream>(), -1, limit);
 #if !PORTABLE && !NETFX_CORE
                 case CMethodId.kAESId:
                     return new AesDecoderStream(inStreams.Single(), info, pass, limit);
 #endif
                 case k_BCJ:
-                    return new BCJFilter(false, inStreams.Single());
+                    return new BCJFilter(false, inStreams.Single<Stream>());
                 case k_BCJ2:
                     return new Bcj2DecoderStream(inStreams, info, limit);
                 case k_BZip2:
-                    return new BZip2Stream(inStreams.Single(), CompressionMode.Decompress, true);
+                    return new BZip2Stream(inStreams.Single<Stream>(), CompressionMode.Decompress, true);
                 case k_PPMD:
-                    return new PpmdStream(new PpmdProperties(info), inStreams.Single(), false);
+                    return new PpmdStream(new PpmdProperties(info), inStreams.Single<Stream>(), false);
                 default:
                     throw new NotSupportedException();
             }

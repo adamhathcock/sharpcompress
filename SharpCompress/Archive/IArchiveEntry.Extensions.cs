@@ -6,7 +6,7 @@ namespace SharpCompress.Archive
 {
     public static class IArchiveEntryExtensions
     {
-        public static void WriteTo(this IArchiveEntry archiveEntry, Stream streamToWriteTo)
+        public static void WriteTo(/*this*/ IArchiveEntry archiveEntry, Stream streamToWriteTo)
         {
             if (archiveEntry.Archive.Type == ArchiveType.Rar && archiveEntry.Archive.IsSolid)
             {
@@ -30,7 +30,8 @@ namespace SharpCompress.Archive
             using(entryStream)
             using (Stream s = new ListeningStream(streamListener, entryStream))
             {
-                s.TransferTo(streamToWriteTo);
+                //s.TransferTo(streamToWriteTo);
+                Utility.TransferTo(s,streamToWriteTo);
             }
             streamListener.FireEntryExtractionEnd(archiveEntry);
         }

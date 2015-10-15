@@ -110,7 +110,10 @@ namespace SharpCompress.Common.Zip
 
         internal override IEnumerable<FilePart> Parts
         {
-            get { return filePart.AsEnumerable<FilePart>(); }
+            get {
+                //return filePart.AsEnumerable<FilePart>();
+                return Utility.AsEnumerable<FilePart>(filePart);
+            }
         }
     }
 }

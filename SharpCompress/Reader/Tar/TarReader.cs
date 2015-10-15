@@ -64,8 +64,8 @@ namespace SharpCompress.Reader.Tar
         /// <returns></returns>
         public static TarReader Open(Stream stream, Options options = Options.KeepStreamsOpen)
         {
-            stream.CheckNotNull("stream");
-
+           // stream.CheckNotNull("stream");
+            Utility.CheckNotNull(stream,"stream");
             RewindableStream rewindableStream = new RewindableStream(stream);
             rewindableStream.StartRecording();
             if (GZipArchive.IsGZipFile(rewindableStream))

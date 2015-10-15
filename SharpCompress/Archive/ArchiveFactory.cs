@@ -19,7 +19,8 @@ namespace SharpCompress.Archive
         /// <returns></returns>
         public static IArchive Open(Stream stream, Options options = Options.KeepStreamsOpen)
         {
-            stream.CheckNotNull("stream");
+            //stream.CheckNotNull("stream");
+            Utility.CheckNotNull(stream,"stream");
             if (!stream.CanRead || !stream.CanSeek)
             {
                 throw new ArgumentException("Stream should be readable and seekable");

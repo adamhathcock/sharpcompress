@@ -55,7 +55,8 @@ namespace SharpCompress.Writer.Zip
         {
             using (Stream output = WriteToStream(entryPath, modificationTime, comment, compressionInfo))
             {
-                source.TransferTo(output);
+                //source.TransferTo(output);
+                Utility.TransferTo(source,output);
             }
         }
 
@@ -106,7 +107,8 @@ namespace SharpCompress.Writer.Zip
             }
             OutputStream.Write(BitConverter.GetBytes((ushort) flags), 0, 2);
             OutputStream.Write(BitConverter.GetBytes((ushort)explicitZipCompressionInfo.Compression), 0, 2); // zipping method
-            OutputStream.Write(BitConverter.GetBytes(modificationTime.DateTimeToDosTime()), 0, 4);
+            //OutputStream.Write(BitConverter.GetBytes(modificationTime.DateTimeToDosTime()), 0, 4);
+            OutputStream.Write(BitConverter.GetBytes((Utility.DateTimeToDosTime(modificationTime))), 0, 4);
             // zipping date and time
             OutputStream.Write(new byte[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, 0, 12);
             // unused CRC, un/compressed size, updated later

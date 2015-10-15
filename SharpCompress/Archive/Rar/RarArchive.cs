@@ -62,14 +62,14 @@ namespace SharpCompress.Archive.Rar
 
         protected override IReader CreateReaderForSolidExtraction()
         {
-            var stream = Volumes.First().Stream;
+            var stream = Volumes.First<RarVolume>().Stream;
             stream.Position = 0;
             return RarReader.Open(stream);
         }
 
         public override bool IsSolid
         {
-            get { return Volumes.First().IsSolidArchive; }
+            get { return Volumes.First<RarVolume>().IsSolidArchive; }
         }
 
         #region Creation
@@ -107,8 +107,10 @@ namespace SharpCompress.Archive.Rar
         /// <param name="password"></param>
         public static RarArchive Open(Stream stream, Options options = Options.KeepStreamsOpen, string password = null)
         {
-            stream.CheckNotNull("stream");
-            return Open(stream.AsEnumerable(), options, password);
+            //stream.CheckNotNull("stream");
+            Utility.CheckNotNull(stream,"stream");
+            //return Open(stream.AsEnumerable(), options, password);
+            return Open(Utility.AsEnumerable<Stream>(stream), options, password);
         }
 
         /// <summary>
@@ -119,7 +121,8 @@ namespace SharpCompress.Archive.Rar
         /// <param name="password"></param>
         public static RarArchive Open(IEnumerable<Stream> streams, Options options = Options.KeepStreamsOpen, string password = null)
         {
-            streams.CheckNotNull("streams");
+            //streams.CheckNotNull("streams");
+            Utility.CheckNotNull(streams,"streams");
             return new RarArchive(streams, options, password);
         }
 
@@ -152,7 +155,7 @@ namespace SharpCompress.Archive.Rar
             try
             {
                 var headerFactory = new RarHeaderFactory(StreamingMode.Seekable, options);
-                RarHeader header = headerFactory.ReadHeaders(stream).FirstOrDefault();
+                RarHeader header = headerFactory.ReadHeaders(stream).FirstOrDefault<RarHeader>();
                 if (header == null)
                 {
                     return false;

@@ -8,6 +8,7 @@ using Org.BouncyCastle.Crypto.Parameters;
 
 namespace SharpCompress.Common.Rar
 {
+#if PORTABLE
     internal class RarRijndael : IDisposable
     {
         internal const int CRYPTO_BLOCK_SIZE = 16;
@@ -58,9 +59,10 @@ namespace SharpCompress.Common.Rar
             //TODO slow code below, find ways to optimize
             for (int i = 0; i < noOfRounds; i++)
             {
-                bytes.AddRange(rawPassword);
-
-                bytes.AddRange(new[] { (byte)i, (byte)(i >> 8), (byte)(i >> CRYPTO_BLOCK_SIZE) });
+                //bytes.AddRange(rawPassword);
+                Utility.AddRange<byte>(bytes, rawPassword);
+                //bytes.AddRange(new[] { (byte)i, (byte)(i >> 8), (byte)(i >> CRYPTO_BLOCK_SIZE) });
+                Utility.AddRange<byte>(bytes,new[] { (byte)i, (byte)(i >> 8), (byte)(i >> CRYPTO_BLOCK_SIZE) });
                 if (i % (noOfRounds / CRYPTO_BLOCK_SIZE) == 0)
                 {
                     digest = ComputeHash(bytes.ToArray());
@@ -110,4 +112,5 @@ namespace SharpCompress.Common.Rar
         {
         }
     }
+#endif
 }

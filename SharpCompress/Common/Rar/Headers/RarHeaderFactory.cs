@@ -99,7 +99,11 @@ namespace SharpCompress.Common.Rar.Headers
                 if (!Options_HasFlag(Options.KeepStreamsOpen))
                 {
 #if NET2
+#if PORTABLE
+                    reader.Dispose();
+#else
                     reader.Close();
+#endif
 #else
                     reader.Dispose();
 #endif
@@ -171,7 +175,8 @@ namespace SharpCompress.Common.Rar.Headers
                                 break;
                             case StreamingMode.Streaming:
                                 {
-                                    reader.BaseStream.Skip(ph.DataSize);
+                                   // reader.BaseStream.Skip(ph.DataSize);
+                                    Utility.Skip( reader.BaseStream,ph.DataSize);
                                 }
                                 break;
                             default:
@@ -197,7 +202,8 @@ namespace SharpCompress.Common.Rar.Headers
                             case StreamingMode.Streaming:
                                 {
                                     //skip the data because it's useless?
-                                    reader.BaseStream.Skip(fh.CompressedSize);
+                                    //reader.BaseStream.Skip(fh.CompressedSize);
+                                    Utility.Skip(reader.BaseStream,fh.CompressedSize);
                                 }
                                 break;
                             default:

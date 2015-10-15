@@ -71,7 +71,7 @@ namespace SharpCompress.Common.Rar
                     throw new InvalidOperationException("ArchiveHeader should never been null in a streaming read.");
                 }
                 //we only want to load the archive header to avoid overhead but have to do the nasty thing and reset the stream
-                GetVolumeFileParts().First();
+                GetVolumeFileParts().First<RarFilePart>();
                 Stream.Position = 0;
             }
         }

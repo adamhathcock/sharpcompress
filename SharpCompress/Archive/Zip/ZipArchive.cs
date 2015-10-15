@@ -75,7 +75,8 @@ namespace SharpCompress.Archive.Zip
         /// <param name="password"></param>
         public static ZipArchive Open(Stream stream, string password = null)
         {
-            stream.CheckNotNull("stream");
+            //stream.CheckNotNull("stream");
+            Utility.CheckNotNull(stream,"stream");
             return Open(stream, Options.None, password);
         }
 
@@ -87,7 +88,8 @@ namespace SharpCompress.Archive.Zip
         /// <param name="password"></param>
         public static ZipArchive Open(Stream stream, Options options, string password = null)
         {
-            stream.CheckNotNull("stream");
+            //stream.CheckNotNull("stream");
+            Utility.CheckNotNull(stream,"stream");
             return new ZipArchive(stream, options, password);
         }
 
@@ -175,7 +177,8 @@ namespace SharpCompress.Archive.Zip
 
         protected override IEnumerable<ZipVolume> LoadVolumes(IEnumerable<Stream> streams, Options options)
         {
-            return new ZipVolume(streams.First(), options).AsEnumerable();
+            //return new ZipVolume(streams.First(), options).AsEnumerable();
+            return Utility.AsEnumerable<ZipVolume>(new ZipVolume(streams.First(), options));
         }
 
         protected override IEnumerable<ZipArchiveEntry> LoadEntries(IEnumerable<ZipVolume> volumes)

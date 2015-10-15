@@ -79,7 +79,10 @@ namespace SharpCompress.Common.Tar
 
         internal override IEnumerable<FilePart> Parts
         {
-            get { return filePart.AsEnumerable<FilePart>(); }
+            get { 
+                //return filePart.AsEnumerable<FilePart>();
+                return Utility.AsEnumerable<FilePart>(filePart);
+            }
         }
 
         internal static IEnumerable<TarEntry> GetEntries(StreamingMode mode, Stream stream,

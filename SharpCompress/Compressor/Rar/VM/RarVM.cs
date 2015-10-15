@@ -203,7 +203,8 @@ namespace SharpCompress.Compressor.Rar.VM
             {
                 //prg.GlobalData.Clear();
                 // ->GlobalData.Add(dataSize+VM_FIXEDGLOBALSIZE);
-                prg.GlobalData.SetSize(dataSize + VM_FIXEDGLOBALSIZE);
+                //prg.GlobalData.SetSize(dataSize + VM_FIXEDGLOBALSIZE);
+                Utility.SetSize(prg.GlobalData,dataSize + VM_FIXEDGLOBALSIZE);
                 for (int i = 0; i < dataSize + VM_FIXEDGLOBALSIZE; i++)
                     // memcpy(&Prg->GlobalData[0],&Mem[VM_GLOBALMEMADDR],DataSize+VM_FIXEDGLOBALSIZE);
                 {

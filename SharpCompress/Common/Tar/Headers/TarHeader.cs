@@ -111,8 +111,8 @@ namespace SharpCompress.Common.Tar.Headers
             {
                 throw new InvalidOperationException();
             }
-            Name = ArchiveEncoding.Default.GetString(buffer, 0, 100).TrimNulls();
-
+            //Name = ArchiveEncoding.Default.GetString(buffer, 0, 100).TrimNulls();
+            Name = Utility.TrimNulls(ArchiveEncoding.Default.GetString(buffer, 0, 100));
             //Mode = ReadASCIIInt32Base8(buffer, 100, 7);
             //UserId = ReadASCIIInt32Base8(buffer, 108, 7);
             //GroupId = ReadASCIIInt32Base8(buffer, 116, 7);
@@ -134,12 +134,13 @@ namespace SharpCompress.Common.Tar.Headers
             LastModifiedTime = Epoch.AddSeconds(unixTimeStamp).ToLocalTime();
 
 
-            Magic = ArchiveEncoding.Default.GetString(buffer, 257, 6).TrimNulls();
-
+            //Magic = ArchiveEncoding.Default.GetString(buffer, 257, 6).TrimNulls();
+            Magic = Utility.TrimNulls(ArchiveEncoding.Default.GetString(buffer, 257, 6));
             if (!string.IsNullOrEmpty(Magic) && "ustar".Equals(Magic))
             {
                 string namePrefix = ArchiveEncoding.Default.GetString(buffer, 345, 157);
-                namePrefix = namePrefix.TrimNulls();
+                //namePrefix = namePrefix.TrimNulls();
+                namePrefix = Utility.TrimNulls(namePrefix);
                 if (!string.IsNullOrEmpty(namePrefix))
                 {
                     Name = namePrefix + "/" + Name;
@@ -183,7 +184,8 @@ namespace SharpCompress.Common.Tar.Headers
 
         private static int ReadASCIIInt32Base8(byte[] buffer, int offset, int count)
         {
-            string s = Encoding.UTF8.GetString(buffer, offset, count).TrimNulls();
+           // string s = Encoding.UTF8.GetString(buffer, offset, count).TrimNulls();
+            string s = Utility.TrimNulls(Encoding.UTF8.GetString(buffer, offset, count));
             if (string.IsNullOrEmpty(s))
             {
                 return 0;
@@ -193,7 +195,8 @@ namespace SharpCompress.Common.Tar.Headers
 
         private static long ReadASCIIInt64Base8(byte[] buffer, int offset, int count)
         {
-            string s = Encoding.UTF8.GetString(buffer, offset, count).TrimNulls();
+            //string s = Encoding.UTF8.GetString(buffer, offset, count).TrimNulls();
+            string s = Utility.TrimNulls(Encoding.UTF8.GetString(buffer, offset, count));
             if (string.IsNullOrEmpty(s))
             {
                 return 0;
@@ -203,7 +206,8 @@ namespace SharpCompress.Common.Tar.Headers
 
         private static long ReadASCIIInt64(byte[] buffer, int offset, int count)
         {
-            string s = Encoding.UTF8.GetString(buffer, offset, count).TrimNulls();
+            //string s = Encoding.UTF8.GetString(buffer, offset, count).TrimNulls();
+            string s = Utility.TrimNulls(Encoding.UTF8.GetString(buffer, offset, count));
             if (string.IsNullOrEmpty(s))
             {
                 return 0;
