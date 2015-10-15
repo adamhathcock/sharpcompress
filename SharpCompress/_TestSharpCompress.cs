@@ -16,9 +16,24 @@ namespace SharpCompress
             string scratchPath = "ziptest.zip";
 
              using (var archive = ZipArchive.Create()) 
-             { 
-                 archive.AddAllFromDirectory(SCRATCH_FILES_PATH); 
-                 archive.SaveTo(scratchPath, CompressionType.Deflate); 
+             {
+                 DirectoryInfo di = new DirectoryInfo(SCRATCH_FILES_PATH);
+                 foreach( var fi in di.GetFiles()){
+                     archive.AddEntry(fi.Name, fi.OpenRead(), true);
+                 }
+                 FileStream fs_scratchPath = new FileStream(scratchPath, FileMode.OpenOrCreate,FileAccess.Write);
+                 archive.SaveTo(fs_scratchPath, CompressionType.Deflate);
+                 fs_scratchPath.Close();
+                 //archive.AddAllFromDirectory(SCRATCH_FILES_PATH); 
+                 //archive.SaveTo(scratchPath, CompressionType.Deflate);
+                 using (FileStream fs = new FileStream("ziphead.zip", FileMode.OpenOrCreate, FileAccess.ReadWrite)) {
+                     MyHead mh = new MyHead();
+                     byte[] headData = mh.Create();
+                     fs.Write(headData, 0, headData.Length);
+                     //
+                     SharpCompress.IO.OffsetStream ofs = new IO.OffsetStream(fs, fs.Position);
+                     archive.SaveTo(ofs, CompressionType.Deflate);
+                 }
              }
             //write my zipfile with head data
              using (FileStream fs = new FileStream("mypack.data.zip", FileMode.Create, FileAccess.ReadWrite, FileShare.Read)) {
@@ -40,7 +55,9 @@ namespace SharpCompress
                  byte[] buf = new byte[1024];
                  int offset=fs.Read(buf, 0, buf.Length);
                  System.Diagnostics.Debug.Assert(offset==1024);
-                 ZipArchive zip=ZipArchive.Open(fs, Options.LookForHeader);//cann't read
+                 //fs.Position = 0L;
+                 SharpCompress.IO.OffsetStream substream = new SharpCompress.IO.OffsetStream(fs,offset);
+                 ZipArchive zip = ZipArchive.Open(substream, Options.KeepStreamsOpen);//cann't read
                  //ZipArchive zip = ZipArchive.Open(fs, Options.None); //will throw exption
                  //ZipArchive zip = ZipArchive.Open(fs, Options.KeepStreamsOpen);//cann't read
                  
@@ -48,6 +65,9 @@ namespace SharpCompress
                      Console.WriteLine(zf.Key);
                      //bug:the will not none in zipfile
                  }
+                
+                 int jjj = 0;
+                 jjj++;
              }
         }
         public class MyHead {

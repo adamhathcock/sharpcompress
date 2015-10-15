@@ -5,26 +5,26 @@ namespace SharpCompress.Common
     [Flags]
     public enum ExtractOptions
     {
-        None,
+        None = 0,
 
         /// <summary>
         /// overwrite target if it exists
         /// </summary>
-        Overwrite,
+        Overwrite = 1 << 0,
 
         /// <summary>
         /// extract with internal directory structure
         /// </summary>
-        ExtractFullPath,
+        ExtractFullPath = 1 << 1,
 
         /// <summary>
         /// preserve file time
         /// </summary>
-        PreserveFileTime,
+        PreserveFileTime = 1 << 2,
 
         /// <summary>
         /// preserve windows file attributes
         /// </summary>
-        PreserveAttributes,
+        PreserveAttributes = 1 << 3,
     }
 }

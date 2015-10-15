@@ -321,6 +321,7 @@
     <Compile Include="Writer\Tar\TarWriter.cs" />
     <Compile Include="Writer\WriterFactory.cs" />
     <Compile Include="Writer\Zip\ZipCentralDirectoryEntry.cs" />
+    <Compile Include="Writer\Zip\ZipCompressionInfo.cs" />
     <Compile Include="Writer\Zip\ZipWriter.cs" />
   </ItemGroup>
   <ItemGroup>

@@ -52,15 +52,16 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>..\bin\Full\</OutputPath>
-    <DefineConstants>TRACE;DEBUG;DISABLE_TRACE</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;DISABLE_TRACE,NETFX_CORE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
     <NoWarn>1591</NoWarn>
     <DocumentationFile>
     </DocumentationFile>
+    <PlatformTarget>x86</PlatformTarget>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -252,7 +253,9 @@
     <Compile Include="IO\ListeningStream.cs" />
     <Compile Include="IO\NonDisposingStream.cs" />
     <Compile Include="Common\Rar\RarCryptoBinaryReader.cs" />
+    <Compile Include="IO\OffsetStream.cs" />
     <Compile Include="IO\RewindableStream.cs" />
+    <Compile Include="IO\StreamUtils.cs" />
     <Compile Include="Reader\GZip\GZipReader.cs" />
     <Compile Include="Reader\IReaderExtractionListener.cs" />
     <Compile Include="Reader\ReaderFactory.cs" />
@@ -361,6 +364,7 @@
     <Compile Include="Writer\Tar\TarWriter.cs" />
     <Compile Include="Writer\WriterFactory.cs" />
     <Compile Include="Writer\Zip\ZipCentralDirectoryEntry.cs" />
+    <Compile Include="Writer\Zip\ZipCompressionInfo.cs" />
     <Compile Include="Writer\Zip\ZipWriter.cs" />
     <Compile Include="_TestSharpCompress.cs" />
   </ItemGroup>

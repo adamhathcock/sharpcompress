@@ -94,6 +94,7 @@ namespace SharpCompress.Archive
                 FileInfo nf = new FileInfo(destinationFileName);
                 if (nf.Exists)
                 {
+
                     if (options_HasFlag(options,ExtractOptions.PreserveAttributes))
                     {
                         if (entry.CreatedTime.HasValue)
