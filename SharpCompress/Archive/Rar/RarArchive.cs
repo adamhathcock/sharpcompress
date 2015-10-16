@@ -83,7 +83,8 @@ namespace SharpCompress.Archive.Rar
         /// <param name="password"></param>
         public static RarArchive Open(string filePath, Options options = Options.None, string password = null)
         {
-            filePath.CheckNotNullOrEmpty("filePath");
+            //filePath.CheckNotNullOrEmpty("filePath");
+            Utility.CheckNotNullOrEmpty(filePath,"filePath");
             return Open(new FileInfo(filePath), options, password);
         }
 
@@ -95,7 +96,8 @@ namespace SharpCompress.Archive.Rar
         /// <param name="password"></param>
         public static RarArchive Open(FileInfo fileInfo, Options options = Options.None, string password = null)
         {
-            fileInfo.CheckNotNull("fileInfo");
+            //fileInfo.CheckNotNull("fileInfo");
+            Utility.CheckNotNull(fileInfo,"fileInfo");
             return new RarArchive(fileInfo, options, password);
         }
 #endif

@@ -107,7 +107,8 @@ namespace SharpCompress.Archive
         /// <param name="options"></param>
         public static IArchive Open(string filePath, Options options)
         {
-            filePath.CheckNotNullOrEmpty("filePath");
+            //filePath.CheckNotNullOrEmpty("filePath");
+            Utility.CheckNotNullOrEmpty(filePath,"filePath");
             return Open(new FileInfo(filePath), options);
         }
 
@@ -118,7 +119,8 @@ namespace SharpCompress.Archive
         /// <param name="options"></param>
         public static IArchive Open(FileInfo fileInfo, Options options)
         {
-            fileInfo.CheckNotNull("fileInfo");
+            //fileInfo.CheckNotNull("fileInfo");
+            Utility.CheckNotNull(fileInfo,"fileInfo");
             using (var stream = fileInfo.OpenRead())
             {
                 if (ZipArchive.IsZipFile(stream, null))

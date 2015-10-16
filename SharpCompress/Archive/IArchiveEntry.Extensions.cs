@@ -86,7 +86,8 @@ namespace SharpCompress.Archive
             }
             using (FileStream fs = File.Open(destinationFileName, fm))
             {
-                entry.WriteTo(fs);
+                //entry.WriteTo(fs);
+                IArchiveEntryExtensions.WriteTo(entry, fs);
             }
 
             if (options_HasFlag(options,ExtractOptions.PreserveFileTime) || options_HasFlag(options,ExtractOptions.PreserveAttributes))

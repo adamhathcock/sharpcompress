@@ -40,7 +40,8 @@ namespace SharpCompress.Archive.Tar
         /// <param name="options"></param>
         public static TarArchive Open(string filePath, Options options)
         {
-            filePath.CheckNotNullOrEmpty("filePath");
+            //filePath.CheckNotNullOrEmpty("filePath");
+            Utility.CheckNotNullOrEmpty(filePath,"filePath");
             return Open(new FileInfo(filePath), options);
         }
 
@@ -51,7 +52,8 @@ namespace SharpCompress.Archive.Tar
         /// <param name="options"></param>
         public static TarArchive Open(FileInfo fileInfo, Options options)
         {
-            fileInfo.CheckNotNull("fileInfo");
+            //fileInfo.CheckNotNull("fileInfo");
+            Utility.CheckNotNull(fileInfo,"fileInfo");
             return new TarArchive(fileInfo, options);
         }
 #endif
@@ -129,7 +131,8 @@ namespace SharpCompress.Archive.Tar
             {
                 options = (Options)FlagUtility.SetFlag(options, Options.KeepStreamsOpen, false);
             }
-            return new TarVolume(file.OpenRead(), options).AsEnumerable();
+            //return new TarVolume(file.OpenRead(), options).AsEnumerable();
+            return Utility.AsEnumerable<TarVolume>(new TarVolume(file.OpenRead(), options));
         }
 #endif
 

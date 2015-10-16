@@ -1,4 +1,6 @@
-﻿using System;
+﻿#if PORTABLE
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,7 +10,7 @@ using Org.BouncyCastle.Crypto.Parameters;
 
 namespace SharpCompress.Common.Rar
 {
-#if PORTABLE
+
     internal class RarRijndael : IDisposable
     {
         internal const int CRYPTO_BLOCK_SIZE = 16;
@@ -112,5 +114,8 @@ namespace SharpCompress.Common.Rar
         {
         }
     }
-#endif
+
 }
+
+
+#endif

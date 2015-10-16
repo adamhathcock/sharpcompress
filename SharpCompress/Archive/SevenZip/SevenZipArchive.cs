@@ -38,7 +38,8 @@ namespace SharpCompress.Archive.SevenZip
         /// <param name="options"></param>
         public static SevenZipArchive Open(string filePath, Options options)
         {
-            filePath.CheckNotNullOrEmpty("filePath");
+            //filePath.CheckNotNullOrEmpty("filePath");
+            Utility.CheckNotNullOrEmpty(filePath,"filePath");
             return Open(new FileInfo(filePath), options);
         }
 
@@ -49,7 +50,8 @@ namespace SharpCompress.Archive.SevenZip
         /// <param name="options"></param>
         public static SevenZipArchive Open(FileInfo fileInfo, Options options)
         {
-            fileInfo.CheckNotNull("fileInfo");
+            //fileInfo.CheckNotNull("fileInfo");
+            Utility.CheckNotNull(fileInfo,"fileInfo");
             return new SevenZipArchive(fileInfo, options);
         }
 #endif
@@ -89,7 +91,8 @@ namespace SharpCompress.Archive.SevenZip
             {
                 options = (Options)FlagUtility.SetFlag(options, Options.KeepStreamsOpen, false);
             }
-            return new SevenZipVolume(file.OpenRead(), options).AsEnumerable();
+            //return new SevenZipVolume(file.OpenRead(), options).AsEnumerable();
+            return Utility.AsEnumerable<SevenZipVolume>( new SevenZipVolume(file.OpenRead(), options));
         }
 
         public static bool IsSevenZipFile(string filePath)

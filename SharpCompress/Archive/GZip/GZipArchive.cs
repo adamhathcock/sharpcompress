@@ -38,7 +38,8 @@ namespace SharpCompress.Archive.GZip
         /// <param name="options"></param>
         public static GZipArchive Open(string filePath, Options options)
         {
-            filePath.CheckNotNullOrEmpty("filePath");
+            //filePath.CheckNotNullOrEmpty("filePath");
+            Utility.CheckNotNullOrEmpty(filePath,"filePath");
             return Open(new FileInfo(filePath), options);
         }
 
@@ -49,7 +50,8 @@ namespace SharpCompress.Archive.GZip
         /// <param name="options"></param>
         public static GZipArchive Open(FileInfo fileInfo, Options options)
         {
-            fileInfo.CheckNotNull("fileInfo");
+            //fileInfo.CheckNotNull("fileInfo");
+            Utility.CheckNotNull(fileInfo,"fileInfo");
             return new GZipArchive(fileInfo, options);
         }
 #endif
@@ -95,7 +97,8 @@ namespace SharpCompress.Archive.GZip
 
         protected override IEnumerable<GZipVolume> LoadVolumes(FileInfo file, Options options)
         {
-            return new GZipVolume(file, options).AsEnumerable();
+            //return new GZipVolume(file, options).AsEnumerable();
+            return Utility.AsEnumerable<GZipVolume>(new GZipVolume(file, options));
         }
 
         public static bool IsGZipFile(string filePath)

@@ -2,13 +2,15 @@
 using System.Collections.Generic;
 using System.IO;
 #if !PORTABLE
-//using System.Linq;
+using System.Linq;
 using System.Text;
 using SharpCompress.Common.Rar.Headers;
+#else
+  //using SharpCompress.Common.Rar.Headers;
 #endif
 using SharpCompress.Common;
 using SharpCompress.Common.Rar;
-using SharpCompress.Common.Rar.Headers;
+
 
 namespace SharpCompress.Archive.Rar
 {
@@ -41,13 +43,13 @@ namespace SharpCompress.Archive.Rar
                 yield break; //if file isn't volume then there is no reason to look
             }
             ArchiveHeader ah = part.ArchiveHeader;
-            fileInfo = GetNextFileInfo(ah, part.FileParts.FirstOrDefault() as FileInfoRarFilePart);
+            fileInfo = GetNextFileInfo(ah, part.FileParts.FirstOrDefault<RarFilePart>() as FileInfoRarFilePart);
             //we use fileinfo because rar is dumb and looks at file names rather than archive info for another volume
             while (fileInfo != null && fileInfo.Exists)
             {
                 part = new FileInfoRarArchiveVolume(fileInfo, password, options);
 
-                fileInfo = GetNextFileInfo(ah, part.FileParts.FirstOrDefault() as FileInfoRarFilePart);
+                fileInfo = GetNextFileInfo(ah, part.FileParts.FirstOrDefault<RarFilePart>() as FileInfoRarFilePart);
                 yield return part;
             }
         }

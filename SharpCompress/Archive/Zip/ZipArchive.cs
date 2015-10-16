@@ -51,7 +51,8 @@ namespace SharpCompress.Archive.Zip
         /// <param name="password"></param>
         public static ZipArchive Open(string filePath, Options options, string password = null)
         {
-            filePath.CheckNotNullOrEmpty("filePath");
+            //filePath.CheckNotNullOrEmpty("filePath");
+            Utility.CheckNotNullOrEmpty(filePath,"filePath");
             return Open(new FileInfo(filePath), options, password);
         }
 
@@ -63,7 +64,8 @@ namespace SharpCompress.Archive.Zip
         /// <param name="password"></param>
         public static ZipArchive Open(FileInfo fileInfo, Options options, string password = null)
         {
-            fileInfo.CheckNotNull("fileInfo");
+            //fileInfo.CheckNotNull("fileInfo");
+            Utility.CheckNotNull(fileInfo,"fileInfo");
             return new ZipArchive(fileInfo, options, password);
         }
 #endif
@@ -154,7 +156,8 @@ namespace SharpCompress.Archive.Zip
             {
                 options = (Options)FlagUtility.SetFlag(options, Options.KeepStreamsOpen, false);
             }
-            return new ZipVolume(file.OpenRead(), options).AsEnumerable();
+            //return new ZipVolume(file.OpenRead(), options).AsEnumerable();
+            return Utility.AsEnumerable<ZipVolume>(new ZipVolume(file.OpenRead(), options));
         }
 #endif
 

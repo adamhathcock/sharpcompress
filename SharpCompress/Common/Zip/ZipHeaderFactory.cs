@@ -3,7 +3,7 @@ using System.IO;
 using SharpCompress.Common.Zip.Headers;
 using SharpCompress.IO;
 #if !PORTABLE
-//using System.Linq;
+using System.Linq;
 
 #endif
 
