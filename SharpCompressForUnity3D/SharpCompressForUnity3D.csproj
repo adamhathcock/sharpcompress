@@ -35,9 +35,40 @@
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
     <Reference Include="System" />
-    <Reference Include="System.Core" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
     <Compile Include="AssemblyInfo.cs" />
     <Compile Include="Global.cs" />
+    <Compile Include="NET_3_5\HashSet.cs" />
+    <Compile Include="NET_3_5\ISet.cs" />
+    <Compile Include="NET_3_5\Lazy.cs" />
+    <Compile Include="NET_3_5\LazyThreadSafetyMode.cs" />
+    <Compile Include="NET_3_5\LinqBridge-1.3.cs" />
+    <Compile Include="NET_3_5\Mono.Net.Dns\DnsClass.cs" />
+    <Compile Include="NET_3_5\Mono.Net.Dns\DnsHeader.cs" />
+    <Compile Include="NET_3_5\Mono.Net.Dns\DnsOpCode.cs" />
+    <Compile Include="NET_3_5\Mono.Net.Dns\DnsPacket.cs" />
+    <Compile Include="NET_3_5\Mono.Net.Dns\DnsQClass.cs" />
+    <Compile Include="NET_3_5\Mono.Net.Dns\DnsQType.cs" />
+    <Compile Include="NET_3_5\Mono.Net.Dns\DnsQuery.cs" />
+    <Compile Include="NET_3_5\Mono.Net.Dns\DnsQuestion.cs" />
+    <Compile Include="NET_3_5\Mono.Net.Dns\DnsRCode.cs" />
+    <Compile Include="NET_3_5\Mono.Net.Dns\DnsResourceRecord.cs" />
+    <Compile Include="NET_3_5\Mono.Net.Dns\DnsResourceRecordA.cs" />
+    <Compile Include="NET_3_5\Mono.Net.Dns\DnsResourceRecordAAAA.cs" />
+    <Compile Include="NET_3_5\Mono.Net.Dns\DnsResourceRecordCName.cs" />
+    <Compile Include="NET_3_5\Mono.Net.Dns\DnsResourceRecordIPAddress.cs" />
+    <Compile Include="NET_3_5\Mono.Net.Dns\DnsResourceRecordPTR.cs" />
+    <Compile Include="NET_3_5\Mono.Net.Dns\DnsResponse.cs" />
+    <Compile Include="NET_3_5\Mono.Net.Dns\DnsType.cs" />
+    <Compile Include="NET_3_5\Mono.Net.Dns\DnsUtil.cs" />
+    <Compile Include="NET_3_5\Mono.Net.Dns\ResolverAsyncOperation.cs" />
+    <Compile Include="NET_3_5\Mono.Net.Dns\ResolverError.cs" />
+    <Compile Include="NET_3_5\Mono.Net.Dns\SimpleResolver.cs" />
+    <Compile Include="NET_3_5\Mono.Net.Dns\SimpleResolverEventArgs.cs" />
+    <Compile Include="NET_3_5\MonoAttribute.cs" />
+    <Compile Include="NET_3_5\RBTree .cs" />
+    <Compile Include="NET_3_5\SortedSet.cs" />
     <Compile Include="SharpCompress\Archive\IArchive.cs" />
     <Compile Include="SharpCompress\Archive\IWritableArchive.cs" />
     <Compile Include="SharpCompress\Archive\IWritableArchiveEntry.cs" />
@@ -329,5 +360,8 @@
     <Compile Include="SharpCompress\Writer\Zip\ZipCompressionInfo.cs" />
     <Compile Include="SharpCompress\Writer\Zip\ZipWriter.cs" />
     <Compile Include="SharpCompress\_TestSharpCompress.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="NET_3_5\Mono.Net.Dns\Makefile" />
   </ItemGroup>
 </Project>

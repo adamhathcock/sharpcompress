@@ -90,6 +90,10 @@
 
         internal DeflateManager()
         {
+            dyn_ltree = new short[HEAP_SIZE * 2];
+            dyn_dtree = new short[(2 * InternalConstants.D_CODES + 1) * 2]; // distance tree
+            bl_tree = new short[(2 * InternalConstants.BL_CODES + 1) * 2]; // Huffman tree for bit lengths
+
         }
 
         private void _fillWindow()

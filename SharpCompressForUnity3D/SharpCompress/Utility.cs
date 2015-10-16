@@ -1,3 +1,4 @@
+
 namespace SharpCompress
 {
     using System;
@@ -8,6 +9,8 @@ namespace SharpCompress
     using System.Linq;
     using System.Runtime.CompilerServices;
     using System.Threading;
+  
+
 
     internal static class Utility
     {
