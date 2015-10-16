@@ -97,6 +97,39 @@
     <Compile Include="SharpCompress\Common\Rar\RarVolume.cs" />
     <Compile Include="SharpCompress\Archive\Rar\StreamRarArchiveVolume.cs" />
     <Compile Include="SharpCompress\Archive\SevenZip\SevenZipArchive.cs" />
+    <Compile Include="SharpCompress\Compressor\Deflate\CRC32.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="SharpCompress\Compressor\Deflate\DeflateManager.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="SharpCompress\Compressor\Deflate\DeflateStream.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="SharpCompress\Compressor\Deflate\FlushType.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="SharpCompress\Compressor\Deflate\GZipStream.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="SharpCompress\Compressor\Deflate\Inflate.cs" />
+    <Compile Include="SharpCompress\Compressor\Deflate\InfTree.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="SharpCompress\Compressor\Deflate\Tree.cs" />
+    <Compile Include="SharpCompress\Compressor\Deflate\Zlib.cs" />
+    <Compile Include="SharpCompress\Compressor\Deflate\ZlibBaseStream.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="SharpCompress\Compressor\Deflate\ZlibCodec.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="SharpCompress\Compressor\Deflate\ZlibConstants.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="SharpCompress\Compressor\Deflate\ZlibStream.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="SharpCompress\Reader\IReader.cs" />
     <Compile Include="SharpCompress\Reader\IReaderExtractionListener.cs" />
     <Compile Include="SharpCompress\Reader\AbstractReader!2.cs" />
@@ -168,11 +201,9 @@
     <Compile Include="SharpCompress\Compressor\BZip2\CBZip2OutputStream.cs" />
     <Compile Include="SharpCompress\Compressor\BZip2\CRC.cs" />
     <Compile Include="SharpCompress\Compressor\CompressionMode.cs" />
-    <Compile Include="SharpCompress\Compressor\Deflate\FlushType.cs" />
     <Compile Include="SharpCompress\Common\Zip\CryptoMode.cs" />
     <Compile Include="SharpCompress\Common\Zip\PkwareTraditionalCryptoStream.cs" />
     <Compile Include="SharpCompress\Common\Zip\PkwareTraditionalEncryptionData.cs" />
-    <Compile Include="SharpCompress\Compressor\Deflate\GZipStream.cs" />
     <Compile Include="SharpCompress\Compressor\Filters\BCJ2Filter.cs" />
     <Compile Include="SharpCompress\Compressor\Filters\Filter.cs" />
     <Compile Include="SharpCompress\Compressor\Filters\BCJFilter.cs" />
@@ -253,26 +284,6 @@
     <Compile Include="SharpCompress\IO\StreamUtils.cs" />
     <Compile Include="SharpCompress\Reader\GZip\GZipReader.cs" />
     <Compile Include="SharpCompress\Reader\ReaderFactory.cs" />
-    <Compile Include="SharpCompress\Compressor\Deflate\CRC32.cs" />
-    <Compile Include="SharpCompress\Compressor\Deflate\DeflateManager.cs" />
-    <Compile Include="SharpCompress\Compressor\Deflate\DeflateStream.cs" />
-    <Compile Include="SharpCompress\Compressor\Deflate\InflateBlocks.cs" />
-    <Compile Include="SharpCompress\Compressor\Deflate\InternalInflateConstants.cs" />
-    <Compile Include="SharpCompress\Compressor\Deflate\InflateCodes.cs" />
-    <Compile Include="SharpCompress\Compressor\Deflate\InflateManager.cs" />
-    <Compile Include="SharpCompress\Compressor\Deflate\InfTree.cs" />
-    <Compile Include="SharpCompress\Compressor\Deflate\CompressionLevel.cs" />
-    <Compile Include="SharpCompress\Compressor\Deflate\CompressionStrategy.cs" />
-    <Compile Include="SharpCompress\Compressor\Deflate\ZlibException.cs" />
-    <Compile Include="SharpCompress\Compressor\Deflate\SharedUtils.cs" />
-    <Compile Include="SharpCompress\Compressor\Deflate\InternalConstants.cs" />
-    <Compile Include="SharpCompress\Compressor\Deflate\StaticTree.cs" />
-    <Compile Include="SharpCompress\Compressor\Deflate\Adler.cs" />
-    <Compile Include="SharpCompress\Compressor\Deflate\ZlibStreamFlavor.cs" />
-    <Compile Include="SharpCompress\Compressor\Deflate\ZlibBaseStream.cs" />
-    <Compile Include="SharpCompress\Compressor\Deflate\ZlibCodec.cs" />
-    <Compile Include="SharpCompress\Compressor\Deflate\ZlibConstants.cs" />
-    <Compile Include="SharpCompress\Compressor\Deflate\ZlibStream.cs" />
     <Compile Include="SharpCompress\Common\Rar\Headers\FileNameDecoder.cs" />
     <Compile Include="SharpCompress\Common\InvalidFormatException.cs" />
     <Compile Include="SharpCompress\IO\ReadOnlySubStream.cs" />

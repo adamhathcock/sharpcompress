@@ -1,429 +1,563 @@
-﻿namespace SharpCompress.Compressor.Deflate
-{
-    using System;
+// Inftree.cs
+// ------------------------------------------------------------------
+//
+// Copyright (c) 2009 Dino Chiesa and Microsoft Corporation.  
+// All rights reserved.
+//
+// This code module is part of DotNetZip, a zipfile class library.
+//
+// ------------------------------------------------------------------
+//
+// This code is licensed under the Microsoft Public License. 
+// See the file License.txt for the license details.
+// More info on: http://dotnetzip.codeplex.com
+//
+// ------------------------------------------------------------------
+//
+// last saved (in emacs): 
+// Time-stamp: <2009-October-28 12:43:54>
+//
+// ------------------------------------------------------------------
+//
+// This module defines classes used in  decompression. This code is derived
+// from the jzlib implementation of zlib. In keeping with the license for jzlib, 
+// the copyright to that code is below.
+//
+// ------------------------------------------------------------------
+// 
+// Copyright (c) 2000,2001,2002,2003 ymnk, JCraft,Inc. All rights reserved.
+// 
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are met:
+// 
+// 1. Redistributions of source code must retain the above copyright notice,
+// this list of conditions and the following disclaimer.
+// 
+// 2. Redistributions in binary form must reproduce the above copyright 
+// notice, this list of conditions and the following disclaimer in 
+// the documentation and/or other materials provided with the distribution.
+// 
+// 3. The names of the authors may not be used to endorse or promote products
+// derived from this software without specific prior written permission.
+// 
+// THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESSED OR IMPLIED WARRANTIES,
+// INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND
+// FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL JCRAFT,
+// INC. OR ANY CONTRIBUTORS TO THIS SOFTWARE BE LIABLE FOR ANY DIRECT, INDIRECT,
+// INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,
+// OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+// NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+// EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+// 
+// -----------------------------------------------------------------------
+//
+// This program is based on zlib-1.1.3; credit to authors
+// Jean-loup Gailly(jloup@gzip.org) and Mark Adler(madler@alumni.caltech.edu)
+// and contributors of zlib.
+//
+// -----------------------------------------------------------------------
 
+
+using System;
+
+namespace SharpCompress.Compressor.Deflate
+{
     internal sealed class InfTree
     {
-        internal const int BMAX = 15;
-        internal int[] c;
-        internal static readonly int[] cpdext = new int[] { 
-            0, 0, 0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 
-            7, 7, 8, 8, 9, 9, 10, 10, 11, 11, 12, 12, 13, 13
-         };
-        internal static readonly int[] cpdist = new int[] { 
-            1, 2, 3, 4, 5, 7, 9, 13, 0x11, 0x19, 0x21, 0x31, 0x41, 0x61, 0x81, 0xc1, 
-            0x101, 0x181, 0x201, 0x301, 0x401, 0x601, 0x801, 0xc01, 0x1001, 0x1801, 0x2001, 0x3001, 0x4001, 0x6001
-         };
-        internal static readonly int[] cplens = new int[] { 
-            3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 15, 0x11, 0x13, 0x17, 0x1b, 0x1f, 
-            0x23, 0x2b, 0x33, 0x3b, 0x43, 0x53, 0x63, 0x73, 0x83, 0xa3, 0xc3, 0xe3, 0x102, 0, 0
-         };
-        internal static readonly int[] cplext = new int[] { 
-            0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 
-            3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5, 0, 0x70, 0x70
-         };
-        internal const int fixed_bd = 5;
-        internal const int fixed_bl = 9;
-        internal static readonly int[] fixed_td = new int[] { 
-            80, 5, 1, 0x57, 5, 0x101, 0x53, 5, 0x11, 0x5b, 5, 0x1001, 0x51, 5, 5, 0x59, 
-            5, 0x401, 0x55, 5, 0x41, 0x5d, 5, 0x4001, 80, 5, 3, 0x58, 5, 0x201, 0x54, 5, 
-            0x21, 0x5c, 5, 0x2001, 0x52, 5, 9, 90, 5, 0x801, 0x56, 5, 0x81, 0xc0, 5, 0x6001, 
-            80, 5, 2, 0x57, 5, 0x181, 0x53, 5, 0x19, 0x5b, 5, 0x1801, 0x51, 5, 7, 0x59, 
-            5, 0x601, 0x55, 5, 0x61, 0x5d, 5, 0x6001, 80, 5, 4, 0x58, 5, 0x301, 0x54, 5, 
-            0x31, 0x5c, 5, 0x3001, 0x52, 5, 13, 90, 5, 0xc01, 0x56, 5, 0xc1, 0xc0, 5, 0x6001
-         };
-        internal static readonly int[] fixed_tl = new int[] { 
-            0x60, 7, 0x100, 0, 8, 80, 0, 8, 0x10, 0x54, 8, 0x73, 0x52, 7, 0x1f, 0, 
-            8, 0x70, 0, 8, 0x30, 0, 9, 0xc0, 80, 7, 10, 0, 8, 0x60, 0, 8, 
-            0x20, 0, 9, 160, 0, 8, 0, 0, 8, 0x80, 0, 8, 0x40, 0, 9, 0xe0, 
-            80, 7, 6, 0, 8, 0x58, 0, 8, 0x18, 0, 9, 0x90, 0x53, 7, 0x3b, 0, 
-            8, 120, 0, 8, 0x38, 0, 9, 0xd0, 0x51, 7, 0x11, 0, 8, 0x68, 0, 8, 
-            40, 0, 9, 0xb0, 0, 8, 8, 0, 8, 0x88, 0, 8, 0x48, 0, 9, 240, 
-            80, 7, 4, 0, 8, 0x54, 0, 8, 20, 0x55, 8, 0xe3, 0x53, 7, 0x2b, 0, 
-            8, 0x74, 0, 8, 0x34, 0, 9, 200, 0x51, 7, 13, 0, 8, 100, 0, 8, 
-            0x24, 0, 9, 0xa8, 0, 8, 4, 0, 8, 0x84, 0, 8, 0x44, 0, 9, 0xe8, 
-            80, 7, 8, 0, 8, 0x5c, 0, 8, 0x1c, 0, 9, 0x98, 0x54, 7, 0x53, 0, 
-            8, 0x7c, 0, 8, 60, 0, 9, 0xd8, 0x52, 7, 0x17, 0, 8, 0x6c, 0, 8, 
-            0x2c, 0, 9, 0xb8, 0, 8, 12, 0, 8, 140, 0, 8, 0x4c, 0, 9, 0xf8, 
-            80, 7, 3, 0, 8, 0x52, 0, 8, 0x12, 0x55, 8, 0xa3, 0x53, 7, 0x23, 0, 
-            8, 0x72, 0, 8, 50, 0, 9, 0xc4, 0x51, 7, 11, 0, 8, 0x62, 0, 8, 
-            0x22, 0, 9, 0xa4, 0, 8, 2, 0, 8, 130, 0, 8, 0x42, 0, 9, 0xe4, 
-            80, 7, 7, 0, 8, 90, 0, 8, 0x1a, 0, 9, 0x94, 0x54, 7, 0x43, 0, 
-            8, 0x7a, 0, 8, 0x3a, 0, 9, 0xd4, 0x52, 7, 0x13, 0, 8, 0x6a, 0, 8, 
-            0x2a, 0, 9, 180, 0, 8, 10, 0, 8, 0x8a, 0, 8, 0x4a, 0, 9, 0xf4, 
-            80, 7, 5, 0, 8, 0x56, 0, 8, 0x16, 0xc0, 8, 0, 0x53, 7, 0x33, 0, 
-            8, 0x76, 0, 8, 0x36, 0, 9, 0xcc, 0x51, 7, 15, 0, 8, 0x66, 0, 8, 
-            0x26, 0, 9, 0xac, 0, 8, 6, 0, 8, 0x86, 0, 8, 70, 0, 9, 0xec, 
-            80, 7, 9, 0, 8, 0x5e, 0, 8, 30, 0, 9, 0x9c, 0x54, 7, 0x63, 0, 
-            8, 0x7e, 0, 8, 0x3e, 0, 9, 220, 0x52, 7, 0x1b, 0, 8, 110, 0, 8, 
-            0x2e, 0, 9, 0xbc, 0, 8, 14, 0, 8, 0x8e, 0, 8, 0x4e, 0, 9, 0xfc, 
-            0x60, 7, 0x100, 0, 8, 0x51, 0, 8, 0x11, 0x55, 8, 0x83, 0x52, 7, 0x1f, 0, 
-            8, 0x71, 0, 8, 0x31, 0, 9, 0xc2, 80, 7, 10, 0, 8, 0x61, 0, 8, 
-            0x21, 0, 9, 0xa2, 0, 8, 1, 0, 8, 0x81, 0, 8, 0x41, 0, 9, 0xe2, 
-            80, 7, 6, 0, 8, 0x59, 0, 8, 0x19, 0, 9, 0x92, 0x53, 7, 0x3b, 0, 
-            8, 0x79, 0, 8, 0x39, 0, 9, 210, 0x51, 7, 0x11, 0, 8, 0x69, 0, 8, 
-            0x29, 0, 9, 0xb2, 0, 8, 9, 0, 8, 0x89, 0, 8, 0x49, 0, 9, 0xf2, 
-            80, 7, 4, 0, 8, 0x55, 0, 8, 0x15, 80, 8, 0x102, 0x53, 7, 0x2b, 0, 
-            8, 0x75, 0, 8, 0x35, 0, 9, 0xca, 0x51, 7, 13, 0, 8, 0x65, 0, 8, 
-            0x25, 0, 9, 170, 0, 8, 5, 0, 8, 0x85, 0, 8, 0x45, 0, 9, 0xea, 
-            80, 7, 8, 0, 8, 0x5d, 0, 8, 0x1d, 0, 9, 0x9a, 0x54, 7, 0x53, 0, 
-            8, 0x7d, 0, 8, 0x3d, 0, 9, 0xda, 0x52, 7, 0x17, 0, 8, 0x6d, 0, 8, 
-            0x2d, 0, 9, 0xba, 0, 8, 13, 0, 8, 0x8d, 0, 8, 0x4d, 0, 9, 250, 
-            80, 7, 3, 0, 8, 0x53, 0, 8, 0x13, 0x55, 8, 0xc3, 0x53, 7, 0x23, 0, 
-            8, 0x73, 0, 8, 0x33, 0, 9, 0xc6, 0x51, 7, 11, 0, 8, 0x63, 0, 8, 
-            0x23, 0, 9, 0xa6, 0, 8, 3, 0, 8, 0x83, 0, 8, 0x43, 0, 9, 230, 
-            80, 7, 7, 0, 8, 0x5b, 0, 8, 0x1b, 0, 9, 150, 0x54, 7, 0x43, 0, 
-            8, 0x7b, 0, 8, 0x3b, 0, 9, 0xd6, 0x52, 7, 0x13, 0, 8, 0x6b, 0, 8, 
-            0x2b, 0, 9, 0xb6, 0, 8, 11, 0, 8, 0x8b, 0, 8, 0x4b, 0, 9, 0xf6, 
-            80, 7, 5, 0, 8, 0x57, 0, 8, 0x17, 0xc0, 8, 0, 0x53, 7, 0x33, 0, 
-            8, 0x77, 0, 8, 0x37, 0, 9, 0xce, 0x51, 7, 15, 0, 8, 0x67, 0, 8, 
-            0x27, 0, 9, 0xae, 0, 8, 7, 0, 8, 0x87, 0, 8, 0x47, 0, 9, 0xee, 
-            80, 7, 9, 0, 8, 0x5f, 0, 8, 0x1f, 0, 9, 0x9e, 0x54, 7, 0x63, 0, 
-            8, 0x7f, 0, 8, 0x3f, 0, 9, 0xde, 0x52, 7, 0x1b, 0, 8, 0x6f, 0, 8, 
-            0x2f, 0, 9, 190, 0, 8, 15, 0, 8, 0x8f, 0, 8, 0x4f, 0, 9, 0xfe, 
-            0x60, 7, 0x100, 0, 8, 80, 0, 8, 0x10, 0x54, 8, 0x73, 0x52, 7, 0x1f, 0, 
-            8, 0x70, 0, 8, 0x30, 0, 9, 0xc1, 80, 7, 10, 0, 8, 0x60, 0, 8, 
-            0x20, 0, 9, 0xa1, 0, 8, 0, 0, 8, 0x80, 0, 8, 0x40, 0, 9, 0xe1, 
-            80, 7, 6, 0, 8, 0x58, 0, 8, 0x18, 0, 9, 0x91, 0x53, 7, 0x3b, 0, 
-            8, 120, 0, 8, 0x38, 0, 9, 0xd1, 0x51, 7, 0x11, 0, 8, 0x68, 0, 8, 
-            40, 0, 9, 0xb1, 0, 8, 8, 0, 8, 0x88, 0, 8, 0x48, 0, 9, 0xf1, 
-            80, 7, 4, 0, 8, 0x54, 0, 8, 20, 0x55, 8, 0xe3, 0x53, 7, 0x2b, 0, 
-            8, 0x74, 0, 8, 0x34, 0, 9, 0xc9, 0x51, 7, 13, 0, 8, 100, 0, 8, 
-            0x24, 0, 9, 0xa9, 0, 8, 4, 0, 8, 0x84, 0, 8, 0x44, 0, 9, 0xe9, 
-            80, 7, 8, 0, 8, 0x5c, 0, 8, 0x1c, 0, 9, 0x99, 0x54, 7, 0x53, 0, 
-            8, 0x7c, 0, 8, 60, 0, 9, 0xd9, 0x52, 7, 0x17, 0, 8, 0x6c, 0, 8, 
-            0x2c, 0, 9, 0xb9, 0, 8, 12, 0, 8, 140, 0, 8, 0x4c, 0, 9, 0xf9, 
-            80, 7, 3, 0, 8, 0x52, 0, 8, 0x12, 0x55, 8, 0xa3, 0x53, 7, 0x23, 0, 
-            8, 0x72, 0, 8, 50, 0, 9, 0xc5, 0x51, 7, 11, 0, 8, 0x62, 0, 8, 
-            0x22, 0, 9, 0xa5, 0, 8, 2, 0, 8, 130, 0, 8, 0x42, 0, 9, 0xe5, 
-            80, 7, 7, 0, 8, 90, 0, 8, 0x1a, 0, 9, 0x95, 0x54, 7, 0x43, 0, 
-            8, 0x7a, 0, 8, 0x3a, 0, 9, 0xd5, 0x52, 7, 0x13, 0, 8, 0x6a, 0, 8, 
-            0x2a, 0, 9, 0xb5, 0, 8, 10, 0, 8, 0x8a, 0, 8, 0x4a, 0, 9, 0xf5, 
-            80, 7, 5, 0, 8, 0x56, 0, 8, 0x16, 0xc0, 8, 0, 0x53, 7, 0x33, 0, 
-            8, 0x76, 0, 8, 0x36, 0, 9, 0xcd, 0x51, 7, 15, 0, 8, 0x66, 0, 8, 
-            0x26, 0, 9, 0xad, 0, 8, 6, 0, 8, 0x86, 0, 8, 70, 0, 9, 0xed, 
-            80, 7, 9, 0, 8, 0x5e, 0, 8, 30, 0, 9, 0x9d, 0x54, 7, 0x63, 0, 
-            8, 0x7e, 0, 8, 0x3e, 0, 9, 0xdd, 0x52, 7, 0x1b, 0, 8, 110, 0, 8, 
-            0x2e, 0, 9, 0xbd, 0, 8, 14, 0, 8, 0x8e, 0, 8, 0x4e, 0, 9, 0xfd, 
-            0x60, 7, 0x100, 0, 8, 0x51, 0, 8, 0x11, 0x55, 8, 0x83, 0x52, 7, 0x1f, 0, 
-            8, 0x71, 0, 8, 0x31, 0, 9, 0xc3, 80, 7, 10, 0, 8, 0x61, 0, 8, 
-            0x21, 0, 9, 0xa3, 0, 8, 1, 0, 8, 0x81, 0, 8, 0x41, 0, 9, 0xe3, 
-            80, 7, 6, 0, 8, 0x59, 0, 8, 0x19, 0, 9, 0x93, 0x53, 7, 0x3b, 0, 
-            8, 0x79, 0, 8, 0x39, 0, 9, 0xd3, 0x51, 7, 0x11, 0, 8, 0x69, 0, 8, 
-            0x29, 0, 9, 0xb3, 0, 8, 9, 0, 8, 0x89, 0, 8, 0x49, 0, 9, 0xf3, 
-            80, 7, 4, 0, 8, 0x55, 0, 8, 0x15, 80, 8, 0x102, 0x53, 7, 0x2b, 0, 
-            8, 0x75, 0, 8, 0x35, 0, 9, 0xcb, 0x51, 7, 13, 0, 8, 0x65, 0, 8, 
-            0x25, 0, 9, 0xab, 0, 8, 5, 0, 8, 0x85, 0, 8, 0x45, 0, 9, 0xeb, 
-            80, 7, 8, 0, 8, 0x5d, 0, 8, 0x1d, 0, 9, 0x9b, 0x54, 7, 0x53, 0, 
-            8, 0x7d, 0, 8, 0x3d, 0, 9, 0xdb, 0x52, 7, 0x17, 0, 8, 0x6d, 0, 8, 
-            0x2d, 0, 9, 0xbb, 0, 8, 13, 0, 8, 0x8d, 0, 8, 0x4d, 0, 9, 0xfb, 
-            80, 7, 3, 0, 8, 0x53, 0, 8, 0x13, 0x55, 8, 0xc3, 0x53, 7, 0x23, 0, 
-            8, 0x73, 0, 8, 0x33, 0, 9, 0xc7, 0x51, 7, 11, 0, 8, 0x63, 0, 8, 
-            0x23, 0, 9, 0xa7, 0, 8, 3, 0, 8, 0x83, 0, 8, 0x43, 0, 9, 0xe7, 
-            80, 7, 7, 0, 8, 0x5b, 0, 8, 0x1b, 0, 9, 0x97, 0x54, 7, 0x43, 0, 
-            8, 0x7b, 0, 8, 0x3b, 0, 9, 0xd7, 0x52, 7, 0x13, 0, 8, 0x6b, 0, 8, 
-            0x2b, 0, 9, 0xb7, 0, 8, 11, 0, 8, 0x8b, 0, 8, 0x4b, 0, 9, 0xf7, 
-            80, 7, 5, 0, 8, 0x57, 0, 8, 0x17, 0xc0, 8, 0, 0x53, 7, 0x33, 0, 
-            8, 0x77, 0, 8, 0x37, 0, 9, 0xcf, 0x51, 7, 15, 0, 8, 0x67, 0, 8, 
-            0x27, 0, 9, 0xaf, 0, 8, 7, 0, 8, 0x87, 0, 8, 0x47, 0, 9, 0xef, 
-            80, 7, 9, 0, 8, 0x5f, 0, 8, 0x1f, 0, 9, 0x9f, 0x54, 7, 0x63, 0, 
-            8, 0x7f, 0, 8, 0x3f, 0, 9, 0xdf, 0x52, 7, 0x1b, 0, 8, 0x6f, 0, 8, 
-            0x2f, 0, 9, 0xbf, 0, 8, 15, 0, 8, 0x8f, 0, 8, 0x4f, 0, 9, 0xff
-         };
-        internal int[] hn;
-        private const int MANY = 0x5a0;
-        internal int[] r;
-        internal int[] u;
-        internal int[] v;
-        internal int[] x;
-        private const int Z_BUF_ERROR = -5;
-        private const int Z_DATA_ERROR = -3;
-        private const int Z_ERRNO = -1;
-        private const int Z_MEM_ERROR = -4;
-        private const int Z_NEED_DICT = 2;
+        private const int MANY = 1440;
+
         private const int Z_OK = 0;
         private const int Z_STREAM_END = 1;
+        private const int Z_NEED_DICT = 2;
+        private const int Z_ERRNO = -1;
         private const int Z_STREAM_ERROR = -2;
+        private const int Z_DATA_ERROR = -3;
+        private const int Z_MEM_ERROR = -4;
+        private const int Z_BUF_ERROR = -5;
         private const int Z_VERSION_ERROR = -6;
 
-        private int huft_build(int[] b, int bindex, int n, int s, int[] d, int[] e, int[] t, int[] m, int[] hp, int[] hn, int[] v)
+        internal const int fixed_bl = 9;
+        internal const int fixed_bd = 5;
+        internal const int BMAX = 15; // maximum bit length of any code
+
+        //UPGRADE_NOTE: Final was removed from the declaration of 'fixed_tl'. "ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?index='!DefaultContextWindowIndex'&keyword='jlca1003'"
+        internal static readonly int[] fixed_tl = new[]
+                                                      {
+                                                          96, 7, 256, 0, 8, 80, 0, 8, 16, 84, 8, 115, 82, 7, 31, 0, 8,
+                                                          112, 0, 8, 48, 0, 9, 192, 80, 7, 10, 0, 8, 96, 0, 8, 32, 0, 9,
+                                                          160, 0, 8, 0, 0, 8, 128, 0, 8, 64, 0, 9, 224, 80, 7, 6, 0, 8,
+                                                          88, 0, 8, 24, 0, 9, 144, 83, 7, 59, 0, 8, 120, 0, 8, 56, 0, 9,
+                                                          208, 81, 7, 17, 0, 8, 104, 0, 8, 40, 0, 9, 176, 0, 8, 8, 0, 8,
+                                                          136, 0, 8, 72, 0, 9, 240, 80, 7, 4, 0, 8, 84, 0, 8, 20, 85, 8,
+                                                          227, 83, 7, 43, 0, 8, 116, 0, 8, 52, 0, 9, 200, 81, 7, 13, 0,
+                                                          8, 100, 0, 8, 36, 0, 9, 168, 0, 8, 4, 0, 8, 132, 0, 8, 68, 0,
+                                                          9, 232, 80, 7, 8, 0, 8, 92, 0, 8, 28, 0, 9, 152, 84, 7, 83, 0,
+                                                          8, 124, 0, 8, 60, 0, 9, 216, 82, 7, 23, 0, 8, 108, 0, 8, 44, 0
+                                                          , 9, 184, 0, 8, 12, 0, 8, 140, 0, 8, 76, 0, 9, 248, 80, 7, 3,
+                                                          0, 8, 82, 0, 8, 18, 85, 8, 163, 83, 7, 35, 0, 8, 114, 0, 8, 50
+                                                          , 0, 9, 196, 81, 7, 11, 0, 8, 98, 0, 8, 34, 0, 9, 164, 0, 8, 2
+                                                          , 0, 8, 130, 0, 8, 66, 0, 9, 228, 80, 7, 7, 0, 8, 90, 0, 8, 26
+                                                          , 0, 9, 148, 84, 7, 67, 0, 8, 122, 0, 8, 58, 0, 9, 212, 82, 7,
+                                                          19, 0, 8, 106, 0, 8, 42, 0, 9, 180, 0, 8, 10, 0, 8, 138, 0, 8,
+                                                          74, 0, 9, 244, 80, 7, 5, 0, 8, 86, 0, 8, 22, 192, 8, 0, 83, 7,
+                                                          51, 0, 8, 118, 0, 8, 54, 0, 9, 204, 81, 7, 15, 0, 8, 102, 0, 8
+                                                          , 38, 0, 9, 172, 0, 8, 6, 0, 8, 134, 0, 8, 70, 0, 9, 236, 80,
+                                                          7, 9, 0, 8, 94, 0, 8, 30, 0, 9, 156, 84, 7, 99, 0, 8, 126, 0,
+                                                          8, 62, 0, 9, 220, 82, 7, 27, 0, 8, 110, 0, 8, 46, 0, 9, 188, 0
+                                                          , 8, 14, 0, 8, 142, 0, 8, 78, 0, 9, 252, 96, 7, 256, 0, 8, 81,
+                                                          0, 8, 17, 85, 8, 131, 82, 7, 31, 0, 8, 113, 0, 8, 49, 0, 9,
+                                                          194, 80, 7, 10, 0, 8, 97, 0, 8, 33, 0, 9, 162, 0, 8, 1, 0, 8,
+                                                          129, 0, 8, 65, 0, 9, 226, 80, 7, 6, 0, 8, 89, 0, 8, 25, 0, 9,
+                                                          146, 83, 7, 59, 0, 8, 121, 0, 8, 57, 0, 9, 210, 81, 7, 17, 0,
+                                                          8, 105, 0, 8, 41, 0, 9, 178, 0, 8, 9, 0, 8, 137, 0, 8, 73, 0,
+                                                          9, 242, 80, 7, 4, 0, 8, 85, 0, 8, 21, 80, 8, 258, 83, 7, 43, 0
+                                                          , 8, 117, 0, 8, 53, 0, 9, 202, 81, 7, 13, 0, 8, 101, 0, 8, 37,
+                                                          0, 9, 170, 0, 8, 5, 0, 8, 133, 0, 8, 69, 0, 9, 234, 80, 7, 8,
+                                                          0, 8, 93, 0, 8, 29, 0, 9, 154, 84, 7, 83, 0, 8, 125, 0, 8, 61,
+                                                          0, 9, 218, 82, 7, 23, 0, 8, 109, 0, 8, 45, 0, 9, 186,
+                                                          0, 8, 13, 0, 8, 141, 0, 8, 77, 0, 9, 250, 80, 7, 3, 0, 8, 83,
+                                                          0, 8, 19, 85, 8, 195, 83, 7, 35, 0, 8, 115, 0, 8, 51, 0, 9,
+                                                          198, 81, 7, 11, 0, 8, 99, 0, 8, 35, 0, 9, 166, 0, 8, 3, 0, 8,
+                                                          131, 0, 8, 67, 0, 9, 230, 80, 7, 7, 0, 8, 91, 0, 8, 27, 0, 9,
+                                                          150, 84, 7, 67, 0, 8, 123, 0, 8, 59, 0, 9, 214, 82, 7, 19, 0,
+                                                          8, 107, 0, 8, 43, 0, 9, 182, 0, 8, 11, 0, 8, 139, 0, 8, 75, 0,
+                                                          9, 246, 80, 7, 5, 0, 8, 87, 0, 8, 23, 192, 8, 0, 83, 7, 51, 0,
+                                                          8, 119, 0, 8, 55, 0, 9, 206, 81, 7, 15, 0, 8, 103, 0, 8, 39, 0
+                                                          , 9, 174, 0, 8, 7, 0, 8, 135, 0, 8, 71, 0, 9, 238, 80, 7, 9, 0
+                                                          , 8, 95, 0, 8, 31, 0, 9, 158, 84, 7, 99, 0, 8, 127, 0, 8, 63,
+                                                          0, 9, 222, 82, 7, 27, 0, 8, 111, 0, 8, 47, 0, 9, 190, 0, 8, 15
+                                                          , 0, 8, 143, 0, 8, 79, 0, 9, 254, 96, 7, 256, 0, 8, 80, 0, 8,
+                                                          16, 84, 8, 115, 82, 7, 31, 0, 8, 112, 0, 8, 48, 0, 9, 193, 80,
+                                                          7, 10, 0, 8, 96, 0, 8, 32, 0, 9, 161, 0, 8, 0, 0, 8, 128, 0, 8
+                                                          , 64, 0, 9, 225, 80, 7, 6, 0, 8, 88, 0, 8, 24, 0, 9, 145, 83,
+                                                          7, 59, 0, 8, 120, 0, 8, 56, 0, 9, 209, 81, 7, 17, 0, 8, 104, 0
+                                                          , 8, 40, 0, 9, 177, 0, 8, 8, 0, 8, 136, 0, 8, 72, 0, 9, 241,
+                                                          80, 7, 4, 0, 8, 84, 0, 8, 20, 85, 8, 227, 83, 7, 43, 0, 8, 116
+                                                          , 0, 8, 52, 0, 9, 201, 81, 7, 13, 0, 8, 100, 0, 8, 36, 0, 9,
+                                                          169, 0, 8, 4, 0, 8, 132, 0, 8, 68, 0, 9, 233, 80, 7, 8, 0, 8,
+                                                          92, 0, 8, 28, 0, 9, 153, 84, 7, 83, 0, 8, 124, 0, 8, 60, 0, 9,
+                                                          217, 82, 7, 23, 0, 8, 108, 0, 8, 44, 0, 9, 185, 0, 8, 12, 0, 8
+                                                          , 140, 0, 8, 76, 0, 9, 249, 80, 7, 3, 0, 8, 82, 0, 8, 18, 85,
+                                                          8, 163, 83, 7, 35, 0, 8, 114, 0, 8, 50, 0, 9, 197, 81, 7, 11,
+                                                          0, 8, 98, 0, 8, 34, 0, 9, 165, 0, 8, 2, 0, 8, 130, 0, 8, 66, 0
+                                                          , 9, 229, 80, 7, 7, 0, 8, 90, 0, 8, 26, 0, 9, 149, 84, 7, 67,
+                                                          0, 8, 122, 0, 8, 58, 0, 9, 213, 82, 7, 19, 0, 8, 106, 0, 8, 42
+                                                          , 0, 9, 181, 0, 8, 10, 0, 8, 138, 0, 8, 74, 0, 9, 245, 80, 7,
+                                                          5, 0, 8, 86, 0, 8, 22, 192, 8, 0, 83, 7, 51, 0, 8, 118, 0, 8,
+                                                          54, 0, 9, 205, 81, 7, 15, 0, 8, 102, 0, 8, 38, 0, 9, 173, 0, 8
+                                                          , 6, 0, 8, 134, 0, 8, 70, 0, 9, 237, 80, 7, 9, 0, 8, 94, 0, 8,
+                                                          30, 0, 9, 157, 84, 7, 99, 0, 8, 126, 0, 8, 62, 0, 9, 221, 82,
+                                                          7, 27, 0, 8, 110, 0, 8, 46, 0, 9, 189, 0, 8,
+                                                          14, 0, 8, 142, 0, 8, 78, 0, 9, 253, 96, 7, 256, 0, 8, 81, 0, 8
+                                                          , 17, 85, 8, 131, 82, 7, 31, 0, 8, 113, 0, 8, 49, 0, 9, 195,
+                                                          80, 7, 10, 0, 8, 97, 0, 8, 33, 0, 9, 163, 0, 8, 1, 0, 8, 129,
+                                                          0, 8, 65, 0, 9, 227, 80, 7, 6, 0, 8, 89, 0, 8, 25, 0, 9, 147,
+                                                          83, 7, 59, 0, 8, 121, 0, 8, 57, 0, 9, 211, 81, 7, 17, 0, 8,
+                                                          105, 0, 8, 41, 0, 9, 179, 0, 8, 9, 0, 8, 137, 0, 8, 73, 0, 9,
+                                                          243, 80, 7, 4, 0, 8, 85, 0, 8, 21, 80, 8, 258, 83, 7, 43, 0, 8
+                                                          , 117, 0, 8, 53, 0, 9, 203, 81, 7, 13, 0, 8, 101, 0, 8, 37, 0,
+                                                          9, 171, 0, 8, 5, 0, 8, 133, 0, 8, 69, 0, 9, 235, 80, 7, 8, 0,
+                                                          8, 93, 0, 8, 29, 0, 9, 155, 84, 7, 83, 0, 8, 125, 0, 8, 61, 0,
+                                                          9, 219, 82, 7, 23, 0, 8, 109, 0, 8, 45, 0, 9, 187, 0, 8, 13, 0
+                                                          , 8, 141, 0, 8, 77, 0, 9, 251, 80, 7, 3, 0, 8, 83, 0, 8, 19,
+                                                          85, 8, 195, 83, 7, 35, 0, 8, 115, 0, 8, 51, 0, 9, 199, 81, 7,
+                                                          11, 0, 8, 99, 0, 8, 35, 0, 9, 167, 0, 8, 3, 0, 8, 131, 0, 8,
+                                                          67, 0, 9, 231, 80, 7, 7, 0, 8, 91, 0, 8, 27, 0, 9, 151, 84, 7,
+                                                          67, 0, 8, 123, 0, 8, 59, 0, 9, 215, 82, 7, 19, 0, 8, 107, 0, 8
+                                                          , 43, 0, 9, 183, 0, 8, 11, 0, 8, 139, 0, 8, 75, 0, 9, 247, 80,
+                                                          7, 5, 0, 8, 87, 0, 8, 23, 192, 8, 0, 83, 7, 51, 0, 8, 119, 0,
+                                                          8, 55, 0, 9, 207, 81, 7, 15, 0, 8, 103, 0, 8, 39, 0, 9, 175, 0
+                                                          , 8, 7, 0, 8, 135, 0, 8, 71, 0, 9, 239, 80, 7, 9, 0, 8, 95, 0,
+                                                          8, 31, 0, 9, 159, 84, 7, 99, 0, 8, 127, 0, 8, 63, 0, 9, 223,
+                                                          82, 7, 27, 0, 8, 111, 0, 8, 47, 0, 9, 191, 0, 8, 15, 0, 8, 143
+                                                          , 0, 8, 79, 0, 9, 255
+                                                      };
+
+        //UPGRADE_NOTE: Final was removed from the declaration of 'fixed_td'. "ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?index='!DefaultContextWindowIndex'&keyword='jlca1003'"
+        internal static readonly int[] fixed_td = new[]
+                                                      {
+                                                          80, 5, 1, 87, 5, 257, 83, 5, 17, 91, 5, 4097, 81, 5, 5, 89, 5,
+                                                          1025, 85, 5, 65, 93, 5, 16385, 80, 5, 3, 88, 5, 513, 84, 5, 33
+                                                          ,
+                                                          92, 5, 8193, 82, 5, 9, 90, 5, 2049, 86, 5, 129, 192, 5, 24577,
+                                                          80
+                                                          , 5, 2, 87, 5, 385, 83, 5, 25, 91, 5, 6145, 81, 5, 7, 89, 5,
+                                                          1537
+                                                          , 85, 5, 97, 93, 5, 24577, 80, 5, 4, 88, 5, 769, 84, 5, 49, 92
+                                                          , 5
+                                                          , 12289, 82, 5, 13, 90, 5, 3073, 86, 5, 193, 192, 5, 24577
+                                                      };
+
+        // Tables for deflate from PKZIP's appnote.txt.
+        //UPGRADE_NOTE: Final was removed from the declaration of 'cplens'. "ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?index='!DefaultContextWindowIndex'&keyword='jlca1003'"
+        internal static readonly int[] cplens = new[]
+                                                    {
+                                                        3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 15, 17, 19, 23, 27, 31, 35, 43,
+                                                        51
+                                                        , 59, 67, 83, 99, 115, 131, 163, 195, 227, 258, 0, 0
+                                                    };
+
+        // see note #13 above about 258
+        //UPGRADE_NOTE: Final was removed from the declaration of 'cplext'. "ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?index='!DefaultContextWindowIndex'&keyword='jlca1003'"
+        internal static readonly int[] cplext = new[]
+                                                    {
+                                                        0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4
+                                                        , 4
+                                                        , 4, 5, 5, 5, 5, 0, 112, 112
+                                                    };
+
+        //UPGRADE_NOTE: Final was removed from the declaration of 'cpdist'. "ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?index='!DefaultContextWindowIndex'&keyword='jlca1003'"
+        internal static readonly int[] cpdist = new[]
+                                                    {
+                                                        1, 2, 3, 4, 5, 7, 9, 13, 17, 25, 33, 49, 65, 97, 129, 193, 257,
+                                                        385
+                                                        , 513, 769, 1025, 1537, 2049, 3073, 4097, 6145, 8193, 12289,
+                                                        16385,
+                                                        24577
+                                                    };
+
+        //UPGRADE_NOTE: Final was removed from the declaration of 'cpdext'. "ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?index='!DefaultContextWindowIndex'&keyword='jlca1003'"
+        internal static readonly int[] cpdext = new[]
+                                                    {
+                                                        0, 0, 0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9
+                                                        ,
+                                                        10, 10, 11, 11, 12, 12, 13, 13
+                                                    };
+
+        // If BMAX needs to be larger than 16, then h and x[] should be uLong.
+        internal int[] c; // bit length count table
+        internal int[] hn; // hufts used in space
+        internal int[] r; // table entry for structure assignment
+        internal int[] u; // table stack
+        internal int[] v; // work area for huft_build 
+        internal int[] x; // bit offsets, then code stack
+
+        private int huft_build(int[] b, int bindex, int n, int s, int[] d, int[] e, int[] t, int[] m, int[] hp, int[] hn,
+                               int[] v)
         {
-            int index = 0;
-            int num5 = n;
+            // Given a list of code lengths and a maximum table size, make a set of
+            // tables to decode that set of codes.  Return Z_OK on success, Z_BUF_ERROR
+            // if the given code set is incomplete (the tables are still built in this
+            // case), Z_DATA_ERROR if the input is invalid (an over-subscribed set of
+            // lengths), or Z_MEM_ERROR if not enough memory.
+
+            int a; // counter for codes of length k
+            int f; // i repeats in table every f entries
+            int g; // maximum code length
+            int h; // table level
+            int i; // counter, current code
+            int j; // counter
+            int k; // number of bits in current code
+            int l; // bits per table (returned in m)
+            int mask; // (1 << w) - 1, to avoid cc -O bug on HP
+            int p; // pointer into c[], b[], or v[]
+            int q; // points to current table
+            int w; // bits before this table == (l * h)
+            int xp; // pointer into x
+            int y; // number of dummy codes added
+            int z; // number of entries in current table
+
+            // Generate counts for each bit length
+
+            p = 0;
+            i = n;
             do
             {
-                this.c[b[bindex + index]]++;
-                index++;
-                num5--;
-            }
-            while (num5 != 0);
-            if (this.c[0] == n)
+                c[b[bindex + p]]++;
+                p++;
+                i--; // assume all entries <= BMAX
+            } while (i != 0);
+
+            if (c[0] == n)
             {
+                // null input--all zero length codes
                 t[0] = -1;
                 m[0] = 0;
-                return 0;
+                return Z_OK;
             }
-            int num8 = m[0];
-            int num6 = 1;
-            while (num6 <= 15)
-            {
-                if (this.c[num6] != 0)
-                {
+
+            // Find minimum and maximum length, bound *m by those
+            l = m[0];
+            for (j = 1; j <= BMAX; j++)
+                if (c[j] != 0)
                     break;
-                }
-                num6++;
-            }
-            int num7 = num6;
-            if (num8 < num6)
+            k = j; // minimum code length
+            if (l < j)
             {
-                num8 = num6;
+                l = j;
             }
-            num5 = 15;
-            while (num5 != 0)
+            for (i = BMAX; i != 0; i--)
             {
-                if (this.c[num5] != 0)
-                {
+                if (c[i] != 0)
                     break;
-                }
-                num5--;
             }
-            int num3 = num5;
-            if (num8 > num5)
+            g = i; // maximum code length
+            if (l > i)
             {
-                num8 = num5;
+                l = i;
             }
-            m[0] = num8;
-            int num14 = ((int) 1) << num6;
-            while (num6 < num5)
+            m[0] = l;
+
+            // Adjust last length count to fill out codes, if needed
+            for (y = 1 << j; j < i; j++, y <<= 1)
             {
-                num14 -= this.c[num6];
-                if (num14 < 0)
+                if ((y -= c[j]) < 0)
                 {
-                    return -3;
+                    return Z_DATA_ERROR;
                 }
-                num6++;
-                num14 = num14 << 1;
             }
-            num14 -= this.c[num5];
-            if (num14 < 0)
+            if ((y -= c[i]) < 0)
             {
-                return -3;
+                return Z_DATA_ERROR;
             }
-            this.c[num5] += num14;
-            this.x[1] = num6 = 0;
-            index = 1;
-            int num13 = 2;
-            while (--num5 != 0)
+            c[i] += y;
+
+            // Generate starting offsets into the value table for each length
+            x[1] = j = 0;
+            p = 1;
+            xp = 2;
+            while (--i != 0)
             {
-                this.x[num13] = num6 += this.c[index];
-                num13++;
-                index++;
+                // note that i == g from above
+                x[xp] = (j += c[p]);
+                xp++;
+                p++;
             }
-            num5 = 0;
-            index = 0;
+
+            // Make a table of values in order of bit lengths
+            i = 0;
+            p = 0;
             do
             {
-                num6 = b[bindex + index];
-                if (num6 != 0)
+                if ((j = b[bindex + p]) != 0)
                 {
-                    v[this.x[num6]++] = num5;
+                    v[x[j]++] = i;
                 }
-                index++;
-            }
-            while (++num5 < n);
-            n = this.x[num3];
-            this.x[0] = num5 = 0;
-            index = 0;
-            int num4 = -1;
-            int bits = -num8;
-            this.u[0] = 0;
-            int num11 = 0;
-            int num15 = 0;
-            while (num7 <= num3)
+                p++;
+            } while (++i < n);
+            n = x[g]; // set n to length of v
+
+            // Generate the Huffman codes and for each, make the table entries
+            x[0] = i = 0; // first Huffman code is zero
+            p = 0; // grab values in bit order
+            h = -1; // no tables yet--level -1
+            w = -l; // bits decoded == (l * h)
+            u[0] = 0; // just to keep compilers happy
+            q = 0; // ditto
+            z = 0; // ditto
+
+            // go through the bit lengths (k already is bits in shortest code)
+            for (; k <= g; k++)
             {
-                int num = this.c[num7];
-                while (num-- != 0)
+                a = c[k];
+                while (a-- != 0)
                 {
-                    int num2;
-                    while (num7 > (bits + num8))
+                    // here i is the Huffman code of length k bits for value *p
+                    // make tables up to required level
+                    while (k > w + l)
                     {
-                        num4++;
-                        bits += num8;
-                        num15 = num3 - bits;
-                        num15 = (num15 > num8) ? num8 : num15;
-                        if ((num2 = ((int) 1) << (num6 = num7 - bits)) > (num + 1))
+                        h++;
+                        w += l; // previous table always l bits
+                        // compute minimum size table less than or equal to l bits
+                        z = g - w;
+                        z = (z > l) ? l : z; // table size upper limit
+                        if ((f = 1 << (j = k - w)) > a + 1)
                         {
-                            num2 -= num + 1;
-                            num13 = num7;
-                            if (num6 < num15)
+                            // try a k-w bit table
+                            // too few codes for k-w bit table
+                            f -= (a + 1); // deduct codes from patterns left
+                            xp = k;
+                            if (j < z)
                             {
-                                while (++num6 < num15)
+                                while (++j < z)
                                 {
-                                    if ((num2 = num2 << 1) <= this.c[++num13])
-                                    {
-                                        break;
-                                    }
-                                    num2 -= this.c[num13];
+                                    // try smaller tables up to z bits
+                                    if ((f <<= 1) <= c[++xp])
+                                        break; // enough codes to use up j bits
+                                    f -= c[xp]; // else deduct codes from patterns
                                 }
                             }
                         }
-                        num15 = ((int) 1) << num6;
-                        if ((hn[0] + num15) > 0x5a0)
+                        z = 1 << j; // table entries for j-bit table
+
+                        // allocate new table
+                        if (hn[0] + z > MANY)
                         {
-                            return -3;
+                            // (note: doesn't matter for fixed)
+                            return Z_DATA_ERROR; // overflow of MANY
                         }
-                        this.u[num4] = num11 = hn[0];
-                        hn[0] += num15;
-                        if (num4 != 0)
+                        u[h] = q = hn[0]; // DEBUG
+                        hn[0] += z;
+
+                        // connect to last table, if there is one
+                        if (h != 0)
                         {
-                            this.x[num4] = num5;
-                            this.r[0] = (sbyte) num6;
-                            this.r[1] = (sbyte) num8;
-                            num6 = SharedUtils.URShift(num5, bits - num8);
-                            this.r[2] = (num11 - this.u[num4 - 1]) - num6;
-                            Array.Copy(this.r, 0, hp, (this.u[num4 - 1] + num6) * 3, 3);
+                            x[h] = i; // save pattern for backing up
+                            r[0] = (sbyte) j; // bits in this table
+                            r[1] = (sbyte) l; // bits to dump before this table
+                            j = SharedUtils.URShift(i, (w - l));
+                            r[2] = (q - u[h - 1] - j); // offset to this table
+                            Array.Copy(r, 0, hp, (u[h - 1] + j)*3, 3); // connect to last table
                         }
                         else
                         {
-                            t[0] = num11;
+                            t[0] = q; // first table is returned result
                         }
                     }
-                    this.r[1] = (sbyte) (num7 - bits);
-                    if (index >= n)
+
+                    // set up table entry in r
+                    r[1] = (sbyte) (k - w);
+                    if (p >= n)
                     {
-                        this.r[0] = 0xc0;
+                        r[0] = 128 + 64; // out of values--invalid code
                     }
-                    else if (v[index] < s)
+                    else if (v[p] < s)
                     {
-                        this.r[0] = (v[index] < 0x100) ? ((sbyte) 0) : ((sbyte) 0x60);
-                        this.r[2] = v[index++];
+                        r[0] = (sbyte) (v[p] < 256 ? 0 : 32 + 64); // 256 is end-of-block
+                        r[2] = v[p++]; // simple code is just the value
                     }
                     else
                     {
-                        this.r[0] = (sbyte) ((e[v[index] - s] + 0x10) + 0x40);
-                        this.r[2] = d[v[index++] - s];
+                        r[0] = (sbyte) (e[v[p] - s] + 16 + 64); // non-simple--look up in lists
+                        r[2] = d[v[p++] - s];
                     }
-                    num2 = ((int) 1) << (num7 - bits);
-                    num6 = SharedUtils.URShift(num5, bits);
-                    while (num6 < num15)
+
+                    // fill code-like entries with r
+                    f = 1 << (k - w);
+                    for (j = SharedUtils.URShift(i, w); j < z; j += f)
                     {
-                        Array.Copy(this.r, 0, hp, (num11 + num6) * 3, 3);
-                        num6 += num2;
+                        Array.Copy(r, 0, hp, (q + j)*3, 3);
                     }
-                    num6 = ((int) 1) << (num7 - 1);
-                    while ((num5 & num6) != 0)
+
+                    // backwards increment the k-bit code i
+                    for (j = 1 << (k - 1); (i & j) != 0; j = SharedUtils.URShift(j, 1))
                     {
-                        num5 ^= num6;
-                        num6 = SharedUtils.URShift(num6, 1);
+                        i ^= j;
                     }
-                    num5 ^= num6;
-                    for (int i = (((int) 1) << bits) - 1; (num5 & i) != this.x[num4]; i = (((int) 1) << bits) - 1)
+                    i ^= j;
+
+                    // backup over finished tables
+                    mask = (1 << w) - 1; // needed on HP, cc -O bug
+                    while ((i & mask) != x[h])
                     {
-                        num4--;
-                        bits -= num8;
+                        h--; // don't need to update q
+                        w -= l;
+                        mask = (1 << w) - 1;
                     }
                 }
-                num7++;
             }
-            return (((num14 != 0) && (num3 != 1)) ? -5 : 0);
+            // Return Z_BUF_ERROR if we were given an incomplete table
+            return y != 0 && g != 1 ? Z_BUF_ERROR : Z_OK;
         }
 
         internal int inflate_trees_bits(int[] c, int[] bb, int[] tb, int[] hp, ZlibCodec z)
         {
-            this.initWorkArea(0x13);
-            this.hn[0] = 0;
-            int num = this.huft_build(c, 0, 0x13, 0x13, null, null, tb, bb, hp, this.hn, this.v);
-            if (num == -3)
+            int result;
+            initWorkArea(19);
+            hn[0] = 0;
+            result = huft_build(c, 0, 19, 19, null, null, tb, bb, hp, hn, v);
+
+            if (result == Z_DATA_ERROR)
             {
                 z.Message = "oversubscribed dynamic bit lengths tree";
-                return num;
             }
-            if ((num == -5) || (bb[0] == 0))
+            else if (result == Z_BUF_ERROR || bb[0] == 0)
             {
                 z.Message = "incomplete dynamic bit lengths tree";
-                num = -3;
+                result = Z_DATA_ERROR;
             }
-            return num;
+            return result;
         }
 
-        internal int inflate_trees_dynamic(int nl, int nd, int[] c, int[] bl, int[] bd, int[] tl, int[] td, int[] hp, ZlibCodec z)
+        internal int inflate_trees_dynamic(int nl, int nd, int[] c, int[] bl, int[] bd, int[] tl, int[] td, int[] hp,
+                                           ZlibCodec z)
         {
-            this.initWorkArea(0x120);
-            this.hn[0] = 0;
-            int num = this.huft_build(c, 0, nl, 0x101, cplens, cplext, tl, bl, hp, this.hn, this.v);
-            if ((num != 0) || (bl[0] == 0))
+            int result;
+
+            // build literal/length tree
+            initWorkArea(288);
+            hn[0] = 0;
+            result = huft_build(c, 0, nl, 257, cplens, cplext, tl, bl, hp, hn, v);
+            if (result != Z_OK || bl[0] == 0)
             {
-                if (num == -3)
+                if (result == Z_DATA_ERROR)
                 {
                     z.Message = "oversubscribed literal/length tree";
-                    return num;
                 }
-                if (num != -4)
+                else if (result != Z_MEM_ERROR)
                 {
                     z.Message = "incomplete literal/length tree";
-                    num = -3;
+                    result = Z_DATA_ERROR;
                 }
-                return num;
+                return result;
             }
-            this.initWorkArea(0x120);
-            num = this.huft_build(c, nl, nd, 0, cpdist, cpdext, td, bd, hp, this.hn, this.v);
-            if ((num != 0) || ((bd[0] == 0) && (nl > 0x101)))
+
+            // build distance tree
+            initWorkArea(288);
+            result = huft_build(c, nl, nd, 0, cpdist, cpdext, td, bd, hp, hn, v);
+
+            if (result != Z_OK || (bd[0] == 0 && nl > 257))
             {
-                if (num == -3)
+                if (result == Z_DATA_ERROR)
                 {
                     z.Message = "oversubscribed distance tree";
-                    return num;
                 }
-                if (num == -5)
+                else if (result == Z_BUF_ERROR)
                 {
                     z.Message = "incomplete distance tree";
-                    return -3;
+                    result = Z_DATA_ERROR;
                 }
-                if (num != -4)
+                else if (result != Z_MEM_ERROR)
                 {
                     z.Message = "empty distance tree with lengths";
-                    num = -3;
+                    result = Z_DATA_ERROR;
                 }
-                return num;
+                return result;
             }
-            return 0;
+
+            return Z_OK;
         }
 
         internal static int inflate_trees_fixed(int[] bl, int[] bd, int[][] tl, int[][] td, ZlibCodec z)
         {
-            bl[0] = 9;
-            bd[0] = 5;
+            bl[0] = fixed_bl;
+            bd[0] = fixed_bd;
             tl[0] = fixed_tl;
             td[0] = fixed_td;
-            return 0;
+            return Z_OK;
         }
 
         private void initWorkArea(int vsize)
         {
-            if (this.hn == null)
+            if (hn == null)
             {
-                this.hn = new int[1];
-                this.v = new int[vsize];
-                this.c = new int[0x10];
-                this.r = new int[3];
-                this.u = new int[15];
-                this.x = new int[0x10];
+                hn = new int[1];
+                v = new int[vsize];
+                c = new int[BMAX + 1];
+                r = new int[3];
+                u = new int[BMAX];
+                x = new int[BMAX + 1];
             }
             else
             {
-                if (this.v.Length < vsize)
+                if (v.Length < vsize)
                 {
-                    this.v = new int[vsize];
+                    v = new int[vsize];
                 }
-                Array.Clear(this.v, 0, vsize);
-                Array.Clear(this.c, 0, 0x10);
-                this.r[0] = 0;
-                this.r[1] = 0;
-                this.r[2] = 0;
-                Array.Clear(this.u, 0, 15);
-                Array.Clear(this.x, 0, 0x10);
+                Array.Clear(v, 0, vsize);
+                Array.Clear(c, 0, BMAX + 1);
+                r[0] = 0;
+                r[1] = 0;
+                r[2] = 0;
+                //  for(int i=0; i<BMAX; i++){u[i]=0;}
+                //Array.Copy(c, 0, u, 0, BMAX);
+                Array.Clear(u, 0, BMAX);
+                //  for(int i=0; i<BMAX+1; i++){x[i]=0;}
+                //Array.Copy(c, 0, x, 0, BMAX + 1);
+                Array.Clear(x, 0, BMAX + 1);
             }
         }
     }
 }
-
