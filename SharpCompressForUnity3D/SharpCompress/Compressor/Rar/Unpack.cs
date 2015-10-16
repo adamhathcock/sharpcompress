@@ -239,6 +239,11 @@
             }
         }
 
+        private int decodeNumber(BitDecode BD)
+        {
+            return UnpackUtility.decodeNumber(this, BD);
+        }
+
         public void doUnpack()
         {
             bool solid = FlagUtility.HasFlag<FileFlags>(this.fileHeader.FileFlags, FileFlags.SOLID);
@@ -408,7 +413,7 @@
                 {
                     return false;
                 }
-                int num6 = UnpackUtility.decodeNumber(this, base.BD);
+                int num6 = this.decodeNumber(base.BD);
                 if (num6 < 0x10)
                 {
                     buffer2[num2] = (byte) ((num6 + this.unpOldTable[num2]) & 15);

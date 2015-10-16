@@ -28,15 +28,26 @@
             this.removedEntries = new List<TEntry>();
             this.modifiedEntries = new List<TEntry>();
         }
+
+        //public TEntry AddEntry(string key, Stream source, [Optional, DefaultParameterValue(0L)] long size, [Optional, DefaultParameterValue(null)] DateTime? modified)
+        //{
+        //    return this.AddEntry(key, source, false, size, modified);
+        //}
         public TEntry AddEntry(string key, Stream source) {
-            return AddEntry(key,source,0,null);
+            return AddEntry(key, source, 0L, null);
         }
-        public TEntry AddEntry(string key, Stream source,  long size,  DateTime? modified)
-        {
-            return this.AddEntry(key, source, false, size, modified);
+        public TEntry AddEntry(string key, Stream source, long size) {
+            return AddEntry(key, source, size, null);
+        }
+        public TEntry AddEntry(string key, Stream source,
+                             long size, DateTime? modified) {
+            return AddEntry(key, source, false, size, modified);
         }
         public TEntry AddEntry(string key, Stream source, bool closeStream) {
-            return AddEntry(key,source,closeStream,0,null);
+            return AddEntry(key, source, closeStream, 0L, null);
+        }
+        public TEntry AddEntry(string key, Stream source, bool closeStream, long size) {
+            return AddEntry(key, source, closeStream, size, null);
         }
         public TEntry AddEntry(string key, Stream source, bool closeStream,  long size,  DateTime? modified)
         {

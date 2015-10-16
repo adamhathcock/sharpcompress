@@ -1,4 +1,4 @@
-﻿namespace SharpCompress.Archive.Rar
+namespace SharpCompress.Archive.Rar
 {
     using SharpCompress;
     using SharpCompress.Common;
@@ -17,7 +17,7 @@
         [CompilerGenerated]
         private ReadOnlyCollection<RarFilePart> _FileParts_k__BackingField;
 
-        internal FileInfoRarArchiveVolume(System.IO.FileInfo fileInfo, string password, Options options) : base(StreamingMode.Seekable, fileInfo.OpenRead(), password, FixOptions(options))
+        internal FileInfoRarArchiveVolume(System.IO.FileInfo fileInfo, string password, Options options) : base(StreamingMode.Seekable, fileInfo.Open(FileMode.Open, FileAccess.Read), password, FixOptions(options))
         {
             this.FileInfo = fileInfo;
             this.FileParts = Utility.ToReadOnly<RarFilePart>(base.GetVolumeFileParts());

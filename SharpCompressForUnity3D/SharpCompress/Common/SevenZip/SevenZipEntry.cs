@@ -1,4 +1,4 @@
-﻿namespace SharpCompress.Common.SevenZip
+namespace SharpCompress.Common.SevenZip
 {
     using SharpCompress;
     using SharpCompress.Common;
@@ -26,10 +26,7 @@
 
         public override int? Attrib
         {
-            get
-            {
-                return new int?((int)this.FilePart.Header.Attrib.Value);
-            }
+            get { return (int)FilePart.Header.Attrib; }
         }
 
         public override long CompressedSize
@@ -48,13 +45,8 @@
             }
         }
 
-        public override long Crc
-        {
-            get
-            {
-                uint? crc = this.FilePart.Header.Crc;
-                return (crc.HasValue ? ((long) ((ulong) crc.GetValueOrDefault())) : ((long) ((ulong) 0)));
-            }
+        public override long Crc {
+            get { return FilePart.Header.Crc ?? 0; }
         }
 
         public override DateTime? CreatedTime

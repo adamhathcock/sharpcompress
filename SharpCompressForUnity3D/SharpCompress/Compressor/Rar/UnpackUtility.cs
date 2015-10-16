@@ -4,12 +4,9 @@
     using SharpCompress.Compressor.Rar.decode;
     using SharpCompress.Compressor.Rar.VM;
     using System;
-    using System.Runtime.CompilerServices;
 
-    //[Extension]
     internal static class UnpackUtility
     {
-        //[Extension]
         internal static int decodeNumber(BitInput input, Decode dec)
         {
             int num;

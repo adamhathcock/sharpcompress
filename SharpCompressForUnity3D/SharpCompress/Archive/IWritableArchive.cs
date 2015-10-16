@@ -7,6 +7,8 @@
 
     public interface IWritableArchive : IArchive, IDisposable
     {
+        //IArchiveEntry AddEntry(string key, Stream source, bool closeStream);
+        //IArchiveEntry AddEntry(string key, Stream source, bool closeStream,long size);
         IArchiveEntry AddEntry(string key, Stream source, bool closeStream,  long size,  DateTime? modified);
         void RemoveEntry(IArchiveEntry entry);
         void SaveTo(Stream stream, CompressionInfo compressionType);

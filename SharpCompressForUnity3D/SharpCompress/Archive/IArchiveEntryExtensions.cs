@@ -5,13 +5,10 @@
     using SharpCompress.IO;
     using System;
     using System.IO;
-    using System.Runtime.CompilerServices;
 
-    //[Extension]
     public static class IArchiveEntryExtensions
     {
-        //[Extension]
-        public static void WriteTo( IArchiveEntry archiveEntry, Stream streamToWriteTo)
+        public static void WriteTo(IArchiveEntry archiveEntry, Stream streamToWriteTo)
         {
             if ((archiveEntry.Archive.Type == ArchiveType.Rar) && archiveEntry.Archive.IsSolid)
             {

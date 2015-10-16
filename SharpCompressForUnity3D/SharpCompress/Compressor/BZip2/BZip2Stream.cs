@@ -12,8 +12,13 @@ namespace SharpCompress.Compressor.BZip2
         private CompressionMode _Mode_k__BackingField;
         private bool isDisposed;
         private readonly Stream stream;
-
-        public BZip2Stream(Stream stream, CompressionMode compressionMode, [Optional, DefaultParameterValue(false)] bool leaveOpen, [Optional, DefaultParameterValue(false)] bool decompressContacted)
+        public BZip2Stream(Stream stream, CompressionMode compressionMode) 
+            : this(stream,compressionMode,false,false) {
+        }
+        public BZip2Stream(Stream stream, CompressionMode compressionMode,  bool leaveOpen)
+            : this(stream, compressionMode, leaveOpen, false) {
+        }
+        public BZip2Stream(Stream stream, CompressionMode compressionMode,  bool leaveOpen,  bool decompressContacted)
         {
             this.Mode = compressionMode;
             if (this.Mode == CompressionMode.Compress)

@@ -47,92 +47,151 @@ namespace SharpCompress.Reader.Rar
         internal override void ValidateArchive(RarVolume archive)
         {
         }
-
-        private class MultiVolumeStreamEnumerator : IEnumerable<FilePart>, IEnumerable, IEnumerator<FilePart>, IDisposable, IEnumerator
-        {
-            [CompilerGenerated]
-            private FilePart _Current_k__BackingField;
-            private bool isFirst = true;
-            private readonly IEnumerator<Stream> nextReadableStreams;
+        private class MultiVolumeStreamEnumerator : IEnumerable<FilePart>, IEnumerator<FilePart> {
             private readonly MultiVolumeRarReader reader;
+            private readonly IEnumerator<Stream> nextReadableStreams;
             private Stream tempStream;
+            private bool isFirst = true;
 
-            internal MultiVolumeStreamEnumerator(MultiVolumeRarReader r, IEnumerator<Stream> nextReadableStreams, Stream tempStream)
-            {
-                this.reader = r;
+            internal MultiVolumeStreamEnumerator(MultiVolumeRarReader r, IEnumerator<Stream> nextReadableStreams,
+                                                 Stream tempStream) {
+                reader = r;
                 this.nextReadableStreams = nextReadableStreams;
                 this.tempStream = tempStream;
             }
 
-            public void Dispose()
-            {
-            }
-
-            public IEnumerator<FilePart> GetEnumerator()
-            {
+            public IEnumerator<FilePart> GetEnumerator() {
                 return this;
             }
 
-            public bool MoveNext()
-            {
-                if (this.isFirst)
-                {
-                    this.Current = Enumerable.First<FilePart>(this.reader.Entry.Parts);
-                    this.isFirst = false;
+            System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() {
+                return this;
+            }
+
+            public FilePart Current { get; private set; }
+
+            public void Dispose() {
+            }
+
+            object System.Collections.IEnumerator.Current {
+                get { return Current; }
+            }
+
+            public bool MoveNext() {
+                if (isFirst) {
+                    Current = reader.Entry.Parts.First<FilePart>();
+                    isFirst = false; //first stream already to go
                     return true;
                 }
-                if (!this.reader.Entry.IsSplit)
-                {
+
+                if (!reader.Entry.IsSplit) {
                     return false;
                 }
-                if (this.tempStream != null)
-                {
-                    this.reader.LoadStreamForReading(this.tempStream);
-                    this.tempStream = null;
+                if (tempStream != null) {
+                    reader.LoadStreamForReading(tempStream);
+                    tempStream = null;
                 }
-                else
-                {
-                    if (!this.nextReadableStreams.MoveNext())
-                    {
-                        throw new MultiVolumeExtractionException("No stream provided when requested by MultiVolumeRarReader");
-                    }
-                    this.reader.LoadStreamForReading(this.nextReadableStreams.Current);
+                else if (!nextReadableStreams.MoveNext()) {
+                    throw new MultiVolumeExtractionException("No stream provided when requested by MultiVolumeRarReader");
                 }
-                this.Current = Enumerable.First<FilePart>(this.reader.Entry.Parts);
+                else {
+                    reader.LoadStreamForReading(nextReadableStreams.Current);
+                }
+
+                Current = reader.Entry.Parts.First<FilePart>();
                 return true;
             }
 
-            public void Reset()
-            {
-            }
-
-            IEnumerator IEnumerable.GetEnumerator()
-            {
-                return this;
-            }
-
-            public FilePart Current
-            {
-                [CompilerGenerated]
-                get
-                {
-                    return this._Current_k__BackingField;
-                }
-                [CompilerGenerated]
-                private set
-                {
-                    this._Current_k__BackingField = value;
-                }
-            }
-
-            object IEnumerator.Current
-            {
-                get
-                {
-                    return this.Current;
-                }
+            public void Reset() {
             }
         }
+
+        //private class MultiVolumeStreamEnumerator : IEnumerable<FilePart>, IEnumerable, IEnumerator<FilePart>, IDisposable, IEnumerator
+        //{
+        //    [CompilerGenerated]
+        //    private FilePart _Current_k__BackingField;
+        //    private bool isFirst = true;
+        //    private readonly IEnumerator<Stream> nextReadableStreams;
+        //    private readonly MultiVolumeRarReader reader;
+        //    private Stream tempStream;
+
+        //    internal MultiVolumeStreamEnumerator(MultiVolumeRarReader r, IEnumerator<Stream> nextReadableStreams, Stream tempStream)
+        //    {
+        //        this.reader = r;
+        //        this.nextReadableStreams = nextReadableStreams;
+        //        this.tempStream = tempStream;
+        //    }
+
+        //    public void Dispose()
+        //    {
+        //    }
+
+        //    public IEnumerator<FilePart> GetEnumerator()
+        //    {
+        //        return this;
+        //    }
+
+        //    public bool MoveNext()
+        //    {
+        //        if (this.isFirst)
+        //        {
+        //            this.Current = Enumerable.First<FilePart>(this.reader.Entry.Parts);
+        //            this.isFirst = false;
+        //            return true;
+        //        }
+        //        if (!this.reader.Entry.IsSplit)
+        //        {
+        //            return false;
+        //        }
+        //        if (this.tempStream != null)
+        //        {
+        //            this.reader.LoadStreamForReading(this.tempStream);
+        //            this.tempStream = null;
+        //        }
+        //        else
+        //        {
+        //            if (!this.nextReadableStreams.MoveNext())
+        //            {
+        //                throw new MultiVolumeExtractionException("No stream provided when requested by MultiVolumeRarReader");
+        //            }
+        //            this.reader.LoadStreamForReading(this.nextReadableStreams.Current);
+        //        }
+        //        this.Current = Enumerable.First<FilePart>(this.reader.Entry.Parts);
+        //        return true;
+        //    }
+
+        //    public void Reset()
+        //    {
+        //    }
+
+        //    IEnumerator IEnumerable.GetEnumerator()
+        //    {
+        //        return this;
+        //    }
+
+        //    public FilePart Current
+        //    {
+        //        [CompilerGenerated]
+        //        get
+        //        {
+        //            return this._Current_k__BackingField;
+        //        }
+        //        [CompilerGenerated]
+        //        private set
+        //        {
+        //            this._Current_k__BackingField = value;
+        //        }
+        //    }
+
+        //    object IEnumerator.Current
+        //    {
+        //        get
+        //        {
+        //            return this.Current;
+        //        }
+        //    }
+        //}
+   
     }
 }
 

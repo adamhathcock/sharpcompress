@@ -1,4 +1,4 @@
-﻿namespace SharpCompress.Reader.Rar
+namespace SharpCompress.Reader.Rar
 {
     using SharpCompress;
     using SharpCompress.Common;
@@ -46,23 +46,28 @@
         {
             return base.CreateEntryStream(new RarStream(this.pack, base.Entry.FileHeader, new MultiVolumeReadOnlyStream(Enumerable.Cast<RarFilePart>(this.CreateFilePartEnumerableForCurrentEntry()), this)));
         }
-        public static RarReader Open(IEnumerable<Stream> streams) {
-            return Open(streams,Options.KeepStreamsOpen);
+        public static RarReader Open(Stream stream) {
+            return Open(stream, null, Options.KeepStreamsOpen);
         }
+        public static RarReader Open(IEnumerable<Stream> streams) {
+            return Open(streams, Options.KeepStreamsOpen);
+        }
+
+
         public static RarReader Open(IEnumerable<Stream> streams,  Options options)
         {
             Utility.CheckNotNull(streams, "streams");
             return new MultiVolumeRarReader(streams, options);
         }
-        public static RarReader Open(Stream stream) {
-            return Open(stream, Options.KeepStreamsOpen);
-        }
-        public static RarReader Open(Stream stream,  Options options)
+       
+        public static RarReader Open(Stream stream, Options options)
         {
             return Open(stream, null, options);
         }
+
+
         public static RarReader Open(Stream stream, string password) {
-            return Open(stream,password, Options.KeepStreamsOpen);
+            return Open(stream, password, Options.KeepStreamsOpen);
         }
         public static RarReader Open(Stream stream, string password,  Options options)
         {

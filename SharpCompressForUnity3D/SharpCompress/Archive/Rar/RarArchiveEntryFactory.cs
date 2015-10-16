@@ -1,4 +1,4 @@
-﻿namespace SharpCompress.Archive.Rar
+namespace SharpCompress.Archive.Rar
 {
     using SharpCompress.Common;
     using SharpCompress.Common.Rar;
@@ -19,19 +19,18 @@
             }
         }
 
-        //private static IEnumerable<RarFilePart> GetFileParts(IEnumerable<RarVolume> parts)
-        //{
-        //    _GetFileParts_d__0 d__ = new _GetFileParts_d__0(-2);
-        //    d__.__3__parts = parts;
-        //    return d__;
-        //}
-        private static IEnumerable<RarFilePart> GetFileParts(IEnumerable<RarVolume> parts) {
+        private static IEnumerable<RarFilePart> GetFileParts(IEnumerable<RarVolume> parts)
+        {
             foreach (RarVolume rarPart in parts) {
                 foreach (RarFilePart fp in rarPart.ReadFileParts()) {
                     yield return fp;
                 }
             }
+            //_GetFileParts_d__0 d__ = new _GetFileParts_d__0(-2);
+            //d__.__3__parts = parts;
+            //return d__;
         }
+
         private static IEnumerable<IEnumerable<RarFilePart>> GetMatchedFileParts(IEnumerable<RarVolume> parts)
         {
             List<RarFilePart> iteratorVariable0 = new List<RarFilePart>();
@@ -127,6 +126,7 @@
         //        Label_00D4:
         //            flag = false;
         //        }
+        //        //fault
         //        finally
         //        {
         //            this.System.IDisposable.Dispose();
@@ -214,8 +214,6 @@
         //            return this.__2__current;
         //        }
         //    }
-
-           
         //}
 
     }

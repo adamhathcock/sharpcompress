@@ -50,8 +50,7 @@
 
         public IEnumerator<T> GetEnumerator()
         {
-           // return new LazyLoader<T>((LazyReadOnlyCollection<T>) this);
-            return new LazyLoader(this);
+            return new LazyLoader(this);//(LazyReadOnlyCollection<T>) this);
         }
 
         internal IEnumerable<T> GetLoaded()

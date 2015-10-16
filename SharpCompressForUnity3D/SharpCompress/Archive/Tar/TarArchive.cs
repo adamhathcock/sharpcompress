@@ -88,6 +88,7 @@
                                 memoryStream.Position = 0;
                                 var bytes = memoryStream.ToArray();
 
+                                //header.Name = ArchiveEncoding.Default.GetString(bytes, 0, bytes.Length).TrimNulls();
                                 header.Name = Utility.TrimNulls(ArchiveEncoding.Default.GetString(bytes, 0, bytes.Length));
                             }
 
@@ -183,6 +184,7 @@
         //            this._previousHeader_5__2 = null;
         //            this.__7__wrap4 = TarHeaderFactory.ReadHeader(StreamingMode.Seekable, this._stream_5__1).GetEnumerator();
         //            this.__1__state = 1;
+        //       Label_01AF_2MoveNext:
         //            while (this.__7__wrap4.MoveNext())
         //            {
         //                this._header_5__3 = this.__7__wrap4.Current;
@@ -215,23 +217,29 @@
         //                this.__2__current = new TarArchiveEntry(this.__4__this, new TarFilePart(this._header_5__3, this._stream_5__1), CompressionType.None);
         //                this.__1__state = 4;
         //                return true;
-        //            Label_01AF:
+        //            //Label_01AF:
+        //              //  this.__1__state = 1;
+        //            }
+        //        Label_01AF: {
         //                this.__1__state = 1;
+        //                goto Label_01AF_2MoveNext;
         //            }
         //            this.__m__Finally5();
         //        Label_01D5:
         //            flag = false;
         //        }
+        //        //fault
         //        finally
         //        {
-        //            //this.System.IDisposable.Dispose();
+                    
+        //            this.Dispose();
                     
         //        }
         //        return flag;
         //    }
 
         //    [DebuggerHidden]
-        //    IEnumerator<TarArchiveEntry> IEnumerable<TarArchiveEntry>.GetEnumerator()
+        //   public IEnumerator<TarArchiveEntry> GetEnumerator()
         //    {
         //        TarArchive._LoadEntries_d__0 d__;
         //        if ((Thread.CurrentThread.ManagedThreadId == this.__l__initialThreadId) && (this.__1__state == -2))
@@ -248,19 +256,26 @@
         //        return d__;
         //    }
 
-        //    [DebuggerHidden]
-        //    IEnumerator IEnumerable.GetEnumerator()
-        //    {
-        //        return this.System.Collections.Generic.IEnumerable<SharpCompress.Archive.Tar.TarArchiveEntry>.GetEnumerator();
+        //   // [DebuggerHidden]
+        //   //public IEnumerator GetEnumerator() {
+        //        //return this.IEnumerable<TarArchiveEntry>.GetEnumerator();
+        //        //return this.System.Collections.Generic.IEnumerable<SharpCompress.Archive.Tar.TarArchiveEntry>.GetEnumerator();
+                
+        //   // }
+        //    #region IEnumerable 成员
+
+        //    IEnumerator IEnumerable.GetEnumerator() {
+        //        throw new NotImplementedException();
         //    }
 
+        //    #endregion
         //    [DebuggerHidden]
         //    void IEnumerator.Reset()
         //    {
         //        throw new NotSupportedException();
         //    }
 
-        //    void IDisposable.Dispose()
+        //    public void Dispose()
         //    {
         //        switch (this.__1__state)
         //        {
@@ -294,6 +309,10 @@
         //            return this.__2__current;
         //        }
         //    }
+
+
+
+          
         //}
     }
 }

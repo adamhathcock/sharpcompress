@@ -28,8 +28,10 @@ namespace SharpCompress.Archive.Zip
         internal ZipArchive() : base(ArchiveType.Zip)
         {
         }
-
-        internal ZipArchive(Stream stream, Options options, [Optional, DefaultParameterValue(null)] string password) : base(ArchiveType.Zip, stream, options)
+        internal ZipArchive(Stream stream, Options options)
+            : this(stream, options, null) {
+        }
+        internal ZipArchive(Stream stream, Options options,  string password) : base(ArchiveType.Zip, stream, options)
         {
             this.headerFactory = new SeekableZipHeaderFactory(password);
         }
@@ -50,8 +52,10 @@ namespace SharpCompress.Archive.Zip
             stream.Position = 0L;
             return ZipReader.Open(stream, null, Options.KeepStreamsOpen);
         }
-
-        public static bool IsZipFile(Stream stream, [Optional, DefaultParameterValue(null)] string password)
+        public static bool IsZipFile(Stream stream) {
+            return IsZipFile(stream, null);
+        }
+        public static bool IsZipFile(Stream stream,  string password)
         {
             StreamingZipHeaderFactory factory = new StreamingZipHeaderFactory(password);
             try
@@ -107,14 +111,18 @@ namespace SharpCompress.Archive.Zip
         {
             return Utility.AsEnumerable<ZipVolume>(new ZipVolume(Enumerable.First<Stream>(streams), options));
         }
-
-        public static ZipArchive Open(Stream stream, [Optional, DefaultParameterValue(null)] string password)
+        public static ZipArchive Open(Stream stream) {
+            return Open(stream, Options.None, null);
+        }
+        public static ZipArchive Open(Stream stream,  string password)
         {
             Utility.CheckNotNull(stream, "stream");
             return Open(stream, Options.None, password);
         }
-
-        public static ZipArchive Open(Stream stream, Options options, [Optional, DefaultParameterValue(null)] string password)
+        public static ZipArchive Open(Stream stream, Options options) {
+            return Open(stream, options, null);
+        }
+        public static ZipArchive Open(Stream stream, Options options,  string password)
         {
             Utility.CheckNotNull(stream, "stream");
             return new ZipArchive(stream, options, password);

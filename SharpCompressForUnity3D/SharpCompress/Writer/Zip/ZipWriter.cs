@@ -63,8 +63,10 @@
         {
             this.Write(entryPath, source, modificationTime, null, null);
         }
-
-        public void Write(string entryPath, Stream source, DateTime? modificationTime, string comment, [Optional, DefaultParameterValue(null)] CompressionInfo compressionInfo)
+        public void Write(string entryPath, Stream source, DateTime? modificationTime, string comment) { 
+            Write( entryPath,  source,  modificationTime,  comment,null);
+        }
+        public void Write(string entryPath, Stream source, DateTime? modificationTime, string comment,  CompressionInfo compressionInfo)
         {
             using (Stream stream = this.WriteToStream(entryPath, modificationTime, comment, compressionInfo))
             {
@@ -90,8 +92,10 @@
             base.OutputStream.Write(BitConverter.GetBytes(compressed), 0, 4);
             base.OutputStream.Write(BitConverter.GetBytes(uncompressed), 0, 4);
         }
-
-        private int WriteHeader(string filename, DateTime? modificationTime, [Optional, DefaultParameterValue(null)] CompressionInfo compressionInfo)
+        private int WriteHeader(string filename, DateTime? modificationTime) {
+            return WriteHeader(filename, modificationTime, null);
+        }
+        private int WriteHeader(string filename, DateTime? modificationTime,  CompressionInfo compressionInfo)
         {
             ZipCompressionInfo info = (compressionInfo != null) ? new ZipCompressionInfo(compressionInfo) : this.zipCompressionInfo;
             byte[] bytes = ArchiveEncoding.Default.GetBytes(filename);
@@ -118,8 +122,10 @@
             base.OutputStream.Write(bytes, 0, bytes.Length);
             return (30 + bytes.Length);
         }
-
-        public Stream WriteToStream(string entryPath, DateTime? modificationTime, string comment, [Optional, DefaultParameterValue(null)] CompressionInfo compressionInfo)
+        public Stream WriteToStream(string entryPath, DateTime? modificationTime, string comment) {
+            return WriteToStream(entryPath, modificationTime, comment, null);
+        }
+        public Stream WriteToStream(string entryPath, DateTime? modificationTime, string comment,  CompressionInfo compressionInfo)
         {
             entryPath = this.NormalizeFilename(entryPath);
             DateTime? nullable = modificationTime;

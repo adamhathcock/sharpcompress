@@ -4,7 +4,7 @@
     <ProjectType>local</ProjectType>
     <ProjectVersion>7.10.377</ProjectVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>867192bc-736f-45ec-b4b4-9c2fe23a1efa</ProjectGuid>
+    <ProjectGuid>5cbd4b3d-e6a6-49a6-9c2c-32a8f146b2d3</ProjectGuid>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <AssemblyName>SharpCompress</AssemblyName>
     <OutputType>Exe</OutputType>

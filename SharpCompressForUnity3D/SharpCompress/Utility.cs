@@ -1,4 +1,4 @@
-﻿namespace SharpCompress
+namespace SharpCompress
 {
     using System;
     using System.Collections;
@@ -9,10 +9,8 @@
     using System.Runtime.CompilerServices;
     using System.Threading;
 
-    //[Extension]
     internal static class Utility
     {
-        //[Extension]
         public static void AddRange<T>(ICollection<T> destination, IEnumerable<T> source)
         {
             foreach (T local in source)
@@ -21,13 +19,11 @@
             }
         }
 
-        //[Extension]
         public static IEnumerable<T> AsEnumerable<T>(T item)
         {
             yield return item;
         }
 
-        //[Extension]
         public static bool BinaryEquals(byte[] source, byte[] target)
         {
             if (source.Length != target.Length)
@@ -44,7 +40,6 @@
             return true;
         }
 
-        //[Extension]
         public static void CheckNotNull(object obj, string name)
         {
             if (obj == null)
@@ -53,7 +48,6 @@
             }
         }
 
-        //[Extension]
         public static void CheckNotNullOrEmpty(string obj, string name)
         {
             CheckNotNull(obj, name);
@@ -63,13 +57,11 @@
             }
         }
 
-        //[Extension]
         public static void CopyTo(byte[] array, byte[] destination, int index)
         {
             Array.Copy(array, 0, destination, index, array.Length);
         }
 
-        //[Extension]
         public static uint DateTimeToDosTime(DateTime? dateTime)
         {
             if (!dateTime.HasValue)
@@ -143,7 +135,6 @@
             }
         }
 
-        //[Extension]
         public static void ForEach<T>(IEnumerable<T> items, Action<T> action)
         {
             foreach (T local in items)
@@ -173,7 +164,6 @@
             WriteLittleEndian(array, pos, num);
         }
 
-        //[Extension]
         public static void Initialize<T>(T[] array, Func<T> func)
         {
             for (int i = 0; i < array.Length; i++)
@@ -197,7 +187,6 @@
             return HostToNetworkOrder(network);
         }
 
-        //[Extension]
         public static bool ReadFully(Stream stream, byte[] buffer)
         {
             int num2;
@@ -235,7 +224,6 @@
             return BitConverter.ToInt16(array, pos);
         }
 
-        //[Extension]
         public static void SetSize(List<byte> list, int count)
         {
             if (count > list.Count)
@@ -254,7 +242,6 @@
             }
         }
 
-        //[Extension]
         public static void Skip(Stream source, long advanceAmount)
         {
             byte[] buffer = new byte[0x8000];
@@ -280,7 +267,6 @@
             }
         }
 
-        //[Extension]
         public static void SkipAll(Stream source)
         {
             byte[] buffer = new byte[0x8000];
@@ -289,13 +275,11 @@
             }
         }
 
-        //[Extension]
         public static ReadOnlyCollection<T> ToReadOnly<T>(IEnumerable<T> items)
         {
             return new ReadOnlyCollection<T>(Enumerable.ToList<T>(items));
         }
 
-        //[Extension]
         public static long TransferTo(Stream source, Stream destination)
         {
             int num;
@@ -309,7 +293,6 @@
             return num2;
         }
 
-        //[Extension]
         public static string TrimNulls(string source)
         {
             return source.Replace('\0', ' ').Trim();

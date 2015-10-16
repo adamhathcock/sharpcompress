@@ -10,81 +10,82 @@
 
     internal static class _TestSharpCompress
     {
-        public static void Main(string[] args)
-        {
-            FileStream stream2;
-            byte[] buffer;
-            byte[] buffer2;
-            string path = "ziptest";
-            string str2 = "ziptest.zip";
-            using (ZipArchive archive = ZipArchive.Create())
-            {
-                DirectoryInfo info = new DirectoryInfo(path);
-                foreach (FileInfo info2 in info.GetFiles())
-                {
-                    DateTime? modified = null;
-                    archive.AddEntry(info2.Name, info2.OpenRead(), true, 0L, modified);
+        public static void Main(string[] args) {
+            string SCRATCH_FILES_PATH = "ziptest";
+            string scratchPath = "ziptest.zip";
+
+            using (var archive = ZipArchive.Create()) {
+                DirectoryInfo di = new DirectoryInfo(SCRATCH_FILES_PATH);
+                foreach (var fi in di.GetFiles()) {
+                    archive.AddEntry(fi.Name, fi.OpenRead(), true);
                 }
-                FileStream stream = new FileStream(str2, FileMode.OpenOrCreate, FileAccess.Write);
-                archive.SaveTo(stream,  CompressionType.Deflate);
-                stream.Close();
-                using (stream2 = new FileStream("ziphead.zip", FileMode.OpenOrCreate, FileAccess.ReadWrite))
-                {
-                    buffer = new MyHead().Create();
-                    stream2.Write(buffer, 0, buffer.Length);
-                    OffsetStream stream3 = new OffsetStream(stream2, stream2.Position);
-                    archive.SaveTo(stream3, CompressionType.Deflate);
+                FileStream fs_scratchPath = new FileStream(scratchPath, FileMode.OpenOrCreate, FileAccess.Write);
+                archive.SaveTo(fs_scratchPath, CompressionType.Deflate);
+                fs_scratchPath.Close();
+                //archive.AddAllFromDirectory(SCRATCH_FILES_PATH); 
+                //archive.SaveTo(scratchPath, CompressionType.Deflate);
+                using (FileStream fs = new FileStream("ziphead.zip", FileMode.OpenOrCreate, FileAccess.ReadWrite)) {
+                    MyHead mh = new MyHead();
+                    byte[] headData = mh.Create();
+                    fs.Write(headData, 0, headData.Length);
+                    //
+                    SharpCompress.IO.OffsetStream ofs = new IO.OffsetStream(fs, fs.Position);
+                    archive.SaveTo(ofs, CompressionType.Deflate);
                 }
             }
-            using (stream2 = new FileStream("mypack.data.zip", FileMode.Create, FileAccess.ReadWrite, FileShare.Read))
-            {
-                buffer = new MyHead().Create();
-                stream2.Write(buffer, 0, buffer.Length);
-                using (FileStream stream4 = new FileStream(str2, FileMode.Open, FileAccess.Read))
-                {
-                    buffer2 = new byte[0x400];
-                    int count = 0;
-                    while ((count = stream4.Read(buffer2, 0, buffer2.Length)) > 0)
-                    {
-                        stream2.Write(buffer2, 0, count);
+            //write my zipfile with head data
+            using (FileStream fs = new FileStream("mypack.data.zip", FileMode.Create, FileAccess.ReadWrite, FileShare.Read)) {
+                MyHead mh = new MyHead();
+                byte[] headData = mh.Create();
+                fs.Write(headData, 0, headData.Length);
+                using (FileStream fs2 = new FileStream(scratchPath, FileMode.Open, FileAccess.Read)) {
+                    byte[] buf = new byte[1024];
+                    int rc = 0;
+                    while ((rc = fs2.Read(buf, 0, buf.Length)) > 0) {
+                        fs.Write(buf, 0, rc);
                     }
                 }
             }
-            using (stream2 = new FileStream("mypack.data.zip", FileMode.Open, FileAccess.Read, FileShare.Read))
-            {
-                buffer2 = new byte[0x400];
-                int num2 = stream2.Read(buffer2, 0, buffer2.Length);
-                Debug.Assert(num2 == 0x400);
-                OffsetStream stream5 = new OffsetStream(stream2, (long) num2);
-                ZipArchive archive2 = ZipArchive.Open(stream5, Options.KeepStreamsOpen, null);
-                foreach (ZipArchiveEntry entry in archive2.Entries)
-                {
-                    Console.WriteLine(entry.Key);
+            //
+            //read my zip file with head
+            //
+            using (FileStream fs = new FileStream("mypack.data.zip", FileMode.Open, FileAccess.Read, FileShare.Read)) {
+                byte[] buf = new byte[1024];
+                int offset = fs.Read(buf, 0, buf.Length);
+                System.Diagnostics.Debug.Assert(offset == 1024);
+                //fs.Position = 0L;
+                SharpCompress.IO.OffsetStream substream = new SharpCompress.IO.OffsetStream(fs, offset);
+                ZipArchive zip = ZipArchive.Open(substream, Options.KeepStreamsOpen);//cann't read
+                //ZipArchive zip = ZipArchive.Open(fs, Options.None); //will throw exption
+                //ZipArchive zip = ZipArchive.Open(fs, Options.KeepStreamsOpen);//cann't read
+
+                foreach (ZipArchiveEntry zf in zip.Entries) {
+                    Console.WriteLine(zf.Key);
+                    //bug:the will not none in zipfile
                 }
-                int num3 = 0;
-                num3++;
+
+                int jjj = 0;
+                jjj++;
             }
         }
-
-        public class MyHead
-        {
-            public string Flag = "MyHead";
-            public int Id = 0x2766;
+        public class MyHead {
+            public int Id = 10086;
             public string Ver = "1.0.1";
+            public string Flag = "MyHead";
+            public byte[] Create() {
+                byte[] buf = null;
+                using (MemoryStream ms = new MemoryStream(1024)) {
+                    ms.SetLength(1024);
+                    using (BinaryWriter bw = new BinaryWriter(ms, Encoding.UTF8)) {
+                        bw.Write(this.Flag);
+                        bw.Write(this.Id);
+                        bw.Write(this.Ver);
 
-            public byte[] Create()
-            {
-                using (MemoryStream stream = new MemoryStream(0x400))
-                {
-                    stream.SetLength(0x400L);
-                    using (BinaryWriter writer = new BinaryWriter(stream, Encoding.UTF8))
-                    {
-                        writer.Write(this.Flag);
-                        writer.Write(this.Id);
-                        writer.Write(this.Ver);
                     }
-                    return stream.ToArray();
+
+                    buf = ms.ToArray();
                 }
+                return buf;
             }
         }
     }

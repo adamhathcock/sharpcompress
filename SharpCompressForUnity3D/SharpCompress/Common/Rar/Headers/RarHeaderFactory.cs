@@ -24,8 +24,10 @@ namespace SharpCompress.Common.Rar.Headers
         [CompilerGenerated]
         private SharpCompress.IO.StreamingMode _StreamingMode_k__BackingField;
         private const int MAX_SFX_SIZE = 0x7fff0;
-
-        internal RarHeaderFactory(SharpCompress.IO.StreamingMode mode, SharpCompress.Common.Options options, [Optional, DefaultParameterValue(null)] string password)
+        internal RarHeaderFactory(StreamingMode mode, Options options)
+            : this(mode, options, null) {
+        }
+        internal RarHeaderFactory(SharpCompress.IO.StreamingMode mode, SharpCompress.Common.Options options,  string password)
         {
             this.StreamingMode = mode;
             this.Options = options;

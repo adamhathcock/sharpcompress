@@ -46,8 +46,11 @@
         Label_00FC:
             yield break;
         }
+        public static ZipReader Open(Stream stream) {
+            return Open(stream, null, Options.KeepStreamsOpen);
+        }
         public static ZipReader Open(Stream stream, string password) {
-            return Open(stream,null);
+            return Open(stream, password, Options.KeepStreamsOpen);
         }
         public static ZipReader Open(Stream stream,  string password,  Options options)
         {

@@ -188,6 +188,11 @@
             return (byte) num2;
         }
 
+        private int decodeNumber(Decode RD)
+        {
+            return UnpackUtility.decodeNumber(this, RD);
+        }
+
         private void InitBlock()
         {
             this.UnpOldTable20 = new byte[0x404];
@@ -199,12 +204,12 @@
             {
                 if (this.UnpAudioBlock != 0)
                 {
-                    if (UnpackUtility.decodeNumber(this, this.MD[this.UnpCurChannel]) == 0x100)
+                    if (this.decodeNumber(this.MD[this.UnpCurChannel]) == 0x100)
                     {
                         this.ReadTables20();
                     }
                 }
-                else if (UnpackUtility.decodeNumber(this, this.LD) == 0x10d)
+                else if (this.decodeNumber(this.LD) == 0x10d)
                 {
                     this.ReadTables20();
                 }
@@ -255,7 +260,7 @@
                 {
                     return false;
                 }
-                int num5 = UnpackUtility.decodeNumber(this, this.BD);
+                int num5 = this.decodeNumber(this.BD);
                 if (num5 < 0x10)
                 {
                     buffer2[num3] = (byte) ((num5 + this.UnpOldTable20[num3]) & 15);
@@ -348,7 +353,7 @@
                 }
                 if (this.UnpAudioBlock != 0)
                 {
-                    int delta = UnpackUtility.decodeNumber(this, this.MD[this.UnpCurChannel]);
+                    int delta = this.decodeNumber(this.MD[this.UnpCurChannel]);
                     if (delta == 0x100)
                     {
                         if (this.ReadTables20())
@@ -369,7 +374,7 @@
                     int num;
                     int num4;
                     int num6;
-                    int index = UnpackUtility.decodeNumber(this, this.LD);
+                    int index = this.decodeNumber(this.LD);
                     if (index < 0x100)
                     {
                         base.window[base.unpPtr++] = (byte) index;
@@ -385,7 +390,7 @@
                             num4 += Utility.URShift(base.GetBits(), (int) (0x10 - num));
                             base.AddBits(num);
                         }
-                        int num5 = UnpackUtility.decodeNumber(this, this.DD);
+                        int num5 = this.decodeNumber(this.DD);
                         num6 = DDecode[num5] + 1;
                         num = DBits[num5];
                         if (num > 0)
@@ -420,7 +425,7 @@
                     if (index < 0x105)
                     {
                         num6 = base.oldDist[(base.oldDistPtr - (index - 0x100)) & 3];
-                        int num7 = UnpackUtility.decodeNumber(this, this.RD);
+                        int num7 = this.decodeNumber(this.RD);
                         num4 = LDecode[num7] + 2;
                         num = LBits[num7];
                         if (num > 0)
