@@ -72,9 +72,14 @@ namespace SharpCompress.Archive
             RemoveEntry((TEntry)entry);
         }
 
+        public TEntry AddEntry(string key, Stream source) {
+            return AddEntry(key, source, 0L, null);
+        }
+        public TEntry AddEntry(string key, Stream source, long size) {
+            return AddEntry(key, source, size, null);
+        }
         public TEntry AddEntry(string key, Stream source,
-                             long size = 0, DateTime? modified = null)
-        {
+                             long size, DateTime? modified) {
             return AddEntry(key, source, false, size, modified);
         }
 
@@ -83,9 +88,14 @@ namespace SharpCompress.Archive
         {
             return AddEntry(key, source, closeStream, size, modified);
         }
-
+        public TEntry AddEntry(string key, Stream source, bool closeStream) {
+            return AddEntry(key, source, closeStream, 0L, null);
+        }
+        public TEntry AddEntry(string key, Stream source, bool closeStream, long size) {
+            return AddEntry(key, source, closeStream, size, null);
+        }
         public TEntry AddEntry(string key, Stream source, bool closeStream,
-                             long size = 0, DateTime? modified = null)
+                             long size , DateTime? modified )
         {
             if (key.StartsWith("/")
                 || key.StartsWith("\\"))

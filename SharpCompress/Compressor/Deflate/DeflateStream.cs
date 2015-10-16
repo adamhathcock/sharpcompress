@@ -35,10 +35,18 @@ namespace SharpCompress.Compressor.Deflate
         private readonly ZlibBaseStream _baseStream;
         private bool _disposed;
 
-
+              public DeflateStream(Stream stream, CompressionMode mode )
+            : this(stream, mode, CompressionLevel.Default, false) { 
+        
+        } 
         public DeflateStream(Stream stream, CompressionMode mode,
-                             CompressionLevel level = CompressionLevel.Default,
-                             bool leaveOpen = false)
+                            CompressionLevel level)
+            : this(stream,mode,level,false) { 
+        
+        } 
+        public DeflateStream(Stream stream, CompressionMode mode,
+                             CompressionLevel level ,
+                             bool leaveOpen )
         {
             _baseStream = new ZlibBaseStream(stream, mode, level, ZlibStreamFlavor.DEFLATE, leaveOpen);
         }

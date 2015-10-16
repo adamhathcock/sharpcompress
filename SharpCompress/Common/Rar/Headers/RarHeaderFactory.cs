@@ -9,8 +9,10 @@ namespace SharpCompress.Common.Rar.Headers
     internal class RarHeaderFactory
     {
         private const int MAX_SFX_SIZE = 0x80000 - 16; //archive.cpp line 136
-
-        internal RarHeaderFactory(StreamingMode mode, Options options, string password = null)
+        internal RarHeaderFactory(StreamingMode mode, Options options)
+            : this(mode, options, null) {
+        }
+        internal RarHeaderFactory(StreamingMode mode, Options options, string password )
         {
             StreamingMode = mode;
             Options = options;

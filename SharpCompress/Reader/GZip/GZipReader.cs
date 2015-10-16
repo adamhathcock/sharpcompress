@@ -21,7 +21,9 @@ namespace SharpCompress.Reader.GZip
         }
 
         #region Open
-
+        public static GZipReader Open(Stream stream) {
+            return Open(stream, Options.KeepStreamsOpen);
+        }
         /// <summary>
         /// Opens a GZipReader for Non-seeking usage with a single volume
         /// </summary>
@@ -29,7 +31,7 @@ namespace SharpCompress.Reader.GZip
         /// <param name="options"></param>
         /// <returns></returns>
         public static GZipReader Open(Stream stream,
-                                      Options options = Options.KeepStreamsOpen)
+                                      Options options  )
         {
             //stream.CheckNotNull("stream");
             Utility.CheckNotNull(stream,"stream");

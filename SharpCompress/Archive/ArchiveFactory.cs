@@ -11,13 +11,16 @@ namespace SharpCompress.Archive
 {
     public class ArchiveFactory
     {
+        public static IArchive Open(Stream stream) {
+            return Open(stream, Options.KeepStreamsOpen);
+        }
         /// <summary>
         /// Opens an Archive for random access
         /// </summary>
         /// <param name="stream"></param>
         /// <param name="options"></param>
         /// <returns></returns>
-        public static IArchive Open(Stream stream, Options options = Options.KeepStreamsOpen)
+        public static IArchive Open(Stream stream, Options options )
         {
             //stream.CheckNotNull("stream");
             Utility.CheckNotNull(stream,"stream");

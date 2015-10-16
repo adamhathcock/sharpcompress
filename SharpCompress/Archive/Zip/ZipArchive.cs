@@ -69,26 +69,30 @@ namespace SharpCompress.Archive.Zip
             return new ZipArchive(fileInfo, options, password);
         }
 #endif
-
+        public static ZipArchive Open(Stream stream) {
+            return Open(stream, Options.None, null);
+        }
         /// <summary>
         /// Takes a seekable Stream as a source
         /// </summary>
         /// <param name="stream"></param>
         /// <param name="password"></param>
-        public static ZipArchive Open(Stream stream, string password = null)
+        public static ZipArchive Open(Stream stream, string password )
         {
             //stream.CheckNotNull("stream");
             Utility.CheckNotNull(stream,"stream");
             return Open(stream, Options.None, password);
         }
-
+        public static ZipArchive Open(Stream stream, Options options) {
+            return Open(stream, options, null);
+        }
         /// <summary>
         /// Takes a seekable Stream as a source
         /// </summary>
         /// <param name="stream"></param>
         /// <param name="options"></param>
         /// <param name="password"></param>
-        public static ZipArchive Open(Stream stream, Options options, string password = null)
+        public static ZipArchive Open(Stream stream, Options options, string password)
         {
             //stream.CheckNotNull("stream");
             Utility.CheckNotNull(stream,"stream");
@@ -113,8 +117,10 @@ namespace SharpCompress.Archive.Zip
             }
         }
 #endif
-
-        public static bool IsZipFile(Stream stream, string password = null)
+        public static bool IsZipFile(Stream stream) {
+            return IsZipFile(stream, null);
+        }
+        public static bool IsZipFile(Stream stream, string password )
         {
             StreamingZipHeaderFactory headerFactory = new StreamingZipHeaderFactory(password);
             try
@@ -165,14 +171,16 @@ namespace SharpCompress.Archive.Zip
             : base(ArchiveType.Zip)
         {
         }
-
+        internal ZipArchive(Stream stream, Options options)
+            : this(stream, options, null) {
+        }
         /// <summary>
         /// Takes multiple seekable Streams for a multi-part archive
         /// </summary>
         /// <param name="stream"></param>
         /// <param name="options"></param>
         /// <param name="password"></param>
-        internal ZipArchive(Stream stream, Options options, string password = null)
+        internal ZipArchive(Stream stream, Options options, string password )
             : base(ArchiveType.Zip, stream, options)
         {
             headerFactory = new SeekableZipHeaderFactory(password);
