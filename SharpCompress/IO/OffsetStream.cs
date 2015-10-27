@@ -139,7 +139,59 @@ namespace SharpCompress.IO
         }
 
         public bool KeepStreamsOpen { get; private set; }
-        protected override void Dispose(bool disposing) {           
+
+        #region IAsync read write
+        public override IAsyncResult BeginRead(byte[] buffer, int offset, int count, AsyncCallback callback, object state) {
+            return this._originalStream.BeginRead(buffer, offset, count, callback, state);
+        }
+
+        public override IAsyncResult BeginWrite(byte[] buffer, int offset, int count, AsyncCallback callback, object state) {
+            return this._originalStream.BeginWrite(buffer, offset, count, callback, state);
+        }
+        public override int EndRead(IAsyncResult asyncResult) {
+            return this._originalStream.EndRead(asyncResult);
+        }
+
+        public override void EndWrite(IAsyncResult asyncResult) {
+            this._originalStream.EndWrite(asyncResult);
+        }
+
+        #endregion
+        #region
+        public void CopyToStream(Stream destination) {
+            CopyToStream(destination, 16 * 1024);
+        }
+
+        public void CopyToStream(Stream destination, int bufferSize) {
+            if (destination == null)
+                throw new ArgumentNullException("destination");
+            if (!CanRead)
+                throw new NotSupportedException("This stream does not support reading");
+            if (!destination.CanWrite)
+                throw new NotSupportedException("This destination stream does not support writing");
+            if (bufferSize <= 0)
+                throw new ArgumentOutOfRangeException("bufferSize");
+
+            var buffer = new byte[bufferSize];
+            int nread;
+            while ((nread = Read(buffer, 0, bufferSize)) != 0) {
+                destination.Write(buffer, 0, nread);
+            }
+        }
+        public byte[] GetBuffer() {
+            byte[]buf=null;
+            using(MemoryStream ms = new MemoryStream()){
+                CopyToStream(ms);
+                buf = ms.ToArray();
+            }
+            return buf;
+        }
+        #endregion
+        //public override void Close() {
+        //    Dispose(true);
+        //    GC.SuppressFinalize(this);
+        //}
+        protected override void Dispose(bool disposing) {
             base.Dispose(disposing);
             if (disposing && !KeepStreamsOpen) {
                 _originalStream.Dispose();
