@@ -128,6 +128,12 @@ namespace SharpCompress.IO
             int num_read = _originalStream.Read(buffer, offset, count);
             return num_read;
         }
+        public override int ReadByte() {
+            return _originalStream.ReadByte();
+        }
+        public override void WriteByte(byte value) {
+            _originalStream.WriteByte(value);
+        }
         /// <summary>
         /// 指定长度内的数据写入
         /// </summary>
