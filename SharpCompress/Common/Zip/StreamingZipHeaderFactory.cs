@@ -45,18 +45,17 @@ namespace SharpCompress.Common.Zip
                 lastEntryHeader = null;
                 uint headerBytes = reader.ReadUInt32();
                 header = ReadHeader(headerBytes, reader);
-
-                //entry could be zero bytes so we need to know that.
-                if (header.ZipHeaderType == ZipHeaderType.LocalEntry)
-                {
-                    bool isRecording = rewindableStream.IsRecording;
-                    if (!isRecording)
-                    {
-                        rewindableStream.StartRecording();
+                if (header != null) {
+                    // entry could be zero bytes so we need to know that.
+                    if(header.ZipHeaderType == ZipHeaderType.LocalEntry) {
+                        bool isRecording = rewindableStream.IsRecording;
+                        if (!isRecording) {
+                            rewindableStream.StartRecording();
+                        }
+                        uint nextHeaderBytes = reader.ReadUInt32();
+                        header.HasData = !IsHeader(nextHeaderBytes);
+                        rewindableStream.Rewind(!isRecording);
                     }
-                    uint nextHeaderBytes = reader.ReadUInt32();
-                    header.HasData = !IsHeader(nextHeaderBytes);
-                    rewindableStream.Rewind(!isRecording);
                 }
                 yield return header;
             }
