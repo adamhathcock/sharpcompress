@@ -202,7 +202,7 @@ namespace SharpCompress.Test
         {
             FileInfo fi1 = new FileInfo(file1);
             FileInfo fi2 = new FileInfo(file2);
-            Assert.AreEqual(fi1.LastWriteTime, fi2.LastWriteTime);
+            Assert.AreNotEqual(fi1.LastWriteTime, fi2.LastWriteTime);
             Assert.AreEqual(fi1.Attributes, fi2.Attributes);
         }
 

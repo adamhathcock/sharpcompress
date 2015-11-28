@@ -90,7 +90,7 @@ namespace SharpCompress.Archive
                 FileInfo nf = new FileInfo(destinationFileName);
                 if (nf.Exists)
                 {
-                    if (options.HasFlag(ExtractOptions.PreserveAttributes))
+                    if (options.HasFlag(ExtractOptions.PreserveFileTime))
                     {
                         if (entry.CreatedTime.HasValue)
                         {

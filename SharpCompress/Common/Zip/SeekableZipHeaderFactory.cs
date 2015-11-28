@@ -8,7 +8,7 @@ namespace SharpCompress.Common.Zip
 {
     internal class SeekableZipHeaderFactory : ZipHeaderFactory
     {
-        private const int MAX_ITERATIONS_FOR_DIRECTORY_HEADER = 1000;
+        private const int MAX_ITERATIONS_FOR_DIRECTORY_HEADER = 4096;
 
         internal SeekableZipHeaderFactory(string password)
             : base(StreamingMode.Seekable, password)
