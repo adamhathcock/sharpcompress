@@ -94,7 +94,14 @@ namespace SharpCompress.Writer.Zip
             byte[] encodedFilename = ArchiveEncoding.Default.GetBytes(filename);
 
             OutputStream.Write(BitConverter.GetBytes(ZipHeaderFactory.ENTRY_HEADER_BYTES), 0, 4);
-            OutputStream.Write(new byte[] {63, 0}, 0, 2); //version
+				if(explicitZipCompressionInfo.Compression == ZipCompressionMethod.Deflate)
+				{
+					OutputStream.Write(new byte[] {20, 0}, 0, 2); //version
+				}
+				else
+				{
+					OutputStream.Write(new byte[] {63, 0}, 0, 2); //version
+				}            
             HeaderFlags flags = ArchiveEncoding.Default == Encoding.UTF8 ? HeaderFlags.UTF8 : (HeaderFlags)0;
             if (!OutputStream.CanSeek)
             {
