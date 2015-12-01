@@ -34,7 +34,8 @@ namespace SharpCompress.Writer.Zip
             }
             outputStream.Write(BitConverter.GetBytes((ushort) flags), 0, 2);
             outputStream.Write(BitConverter.GetBytes((ushort) compression), 0, 2); // zipping method
-            outputStream.Write(BitConverter.GetBytes(ModificationTime.DateTimeToDosTime()), 0, 4);
+            //outputStream.Write(BitConverter.GetBytes(ModificationTime.DateTimeToDosTime()), 0, 4);
+            outputStream.Write(BitConverter.GetBytes(Utility.DateTimeToDosTime(ModificationTime)), 0, 4);
                 // zipping date and time
             outputStream.Write(BitConverter.GetBytes(Crc), 0, 4); // file CRC
             outputStream.Write(BitConverter.GetBytes(Compressed), 0, 4); // compressed file size

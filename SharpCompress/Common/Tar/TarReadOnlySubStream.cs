@@ -33,7 +33,8 @@ namespace SharpCompress.Common.Tar
                     return;
                 }
                 var buffer = new byte[skipBytes];
-                Stream.ReadFully(buffer);
+                //Stream.ReadFully(buffer);
+                Utility.ReadFully(Stream,buffer);
             }
         }
 

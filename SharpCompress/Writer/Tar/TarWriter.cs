@@ -70,7 +70,8 @@ namespace SharpCompress.Writer.Tar
             header.Name = NormalizeFilename(filename);
             header.Size = realSize;
             header.Write(OutputStream);
-            size = source.TransferTo(OutputStream);
+            //size = source.TransferTo(OutputStream);
+            size = Utility.TransferTo(source, OutputStream);
             PadTo512(size.Value, false);
         }
 

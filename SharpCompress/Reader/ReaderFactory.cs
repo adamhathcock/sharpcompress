@@ -18,16 +18,19 @@ namespace SharpCompress.Reader
 {
     public static class ReaderFactory
     {
+        public static IReader Open(Stream stream) {
+            return Open(stream, Options.KeepStreamsOpen);
+        }
         /// <summary>
         /// Opens a Reader for Non-seeking usage
         /// </summary>
         /// <param name="stream"></param>
         /// <param name="options"></param>
         /// <returns></returns>
-        public static IReader Open(Stream stream, Options options = Options.KeepStreamsOpen)
+        public static IReader Open(Stream stream, Options options )
         {
-            stream.CheckNotNull("stream");
-
+            //stream.CheckNotNull("stream");
+            Utility.CheckNotNull(stream,"stream");
             RewindableStream rewindableStream = new RewindableStream(stream);
             rewindableStream.StartRecording();
             if (ZipArchive.IsZipFile(rewindableStream, null))

@@ -5,9 +5,12 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using SharpCompress.Common.Rar.Headers;
+#else
+  //using SharpCompress.Common.Rar.Headers;
 #endif
 using SharpCompress.Common;
 using SharpCompress.Common.Rar;
+
 
 namespace SharpCompress.Archive.Rar
 {
@@ -25,36 +28,40 @@ namespace SharpCompress.Archive.Rar
                 yield return part;
             }
         }
+        private static bool af_HasFlag(ArchiveFlags archiveFlags, ArchiveFlags archiveFlags2) {
+            return (archiveFlags & archiveFlags2) == archiveFlags2;
+        }
 
 #if !PORTABLE && !NETFX_CORE
         internal static IEnumerable<RarVolume> GetParts(FileInfo fileInfo, string password, Options options)
         {
             FileInfoRarArchiveVolume part = new FileInfoRarArchiveVolume(fileInfo, password, options);
             yield return part;
-
-            if (!part.ArchiveHeader.ArchiveHeaderFlags.HasFlag(ArchiveFlags.VOLUME))
+            ArchiveFlags af=part.ArchiveHeader.ArchiveHeaderFlags;
+            if (!af_HasFlag(af,ArchiveFlags.VOLUME))
             {
                 yield break; //if file isn't volume then there is no reason to look
             }
             ArchiveHeader ah = part.ArchiveHeader;
-            fileInfo = GetNextFileInfo(ah, part.FileParts.FirstOrDefault() as FileInfoRarFilePart);
+            fileInfo = GetNextFileInfo(ah, part.FileParts.FirstOrDefault<RarFilePart>() as FileInfoRarFilePart);
             //we use fileinfo because rar is dumb and looks at file names rather than archive info for another volume
             while (fileInfo != null && fileInfo.Exists)
             {
                 part = new FileInfoRarArchiveVolume(fileInfo, password, options);
 
-                fileInfo = GetNextFileInfo(ah, part.FileParts.FirstOrDefault() as FileInfoRarFilePart);
+                fileInfo = GetNextFileInfo(ah, part.FileParts.FirstOrDefault<RarFilePart>() as FileInfoRarFilePart);
                 yield return part;
             }
         }
 
+       
         private static FileInfo GetNextFileInfo(ArchiveHeader ah, FileInfoRarFilePart currentFilePart)
         {
             if (currentFilePart == null)
             {
                 return null;
             }
-            bool oldNumbering = !ah.ArchiveHeaderFlags.HasFlag(ArchiveFlags.NEWNUMBERING)
+            bool oldNumbering = !af_HasFlag(ah.ArchiveHeaderFlags,ArchiveFlags.NEWNUMBERING)
                                 || currentFilePart.MarkHeader.OldFormat;
             if (oldNumbering)
             {

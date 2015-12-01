@@ -62,14 +62,14 @@ namespace SharpCompress.Archive.Rar
 
         protected override IReader CreateReaderForSolidExtraction()
         {
-            var stream = Volumes.First().Stream;
+            var stream = Volumes.First<RarVolume>().Stream;
             stream.Position = 0;
             return RarReader.Open(stream);
         }
 
         public override bool IsSolid
         {
-            get { return Volumes.First().IsSolidArchive; }
+            get { return Volumes.First<RarVolume>().IsSolidArchive; }
         }
 
         #region Creation
@@ -83,7 +83,8 @@ namespace SharpCompress.Archive.Rar
         /// <param name="password"></param>
         public static RarArchive Open(string filePath, Options options = Options.None, string password = null)
         {
-            filePath.CheckNotNullOrEmpty("filePath");
+            //filePath.CheckNotNullOrEmpty("filePath");
+            Utility.CheckNotNullOrEmpty(filePath,"filePath");
             return Open(new FileInfo(filePath), options, password);
         }
 
@@ -95,31 +96,47 @@ namespace SharpCompress.Archive.Rar
         /// <param name="password"></param>
         public static RarArchive Open(FileInfo fileInfo, Options options = Options.None, string password = null)
         {
-            fileInfo.CheckNotNull("fileInfo");
+            //fileInfo.CheckNotNull("fileInfo");
+            Utility.CheckNotNull(fileInfo,"fileInfo");
             return new RarArchive(fileInfo, options, password);
         }
 #endif
+
+        public static RarArchive Open(Stream stream) {
+            return Open(stream, Options.KeepStreamsOpen,null);
+        }
+        public static RarArchive Open(Stream stream,Options op) {
+            return Open(stream, op,null);
+        }
         /// <summary>
         /// Takes a seekable Stream as a source
         /// </summary>
         /// <param name="stream"></param>
         /// <param name="options"></param>
         /// <param name="password"></param>
-        public static RarArchive Open(Stream stream, Options options = Options.KeepStreamsOpen, string password = null)
+        public static RarArchive Open(Stream stream, Options options, string password )
         {
-            stream.CheckNotNull("stream");
-            return Open(stream.AsEnumerable(), options, password);
+            //stream.CheckNotNull("stream");
+            Utility.CheckNotNull(stream,"stream");
+            //return Open(stream.AsEnumerable(), options, password);
+            return Open(Utility.AsEnumerable<Stream>(stream), options, password);
         }
-
+        public static RarArchive Open(IEnumerable<Stream> streams) {
+            return Open(streams, Options.KeepStreamsOpen,null);
+        }
+        public static RarArchive Open(IEnumerable<Stream> streams,Options op) {
+            return Open(streams, op, null);
+        }
         /// <summary>
         /// Takes multiple seekable Streams for a multi-part archive
         /// </summary>
         /// <param name="streams"></param>
         /// <param name="options"></param>
         /// <param name="password"></param>
-        public static RarArchive Open(IEnumerable<Stream> streams, Options options = Options.KeepStreamsOpen, string password = null)
+        public static RarArchive Open(IEnumerable<Stream> streams, Options options , string password )
         {
-            streams.CheckNotNull("streams");
+            //streams.CheckNotNull("streams");
+            Utility.CheckNotNull(streams,"streams");
             return new RarArchive(streams, options, password);
         }
 
@@ -152,7 +169,7 @@ namespace SharpCompress.Archive.Rar
             try
             {
                 var headerFactory = new RarHeaderFactory(StreamingMode.Seekable, options);
-                RarHeader header = headerFactory.ReadHeaders(stream).FirstOrDefault();
+                RarHeader header = headerFactory.ReadHeaders(stream).FirstOrDefault<RarHeader>();
                 if (header == null)
                 {
                     return false;

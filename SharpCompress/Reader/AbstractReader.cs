@@ -158,7 +158,7 @@ namespace SharpCompress.Reader
         {
             if (!Entry.IsSolid)
             {
-                var rawStream = Entry.Parts.First().GetRawStream();
+                var rawStream = Entry.Parts.First<FilePart>().GetRawStream();
 
                 if (rawStream != null)
                 {
@@ -202,7 +202,8 @@ namespace SharpCompress.Reader
         {
             using (Stream s = OpenEntryStream())
             {
-                s.TransferTo(writeStream);
+                //s.TransferTo(writeStream);
+                Utility.TransferTo(s,writeStream);
             }
         }
 
@@ -227,7 +228,7 @@ namespace SharpCompress.Reader
 
         protected virtual EntryStream GetEntryStream()
         {
-          return CreateEntryStream(Entry.Parts.First().GetCompressedStream());
+          return CreateEntryStream(Entry.Parts.First<FilePart>().GetCompressedStream());
         }
 
         #endregion

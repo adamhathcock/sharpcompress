@@ -41,7 +41,7 @@ namespace SharpCompress.IO
 
         public override byte ReadByte()
         {
-            return ReadBytes(1).Single();
+            return ReadBytes(1).Single<byte>();
         }
 
         public override byte[] ReadBytes(int count)

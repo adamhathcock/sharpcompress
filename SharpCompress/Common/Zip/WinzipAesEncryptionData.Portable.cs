@@ -1,9 +1,12 @@
-﻿using System;
+﻿#if PORTABLE
+
+using System;
 using System.Text;
 using SharpCompress.Crypto;
 
 namespace SharpCompress.Common.Zip
 {
+
     internal class WinzipAesEncryptionData
     {
         private const int RFC2898_ITERATIONS = 1000;
@@ -65,4 +68,7 @@ namespace SharpCompress.Common.Zip
             }
         }
     }
+
 }
+
+#endif

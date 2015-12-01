@@ -375,7 +375,7 @@ namespace SharpCompress.Compressor.PPMd.H
         public virtual void initSubAllocator()
         {
             int i, k;
-            Utility.Fill(heap, freeListPos, freeListPos + sizeOfFreeList(), (byte) 0);
+            Utility.Fill<byte>(heap, freeListPos, freeListPos + sizeOfFreeList(), (byte) 0);
 
             pText = heapStart;
 

@@ -13,20 +13,25 @@ namespace SharpCompress.Archive.Rar
     internal class FileInfoRarArchiveVolume : RarVolume
     {
         internal FileInfoRarArchiveVolume(FileInfo fileInfo, string password, Options options)
-            : base(StreamingMode.Seekable, fileInfo.OpenRead(), password, FixOptions(options))
+            : base(StreamingMode.Seekable, /*fileInfo.OpenRead()*/fileInfo.Open(FileMode.Open, FileAccess.Read), password, FixOptions(options))
         {
             FileInfo = fileInfo;
-            FileParts = base.GetVolumeFileParts().ToReadOnly();
+            //FileParts = base.GetVolumeFileParts().ToReadOnly();
+            FileParts =Utility.ToReadOnly<RarFilePart>( base.GetVolumeFileParts());
         }
 
         private static Options FixOptions(Options options)
         {
             //make sure we're closing streams with fileinfo
-            if (options.HasFlag(Options.KeepStreamsOpen))
+            if (options_HasFlag(options,Options.KeepStreamsOpen))
             {
                 options = (Options) FlagUtility.SetFlag(options, Options.KeepStreamsOpen, false);
             }
             return options;
+        }
+
+        private static bool options_HasFlag(Options options,Options options2) {
+            return (options&options2)==options2;
         }
 
         internal ReadOnlyCollection<RarFilePart> FileParts { get; private set; }

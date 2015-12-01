@@ -44,7 +44,7 @@ namespace SharpCompress.Reader
             string file = Path.GetFileName(reader.Entry.Key);
 
 
-            if (options.HasFlag(ExtractOptions.ExtractFullPath))
+            if (options_HasFlag(options,ExtractOptions.ExtractFullPath))
             {
                 string folder = Path.GetDirectoryName(reader.Entry.Key);
                 string destdir = Path.Combine(destinationDirectory, folder);
@@ -63,10 +63,14 @@ namespace SharpCompress.Reader
             {
                 reader.WriteEntryToFile(destinationFileName, options);
             }
-            else if (options.HasFlag(ExtractOptions.ExtractFullPath) && !Directory.Exists(destinationFileName))
+            else if (options_HasFlag(options,ExtractOptions.ExtractFullPath) && !Directory.Exists(destinationFileName))
             {
                 Directory.CreateDirectory(destinationFileName);
             }
+        }
+
+        private static bool options_HasFlag(ExtractOptions options, ExtractOptions extractOptions) {
+            return (options&extractOptions)==extractOptions;
         }
 
         /// <summary>
@@ -77,7 +81,7 @@ namespace SharpCompress.Reader
         {
             FileMode fm = FileMode.Create;
 
-            if (!options.HasFlag(ExtractOptions.Overwrite))
+            if (!options_HasFlag(options,ExtractOptions.Overwrite))
             {
                 fm = FileMode.CreateNew;
             }

@@ -11,10 +11,14 @@ namespace SharpCompress.Common.Rar.Headers
         {
             HighPosAv = reader.ReadInt16();
             PosAv = reader.ReadInt32();
-            if (ArchiveHeaderFlags.HasFlag(ArchiveFlags.ENCRYPTVER))
+            if (ArchiveHeaderFlags_HasFlag(ArchiveFlags.ENCRYPTVER))
             {
                 EncryptionVersion = reader.ReadByte();
             }
+        }
+
+        private bool ArchiveHeaderFlags_HasFlag(ArchiveFlags archiveFlags) {
+            return (ArchiveHeaderFlags & archiveFlags) == archiveFlags;
         }
 
         internal ArchiveFlags ArchiveHeaderFlags
@@ -30,7 +34,7 @@ namespace SharpCompress.Common.Rar.Headers
 
         public bool HasPassword
         {
-            get { return ArchiveHeaderFlags.HasFlag(ArchiveFlags.PASSWORD); }
+            get { return ArchiveHeaderFlags_HasFlag(ArchiveFlags.PASSWORD); }
         }
     }
 }

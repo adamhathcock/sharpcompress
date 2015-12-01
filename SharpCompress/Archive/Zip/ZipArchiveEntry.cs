@@ -14,7 +14,7 @@ namespace SharpCompress.Archive.Zip
 
         public virtual Stream OpenEntryStream()
         {
-            return Parts.Single().GetCompressedStream();
+            return Parts.Single<SharpCompress.Common.FilePart>().GetCompressedStream();
         }
 
         #region IArchiveEntry Members
@@ -30,7 +30,7 @@ namespace SharpCompress.Archive.Zip
 
         public string Comment
         {
-            get { return (Parts.Single() as SeekableZipFilePart).Comment; }
+            get { return (Parts.Single<SharpCompress.Common.FilePart>() as SeekableZipFilePart).Comment; }
         }
     }
 }

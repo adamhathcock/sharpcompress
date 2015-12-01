@@ -45,8 +45,8 @@ namespace SharpCompress.Common.Zip
                 {
                     decompressionStream = GetCompressedStream();
                 }
-                decompressionStream.SkipAll();
-
+                //decompressionStream.SkipAll();
+                Utility.SkipAll(decompressionStream);
                 DeflateStream deflateStream = decompressionStream as DeflateStream;
                 if (deflateStream != null)
                 {

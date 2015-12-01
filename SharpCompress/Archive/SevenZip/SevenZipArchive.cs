@@ -38,7 +38,8 @@ namespace SharpCompress.Archive.SevenZip
         /// <param name="options"></param>
         public static SevenZipArchive Open(string filePath, Options options)
         {
-            filePath.CheckNotNullOrEmpty("filePath");
+            //filePath.CheckNotNullOrEmpty("filePath");
+            Utility.CheckNotNullOrEmpty(filePath,"filePath");
             return Open(new FileInfo(filePath), options);
         }
 
@@ -49,7 +50,8 @@ namespace SharpCompress.Archive.SevenZip
         /// <param name="options"></param>
         public static SevenZipArchive Open(FileInfo fileInfo, Options options)
         {
-            fileInfo.CheckNotNull("fileInfo");
+            //fileInfo.CheckNotNull("fileInfo");
+            Utility.CheckNotNull(fileInfo,"fileInfo");
             return new SevenZipArchive(fileInfo, options);
         }
 #endif
@@ -60,7 +62,8 @@ namespace SharpCompress.Archive.SevenZip
         /// <param name="stream"></param>
         public static SevenZipArchive Open(Stream stream)
         {
-            stream.CheckNotNull("stream");
+            //stream.CheckNotNull("stream");
+            Utility.CheckNotNull(stream,"stream");
             return Open(stream, Options.None);
         }
 
@@ -71,7 +74,8 @@ namespace SharpCompress.Archive.SevenZip
         /// <param name="options"></param>
         public static SevenZipArchive Open(Stream stream, Options options)
         {
-            stream.CheckNotNull("stream");
+            //stream.CheckNotNull("stream");
+            Utility.CheckNotNull(stream,"stream");
             return new SevenZipArchive(stream, options);
         }
 
@@ -87,7 +91,8 @@ namespace SharpCompress.Archive.SevenZip
             {
                 options = (Options)FlagUtility.SetFlag(options, Options.KeepStreamsOpen, false);
             }
-            return new SevenZipVolume(file.OpenRead(), options).AsEnumerable();
+            //return new SevenZipVolume(file.OpenRead(), options).AsEnumerable();
+            return Utility.AsEnumerable<SevenZipVolume>( new SevenZipVolume(file.OpenRead(), options));
         }
 
         public static bool IsSevenZipFile(string filePath)
@@ -109,7 +114,8 @@ namespace SharpCompress.Archive.SevenZip
 #endif
 
         internal SevenZipArchive(Stream stream, Options options)
-            : base(ArchiveType.SevenZip, stream.AsEnumerable(), options, null)
+            //: base(ArchiveType.SevenZip, stream.AsEnumerable(), options, null)
+            : base(ArchiveType.SevenZip, Utility.AsEnumerable<Stream>(stream), options, null)
         {
         }
 
@@ -175,7 +181,8 @@ namespace SharpCompress.Archive.SevenZip
         {
             BinaryReader reader = new BinaryReader(stream);
             byte[] signatureBytes = reader.ReadBytes(6);
-            return signatureBytes.BinaryEquals(SIGNATURE);
+            //return signatureBytes.BinaryEquals(SIGNATURE);
+           return Utility.BinaryEquals(signatureBytes,SIGNATURE);
         }
 
         protected override IReader CreateReaderForSolidExtraction()

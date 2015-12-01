@@ -82,7 +82,9 @@ namespace SharpCompress
         {
             if (!fullyLoaded)
             {
-                this.ForEach(x => { });
+                //this.ForEach(x => { });
+                Utility.ForEach<T>(this,x => { });
+
                 fullyLoaded = true;
             }
         }

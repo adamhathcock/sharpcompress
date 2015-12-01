@@ -1,3 +1,4 @@
+#define NET2
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -8,8 +9,10 @@ namespace SharpCompress.Common.Rar.Headers
     internal class RarHeaderFactory
     {
         private const int MAX_SFX_SIZE = 0x80000 - 16; //archive.cpp line 136
-
-        internal RarHeaderFactory(StreamingMode mode, Options options, string password = null)
+        internal RarHeaderFactory(StreamingMode mode, Options options)
+            : this(mode, options, null) {
+        }
+        internal RarHeaderFactory(StreamingMode mode, Options options, string password )
         {
             StreamingMode = mode;
             Options = options;
@@ -23,7 +26,7 @@ namespace SharpCompress.Common.Rar.Headers
         
         internal IEnumerable<RarHeader> ReadHeaders(Stream stream)
         {
-            if (Options.HasFlag(Options.LookForHeader))
+            if (Options_HasFlag(Options.LookForHeader))
             {
                 stream = CheckSFX(stream);
             }
@@ -37,6 +40,10 @@ namespace SharpCompress.Common.Rar.Headers
                     yield break; // the end?
                 }
             }
+        }
+
+        private bool Options_HasFlag(Common.Options options) {
+            return (Options&options)==options;
         }
 
         private Stream CheckSFX(Stream stream)
@@ -91,10 +98,14 @@ namespace SharpCompress.Common.Rar.Headers
             }
             catch (Exception e)
             {
-                if (!Options.HasFlag(Options.KeepStreamsOpen))
+                if (!Options_HasFlag(Options.KeepStreamsOpen))
                 {
 #if NET2
+#if PORTABLE
+                    reader.Dispose();
+#else
                     reader.Close();
+#endif
 #else
                     reader.Dispose();
 #endif
@@ -166,7 +177,8 @@ namespace SharpCompress.Common.Rar.Headers
                                 break;
                             case StreamingMode.Streaming:
                                 {
-                                    reader.BaseStream.Skip(ph.DataSize);
+                                   // reader.BaseStream.Skip(ph.DataSize);
+                                    Utility.Skip( reader.BaseStream,ph.DataSize);
                                 }
                                 break;
                             default:
@@ -192,7 +204,8 @@ namespace SharpCompress.Common.Rar.Headers
                             case StreamingMode.Streaming:
                                 {
                                     //skip the data because it's useless?
-                                    reader.BaseStream.Skip(fh.CompressedSize);
+                                    //reader.BaseStream.Skip(fh.CompressedSize);
+                                    Utility.Skip(reader.BaseStream,fh.CompressedSize);
                                 }
                                 break;
                             default:

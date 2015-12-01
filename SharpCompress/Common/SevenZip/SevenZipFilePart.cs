@@ -55,7 +55,8 @@ namespace SharpCompress.Common.SevenZip
             }
             if (skipSize > 0)
             {
-                folderStream.Skip(skipSize);
+                //folderStream.Skip(skipSize);
+                Utility.Skip(folderStream,skipSize);
             }
             return new ReadOnlySubStream(folderStream, Header.Size);
         }

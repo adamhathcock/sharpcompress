@@ -71,7 +71,7 @@ namespace SharpCompress.Common.Rar
                     throw new InvalidOperationException("ArchiveHeader should never been null in a streaming read.");
                 }
                 //we only want to load the archive header to avoid overhead but have to do the nasty thing and reset the stream
-                GetVolumeFileParts().First();
+                GetVolumeFileParts().First<RarFilePart>();
                 Stream.Position = 0;
             }
         }
@@ -85,8 +85,13 @@ namespace SharpCompress.Common.Rar
             get
             {
                 EnsureArchiveHeaderLoaded();
-                return ArchiveHeader.ArchiveHeaderFlags.HasFlag(ArchiveFlags.FIRSTVOLUME);
+                ArchiveFlags ahf=ArchiveHeader.ArchiveHeaderFlags;
+                return ArchiveHeader_HasFlag(ahf,ArchiveFlags.FIRSTVOLUME);
             }
+        }
+
+        private bool ArchiveHeader_HasFlag(ArchiveFlags ahf, ArchiveFlags archiveFlags) {
+            return (ahf&archiveFlags)==archiveFlags;
         }
 
         /// <summary>
@@ -97,7 +102,7 @@ namespace SharpCompress.Common.Rar
             get
             {
                 EnsureArchiveHeaderLoaded();
-                return ArchiveHeader.ArchiveHeaderFlags.HasFlag(ArchiveFlags.VOLUME);
+                return ArchiveHeader_HasFlag(ArchiveHeader.ArchiveHeaderFlags, ArchiveFlags.VOLUME);
             }
         }
 
@@ -110,7 +115,7 @@ namespace SharpCompress.Common.Rar
             get
             {
                 EnsureArchiveHeaderLoaded();
-                return ArchiveHeader.ArchiveHeaderFlags.HasFlag(ArchiveFlags.SOLID);
+                return ArchiveHeader_HasFlag(ArchiveHeader.ArchiveHeaderFlags, ArchiveFlags.SOLID);
             }
         }
     }

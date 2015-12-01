@@ -10,9 +10,9 @@ namespace SharpCompress
 {
     internal static class Utility
     {
-        public static ReadOnlyCollection<T> ToReadOnly<T>(this IEnumerable<T> items)
+        public static ReadOnlyCollection<T> ToReadOnly<T>(/*this*/ IEnumerable<T> items)
         {
-            return new ReadOnlyCollection<T>(items.ToList());
+            return new ReadOnlyCollection<T>(items.ToList<T>());
         }
 
         /// <summary>
@@ -102,7 +102,7 @@ namespace SharpCompress
             Fill(array, 0, array.Length, val);
         }
 
-        public static void SetSize(this List<byte> list, int count)
+        public static void SetSize(/*this*/ List<byte> list, int count)
         {
             if (count > list.Count)
             {
@@ -245,7 +245,7 @@ namespace SharpCompress
             Array.Copy(newBytes, 0, array, pos, newBytes.Length);
         }
 
-        public static void Initialize<T>(this T[] array, Func<T> func)
+        public static void Initialize<T>(/*this*/ T[] array, Func<T> func)
         {
             for (int i = 0; i < array.Length; i++)
             {
@@ -253,7 +253,7 @@ namespace SharpCompress
             }
         }
 
-        public static void AddRange<T>(this ICollection<T> destination, IEnumerable<T> source)
+        public static void AddRange<T>(/*this*/ ICollection<T> destination, IEnumerable<T> source)
         {
             foreach (T item in source)
             {
@@ -261,7 +261,7 @@ namespace SharpCompress
             }
         }
 
-        public static void ForEach<T>(this IEnumerable<T> items, Action<T> action)
+        public static void ForEach<T>(/*this*/ IEnumerable<T> items, Action<T> action)
         {
             foreach (T item in items)
             {
@@ -269,12 +269,12 @@ namespace SharpCompress
             }
         }
 
-        public static IEnumerable<T> AsEnumerable<T>(this T item)
+        public static IEnumerable<T> AsEnumerable<T>(/*this*/ T item)
         {
             yield return item;
         }
 
-        public static void CheckNotNull(this object obj, string name)
+        public static void CheckNotNull(/*this*/ object obj, string name)
         {
             if (obj == null)
             {
@@ -282,16 +282,17 @@ namespace SharpCompress
             }
         }
 
-        public static void CheckNotNullOrEmpty(this string obj, string name)
+        public static void CheckNotNullOrEmpty(/*this*/ string obj, string name)
         {
-            obj.CheckNotNull(name);
+            //obj.CheckNotNull(name);
+            Utility.CheckNotNull(obj,name);
             if (obj.Length == 0)
             {
                 throw new ArgumentException("String is empty.");
             }
         }
 
-        public static void Skip(this Stream source, long advanceAmount)
+        public static void Skip(/*this*/ Stream source, long advanceAmount)
         {
             byte[] buffer = new byte[32 * 1024];
             int read = 0;
@@ -316,7 +317,7 @@ namespace SharpCompress
             } while (true);
         }
 
-        public static void SkipAll(this Stream source)
+        public static void SkipAll(/*this*/ Stream source)
         {
             byte[] buffer = new byte[32 * 1024];
             do
@@ -369,7 +370,7 @@ namespace SharpCompress
             return dt;
         }
 
-        public static uint DateTimeToDosTime(this DateTime? dateTime)
+        public static uint DateTimeToDosTime(/*this*/ DateTime? dateTime)
         {
             if (dateTime == null)
             {
@@ -396,7 +397,7 @@ namespace SharpCompress
             return DosDateToDateTime((UInt32)iTime);
         }
 
-        public static long TransferTo(this Stream source, Stream destination)
+        public static long TransferTo(/*this*/ Stream source, Stream destination)
         {
             byte[] array = new byte[81920];
             int count;
@@ -409,7 +410,7 @@ namespace SharpCompress
             return total;
         }
 
-        public static bool ReadFully(this Stream stream, byte[] buffer)
+        public static bool ReadFully(/*this*/ Stream stream, byte[] buffer)
         {
             int total = 0;
             int read;
@@ -424,12 +425,12 @@ namespace SharpCompress
             return (total >= buffer.Length);
         }
 
-        public static string TrimNulls(this string source)
+        public static string TrimNulls(/*this*/ string source)
         {
             return source.Replace('\0', ' ').Trim();
         }
 
-        public static bool BinaryEquals(this byte[] source, byte[] target)
+        public static bool BinaryEquals(/*this*/ byte[] source, byte[] target)
         {
             if (source.Length != target.Length)
             {
@@ -446,7 +447,7 @@ namespace SharpCompress
         }
 
 #if PORTABLE || NETFX_CORE
-        public static void CopyTo(this byte[] array, byte[] destination, int index)
+        public static void CopyTo(/*this*/ byte[] array, byte[] destination, int index)
         {
             Array.Copy(array, 0, destination, index, array.Length);
         }

@@ -15,7 +15,7 @@ namespace SharpCompress.Archive.Tar
 
         public virtual Stream OpenEntryStream()
         {
-            return Parts.Single().GetCompressedStream();
+            return Parts.Single<SharpCompress.Common.FilePart>().GetCompressedStream();
         }
 
         #region IArchiveEntry Members

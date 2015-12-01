@@ -12,8 +12,10 @@ namespace SharpCompress.Compressor.LZMA
         {
             _indent.Push("");
         }
-
-        public static void PushIndent(string indent = "  ")
+        public static void PushIndent() {
+            PushIndent("  ");
+        }
+        public static void PushIndent(string indent )
         {
             _indent.Push(_indent.Peek() + indent);
         }

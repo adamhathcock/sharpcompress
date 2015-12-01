@@ -11,15 +11,19 @@ namespace SharpCompress.Archive
 {
     public class ArchiveFactory
     {
+        public static IArchive Open(Stream stream) {
+            return Open(stream, Options.KeepStreamsOpen);
+        }
         /// <summary>
         /// Opens an Archive for random access
         /// </summary>
         /// <param name="stream"></param>
         /// <param name="options"></param>
         /// <returns></returns>
-        public static IArchive Open(Stream stream, Options options = Options.KeepStreamsOpen)
+        public static IArchive Open(Stream stream, Options options )
         {
-            stream.CheckNotNull("stream");
+            //stream.CheckNotNull("stream");
+            Utility.CheckNotNull(stream,"stream");
             if (!stream.CanRead || !stream.CanSeek)
             {
                 throw new ArgumentException("Stream should be readable and seekable");
@@ -106,7 +110,8 @@ namespace SharpCompress.Archive
         /// <param name="options"></param>
         public static IArchive Open(string filePath, Options options)
         {
-            filePath.CheckNotNullOrEmpty("filePath");
+            //filePath.CheckNotNullOrEmpty("filePath");
+            Utility.CheckNotNullOrEmpty(filePath,"filePath");
             return Open(new FileInfo(filePath), options);
         }
 
@@ -117,7 +122,8 @@ namespace SharpCompress.Archive
         /// <param name="options"></param>
         public static IArchive Open(FileInfo fileInfo, Options options)
         {
-            fileInfo.CheckNotNull("fileInfo");
+            //fileInfo.CheckNotNull("fileInfo");
+            Utility.CheckNotNull(fileInfo,"fileInfo");
             using (var stream = fileInfo.OpenRead())
             {
                 if (ZipArchive.IsZipFile(stream, null))

@@ -45,7 +45,8 @@ namespace SharpCompress.IO
             }
             else
             {
-                bufferStream.TransferTo(buffer);
+                //bufferStream.TransferTo(buffer);
+                Utility.TransferTo(bufferStream,buffer);
                 bufferStream = buffer;
                 bufferStream.Position = 0;
             }

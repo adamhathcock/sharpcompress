@@ -17,7 +17,10 @@ namespace SharpCompress.Reader.Rar
 
         internal override IEnumerable<FilePart> Parts
         {
-            get { return Part.AsEnumerable<FilePart>(); }
+            get { 
+                //return Part.AsEnumerable<FilePart>();
+                return Utility.AsEnumerable<FilePart>(Part);
+            }
         }
 
         internal override FileHeader FileHeader

@@ -40,7 +40,8 @@ namespace SharpCompress.Archive.Tar
         /// <param name="options"></param>
         public static TarArchive Open(string filePath, Options options)
         {
-            filePath.CheckNotNullOrEmpty("filePath");
+            //filePath.CheckNotNullOrEmpty("filePath");
+            Utility.CheckNotNullOrEmpty(filePath,"filePath");
             return Open(new FileInfo(filePath), options);
         }
 
@@ -51,7 +52,8 @@ namespace SharpCompress.Archive.Tar
         /// <param name="options"></param>
         public static TarArchive Open(FileInfo fileInfo, Options options)
         {
-            fileInfo.CheckNotNull("fileInfo");
+            //fileInfo.CheckNotNull("fileInfo");
+            Utility.CheckNotNull(fileInfo,"fileInfo");
             return new TarArchive(fileInfo, options);
         }
 #endif
@@ -62,7 +64,8 @@ namespace SharpCompress.Archive.Tar
         /// <param name="stream"></param>
         public static TarArchive Open(Stream stream)
         {
-            stream.CheckNotNull("stream");
+            //stream.CheckNotNull("stream");
+            Utility.CheckNotNull(stream,"stream");
             return Open(stream, Options.None);
         }
 
@@ -73,7 +76,8 @@ namespace SharpCompress.Archive.Tar
         /// <param name="options"></param>
         public static TarArchive Open(Stream stream, Options options)
         {
-            stream.CheckNotNull("stream");
+            //stream.CheckNotNull("stream");
+            Utility.CheckNotNull(stream,"stream");
             return new TarArchive(stream, options);
         }
 
@@ -127,7 +131,8 @@ namespace SharpCompress.Archive.Tar
             {
                 options = (Options)FlagUtility.SetFlag(options, Options.KeepStreamsOpen, false);
             }
-            return new TarVolume(file.OpenRead(), options).AsEnumerable();
+            //return new TarVolume(file.OpenRead(), options).AsEnumerable();
+            return Utility.AsEnumerable<TarVolume>(new TarVolume(file.OpenRead(), options));
         }
 #endif
 
@@ -148,7 +153,8 @@ namespace SharpCompress.Archive.Tar
 
         protected override IEnumerable<TarVolume> LoadVolumes(IEnumerable<Stream> streams, Options options)
         {
-            return new TarVolume(streams.First(), options).AsEnumerable();
+            //return new TarVolume(streams.First(), options).AsEnumerable();
+            return Utility.AsEnumerable<TarVolume>(new TarVolume(streams.First(), options));
         }
 
         protected override IEnumerable<TarArchiveEntry> LoadEntries(IEnumerable<TarVolume> volumes)
@@ -175,11 +181,13 @@ namespace SharpCompress.Archive.Tar
                             using(var entryStream = entry.OpenEntryStream())
                             using(var memoryStream = new MemoryStream())
                             {
-                                entryStream.TransferTo(memoryStream);
+                                //entryStream.TransferTo(memoryStream);
+                                Utility.TransferTo(entryStream,memoryStream);
                                 memoryStream.Position = 0;
                                 var bytes = memoryStream.ToArray();
 
-                                header.Name = ArchiveEncoding.Default.GetString(bytes, 0, bytes.Length).TrimNulls();
+                                //header.Name = ArchiveEncoding.Default.GetString(bytes, 0, bytes.Length).TrimNulls();
+                                header.Name =Utility.TrimNulls(ArchiveEncoding.Default.GetString(bytes, 0, bytes.Length));
                             }
 
                             stream.Position = oldStreamPos;

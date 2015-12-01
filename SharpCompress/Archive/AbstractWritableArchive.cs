@@ -22,7 +22,8 @@ namespace SharpCompress.Archive
         }
 
         internal AbstractWritableArchive(ArchiveType type, Stream stream, Options options)
-            : base(type, stream.AsEnumerable(), options, null)
+            //: base(type, stream.AsEnumerable(), options, null)
+            : base(type, Utility.AsEnumerable<Stream>(stream), options, null)
         {
         }
 
@@ -71,9 +72,14 @@ namespace SharpCompress.Archive
             RemoveEntry((TEntry)entry);
         }
 
+        public TEntry AddEntry(string key, Stream source) {
+            return AddEntry(key, source, 0L, null);
+        }
+        public TEntry AddEntry(string key, Stream source, long size) {
+            return AddEntry(key, source, size, null);
+        }
         public TEntry AddEntry(string key, Stream source,
-                             long size = 0, DateTime? modified = null)
-        {
+                             long size, DateTime? modified) {
             return AddEntry(key, source, false, size, modified);
         }
 
@@ -82,9 +88,14 @@ namespace SharpCompress.Archive
         {
             return AddEntry(key, source, closeStream, size, modified);
         }
-
+        public TEntry AddEntry(string key, Stream source, bool closeStream) {
+            return AddEntry(key, source, closeStream, 0L, null);
+        }
+        public TEntry AddEntry(string key, Stream source, bool closeStream, long size) {
+            return AddEntry(key, source, closeStream, size, null);
+        }
         public TEntry AddEntry(string key, Stream source, bool closeStream,
-                             long size = 0, DateTime? modified = null)
+                             long size , DateTime? modified )
         {
             if (key.StartsWith("/")
                 || key.StartsWith("\\"))
@@ -118,7 +129,8 @@ namespace SharpCompress.Archive
         public void SaveTo(Stream stream, CompressionInfo compressionType)
         {
             //reset streams of new entries
-            newEntries.Cast<IWritableArchiveEntry>().ForEach(x => x.Stream.Seek(0, SeekOrigin.Begin));
+            //newEntries.Cast<IWritableArchiveEntry>().ForEach(x => x.Stream.Seek(0, SeekOrigin.Begin));    
+            Utility.ForEach<IWritableArchiveEntry>(newEntries.Cast<IWritableArchiveEntry>(),(x )=> x.Stream.Seek(0, SeekOrigin.Begin));    
             SaveTo(stream, compressionType, OldEntries, newEntries);
         }
 
@@ -141,9 +153,12 @@ namespace SharpCompress.Archive
         public override void Dispose()
         {
             base.Dispose();
-            newEntries.Cast<Entry>().ForEach(x => x.Close());
-            removedEntries.Cast<Entry>().ForEach(x => x.Close());
-            modifiedEntries.Cast<Entry>().ForEach(x => x.Close());
+            //newEntries.Cast<Entry>().ForEach(x => x.Close());
+            Utility.ForEach<Entry>(newEntries.Cast<Entry>(),(x )=> x.Close());
+            //removedEntries.Cast<Entry>().ForEach(x => x.Close());
+            Utility.ForEach<Entry>(removedEntries.Cast<Entry>(),(x )=> x.Close());
+            //modifiedEntries.Cast<Entry>().ForEach(x => x.Close());
+            Utility.ForEach<Entry>(modifiedEntries.Cast<Entry>(),x => x.Close());
         }
     }
 }

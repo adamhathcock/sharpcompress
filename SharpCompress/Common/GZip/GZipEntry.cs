@@ -75,7 +75,10 @@ namespace SharpCompress.Common.GZip
 
         internal override IEnumerable<FilePart> Parts
         {
-            get { return filePart.AsEnumerable<FilePart>(); }
+            get { 
+                //return filePart.AsEnumerable<FilePart>(); 
+                return Utility.AsEnumerable<FilePart>(filePart); 
+            }
         }
 
         internal static IEnumerable<GZipEntry> GetEntries(Stream stream)

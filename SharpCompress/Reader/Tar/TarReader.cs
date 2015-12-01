@@ -55,17 +55,19 @@ namespace SharpCompress.Reader.Tar
         }
 
         #region Open
-
+        public static TarReader Open(Stream stream) {
+            return Open(stream, Options.KeepStreamsOpen);
+        }
         /// <summary>
         /// Opens a TarReader for Non-seeking usage with a single volume
         /// </summary>
         /// <param name="stream"></param>
         /// <param name="options"></param>
         /// <returns></returns>
-        public static TarReader Open(Stream stream, Options options = Options.KeepStreamsOpen)
+        public static TarReader Open(Stream stream, Options options)
         {
-            stream.CheckNotNull("stream");
-
+           // stream.CheckNotNull("stream");
+            Utility.CheckNotNull(stream,"stream");
             RewindableStream rewindableStream = new RewindableStream(stream);
             rewindableStream.StartRecording();
             if (GZipArchive.IsGZipFile(rewindableStream))

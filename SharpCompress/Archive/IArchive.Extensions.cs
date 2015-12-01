@@ -12,7 +12,7 @@ namespace SharpCompress.Archive
         public static void WriteToDirectory(this IArchive archive, string destinationDirectory,
                                             ExtractOptions options = ExtractOptions.Overwrite)
         {
-            foreach (IArchiveEntry entry in archive.Entries.Where(x => !x.IsDirectory))
+            foreach (IArchiveEntry entry in archive.Entries.Where<IArchiveEntry>(x => !x.IsDirectory))
             {
                 entry.WriteToDirectory(destinationDirectory, options);
             }

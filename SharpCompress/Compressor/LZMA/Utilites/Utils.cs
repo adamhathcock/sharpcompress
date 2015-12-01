@@ -52,7 +52,7 @@ namespace SharpCompress.Compressor.LZMA.Utilites
             }
         }
 
-        public static void ReadExact(this Stream stream, byte[] buffer, int offset, int length)
+        public static void ReadExact(/*this*/ Stream stream, byte[] buffer, int offset, int length)
         {
             if (stream == null)
                 throw new ArgumentNullException("stream");

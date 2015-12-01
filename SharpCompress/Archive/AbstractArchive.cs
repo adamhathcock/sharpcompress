@@ -42,10 +42,14 @@ namespace SharpCompress.Archive
 
         internal AbstractArchive(ArchiveType type, IEnumerable<Stream> streams, Options options, string password)
         {
-            Type = type;
-            Password = password;
-            lazyVolumes = new LazyReadOnlyCollection<TVolume>(LoadVolumes(streams.Select(CheckStreams), options));
-            lazyEntries = new LazyReadOnlyCollection<TEntry>(LoadEntries(Volumes));
+            //Type = type;
+            //Password = password;
+            //lazyVolumes = new LazyReadOnlyCollection<TVolume>(LoadVolumes(streams.Select(CheckStreams), options));
+            //lazyEntries = new LazyReadOnlyCollection<TEntry>(LoadEntries(Volumes));
+            this.Type = type;
+            this.Password = password;
+            this.lazyVolumes = new LazyReadOnlyCollection<TVolume>(this.LoadVolumes(streams.Select<Stream, Stream>(new Func<Stream, Stream>(AbstractArchive<TEntry, TVolume>.CheckStreams)), options));
+            this.lazyEntries = new LazyReadOnlyCollection<TEntry>(this.LoadEntries(this.Volumes));
         }
 
         internal AbstractArchive(ArchiveType type)
@@ -132,8 +136,10 @@ namespace SharpCompress.Archive
         {
             if (!disposed)
             {
-                lazyVolumes.ForEach(v => v.Dispose());
-                lazyEntries.GetLoaded().Cast<Entry>().ForEach(x => x.Close());
+                //lazyVolumes.ForEach(v => v.Dispose());
+                Utility.ForEach<TVolume>(lazyVolumes, (v )=> v.Dispose());
+                //lazyEntries.GetLoaded().Cast<Entry>().ForEach(x => x.Close());
+                Utility.ForEach<Entry>(lazyEntries.GetLoaded().Cast<Entry>(),(x )=> x.Close());
                 disposed = true;
             }
         }

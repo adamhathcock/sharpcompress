@@ -38,7 +38,8 @@ namespace SharpCompress.Archive.GZip
         /// <param name="options"></param>
         public static GZipArchive Open(string filePath, Options options)
         {
-            filePath.CheckNotNullOrEmpty("filePath");
+            //filePath.CheckNotNullOrEmpty("filePath");
+            Utility.CheckNotNullOrEmpty(filePath,"filePath");
             return Open(new FileInfo(filePath), options);
         }
 
@@ -49,7 +50,8 @@ namespace SharpCompress.Archive.GZip
         /// <param name="options"></param>
         public static GZipArchive Open(FileInfo fileInfo, Options options)
         {
-            fileInfo.CheckNotNull("fileInfo");
+            //fileInfo.CheckNotNull("fileInfo");
+            Utility.CheckNotNull(fileInfo,"fileInfo");
             return new GZipArchive(fileInfo, options);
         }
 #endif
@@ -60,7 +62,8 @@ namespace SharpCompress.Archive.GZip
         /// <param name="stream"></param>
         public static GZipArchive Open(Stream stream)
         {
-            stream.CheckNotNull("stream");
+            //stream.CheckNotNull("stream");
+            Utility.CheckNotNull(stream,"stream");
             return Open(stream, Options.None);
         }
 
@@ -71,7 +74,8 @@ namespace SharpCompress.Archive.GZip
         /// <param name="options"></param>
         public static GZipArchive Open(Stream stream, Options options)
         {
-            stream.CheckNotNull("stream");
+            //stream.CheckNotNull("stream");
+            Utility.CheckNotNull(stream,"stream");
             return new GZipArchive(stream, options);
         }
 
@@ -93,7 +97,8 @@ namespace SharpCompress.Archive.GZip
 
         protected override IEnumerable<GZipVolume> LoadVolumes(FileInfo file, Options options)
         {
-            return new GZipVolume(file, options).AsEnumerable();
+            //return new GZipVolume(file, options).AsEnumerable();
+            return Utility.AsEnumerable<GZipVolume>(new GZipVolume(file, options));
         }
 
         public static bool IsGZipFile(string filePath)
@@ -199,7 +204,8 @@ namespace SharpCompress.Archive.GZip
 
         protected override IEnumerable<GZipVolume> LoadVolumes(IEnumerable<Stream> streams, Options options)
         {
-            return new GZipVolume(streams.First(), options).AsEnumerable();
+            //return new GZipVolume(streams.First(), options).AsEnumerable();
+            return Utility.AsEnumerable<GZipVolume>(new GZipVolume(streams.First(), options));
         }
 
         protected override IEnumerable<GZipArchiveEntry> LoadEntries(IEnumerable<GZipVolume> volumes)

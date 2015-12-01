@@ -5,7 +5,7 @@ namespace SharpCompress.Compressor.Rar
 {
     internal static class UnpackUtility
     {
-        internal static int decodeNumber(this BitInput input, Decode dec)
+        internal static int decodeNumber(/*this*/ BitInput input, Decode dec)
         {
             int bits;
             long bitField = input.GetBits() & 0xfffe;

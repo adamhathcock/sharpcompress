@@ -6,7 +6,7 @@ namespace SharpCompress.Archive
 {
     public static class IArchiveEntryExtensions
     {
-        public static void WriteTo(this IArchiveEntry archiveEntry, Stream streamToWriteTo)
+        public static void WriteTo(/*this*/ IArchiveEntry archiveEntry, Stream streamToWriteTo)
         {
             if (archiveEntry.Archive.Type == ArchiveType.Rar && archiveEntry.Archive.IsSolid)
             {
@@ -30,7 +30,8 @@ namespace SharpCompress.Archive
             using(entryStream)
             using (Stream s = new ListeningStream(streamListener, entryStream))
             {
-                s.TransferTo(streamToWriteTo);
+                //s.TransferTo(streamToWriteTo);
+                Utility.TransferTo(s,streamToWriteTo);
             }
             streamListener.FireEntryExtractionEnd(archiveEntry);
         }
@@ -46,7 +47,7 @@ namespace SharpCompress.Archive
             string file = Path.GetFileName(entry.Key);
 
 
-            if (options.HasFlag(ExtractOptions.ExtractFullPath))
+            if (options_HasFlag(options,ExtractOptions.ExtractFullPath))
             {
                 string folder = Path.GetDirectoryName(entry.Key);
                 string destdir = Path.Combine(destinationDirectory, folder);
@@ -63,6 +64,10 @@ namespace SharpCompress.Archive
             entry.WriteToFile(destinationFileName, options);
         }
 
+        private static bool options_HasFlag(ExtractOptions options,ExtractOptions extractOptions2) {
+            return (options&extractOptions2)==extractOptions2;
+        }
+
         /// <summary>
         /// Extract to specific file
         /// </summary>
@@ -75,22 +80,24 @@ namespace SharpCompress.Archive
             }
             FileMode fm = FileMode.Create;
 
-            if (!options.HasFlag(ExtractOptions.Overwrite))
+            if (!options_HasFlag(options,ExtractOptions.Overwrite))
             {
                 fm = FileMode.CreateNew;
             }
             using (FileStream fs = File.Open(destinationFileName, fm))
             {
-                entry.WriteTo(fs);
+                //entry.WriteTo(fs);
+                IArchiveEntryExtensions.WriteTo(entry, fs);
             }
 
-            if (options.HasFlag(ExtractOptions.PreserveFileTime) || options.HasFlag(ExtractOptions.PreserveAttributes))
+            if (options_HasFlag(options,ExtractOptions.PreserveFileTime) || options_HasFlag(options,ExtractOptions.PreserveAttributes))
             {
                 // update file time to original packed time
                 FileInfo nf = new FileInfo(destinationFileName);
                 if (nf.Exists)
                 {
-                    if (options.HasFlag(ExtractOptions.PreserveFileTime))
+
+                    if (options_HasFlag(options,ExtractOptions.PreserveAttributes))
                     {
                         if (entry.CreatedTime.HasValue)
                         {
@@ -108,7 +115,7 @@ namespace SharpCompress.Archive
                         }
                     }
 
-                    if (options.HasFlag(ExtractOptions.PreserveAttributes))
+                    if (options_HasFlag(options,ExtractOptions.PreserveAttributes))
                     {
                         if (entry.Attrib.HasValue)
                         {

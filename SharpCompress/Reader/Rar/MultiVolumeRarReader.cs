@@ -91,7 +91,7 @@ namespace SharpCompress.Reader.Rar
             {
                 if (isFirst)
                 {
-                    Current = reader.Entry.Parts.First();
+                    Current = reader.Entry.Parts.First<FilePart>();
                     isFirst = false; //first stream already to go
                     return true;
                 }
@@ -114,7 +114,7 @@ namespace SharpCompress.Reader.Rar
                     reader.LoadStreamForReading(nextReadableStreams.Current);
                 }
 
-                Current = reader.Entry.Parts.First();
+                Current = reader.Entry.Parts.First<FilePart>();
                 return true;
             }
 
