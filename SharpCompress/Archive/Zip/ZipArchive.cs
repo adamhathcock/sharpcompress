@@ -116,7 +116,7 @@ namespace SharpCompress.Archive.Zip
             try
             {
                 ZipHeader header =
-                    headerFactory.ReadStreamHeader(stream).FirstOrDefault(x => x != null && x.ZipHeaderType != ZipHeaderType.Split);
+                    headerFactory.ReadStreamHeader(stream).FirstOrDefault(x => x.ZipHeaderType != ZipHeaderType.Split);
                 if (header == null)
                 {
                     return false;
