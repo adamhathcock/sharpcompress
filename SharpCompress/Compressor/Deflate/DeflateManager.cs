@@ -670,6 +670,7 @@ namespace SharpCompress.Compressor.Deflate
             send_bits((tree[c2] & 0xffff), (tree[c2 + 1] & 0xffff));
         }
 
+#pragma warning disable 675 // workaround for Visual Studio 2015 compiler bug: https://github.com/dotnet/roslyn/issues/4027
         internal void send_bits(int value, int length)
         {
             int len = length;
@@ -677,10 +678,10 @@ namespace SharpCompress.Compressor.Deflate
             {
                 if (bi_valid > (int) Buf_size - len)
                 {
+                    //int val = value;
                     //      bi_buf |= (val << bi_valid);
-                    int x = (value << bi_valid) & 0xffff;
-                    bi_buf = (short)((int)bi_buf | x);
 
+                    bi_buf |= (short)((value << bi_valid) & 0xffff);
                     //put_short(bi_buf);
                     pending[pendingCount++] = (byte) bi_buf;
                     pending[pendingCount++] = (byte) (bi_buf >> 8);
@@ -691,14 +692,13 @@ namespace SharpCompress.Compressor.Deflate
                 }
                 else
                 {
-                    //      bi_buf |= (val << bi_valid);
-                    int x = (value << bi_valid) & 0xffff;
-                    bi_buf = (short)((int)bi_buf | x);
-
+                    //      bi_buf |= (value) << bi_valid;
+                    bi_buf |= (short)((value << bi_valid) & 0xffff);
                     bi_valid += len;
                 }
             }
         }
+#pragma warning restore 675
 
         // Send one empty static block to give enough lookahead for inflate.
         // This takes 10 bits, of which 7 may remain in the bit buffer.
