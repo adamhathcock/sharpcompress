@@ -87,7 +87,7 @@ namespace SharpCompress.Common.Zip
                         return entry;
                     }
                 default:
-                    return null;
+                    throw new NotSupportedException("Unknown header: " + headerBytes);
             }
         }
 
