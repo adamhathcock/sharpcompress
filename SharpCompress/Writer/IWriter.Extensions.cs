@@ -10,7 +10,7 @@ namespace SharpCompress.Writer
             writer.Write(entryPath, source, null);
         }
 
-#if !PORTABLE && !NETFX_CORE
+#if !DOTNET51
         public static void Write(this IWriter writer, string entryPath, FileInfo source)
         {
             if (!source.Exists)
@@ -35,11 +35,7 @@ namespace SharpCompress.Writer
             {
                 throw new ArgumentException("Directory does not exist: " + directory);
             }
-#if NET2
-            foreach (var file in Directory.GetFiles(directory, searchPattern, option))
-#else
             foreach (var file in Directory.EnumerateFiles(directory, searchPattern, option))
-#endif
             {
                 writer.Write(file.Substring(directory.Length), file);
             }

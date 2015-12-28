@@ -22,7 +22,7 @@ namespace SharpCompress.Archive
 
         protected string Password { get; private set; }
 
-#if !PORTABLE && !NETFX_CORE
+#if !DOTNET51
         internal AbstractArchive(ArchiveType type, FileInfo fileInfo, Options options, string password)
         {
             Type = type;

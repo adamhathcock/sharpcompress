@@ -12,7 +12,7 @@ namespace SharpCompress.Archive
             writableArchive.SaveTo(stream, new CompressionInfo {Type = compressionType});
         }
 
-#if !PORTABLE && !NETFX_CORE
+#if !DOTNET51
 
         public static void AddEntry(this IWritableArchive writableArchive,
                                                      string entryPath, string filePath)

@@ -135,11 +135,11 @@ namespace SharpCompress.Common.Zip
                 }
                 else
                 {
-#if PORTABLE || NETFX_CORE
+#if DOTNET51
                     throw new NotSupportedException("Cannot decrypt Winzip AES with Silverlight or WP7.");
 #else
 
-                    var data = entryHeader.Extra.Where(x => x.Type == ExtraDataType.WinZipAes).SingleOrDefault();
+                    var data = entryHeader.Extra.SingleOrDefault(x => x.Type == ExtraDataType.WinZipAes);
                     WinzipAesKeySize keySize = (WinzipAesKeySize) data.DataBytes[4];
 
                     byte[] salt = new byte[WinzipAesEncryptionData.KeyLengthInBytes(keySize)/2];

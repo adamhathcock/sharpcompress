@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿#if !DOTNET51
+using System.Collections.Generic;
 using System.IO;
 using SharpCompress.Common;
 using SharpCompress.Common.Rar;
@@ -44,3 +45,4 @@ namespace SharpCompress.Archive.Rar
         }
     }
 }
+#endif

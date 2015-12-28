@@ -54,7 +54,7 @@ namespace SharpCompress.Common.Zip.Headers
         internal List<ExtraData> Extra { get; set; }
 
         internal PkwareTraditionalEncryptionData PkwareTraditionalEncryptionData { get; set; }
-#if !PORTABLE && !NETFX_CORE
+#if !DOTNET51
         internal WinzipAesEncryptionData WinzipAesEncryptionData { get; set; }
 #endif
 

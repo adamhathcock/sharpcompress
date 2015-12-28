@@ -1,5 +1,5 @@
 ﻿using System;
-#if !PORTABLE && !NETFX_CORE
+#if !DOTNET51
 using System.IO;
 #endif
 

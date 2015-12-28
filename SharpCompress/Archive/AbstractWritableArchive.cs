@@ -26,7 +26,7 @@ namespace SharpCompress.Archive
         {
         }
 
-#if !PORTABLE && !NETFX_CORE
+#if !DOTNET51
         internal AbstractWritableArchive(ArchiveType type, FileInfo fileInfo, Options options)
             : base(type, fileInfo, options, null)
         {

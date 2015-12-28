@@ -21,7 +21,7 @@ namespace SharpCompress.Archive.Rar
             get { return unpack; }
         }
 
-#if !PORTABLE && !NETFX_CORE
+#if !DOTNET51
         /// <summary>
         /// Constructor with a FileInfo object to an existing file.
         /// </summary>
@@ -74,7 +74,7 @@ namespace SharpCompress.Archive.Rar
 
         #region Creation
 
-#if !PORTABLE && !NETFX_CORE
+#if !DOTNET51
         /// <summary>
         /// Constructor expects a filepath to an existing file.
         /// </summary>
@@ -123,7 +123,7 @@ namespace SharpCompress.Archive.Rar
             return new RarArchive(streams, options, password);
         }
 
-#if !PORTABLE && !NETFX_CORE
+#if !DOTNET51
         public static bool IsRarFile(string filePath)
         {
             return IsRarFile(new FileInfo(filePath));
