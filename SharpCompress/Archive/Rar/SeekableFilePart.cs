@@ -22,11 +22,7 @@ namespace SharpCompress.Archive.Rar
             stream.Position = FileHeader.DataStartPosition;
             if (FileHeader.Salt != null)
             {
-#if PORTABLE
-                throw new NotSupportedException("Encrypted Rar files aren't supported in portable distro.");
-#else
                 return new RarCryptoWrapper(stream, password, FileHeader.Salt);
-#endif
             }
             return stream;
         }

@@ -910,11 +910,8 @@ namespace SharpCompress.Compressor.Rar
             UnpackUtility.makeDecodeTables(table, Compress.NC + Compress.DC + Compress.LDC, RD, Compress.RC);
 
             // memcpy(unpOldTable,table,sizeof(unpOldTable));
-#if !PORTABLE
+
             Buffer.BlockCopy(table, 0, unpOldTable, 0, unpOldTable.Length);
-#else
-            Array.Copy(table, 0, unpOldTable, 0, unpOldTable.Length);
-#endif
             return (true);
         }
 

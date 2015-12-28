@@ -64,8 +64,7 @@ namespace SharpCompress.IO
         {
             throw new NotSupportedException();
         }
-
-#if !PORTABLE
+        
         public override decimal ReadDecimal()
         {
             return ByteArrayToDecimal(ReadBytes(16), 0);
@@ -81,7 +80,6 @@ namespace SharpCompress.IO
 
             return new decimal(new[] { i1, i2, i3, i4 });
         }
-#endif
 
         public override double ReadDouble()
         {

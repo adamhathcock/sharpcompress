@@ -93,7 +93,7 @@ namespace SharpCompress.Common.Rar.Headers
             {
                 if (!Options.HasFlag(Options.KeepStreamsOpen))
                 {
-#if NET2
+#if NET35
                     reader.Close();
 #else
                     reader.Dispose();
@@ -117,9 +117,6 @@ namespace SharpCompress.Common.Rar.Headers
 
         private RarHeader ReadNextHeader(Stream stream)
         {
-#if PORTABLE
-            var reader = new MarkingBinaryReader(stream);
-#else
             var reader = new RarCryptoBinaryReader(stream, Password);
             
             if (IsEncrypted)
@@ -132,7 +129,6 @@ namespace SharpCompress.Common.Rar.Headers
                 byte[] salt = reader.ReadBytes(8);
                 reader.InitializeAes(salt);
             }
-#endif
 
             RarHeader header = RarHeader.Create(reader);
             if (header == null)
@@ -222,11 +218,7 @@ namespace SharpCompress.Common.Rar.Headers
                                     }
                                     else
                                     {
-#if PORTABLE
-                                        throw new NotSupportedException("Encrypted Rar files aren't supported in portable distro.");
-#else
                                         fh.PackedStream = new RarCryptoWrapper(ms, Password,  fh.Salt);
-#endif
                                     }
                                 }
                                 break;

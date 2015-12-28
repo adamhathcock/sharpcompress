@@ -1,11 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-#if !PORTABLE
 using System.Linq;
 using System.Text;
 using SharpCompress.Common.Rar.Headers;
-#endif
 using SharpCompress.Common;
 using SharpCompress.Common.Rar;
 

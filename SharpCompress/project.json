@@ -1,12 +1,22 @@
 ﻿{
     "version": "0.11.3",
     "description": "SharpCompress Class Library",
-    "authors": [ "hathcoa" ],
+    "authors": [ "Adam Hathcock" ],
     "tags": [ "" ],
     "projectUrl": "",
     "licenseUrl": "",
 
     "frameworks": {
+        "net35": {
+            "compilationOptions": {
+                "warningsAsErrors": true
+            }
+        },
+        "net40": {
+            "compilationOptions": {
+                "warningsAsErrors": true
+            }
+        },
         "dotnet51": {
             "compilationOptions": {
                 "warningsAsErrors": true,
@@ -24,7 +34,7 @@
         },
         "dnxcore50": {
             "compilationOptions": {
-                "warningsAsErrors": true ,
+                "warningsAsErrors": true,
                 "define": [ "DNXCORE50" ]
             },
             "dependencies": {

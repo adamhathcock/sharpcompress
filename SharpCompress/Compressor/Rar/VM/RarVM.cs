@@ -741,11 +741,8 @@ namespace SharpCompress.Compressor.Rar.VM
             InitBitInput();
             int cpLength = System.Math.Min(MAX_SIZE, codeSize);
             // memcpy(inBuf,Code,Min(CodeSize,BitInput::MAX_SIZE));
-#if !PORTABLE
+
             Buffer.BlockCopy(code, 0, InBuf, 0, cpLength);
-#else
-            Array.Copy(code, 0, InBuf, 0, cpLength);
-#endif
             byte xorSum = 0;
             for (int i = 1; i < codeSize; i++)
             {

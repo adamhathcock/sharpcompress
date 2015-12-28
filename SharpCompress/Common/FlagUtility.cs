@@ -48,28 +48,7 @@ namespace SharpCompress.Common
         {
             return ((bitField & flag) == flag);
         }
-
-#if PORTABLE
-    /// <summary>
-    /// Generically checks enums in a Windows Phone 7 enivronment
-    /// </summary>
-    /// <param name="enumVal"></param>
-    /// <param name="flag"></param>
-    /// <returns></returns>
-        public static bool HasFlag(this Enum enumVal, Enum flag)
-        {
-            if (enumVal.GetHashCode() > 0) //GetHashCode returns the enum value. But it's something very crazy if not set beforehand
-            {
-                ulong num = Convert.ToUInt64(flag.GetHashCode());
-                return ((Convert.ToUInt64(enumVal.GetHashCode()) & num) == num);
-            }
-            else
-            {
-                return false;
-            }
-        }
-#endif
-
+        
         /// <summary>
         /// Returns true if the flag is set on the specified bit field.
         /// Currently only works with 32-bit bitfields. 

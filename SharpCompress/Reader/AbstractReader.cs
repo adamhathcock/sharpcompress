@@ -5,9 +5,6 @@ using System.Linq;
 using SharpCompress.Archive;
 using SharpCompress.Archive.Rar;
 using SharpCompress.Common;
-#if PORTABLE
-using SharpCompress.Common.Rar.Headers;
-#endif
 using SharpCompress.Reader.Rar;
 
 namespace SharpCompress.Reader

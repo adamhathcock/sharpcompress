@@ -370,13 +370,12 @@ namespace SharpCompress.Compressor.Deflate
                 }
                 if (fileName.EndsWith("\\"))
                     throw new InvalidOperationException("Illegal filename");
-#if !PORTABLE
+
                 if (fileName.IndexOf("\\") != -1)
                 {
                     // trim any leading path
                     fileName = Path.GetFileName(fileName);
                 }
-#endif
             }
         }
 
