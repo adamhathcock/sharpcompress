@@ -35,11 +35,15 @@ namespace SharpCompress.Writer
             {
                 throw new ArgumentException("Directory does not exist: " + directory);
             }
+#if NET35
+            foreach (var file in Directory.GetDirectories(directory, searchPattern, option))
+#else
             foreach (var file in Directory.EnumerateFiles(directory, searchPattern, option))
+#endif
             {
                 writer.Write(file.Substring(directory.Length), file);
             }
         }
 #endif
-    }
+        }
 }
