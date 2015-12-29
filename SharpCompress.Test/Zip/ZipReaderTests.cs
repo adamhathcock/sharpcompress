@@ -1,86 +1,85 @@
 ﻿using System;
 using System.IO;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using SharpCompress.Common;
 using SharpCompress.Reader;
 using SharpCompress.Reader.Zip;
 using SharpCompress.Writer;
+using Xunit;
 
 namespace SharpCompress.Test
 {
-    [TestClass]
     public class ZipReaderTests : ReaderTests
     {
         public ZipReaderTests()
         {
             UseExtensionInsteadOfNameToVerify = true;
         }
-        [TestMethod]
+        [Fact]
         public void Zip_ZipX_Streamed_Read()
         {
             Read("Zip.Zipx", CompressionType.LZMA);
         }
 
-        [TestMethod]
+        [Fact]
         public void Zip_BZip2_Streamed_Read()
         {
             Read("Zip.bzip2.dd.zip", CompressionType.BZip2);
         }
-        [TestMethod]
+        [Fact]
         public void Zip_BZip2_Read()
         {
             Read("Zip.bzip2.zip", CompressionType.BZip2);
         }
-        [TestMethod]
+        [Fact]
         public void Zip_Deflate_Streamed2_Read()
         {
             Read("Zip.deflate.dd-.zip", CompressionType.Deflate);
         }
-        [TestMethod]
+        [Fact]
         public void Zip_Deflate_Streamed_Read()
         {
             Read("Zip.deflate.dd.zip", CompressionType.Deflate);
         }
-        [TestMethod]
+        [Fact]
         public void Zip_Deflate_Read()
         {
             Read("Zip.deflate.zip", CompressionType.Deflate);
         }
 
-        [TestMethod]
+        [Fact]
         public void Zip_LZMA_Streamed_Read()
         {
             Read("Zip.lzma.dd.zip", CompressionType.LZMA);
         }
-        [TestMethod]
+        [Fact]
         public void Zip_LZMA_Read()
         {
             Read("Zip.lzma.zip", CompressionType.LZMA);
         }
-        [TestMethod]
+        [Fact]
         public void Zip_PPMd_Streamed_Read()
         {
             Read("Zip.ppmd.dd.zip", CompressionType.PPMd);
         }
-        [TestMethod]
+        [Fact]
         public void Zip_PPMd_Read()
         {
             Read("Zip.ppmd.zip", CompressionType.PPMd);
         }
 
-        [TestMethod]
+        [Fact]
         public void Zip_None_Read()
         {
             Read("Zip.none.zip", CompressionType.None);
         }
 
-        [TestMethod]
+        [Fact]
         public void Zip_Deflate_NoEmptyDirs_Read()
         {
             Read("Zip.deflate.noEmptyDirs.zip", CompressionType.Deflate);
         }
 
-        [TestMethod]
+        [Fact]
         public void Zip_BZip2_PkwareEncryption_Read()
         {
             ResetScratch();
@@ -91,7 +90,7 @@ namespace SharpCompress.Test
                 {
                     if (!reader.Entry.IsDirectory)
                     {
-                        Assert.AreEqual(reader.Entry.CompressionType, CompressionType.BZip2);
+                        Assert.Equal(reader.Entry.CompressionType, CompressionType.BZip2);
                         reader.WriteEntryToDirectory(SCRATCH_FILES_PATH, ExtractOptions.ExtractFullPath | ExtractOptions.Overwrite);
                     }
                 }
@@ -99,7 +98,7 @@ namespace SharpCompress.Test
             VerifyFiles();
         }
 
-        [TestMethod]
+        [Fact]
         public void Zip_Reader_Disposal_Test()
         {
             ResetScratch();
@@ -116,11 +115,11 @@ namespace SharpCompress.Test
                         }
                     }
                 }
-                Assert.IsTrue(stream.IsDisposed);
+                Assert.True(stream.IsDisposed);
             }
         }
 
-        [TestMethod]
+        [Fact]
         public void Zip_Reader_Disposal_Test2()
         {
             ResetScratch();
@@ -135,11 +134,11 @@ namespace SharpCompress.Test
                                                      ExtractOptions.ExtractFullPath | ExtractOptions.Overwrite);
                     }
                 }
-                Assert.IsFalse(stream.IsDisposed);
+                Assert.False(stream.IsDisposed);
             }
         }
 
-        [TestMethod]
+        [Fact]
         [ExpectedException(typeof(NotSupportedException))]
         public void Zip_LZMA_WinzipAES_Read()
         {
@@ -151,7 +150,7 @@ namespace SharpCompress.Test
                 {
                     if (!reader.Entry.IsDirectory)
                     {
-                        Assert.AreEqual(reader.Entry.CompressionType, CompressionType.Unknown);
+                        Assert.Equal(reader.Entry.CompressionType, CompressionType.Unknown);
                         reader.WriteEntryToDirectory(SCRATCH_FILES_PATH, ExtractOptions.ExtractFullPath | ExtractOptions.Overwrite);
                     }
                 }
@@ -159,7 +158,7 @@ namespace SharpCompress.Test
             VerifyFiles();
         }
 
-        [TestMethod]
+        [Fact]
         public void Zip_Deflate_WinzipAES_Read()
         {
             ResetScratch();
@@ -170,7 +169,7 @@ namespace SharpCompress.Test
                 {
                     if (!reader.Entry.IsDirectory)
                     {
-                        Assert.AreEqual(reader.Entry.CompressionType, CompressionType.Unknown);
+                        Assert.Equal(reader.Entry.CompressionType, CompressionType.Unknown);
                         reader.WriteEntryToDirectory(SCRATCH_FILES_PATH,
                                                      ExtractOptions.ExtractFullPath | ExtractOptions.Overwrite);
                     }
@@ -190,7 +189,7 @@ namespace SharpCompress.Test
             }
         }
 
-        [TestMethod]
+        [Fact]
         public void TestSharpCompressWithEmptyStream()
         {
             MemoryStream stream = new NonSeekableMemoryStream();

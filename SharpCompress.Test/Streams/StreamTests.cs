@@ -1,13 +1,12 @@
 ﻿using System.IO;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using SharpCompress.Compressor.LZMA;
+using Xunit;
 
 namespace SharpCompress.Test.Streams
 {
-    [TestClass]
     public class StreamTests
     {
-        [TestMethod]
+        [Fact]
         public void TestLzma2Decompress1Byte()
         {
             byte[] properties = new byte[] { 0x01 };
@@ -15,7 +14,7 @@ namespace SharpCompress.Test.Streams
             MemoryStream lzma2Stream = new MemoryStream(compressedData);
 
             LzmaStream decompressor = new LzmaStream(properties, lzma2Stream, 5, 1);
-            Assert.AreEqual('X', decompressor.ReadByte());
+            Assert.Equal('X', decompressor.ReadByte());
         }
     }
 }

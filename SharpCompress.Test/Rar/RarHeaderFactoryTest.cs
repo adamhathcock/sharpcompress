@@ -1,28 +1,26 @@
 ﻿using System.IO;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using SharpCompress.Common;
 using SharpCompress.Common.Rar.Headers;
 using SharpCompress.IO;
+using Xunit;
 
 namespace SharpCompress.Test.Rar
 {
     /// <summary>
     /// Summary description for RarFactoryReaderTest
     /// </summary>
-    [TestClass]
     public class RarHeaderFactoryTest : TestBase
     {
         private RarHeaderFactory rarHeaderFactory;
-
-        [TestInitialize]
-        public void Initialize()
+        
+        public RarHeaderFactoryTest()
         {
             ResetScratch();
             rarHeaderFactory = new RarHeaderFactory(StreamingMode.Seekable, Options.KeepStreamsOpen);
         }
 
 
-        [TestMethod]
+        [Fact]
         public void ReadHeaders_RecognizeEncryptedFlag()
         {
 
@@ -39,13 +37,13 @@ namespace SharpCompress.Test.Rar
                 {
                     if (header.HeaderType == HeaderType.ArchiveHeader)
                     {
-                        Assert.AreEqual(isEncrypted, rarHeaderFactory.IsEncrypted);
+                        Assert.Equal(isEncrypted, rarHeaderFactory.IsEncrypted);
                         break;
                     }
                 }
         }
 
-        [TestMethod]
+        [Fact]
         public void ReadHeaders_RecognizeNoEncryptedFlag()
         {
             ReadEncryptedFlag("Rar.rar", false);

@@ -1,12 +1,11 @@
 ﻿using System.IO;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using SharpCompress.Common;
 using SharpCompress.Writer;
 using SharpCompress.Writer.GZip;
+using Xunit;
 
 namespace SharpCompress.Test
 {
-    [TestClass]
     public class GZipWriterTests : WriterTests
     {
         public GZipWriterTests()
@@ -15,7 +14,7 @@ namespace SharpCompress.Test
             UseExtensionInsteadOfNameToVerify = true;
         }
 
-        [TestMethod]
+        [Fact]
         public void GZip_Writer_Generic()
         {
             ResetScratch();
@@ -28,7 +27,7 @@ namespace SharpCompress.Test
                 Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.gz"));
         }
 
-        [TestMethod]
+        [Fact]
         public void GZip_Writer()
         {
             ResetScratch();
@@ -41,8 +40,7 @@ namespace SharpCompress.Test
                 Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.gz"));
         }
 
-        [TestMethod]
-        [ExpectedException(typeof(InvalidFormatException))]
+        [Fact]
         public void GZip_Writer_Generic_Bad_Compression()
         {
             ResetScratch();

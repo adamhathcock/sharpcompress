@@ -1,9 +1,8 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using SharpCompress.Common;
+﻿using SharpCompress.Common;
+using Xunit;
 
 namespace SharpCompress.Test
 {
-    [TestClass]
     public class TarWriterTests : WriterTests
     {
         public TarWriterTests()
@@ -12,19 +11,19 @@ namespace SharpCompress.Test
             UseExtensionInsteadOfNameToVerify = true;
         }
 
-        [TestMethod]
+        [Fact]
         public void Tar_Writer()
         {
             Write(CompressionType.None, "Tar.noEmptyDirs.tar", "Tar.noEmptyDirs.tar");
         }
 
-        [TestMethod]
+        [Fact]
         public void Tar_BZip2_Writer()
         {
             Write(CompressionType.BZip2, "Tar.noEmptyDirs.tar.bz2", "Tar.noEmptyDirs.tar.bz2");
         }
 
-        [TestMethod]
+        [Fact]
         [ExpectedException(typeof(InvalidFormatException))]
         public void Tar_Rar_Write()
         {

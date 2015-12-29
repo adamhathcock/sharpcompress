@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using SharpCompress.Archive;
 using SharpCompress.Common;
+using Xunit;
 
 namespace SharpCompress.Test
 {
@@ -25,7 +25,7 @@ namespace SharpCompress.Test
                 using (Stream stream = File.OpenRead(path))
                 using (var archive = ArchiveFactory.Open(stream))
                 {
-                    Assert.IsTrue(archive.IsSolid);
+                    Assert.True(archive.IsSolid);
                     using (var reader = archive.ExtractAllEntries())
                     {
                         ReaderTests.UseReader(this, reader, compression);

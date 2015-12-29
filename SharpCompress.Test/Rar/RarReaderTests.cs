@@ -1,16 +1,15 @@
 ﻿using System.IO;
 using System.Linq;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using SharpCompress.Common;
 using SharpCompress.Reader;
 using SharpCompress.Reader.Rar;
+using Xunit;
 
 namespace SharpCompress.Test
 {
-    [TestClass]
     public class RarReaderTests : ReaderTests
     {
-        [TestMethod]
+        [Fact]
         public void Rar_Multi_Reader()
         {
             var testArchives = new string[] { "Rar.multi.part01.rar",
@@ -33,7 +32,7 @@ namespace SharpCompress.Test
             VerifyFiles();
         }
 
-        //[TestMethod]
+        //[Fact]
         public void Rar_Multi_Reader_Encrypted()
         {
             var testArchives = new string[] { "EncryptedParts.part01.rar",
@@ -56,7 +55,7 @@ namespace SharpCompress.Test
             VerifyFiles();
         }
 
-        [TestMethod]
+        [Fact]
         public void Rar_Multi_Reader_Delete_Files()
         {
             var testArchives = new string[] { "Rar.multi.part01.rar",
@@ -93,33 +92,33 @@ namespace SharpCompress.Test
             }
         }
 
-        [TestMethod]
+        [Fact]
         public void Rar_None_Reader()
         {
             Read("Rar.none.rar", CompressionType.Rar);
         }
 
-        [TestMethod]
+        [Fact]
         public void Rar_Reader()
         {
             Read("Rar.rar", CompressionType.Rar);
         }
 
-        [TestMethod]
+        [Fact]
         public void Rar_EncryptedFileAndHeader_Reader()
         {
             ReadRar("Rar.encrypted_filesAndHeader.rar", "test");
 
         }
 
-        [TestMethod]
+        [Fact]
         public void Rar_EncryptedFileOnly_Reader()
         {
             ReadRar("Rar.encrypted_filesOnly.rar", "test");
 
         }
 
-        [TestMethod]
+        [Fact]
         public void Rar_Encrypted_Reader()
         {
             ReadRar("Encrypted.rar", "test");
@@ -135,7 +134,7 @@ namespace SharpCompress.Test
                 {
                     if (!reader.Entry.IsDirectory)
                     {
-                        Assert.AreEqual(reader.Entry.CompressionType, CompressionType.Rar);
+                        Assert.Equal(reader.Entry.CompressionType, CompressionType.Rar);
                         reader.WriteEntryToDirectory(SCRATCH_FILES_PATH, ExtractOptions.ExtractFullPath | ExtractOptions.Overwrite);
                     }
                 }
@@ -143,7 +142,7 @@ namespace SharpCompress.Test
             VerifyFiles();
         }
 
-        [TestMethod]
+        [Fact]
         public void Rar_Entry_Stream()
         {
             ResetScratch();
@@ -154,7 +153,7 @@ namespace SharpCompress.Test
                 {
                     if (!reader.Entry.IsDirectory)
                     {
-                        Assert.AreEqual(reader.Entry.CompressionType, CompressionType.Rar);
+                        Assert.Equal(reader.Entry.CompressionType, CompressionType.Rar);
                         using (var entryStream = reader.OpenEntryStream())
                         {
                             string file = Path.GetFileName(reader.Entry.Key);
@@ -177,7 +176,7 @@ namespace SharpCompress.Test
             VerifyFiles();
         }
 
-        [TestMethod]
+        [Fact]
         public void Rar_Reader_Audio_program()
         {
             ResetScratch();
@@ -186,7 +185,7 @@ namespace SharpCompress.Test
             {
                 while (reader.MoveToNextEntry())
                 {
-                    Assert.AreEqual(reader.Entry.CompressionType, CompressionType.Rar);
+                    Assert.Equal(reader.Entry.CompressionType, CompressionType.Rar);
                     reader.WriteEntryToDirectory(SCRATCH_FILES_PATH, ExtractOptions.ExtractFullPath | ExtractOptions.Overwrite);
                 }
             }
@@ -194,7 +193,7 @@ namespace SharpCompress.Test
                 Path.Combine(MISC_TEST_FILES_PATH, "test.dat"));
         }
 
-        [TestMethod]
+        [Fact]
         public void Rar_Jpg_Reader()
         {
             ResetScratch();
@@ -203,20 +202,20 @@ namespace SharpCompress.Test
             {
                 while (reader.MoveToNextEntry())
                 {
-                    Assert.AreEqual(reader.Entry.CompressionType, CompressionType.Rar);
+                    Assert.Equal(reader.Entry.CompressionType, CompressionType.Rar);
                     reader.WriteEntryToDirectory(SCRATCH_FILES_PATH, ExtractOptions.ExtractFullPath | ExtractOptions.Overwrite);
                 }
             }
             VerifyFiles();
         }
 
-        [TestMethod]
+        [Fact]
         public void Rar_Solid_Reader()
         {
             Read("Rar.solid.rar", CompressionType.Rar);
         }
 
-        [TestMethod]
+        [Fact]
         public void Rar_Solid_Skip_Reader()
         {
             ResetScratch();
@@ -227,14 +226,14 @@ namespace SharpCompress.Test
                 {
                     if (reader.Entry.Key.Contains("jpg"))
                     {
-                        Assert.AreEqual(reader.Entry.CompressionType, CompressionType.Rar);
+                        Assert.Equal(reader.Entry.CompressionType, CompressionType.Rar);
                         reader.WriteEntryToDirectory(SCRATCH_FILES_PATH, ExtractOptions.ExtractFullPath | ExtractOptions.Overwrite);
                     }
                 }
             }
         }
 
-        [TestMethod]
+        [Fact]
         public void Rar_Reader_Skip()
         {
             ResetScratch();
@@ -245,7 +244,7 @@ namespace SharpCompress.Test
                 {
                     if (reader.Entry.Key.Contains("jpg"))
                     {
-                        Assert.AreEqual(reader.Entry.CompressionType, CompressionType.Rar);
+                        Assert.Equal(reader.Entry.CompressionType, CompressionType.Rar);
                         reader.WriteEntryToDirectory(SCRATCH_FILES_PATH, ExtractOptions.ExtractFullPath | ExtractOptions.Overwrite);
                     }
                 }

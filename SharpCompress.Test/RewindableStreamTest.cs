@@ -1,13 +1,12 @@
 ﻿using System.IO;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using SharpCompress.IO;
+using Xunit;
 
 namespace SharpCompress.Test
 {
-    [TestClass]
     public class RewindableStreamTest
     {
-        [TestMethod]
+        [Fact]
         public void TestRewind()
         {
             MemoryStream ms = new MemoryStream();
@@ -24,28 +23,28 @@ namespace SharpCompress.Test
             RewindableStream stream = new RewindableStream(ms);
             stream.StartRecording();
             BinaryReader br = new BinaryReader(stream);
-            Assert.AreEqual(br.ReadInt32(), 1);
-            Assert.AreEqual(br.ReadInt32(), 2);
-            Assert.AreEqual(br.ReadInt32(), 3);
-            Assert.AreEqual(br.ReadInt32(), 4);
+            Assert.Equal(br.ReadInt32(), 1);
+            Assert.Equal(br.ReadInt32(), 2);
+            Assert.Equal(br.ReadInt32(), 3);
+            Assert.Equal(br.ReadInt32(), 4);
             stream.Rewind(true);
             stream.StartRecording();
-            Assert.AreEqual(br.ReadInt32(), 1);
-            Assert.AreEqual(br.ReadInt32(), 2);
-            Assert.AreEqual(br.ReadInt32(), 3);
-            Assert.AreEqual(br.ReadInt32(), 4);
-            Assert.AreEqual(br.ReadInt32(), 5);
-            Assert.AreEqual(br.ReadInt32(), 6);
-            Assert.AreEqual(br.ReadInt32(), 7);
+            Assert.Equal(br.ReadInt32(), 1);
+            Assert.Equal(br.ReadInt32(), 2);
+            Assert.Equal(br.ReadInt32(), 3);
+            Assert.Equal(br.ReadInt32(), 4);
+            Assert.Equal(br.ReadInt32(), 5);
+            Assert.Equal(br.ReadInt32(), 6);
+            Assert.Equal(br.ReadInt32(), 7);
             stream.Rewind(true);
             stream.StartRecording();
-            Assert.AreEqual(br.ReadInt32(), 1);
-            Assert.AreEqual(br.ReadInt32(), 2);
-            Assert.AreEqual(br.ReadInt32(), 3);
-            Assert.AreEqual(br.ReadInt32(), 4);
+            Assert.Equal(br.ReadInt32(), 1);
+            Assert.Equal(br.ReadInt32(), 2);
+            Assert.Equal(br.ReadInt32(), 3);
+            Assert.Equal(br.ReadInt32(), 4);
         }
 
-        [TestMethod]
+        [Fact]
         public void TestIncompleteRewind()
         {
             MemoryStream ms = new MemoryStream();
@@ -62,23 +61,23 @@ namespace SharpCompress.Test
             RewindableStream stream = new RewindableStream(ms);
             stream.StartRecording();
             BinaryReader br = new BinaryReader(stream);
-            Assert.AreEqual(br.ReadInt32(), 1);
-            Assert.AreEqual(br.ReadInt32(), 2);
-            Assert.AreEqual(br.ReadInt32(), 3);
-            Assert.AreEqual(br.ReadInt32(), 4);
+            Assert.Equal(br.ReadInt32(), 1);
+            Assert.Equal(br.ReadInt32(), 2);
+            Assert.Equal(br.ReadInt32(), 3);
+            Assert.Equal(br.ReadInt32(), 4);
             stream.Rewind(true);
-            Assert.AreEqual(br.ReadInt32(), 1);
-            Assert.AreEqual(br.ReadInt32(), 2);
+            Assert.Equal(br.ReadInt32(), 1);
+            Assert.Equal(br.ReadInt32(), 2);
             stream.StartRecording();
-            Assert.AreEqual(br.ReadInt32(), 3);
-            Assert.AreEqual(br.ReadInt32(), 4);
-            Assert.AreEqual(br.ReadInt32(), 5);
+            Assert.Equal(br.ReadInt32(), 3);
+            Assert.Equal(br.ReadInt32(), 4);
+            Assert.Equal(br.ReadInt32(), 5);
             stream.Rewind(true);
-            Assert.AreEqual(br.ReadInt32(), 3);
-            Assert.AreEqual(br.ReadInt32(), 4);
-            Assert.AreEqual(br.ReadInt32(), 5);
-            Assert.AreEqual(br.ReadInt32(), 6);
-            Assert.AreEqual(br.ReadInt32(), 7);
+            Assert.Equal(br.ReadInt32(), 3);
+            Assert.Equal(br.ReadInt32(), 4);
+            Assert.Equal(br.ReadInt32(), 5);
+            Assert.Equal(br.ReadInt32(), 6);
+            Assert.Equal(br.ReadInt32(), 7);
         }
     }
 }

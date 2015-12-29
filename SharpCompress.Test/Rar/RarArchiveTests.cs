@@ -1,30 +1,29 @@
 ﻿using System.IO;
 using System.Linq;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using SharpCompress.Archive;
 using SharpCompress.Archive.Rar;
 using SharpCompress.Common;
+using Xunit;
 
 namespace SharpCompress.Test
 {
-    [TestClass]
     public class RarArchiveTests : ArchiveTests
     {
-        [TestMethod]
+        [Fact]
         public void Rar_EncryptedFileAndHeader_Archive()
         {
             ReadRarPassword("Rar.encrypted_filesAndHeader.rar", "test");
 
         }
 
-        [TestMethod]
+        [Fact]
         public void Rar_EncryptedFileOnly_Archive()
         {
             ReadRarPassword("Rar.encrypted_filesOnly.rar", "test");
 
         }
 
-        [TestMethod]
+        [Fact]
         public void Rar_Encrypted_Archive()
         {
             ReadRarPassword("Encrypted.rar", "test");
@@ -40,7 +39,7 @@ namespace SharpCompress.Test
                 {
                     if (!entry.IsDirectory)
                     {
-                        Assert.AreEqual(entry.CompressionType, CompressionType.Rar);
+                        Assert.Equal(entry.CompressionType, CompressionType.Rar);
                         entry.WriteToDirectory(SCRATCH_FILES_PATH, ExtractOptions.ExtractFullPath | ExtractOptions.Overwrite);
                     }
                 }
@@ -48,11 +47,10 @@ namespace SharpCompress.Test
             VerifyFiles();
         }
 
-        [TestMethod]
-        [ExpectedException(typeof(InvalidFormatException))]
+        [Fact]
         public void Rar_Multi_Archive_Encrypted()
         {
-            ArchiveFileReadPassword("EncryptedParts.part01.rar", "test");
+            Assert.Throws<InvalidFormatException>(() => ArchiveFileReadPassword("EncryptedParts.part01.rar", "test"));
         }
 
         protected void ArchiveFileReadPassword(string archiveName, string password)
@@ -69,19 +67,19 @@ namespace SharpCompress.Test
             VerifyFiles();
         }
 
-        [TestMethod]
+        [Fact]
         public void Rar_None_ArchiveStreamRead()
         {
             ArchiveStreamRead("Rar.none.rar");
         }
 
-        [TestMethod]
+        [Fact]
         public void Rar_ArchiveStreamRead()
         {
             ArchiveStreamRead("Rar.rar");
         }
 
-        [TestMethod]
+        [Fact]
         public void Rar_test_invalid_exttime_ArchiveStreamRead()
         {
             ResetScratch();
@@ -97,7 +95,7 @@ namespace SharpCompress.Test
             }
         }
 
-        [TestMethod]
+        [Fact]
         public void Rar_Jpg_ArchiveStreamRead()
         {
             ResetScratch();
@@ -115,7 +113,7 @@ namespace SharpCompress.Test
             }
         }
 
-        [TestMethod]
+        [Fact]
         public void Rar_IsSolidArchiveCheck()
         {
             ResetScratch();
@@ -123,7 +121,7 @@ namespace SharpCompress.Test
             {
                 using (var archive = RarArchive.Open(stream))
                 {
-                    Assert.IsFalse(archive.IsSolid);
+                    Assert.False(archive.IsSolid);
                     foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
                     {
                         entry.WriteToDirectory(SCRATCH_FILES_PATH,
@@ -134,20 +132,19 @@ namespace SharpCompress.Test
             VerifyFiles();
         }
 
-        [TestMethod]
-        [ExpectedException(typeof(InvalidFormatException))]
+        [Fact]
         public void Rar_Solid_ArchiveStreamRead()
         {
-            ArchiveStreamRead("Rar.solid.rar");
+            Assert.Throws<InvalidFormatException>(() => ArchiveStreamRead("Rar.solid.rar"));
         }
 
-        [TestMethod]
+        [Fact]
         public void Rar_Solid_StreamRead_Extract_All()
         {
             ArchiveStreamReadExtractAll("Rar.solid.rar", CompressionType.Rar);
         }
 
-        [TestMethod]
+        [Fact]
         public void Rar_Multi_ArchiveStreamRead()
         {
             var testArchives = new string[] { "Rar.multi.part01.rar",
@@ -170,19 +167,19 @@ namespace SharpCompress.Test
             VerifyFiles();
         }
 
-        [TestMethod]
+        [Fact]
         public void RarNoneArchiveFileRead()
         {
             ArchiveFileRead("Rar.none.rar");
         }
 
-        [TestMethod]
+        [Fact]
         public void Rar_ArchiveFileRead()
         {
             ArchiveFileRead("Rar.rar");
         }
 
-        [TestMethod]
+        [Fact]
         public void Rar_ArchiveFileRead_HasDirectories()
         {
             ResetScratch();
@@ -190,13 +187,13 @@ namespace SharpCompress.Test
             {
                 using (var archive = RarArchive.Open(stream))
                 {
-                    Assert.IsFalse(archive.IsSolid);
-                    Assert.IsTrue(archive.Entries.Any(entry => entry.IsDirectory));
+                    Assert.False(archive.IsSolid);
+                    Assert.True(archive.Entries.Any(entry => entry.IsDirectory));
                 }
             }
         }
 
-        [TestMethod]
+        [Fact]
         public void Rar_Jpg_ArchiveFileRead()
         {
             ResetScratch();
@@ -210,36 +207,35 @@ namespace SharpCompress.Test
             VerifyFiles();
         }
 
-        [TestMethod]
-        [ExpectedException(typeof(InvalidFormatException))]
+        [Fact]
         public void Rar_Solid_ArchiveFileRead()
         {
-            ArchiveFileRead("Rar.solid.rar");
+            Assert.Throws<InvalidFormatException>(() => ArchiveFileRead("Rar.solid.rar"));
         }
 
-        [TestMethod]
+        [Fact]
         public void Rar_Multi_ArchiveFileRead()
         {
             ArchiveFileRead("Rar.multi.part01.rar");
         }
 
-        [TestMethod]
+        [Fact]
         public void Rar_IsFirstVolume_True()
         {
             using (var archive = RarArchive.Open(Path.Combine(TEST_ARCHIVES_PATH, "Rar.multi.part01.rar")))
             {
-                Assert.IsTrue(archive.IsMultipartVolume());
-                Assert.IsTrue(archive.IsFirstVolume());
+                Assert.True(archive.IsMultipartVolume());
+                Assert.True(archive.IsFirstVolume());
             }
         }
 
-        [TestMethod]
+        [Fact]
         public void Rar_IsFirstVolume_False()
         {
             using (var archive = RarArchive.Open(Path.Combine(TEST_ARCHIVES_PATH, "Rar.multi.part03.rar")))
             {
-                Assert.IsTrue(archive.IsMultipartVolume());
-                Assert.IsFalse(archive.IsFirstVolume());
+                Assert.True(archive.IsMultipartVolume());
+                Assert.False(archive.IsFirstVolume());
             }
         }
     }

@@ -1,15 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Threading;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using SharpCompress.Common;
 using SharpCompress.Reader;
+using Xunit;
 
 namespace SharpCompress.Test
 {
-    [TestClass]
     public class TestBase
     {
         protected static string SOLUTION_BASE_PATH=null;
@@ -102,11 +99,11 @@ namespace SharpCompress.Test
                 Directory.EnumerateFiles(ORIGINAL_FILES_PATH, "*.*", SearchOption.AllDirectories)
                 .ToLookup(path => path.Substring(ORIGINAL_FILES_PATH.Length));
 
-            Assert.AreEqual(extracted.Count, original.Count);
+            Assert.Equal(extracted.Count, original.Count);
 
             foreach (var orig in original)
             {
-                Assert.IsTrue(extracted.Contains(orig.Key));
+                Assert.True(extracted.Contains(orig.Key));
 
                 CompareFilesByPath(orig.Single(), extracted[orig.Key].Single());
             }
@@ -124,11 +121,11 @@ namespace SharpCompress.Test
                 Directory.EnumerateFiles(ORIGINAL_FILES_PATH, "*.*", SearchOption.AllDirectories)
                 .ToLookup(path => path.Substring(ORIGINAL_FILES_PATH.Length));
 
-            Assert.AreEqual(extracted.Count, original.Count);
+            Assert.Equal(extracted.Count, original.Count);
 
             foreach (var orig in original)
             {
-                Assert.IsTrue(extracted.Contains(orig.Key));
+                Assert.True(extracted.Contains(orig.Key));
 
                 CompareFilesByPath(orig.Single(), extracted[orig.Key].Single());
                 CompareFilesByTimeAndAttribut(orig.Single(), extracted[orig.Key].Single());
@@ -147,11 +144,11 @@ namespace SharpCompress.Test
                 Directory.EnumerateFiles(ORIGINAL_FILES_PATH, "*.*", SearchOption.AllDirectories)
                 .ToLookup(path => Path.GetExtension(path));
 
-            Assert.AreEqual(extracted.Count, original.Count);
+            Assert.Equal(extracted.Count, original.Count);
 
             foreach (var orig in original)
             {
-                Assert.IsTrue(extracted.Contains(orig.Key));
+                Assert.True(extracted.Contains(orig.Key));
 
                 CompareFilesByPath(orig.Single(), extracted[orig.Key].Single());
                 CompareFilesByTimeAndAttribut(orig.Single(), extracted[orig.Key].Single());
@@ -169,11 +166,11 @@ namespace SharpCompress.Test
                 Directory.EnumerateFiles(ORIGINAL_FILES_PATH, "*.*", SearchOption.AllDirectories)
                 .ToLookup(path => Path.GetExtension(path));
 
-            Assert.AreEqual(extracted.Count, original.Count);
+            Assert.Equal(extracted.Count, original.Count);
 
             foreach (var orig in original)
             {
-                Assert.IsTrue(extracted.Contains(orig.Key));
+                Assert.True(extracted.Contains(orig.Key));
 
                 CompareFilesByPath(orig.Single(), extracted[orig.Key].Single());
             }
@@ -184,7 +181,7 @@ namespace SharpCompress.Test
             using (var file1Stream = File.OpenRead(file1))
             using (var file2Stream = File.OpenRead(file2))
             {
-                Assert.AreEqual(file1Stream.Length, file2Stream.Length);
+                Assert.Equal(file1Stream.Length, file2Stream.Length);
                 int byte1 = 0;
                 int byte2 = 0;
                 for (int counter = 0; byte1 != -1; counter++)
@@ -192,8 +189,10 @@ namespace SharpCompress.Test
                     byte1 = file1Stream.ReadByte();
                     byte2 = file2Stream.ReadByte();
                     if (byte1 != byte2)
-                        Assert.AreEqual(byte1, byte2, string.Format("Byte {0} differ between {1} and {2}",
-                            counter, file1, file2));
+                    {
+                        //string.Format("Byte {0} differ between {1} and {2}", counter, file1, file2)
+                        Assert.Equal(byte1, byte2);
+                    }
                 }
             }
         }
@@ -202,8 +201,8 @@ namespace SharpCompress.Test
         {
             FileInfo fi1 = new FileInfo(file1);
             FileInfo fi2 = new FileInfo(file2);
-            Assert.AreNotEqual(fi1.LastWriteTime, fi2.LastWriteTime);
-            Assert.AreEqual(fi1.Attributes, fi2.Attributes);
+            Assert.NotEqual(fi1.LastWriteTime, fi2.LastWriteTime);
+            Assert.Equal(fi1.Attributes, fi2.Attributes);
         }
 
         protected void CompareArchivesByPath(string file1, string file2)
@@ -213,17 +212,16 @@ namespace SharpCompress.Test
             {
                 while (archive1.MoveToNextEntry())
                 {
-                    Assert.IsTrue(archive2.MoveToNextEntry());
-                    Assert.AreEqual(archive1.Entry.Key, archive2.Entry.Key);
+                    Assert.True(archive2.MoveToNextEntry());
+                    Assert.Equal(archive1.Entry.Key, archive2.Entry.Key);
                 }
-                Assert.IsFalse(archive2.MoveToNextEntry());
+                Assert.False(archive2.MoveToNextEntry());
             }
         }
 
         private static readonly object testLock = new object();
-
-        [AssemblyInitialize]
-        public static void InitializePaths(TestContext ctx)
+        
+        static TestBase()
         {
             SOLUTION_BASE_PATH = Path.GetDirectoryName(Path.GetDirectoryName(ctx.TestDir));
             TEST_ARCHIVES_PATH = Path.Combine(SOLUTION_BASE_PATH, "TestArchives", "Archives");

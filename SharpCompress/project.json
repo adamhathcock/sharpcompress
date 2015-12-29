@@ -17,7 +17,7 @@
                 "warningsAsErrors": true
             }
         },
-        "dotnet51": {
+        "dotnet5.1": {
             "compilationOptions": {
                 "warningsAsErrors": true,
                 "define": [ "DOTNET51" ]

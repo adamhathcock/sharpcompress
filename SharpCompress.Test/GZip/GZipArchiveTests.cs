@@ -1,13 +1,11 @@
-﻿using System;
-using System.IO;
+﻿using System.IO;
 using System.Linq;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using SharpCompress.Archive;
 using SharpCompress.Archive.GZip;
+using Xunit;
 
 namespace SharpCompress.Test
 {
-    [TestClass]
     public class GZipArchiveTests : ArchiveTests
     {
         public GZipArchiveTests()
@@ -15,7 +13,7 @@ namespace SharpCompress.Test
             UseExtensionInsteadOfNameToVerify = true;
         }
 
-        [TestMethod]
+        [Fact]
         public void GZip_Archive_Generic()
         {
             ResetScratch();
@@ -29,7 +27,7 @@ namespace SharpCompress.Test
                 Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar"));
         }
 
-        [TestMethod]
+        [Fact]
         public void GZip_Archive()
         {
             ResetScratch();
@@ -44,8 +42,7 @@ namespace SharpCompress.Test
         }
 
 
-        [TestMethod]
-        [ExpectedException(typeof(InvalidOperationException))]
+        [Fact]
         public void GZip_Archive_NoAdd()
         {
             string jpg = Path.Combine(ORIGINAL_FILES_PATH, "jpg\\test.jpg");

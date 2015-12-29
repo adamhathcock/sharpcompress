@@ -1,12 +1,11 @@
 ﻿using System.Collections.Generic;
 using System.IO;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using SharpCompress.Common;
 using SharpCompress.Reader.Tar;
+using Xunit;
 
 namespace SharpCompress.Test
 {
-    [TestClass]
     public class TarReaderTests : ReaderTests
     {
         public TarReaderTests()
@@ -14,25 +13,25 @@ namespace SharpCompress.Test
             UseExtensionInsteadOfNameToVerify = true;
         }
 
-        [TestMethod]
+        [Fact]
         public void Tar_Reader()
         {
             Read("Tar.tar", CompressionType.None);
         }
 
-        [TestMethod]
+        [Fact]
         public void Tar_BZip2_Reader()
         {
             Read("Tar.tar.bz2", CompressionType.BZip2);
         }
 
-        [TestMethod]
+        [Fact]
         public void Tar_GZip_Reader()
         {
             Read("Tar.tar.gz", CompressionType.GZip);
         }
 
-        [TestMethod]
+        [Fact]
         public void Tar_BZip2_Entry_Stream()
         {
             ResetScratch();
@@ -43,7 +42,7 @@ namespace SharpCompress.Test
                 {
                     if (!reader.Entry.IsDirectory)
                     {
-                        Assert.AreEqual(reader.Entry.CompressionType, CompressionType.BZip2);
+                        Assert.Equal(reader.Entry.CompressionType, CompressionType.BZip2);
                         using (var entryStream = reader.OpenEntryStream())
                         {
                             string file = Path.GetFileName(reader.Entry.Key);
@@ -66,7 +65,7 @@ namespace SharpCompress.Test
             VerifyFiles();
         }
 
-        [TestMethod]
+        [Fact]
         public void Tar_BZip2_Skip_Entry_Stream()
         {
             using (Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.bz2")))
@@ -77,7 +76,7 @@ namespace SharpCompress.Test
                 {
                     if (!reader.Entry.IsDirectory)
                     {
-                        Assert.AreEqual(reader.Entry.CompressionType, CompressionType.BZip2);
+                        Assert.Equal(reader.Entry.CompressionType, CompressionType.BZip2);
                         using (var entryStream = reader.OpenEntryStream())
                         {
                             entryStream.SkipEntry();
@@ -85,7 +84,7 @@ namespace SharpCompress.Test
                         }
                     }
                 }
-                Assert.AreEqual(names.Count, 3);
+                Assert.Equal(names.Count, 3);
             }
         }
     }

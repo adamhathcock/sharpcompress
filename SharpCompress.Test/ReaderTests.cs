@@ -1,8 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.IO;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using SharpCompress.Common;
 using SharpCompress.Reader;
+using Xunit;
 
 namespace SharpCompress.Test
 {
@@ -33,7 +33,7 @@ namespace SharpCompress.Test
             {
                 if (!reader.Entry.IsDirectory)
                 {
-                    Assert.AreEqual(reader.Entry.CompressionType, expectedCompression);
+                    Assert.Equal(reader.Entry.CompressionType, expectedCompression);
                     reader.WriteEntryToDirectory(SCRATCH_FILES_PATH, ExtractOptions.ExtractFullPath | ExtractOptions.Overwrite);
                 }
             }
