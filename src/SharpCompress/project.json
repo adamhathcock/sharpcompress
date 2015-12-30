@@ -1,0 +1,51 @@
+﻿{
+    "version": "0.11.4",
+    "description": "SharpCompress Class Library",
+    "authors": [ "Adam Hathcock" ],
+    "tags": [ "" ],
+    "projectUrl": "",
+    "licenseUrl": "",
+
+    "frameworks": {
+        "net35": {
+            "compilationOptions": {
+                "warningsAsErrors": true
+            }
+        },
+        "net40": {
+            "compilationOptions": {
+                "warningsAsErrors": true
+            }
+        },
+        "dotnet5.1": {
+            "compilationOptions": {
+                "warningsAsErrors": true,
+                "define": [ "DOTNET51" ]
+            },
+            "dependencies": {
+                "System.Collections": "4.0.11-beta-23516",
+                "System.Diagnostics.Debug": "4.0.11-beta-23516",
+                "System.IO": "4.0.11-beta-23516",
+                "System.Linq": "4.0.1-beta-23516",
+                "System.Runtime.Extensions": "4.0.11-beta-23516",
+                "System.Security.Cryptography.Algorithms": "4.0.0-beta-23516",
+                "System.Text.Encoding.Extensions": "4.0.11-beta-23516"
+            }
+        },
+        "dnxcore50": {
+            "compilationOptions": {
+                "warningsAsErrors": true,
+                "define": [ "DNXCORE50" ]
+            },
+            "dependencies": {
+                "System.Collections": "4.0.11-beta-23516",
+                "System.Diagnostics.Debug": "4.0.11-beta-23516",
+                "System.IO": "4.0.11-beta-23516",
+                "System.IO.FileSystem": "4.0.1-beta-23516",
+                "System.Linq": "4.0.1-beta-23516",
+                "System.Security.Cryptography.Algorithms": "4.0.0-beta-23516",
+                "System.Text.Encoding.Extensions": "4.0.11-beta-23516"
+            }
+        }
+    }
+}

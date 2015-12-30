@@ -5,13 +5,17 @@ VisualStudioVersion = 14.0.24720.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{F18F1765-4A02-42FD-9BEF-F0E2FCBD9D17}"
 	ProjectSection(SolutionItems) = preProject
-		SharpCompress.Test\global.json = SharpCompress.Test\global.json
+		global.json = global.json
 		NuGet\sharpcompress.nuspec = NuGet\sharpcompress.nuspec
 	EndProjectSection
 EndProject
-Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "SharpCompress", "SharpCompress\SharpCompress.xproj", "{FD19DDD8-72B2-4024-8665-0D1F7A2AA998}"
+Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "SharpCompress", "src\SharpCompress\SharpCompress.xproj", "{FD19DDD8-72B2-4024-8665-0D1F7A2AA998}"
 EndProject
-Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "SharpCompress.Test", "SharpCompress.Test\SharpCompress.Test.xproj", "{3B80E585-A2F3-4666-8F69-C7FFDA0DD7E5}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{3C5BE746-03E5-4895-9988-0B57F162F86C}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{0F0901FF-E8D9-426A-B5A2-17C7F47C1529}"
+EndProject
+Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "SharpCompress.Test", "test\SharpCompress.Test\SharpCompress.Test.xproj", "{3B80E585-A2F3-4666-8F69-C7FFDA0DD7E5}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -30,5 +34,9 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{FD19DDD8-72B2-4024-8665-0D1F7A2AA998} = {3C5BE746-03E5-4895-9988-0B57F162F86C}
+		{3B80E585-A2F3-4666-8F69-C7FFDA0DD7E5} = {0F0901FF-E8D9-426A-B5A2-17C7F47C1529}
 	EndGlobalSection
 EndGlobal
