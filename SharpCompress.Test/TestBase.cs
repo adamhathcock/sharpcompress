@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Microsoft.Extensions.PlatformAbstractions;
 using SharpCompress.Common;
 using SharpCompress.Reader;
 using Xunit;
@@ -9,20 +10,20 @@ namespace SharpCompress.Test
 {
     public class TestBase
     {
-        protected static string SOLUTION_BASE_PATH=null;
-        protected static string TEST_ARCHIVES_PATH;
-        protected static string ORIGINAL_FILES_PATH;
-        protected static string MISC_TEST_FILES_PATH;
-        protected static string SCRATCH_FILES_PATH;
-        protected static string SCRATCH2_FILES_PATH;
-        protected static IEnumerable<string> GetRarArchives()
+        protected string SOLUTION_BASE_PATH=null;
+        protected string TEST_ARCHIVES_PATH;
+        protected string ORIGINAL_FILES_PATH;
+        protected string MISC_TEST_FILES_PATH;
+        protected string SCRATCH_FILES_PATH;
+        protected string SCRATCH2_FILES_PATH;
+        protected IEnumerable<string> GetRarArchives()
         {
             yield return Path.Combine(TEST_ARCHIVES_PATH, "Rar.none.rar");
             yield return Path.Combine(TEST_ARCHIVES_PATH, "Rar.rar");
             yield return Path.Combine(TEST_ARCHIVES_PATH, "Rar.solid.rar");
             yield return Path.Combine(TEST_ARCHIVES_PATH, "Rar.multi.part01.rar");
         }
-        protected static IEnumerable<string> GetZipArchives()
+        protected IEnumerable<string> GetZipArchives()
         {
             yield return Path.Combine(TEST_ARCHIVES_PATH, "Zip.bzip2.dd.zip");
             yield return Path.Combine(TEST_ARCHIVES_PATH, "Zip.bzip2.zip");
@@ -35,15 +36,15 @@ namespace SharpCompress.Test
             yield return Path.Combine(TEST_ARCHIVES_PATH, "Zip.ppmd.dd.zip");
             yield return Path.Combine(TEST_ARCHIVES_PATH, "Zip.ppmd.zip");
         }
-        protected static IEnumerable<string> GetTarArchives()
+        protected IEnumerable<string> GetTarArchives()
         {
             yield return Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar");
         }
-        protected static IEnumerable<string> GetTarBz2Archives()
+        protected IEnumerable<string> GetTarBz2Archives()
         {
             yield return Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.bz2");
         }
-        protected static IEnumerable<string> GetTarGzArchives()
+        protected IEnumerable<string> GetTarGzArchives()
         {
             yield return Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.gz");
         }
@@ -218,12 +219,10 @@ namespace SharpCompress.Test
                 Assert.False(archive2.MoveToNextEntry());
             }
         }
-
-        private static readonly object testLock = new object();
         
-        static TestBase()
+        public TestBase()
         {
-            SOLUTION_BASE_PATH = Path.GetDirectoryName(Path.GetDirectoryName(ctx.TestDir));
+            SOLUTION_BASE_PATH = Path.GetDirectoryName(PlatformServices.Default.Application.ApplicationBasePath);
             TEST_ARCHIVES_PATH = Path.Combine(SOLUTION_BASE_PATH, "TestArchives", "Archives");
             ORIGINAL_FILES_PATH = Path.Combine(SOLUTION_BASE_PATH, "TestArchives", "Original");
             MISC_TEST_FILES_PATH = Path.Combine(SOLUTION_BASE_PATH, "TestArchives", "MiscTest");

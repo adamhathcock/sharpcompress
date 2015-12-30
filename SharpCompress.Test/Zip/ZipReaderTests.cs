@@ -139,23 +139,31 @@ namespace SharpCompress.Test
         }
 
         [Fact]
-        [ExpectedException(typeof(NotSupportedException))]
         public void Zip_LZMA_WinzipAES_Read()
         {
-            ResetScratch();
-            using (Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Zip.lzma.winzipaes.zip")))
-            using (var reader = ZipReader.Open(stream, "test"))
-            {
-                while (reader.MoveToNextEntry())
-                {
-                    if (!reader.Entry.IsDirectory)
-                    {
-                        Assert.Equal(reader.Entry.CompressionType, CompressionType.Unknown);
-                        reader.WriteEntryToDirectory(SCRATCH_FILES_PATH, ExtractOptions.ExtractFullPath | ExtractOptions.Overwrite);
-                    }
-                }
-            }
-            VerifyFiles();
+            Assert.Throws<NotSupportedException>(() =>
+                                            {
+                                                ResetScratch();
+                                                using (
+                                                    Stream stream =
+                                                        File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH,
+                                                            "Zip.lzma.winzipaes.zip")))
+                                                using (var reader = ZipReader.Open(stream, "test"))
+                                                {
+                                                    while (reader.MoveToNextEntry())
+                                                    {
+                                                        if (!reader.Entry.IsDirectory)
+                                                        {
+                                                            Assert.Equal(reader.Entry.CompressionType,
+                                                                CompressionType.Unknown);
+                                                            reader.WriteEntryToDirectory(SCRATCH_FILES_PATH,
+                                                                ExtractOptions.ExtractFullPath
+                                                                | ExtractOptions.Overwrite);
+                                                        }
+                                                    }
+                                                }
+                                                VerifyFiles();
+                                            });
         }
 
         [Fact]

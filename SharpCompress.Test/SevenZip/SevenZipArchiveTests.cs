@@ -66,12 +66,11 @@ namespace SharpCompress.Test
         }
 
         [Fact]
-        [ExpectedException(typeof(IndexOutOfRangeException))]
         public void SevenZipArchive_BZip2_Split()
         {
-            ArchiveStreamRead("Original.7z.001", "Original.7z.002",
+            Assert.Throws<IndexOutOfRangeException>(() => ArchiveStreamRead("Original.7z.001", "Original.7z.002",
                 "Original.7z.003", "Original.7z.004", "Original.7z.005",
-                "Original.7z.006", "Original.7z.007");
+                "Original.7z.006", "Original.7z.007"));
         }
     }
 }

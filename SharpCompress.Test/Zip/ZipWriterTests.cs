@@ -44,10 +44,9 @@ namespace SharpCompress.Test
         }
 
         [Fact]
-        [ExpectedException(typeof(InvalidFormatException))]
         public void Zip_Rar_Write()
         {
-            Write(CompressionType.Rar, "Zip.ppmd.noEmptyDirs.zip", "Zip.ppmd.noEmptyDirs.zip");
+            Assert.Throws<InvalidFormatException>(() => Write(CompressionType.Rar, "Zip.ppmd.noEmptyDirs.zip", "Zip.ppmd.noEmptyDirs.zip"));
         }
     }
 }

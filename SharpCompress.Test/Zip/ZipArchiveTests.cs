@@ -201,13 +201,12 @@ namespace SharpCompress.Test
         }
 
         [Fact]
-        [ExpectedException(typeof(ArchiveException))]
         public void Zip_Create_NoDups()
         {
             using (var arc = ZipArchive.Create())
             {
                 arc.AddEntry("1.txt", new MemoryStream());
-                arc.AddEntry("\\1.txt", new MemoryStream());
+                Assert.Throws<ArchiveException>(() => arc.AddEntry("\\1.txt", new MemoryStream()));
             }
         }
 

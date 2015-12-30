@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Linq;
 using SharpCompress.Archive;
 using SharpCompress.Archive.GZip;
@@ -50,7 +51,7 @@ namespace SharpCompress.Test
             using (Stream stream = File.Open(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.gz"), FileMode.Open))
             using (var archive = GZipArchive.Open(stream))
             {
-                archive.AddEntry("jpg\\test.jpg", jpg);
+                Assert.Throws<InvalidOperationException>(() => archive.AddEntry("jpg\\test.jpg", jpg));
                 archive.SaveTo(Path.Combine(SCRATCH_FILES_PATH, "Tar.tar.gz"));
             }
         }

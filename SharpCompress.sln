@@ -5,6 +5,7 @@ VisualStudioVersion = 14.0.24720.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{F18F1765-4A02-42FD-9BEF-F0E2FCBD9D17}"
 	ProjectSection(SolutionItems) = preProject
+		SharpCompress.Test\global.json = SharpCompress.Test\global.json
 		NuGet\sharpcompress.nuspec = NuGet\sharpcompress.nuspec
 	EndProjectSection
 EndProject
