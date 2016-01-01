@@ -383,7 +383,7 @@ namespace SharpCompress.Test
             }
 
             stream = new MemoryStream(stream.ToArray());
-            File.WriteAllBytes("foo.zip", stream.ToArray());
+            File.WriteAllBytes(Path.Combine(SCRATCH_FILES_PATH, "foo.zip"), stream.ToArray());
 
             using (var zipArchive = ZipArchive.Open(stream))
             {

@@ -6,7 +6,7 @@
     "projectUrl": "",
     "licenseUrl": "",
     "commands": {
-        "test": "xunit.runner.dnx"
+        "test": "xunit.runner.dnx -parallel none"
     },
     "frameworks": {
         "dnxcore50": {
