@@ -2,7 +2,6 @@
 using System.IO;
 using System.Security.Cryptography;
 using System.Text;
-using Org.BouncyCastle.Crypto.Digests;
 using SharpCompress.Compressor.LZMA.Utilites;
 
 namespace SharpCompress.Compressor.LZMA
@@ -186,24 +185,47 @@ namespace SharpCompress.Compressor.LZMA
             }
             else
             {
-                var sha = new Sha256Digest();
-                byte[] counter = new byte[8];
-                long numRounds = 1L << mNumCyclesPower;
-                for (long round = 0; round < numRounds; round++)
+#if DOTNET51 || DNXCORE50
+                using (IncrementalHash sha = IncrementalHash.CreateHash(HashAlgorithmName.SHA256))
                 {
-                    sha.BlockUpdate(salt, 0, salt.Length);
-                    sha.BlockUpdate(pass, 0, pass.Length);
-                    sha.BlockUpdate(counter, 0, counter.Length);
+                    byte[] counter = new byte[8];
+                    long numRounds = 1L << mNumCyclesPower;
+                    for (long round = 0; round < numRounds; round++)
+                    {
+                        sha.AppendData(salt, 0, salt.Length);
+                        sha.AppendData(pass, 0, pass.Length);
+                        sha.AppendData(counter, 0, 8);
 
-                    // This mirrors the counter so we don't have to convert long to byte[] each round.
-                    // (It also ensures the counter is little endian, which BitConverter does not.)
-                    for (int i = 0; i < 8; i++)
-                        if (++counter[i] != 0)
-                            break;
+                        // This mirrors the counter so we don't have to convert long to byte[] each round.
+                        // (It also ensures the counter is little endian, which BitConverter does not.)
+                        for (int i = 0; i < 8; i++)
+                            if (++counter[i] != 0)
+                                break;
+                    }
+                    return sha.GetHashAndReset();
                 }
+#else
+                using (var sha = SHA256.Create())
+                {
+                    byte[] counter = new byte[8];
+                    long numRounds = 1L << mNumCyclesPower;
+                    for (long round = 0; round < numRounds; round++)
+                    {
+                        sha.TransformBlock(salt, 0, salt.Length, null, 0);
+                        sha.TransformBlock(pass, 0, pass.Length, null, 0);
+                        sha.TransformBlock(counter, 0, 8, null, 0);
 
-                sha.DoFinal(counter, 0);
-                return counter;
+                        // This mirrors the counter so we don't have to convert long to byte[] each round.
+                        // (It also ensures the counter is little endian, which BitConverter does not.)
+                        for (int i = 0; i < 8; i++)
+                            if (++counter[i] != 0)
+                                break;
+                    }
+
+                    sha.TransformFinalBlock(counter, 0, 0);
+                    return sha.Hash;
+                }
+#endif
             }
         }
 
@@ -227,6 +249,6 @@ namespace SharpCompress.Compressor.LZMA
             return count;
         }
 
-        #endregion
+#endregion
     }
 }

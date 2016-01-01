@@ -1,6 +1,6 @@
 using System;
+using System.Security.Cryptography;
 using System.Text;
-using SharpCompress.Crypto;
 
 namespace SharpCompress.Common.Zip
 {
@@ -56,12 +56,11 @@ namespace SharpCompress.Common.Zip
 
         private void Initialize()
         {
-            var utf8 = new UTF8Encoding(false);
-            var paramz = new PBKDF2(utf8.GetBytes(password), salt, RFC2898_ITERATIONS);
-            KeyBytes = paramz.GetBytes(KeySizeInBytes);
-            IvBytes = paramz.GetBytes(KeySizeInBytes);
-            generatedVerifyValue = paramz.GetBytes(2);
+            var rfc2898 = new Rfc2898DeriveBytes(password, salt, RFC2898_ITERATIONS);
 
+            KeyBytes = rfc2898.GetBytes(KeySizeInBytes); // 16 or 24 or 32 ???
+            IvBytes = rfc2898.GetBytes(KeySizeInBytes);
+            generatedVerifyValue = rfc2898.GetBytes(2);
 
             short verify = BitConverter.ToInt16(passwordVerifyValue, 0);
             if (password != null)
