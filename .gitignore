@@ -10,3 +10,4 @@ TestResults/
 *.nupkg
 packages/*/
 project.lock.json
+test/TestArchives/Scratch
