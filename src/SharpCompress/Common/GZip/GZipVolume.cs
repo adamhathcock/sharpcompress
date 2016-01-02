@@ -4,7 +4,7 @@ namespace SharpCompress.Common.GZip
 {
     public class GZipVolume : Volume
     {
-#if !DOTNET51
+#if !NO_FILE
         private readonly FileInfo fileInfo;
 #endif
 
@@ -13,7 +13,7 @@ namespace SharpCompress.Common.GZip
         {
         }
 
-#if !DOTNET51
+#if !NO_FILE
         public GZipVolume(FileInfo fileInfo, Options options)
             : base(fileInfo.OpenRead(), options)
         {

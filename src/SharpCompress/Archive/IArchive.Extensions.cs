@@ -5,7 +5,7 @@ namespace SharpCompress.Archive
 {
     public static class IArchiveExtensions
     {
-#if !DOTNET51
+#if !NO_FILE
         /// <summary>
         /// Extract to specific directory, retaining filename
         /// </summary>

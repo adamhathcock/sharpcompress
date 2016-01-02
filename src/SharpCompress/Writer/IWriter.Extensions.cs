@@ -10,7 +10,7 @@ namespace SharpCompress.Writer
             writer.Write(entryPath, source, null);
         }
 
-#if !DOTNET51
+#if !NO_FILE
         public static void Write(this IWriter writer, string entryPath, FileInfo source)
         {
             if (!source.Exists)

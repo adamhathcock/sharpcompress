@@ -2,7 +2,7 @@
     "version": "0.11.4",
     "title": "SharpCompress - Pure C# Decompression/Compression",
     "authors": [ "Adam Hathcock" ],
-    "owners": ["Adam Hathcock"],
+    "owners": [ "Adam Hathcock" ],
     "tags": [ "rar", "unrar", "zip", "unzip", "bzip2", "gzip", "tar", "7zip" ],
     "projectUrl": "https://github.com/adamhathcock/sharpcompress",
     "licenseUrl": "https://github.com/adamhathcock/sharpcompress/blob/master/LICENSE.txt",
@@ -20,10 +20,32 @@
                 "warningsAsErrors": true
             }
         },
+        ".NETPortable,Version=v4.5,Profile=Profile259": {
+            "compilationOptions": {
+                "define": [ "PROFILE259", "NO_FILE" ]
+            },
+            "frameworkAssemblies": {
+                "Microsoft.CSharp": "",
+                "System.Collections": "",
+                "System.Diagnostics.Debug": "",
+                "System.Dynamic.Runtime": "",
+                "System.Globalization": "",
+                "System.IO": "",
+                "System.Linq": "",
+                "System.Reflection": "",
+                "System.Reflection.Extensions": "",
+                "System.Runtime": "",
+                "System.Runtime.Extensions": "",
+                "System.Core": "",
+                "System.Threading": "",
+                "System.Threading.Tasks": "",
+                "System.Text.Encoding": "4.0.0.0"
+            }
+        },
         "dotnet5.1": {
             "compilationOptions": {
                 "warningsAsErrors": true,
-                "define": [ "DOTNET51" ]
+                "define": [ "DOTNET51", "NO_FILE" ]
             },
             "dependencies": {
                 "System.Collections": "4.0.11-beta-23516",

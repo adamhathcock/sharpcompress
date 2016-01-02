@@ -12,7 +12,7 @@ namespace SharpCompress.Archive.SevenZip
     public class SevenZipArchive : AbstractArchive<SevenZipArchiveEntry, SevenZipVolume>
     {
         private ArchiveDatabase database;
-#if !DOTNET51
+#if !NO_FILE
         /// <summary>
         /// Constructor expects a filepath to an existing file.
         /// </summary>
@@ -75,7 +75,7 @@ namespace SharpCompress.Archive.SevenZip
             return new SevenZipArchive(stream, options);
         }
 
-#if !DOTNET51
+#if !NO_FILE
         internal SevenZipArchive(FileInfo fileInfo, Options options)
             : base(ArchiveType.SevenZip, fileInfo, options, null)
         {

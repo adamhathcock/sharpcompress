@@ -14,7 +14,7 @@ namespace SharpCompress.Archive.Tar
 {
     public class TarArchive : AbstractWritableArchive<TarArchiveEntry, TarVolume>
     {
-#if !DOTNET51
+#if !NO_FILE
         /// <summary>
         /// Constructor expects a filepath to an existing file.
         /// </summary>
@@ -77,7 +77,7 @@ namespace SharpCompress.Archive.Tar
             return new TarArchive(stream, options);
         }
 
-#if !DOTNET51
+#if !NO_FILE
         public static bool IsTarFile(string filePath)
         {
             return IsTarFile(new FileInfo(filePath));
@@ -110,7 +110,7 @@ namespace SharpCompress.Archive.Tar
             return false;
         }
 
-#if !DOTNET51
+#if !NO_FILE
         /// <summary>
         /// Constructor with a FileInfo object to an existing file.
         /// </summary>

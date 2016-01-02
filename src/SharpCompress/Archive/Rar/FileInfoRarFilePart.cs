@@ -1,4 +1,4 @@
-﻿#if !DOTNET51
+﻿#if !NO_FILE
 using System.IO;
 using SharpCompress.Common.Rar;
 using SharpCompress.Common.Rar.Headers;

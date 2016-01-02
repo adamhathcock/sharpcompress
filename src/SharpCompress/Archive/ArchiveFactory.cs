@@ -80,7 +80,7 @@ namespace SharpCompress.Archive
             }
         }
 
-#if !DOTNET51
+#if !NO_FILE
         /// <summary>
         /// Constructor expects a filepath to an existing file.
         /// </summary>

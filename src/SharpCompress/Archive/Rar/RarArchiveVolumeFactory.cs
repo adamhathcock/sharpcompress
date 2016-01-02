@@ -24,7 +24,7 @@ namespace SharpCompress.Archive.Rar
             }
         }
 
-#if !DOTNET51
+#if !NO_FILE
         internal static IEnumerable<RarVolume> GetParts(FileInfo fileInfo, string password, Options options)
         {
             FileInfoRarArchiveVolume part = new FileInfoRarArchiveVolume(fileInfo, password, options);
