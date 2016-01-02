@@ -20,6 +20,11 @@
                 "warningsAsErrors": true
             }
         },
+        "net45": {
+            "compilationOptions": {
+                "warningsAsErrors": true
+            }
+        },
         ".NETPortable,Version=v4.5,Profile=Profile259": {
             "compilationOptions": {
                 "define": [ "PROFILE259", "NO_FILE", "NO_CRYPTO" ]
