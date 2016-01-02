@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if !NO_CRYPTO
+using System;
 using System.IO;
 using System.Security.Cryptography;
 using System.Text;
@@ -8,7 +9,7 @@ namespace SharpCompress.Compressor.LZMA
 {
     internal class AesDecoderStream : DecoderStream2
     {
-        #region Variables
+#region Variables
 
         private Stream mStream;
         private ICryptoTransform mDecoder;
@@ -20,9 +21,9 @@ namespace SharpCompress.Compressor.LZMA
         private int mUnderflow;
         private bool isDisposed;
 
-        #endregion
+#endregion
 
-        #region Stream Methods
+#region Stream Methods
 
         public AesDecoderStream(Stream input, byte[] info, IPasswordProvider pass, long limit)
         {
@@ -130,9 +131,9 @@ namespace SharpCompress.Compressor.LZMA
             return processed;
         }
 
-        #endregion
+#endregion
 
-        #region Private Methods
+#region Private Methods
 
         private void Init(byte[] info, out int numCyclesPower, out byte[] salt, out byte[] iv)
         {
@@ -185,7 +186,7 @@ namespace SharpCompress.Compressor.LZMA
             }
             else
             {
-#if DOTNET51 || DNXCORE50
+#if NO_FILE || DNXCORE50
                 using (IncrementalHash sha = IncrementalHash.CreateHash(HashAlgorithmName.SHA256))
                 {
                     byte[] counter = new byte[8];
@@ -252,3 +253,4 @@ namespace SharpCompress.Compressor.LZMA
 #endregion
     }
 }
+#endif

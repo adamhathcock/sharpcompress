@@ -161,7 +161,7 @@ namespace SharpCompress.Common.Rar.Headers
 
         private static string ConvertPath(string path, HostOS os)
         {
-#if DOTNET51
+#if NO_FILE
             return path.Replace('\\', '/');
 #else
             switch (os)

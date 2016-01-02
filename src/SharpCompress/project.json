@@ -22,7 +22,7 @@
         },
         ".NETPortable,Version=v4.5,Profile=Profile259": {
             "compilationOptions": {
-                "define": [ "PROFILE259", "NO_FILE" ]
+                "define": [ "PROFILE259", "NO_FILE", "NO_CRYPTO" ]
             },
             "frameworkAssemblies": {
                 "Microsoft.CSharp": "",

@@ -33,7 +33,7 @@ namespace SharpCompress.Compressor.LZMA
                 case k_LZMA:
                 case k_LZMA2:
                     return new LzmaStream(info, inStreams.Single(), -1, limit);
-#if !DOTNET51
+#if !NO_CRYPTO
                 case CMethodId.kAESId:
                     return new AesDecoderStream(inStreams.Single(), info, pass, limit);
 #endif

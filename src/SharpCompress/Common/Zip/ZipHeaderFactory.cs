@@ -132,7 +132,7 @@ namespace SharpCompress.Common.Zip
                 }
                 else
                 {
-#if DOTNET51
+#if NO_CRYPTO
                     throw new NotSupportedException("Cannot decrypt Winzip AES with Silverlight or WP7.");
 #else
 
