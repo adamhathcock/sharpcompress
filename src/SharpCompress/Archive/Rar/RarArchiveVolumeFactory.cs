@@ -53,7 +53,7 @@ namespace SharpCompress.Archive.Rar
                 return null;
             }
             bool oldNumbering = !ah.ArchiveHeaderFlags.HasFlag(ArchiveFlags.NEWNUMBERING)
-                                || currentFilePart.MarkHeader.OldFormat;
+                                || currentFilePart.SignatureType == SignatureType.Old;
             if (oldNumbering)
             {
                 return FindNextFileWithOldNumbering(currentFilePart.FileInfo);

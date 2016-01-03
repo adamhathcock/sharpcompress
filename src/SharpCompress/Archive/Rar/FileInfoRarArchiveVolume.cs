@@ -34,9 +34,9 @@ namespace SharpCompress.Archive.Rar
 
         internal FileInfo FileInfo { get; private set; }
 
-        internal override RarFilePart CreateFilePart(FileHeader fileHeader, MarkHeader markHeader)
+        internal override RarFilePart CreateFilePart(FileHeader fileHeader, SignatureType signatureType)
         {
-            return new FileInfoRarFilePart(this, markHeader, fileHeader, FileInfo);
+            return new FileInfoRarFilePart(this, signatureType, fileHeader, FileInfo);
         }
 
         internal override IEnumerable<RarFilePart> ReadFileParts()

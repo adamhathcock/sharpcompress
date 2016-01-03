@@ -14,9 +14,9 @@ namespace SharpCompress.Reader.Rar
         {
         }
 
-        internal override RarFilePart CreateFilePart(FileHeader fileHeader, MarkHeader markHeader)
+        internal override RarFilePart CreateFilePart(FileHeader fileHeader, SignatureType signatureType)
         {
-            return new NonSeekableStreamFilePart(markHeader, fileHeader);
+            return new NonSeekableStreamFilePart(signatureType, fileHeader);
         }
 
         internal override IEnumerable<RarFilePart> ReadFileParts()

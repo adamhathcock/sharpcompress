@@ -8,13 +8,13 @@ namespace SharpCompress.Common.Rar
     /// </summary>
     internal abstract class RarFilePart : FilePart
     {
-        internal RarFilePart(MarkHeader mh, FileHeader fh)
+        internal RarFilePart(SignatureType mh, FileHeader fh)
         {
-            MarkHeader = mh;
+            SignatureType = mh;
             FileHeader = fh;
         }
-
-        internal MarkHeader MarkHeader { get; private set; }
+        
+        internal SignatureType SignatureType { get; private set; }
 
         internal FileHeader FileHeader { get; private set; }
 
