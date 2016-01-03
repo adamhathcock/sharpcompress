@@ -64,7 +64,7 @@ namespace SharpCompress.Archive.Rar
         {
             var stream = Volumes.First().Stream;
             stream.Position = 0;
-            return RarReader.Open(stream);
+            return RarReader.Open(stream, Password);
         }
 
         public override bool IsSolid
