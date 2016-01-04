@@ -20,14 +20,23 @@ namespace SharpCompress.Common.Rar.Headers
         public string Password { get; private set; }
         internal StreamingMode StreamingMode { get; private set; }
         internal bool IsEncrypted { get; private set; }
-        
+        internal SignatureType CurrentSignatureType { get; private set; }
+
         internal IEnumerable<RarHeader> ReadHeaders(Stream stream)
         {
             if (Options.HasFlag(Options.LookForHeader))
             {
                 stream = CheckSFX(stream);
             }
-
+            CurrentSignatureType = ReadSignature(stream);
+            if (CurrentSignatureType == SignatureType.Unknown)
+            {
+                throw new ArchiveException("Unknown Rar type");
+            }
+            if (CurrentSignatureType == SignatureType.Rar5)
+            {
+                throw new ArchiveException("Unknown Rar5 is supported");
+            }
             RarHeader header;
             while ((header = ReadNextHeader(stream)) != null)
             {
@@ -49,39 +58,9 @@ namespace SharpCompress.Common.Rar.Headers
                 int count = 0;
                 while (true)
                 {
-                    byte firstByte = reader.ReadByte();
-                    if (firstByte == 0x52)
+                    if (ReadSignature(rewindableStream, reader) != SignatureType.Unknown)
                     {
-                        MemoryStream buffer = new MemoryStream();
-                        byte[] nextThreeBytes = reader.ReadBytes(3);
-                        if ((nextThreeBytes[0] == 0x45)
-                            && (nextThreeBytes[1] == 0x7E)
-                            && (nextThreeBytes[2] == 0x5E))
-                        {
-                            //old format and isvalid
-                            buffer.WriteByte(0x52);
-                            buffer.Write(nextThreeBytes, 0, 3);
-                            rewindableStream.Rewind(buffer);
-                            break;
-                        }
-                        byte[] secondThreeBytes = reader.ReadBytes(3);
-                        if ((nextThreeBytes[0] == 0x61)
-                            && (nextThreeBytes[1] == 0x72)
-                            && (nextThreeBytes[2] == 0x21)
-                            && (secondThreeBytes[0] == 0x1A)
-                            && (secondThreeBytes[1] == 0x07)
-                            && (secondThreeBytes[2] == 0x00))
-                        {
-                            //new format and isvalid
-                            buffer.WriteByte(0x52);
-                            buffer.Write(nextThreeBytes, 0, 3);
-                            buffer.Write(secondThreeBytes, 0, 3);
-                            rewindableStream.Rewind(buffer);
-                            break;
-                        }
-                        buffer.Write(nextThreeBytes, 0, 3);
-                        buffer.Write(secondThreeBytes, 0, 3);
-                        rewindableStream.Rewind(buffer);
+                        break;
                     }
                     if (count > MAX_SFX_SIZE)
                     {
@@ -114,6 +93,69 @@ namespace SharpCompress.Common.Rar.Headers
             return rewindableStream;
         }
 
+        private SignatureType ReadSignature(Stream stream)
+        {
+            RewindableStream rewindableStream = GetRewindableStream(stream);
+            BinaryReader reader = new BinaryReader(rewindableStream);
+            return ReadSignature(rewindableStream, reader);
+        }
+
+        private SignatureType ReadSignature(RewindableStream rewindableStream, BinaryReader reader)
+        {
+            byte firstByte = reader.ReadByte();
+            if (firstByte == 0x52)
+            {
+                MemoryStream buffer = new MemoryStream();
+                byte[] nextThreeBytes = reader.ReadBytes(3);
+                if ((nextThreeBytes[0] == 0x45)
+                    && (nextThreeBytes[1] == 0x7E)
+                    && (nextThreeBytes[2] == 0x5E))
+                {
+                    //old format and isvalid
+                    buffer.WriteByte(0x52);
+                    buffer.Write(nextThreeBytes, 0, 3);
+                    rewindableStream.Rewind(buffer);
+                    return SignatureType.Old;
+                }
+                byte[] secondThreeBytes = reader.ReadBytes(3);
+                if ((nextThreeBytes[0] == 0x61)
+                    && (nextThreeBytes[1] == 0x72)
+                    && (nextThreeBytes[2] == 0x21)
+                    && (secondThreeBytes[0] == 0x1A)
+                    && (secondThreeBytes[1] == 0x07)
+                    && (secondThreeBytes[2] == 0x00))
+                {
+                    //new format and isvalid
+                    buffer.WriteByte(0x52);
+                    buffer.Write(nextThreeBytes, 0, 3);
+                    buffer.Write(secondThreeBytes, 0, 3);
+                    rewindableStream.Rewind(buffer);
+                    return SignatureType.Rar;
+                }
+                byte seventhByte = reader.ReadByte();
+                if ((nextThreeBytes[0] == 0x61)
+                    && (nextThreeBytes[1] == 0x72)
+                    && (nextThreeBytes[2] == 0x21)
+                    && (secondThreeBytes[0] == 0x1A)
+                    && (secondThreeBytes[1] == 0x07)
+                    && (secondThreeBytes[2] == 0x01)
+                    && (seventhByte == 0x00))
+                {
+                    //new format and isvalid
+                    buffer.WriteByte(0x52);
+                    buffer.Write(nextThreeBytes, 0, 3);
+                    buffer.Write(secondThreeBytes, 0, 3);
+                    buffer.WriteByte(seventhByte);
+                    rewindableStream.Rewind(buffer);
+                    return SignatureType.Rar5;
+                }
+                buffer.Write(nextThreeBytes, 0, 3);
+                buffer.Write(secondThreeBytes, 0, 3);
+                buffer.WriteByte(seventhByte);
+                rewindableStream.Rewind(buffer);
+            }
+            return SignatureType.Unknown;
+        }
 
         private RarHeader ReadNextHeader(Stream stream)
         {
@@ -134,6 +176,7 @@ namespace SharpCompress.Common.Rar.Headers
             var reader = new MarkingBinaryReader(stream);
 
 #endif
+
 
             RarHeader header = RarHeader.Create(reader);
             if (header == null)

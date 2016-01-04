@@ -6,7 +6,7 @@ namespace SharpCompress.Reader.Rar
 {
     internal class NonSeekableStreamFilePart : RarFilePart
     {
-        internal NonSeekableStreamFilePart(MarkHeader mh, FileHeader fh)
+        internal NonSeekableStreamFilePart(SignatureType mh, FileHeader fh)
             : base(mh, fh)
         {
         }

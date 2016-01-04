@@ -10,7 +10,7 @@ namespace SharpCompress.Archive.Rar
         private readonly Stream stream;
         private readonly string password;
 
-        internal SeekableFilePart(MarkHeader mh, FileHeader fh, Stream stream, string password)
+        internal SeekableFilePart(SignatureType mh, FileHeader fh, Stream stream, string password)
             : base(mh, fh)
         {
             this.stream = stream;

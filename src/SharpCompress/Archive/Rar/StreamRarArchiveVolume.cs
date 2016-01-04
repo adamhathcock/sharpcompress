@@ -19,9 +19,9 @@ namespace SharpCompress.Archive.Rar
             return GetVolumeFileParts();
         }
 
-        internal override RarFilePart CreateFilePart(FileHeader fileHeader, MarkHeader markHeader)
+        internal override RarFilePart CreateFilePart(FileHeader fileHeader, SignatureType signatureType)
         {
-            return new SeekableFilePart(markHeader, fileHeader, Stream, Password);
+            return new SeekableFilePart(signatureType, fileHeader, Stream, Password);
         }
     }
 }

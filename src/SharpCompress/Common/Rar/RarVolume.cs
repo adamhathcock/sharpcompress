@@ -30,11 +30,10 @@ namespace SharpCompress.Common.Rar
 
         internal abstract IEnumerable<RarFilePart> ReadFileParts();
 
-        internal abstract RarFilePart CreateFilePart(FileHeader fileHeader, MarkHeader markHeader);
+        internal abstract RarFilePart CreateFilePart(FileHeader fileHeader, SignatureType signatureType);
 
         internal IEnumerable<RarFilePart> GetVolumeFileParts()
         {
-            MarkHeader previousMarkHeader = null;
             foreach (RarHeader header in headerFactory.ReadHeaders(this.Stream))
             {
                 switch (header.HeaderType)
@@ -44,15 +43,10 @@ namespace SharpCompress.Common.Rar
                             ArchiveHeader = header as ArchiveHeader;
                         }
                         break;
-                    case HeaderType.MarkHeader:
-                        {
-                            previousMarkHeader = header as MarkHeader;
-                        }
-                        break;
                     case HeaderType.FileHeader:
                         {
                             FileHeader fh = header as FileHeader;
-                            RarFilePart fp = CreateFilePart(fh, previousMarkHeader);
+                            RarFilePart fp = CreateFilePart(fh, headerFactory.CurrentSignatureType);
                             yield return fp;
                         }
                         break;
