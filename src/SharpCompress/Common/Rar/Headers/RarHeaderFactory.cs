@@ -33,7 +33,10 @@ namespace SharpCompress.Common.Rar.Headers
             {
                 throw new ArchiveException("Unknown Rar type");
             }
-
+            if (CurrentSignatureType == SignatureType.Rar5)
+            {
+                throw new ArchiveException("Unknown Rar5 is supported");
+            }
             RarHeader header;
             while ((header = ReadNextHeader(stream)) != null)
             {
@@ -129,8 +132,26 @@ namespace SharpCompress.Common.Rar.Headers
                     rewindableStream.Rewind(buffer);
                     return SignatureType.Rar;
                 }
+                byte seventhByte = reader.ReadByte();
+                if ((nextThreeBytes[0] == 0x61)
+                    && (nextThreeBytes[1] == 0x72)
+                    && (nextThreeBytes[2] == 0x21)
+                    && (secondThreeBytes[0] == 0x1A)
+                    && (secondThreeBytes[1] == 0x07)
+                    && (secondThreeBytes[2] == 0x01)
+                    && (seventhByte == 0x00))
+                {
+                    //new format and isvalid
+                    buffer.WriteByte(0x52);
+                    buffer.Write(nextThreeBytes, 0, 3);
+                    buffer.Write(secondThreeBytes, 0, 3);
+                    buffer.WriteByte(seventhByte);
+                    rewindableStream.Rewind(buffer);
+                    return SignatureType.Rar5;
+                }
                 buffer.Write(nextThreeBytes, 0, 3);
                 buffer.Write(secondThreeBytes, 0, 3);
+                buffer.WriteByte(seventhByte);
                 rewindableStream.Rewind(buffer);
             }
             return SignatureType.Unknown;

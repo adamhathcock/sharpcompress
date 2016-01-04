@@ -1,8 +1,5 @@
-﻿using System.IO;
-using System.Linq;
+﻿using System;
 using SharpCompress.Common;
-using SharpCompress.Reader;
-using SharpCompress.Reader.Rar;
 using Xunit;
 
 namespace SharpCompress.Test
@@ -13,7 +10,7 @@ namespace SharpCompress.Test
         [Fact]
         public void Rar_Reader()
         {
-            Read("Rar5.rar", CompressionType.Rar);
+            Assert.Throws<InvalidOperationException>(() => Read("Rar5.rar", CompressionType.Rar));
         }
     }
 }
