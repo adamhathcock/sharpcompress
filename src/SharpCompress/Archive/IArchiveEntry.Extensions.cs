@@ -27,7 +27,7 @@ namespace SharpCompress.Archive
             {
                 return;
             }
-            using(entryStream)
+            using (entryStream)
             using (Stream s = new ListeningStream(streamListener, entryStream))
             {
                 s.TransferTo(streamToWriteTo);
@@ -60,7 +60,10 @@ namespace SharpCompress.Archive
             {
                 destinationFileName = Path.Combine(destinationDirectory, file);
             }
-            entry.WriteToFile(destinationFileName, options);
+            if (!entry.IsDirectory)
+            {
+                entry.WriteToFile(destinationFileName, options);
+            }
         }
 
         /// <summary>
@@ -69,10 +72,6 @@ namespace SharpCompress.Archive
         public static void WriteToFile(this IArchiveEntry entry, string destinationFileName,
                                        ExtractOptions options = ExtractOptions.Overwrite)
         {
-            if (entry.IsDirectory)
-            {
-                return;
-            }
             FileMode fm = FileMode.Create;
 
             if (!options.HasFlag(ExtractOptions.Overwrite))
@@ -84,39 +83,7 @@ namespace SharpCompress.Archive
                 entry.WriteTo(fs);
             }
 
-            if (options.HasFlag(ExtractOptions.PreserveFileTime) || options.HasFlag(ExtractOptions.PreserveAttributes))
-            {
-                // update file time to original packed time
-                FileInfo nf = new FileInfo(destinationFileName);
-                if (nf.Exists)
-                {
-                    if (options.HasFlag(ExtractOptions.PreserveFileTime))
-                    {
-                        if (entry.CreatedTime.HasValue)
-                        {
-                            nf.CreationTime = entry.CreatedTime.Value;
-                        }
-
-                        if (entry.LastModifiedTime.HasValue)
-                        {
-                            nf.LastWriteTime = entry.LastModifiedTime.Value;
-                        }
-
-                        if (entry.LastAccessedTime.HasValue)
-                        {
-                            nf.LastAccessTime = entry.CreatedTime.Value;
-                        }
-                    }
-
-                    if (options.HasFlag(ExtractOptions.PreserveAttributes))
-                    {
-                        if (entry.Attrib.HasValue)
-                        {
-                            nf.Attributes = (FileAttributes)System.Enum.ToObject(typeof(FileAttributes), entry.Attrib.Value);
-                        }
-                    }
-                }
-            }
+            entry.PreserveExtractionOptions(destinationFileName, options);
         }
 #endif
     }
