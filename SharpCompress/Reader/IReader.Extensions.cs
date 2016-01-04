@@ -89,6 +89,7 @@ namespace SharpCompress.Reader
                 //    s.TransferTo(fs);
                 //}
             }
+            reader.Entry.PreserveExtractionOptions(destinationFileName, options);
         }
 #endif
     }

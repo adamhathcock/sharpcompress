@@ -131,6 +131,7 @@
     <Compile Include="Common\FilePart.cs" />
     <Compile Include="Common\Entry.cs" />
     <Compile Include="Common\IEntry.cs" />
+	<Compile Include="Common\IEntry.Extensions.cs" />
     <Compile Include="Common\IVolume.cs" />
     <Compile Include="Common\Rar\RarCryptoWrapper.cs" />
     <Compile Include="Common\Rar\RarRijndael.cs" />
