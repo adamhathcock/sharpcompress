@@ -62,18 +62,18 @@ namespace SharpCompress.Reader
             }
 
             rewindableStream.Rewind(false);
-            if (TarArchive.IsTarFile(rewindableStream))
-            {
-                rewindableStream.Rewind(true);
-                return TarReader.Open(rewindableStream, options);
-            }
-            rewindableStream.Rewind(false);
             if (RarArchive.IsRarFile(rewindableStream, options))
             {
                 rewindableStream.Rewind(true);
                 return RarReader.Open(rewindableStream, options);
             }
 
+            rewindableStream.Rewind(false);
+            if (TarArchive.IsTarFile(rewindableStream))
+            {
+                rewindableStream.Rewind(true);
+                return TarReader.Open(rewindableStream, options);
+            }
             throw new InvalidOperationException("Cannot determine compressed stream type.  Supported Reader Formats: Zip, GZip, BZip2, Tar, Rar");
         }
     }
