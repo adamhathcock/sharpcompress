@@ -126,12 +126,6 @@ namespace SharpCompress.Archive
                     return ZipArchive.Open(fileInfo, options, null);
                 }
                 stream.Seek(0, SeekOrigin.Begin);
-                if (TarArchive.IsTarFile(stream))
-                {
-                    stream.Dispose();
-                    return TarArchive.Open(fileInfo, options);
-                }
-                stream.Seek(0, SeekOrigin.Begin);
                 if (SevenZipArchive.IsSevenZipFile(stream))
                 {
                     stream.Dispose();
@@ -148,6 +142,12 @@ namespace SharpCompress.Archive
                 {
                    stream.Dispose();
                    return RarArchive.Open(fileInfo, options);
+                }
+                stream.Seek(0, SeekOrigin.Begin);
+                if (TarArchive.IsTarFile(stream))
+                {
+                    stream.Dispose();
+                    return TarArchive.Open(fileInfo, options);
                 }
                 throw new InvalidOperationException("Cannot determine compressed stream type. Supported Archive Formats: Zip, GZip, Tar, Rar, 7Zip");
             }
