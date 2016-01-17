@@ -14,6 +14,9 @@ namespace SharpCompress.Archive.Rar
 {
     public class RarArchive : AbstractArchive<RarArchiveEntry, RarVolume>
     {
+        internal IEnumerator<RarArchiveEntry> SolidEntryEnumerator;
+        internal List<RarArchiveEntry> SolidReadedEntries=new List<RarArchiveEntry>(); 
+
         private readonly Unpack unpack = new Unpack();
 
         internal Unpack Unpack

@@ -70,11 +70,45 @@ namespace SharpCompress.Archive.Rar
                 return parts.Aggregate(0L, (total, fp) => { return total + fp.FileHeader.CompressedSize; });
             }
         }
+        private readonly byte[] skipBuffer = new byte[4096];
 
+        private void Skip(RarArchiveEntry en)
+        {
+            using (var s = new RarStream(archive.Unpack, en.FileHeader, new MultiVolumeReadOnlyStream(en.parts, archive)))
+            {
+                while (s.Read(skipBuffer, 0, skipBuffer.Length) > 0);
+            }
+        }
+
+        private void MoveNext()
+        {
+            archive.SolidReadedEntries.Add(archive.SolidEntryEnumerator.Current);
+            if (!archive.SolidEntryEnumerator.MoveNext())
+            {
+                archive.SolidEntryEnumerator = archive.Entries.GetEnumerator();
+                archive.SolidReadedEntries = new List<RarArchiveEntry>();
+                archive.SolidEntryEnumerator.MoveNext();
+            }
+        }
         public Stream OpenEntryStream()
         {
-            return new RarStream(archive.Unpack, FileHeader,
-                                 new MultiVolumeReadOnlyStream(Parts.Cast<RarFilePart>(), archive));
+            if (archive.IsSolid)
+            {
+               
+                if ((archive.SolidEntryEnumerator == null) || (archive.SolidReadedEntries.Any(b=>b.FileHeader==FileHeader)))
+                {
+                    archive.SolidEntryEnumerator = archive.Entries.GetEnumerator();
+                    archive.SolidReadedEntries = new List<RarArchiveEntry>();
+                    archive.SolidEntryEnumerator.MoveNext();
+                }
+                while (archive.SolidEntryEnumerator.Current.FileHeader != FileHeader)
+                {
+                    Skip(archive.SolidEntryEnumerator.Current);
+                    MoveNext();
+                }
+                MoveNext();
+            }
+            return new RarStream(archive.Unpack, FileHeader, new MultiVolumeReadOnlyStream(Parts.Cast<RarFilePart>(), archive));
         }
 
         public bool IsComplete
