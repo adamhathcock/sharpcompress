@@ -895,6 +895,11 @@ namespace SharpCompress.Compressor.Deflate
                                 r = ZlibConstants.Z_OK;
                             else
                             {
+								// Handling missing trailing bit(s)
+								var tmp_tindex = (tree_index + (b & InternalInflateConstants.InflateMask[k]))*3;
+								if (k >= tree[tmp_tindex + 1])
+									break;
+								
                                 blocks.bitb = b;
                                 blocks.bitk = k;
                                 z.AvailableBytesIn = n;
@@ -998,6 +1003,11 @@ namespace SharpCompress.Compressor.Deflate
                                 r = ZlibConstants.Z_OK;
                             else
                             {
+								// Handling missing trailing bit(s)
+								var tmp_tindex = (tree_index + (b & InternalInflateConstants.InflateMask[k]))*3;
+								if (k >= tree[tmp_tindex + 1])
+									break;
+
                                 blocks.bitb = b;
                                 blocks.bitk = k;
                                 z.AvailableBytesIn = n;
