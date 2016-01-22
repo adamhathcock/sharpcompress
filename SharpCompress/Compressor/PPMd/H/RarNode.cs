@@ -1,4 +1,5 @@
 using System.Text;
+using SharpCompress.Converter;
 
 namespace SharpCompress.Compressor.PPMd.H
 {
@@ -17,7 +18,7 @@ namespace SharpCompress.Compressor.PPMd.H
         {
             if (Memory != null)
             {
-                next = Utility.readIntLittleEndian(Memory, Address);
+                next = DataConverter.LittleEndian.GetInt32(Memory, Address);
             }
             return next;
         }
@@ -32,7 +33,7 @@ namespace SharpCompress.Compressor.PPMd.H
             this.next = next;
             if (Memory != null)
             {
-                Utility.WriteLittleEndian(Memory, Address, next);
+                DataConverter.LittleEndian.PutBytes(Memory, Address, next);
             }
         }
 

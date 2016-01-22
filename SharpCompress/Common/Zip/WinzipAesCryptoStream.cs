@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Security.Cryptography;
+using SharpCompress.Converter;
 
 namespace SharpCompress.Common.Zip
 {
@@ -117,7 +118,7 @@ namespace SharpCompress.Common.Zip
                                   : bytesRemaining;
 
             // update the counter
-            Array.Copy(BitConverter.GetBytes(nonce++), 0, counter, 0, 4);
+            DataConverter.LittleEndian.PutBytes(counter, 0, nonce++);
 
             // Determine if this is the final block
             if ((bytesToRead == bytesRemaining) && (totalBytesLeftToRead == 0))

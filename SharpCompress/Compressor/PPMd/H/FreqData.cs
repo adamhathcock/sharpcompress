@@ -1,4 +1,5 @@
 using System.Text;
+using SharpCompress.Converter;
 
 namespace SharpCompress.Compressor.PPMd.H
 {
@@ -19,9 +20,9 @@ namespace SharpCompress.Compressor.PPMd.H
 
         internal int SummFreq
         {
-            get { return Utility.readShortLittleEndian(Memory, Address) & 0xffff; }
+            get { return DataConverter.LittleEndian.GetInt16(Memory, Address) & 0xffff; }
 
-            set { Utility.WriteLittleEndian(Memory, Address, (short) value); }
+            set { DataConverter.LittleEndian.PutBytes(Memory, Address, (short)value); }
         }
 
         internal FreqData Initialize(byte[] mem)
@@ -31,12 +32,14 @@ namespace SharpCompress.Compressor.PPMd.H
 
         internal void IncrementSummFreq(int dSummFreq)
         {
-            Utility.incShortLittleEndian(Memory, Address, (short) dSummFreq);
+            short summFreq = DataConverter.LittleEndian.GetInt16(Memory, Address);
+            summFreq += (short)dSummFreq;
+            DataConverter.LittleEndian.PutBytes(Memory, Address, summFreq);
         }
 
         internal int GetStats()
         {
-            return Utility.readIntLittleEndian(Memory, Address + 2);
+            return DataConverter.LittleEndian.GetInt32(Memory, Address + 2);
         }
 
         internal virtual void SetStats(State state)
@@ -46,7 +49,7 @@ namespace SharpCompress.Compressor.PPMd.H
 
         internal void SetStats(int state)
         {
-            Utility.WriteLittleEndian(Memory, Address + 2, state);
+            DataConverter.LittleEndian.PutBytes(Memory, Address + 2, state);
         }
 
         public override System.String ToString()

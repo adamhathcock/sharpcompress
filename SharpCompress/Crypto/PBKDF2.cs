@@ -3,6 +3,7 @@ using Org.BouncyCastle.Crypto;
 using Org.BouncyCastle.Crypto.Digests;
 using Org.BouncyCastle.Crypto.Macs;
 using Org.BouncyCastle.Crypto.Parameters;
+using SharpCompress.Converter;
 
 namespace SharpCompress.Crypto
 {
@@ -68,7 +69,7 @@ namespace SharpCompress.Crypto
 
         private byte[] Hash()
         {
-            byte[] array = UIntToOctet(block);
+            byte[] array = DataConverter.BigEndian.GetBytes(block);
             ICipherParameters param = new KeyParameter(password);
 
             hMac.Init(param);
@@ -96,24 +97,6 @@ namespace SharpCompress.Crypto
             block += 1u;
             return array3;
         }
-
-        internal static byte[] UIntToOctet(uint i)
-        {
-            byte[] bytes = BitConverter.GetBytes(i);
-            byte[] result = new[]
-                            {
-                                bytes[3],
-                                bytes[2],
-                                bytes[1],
-                                bytes[0]
-                            };
-            if (!BitConverter.IsLittleEndian)
-            {
-                return bytes;
-            }
-            return result;
-        }
-
     }
 }
 

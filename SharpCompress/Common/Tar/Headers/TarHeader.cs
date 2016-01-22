@@ -4,6 +4,7 @@ using System.IO;
 using System.Net;
 #endif
 using System.Text;
+using SharpCompress.Converter;
 
 namespace SharpCompress.Common.Tar.Headers
 {
@@ -64,11 +65,7 @@ namespace SharpCompress.Common.Tar.Headers
 
                 if (Size >= 0x1FFFFFFFF)
                 {
-#if PORTABLE || NETFX_CORE
-                byte[] bytes = BitConverter.GetBytes(Utility.HostToNetworkOrder(Size));
-#else
-                    byte[] bytes = BitConverter.GetBytes(IPAddress.HostToNetworkOrder(Size));
-#endif
+                    byte[] bytes = DataConverter.BigEndian.GetBytes(Size);
                     var bytes12 = new byte[12];
                     bytes.CopyTo(bytes12, 12 - bytes.Length);
                     bytes12[0] |= 0x80;
@@ -119,12 +116,7 @@ namespace SharpCompress.Common.Tar.Headers
             EntryType = (EntryType) buffer[156];
             if ((buffer[124] & 0x80) == 0x80) // if size in binary
             {
-                long sizeBigEndian = BitConverter.ToInt64(buffer, 0x80);
-#if PORTABLE || NETFX_CORE
-                    Size = Utility.NetworkToHostOrder(sizeBigEndian);
-#else
-                Size = IPAddress.NetworkToHostOrder(sizeBigEndian);
-#endif
+                Size = DataConverter.BigEndian.GetInt64(buffer, 0x80);
             }
             else
             {

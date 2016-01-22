@@ -240,6 +240,7 @@
     <Compile Include="Compressor\PPMd\PpmdProperties.cs" />
     <Compile Include="Compressor\PPMd\PpmdStream.cs" />
     <Compile Include="Compressor\Rar\RarStream.cs" />
+    <Compile Include="Converter\DataConverter.Portable.cs" />
     <Compile Include="Crypto\BigInteger.cs" />
     <Compile Include="Crypto\BufferedBlockCipher.cs" />
     <Compile Include="Crypto\BufferedCipherBase.cs" />
