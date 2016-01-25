@@ -287,6 +287,7 @@
     <Compile Include="Crypto\PBKDF2.cs" />
     <Compile Include="Crypto\RijndaelEngine.cs" />
     <Compile Include="Crypto\Sha1Digest.cs" />
+    <Compile Include="EnumExtensions.cs" />
     <Compile Include="IO\CountingWritableSubStream.cs" />
     <Compile Include="IO\ListeningStream.cs" />
     <Compile Include="IO\MarkingBinaryReader.cs" />

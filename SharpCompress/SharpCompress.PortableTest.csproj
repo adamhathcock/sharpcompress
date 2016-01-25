@@ -129,7 +129,7 @@
     <Compile Include="Common\FilePart.cs" />
     <Compile Include="Common\Entry.cs" />
     <Compile Include="Common\IEntry.cs" />
-	<Compile Include="Common\IEntry.Extensions.cs" />
+    <Compile Include="Common\IEntry.Extensions.cs" />
     <Compile Include="Common\IVolume.cs" />
     <Compile Include="Common\Rar\RarCryptoWrapper.cs" />
     <Compile Include="Common\Rar\RarRijndael.Portable.cs" />
@@ -257,6 +257,7 @@
     <Compile Include="Crypto\PBKDF2.cs" />
     <Compile Include="Crypto\RijndaelEngine.cs" />
     <Compile Include="Crypto\Sha1Digest.cs" />
+    <Compile Include="EnumExtensions.cs" />
     <Compile Include="IO\CountingWritableSubStream.cs" />
     <Compile Include="Common\EntryStream.cs">
       <SubType>Code</SubType>

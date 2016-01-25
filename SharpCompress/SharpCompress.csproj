@@ -131,7 +131,7 @@
     <Compile Include="Common\FilePart.cs" />
     <Compile Include="Common\Entry.cs" />
     <Compile Include="Common\IEntry.cs" />
-	<Compile Include="Common\IEntry.Extensions.cs" />
+    <Compile Include="Common\IEntry.Extensions.cs" />
     <Compile Include="Common\IVolume.cs" />
     <Compile Include="Common\Rar\RarCryptoWrapper.cs" />
     <Compile Include="Common\Rar\RarRijndael.cs" />
@@ -244,6 +244,7 @@
     <Compile Include="Compressor\PPMd\PpmdProperties.cs" />
     <Compile Include="Compressor\PPMd\PpmdStream.cs" />
     <Compile Include="Compressor\Rar\RarStream.cs" />
+    <Compile Include="EnumExtensions.cs" />
     <Compile Include="IO\CountingWritableSubStream.cs" />
     <Compile Include="Common\EntryStream.cs">
       <SubType>Code</SubType>
