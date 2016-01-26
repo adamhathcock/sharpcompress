@@ -145,5 +145,16 @@ namespace SharpCompress.Test
             }
             CompareArchivesByPath(modified, scratchPath);
         }
+
+        [TestMethod]
+        public void Tar_Containing_Rar_Archive()
+        {
+            string archiveFullPath = Path.Combine(TEST_ARCHIVES_PATH, "Tar.ContainsRar.tar");
+            using (Stream stream = File.OpenRead(archiveFullPath))
+            using (IArchive archive = ArchiveFactory.Open(stream))
+            {
+                Assert.IsTrue(archive.Type == ArchiveType.Tar);
+            }
+        }
     }
 }
