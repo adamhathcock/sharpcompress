@@ -4,10 +4,6 @@ namespace SharpCompress.Common.GZip
 {
     public class GZipVolume : Volume
     {
-#if !PORTABLE && !NETFX_CORE
-        private readonly FileInfo fileInfo;
-#endif
-
         public GZipVolume(Stream stream, Options options)
             : base(stream, options)
         {
@@ -17,7 +13,6 @@ namespace SharpCompress.Common.GZip
         public GZipVolume(FileInfo fileInfo, Options options)
             : base(fileInfo.OpenRead(), options)
         {
-            this.fileInfo = fileInfo;
         }
 #endif
 
