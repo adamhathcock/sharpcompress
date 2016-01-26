@@ -1273,11 +1273,7 @@ namespace SharpCompress.Common.SevenZip
 
             private void OpenFile()
             {
-                //bool skip = !_extractStatuses[_currentIndex];
                 int index = _startIndex + _currentIndex;
-                //string filename = @"D:\_testdump\" + _db.Files[index].Name;
-                //Directory.CreateDirectory(Path.GetDirectoryName(filename));
-                //_stream = new FileStream(filename, FileMode.Create, FileAccess.Write, FileShare.Delete);
 #if DEBUG
                 Log.WriteLine(_db.Files[index].Name);
 #endif
