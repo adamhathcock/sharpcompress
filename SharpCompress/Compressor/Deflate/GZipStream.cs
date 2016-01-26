@@ -30,6 +30,7 @@
 using System;
 using System.IO;
 using SharpCompress.Common;
+using SharpCompress.Converter;
 
 namespace SharpCompress.Compressor.Deflate
 {
@@ -417,7 +418,7 @@ namespace SharpCompress.Compressor.Deflate
                 LastModified = DateTime.Now;
             TimeSpan delta = LastModified.Value - UnixEpoch;
             var timet = (Int32) delta.TotalSeconds;
-            Array.Copy(BitConverter.GetBytes(timet), 0, header, i, 4);
+            DataConverter.LittleEndian.PutBytes(header, i, timet);
             i += 4;
 
             // xflg

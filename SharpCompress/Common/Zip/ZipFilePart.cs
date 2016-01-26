@@ -7,6 +7,7 @@ using SharpCompress.Compressor.BZip2;
 using SharpCompress.Compressor.Deflate;
 using SharpCompress.Compressor.LZMA;
 using SharpCompress.Compressor.PPMd;
+using SharpCompress.Converter;
 using SharpCompress.IO;
 
 namespace SharpCompress.Common.Zip
@@ -108,19 +109,19 @@ namespace SharpCompress.Common.Zip
                         {
                             throw new InvalidFormatException("Winzip data length is not 7.");
                         }
-                        ushort method = BitConverter.ToUInt16(data.DataBytes, 0);
+                        ushort method = DataConverter.LittleEndian.GetUInt16(data.DataBytes, 0);
 
                         if (method != 0x01 && method != 0x02)
                         {
                             throw new InvalidFormatException("Unexpected vendor version number for WinZip AES metadata");
                         }
 
-                        ushort vendorId = BitConverter.ToUInt16(data.DataBytes, 2);
+                        ushort vendorId = DataConverter.LittleEndian.GetUInt16(data.DataBytes, 2);
                         if (vendorId != 0x4541)
                         {
                             throw new InvalidFormatException("Unexpected vendor ID for WinZip AES metadata");
                         }
-                        Header.CompressionMethod = (ZipCompressionMethod)BitConverter.ToUInt16(data.DataBytes, 5);
+                        Header.CompressionMethod = (ZipCompressionMethod)DataConverter.LittleEndian.GetUInt16(data.DataBytes, 5);
                         return CreateDecompressionStream(stream);
                     }
                 default:

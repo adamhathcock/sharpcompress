@@ -1,3 +1,5 @@
+using SharpCompress.Converter;
+
 namespace SharpCompress.Compressor.PPMd.H
 {
     internal class RarMemBlock : Pointer
@@ -19,7 +21,7 @@ namespace SharpCompress.Compressor.PPMd.H
             {
                 if (Memory != null)
                 {
-                    stamp = Utility.readShortLittleEndian(Memory, Address) & 0xffff;
+                    stamp = DataConverter.LittleEndian.GetInt16(Memory, Address) & 0xffff;
                 }
                 return stamp;
             }
@@ -29,7 +31,7 @@ namespace SharpCompress.Compressor.PPMd.H
                 this.stamp = value;
                 if (Memory != null)
                 {
-                    Utility.WriteLittleEndian(Memory, Address, (short) value);
+                    DataConverter.LittleEndian.PutBytes(Memory, Address, (short)value);
                 }
             }
         }
@@ -60,7 +62,7 @@ namespace SharpCompress.Compressor.PPMd.H
         {
             if (Memory != null)
             {
-                next = Utility.readIntLittleEndian(Memory, Address + 4);
+                next = DataConverter.LittleEndian.GetInt32(Memory, Address + 4);
             }
             return next;
         }
@@ -75,7 +77,7 @@ namespace SharpCompress.Compressor.PPMd.H
             this.next = next;
             if (Memory != null)
             {
-                Utility.WriteLittleEndian(Memory, Address + 4, next);
+                DataConverter.LittleEndian.PutBytes(Memory, Address + 4, next);
             }
         }
 
@@ -83,7 +85,7 @@ namespace SharpCompress.Compressor.PPMd.H
         {
             if (Memory != null)
             {
-                NU = Utility.readShortLittleEndian(Memory, Address + 2) & 0xffff;
+                NU = DataConverter.LittleEndian.GetInt16(Memory, Address + 2) & 0xffff;
             }
             return NU;
         }
@@ -93,7 +95,7 @@ namespace SharpCompress.Compressor.PPMd.H
             NU = nu & 0xffff;
             if (Memory != null)
             {
-                Utility.WriteLittleEndian(Memory, Address + 2, (short) nu);
+                DataConverter.LittleEndian.PutBytes(Memory, Address + 2, (short)nu);
             }
         }
 
@@ -101,7 +103,7 @@ namespace SharpCompress.Compressor.PPMd.H
         {
             if (Memory != null)
             {
-                prev = Utility.readIntLittleEndian(Memory, Address + 8);
+                prev = DataConverter.LittleEndian.GetInt32(Memory, Address + 8);
             }
             return prev;
         }
@@ -116,7 +118,7 @@ namespace SharpCompress.Compressor.PPMd.H
             this.prev = prev;
             if (Memory != null)
             {
-                Utility.WriteLittleEndian(Memory, Address + 8, prev);
+                DataConverter.LittleEndian.PutBytes(Memory, Address + 8, prev);
             }
         }
     }

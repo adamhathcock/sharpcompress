@@ -270,6 +270,7 @@
     <Compile Include="Compressor\Rar\VM\VMPreparedProgram.cs" />
     <Compile Include="Compressor\Rar\VM\VMStandardFilters.cs" />
     <Compile Include="Compressor\Rar\VM\VMStandardFilterSignature.cs" />
+    <Compile Include="Converter\DataConverter.Portable.cs" />
     <Compile Include="Crypto\BufferedBlockCipher.cs" />
     <Compile Include="Crypto\BufferedCipherBase.cs" />
     <Compile Include="Crypto\CryptoException.cs" />
