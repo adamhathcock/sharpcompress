@@ -1198,14 +1198,12 @@ namespace SharpCompress.Common.SevenZip
         private class FolderUnpackStream : Stream
         {
             private ArchiveDatabase _db;
-            //private int _otherIndex;
             private int _startIndex;
             private List<bool> _extractStatuses;
 
             public FolderUnpackStream(ArchiveDatabase db, int p, int startIndex, List<bool> list)
             {
                 this._db = db;
-                //this._otherIndex = p;
                 this._startIndex = startIndex;
                 this._extractStatuses = list;
             }
@@ -1277,7 +1275,6 @@ namespace SharpCompress.Common.SevenZip
             {
                 //bool skip = !_extractStatuses[_currentIndex];
                 int index = _startIndex + _currentIndex;
-                //int realIndex = _otherIndex + index;
                 //string filename = @"D:\_testdump\" + _db.Files[index].Name;
                 //Directory.CreateDirectory(Path.GetDirectoryName(filename));
                 //_stream = new FileStream(filename, FileMode.Create, FileAccess.Write, FileShare.Delete);
