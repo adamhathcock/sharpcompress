@@ -274,6 +274,7 @@
     <Compile Include="Crypto\RijndaelEngine.cs" />
     <Compile Include="Crypto\Pack.cs" />
     <Compile Include="Crypto\Sha1Digest.cs" />
+    <Compile Include="EnumExtensions.cs" />
     <Compile Include="IO\AppendingStream.cs" />
     <Compile Include="IO\CountingWritableSubStream.cs" />
     <Compile Include="IO\ListeningStream.cs" />

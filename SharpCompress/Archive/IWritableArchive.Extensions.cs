@@ -60,7 +60,7 @@ namespace SharpCompress.Archive
             this IWritableArchive writableArchive,
             string filePath, string searchPattern = "*.*", SearchOption searchOption = SearchOption.AllDirectories)
         {
-#if NET2
+#if NET35
             foreach (var path in Directory.GetFiles(filePath, searchPattern, searchOption))
 #else
             foreach (var path in Directory.EnumerateFiles(filePath, searchPattern, searchOption))

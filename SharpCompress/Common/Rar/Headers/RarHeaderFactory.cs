@@ -93,7 +93,7 @@ namespace SharpCompress.Common.Rar.Headers
             {
                 if (!Options.HasFlag(Options.KeepStreamsOpen))
                 {
-#if NET2
+#if NET35
                     reader.Close();
 #else
                     reader.Dispose();
