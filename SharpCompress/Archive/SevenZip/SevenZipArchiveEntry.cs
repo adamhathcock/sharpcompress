@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using SharpCompress.Common.SevenZip;
 
 namespace SharpCompress.Archive.SevenZip
@@ -13,6 +14,10 @@ namespace SharpCompress.Archive.SevenZip
 
         public Stream OpenEntryStream()
         {
+            if (Archive.IsSolid)
+            {
+                throw new InvalidOperationException("Use ExtractAllEntries to extract SOLID archives.");
+            }
             return FilePart.GetCompressedStream();
         }
         public IArchive Archive { get; private set; }
