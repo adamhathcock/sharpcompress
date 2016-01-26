@@ -1,4 +1,5 @@
 ﻿using System;
+using SharpCompress.Converter;
 
 namespace SharpCompress.Compressor.PPMd
 {
@@ -39,7 +40,7 @@ namespace SharpCompress.Compressor.PPMd
         {
             if (properties.Length == 2)
             {
-                ushort props = BitConverter.ToUInt16(properties, 0);
+                ushort props = DataConverter.LittleEndian.GetUInt16(properties, 0);
                 AllocatorSize = (((props >> 4) & 0xff) + 1) << 20;
                 ModelOrder = (props & 0x0f) + 1;
                 ModelRestorationMethod = (I1.ModelRestorationMethod) (props >> 12);
@@ -47,7 +48,7 @@ namespace SharpCompress.Compressor.PPMd
             else if (properties.Length == 5)
             {
                 Version = PpmdVersion.H7z;
-                AllocatorSize = BitConverter.ToInt32(properties, 1);
+                AllocatorSize = DataConverter.LittleEndian.GetInt32(properties, 1);
                 ModelOrder = properties[0];
             }
         }
@@ -72,7 +73,7 @@ namespace SharpCompress.Compressor.PPMd
             get
             {
                 return
-                    BitConverter.GetBytes(
+                    DataConverter.LittleEndian.GetBytes(
                         (ushort)
                         ((ModelOrder - 1) + (((AllocatorSize >> 20) - 1) << 4) + ((ushort) ModelRestorationMethod << 12)));
             }

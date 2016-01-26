@@ -245,6 +245,7 @@
     <Compile Include="Compressor\PPMd\PpmdStream.cs" />
     <Compile Include="Compressor\Rar\RarStream.cs" />
     <Compile Include="EnumExtensions.cs" />
+    <Compile Include="Converter\DataConverter.cs" />
     <Compile Include="IO\CountingWritableSubStream.cs" />
     <Compile Include="Common\EntryStream.cs">
       <SubType>Code</SubType>

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using SharpCompress.Compressor.LZMA.LZ;
+using SharpCompress.Converter;
 
 namespace SharpCompress.Compressor.LZMA
 {
@@ -56,7 +57,7 @@ namespace SharpCompress.Compressor.LZMA
 
             if (!isLZMA2)
             {
-                dictionarySize = BitConverter.ToInt32(properties, 1);
+                dictionarySize = DataConverter.LittleEndian.GetInt32(properties, 1);
                 outWindow.Create(dictionarySize);
                 if (presetDictionary != null)
                     outWindow.Train(presetDictionary);

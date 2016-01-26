@@ -34,7 +34,6 @@ namespace SharpCompress.Common.SevenZip
         #region Variables
 
         private byte[] _buffer;
-        private int _origin;
         private int _offset;
         private int _ending;
 
@@ -45,7 +44,6 @@ namespace SharpCompress.Common.SevenZip
         public DataReader(byte[] buffer, int offset, int length)
         {
             _buffer = buffer;
-            _origin = offset;
             _offset = offset;
             _ending = offset + length;
         }

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using SharpCompress.Converter;
 
 namespace SharpCompress.Compressor.Rar.VM
 {
@@ -77,11 +78,12 @@ namespace SharpCompress.Compressor.Rar.VM
             {
                 if (IsVMMem(mem))
                 {
-                    return Utility.readIntLittleEndian(mem, offset);
+                    return DataConverter.LittleEndian.GetInt32(mem, offset);
                 }
                 else
                 {
-                    return Utility.readIntBigEndian(mem, offset);
+                    return DataConverter.BigEndian.GetInt32(mem, offset);
+
                 }
             }
         }
@@ -103,19 +105,11 @@ namespace SharpCompress.Compressor.Rar.VM
             {
                 if (IsVMMem(mem))
                 {
-                    Utility.WriteLittleEndian(mem, offset, value);
-                    //				Mem[offset + 0] = (byte) value;
-                    //				Mem[offset + 1] = (byte) (value >>> 8);
-                    //				Mem[offset + 2] = (byte) (value >>> 16);
-                    //				Mem[offset + 3] = (byte) (value >>> 24);
+                    DataConverter.LittleEndian.PutBytes(mem, offset, value);
                 }
                 else
                 {
-                    Utility.writeIntBigEndian(mem, offset, value);
-                    //				Mem[offset + 3] = (byte) value;
-                    //				Mem[offset + 2] = (byte) (value >>> 8);
-                    //				Mem[offset + 1] = (byte) (value >>> 16);
-                    //				Mem[offset + 0] = (byte) (value >>> 24);
+                    DataConverter.BigEndian.PutBytes(mem, offset, value);
                 }
             }
             // #define SET_VALUE(ByteMode,Addr,Value) SetValue(ByteMode,(uint
@@ -136,12 +130,12 @@ namespace SharpCompress.Compressor.Rar.VM
             if (cmdOp.Type == VMOpType.VM_OPREGMEM)
             {
                 int pos = (cmdOp.Offset + cmdOp.Base) & VM_MEMMASK;
-                ret = Utility.readIntLittleEndian(Mem, pos);
+                ret = DataConverter.LittleEndian.GetInt32(Mem, pos);
             }
             else
             {
                 int pos = cmdOp.Offset;
-                ret = Utility.readIntLittleEndian(Mem, pos);
+                ret = DataConverter.LittleEndian.GetInt32(Mem, pos);
             }
             return ret;
         }

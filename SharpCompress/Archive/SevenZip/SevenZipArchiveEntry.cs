@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using SharpCompress.Common.SevenZip;
 
 namespace SharpCompress.Archive.SevenZip

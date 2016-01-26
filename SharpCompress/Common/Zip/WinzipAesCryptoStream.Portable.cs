@@ -3,6 +3,7 @@ using System.IO;
 using Org.BouncyCastle.Crypto;
 using Org.BouncyCastle.Crypto.Engines;
 using Org.BouncyCastle.Crypto.Parameters;
+using SharpCompress.Converter;
 
 namespace SharpCompress.Common.Zip
 {
@@ -113,7 +114,7 @@ namespace SharpCompress.Common.Zip
                                   : bytesRemaining;
 
             // update the counter
-            Array.Copy(BitConverter.GetBytes(nonce++), 0, counter, 0, 4);
+            DataConverter.LittleEndian.PutBytes(counter, 0, nonce++);
 
             // Determine if this is the final block
             if ((bytesToRead == bytesRemaining) && (totalBytesLeftToRead == 0))

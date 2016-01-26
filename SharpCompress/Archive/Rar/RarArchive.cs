@@ -14,9 +14,6 @@ namespace SharpCompress.Archive.Rar
 {
     public class RarArchive : AbstractArchive<RarArchiveEntry, RarVolume>
     {
-        internal IEnumerator<RarArchiveEntry> SolidEntryEnumerator;
-        internal List<RarArchiveEntry> SolidReadedEntries=new List<RarArchiveEntry>(); 
-
         private readonly Unpack unpack = new Unpack();
 
         internal Unpack Unpack
@@ -155,12 +152,8 @@ namespace SharpCompress.Archive.Rar
             try
             {
                 var headerFactory = new RarHeaderFactory(StreamingMode.Seekable, options);
-                RarHeader header = headerFactory.ReadHeaders(stream).FirstOrDefault();
-                if (header == null)
-                {
-                    return false;
-                }
-                return Enum.IsDefined(typeof (HeaderType), header.HeaderType);
+                var markHeader = headerFactory.ReadHeaders(stream).FirstOrDefault() as MarkHeader;
+                return markHeader != null && markHeader.IsValid();
             }
             catch
             {

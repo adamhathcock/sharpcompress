@@ -43,7 +43,7 @@ namespace SharpCompress.Archive
                 return GZipArchive.Open(stream, options);
             }
             stream.Seek(0, SeekOrigin.Begin);
-            if(RarArchive.IsRarFile(stream, Options.LookForHeader | Options.KeepStreamsOpen))
+            if (RarArchive.IsRarFile(stream, options))
             {
                stream.Seek(0, SeekOrigin.Begin);
                return RarArchive.Open(stream, options);
@@ -138,7 +138,7 @@ namespace SharpCompress.Archive
                     return GZipArchive.Open(fileInfo, options);
                 }
                 stream.Seek(0, SeekOrigin.Begin);
-                if(RarArchive.IsRarFile(stream, Options.LookForHeader | Options.KeepStreamsOpen))
+                if (RarArchive.IsRarFile(stream, options))
                 {
                    stream.Dispose();
                    return RarArchive.Open(fileInfo, options);
