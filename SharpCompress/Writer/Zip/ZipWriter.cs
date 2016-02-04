@@ -75,7 +75,7 @@ namespace SharpCompress.Writer.Zip
 
             var headersize = (uint)WriteHeader(entryPath, modificationTime, compressionInfo);
             streamPosition += headersize;
-            return new ZipWritingStream(this, OutputStream, entry);
+            return new ZipWritingStream(this, OutputStream, entry, compressionInfo);
         }
 
         private string NormalizeFilename(string filename)
@@ -154,16 +154,18 @@ namespace SharpCompress.Writer.Zip
             private readonly Stream originalStream;
             private readonly Stream writeStream;
             private readonly ZipWriter writer;
+            private readonly ZipCompressionInfo compressionInfo;
             private CountingWritableSubStream counting;
             private uint decompressed;
 
-            internal ZipWritingStream(ZipWriter writer, Stream originalStream, ZipCentralDirectoryEntry entry)
+            internal ZipWritingStream(ZipWriter writer, Stream originalStream, ZipCentralDirectoryEntry entry, CompressionInfo compressionInfo = null)
             {
                 this.writer = writer;
                 this.originalStream = originalStream;
                 writeStream = GetWriteStream(originalStream);
                 this.writer = writer;
                 this.entry = entry;
+				this.compressionInfo = compressionInfo == null ? writer.zipCompressionInfo : new ZipCompressionInfo(compressionInfo);
             }
 
             public override bool CanRead
@@ -196,7 +198,7 @@ namespace SharpCompress.Writer.Zip
             {
                 counting = new CountingWritableSubStream(writeStream);
                 Stream output = counting;
-                switch (writer.zipCompressionInfo.Compression)
+                switch (compressionInfo.Compression)
                 {
                     case ZipCompressionMethod.None:
                         {
@@ -204,7 +206,7 @@ namespace SharpCompress.Writer.Zip
                         }
                     case ZipCompressionMethod.Deflate:
                         {
-                            return new DeflateStream(counting, CompressionMode.Compress, writer.zipCompressionInfo.DeflateCompressionLevel,
+                            return new DeflateStream(counting, CompressionMode.Compress, compressionInfo.DeflateCompressionLevel,
                                                      true);
                         }
                     case ZipCompressionMethod.BZip2:
@@ -230,7 +232,7 @@ namespace SharpCompress.Writer.Zip
                         }
                     default:
                         {
-                            throw new NotSupportedException("CompressionMethod: " + writer.zipCompressionInfo.Compression);
+                            throw new NotSupportedException("CompressionMethod: " + compressionInfo.Compression);
                         }
                 }
             }
