@@ -75,7 +75,7 @@ namespace SharpCompress.Writer.Zip
 
             var headersize = (uint)WriteHeader(entryPath, modificationTime, compressionInfo);
             streamPosition += headersize;
-			return new ZipWritingStream(this, OutputStream, entry, compressionInfo);
+            return new ZipWritingStream(this, OutputStream, entry, compressionInfo);
         }
 
         private string NormalizeFilename(string filename)
@@ -158,7 +158,7 @@ namespace SharpCompress.Writer.Zip
             private CountingWritableSubStream counting;
             private uint decompressed;
 
-			internal ZipWritingStream(ZipWriter writer, Stream originalStream, ZipCentralDirectoryEntry entry, CompressionInfo compressionInfo = null)
+            internal ZipWritingStream(ZipWriter writer, Stream originalStream, ZipCentralDirectoryEntry entry, CompressionInfo compressionInfo = null)
             {
                 this.writer = writer;
                 this.originalStream = originalStream;
