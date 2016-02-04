@@ -154,7 +154,7 @@ namespace SharpCompress.Writer.Zip
             private readonly Stream originalStream;
             private readonly Stream writeStream;
             private readonly ZipWriter writer;
-			private readonly ZipCompressionInfo compressionInfo;
+            private readonly ZipCompressionInfo compressionInfo;
             private CountingWritableSubStream counting;
             private uint decompressed;
 
