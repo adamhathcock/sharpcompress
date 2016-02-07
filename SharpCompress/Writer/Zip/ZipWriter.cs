@@ -158,14 +158,14 @@ namespace SharpCompress.Writer.Zip
             private CountingWritableSubStream counting;
             private uint decompressed;
 
-            internal ZipWritingStream(ZipWriter writer, Stream originalStream, ZipCentralDirectoryEntry entry, CompressionInfo compressionInfo = null)
+            internal ZipWritingStream(ZipWriter writer, Stream originalStream, ZipCentralDirectoryEntry entry, CompressionInfo compressionInfo)
             {
                 this.writer = writer;
                 this.originalStream = originalStream;
-                writeStream = GetWriteStream(originalStream);
                 this.writer = writer;
                 this.entry = entry;
 				this.compressionInfo = compressionInfo == null ? writer.zipCompressionInfo : new ZipCompressionInfo(compressionInfo);
+                writeStream = GetWriteStream(originalStream);
             }
 
             public override bool CanRead
