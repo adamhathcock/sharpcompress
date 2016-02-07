@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
     <metadata>
         <id>sharpcompress</id>
-        <version>0.11.3</version>
+        <version>0.11.4</version>
         <title>SharpCompress - Pure C# Decompression/Compression</title>
         <authors>Adam Hathcock</authors>
         <owners>Adam Hathcock</owners>
