@@ -12,21 +12,26 @@
     "frameworks": {
         "net35": {
             "compilationOptions": {
-                "warningsAsErrors": true
+                "warningsAsErrors": true,
+                "allowUnsafe": true
             }
         },
         "net40": {
             "compilationOptions": {
-                "warningsAsErrors": true
+                "warningsAsErrors": true,
+                "allowUnsafe": true
             }
         },
         "net45": {
             "compilationOptions": {
-                "warningsAsErrors": true
+                "warningsAsErrors": true,
+                "allowUnsafe": true
             }
         },
         ".NETPortable,Version=v4.5,Profile=Profile259": {
             "compilationOptions": {
+                "warningsAsErrors": true,
+                "allowUnsafe": true,
                 "define": [ "PROFILE259", "NO_FILE", "NO_CRYPTO" ]
             },
             "frameworkAssemblies": {
@@ -50,6 +55,7 @@
         "dotnet5.1": {
             "compilationOptions": {
                 "warningsAsErrors": true,
+                "allowUnsafe": true,
                 "define": [ "DOTNET51", "NO_FILE" ]
             },
             "dependencies": {
@@ -65,6 +71,7 @@
         "dnxcore50": {
             "compilationOptions": {
                 "warningsAsErrors": true,
+                "allowUnsafe": true,
                 "define": [ "DNXCORE50" ]
             },
             "dependencies": {

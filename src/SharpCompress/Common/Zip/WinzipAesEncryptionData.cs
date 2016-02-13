@@ -1,5 +1,6 @@
 #if !NO_CRYPTO
 using System;
+using System.Security.Cryptography;
 using SharpCompress.Converter;
 using System.Text;
 
