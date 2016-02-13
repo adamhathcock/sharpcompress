@@ -27,6 +27,10 @@ In-Progress:
 - DNX/NET Core support
 - xproj targeting
 
+Version 0.11.5:
+==============
+- Bug fix in Skip method
+
 Version 0.11.4:
 ==============
 - SharpCompress is now endian neutral (matters for Mono platforms)
