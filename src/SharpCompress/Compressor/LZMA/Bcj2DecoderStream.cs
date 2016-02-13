@@ -99,7 +99,6 @@ namespace SharpCompress.Compressor.LZMA
         private RangeDecoder mRangeDecoder;
         private StatusDecoder[] mStatusDecoder;
         private long mWritten;
-        private long mLimit;
         private IEnumerator<byte> mIter;
         private bool mFinished;
         private bool isDisposed;
@@ -112,7 +111,6 @@ namespace SharpCompress.Compressor.LZMA
             if (streams.Length != 4)
                 throw new NotSupportedException();
 
-            mLimit = limit;
             mMainStream = streams[0];
             mCallStream = streams[1];
             mJumpStream = streams[2];

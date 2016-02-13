@@ -27,6 +27,7 @@
 using System;
 using SharpCompress.Common;
 using SharpCompress.Common.Tar.Headers;
+using SharpCompress.Converter;
 
 namespace SharpCompress.Compressor.Deflate
 {
@@ -221,9 +222,9 @@ namespace SharpCompress.Compressor.Deflate
                     {
                         // Emit the GZIP trailer: CRC32 and  size mod 2^32
                         int c1 = crc.Crc32Result;
-                        _stream.Write(BitConverter.GetBytes(c1), 0, 4);
+                        _stream.Write(DataConverter.LittleEndian.GetBytes(c1), 0, 4);
                         int c2 = (Int32)(crc.TotalBytesRead & 0x00000000FFFFFFFF);
-                        _stream.Write(BitConverter.GetBytes(c2), 0, 4);
+                        _stream.Write(DataConverter.LittleEndian.GetBytes(c2), 0, 4);
                     }
                     else
                     {
@@ -267,9 +268,9 @@ namespace SharpCompress.Compressor.Deflate
                         }
 
 
-                        Int32 crc32_expected = BitConverter.ToInt32(trailer, 0);
+                        Int32 crc32_expected = DataConverter.LittleEndian.GetInt32(trailer, 0);
                         Int32 crc32_actual = crc.Crc32Result;
-                        Int32 isize_expected = BitConverter.ToInt32(trailer, 4);
+                        Int32 isize_expected = DataConverter.LittleEndian.GetInt32(trailer, 4);
                         Int32 isize_actual = (Int32)(_z.TotalBytesOut & 0x00000000FFFFFFFF);
 
                         if (crc32_actual != crc32_expected)
@@ -405,7 +406,7 @@ namespace SharpCompress.Compressor.Deflate
             if (header[0] != 0x1F || header[1] != 0x8B || header[2] != 8)
                 throw new ZlibException("Bad GZIP header.");
 
-            Int32 timet = BitConverter.ToInt32(header, 4);
+            Int32 timet = DataConverter.LittleEndian.GetInt32(header, 4);
             _GzipMtime = TarHeader.Epoch.AddSeconds(timet);
             totalBytesRead += n;
             if ((header[3] & 0x04) == 0x04)

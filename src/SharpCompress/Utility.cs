@@ -2,9 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using SharpCompress.Archive;
-using SharpCompress.Common;
-using SharpCompress.IO;
 
 namespace SharpCompress
 {
@@ -35,34 +32,12 @@ namespace SharpCompress
         /// <param name="number">Number to operate on</param>
         /// <param name="bits">Ammount of bits to shift</param>
         /// <returns>The resulting number from the shift operation</returns>
-        public static int URShift(int number, long bits)
-        {
-            return URShift(number, (int)bits);
-        }
-
-        /// <summary>
-        /// Performs an unsigned bitwise right shift with the specified number
-        /// </summary>
-        /// <param name="number">Number to operate on</param>
-        /// <param name="bits">Ammount of bits to shift</param>
-        /// <returns>The resulting number from the shift operation</returns>
         public static long URShift(long number, int bits)
         {
             if (number >= 0)
                 return number >> bits;
             else
                 return (number >> bits) + (2L << ~bits);
-        }
-
-        /// <summary>
-        /// Performs an unsigned bitwise right shift with the specified number
-        /// </summary>
-        /// <param name="number">Number to operate on</param>
-        /// <param name="bits">Ammount of bits to shift</param>
-        /// <returns>The resulting number from the shift operation</returns>
-        public static long URShift(long number, long bits)
-        {
-            return URShift(number, (int)bits);
         }
 
         /// <summary>
@@ -120,139 +95,6 @@ namespace SharpCompress
             }
         }
 
-        /// <summary> Read a int value from the byte array at the given position (Big Endian)
-        /// 
-        /// </summary>
-        /// <param name="array">the array to read from
-        /// </param>
-        /// <param name="pos">the offset
-        /// </param>
-        /// <returns> the value
-        /// </returns>
-        public static int readIntBigEndian(byte[] array, int pos)
-        {
-            int temp = 0;
-            temp |= array[pos] & 0xff;
-            temp <<= 8;
-            temp |= array[pos + 1] & 0xff;
-            temp <<= 8;
-            temp |= array[pos + 2] & 0xff;
-            temp <<= 8;
-            temp |= array[pos + 3] & 0xff;
-            return temp;
-        }
-
-        /// <summary> Read a short value from the byte array at the given position (little
-        /// Endian)
-        /// 
-        /// </summary>
-        /// <param name="array">the array to read from
-        /// </param>
-        /// <param name="pos">the offset
-        /// </param>
-        /// <returns> the value
-        /// </returns>
-        public static short readShortLittleEndian(byte[] array, int pos)
-        {
-            return BitConverter.ToInt16(array, pos);
-        }
-
-        /// <summary> Read an int value from the byte array at the given position (little
-        /// Endian)
-        /// 
-        /// </summary>
-        /// <param name="array">the array to read from
-        /// </param>
-        /// <param name="pos">the offset
-        /// </param>
-        /// <returns> the value
-        /// </returns>
-        public static int readIntLittleEndian(byte[] array, int pos)
-        {
-            return BitConverter.ToInt32(array, pos);
-        }
-
-        /// <summary> Write an int value into the byte array at the given position (Big endian)
-        /// 
-        /// </summary>
-        /// <param name="array">the array
-        /// </param>
-        /// <param name="pos">the offset
-        /// </param>
-        /// <param name="value">the value to write
-        /// </param>
-        public static void writeIntBigEndian(byte[] array, int pos, int value)
-        {
-            array[pos] = (byte)((Utility.URShift(value, 24)) & 0xff);
-            array[pos + 1] = (byte)((Utility.URShift(value, 16)) & 0xff);
-            array[pos + 2] = (byte)((Utility.URShift(value, 8)) & 0xff);
-            array[pos + 3] = (byte)((value) & 0xff);
-        }
-
-        /// <summary> Write a short value into the byte array at the given position (little
-        /// endian)
-        /// 
-        /// </summary>
-        /// <param name="array">the array
-        /// </param>
-        /// <param name="pos">the offset
-        /// </param>
-        /// <param name="value">the value to write
-        /// </param>
-        public static void WriteLittleEndian(byte[] array, int pos, short value)
-        {
-            byte[] newBytes = BitConverter.GetBytes(value);
-
-            if (!BitConverter.IsLittleEndian)
-                Array.Reverse(newBytes);
-
-            Array.Copy(newBytes, 0, array, pos, newBytes.Length);
-        }
-
-        /// <summary> Increment a short value at the specified position by the specified amount
-        /// (little endian).
-        /// </summary>
-        public static void incShortLittleEndian(byte[] array, int pos, short incrementValue)
-        {
-            short existingValue = BitConverter.ToInt16(array, pos);
-            existingValue += incrementValue;
-            WriteLittleEndian(array, pos, existingValue);
-            //int c = Utility.URShift(((array[pos] & 0xff) + (dv & 0xff)), 8);
-            //array[pos] = (byte)(array[pos] + (dv & 0xff));
-            //if ((c > 0) || ((dv & 0xff00) != 0))
-            //{
-            //    array[pos + 1] = (byte)(array[pos + 1] + ((Utility.URShift(dv, 8)) & 0xff) + c);
-            //}
-        }
-
-        /// <summary> Write an int value into the byte array at the given position (little
-        /// endian)
-        /// 
-        /// </summary>
-        /// <param name="array">the array
-        /// </param>
-        /// <param name="pos">the offset
-        /// </param>
-        /// <param name="value">the value to write
-        /// </param>
-        public static void WriteLittleEndian(byte[] array, int pos, int value)
-        {
-            byte[] newBytes = BitConverter.GetBytes(value);
-
-            if (!BitConverter.IsLittleEndian)
-                Array.Reverse(newBytes);
-
-            Array.Copy(newBytes, 0, array, pos, newBytes.Length);
-        }
-
-        public static void Initialize<T>(this T[] array, Func<T> func)
-        {
-            for (int i = 0; i < array.Length; i++)
-            {
-                array[i] = func();
-            }
-        }
-
         public static void AddRange<T>(this ICollection<T> destination, IEnumerable<T> source)
         {
             foreach (T item in source)
@@ -304,7 +146,7 @@ namespace SharpCompress
                     readCount = (int)advanceAmount;
                 }
                 read = source.Read(buffer, 0, readCount);
-                if (read < 0)
+                if (read <= 0)
                 {
                     break;
                 }
@@ -322,18 +164,6 @@ namespace SharpCompress
             do
             {
             } while (source.Read(buffer, 0, buffer.Length) == buffer.Length);
-        }
-
-
-        public static byte[] UInt32ToBigEndianBytes(uint x)
-        {
-            return new byte[]
-                       {
-                           (byte) ((x >> 24) & 0xff),
-                           (byte) ((x >> 16) & 0xff),
-                           (byte) ((x >> 8) & 0xff),
-                           (byte) (x & 0xff)
-                       };
         }
 
         public static DateTime DosDateToDateTime(UInt16 iDate, UInt16 iTime)
@@ -448,33 +278,6 @@ namespace SharpCompress
         public static void CopyTo(this byte[] array, byte[] destination, int index)
         {
             Array.Copy(array, 0, destination, index, array.Length);
-        }
-
-        public static long HostToNetworkOrder(long host)
-        {
-            return (int)((long)HostToNetworkOrder((int)host)
-                & unchecked((long)(unchecked((ulong)-1))) << 32
-                | ((long)HostToNetworkOrder((int)((int)host >> 32)) & unchecked((long)(unchecked((ulong)-1)))));
-        }
-        public static int HostToNetworkOrder(int host)
-        {
-            return (int)((int)(HostToNetworkOrder((short)host) & -1) << 16 | (HostToNetworkOrder((short)(host >> 16)) & -1));
-        }
-        public static short HostToNetworkOrder(short host)
-        {
-            return (short)((int)(host & 255) << 8 | ((int)host >> 8 & 255));
-        }
-        public static long NetworkToHostOrder(long network)
-        {
-            return HostToNetworkOrder(network);
-        }
-        public static int NetworkToHostOrder(int network)
-        {
-            return HostToNetworkOrder(network);
-        }
-        public static short NetworkToHostOrder(short network)
-        {
-            return HostToNetworkOrder(network);
         }
     }
 }

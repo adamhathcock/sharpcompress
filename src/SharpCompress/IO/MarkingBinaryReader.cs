@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using SharpCompress.Converter;
 
 namespace SharpCompress.IO
 {
@@ -36,7 +37,7 @@ namespace SharpCompress.IO
 
         public override bool ReadBoolean()
         {
-            return BitConverter.ToBoolean(ReadBytes(1), 0);
+            return ReadBytes(1).Single() != 0;
         }
 
         public override byte ReadByte()
@@ -67,38 +68,27 @@ namespace SharpCompress.IO
         
         public override decimal ReadDecimal()
         {
-            return ByteArrayToDecimal(ReadBytes(16), 0);
-        }
-
-        private decimal ByteArrayToDecimal(byte[] src, int offset)
-        {
-            //http://stackoverflow.com/a/16984356/385387
-            var i1 = BitConverter.ToInt32(src, offset);
-            var i2 = BitConverter.ToInt32(src, offset + 4);
-            var i3 = BitConverter.ToInt32(src, offset + 8);
-            var i4 = BitConverter.ToInt32(src, offset + 12);
-
-            return new decimal(new[] { i1, i2, i3, i4 });
+            throw new NotSupportedException();
         }
 
         public override double ReadDouble()
         {
-            return BitConverter.ToDouble(ReadBytes(8), 0);
+            throw new NotSupportedException();
         }
 
         public override short ReadInt16()
         {
-            return BitConverter.ToInt16(ReadBytes(2), 0);
+            return DataConverter.LittleEndian.GetInt16(ReadBytes(2), 0);
         }
 
         public override int ReadInt32()
         {
-            return BitConverter.ToInt32(ReadBytes(4), 0);
+            return DataConverter.LittleEndian.GetInt32(ReadBytes(4), 0);
         }
 
         public override long ReadInt64()
         {
-            return BitConverter.ToInt64(ReadBytes(8), 0);
+            return DataConverter.LittleEndian.GetInt64(ReadBytes(8), 0);
         }
 
         public override sbyte ReadSByte()
@@ -108,7 +98,7 @@ namespace SharpCompress.IO
 
         public override float ReadSingle()
         {
-            return BitConverter.ToSingle(ReadBytes(4), 0);
+            throw new NotSupportedException();
         }
 
         public override string ReadString()
@@ -118,17 +108,17 @@ namespace SharpCompress.IO
 
         public override ushort ReadUInt16()
         {
-            return BitConverter.ToUInt16(ReadBytes(2), 0);
+            return DataConverter.LittleEndian.GetUInt16(ReadBytes(2), 0);
         }
 
         public override uint ReadUInt32()
         {
-            return BitConverter.ToUInt32(ReadBytes(4), 0);
+            return DataConverter.LittleEndian.GetUInt32(ReadBytes(4), 0);
         }
 
         public override ulong ReadUInt64()
         {
-            return BitConverter.ToUInt64(ReadBytes(8), 0);
+            return DataConverter.LittleEndian.GetUInt64(ReadBytes(8), 0);
         }
     }
 }

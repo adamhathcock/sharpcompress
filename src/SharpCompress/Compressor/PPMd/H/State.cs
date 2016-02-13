@@ -1,5 +1,6 @@
 using System;
 using System.Text;
+using SharpCompress.Converter;
 
 namespace SharpCompress.Compressor.PPMd.H
 {
@@ -38,7 +39,7 @@ namespace SharpCompress.Compressor.PPMd.H
 
         internal int GetSuccessor()
         {
-            return Utility.readIntLittleEndian(Memory, Address + 2);
+            return DataConverter.LittleEndian.GetInt32(Memory, Address + 2);
         }
 
         internal void SetSuccessor(PPMContext successor)
@@ -48,7 +49,7 @@ namespace SharpCompress.Compressor.PPMd.H
 
         internal void SetSuccessor(int successor)
         {
-            Utility.WriteLittleEndian(Memory, Address + 2, successor);
+            DataConverter.LittleEndian.PutBytes(Memory, Address + 2, successor);
         }
 
         internal void SetValues(StateRef state)

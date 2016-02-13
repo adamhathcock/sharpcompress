@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -73,8 +74,11 @@ namespace SharpCompress.Archive.Rar
 
         public Stream OpenEntryStream()
         {
-            return new RarStream(archive.Unpack, FileHeader,
-                                 new MultiVolumeReadOnlyStream(Parts.Cast<RarFilePart>(), archive));
+            if (archive.IsSolid)
+            {
+                throw new InvalidOperationException("Use ExtractAllEntries to extract SOLID archives.");
+            }
+            return new RarStream(archive.Unpack, FileHeader, new MultiVolumeReadOnlyStream(Parts.Cast<RarFilePart>(), archive));
         }
 
         public bool IsComplete

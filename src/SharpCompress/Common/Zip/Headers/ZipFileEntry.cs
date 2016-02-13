@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using SharpCompress.Converter;
 
 namespace SharpCompress.Common.Zip.Headers
 {
@@ -68,13 +69,13 @@ namespace SharpCompress.Common.Zip.Headers
         {
             for (int i = 0; i < extra.Length-4;)
             {
-                ExtraDataType type = (ExtraDataType) BitConverter.ToUInt16(extra, i);
+                ExtraDataType type = (ExtraDataType)DataConverter.LittleEndian.GetUInt16(extra, i);
                 if (!Enum.IsDefined(typeof (ExtraDataType), type))
                 {
                     type = ExtraDataType.NotImplementedExtraData;
                 }
 
-                ushort length = BitConverter.ToUInt16(extra, i + 2);
+                ushort length = DataConverter.LittleEndian.GetUInt16(extra, i + 2);
                 byte[] data = new byte[length];
                 Buffer.BlockCopy(extra, i + 4, data, 0, length);
                 Extra.Add(LocalEntryHeaderExtraFactory.Create(type,length,data));

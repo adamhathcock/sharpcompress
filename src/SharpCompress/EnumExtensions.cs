@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if NET35
+using System;
 
 namespace SharpCompress
 {
@@ -13,3 +14,4 @@ namespace SharpCompress
         }
     }
 }
+#endif

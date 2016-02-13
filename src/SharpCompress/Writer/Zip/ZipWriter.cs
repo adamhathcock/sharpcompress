@@ -10,6 +10,7 @@ using SharpCompress.Compressor.BZip2;
 using SharpCompress.Compressor.Deflate;
 using SharpCompress.Compressor.LZMA;
 using SharpCompress.Compressor.PPMd;
+using SharpCompress.Converter;
 using SharpCompress.IO;
 using DeflateStream = SharpCompress.Compressor.Deflate.DeflateStream;
 
@@ -74,7 +75,7 @@ namespace SharpCompress.Writer.Zip
 
             var headersize = (uint)WriteHeader(entryPath, modificationTime, compressionInfo);
             streamPosition += headersize;
-            return new ZipWritingStream(this, OutputStream, entry);
+            return new ZipWritingStream(this, OutputStream, entry, compressionInfo);
         }
 
         private string NormalizeFilename(string filename)
@@ -93,7 +94,7 @@ namespace SharpCompress.Writer.Zip
             var explicitZipCompressionInfo = compressionInfo != null ? new ZipCompressionInfo(compressionInfo) : this.zipCompressionInfo;
             byte[] encodedFilename = ArchiveEncoding.Default.GetBytes(filename);
 
-            OutputStream.Write(BitConverter.GetBytes(ZipHeaderFactory.ENTRY_HEADER_BYTES), 0, 4);
+            OutputStream.Write(DataConverter.LittleEndian.GetBytes(ZipHeaderFactory.ENTRY_HEADER_BYTES), 0, 4);
 		    if (explicitZipCompressionInfo.Compression == ZipCompressionMethod.Deflate)
 		    {
 			    OutputStream.Write(new byte[] {20, 0}, 0, 2); //older version which is more compatible 
@@ -111,14 +112,14 @@ namespace SharpCompress.Writer.Zip
                     flags |= HeaderFlags.Bit1; // eos marker
                 }
             }
-            OutputStream.Write(BitConverter.GetBytes((ushort) flags), 0, 2);
-            OutputStream.Write(BitConverter.GetBytes((ushort)explicitZipCompressionInfo.Compression), 0, 2); // zipping method
-            OutputStream.Write(BitConverter.GetBytes(modificationTime.DateTimeToDosTime()), 0, 4);
+            OutputStream.Write(DataConverter.LittleEndian.GetBytes((ushort) flags), 0, 2);
+            OutputStream.Write(DataConverter.LittleEndian.GetBytes((ushort)explicitZipCompressionInfo.Compression), 0, 2); // zipping method
+            OutputStream.Write(DataConverter.LittleEndian.GetBytes(modificationTime.DateTimeToDosTime()), 0, 4);
             // zipping date and time
             OutputStream.Write(new byte[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, 0, 12);
             // unused CRC, un/compressed size, updated later
-            OutputStream.Write(BitConverter.GetBytes((ushort) encodedFilename.Length), 0, 2); // filename length
-            OutputStream.Write(BitConverter.GetBytes((ushort) 0), 0, 2); // extra length
+            OutputStream.Write(DataConverter.LittleEndian.GetBytes((ushort) encodedFilename.Length), 0, 2); // filename length
+            OutputStream.Write(DataConverter.LittleEndian.GetBytes((ushort) 0), 0, 2); // extra length
             OutputStream.Write(encodedFilename, 0, encodedFilename.Length);
 
             return 6 + 2 + 2 + 4 + 12 + 2 + 2 + encodedFilename.Length;
@@ -126,9 +127,9 @@ namespace SharpCompress.Writer.Zip
 
         private void WriteFooter(uint crc, uint compressed, uint uncompressed)
         {
-            OutputStream.Write(BitConverter.GetBytes(crc), 0, 4);
-            OutputStream.Write(BitConverter.GetBytes(compressed), 0, 4);
-            OutputStream.Write(BitConverter.GetBytes(uncompressed), 0, 4);
+            OutputStream.Write(DataConverter.LittleEndian.GetBytes(crc), 0, 4);
+            OutputStream.Write(DataConverter.LittleEndian.GetBytes(compressed), 0, 4);
+            OutputStream.Write(DataConverter.LittleEndian.GetBytes(uncompressed), 0, 4);
         }
 
         private void WriteEndRecord(uint size)
@@ -136,11 +137,11 @@ namespace SharpCompress.Writer.Zip
             byte[] encodedComment = ArchiveEncoding.Default.GetBytes(zipComment);
 
             OutputStream.Write(new byte[] {80, 75, 5, 6, 0, 0, 0, 0}, 0, 8);
-            OutputStream.Write(BitConverter.GetBytes((ushort) entries.Count), 0, 2);
-            OutputStream.Write(BitConverter.GetBytes((ushort) entries.Count), 0, 2);
-            OutputStream.Write(BitConverter.GetBytes(size), 0, 4);
-            OutputStream.Write(BitConverter.GetBytes((uint) streamPosition), 0, 4);
-            OutputStream.Write(BitConverter.GetBytes((ushort) encodedComment.Length), 0, 2);
+            OutputStream.Write(DataConverter.LittleEndian.GetBytes((ushort) entries.Count), 0, 2);
+            OutputStream.Write(DataConverter.LittleEndian.GetBytes((ushort) entries.Count), 0, 2);
+            OutputStream.Write(DataConverter.LittleEndian.GetBytes(size), 0, 4);
+            OutputStream.Write(DataConverter.LittleEndian.GetBytes((uint) streamPosition), 0, 4);
+            OutputStream.Write(DataConverter.LittleEndian.GetBytes((ushort) encodedComment.Length), 0, 2);
             OutputStream.Write(encodedComment, 0, encodedComment.Length);
         }
 
@@ -153,16 +154,18 @@ namespace SharpCompress.Writer.Zip
             private readonly Stream originalStream;
             private readonly Stream writeStream;
             private readonly ZipWriter writer;
+            private readonly ZipCompressionInfo compressionInfo;
             private CountingWritableSubStream counting;
             private uint decompressed;
 
-            internal ZipWritingStream(ZipWriter writer, Stream originalStream, ZipCentralDirectoryEntry entry)
+            internal ZipWritingStream(ZipWriter writer, Stream originalStream, ZipCentralDirectoryEntry entry, CompressionInfo compressionInfo)
             {
                 this.writer = writer;
                 this.originalStream = originalStream;
-                writeStream = GetWriteStream(originalStream);
                 this.writer = writer;
                 this.entry = entry;
+				this.compressionInfo = compressionInfo == null ? writer.zipCompressionInfo : new ZipCompressionInfo(compressionInfo);
+                writeStream = GetWriteStream(originalStream);
             }
 
             public override bool CanRead
@@ -195,7 +198,7 @@ namespace SharpCompress.Writer.Zip
             {
                 counting = new CountingWritableSubStream(writeStream);
                 Stream output = counting;
-                switch (writer.zipCompressionInfo.Compression)
+                switch (compressionInfo.Compression)
                 {
                     case ZipCompressionMethod.None:
                         {
@@ -203,7 +206,7 @@ namespace SharpCompress.Writer.Zip
                         }
                     case ZipCompressionMethod.Deflate:
                         {
-                            return new DeflateStream(counting, CompressionMode.Compress, writer.zipCompressionInfo.DeflateCompressionLevel,
+                            return new DeflateStream(counting, CompressionMode.Compress, compressionInfo.DeflateCompressionLevel,
                                                      true);
                         }
                     case ZipCompressionMethod.BZip2:
@@ -229,7 +232,7 @@ namespace SharpCompress.Writer.Zip
                         }
                     default:
                         {
-                            throw new NotSupportedException("CompressionMethod: " + writer.zipCompressionInfo.Compression);
+                            throw new NotSupportedException("CompressionMethod: " + compressionInfo.Compression);
                         }
                 }
             }
@@ -254,7 +257,7 @@ namespace SharpCompress.Writer.Zip
                     }
                     else
                     {
-                        originalStream.Write(BitConverter.GetBytes(ZipHeaderFactory.POST_DATA_DESCRIPTOR), 0, 4);
+                        originalStream.Write(DataConverter.LittleEndian.GetBytes(ZipHeaderFactory.POST_DATA_DESCRIPTOR), 0, 4);
                         writer.WriteFooter(entry.Crc, counting.Count, decompressed);
                         writer.streamPosition += entry.Compressed + 16;
                     }

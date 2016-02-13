@@ -9,6 +9,8 @@ A Simple Request
 
 Hi everyone. I hope you're using SharpCompress and finding it useful. Please give me feedback on what you'd like to see changed especially as far as usability goes. New feature suggestions are always welcome as well. I would also like to know what projects SharpCompress is being used in. I like seeing how it is used to give me ideas for future versions. Thanks!
 
+Please do not email me directly to ask for help.  If you think there is a real issue, please report it here.
+
 Want to contribute?
 
 I'm always looking for help or ideas. Please submit code or email with ideas. Unfortunately, just letting me know you'd like to help is not enough because I really have no overall plan of what needs to be done. I'll definitely accept code submissions and add you as a member of the project!
@@ -24,6 +26,16 @@ In-Progress:
 - RAR5 support
 - DNX/NET Core support
 - xproj targeting
+
+Version 0.11.5:
+==============
+- Bug fix in Skip method
+
+Version 0.11.4:
+==============
+- SharpCompress is now endian neutral (matters for Mono platforms)
+- Fix for Inflate (need to change implementation)
+- Fixes for RAR detection
 
 Version 0.11.1:
 ==============

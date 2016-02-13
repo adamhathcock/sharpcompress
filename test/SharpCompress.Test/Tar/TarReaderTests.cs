@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using SharpCompress.Common;
+using SharpCompress.Reader;
 using SharpCompress.Reader.Tar;
 using Xunit;
 
@@ -85,6 +86,17 @@ namespace SharpCompress.Test
                     }
                 }
                 Assert.Equal(names.Count, 3);
+            }
+        }
+
+        [TestMethod]
+        public void Tar_Containing_Rar_Reader()
+        {
+            string archiveFullPath = Path.Combine(TEST_ARCHIVES_PATH, "Tar.ContainsRar.tar");
+            using (Stream stream = File.OpenRead(archiveFullPath))
+            using (IReader reader = ReaderFactory.Open(stream))
+            {
+                Assert.IsTrue(reader.ArchiveType == ArchiveType.Tar);
             }
         }
     }
