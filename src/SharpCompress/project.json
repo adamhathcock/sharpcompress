@@ -68,11 +68,11 @@
                 "System.Text.Encoding.Extensions": "4.0.11-beta-23516"
             }
         },
-        "dnxcore50": {
+        "dotnet5.4": {
             "compilationOptions": {
                 "warningsAsErrors": true,
                 "allowUnsafe": true,
-                "define": [ "DNXCORE50" ]
+                "define": [ "DOTNET54" ]
             },
             "dependencies": {
                 "System.Collections": "4.0.11-beta-23516",

@@ -186,7 +186,7 @@ namespace SharpCompress.Compressor.LZMA
             }
             else
             {
-#if NO_FILE || DNXCORE50
+#if DOTNET54 || DOTNET51
                 using (IncrementalHash sha = IncrementalHash.CreateHash(HashAlgorithmName.SHA256))
                 {
                     byte[] counter = new byte[8];
