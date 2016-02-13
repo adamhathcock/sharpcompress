@@ -146,7 +146,7 @@ namespace SharpCompress
                     readCount = (int)advanceAmount;
                 }
                 read = source.Read(buffer, 0, readCount);
-                if (read == 0)
+                if (read <= 0)
                 {
                     break;
                 }
