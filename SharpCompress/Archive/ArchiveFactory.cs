@@ -6,6 +6,7 @@ using SharpCompress.Archive.SevenZip;
 using SharpCompress.Archive.Tar;
 using SharpCompress.Archive.Zip;
 using SharpCompress.Common;
+using SharpCompress.IO;
 
 namespace SharpCompress.Archive
 {
@@ -43,7 +44,7 @@ namespace SharpCompress.Archive
                 return GZipArchive.Open(stream, options);
             }
             stream.Seek(0, SeekOrigin.Begin);
-            if (RarArchive.IsRarFile(stream, options))
+            if (RarArchive.IsRarFile(stream, StreamingMode.Seekable, options))
             {
                stream.Seek(0, SeekOrigin.Begin);
                return RarArchive.Open(stream, options);
@@ -138,7 +139,7 @@ namespace SharpCompress.Archive
                     return GZipArchive.Open(fileInfo, options);
                 }
                 stream.Seek(0, SeekOrigin.Begin);
-                if (RarArchive.IsRarFile(stream, options))
+                if (RarArchive.IsRarFile(stream, StreamingMode.Seekable, options))
                 {
                    stream.Dispose();
                    return RarArchive.Open(fileInfo, options);

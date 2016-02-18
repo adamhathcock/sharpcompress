@@ -149,9 +149,14 @@ namespace SharpCompress.Archive.Rar
 
         public static bool IsRarFile(Stream stream, Options options)
         {
+            return IsRarFile(stream, StreamingMode.Seekable, options);
+        }
+
+        public static bool IsRarFile(Stream stream, StreamingMode streamingMode, Options options)
+        {
             try
             {
-                var headerFactory = new RarHeaderFactory(StreamingMode.Seekable, options);
+                var headerFactory = new RarHeaderFactory(streamingMode, options);
                 var markHeader = headerFactory.ReadHeaders(stream).FirstOrDefault() as MarkHeader;
                 return markHeader != null && markHeader.IsValid();
             }
