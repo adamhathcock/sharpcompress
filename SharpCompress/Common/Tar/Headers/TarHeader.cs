@@ -22,6 +22,7 @@ namespace SharpCompress.Common.Tar.Headers
         LongName = (byte) 'L',
         SparseFile = (byte) 'S',
         VolumeHeader = (byte) 'V',
+        GlobalExtendedHeader = (byte) 'g',
     }
 
     internal class TarHeader
