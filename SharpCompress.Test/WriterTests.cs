@@ -1,5 +1,7 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using SharpCompress.Common;
+using SharpCompress.IO;
 using SharpCompress.Reader;
 using SharpCompress.Writer;
 
@@ -18,9 +20,15 @@ namespace SharpCompress.Test
         {
             ResetScratch();
             using (Stream stream = File.OpenWrite(Path.Combine(SCRATCH2_FILES_PATH, archive)))
-            using (var writer = WriterFactory.Open(stream, type, compressionType))
             {
-               writer.WriteAll(ORIGINAL_FILES_PATH, "*", SearchOption.AllDirectories);
+                using (var writer = WriterFactory.Open(stream, type, compressionType, true))
+                {
+                    writer.WriteAll(ORIGINAL_FILES_PATH, "*", SearchOption.AllDirectories);
+                }
+                if (!stream.CanWrite)
+                {
+                    throw new InvalidOperationException();
+                }
             }
             CompareArchivesByPath(Path.Combine(SCRATCH2_FILES_PATH, archive),
                Path.Combine(TEST_ARCHIVES_PATH, archiveToVerifyAgainst));

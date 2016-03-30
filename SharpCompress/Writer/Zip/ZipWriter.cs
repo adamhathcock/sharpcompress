@@ -24,13 +24,13 @@ namespace SharpCompress.Writer.Zip
         private readonly string zipComment;
         private long streamPosition;
 
-        public ZipWriter(Stream destination, CompressionInfo compressionInfo, string zipComment)
+        public ZipWriter(Stream destination, CompressionInfo compressionInfo, string zipComment, bool leaveOpen = false)
             : base(ArchiveType.Zip)
         {
             this.zipComment = zipComment ?? string.Empty;
 
             this.zipCompressionInfo = new ZipCompressionInfo(compressionInfo);
-            InitalizeStream(destination, false);
+            InitalizeStream(destination, !leaveOpen);
         }
 
         protected override void Dispose(bool isDisposing)

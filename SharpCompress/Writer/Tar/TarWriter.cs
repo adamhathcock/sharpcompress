@@ -10,7 +10,7 @@ namespace SharpCompress.Writer.Tar
 {
     public class TarWriter : AbstractWriter
     {
-        public TarWriter(Stream destination, CompressionInfo compressionInfo)
+        public TarWriter(Stream destination, CompressionInfo compressionInfo, bool leaveOpen = false)
             : base(ArchiveType.Tar)
         {
             if (!destination.CanWrite)
@@ -23,12 +23,12 @@ namespace SharpCompress.Writer.Tar
                     break;
                 case CompressionType.BZip2:
                     {
-                        destination = new BZip2Stream(destination, CompressionMode.Compress, false);
+                        destination = new BZip2Stream(destination, CompressionMode.Compress, leaveOpen);
                     }
                     break;
                 case CompressionType.GZip:
                     {
-                        destination = new GZipStream(destination, CompressionMode.Compress, false);
+                        destination = new GZipStream(destination, CompressionMode.Compress, leaveOpen);
                     }
                     break;
                 default:
