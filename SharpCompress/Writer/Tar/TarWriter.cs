@@ -36,7 +36,7 @@ namespace SharpCompress.Writer.Tar
                         throw new InvalidFormatException("Tar does not support compression: " + compressionInfo.Type);
                     }
             }
-            InitalizeStream(destination, false);
+            InitalizeStream(destination, !leaveOpen);
         }
 
         public override void Write(string filename, Stream source, DateTime? modificationTime)
@@ -91,7 +91,7 @@ namespace SharpCompress.Writer.Tar
             {
                 PadTo512(0, true);
                 PadTo512(0, true);
-                OutputStream.Dispose(); // required when bzip2 compression is used
+                (OutputStream as BZip2Stream)?.Finish(); // required when bzip2 compression is used
             }
             base.Dispose(isDisposing);
         }
