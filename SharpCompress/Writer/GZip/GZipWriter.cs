@@ -1,7 +1,6 @@
 ﻿using System;
 using System.IO;
 using SharpCompress.Common;
-using SharpCompress.Common.Tar.Headers;
 using SharpCompress.Compressor;
 using SharpCompress.Compressor.Deflate;
 
@@ -11,10 +10,10 @@ namespace SharpCompress.Writer.GZip
     {
         private bool wroteToStream;
 
-        public GZipWriter(Stream destination)
+        public GZipWriter(Stream destination, bool leaveOpen = false)
             : base(ArchiveType.GZip)
         {
-            InitalizeStream(new GZipStream(destination, CompressionMode.Compress, true), true);
+            InitalizeStream(new GZipStream(destination, CompressionMode.Compress, leaveOpen), !leaveOpen);
         }
 
         protected override void Dispose(bool isDisposing)
