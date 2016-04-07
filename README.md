@@ -34,6 +34,11 @@ I'm always looking for help or ideas. Please submit code or email with ideas. Un
 
 ## Version Log
 
+### Version 0.11.6
+
+* Bug fix for global header in Tar
+* Writers now have a leaveOpen `bool` overload.  They won't close streams if not-requested to.
+
 ### Version 0.11.5
 
 * Bug fix in Skip method
