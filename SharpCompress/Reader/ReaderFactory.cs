@@ -62,7 +62,7 @@ namespace SharpCompress.Reader
             }
 
             rewindableStream.Rewind(false);
-            if (RarArchive.IsRarFile(rewindableStream, options))
+            if (RarArchive.IsRarFile(rewindableStream, StreamingMode.Streaming, options))
             {
                 rewindableStream.Rewind(true);
                 return RarReader.Open(rewindableStream, options);
