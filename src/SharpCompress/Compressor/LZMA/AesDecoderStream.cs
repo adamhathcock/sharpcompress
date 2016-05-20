@@ -9,28 +9,28 @@ namespace SharpCompress.Compressor.LZMA
 {
     internal class AesDecoderStream : DecoderStream2
     {
-#region Variables
+        #region Variables
 
-        private Stream mStream;
-        private ICryptoTransform mDecoder;
-        private byte[] mBuffer;
+        private readonly Stream mStream;
+        private readonly ICryptoTransform mDecoder;
+        private readonly byte[] mBuffer;
         private long mWritten;
-        private long mLimit;
+        private readonly long mLimit;
         private int mOffset;
         private int mEnding;
         private int mUnderflow;
         private bool isDisposed;
 
-#endregion
+        #endregion
 
-#region Stream Methods
+        #region Stream Methods
 
         public AesDecoderStream(Stream input, byte[] info, IPasswordProvider pass, long limit)
         {
             mStream = input;
             mLimit = limit;
 
-            if (((uint)input.Length & 15) != 0)
+            if (((uint) input.Length & 15) != 0)
                 throw new NotSupportedException("AES decoder does not support padding.");
 
             int numCyclesPower;
@@ -73,17 +73,24 @@ namespace SharpCompress.Compressor.LZMA
 
         public override long Position
         {
-            get { return mWritten; }
+            get
+            {
+                return mWritten;
+            }
         }
 
         public override long Length
         {
-            get { return mLimit; }
+            get
+            {
+                return mLimit;
+            }
         }
 
         public override int Read(byte[] buffer, int offset, int count)
         {
-            if (count == 0 || mWritten == mLimit)
+            if (count == 0
+                || mWritten == mLimit)
                 return 0;
 
             if (mUnderflow > 0)
@@ -106,14 +113,15 @@ namespace SharpCompress.Compressor.LZMA
                     }
 
                     mEnding += read;
-                } while (mEnding - mOffset < 16);
+                }
+                while (mEnding - mOffset < 16);
             }
 
             // We shouldn't return more data than we are limited to.
             // Currently this is handled by forcing an underflow if
             // the stream length is not a multiple of the block size.
             if (count > mLimit - mWritten)
-                count = (int)(mLimit - mWritten);
+                count = (int) (mLimit - mWritten);
 
             // We cannot transform less than 16 bytes into the target buffer,
             // but we also cannot return zero, so we need to handle this.
@@ -131,9 +139,9 @@ namespace SharpCompress.Compressor.LZMA
             return processed;
         }
 
-#endregion
+        #endregion
 
-#region Private Methods
+        #region Private Methods
 
         private void Init(byte[] info, out int numCyclesPower, out byte[] salt, out byte[] iv)
         {
@@ -186,7 +194,7 @@ namespace SharpCompress.Compressor.LZMA
             }
             else
             {
-#if DOTNET54 || DOTNET51
+#if NETSTANDARD13
                 using (IncrementalHash sha = IncrementalHash.CreateHash(HashAlgorithmName.SHA256))
                 {
                     byte[] counter = new byte[8];
@@ -250,7 +258,8 @@ namespace SharpCompress.Compressor.LZMA
             return count;
         }
 
-#endregion
+        #endregion
     }
 }
+
 #endif

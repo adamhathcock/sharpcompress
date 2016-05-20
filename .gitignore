@@ -11,3 +11,4 @@ TestResults/
 packages/*/
 project.lock.json
 test/TestArchives/Scratch
+.vs

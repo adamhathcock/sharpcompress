@@ -5,7 +5,6 @@ using SharpCompress.Converter;
 
 namespace SharpCompress.Common.Tar.Headers
 {
-        GlobalExtendedHeader = (byte) 'g',
     internal class TarHeader
     {
         internal static readonly DateTime Epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
@@ -25,25 +24,25 @@ namespace SharpCompress.Common.Tar.Headers
         {
             byte[] buffer = new byte[512];
 
-            WriteOctalBytes(511, buffer, 100, 8);   // file mode
-            WriteOctalBytes(0, buffer, 108, 8);     // owner ID
-            WriteOctalBytes(0, buffer, 116, 8);     // group ID
+            WriteOctalBytes(511, buffer, 100, 8); // file mode
+            WriteOctalBytes(0, buffer, 108, 8); // owner ID
+            WriteOctalBytes(0, buffer, 116, 8); // group ID
 
             //Encoding.UTF8.GetBytes("magic").CopyTo(buffer, 257);
             if (Name.Length > 100)
             {
                 // Set mock filename and filetype to indicate the next block is the actual name of the file
                 WriteStringBytes("././@LongLink", buffer, 0, 100);
-                buffer[156] = (byte)EntryType.LongName;
+                buffer[156] = (byte) EntryType.LongName;
                 WriteOctalBytes(Name.Length + 1, buffer, 124, 12);
             }
             else
             {
                 WriteStringBytes(Name, buffer, 0, 100);
                 WriteOctalBytes(Size, buffer, 124, 12);
-                var time = (long)(LastModifiedTime.ToUniversalTime() - Epoch).TotalSeconds;
+                var time = (long) (LastModifiedTime.ToUniversalTime() - Epoch).TotalSeconds;
                 WriteOctalBytes(time, buffer, 136, 12);
-                buffer[156] = (byte)EntryType;
+                buffer[156] = (byte) EntryType;
 
                 if (Size >= 0x1FFFFFFFF)
                 {
@@ -67,13 +66,14 @@ namespace SharpCompress.Common.Tar.Headers
                 Write(output);
             }
         }
+
         private void WriteLongFilenameHeader(Stream output)
         {
             byte[] nameBytes = ArchiveEncoding.Default.GetBytes(Name);
             output.Write(nameBytes, 0, nameBytes.Length);
 
             // pad to multiple of 512 bytes, and make sure a terminating null is added
-            int numPaddingBytes = 512 - (nameBytes.Length % 512);
+            int numPaddingBytes = 512 - (nameBytes.Length%512);
             if (numPaddingBytes == 0)
                 numPaddingBytes = 512;
             output.Write(new byte[numPaddingBytes], 0, numPaddingBytes);
@@ -110,7 +110,8 @@ namespace SharpCompress.Common.Tar.Headers
 
             Magic = ArchiveEncoding.Default.GetString(buffer, 257, 6).TrimNulls();
 
-            if (!string.IsNullOrEmpty(Magic) && "ustar".Equals(Magic))
+            if (!string.IsNullOrEmpty(Magic)
+                && "ustar".Equals(Magic))
             {
                 string namePrefix = ArchiveEncoding.Default.GetString(buffer, 345, 157);
                 namePrefix = namePrefix.TrimNulls();
@@ -119,7 +120,8 @@ namespace SharpCompress.Common.Tar.Headers
                     Name = namePrefix + "/" + Name;
                 }
             }
-            if (EntryType != EntryType.LongName && Name.Length == 0)
+            if (EntryType != EntryType.LongName
+                && Name.Length == 0)
             {
                 return false;
             }
