@@ -53,7 +53,7 @@ namespace SharpCompress.Reader
             if (BZip2Stream.IsBZip2(rewindableStream))
             {
                 rewindableStream.Rewind(false);
-                BZip2Stream testStream = new BZip2Stream(rewindableStream, CompressionMode.Decompress, false);
+                BZip2Stream testStream = new BZip2Stream(rewindableStream, CompressionMode.Decompress, true);
                 if (TarArchive.IsTarFile(testStream))
                 {
                     rewindableStream.Rewind(true);

@@ -23,7 +23,8 @@ namespace SharpCompress.Writer.Zip
             byte[] encodedFilename = Encoding.UTF8.GetBytes(FileName);
             byte[] encodedComment = Encoding.UTF8.GetBytes(Comment);
 
-            outputStream.Write(new byte[] {80, 75, 1, 2, 0x3F, 0, 0x0A, 0}, 0, 8);
+            //constant sig, then version made by, compabitility, then version to extract
+            outputStream.Write(new byte[] {80, 75, 1, 2, 0x14, 0, 0x0A, 0}, 0, 8);
             HeaderFlags flags = HeaderFlags.UTF8;
             if (!outputStream.CanSeek)
             {

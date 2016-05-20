@@ -9,15 +9,15 @@ namespace SharpCompress.Writer
 {
     public static class WriterFactory
     {
-        public static IWriter Open(Stream stream, ArchiveType archiveType, CompressionType compressionType)
+        public static IWriter Open(Stream stream, ArchiveType archiveType, CompressionType compressionType, bool leaveOpen = false)
         {
             return Open(stream, archiveType, new CompressionInfo
                                                  {
                                                      Type = compressionType
-                                                 });
+                                                 }, leaveOpen);
         }
 
-        public static IWriter Open(Stream stream, ArchiveType archiveType, CompressionInfo compressionInfo)
+        public static IWriter Open(Stream stream, ArchiveType archiveType, CompressionInfo compressionInfo, bool leaveOpen = false)
         {
             switch (archiveType)
             {
@@ -27,15 +27,15 @@ namespace SharpCompress.Writer
                         {
                             throw new InvalidFormatException("GZip archives only support GZip compression type.");
                         }
-                        return new GZipWriter(stream);
+                        return new GZipWriter(stream, leaveOpen);
                     }
                 case ArchiveType.Zip:
                     {
-                        return new ZipWriter(stream, compressionInfo, null);
+                        return new ZipWriter(stream, compressionInfo, null, leaveOpen);
                     }
                 case ArchiveType.Tar:
                     {
-                        return new TarWriter(stream, compressionInfo);
+                        return new TarWriter(stream, compressionInfo, leaveOpen);
                     }
                 default:
                     {

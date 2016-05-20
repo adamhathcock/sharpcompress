@@ -27,6 +27,11 @@ namespace SharpCompress.Compressor.BZip2
                 this.stream = new CBZip2InputStream(stream, decompressContacted, leaveOpen);
             }
         }
+        
+        public void Finish()
+        {
+            (this.stream as CBZip2OutputStream)?.Finish();
+        }
 
         protected override void Dispose(bool disposing)
         {

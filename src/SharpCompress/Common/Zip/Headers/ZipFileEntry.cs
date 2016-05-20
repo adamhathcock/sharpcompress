@@ -16,7 +16,17 @@ namespace SharpCompress.Common.Zip.Headers
 
         internal bool IsDirectory
         {
-            get { return Name.EndsWith("/"); }
+            get
+            {
+                if (Name.EndsWith("/"))
+                    return true;
+
+                //.NET Framework 4.5 : System.IO.Compression::CreateFromDirectory() probably writes backslashes to headers
+                return CompressedSize == 0
+                        && UncompressedSize == 0
+                        && Name.EndsWith("\\");
+
+            }
         }
 
         protected string DecodeString(byte[] str)
