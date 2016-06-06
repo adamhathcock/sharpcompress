@@ -1,0 +1,67 @@
+﻿{
+    "version": "0.12.0",
+    "title": "SharpCompress - Pure C# Decompression/Compression",
+    "authors": [ "Adam Hathcock" ],
+    "language": "en-US",
+    "packOptions": {
+        "owners": [ "Adam Hathcock" ],
+        "tags": [ "rar", "unrar", "zip", "unzip", "bzip2", "gzip", "tar", "7zip" ],
+        "projectUrl": "https://github.com/adamhathcock/sharpcompress",
+        "licenseUrl": "https://github.com/adamhathcock/sharpcompress/blob/master/LICENSE.txt",
+        "description": "SharpCompress is a compression library for .NET/Mono/Silverlight/WP7/WindowsStore that can unrar, decompress 7zip, zip/unzip, tar/untar bzip2/unbzip2 and gzip/ungzip with forward-only reading and file random access APIs. Write support for zip/tar/bzip2/gzip is implemented.",
+        "requireLicenseAcceptance": false
+    },
+    "frameworks": {
+        "net35": {
+            "buildOptions": {
+                "warningsAsErrors": true,
+                "allowUnsafe": true
+            }
+        },
+        "net40": {
+            "buildOptions": {
+                "warningsAsErrors": true,
+                "allowUnsafe": true
+            }
+        },
+        "net45": {
+            "buildOptions": {
+                "warningsAsErrors": true,
+                "allowUnsafe": true
+            }
+        },
+        "netstandard1.0": {
+            "buildOptions": {
+                "warningsAsErrors": true,
+                "allowUnsafe": true,
+                "define": [ "NO_FILE", "NO_CRYPTO" ]
+            },
+            "dependencies": {
+                "System.Collections": "4.0.11-rc2-24027",
+                "System.Diagnostics.Debug": "4.0.11-rc2-24027",
+                "System.IO": "4.1.0-rc2-24027",
+                "System.Linq": "4.1.0-rc2-24027",
+                "System.Resources.ResourceManager": "4.0.1-rc2-24027",
+                "System.Runtime.Extensions": "4.1.0-rc2-24027",
+                "System.Text.Encoding.Extensions": "4.0.11-rc2-24027"
+            }
+        },
+        "netstandard1.3": {
+            "buildOptions": {
+                "warningsAsErrors": true,
+                "allowUnsafe": true
+            },
+            "dependencies": {
+                "System.Collections": "4.0.11-rc2-24027",
+                "System.Diagnostics.Debug": "4.0.11-rc2-24027",
+                "System.IO": "4.1.0-rc2-24027",
+                "System.IO.FileSystem": "4.0.1-rc2-24027",
+                "System.Linq": "4.1.0-rc2-24027",
+                "System.Resources.ResourceManager": "4.0.1-rc2-24027",
+                "System.Runtime.Extensions": "4.1.0-rc2-24027",
+                "System.Security.Cryptography.Algorithms": "4.1.0-rc2-24027",
+                "System.Text.Encoding.Extensions": "4.0.11-rc2-24027"
+            }
+        }
+    }
+}

@@ -9,3 +9,6 @@ TestArchives/Scratch2/
 TestResults/
 *.nupkg
 packages/*/
+project.lock.json
+test/TestArchives/Scratch
+.vs

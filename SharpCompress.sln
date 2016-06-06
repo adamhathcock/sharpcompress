@@ -1,28 +1,23 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2013
-VisualStudioVersion = 12.0.31101.0
+# Visual Studio 14
+VisualStudioVersion = 14.0.24720.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Testing", "Testing", "{932BBFCC-76E3-45FF-90CA-6BE4FBF4A097}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{F18F1765-4A02-42FD-9BEF-F0E2FCBD9D17}"
 	ProjectSection(SolutionItems) = preProject
-		NuGet\sharpcompress.nuspec = NuGet\sharpcompress.nuspec
+		global.json = global.json
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharpCompress", "SharpCompress\SharpCompress.csproj", "{10A689CF-76A2-4A4F-96E4-553C33398438}"
+Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "SharpCompress", "src\SharpCompress\SharpCompress.xproj", "{FD19DDD8-72B2-4024-8665-0D1F7A2AA998}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharpCompress.Test", "SharpCompress.Test\SharpCompress.Test.csproj", "{15679D7A-F22C-4943-87FF-BF5C76C4A6FD}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{3C5BE746-03E5-4895-9988-0B57F162F86C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharpCompress.Portable", "SharpCompress\SharpCompress.Portable.csproj", "{7FA7D133-1417-4F85-9998-4C618AC8FEDA}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{0F0901FF-E8D9-426A-B5A2-17C7F47C1529}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharpCompress.WindowsStore", "SharpCompress\SharpCompress.WindowsStore.csproj", "{1DF6D83C-31FF-47B6-82FE-C4603BE916B5}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharpCompress.PortableTest", "SharpCompress\SharpCompress.PortableTest.csproj", "{EFDCAF57-FD4D-4E5D-A3D5-F26B875817ED}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharpCompress.Test.Portable", "SharpCompress.Test\SharpCompress.Test.Portable.csproj", "{E9C3C94B-FB27-4B4F-B225-57513C254D37}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharpCompress.Unsigned", "SharpCompress\SharpCompress.Unsigned.csproj", "{27D535CB-2FD3-4621-8C9A-46161FC77A5D}"
+Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "SharpCompress.Test", "test\SharpCompress.Test\SharpCompress.Test.xproj", "{3B80E585-A2F3-4666-8F69-C7FFDA0DD7E5}"
+	ProjectSection(ProjectDependencies) = postProject
+		{FD19DDD8-72B2-4024-8665-0D1F7A2AA998} = {FD19DDD8-72B2-4024-8665-0D1F7A2AA998}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -30,42 +25,20 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{10A689CF-76A2-4A4F-96E4-553C33398438}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{10A689CF-76A2-4A4F-96E4-553C33398438}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{10A689CF-76A2-4A4F-96E4-553C33398438}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{10A689CF-76A2-4A4F-96E4-553C33398438}.Release|Any CPU.Build.0 = Release|Any CPU
-		{15679D7A-F22C-4943-87FF-BF5C76C4A6FD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{15679D7A-F22C-4943-87FF-BF5C76C4A6FD}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{15679D7A-F22C-4943-87FF-BF5C76C4A6FD}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{15679D7A-F22C-4943-87FF-BF5C76C4A6FD}.Release|Any CPU.Build.0 = Release|Any CPU
-		{7FA7D133-1417-4F85-9998-4C618AC8FEDA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{7FA7D133-1417-4F85-9998-4C618AC8FEDA}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{7FA7D133-1417-4F85-9998-4C618AC8FEDA}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{7FA7D133-1417-4F85-9998-4C618AC8FEDA}.Release|Any CPU.Build.0 = Release|Any CPU
-		{1DF6D83C-31FF-47B6-82FE-C4603BE916B5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{1DF6D83C-31FF-47B6-82FE-C4603BE916B5}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{1DF6D83C-31FF-47B6-82FE-C4603BE916B5}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{1DF6D83C-31FF-47B6-82FE-C4603BE916B5}.Release|Any CPU.Build.0 = Release|Any CPU
-		{EFDCAF57-FD4D-4E5D-A3D5-F26B875817ED}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{EFDCAF57-FD4D-4E5D-A3D5-F26B875817ED}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{EFDCAF57-FD4D-4E5D-A3D5-F26B875817ED}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{EFDCAF57-FD4D-4E5D-A3D5-F26B875817ED}.Release|Any CPU.Build.0 = Release|Any CPU
-		{E9C3C94B-FB27-4B4F-B225-57513C254D37}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{E9C3C94B-FB27-4B4F-B225-57513C254D37}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{E9C3C94B-FB27-4B4F-B225-57513C254D37}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{E9C3C94B-FB27-4B4F-B225-57513C254D37}.Release|Any CPU.Build.0 = Release|Any CPU
-		{27D535CB-2FD3-4621-8C9A-46161FC77A5D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{27D535CB-2FD3-4621-8C9A-46161FC77A5D}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{27D535CB-2FD3-4621-8C9A-46161FC77A5D}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{27D535CB-2FD3-4621-8C9A-46161FC77A5D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FD19DDD8-72B2-4024-8665-0D1F7A2AA998}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FD19DDD8-72B2-4024-8665-0D1F7A2AA998}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FD19DDD8-72B2-4024-8665-0D1F7A2AA998}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FD19DDD8-72B2-4024-8665-0D1F7A2AA998}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3B80E585-A2F3-4666-8F69-C7FFDA0DD7E5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3B80E585-A2F3-4666-8F69-C7FFDA0DD7E5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3B80E585-A2F3-4666-8F69-C7FFDA0DD7E5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3B80E585-A2F3-4666-8F69-C7FFDA0DD7E5}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
-		{15679D7A-F22C-4943-87FF-BF5C76C4A6FD} = {932BBFCC-76E3-45FF-90CA-6BE4FBF4A097}
-		{EFDCAF57-FD4D-4E5D-A3D5-F26B875817ED} = {932BBFCC-76E3-45FF-90CA-6BE4FBF4A097}
-		{E9C3C94B-FB27-4B4F-B225-57513C254D37} = {932BBFCC-76E3-45FF-90CA-6BE4FBF4A097}
-		{27D535CB-2FD3-4621-8C9A-46161FC77A5D} = {932BBFCC-76E3-45FF-90CA-6BE4FBF4A097}
+		{FD19DDD8-72B2-4024-8665-0D1F7A2AA998} = {3C5BE746-03E5-4895-9988-0B57F162F86C}
+		{3B80E585-A2F3-4666-8F69-C7FFDA0DD7E5} = {0F0901FF-E8D9-426A-B5A2-17C7F47C1529}
 	EndGlobalSection
 EndGlobal
