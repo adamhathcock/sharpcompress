@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using Microsoft.Extensions.PlatformAbstractions;
 using SharpCompress.Common;
 using SharpCompress.Reader;
@@ -9,7 +10,7 @@ using Xunit;
 
 namespace SharpCompress.Test
 {
-    public class TestBase
+    public class TestBase : IDisposable
     {
         protected string SOLUTION_BASE_PATH=null;
         protected string TEST_ARCHIVES_PATH;
@@ -220,9 +221,12 @@ namespace SharpCompress.Test
                 Assert.False(archive2.MoveToNextEntry());
             }
         }
-        
+
+        private static object lockObject = new object();
+
         public TestBase()
         {
+            Monitor.Enter(lockObject);
             var index = PlatformServices.Default.Application.ApplicationBasePath.IndexOf("SharpCompress.Test", StringComparison.OrdinalIgnoreCase);
             SOLUTION_BASE_PATH = Path.GetDirectoryName(PlatformServices.Default.Application.ApplicationBasePath.Substring(0, index));
             TEST_ARCHIVES_PATH = Path.Combine(SOLUTION_BASE_PATH, "TestArchives", "Archives");
@@ -230,6 +234,11 @@ namespace SharpCompress.Test
             MISC_TEST_FILES_PATH = Path.Combine(SOLUTION_BASE_PATH, "TestArchives", "MiscTest");
             SCRATCH_FILES_PATH = Path.Combine(SOLUTION_BASE_PATH, "TestArchives", "Scratch");
             SCRATCH2_FILES_PATH = Path.Combine(SOLUTION_BASE_PATH, "TestArchives", "Scratch2");
+        }
+
+        public void Dispose()
+        {
+            Monitor.Exit(lockObject);
         }
     }
 }
