@@ -4,6 +4,7 @@ using SharpCompress.Common;
 using SharpCompress.Reader;
 using SharpCompress.Reader.Tar;
 using Xunit;
+using System.Linq;
 
 namespace SharpCompress.Test
 {
@@ -64,6 +65,29 @@ namespace SharpCompress.Test
                 }
             }
             VerifyFiles();
+        }
+
+        [Fact]
+        public void Tar_LongNamesWithLongNameExtension()
+        {
+            var filePaths = new List<string>();
+
+            using (Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.LongPathsWithLongNameExtension.tar")))
+            using (var reader = TarReader.Open(stream))
+            {
+                while (reader.MoveToNextEntry())
+                {
+                    if (!reader.Entry.IsDirectory)
+                    {
+                        filePaths.Add(reader.Entry.Key);
+                    }
+                }                
+            }
+
+            Assert.Equal(3, filePaths.Count);
+            Assert.Contains("a.txt", filePaths);
+            Assert.Contains("wp-content/plugins/gravityformsextend/lib/Aws/Symfony/Component/ClassLoader/Tests/Fixtures/Apc/beta/Apc/ApcPrefixCollision/A/B/Bar.php", filePaths);
+            Assert.Contains("wp-content/plugins/gravityformsextend/lib/Aws/Symfony/Component/ClassLoader/Tests/Fixtures/Apc/beta/Apc/ApcPrefixCollision/A/B/Foo.php", filePaths);
         }
 
         [Fact]
