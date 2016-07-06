@@ -20,9 +20,11 @@ namespace SharpCompress.Common.Tar.Headers
         internal EntryType EntryType { get; set; }
         internal Stream PackedStream { get; set; }
 
+        internal const int BlockSize = 512;
+
         internal void Write(Stream output)
         {
-            byte[] buffer = new byte[512];
+            byte[] buffer = new byte[BlockSize];
 
             WriteOctalBytes(511, buffer, 100, 8); // file mode
             WriteOctalBytes(0, buffer, 108, 8); // owner ID
@@ -72,17 +74,16 @@ namespace SharpCompress.Common.Tar.Headers
             byte[] nameBytes = ArchiveEncoding.Default.GetBytes(Name);
             output.Write(nameBytes, 0, nameBytes.Length);
 
-            // pad to multiple of 512 bytes, and make sure a terminating null is added
-            int numPaddingBytes = 512 - (nameBytes.Length % 512);
+            // pad to multiple of BlockSize bytes, and make sure a terminating null is added
+            int numPaddingBytes = BlockSize - (nameBytes.Length % BlockSize);
             if (numPaddingBytes == 0)
-                numPaddingBytes = 512;
+                numPaddingBytes = BlockSize;
             output.Write(new byte[numPaddingBytes], 0, numPaddingBytes);
         }
 
         internal bool Read(BinaryReader reader)
         {
             var buffer = ReadBlock(reader);
-
             if (buffer.Length == 0)
             {
                 return false;
@@ -90,14 +91,7 @@ namespace SharpCompress.Common.Tar.Headers
 
             if (ReadEntryType(buffer) == EntryType.LongName)
             {
-                var size = ReadSize(buffer);
-                var nameLength = (int)size;
-                var nameBytes = reader.ReadBytes(nameLength);
-                var remainingBytesToRead = 512 - (nameLength % 512);
-                // Read the rest of the block and discard the data
-                if (remainingBytesToRead < 512) reader.ReadBytes(remainingBytesToRead);
-                Name = ArchiveEncoding.Default.GetString(nameBytes, 0, nameBytes.Length).TrimNulls();
-
+                Name = ReadLongName(reader, buffer);
                 buffer = ReadBlock(reader);
             }
             else
@@ -113,7 +107,6 @@ namespace SharpCompress.Common.Tar.Headers
             //GroupId = ReadASCIIInt32Base8(buffer, 116, 7);
             long unixTimeStamp = ReadASCIIInt64Base8(buffer, 136, 11);
             LastModifiedTime = Epoch.AddSeconds(unixTimeStamp).ToLocalTime();
-
 
             Magic = ArchiveEncoding.Default.GetString(buffer, 257, 6).TrimNulls();
 
@@ -135,6 +128,17 @@ namespace SharpCompress.Common.Tar.Headers
             return true;
         }
 
+        private string ReadLongName(BinaryReader reader, byte[] buffer)
+        {
+            var size = ReadSize(buffer);
+            var nameLength = (int) size;
+            var nameBytes = reader.ReadBytes(nameLength);
+            var remainingBytesToRead = BlockSize - (nameLength%BlockSize);
+            // Read the rest of the block and discard the data
+            if (remainingBytesToRead < BlockSize) reader.ReadBytes(remainingBytesToRead);
+            return ArchiveEncoding.Default.GetString(nameBytes, 0, nameBytes.Length).TrimNulls();
+        }
+
         private static EntryType ReadEntryType(byte[] buffer)
         {
             return (EntryType)buffer[156];
@@ -151,9 +155,9 @@ namespace SharpCompress.Common.Tar.Headers
 
         private static byte[] ReadBlock(BinaryReader reader)
         {
-            byte[] buffer = reader.ReadBytes(512);
+            byte[] buffer = reader.ReadBytes(BlockSize);
 
-            if (buffer.Length < 512)
+            if (buffer.Length < BlockSize)
             {
                 throw new InvalidOperationException();
             }
