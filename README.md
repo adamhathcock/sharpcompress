@@ -34,6 +34,10 @@ I'm always looking for help or ideas. Please submit code or email with ideas. Un
 
 ## Version Log
 
+### Version 0.12.0
+* .NET Core RTM!
+* Bug fix for Tar long paths
+
 ### Version 0.11.6
 
 * Bug fix for global header in Tar
