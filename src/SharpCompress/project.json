@@ -1,5 +1,5 @@
 ﻿{
-    "version": "0.12.0",
+    "version": "0.12.1",
     "title": "SharpCompress - Pure C# Decompression/Compression",
     "authors": [ "Adam Hathcock" ],
     "language": "en-US",
@@ -28,6 +28,18 @@
             "buildOptions": {
                 "warningsAsErrors": true,
                 "allowUnsafe": true
+            }
+        },
+        "sl5": {
+            "buildOptions": {
+                "warningsAsErrors": true,
+                "allowUnsafe": true,
+                "define": [ "NO_FILE", "NO_CRYPTO", "SILVERLIGHT" ]
+            },
+            "frameworkAssemblies": {
+                "mscorlib": "",
+                "System": "",
+                "System.Core": ""
             }
         },
         "netstandard1.0": {
