@@ -34,6 +34,9 @@ I'm always looking for help or ideas. Please submit code or email with ideas. Un
 
 ## Version Log
 
+### Version 0.12.2
+* Support Profile 259 again
+
 ### Version 0.12.1
 * Support Silverlight 5
 

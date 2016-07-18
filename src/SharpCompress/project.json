@@ -1,5 +1,5 @@
 ﻿{
-    "version": "0.12.1",
+    "version": "0.12.2",
     "title": "SharpCompress - Pure C# Decompression/Compression",
     "authors": [ "Adam Hathcock" ],
     "language": "en-US",
@@ -40,6 +40,27 @@
                 "mscorlib": "",
                 "System": "",
                 "System.Core": ""
+            }
+        },
+        ".NETPortable,Version=v4.5,Profile=Profile259": {
+            "buildOptions": {
+                "warningsAsErrors": true,
+                "allowUnsafe": true,
+                "define": [ "NO_FILE", "NO_CRYPTO", "SILVERLIGHT" ]
+            },
+            "frameworkAssemblies": {
+                "Microsoft.CSharp": "",
+                "System": "",
+                "System.Collections": "",
+                "System.Core": "",
+                "System.Diagnostics.Debug": "",
+                "System.IO": "",
+                "System.Linq": "",
+                "System.Linq.Expressions": "",
+                "System.Resources.ResourceManager": "",
+                "System.Runtime": "",
+                "System.Runtime.Extensions": "",
+                "System.Text.Encoding": ""
             }
         },
         "netstandard1.0": {
