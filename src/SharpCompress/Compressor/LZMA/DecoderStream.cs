@@ -162,7 +162,7 @@ namespace SharpCompress.Compressor.LZMA
             Stream[] inStreams = new Stream[folderInfo.PackStreams.Count];
             for (int j = 0; j < folderInfo.PackStreams.Count; j++)
             {
-                inStreams[j] = new ReadOnlySubStream(inStream, startPos, packSizes[j]);
+                inStreams[j] = new BufferedSubStream(inStream, startPos, packSizes[j]);
                 startPos += packSizes[j];
             }
 
