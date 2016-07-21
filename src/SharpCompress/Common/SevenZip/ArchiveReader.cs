@@ -895,6 +895,26 @@ namespace SharpCompress.Common.SevenZip
 #endif
                             ReadAttributeVector(dataVector, numFiles, delegate(int i, uint? attr)
                                                                           {
+                                                                              // Some third party implementations established an unofficial extension
+                                                                              // of the 7z archive format by placing posix file attributes in the high
+                                                                              // bits of the windows file attributes. This makes use of the fact that
+                                                                              // the official implementation does not perform checks on this value.
+                                                                              //
+                                                                              // Newer versions of the official 7z GUI client will try to parse this
+                                                                              // extension, thus acknowledging the unofficial use of these bits.
+                                                                              //
+                                                                              // For us it is safe to just discard the upper bits if they are set and
+                                                                              // keep the windows attributes from the lower bits (which should be set
+                                                                              // properly even if posix file attributes are present, in order to be
+                                                                              // compatible with older 7z archive readers)
+                                                                              //
+                                                                              // Note that the 15th bit is used by some implementations to indicate
+                                                                              // presence of the extension, but not all implementations do that so
+                                                                              // we can't trust that bit and must ignore it.
+                                                                              //
+                                                                              if (attr.HasValue && (attr.Value >> 16) != 0)
+                                                                                  attr = attr.Value & 0x7FFFu;
+
                                                                               db.Files[i].Attrib = attr;
 #if DEBUG
                                                                               Log.Write("  " + (attr.HasValue ? attr.Value.ToString("x8") : "n/a"));
