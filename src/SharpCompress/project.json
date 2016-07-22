@@ -37,9 +37,9 @@
                 "define": [ "NO_FILE", "NO_CRYPTO", "SILVERLIGHT" ]
             },
             "frameworkAssemblies": {
-                "mscorlib": "",
-                "System": "",
-                "System.Core": ""
+                "mscorlib": { "type": "build" },
+                "System": { "type": "build" },
+                "System.Core": { "type": "build" }
             }
         },
         ".NETPortable,Version=v4.5,Profile=Profile259": {
@@ -49,18 +49,17 @@
                 "define": [ "NO_FILE", "NO_CRYPTO", "SILVERLIGHT" ]
             },
             "frameworkAssemblies": {
-                "Microsoft.CSharp": "",
-                "System": "",
-                "System.Collections": "",
-                "System.Core": "",
-                "System.Diagnostics.Debug": "",
-                "System.IO": "",
-                "System.Linq": "",
-                "System.Linq.Expressions": "",
-                "System.Resources.ResourceManager": "",
-                "System.Runtime": "",
-                "System.Runtime.Extensions": "",
-                "System.Text.Encoding": ""
+                "System": { "type": "build" },
+                "System.Collections": { "type": "build" },
+                "System.Core": { "type": "build" },
+                "System.Diagnostics.Debug": { "type": "build" },
+                "System.IO": { "type": "build" },
+                "System.Linq": { "type": "build" },
+                "System.Linq.Expressions": { "type": "build" },
+                "System.Resources.ResourceManager": { "type": "build" },
+                "System.Runtime": { "type": "build" },
+                "System.Runtime.Extensions": { "type": "build" },
+                "System.Text.Encoding": { "type": "build" }
             }
         },
         "netstandard1.0": {
