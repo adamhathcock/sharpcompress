@@ -18,7 +18,7 @@ namespace SharpCompress.Test
         {
             foreach (var path in testArchives)
             {
-                using (Stream stream = File.OpenRead(path))
+                using (Stream stream = new ForwardOnlyStream(File.OpenRead(path)))
                 using (IReader reader = ReaderFactory.Open(stream))
                 {
                     UseReader(this, reader, expectedCompression);

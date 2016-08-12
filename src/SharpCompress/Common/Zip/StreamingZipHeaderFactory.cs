@@ -31,7 +31,7 @@ namespace SharpCompress.Common.Zip
                     FlagUtility.HasFlag(lastEntryHeader.Flags, HeaderFlags.UsePostDataDescriptor))
                 {
                     reader = (lastEntryHeader.Part as StreamingZipFilePart).FixStreamedFileLocation(ref rewindableStream);
-                    long pos = rewindableStream.Position;
+                    long? pos = rewindableStream.CanSeek ? (long?)rewindableStream.Position : null;
                     uint crc = reader.ReadUInt32();
                     if (crc == POST_DATA_DESCRIPTOR)
                     {
@@ -40,7 +40,10 @@ namespace SharpCompress.Common.Zip
                     lastEntryHeader.Crc = crc;
                     lastEntryHeader.CompressedSize = reader.ReadUInt32();
                     lastEntryHeader.UncompressedSize = reader.ReadUInt32();
-                    lastEntryHeader.DataStartPosition = pos - lastEntryHeader.CompressedSize;
+                    if (pos.HasValue)
+                    {
+                        lastEntryHeader.DataStartPosition = pos - lastEntryHeader.CompressedSize;
+                    }
                 }
                 lastEntryHeader = null;
                 uint headerBytes = reader.ReadUInt32();
