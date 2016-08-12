@@ -1,5 +1,5 @@
 ﻿{
-    "version": "0.12.3",
+    "version": "0.12.4",
     "title": "SharpCompress - Pure C# Decompression/Compression",
     "authors": [ "Adam Hathcock" ],
     "language": "en-US",
@@ -11,29 +11,19 @@
         "description": "SharpCompress is a compression library for .NET/Mono/Silverlight/WP7/WindowsStore that can unrar, decompress 7zip, zip/unzip, tar/untar bzip2/unbzip2 and gzip/ungzip with forward-only reading and file random access APIs. Write support for zip/tar/bzip2/gzip is implemented.",
         "requireLicenseAcceptance": false
     },
+    "buildOptions": {
+        "warningsAsErrors": true,
+        "allowUnsafe": true
+    },
     "frameworks": {
         "net35": {
-            "buildOptions": {
-                "warningsAsErrors": true,
-                "allowUnsafe": true
-            }
         },
         "net40": {
-            "buildOptions": {
-                "warningsAsErrors": true,
-                "allowUnsafe": true
-            }
         },
         "net45": {
-            "buildOptions": {
-                "warningsAsErrors": true,
-                "allowUnsafe": true
-            }
         },
-        "sl5": {
+        ".NETPortable,Version=v4.0,Profile=Profile328": {
             "buildOptions": {
-                "warningsAsErrors": true,
-                "allowUnsafe": true,
                 "define": [ "NO_FILE", "NO_CRYPTO", "SILVERLIGHT" ]
             },
             "frameworkAssemblies": {
@@ -44,8 +34,6 @@
         },
         ".NETPortable,Version=v4.5,Profile=Profile259": {
             "buildOptions": {
-                "warningsAsErrors": true,
-                "allowUnsafe": true,
                 "define": [ "NO_FILE", "NO_CRYPTO", "SILVERLIGHT" ]
             },
             "frameworkAssemblies": {
@@ -64,8 +52,6 @@
         },
         "netstandard1.0": {
             "buildOptions": {
-                "warningsAsErrors": true,
-                "allowUnsafe": true,
                 "define": [ "NO_FILE", "NO_CRYPTO" ]
             },
             "dependencies": {
@@ -79,10 +65,6 @@
             }
         },
         "netstandard1.3": {
-            "buildOptions": {
-                "warningsAsErrors": true,
-                "allowUnsafe": true
-            },
             "dependencies": {
                 "System.Collections": "4.0.11",
                 "System.Diagnostics.Debug": "4.0.11",

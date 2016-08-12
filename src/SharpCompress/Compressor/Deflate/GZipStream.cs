@@ -355,7 +355,7 @@ namespace SharpCompress.Compressor.Deflate
             }
         }
 
-        public String FileName
+        public string FileName
         {
             get { return fileName; }
             set
@@ -372,10 +372,20 @@ namespace SharpCompress.Compressor.Deflate
                 if (fileName.EndsWith("\\"))
                     throw new InvalidOperationException("Illegal filename");
 
-                if (fileName.IndexOf("\\") != -1)
+                var index = fileName.IndexOf("\\");
+                if (index != -1)
                 {
                     // trim any leading path
-                    fileName = Path.GetFileName(fileName);
+                    int length = fileName.Length;
+                    int num = length;
+                    while (--num >= 0)
+                    {
+                        char c = fileName[num];
+                        if (c == '\\')
+                        {
+                            fileName = fileName.Substring(num + 1, length - num - 1);
+                        }
+                    }
                 }
             }
         }
