@@ -34,6 +34,10 @@ I'm always looking for help or ideas. Please submit code or email with ideas. Un
 
 ## Version Log
 
+### Version 0.12.4
+* Forward only zip issue fix https://github.com/adamhathcock/sharpcompress/issues/160
+* Try to fix frameworks again by copying targets from JSON.NET
+
 ### Version 0.12.3
 * 7Zip fixes https://github.com/adamhathcock/sharpcompress/issues/73
 * Maybe all profiles will work with project.json now
