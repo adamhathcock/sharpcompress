@@ -72,10 +72,7 @@ namespace SharpCompress.IO
             get { return true; }
         }
 
-        public override bool CanSeek
-        {
-            get { return false; }
-        }
+        public override bool CanSeek => stream.CanSeek;
 
         public override bool CanWrite
         {
