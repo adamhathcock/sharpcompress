@@ -7,12 +7,12 @@ using SharpCompress.Archive.Zip;
 using SharpCompress.Common;
 using SharpCompress.Compressor;
 using SharpCompress.Compressor.BZip2;
+using SharpCompress.Compressor.Deflate;
 using SharpCompress.IO;
 using SharpCompress.Reader.GZip;
 using SharpCompress.Reader.Rar;
 using SharpCompress.Reader.Tar;
 using SharpCompress.Reader.Zip;
-using GZipStream = SharpCompress.Compressor.Deflate.GZipStream;
 
 namespace SharpCompress.Reader
 {

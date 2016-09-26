@@ -28,7 +28,9 @@ namespace SharpCompress.Compressor.LZMA
             {
                 case k_Copy:
                     if (info != null)
+                    {
                         throw new NotSupportedException();
+                    }
                     return inStreams.Single();
                 case k_LZMA:
                 case k_LZMA2:

@@ -24,6 +24,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 using System;
+﻿using System;
 using System.IO;
 
 namespace SharpCompress.Compressor.ADC
@@ -37,18 +38,22 @@ namespace SharpCompress.Compressor.ADC
         /// This stream holds the compressed data
         /// </summary>
         private readonly Stream stream;
+
         /// <summary>
         /// Is this instance disposed?
         /// </summary>
         private bool isDisposed;
+
         /// <summary>
         /// Position in decompressed data
         /// </summary>
-        private long position = 0;
+        private long position;
+
         /// <summary>
         /// Buffer with currently used chunk of decompressed data
         /// </summary>
         private byte[] outBuffer;
+
         /// <summary>
         /// Position in buffer of decompressed data
         /// </summary>
@@ -62,36 +67,22 @@ namespace SharpCompress.Compressor.ADC
         public ADCStream(Stream stream, CompressionMode compressionMode = CompressionMode.Decompress)
         {
             if (compressionMode == CompressionMode.Compress)
+            {
                 throw new NotSupportedException();
+            }
 
             this.stream = stream;
         }
 
-        public override bool CanRead
-        {
-            get { return stream.CanRead; }
-        }
+        public override bool CanRead { get { return stream.CanRead; } }
 
-        public override bool CanSeek
-        {
-            get { return false; }
-        }
+        public override bool CanSeek { get { return false; } }
 
-        public override bool CanWrite
-        {
-            get { return false; }
-        }
+        public override bool CanWrite { get { return false; } }
 
-        public override long Length
-        {
-            get { throw new NotSupportedException(); }
-        }
+        public override long Length { get { throw new NotSupportedException(); } }
 
-        public override long Position
-        {
-            get { return position; }
-            set { throw new NotSupportedException(); }
-        }
+        public override long Position { get { return position; } set { throw new NotSupportedException(); } }
 
         public override void Flush()
         {
@@ -100,7 +91,9 @@ namespace SharpCompress.Compressor.ADC
         protected override void Dispose(bool disposing)
         {
             if (isDisposed)
+            {
                 return;
+            }
             isDisposed = true;
             base.Dispose(disposing);
         }
@@ -108,15 +101,25 @@ namespace SharpCompress.Compressor.ADC
         public override int Read(byte[] buffer, int offset, int count)
         {
             if (count == 0)
+            {
                 return 0;
+            }
             if (buffer == null)
+            {
                 throw new ArgumentNullException("buffer");
+            }
             if (count < 0)
+            {
                 throw new ArgumentOutOfRangeException("count");
+            }
             if (offset < buffer.GetLowerBound(0))
+            {
                 throw new ArgumentOutOfRangeException("offset");
+            }
             if ((offset + count) > buffer.GetLength(0))
+            {
                 throw new ArgumentOutOfRangeException("count");
+            }
 
             int size = -1;
 
@@ -141,7 +144,9 @@ namespace SharpCompress.Compressor.ADC
                 size = ADCBase.Decompress(stream, out outBuffer);
                 outPosition = 0;
                 if (size == 0 || outBuffer == null || outBuffer.Length == 0)
+                {
                     return copied;
+                }
             }
 
             Array.Copy(outBuffer, outPosition, buffer, inPosition, toCopy);

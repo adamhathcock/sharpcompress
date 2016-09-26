@@ -1,6 +1,6 @@
 #region Using
 
-using System;
+
 
 #endregion
 
@@ -32,15 +32,15 @@ namespace SharpCompress.Compressor.PPMd.I1
         public void Initialize(uint initialValue)
         {
             Shift = PeriodBitCount - 4;
-            Summary = (ushort) (initialValue << Shift);
+            Summary = (ushort)(initialValue << Shift);
             Count = 7;
         }
 
         public uint Mean()
         {
-            uint value = (uint) (Summary >> Shift);
-            Summary = (ushort) (Summary - value);
-            return (uint) (value + ((value == 0) ? 1 : 0));
+            uint value = (uint)(Summary >> Shift);
+            Summary = (ushort)(Summary - value);
+            return (uint)(value + ((value == 0) ? 1 : 0));
         }
 
         public void Update()
@@ -48,7 +48,7 @@ namespace SharpCompress.Compressor.PPMd.I1
             if (Shift < PeriodBitCount && --Count == 0)
             {
                 Summary += Summary;
-                Count = (byte) (3 << Shift++);
+                Count = (byte)(3 << Shift++);
             }
         }
     }

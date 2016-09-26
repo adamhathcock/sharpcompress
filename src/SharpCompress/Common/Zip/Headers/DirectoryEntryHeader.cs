@@ -14,8 +14,8 @@ namespace SharpCompress.Common.Zip.Headers
         {
             Version = reader.ReadUInt16();
             VersionNeededToExtract = reader.ReadUInt16();
-            Flags = (HeaderFlags) reader.ReadUInt16();
-            CompressionMethod = (ZipCompressionMethod) reader.ReadUInt16();
+            Flags = (HeaderFlags)reader.ReadUInt16();
+            CompressionMethod = (ZipCompressionMethod)reader.ReadUInt16();
             LastModifiedTime = reader.ReadUInt16();
             LastModifiedDate = reader.ReadUInt16();
             Crc = reader.ReadUInt32();
@@ -47,8 +47,8 @@ namespace SharpCompress.Common.Zip.Headers
         {
             writer.Write(Version);
             writer.Write(VersionNeededToExtract);
-            writer.Write((ushort) Flags);
-            writer.Write((ushort) CompressionMethod);
+            writer.Write((ushort)Flags);
+            writer.Write((ushort)CompressionMethod);
             writer.Write(LastModifiedTime);
             writer.Write(LastModifiedDate);
             writer.Write(Crc);
@@ -56,10 +56,11 @@ namespace SharpCompress.Common.Zip.Headers
             writer.Write(UncompressedSize);
 
             byte[] nameBytes = EncodeString(Name);
-            writer.Write((ushort) nameBytes.Length);
+            writer.Write((ushort)nameBytes.Length);
+
             //writer.Write((ushort)Extra.Length);
-            writer.Write((ushort) 0);
-            writer.Write((ushort) Comment.Length);
+            writer.Write((ushort)0);
+            writer.Write((ushort)Comment.Length);
 
             writer.Write(DiskNumberStart);
             writer.Write(InternalFileAttributes);
@@ -67,6 +68,7 @@ namespace SharpCompress.Common.Zip.Headers
             writer.Write(RelativeOffsetOfEntryHeader);
 
             writer.Write(nameBytes);
+
             // writer.Write(Extra);
             writer.Write(Comment);
         }

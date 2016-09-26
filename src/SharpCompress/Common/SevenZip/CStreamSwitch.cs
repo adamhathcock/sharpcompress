@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using SharpCompress.Compressor.LZMA;
 
 namespace SharpCompress.Common.SevenZip
@@ -47,7 +46,9 @@ namespace SharpCompress.Common.SevenZip
             {
                 int dataIndex = archive.ReadNum();
                 if (dataIndex < 0 || dataIndex >= dataVector.Count)
+                {
                     throw new InvalidOperationException();
+                }
 
 #if DEBUG
                 Log.WriteLine("[switch to stream {0}]", dataIndex);

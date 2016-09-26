@@ -13,37 +13,22 @@ namespace SharpCompress.Reader.Rar
             IsSolid = solid;
         }
 
-        internal RarFilePart Part { get; private set; }
+        internal RarFilePart Part { get; }
 
-        internal override IEnumerable<FilePart> Parts
-        {
-            get { return Part.AsEnumerable<FilePart>(); }
-        }
+        internal override IEnumerable<FilePart> Parts { get { return Part.AsEnumerable<FilePart>(); } }
 
-        internal override FileHeader FileHeader
-        {
-            get { return Part.FileHeader; }
-        }
+        internal override FileHeader FileHeader { get { return Part.FileHeader; } }
 
-        public override CompressionType CompressionType
-        {
-            get { return CompressionType.Rar; }
-        }
+        public override CompressionType CompressionType { get { return CompressionType.Rar; } }
 
         /// <summary>
         /// The compressed file size
         /// </summary>
-        public override long CompressedSize
-        {
-            get { return Part.FileHeader.CompressedSize; }
-        }
+        public override long CompressedSize { get { return Part.FileHeader.CompressedSize; } }
 
         /// <summary>
         /// The uncompressed file size
         /// </summary>
-        public override long Size
-        {
-            get { return Part.FileHeader.UncompressedSize; }
-        }
+        public override long Size { get { return Part.FileHeader.UncompressedSize; } }
     }
 }

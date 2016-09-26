@@ -7,29 +7,28 @@ namespace SharpCompress.Compressor.LZMA
 {
     public class LzmaStream : Stream
     {
-        private Stream inputStream;
-        private long inputSize;
-        private long outputSize;
+        private readonly Stream inputStream;
+        private readonly long inputSize;
+        private readonly long outputSize;
 
-        private int dictionarySize;
-        private OutWindow outWindow = new OutWindow();
-        private RangeCoder.Decoder rangeDecoder = new RangeCoder.Decoder();
+        private readonly int dictionarySize;
+        private readonly OutWindow outWindow = new OutWindow();
+        private readonly RangeCoder.Decoder rangeDecoder = new RangeCoder.Decoder();
         private Decoder decoder;
 
-        private long position = 0;
-        private bool endReached = false;
+        private long position;
+        private bool endReached;
         private long availableBytes;
         private long rangeDecoderLimit;
-        private long inputPosition = 0;
+        private long inputPosition;
 
         // LZMA2
-        private bool isLZMA2;
-        private bool uncompressedChunk = false;
+        private readonly bool isLZMA2;
+        private bool uncompressedChunk;
         private bool needDictReset = true;
         private bool needProps = true;
-        private byte[] props = new byte[5];
 
-        private Encoder encoder;
+        private readonly Encoder encoder;
         private bool isDisposed;
 
         public LzmaStream(byte[] properties, Stream inputStream)
@@ -60,13 +59,15 @@ namespace SharpCompress.Compressor.LZMA
                 dictionarySize = DataConverter.LittleEndian.GetInt32(properties, 1);
                 outWindow.Create(dictionarySize);
                 if (presetDictionary != null)
+                {
                     outWindow.Train(presetDictionary);
+                }
 
                 rangeDecoder.Init(inputStream);
 
                 decoder = new Decoder();
                 decoder.SetDecoderProperties(properties);
-                props = properties;
+                Properties = properties;
 
                 availableBytes = outputSize < 0 ? long.MaxValue : outputSize;
                 rangeDecoderLimit = inputSize;
@@ -83,7 +84,7 @@ namespace SharpCompress.Compressor.LZMA
                     needDictReset = false;
                 }
 
-                props = new byte[1];
+                Properties = new byte[1];
                 availableBytes = 0;
             }
         }
@@ -100,33 +101,28 @@ namespace SharpCompress.Compressor.LZMA
             endReached = true;
 
             if (isLZMA2)
+            {
                 throw new NotImplementedException();
+            }
 
             encoder = new Encoder();
             encoder.SetCoderProperties(properties.propIDs, properties.properties);
             MemoryStream propStream = new MemoryStream(5);
             encoder.WriteCoderProperties(propStream);
-            props = propStream.ToArray();
+            Properties = propStream.ToArray();
 
             encoder.SetStreams(null, outputStream, -1, -1);
             if (presetDictionary != null)
+            {
                 encoder.Train(presetDictionary);
+            }
         }
 
-        public override bool CanRead
-        {
-            get { return encoder == null; }
-        }
+        public override bool CanRead { get { return encoder == null; } }
 
-        public override bool CanSeek
-        {
-            get { return false; }
-        }
+        public override bool CanSeek { get { return false; } }
 
-        public override bool CanWrite
-        {
-            get { return encoder != null; }
-        }
+        public override bool CanWrite { get { return encoder != null; } }
 
         public override void Flush()
         {
@@ -153,21 +149,16 @@ namespace SharpCompress.Compressor.LZMA
             base.Dispose(disposing);
         }
 
-        public override long Length
-        {
-            get { return position + availableBytes; }
-        }
+        public override long Length { get { return position + availableBytes; } }
 
-        public override long Position
-        {
-            get { return position; }
-            set { throw new NotSupportedException(); }
-        }
+        public override long Position { get { return position; } set { throw new NotSupportedException(); } }
 
         public override int Read(byte[] buffer, int offset, int count)
         {
             if (endReached)
+            {
                 return 0;
+            }
 
             int total = 0;
             while (total < count)
@@ -175,16 +166,24 @@ namespace SharpCompress.Compressor.LZMA
                 if (availableBytes == 0)
                 {
                     if (isLZMA2)
+                    {
                         decodeChunkHeader();
+                    }
                     else
+                    {
                         endReached = true;
+                    }
                     if (endReached)
+                    {
                         break;
+                    }
                 }
 
                 int toProcess = count - total;
                 if (toProcess > availableBytes)
+                {
                     toProcess = (int)availableBytes;
+                }
 
                 outWindow.SetLimit(toProcess);
                 if (uncompressedChunk)
@@ -207,19 +206,27 @@ namespace SharpCompress.Compressor.LZMA
                 {
                     rangeDecoder.ReleaseStream();
                     if (!rangeDecoder.IsFinished || (rangeDecoderLimit >= 0 && rangeDecoder.Total != rangeDecoderLimit))
+                    {
                         throw new DataErrorException();
+                    }
                     inputPosition += rangeDecoder.Total;
                     if (outWindow.HasPending)
+                    {
                         throw new DataErrorException();
+                    }
                 }
             }
 
             if (endReached)
             {
                 if (inputSize >= 0 && inputPosition != inputSize)
+                {
                     throw new DataErrorException();
+                }
                 if (outputSize >= 0 && position != outputSize)
+                {
                     throw new DataErrorException();
+                }
             }
 
             return total;
@@ -243,7 +250,9 @@ namespace SharpCompress.Compressor.LZMA
                 outWindow.Reset();
             }
             else if (needDictReset)
+            {
                 throw new DataErrorException();
+            }
 
             if (control >= 0x80)
             {
@@ -259,24 +268,28 @@ namespace SharpCompress.Compressor.LZMA
                 if (control >= 0xC0)
                 {
                     needProps = false;
-                    props[0] = (byte)inputStream.ReadByte();
+                    Properties[0] = (byte)inputStream.ReadByte();
                     inputPosition++;
 
                     decoder = new Decoder();
-                    decoder.SetDecoderProperties(props);
+                    decoder.SetDecoderProperties(Properties);
                 }
                 else if (needProps)
+                {
                     throw new DataErrorException();
+                }
                 else if (control >= 0xA0)
                 {
                     decoder = new Decoder();
-                    decoder.SetDecoderProperties(props);
+                    decoder.SetDecoderProperties(Properties);
                 }
 
                 rangeDecoder.Init(inputStream);
             }
             else if (control > 0x02)
+            {
                 throw new DataErrorException();
+            }
             else
             {
                 uncompressedChunk = true;
@@ -298,12 +311,11 @@ namespace SharpCompress.Compressor.LZMA
         public override void Write(byte[] buffer, int offset, int count)
         {
             if (encoder != null)
+            {
                 position = encoder.Code(new MemoryStream(buffer, offset, count), false);
+            }
         }
 
-        public byte[] Properties
-        {
-            get { return props; }
-        }
+        public byte[] Properties { get; } = new byte[5];
     }
 }

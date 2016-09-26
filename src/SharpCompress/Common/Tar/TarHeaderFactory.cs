@@ -23,21 +23,22 @@ namespace SharpCompress.Common.Tar
                     switch (mode)
                     {
                         case StreamingMode.Seekable:
-                            {
-                                header.DataStartPosition = reader.BaseStream.Position;
-                                //skip to nearest 512
-                                reader.BaseStream.Position += PadTo512(header.Size);
-                            }
+                        {
+                            header.DataStartPosition = reader.BaseStream.Position;
+
+                            //skip to nearest 512
+                            reader.BaseStream.Position += PadTo512(header.Size);
+                        }
                             break;
                         case StreamingMode.Streaming:
-                            {
-                                header.PackedStream = new TarReadOnlySubStream(stream, header.Size);
-                            }
+                        {
+                            header.PackedStream = new TarReadOnlySubStream(stream, header.Size);
+                        }
                             break;
                         default:
-                            {
-                                throw new InvalidFormatException("Invalid StreamingMode");
-                            }
+                        {
+                            throw new InvalidFormatException("Invalid StreamingMode");
+                        }
                     }
                 }
                 catch
@@ -50,7 +51,7 @@ namespace SharpCompress.Common.Tar
 
         private static long PadTo512(long size)
         {
-            int zeros = (int) (size%512);
+            int zeros = (int)(size % 512);
             if (zeros == 0)
             {
                 return size;

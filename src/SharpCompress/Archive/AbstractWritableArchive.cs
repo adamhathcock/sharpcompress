@@ -53,10 +53,7 @@ namespace SharpCompress.Archive
             modifiedEntries.AddRange(OldEntries.Concat(newEntries));
         }
 
-        private IEnumerable<TEntry> OldEntries
-        {
-            get { return base.Entries.Where(x => !removedEntries.Contains(x)); }
-        }
+        private IEnumerable<TEntry> OldEntries { get { return base.Entries.Where(x => !removedEntries.Contains(x)); } }
 
         public void RemoveEntry(TEntry entry)
         {
@@ -66,17 +63,17 @@ namespace SharpCompress.Archive
                 RebuildModifiedCollection();
             }
         }
+
         void IWritableArchive.RemoveEntry(IArchiveEntry entry)
         {
             RemoveEntry((TEntry)entry);
         }
 
         public TEntry AddEntry(string key, Stream source,
-                             long size = 0, DateTime? modified = null)
+                               long size = 0, DateTime? modified = null)
         {
             return AddEntry(key, source, false, size, modified);
         }
-
 
         IArchiveEntry IWritableArchive.AddEntry(string key, Stream source, bool closeStream, long size, DateTime? modified)
         {
@@ -84,7 +81,7 @@ namespace SharpCompress.Archive
         }
 
         public TEntry AddEntry(string key, Stream source, bool closeStream,
-                             long size = 0, DateTime? modified = null)
+                               long size = 0, DateTime? modified = null)
         {
             if (key.StartsWith("/")
                 || key.StartsWith("\\"))
@@ -105,7 +102,7 @@ namespace SharpCompress.Archive
         {
             foreach (var path in Entries.Select(x => x.Key))
             {
-                var p = path.Replace('/','\\');
+                var p = path.Replace('/', '\\');
                 if (p.StartsWith("\\"))
                 {
                     p = p.Substring(1);
@@ -123,7 +120,7 @@ namespace SharpCompress.Archive
         }
 
         protected TEntry CreateEntry(string key, Stream source, long size, DateTime? modified,
-            bool closeStream)
+                                     bool closeStream)
         {
             if (!source.CanRead || !source.CanSeek)
             {
@@ -133,7 +130,7 @@ namespace SharpCompress.Archive
         }
 
         protected abstract TEntry CreateEntryInternal(string key, Stream source, long size, DateTime? modified,
-                                              bool closeStream);
+                                                      bool closeStream);
 
         protected abstract void SaveTo(Stream stream, CompressionInfo compressionType,
                                        IEnumerable<TEntry> oldEntries, IEnumerable<TEntry> newEntries);

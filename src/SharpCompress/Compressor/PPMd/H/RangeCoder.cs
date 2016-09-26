@@ -1,5 +1,6 @@
-using System.Text;
+using System;
 using System.IO;
+using System.Text;
 using SharpCompress.Compressor.Rar;
 
 namespace SharpCompress.Compressor.PPMd.H
@@ -12,8 +13,8 @@ namespace SharpCompress.Compressor.PPMd.H
 
         // uint low, code, range;
         private long low, code, range;
-        private Unpack unpackRead;
-        private Stream stream;
+        private readonly Unpack unpackRead;
+        private readonly Stream stream;
 
         internal RangeCoder(Unpack unpackRead)
         {
@@ -29,7 +30,7 @@ namespace SharpCompress.Compressor.PPMd.H
 
         private void Init()
         {
-            this.SubRange = new SubRange();
+            SubRange = new SubRange();
 
             low = code = 0L;
             range = 0xFFFFffffL;
@@ -43,8 +44,8 @@ namespace SharpCompress.Compressor.PPMd.H
         {
             get
             {
-                range = (range/SubRange.Scale) & UintMask;
-                return (int) ((code - low)/(range));
+                range = (range / SubRange.Scale) & UintMask;
+                return (int)((code - low) / (range));
             }
         }
 
@@ -53,26 +54,29 @@ namespace SharpCompress.Compressor.PPMd.H
             get
             {
                 if (unpackRead != null)
+                {
                     return (unpackRead.Char);
+                }
                 if (stream != null)
+                {
                     return stream.ReadByte();
+                }
                 return -1;
             }
         }
 
         internal SubRange SubRange { get; private set; }
 
-
         internal long GetCurrentShiftCount(int SHIFT)
         {
             range = Utility.URShift(range, SHIFT);
-            return ((code - low)/(range)) & UintMask;
+            return ((code - low) / (range)) & UintMask;
         }
 
         internal void Decode()
         {
-            low = (low + (range*SubRange.LowCount)) & UintMask;
-            range = (range*(SubRange.HighCount - SubRange.LowCount)) & UintMask;
+            low = (low + (range * SubRange.LowCount)) & UintMask;
+            range = (range * (SubRange.HighCount - SubRange.LowCount)) & UintMask;
         }
 
         internal void AriDecNormalize()
@@ -100,7 +104,7 @@ namespace SharpCompress.Compressor.PPMd.H
         }
 
         // Debug
-        public override System.String ToString()
+        public override String ToString()
         {
             StringBuilder buffer = new StringBuilder();
             buffer.Append("RangeCoder[");
@@ -127,29 +131,14 @@ namespace SharpCompress.Compressor.PPMd.H
             Scale = Scale + dScale;
         }
 
-        internal long HighCount
-        {
-            get { return highCount; }
+        internal long HighCount { get { return highCount; } set { highCount = value & RangeCoder.UintMask; } }
 
-            set { this.highCount = value & RangeCoder.UintMask; }
-        }
+        internal long LowCount { get { return lowCount & RangeCoder.UintMask; } set { lowCount = value & RangeCoder.UintMask; } }
 
-        internal long LowCount
-        {
-            get { return lowCount & RangeCoder.UintMask; }
-
-            set { this.lowCount = value & RangeCoder.UintMask; }
-        }
-
-        internal long Scale
-        {
-            get { return scale; }
-
-            set { this.scale = value & RangeCoder.UintMask; }
-        }
+        internal long Scale { get { return scale; } set { scale = value & RangeCoder.UintMask; } }
 
         // Debug
-        public override System.String ToString()
+        public override String ToString()
         {
             StringBuilder buffer = new StringBuilder();
             buffer.Append("SubRange[");

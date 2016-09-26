@@ -10,6 +10,7 @@ namespace SharpCompress.Common.Tar.Headers
         internal static readonly DateTime Epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 
         internal string Name { get; set; }
+
         //internal int Mode { get; set; }
         //internal int UserId { get; set; }
         //internal string UserName { get; set; }
@@ -77,7 +78,9 @@ namespace SharpCompress.Common.Tar.Headers
             // pad to multiple of BlockSize bytes, and make sure a terminating null is added
             int numPaddingBytes = BlockSize - (nameBytes.Length % BlockSize);
             if (numPaddingBytes == 0)
+            {
                 numPaddingBytes = BlockSize;
+            }
             output.Write(new byte[numPaddingBytes], 0, numPaddingBytes);
         }
 
@@ -131,11 +134,15 @@ namespace SharpCompress.Common.Tar.Headers
         private string ReadLongName(BinaryReader reader, byte[] buffer)
         {
             var size = ReadSize(buffer);
-            var nameLength = (int) size;
+            var nameLength = (int)size;
             var nameBytes = reader.ReadBytes(nameLength);
-            var remainingBytesToRead = BlockSize - (nameLength%BlockSize);
+            var remainingBytesToRead = BlockSize - (nameLength % BlockSize);
+
             // Read the rest of the block and discard the data
-            if (remainingBytesToRead < BlockSize) reader.ReadBytes(remainingBytesToRead);
+            if (remainingBytesToRead < BlockSize)
+            {
+                reader.ReadBytes(remainingBytesToRead);
+            }
             return ArchiveEncoding.Default.GetString(nameBytes, 0, nameBytes.Length).TrimNulls();
         }
 

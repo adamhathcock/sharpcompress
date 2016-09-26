@@ -4,9 +4,9 @@ namespace SharpCompress.Compressor.Rar.VM
     {
         internal VMStandardFilterSignature(int length, uint crc, VMStandardFilters type)
         {
-            this.Length = length;
+            Length = length;
             CRC = crc;
-            this.Type = type;
+            Type = type;
         }
 
         internal int Length { get; private set; }

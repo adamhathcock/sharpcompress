@@ -49,7 +49,6 @@ namespace SharpCompress.Compressor.Deflate
         private const int BUFFER_SIZE = 8192;
         private static readonly UInt32[] crc32Table;
         private UInt32 runningCrc32Result = 0xFFFFFFFF;
-        private Int64 totalBytesRead;
 
         static CRC32()
         {
@@ -89,10 +88,7 @@ namespace SharpCompress.Compressor.Deflate
         /// indicates the total number of bytes read on the CRC stream.
         /// This is used when writing the ZipDirEntry when compressing files.
         /// </summary>
-        public Int64 TotalBytesRead
-        {
-            get { return totalBytesRead; }
-        }
+        public Int64 TotalBytesRead { get; private set; }
 
         /// <summary>
         /// Indicates the current CRC for all blocks slurped in.
@@ -102,7 +98,7 @@ namespace SharpCompress.Compressor.Deflate
             get
             {
                 // return one's complement of the running result
-                return unchecked((Int32) (~runningCrc32Result));
+                return unchecked((Int32)(~runningCrc32Result));
             }
         }
 
@@ -126,7 +122,9 @@ namespace SharpCompress.Compressor.Deflate
         public Int32 GetCrc32AndCopy(Stream input, Stream output)
         {
             if (input == null)
+            {
                 throw new ZlibException("The input stream must not be null.");
+            }
 
             unchecked
             {
@@ -135,22 +133,27 @@ namespace SharpCompress.Compressor.Deflate
                 var buffer = new byte[BUFFER_SIZE];
                 int readSize = BUFFER_SIZE;
 
-                totalBytesRead = 0;
+                TotalBytesRead = 0;
                 int count = input.Read(buffer, 0, readSize);
-                if (output != null) output.Write(buffer, 0, count);
-                totalBytesRead += count;
+                if (output != null)
+                {
+                    output.Write(buffer, 0, count);
+                }
+                TotalBytesRead += count;
                 while (count > 0)
                 {
                     SlurpBlock(buffer, 0, count);
                     count = input.Read(buffer, 0, readSize);
-                    if (output != null) output.Write(buffer, 0, count);
-                    totalBytesRead += count;
+                    if (output != null)
+                    {
+                        output.Write(buffer, 0, count);
+                    }
+                    TotalBytesRead += count;
                 }
 
-                return (Int32) (~runningCrc32Result);
+                return (Int32)(~runningCrc32Result);
             }
         }
-
 
         /// <summary>
         /// Get the CRC32 for the given (word,byte) combo.  This is a computation
@@ -161,12 +164,12 @@ namespace SharpCompress.Compressor.Deflate
         /// <returns>The CRC-ized result.</returns>
         public Int32 ComputeCrc32(Int32 W, byte B)
         {
-            return _InternalComputeCrc32((UInt32) W, B);
+            return _InternalComputeCrc32((UInt32)W, B);
         }
 
         internal Int32 _InternalComputeCrc32(UInt32 W, byte B)
         {
-            return (Int32) (crc32Table[(W ^ B) & 0xFF] ^ (W >> 8));
+            return (Int32)(crc32Table[(W ^ B) & 0xFF] ^ (W >> 8));
         }
 
         /// <summary>
@@ -179,7 +182,9 @@ namespace SharpCompress.Compressor.Deflate
         public void SlurpBlock(byte[] block, int offset, int count)
         {
             if (block == null)
+            {
                 throw new ZlibException("The data buffer must not be null.");
+            }
 
             for (int i = 0; i < count; i++)
             {
@@ -187,12 +192,10 @@ namespace SharpCompress.Compressor.Deflate
                 runningCrc32Result = ((runningCrc32Result) >> 8) ^
                                      crc32Table[(block[x]) ^ ((runningCrc32Result) & 0x000000FF)];
             }
-            totalBytesRead += count;
+            TotalBytesRead += count;
         }
 
-
         // pre-initialize the crc table for speed of lookup.
-
 
         private uint gf2_matrix_times(uint[] matrix, uint vec)
         {
@@ -201,7 +204,9 @@ namespace SharpCompress.Compressor.Deflate
             while (vec != 0)
             {
                 if ((vec & 0x01) == 0x01)
+                {
                     sum ^= matrix[i];
+                }
                 vec >>= 1;
                 i++;
             }
@@ -211,9 +216,10 @@ namespace SharpCompress.Compressor.Deflate
         private void gf2_matrix_square(uint[] square, uint[] mat)
         {
             for (int i = 0; i < 32; i++)
+            {
                 square[i] = gf2_matrix_times(mat, mat[i]);
+            }
         }
-
 
         /// <summary>
         /// Combines the given CRC32 value with the current running total.
@@ -231,10 +237,12 @@ namespace SharpCompress.Compressor.Deflate
             var odd = new uint[32]; // odd-power-of-two zeros operator
 
             if (length == 0)
+            {
                 return;
+            }
 
             uint crc1 = ~runningCrc32Result;
-            var crc2 = (uint) crc;
+            var crc2 = (uint)crc;
 
             // put operator for one zero bit in odd
             odd[0] = 0xEDB88320; // the CRC-32 polynomial
@@ -251,7 +259,7 @@ namespace SharpCompress.Compressor.Deflate
             // put operator for four zero bits in odd
             gf2_matrix_square(odd, even);
 
-            var len2 = (uint) length;
+            var len2 = (uint)length;
 
             // apply len2 zeros to crc1 (first square will put the operator for one
             // zero byte, eight zero bits, in even)
@@ -261,27 +269,32 @@ namespace SharpCompress.Compressor.Deflate
                 gf2_matrix_square(even, odd);
 
                 if ((len2 & 1) == 1)
+                {
                     crc1 = gf2_matrix_times(even, crc1);
+                }
                 len2 >>= 1;
 
                 if (len2 == 0)
+                {
                     break;
+                }
 
                 // another iteration of the loop with odd and even swapped
                 gf2_matrix_square(odd, even);
                 if ((len2 & 1) == 1)
+                {
                     crc1 = gf2_matrix_times(odd, crc1);
+                }
                 len2 >>= 1;
-            } while (len2 != 0);
+            }
+            while (len2 != 0);
 
             crc1 ^= crc2;
 
             runningCrc32Result = ~crc1;
 
             //return (int) crc1;
-            return;
         }
-
 
         // private member vars
     }

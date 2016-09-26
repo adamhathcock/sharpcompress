@@ -1,5 +1,4 @@
-﻿using System;
-using System.IO;
+﻿using System.IO;
 using SharpCompress.Common.Rar;
 using SharpCompress.Common.Rar.Headers;
 
@@ -29,9 +28,6 @@ namespace SharpCompress.Archive.Rar
             return stream;
         }
 
-        internal override string FilePartName
-        {
-            get { return "Unknown Stream - File Entry: " + FileHeader.FileName; }
-        }
+        internal override string FilePartName { get { return "Unknown Stream - File Entry: " + FileHeader.FileName; } }
     }
 }

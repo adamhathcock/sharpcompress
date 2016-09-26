@@ -1,4 +1,4 @@
-﻿using System;
+﻿using SharpCompress.Compressor.PPMd.I1;
 using SharpCompress.Converter;
 
 namespace SharpCompress.Compressor.PPMd
@@ -7,17 +7,17 @@ namespace SharpCompress.Compressor.PPMd
     {
         H,
         H7z,
-        I1,
+        I1
     }
 
     public class PpmdProperties
     {
         public PpmdVersion Version = PpmdVersion.I1;
         public int ModelOrder;
-        internal I1.ModelRestorationMethod ModelRestorationMethod;
+        internal ModelRestorationMethod ModelRestorationMethod;
 
         private int allocatorSize;
-        internal I1.Allocator Allocator;
+        internal Allocator Allocator;
 
         public PpmdProperties()
             : this(16 << 20, 6)
@@ -25,11 +25,11 @@ namespace SharpCompress.Compressor.PPMd
         }
 
         public PpmdProperties(int allocatorSize, int modelOrder)
-            : this(allocatorSize, modelOrder, I1.ModelRestorationMethod.Restart)
+            : this(allocatorSize, modelOrder, ModelRestorationMethod.Restart)
         {
         }
 
-        internal PpmdProperties(int allocatorSize, int modelOrder, I1.ModelRestorationMethod modelRestorationMethod)
+        internal PpmdProperties(int allocatorSize, int modelOrder, ModelRestorationMethod modelRestorationMethod)
         {
             AllocatorSize = allocatorSize;
             ModelOrder = modelOrder;
@@ -43,7 +43,7 @@ namespace SharpCompress.Compressor.PPMd
                 ushort props = DataConverter.LittleEndian.GetUInt16(properties, 0);
                 AllocatorSize = (((props >> 4) & 0xff) + 1) << 20;
                 ModelOrder = (props & 0x0f) + 1;
-                ModelRestorationMethod = (I1.ModelRestorationMethod) (props >> 12);
+                ModelRestorationMethod = (ModelRestorationMethod)(props >> 12);
             }
             else if (properties.Length == 5)
             {
@@ -62,7 +62,9 @@ namespace SharpCompress.Compressor.PPMd
                 if (Version == PpmdVersion.I1)
                 {
                     if (Allocator == null)
-                        Allocator = new I1.Allocator();
+                    {
+                        Allocator = new Allocator();
+                    }
                     Allocator.Start(allocatorSize);
                 }
             }
@@ -74,8 +76,8 @@ namespace SharpCompress.Compressor.PPMd
             {
                 return
                     DataConverter.LittleEndian.GetBytes(
-                        (ushort)
-                        ((ModelOrder - 1) + (((AllocatorSize >> 20) - 1) << 4) + ((ushort) ModelRestorationMethod << 12)));
+                                                        (ushort)
+                                                        ((ModelOrder - 1) + (((AllocatorSize >> 20) - 1) << 4) + ((ushort)ModelRestorationMethod << 12)));
             }
         }
     }

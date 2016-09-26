@@ -4,6 +4,7 @@ namespace SharpCompress.Compressor.Rar.decode
     {
         public const int CODEBUFSIZE = 0x4000;
         public const int MAXWINSIZE = 0x400000;
+
         //UPGRADE_NOTE: Final was removed from the declaration of 'MAXWINMASK '. "ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?index='!DefaultContextWindowIndex'&keyword='jlca1003'"
         public static readonly int MAXWINMASK = (MAXWINSIZE - 1);
 
@@ -13,6 +14,7 @@ namespace SharpCompress.Compressor.Rar.decode
         public const int DC = 60;
         public const int LDC = 17;
         public const int RC = 28;
+
         //UPGRADE_NOTE: Final was removed from the declaration of 'HUFF_TABLE_SIZE '. "ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?index='!DefaultContextWindowIndex'&keyword='jlca1003'"
         public static readonly int HUFF_TABLE_SIZE = (NC + DC + RC + LDC);
         public const int BC = 20;

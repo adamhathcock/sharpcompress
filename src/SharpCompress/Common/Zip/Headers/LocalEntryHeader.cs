@@ -13,8 +13,8 @@ namespace SharpCompress.Common.Zip.Headers
         internal override void Read(BinaryReader reader)
         {
             Version = reader.ReadUInt16();
-            Flags = (HeaderFlags) reader.ReadUInt16();
-            CompressionMethod = (ZipCompressionMethod) reader.ReadUInt16();
+            Flags = (HeaderFlags)reader.ReadUInt16();
+            CompressionMethod = (ZipCompressionMethod)reader.ReadUInt16();
             LastModifiedTime = reader.ReadUInt16();
             LastModifiedDate = reader.ReadUInt16();
             Crc = reader.ReadUInt32();
@@ -28,17 +28,17 @@ namespace SharpCompress.Common.Zip.Headers
             LoadExtra(extra);
 
             var unicodePathExtra = Extra.FirstOrDefault(u => u.Type == ExtraDataType.UnicodePathExtraField);
-            if (unicodePathExtra!=null)
+            if (unicodePathExtra != null)
             {
-                Name = ((ExtraUnicodePathExtraField) unicodePathExtra).UnicodeName;
+                Name = ((ExtraUnicodePathExtraField)unicodePathExtra).UnicodeName;
             }
         }
 
         internal override void Write(BinaryWriter writer)
         {
             writer.Write(Version);
-            writer.Write((ushort) Flags);
-            writer.Write((ushort) CompressionMethod);
+            writer.Write((ushort)Flags);
+            writer.Write((ushort)CompressionMethod);
             writer.Write(LastModifiedTime);
             writer.Write(LastModifiedDate);
             writer.Write(Crc);
@@ -47,8 +47,9 @@ namespace SharpCompress.Common.Zip.Headers
 
             byte[] nameBytes = EncodeString(Name);
 
-            writer.Write((ushort) nameBytes.Length);
-            writer.Write((ushort) 0);
+            writer.Write((ushort)nameBytes.Length);
+            writer.Write((ushort)0);
+
             //if (Extra != null)
             //{
             //    writer.Write(Extra);

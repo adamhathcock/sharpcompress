@@ -19,18 +19,12 @@ namespace SharpCompress.Archive.Zip
 
         #region IArchiveEntry Members
 
-        public IArchive Archive { get; private set; }
+        public IArchive Archive { get; }
 
-        public bool IsComplete
-        {
-            get { return true; }
-        }
+        public bool IsComplete { get { return true; } }
 
         #endregion
 
-        public string Comment
-        {
-            get { return (Parts.Single() as SeekableZipFilePart).Comment; }
-        }
+        public string Comment { get { return (Parts.Single() as SeekableZipFilePart).Comment; } }
     }
 }

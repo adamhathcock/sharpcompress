@@ -11,6 +11,6 @@
         LZMA,
         BCJ,
         BCJ2,
-        Unknown,
+        Unknown
     }
 }

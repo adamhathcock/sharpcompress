@@ -7,18 +7,13 @@ namespace SharpCompress.Reader.GZip
 {
     public class GZipReader : AbstractReader<GZipEntry, GZipVolume>
     {
-        private readonly GZipVolume volume;
-
         internal GZipReader(Stream stream, Options options)
             : base(options, ArchiveType.GZip)
         {
-            volume = new GZipVolume(stream, options);
+            Volume = new GZipVolume(stream, options);
         }
 
-        public override GZipVolume Volume
-        {
-            get { return volume; }
-        }
+        public override GZipVolume Volume { get; }
 
         #region Open
 

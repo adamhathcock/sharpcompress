@@ -35,9 +35,10 @@ namespace SharpCompress.Common.Zip
                 if (iterationCount > MAX_ITERATIONS_FOR_DIRECTORY_HEADER)
                 {
                     throw new ArchiveException(
-                        "Could not find Zip file Directory at the end of the file.  File may be corrupted.");
+                                               "Could not find Zip file Directory at the end of the file.  File may be corrupted.");
                 }
-            } while (signature != DIRECTORY_END_HEADER_BYTES);
+            }
+            while (signature != DIRECTORY_END_HEADER_BYTES);
 
             var entry = new DirectoryEndHeader();
             entry.Read(reader);
@@ -55,6 +56,7 @@ namespace SharpCompress.Common.Zip
                 {
                     yield break;
                 }
+
                 //entry could be zero bytes so we need to know that.
                 directoryEntryHeader.HasData = directoryEntryHeader.CompressedSize != 0;
                 yield return directoryEntryHeader;

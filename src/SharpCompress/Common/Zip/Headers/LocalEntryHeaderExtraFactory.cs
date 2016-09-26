@@ -8,6 +8,7 @@ namespace SharpCompress.Common.Zip.Headers
         WinZipAes = 0x9901,
 
         NotImplementedExtraData = 0xFFFF,
+
         // Third Party Mappings
         // -Info-ZIP Unicode Path Extra Field
         UnicodePathExtraField = 0x7075
@@ -22,17 +23,14 @@ namespace SharpCompress.Common.Zip.Headers
 
     internal class ExtraUnicodePathExtraField : ExtraData
     {
-        internal byte Version
-        {
-            get { return this.DataBytes[0]; }
-        }
+        internal byte Version { get { return DataBytes[0]; } }
 
         internal byte[] NameCRC32
         {
             get
             {
                 var crc = new byte[4];
-                Buffer.BlockCopy(this.DataBytes, 1, crc, 0, 4);
+                Buffer.BlockCopy(DataBytes, 1, crc, 0, 4);
                 return crc;
             }
         }
@@ -42,8 +40,8 @@ namespace SharpCompress.Common.Zip.Headers
             get
             {
                 // PathNamelength = dataLength - Version(1 byte) - NameCRC32(4 bytes)
-                var length = this.Length - 5;
-                var nameStr = Encoding.UTF8.GetString(this.DataBytes, 5, length);
+                var length = Length - 5;
+                var nameStr = Encoding.UTF8.GetString(DataBytes, 5, length);
                 return nameStr;
             }
         }
@@ -51,24 +49,24 @@ namespace SharpCompress.Common.Zip.Headers
 
     internal static class LocalEntryHeaderExtraFactory
     {
-        internal static ExtraData Create(ExtraDataType type,ushort length, byte[] extraData)
+        internal static ExtraData Create(ExtraDataType type, ushort length, byte[] extraData)
         {
             switch (type)
             {
                 case ExtraDataType.UnicodePathExtraField:
-                    return new ExtraUnicodePathExtraField()
-                    {
-                        Type = type,
-                        Length = length,
-                        DataBytes = extraData
-                    };
+                    return new ExtraUnicodePathExtraField
+                           {
+                               Type = type,
+                               Length = length,
+                               DataBytes = extraData
+                           };
                 default:
                     return new ExtraData
-                    {
-                        Type = type,
-                        Length = length,
-                        DataBytes = extraData
-                    };
+                           {
+                               Type = type,
+                               Length = length,
+                               DataBytes = extraData
+                           };
             }
         }
     }

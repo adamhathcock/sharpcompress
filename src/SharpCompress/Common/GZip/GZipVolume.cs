@@ -16,14 +16,8 @@ namespace SharpCompress.Common.GZip
         }
 #endif
 
-        public override bool IsFirstVolume
-        {
-            get { return true; }
-        }
+        public override bool IsFirstVolume { get { return true; } }
 
-        public override bool IsMultiVolume
-        {
-            get { return true; }
-        }
+        public override bool IsMultiVolume { get { return true; } }
     }
 }

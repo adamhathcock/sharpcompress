@@ -1,5 +1,4 @@
-﻿using System;
-using System.IO;
+﻿using System.IO;
 
 namespace SharpCompress.Writer
 {
@@ -45,5 +44,5 @@ namespace SharpCompress.Writer
             }
         }
 #endif
-        }
+    }
 }

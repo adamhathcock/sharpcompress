@@ -131,7 +131,7 @@ namespace SharpCompress.Compressor.Deflate
         /// <summary>
         /// used for diagnostics, when something goes wrong!
         /// </summary>
-        public System.String Message;
+        public String Message;
 
         internal DeflateManager dstate;
         internal InflateManager istate;
@@ -169,15 +169,10 @@ namespace SharpCompress.Compressor.Deflate
         /// </remarks>
         public CompressionStrategy Strategy = CompressionStrategy.Default;
 
-
         /// <summary>
         /// The Adler32 checksum on the data transferred through the codec so far. You probably don't need to look at this.
         /// </summary>
-        public int Adler32
-        {
-            get { return (int) _Adler32; }
-        }
-
+        public int Adler32 { get { return (int)_Adler32; } }
 
         /// <summary>
         /// Create a ZlibCodec.
@@ -202,14 +197,23 @@ namespace SharpCompress.Compressor.Deflate
             if (mode == CompressionMode.Compress)
             {
                 int rc = InitializeDeflate();
-                if (rc != ZlibConstants.Z_OK) throw new ZlibException("Cannot initialize for deflate.");
+                if (rc != ZlibConstants.Z_OK)
+                {
+                    throw new ZlibException("Cannot initialize for deflate.");
+                }
             }
             else if (mode == CompressionMode.Decompress)
             {
                 int rc = InitializeInflate();
-                if (rc != ZlibConstants.Z_OK) throw new ZlibException("Cannot initialize for inflate.");
+                if (rc != ZlibConstants.Z_OK)
+                {
+                    throw new ZlibException("Cannot initialize for inflate.");
+                }
             }
-            else throw new ZlibException("Invalid ZlibStreamFlavor.");
+            else
+            {
+                throw new ZlibException("Invalid ZlibStreamFlavor.");
+            }
         }
 
         /// <summary>
@@ -222,7 +226,7 @@ namespace SharpCompress.Compressor.Deflate
         /// <returns>Z_OK if everything goes well.</returns>
         public int InitializeInflate()
         {
-            return InitializeInflate(this.WindowBits);
+            return InitializeInflate(WindowBits);
         }
 
         /// <summary>
@@ -245,7 +249,7 @@ namespace SharpCompress.Compressor.Deflate
         /// <returns>Z_OK if everything goes well.</returns>
         public int InitializeInflate(bool expectRfc1950Header)
         {
-            return InitializeInflate(this.WindowBits, expectRfc1950Header);
+            return InitializeInflate(WindowBits, expectRfc1950Header);
         }
 
         /// <summary>
@@ -256,7 +260,7 @@ namespace SharpCompress.Compressor.Deflate
         /// <returns>Z_OK if all goes well.</returns>
         public int InitializeInflate(int windowBits)
         {
-            this.WindowBits = windowBits;
+            WindowBits = windowBits;
             return InitializeInflate(windowBits, true);
         }
 
@@ -281,9 +285,11 @@ namespace SharpCompress.Compressor.Deflate
         /// <returns>Z_OK if everything goes well.</returns>
         public int InitializeInflate(int windowBits, bool expectRfc1950Header)
         {
-            this.WindowBits = windowBits;
+            WindowBits = windowBits;
             if (dstate != null)
+            {
                 throw new ZlibException("You may not call InitializeInflate() after calling InitializeDeflate().");
+            }
             istate = new InflateManager(expectRfc1950Header);
             return istate.Initialize(this, windowBits);
         }
@@ -354,10 +360,11 @@ namespace SharpCompress.Compressor.Deflate
         public int Inflate(FlushType flush)
         {
             if (istate == null)
+            {
                 throw new ZlibException("No Inflate State!");
+            }
             return istate.Inflate(flush);
         }
-
 
         /// <summary>
         /// Ends an inflation session. 
@@ -371,7 +378,9 @@ namespace SharpCompress.Compressor.Deflate
         public int EndInflate()
         {
             if (istate == null)
+            {
                 throw new ZlibException("No Inflate State!");
+            }
             int ret = istate.End();
             istate = null;
             return ret;
@@ -384,7 +393,9 @@ namespace SharpCompress.Compressor.Deflate
         public int SyncInflate()
         {
             if (istate == null)
+            {
                 throw new ZlibException("No Inflate State!");
+            }
             return istate.Sync();
         }
 
@@ -444,10 +455,9 @@ namespace SharpCompress.Compressor.Deflate
         /// <returns>Z_OK if all goes well.</returns>
         public int InitializeDeflate(CompressionLevel level)
         {
-            this.CompressLevel = level;
+            CompressLevel = level;
             return _InternalInitializeDeflate(true);
         }
-
 
         /// <summary>
         /// Initialize the ZlibCodec for deflation operation, using the specified CompressionLevel, 
@@ -465,10 +475,9 @@ namespace SharpCompress.Compressor.Deflate
         /// <returns>Z_OK if all goes well.</returns>
         public int InitializeDeflate(CompressionLevel level, bool wantRfc1950Header)
         {
-            this.CompressLevel = level;
+            CompressLevel = level;
             return _InternalInitializeDeflate(wantRfc1950Header);
         }
-
 
         /// <summary>
         /// Initialize the ZlibCodec for deflation operation, using the specified CompressionLevel, 
@@ -482,8 +491,8 @@ namespace SharpCompress.Compressor.Deflate
         /// <returns>Z_OK if all goes well.</returns>
         public int InitializeDeflate(CompressionLevel level, int bits)
         {
-            this.CompressLevel = level;
-            this.WindowBits = bits;
+            CompressLevel = level;
+            WindowBits = bits;
             return _InternalInitializeDeflate(true);
         }
 
@@ -499,19 +508,21 @@ namespace SharpCompress.Compressor.Deflate
         /// <returns>Z_OK if all goes well.</returns>
         public int InitializeDeflate(CompressionLevel level, int bits, bool wantRfc1950Header)
         {
-            this.CompressLevel = level;
-            this.WindowBits = bits;
+            CompressLevel = level;
+            WindowBits = bits;
             return _InternalInitializeDeflate(wantRfc1950Header);
         }
 
         private int _InternalInitializeDeflate(bool wantRfc1950Header)
         {
             if (istate != null)
+            {
                 throw new ZlibException("You may not call InitializeDeflate() after calling InitializeInflate().");
+            }
             dstate = new DeflateManager();
             dstate.WantRfc1950HeaderBytes = wantRfc1950Header;
 
-            return dstate.Initialize(this, this.CompressLevel, this.WindowBits, this.Strategy);
+            return dstate.Initialize(this, CompressLevel, WindowBits, Strategy);
         }
 
         /// <summary>
@@ -585,7 +596,9 @@ namespace SharpCompress.Compressor.Deflate
         public int Deflate(FlushType flush)
         {
             if (dstate == null)
+            {
                 throw new ZlibException("No Deflate State!");
+            }
             return dstate.Deflate(flush);
         }
 
@@ -599,7 +612,10 @@ namespace SharpCompress.Compressor.Deflate
         public int EndDeflate()
         {
             if (dstate == null)
+            {
                 throw new ZlibException("No Deflate State!");
+            }
+
             // TODO: dinoch Tue, 03 Nov 2009  15:39 (test this)
             //int ret = dstate.End();
             dstate = null;
@@ -618,10 +634,11 @@ namespace SharpCompress.Compressor.Deflate
         public void ResetDeflate()
         {
             if (dstate == null)
+            {
                 throw new ZlibException("No Deflate State!");
+            }
             dstate.Reset();
         }
-
 
         /// <summary>
         /// Set the CompressionStrategy and CompressionLevel for a deflation session.
@@ -632,10 +649,11 @@ namespace SharpCompress.Compressor.Deflate
         public int SetDeflateParams(CompressionLevel level, CompressionStrategy strategy)
         {
             if (dstate == null)
+            {
                 throw new ZlibException("No Deflate State!");
+            }
             return dstate.SetParams(level, strategy);
         }
-
 
         /// <summary>
         /// Set the dictionary to be used for either Inflation or Deflation.
@@ -645,10 +663,14 @@ namespace SharpCompress.Compressor.Deflate
         public int SetDictionary(byte[] dictionary)
         {
             if (istate != null)
+            {
                 return istate.SetDictionary(dictionary);
+            }
 
             if (dstate != null)
+            {
                 return dstate.SetDictionary(dictionary);
+            }
 
             throw new ZlibException("No Inflate or Deflate state!");
         }
@@ -662,9 +684,13 @@ namespace SharpCompress.Compressor.Deflate
             int len = dstate.pendingCount;
 
             if (len > AvailableBytesOut)
+            {
                 len = AvailableBytesOut;
+            }
             if (len == 0)
+            {
                 return;
+            }
 
             if (dstate.pending.Length <= dstate.nextPending ||
                 OutputBuffer.Length <= NextOut ||
@@ -698,9 +724,13 @@ namespace SharpCompress.Compressor.Deflate
             int len = AvailableBytesIn;
 
             if (len > size)
+            {
                 len = size;
+            }
             if (len == 0)
+            {
                 return 0;
+            }
 
             AvailableBytesIn -= len;
 

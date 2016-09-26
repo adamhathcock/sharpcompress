@@ -73,6 +73,6 @@ namespace SharpCompress.Compressor.Rar.VM
         VM_NEGB = 52,
         VM_NEGD = 53,
 
-        VM_STANDARD = 54,
+        VM_STANDARD = 54
     }
 }

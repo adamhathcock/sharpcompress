@@ -6,14 +6,14 @@ namespace SharpCompress.Common
 {
     public class EntryStream : Stream
     {
-        public IReader Reader { get; private set; }
-        private Stream stream;
+        public IReader Reader { get; }
+        private readonly Stream stream;
         private bool completed;
         private bool isDisposed;
 
         internal EntryStream(IReader reader, Stream stream)
         {
-            this.Reader = reader;
+            Reader = reader;
             this.stream = stream;
         }
 
@@ -44,36 +44,20 @@ namespace SharpCompress.Common
             stream.Dispose();
         }
 
-        public override bool CanRead
-        {
-            get { return true; }
-        }
+        public override bool CanRead { get { return true; } }
 
-        public override bool CanSeek
-        {
-            get { return false; }
-        }
+        public override bool CanSeek { get { return false; } }
 
-        public override bool CanWrite
-        {
-            get { return false; }
-        }
+        public override bool CanWrite { get { return false; } }
 
         public override void Flush()
         {
             throw new NotSupportedException();
         }
 
-        public override long Length
-        {
-            get { throw new NotSupportedException(); }
-        }
+        public override long Length { get { throw new NotSupportedException(); } }
 
-        public override long Position
-        {
-            get { throw new NotSupportedException(); }
-            set { throw new NotSupportedException(); }
-        }
+        public override long Position { get { throw new NotSupportedException(); } set { throw new NotSupportedException(); } }
 
         public override int Read(byte[] buffer, int offset, int count)
         {

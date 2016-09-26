@@ -70,16 +70,11 @@ namespace SharpCompress.Common
 
         internal virtual void Close()
         {
-
         }
 
         /// <summary>
         /// Entry file attribute.
         /// </summary>
-        public virtual int? Attrib
-        {
-            get { throw new NotImplementedException(); }
-        }
-
+        public virtual int? Attrib { get { throw new NotImplementedException(); } }
     }
 }

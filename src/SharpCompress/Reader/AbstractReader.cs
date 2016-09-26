@@ -2,10 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using SharpCompress.Archive;
-using SharpCompress.Archive.Rar;
 using SharpCompress.Common;
-using SharpCompress.Reader.Rar;
 
 namespace SharpCompress.Reader
 {
@@ -26,8 +23,6 @@ namespace SharpCompress.Reader
         public event EventHandler<CompressedBytesReadEventArgs> CompressedBytesRead;
         public event EventHandler<FilePartExtractionBeginEventArgs> FilePartExtractionBegin;
 
-
-
         internal AbstractReader(Options options, ArchiveType archiveType)
         {
             ArchiveType = archiveType;
@@ -36,7 +31,7 @@ namespace SharpCompress.Reader
 
         internal Options Options { get; private set; }
 
-        public ArchiveType ArchiveType { get; private set; }
+        public ArchiveType ArchiveType { get; }
 
         /// <summary>
         /// Current volume that the current entry resides in
@@ -46,10 +41,7 @@ namespace SharpCompress.Reader
         /// <summary>
         /// Current file entry 
         /// </summary>
-        public TEntry Entry
-        {
-            get { return entriesForCurrentReadStream.Current; }
-        }
+        public TEntry Entry { get { return entriesForCurrentReadStream.Current; } }
 
         #region IDisposable Members
 
@@ -64,7 +56,6 @@ namespace SharpCompress.Reader
 
         #endregion
 
-
         public bool Cancelled { get; private set; }
 
         /// <summary>
@@ -74,10 +65,10 @@ namespace SharpCompress.Reader
         /// </summary>
         public void Cancel()
         {
-          if (!completed)
-          {
-            Cancelled = true;
-          }
+            if (!completed)
+            {
+                Cancelled = true;
+            }
         }
 
         public bool MoveToNextEntry()
@@ -185,13 +176,13 @@ namespace SharpCompress.Reader
             if ((writableStream == null) || (!writableStream.CanWrite))
             {
                 throw new ArgumentNullException(
-                    "A writable Stream was required.  Use Cancel if that was intended.");
+                                                "A writable Stream was required.  Use Cancel if that was intended.");
             }
 
             var streamListener = this as IReaderExtractionListener;
-            streamListener.FireEntryExtractionBegin(this.Entry);
+            streamListener.FireEntryExtractionBegin(Entry);
             Write(writableStream);
-            streamListener.FireEntryExtractionEnd(this.Entry);
+            streamListener.FireEntryExtractionEnd(Entry);
             wroteCurrentEntry = true;
         }
 
@@ -219,30 +210,27 @@ namespace SharpCompress.Reader
         /// </summary>
         protected EntryStream CreateEntryStream(Stream decompressed)
         {
-          return new EntryStream(this, decompressed);
+            return new EntryStream(this, decompressed);
         }
 
         protected virtual EntryStream GetEntryStream()
         {
-          return CreateEntryStream(Entry.Parts.First().GetCompressedStream());
+            return CreateEntryStream(Entry.Parts.First().GetCompressedStream());
         }
 
         #endregion
 
-        IEntry IReader.Entry
-        {
-            get { return Entry; }
-        }
+        IEntry IReader.Entry { get { return Entry; } }
 
         void IExtractionListener.FireCompressedBytesRead(long currentPartCompressedBytes, long compressedReadBytes)
         {
             if (CompressedBytesRead != null)
             {
-                CompressedBytesRead(this, new CompressedBytesReadEventArgs()
-                                              {
-                                                  CurrentFilePartCompressedBytesRead = currentPartCompressedBytes,
-                                                  CompressedBytesRead = compressedReadBytes
-                                              });
+                CompressedBytesRead(this, new CompressedBytesReadEventArgs
+                                          {
+                                              CurrentFilePartCompressedBytesRead = currentPartCompressedBytes,
+                                              CompressedBytesRead = compressedReadBytes
+                                          });
             }
         }
 
@@ -250,18 +238,18 @@ namespace SharpCompress.Reader
         {
             if (FilePartExtractionBegin != null)
             {
-                FilePartExtractionBegin(this, new FilePartExtractionBeginEventArgs()
-                                                  {
-                                                      CompressedSize = compressedSize,
-                                                      Size = size,
-                                                      Name = name,
-                                                  });
+                FilePartExtractionBegin(this, new FilePartExtractionBeginEventArgs
+                                              {
+                                                  CompressedSize = compressedSize,
+                                                  Size = size,
+                                                  Name = name
+                                              });
             }
         }
 
         void IReaderExtractionListener.FireEntryExtractionBegin(Entry entry)
         {
-            if (EntryExtractionBegin!=null)
+            if (EntryExtractionBegin != null)
             {
                 EntryExtractionBegin(this, new ReaderExtractionEventArgs<IEntry>(entry));
             }
@@ -269,7 +257,7 @@ namespace SharpCompress.Reader
 
         void IReaderExtractionListener.FireEntryExtractionEnd(Entry entry)
         {
-            if (EntryExtractionEnd!=null)
+            if (EntryExtractionEnd != null)
             {
                 EntryExtractionEnd(this, new ReaderExtractionEventArgs<IEntry>(entry));
             }

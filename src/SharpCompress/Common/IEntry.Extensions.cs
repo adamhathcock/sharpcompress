@@ -1,4 +1,5 @@
-﻿#if !NO_FILE
+﻿
+#if !NO_FILE
 using System.IO;
 
 namespace SharpCompress.Common

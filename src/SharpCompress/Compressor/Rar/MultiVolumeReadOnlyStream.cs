@@ -74,7 +74,7 @@ namespace SharpCompress.Compressor.Rar
                 int readSize = currentCount;
                 if (currentCount > maxPosition - currentPosition)
                 {
-                    readSize = (int) (maxPosition - currentPosition);
+                    readSize = (int)(maxPosition - currentPosition);
                 }
 
                 int read = currentStream.Read(buffer, currentOffset, readSize);
@@ -98,7 +98,7 @@ namespace SharpCompress.Compressor.Rar
                     if (!filePartEnumerator.MoveNext())
                     {
                         throw new InvalidFormatException(
-                            "Multi-part rar file is incomplete.  Entry expects a new volume: " + fileName);
+                                                         "Multi-part rar file is incomplete.  Entry expects a new volume: " + fileName);
                     }
                     InitializeNextFilePart();
                 }
@@ -113,36 +113,20 @@ namespace SharpCompress.Compressor.Rar
             return totalRead;
         }
 
-        public override bool CanRead
-        {
-            get { return true; }
-        }
+        public override bool CanRead { get { return true; } }
 
-        public override bool CanSeek
-        {
-            get { return false; }
-        }
+        public override bool CanSeek { get { return false; } }
 
-        public override bool CanWrite
-        {
-            get { return false; }
-        }
+        public override bool CanWrite { get { return false; } }
 
         public override void Flush()
         {
             throw new NotSupportedException();
         }
 
-        public override long Length
-        {
-            get { throw new NotSupportedException(); }
-        }
+        public override long Length { get { throw new NotSupportedException(); } }
 
-        public override long Position
-        {
-            get { throw new NotSupportedException(); }
-            set { throw new NotSupportedException(); }
-        }
+        public override long Position { get { throw new NotSupportedException(); } set { throw new NotSupportedException(); } }
 
         public override long Seek(long offset, SeekOrigin origin)
         {

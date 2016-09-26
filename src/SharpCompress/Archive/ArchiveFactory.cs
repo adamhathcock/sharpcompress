@@ -45,8 +45,8 @@ namespace SharpCompress.Archive
             stream.Seek(0, SeekOrigin.Begin);
             if (RarArchive.IsRarFile(stream, options))
             {
-               stream.Seek(0, SeekOrigin.Begin);
-               return RarArchive.Open(stream, options);
+                stream.Seek(0, SeekOrigin.Begin);
+                return RarArchive.Open(stream, options);
             }
             stream.Seek(0, SeekOrigin.Begin);
             if (TarArchive.IsTarFile(stream))
@@ -62,29 +62,30 @@ namespace SharpCompress.Archive
             switch (type)
             {
                 case ArchiveType.Zip:
-                    {
-                        return ZipArchive.Create();
-                    }
+                {
+                    return ZipArchive.Create();
+                }
                 case ArchiveType.Tar:
-                    {
-                        return TarArchive.Create();
-                    }
+                {
+                    return TarArchive.Create();
+                }
                 case ArchiveType.GZip:
-                    {
-                        return GZipArchive.Create();
-                    }
+                {
+                    return GZipArchive.Create();
+                }
                 default:
-                    {
-                        throw new NotSupportedException("Cannot create Archives of type: " + type);
-                    }
+                {
+                    throw new NotSupportedException("Cannot create Archives of type: " + type);
+                }
             }
         }
 
 #if !NO_FILE
-        /// <summary>
-        /// Constructor expects a filepath to an existing file.
-        /// </summary>
-        /// <param name="filePath"></param>
+
+/// <summary>
+/// Constructor expects a filepath to an existing file.
+/// </summary>
+/// <param name="filePath"></param>
         public static IArchive Open(string filePath)
         {
             return Open(filePath, Options.None);

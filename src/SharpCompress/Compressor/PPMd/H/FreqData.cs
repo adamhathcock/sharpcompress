@@ -1,3 +1,4 @@
+using System;
 using System.Text;
 using SharpCompress.Converter;
 
@@ -18,12 +19,7 @@ namespace SharpCompress.Compressor.PPMd.H
         {
         }
 
-        internal int SummFreq
-        {
-            get { return DataConverter.LittleEndian.GetInt16(Memory, Address) & 0xffff; }
-
-            set { DataConverter.LittleEndian.PutBytes(Memory, Address, (short)value); }
-        }
+        internal int SummFreq { get { return DataConverter.LittleEndian.GetInt16(Memory, Address) & 0xffff; } set { DataConverter.LittleEndian.PutBytes(Memory, Address, (short)value); } }
 
         internal FreqData Initialize(byte[] mem)
         {
@@ -52,7 +48,7 @@ namespace SharpCompress.Compressor.PPMd.H
             DataConverter.LittleEndian.PutBytes(Memory, Address + 2, state);
         }
 
-        public override System.String ToString()
+        public override String ToString()
         {
             StringBuilder buffer = new StringBuilder();
             buffer.Append("FreqData[");

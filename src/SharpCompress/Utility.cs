@@ -21,9 +21,10 @@ namespace SharpCompress
         public static int URShift(int number, int bits)
         {
             if (number >= 0)
+            {
                 return number >> bits;
-            else
-                return (number >> bits) + (2 << ~bits);
+            }
+            return (number >> bits) + (2 << ~bits);
         }
 
         /// <summary>
@@ -35,9 +36,10 @@ namespace SharpCompress
         public static long URShift(long number, int bits)
         {
             if (number >= 0)
+            {
                 return number >> bits;
-            else
-                return (number >> bits) + (2L << ~bits);
+            }
+            return (number >> bits) + (2L << ~bits);
         }
 
         /// <summary>
@@ -57,7 +59,7 @@ namespace SharpCompress
             {
                 throw new ArgumentException();
             }
-            if ((fromindex < 0) || ((System.Array)array).Length < toindex)
+            if ((fromindex < 0) || array.Length < toindex)
             {
                 throw new IndexOutOfRangeException();
             }
@@ -155,7 +157,8 @@ namespace SharpCompress
                 {
                     break;
                 }
-            } while (true);
+            }
+            while (true);
         }
 
         public static void SkipAll(this Stream source)
@@ -163,7 +166,8 @@ namespace SharpCompress
             byte[] buffer = new byte[32 * 1024];
             do
             {
-            } while (source.Read(buffer, 0, buffer.Length) == buffer.Length);
+            }
+            while (source.Read(buffer, 0, buffer.Length) == buffer.Length);
         }
 
         public static DateTime DosDateToDateTime(UInt16 iDate, UInt16 iTime)
@@ -209,11 +213,10 @@ namespace SharpCompress
             var localDateTime = dateTime.Value.ToLocalTime();
 
             return (uint)(
-                              (localDateTime.Second / 2) | (localDateTime.Minute << 5) | (localDateTime.Hour << 11) |
-                              (localDateTime.Day << 16) | (localDateTime.Month << 21) |
-                              ((localDateTime.Year - 1980) << 25));
+                             (localDateTime.Second / 2) | (localDateTime.Minute << 5) | (localDateTime.Hour << 11) |
+                             (localDateTime.Day << 16) | (localDateTime.Month << 21) |
+                             ((localDateTime.Year - 1980) << 25));
         }
-
 
         public static DateTime DosDateToDateTime(UInt32 iTime)
         {
@@ -274,7 +277,7 @@ namespace SharpCompress
             }
             return true;
         }
-        
+
         public static void CopyTo(this byte[] array, byte[] destination, int index)
         {
             Array.Copy(array, 0, destination, index, array.Length);

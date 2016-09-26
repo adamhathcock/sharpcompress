@@ -54,7 +54,8 @@ namespace SharpCompress.Archive
             lazyVolumes = new LazyReadOnlyCollection<TVolume>(Enumerable.Empty<TVolume>());
             lazyEntries = new LazyReadOnlyCollection<TEntry>(Enumerable.Empty<TEntry>());
         }
-        public ArchiveType Type { get; private set; }
+
+        public ArchiveType Type { get; }
 
         void IArchiveExtractionListener.FireEntryExtractionBegin(IArchiveEntry entry)
         {
@@ -84,47 +85,29 @@ namespace SharpCompress.Archive
         /// <summary>
         /// Returns an ReadOnlyCollection of all the RarArchiveEntries across the one or many parts of the RarArchive.
         /// </summary>
-        public virtual ICollection<TEntry> Entries
-        {
-            get { return lazyEntries; }
-        }
+        public virtual ICollection<TEntry> Entries { get { return lazyEntries; } }
 
         /// <summary>
         /// Returns an ReadOnlyCollection of all the RarArchiveVolumes across the one or many parts of the RarArchive.
         /// </summary>
-        public ICollection<TVolume> Volumes
-        {
-            get { return lazyVolumes; }
-        }
+        public ICollection<TVolume> Volumes { get { return lazyVolumes; } }
 
         /// <summary>
         /// The total size of the files compressed in the archive.
         /// </summary>
-        public virtual long TotalSize
-        {
-            get { return Entries.Aggregate(0L, (total, cf) => total + cf.CompressedSize); }
-        }
+        public virtual long TotalSize { get { return Entries.Aggregate(0L, (total, cf) => total + cf.CompressedSize); } }
 
         /// <summary>
         /// The total size of the files as uncompressed in the archive.
         /// </summary>
-        public virtual long TotalUncompressSize
-        {
-            get { return Entries.Aggregate(0L, (total, cf) => total + cf.Size); }
-        }
+        public virtual long TotalUncompressSize { get { return Entries.Aggregate(0L, (total, cf) => total + cf.Size); } }
 
         protected abstract IEnumerable<TVolume> LoadVolumes(IEnumerable<Stream> streams, Options options);
         protected abstract IEnumerable<TEntry> LoadEntries(IEnumerable<TVolume> volumes);
 
-        IEnumerable<IArchiveEntry> IArchive.Entries
-        {
-            get { return Entries.Cast<IArchiveEntry>(); }
-        }
+        IEnumerable<IArchiveEntry> IArchive.Entries { get { return Entries.Cast<IArchiveEntry>(); } }
 
-        IEnumerable<IVolume> IArchive.Volumes
-        {
-            get { return lazyVolumes.Cast<IVolume>(); }
-        }
+        IEnumerable<IVolume> IArchive.Volumes { get { return lazyVolumes.Cast<IVolume>(); } }
 
         private bool disposed;
 
@@ -148,11 +131,11 @@ namespace SharpCompress.Archive
         {
             if (CompressedBytesRead != null)
             {
-                CompressedBytesRead(this, new CompressedBytesReadEventArgs()
-                                              {
-                                                  CurrentFilePartCompressedBytesRead = currentPartCompressedBytes,
-                                                  CompressedBytesRead = compressedReadBytes
-                                              });
+                CompressedBytesRead(this, new CompressedBytesReadEventArgs
+                                          {
+                                              CurrentFilePartCompressedBytesRead = currentPartCompressedBytes,
+                                              CompressedBytesRead = compressedReadBytes
+                                          });
             }
         }
 
@@ -160,12 +143,12 @@ namespace SharpCompress.Archive
         {
             if (FilePartExtractionBegin != null)
             {
-                FilePartExtractionBegin(this, new FilePartExtractionBeginEventArgs()
-                                                  {
-                                                      CompressedSize = compressedSize,
-                                                      Size = size,
-                                                      Name = name,
-                                                  });
+                FilePartExtractionBegin(this, new FilePartExtractionBeginEventArgs
+                                              {
+                                                  CompressedSize = compressedSize,
+                                                  Size = size,
+                                                  Name = name
+                                              });
             }
         }
 
@@ -191,11 +174,7 @@ namespace SharpCompress.Archive
         /// <summary>
         /// Archive is SOLID (this means the Archive saved bytes by reusing information which helps for archives containing many small files).
         /// </summary>
-        public virtual bool IsSolid
-        {
-            get { return false; }
-        }
-
+        public virtual bool IsSolid { get { return false; } }
 
         /// <summary>
         /// The archive can find all the parts of the archive needed to fully extract the archive.  This forces the parsing of the entire archive.

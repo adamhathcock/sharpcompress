@@ -35,7 +35,6 @@ namespace SharpCompress.Compressor.Deflate
         private readonly ZlibBaseStream _baseStream;
         private bool _disposed;
 
-
         public DeflateStream(Stream stream, CompressionMode mode,
                              CompressionLevel level = CompressionLevel.Default,
                              bool leaveOpen = false)
@@ -55,7 +54,10 @@ namespace SharpCompress.Compressor.Deflate
             get { return (_baseStream._flushMode); }
             set
             {
-                if (_disposed) throw new ObjectDisposedException("DeflateStream");
+                if (_disposed)
+                {
+                    throw new ObjectDisposedException("DeflateStream");
+                }
                 _baseStream._flushMode = value;
             }
         }
@@ -82,13 +84,20 @@ namespace SharpCompress.Compressor.Deflate
             get { return _baseStream._bufferSize; }
             set
             {
-                if (_disposed) throw new ObjectDisposedException("DeflateStream");
+                if (_disposed)
+                {
+                    throw new ObjectDisposedException("DeflateStream");
+                }
                 if (_baseStream._workingBuffer != null)
+                {
                     throw new ZlibException("The working buffer is already set.");
+                }
                 if (value < ZlibConstants.WorkingBufferSizeMin)
+                {
                     throw new ZlibException(
-                        String.Format("Don't be silly. {0} bytes?? Use a bigger buffer, at least {1}.", value,
-                                      ZlibConstants.WorkingBufferSizeMin));
+                                            String.Format("Don't be silly. {0} bytes?? Use a bigger buffer, at least {1}.", value,
+                                                          ZlibConstants.WorkingBufferSizeMin));
+                }
                 _baseStream._bufferSize = value;
             }
         }
@@ -106,22 +115,19 @@ namespace SharpCompress.Compressor.Deflate
             get { return _baseStream.Strategy; }
             set
             {
-                if (_disposed) throw new ObjectDisposedException("DeflateStream");
+                if (_disposed)
+                {
+                    throw new ObjectDisposedException("DeflateStream");
+                }
                 _baseStream.Strategy = value;
             }
         }
 
         /// <summary> Returns the total number of bytes input so far.</summary>
-        public virtual long TotalIn
-        {
-            get { return _baseStream._z.TotalBytesIn; }
-        }
+        public virtual long TotalIn { get { return _baseStream._z.TotalBytesIn; } }
 
         /// <summary> Returns the total number of bytes output so far.</summary>
-        public virtual long TotalOut
-        {
-            get { return _baseStream._z.TotalBytesOut; }
-        }
+        public virtual long TotalOut { get { return _baseStream._z.TotalBytesOut; } }
 
         #endregion
 
@@ -137,7 +143,10 @@ namespace SharpCompress.Compressor.Deflate
         {
             get
             {
-                if (_disposed) throw new ObjectDisposedException("DeflateStream");
+                if (_disposed)
+                {
+                    throw new ObjectDisposedException("DeflateStream");
+                }
                 return _baseStream._stream.CanRead;
             }
         }
@@ -148,11 +157,7 @@ namespace SharpCompress.Compressor.Deflate
         /// <remarks>
         /// Always returns false.
         /// </remarks>
-        public override bool CanSeek
-        {
-            get { return false; }
-        }
-
+        public override bool CanSeek { get { return false; } }
 
         /// <summary>
         /// Indicates whether the stream can be written.
@@ -164,7 +169,10 @@ namespace SharpCompress.Compressor.Deflate
         {
             get
             {
-                if (_disposed) throw new ObjectDisposedException("DeflateStream");
+                if (_disposed)
+                {
+                    throw new ObjectDisposedException("DeflateStream");
+                }
                 return _baseStream._stream.CanWrite;
             }
         }
@@ -172,10 +180,7 @@ namespace SharpCompress.Compressor.Deflate
         /// <summary>
         /// Reading this property always throws a <see cref="NotImplementedException"/>.
         /// </summary>
-        public override long Length
-        {
-            get { throw new NotSupportedException(); }
-        }
+        public override long Length { get { throw new NotSupportedException(); } }
 
         /// <summary>
         /// The position of the stream pointer.
@@ -193,9 +198,13 @@ namespace SharpCompress.Compressor.Deflate
             get
             {
                 if (_baseStream._streamMode == ZlibBaseStream.StreamMode.Writer)
+                {
                     return _baseStream._z.TotalBytesOut;
+                }
                 if (_baseStream._streamMode == ZlibBaseStream.StreamMode.Reader)
+                {
                     return _baseStream._z.TotalBytesIn;
+                }
                 return 0;
             }
             set { throw new NotSupportedException(); }
@@ -215,7 +224,9 @@ namespace SharpCompress.Compressor.Deflate
                 if (!_disposed)
                 {
                     if (disposing && (_baseStream != null))
+                    {
                         _baseStream.Dispose();
+                    }
                     _disposed = true;
                 }
             }
@@ -230,7 +241,10 @@ namespace SharpCompress.Compressor.Deflate
         /// </summary>
         public override void Flush()
         {
-            if (_disposed) throw new ObjectDisposedException("DeflateStream");
+            if (_disposed)
+            {
+                throw new ObjectDisposedException("DeflateStream");
+            }
             _baseStream.Flush();
         }
 
@@ -262,10 +276,12 @@ namespace SharpCompress.Compressor.Deflate
         /// <returns>the number of bytes actually read</returns>
         public override int Read(byte[] buffer, int offset, int count)
         {
-            if (_disposed) throw new ObjectDisposedException("DeflateStream");
+            if (_disposed)
+            {
+                throw new ObjectDisposedException("DeflateStream");
+            }
             return _baseStream.Read(buffer, offset, count);
         }
-
 
         /// <summary>
         /// Calling this method always throws a <see cref="NotImplementedException"/>.
@@ -318,7 +334,10 @@ namespace SharpCompress.Compressor.Deflate
         /// <param name="count">the number of bytes to write.</param>
         public override void Write(byte[] buffer, int offset, int count)
         {
-            if (_disposed) throw new ObjectDisposedException("DeflateStream");
+            if (_disposed)
+            {
+                throw new ObjectDisposedException("DeflateStream");
+            }
             _baseStream.Write(buffer, offset, count);
         }
 

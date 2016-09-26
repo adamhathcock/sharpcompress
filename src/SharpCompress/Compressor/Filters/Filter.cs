@@ -8,11 +8,11 @@ namespace SharpCompress.Compressor.Filters
         protected bool isEncoder;
         protected Stream baseStream;
 
-        private byte[] tail;
-        private byte[] window;
-        private int transformed = 0;
-        private int read = 0;
-        private bool endReached = false;
+        private readonly byte[] tail;
+        private readonly byte[] window;
+        private int transformed;
+        private int read;
+        private bool endReached;
         private bool isDisposed;
 
         protected Filter(bool isEncoder, Stream baseStream, int lookahead)
@@ -34,36 +34,20 @@ namespace SharpCompress.Compressor.Filters
             baseStream.Dispose();
         }
 
-        public override bool CanRead
-        {
-            get { return !isEncoder; }
-        }
+        public override bool CanRead { get { return !isEncoder; } }
 
-        public override bool CanSeek
-        {
-            get { return false; }
-        }
+        public override bool CanSeek { get { return false; } }
 
-        public override bool CanWrite
-        {
-            get { return isEncoder; }
-        }
+        public override bool CanWrite { get { return isEncoder; } }
 
         public override void Flush()
         {
             throw new NotSupportedException();
         }
 
-        public override long Length
-        {
-            get { return baseStream.Length; }
-        }
+        public override long Length { get { return baseStream.Length; } }
 
-        public override long Position
-        {
-            get { return baseStream.Position; }
-            set { throw new NotSupportedException(); }
-        }
+        public override long Position { get { return baseStream.Position; } set { throw new NotSupportedException(); } }
 
         public override int Read(byte[] buffer, int offset, int count)
         {
@@ -73,7 +57,9 @@ namespace SharpCompress.Compressor.Filters
             {
                 int copySize = transformed;
                 if (copySize > count)
+                {
                     copySize = count;
+                }
                 Buffer.BlockCopy(tail, 0, buffer, offset, copySize);
                 transformed -= copySize;
                 read -= copySize;
@@ -83,11 +69,15 @@ namespace SharpCompress.Compressor.Filters
                 Buffer.BlockCopy(tail, copySize, tail, 0, read);
             }
             if (count == 0)
+            {
                 return size;
+            }
 
             int inSize = read;
             if (inSize > count)
+            {
                 inSize = count;
+            }
             Buffer.BlockCopy(tail, 0, buffer, offset, inSize);
             read -= inSize;
             Buffer.BlockCopy(tail, inSize, tail, 0, read);
@@ -96,14 +86,18 @@ namespace SharpCompress.Compressor.Filters
                 int baseRead = baseStream.Read(buffer, offset + inSize, count - inSize);
                 inSize += baseRead;
                 if (baseRead == 0)
+                {
                     endReached = true;
+                }
             }
             while (!endReached && read < tail.Length)
             {
                 int baseRead = baseStream.Read(tail, read, tail.Length - read);
                 read += baseRead;
                 if (baseRead == 0)
+                {
                     endReached = true;
+                }
             }
 
             if (inSize > tail.Length)
@@ -117,14 +111,20 @@ namespace SharpCompress.Compressor.Filters
             }
 
             if (count == 0)
+            {
                 return size;
+            }
 
             Buffer.BlockCopy(buffer, offset, window, 0, inSize);
             Buffer.BlockCopy(tail, 0, window, inSize, read);
             if (inSize + read > tail.Length)
+            {
                 transformed = Transform(window, 0, inSize + read);
+            }
             else
+            {
                 transformed = inSize + read;
+            }
             Buffer.BlockCopy(window, 0, buffer, offset, inSize);
             Buffer.BlockCopy(window, inSize, tail, 0, read);
             size += inSize;

@@ -18,6 +18,6 @@ namespace SharpCompress.Common
         /// <summary>
         /// Look for RarArchive (Check for self-extracting archives or cases where RarArchive isn't at the start of the file)
         /// </summary>
-        LookForHeader = 2,
+        LookForHeader = 2
     }
 }

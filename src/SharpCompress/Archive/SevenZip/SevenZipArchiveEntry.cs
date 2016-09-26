@@ -1,5 +1,4 @@
-﻿using System;
-using System.IO;
+﻿using System.IO;
 using SharpCompress.Common.SevenZip;
 
 namespace SharpCompress.Archive.SevenZip
@@ -16,19 +15,14 @@ namespace SharpCompress.Archive.SevenZip
         {
             return FilePart.GetCompressedStream();
         }
-        public IArchive Archive { get; private set; }
 
-        public bool IsComplete
-        {
-            get { return true; }
-        }
+        public IArchive Archive { get; }
+
+        public bool IsComplete { get { return true; } }
 
         /// <summary>
         /// This is a 7Zip Anti item
         /// </summary>
-        public bool IsAnti
-        {
-            get { return FilePart.Header.IsAnti; }
-        }
+        public bool IsAnti { get { return FilePart.Header.IsAnti; } }
     }
 }

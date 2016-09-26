@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using SharpCompress.Common;
@@ -71,7 +72,7 @@ namespace SharpCompress.Reader.Rar
                 return this;
             }
 
-            System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
+            IEnumerator IEnumerable.GetEnumerator()
             {
                 return this;
             }
@@ -82,10 +83,7 @@ namespace SharpCompress.Reader.Rar
             {
             }
 
-            object System.Collections.IEnumerator.Current
-            {
-                get { return Current; }
-            }
+            object IEnumerator.Current { get { return Current; } }
 
             public bool MoveNext()
             {

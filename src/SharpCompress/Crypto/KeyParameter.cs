@@ -11,7 +11,9 @@ namespace Org.BouncyCastle.Crypto.Parameters
             byte[] key)
         {
             if (key == null)
+            {
                 throw new ArgumentNullException("key");
+            }
 
             this.key = (byte[])key.Clone();
         }
@@ -22,11 +24,17 @@ namespace Org.BouncyCastle.Crypto.Parameters
             int keyLen)
         {
             if (key == null)
+            {
                 throw new ArgumentNullException("key");
+            }
             if (keyOff < 0 || keyOff > key.Length)
+            {
                 throw new ArgumentOutOfRangeException("keyOff");
+            }
             if (keyLen < 0 || (keyOff + keyLen) > key.Length)
+            {
                 throw new ArgumentOutOfRangeException("keyLen");
+            }
 
             this.key = new byte[keyLen];
             Array.Copy(key, keyOff, this.key, 0, keyLen);

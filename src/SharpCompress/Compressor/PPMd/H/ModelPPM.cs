@@ -1,6 +1,8 @@
-using System.Text;
+using System;
 using System.IO;
+using System.Text;
 using SharpCompress.Compressor.Rar;
+using Decoder = SharpCompress.Compressor.LZMA.RangeCoder.Decoder;
 
 namespace SharpCompress.Compressor.PPMd.H
 {
@@ -18,92 +20,35 @@ namespace SharpCompress.Compressor.PPMd.H
             }
         }
 
-        public SubAllocator SubAlloc
-        {
-            get { return subAlloc; }
-        }
+        public SubAllocator SubAlloc { get; } = new SubAllocator();
 
-        public virtual SEE2Context DummySEE2Cont
-        {
-            get { return dummySEE2Cont; }
-        }
+        public virtual SEE2Context DummySEE2Cont { get { return dummySEE2Cont; } }
 
-        public virtual int InitRL
-        {
-            get { return initRL; }
-        }
+        public virtual int InitRL { get { return initRL; } }
 
-        public virtual int EscCount
-        {
-            get { return escCount; }
+        public virtual int EscCount { get { return escCount; } set { escCount = value & 0xff; } }
 
-            set { this.escCount = value & 0xff; }
-        }
+        public virtual int[] CharMask { get { return charMask; } }
 
-        public virtual int[] CharMask
-        {
-            get { return charMask; }
-        }
+        public virtual int NumMasked { get { return numMasked; } set { numMasked = value; } }
 
-        public virtual int NumMasked
-        {
-            get { return numMasked; }
+        public virtual int PrevSuccess { get { return prevSuccess; } set { prevSuccess = value & 0xff; } }
 
-            set { this.numMasked = value; }
-        }
+        public virtual int InitEsc { get { return initEsc; } set { initEsc = value; } }
 
-        public virtual int PrevSuccess
-        {
-            get { return prevSuccess; }
+        public virtual int RunLength { get { return runLength; } set { runLength = value; } }
 
-            set { this.prevSuccess = value & 0xff; }
-        }
+        public virtual int HiBitsFlag { get { return hiBitsFlag; } set { hiBitsFlag = value & 0xff; } }
 
-        public virtual int InitEsc
-        {
-            get { return initEsc; }
+        public virtual int[][] BinSumm { get { return binSumm; } }
 
-            set { this.initEsc = value; }
-        }
+        internal RangeCoder Coder { get; private set; }
 
-        public virtual int RunLength
-        {
-            get { return runLength; }
+        internal State FoundState { get; private set; }
 
-            set { this.runLength = value; }
-        }
+        public virtual byte[] Heap { get { return SubAlloc.Heap; } }
 
-        public virtual int HiBitsFlag
-        {
-            get { return hiBitsFlag; }
-
-            set { this.hiBitsFlag = value & 0xff; }
-        }
-
-        public virtual int[][] BinSumm
-        {
-            get { return binSumm; }
-        }
-
-        internal RangeCoder Coder
-        {
-            get { return coder; }
-        }
-
-        internal State FoundState
-        {
-            get { return foundState; }
-        }
-
-        public virtual byte[] Heap
-        {
-            get { return subAlloc.Heap; }
-        }
-
-        public virtual int OrderFall
-        {
-            get { return orderFall; }
-        }
+        public virtual int OrderFall { get { return orderFall; } }
 
         public const int MAX_O = 64; /* maximum allowed model order */
 
@@ -122,7 +67,7 @@ namespace SharpCompress.Compressor.PPMd.H
 
         public const int MAX_FREQ = 124;
 
-        private SEE2Context[][] SEE2Cont = new SEE2Context[25][];
+        private readonly SEE2Context[][] SEE2Cont = new SEE2Context[25][];
 
         private SEE2Context dummySEE2Cont;
 
@@ -130,67 +75,72 @@ namespace SharpCompress.Compressor.PPMd.H
 
         private PPMContext maxContext;
 
-        private State foundState; // found next state transition
-
         private int numMasked, initEsc, orderFall, maxOrder, runLength, initRL;
 
-        private int[] charMask = new int[256];
+        private readonly int[] charMask = new int[256];
 
-        private int[] NS2Indx = new int[256];
+        private readonly int[] NS2Indx = new int[256];
 
-        private int[] NS2BSIndx = new int[256];
+        private readonly int[] NS2BSIndx = new int[256];
 
-        private int[] HB2Flag = new int[256];
+        private readonly int[] HB2Flag = new int[256];
 
         // byte EscCount, PrevSuccess, HiBitsFlag;
         private int escCount, prevSuccess, hiBitsFlag;
 
-        private int[][] binSumm = new int[128][]; // binary SEE-contexts
+        private readonly int[][] binSumm = new int[128][]; // binary SEE-contexts
 
-        private RangeCoder coder;
-
-        private SubAllocator subAlloc = new SubAllocator();
-
-        private static int[] InitBinEsc = new int[] {0x3CDD, 0x1F3F, 0x59BF, 0x48F3, 0x64A1, 0x5ABC, 0x6632, 0x6051};
+        private static readonly int[] InitBinEsc = {0x3CDD, 0x1F3F, 0x59BF, 0x48F3, 0x64A1, 0x5ABC, 0x6632, 0x6051};
 
         // Temp fields
         //UPGRADE_NOTE: Final was removed from the declaration of 'tempState1 '. "ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?index='!DefaultContextWindowIndex'&keyword='jlca1003'"
-        private State tempState1 = new State(null);
+        private readonly State tempState1 = new State(null);
+
         //UPGRADE_NOTE: Final was removed from the declaration of 'tempState2 '. "ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?index='!DefaultContextWindowIndex'&keyword='jlca1003'"
-        private State tempState2 = new State(null);
+        private readonly State tempState2 = new State(null);
+
         //UPGRADE_NOTE: Final was removed from the declaration of 'tempState3 '. "ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?index='!DefaultContextWindowIndex'&keyword='jlca1003'"
-        private State tempState3 = new State(null);
+        private readonly State tempState3 = new State(null);
+
         //UPGRADE_NOTE: Final was removed from the declaration of 'tempState4 '. "ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?index='!DefaultContextWindowIndex'&keyword='jlca1003'"
-        private State tempState4 = new State(null);
+        private readonly State tempState4 = new State(null);
+
         //UPGRADE_NOTE: Final was removed from the declaration of 'tempStateRef1 '. "ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?index='!DefaultContextWindowIndex'&keyword='jlca1003'"
-        private StateRef tempStateRef1 = new StateRef();
+        private readonly StateRef tempStateRef1 = new StateRef();
+
         //UPGRADE_NOTE: Final was removed from the declaration of 'tempStateRef2 '. "ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?index='!DefaultContextWindowIndex'&keyword='jlca1003'"
-        private StateRef tempStateRef2 = new StateRef();
+        private readonly StateRef tempStateRef2 = new StateRef();
+
         //UPGRADE_NOTE: Final was removed from the declaration of 'tempPPMContext1 '. "ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?index='!DefaultContextWindowIndex'&keyword='jlca1003'"
-        private PPMContext tempPPMContext1 = new PPMContext(null);
+        private readonly PPMContext tempPPMContext1 = new PPMContext(null);
+
         //UPGRADE_NOTE: Final was removed from the declaration of 'tempPPMContext2 '. "ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?index='!DefaultContextWindowIndex'&keyword='jlca1003'"
-        private PPMContext tempPPMContext2 = new PPMContext(null);
+        private readonly PPMContext tempPPMContext2 = new PPMContext(null);
+
         //UPGRADE_NOTE: Final was removed from the declaration of 'tempPPMContext3 '. "ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?index='!DefaultContextWindowIndex'&keyword='jlca1003'"
-        private PPMContext tempPPMContext3 = new PPMContext(null);
+        private readonly PPMContext tempPPMContext3 = new PPMContext(null);
+
         //UPGRADE_NOTE: Final was removed from the declaration of 'tempPPMContext4 '. "ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?index='!DefaultContextWindowIndex'&keyword='jlca1003'"
-        private PPMContext tempPPMContext4 = new PPMContext(null);
+        private readonly PPMContext tempPPMContext4 = new PPMContext(null);
+
         //UPGRADE_NOTE: Final was removed from the declaration of 'ps '. "ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?index='!DefaultContextWindowIndex'&keyword='jlca1003'"
-        private int[] ps = new int[MAX_O];
+        private readonly int[] ps = new int[MAX_O];
 
         public ModelPPM()
         {
             InitBlock();
             minContext = null;
             maxContext = null;
+
             //medContext = null;
         }
 
         private void restartModelRare()
         {
             Utility.Fill(charMask, 0);
-            subAlloc.initSubAllocator();
+            SubAlloc.initSubAllocator();
             initRL = -(maxOrder < 12 ? maxOrder : 12) - 1;
-            int addr = subAlloc.allocContext();
+            int addr = SubAlloc.allocContext();
             minContext.Address = addr;
             maxContext.Address = addr;
             minContext.setSuffix(0);
@@ -198,17 +148,17 @@ namespace SharpCompress.Compressor.PPMd.H
             minContext.NumStats = 256;
             minContext.FreqData.SummFreq = minContext.NumStats + 1;
 
-            addr = subAlloc.allocUnits(256/2);
-            foundState.Address = addr;
+            addr = SubAlloc.allocUnits(256 / 2);
+            FoundState.Address = addr;
             minContext.FreqData.SetStats(addr);
 
-            State state = new State(subAlloc.Heap);
+            State state = new State(SubAlloc.Heap);
             addr = minContext.FreqData.GetStats();
             runLength = initRL;
             prevSuccess = 0;
             for (int i = 0; i < 256; i++)
             {
-                state.Address = addr + i*State.Size;
+                state.Address = addr + i * State.Size;
                 state.Symbol = i;
                 state.Freq = 1;
                 state.SetSuccessor(0);
@@ -220,7 +170,7 @@ namespace SharpCompress.Compressor.PPMd.H
                 {
                     for (int m = 0; m < 64; m += 8)
                     {
-                        binSumm[i][k + m] = BIN_SCALE - InitBinEsc[k]/(i + 2);
+                        binSumm[i][k + m] = BIN_SCALE - InitBinEsc[k] / (i + 2);
                     }
                 }
             }
@@ -228,7 +178,7 @@ namespace SharpCompress.Compressor.PPMd.H
             {
                 for (int k = 0; k < 16; k++)
                 {
-                    SEE2Cont[i][k].Initialize(5*i + 10);
+                    SEE2Cont[i][k].Initialize(5 * i + 10);
                 }
             }
         }
@@ -237,8 +187,9 @@ namespace SharpCompress.Compressor.PPMd.H
         {
             int i, k, m, Step;
             escCount = 1;
-            this.maxOrder = MaxOrder;
+            maxOrder = MaxOrder;
             restartModelRare();
+
             // Bug Fixed
             NS2BSIndx[0] = 0;
             NS2BSIndx[1] = 2;
@@ -292,7 +243,7 @@ namespace SharpCompress.Compressor.PPMd.H
             }
             else
             {
-                if (subAlloc.GetAllocatedMemory() == 0)
+                if (SubAlloc.GetAllocatedMemory() == 0)
                 {
                     return (false);
                 }
@@ -302,24 +253,25 @@ namespace SharpCompress.Compressor.PPMd.H
                 escChar = unpackRead.Char;
                 unpackRead.PpmEscChar = escChar;
             }
-            coder = new RangeCoder(unpackRead);
+            Coder = new RangeCoder(unpackRead);
             if (reset)
             {
                 MaxOrder = (MaxOrder & 0x1f) + 1;
                 if (MaxOrder > 16)
                 {
-                    MaxOrder = 16 + (MaxOrder - 16)*3;
+                    MaxOrder = 16 + (MaxOrder - 16) * 3;
                 }
                 if (MaxOrder == 1)
                 {
-                    subAlloc.stopSubAllocator();
+                    SubAlloc.stopSubAllocator();
                     return (false);
                 }
-                subAlloc.startSubAllocator((MaxMB + 1) << 20);
+                SubAlloc.startSubAllocator((MaxMB + 1) << 20);
                 minContext = new PPMContext(Heap);
+
                 //medContext = new PPMContext(Heap);
                 maxContext = new PPMContext(Heap);
-                foundState = new State(Heap);
+                FoundState = new State(Heap);
                 dummySEE2Cont = new SEE2Context();
                 for (int i = 0; i < 25; i++)
                 {
@@ -338,15 +290,15 @@ namespace SharpCompress.Compressor.PPMd.H
             // Debug
             //subAlloc.dumpHeap();
 
-            if (minContext.Address <= subAlloc.PText || minContext.Address > subAlloc.HeapEnd)
+            if (minContext.Address <= SubAlloc.PText || minContext.Address > SubAlloc.HeapEnd)
             {
                 return (-1);
             }
 
             if (minContext.NumStats != 1)
             {
-                if (minContext.FreqData.GetStats() <= subAlloc.PText ||
-                    minContext.FreqData.GetStats() > subAlloc.HeapEnd)
+                if (minContext.FreqData.GetStats() <= SubAlloc.PText ||
+                    minContext.FreqData.GetStats() > SubAlloc.HeapEnd)
                 {
                     return (-1);
                 }
@@ -359,43 +311,45 @@ namespace SharpCompress.Compressor.PPMd.H
             {
                 minContext.decodeBinSymbol(this);
             }
-            coder.Decode();
-            while (foundState.Address == 0)
+            Coder.Decode();
+            while (FoundState.Address == 0)
             {
-                coder.AriDecNormalize();
+                Coder.AriDecNormalize();
                 do
                 {
                     orderFall++;
                     minContext.Address = minContext.getSuffix(); // =MinContext->Suffix;
-                    if (minContext.Address <= subAlloc.PText || minContext.Address > subAlloc.HeapEnd)
+                    if (minContext.Address <= SubAlloc.PText || minContext.Address > SubAlloc.HeapEnd)
                     {
                         return (-1);
                     }
-                } while (minContext.NumStats == numMasked);
+                }
+                while (minContext.NumStats == numMasked);
                 if (!minContext.decodeSymbol2(this))
                 {
                     return (-1);
                 }
-                coder.Decode();
+                Coder.Decode();
             }
-            int Symbol = foundState.Symbol;
-            if ((orderFall == 0) && foundState.GetSuccessor() > subAlloc.PText)
+            int Symbol = FoundState.Symbol;
+            if ((orderFall == 0) && FoundState.GetSuccessor() > SubAlloc.PText)
             {
                 // MinContext=MaxContext=FoundState->Successor;
-                int addr = foundState.GetSuccessor();
+                int addr = FoundState.GetSuccessor();
                 minContext.Address = addr;
                 maxContext.Address = addr;
             }
             else
             {
                 updateModel();
+
                 //this.foundState.Address=foundState.Address);//TODO just 4 debugging
                 if (escCount == 0)
                 {
                     clearMask();
                 }
             }
-            coder.AriDecNormalize(); // ARI_DEC_NORMALIZE(Coder.code,Coder.low,Coder.range,Coder.UnpackRead);
+            Coder.AriDecNormalize(); // ARI_DEC_NORMALIZE(Coder.code,Coder.low,Coder.range,Coder.UnpackRead);
             return (Symbol);
         }
 
@@ -439,7 +393,7 @@ namespace SharpCompress.Compressor.PPMd.H
             PPMContext pc = tempPPMContext1.Initialize(Heap);
             pc.Address = minContext.Address;
             PPMContext upBranch = tempPPMContext2.Initialize(Heap);
-            upBranch.Address = foundState.GetSuccessor();
+            upBranch.Address = FoundState.GetSuccessor();
 
             // STATE * p, * ps[MAX_O], ** pps=ps;
             State p = tempState2.Initialize(Heap);
@@ -449,7 +403,7 @@ namespace SharpCompress.Compressor.PPMd.H
 
             if (!Skip)
             {
-                ps[pps++] = foundState.Address; // *pps++ = FoundState;
+                ps[pps++] = FoundState.Address; // *pps++ = FoundState;
                 if (pc.getSuffix() == 0)
                 {
                     noLoop = true;
@@ -472,12 +426,13 @@ namespace SharpCompress.Compressor.PPMd.H
                         if (pc.NumStats != 1)
                         {
                             p.Address = pc.FreqData.GetStats(); // p=pc->U.Stats
-                            if (p.Symbol != foundState.Symbol)
+                            if (p.Symbol != FoundState.Symbol)
                             {
                                 do
                                 {
                                     p.IncrementAddress();
-                                } while (p.Symbol != foundState.Symbol);
+                                }
+                                while (p.Symbol != FoundState.Symbol);
                             }
                         }
                         else
@@ -492,19 +447,21 @@ namespace SharpCompress.Compressor.PPMd.H
                         break;
                     }
                     ps[pps++] = p.Address;
-                } while (pc.getSuffix() != 0);
+                }
+                while (pc.getSuffix() != 0);
             } // NO_LOOP:
             if (pps == 0)
             {
                 return pc.Address;
             }
             upState.Symbol = Heap[upBranch.Address]; // UpState.Symbol=*(byte*)
+
             // UpBranch;
             // UpState.Successor=(PPM_CONTEXT*) (((byte*) UpBranch)+1);
             upState.SetSuccessor(upBranch.Address + 1); //TODO check if +1 necessary
             if (pc.NumStats != 1)
             {
-                if (pc.Address <= subAlloc.PText)
+                if (pc.Address <= SubAlloc.PText)
                 {
                     return (0);
                 }
@@ -514,12 +471,14 @@ namespace SharpCompress.Compressor.PPMd.H
                     do
                     {
                         p.IncrementAddress();
-                    } while (p.Symbol != upState.Symbol);
+                    }
+                    while (p.Symbol != upState.Symbol);
                 }
                 int cf = p.Freq - 1;
                 int s0 = pc.FreqData.SummFreq - pc.NumStats - cf;
+
                 // UpState.Freq=1+((2*cf <= s0)?(5*cf > s0):((2*cf+3*s0-1)/(2*s0)));
-                upState.Freq = 1 + ((2*cf <= s0) ? (5*cf > s0 ? 1 : 0) : ((2*cf + 3*s0 - 1)/(2*s0)));
+                upState.Freq = 1 + ((2 * cf <= s0) ? (5 * cf > s0 ? 1 : 0) : ((2 * cf + 3 * s0 - 1) / (2 * s0)));
             }
             else
             {
@@ -534,7 +493,8 @@ namespace SharpCompress.Compressor.PPMd.H
                 {
                     return 0;
                 }
-            } while (pps != 0);
+            }
+            while (pps != 0);
             return pc.Address;
         }
 
@@ -549,7 +509,7 @@ namespace SharpCompress.Compressor.PPMd.H
             //System.out.println("ModelPPM.updateModel()");
             // STATE fs = *FoundState, *p = NULL;
             StateRef fs = tempStateRef1;
-            fs.Values = foundState;
+            fs.Values = FoundState;
             State p = tempState3.Initialize(Heap);
             State tempState = tempState4.Initialize(Heap);
 
@@ -558,7 +518,7 @@ namespace SharpCompress.Compressor.PPMd.H
 
             int ns1, ns, cf, sf, s0;
             pc.Address = minContext.getSuffix();
-            if (fs.Freq < MAX_FREQ/4 && pc.Address != 0)
+            if (fs.Freq < MAX_FREQ / 4 && pc.Address != 0)
             {
                 if (pc.NumStats != 1)
                 {
@@ -568,7 +528,8 @@ namespace SharpCompress.Compressor.PPMd.H
                         do
                         {
                             p.IncrementAddress();
-                        } while (p.Symbol != fs.Symbol);
+                        }
+                        while (p.Symbol != fs.Symbol);
                         tempState.Address = p.Address - State.Size;
                         if (p.Freq >= tempState.Freq)
                         {
@@ -593,9 +554,9 @@ namespace SharpCompress.Compressor.PPMd.H
             }
             if (orderFall == 0)
             {
-                foundState.SetSuccessor(createSuccessors(true, p));
-                minContext.Address = foundState.GetSuccessor();
-                maxContext.Address = foundState.GetSuccessor();
+                FoundState.SetSuccessor(createSuccessors(true, p));
+                minContext.Address = FoundState.GetSuccessor();
+                maxContext.Address = FoundState.GetSuccessor();
                 if (minContext.Address == 0)
                 {
                     updateModelRestart();
@@ -603,19 +564,20 @@ namespace SharpCompress.Compressor.PPMd.H
                 }
                 return;
             }
-            subAlloc.Heap[subAlloc.PText] = (byte) fs.Symbol;
-            subAlloc.incPText();
-            successor.Address = subAlloc.PText;
-            if (subAlloc.PText >= subAlloc.FakeUnitsStart)
+            SubAlloc.Heap[SubAlloc.PText] = (byte)fs.Symbol;
+            SubAlloc.incPText();
+            successor.Address = SubAlloc.PText;
+            if (SubAlloc.PText >= SubAlloc.FakeUnitsStart)
             {
                 updateModelRestart();
                 return;
             }
+
             //        // Debug
             //        subAlloc.dumpHeap();
             if (fs.GetSuccessor() != 0)
             {
-                if (fs.GetSuccessor() <= subAlloc.PText)
+                if (fs.GetSuccessor() <= SubAlloc.PText)
                 {
                     fs.SetSuccessor(createSuccessors(false, p));
                     if (fs.GetSuccessor() == 0)
@@ -629,15 +591,16 @@ namespace SharpCompress.Compressor.PPMd.H
                     successor.Address = fs.GetSuccessor();
                     if (maxContext.Address != minContext.Address)
                     {
-                        subAlloc.decPText(1);
+                        SubAlloc.decPText(1);
                     }
                 }
             }
             else
             {
-                foundState.SetSuccessor(successor.Address);
+                FoundState.SetSuccessor(successor.Address);
                 fs.SetSuccessor(minContext);
             }
+
             //        // Debug
             //        subAlloc.dumpHeap();
             ns = minContext.NumStats;
@@ -649,24 +612,25 @@ namespace SharpCompress.Compressor.PPMd.H
                     if ((ns1 & 1) == 0)
                     {
                         //System.out.println(ns1);
-                        pc.FreqData.SetStats(subAlloc.expandUnits(pc.FreqData.GetStats(), Utility.URShift(ns1, 1)));
+                        pc.FreqData.SetStats(SubAlloc.expandUnits(pc.FreqData.GetStats(), Utility.URShift(ns1, 1)));
                         if (pc.FreqData.GetStats() == 0)
                         {
                             updateModelRestart();
                             return;
                         }
                     }
+
                     // bug fixed
                     //				int sum = ((2 * ns1 < ns) ? 1 : 0) +
                     //                        2 * ((4 * ((ns1 <= ns) ? 1 : 0)) & ((pc.getFreqData()
                     //								.getSummFreq() <= 8 * ns1) ? 1 : 0));
-                    int sum = ((2*ns1 < ns) ? 1 : 0) +
-                              2*(((4*ns1 <= ns) ? 1 : 0) & ((pc.FreqData.SummFreq <= 8*ns1) ? 1 : 0));
+                    int sum = ((2 * ns1 < ns) ? 1 : 0) +
+                              2 * (((4 * ns1 <= ns) ? 1 : 0) & ((pc.FreqData.SummFreq <= 8 * ns1) ? 1 : 0));
                     pc.FreqData.IncrementSummFreq(sum);
                 }
                 else
                 {
-                    p.Address = subAlloc.allocUnits(1);
+                    p.Address = SubAlloc.allocUnits(1);
                     if (p.Address == 0)
                     {
                         updateModelRestart();
@@ -674,7 +638,7 @@ namespace SharpCompress.Compressor.PPMd.H
                     }
                     p.SetValues(pc.getOneState());
                     pc.FreqData.SetStats(p);
-                    if (p.Freq < MAX_FREQ/4 - 1)
+                    if (p.Freq < MAX_FREQ / 4 - 1)
                     {
                         p.IncrementFreq(p.Freq);
                     }
@@ -684,19 +648,19 @@ namespace SharpCompress.Compressor.PPMd.H
                     }
                     pc.FreqData.SummFreq = (p.Freq + initEsc + (ns > 3 ? 1 : 0));
                 }
-                cf = 2*fs.Freq*(pc.FreqData.SummFreq + 6);
+                cf = 2 * fs.Freq * (pc.FreqData.SummFreq + 6);
                 sf = s0 + pc.FreqData.SummFreq;
-                if (cf < 6*sf)
+                if (cf < 6 * sf)
                 {
-                    cf = 1 + (cf > sf ? 1 : 0) + (cf >= 4*sf ? 1 : 0);
+                    cf = 1 + (cf > sf ? 1 : 0) + (cf >= 4 * sf ? 1 : 0);
                     pc.FreqData.IncrementSummFreq(3);
                 }
                 else
                 {
-                    cf = 4 + (cf >= 9*sf ? 1 : 0) + (cf >= 12*sf ? 1 : 0) + (cf >= 15*sf ? 1 : 0);
+                    cf = 4 + (cf >= 9 * sf ? 1 : 0) + (cf >= 12 * sf ? 1 : 0) + (cf >= 15 * sf ? 1 : 0);
                     pc.FreqData.IncrementSummFreq(cf);
                 }
-                p.Address = pc.FreqData.GetStats() + ns1*State.Size;
+                p.Address = pc.FreqData.GetStats() + ns1 * State.Size;
                 p.SetSuccessor(successor);
                 p.Symbol = fs.Symbol;
                 p.Freq = cf;
@@ -706,6 +670,7 @@ namespace SharpCompress.Compressor.PPMd.H
             int address = fs.GetSuccessor();
             maxContext.Address = address;
             minContext.Address = address;
+
             //TODO-----debug
             //		int pos = minContext.getFreqData().getStats();
             //		State a = new State(getHeap());
@@ -713,11 +678,10 @@ namespace SharpCompress.Compressor.PPMd.H
             //		pos+=State.size;
             //		a.Address=pos);
             //--dbg end
-            return;
         }
 
         // Debug
-        public override System.String ToString()
+        public override String ToString()
         {
             StringBuilder buffer = new StringBuilder();
             buffer.Append("ModelPPM[");
@@ -738,11 +702,11 @@ namespace SharpCompress.Compressor.PPMd.H
             buffer.Append("\n  prevSuccess=");
             buffer.Append(prevSuccess);
             buffer.Append("\n  foundState=");
-            buffer.Append(foundState);
+            buffer.Append(FoundState);
             buffer.Append("\n  coder=");
-            buffer.Append(coder);
+            buffer.Append(Coder);
             buffer.Append("\n  subAlloc=");
-            buffer.Append(subAlloc);
+            buffer.Append(SubAlloc);
             buffer.Append("\n]");
             return buffer.ToString();
         }
@@ -755,18 +719,21 @@ namespace SharpCompress.Compressor.PPMd.H
         internal bool decodeInit(Stream stream, int maxOrder, int maxMemory)
         {
             if (stream != null)
-                coder = new RangeCoder(stream);
+            {
+                Coder = new RangeCoder(stream);
+            }
 
             if (maxOrder == 1)
             {
-                subAlloc.stopSubAllocator();
+                SubAlloc.stopSubAllocator();
                 return (false);
             }
-            subAlloc.startSubAllocator(maxMemory);
+            SubAlloc.startSubAllocator(maxMemory);
             minContext = new PPMContext(Heap);
+
             //medContext = new PPMContext(Heap);
             maxContext = new PPMContext(Heap);
-            foundState = new State(Heap);
+            FoundState = new State(Heap);
             dummySEE2Cont = new SEE2Context();
             for (int i = 0; i < 25; i++)
             {
@@ -782,17 +749,19 @@ namespace SharpCompress.Compressor.PPMd.H
 
         internal void nextContext()
         {
-            int addr = foundState.GetSuccessor();
-            if (orderFall == 0 && addr > subAlloc.PText)
+            int addr = FoundState.GetSuccessor();
+            if (orderFall == 0 && addr > SubAlloc.PText)
             {
                 minContext.Address = addr;
                 maxContext.Address = addr;
             }
             else
+            {
                 updateModel();
+            }
         }
 
-        public int decodeChar(LZMA.RangeCoder.Decoder decoder)
+        public int decodeChar(Decoder decoder)
         {
             if (minContext.NumStats != 1)
             {
@@ -800,11 +769,11 @@ namespace SharpCompress.Compressor.PPMd.H
                 s.Address = minContext.FreqData.GetStats();
                 int i;
                 int count, hiCnt;
-                if ((count = (int) decoder.GetThreshold((uint) minContext.FreqData.SummFreq)) < (hiCnt = s.Freq))
+                if ((count = (int)decoder.GetThreshold((uint)minContext.FreqData.SummFreq)) < (hiCnt = s.Freq))
                 {
                     byte symbol;
-                    decoder.Decode(0, (uint) s.Freq);
-                    symbol = (byte) s.Symbol;
+                    decoder.Decode(0, (uint)s.Freq);
+                    symbol = (byte)s.Symbol;
                     minContext.update1_0(this, s.Address);
                     nextContext();
                     return symbol;
@@ -817,41 +786,47 @@ namespace SharpCompress.Compressor.PPMd.H
                     if ((hiCnt += s.Freq) > count)
                     {
                         byte symbol;
-                        decoder.Decode((uint) (hiCnt - s.Freq), (uint) s.Freq);
-                        symbol = (byte) s.Symbol;
+                        decoder.Decode((uint)(hiCnt - s.Freq), (uint)s.Freq);
+                        symbol = (byte)s.Symbol;
                         minContext.update1(this, s.Address);
                         nextContext();
                         return symbol;
                     }
-                } while (--i > 0);
+                }
+                while (--i > 0);
                 if (count >= minContext.FreqData.SummFreq)
+                {
                     return -2;
-                hiBitsFlag = HB2Flag[foundState.Symbol];
-                decoder.Decode((uint) hiCnt, (uint) (minContext.FreqData.SummFreq - hiCnt));
+                }
+                hiBitsFlag = HB2Flag[FoundState.Symbol];
+                decoder.Decode((uint)hiCnt, (uint)(minContext.FreqData.SummFreq - hiCnt));
                 for (i = 0; i < 256; i++)
+                {
                     charMask[i] = -1;
+                }
                 charMask[s.Symbol] = 0;
                 i = minContext.NumStats - 1;
                 do
                 {
                     s.DecrementAddress();
                     charMask[s.Symbol] = 0;
-                } while (--i > 0);
+                }
+                while (--i > 0);
             }
             else
             {
                 State rs = tempState1.Initialize(Heap);
                 rs.Address = minContext.getOneState().Address;
-                hiBitsFlag = getHB2Flag()[foundState.Symbol];
+                hiBitsFlag = getHB2Flag()[FoundState.Symbol];
                 int off1 = rs.Freq - 1;
                 int off2 = minContext.getArrayIndex(this, rs);
                 int bs = binSumm[off1][off2];
-                if (decoder.DecodeBit((uint) bs, 14) == 0)
+                if (decoder.DecodeBit((uint)bs, 14) == 0)
                 {
                     byte symbol;
                     binSumm[off1][off2] = (bs + INTERVAL - minContext.getMean(bs, PERIOD_BITS, 2)) & 0xFFFF;
-                    foundState.Address = rs.Address;
-                    symbol = (byte) rs.Symbol;
+                    FoundState.Address = rs.Address;
+                    symbol = (byte)rs.Symbol;
                     rs.IncrementFreq((rs.Freq < 128) ? 1 : 0);
                     prevSuccess = 1;
                     incRunLength(1);
@@ -863,7 +838,9 @@ namespace SharpCompress.Compressor.PPMd.H
                 initEsc = PPMContext.ExpEscape[Utility.URShift(bs, 10)];
                 int i;
                 for (i = 0; i < 256; i++)
+                {
                     charMask[i] = -1;
+                }
                 charMask[rs.Symbol] = 0;
                 prevSuccess = 0;
             }
@@ -878,9 +855,12 @@ namespace SharpCompress.Compressor.PPMd.H
                 {
                     orderFall++;
                     minContext.Address = minContext.getSuffix();
-                    if (minContext.Address <= subAlloc.PText || minContext.Address > subAlloc.HeapEnd)
+                    if (minContext.Address <= SubAlloc.PText || minContext.Address > SubAlloc.HeapEnd)
+                    {
                         return -1;
-                } while (minContext.NumStats == numMasked);
+                    }
+                }
+                while (minContext.NumStats == numMasked);
                 hiCnt = 0;
                 s.Address = minContext.FreqData.GetStats();
                 i = 0;
@@ -892,11 +872,12 @@ namespace SharpCompress.Compressor.PPMd.H
                     minContext.ps[i] = s.Address;
                     s.IncrementAddress();
                     i -= k;
-                } while (i != num);
+                }
+                while (i != num);
 
                 see = minContext.makeEscFreq(this, numMasked, out freqSum);
                 freqSum += hiCnt;
-                count = (int) decoder.GetThreshold((uint) freqSum);
+                count = (int)decoder.GetThreshold((uint)freqSum);
 
                 if (count < hiCnt)
                 {
@@ -904,24 +885,30 @@ namespace SharpCompress.Compressor.PPMd.H
                     State ps = tempState2.Initialize(Heap);
                     for (hiCnt = 0, i = 0, ps.Address = minContext.ps[i];
                          (hiCnt += ps.Freq) <= count;
-                         i++, ps.Address = minContext.ps[i]) ;
+                         i++, ps.Address = minContext.ps[i])
+                    {
+                        ;
+                    }
                     s.Address = ps.Address;
-                    decoder.Decode((uint) (hiCnt - s.Freq), (uint) s.Freq);
+                    decoder.Decode((uint)(hiCnt - s.Freq), (uint)s.Freq);
                     see.update();
-                    symbol = (byte) s.Symbol;
+                    symbol = (byte)s.Symbol;
                     minContext.update2(this, s.Address);
                     updateModel();
                     return symbol;
                 }
                 if (count >= freqSum)
+                {
                     return -2;
-                decoder.Decode((uint) hiCnt, (uint) (freqSum - hiCnt));
+                }
+                decoder.Decode((uint)hiCnt, (uint)(freqSum - hiCnt));
                 see.Summ = see.Summ + freqSum;
                 do
                 {
                     s.Address = minContext.ps[--i];
                     charMask[s.Symbol] = 0;
-                } while (i != 0);
+                }
+                while (i != 0);
             }
         }
     }

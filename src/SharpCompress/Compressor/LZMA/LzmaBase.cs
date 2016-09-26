@@ -21,24 +21,33 @@ namespace SharpCompress.Compressor.LZMA
 
             public void UpdateChar()
             {
-                if (Index < 4) Index = 0;
-                else if (Index < 10) Index -= 3;
-                else Index -= 6;
+                if (Index < 4)
+                {
+                    Index = 0;
+                }
+                else if (Index < 10)
+                {
+                    Index -= 3;
+                }
+                else
+                {
+                    Index -= 6;
+                }
             }
 
             public void UpdateMatch()
             {
-                Index = (uint) (Index < 7 ? 7 : 10);
+                Index = (uint)(Index < 7 ? 7 : 10);
             }
 
             public void UpdateRep()
             {
-                Index = (uint) (Index < 7 ? 8 : 11);
+                Index = (uint)(Index < 7 ? 8 : 11);
             }
 
             public void UpdateShortRep()
             {
-                Index = (uint) (Index < 7 ? 9 : 11);
+                Index = (uint)(Index < 7 ? 9 : 11);
             }
 
             public bool IsCharState()
@@ -49,6 +58,7 @@ namespace SharpCompress.Compressor.LZMA
 
         public const int kNumPosSlotBits = 6;
         public const int kDicLogSizeMin = 0;
+
         // public const int kDicLogSizeMax = 30;
         // public const uint kDistTableSizeMax = kDicLogSizeMax * 2;
 
@@ -61,8 +71,10 @@ namespace SharpCompress.Compressor.LZMA
         {
             len -= kMatchMinLen;
             if (len < kNumLenToPosStates)
+            {
                 return len;
-            return (uint) (kNumLenToPosStates - 1);
+            }
+            return kNumLenToPosStates - 1;
         }
 
         public const int kNumAlignBits = 4;
@@ -73,7 +85,7 @@ namespace SharpCompress.Compressor.LZMA
         public const uint kEndPosModelIndex = 14;
         public const uint kNumPosModels = kEndPosModelIndex - kStartPosModelIndex;
 
-        public const uint kNumFullDistances = 1 << ((int) kEndPosModelIndex/2);
+        public const uint kNumFullDistances = 1 << ((int)kEndPosModelIndex / 2);
 
         public const uint kNumLitPosStatesBitsEncodingMax = 4;
         public const uint kNumLitContextBitsMax = 8;

@@ -22,19 +22,19 @@ namespace SharpCompress.Writer.Tar
                 case CompressionType.None:
                     break;
                 case CompressionType.BZip2:
-                    {
-                        destination = new BZip2Stream(destination, CompressionMode.Compress, leaveOpen);
-                    }
+                {
+                    destination = new BZip2Stream(destination, CompressionMode.Compress, leaveOpen);
+                }
                     break;
                 case CompressionType.GZip:
-                    {
-                        destination = new GZipStream(destination, CompressionMode.Compress, leaveOpen);
-                    }
+                {
+                    destination = new GZipStream(destination, CompressionMode.Compress, leaveOpen);
+                }
                     break;
                 default:
-                    {
-                        throw new InvalidFormatException("Tar does not support compression: " + compressionInfo.Type);
-                    }
+                {
+                    throw new InvalidFormatException("Tar does not support compression: " + compressionInfo.Type);
+                }
             }
             InitalizeStream(destination, !leaveOpen);
         }
@@ -50,7 +50,9 @@ namespace SharpCompress.Writer.Tar
 
             int pos = filename.IndexOf(':');
             if (pos >= 0)
+            {
                 filename = filename.Remove(0, pos + 1);
+            }
 
             return filename.Trim('/');
         }
@@ -64,7 +66,6 @@ namespace SharpCompress.Writer.Tar
 
             long realSize = size ?? source.Length;
 
-
             TarHeader header = new TarHeader();
             header.LastModifiedTime = modificationTime ?? TarHeader.Epoch;
             header.Name = NormalizeFilename(filename);
@@ -76,7 +77,7 @@ namespace SharpCompress.Writer.Tar
 
         private void PadTo512(long size, bool forceZeros)
         {
-            int zeros = (int) size%512;
+            int zeros = (int)size % 512;
             if (zeros == 0 && !forceZeros)
             {
                 return;

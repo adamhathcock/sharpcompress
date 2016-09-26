@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using SharpCompress.Common;
@@ -24,10 +23,7 @@ namespace SharpCompress.Reader.Rar
 
         internal abstract void ValidateArchive(RarVolume archive);
 
-        public override RarVolume Volume
-        {
-            get { return volume; }
-        }
+        public override RarVolume Volume { get { return volume; } }
 
         #region Open
 
@@ -74,8 +70,8 @@ namespace SharpCompress.Reader.Rar
         protected override EntryStream GetEntryStream()
         {
             return CreateEntryStream(new RarStream(pack, Entry.FileHeader,
-                                                 new MultiVolumeReadOnlyStream(
-                                                     CreateFilePartEnumerableForCurrentEntry().Cast<RarFilePart>(), this)));
+                                                   new MultiVolumeReadOnlyStream(
+                                                                                 CreateFilePartEnumerableForCurrentEntry().Cast<RarFilePart>(), this)));
         }
 
         public static RarReader Open(Stream stream, string password, Options options = Options.KeepStreamsOpen)

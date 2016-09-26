@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using SharpCompress.Common.Tar.Headers;
 using SharpCompress.Compressor;
@@ -20,10 +21,7 @@ namespace SharpCompress.Common.GZip
 
         internal DateTime? DateModified { get; private set; }
 
-        internal override string FilePartName
-        {
-            get { return name; }
-        }
+        internal override string FilePartName { get { return name; } }
 
         internal override Stream GetCompressedStream()
         {
@@ -43,13 +41,19 @@ namespace SharpCompress.Common.GZip
 
             // workitem 8501: handle edge case (decompress empty stream)
             if (n == 0)
+            {
                 return;
+            }
 
             if (n != 10)
+            {
                 throw new ZlibException("Not a valid GZIP stream.");
+            }
 
             if (header[0] != 0x1F || header[1] != 0x8B || header[2] != 8)
+            {
                 throw new ZlibException("Bad GZIP header.");
+            }
 
             Int32 timet = DataConverter.LittleEndian.GetInt32(header, 4);
             DateModified = TarHeader.Epoch.AddSeconds(timet);
@@ -58,7 +62,7 @@ namespace SharpCompress.Common.GZip
                 // read and discard extra field
                 n = stream.Read(header, 0, 2); // 2-byte length field
 
-                Int16 extraLength = (Int16) (header[0] + header[1]*256);
+                Int16 extraLength = (Int16)(header[0] + header[1] * 256);
                 byte[] extra = new byte[extraLength];
                 n = stream.Read(extra, 0, extra.Length);
                 if (n != extraLength)
@@ -67,18 +71,23 @@ namespace SharpCompress.Common.GZip
                 }
             }
             if ((header[3] & 0x08) == 0x08)
+            {
                 name = ReadZeroTerminatedString(stream);
+            }
             if ((header[3] & 0x10) == 0x010)
+            {
                 ReadZeroTerminatedString(stream);
+            }
             if ((header[3] & 0x02) == 0x02)
+            {
                 stream.ReadByte(); // CRC16, ignore
+            }
         }
-
 
         private static string ReadZeroTerminatedString(Stream stream)
         {
             byte[] buf1 = new byte[1];
-            var list = new System.Collections.Generic.List<byte>();
+            var list = new List<byte>();
             bool done = false;
             do
             {
@@ -96,7 +105,8 @@ namespace SharpCompress.Common.GZip
                 {
                     list.Add(buf1[0]);
                 }
-            } while (!done);
+            }
+            while (!done);
             byte[] a = list.ToArray();
             return ArchiveEncoding.Default.GetString(a, 0, a.Length);
         }

@@ -19,12 +19,10 @@ namespace SharpCompress.Archive.Tar
         }
 
         #region IArchiveEntry Members
-        public IArchive Archive { get; private set; }
 
-        public bool IsComplete
-        {
-            get { return true; }
-        }
+        public IArchive Archive { get; }
+
+        public bool IsComplete { get { return true; } }
 
         #endregion
     }

@@ -13,12 +13,12 @@ namespace SharpCompress.Common.Rar.Headers
         ProtectHeader = 0x78,
         SignHeader = 0x79,
         NewSubHeader = 0x7a,
-        EndArchiveHeader = 0x7b,
+        EndArchiveHeader = 0x7b
     }
 
     internal enum HeaderFlags : short
     {
-        LONG_BLOCK = -0x8000,
+        LONG_BLOCK = -0x8000
     }
 
     [Flags]
@@ -33,7 +33,7 @@ namespace SharpCompress.Common.Rar.Headers
         PROTECT = 0x0040,
         PASSWORD = 0x0080,
         FIRSTVOLUME = 0x0100,
-        ENCRYPTVER = 0x0200,
+        ENCRYPTVER = 0x0200
     }
 
     internal enum HostOS
@@ -70,9 +70,8 @@ namespace SharpCompress.Common.Rar.Headers
         SALT = 0x0400,
         VERSION = 0x0800,
         EXTTIME = 0x1000,
-        EXTFLAGS = 0x2000,
+        EXTFLAGS = 0x2000
     }
-
 
     [Flags]
     internal enum EndArchiveFlags
@@ -80,6 +79,6 @@ namespace SharpCompress.Common.Rar.Headers
         EARC_NEXT_VOLUME = 0x0001,
         EARC_DATACRC = 0x0002,
         EARC_REVSPACE = 0x0004,
-        EARC_VOLNUMBER = 0x0008,
+        EARC_VOLNUMBER = 0x0008
     }
 }

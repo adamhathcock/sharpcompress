@@ -13,19 +13,9 @@ namespace SharpCompress.Compressor.PPMd.H
         {
         }
 
-        internal int Symbol
-        {
-            get { return Memory[Address] & 0xff; }
+        internal int Symbol { get { return Memory[Address] & 0xff; } set { Memory[Address] = (byte)value; } }
 
-            set { Memory[Address] = (byte) value; }
-        }
-
-        internal int Freq
-        {
-            get { return Memory[Address + 1] & 0xff; }
-
-            set { Memory[Address + 1] = (byte) value; }
-        }
+        internal int Freq { get { return Memory[Address + 1] & 0xff; } set { Memory[Address + 1] = (byte)value; } }
 
         internal State Initialize(byte[] mem)
         {
@@ -34,7 +24,7 @@ namespace SharpCompress.Compressor.PPMd.H
 
         internal void IncrementFreq(int dFreq)
         {
-            Memory[Address + 1] = (byte) (Memory[Address + 1] + dFreq);
+            Memory[Address + 1] = (byte)(Memory[Address + 1] + dFreq);
         }
 
         internal int GetSuccessor()
@@ -87,7 +77,7 @@ namespace SharpCompress.Compressor.PPMd.H
             }
         }
 
-        public override System.String ToString()
+        public override String ToString()
         {
             StringBuilder buffer = new StringBuilder();
             buffer.Append("State[");

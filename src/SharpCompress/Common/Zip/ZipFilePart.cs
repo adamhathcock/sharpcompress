@@ -18,17 +18,13 @@ namespace SharpCompress.Common.Zip
         {
             Header = header;
             header.Part = this;
-            this.BaseStream = stream;
+            BaseStream = stream;
         }
 
         internal Stream BaseStream { get; private set; }
         internal ZipFileEntry Header { get; set; }
 
-
-        internal override string FilePartName
-        {
-            get { return Header.Name; }
-        }
+        internal override string FilePartName { get { return Header.Name; } }
 
         internal override Stream GetCompressedStream()
         {
@@ -55,79 +51,76 @@ namespace SharpCompress.Common.Zip
 
         protected abstract Stream CreateBaseStream();
 
-        protected bool LeaveStreamOpen
-        {
-            get { return FlagUtility.HasFlag(Header.Flags, HeaderFlags.UsePostDataDescriptor); }
-        }
+        protected bool LeaveStreamOpen { get { return FlagUtility.HasFlag(Header.Flags, HeaderFlags.UsePostDataDescriptor); } }
 
         protected Stream CreateDecompressionStream(Stream stream)
         {
             switch (Header.CompressionMethod)
             {
                 case ZipCompressionMethod.None:
-                    {
-                        return stream;
-                    }
+                {
+                    return stream;
+                }
                 case ZipCompressionMethod.Deflate:
-                    {
-                        return new DeflateStream(stream, CompressionMode.Decompress);
-                    }
+                {
+                    return new DeflateStream(stream, CompressionMode.Decompress);
+                }
                 case ZipCompressionMethod.BZip2:
-                    {
-                        return new BZip2Stream(stream, CompressionMode.Decompress);
-                    }
+                {
+                    return new BZip2Stream(stream, CompressionMode.Decompress);
+                }
                 case ZipCompressionMethod.LZMA:
+                {
+                    if (FlagUtility.HasFlag(Header.Flags, HeaderFlags.Encrypted))
                     {
-                        if (FlagUtility.HasFlag(Header.Flags, HeaderFlags.Encrypted))
-                        {
-                            throw new NotSupportedException("LZMA with pkware encryption.");
-                        }
-                        var reader = new BinaryReader(stream);
-                        reader.ReadUInt16(); //LZMA version
-                        var props = new byte[reader.ReadUInt16()];
-                        reader.Read(props, 0, props.Length);
-                        return new LzmaStream(props, stream,
-                                              Header.CompressedSize > 0 ? Header.CompressedSize - 4 - props.Length : -1,
-                                              FlagUtility.HasFlag(Header.Flags, HeaderFlags.Bit1)
-                                                  ? -1
-                                                  : (long)Header.UncompressedSize);
+                        throw new NotSupportedException("LZMA with pkware encryption.");
                     }
+                    var reader = new BinaryReader(stream);
+                    reader.ReadUInt16(); //LZMA version
+                    var props = new byte[reader.ReadUInt16()];
+                    reader.Read(props, 0, props.Length);
+                    return new LzmaStream(props, stream,
+                                          Header.CompressedSize > 0 ? Header.CompressedSize - 4 - props.Length : -1,
+                                          FlagUtility.HasFlag(Header.Flags, HeaderFlags.Bit1)
+                                              ? -1
+                                              : (long)Header.UncompressedSize);
+                }
                 case ZipCompressionMethod.PPMd:
-                    {
-                        var props = new byte[2];
-                        stream.Read(props, 0, props.Length);
-                        return new PpmdStream(new PpmdProperties(props), stream, false);
-                    }
+                {
+                    var props = new byte[2];
+                    stream.Read(props, 0, props.Length);
+                    return new PpmdStream(new PpmdProperties(props), stream, false);
+                }
                 case ZipCompressionMethod.WinzipAes:
+                {
+                    ExtraData data = Header.Extra.Where(x => x.Type == ExtraDataType.WinZipAes).SingleOrDefault();
+                    if (data == null)
                     {
-                        ExtraData data = Header.Extra.Where(x => x.Type == ExtraDataType.WinZipAes).SingleOrDefault();
-                        if (data == null)
-                        {
-                            throw new InvalidFormatException("No Winzip AES extra data found.");
-                        }
-                        if (data.Length != 7)
-                        {
-                            throw new InvalidFormatException("Winzip data length is not 7.");
-                        }
-                        ushort method = DataConverter.LittleEndian.GetUInt16(data.DataBytes, 0);
-
-                        if (method != 0x01 && method != 0x02)
-                        {
-                            throw new InvalidFormatException("Unexpected vendor version number for WinZip AES metadata");
-                        }
-
-                        ushort vendorId = DataConverter.LittleEndian.GetUInt16(data.DataBytes, 2);
-                        if (vendorId != 0x4541)
-                        {
-                            throw new InvalidFormatException("Unexpected vendor ID for WinZip AES metadata");
-                        }
-                        Header.CompressionMethod = (ZipCompressionMethod)DataConverter.LittleEndian.GetUInt16(data.DataBytes, 5);
-                        return CreateDecompressionStream(stream);
+                        throw new InvalidFormatException("No Winzip AES extra data found.");
                     }
+                    if (data.Length != 7)
+                    {
+                        throw new InvalidFormatException("Winzip data length is not 7.");
+                    }
+                    ushort method = DataConverter.LittleEndian.GetUInt16(data.DataBytes, 0);
+
+                    if (method != 0x01 && method != 0x02)
+                    {
+                        throw new InvalidFormatException("Unexpected vendor version number for WinZip AES metadata");
+                    }
+
+                    ushort vendorId = DataConverter.LittleEndian.GetUInt16(data.DataBytes, 2);
+                    if (vendorId != 0x4541)
+                    {
+                        throw new InvalidFormatException("Unexpected vendor ID for WinZip AES metadata");
+                    }
+                    Header.CompressionMethod = (ZipCompressionMethod)DataConverter.LittleEndian.GetUInt16(data.DataBytes, 5);
+                    return CreateDecompressionStream(stream);
+                }
                 default:
-                    {
-                        throw new NotSupportedException("CompressionMethod: " + Header.CompressionMethod);
-                    }
+                {
+                    throw new NotSupportedException("CompressionMethod: " + Header.CompressionMethod);
+                }
             }
         }
 
@@ -137,7 +130,7 @@ namespace SharpCompress.Common.Zip
 #if !NO_CRYPTO
  && ((Header.PkwareTraditionalEncryptionData != null)
                     || (Header.WinzipAesEncryptionData != null)))
-#else 
+#else
                 && (Header.PkwareTraditionalEncryptionData != null))
 #endif
             {

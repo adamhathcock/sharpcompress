@@ -35,6 +35,7 @@ namespace SharpCompress.Common.Rar.Headers
                 return null;
             }
         }
+
         protected virtual void ReadFromReader(MarkingBinaryReader reader)
         {
             HeadCRC = reader.ReadInt16();

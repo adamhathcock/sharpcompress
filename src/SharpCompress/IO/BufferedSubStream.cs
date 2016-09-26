@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 
 namespace SharpCompress.IO
 {
@@ -7,7 +8,7 @@ namespace SharpCompress.IO
         private long position;
         private int cacheOffset;
         private int cacheLength;
-        private byte[] cache;
+        private readonly byte[] cache;
 
         public BufferedSubStream(Stream stream, long origin, long bytesToRead)
         {
@@ -27,43 +28,29 @@ namespace SharpCompress.IO
 
         private long BytesLeftToRead { get; set; }
 
-        public Stream Stream { get; private set; }
+        public Stream Stream { get; }
 
-        public override bool CanRead
-        {
-            get { return true; }
-        }
+        public override bool CanRead { get { return true; } }
 
-        public override bool CanSeek
-        {
-            get { return false; }
-        }
+        public override bool CanSeek { get { return false; } }
 
-        public override bool CanWrite
-        {
-            get { return false; }
-        }
+        public override bool CanWrite { get { return false; } }
 
         public override void Flush()
         {
-            throw new System.NotSupportedException();
+            throw new NotSupportedException();
         }
 
-        public override long Length
-        {
-            get { throw new System.NotSupportedException(); }
-        }
+        public override long Length { get { throw new NotSupportedException(); } }
 
-        public override long Position
-        {
-            get { throw new System.NotSupportedException(); }
-            set { throw new System.NotSupportedException(); }
-        }
+        public override long Position { get { throw new NotSupportedException(); } set { throw new NotSupportedException(); } }
 
         public override int Read(byte[] buffer, int offset, int count)
         {
             if (count > BytesLeftToRead)
+            {
                 count = (int)BytesLeftToRead;
+            }
 
             if (count > 0)
             {
@@ -76,9 +63,11 @@ namespace SharpCompress.IO
                 }
 
                 if (count > cacheLength)
+                {
                     count = cacheLength;
+                }
 
-                System.Buffer.BlockCopy(cache, cacheOffset, buffer, offset, count);
+                Buffer.BlockCopy(cache, cacheOffset, buffer, offset, count);
                 cacheOffset += count;
                 cacheLength -= count;
                 BytesLeftToRead -= count;
@@ -89,17 +78,17 @@ namespace SharpCompress.IO
 
         public override long Seek(long offset, SeekOrigin origin)
         {
-            throw new System.NotSupportedException();
+            throw new NotSupportedException();
         }
 
         public override void SetLength(long value)
         {
-            throw new System.NotSupportedException();
+            throw new NotSupportedException();
         }
 
         public override void Write(byte[] buffer, int offset, int count)
         {
-            throw new System.NotSupportedException();
+            throw new NotSupportedException();
         }
     }
 }

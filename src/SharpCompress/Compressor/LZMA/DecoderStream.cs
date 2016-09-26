@@ -8,36 +8,20 @@ namespace SharpCompress.Compressor.LZMA
 {
     internal abstract class DecoderStream2 : Stream
     {
-        public override bool CanRead
-        {
-            get { return true; }
-        }
+        public override bool CanRead { get { return true; } }
 
-        public override bool CanSeek
-        {
-            get { return false; }
-        }
+        public override bool CanSeek { get { return false; } }
 
-        public override bool CanWrite
-        {
-            get { return false; }
-        }
+        public override bool CanWrite { get { return false; } }
 
         public override void Flush()
         {
             throw new NotSupportedException();
         }
 
-        public override long Length
-        {
-            get { throw new NotSupportedException(); }
-        }
+        public override long Length { get { throw new NotSupportedException(); } }
 
-        public override long Position
-        {
-            get { throw new NotSupportedException(); }
-            set { throw new NotSupportedException(); }
-        }
+        public override long Position { get { throw new NotSupportedException(); } set { throw new NotSupportedException(); } }
 
         public override long Seek(long offset, SeekOrigin origin)
         {
@@ -64,7 +48,9 @@ namespace SharpCompress.Compressor.LZMA
                 var coderInfo = folderInfo.Coders[coderIndex];
                 outStreamIndex -= coderInfo.NumOutStreams;
                 if (outStreamIndex < 0)
+                {
                     return coderIndex;
+                }
             }
 
             throw new InvalidOperationException("Could not link output stream to coder.");
@@ -88,7 +74,9 @@ namespace SharpCompress.Compressor.LZMA
                     if (folderInfo.FindBindPairForOutStream(outStreamIndex) < 0)
                     {
                         if (foundPrimaryOutStream)
+                        {
                             throw new NotSupportedException("Multiple output streams.");
+                        }
 
                         foundPrimaryOutStream = true;
                         primaryCoderIndex = coderIndex;
@@ -98,7 +86,9 @@ namespace SharpCompress.Compressor.LZMA
             }
 
             if (!foundPrimaryOutStream)
+            {
                 throw new NotSupportedException("No output stream.");
+            }
         }
 
         private static Stream CreateDecoderStream(Stream[] packStreams, long[] packSizes, Stream[] outStreams,
@@ -106,15 +96,21 @@ namespace SharpCompress.Compressor.LZMA
         {
             var coderInfo = folderInfo.Coders[coderIndex];
             if (coderInfo.NumOutStreams != 1)
+            {
                 throw new NotSupportedException("Multiple output streams are not supported.");
+            }
 
             int inStreamId = 0;
             for (int i = 0; i < coderIndex; i++)
+            {
                 inStreamId += folderInfo.Coders[i].NumInStreams;
+            }
 
             int outStreamId = 0;
             for (int i = 0; i < coderIndex; i++)
+            {
                 outStreamId += folderInfo.Coders[i].NumOutStreams;
+            }
 
             Stream[] inStreams = new Stream[coderInfo.NumInStreams];
 
@@ -126,15 +122,20 @@ namespace SharpCompress.Compressor.LZMA
                     int pairedOutIndex = folderInfo.BindPairs[bindPairIndex].OutIndex;
 
                     if (outStreams[pairedOutIndex] != null)
+                    {
                         throw new NotSupportedException("Overlapping stream bindings are not supported.");
+                    }
 
                     int otherCoderIndex = FindCoderIndexForOutStreamIndex(folderInfo, pairedOutIndex);
                     inStreams[i] = CreateDecoderStream(packStreams, packSizes, outStreams, folderInfo, otherCoderIndex,
                                                        pass);
+
                     //inStreamSizes[i] = folderInfo.UnpackSizes[pairedOutIndex];
 
                     if (outStreams[pairedOutIndex] != null)
+                    {
                         throw new NotSupportedException("Overlapping stream bindings are not supported.");
+                    }
 
                     outStreams[pairedOutIndex] = inStreams[i];
                 }
@@ -142,9 +143,12 @@ namespace SharpCompress.Compressor.LZMA
                 {
                     int index = folderInfo.FindPackStreamArrayIndex(inStreamId);
                     if (index < 0)
+                    {
                         throw new NotSupportedException("Could not find input stream binding.");
+                    }
 
                     inStreams[i] = packStreams[index];
+
                     //inStreamSizes[i] = packSizes[index];
                 }
             }
@@ -157,7 +161,9 @@ namespace SharpCompress.Compressor.LZMA
                                                    IPasswordProvider pass)
         {
             if (!folderInfo.CheckStructure())
+            {
                 throw new NotSupportedException("Unsupported stream binding structure.");
+            }
 
             Stream[] inStreams = new Stream[folderInfo.PackStreams.Count];
             for (int j = 0; j < folderInfo.PackStreams.Count; j++)

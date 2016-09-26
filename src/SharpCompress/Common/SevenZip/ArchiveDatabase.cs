@@ -80,15 +80,19 @@ namespace SharpCompress.Common.SevenZip
                 {
                     // v3.13 incorrectly worked with empty folders
                     // v4.07: Loop for skipping empty folders
-                    for (; ; )
+                    for (;;)
                     {
                         if (folderIndex >= Folders.Count)
+                        {
                             throw new InvalidOperationException();
+                        }
 
                         FolderStartFileIndex.Add(i); // check it
 
                         if (NumUnpackStreamsVector[folderIndex] != 0)
+                        {
                             break;
+                        }
 
                         folderIndex++;
                     }
@@ -97,7 +101,9 @@ namespace SharpCompress.Common.SevenZip
                 FileIndexToFolderIndexMap.Add(folderIndex);
 
                 if (emptyStream)
+                {
                     continue;
+                }
 
                 indexInFolder++;
 
@@ -128,7 +134,9 @@ namespace SharpCompress.Common.SevenZip
 
             long size = 0;
             for (int i = 0; i < folder.PackStreams.Count; i++)
+            {
                 size += PackSizes[packStreamIndex + i];
+            }
 
             return size;
         }
@@ -139,7 +147,9 @@ namespace SharpCompress.Common.SevenZip
             long folderStartPackPos = GetFolderStreamPos(folder, 0);
             List<long> packSizes = new List<long>();
             for (int j = 0; j < folder.PackStreams.Count; j++)
+            {
                 packSizes.Add(PackSizes[packStreamIndex + j]);
+            }
 
             return DecoderStreamHelper.CreateDecoderStream(stream, folderStartPackPos, packSizes.ToArray(), folder, pw);
         }
@@ -153,8 +163,12 @@ namespace SharpCompress.Common.SevenZip
         {
             int folderIndex = FileIndexToFolderIndexMap[fileIndex];
             if (folderIndex != -1)
+            {
                 if (FolderStartFileIndex[folderIndex] == fileIndex)
+                {
                     return GetFolderFullPackSize(folderIndex);
+                }
+            }
             return 0;
         }
     }

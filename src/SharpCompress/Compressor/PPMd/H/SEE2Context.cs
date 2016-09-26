@@ -1,3 +1,4 @@
+using System;
 using System.Text;
 
 namespace SharpCompress.Compressor.PPMd.H
@@ -14,26 +15,11 @@ namespace SharpCompress.Compressor.PPMd.H
             }
         }
 
-        public virtual int Count
-        {
-            get { return count; }
+        public virtual int Count { get { return count; } set { count = value & 0xff; } }
 
-            set { this.count = value & 0xff; }
-        }
+        public virtual int Shift { get { return shift; } set { shift = value & 0xff; } }
 
-        public virtual int Shift
-        {
-            get { return shift; }
-
-            set { this.shift = value & 0xff; }
-        }
-
-        public virtual int Summ
-        {
-            get { return summ; }
-
-            set { this.summ = value & 0xffff; }
-        }
+        public virtual int Summ { get { return summ; } set { summ = value & 0xffff; } }
 
         public const int size = 4;
 
@@ -70,7 +56,7 @@ namespace SharpCompress.Compressor.PPMd.H
             Summ = Summ + dSumm;
         }
 
-        public override System.String ToString()
+        public override String ToString()
         {
             StringBuilder buffer = new StringBuilder();
             buffer.Append("SEE2Context[");

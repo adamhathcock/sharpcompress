@@ -1,5 +1,4 @@
-﻿using System;
-using System.IO;
+﻿using System.IO;
 using SharpCompress.Common;
 
 namespace SharpCompress.Archive
@@ -7,7 +6,7 @@ namespace SharpCompress.Archive
     public static class IWritableArchiveExtensions
     {
         public static void SaveTo(this IWritableArchive writableArchive,
-                                                   Stream stream, CompressionType compressionType)
+                                  Stream stream, CompressionType compressionType)
         {
             writableArchive.SaveTo(stream, new CompressionInfo {Type = compressionType});
         }

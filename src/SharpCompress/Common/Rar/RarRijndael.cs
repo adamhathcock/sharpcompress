@@ -1,4 +1,5 @@
-﻿#if !NO_CRYPTO
+﻿
+#if !NO_CRYPTO
 using System;
 using System.Collections.Generic;
 using System.Linq;

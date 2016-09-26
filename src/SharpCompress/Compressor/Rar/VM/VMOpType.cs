@@ -5,6 +5,6 @@ namespace SharpCompress.Compressor.Rar.VM
         VM_OPREG = 0,
         VM_OPINT = 1,
         VM_OPREGMEM = 2,
-        VM_OPNONE = 3,
+        VM_OPNONE = 3
     }
 }

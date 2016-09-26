@@ -16,7 +16,7 @@
 
         public CMethodId(ulong id)
         {
-            this.Id = id;
+            Id = id;
         }
 
         public override int GetHashCode()
@@ -26,7 +26,7 @@
 
         public override bool Equals(object obj)
         {
-            return obj is CMethodId && (CMethodId) obj == this;
+            return obj is CMethodId && (CMethodId)obj == this;
         }
 
         public bool Equals(CMethodId other)
@@ -48,7 +48,9 @@
         {
             int bytes = 0;
             for (ulong value = Id; value != 0; value >>= 8)
+            {
                 bytes++;
+            }
             return bytes;
         }
     }

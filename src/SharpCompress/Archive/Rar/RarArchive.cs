@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -14,20 +13,16 @@ namespace SharpCompress.Archive.Rar
 {
     public class RarArchive : AbstractArchive<RarArchiveEntry, RarVolume>
     {
-        private readonly Unpack unpack = new Unpack();
-
-        internal Unpack Unpack
-        {
-            get { return unpack; }
-        }
+        internal Unpack Unpack { get; } = new Unpack();
 
 #if !NO_FILE
-        /// <summary>
-        /// Constructor with a FileInfo object to an existing file.
-        /// </summary>
-        /// <param name="fileInfo"></param>
-        /// <param name="options"></param>
-        /// <param name="password"></param>
+
+/// <summary>
+/// Constructor with a FileInfo object to an existing file.
+/// </summary>
+/// <param name="fileInfo"></param>
+/// <param name="options"></param>
+/// <param name="password"></param>
         internal RarArchive(FileInfo fileInfo, Options options, string password)
             : base(ArchiveType.Rar, fileInfo, options, password)
         {
@@ -67,20 +62,18 @@ namespace SharpCompress.Archive.Rar
             return RarReader.Open(stream, Password);
         }
 
-        public override bool IsSolid
-        {
-            get { return Volumes.First().IsSolidArchive; }
-        }
+        public override bool IsSolid { get { return Volumes.First().IsSolidArchive; } }
 
         #region Creation
 
 #if !NO_FILE
-        /// <summary>
-        /// Constructor expects a filepath to an existing file.
-        /// </summary>
-        /// <param name="filePath"></param>
-        /// <param name="options"></param>
-        /// <param name="password"></param>
+
+/// <summary>
+/// Constructor expects a filepath to an existing file.
+/// </summary>
+/// <param name="filePath"></param>
+/// <param name="options"></param>
+/// <param name="password"></param>
         public static RarArchive Open(string filePath, Options options = Options.None, string password = null)
         {
             filePath.CheckNotNullOrEmpty("filePath");
@@ -99,6 +92,7 @@ namespace SharpCompress.Archive.Rar
             return new RarArchive(fileInfo, options, password);
         }
 #endif
+
         /// <summary>
         /// Takes a seekable Stream as a source
         /// </summary>

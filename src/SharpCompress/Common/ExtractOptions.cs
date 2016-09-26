@@ -25,6 +25,6 @@ namespace SharpCompress.Common
         /// <summary>
         /// preserve windows file attributes
         /// </summary>
-        PreserveAttributes = 1 << 3,
+        PreserveAttributes = 1 << 3
     }
 }

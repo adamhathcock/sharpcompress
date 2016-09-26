@@ -14,7 +14,7 @@ namespace SharpCompress.Compressor.Rar.VM
             InBuf = new byte[MAX_SIZE];
         }
 
-        internal byte[] InBuf { get; private set; }
+        internal byte[] InBuf { get; }
 
         internal void InitBitInput()
         {

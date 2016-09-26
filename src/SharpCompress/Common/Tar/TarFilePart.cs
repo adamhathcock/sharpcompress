@@ -14,12 +14,9 @@ namespace SharpCompress.Common.Tar
             Header = header;
         }
 
-        internal TarHeader Header { get; private set; }
+        internal TarHeader Header { get; }
 
-        internal override string FilePartName
-        {
-            get { return Header.Name; }
-        }
+        internal override string FilePartName { get { return Header.Name; } }
 
         internal override Stream GetCompressedStream()
         {

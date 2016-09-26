@@ -11,6 +11,6 @@ namespace SharpCompress.Compressor.Rar.decode
         FILTER_RGB,
         FILTER_DELTA,
         FILTER_ITANIUM,
-        FILTER_E8E9V2,
+        FILTER_E8E9V2
     }
 }

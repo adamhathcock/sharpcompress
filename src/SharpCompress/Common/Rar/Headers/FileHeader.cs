@@ -52,50 +52,50 @@ namespace SharpCompress.Common.Rar.Headers
             switch (HeaderType)
             {
                 case HeaderType.FileHeader:
+                {
+                    if (FileFlags.HasFlag(FileFlags.UNICODE))
                     {
-                        if (FileFlags.HasFlag(FileFlags.UNICODE))
+                        int length = 0;
+                        while (length < fileNameBytes.Length
+                               && fileNameBytes[length] != 0)
                         {
-                            int length = 0;
-                            while (length < fileNameBytes.Length
-                                   && fileNameBytes[length] != 0)
-                            {
-                                length++;
-                            }
-                            if (length != nameSize)
-                            {
-                                length++;
-                                FileName = FileNameDecoder.Decode(fileNameBytes, length);
-                            }
-                            else
-                            {
-                                FileName = DecodeDefault(fileNameBytes);
-                            }
+                            length++;
+                        }
+                        if (length != nameSize)
+                        {
+                            length++;
+                            FileName = FileNameDecoder.Decode(fileNameBytes, length);
                         }
                         else
                         {
                             FileName = DecodeDefault(fileNameBytes);
                         }
-                        FileName = ConvertPath(FileName, HostOS);
                     }
+                    else
+                    {
+                        FileName = DecodeDefault(fileNameBytes);
+                    }
+                    FileName = ConvertPath(FileName, HostOS);
+                }
                     break;
                 case HeaderType.NewSubHeader:
+                {
+                    int datasize = HeaderSize - NEWLHD_SIZE - nameSize;
+                    if (FileFlags.HasFlag(FileFlags.SALT))
                     {
-                        int datasize = HeaderSize - NEWLHD_SIZE - nameSize;
-                        if (FileFlags.HasFlag(FileFlags.SALT))
-                        {
-                            datasize -= SALT_SIZE;
-                        }
-                        if (datasize > 0)
-                        {
-                            SubData = reader.ReadBytes(datasize);
-                        }
-
-                        if (NewSubHeaderType.SUBHEAD_TYPE_RR.Equals(fileNameBytes))
-                        {
-                            RecoverySectors = SubData[8] + (SubData[9] << 8)
-                                              + (SubData[10] << 16) + (SubData[11] << 24);
-                        }
+                        datasize -= SALT_SIZE;
                     }
+                    if (datasize > 0)
+                    {
+                        SubData = reader.ReadBytes(datasize);
+                    }
+
+                    if (NewSubHeaderType.SUBHEAD_TYPE_RR.Equals(fileNameBytes))
+                    {
+                        RecoverySectors = SubData[8] + (SubData[9] << 8)
+                                          + (SubData[10] << 16) + (SubData[11] << 24);
+                    }
+                }
                     break;
             }
 
@@ -155,6 +155,7 @@ namespace SharpCompress.Common.Rar.Headers
                 byte b = reader.ReadByte();
                 nanosecondHundreds |= (((uint)b) << ((j + 3 - count) * 8));
             }
+
             //10^-7 to 10^-3
             return time.Value.AddMilliseconds(nanosecondHundreds * Math.Pow(10, -4));
         }
@@ -207,10 +208,7 @@ namespace SharpCompress.Common.Rar.Headers
 
         internal int FileAttributes { get; private set; }
 
-        internal FileFlags FileFlags
-        {
-            get { return (FileFlags)base.Flags; }
-        }
+        internal FileFlags FileFlags { get { return (FileFlags)Flags; } }
 
         internal long CompressedSize { get; private set; }
         internal long UncompressedSize { get; private set; }

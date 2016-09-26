@@ -5,42 +5,21 @@ namespace SharpCompress.Compressor.PPMd.H
 {
     internal class SubAllocator
     {
-        public virtual int FakeUnitsStart
-        {
-            get { return fakeUnitsStart; }
+        public virtual int FakeUnitsStart { get { return fakeUnitsStart; } set { fakeUnitsStart = value; } }
 
-            set { this.fakeUnitsStart = value; }
-        }
+        public virtual int HeapEnd { get { return heapEnd; } }
 
-        public virtual int HeapEnd
-        {
-            get { return heapEnd; }
-        }
+        public virtual int PText { get { return pText; } set { pText = value; } }
 
-        public virtual int PText
-        {
-            get { return pText; }
+        public virtual int UnitsStart { get { return unitsStart; } set { unitsStart = value; } }
 
-            set { pText = value; }
-        }
-
-        public virtual int UnitsStart
-        {
-            get { return unitsStart; }
-
-            set { this.unitsStart = value; }
-        }
-
-        public virtual byte[] Heap
-        {
-            get { return heap; }
-        }
+        public virtual byte[] Heap { get { return heap; } }
 
         //UPGRADE_NOTE: Final was removed from the declaration of 'N4 '. "ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?index='!DefaultContextWindowIndex'&keyword='jlca1003'"
         public const int N1 = 4;
         public const int N2 = 4;
         public const int N3 = 4;
-        public static readonly int N4 = (128 + 3 - 1*N1 - 2*N2 - 3*N3)/4;
+        public static readonly int N4 = (128 + 3 - 1 * N1 - 2 * N2 - 3 * N3) / 4;
 
         //UPGRADE_NOTE: Final was removed from the declaration of 'N_INDEXES '. "ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?index='!DefaultContextWindowIndex'&keyword='jlca1003'"
         public static readonly int N_INDEXES = N1 + N2 + N3 + N4;
@@ -54,15 +33,15 @@ namespace SharpCompress.Compressor.PPMd.H
         private int subAllocatorSize;
 
         // byte Indx2Units[N_INDEXES], Units2Indx[128], GlueCount;
-        private int[] indx2Units = new int[N_INDEXES];
-        private int[] units2Indx = new int[128];
+        private readonly int[] indx2Units = new int[N_INDEXES];
+        private readonly int[] units2Indx = new int[128];
         private int glueCount;
 
         // byte *HeapStart,*LoUnit, *HiUnit;
         private int heapStart, loUnit, hiUnit;
 
         //UPGRADE_NOTE: Final was removed from the declaration of 'freeList '. "ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?index='!DefaultContextWindowIndex'&keyword='jlca1003'"
-        private RarNode[] freeList = new RarNode[N_INDEXES];
+        private readonly RarNode[] freeList = new RarNode[N_INDEXES];
 
         // byte *pText, *UnitsStart,*HeapEnd,*FakeUnitsStart;
         private int pText, unitsStart, heapEnd, fakeUnitsStart;
@@ -74,10 +53,10 @@ namespace SharpCompress.Compressor.PPMd.H
         private int tempMemBlockPos;
 
         // Temp fields
-        private RarNode tempRarNode = null;
-        private RarMemBlock tempRarMemBlock1 = null;
-        private RarMemBlock tempRarMemBlock2 = null;
-        private RarMemBlock tempRarMemBlock3 = null;
+        private RarNode tempRarNode;
+        private RarMemBlock tempRarMemBlock1;
+        private RarMemBlock tempRarMemBlock2;
+        private RarMemBlock tempRarMemBlock3;
 
         public SubAllocator()
         {
@@ -113,7 +92,7 @@ namespace SharpCompress.Compressor.PPMd.H
 
         private int U2B(int NU)
         {
-            return UNIT_SIZE*NU;
+            return UNIT_SIZE * NU;
         }
 
         /* memblockptr */
@@ -141,9 +120,11 @@ namespace SharpCompress.Compressor.PPMd.H
             if (subAllocatorSize != 0)
             {
                 subAllocatorSize = 0;
+
                 //ArrayFactory.BYTES_FACTORY.recycle(heap);
                 heap = null;
                 heapStart = 1;
+
                 // rarfree(HeapStart);
                 // Free temp fields
                 tempRarNode = null;
@@ -158,7 +139,6 @@ namespace SharpCompress.Compressor.PPMd.H
             return subAllocatorSize;
         }
 
-
         public virtual bool startSubAllocator(int SASize)
         {
             int t = SASize;
@@ -167,11 +147,12 @@ namespace SharpCompress.Compressor.PPMd.H
                 return true;
             }
             stopSubAllocator();
-            int allocSize = t/FIXED_UNIT_SIZE*UNIT_SIZE + UNIT_SIZE;
+            int allocSize = t / FIXED_UNIT_SIZE * UNIT_SIZE + UNIT_SIZE;
 
             // adding space for freelist (needed for poiters)
             // 1+ for null pointer
-            int realAllocSize = 1 + allocSize + 4*N_INDEXES;
+            int realAllocSize = 1 + allocSize + 4 * N_INDEXES;
+
             // adding space for an additional memblock
             tempMemBlockPos = realAllocSize;
             realAllocSize += RarMemBlock.size;
@@ -180,8 +161,10 @@ namespace SharpCompress.Compressor.PPMd.H
             heapStart = 1;
             heapEnd = heapStart + allocSize - UNIT_SIZE;
             subAllocatorSize = t;
+
             // Bug fixed
             freeListPos = heapStart + allocSize;
+
             //UPGRADE_ISSUE: The following fragment of code could not be parsed and was not converted. "ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?index='!DefaultContextWindowIndex'&keyword='jlca1156'"
             //assert(realAllocSize - tempMemBlockPos == RarMemBlock.size): realAllocSize 
             //+   + tempMemBlockPos +   + RarMemBlock.size;
@@ -236,6 +219,7 @@ namespace SharpCompress.Compressor.PPMd.H
                     p1.Address = MBPtr(p.Address, p.GetNU());
                 }
             }
+
             // while ((p=s0.next) != &s0)
             // Bug fixed
             p.Address = s0.GetNext();
@@ -273,7 +257,7 @@ namespace SharpCompress.Compressor.PPMd.H
                 {
                     glueCount--;
                     i = U2B(indx2Units[indx]);
-                    int j = FIXED_UNIT_SIZE*indx2Units[indx];
+                    int j = FIXED_UNIT_SIZE * indx2Units[indx];
                     if (fakeUnitsStart - pText > j)
                     {
                         fakeUnitsStart -= j;
@@ -282,7 +266,8 @@ namespace SharpCompress.Compressor.PPMd.H
                     }
                     return (0);
                 }
-            } while (freeList[i].GetNext() == 0);
+            }
+            while (freeList[i].GetNext() == 0);
             int retVal = removeNode(i);
             splitBlock(retVal, i, indx);
             return retVal;
@@ -308,7 +293,9 @@ namespace SharpCompress.Compressor.PPMd.H
         public virtual int allocContext()
         {
             if (hiUnit != loUnit)
+            {
                 return (hiUnit -= UNIT_SIZE);
+            }
             if (freeList[0].GetNext() != 0)
             {
                 return removeNode(0);
@@ -347,6 +334,7 @@ namespace SharpCompress.Compressor.PPMd.H
             if (freeList[i1].GetNext() != 0)
             {
                 int ptr = removeNode(i1);
+
                 // memcpy(ptr,OldPtr,U2B(NewNU));
                 // for (int i = 0; i < U2B(NewNU); i++) {
                 // heap[ptr + i] = heap[OldPtr + i];
@@ -355,11 +343,8 @@ namespace SharpCompress.Compressor.PPMd.H
                 insertNode(oldPtr, i0);
                 return ptr;
             }
-            else
-            {
-                splitBlock(oldPtr, i0, i1);
-                return oldPtr;
-            }
+            splitBlock(oldPtr, i0, i1);
+            return oldPtr;
         }
 
         public virtual void freeUnits(int ptr, int OldNU)
@@ -375,14 +360,14 @@ namespace SharpCompress.Compressor.PPMd.H
         public virtual void initSubAllocator()
         {
             int i, k;
-            Utility.Fill(heap, freeListPos, freeListPos + sizeOfFreeList(), (byte) 0);
+            Utility.Fill(heap, freeListPos, freeListPos + sizeOfFreeList(), (byte)0);
 
             pText = heapStart;
 
-            int size2 = FIXED_UNIT_SIZE*(subAllocatorSize/8/FIXED_UNIT_SIZE*7);
-            int realSize2 = size2/FIXED_UNIT_SIZE*UNIT_SIZE;
+            int size2 = FIXED_UNIT_SIZE * (subAllocatorSize / 8 / FIXED_UNIT_SIZE * 7);
+            int realSize2 = size2 / FIXED_UNIT_SIZE * UNIT_SIZE;
             int size1 = subAllocatorSize - size2;
-            int realSize1 = size1/FIXED_UNIT_SIZE*UNIT_SIZE + size1%FIXED_UNIT_SIZE;
+            int realSize1 = size1 / FIXED_UNIT_SIZE * UNIT_SIZE + size1 % FIXED_UNIT_SIZE;
             hiUnit = heapStart + subAllocatorSize;
             loUnit = unitsStart = heapStart + realSize1;
             fakeUnitsStart = heapStart + size1;
@@ -414,7 +399,7 @@ namespace SharpCompress.Compressor.PPMd.H
 
         private int sizeOfFreeList()
         {
-            return freeList.Length*RarNode.size;
+            return freeList.Length * RarNode.size;
         }
 
         // Debug
@@ -436,7 +421,7 @@ namespace SharpCompress.Compressor.PPMd.H
         // }
 
         // Debug
-        public override System.String ToString()
+        public override String ToString()
         {
             StringBuilder buffer = new StringBuilder();
             buffer.Append("SubAllocator[");
@@ -460,7 +445,7 @@ namespace SharpCompress.Compressor.PPMd.H
 
         static SubAllocator()
         {
-            UNIT_SIZE = System.Math.Max(PPMContext.size, RarMemBlock.size);
+            UNIT_SIZE = Math.Max(PPMContext.size, RarMemBlock.size);
         }
     }
 }

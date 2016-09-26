@@ -14,7 +14,6 @@ namespace SharpCompress.Reader.Tar
 {
     public class TarReader : AbstractReader<TarEntry, TarVolume>
     {
-        private readonly TarVolume volume;
         private readonly CompressionType compressionType;
 
         internal TarReader(Stream stream, CompressionType compressionType,
@@ -22,13 +21,10 @@ namespace SharpCompress.Reader.Tar
             : base(options, ArchiveType.Tar)
         {
             this.compressionType = compressionType;
-            volume = new TarVolume(stream, options);
+            Volume = new TarVolume(stream, options);
         }
 
-        public override TarVolume Volume
-        {
-            get { return volume; }
-        }
+        public override TarVolume Volume { get; }
 
         internal override Stream RequestInitialStream()
         {
@@ -36,21 +32,21 @@ namespace SharpCompress.Reader.Tar
             switch (compressionType)
             {
                 case CompressionType.BZip2:
-                    {
-                        return new BZip2Stream(stream, CompressionMode.Decompress, false);
-                    }
+                {
+                    return new BZip2Stream(stream, CompressionMode.Decompress, false);
+                }
                 case CompressionType.GZip:
-                    {
-                        return new GZipStream(stream, CompressionMode.Decompress);
-                    }
+                {
+                    return new GZipStream(stream, CompressionMode.Decompress);
+                }
                 case CompressionType.None:
-                    {
-                        return stream;
-                    }
+                {
+                    return stream;
+                }
                 default:
-                    {
-                        throw new NotSupportedException("Invalid compression type: " + compressionType);
-                    }
+                {
+                    throw new NotSupportedException("Invalid compression type: " + compressionType);
+                }
             }
         }
 

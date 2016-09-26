@@ -7,26 +7,26 @@ namespace SharpCompress.Compressor.Filters
     {
         private readonly Stream baseStream;
         private readonly byte[] input = new byte[4096];
-        private int inputOffset = 0;
-        private int inputCount = 0;
-        private bool endReached = false;
+        private int inputOffset;
+        private int inputCount;
+        private bool endReached;
 
-        private long position = 0;
-        private byte[] output = new byte[4];
-        private int outputOffset = 0;
-        private int outputCount = 0;
+        private long position;
+        private readonly byte[] output = new byte[4];
+        private int outputOffset;
+        private int outputCount;
 
-        private byte[] control;
-        private byte[] data1;
-        private byte[] data2;
+        private readonly byte[] control;
+        private readonly byte[] data1;
+        private readonly byte[] data2;
 
-        private int controlPos = 0;
-        private int data1Pos = 0;
-        private int data2Pos = 0;
+        private int controlPos;
+        private int data1Pos;
+        private int data2Pos;
 
-        private ushort[] p = new ushort[256 + 2];
+        private readonly ushort[] p = new ushort[256 + 2];
         private uint range, code;
-        private byte prevByte = 0;
+        private byte prevByte;
         private bool isDisposed;
 
         private const int kNumTopBits = 24;
@@ -55,12 +55,16 @@ namespace SharpCompress.Compressor.Filters
 
             int i;
             for (i = 0; i < p.Length; i++)
+            {
                 p[i] = kBitModelTotal >> 1;
+            }
 
             code = 0;
             range = 0xFFFFFFFF;
             for (i = 0; i < 5; i++)
+            {
                 code = (code << 8) | control[controlPos++];
+            }
         }
 
         protected override void Dispose(bool disposing)
@@ -74,36 +78,20 @@ namespace SharpCompress.Compressor.Filters
             baseStream.Dispose();
         }
 
-        public override bool CanRead
-        {
-            get { return true; }
-        }
+        public override bool CanRead { get { return true; } }
 
-        public override bool CanSeek
-        {
-            get { return false; }
-        }
+        public override bool CanSeek { get { return false; } }
 
-        public override bool CanWrite
-        {
-            get { return false; }
-        }
+        public override bool CanWrite { get { return false; } }
 
         public override void Flush()
         {
             throw new NotSupportedException();
         }
 
-        public override long Length
-        {
-            get { return baseStream.Length + data1.Length + data2.Length; }
-        }
+        public override long Length { get { return baseStream.Length + data1.Length + data2.Length; } }
 
-        public override long Position
-        {
-            get { return position; }
-            set { throw new NotSupportedException(); }
-        }
+        public override long Position { get { return position; } set { throw new NotSupportedException(); } }
 
         public override int Read(byte[] buffer, int offset, int count)
         {
@@ -121,7 +109,9 @@ namespace SharpCompress.Compressor.Filters
 
                     prevByte = b;
                     if (size == count)
+                    {
                         return size;
+                    }
                 }
 
                 if (inputOffset == inputCount)
@@ -141,16 +131,24 @@ namespace SharpCompress.Compressor.Filters
                 position++;
 
                 if (!IsJ(prevByte, b))
+                {
                     prevByte = b;
+                }
                 else
                 {
                     int prob;
                     if (b == 0xE8)
+                    {
                         prob = prevByte;
+                    }
                     else if (b == 0xE9)
+                    {
                         prob = 256;
+                    }
                     else
+                    {
                         prob = 257;
+                    }
 
                     uint bound = (range >> kNumBitModelTotalBits) * p[prob];
                     if (code < bound)
@@ -177,15 +175,19 @@ namespace SharpCompress.Compressor.Filters
 
                         uint dest;
                         if (b == 0xE8)
+                        {
                             dest =
                                 (uint)
                                 ((data1[data1Pos++] << 24) | (data1[data1Pos++] << 16) | (data1[data1Pos++] << 8) |
                                  data1[data1Pos++]);
+                        }
                         else
+                        {
                             dest =
                                 (uint)
                                 ((data2[data2Pos++] << 24) | (data2[data2Pos++] << 16) | (data2[data2Pos++] << 8) |
                                  data2[data2Pos++]);
+                        }
                         dest -= (uint)(position + 4);
 
                         output[0] = (byte)dest;

@@ -13,10 +13,11 @@ namespace SharpCompress.Archive.GZip
     public class GZipArchive : AbstractWritableArchive<GZipArchiveEntry, GZipVolume>
     {
 #if !NO_FILE
-        /// <summary>
-        /// Constructor expects a filepath to an existing file.
-        /// </summary>
-        /// <param name="filePath"></param>
+
+/// <summary>
+/// Constructor expects a filepath to an existing file.
+/// </summary>
+/// <param name="filePath"></param>
         public static GZipArchive Open(string filePath)
         {
             return Open(filePath, Options.None);
@@ -81,11 +82,12 @@ namespace SharpCompress.Archive.GZip
         }
 
 #if !NO_FILE
-        /// <summary>
-        /// Constructor with a FileInfo object to an existing file.
-        /// </summary>
-        /// <param name="fileInfo"></param>
-        /// <param name="options"></param>
+
+/// <summary>
+/// Constructor with a FileInfo object to an existing file.
+/// </summary>
+/// <param name="fileInfo"></param>
+/// <param name="options"></param>
         internal GZipArchive(FileInfo fileInfo, Options options)
             : base(ArchiveType.GZip, fileInfo, options)
         {
@@ -135,13 +137,19 @@ namespace SharpCompress.Archive.GZip
 
             // workitem 8501: handle edge case (decompress empty stream)
             if (n == 0)
+            {
                 return false;
+            }
 
             if (n != 10)
+            {
                 return false;
+            }
 
             if (header[0] != 0x1F || header[1] != 0x8B || header[2] != 8)
+            {
                 return false;
+            }
 
             return true;
         }
@@ -167,7 +175,7 @@ namespace SharpCompress.Archive.GZip
         }
 
         protected override GZipArchiveEntry CreateEntryInternal(string filePath, Stream source, long size, DateTime? modified,
-                                                        bool closeStream)
+                                                                bool closeStream)
         {
             if (Entries.Any())
             {

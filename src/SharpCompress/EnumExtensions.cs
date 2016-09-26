@@ -1,4 +1,5 @@
-﻿#if NET35
+﻿
+#if NET35
 using System;
 
 namespace SharpCompress

@@ -8,9 +8,6 @@ namespace SharpCompress.Archive.Zip
 {
     internal class ZipWritableArchiveEntry : ZipArchiveEntry, IWritableArchiveEntry
     {
-        private readonly string path;
-        private readonly long size;
-        private readonly DateTime? lastModified;
         private readonly bool closeStream;
         private readonly Stream stream;
         private bool isDisposed;
@@ -20,79 +17,37 @@ namespace SharpCompress.Archive.Zip
             : base(archive, null)
         {
             this.stream = stream;
-            this.path = path;
-            this.size = size;
-            this.lastModified = lastModified;
+            Key = path;
+            Size = size;
+            LastModifiedTime = lastModified;
             this.closeStream = closeStream;
         }
 
-        public override long Crc
-        {
-            get { return 0; }
-        }
+        public override long Crc { get { return 0; } }
 
-        public override string Key
-        {
-            get { return path; }
-        }
+        public override string Key { get; }
 
-        public override long CompressedSize
-        {
-            get { return 0; }
-        }
+        public override long CompressedSize { get { return 0; } }
 
-        public override long Size
-        {
-            get { return size; }
-        }
+        public override long Size { get; }
 
-        public override DateTime? LastModifiedTime
-        {
-            get { return lastModified; }
-        }
+        public override DateTime? LastModifiedTime { get; }
 
-        public override DateTime? CreatedTime
-        {
-            get { return null; }
-        }
+        public override DateTime? CreatedTime { get { return null; } }
 
-        public override DateTime? LastAccessedTime
-        {
-            get { return null; }
-        }
+        public override DateTime? LastAccessedTime { get { return null; } }
 
-        public override DateTime? ArchivedTime
-        {
-            get { return null; }
-        }
+        public override DateTime? ArchivedTime { get { return null; } }
 
-        public override bool IsEncrypted
-        {
-            get { return false; }
-        }
+        public override bool IsEncrypted { get { return false; } }
 
-        public override bool IsDirectory
-        {
-            get { return false; }
-        }
+        public override bool IsDirectory { get { return false; } }
 
-        public override bool IsSplit
-        {
-            get { return false; }
-        }
+        public override bool IsSplit { get { return false; } }
 
-        internal override IEnumerable<FilePart> Parts
-        {
-            get { throw new NotImplementedException(); }
-        }
+        internal override IEnumerable<FilePart> Parts { get { throw new NotImplementedException(); } }
 
-        Stream IWritableArchiveEntry.Stream
-        {
-            get
-            {
-                return stream;
-            }
-        }
+        Stream IWritableArchiveEntry.Stream { get { return stream; } }
 
         public override Stream OpenEntryStream()
         {

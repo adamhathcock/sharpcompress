@@ -13,10 +13,11 @@ namespace SharpCompress.Archive.SevenZip
     {
         private ArchiveDatabase database;
 #if !NO_FILE
-        /// <summary>
-        /// Constructor expects a filepath to an existing file.
-        /// </summary>
-        /// <param name="filePath"></param>
+
+/// <summary>
+/// Constructor expects a filepath to an existing file.
+/// </summary>
+/// <param name="filePath"></param>
         public static SevenZipArchive Open(string filePath)
         {
             return Open(filePath, Options.None);
@@ -156,7 +157,6 @@ namespace SharpCompress.Archive.SevenZip
             }
         }
 
-
         public static bool IsSevenZipFile(Stream stream)
         {
             try
@@ -169,7 +169,7 @@ namespace SharpCompress.Archive.SevenZip
             }
         }
 
-        private static readonly byte[] SIGNATURE = new byte[] {(byte) '7', (byte) 'z', 0xBC, 0xAF, 0x27, 0x1C};
+        private static readonly byte[] SIGNATURE = {(byte)'7', (byte)'z', 0xBC, 0xAF, 0x27, 0x1C};
 
         private static bool SignatureMatch(Stream stream)
         {
@@ -183,10 +183,7 @@ namespace SharpCompress.Archive.SevenZip
             return new SevenZipReader(this);
         }
 
-        public override bool IsSolid
-        {
-            get { return Entries.Where(x => !x.IsDirectory).GroupBy(x => x.FilePart.Folder).Count() > 1; }
-        }
+        public override bool IsSolid { get { return Entries.Where(x => !x.IsDirectory).GroupBy(x => x.FilePart.Folder).Count() > 1; } }
 
         public override long TotalSize
         {
@@ -210,11 +207,7 @@ namespace SharpCompress.Archive.SevenZip
                 this.archive = archive;
             }
 
-
-            public override SevenZipVolume Volume
-            {
-                get { return archive.Volumes.Single(); }
-            }
+            public override SevenZipVolume Volume { get { return archive.Volumes.Single(); } }
 
             internal override IEnumerable<SevenZipEntry> GetEntries(Stream stream)
             {

@@ -5,8 +5,7 @@ namespace SharpCompress.Compressor.LZMA.Utilites
 {
     internal class CrcBuilderStream : Stream
     {
-        private long mProcessed;
-        private Stream mTarget;
+        private readonly Stream mTarget;
         private uint mCRC;
         private bool mFinished;
         private bool isDisposed;
@@ -28,10 +27,7 @@ namespace SharpCompress.Compressor.LZMA.Utilites
             base.Dispose(disposing);
         }
 
-        public long Processed
-        {
-            get { return mProcessed; }
-        }
+        public long Processed { get; private set; }
 
         public uint Finish()
         {
@@ -44,35 +40,19 @@ namespace SharpCompress.Compressor.LZMA.Utilites
             return mCRC;
         }
 
-        public override bool CanRead
-        {
-            get { return false; }
-        }
+        public override bool CanRead { get { return false; } }
 
-        public override bool CanSeek
-        {
-            get { return false; }
-        }
+        public override bool CanSeek { get { return false; } }
 
-        public override bool CanWrite
-        {
-            get { return true; }
-        }
+        public override bool CanWrite { get { return true; } }
 
         public override void Flush()
         {
         }
 
-        public override long Length
-        {
-            get { throw new NotSupportedException(); }
-        }
+        public override long Length { get { throw new NotSupportedException(); } }
 
-        public override long Position
-        {
-            get { throw new NotSupportedException(); }
-            set { throw new NotSupportedException(); }
-        }
+        public override long Position { get { throw new NotSupportedException(); } set { throw new NotSupportedException(); } }
 
         public override int Read(byte[] buffer, int offset, int count)
         {
@@ -92,9 +72,11 @@ namespace SharpCompress.Compressor.LZMA.Utilites
         public override void Write(byte[] buffer, int offset, int count)
         {
             if (mFinished)
+            {
                 throw new InvalidOperationException("CRC calculation has been finished.");
+            }
 
-            mProcessed += count;
+            Processed += count;
             mCRC = CRC.Update(mCRC, buffer, offset, count);
             mTarget.Write(buffer, offset, count);
         }
@@ -102,8 +84,7 @@ namespace SharpCompress.Compressor.LZMA.Utilites
 
     internal class ReadingCrcBuilderStream : Stream
     {
-        private long mProcessed;
-        private Stream mSource;
+        private readonly Stream mSource;
         private uint mCRC;
         private bool mFinished;
 
@@ -118,7 +99,9 @@ namespace SharpCompress.Compressor.LZMA.Utilites
             try
             {
                 if (disposing)
+                {
                     mSource.Dispose();
+                }
             }
             finally
             {
@@ -126,10 +109,7 @@ namespace SharpCompress.Compressor.LZMA.Utilites
             }
         }
 
-        public long Processed
-        {
-            get { return mProcessed; }
-        }
+        public long Processed { get; private set; }
 
         public uint Finish()
         {
@@ -142,36 +122,20 @@ namespace SharpCompress.Compressor.LZMA.Utilites
             return mCRC;
         }
 
-        public override bool CanRead
-        {
-            get { return mSource.CanRead; }
-        }
+        public override bool CanRead { get { return mSource.CanRead; } }
 
-        public override bool CanSeek
-        {
-            get { return false; }
-        }
+        public override bool CanSeek { get { return false; } }
 
-        public override bool CanWrite
-        {
-            get { return false; }
-        }
+        public override bool CanWrite { get { return false; } }
 
         public override void Flush()
         {
             throw new NotSupportedException();
         }
 
-        public override long Length
-        {
-            get { throw new NotSupportedException(); }
-        }
+        public override long Length { get { throw new NotSupportedException(); } }
 
-        public override long Position
-        {
-            get { throw new NotSupportedException(); }
-            set { throw new NotSupportedException(); }
-        }
+        public override long Position { get { throw new NotSupportedException(); } set { throw new NotSupportedException(); } }
 
         public override int Read(byte[] buffer, int offset, int count)
         {
@@ -180,7 +144,7 @@ namespace SharpCompress.Compressor.LZMA.Utilites
                 int read = mSource.Read(buffer, offset, count);
                 if (read > 0)
                 {
-                    mProcessed += read;
+                    Processed += read;
                     mCRC = CRC.Update(mCRC, buffer, offset, read);
                     return read;
                 }

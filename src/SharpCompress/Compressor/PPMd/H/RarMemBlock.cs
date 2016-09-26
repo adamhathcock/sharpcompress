@@ -28,7 +28,7 @@ namespace SharpCompress.Compressor.PPMd.H
 
             set
             {
-                this.stamp = value;
+                stamp = value;
                 if (Memory != null)
                 {
                     DataConverter.LittleEndian.PutBytes(Memory, Address, (short)value);
@@ -54,6 +54,7 @@ namespace SharpCompress.Compressor.PPMd.H
             temp.SetNext(GetNext()); // prev.setNext(next);
             temp.Address = GetNext();
             temp.SetPrev(GetPrev()); // next.setPrev(prev);
+
             //		next = -1;
             //		prev = -1;
         }

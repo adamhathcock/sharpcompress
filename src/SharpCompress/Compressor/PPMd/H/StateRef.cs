@@ -1,3 +1,4 @@
+using System;
 using System.Text;
 
 namespace SharpCompress.Compressor.PPMd.H
@@ -10,19 +11,9 @@ namespace SharpCompress.Compressor.PPMd.H
 
         private int successor; // pointer ppmcontext
 
-        internal int Symbol
-        {
-            get { return symbol; }
+        internal int Symbol { get { return symbol; } set { symbol = value & 0xff; } }
 
-            set { this.symbol = value & 0xff; }
-        }
-
-        internal int Freq
-        {
-            get { return freq; }
-
-            set { this.freq = value & 0xff; }
-        }
+        internal int Freq { get { return freq; } set { freq = value & 0xff; } }
 
         internal State Values
         {
@@ -33,7 +24,6 @@ namespace SharpCompress.Compressor.PPMd.H
                 Symbol = value.Symbol;
             }
         }
-
 
         public virtual void IncrementFreq(int dFreq)
         {
@@ -60,7 +50,7 @@ namespace SharpCompress.Compressor.PPMd.H
             this.successor = successor;
         }
 
-        public override System.String ToString()
+        public override String ToString()
         {
             StringBuilder buffer = new StringBuilder();
             buffer.Append("State[");

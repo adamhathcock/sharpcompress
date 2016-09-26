@@ -10,15 +10,15 @@ namespace SharpCompress.Compressor.Rar
         private readonly FileHeader fileHeader;
         private readonly Stream readStream;
 
-        private bool fetch = false;
+        private bool fetch;
 
         private byte[] tmpBuffer = new byte[65536];
-        private int tmpOffset = 0;
-        private int tmpCount = 0;
+        private int tmpOffset;
+        private int tmpCount;
 
         private byte[] outBuffer;
         private int outOffset;
-        private int outCount = 0;
+        private int outCount;
         private int outTotal;
         private bool isDisposed;
 
@@ -43,44 +43,19 @@ namespace SharpCompress.Compressor.Rar
             readStream.Dispose();
         }
 
-        public override bool CanRead
-        {
-            get
-            {
-                return true;
-            }
-        }
+        public override bool CanRead { get { return true; } }
 
-        public override bool CanSeek
-        {
-            get
-            {
-                return false;
-            }
-        }
+        public override bool CanSeek { get { return false; } }
 
-        public override bool CanWrite
-        {
-            get
-            {
-                return false;
-            }
-        }
+        public override bool CanWrite { get { return false; } }
 
         public override void Flush()
         {
         }
 
-        public override long Length
-        {
-            get { return fileHeader.UncompressedSize; }
-        }
+        public override long Length { get { return fileHeader.UncompressedSize; } }
 
-        public override long Position
-        {
-            get { return fileHeader.UncompressedSize - unpack.DestSize; }
-            set { throw new NotSupportedException(); }
-        }
+        public override long Position { get { return fileHeader.UncompressedSize - unpack.DestSize; } set { throw new NotSupportedException(); } }
 
         public override int Read(byte[] buffer, int offset, int count)
         {
@@ -148,7 +123,9 @@ namespace SharpCompress.Compressor.Rar
                 unpack.Suspended = true;
             }
             else
+            {
                 unpack.Suspended = false;
+            }
         }
     }
 }

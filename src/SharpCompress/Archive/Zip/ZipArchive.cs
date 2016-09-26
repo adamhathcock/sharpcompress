@@ -23,11 +23,12 @@ namespace SharpCompress.Archive.Zip
         public CompressionLevel DeflateCompressionLevel { get; set; }
 
 #if !NO_FILE
-        /// <summary>
-        /// Constructor expects a filepath to an existing file.
-        /// </summary>
-        /// <param name="filePath"></param>
-        /// <param name="password"></param>
+
+/// <summary>
+/// Constructor expects a filepath to an existing file.
+/// </summary>
+/// <param name="filePath"></param>
+/// <param name="password"></param>
         public static ZipArchive Open(string filePath, string password = null)
         {
             return Open(filePath, Options.None, password);
@@ -121,7 +122,7 @@ namespace SharpCompress.Archive.Zip
                 {
                     return false;
                 }
-                return Enum.IsDefined(typeof (ZipHeaderType), header.ZipHeaderType);
+                return Enum.IsDefined(typeof(ZipHeaderType), header.ZipHeaderType);
             }
             catch (CryptographicException)
             {
@@ -134,12 +135,13 @@ namespace SharpCompress.Archive.Zip
         }
 
 #if !NO_FILE
-        /// <summary>
-        /// Constructor with a FileInfo object to an existing file.
-        /// </summary>
-        /// <param name="fileInfo"></param>
-        /// <param name="options"></param>
-        /// <param name="password"></param>
+
+/// <summary>
+/// Constructor with a FileInfo object to an existing file.
+/// </summary>
+/// <param name="fileInfo"></param>
+/// <param name="options"></param>
+/// <param name="password"></param>
         internal ZipArchive(FileInfo fileInfo, Options options, string password = null)
             : base(ArchiveType.Zip, fileInfo, options)
         {
@@ -189,19 +191,19 @@ namespace SharpCompress.Archive.Zip
                     switch (h.ZipHeaderType)
                     {
                         case ZipHeaderType.DirectoryEntry:
-                            {
-                                yield return new ZipArchiveEntry(this,
-                                                                 new SeekableZipFilePart(headerFactory,
-                                                                                         h as DirectoryEntryHeader,
-                                                                                         stream));
-                            }
+                        {
+                            yield return new ZipArchiveEntry(this,
+                                                             new SeekableZipFilePart(headerFactory,
+                                                                                     h as DirectoryEntryHeader,
+                                                                                     stream));
+                        }
                             break;
                         case ZipHeaderType.DirectoryEnd:
-                            {
-                                byte[] bytes = (h as DirectoryEndHeader).Comment;
-                                volume.Comment = ArchiveEncoding.Default.GetString(bytes, 0, bytes.Length);
-                                yield break;
-                            }
+                        {
+                            byte[] bytes = (h as DirectoryEndHeader).Comment;
+                            volume.Comment = ArchiveEncoding.Default.GetString(bytes, 0, bytes.Length);
+                            yield break;
+                        }
                     }
                 }
             }
@@ -225,7 +227,7 @@ namespace SharpCompress.Archive.Zip
         }
 
         protected override ZipArchiveEntry CreateEntryInternal(string filePath, Stream source, long size, DateTime? modified,
-                                                       bool closeStream)
+                                                               bool closeStream)
         {
             return new ZipWritableArchiveEntry(this, source, filePath, size, modified, closeStream);
         }

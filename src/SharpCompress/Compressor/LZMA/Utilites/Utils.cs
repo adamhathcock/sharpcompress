@@ -33,7 +33,7 @@ namespace SharpCompress.Compressor.LZMA.Utilites
         Comment = 22,
         EncodedHeader = 23,
         StartPos = 24,
-        Dummy = 25,
+        Dummy = 25
 
         #endregion
     }
@@ -46,7 +46,9 @@ namespace SharpCompress.Compressor.LZMA.Utilites
             if (!expression)
             {
                 if (Debugger.IsAttached)
+                {
                     Debugger.Break();
+                }
 
                 throw new Exception("Assertion failed.");
             }
@@ -55,22 +57,32 @@ namespace SharpCompress.Compressor.LZMA.Utilites
         public static void ReadExact(this Stream stream, byte[] buffer, int offset, int length)
         {
             if (stream == null)
+            {
                 throw new ArgumentNullException("stream");
+            }
 
             if (buffer == null)
+            {
                 throw new ArgumentNullException("buffer");
+            }
 
             if (offset < 0 || offset > buffer.Length)
+            {
                 throw new ArgumentOutOfRangeException("offset");
+            }
 
             if (length < 0 || length > buffer.Length - offset)
+            {
                 throw new ArgumentOutOfRangeException("length");
+            }
 
             while (length > 0)
             {
                 int fetched = stream.Read(buffer, offset, length);
                 if (fetched <= 0)
+                {
                     throw new EndOfStreamException();
+                }
 
                 offset += fetched;
                 length -= fetched;

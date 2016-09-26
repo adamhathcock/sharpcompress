@@ -15,10 +15,11 @@ namespace SharpCompress.Archive.Tar
     public class TarArchive : AbstractWritableArchive<TarArchiveEntry, TarVolume>
     {
 #if !NO_FILE
-        /// <summary>
-        /// Constructor expects a filepath to an existing file.
-        /// </summary>
-        /// <param name="filePath"></param>
+
+/// <summary>
+/// Constructor expects a filepath to an existing file.
+/// </summary>
+/// <param name="filePath"></param>
         public static TarArchive Open(string filePath)
         {
             return Open(filePath, Options.None);
@@ -102,7 +103,7 @@ namespace SharpCompress.Archive.Tar
             {
                 TarHeader tar = new TarHeader();
                 tar.Read(new BinaryReader(stream));
-                return tar.Name.Length > 0 && Enum.IsDefined(typeof (EntryType), tar.EntryType);
+                return tar.Name.Length > 0 && Enum.IsDefined(typeof(EntryType), tar.EntryType);
             }
             catch
             {
@@ -111,11 +112,12 @@ namespace SharpCompress.Archive.Tar
         }
 
 #if !NO_FILE
-        /// <summary>
-        /// Constructor with a FileInfo object to an existing file.
-        /// </summary>
-        /// <param name="fileInfo"></param>
-        /// <param name="options"></param>
+
+/// <summary>
+/// Constructor with a FileInfo object to an existing file.
+/// </summary>
+/// <param name="fileInfo"></param>
+/// <param name="options"></param>
         internal TarArchive(FileInfo fileInfo, Options options)
             : base(ArchiveType.Tar, fileInfo, options)
         {
@@ -172,14 +174,16 @@ namespace SharpCompress.Archive.Tar
 
                             var oldStreamPos = stream.Position;
 
-                            using(var entryStream = entry.OpenEntryStream())
-                            using(var memoryStream = new MemoryStream())
+                            using (var entryStream = entry.OpenEntryStream())
                             {
-                                entryStream.TransferTo(memoryStream);
-                                memoryStream.Position = 0;
-                                var bytes = memoryStream.ToArray();
+                                using (var memoryStream = new MemoryStream())
+                                {
+                                    entryStream.TransferTo(memoryStream);
+                                    memoryStream.Position = 0;
+                                    var bytes = memoryStream.ToArray();
 
-                                header.Name = ArchiveEncoding.Default.GetString(bytes, 0, bytes.Length).TrimNulls();
+                                    header.Name = ArchiveEncoding.Default.GetString(bytes, 0, bytes.Length).TrimNulls();
+                                }
                             }
 
                             stream.Position = oldStreamPos;
@@ -198,7 +202,7 @@ namespace SharpCompress.Archive.Tar
         }
 
         protected override TarArchiveEntry CreateEntryInternal(string filePath, Stream source,
-                                                       long size, DateTime? modified, bool closeStream)
+                                                               long size, DateTime? modified, bool closeStream)
         {
             return new TarWritableArchiveEntry(this, source, CompressionType.Unknown, filePath, size, modified,
                                                closeStream);

@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 
 namespace SharpCompress.Compressor.LZMA.RangeCoder
 {
@@ -6,7 +7,7 @@ namespace SharpCompress.Compressor.LZMA.RangeCoder
     {
         public const uint kTopValue = (1 << 24);
 
-        private System.IO.Stream Stream;
+        private Stream Stream;
 
         public UInt64 Low;
         public uint Range;
@@ -15,7 +16,7 @@ namespace SharpCompress.Compressor.LZMA.RangeCoder
 
         //long StartPosition;
 
-        public void SetStream(System.IO.Stream stream)
+        public void SetStream(Stream stream)
         {
             Stream = stream;
         }
@@ -38,7 +39,9 @@ namespace SharpCompress.Compressor.LZMA.RangeCoder
         public void FlushData()
         {
             for (int i = 0; i < 5; i++)
+            {
                 ShiftLow();
+            }
         }
 
         public void FlushStream()
@@ -53,7 +56,7 @@ namespace SharpCompress.Compressor.LZMA.RangeCoder
 
         public void Encode(uint start, uint size, uint total)
         {
-            Low += start*(Range /= total);
+            Low += start * (Range /= total);
             Range *= size;
             while (Range < kTopValue)
             {
@@ -64,18 +67,19 @@ namespace SharpCompress.Compressor.LZMA.RangeCoder
 
         public void ShiftLow()
         {
-            if ((uint) Low < (uint) 0xFF000000 || (uint) (Low >> 32) == 1)
+            if ((uint)Low < 0xFF000000 || (uint)(Low >> 32) == 1)
             {
                 byte temp = _cache;
                 do
                 {
-                    Stream.WriteByte((byte) (temp + (Low >> 32)));
+                    Stream.WriteByte((byte)(temp + (Low >> 32)));
                     temp = 0xFF;
-                } while (--_cacheSize != 0);
-                _cache = (byte) (((uint) Low) >> 24);
+                }
+                while (--_cacheSize != 0);
+                _cache = (byte)(((uint)Low) >> 24);
             }
             _cacheSize++;
-            Low = ((uint) Low) << 8;
+            Low = ((uint)Low) << 8;
         }
 
         public void EncodeDirectBits(uint v, int numTotalBits)
@@ -84,7 +88,9 @@ namespace SharpCompress.Compressor.LZMA.RangeCoder
             {
                 Range >>= 1;
                 if (((v >> i) & 1) == 1)
+                {
                     Low += Range;
+                }
                 if (Range < kTopValue)
                 {
                     Range <<= 8;
@@ -95,9 +101,11 @@ namespace SharpCompress.Compressor.LZMA.RangeCoder
 
         public void EncodeBit(uint size0, int numTotalBits, uint symbol)
         {
-            uint newBound = (Range >> numTotalBits)*size0;
+            uint newBound = (Range >> numTotalBits) * size0;
             if (symbol == 0)
+            {
                 Range = newBound;
+            }
             else
             {
                 Low += newBound;
@@ -113,6 +121,7 @@ namespace SharpCompress.Compressor.LZMA.RangeCoder
         public long GetProcessedSizeAdd()
         {
             return -1;
+
             //return _cacheSize + Stream.Position - StartPosition + 4;
             // (long)Stream.GetProcessedSize();
         }
@@ -122,12 +131,13 @@ namespace SharpCompress.Compressor.LZMA.RangeCoder
     {
         public const uint kTopValue = (1 << 24);
         public uint Range;
-        public uint Code = 0;
+        public uint Code;
+
         // public Buffer.InBuffer Stream = new Buffer.InBuffer(1 << 16);
-        public System.IO.Stream Stream;
+        public Stream Stream;
         public long Total;
 
-        public void Init(System.IO.Stream stream)
+        public void Init(Stream stream)
         {
             // Stream.Init(stream);
             Stream = stream;
@@ -135,7 +145,9 @@ namespace SharpCompress.Compressor.LZMA.RangeCoder
             Code = 0;
             Range = 0xFFFFFFFF;
             for (int i = 0; i < 5; i++)
-                Code = (Code << 8) | (byte) Stream.ReadByte();
+            {
+                Code = (Code << 8) | (byte)Stream.ReadByte();
+            }
             Total = 5;
         }
 
@@ -154,7 +166,7 @@ namespace SharpCompress.Compressor.LZMA.RangeCoder
         {
             while (Range < kTopValue)
             {
-                Code = (Code << 8) | (byte) Stream.ReadByte();
+                Code = (Code << 8) | (byte)Stream.ReadByte();
                 Range <<= 8;
                 Total++;
             }
@@ -164,7 +176,7 @@ namespace SharpCompress.Compressor.LZMA.RangeCoder
         {
             if (Range < kTopValue)
             {
-                Code = (Code << 8) | (byte) Stream.ReadByte();
+                Code = (Code << 8) | (byte)Stream.ReadByte();
                 Range <<= 8;
                 Total++;
             }
@@ -172,12 +184,12 @@ namespace SharpCompress.Compressor.LZMA.RangeCoder
 
         public uint GetThreshold(uint total)
         {
-            return Code/(Range /= total);
+            return Code / (Range /= total);
         }
 
         public void Decode(uint start, uint size)
         {
-            Code -= start*Range;
+            Code -= start * Range;
             Range *= size;
             Normalize();
         }
@@ -204,7 +216,7 @@ namespace SharpCompress.Compressor.LZMA.RangeCoder
 
                 if (range < kTopValue)
                 {
-                    code = (code << 8) | (byte) Stream.ReadByte();
+                    code = (code << 8) | (byte)Stream.ReadByte();
                     range <<= 8;
                     Total++;
                 }
@@ -216,7 +228,7 @@ namespace SharpCompress.Compressor.LZMA.RangeCoder
 
         public uint DecodeBit(uint size0, int numTotalBits)
         {
-            uint newBound = (Range >> numTotalBits)*size0;
+            uint newBound = (Range >> numTotalBits) * size0;
             uint symbol;
             if (Code < newBound)
             {
@@ -233,10 +245,7 @@ namespace SharpCompress.Compressor.LZMA.RangeCoder
             return symbol;
         }
 
-        public bool IsFinished
-        {
-            get { return Code == 0; }
-        }
+        public bool IsFinished { get { return Code == 0; } }
 
         // ulong GetProcessedSize() {return Stream.GetProcessedSize(); }
     }

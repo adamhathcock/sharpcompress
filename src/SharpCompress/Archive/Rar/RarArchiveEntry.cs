@@ -20,28 +20,13 @@ namespace SharpCompress.Archive.Rar
             this.archive = archive;
         }
 
-        public override CompressionType CompressionType
-        {
-            get { return CompressionType.Rar; }
-        }
+        public override CompressionType CompressionType { get { return CompressionType.Rar; } }
 
-        public IArchive Archive
-        {
-            get
-            {
-                return archive;
-            }
-        }
+        public IArchive Archive { get { return archive; } }
 
-        internal override IEnumerable<FilePart> Parts
-        {
-            get { return parts.Cast<FilePart>(); }
-        }
+        internal override IEnumerable<FilePart> Parts { get { return parts.Cast<FilePart>(); } }
 
-        internal override FileHeader FileHeader
-        {
-            get { return parts.First().FileHeader; }
-        }
+        internal override FileHeader FileHeader { get { return parts.First().FileHeader; } }
 
         public override long Crc
         {
@@ -49,10 +34,9 @@ namespace SharpCompress.Archive.Rar
             {
                 CheckIncomplete();
                 return parts.Select(fp => fp.FileHeader)
-                    .Single(fh => !fh.FileFlags.HasFlag(FileFlags.SPLIT_AFTER)).FileCRC;
+                            .Single(fh => !fh.FileFlags.HasFlag(FileFlags.SPLIT_AFTER)).FileCRC;
             }
         }
-
 
         public override long Size
         {
@@ -81,10 +65,7 @@ namespace SharpCompress.Archive.Rar
             return new RarStream(archive.Unpack, FileHeader, new MultiVolumeReadOnlyStream(Parts.Cast<RarFilePart>(), archive));
         }
 
-        public bool IsComplete
-        {
-            get { return parts.Select(fp => fp.FileHeader).Any(fh => !fh.FileFlags.HasFlag(FileFlags.SPLIT_AFTER)); }
-        }
+        public bool IsComplete { get { return parts.Select(fp => fp.FileHeader).Any(fh => !fh.FileFlags.HasFlag(FileFlags.SPLIT_AFTER)); } }
 
         private void CheckIncomplete()
         {

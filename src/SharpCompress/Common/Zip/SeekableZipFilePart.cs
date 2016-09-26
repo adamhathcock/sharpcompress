@@ -24,10 +24,7 @@ namespace SharpCompress.Common.Zip
             return base.GetCompressedStream();
         }
 
-        internal string Comment
-        {
-            get { return (Header as DirectoryEntryHeader).Comment; }
-        }
+        internal string Comment { get { return (Header as DirectoryEntryHeader).Comment; } }
 
         private void LoadLocalHeader()
         {

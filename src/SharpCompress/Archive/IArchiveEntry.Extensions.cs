@@ -28,17 +28,20 @@ namespace SharpCompress.Archive
                 return;
             }
             using (entryStream)
-            using (Stream s = new ListeningStream(streamListener, entryStream))
             {
-                s.TransferTo(streamToWriteTo);
+                using (Stream s = new ListeningStream(streamListener, entryStream))
+                {
+                    s.TransferTo(streamToWriteTo);
+                }
             }
             streamListener.FireEntryExtractionEnd(archiveEntry);
         }
 
 #if !NO_FILE
-        /// <summary>
-        /// Extract to specific directory, retaining filename
-        /// </summary>
+
+/// <summary>
+/// Extract to specific directory, retaining filename
+/// </summary>
         public static void WriteToDirectory(this IArchiveEntry entry, string destinationDirectory,
                                             ExtractOptions options = ExtractOptions.Overwrite)
         {

@@ -5,7 +5,7 @@ namespace SharpCompress.IO
 {
     internal class CountingWritableSubStream : Stream
     {
-        private Stream writableStream;
+        private readonly Stream writableStream;
 
         internal CountingWritableSubStream(Stream stream)
         {
@@ -14,35 +14,19 @@ namespace SharpCompress.IO
 
         public uint Count { get; private set; }
 
-        public override bool CanRead
-        {
-            get { return false; }
-        }
+        public override bool CanRead { get { return false; } }
 
-        public override bool CanSeek
-        {
-            get { return false; }
-        }
+        public override bool CanSeek { get { return false; } }
 
-        public override bool CanWrite
-        {
-            get { return true; }
-        }
+        public override bool CanWrite { get { return true; } }
 
         public override void Flush()
         {
         }
 
-        public override long Length
-        {
-            get { throw new NotSupportedException(); }
-        }
+        public override long Length { get { throw new NotSupportedException(); } }
 
-        public override long Position
-        {
-            get { throw new NotSupportedException(); }
-            set { throw new NotSupportedException(); }
-        }
+        public override long Position { get { throw new NotSupportedException(); } set { throw new NotSupportedException(); } }
 
         public override int Read(byte[] buffer, int offset, int count)
         {
@@ -62,7 +46,7 @@ namespace SharpCompress.IO
         public override void Write(byte[] buffer, int offset, int count)
         {
             writableStream.Write(buffer, offset, count);
-            Count += (uint) count;
+            Count += (uint)count;
         }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 
 namespace SharpCompress
@@ -27,10 +28,7 @@ namespace SharpCompress
 
             #region IEnumerator<T> Members
 
-            public T Current
-            {
-                get { return lazyReadOnlyCollection.backing[index]; }
-            }
+            public T Current { get { return lazyReadOnlyCollection.backing[index]; } }
 
             #endregion
 
@@ -48,10 +46,7 @@ namespace SharpCompress
 
             #region IEnumerator Members
 
-            object System.Collections.IEnumerator.Current
-            {
-                get { return Current; }
-            }
+            object IEnumerator.Current { get { return Current; } }
 
             public bool MoveNext()
             {
@@ -125,10 +120,7 @@ namespace SharpCompress
             }
         }
 
-        public bool IsReadOnly
-        {
-            get { return true; }
-        }
+        public bool IsReadOnly { get { return true; } }
 
         public bool Remove(T item)
         {
@@ -149,7 +141,7 @@ namespace SharpCompress
 
         #region IEnumerable Members
 
-        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
+        IEnumerator IEnumerable.GetEnumerator()
         {
             return GetEnumerator();
         }

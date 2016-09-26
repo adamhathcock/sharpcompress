@@ -14,38 +14,22 @@ namespace SharpCompress.IO
             //don't dispose anything
         }
 
-        public Stream Stream { get; private set; }
+        public Stream Stream { get; }
 
-        public override bool CanRead
-        {
-            get { return Stream.CanRead; }
-        }
+        public override bool CanRead { get { return Stream.CanRead; } }
 
-        public override bool CanSeek
-        {
-            get { return Stream.CanSeek; }
-        }
+        public override bool CanSeek { get { return Stream.CanSeek; } }
 
-        public override bool CanWrite
-        {
-            get { return Stream.CanWrite; }
-        }
+        public override bool CanWrite { get { return Stream.CanWrite; } }
 
         public override void Flush()
         {
             Stream.Flush();
         }
 
-        public override long Length
-        {
-            get { return Stream.Length; }
-        }
+        public override long Length { get { return Stream.Length; } }
 
-        public override long Position
-        {
-            get { return Stream.Position; }
-            set { Stream.Position = value; }
-        }
+        public override long Position { get { return Stream.Position; } set { Stream.Position = value; } }
 
         public override int Read(byte[] buffer, int offset, int count)
         {

@@ -20,14 +20,14 @@ namespace SharpCompress.Common.Rar.Headers
 
         //internal static final NewSubHeaderType SUBHEAD_TYPE_BEOSEA = new NewSubHeaderType(new byte[]{'E','A','B','E'});
 
-        private byte[] bytes;
+        private readonly byte[] bytes;
 
         private NewSubHeaderType(params char[] chars)
         {
             bytes = new byte[chars.Length];
             for (int i = 0; i < chars.Length; ++i)
             {
-                bytes[i] = (byte) chars[i];
+                bytes[i] = (byte)chars[i];
             }
         }
 

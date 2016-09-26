@@ -24,6 +24,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 using System;
+﻿using System;
 using System.IO;
 
 namespace SharpCompress.Compressor.ADC
@@ -40,9 +41,13 @@ namespace SharpCompress.Compressor.ADC
         static int GetChunkType(byte byt)
         {
             if ((byt & 0x80) == 0x80)
+            {
                 return Plain;
+            }
             if ((byt & 0x40) == 0x40)
+            {
                 return ThreeByte;
+            }
             return TwoByte;
         }
 
@@ -100,7 +105,9 @@ namespace SharpCompress.Compressor.ADC
             output = null;
 
             if (input == null || input.Length == 0)
+            {
                 return 0;
+            }
 
             int start = (int)input.Position;
             int position = (int)input.Position;
@@ -116,7 +123,9 @@ namespace SharpCompress.Compressor.ADC
             {
                 int readByte = input.ReadByte();
                 if (readByte == -1)
+                {
                     break;
+                }
 
                 chunkType = GetChunkType((byte)readByte);
 
@@ -199,7 +208,9 @@ namespace SharpCompress.Compressor.ADC
                 }
 
                 if (full)
+                {
                     break;
+                }
             }
 
             output = new byte[outPosition];

@@ -6,6 +6,6 @@
         Zip,
         Tar,
         SevenZip,
-        GZip,
+        GZip
     }
 }

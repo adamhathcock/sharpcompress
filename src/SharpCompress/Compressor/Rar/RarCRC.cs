@@ -4,7 +4,7 @@ namespace SharpCompress.Compressor.Rar
 {
     internal static class RarCRC
     {
-        private static uint[] crcTab;
+        private static readonly uint[] crcTab;
 
         public static uint CheckCrc(uint startCrc, byte[] data, int offset, int count)
         {
@@ -12,7 +12,7 @@ namespace SharpCompress.Compressor.Rar
 
             for (int i = 0; i < size; i++)
             {
-                startCrc = (crcTab[((int) ((int) startCrc ^ (int) data[offset + i])) & 0xff] ^ (startCrc >> 8));
+                startCrc = (crcTab[((int)startCrc ^ data[offset + i]) & 0xff] ^ (startCrc >> 8));
             }
             return (startCrc);
         }

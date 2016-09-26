@@ -11,31 +11,30 @@ namespace SharpCompress.Common.SevenZip
 
         public static uint Get32(byte[] buffer, int offset)
         {
-            return (uint) buffer[offset]
-                   + ((uint) buffer[offset + 1] << 8)
-                   + ((uint) buffer[offset + 2] << 16)
-                   + ((uint) buffer[offset + 3] << 24);
+            return buffer[offset]
+                   + ((uint)buffer[offset + 1] << 8)
+                   + ((uint)buffer[offset + 2] << 16)
+                   + ((uint)buffer[offset + 3] << 24);
         }
 
         public static ulong Get64(byte[] buffer, int offset)
         {
-            return (ulong) buffer[offset]
-                   + ((ulong) buffer[offset + 1] << 8)
-                   + ((ulong) buffer[offset + 2] << 16)
-                   + ((ulong) buffer[offset + 3] << 24)
-                   + ((ulong) buffer[offset + 4] << 32)
-                   + ((ulong) buffer[offset + 5] << 40)
-                   + ((ulong) buffer[offset + 6] << 48)
-                   + ((ulong) buffer[offset + 7] << 56);
+            return buffer[offset]
+                   + ((ulong)buffer[offset + 1] << 8)
+                   + ((ulong)buffer[offset + 2] << 16)
+                   + ((ulong)buffer[offset + 3] << 24)
+                   + ((ulong)buffer[offset + 4] << 32)
+                   + ((ulong)buffer[offset + 5] << 40)
+                   + ((ulong)buffer[offset + 6] << 48)
+                   + ((ulong)buffer[offset + 7] << 56);
         }
 
         #endregion
 
         #region Variables
 
-        private byte[] _buffer;
-        private int _offset;
-        private int _ending;
+        private readonly byte[] _buffer;
+        private readonly int _ending;
 
         #endregion
 
@@ -44,38 +43,43 @@ namespace SharpCompress.Common.SevenZip
         public DataReader(byte[] buffer, int offset, int length)
         {
             _buffer = buffer;
-            _offset = offset;
+            Offset = offset;
             _ending = offset + length;
         }
 
-        public int Offset
-        {
-            get { return _offset; }
-        }
+        public int Offset { get; private set; }
 
         public Byte ReadByte()
         {
-            if (_offset >= _ending)
+            if (Offset >= _ending)
+            {
                 throw new EndOfStreamException();
+            }
 
-            return _buffer[_offset++];
+            return _buffer[Offset++];
         }
 
         public void ReadBytes(byte[] buffer, int offset, int length)
         {
-            if (length > _ending - _offset)
+            if (length > _ending - Offset)
+            {
                 throw new EndOfStreamException();
+            }
 
             while (length-- > 0)
-                buffer[offset++] = _buffer[_offset++];
+            {
+                buffer[offset++] = _buffer[Offset++];
+            }
         }
 
         public void SkipData(long size)
         {
-            if (size > _ending - _offset)
+            if (size > _ending - Offset)
+            {
                 throw new EndOfStreamException();
+            }
 
-            _offset += (int) size;
+            Offset += (int)size;
 #if DEBUG
             Log.WriteLine("SkipData {0}", size);
 #endif
@@ -83,15 +87,17 @@ namespace SharpCompress.Common.SevenZip
 
         public void SkipData()
         {
-            SkipData(checked((long) ReadNumber()));
+            SkipData(checked((long)ReadNumber()));
         }
 
         public ulong ReadNumber()
         {
-            if (_offset >= _ending)
+            if (Offset >= _ending)
+            {
                 throw new EndOfStreamException();
+            }
 
-            byte firstByte = _buffer[_offset++];
+            byte firstByte = _buffer[Offset++];
             byte mask = 0x80;
             ulong value = 0;
 
@@ -100,14 +106,16 @@ namespace SharpCompress.Common.SevenZip
                 if ((firstByte & mask) == 0)
                 {
                     ulong highPart = firstByte & (mask - 1u);
-                    value += highPart << (i*8);
+                    value += highPart << (i * 8);
                     return value;
                 }
 
-                if (_offset >= _ending)
+                if (Offset >= _ending)
+                {
                     throw new EndOfStreamException();
+                }
 
-                value |= (ulong) _buffer[_offset++] << (8*i);
+                value |= (ulong)_buffer[Offset++] << (8 * i);
                 mask >>= 1;
             }
 
@@ -118,48 +126,58 @@ namespace SharpCompress.Common.SevenZip
         {
             ulong value = ReadNumber();
             if (value > Int32.MaxValue)
+            {
                 throw new NotSupportedException();
+            }
 
-            return (int) value;
+            return (int)value;
         }
 
         public uint ReadUInt32()
         {
-            if (_offset + 4 > _ending)
+            if (Offset + 4 > _ending)
+            {
                 throw new EndOfStreamException();
+            }
 
-            uint res = Get32(_buffer, _offset);
-            _offset += 4;
+            uint res = Get32(_buffer, Offset);
+            Offset += 4;
             return res;
         }
 
         public ulong ReadUInt64()
         {
-            if (_offset + 8 > _ending)
+            if (Offset + 8 > _ending)
+            {
                 throw new EndOfStreamException();
+            }
 
-            ulong res = Get64(_buffer, _offset);
-            _offset += 8;
+            ulong res = Get64(_buffer, Offset);
+            Offset += 8;
             return res;
         }
 
         public string ReadString()
         {
-            int ending = _offset;
+            int ending = Offset;
 
             for (;;)
             {
                 if (ending + 2 > _ending)
+                {
                     throw new EndOfStreamException();
+                }
 
                 if (_buffer[ending] == 0 && _buffer[ending + 1] == 0)
+                {
                     break;
+                }
 
                 ending += 2;
             }
 
-            string str = Encoding.Unicode.GetString(_buffer, _offset, ending - _offset);
-            _offset = ending + 2;
+            string str = Encoding.Unicode.GetString(_buffer, Offset, ending - Offset);
+            Offset = ending + 2;
             return str;
         }
 

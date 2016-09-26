@@ -1,11 +1,12 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 
 namespace SharpCompress
 {
     internal class ReadOnlyCollection<T> : ICollection<T>
     {
-        private ICollection<T> collection;
+        private readonly ICollection<T> collection;
 
         public ReadOnlyCollection(ICollection<T> collection)
         {
@@ -32,15 +33,9 @@ namespace SharpCompress
             collection.CopyTo(array, arrayIndex);
         }
 
-        public int Count
-        {
-            get { return collection.Count; }
-        }
+        public int Count { get { return collection.Count; } }
 
-        public bool IsReadOnly
-        {
-            get { return true; }
-        }
+        public bool IsReadOnly { get { return true; } }
 
         public bool Remove(T item)
         {
@@ -52,7 +47,7 @@ namespace SharpCompress
             return collection.GetEnumerator();
         }
 
-        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
+        IEnumerator IEnumerable.GetEnumerator()
         {
             throw new NotSupportedException();
         }

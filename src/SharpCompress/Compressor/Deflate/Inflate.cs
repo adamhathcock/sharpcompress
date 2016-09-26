@@ -71,7 +71,7 @@ namespace SharpCompress.Compressor.Deflate
         private const int MANY = 1440;
 
         // Table for deflate from PKZIP's appnote.txt.
-        internal static readonly int[] border = new[] {16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1, 15};
+        internal static readonly int[] border = {16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1, 15};
 
         internal ZlibCodec _codec; // pointer back to this zlib stream
         internal int[] bb = new int[1]; // bit length tree depth
@@ -99,7 +99,7 @@ namespace SharpCompress.Compressor.Deflate
         internal InflateBlocks(ZlibCodec codec, Object checkfn, int w)
         {
             _codec = codec;
-            hufts = new int[MANY*3];
+            hufts = new int[MANY * 3];
             window = new byte[w];
             end = w;
             this.checkfn = checkfn;
@@ -116,10 +116,11 @@ namespace SharpCompress.Compressor.Deflate
             readAt = writeAt = 0;
 
             if (checkfn != null)
+            {
                 _codec._Adler32 = check = Adler.Adler32(0, null, 0, 0);
+            }
             return oldCheck;
         }
-
 
         internal int Process(int r)
         {
@@ -140,7 +141,6 @@ namespace SharpCompress.Compressor.Deflate
 
             q = writeAt;
             m = (q < readAt ? readAt - q - 1 : end - q);
-
 
             // process input based on current state
             while (true)
@@ -173,7 +173,7 @@ namespace SharpCompress.Compressor.Deflate
                         t = (b & 7);
                         last = t & 1;
 
-                        switch ((uint) t >> 1)
+                        switch ((uint)t >> 1)
                         {
                             case 0: // stored
                                 b >>= 3;
@@ -309,16 +309,22 @@ namespace SharpCompress.Compressor.Deflate
 
                         t = left;
                         if (t > n)
+                        {
                             t = n;
+                        }
                         if (t > m)
+                        {
                             t = m;
+                        }
                         Array.Copy(_codec.InputBuffer, p, window, q, t);
                         p += t;
                         n -= t;
                         q += t;
                         m -= t;
                         if ((left -= t) != 0)
+                        {
                             break;
+                        }
                         mode = last != 0 ? InflateBlockMode.DRY : InflateBlockMode.TYPE;
                         break;
 
@@ -369,6 +375,7 @@ namespace SharpCompress.Compressor.Deflate
                         else
                         {
                             Array.Clear(blens, 0, t);
+
                             // for (int i = 0; i < t; i++)
                             // {
                             //     blens[i] = 0;
@@ -377,7 +384,6 @@ namespace SharpCompress.Compressor.Deflate
 
                         b >>= 14;
                         k -= 14;
-
 
                         index = 0;
                         mode = InflateBlockMode.BTREE;
@@ -478,8 +484,8 @@ namespace SharpCompress.Compressor.Deflate
                                 k += 8;
                             }
 
-                            t = hufts[(tb[0] + (b & InternalInflateConstants.InflateMask[t]))*3 + 1];
-                            c = hufts[(tb[0] + (b & InternalInflateConstants.InflateMask[t]))*3 + 2];
+                            t = hufts[(tb[0] + (b & InternalInflateConstants.InflateMask[t])) * 3 + 1];
+                            c = hufts[(tb[0] + (b & InternalInflateConstants.InflateMask[t])) * 3 + 2];
 
                             if (c < 16)
                             {
@@ -545,41 +551,42 @@ namespace SharpCompress.Compressor.Deflate
                                 do
                                 {
                                     blens[i++] = c;
-                                } while (--j != 0);
+                                }
+                                while (--j != 0);
                                 index = i;
                             }
                         }
 
                         tb[0] = -1;
+                    {
+                        var bl = new[] {9}; // must be <= 9 for lookahead assumptions
+                        var bd = new[] {6}; // must be <= 9 for lookahead assumptions
+                        var tl = new int[1];
+                        var td = new int[1];
+
+                        t = table;
+                        t = inftree.inflate_trees_dynamic(257 + (t & 0x1f), 1 + ((t >> 5) & 0x1f), blens, bl, bd, tl,
+                                                          td, hufts, _codec);
+
+                        if (t != ZlibConstants.Z_OK)
                         {
-                            var bl = new[] {9}; // must be <= 9 for lookahead assumptions
-                            var bd = new[] {6}; // must be <= 9 for lookahead assumptions
-                            var tl = new int[1];
-                            var td = new int[1];
-
-                            t = table;
-                            t = inftree.inflate_trees_dynamic(257 + (t & 0x1f), 1 + ((t >> 5) & 0x1f), blens, bl, bd, tl,
-                                                              td, hufts, _codec);
-
-                            if (t != ZlibConstants.Z_OK)
+                            if (t == ZlibConstants.Z_DATA_ERROR)
                             {
-                                if (t == ZlibConstants.Z_DATA_ERROR)
-                                {
-                                    blens = null;
-                                    mode = InflateBlockMode.BAD;
-                                }
-                                r = t;
-
-                                bitb = b;
-                                bitk = k;
-                                _codec.AvailableBytesIn = n;
-                                _codec.TotalBytesIn += p - _codec.NextIn;
-                                _codec.NextIn = p;
-                                writeAt = q;
-                                return Flush(r);
+                                blens = null;
+                                mode = InflateBlockMode.BAD;
                             }
-                            codes.Init(bl[0], bd[0], hufts, tl[0], hufts, td[0]);
+                            r = t;
+
+                            bitb = b;
+                            bitk = k;
+                            _codec.AvailableBytesIn = n;
+                            _codec.TotalBytesIn += p - _codec.NextIn;
+                            _codec.NextIn = p;
+                            writeAt = q;
+                            return Flush(r);
                         }
+                        codes.Init(bl[0], bd[0], hufts, tl[0], hufts, td[0]);
+                    }
                         mode = InflateBlockMode.CODES;
                         goto case InflateBlockMode.CODES;
 
@@ -652,7 +659,6 @@ namespace SharpCompress.Compressor.Deflate
                         writeAt = q;
                         return Flush(r);
 
-
                     default:
                         r = ZlibConstants.Z_STREAM_ERROR;
 
@@ -666,7 +672,6 @@ namespace SharpCompress.Compressor.Deflate
                 }
             }
         }
-
 
         internal void Free()
         {
@@ -710,15 +715,21 @@ namespace SharpCompress.Compressor.Deflate
                 if (nBytes == 0)
                 {
                     if (r == ZlibConstants.Z_BUF_ERROR)
+                    {
                         r = ZlibConstants.Z_OK;
+                    }
                     return r;
                 }
 
                 if (nBytes > _codec.AvailableBytesOut)
+                {
                     nBytes = _codec.AvailableBytesOut;
+                }
 
                 if (nBytes != 0 && r == ZlibConstants.Z_BUF_ERROR)
+                {
                     r = ZlibConstants.Z_OK;
+                }
 
                 // update counters
                 _codec.AvailableBytesOut -= nBytes;
@@ -726,7 +737,9 @@ namespace SharpCompress.Compressor.Deflate
 
                 // update check information
                 if (checkfn != null)
+                {
                     _codec._Adler32 = check = Adler.Adler32(check, window, readAt, nBytes);
+                }
 
                 // copy as far as end of window
                 Array.Copy(window, readAt, _codec.OutputBuffer, _codec.NextOut, nBytes);
@@ -739,9 +752,14 @@ namespace SharpCompress.Compressor.Deflate
                     // wrap pointers
                     readAt = 0;
                     if (writeAt == end)
+                    {
                         writeAt = 0;
+                    }
                 }
-                else pass++;
+                else
+                {
+                    pass++;
+                }
             }
 
             // done
@@ -761,25 +779,23 @@ namespace SharpCompress.Compressor.Deflate
             CODES = 6, // processing fixed or dynamic block
             DRY = 7, // output remaining window bytes
             DONE = 8, // finished last block, done
-            BAD = 9, // ot a data error--stuck here
+            BAD = 9 // ot a data error--stuck here
         }
 
         #endregion
     }
 
-
     internal static class InternalInflateConstants
     {
         // And'ing with mask[n] masks the lower n bits
-        internal static readonly int[] InflateMask = new[]
-                                                         {
-                                                             0x00000000, 0x00000001, 0x00000003, 0x00000007,
-                                                             0x0000000f, 0x0000001f, 0x0000003f, 0x0000007f,
-                                                             0x000000ff, 0x000001ff, 0x000003ff, 0x000007ff,
-                                                             0x00000fff, 0x00001fff, 0x00003fff, 0x00007fff, 0x0000ffff
-                                                         };
+        internal static readonly int[] InflateMask =
+        {
+            0x00000000, 0x00000001, 0x00000003, 0x00000007,
+            0x0000000f, 0x0000001f, 0x0000003f, 0x0000007f,
+            0x000000ff, 0x000001ff, 0x000003ff, 0x000007ff,
+            0x00000fff, 0x00001fff, 0x00003fff, 0x00007fff, 0x0000ffff
+        };
     }
-
 
     internal sealed class InflateCodes
     {
@@ -817,8 +833,8 @@ namespace SharpCompress.Compressor.Deflate
         internal void Init(int bl, int bd, int[] tl, int tl_index, int[] td, int td_index)
         {
             mode = START;
-            lbits = (byte) bl;
-            dbits = (byte) bd;
+            lbits = (byte)bl;
+            dbits = (byte)bd;
             ltree = tl;
             ltree_index = tl_index;
             dtree = td;
@@ -854,7 +870,7 @@ namespace SharpCompress.Compressor.Deflate
             {
                 switch (mode)
                 {
-                        // waiting for "i:"=input, "o:"=output, "x:"=nothing
+                    // waiting for "i:"=input, "o:"=output, "x:"=nothing
                     case START: // x: set up for LEN
                         if (m >= 258 && n >= 10)
                         {
@@ -892,14 +908,18 @@ namespace SharpCompress.Compressor.Deflate
                         while (k < j)
                         {
                             if (n != 0)
+                            {
                                 r = ZlibConstants.Z_OK;
+                            }
                             else
                             {
                                 // Handling missing trailing bit(s)
-                                var tmp_tindex = (tree_index + (b & InternalInflateConstants.InflateMask[k]))*3;
+                                var tmp_tindex = (tree_index + (b & InternalInflateConstants.InflateMask[k])) * 3;
                                 if (k >= tree[tmp_tindex + 1])
+                                {
                                     break;
-                                
+                                }
+
                                 blocks.bitb = b;
                                 blocks.bitk = k;
                                 z.AvailableBytesIn = n;
@@ -913,7 +933,7 @@ namespace SharpCompress.Compressor.Deflate
                             k += 8;
                         }
 
-                        tindex = (tree_index + (b & InternalInflateConstants.InflateMask[j]))*3;
+                        tindex = (tree_index + (b & InternalInflateConstants.InflateMask[j])) * 3;
 
                         b >>= (tree[tindex + 1]);
                         k -= (tree[tindex + 1]);
@@ -939,7 +959,7 @@ namespace SharpCompress.Compressor.Deflate
                         {
                             // next table
                             need = e;
-                            tree_index = tindex/3 + tree[tindex + 2];
+                            tree_index = tindex / 3 + tree[tindex + 2];
                             break;
                         }
                         if ((e & 32) != 0)
@@ -960,14 +980,15 @@ namespace SharpCompress.Compressor.Deflate
                         blocks.writeAt = q;
                         return blocks.Flush(r);
 
-
                     case LENEXT: // i: getting length extra (have base)
                         j = bitsToGet;
 
                         while (k < j)
                         {
                             if (n != 0)
+                            {
                                 r = ZlibConstants.Z_OK;
+                            }
                             else
                             {
                                 blocks.bitb = b;
@@ -1000,13 +1021,17 @@ namespace SharpCompress.Compressor.Deflate
                         while (k < j)
                         {
                             if (n != 0)
+                            {
                                 r = ZlibConstants.Z_OK;
+                            }
                             else
                             {
                                 // Handling missing trailing bit(s)
-                                var tmp_tindex = (tree_index + (b & InternalInflateConstants.InflateMask[k]))*3;
+                                var tmp_tindex = (tree_index + (b & InternalInflateConstants.InflateMask[k])) * 3;
                                 if (k >= tree[tmp_tindex + 1])
+                                {
                                     break;
+                                }
 
                                 blocks.bitb = b;
                                 blocks.bitk = k;
@@ -1021,7 +1046,7 @@ namespace SharpCompress.Compressor.Deflate
                             k += 8;
                         }
 
-                        tindex = (tree_index + (b & InternalInflateConstants.InflateMask[j]))*3;
+                        tindex = (tree_index + (b & InternalInflateConstants.InflateMask[j])) * 3;
 
                         b >>= tree[tindex + 1];
                         k -= tree[tindex + 1];
@@ -1039,7 +1064,7 @@ namespace SharpCompress.Compressor.Deflate
                         {
                             // next table
                             need = e;
-                            tree_index = tindex/3 + tree[tindex + 2];
+                            tree_index = tindex / 3 + tree[tindex + 2];
                             break;
                         }
                         mode = BADCODE; // invalid code
@@ -1054,14 +1079,15 @@ namespace SharpCompress.Compressor.Deflate
                         blocks.writeAt = q;
                         return blocks.Flush(r);
 
-
                     case DISTEXT: // i: getting distance extra
                         j = bitsToGet;
 
                         while (k < j)
                         {
                             if (n != 0)
+                            {
                                 r = ZlibConstants.Z_OK;
+                            }
                             else
                             {
                                 blocks.bitb = b;
@@ -1131,7 +1157,9 @@ namespace SharpCompress.Compressor.Deflate
                             m--;
 
                             if (f == blocks.end)
+                            {
                                 f = 0;
+                            }
                             len--;
                         }
                         mode = START;
@@ -1171,7 +1199,7 @@ namespace SharpCompress.Compressor.Deflate
                         }
                         r = ZlibConstants.Z_OK;
 
-                        blocks.window[q++] = (byte) lit;
+                        blocks.window[q++] = (byte)lit;
                         m--;
 
                         mode = START;
@@ -1240,7 +1268,6 @@ namespace SharpCompress.Compressor.Deflate
             }
         }
 
-
         // Called with number of bytes left to write in window at least 258
         // (the maximum string length) and number of input bytes available
         // at least ten.  The ten bytes are six bytes for the longest length/
@@ -1295,13 +1322,13 @@ namespace SharpCompress.Compressor.Deflate
                 t = b & ml;
                 tp = tl;
                 tp_index = tl_index;
-                tp_index_t_3 = (tp_index + t)*3;
+                tp_index_t_3 = (tp_index + t) * 3;
                 if ((e = tp[tp_index_t_3]) == 0)
                 {
                     b >>= (tp[tp_index_t_3 + 1]);
                     k -= (tp[tp_index_t_3 + 1]);
 
-                    s.window[q++] = (byte) tp[tp_index_t_3 + 2];
+                    s.window[q++] = (byte)tp[tp_index_t_3 + 2];
                     m--;
                     continue;
                 }
@@ -1330,7 +1357,7 @@ namespace SharpCompress.Compressor.Deflate
                         t = b & md;
                         tp = td;
                         tp_index = td_index;
-                        tp_index_t_3 = (tp_index + t)*3;
+                        tp_index_t_3 = (tp_index + t) * 3;
                         e = tp[tp_index_t_3];
 
                         do
@@ -1383,7 +1410,8 @@ namespace SharpCompress.Compressor.Deflate
                                     do
                                     {
                                         r += s.end; // force pointer in window
-                                    } while (r < 0); // covers invalid distances
+                                    }
+                                    while (r < 0); // covers invalid distances
                                     e = s.end - r;
                                     if (c > e)
                                     {
@@ -1394,7 +1422,8 @@ namespace SharpCompress.Compressor.Deflate
                                             do
                                             {
                                                 s.window[q++] = s.window[r++];
-                                            } while (--e != 0);
+                                            }
+                                            while (--e != 0);
                                         }
                                         else
                                         {
@@ -1413,7 +1442,8 @@ namespace SharpCompress.Compressor.Deflate
                                     do
                                     {
                                         s.window[q++] = s.window[r++];
-                                    } while (--c != 0);
+                                    }
+                                    while (--c != 0);
                                 }
                                 else
                                 {
@@ -1424,11 +1454,11 @@ namespace SharpCompress.Compressor.Deflate
                                 }
                                 break;
                             }
-                            else if ((e & 64) == 0)
+                            if ((e & 64) == 0)
                             {
                                 t += tp[tp_index_t_3 + 2];
                                 t += (b & InternalInflateConstants.InflateMask[e]);
-                                tp_index_t_3 = (tp_index + t)*3;
+                                tp_index_t_3 = (tp_index + t) * 3;
                                 e = tp[tp_index_t_3];
                             }
                             else
@@ -1450,7 +1480,8 @@ namespace SharpCompress.Compressor.Deflate
 
                                 return ZlibConstants.Z_DATA_ERROR;
                             }
-                        } while (true);
+                        }
+                        while (true);
                         break;
                     }
 
@@ -1458,12 +1489,12 @@ namespace SharpCompress.Compressor.Deflate
                     {
                         t += tp[tp_index_t_3 + 2];
                         t += (b & InternalInflateConstants.InflateMask[e]);
-                        tp_index_t_3 = (tp_index + t)*3;
+                        tp_index_t_3 = (tp_index + t) * 3;
                         if ((e = tp[tp_index_t_3]) == 0)
                         {
                             b >>= (tp[tp_index_t_3 + 1]);
                             k -= (tp[tp_index_t_3 + 1]);
-                            s.window[q++] = (byte) tp[tp_index_t_3 + 2];
+                            s.window[q++] = (byte)tp[tp_index_t_3 + 2];
                             m--;
                             break;
                         }
@@ -1504,8 +1535,10 @@ namespace SharpCompress.Compressor.Deflate
 
                         return ZlibConstants.Z_DATA_ERROR;
                     }
-                } while (true);
-            } while (m >= 258 && n >= 10);
+                }
+                while (true);
+            }
+            while (m >= 258 && n >= 10);
 
             // not enough input or output--restore pointers and return
             c = z.AvailableBytesIn - n;
@@ -1525,17 +1558,15 @@ namespace SharpCompress.Compressor.Deflate
         }
     }
 
-
     internal sealed class InflateManager
     {
         // preset dictionary flag in zlib header
         private const int PRESET_DICT = 0x20;
 
         private const int Z_DEFLATED = 8;
-        private static readonly byte[] mark = new byte[] {0, 0, 0xff, 0xff};
+        private static readonly byte[] mark = {0, 0, 0xff, 0xff};
 
         internal ZlibCodec _codec; // pointer back to this zlib stream
-        private bool _handleRfc1950HeaderBytes = true;
         internal InflateBlocks blocks; // current inflate_blocks state
 
         // mode dependent information
@@ -1560,14 +1591,10 @@ namespace SharpCompress.Compressor.Deflate
 
         public InflateManager(bool expectRfc1950HeaderBytes)
         {
-            _handleRfc1950HeaderBytes = expectRfc1950HeaderBytes;
+            HandleRfc1950HeaderBytes = expectRfc1950HeaderBytes;
         }
 
-        internal bool HandleRfc1950HeaderBytes
-        {
-            get { return _handleRfc1950HeaderBytes; }
-            set { _handleRfc1950HeaderBytes = value; }
-        }
+        internal bool HandleRfc1950HeaderBytes { get; set; } = true;
 
         internal int Reset()
         {
@@ -1581,7 +1608,9 @@ namespace SharpCompress.Compressor.Deflate
         internal int End()
         {
             if (blocks != null)
+            {
                 blocks.Free();
+            }
             blocks = null;
             return ZlibConstants.Z_OK;
         }
@@ -1619,13 +1648,14 @@ namespace SharpCompress.Compressor.Deflate
             return ZlibConstants.Z_OK;
         }
 
-
         internal int Inflate(FlushType flush)
         {
             int b;
 
             if (_codec.InputBuffer == null)
+            {
                 throw new ZlibException("InputBuffer is null. ");
+            }
 
             //             int f = (flush == FlushType.Finish)
             //                 ? ZlibConstants.Z_BUF_ERROR
@@ -1640,7 +1670,10 @@ namespace SharpCompress.Compressor.Deflate
                 switch (mode)
                 {
                     case InflateManagerMode.METHOD:
-                        if (_codec.AvailableBytesIn == 0) return r;
+                        if (_codec.AvailableBytesIn == 0)
+                        {
+                            return r;
+                        }
                         r = f;
                         _codec.AvailableBytesIn--;
                         _codec.TotalBytesIn++;
@@ -1661,15 +1694,17 @@ namespace SharpCompress.Compressor.Deflate
                         mode = InflateManagerMode.FLAG;
                         break;
 
-
                     case InflateManagerMode.FLAG:
-                        if (_codec.AvailableBytesIn == 0) return r;
+                        if (_codec.AvailableBytesIn == 0)
+                        {
+                            return r;
+                        }
                         r = f;
                         _codec.AvailableBytesIn--;
                         _codec.TotalBytesIn++;
                         b = (_codec.InputBuffer[_codec.NextIn++]) & 0xff;
 
-                        if ((((method << 8) + b)%31) != 0)
+                        if ((((method << 8) + b) % 31) != 0)
                         {
                             mode = InflateManagerMode.BAD;
                             _codec.Message = "incorrect header check";
@@ -1683,51 +1718,60 @@ namespace SharpCompress.Compressor.Deflate
                         break;
 
                     case InflateManagerMode.DICT4:
-                        if (_codec.AvailableBytesIn == 0) return r;
+                        if (_codec.AvailableBytesIn == 0)
+                        {
+                            return r;
+                        }
                         r = f;
                         _codec.AvailableBytesIn--;
                         _codec.TotalBytesIn++;
-                        expectedCheck = (uint) ((_codec.InputBuffer[_codec.NextIn++] << 24) & 0xff000000);
+                        expectedCheck = (uint)((_codec.InputBuffer[_codec.NextIn++] << 24) & 0xff000000);
                         mode = InflateManagerMode.DICT3;
                         break;
 
                     case InflateManagerMode.DICT3:
-                        if (_codec.AvailableBytesIn == 0) return r;
+                        if (_codec.AvailableBytesIn == 0)
+                        {
+                            return r;
+                        }
                         r = f;
                         _codec.AvailableBytesIn--;
                         _codec.TotalBytesIn++;
-                        expectedCheck += (uint) ((_codec.InputBuffer[_codec.NextIn++] << 16) & 0x00ff0000);
+                        expectedCheck += (uint)((_codec.InputBuffer[_codec.NextIn++] << 16) & 0x00ff0000);
                         mode = InflateManagerMode.DICT2;
                         break;
 
                     case InflateManagerMode.DICT2:
 
-                        if (_codec.AvailableBytesIn == 0) return r;
+                        if (_codec.AvailableBytesIn == 0)
+                        {
+                            return r;
+                        }
                         r = f;
                         _codec.AvailableBytesIn--;
                         _codec.TotalBytesIn++;
-                        expectedCheck += (uint) ((_codec.InputBuffer[_codec.NextIn++] << 8) & 0x0000ff00);
+                        expectedCheck += (uint)((_codec.InputBuffer[_codec.NextIn++] << 8) & 0x0000ff00);
                         mode = InflateManagerMode.DICT1;
                         break;
 
-
                     case InflateManagerMode.DICT1:
-                        if (_codec.AvailableBytesIn == 0) return r;
+                        if (_codec.AvailableBytesIn == 0)
+                        {
+                            return r;
+                        }
                         r = f;
                         _codec.AvailableBytesIn--;
                         _codec.TotalBytesIn++;
-                        expectedCheck += (uint) (_codec.InputBuffer[_codec.NextIn++] & 0x000000ff);
+                        expectedCheck += (uint)(_codec.InputBuffer[_codec.NextIn++] & 0x000000ff);
                         _codec._Adler32 = expectedCheck;
                         mode = InflateManagerMode.DICT0;
                         return ZlibConstants.Z_NEED_DICT;
-
 
                     case InflateManagerMode.DICT0:
                         mode = InflateManagerMode.BAD;
                         _codec.Message = "need dictionary";
                         marker = 0; // can try inflateSync
                         return ZlibConstants.Z_STREAM_ERROR;
-
 
                     case InflateManagerMode.BLOCKS:
                         r = blocks.Process(r);
@@ -1738,10 +1782,15 @@ namespace SharpCompress.Compressor.Deflate
                             break;
                         }
 
-                        if (r == ZlibConstants.Z_OK) r = f;
+                        if (r == ZlibConstants.Z_OK)
+                        {
+                            r = f;
+                        }
 
                         if (r != ZlibConstants.Z_STREAM_END)
+                        {
                             return r;
+                        }
 
                         r = f;
                         computedCheck = blocks.Reset();
@@ -1754,38 +1803,50 @@ namespace SharpCompress.Compressor.Deflate
                         break;
 
                     case InflateManagerMode.CHECK4:
-                        if (_codec.AvailableBytesIn == 0) return r;
+                        if (_codec.AvailableBytesIn == 0)
+                        {
+                            return r;
+                        }
                         r = f;
                         _codec.AvailableBytesIn--;
                         _codec.TotalBytesIn++;
-                        expectedCheck = (uint) ((_codec.InputBuffer[_codec.NextIn++] << 24) & 0xff000000);
+                        expectedCheck = (uint)((_codec.InputBuffer[_codec.NextIn++] << 24) & 0xff000000);
                         mode = InflateManagerMode.CHECK3;
                         break;
 
                     case InflateManagerMode.CHECK3:
-                        if (_codec.AvailableBytesIn == 0) return r;
+                        if (_codec.AvailableBytesIn == 0)
+                        {
+                            return r;
+                        }
                         r = f;
                         _codec.AvailableBytesIn--;
                         _codec.TotalBytesIn++;
-                        expectedCheck += (uint) ((_codec.InputBuffer[_codec.NextIn++] << 16) & 0x00ff0000);
+                        expectedCheck += (uint)((_codec.InputBuffer[_codec.NextIn++] << 16) & 0x00ff0000);
                         mode = InflateManagerMode.CHECK2;
                         break;
 
                     case InflateManagerMode.CHECK2:
-                        if (_codec.AvailableBytesIn == 0) return r;
+                        if (_codec.AvailableBytesIn == 0)
+                        {
+                            return r;
+                        }
                         r = f;
                         _codec.AvailableBytesIn--;
                         _codec.TotalBytesIn++;
-                        expectedCheck += (uint) ((_codec.InputBuffer[_codec.NextIn++] << 8) & 0x0000ff00);
+                        expectedCheck += (uint)((_codec.InputBuffer[_codec.NextIn++] << 8) & 0x0000ff00);
                         mode = InflateManagerMode.CHECK1;
                         break;
 
                     case InflateManagerMode.CHECK1:
-                        if (_codec.AvailableBytesIn == 0) return r;
+                        if (_codec.AvailableBytesIn == 0)
+                        {
+                            return r;
+                        }
                         r = f;
                         _codec.AvailableBytesIn--;
                         _codec.TotalBytesIn++;
-                        expectedCheck += (uint) (_codec.InputBuffer[_codec.NextIn++] & 0x000000ff);
+                        expectedCheck += (uint)(_codec.InputBuffer[_codec.NextIn++] & 0x000000ff);
                         if (computedCheck != expectedCheck)
                         {
                             mode = InflateManagerMode.BAD;
@@ -1808,13 +1869,14 @@ namespace SharpCompress.Compressor.Deflate
             }
         }
 
-
         internal int SetDictionary(byte[] dictionary)
         {
             int index = 0;
             int length = dictionary.Length;
             if (mode != InflateManagerMode.DICT0)
+            {
                 throw new ZlibException("Stream error.");
+            }
 
             if (Adler.Adler32(1, dictionary, 0, dictionary.Length) != _codec._Adler32)
             {
@@ -1833,7 +1895,6 @@ namespace SharpCompress.Compressor.Deflate
             return ZlibConstants.Z_OK;
         }
 
-
         internal int Sync()
         {
             int n; // number of bytes to look at
@@ -1848,7 +1909,9 @@ namespace SharpCompress.Compressor.Deflate
                 marker = 0;
             }
             if ((n = _codec.AvailableBytesIn) == 0)
+            {
                 return ZlibConstants.Z_BUF_ERROR;
+            }
             p = _codec.NextIn;
             m = marker;
 
@@ -1891,7 +1954,6 @@ namespace SharpCompress.Compressor.Deflate
             return ZlibConstants.Z_OK;
         }
 
-
         // Returns true if inflate is currently at the end of a block generated
         // by Z_SYNC_FLUSH or Z_FULL_FLUSH. This function is used by one PPP
         // implementation to provide an additional safety check. PPP uses Z_SYNC_FLUSH
@@ -1920,7 +1982,7 @@ namespace SharpCompress.Compressor.Deflate
             CHECK2 = 10, // two check bytes to go
             CHECK1 = 11, // one check byte to go
             DONE = 12, // finished check, done
-            BAD = 13, // got an error--stay here
+            BAD = 13 // got an error--stay here
         }
 
         #endregion

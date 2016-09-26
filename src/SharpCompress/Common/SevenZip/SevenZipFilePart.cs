@@ -8,8 +8,8 @@ namespace SharpCompress.Common.SevenZip
     internal class SevenZipFilePart : FilePart
     {
         private CompressionType? type;
-        private Stream stream;
-        private ArchiveDatabase database;
+        private readonly Stream stream;
+        private readonly ArchiveDatabase database;
 
         internal SevenZipFilePart(Stream stream, ArchiveDatabase database, int index, CFileItem fileEntry)
         {
@@ -24,14 +24,11 @@ namespace SharpCompress.Common.SevenZip
         }
 
         internal Stream BaseStream { get; private set; }
-        internal CFileItem Header { get; private set; }
-        internal CFolder Folder { get; private set; }
-        internal int Index { get; private set; }
+        internal CFileItem Header { get; }
+        internal CFolder Folder { get; }
+        internal int Index { get; }
 
-        internal override string FilePartName
-        {
-            get { return Header.Name; }
-        }
+        internal override string FilePartName { get { return Header.Name; } }
 
         internal override Stream GetRawStream()
         {
@@ -90,17 +87,17 @@ namespace SharpCompress.Common.SevenZip
             {
                 case k_LZMA:
                 case k_LZMA2:
-                    {
-                        return CompressionType.LZMA;
-                    }
+                {
+                    return CompressionType.LZMA;
+                }
                 case k_PPMD:
-                    {
-                        return CompressionType.PPMd;
-                    }
+                {
+                    return CompressionType.PPMd;
+                }
                 case k_BZip2:
-                    {
-                        return CompressionType.BZip2;
-                    }
+                {
+                    return CompressionType.BZip2;
+                }
                 default:
                     throw new NotImplementedException();
             }

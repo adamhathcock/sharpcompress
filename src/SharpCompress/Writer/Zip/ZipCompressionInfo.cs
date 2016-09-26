@@ -14,30 +14,30 @@ namespace SharpCompress.Writer.Zip
             switch (compressionInfo.Type)
             {
                 case CompressionType.None:
-                    {
-                        this.Compression = ZipCompressionMethod.None;
-                    }
+                {
+                    Compression = ZipCompressionMethod.None;
+                }
                     break;
                 case CompressionType.Deflate:
-                    {
-                        this.DeflateCompressionLevel = compressionInfo.DeflateCompressionLevel;
-                        this.Compression = ZipCompressionMethod.Deflate;
-                    }
+                {
+                    DeflateCompressionLevel = compressionInfo.DeflateCompressionLevel;
+                    Compression = ZipCompressionMethod.Deflate;
+                }
                     break;
                 case CompressionType.BZip2:
-                    {
-                        this.Compression = ZipCompressionMethod.BZip2;
-                    }
+                {
+                    Compression = ZipCompressionMethod.BZip2;
+                }
                     break;
                 case CompressionType.LZMA:
-                    {
-                        this.Compression = ZipCompressionMethod.LZMA;
-                    }
+                {
+                    Compression = ZipCompressionMethod.LZMA;
+                }
                     break;
                 case CompressionType.PPMd:
-                    {
-                        this.Compression = ZipCompressionMethod.PPMd;
-                    }
+                {
+                    Compression = ZipCompressionMethod.PPMd;
+                }
                     break;
                 default:
                     throw new InvalidFormatException("Invalid compression method: " + compressionInfo.Type);

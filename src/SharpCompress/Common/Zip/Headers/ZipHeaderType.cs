@@ -6,6 +6,6 @@
         LocalEntry,
         DirectoryEntry,
         DirectoryEnd,
-        Split,
+        Split
     }
 }

@@ -19,13 +19,14 @@ namespace SharpCompress.Common.Zip.Headers
             get
             {
                 if (Name.EndsWith("/"))
+                {
                     return true;
+                }
 
                 //.NET Framework 4.5 : System.IO.Compression::CreateFromDirectory() probably writes backslashes to headers
                 return CompressedSize == 0
-                        && UncompressedSize == 0
-                        && Name.EndsWith("\\");
-
+                       && UncompressedSize == 0
+                       && Name.EndsWith("\\");
             }
         }
 
@@ -77,10 +78,10 @@ namespace SharpCompress.Common.Zip.Headers
 
         protected void LoadExtra(byte[] extra)
         {
-            for (int i = 0; i < extra.Length-4;)
+            for (int i = 0; i < extra.Length - 4;)
             {
                 ExtraDataType type = (ExtraDataType)DataConverter.LittleEndian.GetUInt16(extra, i);
-                if (!Enum.IsDefined(typeof (ExtraDataType), type))
+                if (!Enum.IsDefined(typeof(ExtraDataType), type))
                 {
                     type = ExtraDataType.NotImplementedExtraData;
                 }
@@ -88,7 +89,7 @@ namespace SharpCompress.Common.Zip.Headers
                 ushort length = DataConverter.LittleEndian.GetUInt16(extra, i + 2);
                 byte[] data = new byte[length];
                 Buffer.BlockCopy(extra, i + 4, data, 0, length);
-                Extra.Add(LocalEntryHeaderExtraFactory.Create(type,length,data));
+                Extra.Add(LocalEntryHeaderExtraFactory.Create(type, length, data));
 
                 i += length + 4;
             }

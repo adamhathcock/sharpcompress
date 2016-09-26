@@ -1,14 +1,12 @@
-﻿using System.Linq;
-using SharpCompress.Common;
-
-namespace SharpCompress.Archive
+﻿namespace SharpCompress.Archive
 {
     public static class IArchiveExtensions
     {
 #if !NO_FILE
-        /// <summary>
-        /// Extract to specific directory, retaining filename
-        /// </summary>
+
+/// <summary>
+/// Extract to specific directory, retaining filename
+/// </summary>
         public static void WriteToDirectory(this IArchive archive, string destinationDirectory,
                                             ExtractOptions options = ExtractOptions.Overwrite)
         {

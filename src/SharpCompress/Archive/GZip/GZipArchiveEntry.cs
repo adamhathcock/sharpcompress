@@ -6,7 +6,6 @@ namespace SharpCompress.Archive.GZip
 {
     public class GZipArchiveEntry : GZipEntry, IArchiveEntry
     {
-
         internal GZipArchiveEntry(GZipArchive archive, GZipFilePart part)
             : base(part)
         {
@@ -19,12 +18,10 @@ namespace SharpCompress.Archive.GZip
         }
 
         #region IArchiveEntry Members
-        public IArchive Archive { get; private set; }
 
-        public bool IsComplete
-        {
-            get { return true; }
-        }
+        public IArchive Archive { get; }
+
+        public bool IsComplete { get { return true; } }
 
         #endregion
     }

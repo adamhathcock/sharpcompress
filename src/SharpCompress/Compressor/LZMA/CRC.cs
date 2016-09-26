@@ -6,7 +6,7 @@ namespace SharpCompress.Compressor.LZMA
     internal static class CRC
     {
         public const uint kInitCRC = 0xFFFFFFFF;
-        private static uint[] kTable = new uint[4 * 256];
+        private static readonly uint[] kTable = new uint[4 * 256];
 
         static CRC()
         {
@@ -16,7 +16,9 @@ namespace SharpCompress.Compressor.LZMA
             {
                 uint r = i;
                 for (int j = 0; j < 8; j++)
+                {
                     r = (r >> 1) ^ (kCrcPoly & ~((r & 1) - 1));
+                }
 
                 kTable[i] = r;
             }
@@ -36,7 +38,9 @@ namespace SharpCompress.Compressor.LZMA
             {
                 int delta = stream.Read(buffer, 0, (int)Math.Min(length, buffer.Length));
                 if (delta == 0)
+                {
                     throw new EndOfStreamException();
+                }
                 crc = Update(crc, buffer, 0, delta);
                 length -= delta;
             }
@@ -75,7 +79,9 @@ namespace SharpCompress.Compressor.LZMA
         public static uint Update(uint crc, byte[] buffer, int offset, int length)
         {
             for (int i = 0; i < length; i++)
+            {
                 crc = Update(crc, buffer[offset + i]);
+            }
 
             return crc;
         }

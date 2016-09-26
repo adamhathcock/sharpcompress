@@ -4,8 +4,8 @@ namespace SharpCompress.Compressor.LZMA.RangeCoder
 {
     internal struct BitTreeEncoder
     {
-        private BitEncoder[] Models;
-        private int NumBitLevels;
+        private readonly BitEncoder[] Models;
+        private readonly int NumBitLevels;
 
         public BitTreeEncoder(int numBitLevels)
         {
@@ -16,7 +16,9 @@ namespace SharpCompress.Compressor.LZMA.RangeCoder
         public void Init()
         {
             for (uint i = 1; i < (1 << NumBitLevels); i++)
+            {
                 Models[i].Init();
+            }
         }
 
         public void Encode(Encoder rangeEncoder, UInt32 symbol)
@@ -102,8 +104,8 @@ namespace SharpCompress.Compressor.LZMA.RangeCoder
 
     internal struct BitTreeDecoder
     {
-        private BitDecoder[] Models;
-        private int NumBitLevels;
+        private readonly BitDecoder[] Models;
+        private readonly int NumBitLevels;
 
         public BitTreeDecoder(int numBitLevels)
         {
@@ -114,18 +116,22 @@ namespace SharpCompress.Compressor.LZMA.RangeCoder
         public void Init()
         {
             for (uint i = 1; i < (1 << NumBitLevels); i++)
+            {
                 Models[i].Init();
+            }
         }
 
-        public uint Decode(RangeCoder.Decoder rangeDecoder)
+        public uint Decode(Decoder rangeDecoder)
         {
             uint m = 1;
             for (int bitIndex = NumBitLevels; bitIndex > 0; bitIndex--)
+            {
                 m = (m << 1) + Models[m].Decode(rangeDecoder);
-            return m - ((uint) 1 << NumBitLevels);
+            }
+            return m - ((uint)1 << NumBitLevels);
         }
 
-        public uint ReverseDecode(RangeCoder.Decoder rangeDecoder)
+        public uint ReverseDecode(Decoder rangeDecoder)
         {
             uint m = 1;
             uint symbol = 0;
@@ -140,7 +146,7 @@ namespace SharpCompress.Compressor.LZMA.RangeCoder
         }
 
         public static uint ReverseDecode(BitDecoder[] Models, UInt32 startIndex,
-                                         RangeCoder.Decoder rangeDecoder, int NumBitLevels)
+                                         Decoder rangeDecoder, int NumBitLevels)
         {
             uint m = 1;
             uint symbol = 0;

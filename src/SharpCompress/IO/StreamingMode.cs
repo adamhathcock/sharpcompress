@@ -3,6 +3,6 @@
     internal enum StreamingMode
     {
         Streaming,
-        Seekable,
+        Seekable
     }
 }

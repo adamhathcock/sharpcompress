@@ -41,14 +41,12 @@ namespace SharpCompress.Compressor.Deflate
         public DateTime? LastModified { get; set; }
 
         private string comment;
-        private int crc32;
         private string fileName;
 
         internal ZlibBaseStream BaseStream;
         private bool disposed;
         private bool firstReadDone;
         private int headerByteCount;
-
 
         public GZipStream(Stream stream, CompressionMode mode)
             : this(stream, mode, CompressionLevel.Default, false)
@@ -78,7 +76,9 @@ namespace SharpCompress.Compressor.Deflate
             set
             {
                 if (disposed)
+                {
                     throw new ObjectDisposedException("GZipStream");
+                }
                 BaseStream._flushMode = value;
             }
         }
@@ -89,27 +89,26 @@ namespace SharpCompress.Compressor.Deflate
             set
             {
                 if (disposed)
+                {
                     throw new ObjectDisposedException("GZipStream");
+                }
                 if (BaseStream._workingBuffer != null)
+                {
                     throw new ZlibException("The working buffer is already set.");
+                }
                 if (value < ZlibConstants.WorkingBufferSizeMin)
+                {
                     throw new ZlibException(
-                        String.Format("Don't be silly. {0} bytes?? Use a bigger buffer, at least {1}.", value,
-                                      ZlibConstants.WorkingBufferSizeMin));
+                                            String.Format("Don't be silly. {0} bytes?? Use a bigger buffer, at least {1}.", value,
+                                                          ZlibConstants.WorkingBufferSizeMin));
+                }
                 BaseStream._bufferSize = value;
             }
         }
 
+        internal virtual long TotalIn { get { return BaseStream._z.TotalBytesIn; } }
 
-        internal virtual long TotalIn
-        {
-            get { return BaseStream._z.TotalBytesIn; }
-        }
-
-        internal virtual long TotalOut
-        {
-            get { return BaseStream._z.TotalBytesOut; }
-        }
+        internal virtual long TotalOut { get { return BaseStream._z.TotalBytesOut; } }
 
         #endregion
 
@@ -126,7 +125,9 @@ namespace SharpCompress.Compressor.Deflate
             get
             {
                 if (disposed)
+                {
                     throw new ObjectDisposedException("GZipStream");
+                }
                 return BaseStream._stream.CanRead;
             }
         }
@@ -137,11 +138,7 @@ namespace SharpCompress.Compressor.Deflate
         /// <remarks>
         /// Always returns false.
         /// </remarks>
-        public override bool CanSeek
-        {
-            get { return false; }
-        }
-
+        public override bool CanSeek { get { return false; } }
 
         /// <summary>
         /// Indicates whether the stream can be written.
@@ -154,7 +151,9 @@ namespace SharpCompress.Compressor.Deflate
             get
             {
                 if (disposed)
+                {
                     throw new ObjectDisposedException("GZipStream");
+                }
                 return BaseStream._stream.CanWrite;
             }
         }
@@ -162,10 +161,7 @@ namespace SharpCompress.Compressor.Deflate
         /// <summary>
         /// Reading this property always throws a <see cref="NotImplementedException"/>.
         /// </summary>
-        public override long Length
-        {
-            get { throw new NotSupportedException(); }
-        }
+        public override long Length { get { throw new NotSupportedException(); } }
 
         /// <summary>
         ///   The position of the stream pointer.
@@ -183,9 +179,13 @@ namespace SharpCompress.Compressor.Deflate
             get
             {
                 if (BaseStream._streamMode == ZlibBaseStream.StreamMode.Writer)
+                {
                     return BaseStream._z.TotalBytesOut + headerByteCount;
+                }
                 if (BaseStream._streamMode == ZlibBaseStream.StreamMode.Reader)
+                {
                     return BaseStream._z.TotalBytesIn + BaseStream._gzipHeaderByteCount;
+                }
                 return 0;
             }
 
@@ -208,7 +208,7 @@ namespace SharpCompress.Compressor.Deflate
                     if (disposing && (BaseStream != null))
                     {
                         BaseStream.Dispose();
-                        crc32 = BaseStream.Crc32;
+                        Crc32 = BaseStream.Crc32;
                     }
                     disposed = true;
                 }
@@ -225,7 +225,9 @@ namespace SharpCompress.Compressor.Deflate
         public override void Flush()
         {
             if (disposed)
+            {
                 throw new ObjectDisposedException("GZipStream");
+            }
             BaseStream.Flush();
         }
 
@@ -263,7 +265,9 @@ namespace SharpCompress.Compressor.Deflate
         public override int Read(byte[] buffer, int offset, int count)
         {
             if (disposed)
+            {
                 throw new ObjectDisposedException("GZipStream");
+            }
             int n = BaseStream.Read(buffer, offset, count);
 
             // Console.WriteLine("GZipStream::Read(buffer, off({0}), c({1}) = {2}", offset, count, n);
@@ -277,7 +281,6 @@ namespace SharpCompress.Compressor.Deflate
             }
             return n;
         }
-
 
         /// <summary>
         ///   Calling this method always throws a <see cref="NotImplementedException"/>.
@@ -324,7 +327,9 @@ namespace SharpCompress.Compressor.Deflate
         public override void Write(byte[] buffer, int offset, int count)
         {
             if (disposed)
+            {
                 throw new ObjectDisposedException("GZipStream");
+            }
             if (BaseStream._streamMode == ZlibBaseStream.StreamMode.Undefined)
             {
                 //Console.WriteLine("GZipStream: First write");
@@ -350,7 +355,9 @@ namespace SharpCompress.Compressor.Deflate
             set
             {
                 if (disposed)
+                {
                     throw new ObjectDisposedException("GZipStream");
+                }
                 comment = value;
             }
         }
@@ -361,16 +368,22 @@ namespace SharpCompress.Compressor.Deflate
             set
             {
                 if (disposed)
+                {
                     throw new ObjectDisposedException("GZipStream");
+                }
                 fileName = value;
                 if (fileName == null)
+                {
                     return;
+                }
                 if (fileName.IndexOf("/") != -1)
                 {
                     fileName = fileName.Replace("/", "\\");
                 }
                 if (fileName.EndsWith("\\"))
+                {
                     throw new InvalidOperationException("Illegal filename");
+                }
 
                 var index = fileName.IndexOf("\\");
                 if (index != -1)
@@ -390,11 +403,7 @@ namespace SharpCompress.Compressor.Deflate
             }
         }
 
-        public int Crc32
-        {
-            get { return crc32; }
-        }
-
+        public int Crc32 { get; private set; }
 
         private int EmitHeader()
         {
@@ -407,6 +416,7 @@ namespace SharpCompress.Compressor.Deflate
             int bufferLength = 10 + cbLength + fnLength;
             var header = new byte[bufferLength];
             int i = 0;
+
             // ID
             header[i++] = 0x1F;
             header[i++] = 0x8B;
@@ -415,23 +425,30 @@ namespace SharpCompress.Compressor.Deflate
             header[i++] = 8;
             byte flag = 0;
             if (Comment != null)
+            {
                 flag ^= 0x10;
+            }
             if (FileName != null)
+            {
                 flag ^= 0x8;
+            }
 
             // flag
             header[i++] = flag;
 
             // mtime
             if (!LastModified.HasValue)
+            {
                 LastModified = DateTime.Now;
+            }
             TimeSpan delta = LastModified.Value - UnixEpoch;
-            var timet = (Int32) delta.TotalSeconds;
+            var timet = (Int32)delta.TotalSeconds;
             DataConverter.LittleEndian.PutBytes(header, i, timet);
             i += 4;
 
             // xflg
             header[i++] = 0; // this field is totally useless
+
             // OS
             header[i++] = 0xFF; // 0xFF == unspecified
 

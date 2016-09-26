@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using SharpCompress.Compressor.LZMA;
@@ -17,7 +18,7 @@ namespace SharpCompress.Common.SevenZip
         internal long _streamEnding;
         internal byte[] _header;
 
-        private Dictionary<int, Stream> _cachedStreams = new Dictionary<int, Stream>();
+        private readonly Dictionary<int, Stream> _cachedStreams = new Dictionary<int, Stream>();
 
         internal void AddByteStream(byte[] buffer, int offset, int length)
         {
@@ -66,7 +67,9 @@ namespace SharpCompress.Common.SevenZip
         {
             ulong id = _currentReader.ReadNumber();
             if (id > 25)
+            {
                 return null;
+            }
 #if DEBUG
             Log.WriteLine("ReadId: {0}", (BlockType)id);
 #endif
@@ -85,13 +88,17 @@ namespace SharpCompress.Common.SevenZip
 
         private void WaitAttribute(BlockType attribute)
         {
-            for (; ; )
+            for (;;)
             {
                 BlockType? type = ReadId();
                 if (type == attribute)
+                {
                     return;
+                }
                 if (type == BlockType.End)
+                {
                     throw new InvalidOperationException();
+                }
                 SkipData();
             }
         }
@@ -99,7 +106,9 @@ namespace SharpCompress.Common.SevenZip
         private void ReadArchiveProperties()
         {
             while (ReadId() != BlockType.End)
+            {
                 SkipData();
+            }
         }
 
         #endregion
@@ -122,7 +131,9 @@ namespace SharpCompress.Common.SevenZip
                 }
 
                 if ((data & mask) != 0)
+                {
                     bits.SetBit(i);
+                }
 
                 mask >>= 1;
             }
@@ -134,7 +145,9 @@ namespace SharpCompress.Common.SevenZip
         {
             byte allTrue = ReadByte();
             if (allTrue != 0)
+            {
                 return new BitVector(length, true);
+            }
 
             return ReadBitVector(length);
         }
@@ -150,9 +163,13 @@ namespace SharpCompress.Common.SevenZip
                 for (int i = 0; i < numFiles; i++)
                 {
                     if (defined[i])
+                    {
                         action(i, checked((long)ReadUInt64()));
+                    }
                     else
+                    {
                         action(i, null);
+                    }
                 }
             }
         }
@@ -166,9 +183,10 @@ namespace SharpCompress.Common.SevenZip
         private DateTime? TranslateTime(long? time)
         {
             if (time.HasValue)
+            {
                 return TranslateTime(time.Value);
-            else
-                return null;
+            }
+            return null;
         }
 
         private void ReadDateTimeVector(List<byte[]> dataVector, int numFiles, Action<int, DateTime?> action)
@@ -185,9 +203,13 @@ namespace SharpCompress.Common.SevenZip
                 for (int i = 0; i < numFiles; i++)
                 {
                     if (boolVector[i])
+                    {
                         action(i, ReadUInt32());
+                    }
                     else
+                    {
                         action(i, null);
+                    }
                 }
             }
         }
@@ -230,10 +252,14 @@ namespace SharpCompress.Common.SevenZip
                         Log.WriteLine("MethodId: " + String.Join("", Enumerable.Range(0, idSize).Select(x => longID[x].ToString("x2")).ToArray()));
 #endif
                         if (idSize > 8)
+                        {
                             throw new NotSupportedException();
+                        }
                         ulong id = 0;
                         for (int j = 0; j < idSize; j++)
+                        {
                             id |= (ulong)longID[idSize - 1 - j] << (8 * j);
+                        }
                         coder.MethodId = new CMethodId(id);
 
                         if ((mainByte & 0x10) != 0)
@@ -264,7 +290,9 @@ namespace SharpCompress.Common.SevenZip
                         }
 
                         if ((mainByte & 0x80) != 0)
+                        {
                             throw new NotSupportedException();
+                        }
 
                         numInStreams += coder.NumInStreams;
                         numOutStreams += coder.NumOutStreams;
@@ -298,9 +326,12 @@ namespace SharpCompress.Common.SevenZip
 #endif
 
                 if (numInStreams < numBindPairs)
+                {
                     throw new NotSupportedException();
+                }
 
                 int numPackStreams = numInStreams - numBindPairs;
+
                 //folder.PackStreams.Reserve(numPackStreams);
                 if (numPackStreams == 1)
                 {
@@ -317,7 +348,9 @@ namespace SharpCompress.Common.SevenZip
                     }
 
                     if (folder.PackStreams.Count != 1)
+                    {
                         throw new NotSupportedException();
+                    }
                 }
                 else
                 {
@@ -417,11 +450,13 @@ namespace SharpCompress.Common.SevenZip
 #endif
 
                 BlockType? type;
-                for (; ; )
+                for (;;)
                 {
                     type = ReadId();
                     if (type == BlockType.End)
+                    {
                         break;
+                    }
                     if (type == BlockType.CRC)
                     {
                         packCRCs = ReadHashDigests(numPackStreams);
@@ -434,7 +469,9 @@ namespace SharpCompress.Common.SevenZip
                 {
                     packCRCs = new List<uint?>(numPackStreams);
                     for (int i = 0; i < numPackStreams; i++)
+                    {
                         packCRCs.Add(null);
+                    }
                 }
             }
             finally
@@ -462,13 +499,14 @@ namespace SharpCompress.Common.SevenZip
                 using (CStreamSwitch streamSwitch = new CStreamSwitch())
                 {
                     streamSwitch.Set(this, dataVector);
+
                     //folders.Clear();
                     //folders.Reserve(numFolders);
                     folders = new List<CFolder>(numFolders);
                     int index = 0;
                     for (int i = 0; i < numFolders; i++)
                     {
-                        var f = new CFolder { FirstPackStreamId = index };
+                        var f = new CFolder {FirstPackStreamId = index};
                         folders.Add(f);
                         GetNextFolderItem(f);
                         index += f.PackStreams.Count;
@@ -499,17 +537,21 @@ namespace SharpCompress.Common.SevenZip
 #endif
                 }
 
-                for (; ; )
+                for (;;)
                 {
                     BlockType? type = ReadId();
                     if (type == BlockType.End)
+                    {
                         return;
+                    }
 
                     if (type == BlockType.CRC)
                     {
                         List<uint?> crcs = ReadHashDigests(numFolders);
                         for (int i = 0; i < numFolders; i++)
+                        {
                             folders[i].UnpackCRC = crcs[i];
+                        }
                         continue;
                     }
 
@@ -536,7 +578,7 @@ namespace SharpCompress.Common.SevenZip
                 numUnpackStreamsInFolders = null;
 
                 BlockType? type;
-                for (; ; )
+                for (;;)
                 {
                     type = ReadId();
                     if (type == BlockType.NumUnpackStream)
@@ -559,9 +601,13 @@ namespace SharpCompress.Common.SevenZip
                         continue;
                     }
                     if (type == BlockType.CRC || type == BlockType.Size)
+                    {
                         break;
+                    }
                     if (type == BlockType.End)
+                    {
                         break;
+                    }
                     SkipData();
                 }
 
@@ -569,7 +615,9 @@ namespace SharpCompress.Common.SevenZip
                 {
                     numUnpackStreamsInFolders = new List<int>(folders.Count);
                     for (int i = 0; i < folders.Count; i++)
+                    {
                         numUnpackStreamsInFolders.Add(1);
+                    }
                 }
 
                 unpackSizes = new List<long>(folders.Count);
@@ -579,7 +627,9 @@ namespace SharpCompress.Common.SevenZip
                     // v4.07: we check that folder is empty
                     int numSubstreams = numUnpackStreamsInFolders[i];
                     if (numSubstreams == 0)
+                    {
                         continue;
+                    }
 #if DEBUG
                     Log.Write("#{0} StreamSizes:", i);
 #endif
@@ -602,7 +652,9 @@ namespace SharpCompress.Common.SevenZip
 #endif
                 }
                 if (type == BlockType.Size)
+                {
                     type = ReadId();
+                }
 
                 int numDigests = 0;
                 int numDigestsTotal = 0;
@@ -610,13 +662,15 @@ namespace SharpCompress.Common.SevenZip
                 {
                     int numSubstreams = numUnpackStreamsInFolders[i];
                     if (numSubstreams != 1 || !folders[i].UnpackCRCDefined)
+                    {
                         numDigests += numSubstreams;
+                    }
                     numDigestsTotal += numSubstreams;
                 }
 
                 digests = null;
 
-                for (; ; )
+                for (;;)
                 {
                     if (type == BlockType.CRC)
                     {
@@ -636,12 +690,16 @@ namespace SharpCompress.Common.SevenZip
                             else
                             {
                                 for (int j = 0; j < numSubstreams; j++, digestIndex++)
+                                {
                                     digests.Add(digests2[digestIndex]);
+                                }
                             }
                         }
 
                         if (digestIndex != numDigests || numDigestsTotal != digests.Count)
-                            System.Diagnostics.Debugger.Break();
+                        {
+                            Debugger.Break();
+                        }
                     }
                     else if (type == BlockType.End)
                     {
@@ -649,7 +707,9 @@ namespace SharpCompress.Common.SevenZip
                         {
                             digests = new List<uint?>(numDigestsTotal);
                             for (int i = 0; i < numDigestsTotal; i++)
+                            {
                                 digests.Add(null);
+                            }
                         }
                         return;
                     }
@@ -693,7 +753,7 @@ namespace SharpCompress.Common.SevenZip
                 unpackSizes = null;
                 digests = null;
 
-                for (; ; )
+                for (;;)
                 {
                     switch (ReadId())
                     {
@@ -768,12 +828,18 @@ namespace SharpCompress.Common.SevenZip
                     byte[] data = new byte[unpackSize];
                     outStream.ReadExact(data, 0, data.Length);
                     if (outStream.ReadByte() >= 0)
+                    {
                         throw new InvalidOperationException("Decoded stream is longer than expected.");
+                    }
                     dataVector.Add(data);
 
                     if (folder.UnpackCRCDefined)
+                    {
                         if (CRC.Finish(CRC.Update(CRC.kInitCRC, data, 0, unpackSize)) != folder.UnpackCRC)
+                        {
                             throw new InvalidOperationException("Decoded stream does not match expected CRC.");
+                        }
+                    }
                 }
                 return dataVector;
             }
@@ -842,10 +908,14 @@ namespace SharpCompress.Common.SevenZip
                 db.Files.Clear();
 
                 if (type == BlockType.End)
+                {
                     return;
+                }
 
                 if (type != BlockType.FilesInfo)
+                {
                     throw new InvalidOperationException();
+                }
 
                 int numFiles = ReadNum();
 #if DEBUG
@@ -853,18 +923,22 @@ namespace SharpCompress.Common.SevenZip
 #endif
                 db.Files = new List<CFileItem>(numFiles);
                 for (int i = 0; i < numFiles; i++)
+                {
                     db.Files.Add(new CFileItem());
+                }
 
                 BitVector emptyStreamVector = new BitVector(numFiles);
                 BitVector emptyFileVector = null;
                 BitVector antiFileVector = null;
                 int numEmptyStreams = 0;
 
-                for (; ; )
+                for (;;)
                 {
                     type = ReadId();
                     if (type == BlockType.End)
+                    {
                         break;
+                    }
 
                     long size = checked((long)ReadNumber()); // TODO: throw invalid data on negative
                     int oldPos = _currentReader.Offset;
@@ -894,32 +968,34 @@ namespace SharpCompress.Common.SevenZip
                             Log.Write("WinAttributes:");
 #endif
                             ReadAttributeVector(dataVector, numFiles, delegate(int i, uint? attr)
+                                                                      {
+                                                                          // Some third party implementations established an unofficial extension
+                                                                          // of the 7z archive format by placing posix file attributes in the high
+                                                                          // bits of the windows file attributes. This makes use of the fact that
+                                                                          // the official implementation does not perform checks on this value.
+                                                                          //
+                                                                          // Newer versions of the official 7z GUI client will try to parse this
+                                                                          // extension, thus acknowledging the unofficial use of these bits.
+                                                                          //
+                                                                          // For us it is safe to just discard the upper bits if they are set and
+                                                                          // keep the windows attributes from the lower bits (which should be set
+                                                                          // properly even if posix file attributes are present, in order to be
+                                                                          // compatible with older 7z archive readers)
+                                                                          //
+                                                                          // Note that the 15th bit is used by some implementations to indicate
+                                                                          // presence of the extension, but not all implementations do that so
+                                                                          // we can't trust that bit and must ignore it.
+                                                                          //
+                                                                          if (attr.HasValue && (attr.Value >> 16) != 0)
                                                                           {
-                                                                              // Some third party implementations established an unofficial extension
-                                                                              // of the 7z archive format by placing posix file attributes in the high
-                                                                              // bits of the windows file attributes. This makes use of the fact that
-                                                                              // the official implementation does not perform checks on this value.
-                                                                              //
-                                                                              // Newer versions of the official 7z GUI client will try to parse this
-                                                                              // extension, thus acknowledging the unofficial use of these bits.
-                                                                              //
-                                                                              // For us it is safe to just discard the upper bits if they are set and
-                                                                              // keep the windows attributes from the lower bits (which should be set
-                                                                              // properly even if posix file attributes are present, in order to be
-                                                                              // compatible with older 7z archive readers)
-                                                                              //
-                                                                              // Note that the 15th bit is used by some implementations to indicate
-                                                                              // presence of the extension, but not all implementations do that so
-                                                                              // we can't trust that bit and must ignore it.
-                                                                              //
-                                                                              if (attr.HasValue && (attr.Value >> 16) != 0)
-                                                                                  attr = attr.Value & 0x7FFFu;
+                                                                              attr = attr.Value & 0x7FFFu;
+                                                                          }
 
-                                                                              db.Files[i].Attrib = attr;
+                                                                          db.Files[i].Attrib = attr;
 #if DEBUG
-                                                                              Log.Write("  " + (attr.HasValue ? attr.Value.ToString("x8") : "n/a"));
+                                                                          Log.Write("  " + (attr.HasValue ? attr.Value.ToString("x8") : "n/a"));
 #endif
-                                                                          });
+                                                                      });
 #if DEBUG
                             Log.WriteLine();
 #endif
@@ -958,7 +1034,9 @@ namespace SharpCompress.Common.SevenZip
 #if DEBUG
                             Log.Write("EmptyFile: ");
                             for (int i = 0; i < numEmptyStreams; i++)
+                            {
                                 Log.Write(emptyFileVector[i] ? "x" : ".");
+                            }
                             Log.WriteLine();
 #endif
                             break;
@@ -967,7 +1045,9 @@ namespace SharpCompress.Common.SevenZip
 #if DEBUG
                             Log.Write("Anti: ");
                             for (int i = 0; i < numEmptyStreams; i++)
+                            {
                                 Log.Write(antiFileVector[i] ? "x" : ".");
+                            }
                             Log.WriteLine();
 #endif
                             break;
@@ -976,12 +1056,12 @@ namespace SharpCompress.Common.SevenZip
                             Log.Write("StartPos:");
 #endif
                             ReadNumberVector(dataVector, numFiles, delegate(int i, long? startPos)
-                                                                       {
-                                                                           db.Files[i].StartPos = startPos;
+                                                                   {
+                                                                       db.Files[i].StartPos = startPos;
 #if DEBUG
-                                                                           Log.Write("  " + (startPos.HasValue ? startPos.Value.ToString() : "n/a"));
+                                                                       Log.Write("  " + (startPos.HasValue ? startPos.Value.ToString() : "n/a"));
 #endif
-                                                                       });
+                                                                   });
 #if DEBUG
                             Log.WriteLine();
 #endif
@@ -991,12 +1071,12 @@ namespace SharpCompress.Common.SevenZip
                             Log.Write("CTime:");
 #endif
                             ReadDateTimeVector(dataVector, numFiles, delegate(int i, DateTime? time)
-                                                                         {
-                                                                             db.Files[i].CTime = time;
+                                                                     {
+                                                                         db.Files[i].CTime = time;
 #if DEBUG
-                                                                             Log.Write("  " + (time.HasValue ? time.Value.ToString() : "n/a"));
+                                                                         Log.Write("  " + (time.HasValue ? time.Value.ToString() : "n/a"));
 #endif
-                                                                         });
+                                                                     });
 #if DEBUG
                             Log.WriteLine();
 #endif
@@ -1006,12 +1086,12 @@ namespace SharpCompress.Common.SevenZip
                             Log.Write("ATime:");
 #endif
                             ReadDateTimeVector(dataVector, numFiles, delegate(int i, DateTime? time)
-                                                                         {
-                                                                             db.Files[i].ATime = time;
+                                                                     {
+                                                                         db.Files[i].ATime = time;
 #if DEBUG
-                                                                             Log.Write("  " + (time.HasValue ? time.Value.ToString() : "n/a"));
+                                                                         Log.Write("  " + (time.HasValue ? time.Value.ToString() : "n/a"));
 #endif
-                                                                         });
+                                                                     });
 #if DEBUG
                             Log.WriteLine();
 #endif
@@ -1021,12 +1101,12 @@ namespace SharpCompress.Common.SevenZip
                             Log.Write("MTime:");
 #endif
                             ReadDateTimeVector(dataVector, numFiles, delegate(int i, DateTime? time)
-                                                                         {
-                                                                             db.Files[i].MTime = time;
+                                                                     {
+                                                                         db.Files[i].MTime = time;
 #if DEBUG
-                                                                             Log.Write("  " + (time.HasValue ? time.Value.ToString() : "n/a"));
+                                                                         Log.Write("  " + (time.HasValue ? time.Value.ToString() : "n/a"));
 #endif
-                                                                         });
+                                                                     });
 #if DEBUG
                             Log.WriteLine();
 #endif
@@ -1036,8 +1116,12 @@ namespace SharpCompress.Common.SevenZip
                             Log.Write("Dummy: " + size);
 #endif
                             for (long j = 0; j < size; j++)
+                            {
                                 if (ReadByte() != 0)
+                                {
                                     throw new InvalidOperationException();
+                                }
+                            }
                             break;
                         default:
                             SkipData(size);
@@ -1047,7 +1131,9 @@ namespace SharpCompress.Common.SevenZip
                     // since 0.3 record sizes must be correct
                     bool checkRecordsSize = (db.MajorVersion > 0 || db.MinorVersion > 2);
                     if (checkRecordsSize && _currentReader.Offset - oldPos != size)
+                    {
                         throw new InvalidOperationException();
+                    }
                 }
 
                 int emptyFileIndex = 0;
@@ -1095,11 +1181,13 @@ namespace SharpCompress.Common.SevenZip
 
             // TODO: Check Signature!
             _header = new byte[0x20];
-            for (int offset = 0; offset < 0x20; )
+            for (int offset = 0; offset < 0x20;)
             {
                 int delta = stream.Read(_header, offset, 0x20 - offset);
                 if (delta == 0)
+                {
                     throw new EndOfStreamException();
+                }
                 offset += delta;
             }
 
@@ -1109,10 +1197,14 @@ namespace SharpCompress.Common.SevenZip
         public void Close()
         {
             if (_stream != null)
+            {
                 _stream.Dispose();
+            }
 
             foreach (var stream in _cachedStreams.Values)
+            {
                 stream.Dispose();
+            }
 
             _cachedStreams.Clear();
         }
@@ -1126,7 +1218,9 @@ namespace SharpCompress.Common.SevenZip
             db.MinorVersion = _header[7];
 
             if (db.MajorVersion != 0)
+            {
                 throw new InvalidOperationException();
+            }
 
             uint crcFromArchive = DataReader.Get32(_header, 8);
             long nextHeaderOffset = (long)DataReader.Get64(_header, 0xC);
@@ -1140,7 +1234,9 @@ namespace SharpCompress.Common.SevenZip
             crc = CRC.Finish(crc);
 
             if (crc != crcFromArchive)
+            {
                 throw new InvalidOperationException();
+            }
 
             db.StartPositionAfterHeader = _streamOrigin + 0x20;
 
@@ -1151,12 +1247,15 @@ namespace SharpCompress.Common.SevenZip
                 return db;
             }
 
-
             if (nextHeaderOffset < 0 || nextHeaderSize < 0 || nextHeaderSize > Int32.MaxValue)
+            {
                 throw new InvalidOperationException();
+            }
 
             if (nextHeaderOffset > _streamEnding - db.StartPositionAfterHeader)
+            {
                 throw new IndexOutOfRangeException();
+            }
 
             _stream.Seek(nextHeaderOffset, SeekOrigin.Current);
 
@@ -1164,7 +1263,9 @@ namespace SharpCompress.Common.SevenZip
             _stream.ReadExact(header, 0, header.Length);
 
             if (CRC.Finish(CRC.Update(CRC.kInitCRC, header, 0, header.Length)) != nextHeaderCrc)
+            {
                 throw new InvalidOperationException();
+            }
 
             using (CStreamSwitch streamSwitch = new CStreamSwitch())
             {
@@ -1174,7 +1275,9 @@ namespace SharpCompress.Common.SevenZip
                 if (type != BlockType.Header)
                 {
                     if (type != BlockType.EncodedHeader)
+                    {
                         throw new InvalidOperationException();
+                    }
 
                     var dataVector = ReadAndDecodePackedStreams(db.StartPositionAfterHeader, pass);
 
@@ -1186,12 +1289,16 @@ namespace SharpCompress.Common.SevenZip
                     }
 
                     if (dataVector.Count != 1)
+                    {
                         throw new InvalidOperationException();
+                    }
 
                     streamSwitch.Set(this, dataVector[0]);
 
                     if (ReadId() != BlockType.Header)
+                    {
                         throw new InvalidOperationException();
+                    }
                 }
 
                 ReadHeader(db, pass);
@@ -1211,55 +1318,41 @@ namespace SharpCompress.Common.SevenZip
                 FileIndex = fileIndex;
                 FolderIndex = folderIndex;
                 if (fileIndex != -1)
+                {
                     ExtractStatuses.Add(true);
+                }
             }
         }
 
         private class FolderUnpackStream : Stream
         {
-            private ArchiveDatabase _db;
-            private int _startIndex;
-            private List<bool> _extractStatuses;
+            private readonly ArchiveDatabase _db;
+            private readonly int _startIndex;
+            private readonly List<bool> _extractStatuses;
 
             public FolderUnpackStream(ArchiveDatabase db, int p, int startIndex, List<bool> list)
             {
-                this._db = db;
-                this._startIndex = startIndex;
-                this._extractStatuses = list;
+                _db = db;
+                _startIndex = startIndex;
+                _extractStatuses = list;
             }
 
             #region Stream
 
-            public override bool CanRead
-            {
-                get { return true; }
-            }
+            public override bool CanRead { get { return true; } }
 
-            public override bool CanSeek
-            {
-                get { return false; }
-            }
+            public override bool CanSeek { get { return false; } }
 
-            public override bool CanWrite
-            {
-                get { return false; }
-            }
+            public override bool CanWrite { get { return false; } }
 
             public override void Flush()
             {
                 throw new NotSupportedException();
             }
 
-            public override long Length
-            {
-                get { throw new NotSupportedException(); }
-            }
+            public override long Length { get { throw new NotSupportedException(); } }
 
-            public override long Position
-            {
-                get { throw new NotSupportedException(); }
-                set { throw new NotSupportedException(); }
-            }
+            public override long Position { get { throw new NotSupportedException(); } set { throw new NotSupportedException(); } }
 
             public override int Read(byte[] buffer, int offset, int count)
             {
@@ -1298,9 +1391,13 @@ namespace SharpCompress.Common.SevenZip
                 Log.WriteLine(_db.Files[index].Name);
 #endif
                 if (_db.Files[index].CrcDefined)
+                {
                     _stream = new CrcCheckStream(_db.Files[index].Crc.Value);
+                }
                 else
+                {
                     _stream = new MemoryStream();
+                }
                 _rem = _db.Files[index].Size;
             }
 
@@ -1312,7 +1409,9 @@ namespace SharpCompress.Common.SevenZip
                     {
                         int write = count;
                         if (write > _rem)
+                        {
                             write = (int)_rem;
+                        }
                         _stream.Write(buffer, offset, write);
                         count -= write;
                         _rem -= write;
@@ -1331,7 +1430,7 @@ namespace SharpCompress.Common.SevenZip
                         if (_currentIndex == _extractStatuses.Count)
                         {
                             // we support partial extracting
-                            System.Diagnostics.Debugger.Break();
+                            Debugger.Break();
                             throw new NotSupportedException();
                         }
                         OpenFile();
@@ -1352,7 +1451,9 @@ namespace SharpCompress.Common.SevenZip
                 long folderStartPackPos = _db.GetFolderStreamPos(folderInfo, 0);
                 List<long> packSizes = new List<long>();
                 for (int j = 0; j < folderInfo.PackStreams.Count; j++)
+                {
                     packSizes.Add(_db.PackSizes[packStreamIndex + j]);
+                }
 
                 s = DecoderStreamHelper.CreateDecoderStream(_stream, folderStartPackPos, packSizes.ToArray(), folderInfo,
                                                             pw);
@@ -1367,12 +1468,16 @@ namespace SharpCompress.Common.SevenZip
             int numFilesInFolder = _db.NumUnpackStreamsVector[folderIndex];
             int firstFileIndex = _db.FolderStartFileIndex[folderIndex];
             if (firstFileIndex > fileIndex || fileIndex - firstFileIndex >= numFilesInFolder)
+            {
                 throw new InvalidOperationException();
+            }
 
             int skipCount = fileIndex - firstFileIndex;
             long skipSize = 0;
             for (int i = 0; i < skipCount; i++)
+            {
                 skipSize += _db.Files[firstFileIndex + i].Size;
+            }
 
             Stream s = GetCachedDecoderStream(_db, folderIndex, pw);
             s.Position = skipSize;
@@ -1384,12 +1489,18 @@ namespace SharpCompress.Common.SevenZip
             int numItems;
             bool allFilesMode = (indices == null);
             if (allFilesMode)
+            {
                 numItems = _db.Files.Count;
+            }
             else
+            {
                 numItems = indices.Length;
+            }
 
             if (numItems == 0)
+            {
                 return;
+            }
 
             List<CExtractFolderInfo> extractFolderInfoVector = new List<CExtractFolderInfo>();
             for (int i = 0; i < numItems; i++)
@@ -1404,27 +1515,37 @@ namespace SharpCompress.Common.SevenZip
                 }
 
                 if (extractFolderInfoVector.Count == 0 || folderIndex != extractFolderInfoVector.Last().FolderIndex)
+                {
                     extractFolderInfoVector.Add(new CExtractFolderInfo(-1, folderIndex));
+                }
 
                 CExtractFolderInfo efi = extractFolderInfoVector.Last();
 
                 int startIndex = _db.FolderStartFileIndex[folderIndex];
                 for (int index = efi.ExtractStatuses.Count; index <= fileIndex - startIndex; index++)
+                {
                     efi.ExtractStatuses.Add(index == fileIndex - startIndex);
+                }
             }
 
             foreach (CExtractFolderInfo efi in extractFolderInfoVector)
             {
                 int startIndex;
                 if (efi.FileIndex != -1)
+                {
                     startIndex = efi.FileIndex;
+                }
                 else
+                {
                     startIndex = _db.FolderStartFileIndex[efi.FolderIndex];
+                }
 
                 var outStream = new FolderUnpackStream(_db, 0, startIndex, efi.ExtractStatuses);
 
                 if (efi.FileIndex != -1)
+                {
                     continue;
+                }
 
                 int folderIndex = efi.FolderIndex;
                 CFolder folderInfo = _db.Folders[folderIndex];
@@ -1434,18 +1555,22 @@ namespace SharpCompress.Common.SevenZip
 
                 List<long> packSizes = new List<long>();
                 for (int j = 0; j < folderInfo.PackStreams.Count; j++)
+                {
                     packSizes.Add(_db.PackSizes[packStreamIndex + j]);
+                }
 
                 // TODO: If the decoding fails the last file may be extracted incompletely. Delete it?
 
                 Stream s = DecoderStreamHelper.CreateDecoderStream(_stream, folderStartPackPos, packSizes.ToArray(),
                                                                    folderInfo, pw);
                 byte[] buffer = new byte[4 << 10];
-                for (; ; )
+                for (;;)
                 {
                     int processed = s.Read(buffer, 0, buffer.Length);
                     if (processed == 0)
+                    {
                         break;
+                    }
                     outStream.Write(buffer, 0, processed);
                 }
             }

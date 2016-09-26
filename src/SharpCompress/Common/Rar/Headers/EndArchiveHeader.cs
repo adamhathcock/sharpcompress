@@ -16,10 +16,7 @@ namespace SharpCompress.Common.Rar.Headers
             }
         }
 
-        internal EndArchiveFlags EndArchiveFlags
-        {
-            get { return (EndArchiveFlags) base.Flags; }
-        }
+        internal EndArchiveFlags EndArchiveFlags { get { return (EndArchiveFlags)Flags; } }
 
         internal int? ArchiveCRC { get; private set; }
 

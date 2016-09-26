@@ -1,7 +1,3 @@
-#region Using
-
-#endregion
-
 namespace SharpCompress.Compressor.PPMd.I1
 {
     /// Allocate a single, large array and then provide sections of this array to callers.  Callers are provided with
@@ -14,13 +10,14 @@ namespace SharpCompress.Compressor.PPMd.I1
         private const uint LocalOffset = 4; // reserve the first four bytes for Pointer.Zero
         private const uint NodeOffset = LocalOffset + MemoryNode.Size; // reserve space for a single memory node
 
-        private const uint HeapOffset = NodeOffset + IndexCount*MemoryNode.Size;
-                           // reserve space for the array of memory nodes
+        private const uint HeapOffset = NodeOffset + IndexCount * MemoryNode.Size;
+
+        // reserve space for the array of memory nodes
 
         private const uint N1 = 4;
         private const uint N2 = 4;
         private const uint N3 = 4;
-        private const uint N4 = (128 + 3 - 1*N1 - 2*N2 - 3*N3)/4;
+        private const uint N4 = (128 + 3 - 1 * N1 - 2 * N2 - 3 * N3) / 4;
         private const uint IndexCount = N1 + N2 + N3 + N4;
 
         private static readonly byte[] indexToUnits;
@@ -53,16 +50,24 @@ namespace SharpCompress.Compressor.PPMd.I1
             indexToUnits = new byte[IndexCount];
 
             for (index = 0, unitCount = 1; index < N1; index++, unitCount += 1)
-                indexToUnits[index] = (byte) unitCount;
+            {
+                indexToUnits[index] = (byte)unitCount;
+            }
 
             for (unitCount++; index < N1 + N2; index++, unitCount += 2)
-                indexToUnits[index] = (byte) unitCount;
+            {
+                indexToUnits[index] = (byte)unitCount;
+            }
 
             for (unitCount++; index < N1 + N2 + N3; index++, unitCount += 3)
-                indexToUnits[index] = (byte) unitCount;
+            {
+                indexToUnits[index] = (byte)unitCount;
+            }
 
             for (unitCount++; index < N1 + N2 + N3 + N4; index++, unitCount += 4)
-                indexToUnits[index] = (byte) unitCount;
+            {
+                indexToUnits[index] = (byte)unitCount;
+            }
 
             // Construct the static units to index lookup array.  It will contain the following values.
             //
@@ -75,8 +80,8 @@ namespace SharpCompress.Compressor.PPMd.I1
 
             for (unitCount = index = 0; unitCount < 128; unitCount++)
             {
-                index += (uint) ((indexToUnits[index] < unitCount + 1) ? 1 : 0);
-                unitsToIndex[unitCount] = (byte) index;
+                index += (uint)((indexToUnits[index] < unitCount + 1) ? 1 : 0);
+                unitsToIndex[unitCount] = (byte)index;
             }
         }
 
@@ -95,7 +100,7 @@ namespace SharpCompress.Compressor.PPMd.I1
         {
             for (int index = 0; index < IndexCount; index++)
             {
-                MemoryNodes[index] = new MemoryNode((uint) (NodeOffset + index*MemoryNode.Size), Memory);
+                MemoryNodes[index] = new MemoryNode((uint)(NodeOffset + index * MemoryNode.Size), Memory);
                 MemoryNodes[index].Stamp = 0;
                 MemoryNodes[index].Next = MemoryNode.Zero;
                 MemoryNodes[index].UnitCount = 0;
@@ -103,7 +108,7 @@ namespace SharpCompress.Compressor.PPMd.I1
 
             Text = Heap;
 
-            uint difference = UnitSize*(AllocatorSize/8/UnitSize*7);
+            uint difference = UnitSize * (AllocatorSize / 8 / UnitSize * 7);
 
             HighUnit = Heap + AllocatorSize;
             LowUnit = HighUnit - difference;
@@ -121,7 +126,7 @@ namespace SharpCompress.Compressor.PPMd.I1
         /// <param name="allocatorSize"></param>
         public void Start(int allocatorSize)
         {
-            uint size = (uint) allocatorSize;
+            uint size = (uint)allocatorSize;
             if (AllocatorSize != size)
             {
                 Stop();
@@ -156,7 +161,9 @@ namespace SharpCompress.Compressor.PPMd.I1
         {
             uint memoryUsed = AllocatorSize - (HighUnit - LowUnit) - (BaseUnit - Text);
             for (uint index = 0; index < IndexCount; index++)
-                memoryUsed -= UnitSize*indexToUnits[index]*MemoryNodes[index].Stamp;
+            {
+                memoryUsed -= UnitSize * indexToUnits[index] * MemoryNodes[index].Stamp;
+            }
             return memoryUsed;
         }
 
@@ -170,14 +177,18 @@ namespace SharpCompress.Compressor.PPMd.I1
         {
             uint index = unitsToIndex[unitCount - 1];
             if (MemoryNodes[index].Available)
+            {
                 return MemoryNodes[index].Remove();
+            }
 
             Pointer allocatedBlock = LowUnit;
-            LowUnit += indexToUnits[index]*UnitSize;
+            LowUnit += indexToUnits[index] * UnitSize;
             if (LowUnit <= HighUnit)
+            {
                 return allocatedBlock;
+            }
 
-            LowUnit -= indexToUnits[index]*UnitSize;
+            LowUnit -= indexToUnits[index] * UnitSize;
             return AllocateUnitsRare(index);
         }
 
@@ -188,11 +199,14 @@ namespace SharpCompress.Compressor.PPMd.I1
         public Pointer AllocateContext()
         {
             if (HighUnit != LowUnit)
+            {
                 return (HighUnit -= UnitSize);
-            else if (MemoryNodes[0].Available)
+            }
+            if (MemoryNodes[0].Available)
+            {
                 return MemoryNodes[0].Remove();
-            else
-                return AllocateUnitsRare(0);
+            }
+            return AllocateUnitsRare(0);
         }
 
         /// <summary>
@@ -207,7 +221,9 @@ namespace SharpCompress.Compressor.PPMd.I1
             uint newIndex = unitsToIndex[oldUnitCount];
 
             if (oldIndex == newIndex)
+            {
                 return oldPointer;
+            }
 
             Pointer pointer = AllocateUnits(oldUnitCount + 1);
 
@@ -233,7 +249,9 @@ namespace SharpCompress.Compressor.PPMd.I1
             uint newIndex = unitsToIndex[newUnitCount - 1];
 
             if (oldIndex == newIndex)
+            {
                 return oldPointer;
+            }
 
             if (MemoryNodes[newIndex].Available)
             {
@@ -242,11 +260,8 @@ namespace SharpCompress.Compressor.PPMd.I1
                 MemoryNodes[oldIndex].Insert(oldPointer, indexToUnits[oldIndex]);
                 return pointer;
             }
-            else
-            {
-                SplitBlock(oldPointer, oldIndex, newIndex);
-                return oldPointer;
-            }
+            SplitBlock(oldPointer, oldIndex, newIndex);
+            return oldPointer;
         }
 
         /// <summary>
@@ -279,17 +294,23 @@ namespace SharpCompress.Compressor.PPMd.I1
         {
             uint index = unitsToIndex[unitCount - 1];
 
-            if (oldPointer > BaseUnit + 16*1024 || oldPointer > MemoryNodes[index].Next)
+            if (oldPointer > BaseUnit + 16 * 1024 || oldPointer > MemoryNodes[index].Next)
+            {
                 return oldPointer;
+            }
 
             Pointer pointer = MemoryNodes[index].Remove();
             CopyUnits(pointer, oldPointer, unitCount);
             unitCount = indexToUnits[index];
 
             if (oldPointer != BaseUnit)
+            {
                 MemoryNodes[index].Insert(oldPointer, unitCount);
+            }
             else
-                BaseUnit += unitCount*UnitSize;
+            {
+                BaseUnit += unitCount * UnitSize;
+            }
 
             return pointer;
         }
@@ -319,7 +340,9 @@ namespace SharpCompress.Compressor.PPMd.I1
                         memoryNode.Unlink();
                         MemoryNodes[index].Stamp--;
                         if (--counts[index] == 0)
+                        {
                             break;
+                        }
                     }
                 }
             }
@@ -335,7 +358,9 @@ namespace SharpCompress.Compressor.PPMd.I1
             {
                 GlueFreeBlocks();
                 if (MemoryNodes[index].Available)
+                {
                     return MemoryNodes[index].Remove();
+                }
             }
 
             uint oldIndex = index;
@@ -344,10 +369,11 @@ namespace SharpCompress.Compressor.PPMd.I1
                 if (++oldIndex == IndexCount)
                 {
                     GlueCount--;
-                    oldIndex = indexToUnits[index]*UnitSize;
+                    oldIndex = indexToUnits[index] * UnitSize;
                     return (BaseUnit - Text > oldIndex) ? (BaseUnit -= oldIndex) : Pointer.Zero;
                 }
-            } while (!MemoryNodes[oldIndex].Available);
+            }
+            while (!MemoryNodes[oldIndex].Available);
 
             Pointer allocatedBlock = MemoryNodes[oldIndex].Remove();
             SplitBlock(allocatedBlock, oldIndex, index);
@@ -356,15 +382,15 @@ namespace SharpCompress.Compressor.PPMd.I1
 
         private void SplitBlock(Pointer pointer, uint oldIndex, uint newIndex)
         {
-            uint unitCountDifference = (uint) (indexToUnits[oldIndex] - indexToUnits[newIndex]);
-            Pointer newPointer = pointer + indexToUnits[newIndex]*UnitSize;
+            uint unitCountDifference = (uint)(indexToUnits[oldIndex] - indexToUnits[newIndex]);
+            Pointer newPointer = pointer + indexToUnits[newIndex] * UnitSize;
 
             uint index = unitsToIndex[unitCountDifference - 1];
             if (indexToUnits[index] != unitCountDifference)
             {
                 uint unitCount = indexToUnits[--index];
                 MemoryNodes[index].Insert(newPointer, unitCount);
-                newPointer += unitCount*UnitSize;
+                newPointer += unitCount * UnitSize;
                 unitCountDifference -= unitCount;
             }
 
@@ -383,7 +409,9 @@ namespace SharpCompress.Compressor.PPMd.I1
             MemoryNode memoryNode2;
 
             if (LowUnit != HighUnit)
+            {
                 LowUnit[0] = 0;
+            }
 
             // Find all unused memory nodes.
 
@@ -415,7 +443,9 @@ namespace SharpCompress.Compressor.PPMd.I1
                 if (unitCount != 0)
                 {
                     for (; unitCount > 128; unitCount -= 128, memoryNode0 += 128)
+                    {
                         MemoryNodes[IndexCount - 1].Insert(memoryNode0, 128);
+                    }
 
                     uint index = unitsToIndex[unitCount - 1];
                     if (indexToUnits[index] != unitCount)
@@ -450,7 +480,8 @@ namespace SharpCompress.Compressor.PPMd.I1
                 target[11] = source[11];
                 target += UnitSize;
                 source += UnitSize;
-            } while (--unitCount != 0);
+            }
+            while (--unitCount != 0);
         }
 
         #endregion

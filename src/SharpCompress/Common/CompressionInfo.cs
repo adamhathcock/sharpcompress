@@ -24,7 +24,7 @@ namespace SharpCompress.Common
 
         public static implicit operator CompressionInfo(CompressionType compressionType)
         {
-            return new CompressionInfo() {Type = compressionType};
+            return new CompressionInfo {Type = compressionType};
         }
     }
 }

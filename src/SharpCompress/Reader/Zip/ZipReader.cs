@@ -9,19 +9,15 @@ namespace SharpCompress.Reader.Zip
     public class ZipReader : AbstractReader<ZipEntry, ZipVolume>
     {
         private readonly StreamingZipHeaderFactory headerFactory;
-        private readonly ZipVolume volume;
 
         internal ZipReader(Stream stream, Options options, string password)
             : base(options, ArchiveType.Zip)
         {
-            volume = new ZipVolume(stream, options);
+            Volume = new ZipVolume(stream, options);
             headerFactory = new StreamingZipHeaderFactory(password);
         }
 
-        public override ZipVolume Volume
-        {
-            get { return volume; }
-        }
+        public override ZipVolume Volume { get; }
 
         #region Open
 
@@ -50,15 +46,15 @@ namespace SharpCompress.Reader.Zip
                     switch (h.ZipHeaderType)
                     {
                         case ZipHeaderType.LocalEntry:
-                            {
-                                yield return new ZipEntry(new StreamingZipFilePart(h as LocalEntryHeader,
-                                                                                   stream));
-                            }
+                        {
+                            yield return new ZipEntry(new StreamingZipFilePart(h as LocalEntryHeader,
+                                                                               stream));
+                        }
                             break;
                         case ZipHeaderType.DirectoryEnd:
-                            {
-                                yield break;
-                            }
+                        {
+                            yield break;
+                        }
                     }
                 }
             }

@@ -8,6 +8,7 @@ namespace Org.BouncyCastle.Crypto
         /**
         * base constructor.
         */
+
         public DataLengthException()
         {
         }
@@ -17,6 +18,7 @@ namespace Org.BouncyCastle.Crypto
          *
          * @param message the message to be carried with the exception.
          */
+
         public DataLengthException(
             string message)
             : base(message)

@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 
 namespace SharpCompress.Compressor.LZMA
 {
@@ -7,7 +8,8 @@ namespace SharpCompress.Compressor.LZMA
     /// </summary>
     internal class DataErrorException : Exception
     {
-        public DataErrorException() : base("Data Error")
+        public DataErrorException()
+            : base("Data Error")
         {
         }
     }
@@ -17,7 +19,8 @@ namespace SharpCompress.Compressor.LZMA
     /// </summary>
     internal class InvalidParamException : Exception
     {
-        public InvalidParamException() : base("Invalid Parameter")
+        public InvalidParamException()
+            : base("Invalid Parameter")
         {
         }
     }
@@ -34,7 +37,7 @@ namespace SharpCompress.Compressor.LZMA
         /// output size. -1 if unknown.
         /// </param>
         void SetProgress(Int64 inSize, Int64 outSize);
-    };
+    }
 
     internal interface ICoder
     {
@@ -56,9 +59,9 @@ namespace SharpCompress.Compressor.LZMA
         /// <param name="progress">
         /// callback progress reference.
         /// </param>
-        void Code(System.IO.Stream inStream, System.IO.Stream outStream,
+        void Code(Stream inStream, Stream outStream,
                   Int64 inSize, Int64 outSize, ICodeProgress progress);
-    };
+    }
 
     /*
     public interface ICoder2
@@ -150,17 +153,16 @@ namespace SharpCompress.Compressor.LZMA
         /// Specifies mode with end marker.
         /// </summary>
         EndMarker
-    };
-
+    }
 
     internal interface ISetCoderProperties
     {
         void SetCoderProperties(CoderPropID[] propIDs, object[] properties);
-    };
+    }
 
     internal interface IWriteCoderProperties
     {
-        void WriteCoderProperties(System.IO.Stream outStream);
+        void WriteCoderProperties(Stream outStream);
     }
 
     internal interface ISetDecoderProperties

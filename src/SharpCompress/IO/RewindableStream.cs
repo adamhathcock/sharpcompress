@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 
 namespace SharpCompress.IO
 {
@@ -67,27 +68,18 @@ namespace SharpCompress.IO
             IsRecording = true;
         }
 
-        public override bool CanRead
-        {
-            get { return true; }
-        }
+        public override bool CanRead { get { return true; } }
 
         public override bool CanSeek => stream.CanSeek;
 
-        public override bool CanWrite
-        {
-            get { return false; }
-        }
+        public override bool CanWrite { get { return false; } }
 
         public override void Flush()
         {
-            throw new System.NotSupportedException();
+            throw new NotSupportedException();
         }
 
-        public override long Length
-        {
-            get { throw new System.NotSupportedException(); }
-        }
+        public override long Length { get { throw new NotSupportedException(); } }
 
         public override long Position
         {
@@ -144,17 +136,17 @@ namespace SharpCompress.IO
 
         public override long Seek(long offset, SeekOrigin origin)
         {
-            throw new System.NotSupportedException();
+            throw new NotSupportedException();
         }
 
         public override void SetLength(long value)
         {
-            throw new System.NotSupportedException();
+            throw new NotSupportedException();
         }
 
         public override void Write(byte[] buffer, int offset, int count)
         {
-            throw new System.NotSupportedException();
+            throw new NotSupportedException();
         }
     }
 }

@@ -1,6 +1,5 @@
 #region Using
 
-using System;
 using System.IO;
 
 #endregion
@@ -35,9 +34,9 @@ namespace SharpCompress.Compressor.PPMd.I1
         public void RangeEncoderNormalize(Stream stream)
         {
             while ((low ^ (low + range)) < RangeTop ||
-                   range < RangeBottom && ((range = (uint) -low & (RangeBottom - 1)) != 0 || true))
+                   range < RangeBottom && ((range = (uint)-low & (RangeBottom - 1)) != 0 || true))
             {
-                stream.WriteByte((byte) (low >> 24));
+                stream.WriteByte((byte)(low >> 24));
                 range <<= 8;
                 low <<= 8;
             }
@@ -45,13 +44,13 @@ namespace SharpCompress.Compressor.PPMd.I1
 
         public void RangeEncodeSymbol()
         {
-            low += LowCount*(range /= Scale);
+            low += LowCount * (range /= Scale);
             range *= HighCount - LowCount;
         }
 
         public void RangeShiftEncodeSymbol(int rangeShift)
         {
-            low += LowCount*(range >>= rangeShift);
+            low += LowCount * (range >>= rangeShift);
             range *= HighCount - LowCount;
         }
 
@@ -59,7 +58,7 @@ namespace SharpCompress.Compressor.PPMd.I1
         {
             for (uint index = 0; index < 4; index++)
             {
-                stream.WriteByte((byte) (low >> 24));
+                stream.WriteByte((byte)(low >> 24));
                 low <<= 8;
             }
         }
@@ -70,15 +69,17 @@ namespace SharpCompress.Compressor.PPMd.I1
             code = 0;
             range = uint.MaxValue;
             for (uint index = 0; index < 4; index++)
-                code = (code << 8) | (byte) stream.ReadByte();
+            {
+                code = (code << 8) | (byte)stream.ReadByte();
+            }
         }
 
         public void RangeDecoderNormalize(Stream stream)
         {
             while ((low ^ (low + range)) < RangeTop ||
-                   range < RangeBottom && ((range = (uint) -low & (RangeBottom - 1)) != 0 || true))
+                   range < RangeBottom && ((range = (uint)-low & (RangeBottom - 1)) != 0 || true))
             {
-                code = (code << 8) | (byte) stream.ReadByte();
+                code = (code << 8) | (byte)stream.ReadByte();
                 range <<= 8;
                 low <<= 8;
             }
@@ -86,17 +87,17 @@ namespace SharpCompress.Compressor.PPMd.I1
 
         public uint RangeGetCurrentCount()
         {
-            return (code - low)/(range /= Scale);
+            return (code - low) / (range /= Scale);
         }
 
         public uint RangeGetCurrentShiftCount(int rangeShift)
         {
-            return (code - low)/(range >>= rangeShift);
+            return (code - low) / (range >>= rangeShift);
         }
 
         public void RangeRemoveSubrange()
         {
-            low += range*LowCount;
+            low += range * LowCount;
             range *= HighCount - LowCount;
         }
     }

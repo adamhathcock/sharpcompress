@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 
 namespace SharpCompress.Common.Zip.Headers
 {
@@ -9,12 +10,12 @@ namespace SharpCompress.Common.Zip.Headers
         {
         }
 
-        internal override void Read(System.IO.BinaryReader reader)
+        internal override void Read(BinaryReader reader)
         {
             throw new NotImplementedException();
         }
 
-        internal override void Write(System.IO.BinaryWriter writer)
+        internal override void Write(BinaryWriter writer)
         {
             throw new NotImplementedException();
         }

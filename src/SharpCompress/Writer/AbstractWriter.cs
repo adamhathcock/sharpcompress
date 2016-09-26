@@ -11,20 +11,20 @@ namespace SharpCompress.Writer
 
         protected AbstractWriter(ArchiveType type)
         {
-            this.WriterType = type;
+            WriterType = type;
         }
 
         protected void InitalizeStream(Stream stream, bool closeStream)
         {
-            this.OutputStream = stream;
+            OutputStream = stream;
             this.closeStream = closeStream;
         }
 
         protected Stream OutputStream { get; private set; }
 
-        public ArchiveType WriterType { get; private set; }
+        public ArchiveType WriterType { get; }
 
-        public abstract void Write(string filename, System.IO.Stream source, DateTime? modificationTime);
+        public abstract void Write(string filename, Stream source, DateTime? modificationTime);
 
         protected virtual void Dispose(bool isDisposing)
         {

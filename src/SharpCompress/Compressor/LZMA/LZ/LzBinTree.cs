@@ -1,11 +1,12 @@
 using System;
+using System.IO;
 
 namespace SharpCompress.Compressor.LZMA.LZ
 {
     internal class BinTree : InWindow
     {
         private UInt32 _cyclicBufferPos;
-        private UInt32 _cyclicBufferSize = 0;
+        private UInt32 _cyclicBufferSize;
         private UInt32 _matchMaxLen;
 
         private UInt32[] _son;
@@ -13,7 +14,7 @@ namespace SharpCompress.Compressor.LZMA.LZ
 
         private UInt32 _cutValue = 0xFF;
         private UInt32 _hashMask;
-        private UInt32 _hashSizeSum = 0;
+        private UInt32 _hashSizeSum;
 
         private bool HASH_ARRAY = true;
 
@@ -23,9 +24,9 @@ namespace SharpCompress.Compressor.LZMA.LZ
         private const UInt32 kStartMaxLen = 1;
         private const UInt32 kHash3Offset = kHash2Size;
         private const UInt32 kEmptyHashValue = 0;
-        private const UInt32 kMaxValForNormalize = ((UInt32) 1 << 31) - 1;
+        private const UInt32 kMaxValForNormalize = ((UInt32)1 << 31) - 1;
 
-        private UInt32 kNumHashDirectBytes = 0;
+        private UInt32 kNumHashDirectBytes;
         private UInt32 kMinMatchCheck = 4;
         private UInt32 kFixHashSize = kHash2Size + kHash3Size;
 
@@ -46,7 +47,7 @@ namespace SharpCompress.Compressor.LZMA.LZ
             }
         }
 
-        public new void SetStream(System.IO.Stream stream)
+        public new void SetStream(Stream stream)
         {
             base.SetStream(stream);
         }
@@ -60,7 +61,9 @@ namespace SharpCompress.Compressor.LZMA.LZ
         {
             base.Init();
             for (UInt32 i = 0; i < _hashSizeSum; i++)
+            {
                 _hash[i] = kEmptyHashValue;
+            }
             _cyclicBufferPos = 0;
             ReduceOffsets(-1);
         }
@@ -68,10 +71,14 @@ namespace SharpCompress.Compressor.LZMA.LZ
         public new void MovePos()
         {
             if (++_cyclicBufferPos >= _cyclicBufferSize)
+            {
                 _cyclicBufferPos = 0;
+            }
             base.MovePos();
             if (_pos == kMaxValForNormalize)
+            {
                 Normalize();
+            }
         }
 
         public new Byte GetIndexByte(Int32 index)
@@ -93,11 +100,13 @@ namespace SharpCompress.Compressor.LZMA.LZ
                            UInt32 matchMaxLen, UInt32 keepAddBufferAfter)
         {
             if (historySize > kMaxValForNormalize - 256)
+            {
                 throw new Exception();
+            }
             _cutValue = 16 + (matchMaxLen >> 1);
 
             UInt32 windowReservSize = (historySize + keepAddBufferBefore +
-                                       matchMaxLen + keepAddBufferAfter)/2 + 256;
+                                       matchMaxLen + keepAddBufferAfter) / 2 + 256;
 
             base.Create(historySize + keepAddBufferBefore, matchMaxLen + keepAddBufferAfter, windowReservSize);
 
@@ -105,7 +114,9 @@ namespace SharpCompress.Compressor.LZMA.LZ
 
             UInt32 cyclicBufferSize = historySize + 1;
             if (_cyclicBufferSize != cyclicBufferSize)
-                _son = new UInt32[(_cyclicBufferSize = cyclicBufferSize)*2];
+            {
+                _son = new UInt32[(_cyclicBufferSize = cyclicBufferSize) * 2];
+            }
 
             UInt32 hs = kBT2HashSize;
 
@@ -119,20 +130,26 @@ namespace SharpCompress.Compressor.LZMA.LZ
                 hs >>= 1;
                 hs |= 0xFFFF;
                 if (hs > (1 << 24))
+                {
                     hs >>= 1;
+                }
                 _hashMask = hs;
                 hs++;
                 hs += kFixHashSize;
             }
             if (hs != _hashSizeSum)
+            {
                 _hash = new UInt32[_hashSizeSum = hs];
+            }
         }
 
         public UInt32 GetMatches(UInt32[] distances)
         {
             UInt32 lenLimit;
             if (_pos + _matchMaxLen <= _streamPos)
+            {
                 lenLimit = _matchMaxLen;
+            }
             else
             {
                 lenLimit = _streamPos - _pos;
@@ -153,12 +170,14 @@ namespace SharpCompress.Compressor.LZMA.LZ
             {
                 UInt32 temp = CRC.Table[_bufferBase[cur]] ^ _bufferBase[cur + 1];
                 hash2Value = temp & (kHash2Size - 1);
-                temp ^= ((UInt32) (_bufferBase[cur + 2]) << 8);
+                temp ^= ((UInt32)(_bufferBase[cur + 2]) << 8);
                 hash3Value = temp & (kHash3Size - 1);
                 hashValue = (temp ^ (CRC.Table[_bufferBase[cur + 3]] << 5)) & _hashMask;
             }
             else
-                hashValue = _bufferBase[cur] ^ ((UInt32) (_bufferBase[cur + 1]) << 8);
+            {
+                hashValue = _bufferBase[cur] ^ ((UInt32)(_bufferBase[cur + 1]) << 8);
+            }
 
             UInt32 curMatch = _hash[kFixHashSize + hashValue];
             if (HASH_ARRAY)
@@ -168,20 +187,26 @@ namespace SharpCompress.Compressor.LZMA.LZ
                 _hash[hash2Value] = _pos;
                 _hash[kHash3Offset + hash3Value] = _pos;
                 if (curMatch2 > matchMinPos)
+                {
                     if (_bufferBase[_bufferOffset + curMatch2] == _bufferBase[cur])
                     {
                         distances[offset++] = maxLen = 2;
                         distances[offset++] = _pos - curMatch2 - 1;
                     }
+                }
                 if (curMatch3 > matchMinPos)
+                {
                     if (_bufferBase[_bufferOffset + curMatch3] == _bufferBase[cur])
                     {
                         if (curMatch3 == curMatch2)
+                        {
                             offset -= 2;
+                        }
                         distances[offset++] = maxLen = 3;
                         distances[offset++] = _pos - curMatch3 - 1;
                         curMatch2 = curMatch3;
                     }
+                }
                 if (offset != 0 && curMatch2 == curMatch)
                 {
                     offset -= 2;
@@ -229,8 +254,12 @@ namespace SharpCompress.Compressor.LZMA.LZ
                 if (_bufferBase[pby1 + len] == _bufferBase[cur + len])
                 {
                     while (++len != lenLimit)
+                    {
                         if (_bufferBase[pby1 + len] != _bufferBase[cur + len])
+                        {
                             break;
+                        }
+                    }
                     if (maxLen < len)
                     {
                         distances[offset++] = maxLen = len;
@@ -268,7 +297,9 @@ namespace SharpCompress.Compressor.LZMA.LZ
             {
                 UInt32 lenLimit;
                 if (_pos + _matchMaxLen <= _streamPos)
+                {
                     lenLimit = _matchMaxLen;
+                }
                 else
                 {
                     lenLimit = _streamPos - _pos;
@@ -289,13 +320,15 @@ namespace SharpCompress.Compressor.LZMA.LZ
                     UInt32 temp = CRC.Table[_bufferBase[cur]] ^ _bufferBase[cur + 1];
                     UInt32 hash2Value = temp & (kHash2Size - 1);
                     _hash[hash2Value] = _pos;
-                    temp ^= ((UInt32) (_bufferBase[cur + 2]) << 8);
+                    temp ^= ((UInt32)(_bufferBase[cur + 2]) << 8);
                     UInt32 hash3Value = temp & (kHash3Size - 1);
                     _hash[kHash3Offset + hash3Value] = _pos;
                     hashValue = (temp ^ (CRC.Table[_bufferBase[cur + 3]] << 5)) & _hashMask;
                 }
                 else
-                    hashValue = _bufferBase[cur] ^ ((UInt32) (_bufferBase[cur + 1]) << 8);
+                {
+                    hashValue = _bufferBase[cur] ^ ((UInt32)(_bufferBase[cur + 1]) << 8);
+                }
 
                 UInt32 curMatch = _hash[kFixHashSize + hashValue];
                 _hash[kFixHashSize + hashValue] = _pos;
@@ -325,8 +358,12 @@ namespace SharpCompress.Compressor.LZMA.LZ
                     if (_bufferBase[pby1 + len] == _bufferBase[cur + len])
                     {
                         while (++len != lenLimit)
+                        {
                             if (_bufferBase[pby1 + len] != _bufferBase[cur + len])
+                            {
                                 break;
+                            }
+                        }
                         if (len == lenLimit)
                         {
                             _son[ptr1] = _son[cyclicPos];
@@ -350,7 +387,8 @@ namespace SharpCompress.Compressor.LZMA.LZ
                     }
                 }
                 MovePos();
-            } while (--num != 0);
+            }
+            while (--num != 0);
         }
 
         private void NormalizeLinks(UInt32[] items, UInt32 numItems, UInt32 subValue)
@@ -359,9 +397,13 @@ namespace SharpCompress.Compressor.LZMA.LZ
             {
                 UInt32 value = items[i];
                 if (value <= subValue)
+                {
                     value = kEmptyHashValue;
+                }
                 else
+                {
                     value -= subValue;
+                }
                 items[i] = value;
             }
         }
@@ -369,9 +411,9 @@ namespace SharpCompress.Compressor.LZMA.LZ
         private void Normalize()
         {
             UInt32 subValue = _pos - _cyclicBufferSize;
-            NormalizeLinks(_son, _cyclicBufferSize*2, subValue);
+            NormalizeLinks(_son, _cyclicBufferSize * 2, subValue);
             NormalizeLinks(_hash, _hashSizeSum, subValue);
-            ReduceOffsets((Int32) subValue);
+            ReduceOffsets((Int32)subValue);
         }
 
         public void SetCutValue(UInt32 cutValue)

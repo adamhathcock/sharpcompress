@@ -48,7 +48,7 @@ namespace SharpCompress.Common
         {
             return ((bitField & flag) == flag);
         }
-        
+
         /// <summary>
         /// Returns true if the flag is set on the specified bit field.
         /// Currently only works with 32-bit bitfields. 
@@ -75,7 +75,6 @@ namespace SharpCompress.Common
             return ((bitField & flag) == flag);
         }
 
-
         /// <summary>
         /// Sets a bit-field to either on or off for the specified flag.
         /// </summary>
@@ -83,9 +82,9 @@ namespace SharpCompress.Common
         /// <param name="flag">Flag to change</param>
         /// <param name="on">bool</param>
         /// <returns>The flagged variable with the flag changed</returns>
-        public static long SetFlag(long bitField, long flag, bool @on)
+        public static long SetFlag(long bitField, long flag, bool on)
         {
-            if (@on)
+            if (on)
             {
                 return bitField | flag;
             }
@@ -100,10 +99,10 @@ namespace SharpCompress.Common
         /// <param name="flag">Flag to change</param>
         /// <param name="on">bool</param>
         /// <returns>The flagged variable with the flag changed</returns>
-        public static long SetFlag<T>(T bitField, T flag, bool @on)
+        public static long SetFlag<T>(T bitField, T flag, bool on)
             where T : struct
         {
-            return SetFlag(Convert.ToInt64(bitField), Convert.ToInt64(flag), @on);
+            return SetFlag(Convert.ToInt64(bitField), Convert.ToInt64(flag), on);
         }
     }
 }

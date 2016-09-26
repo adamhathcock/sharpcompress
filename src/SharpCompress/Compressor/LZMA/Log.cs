@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace SharpCompress.Compressor.LZMA
 {
     internal static class Log
     {
-        private static Stack<string> _indent = new Stack<string>();
+        private static readonly Stack<string> _indent = new Stack<string>();
         private static bool _needsIndent = true;
 
         static Log()
@@ -21,7 +22,9 @@ namespace SharpCompress.Compressor.LZMA
         public static void PopIndent()
         {
             if (_indent.Count == 1)
+            {
                 throw new InvalidOperationException();
+            }
 
             _indent.Pop();
         }
@@ -63,28 +66,28 @@ namespace SharpCompress.Compressor.LZMA
 
         public static void WriteLine()
         {
-            System.Diagnostics.Debug.WriteLine("");
+            Debug.WriteLine("");
             _needsIndent = true;
         }
 
         public static void WriteLine(object value)
         {
             EnsureIndent();
-            System.Diagnostics.Debug.WriteLine(value);
+            Debug.WriteLine(value);
             _needsIndent = true;
         }
 
         public static void WriteLine(string text)
         {
             EnsureIndent();
-            System.Diagnostics.Debug.WriteLine(text);
+            Debug.WriteLine(text);
             _needsIndent = true;
         }
 
         public static void WriteLine(string format, params object[] args)
         {
             EnsureIndent();
-            System.Diagnostics.Debug.WriteLine(string.Format(format, args));
+            Debug.WriteLine(format, args);
             _needsIndent = true;
         }
     }
