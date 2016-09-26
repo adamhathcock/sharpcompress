@@ -1,4 +1,5 @@
 ﻿using System.IO;
+using SharpCompress.Compressors.LZMA;
 using Xunit;
 
 namespace SharpCompress.Test.Streams

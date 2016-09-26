@@ -24,6 +24,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 using System.IO;
+using SharpCompress.Compressors;
+using SharpCompress.Compressors.ADC;
 using Xunit;
 
 namespace SharpCompress.Test
@@ -80,7 +82,7 @@ namespace SharpCompress.Test
 
                 using (FileStream cmpFs = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "adc_compressed.bin")))
                 {
-                    using (ADCStream decStream = new ADCStream(cmpFs, Compressor.CompressionMode.Decompress))
+                    using (ADCStream decStream = new ADCStream(cmpFs, CompressionMode.Decompress))
                     {
                         byte[] test = new byte[262144];
 
@@ -102,7 +104,7 @@ namespace SharpCompress.Test
 
                 using (FileStream cmpFs = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "adc_compressed.bin")))
                 {
-                    using (ADCStream decStream = new ADCStream(cmpFs, Compressor.CompressionMode.Decompress))
+                    using (ADCStream decStream = new ADCStream(cmpFs, CompressionMode.Decompress))
                     {
                         using (MemoryStream decMs = new MemoryStream())
                         {
