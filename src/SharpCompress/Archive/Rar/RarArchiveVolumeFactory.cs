@@ -3,6 +3,11 @@ using System.Collections.Generic;
 using System.IO;
 using SharpCompress.Common;
 using SharpCompress.Common.Rar;
+#if !NO_FILE
+using System.Linq;
+using System.Text;
+using SharpCompress.Common.Rar.Headers;
+#endif
 
 namespace SharpCompress.Archive.Rar
 {

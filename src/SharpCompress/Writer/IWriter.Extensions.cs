@@ -1,4 +1,7 @@
-﻿using System.IO;
+﻿#if !NO_FILE
+using System;
+#endif
+using System.IO;
 
 namespace SharpCompress.Writer
 {

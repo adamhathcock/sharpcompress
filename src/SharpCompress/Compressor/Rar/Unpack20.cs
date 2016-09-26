@@ -16,6 +16,7 @@
 * "@":  "&#064;" 
 */
 
+using System;
 using SharpCompress.Compressor.Rar.decode;
 
 namespace SharpCompress.Compressor.Rar

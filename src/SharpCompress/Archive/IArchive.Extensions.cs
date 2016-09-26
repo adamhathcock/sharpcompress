@@ -1,4 +1,9 @@
-﻿namespace SharpCompress.Archive
+﻿#if !NO_FILE
+using System.Linq;
+using SharpCompress.Common;
+#endif
+
+namespace SharpCompress.Archive
 {
     public static class IArchiveExtensions
     {

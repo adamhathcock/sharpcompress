@@ -1,4 +1,9 @@
-﻿namespace SharpCompress.Reader
+﻿#if !NO_FILE
+using System.IO;
+using SharpCompress.Common;
+#endif
+
+namespace SharpCompress.Reader
 {
     public static class IReaderExtensions
     {

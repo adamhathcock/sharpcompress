@@ -1,5 +1,8 @@
 ﻿using System;
 using System.IO;
+#if !NO_CRYPTO
+using System.Linq;
+#endif
 using SharpCompress.Common.Zip.Headers;
 using SharpCompress.IO;
 

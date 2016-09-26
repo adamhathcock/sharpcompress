@@ -1,4 +1,7 @@
-﻿using System.IO;
+﻿#if !NO_FILE
+using System;
+#endif
+using System.IO;
 using SharpCompress.Common;
 
 namespace SharpCompress.Archive
