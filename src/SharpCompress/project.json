@@ -1,5 +1,5 @@
 ﻿{
-    "version": "0.12.4",
+    "version": "0.13.0",
     "title": "SharpCompress - Pure C# Decompression/Compression",
     "authors": [ "Adam Hathcock" ],
     "language": "en-US",
