@@ -1,6 +1,6 @@
 ﻿using System.IO;
 using SharpCompress.Common.Zip.Headers;
-using SharpCompress.Compressor.Deflate;
+using SharpCompress.Compressors.Deflate;
 using SharpCompress.IO;
 
 namespace SharpCompress.Common.Zip

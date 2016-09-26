@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Text;
-using SharpCompress.Converter;
+using SharpCompress.Converters;
 
 namespace SharpCompress.Common.Tar.Headers
 {

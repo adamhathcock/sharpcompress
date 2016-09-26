@@ -1,9 +1,8 @@
 ﻿using System;
 using System.IO;
 using SharpCompress.Common;
-using SharpCompress.IO;
-using SharpCompress.Reader;
-using SharpCompress.Writer;
+using SharpCompress.Readers;
+using SharpCompress.Writers;
 
 namespace SharpCompress.Test
 {

@@ -1,4 +1,4 @@
-﻿using SharpCompress.Compressor.Deflate;
+﻿using SharpCompress.Compressors.Deflate;
 
 namespace SharpCompress.Common
 {

@@ -3,7 +3,7 @@
 using System;
 using System.IO;
 using System.Security.Cryptography;
-using SharpCompress.Converter;
+using SharpCompress.Converters;
 
 namespace SharpCompress.Common.Zip
 {

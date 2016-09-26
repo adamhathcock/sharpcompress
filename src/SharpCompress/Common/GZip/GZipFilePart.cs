@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.IO;
 using SharpCompress.Common.Tar.Headers;
-using SharpCompress.Compressor;
-using SharpCompress.Compressor.Deflate;
-using SharpCompress.Converter;
+using SharpCompress.Compressors;
+using SharpCompress.Compressors.Deflate;
+using SharpCompress.Converters;
 
 namespace SharpCompress.Common.GZip
 {

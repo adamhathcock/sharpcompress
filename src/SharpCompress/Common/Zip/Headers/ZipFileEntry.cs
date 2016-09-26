@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
-using SharpCompress.Converter;
+using SharpCompress.Converters;
 
 namespace SharpCompress.Common.Zip.Headers
 {

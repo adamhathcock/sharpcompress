@@ -1,7 +1,7 @@
 ﻿using System.IO;
 using System.Linq;
-using SharpCompress.Archive;
-using SharpCompress.Archive.Rar;
+using SharpCompress.Archives;
+using SharpCompress.Archives.Rar;
 using SharpCompress.Common;
 using Xunit;
 

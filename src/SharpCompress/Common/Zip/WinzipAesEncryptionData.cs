@@ -2,8 +2,7 @@
 #if !NO_CRYPTO
 using System;
 using System.Security.Cryptography;
-using SharpCompress.Converter;
-using System.Text;
+using SharpCompress.Converters;
 
 namespace SharpCompress.Common.Zip
 {
@@ -70,7 +69,9 @@ namespace SharpCompress.Common.Zip
             {
                 short generated = DataConverter.LittleEndian.GetInt16(generatedVerifyValue, 0);
                 if (verify != generated)
+                {
                     throw new InvalidFormatException("bad password");
+                }
             }
         }
     }

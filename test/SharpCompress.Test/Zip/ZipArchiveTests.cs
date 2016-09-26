@@ -3,10 +3,10 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Text;
-using SharpCompress.Archive;
-using SharpCompress.Archive.Zip;
+using SharpCompress.Archives;
+using SharpCompress.Archives.Zip;
 using SharpCompress.Common;
-using SharpCompress.Writer;
+using SharpCompress.Writers;
 using Xunit;
 
 namespace SharpCompress.Test

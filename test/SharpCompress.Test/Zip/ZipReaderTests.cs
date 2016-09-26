@@ -1,9 +1,9 @@
 ﻿using System;
 using System.IO;
 using SharpCompress.Common;
-using SharpCompress.Reader;
-using SharpCompress.Reader.Zip;
-using SharpCompress.Writer;
+using SharpCompress.Readers;
+using SharpCompress.Readers.Zip;
+using SharpCompress.Writers;
 using Xunit;
 
 namespace SharpCompress.Test

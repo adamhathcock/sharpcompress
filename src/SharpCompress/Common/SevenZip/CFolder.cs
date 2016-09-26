@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using SharpCompress.Compressor.LZMA;
+using SharpCompress.Compressors.LZMA;
 
 namespace SharpCompress.Common.SevenZip
 {

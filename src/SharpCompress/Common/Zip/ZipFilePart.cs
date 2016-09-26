@@ -2,12 +2,12 @@
 using System.IO;
 using System.Linq;
 using SharpCompress.Common.Zip.Headers;
-using SharpCompress.Compressor;
-using SharpCompress.Compressor.BZip2;
-using SharpCompress.Compressor.Deflate;
-using SharpCompress.Compressor.LZMA;
-using SharpCompress.Compressor.PPMd;
-using SharpCompress.Converter;
+using SharpCompress.Compressors;
+using SharpCompress.Compressors.BZip2;
+using SharpCompress.Compressors.Deflate;
+using SharpCompress.Compressors.LZMA;
+using SharpCompress.Compressors.PPMd;
+using SharpCompress.Converters;
 using SharpCompress.IO;
 
 namespace SharpCompress.Common.Zip

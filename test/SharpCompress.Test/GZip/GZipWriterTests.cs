@@ -1,7 +1,7 @@
 ﻿using System.IO;
 using SharpCompress.Common;
-using SharpCompress.Writer;
-using SharpCompress.Writer.GZip;
+using SharpCompress.Writers;
+using SharpCompress.Writers.GZip;
 using Xunit;
 
 namespace SharpCompress.Test

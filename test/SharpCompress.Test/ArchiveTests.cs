@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using SharpCompress.Archive;
+using SharpCompress.Archives;
 using SharpCompress.Common;
 using Xunit;
 

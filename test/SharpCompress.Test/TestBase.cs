@@ -5,7 +5,7 @@ using System.Linq;
 using System.Threading;
 using Microsoft.Extensions.PlatformAbstractions;
 using SharpCompress.Common;
-using SharpCompress.Reader;
+using SharpCompress.Readers;
 using Xunit;
 
 namespace SharpCompress.Test

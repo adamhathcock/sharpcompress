@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Text;
-using SharpCompress.Compressor.LZMA;
+using SharpCompress.Compressors.LZMA;
 
 namespace SharpCompress.Common.SevenZip
 {

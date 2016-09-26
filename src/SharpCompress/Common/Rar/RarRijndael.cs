@@ -1,5 +1,4 @@
-﻿
-#if !NO_CRYPTO
+﻿#if !NO_CRYPTO
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -75,13 +74,16 @@ namespace SharpCompress.Common.Rar
 
             byte[] aesKey = new byte[CRYPTO_BLOCK_SIZE];
             for (int i = 0; i < 4; i++)
+            {
                 for (int j = 0; j < 4; j++)
+                {
                     aesKey[i*4 + j] = (byte)
                         (((digest[i*4]*0x1000000) & 0xff000000 |
                           (uint) ((digest[i*4 + 1]*0x10000) & 0xff0000) |
                           (uint) ((digest[i*4 + 2]*0x100) & 0xff00) |
                           (uint) (digest[i*4 + 3] & 0xff)) >> (j*8));
-
+                }
+            }
 
             rijndael.Init(false, new KeyParameter(aesKey));
 
@@ -101,10 +103,14 @@ namespace SharpCompress.Common.Rar
             rijndael.ProcessBlock(cipherText, 0, plainText, 0);
 
             for (int j = 0; j < plainText.Length; j++)
+            {
                 decryptedBytes.Add((byte) (plainText[j] ^ aesInitializationVector[j%16])); //32:114, 33:101
+            }
 
             for (int j = 0; j < aesInitializationVector.Length; j++)
+            {
                 aesInitializationVector[j] = cipherText[j];
+            }
             return decryptedBytes.ToArray();
         }
 

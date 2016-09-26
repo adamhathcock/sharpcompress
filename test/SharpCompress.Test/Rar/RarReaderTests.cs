@@ -1,8 +1,8 @@
 ﻿using System.IO;
 using System.Linq;
 using SharpCompress.Common;
-using SharpCompress.Reader;
-using SharpCompress.Reader.Rar;
+using SharpCompress.Readers;
+using SharpCompress.Readers.Rar;
 using Xunit;
 
 namespace SharpCompress.Test

@@ -1,10 +1,10 @@
 ﻿
 using System.IO;
 using System.Linq;
-using SharpCompress.Archive;
-using SharpCompress.Archive.Tar;
+using SharpCompress.Archives;
+using SharpCompress.Archives.Tar;
 using SharpCompress.Common;
-using SharpCompress.Writer;
+using SharpCompress.Writers;
 using Xunit;
 
 namespace SharpCompress.Test

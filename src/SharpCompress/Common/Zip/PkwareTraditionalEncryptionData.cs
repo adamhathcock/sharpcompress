@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Text;
 using SharpCompress.Common.Zip.Headers;
-using SharpCompress.Compressor.Deflate;
+using SharpCompress.Compressors.Deflate;
 
 namespace SharpCompress.Common.Zip
 {

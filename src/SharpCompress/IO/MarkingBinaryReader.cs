@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
-using SharpCompress.Converter;
+using SharpCompress.Converters;
 
 namespace SharpCompress.IO
 {

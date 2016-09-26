@@ -1,8 +1,8 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
-using SharpCompress.Archive;
-using SharpCompress.Archive.GZip;
+using SharpCompress.Archives;
+using SharpCompress.Archives.GZip;
 using Xunit;
 
 namespace SharpCompress.Test

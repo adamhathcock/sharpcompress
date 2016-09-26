@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using SharpCompress.Compressor.LZMA;
-using SharpCompress.Compressor.LZMA.Utilites;
+using SharpCompress.Compressors.LZMA;
+using SharpCompress.Compressors.LZMA.Utilites;
 using SharpCompress.IO;
 
 namespace SharpCompress.Common.SevenZip

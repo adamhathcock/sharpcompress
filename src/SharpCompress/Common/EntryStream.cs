@@ -1,6 +1,6 @@
 ﻿using System;
 using System.IO;
-using SharpCompress.Reader;
+using SharpCompress.Readers;
 
 namespace SharpCompress.Common
 {

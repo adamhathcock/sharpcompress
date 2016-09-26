@@ -1,10 +1,10 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using SharpCompress.Common;
-using SharpCompress.Reader;
-using SharpCompress.Reader.Tar;
 using Xunit;
 using System.Linq;
+using SharpCompress.Readers;
+using SharpCompress.Readers.Tar;
 
 namespace SharpCompress.Test
 {
