@@ -45,7 +45,11 @@ namespace SharpCompress.Test
                     if (!entry.IsDirectory)
                     {
                         Assert.Equal(entry.CompressionType, CompressionType.Rar);
-                        entry.WriteToDirectory(SCRATCH_FILES_PATH, ExtractOptions.ExtractFullPath | ExtractOptions.Overwrite);
+                        entry.WriteToDirectory(SCRATCH_FILES_PATH, new ExtractOptions()
+                        {
+                            ExtractFullPath = true,
+                            Overwrite = true
+                        });
                     }
                 }
             }
@@ -70,7 +74,11 @@ namespace SharpCompress.Test
                 foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
                 {
                     entry.WriteToDirectory(SCRATCH_FILES_PATH,
-                                            ExtractOptions.ExtractFullPath | ExtractOptions.Overwrite);
+                                            new ExtractOptions()
+                                            {
+                                                ExtractFullPath = true,
+                                                Overwrite = true
+                                            });
                 }
             }
             VerifyFiles();
@@ -98,7 +106,11 @@ namespace SharpCompress.Test
                 {
                     foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
                     {
-                        entry.WriteToDirectory(SCRATCH_FILES_PATH, ExtractOptions.ExtractFullPath | ExtractOptions.Overwrite);
+                        entry.WriteToDirectory(SCRATCH_FILES_PATH, new ExtractOptions()
+                        {
+                            ExtractFullPath = true,
+                            Overwrite = true
+                        });
                     }
                 }
             }
@@ -118,7 +130,11 @@ namespace SharpCompress.Test
                     foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
                     {
                         entry.WriteToDirectory(SCRATCH_FILES_PATH,
-                                               ExtractOptions.ExtractFullPath | ExtractOptions.Overwrite);
+                                               new ExtractOptions()
+                                               {
+                                                   ExtractFullPath = true,
+                                                   Overwrite = true
+                                               });
                     }
                 }
                 VerifyFiles();
@@ -137,7 +153,11 @@ namespace SharpCompress.Test
                     foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
                     {
                         entry.WriteToDirectory(SCRATCH_FILES_PATH,
-                                               ExtractOptions.ExtractFullPath | ExtractOptions.Overwrite);
+                                               new ExtractOptions()
+                                               {
+                                                   ExtractFullPath = true,
+                                                   Overwrite = true
+                                               });
                     }
                 }
             }
@@ -173,7 +193,11 @@ namespace SharpCompress.Test
             {
                 foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
                 {
-                    entry.WriteToDirectory(SCRATCH_FILES_PATH, ExtractOptions.ExtractFullPath | ExtractOptions.Overwrite);
+                    entry.WriteToDirectory(SCRATCH_FILES_PATH, new ExtractOptions()
+                    {
+                        ExtractFullPath = true,
+                        Overwrite = true
+                    });
                 }
             }
             VerifyFiles();
@@ -216,7 +240,11 @@ namespace SharpCompress.Test
             {
                 foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
                 {
-                    entry.WriteToDirectory(SCRATCH_FILES_PATH, ExtractOptions.ExtractFullPath | ExtractOptions.Overwrite);
+                    entry.WriteToDirectory(SCRATCH_FILES_PATH, new ExtractOptions()
+                    {
+                        ExtractFullPath = true,
+                        Overwrite = true
+                    });
                 }
             }
             VerifyFiles();

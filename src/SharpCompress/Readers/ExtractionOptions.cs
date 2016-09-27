@@ -1,30 +1,25 @@
-﻿using System;
-
-namespace SharpCompress.Common
+﻿namespace SharpCompress.Readers
 {
-    [Flags]
-    public enum ExtractOptions
+    public class ExtractionOptions
     {
-        None = 0,
-
         /// <summary>
         /// overwrite target if it exists
         /// </summary>
-        Overwrite = 1 << 0,
+        public bool Overwrite  {get; set; }
 
         /// <summary>
         /// extract with internal directory structure
         /// </summary>
-        ExtractFullPath = 1 << 1,
+        public bool ExtractFullPath { get; set; }
 
         /// <summary>
         /// preserve file time
         /// </summary>
-        PreserveFileTime = 1 << 2,
+        public bool PreserveFileTime { get; set; }
 
         /// <summary>
         /// preserve windows file attributes
         /// </summary>
-        PreserveAttributes = 1 << 3
+        public bool PreserveAttributes { get; set; }
     }
 }

@@ -39,7 +39,10 @@ namespace SharpCompress.Test
             using (Stream stream = File.OpenRead(Path.Combine(SCRATCH2_FILES_PATH, archive)))
             using (var reader = ReaderFactory.Open(new NonDisposingStream(stream)))
             {
-                reader.WriteAllToDirectory(SCRATCH_FILES_PATH, ExtractOptions.ExtractFullPath);
+                reader.WriteAllToDirectory(SCRATCH_FILES_PATH, new ExtractOptions()
+                {
+                    ExtractFullPath = true
+                });
             }
             VerifyFiles();
         }

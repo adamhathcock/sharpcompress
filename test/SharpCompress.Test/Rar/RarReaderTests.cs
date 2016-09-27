@@ -26,7 +26,11 @@ namespace SharpCompress.Test
             {
                 while (reader.MoveToNextEntry())
                 {
-                    reader.WriteEntryToDirectory(SCRATCH_FILES_PATH, ExtractOptions.ExtractFullPath | ExtractOptions.Overwrite);
+                    reader.WriteEntryToDirectory(SCRATCH_FILES_PATH, new ExtractOptions()
+                    {
+                        ExtractFullPath = true,
+                        Overwrite = true
+                    });
                 }
             }
             VerifyFiles();
@@ -49,7 +53,11 @@ namespace SharpCompress.Test
             {
                 while (reader.MoveToNextEntry())
                 {
-                    reader.WriteEntryToDirectory(SCRATCH_FILES_PATH, ExtractOptions.ExtractFullPath | ExtractOptions.Overwrite);
+                    reader.WriteEntryToDirectory(SCRATCH_FILES_PATH, new ExtractOptions()
+                    {
+                        ExtractFullPath = true,
+                        Overwrite = true
+                    });
                 }
             }
             VerifyFiles();
@@ -77,7 +85,11 @@ namespace SharpCompress.Test
             {
                 while (reader.MoveToNextEntry())
                 {
-                    reader.WriteEntryToDirectory(SCRATCH_FILES_PATH, ExtractOptions.ExtractFullPath | ExtractOptions.Overwrite);
+                    reader.WriteEntryToDirectory(SCRATCH_FILES_PATH, new ExtractOptions()
+                    {
+                        ExtractFullPath = true,
+                        Overwrite = true
+                    });
                 }
             }
             foreach (var stream in streams)
@@ -138,7 +150,11 @@ namespace SharpCompress.Test
                     if (!reader.Entry.IsDirectory)
                     {
                         Assert.Equal(reader.Entry.CompressionType, CompressionType.Rar);
-                        reader.WriteEntryToDirectory(SCRATCH_FILES_PATH, ExtractOptions.ExtractFullPath | ExtractOptions.Overwrite);
+                        reader.WriteEntryToDirectory(SCRATCH_FILES_PATH, new ExtractOptions()
+                        {
+                            ExtractFullPath = true,
+                            Overwrite = true
+                        });
                     }
                 }
             }
@@ -192,7 +208,11 @@ namespace SharpCompress.Test
                 while (reader.MoveToNextEntry())
                 {
                     Assert.Equal(reader.Entry.CompressionType, CompressionType.Rar);
-                    reader.WriteEntryToDirectory(SCRATCH_FILES_PATH, ExtractOptions.ExtractFullPath | ExtractOptions.Overwrite);
+                    reader.WriteEntryToDirectory(SCRATCH_FILES_PATH, new ExtractOptions()
+                    {
+                        ExtractFullPath = true,
+                        Overwrite = true
+                    });
                 }
             }
             CompareFilesByPath(Path.Combine(SCRATCH_FILES_PATH, "test.dat"),
@@ -212,7 +232,11 @@ namespace SharpCompress.Test
                 while (reader.MoveToNextEntry())
                 {
                     Assert.Equal(reader.Entry.CompressionType, CompressionType.Rar);
-                    reader.WriteEntryToDirectory(SCRATCH_FILES_PATH, ExtractOptions.ExtractFullPath | ExtractOptions.Overwrite);
+                    reader.WriteEntryToDirectory(SCRATCH_FILES_PATH, new ExtractOptions()
+                    {
+                        ExtractFullPath = true,
+                        Overwrite = true
+                    });
                 }
             }
             VerifyFiles();
@@ -239,7 +263,11 @@ namespace SharpCompress.Test
                     if (reader.Entry.Key.Contains("jpg"))
                     {
                         Assert.Equal(reader.Entry.CompressionType, CompressionType.Rar);
-                        reader.WriteEntryToDirectory(SCRATCH_FILES_PATH, ExtractOptions.ExtractFullPath | ExtractOptions.Overwrite);
+                        reader.WriteEntryToDirectory(SCRATCH_FILES_PATH, new ExtractOptions()
+                        {
+                            ExtractFullPath = true,
+                            Overwrite = true
+                        });
                     }
                 }
             }
@@ -260,7 +288,11 @@ namespace SharpCompress.Test
                     if (reader.Entry.Key.Contains("jpg"))
                     {
                         Assert.Equal(reader.Entry.CompressionType, CompressionType.Rar);
-                        reader.WriteEntryToDirectory(SCRATCH_FILES_PATH, ExtractOptions.ExtractFullPath | ExtractOptions.Overwrite);
+                        reader.WriteEntryToDirectory(SCRATCH_FILES_PATH, new ExtractOptions()
+                        {
+                            ExtractFullPath = true,
+                            Overwrite = true
+                        });
                     }
                 }
             }

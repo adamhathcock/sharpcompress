@@ -1,6 +1,7 @@
 ﻿#if !NO_FILE
 using System.Linq;
-using SharpCompress.Common;
+using SharpCompress.Readers;
+
 #endif
 
 namespace SharpCompress.Archives
@@ -13,7 +14,7 @@ namespace SharpCompress.Archives
 /// Extract to specific directory, retaining filename
 /// </summary>
         public static void WriteToDirectory(this IArchive archive, string destinationDirectory,
-                                            ExtractOptions options = ExtractOptions.Overwrite)
+                                            ExtractionOptions options = null)
         {
             foreach (IArchiveEntry entry in archive.Entries.Where(x => !x.IsDirectory))
             {
