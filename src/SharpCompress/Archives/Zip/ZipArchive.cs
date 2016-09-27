@@ -168,6 +168,11 @@ namespace SharpCompress.Archives.Zip
             }
         }
 
+        public void SaveTo(Stream stream)
+        {
+            SaveTo(stream, new WriterOptions(CompressionType.Deflate));
+        }
+
         protected override void SaveTo(Stream stream, WriterOptions options,
                                        IEnumerable<ZipArchiveEntry> oldEntries,
                                        IEnumerable<ZipArchiveEntry> newEntries)
