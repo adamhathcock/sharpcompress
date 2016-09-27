@@ -303,7 +303,7 @@ namespace SharpCompress.Test
             {
                 foreach (var entry in reader.Entries.Where(x => !x.IsDirectory))
                 {
-                    entry.WriteToDirectory(SCRATCH_FILES_PATH, new ExtractOptions()
+                    entry.WriteToDirectory(SCRATCH_FILES_PATH, new ExtractionOptions()
                     {
                         ExtractFullPath = true,
                         Overwrite = true
@@ -325,7 +325,7 @@ namespace SharpCompress.Test
             {
                 foreach (var entry in reader.Entries.Where(x => !x.IsDirectory))
                 {
-                    entry.WriteToDirectory(SCRATCH_FILES_PATH, new ExtractOptions()
+                    entry.WriteToDirectory(SCRATCH_FILES_PATH, new ExtractionOptions()
                     {
                         ExtractFullPath = true,
                         Overwrite = true

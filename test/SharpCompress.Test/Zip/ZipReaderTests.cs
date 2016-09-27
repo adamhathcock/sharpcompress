@@ -94,7 +94,7 @@ namespace SharpCompress.Test
                     if (!reader.Entry.IsDirectory)
                     {
                         Assert.Equal(reader.Entry.CompressionType, CompressionType.BZip2);
-                        reader.WriteEntryToDirectory(SCRATCH_FILES_PATH, new ExtractOptions()
+                        reader.WriteEntryToDirectory(SCRATCH_FILES_PATH, new ExtractionOptions()
                         {
                             ExtractFullPath = true,
                             Overwrite = true
@@ -118,7 +118,7 @@ namespace SharpCompress.Test
                         if (!reader.Entry.IsDirectory)
                         {
                             reader.WriteEntryToDirectory(SCRATCH_FILES_PATH,
-                                                         new ExtractOptions()
+                                                         new ExtractionOptions()
                                                          {
                                                              ExtractFullPath = true,
                                                              Overwrite = true
@@ -142,7 +142,7 @@ namespace SharpCompress.Test
                     if (!reader.Entry.IsDirectory)
                     {
                         reader.WriteEntryToDirectory(SCRATCH_FILES_PATH,
-                                                     new ExtractOptions()
+                                                     new ExtractionOptions()
                                                      {
                                                          ExtractFullPath = true,
                                                          Overwrite = true
@@ -175,7 +175,7 @@ namespace SharpCompress.Test
                                                             Assert.Equal(reader.Entry.CompressionType,
                                                                 CompressionType.Unknown);
                                                             reader.WriteEntryToDirectory(SCRATCH_FILES_PATH,
-                                                                new ExtractOptions()
+                                                                new ExtractionOptions()
                                                                 {
                                                                     ExtractFullPath = true,
                                                                     Overwrite = true
@@ -203,7 +203,7 @@ namespace SharpCompress.Test
                     {
                         Assert.Equal(reader.Entry.CompressionType, CompressionType.Unknown);
                         reader.WriteEntryToDirectory(SCRATCH_FILES_PATH,
-                                                    new ExtractOptions()
+                                                    new ExtractionOptions()
                                                     {
                                                         ExtractFullPath = true,
                                                         Overwrite = true

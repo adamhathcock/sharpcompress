@@ -34,7 +34,7 @@ namespace SharpCompress.Test
                 if (!reader.Entry.IsDirectory)
                 {
                     Assert.Equal(reader.Entry.CompressionType, expectedCompression);
-                    reader.WriteEntryToDirectory(test.SCRATCH_FILES_PATH, new ExtractOptions()
+                    reader.WriteEntryToDirectory(test.SCRATCH_FILES_PATH, new ExtractionOptions()
                     {
                         ExtractFullPath = true,
                         Overwrite = true

@@ -45,7 +45,7 @@ namespace SharpCompress.Test
                     if (!entry.IsDirectory)
                     {
                         Assert.Equal(entry.CompressionType, CompressionType.Rar);
-                        entry.WriteToDirectory(SCRATCH_FILES_PATH, new ExtractOptions()
+                        entry.WriteToDirectory(SCRATCH_FILES_PATH, new ExtractionOptions()
                         {
                             ExtractFullPath = true,
                             Overwrite = true
@@ -74,7 +74,7 @@ namespace SharpCompress.Test
                 foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
                 {
                     entry.WriteToDirectory(SCRATCH_FILES_PATH,
-                                            new ExtractOptions()
+                                            new ExtractionOptions()
                                             {
                                                 ExtractFullPath = true,
                                                 Overwrite = true
@@ -106,7 +106,7 @@ namespace SharpCompress.Test
                 {
                     foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
                     {
-                        entry.WriteToDirectory(SCRATCH_FILES_PATH, new ExtractOptions()
+                        entry.WriteToDirectory(SCRATCH_FILES_PATH, new ExtractionOptions()
                         {
                             ExtractFullPath = true,
                             Overwrite = true
@@ -130,7 +130,7 @@ namespace SharpCompress.Test
                     foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
                     {
                         entry.WriteToDirectory(SCRATCH_FILES_PATH,
-                                               new ExtractOptions()
+                                               new ExtractionOptions()
                                                {
                                                    ExtractFullPath = true,
                                                    Overwrite = true
@@ -153,7 +153,7 @@ namespace SharpCompress.Test
                     foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
                     {
                         entry.WriteToDirectory(SCRATCH_FILES_PATH,
-                                               new ExtractOptions()
+                                               new ExtractionOptions()
                                                {
                                                    ExtractFullPath = true,
                                                    Overwrite = true
@@ -193,7 +193,7 @@ namespace SharpCompress.Test
             {
                 foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
                 {
-                    entry.WriteToDirectory(SCRATCH_FILES_PATH, new ExtractOptions()
+                    entry.WriteToDirectory(SCRATCH_FILES_PATH, new ExtractionOptions()
                     {
                         ExtractFullPath = true,
                         Overwrite = true
@@ -240,7 +240,7 @@ namespace SharpCompress.Test
             {
                 foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
                 {
-                    entry.WriteToDirectory(SCRATCH_FILES_PATH, new ExtractOptions()
+                    entry.WriteToDirectory(SCRATCH_FILES_PATH, new ExtractionOptions()
                     {
                         ExtractFullPath = true,
                         Overwrite = true
