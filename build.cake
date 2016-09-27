@@ -221,8 +221,7 @@ Task("MasterBuild")
     .IsDependentOn("Restore")
     .IsDependentOn("Build")
     .IsDependentOn("Test")
-    .IsDependentOn("Pack")
-    .IsDependentOn("Publish");
+    .IsDependentOn("Pack");
 
 Task("Default")
     .IsDependentOn("PRBuild");
