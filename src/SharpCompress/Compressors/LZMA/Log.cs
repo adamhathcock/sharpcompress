@@ -87,7 +87,7 @@ namespace SharpCompress.Compressors.LZMA
         public static void WriteLine(string format, params object[] args)
         {
             EnsureIndent();
-            Debug.WriteLine(format, args);
+            Debug.WriteLine(string.Format(format, args));
             _needsIndent = true;
         }
     }
