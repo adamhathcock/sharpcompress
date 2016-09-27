@@ -10,7 +10,7 @@ namespace SharpCompress.Writers.Tar
 {
     public class TarWriter : AbstractWriter
     {
-        public TarWriter(Stream destination, TarWriterOptions options)
+        public TarWriter(Stream destination, WriterOptions options)
             : base(ArchiveType.Tar)
         {
             if (!destination.CanWrite)

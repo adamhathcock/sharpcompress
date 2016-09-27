@@ -4,22 +4,18 @@ using SharpCompress.Compressors.Deflate;
 
 namespace SharpCompress.Writers.Zip
 {
-    public class ZipWriterOptions
+    public class ZipWriterOptions : WriterOptions
     {
-        public ZipWriterOptions()
+        public ZipWriterOptions(CompressionType compressionType)
+            : base(compressionType)
         {
-            
         }
-        
+
         internal ZipWriterOptions(WriterOptions options)
+            : base(options.CompressionType)
         {
             LeaveOpenStream = options.LeaveOpenStream;
-            CompressionType = options.CompressionType;
         }
-
-        public bool LeaveOpenStream { get; set; }
-
-        public CompressionType CompressionType { get; set; } = CompressionType.Unknown;
         /// <summary>
         /// When CompressionType.Deflate is used, this property is referenced.  Defaults to CompressionLevel.Default.
         /// </summary>

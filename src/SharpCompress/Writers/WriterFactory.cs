@@ -27,7 +27,7 @@ namespace SharpCompress.Writers
                 }
                 case ArchiveType.Tar:
                 {
-                    return new TarWriter(stream, new TarWriterOptions(writerOptions));
+                    return new TarWriter(stream, writerOptions);
                 }
                 default:
                 {
