@@ -84,7 +84,10 @@ namespace SharpCompress.Test
         {
             ResetScratch();
             using (Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Zip.bzip2.pkware.zip")))
-            using (var reader = ZipReader.Open(stream, "test"))
+            using (var reader = ZipReader.Open(stream, new ReaderOptions()
+                                                       {
+                                                           Password = "test"
+            }))
             {
                 while (reader.MoveToNextEntry())
                 {
@@ -104,7 +107,7 @@ namespace SharpCompress.Test
             ResetScratch();
             using (TestStream stream = new TestStream(File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.dd.zip"))))
             {
-                using (var reader = ReaderFactory.Open(stream, Options.None))
+                using (var reader = ReaderFactory.Open(stream))
                 {
                     while (reader.MoveToNextEntry())
                     {
@@ -125,7 +128,7 @@ namespace SharpCompress.Test
             ResetScratch();
             using (TestStream stream = new TestStream(File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.dd.zip"))))
             {
-                var reader = ReaderFactory.Open(stream, Options.None);
+                var reader = ReaderFactory.Open(stream);
                 while (reader.MoveToNextEntry())
                 {
                     if (!reader.Entry.IsDirectory)
@@ -148,7 +151,10 @@ namespace SharpCompress.Test
                                                     Stream stream =
                                                         File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH,
                                                             "Zip.lzma.winzipaes.zip")))
-                                                using (var reader = ZipReader.Open(stream, "test"))
+                                                using (var reader = ZipReader.Open(stream, new ReaderOptions()
+                                                                                           {
+                                                                                               Password = "test"
+                                                                                           }))
                                                 {
                                                     while (reader.MoveToNextEntry())
                                                     {
@@ -171,7 +177,10 @@ namespace SharpCompress.Test
         {
             ResetScratch();
             using (Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.WinzipAES.zip")))
-            using (var reader = ZipReader.Open(stream, "test"))
+            using (var reader = ZipReader.Open(stream, new ReaderOptions()
+                                                       {
+                                                           Password = "test"
+                                                       }))
             {
                 while (reader.MoveToNextEntry())
                 {

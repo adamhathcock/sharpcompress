@@ -1,5 +1,6 @@
 ﻿using System.IO;
 using SharpCompress.IO;
+using SharpCompress.Readers;
 
 namespace SharpCompress.Common
 {
@@ -7,15 +8,15 @@ namespace SharpCompress.Common
     {
         private readonly Stream actualStream;
 
-        internal Volume(Stream stream, Options options)
+        internal Volume(Stream stream, ReaderOptions readerFactoryOptions)
         {
             actualStream = stream;
-            Options = options;
+            ReaderOptions = readerFactoryOptions;
         }
 
         internal Stream Stream { get { return new NonDisposingStream(actualStream); } }
 
-        internal Options Options { get; }
+        protected ReaderOptions ReaderOptions { get; }
 
         /// <summary>
         /// RarArchive is the first volume of a multi-part archive.
@@ -32,7 +33,7 @@ namespace SharpCompress.Common
 
         public void Dispose()
         {
-            if (!Options.HasFlag(Options.KeepStreamsOpen) && !disposed)
+            if (!ReaderOptions.LeaveOpenStream && !disposed)
             {
                 actualStream.Dispose();
                 disposed = true;

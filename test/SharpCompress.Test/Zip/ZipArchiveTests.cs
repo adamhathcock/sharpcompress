@@ -6,6 +6,7 @@ using System.Text;
 using SharpCompress.Archives;
 using SharpCompress.Archives.Zip;
 using SharpCompress.Common;
+using SharpCompress.Readers;
 using SharpCompress.Writers;
 using Xunit;
 
@@ -295,7 +296,10 @@ namespace SharpCompress.Test
         public void Zip_Deflate_WinzipAES_Read()
         {
             ResetScratch();
-            using (var reader = ZipArchive.Open(Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.WinzipAES.zip"), "test"))
+            using (var reader = ZipArchive.Open(Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.WinzipAES.zip"), new ReaderOptions()
+                                                                                                               {
+                                                                                                                   Password = "test"
+                                                                                                                }))
             {
                 foreach (var entry in reader.Entries.Where(x => !x.IsDirectory))
                 {
@@ -310,7 +314,10 @@ namespace SharpCompress.Test
         public void Zip_BZip2_Pkware_Read()
         {
             ResetScratch();
-            using (var reader = ZipArchive.Open(Path.Combine(TEST_ARCHIVES_PATH, "Zip.bzip2.pkware.zip"), "test"))
+            using (var reader = ZipArchive.Open(Path.Combine(TEST_ARCHIVES_PATH, "Zip.bzip2.pkware.zip"), new ReaderOptions()
+            {
+                Password = "test"
+            }))
             {
                 foreach (var entry in reader.Entries.Where(x => !x.IsDirectory))
                 {

@@ -8,10 +8,9 @@ namespace SharpCompress.Readers.Rar
     {
         private readonly Stream stream;
 
-        internal SingleVolumeRarReader(Stream stream, string password, Options options)
+        internal SingleVolumeRarReader(Stream stream, ReaderOptions options)
             : base(options)
         {
-            Password = password;
             this.stream = stream;
         }
 

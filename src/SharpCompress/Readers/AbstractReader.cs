@@ -23,13 +23,13 @@ namespace SharpCompress.Readers
         public event EventHandler<CompressedBytesReadEventArgs> CompressedBytesRead;
         public event EventHandler<FilePartExtractionBeginEventArgs> FilePartExtractionBegin;
 
-        internal AbstractReader(Options options, ArchiveType archiveType)
+        internal AbstractReader(ReaderOptions options, ArchiveType archiveType)
         {
             ArchiveType = archiveType;
             Options = options;
         }
 
-        internal Options Options { get; private set; }
+        internal ReaderOptions Options { get; private set; }
 
         public ArchiveType ArchiveType { get; }
 

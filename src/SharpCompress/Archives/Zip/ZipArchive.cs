@@ -8,6 +8,7 @@ using SharpCompress.Common.Zip.Headers;
 using SharpCompress.Compressors.Deflate;
 using SharpCompress.Readers;
 using SharpCompress.Readers.Zip;
+using SharpCompress.Writers;
 using SharpCompress.Writers.Zip;
 
 namespace SharpCompress.Archives.Zip
@@ -23,73 +24,37 @@ namespace SharpCompress.Archives.Zip
         public CompressionLevel DeflateCompressionLevel { get; set; }
 
 #if !NO_FILE
-
         /// <summary>
         /// Constructor expects a filepath to an existing file.
         /// </summary>
         /// <param name="filePath"></param>
-        /// <param name="password"></param>
-        public static ZipArchive Open(string filePath, string password = null)
-        {
-            return Open(filePath, Options.None, password);
-        }
-
-        /// <summary>
-        /// Constructor with a FileInfo object to an existing file.
-        /// </summary>
-        /// <param name="fileInfo"></param>
-        /// <param name="password"></param>
-        public static ZipArchive Open(FileInfo fileInfo, string password = null)
-        {
-            return Open(fileInfo, Options.None, password);
-        }
-
-        /// <summary>
-        /// Constructor expects a filepath to an existing file.
-        /// </summary>
-        /// <param name="filePath"></param>
-        /// <param name="options"></param>
-        /// <param name="password"></param>
-        public static ZipArchive Open(string filePath, Options options, string password = null)
+        /// <param name="readerOptions"></param>
+        public static ZipArchive Open(string filePath, ReaderOptions readerOptions = null)
         {
             filePath.CheckNotNullOrEmpty("filePath");
-            return Open(new FileInfo(filePath), options, password);
+            return Open(new FileInfo(filePath), readerOptions ?? new ReaderOptions());
         }
 
         /// <summary>
         /// Constructor with a FileInfo object to an existing file.
         /// </summary>
         /// <param name="fileInfo"></param>
-        /// <param name="options"></param>
-        /// <param name="password"></param>
-        public static ZipArchive Open(FileInfo fileInfo, Options options, string password = null)
+        /// <param name="readerOptions"></param>
+        public static ZipArchive Open(FileInfo fileInfo, ReaderOptions readerOptions = null)
         {
             fileInfo.CheckNotNull("fileInfo");
-            return new ZipArchive(fileInfo, options, password);
+            return new ZipArchive(fileInfo, readerOptions ?? new ReaderOptions());
         }
 #endif
-
         /// <summary>
         /// Takes a seekable Stream as a source
         /// </summary>
         /// <param name="stream"></param>
-        /// <param name="password"></param>
-        public static ZipArchive Open(Stream stream, string password = null)
+        /// <param name="readerOptions"></param>
+        public static ZipArchive Open(Stream stream, ReaderOptions readerOptions = null)
         {
             stream.CheckNotNull("stream");
-            return Open(stream, Options.None, password);
-        }
-
-        /// <summary>
-        /// Takes a seekable Stream as a source
-        /// </summary>
-        /// <param name="stream"></param>
-        /// <param name="options"></param>
-        /// <param name="password"></param>
-        public static ZipArchive Open(Stream stream, Options options, string password = null)
-        {
-            stream.CheckNotNull("stream");
-            return new ZipArchive(stream, options, password);
+            return new ZipArchive(stream, readerOptions ?? new ReaderOptions());
         }
 
 #if !NO_FILE
@@ -136,25 +101,20 @@ namespace SharpCompress.Archives.Zip
 
 #if !NO_FILE
 
-/// <summary>
-/// Constructor with a FileInfo object to an existing file.
-/// </summary>
-/// <param name="fileInfo"></param>
-/// <param name="options"></param>
-/// <param name="password"></param>
-        internal ZipArchive(FileInfo fileInfo, Options options, string password = null)
-            : base(ArchiveType.Zip, fileInfo, options)
+        /// <summary>
+        /// Constructor with a FileInfo object to an existing file.
+        /// </summary>
+        /// <param name="fileInfo"></param>
+        /// <param name="readerOptions"></param>
+        internal ZipArchive(FileInfo fileInfo, ReaderOptions readerOptions)
+            : base(ArchiveType.Zip, fileInfo, readerOptions)
         {
-            headerFactory = new SeekableZipHeaderFactory(password);
+            headerFactory = new SeekableZipHeaderFactory(readerOptions.Password);
         }
 
-        protected override IEnumerable<ZipVolume> LoadVolumes(FileInfo file, Options options)
+        protected override IEnumerable<ZipVolume> LoadVolumes(FileInfo file)
         {
-            if (FlagUtility.HasFlag(options, Options.KeepStreamsOpen))
-            {
-                options = (Options)FlagUtility.SetFlag(options, Options.KeepStreamsOpen, false);
-            }
-            return new ZipVolume(file.OpenRead(), options).AsEnumerable();
+            return new ZipVolume(file.OpenRead(), ReaderOptions).AsEnumerable();
         }
 #endif
 
@@ -167,17 +127,16 @@ namespace SharpCompress.Archives.Zip
         /// Takes multiple seekable Streams for a multi-part archive
         /// </summary>
         /// <param name="stream"></param>
-        /// <param name="options"></param>
-        /// <param name="password"></param>
-        internal ZipArchive(Stream stream, Options options, string password = null)
-            : base(ArchiveType.Zip, stream, options)
+        /// <param name="readerOptions"></param>
+        internal ZipArchive(Stream stream, ReaderOptions readerOptions)
+            : base(ArchiveType.Zip, stream, readerOptions)
         {
-            headerFactory = new SeekableZipHeaderFactory(password);
+            headerFactory = new SeekableZipHeaderFactory(readerOptions.Password);
         }
 
-        protected override IEnumerable<ZipVolume> LoadVolumes(IEnumerable<Stream> streams, Options options)
+        protected override IEnumerable<ZipVolume> LoadVolumes(IEnumerable<Stream> streams)
         {
-            return new ZipVolume(streams.First(), options).AsEnumerable();
+            return new ZipVolume(streams.First(), ReaderOptions).AsEnumerable();
         }
 
         protected override IEnumerable<ZipArchiveEntry> LoadEntries(IEnumerable<ZipVolume> volumes)
@@ -209,18 +168,18 @@ namespace SharpCompress.Archives.Zip
             }
         }
 
-        protected override void SaveTo(Stream stream, CompressionInfo compressionInfo,
+        protected override void SaveTo(Stream stream, WriterOptions options,
                                        IEnumerable<ZipArchiveEntry> oldEntries,
                                        IEnumerable<ZipArchiveEntry> newEntries)
         {
-            using (var writer = new ZipWriter(stream, compressionInfo, string.Empty))
+            using (var writer = new ZipWriter(stream, new ZipWriterOptions(options)))
             {
                 foreach (var entry in oldEntries.Concat(newEntries)
                                                 .Where(x => !x.IsDirectory))
                 {
                     using (var entryStream = entry.OpenEntryStream())
                     {
-                        writer.Write(entry.Key, entryStream, entry.LastModifiedTime, string.Empty);
+                        writer.Write(entry.Key, entryStream, entry.LastModifiedTime);
                     }
                 }
             }

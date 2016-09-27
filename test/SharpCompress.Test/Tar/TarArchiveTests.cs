@@ -139,7 +139,7 @@ namespace SharpCompress.Test
             base.ResetScratch();
             using (var archive = TarArchive.Open(unmodified))
             {
-                var entry = archive.Entries.Where(x => x.Key.EndsWith("jpg")).Single();
+                var entry = archive.Entries.Single(x => x.Key.EndsWith("jpg"));
                 archive.RemoveEntry(entry);
                 archive.SaveTo(scratchPath, CompressionType.None);
             }
