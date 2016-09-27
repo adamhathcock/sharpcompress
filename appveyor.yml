@@ -1,0 +1,33 @@
+# configuration for "master" branch
+-
+    version: '0.13.{build}'
+
+    init:
+    - git config --global core.autocrlf true
+
+    branches:
+        only:
+        - master
+
+    build_script:
+    - ps: .\build.ps1
+
+    test: off
+
+    cache:
+    - tools -> build.cake
+    - tools -> build.ps1
+
+# configuration for "default" branch
+-
+    init:
+    - git config --global core.autocrlf true
+
+    build_script:
+    - ps: .\build.ps1
+
+    test: off
+
+    cache:
+    - tools -> build.cake
+    - tools -> build.ps1
