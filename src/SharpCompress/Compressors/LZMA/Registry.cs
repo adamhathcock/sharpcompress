@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using SharpCompress.Common.SevenZip;
 using SharpCompress.Compressors.BZip2;
+using SharpCompress.Compressors.Deflate;
 using SharpCompress.Compressors.Filters;
 using SharpCompress.Compressors.LZMA.Utilites;
 using SharpCompress.Compressors.PPMd;
@@ -47,6 +48,8 @@ namespace SharpCompress.Compressors.LZMA
                     return new BZip2Stream(inStreams.Single(), CompressionMode.Decompress, true);
                 case k_PPMD:
                     return new PpmdStream(new PpmdProperties(info), inStreams.Single(), false);
+                case k_Deflate:
+                    return new DeflateStream(inStreams.Single(), CompressionMode.Decompress);
                 default:
                     throw new NotSupportedException();
             }
