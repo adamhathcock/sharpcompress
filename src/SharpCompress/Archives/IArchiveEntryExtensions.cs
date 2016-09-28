@@ -1,6 +1,7 @@
 ﻿using System.IO;
 using SharpCompress.Common;
 using SharpCompress.IO;
+using SharpCompress.Readers;
 
 namespace SharpCompress.Archives
 {
@@ -43,13 +44,18 @@ namespace SharpCompress.Archives
 /// Extract to specific directory, retaining filename
 /// </summary>
         public static void WriteToDirectory(this IArchiveEntry entry, string destinationDirectory,
-                                            ExtractOptions options = ExtractOptions.Overwrite)
+                                            ExtractionOptions options = null)
         {
             string destinationFileName;
             string file = Path.GetFileName(entry.Key);
 
+            options = options ?? new ExtractionOptions()
+                                 {
+                                     Overwrite = true
+                                 };
 
-            if (options.HasFlag(ExtractOptions.ExtractFullPath))
+
+            if (options.ExtractFullPath)
             {
                 string folder = Path.GetDirectoryName(entry.Key);
                 string destdir = Path.Combine(destinationDirectory, folder);
@@ -73,11 +79,16 @@ namespace SharpCompress.Archives
         /// Extract to specific file
         /// </summary>
         public static void WriteToFile(this IArchiveEntry entry, string destinationFileName,
-                                       ExtractOptions options = ExtractOptions.Overwrite)
+                                       ExtractionOptions options = null)
         {
             FileMode fm = FileMode.Create;
+            options = options ?? new ExtractionOptions()
+            {
+                Overwrite = true
+            };
 
-            if (!options.HasFlag(ExtractOptions.Overwrite))
+
+            if (!options.Overwrite)
             {
                 fm = FileMode.CreateNew;
             }

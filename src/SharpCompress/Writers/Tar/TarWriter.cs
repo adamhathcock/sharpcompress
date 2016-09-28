@@ -10,33 +10,33 @@ namespace SharpCompress.Writers.Tar
 {
     public class TarWriter : AbstractWriter
     {
-        public TarWriter(Stream destination, CompressionInfo compressionInfo, bool leaveOpen = false)
+        public TarWriter(Stream destination, WriterOptions options)
             : base(ArchiveType.Tar)
         {
             if (!destination.CanWrite)
             {
                 throw new ArgumentException("Tars require writable streams.");
             }
-            switch (compressionInfo.Type)
+            switch (options.CompressionType)
             {
                 case CompressionType.None:
                     break;
                 case CompressionType.BZip2:
                 {
-                    destination = new BZip2Stream(destination, CompressionMode.Compress, leaveOpen);
+                    destination = new BZip2Stream(destination, CompressionMode.Compress, options.LeaveOpenStream);
                 }
                     break;
                 case CompressionType.GZip:
                 {
-                    destination = new GZipStream(destination, CompressionMode.Compress, leaveOpen);
+                    destination = new GZipStream(destination, CompressionMode.Compress, options.LeaveOpenStream);
                 }
                     break;
                 default:
                 {
-                    throw new InvalidFormatException("Tar does not support compression: " + compressionInfo.Type);
+                    throw new InvalidFormatException("Tar does not support compression: " + options.CompressionType);
                 }
             }
-            InitalizeStream(destination, !leaveOpen);
+            InitalizeStream(destination, !options.LeaveOpenStream);
         }
 
         public override void Write(string filename, Stream source, DateTime? modificationTime)

@@ -28,7 +28,7 @@ namespace SharpCompress.Readers
         /// Extract all remaining unread entries to specific directory, retaining filename
         /// </summary>
         public static void WriteAllToDirectory(this IReader reader, string destinationDirectory,
-                                               ExtractOptions options = ExtractOptions.Overwrite)
+                                               ExtractionOptions options = null)
         {
             while (reader.MoveToNextEntry())
             {
@@ -40,13 +40,16 @@ namespace SharpCompress.Readers
         /// Extract to specific directory, retaining filename
         /// </summary>
         public static void WriteEntryToDirectory(this IReader reader, string destinationDirectory,
-                                                 ExtractOptions options = ExtractOptions.Overwrite)
+                                                 ExtractionOptions options = null)
         {
             string destinationFileName = string.Empty;
             string file = Path.GetFileName(reader.Entry.Key);
+            options = options ?? new ExtractionOptions()
+                      {
+                          Overwrite = true
+                      };
 
-
-            if (options.HasFlag(ExtractOptions.ExtractFullPath))
+            if (options.ExtractFullPath)
             {
                 string folder = Path.GetDirectoryName(reader.Entry.Key);
                 string destdir = Path.Combine(destinationDirectory, folder);
@@ -65,7 +68,7 @@ namespace SharpCompress.Readers
             {
                 reader.WriteEntryToFile(destinationFileName, options);
             }
-            else if (options.HasFlag(ExtractOptions.ExtractFullPath) && !Directory.Exists(destinationFileName))
+            else if (options.ExtractFullPath && !Directory.Exists(destinationFileName))
             {
                 Directory.CreateDirectory(destinationFileName);
             }
@@ -75,11 +78,15 @@ namespace SharpCompress.Readers
         /// Extract to specific file
         /// </summary>
         public static void WriteEntryToFile(this IReader reader, string destinationFileName,
-                                            ExtractOptions options = ExtractOptions.Overwrite)
+                                            ExtractionOptions options = null)
         {
             FileMode fm = FileMode.Create;
+            options = options ?? new ExtractionOptions()
+            {
+                Overwrite = true
+            };
 
-            if (!options.HasFlag(ExtractOptions.Overwrite))
+            if (!options.Overwrite)
             {
                 fm = FileMode.CreateNew;
             }

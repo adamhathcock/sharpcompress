@@ -10,11 +10,11 @@ namespace SharpCompress.Readers.Zip
     {
         private readonly StreamingZipHeaderFactory headerFactory;
 
-        internal ZipReader(Stream stream, Options options, string password)
+        internal ZipReader(Stream stream, ReaderOptions options)
             : base(options, ArchiveType.Zip)
         {
             Volume = new ZipVolume(stream, options);
-            headerFactory = new StreamingZipHeaderFactory(password);
+            headerFactory = new StreamingZipHeaderFactory(options.Password);
         }
 
         public override ZipVolume Volume { get; }
@@ -26,13 +26,11 @@ namespace SharpCompress.Readers.Zip
         /// </summary>
         /// <param name="stream"></param>
         /// <param name="options"></param>
-        /// <param name="password"></param>
         /// <returns></returns>
-        public static ZipReader Open(Stream stream, string password = null,
-                                     Options options = Options.KeepStreamsOpen)
+        public static ZipReader Open(Stream stream, ReaderOptions options = null)
         {
             stream.CheckNotNull("stream");
-            return new ZipReader(stream, options, password);
+            return new ZipReader(stream, options ?? new ReaderOptions());
         }
 
         #endregion

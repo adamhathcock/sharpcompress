@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using SharpCompress.IO;
+using SharpCompress.Readers;
 
 namespace SharpCompress.Common.Rar.Headers
 {
@@ -9,21 +10,19 @@ namespace SharpCompress.Common.Rar.Headers
     {
         private const int MAX_SFX_SIZE = 0x80000 - 16; //archive.cpp line 136
 
-        internal RarHeaderFactory(StreamingMode mode, Options options, string password = null)
+        internal RarHeaderFactory(StreamingMode mode, ReaderOptions options)
         {
             StreamingMode = mode;
             Options = options;
-            Password = password;
         }
 
-        private Options Options { get; }
-        public string Password { get; private set; }
+        private ReaderOptions Options { get; }
         internal StreamingMode StreamingMode { get; }
         internal bool IsEncrypted { get; private set; }
 
         internal IEnumerable<RarHeader> ReadHeaders(Stream stream)
         {
-            if (Options.HasFlag(Options.LookForHeader))
+            if (Options.LookForHeader)
             {
                 stream = CheckSFX(stream);
             }
@@ -91,7 +90,7 @@ namespace SharpCompress.Common.Rar.Headers
             }
             catch (Exception e)
             {
-                if (!Options.HasFlag(Options.KeepStreamsOpen))
+                if (!Options.LeaveOpenStream)
                 {
 #if NET35
                     reader.Close();
@@ -117,11 +116,11 @@ namespace SharpCompress.Common.Rar.Headers
         private RarHeader ReadNextHeader(Stream stream)
         {
 #if !NO_CRYPTO
-            var reader = new RarCryptoBinaryReader(stream, Password);
+            var reader = new RarCryptoBinaryReader(stream, Options.Password);
             
             if (IsEncrypted)
             {
-                if (Password == null)
+                if (Options.Password == null)
                 {
                     throw new CryptographicException("Encrypted Rar archive has no password specified.");
                 }
@@ -223,7 +222,7 @@ namespace SharpCompress.Common.Rar.Headers
                             else
                             {
 #if !NO_CRYPTO
-                                        fh.PackedStream = new RarCryptoWrapper(ms, Password,  fh.Salt);
+                                fh.PackedStream = new RarCryptoWrapper(ms, Options.Password,  fh.Salt);
 #else
                                 throw new NotSupportedException("RarCrypto not supported");
 #endif

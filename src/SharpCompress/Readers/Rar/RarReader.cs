@@ -12,11 +12,10 @@ namespace SharpCompress.Readers.Rar
     /// </summary>
     public abstract class RarReader : AbstractReader<RarReaderEntry, RarVolume>
     {
-        public string Password { get; set; }
         private RarVolume volume;
         private readonly Unpack pack = new Unpack();
 
-        internal RarReader(Options options)
+        internal RarReader(ReaderOptions options)
             : base(options, ArchiveType.Rar)
         {
         }
@@ -33,9 +32,10 @@ namespace SharpCompress.Readers.Rar
         /// <param name="stream"></param>
         /// <param name="options"></param>
         /// <returns></returns>
-        public static RarReader Open(Stream stream, Options options = Options.KeepStreamsOpen)
+        public static RarReader Open(Stream stream, ReaderOptions options = null)
         {
-            return Open(stream, null, options);
+            stream.CheckNotNull("stream");
+            return new SingleVolumeRarReader(stream, options ?? new ReaderOptions());
         }
 
         /// <summary>
@@ -44,17 +44,17 @@ namespace SharpCompress.Readers.Rar
         /// <param name="streams"></param>
         /// <param name="options"></param>
         /// <returns></returns>
-        public static RarReader Open(IEnumerable<Stream> streams, Options options = Options.KeepStreamsOpen)
+        public static RarReader Open(IEnumerable<Stream> streams, ReaderOptions options = null)
         {
             streams.CheckNotNull("streams");
-            return new MultiVolumeRarReader(streams, options);
+            return new MultiVolumeRarReader(streams, options ?? new ReaderOptions());
         }
 
         #endregion
 
         internal override IEnumerable<RarReaderEntry> GetEntries(Stream stream)
         {
-            volume = new RarReaderVolume(stream, Password, Options);
+            volume = new RarReaderVolume(stream, Options);
             foreach (RarFilePart fp in volume.ReadFileParts())
             {
                 ValidateArchive(volume);
@@ -72,12 +72,6 @@ namespace SharpCompress.Readers.Rar
             return CreateEntryStream(new RarStream(pack, Entry.FileHeader,
                                                    new MultiVolumeReadOnlyStream(
                                                                                  CreateFilePartEnumerableForCurrentEntry().Cast<RarFilePart>(), this)));
-        }
-
-        public static RarReader Open(Stream stream, string password, Options options = Options.KeepStreamsOpen)
-        {
-            stream.CheckNotNull("stream");
-            return new SingleVolumeRarReader(stream, password, options);
         }
     }
 }

@@ -6,6 +6,7 @@ using SharpCompress.Archives.SevenZip;
 using SharpCompress.Archives.Tar;
 using SharpCompress.Archives.Zip;
 using SharpCompress.Common;
+using SharpCompress.Readers;
 
 namespace SharpCompress.Archives
 {
@@ -15,44 +16,44 @@ namespace SharpCompress.Archives
         /// Opens an Archive for random access
         /// </summary>
         /// <param name="stream"></param>
-        /// <param name="options"></param>
+        /// <param name="readerOptions"></param>
         /// <returns></returns>
-        public static IArchive Open(Stream stream, Options options = Options.KeepStreamsOpen)
+        public static IArchive Open(Stream stream, ReaderOptions readerOptions = null)
         {
             stream.CheckNotNull("stream");
             if (!stream.CanRead || !stream.CanSeek)
             {
                 throw new ArgumentException("Stream should be readable and seekable");
             }
-
+            readerOptions = readerOptions ?? new ReaderOptions();
             if (ZipArchive.IsZipFile(stream, null))
             {
                 stream.Seek(0, SeekOrigin.Begin);
-                return ZipArchive.Open(stream, options, null);
+                return ZipArchive.Open(stream, readerOptions);
             }
             stream.Seek(0, SeekOrigin.Begin);
             if (SevenZipArchive.IsSevenZipFile(stream))
             {
                 stream.Seek(0, SeekOrigin.Begin);
-                return SevenZipArchive.Open(stream, options);
+                return SevenZipArchive.Open(stream, readerOptions);
             }
             stream.Seek(0, SeekOrigin.Begin);
             if (GZipArchive.IsGZipFile(stream))
             {
                 stream.Seek(0, SeekOrigin.Begin);
-                return GZipArchive.Open(stream, options);
+                return GZipArchive.Open(stream, readerOptions);
             }
             stream.Seek(0, SeekOrigin.Begin);
-            if (RarArchive.IsRarFile(stream, options))
+            if (RarArchive.IsRarFile(stream, readerOptions))
             {
                 stream.Seek(0, SeekOrigin.Begin);
-                return RarArchive.Open(stream, options);
+                return RarArchive.Open(stream, readerOptions);
             }
             stream.Seek(0, SeekOrigin.Begin);
             if (TarArchive.IsTarFile(stream))
             {
                 stream.Seek(0, SeekOrigin.Begin);
-                return TarArchive.Open(stream, options);
+                return TarArchive.Open(stream, readerOptions);
             }
             throw new InvalidOperationException("Cannot determine compressed stream type. Supported Archive Formats: Zip, GZip, Tar, Rar, 7Zip");
         }
@@ -86,29 +87,11 @@ namespace SharpCompress.Archives
         /// Constructor expects a filepath to an existing file.
         /// </summary>
         /// <param name="filePath"></param>
-        public static IArchive Open(string filePath)
-        {
-            return Open(filePath, Options.None);
-        }
-
-        /// <summary>
-        /// Constructor with a FileInfo object to an existing file.
-        /// </summary>
-        /// <param name="fileInfo"></param>
-        public static IArchive Open(FileInfo fileInfo)
-        {
-            return Open(fileInfo, Options.None);
-        }
-
-        /// <summary>
-        /// Constructor expects a filepath to an existing file.
-        /// </summary>
-        /// <param name="filePath"></param>
         /// <param name="options"></param>
-        public static IArchive Open(string filePath, Options options)
+        public static IArchive Open(string filePath, ReaderOptions options = null)
         {
             filePath.CheckNotNullOrEmpty("filePath");
-            return Open(new FileInfo(filePath), options);
+            return Open(new FileInfo(filePath), options ?? new ReaderOptions());
         }
 
         /// <summary>
@@ -116,15 +99,16 @@ namespace SharpCompress.Archives
         /// </summary>
         /// <param name="fileInfo"></param>
         /// <param name="options"></param>
-        public static IArchive Open(FileInfo fileInfo, Options options)
+        public static IArchive Open(FileInfo fileInfo, ReaderOptions options = null)
         {
             fileInfo.CheckNotNull("fileInfo");
+            options = options ?? new ReaderOptions();
             using (var stream = fileInfo.OpenRead())
             {
                 if (ZipArchive.IsZipFile(stream, null))
                 {
                     stream.Dispose();
-                    return ZipArchive.Open(fileInfo, options, null);
+                    return ZipArchive.Open(fileInfo, options);
                 }
                 stream.Seek(0, SeekOrigin.Begin);
                 if (SevenZipArchive.IsSevenZipFile(stream))
@@ -158,7 +142,7 @@ namespace SharpCompress.Archives
         /// Extract to specific directory, retaining filename
         /// </summary>
         public static void WriteToDirectory(string sourceArchive, string destinationDirectory,
-                                            ExtractOptions options = ExtractOptions.Overwrite)
+                                            ExtractionOptions options = null)
         {
             using (IArchive archive = Open(sourceArchive))
             {

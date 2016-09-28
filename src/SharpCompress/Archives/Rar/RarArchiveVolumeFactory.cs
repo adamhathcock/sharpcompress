@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using SharpCompress.Common;
 using SharpCompress.Common.Rar;
-
+using SharpCompress.Readers;
 #if !NO_FILE
 using System.Linq;
 using System.Text;
@@ -14,7 +14,7 @@ namespace SharpCompress.Archives.Rar
 {
     internal static class RarArchiveVolumeFactory
     {
-        internal static IEnumerable<RarVolume> GetParts(IEnumerable<Stream> streams, string password, Options options)
+        internal static IEnumerable<RarVolume> GetParts(IEnumerable<Stream> streams, ReaderOptions options)
         {
             foreach (Stream s in streams)
             {
@@ -22,15 +22,15 @@ namespace SharpCompress.Archives.Rar
                 {
                     throw new ArgumentException("Stream is not readable and seekable");
                 }
-                StreamRarArchiveVolume part = new StreamRarArchiveVolume(s, password, options);
+                StreamRarArchiveVolume part = new StreamRarArchiveVolume(s, options);
                 yield return part;
             }
         }
 
 #if !NO_FILE
-        internal static IEnumerable<RarVolume> GetParts(FileInfo fileInfo, string password, Options options)
+        internal static IEnumerable<RarVolume> GetParts(FileInfo fileInfo, ReaderOptions options)
         {
-            FileInfoRarArchiveVolume part = new FileInfoRarArchiveVolume(fileInfo, password, options);
+            FileInfoRarArchiveVolume part = new FileInfoRarArchiveVolume(fileInfo, options);
             yield return part;
 
             if (!part.ArchiveHeader.ArchiveHeaderFlags.HasFlag(ArchiveFlags.VOLUME))
@@ -42,7 +42,7 @@ namespace SharpCompress.Archives.Rar
             //we use fileinfo because rar is dumb and looks at file names rather than archive info for another volume
             while (fileInfo != null && fileInfo.Exists)
             {
-                part = new FileInfoRarArchiveVolume(fileInfo, password, options);
+                part = new FileInfoRarArchiveVolume(fileInfo, options);
 
                 fileInfo = GetNextFileInfo(ah, part.FileParts.FirstOrDefault() as FileInfoRarFilePart);
                 yield return part;

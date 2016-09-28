@@ -3,6 +3,7 @@ using System.Linq;
 using SharpCompress.Archives;
 using SharpCompress.Archives.Rar;
 using SharpCompress.Common;
+using SharpCompress.Readers;
 using Xunit;
 
 namespace SharpCompress.Test
@@ -33,14 +34,22 @@ namespace SharpCompress.Test
         {
             ResetScratch();
             using (Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, testArchive)))
-            using (var archive = RarArchive.Open(stream, Options.KeepStreamsOpen, password))
+            using (var archive = RarArchive.Open(stream, new ReaderOptions()
+                                                         {
+                                                             Password = password,
+                                                             LeaveOpenStream = true
+                                                         }))
             {
                 foreach (var entry in archive.Entries)
                 {
                     if (!entry.IsDirectory)
                     {
                         Assert.Equal(entry.CompressionType, CompressionType.Rar);
-                        entry.WriteToDirectory(SCRATCH_FILES_PATH, ExtractOptions.ExtractFullPath | ExtractOptions.Overwrite);
+                        entry.WriteToDirectory(SCRATCH_FILES_PATH, new ExtractionOptions()
+                        {
+                            ExtractFullPath = true,
+                            Overwrite = true
+                        });
                     }
                 }
             }
@@ -56,12 +65,20 @@ namespace SharpCompress.Test
         protected void ArchiveFileReadPassword(string archiveName, string password)
         {
             ResetScratch();
-            using (var archive = RarArchive.Open(Path.Combine(TEST_ARCHIVES_PATH, archiveName), Options.None, password))
+            using (var archive = RarArchive.Open(Path.Combine(TEST_ARCHIVES_PATH, archiveName), new ReaderOptions()
+                                                            {
+                                                                Password = password,
+                                                                LeaveOpenStream = true
+                                                            }))
             {
                 foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
                 {
                     entry.WriteToDirectory(SCRATCH_FILES_PATH,
-                                            ExtractOptions.ExtractFullPath | ExtractOptions.Overwrite);
+                                            new ExtractionOptions()
+                                            {
+                                                ExtractFullPath = true,
+                                                Overwrite = true
+                                            });
                 }
             }
             VerifyFiles();
@@ -89,7 +106,11 @@ namespace SharpCompress.Test
                 {
                     foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
                     {
-                        entry.WriteToDirectory(SCRATCH_FILES_PATH, ExtractOptions.ExtractFullPath | ExtractOptions.Overwrite);
+                        entry.WriteToDirectory(SCRATCH_FILES_PATH, new ExtractionOptions()
+                        {
+                            ExtractFullPath = true,
+                            Overwrite = true
+                        });
                     }
                 }
             }
@@ -101,12 +122,19 @@ namespace SharpCompress.Test
             ResetScratch();
             using (var stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "RarJpeg.jpg")))
             {
-                using (var archive = RarArchive.Open(stream, Options.LookForHeader))
+                using (var archive = RarArchive.Open(stream, new ReaderOptions()
+                                                             {
+                                                                 LookForHeader = true
+                                                             }))
                 {
                     foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
                     {
                         entry.WriteToDirectory(SCRATCH_FILES_PATH,
-                                               ExtractOptions.ExtractFullPath | ExtractOptions.Overwrite);
+                                               new ExtractionOptions()
+                                               {
+                                                   ExtractFullPath = true,
+                                                   Overwrite = true
+                                               });
                     }
                 }
                 VerifyFiles();
@@ -125,7 +153,11 @@ namespace SharpCompress.Test
                     foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
                     {
                         entry.WriteToDirectory(SCRATCH_FILES_PATH,
-                                               ExtractOptions.ExtractFullPath | ExtractOptions.Overwrite);
+                                               new ExtractionOptions()
+                                               {
+                                                   ExtractFullPath = true,
+                                                   Overwrite = true
+                                               });
                     }
                 }
             }
@@ -161,7 +193,11 @@ namespace SharpCompress.Test
             {
                 foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
                 {
-                    entry.WriteToDirectory(SCRATCH_FILES_PATH, ExtractOptions.ExtractFullPath | ExtractOptions.Overwrite);
+                    entry.WriteToDirectory(SCRATCH_FILES_PATH, new ExtractionOptions()
+                    {
+                        ExtractFullPath = true,
+                        Overwrite = true
+                    });
                 }
             }
             VerifyFiles();
@@ -197,11 +233,18 @@ namespace SharpCompress.Test
         public void Rar_Jpg_ArchiveFileRead()
         {
             ResetScratch();
-            using (var archive = RarArchive.Open(Path.Combine(TEST_ARCHIVES_PATH, "RarJpeg.jpg"), Options.LookForHeader))
+            using (var archive = RarArchive.Open(Path.Combine(TEST_ARCHIVES_PATH, "RarJpeg.jpg"), new ReaderOptions()
+                                                                                                  {
+                                                                                                      LookForHeader = true
+                                                                                                  }))
             {
                 foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
                 {
-                    entry.WriteToDirectory(SCRATCH_FILES_PATH, ExtractOptions.ExtractFullPath | ExtractOptions.Overwrite);
+                    entry.WriteToDirectory(SCRATCH_FILES_PATH, new ExtractionOptions()
+                    {
+                        ExtractFullPath = true,
+                        Overwrite = true
+                    });
                 }
             }
             VerifyFiles();

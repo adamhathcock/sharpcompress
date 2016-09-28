@@ -17,20 +17,19 @@ namespace SharpCompress.Archives.Rar
 
 #if !NO_FILE
 
-/// <summary>
-/// Constructor with a FileInfo object to an existing file.
-/// </summary>
-/// <param name="fileInfo"></param>
-/// <param name="options"></param>
-/// <param name="password"></param>
-        internal RarArchive(FileInfo fileInfo, Options options, string password)
-            : base(ArchiveType.Rar, fileInfo, options, password)
+        /// <summary>
+        /// Constructor with a FileInfo object to an existing file.
+        /// </summary>
+        /// <param name="fileInfo"></param>
+        /// <param name="options"></param>
+        internal RarArchive(FileInfo fileInfo, ReaderOptions options)
+            : base(ArchiveType.Rar, fileInfo, options)
         {
         }
 
-        protected override IEnumerable<RarVolume> LoadVolumes(FileInfo file, Options options)
+        protected override IEnumerable<RarVolume> LoadVolumes(FileInfo file)
         {
-            return RarArchiveVolumeFactory.GetParts(file, Password, options);
+            return RarArchiveVolumeFactory.GetParts(file, ReaderOptions);
         }
 #endif
 
@@ -39,9 +38,8 @@ namespace SharpCompress.Archives.Rar
         /// </summary>
         /// <param name="streams"></param>
         /// <param name="options"></param>
-        /// <param name="password"></param>
-        internal RarArchive(IEnumerable<Stream> streams, Options options, string password)
-            : base(ArchiveType.Rar, streams, options, password)
+        internal RarArchive(IEnumerable<Stream> streams, ReaderOptions options)
+            : base(ArchiveType.Rar, streams, options)
         {
         }
 
@@ -50,16 +48,16 @@ namespace SharpCompress.Archives.Rar
             return RarArchiveEntryFactory.GetEntries(this, volumes);
         }
 
-        protected override IEnumerable<RarVolume> LoadVolumes(IEnumerable<Stream> streams, Options options)
+        protected override IEnumerable<RarVolume> LoadVolumes(IEnumerable<Stream> streams)
         {
-            return RarArchiveVolumeFactory.GetParts(streams, Password, options);
+            return RarArchiveVolumeFactory.GetParts(streams, ReaderOptions);
         }
 
         protected override IReader CreateReaderForSolidExtraction()
         {
             var stream = Volumes.First().Stream;
             stream.Position = 0;
-            return RarReader.Open(stream, Password);
+            return RarReader.Open(stream, ReaderOptions);
         }
 
         public override bool IsSolid { get { return Volumes.First().IsSolidArchive; } }
@@ -68,16 +66,15 @@ namespace SharpCompress.Archives.Rar
 
 #if !NO_FILE
 
-/// <summary>
-/// Constructor expects a filepath to an existing file.
-/// </summary>
-/// <param name="filePath"></param>
-/// <param name="options"></param>
-/// <param name="password"></param>
-        public static RarArchive Open(string filePath, Options options = Options.None, string password = null)
+        /// <summary>
+        /// Constructor with a FileInfo object to an existing file.
+        /// </summary>
+        /// <param name="filePath"></param>
+        /// <param name="options"></param>
+        public static RarArchive Open(string filePath, ReaderOptions options = null)
         {
             filePath.CheckNotNullOrEmpty("filePath");
-            return Open(new FileInfo(filePath), options, password);
+            return new RarArchive(new FileInfo(filePath), options ?? new ReaderOptions());
         }
 
         /// <summary>
@@ -85,11 +82,10 @@ namespace SharpCompress.Archives.Rar
         /// </summary>
         /// <param name="fileInfo"></param>
         /// <param name="options"></param>
-        /// <param name="password"></param>
-        public static RarArchive Open(FileInfo fileInfo, Options options = Options.None, string password = null)
+        public static RarArchive Open(FileInfo fileInfo, ReaderOptions options = null)
         {
             fileInfo.CheckNotNull("fileInfo");
-            return new RarArchive(fileInfo, options, password);
+            return new RarArchive(fileInfo, options ?? new ReaderOptions());
         }
 #endif
 
@@ -98,11 +94,10 @@ namespace SharpCompress.Archives.Rar
         /// </summary>
         /// <param name="stream"></param>
         /// <param name="options"></param>
-        /// <param name="password"></param>
-        public static RarArchive Open(Stream stream, Options options = Options.KeepStreamsOpen, string password = null)
+        public static RarArchive Open(Stream stream, ReaderOptions options = null)
         {
             stream.CheckNotNull("stream");
-            return Open(stream.AsEnumerable(), options, password);
+            return Open(stream.AsEnumerable(), options ?? new ReaderOptions());
         }
 
         /// <summary>
@@ -110,11 +105,10 @@ namespace SharpCompress.Archives.Rar
         /// </summary>
         /// <param name="streams"></param>
         /// <param name="options"></param>
-        /// <param name="password"></param>
-        public static RarArchive Open(IEnumerable<Stream> streams, Options options = Options.KeepStreamsOpen, string password = null)
+        public static RarArchive Open(IEnumerable<Stream> streams, ReaderOptions options = null)
         {
             streams.CheckNotNull("streams");
-            return new RarArchive(streams, options, password);
+            return new RarArchive(streams, options ?? new ReaderOptions());
         }
 
 #if !NO_FILE
@@ -135,17 +129,12 @@ namespace SharpCompress.Archives.Rar
             }
         }
 #endif
-
-        public static bool IsRarFile(Stream stream)
-        {
-            return IsRarFile(stream, Options.None);
-        }
-
-        public static bool IsRarFile(Stream stream, Options options)
+        
+        public static bool IsRarFile(Stream stream, ReaderOptions options = null)
         {
             try
             {
-                var headerFactory = new RarHeaderFactory(StreamingMode.Seekable, options);
+                var headerFactory = new RarHeaderFactory(StreamingMode.Seekable, options ?? new ReaderOptions());
                 var markHeader = headerFactory.ReadHeaders(stream).FirstOrDefault() as MarkHeader;
                 return markHeader != null && markHeader.IsValid();
             }

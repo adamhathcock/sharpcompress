@@ -1,18 +1,20 @@
 ﻿using System.IO;
+using SharpCompress.Readers;
 
 namespace SharpCompress.Common.GZip
 {
     public class GZipVolume : Volume
     {
-        public GZipVolume(Stream stream, Options options)
+        public GZipVolume(Stream stream, ReaderOptions options)
             : base(stream, options)
         {
         }
 
 #if !NO_FILE
-        public GZipVolume(FileInfo fileInfo, Options options)
+        public GZipVolume(FileInfo fileInfo, ReaderOptions options)
             : base(fileInfo.OpenRead(), options)
         {
+            options.LeaveOpenStream = false;
         }
 #endif
 
