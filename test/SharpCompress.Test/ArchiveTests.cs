@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using SharpCompress.Archives;
 using SharpCompress.Common;
+using SharpCompress.Readers;
 using Xunit;
 
 namespace SharpCompress.Test
@@ -39,7 +40,11 @@ namespace SharpCompress.Test
                     foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
                     {
                         entry.WriteToDirectory(SCRATCH_FILES_PATH,
-                                               ExtractOptions.ExtractFullPath | ExtractOptions.Overwrite);
+                                               new ExtractionOptions()
+                                               {
+                                                   ExtractFullPath = true,
+                                                   Overwrite = true
+                                               });
                     }
                 }
                 VerifyFiles();
@@ -67,7 +72,11 @@ namespace SharpCompress.Test
                 {
                     foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
                     {
-                        entry.WriteToDirectory(SCRATCH_FILES_PATH, ExtractOptions.ExtractFullPath | ExtractOptions.Overwrite);
+                        entry.WriteToDirectory(SCRATCH_FILES_PATH, new ExtractionOptions()
+                        {
+                            ExtractFullPath = true,
+                            Overwrite = true
+                        });
                     }
                 }
                 VerifyFiles();
@@ -93,7 +102,11 @@ namespace SharpCompress.Test
                     foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
                     {
                         entry.WriteToDirectory(SCRATCH_FILES_PATH,
-                                               ExtractOptions.ExtractFullPath | ExtractOptions.Overwrite);
+                                               new ExtractionOptions()
+                                               {
+                                                   ExtractFullPath = true,
+                                                   Overwrite = true
+                                               });
                     }
                 }
                 VerifyFiles();
@@ -134,7 +147,7 @@ namespace SharpCompress.Test
         }
         
         /// <summary>
-        /// Demonstrate the TotalUncompressSize property, and the ExtractOptions.PreserveFileTime and ExtractOptions.PreserveAttributes extract options
+        /// Demonstrate the TotalUncompressSize property, and the ExtractionOptions.PreserveFileTime and ExtractionOptions.PreserveAttributes extract options
         /// </summary>
         protected void ArchiveFileReadEx(IEnumerable<string> testArchives)
         {
@@ -151,7 +164,13 @@ namespace SharpCompress.Test
                     foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
                     {
                         entry.WriteToDirectory(SCRATCH_FILES_PATH,
-                                               ExtractOptions.ExtractFullPath | ExtractOptions.Overwrite | ExtractOptions.PreserveFileTime | ExtractOptions.PreserveAttributes);
+                                               new ExtractionOptions()
+                                               {
+                                                   ExtractFullPath = true,
+                                                   Overwrite = true,
+                                                   PreserveAttributes = true,
+                                                   PreserveFileTime = true
+                                               });
                     }
                 }
                 VerifyFilesEx();

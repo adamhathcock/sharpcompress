@@ -16,8 +16,7 @@ namespace SharpCompress.Readers.Tar
     {
         private readonly CompressionType compressionType;
 
-        internal TarReader(Stream stream, CompressionType compressionType,
-                           Options options)
+        internal TarReader(Stream stream, ReaderOptions options, CompressionType compressionType)
             : base(options, ArchiveType.Tar)
         {
             this.compressionType = compressionType;
@@ -58,10 +57,10 @@ namespace SharpCompress.Readers.Tar
         /// <param name="stream"></param>
         /// <param name="options"></param>
         /// <returns></returns>
-        public static TarReader Open(Stream stream, Options options = Options.KeepStreamsOpen)
+        public static TarReader Open(Stream stream, ReaderOptions options = null)
         {
             stream.CheckNotNull("stream");
-
+            options = options ?? new ReaderOptions();
             RewindableStream rewindableStream = new RewindableStream(stream);
             rewindableStream.StartRecording();
             if (GZipArchive.IsGZipFile(rewindableStream))
@@ -71,7 +70,7 @@ namespace SharpCompress.Readers.Tar
                 if (TarArchive.IsTarFile(testStream))
                 {
                     rewindableStream.Rewind(true);
-                    return new TarReader(rewindableStream, CompressionType.GZip, options);
+                    return new TarReader(rewindableStream, options, CompressionType.GZip);
                 }
                 throw new InvalidFormatException("Not a tar file.");
             }
@@ -84,12 +83,12 @@ namespace SharpCompress.Readers.Tar
                 if (TarArchive.IsTarFile(testStream))
                 {
                     rewindableStream.Rewind(true);
-                    return new TarReader(rewindableStream, CompressionType.BZip2, options);
+                    return new TarReader(rewindableStream, options, CompressionType.BZip2);
                 }
                 throw new InvalidFormatException("Not a tar file.");
             }
             rewindableStream.Rewind(true);
-            return new TarReader(rewindableStream, CompressionType.None, options);
+            return new TarReader(rewindableStream, options, CompressionType.None);
         }
 
         #endregion

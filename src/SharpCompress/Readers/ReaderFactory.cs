@@ -24,16 +24,19 @@ namespace SharpCompress.Readers
         /// <param name="stream"></param>
         /// <param name="options"></param>
         /// <returns></returns>
-        public static IReader Open(Stream stream, Options options = Options.KeepStreamsOpen)
+        public static IReader Open(Stream stream, ReaderOptions options = null)
         {
             stream.CheckNotNull("stream");
-
+            options = options ?? new ReaderOptions()
+                                 {
+                                     LeaveOpenStream = false
+                                 };
             RewindableStream rewindableStream = new RewindableStream(stream);
             rewindableStream.StartRecording();
             if (ZipArchive.IsZipFile(rewindableStream, null))
             {
                 rewindableStream.Rewind(true);
-                return ZipReader.Open(rewindableStream, null, options);
+                return ZipReader.Open(rewindableStream, options);
             }
             rewindableStream.Rewind(false);
             if (GZipArchive.IsGZipFile(rewindableStream))
@@ -43,7 +46,7 @@ namespace SharpCompress.Readers
                 if (TarArchive.IsTarFile(testStream))
                 {
                     rewindableStream.Rewind(true);
-                    return new TarReader(rewindableStream, CompressionType.GZip, options);
+                    return new TarReader(rewindableStream, options, CompressionType.GZip);
                 }
                 rewindableStream.Rewind(true);
                 return GZipReader.Open(rewindableStream, options);
@@ -57,7 +60,7 @@ namespace SharpCompress.Readers
                 if (TarArchive.IsTarFile(testStream))
                 {
                     rewindableStream.Rewind(true);
-                    return new TarReader(rewindableStream, CompressionType.BZip2, options);
+                    return new TarReader(rewindableStream, options, CompressionType.BZip2);
                 }
             }
 

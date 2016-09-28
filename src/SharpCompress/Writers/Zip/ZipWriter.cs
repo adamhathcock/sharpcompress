@@ -17,19 +17,21 @@ namespace SharpCompress.Writers.Zip
 {
     public class ZipWriter : AbstractWriter
     {
-        private readonly ZipCompressionInfo zipCompressionInfo;
+        private readonly CompressionType compressionType;
+        private readonly CompressionLevel compressionLevel;
         private readonly PpmdProperties ppmdProperties = new PpmdProperties(); // Caching properties to speed up PPMd
         private readonly List<ZipCentralDirectoryEntry> entries = new List<ZipCentralDirectoryEntry>();
         private readonly string zipComment;
         private long streamPosition;
 
-        public ZipWriter(Stream destination, CompressionInfo compressionInfo, string zipComment, bool leaveOpen = false)
+        public ZipWriter(Stream destination, ZipWriterOptions zipWriterOptions)
             : base(ArchiveType.Zip)
         {
-            this.zipComment = zipComment ?? string.Empty;
+            zipComment = zipWriterOptions.ArchiveComment ?? string.Empty;
 
-            zipCompressionInfo = new ZipCompressionInfo(compressionInfo);
-            InitalizeStream(destination, !leaveOpen);
+            compressionType = zipWriterOptions.CompressionType;
+            compressionLevel = zipWriterOptions.DeflateCompressionLevel;
+            InitalizeStream(destination, !zipWriterOptions.LeaveOpenStream);
         }
 
         protected override void Dispose(bool isDisposing)
@@ -39,42 +41,75 @@ namespace SharpCompress.Writers.Zip
                 uint size = 0;
                 foreach (ZipCentralDirectoryEntry entry in entries)
                 {
-                    size += entry.Write(OutputStream, zipCompressionInfo.Compression);
+                    size += entry.Write(OutputStream, ToZipCompressionMethod(compressionType));
                 }
                 WriteEndRecord(size);
             }
             base.Dispose(isDisposing);
         }
+        private static ZipCompressionMethod ToZipCompressionMethod(CompressionType compressionType)
+        {
+            switch (compressionType)
+            {
+                case CompressionType.None:
+                    {
+                        return ZipCompressionMethod.None;
+                    }
+                case CompressionType.Deflate:
+                    {
+                        return ZipCompressionMethod.Deflate;
+                    }
+                case CompressionType.BZip2:
+                    {
+                        return ZipCompressionMethod.BZip2;
+                    }
+                case CompressionType.LZMA:
+                    {
+                        return ZipCompressionMethod.LZMA;
+                    }
+                case CompressionType.PPMd:
+                    {
+                        return ZipCompressionMethod.PPMd;
+                    }
+                default:
+                    throw new InvalidFormatException("Invalid compression method: " + compressionType);
+            }
+        }
 
         public override void Write(string entryPath, Stream source, DateTime? modificationTime)
         {
-            Write(entryPath, source, modificationTime, null);
+            Write(entryPath, source, new ZipWriterEntryOptions()
+                                     {
+                                         ModificationDateTime =  modificationTime
+                                     });
         }
 
-        public void Write(string entryPath, Stream source, DateTime? modificationTime, string comment, CompressionInfo compressionInfo = null)
+        public void Write(string entryPath, Stream source, ZipWriterEntryOptions zipWriterEntryOptions)
         {
-            using (Stream output = WriteToStream(entryPath, modificationTime, comment, compressionInfo))
+            using (Stream output = WriteToStream(entryPath, zipWriterEntryOptions))
             {
                 source.TransferTo(output);
             }
         }
 
-        public Stream WriteToStream(string entryPath, DateTime? modificationTime, string comment, CompressionInfo compressionInfo = null)
+        public Stream WriteToStream(string entryPath, ZipWriterEntryOptions options)
         {
             entryPath = NormalizeFilename(entryPath);
-            modificationTime = modificationTime ?? DateTime.Now;
-            comment = comment ?? "";
+            options.ModificationDateTime = options.ModificationDateTime ?? DateTime.Now;
+            options.EntryComment = options.EntryComment ?? string.Empty;
             var entry = new ZipCentralDirectoryEntry
                         {
-                            Comment = comment,
+                            Comment = options.EntryComment,
                             FileName = entryPath,
-                            ModificationTime = modificationTime,
+                            ModificationTime = options.ModificationDateTime,
                             HeaderOffset = (uint)streamPosition
                         };
 
-            var headersize = (uint)WriteHeader(entryPath, modificationTime, compressionInfo);
+            var headersize = (uint)WriteHeader(entryPath, options);
             streamPosition += headersize;
-            return new ZipWritingStream(this, OutputStream, entry, compressionInfo);
+            return new ZipWritingStream(this, OutputStream, entry, 
+                ToZipCompressionMethod(options.CompressionType ?? compressionType), 
+                options.DeflateCompressionLevel ?? compressionLevel);
         }
 
         private string NormalizeFilename(string filename)
@@ -90,13 +125,13 @@ namespace SharpCompress.Writers.Zip
             return filename.Trim('/');
         }
 
-        private int WriteHeader(string filename, DateTime? modificationTime, CompressionInfo compressionInfo = null)
+        private int WriteHeader(string filename, ZipWriterEntryOptions zipWriterEntryOptions)
         {
-            var explicitZipCompressionInfo = compressionInfo != null ? new ZipCompressionInfo(compressionInfo) : zipCompressionInfo;
+            var explicitZipCompressionInfo = ToZipCompressionMethod(zipWriterEntryOptions.CompressionType ?? compressionType);
             byte[] encodedFilename = ArchiveEncoding.Default.GetBytes(filename);
 
             OutputStream.Write(DataConverter.LittleEndian.GetBytes(ZipHeaderFactory.ENTRY_HEADER_BYTES), 0, 4);
-            if (explicitZipCompressionInfo.Compression == ZipCompressionMethod.Deflate)
+            if (explicitZipCompressionInfo == ZipCompressionMethod.Deflate)
             {
                 OutputStream.Write(new byte[] {20, 0}, 0, 2); //older version which is more compatible 
             }
@@ -108,14 +143,14 @@ namespace SharpCompress.Writers.Zip
             if (!OutputStream.CanSeek)
             {
                 flags |= HeaderFlags.UsePostDataDescriptor;
-                if (explicitZipCompressionInfo.Compression == ZipCompressionMethod.LZMA)
+                if (explicitZipCompressionInfo == ZipCompressionMethod.LZMA)
                 {
                     flags |= HeaderFlags.Bit1; // eos marker
                 }
             }
             OutputStream.Write(DataConverter.LittleEndian.GetBytes((ushort)flags), 0, 2);
-            OutputStream.Write(DataConverter.LittleEndian.GetBytes((ushort)explicitZipCompressionInfo.Compression), 0, 2); // zipping method
-            OutputStream.Write(DataConverter.LittleEndian.GetBytes(modificationTime.DateTimeToDosTime()), 0, 4);
+            OutputStream.Write(DataConverter.LittleEndian.GetBytes((ushort)explicitZipCompressionInfo), 0, 2); // zipping method
+            OutputStream.Write(DataConverter.LittleEndian.GetBytes(zipWriterEntryOptions.ModificationDateTime.DateTimeToDosTime()), 0, 4);
 
             // zipping date and time
             OutputStream.Write(new byte[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, 0, 12);
@@ -157,17 +192,20 @@ namespace SharpCompress.Writers.Zip
             private readonly Stream originalStream;
             private readonly Stream writeStream;
             private readonly ZipWriter writer;
-            private readonly ZipCompressionInfo compressionInfo;
+            private readonly ZipCompressionMethod zipCompressionMethod;
+            private readonly CompressionLevel compressionLevel;
             private CountingWritableSubStream counting;
             private uint decompressed;
 
-            internal ZipWritingStream(ZipWriter writer, Stream originalStream, ZipCentralDirectoryEntry entry, CompressionInfo compressionInfo)
+            internal ZipWritingStream(ZipWriter writer, Stream originalStream, ZipCentralDirectoryEntry entry, 
+                ZipCompressionMethod zipCompressionMethod, CompressionLevel compressionLevel)
             {
                 this.writer = writer;
                 this.originalStream = originalStream;
                 this.writer = writer;
                 this.entry = entry;
-                this.compressionInfo = compressionInfo == null ? writer.zipCompressionInfo : new ZipCompressionInfo(compressionInfo);
+                this.zipCompressionMethod = zipCompressionMethod;
+                this.compressionLevel = compressionLevel;
                 writeStream = GetWriteStream(originalStream);
             }
 
@@ -185,7 +223,7 @@ namespace SharpCompress.Writers.Zip
             {
                 counting = new CountingWritableSubStream(writeStream);
                 Stream output = counting;
-                switch (compressionInfo.Compression)
+                switch (zipCompressionMethod)
                 {
                     case ZipCompressionMethod.None:
                     {
@@ -193,7 +231,7 @@ namespace SharpCompress.Writers.Zip
                     }
                     case ZipCompressionMethod.Deflate:
                     {
-                        return new DeflateStream(counting, CompressionMode.Compress, compressionInfo.DeflateCompressionLevel,
+                        return new DeflateStream(counting, CompressionMode.Compress, compressionLevel,
                                                  true);
                     }
                     case ZipCompressionMethod.BZip2:
@@ -219,7 +257,7 @@ namespace SharpCompress.Writers.Zip
                     }
                     default:
                     {
-                        throw new NotSupportedException("CompressionMethod: " + compressionInfo.Compression);
+                        throw new NotSupportedException("CompressionMethod: " + zipCompressionMethod);
                     }
                 }
             }

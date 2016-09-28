@@ -20,31 +20,33 @@ namespace SharpCompress.Archives
         public event EventHandler<CompressedBytesReadEventArgs> CompressedBytesRead;
         public event EventHandler<FilePartExtractionBeginEventArgs> FilePartExtractionBegin;
 
-        protected string Password { get; private set; }
+        protected ReaderOptions ReaderOptions { get; }
+
+        private bool disposed;
 
 #if !NO_FILE
-        internal AbstractArchive(ArchiveType type, FileInfo fileInfo, Options options, string password)
+        internal AbstractArchive(ArchiveType type, FileInfo fileInfo, ReaderOptions readerOptions)
         {
             Type = type;
-            Password = password;
             if (!fileInfo.Exists)
             {
                 throw new ArgumentException("File does not exist: " + fileInfo.FullName);
             }
-            options = (Options) FlagUtility.SetFlag(options, Options.KeepStreamsOpen, false);
-            lazyVolumes = new LazyReadOnlyCollection<TVolume>(LoadVolumes(fileInfo, options));
+            ReaderOptions = readerOptions;
+            readerOptions.LeaveOpenStream = false;
+            lazyVolumes = new LazyReadOnlyCollection<TVolume>(LoadVolumes(fileInfo));
             lazyEntries = new LazyReadOnlyCollection<TEntry>(LoadEntries(Volumes));
         }
 
 
-        protected abstract IEnumerable<TVolume> LoadVolumes(FileInfo file, Options options);
+        protected abstract IEnumerable<TVolume> LoadVolumes(FileInfo file);
 #endif
 
-        internal AbstractArchive(ArchiveType type, IEnumerable<Stream> streams, Options options, string password)
+        internal AbstractArchive(ArchiveType type, IEnumerable<Stream> streams, ReaderOptions readerOptions)
         {
             Type = type;
-            Password = password;
-            lazyVolumes = new LazyReadOnlyCollection<TVolume>(LoadVolumes(streams.Select(CheckStreams), options));
+            ReaderOptions = readerOptions;
+            lazyVolumes = new LazyReadOnlyCollection<TVolume>(LoadVolumes(streams.Select(CheckStreams)));
             lazyEntries = new LazyReadOnlyCollection<TEntry>(LoadEntries(Volumes));
         }
 
@@ -102,14 +104,12 @@ namespace SharpCompress.Archives
         /// </summary>
         public virtual long TotalUncompressSize { get { return Entries.Aggregate(0L, (total, cf) => total + cf.Size); } }
 
-        protected abstract IEnumerable<TVolume> LoadVolumes(IEnumerable<Stream> streams, Options options);
+        protected abstract IEnumerable<TVolume> LoadVolumes(IEnumerable<Stream> streams);
         protected abstract IEnumerable<TEntry> LoadEntries(IEnumerable<TVolume> volumes);
 
         IEnumerable<IArchiveEntry> IArchive.Entries { get { return Entries.Cast<IArchiveEntry>(); } }
 
         IEnumerable<IVolume> IArchive.Volumes { get { return lazyVolumes.Cast<IVolume>(); } }
-
-        private bool disposed;
 
         public virtual void Dispose()
         {

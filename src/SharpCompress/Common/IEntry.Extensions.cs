@@ -1,15 +1,16 @@
 ﻿
 #if !NO_FILE
 using System.IO;
+using SharpCompress.Readers;
 
 namespace SharpCompress.Common
 {
     internal static class IEntryExtensions
     {
         internal static void PreserveExtractionOptions(this IEntry entry, string destinationFileName,
-                                                        ExtractOptions options)
+                                                        ExtractionOptions options)
         {
-            if (options.HasFlag(ExtractOptions.PreserveFileTime) || options.HasFlag(ExtractOptions.PreserveAttributes))
+            if (options.PreserveFileTime || options.PreserveAttributes)
             {
                 FileInfo nf = new FileInfo(destinationFileName);
                 if (!nf.Exists)
@@ -18,7 +19,7 @@ namespace SharpCompress.Common
                 }
 
                 // update file time to original packed time
-                if (options.HasFlag(ExtractOptions.PreserveFileTime))
+                if (options.PreserveFileTime)
                 {
                     if (entry.CreatedTime.HasValue)
                     {
@@ -36,7 +37,7 @@ namespace SharpCompress.Common
                     }
                 }
 
-                if (options.HasFlag(ExtractOptions.PreserveAttributes))
+                if (options.PreserveAttributes)
                 {
                     if (entry.Attrib.HasValue)
                     {

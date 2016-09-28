@@ -7,13 +7,13 @@ namespace SharpCompress.Archives.Rar
 {
     internal class FileInfoRarFilePart : SeekableFilePart
     {
-        internal FileInfoRarFilePart(FileInfoRarArchiveVolume volume, MarkHeader mh, FileHeader fh, FileInfo fi)
-            : base(mh, fh, volume.Stream, volume.Password)
+        internal FileInfoRarFilePart(FileInfoRarArchiveVolume volume, string password, MarkHeader mh, FileHeader fh, FileInfo fi)
+            : base(mh, fh, volume.Stream, password)
         {
             FileInfo = fi;
         }
 
-        internal FileInfo FileInfo { get; private set; }
+        internal FileInfo FileInfo { get; }
 
         internal override string FilePartName
         {

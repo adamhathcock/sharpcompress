@@ -1,11 +1,12 @@
 ﻿using System.IO;
+using SharpCompress.Readers;
 
 namespace SharpCompress.Common.Zip
 {
     public class ZipVolume : Volume
     {
-        public ZipVolume(Stream stream, Options options)
-            : base(stream, options)
+        public ZipVolume(Stream stream, ReaderOptions readerOptions)
+            : base(stream, readerOptions)
         {
         }
 
