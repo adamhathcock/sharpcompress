@@ -164,9 +164,9 @@ namespace SharpCompress.Common.Tar.Headers
         {
             byte[] buffer = reader.ReadBytes(BlockSize);
 
-            if (buffer.Length < BlockSize)
+            if (buffer.Length != 0 && buffer.Length < BlockSize)
             {
-                throw new InvalidOperationException();
+                throw new InvalidOperationException("Buffer is invalid size");
             }
             return buffer;
         }
