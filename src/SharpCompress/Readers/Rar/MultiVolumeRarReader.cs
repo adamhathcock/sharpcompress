@@ -12,7 +12,7 @@ namespace SharpCompress.Readers.Rar
         private readonly IEnumerator<Stream> streams;
         private Stream tempStream;
 
-        internal MultiVolumeRarReader(IEnumerable<Stream> streams, Options options)
+        internal MultiVolumeRarReader(IEnumerable<Stream> streams, ReaderOptions options)
             : base(options)
         {
             this.streams = streams.GetEnumerator();

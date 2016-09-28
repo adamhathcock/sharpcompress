@@ -210,8 +210,8 @@ namespace SharpCompress.Test
 
         protected void CompareArchivesByPath(string file1, string file2)
         {
-            using (var archive1 = ReaderFactory.Open(File.OpenRead(file1), Options.None))
-            using (var archive2 = ReaderFactory.Open(File.OpenRead(file2), Options.None))
+            using (var archive1 = ReaderFactory.Open(File.OpenRead(file1)))
+            using (var archive2 = ReaderFactory.Open(File.OpenRead(file2)))
             {
                 while (archive1.MoveToNextEntry())
                 {

@@ -2,18 +2,12 @@
 using System;
 #endif
 using System.IO;
-using SharpCompress.Common;
+using SharpCompress.Writers;
 
 namespace SharpCompress.Archives
 {
     public static class IWritableArchiveExtensions
     {
-        public static void SaveTo(this IWritableArchive writableArchive,
-                                  Stream stream, CompressionType compressionType)
-        {
-            writableArchive.SaveTo(stream, new CompressionInfo {Type = compressionType});
-        }
-
 #if !NO_FILE
 
         public static void AddEntry(this IWritableArchive writableArchive,
@@ -28,33 +22,16 @@ namespace SharpCompress.Archives
                                      fileInfo.LastWriteTime);
         }
 
-        public static void SaveTo(this IWritableArchive writableArchive,
-                                                   string filePath, CompressionType compressionType)
+        public static void SaveTo(this IWritableArchive writableArchive, string filePath, WriterOptions options)
         {
-            writableArchive.SaveTo(new FileInfo(filePath), new CompressionInfo {Type = compressionType});
+            writableArchive.SaveTo(new FileInfo(filePath), options);
         }
 
-        public static void SaveTo(this IWritableArchive writableArchive,
-                                                   FileInfo fileInfo, CompressionType compressionType)
+        public static void SaveTo(this IWritableArchive writableArchive, FileInfo fileInfo, WriterOptions options)
         {
             using (var stream = fileInfo.Open(FileMode.Create, FileAccess.Write))
             {
-                writableArchive.SaveTo(stream, new CompressionInfo {Type = compressionType});
-            }
-        }
-
-        public static void SaveTo(this IWritableArchive writableArchive,
-                                                   string filePath, CompressionInfo compressionInfo)
-        {
-            writableArchive.SaveTo(new FileInfo(filePath), compressionInfo);
-        }
-
-        public static void SaveTo(this IWritableArchive writableArchive,
-                                                   FileInfo fileInfo, CompressionInfo compressionInfo)
-        {
-            using (var stream = fileInfo.Open(FileMode.Create, FileAccess.Write))
-            {
-                writableArchive.SaveTo(stream, compressionInfo);
+                writableArchive.SaveTo(stream, options);
             }
         }
 

@@ -1,7 +1,7 @@
 ﻿using System.IO;
-using SharpCompress.Common;
 using SharpCompress.Common.Rar.Headers;
 using SharpCompress.IO;
+using SharpCompress.Readers;
 using Xunit;
 
 namespace SharpCompress.Test.Rar
@@ -16,7 +16,10 @@ namespace SharpCompress.Test.Rar
         public RarHeaderFactoryTest()
         {
             ResetScratch();
-            rarHeaderFactory = new RarHeaderFactory(StreamingMode.Seekable, Options.KeepStreamsOpen);
+            rarHeaderFactory = new RarHeaderFactory(StreamingMode.Seekable, new ReaderOptions()
+                                                                            {
+                                                                                LeaveOpenStream = true
+                                                                            });
         }
 
 
@@ -33,6 +36,7 @@ namespace SharpCompress.Test.Rar
         private void ReadEncryptedFlag(string testArchive, bool isEncrypted)
         {
             using (var stream = GetReaderStream(testArchive))
+            {
                 foreach (var header in rarHeaderFactory.ReadHeaders(stream))
                 {
                     if (header.HeaderType == HeaderType.ArchiveHeader)
@@ -41,6 +45,7 @@ namespace SharpCompress.Test.Rar
                         break;
                     }
                 }
+            }
         }
 
         [Fact]

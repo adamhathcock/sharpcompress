@@ -7,7 +7,7 @@ namespace SharpCompress.Readers.GZip
 {
     public class GZipReader : AbstractReader<GZipEntry, GZipVolume>
     {
-        internal GZipReader(Stream stream, Options options)
+        internal GZipReader(Stream stream, ReaderOptions options)
             : base(options, ArchiveType.GZip)
         {
             Volume = new GZipVolume(stream, options);
@@ -23,11 +23,10 @@ namespace SharpCompress.Readers.GZip
         /// <param name="stream"></param>
         /// <param name="options"></param>
         /// <returns></returns>
-        public static GZipReader Open(Stream stream,
-                                      Options options = Options.KeepStreamsOpen)
+        public static GZipReader Open(Stream stream, ReaderOptions options = null)
         {
             stream.CheckNotNull("stream");
-            return new GZipReader(stream, options);
+            return new GZipReader(stream, options ?? new ReaderOptions());
         }
 
         #endregion

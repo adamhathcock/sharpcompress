@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using SharpCompress.Common;
+using SharpCompress.Readers;
+using SharpCompress.Writers;
 
 namespace SharpCompress.Archives
 {
@@ -21,14 +23,14 @@ namespace SharpCompress.Archives
         {
         }
 
-        internal AbstractWritableArchive(ArchiveType type, Stream stream, Options options)
-            : base(type, stream.AsEnumerable(), options, null)
+        internal AbstractWritableArchive(ArchiveType type, Stream stream, ReaderOptions readerFactoryOptions)
+            : base(type, stream.AsEnumerable(), readerFactoryOptions)
         {
         }
 
 #if !NO_FILE
-        internal AbstractWritableArchive(ArchiveType type, FileInfo fileInfo, Options options)
-            : base(type, fileInfo, options, null)
+        internal AbstractWritableArchive(ArchiveType type, FileInfo fileInfo, ReaderOptions readerFactoryOptions)
+            : base(type, fileInfo, readerFactoryOptions)
         {
         }
 #endif
@@ -112,11 +114,11 @@ namespace SharpCompress.Archives
             return false;
         }
 
-        public void SaveTo(Stream stream, CompressionInfo compressionType)
+        public void SaveTo(Stream stream, WriterOptions options)
         {
             //reset streams of new entries
             newEntries.Cast<IWritableArchiveEntry>().ForEach(x => x.Stream.Seek(0, SeekOrigin.Begin));
-            SaveTo(stream, compressionType, OldEntries, newEntries);
+            SaveTo(stream, options, OldEntries, newEntries);
         }
 
         protected TEntry CreateEntry(string key, Stream source, long size, DateTime? modified,
@@ -132,8 +134,7 @@ namespace SharpCompress.Archives
         protected abstract TEntry CreateEntryInternal(string key, Stream source, long size, DateTime? modified,
                                                       bool closeStream);
 
-        protected abstract void SaveTo(Stream stream, CompressionInfo compressionType,
-                                       IEnumerable<TEntry> oldEntries, IEnumerable<TEntry> newEntries);
+        protected abstract void SaveTo(Stream stream, WriterOptions options, IEnumerable<TEntry> oldEntries, IEnumerable<TEntry> newEntries);
 
         public override void Dispose()
         {

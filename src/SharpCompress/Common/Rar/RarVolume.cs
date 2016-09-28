@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using SharpCompress.Common.Rar.Headers;
 using SharpCompress.IO;
+using SharpCompress.Readers;
 
 namespace SharpCompress.Common.Rar
 {
@@ -14,14 +15,11 @@ namespace SharpCompress.Common.Rar
     {
         private readonly RarHeaderFactory headerFactory;
 
-        internal RarVolume(StreamingMode mode, Stream stream, string password, Options options)
+        internal RarVolume(StreamingMode mode, Stream stream, ReaderOptions options)
             : base(stream, options)
         {
-            headerFactory = new RarHeaderFactory(mode, options, password);
-            Password = password;
+            headerFactory = new RarHeaderFactory(mode, options);
         }
-
-        internal string Password { get; private set; }
 
         internal StreamingMode Mode { get { return headerFactory.StreamingMode; } }
 
