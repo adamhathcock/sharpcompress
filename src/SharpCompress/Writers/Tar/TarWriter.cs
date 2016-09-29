@@ -23,12 +23,12 @@ namespace SharpCompress.Writers.Tar
                     break;
                 case CompressionType.BZip2:
                 {
-                    destination = new BZip2Stream(destination, CompressionMode.Compress, options.LeaveOpenStream);
+                    destination = new BZip2Stream(destination, CompressionMode.Compress, options.LeaveStreamOpen);
                 }
                     break;
                 case CompressionType.GZip:
                 {
-                    destination = new GZipStream(destination, CompressionMode.Compress, options.LeaveOpenStream);
+                    destination = new GZipStream(destination, CompressionMode.Compress, options.LeaveStreamOpen);
                 }
                     break;
                 default:
@@ -36,7 +36,7 @@ namespace SharpCompress.Writers.Tar
                     throw new InvalidFormatException("Tar does not support compression: " + options.CompressionType);
                 }
             }
-            InitalizeStream(destination, !options.LeaveOpenStream);
+            InitalizeStream(destination, !options.LeaveStreamOpen);
         }
 
         public override void Write(string filename, Stream source, DateTime? modificationTime)

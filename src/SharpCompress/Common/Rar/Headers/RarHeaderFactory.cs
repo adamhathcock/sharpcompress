@@ -90,7 +90,7 @@ namespace SharpCompress.Common.Rar.Headers
             }
             catch (Exception e)
             {
-                if (!Options.LeaveOpenStream)
+                if (!Options.LeaveStreamOpen)
                 {
 #if NET35
                     reader.Close();

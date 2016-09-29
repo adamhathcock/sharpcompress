@@ -31,7 +31,7 @@ namespace SharpCompress.Writers.Zip
 
             compressionType = zipWriterOptions.CompressionType;
             compressionLevel = zipWriterOptions.DeflateCompressionLevel;
-            InitalizeStream(destination, !zipWriterOptions.LeaveOpenStream);
+            InitalizeStream(destination, !zipWriterOptions.LeaveStreamOpen);
         }
 
         protected override void Dispose(bool isDisposing)

@@ -186,6 +186,10 @@ Task("Pack")
 });
 
 Task("Publish")
+    .IsDependentOn("Restore")
+    .IsDependentOn("Build")
+    .IsDependentOn("Test")
+    .IsDependentOn("Pack")
     .Does(() =>
 {
     var packages = GetFiles(nupkgs + "/*.nupkg");
