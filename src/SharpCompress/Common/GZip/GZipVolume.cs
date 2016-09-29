@@ -14,7 +14,7 @@ namespace SharpCompress.Common.GZip
         public GZipVolume(FileInfo fileInfo, ReaderOptions options)
             : base(fileInfo.OpenRead(), options)
         {
-            options.LeaveOpenStream = false;
+            options.LeaveStreamOpen = false;
         }
 #endif
 

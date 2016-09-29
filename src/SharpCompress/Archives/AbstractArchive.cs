@@ -33,7 +33,7 @@ namespace SharpCompress.Archives
                 throw new ArgumentException("File does not exist: " + fileInfo.FullName);
             }
             ReaderOptions = readerOptions;
-            readerOptions.LeaveOpenStream = false;
+            readerOptions.LeaveStreamOpen = false;
             lazyVolumes = new LazyReadOnlyCollection<TVolume>(LoadVolumes(fileInfo));
             lazyEntries = new LazyReadOnlyCollection<TEntry>(LoadEntries(Volumes));
         }

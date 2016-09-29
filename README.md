@@ -4,10 +4,12 @@ SharpCompress is a compression library for .NET/Mono/Silverlight/WP7 that can un
 
 The major feature is support for non-seekable streams so large files can be processed on the fly (i.e. download stream). 
 
+[![Build status](https://ci.appveyor.com/api/projects/status/voxg971oemmvxh1e/branch/master?svg=true)](https://ci.appveyor.com/project/adamhathcock/sharpcompress/branch/master)
+
 ## Need Help?
 Post Issues on Github!
 
-Check the [Supported Formats](https://github.com/adamhathcock/sharpcompress/wiki/Supported-Formats) and [basic samples.](https://github.com/adamhathcock/sharpcompress/wiki/API-Examples)
+Check the [Supported Formats](FORMATS.md) and [basic usage.](USAGE.md)
 
 ## A Simple Request
 
@@ -25,14 +27,13 @@ I'm always looking for help or ideas. Please submit code or email with ideas. Un
 * 7Zip writing
 * Zip64
 * Multi-volume Zip support.
-
-## In-Progress
-
 * RAR5 support
-* DNX/NET Core support
-* xproj targeting
 
 ## Version Log
+
+### Version 0.13.0
+* Breaking change: Big refactor of Options on API.
+* 7Zip supports Deflate
 
 ### Version 0.12.4
 * Forward only zip issue fix https://github.com/adamhathcock/sharpcompress/issues/160

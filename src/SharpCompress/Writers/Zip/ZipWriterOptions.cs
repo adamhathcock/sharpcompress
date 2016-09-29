@@ -14,7 +14,7 @@ namespace SharpCompress.Writers.Zip
         internal ZipWriterOptions(WriterOptions options)
             : base(options.CompressionType)
         {
-            LeaveOpenStream = options.LeaveOpenStream;
+            LeaveStreamOpen = options.LeaveStreamOpen;
         }
         /// <summary>
         /// When CompressionType.Deflate is used, this property is referenced.  Defaults to CompressionLevel.Default.

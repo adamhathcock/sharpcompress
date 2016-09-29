@@ -23,7 +23,7 @@ namespace SharpCompress.Test
             {
                 using (var writer = WriterFactory.Open(new NonDisposingStream(stream), type, new WriterOptions(compressionType)
                                                                {
-                                                                   LeaveOpenStream = true
+                                                                   LeaveStreamOpen = true
                                                                }))
                 {
                     writer.WriteAll(ORIGINAL_FILES_PATH, "*", SearchOption.AllDirectories);

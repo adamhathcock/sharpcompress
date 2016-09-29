@@ -24,7 +24,7 @@ namespace SharpCompress.Archives.Rar
         private static ReaderOptions FixOptions(ReaderOptions options)
         {
             //make sure we're closing streams with fileinfo
-            options.LeaveOpenStream = false;
+            options.LeaveStreamOpen = false;
             return options;
         }
 

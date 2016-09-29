@@ -29,7 +29,7 @@ namespace SharpCompress.Readers
             stream.CheckNotNull("stream");
             options = options ?? new ReaderOptions()
                                  {
-                                     LeaveOpenStream = false
+                                     LeaveStreamOpen = false
                                  };
             RewindableStream rewindableStream = new RewindableStream(stream);
             rewindableStream.StartRecording();
