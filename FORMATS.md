@@ -8,11 +8,11 @@ Writer classes allow forward-only Writing
 ## Supported Format Table
 | Archive Format | Compression Format(s) | Compress/Decompress | Archive API | Reader API | Writer API |
 | --- | --- | --- | --- | --- | --- |
-| Rar | Rar | Decompress^^(1)^^ | RarArchive | RarReader | N/A |
-| Zip^^(2)^^ | None, DEFLATE, BZip2, LZMA/LZMA2, PPMd | Both | ZipArchive | ZipReader | ZipWriter |
-| Tar | None, BZip2, GZip | Both | TarArchive | TarReader | TarWriter^^(3)^^  |
+| Rar | Rar | Decompress (1) | RarArchive | RarReader | N/A |
+| Zip (2) | None, DEFLATE, BZip2, LZMA/LZMA2, PPMd | Both | ZipArchive | ZipReader | ZipWriter |
+| Tar | None, BZip2, GZip | Both | TarArchive | TarReader | TarWriter (3)  |
 | GZip (single file) | GZip | Both | GZipArchive | GZipReader | GZipWriter |
-| 7Zip^^(4)^^ | LZMA, LZMA2, BZip2, PPMd, BCJ, BCJ2 | Decompress | SevenZipArchive | N/A | N/A |
+| 7Zip (4) | LZMA, LZMA2, BZip2, PPMd, BCJ, BCJ2, Deflate | Decompress | SevenZipArchive | N/A | N/A |
 
  1. SOLID Rars are only supported in the RarReader API.
  2. Zip format supports pkware and WinzipAES encryption.  However, encrypted LZMA is not supported.
