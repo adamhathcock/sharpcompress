@@ -7,6 +7,7 @@ Writer classes allow forward-only Writing
 
 ## Supported Format Table
 | Archive Format | Compression Format(s) | Compress/Decompress | Archive API | Reader API | Writer API |
+| --- | --- | --- | --- | --- | --- |
 | Rar | Rar | Decompress^^(1)^^ | RarArchive | RarReader | N/A |
 | Zip^^(2)^^ | None, DEFLATE, BZip2, LZMA/LZMA2, PPMd | Both | ZipArchive | ZipReader | ZipWriter |
 | Tar | None, BZip2, GZip | Both | TarArchive | TarReader | TarWriter^^(3)^^  |
@@ -22,6 +23,7 @@ Writer classes allow forward-only Writing
 For those who want to directly compress/decompress bits
 
 | Compressor | Compress/Decompress |
+| --- | --- |
 | BZip2Stream | Both |
 | GZipStream | Both |
 | DeflateStream | Both |
