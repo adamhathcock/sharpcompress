@@ -1,37 +1,21 @@
-# configuration for "master" branch
--
-    version: '0.13.{build}'
+version: '0.13.{build}'
 
-    init:
-    - git config --global core.autocrlf true
+init:
+- git config --global core.autocrlf true
 
-    branches:
-        only:
-        - master
+branches:
+    only:
+    - master
 
-    build_script:
-    - ps: .\build.ps1
+build_script:
+- ps: .\build.ps1
 
-    test: off
+test: off
 
-    cache:
-    - tools -> build.cake
-    - tools -> build.ps1
+cache:
+- tools -> build.cake
+- tools -> build.ps1
 
-    artifacts:
-    - path: nupkgs\*.nupkg
-      name: NuPkgs
-
-# configuration for "default" branch
--
-    init:
-    - git config --global core.autocrlf true
-
-    build_script:
-    - ps: .\build.ps1
-
-    test: off
-
-    cache:
-    - tools -> build.cake
-    - tools -> build.ps1
+artifacts:
+- path: nupkgs\*.nupkg
+  name: NuPkgs
