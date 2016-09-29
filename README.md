@@ -4,6 +4,8 @@ SharpCompress is a compression library for .NET/Mono/Silverlight/WP7 that can un
 
 The major feature is support for non-seekable streams so large files can be processed on the fly (i.e. download stream). 
 
+[![Build status](https://ci.appveyor.com/api/projects/status/voxg971oemmvxh1e/branch/master?svg=true)](https://ci.appveyor.com/project/adamhathcock/sharpcompress/branch/master)
+
 ## Need Help?
 Post Issues on Github!
 
