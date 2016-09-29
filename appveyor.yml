@@ -3,10 +3,6 @@ version: '0.13.{build}'
 init:
 - git config --global core.autocrlf true
 
-branches:
-    only:
-    - master
-
 build_script:
 - ps: .\build.ps1
 
