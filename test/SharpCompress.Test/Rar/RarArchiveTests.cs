@@ -37,7 +37,7 @@ namespace SharpCompress.Test
             using (var archive = RarArchive.Open(stream, new ReaderOptions()
                                                          {
                                                              Password = password,
-                                                             LeaveOpenStream = true
+                                                             LeaveStreamOpen = true
                                                          }))
             {
                 foreach (var entry in archive.Entries)
@@ -68,7 +68,7 @@ namespace SharpCompress.Test
             using (var archive = RarArchive.Open(Path.Combine(TEST_ARCHIVES_PATH, archiveName), new ReaderOptions()
                                                             {
                                                                 Password = password,
-                                                                LeaveOpenStream = true
+                                                                LeaveStreamOpen = true
                                                             }))
             {
                 foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))

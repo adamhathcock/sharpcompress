@@ -18,7 +18,7 @@ namespace SharpCompress.Test.Rar
             ResetScratch();
             rarHeaderFactory = new RarHeaderFactory(StreamingMode.Seekable, new ReaderOptions()
                                                                             {
-                                                                                LeaveOpenStream = true
+                                                                                LeaveStreamOpen = true
                                                                             });
         }
 
