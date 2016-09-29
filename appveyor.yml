@@ -35,7 +35,3 @@
     cache:
     - tools -> build.cake
     - tools -> build.ps1
-
-    artifacts:
-    - path: nupkgs\*.nupkg
-      name: NuPkgs
