@@ -18,6 +18,10 @@
     - tools -> build.cake
     - tools -> build.ps1
 
+    artifacts:
+    - path: nupkgs\*.nupkg
+      name: NuPkgs
+
 # configuration for "default" branch
 -
     init:
@@ -31,3 +35,7 @@
     cache:
     - tools -> build.cake
     - tools -> build.ps1
+
+    artifacts:
+    - path: nupkgs\*.nupkg
+      name: NuPkgs

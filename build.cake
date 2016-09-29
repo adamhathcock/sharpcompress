@@ -216,19 +216,11 @@ Task("Publish")
 // TASK TARGETS
 //////////////////////////////////////////////////////////////////////
 
-Task("PRBuild")
-    .IsDependentOn("Restore")
-    .IsDependentOn("Build")
-    .IsDependentOn("Test");
-    
-Task("MasterBuild")
+Task("Default")
     .IsDependentOn("Restore")
     .IsDependentOn("Build")
     .IsDependentOn("Test")
     .IsDependentOn("Pack");
-
-Task("Default")
-    .IsDependentOn("PRBuild");
 
 //////////////////////////////////////////////////////////////////////
 // EXECUTION
