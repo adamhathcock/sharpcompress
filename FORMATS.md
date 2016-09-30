@@ -29,3 +29,4 @@ For those who want to directly compress/decompress bits
 | DeflateStream | Both |
 | LZMAStream | Both |
 | PPMdStream | Both |
+| ADCStream | Decompress |
