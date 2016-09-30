@@ -1,5 +1,5 @@
 ﻿//
-// ADC.cs
+// ADCTest.cs
 //
 // Author:
 //       Natalia Portillo <claunia@claunia.com>

@@ -1,5 +1,5 @@
 ﻿//
-// ADC.cs
+// ADCStream.cs
 //
 // Author:
 //       Natalia Portillo <claunia@claunia.com>
