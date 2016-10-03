@@ -8,10 +8,10 @@ namespace SharpCompress.Common
     {
         private readonly Stream actualStream;
 
-        internal Volume(Stream stream, ReaderOptions readerFactoryOptions)
+        internal Volume(Stream stream, ReaderOptions readerOptions)
         {
             actualStream = stream;
-            ReaderOptions = readerFactoryOptions;
+            ReaderOptions = readerOptions;
         }
 
         internal Stream Stream { get { return new NonDisposingStream(actualStream); } }

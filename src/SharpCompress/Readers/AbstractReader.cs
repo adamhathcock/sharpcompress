@@ -29,7 +29,7 @@ namespace SharpCompress.Readers
             Options = options;
         }
 
-        internal ReaderOptions Options { get; private set; }
+        internal ReaderOptions Options { get; }
 
         public ArchiveType ArchiveType { get; }
 
