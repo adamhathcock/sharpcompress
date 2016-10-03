@@ -3,13 +3,6 @@ using SharpCompress.Converters;
 
 namespace SharpCompress.Compressors.PPMd
 {
-    public enum PpmdVersion
-    {
-        H,
-        H7z,
-        I1
-    }
-
     public class PpmdProperties
     {
         public PpmdVersion Version = PpmdVersion.I1;
