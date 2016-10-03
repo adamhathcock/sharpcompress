@@ -228,6 +228,8 @@ namespace SharpCompress.Test
         [Fact]
         public void TestSharpCompressWithEmptyStream()
         {
+            ResetScratch();
+
             MemoryStream stream = new NonSeekableMemoryStream();
 
             using (IWriter zipWriter = WriterFactory.Open(stream, ArchiveType.Zip, CompressionType.Deflate))
@@ -250,7 +252,9 @@ namespace SharpCompress.Test
                         byte[] buf = new byte[bufSize];
                         int bytesRead = 0;
                         while ((bytesRead = entry.Read(buf, 0, bufSize)) > 0)
+                        {
                             tempStream.Write(buf, 0, bytesRead);
+                        }
                     }
                 }
             }
