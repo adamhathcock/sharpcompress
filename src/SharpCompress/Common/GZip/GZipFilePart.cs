@@ -5,6 +5,7 @@ using SharpCompress.Common.Tar.Headers;
 using SharpCompress.Compressors;
 using SharpCompress.Compressors.Deflate;
 using SharpCompress.Converters;
+using SharpCompress.IO;
 
 namespace SharpCompress.Common.GZip
 {
@@ -36,79 +37,85 @@ namespace SharpCompress.Common.GZip
         private void ReadAndValidateGzipHeader(Stream stream)
         {
             // read the header on the first read
-            byte[] header = new byte[10];
-            int n = stream.Read(header, 0, header.Length);
-
-            // workitem 8501: handle edge case (decompress empty stream)
-            if (n == 0)
+            using (var header = ByteArrayPool.RentScope(10))
             {
-                return;
-            }
+                int n = stream.Read(header);
 
-            if (n != 10)
-            {
-                throw new ZlibException("Not a valid GZIP stream.");
-            }
-
-            if (header[0] != 0x1F || header[1] != 0x8B || header[2] != 8)
-            {
-                throw new ZlibException("Bad GZIP header.");
-            }
-
-            Int32 timet = DataConverter.LittleEndian.GetInt32(header, 4);
-            DateModified = TarHeader.Epoch.AddSeconds(timet);
-            if ((header[3] & 0x04) == 0x04)
-            {
-                // read and discard extra field
-                n = stream.Read(header, 0, 2); // 2-byte length field
-
-                Int16 extraLength = (Int16)(header[0] + header[1] * 256);
-                byte[] extra = new byte[extraLength];
-                n = stream.Read(extra, 0, extra.Length);
-                if (n != extraLength)
+                // workitem 8501: handle edge case (decompress empty stream)
+                if (n == 0)
                 {
-                    throw new ZlibException("Unexpected end-of-file reading GZIP header.");
+                    return;
                 }
-            }
-            if ((header[3] & 0x08) == 0x08)
-            {
-                name = ReadZeroTerminatedString(stream);
-            }
-            if ((header[3] & 0x10) == 0x010)
-            {
-                ReadZeroTerminatedString(stream);
-            }
-            if ((header[3] & 0x02) == 0x02)
-            {
-                stream.ReadByte(); // CRC16, ignore
+
+                if (n != 10)
+                {
+                    throw new ZlibException("Not a valid GZIP stream.");
+                }
+
+                if (header[0] != 0x1F || header[1] != 0x8B || header[2] != 8)
+                {
+                    throw new ZlibException("Bad GZIP header.");
+                }
+
+                Int32 timet = DataConverter.LittleEndian.GetInt32(header.Array, 4);
+                DateModified = TarHeader.Epoch.AddSeconds(timet);
+                if ((header[3] & 0x04) == 0x04)
+                {
+                    // read and discard extra field
+                    n = stream.Read(header.Array, 0, 2); // 2-byte length field
+
+                    Int16 extraLength = (Int16)(header[0] + header[1] * 256);
+                    using (var extra = ByteArrayPool.RentScope(extraLength))
+                    {
+                        n = stream.Read(extra);
+                        if (n != extraLength)
+                        {
+                            throw new ZlibException("Unexpected end-of-file reading GZIP header.");
+                        }
+                    }
+                }
+                if ((header[3] & 0x08) == 0x08)
+                {
+                    name = ReadZeroTerminatedString(stream);
+                }
+                if ((header[3] & 0x10) == 0x010)
+                {
+                    ReadZeroTerminatedString(stream);
+                }
+                if ((header[3] & 0x02) == 0x02)
+                {
+                    stream.ReadByte(); // CRC16, ignore
+                }
             }
         }
 
         private static string ReadZeroTerminatedString(Stream stream)
         {
-            byte[] buf1 = new byte[1];
-            var list = new List<byte>();
-            bool done = false;
-            do
+            using (var buf1 = ByteArrayPool.RentScope(1))
             {
-                // workitem 7740
-                int n = stream.Read(buf1, 0, 1);
-                if (n != 1)
+                var list = new List<byte>();
+                bool done = false;
+                do
                 {
-                    throw new ZlibException("Unexpected EOF reading GZIP header.");
+                    // workitem 7740
+                    int n = stream.Read(buf1);
+                    if (n != 1)
+                    {
+                        throw new ZlibException("Unexpected EOF reading GZIP header.");
+                    }
+                    if (buf1[0] == 0)
+                    {
+                        done = true;
+                    }
+                    else
+                    {
+                        list.Add(buf1[0]);
+                    }
                 }
-                if (buf1[0] == 0)
-                {
-                    done = true;
-                }
-                else
-                {
-                    list.Add(buf1[0]);
-                }
+                while (!done);
+                byte[] a = list.ToArray();
+                return ArchiveEncoding.Default.GetString(a, 0, a.Length);
             }
-            while (!done);
-            byte[] a = list.ToArray();
-            return ArchiveEncoding.Default.GetString(a, 0, a.Length);
         }
     }
 }
