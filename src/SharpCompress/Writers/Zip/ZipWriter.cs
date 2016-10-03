@@ -19,10 +19,10 @@ namespace SharpCompress.Writers.Zip
     {
         private readonly CompressionType compressionType;
         private readonly CompressionLevel compressionLevel;
-        private readonly Lazy<PpmdProperties> ppmdProperties = new Lazy<PpmdProperties>(() => new PpmdProperties()); // Caching properties to speed up PPMd
         private readonly List<ZipCentralDirectoryEntry> entries = new List<ZipCentralDirectoryEntry>();
         private readonly string zipComment;
         private long streamPosition;
+        private PpmdProperties ppmdProps;
 
         public ZipWriter(Stream destination, ZipWriterOptions zipWriterOptions)
             : base(ArchiveType.Zip)
@@ -32,6 +32,18 @@ namespace SharpCompress.Writers.Zip
             compressionType = zipWriterOptions.CompressionType;
             compressionLevel = zipWriterOptions.DeflateCompressionLevel;
             InitalizeStream(destination, !zipWriterOptions.LeaveStreamOpen);
+        }
+
+        private PpmdProperties PpmdProperties
+        {
+            get
+            {
+                if (ppmdProps == null)
+                {
+                    ppmdProps = new PpmdProperties();
+                }
+                return ppmdProps;
+            }
         }
 
         protected override void Dispose(bool isDisposing)
@@ -252,8 +264,8 @@ namespace SharpCompress.Writers.Zip
                     }
                     case ZipCompressionMethod.PPMd:
                     {
-                        counting.Write(writer.ppmdProperties.Value.Properties, 0, 2);
-                        return new PpmdStream(writer.ppmdProperties.Value, counting, true);
+                        counting.Write(writer.PpmdProperties.Properties, 0, 2);
+                        return new PpmdStream(writer.PpmdProperties, counting, true);
                     }
                     default:
                     {
