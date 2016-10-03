@@ -9,7 +9,7 @@ The major feature is support for non-seekable streams so large files can be proc
 ## Need Help?
 Post Issues on Github!
 
-Check the [Supported Formats](FORMATS.md) and [basic usage.](USAGE.md)
+Check the [Supported Formats](FORMATS.md) and [Basic Usage.](USAGE.md)
 
 ## A Simple Request
 
