@@ -31,25 +31,36 @@ I'm always looking for help or ideas. Please submit code or email with ideas. Un
 
 ## Version Log
 
+### Version 0.13.1
+
+* [Fix null password on ReaderFactory. Fix null options on SevenZipArchive](https://github.com/adamhathcock/sharpcompress/pull/188)
+* [Make PpmdProperties lazy to avoid unnecessary allocations.](https://github.com/adamhathcock/sharpcompress/pull/185)
+
 ### Version 0.13.0
+
 * Breaking change: Big refactor of Options on API.
 * 7Zip supports Deflate
 
 ### Version 0.12.4
+
 * Forward only zip issue fix https://github.com/adamhathcock/sharpcompress/issues/160
 * Try to fix frameworks again by copying targets from JSON.NET
 
 ### Version 0.12.3
+
 * 7Zip fixes https://github.com/adamhathcock/sharpcompress/issues/73
 * Maybe all profiles will work with project.json now
 
 ### Version 0.12.2
+
 * Support Profile 259 again
 
 ### Version 0.12.1
+
 * Support Silverlight 5
 
 ### Version 0.12.0
+
 * .NET Core RTM!
 * Bug fix for Tar long paths
 
