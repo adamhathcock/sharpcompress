@@ -33,7 +33,7 @@ namespace SharpCompress.Readers
                                  };
             RewindableStream rewindableStream = new RewindableStream(stream);
             rewindableStream.StartRecording();
-            if (ZipArchive.IsZipFile(rewindableStream, null))
+            if (ZipArchive.IsZipFile(rewindableStream, options.Password))
             {
                 rewindableStream.Rewind(true);
                 return ZipReader.Open(rewindableStream, options);

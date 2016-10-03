@@ -30,7 +30,7 @@ namespace SharpCompress.Archives.SevenZip
         /// </summary>
         /// <param name="fileInfo"></param>
         /// <param name="readerOptions"></param>
-        public static SevenZipArchive Open(FileInfo fileInfo, ReaderOptions readerOptions)
+        public static SevenZipArchive Open(FileInfo fileInfo, ReaderOptions readerOptions = null)
         {
             fileInfo.CheckNotNull("fileInfo");
             return new SevenZipArchive(fileInfo, readerOptions ?? new ReaderOptions());
@@ -44,7 +44,7 @@ namespace SharpCompress.Archives.SevenZip
         public static SevenZipArchive Open(Stream stream, ReaderOptions readerOptions = null)
         {
             stream.CheckNotNull("stream");
-            return new SevenZipArchive(stream, readerOptions);
+            return new SevenZipArchive(stream, readerOptions ?? new ReaderOptions());
         }
 
 #if !NO_FILE
