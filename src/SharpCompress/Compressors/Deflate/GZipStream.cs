@@ -474,9 +474,9 @@ namespace SharpCompress.Compressors.Deflate
                     header[i++] = 0; // terminate
                 }
 
-                BaseStream._stream.Write(header, 0, header.Length);
+                BaseStream._stream.Write(header, 0, bufferLength);
 
-                return header.Length; // bytes written
+                return bufferLength; // bytes written
             }
             finally
             {
