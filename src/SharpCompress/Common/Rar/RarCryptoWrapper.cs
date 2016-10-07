@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using SharpCompress.IO;
 
 namespace SharpCompress.Common.Rar
 {
@@ -55,17 +56,21 @@ namespace SharpCompress.Common.Rar
                 for (int i = 0; i < alignedSize / 16; i++)
                 {
                     //long ax = System.currentTimeMillis();
-                    byte[] cipherText = new byte[RarRijndael.CRYPTO_BLOCK_SIZE];
-                    actualStream.Read(cipherText, 0, RarRijndael.CRYPTO_BLOCK_SIZE);
-
-                    var readBytes = rijndael.ProcessBlock(cipherText);
-                    foreach (var readByte in readBytes)
-                        data.Enqueue(readByte);
-
+                    using (var cipherText = ByteArrayPool.RentScope(RarRijndael.CRYPTO_BLOCK_SIZE))
+                    {
+                        actualStream.Read(cipherText.Array, 0, RarRijndael.CRYPTO_BLOCK_SIZE);
+                        var readBytes = rijndael.ProcessBlock(cipherText);
+                        foreach (var readByte in readBytes)
+                        {
+                            data.Enqueue(readByte);
+                        }
+                    }
                 }
 
                 for (int i = 0; i < count; i++)
+                {
                     buffer[offset + i] = data.Dequeue();
+                }
             }
             return count;
         }

@@ -1,6 +1,5 @@
 ﻿
 #if !NO_CRYPTO
-using System;
 using System.Collections.Generic;
 using System.IO;
 using SharpCompress.IO;
@@ -57,12 +56,13 @@ namespace SharpCompress.Common.Rar
                 int alignedSize = sizeToRead + ((~sizeToRead + 1) & 0xf);
                 for (int i = 0; i < alignedSize / 16; i++)
                 {
-                    //long ax = System.currentTimeMillis();
-                    byte[] cipherText = base.ReadBytes(16);
-                    var readBytes = rijndael.ProcessBlock(cipherText);
-                    foreach (var readByte in readBytes)
+                    using (var cipherText = PrivateReadScope(16))
                     {
-                        data.Enqueue(readByte);
+                        var readBytes = rijndael.ProcessBlock(cipherText);
+                        foreach (var readByte in readBytes)
+                        {
+                            data.Enqueue(readByte);
+                        }
                     }
                 }
             }
@@ -72,6 +72,25 @@ namespace SharpCompress.Common.Rar
                 buffer[i] = data.Dequeue();
             }
             return count;
+        }
+
+
+        private ByteArrayPoolScope PrivateReadScope(int count)
+        {
+            var scope = ByteArrayPool.RentScope(count);
+            int numRead = 0;
+            do
+            {
+                int n = base.Read(scope.Array, numRead, count);
+                if (n == 0)
+                {
+                    break;
+                }
+                numRead += n;
+                count -= n;
+            } while (count > 0);
+            scope.OverrideSize(numRead);
+            return scope;
         }
 
         public void ClearQueue()

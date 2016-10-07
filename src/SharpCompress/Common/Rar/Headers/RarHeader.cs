@@ -62,7 +62,8 @@ namespace SharpCompress.Common.Rar.Headers
 
             if (headerSizeDiff > 0)
             {
-                reader.ReadBytes(headerSizeDiff);
+                using (reader.ReadScope(headerSizeDiff))
+                { }
             }
 
             return header;

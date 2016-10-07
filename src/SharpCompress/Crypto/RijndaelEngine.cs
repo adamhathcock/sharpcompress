@@ -1,5 +1,6 @@
 ﻿using System;
 using Org.BouncyCastle.Crypto.Parameters;
+using SharpCompress.IO;
 
 namespace Org.BouncyCastle.Crypto.Engines
 {
@@ -586,28 +587,24 @@ namespace Org.BouncyCastle.Crypto.Engines
             return BC / 2;
         }
 
-        public int ProcessBlock(
-            byte[] input,
-            int inOff,
-            byte[] output,
-            int outOff)
+        public int ProcessBlock(ByteArrayPoolScope input, ByteArrayPoolScope output)
         {
             if (workingKey == null)
             {
                 throw new InvalidOperationException("Rijndael engine not initialised");
             }
 
-            if ((inOff + (BC / 2)) > input.Length)
+            if ((input.Offset + (BC / 2)) > input.Count)
             {
                 throw new DataLengthException("input buffer too short");
             }
 
-            if ((outOff + (BC / 2)) > output.Length)
+            if ((output.Offset + (BC / 2)) > output.Count)
             {
                 throw new DataLengthException("output buffer too short");
             }
 
-            UnPackBlock(input, inOff);
+            UnPackBlock(input.Array, input.Offset);
 
             if (forEncryption)
             {
@@ -618,7 +615,7 @@ namespace Org.BouncyCastle.Crypto.Engines
                 DecryptBlock(workingKey);
             }
 
-            PackBlock(output, outOff);
+            PackBlock(output.Array, output.Offset);
 
             return BC / 2;
         }
