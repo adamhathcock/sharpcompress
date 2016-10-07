@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using SharpCompress.Converters;
+using SharpCompress.IO;
 
 namespace SharpCompress.Common.Zip.Headers
 {
@@ -30,14 +31,14 @@ namespace SharpCompress.Common.Zip.Headers
             }
         }
 
-        protected string DecodeString(byte[] str)
+        protected string DecodeString(ByteArrayPoolScope str)
         {
             if (FlagUtility.HasFlag(Flags, HeaderFlags.UTF8))
             {
-                return Encoding.UTF8.GetString(str, 0, str.Length);
+                return Encoding.UTF8.GetString(str.Array, 0, str.Count);
             }
 
-            return ArchiveEncoding.Default.GetString(str, 0, str.Length);
+            return ArchiveEncoding.Default.GetString(str.Array, 0, str.Count);
         }
 
         protected byte[] EncodeString(string str)
@@ -76,20 +77,22 @@ namespace SharpCompress.Common.Zip.Headers
 
         internal uint Crc { get; set; }
 
-        protected void LoadExtra(byte[] extra)
+        protected void LoadExtra(ByteArrayPoolScope extra)
         {
-            for (int i = 0; i < extra.Length - 4;)
+            for (int i = 0; i < extra.Count - 4;)
             {
-                ExtraDataType type = (ExtraDataType)DataConverter.LittleEndian.GetUInt16(extra, i);
+                ExtraDataType type = (ExtraDataType)DataConverter.LittleEndian.GetUInt16(extra.Array, i);
                 if (!Enum.IsDefined(typeof(ExtraDataType), type))
                 {
                     type = ExtraDataType.NotImplementedExtraData;
                 }
 
-                ushort length = DataConverter.LittleEndian.GetUInt16(extra, i + 2);
-                byte[] data = new byte[length];
-                Buffer.BlockCopy(extra, i + 4, data, 0, length);
-                Extra.Add(LocalEntryHeaderExtraFactory.Create(type, length, data));
+                ushort length = DataConverter.LittleEndian.GetUInt16(extra.Array, i + 2);
+                using (var data = ByteArrayPool.RentScope(length))
+                {
+                    Buffer.BlockCopy(extra.Array, i + 4, data.Array, 0, length);
+                    Extra.Add(LocalEntryHeaderExtraFactory.Create(type, length, data.Array));
+                }
 
                 i += length + 4;
             }

@@ -1,4 +1,5 @@
 ﻿using System.IO;
+using SharpCompress.IO;
 
 namespace SharpCompress.Compressors.BZip2
 {
@@ -91,12 +92,14 @@ namespace SharpCompress.Compressors.BZip2
         public static bool IsBZip2(Stream stream)
         {
             BinaryReader br = new BinaryReader(stream);
-            byte[] chars = br.ReadBytes(2);
-            if (chars.Length < 2 || chars[0] != 'B' || chars[1] != 'Z')
+            using (var chars = br.ReadScope(2))
             {
-                return false;
+                if (chars.Count < 2 || chars[0] != 'B' || chars[1] != 'Z')
+                {
+                    return false;
+                }
+                return true;
             }
-            return true;
         }
     }
 }

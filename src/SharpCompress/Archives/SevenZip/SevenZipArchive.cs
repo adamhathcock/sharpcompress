@@ -141,8 +141,10 @@ namespace SharpCompress.Archives.SevenZip
         private static bool SignatureMatch(Stream stream)
         {
             BinaryReader reader = new BinaryReader(stream);
-            byte[] signatureBytes = reader.ReadBytes(6);
-            return signatureBytes.BinaryEquals(SIGNATURE);
+            using (var signatureBytes = reader.ReadScope(6))
+            {
+                return signatureBytes.BinaryEquals(SIGNATURE);
+            }
         }
 
         protected override IReader CreateReaderForSolidExtraction()

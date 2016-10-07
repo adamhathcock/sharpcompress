@@ -1,19 +1,20 @@
 ﻿using System;
-using System.IO;
 
 namespace SharpCompress.IO
 {
     public struct ByteArrayPoolScope : IDisposable
     {
         private readonly ArraySegment<byte> array;
+        private int? overridenSize;
         public ByteArrayPoolScope(ArraySegment<byte> array)
         {
             this.array = array;
+            overridenSize = null;
         }
 
         public byte[] Array => array.Array;
         public int Offset => array.Offset;
-        public int Count => array.Count;
+        public int Count => overridenSize ?? array.Count;
 
         public byte this[int index]
         {
@@ -25,13 +26,10 @@ namespace SharpCompress.IO
         {
             ByteArrayPool.Return(array);
         }
-    }
 
-    public static class ByteArrayPoolScopeExtensions
-    {
-        public static int Read(this Stream stream, ByteArrayPoolScope scope)
+        public void OverrideSize(int newSize)
         {
-            return stream.Read(scope.Array, scope.Offset, scope.Count);
+            overridenSize = newSize;
         }
     }
 }

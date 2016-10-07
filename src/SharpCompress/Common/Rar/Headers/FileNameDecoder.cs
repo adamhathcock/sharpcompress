@@ -1,4 +1,5 @@
 using System.Text;
+using SharpCompress.IO;
 
 namespace SharpCompress.Common.Rar.Headers
 {
@@ -7,12 +8,12 @@ namespace SharpCompress.Common.Rar.Headers
     /// </summary>
     internal static class FileNameDecoder
     {
-        internal static int GetChar(byte[] name, int pos)
+        internal static int GetChar(ByteArrayPoolScope name, int pos)
         {
             return name[pos] & 0xff;
         }
 
-        internal static string Decode(byte[] name, int encPos)
+        internal static string Decode(ByteArrayPoolScope name, int encPos)
         {
             int decPos = 0;
             int flags = 0;
@@ -22,7 +23,7 @@ namespace SharpCompress.Common.Rar.Headers
             int high = 0;
             int highByte = GetChar(name, encPos++);
             StringBuilder buf = new StringBuilder();
-            while (encPos < name.Length)
+            while (encPos < name.Count)
             {
                 if (flagBits == 0)
                 {
@@ -54,7 +55,7 @@ namespace SharpCompress.Common.Rar.Headers
                         if ((length & 0x80) != 0)
                         {
                             int correction = GetChar(name, encPos++);
-                            for (length = (length & 0x7f) + 2; length > 0 && decPos < name.Length; length--, decPos++)
+                            for (length = (length & 0x7f) + 2; length > 0 && decPos < name.Count; length--, decPos++)
                             {
                                 low = (GetChar(name, decPos) + correction) & 0xff;
                                 buf.Append((char)((highByte << 8) + low));
@@ -62,7 +63,7 @@ namespace SharpCompress.Common.Rar.Headers
                         }
                         else
                         {
-                            for (length += 2; length > 0 && decPos < name.Length; length--, decPos++)
+                            for (length += 2; length > 0 && decPos < name.Count; length--, decPos++)
                             {
                                 buf.Append((char)(GetChar(name, decPos)));
                             }

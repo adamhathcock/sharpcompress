@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using SharpCompress.IO;
 
 namespace SharpCompress
 {
@@ -137,37 +138,41 @@ namespace SharpCompress
 
         public static void Skip(this Stream source, long advanceAmount)
         {
-            byte[] buffer = new byte[32 * 1024];
-            int read = 0;
-            int readCount = 0;
-            do
+            using (var buffer = ByteArrayPool.RentScope(32 * 1024))
             {
-                readCount = buffer.Length;
-                if (readCount > advanceAmount)
+                int read = 0;
+                int readCount = 0;
+                do
                 {
-                    readCount = (int)advanceAmount;
+                    readCount = buffer.Count;
+                    if (readCount > advanceAmount)
+                    {
+                        readCount = (int)advanceAmount;
+                    }
+                    read = source.Read(buffer.Array, 0, readCount);
+                    if (read <= 0)
+                    {
+                        break;
+                    }
+                    advanceAmount -= read;
+                    if (advanceAmount == 0)
+                    {
+                        break;
+                    }
                 }
-                read = source.Read(buffer, 0, readCount);
-                if (read <= 0)
-                {
-                    break;
-                }
-                advanceAmount -= read;
-                if (advanceAmount == 0)
-                {
-                    break;
-                }
+                while (true);
             }
-            while (true);
         }
 
         public static void SkipAll(this Stream source)
         {
-            byte[] buffer = new byte[32 * 1024];
-            do
+            using (var buffer = ByteArrayPool.RentScope(32 * 1024))
             {
+                do
+                {
+                }
+                while (source.Read(buffer) > 0);
             }
-            while (source.Read(buffer, 0, buffer.Length) == buffer.Length);
         }
 
         public static DateTime DosDateToDateTime(UInt16 iDate, UInt16 iTime)
@@ -231,15 +236,17 @@ namespace SharpCompress
 
         public static long TransferTo(this Stream source, Stream destination)
         {
-            byte[] array = new byte[81920];
-            int count;
-            long total = 0;
-            while ((count = source.Read(array, 0, array.Length)) != 0)
+            using (var array = ByteArrayPool.RentScope(81920))
             {
-                total += count;
-                destination.Write(array, 0, count);
+                int count;
+                long total = 0;
+                while ((count = source.Read(array.Array, 0, array.Count)) != 0)
+                {
+                    total += count;
+                    destination.Write(array.Array, 0, count);
+                }
+                return total;
             }
-            return total;
         }
 
         public static bool ReadFully(this Stream stream, byte[] buffer)
@@ -261,14 +268,14 @@ namespace SharpCompress
         {
             return source.Replace('\0', ' ').Trim();
         }
-
-        public static bool BinaryEquals(this byte[] source, byte[] target)
+        
+        public static bool BinaryEquals(this ByteArrayPoolScope source, byte[] target)
         {
-            if (source.Length != target.Length)
+            if (source.Count != target.Length)
             {
                 return false;
             }
-            for (int i = 0; i < source.Length; ++i)
+            for (int i = 0; i < source.Count; ++i)
             {
                 if (source[i] != target[i])
                 {
@@ -276,11 +283,6 @@ namespace SharpCompress
                 }
             }
             return true;
-        }
-
-        public static void CopyTo(this byte[] array, byte[] destination, int index)
-        {
-            Array.Copy(array, 0, destination, index, array.Length);
         }
     }
 }

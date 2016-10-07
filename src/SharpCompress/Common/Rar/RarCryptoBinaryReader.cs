@@ -1,5 +1,6 @@
 ﻿
 #if !NO_CRYPTO
+using System;
 using System.Collections.Generic;
 using System.IO;
 using SharpCompress.IO;
@@ -32,14 +33,21 @@ namespace SharpCompress.Common.Rar
 
         public override byte[] ReadBytes(int count)
         {
-            if (UseEncryption)
-            {
-                return ReadAndDecryptBytes(count);
-            }
-            return base.ReadBytes(count);
+            byte[] b = new byte[count];
+            Read(b, 0, count);
+            return b;
         }
 
-        private byte[] ReadAndDecryptBytes(int count)
+        public override int Read(byte[] buffer, int index, int count)
+        {
+            if (UseEncryption)
+            {
+                return ReadAndDecryptBytes(buffer, index, count);
+            }
+            return base.Read(buffer, index, count);
+        }
+
+        private int ReadAndDecryptBytes(byte[] buffer, int index, int count)
         {
             int queueSize = data.Count;
             int sizeToRead = count - queueSize;
@@ -53,19 +61,17 @@ namespace SharpCompress.Common.Rar
                     byte[] cipherText = base.ReadBytes(16);
                     var readBytes = rijndael.ProcessBlock(cipherText);
                     foreach (var readByte in readBytes)
+                    {
                         data.Enqueue(readByte);
-
+                    }
                 }
-
             }
-
-            var decryptedBytes = new byte[count];
-
-            for (int i = 0; i < count; i++)
+            
+            for (int i = index; i < count; i++)
             {
-                decryptedBytes[i] = data.Dequeue();
+                buffer[i] = data.Dequeue();
             }
-            return decryptedBytes;
+            return count;
         }
 
         public void ClearQueue()
