@@ -80,7 +80,7 @@ using (var archive = RarArchive.Open("Test.rar"))
 ### Use ReaderFactory to autodetect archive type and Open the entry stream
 
 ```C#
-using (Stream stream = File.OpenRead("Tar.tar.bz2")))
+using (Stream stream = File.OpenRead("Tar.tar.bz2"))
 using (var reader = ReaderFactory.Open(stream))
 {
     while (reader.MoveToNextEntry())
@@ -101,7 +101,7 @@ using (var reader = ReaderFactory.Open(stream))
 ### Use ReaderFactory to autodetect archive type and Open the entry stream
 
 ```C#
-using (Stream stream = File.OpenRead("Tar.tar.bz2")))
+using (Stream stream = File.OpenRead("Tar.tar.bz2"))
 using (var reader = ReaderFactory.Open(stream))
 {
     while (reader.MoveToNextEntry())
