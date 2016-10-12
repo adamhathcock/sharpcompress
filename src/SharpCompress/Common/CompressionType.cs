@@ -11,6 +11,7 @@
         LZMA,
         BCJ,
         BCJ2,
+        LZip,
         Unknown
     }
 }
