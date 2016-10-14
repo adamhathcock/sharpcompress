@@ -9,6 +9,7 @@ using SharpCompress.Compressors;
 using SharpCompress.Compressors.BZip2;
 using SharpCompress.Compressors.Deflate;
 using SharpCompress.IO;
+using SharpCompress.Compressors.LZMA;
 
 namespace SharpCompress.Readers.Tar
 {
@@ -37,6 +38,10 @@ namespace SharpCompress.Readers.Tar
                 case CompressionType.GZip:
                 {
                     return new GZipStream(stream, CompressionMode.Decompress);
+                }
+                case CompressionType.LZip:
+                {
+                    return new LZipStream(stream, CompressionMode.Decompress);
                 }
                 case CompressionType.None:
                 {
@@ -84,6 +89,19 @@ namespace SharpCompress.Readers.Tar
                 {
                     rewindableStream.Rewind(true);
                     return new TarReader(rewindableStream, options, CompressionType.BZip2);
+                }
+                throw new InvalidFormatException("Not a tar file.");
+            }
+
+            rewindableStream.Rewind(false);
+            if (LZipStream.IsLZipFile(rewindableStream))
+            {
+                rewindableStream.Rewind(false);
+                LZipStream testStream = new LZipStream(rewindableStream, CompressionMode.Decompress, false);
+                if (TarArchive.IsTarFile(testStream))
+                {
+                    rewindableStream.Rewind(true);
+                    return new TarReader(rewindableStream, options, CompressionType.LZip);
                 }
                 throw new InvalidFormatException("Not a tar file.");
             }

@@ -13,6 +13,7 @@ using SharpCompress.Readers.GZip;
 using SharpCompress.Readers.Rar;
 using SharpCompress.Readers.Tar;
 using SharpCompress.Readers.Zip;
+using SharpCompress.Compressors.LZMA;
 
 namespace SharpCompress.Readers
 {
@@ -61,6 +62,18 @@ namespace SharpCompress.Readers
                 {
                     rewindableStream.Rewind(true);
                     return new TarReader(rewindableStream, options, CompressionType.BZip2);
+                }
+            }
+
+            rewindableStream.Rewind(false);
+            if (LZipStream.IsLZipFile(rewindableStream))
+            {
+                rewindableStream.Rewind(false);
+                LZipStream testStream = new LZipStream(rewindableStream, CompressionMode.Decompress, true);
+                if (TarArchive.IsTarFile(testStream))
+                {
+                    rewindableStream.Rewind(true);
+                    return new TarReader(rewindableStream, options, CompressionType.LZip);
                 }
             }
 
