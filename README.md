@@ -31,6 +31,10 @@ I'm always looking for help or ideas. Please submit code or email with ideas. Un
 
 ## Version Log
 
+### Version 0.14.0
+
+* [Support for LZip reading in for Tars](https://github.com/adamhathcock/sharpcompress/pull/191)
+
 ### Version 0.13.1
 
 * [Fix null password on ReaderFactory. Fix null options on SevenZipArchive](https://github.com/adamhathcock/sharpcompress/pull/188)

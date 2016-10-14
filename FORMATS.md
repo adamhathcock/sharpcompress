@@ -10,7 +10,7 @@ Writer classes allow forward-only Writing
 | --- | --- | --- | --- | --- | --- |
 | Rar | Rar | Decompress (1) | RarArchive | RarReader | N/A |
 | Zip (2) | None, DEFLATE, BZip2, LZMA/LZMA2, PPMd | Both | ZipArchive | ZipReader | ZipWriter |
-| Tar | None, BZip2, GZip | Both | TarArchive | TarReader | TarWriter (3)  |
+| Tar | None, BZip2, GZip, LZip | Both | TarArchive | TarReader | TarWriter (3)  |
 | GZip (single file) | GZip | Both | GZipArchive | GZipReader | GZipWriter |
 | 7Zip (4) | LZMA, LZMA2, BZip2, PPMd, BCJ, BCJ2, Deflate | Decompress | SevenZipArchive | N/A | N/A |
 
@@ -30,3 +30,4 @@ For those who want to directly compress/decompress bits
 | LZMAStream | Both |
 | PPMdStream | Both |
 | ADCStream | Decompress |
+| LZipStream | Decompress |
