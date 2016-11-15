@@ -13,7 +13,8 @@
     },
     "buildOptions": {
         "warningsAsErrors": true,
-        "allowUnsafe": true
+        "allowUnsafe": true,
+        "keyFile": "../../SharpCompress.snk"
     },
     "frameworks": {
         "net35": {
