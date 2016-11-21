@@ -1,4 +1,8 @@
 {
+    "buildOptions": {
+        "keyFile": "../../SharpCompress.snk"
+    },
+
     "testRunner": "xunit",
 
     "frameworks": {
