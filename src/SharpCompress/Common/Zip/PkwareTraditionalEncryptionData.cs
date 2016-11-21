@@ -9,10 +9,11 @@ namespace SharpCompress.Common.Zip
     {
         private static readonly CRC32 crc32 = new CRC32();
         private readonly UInt32[] _Keys = {0x12345678, 0x23456789, 0x34567890};
+        private readonly string password;
 
         private PkwareTraditionalEncryptionData(string password)
         {
-            Initialize(password);
+            this.password = password;
         }
 
         private byte MagicByte
@@ -28,6 +29,7 @@ namespace SharpCompress.Common.Zip
                                                               byte[] encryptionHeader)
         {
             var encryptor = new PkwareTraditionalEncryptionData(password);
+            encryptor.InitializeKeys();
             byte[] plainTextHeader = encryptor.Decrypt(encryptionHeader, encryptionHeader.Length);
             if (plainTextHeader[11] != (byte)((header.Crc >> 24) & 0xff))
             {
@@ -84,7 +86,7 @@ namespace SharpCompress.Common.Zip
             return cipherText;
         }
 
-        private void Initialize(string password)
+        internal void InitializeKeys()
         {
             byte[] p = StringToByteArray(password);
             for (int i = 0; i < password.Length; i++)

@@ -147,6 +147,7 @@ namespace SharpCompress.Common.Zip
             }
             if (Header.PkwareTraditionalEncryptionData != null)
             {
+                Header.PkwareTraditionalEncryptionData.InitializeKeys();
                 return new PkwareTraditionalCryptoStream(plainStream, Header.PkwareTraditionalEncryptionData,
                                                          CryptoMode.Decrypt);
             }

@@ -184,6 +184,32 @@ namespace SharpCompress.Test
         }
 
         [Fact]
+        public void Zip_Read_Entry_Twice()
+        {
+            string scratchPath = "C:\\Users\\adam\\Downloads\\Archive1.zip";
+
+            using (var archive = ArchiveFactory.Open(scratchPath, new ReaderOptions()
+                                                                  {
+                                                                      Password = "12345678"
+            }))
+            {
+                var entries = archive.Entries.Where(entry => !entry.IsDirectory);
+
+                foreach (var entry in entries)
+                {
+                    for (int i = 0; i < 2; i++)
+                    {
+                        using (var memoryStream = new MemoryStream())
+                        using (var entryStream = entry.OpenEntryStream())
+                        {
+                            entryStream.CopyTo(memoryStream);
+                        }
+                    }
+                }
+            }
+        }
+
+        [Fact]
         public void Zip_Removal_Poly()
         {
             ResetScratch();
