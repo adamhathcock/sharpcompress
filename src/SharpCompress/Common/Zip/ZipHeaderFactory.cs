@@ -162,16 +162,22 @@ namespace SharpCompress.Common.Zip
             switch (mode)
             {
                 case StreamingMode.Seekable:
+                {
                     entryHeader.DataStartPosition = stream.Position;
                     stream.Position += entryHeader.CompressedSize;
                     break;
+                }
 
                 case StreamingMode.Streaming:
+                {
                     entryHeader.PackedStream = stream;
                     break;
+                }
 
                 default:
+                {
                     throw new InvalidFormatException("Invalid StreamingMode");
+                }
             }
 
             //}

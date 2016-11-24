@@ -126,7 +126,7 @@ namespace SharpCompress.Common.Zip
 
         protected Stream GetCryptoStream(Stream plainStream)
         {
-            if ((Header.CompressedSize == 0) && !string.IsNullOrEmpty(Header.Password))
+            if (Header.CompressedSize == 0)
             {
                 throw new NotSupportedException("Cannot encrypt file with unknown size at start.");
             }
@@ -151,9 +151,12 @@ namespace SharpCompress.Common.Zip
                     case ZipCompressionMethod.BZip2:
                     case ZipCompressionMethod.LZMA:
                     case ZipCompressionMethod.PPMd:
+                    {
                         return new PkwareTraditionalCryptoStream(plainStream, Header.ComposeEncryptionData(plainStream), CryptoMode.Decrypt);
+                    }
 
                     case ZipCompressionMethod.WinzipAes:
+                    {
 #if !NO_FILE
                         if (Header.WinzipAesEncryptionData != null)
                         {
@@ -161,9 +164,13 @@ namespace SharpCompress.Common.Zip
                         }
 #endif
                         return plainStream;
+                    }
 
                     default:
+                    {
                         throw new ArgumentOutOfRangeException();
+                    }
+
                 }
             }
 
