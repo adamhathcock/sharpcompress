@@ -126,7 +126,9 @@ namespace SharpCompress.Common.Zip
 
         protected Stream GetCryptoStream(Stream plainStream)
         {
-            if (Header.CompressedSize == 0)
+            bool isFileEncrypted = FlagUtility.HasFlag(Header.Flags, HeaderFlags.Encrypted);
+
+            if (Header.CompressedSize == 0 && isFileEncrypted)
             {
                 throw new NotSupportedException("Cannot encrypt file with unknown size at start.");
             }
@@ -141,7 +143,7 @@ namespace SharpCompress.Common.Zip
                 plainStream = new ReadOnlySubStream(plainStream, Header.CompressedSize); //make sure AES doesn't close
             }
 
-            if (FlagUtility.HasFlag(Header.Flags, HeaderFlags.Encrypted))
+            if (isFileEncrypted)
             {
                 switch (Header.CompressionMethod)
                 {
