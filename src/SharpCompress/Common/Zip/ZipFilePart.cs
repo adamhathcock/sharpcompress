@@ -155,8 +155,12 @@ namespace SharpCompress.Common.Zip
 
 					case ZipCompressionMethod.WinzipAes:
 #if !NO_FILE
-						return Header.WinzipAesEncryptionData != null ? new WinzipAesCryptoStream(plainStream, Header.WinzipAesEncryptionData, Header.CompressedSize - 10) : plainStream;
+						if (Header.WinzipAesEncryptionData != null)
+						{
+							return new WinzipAesCryptoStream(plainStream, Header.WinzipAesEncryptionData, Header.CompressedSize - 10);
+						}
 #endif
+						return plainStream;
 
 					default:
 						throw new ArgumentOutOfRangeException();
