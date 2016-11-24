@@ -124,50 +124,50 @@ namespace SharpCompress.Common.Zip
             }
         }
 
-		protected Stream GetCryptoStream(Stream plainStream)
-		{
-			if ((Header.CompressedSize == 0) && !string.IsNullOrEmpty(Header.Password))
-			{
-				throw new NotSupportedException("Cannot encrypt file with unknown size at start.");
-			}
+        protected Stream GetCryptoStream(Stream plainStream)
+        {
+            if ((Header.CompressedSize == 0) && !string.IsNullOrEmpty(Header.Password))
+            {
+                throw new NotSupportedException("Cannot encrypt file with unknown size at start.");
+            }
 
-			if ((Header.CompressedSize == 0)
-				&& FlagUtility.HasFlag(Header.Flags, HeaderFlags.UsePostDataDescriptor))
-			{
-				plainStream = new NonDisposingStream(plainStream); //make sure AES doesn't close    
-			}
-			else
-			{
-				plainStream = new ReadOnlySubStream(plainStream, Header.CompressedSize); //make sure AES doesn't close
-			}
+            if ((Header.CompressedSize == 0)
+                && FlagUtility.HasFlag(Header.Flags, HeaderFlags.UsePostDataDescriptor))
+            {
+                plainStream = new NonDisposingStream(plainStream); //make sure AES doesn't close    
+            }
+            else
+            {
+                plainStream = new ReadOnlySubStream(plainStream, Header.CompressedSize); //make sure AES doesn't close
+            }
 
-			if (FlagUtility.HasFlag(Header.Flags, HeaderFlags.Encrypted))
-			{
-				switch (Header.CompressionMethod)
-				{
-					case ZipCompressionMethod.None:
-					case ZipCompressionMethod.Deflate:
-					case ZipCompressionMethod.Deflate64:
-					case ZipCompressionMethod.BZip2:
-					case ZipCompressionMethod.LZMA:
-					case ZipCompressionMethod.PPMd:
-						return new PkwareTraditionalCryptoStream(plainStream, Header.ComposeEncryptionData(plainStream), CryptoMode.Decrypt);
+            if (FlagUtility.HasFlag(Header.Flags, HeaderFlags.Encrypted))
+            {
+                switch (Header.CompressionMethod)
+                {
+                    case ZipCompressionMethod.None:
+                    case ZipCompressionMethod.Deflate:
+                    case ZipCompressionMethod.Deflate64:
+                    case ZipCompressionMethod.BZip2:
+                    case ZipCompressionMethod.LZMA:
+                    case ZipCompressionMethod.PPMd:
+                        return new PkwareTraditionalCryptoStream(plainStream, Header.ComposeEncryptionData(plainStream), CryptoMode.Decrypt);
 
-					case ZipCompressionMethod.WinzipAes:
+                    case ZipCompressionMethod.WinzipAes:
 #if !NO_FILE
-						if (Header.WinzipAesEncryptionData != null)
-						{
-							return new WinzipAesCryptoStream(plainStream, Header.WinzipAesEncryptionData, Header.CompressedSize - 10);
-						}
+                        if (Header.WinzipAesEncryptionData != null)
+                        {
+                            return new WinzipAesCryptoStream(plainStream, Header.WinzipAesEncryptionData, Header.CompressedSize - 10);
+                        }
 #endif
-						return plainStream;
+                        return plainStream;
 
-					default:
-						throw new ArgumentOutOfRangeException();
-				}
-			}
+                    default:
+                        throw new ArgumentOutOfRangeException();
+                }
+            }
 
-			return plainStream;
-		}
-	}
+            return plainStream;
+        }
+    }
 }
