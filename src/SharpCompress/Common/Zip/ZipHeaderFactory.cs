@@ -111,46 +111,43 @@ namespace SharpCompress.Common.Zip
         {
             if (FlagUtility.HasFlag(entryHeader.Flags, HeaderFlags.Encrypted))
             {
-                if (!entryHeader.IsDirectory &&
-                    entryHeader.CompressedSize == 0 &&
+                if (!entryHeader.IsDirectory && entryHeader.CompressedSize == 0 &&
                     FlagUtility.HasFlag(entryHeader.Flags, HeaderFlags.UsePostDataDescriptor))
                 {
-                    throw new NotSupportedException(
-                                                    "SharpCompress cannot currently read non-seekable Zip Streams with encrypted data that has been written in a non-seekable manner.");
+                    throw new NotSupportedException("SharpCompress cannot currently read non-seekable Zip Streams with encrypted data that has been written in a non-seekable manner.");
                 }
+
                 if (password == null)
                 {
                     throw new CryptographicException("No password supplied for encrypted zip.");
                 }
-                if (entryHeader.CompressionMethod != ZipCompressionMethod.WinzipAes)
-                {
-                    byte[] buffer = new byte[12];
-                    stream.Read(buffer, 0, 12);
-                    entryHeader.PkwareTraditionalEncryptionData = PkwareTraditionalEncryptionData.ForRead(password,
-                                                                                                          entryHeader,
-                                                                                                          buffer);
-                    entryHeader.CompressedSize -= 12;
-                }
-                else
+
+                entryHeader.Password = password;
+
+                if (entryHeader.CompressionMethod == ZipCompressionMethod.WinzipAes)
                 {
 #if NO_CRYPTO
                     throw new NotSupportedException("Cannot decrypt Winzip AES with Silverlight or WP7.");
 #else
 
-                    var data = entryHeader.Extra.SingleOrDefault(x => x.Type == ExtraDataType.WinZipAes);
-                    WinzipAesKeySize keySize = (WinzipAesKeySize) data.DataBytes[4];
+                    ExtraData data = entryHeader.Extra.SingleOrDefault(x => x.Type == ExtraDataType.WinZipAes);
+                    if (data != null)
+                    {
+                        var keySize = (WinzipAesKeySize)data.DataBytes[4];
 
-                    byte[] salt = new byte[WinzipAesEncryptionData.KeyLengthInBytes(keySize)/2];
-                    byte[] passwordVerifyValue = new byte[2];
-                    stream.Read(salt, 0, salt.Length);
-                    stream.Read(passwordVerifyValue, 0, 2);
-                    entryHeader.WinzipAesEncryptionData = new WinzipAesEncryptionData(keySize, salt, passwordVerifyValue,
-                                                                                      password);
-                    entryHeader.CompressedSize -= (uint) (salt.Length + 2);
+                        var salt = new byte[WinzipAesEncryptionData.KeyLengthInBytes(keySize) / 2];
+                        var passwordVerifyValue = new byte[2];
+                        stream.Read(salt, 0, salt.Length);
+                        stream.Read(passwordVerifyValue, 0, 2);
+                        entryHeader.WinzipAesEncryptionData =
+                            new WinzipAesEncryptionData(keySize, salt, passwordVerifyValue, password);
 
+                        entryHeader.CompressedSize -= (uint)(salt.Length + 2);
+                    }
 #endif
                 }
             }
+
             if (entryHeader.IsDirectory)
             {
                 return;
@@ -168,13 +165,15 @@ namespace SharpCompress.Common.Zip
                 {
                     entryHeader.DataStartPosition = stream.Position;
                     stream.Position += entryHeader.CompressedSize;
-                }
                     break;
+                }
+
                 case StreamingMode.Streaming:
                 {
                     entryHeader.PackedStream = stream;
-                }
                     break;
+                }
+
                 default:
                 {
                     throw new InvalidFormatException("Invalid StreamingMode");

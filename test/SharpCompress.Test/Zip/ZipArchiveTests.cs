@@ -374,6 +374,29 @@ namespace SharpCompress.Test
             Assert.Equal(count3, 3);
         }
 
+        [Fact]
+        public void Zip_Deflate_PKWear_Multipy_Entry_Access()
+        {
+            string zipFile = Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.pkware.zip");
+
+            using (FileStream fileStream = File.Open(zipFile, FileMode.Open))
+            {
+                using (IArchive archive = ArchiveFactory.Open(fileStream, new ReaderOptions { Password = "12345678" }))
+                {
+                    var entries = archive.Entries.Where(entry => !entry.IsDirectory);
+                    foreach (IArchiveEntry entry in entries)
+                    {
+                        for (var i = 0; i < 100; i++)
+                        {
+                            using (var memoryStream = new MemoryStream())
+                            using (Stream entryStream = entry.OpenEntryStream())
+                                entryStream.CopyTo(memoryStream);
+                        }
+                    }
+                }
+            }
+
+        }
 
         class NonSeekableMemoryStream : MemoryStream
         {

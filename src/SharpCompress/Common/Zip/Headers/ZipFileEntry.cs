@@ -64,8 +64,24 @@ namespace SharpCompress.Common.Zip.Headers
         internal uint UncompressedSize { get; set; }
 
         internal List<ExtraData> Extra { get; set; }
+        
+        public string Password { get; set; }
 
-        internal PkwareTraditionalEncryptionData PkwareTraditionalEncryptionData { get; set; }
+        internal PkwareTraditionalEncryptionData ComposeEncryptionData(Stream archiveStream)
+        {
+            if (archiveStream == null)
+            {
+                throw new ArgumentNullException(nameof(archiveStream));
+            }
+
+            var buffer = new byte[12];
+            archiveStream.Read(buffer, 0, 12);
+
+            PkwareTraditionalEncryptionData encryptionData = PkwareTraditionalEncryptionData.ForRead(Password, this, buffer);
+            
+            return encryptionData;
+        }
+
 #if !NO_CRYPTO
         internal WinzipAesEncryptionData WinzipAesEncryptionData { get; set; }
 #endif
