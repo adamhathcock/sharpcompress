@@ -16,8 +16,11 @@ namespace SharpCompress.Common.GZip
         internal GZipFilePart(Stream stream)
         {
             ReadAndValidateGzipHeader(stream);
+            EntryStartPosition = stream.Position;
             this.stream = stream;
         }
+
+        internal long EntryStartPosition { get; }
 
         internal DateTime? DateModified { get; private set; }
 

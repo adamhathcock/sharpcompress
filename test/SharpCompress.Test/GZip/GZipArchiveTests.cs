@@ -55,5 +55,47 @@ namespace SharpCompress.Test
                 archive.SaveTo(Path.Combine(SCRATCH_FILES_PATH, "Tar.tar.gz"));
             }
         }
+
+
+        [Fact]
+        public void GZip_Archive_Multiple_Reads()
+        {
+            ResetScratch();
+            var inputStream = new MemoryStream();
+            using (var fileStream = File.Open(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.gz"), FileMode.Open))
+            {
+                fileStream.CopyTo(inputStream);
+                inputStream.Position = 0;
+            }
+            using (var archive = GZipArchive.Open(inputStream))
+            {
+                var archiveEntry = archive.Entries.First();
+
+                MemoryStream tarStream;
+                using (var entryStream = archiveEntry.OpenEntryStream())
+                {
+                    tarStream = new MemoryStream();
+                    entryStream.CopyTo(tarStream);
+                }
+                var size = tarStream.Length;
+                using (var entryStream = archiveEntry.OpenEntryStream())
+                {
+                    tarStream = new MemoryStream();
+                    entryStream.CopyTo(tarStream);
+                }
+                Assert.Equal(size, tarStream.Length);
+                using (var entryStream = archiveEntry.OpenEntryStream())
+                {
+                    var result = SharpCompress.Archives.Tar.TarArchive.IsTarFile(entryStream);
+                }
+                Assert.Equal(size, tarStream.Length);
+                using (var entryStream = archiveEntry.OpenEntryStream())
+                {
+                    tarStream = new MemoryStream();
+                    entryStream.CopyTo(tarStream);
+                }
+                Assert.Equal(size, tarStream.Length);
+            }
+        }
     }
 }
