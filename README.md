@@ -31,6 +31,12 @@ I'm always looking for help or ideas. Please submit code or email with ideas. Un
 
 ## Version Log
 
+### Version 0.14.1
+
+* [.NET Assemblies aren't strong named](https://github.com/adamhathcock/sharpcompress/issues/158)
+* [Pkware encryption for Zip files didn't allow for multiple reads of an entry](https://github.com/adamhathcock/sharpcompress/issues/197)
+* [GZip Entry couldn't be read multiple times](https://github.com/adamhathcock/sharpcompress/issues/198)
+
 ### Version 0.14.0
 
 * [Support for LZip reading in for Tars](https://github.com/adamhathcock/sharpcompress/pull/191)
