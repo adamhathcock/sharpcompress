@@ -17,8 +17,8 @@ namespace SharpCompress.Common.Zip
         internal const uint DIGITAL_SIGNATURE = 0x05054b50;
         internal const uint SPLIT_ARCHIVE_HEADER_BYTES = 0x30304b50;
 
-        private const uint ZIP64_END_OF_CENTRAL_DIRECTORY = 0x06064b50;
-        private const uint ZIP64_END_OF_CENTRAL_DIRECTORY_LOCATOR = 0x07064b50;
+        internal const uint ZIP64_END_OF_CENTRAL_DIRECTORY = 0x06064b50;
+        internal const uint ZIP64_END_OF_CENTRAL_DIRECTORY_LOCATOR = 0x07064b50;
 
         protected LocalEntryHeader lastEntryHeader;
         private readonly string password;
@@ -30,7 +30,7 @@ namespace SharpCompress.Common.Zip
             this.password = password;
         }
 
-        protected ZipHeader ReadHeader(uint headerBytes, BinaryReader reader)
+        protected ZipHeader ReadHeader(uint headerBytes, BinaryReader reader, bool zip64 = false)
         {
             switch (headerBytes)
             {
@@ -54,14 +54,12 @@ namespace SharpCompress.Common.Zip
                     if (FlagUtility.HasFlag(lastEntryHeader.Flags, HeaderFlags.UsePostDataDescriptor))
                     {
                         lastEntryHeader.Crc = reader.ReadUInt32();
-                        lastEntryHeader.CompressedSize = reader.ReadUInt32();
-                        lastEntryHeader.UncompressedSize = reader.ReadUInt32();
+                        lastEntryHeader.CompressedSize = zip64 ? (long)reader.ReadUInt64() : reader.ReadUInt32();
+                        lastEntryHeader.UncompressedSize = zip64 ? (long)reader.ReadUInt64() : reader.ReadUInt32();
                     }
                     else
                     {
-                        reader.ReadUInt32();
-                        reader.ReadUInt32();
-                        reader.ReadUInt32();
+                        reader.ReadBytes(zip64 ? 20 : 12);
                     }
                     return null;
                 }
@@ -78,9 +76,14 @@ namespace SharpCompress.Common.Zip
                     return new SplitHeader();
                 }
                 case ZIP64_END_OF_CENTRAL_DIRECTORY:
+                {
+                    var entry = new Zip64DirectoryEndHeader();
+                    entry.Read(reader);
+                    return entry;
+                }
                 case ZIP64_END_OF_CENTRAL_DIRECTORY_LOCATOR:
                 {
-                    var entry = new IgnoreHeader(ZipHeaderType.Ignore);
+                    var entry = new Zip64DirectoryEndLocatorHeader();
                     entry.Read(reader);
                     return entry;
                 }

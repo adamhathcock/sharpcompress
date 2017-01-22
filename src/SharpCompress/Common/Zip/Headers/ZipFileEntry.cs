@@ -57,11 +57,11 @@ namespace SharpCompress.Common.Zip.Headers
 
         internal ZipCompressionMethod CompressionMethod { get; set; }
 
-        internal uint CompressedSize { get; set; }
+        internal long CompressedSize { get; set; }
 
         internal long? DataStartPosition { get; set; }
 
-        internal uint UncompressedSize { get; set; }
+        internal long UncompressedSize { get; set; }
 
         internal List<ExtraData> Extra { get; set; }
         
@@ -112,5 +112,7 @@ namespace SharpCompress.Common.Zip.Headers
         }
 
         internal ZipFilePart Part { get; set; }
+
+        internal bool IsZip64 { get { return CompressedSize == uint.MaxValue; } }
     }
 }
