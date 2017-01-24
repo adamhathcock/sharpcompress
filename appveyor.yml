@@ -1,4 +1,4 @@
-version: '0.13.{build}'
+version: '0.15.{build}'
 
 init:
 - git config --global core.autocrlf true

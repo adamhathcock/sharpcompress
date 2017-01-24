@@ -25,11 +25,15 @@ I'm always looking for help or ideas. Please submit code or email with ideas. Un
 
 * RAR 5 support
 * 7Zip writing
-* Zip64
+* Zip64 (Need writing and extend Reading)
 * Multi-volume Zip support.
 * RAR5 support
 
 ## Version Log
+
+### Version 0.15.0
+
+* [Add zip64 support for ZipArchive extraction](https://github.com/adamhathcock/sharpcompress/pull/205)
 
 ### Version 0.14.1
 
@@ -122,8 +126,6 @@ I'm always looking for help or ideas. Please submit code or email with ideas. Un
 * Added support for RAR Decryption (thanks to https://github.com/hrasyid)
 * Embedded some BouncyCastle crypto classes to allow RAR Decryption and Winzip AES Decryption in Portable and Windows Store DLLs
 * Built in Release (I think)
-
-Some Help/Discussion: https://sharpcompress.codeplex.com/discussions
 
 7Zip implementation based on: https://code.google.com/p/managed-lzma/
 
