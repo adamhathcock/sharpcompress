@@ -6,6 +6,8 @@
         LocalEntry,
         DirectoryEntry,
         DirectoryEnd,
-        Split
+        Split,
+        Zip64DirectoryEnd,
+        Zip64DirectoryEndLocator
     }
 }

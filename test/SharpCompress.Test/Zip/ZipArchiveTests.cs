@@ -25,7 +25,6 @@ namespace SharpCompress.Test
             ArchiveStreamRead("Zip.zipx");
         }
 
-
         [Fact]
         public void Zip_BZip2_Streamed_ArchiveStreamRead()
         {
@@ -128,6 +127,18 @@ namespace SharpCompress.Test
         public void Zip_None_ArchiveFileRead()
         {
             ArchiveFileRead("Zip.none.zip");
+        }
+
+        [Fact]
+        public void Zip_Zip64_ArchiveStreamRead()
+        {
+            ArchiveStreamRead("Zip.zip64.zip");
+        }
+
+        [Fact]
+        public void Zip_Zip64_ArchiveFileRead()
+        {
+            ArchiveFileRead("Zip.zip64.zip");
         }
 
         [Fact]

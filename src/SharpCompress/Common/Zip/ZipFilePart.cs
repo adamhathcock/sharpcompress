@@ -133,8 +133,9 @@ namespace SharpCompress.Common.Zip
                 throw new NotSupportedException("Cannot encrypt file with unknown size at start.");
             }
 
-            if ((Header.CompressedSize == 0)
+            if ((Header.CompressedSize == 0
                 && FlagUtility.HasFlag(Header.Flags, HeaderFlags.UsePostDataDescriptor))
+                || Header.IsZip64)
             {
                 plainStream = new NonDisposingStream(plainStream); //make sure AES doesn't close    
             }
