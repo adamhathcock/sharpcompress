@@ -161,7 +161,7 @@ namespace SharpCompress.Test
         [Fact]
         public void Zip_Random_Write_Add()
         {
-            string jpg = Path.Combine(ORIGINAL_FILES_PATH, "jpg\\test.jpg");
+            string jpg = Path.Combine(ORIGINAL_FILES_PATH, "jpg","test.jpg");
             string scratchPath = Path.Combine(SCRATCH_FILES_PATH, "Zip.deflate.mod.zip");
             string unmodified = Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.mod.zip");
             string modified = Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.mod2.zip");

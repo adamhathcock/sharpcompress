@@ -115,7 +115,7 @@ namespace SharpCompress.Test
         [Fact]
         public void Tar_Random_Write_Add()
         {
-            string jpg = Path.Combine(ORIGINAL_FILES_PATH, "jpg\\test.jpg");
+            string jpg = Path.Combine(ORIGINAL_FILES_PATH, "jpg","test.jpg");
             string scratchPath = Path.Combine(SCRATCH_FILES_PATH, "Tar.mod.tar");
             string unmodified = Path.Combine(TEST_ARCHIVES_PATH, "Tar.mod.tar");
             string modified = Path.Combine(TEST_ARCHIVES_PATH, "Tar.noEmptyDirs.tar");

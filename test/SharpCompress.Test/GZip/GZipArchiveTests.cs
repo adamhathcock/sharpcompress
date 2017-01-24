@@ -46,7 +46,7 @@ namespace SharpCompress.Test
         [Fact]
         public void GZip_Archive_NoAdd()
         {
-            string jpg = Path.Combine(ORIGINAL_FILES_PATH, "jpg\\test.jpg");
+            string jpg = Path.Combine(ORIGINAL_FILES_PATH, "jpg", "test.jpg");
             ResetScratch();
             using (Stream stream = File.Open(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.gz"), FileMode.Open))
             using (var archive = GZipArchive.Open(stream))
