@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Linq;
 
 namespace SharpCompress.Common.Zip.Headers
@@ -41,6 +42,23 @@ namespace SharpCompress.Common.Zip.Headers
             {
                 Name = ((ExtraUnicodePathExtraField)unicodePathExtra).UnicodeName;
             }
+
+            var zip64ExtraData = Extra.OfType<Zip64ExtendedInformationExtraField>().FirstOrDefault();
+            if (zip64ExtraData != null)
+            {
+                if (CompressedSize == uint.MaxValue)
+                {
+                    CompressedSize = zip64ExtraData.CompressedSize;
+                }
+                if (UncompressedSize == uint.MaxValue)
+                {
+                    UncompressedSize = zip64ExtraData.UncompressedSize;
+                }
+                if (RelativeOffsetOfEntryHeader == uint.MaxValue)
+                {
+                    RelativeOffsetOfEntryHeader = zip64ExtraData.RelativeOffsetOfEntryHeader;
+                }
+            }
         }
 
         internal override void Write(BinaryWriter writer)
@@ -77,7 +95,7 @@ namespace SharpCompress.Common.Zip.Headers
 
         public ushort VersionNeededToExtract { get; set; }
 
-        public uint RelativeOffsetOfEntryHeader { get; set; }
+        public long RelativeOffsetOfEntryHeader { get; set; }
 
         public uint ExternalFileAttributes { get; set; }
 
