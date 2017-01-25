@@ -210,15 +210,25 @@ namespace SharpCompress.Test
 
         protected void CompareArchivesByPath(string file1, string file2)
         {
+            //don't compare the order.  OS X reads files from the file system in a different order therefore makes the archive ordering different
+            var archive1Entries = new List<string>();
+            var archive2Entries = new List<string>();
             using (var archive1 = ReaderFactory.Open(File.OpenRead(file1)))
             using (var archive2 = ReaderFactory.Open(File.OpenRead(file2)))
             {
                 while (archive1.MoveToNextEntry())
                 {
                     Assert.True(archive2.MoveToNextEntry());
-                    Assert.Equal(archive1.Entry.Key, archive2.Entry.Key);
+                    archive1Entries.Add(archive1.Entry.Key);
+                    archive2Entries.Add(archive2.Entry.Key);
                 }
                 Assert.False(archive2.MoveToNextEntry());
+            }
+            archive1Entries.Sort();
+            archive2Entries.Sort();
+            for (int i = 0; i < archive1Entries.Count; i++)
+            {
+                Assert.Equal(archive1Entries[i], archive2Entries[i]);
             }
         }
 
