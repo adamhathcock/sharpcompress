@@ -51,7 +51,7 @@ namespace SharpCompress.Common.Zip
 
         protected abstract Stream CreateBaseStream();
 
-        protected bool LeaveStreamOpen { get { return FlagUtility.HasFlag(Header.Flags, HeaderFlags.UsePostDataDescriptor); } }
+        protected bool LeaveStreamOpen { get { return FlagUtility.HasFlag(Header.Flags, HeaderFlags.UsePostDataDescriptor) || Header.IsZip64; } }
 
         protected Stream CreateDecompressionStream(Stream stream)
         {
