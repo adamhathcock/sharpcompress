@@ -14,6 +14,13 @@ namespace SharpCompress.Test
         {
             UseExtensionInsteadOfNameToVerify = true;
         }
+
+        [Fact]
+        public void Zip_Zip64_Streamed_Read()
+        {
+            Read("Zip.Zip64.zip", CompressionType.Deflate);
+        }
+
         [Fact]
         public void Zip_ZipX_Streamed_Read()
         {

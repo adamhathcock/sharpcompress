@@ -32,6 +32,19 @@ namespace SharpCompress.Common.Zip.Headers
             {
                 Name = ((ExtraUnicodePathExtraField)unicodePathExtra).UnicodeName;
             }
+
+            var zip64ExtraData = Extra.OfType<Zip64ExtendedInformationExtraField>().FirstOrDefault();
+            if (zip64ExtraData != null)
+            {
+                if (CompressedSize == uint.MaxValue)
+                {
+                    CompressedSize = zip64ExtraData.CompressedSize;
+                }
+                if (UncompressedSize == uint.MaxValue)
+                {
+                    UncompressedSize = zip64ExtraData.UncompressedSize;
+                }
+            }
         }
 
         internal override void Write(BinaryWriter writer)

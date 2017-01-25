@@ -28,7 +28,7 @@ namespace SharpCompress.Common.Zip
                 ZipHeader header = null;
                 BinaryReader reader = new BinaryReader(rewindableStream);
                 if (lastEntryHeader != null &&
-                    FlagUtility.HasFlag(lastEntryHeader.Flags, HeaderFlags.UsePostDataDescriptor))
+                    (FlagUtility.HasFlag(lastEntryHeader.Flags, HeaderFlags.UsePostDataDescriptor) || lastEntryHeader.IsZip64))
                 {
                     reader = (lastEntryHeader.Part as StreamingZipFilePart).FixStreamedFileLocation(ref rewindableStream);
                     long? pos = rewindableStream.CanSeek ? (long?)rewindableStream.Position : null;
