@@ -31,6 +31,10 @@ I'm always looking for help or ideas. Please submit code or email with ideas. Un
 
 ## Version Log
 
+### Version 0.15.1
+
+* [Zip64 extending information and ZipReader](https://github.com/adamhathcock/sharpcompress/pull/206)
+
 ### Version 0.15.0
 
 * [Add zip64 support for ZipArchive extraction](https://github.com/adamhathcock/sharpcompress/pull/205)
