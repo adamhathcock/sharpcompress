@@ -1,5 +1,5 @@
 ﻿{
-    "version": "0.15.1",
+    "version": "0.15.2",
     "title": "SharpCompress - Pure C# Decompression/Compression",
     "authors": [ "Adam Hathcock" ],
     "language": "en-US",
@@ -14,7 +14,8 @@
     "buildOptions": {
         "warningsAsErrors": true,
         "allowUnsafe": true,
-        "keyFile": "../../SharpCompress.snk"
+        "keyFile": "../../SharpCompress.snk",
+        "xmlDoc": true
     },
     "frameworks": {
         "net35": {
