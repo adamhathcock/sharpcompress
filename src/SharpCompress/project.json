@@ -15,7 +15,8 @@
         "warningsAsErrors": true,
         "allowUnsafe": true,
         "keyFile": "../../SharpCompress.snk",
-        "xmlDoc": true
+        "xmlDoc": true,
+        "nowarn": ["CS1591"]
     },
     "frameworks": {
         "net35": {
