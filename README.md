@@ -31,6 +31,10 @@ I'm always looking for help or ideas. Please submit code or email with ideas. Un
 
 ## Version Log
 
+### Version 0.15.2
+
+* [Fix invalid headers](https://github.com/adamhathcock/sharpcompress/pull/210) - fixes an issue creating large-ish zip archives that was introduced with zip64 reading.
+
 ### Version 0.15.1
 
 * [Zip64 extending information and ZipReader](https://github.com/adamhathcock/sharpcompress/pull/206)
