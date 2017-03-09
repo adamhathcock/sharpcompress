@@ -70,8 +70,8 @@ namespace SharpCompress.Common.Zip.Headers
             writer.Write(LastModifiedTime);
             writer.Write(LastModifiedDate);
             writer.Write(Crc);
-            writer.Write(CompressedSize);
-            writer.Write(UncompressedSize);
+            writer.Write((uint)CompressedSize);
+            writer.Write((uint)UncompressedSize);
 
             byte[] nameBytes = EncodeString(Name);
             writer.Write((ushort)nameBytes.Length);
