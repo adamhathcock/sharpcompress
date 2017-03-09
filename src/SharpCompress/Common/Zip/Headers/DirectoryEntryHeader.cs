@@ -63,9 +63,9 @@ namespace SharpCompress.Common.Zip.Headers
 
         internal override void Write(BinaryWriter writer)
         {
-			var zip64 = CompressedSize >= uint.MaxValue || UncompressedSize >= uint.MaxValue || RelativeOffsetOfEntryHeader >= uint.MaxValue;
-			if (zip64)
-				Version = (ushort)(Version > 45 ? Version : 45);
+            var zip64 = CompressedSize >= uint.MaxValue || UncompressedSize >= uint.MaxValue || RelativeOffsetOfEntryHeader >= uint.MaxValue;
+            if (zip64)
+                Version = (ushort)(Version > 45 ? Version : 45);
 
             writer.Write(Version);
             writer.Write(VersionNeededToExtract);
@@ -74,21 +74,21 @@ namespace SharpCompress.Common.Zip.Headers
             writer.Write(LastModifiedTime);
             writer.Write(LastModifiedDate);
             writer.Write(Crc);
-			writer.Write(zip64 ? uint.MaxValue : CompressedSize);
+            writer.Write(zip64 ? uint.MaxValue : CompressedSize);
             writer.Write(zip64 ? uint.MaxValue : UncompressedSize);
 
             byte[] nameBytes = EncodeString(Name);
             writer.Write((ushort)nameBytes.Length);
 
-			if (zip64)
-			{
-				writer.Write((ushort)(2 + 2 + 8 + 8 + 8 + 4));
-			}
-			else
-			{
-				//writer.Write((ushort)Extra.Length);
-				writer.Write((ushort)0);
-			}
+            if (zip64)
+            {
+                writer.Write((ushort)(2 + 2 + 8 + 8 + 8 + 4));
+            }
+            else
+            {
+                //writer.Write((ushort)Extra.Length);
+                writer.Write((ushort)0);
+            }
             writer.Write((ushort)Comment.Length);
 
             writer.Write(DiskNumberStart);
@@ -98,16 +98,16 @@ namespace SharpCompress.Common.Zip.Headers
 
             writer.Write(nameBytes);
 
-			if (zip64)
-			{
-				writer.Write((ushort)0x0001);
-				writer.Write((ushort)((8 + 8 + 8 + 4)));
+            if (zip64)
+            {
+                writer.Write((ushort)0x0001);
+                writer.Write((ushort)((8 + 8 + 8 + 4)));
 
-				writer.Write((ulong)UncompressedSize);
-				writer.Write((ulong)CompressedSize);
-				writer.Write((ulong)RelativeOffsetOfEntryHeader);
-				writer.Write((uint)0); // VolumeNumber = 0
-			}
+                writer.Write((ulong)UncompressedSize);
+                writer.Write((ulong)CompressedSize);
+                writer.Write((ulong)RelativeOffsetOfEntryHeader);
+                writer.Write((uint)0); // VolumeNumber = 0
+            }
             writer.Write(Comment);
         }
 

@@ -15,5 +15,10 @@ namespace SharpCompress.Writers.Zip
         public string EntryComment { get; set; }
 
         public DateTime? ModificationDateTime { get; set; }
+
+        /// <summary>
+        /// Allocate space for storing values if the file is larger than 4GiB
+        /// </summary>
+        public bool? EnableZip64 { get; set; }
     }
 }
