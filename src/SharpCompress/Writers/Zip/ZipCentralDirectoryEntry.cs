@@ -23,7 +23,8 @@ namespace SharpCompress.Writers.Zip
             byte[] encodedFilename = Encoding.UTF8.GetBytes(FileName);
             byte[] encodedComment = Encoding.UTF8.GetBytes(Comment);
 
-            var zip64 = Compressed >= uint.MaxValue || Decompressed >= uint.MaxValue || HeaderOffset >= uint.MaxValue || Zip64HeaderOffset != 0;
+			var zip64_stream = Compressed >= uint.MaxValue || Decompressed >= uint.MaxValue;
+			var zip64 = zip64_stream || HeaderOffset >= uint.MaxValue || Zip64HeaderOffset != 0;
 
             var compressedvalue = zip64 ? uint.MaxValue : (uint)Compressed;
             var decompressedvalue = zip64 ? uint.MaxValue : (uint)Decompressed;
@@ -36,7 +37,11 @@ namespace SharpCompress.Writers.Zip
             {
                 // Cannot use data descriptors with zip64:
                 // https://blogs.oracle.com/xuemingshen/entry/is_zipinput_outputstream_handling_of
-                if (!zip64)
+
+				// We check that streams are not written too large in the ZipWritingStream,
+				// so this extra guard is not required, but kept to simplify changing the code
+				// once the zip64 post-data issue is resolved
+                if (!zip64_stream)
                     flags |= HeaderFlags.UsePostDataDescriptor;
                 
                 if (compression == ZipCompressionMethod.LZMA)

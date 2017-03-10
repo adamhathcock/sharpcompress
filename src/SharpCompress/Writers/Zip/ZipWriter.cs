@@ -116,13 +116,11 @@ namespace SharpCompress.Writers.Zip
                             Comment = options.EntryComment,
                             FileName = entryPath,
                             ModificationTime = options.ModificationDateTime,
-                            HeaderOffset = (uint)streamPosition
-                        };
+                            HeaderOffset = (ulong)streamPosition
+			};
 
-            // Switch to allocating space for zip64, if the archive is larger than 2GB
-            var useZip64 = (OutputStream.CanSeek && OutputStream.Length > int.MaxValue) || isZip64;
-
-            // Allow direct disabling
+            // Use the archive default setting for zip64 and allow overrides
+            var useZip64 = isZip64;
             if (options.EnableZip64.HasValue)
                 useZip64 = options.EnableZip64.Value;
 
@@ -148,6 +146,10 @@ namespace SharpCompress.Writers.Zip
 
         private int WriteHeader(string filename, ZipWriterEntryOptions zipWriterEntryOptions, ZipCentralDirectoryEntry entry, bool useZip64)
         {
+			// We err on the side of caution until the zip specification clarifies how to support this
+			if (!OutputStream.CanSeek && useZip64)
+				throw new NotSupportedException("Zip64 extensions are not supported on non-seekable streams");
+
             var explicitZipCompressionInfo = ToZipCompressionMethod(zipWriterEntryOptions.CompressionType ?? compressionType);
             byte[] encodedFilename = ArchiveEncoding.Default.GetBytes(filename);
 
@@ -166,7 +168,6 @@ namespace SharpCompress.Writers.Zip
             HeaderFlags flags = ArchiveEncoding.Default == Encoding.UTF8 ? HeaderFlags.UTF8 : 0;
             if (!OutputStream.CanSeek)
             {
-                // We cannot really use post data with zip64, but we have nothing else
                 flags |= HeaderFlags.UsePostDataDescriptor;
                 
                 if (explicitZipCompressionInfo == ZipCompressionMethod.LZMA)
@@ -277,6 +278,9 @@ namespace SharpCompress.Writers.Zip
             private CountingWritableSubStream counting;
             private ulong decompressed;
 
+			// Flag to prevent throwing exceptions on Dispose
+			private bool limitsExceeded;
+
             internal ZipWritingStream(ZipWriter writer, Stream originalStream, ZipCentralDirectoryEntry entry, 
                 ZipCompressionMethod zipCompressionMethod, CompressionLevel compressionLevel)
             {
@@ -348,16 +352,23 @@ namespace SharpCompress.Writers.Zip
                 if (disposing)
                 {
                     writeStream.Dispose();
+
+					if (limitsExceeded)
+					{
+						// We have written invalid data into the archive,
+						// so we destroy it now, instead of allowing the user to continue
+						// with a defunct archive
+						originalStream.Dispose();
+						return;
+					}
+
                     entry.Crc = (uint)crc.Crc32Result;
                     entry.Compressed = counting.Count;
                     entry.Decompressed = decompressed;
 
-                    var zip64 = entry.Compressed >= uint.MaxValue || entry.Decompressed >= uint.MaxValue || entry.HeaderOffset >= uint.MaxValue;
-
-                    writer.isZip64 |= zip64;
-
-                    var compressedvalue = zip64 ? uint.MaxValue : (uint)counting.Count;
-                    var decompressedvalue = zip64 ? uint.MaxValue : (uint)entry.Decompressed;
+                    var zip64 = entry.Compressed >= uint.MaxValue || entry.Decompressed >= uint.MaxValue;
+					var compressedvalue = zip64 ? uint.MaxValue : (uint)counting.Count;
+					var decompressedvalue = zip64 ? uint.MaxValue : (uint)entry.Decompressed;
 
                     if (originalStream.CanSeek)
                     {
@@ -368,33 +379,41 @@ namespace SharpCompress.Writers.Zip
 
                         writer.WriteFooter(entry.Crc, compressedvalue, decompressedvalue);
 
-                        // If we have pre-allocated space for zip64 data, fill it out
-                        if (entry.Zip64HeaderOffset != 0)
-                        {
-                            originalStream.Position = (long)(entry.HeaderOffset + entry.Zip64HeaderOffset);
-                            originalStream.Write(DataConverter.LittleEndian.GetBytes((ushort)0x0001), 0, 2);
-                            originalStream.Write(DataConverter.LittleEndian.GetBytes((ushort)(8 + 8)), 0, 2);
+						// Ideally, we should not throw from Dispose()
+						// We should not get here as the Write call checks the limits
+						if (zip64 && entry.Zip64HeaderOffset == 0)
+							throw new NotSupportedException("Attempted to write a stream that is larger than 4GiB without setting the zip64 option");
 
-                            originalStream.Write(DataConverter.LittleEndian.GetBytes(entry.Decompressed), 0, 8);
-                            originalStream.Write(DataConverter.LittleEndian.GetBytes(entry.Compressed), 0, 8);
-                        }
+						// If we have pre-allocated space for zip64 data, 
+						// fill it out, even if it is not required
+						if (entry.Zip64HeaderOffset != 0)
+						{
+							originalStream.Position = (long)(entry.HeaderOffset + entry.Zip64HeaderOffset);
+							originalStream.Write(DataConverter.LittleEndian.GetBytes((ushort)0x0001), 0, 2);
+							originalStream.Write(DataConverter.LittleEndian.GetBytes((ushort)(8 + 8)), 0, 2);
+
+							originalStream.Write(DataConverter.LittleEndian.GetBytes(entry.Decompressed), 0, 8);
+							originalStream.Write(DataConverter.LittleEndian.GetBytes(entry.Compressed), 0, 8);
+						}
 
                         originalStream.Position = writer.streamPosition + (long)entry.Compressed;
                         writer.streamPosition += (long)entry.Compressed;
-
                     }
                     else
                     {
-                        // Bit unclear what happens here, with zip64
-                        // We have a streaming archive, so we should add a post-data-descriptor,
-                        // but we cannot as it does not hold the zip64 values
+						// We have a streaming archive, so we should add a post-data-descriptor,
+						// but we cannot as it does not hold the zip64 values
+						// Throwing an exception until the zip specification is clarified
 
-                        // The current implementation writes 0xffffffff in the fields here, and the 
-                        // the central directory has the extra data required if the fields are overflown
-                        originalStream.Write(DataConverter.LittleEndian.GetBytes(ZipHeaderFactory.POST_DATA_DESCRIPTOR), 0, 4);
+						// Ideally, we should not throw from Dispose()
+						// We should not get here as the Write call checks the limits
+						if (zip64)
+							throw new NotSupportedException("Streams larger than 4GiB are not supported for non-seekable streams");
+
+						originalStream.Write(DataConverter.LittleEndian.GetBytes(ZipHeaderFactory.POST_DATA_DESCRIPTOR), 0, 4);
                         writer.WriteFooter(entry.Crc, 
-                                           (uint)(counting.Count >= uint.MaxValue ? uint.MaxValue : counting.Count),
-                                           (uint)(entry.Decompressed >= uint.MaxValue ? uint.MaxValue : entry.Decompressed));
+                                           (uint)compressedvalue,
+                                           (uint)decompressedvalue);
                         writer.streamPosition += (long)entry.Compressed + 16;
                     }
                     writer.entries.Add(entry);
@@ -423,9 +442,33 @@ namespace SharpCompress.Writers.Zip
 
             public override void Write(byte[] buffer, int offset, int count)
             {
+				// We check the limits first, because we can keep the archive consistent
+				// if we can prevent the writes from happening
+				if (entry.Zip64HeaderOffset == 0)
+				{
+					// Pre-check, the counting.Count is not exact, as we do not know the size before having actually compressed it
+					if (limitsExceeded || ((decompressed + (uint)count) > uint.MaxValue) || (counting.Count + (uint)count) > uint.MaxValue)
+						throw new NotSupportedException("Attempted to write a stream that is larger than 4GiB without setting the zip64 option");
+				}
+
                 decompressed += (uint)count;
                 crc.SlurpBlock(buffer, offset, count);
                 writeStream.Write(buffer, offset, count);
+
+				if (entry.Zip64HeaderOffset == 0)
+				{
+					// Post-check, this is accurate
+					if ((decompressed > uint.MaxValue) || counting.Count > uint.MaxValue)
+					{
+						// We have written the data, so the archive is now broken
+						// Throwing the exception here, allows us to avoid
+						// throwing an exception in Dispose() which is discouraged
+						// as it can mask other errors
+						limitsExceeded = true;
+						throw new NotSupportedException("Attempted to write a stream that is larger than 4GiB without setting the zip64 option");
+					}
+				}
+
             }
         }
 
