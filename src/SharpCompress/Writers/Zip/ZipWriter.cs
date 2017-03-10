@@ -225,7 +225,7 @@ namespace SharpCompress.Writers.Zip
 
             if (zip64)
             {
-                var recordlen = 4 + 8 + 2 + 2 + 4 + 4 + 8 + 8 + 8 + 8;
+                var recordlen = 2 + 2 + 4 + 4 + 8 + 8 + 8 + 8;
 
                 // Write zip64 end of central directory record
                 OutputStream.Write(new byte[] { 80, 75, 6, 6 }, 0, 4);
