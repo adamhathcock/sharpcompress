@@ -14,8 +14,6 @@ namespace SharpCompress.Common.Zip.Headers
 
         internal abstract void Read(BinaryReader reader);
 
-        internal abstract void Write(BinaryWriter writer);
-
         internal bool HasData { get; set; }
     }
 }

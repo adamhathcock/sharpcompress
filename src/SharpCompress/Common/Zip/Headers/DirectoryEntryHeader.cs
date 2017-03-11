@@ -61,36 +61,6 @@ namespace SharpCompress.Common.Zip.Headers
             }
         }
 
-        internal override void Write(BinaryWriter writer)
-        {
-            writer.Write(Version);
-            writer.Write(VersionNeededToExtract);
-            writer.Write((ushort)Flags);
-            writer.Write((ushort)CompressionMethod);
-            writer.Write(LastModifiedTime);
-            writer.Write(LastModifiedDate);
-            writer.Write(Crc);
-            writer.Write((uint)CompressedSize);
-            writer.Write((uint)UncompressedSize);
-
-            byte[] nameBytes = EncodeString(Name);
-            writer.Write((ushort)nameBytes.Length);
-
-            //writer.Write((ushort)Extra.Length);
-            writer.Write((ushort)0);
-            writer.Write((ushort)Comment.Length);
-
-            writer.Write(DiskNumberStart);
-            writer.Write(InternalFileAttributes);
-            writer.Write(ExternalFileAttributes);
-            writer.Write(RelativeOffsetOfEntryHeader);
-
-            writer.Write(nameBytes);
-
-            // writer.Write(Extra);
-            writer.Write(Comment);
-        }
-
         internal ushort Version { get; private set; }
 
         public ushort VersionNeededToExtract { get; set; }

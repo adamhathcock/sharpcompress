@@ -14,10 +14,5 @@ namespace SharpCompress.Common.Zip.Headers
         {
             throw new NotImplementedException();
         }
-
-        internal override void Write(BinaryWriter writer)
-        {
-            throw new NotImplementedException();
-        }
     }
 }
