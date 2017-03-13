@@ -12,7 +12,7 @@ namespace SharpCompress.IO
             writableStream = stream;
         }
 
-        public uint Count { get; private set; }
+        public ulong Count { get; private set; }
 
         public override bool CanRead { get { return false; } }
 

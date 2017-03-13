@@ -49,25 +49,52 @@ namespace SharpCompress.Common.Zip.Headers
 
         internal override void Write(BinaryWriter writer)
         {
+            if (IsZip64)
+                Version = (ushort)(Version > 45 ? Version : 45);
+
             writer.Write(Version);
+            
             writer.Write((ushort)Flags);
             writer.Write((ushort)CompressionMethod);
             writer.Write(LastModifiedTime);
             writer.Write(LastModifiedDate);
             writer.Write(Crc);
-            writer.Write((uint)CompressedSize);
-            writer.Write((uint)UncompressedSize);
+
+            if (IsZip64)
+            {
+                writer.Write(uint.MaxValue);
+                writer.Write(uint.MaxValue);
+            }
+            else
+            {
+                writer.Write(CompressedSize);
+                writer.Write(UncompressedSize);
+            }
 
             byte[] nameBytes = EncodeString(Name);
 
             writer.Write((ushort)nameBytes.Length);
-            writer.Write((ushort)0);
+            if (IsZip64)
+            {
+                writer.Write((ushort)(2 + 2 + (2 * 8)));
+            }
+            else
+            {
+                writer.Write((ushort)0);
+            }
 
             //if (Extra != null)
             //{
             //    writer.Write(Extra);
             //}
             writer.Write(nameBytes);
+            if (IsZip64)
+            {
+                writer.Write((ushort)0x0001);
+                writer.Write((ushort)(2 * 8));
+                writer.Write((ulong)CompressedSize);
+                writer.Write((ulong)UncompressedSize);
+            }
         }
 
         internal ushort Version { get; private set; }
