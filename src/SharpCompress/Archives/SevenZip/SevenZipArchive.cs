@@ -106,10 +106,7 @@ namespace SharpCompress.Archives.SevenZip
             for (int i = 0; i < database.Files.Count; i++)
             {
                 var file = database.Files[i];
-                if (!file.IsDir)
-                {
-                    yield return new SevenZipArchiveEntry(this, new SevenZipFilePart(stream, database, i, file));
-                }
+                yield return new SevenZipArchiveEntry(this, new SevenZipFilePart(stream, database, i, file));
             }
         }
 
