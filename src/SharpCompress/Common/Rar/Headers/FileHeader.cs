@@ -47,81 +47,82 @@ namespace SharpCompress.Common.Rar.Headers
 
             nameSize = nameSize > 4 * 1024 ? (short)(4 * 1024) : nameSize;
 
-            byte[] fileNameBytes = reader.ReadBytes(nameSize);
-
-            switch (HeaderType)
+            using (var fileNameBytes = reader.ReadScope(nameSize))
             {
-                case HeaderType.FileHeader:
+                switch (HeaderType)
                 {
-                    if (FileFlags.HasFlag(FileFlags.UNICODE))
+                    case HeaderType.FileHeader:
                     {
-                        int length = 0;
-                        while (length < fileNameBytes.Length
-                               && fileNameBytes[length] != 0)
+                        if (FileFlags.HasFlag(FileFlags.UNICODE))
                         {
-                            length++;
-                        }
-                        if (length != nameSize)
-                        {
-                            length++;
-                            FileName = FileNameDecoder.Decode(fileNameBytes, length);
+                            int length = 0;
+                            while (length < fileNameBytes.Count
+                                   && fileNameBytes[length] != 0)
+                            {
+                                length++;
+                            }
+                            if (length != nameSize)
+                            {
+                                length++;
+                                FileName = FileNameDecoder.Decode(fileNameBytes, length);
+                            }
+                            else
+                            {
+                                FileName = DecodeDefault(fileNameBytes);
+                            }
                         }
                         else
                         {
                             FileName = DecodeDefault(fileNameBytes);
                         }
+                        FileName = ConvertPath(FileName, HostOS);
                     }
-                    else
+                        break;
+                    case HeaderType.NewSubHeader:
                     {
-                        FileName = DecodeDefault(fileNameBytes);
-                    }
-                    FileName = ConvertPath(FileName, HostOS);
-                }
-                    break;
-                case HeaderType.NewSubHeader:
-                {
-                    int datasize = HeaderSize - NEWLHD_SIZE - nameSize;
-                    if (FileFlags.HasFlag(FileFlags.SALT))
-                    {
-                        datasize -= SALT_SIZE;
-                    }
-                    if (datasize > 0)
-                    {
-                        SubData = reader.ReadBytes(datasize);
-                    }
+                        int datasize = HeaderSize - NEWLHD_SIZE - nameSize;
+                        if (FileFlags.HasFlag(FileFlags.SALT))
+                        {
+                            datasize -= SALT_SIZE;
+                        }
+                        if (datasize > 0)
+                        {
+                            SubData = reader.ReadBytes(datasize);
+                        }
 
-                    if (NewSubHeaderType.SUBHEAD_TYPE_RR.Equals(fileNameBytes))
-                    {
-                        RecoverySectors = SubData[8] + (SubData[9] << 8)
-                                          + (SubData[10] << 16) + (SubData[11] << 24);
+                        if (NewSubHeaderType.SUBHEAD_TYPE_RR.Equals(fileNameBytes))
+                        {
+                            RecoverySectors = SubData[8] + (SubData[9] << 8)
+                                              + (SubData[10] << 16) + (SubData[11] << 24);
+                        }
                     }
+                        break;
                 }
-                    break;
-            }
 
-            if (FileFlags.HasFlag(FileFlags.SALT))
-            {
-                Salt = reader.ReadBytes(SALT_SIZE);
-            }
-            if (FileFlags.HasFlag(FileFlags.EXTTIME))
-            {
-                // verify that the end of the header hasn't been reached before reading the Extended Time.
-                //  some tools incorrectly omit Extended Time despite specifying FileFlags.EXTTIME, which most parsers tolerate.
-                if (ReadBytes + reader.CurrentReadByteCount <= HeaderSize - 2)
+                if (FileFlags.HasFlag(FileFlags.SALT))
                 {
-                    ushort extendedFlags = reader.ReadUInt16();
-                    FileLastModifiedTime = ProcessExtendedTime(extendedFlags, FileLastModifiedTime, reader, 0);
-                    FileCreatedTime = ProcessExtendedTime(extendedFlags, null, reader, 1);
-                    FileLastAccessedTime = ProcessExtendedTime(extendedFlags, null, reader, 2);
-                    FileArchivedTime = ProcessExtendedTime(extendedFlags, null, reader, 3);
+                    Salt = reader.ReadBytes(SALT_SIZE);
+                }
+                if (FileFlags.HasFlag(FileFlags.EXTTIME))
+                {
+                    // verify that the end of the header hasn't been reached before reading the Extended Time.
+                    //  some tools incorrectly omit Extended Time despite specifying FileFlags.EXTTIME, which most parsers tolerate.
+                    if (ReadBytes + reader.CurrentReadByteCount <= HeaderSize - 2)
+                    {
+                        ushort extendedFlags = reader.ReadUInt16();
+                        FileLastModifiedTime = ProcessExtendedTime(extendedFlags, FileLastModifiedTime, reader, 0);
+                        FileCreatedTime = ProcessExtendedTime(extendedFlags, null, reader, 1);
+                        FileLastAccessedTime = ProcessExtendedTime(extendedFlags, null, reader, 2);
+                        FileArchivedTime = ProcessExtendedTime(extendedFlags, null, reader, 3);
+                    }
                 }
             }
         }
 
         //only the full .net framework will do other code pages than unicode/utf8
-        private string DecodeDefault(byte[] bytes)
+        private string DecodeDefault(ByteArrayPoolScope bytes)
         {
-            return ArchiveEncoding.Default.GetString(bytes, 0, bytes.Length);
+            return ArchiveEncoding.Default.GetString(bytes.Array, 0, bytes.Count);
         }
 
         private long UInt32To64(uint x, uint y)

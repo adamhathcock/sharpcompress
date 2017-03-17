@@ -26,7 +26,9 @@ namespace SharpCompress.IO
 
         public override int Read(byte[] buffer, int index, int count)
         {
-            throw new NotSupportedException();
+            int read = base.Read(buffer, index, count);
+            CurrentReadByteCount += read;
+            return read;
         }
 
         public override int Read(char[] buffer, int index, int count)
@@ -36,12 +38,18 @@ namespace SharpCompress.IO
 
         public override bool ReadBoolean()
         {
-            return ReadBytes(1).Single() != 0;
+            using (var b = this.ReadScope(1))
+            {
+                return b.Array.First() != 0;
+            }
         }
 
         public override byte ReadByte()
         {
-            return ReadBytes(1).Single();
+            using (var b = this.ReadScope(1))
+            {
+                return b.Array.First();
+            }
         }
 
         public override byte[] ReadBytes(int count)
@@ -79,17 +87,26 @@ namespace SharpCompress.IO
 
         public override short ReadInt16()
         {
-            return DataConverter.LittleEndian.GetInt16(ReadBytes(2), 0);
+            using (var b = this.ReadScope(2))
+            {
+                return DataConverter.LittleEndian.GetInt16(b.Array, 0);
+            }
         }
 
         public override int ReadInt32()
         {
-            return DataConverter.LittleEndian.GetInt32(ReadBytes(4), 0);
+            using (var b = this.ReadScope(4))
+            {
+                return DataConverter.LittleEndian.GetInt32(b.Array, 0);
+            }
         }
 
         public override long ReadInt64()
         {
-            return DataConverter.LittleEndian.GetInt64(ReadBytes(8), 0);
+            using (var b = this.ReadScope(8))
+            {
+                return DataConverter.LittleEndian.GetInt64(b.Array, 0);
+            }
         }
 
         public override sbyte ReadSByte()
@@ -109,17 +126,26 @@ namespace SharpCompress.IO
 
         public override ushort ReadUInt16()
         {
-            return DataConverter.LittleEndian.GetUInt16(ReadBytes(2), 0);
+            using (var b = this.ReadScope(2))
+            {
+                return DataConverter.LittleEndian.GetUInt16(b.Array, 0);
+            }
         }
 
         public override uint ReadUInt32()
         {
-            return DataConverter.LittleEndian.GetUInt32(ReadBytes(4), 0);
+            using (var b = this.ReadScope(4))
+            {
+                return DataConverter.LittleEndian.GetUInt32(b.Array, 0);
+            }
         }
 
         public override ulong ReadUInt64()
         {
-            return DataConverter.LittleEndian.GetUInt64(ReadBytes(8), 0);
+            using (var b = this.ReadScope(8))
+            {
+                return DataConverter.LittleEndian.GetUInt64(b.Array, 0);
+            }
         }
     }
 }

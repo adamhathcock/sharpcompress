@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using SharpCompress.Common;
 using SharpCompress.Common.GZip;
+using SharpCompress.IO;
 using SharpCompress.Readers;
 using SharpCompress.Readers.GZip;
 using SharpCompress.Writers;
@@ -103,26 +104,28 @@ namespace SharpCompress.Archives.GZip
         public static bool IsGZipFile(Stream stream)
         {
             // read the header on the first read
-            byte[] header = new byte[10];
-            int n = stream.Read(header, 0, header.Length);
-
-            // workitem 8501: handle edge case (decompress empty stream)
-            if (n == 0)
+            using (var header = ByteArrayPool.RentScope(10))
             {
-                return false;
-            }
+                int n = stream.Read(header);
 
-            if (n != 10)
-            {
-                return false;
-            }
+                // workitem 8501: handle edge case (decompress empty stream)
+                if (n == 0)
+                {
+                    return false;
+                }
 
-            if (header[0] != 0x1F || header[1] != 0x8B || header[2] != 8)
-            {
-                return false;
-            }
+                if (n != 10)
+                {
+                    return false;
+                }
 
-            return true;
+                if (header[0] != 0x1F || header[1] != 0x8B || header[2] != 8)
+                {
+                    return false;
+                }
+
+                return true;
+            }
         }
 
         /// <summary>

@@ -30,6 +30,7 @@ using System.IO;
 using SharpCompress.Common;
 using SharpCompress.Common.Tar.Headers;
 using SharpCompress.Converters;
+using SharpCompress.IO;
 
 namespace SharpCompress.Compressors.Deflate
 {
@@ -267,46 +268,48 @@ namespace SharpCompress.Compressors.Deflate
                         }
 
                         // Read and potentially verify the GZIP trailer: CRC32 and  size mod 2^32
-                        byte[] trailer = new byte[8];
-
-                        // workitem 8679
-                        if (_z.AvailableBytesIn != 8)
+                        using (var trailer = ByteArrayPool.RentScope(8))
                         {
-                            // Make sure we have read to the end of the stream
-                            Array.Copy(_z.InputBuffer, _z.NextIn, trailer, 0, _z.AvailableBytesIn);
-                            int bytesNeeded = 8 - _z.AvailableBytesIn;
-                            int bytesRead = _stream.Read(trailer,
-                                                         _z.AvailableBytesIn,
-                                                         bytesNeeded);
-                            if (bytesNeeded != bytesRead)
+
+                            // workitem 8679
+                            if (_z.AvailableBytesIn != 8)
                             {
-                                throw new ZlibException(String.Format(
-                                                                      "Protocol error. AvailableBytesIn={0}, expected 8",
-                                                                      _z.AvailableBytesIn + bytesRead));
+                                // Make sure we have read to the end of the stream
+                                Array.Copy(_z.InputBuffer, _z.NextIn, trailer.Array, 0, _z.AvailableBytesIn);
+                                int bytesNeeded = 8 - _z.AvailableBytesIn;
+                                int bytesRead = _stream.Read(trailer.Array,
+                                                             _z.AvailableBytesIn,
+                                                             bytesNeeded);
+                                if (bytesNeeded != bytesRead)
+                                {
+                                    throw new ZlibException(String.Format(
+                                                                          "Protocol error. AvailableBytesIn={0}, expected 8",
+                                                                          _z.AvailableBytesIn + bytesRead));
+                                }
                             }
-                        }
-                        else
-                        {
-                            Array.Copy(_z.InputBuffer, _z.NextIn, trailer, 0, trailer.Length);
-                        }
+                            else
+                            {
+                                Array.Copy(_z.InputBuffer, _z.NextIn, trailer.Array, 0, trailer.Count);
+                            }
 
-                        Int32 crc32_expected = DataConverter.LittleEndian.GetInt32(trailer, 0);
-                        Int32 crc32_actual = crc.Crc32Result;
-                        Int32 isize_expected = DataConverter.LittleEndian.GetInt32(trailer, 4);
-                        Int32 isize_actual = (Int32)(_z.TotalBytesOut & 0x00000000FFFFFFFF);
+                            Int32 crc32_expected = DataConverter.LittleEndian.GetInt32(trailer.Array, 0);
+                            Int32 crc32_actual = crc.Crc32Result;
+                            Int32 isize_expected = DataConverter.LittleEndian.GetInt32(trailer.Array, 4);
+                            Int32 isize_actual = (Int32)(_z.TotalBytesOut & 0x00000000FFFFFFFF);
 
-                        if (crc32_actual != crc32_expected)
-                        {
-                            throw new ZlibException(
-                                                    String.Format("Bad CRC32 in GZIP stream. (actual({0:X8})!=expected({1:X8}))",
-                                                                  crc32_actual, crc32_expected));
-                        }
+                            if (crc32_actual != crc32_expected)
+                            {
+                                throw new ZlibException(
+                                                        String.Format("Bad CRC32 in GZIP stream. (actual({0:X8})!=expected({1:X8}))",
+                                                                      crc32_actual, crc32_expected));
+                            }
 
-                        if (isize_actual != isize_expected)
-                        {
-                            throw new ZlibException(
-                                                    String.Format("Bad size in GZIP stream. (actual({0})!=expected({1}))", isize_actual,
-                                                                  isize_expected));
+                            if (isize_actual != isize_expected)
+                            {
+                                throw new ZlibException(
+                                                        String.Format("Bad size in GZIP stream. (actual({0})!=expected({1}))", isize_actual,
+                                                                      isize_expected));
+                            }
                         }
                     }
                     else
@@ -427,57 +430,61 @@ namespace SharpCompress.Compressors.Deflate
             int totalBytesRead = 0;
 
             // read the header on the first read
-            byte[] header = new byte[10];
-            int n = _stream.Read(header, 0, header.Length);
-
-            // workitem 8501: handle edge case (decompress empty stream)
-            if (n == 0)
+            using (var header = ByteArrayPool.RentScope(10))
             {
-                return 0;
-            }
+                int n = _stream.Read(header);
 
-            if (n != 10)
-            {
-                throw new ZlibException("Not a valid GZIP stream.");
-            }
-
-            if (header[0] != 0x1F || header[1] != 0x8B || header[2] != 8)
-            {
-                throw new ZlibException("Bad GZIP header.");
-            }
-
-            Int32 timet = DataConverter.LittleEndian.GetInt32(header, 4);
-            _GzipMtime = TarHeader.Epoch.AddSeconds(timet);
-            totalBytesRead += n;
-            if ((header[3] & 0x04) == 0x04)
-            {
-                // read and discard extra field
-                n = _stream.Read(header, 0, 2); // 2-byte length field
-                totalBytesRead += n;
-
-                Int16 extraLength = (Int16)(header[0] + header[1] * 256);
-                byte[] extra = new byte[extraLength];
-                n = _stream.Read(extra, 0, extra.Length);
-                if (n != extraLength)
+                // workitem 8501: handle edge case (decompress empty stream)
+                if (n == 0)
                 {
-                    throw new ZlibException("Unexpected end-of-file reading GZIP header.");
+                    return 0;
                 }
-                totalBytesRead += n;
-            }
-            if ((header[3] & 0x08) == 0x08)
-            {
-                _GzipFileName = ReadZeroTerminatedString();
-            }
-            if ((header[3] & 0x10) == 0x010)
-            {
-                _GzipComment = ReadZeroTerminatedString();
-            }
-            if ((header[3] & 0x02) == 0x02)
-            {
-                Read(_buf1, 0, 1); // CRC16, ignore
-            }
 
-            return totalBytesRead;
+                if (n != 10)
+                {
+                    throw new ZlibException("Not a valid GZIP stream.");
+                }
+
+                if (header[0] != 0x1F || header[1] != 0x8B || header[2] != 8)
+                {
+                    throw new ZlibException("Bad GZIP header.");
+                }
+
+                Int32 timet = DataConverter.LittleEndian.GetInt32(header.Array, 4);
+                _GzipMtime = TarHeader.Epoch.AddSeconds(timet);
+                totalBytesRead += n;
+                if ((header[3] & 0x04) == 0x04)
+                {
+                    // read and discard extra field
+                    n = _stream.Read(header.Array, 0, 2); // 2-byte length field
+                    totalBytesRead += n;
+
+                    Int16 extraLength = (Int16)(header[0] + header[1] * 256);
+                    using (var extra = ByteArrayPool.RentScope(extraLength))
+                    {
+                        n = _stream.Read(extra);
+                        if (n != extraLength)
+                        {
+                            throw new ZlibException("Unexpected end-of-file reading GZIP header.");
+                        }
+                        totalBytesRead += n;
+                    }
+                }
+                if ((header[3] & 0x08) == 0x08)
+                {
+                    _GzipFileName = ReadZeroTerminatedString();
+                }
+                if ((header[3] & 0x10) == 0x010)
+                {
+                    _GzipComment = ReadZeroTerminatedString();
+                }
+                if ((header[3] & 0x02) == 0x02)
+                {
+                    Read(_buf1, 0, 1); // CRC16, ignore
+                }
+
+                return totalBytesRead;
+            }
         }
 
         public override Int32 Read(Byte[] buffer, Int32 offset, Int32 count)

@@ -2,6 +2,7 @@
 using System.IO;
 using System.Text;
 using SharpCompress.Converters;
+using SharpCompress.IO;
 
 namespace SharpCompress.Common.Tar.Headers
 {
@@ -87,63 +88,75 @@ namespace SharpCompress.Common.Tar.Headers
         internal bool Read(BinaryReader reader)
         {
             var buffer = ReadBlock(reader);
-            if (buffer.Length == 0)
+            try
             {
-                return false;
-            }
-
-            if (ReadEntryType(buffer) == EntryType.LongName)
-            {
-                Name = ReadLongName(reader, buffer);
-                buffer = ReadBlock(reader);
-            }
-            else
-            {
-                Name = ArchiveEncoding.Default.GetString(buffer, 0, 100).TrimNulls();
-            }
-
-            EntryType = ReadEntryType(buffer);
-            Size = ReadSize(buffer);
-
-            //Mode = ReadASCIIInt32Base8(buffer, 100, 7);
-            //UserId = ReadASCIIInt32Base8(buffer, 108, 7);
-            //GroupId = ReadASCIIInt32Base8(buffer, 116, 7);
-            long unixTimeStamp = ReadASCIIInt64Base8(buffer, 136, 11);
-            LastModifiedTime = Epoch.AddSeconds(unixTimeStamp).ToLocalTime();
-
-            Magic = ArchiveEncoding.Default.GetString(buffer, 257, 6).TrimNulls();
-
-            if (!string.IsNullOrEmpty(Magic)
-                && "ustar".Equals(Magic))
-            {
-                string namePrefix = ArchiveEncoding.Default.GetString(buffer, 345, 157);
-                namePrefix = namePrefix.TrimNulls();
-                if (!string.IsNullOrEmpty(namePrefix))
+                if (buffer.Count == 0)
                 {
-                    Name = namePrefix + "/" + Name;
+                    return false;
                 }
+
+                if (ReadEntryType(buffer.Array) == EntryType.LongName)
+                {
+                    Name = ReadLongName(reader, buffer.Array);
+                    buffer.Dispose();
+                    buffer = ReadBlock(reader);
+                }
+                else
+                {
+                    Name = ArchiveEncoding.Default.GetString(buffer.Array, 0, 100).TrimNulls();
+                }
+
+                EntryType = ReadEntryType(buffer.Array);
+                Size = ReadSize(buffer.Array);
+
+                //Mode = ReadASCIIInt32Base8(buffer, 100, 7);
+                //UserId = ReadASCIIInt32Base8(buffer, 108, 7);
+                //GroupId = ReadASCIIInt32Base8(buffer, 116, 7);
+                long unixTimeStamp = ReadASCIIInt64Base8(buffer.Array, 136, 11);
+                LastModifiedTime = Epoch.AddSeconds(unixTimeStamp).ToLocalTime();
+
+                Magic = ArchiveEncoding.Default.GetString(buffer.Array, 257, 6).TrimNulls();
+
+                if (!string.IsNullOrEmpty(Magic)
+                    && "ustar".Equals(Magic))
+                {
+                    string namePrefix = ArchiveEncoding.Default.GetString(buffer.Array, 345, 157);
+                    namePrefix = namePrefix.TrimNulls();
+                    if (!string.IsNullOrEmpty(namePrefix))
+                    {
+                        Name = namePrefix + "/" + Name;
+                    }
+                }
+                if (EntryType != EntryType.LongName
+                    && Name.Length == 0)
+                {
+                    return false;
+                }
+                return true;
             }
-            if (EntryType != EntryType.LongName
-                && Name.Length == 0)
+            finally
             {
-                return false;
+                buffer.Dispose();
             }
-            return true;
         }
 
         private string ReadLongName(BinaryReader reader, byte[] buffer)
         {
             var size = ReadSize(buffer);
             var nameLength = (int)size;
-            var nameBytes = reader.ReadBytes(nameLength);
-            var remainingBytesToRead = BlockSize - (nameLength % BlockSize);
-
-            // Read the rest of the block and discard the data
-            if (remainingBytesToRead < BlockSize)
+            using (var nameBytes = reader.ReadScope(nameLength))
             {
-                reader.ReadBytes(remainingBytesToRead);
+                var remainingBytesToRead = BlockSize - (nameLength % BlockSize);
+
+                // Read the rest of the block and discard the data
+                if (remainingBytesToRead < BlockSize)
+                {
+                    using (reader.ReadScope(remainingBytesToRead))
+                    {
+                    }
+                }
+                return ArchiveEncoding.Default.GetString(nameBytes.Array, 0, nameBytes.Count).TrimNulls();
             }
-            return ArchiveEncoding.Default.GetString(nameBytes, 0, nameBytes.Length).TrimNulls();
         }
 
         private static EntryType ReadEntryType(byte[] buffer)
@@ -160,11 +173,11 @@ namespace SharpCompress.Common.Tar.Headers
             return ReadASCIIInt64Base8(buffer, 124, 11);
         }
 
-        private static byte[] ReadBlock(BinaryReader reader)
+        private static ByteArrayPoolScope ReadBlock(BinaryReader reader)
         {
-            byte[] buffer = reader.ReadBytes(BlockSize);
+            var buffer = reader.ReadScope(BlockSize);
 
-            if (buffer.Length != 0 && buffer.Length < BlockSize)
+            if (buffer.Count != 0 && buffer.Count < BlockSize)
             {
                 throw new InvalidOperationException("Buffer is invalid size");
             }

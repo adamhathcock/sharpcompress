@@ -30,6 +30,7 @@ using System;
 using System.IO;
 using SharpCompress.Common;
 using SharpCompress.Converters;
+using SharpCompress.IO;
 
 namespace SharpCompress.Compressors.Deflate
 {
@@ -413,67 +414,74 @@ namespace SharpCompress.Compressors.Deflate
             int fnLength = (FileName == null) ? 0 : filenameBytes.Length + 1;
 
             int bufferLength = 10 + cbLength + fnLength;
-            var header = new byte[bufferLength];
-            int i = 0;
-
-            // ID
-            header[i++] = 0x1F;
-            header[i++] = 0x8B;
-
-            // compression method
-            header[i++] = 8;
-            byte flag = 0;
-            if (Comment != null)
+            var header = ByteArrayPool.RentWritable(bufferLength);
+            try
             {
-                flag ^= 0x10;
+                int i = 0;
+
+                // ID
+                header[i++] = 0x1F;
+                header[i++] = 0x8B;
+
+                // compression method
+                header[i++] = 8;
+                byte flag = 0;
+                if (Comment != null)
+                {
+                    flag ^= 0x10;
+                }
+                if (FileName != null)
+                {
+                    flag ^= 0x8;
+                }
+
+                // flag
+                header[i++] = flag;
+
+                // mtime
+                if (!LastModified.HasValue)
+                {
+                    LastModified = DateTime.Now;
+                }
+                TimeSpan delta = LastModified.Value - UnixEpoch;
+                var timet = (Int32)delta.TotalSeconds;
+                DataConverter.LittleEndian.PutBytes(header, i, timet);
+                i += 4;
+
+                // xflg
+                header[i++] = 0; // this field is totally useless
+
+                // OS
+                header[i++] = 0xFF; // 0xFF == unspecified
+
+                // extra field length - only if FEXTRA is set, which it is not.
+                //header[i++]= 0;
+                //header[i++]= 0;
+
+                // filename
+                if (fnLength != 0)
+                {
+                    Array.Copy(filenameBytes, 0, header, i, fnLength - 1);
+                    i += fnLength - 1;
+                    header[i++] = 0; // terminate
+                }
+
+                // comment
+                if (cbLength != 0)
+                {
+                    Array.Copy(commentBytes, 0, header, i, cbLength - 1);
+                    i += cbLength - 1;
+                    header[i++] = 0; // terminate
+                }
+
+                BaseStream._stream.Write(header, 0, bufferLength);
+
+                return bufferLength; // bytes written
             }
-            if (FileName != null)
+            finally
             {
-                flag ^= 0x8;
+                ByteArrayPool.Return(header);
             }
-
-            // flag
-            header[i++] = flag;
-
-            // mtime
-            if (!LastModified.HasValue)
-            {
-                LastModified = DateTime.Now;
-            }
-            TimeSpan delta = LastModified.Value - UnixEpoch;
-            var timet = (Int32)delta.TotalSeconds;
-            DataConverter.LittleEndian.PutBytes(header, i, timet);
-            i += 4;
-
-            // xflg
-            header[i++] = 0; // this field is totally useless
-
-            // OS
-            header[i++] = 0xFF; // 0xFF == unspecified
-
-            // extra field length - only if FEXTRA is set, which it is not.
-            //header[i++]= 0;
-            //header[i++]= 0;
-
-            // filename
-            if (fnLength != 0)
-            {
-                Array.Copy(filenameBytes, 0, header, i, fnLength - 1);
-                i += fnLength - 1;
-                header[i++] = 0; // terminate
-            }
-
-            // comment
-            if (cbLength != 0)
-            {
-                Array.Copy(commentBytes, 0, header, i, cbLength - 1);
-                i += cbLength - 1;
-                header[i++] = 0; // terminate
-            }
-
-            BaseStream._stream.Write(header, 0, header.Length);
-
-            return header.Length; // bytes written
         }
     }
 }

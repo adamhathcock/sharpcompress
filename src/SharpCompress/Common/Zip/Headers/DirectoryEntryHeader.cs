@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using SharpCompress.IO;
 
 namespace SharpCompress.Common.Zip.Headers
 {
@@ -30,12 +31,16 @@ namespace SharpCompress.Common.Zip.Headers
             ExternalFileAttributes = reader.ReadUInt32();
             RelativeOffsetOfEntryHeader = reader.ReadUInt32();
 
-            byte[] name = reader.ReadBytes(nameLength);
-            Name = DecodeString(name);
-            byte[] extra = reader.ReadBytes(extraLength);
-            byte[] comment = reader.ReadBytes(commentLength);
-            Comment = DecodeString(comment);
-            LoadExtra(extra);
+            using (var name = reader.ReadScope(nameLength))
+            {
+                Name = DecodeString(name);
+            }
+            using (var extra = reader.ReadScope(extraLength))
+            using (var comment = reader.ReadScope(commentLength))
+            {
+                Comment = DecodeString(comment);
+                LoadExtra(extra);
+            }
 
             var unicodePathExtra = Extra.FirstOrDefault(u => u.Type == ExtraDataType.UnicodePathExtraField);
             if (unicodePathExtra != null)

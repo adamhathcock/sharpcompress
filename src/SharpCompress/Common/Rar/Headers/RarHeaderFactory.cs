@@ -52,35 +52,39 @@ namespace SharpCompress.Common.Rar.Headers
                     if (firstByte == 0x52)
                     {
                         MemoryStream buffer = new MemoryStream();
-                        byte[] nextThreeBytes = reader.ReadBytes(3);
-                        if ((nextThreeBytes[0] == 0x45)
-                            && (nextThreeBytes[1] == 0x7E)
-                            && (nextThreeBytes[2] == 0x5E))
+                        using (var nextThreeBytes = reader.ReadScope(3))
                         {
-                            //old format and isvalid
-                            buffer.WriteByte(0x52);
-                            buffer.Write(nextThreeBytes, 0, 3);
-                            rewindableStream.Rewind(buffer);
-                            break;
+                            if ((nextThreeBytes[0] == 0x45)
+                                && (nextThreeBytes[1] == 0x7E)
+                                && (nextThreeBytes[2] == 0x5E))
+                            {
+                                //old format and isvalid
+                                buffer.WriteByte(0x52);
+                                buffer.Write(nextThreeBytes.Array, 0, 3);
+                                rewindableStream.Rewind(buffer);
+                                break;
+                            }
+                            using (var secondThreeBytes = reader.ReadScope(3))
+                            {
+                                if ((nextThreeBytes[0] == 0x61)
+                                    && (nextThreeBytes[1] == 0x72)
+                                    && (nextThreeBytes[2] == 0x21)
+                                    && (secondThreeBytes[0] == 0x1A)
+                                    && (secondThreeBytes[1] == 0x07)
+                                    && (secondThreeBytes[2] == 0x00))
+                                {
+                                    //new format and isvalid
+                                    buffer.WriteByte(0x52);
+                                    buffer.Write(nextThreeBytes.Array, 0, 3);
+                                    buffer.Write(secondThreeBytes.Array, 0, 3);
+                                    rewindableStream.Rewind(buffer);
+                                    break;
+                                }
+                                buffer.Write(nextThreeBytes.Array, 0, 3);
+                                buffer.Write(secondThreeBytes.Array, 0, 3);
+                                rewindableStream.Rewind(buffer);
+                            }
                         }
-                        byte[] secondThreeBytes = reader.ReadBytes(3);
-                        if ((nextThreeBytes[0] == 0x61)
-                            && (nextThreeBytes[1] == 0x72)
-                            && (nextThreeBytes[2] == 0x21)
-                            && (secondThreeBytes[0] == 0x1A)
-                            && (secondThreeBytes[1] == 0x07)
-                            && (secondThreeBytes[2] == 0x00))
-                        {
-                            //new format and isvalid
-                            buffer.WriteByte(0x52);
-                            buffer.Write(nextThreeBytes, 0, 3);
-                            buffer.Write(secondThreeBytes, 0, 3);
-                            rewindableStream.Rewind(buffer);
-                            break;
-                        }
-                        buffer.Write(nextThreeBytes, 0, 3);
-                        buffer.Write(secondThreeBytes, 0, 3);
-                        rewindableStream.Rewind(buffer);
                     }
                     if (count > MAX_SFX_SIZE)
                     {

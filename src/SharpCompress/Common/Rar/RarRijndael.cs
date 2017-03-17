@@ -6,6 +6,7 @@ using System.Security.Cryptography;
 using System.Text;
 using Org.BouncyCastle.Crypto.Engines;
 using Org.BouncyCastle.Crypto.Parameters;
+using SharpCompress.IO;
 
 namespace SharpCompress.Common.Rar
 {
@@ -96,22 +97,24 @@ namespace SharpCompress.Common.Rar
             return rijndael;
         }
 
-        public byte[] ProcessBlock(byte[] cipherText)
+        public byte[] ProcessBlock(ByteArrayPoolScope cipherText)
         {
-            var plainText = new byte[CRYPTO_BLOCK_SIZE];
-            var decryptedBytes = new List<byte>();
-            rijndael.ProcessBlock(cipherText, 0, plainText, 0);
-
-            for (int j = 0; j < plainText.Length; j++)
+            using (var plainText = ByteArrayPool.RentScope(CRYPTO_BLOCK_SIZE))
             {
-                decryptedBytes.Add((byte) (plainText[j] ^ aesInitializationVector[j%16])); //32:114, 33:101
-            }
+                var decryptedBytes = new List<byte>();
+                rijndael.ProcessBlock(cipherText, plainText);
 
-            for (int j = 0; j < aesInitializationVector.Length; j++)
-            {
-                aesInitializationVector[j] = cipherText[j];
+                for (int j = 0; j < plainText.Count; j++)
+                {
+                    decryptedBytes.Add((byte)(plainText[j] ^ aesInitializationVector[j % 16])); //32:114, 33:101
+                }
+
+                for (int j = 0; j < aesInitializationVector.Length; j++)
+                {
+                    aesInitializationVector[j] = cipherText[j];
+                }
+                return decryptedBytes.ToArray();
             }
-            return decryptedBytes.ToArray();
         }
 
         public void Dispose()

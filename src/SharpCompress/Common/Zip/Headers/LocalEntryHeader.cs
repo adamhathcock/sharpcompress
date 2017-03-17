@@ -1,5 +1,6 @@
 ﻿using System.IO;
 using System.Linq;
+using SharpCompress.IO;
 
 namespace SharpCompress.Common.Zip.Headers
 {
@@ -22,10 +23,12 @@ namespace SharpCompress.Common.Zip.Headers
             UncompressedSize = reader.ReadUInt32();
             ushort nameLength = reader.ReadUInt16();
             ushort extraLength = reader.ReadUInt16();
-            byte[] name = reader.ReadBytes(nameLength);
-            byte[] extra = reader.ReadBytes(extraLength);
-            Name = DecodeString(name);
-            LoadExtra(extra);
+            using (var name = reader.ReadScope(nameLength))
+            using (var extra = reader.ReadScope(extraLength))
+            {
+                Name = DecodeString(name);
+                LoadExtra(extra);
+            }
 
             var unicodePathExtra = Extra.FirstOrDefault(u => u.Type == ExtraDataType.UnicodePathExtraField);
             if (unicodePathExtra != null)
