@@ -1,0 +1,214 @@
+<#@ Template Language="C#" #>
+<#@ Import Namespace="System.CodeDom" #>
+<#@ Import Namespace="System.CodeDom.Compiler" #>
+<#@ Import Namespace="Microsoft.CSharp" #>
+<# 
+    Type[] types = new Type[] 
+    { 
+        typeof(int),
+        typeof(int?), 
+        typeof(long), 
+        typeof(long?), 
+        typeof(float),
+        typeof(float?),
+        typeof(double),
+        typeof(double?),
+        typeof(decimal),
+        typeof(decimal?),
+    };
+#>
+#region License, Terms and Author(s)
+//
+// LINQBridge
+// Copyright (c) 2007 Atif Aziz, Joseph Albahari. All rights reserved.
+//
+//  Author(s):
+//
+//      Atif Aziz, http://www.raboof.com
+//
+// This library is free software; you can redistribute it and/or modify it 
+// under the terms of the New BSD License, a copy of which should have 
+// been delivered along with this distribution.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS 
+// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT 
+// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A 
+// PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT 
+// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
+// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT 
+// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, 
+// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY 
+// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT 
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE 
+// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
+#endregion
+
+// $Id$
+
+namespace System.Linq
+{
+    #region Imports
+
+    using System;
+    using System.Collections.Generic;
+
+    #endregion
+    
+    // This partial implementation was template-generated:
+    // <#= DateTime.UtcNow.ToString("r", System.Globalization.CultureInfo.InvariantCulture) #>
+
+    partial class Enumerable
+    {<#
+
+    CodeDomProvider cscp = new CSharpCodeProvider();
+    foreach (Type type in types) 
+    { 
+        bool isNullable = type.IsGenericType && typeof(Nullable<>) == type.GetGenericTypeDefinition();
+        string csBaseType, csType, doc;
+        Type baseType;
+
+        if (isNullable)
+        {
+            baseType = type.GetGenericArguments()[0];
+            csBaseType = cscp.GetTypeOutput(new CodeTypeReference(baseType));
+            csType = csBaseType + "?";
+            doc = string.Empty;
+        }
+        else
+        {
+            baseType = type;
+            csBaseType = csType = cscp.GetTypeOutput(new CodeTypeReference(type));
+            doc = "nullable ";
+        }
+        
+        doc += "<see cref=\"" + baseType + "\" />";
+#>
+
+        /// <summary>
+        /// Computes the sum of a sequence of <#= doc #> values.
+        /// </summary>
+
+        public static <#= csType #> Sum(
+            this IEnumerable<<#= csType #>> source)
+        {
+            if (source == null) throw new ArgumentNullException("source");
+
+            <#= csBaseType #> sum = 0;
+            foreach (var num in source)
+                sum = checked(sum + <#= isNullable ? "(num ?? 0)" : "num" #>);
+
+            return sum;
+        }
+
+        /// <summary>
+        /// Computes the sum of a sequence of <#= doc #> 
+        /// values that are obtained by invoking a transform function on 
+        /// each element of the input sequence.
+        /// </summary>
+
+        public static <#= csType #> Sum<TSource>(
+            this IEnumerable<TSource> source,
+            Func<TSource, <#= csType #>> selector)
+        {
+            return source.Select(selector).Sum();
+        }
+<#
+        string csSumType = type == typeof(int) || type == typeof(long) || type == typeof(int?) || type == typeof(long?) 
+                         ? "long" : csBaseType;
+        string csAvgType = (type == typeof(int) || type == typeof(long) || type == typeof(int?) || type == typeof(long?) 
+                            ? "double" : csBaseType) + (isNullable ? "?" : string.Empty);
+#>        
+        /// <summary>
+        /// Computes the average of a sequence of <#= doc #> values.
+        /// </summary>
+
+        public static <#= csAvgType #> Average(
+            this IEnumerable<<#= csType #>> source)
+        {
+            if (source == null) throw new ArgumentNullException("source");
+
+            <#= csSumType #> sum = 0;
+            long count = 0;
+
+            foreach (var num in source<# if (isNullable) { #>.Where(n => n != null)<# } #>)
+            checked
+            {
+                sum += (<#= csBaseType #>) num;
+                count++;
+            }
+
+            if (count == 0)
+                <# if (isNullable) { #>return null<# } else { #>throw new InvalidOperationException()<# } #>;
+
+            return (<#= csAvgType #>) sum / count;
+        }
+
+        /// <summary>
+        /// Computes the average of a sequence of <#= doc #> values 
+        /// that are obtained by invoking a transform function on each 
+        /// element of the input sequence.
+        /// </summary>
+
+        public static <#= csAvgType #> Average<TSource>(
+            this IEnumerable<TSource> source,
+            Func<TSource, <#= csType #>> selector)
+        {
+            return source.Select(selector).Average();
+        }
+        
+<#      if (isNullable) { #>
+        /// <summary>
+        /// Returns the minimum value in a sequence of nullable 
+        /// <#= doc #> values.
+        /// </summary>
+
+        public static <#= csType #> Min(
+            this IEnumerable<<#= csType #>> source) 
+        {
+            if (source == null) throw new ArgumentNullException("source");
+            
+            return MinMaxImpl(source.Where(x => x != null), null, (min, x) => min < x);
+        }
+
+        /// <summary>
+        /// Invokes a transform function on each element of a sequence and 
+        /// returns the minimum nullable <#= doc #> value.
+        /// </summary>
+
+        public static <#= csType #> Min<TSource>(
+            this IEnumerable<TSource> source,
+            Func<TSource, <#= csType #>> selector) 
+        {
+            return source.Select(selector).Min();
+        }
+
+        /// <summary>
+        /// Returns the maximum value in a sequence of nullable 
+        /// <#= doc #> values.
+        /// </summary>
+
+        public static <#= csType #> Max(
+            this IEnumerable<<#= csType #>> source) 
+        {
+            if (source == null) throw new ArgumentNullException("source");
+            
+            return MinMaxImpl(source.Where(x => x != null), 
+                null, (max, x) => x == null || (max != null && x.Value < max.Value));
+        }
+
+        /// <summary>
+        /// Invokes a transform function on each element of a sequence and 
+        /// returns the maximum nullable <#= doc #> value.
+        /// </summary>
+
+        public static <#= csType #> Max<TSource>(
+            this IEnumerable<TSource> source,
+            Func<TSource, <#= csType #>> selector) 
+        {
+            return source.Select(selector).Max();
+        }
+<#      } #>
+<#  } #>
+    }
+}
