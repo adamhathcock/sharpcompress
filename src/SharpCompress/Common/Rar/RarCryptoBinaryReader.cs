@@ -6,7 +6,7 @@ using SharpCompress.IO;
 
 namespace SharpCompress.Common.Rar
 {
-    internal class RarCryptoBinaryReader : MarkingBinaryReader
+    internal class RarCryptoBinaryReader : RarCrcBinaryReader
     {
         private RarRijndael rijndael;
         private byte[] salt;
