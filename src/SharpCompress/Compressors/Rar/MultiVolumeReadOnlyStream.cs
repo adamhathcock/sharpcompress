@@ -19,6 +19,7 @@ namespace SharpCompress.Compressors.Rar
 
         private long currentPartTotalReadBytes;
         private long currentEntryTotalReadBytes;
+        private uint currentCrc;
 
         internal MultiVolumeReadOnlyStream(IEnumerable<RarFilePart> parts, IExtractionListener streamListener)
         {
@@ -58,6 +59,8 @@ namespace SharpCompress.Compressors.Rar
             currentStream = filePartEnumerator.Current.GetCompressedStream();
 
             currentPartTotalReadBytes = 0;
+
+            currentCrc = filePartEnumerator.Current.FileHeader.FileCRC;
 
             streamListener.FireFilePartExtractionBegin(filePartEnumerator.Current.FilePartName,
                                                        filePartEnumerator.Current.FileHeader.CompressedSize,
@@ -118,6 +121,8 @@ namespace SharpCompress.Compressors.Rar
         public override bool CanSeek { get { return false; } }
 
         public override bool CanWrite { get { return false; } }
+
+        public uint CurrentCrc { get { return this.currentCrc; } }
 
         public override void Flush()
         {

@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using SharpCompress.IO;
 
 namespace SharpCompress.Common.Rar.Headers
@@ -18,14 +19,14 @@ namespace SharpCompress.Common.Rar.Headers
             ReadBytes = baseHeader.ReadBytes;
         }
 
-        internal static RarHeader Create(MarkingBinaryReader reader)
+        internal static RarHeader Create(RarCrcBinaryReader reader)
         {
             try
             {
                 RarHeader header = new RarHeader();
 
                 reader.Mark();
-                header.ReadFromReader(reader);
+                header.ReadStartFromReader(reader);
                 header.ReadBytes += reader.CurrentReadByteCount;
 
                 return header;
@@ -36,9 +37,10 @@ namespace SharpCompress.Common.Rar.Headers
             }
         }
 
-        protected virtual void ReadFromReader(MarkingBinaryReader reader)
+        private void ReadStartFromReader(RarCrcBinaryReader reader)
         {
-            HeadCRC = reader.ReadInt16();
+            HeadCRC = reader.ReadUInt16();
+            reader.ResetCrc();
             HeaderType = (HeaderType)(reader.ReadByte() & 0xff);
             Flags = reader.ReadInt16();
             HeaderSize = reader.ReadInt16();
@@ -48,7 +50,11 @@ namespace SharpCompress.Common.Rar.Headers
             }
         }
 
-        internal T PromoteHeader<T>(MarkingBinaryReader reader)
+        protected virtual void ReadFromReader(MarkingBinaryReader reader) {
+            throw new NotImplementedException();
+        }
+
+        internal T PromoteHeader<T>(RarCrcBinaryReader reader)
             where T : RarHeader, new()
         {
             T header = new T();
@@ -65,7 +71,19 @@ namespace SharpCompress.Common.Rar.Headers
                 reader.ReadBytes(headerSizeDiff);
             }
 
+            VerifyHeaderCrc(reader.GetCrc());
+
             return header;
+        }
+
+        private void VerifyHeaderCrc(ushort crc) {
+            if (HeaderType != HeaderType.MarkHeader) 
+            {
+                if (crc != HeadCRC) 
+                {
+                    throw new InvalidFormatException("rar header crc mismatch");
+                }
+            }
         }
 
         protected virtual void PostReadingBytes(MarkingBinaryReader reader)
@@ -77,7 +95,7 @@ namespace SharpCompress.Common.Rar.Headers
         /// </summary>
         protected long ReadBytes { get; private set; }
 
-        protected short HeadCRC { get; private set; }
+        protected ushort HeadCRC { get; private set; }
 
         internal HeaderType HeaderType { get; private set; }
 
