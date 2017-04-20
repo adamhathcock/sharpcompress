@@ -229,15 +229,18 @@ namespace SharpCompress
             return DosDateToDateTime((UInt32)iTime);
         }
 
-        public static long TransferTo(this Stream source, Stream destination)
+        public static long TransferTo(this Stream source, Stream destination, Action<long, int> partTransferredAction = null)
         {
             byte[] array = new byte[81920];
             int count;
+            var iterations = 0;
             long total = 0;
             while ((count = source.Read(array, 0, array.Length)) != 0)
             {
                 total += count;
                 destination.Write(array, 0, count);
+                iterations++;
+                partTransferredAction?.Invoke(total, iterations);
             }
             return total;
         }

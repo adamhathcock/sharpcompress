@@ -24,7 +24,7 @@ namespace SharpCompress.Writers
 
         public ArchiveType WriterType { get; }
 
-        public abstract void Write(string filename, Stream source, DateTime? modificationTime);
+        public abstract void Write(string filename, Stream source, DateTime? modificationTime, Action<long, int> partTransferredAction = null);
 
         protected virtual void Dispose(bool isDisposing)
         {

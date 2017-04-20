@@ -1,4 +1,5 @@
 ﻿#if !NO_FILE
+using System;
 using System.IO;
 using SharpCompress.Common;
 #endif
@@ -39,8 +40,12 @@ namespace SharpCompress.Readers
         /// <summary>
         /// Extract to specific directory, retaining filename
         /// </summary>
-        public static void WriteEntryToDirectory(this IReader reader, string destinationDirectory,
-                                                 ExtractionOptions options = null)
+        public static void WriteEntryToDirectory(
+            this IReader reader, 
+            string destinationDirectory,
+            ExtractionOptions options = null,
+            Action<long, int> partTransferredAction = null
+        )
         {
             string destinationFileName = string.Empty;
             string file = Path.GetFileName(reader.Entry.Key);
@@ -66,7 +71,7 @@ namespace SharpCompress.Readers
 
             if (!reader.Entry.IsDirectory)
             {
-                reader.WriteEntryToFile(destinationFileName, options);
+                reader.WriteEntryToFile(destinationFileName, options, partTransferredAction);
             }
             else if (options.ExtractFullPath && !Directory.Exists(destinationFileName))
             {
@@ -77,8 +82,12 @@ namespace SharpCompress.Readers
         /// <summary>
         /// Extract to specific file
         /// </summary>
-        public static void WriteEntryToFile(this IReader reader, string destinationFileName,
-                                            ExtractionOptions options = null)
+        public static void WriteEntryToFile(
+            this IReader reader, 
+            string destinationFileName,
+            ExtractionOptions options = null, 
+            Action<long, int> partTransferredAction = null
+        )
         {
             FileMode fm = FileMode.Create;
             options = options ?? new ExtractionOptions()
@@ -92,7 +101,7 @@ namespace SharpCompress.Readers
             }
             using (FileStream fs = File.Open(destinationFileName, fm))
             {
-                reader.WriteEntryTo(fs);
+                reader.WriteEntryTo(fs, partTransferredAction);
                 //using (Stream s = reader.OpenEntryStream())
                 //{
                 //    s.TransferTo(fs);

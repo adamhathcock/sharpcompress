@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using SharpCompress.Common;
 using SharpCompress.IO;
 using SharpCompress.Readers;
@@ -7,7 +8,7 @@ namespace SharpCompress.Archives
 {
     public static class IArchiveEntryExtensions
     {
-        public static void WriteTo(this IArchiveEntry archiveEntry, Stream streamToWriteTo)
+        public static void WriteTo(this IArchiveEntry archiveEntry, Stream streamToWriteTo, Action<long, int> partTransferredAction = null)
         {
             if (archiveEntry.Archive.Type == ArchiveType.Rar && archiveEntry.Archive.IsSolid)
             {
@@ -32,7 +33,7 @@ namespace SharpCompress.Archives
             {
                 using (Stream s = new ListeningStream(streamListener, entryStream))
                 {
-                    s.TransferTo(streamToWriteTo);
+                    s.TransferTo(streamToWriteTo, partTransferredAction);
                 }
             }
             streamListener.FireEntryExtractionEnd(archiveEntry);
