@@ -90,19 +90,19 @@ namespace SharpCompress.Writers.Zip
             }
         }
 
-        public override void Write(string entryPath, Stream source, DateTime? modificationTime, Action<long, int> partTransferredAction = null)
+        public override void Write(string entryPath, Stream source, DateTime? modificationTime)
         {
             Write(entryPath, source, new ZipWriterEntryOptions()
                                      {
                                          ModificationDateTime =  modificationTime
-                                     }, partTransferredAction);
+                                     });
         }
 
-        public void Write(string entryPath, Stream source, ZipWriterEntryOptions zipWriterEntryOptions, Action<long, int> partTransferredAction = null)
+        public void Write(string entryPath, Stream source, ZipWriterEntryOptions zipWriterEntryOptions)
         {
             using (Stream output = WriteToStream(entryPath, zipWriterEntryOptions))
             {
-                source.TransferTo(output, partTransferredAction);
+                source.TransferTo(output);
             }
         }
 

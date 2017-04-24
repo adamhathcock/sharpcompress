@@ -167,7 +167,7 @@ namespace SharpCompress.Readers
             }
         }
 
-        public void WriteEntryTo(Stream writableStream, Action<long, int> partTransferredAction = null)
+        public void WriteEntryTo(Stream writableStream)
         {
             if (wroteCurrentEntry)
             {
@@ -175,21 +175,22 @@ namespace SharpCompress.Readers
             }
             if ((writableStream == null) || (!writableStream.CanWrite))
             {
-                throw new ArgumentNullException("A writable Stream was required.  Use Cancel if that was intended.");
+                throw new ArgumentNullException(
+                                                "A writable Stream was required.  Use Cancel if that was intended.");
             }
 
             var streamListener = this as IReaderExtractionListener;
             streamListener.FireEntryExtractionBegin(Entry);
-            Write(writableStream, partTransferredAction);
+            Write(writableStream);
             streamListener.FireEntryExtractionEnd(Entry);
             wroteCurrentEntry = true;
         }
 
-        internal void Write(Stream writeStream, Action<long, int> partTransferredAction = null)
+        internal void Write(Stream writeStream)
         {
             using (Stream s = OpenEntryStream())
             {
-                s.TransferTo(writeStream, partTransferredAction);
+                s.TransferTo(writeStream);
             }
         }
 

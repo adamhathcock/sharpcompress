@@ -39,9 +39,9 @@ namespace SharpCompress.Writers.Tar
             InitalizeStream(destination, !options.LeaveStreamOpen);
         }
 
-        public override void Write(string filename, Stream source, DateTime? modificationTime, Action<long, int> partTransferredAction = null)
+        public override void Write(string filename, Stream source, DateTime? modificationTime)
         {
-            Write(filename, source, modificationTime, null, partTransferredAction);
+            Write(filename, source, modificationTime, null);
         }
 
         private string NormalizeFilename(string filename)
@@ -57,7 +57,7 @@ namespace SharpCompress.Writers.Tar
             return filename.Trim('/');
         }
 
-        public void Write(string filename, Stream source, DateTime? modificationTime, long? size, Action<long, int> partTransferredAction = null)
+        public void Write(string filename, Stream source, DateTime? modificationTime, long? size)
         {
             if (!source.CanSeek && size == null)
             {
@@ -71,7 +71,7 @@ namespace SharpCompress.Writers.Tar
             header.Name = NormalizeFilename(filename);
             header.Size = realSize;
             header.Write(OutputStream);
-            size = source.TransferTo(OutputStream, partTransferredAction);
+            size = source.TransferTo(OutputStream);
             PadTo512(size.Value, false);
         }
 

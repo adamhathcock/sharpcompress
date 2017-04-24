@@ -26,7 +26,7 @@ namespace SharpCompress.Writers.GZip
             base.Dispose(isDisposing);
         }
 
-        public override void Write(string filename, Stream source, DateTime? modificationTime, Action<long, int> partTransferredAction = null)
+        public override void Write(string filename, Stream source, DateTime? modificationTime)
         {
             if (wroteToStream)
             {
@@ -35,7 +35,7 @@ namespace SharpCompress.Writers.GZip
             GZipStream stream = OutputStream as GZipStream;
             stream.FileName = filename;
             stream.LastModified = modificationTime;
-            source.TransferTo(stream, partTransferredAction);
+            source.TransferTo(stream);
             wroteToStream = true;
         }
     }

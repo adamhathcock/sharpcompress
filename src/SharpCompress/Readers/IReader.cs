@@ -20,8 +20,7 @@ namespace SharpCompress.Readers
         /// Decompresses the current entry to the stream.  This cannot be called twice for the current entry.
         /// </summary>
         /// <param name="writableStream"></param>
-        /// <param name="partTransferredAction"></param>
-        void WriteEntryTo(Stream writableStream, Action<long, int> partTransferredAction = null);
+        void WriteEntryTo(Stream writableStream);
 
         bool Cancelled { get; }
         void Cancel();
