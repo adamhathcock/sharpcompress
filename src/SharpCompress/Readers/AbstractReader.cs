@@ -19,6 +19,7 @@ namespace SharpCompress.Readers
 
         public event EventHandler<ReaderExtractionEventArgs<IEntry>> EntryExtractionBegin;
         public event EventHandler<ReaderExtractionEventArgs<IEntry>> EntryExtractionEnd;
+        public event EventHandler<ReaderExtractionEventArgs<IEntry>> EntryExtractionProgress;
 
         public event EventHandler<CompressedBytesReadEventArgs> CompressedBytesRead;
         public event EventHandler<FilePartExtractionBeginEventArgs> FilePartExtractionBegin;
@@ -181,16 +182,16 @@ namespace SharpCompress.Readers
 
             var streamListener = this as IReaderExtractionListener;
             streamListener.FireEntryExtractionBegin(Entry);
-            Write(writableStream);
+            Write(writableStream, streamListener);
             streamListener.FireEntryExtractionEnd(Entry);
             wroteCurrentEntry = true;
         }
 
-        internal void Write(Stream writeStream)
+        internal void Write(Stream writeStream, IReaderExtractionListener streamListener)
         {
             using (Stream s = OpenEntryStream())
             {
-                s.TransferTo(writeStream);
+                s.TransferTo(writeStream, (sizeTransferred, iterations) => streamListener.FireEntryExtractionProgress(Entry, sizeTransferred, iterations));
             }
         }
 
@@ -252,6 +253,14 @@ namespace SharpCompress.Readers
             if (EntryExtractionBegin != null)
             {
                 EntryExtractionBegin(this, new ReaderExtractionEventArgs<IEntry>(entry));
+            }
+        }
+
+        void IReaderExtractionListener.FireEntryExtractionProgress(Entry entry, long bytesTransferred, int iterations)
+        {
+            if (EntryExtractionProgress != null)
+            {
+                EntryExtractionProgress(this, new ReaderExtractionEventArgs<IEntry>(entry, new ReaderProgress(entry, bytesTransferred, iterations)));
             }
         }
 

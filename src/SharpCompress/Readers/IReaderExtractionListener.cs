@@ -7,5 +7,6 @@ namespace SharpCompress.Readers
         //        void EnsureEntriesLoaded();
         void FireEntryExtractionBegin(Entry entry);
         void FireEntryExtractionEnd(Entry entry);
+        void FireEntryExtractionProgress(Entry entry, long sizeTransferred, int iterations);
     }
 }
