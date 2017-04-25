@@ -1,16 +1,17 @@
 ﻿using System;
+using SharpCompress.Readers;
 
 namespace SharpCompress.Common
 {
     public class ReaderExtractionEventArgs<T> : EventArgs
     {
-        internal ReaderExtractionEventArgs(T entry, params object[] paramList)
+        internal ReaderExtractionEventArgs(T entry, ReaderProgress readerProgress = null)
         {
             Item = entry;
-            ParamList = paramList;
+            ReaderProgress = readerProgress;
         }
 
         public T Item { get; private set; }
-        public object[] ParamList { get; private set; }
+        public ReaderProgress ReaderProgress { get; private set; }
     }
 }
