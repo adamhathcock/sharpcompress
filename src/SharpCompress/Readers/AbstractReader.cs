@@ -191,7 +191,7 @@ namespace SharpCompress.Readers
         {
             using (Stream s = OpenEntryStream())
             {
-                s.TransferTo(writeStream, (sizeTransferred, iterations) => streamListener.FireEntryExtractionProgress(Entry, sizeTransferred, iterations));
+                s.TransferTo(writeStream, Entry, streamListener);
             }
         }
 
