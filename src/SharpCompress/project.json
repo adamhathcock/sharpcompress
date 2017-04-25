@@ -14,7 +14,9 @@
     "buildOptions": {
         "warningsAsErrors": true,
         "allowUnsafe": true,
-        "keyFile": "../../SharpCompress.snk"
+        "keyFile": "../../SharpCompress.snk",
+        "xmlDoc": true,
+        "nowarn": ["CS1591"]
     },
     "frameworks": {
         "net35": {
