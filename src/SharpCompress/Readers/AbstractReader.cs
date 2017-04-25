@@ -180,15 +180,13 @@ namespace SharpCompress.Readers
                                                 "A writable Stream was required.  Use Cancel if that was intended.");
             }
 
-            var streamListener = this as IReaderExtractionListener;
-            streamListener.FireEntryExtractionBegin(Entry);
-            Write(writableStream, streamListener);
-            streamListener.FireEntryExtractionEnd(Entry);
+            Write(writableStream);
             wroteCurrentEntry = true;
         }
 
-        internal void Write(Stream writeStream, IReaderExtractionListener streamListener)
+        internal void Write(Stream writeStream)
         {
+            var streamListener = this as IReaderExtractionListener;
             using (Stream s = OpenEntryStream())
             {
                 s.TransferTo(writeStream, Entry, streamListener);
@@ -247,28 +245,13 @@ namespace SharpCompress.Readers
                                               });
             }
         }
-
-        void IReaderExtractionListener.FireEntryExtractionBegin(Entry entry)
-        {
-            if (EntryExtractionBegin != null)
-            {
-                EntryExtractionBegin(this, new ReaderExtractionEventArgs<IEntry>(entry));
-            }
-        }
-
         void IReaderExtractionListener.FireEntryExtractionProgress(Entry entry, long bytesTransferred, int iterations)
         {
             if (EntryExtractionProgress != null)
             {
-                EntryExtractionProgress(this, new ReaderExtractionEventArgs<IEntry>(entry, new ReaderProgress(entry, bytesTransferred, iterations)));
-            }
-        }
-
-        void IReaderExtractionListener.FireEntryExtractionEnd(Entry entry)
-        {
-            if (EntryExtractionEnd != null)
-            {
-                EntryExtractionEnd(this, new ReaderExtractionEventArgs<IEntry>(entry));
+                EntryExtractionProgress(this, 
+                    new ReaderExtractionEventArgs<IEntry>(entry, new ReaderProgress(entry, bytesTransferred, iterations))
+                );
             }
         }
     }
