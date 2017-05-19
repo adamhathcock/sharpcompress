@@ -1,17 +1,30 @@
-version: '0.15.{build}'
+version: '{build}'
+image: Visual Studio 2017
 
-init:
-- git config --global core.autocrlf true
+pull_requests:
+  do_not_increment_build_number: true
 
-build_script:
-- ps: .\build.ps1
+branches:
+  only:
+  - master
 
-test: off
+nuget:
+  disable_publish_on_pr: true
 
-cache:
-- tools -> build.cake
-- tools -> build.ps1
+before_build:
+  - cmd: dotnet restore
+
+after_build:
+- dotnet pack "src\SharpCompress\SharpCompress.csproj" -c Release
+
+test_script:
+- dotnet test "test\SharpCompress" -c Release
 
 artifacts:
-- path: nupkgs\*.nupkg
-  name: NuPkgs
+- path: src\SharpCompress\bin\Release\*.nupkg
+
+deploy:
+  - provider: Environment
+    name: nuget.org
+    on:
+      branch: master
