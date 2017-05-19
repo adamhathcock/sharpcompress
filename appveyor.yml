@@ -11,18 +11,8 @@ branches:
 nuget:
   disable_publish_on_pr: true
 
-before_build:
-  - cmd: dotnet restore
-
-build:
-  parallel: true
-  verbosity: minimal
-
-after_build:
-- dotnet pack "src\SharpCompress\SharpCompress.csproj" -c Release
-
-test_script:
-- dotnet test --no-build .\tests\SharpCompress.Test\SharpCompress.Test.csproj
+build_script:
+- ps: .\build.ps1
 
 artifacts:
 - path: src\SharpCompress\bin\Release\*.nupkg
