@@ -22,9 +22,3 @@ test_script:
 
 artifacts:
 - path: src\SharpCompress\bin\Release\*.nupkg
-
-deploy:
-  - provider: Environment
-    name: nuget.org
-    on:
-      branch: master
