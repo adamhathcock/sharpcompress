@@ -14,11 +14,15 @@ nuget:
 before_build:
   - cmd: dotnet restore
 
+build:
+  parallel: true
+  verbosity: minimal
+
 after_build:
-- dotnet pack "src\SharpCompress\SharpCompress.csproj" -c Release
+- dotnet pack "src\SharpCompress\SharpCompress.csproj" -c Release --no-build
 
 test_script:
-- dotnet test "test\SharpCompress" -c Release
+- dotnet test "test\SharpCompress.Test" -c Release --no-build
 
 artifacts:
 - path: src\SharpCompress\bin\Release\*.nupkg
