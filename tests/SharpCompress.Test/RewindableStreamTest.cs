@@ -23,25 +23,25 @@ namespace SharpCompress.Test
             RewindableStream stream = new RewindableStream(ms);
             stream.StartRecording();
             BinaryReader br = new BinaryReader(stream);
-            Assert.Equal(br.ReadInt32(), 1);
-            Assert.Equal(br.ReadInt32(), 2);
-            Assert.Equal(br.ReadInt32(), 3);
-            Assert.Equal(br.ReadInt32(), 4);
+            Assert.Equal(1, br.ReadInt32());
+            Assert.Equal(2, br.ReadInt32());
+            Assert.Equal(3, br.ReadInt32());
+            Assert.Equal(4, br.ReadInt32());
             stream.Rewind(true);
             stream.StartRecording();
-            Assert.Equal(br.ReadInt32(), 1);
-            Assert.Equal(br.ReadInt32(), 2);
-            Assert.Equal(br.ReadInt32(), 3);
-            Assert.Equal(br.ReadInt32(), 4);
-            Assert.Equal(br.ReadInt32(), 5);
-            Assert.Equal(br.ReadInt32(), 6);
-            Assert.Equal(br.ReadInt32(), 7);
+            Assert.Equal(1, br.ReadInt32());
+            Assert.Equal(2, br.ReadInt32());
+            Assert.Equal(3, br.ReadInt32());
+            Assert.Equal(4, br.ReadInt32());
+            Assert.Equal(5, br.ReadInt32());
+            Assert.Equal(6, br.ReadInt32());
+            Assert.Equal(7, br.ReadInt32());
             stream.Rewind(true);
             stream.StartRecording();
-            Assert.Equal(br.ReadInt32(), 1);
-            Assert.Equal(br.ReadInt32(), 2);
-            Assert.Equal(br.ReadInt32(), 3);
-            Assert.Equal(br.ReadInt32(), 4);
+            Assert.Equal(1, br.ReadInt32());
+            Assert.Equal(2, br.ReadInt32());
+            Assert.Equal(3, br.ReadInt32());
+            Assert.Equal(4, br.ReadInt32());
         }
 
         [Fact]
@@ -61,23 +61,23 @@ namespace SharpCompress.Test
             RewindableStream stream = new RewindableStream(ms);
             stream.StartRecording();
             BinaryReader br = new BinaryReader(stream);
-            Assert.Equal(br.ReadInt32(), 1);
-            Assert.Equal(br.ReadInt32(), 2);
-            Assert.Equal(br.ReadInt32(), 3);
-            Assert.Equal(br.ReadInt32(), 4);
+            Assert.Equal(1, br.ReadInt32());
+            Assert.Equal(2, br.ReadInt32());
+            Assert.Equal(3, br.ReadInt32());
+            Assert.Equal(4, br.ReadInt32());
             stream.Rewind(true);
-            Assert.Equal(br.ReadInt32(), 1);
-            Assert.Equal(br.ReadInt32(), 2);
+            Assert.Equal(1, br.ReadInt32());
+            Assert.Equal(2, br.ReadInt32());
             stream.StartRecording();
-            Assert.Equal(br.ReadInt32(), 3);
-            Assert.Equal(br.ReadInt32(), 4);
-            Assert.Equal(br.ReadInt32(), 5);
+            Assert.Equal(3, br.ReadInt32());
+            Assert.Equal(4, br.ReadInt32());
+            Assert.Equal(5, br.ReadInt32());
             stream.Rewind(true);
-            Assert.Equal(br.ReadInt32(), 3);
-            Assert.Equal(br.ReadInt32(), 4);
-            Assert.Equal(br.ReadInt32(), 5);
-            Assert.Equal(br.ReadInt32(), 6);
-            Assert.Equal(br.ReadInt32(), 7);
+            Assert.Equal(3, br.ReadInt32());
+            Assert.Equal(4, br.ReadInt32());
+            Assert.Equal(5, br.ReadInt32());
+            Assert.Equal(6, br.ReadInt32());
+            Assert.Equal(7, br.ReadInt32());
         }
     }
 }

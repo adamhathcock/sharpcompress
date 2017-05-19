@@ -36,7 +36,7 @@ namespace SharpCompress.Test
             VerifyFiles();
         }
 
-        //[Fact]
+        [Fact]
         public void Rar_Multi_Reader_Encrypted()
         {
             var testArchives = new string[] { "EncryptedParts.part01.rar",
@@ -149,7 +149,7 @@ namespace SharpCompress.Test
                 {
                     if (!reader.Entry.IsDirectory)
                     {
-                        Assert.Equal(reader.Entry.CompressionType, CompressionType.Rar);
+                        Assert.Equal(CompressionType.Rar, reader.Entry.CompressionType);
                         reader.WriteEntryToDirectory(SCRATCH_FILES_PATH, new ExtractionOptions()
                         {
                             ExtractFullPath = true,
@@ -172,7 +172,7 @@ namespace SharpCompress.Test
                 {
                     if (!reader.Entry.IsDirectory)
                     {
-                        Assert.Equal(reader.Entry.CompressionType, CompressionType.Rar);
+                        Assert.Equal(CompressionType.Rar, reader.Entry.CompressionType);
                         using (var entryStream = reader.OpenEntryStream())
                         {
                             string file = Path.GetFileName(reader.Entry.Key);
@@ -207,7 +207,7 @@ namespace SharpCompress.Test
             {
                 while (reader.MoveToNextEntry())
                 {
-                    Assert.Equal(reader.Entry.CompressionType, CompressionType.Rar);
+                    Assert.Equal(CompressionType.Rar, reader.Entry.CompressionType);
                     reader.WriteEntryToDirectory(SCRATCH_FILES_PATH, new ExtractionOptions()
                     {
                         ExtractFullPath = true,
@@ -231,7 +231,7 @@ namespace SharpCompress.Test
             {
                 while (reader.MoveToNextEntry())
                 {
-                    Assert.Equal(reader.Entry.CompressionType, CompressionType.Rar);
+                    Assert.Equal(CompressionType.Rar, reader.Entry.CompressionType);
                     reader.WriteEntryToDirectory(SCRATCH_FILES_PATH, new ExtractionOptions()
                     {
                         ExtractFullPath = true,
@@ -262,7 +262,7 @@ namespace SharpCompress.Test
                 {
                     if (reader.Entry.Key.Contains("jpg"))
                     {
-                        Assert.Equal(reader.Entry.CompressionType, CompressionType.Rar);
+                        Assert.Equal(CompressionType.Rar, reader.Entry.CompressionType);
                         reader.WriteEntryToDirectory(SCRATCH_FILES_PATH, new ExtractionOptions()
                         {
                             ExtractFullPath = true,
@@ -287,7 +287,7 @@ namespace SharpCompress.Test
                 {
                     if (reader.Entry.Key.Contains("jpg"))
                     {
-                        Assert.Equal(reader.Entry.CompressionType, CompressionType.Rar);
+                        Assert.Equal(CompressionType.Rar, reader.Entry.CompressionType);
                         reader.WriteEntryToDirectory(SCRATCH_FILES_PATH, new ExtractionOptions()
                         {
                             ExtractFullPath = true,

@@ -358,7 +358,7 @@ namespace SharpCompress.Test
                 count++;
 
             //Prints 3
-            Assert.Equal(count, 3);
+            Assert.Equal(3, count);
             a.Dispose();
 
             a = ZipArchive.Open(unmodified);
@@ -382,7 +382,7 @@ namespace SharpCompress.Test
             foreach (var e in a.Entries)
                 count3++;
 
-            Assert.Equal(count3, 3);
+            Assert.Equal(3, count3);
         }
 
         [Fact]

@@ -44,7 +44,7 @@ namespace SharpCompress.Test
                 {
                     if (!entry.IsDirectory)
                     {
-                        Assert.Equal(entry.CompressionType, CompressionType.Rar);
+                        Assert.Equal(CompressionType.Rar, entry.CompressionType);
                         entry.WriteToDirectory(SCRATCH_FILES_PATH, new ExtractionOptions()
                         {
                             ExtractFullPath = true,
@@ -189,7 +189,7 @@ namespace SharpCompress.Test
 
             ResetScratch();
             using (var archive = RarArchive.Open(testArchives.Select(s => Path.Combine(TEST_ARCHIVES_PATH, s))
-                .Select(p => File.OpenRead(p))))
+                .Select(File.OpenRead)))
             {
                 foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
                 {
