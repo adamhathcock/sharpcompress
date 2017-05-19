@@ -47,20 +47,28 @@ namespace SharpCompress.Test
                 "EncryptedParts.part06.rar"};
 
 
-            ResetScratch();
-            using (var reader = RarReader.Open(testArchives.Select(s => Path.Combine(TEST_ARCHIVES_PATH, s))
-                .Select(p => File.OpenRead(p))))
-            {
-                while (reader.MoveToNextEntry())
-                {
-                    reader.WriteEntryToDirectory(SCRATCH_FILES_PATH, new ExtractionOptions()
-                    {
-                        ExtractFullPath = true,
-                        Overwrite = true
-                    });
-                }
-            }
-            VerifyFiles();
+            Assert.Throws<InvalidFormatException>(() =>
+                                                  {
+                                                      ResetScratch();
+                                                      using (var reader = RarReader.Open(testArchives.Select(s => Path.Combine(TEST_ARCHIVES_PATH, s))
+                                                                                                     .Select(p => File.OpenRead(p)),
+                                                                                         new ReaderOptions()
+                                                                                         {
+                                                                                             Password = "test"
+                                                                                         }))
+                                                      {
+                                                          while (reader.MoveToNextEntry())
+                                                          {
+                                                              reader.WriteEntryToDirectory(SCRATCH_FILES_PATH,
+                                                                                           new ExtractionOptions()
+                                                                                           {
+                                                                                               ExtractFullPath = true,
+                                                                                               Overwrite = true
+                                                                                           });
+                                                          }
+                                                      }
+                                                      VerifyFiles();
+                                                  });
         }
 
         [Fact]
