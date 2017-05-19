@@ -30,7 +30,7 @@ namespace SharpCompress.Writers.Zip
             var decompressedvalue = zip64 ? uint.MaxValue : (uint)Decompressed;
             var headeroffsetvalue = zip64 ? uint.MaxValue : (uint)HeaderOffset;
             var extralength = zip64 ? (2 + 2 + 8 + 8 + 8 + 4) : 0;
-            var version = (byte)(zip64 ? 45 : 10);
+            var version = (byte)(zip64 ? 45 : 20); // Version 20 required for deflate/encryption
 
             HeaderFlags flags = HeaderFlags.UTF8;
             if (!outputStream.CanSeek)
