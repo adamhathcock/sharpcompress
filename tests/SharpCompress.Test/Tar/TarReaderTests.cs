@@ -50,7 +50,7 @@ namespace SharpCompress.Test
                 {
                     if (!reader.Entry.IsDirectory)
                     {
-                        Assert.Equal(reader.Entry.CompressionType, CompressionType.BZip2);
+                        Assert.Equal(CompressionType.BZip2, reader.Entry.CompressionType);
                         using (var entryStream = reader.OpenEntryStream())
                         {
                             string file = Path.GetFileName(reader.Entry.Key);
@@ -107,7 +107,7 @@ namespace SharpCompress.Test
                 {
                     if (!reader.Entry.IsDirectory)
                     {
-                        Assert.Equal(reader.Entry.CompressionType, CompressionType.BZip2);
+                        Assert.Equal(CompressionType.BZip2, reader.Entry.CompressionType);
                         using (var entryStream = reader.OpenEntryStream())
                         {
                             entryStream.SkipEntry();
@@ -115,7 +115,7 @@ namespace SharpCompress.Test
                         }
                     }
                 }
-                Assert.Equal(names.Count, 3);
+                Assert.Equal(3, names.Count);
             }
         }
 
