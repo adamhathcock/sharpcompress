@@ -41,12 +41,12 @@ Task("Pack")
 Task("Default")
     .IsDependentOn("Restore")
     .IsDependentOn("Build")
-    .IsDependentOn("Test")
     .IsDependentOn("Pack");
 
- Task("Rebuild")
+ Task("RunTests")
     .IsDependentOn("Restore")
-    .IsDependentOn("Build");
+    .IsDependentOn("Build")
+    .IsDependentOn("Test");
 
 
 RunTarget(target);
