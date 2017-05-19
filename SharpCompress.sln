@@ -13,6 +13,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SharpCompress", "src\SharpC
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SharpCompress.Test", "tests\SharpCompress.Test\SharpCompress.Test.csproj", "{F2B1A1EB-0FA6-40D0-8908-E13247C7226F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "dotnet-sharpcompress", "src\dotnet-sharpcompress\dotnet-sharpcompress.csproj", "{CC08976E-8E3B-44EE-BDA7-6A9D2FDDDB02}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,10 @@ Global
 		{F2B1A1EB-0FA6-40D0-8908-E13247C7226F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F2B1A1EB-0FA6-40D0-8908-E13247C7226F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F2B1A1EB-0FA6-40D0-8908-E13247C7226F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CC08976E-8E3B-44EE-BDA7-6A9D2FDDDB02}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CC08976E-8E3B-44EE-BDA7-6A9D2FDDDB02}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CC08976E-8E3B-44EE-BDA7-6A9D2FDDDB02}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CC08976E-8E3B-44EE-BDA7-6A9D2FDDDB02}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -34,5 +40,6 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{FD19DDD8-72B2-4024-8665-0D1F7A2AA998} = {3C5BE746-03E5-4895-9988-0B57F162F86C}
 		{F2B1A1EB-0FA6-40D0-8908-E13247C7226F} = {0F0901FF-E8D9-426A-B5A2-17C7F47C1529}
+		{CC08976E-8E3B-44EE-BDA7-6A9D2FDDDB02} = {3C5BE746-03E5-4895-9988-0B57F162F86C}
 	EndGlobalSection
 EndGlobal
