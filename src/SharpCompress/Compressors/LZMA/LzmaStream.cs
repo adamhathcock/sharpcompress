@@ -118,11 +118,11 @@ namespace SharpCompress.Compressors.LZMA
             }
         }
 
-        public override bool CanRead { get { return encoder == null; } }
+        public override bool CanRead => encoder == null;
 
-        public override bool CanSeek { get { return false; } }
+        public override bool CanSeek => false;
 
-        public override bool CanWrite { get { return encoder != null; } }
+        public override bool CanWrite => encoder != null;
 
         public override void Flush()
         {
@@ -149,9 +149,9 @@ namespace SharpCompress.Compressors.LZMA
             base.Dispose(disposing);
         }
 
-        public override long Length { get { return position + availableBytes; } }
+        public override long Length => position + availableBytes;
 
-        public override long Position { get { return position; } set { throw new NotSupportedException(); } }
+        public override long Position { get => position; set => throw new NotSupportedException(); }
 
         public override int Read(byte[] buffer, int offset, int count)
         {

@@ -4,12 +4,9 @@ namespace SharpCompress.Test
 {
    public class TestStream : Stream
    {
-      private Stream stream;
-      private bool read;
-      private bool write;
-      private bool seek;
+      private readonly Stream stream;
 
-      public TestStream(Stream stream)
+       public TestStream(Stream stream)
          : this(stream, true, true, true)
       {
       }
@@ -19,9 +16,9 @@ namespace SharpCompress.Test
       public TestStream(Stream stream, bool read, bool write, bool seek)
       {
          this.stream = stream;
-         this.read = read;
-         this.write = write;
-         this.seek = seek;
+         CanRead = read;
+         CanWrite = write;
+         CanSeek = seek;
       }
 
       protected override void Dispose(bool disposing)
@@ -31,36 +28,24 @@ namespace SharpCompress.Test
          IsDisposed = true;
       }
 
-      public override bool CanRead
-      {
-         get { return read; }
-      }
+      public override bool CanRead { get; }
 
-      public override bool CanSeek
-      {
-         get { return seek; }
-      }
+       public override bool CanSeek { get; }
 
-      public override bool CanWrite
-      {
-         get { return write; }
-      }
+       public override bool CanWrite { get; }
 
-      public override void Flush()
+       public override void Flush()
       {
          stream.Flush();
       }
 
-      public override long Length
-      {
-         get { return stream.Length; }
-      }
+      public override long Length => stream.Length;
 
-      public override long Position
+       public override long Position
       {
-         get { return stream.Position; }
-         set { stream.Position = value; }
-      }
+         get => stream.Position;
+           set => stream.Position = value;
+       }
 
       public override int Read(byte[] buffer, int offset, int count)
       {

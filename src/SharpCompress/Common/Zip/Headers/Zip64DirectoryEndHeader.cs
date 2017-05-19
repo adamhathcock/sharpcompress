@@ -28,7 +28,7 @@ namespace SharpCompress.Common.Zip.Headers
 
         internal override void Write(BinaryWriter writer)
         {
-            throw new System.NotImplementedException();
+            throw new NotImplementedException();
         }
 
         public long SizeOfDirectoryEndRecord { get; private set; }

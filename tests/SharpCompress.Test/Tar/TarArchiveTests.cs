@@ -104,7 +104,7 @@ namespace SharpCompress.Test
             string scratchPath = Path.Combine(SCRATCH_FILES_PATH, "Tar.tar");
             string unmodified = Path.Combine(TEST_ARCHIVES_PATH, "Tar.noEmptyDirs.tar");
 
-            base.ResetScratch();
+            ResetScratch();
             using (var archive = TarArchive.Create())
             {
                 archive.AddAllFromDirectory(ORIGINAL_FILES_PATH);
@@ -120,7 +120,7 @@ namespace SharpCompress.Test
             string unmodified = Path.Combine(TEST_ARCHIVES_PATH, "Tar.mod.tar");
             string modified = Path.Combine(TEST_ARCHIVES_PATH, "Tar.noEmptyDirs.tar");
 
-            base.ResetScratch();
+            ResetScratch();
             using (var archive = TarArchive.Open(unmodified))
             {
                 archive.AddEntry("jpg\\test.jpg", jpg);
@@ -136,7 +136,7 @@ namespace SharpCompress.Test
             string modified = Path.Combine(TEST_ARCHIVES_PATH, "Tar.mod.tar");
             string unmodified = Path.Combine(TEST_ARCHIVES_PATH, "Tar.noEmptyDirs.tar");
 
-            base.ResetScratch();
+            ResetScratch();
             using (var archive = TarArchive.Open(unmodified))
             {
                 var entry = archive.Entries.Single(x => x.Key.EndsWith("jpg"));

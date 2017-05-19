@@ -69,9 +69,9 @@ namespace SharpCompress.Compressors.LZMA
     
         // TODO: Both Length and Position are sometimes feasible, but would require
         // reading the output length when we initialize.
-        public override long Length { get { throw new NotImplementedException(); } }
+        public override long Length => throw new NotImplementedException();
 
-        public override long Position { get { throw new NotImplementedException(); } set { throw new NotImplementedException(); } }
+        public override long Position { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
 
         public override int Read(byte[] buffer, int offset, int count) => stream.Read(buffer, offset, count);
 

@@ -166,9 +166,9 @@ namespace SharpCompress.Compressors.LZMA.LZ
             Limit = Total + size;
         }
 
-        public bool HasSpace { get { return _pos < _windowSize && Total < Limit; } }
+        public bool HasSpace => _pos < _windowSize && Total < Limit;
 
-        public bool HasPending { get { return _pendingLen > 0; } }
+        public bool HasPending => _pendingLen > 0;
 
         public int Read(byte[] buffer, int offset, int count)
         {
@@ -200,6 +200,6 @@ namespace SharpCompress.Compressors.LZMA.LZ
             }
         }
 
-        public int AvailableBytes { get { return _pos - _streamPos; } }
+        public int AvailableBytes => _pos - _streamPos;
     }
 }

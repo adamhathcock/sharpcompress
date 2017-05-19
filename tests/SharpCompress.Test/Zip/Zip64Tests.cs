@@ -139,7 +139,7 @@ namespace SharpCompress.Test
             var opts = new ZipWriterOptions(CompressionType.Deflate) { UseZip64 = set_zip64 };
 
             // Use no compression to ensure we hit the limits (actually inflates a bit, but seems better than using method==Store)
-            var eo = new ZipWriterEntryOptions() { DeflateCompressionLevel = SharpCompress.Compressors.Deflate.CompressionLevel.None };
+            var eo = new ZipWriterEntryOptions() { DeflateCompressionLevel = Compressors.Deflate.CompressionLevel.None };
 
             using (var zip = File.OpenWrite(filename))
             using(var st = forward_only ? (Stream)new NonSeekableStream(zip) : zip)
@@ -203,11 +203,11 @@ namespace SharpCompress.Test
         {
             private readonly Stream stream;
             public NonSeekableStream(Stream s) { stream = s; }
-            public override bool CanRead { get { return stream.CanRead; } }
-            public override bool CanSeek { get { return false; } }
-            public override bool CanWrite { get { return stream.CanWrite; } }
-            public override long Length { get { throw new NotImplementedException(); } }
-            public override long Position { get { throw new NotImplementedException(); } set { throw new NotImplementedException(); } }
+            public override bool CanRead => stream.CanRead;
+            public override bool CanSeek => false;
+            public override bool CanWrite => stream.CanWrite;
+            public override long Length => throw new NotImplementedException();
+            public override long Position { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
             public override void Flush() { stream.Flush(); }
 
             public override int Read(byte[] buffer, int offset, int count) 

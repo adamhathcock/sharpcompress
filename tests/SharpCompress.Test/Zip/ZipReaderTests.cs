@@ -222,13 +222,7 @@ namespace SharpCompress.Test
 
         class NonSeekableMemoryStream : MemoryStream
         {
-            public override bool CanSeek
-            {
-                get
-                {
-                    return false;
-                }
-            }
+            public override bool CanSeek => false;
         }
 
         [Fact]

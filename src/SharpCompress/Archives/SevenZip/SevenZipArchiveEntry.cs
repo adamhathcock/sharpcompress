@@ -18,11 +18,11 @@ namespace SharpCompress.Archives.SevenZip
 
         public IArchive Archive { get; }
 
-        public bool IsComplete { get { return true; } }
+        public bool IsComplete => true;
 
         /// <summary>
         /// This is a 7Zip Anti item
         /// </summary>
-        public bool IsAnti { get { return FilePart.Header.IsAnti; } }
+        public bool IsAnti => FilePart.Header.IsAnti;
     }
 }

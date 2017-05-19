@@ -28,6 +28,6 @@ namespace SharpCompress.Archives.Rar
             return stream;
         }
 
-        internal override string FilePartName { get { return "Unknown Stream - File Entry: " + FileHeader.FileName; } }
+        internal override string FilePartName => "Unknown Stream - File Entry: " + FileHeader.FileName;
     }
 }

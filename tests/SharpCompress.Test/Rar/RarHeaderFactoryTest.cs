@@ -11,7 +11,7 @@ namespace SharpCompress.Test.Rar
     /// </summary>
     public class RarHeaderFactoryTest : TestBase
     {
-        private RarHeaderFactory rarHeaderFactory;
+        private readonly RarHeaderFactory rarHeaderFactory;
         
         public RarHeaderFactoryTest()
         {

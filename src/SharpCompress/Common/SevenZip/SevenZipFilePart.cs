@@ -28,7 +28,7 @@ namespace SharpCompress.Common.SevenZip
         internal CFolder Folder { get; }
         internal int Index { get; }
 
-        internal override string FilePartName { get { return Header.Name; } }
+        internal override string FilePartName => Header.Name;
 
         internal override Stream GetRawStream()
         {

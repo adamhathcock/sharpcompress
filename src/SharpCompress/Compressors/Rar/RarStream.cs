@@ -43,19 +43,19 @@ namespace SharpCompress.Compressors.Rar
             readStream.Dispose();
         }
 
-        public override bool CanRead { get { return true; } }
+        public override bool CanRead => true;
 
-        public override bool CanSeek { get { return false; } }
+        public override bool CanSeek => false;
 
-        public override bool CanWrite { get { return false; } }
+        public override bool CanWrite => false;
 
         public override void Flush()
         {
         }
 
-        public override long Length { get { return fileHeader.UncompressedSize; } }
+        public override long Length => fileHeader.UncompressedSize;
 
-        public override long Position { get { return fileHeader.UncompressedSize - unpack.DestSize; } set { throw new NotSupportedException(); } }
+        public override long Position { get => fileHeader.UncompressedSize - unpack.DestSize; set => throw new NotSupportedException(); }
 
         public override int Read(byte[] buffer, int offset, int count)
         {

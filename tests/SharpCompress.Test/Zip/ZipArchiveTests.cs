@@ -148,7 +148,7 @@ namespace SharpCompress.Test
             string unmodified = Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.noEmptyDirs.zip");
             string modified = Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.mod.zip");
 
-            base.ResetScratch();
+            ResetScratch();
             using (var archive = ZipArchive.Open(unmodified))
             {
                 var entry = archive.Entries.Single(x => x.Key.EndsWith("jpg"));
@@ -166,7 +166,7 @@ namespace SharpCompress.Test
             string unmodified = Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.mod.zip");
             string modified = Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.mod2.zip");
 
-            base.ResetScratch();
+            ResetScratch();
             using (var archive = ZipArchive.Open(unmodified))
             {
                 archive.AddEntry("jpg\\test.jpg", jpg);
@@ -245,7 +245,7 @@ namespace SharpCompress.Test
         [Fact]
         public void Zip_Create_New()
         {
-            base.ResetScratch();
+            ResetScratch();
             foreach (var file in Directory.EnumerateFiles(ORIGINAL_FILES_PATH, "*.*", SearchOption.AllDirectories))
             {
                 var newFileName = file.Substring(ORIGINAL_FILES_PATH.Length);
@@ -276,7 +276,7 @@ namespace SharpCompress.Test
         [Fact]
         public void Zip_Create_New_Add_Remove()
         {
-            base.ResetScratch();
+            ResetScratch();
             foreach (var file in Directory.EnumerateFiles(ORIGINAL_FILES_PATH, "*.*", SearchOption.AllDirectories))
             {
                 var newFileName = file.Substring(ORIGINAL_FILES_PATH.Length);
@@ -351,7 +351,7 @@ namespace SharpCompress.Test
         {
             string unmodified = Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.noEmptyDirs.zip");
 
-            base.ResetScratch();
+            ResetScratch();
             ZipArchive a = ZipArchive.Open(unmodified);
             int count = 0;
             foreach (var e in a.Entries)
@@ -411,13 +411,7 @@ namespace SharpCompress.Test
 
         class NonSeekableMemoryStream : MemoryStream
         {
-            public override bool CanSeek
-            {
-                get
-                {
-                    return false;
-                }
-            }
+            public override bool CanSeek => false;
         }
 
         [Fact]

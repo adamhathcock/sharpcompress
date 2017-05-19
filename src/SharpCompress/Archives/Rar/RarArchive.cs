@@ -60,7 +60,7 @@ namespace SharpCompress.Archives.Rar
             return RarReader.Open(stream, ReaderOptions);
         }
 
-        public override bool IsSolid { get { return Volumes.First().IsSolidArchive; } }
+        public override bool IsSolid => Volumes.First().IsSolidArchive;
 
         #region Creation
 

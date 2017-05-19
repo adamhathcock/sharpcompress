@@ -126,13 +126,13 @@ namespace SharpCompress.Test
 
         void archive_FilePartExtractionBegin(object sender, FilePartExtractionBeginEventArgs e)
         {
-            this.partTotal = e.Size;
+            partTotal = e.Size;
             Console.WriteLine("Initializing File Part Extraction: " + e.Name);
         }
 
         void archive_EntryExtractionBegin(object sender, ArchiveExtractionEventArgs<IArchiveEntry> e)
         {
-            this.entryTotal = e.Item.Size;
+            entryTotal = e.Item.Size;
             Console.WriteLine("Initializing File Entry Extraction: " + e.Item.Key);
         }
 
@@ -156,7 +156,7 @@ namespace SharpCompress.Test
                 ResetScratch();
                 using (var archive = ArchiveFactory.Open(path))
                 {
-                    this.totalSize = archive.TotalUncompressSize;
+                    totalSize = archive.TotalUncompressSize;
                     archive.EntryExtractionBegin += Archive_EntryExtractionBeginEx;
                     archive.EntryExtractionEnd += Archive_EntryExtractionEndEx;
                     archive.CompressedBytesRead += Archive_CompressedBytesReadEx;
@@ -179,19 +179,19 @@ namespace SharpCompress.Test
 
         private void Archive_EntryExtractionEndEx(object sender, ArchiveExtractionEventArgs<IArchiveEntry> e)
         {
-            this.partTotal += e.Item.Size;
+            partTotal += e.Item.Size;
         }
 
         private void Archive_CompressedBytesReadEx(object sender, CompressedBytesReadEventArgs e)
         {
-            string percentage = this.entryTotal.HasValue ? this.CreatePercentage(e.CompressedBytesRead, this.entryTotal.Value).ToString() : "-";
-            string tortalPercentage = this.CreatePercentage(this.partTotal + e.CompressedBytesRead, this.totalSize).ToString();
+            string percentage = entryTotal.HasValue ? CreatePercentage(e.CompressedBytesRead, entryTotal.Value).ToString() : "-";
+            string tortalPercentage = CreatePercentage(partTotal + e.CompressedBytesRead, totalSize).ToString();
             Console.WriteLine(@"Read Compressed File Progress: {0}% Total Progress {1}%", percentage, tortalPercentage);
         }
 
         private void Archive_EntryExtractionBeginEx(object sender, ArchiveExtractionEventArgs<IArchiveEntry> e)
         {
-            this.entryTotal = e.Item.Size;
+            entryTotal = e.Item.Size;
         }
 
         private int CreatePercentage(long n, long d)

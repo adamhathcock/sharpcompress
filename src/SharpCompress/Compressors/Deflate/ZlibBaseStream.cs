@@ -98,7 +98,7 @@ namespace SharpCompress.Compressors.Deflate
             }
         }
 
-        protected internal bool _wantCompress { get { return (_compressionMode == CompressionMode.Compress); } }
+        protected internal bool _wantCompress => (_compressionMode == CompressionMode.Compress);
 
         private ZlibCodec z
         {
@@ -630,15 +630,15 @@ namespace SharpCompress.Compressors.Deflate
             return rc;
         }
 
-        public override Boolean CanRead { get { return _stream.CanRead; } }
+        public override Boolean CanRead => _stream.CanRead;
 
-        public override Boolean CanSeek { get { return _stream.CanSeek; } }
+        public override Boolean CanSeek => _stream.CanSeek;
 
-        public override Boolean CanWrite { get { return _stream.CanWrite; } }
+        public override Boolean CanWrite => _stream.CanWrite;
 
-        public override Int64 Length { get { return _stream.Length; } }
+        public override Int64 Length => _stream.Length;
 
-        public override long Position { get { throw new NotSupportedException(); } set { throw new NotSupportedException(); } }
+        public override long Position { get => throw new NotSupportedException(); set => throw new NotSupportedException(); }
 
         internal enum StreamMode
         {

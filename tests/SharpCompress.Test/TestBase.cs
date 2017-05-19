@@ -232,7 +232,7 @@ namespace SharpCompress.Test
             }
         }
 
-        private static object lockObject = new object();
+        private static readonly object lockObject = new object();
 
         public TestBase()
         {

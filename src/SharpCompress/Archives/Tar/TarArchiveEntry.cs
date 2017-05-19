@@ -22,7 +22,7 @@ namespace SharpCompress.Archives.Tar
 
         public IArchive Archive { get; }
 
-        public bool IsComplete { get { return true; } }
+        public bool IsComplete => true;
 
         #endregion
     }

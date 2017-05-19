@@ -28,7 +28,7 @@ namespace SharpCompress
 
             #region IEnumerator<T> Members
 
-            public T Current { get { return lazyReadOnlyCollection.backing[index]; } }
+            public T Current => lazyReadOnlyCollection.backing[index];
 
             #endregion
 
@@ -46,7 +46,7 @@ namespace SharpCompress
 
             #region IEnumerator Members
 
-            object IEnumerator.Current { get { return Current; } }
+            object IEnumerator.Current => Current;
 
             public bool MoveNext()
             {
@@ -120,7 +120,7 @@ namespace SharpCompress
             }
         }
 
-        public bool IsReadOnly { get { return true; } }
+        public bool IsReadOnly => true;
 
         public bool Remove(T item)
         {

@@ -208,7 +208,7 @@ namespace SharpCompress.Common.Rar.Headers
 
         internal int FileAttributes { get; private set; }
 
-        internal FileFlags FileFlags { get { return (FileFlags)Flags; } }
+        internal FileFlags FileFlags => (FileFlags)Flags;
 
         internal long CompressedSize { get; private set; }
         internal long UncompressedSize { get; private set; }

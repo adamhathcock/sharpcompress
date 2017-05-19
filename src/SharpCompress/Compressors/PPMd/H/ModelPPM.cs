@@ -22,33 +22,33 @@ namespace SharpCompress.Compressors.PPMd.H
 
         public SubAllocator SubAlloc { get; } = new SubAllocator();
 
-        public virtual SEE2Context DummySEE2Cont { get { return dummySEE2Cont; } }
+        public virtual SEE2Context DummySEE2Cont => dummySEE2Cont;
 
-        public virtual int InitRL { get { return initRL; } }
+        public virtual int InitRL => initRL;
 
-        public virtual int EscCount { get { return escCount; } set { escCount = value & 0xff; } }
+        public virtual int EscCount { get => escCount; set => escCount = value & 0xff; }
 
-        public virtual int[] CharMask { get { return charMask; } }
+        public virtual int[] CharMask => charMask;
 
-        public virtual int NumMasked { get { return numMasked; } set { numMasked = value; } }
+        public virtual int NumMasked { get => numMasked; set => numMasked = value; }
 
-        public virtual int PrevSuccess { get { return prevSuccess; } set { prevSuccess = value & 0xff; } }
+        public virtual int PrevSuccess { get => prevSuccess; set => prevSuccess = value & 0xff; }
 
-        public virtual int InitEsc { get { return initEsc; } set { initEsc = value; } }
+        public virtual int InitEsc { get => initEsc; set => initEsc = value; }
 
-        public virtual int RunLength { get { return runLength; } set { runLength = value; } }
+        public virtual int RunLength { get => runLength; set => runLength = value; }
 
-        public virtual int HiBitsFlag { get { return hiBitsFlag; } set { hiBitsFlag = value & 0xff; } }
+        public virtual int HiBitsFlag { get => hiBitsFlag; set => hiBitsFlag = value & 0xff; }
 
-        public virtual int[][] BinSumm { get { return binSumm; } }
+        public virtual int[][] BinSumm => binSumm;
 
         internal RangeCoder Coder { get; private set; }
 
         internal State FoundState { get; private set; }
 
-        public virtual byte[] Heap { get { return SubAlloc.Heap; } }
+        public virtual byte[] Heap => SubAlloc.Heap;
 
-        public virtual int OrderFall { get { return orderFall; } }
+        public virtual int OrderFall => orderFall;
 
         public const int MAX_O = 64; /* maximum allowed model order */
 

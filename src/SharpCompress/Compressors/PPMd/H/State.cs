@@ -13,9 +13,9 @@ namespace SharpCompress.Compressors.PPMd.H
         {
         }
 
-        internal int Symbol { get { return Memory[Address] & 0xff; } set { Memory[Address] = (byte)value; } }
+        internal int Symbol { get => Memory[Address] & 0xff; set => Memory[Address] = (byte)value; }
 
-        internal int Freq { get { return Memory[Address + 1] & 0xff; } set { Memory[Address + 1] = (byte)value; } }
+        internal int Freq { get => Memory[Address + 1] & 0xff; set => Memory[Address + 1] = (byte)value; }
 
         internal State Initialize(byte[] mem)
         {

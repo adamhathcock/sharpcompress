@@ -9,7 +9,7 @@ namespace SharpCompress.Test
 {
     public class WriterTests : TestBase
     {
-        private ArchiveType type;
+        private readonly ArchiveType type;
 
         protected WriterTests(ArchiveType type)
         {

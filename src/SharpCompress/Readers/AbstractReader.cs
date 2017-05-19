@@ -40,7 +40,7 @@ namespace SharpCompress.Readers
         /// <summary>
         /// Current file entry 
         /// </summary>
-        public TEntry Entry { get { return entriesForCurrentReadStream.Current; } }
+        public TEntry Entry => entriesForCurrentReadStream.Current;
 
         #region IDisposable Members
 
@@ -217,40 +217,29 @@ namespace SharpCompress.Readers
 
         #endregion
 
-        IEntry IReader.Entry { get { return Entry; } }
+        IEntry IReader.Entry => Entry;
 
         void IExtractionListener.FireCompressedBytesRead(long currentPartCompressedBytes, long compressedReadBytes)
         {
-            if (CompressedBytesRead != null)
+            CompressedBytesRead?.Invoke(this, new CompressedBytesReadEventArgs
             {
-                CompressedBytesRead(this, new CompressedBytesReadEventArgs
-                                          {
-                                              CurrentFilePartCompressedBytesRead = currentPartCompressedBytes,
-                                              CompressedBytesRead = compressedReadBytes
-                                          });
-            }
+                CurrentFilePartCompressedBytesRead = currentPartCompressedBytes,
+                CompressedBytesRead = compressedReadBytes
+            });
         }
 
         void IExtractionListener.FireFilePartExtractionBegin(string name, long size, long compressedSize)
         {
-            if (FilePartExtractionBegin != null)
+            FilePartExtractionBegin?.Invoke(this, new FilePartExtractionBeginEventArgs
             {
-                FilePartExtractionBegin(this, new FilePartExtractionBeginEventArgs
-                                              {
-                                                  CompressedSize = compressedSize,
-                                                  Size = size,
-                                                  Name = name
-                                              });
-            }
+                CompressedSize = compressedSize,
+                Size = size,
+                Name = name
+            });
         }
         void IReaderExtractionListener.FireEntryExtractionProgress(Entry entry, long bytesTransferred, int iterations)
         {
-            if (EntryExtractionProgress != null)
-            {
-                EntryExtractionProgress(this, 
-                    new ReaderExtractionEventArgs<IEntry>(entry, new ReaderProgress(entry, bytesTransferred, iterations))
-                );
-            }
+            EntryExtractionProgress?.Invoke(this, new ReaderExtractionEventArgs<IEntry>(entry, new ReaderProgress(entry, bytesTransferred, iterations)));
         }
     }
 }

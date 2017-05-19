@@ -17,7 +17,7 @@ namespace SharpCompress.Common.Rar.Headers
             }
         }
 
-        internal ArchiveFlags ArchiveHeaderFlags { get { return (ArchiveFlags)Flags; } }
+        internal ArchiveFlags ArchiveHeaderFlags => (ArchiveFlags)Flags;
 
         internal short HighPosAv { get; private set; }
 
@@ -25,6 +25,6 @@ namespace SharpCompress.Common.Rar.Headers
 
         internal byte EncryptionVersion { get; private set; }
 
-        public bool HasPassword { get { return ArchiveHeaderFlags.HasFlag(ArchiveFlags.PASSWORD); } }
+        public bool HasPassword => ArchiveHeaderFlags.HasFlag(ArchiveFlags.PASSWORD);
     }
 }

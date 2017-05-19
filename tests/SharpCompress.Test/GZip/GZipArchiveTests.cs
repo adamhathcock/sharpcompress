@@ -86,7 +86,7 @@ namespace SharpCompress.Test
                 Assert.Equal(size, tarStream.Length);
                 using (var entryStream = archiveEntry.OpenEntryStream())
                 {
-                    var result = SharpCompress.Archives.Tar.TarArchive.IsTarFile(entryStream);
+                    var result = Archives.Tar.TarArchive.IsTarFile(entryStream);
                 }
                 Assert.Equal(size, tarStream.Length);
                 using (var entryStream = archiveEntry.OpenEntryStream())
