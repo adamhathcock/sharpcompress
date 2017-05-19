@@ -1,0 +1,31 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <AssemblyTitle>SharpCompress - Pure C# Decompression/Compression</AssemblyTitle>
+    <NeutralLanguage>en-US</NeutralLanguage>
+    <VersionPrefix>0.15.2</VersionPrefix>
+    <Authors>Adam Hathcock</Authors>
+    <TargetFrameworks>net35;netstandard1.0;netstandard1.3</TargetFrameworks>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <AssemblyName>SharpCompress</AssemblyName>
+    <AssemblyOriginatorKeyFile>../../SharpCompress.snk</AssemblyOriginatorKeyFile>
+    <SignAssembly>true</SignAssembly>
+    <PublicSign Condition=" '$(OS)' != 'Windows_NT' ">true</PublicSign>
+    <PackageId>SharpCompress</PackageId>
+    <PackageTags>rar;unrar;zip;unzip;bzip2;gzip;tar;7zip</PackageTags>
+    <PackageProjectUrl>https://github.com/adamhathcock/sharpcompress</PackageProjectUrl>
+    <PackageLicenseUrl>https://github.com/adamhathcock/sharpcompress/blob/master/LICENSE.txt</PackageLicenseUrl>
+    <GenerateAssemblyTitleAttribute>false</GenerateAssemblyTitleAttribute>
+    <GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>
+  </PropertyGroup>
+
+  <ItemGroup Condition=" '$(TargetFramework)' == 'net35' ">
+    <Reference Include="System" />
+  </ItemGroup>
+
+  <PropertyGroup Condition=" '$(TargetFramework)' == 'netstandard1.0' ">
+    <DefineConstants>$(DefineConstants);NO_FILE;NO_CRYPTO;SILVERLIGHT</DefineConstants>
+  </PropertyGroup>
+
+</Project>
