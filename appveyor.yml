@@ -22,7 +22,7 @@ after_build:
 - dotnet pack "src\SharpCompress\SharpCompress.csproj" -c Release
 
 test_script:
-- dotnet test "test\SharpCompress.Test" -c Release --no-build
+- dotnet test --no-build .\tests\SharpCompress.Test\SharpCompress.Test.csproj
 
 artifacts:
 - path: src\SharpCompress\bin\Release\*.nupkg
