@@ -16,9 +16,7 @@ namespace SharpCompress.Readers
         private bool completed;
         private IEnumerator<TEntry> entriesForCurrentReadStream;
         private bool wroteCurrentEntry;
-
-        public event EventHandler<ReaderExtractionEventArgs<IEntry>> EntryExtractionBegin;
-        public event EventHandler<ReaderExtractionEventArgs<IEntry>> EntryExtractionEnd;
+        
         public event EventHandler<ReaderExtractionEventArgs<IEntry>> EntryExtractionProgress;
 
         public event EventHandler<CompressedBytesReadEventArgs> CompressedBytesRead;
