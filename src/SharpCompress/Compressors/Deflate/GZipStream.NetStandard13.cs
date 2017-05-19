@@ -1,33 +1,6 @@
-#if NETSTANDARD1_0
-// GZipStream.cs
-// ------------------------------------------------------------------
-//
-// Copyright (c) 2009 Dino Chiesa and Microsoft Corporation.
-// All rights reserved.
-//
-// This code module is part of DotNetZip, a zipfile class library.
-//
-// ------------------------------------------------------------------
-//
-// This code is licensed under the Microsoft Public License.
-// See the file License.txt for the license details.
-// More info on: http://dotnetzip.codeplex.com
-//
-// ------------------------------------------------------------------
-//
-// last saved (in emacs):
-// Time-stamp: <2010-January-09 12:04:28>
-//
-// ------------------------------------------------------------------
-//
-// This module defines the GZipStream class, which can be used as a replacement for
-// the System.IO.Compression.GZipStream class in the .NET BCL.  NB: The design is not
-// completely OO clean: there is some intelligence in the ZlibBaseStream that reads the
-// GZip header.
-//
-// ------------------------------------------------------------------
-
+#if NETSTANDARD1_3
 using System;
+using System.Collections.Generic;
 using System.IO;
 using SharpCompress.Common;
 using SharpCompress.Converters;
@@ -36,17 +9,27 @@ namespace SharpCompress.Compressors.Deflate
 {
     public class GZipStream : Stream
     {
+        private enum Mode
+        {
+            Unknown,
+            Reader,
+            Writer
+        }
+
         internal static readonly DateTime UnixEpoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 
         public DateTime? LastModified { get; set; }
-
-        private string comment;
-        private string fileName;
-
-        internal ZlibBaseStream BaseStream;
+        private byte[] _buf1 = new byte[1];
+        
+        private System.IO.Compression.DeflateStream BaseStream;
         private bool disposed;
-        private bool firstReadDone;
-        private int headerByteCount;
+        private Mode mode;
+
+
+        private string _GzipFileName;
+        private string _GzipComment;
+        private DateTime _GzipMtime;
+        private int _gzipHeaderByteCount;
 
         public GZipStream(Stream stream, CompressionMode mode)
             : this(stream, mode, CompressionLevel.Default, false)
@@ -65,52 +48,37 @@ namespace SharpCompress.Compressors.Deflate
 
         public GZipStream(Stream stream, CompressionMode mode, CompressionLevel level, bool leaveOpen)
         {
-            BaseStream = new ZlibBaseStream(stream, mode, level, ZlibStreamFlavor.GZIP, leaveOpen);
-        }
-
-        #region Zlib properties
-
-        public virtual FlushType FlushMode
-        {
-            get => (BaseStream._flushMode);
-            set
+            if (mode == CompressionMode.Decompress)
             {
-                if (disposed)
+                BaseStream = new System.IO.Compression.DeflateStream(stream, System.IO.Compression.CompressionMode.Decompress, leaveOpen);
+            }
+            else
+            {
+                System.IO.Compression.CompressionLevel l;
+                switch (level)
                 {
-                    throw new ObjectDisposedException("GZipStream");
+                    case CompressionLevel.BestSpeed:
+                    {
+                        l = System.IO.Compression.CompressionLevel.Fastest;
+                        break;
+                    }
+                    case CompressionLevel.None:
+                    {
+                        l = System.IO.Compression.CompressionLevel.NoCompression;
+                        break;
+                    }
+                    default:
+                    {
+                        l = System.IO.Compression.CompressionLevel.Optimal;
+                        break;
+                    }
                 }
-                BaseStream._flushMode = value;
+
+                BaseStream = new System.IO.Compression.DeflateStream(stream, l, leaveOpen);
+
+
             }
         }
-
-        public int BufferSize
-        {
-            get => BaseStream._bufferSize;
-            set
-            {
-                if (disposed)
-                {
-                    throw new ObjectDisposedException("GZipStream");
-                }
-                if (BaseStream._workingBuffer != null)
-                {
-                    throw new ZlibException("The working buffer is already set.");
-                }
-                if (value < ZlibConstants.WorkingBufferSizeMin)
-                {
-                    throw new ZlibException(
-                                            String.Format("Don't be silly. {0} bytes?? Use a bigger buffer, at least {1}.", value,
-                                                          ZlibConstants.WorkingBufferSizeMin));
-                }
-                BaseStream._bufferSize = value;
-            }
-        }
-
-        internal virtual long TotalIn => BaseStream._z.TotalBytesIn;
-
-        internal virtual long TotalOut => BaseStream._z.TotalBytesOut;
-
-        #endregion
 
         #region Stream methods
 
@@ -128,7 +96,7 @@ namespace SharpCompress.Compressors.Deflate
                 {
                     throw new ObjectDisposedException("GZipStream");
                 }
-                return BaseStream._stream.CanRead;
+                return BaseStream.CanRead;
             }
         }
 
@@ -154,7 +122,7 @@ namespace SharpCompress.Compressors.Deflate
                 {
                     throw new ObjectDisposedException("GZipStream");
                 }
-                return BaseStream._stream.CanWrite;
+                return BaseStream.CanWrite;
             }
         }
 
@@ -178,15 +146,15 @@ namespace SharpCompress.Compressors.Deflate
         {
             get
             {
-                if (BaseStream._streamMode == ZlibBaseStream.StreamMode.Writer)
+                switch (mode)
                 {
-                    return BaseStream._z.TotalBytesOut + headerByteCount;
+                    case Mode.Writer:
+                        return BaseStream.Position + _gzipHeaderByteCount;
+                    case Mode.Reader:
+                        return BaseStream.Position + _gzipHeaderByteCount;
+                    default:
+                        return 0;
                 }
-                if (BaseStream._streamMode == ZlibBaseStream.StreamMode.Reader)
-                {
-                    return BaseStream._z.TotalBytesIn + BaseStream._gzipHeaderByteCount;
-                }
-                return 0;
             }
 
             set => throw new NotSupportedException();
@@ -207,8 +175,7 @@ namespace SharpCompress.Compressors.Deflate
                 {
                     if (disposing && (BaseStream != null))
                     {
-                        BaseStream.Dispose();
-                        Crc32 = BaseStream.Crc32;
+                        BaseStream.Dispose();;
                     }
                     disposed = true;
                 }
@@ -273,13 +240,99 @@ namespace SharpCompress.Compressors.Deflate
             // Console.WriteLine("GZipStream::Read(buffer, off({0}), c({1}) = {2}", offset, count, n);
             // Console.WriteLine( Util.FormatByteArray(buffer, offset, n) );
 
-            if (!firstReadDone)
+            if (mode == Mode.Unknown)
             {
-                firstReadDone = true;
-                FileName = BaseStream._GzipFileName;
-                Comment = BaseStream._GzipComment;
+                _gzipHeaderByteCount = _ReadAndValidateGzipHeader();
+                mode = Mode.Reader;
+                FileName = _GzipFileName;
+                Comment = _GzipComment;
             }
             return n;
+        }
+
+
+        private int _ReadAndValidateGzipHeader()
+        {
+            int totalBytesRead = 0;
+
+            // read the header on the first read
+            byte[] header = new byte[10];
+            int n = BaseStream.Read(header, 0, header.Length);
+
+            // workitem 8501: handle edge case (decompress empty stream)
+            if (n == 0)
+            {
+                return 0;
+            }
+
+            if (n != 10)
+            {
+                throw new ZlibException("Not a valid GZIP stream.");
+            }
+
+            if (header[0] != 0x1F || header[1] != 0x8B || header[2] != 8)
+            {
+                throw new ZlibException("Bad GZIP header.");
+            }
+
+            Int32 timet = DataConverter.LittleEndian.GetInt32(header, 4);
+            _GzipMtime = UnixEpoch.AddSeconds(timet);
+            totalBytesRead += n;
+            if ((header[3] & 0x04) == 0x04)
+            {
+                // read and discard extra field
+                n = BaseStream.Read(header, 0, 2); // 2-byte length field
+                totalBytesRead += n;
+
+                Int16 extraLength = (Int16)(header[0] + header[1] * 256);
+                byte[] extra = new byte[extraLength];
+                n = BaseStream.Read(extra, 0, extra.Length);
+                if (n != extraLength)
+                {
+                    throw new ZlibException("Unexpected end-of-file reading GZIP header.");
+                }
+                totalBytesRead += n;
+            }
+            if ((header[3] & 0x08) == 0x08)
+            {
+                _GzipFileName = ReadZeroTerminatedString();
+            }
+            if ((header[3] & 0x10) == 0x010)
+            {
+                _GzipComment = ReadZeroTerminatedString();
+            }
+            if ((header[3] & 0x02) == 0x02)
+            {
+                Read(_buf1, 0, 1); // CRC16, ignore
+            }
+
+            return totalBytesRead;
+        }
+
+        private string ReadZeroTerminatedString()
+        {
+            var list = new List<byte>();
+            bool done = false;
+            do
+            {
+                // workitem 7740
+                int n = BaseStream.Read(_buf1, 0, 1);
+                if (n != 1)
+                {
+                    throw new ZlibException("Unexpected EOF reading GZIP header.");
+                }
+                if (_buf1[0] == 0)
+                {
+                    done = true;
+                }
+                else
+                {
+                    list.Add(_buf1[0]);
+                }
+            }
+            while (!done);
+            byte[] a = list.ToArray();
+            return ArchiveEncoding.Default.GetString(a, 0, a.Length);
         }
 
         /// <summary>
@@ -330,18 +383,11 @@ namespace SharpCompress.Compressors.Deflate
             {
                 throw new ObjectDisposedException("GZipStream");
             }
-            if (BaseStream._streamMode == ZlibBaseStream.StreamMode.Undefined)
+            if (mode == Mode.Unknown)
             {
-                //Console.WriteLine("GZipStream: First write");
-                if (BaseStream._wantCompress)
-                {
-                    // first write in compression, therefore, emit the GZIP header
-                    headerByteCount = EmitHeader();
-                }
-                else
-                {
-                    throw new InvalidOperationException();
-                }
+                // first write in compression, therefore, emit the GZIP header
+                _gzipHeaderByteCount = EmitHeader();
+                mode = Mode.Writer;
             }
 
             BaseStream.Write(buffer, offset, count);
@@ -349,61 +395,59 @@ namespace SharpCompress.Compressors.Deflate
 
         #endregion
 
-        public String Comment
+        public string Comment
         {
-            get => comment;
+            get => _GzipComment;
             set
             {
                 if (disposed)
                 {
                     throw new ObjectDisposedException("GZipStream");
                 }
-                comment = value;
+                _GzipComment = value;
             }
         }
 
         public string FileName
         {
-            get => fileName;
+            get => _GzipFileName;
             set
             {
                 if (disposed)
                 {
                     throw new ObjectDisposedException("GZipStream");
                 }
-                fileName = value;
-                if (fileName == null)
+                _GzipFileName = value;
+                if (_GzipFileName == null)
                 {
                     return;
                 }
-                if (fileName.IndexOf("/") != -1)
+                if (_GzipFileName.IndexOf("/") != -1)
                 {
-                    fileName = fileName.Replace("/", "\\");
+                    _GzipFileName = _GzipFileName.Replace("/", "\\");
                 }
-                if (fileName.EndsWith("\\"))
+                if (_GzipFileName.EndsWith("\\"))
                 {
                     throw new InvalidOperationException("Illegal filename");
                 }
 
-                var index = fileName.IndexOf("\\");
+                var index = _GzipFileName.IndexOf("\\");
                 if (index != -1)
                 {
                     // trim any leading path
-                    int length = fileName.Length;
+                    int length = _GzipFileName.Length;
                     int num = length;
                     while (--num >= 0)
                     {
-                        char c = fileName[num];
+                        char c = _GzipFileName[num];
                         if (c == '\\')
                         {
-                            fileName = fileName.Substring(num + 1, length - num - 1);
+                            _GzipFileName = _GzipFileName.Substring(num + 1, length - num - 1);
                         }
                     }
                 }
             }
         }
-
-        public int Crc32 { get; private set; }
 
         private int EmitHeader()
         {
@@ -472,7 +516,7 @@ namespace SharpCompress.Compressors.Deflate
                 header[i++] = 0; // terminate
             }
 
-            BaseStream._stream.Write(header, 0, header.Length);
+            BaseStream.Write(header, 0, header.Length);
 
             return header.Length; // bytes written
         }
