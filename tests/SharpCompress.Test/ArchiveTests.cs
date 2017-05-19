@@ -95,9 +95,9 @@ namespace SharpCompress.Test
                 ResetScratch();
                 using (var archive = ArchiveFactory.Open(path))
                 {
-                    archive.EntryExtractionBegin += archive_EntryExtractionBegin;
-                    archive.FilePartExtractionBegin += archive_FilePartExtractionBegin;
-                    archive.CompressedBytesRead += archive_CompressedBytesRead;
+                    //archive.EntryExtractionBegin += archive_EntryExtractionBegin;
+                    //archive.FilePartExtractionBegin += archive_FilePartExtractionBegin;
+                    //archive.CompressedBytesRead += archive_CompressedBytesRead;
 
                     foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
                     {
@@ -157,9 +157,9 @@ namespace SharpCompress.Test
                 using (var archive = ArchiveFactory.Open(path))
                 {
                     totalSize = archive.TotalUncompressSize;
-                    archive.EntryExtractionBegin += Archive_EntryExtractionBeginEx;
-                    archive.EntryExtractionEnd += Archive_EntryExtractionEndEx;
-                    archive.CompressedBytesRead += Archive_CompressedBytesReadEx;
+                    //archive.EntryExtractionBegin += Archive_EntryExtractionBeginEx;
+                    //archive.EntryExtractionEnd += Archive_EntryExtractionEndEx;
+                    //archive.CompressedBytesRead += Archive_CompressedBytesReadEx;
 
                     foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
                     {
