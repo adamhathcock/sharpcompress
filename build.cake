@@ -46,7 +46,6 @@ Task("Pack")
 Task("Default")
     .IsDependentOn("Restore")
     .IsDependentOn("Build")
-    .IsDependentOn("Test")
     .IsDependentOn("Pack");
 
  Task("RunTests")
