@@ -22,7 +22,12 @@ Task("Test")
     var files = GetFiles("tests/**/*.csproj");
     foreach(var file in files)
     {
-        DotNetCoreTest(file.ToString());
+        var settings = new DotNetCoreTestSettings
+        {
+            Configuration = "Release"
+        };
+
+        DotNetCoreTest(file.ToString(), settings);
     }
 });
 
@@ -41,11 +46,13 @@ Task("Pack")
 Task("Default")
     .IsDependentOn("Restore")
     .IsDependentOn("Build")
+    .IsDependentOn("Test")
     .IsDependentOn("Pack");
 
  Task("RunTests")
     .IsDependentOn("Restore")
-    .IsDependentOn("Build");
+    .IsDependentOn("Build")
+    .IsDependentOn("Test");
 
 
 RunTarget(target);
