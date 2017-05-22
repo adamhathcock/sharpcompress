@@ -165,25 +165,13 @@ namespace SharpCompress.Common.Rar.Headers
 #if NO_FILE
             return path.Replace('\\', '/');
 #else
-            switch (os)
+            if (Path.DirectorySeparatorChar == '/')
             {
-                case HostOS.MacOS:
-                case HostOS.Unix:
-                    {
-                        if (Path.DirectorySeparatorChar == '\\')
-                        {
-                            return path.Replace('/', '\\');
-                        }
-                    }
-                    break;
-                default:
-                    {
-                        if (Path.DirectorySeparatorChar == '/')
-                        {
-                            return path.Replace('\\', '/');
-                        }
-                    }
-                    break;
+                return path.Replace('\\', '/');
+            }
+            else if (Path.DirectorySeparatorChar == '\\')
+            {
+                return path.Replace('/', '\\');
             }
             return path;
 #endif
