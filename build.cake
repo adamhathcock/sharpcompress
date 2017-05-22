@@ -45,8 +45,7 @@ Task("Default")
 
  Task("RunTests")
     .IsDependentOn("Restore")
-    .IsDependentOn("Build")
-    .IsDependentOn("Test");
+    .IsDependentOn("Build");
 
 
 RunTarget(target);
