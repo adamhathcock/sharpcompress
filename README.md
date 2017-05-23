@@ -31,6 +31,11 @@ I'm always looking for help or ideas. Please submit code or email with ideas. Un
 
 ## Version Log
 
+### Version 0.16.1
+
+* Fix [Preserve compression method when getting a compressed stream](https://github.com/adamhathcock/sharpcompress/pull/235)
+* Fix [RAR entry key normalization fix](https://github.com/adamhathcock/sharpcompress/issues/201)
+
 ### Version 0.16.0
 
 * Breaking - [Progress Event Tracking rethink](https://github.com/adamhathcock/sharpcompress/pull/226)
