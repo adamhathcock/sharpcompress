@@ -22,7 +22,12 @@ Task("Test")
     var files = GetFiles("tests/**/*.csproj");
     foreach(var file in files)
     {
-        DotNetCoreTest(file.ToString());
+        var settings = new DotNetCoreTestSettings
+        {
+            Configuration = "Release"
+        };
+
+        DotNetCoreTest(file.ToString(), settings);
     }
 });
 
