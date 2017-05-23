@@ -32,7 +32,7 @@ namespace SharpCompress.Common.Zip
             {
                 return Stream.Null;
             }
-            Stream decompressionStream = CreateDecompressionStream(GetCryptoStream(CreateBaseStream()));
+            Stream decompressionStream = CreateDecompressionStream(GetCryptoStream(CreateBaseStream()), Header.CompressionMethod);
             if (LeaveStreamOpen)
             {
                 return new NonDisposingStream(decompressionStream);
@@ -53,9 +53,9 @@ namespace SharpCompress.Common.Zip
 
         protected bool LeaveStreamOpen => FlagUtility.HasFlag(Header.Flags, HeaderFlags.UsePostDataDescriptor) || Header.IsZip64;
 
-        protected Stream CreateDecompressionStream(Stream stream)
+        protected Stream CreateDecompressionStream(Stream stream, ZipCompressionMethod method)
         {
-            switch (Header.CompressionMethod)
+            switch (method)
             {
                 case ZipCompressionMethod.None:
                 {
@@ -102,9 +102,9 @@ namespace SharpCompress.Common.Zip
                     {
                         throw new InvalidFormatException("Winzip data length is not 7.");
                     }
-                    ushort method = DataConverter.LittleEndian.GetUInt16(data.DataBytes, 0);
+                    ushort compressedMethod = DataConverter.LittleEndian.GetUInt16(data.DataBytes, 0);
 
-                    if (method != 0x01 && method != 0x02)
+                    if (compressedMethod != 0x01 && compressedMethod != 0x02)
                     {
                         throw new InvalidFormatException("Unexpected vendor version number for WinZip AES metadata");
                     }
@@ -114,8 +114,7 @@ namespace SharpCompress.Common.Zip
                     {
                         throw new InvalidFormatException("Unexpected vendor ID for WinZip AES metadata");
                     }
-                    Header.CompressionMethod = (ZipCompressionMethod)DataConverter.LittleEndian.GetUInt16(data.DataBytes, 5);
-                    return CreateDecompressionStream(stream);
+                    return CreateDecompressionStream(stream, (ZipCompressionMethod)DataConverter.LittleEndian.GetUInt16(data.DataBytes, 5));
                 }
                 default:
                 {
