@@ -324,6 +324,24 @@ namespace SharpCompress.Test
             VerifyFiles();
         }
 
+        [Fact]
+        public void Zip_Deflate_WinzipAES_MultiOpenEntryStream()
+        {
+            ResetScratch();
+            using (var reader = ZipArchive.Open(Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.WinzipAES2.zip"), new ReaderOptions()
+            {
+                Password = "test"
+            }))
+            {
+                foreach (var entry in reader.Entries.Where(x => !x.IsDirectory))
+                {
+                    var stream = entry.OpenEntryStream();
+                    Assert.NotNull(stream);
+                    var ex = Record.Exception(() => stream = entry.OpenEntryStream());
+                    Assert.Null(ex);
+                }
+            }
+        }
 
         [Fact]
         public void Zip_BZip2_Pkware_Read()
