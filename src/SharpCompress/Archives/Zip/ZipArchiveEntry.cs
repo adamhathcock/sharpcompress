@@ -14,7 +14,15 @@ namespace SharpCompress.Archives.Zip
 
         public virtual Stream OpenEntryStream()
         {
-            return Parts.Single().GetCompressedStream();
+            var filePart = Parts.Single() as ZipFilePart;
+            var compressionMethod = filePart.Header.CompressionMethod;
+            var stream = filePart.GetCompressedStream();
+            if (filePart.Header.CompressionMethod != compressionMethod)
+            {
+                filePart.Header.CompressionMethod = compressionMethod;
+            }
+            
+            return stream; 
         }
 
         #region IArchiveEntry Members
