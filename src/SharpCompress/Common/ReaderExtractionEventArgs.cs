@@ -11,7 +11,7 @@ namespace SharpCompress.Common
             ReaderProgress = readerProgress;
         }
 
-        public T Item { get; private set; }
-        public ReaderProgress ReaderProgress { get; private set; }
+        public T Item { get; }
+        public ReaderProgress ReaderProgress { get; }
     }
 }

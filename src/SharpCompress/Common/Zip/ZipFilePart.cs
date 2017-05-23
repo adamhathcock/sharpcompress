@@ -21,7 +21,7 @@ namespace SharpCompress.Common.Zip
             BaseStream = stream;
         }
 
-        internal Stream BaseStream { get; private set; }
+        internal Stream BaseStream { get; }
         internal ZipFileEntry Header { get; set; }
 
         internal override string FilePartName => Header.Name;
