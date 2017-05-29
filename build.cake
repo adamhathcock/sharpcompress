@@ -17,17 +17,25 @@ Task("Build")
 });
 
 Task("Test")
+  .IsDependentOn("Build")
   .Does(() =>
 {
-    var files = GetFiles("tests/**/*.csproj");
-    foreach(var file in files)
+    if (!bool.Parse(EnvironmentVariable("APPVEYOR") ?? "false"))
     {
-        var settings = new DotNetCoreTestSettings
+        var files = GetFiles("tests/**/*.csproj");
+        foreach(var file in files)
         {
-            Configuration = "Release"
-        };
+            var settings = new DotNetCoreTestSettings
+            {
+                Configuration = "Release"
+            };
 
-        DotNetCoreTest(file.ToString(), settings);
+            DotNetCoreTest(file.ToString(), settings);
+        }
+    } 
+    else 
+    {
+        Information("Skipping tests as this is AppVeyor");
     }
 });
 
@@ -35,17 +43,25 @@ Task("Pack")
     .IsDependentOn("Build")
     .Does(() => 
 {
+    if (IsRunningOnWindows())
+    {
         MSBuild("src/SharpCompress/SharpCompress.csproj", c => c
             .SetConfiguration("Release")
             .SetVerbosity(Verbosity.Minimal)
             .UseToolVersion(MSBuildToolVersion.VS2017)
             .WithProperty("NoBuild", "true")
             .WithTarget("Pack"));
+    } 
+    else 
+    {
+        Information("Skipping Pack as this is not Windows");
+    }
 });
 
 Task("Default")
     .IsDependentOn("Restore")
     .IsDependentOn("Build")
+    .IsDependentOn("Test")
     .IsDependentOn("Pack");
 
  Task("RunTests")
