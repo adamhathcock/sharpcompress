@@ -17,12 +17,7 @@ namespace SharpCompress.Compressors.LZMA
         private bool disposed;
         private readonly bool leaveOpen;
 
-        public LZipStream(Stream stream, CompressionMode mode)
-            : this(stream, mode, false)
-        {
-        }
-
-        public LZipStream(Stream stream, CompressionMode mode, bool leaveOpen)
+        public LZipStream(Stream stream, CompressionMode mode, bool leaveOpen = false)
         {
             if (mode != CompressionMode.Decompress)
             {

@@ -1,11 +1,13 @@
 ﻿using System;
 using System.IO;
 using SharpCompress.Archives.GZip;
+using SharpCompress.Archives.LZip;
 using SharpCompress.Archives.Rar;
 using SharpCompress.Archives.SevenZip;
 using SharpCompress.Archives.Tar;
 using SharpCompress.Archives.Zip;
 using SharpCompress.Common;
+using SharpCompress.Compressors.LZMA;
 using SharpCompress.Readers;
 
 namespace SharpCompress.Archives
@@ -43,6 +45,11 @@ namespace SharpCompress.Archives
                 stream.Seek(0, SeekOrigin.Begin);
                 return GZipArchive.Open(stream, readerOptions);
             }
+            if (LZipStream.IsLZipFile(stream))
+            {
+                stream.Seek(0, SeekOrigin.Begin);
+                return LZipArchive.Open(stream, readerOptions);
+            }
             stream.Seek(0, SeekOrigin.Begin);
             if (RarArchive.IsRarFile(stream, readerOptions))
             {
@@ -55,7 +62,7 @@ namespace SharpCompress.Archives
                 stream.Seek(0, SeekOrigin.Begin);
                 return TarArchive.Open(stream, readerOptions);
             }
-            throw new InvalidOperationException("Cannot determine compressed stream type. Supported Archive Formats: Zip, GZip, Tar, Rar, 7Zip");
+            throw new InvalidOperationException("Cannot determine compressed stream type. Supported Archive Formats: Zip, GZip, Tar, Rar, 7Zip, LZip");
         }
 
         public static IWritableArchive Create(ArchiveType type)
