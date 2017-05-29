@@ -14,5 +14,6 @@
     <PackageReference Include="CommandLineParser">
       <Version>2.1.1-beta</Version>
     </PackageReference>
+    <PackageReference Include="goblinfactory.konsole" Version="2.0.2" />
   </ItemGroup>
 </Project>
