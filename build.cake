@@ -8,12 +8,44 @@ Task("Restore")
 });
 
 Task("Build")
+  .IsDependentOn("Restore")
   .Does(() =>
 {
-    MSBuild("./sharpcompress.sln", c => c
-            .SetConfiguration("Release")
+    if (IsRunningOnWindows())
+    {
+        MSBuild("./sharpcompress.sln", c => 
+        { 
+            c.SetConfiguration("Release")
             .SetVerbosity(Verbosity.Minimal)
-            .UseToolVersion(MSBuildToolVersion.VS2017));
+            .UseToolVersion(MSBuildToolVersion.VS2017);
+        });
+    }
+    else 
+    {
+        var settings = new DotNetCoreBuildSettings
+        {
+            Framework = "netstandard1.0",
+            Configuration = "Release"
+        };
+
+        DotNetCoreBuild("./src/SharpCompress/SharpCompress.csproj", settings);
+        
+        settings = new DotNetCoreBuildSettings
+        {
+            Framework = "netstandard1.3",
+            Configuration = "Release"
+        };
+
+        DotNetCoreBuild("./src/SharpCompress/SharpCompress.csproj", settings);
+
+        settings = new DotNetCoreBuildSettings
+        {
+            Framework = "netcoreapp1.1",
+            Configuration = "Release"
+        };
+
+        DotNetCoreBuild("./tests/SharpCompress.Test/SharpCompress.Test.csproj", settings);
+    }
 });
 
 Task("Test")
