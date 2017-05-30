@@ -9,7 +9,7 @@ using SharpCompress.Writers;
 using SharpCompress.Writers.Zip;
 using Xunit;
 
-namespace SharpCompress.Test
+namespace SharpCompress.Test.Zip
 {
     public class Zip64Tests : WriterTests
     {

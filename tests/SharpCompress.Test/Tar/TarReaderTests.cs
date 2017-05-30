@@ -1,12 +1,11 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using SharpCompress.Common;
-using Xunit;
-using System.Linq;
 using SharpCompress.Readers;
 using SharpCompress.Readers.Tar;
+using Xunit;
 
-namespace SharpCompress.Test
+namespace SharpCompress.Test.Tar
 {
     public class TarReaderTests : ReaderTests
     {

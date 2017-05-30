@@ -1,5 +1,4 @@
-﻿
-using System.IO;
+﻿using System.IO;
 using System.Linq;
 using SharpCompress.Archives;
 using SharpCompress.Archives.Tar;
@@ -7,7 +6,7 @@ using SharpCompress.Common;
 using SharpCompress.Writers;
 using Xunit;
 
-namespace SharpCompress.Test
+namespace SharpCompress.Test.Tar
 {
     public class TarArchiveTests : ArchiveTests
     {

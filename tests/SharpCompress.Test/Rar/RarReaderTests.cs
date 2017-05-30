@@ -5,7 +5,7 @@ using SharpCompress.Readers;
 using SharpCompress.Readers.Rar;
 using Xunit;
 
-namespace SharpCompress.Test
+namespace SharpCompress.Test.Rar
 {
     public class RarReaderTests : ReaderTests
     {

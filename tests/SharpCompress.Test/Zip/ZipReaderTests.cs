@@ -6,7 +6,7 @@ using SharpCompress.Readers.Zip;
 using SharpCompress.Writers;
 using Xunit;
 
-namespace SharpCompress.Test
+namespace SharpCompress.Test.Zip
 {
     public class ZipReaderTests : ReaderTests
     {
