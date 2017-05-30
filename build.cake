@@ -39,7 +39,8 @@ Task("Test")
   .IsDependentOn("Build")
   .Does(() =>
 {
-    if (!bool.Parse(EnvironmentVariable("APPVEYOR") ?? "false"))
+    if (!bool.Parse(EnvironmentVariable("APPVEYOR") ?? "false")
+        || !bool.Parse(EnvironmentVariable("TRAVIS") ?? "false"))
     {
         var files = GetFiles("tests/**/*.csproj");
         foreach(var file in files)
