@@ -16,11 +16,6 @@ namespace SharpCompress.Common.Zip.Headers
             TotalNumberOfVolumes = reader.ReadUInt32();
         }
 
-        internal override void Write(BinaryWriter writer)
-        {
-            throw new System.NotImplementedException();
-        }
-
         public uint FirstVolumeWithDirectory { get; private set; }
 
         public long RelativeOffsetOfTheEndOfDirectoryRecord { get; private set; }
