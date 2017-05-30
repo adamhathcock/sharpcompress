@@ -1,9 +1,8 @@
-﻿
-using System;
+﻿using System;
 using SharpCompress.Common;
 using Xunit;
 
-namespace SharpCompress.Test
+namespace SharpCompress.Test.SevenZip
 {
     public class SevenZipArchiveTests : ArchiveTests
     {

@@ -5,7 +5,7 @@ using SharpCompress.Archives;
 using SharpCompress.Archives.GZip;
 using Xunit;
 
-namespace SharpCompress.Test
+namespace SharpCompress.Test.GZip
 {
     public class GZipArchiveTests : ArchiveTests
     {

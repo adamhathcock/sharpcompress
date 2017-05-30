@@ -6,7 +6,7 @@ using SharpCompress.Common;
 using SharpCompress.Readers;
 using Xunit;
 
-namespace SharpCompress.Test
+namespace SharpCompress.Test.Rar
 {
     public class RarArchiveTests : ArchiveTests
     {

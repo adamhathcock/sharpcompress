@@ -1,7 +1,7 @@
 ﻿using SharpCompress.Common;
 using Xunit;
 
-namespace SharpCompress.Test
+namespace SharpCompress.Test.Zip
 {
     public class ZipWriterTests : WriterTests
     {

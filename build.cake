@@ -8,19 +8,39 @@ Task("Restore")
 });
 
 Task("Build")
+  .IsDependentOn("Restore")
   .Does(() =>
 {
-    MSBuild("./sharpcompress.sln", c => c
-            .SetConfiguration("Release")
+    if (IsRunningOnWindows())
+    {
+        MSBuild("./sharpcompress.sln", c => 
+        { 
+            c.SetConfiguration("Release")
             .SetVerbosity(Verbosity.Minimal)
-            .UseToolVersion(MSBuildToolVersion.VS2017));
+            .UseToolVersion(MSBuildToolVersion.VS2017);
+        });
+    }
+    else 
+    {
+        var settings = new DotNetCoreBuildSettings
+        {
+            Framework = "netstandard1.0",
+            Configuration = "Release"
+        };
+
+        DotNetCoreBuild("./src/SharpCompress/SharpCompress.csproj", settings);
+
+        settings.Framework = "netcoreapp1.1";
+        DotNetCoreBuild("./tests/SharpCompress.Test/SharpCompress.Test.csproj", settings);
+    }
 });
 
 Task("Test")
   .IsDependentOn("Build")
   .Does(() =>
 {
-    if (!bool.Parse(EnvironmentVariable("APPVEYOR") ?? "false"))
+    if (!bool.Parse(EnvironmentVariable("APPVEYOR") ?? "false")
+        && !bool.Parse(EnvironmentVariable("TRAVIS") ?? "false"))
     {
         var files = GetFiles("tests/**/*.csproj");
         foreach(var file in files)
@@ -35,7 +55,7 @@ Task("Test")
     } 
     else 
     {
-        Information("Skipping tests as this is AppVeyor");
+        Information("Skipping tests as this is AppVeyor or Travis CI");
     }
 });
 
