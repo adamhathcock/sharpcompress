@@ -25,7 +25,7 @@ namespace SharpCompress.Common.Zip.Headers
 
     internal class ExtraUnicodePathExtraField : ExtraData
     {
-        internal byte Version { get { return DataBytes[0]; } }
+        internal byte Version => DataBytes[0];
 
         internal byte[] NameCRC32
         {

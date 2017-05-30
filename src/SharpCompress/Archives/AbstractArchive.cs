@@ -61,18 +61,12 @@ namespace SharpCompress.Archives
 
         void IArchiveExtractionListener.FireEntryExtractionBegin(IArchiveEntry entry)
         {
-            if (EntryExtractionBegin != null)
-            {
-                EntryExtractionBegin(this, new ArchiveExtractionEventArgs<IArchiveEntry>(entry));
-            }
+            EntryExtractionBegin?.Invoke(this, new ArchiveExtractionEventArgs<IArchiveEntry>(entry));
         }
 
         void IArchiveExtractionListener.FireEntryExtractionEnd(IArchiveEntry entry)
         {
-            if (EntryExtractionEnd != null)
-            {
-                EntryExtractionEnd(this, new ArchiveExtractionEventArgs<IArchiveEntry>(entry));
-            }
+            EntryExtractionEnd?.Invoke(this, new ArchiveExtractionEventArgs<IArchiveEntry>(entry));
         }
 
         private static Stream CheckStreams(Stream stream)
@@ -129,27 +123,21 @@ namespace SharpCompress.Archives
 
         void IExtractionListener.FireCompressedBytesRead(long currentPartCompressedBytes, long compressedReadBytes)
         {
-            if (CompressedBytesRead != null)
+            CompressedBytesRead?.Invoke(this, new CompressedBytesReadEventArgs
             {
-                CompressedBytesRead(this, new CompressedBytesReadEventArgs
-                                          {
-                                              CurrentFilePartCompressedBytesRead = currentPartCompressedBytes,
-                                              CompressedBytesRead = compressedReadBytes
-                                          });
-            }
+                CurrentFilePartCompressedBytesRead = currentPartCompressedBytes,
+                CompressedBytesRead = compressedReadBytes
+            });
         }
 
         void IExtractionListener.FireFilePartExtractionBegin(string name, long size, long compressedSize)
         {
-            if (FilePartExtractionBegin != null)
+            FilePartExtractionBegin?.Invoke(this, new FilePartExtractionBeginEventArgs
             {
-                FilePartExtractionBegin(this, new FilePartExtractionBeginEventArgs
-                                              {
-                                                  CompressedSize = compressedSize,
-                                                  Size = size,
-                                                  Name = name
-                                              });
-            }
+                CompressedSize = compressedSize,
+                Size = size,
+                Name = name
+            });
         }
 
         /// <summary>

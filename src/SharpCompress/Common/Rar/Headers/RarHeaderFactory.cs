@@ -129,7 +129,7 @@ namespace SharpCompress.Common.Rar.Headers
                 reader.InitializeAes(salt);
             }
 #else
-            var reader = new MarkingBinaryReader(stream);
+            var reader = new RarCrcBinaryReader(stream);
 
 #endif
 

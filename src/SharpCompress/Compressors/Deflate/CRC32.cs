@@ -92,14 +92,7 @@ namespace SharpCompress.Compressors.Deflate
         /// <summary>
         /// Indicates the current CRC for all blocks slurped in.
         /// </summary>
-        public Int32 Crc32Result
-        {
-            get
-            {
-                // return one's complement of the running result
-                return unchecked((Int32)(~runningCrc32Result));
-            }
-        }
+        public Int32 Crc32Result => unchecked((Int32)(~runningCrc32Result));
 
         /// <summary>
         /// Returns the CRC32 for the specified stream.

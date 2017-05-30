@@ -165,25 +165,13 @@ namespace SharpCompress.Common.Rar.Headers
 #if NO_FILE
             return path.Replace('\\', '/');
 #else
-            switch (os)
+            if (Path.DirectorySeparatorChar == '/')
             {
-                case HostOS.MacOS:
-                case HostOS.Unix:
-                    {
-                        if (Path.DirectorySeparatorChar == '\\')
-                        {
-                            return path.Replace('/', '\\');
-                        }
-                    }
-                    break;
-                default:
-                    {
-                        if (Path.DirectorySeparatorChar == '/')
-                        {
-                            return path.Replace('\\', '/');
-                        }
-                    }
-                    break;
+                return path.Replace('\\', '/');
+            }
+            else if (Path.DirectorySeparatorChar == '\\')
+            {
+                return path.Replace('/', '\\');
             }
             return path;
 #endif
@@ -208,7 +196,7 @@ namespace SharpCompress.Common.Rar.Headers
 
         internal int FileAttributes { get; private set; }
 
-        internal FileFlags FileFlags { get { return (FileFlags)Flags; } }
+        internal FileFlags FileFlags => (FileFlags)Flags;
 
         internal long CompressedSize { get; private set; }
         internal long UncompressedSize { get; private set; }

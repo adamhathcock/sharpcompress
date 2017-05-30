@@ -22,31 +22,31 @@ namespace SharpCompress.Archives.GZip
             this.closeStream = closeStream;
         }
 
-        public override long Crc { get { return 0; } }
+        public override long Crc => 0;
 
         public override string Key { get; }
 
-        public override long CompressedSize { get { return 0; } }
+        public override long CompressedSize => 0;
 
         public override long Size { get; }
 
         public override DateTime? LastModifiedTime { get; }
 
-        public override DateTime? CreatedTime { get { return null; } }
+        public override DateTime? CreatedTime => null;
 
-        public override DateTime? LastAccessedTime { get { return null; } }
+        public override DateTime? LastAccessedTime => null;
 
-        public override DateTime? ArchivedTime { get { return null; } }
+        public override DateTime? ArchivedTime => null;
 
-        public override bool IsEncrypted { get { return false; } }
+        public override bool IsEncrypted => false;
 
-        public override bool IsDirectory { get { return false; } }
+        public override bool IsDirectory => false;
 
-        public override bool IsSplit { get { return false; } }
+        public override bool IsSplit => false;
 
-        internal override IEnumerable<FilePart> Parts { get { throw new NotImplementedException(); } }
+        internal override IEnumerable<FilePart> Parts => throw new NotImplementedException();
 
-        Stream IWritableArchiveEntry.Stream { get { return stream; } }
+        Stream IWritableArchiveEntry.Stream => stream;
 
         public override Stream OpenEntryStream()
         {

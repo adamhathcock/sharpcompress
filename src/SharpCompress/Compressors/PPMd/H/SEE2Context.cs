@@ -15,11 +15,11 @@ namespace SharpCompress.Compressors.PPMd.H
             }
         }
 
-        public virtual int Count { get { return count; } set { count = value & 0xff; } }
+        public virtual int Count { get => count; set => count = value & 0xff; }
 
-        public virtual int Shift { get { return shift; } set { shift = value & 0xff; } }
+        public virtual int Shift { get => shift; set => shift = value & 0xff; }
 
-        public virtual int Summ { get { return summ; } set { summ = value & 0xffff; } }
+        public virtual int Summ { get => summ; set => summ = value & 0xffff; }
 
         public const int size = 4;
 

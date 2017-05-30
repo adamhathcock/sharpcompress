@@ -34,20 +34,20 @@ namespace SharpCompress.Compressors.Filters
             baseStream.Dispose();
         }
 
-        public override bool CanRead { get { return !isEncoder; } }
+        public override bool CanRead => !isEncoder;
 
-        public override bool CanSeek { get { return false; } }
+        public override bool CanSeek => false;
 
-        public override bool CanWrite { get { return isEncoder; } }
+        public override bool CanWrite => isEncoder;
 
         public override void Flush()
         {
             throw new NotSupportedException();
         }
 
-        public override long Length { get { return baseStream.Length; } }
+        public override long Length => baseStream.Length;
 
-        public override long Position { get { return baseStream.Position; } set { throw new NotSupportedException(); } }
+        public override long Position { get => baseStream.Position; set => throw new NotSupportedException(); }
 
         public override int Read(byte[] buffer, int offset, int count)
         {

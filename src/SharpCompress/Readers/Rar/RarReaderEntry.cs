@@ -15,20 +15,20 @@ namespace SharpCompress.Readers.Rar
 
         internal RarFilePart Part { get; }
 
-        internal override IEnumerable<FilePart> Parts { get { return Part.AsEnumerable<FilePart>(); } }
+        internal override IEnumerable<FilePart> Parts => Part.AsEnumerable<FilePart>();
 
-        internal override FileHeader FileHeader { get { return Part.FileHeader; } }
+        internal override FileHeader FileHeader => Part.FileHeader;
 
-        public override CompressionType CompressionType { get { return CompressionType.Rar; } }
+        public override CompressionType CompressionType => CompressionType.Rar;
 
         /// <summary>
         /// The compressed file size
         /// </summary>
-        public override long CompressedSize { get { return Part.FileHeader.CompressedSize; } }
+        public override long CompressedSize => Part.FileHeader.CompressedSize;
 
         /// <summary>
         /// The uncompressed file size
         /// </summary>
-        public override long Size { get { return Part.FileHeader.UncompressedSize; } }
+        public override long Size => Part.FileHeader.UncompressedSize;
     }
 }

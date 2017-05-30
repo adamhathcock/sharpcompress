@@ -24,7 +24,7 @@ namespace SharpCompress.Common.GZip
 
         internal DateTime? DateModified { get; private set; }
 
-        internal override string FilePartName { get { return name; } }
+        internal override string FilePartName => name;
 
         internal override Stream GetCompressedStream()
         {

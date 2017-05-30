@@ -33,9 +33,9 @@ namespace SharpCompress
             collection.CopyTo(array, arrayIndex);
         }
 
-        public int Count { get { return collection.Count; } }
+        public int Count => collection.Count;
 
-        public bool IsReadOnly { get { return true; } }
+        public bool IsReadOnly => true;
 
         public bool Remove(T item)
         {

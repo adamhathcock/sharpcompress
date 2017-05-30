@@ -37,14 +37,8 @@ namespace SharpCompress.Common.Zip.Headers
 
         public ushort TotalNumberOfEntries { get; private set; }
 
-        public bool IsZip64
-        {
-            get
-            {
-                return TotalNumberOfEntriesInDisk == ushort.MaxValue
-                       || DirectorySize == uint.MaxValue
-                       || DirectoryStartOffsetRelativeToDisk == uint.MaxValue;
-            }
-        }
+        public bool IsZip64 => TotalNumberOfEntriesInDisk == ushort.MaxValue
+                               || DirectorySize == uint.MaxValue
+                               || DirectoryStartOffsetRelativeToDisk == uint.MaxValue;
     }
 }

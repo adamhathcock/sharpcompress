@@ -19,7 +19,7 @@ namespace SharpCompress.Compressors.PPMd.H
         {
         }
 
-        internal int SummFreq { get { return DataConverter.LittleEndian.GetInt16(Memory, Address) & 0xffff; } set { DataConverter.LittleEndian.PutBytes(Memory, Address, (short)value); } }
+        internal int SummFreq { get => DataConverter.LittleEndian.GetInt16(Memory, Address) & 0xffff; set => DataConverter.LittleEndian.PutBytes(Memory, Address, (short)value); }
 
         internal FreqData Initialize(byte[] mem)
         {

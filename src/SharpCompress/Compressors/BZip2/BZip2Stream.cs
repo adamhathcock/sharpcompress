@@ -48,20 +48,20 @@ namespace SharpCompress.Compressors.BZip2
 
         public CompressionMode Mode { get; }
 
-        public override bool CanRead { get { return stream.CanRead; } }
+        public override bool CanRead => stream.CanRead;
 
-        public override bool CanSeek { get { return stream.CanSeek; } }
+        public override bool CanSeek => stream.CanSeek;
 
-        public override bool CanWrite { get { return stream.CanWrite; } }
+        public override bool CanWrite => stream.CanWrite;
 
         public override void Flush()
         {
             stream.Flush();
         }
 
-        public override long Length { get { return stream.Length; } }
+        public override long Length => stream.Length;
 
-        public override long Position { get { return stream.Position; } set { stream.Position = value; } }
+        public override long Position { get => stream.Position; set => stream.Position = value; }
 
         public override int Read(byte[] buffer, int offset, int count)
         {

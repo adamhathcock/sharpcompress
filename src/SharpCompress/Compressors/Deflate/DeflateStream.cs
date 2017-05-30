@@ -50,7 +50,7 @@ namespace SharpCompress.Compressors.Deflate
         /// </remarks>
         public virtual FlushType FlushMode
         {
-            get { return (_baseStream._flushMode); }
+            get => (_baseStream._flushMode);
             set
             {
                 if (_disposed)
@@ -80,7 +80,7 @@ namespace SharpCompress.Compressors.Deflate
         /// </remarks>
         public int BufferSize
         {
-            get { return _baseStream._bufferSize; }
+            get => _baseStream._bufferSize;
             set
             {
                 if (_disposed)
@@ -111,7 +111,7 @@ namespace SharpCompress.Compressors.Deflate
         /// </remarks>
         public CompressionStrategy Strategy
         {
-            get { return _baseStream.Strategy; }
+            get => _baseStream.Strategy;
             set
             {
                 if (_disposed)
@@ -123,10 +123,10 @@ namespace SharpCompress.Compressors.Deflate
         }
 
         /// <summary> Returns the total number of bytes input so far.</summary>
-        public virtual long TotalIn { get { return _baseStream._z.TotalBytesIn; } }
+        public virtual long TotalIn => _baseStream._z.TotalBytesIn;
 
         /// <summary> Returns the total number of bytes output so far.</summary>
-        public virtual long TotalOut { get { return _baseStream._z.TotalBytesOut; } }
+        public virtual long TotalOut => _baseStream._z.TotalBytesOut;
 
         #endregion
 
@@ -156,7 +156,7 @@ namespace SharpCompress.Compressors.Deflate
         /// <remarks>
         /// Always returns false.
         /// </remarks>
-        public override bool CanSeek { get { return false; } }
+        public override bool CanSeek => false;
 
         /// <summary>
         /// Indicates whether the stream can be written.
@@ -179,7 +179,7 @@ namespace SharpCompress.Compressors.Deflate
         /// <summary>
         /// Reading this property always throws a <see cref="NotImplementedException"/>.
         /// </summary>
-        public override long Length { get { throw new NotSupportedException(); } }
+        public override long Length => throw new NotSupportedException();
 
         /// <summary>
         /// The position of the stream pointer.
@@ -206,7 +206,7 @@ namespace SharpCompress.Compressors.Deflate
                 }
                 return 0;
             }
-            set { throw new NotSupportedException(); }
+            set => throw new NotSupportedException();
         }
 
         /// <summary>
@@ -342,13 +342,7 @@ namespace SharpCompress.Compressors.Deflate
 
         #endregion
 
-        public MemoryStream InputBuffer
-        {
-            get
-            {
-                return new MemoryStream(_baseStream._z.InputBuffer, _baseStream._z.NextIn,
-                                        _baseStream._z.AvailableBytesIn);
-            }
-        }
+        public MemoryStream InputBuffer => new MemoryStream(_baseStream._z.InputBuffer, _baseStream._z.NextIn,
+                                                            _baseStream._z.AvailableBytesIn);
     }
 }

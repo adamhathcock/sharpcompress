@@ -15,5 +15,13 @@ namespace SharpCompress.Writers.Zip
         public string EntryComment { get; set; }
 
         public DateTime? ModificationDateTime { get; set; }
+
+        /// <summary>
+        /// Allocate an extra 20 bytes for this entry to store,
+		/// 64 bit length values, thus enabling streams
+		/// larger than 4GiB.
+		/// This option is not supported with non-seekable streams.
+        /// </summary>
+        public bool? EnableZip64 { get; set; }
     }
 }

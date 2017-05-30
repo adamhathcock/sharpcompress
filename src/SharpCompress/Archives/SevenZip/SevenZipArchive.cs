@@ -106,10 +106,7 @@ namespace SharpCompress.Archives.SevenZip
             for (int i = 0; i < database.Files.Count; i++)
             {
                 var file = database.Files[i];
-                if (!file.IsDir)
-                {
-                    yield return new SevenZipArchiveEntry(this, new SevenZipFilePart(stream, database, i, file));
-                }
+                yield return new SevenZipArchiveEntry(this, new SevenZipFilePart(stream, database, i, file));
             }
         }
 
@@ -174,7 +171,7 @@ namespace SharpCompress.Archives.SevenZip
                 this.archive = archive;
             }
 
-            public override SevenZipVolume Volume { get { return archive.Volumes.Single(); } }
+            public override SevenZipVolume Volume => archive.Volumes.Single();
 
             internal override IEnumerable<SevenZipEntry> GetEntries(Stream stream)
             {
