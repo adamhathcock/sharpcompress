@@ -4,7 +4,7 @@ using SharpCompress.Writers;
 using SharpCompress.Writers.GZip;
 using Xunit;
 
-namespace SharpCompress.Test
+namespace SharpCompress.Test.GZip
 {
     public class GZipWriterTests : WriterTests
     {

@@ -1,5 +1,4 @@
-﻿
-using System;
+﻿using System;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -10,7 +9,7 @@ using SharpCompress.Readers;
 using SharpCompress.Writers;
 using Xunit;
 
-namespace SharpCompress.Test
+namespace SharpCompress.Test.Zip
 {
     public class ZipArchiveTests : ArchiveTests
     {

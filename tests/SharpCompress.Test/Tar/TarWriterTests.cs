@@ -1,7 +1,7 @@
 ﻿using SharpCompress.Common;
 using Xunit;
 
-namespace SharpCompress.Test
+namespace SharpCompress.Test.Tar
 {
     public class TarWriterTests : WriterTests
     {

@@ -4,7 +4,11 @@ SharpCompress is a compression library in pure C# for .NET 3.5, 4.5, .NET Standa
 
 The major feature is support for non-seekable streams so large files can be processed on the fly (i.e. download stream). 
 
+AppVeyor Build - 
 [![Build status](https://ci.appveyor.com/api/projects/status/voxg971oemmvxh1e/branch/master?svg=true)](https://ci.appveyor.com/project/adamhathcock/sharpcompress/branch/master)
+
+Travis CI Build - 
+[![Build Status](https://travis-ci.org/adamhathcock/sharpcompress.svg?branch=master)](https://travis-ci.org/adamhathcock/sharpcompress)
 
 ## Need Help?
 Post Issues on Github!
