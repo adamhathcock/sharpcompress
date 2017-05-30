@@ -28,10 +28,6 @@ namespace SharpCompress.Test
                 {
                     writer.WriteAll(ORIGINAL_FILES_PATH, "*", SearchOption.AllDirectories);
                 }
-                if (!stream.CanWrite)
-                {
-                    throw new InvalidOperationException();
-                }
             }
             CompareArchivesByPath(Path.Combine(SCRATCH2_FILES_PATH, archive),
                Path.Combine(TEST_ARCHIVES_PATH, archiveToVerifyAgainst));

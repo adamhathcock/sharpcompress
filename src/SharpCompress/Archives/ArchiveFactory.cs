@@ -1,7 +1,6 @@
 ﻿using System;
 using System.IO;
 using SharpCompress.Archives.GZip;
-using SharpCompress.Archives.LZip;
 using SharpCompress.Archives.Rar;
 using SharpCompress.Archives.SevenZip;
 using SharpCompress.Archives.Tar;
@@ -44,12 +43,6 @@ namespace SharpCompress.Archives
             {
                 stream.Seek(0, SeekOrigin.Begin);
                 return GZipArchive.Open(stream, readerOptions);
-            }
-            stream.Seek(0, SeekOrigin.Begin);
-            if (LZipStream.IsLZipFile(stream))
-            {
-                stream.Seek(0, SeekOrigin.Begin);
-                return LZipArchive.Open(stream, readerOptions);
             }
             stream.Seek(0, SeekOrigin.Begin);
             if (RarArchive.IsRarFile(stream, readerOptions))
