@@ -26,11 +26,6 @@ namespace SharpCompress.Common.Zip.Headers
 
         const int SizeOfFixedHeaderDataExceptSignatureAndSizeFields = 44;
 
-        internal override void Write(BinaryWriter writer)
-        {
-            throw new NotImplementedException();
-        }
-
         public long SizeOfDirectoryEndRecord { get; private set; }
 
         public ushort VersionMadeBy { get; private set; }

@@ -21,18 +21,6 @@ namespace SharpCompress.Common.Zip.Headers
             Comment = reader.ReadBytes(CommentLength);
         }
 
-        internal override void Write(BinaryWriter writer)
-        {
-            writer.Write(VolumeNumber);
-            writer.Write(FirstVolumeWithDirectory);
-            writer.Write(TotalNumberOfEntriesInDisk);
-            writer.Write(TotalNumberOfEntries);
-            writer.Write(DirectorySize);
-            writer.Write(DirectoryStartOffsetRelativeToDisk);
-            writer.Write(CommentLength);
-            writer.Write(Comment);
-        }
-
         public ushort VolumeNumber { get; private set; }
 
         public ushort FirstVolumeWithDirectory { get; private set; }
