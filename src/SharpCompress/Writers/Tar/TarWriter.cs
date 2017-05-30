@@ -5,6 +5,7 @@ using SharpCompress.Common.Tar.Headers;
 using SharpCompress.Compressors;
 using SharpCompress.Compressors.BZip2;
 using SharpCompress.Compressors.Deflate;
+using SharpCompress.Compressors.LZMA;
 
 namespace SharpCompress.Writers.Tar
 {
@@ -29,6 +30,11 @@ namespace SharpCompress.Writers.Tar
                 case CompressionType.GZip:
                 {
                     destination = new GZipStream(destination, CompressionMode.Compress, options.LeaveStreamOpen);
+                }
+                    break;
+                case CompressionType.LZip:
+                {
+                    destination = new LZipStream(destination, CompressionMode.Compress, options.LeaveStreamOpen);
                 }
                     break;
                 default:

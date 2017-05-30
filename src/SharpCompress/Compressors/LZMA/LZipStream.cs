@@ -18,32 +18,34 @@ namespace SharpCompress.Compressors.LZMA
         private readonly bool leaveOpen;
 
         public LZipStream(Stream stream, CompressionMode mode, bool leaveOpen = false)
+            : this(stream, mode, null, leaveOpen)
         {
-            if (mode != CompressionMode.Decompress)
-            {
-                throw new NotImplementedException("Only LZip decompression is currently supported");
-            }
-            Mode = mode;
-            this.leaveOpen = leaveOpen;
-            int dictionarySize = ValidateAndReadSize(stream);
-            if (dictionarySize == 0)
-            {
-                throw new IOException("Not an LZip stream");
-            }
-            byte[] properties = GetProperties(dictionarySize);
-            this.stream = new LzmaStream(properties, stream);
         }
 
-        public LZipStream(Stream stream, CompressionMode mode, int dictionarySize, bool leaveOpen = false)
+        public LZipStream(Stream stream, CompressionMode mode, int? dictionarySize, bool leaveOpen = false)
         {
-            if (mode != CompressionMode.Decompress)
-            {
-                throw new NotImplementedException("Only LZip decompression is currently supported");
-            }
             Mode = mode;
             this.leaveOpen = leaveOpen;
-            byte[] properties = GetProperties(dictionarySize);
-            this.stream = new LzmaStream(properties, stream);
+
+            if (mode == CompressionMode.Decompress)
+            {
+                int dSize = dictionarySize ?? ValidateAndReadSize(stream);
+                if (dSize == 0)
+                {
+                    throw new IOException("Not an LZip stream");
+                }
+                byte[] properties = GetProperties(dSize);
+                this.stream = new LzmaStream(properties, stream);
+            }
+            else
+            {
+                //default
+                int dSize = dictionarySize ?? 1 << 20;
+                WriteHeaderSize(stream, dSize);
+                this.stream = new LzmaStream(new LzmaEncoderProperties(!stream.CanSeek, dSize),
+                                             false,
+                                             stream);
+            }
         }
 
         #region Stream methods
@@ -63,11 +65,11 @@ namespace SharpCompress.Compressors.LZMA
 
         public CompressionMode Mode { get; }
 
-        public override bool CanRead => stream.CanRead;
+        public override bool CanRead => Mode == CompressionMode.Decompress;
 
         public override bool CanSeek => false;
 
-        public override bool CanWrite => false;
+        public override bool CanWrite => Mode == CompressionMode.Compress;
 
         public override void Flush()
         {
@@ -82,20 +84,11 @@ namespace SharpCompress.Compressors.LZMA
 
         public override int Read(byte[] buffer, int offset, int count) => stream.Read(buffer, offset, count);
 
-        public override long Seek(long offset, SeekOrigin origin)
-        {
-            throw new NotSupportedException();
-        }
+        public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
 
-        public override void SetLength(long value)
-        {
-            throw new NotImplementedException();
-        }
+        public override void SetLength(long value) => throw new NotImplementedException();
 
-        public override void Write(byte[] buffer, int offset, int count)
-        {
-            throw new NotImplementedException();
-        }
+        public override void Write(byte[] buffer, int offset, int count) => stream.Write(buffer, offset, count);
         #endregion
 
         /// <summary>
@@ -136,6 +129,29 @@ namespace SharpCompress.Compressors.LZMA
             int basePower = header[5] & 0x1F;
             int subtractionNumerator = (header[5] & 0xE0) >> 5;
             return (1 << basePower) - subtractionNumerator * (1 << (basePower - 4));
+        }
+
+        public static void WriteHeaderSize(Stream stream, int dictionarySize)
+        {
+            if (stream == null)
+            {
+                throw new ArgumentNullException(nameof(stream));
+            }
+            // Read the header
+            byte[] header = new byte[6] {(byte)'L', (byte)'Z', (byte)'I', (byte)'P', 1, 0};
+
+            uint base_size = (uint)1 << dictionarySize;
+            uint fraction = base_size / 16;
+
+            for (int i = 7; i >= 1; --i)
+            {
+                if (base_size - (i * fraction) >= dictionarySize)
+                {
+                    header[5] |= (byte)(i << 5);
+                    break;
+                }
+            }
+            stream.Write(header, 0, 6);
         }
 
         /// <summary>

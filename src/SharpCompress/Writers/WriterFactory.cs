@@ -2,6 +2,7 @@
 using System.IO;
 using SharpCompress.Common;
 using SharpCompress.Writers.GZip;
+using SharpCompress.Writers.LZip;
 using SharpCompress.Writers.Tar;
 using SharpCompress.Writers.Zip;
 
@@ -28,6 +29,14 @@ namespace SharpCompress.Writers
                 case ArchiveType.Tar:
                 {
                     return new TarWriter(stream, writerOptions);
+                }
+                case ArchiveType.LZip:
+                {
+                    if (writerOptions.CompressionType != CompressionType.LZip)
+                    {
+                        throw new InvalidFormatException("LZip archives only support LZip compression type.");
+                    }
+                    return new LZipWriter(stream, writerOptions.LeaveStreamOpen);
                 }
                 default:
                 {
