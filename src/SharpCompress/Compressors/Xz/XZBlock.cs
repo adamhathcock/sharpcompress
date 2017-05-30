@@ -21,6 +21,7 @@ namespace SharpCompress.Compressors.Xz
         private bool _endOfStream;
         private bool _paddingSkipped;
         private bool _crcChecked;
+        private ulong _bytesRead;
 
         public XZBlock(Stream stream, CheckType checkType, int checkSize) : base(stream)
         {
@@ -43,12 +44,13 @@ namespace SharpCompress.Compressors.Xz
                 SkipPadding();
             if (_endOfStream && !_crcChecked)
                 CheckCrc();
+            _bytesRead += (ulong)bytesRead;
             return bytesRead;
         }
 
         private void SkipPadding()
         {
-            int padding = (int)(BaseStream.Position - StreamStartPosition) % 4;
+            int padding = (int)(_bytesRead % 4);
             if (padding > 0)
             {
                 byte[] paddingBytes = new byte[padding];

@@ -6,6 +6,18 @@ namespace SharpCompress.Compressors.Xz
     [CLSCompliant(false)]
     public sealed class XZStream : XZReadOnlyStream
     {
+        public static bool IsXZStream(Stream stream)
+        {
+            try
+            {
+                return null != XZHeader.FromStream(stream);
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
+
         private void AssertBlockCheckTypeIsSupported()
         {
             switch (Header.BlockCheckType)

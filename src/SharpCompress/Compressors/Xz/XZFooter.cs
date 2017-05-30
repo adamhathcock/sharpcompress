@@ -1,6 +1,7 @@
 ﻿using System.IO;
 using System.Linq;
 using System.Text;
+using SharpCompress.IO;
 
 namespace SharpCompress.Compressors.Xz
 {
@@ -20,7 +21,7 @@ namespace SharpCompress.Compressors.Xz
 
         public static XZFooter FromStream(Stream stream)
         {
-            var footer = new XZFooter(new BinaryReader(stream, Encoding.UTF8, true));
+            var footer = new XZFooter(new BinaryReader(new NonDisposingStream(stream), Encoding.UTF8));
             footer.Process();
             return footer;
         }

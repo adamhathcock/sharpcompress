@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using SharpCompress.IO;
 
 namespace SharpCompress.Compressors.Xz
 {
@@ -27,7 +28,7 @@ namespace SharpCompress.Compressors.Xz
 
         public static XZIndex FromStream(Stream stream, bool indexMarkerAlreadyVerified)
         {
-            var index = new XZIndex(new BinaryReader(stream, Encoding.UTF8, true), indexMarkerAlreadyVerified);
+            var index = new XZIndex(new BinaryReader(new NonDisposingStream(stream), Encoding.UTF8), indexMarkerAlreadyVerified);
             index.Process();
             return index;
         }

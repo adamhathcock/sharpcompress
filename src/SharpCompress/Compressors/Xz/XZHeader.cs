@@ -2,6 +2,7 @@
 using System.IO;
 using System.Linq;
 using System.Text;
+using SharpCompress.IO;
 
 namespace SharpCompress.Compressors.Xz
 {
@@ -9,7 +10,6 @@ namespace SharpCompress.Compressors.Xz
     {
         private readonly BinaryReader _reader;
         private readonly byte[] MagicHeader = { 0xFD, 0x37, 0x7A, 0x58, 0x5a, 0x00 };
-        public long StreamStartPosition { get; private set; }
 
         public CheckType BlockCheckType { get; private set; }
         public int BlockCheckSize => ((((int)BlockCheckType) + 2) / 3) * 4;
@@ -17,12 +17,11 @@ namespace SharpCompress.Compressors.Xz
         public XZHeader(BinaryReader reader)
         {
             _reader = reader;
-            StreamStartPosition = reader.BaseStream.Position;
         }
 
         public static XZHeader FromStream(Stream stream)
         {
-            var header = new XZHeader(new BinaryReader(stream, Encoding.UTF8, true));
+            var header = new XZHeader(new BinaryReader(new NonDisposingStream(stream), Encoding.UTF8));
             header.Process();
             return header;
         }
