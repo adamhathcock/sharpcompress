@@ -6,6 +6,8 @@ namespace SharpCompress.Common.LZip
 {
     public class LZipEntry : Entry
     {
+        public const string LZIP_FILE_NAME = "LZip_File";
+
         private readonly LZipFilePart filePart;
 
         internal LZipEntry(LZipFilePart filePart)

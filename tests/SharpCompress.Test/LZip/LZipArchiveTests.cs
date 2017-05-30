@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using SharpCompress.Archives;
 using SharpCompress.Archives.LZip;
+using SharpCompress.Common.LZip;
 using Xunit;
 
 namespace SharpCompress.Test
@@ -24,7 +25,7 @@ namespace SharpCompress.Test
                 var entry = archive.Entries.First();
                 entry.WriteToFile(Path.Combine(SCRATCH_FILES_PATH, entry.Key));
             }
-            CompareArchivesByPath(Path.Combine(SCRATCH_FILES_PATH, "Tar.tar"),
+            CompareArchivesByPath(Path.Combine(SCRATCH_FILES_PATH, LZipEntry.LZIP_FILE_NAME),
                 Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar"));
         }
 
@@ -38,7 +39,7 @@ namespace SharpCompress.Test
                 var entry = archive.Entries.First();
                 entry.WriteToFile(Path.Combine(SCRATCH_FILES_PATH, entry.Key));
             }
-            CompareArchivesByPath(Path.Combine(SCRATCH_FILES_PATH, "Tar.tar"),
+            CompareArchivesByPath(Path.Combine(SCRATCH_FILES_PATH, LZipEntry.LZIP_FILE_NAME),
                 Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar"));
         }
 

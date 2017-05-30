@@ -45,6 +45,7 @@ namespace SharpCompress.Archives
                 stream.Seek(0, SeekOrigin.Begin);
                 return GZipArchive.Open(stream, readerOptions);
             }
+            stream.Seek(0, SeekOrigin.Begin);
             if (LZipStream.IsLZipFile(stream))
             {
                 stream.Seek(0, SeekOrigin.Begin);

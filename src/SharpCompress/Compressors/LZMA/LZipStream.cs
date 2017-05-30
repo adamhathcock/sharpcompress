@@ -34,6 +34,18 @@ namespace SharpCompress.Compressors.LZMA
             this.stream = new LzmaStream(properties, stream);
         }
 
+        public LZipStream(Stream stream, CompressionMode mode, int dictionarySize, bool leaveOpen = false)
+        {
+            if (mode != CompressionMode.Decompress)
+            {
+                throw new NotImplementedException("Only LZip decompression is currently supported");
+            }
+            Mode = mode;
+            this.leaveOpen = leaveOpen;
+            byte[] properties = GetProperties(dictionarySize);
+            this.stream = new LzmaStream(properties, stream);
+        }
+
         #region Stream methods
 
         protected override void Dispose(bool disposing)
@@ -100,7 +112,7 @@ namespace SharpCompress.Compressors.LZMA
         /// couldn't be read or it isn't a validate LZIP header, or the dictionary
         /// size if it *is* a valid LZIP file.
         /// </summary>
-        private static int ValidateAndReadSize(Stream stream)
+        public static int ValidateAndReadSize(Stream stream)
         {
             if (stream == null)
             {

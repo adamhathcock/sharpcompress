@@ -10,7 +10,8 @@ namespace SharpCompress.Common.LZip
 
         internal LZipFilePart(Stream stream)
         {
-            if (!LZipStream.IsLZipFile(stream))
+            DictionarySize = LZipStream.ValidateAndReadSize(stream);
+            if (DictionarySize == 0)
             {
                 throw new ArchiveException("Stream is not an LZip stream.");
             }
@@ -19,12 +20,14 @@ namespace SharpCompress.Common.LZip
         }
 
         internal long EntryStartPosition { get; }
+
+        internal int DictionarySize { get; }
         
-        internal override string FilePartName => null;
+        internal override string FilePartName => LZipEntry.LZIP_FILE_NAME;
 
         internal override Stream GetCompressedStream()
         {
-            return new LZipStream(stream, CompressionMode.Decompress, false);
+            return new LZipStream(stream, CompressionMode.Decompress, DictionarySize, false);
         }
 
         internal override Stream GetRawStream()
