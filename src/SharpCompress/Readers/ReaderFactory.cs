@@ -90,7 +90,7 @@ namespace SharpCompress.Readers
                 rewindableStream.Rewind(true);
                 return TarReader.Open(rewindableStream, options);
             }
-            throw new InvalidOperationException("Cannot determine compressed stream type.  Supported Reader Formats: Zip, GZip, BZip2, Tar, Rar");
+            throw new InvalidOperationException("Cannot determine compressed stream type.  Supported Reader Formats: Zip, GZip, BZip2, Tar, Rar, LZip");
         }
     }
 }
