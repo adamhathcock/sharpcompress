@@ -30,6 +30,10 @@ namespace SharpCompress.Writers.Zip
         {
             zipComment = zipWriterOptions.ArchiveComment ?? string.Empty;
             isZip64 = zipWriterOptions.UseZip64;
+            if (destination.CanSeek)
+            {
+                streamPosition = destination.Position;
+            }
 
             compressionType = zipWriterOptions.CompressionType;
             compressionLevel = zipWriterOptions.DeflateCompressionLevel;
