@@ -1,5 +1,7 @@
 ﻿using System;
 using System.IO;
+using SharpCompress.Converters;
+using SharpCompress.Crypto;
 using SharpCompress.IO;
 
 namespace SharpCompress.Compressors.LZMA
@@ -18,22 +20,19 @@ namespace SharpCompress.Compressors.LZMA
         private readonly CountingWritableSubStream rawStream;
         private bool disposed;
         private readonly bool leaveOpen;
+        private bool finished;
 
         private long writeCount;
+        private readonly Crc32Stream crc32Stream;
 
         public LZipStream(Stream stream, CompressionMode mode, bool leaveOpen = false)
-            : this(stream, mode, null, leaveOpen)
-        {
-        }
-
-        public LZipStream(Stream stream, CompressionMode mode, int? dictionarySize, bool leaveOpen = false)
         {
             Mode = mode;
             this.leaveOpen = leaveOpen;
 
             if (mode == CompressionMode.Decompress)
             {
-                int dSize = dictionarySize ?? ValidateAndReadSize(stream);
+                int dSize = ValidateAndReadSize(stream);
                 if (dSize == 0)
                 {
                     throw new IOException("Not an LZip stream");
@@ -46,10 +45,36 @@ namespace SharpCompress.Compressors.LZMA
                 //default
                 int dSize = 104 * 1024;
                 WriteHeaderSize(stream);
+
                 rawStream = new CountingWritableSubStream(stream);
-                this.stream = new LzmaStream(new LzmaEncoderProperties(!stream.CanSeek, dSize),
+                crc32Stream = new Crc32Stream(rawStream);
+                this.stream = new LzmaStream(new LzmaEncoderProperties(true, dSize),
                                              false,
-                                             rawStream);
+                                             crc32Stream);
+            }
+        }
+
+        public void Finish()
+        {
+            if (!finished)
+            {
+                if (Mode == CompressionMode.Compress)
+                {
+                    stream.Dispose();
+                    crc32Stream.Dispose();
+                    var compressedCount = rawStream.Count;
+
+                    var bytes = DataConverter.LittleEndian.GetBytes(crc32Stream.Crc);
+                    rawStream.Write(bytes, 0, bytes.Length);
+
+                    bytes = DataConverter.LittleEndian.GetBytes(writeCount);
+                    rawStream.Write(bytes, 0, bytes.Length);
+
+                    //total with headers
+                    bytes = DataConverter.LittleEndian.GetBytes(compressedCount + 6 + 20);
+                    rawStream.Write(bytes, 0, bytes.Length);
+                }
+                finished = true;
             }
         }
 
@@ -64,18 +89,7 @@ namespace SharpCompress.Compressors.LZMA
             disposed = true;
             if (disposing)
             {
-                stream.Dispose();
-                if (Mode == CompressionMode.Compress)
-                {
-                    var compressedCount = rawStream.Count;
-                    rawStream.Write(new byte[4], 0, 4);
-                    var bytes = BitConverter.GetBytes(writeCount);
-                    rawStream.Write(bytes, 0, bytes.Length);
-
-                    //total with headers
-                    bytes = BitConverter.GetBytes(compressedCount + 6 + 20);
-                    rawStream.Write(bytes, 0, bytes.Length);
-                }
+                Finish();
                 if (!leaveOpen)
                 {
                     rawStream.Dispose();
