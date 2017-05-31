@@ -4,7 +4,6 @@ using System.IO;
 using System.Linq;
 using SharpCompress.Common;
 using SharpCompress.Common.Tar;
-using SharpCompress.Common.Tar.Headers;
 using SharpCompress.IO;
 using SharpCompress.Readers;
 using SharpCompress.Readers.Tar;
@@ -74,9 +73,9 @@ namespace SharpCompress.Archives.Tar
         {
             try
             {
-                TarHeader tar = new TarHeader();
-                tar.Read(new BinaryReader(stream));
-                return tar.Name.Length > 0 && Enum.IsDefined(typeof(EntryType), tar.EntryType);
+                var input = new TarInputStream(stream);
+                var header = input.GetNextEntry();
+                return header.Name.Length > 0;
             }
             catch
             {
@@ -131,7 +130,7 @@ namespace SharpCompress.Archives.Tar
             {
                 if (header != null)
                 {
-                    if (header.EntryType == EntryType.LongName)
+                    if (header.TypeFlag == TarHeader.LF_GNU_LONGNAME)
                     {
                         previousHeader = header;
                     }

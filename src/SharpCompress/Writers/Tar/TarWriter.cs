@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 using SharpCompress.Common;
-using SharpCompress.Common.Tar.Headers;
+using SharpCompress.Common.Tar;
 using SharpCompress.Compressors;
 using SharpCompress.Compressors.BZip2;
 using SharpCompress.Compressors.Deflate;
@@ -67,10 +67,10 @@ namespace SharpCompress.Writers.Tar
             long realSize = size ?? source.Length;
 
             TarHeader header = new TarHeader();
-            header.LastModifiedTime = modificationTime ?? TarHeader.Epoch;
+            header.ModTime = modificationTime ?? TarHeader.Epoch;
             header.Name = NormalizeFilename(filename);
             header.Size = realSize;
-            header.Write(OutputStream);
+            header.WriteHeader(OutputStream);
             size = source.TransferTo(OutputStream);
             PadTo512(size.Value, false);
         }

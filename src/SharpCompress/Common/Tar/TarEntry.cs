@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using SharpCompress.Common.Tar.Headers;
 using SharpCompress.IO;
 
 namespace SharpCompress.Common.Tar
@@ -16,6 +15,8 @@ namespace SharpCompress.Common.Tar
             CompressionType = type;
         }
 
+        internal TarHeader Header => filePart.Header;
+
         public override CompressionType CompressionType { get; }
 
         public override long Crc => 0;
@@ -26,7 +27,7 @@ namespace SharpCompress.Common.Tar
 
         public override long Size => filePart.Header.Size;
 
-        public override DateTime? LastModifiedTime => filePart.Header.LastModifiedTime;
+        public override DateTime? LastModifiedTime => filePart.Header.ModTime;
 
         public override DateTime? CreatedTime => null;
 
@@ -36,7 +37,7 @@ namespace SharpCompress.Common.Tar
 
         public override bool IsEncrypted => false;
 
-        public override bool IsDirectory => filePart.Header.EntryType == EntryType.Directory;
+        public override bool IsDirectory => filePart.Header.TypeFlag == TarHeader.LF_DIR;
 
         public override bool IsSplit => false;
 
@@ -45,17 +46,18 @@ namespace SharpCompress.Common.Tar
         internal static IEnumerable<TarEntry> GetEntries(StreamingMode mode, Stream stream,
                                                          CompressionType compressionType)
         {
-            foreach (TarHeader h in TarHeaderFactory.ReadHeader(mode, stream))
+            using (var tarStream = new TarInputStream(stream))
             {
-                if (h != null)
+                TarHeader header = null;
+                while ((header = tarStream.GetNextEntry()) != null)
                 {
                     if (mode == StreamingMode.Seekable)
                     {
-                        yield return new TarEntry(new TarFilePart(h, stream), compressionType);
+                        yield return new TarEntry(new TarFilePart(header, stream), compressionType);
                     }
                     else
                     {
-                        yield return new TarEntry(new TarFilePart(h, null), compressionType);
+                        yield return new TarEntry(new TarFilePart(header, null), compressionType);
                     }
                 }
             }
