@@ -22,7 +22,7 @@
 | LZip (single file) (5) | LZip (LZMA) | Both | LZipArchive | LZipReader | LZipWriter |
 
  1. SOLID Rars are only supported in the RarReader API.
- 2. Zip format supports pkware and WinzipAES encryption.  However, encrypted LZMA is not supported.  Zip64 reading is supported.
+ 2. Zip format supports pkware and WinzipAES encryption.  However, encrypted LZMA is not supported.  Zip64 reading/writing is supported but only with seekable streams as the Zip spec doesn't support Zip64 data in post data descriptors.
  3. The Tar format requires a file size in the header.  If no size is specified to the TarWriter and the stream is not seekable, then an exception will be thrown.
  4. The 7Zip format doesn't allow for reading as a forward-only stream so 7Zip is only supported through the Archive API
  5. LZip has no support for extra data like the file name or timestamp.  There is a default filename used when looking at the entry Key on the archive.

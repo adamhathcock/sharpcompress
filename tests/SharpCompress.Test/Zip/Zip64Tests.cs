@@ -21,7 +21,6 @@ namespace SharpCompress.Test.Zip
 		// 4GiB + 1
 		const long FOUR_GB_LIMIT = ((long)uint.MaxValue) + 1;
 
-        [Fact(Skip = "Takes too long")]
         [Trait("format", "zip64")]
         public void Zip64_Single_Large_File()
         {
@@ -29,7 +28,6 @@ namespace SharpCompress.Test.Zip
             RunSingleTest(1, FOUR_GB_LIMIT, set_zip64: true, forward_only: false);
         }
 
-        [Fact(Skip = "Takes too long")]
         [Trait("format", "zip64")]
         public void Zip64_Two_Large_Files()
 		{
@@ -37,7 +35,6 @@ namespace SharpCompress.Test.Zip
 			RunSingleTest(2, FOUR_GB_LIMIT, set_zip64: true, forward_only: false);
         }
 
-        [Fact(Skip = "Takes too long")]
         [Trait("format", "zip64")]
         public void Zip64_Two_Small_files()
         {
@@ -45,7 +42,6 @@ namespace SharpCompress.Test.Zip
             RunSingleTest(2, FOUR_GB_LIMIT / 2, set_zip64: false, forward_only: false);
         }
 
-        [Fact(Skip = "Takes too long")]
         [Trait("format", "zip64")]
         public void Zip64_Two_Small_files_stream()
         {
@@ -53,7 +49,6 @@ namespace SharpCompress.Test.Zip
             RunSingleTest(2, FOUR_GB_LIMIT / 2, set_zip64: false, forward_only: true);
         }
 
-        [Fact(Skip = "Takes too long")]
         [Trait("format", "zip64")]
         public void Zip64_Two_Small_Files_Zip64()
         {
@@ -61,7 +56,6 @@ namespace SharpCompress.Test.Zip
             RunSingleTest(2, FOUR_GB_LIMIT / 2, set_zip64: true, forward_only: false);
         }
 
-        [Fact(Skip = "Takes too long")]
         [Trait("format", "zip64")]
         public void Zip64_Single_Large_File_Fail()
         {
@@ -76,7 +70,6 @@ namespace SharpCompress.Test.Zip
             }
         }
 
-        [Fact(Skip = "Takes too long")]
         [Trait("zip64", "true")]
         public void Zip64_Single_Large_File_Zip64_Streaming_Fail()
         {
@@ -91,7 +84,6 @@ namespace SharpCompress.Test.Zip
             }
         }
 
-        [Fact(Skip = "Takes too long")]
         [Trait("zip64", "true")]
         public void Zip64_Single_Large_File_Streaming_Fail()
         {
