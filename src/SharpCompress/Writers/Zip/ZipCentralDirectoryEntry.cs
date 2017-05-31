@@ -9,18 +9,27 @@ namespace SharpCompress.Writers.Zip
 {
     internal class ZipCentralDirectoryEntry
     {
-        internal string FileName { get; set; }
+        private readonly ZipCompressionMethod compression;
+        private readonly string fileName;
+
+        public ZipCentralDirectoryEntry(ZipCompressionMethod compression, string fileName, ulong headerOffset)
+        {
+            this.compression = compression;
+            this.fileName = fileName;
+            HeaderOffset = headerOffset;
+        }
+        
         internal DateTime? ModificationTime { get; set; }
         internal string Comment { get; set; }
         internal uint Crc { get; set; }
-        internal ulong HeaderOffset { get; set; }
         internal ulong Compressed { get; set; }
         internal ulong Decompressed { get; set; }
         internal ushort Zip64HeaderOffset { get; set; }
+        internal ulong HeaderOffset { get; }
 
-        internal uint Write(Stream outputStream, ZipCompressionMethod compression)
+        internal uint Write(Stream outputStream)
         {
-            byte[] encodedFilename = Encoding.UTF8.GetBytes(FileName);
+            byte[] encodedFilename = Encoding.UTF8.GetBytes(fileName);
             byte[] encodedComment = Encoding.UTF8.GetBytes(Comment);
 
 			var zip64_stream = Compressed >= uint.MaxValue || Decompressed >= uint.MaxValue;
