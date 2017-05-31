@@ -34,6 +34,11 @@ I'm always looking for help or ideas. Please submit code or email with ideas. Un
 
 ## Version Log
 
+### Version 0.16.2
+
+* Fix [.NET 3.5 should support files and cryptography (was a regression from 0.16.0)](https://github.com/adamhathcock/sharpcompress/pull/251)
+* Fix [Zip per entry compression customization wrote the wrong method into the zip archive  ](https://github.com/adamhathcock/sharpcompress/pull/249)
+
 ### Version 0.16.1
 
 * Fix [Preserve compression method when getting a compressed stream](https://github.com/adamhathcock/sharpcompress/pull/235)
