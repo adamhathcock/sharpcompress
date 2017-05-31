@@ -23,9 +23,12 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
+using System;
 using System.IO;
 using SharpCompress.Compressors;
 using SharpCompress.Compressors.ADC;
+using SharpCompress.Compressors.Deflate;
+using SharpCompress.Crypto;
 using Xunit;
 
 namespace SharpCompress.Test
@@ -122,6 +125,29 @@ namespace SharpCompress.Test
                         }
                     }
                 }
+            }
+        }
+
+        [Fact]
+        public void TestCrc32Stream()
+        {
+            using (FileStream decFs = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar")))
+            {
+                var crc32 = new CRC32().GetCrc32(decFs);
+                decFs.Seek(0, SeekOrigin.Begin);
+
+                var memory = new MemoryStream();
+                var crcStream = new Crc32Stream(memory, 0xEDB88320, 0xFFFFFFFF);
+                decFs.CopyTo(crcStream);
+
+                decFs.Seek(0, SeekOrigin.Begin);
+
+                var crc32a = crcStream.Crc;
+
+                var crc32b = Crc32Stream.Compute(memory.ToArray());
+                
+                Assert.Equal(crc32, crc32a);
+                Assert.Equal(crc32, crc32b);
             }
         }
     }

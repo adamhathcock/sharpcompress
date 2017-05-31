@@ -15,6 +15,16 @@ Post Issues on Github!
 
 Check the [Supported Formats](FORMATS.md) and [Basic Usage.](USAGE.md)
 
+## Recommended Formats
+
+In general, I recommend GZip (Deflate)/BZip2 (BZip)/LZip (LZMA) as the simplicity of the formats lend to better long term archival as well as the streamability.  Tar is often used in conjunction for multiple files in a single archive (e.g. `.tar.gz`)
+
+Zip is okay, but it's a very hap-hazard format and the variation in headers and implementations makes it hard to get correct.  Uses Deflate by default but supports a lot of compression methods.
+
+RAR is not recommended as it's a propriatory format and the compression is closed source.
+
+7Zip and XZ both are overly complicated.  7Zip does not support streamable formats.  XZ has known holes explained here: (http://www.nongnu.org/lzip/xz_inadequate.html)  Use LZip for LZMA compression instead.
+
 ## A Simple Request
 
 Hi everyone. I hope you're using SharpCompress and finding it useful. Please give me feedback on what you'd like to see changed especially as far as usability goes. New feature suggestions are always welcome as well. I would also like to know what projects SharpCompress is being used in. I like seeing how it is used to give me ideas for future versions. Thanks!
