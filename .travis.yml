@@ -1,5 +1,8 @@
 dist: trusty
 language: csharp
+cache:
+  directories:
+  - $HOME/.dotnet
 solution: SharpCompress.sln
 matrix:
   include:

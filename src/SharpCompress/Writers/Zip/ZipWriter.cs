@@ -55,7 +55,7 @@ namespace SharpCompress.Writers.Zip
                 ulong size = 0;
                 foreach (ZipCentralDirectoryEntry entry in entries)
                 {
-                    size += entry.Write(OutputStream, ToZipCompressionMethod(compressionType));
+                    size += entry.Write(OutputStream);
                 }
                 WriteEndRecord(size);
             }
@@ -108,16 +108,16 @@ namespace SharpCompress.Writers.Zip
 
         public Stream WriteToStream(string entryPath, ZipWriterEntryOptions options)
         {
+            var compression = ToZipCompressionMethod(options.CompressionType ?? compressionType);
+
             entryPath = NormalizeFilename(entryPath);
             options.ModificationDateTime = options.ModificationDateTime ?? DateTime.Now;
             options.EntryComment = options.EntryComment ?? string.Empty;
-            var entry = new ZipCentralDirectoryEntry
+            var entry = new ZipCentralDirectoryEntry(compression, entryPath, (ulong)streamPosition)
                         {
                             Comment = options.EntryComment,
-                            FileName = entryPath,
-                            ModificationTime = options.ModificationDateTime,
-                            HeaderOffset = (ulong)streamPosition
-			};
+                            ModificationTime = options.ModificationDateTime
+                        };
 
             // Use the archive default setting for zip64 and allow overrides
             var useZip64 = isZip64;
@@ -126,8 +126,7 @@ namespace SharpCompress.Writers.Zip
 
             var headersize = (uint)WriteHeader(entryPath, options, entry, useZip64);
             streamPosition += headersize;
-            return new ZipWritingStream(this, OutputStream, entry, 
-                ToZipCompressionMethod(options.CompressionType ?? compressionType), 
+            return new ZipWritingStream(this, OutputStream, entry, compression, 
                 options.DeflateCompressionLevel ?? compressionLevel);
         }
 
