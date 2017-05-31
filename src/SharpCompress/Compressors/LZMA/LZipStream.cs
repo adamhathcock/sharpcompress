@@ -23,7 +23,6 @@ namespace SharpCompress.Compressors.LZMA
         private bool finished;
 
         private long writeCount;
-        private readonly Crc32Stream crc32Stream;
 
         public LZipStream(Stream stream, CompressionMode mode, bool leaveOpen = false)
         {
@@ -47,10 +46,7 @@ namespace SharpCompress.Compressors.LZMA
                 WriteHeaderSize(stream);
 
                 rawStream = new CountingWritableSubStream(stream);
-                crc32Stream = new Crc32Stream(rawStream);
-                this.stream = new LzmaStream(new LzmaEncoderProperties(true, dSize),
-                                             false,
-                                             crc32Stream);
+                this.stream = new Crc32Stream(new LzmaStream(new LzmaEncoderProperties(true, dSize), false, rawStream));
             }
         }
 
@@ -60,10 +56,11 @@ namespace SharpCompress.Compressors.LZMA
             {
                 if (Mode == CompressionMode.Compress)
                 {
-                    stream.Dispose();
+                    var crc32Stream = (Crc32Stream)stream;
+                    crc32Stream.WrappedStream.Dispose();
                     crc32Stream.Dispose();
                     var compressedCount = rawStream.Count;
-
+                    
                     var bytes = DataConverter.LittleEndian.GetBytes(crc32Stream.Crc);
                     rawStream.Write(bytes, 0, bytes.Length);
 

@@ -6,8 +6,8 @@ namespace SharpCompress.Crypto
 {
     internal sealed class Crc32Stream : Stream
     {
-        public const uint DefaultPolynomial = 0xedb88320;
-        public const uint DefaultSeed = 0xffffffff;
+        public const uint DefaultPolynomial = 0xedb88320u;
+        public const uint DefaultSeed = 0xffffffffu;
 
         private static uint[] defaultTable;
         
@@ -27,6 +27,8 @@ namespace SharpCompress.Crypto
             table = InitializeTable(polynomial);
             hash = seed;
         }
+
+        public Stream WrappedStream => stream;
 
         public override void Flush()
         {
