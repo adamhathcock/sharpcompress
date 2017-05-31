@@ -26,7 +26,7 @@ namespace SharpCompress.Test.Tar
         [Fact]
         public void Tar_LZip_Writer()
         {
-            Write(CompressionType.LZip, "Tar.tar.lz", "Tar.tar.lz");
+            Write(CompressionType.LZip, "Tar.noEmptyDirs.tar.lz", "Tar.noEmptyDirs.tar.lz");
         }
 
         [Fact]
