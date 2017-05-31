@@ -141,10 +141,7 @@ namespace SharpCompress.Compressors.LZMA
                 {
                     position = encoder.Code(null, true);
                 }
-                if (inputStream != null)
-                {
-                    inputStream.Dispose();
-                }
+                inputStream?.Dispose();
             }
             base.Dispose(disposing);
         }

@@ -22,6 +22,7 @@ namespace SharpCompress.IO
 
         public override void Flush()
         {
+            writableStream.Flush();
         }
 
         public override long Length => throw new NotSupportedException();
