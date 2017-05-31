@@ -1,10 +1,10 @@
-# Archive Formats
+# Formats
 
 ## Accessing Archives
 
-Archive classes allow random access to a seekable stream.
-Reader classes allow forward-only reading
-Writer classes allow forward-only Writing
+- Archive classes allow random access to a seekable stream.
+- Reader classes allow forward-only reading on a stream.
+- Writer classes allow forward-only Writing on a stream.
 
 ## Supported Format Table
 
@@ -12,8 +12,12 @@ Writer classes allow forward-only Writing
 | --- | --- | --- | --- | --- | --- |
 | Rar | Rar | Decompress (1) | RarArchive | RarReader | N/A |
 | Zip (2) | None, DEFLATE, BZip2, LZMA/LZMA2, PPMd | Both | ZipArchive | ZipReader | ZipWriter |
-| Tar | None, BZip2, GZip, LZip | Both | TarArchive | TarReader | TarWriter (3)  |
-| GZip (single file) | GZip (DEFLATE) | Both | GZipArchive | GZipReader | GZipWriter |
+| Tar | None | Both | TarArchive | TarReader | TarWriter (3)  |
+| Tar.GZip | DEFLATE | Both | TarArchive | TarReader | TarWriter (3)  |
+| Tar.BZip2 | BZip2 | Both | TarArchive | TarReader | TarWriter (3)  |
+| Tar.LZip | LZMA | Both | TarArchive | TarReader | TarWriter (3)  |
+| Tar.XZ | LZMA2 | Decompress | TarArchive | TarReader | TarWriter (3)  |
+| GZip (single file) | DEFLATE | Both | GZipArchive | GZipReader | GZipWriter |
 | 7Zip (4) | LZMA, LZMA2, BZip2, PPMd, BCJ, BCJ2, Deflate | Decompress | SevenZipArchive | N/A | N/A |
 | LZip (single file) (5) | LZip (LZMA) | Both | LZipArchive | LZipReader | LZipWriter |
 
@@ -23,9 +27,9 @@ Writer classes allow forward-only Writing
  4. The 7Zip format doesn't allow for reading as a forward-only stream so 7Zip is only supported through the Archive API
  5. LZip has no support for extra data like the file name or timestamp.  There is a default filename used when looking at the entry Key on the archive.
 
-## Compressors
+## Compression Streams
 
-For those who want to directly compress/decompress bits
+For those who want to directly compress/decompress bits.  The single file formats are represented here as well.  However, BZip2, LZip and XZ have no metadata (GZip has a little) so using them without something like a Tar file makes little sense.
 
 | Compressor | Compress/Decompress |
 | --- | --- |
@@ -36,6 +40,7 @@ For those who want to directly compress/decompress bits
 | PPMdStream | Both |
 | ADCStream | Decompress |
 | LZipStream | Both |
+| XZStream | Decompress |
 
 ## Archive Formats vs Compression 
 
@@ -52,3 +57,4 @@ Formats like Zip, 7Zip, Rar are archive formats only.  They use other compressio
 ### Overlap
 
 GZip, BZip2 and LZip are single file archival formats.  The overlap in the API happens because Tar uses the single file formats as "compression" methods and the API tries to hide this a bit.
+

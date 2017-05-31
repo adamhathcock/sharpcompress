@@ -39,6 +39,12 @@ namespace SharpCompress.Test.Tar
         }
 
         [Fact]
+        public void Tar_Xz_Reader()
+        {
+            Read("Tar.tar.xz", CompressionType.Xz);
+        }
+
+        [Fact]
         public void Tar_BZip2_Entry_Stream()
         {
             ResetScratch();

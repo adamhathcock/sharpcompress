@@ -167,6 +167,8 @@ I'm always looking for help or ideas. Please submit code or email with ideas. Un
 * Embedded some BouncyCastle crypto classes to allow RAR Decryption and Winzip AES Decryption in Portable and Windows Store DLLs
 * Built in Release (I think)
 
+XZ implementation based on: https://github.com/sambott/XZ.NET by @sambott
+
 7Zip implementation based on: https://code.google.com/p/managed-lzma/
 
 LICENSE
