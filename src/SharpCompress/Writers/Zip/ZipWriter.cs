@@ -211,14 +211,6 @@ namespace SharpCompress.Writers.Zip
             OutputStream.Write(DataConverter.LittleEndian.GetBytes(uncompressed), 0, 4);
         }
 
-        private void WritePostdataDescriptor(uint crc, ulong compressed, ulong uncompressed)
-        {
-            OutputStream.Write(DataConverter.LittleEndian.GetBytes(ZipHeaderFactory.POST_DATA_DESCRIPTOR), 0, 4);
-            OutputStream.Write(DataConverter.LittleEndian.GetBytes(crc), 0, 4);
-            OutputStream.Write(DataConverter.LittleEndian.GetBytes((uint)compressed), 0, 4);
-            OutputStream.Write(DataConverter.LittleEndian.GetBytes((uint)uncompressed), 0, 4);
-        }
-
         private void WriteEndRecord(ulong size)
         {
             byte[] encodedComment = ArchiveEncoding.Default.GetBytes(zipComment);
