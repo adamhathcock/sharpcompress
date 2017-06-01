@@ -143,7 +143,9 @@ namespace SharpCompress.Readers
 
         private void Skip()
         {
-            if (!Entry.IsSolid && Entry.CompressedSize > 0)
+            if (ArchiveType != ArchiveType.Rar 
+                && !Entry.IsSolid 
+                && Entry.CompressedSize > 0)
             {
                 //not solid and has a known compressed size then we can skip raw bytes.
                 var rawStream = Entry.Parts.First().GetRawStream();
@@ -156,15 +158,14 @@ namespace SharpCompress.Readers
                         rawStream.Read(skipBuffer, 0, skipBuffer.Length);
                     }
                     rawStream.Read(skipBuffer, 0, (int)(bytesToAdvance % skipBuffer.Length));
+                    return;
                 }
             }
-            else //don't know the size so we have to try to decompress to skip
+            //don't know the size so we have to try to decompress to skip
+            using (var s = OpenEntryStream())
             {
-                using (var s = OpenEntryStream())
+                while (s.Read(skipBuffer, 0, skipBuffer.Length) > 0)
                 {
-                    while (s.Read(skipBuffer, 0, skipBuffer.Length) > 0)
-                    {
-                    }
                 }
             }
         }
