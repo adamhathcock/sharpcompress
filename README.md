@@ -21,9 +21,9 @@ In general, I recommend GZip (Deflate)/BZip2 (BZip)/LZip (LZMA) as the simplicit
 
 Zip is okay, but it's a very hap-hazard format and the variation in headers and implementations makes it hard to get correct.  Uses Deflate by default but supports a lot of compression methods.
 
-RAR is not recommended as it's a propriatory format and the compression is closed source.
+RAR is not recommended as it's a propriatory format and the compression is closed source.  Use Tar/LZip for LZMA
 
-7Zip and XZ both are overly complicated.  7Zip does not support streamable formats.  XZ has known holes explained here: (http://www.nongnu.org/lzip/xz_inadequate.html)  Use LZip for LZMA compression instead.
+7Zip and XZ both are overly complicated.  7Zip does not support streamable formats.  XZ has known holes explained here: (http://www.nongnu.org/lzip/xz_inadequate.html)  Use Tar/LZip for LZMA compression instead.
 
 ## A Simple Request
 
