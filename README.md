@@ -44,10 +44,17 @@ I'm always looking for help or ideas. Please submit code or email with ideas. Un
 
 ## Version Log
 
+### Version 0.17.0
+
+* New - Full LZip support!  Can read and write LZip files and Tars inside LZip files.  [Make LZip a first class citizen. #241](https://github.com/adamhathcock/sharpcompress/issues/241)
+* New - XZ read support!  Can read XZ files and Tars inside XZ files.  [XZ in SharpCompress #91](https://github.com/adamhathcock/sharpcompress/issues/94)
+* Fix - [Regression - zip file writing on seekable streams always assumed stream start was 0.  Introduced with Zip64 writing.](https://github.com/adamhathcock/sharpcompress/issues/244)
+* Fix - [Zip files with post-data descriptors can be properly skipped via decompression](https://github.com/adamhathcock/sharpcompress/issues/162)
+
 ### Version 0.16.2
 
 * Fix [.NET 3.5 should support files and cryptography (was a regression from 0.16.0)](https://github.com/adamhathcock/sharpcompress/pull/251)
-* Fix [Zip per entry compression customization wrote the wrong method into the zip archive  ](https://github.com/adamhathcock/sharpcompress/pull/249)
+* Fix [Zip per entry compression customization wrote the wrong method into the zip archive](https://github.com/adamhathcock/sharpcompress/pull/249)
 
 ### Version 0.16.1
 
