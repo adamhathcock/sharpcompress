@@ -48,6 +48,32 @@ namespace SharpCompress.Test.Zip
             Read("Zip.deflate.dd.zip", CompressionType.Deflate);
         }
         [Fact]
+        public void Zip_Deflate_Streamed_Skip()
+        {
+            using (Stream stream = new ForwardOnlyStream(File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.dd.zip"))))
+            using (IReader reader = ReaderFactory.Open(stream))
+            {
+                ResetScratch();
+                int x = 0;
+                while (reader.MoveToNextEntry())
+                {
+                    if (!reader.Entry.IsDirectory)
+                    {
+                        x++;
+                        if (x % 2 == 0)
+                        {
+                            reader.WriteEntryToDirectory(SCRATCH_FILES_PATH,
+                                                         new ExtractionOptions()
+                                                         {
+                                                             ExtractFullPath = true,
+                                                             Overwrite = true
+                                                         });
+                        }
+                    }
+                }
+            }
+        }
+        [Fact]
         public void Zip_Deflate_Read()
         {
             Read("Zip.deflate.zip", CompressionType.Deflate);
