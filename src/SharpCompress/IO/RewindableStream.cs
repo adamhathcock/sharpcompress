@@ -105,6 +105,10 @@ namespace SharpCompress.IO
 
         public override int Read(byte[] buffer, int offset, int count)
         {
+            if (count == 0)
+            {
+                return 0;
+            }
             int read;
             if (isRewound && bufferStream.Position != bufferStream.Length)
             {
