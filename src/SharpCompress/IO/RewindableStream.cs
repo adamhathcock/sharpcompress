@@ -105,6 +105,12 @@ namespace SharpCompress.IO
 
         public override int Read(byte[] buffer, int offset, int count)
         {
+            //don't actually read if we don't really want to read anything
+            //currently a network stream bug on Windows for .NET Core
+            if (count == 0)
+            {
+                return 0;
+            }
             int read;
             if (isRewound && bufferStream.Position != bufferStream.Length)
             {
