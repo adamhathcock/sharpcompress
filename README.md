@@ -44,6 +44,10 @@ I'm always looking for help or ideas. Please submit code or email with ideas. Un
 
 ## Version Log
 
+### Version 0.17.1
+
+* Fix - [Bug Fix for .NET Core on Windows](https://github.com/adamhathcock/sharpcompress/pull/257)
+
 ### Version 0.17.0
 
 * New - Full LZip support!  Can read and write LZip files and Tars inside LZip files.  [Make LZip a first class citizen. #241](https://github.com/adamhathcock/sharpcompress/issues/241)
