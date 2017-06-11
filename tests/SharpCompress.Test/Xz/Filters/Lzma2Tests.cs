@@ -59,14 +59,14 @@ namespace SharpCompress.Test.Xz.Filters
         public void OnlyAcceptsOneByte(byte[] bytes)
         {
             var ex = Assert.Throws<InvalidDataException>(() => filter.Init(bytes));
-            Assert.Equal(ex.Message, "LZMA properties unexpected length");
+            Assert.Equal("LZMA properties unexpected length", ex.Message);
         }
 
         [Fact]
         public void ReservedBytesThrow()
         {
             var ex = Assert.Throws<InvalidDataException>(() => filter.Init(new byte[] { 0xC0 }));
-            Assert.Equal(ex.Message, "Reserved bits used in LZMA properties");
+            Assert.Equal("Reserved bits used in LZMA properties", ex.Message);
         }
     }
 }
