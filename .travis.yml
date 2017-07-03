@@ -1,5 +1,8 @@
 dist: trusty
 language: csharp
+os:
+  - linux
+  - osx
 cache:
   directories:
   - $HOME/.dotnet
