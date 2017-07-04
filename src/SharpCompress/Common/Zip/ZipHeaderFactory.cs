@@ -5,6 +5,7 @@ using System.Linq;
 #endif
 using SharpCompress.Common.Zip.Headers;
 using SharpCompress.IO;
+using System.Text;
 
 namespace SharpCompress.Common.Zip
 {
@@ -23,11 +24,13 @@ namespace SharpCompress.Common.Zip
         protected LocalEntryHeader lastEntryHeader;
         private readonly string password;
         private readonly StreamingMode mode;
+        private readonly Encoding forceEncoding;
 
-        protected ZipHeaderFactory(StreamingMode mode, string password)
+        protected ZipHeaderFactory(StreamingMode mode, string password, Encoding forceEncoding)
         {
             this.mode = mode;
             this.password = password;
+            this.forceEncoding = forceEncoding;
         }
 
         protected ZipHeader ReadHeader(uint headerBytes, BinaryReader reader, bool zip64 = false)
@@ -35,58 +38,64 @@ namespace SharpCompress.Common.Zip
             switch (headerBytes)
             {
                 case ENTRY_HEADER_BYTES:
-                {
-                    var entryHeader = new LocalEntryHeader();
-                    entryHeader.Read(reader);
-                    LoadHeader(entryHeader, reader.BaseStream);
+                    {
+                        var entryHeader = new LocalEntryHeader()
+                        {
+                            ForceEncoding = forceEncoding
+                        };
+                        entryHeader.Read(reader);
+                        LoadHeader(entryHeader, reader.BaseStream);
 
-                    lastEntryHeader = entryHeader;
-                    return entryHeader;
-                }
+                        lastEntryHeader = entryHeader;
+                        return entryHeader;
+                    }
                 case DIRECTORY_START_HEADER_BYTES:
-                {
-                    var entry = new DirectoryEntryHeader();
-                    entry.Read(reader);
-                    return entry;
-                }
+                    {
+                        var entry = new DirectoryEntryHeader()
+                        {
+                            ForceEncoding = forceEncoding
+                        };
+                        entry.Read(reader);
+                        return entry;
+                    }
                 case POST_DATA_DESCRIPTOR:
-                {
-                    if (FlagUtility.HasFlag(lastEntryHeader.Flags, HeaderFlags.UsePostDataDescriptor))
                     {
-                        lastEntryHeader.Crc = reader.ReadUInt32();
-                        lastEntryHeader.CompressedSize = zip64 ? (long)reader.ReadUInt64() : reader.ReadUInt32();
-                        lastEntryHeader.UncompressedSize = zip64 ? (long)reader.ReadUInt64() : reader.ReadUInt32();
+                        if (FlagUtility.HasFlag(lastEntryHeader.Flags, HeaderFlags.UsePostDataDescriptor))
+                        {
+                            lastEntryHeader.Crc = reader.ReadUInt32();
+                            lastEntryHeader.CompressedSize = zip64 ? (long)reader.ReadUInt64() : reader.ReadUInt32();
+                            lastEntryHeader.UncompressedSize = zip64 ? (long)reader.ReadUInt64() : reader.ReadUInt32();
+                        }
+                        else
+                        {
+                            reader.ReadBytes(zip64 ? 20 : 12);
+                        }
+                        return null;
                     }
-                    else
-                    {
-                        reader.ReadBytes(zip64 ? 20 : 12);
-                    }
-                    return null;
-                }
                 case DIGITAL_SIGNATURE:
                     return null;
                 case DIRECTORY_END_HEADER_BYTES:
-                {
-                    var entry = new DirectoryEndHeader();
-                    entry.Read(reader);
-                    return entry;
-                }
+                    {
+                        var entry = new DirectoryEndHeader();
+                        entry.Read(reader);
+                        return entry;
+                    }
                 case SPLIT_ARCHIVE_HEADER_BYTES:
-                {
-                    return new SplitHeader();
-                }
+                    {
+                        return new SplitHeader();
+                    }
                 case ZIP64_END_OF_CENTRAL_DIRECTORY:
-                {
-                    var entry = new Zip64DirectoryEndHeader();
-                    entry.Read(reader);
-                    return entry;
-                }
+                    {
+                        var entry = new Zip64DirectoryEndHeader();
+                        entry.Read(reader);
+                        return entry;
+                    }
                 case ZIP64_END_OF_CENTRAL_DIRECTORY_LOCATOR:
-                {
-                    var entry = new Zip64DirectoryEndLocatorHeader();
-                    entry.Read(reader);
-                    return entry;
-                }
+                    {
+                        var entry = new Zip64DirectoryEndLocatorHeader();
+                        entry.Read(reader);
+                        return entry;
+                    }
                 default:
                     throw new NotSupportedException("Unknown header: " + headerBytes);
             }
@@ -165,22 +174,22 @@ namespace SharpCompress.Common.Zip
             switch (mode)
             {
                 case StreamingMode.Seekable:
-                {
-                    entryHeader.DataStartPosition = stream.Position;
-                    stream.Position += entryHeader.CompressedSize;
-                    break;
-                }
+                    {
+                        entryHeader.DataStartPosition = stream.Position;
+                        stream.Position += entryHeader.CompressedSize;
+                        break;
+                    }
 
                 case StreamingMode.Streaming:
-                {
-                    entryHeader.PackedStream = stream;
-                    break;
-                }
+                    {
+                        entryHeader.PackedStream = stream;
+                        break;
+                    }
 
                 default:
-                {
-                    throw new InvalidFormatException("Invalid StreamingMode");
-                }
+                    {
+                        throw new InvalidFormatException("Invalid StreamingMode");
+                    }
             }
 
             //}

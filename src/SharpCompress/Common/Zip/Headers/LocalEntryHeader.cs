@@ -1,5 +1,6 @@
 ﻿using System.IO;
 using System.Linq;
+using System.Text;
 
 namespace SharpCompress.Common.Zip.Headers
 {
@@ -53,7 +54,7 @@ namespace SharpCompress.Common.Zip.Headers
                 Version = (ushort)(Version > 45 ? Version : 45);
 
             writer.Write(Version);
-            
+
             writer.Write((ushort)Flags);
             writer.Write((ushort)CompressionMethod);
             writer.Write(LastModifiedTime);

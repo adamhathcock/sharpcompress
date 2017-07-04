@@ -30,6 +30,7 @@ using System;
 using System.IO;
 using SharpCompress.Common;
 using SharpCompress.Converters;
+using System.Text;
 
 namespace SharpCompress.Compressors.Deflate
 {
@@ -47,6 +48,8 @@ namespace SharpCompress.Compressors.Deflate
         private bool firstReadDone;
         private int headerByteCount;
 
+        private readonly Encoding forceEncoding;
+
         public GZipStream(Stream stream, CompressionMode mode)
             : this(stream, mode, CompressionLevel.Default, false)
         {
@@ -62,16 +65,20 @@ namespace SharpCompress.Compressors.Deflate
         {
         }
 
-        public GZipStream(Stream stream, CompressionMode mode, CompressionLevel level, bool leaveOpen)
+        public GZipStream(Stream stream, CompressionMode mode, CompressionLevel level, bool leaveOpen, Encoding forceEncoding = null)
         {
-            BaseStream = new ZlibBaseStream(stream, mode, level, ZlibStreamFlavor.GZIP, leaveOpen);
+            BaseStream = new ZlibBaseStream(stream, mode, level, ZlibStreamFlavor.GZIP, leaveOpen, forceEncoding);
+            this.forceEncoding = forceEncoding;
         }
 
         #region Zlib properties
 
         public virtual FlushType FlushMode
         {
-            get { return (BaseStream._flushMode); }
+            get
+            {
+                return (BaseStream._flushMode);
+            }
             set
             {
                 if (disposed)
@@ -84,7 +91,10 @@ namespace SharpCompress.Compressors.Deflate
 
         public int BufferSize
         {
-            get { return BaseStream._bufferSize; }
+            get
+            {
+                return BaseStream._bufferSize;
+            }
             set
             {
                 if (disposed)
@@ -109,7 +119,7 @@ namespace SharpCompress.Compressors.Deflate
 
         internal virtual long TotalOut { get { return BaseStream._z.TotalBytesOut; } }
 
-        #endregion
+        #endregion Zlib properties
 
         #region Stream methods
 
@@ -188,7 +198,10 @@ namespace SharpCompress.Compressors.Deflate
                 return 0;
             }
 
-            set { throw new NotSupportedException(); }
+            set
+            {
+                throw new NotSupportedException();
+            }
         }
 
         /// <summary>
@@ -346,11 +359,14 @@ namespace SharpCompress.Compressors.Deflate
             BaseStream.Write(buffer, offset, count);
         }
 
-        #endregion
+        #endregion Stream methods
 
         public String Comment
         {
-            get { return comment; }
+            get
+            {
+                return comment;
+            }
             set
             {
                 if (disposed)
@@ -363,7 +379,10 @@ namespace SharpCompress.Compressors.Deflate
 
         public string FileName
         {
-            get { return fileName; }
+            get
+            {
+                return fileName;
+            }
             set
             {
                 if (disposed)
@@ -406,8 +425,10 @@ namespace SharpCompress.Compressors.Deflate
 
         private int EmitHeader()
         {
-            byte[] commentBytes = (Comment == null) ? null : ArchiveEncoding.Default.GetBytes(Comment);
-            byte[] filenameBytes = (FileName == null) ? null : ArchiveEncoding.Default.GetBytes(FileName);
+            byte[] commentBytes = (Comment == null) ? null
+                : (forceEncoding ?? ArchiveEncoding.Default).GetBytes(Comment);
+            byte[] filenameBytes = (FileName == null) ? null
+                : (forceEncoding ?? ArchiveEncoding.Default).GetBytes(FileName);
 
             int cbLength = (Comment == null) ? 0 : commentBytes.Length + 1;
             int fnLength = (FileName == null) ? 0 : filenameBytes.Length + 1;

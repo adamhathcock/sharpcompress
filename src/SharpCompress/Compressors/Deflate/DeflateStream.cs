@@ -26,6 +26,7 @@
 
 using System;
 using System.IO;
+using System.Text;
 
 namespace SharpCompress.Compressors.Deflate
 {
@@ -36,9 +37,10 @@ namespace SharpCompress.Compressors.Deflate
 
         public DeflateStream(Stream stream, CompressionMode mode,
                              CompressionLevel level = CompressionLevel.Default,
-                             bool leaveOpen = false)
+                             bool leaveOpen = false,
+                             Encoding forceEncoding = null)
         {
-            _baseStream = new ZlibBaseStream(stream, mode, level, ZlibStreamFlavor.DEFLATE, leaveOpen);
+            _baseStream = new ZlibBaseStream(stream, mode, level, ZlibStreamFlavor.DEFLATE, leaveOpen, forceEncoding);
         }
 
         #region Zlib properties
@@ -50,7 +52,10 @@ namespace SharpCompress.Compressors.Deflate
         /// </remarks>
         public virtual FlushType FlushMode
         {
-            get { return (_baseStream._flushMode); }
+            get
+            {
+                return (_baseStream._flushMode);
+            }
             set
             {
                 if (_disposed)
@@ -80,7 +85,10 @@ namespace SharpCompress.Compressors.Deflate
         /// </remarks>
         public int BufferSize
         {
-            get { return _baseStream._bufferSize; }
+            get
+            {
+                return _baseStream._bufferSize;
+            }
             set
             {
                 if (_disposed)
@@ -111,7 +119,10 @@ namespace SharpCompress.Compressors.Deflate
         /// </remarks>
         public CompressionStrategy Strategy
         {
-            get { return _baseStream.Strategy; }
+            get
+            {
+                return _baseStream.Strategy;
+            }
             set
             {
                 if (_disposed)
@@ -128,7 +139,7 @@ namespace SharpCompress.Compressors.Deflate
         /// <summary> Returns the total number of bytes output so far.</summary>
         public virtual long TotalOut { get { return _baseStream._z.TotalBytesOut; } }
 
-        #endregion
+        #endregion Zlib properties
 
         #region System.IO.Stream methods
 
@@ -206,7 +217,10 @@ namespace SharpCompress.Compressors.Deflate
                 }
                 return 0;
             }
-            set { throw new NotSupportedException(); }
+            set
+            {
+                throw new NotSupportedException();
+            }
         }
 
         /// <summary>
@@ -340,7 +354,7 @@ namespace SharpCompress.Compressors.Deflate
             _baseStream.Write(buffer, offset, count);
         }
 
-        #endregion
+        #endregion System.IO.Stream methods
 
         public MemoryStream InputBuffer
         {

@@ -2,12 +2,13 @@
 using System.IO;
 using SharpCompress.Common.Tar.Headers;
 using SharpCompress.IO;
+using System.Text;
 
 namespace SharpCompress.Common.Tar
 {
     internal static class TarHeaderFactory
     {
-        internal static IEnumerable<TarHeader> ReadHeader(StreamingMode mode, Stream stream)
+        internal static IEnumerable<TarHeader> ReadHeader(StreamingMode mode, Stream stream, Encoding forceEncoding)
         {
             while (true)
             {
@@ -15,7 +16,11 @@ namespace SharpCompress.Common.Tar
                 try
                 {
                     BinaryReader reader = new BinaryReader(stream);
-                    header = new TarHeader();
+                    header = new TarHeader()
+                    {
+                        ForceEncoding = forceEncoding
+                    };
+
                     if (!header.Read(reader))
                     {
                         yield break;
@@ -23,22 +28,22 @@ namespace SharpCompress.Common.Tar
                     switch (mode)
                     {
                         case StreamingMode.Seekable:
-                        {
-                            header.DataStartPosition = reader.BaseStream.Position;
+                            {
+                                header.DataStartPosition = reader.BaseStream.Position;
 
-                            //skip to nearest 512
-                            reader.BaseStream.Position += PadTo512(header.Size);
-                        }
+                                //skip to nearest 512
+                                reader.BaseStream.Position += PadTo512(header.Size);
+                            }
                             break;
                         case StreamingMode.Streaming:
-                        {
-                            header.PackedStream = new TarReadOnlySubStream(stream, header.Size);
-                        }
+                            {
+                                header.PackedStream = new TarReadOnlySubStream(stream, header.Size);
+                            }
                             break;
                         default:
-                        {
-                            throw new InvalidFormatException("Invalid StreamingMode");
-                        }
+                            {
+                                throw new InvalidFormatException("Invalid StreamingMode");
+                            }
                     }
                 }
                 catch

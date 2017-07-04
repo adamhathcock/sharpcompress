@@ -11,7 +11,7 @@ namespace SharpCompress.Writers.Tar
     public class TarWriter : AbstractWriter
     {
         public TarWriter(Stream destination, WriterOptions options)
-            : base(ArchiveType.Tar)
+            : base(ArchiveType.Tar, options)
         {
             if (!destination.CanWrite)
             {
@@ -22,19 +22,19 @@ namespace SharpCompress.Writers.Tar
                 case CompressionType.None:
                     break;
                 case CompressionType.BZip2:
-                {
-                    destination = new BZip2Stream(destination, CompressionMode.Compress, options.LeaveStreamOpen);
-                }
+                    {
+                        destination = new BZip2Stream(destination, CompressionMode.Compress, options.LeaveStreamOpen);
+                    }
                     break;
                 case CompressionType.GZip:
-                {
-                    destination = new GZipStream(destination, CompressionMode.Compress, options.LeaveStreamOpen);
-                }
+                    {
+                        destination = new GZipStream(destination, CompressionMode.Compress, options.LeaveStreamOpen);
+                    }
                     break;
                 default:
-                {
-                    throw new InvalidFormatException("Tar does not support compression: " + options.CompressionType);
-                }
+                    {
+                        throw new InvalidFormatException("Tar does not support compression: " + options.CompressionType);
+                    }
             }
             InitalizeStream(destination, !options.LeaveStreamOpen);
         }
@@ -66,7 +66,11 @@ namespace SharpCompress.Writers.Tar
 
             long realSize = size ?? source.Length;
 
-            TarHeader header = new TarHeader();
+            TarHeader header = new TarHeader()
+            {
+                ForceEncoding = WriterOptions.ForceEncoding
+            };
+
             header.LastModifiedTime = modificationTime ?? TarHeader.Epoch;
             header.Name = NormalizeFilename(filename);
             header.Size = realSize;
