@@ -52,28 +52,28 @@ namespace SharpCompress.Common.Zip
             }
         }
 
-        public override long Crc { get { return filePart.Header.Crc; } }
+        public override long Crc => filePart.Header.Crc;
 
-        public override string Key { get { return filePart.Header.Name; } }
+        public override string Key => filePart.Header.Name;
 
-        public override long CompressedSize { get { return filePart.Header.CompressedSize; } }
+        public override long CompressedSize => filePart.Header.CompressedSize;
 
-        public override long Size { get { return filePart.Header.UncompressedSize; } }
+        public override long Size => filePart.Header.UncompressedSize;
 
         public override DateTime? LastModifiedTime { get; }
 
-        public override DateTime? CreatedTime { get { return null; } }
+        public override DateTime? CreatedTime => null;
 
-        public override DateTime? LastAccessedTime { get { return null; } }
+        public override DateTime? LastAccessedTime => null;
 
-        public override DateTime? ArchivedTime { get { return null; } }
+        public override DateTime? ArchivedTime => null;
 
-        public override bool IsEncrypted { get { return FlagUtility.HasFlag(filePart.Header.Flags, HeaderFlags.Encrypted); } }
+        public override bool IsEncrypted => FlagUtility.HasFlag(filePart.Header.Flags, HeaderFlags.Encrypted);
 
-        public override bool IsDirectory { get { return filePart.Header.IsDirectory; } }
+        public override bool IsDirectory => filePart.Header.IsDirectory;
 
-        public override bool IsSplit { get { return false; } }
+        public override bool IsSplit => false;
 
-        internal override IEnumerable<FilePart> Parts { get { return filePart.AsEnumerable<FilePart>(); } }
+        internal override IEnumerable<FilePart> Parts => filePart.AsEnumerable<FilePart>();
     }
 }

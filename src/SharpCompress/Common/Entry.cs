@@ -75,6 +75,6 @@ namespace SharpCompress.Common
         /// <summary>
         /// Entry file attribute.
         /// </summary>
-        public virtual int? Attrib { get { throw new NotImplementedException(); } }
+        public virtual int? Attrib => throw new NotImplementedException();
     }
 }

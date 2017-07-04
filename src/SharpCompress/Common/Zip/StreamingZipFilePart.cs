@@ -25,7 +25,7 @@ namespace SharpCompress.Common.Zip
             {
                 return Stream.Null;
             }
-            decompressionStream = CreateDecompressionStream(GetCryptoStream(CreateBaseStream()));
+            decompressionStream = CreateDecompressionStream(GetCryptoStream(CreateBaseStream()), Header.CompressionMethod);
             if (LeaveStreamOpen)
             {
                 return new NonDisposingStream(decompressionStream);

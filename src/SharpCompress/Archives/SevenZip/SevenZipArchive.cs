@@ -171,7 +171,7 @@ namespace SharpCompress.Archives.SevenZip
                 this.archive = archive;
             }
 
-            public override SevenZipVolume Volume { get { return archive.Volumes.Single(); } }
+            public override SevenZipVolume Volume => archive.Volumes.Single();
 
             internal override IEnumerable<SevenZipEntry> GetEntries(Stream stream)
             {

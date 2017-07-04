@@ -20,13 +20,13 @@ namespace SharpCompress.Archives.Rar
             this.archive = archive;
         }
 
-        public override CompressionType CompressionType { get { return CompressionType.Rar; } }
+        public override CompressionType CompressionType => CompressionType.Rar;
 
-        public IArchive Archive { get { return archive; } }
+        public IArchive Archive => archive;
 
-        internal override IEnumerable<FilePart> Parts { get { return parts.Cast<FilePart>(); } }
+        internal override IEnumerable<FilePart> Parts => parts.Cast<FilePart>();
 
-        internal override FileHeader FileHeader { get { return parts.First().FileHeader; } }
+        internal override FileHeader FileHeader => parts.First().FileHeader;
 
         public override long Crc
         {

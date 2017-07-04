@@ -23,15 +23,15 @@ namespace SharpCompress.Common.Zip
             this.mode = mode;
         }
 
-        public override bool CanRead { get { return (mode == CryptoMode.Decrypt); } }
+        public override bool CanRead => (mode == CryptoMode.Decrypt);
 
-        public override bool CanSeek { get { return false; } }
+        public override bool CanSeek => false;
 
-        public override bool CanWrite { get { return (mode == CryptoMode.Encrypt); } }
+        public override bool CanWrite => (mode == CryptoMode.Encrypt);
 
-        public override long Length { get { throw new NotSupportedException(); } }
+        public override long Length => throw new NotSupportedException();
 
-        public override long Position { get { throw new NotSupportedException(); } set { throw new NotSupportedException(); } }
+        public override long Position { get => throw new NotSupportedException(); set => throw new NotSupportedException(); }
 
         public override int Read(byte[] buffer, int offset, int count)
         {

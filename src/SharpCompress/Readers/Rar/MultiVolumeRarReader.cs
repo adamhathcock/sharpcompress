@@ -83,7 +83,7 @@ namespace SharpCompress.Readers.Rar
             {
             }
 
-            object IEnumerator.Current { get { return Current; } }
+            object IEnumerator.Current => Current;
 
             public bool MoveNext()
             {

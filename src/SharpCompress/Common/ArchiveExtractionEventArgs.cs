@@ -9,6 +9,6 @@ namespace SharpCompress.Common
             Item = entry;
         }
 
-        public T Item { get; private set; }
+        public T Item { get; }
     }
 }

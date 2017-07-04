@@ -19,7 +19,6 @@ namespace SharpCompress.Compressors.Rar
 
         private long currentPartTotalReadBytes;
         private long currentEntryTotalReadBytes;
-        private uint currentCrc;
 
         internal MultiVolumeReadOnlyStream(IEnumerable<RarFilePart> parts, IExtractionListener streamListener)
         {
@@ -60,7 +59,7 @@ namespace SharpCompress.Compressors.Rar
 
             currentPartTotalReadBytes = 0;
 
-            currentCrc = filePartEnumerator.Current.FileHeader.FileCRC;
+            CurrentCrc = filePartEnumerator.Current.FileHeader.FileCRC;
 
             streamListener.FireFilePartExtractionBegin(filePartEnumerator.Current.FilePartName,
                                                        filePartEnumerator.Current.FileHeader.CompressedSize,
@@ -116,22 +115,22 @@ namespace SharpCompress.Compressors.Rar
             return totalRead;
         }
 
-        public override bool CanRead { get { return true; } }
+        public override bool CanRead => true;
 
-        public override bool CanSeek { get { return false; } }
+        public override bool CanSeek => false;
 
-        public override bool CanWrite { get { return false; } }
+        public override bool CanWrite => false;
 
-        public uint CurrentCrc { get { return this.currentCrc; } }
+        public uint CurrentCrc { get; private set; }
 
         public override void Flush()
         {
             throw new NotSupportedException();
         }
 
-        public override long Length { get { throw new NotSupportedException(); } }
+        public override long Length => throw new NotSupportedException();
 
-        public override long Position { get { throw new NotSupportedException(); } set { throw new NotSupportedException(); } }
+        public override long Position { get => throw new NotSupportedException(); set => throw new NotSupportedException(); }
 
         public override long Seek(long offset, SeekOrigin origin)
         {

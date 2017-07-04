@@ -75,10 +75,7 @@ namespace SharpCompress.Compressors.Deflate
 
         public virtual FlushType FlushMode
         {
-            get
-            {
-                return (BaseStream._flushMode);
-            }
+            get => (BaseStream._flushMode);
             set
             {
                 if (disposed)
@@ -91,10 +88,7 @@ namespace SharpCompress.Compressors.Deflate
 
         public int BufferSize
         {
-            get
-            {
-                return BaseStream._bufferSize;
-            }
+            get => BaseStream._bufferSize;
             set
             {
                 if (disposed)
@@ -115,11 +109,11 @@ namespace SharpCompress.Compressors.Deflate
             }
         }
 
-        internal virtual long TotalIn { get { return BaseStream._z.TotalBytesIn; } }
+        internal virtual long TotalIn => BaseStream._z.TotalBytesIn;
 
-        internal virtual long TotalOut { get { return BaseStream._z.TotalBytesOut; } }
+        internal virtual long TotalOut => BaseStream._z.TotalBytesOut;
 
-        #endregion Zlib properties
+        #endregion
 
         #region Stream methods
 
@@ -147,7 +141,7 @@ namespace SharpCompress.Compressors.Deflate
         /// <remarks>
         /// Always returns false.
         /// </remarks>
-        public override bool CanSeek { get { return false; } }
+        public override bool CanSeek => false;
 
         /// <summary>
         /// Indicates whether the stream can be written.
@@ -170,7 +164,7 @@ namespace SharpCompress.Compressors.Deflate
         /// <summary>
         /// Reading this property always throws a <see cref="NotImplementedException"/>.
         /// </summary>
-        public override long Length { get { throw new NotSupportedException(); } }
+        public override long Length => throw new NotSupportedException();
 
         /// <summary>
         ///   The position of the stream pointer.
@@ -198,10 +192,7 @@ namespace SharpCompress.Compressors.Deflate
                 return 0;
             }
 
-            set
-            {
-                throw new NotSupportedException();
-            }
+            set => throw new NotSupportedException();
         }
 
         /// <summary>
@@ -363,10 +354,7 @@ namespace SharpCompress.Compressors.Deflate
 
         public String Comment
         {
-            get
-            {
-                return comment;
-            }
+            get => comment;
             set
             {
                 if (disposed)
@@ -379,10 +367,7 @@ namespace SharpCompress.Compressors.Deflate
 
         public string FileName
         {
-            get
-            {
-                return fileName;
-            }
+            get => fileName;
             set
             {
                 if (disposed)

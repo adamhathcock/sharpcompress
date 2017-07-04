@@ -23,13 +23,17 @@ namespace SharpCompress.Writers.Zip
         private readonly string zipComment;
         private long streamPosition;
         private PpmdProperties ppmdProps;
-        private bool isZip64;
+        private readonly bool isZip64;
 
         public ZipWriter(Stream destination, ZipWriterOptions zipWriterOptions)
             : base(ArchiveType.Zip, zipWriterOptions)
         {
             zipComment = zipWriterOptions.ArchiveComment ?? string.Empty;
             isZip64 = zipWriterOptions.UseZip64;
+            if (destination.CanSeek)
+            {
+                streamPosition = destination.Position;
+            }
 
             compressionType = zipWriterOptions.CompressionType;
             compressionLevel = zipWriterOptions.DeflateCompressionLevel;
@@ -55,7 +59,7 @@ namespace SharpCompress.Writers.Zip
                 ulong size = 0;
                 foreach (ZipCentralDirectoryEntry entry in entries)
                 {
-                    size += entry.Write(OutputStream, ToZipCompressionMethod(compressionType));
+                    size += entry.Write(OutputStream);
                 }
                 WriteEndRecord(size);
             }
@@ -109,16 +113,16 @@ namespace SharpCompress.Writers.Zip
 
         public Stream WriteToStream(string entryPath, ZipWriterEntryOptions options)
         {
+            var compression = ToZipCompressionMethod(options.CompressionType ?? compressionType);
+
             entryPath = NormalizeFilename(entryPath);
             options.ModificationDateTime = options.ModificationDateTime ?? DateTime.Now;
             options.EntryComment = options.EntryComment ?? string.Empty;
-            var entry = new ZipCentralDirectoryEntry
-            {
-                Comment = options.EntryComment,
-                FileName = entryPath,
-                ModificationTime = options.ModificationDateTime,
-                HeaderOffset = (ulong)streamPosition
-            };
+            var entry = new ZipCentralDirectoryEntry(compression, entryPath, (ulong)streamPosition)
+                        {
+                            Comment = options.EntryComment,
+                            ModificationTime = options.ModificationDateTime
+                        };
 
             // Use the archive default setting for zip64 and allow overrides
             var useZip64 = isZip64;
@@ -127,8 +131,7 @@ namespace SharpCompress.Writers.Zip
 
             var headersize = (uint)WriteHeader(entryPath, options, entry, useZip64);
             streamPosition += headersize;
-            return new ZipWritingStream(this, OutputStream, entry,
-                ToZipCompressionMethod(options.CompressionType ?? compressionType),
+            return new ZipWritingStream(this, OutputStream, entry, compression, 
                 options.DeflateCompressionLevel ?? compressionLevel);
         }
 
@@ -209,14 +212,6 @@ namespace SharpCompress.Writers.Zip
             OutputStream.Write(DataConverter.LittleEndian.GetBytes(uncompressed), 0, 4);
         }
 
-        private void WritePostdataDescriptor(uint crc, ulong compressed, ulong uncompressed)
-        {
-            OutputStream.Write(DataConverter.LittleEndian.GetBytes(ZipHeaderFactory.POST_DATA_DESCRIPTOR), 0, 4);
-            OutputStream.Write(DataConverter.LittleEndian.GetBytes(crc), 0, 4);
-            OutputStream.Write(DataConverter.LittleEndian.GetBytes((uint)compressed), 0, 4);
-            OutputStream.Write(DataConverter.LittleEndian.GetBytes((uint)uncompressed), 0, 4);
-        }
-
         private void WriteEndRecord(ulong size)
         {
             byte[] encodedComment = (WriterOptions.ForceEncoding ?? ArchiveEncoding.Default).GetBytes(zipComment);
@@ -294,15 +289,15 @@ namespace SharpCompress.Writers.Zip
                 writeStream = GetWriteStream(originalStream);
             }
 
-            public override bool CanRead { get { return false; } }
+            public override bool CanRead => false;
 
-            public override bool CanSeek { get { return false; } }
+            public override bool CanSeek => false;
 
-            public override bool CanWrite { get { return true; } }
+            public override bool CanWrite => true;
 
-            public override long Length { get { throw new NotSupportedException(); } }
+            public override long Length => throw new NotSupportedException();
 
-            public override long Position { get { throw new NotSupportedException(); } set { throw new NotSupportedException(); } }
+            public override long Position { get => throw new NotSupportedException(); set => throw new NotSupportedException(); }
 
             private Stream GetWriteStream(Stream writeStream)
             {

@@ -27,7 +27,7 @@ namespace SharpCompress.Archives.GZip
 
         public IArchive Archive { get; }
 
-        public bool IsComplete { get { return true; } }
+        public bool IsComplete => true;
 
         #endregion
     }

@@ -9,10 +9,10 @@ namespace SharpCompress.Compressors.Rar.VM
             Type = type;
         }
 
-        internal int Length { get; private set; }
+        internal int Length { get; }
 
-        internal uint CRC { get; private set; }
+        internal uint CRC { get; }
 
-        internal VMStandardFilters Type { get; private set; }
+        internal VMStandardFilters Type { get; }
     }
 }

@@ -34,19 +34,19 @@ namespace SharpCompress.Compressors.PPMd.I1
             /// <summary>
             /// Gets or sets the number statistics.
             /// </summary>
-            public byte NumberStatistics { get { return Memory[Address]; } set { Memory[Address] = value; } }
+            public byte NumberStatistics { get => Memory[Address]; set => Memory[Address] = value; }
 
             /// <summary>
             /// Gets or sets the flags.
             /// </summary>
-            public byte Flags { get { return Memory[Address + 1]; } set { Memory[Address + 1] = value; } }
+            public byte Flags { get => Memory[Address + 1]; set => Memory[Address + 1] = value; }
 
             /// <summary>
             /// Gets or sets the summary frequency.
             /// </summary>
             public ushort SummaryFrequency
             {
-                get { return (ushort)(Memory[Address + 2] | Memory[Address + 3] << 8); }
+                get => (ushort)(Memory[Address + 2] | Memory[Address + 3] << 8);
                 set
                 {
                     Memory[Address + 2] = (byte)value;
@@ -59,13 +59,9 @@ namespace SharpCompress.Compressors.PPMd.I1
             /// </summary>
             public PpmState Statistics
             {
-                get
-                {
-                    return
-                        new PpmState(
-                                     Memory[Address + 4] | ((uint)Memory[Address + 5]) << 8 |
-                                     ((uint)Memory[Address + 6]) << 16 | ((uint)Memory[Address + 7]) << 24, Memory);
-                }
+                get => new PpmState(
+                                    Memory[Address + 4] | ((uint)Memory[Address + 5]) << 8 |
+                                    ((uint)Memory[Address + 6]) << 16 | ((uint)Memory[Address + 7]) << 24, Memory);
                 set
                 {
                     Memory[Address + 4] = (byte)value.Address;
@@ -80,13 +76,9 @@ namespace SharpCompress.Compressors.PPMd.I1
             /// </summary>
             public PpmContext Suffix
             {
-                get
-                {
-                    return
-                        new PpmContext(
-                                       Memory[Address + 8] | ((uint)Memory[Address + 9]) << 8 |
-                                       ((uint)Memory[Address + 10]) << 16 | ((uint)Memory[Address + 11]) << 24, Memory);
-                }
+                get => new PpmContext(
+                                      Memory[Address + 8] | ((uint)Memory[Address + 9]) << 8 |
+                                      ((uint)Memory[Address + 10]) << 16 | ((uint)Memory[Address + 11]) << 24, Memory);
                 set
                 {
                     Memory[Address + 8] = (byte)value.Address;
@@ -121,21 +113,21 @@ namespace SharpCompress.Compressors.PPMd.I1
             /// </para>
             /// </remarks>
             /// <returns></returns>
-            public PpmState FirstState { get { return new PpmState(Address + 2, Memory); } }
+            public PpmState FirstState => new PpmState(Address + 2, Memory);
 
             /// <summary>
             /// Gets or sets the symbol of the first PPM state.  This is provided for convenience.  The same
             /// information can be obtained using the Symbol property on the PPM state provided by the
             /// <see cref="FirstState"/> property.
             /// </summary>
-            public byte FirstStateSymbol { get { return Memory[Address + 2]; } set { Memory[Address + 2] = value; } }
+            public byte FirstStateSymbol { get => Memory[Address + 2]; set => Memory[Address + 2] = value; }
 
             /// <summary>
             /// Gets or sets the frequency of the first PPM state.  This is provided for convenience.  The same
             /// information can be obtained using the Frequency property on the PPM state provided by the
             ///context.FirstState property.
             /// </summary>
-            public byte FirstStateFrequency { get { return Memory[Address + 3]; } set { Memory[Address + 3] = value; } }
+            public byte FirstStateFrequency { get => Memory[Address + 3]; set => Memory[Address + 3] = value; }
 
             /// <summary>
             /// Gets or sets the successor of the first PPM state.  This is provided for convenience.  The same
@@ -143,13 +135,9 @@ namespace SharpCompress.Compressors.PPMd.I1
             /// </summary>
             public PpmContext FirstStateSuccessor
             {
-                get
-                {
-                    return
-                        new PpmContext(
-                                       Memory[Address + 4] | ((uint)Memory[Address + 5]) << 8 |
-                                       ((uint)Memory[Address + 6]) << 16 | ((uint)Memory[Address + 7]) << 24, Memory);
-                }
+                get => new PpmContext(
+                                      Memory[Address + 4] | ((uint)Memory[Address + 5]) << 8 |
+                                      ((uint)Memory[Address + 6]) << 16 | ((uint)Memory[Address + 7]) << 24, Memory);
                 set
                 {
                     Memory[Address + 4] = (byte)value.Address;

@@ -9,18 +9,27 @@ namespace SharpCompress.Writers.Zip
 {
     internal class ZipCentralDirectoryEntry
     {
-        internal string FileName { get; set; }
+        private readonly ZipCompressionMethod compression;
+        private readonly string fileName;
+
+        public ZipCentralDirectoryEntry(ZipCompressionMethod compression, string fileName, ulong headerOffset)
+        {
+            this.compression = compression;
+            this.fileName = fileName;
+            HeaderOffset = headerOffset;
+        }
+        
         internal DateTime? ModificationTime { get; set; }
         internal string Comment { get; set; }
         internal uint Crc { get; set; }
-        internal ulong HeaderOffset { get; set; }
         internal ulong Compressed { get; set; }
         internal ulong Decompressed { get; set; }
         internal ushort Zip64HeaderOffset { get; set; }
+        internal ulong HeaderOffset { get; }
 
-        internal uint Write(Stream outputStream, ZipCompressionMethod compression)
+        internal uint Write(Stream outputStream)
         {
-            byte[] encodedFilename = Encoding.UTF8.GetBytes(FileName);
+            byte[] encodedFilename = Encoding.UTF8.GetBytes(fileName);
             byte[] encodedComment = Encoding.UTF8.GetBytes(Comment);
 
 			var zip64_stream = Compressed >= uint.MaxValue || Decompressed >= uint.MaxValue;
@@ -30,7 +39,7 @@ namespace SharpCompress.Writers.Zip
             var decompressedvalue = zip64 ? uint.MaxValue : (uint)Decompressed;
             var headeroffsetvalue = zip64 ? uint.MaxValue : (uint)HeaderOffset;
             var extralength = zip64 ? (2 + 2 + 8 + 8 + 8 + 4) : 0;
-            var version = (byte)(zip64 ? 45 : 10);
+            var version = (byte)(zip64 ? 45 : 20); // Version 20 required for deflate/encryption
 
             HeaderFlags flags = HeaderFlags.UTF8;
             if (!outputStream.CanSeek)
@@ -50,8 +59,8 @@ namespace SharpCompress.Writers.Zip
                 }
             }
 
-            //constant sig, then version made by, compabitility, then version to extract
-            outputStream.Write(new byte[] { 80, 75, 1, 2, 0x14, 0, version, 0 }, 0, 8);
+            //constant sig, then version made by, then version to extract
+            outputStream.Write(new byte[] { 80, 75, 1, 2, version, 0, version, 0 }, 0, 8);
 
             outputStream.Write(DataConverter.LittleEndian.GetBytes((ushort)flags), 0, 2);
             outputStream.Write(DataConverter.LittleEndian.GetBytes((ushort)compression), 0, 2); // zipping method

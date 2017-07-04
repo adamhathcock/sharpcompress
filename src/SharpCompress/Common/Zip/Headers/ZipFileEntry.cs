@@ -126,6 +126,6 @@ namespace SharpCompress.Common.Zip.Headers
 
         internal ZipFilePart Part { get; set; }
 
-        internal bool IsZip64 { get { return CompressedSize == uint.MaxValue; } }
+        internal bool IsZip64 => CompressedSize == uint.MaxValue;
     }
 }

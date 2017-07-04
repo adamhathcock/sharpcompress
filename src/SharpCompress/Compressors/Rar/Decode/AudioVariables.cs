@@ -7,7 +7,7 @@ namespace SharpCompress.Compressors.Rar.Decode
             Dif = new int[11];
         }
 
-        internal int[] Dif { get; private set; }
+        internal int[] Dif { get; }
         internal int ByteCount { get; set; }
         internal int D1 { get; set; }
 
