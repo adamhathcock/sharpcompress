@@ -34,15 +34,15 @@ namespace SharpCompress.Common.Zip.Headers
         {
             if (ForceEncoding != null)
             {
-                return ForceEncoding.GetString(str);
+                return ForceEncoding.GetString(str, 0, str.Length);
             }
 
             if (FlagUtility.HasFlag(Flags, HeaderFlags.UTF8))
             {
-                return Encoding.UTF8.GetString(str);
+                return Encoding.UTF8.GetString(str, 0, str.Length);
             }
 
-            return ArchiveEncoding.Default.GetString(str);
+            return ArchiveEncoding.Default.GetString(str, 0, str.Length);
         }
 
         protected byte[] EncodeString(string str)

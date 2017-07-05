@@ -424,8 +424,8 @@ namespace SharpCompress.Compressors.Deflate
                 }
             }
             while (!done);
-
-            return (forceEncoding ?? ArchiveEncoding.Default).GetString(list.ToArray());
+            byte[] buffer = list.ToArray();
+            return (forceEncoding ?? ArchiveEncoding.Default).GetString(buffer, 0, buffer.Length);
         }
 
         private int _ReadAndValidateGzipHeader()

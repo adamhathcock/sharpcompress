@@ -152,7 +152,7 @@ namespace SharpCompress.Archives.Tar
                                     memoryStream.Position = 0;
                                     var bytes = memoryStream.ToArray();
 
-                                    header.Name = (ReaderOptions.ForceEncoding ?? ArchiveEncoding.Default).GetString(bytes).TrimNulls();
+                                    header.Name = (ReaderOptions.ForceEncoding ?? ArchiveEncoding.Default).GetString(bytes, 0, bytes.Length).TrimNulls();
                                 }
                             }
 

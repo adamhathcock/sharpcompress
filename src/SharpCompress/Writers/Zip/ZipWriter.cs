@@ -118,11 +118,11 @@ namespace SharpCompress.Writers.Zip
             entryPath = NormalizeFilename(entryPath);
             options.ModificationDateTime = options.ModificationDateTime ?? DateTime.Now;
             options.EntryComment = options.EntryComment ?? string.Empty;
-            var entry = new ZipCentralDirectoryEntry(compression, entryPath, (ulong)streamPosition)
-                        {
-                            Comment = options.EntryComment,
-                            ModificationTime = options.ModificationDateTime
-                        };
+            var entry = new ZipCentralDirectoryEntry(compression, entryPath, (ulong)streamPosition, WriterOptions.ForceEncoding)
+            {
+                Comment = options.EntryComment,
+                ModificationTime = options.ModificationDateTime
+            };
 
             // Use the archive default setting for zip64 and allow overrides
             var useZip64 = isZip64;
@@ -131,7 +131,7 @@ namespace SharpCompress.Writers.Zip
 
             var headersize = (uint)WriteHeader(entryPath, options, entry, useZip64);
             streamPosition += headersize;
-            return new ZipWritingStream(this, OutputStream, entry, compression, 
+            return new ZipWritingStream(this, OutputStream, entry, compression,
                 options.DeflateCompressionLevel ?? compressionLevel);
         }
 

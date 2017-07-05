@@ -113,8 +113,8 @@ namespace SharpCompress.Common.GZip
                 }
             }
             while (!done);
-
-            return (forceEncoding ?? ArchiveEncoding.Default).GetString(list.ToArray());
+            byte[] buffer = list.ToArray();
+            return (forceEncoding ?? ArchiveEncoding.Default).GetString(buffer, 0, buffer.Length);
         }
     }
 }

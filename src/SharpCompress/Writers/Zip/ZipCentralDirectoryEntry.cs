@@ -11,14 +11,16 @@ namespace SharpCompress.Writers.Zip
     {
         private readonly ZipCompressionMethod compression;
         private readonly string fileName;
+        private readonly Encoding forceEncoding;
 
-        public ZipCentralDirectoryEntry(ZipCompressionMethod compression, string fileName, ulong headerOffset)
+        public ZipCentralDirectoryEntry(ZipCompressionMethod compression, string fileName, ulong headerOffset, Encoding forceEncoding)
         {
             this.compression = compression;
             this.fileName = fileName;
             HeaderOffset = headerOffset;
+            this.forceEncoding = forceEncoding;
         }
-        
+
         internal DateTime? ModificationTime { get; set; }
         internal string Comment { get; set; }
         internal uint Crc { get; set; }
@@ -29,11 +31,11 @@ namespace SharpCompress.Writers.Zip
 
         internal uint Write(Stream outputStream)
         {
-            byte[] encodedFilename = Encoding.UTF8.GetBytes(fileName);
-            byte[] encodedComment = Encoding.UTF8.GetBytes(Comment);
+            byte[] encodedFilename = (forceEncoding ?? Encoding.UTF8).GetBytes(fileName);
+            byte[] encodedComment = (forceEncoding ?? Encoding.UTF8).GetBytes(Comment);
 
-			var zip64_stream = Compressed >= uint.MaxValue || Decompressed >= uint.MaxValue;
-			var zip64 = zip64_stream || HeaderOffset >= uint.MaxValue || Zip64HeaderOffset != 0;
+            var zip64_stream = Compressed >= uint.MaxValue || Decompressed >= uint.MaxValue;
+            var zip64 = zip64_stream || HeaderOffset >= uint.MaxValue || Zip64HeaderOffset != 0;
 
             var compressedvalue = zip64 ? uint.MaxValue : (uint)Compressed;
             var decompressedvalue = zip64 ? uint.MaxValue : (uint)Decompressed;
@@ -41,18 +43,18 @@ namespace SharpCompress.Writers.Zip
             var extralength = zip64 ? (2 + 2 + 8 + 8 + 8 + 4) : 0;
             var version = (byte)(zip64 ? 45 : 20); // Version 20 required for deflate/encryption
 
-            HeaderFlags flags = HeaderFlags.UTF8;
+            HeaderFlags flags = (forceEncoding ?? Encoding.UTF8) == Encoding.UTF8 ? HeaderFlags.UTF8 : HeaderFlags.None;
             if (!outputStream.CanSeek)
             {
                 // Cannot use data descriptors with zip64:
                 // https://blogs.oracle.com/xuemingshen/entry/is_zipinput_outputstream_handling_of
 
-				// We check that streams are not written too large in the ZipWritingStream,
-				// so this extra guard is not required, but kept to simplify changing the code
-				// once the zip64 post-data issue is resolved
+                // We check that streams are not written too large in the ZipWritingStream,
+                // so this extra guard is not required, but kept to simplify changing the code
+                // once the zip64 post-data issue is resolved
                 if (!zip64_stream)
                     flags |= HeaderFlags.UsePostDataDescriptor;
-                
+
                 if (compression == ZipCompressionMethod.LZMA)
                 {
                     flags |= HeaderFlags.Bit1; // eos marker

@@ -144,7 +144,7 @@ namespace SharpCompress.Common.Tar.Headers
             {
                 reader.ReadBytes(remainingBytesToRead);
             }
-            return (ForceEncoding ?? ArchiveEncoding.Default).GetString(nameBytes).TrimNulls();
+            return (ForceEncoding ?? ArchiveEncoding.Default).GetString(nameBytes, 0, nameBytes.Length).TrimNulls();
         }
 
         private static EntryType ReadEntryType(byte[] buffer)

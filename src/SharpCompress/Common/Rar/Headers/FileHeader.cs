@@ -121,7 +121,7 @@ namespace SharpCompress.Common.Rar.Headers
         //only the full .net framework will do other code pages than unicode/utf8
         private string DecodeString(byte[] bytes)
         {
-            return (ForceEncoding ?? ArchiveEncoding.Default).GetString(bytes);
+            return (ForceEncoding ?? ArchiveEncoding.Default).GetString(bytes, 0, bytes.Length);
         }
 
         private long UInt32To64(uint x, uint y)

@@ -163,7 +163,7 @@ namespace SharpCompress.Archives.Zip
                         case ZipHeaderType.DirectoryEnd:
                             {
                                 byte[] bytes = (h as DirectoryEndHeader).Comment;
-                                volume.Comment = (ReaderOptions.ForceEncoding ?? ArchiveEncoding.Default).GetString(bytes);
+                                volume.Comment = (ReaderOptions.ForceEncoding ?? ArchiveEncoding.Default).GetString(bytes, 0, bytes.Length);
                                 yield break;
                             }
                     }
