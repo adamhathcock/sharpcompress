@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using SharpCompress.Common.Tar.Headers;
 using SharpCompress.IO;
+using System.Text;
 
 namespace SharpCompress.Common.Tar
 {
@@ -43,9 +44,9 @@ namespace SharpCompress.Common.Tar
         internal override IEnumerable<FilePart> Parts => filePart.AsEnumerable<FilePart>();
 
         internal static IEnumerable<TarEntry> GetEntries(StreamingMode mode, Stream stream,
-                                                         CompressionType compressionType)
+                                                         CompressionType compressionType, Encoding forceEncoding)
         {
-            foreach (TarHeader h in TarHeaderFactory.ReadHeader(mode, stream))
+            foreach (TarHeader h in TarHeaderFactory.ReadHeader(mode, stream, forceEncoding))
             {
                 if (h != null)
                 {

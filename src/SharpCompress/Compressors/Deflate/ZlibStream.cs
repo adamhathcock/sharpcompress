@@ -27,6 +27,7 @@
 
 using System;
 using System.IO;
+using System.Text;
 
 namespace SharpCompress.Compressors.Deflate
 {
@@ -50,9 +51,9 @@ namespace SharpCompress.Compressors.Deflate
         {
         }
 
-        public ZlibStream(Stream stream, CompressionMode mode, CompressionLevel level, bool leaveOpen)
+        public ZlibStream(Stream stream, CompressionMode mode, CompressionLevel level, bool leaveOpen, Encoding forceEncoding = null)
         {
-            _baseStream = new ZlibBaseStream(stream, mode, level, ZlibStreamFlavor.ZLIB, leaveOpen);
+            _baseStream = new ZlibBaseStream(stream, mode, level, ZlibStreamFlavor.ZLIB, leaveOpen, forceEncoding);
         }
 
         #region Zlib properties
@@ -326,6 +327,6 @@ namespace SharpCompress.Compressors.Deflate
             _baseStream.Write(buffer, offset, count);
         }
 
-        #endregion
+        #endregion System.IO.Stream methods
     }
 }

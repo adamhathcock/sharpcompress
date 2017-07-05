@@ -30,6 +30,7 @@ using System;
 using System.IO;
 using SharpCompress.Common;
 using SharpCompress.Converters;
+using System.Text;
 
 namespace SharpCompress.Compressors.Deflate
 {
@@ -47,6 +48,8 @@ namespace SharpCompress.Compressors.Deflate
         private bool firstReadDone;
         private int headerByteCount;
 
+        private readonly Encoding forceEncoding;
+
         public GZipStream(Stream stream, CompressionMode mode)
             : this(stream, mode, CompressionLevel.Default, false)
         {
@@ -62,9 +65,10 @@ namespace SharpCompress.Compressors.Deflate
         {
         }
 
-        public GZipStream(Stream stream, CompressionMode mode, CompressionLevel level, bool leaveOpen)
+        public GZipStream(Stream stream, CompressionMode mode, CompressionLevel level, bool leaveOpen, Encoding forceEncoding = null)
         {
-            BaseStream = new ZlibBaseStream(stream, mode, level, ZlibStreamFlavor.GZIP, leaveOpen);
+            BaseStream = new ZlibBaseStream(stream, mode, level, ZlibStreamFlavor.GZIP, leaveOpen, forceEncoding);
+            this.forceEncoding = forceEncoding;
         }
 
         #region Zlib properties
@@ -346,7 +350,7 @@ namespace SharpCompress.Compressors.Deflate
             BaseStream.Write(buffer, offset, count);
         }
 
-        #endregion
+        #endregion Stream methods
 
         public String Comment
         {
@@ -406,8 +410,10 @@ namespace SharpCompress.Compressors.Deflate
 
         private int EmitHeader()
         {
-            byte[] commentBytes = (Comment == null) ? null : ArchiveEncoding.Default.GetBytes(Comment);
-            byte[] filenameBytes = (FileName == null) ? null : ArchiveEncoding.Default.GetBytes(FileName);
+            byte[] commentBytes = (Comment == null) ? null
+                : (forceEncoding ?? ArchiveEncoding.Default).GetBytes(Comment);
+            byte[] filenameBytes = (FileName == null) ? null
+                : (forceEncoding ?? ArchiveEncoding.Default).GetBytes(FileName);
 
             int cbLength = (Comment == null) ? 0 : commentBytes.Length + 1;
             int fnLength = (FileName == null) ? 0 : filenameBytes.Length + 1;

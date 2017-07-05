@@ -12,7 +12,7 @@ namespace SharpCompress.Writers.Tar
     public class TarWriter : AbstractWriter
     {
         public TarWriter(Stream destination, WriterOptions options)
-            : base(ArchiveType.Tar)
+            : base(ArchiveType.Tar, options)
         {
             if (!destination.CanWrite)
             {
@@ -72,7 +72,11 @@ namespace SharpCompress.Writers.Tar
 
             long realSize = size ?? source.Length;
 
-            TarHeader header = new TarHeader();
+            TarHeader header = new TarHeader()
+            {
+                ForceEncoding = WriterOptions.ForceEncoding
+            };
+
             header.LastModifiedTime = modificationTime ?? TarHeader.Epoch;
             header.Name = NormalizeFilename(filename);
             header.Size = realSize;

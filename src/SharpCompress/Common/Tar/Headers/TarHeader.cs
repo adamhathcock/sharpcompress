@@ -20,6 +20,7 @@ namespace SharpCompress.Common.Tar.Headers
         internal DateTime LastModifiedTime { get; set; }
         internal EntryType EntryType { get; set; }
         internal Stream PackedStream { get; set; }
+        internal Encoding ForceEncoding { get; set; }
 
         internal const int BlockSize = 512;
 
@@ -72,7 +73,7 @@ namespace SharpCompress.Common.Tar.Headers
 
         private void WriteLongFilenameHeader(Stream output)
         {
-            byte[] nameBytes = ArchiveEncoding.Default.GetBytes(Name);
+            byte[] nameBytes = (ForceEncoding ?? ArchiveEncoding.Default).GetBytes(Name);
             output.Write(nameBytes, 0, nameBytes.Length);
 
             // pad to multiple of BlockSize bytes, and make sure a terminating null is added
@@ -99,7 +100,7 @@ namespace SharpCompress.Common.Tar.Headers
             }
             else
             {
-                Name = ArchiveEncoding.Default.GetString(buffer, 0, 100).TrimNulls();
+                Name = (ForceEncoding ?? ArchiveEncoding.Default).GetString(buffer, 0, 100).TrimNulls();
             }
 
             EntryType = ReadEntryType(buffer);
@@ -111,12 +112,12 @@ namespace SharpCompress.Common.Tar.Headers
             long unixTimeStamp = ReadASCIIInt64Base8(buffer, 136, 11);
             LastModifiedTime = Epoch.AddSeconds(unixTimeStamp).ToLocalTime();
 
-            Magic = ArchiveEncoding.Default.GetString(buffer, 257, 6).TrimNulls();
+            Magic = (ForceEncoding ?? ArchiveEncoding.Default).GetString(buffer, 257, 6).TrimNulls();
 
             if (!string.IsNullOrEmpty(Magic)
                 && "ustar".Equals(Magic))
             {
-                string namePrefix = ArchiveEncoding.Default.GetString(buffer, 345, 157);
+                string namePrefix = (ForceEncoding ?? ArchiveEncoding.Default).GetString(buffer, 345, 157);
                 namePrefix = namePrefix.TrimNulls();
                 if (!string.IsNullOrEmpty(namePrefix))
                 {
@@ -143,7 +144,7 @@ namespace SharpCompress.Common.Tar.Headers
             {
                 reader.ReadBytes(remainingBytesToRead);
             }
-            return ArchiveEncoding.Default.GetString(nameBytes, 0, nameBytes.Length).TrimNulls();
+            return (ForceEncoding ?? ArchiveEncoding.Default).GetString(nameBytes, 0, nameBytes.Length).TrimNulls();
         }
 
         private static EntryType ReadEntryType(byte[] buffer)

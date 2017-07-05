@@ -32,6 +32,11 @@ namespace SharpCompress.Common.Zip.Headers
 
         protected string DecodeString(byte[] str)
         {
+            if (ForceEncoding != null)
+            {
+                return ForceEncoding.GetString(str, 0, str.Length);
+            }
+
             if (FlagUtility.HasFlag(Flags, HeaderFlags.UTF8))
             {
                 return Encoding.UTF8.GetString(str, 0, str.Length);
@@ -42,14 +47,22 @@ namespace SharpCompress.Common.Zip.Headers
 
         protected byte[] EncodeString(string str)
         {
+            if (ForceEncoding != null)
+            {
+                return ForceEncoding.GetBytes(str);
+            }
+
             if (FlagUtility.HasFlag(Flags, HeaderFlags.UTF8))
             {
                 return Encoding.UTF8.GetBytes(str);
             }
+
             return ArchiveEncoding.Default.GetBytes(str);
         }
 
         internal Stream PackedStream { get; set; }
+
+        internal Encoding ForceEncoding { get; set; }
 
         internal string Name { get; set; }
 
@@ -64,7 +77,7 @@ namespace SharpCompress.Common.Zip.Headers
         internal long UncompressedSize { get; set; }
 
         internal List<ExtraData> Extra { get; set; }
-        
+
         public string Password { get; set; }
 
         internal PkwareTraditionalEncryptionData ComposeEncryptionData(Stream archiveStream)
@@ -78,7 +91,7 @@ namespace SharpCompress.Common.Zip.Headers
             archiveStream.Read(buffer, 0, 12);
 
             PkwareTraditionalEncryptionData encryptionData = PkwareTraditionalEncryptionData.ForRead(Password, this, buffer);
-            
+
             return encryptionData;
         }
 

@@ -1,6 +1,6 @@
+using SharpCompress.IO;
 using System;
 using System.IO;
-using SharpCompress.IO;
 
 namespace SharpCompress.Common.Rar.Headers
 {
@@ -52,50 +52,50 @@ namespace SharpCompress.Common.Rar.Headers
             switch (HeaderType)
             {
                 case HeaderType.FileHeader:
-                {
-                    if (FileFlags.HasFlag(FileFlags.UNICODE))
                     {
-                        int length = 0;
-                        while (length < fileNameBytes.Length
-                               && fileNameBytes[length] != 0)
+                        if (FileFlags.HasFlag(FileFlags.UNICODE))
                         {
-                            length++;
-                        }
-                        if (length != nameSize)
-                        {
-                            length++;
-                            FileName = FileNameDecoder.Decode(fileNameBytes, length);
+                            int length = 0;
+                            while (length < fileNameBytes.Length
+                                   && fileNameBytes[length] != 0)
+                            {
+                                length++;
+                            }
+                            if (length != nameSize)
+                            {
+                                length++;
+                                FileName = FileNameDecoder.Decode(fileNameBytes, length);
+                            }
+                            else
+                            {
+                                FileName = DecodeString(fileNameBytes);
+                            }
                         }
                         else
                         {
-                            FileName = DecodeDefault(fileNameBytes);
+                            FileName = DecodeString(fileNameBytes);
                         }
+                        FileName = ConvertPath(FileName, HostOS);
                     }
-                    else
-                    {
-                        FileName = DecodeDefault(fileNameBytes);
-                    }
-                    FileName = ConvertPath(FileName, HostOS);
-                }
                     break;
                 case HeaderType.NewSubHeader:
-                {
-                    int datasize = HeaderSize - NEWLHD_SIZE - nameSize;
-                    if (FileFlags.HasFlag(FileFlags.SALT))
                     {
-                        datasize -= SALT_SIZE;
-                    }
-                    if (datasize > 0)
-                    {
-                        SubData = reader.ReadBytes(datasize);
-                    }
+                        int datasize = HeaderSize - NEWLHD_SIZE - nameSize;
+                        if (FileFlags.HasFlag(FileFlags.SALT))
+                        {
+                            datasize -= SALT_SIZE;
+                        }
+                        if (datasize > 0)
+                        {
+                            SubData = reader.ReadBytes(datasize);
+                        }
 
-                    if (NewSubHeaderType.SUBHEAD_TYPE_RR.Equals(fileNameBytes))
-                    {
-                        RecoverySectors = SubData[8] + (SubData[9] << 8)
-                                          + (SubData[10] << 16) + (SubData[11] << 24);
+                        if (NewSubHeaderType.SUBHEAD_TYPE_RR.Equals(fileNameBytes))
+                        {
+                            RecoverySectors = SubData[8] + (SubData[9] << 8)
+                                              + (SubData[10] << 16) + (SubData[11] << 24);
+                        }
                     }
-                }
                     break;
             }
 
@@ -119,9 +119,9 @@ namespace SharpCompress.Common.Rar.Headers
         }
 
         //only the full .net framework will do other code pages than unicode/utf8
-        private string DecodeDefault(byte[] bytes)
+        private string DecodeString(byte[] bytes)
         {
-            return ArchiveEncoding.Default.GetString(bytes, 0, bytes.Length);
+            return (ForceEncoding ?? ArchiveEncoding.Default).GetString(bytes, 0, bytes.Length);
         }
 
         private long UInt32To64(uint x, uint y)
@@ -178,6 +178,7 @@ namespace SharpCompress.Common.Rar.Headers
         }
 
         internal long DataStartPosition { get; set; }
+
         internal HostOS HostOS { get; private set; }
 
         internal uint FileCRC { get; private set; }
@@ -199,6 +200,7 @@ namespace SharpCompress.Common.Rar.Headers
         internal FileFlags FileFlags => (FileFlags)Flags;
 
         internal long CompressedSize { get; private set; }
+
         internal long UncompressedSize { get; private set; }
 
         internal string FileName { get; private set; }

@@ -9,9 +9,10 @@ namespace SharpCompress.Writers
         private bool closeStream;
         private bool isDisposed;
 
-        protected AbstractWriter(ArchiveType type)
+        protected AbstractWriter(ArchiveType type, WriterOptions options)
         {
             WriterType = type;
+            WriterOptions = options;
         }
 
         protected void InitalizeStream(Stream stream, bool closeStream)
@@ -23,6 +24,8 @@ namespace SharpCompress.Writers
         protected Stream OutputStream { get; private set; }
 
         public ArchiveType WriterType { get; }
+
+        protected WriterOptions WriterOptions { get; private set; }
 
         public abstract void Write(string filename, Stream source, DateTime? modificationTime);
 
