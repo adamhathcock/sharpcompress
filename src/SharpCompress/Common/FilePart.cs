@@ -8,5 +8,6 @@ namespace SharpCompress.Common
 
         internal abstract Stream GetCompressedStream();
         internal abstract Stream GetRawStream();
+        internal bool Skipped { get; set; }
     }
 }
