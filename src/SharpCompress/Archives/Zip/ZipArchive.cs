@@ -81,7 +81,7 @@ namespace SharpCompress.Archives.Zip
 
         public static bool IsZipFile(Stream stream, string password = null)
         {
-            StreamingZipHeaderFactory headerFactory = new StreamingZipHeaderFactory(password);
+            StreamingZipHeaderFactory headerFactory = new StreamingZipHeaderFactory(password, new ArchiveEncoding());
             try
             {
                 ZipHeader header =
@@ -112,7 +112,7 @@ namespace SharpCompress.Archives.Zip
         internal ZipArchive(FileInfo fileInfo, ReaderOptions readerOptions)
             : base(ArchiveType.Zip, fileInfo, readerOptions)
         {
-            headerFactory = new SeekableZipHeaderFactory(readerOptions.Password, readerOptions.ForceEncoding);
+            headerFactory = new SeekableZipHeaderFactory(readerOptions.Password, readerOptions.ArchiveEncoding);
         }
 
         protected override IEnumerable<ZipVolume> LoadVolumes(FileInfo file)
@@ -134,7 +134,7 @@ namespace SharpCompress.Archives.Zip
         internal ZipArchive(Stream stream, ReaderOptions readerOptions)
             : base(ArchiveType.Zip, stream, readerOptions)
         {
-            headerFactory = new SeekableZipHeaderFactory(readerOptions.Password, readerOptions.ForceEncoding);
+            headerFactory = new SeekableZipHeaderFactory(readerOptions.Password, readerOptions.ArchiveEncoding);
         }
 
         protected override IEnumerable<ZipVolume> LoadVolumes(IEnumerable<Stream> streams)
@@ -163,7 +163,7 @@ namespace SharpCompress.Archives.Zip
                         case ZipHeaderType.DirectoryEnd:
                             {
                                 byte[] bytes = (h as DirectoryEndHeader).Comment;
-                                volume.Comment = (ReaderOptions.ForceEncoding ?? ArchiveEncoding.Default).GetString(bytes, 0, bytes.Length);
+                                volume.Comment = ReaderOptions.ArchiveEncoding.Decode(bytes);
                                 yield break;
                             }
                     }

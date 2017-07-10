@@ -9,6 +9,11 @@ namespace SharpCompress.Common.Tar.Headers
     {
         internal static readonly DateTime Epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 
+        public TarHeader(ArchiveEncoding archiveEncoding)
+        {
+            ArchiveEncoding = archiveEncoding;
+        }
+
         internal string Name { get; set; }
 
         //internal int Mode { get; set; }
@@ -20,7 +25,7 @@ namespace SharpCompress.Common.Tar.Headers
         internal DateTime LastModifiedTime { get; set; }
         internal EntryType EntryType { get; set; }
         internal Stream PackedStream { get; set; }
-        internal Encoding ForceEncoding { get; set; }
+        internal ArchiveEncoding ArchiveEncoding { get; }
 
         internal const int BlockSize = 512;
 
@@ -32,7 +37,7 @@ namespace SharpCompress.Common.Tar.Headers
             WriteOctalBytes(0, buffer, 108, 8); // owner ID
             WriteOctalBytes(0, buffer, 116, 8); // group ID
 
-            //Encoding.UTF8.GetBytes("magic").CopyTo(buffer, 257);
+            //ArchiveEncoding.UTF8.GetBytes("magic").CopyTo(buffer, 257);
             if (Name.Length > 100)
             {
                 // Set mock filename and filetype to indicate the next block is the actual name of the file
@@ -73,7 +78,7 @@ namespace SharpCompress.Common.Tar.Headers
 
         private void WriteLongFilenameHeader(Stream output)
         {
-            byte[] nameBytes = (ForceEncoding ?? ArchiveEncoding.Default).GetBytes(Name);
+            byte[] nameBytes = ArchiveEncoding.Encode(Name);
             output.Write(nameBytes, 0, nameBytes.Length);
 
             // pad to multiple of BlockSize bytes, and make sure a terminating null is added
@@ -100,7 +105,7 @@ namespace SharpCompress.Common.Tar.Headers
             }
             else
             {
-                Name = (ForceEncoding ?? ArchiveEncoding.Default).GetString(buffer, 0, 100).TrimNulls();
+                Name = ArchiveEncoding.Decode(buffer, 0, 100).TrimNulls();
             }
 
             EntryType = ReadEntryType(buffer);
@@ -112,12 +117,12 @@ namespace SharpCompress.Common.Tar.Headers
             long unixTimeStamp = ReadASCIIInt64Base8(buffer, 136, 11);
             LastModifiedTime = Epoch.AddSeconds(unixTimeStamp).ToLocalTime();
 
-            Magic = (ForceEncoding ?? ArchiveEncoding.Default).GetString(buffer, 257, 6).TrimNulls();
+            Magic = ArchiveEncoding.Decode(buffer, 257, 6).TrimNulls();
 
             if (!string.IsNullOrEmpty(Magic)
                 && "ustar".Equals(Magic))
             {
-                string namePrefix = (ForceEncoding ?? ArchiveEncoding.Default).GetString(buffer, 345, 157);
+                string namePrefix = ArchiveEncoding.Decode(buffer, 345, 157);
                 namePrefix = namePrefix.TrimNulls();
                 if (!string.IsNullOrEmpty(namePrefix))
                 {
@@ -144,7 +149,7 @@ namespace SharpCompress.Common.Tar.Headers
             {
                 reader.ReadBytes(remainingBytesToRead);
             }
-            return (ForceEncoding ?? ArchiveEncoding.Default).GetString(nameBytes, 0, nameBytes.Length).TrimNulls();
+            return ArchiveEncoding.Decode(nameBytes, 0, nameBytes.Length).TrimNulls();
         }
 
         private static EntryType ReadEntryType(byte[] buffer)

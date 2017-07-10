@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Text;
+using SharpCompress.Common;
 using SharpCompress.Common.Zip;
 using SharpCompress.Common.Zip.Headers;
 using SharpCompress.Converters;
@@ -11,14 +12,14 @@ namespace SharpCompress.Writers.Zip
     {
         private readonly ZipCompressionMethod compression;
         private readonly string fileName;
-        private readonly Encoding forceEncoding;
+        private readonly ArchiveEncoding archiveEncoding;
 
-        public ZipCentralDirectoryEntry(ZipCompressionMethod compression, string fileName, ulong headerOffset, Encoding forceEncoding)
+        public ZipCentralDirectoryEntry(ZipCompressionMethod compression, string fileName, ulong headerOffset, ArchiveEncoding archiveEncoding)
         {
             this.compression = compression;
             this.fileName = fileName;
             HeaderOffset = headerOffset;
-            this.forceEncoding = forceEncoding;
+            this.archiveEncoding = archiveEncoding;
         }
 
         internal DateTime? ModificationTime { get; set; }
@@ -31,8 +32,8 @@ namespace SharpCompress.Writers.Zip
 
         internal uint Write(Stream outputStream)
         {
-            byte[] encodedFilename = (forceEncoding ?? Encoding.UTF8).GetBytes(fileName);
-            byte[] encodedComment = (forceEncoding ?? Encoding.UTF8).GetBytes(Comment);
+            byte[] encodedFilename = archiveEncoding.Encode(fileName);
+            byte[] encodedComment = archiveEncoding.Encode(Comment);
 
             var zip64_stream = Compressed >= uint.MaxValue || Decompressed >= uint.MaxValue;
             var zip64 = zip64_stream || HeaderOffset >= uint.MaxValue || Zip64HeaderOffset != 0;
@@ -43,7 +44,7 @@ namespace SharpCompress.Writers.Zip
             var extralength = zip64 ? (2 + 2 + 8 + 8 + 8 + 4) : 0;
             var version = (byte)(zip64 ? 45 : 20); // Version 20 required for deflate/encryption
 
-            HeaderFlags flags = (forceEncoding ?? Encoding.UTF8) == Encoding.UTF8 ? HeaderFlags.UTF8 : HeaderFlags.None;
+            HeaderFlags flags = Equals(archiveEncoding.GetEncoding(), Encoding.UTF8) ? HeaderFlags.UTF8 : HeaderFlags.None;
             if (!outputStream.CanSeek)
             {
                 // Cannot use data descriptors with zip64:

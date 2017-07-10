@@ -7,14 +7,15 @@ namespace SharpCompress.Common.SevenZip
 {
     internal class SevenZipFilePart : FilePart
     {
-        private CompressionType? type;
-        private readonly Stream stream;
-        private readonly ArchiveDatabase database;
+        private CompressionType? _type;
+        private readonly Stream _stream;
+        private readonly ArchiveDatabase _database;
 
-        internal SevenZipFilePart(Stream stream, ArchiveDatabase database, int index, CFileItem fileEntry)
+        internal SevenZipFilePart(Stream stream, ArchiveDatabase database, int index, CFileItem fileEntry, ArchiveEncoding archiveEncoding)
+           : base(archiveEncoding)
         {
-            this.stream = stream;
-            this.database = database;
+            this._stream = stream;
+            this._database = database;
             Index = index;
             Header = fileEntry;
             if (Header.HasStream)
@@ -41,14 +42,14 @@ namespace SharpCompress.Common.SevenZip
             {
                 return null;
             }
-            var folderStream = database.GetFolderStream(stream, Folder, null);
+            var folderStream = _database.GetFolderStream(_stream, Folder, null);
 
-            int firstFileIndex = database.FolderStartFileIndex[database.Folders.IndexOf(Folder)];
+            int firstFileIndex = _database.FolderStartFileIndex[_database.Folders.IndexOf(Folder)];
             int skipCount = Index - firstFileIndex;
             long skipSize = 0;
             for (int i = 0; i < skipCount; i++)
             {
-                skipSize += database.Files[firstFileIndex + i].Size;
+                skipSize += _database.Files[firstFileIndex + i].Size;
             }
             if (skipSize > 0)
             {
@@ -61,40 +62,40 @@ namespace SharpCompress.Common.SevenZip
         {
             get
             {
-                if (type == null)
+                if (_type == null)
                 {
-                    type = GetCompression();
+                    _type = GetCompression();
                 }
-                return type.Value;
+                return _type.Value;
             }
         }
 
         //copied from DecoderRegistry
-        private const uint k_Copy = 0x0;
-        private const uint k_Delta = 3;
-        private const uint k_LZMA2 = 0x21;
-        private const uint k_LZMA = 0x030101;
-        private const uint k_PPMD = 0x030401;
-        private const uint k_BCJ = 0x03030103;
-        private const uint k_BCJ2 = 0x0303011B;
-        private const uint k_Deflate = 0x040108;
-        private const uint k_BZip2 = 0x040202;
+        private const uint KCopy = 0x0;
+        private const uint KDelta = 3;
+        private const uint KLzma2 = 0x21;
+        private const uint KLzma = 0x030101;
+        private const uint KPpmd = 0x030401;
+        private const uint KBcj = 0x03030103;
+        private const uint KBcj2 = 0x0303011B;
+        private const uint KDeflate = 0x040108;
+        private const uint KBZip2 = 0x040202;
 
         internal CompressionType GetCompression()
         {
             var coder = Folder.Coders.First();
             switch (coder.MethodId.Id)
             {
-                case k_LZMA:
-                case k_LZMA2:
+                case KLzma:
+                case KLzma2:
                 {
                     return CompressionType.LZMA;
                 }
-                case k_PPMD:
+                case KPpmd:
                 {
                     return CompressionType.PPMd;
                 }
-                case k_BZip2:
+                case KBZip2:
                 {
                     return CompressionType.BZip2;
                 }

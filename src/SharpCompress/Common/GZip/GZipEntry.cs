@@ -40,9 +40,9 @@ namespace SharpCompress.Common.GZip
 
         internal override IEnumerable<FilePart> Parts => filePart.AsEnumerable<FilePart>();
 
-        internal static IEnumerable<GZipEntry> GetEntries(Stream stream, Encoding forceEncoding)
+        internal static IEnumerable<GZipEntry> GetEntries(Stream stream, OptionsBase options)
         {
-            yield return new GZipEntry(new GZipFilePart(stream, forceEncoding));
+            yield return new GZipEntry(new GZipFilePart(stream, options.ArchiveEncoding));
         }
     }
 }

@@ -6,8 +6,8 @@ namespace SharpCompress.Common.Zip.Headers
 {
     internal class DirectoryEntryHeader : ZipFileEntry
     {
-        public DirectoryEntryHeader()
-            : base(ZipHeaderType.DirectoryEntry)
+        public DirectoryEntryHeader(ArchiveEncoding archiveEncoding)
+            : base(ZipHeaderType.DirectoryEntry, archiveEncoding)
         {
         }
 
@@ -31,10 +31,10 @@ namespace SharpCompress.Common.Zip.Headers
             RelativeOffsetOfEntryHeader = reader.ReadUInt32();
 
             byte[] name = reader.ReadBytes(nameLength);
-            Name = DecodeString(name);
+            Name = ArchiveEncoding.Decode(name);
             byte[] extra = reader.ReadBytes(extraLength);
             byte[] comment = reader.ReadBytes(commentLength);
-            Comment = DecodeString(comment);
+            Comment = ArchiveEncoding.Decode(comment);
             LoadExtra(extra);
 
             var unicodePathExtra = Extra.FirstOrDefault(u => u.Type == ExtraDataType.UnicodePathExtraField);

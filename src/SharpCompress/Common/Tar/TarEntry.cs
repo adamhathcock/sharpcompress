@@ -44,9 +44,9 @@ namespace SharpCompress.Common.Tar
         internal override IEnumerable<FilePart> Parts => filePart.AsEnumerable<FilePart>();
 
         internal static IEnumerable<TarEntry> GetEntries(StreamingMode mode, Stream stream,
-                                                         CompressionType compressionType, Encoding forceEncoding)
+                                                         CompressionType compressionType, ArchiveEncoding archiveEncoding)
         {
-            foreach (TarHeader h in TarHeaderFactory.ReadHeader(mode, stream, forceEncoding))
+            foreach (TarHeader h in TarHeaderFactory.ReadHeader(mode, stream, archiveEncoding))
             {
                 if (h != null)
                 {

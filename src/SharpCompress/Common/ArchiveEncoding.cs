@@ -1,23 +1,49 @@
-﻿using System.Text;
+﻿using System;
+using System.Text;
 
 namespace SharpCompress.Common
 {
-    public static class ArchiveEncoding
+    public class ArchiveEncoding
     {
         /// <summary>
         /// Default encoding to use when archive format doesn't specify one.
         /// </summary>
-        public static Encoding Default { get; set; }
+        public Encoding Default { get; set; }
 
         /// <summary>
-        /// Encoding used by encryption schemes which don't comply with RFC 2898.
+        /// ArchiveEncoding used by encryption schemes which don't comply with RFC 2898.
         /// </summary>
-        public static Encoding Password { get; set; }
+        public Encoding Password { get; set; }
+        
+        /// <summary>
+        /// Set this encoding when you want to force it for all encoding/decoding operations.
+        /// </summary>
+        public Encoding Forced { get; set; }
 
-        static ArchiveEncoding()
+        public ArchiveEncoding()
         {
             Default = Encoding.UTF8;
             Password = Encoding.UTF8;
+        }
+
+        public string Decode(byte[] bytes)
+        {
+            return Decode(bytes, 0, bytes.Length);
+        }
+
+        public string Decode(byte[] bytes, int start, int length)
+        {
+            return GetEncoding().GetString(bytes, start, length);
+        }
+
+        public byte[] Encode(string str)
+        {
+            return GetEncoding().GetBytes(str);
+        }
+
+        public Encoding GetEncoding()
+        {
+            return Forced ?? Default ?? Encoding.UTF8;
         }
     }
 }

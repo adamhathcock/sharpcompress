@@ -24,13 +24,13 @@ namespace SharpCompress.Common.Zip
         protected LocalEntryHeader lastEntryHeader;
         private readonly string password;
         private readonly StreamingMode mode;
-        private readonly Encoding forceEncoding;
+        private readonly ArchiveEncoding archiveEncoding;
 
-        protected ZipHeaderFactory(StreamingMode mode, string password, Encoding forceEncoding)
+        protected ZipHeaderFactory(StreamingMode mode, string password, ArchiveEncoding archiveEncoding)
         {
             this.mode = mode;
             this.password = password;
-            this.forceEncoding = forceEncoding;
+            this.archiveEncoding = archiveEncoding;
         }
 
         protected ZipHeader ReadHeader(uint headerBytes, BinaryReader reader, bool zip64 = false)
@@ -38,26 +38,20 @@ namespace SharpCompress.Common.Zip
             switch (headerBytes)
             {
                 case ENTRY_HEADER_BYTES:
-                    {
-                        var entryHeader = new LocalEntryHeader()
-                        {
-                            ForceEncoding = forceEncoding
-                        };
-                        entryHeader.Read(reader);
-                        LoadHeader(entryHeader, reader.BaseStream);
+                {
+                    var entryHeader = new LocalEntryHeader(archiveEncoding);
+                    entryHeader.Read(reader);
+                    LoadHeader(entryHeader, reader.BaseStream);
 
-                        lastEntryHeader = entryHeader;
-                        return entryHeader;
-                    }
+                    lastEntryHeader = entryHeader;
+                    return entryHeader;
+                }
                 case DIRECTORY_START_HEADER_BYTES:
-                    {
-                        var entry = new DirectoryEntryHeader()
-                        {
-                            ForceEncoding = forceEncoding
-                        };
-                        entry.Read(reader);
-                        return entry;
-                    }
+                {
+                    var entry = new DirectoryEntryHeader(archiveEncoding);
+                    entry.Read(reader);
+                    return entry;
+                }
                 case POST_DATA_DESCRIPTOR:
                     {
                         if (FlagUtility.HasFlag(lastEntryHeader.Flags, HeaderFlags.UsePostDataDescriptor))

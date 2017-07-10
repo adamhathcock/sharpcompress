@@ -15,6 +15,7 @@ namespace SharpCompress.Common.Zip
     internal abstract class ZipFilePart : FilePart
     {
         internal ZipFilePart(ZipFileEntry header, Stream stream)
+        : base(header.ArchiveEncoding)
         {
             Header = header;
             header.Part = this;

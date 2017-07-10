@@ -1,5 +1,4 @@
-﻿using System.Text;
-
+﻿
 namespace SharpCompress.Common
 {
     public class OptionsBase
@@ -9,6 +8,6 @@ namespace SharpCompress.Common
         /// </summary>
         public bool LeaveStreamOpen { get; set; } = true;
 
-        public Encoding ForceEncoding { get; set; }
+        public ArchiveEncoding ArchiveEncoding { get; set; } = new ArchiveEncoding();
     }
 }
