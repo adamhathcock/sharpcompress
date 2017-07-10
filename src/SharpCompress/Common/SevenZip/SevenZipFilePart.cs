@@ -71,31 +71,31 @@ namespace SharpCompress.Common.SevenZip
         }
 
         //copied from DecoderRegistry
-        private const uint KCopy = 0x0;
-        private const uint KDelta = 3;
-        private const uint KLzma2 = 0x21;
-        private const uint KLzma = 0x030101;
-        private const uint KPpmd = 0x030401;
-        private const uint KBcj = 0x03030103;
-        private const uint KBcj2 = 0x0303011B;
-        private const uint KDeflate = 0x040108;
-        private const uint KBZip2 = 0x040202;
+        private const uint k_Copy = 0x0;
+        private const uint k_Delta = 3;
+        private const uint k_LZMA2 = 0x21;
+        private const uint k_LZMA = 0x030101;
+        private const uint k_PPMD = 0x030401;
+        private const uint k_BCJ = 0x03030103;
+        private const uint k_BCJ2 = 0x0303011B;
+        private const uint k_Deflate = 0x040108;
+        private const uint k_BZip2 = 0x040202;
 
         internal CompressionType GetCompression()
         {
             var coder = Folder.Coders.First();
             switch (coder.MethodId.Id)
-            {
-                case KLzma:
-                case KLzma2:
+            {                
+                case k_LZMA:
+                case k_LZMA2:
                 {
                     return CompressionType.LZMA;
                 }
-                case KPpmd:
+                case k_PPMD:
                 {
                     return CompressionType.PPMd;
                 }
-                case KBZip2:
+                case k_BZip2:
                 {
                     return CompressionType.BZip2;
                 }
