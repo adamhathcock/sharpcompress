@@ -29,11 +29,11 @@ namespace SharpCompress.Readers.GZip
             return new GZipReader(stream, options ?? new ReaderOptions());
         }
 
-        #endregion
+        #endregion Open
 
         internal override IEnumerable<GZipEntry> GetEntries(Stream stream)
         {
-            return GZipEntry.GetEntries(stream);
+            return GZipEntry.GetEntries(stream, Options.ForceEncoding);
         }
     }
 }

@@ -5,6 +5,7 @@ using SharpCompress.Common.Tar.Headers;
 using SharpCompress.Compressors;
 using SharpCompress.Compressors.Deflate;
 using SharpCompress.Converters;
+using System.Text;
 
 namespace SharpCompress.Common.GZip
 {
@@ -12,12 +13,14 @@ namespace SharpCompress.Common.GZip
     {
         private string name;
         private readonly Stream stream;
+        private readonly Encoding forceEncoding;
 
-        internal GZipFilePart(Stream stream)
+        internal GZipFilePart(Stream stream, Encoding forceEncoding)
         {
             ReadAndValidateGzipHeader(stream);
             EntryStartPosition = stream.Position;
             this.stream = stream;
+            this.forceEncoding = forceEncoding;
         }
 
         internal long EntryStartPosition { get; }
@@ -75,11 +78,11 @@ namespace SharpCompress.Common.GZip
             }
             if ((header[3] & 0x08) == 0x08)
             {
-                name = ReadZeroTerminatedString(stream);
+                name = ReadZeroTerminatedString(stream, forceEncoding);
             }
             if ((header[3] & 0x10) == 0x010)
             {
-                ReadZeroTerminatedString(stream);
+                ReadZeroTerminatedString(stream, forceEncoding);
             }
             if ((header[3] & 0x02) == 0x02)
             {
@@ -87,7 +90,7 @@ namespace SharpCompress.Common.GZip
             }
         }
 
-        private static string ReadZeroTerminatedString(Stream stream)
+        private static string ReadZeroTerminatedString(Stream stream, Encoding forceEncoding)
         {
             byte[] buf1 = new byte[1];
             var list = new List<byte>();
@@ -110,8 +113,8 @@ namespace SharpCompress.Common.GZip
                 }
             }
             while (!done);
-            byte[] a = list.ToArray();
-            return ArchiveEncoding.Default.GetString(a, 0, a.Length);
+            byte[] buffer = list.ToArray();
+            return (forceEncoding ?? ArchiveEncoding.Default).GetString(buffer, 0, buffer.Length);
         }
     }
 }

@@ -30,6 +30,8 @@ namespace SharpCompress.Common.Rar.Headers
             RarHeader header;
             while ((header = ReadNextHeader(stream)) != null)
             {
+                header.ForceEncoding = Options.ForceEncoding;
+
                 yield return header;
                 if (header.HeaderType == HeaderType.EndArchiveHeader)
                 {
@@ -117,7 +119,7 @@ namespace SharpCompress.Common.Rar.Headers
         {
 #if !NO_CRYPTO
             var reader = new RarCryptoBinaryReader(stream, Options.Password);
-            
+
             if (IsEncrypted)
             {
                 if (Options.Password == null)
@@ -141,109 +143,109 @@ namespace SharpCompress.Common.Rar.Headers
             switch (header.HeaderType)
             {
                 case HeaderType.ArchiveHeader:
-                {
-                    var ah = header.PromoteHeader<ArchiveHeader>(reader);
-                    IsEncrypted = ah.HasPassword;
-                    return ah;
-                }
+                    {
+                        var ah = header.PromoteHeader<ArchiveHeader>(reader);
+                        IsEncrypted = ah.HasPassword;
+                        return ah;
+                    }
                 case HeaderType.MarkHeader:
-                {
-                    return header.PromoteHeader<MarkHeader>(reader);
-                }
+                    {
+                        return header.PromoteHeader<MarkHeader>(reader);
+                    }
 
                 case HeaderType.ProtectHeader:
-                {
-                    ProtectHeader ph = header.PromoteHeader<ProtectHeader>(reader);
-
-                    // skip the recovery record data, we do not use it.
-                    switch (StreamingMode)
                     {
-                        case StreamingMode.Seekable:
-                        {
-                            reader.BaseStream.Position += ph.DataSize;
-                        }
-                            break;
-                        case StreamingMode.Streaming:
-                        {
-                            reader.BaseStream.Skip(ph.DataSize);
-                        }
-                            break;
-                        default:
-                        {
-                            throw new InvalidFormatException("Invalid StreamingMode");
-                        }
-                    }
+                        ProtectHeader ph = header.PromoteHeader<ProtectHeader>(reader);
 
-                    return ph;
-                }
+                        // skip the recovery record data, we do not use it.
+                        switch (StreamingMode)
+                        {
+                            case StreamingMode.Seekable:
+                                {
+                                    reader.BaseStream.Position += ph.DataSize;
+                                }
+                                break;
+                            case StreamingMode.Streaming:
+                                {
+                                    reader.BaseStream.Skip(ph.DataSize);
+                                }
+                                break;
+                            default:
+                                {
+                                    throw new InvalidFormatException("Invalid StreamingMode");
+                                }
+                        }
+
+                        return ph;
+                    }
 
                 case HeaderType.NewSubHeader:
-                {
-                    FileHeader fh = header.PromoteHeader<FileHeader>(reader);
-                    switch (StreamingMode)
                     {
-                        case StreamingMode.Seekable:
+                        FileHeader fh = header.PromoteHeader<FileHeader>(reader);
+                        switch (StreamingMode)
                         {
-                            fh.DataStartPosition = reader.BaseStream.Position;
-                            reader.BaseStream.Position += fh.CompressedSize;
+                            case StreamingMode.Seekable:
+                                {
+                                    fh.DataStartPosition = reader.BaseStream.Position;
+                                    reader.BaseStream.Position += fh.CompressedSize;
+                                }
+                                break;
+                            case StreamingMode.Streaming:
+                                {
+                                    //skip the data because it's useless?
+                                    reader.BaseStream.Skip(fh.CompressedSize);
+                                }
+                                break;
+                            default:
+                                {
+                                    throw new InvalidFormatException("Invalid StreamingMode");
+                                }
                         }
-                            break;
-                        case StreamingMode.Streaming:
-                        {
-                            //skip the data because it's useless?
-                            reader.BaseStream.Skip(fh.CompressedSize);
-                        }
-                            break;
-                        default:
-                        {
-                            throw new InvalidFormatException("Invalid StreamingMode");
-                        }
+                        return fh;
                     }
-                    return fh;
-                }
                 case HeaderType.FileHeader:
-                {
-                    FileHeader fh = header.PromoteHeader<FileHeader>(reader);
-                    switch (StreamingMode)
                     {
-                        case StreamingMode.Seekable:
+                        FileHeader fh = header.PromoteHeader<FileHeader>(reader);
+                        switch (StreamingMode)
                         {
-                            fh.DataStartPosition = reader.BaseStream.Position;
-                            reader.BaseStream.Position += fh.CompressedSize;
-                        }
-                            break;
-                        case StreamingMode.Streaming:
-                        {
-                            var ms = new ReadOnlySubStream(reader.BaseStream, fh.CompressedSize);
-                            if (fh.Salt == null)
-                            {
-                                fh.PackedStream = ms;
-                            }
-                            else
-                            {
+                            case StreamingMode.Seekable:
+                                {
+                                    fh.DataStartPosition = reader.BaseStream.Position;
+                                    reader.BaseStream.Position += fh.CompressedSize;
+                                }
+                                break;
+                            case StreamingMode.Streaming:
+                                {
+                                    var ms = new ReadOnlySubStream(reader.BaseStream, fh.CompressedSize);
+                                    if (fh.Salt == null)
+                                    {
+                                        fh.PackedStream = ms;
+                                    }
+                                    else
+                                    {
 #if !NO_CRYPTO
-                                fh.PackedStream = new RarCryptoWrapper(ms, Options.Password,  fh.Salt);
+                                        fh.PackedStream = new RarCryptoWrapper(ms, Options.Password, fh.Salt);
 #else
                                 throw new NotSupportedException("RarCrypto not supported");
 #endif
-                            }
+                                    }
+                                }
+                                break;
+                            default:
+                                {
+                                    throw new InvalidFormatException("Invalid StreamingMode");
+                                }
                         }
-                            break;
-                        default:
-                        {
-                            throw new InvalidFormatException("Invalid StreamingMode");
-                        }
+                        return fh;
                     }
-                    return fh;
-                }
                 case HeaderType.EndArchiveHeader:
-                {
-                    return header.PromoteHeader<EndArchiveHeader>(reader);
-                }
+                    {
+                        return header.PromoteHeader<EndArchiveHeader>(reader);
+                    }
                 default:
-                {
-                    throw new InvalidFormatException("Invalid Rar Header: " + header.HeaderType);
-                }
+                    {
+                        throw new InvalidFormatException("Invalid Rar Header: " + header.HeaderType);
+                    }
             }
         }
     }

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text;
 
 namespace SharpCompress.Common.GZip
 {
@@ -39,9 +40,9 @@ namespace SharpCompress.Common.GZip
 
         internal override IEnumerable<FilePart> Parts => filePart.AsEnumerable<FilePart>();
 
-        internal static IEnumerable<GZipEntry> GetEntries(Stream stream)
+        internal static IEnumerable<GZipEntry> GetEntries(Stream stream, Encoding forceEncoding)
         {
-            yield return new GZipEntry(new GZipFilePart(stream));
+            yield return new GZipEntry(new GZipFilePart(stream, forceEncoding));
         }
     }
 }

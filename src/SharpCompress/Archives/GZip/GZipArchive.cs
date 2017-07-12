@@ -14,6 +14,7 @@ namespace SharpCompress.Archives.GZip
     public class GZipArchive : AbstractWritableArchive<GZipArchiveEntry, GZipVolume>
     {
 #if !NO_FILE
+
         /// <summary>
         /// Constructor expects a filepath to an existing file.
         /// </summary>
@@ -36,6 +37,7 @@ namespace SharpCompress.Archives.GZip
             return new GZipArchive(fileInfo, readerOptions ?? new ReaderOptions());
         }
 #endif
+
         /// <summary>
         /// Takes a seekable Stream as a source
         /// </summary>
@@ -54,11 +56,11 @@ namespace SharpCompress.Archives.GZip
 
 #if !NO_FILE
 
-/// <summary>
-/// Constructor with a FileInfo object to an existing file.
-/// </summary>
-/// <param name="fileInfo"></param>
-/// <param name="options"></param>
+        /// <summary>
+        /// Constructor with a FileInfo object to an existing file.
+        /// </summary>
+        /// <param name="fileInfo"></param>
+        /// <param name="options"></param>
         internal GZipArchive(FileInfo fileInfo, ReaderOptions options)
             : base(ArchiveType.GZip, fileInfo, options)
         {
@@ -179,7 +181,7 @@ namespace SharpCompress.Archives.GZip
         protected override IEnumerable<GZipArchiveEntry> LoadEntries(IEnumerable<GZipVolume> volumes)
         {
             Stream stream = volumes.Single().Stream;
-            yield return new GZipArchiveEntry(this, new GZipFilePart(stream));
+            yield return new GZipArchiveEntry(this, new GZipFilePart(stream, ReaderOptions.ForceEncoding));
         }
 
         protected override IReader CreateReaderForSolidExtraction()

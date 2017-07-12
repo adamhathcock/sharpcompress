@@ -114,11 +114,11 @@ namespace SharpCompress.Readers.Tar
             return new TarReader(rewindableStream, options, CompressionType.None);
         }
 
-        #endregion
+        #endregion Open
 
         internal override IEnumerable<TarEntry> GetEntries(Stream stream)
         {
-            return TarEntry.GetEntries(StreamingMode.Streaming, stream, compressionType);
+            return TarEntry.GetEntries(StreamingMode.Streaming, stream, compressionType, Options.ForceEncoding);
         }
     }
 }

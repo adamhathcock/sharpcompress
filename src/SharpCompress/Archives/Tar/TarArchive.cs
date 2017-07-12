@@ -16,7 +16,7 @@ namespace SharpCompress.Archives.Tar
     public class TarArchive : AbstractWritableArchive<TarArchiveEntry, TarVolume>
     {
 #if !NO_FILE
-        
+
         /// <summary>
         /// Constructor expects a filepath to an existing file.
         /// </summary>
@@ -39,7 +39,7 @@ namespace SharpCompress.Archives.Tar
             return new TarArchive(fileInfo, readerOptions ?? new ReaderOptions());
         }
 #endif
-        
+
         /// <summary>
         /// Takes a seekable Stream as a source
         /// </summary>
@@ -52,6 +52,7 @@ namespace SharpCompress.Archives.Tar
         }
 
 #if !NO_FILE
+
         public static bool IsTarFile(string filePath)
         {
             return IsTarFile(new FileInfo(filePath));
@@ -98,7 +99,6 @@ namespace SharpCompress.Archives.Tar
 
         protected override IEnumerable<TarVolume> LoadVolumes(FileInfo file)
         {
-            
             return new TarVolume(file.OpenRead(), ReaderOptions).AsEnumerable();
         }
 #endif
@@ -127,7 +127,7 @@ namespace SharpCompress.Archives.Tar
         {
             Stream stream = volumes.Single().Stream;
             TarHeader previousHeader = null;
-            foreach (TarHeader header in TarHeaderFactory.ReadHeader(StreamingMode.Seekable, stream))
+            foreach (TarHeader header in TarHeaderFactory.ReadHeader(StreamingMode.Seekable, stream, ReaderOptions.ForceEncoding))
             {
                 if (header != null)
                 {
@@ -152,7 +152,7 @@ namespace SharpCompress.Archives.Tar
                                     memoryStream.Position = 0;
                                     var bytes = memoryStream.ToArray();
 
-                                    header.Name = ArchiveEncoding.Default.GetString(bytes, 0, bytes.Length).TrimNulls();
+                                    header.Name = (ReaderOptions.ForceEncoding ?? ArchiveEncoding.Default).GetString(bytes, 0, bytes.Length).TrimNulls();
                                 }
                             }
 

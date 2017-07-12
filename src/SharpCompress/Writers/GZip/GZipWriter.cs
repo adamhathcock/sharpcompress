@@ -11,8 +11,9 @@ namespace SharpCompress.Writers.GZip
         private bool wroteToStream;
 
         public GZipWriter(Stream destination)
-            : this(destination, new WriterOptions(CompressionType.GZip))
+            : base(ArchiveType.GZip, new WriterOptions(CompressionType.GZip))
         {
+            InitalizeStream(new GZipStream(destination, CompressionMode.Compress, WriterOptions.LeaveStreamOpen));
         }
         
         public GZipWriter(Stream destination, WriterOptions options)

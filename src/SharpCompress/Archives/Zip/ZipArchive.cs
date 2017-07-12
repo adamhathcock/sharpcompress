@@ -24,6 +24,7 @@ namespace SharpCompress.Archives.Zip
         public CompressionLevel DeflateCompressionLevel { get; set; }
 
 #if !NO_FILE
+
         /// <summary>
         /// Constructor expects a filepath to an existing file.
         /// </summary>
@@ -46,6 +47,7 @@ namespace SharpCompress.Archives.Zip
             return new ZipArchive(fileInfo, readerOptions ?? new ReaderOptions());
         }
 #endif
+
         /// <summary>
         /// Takes a seekable Stream as a source
         /// </summary>
@@ -58,6 +60,7 @@ namespace SharpCompress.Archives.Zip
         }
 
 #if !NO_FILE
+
         public static bool IsZipFile(string filePath, string password = null)
         {
             return IsZipFile(new FileInfo(filePath), password);
@@ -109,7 +112,7 @@ namespace SharpCompress.Archives.Zip
         internal ZipArchive(FileInfo fileInfo, ReaderOptions readerOptions)
             : base(ArchiveType.Zip, fileInfo, readerOptions)
         {
-            headerFactory = new SeekableZipHeaderFactory(readerOptions.Password);
+            headerFactory = new SeekableZipHeaderFactory(readerOptions.Password, readerOptions.ForceEncoding);
         }
 
         protected override IEnumerable<ZipVolume> LoadVolumes(FileInfo file)
@@ -131,7 +134,7 @@ namespace SharpCompress.Archives.Zip
         internal ZipArchive(Stream stream, ReaderOptions readerOptions)
             : base(ArchiveType.Zip, stream, readerOptions)
         {
-            headerFactory = new SeekableZipHeaderFactory(readerOptions.Password);
+            headerFactory = new SeekableZipHeaderFactory(readerOptions.Password, readerOptions.ForceEncoding);
         }
 
         protected override IEnumerable<ZipVolume> LoadVolumes(IEnumerable<Stream> streams)
@@ -150,19 +153,19 @@ namespace SharpCompress.Archives.Zip
                     switch (h.ZipHeaderType)
                     {
                         case ZipHeaderType.DirectoryEntry:
-                        {
-                            yield return new ZipArchiveEntry(this,
-                                                             new SeekableZipFilePart(headerFactory,
-                                                                                     h as DirectoryEntryHeader,
-                                                                                     stream));
-                        }
+                            {
+                                yield return new ZipArchiveEntry(this,
+                                                                 new SeekableZipFilePart(headerFactory,
+                                                                                         h as DirectoryEntryHeader,
+                                                                                         stream));
+                            }
                             break;
                         case ZipHeaderType.DirectoryEnd:
-                        {
-                            byte[] bytes = (h as DirectoryEndHeader).Comment;
-                            volume.Comment = ArchiveEncoding.Default.GetString(bytes, 0, bytes.Length);
-                            yield break;
-                        }
+                            {
+                                byte[] bytes = (h as DirectoryEndHeader).Comment;
+                                volume.Comment = (ReaderOptions.ForceEncoding ?? ArchiveEncoding.Default).GetString(bytes, 0, bytes.Length);
+                                yield break;
+                            }
                     }
                 }
             }
