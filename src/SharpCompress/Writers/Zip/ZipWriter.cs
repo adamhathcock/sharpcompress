@@ -26,7 +26,7 @@ namespace SharpCompress.Writers.Zip
         private readonly bool isZip64;
 
         public ZipWriter(Stream destination, ZipWriterOptions zipWriterOptions)
-            : base(ArchiveType.Zip)
+            : base(ArchiveType.Zip, zipWriterOptions)
         {
             zipComment = zipWriterOptions.ArchiveComment ?? string.Empty;
             isZip64 = zipWriterOptions.UseZip64;
@@ -37,7 +37,7 @@ namespace SharpCompress.Writers.Zip
 
             compressionType = zipWriterOptions.CompressionType;
             compressionLevel = zipWriterOptions.DeflateCompressionLevel;
-            InitalizeStream(destination, !zipWriterOptions.LeaveStreamOpen);
+            InitalizeStream(destination);
         }
 
         private PpmdProperties PpmdProperties

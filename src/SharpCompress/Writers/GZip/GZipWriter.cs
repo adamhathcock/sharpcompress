@@ -10,10 +10,16 @@ namespace SharpCompress.Writers.GZip
     {
         private bool wroteToStream;
 
-        public GZipWriter(Stream destination, bool leaveOpen = false)
-            : base(ArchiveType.GZip)
+        public GZipWriter(Stream destination)
+            : this(destination, new WriterOptions(CompressionType.GZip))
         {
-            InitalizeStream(new GZipStream(destination, CompressionMode.Compress, leaveOpen), !leaveOpen);
+        }
+        
+        public GZipWriter(Stream destination, WriterOptions options)
+            : base(ArchiveType.GZip, options)
+        {
+            options.CompressionType = CompressionType.GZip;
+            InitalizeStream(new GZipStream(destination, CompressionMode.Compress, options.LeaveStreamOpen));
         }
 
         protected override void Dispose(bool isDisposing)

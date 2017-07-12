@@ -12,7 +12,7 @@ namespace SharpCompress.Writers.Tar
     public class TarWriter : AbstractWriter
     {
         public TarWriter(Stream destination, WriterOptions options)
-            : base(ArchiveType.Tar)
+            : base(ArchiveType.Tar, options)
         {
             if (!destination.CanWrite)
             {
@@ -42,7 +42,7 @@ namespace SharpCompress.Writers.Tar
                     throw new InvalidFormatException("Tar does not support compression: " + options.CompressionType);
                 }
             }
-            InitalizeStream(destination, true);
+            InitalizeStream(destination);
         }
 
         public override void Write(string filename, Stream source, DateTime? modificationTime)
