@@ -7,7 +7,7 @@ using SharpCompress.Readers;
 namespace SharpCompress
 {
     internal static class Utility
-    {
+    {   
         public static ReadOnlyCollection<T> ToReadOnly<T>(this IEnumerable<T> items)
         {
             return new ReadOnlyCollection<T>(items.ToList());
@@ -138,7 +138,7 @@ namespace SharpCompress
 
         public static void Skip(this Stream source, long advanceAmount)
         {
-            byte[] buffer = new byte[32 * 1024];
+            byte[] buffer = GetTransferByteArray();
             int read = 0;
             int readCount = 0;
             do
@@ -162,9 +162,9 @@ namespace SharpCompress
             while (true);
         }
 
-        public static void SkipAll(this Stream source)
+        public static void Skip(this Stream source)
         {
-            byte[] buffer = new byte[32 * 1024];
+            byte[] buffer = GetTransferByteArray();
             do
             {
             }

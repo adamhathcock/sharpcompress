@@ -88,7 +88,7 @@ namespace SharpCompress.Common.Zip
                 case ZipCompressionMethod.PPMd:
                 {
                     var props = new byte[2];
-                    stream.Read(props, 0, props.Length);
+                    stream.ReadFully(props);
                     return new PpmdStream(new PpmdProperties(props), stream, false);
                 }
                 case ZipCompressionMethod.WinzipAes:
@@ -175,7 +175,6 @@ namespace SharpCompress.Common.Zip
 
                 }
             }
-
             return plainStream;
         }
     }

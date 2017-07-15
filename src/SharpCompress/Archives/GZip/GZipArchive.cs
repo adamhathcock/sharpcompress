@@ -106,15 +106,9 @@ namespace SharpCompress.Archives.GZip
         {
             // read the header on the first read
             byte[] header = new byte[10];
-            int n = stream.Read(header, 0, header.Length);
 
             // workitem 8501: handle edge case (decompress empty stream)
-            if (n == 0)
-            {
-                return false;
-            }
-
-            if (n != 10)
+            if (!stream.ReadFully(header))
             {
                 return false;
             }
