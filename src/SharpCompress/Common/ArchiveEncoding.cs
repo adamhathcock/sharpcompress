@@ -14,11 +14,17 @@ namespace SharpCompress.Common
         /// ArchiveEncoding used by encryption schemes which don't comply with RFC 2898.
         /// </summary>
         public Encoding Password { get; set; }
-        
+
         /// <summary>
-        /// Set this encoding when you want to force it for all encoding/decoding operations.
+        /// Set this encoding when you want to force it for all encoding operations.
         /// </summary>
         public Encoding Forced { get; set; }
+
+        /// <summary>
+        /// Set this when you want to use a custom method for all decoding operations.
+        /// </summary>
+        /// <returns>string Func(bytes, index, length)</returns>
+        public Func<byte[], int, int, string> CustomDecoder { get; set; }
 
         public ArchiveEncoding()
         {
@@ -33,7 +39,7 @@ namespace SharpCompress.Common
 
         public string Decode(byte[] bytes, int start, int length)
         {
-            return GetEncoding().GetString(bytes, start, length);
+            return GetDecoder().Invoke(bytes, start, length);
         }
 
         public byte[] Encode(string str)
@@ -44,6 +50,11 @@ namespace SharpCompress.Common
         public Encoding GetEncoding()
         {
             return Forced ?? Default ?? Encoding.UTF8;
+        }
+
+        public Func<byte[], int, int, string> GetDecoder()
+        {
+            return CustomDecoder ?? ((bytes, index, count) => (Default ?? Encoding.UTF8).GetString(bytes, index, count));
         }
     }
 }
