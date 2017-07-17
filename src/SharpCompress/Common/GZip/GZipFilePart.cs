@@ -69,11 +69,12 @@ namespace SharpCompress.Common.GZip
 
                 Int16 extraLength = (Int16)(header[0] + header[1] * 256);
                 byte[] extra = new byte[extraLength];
-                n = stream.Read(extra, 0, extra.Length);
-                if (n != extraLength)
+                
+                if (!stream.ReadFully(extra))
                 {
                     throw new ZlibException("Unexpected end-of-file reading GZIP header.");
                 }
+                n = extraLength;
             }
             if ((header[3] & 0x08) == 0x08)
             {

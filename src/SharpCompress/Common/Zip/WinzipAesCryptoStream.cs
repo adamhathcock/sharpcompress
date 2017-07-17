@@ -78,7 +78,7 @@ namespace SharpCompress.Common.Zip
             {
                 //read out last 10 auth bytes
                 var ten = new byte[10];
-                stream.Read(ten, 0, 10);
+                stream.ReadFully(ten);
                 stream.Dispose();
             }
         }

@@ -59,7 +59,7 @@ namespace SharpCompress.Common.Zip.Headers
             }
 
             var buffer = new byte[12];
-            archiveStream.Read(buffer, 0, 12);
+            archiveStream.ReadFully(buffer);
 
             PkwareTraditionalEncryptionData encryptionData = PkwareTraditionalEncryptionData.ForRead(Password, this, buffer);
 
