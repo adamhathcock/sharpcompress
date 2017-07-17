@@ -39,7 +39,7 @@ namespace SharpCompress.Common.Zip
             {
                 return new BinaryReader(rewindableStream);
             }
-            if (Header.HasData)
+            if (Header.HasData && !Skipped)
             {
                 if (decompressionStream == null)
                 {
@@ -52,6 +52,7 @@ namespace SharpCompress.Common.Zip
                 {
                     rewindableStream.Rewind(deflateStream.InputBuffer);
                 }
+                Skipped = true;
             }
             var reader = new BinaryReader(rewindableStream);
             decompressionStream = null;
