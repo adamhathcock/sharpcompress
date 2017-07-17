@@ -118,7 +118,7 @@ namespace SharpCompress.Readers.Tar
 
         internal override IEnumerable<TarEntry> GetEntries(Stream stream)
         {
-            return TarEntry.GetEntries(StreamingMode.Streaming, stream, compressionType, Options.ForceEncoding);
+            return TarEntry.GetEntries(StreamingMode.Streaming, stream, compressionType, Options.ArchiveEncoding);
         }
     }
 }

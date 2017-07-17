@@ -37,23 +37,23 @@ namespace SharpCompress.Compressors.Deflate
         private bool _disposed;
 
         public ZlibStream(Stream stream, CompressionMode mode)
-            : this(stream, mode, CompressionLevel.Default, false)
+            : this(stream, mode, CompressionLevel.Default, false, Encoding.UTF8)
         {
         }
 
         public ZlibStream(Stream stream, CompressionMode mode, CompressionLevel level)
-            : this(stream, mode, level, false)
+            : this(stream, mode, level, false, Encoding.UTF8)
         {
         }
 
         public ZlibStream(Stream stream, CompressionMode mode, bool leaveOpen)
-            : this(stream, mode, CompressionLevel.Default, leaveOpen)
+            : this(stream, mode, CompressionLevel.Default, leaveOpen, Encoding.UTF8)
         {
         }
 
-        public ZlibStream(Stream stream, CompressionMode mode, CompressionLevel level, bool leaveOpen, Encoding forceEncoding = null)
+        public ZlibStream(Stream stream, CompressionMode mode, CompressionLevel level, bool leaveOpen, Encoding encoding)
         {
-            _baseStream = new ZlibBaseStream(stream, mode, level, ZlibStreamFlavor.ZLIB, leaveOpen, forceEncoding);
+            _baseStream = new ZlibBaseStream(stream, mode, level, ZlibStreamFlavor.ZLIB, leaveOpen, encoding);
         }
 
         #region Zlib properties

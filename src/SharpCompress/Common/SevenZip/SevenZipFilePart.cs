@@ -7,14 +7,15 @@ namespace SharpCompress.Common.SevenZip
 {
     internal class SevenZipFilePart : FilePart
     {
-        private CompressionType? type;
-        private readonly Stream stream;
-        private readonly ArchiveDatabase database;
+        private CompressionType? _type;
+        private readonly Stream _stream;
+        private readonly ArchiveDatabase _database;
 
-        internal SevenZipFilePart(Stream stream, ArchiveDatabase database, int index, CFileItem fileEntry)
+        internal SevenZipFilePart(Stream stream, ArchiveDatabase database, int index, CFileItem fileEntry, ArchiveEncoding archiveEncoding)
+           : base(archiveEncoding)
         {
-            this.stream = stream;
-            this.database = database;
+            this._stream = stream;
+            this._database = database;
             Index = index;
             Header = fileEntry;
             if (Header.HasStream)
@@ -41,14 +42,14 @@ namespace SharpCompress.Common.SevenZip
             {
                 return null;
             }
-            var folderStream = database.GetFolderStream(stream, Folder, null);
+            var folderStream = _database.GetFolderStream(_stream, Folder, null);
 
-            int firstFileIndex = database.FolderStartFileIndex[database.Folders.IndexOf(Folder)];
+            int firstFileIndex = _database.FolderStartFileIndex[_database.Folders.IndexOf(Folder)];
             int skipCount = Index - firstFileIndex;
             long skipSize = 0;
             for (int i = 0; i < skipCount; i++)
             {
-                skipSize += database.Files[firstFileIndex + i].Size;
+                skipSize += _database.Files[firstFileIndex + i].Size;
             }
             if (skipSize > 0)
             {
@@ -61,11 +62,11 @@ namespace SharpCompress.Common.SevenZip
         {
             get
             {
-                if (type == null)
+                if (_type == null)
                 {
-                    type = GetCompression();
+                    _type = GetCompression();
                 }
-                return type.Value;
+                return _type.Value;
             }
         }
 
@@ -84,7 +85,7 @@ namespace SharpCompress.Common.SevenZip
         {
             var coder = Folder.Coders.First();
             switch (coder.MethodId.Id)
-            {
+            {                
                 case k_LZMA:
                 case k_LZMA2:
                 {

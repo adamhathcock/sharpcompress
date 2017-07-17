@@ -18,14 +18,16 @@ namespace SharpCompress.Common.Rar.Headers
             HeaderSize = baseHeader.HeaderSize;
             AdditionalSize = baseHeader.AdditionalSize;
             ReadBytes = baseHeader.ReadBytes;
+            ArchiveEncoding = baseHeader.ArchiveEncoding;
         }
 
-        internal static RarHeader Create(RarCrcBinaryReader reader)
+        internal static RarHeader Create(RarCrcBinaryReader reader, ArchiveEncoding archiveEncoding)
         {
             try
             {
                 RarHeader header = new RarHeader();
 
+                header.ArchiveEncoding = archiveEncoding;
                 reader.Mark();
                 header.ReadStartFromReader(reader);
                 header.ReadBytes += reader.CurrentReadByteCount;
@@ -109,7 +111,7 @@ namespace SharpCompress.Common.Rar.Headers
 
         protected short HeaderSize { get; private set; }
 
-        internal Encoding ForceEncoding { get; set; }
+        internal ArchiveEncoding ArchiveEncoding { get; private set; }
 
         /// <summary>
         /// This additional size of the header could be file data

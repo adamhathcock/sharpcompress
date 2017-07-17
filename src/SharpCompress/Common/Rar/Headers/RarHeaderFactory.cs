@@ -30,8 +30,6 @@ namespace SharpCompress.Common.Rar.Headers
             RarHeader header;
             while ((header = ReadNextHeader(stream)) != null)
             {
-                header.ForceEncoding = Options.ForceEncoding;
-
                 yield return header;
                 if (header.HeaderType == HeaderType.EndArchiveHeader)
                 {
@@ -135,7 +133,7 @@ namespace SharpCompress.Common.Rar.Headers
 
 #endif
 
-            RarHeader header = RarHeader.Create(reader);
+            RarHeader header = RarHeader.Create(reader, Options.ArchiveEncoding);
             if (header == null)
             {
                 return null;
