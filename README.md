@@ -44,6 +44,10 @@ I'm always looking for help or ideas. Please submit code or email with ideas. Un
 
 ## Version Log
 
+### Version 0.18
+
+* [Now on Github releases](https://github.com/adamhathcock/sharpcompress/releases/tag/0.18)
+
 ### Version 0.17.1
 
 * Fix - [Bug Fix for .NET Core on Windows](https://github.com/adamhathcock/sharpcompress/pull/257)
