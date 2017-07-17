@@ -6,32 +6,30 @@ namespace SharpCompress.Writers
 {
     public abstract class AbstractWriter : IWriter
     {
-        private bool closeStream;
         private bool isDisposed;
 
-        protected AbstractWriter(ArchiveType type, WriterOptions options)
+        protected AbstractWriter(ArchiveType type, WriterOptions writerOptions)
         {
             WriterType = type;
-            WriterOptions = options;
+            WriterOptions = writerOptions;
         }
 
-        protected void InitalizeStream(Stream stream, bool closeStream)
+        protected void InitalizeStream(Stream stream)
         {
             OutputStream = stream;
-            this.closeStream = closeStream;
         }
 
         protected Stream OutputStream { get; private set; }
 
         public ArchiveType WriterType { get; }
 
-        protected WriterOptions WriterOptions { get; private set; }
+        protected WriterOptions WriterOptions { get; }
 
         public abstract void Write(string filename, Stream source, DateTime? modificationTime);
 
         protected virtual void Dispose(bool isDisposing)
         {
-            if (isDisposing && closeStream)
+            if (isDisposing && !WriterOptions.LeaveStreamOpen)
             {
                 OutputStream.Dispose();
             }

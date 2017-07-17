@@ -154,7 +154,7 @@ namespace SharpCompress.Archives.GZip
             {
                 throw new InvalidOperationException("Only one entry is allowed in a GZip Archive");
             }
-            using (var writer = new GZipWriter(stream))
+            using (var writer = new GZipWriter(stream, new GZipWriterOptions(options)))
             {
                 foreach (var entry in oldEntries.Concat(newEntries)
                                                 .Where(x => !x.IsDirectory))

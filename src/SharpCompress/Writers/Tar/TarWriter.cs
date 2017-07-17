@@ -42,7 +42,7 @@ namespace SharpCompress.Writers.Tar
                     throw new InvalidFormatException("Tar does not support compression: " + options.CompressionType);
                 }
             }
-            InitalizeStream(destination, true);
+            InitalizeStream(destination);
         }
 
         public override void Write(string filename, Stream source, DateTime? modificationTime)

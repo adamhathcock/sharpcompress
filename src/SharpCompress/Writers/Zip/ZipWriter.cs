@@ -37,7 +37,7 @@ namespace SharpCompress.Writers.Zip
 
             compressionType = zipWriterOptions.CompressionType;
             compressionLevel = zipWriterOptions.DeflateCompressionLevel;
-            InitalizeStream(destination, !zipWriterOptions.LeaveStreamOpen);
+            InitalizeStream(destination);
         }
 
         private PpmdProperties PpmdProperties
