@@ -146,12 +146,14 @@ namespace SharpCompress.Readers
                 && Entry.CompressedSize > 0)
             {
                 //not solid and has a known compressed size then we can skip raw bytes.
-                var rawStream = Entry.Parts.First().GetRawStream();
+                var part = Entry.Parts.First();
+                var rawStream = part.GetRawStream();
 
                 if (rawStream != null)
                 {
                     var bytesToAdvance = Entry.CompressedSize;
                     rawStream.Skip(bytesToAdvance);
+                    part.Skipped = true;
                     return;
                 }
             }

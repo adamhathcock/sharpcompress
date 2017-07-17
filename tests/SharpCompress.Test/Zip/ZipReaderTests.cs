@@ -14,6 +14,29 @@ namespace SharpCompress.Test.Zip
         {
             UseExtensionInsteadOfNameToVerify = true;
         }
+        
+        [Fact]
+        public void Issue_269_Double_Skip()
+        {
+            ResetScratch();
+            var path = Path.Combine(TEST_ARCHIVES_PATH, "PrePostHeaders.zip");
+            using (Stream stream = new ForwardOnlyStream(File.OpenRead(path)))
+            using (IReader reader = ReaderFactory.Open(stream))
+            {
+                int count = 0;
+                while (reader.MoveToNextEntry())
+                {
+                    count++;
+                    if (!reader.Entry.IsDirectory)
+                    {
+                        if (count % 2 != 0)
+                        {
+                            reader.WriteEntryTo(Stream.Null);
+                        }
+                    }
+                }
+            }
+        }
 
         [Fact]
         public void Zip_Zip64_Streamed_Read()
