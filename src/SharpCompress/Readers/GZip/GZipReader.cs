@@ -33,7 +33,7 @@ namespace SharpCompress.Readers.GZip
 
         internal override IEnumerable<GZipEntry> GetEntries(Stream stream)
         {
-            return GZipEntry.GetEntries(stream, Options.ForceEncoding);
+            return GZipEntry.GetEntries(stream, Options);
         }
     }
 }

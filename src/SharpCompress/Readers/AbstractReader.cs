@@ -139,8 +139,6 @@ namespace SharpCompress.Readers
             }
         }
 
-        private readonly byte[] skipBuffer = new byte[4096];
-
         private void Skip()
         {
             if (ArchiveType != ArchiveType.Rar 
@@ -153,20 +151,14 @@ namespace SharpCompress.Readers
                 if (rawStream != null)
                 {
                     var bytesToAdvance = Entry.CompressedSize;
-                    for (var i = 0; i < bytesToAdvance / skipBuffer.Length; i++)
-                    {
-                        rawStream.Read(skipBuffer, 0, skipBuffer.Length);
-                    }
-                    rawStream.Read(skipBuffer, 0, (int)(bytesToAdvance % skipBuffer.Length));
+                    rawStream.Skip(bytesToAdvance);
                     return;
                 }
             }
             //don't know the size so we have to try to decompress to skip
             using (var s = OpenEntryStream())
             {
-                while (s.Read(skipBuffer, 0, skipBuffer.Length) > 0)
-                {
-                }
+                s.Skip();
             }
         }
 

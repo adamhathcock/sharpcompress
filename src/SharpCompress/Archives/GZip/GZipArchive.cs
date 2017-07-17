@@ -106,15 +106,9 @@ namespace SharpCompress.Archives.GZip
         {
             // read the header on the first read
             byte[] header = new byte[10];
-            int n = stream.Read(header, 0, header.Length);
 
             // workitem 8501: handle edge case (decompress empty stream)
-            if (n == 0)
-            {
-                return false;
-            }
-
-            if (n != 10)
+            if (!stream.ReadFully(header))
             {
                 return false;
             }
@@ -160,7 +154,7 @@ namespace SharpCompress.Archives.GZip
             {
                 throw new InvalidOperationException("Only one entry is allowed in a GZip Archive");
             }
-            using (var writer = new GZipWriter(stream, options))
+            using (var writer = new GZipWriter(stream, new GZipWriterOptions(options)))
             {
                 foreach (var entry in oldEntries.Concat(newEntries)
                                                 .Where(x => !x.IsDirectory))
@@ -181,7 +175,7 @@ namespace SharpCompress.Archives.GZip
         protected override IEnumerable<GZipArchiveEntry> LoadEntries(IEnumerable<GZipVolume> volumes)
         {
             Stream stream = volumes.Single().Stream;
-            yield return new GZipArchiveEntry(this, new GZipFilePart(stream, ReaderOptions.ForceEncoding));
+            yield return new GZipArchiveEntry(this, new GZipFilePart(stream, ReaderOptions.ArchiveEncoding));
         }
 
         protected override IReader CreateReaderForSolidExtraction()

@@ -118,7 +118,7 @@ namespace SharpCompress.Writers.Zip
             entryPath = NormalizeFilename(entryPath);
             options.ModificationDateTime = options.ModificationDateTime ?? DateTime.Now;
             options.EntryComment = options.EntryComment ?? string.Empty;
-            var entry = new ZipCentralDirectoryEntry(compression, entryPath, (ulong)streamPosition, WriterOptions.ForceEncoding)
+            var entry = new ZipCentralDirectoryEntry(compression, entryPath, (ulong)streamPosition, WriterOptions.ArchiveEncoding)
             {
                 Comment = options.EntryComment,
                 ModificationTime = options.ModificationDateTime
@@ -155,7 +155,7 @@ namespace SharpCompress.Writers.Zip
                 throw new NotSupportedException("Zip64 extensions are not supported on non-seekable streams");
 
             var explicitZipCompressionInfo = ToZipCompressionMethod(zipWriterEntryOptions.CompressionType ?? compressionType);
-            byte[] encodedFilename = (WriterOptions.ForceEncoding ?? ArchiveEncoding.Default).GetBytes(filename);
+            byte[] encodedFilename = WriterOptions.ArchiveEncoding.Encode(filename);
 
             OutputStream.Write(DataConverter.LittleEndian.GetBytes(ZipHeaderFactory.ENTRY_HEADER_BYTES), 0, 4);
             if (explicitZipCompressionInfo == ZipCompressionMethod.Deflate)
@@ -169,7 +169,7 @@ namespace SharpCompress.Writers.Zip
             {
                 OutputStream.Write(new byte[] { 63, 0 }, 0, 2); //version says we used PPMd or LZMA
             }
-            HeaderFlags flags = (WriterOptions.ForceEncoding ?? ArchiveEncoding.Default) == Encoding.UTF8 ? HeaderFlags.UTF8 : 0;
+            HeaderFlags flags = Equals(WriterOptions.ArchiveEncoding.GetEncoding(), Encoding.UTF8) ? HeaderFlags.UTF8 : 0;
             if (!OutputStream.CanSeek)
             {
                 flags |= HeaderFlags.UsePostDataDescriptor;
@@ -214,7 +214,7 @@ namespace SharpCompress.Writers.Zip
 
         private void WriteEndRecord(ulong size)
         {
-            byte[] encodedComment = (WriterOptions.ForceEncoding ?? ArchiveEncoding.Default).GetBytes(zipComment);
+            byte[] encodedComment = WriterOptions.ArchiveEncoding.Encode(zipComment);
             var zip64 = isZip64 || entries.Count > ushort.MaxValue || streamPosition >= uint.MaxValue || size >= uint.MaxValue;
 
             var sizevalue = size >= uint.MaxValue ? uint.MaxValue : (uint)size;

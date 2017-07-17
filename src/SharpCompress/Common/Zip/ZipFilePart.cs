@@ -15,6 +15,7 @@ namespace SharpCompress.Common.Zip
     internal abstract class ZipFilePart : FilePart
     {
         internal ZipFilePart(ZipFileEntry header, Stream stream)
+        : base(header.ArchiveEncoding)
         {
             Header = header;
             header.Part = this;
@@ -88,7 +89,7 @@ namespace SharpCompress.Common.Zip
                 case ZipCompressionMethod.PPMd:
                 {
                     var props = new byte[2];
-                    stream.Read(props, 0, props.Length);
+                    stream.ReadFully(props);
                     return new PpmdStream(new PpmdProperties(props), stream, false);
                 }
                 case ZipCompressionMethod.WinzipAes:
@@ -175,7 +176,6 @@ namespace SharpCompress.Common.Zip
 
                 }
             }
-
             return plainStream;
         }
     }

@@ -72,10 +72,7 @@ namespace SharpCompress.Writers.Tar
 
             long realSize = size ?? source.Length;
 
-            TarHeader header = new TarHeader()
-            {
-                ForceEncoding = WriterOptions.ForceEncoding
-            };
+            TarHeader header = new TarHeader(WriterOptions.ArchiveEncoding);
 
             header.LastModifiedTime = modificationTime ?? TarHeader.Epoch;
             header.Name = NormalizeFilename(filename);
