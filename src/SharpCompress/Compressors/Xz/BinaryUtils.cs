@@ -18,9 +18,11 @@ namespace SharpCompress.Compressors.Xz
         public static int ReadLittleEndianInt32(this Stream stream)
         {
             byte[] bytes = new byte[4];
-            var read = stream.Read(bytes, 0, 4);
-            if (read != 4)
+            var read = stream.ReadFully(bytes);
+            if (!read)
+            {
                 throw new EndOfStreamException();
+            }
             return (bytes[0] + (bytes[1] << 8) + (bytes[2] << 16) + (bytes[3] << 24));
         }
 

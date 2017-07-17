@@ -9,9 +9,11 @@ namespace SharpCompress.Common.Zip
     {
         private static readonly CRC32 crc32 = new CRC32();
         private readonly UInt32[] _Keys = {0x12345678, 0x23456789, 0x34567890};
+        private readonly ArchiveEncoding _archiveEncoding;
 
-        private PkwareTraditionalEncryptionData(string password)
+        private PkwareTraditionalEncryptionData(string password, ArchiveEncoding archiveEncoding)
         {
+            _archiveEncoding = archiveEncoding;
             Initialize(password);
         }
 
@@ -27,7 +29,7 @@ namespace SharpCompress.Common.Zip
         public static PkwareTraditionalEncryptionData ForRead(string password, ZipFileEntry header,
                                                               byte[] encryptionHeader)
         {
-            var encryptor = new PkwareTraditionalEncryptionData(password);
+            var encryptor = new PkwareTraditionalEncryptionData(password, header.ArchiveEncoding);
             byte[] plainTextHeader = encryptor.Decrypt(encryptionHeader, encryptionHeader.Length);
             if (plainTextHeader[11] != (byte)((header.Crc >> 24) & 0xff))
             {
@@ -93,15 +95,10 @@ namespace SharpCompress.Common.Zip
             }
         }
 
-        internal static byte[] StringToByteArray(string value, Encoding encoding)
+        internal byte[] StringToByteArray(string value)
         {
-            byte[] a = encoding.GetBytes(value);
+            byte[] a = _archiveEncoding.Password.GetBytes(value);
             return a;
-        }
-
-        internal static byte[] StringToByteArray(string value)
-        {
-            return StringToByteArray(value, ArchiveEncoding.Password);
         }
 
         private void UpdateKeys(byte byteValue)
