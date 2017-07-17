@@ -8,8 +8,8 @@ namespace SharpCompress.Common.Zip
 {
     internal class StreamingZipHeaderFactory : ZipHeaderFactory
     {
-        internal StreamingZipHeaderFactory(string password, Encoding forceEncoding = null)
-            : base(StreamingMode.Streaming, password, forceEncoding)
+        internal StreamingZipHeaderFactory(string password, ArchiveEncoding archiveEncoding)
+            : base(StreamingMode.Streaming, password, archiveEncoding)
         {
         }
 

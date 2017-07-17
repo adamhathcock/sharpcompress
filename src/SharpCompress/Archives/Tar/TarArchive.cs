@@ -75,7 +75,7 @@ namespace SharpCompress.Archives.Tar
         {
             try
             {
-                TarHeader tar = new TarHeader();
+                TarHeader tar = new TarHeader(new ArchiveEncoding());
                 tar.Read(new BinaryReader(stream));
                 return tar.Name.Length > 0 && Enum.IsDefined(typeof(EntryType), tar.EntryType);
             }
@@ -127,7 +127,7 @@ namespace SharpCompress.Archives.Tar
         {
             Stream stream = volumes.Single().Stream;
             TarHeader previousHeader = null;
-            foreach (TarHeader header in TarHeaderFactory.ReadHeader(StreamingMode.Seekable, stream, ReaderOptions.ForceEncoding))
+            foreach (TarHeader header in TarHeaderFactory.ReadHeader(StreamingMode.Seekable, stream, ReaderOptions.ArchiveEncoding))
             {
                 if (header != null)
                 {
@@ -152,7 +152,7 @@ namespace SharpCompress.Archives.Tar
                                     memoryStream.Position = 0;
                                     var bytes = memoryStream.ToArray();
 
-                                    header.Name = (ReaderOptions.ForceEncoding ?? ArchiveEncoding.Default).GetString(bytes, 0, bytes.Length).TrimNulls();
+                                    header.Name = ReaderOptions.ArchiveEncoding.Decode(bytes).TrimNulls();
                                 }
                             }
 

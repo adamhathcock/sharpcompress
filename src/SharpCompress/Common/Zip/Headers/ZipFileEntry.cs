@@ -8,10 +8,11 @@ namespace SharpCompress.Common.Zip.Headers
 {
     internal abstract class ZipFileEntry : ZipHeader
     {
-        protected ZipFileEntry(ZipHeaderType type)
+        protected ZipFileEntry(ZipHeaderType type, ArchiveEncoding archiveEncoding)
             : base(type)
         {
             Extra = new List<ExtraData>();
+            ArchiveEncoding = archiveEncoding;
         }
 
         internal bool IsDirectory
@@ -29,40 +30,10 @@ namespace SharpCompress.Common.Zip.Headers
                        && Name.EndsWith("\\");
             }
         }
-
-        protected string DecodeString(byte[] str)
-        {
-            if (ForceEncoding != null)
-            {
-                return ForceEncoding.GetString(str, 0, str.Length);
-            }
-
-            if (FlagUtility.HasFlag(Flags, HeaderFlags.UTF8))
-            {
-                return Encoding.UTF8.GetString(str, 0, str.Length);
-            }
-
-            return ArchiveEncoding.Default.GetString(str, 0, str.Length);
-        }
-
-        protected byte[] EncodeString(string str)
-        {
-            if (ForceEncoding != null)
-            {
-                return ForceEncoding.GetBytes(str);
-            }
-
-            if (FlagUtility.HasFlag(Flags, HeaderFlags.UTF8))
-            {
-                return Encoding.UTF8.GetBytes(str);
-            }
-
-            return ArchiveEncoding.Default.GetBytes(str);
-        }
-
+        
         internal Stream PackedStream { get; set; }
 
-        internal Encoding ForceEncoding { get; set; }
+        internal ArchiveEncoding ArchiveEncoding { get; }
 
         internal string Name { get; set; }
 

@@ -15,8 +15,15 @@ namespace SharpCompress.Writers.Zip
             : base(options.CompressionType)
         {
             LeaveStreamOpen = options.LeaveStreamOpen;
-            if (options is ZipWriterOptions)
-                UseZip64 = ((ZipWriterOptions)options).UseZip64;
+            ArchiveEncoding = options.ArchiveEncoding;
+
+            var writerOptions = options as ZipWriterOptions;
+            if (writerOptions != null)
+            {
+                UseZip64 = writerOptions.UseZip64;
+                DeflateCompressionLevel = writerOptions.DeflateCompressionLevel;
+                ArchiveComment = writerOptions.ArchiveComment;
+            }
         }
         /// <summary>
         /// When CompressionType.Deflate is used, this property is referenced.  Defaults to CompressionLevel.Default.

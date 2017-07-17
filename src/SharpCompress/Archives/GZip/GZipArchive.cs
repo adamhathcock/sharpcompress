@@ -181,7 +181,7 @@ namespace SharpCompress.Archives.GZip
         protected override IEnumerable<GZipArchiveEntry> LoadEntries(IEnumerable<GZipVolume> volumes)
         {
             Stream stream = volumes.Single().Stream;
-            yield return new GZipArchiveEntry(this, new GZipFilePart(stream, ReaderOptions.ForceEncoding));
+            yield return new GZipArchiveEntry(this, new GZipFilePart(stream, ReaderOptions.ArchiveEncoding));
         }
 
         protected override IReader CreateReaderForSolidExtraction()

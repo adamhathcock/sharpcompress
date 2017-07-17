@@ -8,7 +8,7 @@ namespace SharpCompress.Common.Tar
 {
     internal static class TarHeaderFactory
     {
-        internal static IEnumerable<TarHeader> ReadHeader(StreamingMode mode, Stream stream, Encoding forceEncoding)
+        internal static IEnumerable<TarHeader> ReadHeader(StreamingMode mode, Stream stream, ArchiveEncoding archiveEncoding)
         {
             while (true)
             {
@@ -16,10 +16,7 @@ namespace SharpCompress.Common.Tar
                 try
                 {
                     BinaryReader reader = new BinaryReader(stream);
-                    header = new TarHeader()
-                    {
-                        ForceEncoding = forceEncoding
-                    };
+                    header = new TarHeader(archiveEncoding);
 
                     if (!header.Read(reader))
                     {

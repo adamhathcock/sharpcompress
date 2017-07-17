@@ -6,8 +6,8 @@ namespace SharpCompress.Common.Zip.Headers
 {
     internal class LocalEntryHeader : ZipFileEntry
     {
-        public LocalEntryHeader()
-            : base(ZipHeaderType.LocalEntry)
+        public LocalEntryHeader(ArchiveEncoding archiveEncoding)
+            : base(ZipHeaderType.LocalEntry, archiveEncoding)
         {
         }
 
@@ -25,7 +25,7 @@ namespace SharpCompress.Common.Zip.Headers
             ushort extraLength = reader.ReadUInt16();
             byte[] name = reader.ReadBytes(nameLength);
             byte[] extra = reader.ReadBytes(extraLength);
-            Name = DecodeString(name);
+            Name = ArchiveEncoding.Decode(name);
             LoadExtra(extra);
 
             var unicodePathExtra = Extra.FirstOrDefault(u => u.Type == ExtraDataType.UnicodePathExtraField);

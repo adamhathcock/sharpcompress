@@ -8,13 +8,13 @@ namespace SharpCompress.Readers.Zip
 {
     public class ZipReader : AbstractReader<ZipEntry, ZipVolume>
     {
-        private readonly StreamingZipHeaderFactory headerFactory;
+        private readonly StreamingZipHeaderFactory _headerFactory;
 
         internal ZipReader(Stream stream, ReaderOptions options)
             : base(options, ArchiveType.Zip)
         {
             Volume = new ZipVolume(stream, options);
-            headerFactory = new StreamingZipHeaderFactory(options.Password, options.ForceEncoding);
+            _headerFactory = new StreamingZipHeaderFactory(options.Password, options.ArchiveEncoding);
         }
 
         public override ZipVolume Volume { get; }
@@ -37,7 +37,7 @@ namespace SharpCompress.Readers.Zip
 
         internal override IEnumerable<ZipEntry> GetEntries(Stream stream)
         {
-            foreach (ZipHeader h in headerFactory.ReadStreamHeader(stream))
+            foreach (ZipHeader h in _headerFactory.ReadStreamHeader(stream))
             {
                 if (h != null)
                 {

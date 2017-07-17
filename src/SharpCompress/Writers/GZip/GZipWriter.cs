@@ -8,12 +8,15 @@ namespace SharpCompress.Writers.GZip
 {
     public class GZipWriter : AbstractWriter
     {
-        private bool wroteToStream;
+        private bool _wroteToStream;
 
-        public GZipWriter(Stream destination, bool leaveOpen = false)
-            : base(ArchiveType.GZip, new WriterOptions(CompressionType.GZip))
+        public GZipWriter(Stream destination, GZipWriterOptions options = null)
+            : base(ArchiveType.GZip, options ?? new GZipWriterOptions())
         {
-            InitalizeStream(new GZipStream(destination, CompressionMode.Compress, leaveOpen), !leaveOpen);
+            InitalizeStream(new GZipStream(destination, CompressionMode.Compress, 
+                                           options?.CompressionLevel ?? CompressionLevel.Default, 
+                                           WriterOptions.LeaveStreamOpen, 
+                                           WriterOptions.ArchiveEncoding.GetEncoding()), !WriterOptions.LeaveStreamOpen);
         }
 
         protected override void Dispose(bool isDisposing)
@@ -28,7 +31,7 @@ namespace SharpCompress.Writers.GZip
 
         public override void Write(string filename, Stream source, DateTime? modificationTime)
         {
-            if (wroteToStream)
+            if (_wroteToStream)
             {
                 throw new ArgumentException("Can only write a single stream to a GZip file.");
             }
@@ -36,7 +39,7 @@ namespace SharpCompress.Writers.GZip
             stream.FileName = filename;
             stream.LastModified = modificationTime;
             source.TransferTo(stream);
-            wroteToStream = true;
+            _wroteToStream = true;
         }
     }
 }

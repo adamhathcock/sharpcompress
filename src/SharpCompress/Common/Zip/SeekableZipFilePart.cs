@@ -5,21 +5,21 @@ namespace SharpCompress.Common.Zip
 {
     internal class SeekableZipFilePart : ZipFilePart
     {
-        private bool isLocalHeaderLoaded;
-        private readonly SeekableZipHeaderFactory headerFactory;
+        private bool _isLocalHeaderLoaded;
+        private readonly SeekableZipHeaderFactory _headerFactory;
 
         internal SeekableZipFilePart(SeekableZipHeaderFactory headerFactory, DirectoryEntryHeader header, Stream stream)
             : base(header, stream)
         {
-            this.headerFactory = headerFactory;
+            this._headerFactory = headerFactory;
         }
 
         internal override Stream GetCompressedStream()
         {
-            if (!isLocalHeaderLoaded)
+            if (!_isLocalHeaderLoaded)
             {
                 LoadLocalHeader();
-                isLocalHeaderLoaded = true;
+                _isLocalHeaderLoaded = true;
             }
             return base.GetCompressedStream();
         }
@@ -29,7 +29,7 @@ namespace SharpCompress.Common.Zip
         private void LoadLocalHeader()
         {
             bool hasData = Header.HasData;
-            Header = headerFactory.GetLocalHeader(BaseStream, Header as DirectoryEntryHeader);
+            Header = _headerFactory.GetLocalHeader(BaseStream, Header as DirectoryEntryHeader);
             Header.HasData = hasData;
         }
 

@@ -65,7 +65,7 @@ namespace SharpCompress.Compressors.Deflate
         protected internal DateTime _GzipMtime;
         protected internal int _gzipHeaderByteCount;
 
-        private readonly Encoding forceEncoding;
+        private readonly Encoding _encoding;
 
         internal int Crc32
         {
@@ -84,7 +84,7 @@ namespace SharpCompress.Compressors.Deflate
                               CompressionLevel level,
                               ZlibStreamFlavor flavor,
                               bool leaveOpen,
-                              Encoding forceEncoding)
+                              Encoding encoding)
         {
             _flushMode = FlushType.None;
 
@@ -95,7 +95,7 @@ namespace SharpCompress.Compressors.Deflate
             _flavor = flavor;
             _level = level;
 
-            this.forceEncoding = forceEncoding;
+            _encoding = encoding;
 
             // workitem 7159
             if (flavor == ZlibStreamFlavor.GZIP)
@@ -425,7 +425,7 @@ namespace SharpCompress.Compressors.Deflate
             }
             while (!done);
             byte[] buffer = list.ToArray();
-            return (forceEncoding ?? ArchiveEncoding.Default).GetString(buffer, 0, buffer.Length);
+            return _encoding.GetString(buffer, 0, buffer.Length);
         }
 
         private int _ReadAndValidateGzipHeader()
