@@ -49,7 +49,7 @@ namespace SharpCompress.Common.Zip
         {
             if (length > cipherText.Length)
             {
-                throw new ArgumentOutOfRangeException("length",
+                throw new ArgumentOutOfRangeException(nameof(length),
                                                       "Bad length during Decryption: the length parameter must be smaller than or equal to the size of the destination array.");
             }
 
@@ -72,7 +72,7 @@ namespace SharpCompress.Common.Zip
 
             if (length > plainText.Length)
             {
-                throw new ArgumentOutOfRangeException("length",
+                throw new ArgumentOutOfRangeException(nameof(length),
                                                       "Bad length during Encryption: The length parameter must be smaller than or equal to the size of the destination array.");
             }
 

@@ -42,7 +42,7 @@ namespace SharpCompress.Common.Zip
 
             if (buffer == null)
             {
-                throw new ArgumentNullException("buffer");
+                throw new ArgumentNullException(nameof(buffer));
             }
 
             byte[] temp = new byte[count];
