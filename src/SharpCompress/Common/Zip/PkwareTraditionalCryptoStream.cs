@@ -3,12 +3,6 @@ using System.IO;
 
 namespace SharpCompress.Common.Zip
 {
-    internal enum CryptoMode
-    {
-        Encrypt,
-        Decrypt
-    }
-
     internal class PkwareTraditionalCryptoStream : Stream
     {
         private readonly PkwareTraditionalEncryptionData encryptor;

@@ -33,10 +33,6 @@ namespace SharpCompress.Common.Zip
             byte[] plainTextHeader = encryptor.Decrypt(encryptionHeader, encryptionHeader.Length);
             if (plainTextHeader[11] != (byte)((header.Crc >> 24) & 0xff))
             {
-                if (!FlagUtility.HasFlag(header.Flags, HeaderFlags.UsePostDataDescriptor))
-                {
-                    throw new CryptographicException("The password did not match.");
-                }
                 if (plainTextHeader[11] != (byte)((header.LastModifiedTime >> 8) & 0xff))
                 {
                     throw new CryptographicException("The password did not match.");
@@ -107,6 +103,11 @@ namespace SharpCompress.Common.Zip
             _Keys[1] = _Keys[1] + (byte)_Keys[0];
             _Keys[1] = _Keys[1] * 0x08088405 + 1;
             _Keys[2] = (UInt32)crc32.ComputeCrc32((int)_Keys[2], (byte)(_Keys[1] >> 24));
+        }
+
+        public static PkwareTraditionalEncryptionData ForWrite(string password, ArchiveEncoding archiveEncoding)
+        {
+            return new PkwareTraditionalEncryptionData(password, archiveEncoding);
         }
     }
 }

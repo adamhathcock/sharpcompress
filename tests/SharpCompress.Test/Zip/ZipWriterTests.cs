@@ -1,4 +1,9 @@
-﻿using SharpCompress.Common;
+﻿using System.IO;
+using SharpCompress.Common;
+using SharpCompress.Readers;
+using SharpCompress.Readers.Zip;
+using SharpCompress.Writers;
+using SharpCompress.Writers.Zip;
 using Xunit;
 
 namespace SharpCompress.Test.Zip
@@ -47,6 +52,42 @@ namespace SharpCompress.Test.Zip
         public void Zip_Rar_Write()
         {
             Assert.Throws<InvalidFormatException>(() => Write(CompressionType.Rar, "Zip.ppmd.noEmptyDirs.zip", "Zip.ppmd.noEmptyDirs.zip"));
+        }
+        
+        [Fact]
+        public void Zip_BZip2_PkwareEncryption_Write()
+        {
+            ResetScratch();
+            using (Stream stream = File.OpenWrite(Path.Combine(SCRATCH_FILES_PATH, "Zip.pkware.zip")))
+            {
+                using (var writer = new ZipWriter(stream, new ZipWriterOptions(CompressionType.BZip2)
+                                                          {
+                                                              Password = "test"
+                                                          }))
+                {
+                    writer.WriteAll(ORIGINAL_FILES_PATH, "*", SearchOption.AllDirectories);
+                }  
+            }
+            using (Stream stream = File.OpenRead(Path.Combine(SCRATCH_FILES_PATH, "Zip.pkware.zip")))
+            using (var reader = ZipReader.Open(stream, new ReaderOptions()
+                                                       {
+                                                           Password = "test"
+                                                       }))
+            {
+                while (reader.MoveToNextEntry())
+                {
+                    if (!reader.Entry.IsDirectory)
+                    {
+                        Assert.Equal(CompressionType.BZip2, reader.Entry.CompressionType);
+                        reader.WriteEntryToDirectory(SCRATCH_FILES_PATH, new ExtractionOptions()
+                                                                         {
+                                                                             ExtractFullPath = true,
+                                                                             Overwrite = true
+                                                                         });
+                    }
+                }
+            }
+            VerifyFiles();
         }
     }
 }

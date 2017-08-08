@@ -128,11 +128,6 @@ namespace SharpCompress.Common.Zip
         {
             bool isFileEncrypted = FlagUtility.HasFlag(Header.Flags, HeaderFlags.Encrypted);
 
-            if (Header.CompressedSize == 0 && isFileEncrypted)
-            {
-                throw new NotSupportedException("Cannot encrypt file with unknown size at start.");
-            }
-
             if ((Header.CompressedSize == 0
                 && FlagUtility.HasFlag(Header.Flags, HeaderFlags.UsePostDataDescriptor))
                 || Header.IsZip64)

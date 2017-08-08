@@ -40,5 +40,10 @@ namespace SharpCompress.Writers.Zip
 		/// are less than 4GiB in length.
         /// </summary>
         public bool UseZip64 { get; set; }
+        
+        /// <summary>
+        /// Setting a password will encrypt the zip archive with the Pkware style.
+        /// </summary>
+        public string Password { get; set; }
     }
 }
