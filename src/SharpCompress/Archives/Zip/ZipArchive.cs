@@ -208,7 +208,7 @@ namespace SharpCompress.Archives.Zip
         {
             var stream = Volumes.Single().Stream;
             stream.Position = 0;
-            return ZipReader.Open(stream);
+            return ZipReader.Open(stream, ReaderOptions);
         }
     }
 }
