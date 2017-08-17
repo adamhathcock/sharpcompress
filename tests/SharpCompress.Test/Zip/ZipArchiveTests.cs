@@ -160,7 +160,7 @@ namespace SharpCompress.Test.Zip
         [Fact]
         public void Zip_Random_Write_Add()
         {
-            string jpg = Path.Combine(ORIGINAL_FILES_PATH, "jpg","test.jpg");
+            string jpg = Path.Combine(ORIGINAL_FILES_PATH, "jpg", "test.jpg");
             string scratchPath = Path.Combine(SCRATCH_FILES_PATH, "Zip.deflate.mod.zip");
             string unmodified = Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.mod.zip");
             string modified = Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.mod2.zip");
@@ -297,7 +297,7 @@ namespace SharpCompress.Test.Zip
             {
                 archive.AddAllFromDirectory(SCRATCH_FILES_PATH);
                 archive.RemoveEntry(archive.Entries.Single(x => x.Key.EndsWith("jpg", StringComparison.OrdinalIgnoreCase)));
-                Assert.False(archive.Entries.Any(x => x.Key.EndsWith("jpg")));
+                Assert.Null(archive.Entries.FirstOrDefault(x => x.Key.EndsWith("jpg")));
             }
             Directory.Delete(SCRATCH_FILES_PATH, true);
         }
@@ -307,9 +307,9 @@ namespace SharpCompress.Test.Zip
         {
             ResetScratch();
             using (var reader = ZipArchive.Open(Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.WinzipAES.zip"), new ReaderOptions()
-                                                                                                               {
-                                                                                                                   Password = "test"
-                                                                                                                }))
+            {
+                Password = "test"
+            }))
             {
                 foreach (var entry in reader.Entries.Where(x => !x.IsDirectory))
                 {

@@ -35,10 +35,10 @@ namespace SharpCompress.Test.Rar
             ResetScratch();
             using (Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, testArchive)))
             using (var archive = RarArchive.Open(stream, new ReaderOptions()
-                                                         {
-                                                             Password = password,
-                                                             LeaveStreamOpen = true
-                                                         }))
+            {
+                Password = password,
+                LeaveStreamOpen = true
+            }))
             {
                 foreach (var entry in archive.Entries)
                 {
@@ -66,10 +66,10 @@ namespace SharpCompress.Test.Rar
         {
             ResetScratch();
             using (var archive = RarArchive.Open(Path.Combine(TEST_ARCHIVES_PATH, archiveName), new ReaderOptions()
-                                                            {
-                                                                Password = password,
-                                                                LeaveStreamOpen = true
-                                                            }))
+            {
+                Password = password,
+                LeaveStreamOpen = true
+            }))
             {
                 foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
                 {
@@ -123,9 +123,9 @@ namespace SharpCompress.Test.Rar
             using (var stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "RarJpeg.jpg")))
             {
                 using (var archive = RarArchive.Open(stream, new ReaderOptions()
-                                                             {
-                                                                 LookForHeader = true
-                                                             }))
+                {
+                    LookForHeader = true
+                }))
                 {
                     foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
                     {
@@ -224,7 +224,7 @@ namespace SharpCompress.Test.Rar
                 using (var archive = RarArchive.Open(stream))
                 {
                     Assert.False(archive.IsSolid);
-                    Assert.True(archive.Entries.Any(entry => entry.IsDirectory));
+                    Assert.Contains(true, archive.Entries.Select(entry => entry.IsDirectory));
                 }
             }
         }
@@ -234,9 +234,9 @@ namespace SharpCompress.Test.Rar
         {
             ResetScratch();
             using (var archive = RarArchive.Open(Path.Combine(TEST_ARCHIVES_PATH, "RarJpeg.jpg"), new ReaderOptions()
-                                                                                                  {
-                                                                                                      LookForHeader = true
-                                                                                                  }))
+            {
+                LookForHeader = true
+            }))
             {
                 foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
                 {
