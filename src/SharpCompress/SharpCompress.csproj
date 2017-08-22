@@ -6,7 +6,7 @@
     <AssemblyVersion>0.18.0.0</AssemblyVersion>
     <FileVersion>0.18.0.0</FileVersion>
     <Authors>Adam Hathcock</Authors>
-    <TargetFrameworks Condition="'$(LibraryFrameworks)'==''">net45;net35;netstandard1.0;netstandard1.3</TargetFrameworks>
+    <TargetFrameworks Condition="'$(LibraryFrameworks)'==''">net45;net35;netstandard1.0;netstandard1.3;netstandard2.0</TargetFrameworks>
     <TargetFrameworks Condition="'$(LibraryFrameworks)'!=''">$(LibraryFrameworks)</TargetFrameworks>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
