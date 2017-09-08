@@ -276,6 +276,7 @@ namespace SharpCompress.Writers.Zip
 
             // Flag to prevent throwing exceptions on Dispose
             private bool limitsExceeded;
+            private bool isDisposed;
 
             internal ZipWritingStream(ZipWriter writer, Stream originalStream, ZipCentralDirectoryEntry entry,
                 ZipCompressionMethod zipCompressionMethod, CompressionLevel compressionLevel)
@@ -344,6 +345,13 @@ namespace SharpCompress.Writers.Zip
 
             protected override void Dispose(bool disposing)
             {
+                if (isDisposed)
+                {
+                    return;
+                }
+
+                isDisposed = true;
+
                 base.Dispose(disposing);
                 if (disposing)
                 {
