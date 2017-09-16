@@ -18,7 +18,7 @@ namespace SharpCompress.Compressors.Xz
             int i = 0;
             while ((LastByte & 0x80) != 0)
             {
-                if (i >= MaxBytes)
+                if (++i >= MaxBytes)
                     throw new InvalidDataException();
                 LastByte = reader.ReadByte();
                 if (LastByte == 0)
