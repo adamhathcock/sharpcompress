@@ -4,7 +4,7 @@ using Xunit;
 
 namespace SharpCompress.Test.Xz
 {
-    public class XZStreamReaderTests : XZTestsBase
+    public class XZStreamTests : XZTestsBase
     {
         [Fact]
         public void CanReadEmptyStream()
@@ -24,7 +24,7 @@ namespace SharpCompress.Test.Xz
             using (var sr = new StreamReader(xz))
             {
                 string uncompressed = sr.ReadToEnd();
-                Assert.Equal(uncompressed, Original);
+                Assert.Equal(Original, uncompressed);
             }
         }
 
