@@ -91,14 +91,5 @@ namespace SharpCompress.Test.Xz
                 Assert.Equal(0L, badStream.Position % 4L);
             }
         }
-
-        [Fact]
-        public void ReadsFirstRecord()
-        {
-            BinaryReader br = new BinaryReader(CompressedStream);
-            var index = new XZIndex(br, false);
-            index.Process();
-            Assert.Equal((ulong)OriginalBytes.Length, index.Records[0].UncompressedSize);
-        }
     }
 }
