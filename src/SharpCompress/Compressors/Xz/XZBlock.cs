@@ -50,11 +50,11 @@ namespace SharpCompress.Compressors.Xz
 
         private void SkipPadding()
         {
-            int padding = (int)(_bytesRead % 4);
-            if (padding > 0)
+            int bytes = (int)(BaseStream.Position % 4);
+            if (bytes > 0)
             {
-                byte[] paddingBytes = new byte[padding];
-                BaseStream.Read(paddingBytes, 0, padding);
+                byte[] paddingBytes = new byte[4 - bytes];
+                BaseStream.Read(paddingBytes, 0, paddingBytes.Length);
                 if (paddingBytes.Any(b => b != 0))
                     throw new InvalidDataException("Padding bytes were non-null");
             }

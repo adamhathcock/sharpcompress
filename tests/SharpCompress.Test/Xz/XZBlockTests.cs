@@ -12,6 +12,11 @@ namespace SharpCompress.Test.Xz
             stream.Position = 12;
         }
 
+        protected override void RewindIndexed(Stream stream)
+        {
+            stream.Position = 12;
+        }
+
         private byte[] ReadBytes(XZBlock block, int bytesToRead)
         {
             byte[] buffer = new byte[bytesToRead];
@@ -68,6 +73,26 @@ namespace SharpCompress.Test.Xz
             var XZBlock = new XZBlock(CompressedStream, CheckType.CRC64, 8);
             var sr = new StreamReader(XZBlock);
             Assert.Equal(sr.ReadToEnd(), Original);
+        }
+
+        [Fact]
+        public void NoopWhenNoPadding()
+        {
+            // CompressedStream's only block has no padding.
+            var XZBlock = new XZBlock(CompressedStream, CheckType.CRC64, 8);
+            var sr = new StreamReader(XZBlock);
+            sr.ReadToEnd();
+            Assert.Equal(0L, CompressedStream.Position % 4L);
+        }
+
+        [Fact]
+        public void SkipsPaddingWhenPresent()
+        {
+            // CompressedIndexedStream's first block has 1-byte padding.
+            var XZBlock = new XZBlock(CompressedIndexedStream, CheckType.CRC64, 8);
+            var sr = new StreamReader(XZBlock);
+            sr.ReadToEnd();
+            Assert.Equal(0L, CompressedIndexedStream.Position % 4L);
         }
     }
 }
