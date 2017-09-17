@@ -418,7 +418,7 @@ namespace SharpCompress.Compressors.Deflate
     internal sealed class Adler
     {
         // largest prime smaller than 65536
-        private static readonly int BASE = 65521;
+        private static readonly uint BASE = 65521U;
 
         // NMAX is the largest n such that 255n(n+1)/2 + (n+1)(BASE-1) <= 2^32-1
         private static readonly int NMAX = 5552;
@@ -430,8 +430,8 @@ namespace SharpCompress.Compressors.Deflate
                 return 1;
             }
 
-            int s1 = (int)(adler & 0xffff);
-            int s2 = (int)((adler >> 16) & 0xffff);
+            uint s1 = adler & 0xffffU;
+            uint s2 = (adler >> 16) & 0xffffU;
 
             while (len > 0)
             {
@@ -486,7 +486,7 @@ namespace SharpCompress.Compressors.Deflate
                 s1 %= BASE;
                 s2 %= BASE;
             }
-            return (uint)((s2 << 16) | s1);
+            return (s2 << 16) | s1;
         }
     }
 }
