@@ -182,7 +182,7 @@ namespace SharpCompress.Common.SevenZip
 
         private DateTime? TranslateTime(long? time)
         {
-            if (time.HasValue)
+            if (time.HasValue && time.Value >= 0 && time.Value <= 2650467743999999999) //maximum Windows file time 31.12.9999
             {
                 return TranslateTime(time.Value);
             }
