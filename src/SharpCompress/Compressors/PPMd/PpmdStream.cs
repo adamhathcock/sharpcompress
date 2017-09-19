@@ -57,11 +57,11 @@ namespace SharpCompress.Compressors.PPMd
             }
         }
 
-        public override bool CanRead { get { return !compress; } }
+        public override bool CanRead => !compress;
 
-        public override bool CanSeek { get { return false; } }
+        public override bool CanSeek => false;
 
-        public override bool CanWrite { get { return compress; } }
+        public override bool CanWrite => compress;
 
         public override void Flush()
         {
@@ -84,9 +84,9 @@ namespace SharpCompress.Compressors.PPMd
             base.Dispose(isDisposing);
         }
 
-        public override long Length { get { throw new NotSupportedException(); } }
+        public override long Length => throw new NotSupportedException();
 
-        public override long Position { get { return position; } set { throw new NotSupportedException(); } }
+        public override long Position { get => position; set => throw new NotSupportedException(); }
 
         public override int Read(byte[] buffer, int offset, int count)
         {

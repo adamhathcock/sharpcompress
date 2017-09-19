@@ -73,15 +73,15 @@ namespace SharpCompress.Compressors.ADC
             this.stream = stream;
         }
 
-        public override bool CanRead { get { return stream.CanRead; } }
+        public override bool CanRead => stream.CanRead;
 
-        public override bool CanSeek { get { return false; } }
+        public override bool CanSeek => false;
 
-        public override bool CanWrite { get { return false; } }
+        public override bool CanWrite => false;
 
-        public override long Length { get { throw new NotSupportedException(); } }
+        public override long Length => throw new NotSupportedException();
 
-        public override long Position { get { return position; } set { throw new NotSupportedException(); } }
+        public override long Position { get => position; set => throw new NotSupportedException(); }
 
         public override void Flush()
         {
@@ -105,19 +105,19 @@ namespace SharpCompress.Compressors.ADC
             }
             if (buffer == null)
             {
-                throw new ArgumentNullException("buffer");
+                throw new ArgumentNullException(nameof(buffer));
             }
             if (count < 0)
             {
-                throw new ArgumentOutOfRangeException("count");
+                throw new ArgumentOutOfRangeException(nameof(count));
             }
             if (offset < buffer.GetLowerBound(0))
             {
-                throw new ArgumentOutOfRangeException("offset");
+                throw new ArgumentOutOfRangeException(nameof(offset));
             }
             if ((offset + count) > buffer.GetLength(0))
             {
-                throw new ArgumentOutOfRangeException("count");
+                throw new ArgumentOutOfRangeException(nameof(count));
             }
 
             int size = -1;

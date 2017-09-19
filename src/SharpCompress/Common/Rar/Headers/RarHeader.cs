@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using SharpCompress.IO;
+using System.Text;
 
 namespace SharpCompress.Common.Rar.Headers
 {
@@ -17,14 +18,16 @@ namespace SharpCompress.Common.Rar.Headers
             HeaderSize = baseHeader.HeaderSize;
             AdditionalSize = baseHeader.AdditionalSize;
             ReadBytes = baseHeader.ReadBytes;
+            ArchiveEncoding = baseHeader.ArchiveEncoding;
         }
 
-        internal static RarHeader Create(RarCrcBinaryReader reader)
+        internal static RarHeader Create(RarCrcBinaryReader reader, ArchiveEncoding archiveEncoding)
         {
             try
             {
                 RarHeader header = new RarHeader();
 
+                header.ArchiveEncoding = archiveEncoding;
                 reader.Mark();
                 header.ReadStartFromReader(reader);
                 header.ReadBytes += reader.CurrentReadByteCount;
@@ -50,7 +53,8 @@ namespace SharpCompress.Common.Rar.Headers
             }
         }
 
-        protected virtual void ReadFromReader(MarkingBinaryReader reader) {
+        protected virtual void ReadFromReader(MarkingBinaryReader reader)
+        {
             throw new NotImplementedException();
         }
 
@@ -76,10 +80,11 @@ namespace SharpCompress.Common.Rar.Headers
             return header;
         }
 
-        private void VerifyHeaderCrc(ushort crc) {
-            if (HeaderType != HeaderType.MarkHeader) 
+        private void VerifyHeaderCrc(ushort crc)
+        {
+            if (HeaderType != HeaderType.MarkHeader)
             {
-                if (crc != HeadCRC) 
+                if (crc != HeadCRC)
                 {
                     throw new InvalidFormatException("rar header crc mismatch");
                 }
@@ -105,6 +110,8 @@ namespace SharpCompress.Common.Rar.Headers
         protected short Flags { get; private set; }
 
         protected short HeaderSize { get; private set; }
+
+        internal ArchiveEncoding ArchiveEncoding { get; private set; }
 
         /// <summary>
         /// This additional size of the header could be file data

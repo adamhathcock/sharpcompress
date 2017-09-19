@@ -2,13 +2,14 @@
 using System.IO;
 using SharpCompress.Common.Zip.Headers;
 using SharpCompress.IO;
+using System.Text;
 
 namespace SharpCompress.Common.Zip
 {
     internal class StreamingZipHeaderFactory : ZipHeaderFactory
     {
-        internal StreamingZipHeaderFactory(string password)
-            : base(StreamingMode.Streaming, password)
+        internal StreamingZipHeaderFactory(string password, ArchiveEncoding archiveEncoding)
+            : base(StreamingMode.Streaming, password, archiveEncoding)
         {
         }
 

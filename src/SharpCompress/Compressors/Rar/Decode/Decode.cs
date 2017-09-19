@@ -17,17 +17,17 @@ namespace SharpCompress.Compressors.Rar.Decode
         /// <summary> returns the decode Length array</summary>
         /// <returns> decodeLength
         /// </returns>
-        internal int[] DecodeLen { get; private set; }
+        internal int[] DecodeLen { get; }
 
         /// <summary> returns the decode num array</summary>
         /// <returns> decodeNum
         /// </returns>
-        internal int[] DecodeNum { get; private set; }
+        internal int[] DecodeNum { get; }
 
         /// <summary> returns the decodePos array</summary>
         /// <returns> decodePos
         /// </returns>
-        internal int[] DecodePos { get; private set; }
+        internal int[] DecodePos { get; }
 
         internal int MaxNum { get; set; }
     }

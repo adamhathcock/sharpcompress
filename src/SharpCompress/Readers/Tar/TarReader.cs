@@ -10,6 +10,7 @@ using SharpCompress.Compressors.BZip2;
 using SharpCompress.Compressors.Deflate;
 using SharpCompress.IO;
 using SharpCompress.Compressors.LZMA;
+using SharpCompress.Compressors.Xz;
 
 namespace SharpCompress.Readers.Tar
 {
@@ -42,6 +43,10 @@ namespace SharpCompress.Readers.Tar
                 case CompressionType.LZip:
                 {
                     return new LZipStream(stream, CompressionMode.Decompress);
+                }
+                case CompressionType.Xz:
+                {
+                    return new XZStream(stream);
                 }
                 case CompressionType.None:
                 {
@@ -109,11 +114,11 @@ namespace SharpCompress.Readers.Tar
             return new TarReader(rewindableStream, options, CompressionType.None);
         }
 
-        #endregion
+        #endregion Open
 
         internal override IEnumerable<TarEntry> GetEntries(Stream stream)
         {
-            return TarEntry.GetEntries(StreamingMode.Streaming, stream, compressionType);
+            return TarEntry.GetEntries(StreamingMode.Streaming, stream, compressionType, Options.ArchiveEncoding);
         }
     }
 }

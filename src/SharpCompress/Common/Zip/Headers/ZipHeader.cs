@@ -10,11 +10,9 @@ namespace SharpCompress.Common.Zip.Headers
             HasData = true;
         }
 
-        internal ZipHeaderType ZipHeaderType { get; private set; }
+        internal ZipHeaderType ZipHeaderType { get; }
 
         internal abstract void Read(BinaryReader reader);
-
-        internal abstract void Write(BinaryWriter writer);
 
         internal bool HasData { get; set; }
     }

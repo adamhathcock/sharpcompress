@@ -3,16 +3,17 @@ using System.Collections.Generic;
 using System.IO;
 using SharpCompress.Common.Zip.Headers;
 using SharpCompress.IO;
+using System.Text;
 
 namespace SharpCompress.Common.Zip
 {
     internal class SeekableZipHeaderFactory : ZipHeaderFactory
     {
         private const int MAX_ITERATIONS_FOR_DIRECTORY_HEADER = 4096;
-        private bool zip64;
+        private bool _zip64;
 
-        internal SeekableZipHeaderFactory(string password)
-            : base(StreamingMode.Seekable, password)
+        internal SeekableZipHeaderFactory(string password, ArchiveEncoding archiveEncoding)
+            : base(StreamingMode.Seekable, password, archiveEncoding)
         {
         }
 
@@ -26,14 +27,14 @@ namespace SharpCompress.Common.Zip
 
             if (entry.IsZip64)
             {
-                zip64 = true;
+                _zip64 = true;
                 SeekBackToHeader(stream, reader, ZIP64_END_OF_CENTRAL_DIRECTORY_LOCATOR);
                 var zip64Locator = new Zip64DirectoryEndLocatorHeader();
                 zip64Locator.Read(reader);
 
                 stream.Seek(zip64Locator.RelativeOffsetOfTheEndOfDirectoryRecord, SeekOrigin.Begin);
                 uint zip64Signature = reader.ReadUInt32();
-                if(zip64Signature != ZIP64_END_OF_CENTRAL_DIRECTORY)
+                if (zip64Signature != ZIP64_END_OF_CENTRAL_DIRECTORY)
                     throw new ArchiveException("Failed to locate the Zip64 Header");
 
                 var zip64Entry = new Zip64DirectoryEndHeader();
@@ -50,7 +51,7 @@ namespace SharpCompress.Common.Zip
             {
                 stream.Position = position;
                 uint signature = reader.ReadUInt32();
-                var directoryEntryHeader = ReadHeader(signature, reader, zip64) as DirectoryEntryHeader;
+                var directoryEntryHeader = ReadHeader(signature, reader, _zip64) as DirectoryEntryHeader;
                 position = stream.Position;
                 if (directoryEntryHeader == null)
                 {
@@ -91,7 +92,7 @@ namespace SharpCompress.Common.Zip
             stream.Seek(directoryEntryHeader.RelativeOffsetOfEntryHeader, SeekOrigin.Begin);
             BinaryReader reader = new BinaryReader(stream);
             uint signature = reader.ReadUInt32();
-            var localEntryHeader = ReadHeader(signature, reader, zip64) as LocalEntryHeader;
+            var localEntryHeader = ReadHeader(signature, reader, _zip64) as LocalEntryHeader;
             if (localEntryHeader == null)
             {
                 throw new InvalidOperationException();

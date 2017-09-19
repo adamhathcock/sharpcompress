@@ -15,16 +15,17 @@ namespace SharpCompress.Common.Zip
     internal abstract class ZipFilePart : FilePart
     {
         internal ZipFilePart(ZipFileEntry header, Stream stream)
+        : base(header.ArchiveEncoding)
         {
             Header = header;
             header.Part = this;
             BaseStream = stream;
         }
 
-        internal Stream BaseStream { get; private set; }
+        internal Stream BaseStream { get; }
         internal ZipFileEntry Header { get; set; }
 
-        internal override string FilePartName { get { return Header.Name; } }
+        internal override string FilePartName => Header.Name;
 
         internal override Stream GetCompressedStream()
         {
@@ -32,7 +33,7 @@ namespace SharpCompress.Common.Zip
             {
                 return Stream.Null;
             }
-            Stream decompressionStream = CreateDecompressionStream(GetCryptoStream(CreateBaseStream()));
+            Stream decompressionStream = CreateDecompressionStream(GetCryptoStream(CreateBaseStream()), Header.CompressionMethod);
             if (LeaveStreamOpen)
             {
                 return new NonDisposingStream(decompressionStream);
@@ -51,11 +52,11 @@ namespace SharpCompress.Common.Zip
 
         protected abstract Stream CreateBaseStream();
 
-        protected bool LeaveStreamOpen { get { return FlagUtility.HasFlag(Header.Flags, HeaderFlags.UsePostDataDescriptor) || Header.IsZip64; } }
+        protected bool LeaveStreamOpen => FlagUtility.HasFlag(Header.Flags, HeaderFlags.UsePostDataDescriptor) || Header.IsZip64;
 
-        protected Stream CreateDecompressionStream(Stream stream)
+        protected Stream CreateDecompressionStream(Stream stream, ZipCompressionMethod method)
         {
-            switch (Header.CompressionMethod)
+            switch (method)
             {
                 case ZipCompressionMethod.None:
                 {
@@ -88,7 +89,7 @@ namespace SharpCompress.Common.Zip
                 case ZipCompressionMethod.PPMd:
                 {
                     var props = new byte[2];
-                    stream.Read(props, 0, props.Length);
+                    stream.ReadFully(props);
                     return new PpmdStream(new PpmdProperties(props), stream, false);
                 }
                 case ZipCompressionMethod.WinzipAes:
@@ -102,9 +103,9 @@ namespace SharpCompress.Common.Zip
                     {
                         throw new InvalidFormatException("Winzip data length is not 7.");
                     }
-                    ushort method = DataConverter.LittleEndian.GetUInt16(data.DataBytes, 0);
+                    ushort compressedMethod = DataConverter.LittleEndian.GetUInt16(data.DataBytes, 0);
 
-                    if (method != 0x01 && method != 0x02)
+                    if (compressedMethod != 0x01 && compressedMethod != 0x02)
                     {
                         throw new InvalidFormatException("Unexpected vendor version number for WinZip AES metadata");
                     }
@@ -114,8 +115,7 @@ namespace SharpCompress.Common.Zip
                     {
                         throw new InvalidFormatException("Unexpected vendor ID for WinZip AES metadata");
                     }
-                    Header.CompressionMethod = (ZipCompressionMethod)DataConverter.LittleEndian.GetUInt16(data.DataBytes, 5);
-                    return CreateDecompressionStream(stream);
+                    return CreateDecompressionStream(stream, (ZipCompressionMethod)DataConverter.LittleEndian.GetUInt16(data.DataBytes, 5));
                 }
                 default:
                 {
@@ -176,7 +176,6 @@ namespace SharpCompress.Common.Zip
 
                 }
             }
-
             return plainStream;
         }
     }

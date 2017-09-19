@@ -68,18 +68,18 @@ namespace SharpCompress.IO
             IsRecording = true;
         }
 
-        public override bool CanRead { get { return true; } }
+        public override bool CanRead => true;
 
         public override bool CanSeek => stream.CanSeek;
 
-        public override bool CanWrite { get { return false; } }
+        public override bool CanWrite => false;
 
         public override void Flush()
         {
             throw new NotSupportedException();
         }
 
-        public override long Length { get { throw new NotSupportedException(); } }
+        public override long Length => throw new NotSupportedException();
 
         public override long Position
         {
@@ -105,6 +105,12 @@ namespace SharpCompress.IO
 
         public override int Read(byte[] buffer, int offset, int count)
         {
+            //don't actually read if we don't really want to read anything
+            //currently a network stream bug on Windows for .NET Core
+            if (count == 0)
+            {
+                return 0;
+            }
             int read;
             if (isRewound && bufferStream.Position != bufferStream.Length)
             {

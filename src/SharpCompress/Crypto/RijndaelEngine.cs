@@ -577,9 +577,9 @@ namespace Org.BouncyCastle.Crypto.Engines
             throw new ArgumentException("invalid parameter passed to Rijndael init - " + parameters.GetType());
         }
 
-        public string AlgorithmName { get { return "Rijndael"; } }
+        public string AlgorithmName => "Rijndael";
 
-        public bool IsPartialBlockOkay { get { return false; } }
+        public bool IsPartialBlockOkay => false;
 
         public int GetBlockSize()
         {

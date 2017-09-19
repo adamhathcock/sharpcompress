@@ -16,9 +16,7 @@ namespace SharpCompress.Readers
         private bool completed;
         private IEnumerator<TEntry> entriesForCurrentReadStream;
         private bool wroteCurrentEntry;
-
-        public event EventHandler<ReaderExtractionEventArgs<IEntry>> EntryExtractionBegin;
-        public event EventHandler<ReaderExtractionEventArgs<IEntry>> EntryExtractionEnd;
+        
         public event EventHandler<ReaderExtractionEventArgs<IEntry>> EntryExtractionProgress;
 
         public event EventHandler<CompressedBytesReadEventArgs> CompressedBytesRead;
@@ -42,7 +40,7 @@ namespace SharpCompress.Readers
         /// <summary>
         /// Current file entry 
         /// </summary>
-        public TEntry Entry { get { return entriesForCurrentReadStream.Current; } }
+        public TEntry Entry => entriesForCurrentReadStream.Current;
 
         #region IDisposable Members
 
@@ -141,30 +139,28 @@ namespace SharpCompress.Readers
             }
         }
 
-        private readonly byte[] skipBuffer = new byte[4096];
-
         private void Skip()
         {
-            if (!Entry.IsSolid)
+            if (ArchiveType != ArchiveType.Rar 
+                && !Entry.IsSolid 
+                && Entry.CompressedSize > 0)
             {
-                var rawStream = Entry.Parts.First().GetRawStream();
+                //not solid and has a known compressed size then we can skip raw bytes.
+                var part = Entry.Parts.First();
+                var rawStream = part.GetRawStream();
 
                 if (rawStream != null)
                 {
                     var bytesToAdvance = Entry.CompressedSize;
-                    for (var i = 0; i < bytesToAdvance / skipBuffer.Length; i++)
-                    {
-                        rawStream.Read(skipBuffer, 0, skipBuffer.Length);
-                    }
-                    rawStream.Read(skipBuffer, 0, (int)(bytesToAdvance % skipBuffer.Length));
+                    rawStream.Skip(bytesToAdvance);
+                    part.Skipped = true;
                     return;
                 }
             }
+            //don't know the size so we have to try to decompress to skip
             using (var s = OpenEntryStream())
             {
-                while (s.Read(skipBuffer, 0, skipBuffer.Length) > 0)
-                {
-                }
+                s.Skip();
             }
         }
 
@@ -219,40 +215,29 @@ namespace SharpCompress.Readers
 
         #endregion
 
-        IEntry IReader.Entry { get { return Entry; } }
+        IEntry IReader.Entry => Entry;
 
         void IExtractionListener.FireCompressedBytesRead(long currentPartCompressedBytes, long compressedReadBytes)
         {
-            if (CompressedBytesRead != null)
+            CompressedBytesRead?.Invoke(this, new CompressedBytesReadEventArgs
             {
-                CompressedBytesRead(this, new CompressedBytesReadEventArgs
-                                          {
-                                              CurrentFilePartCompressedBytesRead = currentPartCompressedBytes,
-                                              CompressedBytesRead = compressedReadBytes
-                                          });
-            }
+                CurrentFilePartCompressedBytesRead = currentPartCompressedBytes,
+                CompressedBytesRead = compressedReadBytes
+            });
         }
 
         void IExtractionListener.FireFilePartExtractionBegin(string name, long size, long compressedSize)
         {
-            if (FilePartExtractionBegin != null)
+            FilePartExtractionBegin?.Invoke(this, new FilePartExtractionBeginEventArgs
             {
-                FilePartExtractionBegin(this, new FilePartExtractionBeginEventArgs
-                                              {
-                                                  CompressedSize = compressedSize,
-                                                  Size = size,
-                                                  Name = name
-                                              });
-            }
+                CompressedSize = compressedSize,
+                Size = size,
+                Name = name
+            });
         }
         void IReaderExtractionListener.FireEntryExtractionProgress(Entry entry, long bytesTransferred, int iterations)
         {
-            if (EntryExtractionProgress != null)
-            {
-                EntryExtractionProgress(this, 
-                    new ReaderExtractionEventArgs<IEntry>(entry, new ReaderProgress(entry, bytesTransferred, iterations))
-                );
-            }
+            EntryExtractionProgress?.Invoke(this, new ReaderExtractionEventArgs<IEntry>(entry, new ReaderProgress(entry, bytesTransferred, iterations)));
         }
     }
 }

@@ -10,7 +10,7 @@ TestResults/
 *.nupkg
 packages/*/
 project.lock.json
-test/TestArchives/Scratch
+tests/TestArchives/Scratch
 .vs
 tools
 .vscode

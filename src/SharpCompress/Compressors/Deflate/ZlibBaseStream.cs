@@ -1,20 +1,20 @@
 // ZlibBaseStream.cs
 // ------------------------------------------------------------------
 //
-// Copyright (c) 2009 Dino Chiesa and Microsoft Corporation.  
+// Copyright (c) 2009 Dino Chiesa and Microsoft Corporation.
 // All rights reserved.
 //
 // This code module is part of DotNetZip, a zipfile class library.
 //
 // ------------------------------------------------------------------
 //
-// This code is licensed under the Microsoft Public License. 
+// This code is licensed under the Microsoft Public License.
 // See the file License.txt for the license details.
 // More info on: http://dotnetzip.codeplex.com
 //
 // ------------------------------------------------------------------
 //
-// last saved (in emacs): 
+// last saved (in emacs):
 // Time-stamp: <2009-October-28 15:45:15>
 //
 // ------------------------------------------------------------------
@@ -30,6 +30,7 @@ using System.IO;
 using SharpCompress.Common;
 using SharpCompress.Common.Tar.Headers;
 using SharpCompress.Converters;
+using System.Text;
 
 namespace SharpCompress.Compressors.Deflate
 {
@@ -64,6 +65,8 @@ namespace SharpCompress.Compressors.Deflate
         protected internal DateTime _GzipMtime;
         protected internal int _gzipHeaderByteCount;
 
+        private readonly Encoding _encoding;
+
         internal int Crc32
         {
             get
@@ -80,7 +83,8 @@ namespace SharpCompress.Compressors.Deflate
                               CompressionMode compressionMode,
                               CompressionLevel level,
                               ZlibStreamFlavor flavor,
-                              bool leaveOpen)
+                              bool leaveOpen,
+                              Encoding encoding)
         {
             _flushMode = FlushType.None;
 
@@ -91,6 +95,8 @@ namespace SharpCompress.Compressors.Deflate
             _flavor = flavor;
             _level = level;
 
+            _encoding = encoding;
+
             // workitem 7159
             if (flavor == ZlibStreamFlavor.GZIP)
             {
@@ -98,7 +104,7 @@ namespace SharpCompress.Compressors.Deflate
             }
         }
 
-        protected internal bool _wantCompress { get { return (_compressionMode == CompressionMode.Compress); } }
+        protected internal bool _wantCompress => (_compressionMode == CompressionMode.Compress);
 
         private ZlibCodec z
         {
@@ -418,8 +424,8 @@ namespace SharpCompress.Compressors.Deflate
                 }
             }
             while (!done);
-            byte[] a = list.ToArray();
-            return ArchiveEncoding.Default.GetString(a, 0, a.Length);
+            byte[] buffer = list.ToArray();
+            return _encoding.GetString(buffer, 0, buffer.Length);
         }
 
         private int _ReadAndValidateGzipHeader()
@@ -528,19 +534,19 @@ namespace SharpCompress.Compressors.Deflate
             }
             if (buffer == null)
             {
-                throw new ArgumentNullException("buffer");
+                throw new ArgumentNullException(nameof(buffer));
             }
             if (count < 0)
             {
-                throw new ArgumentOutOfRangeException("count");
+                throw new ArgumentOutOfRangeException(nameof(count));
             }
             if (offset < buffer.GetLowerBound(0))
             {
-                throw new ArgumentOutOfRangeException("offset");
+                throw new ArgumentOutOfRangeException(nameof(offset));
             }
             if ((offset + count) > buffer.GetLength(0))
             {
-                throw new ArgumentOutOfRangeException("count");
+                throw new ArgumentOutOfRangeException(nameof(count));
             }
 
             int rc = 0;
@@ -593,7 +599,7 @@ namespace SharpCompress.Compressors.Deflate
             while (_z.AvailableBytesOut > 0 && !nomoreinput && rc == ZlibConstants.Z_OK);
 
             // workitem 8557
-            // is there more room in output? 
+            // is there more room in output?
             if (_z.AvailableBytesOut > 0)
             {
                 if (rc == ZlibConstants.Z_OK && _z.AvailableBytesIn == 0)
@@ -630,15 +636,15 @@ namespace SharpCompress.Compressors.Deflate
             return rc;
         }
 
-        public override Boolean CanRead { get { return _stream.CanRead; } }
+        public override Boolean CanRead => _stream.CanRead;
 
-        public override Boolean CanSeek { get { return _stream.CanSeek; } }
+        public override Boolean CanSeek => _stream.CanSeek;
 
-        public override Boolean CanWrite { get { return _stream.CanWrite; } }
+        public override Boolean CanWrite => _stream.CanWrite;
 
-        public override Int64 Length { get { return _stream.Length; } }
+        public override Int64 Length => _stream.Length;
 
-        public override long Position { get { throw new NotSupportedException(); } set { throw new NotSupportedException(); } }
+        public override long Position { get => throw new NotSupportedException(); set => throw new NotSupportedException(); }
 
         internal enum StreamMode
         {

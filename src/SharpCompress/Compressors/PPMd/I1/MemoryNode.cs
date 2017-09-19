@@ -48,11 +48,8 @@ namespace SharpCompress.Compressors.PPMd.I1
         /// </summary>
         public uint Stamp
         {
-            get
-            {
-                return Memory[Address] | ((uint)Memory[Address + 1]) << 8 | ((uint)Memory[Address + 2]) << 16 |
-                       ((uint)Memory[Address + 3]) << 24;
-            }
+            get => Memory[Address] | ((uint)Memory[Address + 1]) << 8 | ((uint)Memory[Address + 2]) << 16 |
+                   ((uint)Memory[Address + 3]) << 24;
             set
             {
                 Memory[Address] = (byte)value;
@@ -67,13 +64,9 @@ namespace SharpCompress.Compressors.PPMd.I1
         /// </summary>
         public MemoryNode Next
         {
-            get
-            {
-                return
-                    new MemoryNode(
-                                   Memory[Address + 4] | ((uint)Memory[Address + 5]) << 8 |
-                                   ((uint)Memory[Address + 6]) << 16 | ((uint)Memory[Address + 7]) << 24, Memory);
-            }
+            get => new MemoryNode(
+                                  Memory[Address + 4] | ((uint)Memory[Address + 5]) << 8 |
+                                  ((uint)Memory[Address + 6]) << 16 | ((uint)Memory[Address + 7]) << 24, Memory);
             set
             {
                 Memory[Address + 4] = (byte)value.Address;
@@ -88,11 +81,8 @@ namespace SharpCompress.Compressors.PPMd.I1
         /// </summary>
         public uint UnitCount
         {
-            get
-            {
-                return Memory[Address + 8] | ((uint)Memory[Address + 9]) << 8 |
-                       ((uint)Memory[Address + 10]) << 16 | ((uint)Memory[Address + 11]) << 24;
-            }
+            get => Memory[Address + 8] | ((uint)Memory[Address + 9]) << 8 |
+                   ((uint)Memory[Address + 10]) << 16 | ((uint)Memory[Address + 11]) << 24;
             set
             {
                 Memory[Address + 8] = (byte)value;
@@ -105,7 +95,7 @@ namespace SharpCompress.Compressors.PPMd.I1
         /// <summary>
         /// Gets whether there is a next memory node available.
         /// </summary>
-        public bool Available { get { return Next.Address != 0; } }
+        public bool Available => Next.Address != 0;
 
         /// <summary>
         /// Link in the provided memory node.

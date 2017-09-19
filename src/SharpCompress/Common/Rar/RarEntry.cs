@@ -10,44 +10,44 @@ namespace SharpCompress.Common.Rar
         /// <summary>
         /// The File's 32 bit CRC Hash
         /// </summary>
-        public override long Crc { get { return FileHeader.FileCRC; } }
+        public override long Crc => FileHeader.FileCRC;
 
         /// <summary>
         /// The path of the file internal to the Rar Archive.
         /// </summary>
-        public override string Key { get { return FileHeader.FileName; } }
+        public override string Key => FileHeader.FileName;
 
         /// <summary>
         /// The entry last modified time in the archive, if recorded
         /// </summary>
-        public override DateTime? LastModifiedTime { get { return FileHeader.FileLastModifiedTime; } }
+        public override DateTime? LastModifiedTime => FileHeader.FileLastModifiedTime;
 
         /// <summary>
         /// The entry create time in the archive, if recorded
         /// </summary>
-        public override DateTime? CreatedTime { get { return FileHeader.FileCreatedTime; } }
+        public override DateTime? CreatedTime => FileHeader.FileCreatedTime;
 
         /// <summary>
         /// The entry last accessed time in the archive, if recorded
         /// </summary>
-        public override DateTime? LastAccessedTime { get { return FileHeader.FileLastAccessedTime; } }
+        public override DateTime? LastAccessedTime => FileHeader.FileLastAccessedTime;
 
         /// <summary>
         /// The entry time whend archived, if recorded
         /// </summary>
-        public override DateTime? ArchivedTime { get { return FileHeader.FileArchivedTime; } }
+        public override DateTime? ArchivedTime => FileHeader.FileArchivedTime;
 
         /// <summary>
         /// Entry is password protected and encrypted and cannot be extracted.
         /// </summary>
-        public override bool IsEncrypted { get { return FileHeader.FileFlags.HasFlag(FileFlags.PASSWORD); } }
+        public override bool IsEncrypted => FileHeader.FileFlags.HasFlag(FileFlags.PASSWORD);
 
         /// <summary>
         /// Entry is password protected and encrypted and cannot be extracted.
         /// </summary>
-        public override bool IsDirectory { get { return FileHeader.FileFlags.HasFlag(FileFlags.DIRECTORY); } }
+        public override bool IsDirectory => FileHeader.FileFlags.HasFlag(FileFlags.DIRECTORY);
 
-        public override bool IsSplit { get { return FileHeader.FileFlags.HasFlag(FileFlags.SPLIT_AFTER); } }
+        public override bool IsSplit => FileHeader.FileFlags.HasFlag(FileFlags.SPLIT_AFTER);
 
         public override string ToString()
         {

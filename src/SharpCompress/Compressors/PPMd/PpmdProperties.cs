@@ -48,7 +48,7 @@ namespace SharpCompress.Compressors.PPMd
 
         public int AllocatorSize
         {
-            get { return allocatorSize; }
+            get => allocatorSize;
             set
             {
                 allocatorSize = value;
@@ -63,15 +63,8 @@ namespace SharpCompress.Compressors.PPMd
             }
         }
 
-        public byte[] Properties
-        {
-            get
-            {
-                return
-                    DataConverter.LittleEndian.GetBytes(
-                                                        (ushort)
-                                                        ((ModelOrder - 1) + (((AllocatorSize >> 20) - 1) << 4) + ((ushort)ModelRestorationMethod << 12)));
-            }
-        }
+        public byte[] Properties => DataConverter.LittleEndian.GetBytes(
+                                                                        (ushort)
+                                                                        ((ModelOrder - 1) + (((AllocatorSize >> 20) - 1) << 4) + ((ushort)ModelRestorationMethod << 12)));
     }
 }

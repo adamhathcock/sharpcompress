@@ -5,35 +5,37 @@ using SharpCompress.Common.Tar.Headers;
 using SharpCompress.Compressors;
 using SharpCompress.Compressors.Deflate;
 using SharpCompress.Converters;
+using System.Text;
 
 namespace SharpCompress.Common.GZip
 {
     internal class GZipFilePart : FilePart
     {
-        private string name;
-        private readonly Stream stream;
+        private string _name;
+        private readonly Stream _stream;
 
-        internal GZipFilePart(Stream stream)
+        internal GZipFilePart(Stream stream, ArchiveEncoding archiveEncoding)
+        : base(archiveEncoding)
         {
             ReadAndValidateGzipHeader(stream);
             EntryStartPosition = stream.Position;
-            this.stream = stream;
+            this._stream = stream;
         }
 
         internal long EntryStartPosition { get; }
 
         internal DateTime? DateModified { get; private set; }
 
-        internal override string FilePartName { get { return name; } }
+        internal override string FilePartName => _name;
 
         internal override Stream GetCompressedStream()
         {
-            return new DeflateStream(stream, CompressionMode.Decompress, CompressionLevel.Default, false);
+            return new DeflateStream(_stream, CompressionMode.Decompress, CompressionLevel.Default, false);
         }
 
         internal override Stream GetRawStream()
         {
-            return stream;
+            return _stream;
         }
 
         private void ReadAndValidateGzipHeader(Stream stream)
@@ -67,15 +69,16 @@ namespace SharpCompress.Common.GZip
 
                 Int16 extraLength = (Int16)(header[0] + header[1] * 256);
                 byte[] extra = new byte[extraLength];
-                n = stream.Read(extra, 0, extra.Length);
-                if (n != extraLength)
+                
+                if (!stream.ReadFully(extra))
                 {
                     throw new ZlibException("Unexpected end-of-file reading GZIP header.");
                 }
+                n = extraLength;
             }
             if ((header[3] & 0x08) == 0x08)
             {
-                name = ReadZeroTerminatedString(stream);
+                _name = ReadZeroTerminatedString(stream);
             }
             if ((header[3] & 0x10) == 0x010)
             {
@@ -87,7 +90,7 @@ namespace SharpCompress.Common.GZip
             }
         }
 
-        private static string ReadZeroTerminatedString(Stream stream)
+        private string ReadZeroTerminatedString(Stream stream)
         {
             byte[] buf1 = new byte[1];
             var list = new List<byte>();
@@ -110,8 +113,8 @@ namespace SharpCompress.Common.GZip
                 }
             }
             while (!done);
-            byte[] a = list.ToArray();
-            return ArchiveEncoding.Default.GetString(a, 0, a.Length);
+            byte[] buffer = list.ToArray();
+            return ArchiveEncoding.Decode(buffer);
         }
     }
 }

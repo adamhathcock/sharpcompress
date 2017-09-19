@@ -12,17 +12,17 @@ namespace SharpCompress.Common.Rar {
 
         public ushort GetCrc() 
         {
-            return (ushort)~this.currentCrc;
+            return (ushort)~currentCrc;
         }
 
         public void ResetCrc()
         {
-            this.currentCrc = 0xffffffff;
+            currentCrc = 0xffffffff;
         }
 
         protected void UpdateCrc(byte b) 
         {
-            this.currentCrc = RarCRC.CheckCrc(this.currentCrc, b);
+            currentCrc = RarCRC.CheckCrc(currentCrc, b);
         }
 
         protected byte[] ReadBytesNoCrc(int count)
@@ -33,7 +33,7 @@ namespace SharpCompress.Common.Rar {
         public override byte[] ReadBytes(int count)
         {
             var result = base.ReadBytes(count);
-            this.currentCrc = RarCRC.CheckCrc(this.currentCrc, result, 0, result.Length);
+            currentCrc = RarCRC.CheckCrc(currentCrc, result, 0, result.Length);
             return result;
         }
     }

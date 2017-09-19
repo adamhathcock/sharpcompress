@@ -1092,13 +1092,13 @@ namespace SharpCompress.Compressors.BZip2
         {
         }
 
-        public override bool CanRead { get { return true; } }
+        public override bool CanRead => true;
 
-        public override bool CanSeek { get { return false; } }
+        public override bool CanSeek => false;
 
-        public override bool CanWrite { get { return false; } }
+        public override bool CanWrite => false;
 
-        public override long Length { get { return 0; } }
+        public override long Length => 0;
 
         public override long Position { get { return 0; } set { } }
     }

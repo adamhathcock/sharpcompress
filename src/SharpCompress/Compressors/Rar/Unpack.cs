@@ -32,7 +32,7 @@ namespace SharpCompress.Compressors.Rar
 
         public long DestSize
         {
-            get { return destUnpSize; }
+            get => destUnpSize;
             set
             {
                 destUnpSize = value;
@@ -40,7 +40,7 @@ namespace SharpCompress.Compressors.Rar
             }
         }
 
-        public bool Suspended { set { suspended = value; } }
+        public bool Suspended { set => suspended = value; }
 
         public int Char
         {

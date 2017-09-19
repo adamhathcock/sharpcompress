@@ -27,6 +27,7 @@
 
 using System;
 using System.IO;
+using System.Text;
 
 namespace SharpCompress.Compressors.Deflate
 {
@@ -36,23 +37,23 @@ namespace SharpCompress.Compressors.Deflate
         private bool _disposed;
 
         public ZlibStream(Stream stream, CompressionMode mode)
-            : this(stream, mode, CompressionLevel.Default, false)
+            : this(stream, mode, CompressionLevel.Default, false, Encoding.UTF8)
         {
         }
 
         public ZlibStream(Stream stream, CompressionMode mode, CompressionLevel level)
-            : this(stream, mode, level, false)
+            : this(stream, mode, level, false, Encoding.UTF8)
         {
         }
 
         public ZlibStream(Stream stream, CompressionMode mode, bool leaveOpen)
-            : this(stream, mode, CompressionLevel.Default, leaveOpen)
+            : this(stream, mode, CompressionLevel.Default, leaveOpen, Encoding.UTF8)
         {
         }
 
-        public ZlibStream(Stream stream, CompressionMode mode, CompressionLevel level, bool leaveOpen)
+        public ZlibStream(Stream stream, CompressionMode mode, CompressionLevel level, bool leaveOpen, Encoding encoding)
         {
-            _baseStream = new ZlibBaseStream(stream, mode, level, ZlibStreamFlavor.ZLIB, leaveOpen);
+            _baseStream = new ZlibBaseStream(stream, mode, level, ZlibStreamFlavor.ZLIB, leaveOpen, encoding);
         }
 
         #region Zlib properties
@@ -63,7 +64,7 @@ namespace SharpCompress.Compressors.Deflate
         /// </summary>
         public virtual FlushType FlushMode
         {
-            get { return (_baseStream._flushMode); }
+            get => (_baseStream._flushMode);
             set
             {
                 if (_disposed)
@@ -93,7 +94,7 @@ namespace SharpCompress.Compressors.Deflate
         /// </remarks>
         public int BufferSize
         {
-            get { return _baseStream._bufferSize; }
+            get => _baseStream._bufferSize;
             set
             {
                 if (_disposed)
@@ -115,10 +116,10 @@ namespace SharpCompress.Compressors.Deflate
         }
 
         /// <summary> Returns the total number of bytes input so far.</summary>
-        public virtual long TotalIn { get { return _baseStream._z.TotalBytesIn; } }
+        public virtual long TotalIn => _baseStream._z.TotalBytesIn;
 
         /// <summary> Returns the total number of bytes output so far.</summary>
-        public virtual long TotalOut { get { return _baseStream._z.TotalBytesOut; } }
+        public virtual long TotalOut => _baseStream._z.TotalBytesOut;
 
         #endregion
 
@@ -148,7 +149,7 @@ namespace SharpCompress.Compressors.Deflate
         /// <remarks>
         /// Always returns false.
         /// </remarks>
-        public override bool CanSeek { get { return false; } }
+        public override bool CanSeek => false;
 
         /// <summary>
         /// Indicates whether the stream can be written.
@@ -171,7 +172,7 @@ namespace SharpCompress.Compressors.Deflate
         /// <summary>
         /// Reading this property always throws a <see cref="NotImplementedException"/>.
         /// </summary>
-        public override long Length { get { throw new NotSupportedException(); } }
+        public override long Length => throw new NotSupportedException();
 
         /// <summary>
         ///   The position of the stream pointer.
@@ -199,7 +200,7 @@ namespace SharpCompress.Compressors.Deflate
                 return 0;
             }
 
-            set { throw new NotSupportedException(); }
+            set => throw new NotSupportedException();
         }
 
         /// <summary>
@@ -326,6 +327,6 @@ namespace SharpCompress.Compressors.Deflate
             _baseStream.Write(buffer, offset, count);
         }
 
-        #endregion
+        #endregion System.IO.Stream methods
     }
 }

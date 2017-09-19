@@ -22,7 +22,7 @@ namespace SharpCompress.Readers.Rar
 
         internal abstract void ValidateArchive(RarVolume archive);
 
-        public override RarVolume Volume { get { return volume; } }
+        public override RarVolume Volume => volume;
 
         #region Open
 

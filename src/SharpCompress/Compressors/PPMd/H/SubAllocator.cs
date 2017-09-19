@@ -5,15 +5,15 @@ namespace SharpCompress.Compressors.PPMd.H
 {
     internal class SubAllocator
     {
-        public virtual int FakeUnitsStart { get { return fakeUnitsStart; } set { fakeUnitsStart = value; } }
+        public virtual int FakeUnitsStart { get => fakeUnitsStart; set => fakeUnitsStart = value; }
 
-        public virtual int HeapEnd { get { return heapEnd; } }
+        public virtual int HeapEnd => heapEnd;
 
-        public virtual int PText { get { return pText; } set { pText = value; } }
+        public virtual int PText { get => pText; set => pText = value; }
 
-        public virtual int UnitsStart { get { return unitsStart; } set { unitsStart = value; } }
+        public virtual int UnitsStart { get => unitsStart; set => unitsStart = value; }
 
-        public virtual byte[] Heap { get { return heap; } }
+        public virtual byte[] Heap => heap;
 
         //UPGRADE_NOTE: Final was removed from the declaration of 'N4 '. "ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?index='!DefaultContextWindowIndex'&keyword='jlca1003'"
         public const int N1 = 4;
