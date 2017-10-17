@@ -2,11 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using SharpCompress.Readers;
 
 namespace SharpCompress
 {
     internal static class Utility
-    {
+    {   
         public static ReadOnlyCollection<T> ToReadOnly<T>(this IEnumerable<T> items)
         {
             return new ReadOnlyCollection<T>(items.ToList());
@@ -137,7 +138,7 @@ namespace SharpCompress
 
         public static void Skip(this Stream source, long advanceAmount)
         {
-            byte[] buffer = new byte[32 * 1024];
+            byte[] buffer = GetTransferByteArray();
             int read = 0;
             int readCount = 0;
             do
@@ -161,9 +162,9 @@ namespace SharpCompress
             while (true);
         }
 
-        public static void SkipAll(this Stream source)
+        public static void Skip(this Stream source)
         {
-            byte[] buffer = new byte[32 * 1024];
+            byte[] buffer = GetTransferByteArray();
             do
             {
             }
@@ -231,15 +232,41 @@ namespace SharpCompress
 
         public static long TransferTo(this Stream source, Stream destination)
         {
-            byte[] array = new byte[81920];
+            byte[] array = GetTransferByteArray();
             int count;
             long total = 0;
-            while ((count = source.Read(array, 0, array.Length)) != 0)
+            while (ReadTransferBlock(source, array, out count))
             {
                 total += count;
                 destination.Write(array, 0, count);
             }
             return total;
+        }
+
+        public static long TransferTo(this Stream source, Stream destination, Common.Entry entry, IReaderExtractionListener readerExtractionListener)
+        {
+            byte[] array = GetTransferByteArray();
+            int count;
+            var iterations = 0;
+            long total = 0;
+            while (ReadTransferBlock(source, array, out count))
+            {
+                total += count;
+                destination.Write(array, 0, count);
+                iterations++;
+                readerExtractionListener.FireEntryExtractionProgress(entry, total, iterations);
+            }
+            return total;
+        }
+
+        private static bool ReadTransferBlock(Stream source, byte[] array, out int count)
+        {
+            return (count = source.Read(array, 0, array.Length)) != 0;
+        }
+
+        private static byte[] GetTransferByteArray()
+        {
+            return new byte[81920];
         }
 
         public static bool ReadFully(this Stream stream, byte[] buffer)

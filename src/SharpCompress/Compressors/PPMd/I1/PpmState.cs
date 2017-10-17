@@ -38,25 +38,21 @@ namespace SharpCompress.Compressors.PPMd.I1
         /// <summary>
         /// Gets or sets the symbol.
         /// </summary>
-        public byte Symbol { get { return Memory[Address]; } set { Memory[Address] = value; } }
+        public byte Symbol { get => Memory[Address]; set => Memory[Address] = value; }
 
         /// <summary>
         /// Gets or sets the frequency.
         /// </summary>
-        public byte Frequency { get { return Memory[Address + 1]; } set { Memory[Address + 1] = value; } }
+        public byte Frequency { get => Memory[Address + 1]; set => Memory[Address + 1] = value; }
 
         /// <summary>
         /// Gets or sets the successor.
         /// </summary>
         public Model.PpmContext Successor
         {
-            get
-            {
-                return
-                    new Model.PpmContext(
-                                         Memory[Address + 2] | ((uint)Memory[Address + 3]) << 8 |
-                                         ((uint)Memory[Address + 4]) << 16 | ((uint)Memory[Address + 5]) << 24, Memory);
-            }
+            get => new Model.PpmContext(
+                                        Memory[Address + 2] | ((uint)Memory[Address + 3]) << 8 |
+                                        ((uint)Memory[Address + 4]) << 16 | ((uint)Memory[Address + 5]) << 24, Memory);
             set
             {
                 Memory[Address + 2] = (byte)value.Address;
@@ -72,7 +68,7 @@ namespace SharpCompress.Compressors.PPMd.I1
         /// </summary>
         /// <param name="offset"></param>
         /// <returns></returns>
-        public PpmState this[int offset] { get { return new PpmState((uint)(Address + offset * Size), Memory); } }
+        public PpmState this[int offset] => new PpmState((uint)(Address + offset * Size), Memory);
 
         /// <summary>
         /// Allow a pointer to be implicitly converted to a PPM state.

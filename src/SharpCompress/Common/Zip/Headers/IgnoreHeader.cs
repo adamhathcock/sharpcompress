@@ -13,10 +13,5 @@ namespace SharpCompress.Common.Zip.Headers
         internal override void Read(BinaryReader reader)
         {
         }
-
-        internal override void Write(BinaryWriter writer)
-        {
-            throw new NotImplementedException();
-        }
     }
 }

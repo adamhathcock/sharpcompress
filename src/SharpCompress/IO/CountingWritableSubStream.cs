@@ -12,21 +12,22 @@ namespace SharpCompress.IO
             writableStream = stream;
         }
 
-        public uint Count { get; private set; }
+        public ulong Count { get; private set; }
 
-        public override bool CanRead { get { return false; } }
+        public override bool CanRead => false;
 
-        public override bool CanSeek { get { return false; } }
+        public override bool CanSeek => false;
 
-        public override bool CanWrite { get { return true; } }
+        public override bool CanWrite => true;
 
         public override void Flush()
         {
+            writableStream.Flush();
         }
 
-        public override long Length { get { throw new NotSupportedException(); } }
+        public override long Length => throw new NotSupportedException();
 
-        public override long Position { get { throw new NotSupportedException(); } set { throw new NotSupportedException(); } }
+        public override long Position { get => throw new NotSupportedException(); set => throw new NotSupportedException(); }
 
         public override int Read(byte[] buffer, int offset, int count)
         {

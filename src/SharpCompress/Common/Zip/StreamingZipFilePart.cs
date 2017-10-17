@@ -25,7 +25,7 @@ namespace SharpCompress.Common.Zip
             {
                 return Stream.Null;
             }
-            decompressionStream = CreateDecompressionStream(GetCryptoStream(CreateBaseStream()));
+            decompressionStream = CreateDecompressionStream(GetCryptoStream(CreateBaseStream()), Header.CompressionMethod);
             if (LeaveStreamOpen)
             {
                 return new NonDisposingStream(decompressionStream);
@@ -39,19 +39,20 @@ namespace SharpCompress.Common.Zip
             {
                 return new BinaryReader(rewindableStream);
             }
-            if (Header.HasData)
+            if (Header.HasData && !Skipped)
             {
                 if (decompressionStream == null)
                 {
                     decompressionStream = GetCompressedStream();
                 }
-                decompressionStream.SkipAll();
+                decompressionStream.Skip();
 
                 DeflateStream deflateStream = decompressionStream as DeflateStream;
                 if (deflateStream != null)
                 {
                     rewindableStream.Rewind(deflateStream.InputBuffer);
                 }
+                Skipped = true;
             }
             var reader = new BinaryReader(rewindableStream);
             decompressionStream = null;

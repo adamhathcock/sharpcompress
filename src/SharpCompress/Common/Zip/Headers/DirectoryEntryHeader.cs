@@ -1,12 +1,13 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Linq;
 
 namespace SharpCompress.Common.Zip.Headers
 {
     internal class DirectoryEntryHeader : ZipFileEntry
     {
-        public DirectoryEntryHeader()
-            : base(ZipHeaderType.DirectoryEntry)
+        public DirectoryEntryHeader(ArchiveEncoding archiveEncoding)
+            : base(ZipHeaderType.DirectoryEntry, archiveEncoding)
         {
         }
 
@@ -30,10 +31,10 @@ namespace SharpCompress.Common.Zip.Headers
             RelativeOffsetOfEntryHeader = reader.ReadUInt32();
 
             byte[] name = reader.ReadBytes(nameLength);
-            Name = DecodeString(name);
+            Name = ArchiveEncoding.Decode(name);
             byte[] extra = reader.ReadBytes(extraLength);
             byte[] comment = reader.ReadBytes(commentLength);
-            Comment = DecodeString(comment);
+            Comment = ArchiveEncoding.Decode(comment);
             LoadExtra(extra);
 
             var unicodePathExtra = Extra.FirstOrDefault(u => u.Type == ExtraDataType.UnicodePathExtraField);
@@ -41,43 +42,30 @@ namespace SharpCompress.Common.Zip.Headers
             {
                 Name = ((ExtraUnicodePathExtraField)unicodePathExtra).UnicodeName;
             }
-        }
 
-        internal override void Write(BinaryWriter writer)
-        {
-            writer.Write(Version);
-            writer.Write(VersionNeededToExtract);
-            writer.Write((ushort)Flags);
-            writer.Write((ushort)CompressionMethod);
-            writer.Write(LastModifiedTime);
-            writer.Write(LastModifiedDate);
-            writer.Write(Crc);
-            writer.Write(CompressedSize);
-            writer.Write(UncompressedSize);
-
-            byte[] nameBytes = EncodeString(Name);
-            writer.Write((ushort)nameBytes.Length);
-
-            //writer.Write((ushort)Extra.Length);
-            writer.Write((ushort)0);
-            writer.Write((ushort)Comment.Length);
-
-            writer.Write(DiskNumberStart);
-            writer.Write(InternalFileAttributes);
-            writer.Write(ExternalFileAttributes);
-            writer.Write(RelativeOffsetOfEntryHeader);
-
-            writer.Write(nameBytes);
-
-            // writer.Write(Extra);
-            writer.Write(Comment);
+            var zip64ExtraData = Extra.OfType<Zip64ExtendedInformationExtraField>().FirstOrDefault();
+            if (zip64ExtraData != null)
+            {
+                if (CompressedSize == uint.MaxValue)
+                {
+                    CompressedSize = zip64ExtraData.CompressedSize;
+                }
+                if (UncompressedSize == uint.MaxValue)
+                {
+                    UncompressedSize = zip64ExtraData.UncompressedSize;
+                }
+                if (RelativeOffsetOfEntryHeader == uint.MaxValue)
+                {
+                    RelativeOffsetOfEntryHeader = zip64ExtraData.RelativeOffsetOfEntryHeader;
+                }
+            }
         }
 
         internal ushort Version { get; private set; }
 
         public ushort VersionNeededToExtract { get; set; }
 
-        public uint RelativeOffsetOfEntryHeader { get; set; }
+        public long RelativeOffsetOfEntryHeader { get; set; }
 
         public uint ExternalFileAttributes { get; set; }
 

@@ -21,10 +21,10 @@ namespace SharpCompress.Archives.Zip
 
         public IArchive Archive { get; }
 
-        public bool IsComplete { get { return true; } }
+        public bool IsComplete => true;
 
         #endregion
 
-        public string Comment { get { return (Parts.Single() as SeekableZipFilePart).Comment; } }
+        public string Comment => (Parts.Single() as SeekableZipFilePart).Comment;
     }
 }

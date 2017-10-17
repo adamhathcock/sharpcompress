@@ -21,7 +21,7 @@ namespace SharpCompress.Common.Rar
             headerFactory = new RarHeaderFactory(mode, options);
         }
 
-        internal StreamingMode Mode { get { return headerFactory.StreamingMode; } }
+        internal StreamingMode Mode => headerFactory.StreamingMode;
 
         internal abstract IEnumerable<RarFilePart> ReadFileParts();
 

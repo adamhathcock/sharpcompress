@@ -1,12 +1,13 @@
 ﻿using System.IO;
 using System.Linq;
+using System.Text;
 
 namespace SharpCompress.Common.Zip.Headers
 {
     internal class LocalEntryHeader : ZipFileEntry
     {
-        public LocalEntryHeader()
-            : base(ZipHeaderType.LocalEntry)
+        public LocalEntryHeader(ArchiveEncoding archiveEncoding)
+            : base(ZipHeaderType.LocalEntry, archiveEncoding)
         {
         }
 
@@ -24,7 +25,7 @@ namespace SharpCompress.Common.Zip.Headers
             ushort extraLength = reader.ReadUInt16();
             byte[] name = reader.ReadBytes(nameLength);
             byte[] extra = reader.ReadBytes(extraLength);
-            Name = DecodeString(name);
+            Name = ArchiveEncoding.Decode(name);
             LoadExtra(extra);
 
             var unicodePathExtra = Extra.FirstOrDefault(u => u.Type == ExtraDataType.UnicodePathExtraField);
@@ -32,29 +33,19 @@ namespace SharpCompress.Common.Zip.Headers
             {
                 Name = ((ExtraUnicodePathExtraField)unicodePathExtra).UnicodeName;
             }
-        }
 
-        internal override void Write(BinaryWriter writer)
-        {
-            writer.Write(Version);
-            writer.Write((ushort)Flags);
-            writer.Write((ushort)CompressionMethod);
-            writer.Write(LastModifiedTime);
-            writer.Write(LastModifiedDate);
-            writer.Write(Crc);
-            writer.Write(CompressedSize);
-            writer.Write(UncompressedSize);
-
-            byte[] nameBytes = EncodeString(Name);
-
-            writer.Write((ushort)nameBytes.Length);
-            writer.Write((ushort)0);
-
-            //if (Extra != null)
-            //{
-            //    writer.Write(Extra);
-            //}
-            writer.Write(nameBytes);
+            var zip64ExtraData = Extra.OfType<Zip64ExtendedInformationExtraField>().FirstOrDefault();
+            if (zip64ExtraData != null)
+            {
+                if (CompressedSize == uint.MaxValue)
+                {
+                    CompressedSize = zip64ExtraData.CompressedSize;
+                }
+                if (UncompressedSize == uint.MaxValue)
+                {
+                    UncompressedSize = zip64ExtraData.UncompressedSize;
+                }
+            }
         }
 
         internal ushort Version { get; private set; }

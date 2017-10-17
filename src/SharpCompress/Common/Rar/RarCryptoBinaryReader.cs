@@ -6,12 +6,13 @@ using SharpCompress.IO;
 
 namespace SharpCompress.Common.Rar
 {
-    internal class RarCryptoBinaryReader : MarkingBinaryReader
+    internal class RarCryptoBinaryReader : RarCrcBinaryReader
     {
         private RarRijndael rijndael;
         private byte[] salt;
         private readonly string password;
         private readonly Queue<byte> data = new Queue<byte>();
+        private long readCount;
 
         public RarCryptoBinaryReader(Stream stream, string password )
             : base(stream)
@@ -19,6 +20,22 @@ namespace SharpCompress.Common.Rar
             this.password = password;
         }
 
+        // track read count ourselves rather than using the underlying stream since we buffer
+        public override long CurrentReadByteCount {
+            get 
+            {
+                return this.readCount;
+            }
+            protected set 
+            {
+                // ignore
+            }
+        }
+
+        public override void Mark() {
+            this.readCount = 0;
+        }
+        
         protected bool UseEncryption
         {
             get { return salt != null; }
@@ -36,6 +53,7 @@ namespace SharpCompress.Common.Rar
             {
                 return ReadAndDecryptBytes(count);
             }
+            this.readCount += count;
             return base.ReadBytes(count);
         }
 
@@ -50,7 +68,7 @@ namespace SharpCompress.Common.Rar
                 for (int i = 0; i < alignedSize / 16; i++)
                 {
                     //long ax = System.currentTimeMillis();
-                    byte[] cipherText = base.ReadBytes(16);
+                    byte[] cipherText = base.ReadBytesNoCrc(16);
                     var readBytes = rijndael.ProcessBlock(cipherText);
                     foreach (var readByte in readBytes)
                         data.Enqueue(readByte);
@@ -63,8 +81,11 @@ namespace SharpCompress.Common.Rar
 
             for (int i = 0; i < count; i++)
             {
-                decryptedBytes[i] = data.Dequeue();
+                var b = data.Dequeue();
+                decryptedBytes[i] = b;
+                UpdateCrc(b);
             }
+            this.readCount += count;
             return decryptedBytes;
         }
 

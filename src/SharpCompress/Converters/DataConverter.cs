@@ -146,9 +146,9 @@ namespace SharpCompress.Converters
             return ret;
         }
 
-        static public DataConverter LittleEndian { get { return BitConverter.IsLittleEndian ? Native : SwapConv; } }
+        static public DataConverter LittleEndian => BitConverter.IsLittleEndian ? Native : SwapConv;
 
-        static public DataConverter BigEndian { get { return BitConverter.IsLittleEndian ? SwapConv : Native; } }
+        static public DataConverter BigEndian => BitConverter.IsLittleEndian ? SwapConv : Native;
 
         static public DataConverter Native { get; } = new CopyConverter();
 
@@ -156,7 +156,7 @@ namespace SharpCompress.Converters
         {
             if (dest == null)
             {
-                throw new ArgumentNullException("dest");
+                throw new ArgumentNullException(nameof(dest));
             }
             if (destIdx < 0 || destIdx > dest.Length - size)
             {
@@ -170,7 +170,7 @@ namespace SharpCompress.Converters
             {
                 if (data == null)
                 {
-                    throw new ArgumentNullException("data");
+                    throw new ArgumentNullException(nameof(data));
                 }
                 if (data.Length - index < 8)
                 {
@@ -195,7 +195,7 @@ namespace SharpCompress.Converters
             {
                 if (data == null)
                 {
-                    throw new ArgumentNullException("data");
+                    throw new ArgumentNullException(nameof(data));
                 }
                 if (data.Length - index < 8)
                 {
@@ -221,7 +221,7 @@ namespace SharpCompress.Converters
             {
                 if (data == null)
                 {
-                    throw new ArgumentNullException("data");
+                    throw new ArgumentNullException(nameof(data));
                 }
                 if (data.Length - index < 8)
                 {
@@ -247,7 +247,7 @@ namespace SharpCompress.Converters
             {
                 if (data == null)
                 {
-                    throw new ArgumentNullException("data");
+                    throw new ArgumentNullException(nameof(data));
                 }
                 if (data.Length - index < 4)
                 {
@@ -273,7 +273,7 @@ namespace SharpCompress.Converters
             {
                 if (data == null)
                 {
-                    throw new ArgumentNullException("data");
+                    throw new ArgumentNullException(nameof(data));
                 }
                 if (data.Length - index < 4)
                 {
@@ -299,7 +299,7 @@ namespace SharpCompress.Converters
             {
                 if (data == null)
                 {
-                    throw new ArgumentNullException("data");
+                    throw new ArgumentNullException(nameof(data));
                 }
                 if (data.Length - index < 4)
                 {
@@ -325,7 +325,7 @@ namespace SharpCompress.Converters
             {
                 if (data == null)
                 {
-                    throw new ArgumentNullException("data");
+                    throw new ArgumentNullException(nameof(data));
                 }
                 if (data.Length - index < 2)
                 {
@@ -351,7 +351,7 @@ namespace SharpCompress.Converters
             {
                 if (data == null)
                 {
-                    throw new ArgumentNullException("data");
+                    throw new ArgumentNullException(nameof(data));
                 }
                 if (data.Length - index < 2)
                 {
@@ -468,7 +468,7 @@ namespace SharpCompress.Converters
             {
                 if (data == null)
                 {
-                    throw new ArgumentNullException("data");
+                    throw new ArgumentNullException(nameof(data));
                 }
                 if (data.Length - index < 8)
                 {
@@ -494,7 +494,7 @@ namespace SharpCompress.Converters
             {
                 if (data == null)
                 {
-                    throw new ArgumentNullException("data");
+                    throw new ArgumentNullException(nameof(data));
                 }
                 if (data.Length - index < 8)
                 {
@@ -520,7 +520,7 @@ namespace SharpCompress.Converters
             {
                 if (data == null)
                 {
-                    throw new ArgumentNullException("data");
+                    throw new ArgumentNullException(nameof(data));
                 }
                 if (data.Length - index < 8)
                 {
@@ -546,7 +546,7 @@ namespace SharpCompress.Converters
             {
                 if (data == null)
                 {
-                    throw new ArgumentNullException("data");
+                    throw new ArgumentNullException(nameof(data));
                 }
                 if (data.Length - index < 4)
                 {
@@ -572,7 +572,7 @@ namespace SharpCompress.Converters
             {
                 if (data == null)
                 {
-                    throw new ArgumentNullException("data");
+                    throw new ArgumentNullException(nameof(data));
                 }
                 if (data.Length - index < 4)
                 {
@@ -598,7 +598,7 @@ namespace SharpCompress.Converters
             {
                 if (data == null)
                 {
-                    throw new ArgumentNullException("data");
+                    throw new ArgumentNullException(nameof(data));
                 }
                 if (data.Length - index < 4)
                 {
@@ -624,7 +624,7 @@ namespace SharpCompress.Converters
             {
                 if (data == null)
                 {
-                    throw new ArgumentNullException("data");
+                    throw new ArgumentNullException(nameof(data));
                 }
                 if (data.Length - index < 2)
                 {
@@ -650,7 +650,7 @@ namespace SharpCompress.Converters
             {
                 if (data == null)
                 {
-                    throw new ArgumentNullException("data");
+                    throw new ArgumentNullException(nameof(data));
                 }
                 if (data.Length - index < 2)
                 {

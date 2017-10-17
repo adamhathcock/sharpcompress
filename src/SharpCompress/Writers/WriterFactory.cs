@@ -19,7 +19,7 @@ namespace SharpCompress.Writers
                     {
                         throw new InvalidFormatException("GZip archives only support GZip compression type.");
                     }
-                    return new GZipWriter(stream, writerOptions.LeaveStreamOpen);
+                    return new GZipWriter(stream, new GZipWriterOptions(writerOptions));
                 }
                 case ArchiveType.Zip:
                 {

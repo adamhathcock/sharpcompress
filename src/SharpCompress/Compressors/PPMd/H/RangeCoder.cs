@@ -131,11 +131,11 @@ namespace SharpCompress.Compressors.PPMd.H
             Scale = Scale + dScale;
         }
 
-        internal long HighCount { get { return highCount; } set { highCount = value & RangeCoder.UintMask; } }
+        internal long HighCount { get => highCount; set => highCount = value & RangeCoder.UintMask; }
 
-        internal long LowCount { get { return lowCount & RangeCoder.UintMask; } set { lowCount = value & RangeCoder.UintMask; } }
+        internal long LowCount { get => lowCount & RangeCoder.UintMask; set => lowCount = value & RangeCoder.UintMask; }
 
-        internal long Scale { get { return scale; } set { scale = value & RangeCoder.UintMask; } }
+        internal long Scale { get => scale; set => scale = value & RangeCoder.UintMask; }
 
         // Debug
         public override String ToString()

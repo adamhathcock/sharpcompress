@@ -146,12 +146,12 @@ namespace SharpCompress.Compressors.PPMd.I1
         {
             if (target == null)
             {
-                throw new ArgumentNullException("target");
+                throw new ArgumentNullException(nameof(target));
             }
 
             if (source == null)
             {
-                throw new ArgumentNullException("source");
+                throw new ArgumentNullException(nameof(source));
             }
 
             EncodeStart(properties);
@@ -235,12 +235,12 @@ namespace SharpCompress.Compressors.PPMd.I1
         {
             if (target == null)
             {
-                throw new ArgumentNullException("target");
+                throw new ArgumentNullException(nameof(target));
             }
 
             if (source == null)
             {
-                throw new ArgumentNullException("source");
+                throw new ArgumentNullException(nameof(source));
             }
 
             DecodeStart(source, properties);

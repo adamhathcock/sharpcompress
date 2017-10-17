@@ -182,7 +182,7 @@ namespace SharpCompress.Common.SevenZip
 
         private DateTime? TranslateTime(long? time)
         {
-            if (time.HasValue)
+            if (time.HasValue && time.Value >= 0 && time.Value <= 2650467743999999999) //maximum Windows file time 31.12.9999
             {
                 return TranslateTime(time.Value);
             }
@@ -1339,20 +1339,20 @@ namespace SharpCompress.Common.SevenZip
 
             #region Stream
 
-            public override bool CanRead { get { return true; } }
+            public override bool CanRead => true;
 
-            public override bool CanSeek { get { return false; } }
+            public override bool CanSeek => false;
 
-            public override bool CanWrite { get { return false; } }
+            public override bool CanWrite => false;
 
             public override void Flush()
             {
                 throw new NotSupportedException();
             }
 
-            public override long Length { get { throw new NotSupportedException(); } }
+            public override long Length => throw new NotSupportedException();
 
-            public override long Position { get { throw new NotSupportedException(); } set { throw new NotSupportedException(); } }
+            public override long Position { get => throw new NotSupportedException(); set => throw new NotSupportedException(); }
 
             public override int Read(byte[] buffer, int offset, int count)
             {

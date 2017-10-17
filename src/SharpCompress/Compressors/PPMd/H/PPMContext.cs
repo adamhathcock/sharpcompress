@@ -8,8 +8,7 @@ namespace SharpCompress.Compressors.PPMd.H
     {
         internal FreqData FreqData
         {
-            get { return freqData; }
-
+            get => freqData;
             set
             {
                 freqData.SummFreq = value.SummFreq;
@@ -131,7 +130,7 @@ namespace SharpCompress.Compressors.PPMd.H
 
         internal override int Address
         {
-            get { return base.Address; }
+            get => base.Address;
             set
             {
                 base.Address = value;

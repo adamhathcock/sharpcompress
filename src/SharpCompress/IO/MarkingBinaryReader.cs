@@ -12,9 +12,9 @@ namespace SharpCompress.IO
         {
         }
 
-        public long CurrentReadByteCount { get; private set; }
+        public virtual long CurrentReadByteCount { get; protected set; }
 
-        public void Mark()
+        public virtual void Mark()
         {
             CurrentReadByteCount = 0;
         }

@@ -2,13 +2,14 @@
 using System.IO;
 using SharpCompress.Common.Zip.Headers;
 using SharpCompress.IO;
+using System.Text;
 
 namespace SharpCompress.Common.Zip
 {
     internal class StreamingZipHeaderFactory : ZipHeaderFactory
     {
-        internal StreamingZipHeaderFactory(string password)
-            : base(StreamingMode.Streaming, password)
+        internal StreamingZipHeaderFactory(string password, ArchiveEncoding archiveEncoding)
+            : base(StreamingMode.Streaming, password, archiveEncoding)
         {
         }
 
@@ -28,7 +29,7 @@ namespace SharpCompress.Common.Zip
                 ZipHeader header = null;
                 BinaryReader reader = new BinaryReader(rewindableStream);
                 if (lastEntryHeader != null &&
-                    FlagUtility.HasFlag(lastEntryHeader.Flags, HeaderFlags.UsePostDataDescriptor))
+                    (FlagUtility.HasFlag(lastEntryHeader.Flags, HeaderFlags.UsePostDataDescriptor) || lastEntryHeader.IsZip64))
                 {
                     reader = (lastEntryHeader.Part as StreamingZipFilePart).FixStreamedFileLocation(ref rewindableStream);
                     long? pos = rewindableStream.CanSeek ? (long?)rewindableStream.Position : null;

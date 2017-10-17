@@ -8,10 +8,11 @@ namespace SharpCompress.Common.Zip.Headers
 {
     internal abstract class ZipFileEntry : ZipHeader
     {
-        protected ZipFileEntry(ZipHeaderType type)
+        protected ZipFileEntry(ZipHeaderType type, ArchiveEncoding archiveEncoding)
             : base(type)
         {
             Extra = new List<ExtraData>();
+            ArchiveEncoding = archiveEncoding;
         }
 
         internal bool IsDirectory
@@ -29,27 +30,10 @@ namespace SharpCompress.Common.Zip.Headers
                        && Name.EndsWith("\\");
             }
         }
-
-        protected string DecodeString(byte[] str)
-        {
-            if (FlagUtility.HasFlag(Flags, HeaderFlags.UTF8))
-            {
-                return Encoding.UTF8.GetString(str, 0, str.Length);
-            }
-
-            return ArchiveEncoding.Default.GetString(str, 0, str.Length);
-        }
-
-        protected byte[] EncodeString(string str)
-        {
-            if (FlagUtility.HasFlag(Flags, HeaderFlags.UTF8))
-            {
-                return Encoding.UTF8.GetBytes(str);
-            }
-            return ArchiveEncoding.Default.GetBytes(str);
-        }
-
+        
         internal Stream PackedStream { get; set; }
+
+        internal ArchiveEncoding ArchiveEncoding { get; }
 
         internal string Name { get; set; }
 
@@ -57,15 +41,31 @@ namespace SharpCompress.Common.Zip.Headers
 
         internal ZipCompressionMethod CompressionMethod { get; set; }
 
-        internal uint CompressedSize { get; set; }
+        internal long CompressedSize { get; set; }
 
         internal long? DataStartPosition { get; set; }
 
-        internal uint UncompressedSize { get; set; }
+        internal long UncompressedSize { get; set; }
 
         internal List<ExtraData> Extra { get; set; }
 
-        internal PkwareTraditionalEncryptionData PkwareTraditionalEncryptionData { get; set; }
+        public string Password { get; set; }
+
+        internal PkwareTraditionalEncryptionData ComposeEncryptionData(Stream archiveStream)
+        {
+            if (archiveStream == null)
+            {
+                throw new ArgumentNullException(nameof(archiveStream));
+            }
+
+            var buffer = new byte[12];
+            archiveStream.ReadFully(buffer);
+
+            PkwareTraditionalEncryptionData encryptionData = PkwareTraditionalEncryptionData.ForRead(Password, this, buffer);
+
+            return encryptionData;
+        }
+
 #if !NO_CRYPTO
         internal WinzipAesEncryptionData WinzipAesEncryptionData { get; set; }
 #endif
@@ -96,5 +96,7 @@ namespace SharpCompress.Common.Zip.Headers
         }
 
         internal ZipFilePart Part { get; set; }
+
+        internal bool IsZip64 => CompressedSize == uint.MaxValue;
     }
 }

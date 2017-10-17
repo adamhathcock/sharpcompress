@@ -92,21 +92,14 @@ namespace SharpCompress.Compressors.Deflate
         /// <summary>
         /// Indicates the current CRC for all blocks slurped in.
         /// </summary>
-        public Int32 Crc32Result
-        {
-            get
-            {
-                // return one's complement of the running result
-                return unchecked((Int32)(~runningCrc32Result));
-            }
-        }
+        public Int32 Crc32Result => unchecked((Int32)(~runningCrc32Result));
 
         /// <summary>
         /// Returns the CRC32 for the specified stream.
         /// </summary>
         /// <param name="input">The stream over which to calculate the CRC32</param>
         /// <returns>the CRC32 calculation</returns>
-        public Int32 GetCrc32(Stream input)
+        public UInt32 GetCrc32(Stream input)
         {
             return GetCrc32AndCopy(input, null);
         }
@@ -118,7 +111,7 @@ namespace SharpCompress.Compressors.Deflate
         /// <param name="input">The stream over which to calculate the CRC32</param>
         /// <param name="output">The stream into which to deflate the input</param>
         /// <returns>the CRC32 calculation</returns>
-        public Int32 GetCrc32AndCopy(Stream input, Stream output)
+        public UInt32 GetCrc32AndCopy(Stream input, Stream output)
         {
             if (input == null)
             {
@@ -150,7 +143,7 @@ namespace SharpCompress.Compressors.Deflate
                     TotalBytesRead += count;
                 }
 
-                return (Int32)(~runningCrc32Result);
+                return ~runningCrc32Result;
             }
         }
 

@@ -8,13 +8,13 @@ namespace SharpCompress.Readers.Zip
 {
     public class ZipReader : AbstractReader<ZipEntry, ZipVolume>
     {
-        private readonly StreamingZipHeaderFactory headerFactory;
+        private readonly StreamingZipHeaderFactory _headerFactory;
 
         internal ZipReader(Stream stream, ReaderOptions options)
             : base(options, ArchiveType.Zip)
         {
             Volume = new ZipVolume(stream, options);
-            headerFactory = new StreamingZipHeaderFactory(options.Password);
+            _headerFactory = new StreamingZipHeaderFactory(options.Password, options.ArchiveEncoding);
         }
 
         public override ZipVolume Volume { get; }
@@ -33,26 +33,26 @@ namespace SharpCompress.Readers.Zip
             return new ZipReader(stream, options ?? new ReaderOptions());
         }
 
-        #endregion
+        #endregion Open
 
         internal override IEnumerable<ZipEntry> GetEntries(Stream stream)
         {
-            foreach (ZipHeader h in headerFactory.ReadStreamHeader(stream))
+            foreach (ZipHeader h in _headerFactory.ReadStreamHeader(stream))
             {
                 if (h != null)
                 {
                     switch (h.ZipHeaderType)
                     {
                         case ZipHeaderType.LocalEntry:
-                        {
-                            yield return new ZipEntry(new StreamingZipFilePart(h as LocalEntryHeader,
-                                                                               stream));
-                        }
+                            {
+                                yield return new ZipEntry(new StreamingZipFilePart(h as LocalEntryHeader,
+                                                                                   stream));
+                            }
                             break;
                         case ZipHeaderType.DirectoryEnd:
-                        {
-                            yield break;
-                        }
+                            {
+                                yield break;
+                            }
                     }
                 }
             }
