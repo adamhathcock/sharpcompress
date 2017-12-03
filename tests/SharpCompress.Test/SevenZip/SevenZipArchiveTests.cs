@@ -30,7 +30,6 @@ namespace SharpCompress.Test.SevenZip
         {
             ArchiveFileRead("7Zip.LZMA.Aes.7z", new ReaderOptions() {Password = "testpassword"});
         }
-
         [Fact]
         public void SevenZipArchive_PPMd_StreamRead()
         {
@@ -94,7 +93,7 @@ namespace SharpCompress.Test.SevenZip
         [Fact]
         public void SevenZipArchive_BZip2_Split()
         {
-            Assert.Throws<IndexOutOfRangeException>(() => ArchiveStreamRead("Original.7z.001",
+            Assert.Throws<IndexOutOfRangeException>(() => ArchiveStreamRead(null, "Original.7z.001",
                                                                             "Original.7z.002",
                                                                             "Original.7z.003",
                                                                             "Original.7z.004",
