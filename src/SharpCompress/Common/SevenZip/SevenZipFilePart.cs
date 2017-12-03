@@ -42,7 +42,7 @@ namespace SharpCompress.Common.SevenZip
             {
                 return null;
             }
-            var folderStream = _database.GetFolderStream(_stream, Folder, null);
+            var folderStream = _database.GetFolderStream(_stream, Folder, _database.PasswordProvider);
 
             int firstFileIndex = _database.FolderStartFileIndex[_database.Folders.IndexOf(Folder)];
             int skipCount = Index - firstFileIndex;

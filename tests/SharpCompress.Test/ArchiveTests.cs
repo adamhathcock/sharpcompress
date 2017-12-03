@@ -17,7 +17,6 @@ namespace SharpCompress.Test
             ArchiveStreamReadExtractAll(testArchive.AsEnumerable(), compression);
         }
 
-
         protected void ArchiveStreamReadExtractAll(IEnumerable<string> testArchives, CompressionType compression)
         {
             foreach (var path in testArchives)
@@ -31,97 +30,113 @@ namespace SharpCompress.Test
                     {
                         ReaderTests.UseReader(this, reader, compression);
                     }
+
                     VerifyFiles();
 
                     if (archive.Entries.First().CompressionType == CompressionType.Rar)
                     {
                         return;
                     }
+
                     foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
                     {
                         entry.WriteToDirectory(SCRATCH_FILES_PATH,
-                                               new ExtractionOptions()
+                                               new ExtractionOptions
                                                {
                                                    ExtractFullPath = true,
                                                    Overwrite = true
                                                });
                     }
                 }
+
                 VerifyFiles();
             }
         }
 
-        protected void ArchiveStreamRead(string testArchive)
+        protected void ArchiveStreamRead(string testArchive, ReaderOptions readerOptions)
         {
             testArchive = Path.Combine(TEST_ARCHIVES_PATH, testArchive);
-            ArchiveStreamRead(testArchive.AsEnumerable());
+            
+            ResetScratch();
+            using (Stream stream = File.OpenRead(testArchive))
+            using (var archive = ArchiveFactory.Open(stream, readerOptions))
+            {
+                foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
+                {
+                    entry.WriteToDirectory(SCRATCH_FILES_PATH,
+                                           new ExtractionOptions
+                                           {
+                                               ExtractFullPath = true,
+                                               Overwrite = true
+                                           });
+                }
+            }
+
+            VerifyFiles();
         }
 
         protected void ArchiveStreamRead(params string[] testArchives)
         {
-            ArchiveStreamRead(testArchives.Select(x => Path.Combine(TEST_ARCHIVES_PATH, x)));
+            foreach (var path in testArchives.Select(x => Path.Combine(TEST_ARCHIVES_PATH, x)))
+            {
+                ArchiveStreamRead(path);
+            }
         }
 
         protected void ArchiveStreamRead(IEnumerable<string> testArchives)
         {
             foreach (var path in testArchives)
             {
-                ResetScratch();
-                using (Stream stream = File.OpenRead(path))
-                using (var archive = ArchiveFactory.Open(stream))
-                {
-                    foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
-                    {
-                        entry.WriteToDirectory(SCRATCH_FILES_PATH, new ExtractionOptions()
-                        {
-                            ExtractFullPath = true,
-                            Overwrite = true
-                        });
-                    }
-                }
-                VerifyFiles();
+                ArchiveStreamRead(path);
             }
         }
 
-        protected void ArchiveFileRead(string testArchive)
+        protected void ArchiveFileRead(string testArchive, ReaderOptions readerOptions = null)
         {
             testArchive = Path.Combine(TEST_ARCHIVES_PATH, testArchive);
-            ArchiveFileRead(testArchive.AsEnumerable());
+            ResetScratch();
+
+            using (var archive = ArchiveFactory.Open(testArchive, readerOptions))
+            {
+                //archive.EntryExtractionBegin += archive_EntryExtractionBegin;
+                //archive.FilePartExtractionBegin += archive_FilePartExtractionBegin;
+                //archive.CompressedBytesRead += archive_CompressedBytesRead;
+
+                foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
+                {
+                    entry.WriteToDirectory(SCRATCH_FILES_PATH,
+                                           new ExtractionOptions
+                                           {
+                                               ExtractFullPath = true,
+                                               Overwrite = true
+                                           });
+                }
+            }
+
+            VerifyFiles();
         }
-        protected void ArchiveFileRead(IEnumerable<string> testArchives)
+
+        protected void ArchiveFilesRead(IEnumerable<string> testArchives)
         {
             foreach (var path in testArchives)
             {
-                ResetScratch();
-                using (var archive = ArchiveFactory.Open(path))
-                {
-                    //archive.EntryExtractionBegin += archive_EntryExtractionBegin;
-                    //archive.FilePartExtractionBegin += archive_FilePartExtractionBegin;
-                    //archive.CompressedBytesRead += archive_CompressedBytesRead;
-
-                    foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
-                    {
-                        entry.WriteToDirectory(SCRATCH_FILES_PATH,
-                                               new ExtractionOptions()
-                                               {
-                                                   ExtractFullPath = true,
-                                                   Overwrite = true
-                                               });
-                    }
-                }
-                VerifyFiles();
+                ArchiveFileRead(path);
             }
         }
 
         void archive_CompressedBytesRead(object sender, CompressedBytesReadEventArgs e)
         {
             Console.WriteLine("Read Compressed File Part Bytes: {0} Percentage: {1}%",
-                e.CurrentFilePartCompressedBytesRead, CreatePercentage(e.CurrentFilePartCompressedBytesRead, partTotal));
+                              e.CurrentFilePartCompressedBytesRead,
+                              CreatePercentage(e.CurrentFilePartCompressedBytesRead, partTotal));
 
-            string percentage = entryTotal.HasValue ? CreatePercentage(e.CompressedBytesRead,
-                entryTotal.Value).ToString() : "Unknown";
+            string percentage = entryTotal.HasValue
+                                    ? CreatePercentage(e.CompressedBytesRead,
+                                                       entryTotal.Value).ToString()
+                                    : "Unknown";
             Console.WriteLine("Read Compressed File Entry Bytes: {0} Percentage: {1}%",
-                e.CompressedBytesRead, percentage);
+                              e.CompressedBytesRead,
+                              percentage);
         }
 
         void archive_FilePartExtractionBegin(object sender, FilePartExtractionBeginEventArgs e)
@@ -145,7 +160,7 @@ namespace SharpCompress.Test
             testArchive = Path.Combine(TEST_ARCHIVES_PATH, testArchive);
             ArchiveFileReadEx(testArchive.AsEnumerable());
         }
-        
+
         /// <summary>
         /// Demonstrate the TotalUncompressSize property, and the ExtractionOptions.PreserveFileTime and ExtractionOptions.PreserveAttributes extract options
         /// </summary>
@@ -157,6 +172,7 @@ namespace SharpCompress.Test
                 using (var archive = ArchiveFactory.Open(path))
                 {
                     totalSize = archive.TotalUncompressSize;
+
                     //archive.EntryExtractionBegin += Archive_EntryExtractionBeginEx;
                     //archive.EntryExtractionEnd += Archive_EntryExtractionEndEx;
                     //archive.CompressedBytesRead += Archive_CompressedBytesReadEx;
@@ -164,7 +180,7 @@ namespace SharpCompress.Test
                     foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
                     {
                         entry.WriteToDirectory(SCRATCH_FILES_PATH,
-                                               new ExtractionOptions()
+                                               new ExtractionOptions
                                                {
                                                    ExtractFullPath = true,
                                                    Overwrite = true,
@@ -173,6 +189,7 @@ namespace SharpCompress.Test
                                                });
                     }
                 }
+
                 VerifyFilesEx();
             }
         }
@@ -184,7 +201,9 @@ namespace SharpCompress.Test
 
         private void Archive_CompressedBytesReadEx(object sender, CompressedBytesReadEventArgs e)
         {
-            string percentage = entryTotal.HasValue ? CreatePercentage(e.CompressedBytesRead, entryTotal.Value).ToString() : "-";
+            string percentage = entryTotal.HasValue
+                                    ? CreatePercentage(e.CompressedBytesRead, entryTotal.Value).ToString()
+                                    : "-";
             string tortalPercentage = CreatePercentage(partTotal + e.CompressedBytesRead, totalSize).ToString();
             Console.WriteLine(@"Read Compressed File Progress: {0}% Total Progress {1}%", percentage, tortalPercentage);
         }
