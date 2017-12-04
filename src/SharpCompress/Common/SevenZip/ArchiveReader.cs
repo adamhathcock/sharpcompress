@@ -1211,7 +1211,7 @@ namespace SharpCompress.Common.SevenZip
 
         public ArchiveDatabase ReadDatabase(IPasswordProvider pass)
         {
-            var db = new ArchiveDatabase();
+            var db = new ArchiveDatabase(pass);
             db.Clear();
 
             db.MajorVersion = _header[6];
@@ -1279,7 +1279,7 @@ namespace SharpCompress.Common.SevenZip
                         throw new InvalidOperationException();
                     }
 
-                    var dataVector = ReadAndDecodePackedStreams(db.StartPositionAfterHeader, pass);
+                    var dataVector = ReadAndDecodePackedStreams(db.StartPositionAfterHeader, db.PasswordProvider);
 
                     // compressed header without content is odd but ok
                     if (dataVector.Count == 0)
@@ -1301,7 +1301,7 @@ namespace SharpCompress.Common.SevenZip
                     }
                 }
 
-                ReadHeader(db, pass);
+                ReadHeader(db, db.PasswordProvider);
             }
             db.Fill();
             return db;
@@ -1441,7 +1441,7 @@ namespace SharpCompress.Common.SevenZip
             #endregion
         }
 
-        private Stream GetCachedDecoderStream(ArchiveDatabase _db, int folderIndex, IPasswordProvider pw)
+        private Stream GetCachedDecoderStream(ArchiveDatabase _db, int folderIndex)
         {
             Stream s;
             if (!_cachedStreams.TryGetValue(folderIndex, out s))
@@ -1456,13 +1456,13 @@ namespace SharpCompress.Common.SevenZip
                 }
 
                 s = DecoderStreamHelper.CreateDecoderStream(_stream, folderStartPackPos, packSizes.ToArray(), folderInfo,
-                                                            pw);
+                                                            _db.PasswordProvider);
                 _cachedStreams.Add(folderIndex, s);
             }
             return s;
         }
 
-        public Stream OpenStream(ArchiveDatabase _db, int fileIndex, IPasswordProvider pw)
+        public Stream OpenStream(ArchiveDatabase _db, int fileIndex)
         {
             int folderIndex = _db.FileIndexToFolderIndexMap[fileIndex];
             int numFilesInFolder = _db.NumUnpackStreamsVector[folderIndex];
@@ -1479,12 +1479,12 @@ namespace SharpCompress.Common.SevenZip
                 skipSize += _db.Files[firstFileIndex + i].Size;
             }
 
-            Stream s = GetCachedDecoderStream(_db, folderIndex, pw);
+            Stream s = GetCachedDecoderStream(_db, folderIndex);
             s.Position = skipSize;
             return new ReadOnlySubStream(s, _db.Files[fileIndex].Size);
         }
 
-        public void Extract(ArchiveDatabase _db, int[] indices, IPasswordProvider pw)
+        public void Extract(ArchiveDatabase _db, int[] indices)
         {
             int numItems;
             bool allFilesMode = (indices == null);
@@ -1562,7 +1562,7 @@ namespace SharpCompress.Common.SevenZip
                 // TODO: If the decoding fails the last file may be extracted incompletely. Delete it?
 
                 Stream s = DecoderStreamHelper.CreateDecoderStream(_stream, folderStartPackPos, packSizes.ToArray(),
-                                                                   folderInfo, pw);
+                                                                   folderInfo, _db.PasswordProvider);
                 byte[] buffer = new byte[4 << 10];
                 for (;;)
                 {

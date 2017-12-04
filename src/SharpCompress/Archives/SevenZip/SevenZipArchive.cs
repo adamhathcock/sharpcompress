@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using SharpCompress.Common;
 using SharpCompress.Common.SevenZip;
+using SharpCompress.Compressors.LZMA.Utilites;
 using SharpCompress.IO;
 using SharpCompress.Readers;
 
@@ -117,7 +118,7 @@ namespace SharpCompress.Archives.SevenZip
                 stream.Position = 0;
                 var reader = new ArchiveReader();
                 reader.Open(stream);
-                database = reader.ReadDatabase(null);
+                database = reader.ReadDatabase(new PasswordProvider(ReaderOptions.Password));
             }
         }
 
@@ -144,7 +145,7 @@ namespace SharpCompress.Archives.SevenZip
 
         protected override IReader CreateReaderForSolidExtraction()
         {
-            return new SevenZipReader(this);
+            return new SevenZipReader(ReaderOptions, this);
         }
 
         public override bool IsSolid { get { return Entries.Where(x => !x.IsDirectory).GroupBy(x => x.FilePart.Folder).Count() > 1; } }
@@ -165,8 +166,8 @@ namespace SharpCompress.Archives.SevenZip
             private Stream currentStream;
             private CFileItem currentItem;
 
-            internal SevenZipReader(SevenZipArchive archive)
-                : base(new ReaderOptions(), ArchiveType.SevenZip)
+            internal SevenZipReader(ReaderOptions readerOptions, SevenZipArchive archive)
+                : base(readerOptions, ArchiveType.SevenZip)
             {
                 this.archive = archive;
             }
@@ -190,7 +191,7 @@ namespace SharpCompress.Archives.SevenZip
                     }
                     else
                     {
-                        currentStream = archive.database.GetFolderStream(stream, currentFolder, null);
+                        currentStream = archive.database.GetFolderStream(stream, currentFolder, new PasswordProvider(Options.Password));
                     }
                     foreach (var entry in group)
                     {
@@ -203,6 +204,22 @@ namespace SharpCompress.Archives.SevenZip
             protected override EntryStream GetEntryStream()
             {
                 return CreateEntryStream(new ReadOnlySubStream(currentStream, currentItem.Size));
+            }
+        }
+        
+        private class PasswordProvider : IPasswordProvider
+        {
+            private readonly string _password;
+
+            public PasswordProvider(string password)
+            {
+                _password = password;
+
+            }
+
+            public string CryptoGetTextPassword()
+            {
+                return _password;
             }
         }
     }

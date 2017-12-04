@@ -31,7 +31,7 @@ namespace SharpCompress.Compressors.Rar {
             {
                 currentCrc = RarCRC.CheckCrc(currentCrc, buffer, offset, result);
             } 
-            else if (GetCrc() != readStream.CurrentCrc)
+            else if (GetCrc() != readStream.CurrentCrc && count != 0)
             {
                 // NOTE: we use the last FileHeader in a multipart volume to check CRC
                 throw new InvalidFormatException("file crc mismatch");

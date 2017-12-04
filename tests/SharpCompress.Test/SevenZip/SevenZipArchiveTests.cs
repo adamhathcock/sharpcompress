@@ -1,5 +1,6 @@
 ﻿using System;
 using SharpCompress.Common;
+using SharpCompress.Readers;
 using Xunit;
 
 namespace SharpCompress.Test.SevenZip
@@ -19,6 +20,17 @@ namespace SharpCompress.Test.SevenZip
         }
 
         [Fact]
+        public void SevenZipArchive_LZMAAES_StreamRead()
+        {
+            ArchiveStreamRead("7Zip.LZMA.Aes.7z", new ReaderOptions() {Password = "testpassword"});
+        }
+
+        [Fact]
+        public void SevenZipArchive_LZMAAES_PathRead()
+        {
+            ArchiveFileRead("7Zip.LZMA.Aes.7z", new ReaderOptions() {Password = "testpassword"});
+        }
+        [Fact]
         public void SevenZipArchive_PPMd_StreamRead()
         {
             ArchiveStreamRead("7Zip.PPMd.7z");
@@ -35,6 +47,7 @@ namespace SharpCompress.Test.SevenZip
         {
             ArchiveFileRead("7Zip.PPMd.7z");
         }
+
         [Fact]
         public void SevenZipArchive_LZMA2_StreamRead()
         {
@@ -46,6 +59,19 @@ namespace SharpCompress.Test.SevenZip
         {
             ArchiveFileRead("7Zip.LZMA2.7z");
         }
+
+        [Fact]
+        public void SevenZipArchive_LZMA2AES_StreamRead()
+        {
+            ArchiveStreamRead("7Zip.LZMA2.Aes.7z", new ReaderOptions {Password = "testpassword"});
+        }
+
+        [Fact]
+        public void SevenZipArchive_LZMA2AES_PathRead()
+        {
+            ArchiveFileRead("7Zip.LZMA2.Aes.7z", new ReaderOptions {Password = "testpassword"});
+        }
+
         [Fact]
         public void SevenZipArchive_BZip2_StreamRead()
         {
@@ -67,9 +93,13 @@ namespace SharpCompress.Test.SevenZip
         [Fact]
         public void SevenZipArchive_BZip2_Split()
         {
-            Assert.Throws<IndexOutOfRangeException>(() => ArchiveStreamRead("Original.7z.001", "Original.7z.002",
-                "Original.7z.003", "Original.7z.004", "Original.7z.005",
-                "Original.7z.006", "Original.7z.007"));
+            Assert.Throws<IndexOutOfRangeException>(() => ArchiveStreamRead(null, "Original.7z.001",
+                                                                            "Original.7z.002",
+                                                                            "Original.7z.003",
+                                                                            "Original.7z.004",
+                                                                            "Original.7z.005",
+                                                                            "Original.7z.006",
+                                                                            "Original.7z.007"));
         }
     }
 }

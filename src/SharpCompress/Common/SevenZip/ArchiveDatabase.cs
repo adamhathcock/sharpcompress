@@ -22,6 +22,13 @@ namespace SharpCompress.Common.SevenZip
         internal List<long> PackStreamStartPositions = new List<long>();
         internal List<int> FolderStartFileIndex = new List<int>();
         internal List<int> FileIndexToFolderIndexMap = new List<int>();
+        
+        internal IPasswordProvider PasswordProvider { get; }
+
+        public ArchiveDatabase(IPasswordProvider passwordProvider)
+        {
+            PasswordProvider = passwordProvider;
+        }
 
         internal void Clear()
         {
