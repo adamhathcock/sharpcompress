@@ -9,5 +9,9 @@ matrix:
     - dotnet: 2.0.0
       mono: none
       env: DOTNETCORE=1
+      matrix:
+    - dotnet: 1.0.4
+      mono: none
+      env: DOTNETCORE=1  # optional, can be used to take different code paths in your script
 script:
   - ./build.sh
