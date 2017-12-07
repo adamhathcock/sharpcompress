@@ -19,12 +19,10 @@ namespace SharpCompress.Archives.Rar
         internal override Stream GetCompressedStream()
         {
             stream.Position = FileHeader.DataStartPosition;
-#if !NO_CRYPTO
             if (FileHeader.Salt != null)
             {
                 return new RarCryptoWrapper(stream, password, FileHeader.Salt);
             }
-#endif
             return stream;
         }
 

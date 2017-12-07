@@ -115,7 +115,6 @@ namespace SharpCompress.Common.Rar.Headers
 
         private RarHeader ReadNextHeader(Stream stream)
         {
-#if !NO_CRYPTO
             var reader = new RarCryptoBinaryReader(stream, Options.Password);
 
             if (IsEncrypted)
@@ -128,10 +127,6 @@ namespace SharpCompress.Common.Rar.Headers
                 byte[] salt = reader.ReadBytes(8);
                 reader.InitializeAes(salt);
             }
-#else
-            var reader = new RarCrcBinaryReader(stream);
-
-#endif
 
             RarHeader header = RarHeader.Create(reader, Options.ArchiveEncoding);
             if (header == null)
@@ -221,11 +216,7 @@ namespace SharpCompress.Common.Rar.Headers
                                     }
                                     else
                                     {
-#if !NO_CRYPTO
                                         fh.PackedStream = new RarCryptoWrapper(ms, Options.Password, fh.Salt);
-#else
-                                throw new NotSupportedException("RarCrypto not supported");
-#endif
                                     }
                                 }
                                 break;

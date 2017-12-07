@@ -1,6 +1,4 @@
-﻿#if !NO_FILE
-using System;
-#endif
+﻿using System;
 using System.IO;
 
 namespace SharpCompress.Writers
@@ -12,7 +10,6 @@ namespace SharpCompress.Writers
             writer.Write(entryPath, source, null);
         }
 
-#if !NO_FILE
         public static void Write(this IWriter writer, string entryPath, FileInfo source)
         {
             if (!source.Exists)
@@ -46,6 +43,5 @@ namespace SharpCompress.Writers
                 writer.Write(file.Substring(directory.Length), file);
             }
         }
-#endif
     }
 }

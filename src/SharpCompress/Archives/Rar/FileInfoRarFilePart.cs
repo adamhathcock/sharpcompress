@@ -1,6 +1,4 @@
-﻿
-#if !NO_FILE
-using System.IO;
+﻿using System.IO;
 using SharpCompress.Common.Rar.Headers;
 
 namespace SharpCompress.Archives.Rar
@@ -25,4 +23,3 @@ namespace SharpCompress.Archives.Rar
         }
     }
 }
-#endif

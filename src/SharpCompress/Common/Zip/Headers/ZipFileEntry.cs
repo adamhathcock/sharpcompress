@@ -30,7 +30,7 @@ namespace SharpCompress.Common.Zip.Headers
                        && Name.EndsWith("\\");
             }
         }
-        
+
         internal Stream PackedStream { get; set; }
 
         internal ArchiveEncoding ArchiveEncoding { get; }
@@ -66,9 +66,7 @@ namespace SharpCompress.Common.Zip.Headers
             return encryptionData;
         }
 
-#if !NO_CRYPTO
         internal WinzipAesEncryptionData WinzipAesEncryptionData { get; set; }
-#endif
 
         internal ushort LastModifiedDate { get; set; }
 

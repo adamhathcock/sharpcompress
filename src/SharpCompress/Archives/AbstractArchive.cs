@@ -24,7 +24,6 @@ namespace SharpCompress.Archives
 
         private bool disposed;
 
-#if !NO_FILE
         internal AbstractArchive(ArchiveType type, FileInfo fileInfo, ReaderOptions readerOptions)
         {
             Type = type;
@@ -40,7 +39,6 @@ namespace SharpCompress.Archives
 
 
         protected abstract IEnumerable<TVolume> LoadVolumes(FileInfo file);
-#endif
 
         internal AbstractArchive(ArchiveType type, IEnumerable<Stream> streams, ReaderOptions readerOptions)
         {

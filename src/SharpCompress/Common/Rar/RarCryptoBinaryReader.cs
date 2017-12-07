@@ -1,6 +1,4 @@
-﻿
-#if !NO_CRYPTO
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using SharpCompress.IO;
 
@@ -14,28 +12,30 @@ namespace SharpCompress.Common.Rar
         private readonly Queue<byte> data = new Queue<byte>();
         private long readCount;
 
-        public RarCryptoBinaryReader(Stream stream, string password )
+        public RarCryptoBinaryReader(Stream stream, string password)
             : base(stream)
         {
             this.password = password;
         }
 
         // track read count ourselves rather than using the underlying stream since we buffer
-        public override long CurrentReadByteCount {
-            get 
+        public override long CurrentReadByteCount
+        {
+            get
             {
                 return this.readCount;
             }
-            protected set 
+            protected set
             {
                 // ignore
             }
         }
 
-        public override void Mark() {
+        public override void Mark()
+        {
             this.readCount = 0;
         }
-        
+
         protected bool UseEncryption
         {
             get { return salt != null; }
@@ -102,4 +102,3 @@ namespace SharpCompress.Common.Rar
         }
     }
 }
-#endif

@@ -156,9 +156,6 @@ namespace SharpCompress.Common.Rar.Headers
 
         private static string ConvertPath(string path, HostOS os)
         {
-#if NO_FILE
-            return path.Replace('\\', '/');
-#else
             if (Path.DirectorySeparatorChar == '/')
             {
                 return path.Replace('\\', '/');
@@ -168,7 +165,6 @@ namespace SharpCompress.Common.Rar.Headers
                 return path.Replace('/', '\\');
             }
             return path;
-#endif
         }
 
         internal long DataStartPosition { get; set; }

@@ -24,16 +24,9 @@ Task("Build")
     {
         var settings = new DotNetCoreBuildSettings
         {
-            Framework = "netstandard1.0",
+            Framework = "netcoreapp2.0",
             Configuration = "Release"
         };
-
-        DotNetCoreBuild("./src/SharpCompress/SharpCompress.csproj", settings);
-
-        settings.Framework = "netstandard1.3";
-        DotNetCoreBuild("./src/SharpCompress/SharpCompress.csproj", settings);
-
-        settings.Framework = "netcoreapp2.0";
         DotNetCoreBuild("./tests/SharpCompress.Test/SharpCompress.Test.csproj", settings);
     }
 });
