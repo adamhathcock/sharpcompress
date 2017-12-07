@@ -18,7 +18,7 @@ namespace SharpCompress.Common.Rar.Headers
                    Flags == 0x1A21 &&
                    HeaderSize == 0x07;
 
-            // Rar5 signature: 52 61 72 21 1A 07 10 00 (not supported yet)
+            // Rar5 signature: 52 61 72 21 1A 07 01 00 (not supported yet)
         }
 
         internal bool OldFormat { get; private set; }

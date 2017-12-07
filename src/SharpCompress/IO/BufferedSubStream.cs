@@ -41,7 +41,7 @@ namespace SharpCompress.IO
             throw new NotSupportedException();
         }
 
-        public override long Length => throw new NotSupportedException();
+        public override long Length => BytesLeftToRead;
 
         public override long Position { get => throw new NotSupportedException(); set => throw new NotSupportedException(); }
 
