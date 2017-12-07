@@ -5,7 +5,7 @@ jobs:
       - image: adamhathcock/cake-build:latest
     steps:
       - checkout
-      - build:
+      - run:
           name: Build
           command: ./build.sh
       
