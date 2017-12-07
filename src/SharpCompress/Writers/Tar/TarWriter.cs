@@ -23,24 +23,24 @@ namespace SharpCompress.Writers.Tar
                 case CompressionType.None:
                     break;
                 case CompressionType.BZip2:
-                {
-                    destination = new BZip2Stream(destination, CompressionMode.Compress, true);
-                }
+                    {
+                        destination = new BZip2Stream(destination, CompressionMode.Compress, true);
+                    }
                     break;
                 case CompressionType.GZip:
-                {
-                    destination = new GZipStream(destination, CompressionMode.Compress, true);
-                }
+                    {
+                        destination = new GZipStream(destination, CompressionMode.Compress, true);
+                    }
                     break;
                 case CompressionType.LZip:
-                {
-                    destination = new LZipStream(destination, CompressionMode.Compress, true);
-                }
+                    {
+                        destination = new LZipStream(destination, CompressionMode.Compress, true);
+                    }
                     break;
                 default:
-                {
-                    throw new InvalidFormatException("Tar does not support compression: " + options.CompressionType);
-                }
+                    {
+                        throw new InvalidFormatException("Tar does not support compression: " + options.CompressionType);
+                    }
             }
             InitalizeStream(destination);
         }
@@ -98,19 +98,18 @@ namespace SharpCompress.Writers.Tar
             if (isDisposing)
             {
                 PadTo512(0, true);
-                PadTo512(0, true);
                 switch (OutputStream)
                 {
                     case BZip2Stream b:
-                    {
-                        b.Finish();
-                        break;
-                    }
+                        {
+                            b.Finish();
+                            break;
+                        }
                     case LZipStream l:
-                    {
-                        l.Finish();
-                        break;
-                    }
+                        {
+                            l.Finish();
+                            break;
+                        }
                 }
             }
             base.Dispose(isDisposing);
