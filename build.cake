@@ -54,13 +54,13 @@ Task("Test")
         DotNetCoreTest(file.ToString(), settings);
 
 
-            settings = new DotNetCoreTestSettings
-            {
-                Configuration = "Release",
-                Framework = "netcoreapp2.0"
-            };
+        settings = new DotNetCoreTestSettings
+        {
+            Configuration = "Release",
+            Framework = "netcoreapp1.1"
+        };
 
-            DotNetCoreTest(file.ToString(), settings);
+        DotNetCoreTest(file.ToString(), settings);
     }
 });
 
