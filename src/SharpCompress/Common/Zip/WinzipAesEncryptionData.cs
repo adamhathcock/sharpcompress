@@ -1,3 +1,5 @@
+
+#if !NO_CRYPTO
 using System;
 using System.Security.Cryptography;
 using SharpCompress.Converters;
@@ -26,20 +28,18 @@ namespace SharpCompress.Common.Zip
         }
 
         internal byte[] IvBytes
-        {
-            get; set;
-        }
+{
+    get; set;
+}
         internal byte[] KeyBytes
-        {
-            get; set;
-        }
+{
+    get; set;
+}
 
         private int KeySizeInBytes
         {
-            get
-            {
-                return KeyLengthInBytes(keySize);
-            }
+            get { return KeyLengthInBytes(keySize);
+}
         }
 
         internal static int KeyLengthInBytes(WinzipAesKeySize keySize)
@@ -76,3 +76,4 @@ namespace SharpCompress.Common.Zip
         }
     }
 }
+#endif

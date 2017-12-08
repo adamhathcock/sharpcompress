@@ -1,4 +1,6 @@
-﻿using System.IO;
+﻿
+#if !NO_FILE
+using System.IO;
 using SharpCompress.Readers;
 
 namespace SharpCompress.Common
@@ -46,3 +48,4 @@ namespace SharpCompress.Common
         }
     }
 }
+#endif

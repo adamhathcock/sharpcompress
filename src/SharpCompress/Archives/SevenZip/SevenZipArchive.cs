@@ -13,6 +13,7 @@ namespace SharpCompress.Archives.SevenZip
     public class SevenZipArchive : AbstractArchive<SevenZipArchiveEntry, SevenZipVolume>
     {
         private ArchiveDatabase database;
+#if !NO_FILE
 
         /// <summary>
         /// Constructor expects a filepath to an existing file.
@@ -35,6 +36,7 @@ namespace SharpCompress.Archives.SevenZip
             fileInfo.CheckNotNull("fileInfo");
             return new SevenZipArchive(fileInfo, readerOptions ?? new ReaderOptions());
         }
+#endif
         /// <summary>
         /// Takes a seekable Stream as a source
         /// </summary>
@@ -45,6 +47,8 @@ namespace SharpCompress.Archives.SevenZip
             stream.CheckNotNull("stream");
             return new SevenZipArchive(stream, readerOptions ?? new ReaderOptions());
         }
+
+#if !NO_FILE
         internal SevenZipArchive(FileInfo fileInfo, ReaderOptions readerOptions)
             : base(ArchiveType.SevenZip, fileInfo, readerOptions)
         {
@@ -71,6 +75,8 @@ namespace SharpCompress.Archives.SevenZip
                 return IsSevenZipFile(stream);
             }
         }
+#endif
+
         internal SevenZipArchive(Stream stream, ReaderOptions readerOptions)
             : base(ArchiveType.SevenZip, stream.AsEnumerable(), readerOptions)
         {
@@ -128,7 +134,7 @@ namespace SharpCompress.Archives.SevenZip
             }
         }
 
-        private static readonly byte[] SIGNATURE = { (byte)'7', (byte)'z', 0xBC, 0xAF, 0x27, 0x1C };
+        private static readonly byte[] SIGNATURE = {(byte)'7', (byte)'z', 0xBC, 0xAF, 0x27, 0x1C};
 
         private static bool SignatureMatch(Stream stream)
         {
@@ -200,7 +206,7 @@ namespace SharpCompress.Archives.SevenZip
                 return CreateEntryStream(new ReadOnlySubStream(currentStream, currentItem.Size));
             }
         }
-
+        
         private class PasswordProvider : IPasswordProvider
         {
             private readonly string _password;

@@ -1,6 +1,8 @@
 ﻿using System;
 using System.IO;
+#if !NO_CRYPTO
 using System.Linq;
+#endif
 using SharpCompress.Common.Zip.Headers;
 using SharpCompress.IO;
 using System.Text;
@@ -36,20 +38,20 @@ namespace SharpCompress.Common.Zip
             switch (headerBytes)
             {
                 case ENTRY_HEADER_BYTES:
-                    {
-                        var entryHeader = new LocalEntryHeader(archiveEncoding);
-                        entryHeader.Read(reader);
-                        LoadHeader(entryHeader, reader.BaseStream);
+                {
+                    var entryHeader = new LocalEntryHeader(archiveEncoding);
+                    entryHeader.Read(reader);
+                    LoadHeader(entryHeader, reader.BaseStream);
 
-                        lastEntryHeader = entryHeader;
-                        return entryHeader;
-                    }
+                    lastEntryHeader = entryHeader;
+                    return entryHeader;
+                }
                 case DIRECTORY_START_HEADER_BYTES:
-                    {
-                        var entry = new DirectoryEntryHeader(archiveEncoding);
-                        entry.Read(reader);
-                        return entry;
-                    }
+                {
+                    var entry = new DirectoryEntryHeader(archiveEncoding);
+                    entry.Read(reader);
+                    return entry;
+                }
                 case POST_DATA_DESCRIPTOR:
                     {
                         if (FlagUtility.HasFlag(lastEntryHeader.Flags, HeaderFlags.UsePostDataDescriptor))
@@ -130,6 +132,10 @@ namespace SharpCompress.Common.Zip
 
                 if (entryHeader.CompressionMethod == ZipCompressionMethod.WinzipAes)
                 {
+#if NO_CRYPTO
+                    throw new NotSupportedException("Cannot decrypt Winzip AES with Silverlight or WP7.");
+#else
+
                     ExtraData data = entryHeader.Extra.SingleOrDefault(x => x.Type == ExtraDataType.WinZipAes);
                     if (data != null)
                     {
@@ -144,6 +150,7 @@ namespace SharpCompress.Common.Zip
 
                         entryHeader.CompressedSize -= (uint)(salt.Length + 2);
                     }
+#endif
                 }
             }
 

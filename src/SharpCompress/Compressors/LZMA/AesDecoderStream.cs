@@ -1,4 +1,6 @@
-﻿using System;
+﻿
+#if !NO_CRYPTO
+using System;
 using System.IO;
 using System.Security.Cryptography;
 using System.Text;
@@ -29,7 +31,7 @@ namespace SharpCompress.Compressors.LZMA
             mStream = input;
             mLimit = limit;
 
-            if (((uint)input.Length & 15) != 0)
+            if (((uint) input.Length & 15) != 0)
                 throw new NotSupportedException("AES decoder does not support padding.");
 
             int numCyclesPower;
@@ -120,7 +122,7 @@ namespace SharpCompress.Compressors.LZMA
             // Currently this is handled by forcing an underflow if
             // the stream length is not a multiple of the block size.
             if (count > mLimit - mWritten)
-                count = (int)(mLimit - mWritten);
+                count = (int) (mLimit - mWritten);
 
             // We cannot transform less than 16 bytes into the target buffer,
             // but we also cannot return zero, so we need to handle this.
@@ -260,3 +262,5 @@ namespace SharpCompress.Compressors.LZMA
         #endregion
     }
 }
+
+#endif

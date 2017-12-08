@@ -23,6 +23,8 @@ namespace SharpCompress.Archives.Zip
         /// </summary>
         public CompressionLevel DeflateCompressionLevel { get; set; }
 
+#if !NO_FILE
+
         /// <summary>
         /// Constructor expects a filepath to an existing file.
         /// </summary>
@@ -44,6 +46,8 @@ namespace SharpCompress.Archives.Zip
             fileInfo.CheckNotNull("fileInfo");
             return new ZipArchive(fileInfo, readerOptions ?? new ReaderOptions());
         }
+#endif
+
         /// <summary>
         /// Takes a seekable Stream as a source
         /// </summary>
@@ -54,6 +58,8 @@ namespace SharpCompress.Archives.Zip
             stream.CheckNotNull("stream");
             return new ZipArchive(stream, readerOptions ?? new ReaderOptions());
         }
+
+#if !NO_FILE
 
         public static bool IsZipFile(string filePath, string password = null)
         {
@@ -71,6 +77,7 @@ namespace SharpCompress.Archives.Zip
                 return IsZipFile(stream, password);
             }
         }
+#endif
 
         public static bool IsZipFile(Stream stream, string password = null)
         {
@@ -95,6 +102,8 @@ namespace SharpCompress.Archives.Zip
             }
         }
 
+#if !NO_FILE
+
         /// <summary>
         /// Constructor with a FileInfo object to an existing file.
         /// </summary>
@@ -110,6 +119,7 @@ namespace SharpCompress.Archives.Zip
         {
             return new ZipVolume(file.OpenRead(), ReaderOptions).AsEnumerable();
         }
+#endif
 
         internal ZipArchive()
             : base(ArchiveType.Zip)

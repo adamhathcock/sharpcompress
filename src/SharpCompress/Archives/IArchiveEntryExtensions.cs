@@ -38,9 +38,11 @@ namespace SharpCompress.Archives
             streamListener.FireEntryExtractionEnd(archiveEntry);
         }
 
-        /// <summary>
-        /// Extract to specific directory, retaining filename
-        /// </summary>
+#if !NO_FILE
+
+/// <summary>
+/// Extract to specific directory, retaining filename
+/// </summary>
         public static void WriteToDirectory(this IArchiveEntry entry, string destinationDirectory,
                                             ExtractionOptions options = null)
         {
@@ -48,9 +50,9 @@ namespace SharpCompress.Archives
             string file = Path.GetFileName(entry.Key);
 
             options = options ?? new ExtractionOptions()
-            {
-                Overwrite = true
-            };
+                                 {
+                                     Overwrite = true
+                                 };
 
 
             if (options.ExtractFullPath)
@@ -97,5 +99,6 @@ namespace SharpCompress.Archives
 
             entry.PreserveExtractionOptions(destinationFileName, options);
         }
+#endif
     }
 }

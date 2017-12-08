@@ -64,23 +64,25 @@ namespace SharpCompress.Archives
             switch (type)
             {
                 case ArchiveType.Zip:
-                    {
-                        return ZipArchive.Create();
-                    }
+                {
+                    return ZipArchive.Create();
+                }
                 case ArchiveType.Tar:
-                    {
-                        return TarArchive.Create();
-                    }
+                {
+                    return TarArchive.Create();
+                }
                 case ArchiveType.GZip:
-                    {
-                        return GZipArchive.Create();
-                    }
+                {
+                    return GZipArchive.Create();
+                }
                 default:
-                    {
-                        throw new NotSupportedException("Cannot create Archives of type: " + type);
-                    }
+                {
+                    throw new NotSupportedException("Cannot create Archives of type: " + type);
+                }
             }
         }
+
+#if !NO_FILE
 
         /// <summary>
         /// Constructor expects a filepath to an existing file.
@@ -124,8 +126,8 @@ namespace SharpCompress.Archives
                 stream.Seek(0, SeekOrigin.Begin);
                 if (RarArchive.IsRarFile(stream, options))
                 {
-                    stream.Dispose();
-                    return RarArchive.Open(fileInfo, options);
+                   stream.Dispose();
+                   return RarArchive.Open(fileInfo, options);
                 }
                 stream.Seek(0, SeekOrigin.Begin);
                 if (TarArchive.IsTarFile(stream))
@@ -151,5 +153,6 @@ namespace SharpCompress.Archives
                 }
             }
         }
+#endif
     }
 }

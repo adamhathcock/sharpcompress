@@ -28,10 +28,13 @@ namespace SharpCompress.Archives
         {
         }
 
+#if !NO_FILE
         internal AbstractWritableArchive(ArchiveType type, FileInfo fileInfo, ReaderOptions readerFactoryOptions)
             : base(type, fileInfo, readerFactoryOptions)
         {
         }
+#endif
+
         public override ICollection<TEntry> Entries
         {
             get

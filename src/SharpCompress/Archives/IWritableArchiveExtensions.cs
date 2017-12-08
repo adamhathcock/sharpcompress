@@ -1,4 +1,6 @@
-﻿using System;
+﻿#if !NO_FILE
+using System;
+#endif
 using System.IO;
 using SharpCompress.Writers;
 
@@ -6,6 +8,8 @@ namespace SharpCompress.Archives
 {
     public static class IWritableArchiveExtensions
     {
+#if !NO_FILE
+
         public static void AddEntry(this IWritableArchive writableArchive,
                                                      string entryPath, string filePath)
         {
@@ -54,5 +58,6 @@ namespace SharpCompress.Archives
             }
             return writableArchive.AddEntry(key, fileInfo.OpenRead(), true, fileInfo.Length, fileInfo.LastWriteTime);
         }
+#endif
     }
 }

@@ -4,9 +4,11 @@ using System.IO;
 using SharpCompress.Common;
 using SharpCompress.Common.Rar;
 using SharpCompress.Readers;
+#if !NO_FILE
 using System.Linq;
 using System.Text;
 using SharpCompress.Common.Rar.Headers;
+#endif
 
 namespace SharpCompress.Archives.Rar
 {
@@ -25,6 +27,7 @@ namespace SharpCompress.Archives.Rar
             }
         }
 
+#if !NO_FILE
         internal static IEnumerable<RarVolume> GetParts(FileInfo fileInfo, ReaderOptions options)
         {
             FileInfoRarArchiveVolume part = new FileInfoRarArchiveVolume(fileInfo, options);
@@ -139,5 +142,7 @@ namespace SharpCompress.Archives.Rar
             throw new ArgumentException("Filename invalid or next archive could not be found:"
                                         + fileInfo.FullName);
         }
+
+#endif
     }
 }
