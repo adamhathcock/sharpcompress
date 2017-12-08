@@ -30,6 +30,9 @@ Task("Build")
 
         DotNetCoreBuild("./src/SharpCompress/SharpCompress.csproj", settings);
 
+        settings.Framework = "netstandard1.3";
+        DotNetCoreBuild("./src/SharpCompress/SharpCompress.csproj", settings);
+
         settings.Framework = "netstandard2.0";
         DotNetCoreBuild("./src/SharpCompress/SharpCompress.csproj", settings);
     }
