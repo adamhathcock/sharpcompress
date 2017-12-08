@@ -1,4 +1,7 @@
 using System;
+#if NETCORE || NET45
+using System.Buffers;
+#endif
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -7,7 +10,7 @@ using SharpCompress.Readers;
 namespace SharpCompress
 {
     internal static class Utility
-    {   
+    {
         public static ReadOnlyCollection<T> ToReadOnly<T>(this IEnumerable<T> items)
         {
             return new ReadOnlyCollection<T>(items.ToList());
@@ -139,36 +142,54 @@ namespace SharpCompress
         public static void Skip(this Stream source, long advanceAmount)
         {
             byte[] buffer = GetTransferByteArray();
-            int read = 0;
-            int readCount = 0;
-            do
+            try
             {
-                readCount = buffer.Length;
-                if (readCount > advanceAmount)
+                int read = 0;
+                int readCount = 0;
+                do
                 {
-                    readCount = (int)advanceAmount;
+                    readCount = buffer.Length;
+                    if (readCount > advanceAmount)
+                    {
+                        readCount = (int)advanceAmount;
+                    }
+                    read = source.Read(buffer, 0, readCount);
+                    if (read <= 0)
+                    {
+                        break;
+                    }
+                    advanceAmount -= read;
+                    if (advanceAmount == 0)
+                    {
+                        break;
+                    }
                 }
-                read = source.Read(buffer, 0, readCount);
-                if (read <= 0)
-                {
-                    break;
-                }
-                advanceAmount -= read;
-                if (advanceAmount == 0)
-                {
-                    break;
-                }
+                while (true);
             }
-            while (true);
+            finally
+            {
+#if NETCORE || NET45
+                ArrayPool<byte>.Shared.Return(buffer);
+#endif
+            }
         }
 
         public static void Skip(this Stream source)
         {
             byte[] buffer = GetTransferByteArray();
-            do
+            try
             {
+                do
+                {
+                }
+                while (source.Read(buffer, 0, buffer.Length) == buffer.Length);
             }
-            while (source.Read(buffer, 0, buffer.Length) == buffer.Length);
+            finally
+            {
+#if NETCORE || NET45
+                ArrayPool<byte>.Shared.Return(buffer);
+#endif
+            }
         }
 
         public static DateTime DosDateToDateTime(UInt16 iDate, UInt16 iTime)
@@ -233,30 +254,48 @@ namespace SharpCompress
         public static long TransferTo(this Stream source, Stream destination)
         {
             byte[] array = GetTransferByteArray();
-            int count;
-            long total = 0;
-            while (ReadTransferBlock(source, array, out count))
+            try
             {
-                total += count;
-                destination.Write(array, 0, count);
+                int count;
+                long total = 0;
+                while (ReadTransferBlock(source, array, out count))
+                {
+                    total += count;
+                    destination.Write(array, 0, count);
+                }
+                return total;
             }
-            return total;
+            finally
+            {
+#if NETCORE || NET45
+                ArrayPool<byte>.Shared.Return(array);
+#endif
+            }
         }
 
         public static long TransferTo(this Stream source, Stream destination, Common.Entry entry, IReaderExtractionListener readerExtractionListener)
         {
             byte[] array = GetTransferByteArray();
-            int count;
-            var iterations = 0;
-            long total = 0;
-            while (ReadTransferBlock(source, array, out count))
+            try
             {
-                total += count;
-                destination.Write(array, 0, count);
-                iterations++;
-                readerExtractionListener.FireEntryExtractionProgress(entry, total, iterations);
+                int count;
+                var iterations = 0;
+                long total = 0;
+                while (ReadTransferBlock(source, array, out count))
+                {
+                    total += count;
+                    destination.Write(array, 0, count);
+                    iterations++;
+                    readerExtractionListener.FireEntryExtractionProgress(entry, total, iterations);
+                }
+                return total;
             }
-            return total;
+            finally
+            {
+#if NETCORE || NET45
+                ArrayPool<byte>.Shared.Return(array);
+#endif
+            }
         }
 
         private static bool ReadTransferBlock(Stream source, byte[] array, out int count)
@@ -266,7 +305,11 @@ namespace SharpCompress
 
         private static byte[] GetTransferByteArray()
         {
+#if NETCORE || NET45
+            return ArrayPool<byte>.Shared.Rent(81920);
+#else
             return new byte[81920];
+#endif
         }
 
         public static bool ReadFully(this Stream stream, byte[] buffer)
