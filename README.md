@@ -7,8 +7,8 @@ The major feature is support for non-seekable streams so large files can be proc
 AppVeyor Build - 
 [![Build status](https://ci.appveyor.com/api/projects/status/voxg971oemmvxh1e/branch/master?svg=true)](https://ci.appveyor.com/project/adamhathcock/sharpcompress/branch/master)
 
-Travis CI Build - 
-[![Build Status](https://travis-ci.org/adamhathcock/sharpcompress.svg?branch=master)](https://travis-ci.org/adamhathcock/sharpcompress)
+Circle CI Build - 
+[![CircleCI](https://circleci.com/gh/adamhathcock/sharpcompress.svg?style=svg)](https://circleci.com/gh/adamhathcock/sharpcompress)
 
 ## Need Help?
 Post Issues on Github!
