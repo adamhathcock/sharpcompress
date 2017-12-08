@@ -120,7 +120,7 @@ namespace SharpCompress.Test.Rar
         public void Rar_Jpg_ArchiveStreamRead()
         {
             ResetScratch();
-            using (var stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "RarJpeg.jpg")))
+            using (var stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Rarjpeg.jpg")))
             {
                 using (var archive = RarArchive.Open(stream, new ReaderOptions()
                 {
@@ -233,7 +233,7 @@ namespace SharpCompress.Test.Rar
         public void Rar_Jpg_ArchiveFileRead()
         {
             ResetScratch();
-            using (var archive = RarArchive.Open(Path.Combine(TEST_ARCHIVES_PATH, "RarJpeg.jpg"), new ReaderOptions()
+            using (var archive = RarArchive.Open(Path.Combine(TEST_ARCHIVES_PATH, "Rarjpeg.jpg"), new ReaderOptions()
             {
                 LookForHeader = true
             }))
