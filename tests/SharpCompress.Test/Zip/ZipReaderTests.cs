@@ -47,7 +47,7 @@ namespace SharpCompress.Test.Zip
         [Fact]
         public void Zip_ZipX_Streamed_Read()
         {
-            Read("Zip.Zipx", CompressionType.LZMA);
+            Read("Zip.zipx", CompressionType.LZMA);
         }
 
         [Fact]
