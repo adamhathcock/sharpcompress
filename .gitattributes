@@ -2,4 +2,4 @@
 * text=auto
 
 # need original files to be windows
-test/TestArchives/Original/*.txt eol=crlf
+*.txt text eol=crlf

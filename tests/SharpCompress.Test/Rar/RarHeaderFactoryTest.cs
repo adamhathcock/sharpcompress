@@ -12,14 +12,14 @@ namespace SharpCompress.Test.Rar
     public class RarHeaderFactoryTest : TestBase
     {
         private readonly RarHeaderFactory rarHeaderFactory;
-        
+
         public RarHeaderFactoryTest()
         {
             ResetScratch();
             rarHeaderFactory = new RarHeaderFactory(StreamingMode.Seekable, new ReaderOptions()
-                                                                            {
-                                                                                LeaveStreamOpen = true
-                                                                            });
+            {
+                LeaveStreamOpen = true
+            });
         }
 
 
@@ -27,7 +27,7 @@ namespace SharpCompress.Test.Rar
         public void ReadHeaders_RecognizeEncryptedFlag()
         {
 
-            ReadEncryptedFlag("Rar.Encrypted_filesAndHeader.rar", true);
+            ReadEncryptedFlag("Rar.encrypted_filesAndHeader.rar", true);
 
 
 

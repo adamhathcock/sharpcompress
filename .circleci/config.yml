@@ -1,0 +1,11 @@
+version: 2
+jobs:
+  build:
+    docker:
+      - image: adamhathcock/cake-build:latest
+    steps:
+      - checkout
+      - run:
+          name: Build
+          command: ./build.sh
+      
