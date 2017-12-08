@@ -24,10 +24,14 @@ Task("Build")
     {
         var settings = new DotNetCoreBuildSettings
         {
-            Framework = "netcoreapp2.0",
+            Framework = "netstandard1.0",
             Configuration = "Release"
         };
-        DotNetCoreBuild("./tests/SharpCompress.Test/SharpCompress.Test.csproj", settings);
+
+        DotNetCoreBuild("./src/SharpCompress/SharpCompress.csproj", settings);
+
+        settings.Framework = "netstandard2.0";
+        DotNetCoreBuild("./src/SharpCompress/SharpCompress.csproj", settings);
     }
 });
 
@@ -35,19 +39,16 @@ Task("Test")
   .IsDependentOn("Build")
   .Does(() =>
 {
-    if (!bool.Parse(EnvironmentVariable("APPVEYOR") ?? "false")
-        && !bool.Parse(EnvironmentVariable("TRAVIS") ?? "false"))
+    var files = GetFiles("tests/**/*.csproj");
+    foreach(var file in files)
     {
-        var files = GetFiles("tests/**/*.csproj");
-        foreach(var file in files)
+        var settings = new DotNetCoreTestSettings
         {
-            var settings = new DotNetCoreTestSettings
-            {
-                Configuration = "Release",
-                Framework = "netcoreapp2.0"
-            };
+            Configuration = "Release",
+            Framework = "netcoreapp2.0"
+        };
 
-            DotNetCoreTest(file.ToString(), settings);
+        DotNetCoreTest(file.ToString(), settings);
 
 
             settings = new DotNetCoreTestSettings
@@ -57,11 +58,6 @@ Task("Test")
             };
 
             DotNetCoreTest(file.ToString(), settings);
-        }
-    } 
-    else 
-    {
-        Information("Skipping tests as this is AppVeyor or Travis CI");
     }
 });
 
