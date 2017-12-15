@@ -1,5 +1,5 @@
 using System;
-#if NETCORE || NET45
+#if NETCORE
 using System.Buffers;
 #endif
 using System.Collections.Generic;
@@ -168,7 +168,7 @@ namespace SharpCompress
             }
             finally
             {
-#if NETCORE || NET45
+#if NETCORE
                 ArrayPool<byte>.Shared.Return(buffer);
 #endif
             }
@@ -186,7 +186,7 @@ namespace SharpCompress
             }
             finally
             {
-#if NETCORE || NET45
+#if NETCORE
                 ArrayPool<byte>.Shared.Return(buffer);
 #endif
             }
@@ -267,7 +267,7 @@ namespace SharpCompress
             }
             finally
             {
-#if NETCORE || NET45
+#if NETCORE
                 ArrayPool<byte>.Shared.Return(array);
 #endif
             }
@@ -292,7 +292,7 @@ namespace SharpCompress
             }
             finally
             {
-#if NETCORE || NET45
+#if NETCORE
                 ArrayPool<byte>.Shared.Return(array);
 #endif
             }
@@ -305,7 +305,7 @@ namespace SharpCompress
 
         private static byte[] GetTransferByteArray()
         {
-#if NETCORE || NET45
+#if NETCORE
             return ArrayPool<byte>.Shared.Rent(81920);
 #else
             return new byte[81920];
