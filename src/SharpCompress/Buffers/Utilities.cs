@@ -5,7 +5,7 @@
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 
-namespace System.Buffers
+namespace SharpCompress.Buffers
 {
     internal static class Utilities
     {

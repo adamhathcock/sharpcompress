@@ -5,7 +5,7 @@
 using System.Runtime.CompilerServices;
 using System.Threading;
 
-namespace System.Buffers
+namespace SharpCompress.Buffers
 {
     /// <summary>
     /// Provides a resource pool that enables reusing instances of type <see cref="T:T[]"/>. 
@@ -20,7 +20,7 @@ namespace System.Buffers
     /// This class is thread-safe.  All members may be used by multiple threads concurrently.
     /// </para>
     /// </remarks>
-    public abstract class ArrayPool<T>
+    internal abstract class ArrayPool<T>
     {
         /// <summary>The lazily-initialized shared pool instance.</summary>
         private static ArrayPool<T> s_sharedInstance = null;

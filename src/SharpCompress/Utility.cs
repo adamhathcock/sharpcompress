@@ -1,10 +1,10 @@
 using System;
-#if NETCORE
-using System.Buffers;
-#endif
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+#if NETCORE
+using SharpCompress.Buffers;
+#endif
 using SharpCompress.Readers;
 
 namespace SharpCompress
