@@ -3,10 +3,11 @@
 // See the LICENSE file in the project root for more information.
 
 #if NETCORE
+using System;
 using System.Diagnostics;
 using System.Threading;
 
-namespace System.Buffers
+namespace SharpCompress.Buffers
 {
     internal sealed partial class DefaultArrayPool<T> : ArrayPool<T>
     {
