@@ -1,11 +1,10 @@
 ﻿using System;
 using System.IO;
 using SharpCompress.IO;
-using System.Text;
 
 namespace SharpCompress.Common.Rar.Headers
 {
-    internal class RarHeader
+    internal class RarHeader : IRarHeader
     {
         internal const short BaseBlockSize = 7;
         internal const short LONG_BLOCK = -0x8000;
@@ -25,13 +24,11 @@ namespace SharpCompress.Common.Rar.Headers
         {
             try
             {
-                RarHeader header = new RarHeader();
-
+                var header = new RarHeader();
                 header.ArchiveEncoding = archiveEncoding;
                 reader.Mark();
                 header.ReadStartFromReader(reader);
                 header.ReadBytes += reader.CurrentReadByteCount;
-
                 return header;
             }
             catch (EndOfStreamException)
@@ -44,7 +41,7 @@ namespace SharpCompress.Common.Rar.Headers
         {
             HeadCRC = reader.ReadUInt16();
             reader.ResetCrc();
-            HeaderType = (HeaderType)(reader.ReadByte() & 0xff);
+            HeaderType = (HeaderType)reader.ReadByte();
             Flags = reader.ReadInt16();
             HeaderSize = reader.ReadInt16();
             if (FlagUtility.HasFlag(Flags, LONG_BLOCK))
@@ -69,7 +66,6 @@ namespace SharpCompress.Common.Rar.Headers
             header.ReadBytes += reader.CurrentReadByteCount;
 
             int headerSizeDiff = header.HeaderSize - (int)header.ReadBytes;
-
             if (headerSizeDiff > 0)
             {
                 reader.ReadBytes(headerSizeDiff);
@@ -102,7 +98,7 @@ namespace SharpCompress.Common.Rar.Headers
 
         protected ushort HeadCRC { get; private set; }
 
-        internal HeaderType HeaderType { get; private set; }
+        public HeaderType HeaderType { get; private set; }
 
         /// <summary>
         /// Untyped flags.  These should be typed when Promoting to another header

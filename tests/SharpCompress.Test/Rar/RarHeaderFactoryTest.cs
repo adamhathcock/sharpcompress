@@ -26,11 +26,7 @@ namespace SharpCompress.Test.Rar
         [Fact]
         public void ReadHeaders_RecognizeEncryptedFlag()
         {
-
             ReadEncryptedFlag("Rar.encrypted_filesAndHeader.rar", true);
-
-
-
         }
 
         private void ReadEncryptedFlag(string testArchive, bool isEncrypted)

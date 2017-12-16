@@ -30,6 +30,13 @@ namespace SharpCompress.Common.Rar {
             return base.ReadBytes(count);
         }
 
+        public override byte ReadByte() 
+        {
+            var b = base.ReadByte();
+            currentCrc = RarCRC.CheckCrc(currentCrc, b);
+            return b;
+        }
+
         public override byte[] ReadBytes(int count)
         {
             var result = base.ReadBytes(count);

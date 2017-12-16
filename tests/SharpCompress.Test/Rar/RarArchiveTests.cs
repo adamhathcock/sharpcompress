@@ -14,14 +14,12 @@ namespace SharpCompress.Test.Rar
         public void Rar_EncryptedFileAndHeader_Archive()
         {
             ReadRarPassword("Rar.encrypted_filesAndHeader.rar", "test");
-
         }
 
         [Fact]
         public void Rar_EncryptedFileOnly_Archive()
         {
             ReadRarPassword("Rar.encrypted_filesOnly.rar", "test");
-
         }
 
         [Fact]
@@ -207,6 +205,12 @@ namespace SharpCompress.Test.Rar
         public void RarNoneArchiveFileRead()
         {
             ArchiveFileRead("Rar.none.rar");
+        }
+
+        [Fact]
+        public void Rar5NoneArchiveFileRead()
+        {
+            ArchiveFileRead("Rar5.none.rar");
         }
 
         [Fact]

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.IO;
-using System.Linq;
 using SharpCompress.Converters;
 
 namespace SharpCompress.IO
@@ -36,12 +35,22 @@ namespace SharpCompress.IO
 
         public override bool ReadBoolean()
         {
-            return ReadBytes(1).Single() != 0;
+            return ReadByte() != 0;
         }
 
+        // NOTE: there is a somewhat fragile dependency on the internals of this class
+        // with RarCrcBinaryReader and RarCryptoBinaryReader.
+        //
+        // RarCrcBinaryReader/RarCryptoBinaryReader need to override any specific methods
+        // that call directly to the base BinaryReader and do not delegate to other methods
+        // in this class so that it can track the each byte being read.
+        //
+        // if altering this class in a way that changes the implementation be sure to
+        // update RarCrcBinaryReader/RarCryptoBinaryReader.
         public override byte ReadByte()
         {
-            return ReadBytes(1).Single();
+            CurrentReadByteCount++;
+            return base.ReadByte();
         }
 
         public override byte[] ReadBytes(int count)
@@ -120,6 +129,32 @@ namespace SharpCompress.IO
         public override ulong ReadUInt64()
         {
             return DataConverter.LittleEndian.GetUInt64(ReadBytes(8), 0);
+        }
+
+        // RAR5 style variable length encoded value
+        // maximum value of 0xffffffffffffffff (64 bits)
+        // implies max 10 bytes consumed
+        //
+        // Variable length integer. Can include one or more bytes, where lower 7 bits of every byte contain integer data
+        // and highest bit in every byte is the continuation flag. If highest bit is 0, this is the last byte in sequence.
+        // So first byte contains 7 least significant bits of integer and continuation flag. Second byte, if present,
+        // contains next 7 bits and so on.
+        public ulong ReadRarVInt() {
+            int shift = 0;
+            ulong result = 0;
+            do {
+                ulong n = ReadByte();
+                result |= n << shift;
+                shift += 7;
+                if ((n & 0x80) == 0) {
+                    return result;
+                }
+                // note: we're actually only allowing a max high bit of 2^56
+                // to avoid an extra complex check for shift overflow due to the
+                // 10th byte having high bits set
+            } while (shift < 63);
+
+            throw new FormatException("malformed vint");
         }
     }
 }

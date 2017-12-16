@@ -30,7 +30,7 @@ namespace SharpCompress.Common.Rar
         internal IEnumerable<RarFilePart> GetVolumeFileParts()
         {
             MarkHeader previousMarkHeader = null;
-            foreach (RarHeader header in headerFactory.ReadHeaders(Stream))
+            foreach (var header in headerFactory.ReadHeaders(Stream))
             {
                 switch (header.HeaderType)
                 {

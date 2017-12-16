@@ -134,9 +134,8 @@ namespace SharpCompress.Archives.Rar
         {
             try
             {
-                var headerFactory = new RarHeaderFactory(StreamingMode.Seekable, options ?? new ReaderOptions());
-                var markHeader = headerFactory.ReadHeaders(stream).FirstOrDefault() as MarkHeader;
-                return markHeader != null && markHeader.IsValid();
+                MarkHeader.Read(stream, true, false);
+                return true;
             }
             catch
             {
