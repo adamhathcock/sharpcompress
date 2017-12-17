@@ -3,17 +3,8 @@
 * Original author: Edmund Wagner
 * Creation date: 21.06.2007
 *
-* Source: $HeadURL$
-* Last changed: $LastChangedDate$
-* 
 * the unrar licence applies to all junrar source and binary distributions 
 * you are not allowed to use this source to re-create the RAR compression algorithm
-* 
-* Here some html entities which can be used for escaping javadoc tags:
-* "&":  "&#038;" or "&amp;"
-* "<":  "&#060;" or "&lt;"
-* ">":  "&#062;" or "&gt;"
-* "@":  "&#064;" 
 */
 
 using System;
@@ -21,59 +12,38 @@ using SharpCompress.Compressors.Rar.Decode;
 
 namespace SharpCompress.Compressors.Rar
 {
-    /// <summary> DOCUMENT ME
-    /// 
-    /// </summary>
-    /// <author>  $LastChangedBy$
-    /// </author>
-    /// <version>  $LastChangedRevision$
-    /// </version>
-    internal abstract class Unpack20 : Unpack15
+    internal partial class Unpack
     {
-        public Unpack20()
-        {
-            InitBlock();
-        }
+        protected readonly internal MultDecode[] MD = new MultDecode[4];
 
-        private void InitBlock()
-        {
-            UnpOldTable20 = new byte[PackDef.MC20 * 4];
-        }
-
-        protected internal MultDecode[] MD = new MultDecode[4];
-
-        //UPGRADE_NOTE: The initialization of  'UnpOldTable20' was moved to method 'InitBlock'. "ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?index='!DefaultContextWindowIndex'&keyword='jlca1005'"
-        protected internal byte[] UnpOldTable20;
+        protected readonly internal byte[] UnpOldTable20 = new byte[PackDef.MC20 * 4];
 
         protected internal int UnpAudioBlock, UnpChannels, UnpCurChannel, UnpChannelDelta;
 
         private readonly AudioVariables[] AudV = new AudioVariables[4];
 
-        protected internal LitDecode LD = new LitDecode();
+        protected readonly internal LitDecode LD = new LitDecode();
 
-        protected internal DistDecode DD = new DistDecode();
+        protected readonly internal DistDecode DD = new DistDecode();
 
-        protected internal LowDistDecode LDD = new LowDistDecode();
+        protected readonly internal LowDistDecode LDD = new LowDistDecode();
 
-        protected internal RepDecode RD = new RepDecode();
+        protected readonly internal RepDecode RD = new RepDecode();
 
-        protected internal BitDecode BD = new BitDecode();
+        protected readonly internal BitDecode BD = new BitDecode();
 
-        //UPGRADE_NOTE: Final was removed from the declaration of 'LDecode'. "ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?index='!DefaultContextWindowIndex'&keyword='jlca1003'"
         public static readonly int[] LDecode =
         {
             0, 1, 2, 3, 4, 5, 6, 7, 8, 10, 12, 14, 16, 20, 24, 28, 32, 40, 48,
             56, 64, 80, 96, 112, 128, 160, 192, 224
         };
 
-        //UPGRADE_NOTE: Final was removed from the declaration of 'LBits'. "ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?index='!DefaultContextWindowIndex'&keyword='jlca1003'"
         public static readonly byte[] LBits =
         {
             0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4,
             4, 5, 5, 5, 5
         };
 
-        //UPGRADE_NOTE: Final was removed from the declaration of 'DDecode'. "ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?index='!DefaultContextWindowIndex'&keyword='jlca1003'"
         public static readonly int[] DDecode =
         {
             0, 1, 2, 3, 4, 6, 8, 12, 16, 24, 32, 48, 64, 96, 128, 192, 256, 384,
@@ -83,7 +53,6 @@ namespace SharpCompress.Compressors.Rar
             917504, 983040
         };
 
-        //UPGRADE_NOTE: Final was removed from the declaration of 'DBits'. "ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?index='!DefaultContextWindowIndex'&keyword='jlca1003'"
         public static readonly int[] DBits =
         {
             0, 0, 0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 10,
@@ -91,10 +60,8 @@ namespace SharpCompress.Compressors.Rar
             , 16, 16, 16, 16, 16, 16, 16
         };
 
-        //UPGRADE_NOTE: Final was removed from the declaration of 'SDDecode'. "ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?index='!DefaultContextWindowIndex'&keyword='jlca1003'"
         public static readonly int[] SDDecode = {0, 4, 8, 16, 32, 64, 128, 192};
 
-        //UPGRADE_NOTE: Final was removed from the declaration of 'SDBits'. "ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?index='!DefaultContextWindowIndex'&keyword='jlca1003'"
         public static readonly int[] SDBits = {2, 2, 3, 4, 5, 6, 6, 6};
 
         internal void unpack20(bool solid)

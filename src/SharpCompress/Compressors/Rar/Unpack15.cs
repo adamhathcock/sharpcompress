@@ -3,34 +3,17 @@
 * Original author: Edmund Wagner
 * Creation date: 21.06.2007
 *
-* Source: $HeadURL$
-* Last changed: $LastChangedDate$
-* 
 * the unrar licence applies to all junrar source and binary distributions 
 * you are not allowed to use this source to re-create the RAR compression algorithm
-* 
-* Here some html entities which can be used for escaping javadoc tags:
-* "&":  "&#038;" or "&amp;"
-* "<":  "&#060;" or "&lt;"
-* ">":  "&#062;" or "&gt;"
-* "@":  "&#064;" 
 */
 
 using System;
 using System.IO;
 using SharpCompress.Compressors.Rar.Decode;
-using SharpCompress.Compressors.Rar.VM;
 
 namespace SharpCompress.Compressors.Rar
 {
-    /// <summary> DOCUMENT ME
-    /// 
-    /// </summary>
-    /// <author>  $LastChangedBy$
-    /// </author>
-    /// <version>  $LastChangedRevision$
-    /// </version>
-    internal abstract class Unpack15 : BitInput
+    internal partial class Unpack
     {
         protected internal int readBorder;
 
@@ -141,8 +124,6 @@ namespace SharpCompress.Compressors.Rar
             0, 0x40, 0x60, 0xa0, 0xd0, 0xe0, 0xf0, 0xf8, 0xfc, 0xc0, 0x80, 0x90, 0x98
             , 0x9c, 0xb0
         };
-
-        protected internal abstract void unpInitData(bool solid);
 
         protected void unpack15(bool solid)
         {

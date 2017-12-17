@@ -10,7 +10,8 @@ using SharpCompress.Compressors.Rar.VM;
 
 namespace SharpCompress.Compressors.Rar
 {
-    internal sealed class Unpack : Unpack20
+    //!!! internal sealed class Unpack : Unpack20
+    internal partial class Unpack : BitInput
     {
         public bool FileExtracted { // Duplicate method
             // private boolean ReadEndOfBlock() throws IOException, RarException
@@ -738,7 +739,7 @@ namespace SharpCompress.Compressors.Rar
             }
         }
 
-        protected internal override void unpInitData(bool solid)
+        protected internal void unpInitData(bool solid)
         {
             if (!solid)
             {
