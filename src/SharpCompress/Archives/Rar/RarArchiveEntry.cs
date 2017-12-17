@@ -24,7 +24,7 @@ namespace SharpCompress.Archives.Rar
 
         public IArchive Archive => archive;
 
-        internal override IEnumerable<FilePart> Parts => parts.Cast<FilePart>();
+        internal override IEnumerable<FilePart> Parts => this.parts;
 
         internal override FileHeader FileHeader => parts.First().FileHeader;
 
@@ -33,8 +33,7 @@ namespace SharpCompress.Archives.Rar
             get
             {
                 CheckIncomplete();
-                return parts.Select(fp => fp.FileHeader)
-                            .Single(fh => !fh.FileFlags.HasFlag(FileFlags.SPLIT_AFTER)).FileCRC;
+                return parts.Select(fp => fp.FileHeader).Single(fh => !fh.IsSplit).FileCrc;
             }
         }
 
@@ -65,7 +64,13 @@ namespace SharpCompress.Archives.Rar
             return new RarStream(archive.Unpack, FileHeader, new MultiVolumeReadOnlyStream(Parts.Cast<RarFilePart>(), archive));
         }
 
-        public bool IsComplete { get { return parts.Select(fp => fp.FileHeader).Any(fh => !fh.FileFlags.HasFlag(FileFlags.SPLIT_AFTER)); } }
+        public bool IsComplete 
+        { 
+            get 
+            { 
+                return parts.Select(fp => fp.FileHeader).Any(fh => !fh.IsSplit); 
+            } 
+        }
 
         private void CheckIncomplete()
         {

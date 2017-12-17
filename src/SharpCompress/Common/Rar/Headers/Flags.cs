@@ -4,22 +4,37 @@ namespace SharpCompress.Common.Rar.Headers
 {
     internal enum HeaderType : byte
     {
-        Rar5ArchiveHeader = 0x01,
-        Rar5FileHeader = 0x02,
-        Rar5ServiceHeader = 0x03,
-        Rar5EncryptionHeader = 0x04,
-        Rar5EndArchiveHeader = 0x05,
+        Null,
+        Mark,
+        Archive,
+        File,
+//        Comment,
+//        Av,
+//        Sub,
+//        Protect,
+//        Sign,
+//        NewSub,
+        EndArchive
+    }
 
-        MarkHeader = 0x72,
-        ArchiveHeader = 0x73,
-        FileHeader = 0x74,
-        CommHeader = 0x75,
-        AvHeader = 0x76,
-        SubHeader = 0x77,
-        ProtectHeader = 0x78,
-        SignHeader = 0x79,
-        NewSubHeader = 0x7a,
-        EndArchiveHeader = 0x7b
+    internal static class HeaderCodeV
+    {
+        public const byte Rar5ArchiveHeader = 0x01;
+        public const byte Rar5FileHeader = 0x02;
+        public const byte Rar5ServiceHeader = 0x03;
+        public const byte Rar5EncryptionHeader = 0x04;
+        public const byte Rar5EndArchiveHeader = 0x05;
+
+        public const byte MarkHeader = 0x72;
+        public const byte ArchiveHeader = 0x73;
+        public const byte FileHeader = 0x74;
+        public const byte CommHeader = 0x75;
+        public const byte AvHeader = 0x76;
+        public const byte SubHeader = 0x77;
+        public const byte ProtectHeader = 0x78;
+        public const byte SignHeader = 0x79;
+        public const byte NewSubHeader = 0x7a;
+        public const byte EndArchiveHeader = 0x7b;
     }
 
     internal static class HeaderFlagsV4
@@ -56,49 +71,66 @@ namespace SharpCompress.Common.Rar.Headers
         public const ushort Lock = 0x0010;
     }
 
-    internal enum HostOS
+    internal static class HostOsV4
     {
-        MSDOS = 0,
-        OS2 = 1,
-        Win32 = 2,
-        Unix = 3,
-        MacOS = 4,
-        BeOS = 5
+        public const byte MsDos = 0;
+        public const byte Os2 = 1;
+        public const byte Win32 = 2;
+        public const byte Unix = 3;
+        public const byte MacOs = 4;
+        public const byte BeOs = 5;
     }
 
-    [Flags]
-    internal enum FileFlags : ushort
+    internal static class HostOsV5
     {
-        SPLIT_BEFORE = 0x0001,
-        SPLIT_AFTER = 0x0002,
-        PASSWORD = 0x0004,
-        COMMENT = 0x0008,
-        SOLID = 0x0010,
-
-        WINDOWMASK = 0x00e0,
-        WINDOW64 = 0x0000,
-        WINDOW128 = 0x0020,
-        WINDOW256 = 0x0040,
-        WINDOW512 = 0x0060,
-        WINDOW1024 = 0x0080,
-        WINDOW2048 = 0x00a0,
-        WINDOW4096 = 0x00c0,
-        DIRECTORY = 0x00e0,
-
-        LARGE = 0x0100,
-        UNICODE = 0x0200,
-        SALT = 0x0400,
-        VERSION = 0x0800,
-        EXTTIME = 0x1000,
-        EXTFLAGS = 0x2000
+        public const byte Windows = 0;
+        public const byte Unix = 1;
     }
 
-    [Flags]
-    internal enum EndArchiveFlags
+    internal static class FileFlagsV4
     {
-        EARC_NEXT_VOLUME = 0x0001,
-        EARC_DATACRC = 0x0002,
-        EARC_REVSPACE = 0x0004,
-        EARC_VOLNUMBER = 0x0008
+        public const ushort SplitBefore = 0x0001;
+        public const ushort SplitAfter = 0x0002;
+        public const ushort Password = 0x0004;
+        public const ushort Comment = 0x0008;
+        public const ushort Solid = 0x0010;
+
+        public const ushort WindowMask = 0x00e0;
+        public const ushort Window64 = 0x0000;
+        public const ushort Window128 = 0x0020;
+        public const ushort Window256 = 0x0040;
+        public const ushort Window512 = 0x0060;
+        public const ushort Window1024 = 0x0080;
+        public const ushort Window2048 = 0x00a0;
+        public const ushort Window4096 = 0x00c0;
+        public const ushort Directory = 0x00e0;
+
+        public const ushort Large = 0x0100;
+        public const ushort Unicode = 0x0200;
+        public const ushort Salt = 0x0400;
+        public const ushort Version = 0x0800;
+        public const ushort ExtTime = 0x1000;
+        public const ushort ExtFlags = 0x2000;
+    }
+
+    internal static class FileFlagsV5
+    {
+        public const ushort Directory = 0x0001;
+        public const ushort HasModTime = 0x0002;
+        public const ushort HasCrc32 = 0x0004;
+        public const ushort UnpackedSizeUnknown = 0x0008;
+    }
+
+    internal static class EndArchiveFlagsV4
+    {
+        public const ushort NextVolume = 0x0001;
+        public const ushort DataCrc = 0x0002;
+        public const ushort RevSpace = 0x0004;
+        public const ushort VolumeNumber = 0x0008;
+    }
+
+    internal static class EndArchiveFlagsV5
+    {
+        public const ushort HasNextVolume = 0x0001;
     }
 }

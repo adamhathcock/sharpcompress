@@ -132,8 +132,7 @@ namespace SharpCompress.Compressors.Rar
             this.fileHeader = fileHeader;
             this.writeStream = writeStream;
             this.readStream = readStream;
-            bool solid = FlagUtility.HasFlag(fileHeader.FileFlags, FileFlags.SOLID);
-            if (!solid)
+            if (!fileHeader.IsSolid)
             {
                 init(null);
             }
@@ -143,13 +142,13 @@ namespace SharpCompress.Compressors.Rar
 
         public void doUnpack()
         {
-            bool solid = FlagUtility.HasFlag(fileHeader.FileFlags, FileFlags.SOLID);
-            if (fileHeader.PackingMethod == 0x30)
+            if (fileHeader.R4PackingMethod == 0x30)
             {
                 unstoreFile();
                 return;
             }
-            switch (fileHeader.RarVersion)
+            var solid = fileHeader.IsSolid;
+            switch (fileHeader.R4RarVersion)
             {
                 case 15: // rar 1.5 compression
                     unpack15(solid);

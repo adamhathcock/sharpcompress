@@ -10,7 +10,7 @@ namespace SharpCompress.Common.Rar
         /// <summary>
         /// The File's 32 bit CRC Hash
         /// </summary>
-        public override long Crc => FileHeader.FileCRC;
+        public override long Crc => FileHeader.FileCrc;
 
         /// <summary>
         /// The path of the file internal to the Rar Archive.
@@ -40,14 +40,14 @@ namespace SharpCompress.Common.Rar
         /// <summary>
         /// Entry is password protected and encrypted and cannot be extracted.
         /// </summary>
-        public override bool IsEncrypted => FileHeader.FileFlags.HasFlag(FileFlags.PASSWORD);
+        public override bool IsEncrypted => FileHeader.IsEncrypted;
 
         /// <summary>
         /// Entry is password protected and encrypted and cannot be extracted.
         /// </summary>
-        public override bool IsDirectory => FileHeader.FileFlags.HasFlag(FileFlags.DIRECTORY);
+        public override bool IsDirectory => FileHeader.IsDirectory;
 
-        public override bool IsSplit => FileHeader.FileFlags.HasFlag(FileFlags.SPLIT_AFTER);
+        public override bool IsSplit => FileHeader.IsSplit;
 
         public override string ToString()
         {

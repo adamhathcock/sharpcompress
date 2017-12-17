@@ -30,9 +30,10 @@ namespace SharpCompress.Common.Rar.Headers
             while ((header = ReadNextHeader(stream)) != null)
             {
                 yield return header;
-                if (header.HeaderType == HeaderType.EndArchiveHeader)
+                if (header.HeaderType == HeaderType.EndArchive)
                 {
-                    yield break; // the end?
+                    // End of archive marker. RAR does not read anything after this header letting to use third party tools to add extra information such as a digital signature to archive.
+                    yield break;
                 }
             }
         }
@@ -59,18 +60,20 @@ namespace SharpCompress.Common.Rar.Headers
             {
                 return null;
             }
-            switch (header.HeaderType)
+            switch (header.HeaderCode)
             {
-                case HeaderType.Rar5ArchiveHeader:
-                case HeaderType.ArchiveHeader:
+                case HeaderCodeV.Rar5ArchiveHeader:
+                case HeaderCodeV.ArchiveHeader:
                     {
                         var ah = new ArchiveHeader(header, reader);
-                        //x var ah = header.PromoteHeader<ArchiveHeader>(reader);
-                        IsEncrypted = ah.HasPassword;
+                        if (ah.IsEncrypted == true) {
+//!!! rar5 we don't know yet
+                            IsEncrypted = true;
+                        }
                         return ah;
                     }
 
-                case HeaderType.ProtectHeader:
+                case HeaderCodeV.ProtectHeader:
                     {
                         ProtectHeader ph = header.PromoteHeader<ProtectHeader>(reader);
 
@@ -96,9 +99,10 @@ namespace SharpCompress.Common.Rar.Headers
                         return ph;
                     }
 
-                case HeaderType.NewSubHeader:
+                case HeaderCodeV.Rar5ServiceHeader:
+                case HeaderCodeV.NewSubHeader:
                     {
-                        FileHeader fh = header.PromoteHeader<FileHeader>(reader);
+                        var fh = new FileHeader(header, reader);
                         switch (StreamingMode)
                         {
                             case StreamingMode.Seekable:
@@ -120,9 +124,11 @@ namespace SharpCompress.Common.Rar.Headers
                         }
                         return fh;
                     }
-                case HeaderType.FileHeader:
+
+                case HeaderCodeV.Rar5FileHeader:
+                case HeaderCodeV.FileHeader:
                     {
-                        FileHeader fh = header.PromoteHeader<FileHeader>(reader);
+                        var fh = new FileHeader(header, reader);
                         switch (StreamingMode)
                         {
                             case StreamingMode.Seekable:
@@ -134,16 +140,16 @@ namespace SharpCompress.Common.Rar.Headers
                             case StreamingMode.Streaming:
                                 {
                                     var ms = new ReadOnlySubStream(reader.BaseStream, fh.CompressedSize);
-                                    if (fh.Salt == null)
+                                    if (fh.R4Salt == null)
                                     {
                                         fh.PackedStream = ms;
                                     }
                                     else
                                     {
 #if !NO_CRYPTO
-                                        fh.PackedStream = new RarCryptoWrapper(ms, Options.Password, fh.Salt);
+                                        fh.PackedStream = new RarCryptoWrapper(ms, Options.Password, fh.R4Salt);
 #else
-                                throw new NotSupportedException("RarCrypto not supported");
+                                        throw new NotSupportedException("RarCrypto not supported");
 #endif
                                     }
                                 }
@@ -155,13 +161,14 @@ namespace SharpCompress.Common.Rar.Headers
                         }
                         return fh;
                     }
-                case HeaderType.EndArchiveHeader:
+                case HeaderCodeV.Rar5EndArchiveHeader:
+                case HeaderCodeV.EndArchiveHeader:
                     {
-                        return header.PromoteHeader<EndArchiveHeader>(reader);
+                        return new EndArchiveHeader(header, reader);
                     }
                 default:
                     {
-                        throw new InvalidFormatException("Invalid Rar Header: " + header.HeaderType);
+                        throw new InvalidFormatException("Invalid Rar Header: " + header.HeaderCode);
                     }
             }
         }

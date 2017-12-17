@@ -194,5 +194,23 @@ namespace SharpCompress.IO
 
             throw new FormatException("malformed vint");
         }
+
+        public byte ReadRarVIntByte(int maxBytes = 1) {
+            int shift = 0;
+            uint result = 0;
+            do {
+                byte b0 = ReadByte();
+                var b1 = b0 & 0x7f;
+                uint n = (uint)b1;
+                result |= n << shift;
+                if (b0 == b1) {
+                    return checked((byte)result);
+                }
+                shift += 7;
+                // NOTE: we are too strict here but handling the full range adds complexity and we don't need it
+            } while (shift < 7 && --maxBytes > 0);
+
+            throw new FormatException("malformed vint");
+        }
     }
 }

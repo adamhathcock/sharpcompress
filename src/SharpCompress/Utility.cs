@@ -246,9 +246,15 @@ namespace SharpCompress
                                      (UInt16)(iTime % 65536));
         }
 
-        public static DateTime DosDateToDateTime(Int32 iTime)
+        /// <summary>
+        /// Convert Unix time value to a DateTime object.
+        /// </summary>
+        /// <param name="unixtime">The Unix time stamp you want to convert to DateTime.</param>
+        /// <returns>Returns a DateTime object that represents value of the Unix time.</returns>
+        public static DateTime UnixTimeToDateTime(long unixtime)
         {
-            return DosDateToDateTime((UInt32)iTime);
+            DateTime sTime = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+            return sTime.AddSeconds(unixtime);
         }
 
         public static long TransferTo(this Stream source, Stream destination)

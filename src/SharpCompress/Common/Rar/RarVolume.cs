@@ -34,17 +34,17 @@ namespace SharpCompress.Common.Rar
             {
                 switch (header.HeaderType)
                 {
-                    case HeaderType.ArchiveHeader:
+                    case HeaderType.Archive:
                     {
                         ArchiveHeader = header as ArchiveHeader;
                     }
                         break;
-                    case HeaderType.MarkHeader:
+                    case HeaderType.Mark:
                     {
                         previousMarkHeader = header as MarkHeader;
                     }
                         break;
-                    case HeaderType.FileHeader:
+                    case HeaderType.File:
                     {
                         FileHeader fh = header as FileHeader;
                         RarFilePart fp = CreateFilePart(fh, previousMarkHeader);

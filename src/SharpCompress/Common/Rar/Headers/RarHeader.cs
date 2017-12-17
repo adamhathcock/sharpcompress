@@ -6,20 +6,23 @@ namespace SharpCompress.Common.Rar.Headers
 {
     internal class RarHeader : IRarHeader
     {
-        protected readonly bool isRar5;
+        private readonly HeaderType headerType;
+        private readonly bool isRar5;
 
         protected RarHeader() { 
             //TODO
-            //throw new NotImplementedException();
+            throw new NotImplementedException();
         }
 
         private RarHeader(bool isRar5) 
         {
+            this.headerType = HeaderType.Null;
             this.isRar5 = isRar5;
         }
 
-        protected RarHeader(RarHeader header, RarCrcBinaryReader reader) {
-            this.isRar5 = header.isRar5;
+        protected RarHeader(RarHeader header, RarCrcBinaryReader reader, HeaderType headerType) {
+            this.headerType = headerType;
+            this.isRar5 = header.IsRar5;
             FillBase(header);
             ReadFromReader(reader);
             ReadBytes = reader.CurrentReadByteCount;
@@ -33,16 +36,16 @@ namespace SharpCompress.Common.Rar.Headers
             VerifyHeaderCrc(reader.GetCrc32());
         }
 
-        private void FillBase(RarHeader baseHeader)
+        private void FillBase(RarHeader other)
         {
-            HeadCRC = baseHeader.HeadCRC;
-            HeaderType = baseHeader.HeaderType;
-            Flags = baseHeader.Flags;
-            HeaderSize = baseHeader.HeaderSize;
-            ExtraSize = baseHeader.ExtraSize;
-            AdditionalDataSize = baseHeader.AdditionalDataSize;
-            ReadBytes = baseHeader.ReadBytes;
-            ArchiveEncoding = baseHeader.ArchiveEncoding;
+            HeaderCrc = other.HeaderCrc;
+            HeaderCode = other.HeaderCode;
+            HeaderFlags = other.HeaderFlags;
+            HeaderSize = other.HeaderSize;
+            ExtraSize = other.ExtraSize;
+            AdditionalDataSize = other.AdditionalDataSize;
+            ReadBytes = other.ReadBytes;
+            ArchiveEncoding = other.ArchiveEncoding;
         }
 
         internal static RarHeader ReadBase(RarCrcBinaryReader reader, ArchiveEncoding archiveEncoding, bool isRar5)
@@ -63,30 +66,30 @@ namespace SharpCompress.Common.Rar.Headers
 
         private void ReadStartFromReader(RarCrcBinaryReader reader)
         {
-            if (this.isRar5) 
+            if (this.IsRar5) 
             {
-                HeadCRC = reader.ReadUInt32();
+                HeaderCrc = reader.ReadUInt32();
                 reader.ResetCrc();
                 HeaderSize = (int)reader.ReadRarVIntUInt32(3);
                 reader.Mark();
-                HeaderType = (HeaderType)reader.ReadRarVIntUInt32(1);
-                Flags = reader.ReadRarVIntUInt16(2);
-                if ((Flags & HeaderFlagsV5.HasExtra) == HeaderFlagsV5.HasExtra)
+                HeaderCode = reader.ReadRarVIntByte();
+                HeaderFlags = reader.ReadRarVIntUInt16(2);
+                if ((HeaderFlags & HeaderFlagsV5.HasExtra) == HeaderFlagsV5.HasExtra)
                 {
                     ExtraSize = reader.ReadRarVIntUInt32();
                 }
-                if ((Flags & HeaderFlagsV5.HasData) == HeaderFlagsV5.HasData)
+                if ((HeaderFlags & HeaderFlagsV5.HasData) == HeaderFlagsV5.HasData)
                 {
-                    AdditionalDataSize = reader.ReadRarVIntUInt32();
+                    AdditionalDataSize = (long)reader.ReadRarVInt();
                 }
             } else {
                 reader.Mark();
-                HeadCRC = reader.ReadUInt16();
+                HeaderCrc = reader.ReadUInt16();
                 reader.ResetCrc();
-                HeaderType = (HeaderType)reader.ReadByte();
-                Flags = reader.ReadUInt16();
+                HeaderCode = reader.ReadByte();
+                HeaderFlags = reader.ReadUInt16();
                 HeaderSize = reader.ReadInt16();
-                if ((Flags & HeaderFlagsV4.HasData) == HeaderFlagsV4.HasData)
+                if ((HeaderFlags & HeaderFlagsV4.HasData) == HeaderFlagsV4.HasData)
                 {
                     AdditionalDataSize = reader.ReadUInt32();
                 }
@@ -119,13 +122,10 @@ namespace SharpCompress.Common.Rar.Headers
 
         private void VerifyHeaderCrc(uint crc32)
         {
-            if (HeaderType != HeaderType.MarkHeader)
+            var b = (this.IsRar5 ? crc32 : (ushort)crc32) == HeaderCrc;
+            if (!b)
             {
-                var b = (this.isRar5 ? crc32 : (ushort)crc32) == HeadCRC;
-                if (!b)
-                {
-                    throw new InvalidFormatException("rar header crc mismatch");
-                }
+                throw new InvalidFormatException("rar header crc mismatch");
             }
         }
 
@@ -133,32 +133,33 @@ namespace SharpCompress.Common.Rar.Headers
         {
         }
 
+        public HeaderType HeaderType { get { return this.headerType; } }
+
+        protected bool IsRar5 { get { return this.isRar5; } }
+
         /// <summary>
         /// This is the number of bytes read when reading the header
         /// </summary>
         protected long ReadBytes { get; private set; }
 
-        protected uint HeadCRC { get; private set; }
+        protected uint HeaderCrc { get; private set; }
 
-        public HeaderType HeaderType { get; private set; }
+        internal byte HeaderCode { get; private set; }
 
-        /// <summary>
-        /// Untyped flags.  These should be typed when Promoting to another header
-        /// </summary>
-        protected ushort Flags { get; private set; }
+        protected ushort HeaderFlags { get; private set; }
 
         protected int HeaderSize { get; private set; }
 
         internal ArchiveEncoding ArchiveEncoding { get; private set; }
 
         /// <summary>
-        /// Extra header data.
+        /// Extra header size.
         /// </summary>
         protected uint ExtraSize { get; private set; }
 
         /// <summary>
-        /// Additional data size, eg recovery record
+        /// Size of additional data (eg file contents)
         /// </summary>
-        protected uint AdditionalDataSize { get; private set; }
+        protected long AdditionalDataSize { get; private set; }
     }
 }
