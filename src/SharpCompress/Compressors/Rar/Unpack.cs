@@ -10,26 +10,26 @@ using SharpCompress.Compressors.Rar.VM;
 
 namespace SharpCompress.Compressors.Rar
 {
-    //!!! internal sealed class Unpack : Unpack20
-    internal partial class Unpack : BitInput
+    internal sealed partial class Unpack : BitInput
     {
-        public bool FileExtracted { // Duplicate method
-            // private boolean ReadEndOfBlock() throws IOException, RarException
-            // {
-            // int BitField = getbits();
-            // boolean NewTable, NewFile = false;
-            // if ((BitField & 0x8000) != 0) {
-            // NewTable = true;
-            // addbits(1);
-            // } else {
-            // NewFile = true;
-            // NewTable = (BitField & 0x4000) != 0;
-            // addbits(2);
-            // }
-            // tablesRead = !NewTable;
-            // return !(NewFile || NewTable && !readTables());
-            // }
-            get; private set; }
+        // Duplicate method
+        // private boolean ReadEndOfBlock() throws IOException, RarException
+        // {
+        // int BitField = getbits();
+        // boolean NewTable, NewFile = false;
+        // if ((BitField & 0x8000) != 0) {
+        // NewTable = true;
+        // addbits(1);
+        // } else {
+        // NewFile = true;
+        // NewTable = (BitField & 0x4000) != 0;
+        // addbits(2);
+        // }
+        // tablesRead = !NewTable;
+        // return !(NewFile || NewTable && !readTables());
+        // }
+
+        public bool FileExtracted { get; private set; }
 
         public long DestSize
         {
@@ -57,31 +57,23 @@ namespace SharpCompress.Compressors.Rar
 
         public int PpmEscChar { get; set; }
 
-        //UPGRADE_NOTE: Final was removed from the declaration of 'ppm '. "ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?index='!DefaultContextWindowIndex'&keyword='jlca1003'"
         private readonly ModelPPM ppm = new ModelPPM();
 
         private readonly RarVM rarVM = new RarVM();
 
-        /* Filters code, one entry per filter */
-        //UPGRADE_ISSUE: The following fragment of code could not be parsed and was not converted. "ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?index='!DefaultContextWindowIndex'&keyword='jlca1156'"
+        // Filters code, one entry per filter
         private readonly List<UnpackFilter> filters = new List<UnpackFilter>();
 
-        /* Filters stack, several entrances of same filter are possible */
-        //UPGRADE_ISSUE: The following fragment of code could not be parsed and was not converted. "ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?index='!DefaultContextWindowIndex'&keyword='jlca1156'"
+        // Filters stack, several entrances of same filter are possible
         private readonly List<UnpackFilter> prgStack = new List<UnpackFilter>();
 
-        /*
-        * lengths of preceding blocks, one length per filter. Used to reduce size
-        * required to write block length if lengths are repeating
-        */
-        //UPGRADE_ISSUE: The following fragment of code could not be parsed and was not converted. "ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?index='!DefaultContextWindowIndex'&keyword='jlca1156'"
+        // lengths of preceding blocks, one length per filter. Used to reduce size
+        // required to write block length if lengths are repeating
         private readonly List<int> oldFilterLengths = new List<int>();
 
         private int lastFilter;
 
         private bool tablesRead;
-
-        //UPGRADE_NOTE: The initialization of  'unpOldTable' was moved to method 'InitBlock'. "ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?index='!DefaultContextWindowIndex'&keyword='jlca1005'"
 
         private readonly byte[] unpOldTable = new byte[PackDef.HUFF_TABLE_SIZE];
 
@@ -97,21 +89,11 @@ namespace SharpCompress.Compressors.Rar
 
         private int lowDistRepCount;
 
-        public static int[] DBitLengthCounts = {4, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 14, 0, 12};
+        private static readonly int[] DBitLengthCounts = {4, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 14, 0, 12};
 
         private FileHeader fileHeader;
 
-        public Unpack()
-        {
-            window = null;
-
-            //externalWindow = false;
-            suspended = false;
-            unpAllBuf = false;
-            unpSomeRead = false;
-        }
-
-        public void init(byte[] window)
+        private void init(byte[] window)
         {
             if (window == null)
             {
@@ -739,7 +721,7 @@ namespace SharpCompress.Compressors.Rar
             }
         }
 
-        protected internal void unpInitData(bool solid)
+        private void unpInitData(bool solid)
         {
             if (!solid)
             {
@@ -788,7 +770,7 @@ namespace SharpCompress.Compressors.Rar
             else
             {
                 NewFile = true;
-                NewTable = (BitField & 0x4000) != 0 ? true : false;
+                NewTable = (BitField & 0x4000) != 0;
                 AddBits(2);
             }
             tablesRead = !NewTable;
@@ -942,7 +924,6 @@ namespace SharpCompress.Compressors.Rar
                 AddBits(16);
             }
 
-            //UPGRADE_ISSUE: The following fragment of code could not be parsed and was not converted. "ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?index='!DefaultContextWindowIndex'&keyword='jlca1156'"
             List<Byte> vmCode = new List<Byte>();
             for (int I = 0; I < Length; I++)
             {
@@ -988,7 +969,6 @@ namespace SharpCompress.Compressors.Rar
                 Length = B1 * 256 + B2;
             }
 
-            //UPGRADE_ISSUE: The following fragment of code could not be parsed and was not converted. "ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?index='!DefaultContextWindowIndex'&keyword='jlca1156'"
             List<Byte> vmCode = new List<Byte>();
             for (int I = 0; I < Length; I++)
             {
@@ -1241,7 +1221,7 @@ namespace SharpCompress.Compressors.Rar
             }
         }
 
-        public void cleanUp()
+        private void cleanUp()
         {
             if (ppm != null)
             {

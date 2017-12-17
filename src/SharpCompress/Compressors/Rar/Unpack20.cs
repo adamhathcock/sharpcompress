@@ -14,37 +14,37 @@ namespace SharpCompress.Compressors.Rar
 {
     internal partial class Unpack
     {
-        protected readonly internal MultDecode[] MD = new MultDecode[4];
+        private readonly MultDecode[] MD = new MultDecode[4];
 
-        protected readonly internal byte[] UnpOldTable20 = new byte[PackDef.MC20 * 4];
+        private readonly byte[] UnpOldTable20 = new byte[PackDef.MC20 * 4];
 
-        protected internal int UnpAudioBlock, UnpChannels, UnpCurChannel, UnpChannelDelta;
+        private int UnpAudioBlock, UnpChannels, UnpCurChannel, UnpChannelDelta;
 
         private readonly AudioVariables[] AudV = new AudioVariables[4];
 
-        protected readonly internal LitDecode LD = new LitDecode();
+        private readonly LitDecode LD = new LitDecode();
 
-        protected readonly internal DistDecode DD = new DistDecode();
+        private readonly DistDecode DD = new DistDecode();
 
-        protected readonly internal LowDistDecode LDD = new LowDistDecode();
+        private readonly LowDistDecode LDD = new LowDistDecode();
 
-        protected readonly internal RepDecode RD = new RepDecode();
+        private readonly RepDecode RD = new RepDecode();
 
-        protected readonly internal BitDecode BD = new BitDecode();
+        private readonly BitDecode BD = new BitDecode();
 
-        public static readonly int[] LDecode =
+        private static readonly int[] LDecode =
         {
             0, 1, 2, 3, 4, 5, 6, 7, 8, 10, 12, 14, 16, 20, 24, 28, 32, 40, 48,
             56, 64, 80, 96, 112, 128, 160, 192, 224
         };
 
-        public static readonly byte[] LBits =
+        private static readonly byte[] LBits =
         {
             0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4,
             4, 5, 5, 5, 5
         };
 
-        public static readonly int[] DDecode =
+        private static readonly int[] DDecode =
         {
             0, 1, 2, 3, 4, 6, 8, 12, 16, 24, 32, 48, 64, 96, 128, 192, 256, 384,
             512, 768, 1024, 1536, 2048, 3072, 4096, 6144, 8192, 12288, 16384,
@@ -53,18 +53,18 @@ namespace SharpCompress.Compressors.Rar
             917504, 983040
         };
 
-        public static readonly int[] DBits =
+        private static readonly int[] DBits =
         {
             0, 0, 0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 10,
             10, 11, 11, 12, 12, 13, 13, 14, 14, 15, 15, 16, 16, 16, 16, 16, 16, 16
             , 16, 16, 16, 16, 16, 16, 16
         };
 
-        public static readonly int[] SDDecode = {0, 4, 8, 16, 32, 64, 128, 192};
+        private static readonly int[] SDDecode = {0, 4, 8, 16, 32, 64, 128, 192};
 
-        public static readonly int[] SDBits = {2, 2, 3, 4, 5, 6, 6, 6};
+        private static readonly int[] SDBits = {2, 2, 3, 4, 5, 6, 6, 6};
 
-        internal void unpack20(bool solid)
+        private void unpack20(bool solid)
         {
             int Bits;
 
@@ -357,7 +357,7 @@ namespace SharpCompress.Compressors.Rar
             return (true);
         }
 
-        protected void unpInitData20(bool Solid)
+        private void unpInitData20(bool Solid)
         {
             if (!Solid)
             {

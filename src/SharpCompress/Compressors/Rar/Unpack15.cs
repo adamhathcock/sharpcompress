@@ -15,50 +15,50 @@ namespace SharpCompress.Compressors.Rar
 {
     internal partial class Unpack
     {
-        protected internal int readBorder;
+        private int readBorder;
 
-        protected internal bool suspended;
+        private bool suspended;
 
-        protected internal bool unpAllBuf;
+        internal bool unpAllBuf;
 
-        //protected internal ComprDataIO unpIO;
+        //private ComprDataIO unpIO;
 
-        protected Stream readStream;
-        protected Stream writeStream;
+        private Stream readStream;
+        private Stream writeStream;
 
-        protected internal bool unpSomeRead;
+        internal bool unpSomeRead;
 
-        protected internal int readTop;
+        private int readTop;
 
-        protected internal long destUnpSize;
+        private long destUnpSize;
 
-        protected internal byte[] window;
+        private byte[] window;
 
-        protected internal int[] oldDist = new int[4];
+        private readonly int[] oldDist = new int[4];
 
-        protected internal int unpPtr, wrPtr;
+        private int unpPtr, wrPtr;
 
-        protected internal int oldDistPtr;
+        private int oldDistPtr;
 
-        protected internal int[] ChSet = new int[256],
+        private readonly int[] ChSet = new int[256],
                                  ChSetA = new int[256],
                                  ChSetB = new int[256],
                                  ChSetC = new int[256];
 
-        protected internal int[] Place = new int[256],
+        private readonly int[] Place = new int[256],
                                  PlaceA = new int[256],
                                  PlaceB = new int[256],
                                  PlaceC = new int[256];
 
-        protected internal int[] NToPl = new int[256], NToPlB = new int[256], NToPlC = new int[256];
+        private readonly int[] NToPl = new int[256], NToPlB = new int[256], NToPlC = new int[256];
 
-        protected internal int FlagBuf, AvrPlc, AvrPlcB, AvrLn1, AvrLn2, AvrLn3;
+        private int FlagBuf, AvrPlc, AvrPlcB, AvrLn1, AvrLn2, AvrLn3;
 
-        protected internal int Buf60, NumHuf, StMode, LCount, FlagsCnt;
+        private int Buf60, NumHuf, StMode, LCount, FlagsCnt;
 
-        protected internal int Nhfb, Nlzb, MaxDist3;
+        private int Nhfb, Nlzb, MaxDist3;
 
-        protected internal int lastDist, lastLength;
+        private int lastDist, lastLength;
 
         private const int STARTL1 = 2;
 
@@ -109,23 +109,23 @@ namespace SharpCompress.Compressors.Rar
 
         private static readonly int[] PosHf4 = {0, 0, 0, 0, 0, 0, 0, 0, 0, 255, 0, 0, 0};
 
-        internal static int[] ShortLen1 = {1, 3, 4, 4, 5, 6, 7, 8, 8, 4, 4, 5, 6, 6, 4, 0};
+        private static readonly int[] ShortLen1 = {1, 3, 4, 4, 5, 6, 7, 8, 8, 4, 4, 5, 6, 6, 4, 0};
 
-        internal static int[] ShortXor1 =
+        private static readonly int[] ShortXor1 =
         {
             0, 0xa0, 0xd0, 0xe0, 0xf0, 0xf8, 0xfc, 0xfe, 0xff, 0xc0, 0x80, 0x90, 0x98
             , 0x9c, 0xb0
         };
 
-        internal static int[] ShortLen2 = {2, 3, 3, 3, 4, 4, 5, 6, 6, 4, 4, 5, 6, 6, 4, 0};
+        private static readonly int[] ShortLen2 = {2, 3, 3, 3, 4, 4, 5, 6, 6, 4, 4, 5, 6, 6, 4, 0};
 
-        internal static int[] ShortXor2 =
+        private static readonly int[] ShortXor2 =
         {
             0, 0x40, 0x60, 0xa0, 0xd0, 0xe0, 0xf0, 0xf8, 0xfc, 0xc0, 0x80, 0x90, 0x98
             , 0x9c, 0xb0
         };
 
-        protected void unpack15(bool solid)
+        private void unpack15(bool solid)
         {
             if (suspended)
             {
@@ -223,7 +223,7 @@ namespace SharpCompress.Compressors.Rar
             oldUnpWriteBuf();
         }
 
-        protected bool unpReadBuf()
+        private bool unpReadBuf()
         {
             int dataSize = readTop - inAddr;
             if (dataSize < 0)
@@ -699,7 +699,7 @@ namespace SharpCompress.Compressors.Rar
             return ((Utility.URShift((Num - (I != 0 ? DecTab[I - 1] : 0)), (16 - StartPos))) + PosTab[StartPos]);
         }
 
-        protected void oldUnpWriteBuf()
+        private void oldUnpWriteBuf()
         {
             if (unpPtr != wrPtr)
             {
