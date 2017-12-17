@@ -10,23 +10,36 @@ namespace SharpCompress.Test.Rar
     public class RarReaderTests : ReaderTests
     {
         [Fact]
-        public void Rar_Multi_Reader()
-        {
-            var testArchives = new string[] { "Rar.multi.part01.rar",
+        public void Rar_Multi_Reader() {
+            DoRar_Multi_Reader(new string[] { 
+                "Rar.multi.part01.rar",
                 "Rar.multi.part02.rar",
                 "Rar.multi.part03.rar",
                 "Rar.multi.part04.rar",
                 "Rar.multi.part05.rar",
-                "Rar.multi.part06.rar"};
+                "Rar.multi.part06.rar"});
+        }
 
+        [Fact]
+        public void Rar5_Multi_Reader() {
+            DoRar_Multi_Reader(new string[] { 
+                "Rar5.multi.part01.rar",
+                "Rar5.multi.part02.rar",
+                "Rar5.multi.part03.rar",
+                "Rar5.multi.part04.rar",
+                "Rar5.multi.part05.rar",
+                "Rar5.multi.part06.rar"});
+        }
 
+        private void DoRar_Multi_Reader(string[] archives)
+        {
             ResetScratch();
-            using (var reader = RarReader.Open(testArchives.Select(s => Path.Combine(TEST_ARCHIVES_PATH, s))
+            using (var reader = RarReader.Open(archives.Select(s => Path.Combine(this.TEST_ARCHIVES_PATH, s))
                 .Select(p => File.OpenRead(p))))
             {
                 while (reader.MoveToNextEntry())
                 {
-                    reader.WriteEntryToDirectory(SCRATCH_FILES_PATH, new ExtractionOptions()
+                    reader.WriteEntryToDirectory(this.SCRATCH_FILES_PATH, new ExtractionOptions()
                     {
                         ExtractFullPath = true,
                         Overwrite = true
@@ -37,20 +50,33 @@ namespace SharpCompress.Test.Rar
         }
 
         [Fact]
-        public void Rar_Multi_Reader_Encrypted()
+        public void Rar_Multi_Reader_Encrypted() {
+            DoRar_Multi_Reader_Encrypted(new string[] { 
+                "Rar.EncryptedParts.part01.rar",
+                "Rar.EncryptedParts.part02.rar",
+                "Rar.EncryptedParts.part03.rar",
+                "Rar.EncryptedParts.part04.rar",
+                "Rar.EncryptedParts.part05.rar",
+                "Rar.EncryptedParts.part06.rar"});
+        }
+
+        [Fact]
+        public void Rar5_Multi_Reader_Encrypted() {
+            DoRar_Multi_Reader_Encrypted(new string[] { 
+                "Rar5.EncryptedParts.part01.rar",
+                "Rar5.EncryptedParts.part02.rar",
+                "Rar5.EncryptedParts.part03.rar",
+                "Rar5.EncryptedParts.part04.rar",
+                "Rar5.EncryptedParts.part05.rar",
+                "Rar5.EncryptedParts.part06.rar"});
+        }
+
+        private void DoRar_Multi_Reader_Encrypted(string[] archives)
         {
-            var testArchives = new string[] { "EncryptedParts.part01.rar",
-                "EncryptedParts.part02.rar",
-                "EncryptedParts.part03.rar",
-                "EncryptedParts.part04.rar",
-                "EncryptedParts.part05.rar",
-                "EncryptedParts.part06.rar"};
-
-
             Assert.Throws<InvalidFormatException>(() =>
                                                   {
                                                       ResetScratch();
-                                                      using (var reader = RarReader.Open(testArchives.Select(s => Path.Combine(TEST_ARCHIVES_PATH, s))
+                                                      using (var reader = RarReader.Open(archives.Select(s => Path.Combine(this.TEST_ARCHIVES_PATH, s))
                                                                                                      .Select(p => File.OpenRead(p)),
                                                                                          new ReaderOptions()
                                                                                          {
@@ -59,7 +85,7 @@ namespace SharpCompress.Test.Rar
                                                       {
                                                           while (reader.MoveToNextEntry())
                                                           {
-                                                              reader.WriteEntryToDirectory(SCRATCH_FILES_PATH,
+                                                              reader.WriteEntryToDirectory(this.SCRATCH_FILES_PATH,
                                                                                            new ExtractionOptions()
                                                                                            {
                                                                                                ExtractFullPath = true,
@@ -72,28 +98,41 @@ namespace SharpCompress.Test.Rar
         }
 
         [Fact]
-        public void Rar_Multi_Reader_Delete_Files()
-        {
-            var testArchives = new string[] { "Rar.multi.part01.rar",
+        public void Rar_Multi_Reader_Delete_Files() {
+            DoRar_Multi_Reader_Delete_Files(new string[] { 
+                "Rar.multi.part01.rar",
                 "Rar.multi.part02.rar",
                 "Rar.multi.part03.rar",
                 "Rar.multi.part04.rar",
                 "Rar.multi.part05.rar",
-                "Rar.multi.part06.rar"};
+                "Rar.multi.part06.rar"});
+        }
 
+        [Fact]
+        public void Rar5_Multi_Reader_Delete_Files() {
+            DoRar_Multi_Reader_Delete_Files(new string[] { 
+                "Rar5.multi.part01.rar",
+                "Rar5.multi.part02.rar",
+                "Rar5.multi.part03.rar",
+                "Rar5.multi.part04.rar",
+                "Rar5.multi.part05.rar",
+                "Rar5.multi.part06.rar"});
+        }
 
+        private void DoRar_Multi_Reader_Delete_Files(string[] archives)
+        {
             ResetScratch();
 
-            foreach (var file in testArchives)
+            foreach (var file in archives)
             {
-                File.Copy(Path.Combine(TEST_ARCHIVES_PATH, file), Path.Combine(SCRATCH2_FILES_PATH, file));
+                File.Copy(Path.Combine(this.TEST_ARCHIVES_PATH, file), Path.Combine(this.SCRATCH2_FILES_PATH, file));
             }
-            var streams = testArchives.Select(s => Path.Combine(SCRATCH2_FILES_PATH, s)).Select(File.OpenRead).ToList();
+            var streams = archives.Select(s => Path.Combine(this.SCRATCH2_FILES_PATH, s)).Select(File.OpenRead).ToList();
             using (var reader = RarReader.Open(streams))
             {
                 while (reader.MoveToNextEntry())
                 {
-                    reader.WriteEntryToDirectory(SCRATCH_FILES_PATH, new ExtractionOptions()
+                    reader.WriteEntryToDirectory(this.SCRATCH_FILES_PATH, new ExtractionOptions()
                     {
                         ExtractFullPath = true,
                         Overwrite = true
@@ -106,7 +145,7 @@ namespace SharpCompress.Test.Rar
             }
             VerifyFiles();
 
-            foreach (var file in testArchives.Select(s => Path.Combine(SCRATCH2_FILES_PATH, s)))
+            foreach (var file in archives.Select(s => Path.Combine(this.SCRATCH2_FILES_PATH, s)))
             {
                 File.Delete(file);
             }
@@ -119,29 +158,57 @@ namespace SharpCompress.Test.Rar
         }
 
         [Fact]
+        public void Rar5_None_Reader()
+        {
+            Read("Rar5.none.rar", CompressionType.Rar);
+        }
+
+        [Fact]
         public void Rar_Reader()
         {
             Read("Rar.rar", CompressionType.Rar);
         }
 
         [Fact]
+        public void Rar5_Reader()
+        {
+            Read("Rar5.rar", CompressionType.Rar);
+        }
+
+        [Fact]
         public void Rar_EncryptedFileAndHeader_Reader()
         {
             ReadRar("Rar.encrypted_filesAndHeader.rar", "test");
+        }
 
+        [Fact]
+        public void Rar5_EncryptedFileAndHeader_Reader()
+        {
+            ReadRar("Rar5.encrypted_filesAndHeader.rar", "test");
         }
 
         [Fact]
         public void Rar_EncryptedFileOnly_Reader()
         {
             ReadRar("Rar.encrypted_filesOnly.rar", "test");
+        }
 
+        [Fact]
+        public void Rar5_EncryptedFileOnly_Reader()
+        {
+            ReadRar("Rar5.encrypted_filesOnly.rar", "test");
         }
 
         [Fact]
         public void Rar_Encrypted_Reader()
         {
-            ReadRar("Encrypted.rar", "test");
+            ReadRar("Rar.Encrypted.rar", "test");
+        }
+
+        [Fact]
+        public void Rar5_Encrypted_Reader()
+        {
+            ReadRar("Rar5.Encrypted.rar", "test");
         }
 
         private void ReadRar(string testArchive, string password)
@@ -170,10 +237,19 @@ namespace SharpCompress.Test.Rar
         }
 
         [Fact]
-        public void Rar_Entry_Stream()
+        public void Rar_Entry_Stream() {
+            DoRar_Entry_Stream("Rar.rar");
+        }
+
+        [Fact]
+        public void Rar5_Entry_Stream() {
+            DoRar_Entry_Stream("Rar5.rar");
+        }
+
+        private void DoRar_Entry_Stream(string filename)
         {
             ResetScratch();
-            using (Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Rar.rar")))
+            using (Stream stream = File.OpenRead(Path.Combine(this.TEST_ARCHIVES_PATH, filename)))
             using (var reader = RarReader.Open(stream))
             {
                 while (reader.MoveToNextEntry())
@@ -185,7 +261,7 @@ namespace SharpCompress.Test.Rar
                         {
                             string file = Path.GetFileName(reader.Entry.Key);
                             string folder = Path.GetDirectoryName(reader.Entry.Key);
-                            string destdir = Path.Combine(SCRATCH_FILES_PATH, folder);
+                            string destdir = Path.Combine(this.SCRATCH_FILES_PATH, folder);
                             if (!Directory.Exists(destdir))
                             {
                                 Directory.CreateDirectory(destdir);
@@ -207,7 +283,7 @@ namespace SharpCompress.Test.Rar
         public void Rar_Reader_Audio_program()
         {
             ResetScratch();
-            using (var stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Audio_program.rar")))
+            using (var stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Rar.Audio_program.rar")))
             using (var reader = RarReader.Open(stream, new ReaderOptions()
             {
                 LookForHeader = true
@@ -231,7 +307,7 @@ namespace SharpCompress.Test.Rar
         public void Rar_Jpg_Reader()
         {
             ResetScratch();
-            using (var stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Rarjpeg.jpg")))
+            using (var stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Rar.jpeg.jpg")))
             using (var reader = RarReader.Open(stream, new ReaderOptions()
             {
                 LookForHeader = true
@@ -257,10 +333,25 @@ namespace SharpCompress.Test.Rar
         }
 
         [Fact]
-        public void Rar_Solid_Skip_Reader()
+        public void Rar5_Solid_Reader()
+        {
+            Read("Rar5.solid.rar", CompressionType.Rar);
+        }
+
+        [Fact]
+        public void Rar_Solid_Skip_Reader() {
+            DoRar_Solid_Skip_Reader("Rar.solid.rar");
+        }
+
+        [Fact]
+        public void Rar5_Solid_Skip_Reader() {
+            DoRar_Solid_Skip_Reader("Rar5.solid.rar");
+        }
+
+        private void DoRar_Solid_Skip_Reader(string filename)
         {
             ResetScratch();
-            using (var stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Rar.solid.rar")))
+            using (var stream = File.OpenRead(Path.Combine(this.TEST_ARCHIVES_PATH, filename)))
             using (var reader = RarReader.Open(stream, new ReaderOptions()
             {
                 LookForHeader = true
@@ -271,7 +362,7 @@ namespace SharpCompress.Test.Rar
                     if (reader.Entry.Key.Contains("jpg"))
                     {
                         Assert.Equal(CompressionType.Rar, reader.Entry.CompressionType);
-                        reader.WriteEntryToDirectory(SCRATCH_FILES_PATH, new ExtractionOptions()
+                        reader.WriteEntryToDirectory(this.SCRATCH_FILES_PATH, new ExtractionOptions()
                         {
                             ExtractFullPath = true,
                             Overwrite = true
@@ -282,10 +373,19 @@ namespace SharpCompress.Test.Rar
         }
 
         [Fact]
-        public void Rar_Reader_Skip()
+        public void Rar_Reader_Skip() {
+            DoRar_Reader_Skip("Rar.rar");
+        }
+
+        [Fact]
+        public void Rar5_Reader_Skip() {
+            DoRar_Reader_Skip("Rar5.rar");
+        }
+
+        private void DoRar_Reader_Skip(string filename)
         {
             ResetScratch();
-            using (var stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Rar.rar")))
+            using (var stream = File.OpenRead(Path.Combine(this.TEST_ARCHIVES_PATH, filename)))
             using (var reader = RarReader.Open(stream, new ReaderOptions()
             {
                 LookForHeader = true
@@ -296,7 +396,7 @@ namespace SharpCompress.Test.Rar
                     if (reader.Entry.Key.Contains("jpg"))
                     {
                         Assert.Equal(CompressionType.Rar, reader.Entry.CompressionType);
-                        reader.WriteEntryToDirectory(SCRATCH_FILES_PATH, new ExtractionOptions()
+                        reader.WriteEntryToDirectory(this.SCRATCH_FILES_PATH, new ExtractionOptions()
                         {
                             ExtractFullPath = true,
                             Overwrite = true

@@ -16,17 +16,33 @@ namespace SharpCompress.Test.Rar
         public RarHeaderFactoryTest()
         {
             ResetScratch();
-            rarHeaderFactory = new RarHeaderFactory(StreamingMode.Seekable, new ReaderOptions()
-            {
-                LeaveStreamOpen = true
-            });
+            rarHeaderFactory = new RarHeaderFactory(
+                StreamingMode.Seekable, 
+                new ReaderOptions { LeaveStreamOpen = true });
         }
 
-
         [Fact]
-        public void ReadHeaders_RecognizeEncryptedFlag()
+        public void Rar_ReadHeaders_RecognizeEncryptedFlag()
         {
             ReadEncryptedFlag("Rar.encrypted_filesAndHeader.rar", true);
+        }
+
+        [Fact]
+        public void Rar5_ReadHeaders_RecognizeEncryptedFlag()
+        {
+            ReadEncryptedFlag("Rar5.encrypted_filesAndHeader.rar", true);
+        }
+
+        [Fact]
+        public void Rar_ReadHeaders_RecognizeNoEncryptedFlag()
+        {
+            ReadEncryptedFlag("Rar.rar", false);
+        }
+
+        [Fact]
+        public void Rar5_ReadHeaders_RecognizeNoEncryptedFlag()
+        {
+            ReadEncryptedFlag("Rar5.rar", false);
         }
 
         private void ReadEncryptedFlag(string testArchive, bool isEncrypted)
@@ -44,16 +60,9 @@ namespace SharpCompress.Test.Rar
             }
         }
 
-        [Fact]
-        public void ReadHeaders_RecognizeNoEncryptedFlag()
-        {
-            ReadEncryptedFlag("Rar.rar", false);
-        }
-
         private FileStream GetReaderStream(string testArchive)
         {
-            return new FileStream(Path.Combine(TEST_ARCHIVES_PATH, testArchive),
-                                  FileMode.Open);
+            return new FileStream(Path.Combine(TEST_ARCHIVES_PATH, testArchive), FileMode.Open);
         }
     }
 }
