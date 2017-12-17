@@ -59,7 +59,7 @@ namespace SharpCompress.Common.Rar.Headers
 #endif
             }
 
-            var header = RarHeader.TryReadBase(reader, Options.ArchiveEncoding, this.isRar5);
+            var header = RarHeader.TryReadBase(reader, this.isRar5, Options.ArchiveEncoding);
             if (header == null)
             {
                 return null;
