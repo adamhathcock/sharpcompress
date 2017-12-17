@@ -9,8 +9,8 @@ namespace SharpCompress.Common.Rar.Headers
     {
         private uint fileCrc;
 
-        public FileHeader(RarHeader header, RarCrcBinaryReader reader) 
-            : base(header, reader, HeaderType.File) {
+        public FileHeader(RarHeader header, RarCrcBinaryReader reader, HeaderType headerType) 
+            : base(header, reader, headerType) {
         }
 
         protected override void ReadFromReader(MarkingBinaryReader reader) 

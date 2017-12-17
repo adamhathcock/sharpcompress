@@ -133,82 +133,72 @@ namespace SharpCompress.IO
 
         // RAR5 style variable length encoded value
         // maximum value of 0xffffffffffffffff (64 bits)
-        // implies max 10 bytes consumed
+        // technote: "implies max 10 bytes consumed" -- but not really because we could extend indefinitely using 0x80 0x80 ... 0x80 00
         //
         // Variable length integer. Can include one or more bytes, where lower 7 bits of every byte contain integer data
         // and highest bit in every byte is the continuation flag. If highest bit is 0, this is the last byte in sequence.
         // So first byte contains 7 least significant bits of integer and continuation flag. Second byte, if present,
         // contains next 7 bits and so on.
-        public ulong ReadRarVInt() {
+        public ulong ReadRarVInt(int maxBytes = 10) {
+            // hopefully this gets inlined
+            return DoReadRarVInt((maxBytes - 1) * 7);
+        }
+
+        private ulong DoReadRarVInt(int maxShift) {
             int shift = 0;
             ulong result = 0;
             do {
                 byte b0 = ReadByte();
-                var b1 = b0 & 0x7f;
-                ulong n = (ulong)b1;
-                result |= n << shift;
+                uint b1 = ((uint)b0) & 0x7f;
+                ulong n = b1;
+                ulong shifted = n << shift;
+                if (n != shifted >> shift) {
+                    // overflow
+                    break;
+                }
+                result |= shifted;
                 if (b0 == b1) {
                     return result;
                 }
-                // note: we're actually only allowing a max high bit of 2^56
-                // to avoid an extra complex check for shift overflow due to the
-                // 10th byte having high bits set
                 shift += 7;
-            } while (shift < 63);
+            } while (shift <= maxShift);
 
             throw new FormatException("malformed vint");
         }
 
         public uint ReadRarVIntUInt32(int maxBytes = 5) {
+            // hopefully this gets inlined
+            return DoReadRarVIntUInt32((maxBytes - 1) * 7);
+        }
+
+        public ushort ReadRarVIntUInt16(int maxBytes = 3) {
+            // hopefully this gets inlined
+            return checked((ushort)DoReadRarVIntUInt32((maxBytes - 1) * 7));
+        }
+
+        public byte ReadRarVIntByte(int maxBytes = 2) {
+            // hopefully this gets inlined
+            return checked((byte)DoReadRarVIntUInt32((maxBytes - 1) * 7));
+        }
+
+        private uint DoReadRarVIntUInt32(int maxShift) {
             int shift = 0;
             uint result = 0;
             do {
                 byte b0 = ReadByte();
-                var b1 = b0 & 0x7f;
-                uint n = (uint)b1;
-                result |= n << shift;
+                uint b1 = ((uint)b0) & 0x7f;
+                uint n = b1;
+                uint shifted = n << shift;
+                if (n != shifted >> shift) {
+                    // overflow
+                    break;
+                }
+                result |= shifted;
                 if (b0 == b1) {
                     return result;
                 }
                 shift += 7;
-                // NOTE: we are too strict here but handling the full range adds complexity and we don't need it
-            } while (shift < 28 && --maxBytes > 0);
-
-            throw new FormatException("malformed vint");
-        }
-
-        public ushort ReadRarVIntUInt16(int maxBytes = 3) {
-            int shift = 0;
-            uint result = 0;
-            do {
-                byte b0 = ReadByte();
-                var b1 = b0 & 0x7f;
-                uint n = (uint)b1;
-                result |= n << shift;
-                if (b0 == b1) {
-                    return checked((ushort)result);
-                }
-                shift += 7;
-                // NOTE: we are too strict here but handling the full range adds complexity and we don't need it
-            } while (shift < 14 && --maxBytes > 0);
-
-            throw new FormatException("malformed vint");
-        }
-
-        public byte ReadRarVIntByte(int maxBytes = 1) {
-            int shift = 0;
-            uint result = 0;
-            do {
-                byte b0 = ReadByte();
-                var b1 = b0 & 0x7f;
-                uint n = (uint)b1;
-                result |= n << shift;
-                if (b0 == b1) {
-                    return checked((byte)result);
-                }
-                shift += 7;
-                // NOTE: we are too strict here but handling the full range adds complexity and we don't need it
-            } while (shift < 7 && --maxBytes > 0);
+            } while (shift <= maxShift);
 
             throw new FormatException("malformed vint");
         }

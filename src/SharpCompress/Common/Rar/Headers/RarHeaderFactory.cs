@@ -100,35 +100,23 @@ namespace SharpCompress.Common.Rar.Headers
                     }
 
                 case HeaderCodeV.Rar5ServiceHeader:
+                    {
+                        var fh = new FileHeader(header, reader, HeaderType.Service);
+                        SkipData(fh, reader);
+                        return fh;
+                    }
+
                 case HeaderCodeV.NewSubHeader:
                     {
-                        var fh = new FileHeader(header, reader);
-                        switch (StreamingMode)
-                        {
-                            case StreamingMode.Seekable:
-                                {
-                                    fh.DataStartPosition = reader.BaseStream.Position;
-                                    reader.BaseStream.Position += fh.CompressedSize;
-                                }
-                                break;
-                            case StreamingMode.Streaming:
-                                {
-                                    //skip the data because it's useless?
-                                    reader.BaseStream.Skip(fh.CompressedSize);
-                                }
-                                break;
-                            default:
-                                {
-                                    throw new InvalidFormatException("Invalid StreamingMode");
-                                }
-                        }
+                        var fh = new FileHeader(header, reader, HeaderType.NewSub);
+                        SkipData(fh, reader);
                         return fh;
                     }
 
                 case HeaderCodeV.Rar5FileHeader:
                 case HeaderCodeV.FileHeader:
                     {
-                        var fh = new FileHeader(header, reader);
+                        var fh = new FileHeader(header, reader, HeaderType.File);
                         switch (StreamingMode)
                         {
                             case StreamingMode.Seekable:
@@ -170,6 +158,24 @@ namespace SharpCompress.Common.Rar.Headers
                     {
                         throw new InvalidFormatException("Invalid Rar Header: " + header.HeaderCode);
                     }
+            }
+        }
+
+        private void SkipData(FileHeader fh, RarCrcBinaryReader reader) {
+            switch (StreamingMode) {
+                case StreamingMode.Seekable: {
+                    fh.DataStartPosition = reader.BaseStream.Position;
+                    reader.BaseStream.Position += fh.CompressedSize;
+                }
+                    break;
+                case StreamingMode.Streaming: {
+                    //skip the data because it's useless?
+                    reader.BaseStream.Skip(fh.CompressedSize);
+                }
+                    break;
+                default: {
+                    throw new InvalidFormatException("Invalid StreamingMode");
+                }
             }
         }
     }

@@ -8,9 +8,11 @@ namespace SharpCompress.Common.Rar.Headers
         Mark,
         Archive,
         File,
+        NewSub,
+        Service,
 //        Comment,
+//        Sub
 //        Av,
-//        Sub,
 //        Protect,
 //        Sign,
 //        NewSub,

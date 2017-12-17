@@ -154,19 +154,17 @@ namespace SharpCompress.Compressors.Rar
                     unpack15(solid);
                     break;
 
-                case 20:
-
-                // rar 2.x compression
+                case 20: // rar 2.x compression
                 case 26: // files larger than 2GB
                     unpack20(solid);
                     break;
 
-                case 29:
-
-                // rar 3.x compression
+                case 29: // rar 3.x compression
                 case 36: // alternative hash
                     unpack29(solid);
                     break;
+
+                default: throw new InvalidFormatException("unknown rar compression version " + this.fileHeader.R4RarVersion);
             }
         }
 
