@@ -47,12 +47,15 @@ namespace SharpCompress.Common.Rar.Headers
             var us = reader.ReadRarVIntUInt16();
 
             // Lower 6 bits (0x003f mask) contain the version of compression algorithm, resulting in possible 0 - 63 values. Current version is 0.
-            R5CompressionAlgorithm = (byte)(us & 0x3f);
-            if (R5CompressionAlgorithm != 0) throw new InvalidFormatException("unknown rar5 compression algorithm " + R5CompressionAlgorithm);
+            // "+ 50" to not mix with old RAR format algorithms. For example,
+            // we may need to use the compression algorithm 15 in the future,
+            // but it was already used in RAR 1.5 and Unpack needs to distinguish
+            // them.
+            CompressionAlgorithm = (byte)((us & 0x3f) + 50);
 
             // 7th bit (0x0040) defines the solid flag. If it is set, RAR continues to use the compression dictionary left after processing preceding files. 
             // It can be set only for file headers and is never set for service headers.
-            R5IsSolid = (us & 0x40) == 0x40;
+            IsSolid = (us & 0x40) == 0x40;
 
             // Bits 8 - 10 (0x0380 mask) define the compression method. Currently only values 0 - 5 are used. 0 means no compression.
             CompressionMethod = (byte)((us >> 7) & 0x7);
@@ -195,6 +198,7 @@ namespace SharpCompress.Common.Rar.Headers
         private void ReadFromReaderV4(MarkingBinaryReader reader)
         {
             Flags = HeaderFlags;
+            IsSolid = HasFlag(FileFlagsV4.Solid);
 
             uint lowUncompressedSize = reader.ReadUInt32();
 
@@ -204,7 +208,7 @@ namespace SharpCompress.Common.Rar.Headers
 
             FileLastModifiedTime = Utility.DosDateToDateTime(reader.ReadUInt32());
 
-            R4RarVersion = reader.ReadByte();
+            CompressionAlgorithm = reader.ReadByte();
             CompressionMethod = (byte)(reader.ReadByte() - 0x30);
 
             short nameSize = reader.ReadInt16();
@@ -389,13 +393,12 @@ namespace SharpCompress.Common.Rar.Headers
         // 5 - best compression
         internal byte CompressionMethod { get; private set; }
 
-        internal byte R4RarVersion { get; private set; }
+        // see unpack.cs
+        internal byte CompressionAlgorithm { get; private set; }
+        public bool IsSolid { get; private set; }
+
         internal byte[] R4Salt { get; private set; }
-
-        internal byte R5CompressionAlgorithm { get; private set; }
-        internal bool R5IsSolid{ get; private set; }
         internal byte R5DictSize_2_17plusX { get; private set; }
-
 
         private byte HostOs { get; set; }
         internal uint FileAttributes { get; private set; }
@@ -414,11 +417,7 @@ namespace SharpCompress.Common.Rar.Headers
 
 //!!! TODO rar5
         public bool IsEncrypted => HasFlag(FileFlagsV4.Password);
-
-//!!! TODO rar5; R5IsSolid
-        public bool IsSolid => HasFlag(FileFlagsV4.Solid);
-
-
+        
         internal DateTime? FileLastModifiedTime { get; private set; }
 
         internal DateTime? FileCreatedTime { get; private set; }

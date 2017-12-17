@@ -148,7 +148,7 @@ namespace SharpCompress.Compressors.Rar
                 return;
             }
             var solid = fileHeader.IsSolid;
-            switch (fileHeader.R4RarVersion)
+            switch (fileHeader.CompressionAlgorithm)
             {
                 case 15: // rar 1.5 compression
                     unpack15(solid);
@@ -163,8 +163,13 @@ namespace SharpCompress.Compressors.Rar
                 case 36: // alternative hash
                     unpack29(solid);
                     break;
+                
+//                case 50: // rar 5.x compression
+//                    unpack50(solid);
+//                    break;
 
-                default: throw new InvalidFormatException("unknown rar compression version " + this.fileHeader.R4RarVersion);
+                default: 
+                    throw new InvalidFormatException("unknown rar compression version " + this.fileHeader.CompressionAlgorithm);
             }
         }
 
