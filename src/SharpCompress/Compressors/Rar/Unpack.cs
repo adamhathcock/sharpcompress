@@ -12,6 +12,14 @@ namespace SharpCompress.Compressors.Rar
 {
     internal sealed partial class Unpack : BitInput
     {
+        private readonly BitInput Inp;
+
+        public Unpack() {
+            // to ease in porting Unpack50.cs
+            this.Inp = this;
+        }
+
+
         public bool FileExtracted { get; private set; }
 
         public long DestSize
@@ -24,7 +32,10 @@ namespace SharpCompress.Compressors.Rar
             }
         }
 
-        public bool Suspended { set => suspended = value; }
+        public bool Suspended { 
+            get => this.suspended;
+            set => this.suspended = value; 
+        }
 
         public int Char
         {
@@ -130,9 +141,9 @@ namespace SharpCompress.Compressors.Rar
                     Unpack29(solid);
                     break;
                 
-//                case 50: // rar 5.x compression
-//                    unpack50(solid);
-//                    break;
+                case 50: // rar 5.x compression
+                    Unpack5(solid);
+                    break;
 
                 default: 
                     throw new InvalidFormatException("unknown rar compression version " + this.fileHeader.CompressionAlgorithm);
@@ -664,6 +675,11 @@ namespace SharpCompress.Compressors.Rar
             destUnpSize -= size;
         }
 
+        private void InsertOldDist(uint distance) {
+            // TODO uint
+            InsertOldDist((int)distance);
+        }
+
         private void InsertOldDist(int distance)
         {
             oldDist[3] = oldDist[2];
@@ -676,6 +692,11 @@ namespace SharpCompress.Compressors.Rar
         {
             lastDist = distance;
             lastLength = length;
+        }
+
+        private void CopyString(uint length, uint distance) {
+            // TODO uint
+            CopyString((int)length, (int)distance) ;
         }
 
         private void CopyString(int length, int distance)
@@ -720,6 +741,7 @@ namespace SharpCompress.Compressors.Rar
                 unpPtr = 0;
                 wrPtr = 0;
                 PpmEscChar = 2;
+WriteBorder=Math.Min(MaxWinSize,UNPACK_MAX_WRITE)&MaxWinMask;
 
                 InitFilters();
             }
@@ -730,6 +752,36 @@ namespace SharpCompress.Compressors.Rar
             readBorder = 0;
             unpInitData20(solid);
         }
+
+//void Unpack::UnpInitData(bool Solid)
+//{
+//  if (!Solid)
+//  {
+//    memset(OldDist,0,sizeof(OldDist));
+//    OldDistPtr=0;
+//    LastDist=LastLength=0;
+////    memset(Window,0,MaxWinSize);
+//    memset(&BlockTables,0,sizeof(BlockTables));
+//    UnpPtr=WrPtr=0;
+//    WriteBorder=Min(MaxWinSize,UNPACK_MAX_WRITE)&MaxWinMask;
+//  }
+//  // Filters never share several solid files, so we can safely reset them
+//  // even in solid archive.
+//  InitFilters();
+//
+//  Inp.InitBitInput();
+//  WrittenFileSize=0;
+//  ReadTop=0;
+//  ReadBorder=0;
+//
+//  memset(&BlockHeader,0,sizeof(BlockHeader));
+//  BlockHeader.BlockSize=-1;  // '-1' means not defined yet.
+//#ifndef SFX_MODULE
+//  UnpInitData20(Solid);
+//#endif
+//  UnpInitData30(Solid);
+//  UnpInitData50(Solid);
+//}
 
         private void InitFilters()
         {

@@ -1,16 +1,10 @@
 namespace SharpCompress.Compressors.Rar.Decode
 {
-    internal enum FilterType
+    internal enum FilterType : byte
     {
-        FILTER_NONE,
-        FILTER_PPM,
-        FILTER_E8,
-        FILTER_E8E9,
-        FILTER_UPCASETOLOW,
-        FILTER_AUDIO,
-        FILTER_RGB,
-        FILTER_DELTA,
-        FILTER_ITANIUM,
-        FILTER_E8E9V2
+          // These values must not be changed, because we use them directly
+          // in RAR5 compression and decompression code.
+          FILTER_DELTA=0, FILTER_E8, FILTER_E8E9, FILTER_ARM,
+          FILTER_AUDIO, FILTER_RGB, FILTER_ITANIUM, FILTER_PPM, FILTER_NONE
     }
 }
