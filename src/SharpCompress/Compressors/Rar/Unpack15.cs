@@ -133,7 +133,7 @@ namespace SharpCompress.Compressors.Rar
             }
             else
             {
-                unpInitData(solid);
+                UnpInitData(solid);
                 oldUnpInitData(solid);
                 unpReadBuf();
                 if (!solid)

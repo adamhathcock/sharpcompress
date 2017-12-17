@@ -28,7 +28,7 @@ namespace SharpCompress.Compressors.Rar
             this.fileHeader = fileHeader;
             this.readStream = readStream;
             fetch = true;
-            unpack.doUnpack(fileHeader, readStream, this);
+            unpack.DoUnpack(fileHeader, readStream, this);
             fetch = false;
         }
 
@@ -76,7 +76,7 @@ namespace SharpCompress.Compressors.Rar
                 outOffset = offset;
                 outCount = count;
                 fetch = true;
-                unpack.doUnpack();
+                unpack.DoUnpack();
                 fetch = false;
             }
             return outTotal;

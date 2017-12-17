@@ -12,23 +12,6 @@ namespace SharpCompress.Compressors.Rar
 {
     internal sealed partial class Unpack : BitInput
     {
-        // Duplicate method
-        // private boolean ReadEndOfBlock() throws IOException, RarException
-        // {
-        // int BitField = getbits();
-        // boolean NewTable, NewFile = false;
-        // if ((BitField & 0x8000) != 0) {
-        // NewTable = true;
-        // addbits(1);
-        // } else {
-        // NewFile = true;
-        // NewTable = (BitField & 0x4000) != 0;
-        // addbits(2);
-        // }
-        // tablesRead = !NewTable;
-        // return !(NewFile || NewTable && !readTables());
-        // }
-
         public bool FileExtracted { get; private set; }
 
         public long DestSize
@@ -93,7 +76,7 @@ namespace SharpCompress.Compressors.Rar
 
         private FileHeader fileHeader;
 
-        private void init(byte[] window)
+        private void Init(byte[] window)
         {
             if (window == null)
             {
@@ -106,10 +89,10 @@ namespace SharpCompress.Compressors.Rar
                 //externalWindow = true;
             }
             inAddr = 0;
-            unpInitData(false);
+            UnpInitData(false);
         }
 
-        public void doUnpack(FileHeader fileHeader, Stream readStream, Stream writeStream)
+        public void DoUnpack(FileHeader fileHeader, Stream readStream, Stream writeStream)
         {
             destUnpSize = fileHeader.UncompressedSize;
             this.fileHeader = fileHeader;
@@ -117,17 +100,17 @@ namespace SharpCompress.Compressors.Rar
             this.readStream = readStream;
             if (!fileHeader.IsSolid)
             {
-                init(null);
+                Init(null);
             }
             suspended = false;
-            doUnpack();
+            DoUnpack();
         }
 
-        public void doUnpack()
+        public void DoUnpack()
         {
             if (fileHeader.CompressionMethod == 0)
             {
-                unstoreFile();
+                UnstoreFile();
                 return;
             }
             var solid = fileHeader.IsSolid;
@@ -144,7 +127,7 @@ namespace SharpCompress.Compressors.Rar
 
                 case 29: // rar 3.x compression
                 case 36: // alternative hash
-                    unpack29(solid);
+                    Unpack29(solid);
                     break;
                 
 //                case 50: // rar 5.x compression
@@ -156,7 +139,7 @@ namespace SharpCompress.Compressors.Rar
             }
         }
 
-        private void unstoreFile()
+        private void UnstoreFile()
         {
             byte[] buffer = new byte[0x10000];
             while (true)
@@ -179,7 +162,7 @@ namespace SharpCompress.Compressors.Rar
             }
         }
 
-        private void unpack29(bool solid)
+        private void Unpack29(bool solid)
         {
             int[] DDecode = new int[PackDef.DC];
             byte[] DBits = new byte[PackDef.DC];
@@ -204,12 +187,12 @@ namespace SharpCompress.Compressors.Rar
 
             if (!suspended)
             {
-                unpInitData(solid);
+                UnpInitData(solid);
                 if (!unpReadBuf())
                 {
                     return;
                 }
-                if ((!solid || !tablesRead) && !readTables())
+                if ((!solid || !tablesRead) && !ReadTables())
                 {
                     return;
                 }
@@ -260,7 +243,7 @@ namespace SharpCompress.Compressors.Rar
                         int NextCh = ppm.decodeChar();
                         if (NextCh == 0)
                         {
-                            if (!readTables())
+                            if (!ReadTables())
                             {
                                 break;
                             }
@@ -272,7 +255,7 @@ namespace SharpCompress.Compressors.Rar
                         }
                         if (NextCh == 3)
                         {
-                            if (!readVMCodePPM())
+                            if (!ReadVMCodePPM())
                             {
                                 break;
                             }
@@ -307,7 +290,7 @@ namespace SharpCompress.Compressors.Rar
                             {
                                 break;
                             }
-                            copyString(Length + 32, Distance + 2);
+                            CopyString(Length + 32, Distance + 2);
                             continue;
                         }
                         if (NextCh == 5)
@@ -317,7 +300,7 @@ namespace SharpCompress.Compressors.Rar
                             {
                                 break;
                             }
-                            copyString(Length + 4, 1);
+                            CopyString(Length + 4, 1);
                             continue;
                         }
                     }
@@ -387,15 +370,15 @@ namespace SharpCompress.Compressors.Rar
                         }
                     }
 
-                    insertOldDist(Distance);
-                    insertLastMatch(Length, Distance);
+                    InsertOldDist(Distance);
+                    InsertLastMatch(Length, Distance);
 
-                    copyString(Length, Distance);
+                    CopyString(Length, Distance);
                     continue;
                 }
                 if (Number == 256)
                 {
-                    if (!readEndOfBlock())
+                    if (!ReadEndOfBlock())
                     {
                         break;
                     }
@@ -403,7 +386,7 @@ namespace SharpCompress.Compressors.Rar
                 }
                 if (Number == 257)
                 {
-                    if (!readVMCode())
+                    if (!ReadVMCode())
                     {
                         break;
                     }
@@ -413,7 +396,7 @@ namespace SharpCompress.Compressors.Rar
                 {
                     if (lastLength != 0)
                     {
-                        copyString(lastLength, lastDist);
+                        CopyString(lastLength, lastDist);
                     }
                     continue;
                 }
@@ -434,8 +417,8 @@ namespace SharpCompress.Compressors.Rar
                         Length += Utility.URShift(GetBits(), (16 - Bits));
                         AddBits(Bits);
                     }
-                    insertLastMatch(Length, Distance);
-                    copyString(Length, Distance);
+                    InsertLastMatch(Length, Distance);
+                    CopyString(Length, Distance);
                     continue;
                 }
                 if (Number < 272)
@@ -446,9 +429,9 @@ namespace SharpCompress.Compressors.Rar
                         Distance += Utility.URShift(GetBits(), (16 - Bits));
                         AddBits(Bits);
                     }
-                    insertOldDist(Distance);
-                    insertLastMatch(2, Distance);
-                    copyString(2, Distance);
+                    InsertOldDist(Distance);
+                    InsertLastMatch(2, Distance);
+                    CopyString(2, Distance);
                 }
             }
             UnpWriteBuf();
@@ -681,7 +664,7 @@ namespace SharpCompress.Compressors.Rar
             destUnpSize -= size;
         }
 
-        private void insertOldDist(int distance)
+        private void InsertOldDist(int distance)
         {
             oldDist[3] = oldDist[2];
             oldDist[2] = oldDist[1];
@@ -689,13 +672,13 @@ namespace SharpCompress.Compressors.Rar
             oldDist[0] = distance;
         }
 
-        private void insertLastMatch(int length, int distance)
+        private void InsertLastMatch(int length, int distance)
         {
             lastDist = distance;
             lastLength = length;
         }
 
-        private void copyString(int length, int distance)
+        private void CopyString(int length, int distance)
         {
             // System.out.println("copyString(" + length + ", " + distance + ")");
 
@@ -721,7 +704,7 @@ namespace SharpCompress.Compressors.Rar
             }
         }
 
-        private void unpInitData(bool solid)
+        private void UnpInitData(bool solid)
         {
             if (!solid)
             {
@@ -738,7 +721,7 @@ namespace SharpCompress.Compressors.Rar
                 wrPtr = 0;
                 PpmEscChar = 2;
 
-                initFilters();
+                InitFilters();
             }
             InitBitInput();
             ppmError = false;
@@ -748,7 +731,7 @@ namespace SharpCompress.Compressors.Rar
             unpInitData20(solid);
         }
 
-        private void initFilters()
+        private void InitFilters()
         {
             oldFilterLengths.Clear();
             lastFilter = 0;
@@ -758,7 +741,7 @@ namespace SharpCompress.Compressors.Rar
             prgStack.Clear();
         }
 
-        private bool readEndOfBlock()
+        private bool ReadEndOfBlock()
         {
             int BitField = GetBits();
             bool NewTable, NewFile = false;
@@ -774,10 +757,10 @@ namespace SharpCompress.Compressors.Rar
                 AddBits(2);
             }
             tablesRead = !NewTable;
-            return !(NewFile || NewTable && !readTables());
+            return !(NewFile || NewTable && !ReadTables());
         }
 
-        private bool readTables()
+        private bool ReadTables()
         {
             byte[] bitLength = new byte[PackDef.BC];
 
@@ -908,7 +891,7 @@ namespace SharpCompress.Compressors.Rar
             return (true);
         }
 
-        private bool readVMCode()
+        private bool ReadVMCode()
         {
             int FirstByte = GetBits() >> 8;
             AddBits(8);
@@ -934,10 +917,10 @@ namespace SharpCompress.Compressors.Rar
                 vmCode.Add((byte)(GetBits() >> 8));
                 AddBits(8);
             }
-            return (addVMCode(FirstByte, vmCode, Length));
+            return (AddVMCode(FirstByte, vmCode, Length));
         }
 
-        private bool readVMCodePPM()
+        private bool ReadVMCodePPM()
         {
             int FirstByte = ppm.decodeChar();
             if (FirstByte == -1)
@@ -979,10 +962,10 @@ namespace SharpCompress.Compressors.Rar
                 }
                 vmCode.Add((byte)Ch); // VMCode[I]=Ch;
             }
-            return (addVMCode(FirstByte, vmCode, Length));
+            return (AddVMCode(FirstByte, vmCode, Length));
         }
 
-        private bool addVMCode(int firstByte, List<byte> vmCode, int length)
+        private bool AddVMCode(int firstByte, List<byte> vmCode, int length)
         {
             BitInput Inp = new BitInput();
             Inp.InitBitInput();
@@ -1000,7 +983,7 @@ namespace SharpCompress.Compressors.Rar
                 FiltPos = RarVM.ReadData(Inp);
                 if (FiltPos == 0)
                 {
-                    initFilters();
+                    InitFilters();
                 }
                 else
                 {
@@ -1221,7 +1204,7 @@ namespace SharpCompress.Compressors.Rar
             }
         }
 
-        private void cleanUp()
+        private void CleanUp()
         {
             if (ppm != null)
             {

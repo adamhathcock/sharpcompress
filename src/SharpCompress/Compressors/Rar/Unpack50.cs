@@ -6,15 +6,15 @@
 //
 //namespace SharpCompress.Compressors.Rar
 //{
-//    internal sealed class Unpack50
+//    internal partial class Unpack
 //    {
 //
 //        public void Unpack5(bool Solid) {
-//  FileExtracted=true;
+//            FileExtracted=true;
 //
-//  if (!Suspended)
-//  {
-//    UnpInitData(Solid);
+//            if (!Suspended)
+//            {
+//            unpInitData(Solid);
 //    if (!UnpReadBuf())
 //      return;
 //
