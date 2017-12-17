@@ -18,9 +18,10 @@ namespace SharpCompress.Common.Rar.Headers
                 {
                     VolumeNumber = (int)reader.ReadRarVIntUInt32();
                 }
-                if (ExtraSize != 0) {
-                    ReadLocator(reader);
-                }
+                // later: we may have a locator record if we need it
+                //if (ExtraSize != 0) {
+                //    ReadLocator(reader);
+                //}
             } 
             else 
             {
@@ -35,7 +36,6 @@ namespace SharpCompress.Common.Rar.Headers
         }
 
         private void ReadLocator(MarkingBinaryReader reader) {
-            // parse fields, unused
             var size = reader.ReadRarVIntUInt16();
             var type = reader.ReadRarVIntUInt16();
             if (type != 1) throw new InvalidFormatException("expected locator record");

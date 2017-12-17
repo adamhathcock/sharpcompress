@@ -17,22 +17,22 @@ namespace SharpCompress.Common.Rar.Headers
 
     internal static class HeaderCodeV
     {
+        public const byte Rar4MarkHeader = 0x72;
+        public const byte Rar4ArchiveHeader = 0x73;
+        public const byte Rar4FileHeader = 0x74;
+        public const byte Rar4CommentHeader = 0x75;
+        public const byte Rar4AvHeader = 0x76;
+        public const byte Rar4SubHeader = 0x77;
+        public const byte Rar4ProtectHeader = 0x78;
+        public const byte Rar4SignHeader = 0x79;
+        public const byte Rar4NewSubHeader = 0x7a;
+        public const byte Rar4EndArchiveHeader = 0x7b;
+
         public const byte Rar5ArchiveHeader = 0x01;
         public const byte Rar5FileHeader = 0x02;
         public const byte Rar5ServiceHeader = 0x03;
         public const byte Rar5EncryptionHeader = 0x04;
         public const byte Rar5EndArchiveHeader = 0x05;
-
-        public const byte MarkHeader = 0x72;
-        public const byte ArchiveHeader = 0x73;
-        public const byte FileHeader = 0x74;
-        public const byte CommHeader = 0x75;
-        public const byte AvHeader = 0x76;
-        public const byte SubHeader = 0x77;
-        public const byte ProtectHeader = 0x78;
-        public const byte SignHeader = 0x79;
-        public const byte NewSubHeader = 0x7a;
-        public const byte EndArchiveHeader = 0x7b;
     }
 
     internal static class HeaderFlagsV4
@@ -42,8 +42,13 @@ namespace SharpCompress.Common.Rar.Headers
 
     internal static class HeaderFlagsV5
     {
-        public const ushort HasExtra = 0x01;
-        public const ushort HasData = 0x02;
+        public const ushort HasExtra = 0x0001;
+        public const ushort HasData = 0x0002;
+        public const ushort Lock = 0x0004;  // block must be kept during an update
+        public const ushort VolumeContinuation = 0x0008;
+        public const ushort VolumeIncomplete = 0x0010;
+        public const ushort Solid = 0x0020; // ???
+        public const ushort PreserveChild = 0x0040;
     }
 
     internal static class ArchiveFlagsV4

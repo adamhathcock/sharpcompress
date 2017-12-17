@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using SharpCompress.Common;
 using SharpCompress.Common.Rar;
 using SharpCompress.Readers;
 #if !NO_FILE

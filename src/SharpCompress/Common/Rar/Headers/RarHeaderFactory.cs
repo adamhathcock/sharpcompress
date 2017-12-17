@@ -67,7 +67,7 @@ namespace SharpCompress.Common.Rar.Headers
             switch (header.HeaderCode)
             {
                 case HeaderCodeV.Rar5ArchiveHeader:
-                case HeaderCodeV.ArchiveHeader:
+                case HeaderCodeV.Rar4ArchiveHeader:
                     {
                         var ah = new ArchiveHeader(header, reader);
                         if (ah.IsEncrypted == true) {
@@ -77,7 +77,7 @@ namespace SharpCompress.Common.Rar.Headers
                         return ah;
                     }
 
-                case HeaderCodeV.ProtectHeader:
+                case HeaderCodeV.Rar4ProtectHeader:
                     {
                         var ph = new ProtectHeader(header, reader);
                         // skip the recovery record data, we do not use it.
@@ -109,7 +109,7 @@ namespace SharpCompress.Common.Rar.Headers
                         return fh;
                     }
 
-                case HeaderCodeV.NewSubHeader:
+                case HeaderCodeV.Rar4NewSubHeader:
                     {
                         var fh = new FileHeader(header, reader, HeaderType.NewSub);
                         SkipData(fh, reader);
@@ -117,7 +117,7 @@ namespace SharpCompress.Common.Rar.Headers
                     }
 
                 case HeaderCodeV.Rar5FileHeader:
-                case HeaderCodeV.FileHeader:
+                case HeaderCodeV.Rar4FileHeader:
                     {
                         var fh = new FileHeader(header, reader, HeaderType.File);
                         switch (StreamingMode)
@@ -153,7 +153,7 @@ namespace SharpCompress.Common.Rar.Headers
                         return fh;
                     }
                 case HeaderCodeV.Rar5EndArchiveHeader:
-                case HeaderCodeV.EndArchiveHeader:
+                case HeaderCodeV.Rar4EndArchiveHeader:
                     {
                         return new EndArchiveHeader(header, reader);
                     }

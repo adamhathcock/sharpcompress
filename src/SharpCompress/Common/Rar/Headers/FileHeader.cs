@@ -85,8 +85,15 @@ namespace SharpCompress.Common.Rar.Headers
             var b = reader.ReadBytes(nameSize);
             FileName = ConvertPathV5(Encoding.UTF8.GetString(b, 0, b.Length));
 
-            if (ExtraSize != 0) {
+            // extra size seems to be redudant since we know the total header size
+            if (ExtraSize != RemainingHeaderBytes(reader)) 
+            {
+                throw new InvalidFormatException("rar5 header size / extra size inconsistency");
+            }
+
+            while (RemainingHeaderBytes(reader) > 0) {
                 var size = reader.ReadRarVIntUInt16();
+                int n = RemainingHeaderBytes(reader);
                 var type = reader.ReadRarVIntUInt16();
                 switch (type) {
 //TODO
@@ -139,9 +146,17 @@ namespace SharpCompress.Common.Rar.Headers
 //                        }
 //                        break;
 
-                    default: throw new InvalidFormatException("unexpected extra data record type " + type);
+                    default:
+                        // skip unknown record types to allow new record types to be added in the future
+                        break;
                 }
-
+                // drain any trailing bytes of extra record
+                int did = n - RemainingHeaderBytes(reader);
+                int drain = size - did;
+                if (drain > 0) 
+                {
+                    reader.ReadBytes(drain);
+                }
             }
 
             if (AdditionalDataSize != 0) {
@@ -223,7 +238,7 @@ namespace SharpCompress.Common.Rar.Headers
 
             switch (HeaderCode)
             {
-                case HeaderCodeV.FileHeader:
+                case HeaderCodeV.Rar4FileHeader:
                     {
                         if (HasFlag(FileFlagsV4.Unicode))
                         {
@@ -250,7 +265,7 @@ namespace SharpCompress.Common.Rar.Headers
                         FileName = ConvertPathV4(FileName);
                     }
                     break;
-                case HeaderCodeV.NewSubHeader:
+                case HeaderCodeV.Rar4NewSubHeader:
                     {
                         int datasize = HeaderSize - newLhdSize - nameSize;
                         if (HasFlag(FileFlagsV4.Salt))
@@ -279,7 +294,7 @@ namespace SharpCompress.Common.Rar.Headers
             {
                 // verify that the end of the header hasn't been reached before reading the Extended Time.
                 //  some tools incorrectly omit Extended Time despite specifying FileFlags.EXTTIME, which most parsers tolerate.
-                if (ReadBytes + reader.CurrentReadByteCount <= HeaderSize - 2)
+                if (RemainingHeaderBytes(reader) >= 2)
                 {
                     ushort extendedFlags = reader.ReadUInt16();
                     FileLastModifiedTime = ProcessExtendedTimeV4(extendedFlags, FileLastModifiedTime, reader, 0);

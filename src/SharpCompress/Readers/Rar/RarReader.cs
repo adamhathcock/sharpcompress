@@ -24,8 +24,6 @@ namespace SharpCompress.Readers.Rar
 
         public override RarVolume Volume => volume;
 
-        #region Open
-
         /// <summary>
         /// Opens a RarReader for Non-seeking usage with a single volume
         /// </summary>
@@ -50,8 +48,6 @@ namespace SharpCompress.Readers.Rar
             return new MultiVolumeRarReader(streams, options ?? new ReaderOptions());
         }
 
-        #endregion
-
         internal override IEnumerable<RarReaderEntry> GetEntries(Stream stream)
         {
             volume = new RarReaderVolume(stream, Options);
@@ -67,11 +63,9 @@ namespace SharpCompress.Readers.Rar
             return Entry.Parts;
         }
 
-        protected override EntryStream GetEntryStream()
-        {
-            return CreateEntryStream(new RarCrcStream(pack, Entry.FileHeader,
-                                                   new MultiVolumeReadOnlyStream(
-                                                                                 CreateFilePartEnumerableForCurrentEntry().Cast<RarFilePart>(), this)));
+        protected override EntryStream GetEntryStream() {
+            var stream = new MultiVolumeReadOnlyStream(CreateFilePartEnumerableForCurrentEntry().Cast<RarFilePart>(), this);
+            return CreateEntryStream(new RarCrcStream(pack, Entry.FileHeader, stream));
         }
     }
 }
