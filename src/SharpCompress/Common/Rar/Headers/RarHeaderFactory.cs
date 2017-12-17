@@ -27,7 +27,7 @@ namespace SharpCompress.Common.Rar.Headers
             yield return markHeader;
 
             RarHeader header;
-            while ((header = ReadNextHeader(stream)) != null)
+            while ((header = TryReadNextHeader(stream)) != null)
             {
                 yield return header;
                 if (header.HeaderType == HeaderType.EndArchive)
@@ -39,7 +39,7 @@ namespace SharpCompress.Common.Rar.Headers
             }
         }
 
-        private RarHeader ReadNextHeader(Stream stream)
+        private RarHeader TryReadNextHeader(Stream stream)
         {
             RarCrcBinaryReader reader;
             if (!IsEncrypted) 

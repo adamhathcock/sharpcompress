@@ -34,6 +34,12 @@ namespace SharpCompress.Common.Rar.Headers
                 reader.Mark();
                 HeaderCode = reader.ReadRarVIntByte();
                 HeaderFlags = reader.ReadRarVIntUInt16(2);
+
+//                if (HasHeaderFlag(HeaderFlagsV5.VolumeContinuation)) throw new NotImplementedException();
+//                if (HasHeaderFlag(HeaderFlagsV5.VolumeIncomplete)) throw new NotImplementedException();
+//                if (HasHeaderFlag(HeaderFlagsV5.Solid)) throw new NotImplementedException();
+//                if (HasHeaderFlag(HeaderFlagsV5.PreserveChild)) throw new NotImplementedException();
+
                 if (HasHeaderFlag(HeaderFlagsV5.HasExtra))
                 {
                     ExtraSize = reader.ReadRarVIntUInt32();

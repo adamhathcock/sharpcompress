@@ -44,7 +44,7 @@ namespace SharpCompress.Common.Rar.Headers
     {
         public const ushort HasExtra = 0x0001;
         public const ushort HasData = 0x0002;
-        public const ushort Lock = 0x0004;  // block must be kept during an update
+        public const ushort Keep = 0x0004;  // block must be kept during an update
         public const ushort VolumeContinuation = 0x0008;
         public const ushort VolumeIncomplete = 0x0010;
         public const ushort Solid = 0x0020; // ???

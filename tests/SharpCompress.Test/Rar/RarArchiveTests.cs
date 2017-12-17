@@ -135,11 +135,6 @@ namespace SharpCompress.Test.Rar
             DoRar_test_invalid_exttime_ArchiveStreamRead("Rar.test_invalid_exttime.rar");
         }
 
-        [Fact]
-        public void Rar5_test_invalid_exttime_ArchiveStreamRead() {
-            DoRar_test_invalid_exttime_ArchiveStreamRead("Rar5.test_invalid_exttime.rar");
-        }
-
         private void DoRar_test_invalid_exttime_ArchiveStreamRead(string filename)
         {
             ResetScratch();

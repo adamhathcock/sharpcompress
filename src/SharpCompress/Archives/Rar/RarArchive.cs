@@ -5,7 +5,6 @@ using SharpCompress.Common;
 using SharpCompress.Common.Rar;
 using SharpCompress.Common.Rar.Headers;
 using SharpCompress.Compressors.Rar;
-using SharpCompress.IO;
 using SharpCompress.Readers;
 using SharpCompress.Readers.Rar;
 
