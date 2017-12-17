@@ -82,7 +82,7 @@ namespace SharpCompress.Compressors.Rar
 
         //UPGRADE_NOTE: The initialization of  'unpOldTable' was moved to method 'InitBlock'. "ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?index='!DefaultContextWindowIndex'&keyword='jlca1005'"
 
-        private readonly byte[] unpOldTable = new byte[Compress.HUFF_TABLE_SIZE];
+        private readonly byte[] unpOldTable = new byte[PackDef.HUFF_TABLE_SIZE];
 
         private BlockTypes unpBlockType;
 
@@ -114,7 +114,7 @@ namespace SharpCompress.Compressors.Rar
         {
             if (window == null)
             {
-                this.window = new byte[Compress.MAXWINSIZE];
+                this.window = new byte[PackDef.MAXWINSIZE];
             }
             else
             {
@@ -198,8 +198,8 @@ namespace SharpCompress.Compressors.Rar
 
         private void unpack29(bool solid)
         {
-            int[] DDecode = new int[Compress.DC];
-            byte[] DBits = new byte[Compress.DC];
+            int[] DDecode = new int[PackDef.DC];
+            byte[] DBits = new byte[PackDef.DC];
 
             int Bits;
 
@@ -239,7 +239,7 @@ namespace SharpCompress.Compressors.Rar
 
             while (true)
             {
-                unpPtr &= Compress.MAXWINMASK;
+                unpPtr &= PackDef.MAXWINMASK;
 
                 if (inAddr > readBorder)
                 {
@@ -251,7 +251,7 @@ namespace SharpCompress.Compressors.Rar
 
                 // System.out.println(((wrPtr - unpPtr) &
                 // Compress.MAXWINMASK)+":"+wrPtr+":"+unpPtr);
-                if (((wrPtr - unpPtr) & Compress.MAXWINMASK) < 260 && wrPtr != unpPtr)
+                if (((wrPtr - unpPtr) & PackDef.MAXWINMASK) < 260 && wrPtr != unpPtr)
                 {
                     UnpWriteBuf();
                     if (destUnpSize <= 0)
@@ -378,7 +378,7 @@ namespace SharpCompress.Compressors.Rar
                                 int LowDist = this.decodeNumber(LDD);
                                 if (LowDist == 16)
                                 {
-                                    lowDistRepCount = Compress.LOW_DIST_REP_COUNT - 1;
+                                    lowDistRepCount = PackDef.LOW_DIST_REP_COUNT - 1;
                                     Distance += prevLowDist;
                                 }
                                 else
@@ -474,7 +474,7 @@ namespace SharpCompress.Compressors.Rar
         private void UnpWriteBuf()
         {
             int WrittenBorder = wrPtr;
-            int WriteSize = (unpPtr - WrittenBorder) & Compress.MAXWINMASK;
+            int WriteSize = (unpPtr - WrittenBorder) & PackDef.MAXWINMASK;
             for (int I = 0; I < prgStack.Count; I++)
             {
                 UnpackFilter flt = prgStack[I];
@@ -489,17 +489,17 @@ namespace SharpCompress.Compressors.Rar
                 }
                 int BlockStart = flt.BlockStart; // ->BlockStart;
                 int BlockLength = flt.BlockLength; // ->BlockLength;
-                if (((BlockStart - WrittenBorder) & Compress.MAXWINMASK) < WriteSize)
+                if (((BlockStart - WrittenBorder) & PackDef.MAXWINMASK) < WriteSize)
                 {
                     if (WrittenBorder != BlockStart)
                     {
                         UnpWriteArea(WrittenBorder, BlockStart);
                         WrittenBorder = BlockStart;
-                        WriteSize = (unpPtr - WrittenBorder) & Compress.MAXWINMASK;
+                        WriteSize = (unpPtr - WrittenBorder) & PackDef.MAXWINMASK;
                     }
                     if (BlockLength <= WriteSize)
                     {
-                        int BlockEnd = (BlockStart + BlockLength) & Compress.MAXWINMASK;
+                        int BlockEnd = (BlockStart + BlockLength) & PackDef.MAXWINMASK;
                         if (BlockStart < BlockEnd || BlockEnd == 0)
                         {
                             // VM.SetMemory(0,Window+BlockStart,BlockLength);
@@ -507,7 +507,7 @@ namespace SharpCompress.Compressors.Rar
                         }
                         else
                         {
-                            int FirstPartLength = Compress.MAXWINSIZE - BlockStart;
+                            int FirstPartLength = PackDef.MAXWINSIZE - BlockStart;
 
                             // VM.SetMemory(0,Window+BlockStart,FirstPartLength);
                             rarVM.setMemory(0, window, BlockStart, FirstPartLength);
@@ -641,7 +641,7 @@ namespace SharpCompress.Compressors.Rar
                         writtenFileSize += FilteredDataSize;
                         destUnpSize -= FilteredDataSize;
                         WrittenBorder = BlockEnd;
-                        WriteSize = (unpPtr - WrittenBorder) & Compress.MAXWINMASK;
+                        WriteSize = (unpPtr - WrittenBorder) & PackDef.MAXWINMASK;
                     }
                     else
                     {
@@ -671,7 +671,7 @@ namespace SharpCompress.Compressors.Rar
             }
             if (endPtr < startPtr)
             {
-                UnpWriteData(window, startPtr, -startPtr & Compress.MAXWINMASK);
+                UnpWriteData(window, startPtr, -startPtr & PackDef.MAXWINMASK);
                 UnpWriteData(window, 0, endPtr);
                 unpAllBuf = true;
             }
@@ -719,7 +719,7 @@ namespace SharpCompress.Compressors.Rar
             int destPtr = unpPtr - distance;
 
             // System.out.println(unpPtr+":"+distance);
-            if (destPtr >= 0 && destPtr < Compress.MAXWINSIZE - 260 && unpPtr < Compress.MAXWINSIZE - 260)
+            if (destPtr >= 0 && destPtr < PackDef.MAXWINSIZE - 260 && unpPtr < PackDef.MAXWINSIZE - 260)
             {
                 window[unpPtr++] = window[destPtr++];
 
@@ -732,8 +732,8 @@ namespace SharpCompress.Compressors.Rar
             {
                 while (length-- != 0)
                 {
-                    window[unpPtr] = window[destPtr++ & Compress.MAXWINMASK];
-                    unpPtr = (unpPtr + 1) & Compress.MAXWINMASK;
+                    window[unpPtr] = window[destPtr++ & PackDef.MAXWINMASK];
+                    unpPtr = (unpPtr + 1) & PackDef.MAXWINMASK;
                 }
             }
         }
@@ -796,9 +796,9 @@ namespace SharpCompress.Compressors.Rar
 
         private bool readTables()
         {
-            byte[] bitLength = new byte[Compress.BC];
+            byte[] bitLength = new byte[PackDef.BC];
 
-            byte[] table = new byte[Compress.HUFF_TABLE_SIZE];
+            byte[] table = new byte[PackDef.HUFF_TABLE_SIZE];
             if (inAddr > readTop - 25)
             {
                 if (!unpReadBuf())
@@ -824,7 +824,7 @@ namespace SharpCompress.Compressors.Rar
             }
             AddBits(2);
 
-            for (int i = 0; i < Compress.BC; i++)
+            for (int i = 0; i < PackDef.BC; i++)
             {
                 int length = (Utility.URShift(GetBits(), 12)) & 0xFF;
                 AddBits(4);
@@ -852,9 +852,9 @@ namespace SharpCompress.Compressors.Rar
                 }
             }
 
-            UnpackUtility.makeDecodeTables(bitLength, 0, BD, Compress.BC);
+            UnpackUtility.makeDecodeTables(bitLength, 0, BD, PackDef.BC);
 
-            int TableSize = Compress.HUFF_TABLE_SIZE;
+            int TableSize = PackDef.HUFF_TABLE_SIZE;
 
             for (int i = 0; i < TableSize;)
             {
@@ -914,10 +914,10 @@ namespace SharpCompress.Compressors.Rar
             {
                 return (false);
             }
-            UnpackUtility.makeDecodeTables(table, 0, LD, Compress.NC);
-            UnpackUtility.makeDecodeTables(table, Compress.NC, DD, Compress.DC);
-            UnpackUtility.makeDecodeTables(table, Compress.NC + Compress.DC, LDD, Compress.LDC);
-            UnpackUtility.makeDecodeTables(table, Compress.NC + Compress.DC + Compress.LDC, RD, Compress.RC);
+            UnpackUtility.makeDecodeTables(table, 0, LD, PackDef.NC);
+            UnpackUtility.makeDecodeTables(table, PackDef.NC, DD, PackDef.DC);
+            UnpackUtility.makeDecodeTables(table, PackDef.NC + PackDef.DC, LDD, PackDef.LDC);
+            UnpackUtility.makeDecodeTables(table, PackDef.NC + PackDef.DC + PackDef.LDC, RD, PackDef.RC);
 
             // memcpy(unpOldTable,table,sizeof(unpOldTable));
 
@@ -1077,7 +1077,7 @@ namespace SharpCompress.Compressors.Rar
             {
                 BlockStart += 258;
             }
-            StackFilter.BlockStart = ((BlockStart + unpPtr) & Compress.MAXWINMASK);
+            StackFilter.BlockStart = ((BlockStart + unpPtr) & PackDef.MAXWINMASK);
             if ((firstByte & 0x20) != 0)
             {
                 StackFilter.BlockLength = RarVM.ReadData(Inp);
@@ -1086,7 +1086,7 @@ namespace SharpCompress.Compressors.Rar
             {
                 StackFilter.BlockLength = FiltPos < oldFilterLengths.Count ? oldFilterLengths[FiltPos] : 0;
             }
-            StackFilter.NextWindow = (wrPtr != unpPtr) && ((wrPtr - unpPtr) & Compress.MAXWINMASK) <= BlockStart;
+            StackFilter.NextWindow = (wrPtr != unpPtr) && ((wrPtr - unpPtr) & PackDef.MAXWINMASK) <= BlockStart;
 
             // DebugLog("\nNextWindow: UnpPtr=%08x WrPtr=%08x
             // BlockStart=%08x",UnpPtr,WrPtr,BlockStart);

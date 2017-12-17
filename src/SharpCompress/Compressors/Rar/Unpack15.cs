@@ -174,13 +174,13 @@ namespace SharpCompress.Compressors.Rar
 
             while (destUnpSize >= 0)
             {
-                unpPtr &= Compress.MAXWINMASK;
+                unpPtr &= PackDef.MAXWINMASK;
 
                 if (inAddr > readTop - 30 && !unpReadBuf())
                 {
                     break;
                 }
-                if (((wrPtr - unpPtr) & Compress.MAXWINMASK) < 270 && wrPtr != unpPtr)
+                if (((wrPtr - unpPtr) & PackDef.MAXWINMASK) < 270 && wrPtr != unpPtr)
                 {
                     oldUnpWriteBuf();
                     if (suspended)
@@ -702,8 +702,8 @@ namespace SharpCompress.Compressors.Rar
             destUnpSize -= Length;
             while ((Length--) != 0)
             {
-                window[unpPtr] = window[(unpPtr - Distance) & Compress.MAXWINMASK];
-                unpPtr = (unpPtr + 1) & Compress.MAXWINMASK;
+                window[unpPtr] = window[(unpPtr - Distance) & PackDef.MAXWINMASK];
+                unpPtr = (unpPtr + 1) & PackDef.MAXWINMASK;
             }
         }
 
@@ -726,7 +726,7 @@ namespace SharpCompress.Compressors.Rar
             }
             if (unpPtr < wrPtr)
             {
-                writeStream.Write(window, wrPtr, -wrPtr & Compress.MAXWINMASK);
+                writeStream.Write(window, wrPtr, -wrPtr & PackDef.MAXWINMASK);
                 writeStream.Write(window, 0, unpPtr);
                 unpAllBuf = true;
             }

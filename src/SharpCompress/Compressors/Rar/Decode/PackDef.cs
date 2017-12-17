@@ -1,6 +1,6 @@
 namespace SharpCompress.Compressors.Rar.Decode
 {
-    internal class Compress
+    internal class PackDef
     {
         public const int CODEBUFSIZE = 0x4000;
         public const int MAXWINSIZE = 0x400000;

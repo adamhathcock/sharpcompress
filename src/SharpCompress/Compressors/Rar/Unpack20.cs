@@ -37,7 +37,7 @@ namespace SharpCompress.Compressors.Rar
 
         private void InitBlock()
         {
-            UnpOldTable20 = new byte[Compress.MC20 * 4];
+            UnpOldTable20 = new byte[PackDef.MC20 * 4];
         }
 
         protected internal MultDecode[] MD = new MultDecode[4];
@@ -124,7 +124,7 @@ namespace SharpCompress.Compressors.Rar
 
             while (destUnpSize >= 0)
             {
-                unpPtr &= Compress.MAXWINMASK;
+                unpPtr &= PackDef.MAXWINMASK;
 
                 if (inAddr > readTop - 30)
                 {
@@ -133,7 +133,7 @@ namespace SharpCompress.Compressors.Rar
                         break;
                     }
                 }
-                if (((wrPtr - unpPtr) & Compress.MAXWINMASK) < 270 && wrPtr != unpPtr)
+                if (((wrPtr - unpPtr) & PackDef.MAXWINMASK) < 270 && wrPtr != unpPtr)
                 {
                     oldUnpWriteBuf();
                     if (suspended)
@@ -258,7 +258,7 @@ namespace SharpCompress.Compressors.Rar
             destUnpSize -= Length;
 
             int DestPtr = unpPtr - Distance;
-            if (DestPtr < Compress.MAXWINSIZE - 300 && unpPtr < Compress.MAXWINSIZE - 300)
+            if (DestPtr < PackDef.MAXWINSIZE - 300 && unpPtr < PackDef.MAXWINSIZE - 300)
             {
                 window[unpPtr++] = window[DestPtr++];
                 window[unpPtr++] = window[DestPtr++];
@@ -272,16 +272,16 @@ namespace SharpCompress.Compressors.Rar
             {
                 while ((Length--) != 0)
                 {
-                    window[unpPtr] = window[DestPtr++ & Compress.MAXWINMASK];
-                    unpPtr = (unpPtr + 1) & Compress.MAXWINMASK;
+                    window[unpPtr] = window[DestPtr++ & PackDef.MAXWINMASK];
+                    unpPtr = (unpPtr + 1) & PackDef.MAXWINMASK;
                 }
             }
         }
 
         private bool ReadTables20()
         {
-            byte[] BitLength = new byte[Compress.BC20];
-            byte[] Table = new byte[Compress.MC20 * 4];
+            byte[] BitLength = new byte[PackDef.BC20];
+            byte[] Table = new byte[PackDef.MC20 * 4];
             int TableSize, N, I;
             if (inAddr > readTop - 25)
             {
@@ -308,18 +308,18 @@ namespace SharpCompress.Compressors.Rar
                     UnpCurChannel = 0;
                 }
                 AddBits(2);
-                TableSize = Compress.MC20 * UnpChannels;
+                TableSize = PackDef.MC20 * UnpChannels;
             }
             else
             {
-                TableSize = Compress.NC20 + Compress.DC20 + Compress.RC20;
+                TableSize = PackDef.NC20 + PackDef.DC20 + PackDef.RC20;
             }
-            for (I = 0; I < Compress.BC20; I++)
+            for (I = 0; I < PackDef.BC20; I++)
             {
                 BitLength[I] = (byte)(Utility.URShift(GetBits(), 12));
                 AddBits(4);
             }
-            UnpackUtility.makeDecodeTables(BitLength, 0, BD, Compress.BC20);
+            UnpackUtility.makeDecodeTables(BitLength, 0, BD, PackDef.BC20);
             I = 0;
             while (I < TableSize)
             {
@@ -372,14 +372,14 @@ namespace SharpCompress.Compressors.Rar
             {
                 for (I = 0; I < UnpChannels; I++)
                 {
-                    UnpackUtility.makeDecodeTables(Table, I * Compress.MC20, MD[I], Compress.MC20);
+                    UnpackUtility.makeDecodeTables(Table, I * PackDef.MC20, MD[I], PackDef.MC20);
                 }
             }
             else
             {
-                UnpackUtility.makeDecodeTables(Table, 0, LD, Compress.NC20);
-                UnpackUtility.makeDecodeTables(Table, Compress.NC20, DD, Compress.DC20);
-                UnpackUtility.makeDecodeTables(Table, Compress.NC20 + Compress.DC20, RD, Compress.RC20);
+                UnpackUtility.makeDecodeTables(Table, 0, LD, PackDef.NC20);
+                UnpackUtility.makeDecodeTables(Table, PackDef.NC20, DD, PackDef.DC20);
+                UnpackUtility.makeDecodeTables(Table, PackDef.NC20 + PackDef.DC20, RD, PackDef.RC20);
             }
 
             // memcpy(UnpOldTable20,Table,sizeof(UnpOldTable20));
