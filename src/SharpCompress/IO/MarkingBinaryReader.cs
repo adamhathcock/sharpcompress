@@ -143,16 +143,54 @@ namespace SharpCompress.IO
             int shift = 0;
             ulong result = 0;
             do {
-                ulong n = ReadByte();
+                byte b0 = ReadByte();
+                var b1 = b0 & 0x7f;
+                ulong n = (ulong)b1;
                 result |= n << shift;
-                shift += 7;
-                if ((n & 0x80) == 0) {
+                if (b0 == b1) {
                     return result;
                 }
                 // note: we're actually only allowing a max high bit of 2^56
                 // to avoid an extra complex check for shift overflow due to the
                 // 10th byte having high bits set
+                shift += 7;
             } while (shift < 63);
+
+            throw new FormatException("malformed vint");
+        }
+
+        public uint ReadRarVIntUInt32(int maxBytes = 5) {
+            int shift = 0;
+            uint result = 0;
+            do {
+                byte b0 = ReadByte();
+                var b1 = b0 & 0x7f;
+                uint n = (uint)b1;
+                result |= n << shift;
+                if (b0 == b1) {
+                    return result;
+                }
+                shift += 7;
+                // NOTE: we are too strict here but handling the full range adds complexity and we don't need it
+            } while (shift < 28 && --maxBytes > 0);
+
+            throw new FormatException("malformed vint");
+        }
+
+        public ushort ReadRarVIntUInt16(int maxBytes = 3) {
+            int shift = 0;
+            uint result = 0;
+            do {
+                byte b0 = ReadByte();
+                var b1 = b0 & 0x7f;
+                uint n = (uint)b1;
+                result |= n << shift;
+                if (b0 == b1) {
+                    return checked((ushort)result);
+                }
+                shift += 7;
+                // NOTE: we are too strict here but handling the full range adds complexity and we don't need it
+            } while (shift < 14 && --maxBytes > 0);
 
             throw new FormatException("malformed vint");
         }

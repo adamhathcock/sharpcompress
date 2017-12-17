@@ -42,7 +42,7 @@ namespace SharpCompress.Common.Rar.Headers
                     highUncompressedkSize = int.MaxValue;
                 }
             }
-            CompressedSize = UInt32To64(highCompressedSize, AdditionalSize);
+            CompressedSize = UInt32To64(highCompressedSize, AdditionalDataSize);
             UncompressedSize = UInt32To64(highUncompressedkSize, lowUncompressedSize);
 
             nameSize = nameSize > 4 * 1024 ? (short)(4 * 1024) : nameSize;

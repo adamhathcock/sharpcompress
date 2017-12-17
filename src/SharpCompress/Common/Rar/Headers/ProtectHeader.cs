@@ -13,7 +13,7 @@ namespace SharpCompress.Common.Rar.Headers
             Mark = reader.ReadBytes(8);
         }
 
-        internal uint DataSize => AdditionalSize;
+        internal uint DataSize => AdditionalDataSize;
         internal byte Version { get; private set; }
         internal ushort RecSectors { get; private set; }
         internal uint TotalBlocks { get; private set; }

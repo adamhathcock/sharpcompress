@@ -10,9 +10,9 @@ namespace SharpCompress.Common.Rar {
         {
         }
 
-        public ushort GetCrc() 
+        public uint GetCrc32() 
         {
-            return (ushort)~currentCrc;
+            return ~currentCrc;
         }
 
         public void ResetCrc()

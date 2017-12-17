@@ -81,7 +81,8 @@ namespace SharpCompress.Common.Rar
             get
             {
                 EnsureArchiveHeaderLoaded();
-                return ArchiveHeader.ArchiveHeaderFlags.HasFlag(ArchiveFlags.FIRSTVOLUME);
+                //return (ArchiveHeader.ArchiveHeaderFlags & ArchiveFlagsV4.FirstVolume) == ArchiveFlagsV4.FirstVolume;
+                return ArchiveHeader.IsFirstVolume;
             }
         }
 
@@ -93,7 +94,7 @@ namespace SharpCompress.Common.Rar
             get
             {
                 EnsureArchiveHeaderLoaded();
-                return ArchiveHeader.ArchiveHeaderFlags.HasFlag(ArchiveFlags.VOLUME);
+                return ArchiveHeader.IsVolume;
             }
         }
 
@@ -106,7 +107,7 @@ namespace SharpCompress.Common.Rar
             get
             {
                 EnsureArchiveHeaderLoaded();
-                return ArchiveHeader.ArchiveHeaderFlags.HasFlag(ArchiveFlags.SOLID);
+                return ArchiveHeader.IsSolid;
             }
         }
     }

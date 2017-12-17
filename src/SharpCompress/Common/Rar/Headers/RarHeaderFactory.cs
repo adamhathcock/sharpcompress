@@ -54,16 +54,18 @@ namespace SharpCompress.Common.Rar.Headers
 #endif
             }
 
-            var header = RarHeader.Create(reader, Options.ArchiveEncoding);
+            var header = RarHeader.ReadBase(reader, Options.ArchiveEncoding, this.isRar5);
             if (header == null)
             {
                 return null;
             }
             switch (header.HeaderType)
             {
+                case HeaderType.Rar5ArchiveHeader:
                 case HeaderType.ArchiveHeader:
                     {
-                        var ah = header.PromoteHeader<ArchiveHeader>(reader);
+                        var ah = new ArchiveHeader(header, reader);
+                        //x var ah = header.PromoteHeader<ArchiveHeader>(reader);
                         IsEncrypted = ah.HasPassword;
                         return ah;
                     }

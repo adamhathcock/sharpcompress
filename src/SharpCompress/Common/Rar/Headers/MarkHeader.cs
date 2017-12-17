@@ -8,6 +8,7 @@ namespace SharpCompress.Common.Rar.Headers
         private const int MAX_SFX_SIZE = 0x80000 - 16; //archive.cpp line 136
 
         internal bool OldNumberingFormat { get; private set; }
+
         public bool IsRar5 { get; private set; }
 
         private MarkHeader(bool isRar5) { 

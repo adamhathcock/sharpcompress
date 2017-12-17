@@ -2,8 +2,14 @@ using System;
 
 namespace SharpCompress.Common.Rar.Headers
 {
-    internal enum HeaderType
+    internal enum HeaderType : byte
     {
+        Rar5ArchiveHeader = 0x01,
+        Rar5FileHeader = 0x02,
+        Rar5ServiceHeader = 0x03,
+        Rar5EncryptionHeader = 0x04,
+        Rar5EndArchiveHeader = 0x05,
+
         MarkHeader = 0x72,
         ArchiveHeader = 0x73,
         FileHeader = 0x74,
@@ -16,24 +22,38 @@ namespace SharpCompress.Common.Rar.Headers
         EndArchiveHeader = 0x7b
     }
 
-    internal enum HeaderFlags : short
+    internal static class HeaderFlagsV4
     {
-        LONG_BLOCK = -0x8000
+        public const ushort HasData = 0x8000;
     }
 
-    [Flags]
-    internal enum ArchiveFlags
+    internal static class HeaderFlagsV5
     {
-        VOLUME = 0x0001,
-        COMMENT = 0x0002,
-        LOCK = 0x0004,
-        SOLID = 0x0008,
-        NEWNUMBERING = 0x0010,
-        AV = 0x0020,
-        PROTECT = 0x0040,
-        PASSWORD = 0x0080,
-        FIRSTVOLUME = 0x0100,
-        ENCRYPTVER = 0x0200
+        public const ushort HasExtra = 0x01;
+        public const ushort HasData = 0x02;
+    }
+
+    internal static class ArchiveFlagsV4
+    {
+        public const ushort Volume = 0x0001;
+        public const ushort Comment = 0x0002;
+        public const ushort Lock = 0x0004;
+        public const ushort Solid = 0x0008;
+        public const ushort NewNumbering = 0x0010;
+        public const ushort AV = 0x0020;
+        public const ushort Protect = 0x0040;
+        public const ushort Password = 0x0080;
+        public const ushort FirstVolume = 0x0100;
+        public const ushort EncryptVer = 0x0200;
+    }
+
+    internal static class ArchiveFlagsV5
+    {
+        public const ushort Volume = 0x0001;
+        public const ushort HasVolumeNumber = 0x0002;
+        public const ushort Solid = 0x0004;
+        public const ushort Protect = 0x0008;
+        public const ushort Lock = 0x0010;
     }
 
     internal enum HostOS
