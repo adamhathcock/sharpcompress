@@ -55,7 +55,7 @@ namespace SharpCompress.Common.Rar.Headers
             R5IsSolid = (us & 0x40) == 0x40;
 
             // Bits 8 - 10 (0x0380 mask) define the compression method. Currently only values 0 - 5 are used. 0 means no compression.
-            R5CompressionMethod = (byte)((us >> 7) & 0x7);
+            CompressionMethod = (byte)((us >> 7) & 0x7);
 
             // Bits 11 - 14 (0x3c00) define the minimum size of dictionary size required to extract data. Value 0 means 128 KB, 1 - 256 KB, ..., 14 - 2048 MB, 15 - 4096 MB.
             // 2 ^ (17 + x)
@@ -205,7 +205,7 @@ namespace SharpCompress.Common.Rar.Headers
             FileLastModifiedTime = Utility.DosDateToDateTime(reader.ReadUInt32());
 
             R4RarVersion = reader.ReadByte();
-            R4PackingMethod = reader.ReadByte();
+            CompressionMethod = (byte)(reader.ReadByte() - 0x30);
 
             short nameSize = reader.ReadInt16();
 
@@ -381,13 +381,19 @@ namespace SharpCompress.Common.Rar.Headers
             private set { this.fileCrc = value; } 
         }
 
+        // 0 - storing
+        // 1 - fastest compression
+        // 2 - fast compression
+        // 3 - normal compression
+        // 4 - good compression
+        // 5 - best compression
+        internal byte CompressionMethod { get; private set; }
+
         internal byte R4RarVersion { get; private set; }
-        internal byte R4PackingMethod { get; private set; }
         internal byte[] R4Salt { get; private set; }
 
         internal byte R5CompressionAlgorithm { get; private set; }
         internal bool R5IsSolid{ get; private set; }
-        internal byte R5CompressionMethod { get; private set; }
         internal byte R5DictSize_2_17plusX { get; private set; }
 
 
