@@ -81,7 +81,6 @@ namespace SharpCompress.Common.Rar
             get
             {
                 EnsureArchiveHeaderLoaded();
-                //return (ArchiveHeader.ArchiveHeaderFlags & ArchiveFlagsV4.FirstVolume) == ArchiveFlagsV4.FirstVolume;
                 return ArchiveHeader.IsFirstVolume;
             }
         }

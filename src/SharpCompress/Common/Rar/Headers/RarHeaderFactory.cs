@@ -32,7 +32,8 @@ namespace SharpCompress.Common.Rar.Headers
                 yield return header;
                 if (header.HeaderType == HeaderType.EndArchive)
                 {
-                    // End of archive marker. RAR does not read anything after this header letting to use third party tools to add extra information such as a digital signature to archive.
+                    // End of archive marker. RAR does not read anything after this header letting to use third
+                    // party tools to add extra information such as a digital signature to archive.
                     yield break;
                 }
             }
@@ -41,9 +42,12 @@ namespace SharpCompress.Common.Rar.Headers
         private RarHeader ReadNextHeader(Stream stream)
         {
             RarCrcBinaryReader reader;
-            if (!IsEncrypted) {
+            if (!IsEncrypted) 
+            {
                 reader = new RarCrcBinaryReader(stream);
-            } else {
+            } 
+            else 
+            {
 #if !NO_CRYPTO
                 if (Options.Password == null)
                 {
@@ -55,7 +59,7 @@ namespace SharpCompress.Common.Rar.Headers
 #endif
             }
 
-            var header = RarHeader.ReadBase(reader, Options.ArchiveEncoding, this.isRar5);
+            var header = RarHeader.TryReadBase(reader, Options.ArchiveEncoding, this.isRar5);
             if (header == null)
             {
                 return null;
@@ -155,7 +159,7 @@ namespace SharpCompress.Common.Rar.Headers
                     }
                 default:
                     {
-                        throw new InvalidFormatException("Invalid Rar Header: " + header.HeaderCode);
+                        throw new InvalidFormatException("Unknown Rar Header: " + header.HeaderCode);
                     }
             }
         }

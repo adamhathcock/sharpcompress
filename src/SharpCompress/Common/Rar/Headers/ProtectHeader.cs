@@ -6,11 +6,12 @@ namespace SharpCompress.Common.Rar.Headers
     internal class ProtectHeader : RarHeader
     {
         public ProtectHeader(RarHeader header, RarCrcBinaryReader reader) 
-            : base(header, reader, HeaderType.Protect) {
+            : base(header, reader, HeaderType.Protect) 
+        {
             if (IsRar5) throw new InvalidFormatException("unexpected rar5 record");
         }
 
-        protected override void ReadFromReader(MarkingBinaryReader reader)
+        protected override void ReadFinish(MarkingBinaryReader reader)
         {
             Version = reader.ReadByte();
             RecSectors = reader.ReadUInt16();

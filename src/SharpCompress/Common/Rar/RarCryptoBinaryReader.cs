@@ -58,27 +58,6 @@ namespace SharpCompress.Common.Rar
             this.readCount++;
             return base.ReadByte();
         }
-//x
-//        public override byte ReadByte() {
-//            if (UseEncryption)
-//            {
-//                int queueSize = this.data.Count;
-//                if (queueSize < 1)
-//                {
-//                    byte[] cipherText = ReadBytesNoCrc(16);
-//                    var readBytes = this.rijndael.ProcessBlock(cipherText);
-//                    foreach (var readByte in readBytes)
-//                        this.data.Enqueue(readByte);
-//                }
-//
-//                var b = this.data.Dequeue();
-//                UpdateCrc(b);
-//                this.readCount++;
-//                return b;
-//            }
-//            this.readCount++;
-//            return base.ReadByte();
-//        }
 
         public override byte[] ReadBytes(int count)
         {

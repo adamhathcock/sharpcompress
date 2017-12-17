@@ -3,7 +3,8 @@ using SharpCompress.Compressors.Rar;
 using SharpCompress.IO;
 
 namespace SharpCompress.Common.Rar {
-    internal class RarCrcBinaryReader : MarkingBinaryReader {
+    internal class RarCrcBinaryReader : MarkingBinaryReader 
+    {
         private uint currentCrc;
 
         public RarCrcBinaryReader(Stream stream) : base(stream)

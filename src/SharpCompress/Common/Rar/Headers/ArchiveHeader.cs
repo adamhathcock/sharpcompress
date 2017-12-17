@@ -5,15 +5,16 @@ namespace SharpCompress.Common.Rar.Headers
     internal class ArchiveHeader : RarHeader
     {
         public ArchiveHeader(RarHeader header, RarCrcBinaryReader reader) 
-            : base(header, reader, HeaderType.Archive) {
+            : base(header, reader, HeaderType.Archive) 
+        {
         }
 
-        protected override void ReadFromReader(MarkingBinaryReader reader)
+        protected override void ReadFinish(MarkingBinaryReader reader)
         {
-            if (this.IsRar5) 
+            if (IsRar5) 
             {
-                ArchiveHeaderFlags = reader.ReadRarVIntUInt16();
-                if (HasArchiveHeaderFlag(ArchiveFlagsV5.HasVolumeNumber))
+                Flags = reader.ReadRarVIntUInt16();
+                if (HasFlag(ArchiveFlagsV5.HasVolumeNumber))
                 {
                     VolumeNumber = (int)reader.ReadRarVIntUInt32();
                 }
@@ -23,10 +24,10 @@ namespace SharpCompress.Common.Rar.Headers
             } 
             else 
             {
-                ArchiveHeaderFlags = HeaderFlags;
+                Flags = HeaderFlags;
                 HighPosAv = reader.ReadInt16();
                 PosAv = reader.ReadInt32();
-                if (HasArchiveHeaderFlag(ArchiveFlagsV4.EncryptVer))
+                if (HasFlag(ArchiveFlagsV4.EncryptVer))
                 {
                     EncryptionVersion = reader.ReadByte();
                 }
@@ -34,6 +35,7 @@ namespace SharpCompress.Common.Rar.Headers
         }
 
         private void ReadLocator(MarkingBinaryReader reader) {
+            // parse fields, unused
             var size = reader.ReadRarVIntUInt16();
             var type = reader.ReadRarVIntUInt16();
             if (type != 1) throw new InvalidFormatException("expected locator record");
@@ -50,11 +52,11 @@ namespace SharpCompress.Common.Rar.Headers
             }
         }
 
-        private ushort ArchiveHeaderFlags  { get; set; }
+        private ushort Flags  { get; set; }
 
-        private bool HasArchiveHeaderFlag(ushort flag) 
+        private bool HasFlag(ushort flag) 
         {
-            return (ArchiveHeaderFlags & flag) == flag;
+            return (Flags & flag) == flag;
         }
 
         internal int? VolumeNumber { get; private set; }
@@ -65,14 +67,14 @@ namespace SharpCompress.Common.Rar.Headers
 
         private byte? EncryptionVersion { get; set; }
 
-        public bool? IsEncrypted => this.IsRar5 ? (bool?)null : HasArchiveHeaderFlag(ArchiveFlagsV4.Password);
+        public bool? IsEncrypted => IsRar5 ? (bool?)null : HasFlag(ArchiveFlagsV4.Password);
 
-        public bool OldNumberingFormat => !this.IsRar5 && !HasArchiveHeaderFlag(ArchiveFlagsV4.NewNumbering);
+        public bool OldNumberingFormat => !IsRar5 && !HasFlag(ArchiveFlagsV4.NewNumbering);
 
-        public bool IsVolume => HasArchiveHeaderFlag(this.IsRar5 ? ArchiveFlagsV5.Volume : ArchiveFlagsV4.Volume);
+        public bool IsVolume => HasFlag(IsRar5 ? ArchiveFlagsV5.Volume : ArchiveFlagsV4.Volume);
 
-        public bool IsFirstVolume => this.IsRar5 ? VolumeNumber == 1 : HasArchiveHeaderFlag(ArchiveFlagsV4.FirstVolume);
+        public bool IsFirstVolume => IsRar5 ? VolumeNumber == 1 : HasFlag(ArchiveFlagsV4.FirstVolume);
 
-        public bool IsSolid => HasArchiveHeaderFlag(this.IsRar5 ? ArchiveFlagsV5.Solid : ArchiveFlagsV4.Solid);
+        public bool IsSolid => HasFlag(IsRar5 ? ArchiveFlagsV5.Solid : ArchiveFlagsV4.Solid);
     }
 }

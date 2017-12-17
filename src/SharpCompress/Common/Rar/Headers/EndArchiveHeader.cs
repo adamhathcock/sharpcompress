@@ -5,34 +5,35 @@ namespace SharpCompress.Common.Rar.Headers
     internal class EndArchiveHeader : RarHeader
     {
         public EndArchiveHeader(RarHeader header, RarCrcBinaryReader reader) 
-            : base(header, reader, HeaderType.EndArchive) {
+            : base(header, reader, HeaderType.EndArchive) 
+        {
         }
 
-        protected override void ReadFromReader(MarkingBinaryReader reader)
+        protected override void ReadFinish(MarkingBinaryReader reader)
         {
-            if (this.IsRar5) 
+            if (IsRar5) 
             {
-                EndArchiveFlags = reader.ReadRarVIntUInt16();
+                Flags = reader.ReadRarVIntUInt16();
             }
             else
             {
-                EndArchiveFlags = HeaderFlags;
-                if (HasEndArchiveFlag(EndArchiveFlagsV4.DataCrc))
+                Flags = HeaderFlags;
+                if (HasFlag(EndArchiveFlagsV4.DataCrc))
                 {
                     ArchiveCrc = reader.ReadInt32();
                 }
-                if (HasEndArchiveFlag(EndArchiveFlagsV4.VolumeNumber))
+                if (HasFlag(EndArchiveFlagsV4.VolumeNumber))
                 {
                     VolumeNumber = reader.ReadInt16();
                 }
             }
         }
 
-        private ushort EndArchiveFlags { get; set; }
+        private ushort Flags { get; set; }
 
-        private bool HasEndArchiveFlag(ushort flag) 
+        private bool HasFlag(ushort flag) 
         {
-            return (EndArchiveFlags & flag) == flag;
+            return (Flags & flag) == flag;
         }
 
         internal int? ArchiveCrc { get; private set; }

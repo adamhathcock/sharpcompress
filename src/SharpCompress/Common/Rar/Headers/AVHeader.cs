@@ -5,11 +5,12 @@ namespace SharpCompress.Common.Rar.Headers
     internal class AVHeader : RarHeader
     {
         public AVHeader(RarHeader header, RarCrcBinaryReader reader) 
-            : base(header, reader, HeaderType.Av) {
+            : base(header, reader, HeaderType.Av) 
+        {
             if (IsRar5) throw new InvalidFormatException("unexpected rar5 record");
         }
 
-        protected override void ReadFromReader(MarkingBinaryReader reader)
+        protected override void ReadFinish(MarkingBinaryReader reader)
         {
             UnpackVersion = reader.ReadByte();
             Method = reader.ReadByte();

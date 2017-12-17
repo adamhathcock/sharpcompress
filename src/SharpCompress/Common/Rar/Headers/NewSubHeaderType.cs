@@ -47,13 +47,9 @@ namespace SharpCompress.Common.Rar.Headers
             return true;
         }
 
-        #region IEquatable<NewSubHeaderType> Members
-
         public bool Equals(NewSubHeaderType other)
         {
             return Equals(other.bytes);
         }
-
-        #endregion
     }
 }
