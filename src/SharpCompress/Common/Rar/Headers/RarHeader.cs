@@ -9,11 +9,6 @@ namespace SharpCompress.Common.Rar.Headers
         private readonly HeaderType headerType;
         private readonly bool isRar5;
 
-        protected RarHeader() { 
-            //TODO
-            throw new NotImplementedException();
-        }
-
         private RarHeader(bool isRar5) 
         {
             this.headerType = HeaderType.Null;
@@ -99,25 +94,6 @@ namespace SharpCompress.Common.Rar.Headers
         protected virtual void ReadFromReader(MarkingBinaryReader reader)
         {
             throw new NotImplementedException();
-        }
-//x
-        internal T PromoteHeader<T>(RarCrcBinaryReader reader)
-            where T : RarHeader, new()
-        {
-            T header = new T();
-            header.FillBase(this);
-            header.ReadFromReader(reader);
-            header.ReadBytes = reader.CurrentReadByteCount;
-
-            int headerSizeDiff = header.HeaderSize - (int)header.ReadBytes;
-            if (headerSizeDiff > 0)
-            {
-                reader.ReadBytes(headerSizeDiff);
-            }
-
-            VerifyHeaderCrc(reader.GetCrc32());
-
-            return header;
         }
 
         private void VerifyHeaderCrc(uint crc32)

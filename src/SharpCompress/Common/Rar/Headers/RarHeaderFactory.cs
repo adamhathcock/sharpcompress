@@ -75,8 +75,7 @@ namespace SharpCompress.Common.Rar.Headers
 
                 case HeaderCodeV.ProtectHeader:
                     {
-                        ProtectHeader ph = header.PromoteHeader<ProtectHeader>(reader);
-
+                        var ph = new ProtectHeader(header, reader);
                         // skip the recovery record data, we do not use it.
                         switch (StreamingMode)
                         {

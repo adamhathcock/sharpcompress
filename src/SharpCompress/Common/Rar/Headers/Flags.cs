@@ -1,5 +1,3 @@
-using System;
-
 namespace SharpCompress.Common.Rar.Headers
 {
     internal enum HeaderType : byte
@@ -8,14 +6,12 @@ namespace SharpCompress.Common.Rar.Headers
         Mark,
         Archive,
         File,
-        NewSub,
         Service,
-//        Comment,
-//        Sub
-//        Av,
-//        Protect,
-//        Sign,
-//        NewSub,
+        Comment,
+        Av,
+        Protect,
+        Sign,
+        NewSub,
         EndArchive
     }
 

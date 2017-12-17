@@ -150,6 +150,44 @@ namespace SharpCompress.Compressors.Rar
             var solid = fileHeader.IsSolid;
             switch (fileHeader.R4RarVersion)
             {
+                case 0: // no compression
+                    unstoreFile();
+                    break;
+
+                case 15: // rar 1.5 compression
+                    unpack15(solid);
+                    break;
+
+                case 20: // rar 2.x compression
+                case 26: // files larger than 2GB
+                    unpack20(solid);
+                    break;
+
+                case 29: // rar 3.x compression
+                case 36: // alternative hash
+                    unpack29(solid);
+                    break;
+
+                default: throw new InvalidFormatException("unknown rar compression version " + this.fileHeader.R4RarVersion);
+            }
+        }
+
+        public void doUnpackNEW()
+        {
+            var compressionMethod = fileHeader.R4RarVersion;
+            //??? if (fileHeader.R4PackingMethod == 0x30)
+//            {
+//                unstoreFile();
+//                return;
+//            }
+            var solid = fileHeader.IsSolid;
+            //switch (fileHeader.R4RarVersion)
+            switch (compressionMethod)
+            {
+                case 0: // no compression
+                    unstoreFile();
+                    break;
+
                 case 15: // rar 1.5 compression
                     unpack15(solid);
                     break;

@@ -5,6 +5,11 @@ namespace SharpCompress.Common.Rar.Headers
     // ProtectHeader is part of the Recovery Record feature
     internal class ProtectHeader : RarHeader
     {
+        public ProtectHeader(RarHeader header, RarCrcBinaryReader reader) 
+            : base(header, reader, HeaderType.Protect) {
+            if (IsRar5) throw new InvalidFormatException("unexpected rar5 record");
+        }
+
         protected override void ReadFromReader(MarkingBinaryReader reader)
         {
             Version = reader.ReadByte();
