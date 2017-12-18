@@ -38,25 +38,15 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017
         private void UnstoreFile()
         {
             var b = new byte[0x10000];
-            while (true)
-            {
+            do {
                 int n = this.readStream.Read(b, 0, (int)Math.Min(b.Length, DestUnpSize));
                 if (n == 0)
                 {
                     break;
                 }
-
-                n = n < DestUnpSize ? n : (int)DestUnpSize;
                 this.writeStream.Write(b, 0, n);
-                if (DestUnpSize >= 0)
-                {
-                    DestUnpSize -= n;
-                }
-                if (Suspended)
-                {
-                    return;
-                }
-            }
+                DestUnpSize -= n;
+            } while (!Suspended);
         }
         
         public bool Suspended { get; set; }
