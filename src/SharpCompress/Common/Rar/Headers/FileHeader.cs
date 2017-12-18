@@ -1,3 +1,13 @@
+#if !Rar2017_64bit
+using nint = System.Int32;
+using nuint = System.UInt32;
+using size_t = System.UInt32;
+#else
+using nint = System.Int64;
+using nuint = System.UInt64;
+using size_t = System.UInt64;
+#endif
+
 using SharpCompress.IO;
 using System;
 using System.IO;
@@ -63,9 +73,7 @@ namespace SharpCompress.Common.Rar.Headers
             CompressionMethod = (byte)((us >> 7) & 0x7);
 
             // Bits 11 - 14 (0x3c00) define the minimum size of dictionary size required to extract data. Value 0 means 128 KB, 1 - 256 KB, ..., 14 - 2048 MB, 15 - 4096 MB.
-            // 2 ^ (17 + x)
-            R5DictSize_2_17plusX = (byte)((us >> 10) & 0xf);
-            //WindowSize = hd->Dir ? 0:0x10000<<((hd->Flags & LHD_WINDOWMASK)>>5)
+            WindowSize = IsDirectory ? 0 : ((size_t)0x20000) << ((us>>10) & 0xf);
 
             HostOs = reader.ReadRarVIntByte();
 
@@ -170,6 +178,7 @@ namespace SharpCompress.Common.Rar.Headers
             }
         }
 
+
         private static DateTime ReadExtendedTimeV5(MarkingBinaryReader reader, bool isWindowsTime) 
         {
             if (isWindowsTime) 
@@ -202,6 +211,7 @@ namespace SharpCompress.Common.Rar.Headers
         {
             Flags = HeaderFlags;
             IsSolid = HasFlag(FileFlagsV4.Solid);
+            WindowSize = IsDirectory ? 0U : ((size_t)0x10000) << ((Flags & FileFlagsV4.WindowMask) >> 5);
 
             uint lowUncompressedSize = reader.ReadUInt32();
 
@@ -406,8 +416,10 @@ namespace SharpCompress.Common.Rar.Headers
 
         public bool IsSolid { get; private set; }
 
+        // unused for UnpackV1 implementation (limitation)
+        internal size_t WindowSize { get; private set; }
+
         internal byte[] R4Salt { get; private set; }
-        internal byte R5DictSize_2_17plusX { get; private set; }
 
         private byte HostOs { get; set; }
         internal uint FileAttributes { get; private set; }
