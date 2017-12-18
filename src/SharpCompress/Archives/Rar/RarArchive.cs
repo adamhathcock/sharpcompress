@@ -41,6 +41,7 @@ namespace SharpCompress.Archives.Rar
         internal RarArchive(IEnumerable<Stream> streams, ReaderOptions options)
             : base(ArchiveType.Rar, streams, options)
         {
+            Unpack = new SharpCompress.Compressors.Rar.UnpackV1.Unpack();
         }
 
         protected override IEnumerable<RarArchiveEntry> LoadEntries(IEnumerable<RarVolume> volumes)
