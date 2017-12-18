@@ -20,10 +20,11 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017
 {
     partial class FragmentedWindow
     {
+
 public FragmentedWindow()
 {
-  memset(Mem,0,sizeof(Mem));
-  memset(MemSize,0,sizeof(MemSize));
+  //memset(Mem,0,sizeof(Mem));
+  //memset(MemSize,0,sizeof(MemSize));
 }
 
 
@@ -60,10 +61,10 @@ public void Init(size_t WinSize)
     // smaller than some arbitrary constant.
     size_t MinSize=Math.Max(Size/(ASIZE(Mem)-BlockNum), 0x400000);
 
-    byte *NewMem=null;
+    byte[] NewMem=null;
     while (Size>=MinSize)
     {
-      NewMem=(byte *)malloc(Size);
+      NewMem=new byte[Size];
       if (NewMem!=null)
         break;
       Size-=Size/32;
@@ -73,7 +74,7 @@ public void Init(size_t WinSize)
     
     // Clean the window to generate the same output when unpacking corrupt
     // RAR files, which may access to unused areas of sliding dictionary.
-    memset(NewMem,0,Size);
+    Utility.Memset(NewMem,0,Size);
 
     Mem[BlockNum]=NewMem;
     TotalSize+=Size;

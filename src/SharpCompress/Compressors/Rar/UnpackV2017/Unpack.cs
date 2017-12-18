@@ -13,6 +13,11 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017
 
         public void DoUnpack(FileHeader fileHeader, Stream readStream, Stream writeStream)
         {
+            // as of 12/2017 .NET limits array indexing to using a signed integer
+            // MaxWinSize causes unpack to use a fragmented window when the file 
+            // window size exceeds MaxWinSize
+            MaxWinSize = ((uint)int.MaxValue) + 1;
+
             // may be long.MaxValue which could indicate unknown size (not present in header)
             DestUnpSize = fileHeader.UncompressedSize;
             this.fileHeader = fileHeader;

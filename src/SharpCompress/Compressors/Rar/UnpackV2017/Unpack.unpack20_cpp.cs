@@ -198,7 +198,7 @@ bool ReadTables20()
   UnpAudioBlock=(BitField & 0x8000)!=0;
 
   if (!(BitField & 0x4000))
-    memset(UnpOldTable20,0,sizeof(UnpOldTable20));
+    Utility.Memset(UnpOldTable20,0,UnpOldTable20.Length);
   Inp.addbits(2);
 
   uint TableSize;

@@ -671,7 +671,7 @@ bool ReadTables30()
   LowDistRepCount=0;
 
   if ((BitField & 0x4000) == 0)
-    memset(UnpOldTable,0,sizeof(UnpOldTable));
+    Utility.Memset(UnpOldTable,0,UnpOldTable.Length);
   Inp.faddbits(2);
 
   for (uint I=0;I<BC;I++)
@@ -766,7 +766,7 @@ void UnpInitData30(bool Solid)
   if (!Solid)
   {
     TablesRead3=false;
-    memset(UnpOldTable,0,sizeof(UnpOldTable));
+    Utility.Memset(UnpOldTable,0,(uint)UnpOldTable.Length);
     PPMEscChar=2;
     UnpBlockType=BLOCK_LZ;
   }

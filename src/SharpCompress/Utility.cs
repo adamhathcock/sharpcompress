@@ -79,15 +79,15 @@ namespace SharpCompress
 #if NET45
         // super fast memset, up to 40x faster than for loop on large arrays
         // see https://stackoverflow.com/questions/1897555/what-is-the-equivalent-of-memset-in-c
-        private static readonly Action<IntPtr, byte, int> MemsetDelegate = CreateMemsetDelegate();
+        private static readonly Action<IntPtr, byte, uint> MemsetDelegate = CreateMemsetDelegate();
 
-        private static Action<IntPtr, byte, int> CreateMemsetDelegate() {
+        private static Action<IntPtr, byte, uint> CreateMemsetDelegate() {
             var dynamicMethod = new DynamicMethod(
                 "Memset",
                 MethodAttributes.Public | MethodAttributes.Static,
                 CallingConventions.Standard,
                 null,
-                new[] { typeof(IntPtr), typeof(byte), typeof(int) },
+                new[] { typeof(IntPtr), typeof(byte), typeof(uint) },
                 typeof(Utility),
                 true);
             var generator = dynamicMethod.GetILGenerator();
@@ -96,13 +96,13 @@ namespace SharpCompress
             generator.Emit(OpCodes.Ldarg_2);
             generator.Emit(OpCodes.Initblk);
             generator.Emit(OpCodes.Ret);
-            return (Action<IntPtr, byte, int>)dynamicMethod.CreateDelegate(typeof(Action<IntPtr, byte, int>));
+            return (Action<IntPtr, byte, uint>)dynamicMethod.CreateDelegate(typeof(Action<IntPtr, byte, uint>));
         }
 
         public static void Memset(byte[] array, byte what, int length)
         {
             var gcHandle = GCHandle.Alloc(array, GCHandleType.Pinned);
-            MemsetDelegate(gcHandle.AddrOfPinnedObject(), what, length);
+            MemsetDelegate(gcHandle.AddrOfPinnedObject(), what, (uint)length);
             gcHandle.Free();
         }
 #else
@@ -114,6 +114,7 @@ namespace SharpCompress
             }
         }
 #endif
+
 
         /// <summary>
         /// Fills the array with an specific value.

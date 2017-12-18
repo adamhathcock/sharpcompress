@@ -128,7 +128,8 @@ void Init(size_t WinSize,bool Solid)
   {
     // Clean the window to generate the same output when unpacking corrupt
     // RAR files, which may access unused areas of sliding dictionary.
-    memset(NewWindow,0,WinSize);
+    // sharpcompress: don't need this, freshly allocated above
+    //memset(NewWindow,0,WinSize);
 
 
     // If Window is not NULL, it means that window size has grown.
@@ -139,8 +140,8 @@ void Init(size_t WinSize,bool Solid)
       for (size_t I=1;I<=MaxWinSize;I++)
         NewWindow[(UnpPtr-I)&(WinSize-1)]=Window[(UnpPtr-I)&(MaxWinSize-1)];
 
-    if (Window!=null)
-      free(Window);
+    //if (Window!=null)
+    //  free(Window);
     Window=NewWindow;
   }
 

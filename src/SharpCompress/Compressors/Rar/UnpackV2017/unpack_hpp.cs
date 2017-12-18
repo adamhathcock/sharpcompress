@@ -366,7 +366,7 @@ internal partial class Unpack
     ModelPPM PPM;
     int PPMEscChar;
 
-    byte UnpOldTable[HUFF_TABLE_SIZE30];
+    readonly byte [] UnpOldTable = new byte[HUFF_TABLE_SIZE30];
     int UnpBlockType;
 
     // If we already read decoding tables for Unpack v2,v3,v5.
