@@ -20,7 +20,7 @@ namespace SharpCompress.Compressors.RarV2017
 {
     partial class FragmentedWindow
     {
-FragmentedWindow()
+public FragmentedWindow()
 {
   memset(Mem,0,sizeof(Mem));
   memset(MemSize,0,sizeof(MemSize));
@@ -43,8 +43,8 @@ void Reset()
     }
 }
 
-public
-void Init(size_t WinSize)
+
+public void Init(size_t WinSize)
 {
   Reset();
 
@@ -95,8 +95,8 @@ byte& operator [](size_t Item)
   return Mem[0][0]; // Must never happen;
 }
 
-public
-void CopyString(uint Length,uint Distance,size_t &UnpPtr,size_t MaxWinMask)
+
+public void CopyString(uint Length,uint Distance,size_t &UnpPtr,size_t MaxWinMask)
 {
   size_t SrcPtr=UnpPtr-Distance;
   while (Length-- > 0)
@@ -115,8 +115,8 @@ void CopyData(byte *Dest,size_t WinPos,size_t Size)
     Dest[I]=(*this)[WinPos+I];
 }
 
-public
-size_t GetBlockSize(size_t StartPos,size_t RequiredSize)
+
+public size_t GetBlockSize(size_t StartPos,size_t RequiredSize)
 {
   for (uint I=0;I<ASIZE(MemSize);I++)
     if (StartPos<MemSize[I])

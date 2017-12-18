@@ -1,10 +1,4 @@
 ﻿#if false
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using static SharpCompress.Compressors.Rar.Decode.PackDef;
 #if !Rar2017_64bit
 using nint = System.Int32;
 using nuint = System.UInt32;
@@ -15,6 +9,13 @@ using nuint = System.UInt64;
 using size_t = System.UInt64;
 #endif
 using int64 = System.Int64;
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using static SharpCompress.Compressors.Rar.Decode.PackDef;
 
 namespace SharpCompress.Compressors.RarV2017
 {
@@ -94,33 +95,22 @@ struct DecodeTable
 
 struct UnpackBlockHeader
 {
-  public
-  int BlockSize;
-  public
-  int BlockBitSize;
-  public
-  int BlockStart;
-  public
-  int HeaderSize;
-  public
-  bool LastBlockInFile;
-  public
-  bool TablePresent;
+  public int BlockSize;
+  public int BlockBitSize;
+  public int BlockStart;
+  public int HeaderSize;
+  public bool LastBlockInFile;
+  public bool TablePresent;
 };
 
 
 struct UnpackBlockTables
 {
-  public
-  DecodeTable LD;  // Decode literals.
-  public
-  DecodeTable DD;  // Decode distances.
-  public
-  DecodeTable LDD; // Decode lower bits of distances.
-  public
-  DecodeTable RD;  // Decode repeating distances.
-  public
-  DecodeTable BD;  // Decode bit lengths in Huffman table.
+  public DecodeTable LD;  // Decode literals.
+  public DecodeTable DD;  // Decode distances.
+  public DecodeTable LDD; // Decode lower bits of distances.
+  public DecodeTable RD;  // Decode repeating distances.
+  public DecodeTable BD;  // Decode bit lengths in Huffman table.
 };
 
 
@@ -177,39 +167,28 @@ struct UnpackThreadData
 //struct UnpackFilter
 class UnpackFilter
 {
-  public
-  byte Type;
-  public
-  public
-  uint BlockStart;
-  public
-  uint BlockLength;
-  public
-  byte Channels;
+  public byte Type;
+  public uint BlockStart;
+  public uint BlockLength;
+  public byte Channels;
 //  uint Width;
 //  byte PosR;
-  public
-  bool NextWindow;
+  public bool NextWindow;
 };
 
 
 //struct UnpackFilter30
 class UnpackFilter30
 {
-  public
-  uint BlockStart;
-  public
-  uint BlockLength;
-  public
-  bool NextWindow;
+  public uint BlockStart;
+  public uint BlockLength;
+  public bool NextWindow;
 
   // Position of parent filter in Filters array used as prototype for filter
   // in PrgStack array. Not defined for filters in Filters array.
-  public
-  uint ParentFilter;
+  public uint ParentFilter;
 
-  public
-  VM_PreparedProgram Prg;
+  public VM_PreparedProgram Prg;
 };
 
 
@@ -271,7 +250,8 @@ internal partial class Unpack
     //void InitFilters();
 
     ComprDataIO *UnpIO;
-    BitInput Inp;
+    //BitInput Inp;
+    BitInput Inp { get { return this; } }
 
 #if RarV2017_RAR_SMP
     void InitMT();
@@ -284,11 +264,11 @@ internal partial class Unpack
     byte *ReadBufMT;
 #endif
 
-    List<byte> FilterSrcMemory;
-    List<byte> FilterDstMemory;
+    List<byte> FilterSrcMemory = new List<byte>();
+    List<byte> FilterDstMemory = new List<byte>();
 
     // Filters code, one entry per filter.
-    List<UnpackFilter> Filters;
+    List<UnpackFilter> Filters = new List<UnpackFilter>();
 
     uint OldDist[4],OldDistPtr;
     uint LastLength;
@@ -314,7 +294,7 @@ internal partial class Unpack
 
     byte[] Window;
 
-    FragmentedWindow FragWindow;
+    FragmentedWindow FragWindow = new FragmentedWindow();
     bool Fragmented;
 
 
@@ -404,15 +384,15 @@ internal partial class Unpack
     BitInput VMCodeInp;
 
     // Filters code, one entry per filter.
-    List<UnpackFilter30> Filters30;
+    List<UnpackFilter30> Filters30 = new List<UnpackFilter30>();
 
     // Filters stack, several entrances of same filter are possible.
-    List<UnpackFilter30> PrgStack;
+    List<UnpackFilter30> PrgStack = new List<UnpackFilter30>();
 
     // Lengths of preceding data blocks, one length of one last block
     // for every filter. Used to reduce the size required to write
     // the data block length if lengths are repeating.
-    List<int> OldFilterLengths;
+    List<int> OldFilterLengths = new List<int>();
 
     int LastFilter;
 /***************************** Unpack v 3.0 *********************************/

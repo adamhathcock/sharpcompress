@@ -17,6 +17,7 @@ using System.Text;
 using System.Threading.Tasks;
 using static SharpCompress.Compressors.RarV2017.PackDef;
 using static SharpCompress.Compressors.RarV2017.UnpackGlobal;
+using static SharpCompress.Compressors.RarV2017.Unpack.Unpack30Local;
 
 namespace SharpCompress.Compressors.RarV2017
 {
@@ -36,14 +37,15 @@ int SafePPMDecodeChar()
   return(Ch);
 }
 
-
-  static byte[] LDecode={0,1,2,3,4,5,6,7,8,10,12,14,16,20,24,28,32,40,48,56,64,80,96,112,128,160,192,224};
-  static byte[] LBits=  {0,0,0,0,0,0,0,0,1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4,  4,  5,  5,  5,  5};
-  static int DDecode[DC];
-  static byte DBits[DC];
-  static int[] DBitLengthCounts= {4,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,14,0,12};
-  static byte[] SDDecode={0,4,8,16,32,64,128,192};
-  static byte[] SDBits=  {2,2,3, 4, 5, 6,  6,  6};
+internal static class Unpack30Local {
+  public static byte[] LDecode={0,1,2,3,4,5,6,7,8,10,12,14,16,20,24,28,32,40,48,56,64,80,96,112,128,160,192,224};
+  public static byte[] LBits=  {0,0,0,0,0,0,0,0,1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4,  4,  5,  5,  5,  5};
+  public static int DDecode[DC];
+  public static byte DBits[DC];
+  public static int[] DBitLengthCounts= {4,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,14,0,12};
+  public static byte[] SDDecode={0,4,8,16,32,64,128,192};
+  public static byte[] SDBits=  {2,2,3, 4, 5, 6,  6,  6};
+}
 void Unpack29(bool Solid)
 {
   uint Bits;
