@@ -1,4 +1,4 @@
-﻿#if false
+﻿#if RARWIP
 #if !Rar2017_64bit
 using nint = System.Int32;
 using nuint = System.UInt32;
@@ -16,7 +16,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace SharpCompress.Compressors.RarV2017
+namespace SharpCompress.Compressors.Rar.UnpackV2017
 {
     partial class FragmentedWindow
     {

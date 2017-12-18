@@ -11,7 +11,7 @@ using System;
 using System.IO;
 using SharpCompress.Compressors.Rar.Decode;
 
-namespace SharpCompress.Compressors.Rar
+namespace SharpCompress.Compressors.Rar.UnpackV1
 {
     internal partial class Unpack
     {
@@ -22,7 +22,6 @@ namespace SharpCompress.Compressors.Rar
         internal bool unpAllBuf;
 
         //private ComprDataIO unpIO;
-
         private Stream readStream;
         private Stream writeStream;
 

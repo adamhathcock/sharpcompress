@@ -1,12 +1,12 @@
-﻿#if false
+﻿#if RARWIP
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using static SharpCompress.Compressors.RarV2017.PackDef;
+using static SharpCompress.Compressors.Rar.UnpackV2017.PackDef;
 
-namespace SharpCompress.Compressors.RarV2017
+namespace SharpCompress.Compressors.Rar.UnpackV2017
 {
     internal partial class Unpack
     {

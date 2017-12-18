@@ -6,7 +6,7 @@ namespace SharpCompress.Compressors.Rar
 {
     internal class RarStream : Stream
     {
-        private readonly Unpack unpack;
+        private readonly IRarUnpack unpack;
         private readonly FileHeader fileHeader;
         private readonly Stream readStream;
 
@@ -22,25 +22,23 @@ namespace SharpCompress.Compressors.Rar
         private int outTotal;
         private bool isDisposed;
 
-        public RarStream(Unpack unpack, FileHeader fileHeader, Stream readStream)
+        public RarStream(IRarUnpack unpack, FileHeader fileHeader, Stream readStream)
         {
             this.unpack = unpack;
             this.fileHeader = fileHeader;
             this.readStream = readStream;
-            fetch = true;
+            this.fetch = true;
             unpack.DoUnpack(fileHeader, readStream, this);
-            fetch = false;
+            this.fetch = false;
         }
 
         protected override void Dispose(bool disposing)
         {
-            if (isDisposed)
-            {
-                return;
+            if (!this.isDisposed) {
+                this.isDisposed = true;
+                base.Dispose(disposing);
+                this.readStream.Dispose();
             }
-            isDisposed = true;
-            base.Dispose(disposing);
-            readStream.Dispose();
         }
 
         public override bool CanRead => true;

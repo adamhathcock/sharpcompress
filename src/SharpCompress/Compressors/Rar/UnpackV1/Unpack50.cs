@@ -10,9 +10,9 @@ using SharpCompress.Compressors.Rar.VM;
 using static SharpCompress.Compressors.Rar.Decode.PackDef;
 
 using size_t=System.UInt32;
-using UnpackBlockHeader = SharpCompress.Compressors.Rar.Unpack;
+using UnpackBlockHeader = SharpCompress.Compressors.Rar.UnpackV1;
 
-namespace SharpCompress.Compressors.Rar
+namespace SharpCompress.Compressors.Rar.UnpackV1
 {
     internal partial class Unpack
     {

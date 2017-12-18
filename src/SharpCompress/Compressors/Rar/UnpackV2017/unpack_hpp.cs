@@ -1,4 +1,4 @@
-﻿#if false
+﻿#if RARWIP
 #if !Rar2017_64bit
 using nint = System.Int32;
 using nuint = System.UInt32;
@@ -17,7 +17,7 @@ using System.Text;
 using System.Threading.Tasks;
 using static SharpCompress.Compressors.Rar.Decode.PackDef;
 
-namespace SharpCompress.Compressors.RarV2017
+namespace SharpCompress.Compressors.Rar.UnpackV2017
 {
     internal static class UnpackGlobal
     {
@@ -300,7 +300,7 @@ internal partial class Unpack
 
     int64 DestUnpSize;
 
-    bool Suspended;
+    //bool Suspended;
     bool UnpAllBuf;
     bool UnpSomeRead;
     int64 WrittenFileSize;

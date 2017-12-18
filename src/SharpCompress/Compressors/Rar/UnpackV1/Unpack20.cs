@@ -10,7 +10,7 @@
 using System;
 using SharpCompress.Compressors.Rar.Decode;
 
-namespace SharpCompress.Compressors.Rar
+namespace SharpCompress.Compressors.Rar.UnpackV1
 {
     internal partial class Unpack
     {

@@ -1,6 +1,6 @@
 using SharpCompress.Compressors.Rar.VM;
 
-namespace SharpCompress.Compressors.Rar
+namespace SharpCompress.Compressors.Rar.UnpackV1
 {
     internal class UnpackFilter
     {

@@ -231,7 +231,7 @@ namespace SharpCompress.Compressors.PPMd.H
             Utility.Fill(charMask, 0);
         }
 
-        internal bool decodeInit(Unpack unpackRead, int escChar)
+        internal bool decodeInit(IRarUnpack unpackRead, int escChar)
         {
             int MaxOrder = unpackRead.Char & 0xff;
             bool reset = ((MaxOrder & 0x20) != 0);

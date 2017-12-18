@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace SharpCompress.Compressors.Rar
+namespace SharpCompress.Compressors.Rar.UnpackV1
 {
     internal partial class Unpack
     {

@@ -8,9 +8,9 @@ using SharpCompress.Compressors.Rar.Decode;
 using SharpCompress.Compressors.Rar.PPM;
 using SharpCompress.Compressors.Rar.VM;
 
-namespace SharpCompress.Compressors.Rar
+namespace SharpCompress.Compressors.Rar.UnpackV1
 {
-    internal sealed partial class Unpack : BitInput
+    internal sealed partial class Unpack : BitInput, IRarUnpack
     {
         private readonly BitInput Inp;
 
@@ -105,15 +105,15 @@ namespace SharpCompress.Compressors.Rar
 
         public void DoUnpack(FileHeader fileHeader, Stream readStream, Stream writeStream)
         {
-            destUnpSize = fileHeader.UncompressedSize;
+            this.destUnpSize = fileHeader.UncompressedSize;
             this.fileHeader = fileHeader;
-            this.writeStream = writeStream;
             this.readStream = readStream;
+            this.writeStream = writeStream;
             if (!fileHeader.IsSolid)
             {
                 Init(null);
             }
-            suspended = false;
+            this.suspended = false;
             DoUnpack();
         }
 

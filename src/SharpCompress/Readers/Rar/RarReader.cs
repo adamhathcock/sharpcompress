@@ -13,11 +13,12 @@ namespace SharpCompress.Readers.Rar
     public abstract class RarReader : AbstractReader<RarReaderEntry, RarVolume>
     {
         private RarVolume volume;
-        private readonly Unpack pack = new Unpack();
+        private readonly IRarUnpack pack;
 
         internal RarReader(ReaderOptions options)
             : base(options, ArchiveType.Rar)
         {
+            this.pack = new SharpCompress.Compressors.Rar.UnpackV1.Unpack();
         }
 
         internal abstract void ValidateArchive(RarVolume archive);

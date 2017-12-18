@@ -1,4 +1,4 @@
-﻿namespace SharpCompress.Compressors.RarV2017
+﻿namespace SharpCompress.Compressors.Rar.UnpackV2017
 {
     internal static class PackDef
     {

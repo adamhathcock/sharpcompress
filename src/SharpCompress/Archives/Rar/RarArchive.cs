@@ -12,7 +12,7 @@ namespace SharpCompress.Archives.Rar
 {
     public class RarArchive : AbstractArchive<RarArchiveEntry, RarVolume>
     {
-        internal Unpack Unpack { get; } = new Unpack();
+        internal IRarUnpack Unpack { get; }
 
 #if !NO_FILE
 
@@ -24,6 +24,7 @@ namespace SharpCompress.Archives.Rar
         internal RarArchive(FileInfo fileInfo, ReaderOptions options)
             : base(ArchiveType.Rar, fileInfo, options)
         {
+            Unpack = new SharpCompress.Compressors.Rar.UnpackV1.Unpack();
         }
 
         protected override IEnumerable<RarVolume> LoadVolumes(FileInfo file)
