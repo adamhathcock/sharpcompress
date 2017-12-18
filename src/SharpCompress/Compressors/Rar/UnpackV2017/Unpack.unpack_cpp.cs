@@ -14,6 +14,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using SharpCompress.Common;
 using static SharpCompress.Compressors.Rar.UnpackV2017.UnpackGlobal;
 using static SharpCompress.Compressors.Rar.UnpackV2017.PackDef;
 
@@ -73,7 +74,8 @@ void Init(size_t WinSize,bool Solid)
   // If 32-bit RAR unpacks an archive with 4 GB dictionary, the window size
   // will be 0 because of size_t overflow. Let's issue the memory error.
   if (WinSize==0)
-    ErrHandler.MemoryError();
+    //ErrHandler.MemoryError();
+    throw new InvalidFormatException("invalid window size (possibly due to a rar file with a 4GB being unpacked on a 32-bit platform)");
 
   // Minimum window size must be at least twice more than maximum possible
   // size of filter block, which is 0x10000 in RAR now. If window size is
@@ -98,22 +100,24 @@ void Init(size_t WinSize,bool Solid)
 
   // We do not handle growth for existing fragmented window.
   if (Grow && Fragmented)
-    throw std::bad_alloc();
+    //throw std::bad_alloc();
+    throw new InvalidFormatException("Grow && Fragmented");
 
-  byte *NewWindow=Fragmented ? null : (byte *)malloc(WinSize);
+  byte[] NewWindow=Fragmented ? null : new byte[WinSize];
 
   if (NewWindow==null)
     if (Grow || WinSize<0x1000000)
     {
       // We do not support growth for new fragmented window.
       // Also exclude RAR4 and small dictionaries.
-      throw std::bad_alloc();
+      //throw std::bad_alloc();
+      throw new InvalidFormatException("Grow || WinSize<0x1000000");
     }
     else
     {
       if (Window!=null) // If allocated by preceding files.
       {
-        free(Window);
+        //free(Window);
         Window=null;
       }
       FragWindow.Init(WinSize);
@@ -125,6 +129,7 @@ void Init(size_t WinSize,bool Solid)
     // Clean the window to generate the same output when unpacking corrupt
     // RAR files, which may access unused areas of sliding dictionary.
     memset(NewWindow,0,WinSize);
+
 
     // If Window is not NULL, it means that window size has grown.
     // In solid streams we need to copy data to a new window in such case.
