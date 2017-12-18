@@ -405,6 +405,7 @@ namespace SharpCompress.Common.Rar.Headers
         // 4 - good compression
         // 5 - best compression
         internal byte CompressionMethod { get; private set; }
+        internal bool IsStored { get { return CompressionMethod == 0; } }
 
         // eg (see DoUnpack())
         //case 15: // rar 1.5 compression

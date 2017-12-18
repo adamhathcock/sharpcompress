@@ -18,23 +18,20 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017
             this.fileHeader = fileHeader;
             this.readStream = readStream;
             this.writeStream = writeStream;
-//            if (!fileHeader.IsSolid)
-//            {
-//                Init(null);
-//            }
-fileHeader.
-            Init(size_t WinSize, fileHeader.IsSolid)
+            if (!fileHeader.IsStored) {
+                Init(fileHeader.WindowSize, fileHeader.IsSolid);
+            }
             Suspended = false;
             DoUnpack();
         }
 
         public void DoUnpack()
         {
-            if (this.fileHeader.CompressionMethod == 0)
+            if (this.fileHeader.IsStored)
             {
                 UnstoreFile();
             } else {
-                DoUnpack(uint Method,bool Solid);
+                DoUnpack(this.fileHeader.CompressionMethod, this.fileHeader.IsSolid);
             }
         }
 
