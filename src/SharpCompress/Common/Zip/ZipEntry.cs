@@ -72,7 +72,7 @@ namespace SharpCompress.Common.Zip
 
         public override bool IsDirectory => filePart.Header.IsDirectory;
 
-        public override bool IsSplit => false;
+        public override bool IsSplitAfter => false;
 
         internal override IEnumerable<FilePart> Parts => filePart.AsEnumerable<FilePart>();
     }

@@ -89,7 +89,7 @@ namespace SharpCompress.Compressors.Rar
                 currentCount -= read;
                 totalRead += read;
                 if (((maxPosition - currentPosition) == 0)
-                    && filePartEnumerator.Current.FileHeader.IsSplit)
+                    && filePartEnumerator.Current.FileHeader.IsSplitAfter)
                 {
                     if (filePartEnumerator.Current.FileHeader.R4Salt != null)
                     {

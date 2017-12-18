@@ -89,7 +89,7 @@ namespace SharpCompress.Readers.Rar
                     return true;
                 }
 
-                if (!reader.Entry.IsSplit)
+                if (!reader.Entry.IsSplitAfter)
                 {
                     return false;
                 }

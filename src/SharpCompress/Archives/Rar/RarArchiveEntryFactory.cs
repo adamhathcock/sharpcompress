@@ -23,7 +23,7 @@ namespace SharpCompress.Archives.Rar
             {
                 groupedParts.Add(fp);
 
-                if (!fp.FileHeader.IsSplit)
+                if (!fp.FileHeader.IsSplitAfter)
                 {
                     yield return groupedParts;
                     groupedParts = new List<RarFilePart>();

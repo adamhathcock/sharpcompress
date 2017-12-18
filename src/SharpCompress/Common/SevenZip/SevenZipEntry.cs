@@ -34,7 +34,7 @@ namespace SharpCompress.Common.SevenZip
 
         public override bool IsDirectory => FilePart.Header.IsDir;
 
-        public override bool IsSplit => false;
+        public override bool IsSplitAfter => false;
 
         public override int? Attrib => (int)FilePart.Header.Attrib;
 

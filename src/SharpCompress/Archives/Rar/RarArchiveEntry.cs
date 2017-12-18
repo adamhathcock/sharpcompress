@@ -33,7 +33,7 @@ namespace SharpCompress.Archives.Rar
             get
             {
                 CheckIncomplete();
-                return parts.Select(fp => fp.FileHeader).Single(fh => !fh.IsSplit).FileCrc;
+                return parts.Select(fp => fp.FileHeader).Single(fh => !fh.IsSplitAfter).FileCrc;
             }
         }
 
@@ -68,7 +68,7 @@ namespace SharpCompress.Archives.Rar
         { 
             get 
             { 
-                return parts.Select(fp => fp.FileHeader).Any(fh => !fh.IsSplit); 
+                return parts.Select(fp => fp.FileHeader).Any(fh => !fh.IsSplitAfter); 
             } 
         }
 

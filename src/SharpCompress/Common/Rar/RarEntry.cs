@@ -47,7 +47,7 @@ namespace SharpCompress.Common.Rar
         /// </summary>
         public override bool IsDirectory => FileHeader.IsDirectory;
 
-        public override bool IsSplit => FileHeader.IsSplit;
+        public override bool IsSplitAfter => FileHeader.IsSplitAfter;
 
         public override string ToString()
         {

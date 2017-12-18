@@ -31,7 +31,8 @@ namespace SharpCompress.Common.Rar.Headers
             Flags = reader.ReadRarVIntUInt16();
 
             var lvalue = checked((long)reader.ReadRarVInt());
-//!!! rar5 TODO: this may cause problems with user code, Unpack20 seems to use this field to decompress
+
+            // long.MaxValue causes the unpack code to finish when the input stream is exhausted
             UncompressedSize = HasFlag(FileFlagsV5.UnpackedSizeUnknown) ? long.MaxValue : lvalue;
 
             FileAttributes = reader.ReadRarVIntUInt32();
@@ -56,6 +57,7 @@ namespace SharpCompress.Common.Rar.Headers
             // 7th bit (0x0040) defines the solid flag. If it is set, RAR continues to use the compression dictionary left after processing preceding files. 
             // It can be set only for file headers and is never set for service headers.
             IsSolid = (us & 0x40) == 0x40;
+            if (IsSolid != HasHeaderFlag(HeaderFlagsV5.Solid_TESTME)) throw new InvalidFormatException("rar solid flag base header != file header");
 
             // Bits 8 - 10 (0x0380 mask) define the compression method. Currently only values 0 - 5 are used. 0 means no compression.
             CompressionMethod = (byte)((us >> 7) & 0x7);
@@ -63,6 +65,7 @@ namespace SharpCompress.Common.Rar.Headers
             // Bits 11 - 14 (0x3c00) define the minimum size of dictionary size required to extract data. Value 0 means 128 KB, 1 - 256 KB, ..., 14 - 2048 MB, 15 - 4096 MB.
             // 2 ^ (17 + x)
             R5DictSize_2_17plusX = (byte)((us >> 10) & 0xf);
+            //WindowSize = hd->Dir ? 0:0x10000<<((hd->Flags & LHD_WINDOWMASK)>>5)
 
             HostOs = reader.ReadRarVIntByte();
 
@@ -393,8 +396,14 @@ namespace SharpCompress.Common.Rar.Headers
         // 5 - best compression
         internal byte CompressionMethod { get; private set; }
 
-        // see unpack.cs
+        // eg (see DoUnpack())
+        //case 15: // rar 1.5 compression
+        //case 20: // rar 2.x compression
+        //case 26: // files larger than 2GB
+        //case 29: // rar 3.x compression
+        //case 50: // RAR 5.0 compression algorithm.
         internal byte CompressionAlgorithm { get; private set; }
+
         public bool IsSolid { get; private set; }
 
         internal byte[] R4Salt { get; private set; }
@@ -410,8 +419,7 @@ namespace SharpCompress.Common.Rar.Headers
         internal long DataStartPosition { get; set; }
         public Stream PackedStream { get; set; }
 
-//!!! TODO rar5
-        public bool IsSplit => HasFlag(FileFlagsV4.SplitAfter);
+        public bool IsSplitAfter => IsRar5 ? HasHeaderFlag(HeaderFlagsV5.SplitAfter) : HasFlag(FileFlagsV4.SplitAfter);
 
         public bool IsDirectory => HasFlag(IsRar5 ? FileFlagsV5.Directory : FileFlagsV4.Directory);
 
