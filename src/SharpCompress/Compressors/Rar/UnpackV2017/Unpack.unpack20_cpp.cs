@@ -303,7 +303,7 @@ void UnpInitData20(bool Solid)
     UnpChannels=1;
 
     memset(AudV,0,sizeof(AudV));
-    memset(UnpOldTable20,0,sizeof(UnpOldTable20));
+    Utility.Memset(UnpOldTable20, 0, UnpOldTable20.Length);
     memset(MD,0,sizeof(MD));
   }
 }

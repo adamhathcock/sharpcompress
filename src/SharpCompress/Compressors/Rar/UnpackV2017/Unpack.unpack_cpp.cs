@@ -27,7 +27,6 @@ public Unpack(/* ComprDataIO *DataIO */)
 //:Inp(true),VMCodeInp(true)
 : base(true)
 {
-  VMCodeInp = new BitInput(true);
   UnpIO=DataIO;
   Window=null;
   Fragmented=false;
@@ -198,7 +197,7 @@ void UnpInitData(bool Solid)
 {
   if (!Solid)
   {
-    memset(OldDist,0,sizeof(OldDist));
+    Utility.Memset<uint>(this.OldDist, 0, this.OldDist.Length);
     OldDistPtr=0;
     LastDist=LastLength=0;
 //    memset(Window,0,MaxWinSize);

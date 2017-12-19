@@ -766,7 +766,7 @@ void UnpInitData30(bool Solid)
   if (!Solid)
   {
     TablesRead3=false;
-    Utility.Memset(UnpOldTable,0,(uint)UnpOldTable.Length);
+    Utility.Memset(UnpOldTable, 0, UnpOldTable.Length);
     PPMEscChar=2;
     UnpBlockType=BLOCK_LZ;
   }
@@ -778,16 +778,19 @@ void InitFilters30(bool Solid)
 {
   if (!Solid)
   {
-    OldFilterLengths.SoftReset();
+    //OldFilterLengths.SoftReset();
+    OldFilterLengths.Clear();
     LastFilter=0;
 
-    for (size_t I=0;I<Filters30.Count;I++)
-      delete Filters30[I];
-    Filters30.SoftReset();
+    //for (size_t I=0;I<Filters30.Count;I++)
+    //  delete Filters30[I];
+    //Filters30.SoftReset();
+    Filters30.Clear();
   }
-  for (size_t I=0;I<PrgStack.Count;I++)
-    delete PrgStack[I];
-  PrgStack.SoftReset();
+  //for (size_t I=0;I<PrgStack.Count;I++)
+  //  delete PrgStack[I];
+  //PrgStack.SoftReset();
+  PrgStack.Clear();
 }
 
     }

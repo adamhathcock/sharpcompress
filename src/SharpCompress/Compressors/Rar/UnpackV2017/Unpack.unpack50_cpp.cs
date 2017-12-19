@@ -703,7 +703,8 @@ bool ReadTables(BitInput Inp,UnpackBlockHeader &Header,UnpackBlockTables &Tables
 
 void InitFilters()
 {
-  Filters.SoftReset();
+  //Filters.SoftReset();
+  Filters.Clear();
 }
 
     }

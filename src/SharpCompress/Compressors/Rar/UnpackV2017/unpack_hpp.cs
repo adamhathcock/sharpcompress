@@ -264,13 +264,14 @@ internal partial class Unpack
     byte *ReadBufMT;
 #endif
 
-    List<byte> FilterSrcMemory = new List<byte>();
-    List<byte> FilterDstMemory = new List<byte>();
+    readonly List<byte> FilterSrcMemory = new List<byte>();
+    readonly List<byte> FilterDstMemory = new List<byte>();
 
     // Filters code, one entry per filter.
-    List<UnpackFilter> Filters = new List<UnpackFilter>();
+    readonly List<UnpackFilter> Filters = new List<UnpackFilter>();
 
-    uint OldDist[4],OldDistPtr;
+    readonly uint[] OldDist = new uint[4];
+    uint OldDistPtr;
     uint LastLength;
 
     // LastDist is necessary only for RAR2 and older with circular OldDist
@@ -294,7 +295,7 @@ internal partial class Unpack
 
     byte[] Window;
 
-    FragmentedWindow FragWindow = new FragmentedWindow();
+    readonly FragmentedWindow FragWindow = new FragmentedWindow();
     bool Fragmented;
 
 
@@ -331,7 +332,7 @@ internal partial class Unpack
 
     DecodeTable MD[4]; // Decode multimedia data, up to 4 channels.
 
-    byte UnpOldTable20[MC20*4];
+    readonly byte[] UnpOldTable20 = new byte[MC20*4];
     bool UnpAudioBlock;
     uint UnpChannels,UnpCurChannel;
     int UnpChannelDelta;
@@ -381,18 +382,18 @@ internal partial class Unpack
   
     // Buffer to read VM filters code. We moved it here from AddVMCode
     // function to reduce time spent in BitInput constructor.
-    BitInput VMCodeInp;
+    readonly BitInput VMCodeInp = new BitInput(true);
 
     // Filters code, one entry per filter.
-    List<UnpackFilter30> Filters30 = new List<UnpackFilter30>();
+    readonly List<UnpackFilter30> Filters30 = new List<UnpackFilter30>();
 
     // Filters stack, several entrances of same filter are possible.
-    List<UnpackFilter30> PrgStack = new List<UnpackFilter30>();
+    readonly List<UnpackFilter30> PrgStack = new List<UnpackFilter30>();
 
     // Lengths of preceding data blocks, one length of one last block
     // for every filter. Used to reduce the size required to write
     // the data block length if lengths are repeating.
-    List<int> OldFilterLengths = new List<int>();
+    readonly List<int> OldFilterLengths = new List<int>();
 
     int LastFilter;
 /***************************** Unpack v 3.0 *********************************/

@@ -115,6 +115,14 @@ namespace SharpCompress
         }
 #endif
 
+        public static void Memset<T>(T[] array, T what, int length)
+        {
+            for(var i = 0; i < length; i++)
+            {
+                array[i] = what;
+            }
+        }
+
 
         /// <summary>
         /// Fills the array with an specific value.
