@@ -36,10 +36,10 @@ public FragmentedWindow()
 
 void Reset()
 {
-  for (uint I=0;I<ASIZE(Mem);I++)
+  for (uint I=0;I<Mem.Length;I++)
     if (Mem[I]!=null)
     {
-      free(Mem[I]);
+      //free(Mem[I]);
       Mem[I]=null;
     }
 }
@@ -51,7 +51,7 @@ public void Init(size_t WinSize)
 
   uint BlockNum=0;
   size_t TotalSize=0; // Already allocated.
-  while (TotalSize<WinSize && BlockNum<ASIZE(Mem))
+  while (TotalSize<WinSize && BlockNum<Mem.Length)
   {
     size_t Size=WinSize-TotalSize; // Size needed to allocate.
 
@@ -59,7 +59,7 @@ public void Init(size_t WinSize)
     // than current, so we do not need blocks if they are smaller than
     // "size left / attempts left". Also we do not waste time to blocks
     // smaller than some arbitrary constant.
-    size_t MinSize=Math.Max(Size/(ASIZE(Mem)-BlockNum), 0x400000);
+    size_t MinSize=Math.Max(Size/(size_t)(Mem.Length-BlockNum), 0x400000);
 
     byte[] NewMem=null;
     while (Size>=MinSize)
@@ -70,11 +70,13 @@ public void Init(size_t WinSize)
       Size-=Size/32;
     }
     if (NewMem==null)
-      throw std::bad_alloc();
+      //throw std::bad_alloc();
+      throw new InvalidOperationException();
     
     // Clean the window to generate the same output when unpacking corrupt
     // RAR files, which may access to unused areas of sliding dictionary.
-    Utility.Memset(NewMem,0,Size);
+    // sharpcompress: don't need this, freshly allocated above
+    //Utility.Memset(NewMem,0,Size);
 
     Mem[BlockNum]=NewMem;
     TotalSize+=Size;
@@ -82,7 +84,8 @@ public void Init(size_t WinSize)
     BlockNum++;
   }
   if (TotalSize<WinSize) // Not found enough free blocks.
-    throw std::bad_alloc();
+    //throw std::bad_alloc();
+    throw new InvalidOperationException();
 }
 
 

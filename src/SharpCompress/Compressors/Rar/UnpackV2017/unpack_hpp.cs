@@ -210,8 +210,8 @@ partial class FragmentedWindow
     const int MAX_MEM_BLOCKS=32;
 
     //void Reset();
-    byte *Mem[MAX_MEM_BLOCKS];
-    size_t MemSize[MAX_MEM_BLOCKS];
+    readonly byte[][] Mem = new byte[MAX_MEM_BLOCKS][];
+    readonly size_t[] MemSize = new size_t[MAX_MEM_BLOCKS];
 
     //FragmentedWindow();
     //~FragmentedWindow();
@@ -251,7 +251,7 @@ internal partial class Unpack
 
     ComprDataIO *UnpIO;
     //BitInput Inp;
-    BitInput Inp { get { return this; } }
+    BitInput Inp { get { return this; } } // hopefully this gets inlined
 
 #if RarV2017_RAR_SMP
     void InitMT();

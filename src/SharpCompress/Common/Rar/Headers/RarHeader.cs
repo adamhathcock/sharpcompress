@@ -4,6 +4,8 @@ using SharpCompress.IO;
 
 namespace SharpCompress.Common.Rar.Headers
 {
+    // http://www.forensicswiki.org/w/images/5/5b/RARFileStructure.txt
+    // https://www.rarlab.com/technote.htm
     internal class RarHeader : IRarHeader
     {
         private readonly HeaderType headerType;
