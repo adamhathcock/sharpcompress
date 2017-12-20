@@ -112,6 +112,21 @@ set {
 }
 }
 
+// sharpcompress: added the following code
+public void GetBuffer(size_t Item, out byte[] buf, out uint offset) {
+  if (Item<MemSize[0]) {
+    //return Mem[0][Item];
+    buf = Mem[0]; offset = Item; return;
+  }
+  for (uint I=1;I<MemSize.Length;I++) {
+    if (Item<MemSize[I]) {
+      //return Mem[I][Item-MemSize[I-1]];
+      buf = Mem[I]; offset = Item-MemSize[I-1]; return;
+    }
+  }
+  //return Mem[0][0]; // Must never happen;
+  buf = Mem[0]; offset = 0; return; // Must never happen;
+}
 
 public void CopyString(uint Length,uint Distance,ref size_t UnpPtr,size_t MaxWinMask)
 {

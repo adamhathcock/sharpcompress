@@ -205,6 +205,8 @@ void UnpInitData(bool Solid)
 //    memset(Window,0,MaxWinSize);
     //memset(&BlockTables,0,sizeof(BlockTables));
     BlockTables = new UnpackBlockTables();
+    // sharpcompress: no default ctor for struct
+    BlockTables.Init();
     UnpPtr=WrPtr=0;
     WriteBorder=Math.Min(MaxWinSize,UNPACK_MAX_WRITE)&MaxWinMask;
   }

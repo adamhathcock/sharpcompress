@@ -24,7 +24,11 @@ namespace SharpCompress.Archives.Rar
         internal RarArchive(FileInfo fileInfo, ReaderOptions options)
             : base(ArchiveType.Rar, fileInfo, options)
         {
+#if !RarV2017_USELEGACY
+            Unpack = new SharpCompress.Compressors.Rar.UnpackV2017.Unpack();
+#else
             Unpack = new SharpCompress.Compressors.Rar.UnpackV1.Unpack();
+#endif
         }
 
         protected override IEnumerable<RarVolume> LoadVolumes(FileInfo file)
@@ -41,7 +45,11 @@ namespace SharpCompress.Archives.Rar
         internal RarArchive(IEnumerable<Stream> streams, ReaderOptions options)
             : base(ArchiveType.Rar, streams, options)
         {
+#if !RarV2017_USELEGACY
+            Unpack = new SharpCompress.Compressors.Rar.UnpackV2017.Unpack();
+#else
             Unpack = new SharpCompress.Compressors.Rar.UnpackV1.Unpack();
+#endif
         }
 
         protected override IEnumerable<RarArchiveEntry> LoadEntries(IEnumerable<RarVolume> volumes)

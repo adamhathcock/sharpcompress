@@ -404,7 +404,8 @@ void UnpWriteBuf()
       EmptyCount++;
   }
   if (EmptyCount>0)
-    Filters.Alloc(Filters.Count-EmptyCount);
+    //Filters.Alloc(Filters.Count-EmptyCount);
+    throw new NotImplementedException();
 
   if (!NotAllFiltersProcessed) // Only if all filters are processed.
   {
@@ -428,6 +429,8 @@ void UnpWriteBuf()
 
 byte[] ApplyFilter(byte[] Data,uint DataSize,UnpackFilter Flt)
 {
+            throw new NotImplementedException();
+#if false
   byte[] SrcData=Data;
   switch(Flt.Type)
   {
@@ -509,6 +512,7 @@ byte[] ApplyFilter(byte[] Data,uint DataSize,UnpackFilter Flt)
 
   }
   return null;
+#endif
 }
 
 
@@ -525,7 +529,9 @@ void UnpWriteArea(size_t StartPtr,size_t EndPtr)
     while (SizeToWrite>0)
     {
       size_t BlockSize=FragWindow.GetBlockSize(StartPtr,SizeToWrite);
-      UnpWriteData(&FragWindow[StartPtr],BlockSize);
+      //UnpWriteData(&FragWindow[StartPtr],BlockSize);
+      FragWindow.GetBuffer(StartPtr, out var __buffer, out var __offset);
+      UnpWriteData(__buffer, __offset, BlockSize);
       SizeToWrite-=BlockSize;
       StartPtr=(StartPtr+BlockSize) & MaxWinMask;
     }

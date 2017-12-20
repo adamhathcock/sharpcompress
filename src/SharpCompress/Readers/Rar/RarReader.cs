@@ -18,7 +18,11 @@ namespace SharpCompress.Readers.Rar
         internal RarReader(ReaderOptions options)
             : base(options, ArchiveType.Rar)
         {
+#if !RarV2017_USELEGACY
+            this.pack = new SharpCompress.Compressors.Rar.UnpackV2017.Unpack();
+#else
             this.pack = new SharpCompress.Compressors.Rar.UnpackV1.Unpack();
+#endif
         }
 
         internal abstract void ValidateArchive(RarVolume archive);

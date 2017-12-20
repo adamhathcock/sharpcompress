@@ -24,7 +24,6 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017
         private Stream writeStream;
 
         private void _UnpackCtor() {
-            BlockTables.Init();
             for (int i = 0; i < this.AudV.Length; i++) {
                 this.AudV[i] = new AudioVariables();
             }
