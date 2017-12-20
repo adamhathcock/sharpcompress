@@ -123,6 +123,23 @@ namespace SharpCompress
             }
         }
 
+        public static void FillFast<T>(T[] array, T val) where T : struct
+        {
+            for (int i = 0; i < array.Length; i++)
+            {
+                array[i] = val;
+            }
+        }
+
+        public static void FillFast<T>(T[] array, int start, int length, T val) where T : struct
+        {
+            int toIndex = start + length;
+            for (int i = start; i < toIndex; i++)
+            {
+                array[i] = val;
+            }
+        }
+
 
         /// <summary>
         /// Fills the array with an specific value.

@@ -29,7 +29,7 @@ public Unpack(/* ComprDataIO *DataIO */)
 {
   _UnpackCtor();
 
-  UnpIO=DataIO;
+  //UnpIO=DataIO;
   Window=null;
   Fragmented=false;
   Suspended=false;
@@ -203,9 +203,10 @@ void UnpInitData(bool Solid)
     OldDistPtr=0;
     LastDist=LastLength=0;
 //    memset(Window,0,MaxWinSize);
-    memset(&BlockTables,0,sizeof(BlockTables));
+    //memset(&BlockTables,0,sizeof(BlockTables));
+    BlockTables = new UnpackBlockTables();
     UnpPtr=WrPtr=0;
-    WriteBorder=Min(MaxWinSize,UNPACK_MAX_WRITE)&MaxWinMask;
+    WriteBorder=Math.Min(MaxWinSize,UNPACK_MAX_WRITE)&MaxWinMask;
   }
   // Filters never share several solid files, so we can safely reset them
   // even in solid archive.
@@ -216,7 +217,8 @@ void UnpInitData(bool Solid)
   ReadTop=0;
   ReadBorder=0;
 
-  memset(&BlockHeader,0,sizeof(BlockHeader));
+  //memset(&BlockHeader,0,sizeof(BlockHeader));
+  BlockHeader = new UnpackBlockHeader();
   BlockHeader.BlockSize=-1;  // '-1' means not defined yet.
 #if !RarV2017_SFX_MODULE
   UnpInitData20(Solid);
@@ -229,7 +231,7 @@ void UnpInitData(bool Solid)
 // LengthTable contains the length in bits for every element of alphabet.
 // Dec is the structure to decode Huffman code/
 // Size is size of length table and DecodeNum field in Dec structure,
-void MakeDecodeTables(byte *LengthTable,DecodeTable Dec,uint Size)
+void MakeDecodeTables(byte[] LengthTable,DecodeTable Dec,uint Size)
 {
   // Size of alphabet and DecodePos array.
   Dec.MaxNum=Size;
@@ -244,7 +246,8 @@ void MakeDecodeTables(byte *LengthTable,DecodeTable Dec,uint Size)
   LengthCount[0]=0;
 
   // Set the entire DecodeNum to zero.
-  memset(Dec->DecodeNum,0,Size*sizeof(*Dec->DecodeNum));
+  //memset(Dec->DecodeNum,0,Size*sizeof(*Dec->DecodeNum));
+  Utility.FillFast<ushort>(Dec.DecodeNum, 0);
 
   // Initialize not really used entry for zero length code.
   Dec.DecodePos[0]=0;
@@ -284,7 +287,7 @@ void MakeDecodeTables(byte *LengthTable,DecodeTable Dec,uint Size)
   for (uint I=0;I<Size;I++)
   {
     // Get the current bit length.
-    byte CurBitLength=LengthTable[I] & 0xf;
+    byte CurBitLength=(byte)(LengthTable[I] & 0xf);
 
     if (CurBitLength!=0)
     {
@@ -311,15 +314,15 @@ void MakeDecodeTables(byte *LengthTable,DecodeTable Dec,uint Size)
     case NC:
     case NC20:
     case NC30:
-      Dec->QuickBits=MAX_QUICK_DECODE_BITS;
+      Dec.QuickBits=MAX_QUICK_DECODE_BITS;
       break;
     default:
-      Dec->QuickBits=MAX_QUICK_DECODE_BITS-3;
+      Dec.QuickBits=MAX_QUICK_DECODE_BITS-3;
       break;
   }
 
   // Size of tables for quick mode.
-  uint QuickDataSize=1<<Dec->QuickBits;
+  uint QuickDataSize=1<<Dec.QuickBits;
 
   // Bit length for current code, start from 1 bit codes. It is important
   // to use 1 bit instead of 0 for minimum code length, so we are moving
@@ -330,23 +333,23 @@ void MakeDecodeTables(byte *LengthTable,DecodeTable Dec,uint Size)
   for (uint Code=0;Code<QuickDataSize;Code++)
   {
     // Left align the current code, so it will be in usual bit field format.
-    uint BitField=Code<<(16-Dec->QuickBits);
+    uint BitField=Code<<(16-Dec.QuickBits);
 
     // Prepare the table for quick decoding of bit lengths.
   
     // Find the upper limit for current bit field and adjust the bit length
     // accordingly if necessary.
-    while (CurBitLength<ASIZE(Dec->DecodeLen) && BitField>=Dec->DecodeLen[CurBitLength])
+    while (CurBitLength<Dec.DecodeLen.Length && BitField>=Dec.DecodeLen[CurBitLength])
       CurBitLength++;
 
     // Translation of right aligned bit string to bit length.
-    Dec->QuickLen[Code]=CurBitLength;
+    Dec.QuickLen[Code]=CurBitLength;
 
     // Prepare the table for quick translation of position in code list
     // to position in alphabet.
 
     // Calculate the distance from the start code for current bit length.
-    uint Dist=BitField-Dec->DecodeLen[CurBitLength-1];
+    uint Dist=BitField-Dec.DecodeLen[CurBitLength-1];
 
     // Right align the distance.
     Dist>>=(16-CurBitLength);
@@ -355,16 +358,16 @@ void MakeDecodeTables(byte *LengthTable,DecodeTable Dec,uint Size)
     // of first position for current bit length and right aligned distance
     // between our bit field and start code for current bit length.
     uint Pos;
-    if (CurBitLength<ASIZE(Dec->DecodePos) &&
-        (Pos=Dec->DecodePos[CurBitLength]+Dist)<Size)
+    if (CurBitLength<Dec.DecodePos.Length &&
+        (Pos=Dec.DecodePos[CurBitLength]+Dist)<Size)
     {
       // Define the code to alphabet number translation.
-      Dec->QuickNum[Code]=Dec->DecodeNum[Pos];
+      Dec.QuickNum[Code]=Dec.DecodeNum[Pos];
     }
     else
     {
       // Can be here for length table filled with zeroes only (empty).
-      Dec->QuickNum[Code]=0;
+      Dec.QuickNum[Code]=0;
     }
   }
 }
