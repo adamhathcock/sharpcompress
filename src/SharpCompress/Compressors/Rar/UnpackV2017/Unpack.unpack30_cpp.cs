@@ -10,20 +10,16 @@ using size_t = System.UInt64;
 using int64 = System.Int64;
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using static SharpCompress.Compressors.Rar.UnpackV2017.PackDef;
 using static SharpCompress.Compressors.Rar.UnpackV2017.UnpackGlobal;
-//using static SharpCompress.Compressors.Rar.UnpackV2017.Unpack.Unpack30Local;
+using static SharpCompress.Compressors.Rar.UnpackV2017.Unpack.Unpack30Local;
 
 namespace SharpCompress.Compressors.Rar.UnpackV2017
 {
     internal partial class Unpack
     {
 
-#if !RarV2017_RAR5ONLY
+#if true || !RarV2017_RAR5ONLY
 // We use it instead of direct PPM.DecodeChar call to be sure that
 // we reset PPM structures in case of corrupt data. It is important,
 // because these structures can be invalid after PPM.DecodeChar returned -1.
@@ -41,8 +37,8 @@ int SafePPMDecodeChar()
 internal static class Unpack30Local {
   public static byte[] LDecode={0,1,2,3,4,5,6,7,8,10,12,14,16,20,24,28,32,40,48,56,64,80,96,112,128,160,192,224};
   public static byte[] LBits=  {0,0,0,0,0,0,0,0,1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4,  4,  5,  5,  5,  5};
-  public static int DDecode[DC];
-  public static byte DBits[DC];
+  public static int[] DDecode = new int[DC];
+  public static byte[] DBits = new byte[DC];
   public static int[] DBitLengthCounts= {4,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,14,0,12};
   public static byte[] SDDecode={0,4,8,16,32,64,128,192};
   public static byte[] SDBits=  {2,2,3, 4, 5, 6,  6,  6};
@@ -54,11 +50,11 @@ void Unpack29(bool Solid)
   if (DDecode[1]==0)
   {
     int Dist=0,BitLength=0,Slot=0;
-    for (int I=0;I<ASIZE(DBitLengthCounts);I++,BitLength++)
+    for (int I=0;I<DBitLengthCounts.Length;I++,BitLength++)
       for (int J=0;J<DBitLengthCounts[I];J++,Slot++,Dist+=(1<<BitLength))
       {
         DDecode[Slot]=Dist;
-        DBits[Slot]=BitLength;
+        DBits[Slot]=(byte)BitLength;
       }
   }
 
@@ -130,14 +126,14 @@ void Unpack29(bool Solid)
           bool Failed=false;
           for (int I=0;I<4 && !Failed;I++)
           {
-            int Ch=SafePPMDecodeChar();
-            if (Ch==-1)
+            int _Ch=SafePPMDecodeChar();
+            if (_Ch==-1)
               Failed=true;
             else
               if (I==3)
-                Length=(byte)Ch;
+                Length=(byte)_Ch;
               else
-                Distance=(Distance<<8)+(byte)Ch;
+                Distance=(Distance<<8)+(byte)_Ch;
           }
           if (Failed)
             break;
@@ -150,13 +146,13 @@ void Unpack29(bool Solid)
           int Length=SafePPMDecodeChar();
           if (Length==-1)
             break;
-          CopyString(Length+4,1);
+          CopyString((uint)(Length+4),1);
           continue;
         }
         // If we are here, NextCh must be 1, what means that current byte
         // is equal to our 'escape' byte, so we just store it to Window.
       }
-      Window[UnpPtr++]=Ch;
+      Window[UnpPtr++]=(byte)Ch;
       continue;
     }
 
@@ -168,47 +164,47 @@ void Unpack29(bool Solid)
     }
     if (Number>=271)
     {
-      uint Length=LDecode[Number-=271]+3;
+      uint Length=(uint)(LDecode[Number-=271]+3);
       if ((Bits=LBits[Number])>0)
       {
-        Length+=Inp.getbits()>>(16-Bits);
+        Length+=Inp.getbits()>>(int)(16-Bits);
         Inp.addbits(Bits);
       }
 
       uint DistNumber=DecodeNumber(Inp,BlockTables.DD);
-      uint Distance=DDecode[DistNumber]+1;
+      uint Distance=(uint)(DDecode[DistNumber]+1);
       if ((Bits=DBits[DistNumber])>0)
       {
         if (DistNumber>9)
         {
           if (Bits>4)
           {
-            Distance+=((Inp.getbits()>>(20-Bits))<<4);
+            Distance+=((Inp.getbits()>>(int)(20-Bits))<<4);
             Inp.addbits(Bits-4);
           }
           if (LowDistRepCount>0)
           {
             LowDistRepCount--;
-            Distance+=PrevLowDist;
+            Distance+=(uint)PrevLowDist;
           }
           else
           {
             uint LowDist=DecodeNumber(Inp,BlockTables.LDD);
             if (LowDist==16)
             {
-              LowDistRepCount=LOW_DIST_REP_COUNT-1;
-              Distance+=PrevLowDist;
+              LowDistRepCount=(int)(LOW_DIST_REP_COUNT-1);
+              Distance+=(uint)PrevLowDist;
             }
             else
             {
               Distance+=LowDist;
-              PrevLowDist=LowDist;
+              PrevLowDist=(int)LowDist;
             }
           }
         }
         else
         {
-          Distance+=Inp.getbits()>>(16-Bits);
+          Distance+=Inp.getbits()>>(int)(16-Bits);
           Inp.addbits(Bits);
         }
       }
@@ -255,19 +251,19 @@ void Unpack29(bool Solid)
       int Length=LDecode[LengthNumber]+2;
       if ((Bits=LBits[LengthNumber])>0)
       {
-        Length+=Inp.getbits()>>(16-Bits);
+        Length+=Inp.getbits()>>(int)(16-Bits);
         Inp.addbits(Bits);
       }
-      LastLength=Length;
-      CopyString(Length,Distance);
+      LastLength=(uint)Length;
+      CopyString((uint)Length,Distance);
       continue;
     }
     if (Number<272)
     {
-      uint Distance=SDDecode[Number-=263]+1;
+      uint Distance=(uint)(SDDecode[Number-=263]+1);
       if ((Bits=SDBits[Number])>0)
       {
-        Distance+=Inp.getbits()>>(16-Bits);
+        Distance+=Inp.getbits()>>(int)(16-Bits);
         Inp.addbits(Bits);
       }
       InsertOldDist(Distance);
@@ -385,10 +381,11 @@ bool ReadVMCodePPM()
 }
 
 
-bool AddVMCode(uint FirstByte,byte *Code,int CodeSize)
+bool AddVMCode(uint FirstByte,byte[] Code,int CodeSize)
 {
   VMCodeInp.InitBitInput();
-  memcpy(VMCodeInp.InBuf,Code,Min(BitInput.MAX_SIZE,CodeSize));
+  //x memcpy(VMCodeInp.InBuf,Code,Min(BitInput.MAX_SIZE,CodeSize));
+  Array.Copy(Code, 0, VMCodeInp.InBuf, 0, Math.Min(BitInput.MAX_SIZE,CodeSize));
   VM.Init();
 
   uint FiltPos;
@@ -401,28 +398,28 @@ bool AddVMCode(uint FirstByte,byte *Code,int CodeSize)
       FiltPos--;
   }
   else
-    FiltPos=LastFilter; // Use the same filter as last time.
+    FiltPos=(uint)this.LastFilter; // Use the same filter as last time.
 
   if (FiltPos>Filters30.Count || FiltPos>OldFilterLengths.Count)
     return false;
-  LastFilter=FiltPos;
+  LastFilter=(int)FiltPos;
   bool NewFilter=(FiltPos==Filters30.Count);
 
-  UnpackFilter30 *StackFilter=new UnpackFilter30(); // New filter for PrgStack.
+  UnpackFilter30 StackFilter=new UnpackFilter30(); // New filter for PrgStack.
 
-  UnpackFilter30 *Filter;
+  UnpackFilter30 Filter;
   if (NewFilter) // New filter code, never used before since VM reset.
   {
     if (FiltPos>MAX3_UNPACK_FILTERS)
     {
       // Too many different filters, corrupt archive.
-      delete StackFilter;
+      //delete StackFilter;
       return false;
     }
 
     Filters30.Add(1);
     Filters30[Filters30.Count-1]=Filter=new UnpackFilter30();
-    StackFilter->ParentFilter=(uint)(Filters30.Count-1);
+    StackFilter.ParentFilter=(uint)(Filters30.Count-1);
 
     // Reserve one item to store the data block length of our new filter 
     // entry. We'll set it to real block length below, after reading it.
@@ -433,11 +430,11 @@ bool AddVMCode(uint FirstByte,byte *Code,int CodeSize)
   else  // Filter was used in the past.
   {
     Filter=Filters30[FiltPos];
-    StackFilter->ParentFilter=FiltPos;
+    StackFilter.ParentFilter=FiltPos;
   }
 
-  uint EmptyCount=0;
-  for (uint I=0;I<PrgStack.Count;I++)
+  int EmptyCount=0;
+  for (int I=0;I<PrgStack.Count;I++)
   {
     PrgStack[I-EmptyCount]=PrgStack[I];
     if (PrgStack[I]==null)
@@ -449,7 +446,7 @@ bool AddVMCode(uint FirstByte,byte *Code,int CodeSize)
   {
     if (PrgStack.Count>MAX3_UNPACK_FILTERS)
     {
-      delete StackFilter;
+      //delete StackFilter;
       return false;
     }
     PrgStack.Add(1);
@@ -461,13 +458,13 @@ bool AddVMCode(uint FirstByte,byte *Code,int CodeSize)
   uint BlockStart=RarVM.ReadData(VMCodeInp);
   if ((FirstByte & 0x40)!=0)
     BlockStart+=258;
-  StackFilter->BlockStart=(uint)((BlockStart+UnpPtr)&MaxWinMask);
+  StackFilter.BlockStart=(uint)((BlockStart+UnpPtr)&MaxWinMask);
   if ((FirstByte & 0x20)!=0)
   {
-    StackFilter->BlockLength=RarVM.ReadData(VMCodeInp);
+    StackFilter.BlockLength=RarVM.ReadData(VMCodeInp);
 
     // Store the last data block length for current filter.
-    OldFilterLengths[FiltPos]=StackFilter->BlockLength;
+    OldFilterLengths[FiltPos]=StackFilter.BlockLength;
   }
   else
   {
@@ -475,23 +472,23 @@ bool AddVMCode(uint FirstByte,byte *Code,int CodeSize)
     // for same filter. It is possible for corrupt data to access a new 
     // and not filled yet item of OldFilterLengths array here. This is why
     // we set new OldFilterLengths items to zero above.
-    StackFilter->BlockLength=FiltPos<OldFilterLengths.Count ? OldFilterLengths[FiltPos]:0;
+    StackFilter.BlockLength=FiltPos<OldFilterLengths.Count ? OldFilterLengths[FiltPos]:0;
   }
 
-  StackFilter->NextWindow=WrPtr!=UnpPtr && ((WrPtr-UnpPtr)&MaxWinMask)<=BlockStart;
+  StackFilter.NextWindow=WrPtr!=UnpPtr && ((WrPtr-UnpPtr)&MaxWinMask)<=BlockStart;
 
 //  DebugLog("\nNextWindow: UnpPtr=%08x WrPtr=%08x BlockStart=%08x",UnpPtr,WrPtr,BlockStart);
 
-  memset(StackFilter->Prg.InitR,0,sizeof(StackFilter->Prg.InitR));
-  StackFilter->Prg.InitR[4]=StackFilter->BlockLength;
+  memset(StackFilter.Prg.InitR,0,sizeof(StackFilter.Prg.InitR));
+  StackFilter.Prg.InitR[4]=StackFilter.BlockLength;
 
   if ((FirstByte & 0x10)!=0) // Set registers to optional parameters if any.
   {
     uint InitMask=VMCodeInp.fgetbits()>>9;
     VMCodeInp.faddbits(7);
-    for (uint I=0;I<7;I++)
-      if (InitMask & (1<<I))
-        StackFilter->Prg.InitR[I]=RarVM.ReadData(VMCodeInp);
+    for (int I=0;I<7;I++)
+      if ((InitMask & (1<<I)) != 0)
+        StackFilter.Prg.InitR[I]=RarVM.ReadData(VMCodeInp);
   }
 
   if (NewFilter)
@@ -509,7 +506,7 @@ bool AddVMCode(uint FirstByte,byte *Code,int CodeSize)
     }
     VM.Prepare(&VMCode[0],VMCodeSize,&Filter->Prg);
   }
-  StackFilter->Prg.Type=Filter->Prg.Type;
+  StackFilter.Prg.Type=Filter.Prg.Type;
 
   return true;
 }
@@ -535,7 +532,7 @@ bool UnpReadBuf30()
   }
   else
     DataSize=ReadTop;
-  int ReadCode=UnpIO->UnpRead(Inp.InBuf+DataSize,BitInput.MAX_SIZE-DataSize);
+  int ReadCode=UnpIO_UnpRead(Inp.InBuf,DataSize,BitInput.MAX_SIZE-DataSize);
   if (ReadCode>0)
     ReadTop+=ReadCode;
   ReadBorder=ReadTop-30;
@@ -555,16 +552,16 @@ void UnpWriteBuf30()
     // these data can be used for future string matches, so we must
     // preserve them in original form.
 
-    UnpackFilter30 *flt=PrgStack[I];
+    UnpackFilter30 flt=PrgStack[I];
     if (flt==null)
       continue;
-    if (flt->NextWindow)
+    if (flt.NextWindow)
     {
-      flt->NextWindow=false;
+      flt.NextWindow=false;
       continue;
     }
-    uint BlockStart=flt->BlockStart;
-    uint BlockLength=flt->BlockLength;
+    uint BlockStart=flt.BlockStart;
+    uint BlockLength=flt.BlockLength;
     if (((BlockStart-WrittenBorder)&MaxWinMask)<WriteSize)
     {
       if (WrittenBorder!=BlockStart)
@@ -590,35 +587,35 @@ void UnpWriteBuf30()
 
         ExecuteCode(Prg);
 
-        byte *FilteredData=Prg->FilteredData;
-        uint FilteredDataSize=Prg->FilteredDataSize;
+        byte[] FilteredData=Prg.FilteredData;
+        uint FilteredDataSize=Prg.FilteredDataSize;
 
         delete PrgStack[I];
         PrgStack[I]=null;
         while (I+1<PrgStack.Count)
         {
-          UnpackFilter30 *NextFilter=PrgStack[I+1];
+          UnpackFilter30 NextFilter=PrgStack[I+1];
           // It is required to check NextWindow here.
-          if (NextFilter==null || NextFilter->BlockStart!=BlockStart ||
-              NextFilter->BlockLength!=FilteredDataSize || NextFilter->NextWindow)
+          if (NextFilter==null || NextFilter.BlockStart!=BlockStart ||
+              NextFilter.BlockLength!=FilteredDataSize || NextFilter.NextWindow)
             break;
 
           // Apply several filters to same data block.
 
           VM.SetMemory(0,FilteredData,FilteredDataSize);
 
-          VM_PreparedProgram *ParentPrg=&Filters30[NextFilter->ParentFilter]->Prg;
+          VM_PreparedProgram *ParentPrg=&Filters30[NextFilter.ParentFilter]->Prg;
           VM_PreparedProgram *NextPrg=&NextFilter->Prg;
 
           ExecuteCode(NextPrg);
 
-          FilteredData=NextPrg->FilteredData;
-          FilteredDataSize=NextPrg->FilteredDataSize;
+          FilteredData=NextPrg.FilteredData;
+          FilteredDataSize=NextPrg.FilteredDataSize;
           I++;
           delete PrgStack[I];
           PrgStack[I]=null;
         }
-        UnpIO->UnpWrite(FilteredData,FilteredDataSize);
+        UnpIO_UnpWrite(FilteredData,0,FilteredDataSize);
         UnpSomeRead=true;
         WrittenFileSize+=FilteredDataSize;
         WrittenBorder=BlockEnd;
@@ -630,9 +627,9 @@ void UnpWriteBuf30()
         // the window border to process this filter next time, not now.
         for (size_t J=I;J<PrgStack.Count;J++)
         {
-          UnpackFilter30 *flt=PrgStack[J];
-          if (flt!=null && flt->NextWindow)
-            flt->NextWindow=false;
+          UnpackFilter30 flt=PrgStack[J];
+          if (flt!=null && flt.NextWindow)
+            flt.NextWindow=false;
         }
         WrPtr=WrittenBorder;
         return;
@@ -654,12 +651,12 @@ void ExecuteCode(VM_PreparedProgram *Prg)
 
 bool ReadTables30()
 {
-  byte BitLength[BC];
-  byte Table[HUFF_TABLE_SIZE30];
+  byte[] BitLength = new byte[BC];
+  byte[] Table = new byte[HUFF_TABLE_SIZE30];
   if (Inp.InAddr>ReadTop-25)
     if (!UnpReadBuf30())
       return(false);
-  Inp.faddbits((8-Inp.InBit)&7);
+  Inp.faddbits((uint)((8-Inp.InBit)&7));
   uint BitField=Inp.fgetbits();
   if ((BitField & 0x8000) != 0)
   {
@@ -694,9 +691,9 @@ bool ReadTables30()
       }
     }
     else
-      BitLength[I]=Length;
+      BitLength[I]=(byte)Length;
   }
-  MakeDecodeTables(BitLength,BlockTables.BD,BC30);
+  MakeDecodeTables(BitLength,0,BlockTables.BD,BC30);
 
   const uint TableSize=HUFF_TABLE_SIZE30;
   for (uint I=0;I<TableSize;)
@@ -707,7 +704,7 @@ bool ReadTables30()
     uint Number=DecodeNumber(Inp,BlockTables.BD);
     if (Number<16)
     {
-      Table[I]=(Number+UnpOldTable[I]) & 0xf;
+      Table[I]=(byte)((Number+this.UnpOldTable[I]) & 0xf);
       I++;
     }
     else
@@ -753,11 +750,12 @@ bool ReadTables30()
   TablesRead3=true;
   if (Inp.InAddr>ReadTop)
     return false;
-  MakeDecodeTables(&Table[0],&BlockTables.LD,NC30);
-  MakeDecodeTables(&Table[NC30],&BlockTables.DD,DC30);
-  MakeDecodeTables(&Table[NC30+DC30],&BlockTables.LDD,LDC30);
-  MakeDecodeTables(&Table[NC30+DC30+LDC30],&BlockTables.RD,RC30);
-  memcpy(UnpOldTable,Table,sizeof(UnpOldTable));
+  MakeDecodeTables(Table,0,BlockTables.LD,NC30);
+  MakeDecodeTables(Table,(int)NC30,BlockTables.DD,DC30);
+  MakeDecodeTables(Table,(int)(NC30+DC30),BlockTables.LDD,LDC30);
+  MakeDecodeTables(Table,(int)(NC30+DC30+LDC30),BlockTables.RD,RC30);
+  //x memcpy(UnpOldTable,Table,sizeof(UnpOldTable));
+  Array.Copy(Table,0,UnpOldTable,0,UnpOldTable.Length);
   return true;
 }
 
