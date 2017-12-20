@@ -30,6 +30,15 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017
             }
         }
 
+        private int UnpIO_UnpRead(byte[] buf, int offset, int count) {
+            // NOTE: caller has logic to check for -1 for error we throw instead.
+            return this.readStream.Read(buf, offset, count);
+        }
+
+        private void UnpIO_UnpWrite(byte[] buf, size_t offset, uint count) {
+            this.writeStream.Write(buf, checked((int)offset), checked((int)count));
+        }
+
         public void DoUnpack(FileHeader fileHeader, Stream readStream, Stream writeStream)
         {
             // as of 12/2017 .NET limits array indexing to using a signed integer
@@ -95,6 +104,7 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017
         public static byte[] EnsureCapacity(byte[] array, int length) {
             return array.Length < length ? new byte[length] : array;
         }
+
     }
 }
 #endif

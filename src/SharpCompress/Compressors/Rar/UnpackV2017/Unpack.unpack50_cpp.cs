@@ -258,7 +258,7 @@ bool UnpReadBuf()
     DataSize=ReadTop;
   int ReadCode=0;
   if (BitInput.MAX_SIZE!=DataSize)
-    ReadCode=UnpIO->UnpRead(Inp.InBuf+DataSize,BitInput.MAX_SIZE-DataSize);
+    ReadCode=UnpIO_UnpRead(Inp.InBuf,DataSize,BitInput.MAX_SIZE-DataSize);
   if (ReadCode>0) // Can be also -1.
     ReadTop+=ReadCode;
   ReadBorder=ReadTop-30;
@@ -359,7 +359,7 @@ void UnpWriteBuf()
           Filters[I].Type=FILTER_NONE;
 
           if (OutMem!=null)
-            UnpIO->UnpWrite(OutMem,BlockLength);
+            UnpIO_UnpWrite(OutMem,0,BlockLength);
 
           UnpSomeRead=true;
           WrittenFileSize+=BlockLength;
@@ -549,7 +549,7 @@ void UnpWriteData(byte[] Data, size_t offset, size_t Size)
   int64 LeftToWrite=DestUnpSize-WrittenFileSize;
   if ((int64)WriteSize>LeftToWrite)
     WriteSize=(size_t)LeftToWrite;
-  UnpIO->UnpWrite(Data, offset, WriteSize);
+  UnpIO_UnpWrite(Data, offset, WriteSize);
   WrittenFileSize+=Size;
 }
 
