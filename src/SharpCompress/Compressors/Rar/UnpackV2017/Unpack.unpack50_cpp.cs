@@ -132,7 +132,7 @@ void Unpack5(bool Solid)
       InsertOldDist(Distance);
       LastLength=Length;
       if (Fragmented)
-        FragWindow.CopyString(Length,Distance,UnpPtr,MaxWinMask);
+        FragWindow.CopyString(Length,Distance,ref UnpPtr,MaxWinMask);
       else
         CopyString(Length,Distance);
       continue;
@@ -148,7 +148,7 @@ void Unpack5(bool Solid)
     {
       if (LastLength!=0)
         if (Fragmented)
-          FragWindow.CopyString(LastLength,OldDist[0],UnpPtr,MaxWinMask);
+          FragWindow.CopyString(LastLength,OldDist[0],ref UnpPtr,MaxWinMask);
         else
           CopyString(LastLength,OldDist[0]);
       continue;
@@ -165,7 +165,7 @@ void Unpack5(bool Solid)
       uint Length=SlotToLength(Inp,LengthSlot);
       LastLength=Length;
       if (Fragmented)
-        FragWindow.CopyString(Length,Distance,UnpPtr,MaxWinMask);
+        FragWindow.CopyString(Length,Distance,ref UnpPtr,MaxWinMask);
       else
         CopyString(Length,Distance);
       continue;
@@ -183,7 +183,7 @@ uint ReadFilterData(BitInput Inp)
   uint Data=0;
   for (uint I=0;I<ByteCount;I++)
   {
-    Data+=(Inp.fgetbits()>>8)<<(I*8);
+    Data+=(Inp.fgetbits()>>8)<<(int)(I*8);
     Inp.addbits(8);
   }
   return Data;
@@ -201,12 +201,12 @@ bool ReadFilter(BitInput Inp,UnpackFilter Filter)
   if (Filter.BlockLength>MAX_FILTER_BLOCK_SIZE)
     Filter.BlockLength=0;
 
-  Filter.Type=Inp.fgetbits()>>13;
+  Filter.Type=(byte)(Inp.fgetbits()>>13);
   Inp.faddbits(3);
 
   if (Filter.Type==FILTER_DELTA)
   {
-    Filter.Channels=(Inp.fgetbits()>>11)+1;
+    Filter.Channels=(byte)((Inp.fgetbits()>>11)+1);
     Inp.faddbits(5);
   }
 
@@ -559,26 +559,26 @@ bool ReadBlockHeader(BitInput Inp,ref UnpackBlockHeader Header)
   if (!Inp.ExternalBuffer && Inp.InAddr>ReadTop-7)
     if (!UnpReadBuf())
       return false;
-  Inp.faddbits((8-Inp.InBit)&7);
+  Inp.faddbits((uint)((8-Inp.InBit)&7));
   
-  byte BlockFlags=Inp.fgetbits()>>8;
+  byte BlockFlags=(byte)(Inp.fgetbits()>>8);
   Inp.faddbits(8);
-  uint ByteCount=((BlockFlags>>3)&3)+1; // Block size byte count.
+  uint ByteCount=(uint)(((BlockFlags>>3)&3)+1); // Block size byte count.
   
   if (ByteCount==4)
     return false;
 
-  Header.HeaderSize=2+ByteCount;
+  Header.HeaderSize=(int)(2+ByteCount);
 
   Header.BlockBitSize=(BlockFlags&7)+1;
 
-  byte SavedCheckSum=Inp.fgetbits()>>8;
+  byte SavedCheckSum=(byte)(Inp.fgetbits()>>8);
   Inp.faddbits(8);
 
   int BlockSize=0;
   for (uint I=0;I<ByteCount;I++)
   {
-    BlockSize+=(Inp.fgetbits()>>8)<<(I*8);
+    BlockSize+=(int)((Inp.fgetbits()>>8)<<(int)(I*8));
     Inp.addbits(8);
   }
 
@@ -625,7 +625,7 @@ bool ReadTables(BitInput Inp,ref UnpackBlockHeader Header, ref UnpackBlockTables
       }
     }
     else
-      BitLength[I]=Length;
+      BitLength[I]=(byte)Length;
   }
 
   MakeDecodeTables(BitLength,Tables.BD,BC);
@@ -640,7 +640,7 @@ bool ReadTables(BitInput Inp,ref UnpackBlockHeader Header, ref UnpackBlockTables
     uint Number=DecodeNumber(Inp,Tables.BD);
     if (Number<16)
     {
-      Table[I]=Number;
+      Table[I]=(byte)Number;
       I++;
     }
     else

@@ -1,4 +1,5 @@
 ﻿#if RARWIP
+#if !RarV2017_RAR5ONLY
 #if !Rar2017_64bit
 using nint = System.Int32;
 using nuint = System.UInt32;
@@ -404,4 +405,5 @@ byte DecodeAudio(int Delta)
 
     }
 }
+#endif
 #endif

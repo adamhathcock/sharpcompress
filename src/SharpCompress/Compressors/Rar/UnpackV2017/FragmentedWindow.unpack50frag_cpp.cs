@@ -89,7 +89,7 @@ public void Init(size_t WinSize)
 }
 
 
-byte this[size_t Item] {
+public byte this[size_t Item] {
 get {
   if (Item<MemSize[0])
     return Mem[0][Item];
@@ -126,7 +126,7 @@ public void CopyString(uint Length,uint Distance,ref size_t UnpPtr,size_t MaxWin
 }
 
 
-void CopyData(byte *Dest,size_t WinPos,size_t Size)
+public void CopyData(byte *Dest,size_t WinPos,size_t Size)
 {
   for (size_t I=0;I<Size;I++)
     Dest[I]=this[WinPos+I];

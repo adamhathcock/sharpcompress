@@ -1,4 +1,5 @@
 ﻿#if RARWIP
+#if !RarV2017_RAR5ONLY
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -506,4 +507,5 @@ uint DecodeNum(uint Num,uint StartPos,uint *DecTab,uint *PosTab)
 
     }
 }
+#endif
 #endif

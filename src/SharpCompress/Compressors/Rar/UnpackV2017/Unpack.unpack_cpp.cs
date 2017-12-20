@@ -44,10 +44,12 @@ public Unpack(/* ComprDataIO *DataIO */)
   // It prevents crash if first DoUnpack call is later made with wrong
   // (true) 'Solid' value.
   UnpInitData(false);
+#if !RarV2017_RAR5ONLY
 #if !RarV2017_SFX_MODULE
   // RAR 1.5 decompression initialization
   UnpInitData15(false);
   InitHuff();
+#endif
 #endif
 }
 
@@ -154,6 +156,7 @@ void DoUnpack(uint Method,bool Solid)
   // just for extra safety.
   switch(Method)
   {
+#if !RarV2017_RAR5ONLY
 #if !RarV2017_SFX_MODULE
     case 15: // rar 1.5 compression
       if (!Fragmented)
@@ -169,6 +172,7 @@ void DoUnpack(uint Method,bool Solid)
       if (!Fragmented)
         Unpack29(Solid);
       break;
+#endif
     case 50: // RAR 5.0 compression algorithm.
 #if RarV2017_RAR_SMP
       if (MaxUserThreads>1)
@@ -216,10 +220,12 @@ void UnpInitData(bool Solid)
   //memset(&BlockHeader,0,sizeof(BlockHeader));
   BlockHeader = new UnpackBlockHeader();
   BlockHeader.BlockSize=-1;  // '-1' means not defined yet.
+#if !RarV2017_RAR5ONLY
 #if !RarV2017_SFX_MODULE
   UnpInitData20(Solid);
 #endif
   UnpInitData30(Solid);
+#endif
   UnpInitData50(Solid);
 }
 

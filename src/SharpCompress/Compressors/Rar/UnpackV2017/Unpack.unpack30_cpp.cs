@@ -1,4 +1,5 @@
 ﻿#if RARWIP
+#if !RarV2017_RAR5ONLY
 #if !Rar2017_64bit
 using nint = System.Int32;
 using nuint = System.UInt32;
@@ -687,7 +688,7 @@ bool ReadTables30()
       else
       {
         ZeroCount+=2;
-        while (ZeroCount-- > 0 && I<ASIZE(BitLength))
+        while (ZeroCount-- > 0 && I<BitLength.Length)
           BitLength[I++]=0;
         I--;
       }
@@ -695,7 +696,7 @@ bool ReadTables30()
     else
       BitLength[I]=Length;
   }
-  MakeDecodeTables(BitLength,&BlockTables.BD,BC30);
+  MakeDecodeTables(BitLength,BlockTables.BD,BC30);
 
   const uint TableSize=HUFF_TABLE_SIZE30;
   for (uint I=0;I<TableSize;)
@@ -795,4 +796,5 @@ void InitFilters30(bool Solid)
 
     }
 }
+#endif
 #endif

@@ -193,7 +193,9 @@ class UnpackFilter30
   // in PrgStack array. Not defined for filters in Filters array.
   public uint ParentFilter;
 
+#if !RarV2017_RAR5ONLY
   public VM_PreparedProgram Prg;
+#endif
 };
 
 
@@ -369,7 +371,9 @@ internal partial class Unpack
 
     int PrevLowDist,LowDistRepCount;
 
+#if !RarV2017_RAR5ONLY
     ModelPPM PPM;
+#endif
     int PPMEscChar;
 
     readonly byte [] UnpOldTable = new byte[HUFF_TABLE_SIZE30];
@@ -383,7 +387,9 @@ internal partial class Unpack
     bool TablesRead2,TablesRead3,TablesRead5;
 
     // Virtual machine to execute filters code.
+#if !RarV2017_RAR5ONLY
     RarVM VM;
+#endif
   
     // Buffer to read VM filters code. We moved it here from AddVMCode
     // function to reduce time spent in BitInput constructor.
