@@ -1,13 +1,8 @@
 ﻿#if true
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using SharpCompress.Compressors.Filters;
-using SharpCompress.Compressors.Rar.Decode;
+using SharpCompress.Compressors.Rar.UnpackV1.Decode;
 using SharpCompress.Compressors.Rar.VM;
-using static SharpCompress.Compressors.Rar.Decode.PackDef;
 
 using size_t=System.UInt32;
 using UnpackBlockHeader = SharpCompress.Compressors.Rar.UnpackV1;
@@ -180,7 +175,7 @@ public bool TablePresent;
                 break;
             }
 
-            if (((WriteBorder-UnpPtr) & MaxWinMask)<MAX_LZ_MATCH+3 && WriteBorder!=UnpPtr)
+            if (((WriteBorder-UnpPtr) & MaxWinMask)<PackDef.MAX_LZ_MATCH+3 && WriteBorder!=UnpPtr)
             {
               UnpWriteBuf();
               if (WrittenFileSize>DestUnpSize)

@@ -4,8 +4,8 @@ using System.IO;
 using SharpCompress.Common;
 using SharpCompress.Common.Rar.Headers;
 using SharpCompress.Compressors.PPMd.H;
-using SharpCompress.Compressors.Rar.Decode;
-using SharpCompress.Compressors.Rar.PPM;
+using SharpCompress.Compressors.Rar.UnpackV1.Decode;
+using SharpCompress.Compressors.Rar.UnpackV1.PPM;
 using SharpCompress.Compressors.Rar.VM;
 
 namespace SharpCompress.Compressors.Rar.UnpackV1

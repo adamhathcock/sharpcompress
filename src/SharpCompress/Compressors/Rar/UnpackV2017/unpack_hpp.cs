@@ -15,7 +15,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using static SharpCompress.Compressors.Rar.Decode.PackDef;
+using static SharpCompress.Compressors.Rar.UnpackV2017.PackDef;
+using static SharpCompress.Compressors.Rar.UnpackV2017.UnpackGlobal;
 
 namespace SharpCompress.Compressors.Rar.UnpackV2017
 {
@@ -51,7 +52,7 @@ public const int UNPACK_MAX_WRITE      =0x400000;
     }
 
 // Decode compressed bit fields to alphabet numbers.
-struct DecodeTable
+sealed class DecodeTable
 {
   // Real size of DecodeNum table.
   uint MaxNum;
@@ -61,11 +62,11 @@ struct DecodeTable
   // range for bit length and DecodeLen[BitLength] defines next code
   // after the end of range or in other words the upper limit code
   // for specified bit length.
-  uint DecodeLen[16]; 
+  readonly uint[] DecodeLen = new uint[16]; 
 
   // Every item of this array contains the sum of all preceding items.
   // So it contains the start position in code list for every bit length. 
-  uint DecodePos[16];
+  readonly uint[] DecodePos = new uint[16];
 
   // Number of compressed bits processed in quick mode.
   // Must not exceed MAX_QUICK_DECODE_BITS.
@@ -73,13 +74,13 @@ struct DecodeTable
 
   // Translates compressed bits (up to QuickBits length)
   // to bit length in quick mode.
-  byte QuickLen[1<<MAX_QUICK_DECODE_BITS];
+  readonly byte[] QuickLen = new byte[1<<MAX_QUICK_DECODE_BITS];
 
   // Translates compressed bits (up to QuickBits length)
   // to position in alphabet in quick mode.
   // 'ushort' saves some memory and even provides a little speed gain
   // comparting to 'uint' here.
-  ushort QuickNum[1<<MAX_QUICK_DECODE_BITS];
+  readonly ushort[] QuickNum = new ushort[1<<MAX_QUICK_DECODE_BITS];
 
   // Translate the position in code list to position in alphabet.
   // We do not allocate it dynamically to avoid performance overhead
@@ -89,7 +90,7 @@ struct DecodeTable
   // for QuickLen based translation.
   // 'ushort' saves some memory and even provides a little speed gain
   // comparting to 'uint' here.
-  ushort DecodeNum[LARGEST_TABLE_SIZE];
+  readonly ushort[] DecodeNum = new ushort[LARGEST_TABLE_SIZE];
 };
 
 

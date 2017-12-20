@@ -8,7 +8,7 @@
 */
 
 using System;
-using SharpCompress.Compressors.Rar.Decode;
+using SharpCompress.Compressors.Rar.UnpackV1.Decode;
 
 namespace SharpCompress.Compressors.Rar.UnpackV1
 {
