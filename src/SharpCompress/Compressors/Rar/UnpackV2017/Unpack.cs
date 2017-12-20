@@ -1,7 +1,19 @@
 ﻿#if RARWIP
+#if !Rar2017_64bit
+using nint = System.Int32;
+using nuint = System.UInt32;
+using size_t = System.UInt32;
+#else
+using nint = System.Int64;
+using nuint = System.UInt64;
+using size_t = System.UInt64;
+#endif
+using int64 = System.Int64;
+
 using System;
 using System.IO;
 using SharpCompress.Common.Rar.Headers;
+using static SharpCompress.Compressors.Rar.UnpackV2017.PackDef;
 
 namespace SharpCompress.Compressors.Rar.UnpackV2017
 {

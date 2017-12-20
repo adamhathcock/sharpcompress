@@ -10,11 +10,6 @@ using size_t = System.UInt64;
 #endif
 using int64 = System.Int64;
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using static SharpCompress.Compressors.Rar.UnpackV2017.PackDef;
 
 namespace SharpCompress.Compressors.Rar.UnpackV2017
@@ -37,60 +32,68 @@ void InsertOldDist(uint Distance)
 void CopyString(uint Length,uint Distance)
 {
   size_t SrcPtr=UnpPtr-Distance;
+
   if (SrcPtr<MaxWinSize-MAX_LZ_MATCH && UnpPtr<MaxWinSize-MAX_LZ_MATCH)
   {
     // If we are not close to end of window, we do not need to waste time
     // to "& MaxWinMask" pointer protection.
 
-    byte *Src=Window+SrcPtr;
-    byte *Dest=Window+UnpPtr;
-    UnpPtr+=Length;
+    // TODO: sharpcompress: non-optimized loop, we may be able to unroll and speed up
+    var Window = this.Window;
+    while (Length-- > 0)
+    {
+        Window[UnpPtr++] = Window[SrcPtr++];
+    }
 
-#if FAST_MEMCPY
-    if (Distance<Length) // Overlapping strings
-#endif
-      while (Length>=8)
-      {
-        Dest[0]=Src[0];
-        Dest[1]=Src[1];
-        Dest[2]=Src[2];
-        Dest[3]=Src[3];
-        Dest[4]=Src[4];
-        Dest[5]=Src[5];
-        Dest[6]=Src[6];
-        Dest[7]=Src[7];
-
-        Src+=8;
-        Dest+=8;
-        Length-=8;
-      }
-#if FAST_MEMCPY
-    else
-      while (Length>=8)
-      {
-        // In theory we still could overlap here.
-        // Supposing Distance == MaxWinSize - 1 we have memcpy(Src, Src + 1, 8).
-        // But for real RAR archives Distance <= MaxWinSize - MAX_LZ_MATCH
-        // always, so overlap here is impossible.
-
-        // This memcpy expanded inline by MSVC. We could also use uint64
-        // assignment, which seems to provide about the same speed.
-        memcpy(Dest,Src,8); 
-
-        Src+=8;
-        Dest+=8;
-        Length-=8;
-      }
-#endif
-
-    // Unroll the loop for 0 - 7 bytes left. Note that we use nested "if"s.
-    if (Length>0) { Dest[0]=Src[0];
-    if (Length>1) { Dest[1]=Src[1];
-    if (Length>2) { Dest[2]=Src[2];
-    if (Length>3) { Dest[3]=Src[3];
-    if (Length>4) { Dest[4]=Src[4];
-    if (Length>5) { Dest[5]=Src[5];
-    if (Length>6) { Dest[6]=Src[6]; } } } } } } } // Close all nested "if"s.
+//    byte *Src=Window+SrcPtr;
+//    byte *Dest=Window+UnpPtr;
+//    UnpPtr+=Length;
+//
+//#if FAST_MEMCPY
+//    if (Distance<Length) // Overlapping strings
+//#endif
+//      while (Length>=8)
+//      {
+//        Dest[0]=Src[0];
+//        Dest[1]=Src[1];
+//        Dest[2]=Src[2];
+//        Dest[3]=Src[3];
+//        Dest[4]=Src[4];
+//        Dest[5]=Src[5];
+//        Dest[6]=Src[6];
+//        Dest[7]=Src[7];
+//
+//        Src+=8;
+//        Dest+=8;
+//        Length-=8;
+//      }
+//#if FAST_MEMCPY
+//    else
+//      while (Length>=8)
+//      {
+//        // In theory we still could overlap here.
+//        // Supposing Distance == MaxWinSize - 1 we have memcpy(Src, Src + 1, 8).
+//        // But for real RAR archives Distance <= MaxWinSize - MAX_LZ_MATCH
+//        // always, so overlap here is impossible.
+//
+//        // This memcpy expanded inline by MSVC. We could also use uint64
+//        // assignment, which seems to provide about the same speed.
+//        memcpy(Dest,Src,8); 
+//
+//        Src+=8;
+//        Dest+=8;
+//        Length-=8;
+//      }
+//#endif
+//
+//    // Unroll the loop for 0 - 7 bytes left. Note that we use nested "if"s.
+//    if (Length>0) { Dest[0]=Src[0];
+//    if (Length>1) { Dest[1]=Src[1];
+//    if (Length>2) { Dest[2]=Src[2];
+//    if (Length>3) { Dest[3]=Src[3];
+//    if (Length>4) { Dest[4]=Src[4];
+//    if (Length>5) { Dest[5]=Src[5];
+//    if (Length>6) { Dest[6]=Src[6]; } } } } } } } // Close all nested "if"s.
   }
   else
     while (Length-- > 0) // Slow copying with all possible precautions.
@@ -110,7 +113,7 @@ uint DecodeNumber(BitInput Inp,DecodeTable Dec)
 
   if (BitField<Dec.DecodeLen[Dec.QuickBits])
   {
-    uint Code=BitField>>(16-Dec.QuickBits);
+    uint Code=BitField>>(int)(16-Dec.QuickBits);
     Inp.addbits(Dec.QuickLen[Code]);
     return Dec.QuickNum[Code];
   }
@@ -131,7 +134,7 @@ uint DecodeNumber(BitInput Inp,DecodeTable Dec)
 
   // Start codes are left aligned, but we need the normal right aligned
   // number. So we shift the distance to the right.
-  Dist>>=(16-Bits);
+  Dist>>=(int)(16-Bits);
 
   // Now we can calculate the position in the code list. It is the sum
   // of first position for current bit length and right aligned distance
@@ -159,12 +162,12 @@ uint SlotToLength(BitInput Inp,uint Slot)
   else
   {
     LBits=Slot/4-1;
-    Length+=(4 | (Slot & 3)) << LBits;
+    Length+=(4 | (Slot & 3)) << (int)LBits;
   }
 
   if (LBits>0)
   {
-    Length+=Inp.getbits()>>(16-LBits);
+    Length+=Inp.getbits()>>(int)(16-LBits);
     Inp.addbits(LBits);
   }
   return Length;
