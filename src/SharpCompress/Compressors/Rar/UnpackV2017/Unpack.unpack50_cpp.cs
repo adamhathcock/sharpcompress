@@ -249,7 +249,8 @@ bool UnpReadBuf()
     // is not less than CRYPT_BLOCK_SIZE, so we can align it without risk
     // to make it zero.
     if (DataSize>0)
-      memmove(Inp.InBuf,Inp.InBuf+Inp.InAddr,DataSize);
+      //x memmove(Inp.InBuf,Inp.InBuf+Inp.InAddr,DataSize);
+      Buffer.BlockCopy(Inp.InBuf, Inp.InAddr, Inp.InBuf, 0, DataSize);
     Inp.InAddr=0;
     ReadTop=DataSize;
   }
@@ -532,15 +533,15 @@ void UnpWriteArea(size_t StartPtr,size_t EndPtr)
   else
     if (EndPtr<StartPtr)
     {
-      UnpWriteData(Window+StartPtr,MaxWinSize-StartPtr);
-      UnpWriteData(Window,EndPtr);
+      UnpWriteData(Window,StartPtr,MaxWinSize-StartPtr);
+      UnpWriteData(Window,0,EndPtr);
     }
     else
-      UnpWriteData(Window+StartPtr,EndPtr-StartPtr);
+      UnpWriteData(Window,StartPtr,EndPtr-StartPtr);
 }
 
 
-void UnpWriteData(byte *Data,size_t Size)
+void UnpWriteData(byte[] Data, size_t offset, size_t Size)
 {
   if (WrittenFileSize>=DestUnpSize)
     return;
@@ -548,7 +549,7 @@ void UnpWriteData(byte *Data,size_t Size)
   int64 LeftToWrite=DestUnpSize-WrittenFileSize;
   if ((int64)WriteSize>LeftToWrite)
     WriteSize=(size_t)LeftToWrite;
-  UnpIO->UnpWrite(Data,WriteSize);
+  UnpIO->UnpWrite(Data, offset, WriteSize);
   WrittenFileSize+=Size;
 }
 
