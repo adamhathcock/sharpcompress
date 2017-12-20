@@ -10,10 +10,6 @@ using size_t = System.UInt64;
 #endif
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using SharpCompress.Common;
 using static SharpCompress.Compressors.Rar.UnpackV2017.UnpackGlobal;
 using static SharpCompress.Compressors.Rar.UnpackV2017.PackDef;
@@ -258,7 +254,7 @@ void MakeDecodeTables(byte[] LengthTable,DecodeTable Dec,uint Size)
   // Right aligned upper limit code for current bit length.
   uint UpperLimit=0;
 
-  for (size_t I=1;I<16;I++)
+  for (int I=1;I<16;I++)
   {
     // Adjust the upper limit code.
     UpperLimit+=LengthCount[I];
@@ -287,12 +283,12 @@ void MakeDecodeTables(byte[] LengthTable,DecodeTable Dec,uint Size)
   for (uint I=0;I<Size;I++)
   {
     // Get the current bit length.
-    byte CurBitLength=(byte)(LengthTable[I] & 0xf);
+    byte _CurBitLength=(byte)(LengthTable[I] & 0xf);
 
-    if (CurBitLength!=0)
+    if (_CurBitLength!=0)
     {
       // Last position in code list for current bit length.
-      uint LastPos=CopyDecodePos[CurBitLength];
+      uint LastPos=CopyDecodePos[_CurBitLength];
 
       // Prepare the decode table, so this position in code list will be
       // decoded to current alphabet item number.
@@ -301,7 +297,7 @@ void MakeDecodeTables(byte[] LengthTable,DecodeTable Dec,uint Size)
       // We'll use next position number for this bit length next time.
       // So we pass through the entire range of positions available
       // for every bit length.
-      CopyDecodePos[CurBitLength]++;
+      CopyDecodePos[_CurBitLength]++;
     }
   }
 
@@ -322,18 +318,19 @@ void MakeDecodeTables(byte[] LengthTable,DecodeTable Dec,uint Size)
   }
 
   // Size of tables for quick mode.
-  uint QuickDataSize=1<<Dec.QuickBits;
+  uint QuickDataSize=1U<<(int)Dec.QuickBits;
 
   // Bit length for current code, start from 1 bit codes. It is important
   // to use 1 bit instead of 0 for minimum code length, so we are moving
   // forward even when processing a corrupt archive.
-  uint CurBitLength=1;
+  //uint CurBitLength=1;
+  byte CurBitLength=1;
 
   // For every right aligned bit string which supports the quick decoding.
   for (uint Code=0;Code<QuickDataSize;Code++)
   {
     // Left align the current code, so it will be in usual bit field format.
-    uint BitField=Code<<(16-Dec.QuickBits);
+    uint BitField=Code<<(int)(16-Dec.QuickBits);
 
     // Prepare the table for quick decoding of bit lengths.
   

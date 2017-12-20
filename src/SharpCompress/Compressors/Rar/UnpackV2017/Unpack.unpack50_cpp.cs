@@ -139,7 +139,7 @@ void Unpack5(bool Solid)
     }
     if (MainSlot==256)
     {
-      UnpackFilter Filter;
+      UnpackFilter Filter = new UnpackFilter();
       if (!ReadFilter(Inp,Filter) || !AddFilter(Filter))
         break;
       continue;
@@ -229,7 +229,7 @@ bool AddFilter(UnpackFilter Filter)
   Filter.NextWindow=WrPtr!=UnpPtr && ((WrPtr-UnpPtr)&MaxWinMask)<=Filter.BlockStart;
 
   Filter.BlockStart=(uint)((Filter.BlockStart+UnpPtr)&MaxWinMask);
-  Filters.Push(Filter);
+  Filters.Add(Filter);
   return true;
 }
 
