@@ -11,6 +11,13 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017
         private Stream readStream;
         private Stream writeStream;
 
+        private void _UnpackCtor() {
+            BlockTables.Init();
+            for (int i = 0; i < this.AudV.Length; i++) {
+                this.AudV[i] = new AudioVariables();
+            }
+        }
+
         public void DoUnpack(FileHeader fileHeader, Stream readStream, Stream writeStream)
         {
             // as of 12/2017 .NET limits array indexing to using a signed integer

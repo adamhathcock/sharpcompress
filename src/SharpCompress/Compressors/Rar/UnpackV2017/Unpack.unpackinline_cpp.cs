@@ -103,22 +103,22 @@ void CopyString(uint Length,uint Distance)
 }
 
 
-uint DecodeNumber(BitInput Inp,DecodeTable *Dec)
+uint DecodeNumber(BitInput Inp,DecodeTable Dec)
 {
   // Left aligned 15 bit length raw bit field.
   uint BitField=Inp.getbits() & 0xfffe;
 
-  if (BitField<Dec->DecodeLen[Dec->QuickBits])
+  if (BitField<Dec.DecodeLen[Dec.QuickBits])
   {
-    uint Code=BitField>>(16-Dec->QuickBits);
-    Inp.addbits(Dec->QuickLen[Code]);
-    return Dec->QuickNum[Code];
+    uint Code=BitField>>(16-Dec.QuickBits);
+    Inp.addbits(Dec.QuickLen[Code]);
+    return Dec.QuickNum[Code];
   }
 
   // Detect the real bit length for current code.
   uint Bits=15;
-  for (uint I=Dec->QuickBits+1;I<15;I++)
-    if (BitField<Dec->DecodeLen[I])
+  for (uint I=Dec.QuickBits+1;I<15;I++)
+    if (BitField<Dec.DecodeLen[I])
     {
       Bits=I;
       break;
@@ -127,7 +127,7 @@ uint DecodeNumber(BitInput Inp,DecodeTable *Dec)
   Inp.addbits(Bits);
   
   // Calculate the distance from the start code for current bit length.
-  uint Dist=BitField-Dec->DecodeLen[Bits-1];
+  uint Dist=BitField-Dec.DecodeLen[Bits-1];
 
   // Start codes are left aligned, but we need the normal right aligned
   // number. So we shift the distance to the right.
@@ -136,15 +136,15 @@ uint DecodeNumber(BitInput Inp,DecodeTable *Dec)
   // Now we can calculate the position in the code list. It is the sum
   // of first position for current bit length and right aligned distance
   // between our bit field and start code for current bit length.
-  uint Pos=Dec->DecodePos[Bits]+Dist;
+  uint Pos=Dec.DecodePos[Bits]+Dist;
 
   // Out of bounds safety check required for damaged archives.
-  if (Pos>=Dec->MaxNum)
+  if (Pos>=Dec.MaxNum)
     Pos=0;
 
   // Convert the position in the code list to position in alphabet
   // and return it.
-  return Dec->DecodeNum[Pos];
+  return Dec.DecodeNum[Pos];
 }
 
 

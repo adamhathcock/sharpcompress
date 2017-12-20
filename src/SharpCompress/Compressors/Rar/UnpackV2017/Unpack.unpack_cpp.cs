@@ -27,6 +27,8 @@ public Unpack(/* ComprDataIO *DataIO */)
 //:Inp(true),VMCodeInp(true)
 : base(true)
 {
+  _UnpackCtor();
+
   UnpIO=DataIO;
   Window=null;
   Fragmented=false;
@@ -227,14 +229,14 @@ void UnpInitData(bool Solid)
 // LengthTable contains the length in bits for every element of alphabet.
 // Dec is the structure to decode Huffman code/
 // Size is size of length table and DecodeNum field in Dec structure,
-void MakeDecodeTables(byte *LengthTable,DecodeTable *Dec,uint Size)
+void MakeDecodeTables(byte *LengthTable,DecodeTable Dec,uint Size)
 {
   // Size of alphabet and DecodePos array.
-  Dec->MaxNum=Size;
+  Dec.MaxNum=Size;
 
   // Calculate how many entries for every bit length in LengthTable we have.
-  uint LengthCount[16];
-  memset(LengthCount,0,sizeof(LengthCount));
+  uint[] LengthCount = new uint[16];
+  //memset(LengthCount,0,sizeof(LengthCount));
   for (size_t I=0;I<Size;I++)
     LengthCount[LengthTable[I] & 0xf]++;
 
@@ -245,10 +247,10 @@ void MakeDecodeTables(byte *LengthTable,DecodeTable *Dec,uint Size)
   memset(Dec->DecodeNum,0,Size*sizeof(*Dec->DecodeNum));
 
   // Initialize not really used entry for zero length code.
-  Dec->DecodePos[0]=0;
+  Dec.DecodePos[0]=0;
 
   // Start code for bit length 1 is 0.
-  Dec->DecodeLen[0]=0;
+  Dec.DecodeLen[0]=0;
 
   // Right aligned upper limit code for current bit length.
   uint UpperLimit=0;
@@ -265,17 +267,17 @@ void MakeDecodeTables(byte *LengthTable,DecodeTable *Dec,uint Size)
     UpperLimit*=2;
 
     // Store the left aligned upper limit code.
-    Dec->DecodeLen[I]=(uint)LeftAligned;
+    Dec.DecodeLen[I]=(uint)LeftAligned;
 
     // Every item of this array contains the sum of all preceding items.
     // So it contains the start position in code list for every bit length. 
-    Dec->DecodePos[I]=Dec->DecodePos[I-1]+LengthCount[I-1];
+    Dec.DecodePos[I]=Dec.DecodePos[I-1]+LengthCount[I-1];
   }
 
   // Prepare the copy of DecodePos. We'll modify this copy below,
   // so we cannot use the original DecodePos.
-  uint CopyDecodePos[ASIZE(Dec->DecodePos)];
-  memcpy(CopyDecodePos,Dec->DecodePos,sizeof(CopyDecodePos));
+  uint[] CopyDecodePos = new uint[Dec.DecodePos.Length];
+  //memcpy(CopyDecodePos,Dec->DecodePos,sizeof(CopyDecodePos));
 
   // For every bit length in the bit length table and so for every item
   // of alphabet.
@@ -291,7 +293,7 @@ void MakeDecodeTables(byte *LengthTable,DecodeTable *Dec,uint Size)
 
       // Prepare the decode table, so this position in code list will be
       // decoded to current alphabet item number.
-      Dec->DecodeNum[LastPos]=(ushort)I;
+      Dec.DecodeNum[LastPos]=(ushort)I;
 
       // We'll use next position number for this bit length next time.
       // So we pass through the entire range of positions available

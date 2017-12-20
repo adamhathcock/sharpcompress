@@ -11,10 +11,6 @@ using size_t = System.UInt64;
 using int64 = System.Int64;
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using static SharpCompress.Compressors.Rar.UnpackV2017.PackDef;
 using static SharpCompress.Compressors.Rar.UnpackV2017.UnpackGlobal;
 
@@ -35,8 +31,8 @@ void Unpack5(bool Solid)
     // Check TablesRead5 to be sure that we read tables at least once
     // regardless of current block header TablePresent flag.
     // So we can safefly use these tables below.
-    if (!ReadBlockHeader(Inp,BlockHeader) || 
-        !ReadTables(Inp,BlockHeader,BlockTables) || !TablesRead5)
+    if (!ReadBlockHeader(Inp,ref BlockHeader) || 
+        !ReadTables(Inp,ref BlockHeader, ref BlockTables) || !TablesRead5)
       return;
   }
 
@@ -59,7 +55,7 @@ void Unpack5(bool Solid)
           FileDone=true;
           break;
         }
-        if (!ReadBlockHeader(Inp,BlockHeader) || !ReadTables(Inp,BlockHeader,BlockTables))
+        if (!ReadBlockHeader(Inp,ref BlockHeader) || !ReadTables(Inp, ref BlockHeader, ref BlockTables))
           return;
       }
       if (FileDone || !UnpReadBuf())
@@ -78,7 +74,7 @@ void Unpack5(bool Solid)
       }
     }
 
-    uint MainSlot=DecodeNumber(Inp,&BlockTables.LD);
+    uint MainSlot=DecodeNumber(Inp,BlockTables.LD);
     if (MainSlot<256)
     {
       if (Fragmented)
@@ -91,7 +87,7 @@ void Unpack5(bool Solid)
     {
       uint Length=SlotToLength(Inp,MainSlot-262);
 
-      uint DBits,Distance=1,DistSlot=DecodeNumber(Inp,&BlockTables.DD);
+      uint DBits,Distance=1,DistSlot=DecodeNumber(Inp,BlockTables.DD);
       if (DistSlot<4)
       {
         DBits=0;
@@ -112,7 +108,7 @@ void Unpack5(bool Solid)
             Distance+=((Inp.getbits32()>>(36-DBits))<<4);
             Inp.addbits(DBits-4);
           }
-          uint LowDist=DecodeNumber(Inp,&BlockTables.LDD);
+          uint LowDist=DecodeNumber(Inp,BlockTables.LDD);
           Distance+=LowDist;
         }
         else
@@ -165,7 +161,7 @@ void Unpack5(bool Solid)
         OldDist[I]=OldDist[I-1];
       OldDist[0]=Distance;
 
-      uint LengthSlot=DecodeNumber(Inp,&BlockTables.RD);
+      uint LengthSlot=DecodeNumber(Inp,BlockTables.RD);
       uint Length=SlotToLength(Inp,LengthSlot);
       LastLength=Length;
       if (Fragmented)
@@ -232,7 +228,7 @@ bool AddFilter(UnpackFilter Filter)
   // flag and process this filter only after processing that older data.
   Filter.NextWindow=WrPtr!=UnpPtr && ((WrPtr-UnpPtr)&MaxWinMask)<=Filter.BlockStart;
 
-  Filter.BlockStart=uint((Filter.BlockStart+UnpPtr)&MaxWinMask);
+  Filter.BlockStart=(uint)((Filter.BlockStart+UnpPtr)&MaxWinMask);
   Filters.Push(Filter);
   return true;
 }
@@ -282,7 +278,9 @@ void UnpWriteBuf()
   size_t FullWriteSize=(UnpPtr-WrittenBorder)&MaxWinMask;
   size_t WriteSizeLeft=FullWriteSize;
   bool NotAllFiltersProcessed=false;
-  for (size_t I=0;I<Filters.Count;I++)
+  //for (size_t I=0;I<Filters.Count;I++)
+  // sharpcompress: size_t -> int
+  for (int I=0;I<Filters.Count;I++)
   {
     // Here we apply filters to data which we need to write.
     // We always copy data to another memory block before processing.
@@ -373,11 +371,13 @@ void UnpWriteBuf()
         // Since Filter start position can only increase, we quit processing
         // all following filters for this data block and reset 'NextWindow'
         // flag for them.
-        for (size_t J=I;J<Filters.Count;J++)
+        //for (size_t J=I;J<Filters.Count;J++)
+        // sharpcompress: size_t -> int
+        for (int J=I;J<Filters.Count;J++)
         {
-          UnpackFilter flt=Filters[J];
-          if (flt.Type!=FILTER_NONE)
-            flt.NextWindow=false;
+          UnpackFilter _flt=Filters[J];
+          if (_flt.Type!=FILTER_NONE)
+            _flt.NextWindow=false;
         }
 
         // Do not write data left after current filter now.
@@ -469,7 +469,7 @@ byte* ApplyFilter(byte *Data,uint DataSize,UnpackFilter Flt)
           byte *D=Data+CurPos;
           if (D[3]==0xeb) // BL command with '1110' (Always) condition.
           {
-            uint Offset=D[0]+uint(D[1])*0x100+uint(D[2])*0x10000;
+            uint Offset=D[0]+(uint)(D[1])*0x100+(uint)(D[2])*0x10000;
             Offset-=(FileOffset+CurPos)/4;
             D[0]=(byte)Offset;
             D[1]=(byte)(Offset>>8);
@@ -552,7 +552,7 @@ void UnpInitData50(bool Solid)
 }
 
 
-bool ReadBlockHeader(BitInput Inp,UnpackBlockHeader &Header)
+bool ReadBlockHeader(BitInput Inp,ref UnpackBlockHeader Header)
 {
   Header.HeaderSize=0;
 
@@ -583,12 +583,12 @@ bool ReadBlockHeader(BitInput Inp,UnpackBlockHeader &Header)
   }
 
   Header.BlockSize=BlockSize;
-  byte CheckSum=byte(0x5a^BlockFlags^BlockSize^(BlockSize>>8)^(BlockSize>>16));
+  byte CheckSum=(byte)(0x5a^BlockFlags^BlockSize^(BlockSize>>8)^(BlockSize>>16));
   if (CheckSum!=SavedCheckSum)
     return false;
 
   Header.BlockStart=Inp.InAddr;
-  ReadBorder=Min(ReadBorder,Header.BlockStart+Header.BlockSize-1);
+  ReadBorder=Math.Min(ReadBorder,Header.BlockStart+Header.BlockSize-1);
 
   Header.LastBlockInFile=(BlockFlags & 0x40)!=0;
   Header.TablePresent=(BlockFlags & 0x80)!=0;
@@ -596,7 +596,7 @@ bool ReadBlockHeader(BitInput Inp,UnpackBlockHeader &Header)
 }
 
 
-bool ReadTables(BitInput Inp,UnpackBlockHeader &Header,UnpackBlockTables &Tables)
+bool ReadTables(BitInput Inp,ref UnpackBlockHeader Header, ref UnpackBlockTables Tables)
 {
   if (!Header.TablePresent)
     return true;
@@ -605,7 +605,7 @@ bool ReadTables(BitInput Inp,UnpackBlockHeader &Header,UnpackBlockTables &Tables
     if (!UnpReadBuf())
       return false;
 
-  byte BitLength[BC];
+  byte[] BitLength = new byte[BC];
   for (uint I=0;I<BC;I++)
   {
     uint Length=(byte)(Inp.fgetbits() >> 12);
@@ -619,7 +619,7 @@ bool ReadTables(BitInput Inp,UnpackBlockHeader &Header,UnpackBlockTables &Tables
       else
       {
         ZeroCount+=2;
-        while (ZeroCount-- > 0 && I<ASIZE(BitLength))
+        while (ZeroCount-- > 0 && I<BitLength.Length)
           BitLength[I++]=0;
         I--;
       }
@@ -628,16 +628,16 @@ bool ReadTables(BitInput Inp,UnpackBlockHeader &Header,UnpackBlockTables &Tables
       BitLength[I]=Length;
   }
 
-  MakeDecodeTables(BitLength,&Tables.BD,BC);
+  MakeDecodeTables(BitLength,Tables.BD,BC);
 
-  byte Table[HUFF_TABLE_SIZE];
+  byte[] Table = new byte[HUFF_TABLE_SIZE];
   const uint TableSize=HUFF_TABLE_SIZE;
   for (uint I=0;I<TableSize;)
   {
     if (!Inp.ExternalBuffer && Inp.InAddr>ReadTop-5)
       if (!UnpReadBuf())
         return false;
-    uint Number=DecodeNumber(Inp,&Tables.BD);
+    uint Number=DecodeNumber(Inp,Tables.BD);
     if (Number<16)
     {
       Table[I]=Number;
@@ -693,10 +693,10 @@ bool ReadTables(BitInput Inp,UnpackBlockHeader &Header,UnpackBlockTables &Tables
   TablesRead5=true;
   if (!Inp.ExternalBuffer && Inp.InAddr>ReadTop)
     return false;
-  MakeDecodeTables(&Table[0],&Tables.LD,NC);
-  MakeDecodeTables(&Table[NC],&Tables.DD,DC);
-  MakeDecodeTables(&Table[NC+DC],&Tables.LDD,LDC);
-  MakeDecodeTables(&Table[NC+DC+LDC],&Tables.RD,RC);
+  MakeDecodeTables(&Table[0],Tables.LD,NC);
+  MakeDecodeTables(&Table[NC],Tables.DD,DC);
+  MakeDecodeTables(&Table[NC+DC],Tables.LDD,LDC);
+  MakeDecodeTables(&Table[NC+DC+LDC],Tables.RD,RC);
   return true;
 }
 

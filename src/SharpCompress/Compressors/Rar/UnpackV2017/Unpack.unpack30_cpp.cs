@@ -159,7 +159,7 @@ void Unpack29(bool Solid)
       continue;
     }
 
-    uint Number=DecodeNumber(Inp,&BlockTables.LD);
+    uint Number=DecodeNumber(Inp,BlockTables.LD);
     if (Number<256)
     {
       Window[UnpPtr++]=(byte)Number;
@@ -174,7 +174,7 @@ void Unpack29(bool Solid)
         Inp.addbits(Bits);
       }
 
-      uint DistNumber=DecodeNumber(Inp,&BlockTables.DD);
+      uint DistNumber=DecodeNumber(Inp,BlockTables.DD);
       uint Distance=DDecode[DistNumber]+1;
       if ((Bits=DBits[DistNumber])>0)
       {
@@ -192,7 +192,7 @@ void Unpack29(bool Solid)
           }
           else
           {
-            uint LowDist=DecodeNumber(Inp,&BlockTables.LDD);
+            uint LowDist=DecodeNumber(Inp,BlockTables.LDD);
             if (LowDist==16)
             {
               LowDistRepCount=LOW_DIST_REP_COUNT-1;
@@ -250,7 +250,7 @@ void Unpack29(bool Solid)
         OldDist[I]=OldDist[I-1];
       OldDist[0]=Distance;
 
-      uint LengthNumber=DecodeNumber(Inp,&BlockTables.RD);
+      uint LengthNumber=DecodeNumber(Inp,BlockTables.RD);
       int Length=LDecode[LengthNumber]+2;
       if ((Bits=LBits[LengthNumber])>0)
       {
@@ -703,7 +703,7 @@ bool ReadTables30()
     if (Inp.InAddr>ReadTop-5)
       if (!UnpReadBuf30())
         return(false);
-    uint Number=DecodeNumber(Inp,&BlockTables.BD);
+    uint Number=DecodeNumber(Inp,BlockTables.BD);
     if (Number<16)
     {
       Table[I]=(Number+UnpOldTable[I]) & 0xf;

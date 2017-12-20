@@ -10,11 +10,7 @@ using size_t = System.UInt64;
 #endif
 using int64 = System.Int64;
 
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using static SharpCompress.Compressors.Rar.UnpackV2017.PackDef;
 using static SharpCompress.Compressors.Rar.UnpackV2017.UnpackGlobal;
 
@@ -55,32 +51,32 @@ public const int UNPACK_MAX_WRITE      =0x400000;
 sealed class DecodeTable
 {
   // Real size of DecodeNum table.
-  uint MaxNum;
+  public uint MaxNum;
 
   // Left aligned start and upper limit codes defining code space 
   // ranges for bit lengths. DecodeLen[BitLength-1] defines the start of
   // range for bit length and DecodeLen[BitLength] defines next code
   // after the end of range or in other words the upper limit code
   // for specified bit length.
-  readonly uint[] DecodeLen = new uint[16]; 
+  public readonly uint[] DecodeLen = new uint[16]; 
 
   // Every item of this array contains the sum of all preceding items.
   // So it contains the start position in code list for every bit length. 
-  readonly uint[] DecodePos = new uint[16];
+  public readonly uint[] DecodePos = new uint[16];
 
   // Number of compressed bits processed in quick mode.
   // Must not exceed MAX_QUICK_DECODE_BITS.
-  uint QuickBits;
+  public uint QuickBits;
 
   // Translates compressed bits (up to QuickBits length)
   // to bit length in quick mode.
-  readonly byte[] QuickLen = new byte[1<<MAX_QUICK_DECODE_BITS];
+  public readonly byte[] QuickLen = new byte[1<<MAX_QUICK_DECODE_BITS];
 
   // Translates compressed bits (up to QuickBits length)
   // to position in alphabet in quick mode.
   // 'ushort' saves some memory and even provides a little speed gain
   // comparting to 'uint' here.
-  readonly ushort[] QuickNum = new ushort[1<<MAX_QUICK_DECODE_BITS];
+  public readonly ushort[] QuickNum = new ushort[1<<MAX_QUICK_DECODE_BITS];
 
   // Translate the position in code list to position in alphabet.
   // We do not allocate it dynamically to avoid performance overhead
@@ -90,7 +86,7 @@ sealed class DecodeTable
   // for QuickLen based translation.
   // 'ushort' saves some memory and even provides a little speed gain
   // comparting to 'uint' here.
-  readonly ushort[] DecodeNum = new ushort[LARGEST_TABLE_SIZE];
+  public readonly ushort[] DecodeNum = new ushort[LARGEST_TABLE_SIZE];
 };
 
 
@@ -112,6 +108,14 @@ struct UnpackBlockTables
   public DecodeTable LDD; // Decode lower bits of distances.
   public DecodeTable RD;  // Decode repeating distances.
   public DecodeTable BD;  // Decode bit lengths in Huffman table.
+
+  public void Init() {
+    this.LD = new DecodeTable();
+    this.DD = new DecodeTable();
+    this.LDD = new DecodeTable();
+    this.RD = new DecodeTable();
+    this.BD = new DecodeTable();
+  }
 };
 
 
@@ -193,14 +197,14 @@ class UnpackFilter30
 };
 
 
-struct AudioVariables // For RAR 2.0 archives only.
+class AudioVariables // For RAR 2.0 archives only.
 {
-  int K1,K2,K3,K4,K5;
-  int D1,D2,D3,D4;
-  int LastDelta;
-  uint Dif[11];
-  uint ByteCount;
-  int LastChar;
+  public int K1,K2,K3,K4,K5;
+  public int D1,D2,D3,D4;
+  public int LastDelta;
+  public readonly uint[] Dif = new uint[11];
+  public uint ByteCount;
+  public int LastChar;
 };
 
 
@@ -250,7 +254,7 @@ internal partial class Unpack
     //bool AddFilter();
     //void InitFilters();
 
-    ComprDataIO *UnpIO;
+    //ComprDataIO *UnpIO;
     //BitInput Inp;
     BitInput Inp { get { return this; } } // hopefully this gets inlined
 
@@ -321,8 +325,8 @@ internal partial class Unpack
     //void CopyString15(uint Distance,uint Length);
     //uint DecodeNum(uint Num,uint StartPos,uint *DecTab,uint *PosTab);
 
-    ushort ChSet[256],ChSetA[256],ChSetB[256],ChSetC[256];
-    byte NToPl[256],NToPlB[256],NToPlC[256];
+    readonly ushort[] ChSet = new ushort[256],ChSetA = new ushort[256],ChSetB = new ushort[256],ChSetC = new ushort[256];
+    readonly byte[] NToPl = new byte[256],NToPlB = new byte[256],NToPlC = new byte[256];
     uint FlagBuf,AvrPlc,AvrPlcB,AvrLn1,AvrLn2,AvrLn3;
     int Buf60,NumHuf,StMode,LCount,FlagsCnt;
     uint Nhfb,Nlzb,MaxDist3;
@@ -331,7 +335,7 @@ internal partial class Unpack
 /***************************** Unpack v 2.0 *********************************/
     //void Unpack20(bool Solid);
 
-    DecodeTable MD[4]; // Decode multimedia data, up to 4 channels.
+    readonly DecodeTable[] MD = new DecodeTable[4]; // Decode multimedia data, up to 4 channels.
 
     readonly byte[] UnpOldTable20 = new byte[MC20*4];
     bool UnpAudioBlock;
@@ -343,7 +347,7 @@ internal partial class Unpack
     //void UnpInitData20(int Solid);
     //void ReadLastTables();
     //byte DecodeAudio(int Delta);
-    struct AudioVariables AudV[4];
+    AudioVariables[] AudV = new AudioVariables[4];
 /***************************** Unpack v 2.0 *********************************/
 
 /***************************** Unpack v 3.0 *********************************/
@@ -424,10 +428,8 @@ internal partial class Unpack
         UnpReadBuf();
       return(Inp.InBuf[Inp.InAddr++]);
     }
-}
 
 
-    
     }
 }
 #endif

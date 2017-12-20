@@ -71,7 +71,7 @@ void Unpack20(bool Solid)
     }
     if (UnpAudioBlock)
     {
-      uint AudioNumber=DecodeNumber(Inp,&MD[UnpCurChannel]);
+      uint AudioNumber=DecodeNumber(Inp,MD[UnpCurChannel]);
 
       if (AudioNumber==256)
       {
@@ -86,7 +86,7 @@ void Unpack20(bool Solid)
       continue;
     }
 
-    uint Number=DecodeNumber(Inp,&BlockTables.LD);
+    uint Number=DecodeNumber(Inp,BlockTables.LD);
     if (Number<256)
     {
       Window[UnpPtr++]=(byte)Number;
@@ -102,7 +102,7 @@ void Unpack20(bool Solid)
         Inp.addbits(Bits);
       }
 
-      uint DistNumber=DecodeNumber(Inp,&BlockTables.DD);
+      uint DistNumber=DecodeNumber(Inp,BlockTables.DD);
       uint Distance=DDecode[DistNumber]+1;
       if ((Bits=DBits[DistNumber])>0)
       {
@@ -134,7 +134,7 @@ void Unpack20(bool Solid)
     if (Number<261)
     {
       uint Distance=OldDist[(OldDistPtr-(Number-256)) & 3];
-      uint LengthNumber=DecodeNumber(Inp,&BlockTables.RD);
+      uint LengthNumber=DecodeNumber(Inp,BlockTables.RD);
       uint Length=LDecode[LengthNumber]+2;
       if ((Bits=LBits[LengthNumber])>0)
       {
@@ -197,7 +197,7 @@ bool ReadTables20()
   uint BitField=Inp.getbits();
   UnpAudioBlock=(BitField & 0x8000)!=0;
 
-  if (!(BitField & 0x4000))
+  if ((BitField & 0x4000) != 0)
     Utility.Memset(UnpOldTable20,0,UnpOldTable20.Length);
   Inp.addbits(2);
 
@@ -218,13 +218,13 @@ bool ReadTables20()
     BitLength[I]=(byte)(Inp.getbits() >> 12);
     Inp.addbits(4);
   }
-  MakeDecodeTables(BitLength,&BlockTables.BD,BC20);
+  MakeDecodeTables(BitLength,BlockTables.BD,BC20);
   for (uint I=0;I<TableSize;)
   {
     if (Inp.InAddr>ReadTop-5)
       if (!UnpReadBuf())
         return false;
-    uint Number=DecodeNumber(Inp,&BlockTables.BD);
+    uint Number=DecodeNumber(Inp,BlockTables.BD);
     if (Number<16)
     {
       Table[I]=(Number+UnpOldTable20[I]) & 0xf;
@@ -269,9 +269,9 @@ bool ReadTables20()
       MakeDecodeTables(&Table[I*MC20],&MD[I],MC20);
   else
   {
-    MakeDecodeTables(&Table[0],&BlockTables.LD,NC20);
-    MakeDecodeTables(&Table[NC20],&BlockTables.DD,DC20);
-    MakeDecodeTables(&Table[NC20+DC20],&BlockTables.RD,RC20);
+    MakeDecodeTables(&Table[0],BlockTables.LD,NC20);
+    MakeDecodeTables(&Table[NC20],BlockTables.DD,DC20);
+    MakeDecodeTables(&Table[NC20+DC20],BlockTables.RD,RC20);
   }
   memcpy(UnpOldTable20,Table,sizeof(UnpOldTable20));
   return true;
@@ -283,11 +283,11 @@ void ReadLastTables()
   if (ReadTop>=Inp.InAddr+5)
     if (UnpAudioBlock)
     {
-      if (DecodeNumber(Inp,&MD[UnpCurChannel])==256)
+      if (DecodeNumber(Inp,MD[UnpCurChannel])==256)
         ReadTables20();
     }
     else
-      if (DecodeNumber(Inp,&BlockTables.LD)==269)
+      if (DecodeNumber(Inp,BlockTables.LD)==269)
         ReadTables20();
 }
 
@@ -311,13 +311,13 @@ void UnpInitData20(bool Solid)
 
 byte DecodeAudio(int Delta)
 {
-  struct AudioVariables *V=&AudV[UnpCurChannel];
-  V->ByteCount++;
-  V->D4=V->D3;
-  V->D3=V->D2;
-  V->D2=V->LastDelta-V->D1;
-  V->D1=V->LastDelta;
-  int PCh=8*V->LastChar+V->K1*V->D1+V->K2*V->D2+V->K3*V->D3+V->K4*V->D4+V->K5*UnpChannelDelta;
+  AudioVariables V=AudV[UnpCurChannel];
+  V.ByteCount++;
+  V.D4=V.D3;
+  V.D3=V.D2;
+  V.D2=V.LastDelta-V.D1;
+  V.D1=V.LastDelta;
+  int PCh=8*V.LastChar+V.K1*V.D1+V.K2*V.D2+V.K3*V.D3+V.K4*V.D4+V.K5*UnpChannelDelta;
   PCh=(PCh>>3) & 0xFF;
 
   uint Ch=PCh-Delta;
@@ -327,75 +327,75 @@ byte DecodeAudio(int Delta)
   // so we cast it to unsigned to follow the standard.
   D=(uint)D<<3;
 
-  V->Dif[0]+=abs(D);
-  V->Dif[1]+=abs(D-V->D1);
-  V->Dif[2]+=abs(D+V->D1);
-  V->Dif[3]+=abs(D-V->D2);
-  V->Dif[4]+=abs(D+V->D2);
-  V->Dif[5]+=abs(D-V->D3);
-  V->Dif[6]+=abs(D+V->D3);
-  V->Dif[7]+=abs(D-V->D4);
-  V->Dif[8]+=abs(D+V->D4);
-  V->Dif[9]+=abs(D-UnpChannelDelta);
-  V->Dif[10]+=abs(D+UnpChannelDelta);
+  V.Dif[0]+=Math.Abs(D);
+  V.Dif[1]+=Math.Abs(D-V.D1);
+  V.Dif[2]+=Math.Abs(D+V.D1);
+  V.Dif[3]+=Math.Abs(D-V.D2);
+  V.Dif[4]+=Math.Abs(D+V.D2);
+  V.Dif[5]+=Math.Abs(D-V.D3);
+  V.Dif[6]+=Math.Abs(D+V.D3);
+  V.Dif[7]+=Math.Abs(D-V.D4);
+  V.Dif[8]+=Math.Abs(D+V.D4);
+  V.Dif[9]+=Math.Abs(D-UnpChannelDelta);
+  V.Dif[10]+=Math.Abs(D+UnpChannelDelta);
 
-  UnpChannelDelta=V->LastDelta=(sbyte)(Ch-V->LastChar);
-  V->LastChar=Ch;
+  UnpChannelDelta=V.LastDelta=(sbyte)(Ch-V.LastChar);
+  V.LastChar=Ch;
 
-  if ((V->ByteCount & 0x1F)==0)
+  if ((V.ByteCount & 0x1F)==0)
   {
-    uint MinDif=V->Dif[0],NumMinDif=0;
-    V->Dif[0]=0;
-    for (uint I=1;I<ASIZE(V->Dif);I++)
+    uint MinDif=V.Dif[0],NumMinDif=0;
+    V.Dif[0]=0;
+    for (uint I=1;I<V.Dif.Length;I++)
     {
-      if (V->Dif[I]<MinDif)
+      if (V.Dif[I]<MinDif)
       {
-        MinDif=V->Dif[I];
+        MinDif=V.Dif[I];
         NumMinDif=I;
       }
-      V->Dif[I]=0;
+      V.Dif[I]=0;
     }
     switch(NumMinDif)
     {
       case 1:
-        if (V->K1>=-16)
-          V->K1--;
+        if (V.K1>=-16)
+          V.K1--;
         break;
       case 2:
-        if (V->K1<16)
-          V->K1++;
+        if (V.K1<16)
+          V.K1++;
         break;
       case 3:
-        if (V->K2>=-16)
-          V->K2--;
+        if (V.K2>=-16)
+          V.K2--;
         break;
       case 4:
-        if (V->K2<16)
-          V->K2++;
+        if (V.K2<16)
+          V.K2++;
         break;
       case 5:
-        if (V->K3>=-16)
-          V->K3--;
+        if (V.K3>=-16)
+          V.K3--;
         break;
       case 6:
-        if (V->K3<16)
-          V->K3++;
+        if (V.K3<16)
+          V.K3++;
         break;
       case 7:
-        if (V->K4>=-16)
-          V->K4--;
+        if (V.K4>=-16)
+          V.K4--;
         break;
       case 8:
-        if (V->K4<16)
-          V->K4++;
+        if (V.K4<16)
+          V.K4++;
         break;
       case 9:
-        if (V->K5>=-16)
-          V->K5--;
+        if (V.K5>=-16)
+          V.K5--;
         break;
       case 10:
-        if (V->K5<16)
-          V->K5++;
+        if (V.K5<16)
+          V.K5++;
         break;
     }
   }
