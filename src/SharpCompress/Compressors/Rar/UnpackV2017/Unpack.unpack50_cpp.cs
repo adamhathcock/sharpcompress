@@ -404,7 +404,7 @@ void UnpWriteBuf()
   }
   if (EmptyCount>0)
     //Filters.Alloc(Filters.Count-EmptyCount);
-    throw new NotImplementedException();
+    Filters.RemoveRange(Filters.Count-EmptyCount, EmptyCount);
 
   if (!NotAllFiltersProcessed) // Only if all filters are processed.
   {
@@ -426,11 +426,10 @@ void UnpWriteBuf()
 }
 
 
-byte[] ApplyFilter(byte[] Data,uint DataSize,UnpackFilter Flt)
+byte[] ApplyFilter(byte[] __d,uint DataSize,UnpackFilter Flt)
 {
-            throw new NotImplementedException();
-#if false
-  byte[] SrcData=Data;
+  int Data = 0;
+  byte[] SrcData=__d;
   switch(Flt.Type)
   {
     case FILTER_E8:
@@ -444,23 +443,24 @@ byte[] ApplyFilter(byte[] Data,uint DataSize,UnpackFilter Flt)
         // to avoid overflow for DataSize<4.
         for (uint CurPos=0;CurPos+4<DataSize;)
         {
-          byte CurByte=*(Data++);
+          //x byte CurByte=*(Data++);
+          byte CurByte=__d[Data++];
           CurPos++;
           if (CurByte==0xe8 || CurByte==CmpByte2)
           {
             uint Offset=(CurPos+FileOffset)%FileSize;
-            uint Addr=RawGet4(Data);
+            uint Addr=RawGet4(__d,Data);
 
             // We check 0x80000000 bit instead of '< 0' comparison
             // not assuming int32 presence or uint size and endianness.
             if ((Addr & 0x80000000)!=0)              // Addr<0
             {
               if (((Addr+Offset) & 0x80000000)==0)   // Addr+Offset>=0
-                RawPut4(Addr+FileSize,Data);
+                RawPut4(Addr+FileSize,__d,Data);
             }
             else
               if (((Addr-FileSize) & 0x80000000)!=0) // Addr<FileSize
-                RawPut4(Addr-Offset,Data);
+                RawPut4(Addr-Offset,__d,Data);
 
             Data+=4;
             CurPos+=4;
@@ -475,14 +475,14 @@ byte[] ApplyFilter(byte[] Data,uint DataSize,UnpackFilter Flt)
         // to avoid overflow for DataSize<3.
         for (uint CurPos=0;CurPos+3<DataSize;CurPos+=4)
         {
-          byte *D=Data+CurPos;
-          if (D[3]==0xeb) // BL command with '1110' (Always) condition.
+          var D=Data+CurPos;
+          if (__d[D+3]==0xeb) // BL command with '1110' (Always) condition.
           {
-            uint Offset=D[0]+(uint)(D[1])*0x100+(uint)(D[2])*0x10000;
+            uint Offset=__d[D]+(uint)(__d[D+1])*0x100+(uint)(__d[D+2])*0x10000;
             Offset-=(FileOffset+CurPos)/4;
-            D[0]=(byte)Offset;
-            D[1]=(byte)(Offset>>8);
-            D[2]=(byte)(Offset>>16);
+            __d[D]=(byte)Offset;
+            __d[D+1]=(byte)(Offset>>8);
+            __d[D+2]=(byte)(Offset>>16);
           }
         }
       }
@@ -504,14 +504,13 @@ byte[] ApplyFilter(byte[] Data,uint DataSize,UnpackFilter Flt)
         {
           byte PrevByte=0;
           for (uint DestPos=CurChannel;DestPos<DataSize;DestPos+=Channels)
-            DstData[DestPos]=(PrevByte-=Data[SrcPos++]);
+            DstData[DestPos]=(PrevByte-=__d[Data+SrcPos++]);
         }
         return DstData;
       }
 
   }
   return null;
-#endif
 }
 
 
