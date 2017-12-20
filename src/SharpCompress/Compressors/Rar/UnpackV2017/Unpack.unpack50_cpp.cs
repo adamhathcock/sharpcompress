@@ -96,7 +96,7 @@ void Unpack5(bool Solid)
       else
       {
         DBits=DistSlot/2 - 1;
-        Distance+=(2 | (DistSlot & 1)) << DBits;
+        Distance+=(2 | (DistSlot & 1)) << (int)DBits;
       }
 
       if (DBits>0)
@@ -105,7 +105,7 @@ void Unpack5(bool Solid)
         {
           if (DBits>4)
           {
-            Distance+=((Inp.getbits32()>>(36-DBits))<<4);
+            Distance+=((Inp.getbits32()>>(int)(36-DBits))<<4);
             Inp.addbits(DBits-4);
           }
           uint LowDist=DecodeNumber(Inp,BlockTables.LDD);
@@ -113,7 +113,7 @@ void Unpack5(bool Solid)
         }
         else
         {
-          Distance+=Inp.getbits32()>>(32-DBits);
+          Distance+=Inp.getbits32()>>(int)(32-DBits);
           Inp.addbits(DBits);
         }
       }

@@ -89,23 +89,36 @@ public void Init(size_t WinSize)
 }
 
 
-byte& operator [](size_t Item)
-{
+byte this[size_t Item] {
+get {
   if (Item<MemSize[0])
     return Mem[0][Item];
-  for (uint I=1;I<ASIZE(MemSize);I++)
+  for (uint I=1;I<MemSize.Length;I++)
     if (Item<MemSize[I])
       return Mem[I][Item-MemSize[I-1]];
   return Mem[0][0]; // Must never happen;
 }
+set {
+  if (Item<MemSize[0]) {
+    Mem[0][Item] = value;
+    return;
+  }                
+  for (uint I=1;I<MemSize.Length;I++)
+    if (Item<MemSize[I]) {
+      Mem[I][Item-MemSize[I-1]] = value;
+      return;
+    }                        
+  Mem[0][0] = value; // Must never happen;
+}
+}
 
 
-public void CopyString(uint Length,uint Distance,size_t &UnpPtr,size_t MaxWinMask)
+public void CopyString(uint Length,uint Distance,ref size_t UnpPtr,size_t MaxWinMask)
 {
   size_t SrcPtr=UnpPtr-Distance;
   while (Length-- > 0)
   {
-    (*this)[UnpPtr]=(*this)[SrcPtr++ & MaxWinMask];
+    this[UnpPtr]=this[SrcPtr++ & MaxWinMask];
     // We need to have masked UnpPtr after quit from loop, so it must not
     // be replaced with '(*this)[UnpPtr++ & MaxWinMask]'
     UnpPtr=(UnpPtr+1) & MaxWinMask;
@@ -116,13 +129,13 @@ public void CopyString(uint Length,uint Distance,size_t &UnpPtr,size_t MaxWinMas
 void CopyData(byte *Dest,size_t WinPos,size_t Size)
 {
   for (size_t I=0;I<Size;I++)
-    Dest[I]=(*this)[WinPos+I];
+    Dest[I]=this[WinPos+I];
 }
 
 
 public size_t GetBlockSize(size_t StartPos,size_t RequiredSize)
 {
-  for (uint I=0;I<ASIZE(MemSize);I++)
+  for (uint I=0;I<MemSize.Length;I++)
     if (StartPos<MemSize[I])
       return Math.Min(MemSize[I]-StartPos,RequiredSize);
   return 0; // Must never be here.
