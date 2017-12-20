@@ -271,8 +271,8 @@ internal partial class Unpack
     byte *ReadBufMT;
 #endif
 
-    readonly List<byte> FilterSrcMemory = new List<byte>();
-    readonly List<byte> FilterDstMemory = new List<byte>();
+    byte[] FilterSrcMemory = new byte[0];
+    byte[] FilterDstMemory = new byte[0];
 
     // Filters code, one entry per filter.
     readonly List<UnpackFilter> Filters = new List<UnpackFilter>();

@@ -91,6 +91,10 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017
         }
 
         public int PpmEscChar { get => this.PPMEscChar; set => this.PPMEscChar = value; } 
+
+        public static byte[] EnsureCapacity(byte[] array, int length) {
+            return array.Length < length ? new byte[length] : array;
+        }
     }
 }
 #endif

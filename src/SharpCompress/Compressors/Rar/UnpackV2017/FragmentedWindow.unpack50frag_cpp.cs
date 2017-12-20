@@ -126,10 +126,10 @@ public void CopyString(uint Length,uint Distance,ref size_t UnpPtr,size_t MaxWin
 }
 
 
-public void CopyData(byte *Dest,size_t WinPos,size_t Size)
+public void CopyData(byte[] Dest, size_t destOffset, size_t WinPos,size_t Size)
 {
   for (size_t I=0;I<Size;I++)
-    Dest[I]=this[WinPos+I];
+    Dest[destOffset+I]=this[WinPos+I];
 }
 
 

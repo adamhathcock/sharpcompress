@@ -325,31 +325,35 @@ void UnpWriteBuf()
         {
           uint BlockEnd=(BlockStart+BlockLength)&MaxWinMask;
 
-          FilterSrcMemory.Alloc(BlockLength);
-          byte *Mem=&FilterSrcMemory[0];
+          //x FilterSrcMemory.Alloc(BlockLength);
+          FilterSrcMemory = EnsureCapacity(FilterSrcMemory, checked((int)BlockLength));
+          byte[] Mem= FilterSrcMemory;
           if (BlockStart<BlockEnd || BlockEnd==0)
           {
             if (Fragmented)
-              FragWindow.CopyData(Mem,BlockStart,BlockLength);
+              FragWindow.CopyData(Mem,0,BlockStart,BlockLength);
             else
-              memcpy(Mem,Window+BlockStart,BlockLength);
+              //x memcpy(Mem,Window+BlockStart,BlockLength);
+              Array.Copy(Window, BlockStart, Mem, 0, BlockLength);
           }
           else
           {
-            size_t FirstPartLength=size_t(MaxWinSize-BlockStart);
+            size_t FirstPartLength=(size_t)(MaxWinSize-BlockStart);
             if (Fragmented)
             {
-              FragWindow.CopyData(Mem,BlockStart,FirstPartLength);
-              FragWindow.CopyData(Mem+FirstPartLength,0,BlockEnd);
+              FragWindow.CopyData(Mem,0,BlockStart,FirstPartLength);
+              FragWindow.CopyData(Mem,FirstPartLength,0,BlockEnd);
             }
             else
             {
-              memcpy(Mem,Window+BlockStart,FirstPartLength);
-              memcpy(Mem+FirstPartLength,Window,BlockEnd);
+              //x memcpy(Mem,Window+BlockStart,FirstPartLength);
+              Array.Copy(Window, BlockStart, Mem, 0, FirstPartLength);
+              //x memcpy(Mem+FirstPartLength,Window,BlockEnd);
+              Array.Copy(Window, 0, Mem, FirstPartLength,BlockEnd);
             }
           }
 
-          byte *OutMem=ApplyFilter(Mem,BlockLength,flt);
+          byte[] OutMem=ApplyFilter(Mem,BlockLength,flt);
 
           Filters[I].Type=FILTER_NONE;
 
@@ -388,8 +392,10 @@ void UnpWriteBuf()
   }
 
   // Remove processed filters from queue.
-  size_t EmptyCount=0;
-  for (size_t I=0;I<Filters.Count;I++)
+  // sharpcompress: size_t -> int
+  int EmptyCount=0;
+  // sharpcompress: size_t -> int
+  for (int I=0;I<Filters.Count;I++)
   {
     if (EmptyCount>0)
       Filters[I-EmptyCount]=Filters[I];
@@ -419,9 +425,9 @@ void UnpWriteBuf()
 }
 
 
-byte* ApplyFilter(byte *Data,uint DataSize,UnpackFilter Flt)
+byte[] ApplyFilter(byte[] Data,uint DataSize,UnpackFilter Flt)
 {
-  byte *SrcData=Data;
+  byte[] SrcData=Data;
   switch(Flt.Type)
   {
     case FILTER_E8:
@@ -484,8 +490,10 @@ byte* ApplyFilter(byte *Data,uint DataSize,UnpackFilter Flt)
         // values here, since RAR5 uses only 5 bits to store channel.
         uint Channels=Flt.Channels,SrcPos=0;
 
-        FilterDstMemory.Alloc(DataSize);
-        byte *DstData=&FilterDstMemory[0];
+        //x FilterDstMemory.Alloc(DataSize);
+        FilterDstMemory = EnsureCapacity(FilterDstMemory, checked((int)DataSize));
+
+        byte[] DstData=FilterDstMemory;
 
         // Bytes from same channels are grouped to continual data blocks,
         // so we need to place them back to their interleaving positions.
