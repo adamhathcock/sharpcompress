@@ -233,7 +233,7 @@ void UnpInitData(bool Solid)
 // LengthTable contains the length in bits for every element of alphabet.
 // Dec is the structure to decode Huffman code/
 // Size is size of length table and DecodeNum field in Dec structure,
-void MakeDecodeTables(byte[] LengthTable,DecodeTable Dec,uint Size)
+void MakeDecodeTables(byte[] LengthTable, int offset, DecodeTable Dec,uint Size)
 {
   // Size of alphabet and DecodePos array.
   Dec.MaxNum=Size;
@@ -242,7 +242,7 @@ void MakeDecodeTables(byte[] LengthTable,DecodeTable Dec,uint Size)
   uint[] LengthCount = new uint[16];
   //memset(LengthCount,0,sizeof(LengthCount));
   for (size_t I=0;I<Size;I++)
-    LengthCount[LengthTable[I] & 0xf]++;
+    LengthCount[LengthTable[offset+I] & 0xf]++;
 
   // We must not calculate the number of zero length codes.
   LengthCount[0]=0;
@@ -289,7 +289,7 @@ void MakeDecodeTables(byte[] LengthTable,DecodeTable Dec,uint Size)
   for (uint I=0;I<Size;I++)
   {
     // Get the current bit length.
-    byte _CurBitLength=(byte)(LengthTable[I] & 0xf);
+    byte _CurBitLength=(byte)(LengthTable[offset+I] & 0xf);
 
     if (_CurBitLength!=0)
     {

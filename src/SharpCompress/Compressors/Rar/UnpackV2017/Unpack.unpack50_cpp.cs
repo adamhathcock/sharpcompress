@@ -637,7 +637,7 @@ bool ReadTables(BitInput Inp,ref UnpackBlockHeader Header, ref UnpackBlockTables
       BitLength[I]=(byte)Length;
   }
 
-  MakeDecodeTables(BitLength,Tables.BD,BC);
+  MakeDecodeTables(BitLength,0,Tables.BD,BC);
 
   byte[] Table = new byte[HUFF_TABLE_SIZE];
   const uint TableSize=HUFF_TABLE_SIZE;
@@ -702,10 +702,10 @@ bool ReadTables(BitInput Inp,ref UnpackBlockHeader Header, ref UnpackBlockTables
   TablesRead5=true;
   if (!Inp.ExternalBuffer && Inp.InAddr>ReadTop)
     return false;
-  MakeDecodeTables(&Table[0],Tables.LD,NC);
-  MakeDecodeTables(&Table[NC],Tables.DD,DC);
-  MakeDecodeTables(&Table[NC+DC],Tables.LDD,LDC);
-  MakeDecodeTables(&Table[NC+DC+LDC],Tables.RD,RC);
+  MakeDecodeTables(Table, 0, Tables.LD,NC);
+  MakeDecodeTables(Table, (int)NC,Tables.DD,DC);
+  MakeDecodeTables(Table, (int)(NC+DC),Tables.LDD,LDC);
+  MakeDecodeTables(Table, (int)(NC+DC+LDC),Tables.RD,RC);
   return true;
 }
 
