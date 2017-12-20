@@ -1,5 +1,4 @@
-﻿#if RARWIP
-#if !Rar2017_64bit
+﻿#if !Rar2017_64bit
 using nint = System.Int32;
 using nuint = System.UInt32;
 using size_t = System.UInt32;
@@ -43,7 +42,8 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017
             // as of 12/2017 .NET limits array indexing to using a signed integer
             // MaxWinSize causes unpack to use a fragmented window when the file 
             // window size exceeds MaxWinSize
-            MaxWinSize = ((uint)int.MaxValue) + 1;
+            // uggh, that's not how this variable is used, it's the size of the currently allocated window buffer
+            //x MaxWinSize = ((uint)int.MaxValue) + 1;
 
             // may be long.MaxValue which could indicate unknown size (not present in header)
             DestUnpSize = fileHeader.UncompressedSize;
@@ -63,7 +63,7 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017
             {
                 UnstoreFile();
             } else {
-                DoUnpack(this.fileHeader.CompressionMethod, this.fileHeader.IsSolid);
+                DoUnpack(this.fileHeader.CompressionAlgorithm, this.fileHeader.IsSolid);
             }
         }
 
@@ -106,4 +106,3 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017
 
     }
 }
-#endif

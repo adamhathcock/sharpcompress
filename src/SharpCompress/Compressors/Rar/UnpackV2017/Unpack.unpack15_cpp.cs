@@ -1,6 +1,4 @@
-﻿#if RARWIP
-#if !RarV2017_RAR5ONLY
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -11,6 +9,7 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017
 {
     internal partial class Unpack
     {
+#if !RarV2017_RAR5ONLY
 
 const int STARTL1  =2;
 static uint[] DecL1={0x8000,0xa000,0xc000,0xd000,0xe000,0xea00,
@@ -439,7 +438,7 @@ void GetFlagsBuf()
   ChSetC[NewFlagsPlace]=Flags;
 }
 
-
+#endif
 void UnpInitData15(bool Solid)
 {
   if (!Solid)
@@ -457,33 +456,33 @@ void UnpInitData15(bool Solid)
   ReadTop=0;
 }
 
-
 void InitHuff()
 {
   for (uint I=0;I<256;I++)
   {
-    ChSet[I]=ChSetB[I]=I<<8;
-    ChSetA[I]=I;
-    ChSetC[I]=((~I+1) & 0xff)<<8;
+    ChSet[I]=ChSetB[I]=(ushort)(I<<8);
+    ChSetA[I]=(ushort)I;
+    ChSetC[I]=(ushort)(((~I+1) & 0xff)<<8);
   }
-  memset(NToPl,0,sizeof(NToPl));
-  memset(NToPlB,0,sizeof(NToPlB));
-  memset(NToPlC,0,sizeof(NToPlC));
+  Utility.Memset(NToPl,0,NToPl.Length);
+  Utility.Memset(NToPlB,0,NToPlB.Length);
+  Utility.Memset(NToPlC,0,NToPlC.Length);
   CorrHuff(ChSetB,NToPlB);
 }
 
 
-void CorrHuff(ushort *CharSet,byte *NumToPlace)
+void CorrHuff(ushort[] CharSet,byte[] NumToPlace)
 {
   int I,J;
   for (I=7;I>=0;I--)
-    for (J=0;J<32;J++,CharSet++)
-      *CharSet=(*CharSet & ~0xff) | I;
-  memset(NumToPlace,0,sizeof(NToPl));
+    for (J=0;J<32;J++)
+      CharSet[J]=(ushort)((CharSet[J] & ~0xff) | I);
+  Utility.Memset(NumToPlace,0,NToPl.Length);
   for (I=6;I>=0;I--)
-    NumToPlace[I]=(7-I)*32;
+    NumToPlace[I]=(byte)((7-I)*32);
 }
 
+#if !RarV2017_RAR5ONLY
 
 void CopyString15(uint Distance,uint Length)
 {
@@ -504,8 +503,7 @@ uint DecodeNum(uint Num,uint StartPos,uint *DecTab,uint *PosTab)
   Inp.faddbits(StartPos);
   return(((Num-(I ? DecTab[I-1]:0))>>(16-StartPos))+PosTab[StartPos]);
 }
+#endif
 
     }
 }
-#endif
-#endif

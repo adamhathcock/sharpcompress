@@ -1,5 +1,4 @@
-﻿#if RARWIP
-#if !Rar2017_64bit
+﻿#if !Rar2017_64bit
 using nint = System.Int32;
 using nuint = System.UInt32;
 using size_t = System.UInt32;
@@ -44,12 +43,10 @@ public Unpack(/* ComprDataIO *DataIO */)
   // It prevents crash if first DoUnpack call is later made with wrong
   // (true) 'Solid' value.
   UnpInitData(false);
-#if !RarV2017_RAR5ONLY
 #if !RarV2017_SFX_MODULE
   // RAR 1.5 decompression initialization
   UnpInitData15(false);
   InitHuff();
-#endif
 #endif
 }
 
@@ -191,6 +188,9 @@ void DoUnpack(uint Method,bool Solid)
 #endif
       Unpack5(Solid);
       break;
+#if !Rar2017_NOSTRICT
+    default: throw new InvalidFormatException("unknown compression method " + Method);
+#endif
   }
 }
 
@@ -222,12 +222,10 @@ void UnpInitData(bool Solid)
   //memset(&BlockHeader,0,sizeof(BlockHeader));
   BlockHeader = new UnpackBlockHeader();
   BlockHeader.BlockSize=-1;  // '-1' means not defined yet.
-#if !RarV2017_RAR5ONLY
 #if !RarV2017_SFX_MODULE
   UnpInitData20(Solid);
 #endif
   UnpInitData30(Solid);
-#endif
   UnpInitData50(Solid);
 }
 
@@ -379,4 +377,3 @@ void MakeDecodeTables(byte[] LengthTable, int offset, DecodeTable Dec,uint Size)
 
     }
 }
-#endif

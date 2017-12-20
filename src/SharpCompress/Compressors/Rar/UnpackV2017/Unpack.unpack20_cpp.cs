@@ -1,6 +1,4 @@
-﻿#if RARWIP
-#if !RarV2017_RAR5ONLY
-#if !Rar2017_64bit
+﻿#if !Rar2017_64bit
 using nint = System.Int32;
 using nuint = System.UInt32;
 using size_t = System.UInt32;
@@ -17,13 +15,14 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using static SharpCompress.Compressors.Rar.UnpackV2017.PackDef;
-using static SharpCompress.Compressors.Rar.UnpackV2017.Unpack.Unpack20Local;
+//using static SharpCompress.Compressors.Rar.UnpackV2017.Unpack.Unpack20Local;
 
 namespace SharpCompress.Compressors.Rar.UnpackV2017
 {
     internal partial class Unpack
     {
 
+#if !RarV2017_RAR5ONLY
 void CopyString20(uint Length,uint Distance)
 {
   LastDist=OldDist[OldDistPtr++ & 3]=Distance;
@@ -292,6 +291,7 @@ void ReadLastTables()
         ReadTables20();
 }
 
+#endif
 
 void UnpInitData20(bool Solid)
 {
@@ -303,12 +303,15 @@ void UnpInitData20(bool Solid)
     UnpCurChannel=0;
     UnpChannels=1;
 
-    memset(AudV,0,sizeof(AudV));
+    //memset(AudV,0,sizeof(AudV));
+    AudV = new AudioVariables[4];
     Utility.Memset(UnpOldTable20, 0, UnpOldTable20.Length);
-    memset(MD,0,sizeof(MD));
+    //memset(MD,0,sizeof(MD));
+    MD = new DecodeTable[4];
   }
 }
 
+#if !RarV2017_RAR5ONLY
 
 byte DecodeAudio(int Delta)
 {
@@ -402,8 +405,7 @@ byte DecodeAudio(int Delta)
   }
   return (byte)Ch;
 }
+#endif
 
     }
 }
-#endif
-#endif

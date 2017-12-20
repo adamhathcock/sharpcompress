@@ -1,6 +1,4 @@
-﻿#if RARWIP
-#if !RarV2017_RAR5ONLY
-#if !Rar2017_64bit
+﻿#if !Rar2017_64bit
 using nint = System.Int32;
 using nuint = System.UInt32;
 using size_t = System.UInt32;
@@ -18,12 +16,14 @@ using System.Text;
 using System.Threading.Tasks;
 using static SharpCompress.Compressors.Rar.UnpackV2017.PackDef;
 using static SharpCompress.Compressors.Rar.UnpackV2017.UnpackGlobal;
-using static SharpCompress.Compressors.Rar.UnpackV2017.Unpack.Unpack30Local;
+//using static SharpCompress.Compressors.Rar.UnpackV2017.Unpack.Unpack30Local;
 
 namespace SharpCompress.Compressors.Rar.UnpackV2017
 {
     internal partial class Unpack
     {
+
+#if !RarV2017_RAR5ONLY
 // We use it instead of direct PPM.DecodeChar call to be sure that
 // we reset PPM structures in case of corrupt data. It is important,
 // because these structures can be invalid after PPM.DecodeChar returned -1.
@@ -761,6 +761,7 @@ bool ReadTables30()
   return true;
 }
 
+#endif
 
 void UnpInitData30(bool Solid)
 {
@@ -794,7 +795,6 @@ void InitFilters30(bool Solid)
   PrgStack.Clear();
 }
 
+
     }
 }
-#endif
-#endif

@@ -1,5 +1,4 @@
-﻿#if RARWIP
-#if !Rar2017_64bit
+﻿#if !Rar2017_64bit
 using nint = System.Int32;
 using nuint = System.UInt32;
 using size_t = System.UInt32;
@@ -341,7 +340,7 @@ internal partial class Unpack
 /***************************** Unpack v 2.0 *********************************/
     //void Unpack20(bool Solid);
 
-    readonly DecodeTable[] MD = new DecodeTable[4]; // Decode multimedia data, up to 4 channels.
+    DecodeTable[] MD = new DecodeTable[4]; // Decode multimedia data, up to 4 channels.
 
     readonly byte[] UnpOldTable20 = new byte[MC20*4];
     bool UnpAudioBlock;
@@ -442,4 +441,3 @@ internal partial class Unpack
 
     }
 }
-#endif

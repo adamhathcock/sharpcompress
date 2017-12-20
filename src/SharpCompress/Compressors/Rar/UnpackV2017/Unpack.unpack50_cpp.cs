@@ -1,5 +1,4 @@
-﻿#if RARWIP
-#if !Rar2017_64bit
+﻿#if !Rar2017_64bit
 using nint = System.Int32;
 using nuint = System.UInt32;
 using size_t = System.UInt32;
@@ -724,4 +723,3 @@ void InitFilters()
 
     }
 }
-#endif
