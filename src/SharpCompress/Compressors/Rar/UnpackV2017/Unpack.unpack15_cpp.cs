@@ -4,7 +4,6 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017
 {
     internal partial class Unpack
     {
-#if true || !RarV2017_RAR5ONLY
 
 const int STARTL1  =2;
 static uint[] DecL1={0x8000,0xa000,0xc000,0xd000,0xe000,0xea00,
@@ -434,7 +433,6 @@ void GetFlagsBuf()
   ChSetC[NewFlagsPlace]=(ushort)Flags;
 }
 
-#endif
 void UnpInitData15(bool Solid)
 {
   if (!Solid)

@@ -153,7 +153,6 @@ void DoUnpack(uint Method,bool Solid)
   // just for extra safety.
   switch(Method)
   {
-#if !RarV2017_RAR5ONLY
 #if !RarV2017_SFX_MODULE
     case 15: // rar 1.5 compression
       if (!Fragmented)
@@ -165,6 +164,7 @@ void DoUnpack(uint Method,bool Solid)
         Unpack20(Solid);
       break;
 #endif
+#if !RarV2017_RAR5ONLY
     case 29: // rar 3.x compression
       if (!Fragmented)
         Unpack29(Solid);

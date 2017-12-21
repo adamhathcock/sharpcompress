@@ -12,14 +12,14 @@ using int64 = System.Int64;
 using System;
 using static SharpCompress.Compressors.Rar.UnpackV2017.PackDef;
 using static SharpCompress.Compressors.Rar.UnpackV2017.UnpackGlobal;
-using static SharpCompress.Compressors.Rar.UnpackV2017.Unpack.Unpack30Local;
+//using static SharpCompress.Compressors.Rar.UnpackV2017.Unpack.Unpack30Local;
 
 namespace SharpCompress.Compressors.Rar.UnpackV2017
 {
     internal partial class Unpack
     {
 
-#if true || !RarV2017_RAR5ONLY
+#if !RarV2017_RAR5ONLY
 // We use it instead of direct PPM.DecodeChar call to be sure that
 // we reset PPM structures in case of corrupt data. It is important,
 // because these structures can be invalid after PPM.DecodeChar returned -1.
@@ -251,7 +251,7 @@ void Unpack29(bool Solid)
       int Length=LDecode[LengthNumber]+2;
       if ((Bits=LBits[LengthNumber])>0)
       {
-        Length+=Inp.getbits()>>(int)(16-Bits);
+        Length+=(int)(Inp.getbits()>>(int)(16-Bits));
         Inp.addbits(Bits);
       }
       LastLength=(uint)Length;
@@ -345,7 +345,7 @@ bool ReadVMCode()
 
 bool ReadVMCodePPM()
 {
-  uint FirstByte=SafePPMDecodeChar();
+  uint FirstByte=(uint)SafePPMDecodeChar();
   if ((int)FirstByte==-1)
     return false;
   uint Length=(FirstByte & 7)+1;
@@ -429,7 +429,7 @@ bool AddVMCode(uint FirstByte,byte[] Code,int CodeSize)
   }
   else  // Filter was used in the past.
   {
-    Filter=Filters30[FiltPos];
+    Filter=Filters30[(int)FiltPos];
     StackFilter.ParentFilter=FiltPos;
   }
 
@@ -452,8 +452,8 @@ bool AddVMCode(uint FirstByte,byte[] Code,int CodeSize)
     PrgStack.Add(1);
     EmptyCount=1;
   }
-  size_t StackPos=PrgStack.Count-EmptyCount;
-  PrgStack[StackPos]=StackFilter;
+  size_t StackPos=(uint)(this.PrgStack.Count-EmptyCount);
+  PrgStack[(int)StackPos]=StackFilter;
  
   uint BlockStart=RarVM.ReadData(VMCodeInp);
   if ((FirstByte & 0x40)!=0)
@@ -464,7 +464,7 @@ bool AddVMCode(uint FirstByte,byte[] Code,int CodeSize)
     StackFilter.BlockLength=RarVM.ReadData(VMCodeInp);
 
     // Store the last data block length for current filter.
-    OldFilterLengths[FiltPos]=StackFilter.BlockLength;
+    OldFilterLengths[(int)FiltPos]=(int)StackFilter.BlockLength;
   }
   else
   {
@@ -472,7 +472,7 @@ bool AddVMCode(uint FirstByte,byte[] Code,int CodeSize)
     // for same filter. It is possible for corrupt data to access a new 
     // and not filled yet item of OldFilterLengths array here. This is why
     // we set new OldFilterLengths items to zero above.
-    StackFilter.BlockLength=FiltPos<OldFilterLengths.Count ? OldFilterLengths[FiltPos]:0;
+    StackFilter.BlockLength=FiltPos<OldFilterLengths.Count ? OldFilterLengths[(int)FiltPos]:0;
   }
 
   StackFilter.NextWindow=WrPtr!=UnpPtr && ((WrPtr-UnpPtr)&MaxWinMask)<=BlockStart;
@@ -526,7 +526,8 @@ bool UnpReadBuf30()
     // is not less than CRYPT_BLOCK_SIZE, so we can align it without risk
     // to make it zero.
     if (DataSize>0)
-      memmove(Inp.InBuf,Inp.InBuf+Inp.InAddr,DataSize);
+      //x memmove(Inp.InBuf,Inp.InBuf+Inp.InAddr,DataSize);
+      Array.Copy(Inp.InBuf,Inp.InAddr,Inp.InBuf,0,DataSize);
     Inp.InAddr=0;
     ReadTop=DataSize;
   }
@@ -544,7 +545,7 @@ void UnpWriteBuf30()
 {
   uint WrittenBorder=(uint)WrPtr;
   uint WriteSize=(uint)((UnpPtr-WrittenBorder)&MaxWinMask);
-  for (size_t I=0;I<PrgStack.Count;I++)
+  for (int I=0;I<PrgStack.Count;I++)
   {
     // Here we apply filters to data which we need to write.
     // We always copy data to virtual machine memory before processing.

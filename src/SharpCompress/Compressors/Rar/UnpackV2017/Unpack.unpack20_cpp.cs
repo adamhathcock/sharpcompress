@@ -18,7 +18,6 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017
     internal partial class Unpack
     {
 
-#if true || !RarV2017_RAR5ONLY
 void CopyString20(uint Length,uint Distance)
 {
   LastDist=OldDist[OldDistPtr++ & 3]=Distance;
@@ -288,7 +287,6 @@ void ReadLastTables()
         ReadTables20();
 }
 
-#endif
 
 void UnpInitData20(bool Solid)
 {
