@@ -1,15 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using static SharpCompress.Compressors.Rar.UnpackV2017.PackDef;
+﻿using static SharpCompress.Compressors.Rar.UnpackV2017.Unpack.Unpack15Local;
 
 namespace SharpCompress.Compressors.Rar.UnpackV2017
 {
     internal partial class Unpack
     {
-#if !RarV2017_RAR5ONLY
+#if true || !RarV2017_RAR5ONLY
 
 const int STARTL1  =2;
 static uint[] DecL1={0x8000,0xa000,0xc000,0xd000,0xe000,0xea00,
@@ -129,13 +124,14 @@ uint GetShortLen1(uint pos) { return ((pos)==1 ? (uint)(this.Buf60+3):ShortLen1[
 //#define GetShortLen2(pos) ((pos)==3 ? Buf60+3:ShortLen2[pos])
 uint GetShortLen2(uint pos) { return ((pos)==3 ? (uint)(this.Buf60+3):ShortLen2[pos]); }
 
-  static uint[] ShortLen1={1,3,4,4,5,6,7,8,8,4,4,5,6,6,4,0};
-  static uint[] ShortXor1={0,0xa0,0xd0,0xe0,0xf0,0xf8,0xfc,0xfe,
+internal static class Unpack15Local {
+  public static readonly uint[] ShortLen1={1,3,4,4,5,6,7,8,8,4,4,5,6,6,4,0};
+  public static readonly  uint[] ShortXor1={0,0xa0,0xd0,0xe0,0xf0,0xf8,0xfc,0xfe,
                                    0xff,0xc0,0x80,0x90,0x98,0x9c,0xb0};
-  static uint[] ShortLen2={2,3,3,3,4,4,5,6,6,4,4,5,6,6,4,0};
-  static uint[] ShortXor2={0,0x40,0x60,0xa0,0xd0,0xe0,0xf0,0xf8,
+  public static readonly  uint[] ShortLen2={2,3,3,3,4,4,5,6,6,4,4,5,6,6,4,0};
+  public static readonly  uint[] ShortXor2={0,0x40,0x60,0xa0,0xd0,0xe0,0xf0,0xf8,
                                    0xfc,0xc0,0x80,0x90,0x98,0x9c,0xb0};
-
+}
 
 void ShortLZ()
 {
@@ -166,14 +162,14 @@ void ShortLZ()
   if (AvrLn1<37)
   {
     for (Length=0;;Length++)
-      if (((BitField^ShortXor1[Length]) & (~(0xff>>GetShortLen1(Length))))==0)
+      if (((BitField^ShortXor1[Length]) & (~(0xff>>(int)GetShortLen1(Length))))==0)
         break;
     Inp.faddbits(GetShortLen1(Length));
   }
   else
   {
     for (Length=0;;Length++)
-      if (((BitField^ShortXor2[Length]) & (~(0xff>>GetShortLen2(Length))))==0)
+      if (((BitField^ShortXor2[Length]) & (~(0xff>>(int)GetShortLen2(Length))))==0)
         break;
     Inp.faddbits(GetShortLen2(Length));
   }
@@ -224,13 +220,13 @@ void ShortLZ()
   AvrLn1 += Length;
   AvrLn1 -= AvrLn1 >> 4;
 
-  DistancePlace=DecodeNum(Inp.fgetbits(),STARTHF2,DecHf2,PosHf2) & 0xff;
+  DistancePlace=(int)(DecodeNum(Inp.fgetbits(),STARTHF2,DecHf2,PosHf2) & 0xff);
   Distance=ChSetA[DistancePlace];
   if (--DistancePlace != -1)
   {
     LastDistance=ChSetA[DistancePlace];
-    ChSetA[DistancePlace+1]=LastDistance;
-    ChSetA[DistancePlace]=Distance;
+    ChSetA[DistancePlace+1]=(ushort)LastDistance;
+    ChSetA[DistancePlace]=(ushort)Distance;
   }
   Length+=2;
   OldDist[OldDistPtr++] = ++Distance;
@@ -271,7 +267,7 @@ void LongLZ()
       }
       else
       {
-        for (Length=0;((BitField<<Length)&0x8000)==0;Length++)
+        for (Length=0;((BitField<<(int)Length)&0x8000)==0;Length++)
           ;
         Inp.faddbits(Length+1);
       }
@@ -290,18 +286,18 @@ void LongLZ()
 
   AvrPlcB += DistancePlace;
   AvrPlcB -= AvrPlcB >> 8;
-  while (1)
+  while (true)
   {
     Distance = ChSetB[DistancePlace & 0xff];
     NewDistancePlace = NToPlB[Distance++ & 0xff]++;
-    if (!(Distance & 0xff))
+    if ((Distance & 0xff) != 0)
       CorrHuff(ChSetB,NToPlB);
     else
       break;
   }
 
   ChSetB[DistancePlace & 0xff]=ChSetB[NewDistancePlace];
-  ChSetB[NewDistancePlace]=Distance;
+  ChSetB[NewDistancePlace]=(ushort)Distance;
 
   Distance=((Distance & 0xff00) | (Inp.fgetbits() >> 8)) >> 1;
   Inp.faddbits(7);
@@ -343,18 +339,18 @@ void HuffDecode()
   uint BitField=Inp.fgetbits();
 
   if (AvrPlc > 0x75ff)
-    BytePlace=DecodeNum(BitField,STARTHF4,DecHf4,PosHf4);
+    BytePlace=(int)DecodeNum(BitField,STARTHF4,DecHf4,PosHf4);
   else
     if (AvrPlc > 0x5dff)
-      BytePlace=DecodeNum(BitField,STARTHF3,DecHf3,PosHf3);
+      BytePlace=(int)DecodeNum(BitField,STARTHF3,DecHf3,PosHf3);
     else
       if (AvrPlc > 0x35ff)
-        BytePlace=DecodeNum(BitField,STARTHF2,DecHf2,PosHf2);
+        BytePlace=(int)DecodeNum(BitField,STARTHF2,DecHf2,PosHf2);
       else
         if (AvrPlc > 0x0dff)
-          BytePlace=DecodeNum(BitField,STARTHF1,DecHf1,PosHf1);
+          BytePlace=(int)DecodeNum(BitField,STARTHF1,DecHf1,PosHf1);
         else
-          BytePlace=DecodeNum(BitField,STARTHF0,DecHf0,PosHf0);
+          BytePlace=(int)DecodeNum(BitField,STARTHF0,DecHf0,PosHf0);
   BytePlace&=0xff;
   if (StMode != 0)
   {
@@ -384,7 +380,7 @@ void HuffDecode()
   else
     if (NumHuf++ >= 16 && FlagsCnt==0)
       StMode=1;
-  AvrPlc += BytePlace;
+  AvrPlc += (uint)BytePlace;
   AvrPlc -= AvrPlc >> 8;
   Nhfb+=16;
   if (Nhfb > 0xff)
@@ -396,7 +392,7 @@ void HuffDecode()
   Window[UnpPtr++]=(byte)(ChSet[BytePlace]>>8);
   --DestUnpSize;
 
-  while (1)
+  while (true)
   {
     CurByte=ChSet[BytePlace];
     NewBytePlace=NToPl[CurByte++ & 0xff]++;
@@ -407,7 +403,7 @@ void HuffDecode()
   }
 
   ChSet[BytePlace]=ChSet[NewBytePlace];
-  ChSet[NewBytePlace]=CurByte;
+  ChSet[NewBytePlace]=(ushort)CurByte;
 }
 
 
@@ -421,7 +417,7 @@ void GetFlagsBuf()
   // While normally we do not use the last item to code the flags byte here,
   // we need to check for value 256 when unpacking in case we unpack
   // a corrupt archive.
-  if (FlagsPlace>=sizeof(ChSetC)/sizeof(ChSetC[0]))
+  if (FlagsPlace>=ChSetC.Length)
     return;
 
   while (true)
@@ -435,7 +431,7 @@ void GetFlagsBuf()
   }
 
   ChSetC[FlagsPlace]=ChSetC[NewFlagsPlace];
-  ChSetC[NewFlagsPlace]=Flags;
+  ChSetC[NewFlagsPlace]=(ushort)Flags;
 }
 
 #endif
@@ -482,7 +478,6 @@ void CorrHuff(ushort[] CharSet,byte[] NumToPlace)
     NumToPlace[I]=(byte)((7-I)*32);
 }
 
-#if !RarV2017_RAR5ONLY
 
 void CopyString15(uint Distance,uint Length)
 {
@@ -495,15 +490,14 @@ void CopyString15(uint Distance,uint Length)
 }
 
 
-uint DecodeNum(uint Num,uint StartPos,uint *DecTab,uint *PosTab)
+uint DecodeNum(uint Num,uint StartPos,uint[] DecTab,uint[] PosTab)
 {
   int I;
   for (Num&=0xfff0,I=0;DecTab[I]<=Num;I++)
     StartPos++;
   Inp.faddbits(StartPos);
-  return(((Num-(I ? DecTab[I-1]:0))>>(16-StartPos))+PosTab[StartPos]);
+  return(((Num-(I != 0 ? DecTab[I-1]:0))>>(int)(16-StartPos))+PosTab[StartPos]);
 }
-#endif
 
     }
 }

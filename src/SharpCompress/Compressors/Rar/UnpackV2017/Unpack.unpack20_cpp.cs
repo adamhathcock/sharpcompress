@@ -10,19 +10,15 @@ using size_t = System.UInt64;
 using int64 = System.Int64;
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using static SharpCompress.Compressors.Rar.UnpackV2017.PackDef;
-//using static SharpCompress.Compressors.Rar.UnpackV2017.Unpack.Unpack20Local;
+using static SharpCompress.Compressors.Rar.UnpackV2017.Unpack.Unpack20Local;
 
 namespace SharpCompress.Compressors.Rar.UnpackV2017
 {
     internal partial class Unpack
     {
 
-#if !RarV2017_RAR5ONLY
+#if true || !RarV2017_RAR5ONLY
 void CopyString20(uint Length,uint Distance)
 {
   LastDist=OldDist[OldDistPtr++ & 3]=Distance;
@@ -33,12 +29,12 @@ void CopyString20(uint Length,uint Distance)
 
 
 internal static class Unpack20Local {
-  public static byte[] LDecode={0,1,2,3,4,5,6,7,8,10,12,14,16,20,24,28,32,40,48,56,64,80,96,112,128,160,192,224};
-  public static byte[] LBits=  {0,0,0,0,0,0,0,0,1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4,  4,  5,  5,  5,  5};
-  public static uint[] DDecode={0,1,2,3,4,6,8,12,16,24,32,48,64,96,128,192,256,384,512,768,1024,1536,2048,3072,4096,6144,8192,12288,16384,24576,32768U,49152U,65536,98304,131072,196608,262144,327680,393216,458752,524288,589824,655360,720896,786432,851968,917504,983040};
-  public static byte[] DBits=  {0,0,0,0,1,1,2, 2, 3, 3, 4, 4, 5, 5,  6,  6,  7,  7,  8,  8,   9,   9,  10,  10,  11,  11,  12,   12,   13,   13,    14,    14,   15,   15,    16,    16,    16,    16,    16,    16,    16,    16,    16,    16,    16,    16,    16,    16};
-  public static byte[] SDDecode={0,4,8,16,32,64,128,192};
-  public static byte[] SDBits=  {2,2,3, 4, 5, 6,  6,  6};
+  public static readonly byte[] LDecode={0,1,2,3,4,5,6,7,8,10,12,14,16,20,24,28,32,40,48,56,64,80,96,112,128,160,192,224};
+  public static readonly byte[] LBits=  {0,0,0,0,0,0,0,0,1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4,  4,  5,  5,  5,  5};
+  public static readonly uint[] DDecode={0,1,2,3,4,6,8,12,16,24,32,48,64,96,128,192,256,384,512,768,1024,1536,2048,3072,4096,6144,8192,12288,16384,24576,32768U,49152U,65536,98304,131072,196608,262144,327680,393216,458752,524288,589824,655360,720896,786432,851968,917504,983040};
+  public static readonly byte[] DBits=  {0,0,0,0,1,1,2, 2, 3, 3, 4, 4, 5, 5,  6,  6,  7,  7,  8,  8,   9,   9,  10,  10,  11,  11,  12,   12,   13,   13,    14,    14,   15,   15,    16,    16,    16,    16,    16,    16,    16,    16,    16,    16,    16,    16,    16,    16};
+  public static readonly byte[] SDDecode={0,4,8,16,32,64,128,192};
+  public static readonly byte[] SDBits=  {2,2,3, 4, 5, 6,  6,  6};
 }
 void Unpack20(bool Solid)
 {
@@ -95,10 +91,10 @@ void Unpack20(bool Solid)
     }
     if (Number>269)
     {
-      uint Length=LDecode[Number-=270]+3;
+      uint Length=(uint)(LDecode[Number-=270]+3);
       if ((Bits=LBits[Number])>0)
       {
-        Length+=Inp.getbits()>>(16-Bits);
+        Length+=Inp.getbits()>>(int)(16-Bits);
         Inp.addbits(Bits);
       }
 
@@ -106,7 +102,7 @@ void Unpack20(bool Solid)
       uint Distance=DDecode[DistNumber]+1;
       if ((Bits=DBits[DistNumber])>0)
       {
-        Distance+=Inp.getbits()>>(16-Bits);
+        Distance+=Inp.getbits()>>(int)(16-Bits);
         Inp.addbits(Bits);
       }
 
@@ -135,10 +131,10 @@ void Unpack20(bool Solid)
     {
       uint Distance=OldDist[(OldDistPtr-(Number-256)) & 3];
       uint LengthNumber=DecodeNumber(Inp,BlockTables.RD);
-      uint Length=LDecode[LengthNumber]+2;
+      uint Length=(uint)(LDecode[LengthNumber]+2);
       if ((Bits=LBits[LengthNumber])>0)
       {
-        Length+=Inp.getbits()>>(16-Bits);
+        Length+=Inp.getbits()>>(int)(16-Bits);
         Inp.addbits(Bits);
       }
       if (Distance>=0x101)
@@ -156,10 +152,10 @@ void Unpack20(bool Solid)
     }
     if (Number<270)
     {
-      uint Distance=SDDecode[Number-=261]+1;
+      uint Distance=(uint)(SDDecode[Number-=261]+1);
       if ((Bits=SDBits[Number])>0)
       {
-        Distance+=Inp.getbits()>>(16-Bits);
+        Distance+=Inp.getbits()>>(int)(16-Bits);
         Inp.addbits(Bits);
       }
       CopyString20(2,Distance);
@@ -177,20 +173,20 @@ void UnpWriteBuf20()
     UnpSomeRead=true;
   if (UnpPtr<WrPtr)
   {
-    UnpIO->UnpWrite(&Window[WrPtr],-(int)WrPtr & MaxWinMask);
-    UnpIO->UnpWrite(Window,UnpPtr);
+    UnpIO_UnpWrite(Window, WrPtr,(uint)(-(int)this.WrPtr & this.MaxWinMask));
+    UnpIO_UnpWrite(Window,0,UnpPtr);
     UnpAllBuf=true;
   }
   else
-    UnpIO->UnpWrite(&Window[WrPtr],UnpPtr-WrPtr);
+    UnpIO_UnpWrite(Window,WrPtr,UnpPtr-WrPtr);
   WrPtr=UnpPtr;
 }
 
 
 bool ReadTables20()
 {
-  byte BitLength[BC20];
-  byte Table[MC20*4];
+  byte[] BitLength = new byte[BC20];
+  byte[] Table = new byte[MC20*4];
   if (Inp.InAddr>ReadTop-25)
     if (!UnpReadBuf())
       return false;
@@ -218,7 +214,7 @@ bool ReadTables20()
     BitLength[I]=(byte)(Inp.getbits() >> 12);
     Inp.addbits(4);
   }
-  MakeDecodeTables(BitLength,BlockTables.BD,BC20);
+  MakeDecodeTables(BitLength,0,BlockTables.BD,BC20);
   for (uint I=0;I<TableSize;)
   {
     if (Inp.InAddr>ReadTop-5)
@@ -227,7 +223,7 @@ bool ReadTables20()
     uint Number=DecodeNumber(Inp,BlockTables.BD);
     if (Number<16)
     {
-      Table[I]=(Number+UnpOldTable20[I]) & 0xf;
+      Table[I]=(byte)((Number+this.UnpOldTable20[I]) & 0xf);
       I++;
     }
     else
@@ -266,14 +262,15 @@ bool ReadTables20()
     return true;
   if (UnpAudioBlock)
     for (uint I=0;I<UnpChannels;I++)
-      MakeDecodeTables(&Table[I*MC20],&MD[I],MC20);
+      MakeDecodeTables(Table,(int)(I*MC20),MD[I],MC20);
   else
   {
-    MakeDecodeTables(&Table[0],BlockTables.LD,NC20);
-    MakeDecodeTables(&Table[NC20],BlockTables.DD,DC20);
-    MakeDecodeTables(&Table[NC20+DC20],BlockTables.RD,RC20);
+    MakeDecodeTables(Table,0,BlockTables.LD,NC20);
+    MakeDecodeTables(Table,(int)NC20,BlockTables.DD,DC20);
+    MakeDecodeTables(Table,(int)(NC20+DC20),BlockTables.RD,RC20);
   }
-  memcpy(UnpOldTable20,Table,sizeof(UnpOldTable20));
+  //x memcpy(UnpOldTable20,Table,sizeof(UnpOldTable20));
+  Array.Copy(Table,0,UnpOldTable20,0,UnpOldTable20.Length);
   return true;
 }
 
@@ -311,7 +308,6 @@ void UnpInitData20(bool Solid)
   }
 }
 
-#if !RarV2017_RAR5ONLY
 
 byte DecodeAudio(int Delta)
 {
@@ -324,27 +320,27 @@ byte DecodeAudio(int Delta)
   int PCh=8*V.LastChar+V.K1*V.D1+V.K2*V.D2+V.K3*V.D3+V.K4*V.D4+V.K5*UnpChannelDelta;
   PCh=(PCh>>3) & 0xFF;
 
-  uint Ch=PCh-Delta;
+  uint Ch=(uint)(PCh-Delta);
 
   int D=(sbyte)Delta;
   // Left shift of negative value is undefined behavior in C++,
   // so we cast it to unsigned to follow the standard.
-  D=(uint)D<<3;
+  D=(int)((uint)D<<3);
 
-  V.Dif[0]+=Math.Abs(D);
-  V.Dif[1]+=Math.Abs(D-V.D1);
-  V.Dif[2]+=Math.Abs(D+V.D1);
-  V.Dif[3]+=Math.Abs(D-V.D2);
-  V.Dif[4]+=Math.Abs(D+V.D2);
-  V.Dif[5]+=Math.Abs(D-V.D3);
-  V.Dif[6]+=Math.Abs(D+V.D3);
-  V.Dif[7]+=Math.Abs(D-V.D4);
-  V.Dif[8]+=Math.Abs(D+V.D4);
-  V.Dif[9]+=Math.Abs(D-UnpChannelDelta);
-  V.Dif[10]+=Math.Abs(D+UnpChannelDelta);
+  V.Dif[0]+=(uint)Math.Abs(D);
+  V.Dif[1]+=(uint)Math.Abs(D-V.D1);
+  V.Dif[2]+=(uint)Math.Abs(D+V.D1);
+  V.Dif[3]+=(uint)Math.Abs(D-V.D2);
+  V.Dif[4]+=(uint)Math.Abs(D+V.D2);
+  V.Dif[5]+=(uint)Math.Abs(D-V.D3);
+  V.Dif[6]+=(uint)Math.Abs(D+V.D3);
+  V.Dif[7]+=(uint)Math.Abs(D-V.D4);
+  V.Dif[8]+=(uint)Math.Abs(D+V.D4);
+  V.Dif[9]+=(uint)Math.Abs(D-UnpChannelDelta);
+  V.Dif[10]+=(uint)Math.Abs(D+UnpChannelDelta);
 
   UnpChannelDelta=V.LastDelta=(sbyte)(Ch-V.LastChar);
-  V.LastChar=Ch;
+  V.LastChar=(int)Ch;
 
   if ((V.ByteCount & 0x1F)==0)
   {
@@ -405,7 +401,6 @@ byte DecodeAudio(int Delta)
   }
   return (byte)Ch;
 }
-#endif
 
     }
 }

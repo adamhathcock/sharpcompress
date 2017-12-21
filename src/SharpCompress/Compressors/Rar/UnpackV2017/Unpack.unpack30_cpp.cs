@@ -35,13 +35,13 @@ int SafePPMDecodeChar()
 }
 
 internal static class Unpack30Local {
-  public static byte[] LDecode={0,1,2,3,4,5,6,7,8,10,12,14,16,20,24,28,32,40,48,56,64,80,96,112,128,160,192,224};
-  public static byte[] LBits=  {0,0,0,0,0,0,0,0,1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4,  4,  5,  5,  5,  5};
-  public static int[] DDecode = new int[DC];
-  public static byte[] DBits = new byte[DC];
-  public static int[] DBitLengthCounts= {4,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,14,0,12};
-  public static byte[] SDDecode={0,4,8,16,32,64,128,192};
-  public static byte[] SDBits=  {2,2,3, 4, 5, 6,  6,  6};
+  public static readonly byte[] LDecode={0,1,2,3,4,5,6,7,8,10,12,14,16,20,24,28,32,40,48,56,64,80,96,112,128,160,192,224};
+  public static readonly byte[] LBits=  {0,0,0,0,0,0,0,0,1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4,  4,  5,  5,  5,  5};
+  public static readonly int[] DDecode = new int[DC];
+  public static readonly byte[] DBits = new byte[DC];
+  public static readonly int[] DBitLengthCounts= {4,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,14,0,12};
+  public static readonly byte[] SDDecode={0,4,8,16,32,64,128,192};
+  public static readonly byte[] SDBits=  {2,2,3, 4, 5, 6,  6,  6};
 }
 void Unpack29(bool Solid)
 {
