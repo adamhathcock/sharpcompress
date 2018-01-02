@@ -141,6 +141,12 @@ namespace SharpCompress
 
         public static void Skip(this Stream source, long advanceAmount)
         {
+            if (source.CanSeek)
+            {
+                source.Position += advanceAmount;
+                return;
+            }
+
             byte[] buffer = GetTransferByteArray();
             try
             {
