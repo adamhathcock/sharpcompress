@@ -11,9 +11,13 @@ namespace SharpCompress.Writers.Tar
 {
     public class TarWriter : AbstractWriter
     {
-        public TarWriter(Stream destination, WriterOptions options)
+        private bool finalizeArchiveOnClose;
+
+        public TarWriter(Stream destination, TarWriterOptions options)
             : base(ArchiveType.Tar, options)
         {
+            finalizeArchiveOnClose = options.FinalizeArchiveOnClose;
+
             if (!destination.CanWrite)
             {
                 throw new ArgumentException("Tars require writable streams.");
@@ -97,8 +101,10 @@ namespace SharpCompress.Writers.Tar
         {
             if (isDisposing)
             {
-                PadTo512(0, true);
-                PadTo512(0, true);
+                if (finalizeArchiveOnClose) {
+                    PadTo512(0, true);
+                    PadTo512(0, true);
+                }
                 switch (OutputStream)
                 {
                     case BZip2Stream b:
