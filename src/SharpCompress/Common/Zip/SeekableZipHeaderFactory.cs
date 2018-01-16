@@ -24,7 +24,7 @@ namespace SharpCompress.Common.Zip
             SeekBackToHeader(stream, reader, DIRECTORY_END_HEADER_BYTES);
             var entry = new DirectoryEndHeader();
             entry.Read(reader);
-
+            var comm = new ArchiveEncoding().Decode(entry.Comment);
             if (entry.IsZip64)
             {
                 _zip64 = true;
@@ -56,6 +56,11 @@ namespace SharpCompress.Common.Zip
                 if (directoryEntryHeader == null)
                 {
                     yield break;
+                }
+
+                if (!string.IsNullOrEmpty(comm))
+                {
+                   directoryEntryHeader.Comment = comm;
                 }
 
                 //entry could be zero bytes so we need to know that.

@@ -23,6 +23,8 @@ namespace SharpCompress.Archives.Zip
         /// </summary>
         public CompressionLevel DeflateCompressionLevel { get; set; }
 
+        public string ArchiveComment { get; private set; }
+
 #if !NO_FILE
 
         /// <summary>
@@ -154,6 +156,7 @@ namespace SharpCompress.Archives.Zip
                     {
                         case ZipHeaderType.DirectoryEntry:
                             {
+                                this.ArchiveComment = (h as DirectoryEntryHeader).Comment;
                                 yield return new ZipArchiveEntry(this,
                                                                  new SeekableZipFilePart(headerFactory,
                                                                                          h as DirectoryEntryHeader,
