@@ -24,7 +24,7 @@ namespace SharpCompress.Common.Zip
             SeekBackToHeader(stream, reader, DIRECTORY_END_HEADER_BYTES);
             var entry = new DirectoryEndHeader();
             entry.Read(reader);
-            var comm = new ArchiveEncoding().Decode(entry.Comment);
+
             if (entry.IsZip64)
             {
                 _zip64 = true;
@@ -58,15 +58,23 @@ namespace SharpCompress.Common.Zip
                     yield break;
                 }
 
-                if (!string.IsNullOrEmpty(comm))
+                if (entry.Comment.Length != 0)
                 {
-                   directoryEntryHeader.Comment = comm;
+                   directoryEntryHeader.Comment = ByteArrayToString(entry.Comment);
                 }
 
                 //entry could be zero bytes so we need to know that.
                 directoryEntryHeader.HasData = directoryEntryHeader.CompressedSize != 0;
                 yield return directoryEntryHeader;
             }
+        }
+
+        internal string ByteArrayToString(byte[] ba)
+        {
+          StringBuilder hex = new StringBuilder(ba.Length * 2);
+          foreach (byte b in ba)
+            hex.AppendFormat("{0:x2}", b);
+          return hex.ToString();
         }
 
         private static void SeekBackToHeader(Stream stream, BinaryReader reader, uint headerSignature)

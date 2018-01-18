@@ -156,7 +156,8 @@ namespace SharpCompress.Archives.Zip
                     {
                         case ZipHeaderType.DirectoryEntry:
                             {
-                                this.ArchiveComment = (h as DirectoryEntryHeader).Comment;
+                                byte[] bytes = StringToByteArray((h as DirectoryEntryHeader).Comment);
+                                ArchiveComment = ReaderOptions.ArchiveEncoding.Decode(bytes); 
                                 yield return new ZipArchiveEntry(this,
                                                                  new SeekableZipFilePart(headerFactory,
                                                                                          h as DirectoryEntryHeader,
@@ -212,6 +213,15 @@ namespace SharpCompress.Archives.Zip
             var stream = Volumes.Single().Stream;
             stream.Position = 0;
             return ZipReader.Open(stream, ReaderOptions);
+        }
+
+        private byte[] StringToByteArray(string hex)
+        {
+          int NumberChars = hex.Length;
+          byte[] bytes = new byte[NumberChars / 2];
+          for (int i = 0; i < NumberChars; i += 2)
+            bytes[i / 2] = Convert.ToByte(hex.Substring(i, 2), 16);
+          return bytes;
         }
     }
 }
