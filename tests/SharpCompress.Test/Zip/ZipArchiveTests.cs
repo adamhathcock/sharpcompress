@@ -11,7 +11,11 @@ using Xunit;
 
 namespace SharpCompress.Test.Zip
 {
-    public class ZipArchiveTests : ArchiveTests
+  using Microsoft.VisualStudio.TestPlatform.ObjectModel;
+
+  using SharpCompress.Writers.Zip;
+
+  public class ZipArchiveTests : ArchiveTests
     {
         public ZipArchiveTests()
         {
@@ -460,6 +464,23 @@ namespace SharpCompress.Test.Zip
                     }
                 }
             }
+        }
+
+        [Fact]
+        public void ReadArchiveComment()
+        {
+          string expectedComment = "HelloWorld";
+          using (var streamArchive = ZipArchive.Create())
+          {
+            var zipStream = new MemoryStream();
+            streamArchive.AddEntry("Dummy", new MemoryStream());
+            streamArchive.SaveTo(zipStream, new ZipWriterOptions(CompressionType.Deflate) { ArchiveComment = expectedComment });
+            using (var openedArchive = ZipArchive.Open(zipStream))
+            {
+              var entries = openedArchive.Entries.ToList();
+              Assert.Equal(expectedComment, openedArchive.ArchiveComment);
+            }
+          }
         }
     }
 }
