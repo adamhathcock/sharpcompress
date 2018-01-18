@@ -186,7 +186,7 @@ namespace SharpCompress.Archives.Zip
                 {
                     if (entry.IsDirectory)
                     {
-
+                       //TODO What do to here?
                     }
                     else
                     {
