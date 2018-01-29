@@ -12,6 +12,7 @@ namespace SharpCompress.Test
     {
         protected string SOLUTION_BASE_PATH = null;
         protected string TEST_ARCHIVES_PATH;
+        protected string MACOS_CHILD_ORIGINAL_FILES_PATH;
         protected string ORIGINAL_FILES_PATH;
         protected string MISC_TEST_FILES_PATH;
         public string SCRATCH_FILES_PATH;
@@ -250,6 +251,7 @@ namespace SharpCompress.Test
 #endif
             TEST_ARCHIVES_PATH = Path.Combine(SOLUTION_BASE_PATH, "TestArchives", "Archives");
             ORIGINAL_FILES_PATH = Path.Combine(SOLUTION_BASE_PATH, "TestArchives", "Original");
+            MACOS_CHILD_ORIGINAL_FILES_PATH = Path.Combine(SOLUTION_BASE_PATH, "TestArchives", "OriginalMacOsChild");
             MISC_TEST_FILES_PATH = Path.Combine(SOLUTION_BASE_PATH, "TestArchives", "MiscTest");
             SCRATCH_FILES_PATH = Path.Combine(SOLUTION_BASE_PATH, "TestArchives", "Scratch");
             SCRATCH2_FILES_PATH = Path.Combine(SOLUTION_BASE_PATH, "TestArchives", "Scratch2");

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using SharpCompress.Common;
 using SharpCompress.Readers;
 using SharpCompress.Readers.Zip;
@@ -328,6 +329,15 @@ namespace SharpCompress.Test.Zip
                     }
                 }
             }
+
+            var extracted =
+                Directory.EnumerateFiles(SCRATCH_FILES_PATH, "*.*", SearchOption.AllDirectories)
+                .ToLookup(path => path.Substring(SCRATCH_FILES_PATH.Length));
+            var original =
+                Directory.EnumerateFiles(MACOS_CHILD_ORIGINAL_FILES_PATH, "*.*", SearchOption.AllDirectories)
+                .ToLookup(path => path.Substring(ORIGINAL_FILES_PATH.Length));
+
+            Assert.Equal(extracted.Count, original.Count);
         }
     }
 }

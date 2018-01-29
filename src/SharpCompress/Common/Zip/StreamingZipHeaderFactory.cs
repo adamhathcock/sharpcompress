@@ -59,7 +59,7 @@ namespace SharpCompress.Common.Zip
                         rewindableStream.StartRecording();
                     }
                     uint nextHeaderBytes = reader.ReadUInt32();
-                    //check for Headers AfterChild Volumes in Mac OS arcive
+                    //check for Headers AfterChild Volumes in Mac OS archive
                     uint nextNextHeaderBytes = reader.ReadUInt32();
                     if(nextNextHeaderBytes > 0)
                     {
