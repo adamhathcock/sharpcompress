@@ -138,7 +138,7 @@ namespace SharpCompress.Test.Zip
         public void Zip_Zip64_ArchiveFileRead()
         {
             ArchiveFileRead("Zip.zip64.zip");
-        }
+        }        
 
         [Fact]
         public void Zip_Random_Write_Remove()

@@ -49,7 +49,7 @@ namespace SharpCompress.Common.Zip
                 lastEntryHeader = null;
                 uint headerBytes = reader.ReadUInt32();
                 header = ReadHeader(headerBytes, reader);
-
+                
                 //entry could be zero bytes so we need to know that.
                 if (header.ZipHeaderType == ZipHeaderType.LocalEntry)
                 {
@@ -59,6 +59,16 @@ namespace SharpCompress.Common.Zip
                         rewindableStream.StartRecording();
                     }
                     uint nextHeaderBytes = reader.ReadUInt32();
+                    //check for Headers AfterChild Volumes in Mac OS arcive
+                    uint nextNextHeaderBytes = reader.ReadUInt32();
+                    if(nextNextHeaderBytes > 0)
+                    {
+                        nextHeaderBytes = nextNextHeaderBytes;
+                    }
+                    else
+                    {
+                        reader.BaseStream.Position -= nextNextHeaderBytes;
+                    }
                     header.HasData = !IsHeader(nextHeaderBytes);
                     rewindableStream.Rewind(!isRecording);
                 }
