@@ -149,9 +149,9 @@ namespace SharpCompress.Test.Rar
             ResetScratch();
             using (Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, testArchive)))
             using (var reader = RarReader.Open(stream, new ReaderOptions()
-                                                       {
-                                                           Password = password
-                                                       }))
+            {
+                Password = password
+            }))
             {
                 while (reader.MoveToNextEntry())
                 {
@@ -209,9 +209,9 @@ namespace SharpCompress.Test.Rar
             ResetScratch();
             using (var stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Audio_program.rar")))
             using (var reader = RarReader.Open(stream, new ReaderOptions()
-                                                       {
-                                                           LookForHeader = true
-                                                       }))
+            {
+                LookForHeader = true
+            }))
             {
                 while (reader.MoveToNextEntry())
                 {
@@ -231,11 +231,11 @@ namespace SharpCompress.Test.Rar
         public void Rar_Jpg_Reader()
         {
             ResetScratch();
-            using (var stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "RarJpeg.jpg")))
+            using (var stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Rarjpeg.jpg")))
             using (var reader = RarReader.Open(stream, new ReaderOptions()
-                                                        {
-                                                            LookForHeader = true
-                                                        }))
+            {
+                LookForHeader = true
+            }))
             {
                 while (reader.MoveToNextEntry())
                 {
@@ -262,9 +262,9 @@ namespace SharpCompress.Test.Rar
             ResetScratch();
             using (var stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Rar.solid.rar")))
             using (var reader = RarReader.Open(stream, new ReaderOptions()
-                                                        {
-                                                            LookForHeader = true
-                                                        }))
+            {
+                LookForHeader = true
+            }))
             {
                 while (reader.MoveToNextEntry())
                 {
@@ -287,9 +287,9 @@ namespace SharpCompress.Test.Rar
             ResetScratch();
             using (var stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Rar.rar")))
             using (var reader = RarReader.Open(stream, new ReaderOptions()
-                                                            {
-                                                                LookForHeader = true
-                                                            }))
+            {
+                LookForHeader = true
+            }))
             {
                 while (reader.MoveToNextEntry())
                 {

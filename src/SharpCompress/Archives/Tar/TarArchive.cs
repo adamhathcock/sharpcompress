@@ -182,7 +182,7 @@ namespace SharpCompress.Archives.Tar
                                        IEnumerable<TarArchiveEntry> oldEntries,
                                        IEnumerable<TarArchiveEntry> newEntries)
         {
-            using (var writer = new TarWriter(stream, options))
+            using (var writer = new TarWriter(stream, new TarWriterOptions(options)))
             {
                 foreach (var entry in oldEntries.Concat(newEntries)
                                                 .Where(x => !x.IsDirectory))

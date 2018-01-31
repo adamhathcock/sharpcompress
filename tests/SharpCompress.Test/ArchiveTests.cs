@@ -40,7 +40,7 @@ namespace SharpCompress.Test
                     foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
                     {
                         entry.WriteToDirectory(SCRATCH_FILES_PATH,
-                                               new ExtractionOptions()
+                                               new ExtractionOptions
                                                {
                                                    ExtractFullPath = true,
                                                    Overwrite = true
@@ -51,24 +51,24 @@ namespace SharpCompress.Test
             }
         }
 
-        protected void ArchiveStreamRead(string testArchive)
+        protected void ArchiveStreamRead(string testArchive, ReaderOptions readerOptions = null)
         {
             testArchive = Path.Combine(TEST_ARCHIVES_PATH, testArchive);
-            ArchiveStreamRead(testArchive.AsEnumerable());
+            ArchiveStreamRead(readerOptions, testArchive.AsEnumerable());
         }
 
-        protected void ArchiveStreamRead(params string[] testArchives)
+        protected void ArchiveStreamRead(ReaderOptions readerOptions = null, params string[] testArchives)
         {
-            ArchiveStreamRead(testArchives.Select(x => Path.Combine(TEST_ARCHIVES_PATH, x)));
+            ArchiveStreamRead(readerOptions, testArchives.Select(x => Path.Combine(TEST_ARCHIVES_PATH, x)));
         }
 
-        protected void ArchiveStreamRead(IEnumerable<string> testArchives)
+        protected void ArchiveStreamRead(ReaderOptions readerOptions, IEnumerable<string> testArchives)
         {
             foreach (var path in testArchives)
             {
                 ResetScratch();
                 using (Stream stream = File.OpenRead(path))
-                using (var archive = ArchiveFactory.Open(stream))
+                using (var archive = ArchiveFactory.Open(stream, readerOptions))
                 {
                     foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
                     {
@@ -83,17 +83,17 @@ namespace SharpCompress.Test
             }
         }
 
-        protected void ArchiveFileRead(string testArchive)
+        protected void ArchiveFileRead(string testArchive, ReaderOptions readerOptions = null)
         {
             testArchive = Path.Combine(TEST_ARCHIVES_PATH, testArchive);
-            ArchiveFileRead(testArchive.AsEnumerable());
+            ArchiveFileRead(testArchive.AsEnumerable(), readerOptions);
         }
-        protected void ArchiveFileRead(IEnumerable<string> testArchives)
+        protected void ArchiveFileRead(IEnumerable<string> testArchives, ReaderOptions readerOptions = null)
         {
             foreach (var path in testArchives)
             {
                 ResetScratch();
-                using (var archive = ArchiveFactory.Open(path))
+                using (var archive = ArchiveFactory.Open(path, readerOptions))
                 {
                     //archive.EntryExtractionBegin += archive_EntryExtractionBegin;
                     //archive.FilePartExtractionBegin += archive_FilePartExtractionBegin;

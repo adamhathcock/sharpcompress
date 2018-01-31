@@ -2,12 +2,11 @@
   <PropertyGroup>
     <AssemblyTitle>SharpCompress - Pure C# Decompression/Compression</AssemblyTitle>
     <NeutralLanguage>en-US</NeutralLanguage>
-    <VersionPrefix>0.18.2</VersionPrefix>
-    <AssemblyVersion>0.18.2.0</AssemblyVersion>
-    <FileVersion>0.18.2.0</FileVersion>
+    <VersionPrefix>0.19.2</VersionPrefix>
+    <AssemblyVersion>0.19.2.0</AssemblyVersion>
+    <FileVersion>0.19.2.0</FileVersion>
     <Authors>Adam Hathcock</Authors>
-    <TargetFrameworks Condition="'$(LibraryFrameworks)'==''">net45;net35;netstandard1.0;netstandard1.3</TargetFrameworks>
-    <TargetFrameworks Condition="'$(LibraryFrameworks)'!=''">$(LibraryFrameworks)</TargetFrameworks>
+    <TargetFrameworks Condition="'$(LibraryFrameworks)'==''">net45;net35;netstandard1.0;netstandard1.3;netstandard2.0</TargetFrameworks>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <AssemblyName>SharpCompress</AssemblyName>
@@ -24,5 +23,11 @@
   </PropertyGroup>
   <PropertyGroup Condition=" '$(TargetFramework)' == 'netstandard1.0' ">
     <DefineConstants>$(DefineConstants);NO_FILE;NO_CRYPTO;SILVERLIGHT</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(TargetFramework)' == 'netstandard1.3' ">
+    <DefineConstants>$(DefineConstants);NETCORE</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' ">
+    <DefineConstants>$(DefineConstants);NETCORE</DefineConstants>
   </PropertyGroup>
 </Project>
