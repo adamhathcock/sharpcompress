@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 using SharpCompress.Common;
-using SharpCompress.Common.Tar.Headers;
+using SharpCompress.Common.Tar;
 using SharpCompress.Compressors;
 using SharpCompress.Compressors.BZip2;
 using SharpCompress.Compressors.Deflate;

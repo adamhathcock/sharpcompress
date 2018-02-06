@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using SharpCompress.Common.Tar.Headers;
 using SharpCompress.Compressors;
 using SharpCompress.Compressors.Deflate;
 using SharpCompress.Converters;
 using System.Text;
+using SharpCompress.Common.Tar;
 
 namespace SharpCompress.Common.GZip
 {

@@ -1,5 +1,4 @@
 ﻿using System.IO;
-using SharpCompress.Common.Tar.Headers;
 using SharpCompress.IO;
 
 namespace SharpCompress.Common.Tar

@@ -28,9 +28,9 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using SharpCompress.Common;
-using SharpCompress.Common.Tar.Headers;
 using SharpCompress.Converters;
 using System.Text;
+using SharpCompress.Common.Tar;
 
 namespace SharpCompress.Compressors.Deflate
 {

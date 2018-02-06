@@ -3,7 +3,7 @@ using System.IO;
 using System.Text;
 using SharpCompress.Converters;
 
-namespace SharpCompress.Common.Tar.Headers
+namespace SharpCompress.Common.Tar
 {
     internal class TarHeader
     {
@@ -128,11 +128,6 @@ namespace SharpCompress.Common.Tar.Headers
                 {
                     Name = namePrefix + "/" + Name;
                 }
-            }
-            if (EntryType != EntryType.LongName
-                && Name.Length == 0)
-            {
-                return false;
             }
             return true;
         }
