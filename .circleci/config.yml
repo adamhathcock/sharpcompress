@@ -2,10 +2,14 @@ version: 2
 jobs:
   build:
     docker:
-      - image: adamhathcock/cake-build:latest
+      - image: microsoft/dotnet:2.0.5-sdk-2.1.4
     steps:
       - checkout
       - run:
+          name: Install unzip
+          command: |
+            apt-get update
+            apt-get install -y unzip
+      - run:
           name: Build
           command: ./build.sh
-      
