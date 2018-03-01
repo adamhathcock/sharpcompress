@@ -32,6 +32,10 @@ namespace SharpCompress.Common.Zip
                     {
                         return CompressionType.Deflate;
                     }
+                    case ZipCompressionMethod.Deflate64:
+                    {
+                        return CompressionType.Deflate64;
+                    }
                     case ZipCompressionMethod.LZMA:
                     {
                         return CompressionType.LZMA;

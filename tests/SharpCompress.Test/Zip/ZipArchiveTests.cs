@@ -49,6 +49,11 @@ namespace SharpCompress.Test.Zip
         {
             ArchiveStreamRead("Zip.deflate.zip");
         }
+        [Fact]
+        public void Zip_Deflate64_ArchiveStreamRead()
+        {
+            ArchiveStreamRead("Zip.deflate64.zip");
+        }
 
         [Fact]
         public void Zip_LZMA_Streamed_ArchiveStreamRead()
@@ -100,6 +105,11 @@ namespace SharpCompress.Test.Zip
         public void Zip_Deflate_ArchiveFileRead()
         {
             ArchiveFileRead("Zip.deflate.zip");
+        }
+        [Fact]
+        public void Zip_Deflate64_ArchiveFileRead()
+        {
+            ArchiveFileRead("Zip.deflate64.zip");
         }
 
         [Fact]

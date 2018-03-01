@@ -30,6 +30,7 @@ namespace SharpCompress.Test
             yield return Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.dd-.zip");
             yield return Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.dd.zip");
             yield return Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.zip");
+            yield return Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate64.zip");
             yield return Path.Combine(TEST_ARCHIVES_PATH, "Zip.lzma.dd.zip");
             yield return Path.Combine(TEST_ARCHIVES_PATH, "Zip.lzma.zip");
             yield return Path.Combine(TEST_ARCHIVES_PATH, "Zip.none.zip");
