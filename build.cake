@@ -25,7 +25,8 @@ Task("Build")
         var settings = new DotNetCoreBuildSettings
         {
             Framework = "netstandard1.0",
-            Configuration = "Release"
+            Configuration = "Release",
+            NoRestore = true
         };
 
         DotNetCoreBuild("./src/SharpCompress/SharpCompress.csproj", settings);
@@ -50,16 +51,6 @@ Task("Test")
             Configuration = "Release",
             Framework = "netcoreapp2.0"
         };
-
-        DotNetCoreTest(file.ToString(), settings);
-
-
-        settings = new DotNetCoreTestSettings
-        {
-            Configuration = "Release",
-            Framework = "netcoreapp1.1"
-        };
-
         DotNetCoreTest(file.ToString(), settings);
     }
 });
