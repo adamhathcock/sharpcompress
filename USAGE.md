@@ -1,7 +1,8 @@
 # SharpCompress Usage
 
 ## Stream Rules
-When dealing with Streams, the rule should be that you don't close a stream you didn't create.  This, in effect, should mean you should always put a Stream in a using block to dispose it.
+
+When dealing with Streams, the rule should be that you don't close a stream you didn't create. This, in effect, should mean you should always put a Stream in a using block to dispose it.
 
 However, the .NET Framework often has classes that will dispose streams by default to make things "easy" like the following:
 
@@ -12,7 +13,7 @@ using (var reader = new StreamReader(File.Open("foo")))
 }
 ```
 
-In this example, reader should get disposed.  However, stream rules should say the the `FileStream` created by `File.Open` should remain open.  However, the .NET Framework closes it for you by default unless you override the constructor.  In general, you should be writing Stream code like this:
+In this example, reader should get disposed. However, stream rules should say the the `FileStream` created by `File.Open` should remain open. However, the .NET Framework closes it for you by default unless you override the constructor. In general, you should be writing Stream code like this:
 
 ```C#
 using (var fileStream = File.Open("foo"))
@@ -25,7 +26,7 @@ using (var reader = new StreamReader(fileStream))
 To deal with the "correct" rules as well as the expectations of users, I've decided on this:
 
 * When writing, leave streams open.
-* When reading, close streams 
+* When reading, close streams
 
 To be explicit though, consider always using the overloads that use `ReaderOptions` or `WriterOptions` and explicitly set `LeaveStreamOpen` the way you want.
 
@@ -43,11 +44,9 @@ using (var archive = ZipArchive.Create())
 }
 ```
 
-
 ### Create Zip Archive from all files in a directory and save in memory
 
 ```C#
-
 var memoryStream = new MemoryStream();
 using (var archive = ZipArchive.Create())
 {
