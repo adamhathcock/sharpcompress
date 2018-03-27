@@ -15,6 +15,11 @@ namespace SharpCompress.Common.Zip.Headers
         {
             Version = reader.ReadUInt16();
             Flags = (HeaderFlags)reader.ReadUInt16();
+            if ((Flags & HeaderFlags.UTF8) == 0)
+            {
+                // IBM Code Page 437
+                ArchiveEncoding.Default = Encoding.GetEncoding("iso-8859-1");
+            }
             CompressionMethod = (ZipCompressionMethod)reader.ReadUInt16();
             LastModifiedTime = reader.ReadUInt16();
             LastModifiedDate = reader.ReadUInt16();
