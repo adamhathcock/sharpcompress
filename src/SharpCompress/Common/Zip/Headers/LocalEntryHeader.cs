@@ -15,11 +15,6 @@ namespace SharpCompress.Common.Zip.Headers
         {
             Version = reader.ReadUInt16();
             Flags = (HeaderFlags)reader.ReadUInt16();
-            if ((Flags & HeaderFlags.UTF8) == 0)
-            {
-                // IBM Code Page 437
-                ArchiveEncoding.Default = Encoding.GetEncoding("iso-8859-1");
-            }
             CompressionMethod = (ZipCompressionMethod)reader.ReadUInt16();
             LastModifiedTime = reader.ReadUInt16();
             LastModifiedDate = reader.ReadUInt16();
@@ -30,7 +25,17 @@ namespace SharpCompress.Common.Zip.Headers
             ushort extraLength = reader.ReadUInt16();
             byte[] name = reader.ReadBytes(nameLength);
             byte[] extra = reader.ReadBytes(extraLength);
-            Name = ArchiveEncoding.Decode(name);
+            if ((Flags & HeaderFlags.UTF8) == 0)
+            {
+                // Use IBM Code Page 437 (IBM PC character encoding set)
+                var extendedASCIIEncoding = Encoding.GetEncoding("IBM437");
+                Name = extendedASCIIEncoding.GetString(name, 0, name.Length);
+            }
+            else
+            {
+                Name = ArchiveEncoding.Decode(name);
+            }
+            
             LoadExtra(extra);
 
             var unicodePathExtra = Extra.FirstOrDefault(u => u.Type == ExtraDataType.UnicodePathExtraField);
