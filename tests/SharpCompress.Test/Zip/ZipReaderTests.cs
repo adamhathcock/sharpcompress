@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using SharpCompress.Common;
 using SharpCompress.Readers;
 using SharpCompress.Readers.Zip;
@@ -312,6 +313,36 @@ namespace SharpCompress.Test.Zip
                     }
                 }
             }
+        }
+
+        [Fact]
+        public void Test_MacOs_Archive_With_Child_Archive_Extract()
+        {
+            ResetScratch();
+            using(var stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Zip.MacOs.ArchiveWithArchive.zip")))
+            using(var reader = ReaderFactory.Open(stream))
+            {
+                while (reader.MoveToNextEntry())
+                {                   
+                    if (!reader.Entry.IsDirectory)
+                    {
+                        reader.WriteEntryToDirectory(SCRATCH_FILES_PATH, new ExtractionOptions()
+                        {
+                            ExtractFullPath = true,
+                            Overwrite = true
+                        });
+                    }
+                }
+            }
+
+            var extracted =
+                Directory.EnumerateFiles(SCRATCH_FILES_PATH, "*.*", SearchOption.AllDirectories)
+                .ToLookup(path => path.Substring(SCRATCH_FILES_PATH.Length));
+            var original =
+                Directory.EnumerateFiles(MACOS_CHILD_ORIGINAL_FILES_PATH, "*.*", SearchOption.AllDirectories)
+                .ToLookup(path => path.Substring(ORIGINAL_FILES_PATH.Length));
+
+            Assert.Equal(extracted.Count, original.Count);
         }
     }
 }
