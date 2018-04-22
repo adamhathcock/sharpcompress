@@ -21,7 +21,7 @@ namespace SharpCompress.IO
             }
         }
 
-        public Stream Stream { get; }
+        protected Stream Stream { get; }
 
         public override bool CanRead => Stream.CanRead;
 
