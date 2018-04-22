@@ -90,14 +90,11 @@ namespace SharpCompress.Common.Rar.Headers
             }
             catch (Exception e)
             {
-                if (!Options.LeaveStreamOpen)
-                {
 #if NET35
-                    reader.Close();
+                reader.Close();
 #else
-                    reader.Dispose();
+                reader.Dispose();
 #endif
-                }
                 throw new InvalidFormatException("Error trying to read rar signature.", e);
             }
             return stream;

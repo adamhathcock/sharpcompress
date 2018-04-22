@@ -6,6 +6,7 @@ using SharpCompress.Compressors;
 using SharpCompress.Compressors.BZip2;
 using SharpCompress.Compressors.Deflate;
 using SharpCompress.Compressors.LZMA;
+using SharpCompress.IO;
 
 namespace SharpCompress.Writers.Tar
 {
@@ -22,23 +23,27 @@ namespace SharpCompress.Writers.Tar
             {
                 throw new ArgumentException("Tars require writable streams.");
             }
+            if (WriterOptions.LeaveStreamOpen)
+            {
+                destination = new NonDisposingStream(destination);
+            }
             switch (options.CompressionType)
             {
                 case CompressionType.None:
                     break;
                 case CompressionType.BZip2:
                 {
-                    destination = new BZip2Stream(destination, CompressionMode.Compress, true);
+                    destination = new BZip2Stream(destination, CompressionMode.Compress, false);
                 }
                     break;
                 case CompressionType.GZip:
                 {
-                    destination = new GZipStream(destination, CompressionMode.Compress, true);
+                    destination = new GZipStream(destination, CompressionMode.Compress);
                 }
                     break;
                 case CompressionType.LZip:
                 {
-                    destination = new LZipStream(destination, CompressionMode.Compress, true);
+                    destination = new LZipStream(destination, CompressionMode.Compress);
                 }
                     break;
                 default:

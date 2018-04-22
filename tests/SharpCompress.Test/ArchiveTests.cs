@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using SharpCompress.Archives;
 using SharpCompress.Common;
+using SharpCompress.IO;
 using SharpCompress.Readers;
 using Xunit;
 
@@ -23,7 +24,7 @@ namespace SharpCompress.Test
             foreach (var path in testArchives)
             {
                 ResetScratch();
-                using (Stream stream = File.OpenRead(path))
+                using (var stream = new NonDisposingStream(File.OpenRead(path), true))
                 using (var archive = ArchiveFactory.Open(stream))
                 {
                     Assert.True(archive.IsSolid);
@@ -46,6 +47,7 @@ namespace SharpCompress.Test
                                                    Overwrite = true
                                                });
                     }
+                    stream.ThrowOnDispose = false;
                 }
                 VerifyFiles();
             }
@@ -67,7 +69,7 @@ namespace SharpCompress.Test
             foreach (var path in testArchives)
             {
                 ResetScratch();
-                using (Stream stream = File.OpenRead(path))
+                using (var stream = new NonDisposingStream(File.OpenRead(path)))
                 using (var archive = ArchiveFactory.Open(stream, readerOptions))
                 {
                     foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
@@ -78,6 +80,7 @@ namespace SharpCompress.Test
                             Overwrite = true
                         });
                     }
+                    stream.ThrowOnDispose = false;
                 }
                 VerifyFiles();
             }

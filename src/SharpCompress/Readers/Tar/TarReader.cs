@@ -102,7 +102,7 @@ namespace SharpCompress.Readers.Tar
             if (LZipStream.IsLZipFile(rewindableStream))
             {
                 rewindableStream.Rewind(false);
-                LZipStream testStream = new LZipStream(rewindableStream, CompressionMode.Decompress, false);
+                LZipStream testStream = new LZipStream(rewindableStream, CompressionMode.Decompress);
                 if (TarArchive.IsTarFile(testStream))
                 {
                     rewindableStream.Rewind(true);

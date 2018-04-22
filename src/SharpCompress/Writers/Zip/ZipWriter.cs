@@ -37,6 +37,11 @@ namespace SharpCompress.Writers.Zip
 
             compressionType = zipWriterOptions.CompressionType;
             compressionLevel = zipWriterOptions.DeflateCompressionLevel;
+            
+            if (WriterOptions.LeaveStreamOpen)
+            {
+                destination = new NonDisposingStream(destination);
+            }
             InitalizeStream(destination);
         }
 
@@ -312,12 +317,11 @@ namespace SharpCompress.Writers.Zip
                         }
                     case ZipCompressionMethod.Deflate:
                         {
-                            return new DeflateStream(counting, CompressionMode.Compress, compressionLevel,
-                                                     true);
+                            return new DeflateStream(counting, CompressionMode.Compress, compressionLevel);
                         }
                     case ZipCompressionMethod.BZip2:
                         {
-                            return new BZip2Stream(counting, CompressionMode.Compress, true);
+                            return new BZip2Stream(counting, CompressionMode.Compress, false);
                         }
                     case ZipCompressionMethod.LZMA:
                         {

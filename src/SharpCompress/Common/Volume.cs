@@ -33,7 +33,7 @@ namespace SharpCompress.Common
 
         public void Dispose()
         {
-            if (!ReaderOptions.LeaveStreamOpen && !disposed)
+            if (!disposed)
             {
                 actualStream.Dispose();
                 disposed = true;

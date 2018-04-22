@@ -1,17 +1,24 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 
 namespace SharpCompress.IO
 {
     internal class NonDisposingStream : Stream
     {
-        public NonDisposingStream(Stream stream)
+        public NonDisposingStream(Stream stream, bool throwOnDispose = false)
         {
             Stream = stream;
+            ThrowOnDispose = false;
         }
+
+        public bool ThrowOnDispose { get; set; }
 
         protected override void Dispose(bool disposing)
         {
-            //don't dispose anything
+            if (ThrowOnDispose)
+            {
+                throw new InvalidOperationException();
+            }
         }
 
         public Stream Stream { get; }

@@ -19,15 +19,13 @@ namespace SharpCompress.Compressors.LZMA
         private readonly Stream stream;
         private readonly CountingWritableSubStream rawStream;
         private bool disposed;
-        private readonly bool leaveOpen;
         private bool finished;
 
         private long writeCount;
 
-        public LZipStream(Stream stream, CompressionMode mode, bool leaveOpen = false)
+        public LZipStream(Stream stream, CompressionMode mode)
         {
             Mode = mode;
-            this.leaveOpen = leaveOpen;
 
             if (mode == CompressionMode.Decompress)
             {
@@ -87,10 +85,7 @@ namespace SharpCompress.Compressors.LZMA
             if (disposing)
             {
                 Finish();
-                if (!leaveOpen)
-                {
-                    rawStream.Dispose();
-                }
+                rawStream?.Dispose();
             }
         }
 

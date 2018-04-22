@@ -12,19 +12,18 @@ namespace SharpCompress.Compressors.BZip2
         /// </summary>
         /// <param name="stream">The stream to read from</param>
         /// <param name="compressionMode">Compression Mode</param>
-        /// <param name="leaveOpen">Leave the underlying stream open when disposed.</param>
-        /// <param name="decompressContacted">Should the BZip2 stream continue to decompress the stream when the End Marker is found.</param>
-        public BZip2Stream(Stream stream, CompressionMode compressionMode, bool leaveOpen = false,
-                           bool decompressContacted = false)
+        /// <param name="decompressConcatenated">Decompress Concatenated</param>
+        public BZip2Stream(Stream stream, CompressionMode compressionMode,
+                           bool decompressConcatenated)
         {
             Mode = compressionMode;
             if (Mode == CompressionMode.Compress)
             {
-                this.stream = new CBZip2OutputStream(stream, leaveOpen);
+                this.stream = new CBZip2OutputStream(stream);
             }
             else
             {
-                this.stream = new CBZip2InputStream(stream, decompressContacted, leaveOpen);
+                this.stream = new CBZip2InputStream(stream, decompressConcatenated);
             }
         }
 
