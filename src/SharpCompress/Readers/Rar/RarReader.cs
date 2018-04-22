@@ -52,7 +52,7 @@ namespace SharpCompress.Readers.Rar
 
         #endregion
 
-        internal override IEnumerable<RarReaderEntry> GetEntries(Stream stream)
+        protected override IEnumerable<RarReaderEntry> GetEntries(Stream stream)
         {
             volume = new RarReaderVolume(stream, Options);
             foreach (RarFilePart fp in volume.ReadFileParts())

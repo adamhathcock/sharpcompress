@@ -35,7 +35,7 @@ namespace SharpCompress.Readers.Zip
 
         #endregion Open
 
-        internal override IEnumerable<ZipEntry> GetEntries(Stream stream)
+        protected override IEnumerable<ZipEntry> GetEntries(Stream stream)
         {
             foreach (ZipHeader h in _headerFactory.ReadStreamHeader(stream))
             {

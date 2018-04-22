@@ -27,7 +27,7 @@ namespace SharpCompress.Readers.Tar
 
         public override TarVolume Volume { get; }
 
-        internal override Stream RequestInitialStream()
+        protected override Stream RequestInitialStream()
         {
             var stream = base.RequestInitialStream();
             switch (compressionType)
@@ -116,7 +116,7 @@ namespace SharpCompress.Readers.Tar
 
         #endregion Open
 
-        internal override IEnumerable<TarEntry> GetEntries(Stream stream)
+        protected override IEnumerable<TarEntry> GetEntries(Stream stream)
         {
             return TarEntry.GetEntries(StreamingMode.Streaming, stream, compressionType, Options.ArchiveEncoding);
         }

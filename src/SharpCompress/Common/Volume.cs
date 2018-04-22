@@ -10,11 +10,15 @@ namespace SharpCompress.Common
 
         internal Volume(Stream stream, ReaderOptions readerOptions)
         {
-            actualStream = stream;
             ReaderOptions = readerOptions;
+            if (readerOptions.LeaveStreamOpen)
+            {
+                stream = new NonDisposingStream(stream);
+            }
+            actualStream = stream;
         }
 
-        internal Stream Stream => new NonDisposingStream(actualStream);
+        internal Stream Stream => actualStream;
 
         protected ReaderOptions ReaderOptions { get; }
 

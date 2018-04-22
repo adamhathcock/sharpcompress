@@ -97,12 +97,9 @@ namespace SharpCompress.Readers
             return false;
         }
 
-        internal bool LoadStreamForReading(Stream stream)
+        protected bool LoadStreamForReading(Stream stream)
         {
-            if (entriesForCurrentReadStream != null)
-            {
-                entriesForCurrentReadStream.Dispose();
-            }
+            entriesForCurrentReadStream?.Dispose();
             if ((stream == null) || (!stream.CanRead))
             {
                 throw new MultipartStreamRequiredException("File is split into multiple archives: '"
@@ -110,14 +107,10 @@ namespace SharpCompress.Readers
                                                            "'. A new readable stream is required.  Use Cancel if it was intended.");
             }
             entriesForCurrentReadStream = GetEntries(stream).GetEnumerator();
-            if (entriesForCurrentReadStream.MoveNext())
-            {
-                return true;
-            }
-            return false;
+            return entriesForCurrentReadStream.MoveNext();
         }
 
-        internal virtual Stream RequestInitialStream()
+        protected virtual Stream RequestInitialStream()
         {
             return Volume.Stream;
         }
@@ -127,7 +120,7 @@ namespace SharpCompress.Readers
             return entriesForCurrentReadStream.MoveNext();
         }
 
-        internal abstract IEnumerable<TEntry> GetEntries(Stream stream);
+        protected abstract IEnumerable<TEntry> GetEntries(Stream stream);
 
         #region Entry Skip/Write
 
@@ -172,8 +165,7 @@ namespace SharpCompress.Readers
             }
             if ((writableStream == null) || (!writableStream.CanWrite))
             {
-                throw new ArgumentNullException(
-                                                "A writable Stream was required.  Use Cancel if that was intended.");
+                throw new ArgumentNullException("A writable Stream was required.  Use Cancel if that was intended.");
             }
 
             Write(writableStream);

@@ -36,6 +36,7 @@ namespace SharpCompress.Test
 
                     if (archive.Entries.First().CompressionType == CompressionType.Rar)
                     {
+                        stream.ThrowOnDispose = false;
                         return;
                     }
                     foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
@@ -72,13 +73,29 @@ namespace SharpCompress.Test
                 using (var stream = new NonDisposingStream(File.OpenRead(path), true))
                 using (var archive = ArchiveFactory.Open(stream, readerOptions))
                 {
-                    foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
+                    try
                     {
-                        entry.WriteToDirectory(SCRATCH_FILES_PATH, new ExtractionOptions()
+                        foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
                         {
-                            ExtractFullPath = true,
-                            Overwrite = true
-                        });
+                            entry.WriteToDirectory(SCRATCH_FILES_PATH,
+                                                   new ExtractionOptions()
+                                                   {
+                                                       ExtractFullPath = true,
+                                                       Overwrite = true
+                                                   });
+                        }
+                    }
+                    catch (InvalidFormatException)
+                    {
+                        //rar SOLID test needs this
+                        stream.ThrowOnDispose = false;
+                        throw;
+                    }
+                    catch (IndexOutOfRangeException)
+                    {
+                        //SevenZipArchive_BZip2_Split test needs this
+                        stream.ThrowOnDispose = false;
+                        throw;
                     }
                     stream.ThrowOnDispose = false;
                 }

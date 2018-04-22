@@ -31,7 +31,7 @@ namespace SharpCompress.Readers.GZip
 
         #endregion Open
 
-        internal override IEnumerable<GZipEntry> GetEntries(Stream stream)
+        protected override IEnumerable<GZipEntry> GetEntries(Stream stream)
         {
             return GZipEntry.GetEntries(stream, Options);
         }

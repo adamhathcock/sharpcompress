@@ -23,7 +23,7 @@ namespace SharpCompress.Readers.Rar
             }
         }
 
-        internal override Stream RequestInitialStream()
+        protected override Stream RequestInitialStream()
         {
             return stream;
         }
