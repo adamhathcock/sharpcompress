@@ -8,7 +8,7 @@ namespace SharpCompress.IO
         public NonDisposingStream(Stream stream, bool throwOnDispose = false)
         {
             Stream = stream;
-            ThrowOnDispose = false;
+            ThrowOnDispose = throwOnDispose;
         }
 
         public bool ThrowOnDispose { get; set; }

@@ -69,7 +69,7 @@ namespace SharpCompress.Test
             foreach (var path in testArchives)
             {
                 ResetScratch();
-                using (var stream = new NonDisposingStream(File.OpenRead(path)))
+                using (var stream = new NonDisposingStream(File.OpenRead(path), true))
                 using (var archive = ArchiveFactory.Open(stream, readerOptions))
                 {
                     foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
