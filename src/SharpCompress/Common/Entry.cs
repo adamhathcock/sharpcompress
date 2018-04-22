@@ -65,6 +65,12 @@ namespace SharpCompress.Common
         /// </summary>
         public abstract bool IsSplitAfter { get; }
 
+        /// <inheritdoc/>
+        public override string ToString()
+        {
+            return this.Key;
+        }
+
         internal abstract IEnumerable<FilePart> Parts { get; }
         internal bool IsSolid { get; set; }
 

@@ -101,6 +101,11 @@ namespace SharpCompress.Test.Zip
         {
             Read("Zip.deflate.zip", CompressionType.Deflate);
         }
+        [Fact]
+        public void Zip_Deflate64_Read()
+        {
+            Read("Zip.deflate64.zip", CompressionType.Deflate64);
+        }
 
         [Fact]
         public void Zip_LZMA_Streamed_Read()
