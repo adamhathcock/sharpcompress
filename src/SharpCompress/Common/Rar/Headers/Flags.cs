@@ -47,7 +47,7 @@ namespace SharpCompress.Common.Rar.Headers
         public const ushort Keep = 0x0004;  // block must be kept during an update
         public const ushort SplitBefore = 0x0008;
         public const ushort SplitAfter = 0x0010;
-        public const ushort Solid_TESTME = 0x0020; // ??? Block depends on preceding file block.
+        public const ushort Child = 0x0020; // ??? Block depends on preceding file block.
         public const ushort PreserveChild = 0x0040; // ???? Preserve a child block if host block is modified
     }
 

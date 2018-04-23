@@ -70,8 +70,9 @@ namespace SharpCompress.Common.Rar.Headers
                 case HeaderCodeV.Rar4ArchiveHeader:
                     {
                         var ah = new ArchiveHeader(header, reader);
-                        if (ah.IsEncrypted == true) {
-//!!! rar5 we don't know yet
+                        if (ah.IsEncrypted == true) 
+                        {
+                            //!!! rar5 we don't know yet
                             IsEncrypted = true;
                         }
                         return ah;

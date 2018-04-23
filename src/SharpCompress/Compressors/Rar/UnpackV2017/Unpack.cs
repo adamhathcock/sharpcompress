@@ -37,7 +37,7 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017
             this.writeStream.Write(buf, checked((int)offset), checked((int)count));
         }
 
-        public void DoUnpack(FileHeader fileHeader, Stream readStream, Stream writeStream)
+        public void DoUnpack(bool isSolid, FileHeader fileHeader, Stream readStream, Stream writeStream)
         {
             // as of 12/2017 .NET limits array indexing to using a signed integer
             // MaxWinSize causes unpack to use a fragmented window when the file 
@@ -51,19 +51,19 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017
             this.readStream = readStream;
             this.writeStream = writeStream;
             if (!fileHeader.IsStored) {
-                Init(fileHeader.WindowSize, fileHeader.IsSolid);
+                Init(fileHeader.WindowSize, isSolid);
             }
             Suspended = false;
-            DoUnpack();
+            DoUnpack(isSolid);
         }
 
-        public void DoUnpack()
+        public void DoUnpack(bool isSolid)
         {
             if (this.fileHeader.IsStored)
             {
                 UnstoreFile();
             } else {
-                DoUnpack(this.fileHeader.CompressionAlgorithm, this.fileHeader.IsSolid);
+                DoUnpack(this.fileHeader.CompressionAlgorithm, isSolid);
             }
         }
 

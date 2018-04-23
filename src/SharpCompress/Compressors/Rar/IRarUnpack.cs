@@ -5,8 +5,8 @@ namespace SharpCompress.Compressors.Rar
 {
     interface IRarUnpack
     {
-        void DoUnpack(FileHeader fileHeader, Stream readStream, Stream writeStream);
-        void DoUnpack();
+        void DoUnpack(bool isSolid, FileHeader fileHeader, Stream readStream, Stream writeStream);
+        void DoUnpack(bool isSolid);
 
         // eg u/i pause/resume button
         bool Suspended { get; set; }

@@ -73,7 +73,8 @@ namespace SharpCompress.Common.Rar.Headers
 
         public bool IsVolume => HasFlag(IsRar5 ? ArchiveFlagsV5.Volume : ArchiveFlagsV4.Volume);
 
-        public bool IsFirstVolume => IsRar5 ? VolumeNumber == 1 : HasFlag(ArchiveFlagsV4.FirstVolume);
+        // RAR5: Volume number field is present. True for all volumes except first.
+        public bool IsFirstVolume => IsRar5 ? VolumeNumber == null : HasFlag(ArchiveFlagsV4.FirstVolume);
 
         public bool IsSolid => HasFlag(IsRar5 ? ArchiveFlagsV5.Solid : ArchiveFlagsV4.Solid);
     }

@@ -64,11 +64,6 @@ namespace SharpCompress.Common.Rar.Headers
             // them.
             CompressionAlgorithm = (byte)((us & 0x3f) + 50);
 
-            // 7th bit (0x0040) defines the solid flag. If it is set, RAR continues to use the compression dictionary left after processing preceding files. 
-            // It can be set only for file headers and is never set for service headers.
-            IsSolid = (us & 0x40) == 0x40;
-            if (IsSolid != HasHeaderFlag(HeaderFlagsV5.Solid_TESTME)) throw new InvalidFormatException("rar solid flag base header != file header");
-
             // Bits 8 - 10 (0x0380 mask) define the compression method. Currently only values 0 - 5 are used. 0 means no compression.
             CompressionMethod = (byte)((us >> 7) & 0x7);
 
@@ -210,7 +205,6 @@ namespace SharpCompress.Common.Rar.Headers
         private void ReadFromReaderV4(MarkingBinaryReader reader)
         {
             Flags = HeaderFlags;
-            IsSolid = HasFlag(FileFlagsV4.Solid);
             WindowSize = IsDirectory ? 0U : ((size_t)0x10000) << ((Flags & FileFlagsV4.WindowMask) >> 5);
 
             uint lowUncompressedSize = reader.ReadUInt32();
@@ -414,8 +408,6 @@ namespace SharpCompress.Common.Rar.Headers
         //case 29: // rar 3.x compression
         //case 50: // RAR 5.0 compression algorithm.
         internal byte CompressionAlgorithm { get; private set; }
-
-        public bool IsSolid { get; private set; }
 
         // unused for UnpackV1 implementation (limitation)
         internal size_t WindowSize { get; private set; }
