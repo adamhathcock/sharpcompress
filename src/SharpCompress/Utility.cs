@@ -427,10 +427,5 @@ namespace SharpCompress
             }
             return true;
         }
-
-        public static void CopyTo(this byte[] array, byte[] destination, int index)
-        {
-            Array.Copy(array, 0, destination, index, array.Length);
-        }
     }
 }

@@ -13,7 +13,7 @@ using System;
 using static SharpCompress.Compressors.Rar.UnpackV2017.PackDef;
 using static SharpCompress.Compressors.Rar.UnpackV2017.UnpackGlobal;
 //using static SharpCompress.Compressors.Rar.UnpackV2017.Unpack.Unpack30Local;
-
+/*
 namespace SharpCompress.Compressors.Rar.UnpackV2017
 {
     internal partial class Unpack
@@ -797,3 +797,4 @@ void InitFilters30(bool Solid)
 
     }
 }
+*/

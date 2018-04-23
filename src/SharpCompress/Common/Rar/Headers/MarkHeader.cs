@@ -67,10 +67,6 @@ namespace SharpCompress.Common.Rar.Headers
                             {
                                 return new MarkHeader(false); // Rar4
                             } 
-                            else 
-                            {
-                                continue;
-                            }
                         } 
                         else if (b == 0x45) 
                         {
@@ -80,19 +76,11 @@ namespace SharpCompress.Common.Rar.Headers
                             if (b != 0x5e) continue;
                             throw new InvalidFormatException("Rar format version pre-4 is unsupported.");
                         } 
-                        else 
-                        {
-                            continue;
-                        }
                     } 
                     else 
                     {
                         b = GetByte(stream); start++;
-                        continue;
                     }
-
-                    // unreachable
-                    throw new InvalidOperationException();
                 }
             }
             catch (Exception e)

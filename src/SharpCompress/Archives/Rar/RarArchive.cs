@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -12,7 +13,8 @@ namespace SharpCompress.Archives.Rar
 {
     public class RarArchive : AbstractArchive<RarArchiveEntry, RarVolume>
     {
-        internal IRarUnpack Unpack { get; }
+        internal Lazy<IRarUnpack> UnpackV2017 { get; } = new Lazy<IRarUnpack>(() => new SharpCompress.Compressors.Rar.UnpackV2017.Unpack());
+        internal Lazy<IRarUnpack> UnpackV1 { get; } = new Lazy<IRarUnpack>(() => new SharpCompress.Compressors.Rar.UnpackV1.Unpack());
 
 #if !NO_FILE
 
@@ -24,11 +26,6 @@ namespace SharpCompress.Archives.Rar
         internal RarArchive(FileInfo fileInfo, ReaderOptions options)
             : base(ArchiveType.Rar, fileInfo, options)
         {
-#if !RarV2017_USELEGACY
-            Unpack = new SharpCompress.Compressors.Rar.UnpackV2017.Unpack();
-#else
-            Unpack = new SharpCompress.Compressors.Rar.UnpackV1.Unpack();
-#endif
         }
 
         protected override IEnumerable<RarVolume> LoadVolumes(FileInfo file)
@@ -45,11 +42,6 @@ namespace SharpCompress.Archives.Rar
         internal RarArchive(IEnumerable<Stream> streams, ReaderOptions options)
             : base(ArchiveType.Rar, streams, options)
         {
-#if !RarV2017_USELEGACY
-            Unpack = new SharpCompress.Compressors.Rar.UnpackV2017.Unpack();
-#else
-            Unpack = new SharpCompress.Compressors.Rar.UnpackV1.Unpack();
-#endif
         }
 
         protected override IEnumerable<RarArchiveEntry> LoadEntries(IEnumerable<RarVolume> volumes)

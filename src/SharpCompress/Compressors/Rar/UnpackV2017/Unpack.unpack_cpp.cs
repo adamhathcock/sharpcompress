@@ -167,7 +167,7 @@ void DoUnpack(uint Method,bool Solid)
 #if !RarV2017_RAR5ONLY
     case 29: // rar 3.x compression
       if (!Fragmented)
-        Unpack29(Solid);
+        throw new NotImplementedException();
       break;
 #endif
     case 50: // RAR 5.0 compression algorithm.
@@ -225,7 +225,7 @@ void UnpInitData(bool Solid)
 #if !RarV2017_SFX_MODULE
   UnpInitData20(Solid);
 #endif
-  UnpInitData30(Solid);
+  //UnpInitData30(Solid);
   UnpInitData50(Solid);
 }
 

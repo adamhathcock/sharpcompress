@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using SharpCompress.Common;
@@ -13,16 +14,12 @@ namespace SharpCompress.Readers.Rar
     public abstract class RarReader : AbstractReader<RarReaderEntry, RarVolume>
     {
         private RarVolume volume;
-        private readonly IRarUnpack pack;
+        internal Lazy<IRarUnpack> UnpackV2017 { get; } = new Lazy<IRarUnpack>(() => new SharpCompress.Compressors.Rar.UnpackV2017.Unpack());
+        internal Lazy<IRarUnpack> UnpackV1 { get; } = new Lazy<IRarUnpack>(() => new SharpCompress.Compressors.Rar.UnpackV1.Unpack());
 
         internal RarReader(ReaderOptions options)
             : base(options, ArchiveType.Rar)
         {
-#if !RarV2017_USELEGACY
-            this.pack = new SharpCompress.Compressors.Rar.UnpackV2017.Unpack();
-#else
-            this.pack = new SharpCompress.Compressors.Rar.UnpackV1.Unpack();
-#endif
         }
 
         internal abstract void ValidateArchive(RarVolume archive);
@@ -68,9 +65,14 @@ namespace SharpCompress.Readers.Rar
             return Entry.Parts;
         }
 
-        protected override EntryStream GetEntryStream() {
+        protected override EntryStream GetEntryStream() 
+        {
             var stream = new MultiVolumeReadOnlyStream(CreateFilePartEnumerableForCurrentEntry().Cast<RarFilePart>(), this);
-            return CreateEntryStream(new RarCrcStream(pack, Entry.FileHeader, stream));
+            if (Entry.IsRarV3)
+            {
+                return CreateEntryStream(new RarCrcStream(UnpackV1.Value, Entry.FileHeader, stream));
+            }
+            return CreateEntryStream(new RarCrcStream(UnpackV2017.Value, Entry.FileHeader, stream));
         }
     }
 }

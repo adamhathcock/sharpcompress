@@ -51,7 +51,7 @@ namespace SharpCompress.Archives.Rar
             get
             {
                 CheckIncomplete();
-                return parts.Aggregate(0L, (total, fp) => { return total + fp.FileHeader.CompressedSize; });
+                return parts.Aggregate(0L, (total, fp) => total + fp.FileHeader.CompressedSize);
             }
         }
 
@@ -61,7 +61,13 @@ namespace SharpCompress.Archives.Rar
             {
                 throw new InvalidOperationException("Use ExtractAllEntries to extract SOLID archives.");
             }
-            return new RarStream(archive.Unpack, FileHeader, new MultiVolumeReadOnlyStream(Parts.Cast<RarFilePart>(), archive));
+
+            if (IsRarV3)
+            {
+                return new RarStream(archive.UnpackV1.Value, FileHeader, new MultiVolumeReadOnlyStream(Parts.Cast<RarFilePart>(), archive));
+            }
+            
+            return new RarStream(archive.UnpackV2017.Value, FileHeader, new MultiVolumeReadOnlyStream(Parts.Cast<RarFilePart>(), archive));
         }
 
         public bool IsComplete 
