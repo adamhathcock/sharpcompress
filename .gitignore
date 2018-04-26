@@ -15,3 +15,4 @@ tests/TestArchives/Scratch
 tools
 .vscode
 .idea/
+.DS_Store
