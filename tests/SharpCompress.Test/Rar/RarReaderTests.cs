@@ -60,17 +60,6 @@ namespace SharpCompress.Test.Rar
                 "Rar.EncryptedParts.part06.rar"});
         }
 
-        /*[Fact]
-        public void Rar5_Multi_Reader_Encrypted() {
-            DoRar_Multi_Reader_Encrypted(new string[] { 
-                "Rar5.EncryptedParts.part01.rar",
-                "Rar5.EncryptedParts.part02.rar",
-                "Rar5.EncryptedParts.part03.rar",
-                "Rar5.EncryptedParts.part04.rar",
-                "Rar5.EncryptedParts.part05.rar",
-                "Rar5.EncryptedParts.part06.rar"});
-        }*/
-
         private void DoRar_Multi_Reader_Encrypted(string[] archives)
         {
             Assert.Throws<InvalidFormatException>(() =>
@@ -205,11 +194,11 @@ namespace SharpCompress.Test.Rar
             ReadRar("Rar.Encrypted.rar", "test");
         }
 
-        /*[Fact]
+        [Fact]
         public void Rar5_Encrypted_Reader()
         {
             ReadRar("Rar5.encrypted_filesOnly.rar", "test");
-        }*/
+        }
 
         private void ReadRar(string testArchive, string password)
         {
