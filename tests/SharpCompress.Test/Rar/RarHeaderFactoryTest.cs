@@ -51,7 +51,7 @@ namespace SharpCompress.Test.Rar
             {
                 foreach (var header in rarHeaderFactory.ReadHeaders(stream))
                 {
-                    if (header.HeaderType == HeaderType.Archive)
+                    if (header.HeaderType == HeaderType.Archive || header.HeaderType == HeaderType.Crypt)
                     {
                         Assert.Equal(isEncrypted, rarHeaderFactory.IsEncrypted);
                         break;

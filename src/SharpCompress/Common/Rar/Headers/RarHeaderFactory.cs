@@ -158,6 +158,12 @@ namespace SharpCompress.Common.Rar.Headers
                     {
                         return new EndArchiveHeader(header, reader);
                     }
+                case HeaderCodeV.Rar5EncryptionHeader:
+                {
+                    var ch = new CryptHeader(header, reader);
+                    IsEncrypted = true;
+                    return ch;
+                }
                 default:
                     {
                         throw new InvalidFormatException("Unknown Rar Header: " + header.HeaderCode);

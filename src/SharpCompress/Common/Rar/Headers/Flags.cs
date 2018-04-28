@@ -12,7 +12,8 @@ namespace SharpCompress.Common.Rar.Headers
         Protect,
         Sign,
         NewSub,
-        EndArchive
+        EndArchive,
+        Crypt
     }
 
     internal static class HeaderCodeV
@@ -38,6 +39,12 @@ namespace SharpCompress.Common.Rar.Headers
     internal static class HeaderFlagsV4
     {
         public const ushort HasData = 0x8000;
+    }
+
+    internal static class EncryptionFlagsV5
+    {   
+        // RAR 5.0 archive encryption header specific flags.
+        public const ushort CHFL_CRYPT_PSWCHECK = 0x0001; // Password check data is present.
     }
 
     internal static class HeaderFlagsV5
