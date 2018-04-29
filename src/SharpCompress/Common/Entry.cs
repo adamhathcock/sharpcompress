@@ -63,7 +63,7 @@ namespace SharpCompress.Common
         /// <summary>
         /// Entry is split among multiple volumes
         /// </summary>
-        public abstract bool IsSplit { get; }
+        public abstract bool IsSplitAfter { get; }
 
         /// <inheritdoc/>
         public override string ToString()

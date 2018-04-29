@@ -88,6 +88,7 @@ namespace SharpCompress.Test
             testArchive = Path.Combine(TEST_ARCHIVES_PATH, testArchive);
             ArchiveFileRead(testArchive.AsEnumerable(), readerOptions);
         }
+
         protected void ArchiveFileRead(IEnumerable<string> testArchives, ReaderOptions readerOptions = null)
         {
             foreach (var path in testArchives)
