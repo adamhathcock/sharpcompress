@@ -1,5 +1,4 @@
-﻿using System;
-using System.IO;
+﻿using System.IO;
 using System.Linq;
 using System.Text;
 
@@ -34,12 +33,11 @@ namespace SharpCompress.Common.Zip.Headers
             byte[] name = reader.ReadBytes(nameLength);
             byte[] extra = reader.ReadBytes(extraLength);
             byte[] comment = reader.ReadBytes(commentLength);
+            
             if ((Flags & HeaderFlags.UTF8) == 0)
             {
-                // Use IBM Code Page 437 (IBM PC character encoding set)
-                var extendedASCIIEncoding = Encoding.GetEncoding("IBM437");
-                Name = extendedASCIIEncoding.GetString(name, 0, name.Length);
-                Comment = extendedASCIIEncoding.GetString(comment, 0, comment.Length);
+                Name = ArchiveEncoding.Decode437(name);
+                Comment = ArchiveEncoding.Decode437(comment);
             }
             else
             {
@@ -62,10 +60,12 @@ namespace SharpCompress.Common.Zip.Headers
                 {
                     CompressedSize = zip64ExtraData.CompressedSize;
                 }
+
                 if (UncompressedSize == uint.MaxValue)
                 {
                     UncompressedSize = zip64ExtraData.UncompressedSize;
                 }
+
                 if (RelativeOffsetOfEntryHeader == uint.MaxValue)
                 {
                     RelativeOffsetOfEntryHeader = zip64ExtraData.RelativeOffsetOfEntryHeader;

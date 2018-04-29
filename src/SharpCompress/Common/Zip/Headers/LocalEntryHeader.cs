@@ -28,8 +28,7 @@ namespace SharpCompress.Common.Zip.Headers
             if ((Flags & HeaderFlags.UTF8) == 0)
             {
                 // Use IBM Code Page 437 (IBM PC character encoding set)
-                var extendedASCIIEncoding = Encoding.GetEncoding("IBM437");
-                Name = extendedASCIIEncoding.GetString(name, 0, name.Length);
+                Name = ArchiveEncoding.Decode437(name);
             }
             else
             {

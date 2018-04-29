@@ -19,7 +19,7 @@
     <PackageLicenseUrl>https://github.com/adamhathcock/sharpcompress/blob/master/LICENSE.txt</PackageLicenseUrl>
     <GenerateAssemblyTitleAttribute>false</GenerateAssemblyTitleAttribute>
     <GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>
-    <Description>SharpCompress is a compression library for NET Standard 1.0  that can unrar, decompress 7zip, decompress xz, zip/unzip, tar/untar lzip/unlzip, bzip2/unbzip2 and gzip/ungzip with forward-only reading and file random access APIs. Write support for zip/tar/bzip2/gzip is implemented.</Description>
+    <Description>SharpCompress is a compression library for NET Standard 1.0 that can unrar, decompress 7zip, decompress xz, zip/unzip, tar/untar lzip/unlzip, bzip2/unbzip2 and gzip/ungzip with forward-only reading and file random access APIs. Write support for zip/tar/bzip2/gzip is implemented.</Description>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(TargetFramework)' == 'netstandard1.0' ">
     <DefineConstants>$(DefineConstants);NO_FILE;NO_CRYPTO;SILVERLIGHT</DefineConstants>
@@ -27,7 +27,13 @@
   <PropertyGroup Condition=" '$(TargetFramework)' == 'netstandard1.3' ">
     <DefineConstants>$(DefineConstants);NETCORE</DefineConstants>
   </PropertyGroup>
+  <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard1.3' ">
+    <PackageReference Include="System.Text.Encoding.CodePages" Version="4.4.0"/>
+  </ItemGroup>
   <PropertyGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' ">
     <DefineConstants>$(DefineConstants);NETCORE</DefineConstants>
   </PropertyGroup>
+  <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' ">
+    <PackageReference Include="System.Text.Encoding.CodePages" Version="4.4.0"/>
+  </ItemGroup>
 </Project>
