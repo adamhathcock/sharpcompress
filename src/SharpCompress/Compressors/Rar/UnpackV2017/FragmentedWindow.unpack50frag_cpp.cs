@@ -10,10 +10,6 @@ using size_t = System.UInt64;
 using int64 = System.Int64;
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace SharpCompress.Compressors.Rar.UnpackV2017
 {

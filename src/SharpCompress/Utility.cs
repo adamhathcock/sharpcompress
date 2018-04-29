@@ -184,6 +184,18 @@ namespace SharpCompress
                 action(item);
             }
         }
+        
+        public static void Copy(Array sourceArray, long sourceIndex, Array destinationArray, long destinationIndex, long length)
+        {
+            if (sourceIndex > Int32.MaxValue || sourceIndex < Int32.MinValue)
+                throw new ArgumentOutOfRangeException();
+            if (destinationIndex > Int32.MaxValue || destinationIndex < Int32.MinValue)
+                throw new ArgumentOutOfRangeException();
+            if (length > Int32.MaxValue || length < Int32.MinValue)
+                throw new ArgumentOutOfRangeException();
+
+            Array.Copy(sourceArray, (int)sourceIndex, destinationArray, (int)destinationIndex, (int)length);
+        }
 
         public static IEnumerable<T> AsEnumerable<T>(this T item)
         {

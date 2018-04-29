@@ -24,7 +24,7 @@ namespace SharpCompress.Archives.Rar
 
         public IArchive Archive => archive;
 
-        internal override IEnumerable<FilePart> Parts => this.parts;
+        internal override IEnumerable<FilePart> Parts => parts.Cast<FilePart>();
 
         internal override FileHeader FileHeader => parts.First().FileHeader;
 
