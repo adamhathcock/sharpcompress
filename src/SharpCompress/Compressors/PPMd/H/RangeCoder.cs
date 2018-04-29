@@ -13,10 +13,10 @@ namespace SharpCompress.Compressors.PPMd.H
 
         // uint low, code, range;
         private long low, code, range;
-        private readonly Unpack unpackRead;
+        private readonly IRarUnpack unpackRead;
         private readonly Stream stream;
 
-        internal RangeCoder(Unpack unpackRead)
+        internal RangeCoder(IRarUnpack unpackRead)
         {
             this.unpackRead = unpackRead;
             Init();

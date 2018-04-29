@@ -1,7 +1,5 @@
 ﻿using System.Collections.Generic;
-using SharpCompress.Common;
 using SharpCompress.Common.Rar;
-using SharpCompress.Common.Rar.Headers;
 
 namespace SharpCompress.Archives.Rar
 {
@@ -25,7 +23,7 @@ namespace SharpCompress.Archives.Rar
             {
                 groupedParts.Add(fp);
 
-                if (!FlagUtility.HasFlag((long)fp.FileHeader.FileFlags, (long)FileFlags.SPLIT_AFTER))
+                if (!fp.FileHeader.IsSplitAfter)
                 {
                     yield return groupedParts;
                     groupedParts = new List<RarFilePart>();

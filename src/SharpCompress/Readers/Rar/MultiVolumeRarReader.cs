@@ -33,14 +33,9 @@ namespace SharpCompress.Readers.Rar
 
         internal override bool NextEntryForCurrentStream()
         {
-            if (!base.NextEntryForCurrentStream())
-            {
-                //if we're got another stream to try to process then do so
-                if (streams.MoveNext() && LoadStreamForReading(streams.Current))
-                {
-                    return true;
-                }
-                return false;
+            if (!base.NextEntryForCurrentStream()) {
+                // if we're got another stream to try to process then do so
+                return this.streams.MoveNext() && LoadStreamForReading(this.streams.Current);
             }
             return true;
         }
@@ -94,7 +89,7 @@ namespace SharpCompress.Readers.Rar
                     return true;
                 }
 
-                if (!reader.Entry.IsSplit)
+                if (!reader.Entry.IsSplitAfter)
                 {
                     return false;
                 }

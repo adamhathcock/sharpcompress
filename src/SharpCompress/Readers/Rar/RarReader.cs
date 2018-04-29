@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using SharpCompress.Common;
@@ -13,7 +13,8 @@ namespace SharpCompress.Readers.Rar
     public abstract class RarReader : AbstractReader<RarReaderEntry, RarVolume>
     {
         private RarVolume volume;
-        private readonly Unpack pack = new Unpack();
+        internal Lazy<IRarUnpack> UnpackV2017 { get; } = new Lazy<IRarUnpack>(() => new SharpCompress.Compressors.Rar.UnpackV2017.Unpack());
+        internal Lazy<IRarUnpack> UnpackV1 { get; } = new Lazy<IRarUnpack>(() => new SharpCompress.Compressors.Rar.UnpackV1.Unpack());
 
         internal RarReader(ReaderOptions options)
             : base(options, ArchiveType.Rar)
@@ -23,8 +24,6 @@ namespace SharpCompress.Readers.Rar
         internal abstract void ValidateArchive(RarVolume archive);
 
         public override RarVolume Volume => volume;
-
-        #region Open
 
         /// <summary>
         /// Opens a RarReader for Non-seeking usage with a single volume
@@ -50,8 +49,6 @@ namespace SharpCompress.Readers.Rar
             return new MultiVolumeRarReader(streams, options ?? new ReaderOptions());
         }
 
-        #endregion
-
         protected override IEnumerable<RarReaderEntry> GetEntries(Stream stream)
         {
             volume = new RarReaderVolume(stream, Options);
@@ -67,11 +64,14 @@ namespace SharpCompress.Readers.Rar
             return Entry.Parts;
         }
 
-        protected override EntryStream GetEntryStream()
+        protected override EntryStream GetEntryStream() 
         {
-            return CreateEntryStream(new RarCrcStream(pack, Entry.FileHeader,
-                                                   new MultiVolumeReadOnlyStream(
-                                                                                 CreateFilePartEnumerableForCurrentEntry().Cast<RarFilePart>(), this)));
+            var stream = new MultiVolumeReadOnlyStream(CreateFilePartEnumerableForCurrentEntry().Cast<RarFilePart>(), this);
+            if (Entry.IsRarV3)
+            {
+                return CreateEntryStream(new RarCrcStream(UnpackV1.Value, Entry.FileHeader, stream));
+            }
+            return CreateEntryStream(new RarCrcStream(UnpackV2017.Value, Entry.FileHeader, stream));
         }
     }
 }

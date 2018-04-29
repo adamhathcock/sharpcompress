@@ -5,7 +5,6 @@ using SharpCompress.Common;
 using SharpCompress.Common.Rar;
 using SharpCompress.Common.Rar.Headers;
 using SharpCompress.Compressors.Rar;
-using SharpCompress.IO;
 using SharpCompress.Readers;
 using SharpCompress.Readers.Rar;
 
@@ -13,7 +12,8 @@ namespace SharpCompress.Archives.Rar
 {
     public class RarArchive : AbstractArchive<RarArchiveEntry, RarVolume>
     {
-        internal Unpack Unpack { get; } = new Unpack();
+        internal Lazy<IRarUnpack> UnpackV2017 { get; } = new Lazy<IRarUnpack>(() => new SharpCompress.Compressors.Rar.UnpackV2017.Unpack());
+        internal Lazy<IRarUnpack> UnpackV1 { get; } = new Lazy<IRarUnpack>(() => new SharpCompress.Compressors.Rar.UnpackV1.Unpack());
 
 #if !NO_FILE
 
@@ -134,9 +134,8 @@ namespace SharpCompress.Archives.Rar
         {
             try
             {
-                var headerFactory = new RarHeaderFactory(StreamingMode.Seekable, options ?? new ReaderOptions());
-                var markHeader = headerFactory.ReadHeaders(stream).FirstOrDefault() as MarkHeader;
-                return markHeader != null && markHeader.IsValid();
+                MarkHeader.Read(stream, true, false);
+                return true;
             }
             catch
             {

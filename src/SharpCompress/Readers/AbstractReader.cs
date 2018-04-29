@@ -46,11 +46,8 @@ namespace SharpCompress.Readers
 
         public void Dispose()
         {
-            if (entriesForCurrentReadStream != null)
-            {
-                entriesForCurrentReadStream.Dispose();
-            }
-            Volume.Dispose();
+            entriesForCurrentReadStream?.Dispose();
+            Volume?.Dispose();
         }
 
         #endregion

@@ -2,6 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
+using System.Reflection.Emit;
+using System.Runtime.InteropServices;
 #if NETCORE
 using SharpCompress.Buffers;
 #endif
@@ -73,6 +76,71 @@ namespace SharpCompress
             }
         }
 
+#if NET45
+        // super fast memset, up to 40x faster than for loop on large arrays
+        // see https://stackoverflow.com/questions/1897555/what-is-the-equivalent-of-memset-in-c
+        private static readonly Action<IntPtr, byte, uint> MemsetDelegate = CreateMemsetDelegate();
+
+        private static Action<IntPtr, byte, uint> CreateMemsetDelegate() {
+            var dynamicMethod = new DynamicMethod(
+                "Memset",
+                MethodAttributes.Public | MethodAttributes.Static,
+                CallingConventions.Standard,
+                null,
+                new[] { typeof(IntPtr), typeof(byte), typeof(uint) },
+                typeof(Utility),
+                true);
+            var generator = dynamicMethod.GetILGenerator();
+            generator.Emit(OpCodes.Ldarg_0);
+            generator.Emit(OpCodes.Ldarg_1);
+            generator.Emit(OpCodes.Ldarg_2);
+            generator.Emit(OpCodes.Initblk);
+            generator.Emit(OpCodes.Ret);
+            return (Action<IntPtr, byte, uint>)dynamicMethod.CreateDelegate(typeof(Action<IntPtr, byte, uint>));
+        }
+
+        public static void Memset(byte[] array, byte what, int length)
+        {
+            var gcHandle = GCHandle.Alloc(array, GCHandleType.Pinned);
+            MemsetDelegate(gcHandle.AddrOfPinnedObject(), what, (uint)length);
+            gcHandle.Free();
+        }
+#else
+        public static void Memset(byte[] array, byte what, int length)
+        {
+            for(var i = 0; i < length; i++)
+            {
+                array[i] = what;
+            }
+        }
+#endif
+
+        public static void Memset<T>(T[] array, T what, int length)
+        {
+            for(var i = 0; i < length; i++)
+            {
+                array[i] = what;
+            }
+        }
+
+        public static void FillFast<T>(T[] array, T val) where T : struct
+        {
+            for (int i = 0; i < array.Length; i++)
+            {
+                array[i] = val;
+            }
+        }
+
+        public static void FillFast<T>(T[] array, int start, int length, T val) where T : struct
+        {
+            int toIndex = start + length;
+            for (int i = start; i < toIndex; i++)
+            {
+                array[i] = val;
+            }
+        }
+
+
         /// <summary>
         /// Fills the array with an specific value.
         /// </summary>
@@ -115,6 +183,18 @@ namespace SharpCompress
             {
                 action(item);
             }
+        }
+        
+        public static void Copy(Array sourceArray, long sourceIndex, Array destinationArray, long destinationIndex, long length)
+        {
+            if (sourceIndex > Int32.MaxValue || sourceIndex < Int32.MinValue)
+                throw new ArgumentOutOfRangeException();
+            if (destinationIndex > Int32.MaxValue || destinationIndex < Int32.MinValue)
+                throw new ArgumentOutOfRangeException();
+            if (length > Int32.MaxValue || length < Int32.MinValue)
+                throw new ArgumentOutOfRangeException();
+
+            Array.Copy(sourceArray, (int)sourceIndex, destinationArray, (int)destinationIndex, (int)length);
         }
 
         public static IEnumerable<T> AsEnumerable<T>(this T item)
@@ -252,9 +332,15 @@ namespace SharpCompress
                                      (UInt16)(iTime % 65536));
         }
 
-        public static DateTime DosDateToDateTime(Int32 iTime)
+        /// <summary>
+        /// Convert Unix time value to a DateTime object.
+        /// </summary>
+        /// <param name="unixtime">The Unix time stamp you want to convert to DateTime.</param>
+        /// <returns>Returns a DateTime object that represents value of the Unix time.</returns>
+        public static DateTime UnixTimeToDateTime(long unixtime)
         {
-            return DosDateToDateTime((UInt32)iTime);
+            DateTime sTime = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+            return sTime.AddSeconds(unixtime);
         }
 
         public static long TransferTo(this Stream source, Stream destination)
@@ -352,11 +438,6 @@ namespace SharpCompress
                 }
             }
             return true;
-        }
-
-        public static void CopyTo(this byte[] array, byte[] destination, int index)
-        {
-            Array.Copy(array, 0, destination, index, array.Length);
         }
     }
 }
