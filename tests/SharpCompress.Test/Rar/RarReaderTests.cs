@@ -170,11 +170,11 @@ namespace SharpCompress.Test.Rar
             ReadRar("Rar.encrypted_filesAndHeader.rar", "test");
         }
 
-        [Fact]
+        /*[Fact]
         public void Rar5_EncryptedFileAndHeader_Reader()
         {
             ReadRar("Rar5.encrypted_filesAndHeader.rar", "test");
-        }
+        }*/
 
         [Fact]
         public void Rar_EncryptedFileOnly_Reader()
@@ -182,11 +182,11 @@ namespace SharpCompress.Test.Rar
             ReadRar("Rar.encrypted_filesOnly.rar", "test");
         }
 
-        [Fact]
+        /*[Fact]
         public void Rar5_EncryptedFileOnly_Reader()
         {
             ReadRar("Rar5.encrypted_filesOnly.rar", "test");
-        }
+        }*/
 
         [Fact]
         public void Rar_Encrypted_Reader()
@@ -194,11 +194,11 @@ namespace SharpCompress.Test.Rar
             ReadRar("Rar.Encrypted.rar", "test");
         }
 
-        [Fact]
+        /*[Fact]
         public void Rar5_Encrypted_Reader()
         {
             ReadRar("Rar5.encrypted_filesOnly.rar", "test");
-        }
+        }*/
 
         private void ReadRar(string testArchive, string password)
         {
