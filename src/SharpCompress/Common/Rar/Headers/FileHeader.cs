@@ -55,20 +55,24 @@ namespace SharpCompress.Common.Rar.Headers
                 FileCrc = reader.ReadUInt32();
             }
 
-            var us = reader.ReadRarVIntUInt16();
+            var compressionInfo = reader.ReadRarVIntUInt16();
 
             // Lower 6 bits (0x003f mask) contain the version of compression algorithm, resulting in possible 0 - 63 values. Current version is 0.
             // "+ 50" to not mix with old RAR format algorithms. For example,
             // we may need to use the compression algorithm 15 in the future,
             // but it was already used in RAR 1.5 and Unpack needs to distinguish
             // them.
-            CompressionAlgorithm = (byte)((us & 0x3f) + 50);
+            CompressionAlgorithm = (byte)((compressionInfo & 0x3f) + 50);
+            
+            // 7th bit (0x0040) defines the solid flag. If it is set, RAR continues to use the compression dictionary left after processing preceding files. 
+            // It can be set only for file headers and is never set for service headers.
+            IsSolid = (compressionInfo & 0x40) == 0x40;
 
             // Bits 8 - 10 (0x0380 mask) define the compression method. Currently only values 0 - 5 are used. 0 means no compression.
-            CompressionMethod = (byte)((us >> 7) & 0x7);
+            CompressionMethod = (byte)((compressionInfo >> 7) & 0x7);
 
             // Bits 11 - 14 (0x3c00) define the minimum size of dictionary size required to extract data. Value 0 means 128 KB, 1 - 256 KB, ..., 14 - 2048 MB, 15 - 4096 MB.
-            WindowSize = IsDirectory ? 0 : ((size_t)0x20000) << ((us>>10) & 0xf);
+            WindowSize = IsDirectory ? 0 : ((size_t)0x20000) << ((compressionInfo>>10) & 0xf);
 
             HostOs = reader.ReadRarVIntByte();
 
@@ -205,6 +209,7 @@ namespace SharpCompress.Common.Rar.Headers
         private void ReadFromReaderV4(MarkingBinaryReader reader)
         {
             Flags = HeaderFlags;
+            IsSolid = HasFlag(FileFlagsV4.Solid);
             WindowSize = IsDirectory ? 0U : ((size_t)0x10000) << ((Flags & FileFlagsV4.WindowMask) >> 5);
 
             uint lowUncompressedSize = reader.ReadUInt32();
@@ -408,6 +413,8 @@ namespace SharpCompress.Common.Rar.Headers
         //case 29: // rar 3.x compression
         //case 50: // RAR 5.0 compression algorithm.
         internal byte CompressionAlgorithm { get; private set; }
+        
+        public bool IsSolid { get; private set; }
 
         // unused for UnpackV1 implementation (limitation)
         internal size_t WindowSize { get; private set; }

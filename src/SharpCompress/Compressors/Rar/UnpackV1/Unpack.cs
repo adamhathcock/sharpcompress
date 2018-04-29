@@ -103,21 +103,21 @@ namespace SharpCompress.Compressors.Rar.UnpackV1
             UnpInitData(false);
         }
 
-        public void DoUnpack(bool isSolid, FileHeader fileHeader, Stream readStream, Stream writeStream)
+        public void DoUnpack(FileHeader fileHeader, Stream readStream, Stream writeStream)
         {
             this.destUnpSize = fileHeader.UncompressedSize;
             this.fileHeader = fileHeader;
             this.readStream = readStream;
             this.writeStream = writeStream;
-            if (!isSolid)
+            if (!fileHeader.IsSolid)
             {
                 Init(null);
             }
             this.suspended = false;
-            DoUnpack(isSolid);
+            DoUnpack();
         }
 
-        public void DoUnpack(bool isSolid)
+        public void DoUnpack()
         {
             if (fileHeader.CompressionMethod == 0)
             {
@@ -127,21 +127,21 @@ namespace SharpCompress.Compressors.Rar.UnpackV1
             switch (fileHeader.CompressionAlgorithm)
             {
                 case 15: // rar 1.5 compression
-                    unpack15(isSolid);
+                    unpack15(fileHeader.IsSolid);
                     break;
 
                 case 20: // rar 2.x compression
                 case 26: // files larger than 2GB
-                    unpack20(isSolid);
+                    unpack20(fileHeader.IsSolid);
                     break;
 
                 case 29: // rar 3.x compression
                 case 36: // alternative hash
-                    Unpack29(isSolid);
+                    Unpack29(fileHeader.IsSolid);
                     break;
                 
                 case 50: // rar 5.x compression
-                    Unpack5(isSolid);
+                    Unpack5(fileHeader.IsSolid);
                     break;
 
                 default: 

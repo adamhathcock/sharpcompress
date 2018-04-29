@@ -9,7 +9,6 @@ namespace SharpCompress.Compressors.Rar
         private readonly IRarUnpack unpack;
         private readonly FileHeader fileHeader;
         private readonly Stream readStream;
-        private readonly bool isSolid;
 
         private bool fetch;
 
@@ -23,14 +22,13 @@ namespace SharpCompress.Compressors.Rar
         private int outTotal;
         private bool isDisposed;
 
-        public RarStream(IRarUnpack unpack, bool isSolid, FileHeader fileHeader, Stream readStream)
+        public RarStream(IRarUnpack unpack, FileHeader fileHeader, Stream readStream)
         {
-            this.isSolid = isSolid;
             this.unpack = unpack;
             this.fileHeader = fileHeader;
             this.readStream = readStream;
             this.fetch = true;
-            unpack.DoUnpack(isSolid, fileHeader, readStream, this);
+            unpack.DoUnpack(fileHeader, readStream, this);
             this.fetch = false;
         }
 
@@ -76,7 +74,7 @@ namespace SharpCompress.Compressors.Rar
                 outOffset = offset;
                 outCount = count;
                 fetch = true;
-                unpack.DoUnpack(isSolid);
+                unpack.DoUnpack();
                 fetch = false;
             }
             return outTotal;

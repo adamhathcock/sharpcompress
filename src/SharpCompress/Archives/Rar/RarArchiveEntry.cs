@@ -64,10 +64,10 @@ namespace SharpCompress.Archives.Rar
 
             if (IsRarV3)
             {
-                return new RarStream(archive.UnpackV1.Value, archive.IsSolid, FileHeader, new MultiVolumeReadOnlyStream(Parts.Cast<RarFilePart>(), archive));
+                return new RarStream(archive.UnpackV1.Value, FileHeader, new MultiVolumeReadOnlyStream(Parts.Cast<RarFilePart>(), archive));
             }
             
-            return new RarStream(archive.UnpackV2017.Value, archive.IsSolid, FileHeader, new MultiVolumeReadOnlyStream(Parts.Cast<RarFilePart>(), archive));
+            return new RarStream(archive.UnpackV2017.Value, FileHeader, new MultiVolumeReadOnlyStream(Parts.Cast<RarFilePart>(), archive));
         }
 
         public bool IsComplete 

@@ -70,9 +70,9 @@ namespace SharpCompress.Readers.Rar
             var stream = new MultiVolumeReadOnlyStream(CreateFilePartEnumerableForCurrentEntry().Cast<RarFilePart>(), this);
             if (Entry.IsRarV3)
             {
-                return CreateEntryStream(new RarCrcStream(UnpackV1.Value, volume.IsSolidArchive, Entry.FileHeader, stream));
+                return CreateEntryStream(new RarCrcStream(UnpackV1.Value, Entry.FileHeader, stream));
             }
-            return CreateEntryStream(new RarCrcStream(UnpackV2017.Value, volume.IsSolidArchive, Entry.FileHeader, stream));
+            return CreateEntryStream(new RarCrcStream(UnpackV2017.Value, Entry.FileHeader, stream));
         }
     }
 }
