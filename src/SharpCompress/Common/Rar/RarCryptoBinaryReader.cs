@@ -2,7 +2,6 @@
 #if !NO_CRYPTO
 using System.Collections.Generic;
 using System.IO;
-using SharpCompress.IO;
 
 namespace SharpCompress.Common.Rar
 {
@@ -18,6 +17,10 @@ namespace SharpCompress.Common.Rar
             : base(stream)
         {
             this.password = password;
+            // coderb: not sure why this was being done at this logical point
+            //SkipQueue();
+            byte[] salt = ReadBytes(8);
+            InitializeAes(salt);
         }
 
         // track read count ourselves rather than using the underlying stream since we buffer
@@ -47,6 +50,15 @@ namespace SharpCompress.Common.Rar
             rijndael = RarRijndael.InitializeFrom(password, salt);
         }
 
+        public override byte ReadByte() {
+            if (UseEncryption)
+            {
+                return ReadAndDecryptBytes(1)[0];
+            }
+            this.readCount++;
+            return base.ReadByte();
+        }
+
         public override byte[] ReadBytes(int count)
         {
             if (UseEncryption)
@@ -68,13 +80,11 @@ namespace SharpCompress.Common.Rar
                 for (int i = 0; i < alignedSize / 16; i++)
                 {
                     //long ax = System.currentTimeMillis();
-                    byte[] cipherText = base.ReadBytesNoCrc(16);
+                    byte[] cipherText = ReadBytesNoCrc(16);
                     var readBytes = rijndael.ProcessBlock(cipherText);
                     foreach (var readByte in readBytes)
                         data.Enqueue(readByte);
-
                 }
-
             }
 
             var decryptedBytes = new byte[count];

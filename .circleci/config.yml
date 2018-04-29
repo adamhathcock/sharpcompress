@@ -2,7 +2,7 @@ version: 2
 jobs:
   build:
     docker:
-      - image: microsoft/dotnet:2.0.5-sdk-2.1.4
+      - image: microsoft/dotnet:2.0.7-sdk-2.1.105
     steps:
       - checkout
       - run:
