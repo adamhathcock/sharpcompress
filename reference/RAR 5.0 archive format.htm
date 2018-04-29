@@ -1,0 +1,1197 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title>RAR 5.0 archive format</title>
+</head>
+
+<body>
+
+<h1>RAR 5.0 archive format</h1>
+
+<p>Here we describe basic data structures of archive format introduced
+in RAR 5.0. If you need information about algorithms or more detailed
+information on data structures, please use UnRAR source code.</p>
+
+<h2>Contents</h2>
+<ul>
+<li><a href="#dtypes">Data types</a>
+  <ul>
+  <li><a href="#vint">vint</a>
+  </li><li><a href="#byte">byte, uint16, uint32, uint64</a>
+  </li><li><a href="#varlen">Variable length data</a>
+  </li><li><a href="#hex">Hexadecimal values</a>
+  </li></ul>
+</li><li><a href="#arcstruct">General archive structure</a>
+  <ul>
+  <li><a href="#genblock">General archive block format</a>
+  </li><li><a href="#extarea">General extra area format</a>
+  </li><li><a href="#arclayout">General archive layout</a>
+  </li></ul>
+</li><li><a href="#arcblocks">Archive blocks</a>
+  <ul>
+  <li><a href="#sfx">Self-extracting module (SFX)</a>
+  </li><li><a href="#rarsign">RAR 5.0 signature</a>
+  </li><li><a href="#enchead">Archive encryption header</a>
+  </li><li><a href="#mainhead">Main archive header</a>
+    <ul>
+    <li><a href="#mainextra">Extra record types</a>
+    </li><li><a href="#locrecord">Locator record</a>
+    </li></ul>
+  </li><li><a href="#filehead">File header and service header</a>
+    <ul>
+    <li><a href="#fileextra">Extra record types</a>
+    </li><li><a href="#encrecord">File encryption record</a>
+    </li><li><a href="#hashrecord">File hash record</a>
+    </li><li><a href="#timerecord">File time record</a>
+    </li><li><a href="#verrecord">File version record</a>
+    </li><li><a href="#redirrecord">File system redirection record</a>
+    </li><li><a href="#uownrecord">Unix owner record</a>
+    </li><li><a href="#servicerecord">Service data record</a>
+    </li></ul>
+  </li><li><a href="#endarchead">End of archive header</a>
+  </li></ul>
+</li><li><a href="#srvheaders">Service headers</a>
+  <ul>
+  <li><a href="#srvcmt">Archive comment header</a>
+  </li><li><a href="#srvqopen">Quick open header</a>
+  </li></ul>
+</li></ul>
+
+<h2 id="dtypes">Data types</h2>
+
+<h3 id="vint">vint</h3>
+
+<p>Variable length integer. Can include one or more bytes, where lower
+7 bits of every byte contain integer data and highest bit in every byte
+is the continuation flag. If highest bit is 0, this is the last byte
+in sequence. So first byte contains 7 least significant bits of integer
+and continuation flag. Second byte, if present, contains next 7 bits
+and so on.</p>
+<p>Currently RAR format uses vint to store up to 64 bit integers,
+resulting in 10 bytes maximum. This value may be increased in the future
+if necessary for some reason.</p>
+<p>Sometimes RAR needs to pre-allocate space for vint before knowing
+its exact value. In such situation it can allocate more space than really
+necessary and then fill several leading bytes with 0x80 hexadecimal,
+which means 0 with continuation flag set.</p>
+
+<h3 id="byte">byte, uint16, uint32, uint64</h3>
+
+<p>Byte, 16-, 32-, 64- bit unsigned integer in little endian format.</p>
+
+<h3 id="varlen">Variable length data</h3>
+
+<p>We use ellipsis ... to denote variable length data areas.
+
+</p><h3 id="hex">Hexadecimal values</h3>
+<p>We use 0x prefix to define hexadecimal values, such as 0xf000</p>
+
+
+
+<h2 id="arcstruct">General archive structure</h2>
+
+<h3 id="genblock">General archive block format</h3>
+
+<table border="1">
+
+<tbody><tr>
+<td><b>Field</b></td>
+<td><b>Size</b></td>
+<td><b>Description</b></td>
+</tr>
+
+<tr>
+<td>Header CRC32</td>
+<td>uint32</td>
+<td>CRC32 of header data starting from <dfn>Header size</dfn> field
+and up to and including the optional extra area.</td>
+</tr>
+
+<tr>
+<td>Header size</td>
+<td>vint</td>
+<td>Size of header data starting from <dfn>Header type</dfn> field
+and up to and including the optional extra area.
+This field must not be longer than 3 bytes in current implementation,
+resulting in 2 MB maximum header size.
+</td>
+</tr>
+
+<tr>
+<td>Header type</td>
+<td>vint</td>
+<td>Type of archive header. Possible values are:
+  <br>  1   Main archive header.
+  <br>  2   File header.
+  <br>  3   Service header.
+  <br>  4   Archive encryption header.
+  <br>  5   End of archive header.
+</td>
+</tr>
+
+<tr>
+<td>Header flags</td>
+<td>vint</td>
+<td>Flags common for all headers:
+  <br>  0x0001   Extra area is present in the end of header.
+  <br>  0x0002   Data area is present in the end of header.
+  <br>  0x0004   Blocks with unknown type and this flag must be skipped when updating an archive.
+  <br>  0x0008   Data area is continuing from previous volume.
+  <br>  0x0010   Data area is continuing in next volume.
+  <br>  0x0020   Block depends on preceding file block.
+  <br>  0x0040   Preserve a child block if host block is modified.
+</td>
+</tr>
+
+<tr>
+<td>Extra area size</td>
+<td>vint</td>
+<td>Size of extra area. Optional field, present only if 0x0001 header flag
+is set.</td>
+</tr>
+
+<tr>
+<td>Data size</td>
+<td>vint</td>
+<td>Size of data area. Optional field, present only if 0x0002 header flag
+is set.</td>
+</tr>
+
+<tr>
+<td>...</td>
+<td>...</td>
+<td>Fields specific for current block type. See concrete block types
+description for details.</td>
+</tr>
+
+<tr>
+<td>Extra area</td>
+<td>...</td>
+<td>Optional area containing additional header fields, present only
+if 0x0001 header flag is set.</td>
+</tr>
+
+<tr>
+<td>Data area</td>
+<td>vint</td>
+<td>Optional data area, present only if 0x0002 header flag is set.
+Used to store large data amounts, such as compressed file data.
+Not counted in <dfn>Header CRC</dfn> and <dfn>Header size</dfn> fields.</td>
+</tr>
+
+</tbody></table>
+
+<h3 id="extarea">General extra area format</h3>
+
+<p>Extra area can include one or more records having the following format:</p>
+
+<table border="1">
+
+<tbody><tr>
+<td>Size</td>
+<td>vint</td>
+<td>Size of record data starting from <dfn>Type</dfn>.
+</td>
+</tr>
+
+<tr>
+<td>Type</td>
+<td>vint</td>
+<td>Record type. Different archive blocks have different associated extra area
+record types. Read the concrete archive block description for details.
+New record types can be added in the future, so unknown record types
+need to be skipped without interrupting an operation.
+</td>
+</tr>
+
+<tr>
+<td>Data</td>
+<td>...</td>
+<td>Record dependent data. May be missing if record consists only from
+size and type.
+</td>
+</tr>
+
+</tbody></table>
+
+
+<h3 id="arclayout">General archive layout</h3>
+
+<pre>    Self-extracting module (optional)
+    RAR 5.0 signature
+    Archive encryption header (optional)
+    Main archive header
+    Archive comment service header (optional)
+
+    File header 1
+    Service headers (NTFS ACL, streams, etc.) for preceding file (optional).
+    ...
+    File header N
+    Service headers (NTFS ACL, streams, etc.) for preceding file (optional).
+
+    Recovery record (optional).
+    End of archive header.
+</pre>
+
+<h2 id="arcblocks">Archive blocks</h2>
+
+<h3 id="sfx">Self-extracting module (SFX)</h3>
+
+<p>Any data preceding the archive signature. Self-extracting module size
+and contents is not defined. At the moment of writing this documentation
+RAR assumes the maximum SFX module size to not exceed 1 MB, but this value
+can be increased in the future.</p>
+
+<h3 id="rarsign">RAR 5.0 signature</h3>
+
+<p>
+RAR 5.0 signature consists of 8 bytes:
+0x52 0x61 0x72 0x21 0x1A 0x07 0x01 0x00.
+You need to search for this signature in supposed archive from beginning
+and up to maximum SFX module size.
+Just for comparison this is RAR 4.x 7 byte length signature:
+0x52 0x61 0x72 0x21 0x1A 0x07 0x00.
+</p>
+
+
+<h3 id="enchead">Archive encryption header</h3>
+
+<table border="1">
+<tbody><tr>
+<td>Header CRC32</td>
+<td>uint32</td>
+<td></td>
+</tr>
+
+<tr>
+<td>Header size</td>
+<td>vint</td>
+<td></td>
+</tr>
+
+<tr>
+<td>Header type</td>
+<td>vint</td>
+<td>4</td>
+</tr>
+
+<tr>
+<td>Header flags</td>
+<td>vint</td>
+<td>Flags common for all headers</td>
+</tr>
+
+<tr>
+<td>Encryption version</td>
+<td>vint</td>
+<td>
+Version of encryption algorithm. Now only 0 version (AES-256)
+is supported.</td>
+
+</tr>
+
+<tr>
+<td>Encryption flags</td>
+<td>vint</td>
+<td>
+  0x0001   Password check data is present.
+</td>
+</tr>
+
+<tr>
+<td>KDF count</td>
+<td>1 byte</td>
+<td>
+Binary logarithm of iteration number for PBKDF2 function. RAR can refuse
+to process KDF count exceeding some threshold. Concrete value of threshold
+is a version dependent.
+</td>
+</tr>
+
+<tr>
+<td>Salt</td>
+<td>16 bytes</td>
+<td>
+Salt value used globally for all encrypted archive headers.
+</td>
+</tr>
+
+<tr>
+<td>Check value</td>
+<td>12 bytes</td>
+<td>
+Value used to verify the password validity. Present only if 0x0001
+encryption flag is set. First 8 bytes are calculated using additional
+PBKDF2 rounds, 4 last bytes is the additional checksum. Together with
+the standard header CRC32 we have 64 bit checksum to reliably verify
+this field integrity and distinguish invalid password and damaged data.
+Further details can be found in UnRAR source code.
+</td>
+</tr>
+
+</tbody></table>
+
+<p>This header is present only in archives with encrypted headers.
+Every next header after this one is started from 16 byte AES-256
+initialization vector followed by encrypted header data. Size of encrypted
+header data block is aligned to 16 byte boundary.</p>
+
+<h3 id="mainhead">Main archive header</h3>
+
+<table border="1">
+<tbody><tr>
+<td>Header CRC32</td>
+<td>uint32</td>
+<td></td>
+</tr>
+
+<tr>
+<td>Header size</td>
+<td>vint</td>
+<td></td>
+</tr>
+
+<tr>
+<td>Header type</td>
+<td>vint</td>
+<td>1</td>
+</tr>
+
+<tr>
+<td>Header flags</td>
+<td>vint</td>
+<td>Flags common for all headers</td>
+</tr>
+
+<tr>
+<td>Extra area size</td>
+<td>vint</td>
+<td>Size of extra area. Optional field, present only if 0x0001 header flag
+is set.</td>
+</tr>
+
+<tr>
+<td>Archive flags</td>
+<td>vint</td>
+<td>
+    0x0001   Volume. Archive is a part of multivolume set.<br>
+    0x0002   Volume number field is present. This flag is present
+                       in all volumes except first.<br>
+    0x0004   Solid archive.<br>
+    0x0008   Recovery record is present.<br>
+    0x0010   Locked archive.
+</td>
+</tr>
+
+<tr>
+<td>Volume number</td>
+<td>vint</td>
+<td>Optional field, present only if 0x0002 archive flag is set.
+Not present for first volume, 1 for second volume, 2 for third and so on.</td>
+</tr>
+
+<tr>
+<td>Extra area</td>
+<td>...</td>
+<td>Optional area containing additional header fields, present only
+if 0x0001 header flag is set.</td>
+</tr>
+
+</tbody></table>
+
+<p id="mainextra">Extra area of main archive header can contain following record
+types</p>
+<table border="1">
+<tbody><tr><td><b>Type</b></td><td><b>Name</b></td><td><b>Description</b></td></tr>
+<tr>
+<td>0x01</td>
+<td>Locator</td>
+<td>Contains positions of different service blocks, so they can be accessed
+quickly, without scanning the entire archive. This record is optional.
+If it is missing, it is still necessary to scan the entire archive to
+verify presence of service blocks.</td>
+</tr>
+</tbody></table>
+
+<h4 id="locrecord">Locator record</h4>
+
+<table border="1">
+
+<tbody><tr>
+<td>Size</td>
+<td>vint</td>
+<td></td>
+</tr>
+
+<tr>
+<td>Type</td>
+<td>vint</td>
+<td>1</td>
+</tr>
+
+<tr>
+<td>Flags</td>
+<td>vint</td>
+<td>
+    0x0001   Quick open record offset is present.<br>
+    0x0002   Recovery record offset is present.<br>
+</td>
+</tr>
+
+<tr>
+<td>Quick open offset</td>
+<td>vint</td>
+<td>Distance from beginning of quick open service block to beginning
+of main archive header. Present only if 0x0001 flag is set.
+If equal to 0, should be ignored. It can be set to zero if preallocated
+space was not enough to store resulting offset.
+</td>
+</tr>
+
+<tr>
+<td>Recovery record offset</td>
+<td>vint</td>
+<td>Distance from beginning of recovery record service block to beginning
+of main archive header. Present only if 0x0002 flag is set.
+If equal to 0, should be ignored. It can be set to zero if preallocated
+space was not enough to store resulting offset.
+</td>
+</tr>
+
+</tbody></table>
+
+
+<h3 id="filehead">File header and service header</h3>
+
+<p>These two header types use the similar data structure, so we describe them
+both here.</p>
+
+<table border="1">
+<tbody><tr>
+<td>Header CRC32</td>
+<td>uint32</td>
+<td></td>
+</tr>
+
+<tr>
+<td>Header size</td>
+<td>vint</td>
+<td></td>
+</tr>
+
+<tr>
+<td>Header type</td>
+<td>vint</td>
+<td>2 for file header, 3 for service header</td>
+</tr>
+
+<tr>
+<td>Header flags</td>
+<td>vint</td>
+<td>Flags common for all headers</td>
+</tr>
+
+<tr>
+<td>Extra area size</td>
+<td>vint</td>
+<td>Size of extra area. Optional field, present only if 0x0001 header flag
+is set.</td>
+</tr>
+
+<tr>
+<td>Data size</td>
+<td>vint</td>
+<td>Size of data area. Optional field, present only if 0x0002 header flag
+is set. For file header this field contains the packed file size.</td>
+</tr>
+
+<tr>
+<td>File flags</td>
+<td>vint</td>
+<td>Flags specific for these header types:<br>
+    0x0001   Directory file system object (file header only).<br>
+    0x0002   Time field in Unix format is present.<br>
+    0x0004   CRC32 field is present.<br>
+    0x0008   Unpacked size is unknown.<br>
+
+  <p>If flag 0x0008 is set, unpacked size field is still present,
+  but must be ignored and extraction must be performed until reaching
+  the end of compression stream. This flag can be set if actual file size
+  is larger than reported by OS or if file size is unknown such as
+  for all volumes except last when archiving from stdin to multivolume
+  archive.</p>
+</td>
+</tr>
+
+<tr>
+<td>Unpacked size</td>
+<td>vint</td>
+<td>Unpacked file or service data size.</td>
+</tr>
+
+<tr>
+<td>Attributes</td>
+<td>vint</td>
+<td>Operating system specific file attributes in case of file header.
+Might be either used for data specific needs or just reserved and set to 0
+for service header.</td>
+</tr>
+
+<tr>
+<td>mtime</td>
+<td>uint32</td>
+<td>File modification time in Unix time format.
+Optional, present if 0x0002 file flag is set.</td>
+</tr>
+
+<tr>
+<td>Data CRC32</td>
+<td>uint32</td>
+<td>CRC32 of unpacked file or service data. For files split between volumes
+it contains CRC32 of file packed data contained in current volume
+for all file parts except the last.
+Optional, present if 0x0004 file flag is set.</td>
+</tr>
+
+<tr>
+<td>Compression information</td>
+<td>vint</td>
+<td>
+<p>Lower 6 bits (0x003f mask) contain the version of compression algorithm,
+resulting in possible 0 - 63 values. Current version is 0.</p>
+<p>7th bit (0x0040) defines the solid flag. If it is set, RAR continues
+to use the compression dictionary left after processing preceding files.
+It can be set only for file headers and is never set for service headers.</p>
+<p>Bits 8 - 10 (0x0380 mask) define the compression method. Currently only
+values 0 - 5 are used. 0 means no compression.</p>
+<p>Bits 11 - 14 (0x3c00) define the minimum size of dictionary size required
+to extract data. Value 0 means 128 KB, 1 - 256 KB, ..., 14 - 2048 MB,
+15 - 4096 MB.</p>
+</td>
+</tr>
+
+<tr>
+<td>Host OS</td>
+<td>vint</td>
+<td>Type of operating system used to create the archive.<br>
+    0x0000   Windows.<br>
+    0x0001   Unix.<br>
+</td>
+</tr>
+
+<tr>
+<td>Name length</td>
+<td>vint</td>
+<td>File or service header name length.</td>
+</tr>
+
+<tr>
+<td>Name</td>
+<td>? bytes</td>
+<td>
+<p>Variable length field containing <dfn>Name length</dfn> bytes in UTF-8
+format without trailing zero.</p>
+<p>For file header this is a name of archived file. Forward slash character
+is used as the path separator both for Unix and Windows names. Backslashes
+are treated as a part of name for Unix names and as invalid character
+for Windows file names. Type of name is defined by <dfn>Host OS</dfn> field.</p><p>
+</p><p>If Unix file name contains any high ASCII characters which cannot be
+correctly converted to Unicode and UTF-8, we map such characters to
+to 0xE080 - 0xE0FF private use Unicode area and insert 0xFFFE Unicode
+non-character to resulting string to indicate that it contains mapped
+characters, which need to be converted back when extracting. Concrete
+position of 0xFFFE is not defined, we need to search the entire string
+for it. Such mapped names are not portable and can be correctly unpacked
+only on the same system where they were created.</p>
+<p>For service header this field contains a name of service header.
+Now the following names are used:
+<table>
+<tbody><tr><td><a href="#srvcmt">CMT</a></td><td>Archive comment</td></tr>
+<tr><td><a href="#srvqopen">QO</a></td><td>Archive quick open data</td></tr>
+<tr><td>ACL</td><td>NTFS file permissions</td></tr>
+<tr><td>STM</td><td>NTFS alternate data stream</td></tr>
+<tr><td>RR</td><td>Recovery record</td></tr>
+</tbody></table>
+
+</p>
+</td>
+</tr>
+
+<tr>
+<td>Extra area</td>
+<td>...</td>
+<td>Optional area containing additional header fields, present only
+if 0x0001 header flag is set.</td>
+</tr>
+
+<tr>
+<td>Data area</td>
+<td>vint</td>
+<td>Optional data area, present only if 0x0002 header flag is set.
+Store file data in case of file header or service data for service header.
+Depending on the compression method value in <dfn>Compression information</dfn>
+can be either uncompressed (compression method 0) or compressed.
+</td></tr>
+
+</tbody></table>
+
+
+<p id="fileextra">File and service headers use the same types of extra area
+records:</p>
+<table border="1">
+<tbody><tr><td><b>Type</b></td><td><b>Name</b></td><td><b>Description</b></td></tr>
+
+<tr>
+<td>0x01</td>
+<td>File encryption</td>
+<td>File encryption information.</td>
+</tr>
+
+<tr>
+<td>0x02</td>
+<td>File hash</td>
+<td>File data hash.</td>
+</tr>
+
+<tr>
+<td>0x03</td>
+<td>File time</td>
+<td>High precision file time.</td>
+</tr>
+
+<tr>
+<td>0x04</td>
+<td>File version</td>
+<td>File version number.</td>
+</tr>
+
+<tr>
+<td>0x05</td>
+<td>Redirection</td>
+<td>File system redirection.</td>
+</tr>
+
+<tr>
+<td>0x06</td>
+<td>Unix owner</td>
+<td>Unix owner and group information.</td>
+</tr>
+
+<tr>
+<td>0x07</td>
+<td>Service data</td>
+<td>Service header data array.</td>
+</tr>
+
+</tbody></table>
+
+
+<h4 id="encrecord">File encryption record</h4>
+
+<p>This record is present if file data is encrypted.</p>
+
+<table border="1">
+
+<tbody><tr>
+<td>Size</td>
+<td>vint</td>
+<td></td>
+</tr>
+
+<tr>
+<td>Type</td>
+<td>vint</td>
+<td>0x01</td>
+</tr>
+
+<tr>
+<td>Version</td>
+<td>vint</td>
+<td>
+Version of encryption algorithm. Now only 0 version (AES-256)
+is supported.</td>
+</tr>
+
+<tr>
+<td>Flags</td>
+<td>vint</td>
+<td>
+    0x0001   Password check data is present.<br>
+    0x0002   Use tweaked checksums instead of plain checksums.<br>
+
+  <p>If flag 0x0002 is present, RAR transforms the checksum preserving
+  file or service data integrity, so it becomes dependent on encryption key.
+  It makes guessing file contents based on checksum impossible.
+  It affects both data CRC32 in file header and checksums
+  in file hash record in extra area.</p>
+</td>
+</tr>
+
+
+<tr>
+<td>KDF count</td>
+<td>1 byte</td>
+<td>
+Binary logarithm of iteration number for PBKDF2 function. RAR can refuse
+to process KDF count exceeding some threshold. Concrete value of threshold
+is version dependent.
+</td>
+</tr>
+
+<tr>
+<td>Salt</td>
+<td>16 bytes</td>
+<td>
+Salt value to set the decryption key for encrypted file.
+</td>
+</tr>
+
+<tr>
+<td>IV</td>
+<td>16 bytes</td>
+<td>
+AES-256 initialization vector.
+</td>
+</tr>
+
+<tr>
+<td>Check value</td>
+<td>12 bytes</td>
+<td>
+Value used to verify the password validity. Present only if 0x0001
+encryption flag is set. First 8 bytes are calculated using additional
+PBKDF2 rounds, 4 last bytes is the additional checksum. Together with
+the standard header CRC32 we have 64 bit checksum to reliably verify
+this field integrity and distinguish invalid password and damaged data.
+Further details can be found in UnRAR source code.
+</td>
+</tr>
+
+</tbody></table>
+
+
+<h4 id="hashrecord">File hash record</h4>
+
+<p>Only the standard CRC32 checksum can be stored directly in file header.
+If other hash is used, it is stored in this extra area record:</p>
+
+<table border="1">
+
+<tbody><tr>
+<td>Size</td>
+<td>vint</td>
+<td></td>
+</tr>
+
+<tr>
+<td>Type</td>
+<td>vint</td>
+<td>0x02</td>
+</tr>
+
+<tr>
+<td>Hash type</td>
+<td>vint</td>
+<td>
+  0x00   BLAKE2sp hash function.<br>
+</td>
+</tr>
+
+<tr>
+<td>Hash data</td>
+<td>? bytes</td>
+<td>
+  32 bytes of <a href="https://blake2.net/">BLAKE2sp</a> for 0x00 hash type.
+</td>
+</tr>
+
+</tbody></table>
+
+<p>For files split between volumes it contains a hash of file packed
+data contained in current volume for all file parts except the last.
+For files not split between volumes and for last parts of split files
+it contains an unpacked data hash.
+</p>
+
+
+<h4 id="timerecord">File time record</h4>
+
+<p>This record is used if it is necessary to store creation and last access
+time or if 1 second precision of Unix mtime stored in file header is not
+enough:</p>
+
+<table border="1">
+
+<tbody><tr>
+<td>Size</td>
+<td>vint</td>
+<td></td>
+</tr>
+
+<tr>
+<td>Type</td>
+<td>vint</td>
+<td>0x03</td>
+</tr>
+
+<tr>
+<td>Flags</td>
+<td>vint</td>
+<td>
+  0x0001   Time is stored in Unix time format if this flags is set
+  and in Windows FILETIME format otherwise<br>
+  0x0002   Modification time is present<br>
+  0x0004   Creation time is present<br>
+  0x0008   Last access time is present<br>
+</td>
+</tr>
+
+<tr>
+<td>mtime</td>
+<td>uint32 or uint64</td>
+<td>Modification time. Present if 0x0002 flag is set. Depending on 0x0001
+flag can be in Unix time or Windows FILETIME format.</td>
+</tr>
+
+<tr>
+<td>ctime</td>
+<td>uint32 or uint64</td>
+<td>Creation time. Present if 0x0004 flag is set. Depending on 0x0001
+flag can be in Unix time or Windows FILETIME format.</td>
+</tr>
+
+<tr>
+<td>ctime</td>
+<td>uint32 or uint64</td>
+<td>Last access time. Present if 0x0008 flag is set. Depending on 0x0001
+flag can be in Unix time or Windows FILETIME format.</td>
+</tr>
+
+</tbody></table>
+
+
+<h4 id="verrecord">File version record</h4>
+
+<p>This record is used in archives created with -ver switch.</p>
+
+<table border="1">
+
+<tbody><tr>
+<td>Size</td>
+<td>vint</td>
+<td></td>
+</tr>
+
+<tr>
+<td>Type</td>
+<td>vint</td>
+<td>0x04</td>
+</tr>
+
+<tr>
+<td>Flags</td>
+<td>vint</td>
+<td>
+  No file version flags are defined yet, so it is set to 0.
+</td>
+</tr>
+
+<tr>
+<td>Version number</td>
+<td>vint</td>
+<td>File version number.</td>
+</tr>
+
+</tbody></table>
+
+
+<h4 id="redirrecord">File system redirection record</h4>
+
+<table border="1">
+
+<tbody><tr>
+<td>Size</td>
+<td>vint</td>
+<td></td>
+</tr>
+
+<tr>
+<td>Type</td>
+<td>vint</td>
+<td>0x05</td>
+</tr>
+
+<tr>
+<td>Redirection type</td>
+<td>vint</td>
+<td>
+  0x0001   Unix symlink<br>
+  0x0002   Windows symlink<br>
+  0x0003   Windows junction<br>
+  0x0004   Hard link<br>
+  0x0005   File copy<br>
+</td>
+</tr>
+
+<tr>
+<td>Flags</td>
+<td>vint</td>
+<td>
+  0x0001   Link target is directory<br>
+</td>
+</tr>
+
+<tr>
+<td>Name length</td>
+<td>vint</td>
+<td>Length of link target name</td>
+</tr>
+
+<tr>
+<td>Name</td>
+<td>vint</td>
+<td>Link target name in UTF-8 format without trailing zero</td>
+</tr>
+
+</tbody></table>
+
+
+<h4 id="uownrecord">Unix owner record</h4>
+
+<table border="1">
+
+<tbody><tr>
+<td>Size</td>
+<td>vint</td>
+<td></td>
+</tr>
+
+<tr>
+<td>Type</td>
+<td>vint</td>
+<td>0x06</td>
+</tr>
+
+<tr>
+<td>Flags</td>
+<td>vint</td>
+<td>
+  0x0001   User name string is present<br>
+  0x0002   Group name string is present<br>
+  0x0004   Numeric user ID is present<br>
+  0x0008   Numeric group ID is present<br>
+</td>
+</tr>
+
+<tr>
+<td>User name length</td>
+<td>vint</td>
+<td>Length of owner user name. Present if 0x0001 flag is set.</td>
+</tr>
+
+<tr>
+<td>User name</td>
+<td>? bytes</td>
+<td>Owner user name in native encoding. Not zero terminated.
+Present if 0x0001 flag is set.</td>
+</tr>
+
+<tr>
+<td>Group name length</td>
+<td>vint</td>
+<td>Length of owner group name. Present if 0x0002 flag is set.</td>
+</tr>
+
+<tr>
+<td>Group name</td>
+<td>? bytes</td>
+<td>Owner group name in native encoding. Not zero terminated.
+Present if 0x0002 flag is set.</td>
+</tr>
+
+<tr>
+<td>User ID</td>
+<td>vint</td>
+<td>Numeric owner user ID. Present if 0x0004 flag is set.</td>
+</tr>
+
+<tr>
+<td>Group ID</td>
+<td>vint</td>
+<td>Numeric owner group ID. Present if 0x0008 flag is set.</td>
+</tr>
+
+</tbody></table>
+
+
+<h4 id="servicerecord">Service data record</h4>
+
+<p>This record is used only by service headers to store additional
+parameters.</p><table border="1">
+
+
+
+<tbody><tr>
+<td>Size</td>
+<td>vint</td>
+<td></td>
+</tr>
+
+<tr>
+<td>Type</td>
+<td>vint</td>
+<td>0x07</td>
+</tr>
+
+<tr>
+<td>Data</td>
+<td>? bytes</td>
+<td>Concrete contents of service data depends on service header type.</td>
+</tr>
+
+</tbody></table>
+
+<h3 id="endarchead">End of archive header</h3>
+
+<p>End of archive marker. RAR does not read anything after this header
+letting to use third party tools to add extra information such as
+a digital signature to archive.</p>
+
+<table border="1">
+<tbody><tr>
+<td>Header CRC32</td>
+<td>uint32</td>
+<td></td>
+</tr>
+
+<tr>
+<td>Header size</td>
+<td>vint</td>
+<td></td>
+</tr>
+
+<tr>
+<td>Header type</td>
+<td>vint</td>
+<td>5</td>
+</tr>
+
+<tr>
+<td>Header flags</td>
+<td>vint</td>
+<td>Flags common for all headers</td>
+</tr>
+
+<tr>
+<td>End of archive flags</td>
+<td>vint</td>
+<td>
+0x0001   Archive is volume and it is not last volume in the set<br>
+</td>
+</tr>
+
+</tbody></table>
+
+<h2 id="srvheaders">Service headers</h2>
+
+<p>RAR uses service headers based on the <a href="#filehead">file header</a>
+data structure to store different supplementary information.</p>
+
+<h3 id="srvcmt">Archive comment header</h3>
+
+<p>Optional header storing the main archive comment. Contains CMT identifier
+in file name field. Placed before any file headers and after the main
+archive header. Comment data is stored in UTF-8 immediately after
+the archive comment header. Now RAR does not use compression for archive
+comments, so packed and unpacked data sizes in header are equal and they
+both define the comment data size. Compression method in header is set
+to 0.</p>
+
+<h3 id="srvqopen">Quick open header</h3>
+
+<p>Optional header storing the quick open record. Contains QO identifier
+in file name field. Placed after all file headers, but before the recovery
+record and end of archive header. It is possible to locate the quick open
+header with <a href="#locrecord">locator record</a> in main archive header.
+
+</p><p>Quick open record data is stored immediately after the quick open header.
+RAR does not use compression for quick open data, so packed and unpacked
+data sizes in header are equal and they both define the quick open data size.
+Compression method in header is set to 0.</p>
+
+<p>Quick open data is the array consisting of data cache structures.
+Every data cache structure stores a portion of archived data
+and has the following format:</p>
+
+<table border="1">
+
+<tbody><tr>
+<td><b>Field</b></td>
+<td><b>Size</b></td>
+<td><b>Description</b></td>
+</tr>
+
+<tr>
+<td>Structure CRC32</td>
+<td>uint32</td>
+<td>CRC32 of structure data starting from <dfn>Structure size</dfn> field.</td>
+</tr>
+
+<tr>
+<td>Structure size</td>
+<td>vint</td>
+<td>Size of structure data starting from <dfn>Flags</dfn> field.
+This field must not be longer than 3 bytes in current implementation,
+resulting in 2 MB maximum size.
+</td>
+</tr>
+
+<tr>
+<td>Flags</td>
+<td>vint</td>
+<td>Currently set to 0.</td>
+</tr>
+
+<tr>
+<td>Offset</td>
+<td>vint</td>
+<td>Offset from beginning of quick open header to beginning of archive data
+cached in current structure. We can use this value to calculate
+the absolute position of archived data stored the current structure.
+It is guaranteed that absolute archive positions referred by data cache
+structures are always growing when going from beginning of structure array
+to end.</td>
+</tr>
+
+<tr>
+<td>Data size</td>
+<td>vint</td>
+<td>Size of archive data stored in the current structure.</td>
+</tr>
+
+<tr>
+<td>Data</td>
+<td>? bytes</td>
+<td>Archive data stored in the current structure.</td>
+</tr>
+
+</tbody></table>
+
+<p>Normally RAR uses the quick open data to store copies of file and service
+headers. It can store either all headers or only a part of them. If required
+header is missing in quick open data or if structure CRC32 is invalid,
+data are read from its original archive position.</p>
+
+<p>Using the quick open data is optional. You can skip it completely
+and read only standard archive headers. But it is important to use the same
+access pattern when reading file names to display them to user and
+to extract files. Otherwise it would be possible to see one file name
+and extract another in case the quick open data and real archive data
+are intentionally created different. It could introduce a security threat.
+So if you use the quick open data when displaying the archive contents,
+use it when extracting. If you do not use it when displaying
+the archive contents, do not use it when extracting.</p>
+
+
+
+</body></html>
