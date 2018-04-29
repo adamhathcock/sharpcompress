@@ -34,15 +34,15 @@ namespace SharpCompress.Common.Zip.Headers
             byte[] extra = reader.ReadBytes(extraLength);
             byte[] comment = reader.ReadBytes(commentLength);
             
-            if ((Flags & HeaderFlags.UTF8) == 0)
-            {
-                Name = ArchiveEncoding.Decode437(name);
-                Comment = ArchiveEncoding.Decode437(comment);
-            }
-            else
+            if (Flags.HasFlag(HeaderFlags.EFS))
             {
                 Name = ArchiveEncoding.Decode(name);
                 Comment = ArchiveEncoding.Decode(comment);
+            }
+            else
+            {
+                Name = ArchiveEncoding.Decode437(name);
+                Comment = ArchiveEncoding.Decode437(comment);
             }
 
             LoadExtra(extra);
