@@ -158,9 +158,9 @@ namespace SharpCompress.Common.Rar.Headers
                     {
                         return new EndArchiveHeader(header, reader);
                     }
-                case HeaderCodeV.Rar5EncryptionHeader:
+                case HeaderCodeV.Rar5ArchiveEncryptionHeader:
                 {
-                    var ch = new CryptHeader(header, reader);
+                    var ch = new ArchiveCryptHeader(header, reader);
                     IsEncrypted = true;
                     return ch;
                 }

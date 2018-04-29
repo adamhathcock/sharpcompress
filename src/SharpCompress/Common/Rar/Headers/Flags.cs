@@ -32,7 +32,7 @@ namespace SharpCompress.Common.Rar.Headers
         public const byte Rar5ArchiveHeader = 0x01;
         public const byte Rar5FileHeader = 0x02;
         public const byte Rar5ServiceHeader = 0x03;
-        public const byte Rar5EncryptionHeader = 0x04;
+        public const byte Rar5ArchiveEncryptionHeader = 0x04;
         public const byte Rar5EndArchiveHeader = 0x05;
     }
 
@@ -44,7 +44,10 @@ namespace SharpCompress.Common.Rar.Headers
     internal static class EncryptionFlagsV5
     {   
         // RAR 5.0 archive encryption header specific flags.
-        public const ushort CHFL_CRYPT_PSWCHECK = 0x0001; // Password check data is present.
+        public const uint CHFL_CRYPT_PSWCHECK = 0x01; // Password check data is present.
+        
+        public const uint FHEXTRA_CRYPT_PSWCHECK = 0x01; // Password check data is present.
+        public const uint FHEXTRA_CRYPT_HASHMAC = 0x02;
     }
 
     internal static class HeaderFlagsV5
