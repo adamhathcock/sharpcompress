@@ -32,9 +32,26 @@ namespace SharpCompress.Common
             Password = Encoding.UTF8;
         }
 
+#if NETSTANDARD1_3 || NETSTANDARD2_0
+        static ArchiveEncoding()
+        {
+            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+        }
+#endif
+
         public string Decode(byte[] bytes)
         {
             return Decode(bytes, 0, bytes.Length);
+        }
+
+        public string Decode437(byte[] bytes)
+        {
+#if NETSTANDARD1_0
+            return Decode(bytes, 0, bytes.Length);
+#else
+            var extendedASCIIEncoding = Encoding.GetEncoding(437);
+            return extendedASCIIEncoding.GetString(bytes, 0, bytes.Length);
+#endif
         }
 
         public string Decode(byte[] bytes, int start, int length)

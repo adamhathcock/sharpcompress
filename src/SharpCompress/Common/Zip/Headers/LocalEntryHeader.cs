@@ -25,7 +25,17 @@ namespace SharpCompress.Common.Zip.Headers
             ushort extraLength = reader.ReadUInt16();
             byte[] name = reader.ReadBytes(nameLength);
             byte[] extra = reader.ReadBytes(extraLength);
-            Name = ArchiveEncoding.Decode(name);
+            
+            if (Flags.HasFlag(HeaderFlags.EFS))
+            {
+                Name = ArchiveEncoding.Decode(name);
+            }
+            else
+            {
+                // Use IBM Code Page 437 (IBM PC character encoding set)
+                Name = ArchiveEncoding.Decode437(name);
+            }
+            
             LoadExtra(extra);
 
             var unicodePathExtra = Extra.FirstOrDefault(u => u.Type == ExtraDataType.UnicodePathExtraField);

@@ -169,7 +169,7 @@ namespace SharpCompress.Writers.Zip
             {
                 OutputStream.Write(new byte[] { 63, 0 }, 0, 2); //version says we used PPMd or LZMA
             }
-            HeaderFlags flags = Equals(WriterOptions.ArchiveEncoding.GetEncoding(), Encoding.UTF8) ? HeaderFlags.UTF8 : 0;
+            HeaderFlags flags = Equals(WriterOptions.ArchiveEncoding.GetEncoding(), Encoding.UTF8) ? HeaderFlags.EFS : 0;
             if (!OutputStream.CanSeek)
             {
                 flags |= HeaderFlags.UsePostDataDescriptor;
