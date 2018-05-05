@@ -38,11 +38,7 @@ namespace SharpCompress.Compressors.Rar
                     filePartEnumerator.Dispose();
                     filePartEnumerator = null;
                 }
-                if (currentStream != null)
-                {
-                    currentStream.Dispose();
-                    currentStream = null;
-                }
+                currentStream = null;
             }
         }
 
@@ -50,10 +46,6 @@ namespace SharpCompress.Compressors.Rar
         {
             maxPosition = filePartEnumerator.Current.FileHeader.CompressedSize;
             currentPosition = 0;
-            if (currentStream != null)
-            {
-                currentStream.Dispose();
-            }
             currentStream = filePartEnumerator.Current.GetCompressedStream();
 
             currentPartTotalReadBytes = 0;

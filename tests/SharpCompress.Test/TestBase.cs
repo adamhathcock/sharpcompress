@@ -185,6 +185,15 @@ namespace SharpCompress.Test
             {
                 return;
             }
+
+            if (IsFileLocked(new FileInfo(file1)))
+            {
+                throw new InvalidOperationException($"{file1} is not disposed");
+            }
+            if (IsFileLocked(new FileInfo(file2)))
+            {
+                throw new InvalidOperationException($"{file2} is not disposed");
+            }
             using (var file1Stream = File.OpenRead(file1))
             using (var file2Stream = File.OpenRead(file2))
             {
@@ -234,6 +243,31 @@ namespace SharpCompress.Test
             {
                 Assert.Equal(archive1Entries[i], archive2Entries[i]);
             }
+        }
+        
+        protected bool IsFileLocked(FileInfo file)
+        {
+            FileStream stream = null;
+
+            try
+            {
+                stream = file.Open(FileMode.Open, FileAccess.Read, FileShare.None);
+            }
+            catch (IOException)
+            {
+                //the file is unavailable because it is:
+                //still being written to
+                //or being processed by another thread
+                //or does not exist (has already been processed)
+                return true;
+            }
+            finally
+            {
+                stream?.Close();
+            }
+
+            //file is not locked
+            return false;
         }
 
         private static readonly object lockObject = new object();

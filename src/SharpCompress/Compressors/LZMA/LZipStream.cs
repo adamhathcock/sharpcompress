@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using SharpCompress.Converters;
 using SharpCompress.Crypto;
@@ -19,15 +19,13 @@ namespace SharpCompress.Compressors.LZMA
         private readonly Stream _stream;
         private readonly CountingWritableSubStream _countingWritableSubStream;
         private bool _disposed;
-        private readonly bool _leaveOpen;
         private bool _finished;
 
         private long _writeCount;
 
-        public LZipStream(Stream stream, CompressionMode mode, bool leaveOpen = false)
+        public LZipStream(Stream stream, CompressionMode mode)
         {
             Mode = mode;
-            _leaveOpen = leaveOpen;
 
             if (mode == CompressionMode.Decompress)
             {
@@ -87,10 +85,7 @@ namespace SharpCompress.Compressors.LZMA
             if (disposing)
             {
                 Finish();
-                if (!_leaveOpen)
-                {
-                    _stream.Dispose();
-                }
+                _stream.Dispose();
             }
         }
 

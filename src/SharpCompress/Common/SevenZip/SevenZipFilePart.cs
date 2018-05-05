@@ -24,7 +24,6 @@ namespace SharpCompress.Common.SevenZip
             }
         }
 
-        internal Stream BaseStream { get; private set; }
         internal CFileItem Header { get; }
         internal CFolder Folder { get; }
         internal int Index { get; }

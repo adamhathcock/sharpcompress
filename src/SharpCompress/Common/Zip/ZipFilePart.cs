@@ -73,7 +73,7 @@ namespace SharpCompress.Common.Zip
                 }
                 case ZipCompressionMethod.BZip2:
                 {
-                    return new BZip2Stream(stream, CompressionMode.Decompress);
+                    return new BZip2Stream(stream, CompressionMode.Decompress, false);
                 }
                 case ZipCompressionMethod.LZMA:
                 {

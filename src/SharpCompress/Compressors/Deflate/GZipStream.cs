@@ -51,23 +51,18 @@ namespace SharpCompress.Compressors.Deflate
         private readonly Encoding _encoding;
 
         public GZipStream(Stream stream, CompressionMode mode)
-            : this(stream, mode, CompressionLevel.Default, false, Encoding.UTF8)
+            : this(stream, mode, CompressionLevel.Default, Encoding.UTF8)
         {
         }
 
         public GZipStream(Stream stream, CompressionMode mode, CompressionLevel level)
-            : this(stream, mode, level, false, Encoding.UTF8)
+            : this(stream, mode, level, Encoding.UTF8)
         {
         }
 
-        public GZipStream(Stream stream, CompressionMode mode, bool leaveOpen)
-            : this(stream, mode, CompressionLevel.Default, leaveOpen, Encoding.UTF8)
+        public GZipStream(Stream stream, CompressionMode mode, CompressionLevel level, Encoding encoding)
         {
-        }
-
-        public GZipStream(Stream stream, CompressionMode mode, CompressionLevel level, bool leaveOpen, Encoding encoding)
-        {
-            BaseStream = new ZlibBaseStream(stream, mode, level, ZlibStreamFlavor.GZIP, leaveOpen, encoding);
+            BaseStream = new ZlibBaseStream(stream, mode, level, ZlibStreamFlavor.GZIP, encoding);
             _encoding = encoding;
         }
 
@@ -200,7 +195,6 @@ namespace SharpCompress.Compressors.Deflate
         /// </summary>
         /// <remarks>
         /// This may or may not result in a <c>Close()</c> call on the captive stream.
-        /// See the doc on constructors that take a <c>leaveOpen</c> parameter for more information.
         /// </remarks>
         protected override void Dispose(bool disposing)
         {

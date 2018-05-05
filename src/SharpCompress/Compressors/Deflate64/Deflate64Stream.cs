@@ -11,19 +11,16 @@ using System.Runtime.CompilerServices;
 
 namespace SharpCompress.Compressors.Deflate64
 {
-    public sealed partial class Deflate64Stream : Stream
+    public sealed class Deflate64Stream : Stream
     {
-        internal const int DefaultBufferSize = 8192;
+        private const int DefaultBufferSize = 8192;
 
         private Stream _stream;
         private CompressionMode _mode;
-        private bool _leaveOpen;
         private InflaterManaged _inflater;
         private byte[] _buffer;
 
-        public Deflate64Stream(Stream stream, CompressionMode mode,
-                               CompressionLevel level = CompressionLevel.Default,
-                               bool leaveOpen = false)
+        public Deflate64Stream(Stream stream, CompressionMode mode)
         {
             if (stream == null)
                 throw new ArgumentNullException(nameof(stream));
@@ -32,13 +29,13 @@ namespace SharpCompress.Compressors.Deflate64
             if (!stream.CanRead)
                 throw new ArgumentException("Deflate64: input stream is not readable", nameof(stream));
 
-            InitializeInflater(stream, leaveOpen, ZipCompressionMethod.Deflate64);
+            InitializeInflater(stream, ZipCompressionMethod.Deflate64);
         }
 
         /// <summary>
         /// Sets up this DeflateManagedStream to be used for Inflation/Decompression
         /// </summary>
-        internal void InitializeInflater(Stream stream, bool leaveOpen, ZipCompressionMethod method = ZipCompressionMethod.Deflate)
+        internal void InitializeInflater(Stream stream, ZipCompressionMethod method = ZipCompressionMethod.Deflate)
         {
             Debug.Assert(stream != null);
             Debug.Assert(method == ZipCompressionMethod.Deflate || method == ZipCompressionMethod.Deflate64);
@@ -49,7 +46,6 @@ namespace SharpCompress.Compressors.Deflate64
 
             _stream = stream;
             _mode = CompressionMode.Decompress;
-            _leaveOpen = leaveOpen;
             _buffer = new byte[DefaultBufferSize];
         }
 
@@ -234,8 +230,10 @@ namespace SharpCompress.Compressors.Deflate64
                 // In this case, we still need to clean up internal resources, hence the inner finally blocks.
                 try
                 {
-                    if (disposing && !_leaveOpen && _stream != null)
-                        _stream.Dispose();
+                    if (disposing)
+                    {
+                        _stream?.Dispose();
+                    }
                 }
                 finally
                 {

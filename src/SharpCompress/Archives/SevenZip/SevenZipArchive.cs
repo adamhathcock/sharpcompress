@@ -174,7 +174,7 @@ namespace SharpCompress.Archives.SevenZip
 
             public override SevenZipVolume Volume => archive.Volumes.Single();
 
-            internal override IEnumerable<SevenZipEntry> GetEntries(Stream stream)
+            protected override IEnumerable<SevenZipEntry> GetEntries(Stream stream)
             {
                 List<SevenZipArchiveEntry> entries = archive.Entries.ToList();
                 stream.Position = 0;

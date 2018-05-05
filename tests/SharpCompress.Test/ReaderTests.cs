@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using SharpCompress.Common;
+using SharpCompress.IO;
 using SharpCompress.Readers;
 using Xunit;
 
@@ -18,10 +19,11 @@ namespace SharpCompress.Test
         {
             foreach (var path in testArchives)
             {
-                using (Stream stream = new ForwardOnlyStream(File.OpenRead(path)))
-                using (IReader reader = ReaderFactory.Open(stream))
+                using (var stream = new NonDisposingStream(new ForwardOnlyStream(File.OpenRead(path)), true))
+                using (var reader = ReaderFactory.Open(stream))
                 {
                     UseReader(this, reader, expectedCompression);
+                    stream.ThrowOnDispose = false;
                 }
             }
         }

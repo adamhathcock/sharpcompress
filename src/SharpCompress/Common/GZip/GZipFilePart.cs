@@ -30,7 +30,7 @@ namespace SharpCompress.Common.GZip
 
         internal override Stream GetCompressedStream()
         {
-            return new DeflateStream(_stream, CompressionMode.Decompress, CompressionLevel.Default, false);
+            return new DeflateStream(_stream, CompressionMode.Decompress, CompressionLevel.Default);
         }
 
         internal override Stream GetRawStream()

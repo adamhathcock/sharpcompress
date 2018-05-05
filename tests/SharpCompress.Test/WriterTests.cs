@@ -21,7 +21,7 @@ namespace SharpCompress.Test
             ResetScratch();
             using (Stream stream = File.OpenWrite(Path.Combine(SCRATCH2_FILES_PATH, archive)))
             {
-                using (var writer = WriterFactory.Open(new NonDisposingStream(stream), type, new WriterOptions(compressionType)
+                using (var writer = WriterFactory.Open(stream, type, new WriterOptions(compressionType)
                                                                {
                                                                    LeaveStreamOpen = true
                                                                }))

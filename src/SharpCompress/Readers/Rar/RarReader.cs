@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using SharpCompress.Common;
@@ -49,7 +49,7 @@ namespace SharpCompress.Readers.Rar
             return new MultiVolumeRarReader(streams, options ?? new ReaderOptions());
         }
 
-        internal override IEnumerable<RarReaderEntry> GetEntries(Stream stream)
+        protected override IEnumerable<RarReaderEntry> GetEntries(Stream stream)
         {
             volume = new RarReaderVolume(stream, Options);
             foreach (RarFilePart fp in volume.ReadFileParts())
