@@ -435,14 +435,15 @@ namespace SharpCompress.Test.Zip
             }
         }
 
-        [Fact]
+        [SkippableFact]
         public void Zip_Evil_Throws_Exception()
         {
-            Exception expectedExcetpion = null;
+            //windows only because of the paths
+            Skip.IfNot(Environment.OSVersion.Platform == PlatformID.Win32NT);
+            
             string zipFile = Path.Combine(TEST_ARCHIVES_PATH, "Zip.Evil.zip");
 
-            try
-            { 
+            Assert.ThrowsAny<Exception>(() => {
                 using (var archive = ZipArchive.Open(zipFile))
                 {
                     foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
@@ -454,13 +455,7 @@ namespace SharpCompress.Test.Zip
                         });
                     }
                 }
-            }
-            catch (Exception ex)
-            {
-                expectedExcetpion = ex;
-            }
-
-            Assert.NotEqual(expectedExcetpion, null);
+            });
         }
 
         class NonSeekableMemoryStream : MemoryStream
