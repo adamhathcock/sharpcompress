@@ -19,7 +19,7 @@ namespace SharpCompress.Common.GZip
         {
             ReadAndValidateGzipHeader(stream);
             EntryStartPosition = stream.Position;
-            this._stream = stream;
+            _stream = stream;
         }
 
         internal long EntryStartPosition { get; }

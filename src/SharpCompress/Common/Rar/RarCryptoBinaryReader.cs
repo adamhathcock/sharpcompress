@@ -1,5 +1,4 @@
-﻿
-#if !NO_CRYPTO
+﻿#if !NO_CRYPTO
 using System.Collections.Generic;
 using System.IO;
 
@@ -7,16 +6,17 @@ namespace SharpCompress.Common.Rar
 {
     internal class RarCryptoBinaryReader : RarCrcBinaryReader
     {
-        private RarRijndael rijndael;
-        private byte[] salt;
-        private readonly string password;
-        private readonly Queue<byte> data = new Queue<byte>();
-        private long readCount;
+        private RarRijndael _rijndael;
+        private byte[] _salt;
+        private readonly string _password;
+        private readonly Queue<byte> _data = new Queue<byte>();
+        private long _readCount;
 
-        public RarCryptoBinaryReader(Stream stream, string password )
+        public RarCryptoBinaryReader(Stream stream, string password)
             : base(stream)
         {
-            this.password = password;
+            this._password = password;
+
             // coderb: not sure why this was being done at this logical point
             //SkipQueue();
             byte[] salt = ReadBytes(8);
@@ -24,38 +24,36 @@ namespace SharpCompress.Common.Rar
         }
 
         // track read count ourselves rather than using the underlying stream since we buffer
-        public override long CurrentReadByteCount {
-            get 
-            {
-                return this.readCount;
-            }
-            protected set 
+        public override long CurrentReadByteCount
+        {
+            get => _readCount;
+            protected set
             {
                 // ignore
             }
         }
 
-        public override void Mark() {
-            this.readCount = 0;
-        }
-        
-        protected bool UseEncryption
+        public override void Mark()
         {
-            get { return salt != null; }
+            _readCount = 0;
         }
+
+        private bool UseEncryption => _salt != null;
 
         internal void InitializeAes(byte[] salt)
         {
-            this.salt = salt;
-            rijndael = RarRijndael.InitializeFrom(password, salt);
+            this._salt = salt;
+            _rijndael = RarRijndael.InitializeFrom(_password, salt);
         }
 
-        public override byte ReadByte() {
+        public override byte ReadByte()
+        {
             if (UseEncryption)
             {
                 return ReadAndDecryptBytes(1)[0];
             }
-            this.readCount++;
+
+            _readCount++;
             return base.ReadByte();
         }
 
@@ -65,13 +63,14 @@ namespace SharpCompress.Common.Rar
             {
                 return ReadAndDecryptBytes(count);
             }
-            this.readCount += count;
+
+            _readCount += count;
             return base.ReadBytes(count);
         }
 
         private byte[] ReadAndDecryptBytes(int count)
         {
-            int queueSize = data.Count;
+            int queueSize = _data.Count;
             int sizeToRead = count - queueSize;
 
             if (sizeToRead > 0)
@@ -81,9 +80,9 @@ namespace SharpCompress.Common.Rar
                 {
                     //long ax = System.currentTimeMillis();
                     byte[] cipherText = ReadBytesNoCrc(16);
-                    var readBytes = rijndael.ProcessBlock(cipherText);
+                    var readBytes = _rijndael.ProcessBlock(cipherText);
                     foreach (var readByte in readBytes)
-                        data.Enqueue(readByte);
+                        _data.Enqueue(readByte);
                 }
             }
 
@@ -91,23 +90,24 @@ namespace SharpCompress.Common.Rar
 
             for (int i = 0; i < count; i++)
             {
-                var b = data.Dequeue();
+                var b = _data.Dequeue();
                 decryptedBytes[i] = b;
                 UpdateCrc(b);
             }
-            this.readCount += count;
+
+            _readCount += count;
             return decryptedBytes;
         }
 
         public void ClearQueue()
         {
-            data.Clear();
+            _data.Clear();
         }
 
         public void SkipQueue()
         {
             var position = BaseStream.Position;
-            BaseStream.Position = position + data.Count;
+            BaseStream.Position = position + _data.Count;
             ClearQueue();
         }
     }

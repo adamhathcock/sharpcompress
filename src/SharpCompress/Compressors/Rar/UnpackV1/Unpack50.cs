@@ -110,19 +110,19 @@ namespace SharpCompress.Compressors.Rar.UnpackV1
         private const int MaxWinMask = PackDef.MAXWINMASK;
 
 // TODO: rename var
-        private int UnpPtr { get { return this.unpPtr; } set { this.unpPtr = value; }  }
-        private int ReadBorder { get { return this.readBorder; } set { this.readBorder = value; }  }
-        private long DestUnpSize { get { return this.destUnpSize; } set { this.destUnpSize = value; }  }
-        private long WrittenFileSize { get { return this.writtenFileSize; } set { this.writtenFileSize = value; }  }
-        private byte[] Window{ get { return this.window; }  }
-        private uint LastLength { get { return (uint)this.lastLength; } set { this.lastLength = (int)value; }  }
-        private uint OldDistN(int i) { return (uint)this.oldDist[i]; }
-        private void SetOldDistN(int i, uint value) { this.oldDist[i] = (int)value; }
-        private int WrPtr { get { return this.wrPtr; } set { this.wrPtr = value; }  }
+        private int UnpPtr { get { return unpPtr; } set { unpPtr = value; }  }
+        private int ReadBorder { get { return readBorder; } set { readBorder = value; }  }
+        private long DestUnpSize { get { return destUnpSize; } set { destUnpSize = value; }  }
+        private long WrittenFileSize { get { return writtenFileSize; } set { writtenFileSize = value; }  }
+        private byte[] Window{ get { return window; }  }
+        private uint LastLength { get { return (uint)lastLength; } set { lastLength = (int)value; }  }
+        private uint OldDistN(int i) { return (uint)oldDist[i]; }
+        private void SetOldDistN(int i, uint value) { oldDist[i] = (int)value; }
+        private int WrPtr { get { return wrPtr; } set { wrPtr = value; }  }
         private Unpack BlockHeader { get { return this; } }
         private Unpack Header { get { return this; } }
-        private int ReadTop { get { return this.readTop; } set { this.readTop = value; } }
-        private List<UnpackFilter> Filters { get { return this.filters; } }
+        private int ReadTop { get { return readTop; } set { readTop = value; } }
+        private List<UnpackFilter> Filters { get { return filters; } }
 
 // TODO: make sure these aren't already somewhere else
 public int BlockSize;
@@ -325,13 +325,13 @@ public bool TablePresent;
             Filter.BlockLength=0;
 
           //Filter.Type=Inp.fgetbits()>>13;
-          Filter.Type=(byte)(this.Inp.fgetbits()>>13);
+          Filter.Type=(byte)(Inp.fgetbits()>>13);
           Inp.faddbits(3);
 
           if (Filter.Type==(byte)FilterType.FILTER_DELTA)
           {
             //Filter.Channels=(Inp.fgetbits()>>11)+1;
-            Filter.Channels=(byte)((this.Inp.fgetbits()>>11)+1);
+            Filter.Channels=(byte)((Inp.fgetbits()>>11)+1);
             Inp.faddbits(5);
           }
 
@@ -363,7 +363,7 @@ public bool TablePresent;
           if (DataSize<0)
             return false;
           BlockHeader.BlockSize-=Inp.InAddr-BlockHeader.BlockStart;
-          if (Inp.InAddr>BitInput.MAX_SIZE/2)
+          if (Inp.InAddr>MAX_SIZE/2)
           {
             // If we already processed more than half of buffer, let's move
             // remaining data into beginning to free more space for new data
@@ -383,9 +383,9 @@ public bool TablePresent;
           else
             DataSize=ReadTop;
           int ReadCode=0;
-          if (BitInput.MAX_SIZE!=DataSize)
+          if (MAX_SIZE!=DataSize)
             //ReadCode=UnpIO->UnpRead(Inp.InBuf+DataSize,BitInput.MAX_SIZE-DataSize);
-            ReadCode = readStream.Read(InBuf, DataSize, BitInput.MAX_SIZE-DataSize);
+            ReadCode = readStream.Read(InBuf, DataSize, MAX_SIZE-DataSize);
           if (ReadCode>0) // Can be also -1.
             ReadTop+=ReadCode;
           ReadBorder=ReadTop-30;
@@ -685,7 +685,7 @@ public bool TablePresent;
             if (!UnpReadBuf())
               return false;
           //Inp.faddbits((8-Inp.InBit)&7);
-          Inp.faddbits((uint)((8-this.Inp.InBit)&7));
+          Inp.faddbits((uint)((8-Inp.InBit)&7));
   
           byte BlockFlags=(byte)(Inp.fgetbits()>>8);
           Inp.faddbits(8);

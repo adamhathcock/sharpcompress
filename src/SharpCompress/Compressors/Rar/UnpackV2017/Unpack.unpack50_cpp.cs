@@ -235,7 +235,7 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017
   if (DataSize<0)
     return false;
   BlockHeader.BlockSize-=Inp.InAddr-BlockHeader.BlockStart;
-  if (Inp.InAddr>BitInput.MAX_SIZE/2)
+  if (Inp.InAddr>MAX_SIZE/2)
   {
     // If we already processed more than half of buffer, let's move
     // remaining data into beginning to free more space for new data
@@ -252,8 +252,8 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017
   else
     DataSize=ReadTop;
   int ReadCode=0;
-  if (BitInput.MAX_SIZE!=DataSize)
-    ReadCode=UnpIO_UnpRead(Inp.InBuf,DataSize,BitInput.MAX_SIZE-DataSize);
+  if (MAX_SIZE!=DataSize)
+    ReadCode=UnpIO_UnpRead(Inp.InBuf,DataSize,MAX_SIZE-DataSize);
   if (ReadCode>0) // Can be also -1.
     ReadTop+=ReadCode;
   ReadBorder=ReadTop-30;

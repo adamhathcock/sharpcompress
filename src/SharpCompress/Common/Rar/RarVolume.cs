@@ -13,17 +13,17 @@ namespace SharpCompress.Common.Rar
     /// </summary>
     public abstract class RarVolume : Volume
     {
-        private readonly RarHeaderFactory headerFactory;
+        private readonly RarHeaderFactory _headerFactory;
 
         internal RarVolume(StreamingMode mode, Stream stream, ReaderOptions options)
             : base(stream, options)
         {
-            headerFactory = new RarHeaderFactory(mode, options);
+            _headerFactory = new RarHeaderFactory(mode, options);
         }
 
         internal ArchiveHeader ArchiveHeader { get; private set; }
 
-        internal StreamingMode Mode => this.headerFactory.StreamingMode;
+        internal StreamingMode Mode => _headerFactory.StreamingMode;
 
         internal abstract IEnumerable<RarFilePart> ReadFileParts();
 
@@ -32,7 +32,7 @@ namespace SharpCompress.Common.Rar
         internal IEnumerable<RarFilePart> GetVolumeFileParts()
         {
             MarkHeader lastMarkHeader = null;
-            foreach (var header in this.headerFactory.ReadHeaders(Stream))
+            foreach (var header in _headerFactory.ReadHeaders(Stream))
             {
                 switch (header.HeaderType)
                 {

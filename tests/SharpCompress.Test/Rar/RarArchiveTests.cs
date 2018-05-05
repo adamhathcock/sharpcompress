@@ -186,14 +186,14 @@ namespace SharpCompress.Test.Rar
         private void DoRar_IsSolidArchiveCheck(string filename)
         {
             ResetScratch();
-            using (var stream = File.OpenRead(Path.Combine(this.TEST_ARCHIVES_PATH, filename)))
+            using (var stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, filename)))
             {
                 using (var archive = RarArchive.Open(stream))
                 {
                     Assert.False(archive.IsSolid);
                     foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
                     {
-                        entry.WriteToDirectory(this.SCRATCH_FILES_PATH,
+                        entry.WriteToDirectory(SCRATCH_FILES_PATH,
                                                new ExtractionOptions()
                                                {
                                                    ExtractFullPath = true,
@@ -254,12 +254,12 @@ namespace SharpCompress.Test.Rar
         private void DoRar_Multi_ArchiveStreamRead(string[] archives)
         {
             ResetScratch();
-            using (var archive = RarArchive.Open(archives.Select(s => Path.Combine(this.TEST_ARCHIVES_PATH, s))
+            using (var archive = RarArchive.Open(archives.Select(s => Path.Combine(TEST_ARCHIVES_PATH, s))
                 .Select(File.OpenRead)))
             {
                 foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
                 {
-                    entry.WriteToDirectory(this.SCRATCH_FILES_PATH, new ExtractionOptions()
+                    entry.WriteToDirectory(SCRATCH_FILES_PATH, new ExtractionOptions()
                     {
                         ExtractFullPath = true,
                         Overwrite = true
@@ -373,7 +373,7 @@ namespace SharpCompress.Test.Rar
 
         private void DoRar_IsFirstVolume_True(string firstFilename)
         {
-            using (var archive = RarArchive.Open(Path.Combine(this.TEST_ARCHIVES_PATH, firstFilename)))
+            using (var archive = RarArchive.Open(Path.Combine(TEST_ARCHIVES_PATH, firstFilename)))
             {
                 Assert.True(archive.IsMultipartVolume());
                 Assert.True(archive.IsFirstVolume());
@@ -392,7 +392,7 @@ namespace SharpCompress.Test.Rar
 
         private void DoRar_IsFirstVolume_False(string notFirstFilename)
         {
-            using (var archive = RarArchive.Open(Path.Combine(this.TEST_ARCHIVES_PATH, notFirstFilename)))
+            using (var archive = RarArchive.Open(Path.Combine(TEST_ARCHIVES_PATH, notFirstFilename)))
             {
                 Assert.True(archive.IsMultipartVolume());
                 Assert.False(archive.IsFirstVolume());

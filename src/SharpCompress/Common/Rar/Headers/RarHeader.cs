@@ -8,8 +8,8 @@ namespace SharpCompress.Common.Rar.Headers
     // https://www.rarlab.com/technote.htm
     internal class RarHeader : IRarHeader
     {
-        private readonly HeaderType headerType;
-        private readonly bool isRar5;
+        private readonly HeaderType _headerType;
+        private readonly bool _isRar5;
 
         internal static RarHeader TryReadBase(RarCrcBinaryReader reader, bool isRar5, ArchiveEncoding archiveEncoding)
         {
@@ -25,8 +25,8 @@ namespace SharpCompress.Common.Rar.Headers
 
         private RarHeader(RarCrcBinaryReader reader, bool isRar5, ArchiveEncoding archiveEncoding) 
         {
-            this.headerType = HeaderType.Null;
-            this.isRar5 = isRar5;
+            _headerType = HeaderType.Null;
+            this._isRar5 = isRar5;
             ArchiveEncoding = archiveEncoding;
             if (IsRar5) 
             {
@@ -37,11 +37,11 @@ namespace SharpCompress.Common.Rar.Headers
                 HeaderCode = reader.ReadRarVIntByte();
                 HeaderFlags = reader.ReadRarVIntUInt16(2);
 
-                if (HasHeaderFlag(HeaderFlagsV5.HasExtra))
+                if (HasHeaderFlag(HeaderFlagsV5.HAS_EXTRA))
                 {
                     ExtraSize = reader.ReadRarVIntUInt32();
                 }
-                if (HasHeaderFlag(HeaderFlagsV5.HasData))
+                if (HasHeaderFlag(HeaderFlagsV5.HAS_DATA))
                 {
                     AdditionalDataSize = (long)reader.ReadRarVInt();
                 }
@@ -52,7 +52,7 @@ namespace SharpCompress.Common.Rar.Headers
                 HeaderCode = reader.ReadByte();
                 HeaderFlags = reader.ReadUInt16();
                 HeaderSize = reader.ReadInt16();
-                if (HasHeaderFlag(HeaderFlagsV4.HasData))
+                if (HasHeaderFlag(HeaderFlagsV4.HAS_DATA))
                 {
                     AdditionalDataSize = reader.ReadUInt32();
                 }
@@ -60,8 +60,8 @@ namespace SharpCompress.Common.Rar.Headers
         }
 
         protected RarHeader(RarHeader header, RarCrcBinaryReader reader, HeaderType headerType) {
-            this.headerType = headerType;
-            this.isRar5 = header.IsRar5;
+            this._headerType = headerType;
+            _isRar5 = header.IsRar5;
             HeaderCrc = header.HeaderCrc;
             HeaderCode = header.HeaderCode;
             HeaderFlags = header.HeaderFlags;
@@ -98,9 +98,9 @@ namespace SharpCompress.Common.Rar.Headers
             }
         }
 
-        public HeaderType HeaderType { get { return this.headerType; } }
+        public HeaderType HeaderType => _headerType;
 
-        protected bool IsRar5 { get { return this.isRar5; } }
+        protected bool IsRar5 => _isRar5;
 
         protected uint HeaderCrc { get; }
 

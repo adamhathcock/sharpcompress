@@ -11,7 +11,7 @@ namespace SharpCompress.Common.Zip
         internal SeekableZipFilePart(SeekableZipHeaderFactory headerFactory, DirectoryEntryHeader header, Stream stream)
             : base(header, stream)
         {
-            this._headerFactory = headerFactory;
+            _headerFactory = headerFactory;
         }
 
         internal override Stream GetCompressedStream()

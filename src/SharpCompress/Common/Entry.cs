@@ -68,7 +68,7 @@ namespace SharpCompress.Common
         /// <inheritdoc/>
         public override string ToString()
         {
-            return this.Key;
+            return Key;
         }
 
         internal abstract IEnumerable<FilePart> Parts { get; }

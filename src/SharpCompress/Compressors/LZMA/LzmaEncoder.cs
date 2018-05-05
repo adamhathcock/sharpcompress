@@ -162,14 +162,14 @@ namespace SharpCompress.Compressors.LZMA
 
             public void Create(int numPosBits, int numPrevBits)
             {
-                if (m_Coders != null && _NumPrevBits == numPrevBits && _NumPosBits == numPosBits)
+                if (_Coders != null && _NumPrevBits == numPrevBits && _NumPosBits == numPosBits)
                 {
                     return;
                 }
                 _NumPosBits = numPosBits;
                 _PosMask = ((uint)1 << numPosBits) - 1;
                 _NumPrevBits = numPrevBits;
-                uint numStates = (uint)1 << (m_NumPrevBits + _NumPosBits);
+                uint numStates = (uint)1 << (_NumPrevBits + _NumPosBits);
                 _Coders = new Encoder2[numStates];
                 for (uint i = 0; i < numStates; i++)
                 {
@@ -179,7 +179,7 @@ namespace SharpCompress.Compressors.LZMA
 
             public void Init()
             {
-                uint numStates = (uint)1 << (m_NumPrevBits + _NumPosBits);
+                uint numStates = (uint)1 << (_NumPrevBits + _NumPosBits);
                 for (uint i = 0; i < numStates; i++)
                 {
                     _Coders[i].Init();

@@ -20,26 +20,26 @@ namespace SharpCompress.Common.Rar.Headers
 
         //internal static final NewSubHeaderType SUBHEAD_TYPE_BEOSEA = new NewSubHeaderType(new byte[]{'E','A','B','E'});
 
-        private readonly byte[] bytes;
+        private readonly byte[] _bytes;
 
         private NewSubHeaderType(params char[] chars)
         {
-            bytes = new byte[chars.Length];
+            _bytes = new byte[chars.Length];
             for (int i = 0; i < chars.Length; ++i)
             {
-                bytes[i] = (byte)chars[i];
+                _bytes[i] = (byte)chars[i];
             }
         }
 
         internal bool Equals(byte[] bytes)
         {
-            if (this.bytes.Length != bytes.Length)
+            if (this._bytes.Length != bytes.Length)
             {
                 return false;
             }
             for (int i = 0; i < bytes.Length; ++i)
             {
-                if (this.bytes[i] != bytes[i])
+                if (this._bytes[i] != bytes[i])
                 {
                     return false;
                 }
@@ -49,7 +49,7 @@ namespace SharpCompress.Common.Rar.Headers
 
         public bool Equals(NewSubHeaderType other)
         {
-            return Equals(other.bytes);
+            return Equals(other._bytes);
         }
     }
 }

@@ -9,8 +9,8 @@ namespace SharpCompress.Compressors.Rar.VM
         public int inBit;
 
 // TODO: rename var
-        public int InAddr { get { return this.inAddr; } set { this.inAddr = value; }  }
-        public int InBit { get { return this.inBit; } set { this.inBit = value; }  }
+        public int InAddr { get { return inAddr; } set { inAddr = value; }  }
+        public int InBit { get { return inBit; } set { inBit = value; }  }
         public bool ExternalBuffer;
 
 

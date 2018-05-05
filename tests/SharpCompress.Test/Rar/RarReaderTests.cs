@@ -34,12 +34,12 @@ namespace SharpCompress.Test.Rar
         private void DoRar_Multi_Reader(string[] archives)
         {
             ResetScratch();
-            using (var reader = RarReader.Open(archives.Select(s => Path.Combine(this.TEST_ARCHIVES_PATH, s))
+            using (var reader = RarReader.Open(archives.Select(s => Path.Combine(TEST_ARCHIVES_PATH, s))
                 .Select(p => File.OpenRead(p))))
             {
                 while (reader.MoveToNextEntry())
                 {
-                    reader.WriteEntryToDirectory(this.SCRATCH_FILES_PATH, new ExtractionOptions()
+                    reader.WriteEntryToDirectory(SCRATCH_FILES_PATH, new ExtractionOptions()
                     {
                         ExtractFullPath = true,
                         Overwrite = true
@@ -65,7 +65,7 @@ namespace SharpCompress.Test.Rar
             Assert.Throws<InvalidFormatException>(() =>
                                                   {
                                                       ResetScratch();
-                                                      using (var reader = RarReader.Open(archives.Select(s => Path.Combine(this.TEST_ARCHIVES_PATH, s))
+                                                      using (var reader = RarReader.Open(archives.Select(s => Path.Combine(TEST_ARCHIVES_PATH, s))
                                                                                                      .Select(p => File.OpenRead(p)),
                                                                                          new ReaderOptions()
                                                                                          {
@@ -74,7 +74,7 @@ namespace SharpCompress.Test.Rar
                                                       {
                                                           while (reader.MoveToNextEntry())
                                                           {
-                                                              reader.WriteEntryToDirectory(this.SCRATCH_FILES_PATH,
+                                                              reader.WriteEntryToDirectory(SCRATCH_FILES_PATH,
                                                                                            new ExtractionOptions()
                                                                                            {
                                                                                                ExtractFullPath = true,
@@ -114,14 +114,14 @@ namespace SharpCompress.Test.Rar
 
             foreach (var file in archives)
             {
-                File.Copy(Path.Combine(this.TEST_ARCHIVES_PATH, file), Path.Combine(this.SCRATCH2_FILES_PATH, file));
+                File.Copy(Path.Combine(TEST_ARCHIVES_PATH, file), Path.Combine(SCRATCH2_FILES_PATH, file));
             }
-            var streams = archives.Select(s => Path.Combine(this.SCRATCH2_FILES_PATH, s)).Select(File.OpenRead).ToList();
+            var streams = archives.Select(s => Path.Combine(SCRATCH2_FILES_PATH, s)).Select(File.OpenRead).ToList();
             using (var reader = RarReader.Open(streams))
             {
                 while (reader.MoveToNextEntry())
                 {
-                    reader.WriteEntryToDirectory(this.SCRATCH_FILES_PATH, new ExtractionOptions()
+                    reader.WriteEntryToDirectory(SCRATCH_FILES_PATH, new ExtractionOptions()
                     {
                         ExtractFullPath = true,
                         Overwrite = true
@@ -134,7 +134,7 @@ namespace SharpCompress.Test.Rar
             }
             VerifyFiles();
 
-            foreach (var file in archives.Select(s => Path.Combine(this.SCRATCH2_FILES_PATH, s)))
+            foreach (var file in archives.Select(s => Path.Combine(SCRATCH2_FILES_PATH, s)))
             {
                 File.Delete(file);
             }
@@ -238,7 +238,7 @@ namespace SharpCompress.Test.Rar
         private void DoRar_Entry_Stream(string filename)
         {
             ResetScratch();
-            using (Stream stream = File.OpenRead(Path.Combine(this.TEST_ARCHIVES_PATH, filename)))
+            using (Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, filename)))
             using (var reader = RarReader.Open(stream))
             {
                 while (reader.MoveToNextEntry())
@@ -250,7 +250,7 @@ namespace SharpCompress.Test.Rar
                         {
                             string file = Path.GetFileName(reader.Entry.Key);
                             string folder = Path.GetDirectoryName(reader.Entry.Key);
-                            string destdir = Path.Combine(this.SCRATCH_FILES_PATH, folder);
+                            string destdir = Path.Combine(SCRATCH_FILES_PATH, folder);
                             if (!Directory.Exists(destdir))
                             {
                                 Directory.CreateDirectory(destdir);
@@ -340,7 +340,7 @@ namespace SharpCompress.Test.Rar
         private void DoRar_Solid_Skip_Reader(string filename)
         {
             ResetScratch();
-            using (var stream = File.OpenRead(Path.Combine(this.TEST_ARCHIVES_PATH, filename)))
+            using (var stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, filename)))
             using (var reader = RarReader.Open(stream, new ReaderOptions()
             {
                 LookForHeader = true
@@ -351,7 +351,7 @@ namespace SharpCompress.Test.Rar
                     if (reader.Entry.Key.Contains("jpg"))
                     {
                         Assert.Equal(CompressionType.Rar, reader.Entry.CompressionType);
-                        reader.WriteEntryToDirectory(this.SCRATCH_FILES_PATH, new ExtractionOptions()
+                        reader.WriteEntryToDirectory(SCRATCH_FILES_PATH, new ExtractionOptions()
                         {
                             ExtractFullPath = true,
                             Overwrite = true
@@ -374,7 +374,7 @@ namespace SharpCompress.Test.Rar
         private void DoRar_Reader_Skip(string filename)
         {
             ResetScratch();
-            using (var stream = File.OpenRead(Path.Combine(this.TEST_ARCHIVES_PATH, filename)))
+            using (var stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, filename)))
             using (var reader = RarReader.Open(stream, new ReaderOptions()
             {
                 LookForHeader = true
@@ -385,7 +385,7 @@ namespace SharpCompress.Test.Rar
                     if (reader.Entry.Key.Contains("jpg"))
                     {
                         Assert.Equal(CompressionType.Rar, reader.Entry.CompressionType);
-                        reader.WriteEntryToDirectory(this.SCRATCH_FILES_PATH, new ExtractionOptions()
+                        reader.WriteEntryToDirectory(SCRATCH_FILES_PATH, new ExtractionOptions()
                         {
                             ExtractFullPath = true,
                             Overwrite = true

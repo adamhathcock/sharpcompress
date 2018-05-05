@@ -16,7 +16,7 @@ namespace SharpCompress.Compressors.Rar.UnpackV1
 
         public Unpack() {
             // to ease in porting Unpack50.cs
-            this.Inp = this;
+            Inp = this;
         }
 
 
@@ -33,8 +33,8 @@ namespace SharpCompress.Compressors.Rar.UnpackV1
         }
 
         public bool Suspended { 
-            get => this.suspended;
-            set => this.suspended = value; 
+            get => suspended;
+            set => suspended = value; 
         }
 
         public int Char
@@ -105,7 +105,7 @@ namespace SharpCompress.Compressors.Rar.UnpackV1
 
         public void DoUnpack(FileHeader fileHeader, Stream readStream, Stream writeStream)
         {
-            this.destUnpSize = fileHeader.UncompressedSize;
+            destUnpSize = fileHeader.UncompressedSize;
             this.fileHeader = fileHeader;
             this.readStream = readStream;
             this.writeStream = writeStream;
@@ -113,7 +113,7 @@ namespace SharpCompress.Compressors.Rar.UnpackV1
             {
                 Init(null);
             }
-            this.suspended = false;
+            suspended = false;
             DoUnpack();
         }
 
@@ -145,7 +145,7 @@ namespace SharpCompress.Compressors.Rar.UnpackV1
                     break;
 
                 default: 
-                    throw new InvalidFormatException("unknown rar compression version " + this.fileHeader.CompressionAlgorithm);
+                    throw new InvalidFormatException("unknown rar compression version " + fileHeader.CompressionAlgorithm);
             }
         }
 

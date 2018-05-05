@@ -125,9 +125,9 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017
 
 
 //#define GetShortLen1(pos) ((pos)==1 ? Buf60+3:ShortLen1[pos])
-      private uint GetShortLen1(uint pos) { return ((pos)==1 ? (uint)(this.Buf60+3):ShortLen1[pos]); }
+      private uint GetShortLen1(uint pos) { return ((pos)==1 ? (uint)(Buf60+3):ShortLen1[pos]); }
 //#define GetShortLen2(pos) ((pos)==3 ? Buf60+3:ShortLen2[pos])
-      private uint GetShortLen2(uint pos) { return ((pos)==3 ? (uint)(this.Buf60+3):ShortLen2[pos]); }
+      private uint GetShortLen2(uint pos) { return ((pos)==3 ? (uint)(Buf60+3):ShortLen2[pos]); }
 
 internal static class Unpack15Local {
   public static readonly uint[] ShortLen1={1,3,4,4,5,6,7,8,8,4,4,5,6,6,4,0};

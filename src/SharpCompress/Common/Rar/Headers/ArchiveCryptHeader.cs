@@ -15,11 +15,11 @@ namespace SharpCompress.Common.Rar.Headers
         private const int CRYPT5_KDF_LG2_COUNT_MAX = 24; // LOG2 of maximum accepted iteration count.
         
         
-        private bool UsePswCheck;
-        private uint Lg2Count; // Log2 of PBKDF2 repetition count.
-        private byte[] Salt;
-        private byte[] PswCheck;
-        private byte[] PswCheckCsm;
+        private bool _usePswCheck;
+        private uint _lg2Count; // Log2 of PBKDF2 repetition count.
+        private byte[] _salt;
+        private byte[] _pswCheck;
+        private byte[] _pswCheckCsm;
         
         public ArchiveCryptHeader(RarHeader header, RarCrcBinaryReader reader)
             : base(header, reader, HeaderType.Crypt)
@@ -35,22 +35,22 @@ namespace SharpCompress.Common.Rar.Headers
                 return;
             } 
             var encryptionFlags = reader.ReadRarVIntUInt32();
-            UsePswCheck = FlagUtility.HasFlag(encryptionFlags, EncryptionFlagsV5.CHFL_CRYPT_PSWCHECK);
-            Lg2Count = reader.ReadRarVIntByte(1);
+            _usePswCheck = FlagUtility.HasFlag(encryptionFlags, EncryptionFlagsV5.CHFL_CRYPT_PSWCHECK);
+            _lg2Count = reader.ReadRarVIntByte(1);
 
             
             //UsePswCheck = HasHeaderFlag(EncryptionFlagsV5.CHFL_CRYPT_PSWCHECK);
-            if (Lg2Count > CRYPT5_KDF_LG2_COUNT_MAX)
+            if (_lg2Count > CRYPT5_KDF_LG2_COUNT_MAX)
             {
                 //error?
                 return;
             }
 
-            Salt = reader.ReadBytes(SIZE_SALT50);
-            if (UsePswCheck)
+            _salt = reader.ReadBytes(SIZE_SALT50);
+            if (_usePswCheck)
             {
-                PswCheck = reader.ReadBytes(SIZE_PSWCHECK);
-                PswCheckCsm = reader.ReadBytes(SIZE_PSWCHECK_CSUM);
+                _pswCheck = reader.ReadBytes(SIZE_PSWCHECK);
+                _pswCheckCsm = reader.ReadBytes(SIZE_PSWCHECK_CSUM);
             }
         }
     }

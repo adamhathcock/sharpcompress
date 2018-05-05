@@ -171,7 +171,7 @@ internal static class Unpack20Local {
     UnpSomeRead=true;
   if (UnpPtr<WrPtr)
   {
-    UnpIO_UnpWrite(Window, WrPtr,(uint)(-(int)this.WrPtr & this.MaxWinMask));
+    UnpIO_UnpWrite(Window, WrPtr,(uint)(-(int)WrPtr & MaxWinMask));
     UnpIO_UnpWrite(Window,0,UnpPtr);
     UnpAllBuf=true;
   }
@@ -220,7 +220,7 @@ internal static class Unpack20Local {
     uint Number=DecodeNumber(Inp,BlockTables.BD);
     if (Number<16)
     {
-      Table[I]=(byte)((Number+this.UnpOldTable20[I]) & 0xf);
+      Table[I]=(byte)((Number+UnpOldTable20[I]) & 0xf);
       I++;
     }
     else

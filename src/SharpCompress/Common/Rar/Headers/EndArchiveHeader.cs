@@ -18,11 +18,11 @@ namespace SharpCompress.Common.Rar.Headers
             else
             {
                 Flags = HeaderFlags;
-                if (HasFlag(EndArchiveFlagsV4.DataCrc))
+                if (HasFlag(EndArchiveFlagsV4.DATA_CRC))
                 {
                     ArchiveCrc = reader.ReadInt32();
                 }
-                if (HasFlag(EndArchiveFlagsV4.VolumeNumber))
+                if (HasFlag(EndArchiveFlagsV4.VOLUME_NUMBER))
                 {
                     VolumeNumber = reader.ReadInt16();
                 }

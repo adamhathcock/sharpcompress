@@ -111,11 +111,11 @@ public const int UNPACK_MAX_WRITE      =0x400000;
   public DecodeTable BD;  // Decode bit lengths in Huffman table.
 
   public void Init() {
-    this.LD = new DecodeTable();
-    this.DD = new DecodeTable();
-    this.LDD = new DecodeTable();
-    this.RD = new DecodeTable();
-    this.BD = new DecodeTable();
+    LD = new DecodeTable();
+    DD = new DecodeTable();
+    LDD = new DecodeTable();
+    RD = new DecodeTable();
+    BD = new DecodeTable();
   }
 };
 
@@ -431,7 +431,7 @@ internal partial class Unpack
 
     private uint GetChar()
     {
-      if (Inp.InAddr>BitInput.MAX_SIZE-30)
+      if (Inp.InAddr>MAX_SIZE-30)
         UnpReadBuf();
       return(Inp.InBuf[Inp.InAddr++]);
     }

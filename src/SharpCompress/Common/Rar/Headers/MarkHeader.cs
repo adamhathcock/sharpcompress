@@ -5,7 +5,7 @@ namespace SharpCompress.Common.Rar.Headers
 {
     internal class MarkHeader : IRarHeader
     {
-        private const int MaxSfxSize = 0x80000 - 16; //archive.cpp line 136
+        private const int MAX_SFX_SIZE = 0x80000 - 16; //archive.cpp line 136
 
         internal bool OldNumberingFormat { get; private set; }
 
@@ -16,9 +16,7 @@ namespace SharpCompress.Common.Rar.Headers
             IsRar5 = isRar5;
         }
 
-        public HeaderType HeaderType { 
-            get { return HeaderType.Mark; }
-        }
+        public HeaderType HeaderType => HeaderType.Mark;
 
         private static byte GetByte(Stream stream) 
         {
@@ -32,7 +30,7 @@ namespace SharpCompress.Common.Rar.Headers
 
         public static MarkHeader Read(Stream stream, bool leaveStreamOpen, bool lookForHeader) 
         {
-            int maxScanIndex = lookForHeader ? MaxSfxSize : 0;
+            int maxScanIndex = lookForHeader ? MAX_SFX_SIZE : 0;
             try
             {
                 int start = -1;

@@ -8,7 +8,7 @@ namespace SharpCompress.Common.Rar.Headers
 {
     internal class RarHeaderFactory
     {
-        private bool isRar5;
+        private bool _isRar5;
 
         internal RarHeaderFactory(StreamingMode mode, ReaderOptions options)
         {
@@ -23,7 +23,7 @@ namespace SharpCompress.Common.Rar.Headers
         internal IEnumerable<IRarHeader> ReadHeaders(Stream stream)
         {
             var markHeader = MarkHeader.Read(stream, Options.LeaveStreamOpen, Options.LookForHeader);
-            this.isRar5 = markHeader.IsRar5;
+            _isRar5 = markHeader.IsRar5;
             yield return markHeader;
 
             RarHeader header;
@@ -59,15 +59,15 @@ namespace SharpCompress.Common.Rar.Headers
 #endif
             }
 
-            var header = RarHeader.TryReadBase(reader, this.isRar5, Options.ArchiveEncoding);
+            var header = RarHeader.TryReadBase(reader, _isRar5, Options.ArchiveEncoding);
             if (header == null)
             {
                 return null;
             }
             switch (header.HeaderCode)
             {
-                case HeaderCodeV.Rar5ArchiveHeader:
-                case HeaderCodeV.Rar4ArchiveHeader:
+                case HeaderCodeV.RAR5_ARCHIVE_HEADER:
+                case HeaderCodeV.RAR4_ARCHIVE_HEADER:
                     {
                         var ah = new ArchiveHeader(header, reader);
                         if (ah.IsEncrypted == true) 
@@ -78,7 +78,7 @@ namespace SharpCompress.Common.Rar.Headers
                         return ah;
                     }
 
-                case HeaderCodeV.Rar4ProtectHeader:
+                case HeaderCodeV.RAR4_PROTECT_HEADER:
                     {
                         var ph = new ProtectHeader(header, reader);
                         // skip the recovery record data, we do not use it.
@@ -103,22 +103,22 @@ namespace SharpCompress.Common.Rar.Headers
                         return ph;
                     }
 
-                case HeaderCodeV.Rar5ServiceHeader:
+                case HeaderCodeV.RAR5_SERVICE_HEADER:
                     {
                         var fh = new FileHeader(header, reader, HeaderType.Service);
                         SkipData(fh, reader);
                         return fh;
                     }
 
-                case HeaderCodeV.Rar4NewSubHeader:
+                case HeaderCodeV.RAR4_NEW_SUB_HEADER:
                     {
                         var fh = new FileHeader(header, reader, HeaderType.NewSub);
                         SkipData(fh, reader);
                         return fh;
                     }
 
-                case HeaderCodeV.Rar5FileHeader:
-                case HeaderCodeV.Rar4FileHeader:
+                case HeaderCodeV.RAR5_FILE_HEADER:
+                case HeaderCodeV.RAR4_FILE_HEADER:
                     {
                         var fh = new FileHeader(header, reader, HeaderType.File);
                         switch (StreamingMode)
@@ -153,12 +153,12 @@ namespace SharpCompress.Common.Rar.Headers
                         }
                         return fh;
                     }
-                case HeaderCodeV.Rar5EndArchiveHeader:
-                case HeaderCodeV.Rar4EndArchiveHeader:
+                case HeaderCodeV.RAR5_END_ARCHIVE_HEADER:
+                case HeaderCodeV.RAR4_END_ARCHIVE_HEADER:
                     {
                         return new EndArchiveHeader(header, reader);
                     }
-                case HeaderCodeV.Rar5ArchiveEncryptionHeader:
+                case HeaderCodeV.RAR5_ARCHIVE_ENCRYPTION_HEADER:
                 {
                     var ch = new ArchiveCryptHeader(header, reader);
                     IsEncrypted = true;

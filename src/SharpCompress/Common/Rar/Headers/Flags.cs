@@ -18,27 +18,27 @@ namespace SharpCompress.Common.Rar.Headers
 
     internal static class HeaderCodeV
     {
-        public const byte Rar4MarkHeader = 0x72;
-        public const byte Rar4ArchiveHeader = 0x73;
-        public const byte Rar4FileHeader = 0x74;
-        public const byte Rar4CommentHeader = 0x75;
-        public const byte Rar4AvHeader = 0x76;
-        public const byte Rar4SubHeader = 0x77;
-        public const byte Rar4ProtectHeader = 0x78;
-        public const byte Rar4SignHeader = 0x79;
-        public const byte Rar4NewSubHeader = 0x7a;
-        public const byte Rar4EndArchiveHeader = 0x7b;
+        public const byte RAR4_MARK_HEADER = 0x72;
+        public const byte RAR4_ARCHIVE_HEADER = 0x73;
+        public const byte RAR4_FILE_HEADER = 0x74;
+        public const byte RAR4_COMMENT_HEADER = 0x75;
+        public const byte RAR4_AV_HEADER = 0x76;
+        public const byte RAR4_SUB_HEADER = 0x77;
+        public const byte RAR4_PROTECT_HEADER = 0x78;
+        public const byte RAR4_SIGN_HEADER = 0x79;
+        public const byte RAR4_NEW_SUB_HEADER = 0x7a;
+        public const byte RAR4_END_ARCHIVE_HEADER = 0x7b;
 
-        public const byte Rar5ArchiveHeader = 0x01;
-        public const byte Rar5FileHeader = 0x02;
-        public const byte Rar5ServiceHeader = 0x03;
-        public const byte Rar5ArchiveEncryptionHeader = 0x04;
-        public const byte Rar5EndArchiveHeader = 0x05;
+        public const byte RAR5_ARCHIVE_HEADER = 0x01;
+        public const byte RAR5_FILE_HEADER = 0x02;
+        public const byte RAR5_SERVICE_HEADER = 0x03;
+        public const byte RAR5_ARCHIVE_ENCRYPTION_HEADER = 0x04;
+        public const byte RAR5_END_ARCHIVE_HEADER = 0x05;
     }
 
     internal static class HeaderFlagsV4
     {
-        public const ushort HasData = 0x8000;
+        public const ushort HAS_DATA = 0x8000;
     }
 
     internal static class EncryptionFlagsV5
@@ -52,98 +52,98 @@ namespace SharpCompress.Common.Rar.Headers
 
     internal static class HeaderFlagsV5
     {
-        public const ushort HasExtra = 0x0001;
-        public const ushort HasData = 0x0002;
-        public const ushort Keep = 0x0004;  // block must be kept during an update
-        public const ushort SplitBefore = 0x0008;
-        public const ushort SplitAfter = 0x0010;
-        public const ushort Child = 0x0020; // ??? Block depends on preceding file block.
-        public const ushort PreserveChild = 0x0040; // ???? Preserve a child block if host block is modified
+        public const ushort HAS_EXTRA = 0x0001;
+        public const ushort HAS_DATA = 0x0002;
+        public const ushort KEEP = 0x0004;  // block must be kept during an update
+        public const ushort SPLIT_BEFORE = 0x0008;
+        public const ushort SPLIT_AFTER = 0x0010;
+        public const ushort CHILD = 0x0020; // ??? Block depends on preceding file block.
+        public const ushort PRESERVE_CHILD = 0x0040; // ???? Preserve a child block if host block is modified
     }
 
     internal static class ArchiveFlagsV4
     {
-        public const ushort Volume = 0x0001;
-        public const ushort Comment = 0x0002;
-        public const ushort Lock = 0x0004;
-        public const ushort Solid = 0x0008;
-        public const ushort NewNumbering = 0x0010;
+        public const ushort VOLUME = 0x0001;
+        public const ushort COMMENT = 0x0002;
+        public const ushort LOCK = 0x0004;
+        public const ushort SOLID = 0x0008;
+        public const ushort NEW_NUMBERING = 0x0010;
         public const ushort AV = 0x0020;
-        public const ushort Protect = 0x0040;
-        public const ushort Password = 0x0080;
-        public const ushort FirstVolume = 0x0100;
-        public const ushort EncryptVer = 0x0200;
+        public const ushort PROTECT = 0x0040;
+        public const ushort PASSWORD = 0x0080;
+        public const ushort FIRST_VOLUME = 0x0100;
+        public const ushort ENCRYPT_VER = 0x0200;
     }
 
     internal static class ArchiveFlagsV5
     {
-        public const ushort Volume = 0x0001;
-        public const ushort HasVolumeNumber = 0x0002;
-        public const ushort Solid = 0x0004;
-        public const ushort Protect = 0x0008;
-        public const ushort Lock = 0x0010;
+        public const ushort VOLUME = 0x0001;
+        public const ushort HAS_VOLUME_NUMBER = 0x0002;
+        public const ushort SOLID = 0x0004;
+        public const ushort PROTECT = 0x0008;
+        public const ushort LOCK = 0x0010;
     }
 
     internal static class HostOsV4
     {
-        public const byte MsDos = 0;
-        public const byte Os2 = 1;
-        public const byte Win32 = 2;
-        public const byte Unix = 3;
-        public const byte MacOs = 4;
-        public const byte BeOs = 5;
+        public const byte MS_DOS = 0;
+        public const byte OS2 = 1;
+        public const byte WIN32 = 2;
+        public const byte UNIX = 3;
+        public const byte MAC_OS = 4;
+        public const byte BE_OS = 5;
     }
 
     internal static class HostOsV5
     {
-        public const byte Windows = 0;
-        public const byte Unix = 1;
+        public const byte WINDOWS = 0;
+        public const byte UNIX = 1;
     }
 
     internal static class FileFlagsV4
     {
-        public const ushort SplitBefore = 0x0001;
-        public const ushort SplitAfter = 0x0002;
-        public const ushort Password = 0x0004;
-        public const ushort Comment = 0x0008;
-        public const ushort Solid = 0x0010;
+        public const ushort SPLIT_BEFORE = 0x0001;
+        public const ushort SPLIT_AFTER = 0x0002;
+        public const ushort PASSWORD = 0x0004;
+        public const ushort COMMENT = 0x0008;
+        public const ushort SOLID = 0x0010;
 
-        public const ushort WindowMask = 0x00e0;
-        public const ushort Window64 = 0x0000;
-        public const ushort Window128 = 0x0020;
-        public const ushort Window256 = 0x0040;
-        public const ushort Window512 = 0x0060;
-        public const ushort Window1024 = 0x0080;
-        public const ushort Window2048 = 0x00a0;
-        public const ushort Window4096 = 0x00c0;
-        public const ushort Directory = 0x00e0;
+        public const ushort WINDOW_MASK = 0x00e0;
+        public const ushort WINDOW64 = 0x0000;
+        public const ushort WINDOW128 = 0x0020;
+        public const ushort WINDOW256 = 0x0040;
+        public const ushort WINDOW512 = 0x0060;
+        public const ushort WINDOW1024 = 0x0080;
+        public const ushort WINDOW2048 = 0x00a0;
+        public const ushort WINDOW4096 = 0x00c0;
+        public const ushort DIRECTORY = 0x00e0;
 
-        public const ushort Large = 0x0100;
-        public const ushort Unicode = 0x0200;
-        public const ushort Salt = 0x0400;
-        public const ushort Version = 0x0800;
-        public const ushort ExtTime = 0x1000;
-        public const ushort ExtFlags = 0x2000;
+        public const ushort LARGE = 0x0100;
+        public const ushort UNICODE = 0x0200;
+        public const ushort SALT = 0x0400;
+        public const ushort VERSION = 0x0800;
+        public const ushort EXT_TIME = 0x1000;
+        public const ushort EXT_FLAGS = 0x2000;
     }
 
     internal static class FileFlagsV5
     {
-        public const ushort Directory = 0x0001;
-        public const ushort HasModTime = 0x0002;
-        public const ushort HasCrc32 = 0x0004;
-        public const ushort UnpackedSizeUnknown = 0x0008;
+        public const ushort DIRECTORY = 0x0001;
+        public const ushort HAS_MOD_TIME = 0x0002;
+        public const ushort HAS_CRC32 = 0x0004;
+        public const ushort UNPACKED_SIZE_UNKNOWN = 0x0008;
     }
 
     internal static class EndArchiveFlagsV4
     {
-        public const ushort NextVolume = 0x0001;
-        public const ushort DataCrc = 0x0002;
-        public const ushort RevSpace = 0x0004;
-        public const ushort VolumeNumber = 0x0008;
+        public const ushort NEXT_VOLUME = 0x0001;
+        public const ushort DATA_CRC = 0x0002;
+        public const ushort REV_SPACE = 0x0004;
+        public const ushort VOLUME_NUMBER = 0x0008;
     }
 
     internal static class EndArchiveFlagsV5
     {
-        public const ushort HasNextVolume = 0x0001;
+        public const ushort HAS_NEXT_VOLUME = 0x0001;
     }
 }

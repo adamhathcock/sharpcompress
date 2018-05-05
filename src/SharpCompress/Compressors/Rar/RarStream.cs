@@ -27,17 +27,17 @@ namespace SharpCompress.Compressors.Rar
             this.unpack = unpack;
             this.fileHeader = fileHeader;
             this.readStream = readStream;
-            this.fetch = true;
+            fetch = true;
             unpack.DoUnpack(fileHeader, readStream, this);
-            this.fetch = false;
+            fetch = false;
         }
 
         protected override void Dispose(bool disposing)
         {
-            if (!this.isDisposed) {
-                this.isDisposed = true;
+            if (!isDisposed) {
+                isDisposed = true;
                 base.Dispose(disposing);
-                this.readStream.Dispose();
+                readStream.Dispose();
             }
         }
 

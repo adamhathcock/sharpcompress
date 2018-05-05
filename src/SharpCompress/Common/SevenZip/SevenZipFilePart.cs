@@ -14,8 +14,8 @@ namespace SharpCompress.Common.SevenZip
         internal SevenZipFilePart(Stream stream, ArchiveDatabase database, int index, CFileItem fileEntry, ArchiveEncoding archiveEncoding)
            : base(archiveEncoding)
         {
-            this._stream = stream;
-            this._database = database;
+            _stream = stream;
+            _database = database;
             Index = index;
             Header = fileEntry;
             if (Header.HasStream)

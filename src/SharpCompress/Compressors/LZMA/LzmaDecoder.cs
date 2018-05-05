@@ -40,12 +40,12 @@ namespace SharpCompress.Compressors.LZMA
 
             public uint Decode(RangeCoder.Decoder rangeDecoder, uint posState)
             {
-                if (m_Choice.Decode(rangeDecoder) == 0)
+                if (_Choice.Decode(rangeDecoder) == 0)
                 {
                     return _LowCoder[posState].Decode(rangeDecoder);
                 }
                 uint symbol = Base.kNumLowLenSymbols;
-                if (m_Choice2.Decode(rangeDecoder) == 0)
+                if (_Choice2.Decode(rangeDecoder) == 0)
                 {
                     symbol += _MidCoder[posState].Decode(rangeDecoder);
                 }
@@ -118,7 +118,7 @@ namespace SharpCompress.Compressors.LZMA
 
             public void Create(int numPosBits, int numPrevBits)
             {
-                if (m_Coders != null && _NumPrevBits == numPrevBits &&
+                if (_Coders != null && _NumPrevBits == numPrevBits &&
                     _NumPosBits == numPosBits)
                 {
                     return;
@@ -126,7 +126,7 @@ namespace SharpCompress.Compressors.LZMA
                 _NumPosBits = numPosBits;
                 _PosMask = ((uint)1 << numPosBits) - 1;
                 _NumPrevBits = numPrevBits;
-                uint numStates = (uint)1 << (m_NumPrevBits + _NumPosBits);
+                uint numStates = (uint)1 << (_NumPrevBits + _NumPosBits);
                 _Coders = new Decoder2[numStates];
                 for (uint i = 0; i < numStates; i++)
                 {
@@ -136,7 +136,7 @@ namespace SharpCompress.Compressors.LZMA
 
             public void Init()
             {
-                uint numStates = (uint)1 << (m_NumPrevBits + _NumPosBits);
+                uint numStates = (uint)1 << (_NumPrevBits + _NumPosBits);
                 for (uint i = 0; i < numStates; i++)
                 {
                     _Coders[i].Init();
@@ -196,12 +196,12 @@ namespace SharpCompress.Compressors.LZMA
 
         private void CreateDictionary()
         {
-            if (m_DictionarySize < 0)
+            if (_DictionarySize < 0)
             {
                 throw new InvalidParamException();
             }
             _OutWindow = new OutWindow();
-            int blockSize = Math.Max(m_DictionarySize, (1 << 12));
+            int blockSize = Math.Max(_DictionarySize, (1 << 12));
             _OutWindow.Create(blockSize);
         }
 
@@ -250,18 +250,18 @@ namespace SharpCompress.Compressors.LZMA
             _LiteralDecoder.Init();
             for (i = 0; i < Base.kNumLenToPosStates; i++)
             {
-                m_PosSlotDecoder[i].Init();
+                _PosSlotDecoder[i].Init();
             }
 
-            // m_PosSpecDecoder.Init();
+            // _PosSpecDecoder.Init();
             for (i = 0; i < Base.kNumFullDistances - Base.kEndPosModelIndex; i++)
             {
-                m_PosDecoders[i].Init();
+                _PosDecoders[i].Init();
             }
 
-            m_LenDecoder.Init();
-            m_RepLenDecoder.Init();
-            m_PosAlignDecoder.Init();
+            _LenDecoder.Init();
+            _RepLenDecoder.Init();
+            _PosAlignDecoder.Init();
 
             state.Init();
             rep0 = 0;
@@ -273,37 +273,37 @@ namespace SharpCompress.Compressors.LZMA
         public void Code(Stream inStream, Stream outStream,
                          Int64 inSize, Int64 outSize, ICodeProgress progress)
         {
-            if (m_OutWindow == null)
+            if (_OutWindow == null)
             {
                 CreateDictionary();
             }
-            m_OutWindow.Init(outStream);
+            _OutWindow.Init(outStream);
             if (outSize > 0)
             {
-                m_OutWindow.SetLimit(outSize);
+                _OutWindow.SetLimit(outSize);
             }
             else
             {
-                m_OutWindow.SetLimit(Int64.MaxValue - m_OutWindow.Total);
+                _OutWindow.SetLimit(Int64.MaxValue - _OutWindow.Total);
             }
 
             RangeCoder.Decoder rangeDecoder = new RangeCoder.Decoder();
             rangeDecoder.Init(inStream);
 
-            Code(m_DictionarySize, m_OutWindow, rangeDecoder);
+            Code(_DictionarySize, _OutWindow, rangeDecoder);
 
-            m_OutWindow.ReleaseStream();
+            _OutWindow.ReleaseStream();
             rangeDecoder.ReleaseStream();
 
             if (!rangeDecoder.IsFinished || (inSize > 0 && rangeDecoder.Total != inSize))
             {
                 throw new DataErrorException();
             }
-            if (m_OutWindow.HasPending)
+            if (_OutWindow.HasPending)
             {
                 throw new DataErrorException();
             }
-            m_OutWindow = null;
+            _OutWindow = null;
         }
 
         internal bool Code(int dictionarySize, OutWindow outWindow, RangeCoder.Decoder rangeDecoder)
@@ -314,20 +314,20 @@ namespace SharpCompress.Compressors.LZMA
 
             while (outWindow.HasSpace)
             {
-                uint posState = (uint)outWindow.Total & m_PosStateMask;
-                if (m_IsMatchDecoders[(state.Index << Base.kNumPosStatesBitsMax) + posState].Decode(rangeDecoder) == 0)
+                uint posState = (uint)outWindow.Total & _PosStateMask;
+                if (_IsMatchDecoders[(state.Index << Base.kNumPosStatesBitsMax) + posState].Decode(rangeDecoder) == 0)
                 {
                     byte b;
                     byte prevByte = outWindow.GetByte(0);
                     if (!state.IsCharState())
                     {
-                        b = m_LiteralDecoder.DecodeWithMatchByte(rangeDecoder,
+                        b = _LiteralDecoder.DecodeWithMatchByte(rangeDecoder,
                                                                  (uint)outWindow.Total, prevByte,
                                                                  outWindow.GetByte((int)rep0));
                     }
                     else
                     {
-                        b = m_LiteralDecoder.DecodeNormal(rangeDecoder, (uint)outWindow.Total, prevByte);
+                        b = _LiteralDecoder.DecodeNormal(rangeDecoder, (uint)outWindow.Total, prevByte);
                     }
                     outWindow.PutByte(b);
                     state.UpdateChar();
@@ -335,12 +335,12 @@ namespace SharpCompress.Compressors.LZMA
                 else
                 {
                     uint len;
-                    if (m_IsRepDecoders[state.Index].Decode(rangeDecoder) == 1)
+                    if (_IsRepDecoders[state.Index].Decode(rangeDecoder) == 1)
                     {
-                        if (m_IsRepG0Decoders[state.Index].Decode(rangeDecoder) == 0)
+                        if (_IsRepG0Decoders[state.Index].Decode(rangeDecoder) == 0)
                         {
                             if (
-                                m_IsRep0LongDecoders[(state.Index << Base.kNumPosStatesBitsMax) + posState].Decode(
+                                _IsRep0LongDecoders[(state.Index << Base.kNumPosStatesBitsMax) + posState].Decode(
                                                                                                                    rangeDecoder) == 0)
                             {
                                 state.UpdateShortRep();
@@ -351,13 +351,13 @@ namespace SharpCompress.Compressors.LZMA
                         else
                         {
                             UInt32 distance;
-                            if (m_IsRepG1Decoders[state.Index].Decode(rangeDecoder) == 0)
+                            if (_IsRepG1Decoders[state.Index].Decode(rangeDecoder) == 0)
                             {
                                 distance = rep1;
                             }
                             else
                             {
-                                if (m_IsRepG2Decoders[state.Index].Decode(rangeDecoder) == 0)
+                                if (_IsRepG2Decoders[state.Index].Decode(rangeDecoder) == 0)
                                 {
                                     distance = rep2;
                                 }
@@ -371,7 +371,7 @@ namespace SharpCompress.Compressors.LZMA
                             rep1 = rep0;
                             rep0 = distance;
                         }
-                        len = m_RepLenDecoder.Decode(rangeDecoder, posState) + Base.kMatchMinLen;
+                        len = _RepLenDecoder.Decode(rangeDecoder, posState) + Base.kMatchMinLen;
                         state.UpdateRep();
                     }
                     else
@@ -379,23 +379,23 @@ namespace SharpCompress.Compressors.LZMA
                         rep3 = rep2;
                         rep2 = rep1;
                         rep1 = rep0;
-                        len = Base.kMatchMinLen + m_LenDecoder.Decode(rangeDecoder, posState);
+                        len = Base.kMatchMinLen + _LenDecoder.Decode(rangeDecoder, posState);
                         state.UpdateMatch();
-                        uint posSlot = m_PosSlotDecoder[Base.GetLenToPosState(len)].Decode(rangeDecoder);
+                        uint posSlot = _PosSlotDecoder[Base.GetLenToPosState(len)].Decode(rangeDecoder);
                         if (posSlot >= Base.kStartPosModelIndex)
                         {
                             int numDirectBits = (int)((posSlot >> 1) - 1);
                             rep0 = ((2 | (posSlot & 1)) << numDirectBits);
                             if (posSlot < Base.kEndPosModelIndex)
                             {
-                                rep0 += BitTreeDecoder.ReverseDecode(m_PosDecoders,
+                                rep0 += BitTreeDecoder.ReverseDecode(_PosDecoders,
                                                                      rep0 - posSlot - 1, rangeDecoder, numDirectBits);
                             }
                             else
                             {
                                 rep0 += (rangeDecoder.DecodeDirectBits(
                                                                        numDirectBits - Base.kNumAlignBits) << Base.kNumAlignBits);
-                                rep0 += m_PosAlignDecoder.ReverseDecode(rangeDecoder);
+                                rep0 += _PosAlignDecoder.ReverseDecode(rangeDecoder);
                             }
                         }
                         else
@@ -436,21 +436,21 @@ namespace SharpCompress.Compressors.LZMA
             Init();
             if (properties.Length >= 5)
             {
-                m_DictionarySize = 0;
+                _DictionarySize = 0;
                 for (int i = 0; i < 4; i++)
                 {
-                    m_DictionarySize += properties[1 + i] << (i * 8);
+                    _DictionarySize += properties[1 + i] << (i * 8);
                 }
             }
         }
 
         public void Train(Stream stream)
         {
-            if (m_OutWindow == null)
+            if (_OutWindow == null)
             {
                 CreateDictionary();
             }
-            m_OutWindow.Train(stream);
+            _OutWindow.Train(stream);
         }
 
         /*

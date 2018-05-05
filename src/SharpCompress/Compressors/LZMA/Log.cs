@@ -35,7 +35,7 @@ namespace SharpCompress.Compressors.LZMA
             {
                 _needsIndent = false;
 #if !NO_FILE
-                System.Diagnostics.Debug.Write(_indent.Peek());
+                Debug.Write(_indent.Peek());
 #endif
             }
         }
@@ -44,7 +44,7 @@ namespace SharpCompress.Compressors.LZMA
         {
             EnsureIndent();
 #if !NO_FILE
-            System.Diagnostics.Debug.Write(value);
+            Debug.Write(value);
 #endif
         }
 
@@ -52,7 +52,7 @@ namespace SharpCompress.Compressors.LZMA
         {
             EnsureIndent();
 #if !NO_FILE
-            System.Diagnostics.Debug.Write(text);
+            Debug.Write(text);
 #endif
         }
 
@@ -60,7 +60,7 @@ namespace SharpCompress.Compressors.LZMA
         {
             EnsureIndent();
 #if !NO_FILE
-            System.Diagnostics.Debug.Write(string.Format(format, args));
+            Debug.Write(string.Format(format, args));
 #endif
         }
 
