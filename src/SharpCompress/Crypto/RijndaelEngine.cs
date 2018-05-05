@@ -128,7 +128,7 @@ namespace Org.BouncyCastle.Crypto.Engines
             0x2f, 0x5e, 0xbc, 0x63, 0xc6, 0x97, 0x35, 0x6a, 0xd4, 0xb3, 0x7d, 0xfa, 0xef, 0xc5, 0x91
         };
 
-        static readonly byte[][] shifts0 =
+        private static readonly byte[][] shifts0 =
         {
             new byte[] {0, 8, 16, 24},
             new byte[] {0, 8, 16, 24},
@@ -137,7 +137,7 @@ namespace Org.BouncyCastle.Crypto.Engines
             new byte[] {0, 8, 24, 32}
         };
 
-        static readonly byte[][] shifts1 =
+        private static readonly byte[][] shifts1 =
         {
             new byte[] {0, 24, 16, 8},
             new byte[] {0, 32, 24, 16},

@@ -40,7 +40,7 @@ namespace SharpCompress.Compressors.Xz
         public bool HeaderIsRead { get; private set; }
         private XZBlock _currentBlock;
 
-        bool _endOfStream;
+        private bool _endOfStream;
 
         public XZStream(Stream stream) : base(stream)
         {

@@ -59,7 +59,7 @@ internal partial class BitInput
     
     // Check if buffer has enough space for IncPtr bytes. Returns 'true'
     // if buffer will be overflown.
-    bool Overflow(uint IncPtr) 
+  private bool Overflow(uint IncPtr) 
     {
       return InAddr+IncPtr>=MAX_SIZE;
     }

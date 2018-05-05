@@ -64,8 +64,7 @@ public Unpack(/* ComprDataIO *DataIO */)
 //#endif
 //}
 
-
-void Init(size_t WinSize,bool Solid)
+      private void Init(size_t WinSize,bool Solid)
 {
   // If 32-bit RAR unpacks an archive with 4 GB dictionary, the window size
   // will be 0 because of size_t overflow. Let's issue the memory error.
@@ -145,8 +144,7 @@ void Init(size_t WinSize,bool Solid)
   MaxWinMask=MaxWinSize-1;
 }
 
-
-void DoUnpack(uint Method,bool Solid)
+      private void DoUnpack(uint Method,bool Solid)
 {
   // Methods <50 will crash in Fragmented mode when accessing NULL Window.
   // They cannot be called in such mode now, but we check it below anyway
@@ -194,8 +192,7 @@ void DoUnpack(uint Method,bool Solid)
   }
 }
 
-
-void UnpInitData(bool Solid)
+      private void UnpInitData(bool Solid)
 {
   if (!Solid)
   {
@@ -233,7 +230,7 @@ void UnpInitData(bool Solid)
 // LengthTable contains the length in bits for every element of alphabet.
 // Dec is the structure to decode Huffman code/
 // Size is size of length table and DecodeNum field in Dec structure,
-void MakeDecodeTables(byte[] LengthTable, int offset, DecodeTable Dec,uint Size)
+      private void MakeDecodeTables(byte[] LengthTable, int offset, DecodeTable Dec,uint Size)
 {
   // Size of alphabet and DecodePos array.
   Dec.MaxNum=Size;

@@ -24,7 +24,7 @@ namespace SharpCompress.Common.Zip.Headers
             DataSector = reader.ReadBytes((int)(SizeOfDirectoryEndRecord - SizeOfFixedHeaderDataExceptSignatureAndSizeFields));
         }
 
-        const int SizeOfFixedHeaderDataExceptSignatureAndSizeFields = 44;
+        private const int SizeOfFixedHeaderDataExceptSignatureAndSizeFields = 44;
 
         public long SizeOfDirectoryEndRecord { get; private set; }
 

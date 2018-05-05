@@ -17,7 +17,7 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017
 {
     internal partial class Unpack
     {
-void Unpack5(bool Solid)
+      private void Unpack5(bool Solid)
 {
   FileExtracted=true;
 
@@ -173,8 +173,7 @@ void Unpack5(bool Solid)
   UnpWriteBuf();
 }
 
-
-uint ReadFilterData(BitInput Inp)
+      private uint ReadFilterData(BitInput Inp)
 {
   uint ByteCount=(Inp.fgetbits()>>14)+1;
   Inp.addbits(2);
@@ -188,8 +187,7 @@ uint ReadFilterData(BitInput Inp)
   return Data;
 }
 
-
-bool ReadFilter(BitInput Inp,UnpackFilter Filter)
+      private bool ReadFilter(BitInput Inp,UnpackFilter Filter)
 {
   if (!Inp.ExternalBuffer && Inp.InAddr>ReadTop-16)
     if (!UnpReadBuf())
@@ -212,8 +210,7 @@ bool ReadFilter(BitInput Inp,UnpackFilter Filter)
   return true;
 }
 
-
-bool AddFilter(UnpackFilter Filter)
+      private bool AddFilter(UnpackFilter Filter)
 {
   if (Filters.Count>=MAX_UNPACK_FILTERS)
   {
@@ -232,8 +229,7 @@ bool AddFilter(UnpackFilter Filter)
   return true;
 }
 
-
-bool UnpReadBuf()
+      private bool UnpReadBuf()
 {
   int DataSize=ReadTop-Inp.InAddr; // Data left to process.
   if (DataSize<0)
@@ -271,8 +267,7 @@ bool UnpReadBuf()
   return ReadCode!=-1;
 }
 
-
-void UnpWriteBuf()
+      private void UnpWriteBuf()
 {
   size_t WrittenBorder=WrPtr;
   size_t FullWriteSize=(UnpPtr-WrittenBorder)&MaxWinMask;
@@ -425,8 +420,7 @@ void UnpWriteBuf()
     WriteBorder=WrPtr;
 }
 
-
-byte[] ApplyFilter(byte[] __d,uint DataSize,UnpackFilter Flt)
+      private byte[] ApplyFilter(byte[] __d,uint DataSize,UnpackFilter Flt)
 {
   int Data = 0;
   byte[] SrcData=__d;
@@ -513,8 +507,7 @@ byte[] ApplyFilter(byte[] __d,uint DataSize,UnpackFilter Flt)
   return null;
 }
 
-
-void UnpWriteArea(size_t StartPtr,size_t EndPtr)
+      private void UnpWriteArea(size_t StartPtr,size_t EndPtr)
 {
   if (EndPtr!=StartPtr)
     UnpSomeRead=true;
@@ -544,8 +537,7 @@ void UnpWriteArea(size_t StartPtr,size_t EndPtr)
       UnpWriteData(Window,StartPtr,EndPtr-StartPtr);
 }
 
-
-void UnpWriteData(byte[] Data, size_t offset, size_t Size)
+      private void UnpWriteData(byte[] Data, size_t offset, size_t Size)
 {
   if (WrittenFileSize>=DestUnpSize)
     return;
@@ -557,15 +549,13 @@ void UnpWriteData(byte[] Data, size_t offset, size_t Size)
   WrittenFileSize+=Size;
 }
 
-
-void UnpInitData50(bool Solid)
+      private void UnpInitData50(bool Solid)
 {
   if (!Solid)
     TablesRead5=false;
 }
 
-
-bool ReadBlockHeader(BitInput Inp,ref UnpackBlockHeader Header)
+      private bool ReadBlockHeader(BitInput Inp,ref UnpackBlockHeader Header)
 {
   Header.HeaderSize=0;
 
@@ -608,8 +598,7 @@ bool ReadBlockHeader(BitInput Inp,ref UnpackBlockHeader Header)
   return true;
 }
 
-
-bool ReadTables(BitInput Inp,ref UnpackBlockHeader Header, ref UnpackBlockTables Tables)
+      private bool ReadTables(BitInput Inp,ref UnpackBlockHeader Header, ref UnpackBlockTables Tables)
 {
   if (!Header.TablePresent)
     return true;
@@ -713,8 +702,7 @@ bool ReadTables(BitInput Inp,ref UnpackBlockHeader Header, ref UnpackBlockTables
   return true;
 }
 
-
-void InitFilters()
+      private void InitFilters()
 {
   //Filters.SoftReset();
   Filters.Clear();

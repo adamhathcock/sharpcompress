@@ -17,8 +17,7 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017
 {
     internal partial class Unpack
     {
-
-void CopyString20(uint Length,uint Distance)
+      private void CopyString20(uint Length,uint Distance)
 {
   LastDist=OldDist[OldDistPtr++ & 3]=Distance;
   LastLength=Length;
@@ -35,7 +34,8 @@ internal static class Unpack20Local {
   public static readonly byte[] SDDecode={0,4,8,16,32,64,128,192};
   public static readonly byte[] SDBits=  {2,2,3, 4, 5, 6,  6,  6};
 }
-void Unpack20(bool Solid)
+
+      private void Unpack20(bool Solid)
 {
   uint Bits;
 
@@ -165,8 +165,7 @@ void Unpack20(bool Solid)
   UnpWriteBuf20();
 }
 
-
-void UnpWriteBuf20()
+      private void UnpWriteBuf20()
 {
   if (UnpPtr!=WrPtr)
     UnpSomeRead=true;
@@ -181,8 +180,7 @@ void UnpWriteBuf20()
   WrPtr=UnpPtr;
 }
 
-
-bool ReadTables20()
+      private bool ReadTables20()
 {
   byte[] BitLength = new byte[BC20];
   byte[] Table = new byte[MC20*4];
@@ -273,8 +271,7 @@ bool ReadTables20()
   return true;
 }
 
-
-void ReadLastTables()
+      private void ReadLastTables()
 {
   if (ReadTop>=Inp.InAddr+5)
     if (UnpAudioBlock)
@@ -287,8 +284,7 @@ void ReadLastTables()
         ReadTables20();
 }
 
-
-void UnpInitData20(bool Solid)
+      private void UnpInitData20(bool Solid)
 {
   if (!Solid)
   {
@@ -306,8 +302,7 @@ void UnpInitData20(bool Solid)
   }
 }
 
-
-byte DecodeAudio(int Delta)
+      private byte DecodeAudio(int Delta)
 {
   AudioVariables V=AudV[UnpCurChannel];
   V.ByteCount++;

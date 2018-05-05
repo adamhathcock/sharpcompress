@@ -12,7 +12,7 @@ namespace SharpCompress.Writers.Tar
 {
     public class TarWriter : AbstractWriter
     {
-        private bool finalizeArchiveOnClose;
+        private readonly bool finalizeArchiveOnClose;
 
         public TarWriter(Stream destination, TarWriterOptions options)
             : base(ArchiveType.Tar, options)

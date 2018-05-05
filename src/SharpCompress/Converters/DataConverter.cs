@@ -47,12 +47,12 @@ namespace SharpCompress.Converters
 	public
 #endif
 
-    unsafe abstract class DataConverter
+	internal unsafe abstract class DataConverter
     {
         // Disables the warning: CLS compliance checking will not be performed on
         //  `XXXX' because it is not visible from outside this assembly
 #pragma warning disable  3019
-        static readonly DataConverter SwapConv = new SwapConverter();
+	    private static readonly DataConverter SwapConv = new SwapConverter();
 
         public static readonly bool IsLittleEndian = BitConverter.IsLittleEndian;
 
@@ -164,7 +164,7 @@ namespace SharpCompress.Converters
             }
         }
 
-        class CopyConverter : DataConverter
+	    private class CopyConverter : DataConverter
         {
             public override double GetDouble(byte[] data, int index)
             {
@@ -462,7 +462,7 @@ namespace SharpCompress.Converters
             }
         }
 
-        class SwapConverter : DataConverter
+	    private class SwapConverter : DataConverter
         {
             public override double GetDouble(byte[] data, int index)
             {

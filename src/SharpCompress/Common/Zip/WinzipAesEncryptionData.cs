@@ -10,10 +10,10 @@ namespace SharpCompress.Common.Zip
     {
         private const int RFC2898_ITERATIONS = 1000;
 
-        private byte[] salt;
-        private WinzipAesKeySize keySize;
-        private byte[] passwordVerifyValue;
-        private string password;
+        private readonly byte[] salt;
+        private readonly WinzipAesKeySize keySize;
+        private readonly byte[] passwordVerifyValue;
+        private readonly string password;
 
         private byte[] generatedVerifyValue;
 

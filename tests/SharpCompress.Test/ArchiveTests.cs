@@ -134,7 +134,7 @@ namespace SharpCompress.Test
             }
         }
 
-        void archive_CompressedBytesRead(object sender, CompressedBytesReadEventArgs e)
+        private void archive_CompressedBytesRead(object sender, CompressedBytesReadEventArgs e)
         {
             Console.WriteLine("Read Compressed File Part Bytes: {0} Percentage: {1}%",
                 e.CurrentFilePartCompressedBytesRead, CreatePercentage(e.CurrentFilePartCompressedBytesRead, partTotal));
@@ -145,13 +145,13 @@ namespace SharpCompress.Test
                 e.CompressedBytesRead, percentage);
         }
 
-        void archive_FilePartExtractionBegin(object sender, FilePartExtractionBeginEventArgs e)
+        private void archive_FilePartExtractionBegin(object sender, FilePartExtractionBeginEventArgs e)
         {
             partTotal = e.Size;
             Console.WriteLine("Initializing File Part Extraction: " + e.Name);
         }
 
-        void archive_EntryExtractionBegin(object sender, ArchiveExtractionEventArgs<IArchiveEntry> e)
+        private void archive_EntryExtractionBegin(object sender, ArchiveExtractionEventArgs<IArchiveEntry> e)
         {
             entryTotal = e.Item.Size;
             Console.WriteLine("Initializing File Entry Extraction: " + e.Item.Key);

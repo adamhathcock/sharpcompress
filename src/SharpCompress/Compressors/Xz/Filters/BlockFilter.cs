@@ -18,7 +18,7 @@ namespace SharpCompress.Compressors.Xz.Filters
             LZMA2 = 0x21,
         }
 
-        static Dictionary<FilterTypes, Type> FilterMap = new Dictionary<FilterTypes, Type>()
+        private static readonly Dictionary<FilterTypes, Type> FilterMap = new Dictionary<FilterTypes, Type>()
         {
             {FilterTypes.LZMA2, typeof(Lzma2Filter) }
         };

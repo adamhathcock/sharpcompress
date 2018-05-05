@@ -19,7 +19,7 @@ namespace SharpCompress.Test.Zip
 		}
 
 		// 4GiB + 1
-		const long FOUR_GB_LIMIT = ((long)uint.MaxValue) + 1;
+        private const long FOUR_GB_LIMIT = ((long)uint.MaxValue) + 1;
 
         [Trait("format", "zip64")]
         public void Zip64_Single_Large_File()

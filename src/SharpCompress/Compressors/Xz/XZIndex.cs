@@ -15,7 +15,7 @@ namespace SharpCompress.Compressors.Xz
         public ulong NumberOfRecords { get; private set; }
         public List<XZIndexRecord> Records { get; } = new List<XZIndexRecord>();
 
-        private bool _indexMarkerAlreadyVerified;
+        private readonly bool _indexMarkerAlreadyVerified;
 
         public XZIndex(BinaryReader reader, bool indexMarkerAlreadyVerified)
         {

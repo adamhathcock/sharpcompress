@@ -13,7 +13,7 @@ using System;
 
 namespace SharpCompress.Compressors.Rar.UnpackV2017
 {
-    partial class FragmentedWindow
+  internal partial class FragmentedWindow
     {
 
 public FragmentedWindow()
@@ -28,8 +28,7 @@ public FragmentedWindow()
 //  Reset();
 //}
 
-
-void Reset()
+      private void Reset()
 {
   for (uint I=0;I<Mem.Length;I++)
     if (Mem[I]!=null)

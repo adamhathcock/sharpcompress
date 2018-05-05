@@ -9,7 +9,7 @@ namespace SharpCompress.Compressors.Xz.Filters
         public override bool AllowAsNonLast => false;
         public override bool ChangesDataSize => true;
 
-        byte _dictionarySize;
+        private byte _dictionarySize;
         public uint DictionarySize
         {
             get

@@ -16,7 +16,7 @@ using System.Text;
 
 namespace SharpCompress.Compressors.Rar.UnpackV2017
 {
-    partial class Unpack
+    internal partial class Unpack
     {
 //#define  rotls(x,n,xsize)  (((x)<<(n)) | ((x)>>(xsize-(n))))
 //#define  rotrs(x,n,xsize)  (((x)>>(n)) | ((x)<<(xsize-(n))))
@@ -29,7 +29,7 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017
 //  return D[0]+(D[1]<<8);
 //}
 
-uint32 RawGet4(byte[] D, int offset)
+        private uint32 RawGet4(byte[] D, int offset)
 {
   return (uint)(D[offset]+(D[offset+1]<<8)+(D[offset+2]<<16)+(D[offset+3]<<24));
 }
@@ -52,7 +52,7 @@ uint32 RawGet4(byte[] D, int offset)
 //  D[1]=(byte)(Field>>8);
 //}
 
-void RawPut4(uint32 Field,byte[] D, int offset)
+        private void RawPut4(uint32 Field,byte[] D, int offset)
 {
   D[offset]=(byte)(Field);
   D[offset+1]=(byte)(Field>>8);

@@ -4,47 +4,53 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017
 {
     internal partial class Unpack
     {
+      private const int STARTL1  =2;
 
-const int STARTL1  =2;
-static uint[] DecL1={0x8000,0xa000,0xc000,0xd000,0xe000,0xea00,
+      private static readonly uint[] DecL1={0x8000,0xa000,0xc000,0xd000,0xe000,0xea00,
                              0xee00,0xf000,0xf200,0xf200,0xffff};
-static uint[] PosL1={0,0,0,2,3,5,7,11,16,20,24,32,32};
 
-const int STARTL2  =3;
-static uint[] DecL2={0xa000,0xc000,0xd000,0xe000,0xea00,0xee00,
+      private static readonly uint[] PosL1={0,0,0,2,3,5,7,11,16,20,24,32,32};
+
+      private const int STARTL2  =3;
+
+      private static readonly uint[] DecL2={0xa000,0xc000,0xd000,0xe000,0xea00,0xee00,
                              0xf000,0xf200,0xf240,0xffff};
-static uint[] PosL2={0,0,0,0,5,7,9,13,18,22,26,34,36};
 
-const int STARTHF0  =4;
-static uint[] DecHf0={0x8000,0xc000,0xe000,0xf200,0xf200,0xf200,
+      private static readonly uint[] PosL2={0,0,0,0,5,7,9,13,18,22,26,34,36};
+
+      private const int STARTHF0  =4;
+
+      private static readonly uint[] DecHf0={0x8000,0xc000,0xe000,0xf200,0xf200,0xf200,
                               0xf200,0xf200,0xffff};
-static uint[] PosHf0={0,0,0,0,0,8,16,24,33,33,33,33,33};
 
+      private static readonly uint[] PosHf0={0,0,0,0,0,8,16,24,33,33,33,33,33};
 
-const int STARTHF1  =5;
-static uint[] DecHf1={0x2000,0xc000,0xe000,0xf000,0xf200,0xf200,
+      private const int STARTHF1  =5;
+
+      private static readonly uint[] DecHf1={0x2000,0xc000,0xe000,0xf000,0xf200,0xf200,
                               0xf7e0,0xffff};
-static uint[] PosHf1={0,0,0,0,0,0,4,44,60,76,80,80,127};
 
+      private static readonly uint[] PosHf1={0,0,0,0,0,0,4,44,60,76,80,80,127};
 
-const int STARTHF2  =5;
-static uint[] DecHf2={0x1000,0x2400,0x8000,0xc000,0xfa00,0xffff,
+      private const int STARTHF2  =5;
+
+      private static readonly uint[] DecHf2={0x1000,0x2400,0x8000,0xc000,0xfa00,0xffff,
                               0xffff,0xffff};
-static uint[] PosHf2={0,0,0,0,0,0,2,7,53,117,233,0,0};
 
+      private static readonly uint[] PosHf2={0,0,0,0,0,0,2,7,53,117,233,0,0};
 
-const int STARTHF3  =6;
-static uint[] DecHf3={0x800,0x2400,0xee00,0xfe80,0xffff,0xffff,
+      private const int STARTHF3  =6;
+
+      private static readonly uint[] DecHf3={0x800,0x2400,0xee00,0xfe80,0xffff,0xffff,
                               0xffff};
-static uint[] PosHf3={0,0,0,0,0,0,0,2,16,218,251,0,0};
 
+      private static readonly uint[] PosHf3={0,0,0,0,0,0,0,2,16,218,251,0,0};
 
-const int STARTHF4  =8;
-static uint[] DecHf4={0xff00,0xffff,0xffff,0xffff,0xffff,0xffff};
-static uint[] PosHf4={0,0,0,0,0,0,0,0,0,255,0,0,0};
+      private const int STARTHF4  =8;
+      private static readonly uint[] DecHf4={0xff00,0xffff,0xffff,0xffff,0xffff,0xffff};
+      private static readonly uint[] PosHf4={0,0,0,0,0,0,0,0,0,255,0,0,0};
 
-
-void Unpack15(bool Solid)
+      private void Unpack15(bool Solid)
 {
   UnpInitData(Solid);
   UnpInitData15(Solid);
@@ -119,9 +125,9 @@ void Unpack15(bool Solid)
 
 
 //#define GetShortLen1(pos) ((pos)==1 ? Buf60+3:ShortLen1[pos])
-uint GetShortLen1(uint pos) { return ((pos)==1 ? (uint)(this.Buf60+3):ShortLen1[pos]); }
+      private uint GetShortLen1(uint pos) { return ((pos)==1 ? (uint)(this.Buf60+3):ShortLen1[pos]); }
 //#define GetShortLen2(pos) ((pos)==3 ? Buf60+3:ShortLen2[pos])
-uint GetShortLen2(uint pos) { return ((pos)==3 ? (uint)(this.Buf60+3):ShortLen2[pos]); }
+      private uint GetShortLen2(uint pos) { return ((pos)==3 ? (uint)(this.Buf60+3):ShortLen2[pos]); }
 
 internal static class Unpack15Local {
   public static readonly uint[] ShortLen1={1,3,4,4,5,6,7,8,8,4,4,5,6,6,4,0};
@@ -132,7 +138,7 @@ internal static class Unpack15Local {
                                    0xfc,0xc0,0x80,0x90,0x98,0x9c,0xb0};
 }
 
-void ShortLZ()
+      private void ShortLZ()
 {
   uint Length,SaveLength;
   uint LastDistance;
@@ -235,8 +241,7 @@ void ShortLZ()
   CopyString15(Distance,Length);
 }
 
-
-void LongLZ()
+      private void LongLZ()
 {
   uint Length;
   uint Distance;
@@ -327,8 +332,7 @@ void LongLZ()
   CopyString15(Distance,Length);
 }
 
-
-void HuffDecode()
+      private void HuffDecode()
 {
   uint CurByte,NewBytePlace;
   uint Length;
@@ -405,8 +409,7 @@ void HuffDecode()
   ChSet[NewBytePlace]=(ushort)CurByte;
 }
 
-
-void GetFlagsBuf()
+      private void GetFlagsBuf()
 {
   uint Flags,NewFlagsPlace;
   uint FlagsPlace=DecodeNum(Inp.fgetbits(),STARTHF2,DecHf2,PosHf2);
@@ -433,7 +436,7 @@ void GetFlagsBuf()
   ChSetC[NewFlagsPlace]=(ushort)Flags;
 }
 
-void UnpInitData15(bool Solid)
+      private void UnpInitData15(bool Solid)
 {
   if (!Solid)
   {
@@ -450,7 +453,7 @@ void UnpInitData15(bool Solid)
   ReadTop=0;
 }
 
-void InitHuff()
+      private void InitHuff()
 {
   for (uint I=0;I<256;I++)
   {
@@ -464,8 +467,7 @@ void InitHuff()
   CorrHuff(ChSetB,NToPlB);
 }
 
-
-void CorrHuff(ushort[] CharSet,byte[] NumToPlace)
+      private void CorrHuff(ushort[] CharSet,byte[] NumToPlace)
 {
   int I,J;
   for (I=7;I>=0;I--)
@@ -476,8 +478,7 @@ void CorrHuff(ushort[] CharSet,byte[] NumToPlace)
     NumToPlace[I]=(byte)((7-I)*32);
 }
 
-
-void CopyString15(uint Distance,uint Length)
+      private void CopyString15(uint Distance,uint Length)
 {
   DestUnpSize-=Length;
   while (Length-- != 0)
@@ -487,8 +488,7 @@ void CopyString15(uint Distance,uint Length)
   }
 }
 
-
-uint DecodeNum(uint Num,uint StartPos,uint[] DecTab,uint[] PosTab)
+      private uint DecodeNum(uint Num,uint StartPos,uint[] DecTab,uint[] PosTab)
 {
   int I;
   for (Num&=0xfff0,I=0;DecTab[I]<=Num;I++)

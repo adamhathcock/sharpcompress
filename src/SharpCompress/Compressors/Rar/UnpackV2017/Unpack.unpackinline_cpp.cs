@@ -15,8 +15,7 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017
 {
     internal partial class Unpack
     {
-
-void InsertOldDist(uint Distance)
+      private void InsertOldDist(uint Distance)
 {
   OldDist[3]=OldDist[2];
   OldDist[2]=OldDist[1];
@@ -28,7 +27,7 @@ void InsertOldDist(uint Distance)
 //#define FAST_MEMCPY
 //#endif
 
-void CopyString(uint Length,uint Distance)
+      private void CopyString(uint Length,uint Distance)
 {
   size_t SrcPtr=UnpPtr-Distance;
 
@@ -104,8 +103,7 @@ void CopyString(uint Length,uint Distance)
     }
 }
 
-
-uint DecodeNumber(BitInput Inp,DecodeTable Dec)
+      private uint DecodeNumber(BitInput Inp,DecodeTable Dec)
 {
   // Left aligned 15 bit length raw bit field.
   uint BitField=Inp.getbits() & 0xfffe;
@@ -149,8 +147,7 @@ uint DecodeNumber(BitInput Inp,DecodeTable Dec)
   return Dec.DecodeNum[Pos];
 }
 
-
-uint SlotToLength(BitInput Inp,uint Slot)
+      private uint SlotToLength(BitInput Inp,uint Slot)
 {
   uint LBits,Length=2;
   if (Slot<8)

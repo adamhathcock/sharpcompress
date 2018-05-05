@@ -3,7 +3,7 @@ using SharpCompress.Common.Rar.Headers;
 
 namespace SharpCompress.Compressors.Rar
 {
-    interface IRarUnpack
+    internal interface IRarUnpack
     {
         void DoUnpack(FileHeader fileHeader, Stream readStream, Stream writeStream);
         void DoUnpack();

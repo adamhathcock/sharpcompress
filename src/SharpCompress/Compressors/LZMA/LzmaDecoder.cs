@@ -9,50 +9,50 @@ namespace SharpCompress.Compressors.LZMA
     {
         private class LenDecoder
         {
-            private BitDecoder m_Choice = new BitDecoder();
-            private BitDecoder m_Choice2 = new BitDecoder();
-            private readonly BitTreeDecoder[] m_LowCoder = new BitTreeDecoder[Base.kNumPosStatesMax];
-            private readonly BitTreeDecoder[] m_MidCoder = new BitTreeDecoder[Base.kNumPosStatesMax];
-            private BitTreeDecoder m_HighCoder = new BitTreeDecoder(Base.kNumHighLenBits);
-            private uint m_NumPosStates;
+            private BitDecoder _Choice = new BitDecoder();
+            private BitDecoder _Choice2 = new BitDecoder();
+            private readonly BitTreeDecoder[] _LowCoder = new BitTreeDecoder[Base.kNumPosStatesMax];
+            private readonly BitTreeDecoder[] _MidCoder = new BitTreeDecoder[Base.kNumPosStatesMax];
+            private BitTreeDecoder _HighCoder = new BitTreeDecoder(Base.kNumHighLenBits);
+            private uint _NumPosStates;
 
             public void Create(uint numPosStates)
             {
-                for (uint posState = m_NumPosStates; posState < numPosStates; posState++)
+                for (uint posState = _NumPosStates; posState < numPosStates; posState++)
                 {
-                    m_LowCoder[posState] = new BitTreeDecoder(Base.kNumLowLenBits);
-                    m_MidCoder[posState] = new BitTreeDecoder(Base.kNumMidLenBits);
+                    _LowCoder[posState] = new BitTreeDecoder(Base.kNumLowLenBits);
+                    _MidCoder[posState] = new BitTreeDecoder(Base.kNumMidLenBits);
                 }
-                m_NumPosStates = numPosStates;
+                _NumPosStates = numPosStates;
             }
 
             public void Init()
             {
-                m_Choice.Init();
-                for (uint posState = 0; posState < m_NumPosStates; posState++)
+                _Choice.Init();
+                for (uint posState = 0; posState < _NumPosStates; posState++)
                 {
-                    m_LowCoder[posState].Init();
-                    m_MidCoder[posState].Init();
+                    _LowCoder[posState].Init();
+                    _MidCoder[posState].Init();
                 }
-                m_Choice2.Init();
-                m_HighCoder.Init();
+                _Choice2.Init();
+                _HighCoder.Init();
             }
 
             public uint Decode(RangeCoder.Decoder rangeDecoder, uint posState)
             {
                 if (m_Choice.Decode(rangeDecoder) == 0)
                 {
-                    return m_LowCoder[posState].Decode(rangeDecoder);
+                    return _LowCoder[posState].Decode(rangeDecoder);
                 }
                 uint symbol = Base.kNumLowLenSymbols;
                 if (m_Choice2.Decode(rangeDecoder) == 0)
                 {
-                    symbol += m_MidCoder[posState].Decode(rangeDecoder);
+                    symbol += _MidCoder[posState].Decode(rangeDecoder);
                 }
                 else
                 {
                     symbol += Base.kNumMidLenSymbols;
-                    symbol += m_HighCoder.Decode(rangeDecoder);
+                    symbol += _HighCoder.Decode(rangeDecoder);
                 }
                 return symbol;
             }
@@ -62,18 +62,18 @@ namespace SharpCompress.Compressors.LZMA
         {
             private struct Decoder2
             {
-                private BitDecoder[] m_Decoders;
+                private BitDecoder[] _Decoders;
 
                 public void Create()
                 {
-                    m_Decoders = new BitDecoder[0x300];
+                    _Decoders = new BitDecoder[0x300];
                 }
 
                 public void Init()
                 {
                     for (int i = 0; i < 0x300; i++)
                     {
-                        m_Decoders[i].Init();
+                        _Decoders[i].Init();
                     }
                 }
 
@@ -82,7 +82,7 @@ namespace SharpCompress.Compressors.LZMA
                     uint symbol = 1;
                     do
                     {
-                        symbol = (symbol << 1) | m_Decoders[symbol].Decode(rangeDecoder);
+                        symbol = (symbol << 1) | _Decoders[symbol].Decode(rangeDecoder);
                     }
                     while (symbol < 0x100);
                     return (byte)symbol;
@@ -95,13 +95,13 @@ namespace SharpCompress.Compressors.LZMA
                     {
                         uint matchBit = (uint)(matchByte >> 7) & 1;
                         matchByte <<= 1;
-                        uint bit = m_Decoders[((1 + matchBit) << 8) + symbol].Decode(rangeDecoder);
+                        uint bit = _Decoders[((1 + matchBit) << 8) + symbol].Decode(rangeDecoder);
                         symbol = (symbol << 1) | bit;
                         if (matchBit != bit)
                         {
                             while (symbol < 0x100)
                             {
-                                symbol = (symbol << 1) | m_Decoders[symbol].Decode(rangeDecoder);
+                                symbol = (symbol << 1) | _Decoders[symbol].Decode(rangeDecoder);
                             }
                             break;
                         }
@@ -111,86 +111,86 @@ namespace SharpCompress.Compressors.LZMA
                 }
             }
 
-            private Decoder2[] m_Coders;
-            private int m_NumPrevBits;
-            private int m_NumPosBits;
-            private uint m_PosMask;
+            private Decoder2[] _Coders;
+            private int _NumPrevBits;
+            private int _NumPosBits;
+            private uint _PosMask;
 
             public void Create(int numPosBits, int numPrevBits)
             {
-                if (m_Coders != null && m_NumPrevBits == numPrevBits &&
-                    m_NumPosBits == numPosBits)
+                if (m_Coders != null && _NumPrevBits == numPrevBits &&
+                    _NumPosBits == numPosBits)
                 {
                     return;
                 }
-                m_NumPosBits = numPosBits;
-                m_PosMask = ((uint)1 << numPosBits) - 1;
-                m_NumPrevBits = numPrevBits;
-                uint numStates = (uint)1 << (m_NumPrevBits + m_NumPosBits);
-                m_Coders = new Decoder2[numStates];
+                _NumPosBits = numPosBits;
+                _PosMask = ((uint)1 << numPosBits) - 1;
+                _NumPrevBits = numPrevBits;
+                uint numStates = (uint)1 << (m_NumPrevBits + _NumPosBits);
+                _Coders = new Decoder2[numStates];
                 for (uint i = 0; i < numStates; i++)
                 {
-                    m_Coders[i].Create();
+                    _Coders[i].Create();
                 }
             }
 
             public void Init()
             {
-                uint numStates = (uint)1 << (m_NumPrevBits + m_NumPosBits);
+                uint numStates = (uint)1 << (m_NumPrevBits + _NumPosBits);
                 for (uint i = 0; i < numStates; i++)
                 {
-                    m_Coders[i].Init();
+                    _Coders[i].Init();
                 }
             }
 
             private uint GetState(uint pos, byte prevByte)
             {
-                return ((pos & m_PosMask) << m_NumPrevBits) + (uint)(prevByte >> (8 - m_NumPrevBits));
+                return ((pos & _PosMask) << _NumPrevBits) + (uint)(prevByte >> (8 - _NumPrevBits));
             }
 
             public byte DecodeNormal(RangeCoder.Decoder rangeDecoder, uint pos, byte prevByte)
             {
-                return m_Coders[GetState(pos, prevByte)].DecodeNormal(rangeDecoder);
+                return _Coders[GetState(pos, prevByte)].DecodeNormal(rangeDecoder);
             }
 
             public byte DecodeWithMatchByte(RangeCoder.Decoder rangeDecoder, uint pos, byte prevByte, byte matchByte)
             {
-                return m_Coders[GetState(pos, prevByte)].DecodeWithMatchByte(rangeDecoder, matchByte);
+                return _Coders[GetState(pos, prevByte)].DecodeWithMatchByte(rangeDecoder, matchByte);
             }
         }
 
-        private OutWindow m_OutWindow;
+        private OutWindow _OutWindow;
 
-        private readonly BitDecoder[] m_IsMatchDecoders = new BitDecoder[Base.kNumStates << Base.kNumPosStatesBitsMax];
-        private readonly BitDecoder[] m_IsRepDecoders = new BitDecoder[Base.kNumStates];
-        private readonly BitDecoder[] m_IsRepG0Decoders = new BitDecoder[Base.kNumStates];
-        private readonly BitDecoder[] m_IsRepG1Decoders = new BitDecoder[Base.kNumStates];
-        private readonly BitDecoder[] m_IsRepG2Decoders = new BitDecoder[Base.kNumStates];
-        private readonly BitDecoder[] m_IsRep0LongDecoders = new BitDecoder[Base.kNumStates << Base.kNumPosStatesBitsMax];
+        private readonly BitDecoder[] _IsMatchDecoders = new BitDecoder[Base.kNumStates << Base.kNumPosStatesBitsMax];
+        private readonly BitDecoder[] _IsRepDecoders = new BitDecoder[Base.kNumStates];
+        private readonly BitDecoder[] _IsRepG0Decoders = new BitDecoder[Base.kNumStates];
+        private readonly BitDecoder[] _IsRepG1Decoders = new BitDecoder[Base.kNumStates];
+        private readonly BitDecoder[] _IsRepG2Decoders = new BitDecoder[Base.kNumStates];
+        private readonly BitDecoder[] _IsRep0LongDecoders = new BitDecoder[Base.kNumStates << Base.kNumPosStatesBitsMax];
 
-        private readonly BitTreeDecoder[] m_PosSlotDecoder = new BitTreeDecoder[Base.kNumLenToPosStates];
-        private readonly BitDecoder[] m_PosDecoders = new BitDecoder[Base.kNumFullDistances - Base.kEndPosModelIndex];
+        private readonly BitTreeDecoder[] _PosSlotDecoder = new BitTreeDecoder[Base.kNumLenToPosStates];
+        private readonly BitDecoder[] _PosDecoders = new BitDecoder[Base.kNumFullDistances - Base.kEndPosModelIndex];
 
-        private BitTreeDecoder m_PosAlignDecoder = new BitTreeDecoder(Base.kNumAlignBits);
+        private BitTreeDecoder _PosAlignDecoder = new BitTreeDecoder(Base.kNumAlignBits);
 
-        private readonly LenDecoder m_LenDecoder = new LenDecoder();
-        private readonly LenDecoder m_RepLenDecoder = new LenDecoder();
+        private readonly LenDecoder _LenDecoder = new LenDecoder();
+        private readonly LenDecoder _RepLenDecoder = new LenDecoder();
 
-        private readonly LiteralDecoder m_LiteralDecoder = new LiteralDecoder();
+        private readonly LiteralDecoder _LiteralDecoder = new LiteralDecoder();
 
-        private int m_DictionarySize;
+        private int _DictionarySize;
 
-        private uint m_PosStateMask;
+        private uint _PosStateMask;
 
         private Base.State state = new Base.State();
         private uint rep0, rep1, rep2, rep3;
 
         public Decoder()
         {
-            m_DictionarySize = -1;
+            _DictionarySize = -1;
             for (int i = 0; i < Base.kNumLenToPosStates; i++)
             {
-                m_PosSlotDecoder[i] = new BitTreeDecoder(Base.kNumPosSlotBits);
+                _PosSlotDecoder[i] = new BitTreeDecoder(Base.kNumPosSlotBits);
             }
         }
 
@@ -200,9 +200,9 @@ namespace SharpCompress.Compressors.LZMA
             {
                 throw new InvalidParamException();
             }
-            m_OutWindow = new OutWindow();
+            _OutWindow = new OutWindow();
             int blockSize = Math.Max(m_DictionarySize, (1 << 12));
-            m_OutWindow.Create(blockSize);
+            _OutWindow.Create(blockSize);
         }
 
         private void SetLiteralProperties(int lp, int lc)
@@ -215,7 +215,7 @@ namespace SharpCompress.Compressors.LZMA
             {
                 throw new InvalidParamException();
             }
-            m_LiteralDecoder.Create(lp, lc);
+            _LiteralDecoder.Create(lp, lc);
         }
 
         private void SetPosBitsProperties(int pb)
@@ -225,9 +225,9 @@ namespace SharpCompress.Compressors.LZMA
                 throw new InvalidParamException();
             }
             uint numPosStates = (uint)1 << pb;
-            m_LenDecoder.Create(numPosStates);
-            m_RepLenDecoder.Create(numPosStates);
-            m_PosStateMask = numPosStates - 1;
+            _LenDecoder.Create(numPosStates);
+            _RepLenDecoder.Create(numPosStates);
+            _PosStateMask = numPosStates - 1;
         }
 
         private void Init()
@@ -235,19 +235,19 @@ namespace SharpCompress.Compressors.LZMA
             uint i;
             for (i = 0; i < Base.kNumStates; i++)
             {
-                for (uint j = 0; j <= m_PosStateMask; j++)
+                for (uint j = 0; j <= _PosStateMask; j++)
                 {
                     uint index = (i << Base.kNumPosStatesBitsMax) + j;
-                    m_IsMatchDecoders[index].Init();
-                    m_IsRep0LongDecoders[index].Init();
+                    _IsMatchDecoders[index].Init();
+                    _IsRep0LongDecoders[index].Init();
                 }
-                m_IsRepDecoders[i].Init();
-                m_IsRepG0Decoders[i].Init();
-                m_IsRepG1Decoders[i].Init();
-                m_IsRepG2Decoders[i].Init();
+                _IsRepDecoders[i].Init();
+                _IsRepG0Decoders[i].Init();
+                _IsRepG1Decoders[i].Init();
+                _IsRepG2Decoders[i].Init();
             }
 
-            m_LiteralDecoder.Init();
+            _LiteralDecoder.Init();
             for (i = 0; i < Base.kNumLenToPosStates; i++)
             {
                 m_PosSlotDecoder[i].Init();

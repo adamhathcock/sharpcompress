@@ -55,8 +55,7 @@ uint fgetbits()
     return getbits();
 }
 
-
-void SetExternalBuffer(byte []Buf)
+        private void SetExternalBuffer(byte []Buf)
 {
     //if (InBuf!=NULL && !ExternalBuffer)
     //  delete[] InBuf;

@@ -13,7 +13,7 @@ namespace SharpCompress.Compressors.Xz
         public Stack<BlockFilter> Filters { get; private set; } = new Stack<BlockFilter>();
         public bool HeaderIsLoaded { get; private set; }
         private CheckType _checkType;
-        private int _checkSize;
+        private readonly int _checkSize;
         private bool _streamConnected;
         private int _numFilters;
         private byte _blockHeaderSizeByte;

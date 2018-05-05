@@ -33,11 +33,11 @@ namespace SharpCompress.Compressors.ADC
     /// </summary>
     public static class ADCBase
     {
-        const int Plain = 1;
-        const int TwoByte = 2;
-        const int ThreeByte = 3;
+        private const int Plain = 1;
+        private const int TwoByte = 2;
+        private const int ThreeByte = 3;
 
-        static int GetChunkType(byte byt)
+        private static int GetChunkType(byte byt)
         {
             if ((byt & 0x80) == 0x80)
             {
@@ -50,7 +50,7 @@ namespace SharpCompress.Compressors.ADC
             return TwoByte;
         }
 
-        static int GetChunkSize(byte byt)
+        private static int GetChunkSize(byte byt)
         {
             switch (GetChunkType(byt))
             {
@@ -65,7 +65,7 @@ namespace SharpCompress.Compressors.ADC
             }
         }
 
-        static int GetOffset(byte[] chunk, int position)
+        private static int GetOffset(byte[] chunk, int position)
         {
             switch (GetChunkType(chunk[position]))
             {

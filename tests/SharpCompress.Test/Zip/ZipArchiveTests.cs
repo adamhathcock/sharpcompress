@@ -458,7 +458,7 @@ namespace SharpCompress.Test.Zip
             });
         }
 
-        class NonSeekableMemoryStream : MemoryStream
+        private class NonSeekableMemoryStream : MemoryStream
         {
             public override bool CanSeek => false;
         }

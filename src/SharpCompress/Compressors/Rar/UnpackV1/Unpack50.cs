@@ -298,8 +298,7 @@ public bool TablePresent;
           UnpWriteBuf();
         }
 
-
-        uint ReadFilterData()
+      private uint ReadFilterData()
         {
           uint ByteCount=(Inp.fgetbits()>>14)+1;
           Inp.AddBits(2);
@@ -314,8 +313,7 @@ public bool TablePresent;
           return Data;
         }
 
-
-        bool ReadFilter(UnpackFilter Filter)
+      private bool ReadFilter(UnpackFilter Filter)
         {
           if (!Inp.ExternalBuffer && Inp.InAddr>ReadTop-16)
             if (!UnpReadBuf())
@@ -340,8 +338,7 @@ public bool TablePresent;
           return true;
         }
 
-
-        bool AddFilter(UnpackFilter Filter)
+      private bool AddFilter(UnpackFilter Filter)
         {
           if (Filters.Count>=MAX_UNPACK_FILTERS)
           {
@@ -360,8 +357,7 @@ public bool TablePresent;
           return true;
         }
 
-
-        bool UnpReadBuf()
+      private bool UnpReadBuf()
         {
           int DataSize=ReadTop-Inp.InAddr; // Data left to process.
           if (DataSize<0)
@@ -675,15 +671,13 @@ public bool TablePresent;
 //          WrittenFileSize+=Size;
 //        }
 
-
-        void UnpInitData50(bool Solid)
+      private void UnpInitData50(bool Solid)
         {
           if (!Solid)
             TablesRead5=false;
         }
 
-
-        bool ReadBlockHeader()
+      private bool ReadBlockHeader()
         {
           Header.HeaderSize=0;
 

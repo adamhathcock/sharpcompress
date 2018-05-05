@@ -3,7 +3,7 @@ namespace SharpCompress.Compressors.Rar.UnpackV1
 {
     internal partial class Unpack
     {
-        uint SlotToLength(uint Slot)
+      private uint SlotToLength(uint Slot)
         {
           //uint LBits,Length=2;
           int LBits;
