@@ -19,32 +19,32 @@ namespace SharpCompress.Compressors.Deflate64
         // With Deflate64 we can have up to a 65536 length as well as up to a 65538 distance. This means we need a Window that is at
         // least 131074 bytes long so we have space to retrieve up to a full 64kb in lookback and place it in our buffer without 
         // overwriting existing data. OutputWindow requires that the WindowSize be an exponent of 2, so we round up to 2^18.
-        private const int WindowSize = 262144;
-        private const int WindowMask = 262143;
+        private const int WINDOW_SIZE = 262144;
+        private const int WINDOW_MASK = 262143;
 
-        private readonly byte[] _window = new byte[WindowSize]; // The window is 2^18 bytes
+        private readonly byte[] _window = new byte[WINDOW_SIZE]; // The window is 2^18 bytes
         private int _end;       // this is the position to where we should write next byte
         private int _bytesUsed; // The number of bytes in the output window which is not consumed.
 
         /// <summary>Add a byte to output window.</summary>
         public void Write(byte b)
         {
-            Debug.Assert(_bytesUsed < WindowSize, "Can't add byte when window is full!");
+            Debug.Assert(_bytesUsed < WINDOW_SIZE, "Can't add byte when window is full!");
             _window[_end++] = b;
-            _end &= WindowMask;
+            _end &= WINDOW_MASK;
             ++_bytesUsed;
         }
 
         public void WriteLengthDistance(int length, int distance)
         {
-            Debug.Assert((_bytesUsed + length) <= WindowSize, "No Enough space");
+            Debug.Assert((_bytesUsed + length) <= WINDOW_SIZE, "No Enough space");
             
             // move backwards distance bytes in the output stream,
             // and copy length bytes from this position to the output stream.
             _bytesUsed += length;
-            int copyStart = (_end - distance) & WindowMask; // start position for coping.
+            int copyStart = (_end - distance) & WINDOW_MASK; // start position for coping.
 
-            int border = WindowSize - length;
+            int border = WINDOW_SIZE - length;
             if (copyStart <= border && _end < border) 
             {
                 if (length <= distance)
@@ -70,8 +70,8 @@ namespace SharpCompress.Compressors.Deflate64
                 while (length-- > 0)
                 {
                     _window[_end++] = _window[copyStart++];
-                    _end &= WindowMask;
-                    copyStart &= WindowMask;
+                    _end &= WINDOW_MASK;
+                    copyStart &= WINDOW_MASK;
                 }
             }
         }
@@ -82,11 +82,11 @@ namespace SharpCompress.Compressors.Deflate64
         /// </summary>
         public int CopyFrom(InputBuffer input, int length)
         {
-            length = Math.Min(Math.Min(length, WindowSize - _bytesUsed), input.AvailableBytes);
+            length = Math.Min(Math.Min(length, WINDOW_SIZE - _bytesUsed), input.AvailableBytes);
             int copied;
 
             // We might need wrap around to copy all bytes.
-            int tailLen = WindowSize - _end;
+            int tailLen = WINDOW_SIZE - _end;
             if (length > tailLen)
             {
                 // copy the first part
@@ -103,13 +103,13 @@ namespace SharpCompress.Compressors.Deflate64
                 copied = input.CopyTo(_window, _end, length);
             }
 
-            _end = (_end + copied) & WindowMask;
+            _end = (_end + copied) & WINDOW_MASK;
             _bytesUsed += copied;
             return copied;
         }
 
         /// <summary>Free space in output window.</summary>
-        public int FreeBytes => WindowSize - _bytesUsed;
+        public int FreeBytes => WINDOW_SIZE - _bytesUsed;
 
         /// <summary>Bytes not consumed in output window.</summary>
         public int AvailableBytes => _bytesUsed;
@@ -117,32 +117,32 @@ namespace SharpCompress.Compressors.Deflate64
         /// <summary>Copy the decompressed bytes to output array.</summary>
         public int CopyTo(byte[] output, int offset, int length)
         {
-            int copy_end;
+            int copyEnd;
 
             if (length > _bytesUsed)
             {
                 // we can copy all the decompressed bytes out
-                copy_end = _end;
+                copyEnd = _end;
                 length = _bytesUsed;
             }
             else
             {
-                copy_end = (_end - _bytesUsed + length) & WindowMask; // copy length of bytes
+                copyEnd = (_end - _bytesUsed + length) & WINDOW_MASK; // copy length of bytes
             }
 
             int copied = length;
 
-            int tailLen = length - copy_end;
+            int tailLen = length - copyEnd;
             if (tailLen > 0)
             {
                 // this means we need to copy two parts separately
                 // copy tailLen bytes from the end of output window
-                Array.Copy(_window, WindowSize - tailLen,
+                Array.Copy(_window, WINDOW_SIZE - tailLen,
                                   output, offset, tailLen);
                 offset += tailLen;
-                length = copy_end;
+                length = copyEnd;
             }
-            Array.Copy(_window, copy_end - length, output, offset, length);
+            Array.Copy(_window, copyEnd - length, output, offset, length);
             _bytesUsed -= copied;
             Debug.Assert(_bytesUsed >= 0, "check this function and find why we copied more bytes than we have");
             return copied;

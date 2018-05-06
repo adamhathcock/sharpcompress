@@ -447,7 +447,7 @@ namespace SharpCompress.Compressors.Deflate
             }
 
             Int32 timet = DataConverter.LittleEndian.GetInt32(header, 4);
-            _GzipMtime = TarHeader.Epoch.AddSeconds(timet);
+            _GzipMtime = TarHeader.EPOCH.AddSeconds(timet);
             totalBytesRead += n;
             if ((header[3] & 0x04) == 0x04)
             {

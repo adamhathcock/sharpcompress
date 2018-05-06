@@ -10,25 +10,25 @@ namespace SharpCompress.Common.Zip
     internal class WinzipAesCryptoStream : Stream
     {
         private const int BLOCK_SIZE_IN_BYTES = 16;
-        private readonly SymmetricAlgorithm cipher;
-        private readonly byte[] counter = new byte[BLOCK_SIZE_IN_BYTES];
-        private readonly Stream stream;
-        private readonly ICryptoTransform transform;
-        private int nonce = 1;
-        private byte[] counterOut = new byte[BLOCK_SIZE_IN_BYTES];
-        private bool isFinalBlock;
-        private long totalBytesLeftToRead;
-        private bool isDisposed;
+        private readonly SymmetricAlgorithm _cipher;
+        private readonly byte[] _counter = new byte[BLOCK_SIZE_IN_BYTES];
+        private readonly Stream _stream;
+        private readonly ICryptoTransform _transform;
+        private int _nonce = 1;
+        private byte[] _counterOut = new byte[BLOCK_SIZE_IN_BYTES];
+        private bool _isFinalBlock;
+        private long _totalBytesLeftToRead;
+        private bool _isDisposed;
 
         internal WinzipAesCryptoStream(Stream stream, WinzipAesEncryptionData winzipAesEncryptionData, long length)
         {
-            this.stream = stream;
-            totalBytesLeftToRead = length;
+            this._stream = stream;
+            _totalBytesLeftToRead = length;
 
-            cipher = CreateCipher(winzipAesEncryptionData);
+            _cipher = CreateCipher(winzipAesEncryptionData);
 
             var iv = new byte[BLOCK_SIZE_IN_BYTES];
-            transform = cipher.CreateEncryptor(winzipAesEncryptionData.KeyBytes, iv);
+            _transform = _cipher.CreateEncryptor(winzipAesEncryptionData.KeyBytes, iv);
         }
 
         private SymmetricAlgorithm CreateCipher(WinzipAesEncryptionData winzipAesEncryptionData)
@@ -69,17 +69,17 @@ namespace SharpCompress.Common.Zip
 
         protected override void Dispose(bool disposing)
         {
-            if (isDisposed)
+            if (_isDisposed)
             {
                 return;
             }
-            isDisposed = true;
+            _isDisposed = true;
             if (disposing)
             {
                 //read out last 10 auth bytes
                 var ten = new byte[10];
-                stream.ReadFully(ten);
-                stream.Dispose();
+                _stream.ReadFully(ten);
+                _stream.Dispose();
             }
         }
 
@@ -90,17 +90,17 @@ namespace SharpCompress.Common.Zip
 
         public override int Read(byte[] buffer, int offset, int count)
         {
-            if (totalBytesLeftToRead == 0)
+            if (_totalBytesLeftToRead == 0)
             {
                 return 0;
             }
             int bytesToRead = count;
-            if (count > totalBytesLeftToRead)
+            if (count > _totalBytesLeftToRead)
             {
-                bytesToRead = (int)totalBytesLeftToRead;
+                bytesToRead = (int)_totalBytesLeftToRead;
             }
-            int read = stream.Read(buffer, offset, bytesToRead);
-            totalBytesLeftToRead -= read;
+            int read = _stream.Read(buffer, offset, bytesToRead);
+            _totalBytesLeftToRead -= read;
 
             ReadTransformBlocks(buffer, offset, read);
 
@@ -109,7 +109,7 @@ namespace SharpCompress.Common.Zip
 
         private int ReadTransformOneBlock(byte[] buffer, int offset, int last)
         {
-            if (isFinalBlock)
+            if (_isFinalBlock)
             {
                 throw new InvalidOperationException();
             }
@@ -120,22 +120,22 @@ namespace SharpCompress.Common.Zip
                                   : bytesRemaining;
 
             // update the counter
-            DataConverter.LittleEndian.PutBytes(counter, 0, nonce++);
+            DataConverter.LittleEndian.PutBytes(_counter, 0, _nonce++);
 
             // Determine if this is the final block
-            if ((bytesToRead == bytesRemaining) && (totalBytesLeftToRead == 0))
+            if ((bytesToRead == bytesRemaining) && (_totalBytesLeftToRead == 0))
             {
-                counterOut = transform.TransformFinalBlock(counter,
+                _counterOut = _transform.TransformFinalBlock(_counter,
                                                            0,
                                                            BLOCK_SIZE_IN_BYTES);
-                isFinalBlock = true;
+                _isFinalBlock = true;
             }
             else
             {
-                transform.TransformBlock(counter,
+                _transform.TransformBlock(_counter,
                                          0, // offset
                                          BLOCK_SIZE_IN_BYTES,
-                                         counterOut,
+                                         _counterOut,
                                          0); // offset
             }
 
@@ -148,7 +148,7 @@ namespace SharpCompress.Common.Zip
         {
             for (int i = 0; i < count; i++)
             {
-                buffer[offset + i] = (byte)(counterOut[i] ^ buffer[offset + i]);
+                buffer[offset + i] = (byte)(_counterOut[i] ^ buffer[offset + i]);
             }
         }
 

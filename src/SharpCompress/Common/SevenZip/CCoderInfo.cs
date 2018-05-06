@@ -2,9 +2,9 @@
 {
     internal class CCoderInfo
     {
-        internal CMethodId MethodId;
-        internal byte[] Props;
-        internal int NumInStreams;
-        internal int NumOutStreams;
+        internal CMethodId _methodId;
+        internal byte[] _props;
+        internal int _numInStreams;
+        internal int _numOutStreams;
     }
 }

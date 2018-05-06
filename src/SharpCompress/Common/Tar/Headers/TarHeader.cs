@@ -7,7 +7,7 @@ namespace SharpCompress.Common.Tar.Headers
 {
     internal class TarHeader
     {
-        internal static readonly DateTime Epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+        internal static readonly DateTime EPOCH = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 
         public TarHeader(ArchiveEncoding archiveEncoding)
         {
@@ -27,11 +27,11 @@ namespace SharpCompress.Common.Tar.Headers
         internal Stream PackedStream { get; set; }
         internal ArchiveEncoding ArchiveEncoding { get; }
 
-        internal const int BlockSize = 512;
+        internal const int BLOCK_SIZE = 512;
 
         internal void Write(Stream output)
         {
-            byte[] buffer = new byte[BlockSize];
+            byte[] buffer = new byte[BLOCK_SIZE];
 
             WriteOctalBytes(511, buffer, 100, 8); // file mode
             WriteOctalBytes(0, buffer, 108, 8); // owner ID
@@ -49,7 +49,7 @@ namespace SharpCompress.Common.Tar.Headers
             {
                 WriteStringBytes(Name, buffer, 0, 100);
                 WriteOctalBytes(Size, buffer, 124, 12);
-                var time = (long)(LastModifiedTime.ToUniversalTime() - Epoch).TotalSeconds;
+                var time = (long)(LastModifiedTime.ToUniversalTime() - EPOCH).TotalSeconds;
                 WriteOctalBytes(time, buffer, 136, 12);
                 buffer[156] = (byte)EntryType;
 
@@ -82,10 +82,10 @@ namespace SharpCompress.Common.Tar.Headers
             output.Write(nameBytes, 0, nameBytes.Length);
 
             // pad to multiple of BlockSize bytes, and make sure a terminating null is added
-            int numPaddingBytes = BlockSize - (nameBytes.Length % BlockSize);
+            int numPaddingBytes = BLOCK_SIZE - (nameBytes.Length % BLOCK_SIZE);
             if (numPaddingBytes == 0)
             {
-                numPaddingBytes = BlockSize;
+                numPaddingBytes = BLOCK_SIZE;
             }
             output.Write(new byte[numPaddingBytes], 0, numPaddingBytes);
         }
@@ -114,8 +114,8 @@ namespace SharpCompress.Common.Tar.Headers
             //Mode = ReadASCIIInt32Base8(buffer, 100, 7);
             //UserId = ReadASCIIInt32Base8(buffer, 108, 7);
             //GroupId = ReadASCIIInt32Base8(buffer, 116, 7);
-            long unixTimeStamp = ReadASCIIInt64Base8(buffer, 136, 11);
-            LastModifiedTime = Epoch.AddSeconds(unixTimeStamp).ToLocalTime();
+            long unixTimeStamp = ReadAsciiInt64Base8(buffer, 136, 11);
+            LastModifiedTime = EPOCH.AddSeconds(unixTimeStamp).ToLocalTime();
 
             Magic = ArchiveEncoding.Decode(buffer, 257, 6).TrimNulls();
 
@@ -142,10 +142,10 @@ namespace SharpCompress.Common.Tar.Headers
             var size = ReadSize(buffer);
             var nameLength = (int)size;
             var nameBytes = reader.ReadBytes(nameLength);
-            var remainingBytesToRead = BlockSize - (nameLength % BlockSize);
+            var remainingBytesToRead = BLOCK_SIZE - (nameLength % BLOCK_SIZE);
 
             // Read the rest of the block and discard the data
-            if (remainingBytesToRead < BlockSize)
+            if (remainingBytesToRead < BLOCK_SIZE)
             {
                 reader.ReadBytes(remainingBytesToRead);
             }
@@ -163,14 +163,14 @@ namespace SharpCompress.Common.Tar.Headers
             {
                 return DataConverter.BigEndian.GetInt64(buffer, 0x80);
             }
-            return ReadASCIIInt64Base8(buffer, 124, 11);
+            return ReadAsciiInt64Base8(buffer, 124, 11);
         }
 
         private static byte[] ReadBlock(BinaryReader reader)
         {
-            byte[] buffer = reader.ReadBytes(BlockSize);
+            byte[] buffer = reader.ReadBytes(BLOCK_SIZE);
 
-            if (buffer.Length != 0 && buffer.Length < BlockSize)
+            if (buffer.Length != 0 && buffer.Length < BLOCK_SIZE)
             {
                 throw new InvalidOperationException("Buffer is invalid size");
             }
@@ -206,7 +206,7 @@ namespace SharpCompress.Common.Tar.Headers
             }
         }
 
-        private static int ReadASCIIInt32Base8(byte[] buffer, int offset, int count)
+        private static int ReadAsciiInt32Base8(byte[] buffer, int offset, int count)
         {
             string s = Encoding.UTF8.GetString(buffer, offset, count).TrimNulls();
             if (string.IsNullOrEmpty(s))
@@ -216,7 +216,7 @@ namespace SharpCompress.Common.Tar.Headers
             return Convert.ToInt32(s, 8);
         }
 
-        private static long ReadASCIIInt64Base8(byte[] buffer, int offset, int count)
+        private static long ReadAsciiInt64Base8(byte[] buffer, int offset, int count)
         {
             string s = Encoding.UTF8.GetString(buffer, offset, count).TrimNulls();
             if (string.IsNullOrEmpty(s))
@@ -226,7 +226,7 @@ namespace SharpCompress.Common.Tar.Headers
             return Convert.ToInt64(s, 8);
         }
 
-        private static long ReadASCIIInt64(byte[] buffer, int offset, int count)
+        private static long ReadAsciiInt64(byte[] buffer, int offset, int count)
         {
             string s = Encoding.UTF8.GetString(buffer, offset, count).TrimNulls();
             if (string.IsNullOrEmpty(s))

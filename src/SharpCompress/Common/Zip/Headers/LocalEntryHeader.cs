@@ -26,7 +26,7 @@ namespace SharpCompress.Common.Zip.Headers
             byte[] name = reader.ReadBytes(nameLength);
             byte[] extra = reader.ReadBytes(extraLength);
             
-            if (Flags.HasFlag(HeaderFlags.EFS))
+            if (Flags.HasFlag(HeaderFlags.Efs))
             {
                 Name = ArchiveEncoding.Decode(name);
             }

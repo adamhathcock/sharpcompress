@@ -5,8 +5,8 @@ namespace SharpCompress.Common.Tar
 {
     internal class TarReadOnlySubStream : Stream
     {
-        private bool isDisposed;
-        private long amountRead;
+        private bool _isDisposed;
+        private long _amountRead;
 
         public TarReadOnlySubStream(Stream stream, long bytesToRead)
         {
@@ -16,14 +16,14 @@ namespace SharpCompress.Common.Tar
 
         protected override void Dispose(bool disposing)
         {
-            if (isDisposed)
+            if (_isDisposed)
             {
                 return;
             }
-            isDisposed = true;
+            _isDisposed = true;
             if (disposing)
             {
-                long skipBytes = amountRead % 512;
+                long skipBytes = _amountRead % 512;
                 if (skipBytes == 0)
                 {
                     return;
@@ -67,7 +67,7 @@ namespace SharpCompress.Common.Tar
             if (read > 0)
             {
                 BytesLeftToRead -= read;
-                amountRead += read;
+                _amountRead += read;
             }
             return read;
         }

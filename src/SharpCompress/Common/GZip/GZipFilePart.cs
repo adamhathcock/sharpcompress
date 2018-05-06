@@ -61,7 +61,7 @@ namespace SharpCompress.Common.GZip
             }
 
             Int32 timet = DataConverter.LittleEndian.GetInt32(header, 4);
-            DateModified = TarHeader.Epoch.AddSeconds(timet);
+            DateModified = TarHeader.EPOCH.AddSeconds(timet);
             if ((header[3] & 0x04) == 0x04)
             {
                 // read and discard extra field

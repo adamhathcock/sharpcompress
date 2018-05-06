@@ -34,7 +34,7 @@ namespace SharpCompress.Common.Zip.Headers
             byte[] extra = reader.ReadBytes(extraLength);
             byte[] comment = reader.ReadBytes(commentLength);
             
-            if (Flags.HasFlag(HeaderFlags.EFS))
+            if (Flags.HasFlag(HeaderFlags.Efs))
             {
                 Name = ArchiveEncoding.Decode(name);
                 Comment = ArchiveEncoding.Decode(comment);

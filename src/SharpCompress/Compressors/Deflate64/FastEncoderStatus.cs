@@ -10,7 +10,7 @@ namespace SharpCompress.Compressors.Deflate64
     {
         // static information for encoding, DO NOT MODIFY
 
-        internal static readonly byte[] FastEncoderTreeStructureData =
+        internal static readonly byte[] FAST_ENCODER_TREE_STRUCTURE_DATA =
         {
             0xec,0xbd,0x07,0x60,0x1c,0x49,0x96,0x25,0x26,0x2f,0x6d,0xca,
             0x7b,0x7f,0x4a,0xf5,0x4a,0xd7,0xe0,0x74,0xa1,0x08,0x80,0x60,
@@ -23,7 +23,7 @@ namespace SharpCompress.Compressors.Deflate64
             0x1f,0x3f
         };
 
-        internal static readonly byte[] BFinalFastEncoderTreeStructureData =
+        internal static readonly byte[] B_FINAL_FAST_ENCODER_TREE_STRUCTURE_DATA =
         {
             0xed,0xbd,0x07,0x60,0x1c,0x49,0x96,0x25,0x26,0x2f,0x6d,0xca,
             0x7b,0x7f,0x4a,0xf5,0x4a,0xd7,0xe0,0x74,0xa1,0x08,0x80,0x60,
@@ -67,7 +67,7 @@ namespace SharpCompress.Compressors.Deflate64
         // The least 5 significant bits are the length
         // and the rest is the code bits.
 
-        internal static readonly uint[] FastEncoderLiteralCodeInfo =
+        internal static readonly uint[] FAST_ENCODER_LITERAL_CODE_INFO =
         {
             0x0000d7ee,0x0004d7ee,0x0002d7ee,0x0006d7ee,0x0001d7ee,0x0005d7ee,0x0003d7ee,
             0x0007d7ee,0x000037ee,0x0000c7ec,0x00000126,0x000437ee,0x000237ee,0x000637ee,
@@ -145,7 +145,7 @@ namespace SharpCompress.Compressors.Deflate64
             0x003de7f1,0x000047eb
         };
 
-        internal static readonly uint[] FastEncoderDistanceCodeInfo =
+        internal static readonly uint[] FAST_ENCODER_DISTANCE_CODE_INFO =
         {
             0x00000f06,0x0001ff0a,0x0003ff0b,0x0007ff0b,0x0000ff19,0x00003f18,0x0000bf28,
             0x00007f28,0x00001f37,0x00005f37,0x00000d45,0x00002f46,0x00000054,0x00001d55,
@@ -154,23 +154,23 @@ namespace SharpCompress.Compressors.Deflate64
             0x000007d5,0x000017d5,0x00000000,0x00000100
         };
 
-        internal static readonly uint[] BitMask = { 0, 1, 3, 7, 15, 31, 63, 127, 255, 511, 1023, 2047, 4095, 8191, 16383, 32767 };
-        internal static readonly byte[] ExtraLengthBits = { 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5, 0 };
-        internal static readonly byte[] ExtraDistanceBits = { 0, 0, 0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 10, 10, 11, 11, 12, 12, 13, 13, 0, 0 };
-        internal const int NumChars = 256;
-        internal const int NumLengthBaseCodes = 29;
-        internal const int NumDistBaseCodes = 30;
+        internal static readonly uint[] BIT_MASK = { 0, 1, 3, 7, 15, 31, 63, 127, 255, 511, 1023, 2047, 4095, 8191, 16383, 32767 };
+        internal static readonly byte[] EXTRA_LENGTH_BITS = { 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5, 0 };
+        internal static readonly byte[] EXTRA_DISTANCE_BITS = { 0, 0, 0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 10, 10, 11, 11, 12, 12, 13, 13, 0, 0 };
+        internal const int NUM_CHARS = 256;
+        internal const int NUM_LENGTH_BASE_CODES = 29;
+        internal const int NUM_DIST_BASE_CODES = 30;
 
-        internal const uint FastEncoderPostTreeBitBuf = 0x0022;
-        internal const int FastEncoderPostTreeBitCount = 9;
+        internal const uint FAST_ENCODER_POST_TREE_BIT_BUF = 0x0022;
+        internal const int FAST_ENCODER_POST_TREE_BIT_COUNT = 9;
 
-        internal const uint NoCompressionHeader = 0x0;
-        internal const int NoCompressionHeaderBitCount = 3;
-        internal const uint BFinalNoCompressionHeader = 0x1;
-        internal const int BFinalNoCompressionHeaderBitCount = 3;
-        internal const int MaxCodeLen = 16;
+        internal const uint NO_COMPRESSION_HEADER = 0x0;
+        internal const int NO_COMPRESSION_HEADER_BIT_COUNT = 3;
+        internal const uint B_FINAL_NO_COMPRESSION_HEADER = 0x1;
+        internal const int B_FINAL_NO_COMPRESSION_HEADER_BIT_COUNT = 3;
+        internal const int MAX_CODE_LEN = 16;
 
-        private static readonly byte[] s_distLookup = CreateDistanceLookup();
+        private static readonly byte[] S_DIST_LOOKUP = CreateDistanceLookup();
 
         private static byte[] CreateDistanceLookup()
         {
@@ -207,15 +207,15 @@ namespace SharpCompress.Compressors.Deflate64
             int code;
             for (code = 0; code < 16; code++)
             {
-                for (int n = 0; n < (1 << ExtraDistanceBits[code]); n++)
+                for (int n = 0; n < (1 << EXTRA_DISTANCE_BITS[code]); n++)
                     result[dist++] = (byte)code;
             }
 
             dist >>= 7; // from now on, all distances are divided by 128
 
-            for (; code < NumDistBaseCodes; code++)
+            for (; code < NUM_DIST_BASE_CODES; code++)
             {
-                for (int n = 0; n < (1 << (ExtraDistanceBits[code] - 7)); n++)
+                for (int n = 0; n < (1 << (EXTRA_DISTANCE_BITS[code] - 7)); n++)
                     result[256 + dist++] = (byte)code;
             }
 
@@ -224,22 +224,22 @@ namespace SharpCompress.Compressors.Deflate64
 
         // Return the position slot (0...29) of a match offset (0...32767)
         internal static int GetSlot(int pos) =>
-            s_distLookup[((pos) < 256) ? (pos) : (256 + ((pos) >> 7))];
+            S_DIST_LOOKUP[((pos) < 256) ? (pos) : (256 + ((pos) >> 7))];
 
         // Reverse 'length' of the bits in code
         public static uint BitReverse(uint code, int length)
         {
-            uint new_code = 0;
+            uint newCode = 0;
 
             Debug.Assert(length > 0 && length <= 16, "Invalid len");
             do
             {
-                new_code |= (code & 1);
-                new_code <<= 1;
+                newCode |= (code & 1);
+                newCode <<= 1;
                 code >>= 1;
             } while (--length > 0);
 
-            return new_code >> 1;
+            return newCode >> 1;
         }
     }
 }

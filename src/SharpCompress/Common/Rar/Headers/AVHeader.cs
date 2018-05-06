@@ -2,9 +2,9 @@
 
 namespace SharpCompress.Common.Rar.Headers
 {
-    internal class AVHeader : RarHeader
+    internal class AvHeader : RarHeader
     {
-        public AVHeader(RarHeader header, RarCrcBinaryReader reader) 
+        public AvHeader(RarHeader header, RarCrcBinaryReader reader) 
             : base(header, reader, HeaderType.Av) 
         {
             if (IsRar5) 

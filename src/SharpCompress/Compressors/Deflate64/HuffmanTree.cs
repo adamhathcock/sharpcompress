@@ -24,10 +24,10 @@ namespace SharpCompress.Compressors.Deflate64
 
     internal sealed class HuffmanTree
     {
-        internal const int MaxLiteralTreeElements = 288;
-        internal const int MaxDistTreeElements = 32;
-        internal const int EndOfBlockCode = 256;
-        internal const int NumberOfCodeLengthTreeElements = 19;
+        internal const int MAX_LITERAL_TREE_ELEMENTS = 288;
+        internal const int MAX_DIST_TREE_ELEMENTS = 32;
+        internal const int END_OF_BLOCK_CODE = 256;
+        internal const int NUMBER_OF_CODE_LENGTH_TREE_ELEMENTS = 19;
 
         private readonly int _tableBits;
         private readonly short[] _table;
@@ -48,13 +48,13 @@ namespace SharpCompress.Compressors.Deflate64
         public HuffmanTree(byte[] codeLengths)
         {
             Debug.Assert(
-                codeLengths.Length == MaxLiteralTreeElements ||
-                codeLengths.Length == MaxDistTreeElements ||
-                codeLengths.Length == NumberOfCodeLengthTreeElements,
+                codeLengths.Length == MAX_LITERAL_TREE_ELEMENTS ||
+                codeLengths.Length == MAX_DIST_TREE_ELEMENTS ||
+                codeLengths.Length == NUMBER_OF_CODE_LENGTH_TREE_ELEMENTS,
                 "we only expect three kinds of Length here");
             _codeLengthArray = codeLengths;
 
-            if (_codeLengthArray.Length == MaxLiteralTreeElements)
+            if (_codeLengthArray.Length == MAX_LITERAL_TREE_ELEMENTS)
             {
                 // bits for Literal/Length tree table
                 _tableBits = 9;
@@ -80,7 +80,7 @@ namespace SharpCompress.Compressors.Deflate64
         // The data is in RFC 1951.
         private static byte[] GetStaticLiteralTreeLength()
         {
-            byte[] literalTreeLength = new byte[MaxLiteralTreeElements];
+            byte[] literalTreeLength = new byte[MAX_LITERAL_TREE_ELEMENTS];
             for (int i = 0; i <= 143; i++)
                 literalTreeLength[i] = 8;
 
@@ -98,8 +98,8 @@ namespace SharpCompress.Compressors.Deflate64
 
         private static byte[] GetStaticDistanceTreeLength()
         {
-            byte[] staticDistanceTreeLength = new byte[MaxDistTreeElements];
-            for (int i = 0; i < MaxDistTreeElements; i++)
+            byte[] staticDistanceTreeLength = new byte[MAX_DIST_TREE_ELEMENTS];
+            for (int i = 0; i < MAX_DIST_TREE_ELEMENTS; i++)
             {
                 staticDistanceTreeLength[i] = 5;
             }
@@ -125,7 +125,7 @@ namespace SharpCompress.Compressors.Deflate64
                 nextCode[bits] = tempCode;
             }
 
-            uint[] code = new uint[MaxLiteralTreeElements];
+            uint[] code = new uint[MAX_LITERAL_TREE_ELEMENTS];
             for (int i = 0; i < _codeLengthArray.Length; i++)
             {
                 int len = _codeLengthArray[i];

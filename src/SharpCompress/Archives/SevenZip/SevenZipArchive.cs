@@ -104,9 +104,9 @@ namespace SharpCompress.Archives.SevenZip
         {
             var stream = volumes.Single().Stream;
             LoadFactory(stream);
-            for (int i = 0; i < database.Files.Count; i++)
+            for (int i = 0; i < database._files.Count; i++)
             {
-                var file = database.Files[i];
+                var file = database._files[i];
                 yield return new SevenZipArchiveEntry(this, new SevenZipFilePart(stream, database, i, file, ReaderOptions.ArchiveEncoding));
             }
         }
@@ -155,7 +155,7 @@ namespace SharpCompress.Archives.SevenZip
             get
             {
                 int i = Entries.Count;
-                return database.PackSizes.Aggregate(0L, (total, packSize) => total + packSize);
+                return database._packSizes.Aggregate(0L, (total, packSize) => total + packSize);
             }
         }
 

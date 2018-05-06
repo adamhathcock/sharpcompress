@@ -25,7 +25,7 @@ namespace SharpCompress.Compressors.LZMA
         internal static Stream CreateDecoderStream(CMethodId id, Stream[] inStreams, byte[] info, IPasswordProvider pass,
                                                    long limit)
         {
-            switch (id.Id)
+            switch (id._id)
             {
                 case K_COPY:
                     if (info != null)
@@ -37,7 +37,7 @@ namespace SharpCompress.Compressors.LZMA
                 case K_LZMA2:
                     return new LzmaStream(info, inStreams.Single(), -1, limit);
 #if !NO_CRYPTO
-                case CMethodId.kAESId:
+                case CMethodId.K_AES_ID:
                     return new AesDecoderStream(inStreams.Single(), info, pass, limit);
 #endif
                 case K_BCJ:

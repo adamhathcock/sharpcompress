@@ -13,7 +13,7 @@ namespace SharpCompress.Compressors.Deflate64
 {
     public sealed class Deflate64Stream : Stream
     {
-        private const int DefaultBufferSize = 8192;
+        private const int DEFAULT_BUFFER_SIZE = 8192;
 
         private Stream _stream;
         private CompressionMode _mode;
@@ -35,7 +35,7 @@ namespace SharpCompress.Compressors.Deflate64
         /// <summary>
         /// Sets up this DeflateManagedStream to be used for Inflation/Decompression
         /// </summary>
-        internal void InitializeInflater(Stream stream, ZipCompressionMethod method = ZipCompressionMethod.Deflate)
+        private void InitializeInflater(Stream stream, ZipCompressionMethod method = ZipCompressionMethod.Deflate)
         {
             Debug.Assert(stream != null);
             Debug.Assert(method == ZipCompressionMethod.Deflate || method == ZipCompressionMethod.Deflate64);
@@ -46,7 +46,7 @@ namespace SharpCompress.Compressors.Deflate64
 
             _stream = stream;
             _mode = CompressionMode.Decompress;
-            _buffer = new byte[DefaultBufferSize];
+            _buffer = new byte[DEFAULT_BUFFER_SIZE];
         }
 
         public override bool CanRead

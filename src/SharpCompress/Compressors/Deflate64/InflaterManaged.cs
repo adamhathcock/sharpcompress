@@ -37,23 +37,23 @@ namespace SharpCompress.Compressors.Deflate64
         // const tables used in decoding:
 
         // Extra bits for length code 257 - 285.
-        private static readonly byte[] s_extraLengthBits =
+        private static readonly byte[] S_EXTRA_LENGTH_BITS =
             { 0,0,0,0,0,0,0,0,1,1,1,1,2,2,2,2,3,3,3,3,4,4,4,4,5,5,5,5,16 };
 
         // The base length for length code 257 - 285.
         // The formula to get the real length for a length code is lengthBase[code - 257] + (value stored in extraBits)
-        private static readonly int[] s_lengthBase =
+        private static readonly int[] S_LENGTH_BASE =
             { 3,4,5,6,7,8,9,10,11,13,15,17,19,23,27,31,35,43,51,59,67,83,99,115,131,163,195,227,3};
 
         // The base distance for distance code 0 - 31
         // The real distance for a distance code is  distanceBasePosition[code] + (value stored in extraBits)
-        private static readonly int[] s_distanceBasePosition =
+        private static readonly int[] S_DISTANCE_BASE_POSITION =
             { 1,2,3,4,5,7,9,13,17,25,33,49,65,97,129,193,257,385,513,769,1025,1537,2049,3073,4097,6145,8193,12289,16385,24577,32769,49153 };
 
         // code lengths for code length alphabet is stored in following order
-        private static readonly byte[] s_codeOrder = { 16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1, 15 };
+        private static readonly byte[] S_CODE_ORDER = { 16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1, 15 };
 
-        private static readonly byte[] s_staticDistanceTreeTable =
+        private static readonly byte[] S_STATIC_DISTANCE_TREE_TABLE =
         {
             0x00,0x10,0x08,0x18,0x04,0x14,0x0c,0x1c,0x02,0x12,0x0a,0x1a,
             0x06,0x16,0x0e,0x1e,0x01,0x11,0x09,0x19,0x05,0x15,0x0d,0x1d,
@@ -98,8 +98,8 @@ namespace SharpCompress.Compressors.Deflate64
             _output = new OutputWindow();
             _input = new InputBuffer();
 
-            _codeList = new byte[HuffmanTree.MaxLiteralTreeElements + HuffmanTree.MaxDistTreeElements];
-            _codeLengthTreeCodeLength = new byte[HuffmanTree.NumberOfCodeLengthTreeElements];
+            _codeList = new byte[HuffmanTree.MAX_LITERAL_TREE_ELEMENTS + HuffmanTree.MAX_DIST_TREE_ELEMENTS];
+            _codeLengthTreeCodeLength = new byte[HuffmanTree.NUMBER_OF_CODE_LENGTH_TREE_ELEMENTS];
             _deflate64 = deflate64;
             //if (reader != null)
             //{
@@ -308,9 +308,9 @@ namespace SharpCompress.Compressors.Deflate64
         //
         // LEN is the number of data bytes in the block.  NLEN is the
         // one's complement of LEN.
-        private bool DecodeUncompressedBlock(out bool end_of_block)
+        private bool DecodeUncompressedBlock(out bool endOfBlock)
         {
-            end_of_block = false;
+            endOfBlock = false;
             while (true)
             {
                 switch (_state)
@@ -357,7 +357,7 @@ namespace SharpCompress.Compressors.Deflate64
                         {
                             // Done with this block, need to re-init bit buffer for next block
                             _state = InflaterState.ReadingBFinal;
-                            end_of_block = true;
+                            endOfBlock = true;
                             return true;
                         }
 
@@ -378,9 +378,9 @@ namespace SharpCompress.Compressors.Deflate64
             }
         }
 
-        private bool DecodeBlock(out bool end_of_block_code_seen)
+        private bool DecodeBlock(out bool endOfBlockCodeSeen)
         {
-            end_of_block_code_seen = false;
+            endOfBlockCodeSeen = false;
 
             int freeBytes = _output.FreeBytes;   // it is a little bit faster than frequently accessing the property
             while (freeBytes > 65536)
@@ -411,7 +411,7 @@ namespace SharpCompress.Compressors.Deflate64
                         else if (symbol == 256)
                         {
                             // end of block
-                            end_of_block_code_seen = true;
+                            endOfBlockCodeSeen = true;
                             // Reset state
                             _state = InflaterState.ReadingBFinal;
                             return true;
@@ -433,11 +433,11 @@ namespace SharpCompress.Compressors.Deflate64
                             }
                             else
                             {
-                                if (symbol < 0 || symbol >= s_extraLengthBits.Length)
+                                if (symbol < 0 || symbol >= S_EXTRA_LENGTH_BITS.Length)
                                 {
                                     throw new InvalidDataException("Deflate64: invalid data");
                                 }
-                                _extraBits = s_extraLengthBits[symbol];
+                                _extraBits = S_EXTRA_LENGTH_BITS[symbol];
                                 Debug.Assert(_extraBits != 0, "We handle other cases separately!");
                             }
                             _length = symbol;
@@ -455,11 +455,11 @@ namespace SharpCompress.Compressors.Deflate64
                                 return false;
                             }
 
-                            if (_length < 0 || _length >= s_lengthBase.Length)
+                            if (_length < 0 || _length >= S_LENGTH_BASE.Length)
                             {
                                 throw new InvalidDataException("Deflate64: invalid data");
                             }
-                            _length = s_lengthBase[_length] + bits;
+                            _length = S_LENGTH_BASE[_length] + bits;
                         }
                         _state = InflaterState.HaveFullLength;
                         goto case InflaterState.HaveFullLength;
@@ -475,7 +475,7 @@ namespace SharpCompress.Compressors.Deflate64
                             _distanceCode = _input.GetBits(5);
                             if (_distanceCode >= 0)
                             {
-                                _distanceCode = s_staticDistanceTreeTable[_distanceCode];
+                                _distanceCode = S_STATIC_DISTANCE_TREE_TABLE[_distanceCode];
                             }
                         }
 
@@ -500,7 +500,7 @@ namespace SharpCompress.Compressors.Deflate64
                             {
                                 return false;
                             }
-                            offset = s_distanceBasePosition[_distanceCode] + bits;
+                            offset = S_DISTANCE_BASE_POSITION[_distanceCode] + bits;
                         }
                         else
                         {
@@ -588,13 +588,13 @@ namespace SharpCompress.Compressors.Deflate64
                         {
                             return false;
                         }
-                        _codeLengthTreeCodeLength[s_codeOrder[_loopCounter]] = (byte)bits;
+                        _codeLengthTreeCodeLength[S_CODE_ORDER[_loopCounter]] = (byte)bits;
                         ++_loopCounter;
                     }
 
-                    for (int i = _codeLengthCodeCount; i < s_codeOrder.Length; i++)
+                    for (int i = _codeLengthCodeCount; i < S_CODE_ORDER.Length; i++)
                     {
-                        _codeLengthTreeCodeLength[s_codeOrder[i]] = 0;
+                        _codeLengthTreeCodeLength[S_CODE_ORDER[i]] = 0;
                     }
 
                     // create huffman tree for code length
@@ -714,15 +714,15 @@ namespace SharpCompress.Compressors.Deflate64
                     throw new InvalidDataException("Deflate64: unknown state");
             }
 
-            byte[] literalTreeCodeLength = new byte[HuffmanTree.MaxLiteralTreeElements];
-            byte[] distanceTreeCodeLength = new byte[HuffmanTree.MaxDistTreeElements];
+            byte[] literalTreeCodeLength = new byte[HuffmanTree.MAX_LITERAL_TREE_ELEMENTS];
+            byte[] distanceTreeCodeLength = new byte[HuffmanTree.MAX_DIST_TREE_ELEMENTS];
 
             // Create literal and distance tables
             Array.Copy(_codeList, 0, literalTreeCodeLength, 0, _literalLengthCodeCount);
             Array.Copy(_codeList, _literalLengthCodeCount, distanceTreeCodeLength, 0, _distanceCodeCount);
 
             // Make sure there is an end-of-block code, otherwise how could we ever end?
-            if (literalTreeCodeLength[HuffmanTree.EndOfBlockCode] == 0)
+            if (literalTreeCodeLength[HuffmanTree.END_OF_BLOCK_CODE] == 0)
             {
                 throw new InvalidDataException();
             }
