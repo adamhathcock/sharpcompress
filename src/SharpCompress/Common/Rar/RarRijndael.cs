@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
+using SharpCompress.Crypto;
 
 namespace SharpCompress.Common.Rar
 {
