@@ -1,7 +1,6 @@
 ﻿using System;
-using Org.BouncyCastle.Crypto.Parameters;
 
-namespace Org.BouncyCastle.Crypto.Engines
+namespace SharpCompress.Crypto
 {
     public class RijndaelEngine
         : IBlockCipher

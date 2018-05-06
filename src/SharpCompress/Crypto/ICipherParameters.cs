@@ -1,4 +1,4 @@
-﻿namespace Org.BouncyCastle.Crypto
+﻿namespace SharpCompress.Crypto
 {
     public interface ICipherParameters
     {

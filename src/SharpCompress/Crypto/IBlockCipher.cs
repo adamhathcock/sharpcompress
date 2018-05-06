@@ -1,4 +1,4 @@
-﻿namespace Org.BouncyCastle.Crypto
+﻿namespace SharpCompress.Crypto
 {
     /// <remarks>Base interface for a symmetric key block cipher.</remarks>
     public interface IBlockCipher

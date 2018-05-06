@@ -4,8 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
-using Org.BouncyCastle.Crypto.Engines;
-using Org.BouncyCastle.Crypto.Parameters;
+using SharpCompress.Crypto;
 
 namespace SharpCompress.Common.Rar
 {
