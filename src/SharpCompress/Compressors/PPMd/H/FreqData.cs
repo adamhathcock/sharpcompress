@@ -6,7 +6,7 @@ namespace SharpCompress.Compressors.PPMd.H
 {
     internal class FreqData : Pointer
     {
-        internal const int Size = 6;
+        internal const int SIZE = 6;
 
         //    struct FreqData
         //    {
@@ -14,8 +14,8 @@ namespace SharpCompress.Compressors.PPMd.H
         //        STATE _PACK_ATTR * Stats;
         //    };
 
-        internal FreqData(byte[] Memory)
-            : base(Memory)
+        internal FreqData(byte[] memory)
+            : base(memory)
         {
         }
 
@@ -55,7 +55,7 @@ namespace SharpCompress.Compressors.PPMd.H
             buffer.Append("\n  Address=");
             buffer.Append(Address);
             buffer.Append("\n  size=");
-            buffer.Append(Size);
+            buffer.Append(SIZE);
             buffer.Append("\n  summFreq=");
             buffer.Append(SummFreq);
             buffer.Append("\n  stats=");

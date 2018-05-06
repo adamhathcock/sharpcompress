@@ -51,7 +51,7 @@ namespace SharpCompress.Compressors.Rar.UnpackV1
 
         public int PpmEscChar { get; set; }
 
-        private readonly ModelPPM ppm = new ModelPPM();
+        private readonly ModelPpm ppm = new ModelPpm();
 
         private readonly RarVM rarVM = new RarVM();
 
@@ -242,7 +242,7 @@ namespace SharpCompress.Compressors.Rar.UnpackV1
                 }
                 if (unpBlockType == BlockTypes.BLOCK_PPM)
                 {
-                    int Ch = ppm.decodeChar();
+                    int Ch = ppm.DecodeChar();
                     if (Ch == -1)
                     {
                         ppmError = true;
@@ -250,7 +250,7 @@ namespace SharpCompress.Compressors.Rar.UnpackV1
                     }
                     if (Ch == PpmEscChar)
                     {
-                        int NextCh = ppm.decodeChar();
+                        int NextCh = ppm.DecodeChar();
                         if (NextCh == 0)
                         {
                             if (!ReadTables())
@@ -277,7 +277,7 @@ namespace SharpCompress.Compressors.Rar.UnpackV1
                             bool failed = false;
                             for (int I = 0; I < 4 && !failed; I++)
                             {
-                                int ch = ppm.decodeChar();
+                                int ch = ppm.DecodeChar();
                                 if (ch == -1)
                                 {
                                     failed = true;
@@ -305,7 +305,7 @@ namespace SharpCompress.Compressors.Rar.UnpackV1
                         }
                         if (NextCh == 5)
                         {
-                            int Length = ppm.decodeChar();
+                            int Length = ppm.DecodeChar();
                             if (Length == -1)
                             {
                                 break;
@@ -828,7 +828,7 @@ WriteBorder=Math.Min(MaxWinSize,UNPACK_MAX_WRITE)&MaxWinMask;
             if ((bitField & 0x8000) != 0)
             {
                 unpBlockType = BlockTypes.BLOCK_PPM;
-                return (ppm.decodeInit(this, PpmEscChar));
+                return (ppm.DecodeInit(this, PpmEscChar));
             }
             unpBlockType = BlockTypes.BLOCK_LZ;
 
@@ -973,7 +973,7 @@ WriteBorder=Math.Min(MaxWinSize,UNPACK_MAX_WRITE)&MaxWinMask;
 
         private bool ReadVMCodePPM()
         {
-            int FirstByte = ppm.decodeChar();
+            int FirstByte = ppm.DecodeChar();
             if (FirstByte == -1)
             {
                 return (false);
@@ -981,7 +981,7 @@ WriteBorder=Math.Min(MaxWinSize,UNPACK_MAX_WRITE)&MaxWinMask;
             int Length = (FirstByte & 7) + 1;
             if (Length == 7)
             {
-                int B1 = ppm.decodeChar();
+                int B1 = ppm.DecodeChar();
                 if (B1 == -1)
                 {
                     return (false);
@@ -990,12 +990,12 @@ WriteBorder=Math.Min(MaxWinSize,UNPACK_MAX_WRITE)&MaxWinMask;
             }
             else if (Length == 8)
             {
-                int B1 = ppm.decodeChar();
+                int B1 = ppm.DecodeChar();
                 if (B1 == -1)
                 {
                     return (false);
                 }
-                int B2 = ppm.decodeChar();
+                int B2 = ppm.DecodeChar();
                 if (B2 == -1)
                 {
                     return (false);
@@ -1006,7 +1006,7 @@ WriteBorder=Math.Min(MaxWinSize,UNPACK_MAX_WRITE)&MaxWinMask;
             List<Byte> vmCode = new List<Byte>();
             for (int I = 0; I < Length; I++)
             {
-                int Ch = ppm.decodeChar();
+                int Ch = ppm.DecodeChar();
                 if (Ch == -1)
                 {
                     return (false);
@@ -1262,7 +1262,7 @@ WriteBorder=Math.Min(MaxWinSize,UNPACK_MAX_WRITE)&MaxWinMask;
                 SubAllocator allocator = ppm.SubAlloc;
                 if (allocator != null)
                 {
-                    allocator.stopSubAllocator();
+                    allocator.StopSubAllocator();
                 }
             }
         }

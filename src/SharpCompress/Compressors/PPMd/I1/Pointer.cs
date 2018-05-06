@@ -7,7 +7,7 @@ using System;
 namespace SharpCompress.Compressors.PPMd.I1
 {
     /// <summary>
-    /// A structure containing a single address representing a position in the <see cref="Memory"/> array.  This
+    /// A structure containing a single address representing a position in the <see cref="_memory"/> array.  This
     /// is intended to mimic the behaviour of a pointer in C/C++.
     /// </summary>
     /// <remarks>
@@ -17,23 +17,23 @@ namespace SharpCompress.Compressors.PPMd.I1
     /// instance rather than just copying a reference to the same instance).
     /// </para>
     /// <para>
-    /// Note that <see cref="Address"/> is a field rather than a property for performance reasons.
+    /// Note that <see cref="_address"/> is a field rather than a property for performance reasons.
     /// </para>
     /// </remarks>
     internal struct Pointer
     {
-        public uint Address;
-        public byte[] Memory;
-        public static readonly Pointer Zero = new Pointer(0, null);
-        public const int Size = 1;
+        public uint _address;
+        public byte[] _memory;
+        public static readonly Pointer ZERO = new Pointer(0, null);
+        public const int SIZE = 1;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Pointer"/> structure.
         /// </summary>
         public Pointer(uint address, byte[] memory)
         {
-            Address = address;
-            Memory = memory;
+            _address = address;
+            _memory = memory;
         }
 
         /// <summary>
@@ -46,22 +46,22 @@ namespace SharpCompress.Compressors.PPMd.I1
             get
             {
 #if DEBUG
-                if (Address == 0)
+                if (_address == 0)
                 {
                     throw new InvalidOperationException("The pointer being indexed is a null pointer.");
                 }
 #endif
-                return Memory[Address + offset];
+                return _memory[_address + offset];
             }
             set
             {
 #if DEBUG
-                if (Address == 0)
+                if (_address == 0)
                 {
                     throw new InvalidOperationException("The pointer being indexed is a null pointer.");
                 }
 #endif
-                Memory[Address + offset] = value;
+                _memory[_address + offset] = value;
             }
         }
 
@@ -72,7 +72,7 @@ namespace SharpCompress.Compressors.PPMd.I1
         /// <returns></returns>
         public static implicit operator Pointer(MemoryNode memoryNode)
         {
-            return new Pointer(memoryNode.Address, memoryNode.Memory);
+            return new Pointer(memoryNode._address, memoryNode._memory);
         }
 
         /// <summary>
@@ -82,7 +82,7 @@ namespace SharpCompress.Compressors.PPMd.I1
         /// <returns></returns>
         public static implicit operator Pointer(Model.PpmContext context)
         {
-            return new Pointer(context.Address, context.Memory);
+            return new Pointer(context._address, context._memory);
         }
 
         /// <summary>
@@ -92,7 +92,7 @@ namespace SharpCompress.Compressors.PPMd.I1
         /// <returns></returns>
         public static implicit operator Pointer(PpmState state)
         {
-            return new Pointer(state.Address, state.Memory);
+            return new Pointer(state._address, state._memory);
         }
 
         /// <summary>
@@ -104,12 +104,12 @@ namespace SharpCompress.Compressors.PPMd.I1
         public static Pointer operator +(Pointer pointer, int offset)
         {
 #if DEBUG
-            if (pointer.Address == 0)
+            if (pointer._address == 0)
             {
                 throw new InvalidOperationException("The pointer is a null pointer.");
             }
 #endif
-            pointer.Address = (uint)(pointer.Address + offset);
+            pointer._address = (uint)(pointer._address + offset);
             return pointer;
         }
 
@@ -122,12 +122,12 @@ namespace SharpCompress.Compressors.PPMd.I1
         public static Pointer operator +(Pointer pointer, uint offset)
         {
 #if DEBUG
-            if (pointer.Address == 0)
+            if (pointer._address == 0)
             {
                 throw new InvalidOperationException("The pointer is a null pointer.");
             }
 #endif
-            pointer.Address += offset;
+            pointer._address += offset;
             return pointer;
         }
 
@@ -139,12 +139,12 @@ namespace SharpCompress.Compressors.PPMd.I1
         public static Pointer operator ++(Pointer pointer)
         {
 #if DEBUG
-            if (pointer.Address == 0)
+            if (pointer._address == 0)
             {
                 throw new InvalidOperationException("The pointer being incremented is a null pointer.");
             }
 #endif
-            pointer.Address++;
+            pointer._address++;
             return pointer;
         }
 
@@ -157,12 +157,12 @@ namespace SharpCompress.Compressors.PPMd.I1
         public static Pointer operator -(Pointer pointer, int offset)
         {
 #if DEBUG
-            if (pointer.Address == 0)
+            if (pointer._address == 0)
             {
                 throw new InvalidOperationException("The pointer is a null pointer.");
             }
 #endif
-            pointer.Address = (uint)(pointer.Address - offset);
+            pointer._address = (uint)(pointer._address - offset);
             return pointer;
         }
 
@@ -175,12 +175,12 @@ namespace SharpCompress.Compressors.PPMd.I1
         public static Pointer operator -(Pointer pointer, uint offset)
         {
 #if DEBUG
-            if (pointer.Address == 0)
+            if (pointer._address == 0)
             {
                 throw new InvalidOperationException("The pointer is a null pointer.");
             }
 #endif
-            pointer.Address -= offset;
+            pointer._address -= offset;
             return pointer;
         }
 
@@ -192,12 +192,12 @@ namespace SharpCompress.Compressors.PPMd.I1
         public static Pointer operator --(Pointer pointer)
         {
 #if DEBUG
-            if (pointer.Address == 0)
+            if (pointer._address == 0)
             {
                 throw new InvalidOperationException("The pointer being decremented is a null pointer.");
             }
 #endif
-            pointer.Address--;
+            pointer._address--;
             return pointer;
         }
 
@@ -210,18 +210,18 @@ namespace SharpCompress.Compressors.PPMd.I1
         public static uint operator -(Pointer pointer1, Pointer pointer2)
         {
 #if DEBUG
-            if (pointer1.Address == 0)
+            if (pointer1._address == 0)
             {
                 throw new InvalidOperationException(
                                                     "The pointer to the left of the subtraction operator is a null pointer.");
             }
-            if (pointer2.Address == 0)
+            if (pointer2._address == 0)
             {
                 throw new InvalidOperationException(
                                                     "The pointer to the right of the subtraction operator is a null pointer.");
             }
 #endif
-            return pointer1.Address - pointer2.Address;
+            return pointer1._address - pointer2._address;
         }
 
         /// <summary>
@@ -233,18 +233,18 @@ namespace SharpCompress.Compressors.PPMd.I1
         public static bool operator <(Pointer pointer1, Pointer pointer2)
         {
 #if DEBUG
-            if (pointer1.Address == 0)
+            if (pointer1._address == 0)
             {
                 throw new InvalidOperationException(
                                                     "The pointer to the left of the less than operator is a null pointer.");
             }
-            if (pointer2.Address == 0)
+            if (pointer2._address == 0)
             {
                 throw new InvalidOperationException(
                                                     "The pointer to the right of the less than operator is a null pointer.");
             }
 #endif
-            return pointer1.Address < pointer2.Address;
+            return pointer1._address < pointer2._address;
         }
 
         /// <summary>
@@ -256,18 +256,18 @@ namespace SharpCompress.Compressors.PPMd.I1
         public static bool operator <=(Pointer pointer1, Pointer pointer2)
         {
 #if DEBUG
-            if (pointer1.Address == 0)
+            if (pointer1._address == 0)
             {
                 throw new InvalidOperationException(
                                                     "The pointer to the left of the less than or equal to operator is a null pointer.");
             }
-            if (pointer2.Address == 0)
+            if (pointer2._address == 0)
             {
                 throw new InvalidOperationException(
                                                     "The pointer to the right of the less than or equal to operator is a null pointer.");
             }
 #endif
-            return pointer1.Address <= pointer2.Address;
+            return pointer1._address <= pointer2._address;
         }
 
         /// <summary>
@@ -279,18 +279,18 @@ namespace SharpCompress.Compressors.PPMd.I1
         public static bool operator >(Pointer pointer1, Pointer pointer2)
         {
 #if DEBUG
-            if (pointer1.Address == 0)
+            if (pointer1._address == 0)
             {
                 throw new InvalidOperationException(
                                                     "The pointer to the left of the greater than operator is a null pointer.");
             }
-            if (pointer2.Address == 0)
+            if (pointer2._address == 0)
             {
                 throw new InvalidOperationException(
                                                     "The pointer to the right of the greater than operator is a null pointer.");
             }
 #endif
-            return pointer1.Address > pointer2.Address;
+            return pointer1._address > pointer2._address;
         }
 
         /// <summary>
@@ -302,18 +302,18 @@ namespace SharpCompress.Compressors.PPMd.I1
         public static bool operator >=(Pointer pointer1, Pointer pointer2)
         {
 #if DEBUG
-            if (pointer1.Address == 0)
+            if (pointer1._address == 0)
             {
                 throw new InvalidOperationException(
                                                     "The pointer to the left of the greater than or equal to operator is a null pointer.");
             }
-            if (pointer2.Address == 0)
+            if (pointer2._address == 0)
             {
                 throw new InvalidOperationException(
                                                     "The pointer to the right of the greater than or equal to operator is a null pointer.");
             }
 #endif
-            return pointer1.Address >= pointer2.Address;
+            return pointer1._address >= pointer2._address;
         }
 
         /// <summary>
@@ -324,7 +324,7 @@ namespace SharpCompress.Compressors.PPMd.I1
         /// <returns></returns>
         public static bool operator ==(Pointer pointer1, Pointer pointer2)
         {
-            return pointer1.Address == pointer2.Address;
+            return pointer1._address == pointer2._address;
         }
 
         /// <summary>
@@ -335,7 +335,7 @@ namespace SharpCompress.Compressors.PPMd.I1
         /// <returns></returns>
         public static bool operator !=(Pointer pointer1, Pointer pointer2)
         {
-            return pointer1.Address != pointer2.Address;
+            return pointer1._address != pointer2._address;
         }
 
         /// <summary>
@@ -348,7 +348,7 @@ namespace SharpCompress.Compressors.PPMd.I1
             if (obj is Pointer)
             {
                 Pointer pointer = (Pointer)obj;
-                return pointer.Address == Address;
+                return pointer._address == _address;
             }
             return base.Equals(obj);
         }
@@ -359,7 +359,7 @@ namespace SharpCompress.Compressors.PPMd.I1
         /// <returns>A 32-bit signed integer that is the hash code for this instance.</returns>
         public override int GetHashCode()
         {
-            return Address.GetHashCode();
+            return _address.GetHashCode();
         }
     }
 }

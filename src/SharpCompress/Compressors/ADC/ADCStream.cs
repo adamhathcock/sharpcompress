@@ -36,27 +36,27 @@ namespace SharpCompress.Compressors.ADC
         /// <summary>
         /// This stream holds the compressed data
         /// </summary>
-        private readonly Stream stream;
+        private readonly Stream _stream;
 
         /// <summary>
         /// Is this instance disposed?
         /// </summary>
-        private bool isDisposed;
+        private bool _isDisposed;
 
         /// <summary>
         /// Position in decompressed data
         /// </summary>
-        private long position;
+        private long _position;
 
         /// <summary>
         /// Buffer with currently used chunk of decompressed data
         /// </summary>
-        private byte[] outBuffer;
+        private byte[] _outBuffer;
 
         /// <summary>
         /// Position in buffer of decompressed data
         /// </summary>
-        private int outPosition;
+        private int _outPosition;
 
         /// <summary>
         /// Initializates a stream that decompresses ADC data on the fly
@@ -70,10 +70,10 @@ namespace SharpCompress.Compressors.ADC
                 throw new NotSupportedException();
             }
 
-            this.stream = stream;
+            _stream = stream;
         }
 
-        public override bool CanRead => stream.CanRead;
+        public override bool CanRead => _stream.CanRead;
 
         public override bool CanSeek => false;
 
@@ -81,7 +81,7 @@ namespace SharpCompress.Compressors.ADC
 
         public override long Length => throw new NotSupportedException();
 
-        public override long Position { get => position; set => throw new NotSupportedException(); }
+        public override long Position { get => _position; set => throw new NotSupportedException(); }
 
         public override void Flush()
         {
@@ -89,11 +89,11 @@ namespace SharpCompress.Compressors.ADC
 
         protected override void Dispose(bool disposing)
         {
-            if (isDisposed)
+            if (_isDisposed)
             {
                 return;
             }
-            isDisposed = true;
+            _isDisposed = true;
             base.Dispose(disposing);
         }
 
@@ -122,35 +122,35 @@ namespace SharpCompress.Compressors.ADC
 
             int size = -1;
 
-            if (outBuffer == null)
+            if (_outBuffer == null)
             {
-                size = ADCBase.Decompress(stream, out outBuffer);
-                outPosition = 0;
+                size = ADCBase.Decompress(_stream, out _outBuffer);
+                _outPosition = 0;
             }
 
             int inPosition = offset;
             int toCopy = count;
             int copied = 0;
 
-            while (outPosition + toCopy >= outBuffer.Length)
+            while (_outPosition + toCopy >= _outBuffer.Length)
             {
-                int piece = outBuffer.Length - outPosition;
-                Array.Copy(outBuffer, outPosition, buffer, inPosition, piece);
+                int piece = _outBuffer.Length - _outPosition;
+                Array.Copy(_outBuffer, _outPosition, buffer, inPosition, piece);
                 inPosition += piece;
                 copied += piece;
-                position += piece;
+                _position += piece;
                 toCopy -= piece;
-                size = ADCBase.Decompress(stream, out outBuffer);
-                outPosition = 0;
-                if (size == 0 || outBuffer == null || outBuffer.Length == 0)
+                size = ADCBase.Decompress(_stream, out _outBuffer);
+                _outPosition = 0;
+                if (size == 0 || _outBuffer == null || _outBuffer.Length == 0)
                 {
                     return copied;
                 }
             }
 
-            Array.Copy(outBuffer, outPosition, buffer, inPosition, toCopy);
-            outPosition += toCopy;
-            position += toCopy;
+            Array.Copy(_outBuffer, _outPosition, buffer, inPosition, toCopy);
+            _outPosition += toCopy;
+            _position += toCopy;
             copied += toCopy;
             return copied;
         }

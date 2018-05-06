@@ -13,8 +13,8 @@ namespace SharpCompress.Compressors.LZMA.LZ
         private int _pendingDist;
         private Stream _stream;
 
-        public long Total;
-        public long Limit;
+        public long _total;
+        public long _limit;
 
         public void Create(int windowSize)
         {
@@ -30,8 +30,8 @@ namespace SharpCompress.Compressors.LZMA.LZ
             _pos = 0;
             _streamPos = 0;
             _pendingLen = 0;
-            Total = 0;
-            Limit = 0;
+            _total = 0;
+            _limit = 0;
         }
 
         public void Reset()
@@ -50,8 +50,8 @@ namespace SharpCompress.Compressors.LZMA.LZ
             long len = stream.Length;
             int size = (len < _windowSize) ? (int)len : _windowSize;
             stream.Position = len - size;
-            Total = 0;
-            Limit = size;
+            _total = 0;
+            _limit = size;
             _pos = _windowSize - size;
             CopyStream(stream, size);
             if (_pos == _windowSize)
@@ -94,14 +94,14 @@ namespace SharpCompress.Compressors.LZMA.LZ
             {
                 pos += _windowSize;
             }
-            for (; size > 0 && _pos < _windowSize && Total < Limit; size--)
+            for (; size > 0 && _pos < _windowSize && _total < _limit; size--)
             {
                 if (pos >= _windowSize)
                 {
                     pos = 0;
                 }
                 _buffer[_pos++] = _buffer[pos++];
-                Total++;
+                _total++;
                 if (_pos >= _windowSize)
                 {
                     Flush();
@@ -114,7 +114,7 @@ namespace SharpCompress.Compressors.LZMA.LZ
         public void PutByte(byte b)
         {
             _buffer[_pos++] = b;
-            Total++;
+            _total++;
             if (_pos >= _windowSize)
             {
                 Flush();
@@ -134,12 +134,12 @@ namespace SharpCompress.Compressors.LZMA.LZ
         public int CopyStream(Stream stream, int len)
         {
             int size = len;
-            while (size > 0 && _pos < _windowSize && Total < Limit)
+            while (size > 0 && _pos < _windowSize && _total < _limit)
             {
                 int curSize = _windowSize - _pos;
-                if (curSize > Limit - Total)
+                if (curSize > _limit - _total)
                 {
-                    curSize = (int)(Limit - Total);
+                    curSize = (int)(_limit - _total);
                 }
                 if (curSize > size)
                 {
@@ -152,7 +152,7 @@ namespace SharpCompress.Compressors.LZMA.LZ
                 }
                 size -= numReadBytes;
                 _pos += numReadBytes;
-                Total += numReadBytes;
+                _total += numReadBytes;
                 if (_pos >= _windowSize)
                 {
                     Flush();
@@ -163,10 +163,10 @@ namespace SharpCompress.Compressors.LZMA.LZ
 
         public void SetLimit(long size)
         {
-            Limit = Total + size;
+            _limit = _total + size;
         }
 
-        public bool HasSpace => _pos < _windowSize && Total < Limit;
+        public bool HasSpace => _pos < _windowSize && _total < _limit;
 
         public bool HasPending => _pendingLen > 0;
 

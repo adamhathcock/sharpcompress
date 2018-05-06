@@ -15,7 +15,7 @@ namespace SharpCompress.Common.Rar
         public RarCryptoBinaryReader(Stream stream, string password)
             : base(stream)
         {
-            this._password = password;
+            _password = password;
 
             // coderb: not sure why this was being done at this logical point
             //SkipQueue();
@@ -42,7 +42,7 @@ namespace SharpCompress.Common.Rar
 
         internal void InitializeAes(byte[] salt)
         {
-            this._salt = salt;
+            _salt = salt;
             _rijndael = RarRijndael.InitializeFrom(_password, salt);
         }
 

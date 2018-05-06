@@ -18,37 +18,37 @@ namespace SharpCompress.Compressors.PPMd.I1
     /// </para>
     /// <remarks>
     /// Note that in most cases fields are used rather than properties for performance reasons (for example,
-    /// <see cref="Shift"/> is a field rather than a property).
+    /// <see cref="_shift"/> is a field rather than a property).
     /// </remarks>
     /// </remarks>
     internal class See2Context
     {
-        private const byte PeriodBitCount = 7;
+        private const byte PERIOD_BIT_COUNT = 7;
 
-        public ushort Summary;
-        public byte Shift;
-        public byte Count;
+        public ushort _summary;
+        public byte _shift;
+        public byte _count;
 
         public void Initialize(uint initialValue)
         {
-            Shift = PeriodBitCount - 4;
-            Summary = (ushort)(initialValue << Shift);
-            Count = 7;
+            _shift = PERIOD_BIT_COUNT - 4;
+            _summary = (ushort)(initialValue << _shift);
+            _count = 7;
         }
 
         public uint Mean()
         {
-            uint value = (uint)(Summary >> Shift);
-            Summary = (ushort)(Summary - value);
+            uint value = (uint)(_summary >> _shift);
+            _summary = (ushort)(_summary - value);
             return (uint)(value + ((value == 0) ? 1 : 0));
         }
 
         public void Update()
         {
-            if (Shift < PeriodBitCount && --Count == 0)
+            if (_shift < PERIOD_BIT_COUNT && --_count == 0)
             {
-                Summary += Summary;
-                Count = (byte)(3 << Shift++);
+                _summary += _summary;
+                _count = (byte)(3 << _shift++);
             }
         }
     }

@@ -5,15 +5,15 @@ namespace SharpCompress.Compressors.PPMd.H
 {
     internal class SubAllocator
     {
-        public virtual int FakeUnitsStart { get => fakeUnitsStart; set => fakeUnitsStart = value; }
+        public virtual int FakeUnitsStart { get => _fakeUnitsStart; set => _fakeUnitsStart = value; }
 
-        public virtual int HeapEnd => heapEnd;
+        public virtual int HeapEnd => _heapEnd;
 
-        public virtual int PText { get => pText; set => pText = value; }
+        public virtual int PText { get => _pText; set => _pText = value; }
 
-        public virtual int UnitsStart { get => unitsStart; set => unitsStart = value; }
+        public virtual int UnitsStart { get => _unitsStart; set => _unitsStart = value; }
 
-        public virtual byte[] Heap => heap;
+        public virtual byte[] Heap => _heap;
 
         //UPGRADE_NOTE: Final was removed from the declaration of 'N4 '. "ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?index='!DefaultContextWindowIndex'&keyword='jlca1003'"
         public const int N1 = 4;
@@ -30,123 +30,123 @@ namespace SharpCompress.Compressors.PPMd.H
 
         public const int FIXED_UNIT_SIZE = 12;
 
-        private int subAllocatorSize;
+        private int _subAllocatorSize;
 
         // byte Indx2Units[N_INDEXES], Units2Indx[128], GlueCount;
-        private readonly int[] indx2Units = new int[N_INDEXES];
-        private readonly int[] units2Indx = new int[128];
-        private int glueCount;
+        private readonly int[] _indx2Units = new int[N_INDEXES];
+        private readonly int[] _units2Indx = new int[128];
+        private int _glueCount;
 
         // byte *HeapStart,*LoUnit, *HiUnit;
-        private int heapStart, loUnit, hiUnit;
+        private int _heapStart, _loUnit, _hiUnit;
 
         //UPGRADE_NOTE: Final was removed from the declaration of 'freeList '. "ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?index='!DefaultContextWindowIndex'&keyword='jlca1003'"
-        private readonly RarNode[] freeList = new RarNode[N_INDEXES];
+        private readonly RarNode[] _freeList = new RarNode[N_INDEXES];
 
         // byte *pText, *UnitsStart,*HeapEnd,*FakeUnitsStart;
-        private int pText, unitsStart, heapEnd, fakeUnitsStart;
+        private int _pText, _unitsStart, _heapEnd, _fakeUnitsStart;
 
-        private byte[] heap;
+        private byte[] _heap;
 
-        private int freeListPos;
+        private int _freeListPos;
 
-        private int tempMemBlockPos;
+        private int _tempMemBlockPos;
 
         // Temp fields
-        private RarNode tempRarNode;
-        private RarMemBlock tempRarMemBlock1;
-        private RarMemBlock tempRarMemBlock2;
-        private RarMemBlock tempRarMemBlock3;
+        private RarNode _tempRarNode;
+        private RarMemBlock _tempRarMemBlock1;
+        private RarMemBlock _tempRarMemBlock2;
+        private RarMemBlock _tempRarMemBlock3;
 
         public SubAllocator()
         {
-            clean();
+            Clean();
         }
 
-        public virtual void clean()
+        public virtual void Clean()
         {
-            subAllocatorSize = 0;
+            _subAllocatorSize = 0;
         }
 
-        private void insertNode(int p, int indx)
+        private void InsertNode(int p, int indx)
         {
-            RarNode temp = tempRarNode;
+            RarNode temp = _tempRarNode;
             temp.Address = p;
-            temp.SetNext(freeList[indx].GetNext());
-            freeList[indx].SetNext(temp);
+            temp.SetNext(_freeList[indx].GetNext());
+            _freeList[indx].SetNext(temp);
         }
 
-        public virtual void incPText()
+        public virtual void IncPText()
         {
-            pText++;
+            _pText++;
         }
 
-        private int removeNode(int indx)
+        private int RemoveNode(int indx)
         {
-            int retVal = freeList[indx].GetNext();
-            RarNode temp = tempRarNode;
+            int retVal = _freeList[indx].GetNext();
+            RarNode temp = _tempRarNode;
             temp.Address = retVal;
-            freeList[indx].SetNext(temp.GetNext());
+            _freeList[indx].SetNext(temp.GetNext());
             return retVal;
         }
 
-        private int U2B(int NU)
+        private int U2B(int nu)
         {
-            return UNIT_SIZE * NU;
+            return UNIT_SIZE * nu;
         }
 
         /* memblockptr */
 
-        private int MBPtr(int BasePtr, int Items)
+        private int MbPtr(int basePtr, int items)
         {
-            return (BasePtr + U2B(Items));
+            return (basePtr + U2B(items));
         }
 
-        private void splitBlock(int pv, int oldIndx, int newIndx)
+        private void SplitBlock(int pv, int oldIndx, int newIndx)
         {
-            int i, uDiff = indx2Units[oldIndx] - indx2Units[newIndx];
-            int p = pv + U2B(indx2Units[newIndx]);
-            if (indx2Units[i = units2Indx[uDiff - 1]] != uDiff)
+            int i, uDiff = _indx2Units[oldIndx] - _indx2Units[newIndx];
+            int p = pv + U2B(_indx2Units[newIndx]);
+            if (_indx2Units[i = _units2Indx[uDiff - 1]] != uDiff)
             {
-                insertNode(p, --i);
-                p += U2B(i = indx2Units[i]);
+                InsertNode(p, --i);
+                p += U2B(i = _indx2Units[i]);
                 uDiff -= i;
             }
-            insertNode(p, units2Indx[uDiff - 1]);
+            InsertNode(p, _units2Indx[uDiff - 1]);
         }
 
-        public virtual void stopSubAllocator()
+        public virtual void StopSubAllocator()
         {
-            if (subAllocatorSize != 0)
+            if (_subAllocatorSize != 0)
             {
-                subAllocatorSize = 0;
+                _subAllocatorSize = 0;
 
                 //ArrayFactory.BYTES_FACTORY.recycle(heap);
-                heap = null;
-                heapStart = 1;
+                _heap = null;
+                _heapStart = 1;
 
                 // rarfree(HeapStart);
                 // Free temp fields
-                tempRarNode = null;
-                tempRarMemBlock1 = null;
-                tempRarMemBlock2 = null;
-                tempRarMemBlock3 = null;
+                _tempRarNode = null;
+                _tempRarMemBlock1 = null;
+                _tempRarMemBlock2 = null;
+                _tempRarMemBlock3 = null;
             }
         }
 
         public virtual int GetAllocatedMemory()
         {
-            return subAllocatorSize;
+            return _subAllocatorSize;
         }
 
-        public virtual bool startSubAllocator(int SASize)
+        public virtual bool StartSubAllocator(int saSize)
         {
-            int t = SASize;
-            if (subAllocatorSize == t)
+            int t = saSize;
+            if (_subAllocatorSize == t)
             {
                 return true;
             }
-            stopSubAllocator();
+            StopSubAllocator();
             int allocSize = t / FIXED_UNIT_SIZE * UNIT_SIZE + UNIT_SIZE;
 
             // adding space for freelist (needed for poiters)
@@ -154,56 +154,56 @@ namespace SharpCompress.Compressors.PPMd.H
             int realAllocSize = 1 + allocSize + 4 * N_INDEXES;
 
             // adding space for an additional memblock
-            tempMemBlockPos = realAllocSize;
-            realAllocSize += RarMemBlock.size;
+            _tempMemBlockPos = realAllocSize;
+            realAllocSize += RarMemBlock.SIZE;
 
-            heap = new byte[realAllocSize];
-            heapStart = 1;
-            heapEnd = heapStart + allocSize - UNIT_SIZE;
-            subAllocatorSize = t;
+            _heap = new byte[realAllocSize];
+            _heapStart = 1;
+            _heapEnd = _heapStart + allocSize - UNIT_SIZE;
+            _subAllocatorSize = t;
 
             // Bug fixed
-            freeListPos = heapStart + allocSize;
+            _freeListPos = _heapStart + allocSize;
 
             //UPGRADE_ISSUE: The following fragment of code could not be parsed and was not converted. "ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?index='!DefaultContextWindowIndex'&keyword='jlca1156'"
             //assert(realAllocSize - tempMemBlockPos == RarMemBlock.size): realAllocSize 
             //+   + tempMemBlockPos +   + RarMemBlock.size;
 
             // Init freeList
-            for (int i = 0, pos = freeListPos; i < freeList.Length; i++, pos += RarNode.size)
+            for (int i = 0, pos = _freeListPos; i < _freeList.Length; i++, pos += RarNode.SIZE)
             {
-                freeList[i] = new RarNode(heap);
-                freeList[i].Address = pos;
+                _freeList[i] = new RarNode(_heap);
+                _freeList[i].Address = pos;
             }
 
             // Init temp fields
-            tempRarNode = new RarNode(heap);
-            tempRarMemBlock1 = new RarMemBlock(heap);
-            tempRarMemBlock2 = new RarMemBlock(heap);
-            tempRarMemBlock3 = new RarMemBlock(heap);
+            _tempRarNode = new RarNode(_heap);
+            _tempRarMemBlock1 = new RarMemBlock(_heap);
+            _tempRarMemBlock2 = new RarMemBlock(_heap);
+            _tempRarMemBlock3 = new RarMemBlock(_heap);
 
             return true;
         }
 
-        private void glueFreeBlocks()
+        private void GlueFreeBlocks()
         {
-            RarMemBlock s0 = tempRarMemBlock1;
-            s0.Address = tempMemBlockPos;
-            RarMemBlock p = tempRarMemBlock2;
-            RarMemBlock p1 = tempRarMemBlock3;
+            RarMemBlock s0 = _tempRarMemBlock1;
+            s0.Address = _tempMemBlockPos;
+            RarMemBlock p = _tempRarMemBlock2;
+            RarMemBlock p1 = _tempRarMemBlock3;
             int i, k, sz;
-            if (loUnit != hiUnit)
+            if (_loUnit != _hiUnit)
             {
-                heap[loUnit] = 0;
+                _heap[_loUnit] = 0;
             }
             for (i = 0, s0.SetPrev(s0), s0.SetNext(s0); i < N_INDEXES; i++)
             {
-                while (freeList[i].GetNext() != 0)
+                while (_freeList[i].GetNext() != 0)
                 {
-                    p.Address = removeNode(i); // =(RAR_MEM_BLK*)RemoveNode(i);
+                    p.Address = RemoveNode(i); // =(RAR_MEM_BLK*)RemoveNode(i);
                     p.InsertAt(s0); // p->insertAt(&s0);
                     p.Stamp = 0xFFFF; // p->Stamp=0xFFFF;
-                    p.SetNU(indx2Units[i]); // p->NU=Indx2Units[i];
+                    p.SetNu(_indx2Units[i]); // p->NU=Indx2Units[i];
                 }
             }
             for (p.Address = s0.GetNext(); p.Address != s0.Address; p.Address = p.GetNext())
@@ -211,12 +211,12 @@ namespace SharpCompress.Compressors.PPMd.H
                 // while ((p1=MBPtr(p,p->NU))->Stamp == 0xFFFF && int(p->NU)+p1->NU
                 // < 0x10000)
                 // Bug fixed
-                p1.Address = MBPtr(p.Address, p.GetNU());
-                while (p1.Stamp == 0xFFFF && p.GetNU() + p1.GetNU() < 0x10000)
+                p1.Address = MbPtr(p.Address, p.GetNu());
+                while (p1.Stamp == 0xFFFF && p.GetNu() + p1.GetNu() < 0x10000)
                 {
                     p1.Remove();
-                    p.SetNU(p.GetNU() + p1.GetNU()); // ->NU += p1->NU;
-                    p1.Address = MBPtr(p.Address, p.GetNU());
+                    p.SetNu(p.GetNu() + p1.GetNu()); // ->NU += p1->NU;
+                    p1.Address = MbPtr(p.Address, p.GetNu());
                 }
             }
 
@@ -225,29 +225,29 @@ namespace SharpCompress.Compressors.PPMd.H
             p.Address = s0.GetNext();
             while (p.Address != s0.Address)
             {
-                for (p.Remove(), sz = p.GetNU(); sz > 128; sz -= 128, p.Address = MBPtr(p.Address, 128))
+                for (p.Remove(), sz = p.GetNu(); sz > 128; sz -= 128, p.Address = MbPtr(p.Address, 128))
                 {
-                    insertNode(p.Address, N_INDEXES - 1);
+                    InsertNode(p.Address, N_INDEXES - 1);
                 }
-                if (indx2Units[i = units2Indx[sz - 1]] != sz)
+                if (_indx2Units[i = _units2Indx[sz - 1]] != sz)
                 {
-                    k = sz - indx2Units[--i];
-                    insertNode(MBPtr(p.Address, sz - k), k - 1);
+                    k = sz - _indx2Units[--i];
+                    InsertNode(MbPtr(p.Address, sz - k), k - 1);
                 }
-                insertNode(p.Address, i);
+                InsertNode(p.Address, i);
                 p.Address = s0.GetNext();
             }
         }
 
-        private int allocUnitsRare(int indx)
+        private int AllocUnitsRare(int indx)
         {
-            if (glueCount == 0)
+            if (_glueCount == 0)
             {
-                glueCount = 255;
-                glueFreeBlocks();
-                if (freeList[indx].GetNext() != 0)
+                _glueCount = 255;
+                GlueFreeBlocks();
+                if (_freeList[indx].GetNext() != 0)
                 {
-                    return removeNode(indx);
+                    return RemoveNode(indx);
                 }
             }
             int i = indx;
@@ -255,151 +255,151 @@ namespace SharpCompress.Compressors.PPMd.H
             {
                 if (++i == N_INDEXES)
                 {
-                    glueCount--;
-                    i = U2B(indx2Units[indx]);
-                    int j = FIXED_UNIT_SIZE * indx2Units[indx];
-                    if (fakeUnitsStart - pText > j)
+                    _glueCount--;
+                    i = U2B(_indx2Units[indx]);
+                    int j = FIXED_UNIT_SIZE * _indx2Units[indx];
+                    if (_fakeUnitsStart - _pText > j)
                     {
-                        fakeUnitsStart -= j;
-                        unitsStart -= i;
-                        return unitsStart;
+                        _fakeUnitsStart -= j;
+                        _unitsStart -= i;
+                        return _unitsStart;
                     }
                     return (0);
                 }
             }
-            while (freeList[i].GetNext() == 0);
-            int retVal = removeNode(i);
-            splitBlock(retVal, i, indx);
+            while (_freeList[i].GetNext() == 0);
+            int retVal = RemoveNode(i);
+            SplitBlock(retVal, i, indx);
             return retVal;
         }
 
-        public virtual int allocUnits(int NU)
+        public virtual int AllocUnits(int nu)
         {
-            int indx = units2Indx[NU - 1];
-            if (freeList[indx].GetNext() != 0)
+            int indx = _units2Indx[nu - 1];
+            if (_freeList[indx].GetNext() != 0)
             {
-                return removeNode(indx);
+                return RemoveNode(indx);
             }
-            int retVal = loUnit;
-            loUnit += U2B(indx2Units[indx]);
-            if (loUnit <= hiUnit)
+            int retVal = _loUnit;
+            _loUnit += U2B(_indx2Units[indx]);
+            if (_loUnit <= _hiUnit)
             {
                 return retVal;
             }
-            loUnit -= U2B(indx2Units[indx]);
-            return allocUnitsRare(indx);
+            _loUnit -= U2B(_indx2Units[indx]);
+            return AllocUnitsRare(indx);
         }
 
-        public virtual int allocContext()
+        public virtual int AllocContext()
         {
-            if (hiUnit != loUnit)
+            if (_hiUnit != _loUnit)
             {
-                return (hiUnit -= UNIT_SIZE);
+                return (_hiUnit -= UNIT_SIZE);
             }
-            if (freeList[0].GetNext() != 0)
+            if (_freeList[0].GetNext() != 0)
             {
-                return removeNode(0);
+                return RemoveNode(0);
             }
-            return allocUnitsRare(0);
+            return AllocUnitsRare(0);
         }
 
-        public virtual int expandUnits(int oldPtr, int OldNU)
+        public virtual int ExpandUnits(int oldPtr, int oldNu)
         {
-            int i0 = units2Indx[OldNU - 1];
-            int i1 = units2Indx[OldNU - 1 + 1];
+            int i0 = _units2Indx[oldNu - 1];
+            int i1 = _units2Indx[oldNu - 1 + 1];
             if (i0 == i1)
             {
                 return oldPtr;
             }
-            int ptr = allocUnits(OldNU + 1);
+            int ptr = AllocUnits(oldNu + 1);
             if (ptr != 0)
             {
                 // memcpy(ptr,OldPtr,U2B(OldNU));
-                Array.Copy(heap, oldPtr, heap, ptr, U2B(OldNU));
-                insertNode(oldPtr, i0);
+                Array.Copy(_heap, oldPtr, _heap, ptr, U2B(oldNu));
+                InsertNode(oldPtr, i0);
             }
             return ptr;
         }
 
-        public virtual int shrinkUnits(int oldPtr, int oldNU, int newNU)
+        public virtual int ShrinkUnits(int oldPtr, int oldNu, int newNu)
         {
             // System.out.println("SubAllocator.shrinkUnits(" + OldPtr + ", " +
             // OldNU + ", " + NewNU + ")");
-            int i0 = units2Indx[oldNU - 1];
-            int i1 = units2Indx[newNU - 1];
+            int i0 = _units2Indx[oldNu - 1];
+            int i1 = _units2Indx[newNu - 1];
             if (i0 == i1)
             {
                 return oldPtr;
             }
-            if (freeList[i1].GetNext() != 0)
+            if (_freeList[i1].GetNext() != 0)
             {
-                int ptr = removeNode(i1);
+                int ptr = RemoveNode(i1);
 
                 // memcpy(ptr,OldPtr,U2B(NewNU));
                 // for (int i = 0; i < U2B(NewNU); i++) {
                 // heap[ptr + i] = heap[OldPtr + i];
                 // }
-                Array.Copy(heap, oldPtr, heap, ptr, U2B(newNU));
-                insertNode(oldPtr, i0);
+                Array.Copy(_heap, oldPtr, _heap, ptr, U2B(newNu));
+                InsertNode(oldPtr, i0);
                 return ptr;
             }
-            splitBlock(oldPtr, i0, i1);
+            SplitBlock(oldPtr, i0, i1);
             return oldPtr;
         }
 
-        public virtual void freeUnits(int ptr, int OldNU)
+        public virtual void FreeUnits(int ptr, int oldNu)
         {
-            insertNode(ptr, units2Indx[OldNU - 1]);
+            InsertNode(ptr, _units2Indx[oldNu - 1]);
         }
 
-        public virtual void decPText(int dPText)
+        public virtual void DecPText(int dPText)
         {
             PText = PText - dPText;
         }
 
-        public virtual void initSubAllocator()
+        public virtual void InitSubAllocator()
         {
             int i, k;
-            Utility.Fill(heap, freeListPos, freeListPos + sizeOfFreeList(), (byte)0);
+            Utility.Fill(_heap, _freeListPos, _freeListPos + SizeOfFreeList(), (byte)0);
 
-            pText = heapStart;
+            _pText = _heapStart;
 
-            int size2 = FIXED_UNIT_SIZE * (subAllocatorSize / 8 / FIXED_UNIT_SIZE * 7);
+            int size2 = FIXED_UNIT_SIZE * (_subAllocatorSize / 8 / FIXED_UNIT_SIZE * 7);
             int realSize2 = size2 / FIXED_UNIT_SIZE * UNIT_SIZE;
-            int size1 = subAllocatorSize - size2;
+            int size1 = _subAllocatorSize - size2;
             int realSize1 = size1 / FIXED_UNIT_SIZE * UNIT_SIZE + size1 % FIXED_UNIT_SIZE;
-            hiUnit = heapStart + subAllocatorSize;
-            loUnit = unitsStart = heapStart + realSize1;
-            fakeUnitsStart = heapStart + size1;
-            hiUnit = loUnit + realSize2;
+            _hiUnit = _heapStart + _subAllocatorSize;
+            _loUnit = _unitsStart = _heapStart + realSize1;
+            _fakeUnitsStart = _heapStart + size1;
+            _hiUnit = _loUnit + realSize2;
 
             for (i = 0, k = 1; i < N1; i++, k += 1)
             {
-                indx2Units[i] = k & 0xff;
+                _indx2Units[i] = k & 0xff;
             }
             for (k++; i < N1 + N2; i++, k += 2)
             {
-                indx2Units[i] = k & 0xff;
+                _indx2Units[i] = k & 0xff;
             }
             for (k++; i < N1 + N2 + N3; i++, k += 3)
             {
-                indx2Units[i] = k & 0xff;
+                _indx2Units[i] = k & 0xff;
             }
             for (k++; i < (N1 + N2 + N3 + N4); i++, k += 4)
             {
-                indx2Units[i] = k & 0xff;
+                _indx2Units[i] = k & 0xff;
             }
 
-            for (glueCount = 0, k = 0, i = 0; k < 128; k++)
+            for (_glueCount = 0, k = 0, i = 0; k < 128; k++)
             {
-                i += ((indx2Units[i] < (k + 1)) ? 1 : 0);
-                units2Indx[k] = i & 0xff;
+                i += ((_indx2Units[i] < (k + 1)) ? 1 : 0);
+                _units2Indx[k] = i & 0xff;
             }
         }
 
-        private int sizeOfFreeList()
+        private int SizeOfFreeList()
         {
-            return freeList.Length * RarNode.size;
+            return _freeList.Length * RarNode.SIZE;
         }
 
         // Debug
@@ -426,26 +426,26 @@ namespace SharpCompress.Compressors.PPMd.H
             StringBuilder buffer = new StringBuilder();
             buffer.Append("SubAllocator[");
             buffer.Append("\n  subAllocatorSize=");
-            buffer.Append(subAllocatorSize);
+            buffer.Append(_subAllocatorSize);
             buffer.Append("\n  glueCount=");
-            buffer.Append(glueCount);
+            buffer.Append(_glueCount);
             buffer.Append("\n  heapStart=");
-            buffer.Append(heapStart);
+            buffer.Append(_heapStart);
             buffer.Append("\n  loUnit=");
-            buffer.Append(loUnit);
+            buffer.Append(_loUnit);
             buffer.Append("\n  hiUnit=");
-            buffer.Append(hiUnit);
+            buffer.Append(_hiUnit);
             buffer.Append("\n  pText=");
-            buffer.Append(pText);
+            buffer.Append(_pText);
             buffer.Append("\n  unitsStart=");
-            buffer.Append(unitsStart);
+            buffer.Append(_unitsStart);
             buffer.Append("\n]");
             return buffer.ToString();
         }
 
         static SubAllocator()
         {
-            UNIT_SIZE = Math.Max(PPMContext.size, RarMemBlock.size);
+            UNIT_SIZE = Math.Max(PpmContext.SIZE, RarMemBlock.SIZE);
         }
     }
 }

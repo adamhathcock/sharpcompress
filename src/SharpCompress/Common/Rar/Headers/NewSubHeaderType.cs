@@ -33,13 +33,13 @@ namespace SharpCompress.Common.Rar.Headers
 
         internal bool Equals(byte[] bytes)
         {
-            if (this._bytes.Length != bytes.Length)
+            if (_bytes.Length != bytes.Length)
             {
                 return false;
             }
             for (int i = 0; i < bytes.Length; ++i)
             {
-                if (this._bytes[i] != bytes[i])
+                if (_bytes[i] != bytes[i])
                 {
                     return false;
                 }

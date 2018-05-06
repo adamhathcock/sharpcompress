@@ -20,8 +20,8 @@ namespace SharpCompress.Common.Rar
 
         private RarRijndael(string password, byte[] salt)
         {
-            this._password = password;
-            this._salt = salt;
+            _password = password;
+            _salt = salt;
         }
 
         private byte[] ComputeHash(byte[] input)

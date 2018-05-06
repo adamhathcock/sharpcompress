@@ -15,8 +15,8 @@ namespace SharpCompress.Common.Rar
 
         public RarCryptoWrapper(Stream actualStream, string password, byte[] salt)
         {
-            this._actualStream = actualStream;
-            this._salt = salt;
+            _actualStream = actualStream;
+            _salt = salt;
             _rijndael = RarRijndael.InitializeFrom(password, salt);
         }
 

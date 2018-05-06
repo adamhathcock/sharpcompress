@@ -457,7 +457,7 @@ namespace SharpCompress.Common.SevenZip
                     {
                         break;
                     }
-                    if (type == BlockType.CRC)
+                    if (type == BlockType.Crc)
                     {
                         packCRCs = ReadHashDigests(numPackStreams);
                         continue;
@@ -545,7 +545,7 @@ namespace SharpCompress.Common.SevenZip
                         return;
                     }
 
-                    if (type == BlockType.CRC)
+                    if (type == BlockType.Crc)
                     {
                         List<uint?> crcs = ReadHashDigests(numFolders);
                         for (int i = 0; i < numFolders; i++)
@@ -600,7 +600,7 @@ namespace SharpCompress.Common.SevenZip
 #endif
                         continue;
                     }
-                    if (type == BlockType.CRC || type == BlockType.Size)
+                    if (type == BlockType.Crc || type == BlockType.Size)
                     {
                         break;
                     }
@@ -672,7 +672,7 @@ namespace SharpCompress.Common.SevenZip
 
                 for (;;)
                 {
-                    if (type == BlockType.CRC)
+                    if (type == BlockType.Crc)
                     {
                         digests = new List<uint?>(numDigestsTotal);
 
@@ -835,7 +835,7 @@ namespace SharpCompress.Common.SevenZip
 
                     if (folder.UnpackCRCDefined)
                     {
-                        if (CRC.Finish(CRC.Update(CRC.kInitCRC, data, 0, unpackSize)) != folder.UnpackCRC)
+                        if (Crc.Finish(Crc.Update(Crc.INIT_CRC, data, 0, unpackSize)) != folder.UnpackCRC)
                         {
                             throw new InvalidOperationException("Decoded stream does not match expected CRC.");
                         }
@@ -1227,11 +1227,11 @@ namespace SharpCompress.Common.SevenZip
             long nextHeaderSize = (long)DataReader.Get64(_header, 0x14);
             uint nextHeaderCrc = DataReader.Get32(_header, 0x1C);
 
-            uint crc = CRC.kInitCRC;
-            crc = CRC.Update(crc, nextHeaderOffset);
-            crc = CRC.Update(crc, nextHeaderSize);
-            crc = CRC.Update(crc, nextHeaderCrc);
-            crc = CRC.Finish(crc);
+            uint crc = Crc.INIT_CRC;
+            crc = Crc.Update(crc, nextHeaderOffset);
+            crc = Crc.Update(crc, nextHeaderSize);
+            crc = Crc.Update(crc, nextHeaderCrc);
+            crc = Crc.Finish(crc);
 
             if (crc != crcFromArchive)
             {
@@ -1262,7 +1262,7 @@ namespace SharpCompress.Common.SevenZip
             byte[] header = new byte[nextHeaderSize];
             _stream.ReadExact(header, 0, header.Length);
 
-            if (CRC.Finish(CRC.Update(CRC.kInitCRC, header, 0, header.Length)) != nextHeaderCrc)
+            if (Crc.Finish(Crc.Update(Crc.INIT_CRC, header, 0, header.Length)) != nextHeaderCrc)
             {
                 throw new InvalidOperationException();
             }

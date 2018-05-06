@@ -26,7 +26,7 @@ namespace SharpCompress.Common.Rar.Headers
         private RarHeader(RarCrcBinaryReader reader, bool isRar5, ArchiveEncoding archiveEncoding) 
         {
             _headerType = HeaderType.Null;
-            this._isRar5 = isRar5;
+            _isRar5 = isRar5;
             ArchiveEncoding = archiveEncoding;
             if (IsRar5) 
             {
@@ -60,7 +60,7 @@ namespace SharpCompress.Common.Rar.Headers
         }
 
         protected RarHeader(RarHeader header, RarCrcBinaryReader reader, HeaderType headerType) {
-            this._headerType = headerType;
+            _headerType = headerType;
             _isRar5 = header.IsRar5;
             HeaderCrc = header.HeaderCrc;
             HeaderCode = header.HeaderCode;

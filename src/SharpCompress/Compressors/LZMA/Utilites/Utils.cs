@@ -18,7 +18,7 @@ namespace SharpCompress.Compressors.LZMA.Utilites
         UnpackInfo = 7,
         SubStreamsInfo = 8,
         Size = 9,
-        CRC = 10,
+        Crc = 10,
         Folder = 11,
         CodersUnpackSize = 12,
         NumUnpackStream = 13,

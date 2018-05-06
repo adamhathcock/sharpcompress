@@ -77,7 +77,7 @@ namespace SharpCompress.Compressors.LZMA
     /// <summary>
     /// Provides the fields that represent properties idenitifiers for compressing.
     /// </summary>
-    internal enum CoderPropID
+    internal enum CoderPropId
     {
         /// <summary>
         /// Specifies default property.
@@ -157,7 +157,7 @@ namespace SharpCompress.Compressors.LZMA
 
     internal interface ISetCoderProperties
     {
-        void SetCoderProperties(CoderPropID[] propIDs, object[] properties);
+        void SetCoderProperties(CoderPropId[] propIDs, object[] properties);
     }
 
     internal interface IWriteCoderProperties
