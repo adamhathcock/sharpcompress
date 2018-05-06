@@ -8,16 +8,16 @@ namespace SharpCompress.Compressors.Filters
 
         private static readonly int[] MASK_TO_BIT_NUMBER = {0, 1, 2, 2, 3, 3, 3, 3};
 
-        private int pos;
-        private int prevMask;
+        private int _pos;
+        private int _prevMask;
 
         public BCJFilter(bool isEncoder, Stream baseStream)
             : base(isEncoder, baseStream, 5)
         {
-            pos = 5;
+            _pos = 5;
         }
 
-        private static bool test86MSByte(byte b)
+        private static bool Test86MsByte(byte b)
         {
             return b == 0x00 || b == 0xFF;
         }
@@ -39,18 +39,18 @@ namespace SharpCompress.Compressors.Filters
                 if ((prevPos & ~3) != 0)
                 {
                     // (unsigned)prevPos > 3
-                    prevMask = 0;
+                    _prevMask = 0;
                 }
                 else
                 {
-                    prevMask = (prevMask << (prevPos - 1)) & 7;
-                    if (prevMask != 0)
+                    _prevMask = (_prevMask << (prevPos - 1)) & 7;
+                    if (_prevMask != 0)
                     {
-                        if (!MASK_TO_ALLOWED_STATUS[prevMask] || test86MSByte(
-                                                                              buffer[i + 4 - MASK_TO_BIT_NUMBER[prevMask]]))
+                        if (!MASK_TO_ALLOWED_STATUS[_prevMask] || Test86MsByte(
+                                                                              buffer[i + 4 - MASK_TO_BIT_NUMBER[_prevMask]]))
                         {
                             prevPos = i;
-                            prevMask = (prevMask << 1) | 1;
+                            _prevMask = (_prevMask << 1) | 1;
                             continue;
                         }
                     }
@@ -58,7 +58,7 @@ namespace SharpCompress.Compressors.Filters
 
                 prevPos = i;
 
-                if (test86MSByte(buffer[i + 4]))
+                if (Test86MsByte(buffer[i + 4]))
                 {
                     int src = buffer[i + 1]
                               | (buffer[i + 2] << 8)
@@ -67,22 +67,22 @@ namespace SharpCompress.Compressors.Filters
                     int dest;
                     while (true)
                     {
-                        if (isEncoder)
+                        if (_isEncoder)
                         {
-                            dest = src + (pos + i - offset);
+                            dest = src + (_pos + i - offset);
                         }
                         else
                         {
-                            dest = src - (pos + i - offset);
+                            dest = src - (_pos + i - offset);
                         }
 
-                        if (prevMask == 0)
+                        if (_prevMask == 0)
                         {
                             break;
                         }
 
-                        int index = MASK_TO_BIT_NUMBER[prevMask] * 8;
-                        if (!test86MSByte((byte)(dest >> (24 - index))))
+                        int index = MASK_TO_BIT_NUMBER[_prevMask] * 8;
+                        if (!Test86MsByte((byte)(dest >> (24 - index))))
                         {
                             break;
                         }
@@ -98,15 +98,15 @@ namespace SharpCompress.Compressors.Filters
                 }
                 else
                 {
-                    prevMask = (prevMask << 1) | 1;
+                    _prevMask = (_prevMask << 1) | 1;
                 }
             }
 
             prevPos = i - prevPos;
-            prevMask = ((prevPos & ~3) != 0) ? 0 : prevMask << (prevPos - 1);
+            _prevMask = ((prevPos & ~3) != 0) ? 0 : _prevMask << (prevPos - 1);
 
             i -= offset;
-            pos += i;
+            _pos += i;
             return i;
         }
     }
