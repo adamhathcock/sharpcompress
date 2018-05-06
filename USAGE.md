@@ -32,7 +32,7 @@ To be explicit though, consider always using the overloads that use `ReaderOptio
 
 ## Samples
 
-Also, look over the tests for more thorough [examples](https://github.com/adamhathcock/sharpcompress/tree/master/test/SharpCompress.Test)
+Also, look over the tests for more thorough [examples](https://github.com/adamhathcock/sharpcompress/tree/master/tests/SharpCompress.Test)
 
 ### Create Zip Archive from all files in a directory to a file
 
