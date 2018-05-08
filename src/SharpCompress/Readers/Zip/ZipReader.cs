@@ -10,7 +10,7 @@ namespace SharpCompress.Readers.Zip
     {
         private readonly StreamingZipHeaderFactory _headerFactory;
 
-        internal ZipReader(Stream stream, ReaderOptions options)
+        private ZipReader(Stream stream, ReaderOptions options)
             : base(options, ArchiveType.Zip)
         {
             Volume = new ZipVolume(stream, options);

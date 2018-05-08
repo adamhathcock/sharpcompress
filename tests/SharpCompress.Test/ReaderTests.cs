@@ -20,7 +20,10 @@ namespace SharpCompress.Test
             foreach (var path in testArchives)
             {
                 using (var stream = new NonDisposingStream(new ForwardOnlyStream(File.OpenRead(path)), true))
-                using (var reader = ReaderFactory.Open(stream))
+                using (var reader = ReaderFactory.Open(stream, new ReaderOptions()
+                                                               {
+                                                                   LeaveStreamOpen = true
+                                                               }))
                 {
                     UseReader(this, reader, expectedCompression);
                     stream.ThrowOnDispose = false;

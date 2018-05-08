@@ -3,7 +3,7 @@ using System.IO;
 
 namespace SharpCompress.IO
 {
-    internal class NonDisposingStream : Stream
+    public class NonDisposingStream : Stream
     {
         public NonDisposingStream(Stream stream, bool throwOnDispose = false)
         {
@@ -15,6 +15,7 @@ namespace SharpCompress.IO
 
         protected override void Dispose(bool disposing)
         {
+            GC.SuppressFinalize(this);
             if (ThrowOnDispose)
             {
                 throw new InvalidOperationException();

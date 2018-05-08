@@ -6,7 +6,7 @@ namespace SharpCompress.Writers
 {
     public abstract class AbstractWriter : IWriter
     {
-        private bool isDisposed;
+        private bool _isDisposed;
 
         protected AbstractWriter(ArchiveType type, WriterOptions writerOptions)
         {
@@ -29,7 +29,7 @@ namespace SharpCompress.Writers
 
         protected virtual void Dispose(bool isDisposing)
         {
-            if (isDisposing && !WriterOptions.LeaveStreamOpen)
+            if (isDisposing)
             {
                 OutputStream.Dispose();
             }
@@ -37,20 +37,20 @@ namespace SharpCompress.Writers
 
         public void Dispose()
         {
-            if (!isDisposed)
+            if (!_isDisposed)
             {
                 GC.SuppressFinalize(this);
                 Dispose(true);
-                isDisposed = true;
+                _isDisposed = true;
             }
         }
 
         ~AbstractWriter()
         {
-            if (!isDisposed)
+            if (!_isDisposed)
             {
                 Dispose(false);
-                isDisposed = true;
+                _isDisposed = true;
             }
         }
     }
