@@ -49,6 +49,11 @@ namespace SharpCompress.Common
 #if NETSTANDARD1_0
             return Decode(bytes, 0, bytes.Length);
 #else
+            //allow forced to override this.
+            if (Forced != null)
+            {
+                return Decode(bytes, 0, bytes.Length);
+            }
             var extendedAsciiEncoding = Encoding.GetEncoding(437);
             return extendedAsciiEncoding.GetString(bytes, 0, bytes.Length);
 #endif
