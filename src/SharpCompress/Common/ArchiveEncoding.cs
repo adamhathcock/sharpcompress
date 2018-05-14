@@ -76,7 +76,7 @@ namespace SharpCompress.Common
 
         public Func<byte[], int, int, string> GetDecoder()
         {
-            return CustomDecoder ?? ((bytes, index, count) => (Default ?? Encoding.UTF8).GetString(bytes, index, count));
+            return CustomDecoder ?? ((bytes, index, count) => GetEncoding().GetString(bytes, index, count));
         }
     }
 }
