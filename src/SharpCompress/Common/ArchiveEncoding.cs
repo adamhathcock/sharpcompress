@@ -49,8 +49,8 @@ namespace SharpCompress.Common
 #if NETSTANDARD1_0
             return Decode(bytes, 0, bytes.Length);
 #else
-            //allow forced to override this.
-            if (Forced != null)
+            //allow forced and custom to override this.
+            if (CustomDecoder != null || Forced != null)
             {
                 return Decode(bytes, 0, bytes.Length);
             }
