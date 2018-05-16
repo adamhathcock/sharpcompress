@@ -1,8 +1,8 @@
 # SharpCompress Usage
 
-## Stream Rules
+## Stream Rules (changed with 0.21)
 
-When dealing with Streams, the rule should be that you don't close a stream you didn't create. This, in effect, should mean you should always put a Stream in a using block to dispose it.
+When dealing with Streams, the rule should be that you don't close a stream you didn't create. This, in effect, should mean you should always put a Stream in a using block to dispose it. 
 
 However, the .NET Framework often has classes that will dispose streams by default to make things "easy" like the following:
 
@@ -23,12 +23,11 @@ using (var reader = new StreamReader(fileStream))
 }
 ```
 
-To deal with the "correct" rules as well as the expectations of users, I've decided on this:
-
-* When writing, leave streams open.
-* When reading, close streams
+To deal with the "correct" rules as well as the expectations of users, I've decided to always close wrapped streams as of 0.21.
 
 To be explicit though, consider always using the overloads that use `ReaderOptions` or `WriterOptions` and explicitly set `LeaveStreamOpen` the way you want.
+
+If using Compression Stream classes directly and you don't want the wrapped stream to be closed.  Use the `NonDisposingStream` as a wrapped to prevent the stream being disposed.  The change in 0.21 simplified a lot even though the usage is a bit more convoluted.
 
 ## Samples
 
