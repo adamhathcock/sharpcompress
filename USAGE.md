@@ -127,3 +127,20 @@ using (var writer = WriterFactory.Open(stream, ArchiveType.Tar, new WriterOption
     writer.WriteAll("D:\\temp", "*", SearchOption.AllDirectories);
 }
 ```
+
+### Extract zip which has non-utf8 encoded filename(cp932)
+
+```C#
+var opts = new SharpCompress.Readers.ReaderOptions();
+var encoding = Encoding.GetEncoding(932);
+opts.ArchiveEncoding = new SharpCompress.Common.ArchiveEncoding();
+opts.ArchiveEncoding.CustomDecoder = (data, x, y) =>
+{
+    return encoding.GetString(data);
+};
+var tr = SharpCompress.Archives.Zip.ZipArchive.Open("test.zip", opts);
+foreach(var entry in tr.Entries)
+{
+    Console.WriteLine($"{entry.Key}");
+}
+```
