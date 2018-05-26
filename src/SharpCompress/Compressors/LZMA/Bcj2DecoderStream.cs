@@ -193,6 +193,22 @@ namespace SharpCompress.Compressors.LZMA
             return count;
         }
 
+        public override int ReadByte()
+        {
+            if (_mFinished)
+            {
+                return -1;
+            }
+
+            if (!_mIter.MoveNext())
+            {
+                _mFinished = true;
+                return -1;
+            }
+
+            return _mIter.Current;
+        }
+
         public IEnumerable<byte> Run()
         {
             const uint kBurstSize = (1u << 18);

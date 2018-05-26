@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 
 namespace SharpCompress.IO
@@ -48,6 +48,12 @@ namespace SharpCompress.IO
         {
             writableStream.Write(buffer, offset, count);
             Count += (uint)count;
+        }
+
+        public override void WriteByte(byte value)
+        {
+            writableStream.WriteByte(value);
+            ++Count;
         }
     }
 }

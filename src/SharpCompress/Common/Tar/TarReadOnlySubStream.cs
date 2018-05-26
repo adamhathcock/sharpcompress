@@ -72,6 +72,22 @@ namespace SharpCompress.Common.Tar
             return read;
         }
 
+        public override int ReadByte()
+        {
+            if (BytesLeftToRead <= 0)
+            {
+                return -1;
+            }
+            int value = Stream.ReadByte();
+            if (value != -1)
+            {
+                --BytesLeftToRead;
+                ++_amountRead;
+            }
+            return value;
+
+        }
+
         public override long Seek(long offset, SeekOrigin origin)
         {
             throw new NotSupportedException();

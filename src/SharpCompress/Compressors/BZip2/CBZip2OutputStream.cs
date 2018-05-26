@@ -1929,6 +1929,11 @@ namespace SharpCompress.Compressors.BZip2
             return 0;
         }
 
+        public override int ReadByte()
+        {
+            return -1;
+        }
+
         public override long Seek(long offset, SeekOrigin origin)
         {
             return 0;
