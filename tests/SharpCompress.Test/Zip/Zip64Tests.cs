@@ -205,6 +205,9 @@ namespace SharpCompress.Test.Zip
             public override int Read(byte[] buffer, int offset, int count) 
             { return stream.Read(buffer, offset, count); }
 
+            public override int ReadByte()
+            { return stream.ReadByte(); }
+
             public override long Seek(long offset, SeekOrigin origin)
             { throw new NotImplementedException(); }
 
@@ -213,6 +216,9 @@ namespace SharpCompress.Test.Zip
 
             public override void Write(byte[] buffer, int offset, int count)
             { stream.Write(buffer, offset, count); }
+
+            public override void WriteByte(byte value)
+            { stream.WriteByte(value); }
         }
     }
 }

@@ -51,6 +51,20 @@ namespace SharpCompress.IO
             return read;
         }
 
+        public override int ReadByte()
+        {
+            if (BytesLeftToRead <= 0)
+            {
+                return -1;
+            }
+            int value = Stream.ReadByte();
+            if (value != -1)
+            {
+                --BytesLeftToRead;
+            }
+            return value;
+        }
+
         public override long Seek(long offset, SeekOrigin origin)
         {
             throw new NotSupportedException();

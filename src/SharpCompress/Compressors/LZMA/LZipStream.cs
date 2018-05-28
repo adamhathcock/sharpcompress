@@ -110,6 +110,8 @@ namespace SharpCompress.Compressors.LZMA
 
         public override int Read(byte[] buffer, int offset, int count) => _stream.Read(buffer, offset, count);
 
+        public override int ReadByte() => _stream.ReadByte();
+
         public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
 
         public override void SetLength(long value) => throw new NotImplementedException();
@@ -118,6 +120,12 @@ namespace SharpCompress.Compressors.LZMA
         {
             _stream.Write(buffer, offset, count);
             _writeCount += count;
+        }
+
+        public override void WriteByte(byte value)
+        {
+            _stream.WriteByte(value);
+            ++_writeCount;
         }
 
         #endregion

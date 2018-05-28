@@ -44,6 +44,11 @@ namespace SharpCompress.Test
             return stream.Read(buffer, offset, count);
         }
 
+        public override int ReadByte()
+        {
+            return stream.ReadByte();
+        }
+
         public override long Seek(long offset, SeekOrigin origin)
         {
             throw new NotSupportedException();
@@ -55,7 +60,8 @@ namespace SharpCompress.Test
         }
 
         public override void Write(byte[] buffer, int offset, int count)
-        {throw new NotSupportedException();
+        {
+            throw new NotSupportedException();
         }
     }
 }

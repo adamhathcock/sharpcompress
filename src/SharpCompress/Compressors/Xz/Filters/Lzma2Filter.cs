@@ -51,5 +51,10 @@ namespace SharpCompress.Compressors.Xz.Filters
         {
             return BaseStream.Read(buffer, offset, count);
         }
+
+        public override int ReadByte()
+        {
+            return BaseStream.ReadByte();
+        }
     }
 }
