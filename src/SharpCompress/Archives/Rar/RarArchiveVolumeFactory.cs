@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using SharpCompress.Common;
 using SharpCompress.Common.Rar;
 using SharpCompress.Readers;
 #if !NO_FILE
@@ -33,11 +32,11 @@ namespace SharpCompress.Archives.Rar
             FileInfoRarArchiveVolume part = new FileInfoRarArchiveVolume(fileInfo, options);
             yield return part;
 
-            if (!part.ArchiveHeader.ArchiveHeaderFlags.HasFlag(ArchiveFlags.VOLUME))
+            ArchiveHeader ah = part.ArchiveHeader;
+            if (!ah.IsVolume)
             {
                 yield break; //if file isn't volume then there is no reason to look
             }
-            ArchiveHeader ah = part.ArchiveHeader;
             fileInfo = GetNextFileInfo(ah, part.FileParts.FirstOrDefault() as FileInfoRarFilePart);
             //we use fileinfo because rar is dumb and looks at file names rather than archive info for another volume
             while (fileInfo != null && fileInfo.Exists)
@@ -55,8 +54,8 @@ namespace SharpCompress.Archives.Rar
             {
                 return null;
             }
-            bool oldNumbering = !ah.ArchiveHeaderFlags.HasFlag(ArchiveFlags.NEWNUMBERING)
-                                || currentFilePart.MarkHeader.OldFormat;
+            bool oldNumbering = ah.OldNumberingFormat
+                                || currentFilePart.MarkHeader.OldNumberingFormat;
             if (oldNumbering)
             {
                 return FindNextFileWithOldNumbering(currentFilePart.FileInfo);

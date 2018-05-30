@@ -7,29 +7,29 @@ namespace SharpCompress.Compressors.LZMA
 {
     public class LzmaStream : Stream
     {
-        private readonly Stream inputStream;
-        private readonly long inputSize;
-        private readonly long outputSize;
+        private readonly Stream _inputStream;
+        private readonly long _inputSize;
+        private readonly long _outputSize;
 
-        private readonly int dictionarySize;
-        private readonly OutWindow outWindow = new OutWindow();
-        private readonly RangeCoder.Decoder rangeDecoder = new RangeCoder.Decoder();
-        private Decoder decoder;
+        private readonly int _dictionarySize;
+        private readonly OutWindow _outWindow = new OutWindow();
+        private readonly RangeCoder.Decoder _rangeDecoder = new RangeCoder.Decoder();
+        private Decoder _decoder;
 
-        private long position;
-        private bool endReached;
-        private long availableBytes;
-        private long rangeDecoderLimit;
-        private long inputPosition;
+        private long _position;
+        private bool _endReached;
+        private long _availableBytes;
+        private long _rangeDecoderLimit;
+        private long _inputPosition;
 
         // LZMA2
-        private readonly bool isLZMA2;
-        private bool uncompressedChunk;
-        private bool needDictReset = true;
-        private bool needProps = true;
+        private readonly bool _isLzma2;
+        private bool _uncompressedChunk;
+        private bool _needDictReset = true;
+        private bool _needProps = true;
 
-        private readonly Encoder encoder;
-        private bool isDisposed;
+        private readonly Encoder _encoder;
+        private bool _isDisposed;
 
         public LzmaStream(byte[] properties, Stream inputStream)
             : this(properties, inputStream, -1, -1, null, properties.Length < 5)
@@ -47,82 +47,82 @@ namespace SharpCompress.Compressors.LZMA
         }
 
         public LzmaStream(byte[] properties, Stream inputStream, long inputSize, long outputSize,
-                          Stream presetDictionary, bool isLZMA2)
+                          Stream presetDictionary, bool isLzma2)
         {
-            this.inputStream = inputStream;
-            this.inputSize = inputSize;
-            this.outputSize = outputSize;
-            this.isLZMA2 = isLZMA2;
+            _inputStream = inputStream;
+            _inputSize = inputSize;
+            _outputSize = outputSize;
+            _isLzma2 = isLzma2;
 
-            if (!isLZMA2)
+            if (!isLzma2)
             {
-                dictionarySize = DataConverter.LittleEndian.GetInt32(properties, 1);
-                outWindow.Create(dictionarySize);
+                _dictionarySize = DataConverter.LittleEndian.GetInt32(properties, 1);
+                _outWindow.Create(_dictionarySize);
                 if (presetDictionary != null)
                 {
-                    outWindow.Train(presetDictionary);
+                    _outWindow.Train(presetDictionary);
                 }
 
-                rangeDecoder.Init(inputStream);
+                _rangeDecoder.Init(inputStream);
 
-                decoder = new Decoder();
-                decoder.SetDecoderProperties(properties);
+                _decoder = new Decoder();
+                _decoder.SetDecoderProperties(properties);
                 Properties = properties;
 
-                availableBytes = outputSize < 0 ? long.MaxValue : outputSize;
-                rangeDecoderLimit = inputSize;
+                _availableBytes = outputSize < 0 ? long.MaxValue : outputSize;
+                _rangeDecoderLimit = inputSize;
             }
             else
             {
-                dictionarySize = 2 | (properties[0] & 1);
-                dictionarySize <<= (properties[0] >> 1) + 11;
+                _dictionarySize = 2 | (properties[0] & 1);
+                _dictionarySize <<= (properties[0] >> 1) + 11;
 
-                outWindow.Create(dictionarySize);
+                _outWindow.Create(_dictionarySize);
                 if (presetDictionary != null)
                 {
-                    outWindow.Train(presetDictionary);
-                    needDictReset = false;
+                    _outWindow.Train(presetDictionary);
+                    _needDictReset = false;
                 }
 
                 Properties = new byte[1];
-                availableBytes = 0;
+                _availableBytes = 0;
             }
         }
 
-        public LzmaStream(LzmaEncoderProperties properties, bool isLZMA2, Stream outputStream)
-            : this(properties, isLZMA2, null, outputStream)
+        public LzmaStream(LzmaEncoderProperties properties, bool isLzma2, Stream outputStream)
+            : this(properties, isLzma2, null, outputStream)
         {
         }
 
-        public LzmaStream(LzmaEncoderProperties properties, bool isLZMA2, Stream presetDictionary, Stream outputStream)
+        public LzmaStream(LzmaEncoderProperties properties, bool isLzma2, Stream presetDictionary, Stream outputStream)
         {
-            this.isLZMA2 = isLZMA2;
-            availableBytes = 0;
-            endReached = true;
+            _isLzma2 = isLzma2;
+            _availableBytes = 0;
+            _endReached = true;
 
-            if (isLZMA2)
+            if (isLzma2)
             {
                 throw new NotImplementedException();
             }
 
-            encoder = new Encoder();
-            encoder.SetCoderProperties(properties.propIDs, properties.properties);
+            _encoder = new Encoder();
+            _encoder.SetCoderProperties(properties._propIDs, properties._properties);
             MemoryStream propStream = new MemoryStream(5);
-            encoder.WriteCoderProperties(propStream);
+            _encoder.WriteCoderProperties(propStream);
             Properties = propStream.ToArray();
 
-            encoder.SetStreams(null, outputStream, -1, -1);
+            _encoder.SetStreams(null, outputStream, -1, -1);
             if (presetDictionary != null)
             {
-                encoder.Train(presetDictionary);
+                _encoder.Train(presetDictionary);
             }
         }
 
-        public override bool CanRead => encoder == null;
+        public override bool CanRead => _encoder == null;
 
         public override bool CanSeek => false;
 
-        public override bool CanWrite => encoder != null;
+        public override bool CanWrite => _encoder != null;
 
         public override void Flush()
         {
@@ -130,29 +130,29 @@ namespace SharpCompress.Compressors.LZMA
 
         protected override void Dispose(bool disposing)
         {
-            if (isDisposed)
+            if (_isDisposed)
             {
                 return;
             }
-            isDisposed = true;
+            _isDisposed = true;
             if (disposing)
             {
-                if (encoder != null)
+                if (_encoder != null)
                 {
-                    position = encoder.Code(null, true);
+                    _position = _encoder.Code(null, true);
                 }
-                inputStream?.Dispose();
+                _inputStream?.Dispose();
             }
             base.Dispose(disposing);
         }
 
-        public override long Length => position + availableBytes;
+        public override long Length => _position + _availableBytes;
 
-        public override long Position { get => position; set => throw new NotSupportedException(); }
+        public override long Position { get => _position; set => throw new NotSupportedException(); }
 
         public override int Read(byte[] buffer, int offset, int count)
         {
-            if (endReached)
+            if (_endReached)
             {
                 return 0;
             }
@@ -160,67 +160,67 @@ namespace SharpCompress.Compressors.LZMA
             int total = 0;
             while (total < count)
             {
-                if (availableBytes == 0)
+                if (_availableBytes == 0)
                 {
-                    if (isLZMA2)
+                    if (_isLzma2)
                     {
-                        decodeChunkHeader();
+                        DecodeChunkHeader();
                     }
                     else
                     {
-                        endReached = true;
+                        _endReached = true;
                     }
-                    if (endReached)
+                    if (_endReached)
                     {
                         break;
                     }
                 }
 
                 int toProcess = count - total;
-                if (toProcess > availableBytes)
+                if (toProcess > _availableBytes)
                 {
-                    toProcess = (int)availableBytes;
+                    toProcess = (int)_availableBytes;
                 }
 
-                outWindow.SetLimit(toProcess);
-                if (uncompressedChunk)
+                _outWindow.SetLimit(toProcess);
+                if (_uncompressedChunk)
                 {
-                    inputPosition += outWindow.CopyStream(inputStream, toProcess);
+                    _inputPosition += _outWindow.CopyStream(_inputStream, toProcess);
                 }
-                else if (decoder.Code(dictionarySize, outWindow, rangeDecoder)
-                         && outputSize < 0)
+                else if (_decoder.Code(_dictionarySize, _outWindow, _rangeDecoder)
+                         && _outputSize < 0)
                 {
-                    availableBytes = outWindow.AvailableBytes;
+                    _availableBytes = _outWindow.AvailableBytes;
                 }
 
-                int read = outWindow.Read(buffer, offset, toProcess);
+                int read = _outWindow.Read(buffer, offset, toProcess);
                 total += read;
                 offset += read;
-                position += read;
-                availableBytes -= read;
+                _position += read;
+                _availableBytes -= read;
 
-                if (availableBytes == 0 && !uncompressedChunk)
+                if (_availableBytes == 0 && !_uncompressedChunk)
                 {
-                    rangeDecoder.ReleaseStream();
-                    if (!rangeDecoder.IsFinished || (rangeDecoderLimit >= 0 && rangeDecoder.Total != rangeDecoderLimit))
+                    _rangeDecoder.ReleaseStream();
+                    if (!_rangeDecoder.IsFinished || (_rangeDecoderLimit >= 0 && _rangeDecoder._total != _rangeDecoderLimit))
                     {
                         throw new DataErrorException();
                     }
-                    inputPosition += rangeDecoder.Total;
-                    if (outWindow.HasPending)
+                    _inputPosition += _rangeDecoder._total;
+                    if (_outWindow.HasPending)
                     {
                         throw new DataErrorException();
                     }
                 }
             }
 
-            if (endReached)
+            if (_endReached)
             {
-                if (inputSize >= 0 && inputPosition != inputSize)
+                if (_inputSize >= 0 && _inputPosition != _inputSize)
                 {
                     throw new DataErrorException();
                 }
-                if (outputSize >= 0 && position != outputSize)
+                if (_outputSize >= 0 && _position != _outputSize)
                 {
                     throw new DataErrorException();
                 }
@@ -229,59 +229,59 @@ namespace SharpCompress.Compressors.LZMA
             return total;
         }
 
-        private void decodeChunkHeader()
+        private void DecodeChunkHeader()
         {
-            int control = inputStream.ReadByte();
-            inputPosition++;
+            int control = _inputStream.ReadByte();
+            _inputPosition++;
 
             if (control == 0x00)
             {
-                endReached = true;
+                _endReached = true;
                 return;
             }
 
             if (control >= 0xE0 || control == 0x01)
             {
-                needProps = true;
-                needDictReset = false;
-                outWindow.Reset();
+                _needProps = true;
+                _needDictReset = false;
+                _outWindow.Reset();
             }
-            else if (needDictReset)
+            else if (_needDictReset)
             {
                 throw new DataErrorException();
             }
 
             if (control >= 0x80)
             {
-                uncompressedChunk = false;
+                _uncompressedChunk = false;
 
-                availableBytes = (control & 0x1F) << 16;
-                availableBytes += (inputStream.ReadByte() << 8) + inputStream.ReadByte() + 1;
-                inputPosition += 2;
+                _availableBytes = (control & 0x1F) << 16;
+                _availableBytes += (_inputStream.ReadByte() << 8) + _inputStream.ReadByte() + 1;
+                _inputPosition += 2;
 
-                rangeDecoderLimit = (inputStream.ReadByte() << 8) + inputStream.ReadByte() + 1;
-                inputPosition += 2;
+                _rangeDecoderLimit = (_inputStream.ReadByte() << 8) + _inputStream.ReadByte() + 1;
+                _inputPosition += 2;
 
                 if (control >= 0xC0)
                 {
-                    needProps = false;
-                    Properties[0] = (byte)inputStream.ReadByte();
-                    inputPosition++;
+                    _needProps = false;
+                    Properties[0] = (byte)_inputStream.ReadByte();
+                    _inputPosition++;
 
-                    decoder = new Decoder();
-                    decoder.SetDecoderProperties(Properties);
+                    _decoder = new Decoder();
+                    _decoder.SetDecoderProperties(Properties);
                 }
-                else if (needProps)
+                else if (_needProps)
                 {
                     throw new DataErrorException();
                 }
                 else if (control >= 0xA0)
                 {
-                    decoder = new Decoder();
-                    decoder.SetDecoderProperties(Properties);
+                    _decoder = new Decoder();
+                    _decoder.SetDecoderProperties(Properties);
                 }
 
-                rangeDecoder.Init(inputStream);
+                _rangeDecoder.Init(_inputStream);
             }
             else if (control > 0x02)
             {
@@ -289,9 +289,9 @@ namespace SharpCompress.Compressors.LZMA
             }
             else
             {
-                uncompressedChunk = true;
-                availableBytes = (inputStream.ReadByte() << 8) + inputStream.ReadByte() + 1;
-                inputPosition += 2;
+                _uncompressedChunk = true;
+                _availableBytes = (_inputStream.ReadByte() << 8) + _inputStream.ReadByte() + 1;
+                _inputPosition += 2;
             }
         }
 
@@ -307,9 +307,9 @@ namespace SharpCompress.Compressors.LZMA
 
         public override void Write(byte[] buffer, int offset, int count)
         {
-            if (encoder != null)
+            if (_encoder != null)
             {
-                position = encoder.Code(new MemoryStream(buffer, offset, count), false);
+                _position = _encoder.Code(new MemoryStream(buffer, offset, count), false);
             }
         }
 

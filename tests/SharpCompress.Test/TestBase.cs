@@ -3,54 +3,35 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
-using Microsoft.Extensions.PlatformAbstractions;
-using SharpCompress.Common;
 using SharpCompress.Readers;
 using Xunit;
 
+[assembly: CollectionBehavior(DisableTestParallelization = true)]
+
 namespace SharpCompress.Test
 {
-    public class TestBase : IDisposable
+    public class TestBase
     {
-        protected string SOLUTION_BASE_PATH=null;
+        private string SOLUTION_BASE_PATH;
         protected string TEST_ARCHIVES_PATH;
         protected string ORIGINAL_FILES_PATH;
         protected string MISC_TEST_FILES_PATH;
         public string SCRATCH_FILES_PATH;
         protected string SCRATCH2_FILES_PATH;
-        protected IEnumerable<string> GetRarArchives()
-        {
-            yield return Path.Combine(TEST_ARCHIVES_PATH, "Rar.none.rar");
-            yield return Path.Combine(TEST_ARCHIVES_PATH, "Rar.rar");
-            yield return Path.Combine(TEST_ARCHIVES_PATH, "Rar.solid.rar");
-            yield return Path.Combine(TEST_ARCHIVES_PATH, "Rar.multi.part01.rar");
-        }
-        protected IEnumerable<string> GetZipArchives()
-        {
-            yield return Path.Combine(TEST_ARCHIVES_PATH, "Zip.bzip2.dd.zip");
-            yield return Path.Combine(TEST_ARCHIVES_PATH, "Zip.bzip2.zip");
-            yield return Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.dd-.zip");
-            yield return Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.dd.zip");
-            yield return Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.zip");
-            yield return Path.Combine(TEST_ARCHIVES_PATH, "Zip.lzma.dd.zip");
-            yield return Path.Combine(TEST_ARCHIVES_PATH, "Zip.lzma.zip");
-            yield return Path.Combine(TEST_ARCHIVES_PATH, "Zip.none.zip");
-            yield return Path.Combine(TEST_ARCHIVES_PATH, "Zip.ppmd.dd.zip");
-            yield return Path.Combine(TEST_ARCHIVES_PATH, "Zip.ppmd.zip");
-        }
-        protected IEnumerable<string> GetTarArchives()
-        {
-            yield return Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar");
-        }
-        protected IEnumerable<string> GetTarBz2Archives()
-        {
-            yield return Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.bz2");
-        }
-        protected IEnumerable<string> GetTarGzArchives()
-        {
-            yield return Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.gz");
-        }
+       
 
+        public TestBase()
+        {
+            var index = AppDomain.CurrentDomain.BaseDirectory.IndexOf("SharpCompress.Test", StringComparison.OrdinalIgnoreCase);
+            SOLUTION_BASE_PATH = Path.GetDirectoryName(AppDomain.CurrentDomain.BaseDirectory.Substring(0, index));
+
+            TEST_ARCHIVES_PATH = Path.Combine(SOLUTION_BASE_PATH, "TestArchives", "Archives");
+            ORIGINAL_FILES_PATH = Path.Combine(SOLUTION_BASE_PATH, "TestArchives", "Original");
+            MISC_TEST_FILES_PATH = Path.Combine(SOLUTION_BASE_PATH, "TestArchives", "MiscTest");
+            SCRATCH_FILES_PATH = Path.Combine(SOLUTION_BASE_PATH, "TestArchives", "Scratch");
+            SCRATCH2_FILES_PATH = Path.Combine(SOLUTION_BASE_PATH, "TestArchives", "Scratch2");
+        }
+        
         public void ResetScratch()
         {
             if (Directory.Exists(SCRATCH_FILES_PATH))
@@ -181,6 +162,20 @@ namespace SharpCompress.Test
 
         protected void CompareFilesByPath(string file1, string file2)
         {
+            //TODO: fix line ending issues with the text file
+            if (file1.EndsWith("txt"))
+            {
+                return;
+            }
+
+            if (IsFileLocked(new FileInfo(file1)))
+            {
+                throw new InvalidOperationException($"{file1} is not disposed");
+            }
+            if (IsFileLocked(new FileInfo(file2)))
+            {
+                throw new InvalidOperationException($"{file2} is not disposed");
+            }
             using (var file1Stream = File.OpenRead(file1))
             using (var file2Stream = File.OpenRead(file2))
             {
@@ -231,24 +226,30 @@ namespace SharpCompress.Test
                 Assert.Equal(archive1Entries[i], archive2Entries[i]);
             }
         }
-
-        private static readonly object lockObject = new object();
-
-        public TestBase()
+        
+        protected bool IsFileLocked(FileInfo file)
         {
-            Monitor.Enter(lockObject);
-            var index = PlatformServices.Default.Application.ApplicationBasePath.IndexOf("SharpCompress.Test", StringComparison.OrdinalIgnoreCase);
-            SOLUTION_BASE_PATH = Path.GetDirectoryName(PlatformServices.Default.Application.ApplicationBasePath.Substring(0, index));
-            TEST_ARCHIVES_PATH = Path.Combine(SOLUTION_BASE_PATH, "TestArchives", "Archives");
-            ORIGINAL_FILES_PATH = Path.Combine(SOLUTION_BASE_PATH, "TestArchives", "Original");
-            MISC_TEST_FILES_PATH = Path.Combine(SOLUTION_BASE_PATH, "TestArchives", "MiscTest");
-            SCRATCH_FILES_PATH = Path.Combine(SOLUTION_BASE_PATH, "TestArchives", "Scratch");
-            SCRATCH2_FILES_PATH = Path.Combine(SOLUTION_BASE_PATH, "TestArchives", "Scratch2");
-        }
+            FileStream stream = null;
 
-        public void Dispose()
-        {
-            Monitor.Exit(lockObject);
+            try
+            {
+                stream = file.Open(FileMode.Open, FileAccess.Read, FileShare.None);
+            }
+            catch (IOException)
+            {
+                //the file is unavailable because it is:
+                //still being written to
+                //or being processed by another thread
+                //or does not exist (has already been processed)
+                return true;
+            }
+            finally
+            {
+                stream?.Close();
+            }
+
+            //file is not locked
+            return false;
         }
     }
 }

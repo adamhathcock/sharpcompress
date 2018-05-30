@@ -11,6 +11,7 @@ namespace SharpCompress.Common.Zip.Headers
         Bit2 = 4,
         UsePostDataDescriptor = 8,
         EnhancedDeflate = 16,
-        UTF8 = 2048
+        //Bit 11: Language encoding flag 
+        Efs = 2048
     }
 }

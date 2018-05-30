@@ -6,24 +6,24 @@ namespace SharpCompress.Compressors.LZMA
 {
     internal class BitVector
     {
-        private readonly uint[] mBits;
+        private readonly uint[] _mBits;
 
         public BitVector(int length)
         {
             Length = length;
-            mBits = new uint[(length + 31) >> 5];
+            _mBits = new uint[(length + 31) >> 5];
         }
 
         public BitVector(int length, bool initValue)
         {
             Length = length;
-            mBits = new uint[(length + 31) >> 5];
+            _mBits = new uint[(length + 31) >> 5];
 
             if (initValue)
             {
-                for (int i = 0; i < mBits.Length; i++)
+                for (int i = 0; i < _mBits.Length; i++)
                 {
-                    mBits[i] = ~0u;
+                    _mBits[i] = ~0u;
                 }
             }
         }
@@ -61,7 +61,7 @@ namespace SharpCompress.Compressors.LZMA
                     throw new ArgumentOutOfRangeException(nameof(index));
                 }
 
-                return (mBits[index >> 5] & (1u << (index & 31))) != 0;
+                return (_mBits[index >> 5] & (1u << (index & 31))) != 0;
             }
         }
 
@@ -72,7 +72,7 @@ namespace SharpCompress.Compressors.LZMA
                 throw new ArgumentOutOfRangeException(nameof(index));
             }
 
-            mBits[index >> 5] |= 1u << (index & 31);
+            _mBits[index >> 5] |= 1u << (index & 31);
         }
 
         internal bool GetAndSet(int index)
@@ -82,9 +82,9 @@ namespace SharpCompress.Compressors.LZMA
                 throw new ArgumentOutOfRangeException(nameof(index));
             }
 
-            uint bits = mBits[index >> 5];
+            uint bits = _mBits[index >> 5];
             uint mask = 1u << (index & 31);
-            mBits[index >> 5] |= mask;
+            _mBits[index >> 5] |= mask;
             return (bits & mask) != 0;
         }
 

@@ -5,7 +5,7 @@ using SharpCompress.Readers;
 
 namespace SharpCompress.Common
 {
-    internal static class IEntryExtensions
+    internal static class EntryExtensions
     {
         internal static void PreserveExtractionOptions(this IEntry entry, string destinationFileName,
                                                         ExtractionOptions options)

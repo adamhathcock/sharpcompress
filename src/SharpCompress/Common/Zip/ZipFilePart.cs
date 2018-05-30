@@ -5,6 +5,7 @@ using SharpCompress.Common.Zip.Headers;
 using SharpCompress.Compressors;
 using SharpCompress.Compressors.BZip2;
 using SharpCompress.Compressors.Deflate;
+using SharpCompress.Compressors.Deflate64;
 using SharpCompress.Compressors.LZMA;
 using SharpCompress.Compressors.PPMd;
 using SharpCompress.Converters;
@@ -66,9 +67,13 @@ namespace SharpCompress.Common.Zip
                 {
                     return new DeflateStream(stream, CompressionMode.Decompress);
                 }
+                case ZipCompressionMethod.Deflate64:
+                {
+                    return new Deflate64Stream(stream, CompressionMode.Decompress);
+                }
                 case ZipCompressionMethod.BZip2:
                 {
-                    return new BZip2Stream(stream, CompressionMode.Decompress);
+                    return new BZip2Stream(stream, CompressionMode.Decompress, false);
                 }
                 case ZipCompressionMethod.LZMA:
                 {

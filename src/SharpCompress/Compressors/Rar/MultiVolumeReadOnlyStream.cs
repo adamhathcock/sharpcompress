@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using SharpCompress.Common;
 using SharpCompress.Common.Rar;
-using SharpCompress.Common.Rar.Headers;
 
 namespace SharpCompress.Compressors.Rar
 {
@@ -39,11 +38,7 @@ namespace SharpCompress.Compressors.Rar
                     filePartEnumerator.Dispose();
                     filePartEnumerator = null;
                 }
-                if (currentStream != null)
-                {
-                    currentStream.Dispose();
-                    currentStream = null;
-                }
+                currentStream = null;
             }
         }
 
@@ -51,15 +46,11 @@ namespace SharpCompress.Compressors.Rar
         {
             maxPosition = filePartEnumerator.Current.FileHeader.CompressedSize;
             currentPosition = 0;
-            if (currentStream != null)
-            {
-                currentStream.Dispose();
-            }
             currentStream = filePartEnumerator.Current.GetCompressedStream();
 
             currentPartTotalReadBytes = 0;
 
-            CurrentCrc = filePartEnumerator.Current.FileHeader.FileCRC;
+            CurrentCrc = filePartEnumerator.Current.FileHeader.FileCrc;
 
             streamListener.FireFilePartExtractionBegin(filePartEnumerator.Current.FilePartName,
                                                        filePartEnumerator.Current.FileHeader.CompressedSize,
@@ -90,9 +81,9 @@ namespace SharpCompress.Compressors.Rar
                 currentCount -= read;
                 totalRead += read;
                 if (((maxPosition - currentPosition) == 0)
-                    && filePartEnumerator.Current.FileHeader.FileFlags.HasFlag(FileFlags.SPLIT_AFTER))
+                    && filePartEnumerator.Current.FileHeader.IsSplitAfter)
                 {
-                    if (filePartEnumerator.Current.FileHeader.Salt != null)
+                    if (filePartEnumerator.Current.FileHeader.R4Salt != null)
                     {
                         throw new InvalidFormatException("Sharpcompress currently does not support multi-volume decryption.");
                     }

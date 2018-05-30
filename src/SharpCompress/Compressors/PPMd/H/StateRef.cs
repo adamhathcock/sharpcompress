@@ -5,15 +5,15 @@ namespace SharpCompress.Compressors.PPMd.H
 {
     internal class StateRef
     {
-        private int symbol;
+        private int _symbol;
 
-        private int freq;
+        private int _freq;
 
-        private int successor; // pointer ppmcontext
+        private int _successor; // pointer ppmcontext
 
-        internal int Symbol { get => symbol; set => symbol = value & 0xff; }
+        internal int Symbol { get => _symbol; set => _symbol = value & 0xff; }
 
-        internal int Freq { get => freq; set => freq = value & 0xff; }
+        internal int Freq { get => _freq; set => _freq = value & 0xff; }
 
         internal State Values
         {
@@ -27,27 +27,27 @@ namespace SharpCompress.Compressors.PPMd.H
 
         public virtual void IncrementFreq(int dFreq)
         {
-            freq = (freq + dFreq) & 0xff;
+            _freq = (_freq + dFreq) & 0xff;
         }
 
         public virtual void DecrementFreq(int dFreq)
         {
-            freq = (freq - dFreq) & 0xff;
+            _freq = (_freq - dFreq) & 0xff;
         }
 
         public virtual int GetSuccessor()
         {
-            return successor;
+            return _successor;
         }
 
-        public virtual void SetSuccessor(PPMContext successor)
+        public virtual void SetSuccessor(PpmContext successor)
         {
             SetSuccessor(successor.Address);
         }
 
         public virtual void SetSuccessor(int successor)
         {
-            this.successor = successor;
+            _successor = successor;
         }
 
         public override String ToString()

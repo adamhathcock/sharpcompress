@@ -119,7 +119,6 @@ namespace SharpCompress.Compressors.BZip2
         private readonly int[] minLens = new int[BZip2Constants.N_GROUPS];
 
         private Stream bsStream;
-        private bool leaveOpen;
 
         private bool streamEnd;
 
@@ -147,12 +146,12 @@ namespace SharpCompress.Compressors.BZip2
         private char z;
         private bool isDisposed;
 
-        public CBZip2InputStream(Stream zStream, bool decompressConcatenated, bool leaveOpen)
+        public CBZip2InputStream(Stream zStream, bool decompressConcatenated)
         {
             this.decompressConcatenated = decompressConcatenated;
             ll8 = null;
             tt = null;
-            BsSetStream(zStream, leaveOpen);
+            BsSetStream(zStream);
             Initialize(true);
             InitBlock();
             SetupBlock();
@@ -354,29 +353,15 @@ namespace SharpCompress.Compressors.BZip2
 
         private void BsFinishedWithStream()
         {
-            try
-            {
-                if (bsStream != null)
-                {
-                    if (!leaveOpen)
-                    {
-                        bsStream.Dispose();
-                    }
-                    bsStream = null;
-                }
-            }
-            catch
-            {
-                //ignore
-            }
+            bsStream?.Dispose();
+            bsStream = null;
         }
 
-        private void BsSetStream(Stream f, bool leaveOpen)
+        private void BsSetStream(Stream f)
         {
             bsStream = f;
             bsLive = 0;
             bsBuff = 0;
-            this.leaveOpen = leaveOpen;
         }
 
         private int BsR(int n)
@@ -1089,6 +1074,10 @@ namespace SharpCompress.Compressors.BZip2
         }
 
         public override void Write(byte[] buffer, int offset, int count)
+        {
+        }
+
+        public override void WriteByte(byte value)
         {
         }
 

@@ -2,34 +2,35 @@
 
 SharpCompress is a compression library in pure C# for .NET 3.5, 4.5, .NET Standard 1.0, 1.3 that can unrar, un7zip, unzip, untar unbzip2 and ungzip with forward-only reading and file random access APIs. Write support for zip/tar/bzip2/gzip are implemented.
 
-The major feature is support for non-seekable streams so large files can be processed on the fly (i.e. download stream). 
+The major feature is support for non-seekable streams so large files can be processed on the fly (i.e. download stream).
 
-AppVeyor Build - 
+AppVeyor Build -
 [![Build status](https://ci.appveyor.com/api/projects/status/voxg971oemmvxh1e/branch/master?svg=true)](https://ci.appveyor.com/project/adamhathcock/sharpcompress/branch/master)
 
-Travis CI Build - 
-[![Build Status](https://travis-ci.org/adamhathcock/sharpcompress.svg?branch=master)](https://travis-ci.org/adamhathcock/sharpcompress)
+Circle CI Build -
+[![CircleCI](https://circleci.com/gh/adamhathcock/sharpcompress.svg?style=svg)](https://circleci.com/gh/adamhathcock/sharpcompress)
 
 ## Need Help?
+
 Post Issues on Github!
 
 Check the [Supported Formats](FORMATS.md) and [Basic Usage.](USAGE.md)
 
 ## Recommended Formats
 
-In general, I recommend GZip (Deflate)/BZip2 (BZip)/LZip (LZMA) as the simplicity of the formats lend to better long term archival as well as the streamability.  Tar is often used in conjunction for multiple files in a single archive (e.g. `.tar.gz`)
+In general, I recommend GZip (Deflate)/BZip2 (BZip)/LZip (LZMA) as the simplicity of the formats lend to better long term archival as well as the streamability. Tar is often used in conjunction for multiple files in a single archive (e.g. `.tar.gz`)
 
-Zip is okay, but it's a very hap-hazard format and the variation in headers and implementations makes it hard to get correct.  Uses Deflate by default but supports a lot of compression methods.
+Zip is okay, but it's a very hap-hazard format and the variation in headers and implementations makes it hard to get correct. Uses Deflate by default but supports a lot of compression methods.
 
-RAR is not recommended as it's a propriatory format and the compression is closed source.  Use Tar/LZip for LZMA
+RAR is not recommended as it's a propriatory format and the compression is closed source. Use Tar/LZip for LZMA
 
-7Zip and XZ both are overly complicated.  7Zip does not support streamable formats.  XZ has known holes explained here: (http://www.nongnu.org/lzip/xz_inadequate.html)  Use Tar/LZip for LZMA compression instead.
+7Zip and XZ both are overly complicated. 7Zip does not support streamable formats. XZ has known holes explained here: (http://www.nongnu.org/lzip/xz_inadequate.html) Use Tar/LZip for LZMA compression instead.
 
 ## A Simple Request
 
 Hi everyone. I hope you're using SharpCompress and finding it useful. Please give me feedback on what you'd like to see changed especially as far as usability goes. New feature suggestions are always welcome as well. I would also like to know what projects SharpCompress is being used in. I like seeing how it is used to give me ideas for future versions. Thanks!
 
-Please do not email me directly to ask for help.  If you think there is a real issue, please report it here.
+Please do not email me directly to ask for help. If you think there is a real issue, please report it here.
 
 ## Want to contribute?
 
@@ -37,7 +38,7 @@ I'm always looking for help or ideas. Please submit code or email with ideas. Un
 
 ## TODOs (always lots)
 
-* RAR 5 support
+* RAR 5 decryption support
 * 7Zip writing
 * Zip64 (Need writing and extend Reading)
 * Multi-volume Zip support.
@@ -54,9 +55,9 @@ I'm always looking for help or ideas. Please submit code or email with ideas. Un
 
 ### Version 0.17.0
 
-* New - Full LZip support!  Can read and write LZip files and Tars inside LZip files.  [Make LZip a first class citizen. #241](https://github.com/adamhathcock/sharpcompress/issues/241)
-* New - XZ read support!  Can read XZ files and Tars inside XZ files.  [XZ in SharpCompress #91](https://github.com/adamhathcock/sharpcompress/issues/94)
-* Fix - [Regression - zip file writing on seekable streams always assumed stream start was 0.  Introduced with Zip64 writing.](https://github.com/adamhathcock/sharpcompress/issues/244)
+* New - Full LZip support! Can read and write LZip files and Tars inside LZip files. [Make LZip a first class citizen. #241](https://github.com/adamhathcock/sharpcompress/issues/241)
+* New - XZ read support! Can read XZ files and Tars inside XZ files. [XZ in SharpCompress #91](https://github.com/adamhathcock/sharpcompress/issues/94)
+* Fix - [Regression - zip file writing on seekable streams always assumed stream start was 0. Introduced with Zip64 writing.](https://github.com/adamhathcock/sharpcompress/issues/244)
 * Fix - [Zip files with post-data descriptors can be properly skipped via decompression](https://github.com/adamhathcock/sharpcompress/issues/162)
 
 ### Version 0.16.2
@@ -136,7 +137,7 @@ I'm always looking for help or ideas. Please submit code or email with ideas. Un
 ### Version 0.11.6
 
 * Bug fix for global header in Tar
-* Writers now have a leaveOpen `bool` overload.  They won't close streams if not-requested to.
+* Writers now have a leaveOpen `bool` overload. They won't close streams if not-requested to.
 
 ### Version 0.11.5
 
@@ -155,7 +156,7 @@ I'm always looking for help or ideas. Please submit code or email with ideas. Un
 
 ### Version 0.11
 
-* Been over a year, contains mainly fixes from contributors!  
+* Been over a year, contains mainly fixes from contributors!
 * Possible breaking change: ArchiveEncoding is UTF8 by default now.
 * TAR supports writing long names using longlink
 * RAR Protect Header added

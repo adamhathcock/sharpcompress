@@ -28,25 +28,25 @@ namespace SharpCompress.Common.Zip
             {
                 ZipHeader header = null;
                 BinaryReader reader = new BinaryReader(rewindableStream);
-                if (lastEntryHeader != null &&
-                    (FlagUtility.HasFlag(lastEntryHeader.Flags, HeaderFlags.UsePostDataDescriptor) || lastEntryHeader.IsZip64))
+                if (_lastEntryHeader != null &&
+                    (FlagUtility.HasFlag(_lastEntryHeader.Flags, HeaderFlags.UsePostDataDescriptor) || _lastEntryHeader.IsZip64))
                 {
-                    reader = (lastEntryHeader.Part as StreamingZipFilePart).FixStreamedFileLocation(ref rewindableStream);
+                    reader = (_lastEntryHeader.Part as StreamingZipFilePart).FixStreamedFileLocation(ref rewindableStream);
                     long? pos = rewindableStream.CanSeek ? (long?)rewindableStream.Position : null;
                     uint crc = reader.ReadUInt32();
                     if (crc == POST_DATA_DESCRIPTOR)
                     {
                         crc = reader.ReadUInt32();
                     }
-                    lastEntryHeader.Crc = crc;
-                    lastEntryHeader.CompressedSize = reader.ReadUInt32();
-                    lastEntryHeader.UncompressedSize = reader.ReadUInt32();
+                    _lastEntryHeader.Crc = crc;
+                    _lastEntryHeader.CompressedSize = reader.ReadUInt32();
+                    _lastEntryHeader.UncompressedSize = reader.ReadUInt32();
                     if (pos.HasValue)
                     {
-                        lastEntryHeader.DataStartPosition = pos - lastEntryHeader.CompressedSize;
+                        _lastEntryHeader.DataStartPosition = pos - _lastEntryHeader.CompressedSize;
                     }
                 }
-                lastEntryHeader = null;
+                _lastEntryHeader = null;
                 uint headerBytes = reader.ReadUInt32();
                 header = ReadHeader(headerBytes, reader);
 

@@ -182,7 +182,7 @@ namespace SharpCompress.Common.SevenZip
 
         private DateTime? TranslateTime(long? time)
         {
-            if (time.HasValue)
+            if (time.HasValue && time.Value >= 0 && time.Value <= 2650467743999999999) //maximum Windows file time 31.12.9999
             {
                 return TranslateTime(time.Value);
             }
@@ -230,7 +230,7 @@ namespace SharpCompress.Common.SevenZip
 #if DEBUG
                 Log.WriteLine("NumCoders: " + numCoders);
 #endif
-                folder.Coders = new List<CCoderInfo>(numCoders);
+                folder._coders = new List<CCoderInfo>(numCoders);
                 int numInStreams = 0;
                 int numOutStreams = 0;
                 for (int i = 0; i < numCoders; i++)
@@ -242,14 +242,14 @@ namespace SharpCompress.Common.SevenZip
                     try
                     {
                         CCoderInfo coder = new CCoderInfo();
-                        folder.Coders.Add(coder);
+                        folder._coders.Add(coder);
 
                         byte mainByte = ReadByte();
                         int idSize = (mainByte & 0xF);
-                        byte[] longID = new byte[idSize];
-                        ReadBytes(longID, 0, idSize);
+                        byte[] longId = new byte[idSize];
+                        ReadBytes(longId, 0, idSize);
 #if DEBUG
-                        Log.WriteLine("MethodId: " + String.Join("", Enumerable.Range(0, idSize).Select(x => longID[x].ToString("x2")).ToArray()));
+                        Log.WriteLine("MethodId: " + String.Join("", Enumerable.Range(0, idSize).Select(x => longId[x].ToString("x2")).ToArray()));
 #endif
                         if (idSize > 8)
                         {
@@ -258,16 +258,16 @@ namespace SharpCompress.Common.SevenZip
                         ulong id = 0;
                         for (int j = 0; j < idSize; j++)
                         {
-                            id |= (ulong)longID[idSize - 1 - j] << (8 * j);
+                            id |= (ulong)longId[idSize - 1 - j] << (8 * j);
                         }
-                        coder.MethodId = new CMethodId(id);
+                        coder._methodId = new CMethodId(id);
 
                         if ((mainByte & 0x10) != 0)
                         {
-                            coder.NumInStreams = ReadNum();
-                            coder.NumOutStreams = ReadNum();
+                            coder._numInStreams = ReadNum();
+                            coder._numOutStreams = ReadNum();
 #if DEBUG
-                            Log.WriteLine("Complex Stream (In: " + coder.NumInStreams + " - Out: " + coder.NumOutStreams + ")");
+                            Log.WriteLine("Complex Stream (In: " + coder._numInStreams + " - Out: " + coder._numOutStreams + ")");
 #endif
                         }
                         else
@@ -275,17 +275,17 @@ namespace SharpCompress.Common.SevenZip
 #if DEBUG
                             Log.WriteLine("Simple Stream (In: 1 - Out: 1)");
 #endif
-                            coder.NumInStreams = 1;
-                            coder.NumOutStreams = 1;
+                            coder._numInStreams = 1;
+                            coder._numOutStreams = 1;
                         }
 
                         if ((mainByte & 0x20) != 0)
                         {
                             int propsSize = ReadNum();
-                            coder.Props = new byte[propsSize];
-                            ReadBytes(coder.Props, 0, propsSize);
+                            coder._props = new byte[propsSize];
+                            ReadBytes(coder._props, 0, propsSize);
 #if DEBUG
-                            Log.WriteLine("Settings: " + String.Join("", coder.Props.Select(bt => bt.ToString("x2")).ToArray()));
+                            Log.WriteLine("Settings: " + String.Join("", coder._props.Select(bt => bt.ToString("x2")).ToArray()));
 #endif
                         }
 
@@ -294,8 +294,8 @@ namespace SharpCompress.Common.SevenZip
                             throw new NotSupportedException();
                         }
 
-                        numInStreams += coder.NumInStreams;
-                        numOutStreams += coder.NumOutStreams;
+                        numInStreams += coder._numInStreams;
+                        numOutStreams += coder._numOutStreams;
                     }
                     finally
                     {
@@ -306,7 +306,7 @@ namespace SharpCompress.Common.SevenZip
                 }
 
                 int numBindPairs = numOutStreams - 1;
-                folder.BindPairs = new List<CBindPair>(numBindPairs);
+                folder._bindPairs = new List<CBindPair>(numBindPairs);
 #if DEBUG
                 Log.WriteLine("BindPairs: " + numBindPairs);
                 Log.PushIndent();
@@ -314,11 +314,11 @@ namespace SharpCompress.Common.SevenZip
                 for (int i = 0; i < numBindPairs; i++)
                 {
                     CBindPair bp = new CBindPair();
-                    bp.InIndex = ReadNum();
-                    bp.OutIndex = ReadNum();
-                    folder.BindPairs.Add(bp);
+                    bp._inIndex = ReadNum();
+                    bp._outIndex = ReadNum();
+                    folder._bindPairs.Add(bp);
 #if DEBUG
-                    Log.WriteLine("#" + i + " - In: " + bp.InIndex + " - Out: " + bp.OutIndex);
+                    Log.WriteLine("#" + i + " - In: " + bp._inIndex + " - Out: " + bp._outIndex);
 #endif
                 }
 #if DEBUG
@@ -342,12 +342,12 @@ namespace SharpCompress.Common.SevenZip
 #if DEBUG
                             Log.WriteLine("Single PackStream: #" + i);
 #endif
-                            folder.PackStreams.Add(i);
+                            folder._packStreams.Add(i);
                             break;
                         }
                     }
 
-                    if (folder.PackStreams.Count != 1)
+                    if (folder._packStreams.Count != 1)
                     {
                         throw new NotSupportedException();
                     }
@@ -364,7 +364,7 @@ namespace SharpCompress.Common.SevenZip
 #if DEBUG
                         Log.WriteLine("#" + i + " - " + num);
 #endif
-                        folder.PackStreams.Add(num);
+                        folder._packStreams.Add(num);
                     }
 #if DEBUG
                     Log.PopIndent();
@@ -412,7 +412,7 @@ namespace SharpCompress.Common.SevenZip
             return digests;
         }
 
-        private void ReadPackInfo(out long dataOffset, out List<long> packSizes, out List<uint?> packCRCs)
+        private void ReadPackInfo(out long dataOffset, out List<long> packSizes, out List<uint?> packCrCs)
         {
 #if DEBUG
             Log.WriteLine("-- ReadPackInfo --");
@@ -420,7 +420,7 @@ namespace SharpCompress.Common.SevenZip
 #endif
             try
             {
-                packCRCs = null;
+                packCrCs = null;
 
                 dataOffset = checked((long)ReadNumber());
 #if DEBUG
@@ -457,20 +457,20 @@ namespace SharpCompress.Common.SevenZip
                     {
                         break;
                     }
-                    if (type == BlockType.CRC)
+                    if (type == BlockType.Crc)
                     {
-                        packCRCs = ReadHashDigests(numPackStreams);
+                        packCrCs = ReadHashDigests(numPackStreams);
                         continue;
                     }
                     SkipData();
                 }
 
-                if (packCRCs == null)
+                if (packCrCs == null)
                 {
-                    packCRCs = new List<uint?>(numPackStreams);
+                    packCrCs = new List<uint?>(numPackStreams);
                     for (int i = 0; i < numPackStreams; i++)
                     {
-                        packCRCs.Add(null);
+                        packCrCs.Add(null);
                     }
                 }
             }
@@ -506,10 +506,10 @@ namespace SharpCompress.Common.SevenZip
                     int index = 0;
                     for (int i = 0; i < numFolders; i++)
                     {
-                        var f = new CFolder {FirstPackStreamId = index};
+                        var f = new CFolder {_firstPackStreamId = index};
                         folders.Add(f);
                         GetNextFolderItem(f);
-                        index += f.PackStreams.Count;
+                        index += f._packStreams.Count;
                     }
                 }
 
@@ -530,7 +530,7 @@ namespace SharpCompress.Common.SevenZip
 #if DEBUG
                         Log.Write("  " + size);
 #endif
-                        folder.UnpackSizes.Add(size);
+                        folder._unpackSizes.Add(size);
                     }
 #if DEBUG
                     Log.WriteLine();
@@ -545,12 +545,12 @@ namespace SharpCompress.Common.SevenZip
                         return;
                     }
 
-                    if (type == BlockType.CRC)
+                    if (type == BlockType.Crc)
                     {
                         List<uint?> crcs = ReadHashDigests(numFolders);
                         for (int i = 0; i < numFolders; i++)
                         {
-                            folders[i].UnpackCRC = crcs[i];
+                            folders[i]._unpackCrc = crcs[i];
                         }
                         continue;
                     }
@@ -600,7 +600,7 @@ namespace SharpCompress.Common.SevenZip
 #endif
                         continue;
                     }
-                    if (type == BlockType.CRC || type == BlockType.Size)
+                    if (type == BlockType.Crc || type == BlockType.Size)
                     {
                         break;
                     }
@@ -661,7 +661,7 @@ namespace SharpCompress.Common.SevenZip
                 for (int i = 0; i < folders.Count; i++)
                 {
                     int numSubstreams = numUnpackStreamsInFolders[i];
-                    if (numSubstreams != 1 || !folders[i].UnpackCRCDefined)
+                    if (numSubstreams != 1 || !folders[i].UnpackCrcDefined)
                     {
                         numDigests += numSubstreams;
                     }
@@ -672,7 +672,7 @@ namespace SharpCompress.Common.SevenZip
 
                 for (;;)
                 {
-                    if (type == BlockType.CRC)
+                    if (type == BlockType.Crc)
                     {
                         digests = new List<uint?>(numDigestsTotal);
 
@@ -683,9 +683,9 @@ namespace SharpCompress.Common.SevenZip
                         {
                             int numSubstreams = numUnpackStreamsInFolders[i];
                             CFolder folder = folders[i];
-                            if (numSubstreams == 1 && folder.UnpackCRCDefined)
+                            if (numSubstreams == 1 && folder.UnpackCrcDefined)
                             {
-                                digests.Add(folder.UnpackCRC.Value);
+                                digests.Add(folder._unpackCrc.Value);
                             }
                             else
                             {
@@ -733,7 +733,7 @@ namespace SharpCompress.Common.SevenZip
             List<byte[]> dataVector,
             out long dataOffset,
             out List<long> packSizes,
-            out List<uint?> packCRCs,
+            out List<uint?> packCrCs,
             out List<CFolder> folders,
             out List<int> numUnpackStreamsInFolders,
             out List<long> unpackSizes,
@@ -747,7 +747,7 @@ namespace SharpCompress.Common.SevenZip
             {
                 dataOffset = long.MinValue;
                 packSizes = null;
-                packCRCs = null;
+                packCrCs = null;
                 folders = null;
                 numUnpackStreamsInFolders = null;
                 unpackSizes = null;
@@ -760,7 +760,7 @@ namespace SharpCompress.Common.SevenZip
                         case BlockType.End:
                             return;
                         case BlockType.PackInfo:
-                            ReadPackInfo(out dataOffset, out packSizes, out packCRCs);
+                            ReadPackInfo(out dataOffset, out packSizes, out packCrCs);
                             break;
                         case BlockType.UnpackInfo:
                             ReadUnpackInfo(dataVector, out folders);
@@ -791,7 +791,7 @@ namespace SharpCompress.Common.SevenZip
             {
                 long dataStartPos;
                 List<long> packSizes;
-                List<uint?> packCRCs;
+                List<uint?> packCrCs;
                 List<CFolder> folders;
                 List<int> numUnpackStreamsInFolders;
                 List<long> unpackSizes;
@@ -800,7 +800,7 @@ namespace SharpCompress.Common.SevenZip
                 ReadStreamsInfo(null,
                                 out dataStartPos,
                                 out packSizes,
-                                out packCRCs,
+                                out packCrCs,
                                 out folders,
                                 out numUnpackStreamsInFolders,
                                 out unpackSizes,
@@ -813,7 +813,7 @@ namespace SharpCompress.Common.SevenZip
                 foreach (var folder in folders)
                 {
                     long oldDataStartPos = dataStartPos;
-                    long[] myPackSizes = new long[folder.PackStreams.Count];
+                    long[] myPackSizes = new long[folder._packStreams.Count];
                     for (int i = 0; i < myPackSizes.Length; i++)
                     {
                         long packSize = packSizes[packIndex + i];
@@ -833,9 +833,9 @@ namespace SharpCompress.Common.SevenZip
                     }
                     dataVector.Add(data);
 
-                    if (folder.UnpackCRCDefined)
+                    if (folder.UnpackCrcDefined)
                     {
-                        if (CRC.Finish(CRC.Update(CRC.kInitCRC, data, 0, unpackSize)) != folder.UnpackCRC)
+                        if (Crc.Finish(Crc.Update(Crc.INIT_CRC, data, 0, unpackSize)) != folder._unpackCrc)
                         {
                             throw new InvalidOperationException("Decoded stream does not match expected CRC.");
                         }
@@ -870,7 +870,7 @@ namespace SharpCompress.Common.SevenZip
                 List<byte[]> dataVector = null;
                 if (type == BlockType.AdditionalStreamsInfo)
                 {
-                    dataVector = ReadAndDecodePackedStreams(db.StartPositionAfterHeader, getTextPassword);
+                    dataVector = ReadAndDecodePackedStreams(db._startPositionAfterHeader, getTextPassword);
                     type = ReadId();
                 }
 
@@ -880,32 +880,32 @@ namespace SharpCompress.Common.SevenZip
                 if (type == BlockType.MainStreamsInfo)
                 {
                     ReadStreamsInfo(dataVector,
-                                    out db.DataStartPosition,
-                                    out db.PackSizes,
-                                    out db.PackCRCs,
-                                    out db.Folders,
-                                    out db.NumUnpackStreamsVector,
+                                    out db._dataStartPosition,
+                                    out db._packSizes,
+                                    out db._packCrCs,
+                                    out db._folders,
+                                    out db._numUnpackStreamsVector,
                                     out unpackSizes,
                                     out digests);
 
-                    db.DataStartPosition += db.StartPositionAfterHeader;
+                    db._dataStartPosition += db._startPositionAfterHeader;
                     type = ReadId();
                 }
                 else
                 {
-                    unpackSizes = new List<long>(db.Folders.Count);
-                    digests = new List<uint?>(db.Folders.Count);
-                    db.NumUnpackStreamsVector = new List<int>(db.Folders.Count);
-                    for (int i = 0; i < db.Folders.Count; i++)
+                    unpackSizes = new List<long>(db._folders.Count);
+                    digests = new List<uint?>(db._folders.Count);
+                    db._numUnpackStreamsVector = new List<int>(db._folders.Count);
+                    for (int i = 0; i < db._folders.Count; i++)
                     {
-                        var folder = db.Folders[i];
+                        var folder = db._folders[i];
                         unpackSizes.Add(folder.GetUnpackSize());
-                        digests.Add(folder.UnpackCRC);
-                        db.NumUnpackStreamsVector.Add(1);
+                        digests.Add(folder._unpackCrc);
+                        db._numUnpackStreamsVector.Add(1);
                     }
                 }
 
-                db.Files.Clear();
+                db._files.Clear();
 
                 if (type == BlockType.End)
                 {
@@ -921,10 +921,10 @@ namespace SharpCompress.Common.SevenZip
 #if DEBUG
                 Log.WriteLine("NumFiles: " + numFiles);
 #endif
-                db.Files = new List<CFileItem>(numFiles);
+                db._files = new List<CFileItem>(numFiles);
                 for (int i = 0; i < numFiles; i++)
                 {
-                    db.Files.Add(new CFileItem());
+                    db._files.Add(new CFileItem());
                 }
 
                 BitVector emptyStreamVector = new BitVector(numFiles);
@@ -951,11 +951,11 @@ namespace SharpCompress.Common.SevenZip
 #if DEBUG
                                 Log.Write("FileNames:");
 #endif
-                                for (int i = 0; i < db.Files.Count; i++)
+                                for (int i = 0; i < db._files.Count; i++)
                                 {
-                                    db.Files[i].Name = _currentReader.ReadString();
+                                    db._files[i].Name = _currentReader.ReadString();
 #if DEBUG
-                                    Log.Write("  " + db.Files[i].Name);
+                                    Log.Write("  " + db._files[i].Name);
 #endif
                                 }
 #if DEBUG
@@ -991,7 +991,7 @@ namespace SharpCompress.Common.SevenZip
                                                                               attr = attr.Value & 0x7FFFu;
                                                                           }
 
-                                                                          db.Files[i].Attrib = attr;
+                                                                          db._files[i].Attrib = attr;
 #if DEBUG
                                                                           Log.Write("  " + (attr.HasValue ? attr.Value.ToString("x8") : "n/a"));
 #endif
@@ -1057,7 +1057,7 @@ namespace SharpCompress.Common.SevenZip
 #endif
                             ReadNumberVector(dataVector, numFiles, delegate(int i, long? startPos)
                                                                    {
-                                                                       db.Files[i].StartPos = startPos;
+                                                                       db._files[i].StartPos = startPos;
 #if DEBUG
                                                                        Log.Write("  " + (startPos.HasValue ? startPos.Value.ToString() : "n/a"));
 #endif
@@ -1072,7 +1072,7 @@ namespace SharpCompress.Common.SevenZip
 #endif
                             ReadDateTimeVector(dataVector, numFiles, delegate(int i, DateTime? time)
                                                                      {
-                                                                         db.Files[i].CTime = time;
+                                                                         db._files[i].CTime = time;
 #if DEBUG
                                                                          Log.Write("  " + (time.HasValue ? time.Value.ToString() : "n/a"));
 #endif
@@ -1087,7 +1087,7 @@ namespace SharpCompress.Common.SevenZip
 #endif
                             ReadDateTimeVector(dataVector, numFiles, delegate(int i, DateTime? time)
                                                                      {
-                                                                         db.Files[i].ATime = time;
+                                                                         db._files[i].ATime = time;
 #if DEBUG
                                                                          Log.Write("  " + (time.HasValue ? time.Value.ToString() : "n/a"));
 #endif
@@ -1102,7 +1102,7 @@ namespace SharpCompress.Common.SevenZip
 #endif
                             ReadDateTimeVector(dataVector, numFiles, delegate(int i, DateTime? time)
                                                                      {
-                                                                         db.Files[i].MTime = time;
+                                                                         db._files[i].MTime = time;
 #if DEBUG
                                                                          Log.Write("  " + (time.HasValue ? time.Value.ToString() : "n/a"));
 #endif
@@ -1129,7 +1129,7 @@ namespace SharpCompress.Common.SevenZip
                     }
 
                     // since 0.3 record sizes must be correct
-                    bool checkRecordsSize = (db.MajorVersion > 0 || db.MinorVersion > 2);
+                    bool checkRecordsSize = (db._majorVersion > 0 || db._minorVersion > 2);
                     if (checkRecordsSize && _currentReader.Offset - oldPos != size)
                     {
                         throw new InvalidOperationException();
@@ -1140,7 +1140,7 @@ namespace SharpCompress.Common.SevenZip
                 int sizeIndex = 0;
                 for (int i = 0; i < numFiles; i++)
                 {
-                    CFileItem file = db.Files[i];
+                    CFileItem file = db._files[i];
                     file.HasStream = !emptyStreamVector[i];
                     if (file.HasStream)
                     {
@@ -1211,13 +1211,13 @@ namespace SharpCompress.Common.SevenZip
 
         public ArchiveDatabase ReadDatabase(IPasswordProvider pass)
         {
-            var db = new ArchiveDatabase();
+            var db = new ArchiveDatabase(pass);
             db.Clear();
 
-            db.MajorVersion = _header[6];
-            db.MinorVersion = _header[7];
+            db._majorVersion = _header[6];
+            db._minorVersion = _header[7];
 
-            if (db.MajorVersion != 0)
+            if (db._majorVersion != 0)
             {
                 throw new InvalidOperationException();
             }
@@ -1227,18 +1227,18 @@ namespace SharpCompress.Common.SevenZip
             long nextHeaderSize = (long)DataReader.Get64(_header, 0x14);
             uint nextHeaderCrc = DataReader.Get32(_header, 0x1C);
 
-            uint crc = CRC.kInitCRC;
-            crc = CRC.Update(crc, nextHeaderOffset);
-            crc = CRC.Update(crc, nextHeaderSize);
-            crc = CRC.Update(crc, nextHeaderCrc);
-            crc = CRC.Finish(crc);
+            uint crc = Crc.INIT_CRC;
+            crc = Crc.Update(crc, nextHeaderOffset);
+            crc = Crc.Update(crc, nextHeaderSize);
+            crc = Crc.Update(crc, nextHeaderCrc);
+            crc = Crc.Finish(crc);
 
             if (crc != crcFromArchive)
             {
                 throw new InvalidOperationException();
             }
 
-            db.StartPositionAfterHeader = _streamOrigin + 0x20;
+            db._startPositionAfterHeader = _streamOrigin + 0x20;
 
             // empty header is ok
             if (nextHeaderSize == 0)
@@ -1252,7 +1252,7 @@ namespace SharpCompress.Common.SevenZip
                 throw new InvalidOperationException();
             }
 
-            if (nextHeaderOffset > _streamEnding - db.StartPositionAfterHeader)
+            if (nextHeaderOffset > _streamEnding - db._startPositionAfterHeader)
             {
                 throw new IndexOutOfRangeException();
             }
@@ -1262,7 +1262,7 @@ namespace SharpCompress.Common.SevenZip
             byte[] header = new byte[nextHeaderSize];
             _stream.ReadExact(header, 0, header.Length);
 
-            if (CRC.Finish(CRC.Update(CRC.kInitCRC, header, 0, header.Length)) != nextHeaderCrc)
+            if (Crc.Finish(Crc.Update(Crc.INIT_CRC, header, 0, header.Length)) != nextHeaderCrc)
             {
                 throw new InvalidOperationException();
             }
@@ -1279,7 +1279,7 @@ namespace SharpCompress.Common.SevenZip
                         throw new InvalidOperationException();
                     }
 
-                    var dataVector = ReadAndDecodePackedStreams(db.StartPositionAfterHeader, pass);
+                    var dataVector = ReadAndDecodePackedStreams(db._startPositionAfterHeader, db.PasswordProvider);
 
                     // compressed header without content is odd but ok
                     if (dataVector.Count == 0)
@@ -1301,7 +1301,7 @@ namespace SharpCompress.Common.SevenZip
                     }
                 }
 
-                ReadHeader(db, pass);
+                ReadHeader(db, db.PasswordProvider);
             }
             db.Fill();
             return db;
@@ -1309,17 +1309,17 @@ namespace SharpCompress.Common.SevenZip
 
         internal class CExtractFolderInfo
         {
-            internal int FileIndex;
-            internal int FolderIndex;
-            internal List<bool> ExtractStatuses = new List<bool>();
+            internal int _fileIndex;
+            internal int _folderIndex;
+            internal List<bool> _extractStatuses = new List<bool>();
 
             internal CExtractFolderInfo(int fileIndex, int folderIndex)
             {
-                FileIndex = fileIndex;
-                FolderIndex = folderIndex;
+                _fileIndex = fileIndex;
+                _folderIndex = folderIndex;
                 if (fileIndex != -1)
                 {
-                    ExtractStatuses.Add(true);
+                    _extractStatuses.Add(true);
                 }
             }
         }
@@ -1375,7 +1375,7 @@ namespace SharpCompress.Common.SevenZip
 
             private void ProcessEmptyFiles()
             {
-                while (_currentIndex < _extractStatuses.Count && _db.Files[_startIndex + _currentIndex].Size == 0)
+                while (_currentIndex < _extractStatuses.Count && _db._files[_startIndex + _currentIndex].Size == 0)
                 {
                     OpenFile();
                     _stream.Dispose();
@@ -1388,17 +1388,17 @@ namespace SharpCompress.Common.SevenZip
             {
                 int index = _startIndex + _currentIndex;
 #if DEBUG
-                Log.WriteLine(_db.Files[index].Name);
+                Log.WriteLine(_db._files[index].Name);
 #endif
-                if (_db.Files[index].CrcDefined)
+                if (_db._files[index].CrcDefined)
                 {
-                    _stream = new CrcCheckStream(_db.Files[index].Crc.Value);
+                    _stream = new CrcCheckStream(_db._files[index].Crc.Value);
                 }
                 else
                 {
                     _stream = new MemoryStream();
                 }
-                _rem = _db.Files[index].Size;
+                _rem = _db._files[index].Size;
             }
 
             public override void Write(byte[] buffer, int offset, int count)
@@ -1441,32 +1441,32 @@ namespace SharpCompress.Common.SevenZip
             #endregion
         }
 
-        private Stream GetCachedDecoderStream(ArchiveDatabase _db, int folderIndex, IPasswordProvider pw)
+        private Stream GetCachedDecoderStream(ArchiveDatabase db, int folderIndex)
         {
             Stream s;
             if (!_cachedStreams.TryGetValue(folderIndex, out s))
             {
-                CFolder folderInfo = _db.Folders[folderIndex];
-                int packStreamIndex = _db.Folders[folderIndex].FirstPackStreamId;
-                long folderStartPackPos = _db.GetFolderStreamPos(folderInfo, 0);
+                CFolder folderInfo = db._folders[folderIndex];
+                int packStreamIndex = db._folders[folderIndex]._firstPackStreamId;
+                long folderStartPackPos = db.GetFolderStreamPos(folderInfo, 0);
                 List<long> packSizes = new List<long>();
-                for (int j = 0; j < folderInfo.PackStreams.Count; j++)
+                for (int j = 0; j < folderInfo._packStreams.Count; j++)
                 {
-                    packSizes.Add(_db.PackSizes[packStreamIndex + j]);
+                    packSizes.Add(db._packSizes[packStreamIndex + j]);
                 }
 
                 s = DecoderStreamHelper.CreateDecoderStream(_stream, folderStartPackPos, packSizes.ToArray(), folderInfo,
-                                                            pw);
+                                                            db.PasswordProvider);
                 _cachedStreams.Add(folderIndex, s);
             }
             return s;
         }
 
-        public Stream OpenStream(ArchiveDatabase _db, int fileIndex, IPasswordProvider pw)
+        public Stream OpenStream(ArchiveDatabase db, int fileIndex)
         {
-            int folderIndex = _db.FileIndexToFolderIndexMap[fileIndex];
-            int numFilesInFolder = _db.NumUnpackStreamsVector[folderIndex];
-            int firstFileIndex = _db.FolderStartFileIndex[folderIndex];
+            int folderIndex = db._fileIndexToFolderIndexMap[fileIndex];
+            int numFilesInFolder = db._numUnpackStreamsVector[folderIndex];
+            int firstFileIndex = db._folderStartFileIndex[folderIndex];
             if (firstFileIndex > fileIndex || fileIndex - firstFileIndex >= numFilesInFolder)
             {
                 throw new InvalidOperationException();
@@ -1476,21 +1476,21 @@ namespace SharpCompress.Common.SevenZip
             long skipSize = 0;
             for (int i = 0; i < skipCount; i++)
             {
-                skipSize += _db.Files[firstFileIndex + i].Size;
+                skipSize += db._files[firstFileIndex + i].Size;
             }
 
-            Stream s = GetCachedDecoderStream(_db, folderIndex, pw);
+            Stream s = GetCachedDecoderStream(db, folderIndex);
             s.Position = skipSize;
-            return new ReadOnlySubStream(s, _db.Files[fileIndex].Size);
+            return new ReadOnlySubStream(s, db._files[fileIndex].Size);
         }
 
-        public void Extract(ArchiveDatabase _db, int[] indices, IPasswordProvider pw)
+        public void Extract(ArchiveDatabase db, int[] indices)
         {
             int numItems;
             bool allFilesMode = (indices == null);
             if (allFilesMode)
             {
-                numItems = _db.Files.Count;
+                numItems = db._files.Count;
             }
             else
             {
@@ -1507,62 +1507,62 @@ namespace SharpCompress.Common.SevenZip
             {
                 int fileIndex = allFilesMode ? i : indices[i];
 
-                int folderIndex = _db.FileIndexToFolderIndexMap[fileIndex];
+                int folderIndex = db._fileIndexToFolderIndexMap[fileIndex];
                 if (folderIndex == -1)
                 {
                     extractFolderInfoVector.Add(new CExtractFolderInfo(fileIndex, -1));
                     continue;
                 }
 
-                if (extractFolderInfoVector.Count == 0 || folderIndex != extractFolderInfoVector.Last().FolderIndex)
+                if (extractFolderInfoVector.Count == 0 || folderIndex != extractFolderInfoVector.Last()._folderIndex)
                 {
                     extractFolderInfoVector.Add(new CExtractFolderInfo(-1, folderIndex));
                 }
 
                 CExtractFolderInfo efi = extractFolderInfoVector.Last();
 
-                int startIndex = _db.FolderStartFileIndex[folderIndex];
-                for (int index = efi.ExtractStatuses.Count; index <= fileIndex - startIndex; index++)
+                int startIndex = db._folderStartFileIndex[folderIndex];
+                for (int index = efi._extractStatuses.Count; index <= fileIndex - startIndex; index++)
                 {
-                    efi.ExtractStatuses.Add(index == fileIndex - startIndex);
+                    efi._extractStatuses.Add(index == fileIndex - startIndex);
                 }
             }
 
             foreach (CExtractFolderInfo efi in extractFolderInfoVector)
             {
                 int startIndex;
-                if (efi.FileIndex != -1)
+                if (efi._fileIndex != -1)
                 {
-                    startIndex = efi.FileIndex;
+                    startIndex = efi._fileIndex;
                 }
                 else
                 {
-                    startIndex = _db.FolderStartFileIndex[efi.FolderIndex];
+                    startIndex = db._folderStartFileIndex[efi._folderIndex];
                 }
 
-                var outStream = new FolderUnpackStream(_db, 0, startIndex, efi.ExtractStatuses);
+                var outStream = new FolderUnpackStream(db, 0, startIndex, efi._extractStatuses);
 
-                if (efi.FileIndex != -1)
+                if (efi._fileIndex != -1)
                 {
                     continue;
                 }
 
-                int folderIndex = efi.FolderIndex;
-                CFolder folderInfo = _db.Folders[folderIndex];
+                int folderIndex = efi._folderIndex;
+                CFolder folderInfo = db._folders[folderIndex];
 
-                int packStreamIndex = _db.Folders[folderIndex].FirstPackStreamId;
-                long folderStartPackPos = _db.GetFolderStreamPos(folderInfo, 0);
+                int packStreamIndex = db._folders[folderIndex]._firstPackStreamId;
+                long folderStartPackPos = db.GetFolderStreamPos(folderInfo, 0);
 
                 List<long> packSizes = new List<long>();
-                for (int j = 0; j < folderInfo.PackStreams.Count; j++)
+                for (int j = 0; j < folderInfo._packStreams.Count; j++)
                 {
-                    packSizes.Add(_db.PackSizes[packStreamIndex + j]);
+                    packSizes.Add(db._packSizes[packStreamIndex + j]);
                 }
 
                 // TODO: If the decoding fails the last file may be extracted incompletely. Delete it?
 
                 Stream s = DecoderStreamHelper.CreateDecoderStream(_stream, folderStartPackPos, packSizes.ToArray(),
-                                                                   folderInfo, pw);
+                                                                   folderInfo, db.PasswordProvider);
                 byte[] buffer = new byte[4 << 10];
                 for (;;)
                 {
@@ -1578,12 +1578,12 @@ namespace SharpCompress.Common.SevenZip
 
         public IEnumerable<CFileItem> GetFiles(ArchiveDatabase db)
         {
-            return db.Files;
+            return db._files;
         }
 
         public int GetFileIndex(ArchiveDatabase db, CFileItem item)
         {
-            return db.Files.IndexOf(item);
+            return db._files.IndexOf(item);
         }
 
         #endregion

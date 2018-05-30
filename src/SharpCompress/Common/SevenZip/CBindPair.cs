@@ -2,7 +2,7 @@
 {
     internal class CBindPair
     {
-        internal int InIndex;
-        internal int OutIndex;
+        internal int _inIndex;
+        internal int _outIndex;
     }
 }

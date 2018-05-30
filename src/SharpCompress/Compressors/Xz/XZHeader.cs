@@ -48,7 +48,7 @@ namespace SharpCompress.Compressors.Xz
 
         private void CheckMagicBytes(byte[] header)
         {
-            if (!Enumerable.SequenceEqual(header, MagicHeader))
+            if (!header.SequenceEqual(MagicHeader))
                 throw new InvalidDataException("Invalid XZ Stream");
         }
     }

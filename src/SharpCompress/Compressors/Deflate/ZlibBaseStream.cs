@@ -50,7 +50,6 @@ namespace SharpCompress.Compressors.Deflate
         protected internal ZlibStreamFlavor _flavor;
         protected internal CompressionMode _compressionMode;
         protected internal CompressionLevel _level;
-        protected internal bool _leaveOpen;
         protected internal byte[] _workingBuffer;
         protected internal int _bufferSize = ZlibConstants.WorkingBufferSizeDefault;
         protected internal byte[] _buf1 = new byte[1];
@@ -83,14 +82,12 @@ namespace SharpCompress.Compressors.Deflate
                               CompressionMode compressionMode,
                               CompressionLevel level,
                               ZlibStreamFlavor flavor,
-                              bool leaveOpen,
                               Encoding encoding)
         {
             _flushMode = FlushType.None;
 
             //this._workingBuffer = new byte[WORKING_BUFFER_SIZE_DEFAULT];
             _stream = stream;
-            _leaveOpen = leaveOpen;
             _compressionMode = compressionMode;
             _flavor = flavor;
             _level = level;
@@ -361,10 +358,7 @@ namespace SharpCompress.Compressors.Deflate
                 finally
                 {
                     end();
-                    if (!_leaveOpen)
-                    {
-                        _stream.Dispose();
-                    }
+                    _stream?.Dispose();
                     _stream = null;
                 }
             }
@@ -453,7 +447,7 @@ namespace SharpCompress.Compressors.Deflate
             }
 
             Int32 timet = DataConverter.LittleEndian.GetInt32(header, 4);
-            _GzipMtime = TarHeader.Epoch.AddSeconds(timet);
+            _GzipMtime = TarHeader.EPOCH.AddSeconds(timet);
             totalBytesRead += n;
             if ((header[3] & 0x04) == 0x04)
             {

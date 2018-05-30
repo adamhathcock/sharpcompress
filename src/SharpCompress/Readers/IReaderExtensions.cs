@@ -93,10 +93,6 @@ namespace SharpCompress.Readers
             using (FileStream fs = File.Open(destinationFileName, fm))
             {
                 reader.WriteEntryTo(fs);
-                //using (Stream s = reader.OpenEntryStream())
-                //{
-                //    s.TransferTo(fs);
-                //}
             }
             reader.Entry.PreserveExtractionOptions(destinationFileName, options);
         }

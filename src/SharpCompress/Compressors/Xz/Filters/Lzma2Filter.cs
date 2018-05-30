@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using SharpCompress.Compressors.LZMA;
 
 namespace SharpCompress.Compressors.Xz.Filters
 {
@@ -9,7 +10,7 @@ namespace SharpCompress.Compressors.Xz.Filters
         public override bool AllowAsNonLast => false;
         public override bool ChangesDataSize => true;
 
-        byte _dictionarySize;
+        private byte _dictionarySize;
         public uint DictionarySize
         {
             get
@@ -43,12 +44,17 @@ namespace SharpCompress.Compressors.Xz.Filters
 
         public override void SetBaseStream(Stream stream)
         {
-            BaseStream = new SharpCompress.Compressors.LZMA.LzmaStream(new[] { _dictionarySize }, stream);
+            BaseStream = new LzmaStream(new[] { _dictionarySize }, stream);
         }
 
         public override int Read(byte[] buffer, int offset, int count)
         {
             return BaseStream.Read(buffer, offset, count);
+        }
+
+        public override int ReadByte()
+        {
+            return BaseStream.ReadByte();
         }
     }
 }

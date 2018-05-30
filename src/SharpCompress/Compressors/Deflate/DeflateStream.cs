@@ -37,10 +37,9 @@ namespace SharpCompress.Compressors.Deflate
 
         public DeflateStream(Stream stream, CompressionMode mode,
                              CompressionLevel level = CompressionLevel.Default,
-                             bool leaveOpen = false,
                              Encoding forceEncoding = null)
         {
-            _baseStream = new ZlibBaseStream(stream, mode, level, ZlibStreamFlavor.DEFLATE, leaveOpen, forceEncoding);
+            _baseStream = new ZlibBaseStream(stream, mode, level, ZlibStreamFlavor.DEFLATE, forceEncoding);
         }
 
         #region Zlib properties
@@ -216,7 +215,6 @@ namespace SharpCompress.Compressors.Deflate
         /// </summary>
         /// <remarks>
         /// This may or may not result in a <c>Close()</c> call on the captive stream.
-        /// See the constructors that have a <c>leaveOpen</c> parameter for more information.
         /// </remarks>
         protected override void Dispose(bool disposing)
         {
@@ -224,9 +222,9 @@ namespace SharpCompress.Compressors.Deflate
             {
                 if (!_disposed)
                 {
-                    if (disposing && (_baseStream != null))
+                    if (disposing)
                     {
-                        _baseStream.Dispose();
+                        _baseStream?.Dispose();
                     }
                     _disposed = true;
                 }
@@ -282,6 +280,15 @@ namespace SharpCompress.Compressors.Deflate
                 throw new ObjectDisposedException("DeflateStream");
             }
             return _baseStream.Read(buffer, offset, count);
+        }
+
+        public override int ReadByte()
+        {
+            if (_disposed)
+            {
+                throw new ObjectDisposedException("DeflateStream");
+            }
+            return _baseStream.ReadByte();
         }
 
         /// <summary>
@@ -340,6 +347,15 @@ namespace SharpCompress.Compressors.Deflate
                 throw new ObjectDisposedException("DeflateStream");
             }
             _baseStream.Write(buffer, offset, count);
+        }
+
+        public override void WriteByte(byte value)
+        {
+            if (_disposed)
+            {
+                throw new ObjectDisposedException("DeflateStream");
+            }
+            _baseStream.WriteByte(value);
         }
 
         #endregion

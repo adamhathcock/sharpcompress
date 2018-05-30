@@ -3,7 +3,7 @@
     public enum PpmdVersion
     {
         H,
-        H7z,
+        H7Z,
         I1
     }
 }

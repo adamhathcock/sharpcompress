@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Org.BouncyCastle.Crypto.Parameters
+namespace SharpCompress.Crypto
 {
     public class KeyParameter
         : ICipherParameters

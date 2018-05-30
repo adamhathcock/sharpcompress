@@ -1,38 +1,21 @@
 ﻿using System;
 using System.IO;
 using SharpCompress.IO;
-using System.Text;
 
 namespace SharpCompress.Common.Rar.Headers
 {
-    internal class RarHeader
+    // http://www.forensicswiki.org/w/images/5/5b/RARFileStructure.txt
+    // https://www.rarlab.com/technote.htm
+    internal class RarHeader : IRarHeader
     {
-        internal const short BaseBlockSize = 7;
-        internal const short LONG_BLOCK = -0x8000;
+        private readonly HeaderType _headerType;
+        private readonly bool _isRar5;
 
-        private void FillBase(RarHeader baseHeader)
-        {
-            HeadCRC = baseHeader.HeadCRC;
-            HeaderType = baseHeader.HeaderType;
-            Flags = baseHeader.Flags;
-            HeaderSize = baseHeader.HeaderSize;
-            AdditionalSize = baseHeader.AdditionalSize;
-            ReadBytes = baseHeader.ReadBytes;
-            ArchiveEncoding = baseHeader.ArchiveEncoding;
-        }
-
-        internal static RarHeader Create(RarCrcBinaryReader reader, ArchiveEncoding archiveEncoding)
+        internal static RarHeader TryReadBase(RarCrcBinaryReader reader, bool isRar5, ArchiveEncoding archiveEncoding)
         {
             try
             {
-                RarHeader header = new RarHeader();
-
-                header.ArchiveEncoding = archiveEncoding;
-                reader.Mark();
-                header.ReadStartFromReader(reader);
-                header.ReadBytes += reader.CurrentReadByteCount;
-
-                return header;
+                return new RarHeader(reader, isRar5, archiveEncoding);
             }
             catch (EndOfStreamException)
             {
@@ -40,82 +23,108 @@ namespace SharpCompress.Common.Rar.Headers
             }
         }
 
-        private void ReadStartFromReader(RarCrcBinaryReader reader)
+        private RarHeader(RarCrcBinaryReader reader, bool isRar5, ArchiveEncoding archiveEncoding) 
         {
-            HeadCRC = reader.ReadUInt16();
-            reader.ResetCrc();
-            HeaderType = (HeaderType)(reader.ReadByte() & 0xff);
-            Flags = reader.ReadInt16();
-            HeaderSize = reader.ReadInt16();
-            if (FlagUtility.HasFlag(Flags, LONG_BLOCK))
+            _headerType = HeaderType.Null;
+            _isRar5 = isRar5;
+            ArchiveEncoding = archiveEncoding;
+            if (IsRar5) 
             {
-                AdditionalSize = reader.ReadUInt32();
-            }
-        }
+                HeaderCrc = reader.ReadUInt32();
+                reader.ResetCrc();
+                HeaderSize = (int)reader.ReadRarVIntUInt32(3);
+                reader.Mark();
+                HeaderCode = reader.ReadRarVIntByte();
+                HeaderFlags = reader.ReadRarVIntUInt16(2);
 
-        protected virtual void ReadFromReader(MarkingBinaryReader reader)
-        {
-            throw new NotImplementedException();
-        }
-
-        internal T PromoteHeader<T>(RarCrcBinaryReader reader)
-            where T : RarHeader, new()
-        {
-            T header = new T();
-            header.FillBase(this);
-
-            reader.Mark();
-            header.ReadFromReader(reader);
-            header.ReadBytes += reader.CurrentReadByteCount;
-
-            int headerSizeDiff = header.HeaderSize - (int)header.ReadBytes;
-
-            if (headerSizeDiff > 0)
-            {
-                reader.ReadBytes(headerSizeDiff);
-            }
-
-            VerifyHeaderCrc(reader.GetCrc());
-
-            return header;
-        }
-
-        private void VerifyHeaderCrc(ushort crc)
-        {
-            if (HeaderType != HeaderType.MarkHeader)
-            {
-                if (crc != HeadCRC)
+                if (HasHeaderFlag(HeaderFlagsV5.HAS_EXTRA))
                 {
-                    throw new InvalidFormatException("rar header crc mismatch");
+                    ExtraSize = reader.ReadRarVIntUInt32();
+                }
+                if (HasHeaderFlag(HeaderFlagsV5.HAS_DATA))
+                {
+                    AdditionalDataSize = (long)reader.ReadRarVInt();
+                }
+            } else {
+                reader.Mark();
+                HeaderCrc = reader.ReadUInt16();
+                reader.ResetCrc();
+                HeaderCode = reader.ReadByte();
+                HeaderFlags = reader.ReadUInt16();
+                HeaderSize = reader.ReadInt16();
+                if (HasHeaderFlag(HeaderFlagsV4.HAS_DATA))
+                {
+                    AdditionalDataSize = reader.ReadUInt32();
                 }
             }
         }
 
-        protected virtual void PostReadingBytes(MarkingBinaryReader reader)
-        {
+        protected RarHeader(RarHeader header, RarCrcBinaryReader reader, HeaderType headerType) {
+            _headerType = headerType;
+            _isRar5 = header.IsRar5;
+            HeaderCrc = header.HeaderCrc;
+            HeaderCode = header.HeaderCode;
+            HeaderFlags = header.HeaderFlags;
+            HeaderSize = header.HeaderSize;
+            ExtraSize = header.ExtraSize;
+            AdditionalDataSize = header.AdditionalDataSize;
+            ArchiveEncoding = header.ArchiveEncoding;
+            ReadFinish(reader);
+
+            int n = RemainingHeaderBytes(reader);
+            if (n > 0)
+            {
+                reader.ReadBytes(n);
+            }
+
+            VerifyHeaderCrc(reader.GetCrc32());
         }
 
+        protected int RemainingHeaderBytes(MarkingBinaryReader reader) {
+            return checked(HeaderSize - (int)reader.CurrentReadByteCount);
+        }
+
+        protected virtual void ReadFinish(MarkingBinaryReader reader)
+        {
+            throw new NotImplementedException();
+        }
+
+        private void VerifyHeaderCrc(uint crc32)
+        {
+            var b = (IsRar5 ? crc32 : (ushort)crc32) == HeaderCrc;
+            if (!b)
+            {
+                throw new InvalidFormatException("rar header crc mismatch");
+            }
+        }
+
+        public HeaderType HeaderType => _headerType;
+
+        protected bool IsRar5 => _isRar5;
+
+        protected uint HeaderCrc { get; }
+
+        internal byte HeaderCode { get; }
+
+        protected ushort HeaderFlags { get; }
+
+        protected bool HasHeaderFlag(ushort flag) 
+        {
+            return (HeaderFlags & flag) == flag;
+        }
+
+        protected int HeaderSize { get; }
+
+        internal ArchiveEncoding ArchiveEncoding { get; }
+
         /// <summary>
-        /// This is the number of bytes read when reading the header
+        /// Extra header size.
         /// </summary>
-        protected long ReadBytes { get; private set; }
-
-        protected ushort HeadCRC { get; private set; }
-
-        internal HeaderType HeaderType { get; private set; }
+        protected uint ExtraSize { get; }
 
         /// <summary>
-        /// Untyped flags.  These should be typed when Promoting to another header
+        /// Size of additional data (eg file contents)
         /// </summary>
-        protected short Flags { get; private set; }
-
-        protected short HeaderSize { get; private set; }
-
-        internal ArchiveEncoding ArchiveEncoding { get; private set; }
-
-        /// <summary>
-        /// This additional size of the header could be file data
-        /// </summary>
-        protected uint AdditionalSize { get; private set; }
+        protected long AdditionalDataSize { get; }
     }
 }

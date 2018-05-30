@@ -6,17 +6,26 @@ using SharpCompress.Compressors;
 using SharpCompress.Compressors.BZip2;
 using SharpCompress.Compressors.Deflate;
 using SharpCompress.Compressors.LZMA;
+using SharpCompress.IO;
 
 namespace SharpCompress.Writers.Tar
 {
     public class TarWriter : AbstractWriter
     {
-        public TarWriter(Stream destination, WriterOptions options)
+        private readonly bool finalizeArchiveOnClose;
+
+        public TarWriter(Stream destination, TarWriterOptions options)
             : base(ArchiveType.Tar, options)
         {
+            finalizeArchiveOnClose = options.FinalizeArchiveOnClose;
+
             if (!destination.CanWrite)
             {
                 throw new ArgumentException("Tars require writable streams.");
+            }
+            if (WriterOptions.LeaveStreamOpen)
+            {
+                destination = new NonDisposingStream(destination);
             }
             switch (options.CompressionType)
             {
@@ -24,17 +33,17 @@ namespace SharpCompress.Writers.Tar
                     break;
                 case CompressionType.BZip2:
                 {
-                    destination = new BZip2Stream(destination, CompressionMode.Compress, true);
+                    destination = new BZip2Stream(destination, CompressionMode.Compress, false);
                 }
                     break;
                 case CompressionType.GZip:
                 {
-                    destination = new GZipStream(destination, CompressionMode.Compress, true);
+                    destination = new GZipStream(destination, CompressionMode.Compress);
                 }
                     break;
                 case CompressionType.LZip:
                 {
-                    destination = new LZipStream(destination, CompressionMode.Compress, true);
+                    destination = new LZipStream(destination, CompressionMode.Compress);
                 }
                     break;
                 default:
@@ -74,7 +83,7 @@ namespace SharpCompress.Writers.Tar
 
             TarHeader header = new TarHeader(WriterOptions.ArchiveEncoding);
 
-            header.LastModifiedTime = modificationTime ?? TarHeader.Epoch;
+            header.LastModifiedTime = modificationTime ?? TarHeader.EPOCH;
             header.Name = NormalizeFilename(filename);
             header.Size = realSize;
             header.Write(OutputStream);
@@ -97,8 +106,10 @@ namespace SharpCompress.Writers.Tar
         {
             if (isDisposing)
             {
-                PadTo512(0, true);
-                PadTo512(0, true);
+                if (finalizeArchiveOnClose) {
+                    PadTo512(0, true);
+                    PadTo512(0, true);
+                }
                 switch (OutputStream)
                 {
                     case BZip2Stream b:

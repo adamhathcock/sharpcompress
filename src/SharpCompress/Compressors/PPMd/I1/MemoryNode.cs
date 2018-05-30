@@ -7,9 +7,9 @@
 namespace SharpCompress.Compressors.PPMd.I1
 {
     /// <summary>
-    /// A structure containing a single address.  The address represents a location in the <see cref="Memory"/>
-    /// array.  That location in the <see cref="Memory"/> array contains information itself describing a section
-    /// of the <see cref="Memory"/> array (ie. a block of memory).
+    /// A structure containing a single address.  The address represents a location in the <see cref="_memory"/>
+    /// array.  That location in the <see cref="_memory"/> array contains information itself describing a section
+    /// of the <see cref="_memory"/> array (ie. a block of memory).
     /// </summary>
     /// <remarks>
     /// <para>
@@ -24,23 +24,23 @@ namespace SharpCompress.Compressors.PPMd.I1
     ///     4 UnitCount
     /// </para>
     /// <para>
-    /// Note that <see cref="Address"/> is a field rather than a property for performance reasons.
+    /// Note that <see cref="_address"/> is a field rather than a property for performance reasons.
     /// </para>
     /// </remarks>
     internal struct MemoryNode
     {
-        public uint Address;
-        public byte[] Memory;
-        public static readonly MemoryNode Zero = new MemoryNode(0, null);
-        public const int Size = 12;
+        public uint _address;
+        public byte[] _memory;
+        public static readonly MemoryNode ZERO = new MemoryNode(0, null);
+        public const int SIZE = 12;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MemoryNode"/> structure.
         /// </summary>
         public MemoryNode(uint address, byte[] memory)
         {
-            Address = address;
-            Memory = memory;
+            _address = address;
+            _memory = memory;
         }
 
         /// <summary>
@@ -48,14 +48,14 @@ namespace SharpCompress.Compressors.PPMd.I1
         /// </summary>
         public uint Stamp
         {
-            get => Memory[Address] | ((uint)Memory[Address + 1]) << 8 | ((uint)Memory[Address + 2]) << 16 |
-                   ((uint)Memory[Address + 3]) << 24;
+            get => _memory[_address] | ((uint)_memory[_address + 1]) << 8 | ((uint)_memory[_address + 2]) << 16 |
+                   ((uint)_memory[_address + 3]) << 24;
             set
             {
-                Memory[Address] = (byte)value;
-                Memory[Address + 1] = (byte)(value >> 8);
-                Memory[Address + 2] = (byte)(value >> 16);
-                Memory[Address + 3] = (byte)(value >> 24);
+                _memory[_address] = (byte)value;
+                _memory[_address + 1] = (byte)(value >> 8);
+                _memory[_address + 2] = (byte)(value >> 16);
+                _memory[_address + 3] = (byte)(value >> 24);
             }
         }
 
@@ -65,14 +65,14 @@ namespace SharpCompress.Compressors.PPMd.I1
         public MemoryNode Next
         {
             get => new MemoryNode(
-                                  Memory[Address + 4] | ((uint)Memory[Address + 5]) << 8 |
-                                  ((uint)Memory[Address + 6]) << 16 | ((uint)Memory[Address + 7]) << 24, Memory);
+                                  _memory[_address + 4] | ((uint)_memory[_address + 5]) << 8 |
+                                  ((uint)_memory[_address + 6]) << 16 | ((uint)_memory[_address + 7]) << 24, _memory);
             set
             {
-                Memory[Address + 4] = (byte)value.Address;
-                Memory[Address + 5] = (byte)(value.Address >> 8);
-                Memory[Address + 6] = (byte)(value.Address >> 16);
-                Memory[Address + 7] = (byte)(value.Address >> 24);
+                _memory[_address + 4] = (byte)value._address;
+                _memory[_address + 5] = (byte)(value._address >> 8);
+                _memory[_address + 6] = (byte)(value._address >> 16);
+                _memory[_address + 7] = (byte)(value._address >> 24);
             }
         }
 
@@ -81,21 +81,21 @@ namespace SharpCompress.Compressors.PPMd.I1
         /// </summary>
         public uint UnitCount
         {
-            get => Memory[Address + 8] | ((uint)Memory[Address + 9]) << 8 |
-                   ((uint)Memory[Address + 10]) << 16 | ((uint)Memory[Address + 11]) << 24;
+            get => _memory[_address + 8] | ((uint)_memory[_address + 9]) << 8 |
+                   ((uint)_memory[_address + 10]) << 16 | ((uint)_memory[_address + 11]) << 24;
             set
             {
-                Memory[Address + 8] = (byte)value;
-                Memory[Address + 9] = (byte)(value >> 8);
-                Memory[Address + 10] = (byte)(value >> 16);
-                Memory[Address + 11] = (byte)(value >> 24);
+                _memory[_address + 8] = (byte)value;
+                _memory[_address + 9] = (byte)(value >> 8);
+                _memory[_address + 10] = (byte)(value >> 16);
+                _memory[_address + 11] = (byte)(value >> 24);
             }
         }
 
         /// <summary>
         /// Gets whether there is a next memory node available.
         /// </summary>
-        public bool Available => Next.Address != 0;
+        public bool Available => Next._address != 0;
 
         /// <summary>
         /// Link in the provided memory node.
@@ -147,7 +147,7 @@ namespace SharpCompress.Compressors.PPMd.I1
         /// <returns></returns>
         public static implicit operator MemoryNode(Pointer pointer)
         {
-            return new MemoryNode(pointer.Address, pointer.Memory);
+            return new MemoryNode(pointer._address, pointer._memory);
         }
 
         /// <summary>
@@ -158,7 +158,7 @@ namespace SharpCompress.Compressors.PPMd.I1
         /// <returns></returns>
         public static MemoryNode operator +(MemoryNode memoryNode, int offset)
         {
-            memoryNode.Address = (uint)(memoryNode.Address + offset * Size);
+            memoryNode._address = (uint)(memoryNode._address + offset * SIZE);
             return memoryNode;
         }
 
@@ -170,7 +170,7 @@ namespace SharpCompress.Compressors.PPMd.I1
         /// <returns></returns>
         public static MemoryNode operator +(MemoryNode memoryNode, uint offset)
         {
-            memoryNode.Address += offset * Size;
+            memoryNode._address += offset * SIZE;
             return memoryNode;
         }
 
@@ -182,7 +182,7 @@ namespace SharpCompress.Compressors.PPMd.I1
         /// <returns></returns>
         public static MemoryNode operator -(MemoryNode memoryNode, int offset)
         {
-            memoryNode.Address = (uint)(memoryNode.Address - offset * Size);
+            memoryNode._address = (uint)(memoryNode._address - offset * SIZE);
             return memoryNode;
         }
 
@@ -194,7 +194,7 @@ namespace SharpCompress.Compressors.PPMd.I1
         /// <returns></returns>
         public static MemoryNode operator -(MemoryNode memoryNode, uint offset)
         {
-            memoryNode.Address -= offset * Size;
+            memoryNode._address -= offset * SIZE;
             return memoryNode;
         }
 
@@ -206,7 +206,7 @@ namespace SharpCompress.Compressors.PPMd.I1
         /// <returns></returns>
         public static bool operator ==(MemoryNode memoryNode1, MemoryNode memoryNode2)
         {
-            return memoryNode1.Address == memoryNode2.Address;
+            return memoryNode1._address == memoryNode2._address;
         }
 
         /// <summary>
@@ -217,7 +217,7 @@ namespace SharpCompress.Compressors.PPMd.I1
         /// <returns></returns>
         public static bool operator !=(MemoryNode memoryNode1, MemoryNode memoryNode2)
         {
-            return memoryNode1.Address != memoryNode2.Address;
+            return memoryNode1._address != memoryNode2._address;
         }
 
         /// <summary>
@@ -230,7 +230,7 @@ namespace SharpCompress.Compressors.PPMd.I1
             if (obj is MemoryNode)
             {
                 MemoryNode memoryNode = (MemoryNode)obj;
-                return memoryNode.Address == Address;
+                return memoryNode._address == _address;
             }
             return base.Equals(obj);
         }
@@ -241,7 +241,7 @@ namespace SharpCompress.Compressors.PPMd.I1
         /// <returns>A 32-bit signed integer that is the hash code for this instance.</returns>
         public override int GetHashCode()
         {
-            return Address.GetHashCode();
+            return _address.GetHashCode();
         }
     }
 }

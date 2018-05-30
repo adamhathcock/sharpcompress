@@ -2,27 +2,30 @@ using System.IO;
 using SharpCompress.Compressors.Rar;
 using SharpCompress.IO;
 
-namespace SharpCompress.Common.Rar {
-    internal class RarCrcBinaryReader : MarkingBinaryReader {
-        private uint currentCrc;
+namespace SharpCompress.Common.Rar
+{
+    internal class RarCrcBinaryReader : MarkingBinaryReader
+    {
+        private uint _currentCrc;
 
-        public RarCrcBinaryReader(Stream stream) : base(stream)
+        public RarCrcBinaryReader(Stream stream)
+            : base(stream)
         {
         }
 
-        public ushort GetCrc() 
+        public uint GetCrc32()
         {
-            return (ushort)~currentCrc;
+            return ~_currentCrc;
         }
 
         public void ResetCrc()
         {
-            currentCrc = 0xffffffff;
+            _currentCrc = 0xffffffff;
         }
 
-        protected void UpdateCrc(byte b) 
+        protected void UpdateCrc(byte b)
         {
-            currentCrc = RarCRC.CheckCrc(currentCrc, b);
+            _currentCrc = RarCRC.CheckCrc(_currentCrc, b);
         }
 
         protected byte[] ReadBytesNoCrc(int count)
@@ -30,10 +33,17 @@ namespace SharpCompress.Common.Rar {
             return base.ReadBytes(count);
         }
 
+        public override byte ReadByte()
+        {
+            var b = base.ReadByte();
+            _currentCrc = RarCRC.CheckCrc(_currentCrc, b);
+            return b;
+        }
+
         public override byte[] ReadBytes(int count)
         {
             var result = base.ReadBytes(count);
-            currentCrc = RarCRC.CheckCrc(currentCrc, result, 0, result.Length);
+            _currentCrc = RarCRC.CheckCrc(_currentCrc, result, 0, result.Length);
             return result;
         }
     }

@@ -3,12 +3,12 @@ using System.IO;
 
 namespace SharpCompress.Compressors.LZMA
 {
-    internal static class CRC
+    internal static class Crc
     {
-        public const uint kInitCRC = 0xFFFFFFFF;
-        private static readonly uint[] kTable = new uint[4 * 256];
+        internal const uint INIT_CRC = 0xFFFFFFFF;
+        internal static readonly uint[] TABLE = new uint[4 * 256];
 
-        static CRC()
+        static Crc()
         {
             const uint kCrcPoly = 0xEDB88320;
 
@@ -20,19 +20,19 @@ namespace SharpCompress.Compressors.LZMA
                     r = (r >> 1) ^ (kCrcPoly & ~((r & 1) - 1));
                 }
 
-                kTable[i] = r;
+                TABLE[i] = r;
             }
 
-            for (uint i = 256; i < kTable.Length; i++)
+            for (uint i = 256; i < TABLE.Length; i++)
             {
-                uint r = kTable[i - 256];
-                kTable[i] = kTable[r & 0xFF] ^ (r >> 8);
+                uint r = TABLE[i - 256];
+                TABLE[i] = TABLE[r & 0xFF] ^ (r >> 8);
             }
         }
 
         public static uint From(Stream stream, long length)
         {
-            uint crc = kInitCRC;
+            uint crc = INIT_CRC;
             byte[] buffer = new byte[Math.Min(length, 4 << 10)];
             while (length > 0)
             {
@@ -54,16 +54,16 @@ namespace SharpCompress.Compressors.LZMA
 
         public static uint Update(uint crc, byte bt)
         {
-            return kTable[(crc & 0xFF) ^ bt] ^ (crc >> 8);
+            return TABLE[(crc & 0xFF) ^ bt] ^ (crc >> 8);
         }
 
         public static uint Update(uint crc, uint value)
         {
             crc ^= value;
-            return kTable[0x300 + (crc & 0xFF)]
-                   ^ kTable[0x200 + ((crc >> 8) & 0xFF)]
-                   ^ kTable[0x100 + ((crc >> 16) & 0xFF)]
-                   ^ kTable[0x000 + (crc >> 24)];
+            return TABLE[0x300 + (crc & 0xFF)]
+                   ^ TABLE[0x200 + ((crc >> 8) & 0xFF)]
+                   ^ TABLE[0x100 + ((crc >> 16) & 0xFF)]
+                   ^ TABLE[0x000 + (crc >> 24)];
         }
 
         public static uint Update(uint crc, ulong value)

@@ -1,6 +1,6 @@
-﻿using System;
-using System.IO;
+﻿using System.IO;
 using System.Linq;
+using System.Text;
 
 namespace SharpCompress.Common.Zip.Headers
 {
@@ -31,10 +31,20 @@ namespace SharpCompress.Common.Zip.Headers
             RelativeOffsetOfEntryHeader = reader.ReadUInt32();
 
             byte[] name = reader.ReadBytes(nameLength);
-            Name = ArchiveEncoding.Decode(name);
             byte[] extra = reader.ReadBytes(extraLength);
             byte[] comment = reader.ReadBytes(commentLength);
-            Comment = ArchiveEncoding.Decode(comment);
+            
+            if (Flags.HasFlag(HeaderFlags.Efs))
+            {
+                Name = ArchiveEncoding.Decode(name);
+                Comment = ArchiveEncoding.Decode(comment);
+            }
+            else
+            {
+                Name = ArchiveEncoding.Decode437(name);
+                Comment = ArchiveEncoding.Decode437(comment);
+            }
+
             LoadExtra(extra);
 
             var unicodePathExtra = Extra.FirstOrDefault(u => u.Type == ExtraDataType.UnicodePathExtraField);
@@ -50,10 +60,12 @@ namespace SharpCompress.Common.Zip.Headers
                 {
                     CompressedSize = zip64ExtraData.CompressedSize;
                 }
+
                 if (UncompressedSize == uint.MaxValue)
                 {
                     UncompressedSize = zip64ExtraData.UncompressedSize;
                 }
+
                 if (RelativeOffsetOfEntryHeader == uint.MaxValue)
                 {
                     RelativeOffsetOfEntryHeader = zip64ExtraData.RelativeOffsetOfEntryHeader;

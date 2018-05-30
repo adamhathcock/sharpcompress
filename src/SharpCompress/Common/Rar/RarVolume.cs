@@ -13,49 +13,48 @@ namespace SharpCompress.Common.Rar
     /// </summary>
     public abstract class RarVolume : Volume
     {
-        private readonly RarHeaderFactory headerFactory;
+        private readonly RarHeaderFactory _headerFactory;
 
         internal RarVolume(StreamingMode mode, Stream stream, ReaderOptions options)
             : base(stream, options)
         {
-            headerFactory = new RarHeaderFactory(mode, options);
+            _headerFactory = new RarHeaderFactory(mode, options);
         }
 
-        internal StreamingMode Mode => headerFactory.StreamingMode;
+        internal ArchiveHeader ArchiveHeader { get; private set; }
+
+        internal StreamingMode Mode => _headerFactory.StreamingMode;
 
         internal abstract IEnumerable<RarFilePart> ReadFileParts();
 
-        internal abstract RarFilePart CreateFilePart(FileHeader fileHeader, MarkHeader markHeader);
+        internal abstract RarFilePart CreateFilePart(MarkHeader markHeader, FileHeader fileHeader);
 
         internal IEnumerable<RarFilePart> GetVolumeFileParts()
         {
-            MarkHeader previousMarkHeader = null;
-            foreach (RarHeader header in headerFactory.ReadHeaders(Stream))
+            MarkHeader lastMarkHeader = null;
+            foreach (var header in _headerFactory.ReadHeaders(Stream))
             {
                 switch (header.HeaderType)
                 {
-                    case HeaderType.ArchiveHeader:
+                    case HeaderType.Mark:
+                    {
+                        lastMarkHeader = header as MarkHeader;
+                    }
+                        break;
+                    case HeaderType.Archive:
                     {
                         ArchiveHeader = header as ArchiveHeader;
                     }
                         break;
-                    case HeaderType.MarkHeader:
+                    case HeaderType.File:
                     {
-                        previousMarkHeader = header as MarkHeader;
-                    }
-                        break;
-                    case HeaderType.FileHeader:
-                    {
-                        FileHeader fh = header as FileHeader;
-                        RarFilePart fp = CreateFilePart(fh, previousMarkHeader);
-                        yield return fp;
+                        var fh = header as FileHeader;
+                        yield return CreateFilePart(lastMarkHeader, fh);
                     }
                         break;
                 }
             }
         }
-
-        internal ArchiveHeader ArchiveHeader { get; private set; }
 
         private void EnsureArchiveHeaderLoaded()
         {
@@ -66,7 +65,7 @@ namespace SharpCompress.Common.Rar
                     throw new InvalidOperationException("ArchiveHeader should never been null in a streaming read.");
                 }
 
-                //we only want to load the archive header to avoid overhead but have to do the nasty thing and reset the stream
+                // we only want to load the archive header to avoid overhead but have to do the nasty thing and reset the stream
                 GetVolumeFileParts().First();
                 Stream.Position = 0;
             }
@@ -81,7 +80,7 @@ namespace SharpCompress.Common.Rar
             get
             {
                 EnsureArchiveHeaderLoaded();
-                return ArchiveHeader.ArchiveHeaderFlags.HasFlag(ArchiveFlags.FIRSTVOLUME);
+                return ArchiveHeader.IsFirstVolume;
             }
         }
 
@@ -93,7 +92,7 @@ namespace SharpCompress.Common.Rar
             get
             {
                 EnsureArchiveHeaderLoaded();
-                return ArchiveHeader.ArchiveHeaderFlags.HasFlag(ArchiveFlags.VOLUME);
+                return ArchiveHeader.IsVolume;
             }
         }
 
@@ -106,7 +105,7 @@ namespace SharpCompress.Common.Rar
             get
             {
                 EnsureArchiveHeaderLoaded();
-                return ArchiveHeader.ArchiveHeaderFlags.HasFlag(ArchiveFlags.SOLID);
+                return ArchiveHeader.IsSolid;
             }
         }
     }

@@ -43,10 +43,10 @@ namespace SharpCompress.Compressors.LZMA
     {
         private static int FindCoderIndexForOutStreamIndex(CFolder folderInfo, int outStreamIndex)
         {
-            for (int coderIndex = 0; coderIndex < folderInfo.Coders.Count; coderIndex++)
+            for (int coderIndex = 0; coderIndex < folderInfo._coders.Count; coderIndex++)
             {
-                var coderInfo = folderInfo.Coders[coderIndex];
-                outStreamIndex -= coderInfo.NumOutStreams;
+                var coderInfo = folderInfo._coders[coderIndex];
+                outStreamIndex -= coderInfo._numOutStreams;
                 if (outStreamIndex < 0)
                 {
                     return coderIndex;
@@ -64,11 +64,11 @@ namespace SharpCompress.Compressors.LZMA
             primaryOutStreamIndex = -1;
 
             for (int outStreamIndex = 0, coderIndex = 0;
-                 coderIndex < folderInfo.Coders.Count;
+                 coderIndex < folderInfo._coders.Count;
                  coderIndex++)
             {
                 for (int coderOutStreamIndex = 0;
-                     coderOutStreamIndex < folderInfo.Coders[coderIndex].NumOutStreams;
+                     coderOutStreamIndex < folderInfo._coders[coderIndex]._numOutStreams;
                      coderOutStreamIndex++, outStreamIndex++)
                 {
                     if (folderInfo.FindBindPairForOutStream(outStreamIndex) < 0)
@@ -94,8 +94,8 @@ namespace SharpCompress.Compressors.LZMA
         private static Stream CreateDecoderStream(Stream[] packStreams, long[] packSizes, Stream[] outStreams,
                                                   CFolder folderInfo, int coderIndex, IPasswordProvider pass)
         {
-            var coderInfo = folderInfo.Coders[coderIndex];
-            if (coderInfo.NumOutStreams != 1)
+            var coderInfo = folderInfo._coders[coderIndex];
+            if (coderInfo._numOutStreams != 1)
             {
                 throw new NotSupportedException("Multiple output streams are not supported.");
             }
@@ -103,23 +103,23 @@ namespace SharpCompress.Compressors.LZMA
             int inStreamId = 0;
             for (int i = 0; i < coderIndex; i++)
             {
-                inStreamId += folderInfo.Coders[i].NumInStreams;
+                inStreamId += folderInfo._coders[i]._numInStreams;
             }
 
             int outStreamId = 0;
             for (int i = 0; i < coderIndex; i++)
             {
-                outStreamId += folderInfo.Coders[i].NumOutStreams;
+                outStreamId += folderInfo._coders[i]._numOutStreams;
             }
 
-            Stream[] inStreams = new Stream[coderInfo.NumInStreams];
+            Stream[] inStreams = new Stream[coderInfo._numInStreams];
 
             for (int i = 0; i < inStreams.Length; i++, inStreamId++)
             {
                 int bindPairIndex = folderInfo.FindBindPairForInStream(inStreamId);
                 if (bindPairIndex >= 0)
                 {
-                    int pairedOutIndex = folderInfo.BindPairs[bindPairIndex].OutIndex;
+                    int pairedOutIndex = folderInfo._bindPairs[bindPairIndex]._outIndex;
 
                     if (outStreams[pairedOutIndex] != null)
                     {
@@ -153,8 +153,8 @@ namespace SharpCompress.Compressors.LZMA
                 }
             }
 
-            long unpackSize = folderInfo.UnpackSizes[outStreamId];
-            return DecoderRegistry.CreateDecoderStream(coderInfo.MethodId, inStreams, coderInfo.Props, pass, unpackSize);
+            long unpackSize = folderInfo._unpackSizes[outStreamId];
+            return DecoderRegistry.CreateDecoderStream(coderInfo._methodId, inStreams, coderInfo._props, pass, unpackSize);
         }
 
         internal static Stream CreateDecoderStream(Stream inStream, long startPos, long[] packSizes, CFolder folderInfo,
@@ -165,14 +165,14 @@ namespace SharpCompress.Compressors.LZMA
                 throw new NotSupportedException("Unsupported stream binding structure.");
             }
 
-            Stream[] inStreams = new Stream[folderInfo.PackStreams.Count];
-            for (int j = 0; j < folderInfo.PackStreams.Count; j++)
+            Stream[] inStreams = new Stream[folderInfo._packStreams.Count];
+            for (int j = 0; j < folderInfo._packStreams.Count; j++)
             {
                 inStreams[j] = new BufferedSubStream(inStream, startPos, packSizes[j]);
                 startPos += packSizes[j];
             }
 
-            Stream[] outStreams = new Stream[folderInfo.UnpackSizes.Count];
+            Stream[] outStreams = new Stream[folderInfo._unpackSizes.Count];
 
             int primaryCoderIndex, primaryOutStreamIndex;
             FindPrimaryOutStreamIndex(folderInfo, out primaryCoderIndex, out primaryOutStreamIndex);

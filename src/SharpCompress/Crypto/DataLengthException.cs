@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Org.BouncyCastle.Crypto
+namespace SharpCompress.Crypto
 {
     public class DataLengthException
         : CryptoException

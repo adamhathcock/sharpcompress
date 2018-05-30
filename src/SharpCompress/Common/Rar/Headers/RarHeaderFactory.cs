@@ -8,7 +8,7 @@ namespace SharpCompress.Common.Rar.Headers
 {
     internal class RarHeaderFactory
     {
-        private const int MAX_SFX_SIZE = 0x80000 - 16; //archive.cpp line 136
+        private bool _isRar5;
 
         internal RarHeaderFactory(StreamingMode mode, ReaderOptions options)
         {
@@ -20,141 +20,67 @@ namespace SharpCompress.Common.Rar.Headers
         internal StreamingMode StreamingMode { get; }
         internal bool IsEncrypted { get; private set; }
 
-        internal IEnumerable<RarHeader> ReadHeaders(Stream stream)
+        internal IEnumerable<IRarHeader> ReadHeaders(Stream stream)
         {
-            if (Options.LookForHeader)
-            {
-                stream = CheckSFX(stream);
-            }
+            var markHeader = MarkHeader.Read(stream, Options.LeaveStreamOpen, Options.LookForHeader);
+            _isRar5 = markHeader.IsRar5;
+            yield return markHeader;
 
             RarHeader header;
-            while ((header = ReadNextHeader(stream)) != null)
+            while ((header = TryReadNextHeader(stream)) != null)
             {
                 yield return header;
-                if (header.HeaderType == HeaderType.EndArchiveHeader)
+                if (header.HeaderType == HeaderType.EndArchive)
                 {
-                    yield break; // the end?
+                    // End of archive marker. RAR does not read anything after this header letting to use third
+                    // party tools to add extra information such as a digital signature to archive.
+                    yield break;
                 }
             }
         }
 
-        private Stream CheckSFX(Stream stream)
+        private RarHeader TryReadNextHeader(Stream stream)
         {
-            RewindableStream rewindableStream = GetRewindableStream(stream);
-            stream = rewindableStream;
-            BinaryReader reader = new BinaryReader(rewindableStream);
-            try
+            RarCrcBinaryReader reader;
+            if (!IsEncrypted) 
             {
-                int count = 0;
-                while (true)
-                {
-                    byte firstByte = reader.ReadByte();
-                    if (firstByte == 0x52)
-                    {
-                        MemoryStream buffer = new MemoryStream();
-                        byte[] nextThreeBytes = reader.ReadBytes(3);
-                        if ((nextThreeBytes[0] == 0x45)
-                            && (nextThreeBytes[1] == 0x7E)
-                            && (nextThreeBytes[2] == 0x5E))
-                        {
-                            //old format and isvalid
-                            buffer.WriteByte(0x52);
-                            buffer.Write(nextThreeBytes, 0, 3);
-                            rewindableStream.Rewind(buffer);
-                            break;
-                        }
-                        byte[] secondThreeBytes = reader.ReadBytes(3);
-                        if ((nextThreeBytes[0] == 0x61)
-                            && (nextThreeBytes[1] == 0x72)
-                            && (nextThreeBytes[2] == 0x21)
-                            && (secondThreeBytes[0] == 0x1A)
-                            && (secondThreeBytes[1] == 0x07)
-                            && (secondThreeBytes[2] == 0x00))
-                        {
-                            //new format and isvalid
-                            buffer.WriteByte(0x52);
-                            buffer.Write(nextThreeBytes, 0, 3);
-                            buffer.Write(secondThreeBytes, 0, 3);
-                            rewindableStream.Rewind(buffer);
-                            break;
-                        }
-                        buffer.Write(nextThreeBytes, 0, 3);
-                        buffer.Write(secondThreeBytes, 0, 3);
-                        rewindableStream.Rewind(buffer);
-                    }
-                    if (count > MAX_SFX_SIZE)
-                    {
-                        break;
-                    }
-                }
-            }
-            catch (Exception e)
+                reader = new RarCrcBinaryReader(stream);
+            } 
+            else 
             {
-                if (!Options.LeaveStreamOpen)
-                {
-#if NET35
-                    reader.Close();
-#else
-                    reader.Dispose();
-#endif
-                }
-                throw new InvalidFormatException("Error trying to read rar signature.", e);
-            }
-            return stream;
-        }
-
-        private RewindableStream GetRewindableStream(Stream stream)
-        {
-            RewindableStream rewindableStream = stream as RewindableStream;
-            if (rewindableStream == null)
-            {
-                rewindableStream = new RewindableStream(stream);
-            }
-            return rewindableStream;
-        }
-
-        private RarHeader ReadNextHeader(Stream stream)
-        {
 #if !NO_CRYPTO
-            var reader = new RarCryptoBinaryReader(stream, Options.Password);
-
-            if (IsEncrypted)
-            {
                 if (Options.Password == null)
                 {
                     throw new CryptographicException("Encrypted Rar archive has no password specified.");
                 }
-                reader.SkipQueue();
-                byte[] salt = reader.ReadBytes(8);
-                reader.InitializeAes(salt);
-            }
+                reader = new RarCryptoBinaryReader(stream, Options.Password);
 #else
-            var reader = new RarCrcBinaryReader(stream);
-
+                throw new CryptographicException("Rar encryption unsupported on this platform");
 #endif
+            }
 
-            RarHeader header = RarHeader.Create(reader, Options.ArchiveEncoding);
+            var header = RarHeader.TryReadBase(reader, _isRar5, Options.ArchiveEncoding);
             if (header == null)
             {
                 return null;
             }
-            switch (header.HeaderType)
+            switch (header.HeaderCode)
             {
-                case HeaderType.ArchiveHeader:
+                case HeaderCodeV.RAR5_ARCHIVE_HEADER:
+                case HeaderCodeV.RAR4_ARCHIVE_HEADER:
                     {
-                        var ah = header.PromoteHeader<ArchiveHeader>(reader);
-                        IsEncrypted = ah.HasPassword;
+                        var ah = new ArchiveHeader(header, reader);
+                        if (ah.IsEncrypted == true) 
+                        {
+                            //!!! rar5 we don't know yet
+                            IsEncrypted = true;
+                        }
                         return ah;
                     }
-                case HeaderType.MarkHeader:
-                    {
-                        return header.PromoteHeader<MarkHeader>(reader);
-                    }
 
-                case HeaderType.ProtectHeader:
+                case HeaderCodeV.RAR4_PROTECT_HEADER:
                     {
-                        ProtectHeader ph = header.PromoteHeader<ProtectHeader>(reader);
-
+                        var ph = new ProtectHeader(header, reader);
                         // skip the recovery record data, we do not use it.
                         switch (StreamingMode)
                         {
@@ -177,33 +103,24 @@ namespace SharpCompress.Common.Rar.Headers
                         return ph;
                     }
 
-                case HeaderType.NewSubHeader:
+                case HeaderCodeV.RAR5_SERVICE_HEADER:
                     {
-                        FileHeader fh = header.PromoteHeader<FileHeader>(reader);
-                        switch (StreamingMode)
-                        {
-                            case StreamingMode.Seekable:
-                                {
-                                    fh.DataStartPosition = reader.BaseStream.Position;
-                                    reader.BaseStream.Position += fh.CompressedSize;
-                                }
-                                break;
-                            case StreamingMode.Streaming:
-                                {
-                                    //skip the data because it's useless?
-                                    reader.BaseStream.Skip(fh.CompressedSize);
-                                }
-                                break;
-                            default:
-                                {
-                                    throw new InvalidFormatException("Invalid StreamingMode");
-                                }
-                        }
+                        var fh = new FileHeader(header, reader, HeaderType.Service);
+                        SkipData(fh, reader);
                         return fh;
                     }
-                case HeaderType.FileHeader:
+
+                case HeaderCodeV.RAR4_NEW_SUB_HEADER:
                     {
-                        FileHeader fh = header.PromoteHeader<FileHeader>(reader);
+                        var fh = new FileHeader(header, reader, HeaderType.NewSub);
+                        SkipData(fh, reader);
+                        return fh;
+                    }
+
+                case HeaderCodeV.RAR5_FILE_HEADER:
+                case HeaderCodeV.RAR4_FILE_HEADER:
+                    {
+                        var fh = new FileHeader(header, reader, HeaderType.File);
                         switch (StreamingMode)
                         {
                             case StreamingMode.Seekable:
@@ -215,16 +132,16 @@ namespace SharpCompress.Common.Rar.Headers
                             case StreamingMode.Streaming:
                                 {
                                     var ms = new ReadOnlySubStream(reader.BaseStream, fh.CompressedSize);
-                                    if (fh.Salt == null)
+                                    if (fh.R4Salt == null)
                                     {
                                         fh.PackedStream = ms;
                                     }
                                     else
                                     {
 #if !NO_CRYPTO
-                                        fh.PackedStream = new RarCryptoWrapper(ms, Options.Password, fh.Salt);
+                                        fh.PackedStream = new RarCryptoWrapper(ms, Options.Password, fh.R4Salt);
 #else
-                                throw new NotSupportedException("RarCrypto not supported");
+                                        throw new NotSupportedException("RarCrypto not supported");
 #endif
                                     }
                                 }
@@ -236,14 +153,39 @@ namespace SharpCompress.Common.Rar.Headers
                         }
                         return fh;
                     }
-                case HeaderType.EndArchiveHeader:
+                case HeaderCodeV.RAR5_END_ARCHIVE_HEADER:
+                case HeaderCodeV.RAR4_END_ARCHIVE_HEADER:
                     {
-                        return header.PromoteHeader<EndArchiveHeader>(reader);
+                        return new EndArchiveHeader(header, reader);
                     }
+                case HeaderCodeV.RAR5_ARCHIVE_ENCRYPTION_HEADER:
+                {
+                    var ch = new ArchiveCryptHeader(header, reader);
+                    IsEncrypted = true;
+                    return ch;
+                }
                 default:
                     {
-                        throw new InvalidFormatException("Invalid Rar Header: " + header.HeaderType);
+                        throw new InvalidFormatException("Unknown Rar Header: " + header.HeaderCode);
                     }
+            }
+        }
+
+        private void SkipData(FileHeader fh, RarCrcBinaryReader reader) {
+            switch (StreamingMode) {
+                case StreamingMode.Seekable: {
+                    fh.DataStartPosition = reader.BaseStream.Position;
+                    reader.BaseStream.Position += fh.CompressedSize;
+                }
+                    break;
+                case StreamingMode.Streaming: {
+                    //skip the data because it's useless?
+                    reader.BaseStream.Skip(fh.CompressedSize);
+                }
+                    break;
+                default: {
+                    throw new InvalidFormatException("Invalid StreamingMode");
+                }
             }
         }
     }

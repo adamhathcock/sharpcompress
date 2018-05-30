@@ -6,36 +6,36 @@ namespace SharpCompress.Compressors.LZMA
 {
     internal static class Log
     {
-        private static readonly Stack<string> _indent = new Stack<string>();
-        private static bool _needsIndent = true;
+        private static readonly Stack<string> INDENT = new Stack<string>();
+        private static bool NEEDS_INDENT = true;
 
         static Log()
         {
-            _indent.Push("");
+            INDENT.Push("");
         }
 
         public static void PushIndent(string indent = "  ")
         {
-            _indent.Push(_indent.Peek() + indent);
+            INDENT.Push(INDENT.Peek() + indent);
         }
 
         public static void PopIndent()
         {
-            if (_indent.Count == 1)
+            if (INDENT.Count == 1)
             {
                 throw new InvalidOperationException();
             }
 
-            _indent.Pop();
+            INDENT.Pop();
         }
 
         private static void EnsureIndent()
         {
-            if (_needsIndent)
+            if (NEEDS_INDENT)
             {
-                _needsIndent = false;
+                NEEDS_INDENT = false;
 #if !NO_FILE
-                System.Diagnostics.Debug.Write(_indent.Peek());
+                Debug.Write(INDENT.Peek());
 #endif
             }
         }
@@ -44,7 +44,7 @@ namespace SharpCompress.Compressors.LZMA
         {
             EnsureIndent();
 #if !NO_FILE
-            System.Diagnostics.Debug.Write(value);
+            Debug.Write(value);
 #endif
         }
 
@@ -52,7 +52,7 @@ namespace SharpCompress.Compressors.LZMA
         {
             EnsureIndent();
 #if !NO_FILE
-            System.Diagnostics.Debug.Write(text);
+            Debug.Write(text);
 #endif
         }
 
@@ -60,35 +60,35 @@ namespace SharpCompress.Compressors.LZMA
         {
             EnsureIndent();
 #if !NO_FILE
-            System.Diagnostics.Debug.Write(string.Format(format, args));
+            Debug.Write(string.Format(format, args));
 #endif
         }
 
         public static void WriteLine()
         {
             Debug.WriteLine("");
-            _needsIndent = true;
+            NEEDS_INDENT = true;
         }
 
         public static void WriteLine(object value)
         {
             EnsureIndent();
             Debug.WriteLine(value);
-            _needsIndent = true;
+            NEEDS_INDENT = true;
         }
 
         public static void WriteLine(string text)
         {
             EnsureIndent();
             Debug.WriteLine(text);
-            _needsIndent = true;
+            NEEDS_INDENT = true;
         }
 
         public static void WriteLine(string format, params object[] args)
         {
             EnsureIndent();
             Debug.WriteLine(string.Format(format, args));
-            _needsIndent = true;
+            NEEDS_INDENT = true;
         }
     }
 }

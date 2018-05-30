@@ -6,15 +6,15 @@ namespace SharpCompress.Common
 {
     public class EntryStream : Stream
     {
-        public IReader Reader { get; }
-        private readonly Stream stream;
-        private bool completed;
-        private bool isDisposed;
+        private readonly IReader _reader;
+        private readonly Stream _stream;
+        private bool _completed;
+        private bool _isDisposed;
 
         internal EntryStream(IReader reader, Stream stream)
         {
-            Reader = reader;
-            this.stream = stream;
+            _reader = reader;
+            _stream = stream;
         }
 
         /// <summary>
@@ -22,26 +22,23 @@ namespace SharpCompress.Common
         /// </summary>
         public void SkipEntry()
         {
-            var buffer = new byte[4096];
-            while (Read(buffer, 0, buffer.Length) > 0)
-            {
-            }
-            completed = true;
+            this.Skip();
+            _completed = true;
         }
 
         protected override void Dispose(bool disposing)
         {
-            if (!(completed || Reader.Cancelled))
+            if (!(_completed || _reader.Cancelled))
             {
                 SkipEntry();
             }
-            if (isDisposed)
+            if (_isDisposed)
             {
                 return;
             }
-            isDisposed = true;
+            _isDisposed = true;
             base.Dispose(disposing);
-            stream.Dispose();
+            _stream.Dispose();
         }
 
         public override bool CanRead => true;
@@ -55,18 +52,28 @@ namespace SharpCompress.Common
             throw new NotSupportedException();
         }
 
-        public override long Length => throw new NotSupportedException();
+        public override long Length => _stream.Length;
 
         public override long Position { get => throw new NotSupportedException(); set => throw new NotSupportedException(); }
 
         public override int Read(byte[] buffer, int offset, int count)
         {
-            int read = stream.Read(buffer, offset, count);
+            int read = _stream.Read(buffer, offset, count);
             if (read <= 0)
             {
-                completed = true;
+                _completed = true;
             }
             return read;
+        }
+
+        public override int ReadByte()
+        {
+            int value = _stream.ReadByte();
+            if (value == -1)
+            {
+                _completed = true;
+            }
+            return value;
         }
 
         public override long Seek(long offset, SeekOrigin origin)

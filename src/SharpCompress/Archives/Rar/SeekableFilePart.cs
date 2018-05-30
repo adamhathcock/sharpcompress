@@ -20,9 +20,9 @@ namespace SharpCompress.Archives.Rar
         {
             stream.Position = FileHeader.DataStartPosition;
 #if !NO_CRYPTO
-            if (FileHeader.Salt != null)
+            if (FileHeader.R4Salt != null)
             {
-                return new RarCryptoWrapper(stream, password, FileHeader.Salt);
+                return new RarCryptoWrapper(stream, password, FileHeader.R4Salt);
             }
 #endif
             return stream;

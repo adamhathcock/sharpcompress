@@ -27,7 +27,7 @@ namespace SharpCompress.Common.Zip.Headers
     {
         internal byte Version => DataBytes[0];
 
-        internal byte[] NameCRC32
+        internal byte[] NameCrc32
         {
             get
             {

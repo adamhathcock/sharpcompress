@@ -19,7 +19,7 @@ namespace SharpCompress.Common.GZip
         {
             ReadAndValidateGzipHeader(stream);
             EntryStartPosition = stream.Position;
-            this._stream = stream;
+            _stream = stream;
         }
 
         internal long EntryStartPosition { get; }
@@ -30,7 +30,7 @@ namespace SharpCompress.Common.GZip
 
         internal override Stream GetCompressedStream()
         {
-            return new DeflateStream(_stream, CompressionMode.Decompress, CompressionLevel.Default, false);
+            return new DeflateStream(_stream, CompressionMode.Decompress, CompressionLevel.Default);
         }
 
         internal override Stream GetRawStream()
@@ -61,7 +61,7 @@ namespace SharpCompress.Common.GZip
             }
 
             Int32 timet = DataConverter.LittleEndian.GetInt32(header, 4);
-            DateModified = TarHeader.Epoch.AddSeconds(timet);
+            DateModified = TarHeader.EPOCH.AddSeconds(timet);
             if ((header[3] & 0x04) == 0x04)
             {
                 // read and discard extra field

@@ -6,27 +6,27 @@ namespace SharpCompress.Common.SevenZip
 {
     internal class CFolder
     {
-        internal List<CCoderInfo> Coders = new List<CCoderInfo>();
-        internal List<CBindPair> BindPairs = new List<CBindPair>();
-        internal List<int> PackStreams = new List<int>();
-        internal int FirstPackStreamId;
-        internal List<long> UnpackSizes = new List<long>();
-        internal uint? UnpackCRC;
+        internal List<CCoderInfo> _coders = new List<CCoderInfo>();
+        internal List<CBindPair> _bindPairs = new List<CBindPair>();
+        internal List<int> _packStreams = new List<int>();
+        internal int _firstPackStreamId;
+        internal List<long> _unpackSizes = new List<long>();
+        internal uint? _unpackCrc;
 
-        internal bool UnpackCRCDefined => UnpackCRC != null;
+        internal bool UnpackCrcDefined => _unpackCrc != null;
 
         public long GetUnpackSize()
         {
-            if (UnpackSizes.Count == 0)
+            if (_unpackSizes.Count == 0)
             {
                 return 0;
             }
 
-            for (int i = UnpackSizes.Count - 1; i >= 0; i--)
+            for (int i = _unpackSizes.Count - 1; i >= 0; i--)
             {
                 if (FindBindPairForOutStream(i) < 0)
                 {
-                    return UnpackSizes[i];
+                    return _unpackSizes[i];
                 }
             }
 
@@ -36,9 +36,9 @@ namespace SharpCompress.Common.SevenZip
         public int GetNumOutStreams()
         {
             int count = 0;
-            for (int i = 0; i < Coders.Count; i++)
+            for (int i = 0; i < _coders.Count; i++)
             {
-                count += Coders[i].NumOutStreams;
+                count += _coders[i]._numOutStreams;
             }
 
             return count;
@@ -46,9 +46,9 @@ namespace SharpCompress.Common.SevenZip
 
         public int FindBindPairForInStream(int inStreamIndex)
         {
-            for (int i = 0; i < BindPairs.Count; i++)
+            for (int i = 0; i < _bindPairs.Count; i++)
             {
-                if (BindPairs[i].InIndex == inStreamIndex)
+                if (_bindPairs[i]._inIndex == inStreamIndex)
                 {
                     return i;
                 }
@@ -59,9 +59,9 @@ namespace SharpCompress.Common.SevenZip
 
         public int FindBindPairForOutStream(int outStreamIndex)
         {
-            for (int i = 0; i < BindPairs.Count; i++)
+            for (int i = 0; i < _bindPairs.Count; i++)
             {
-                if (BindPairs[i].OutIndex == outStreamIndex)
+                if (_bindPairs[i]._outIndex == outStreamIndex)
                 {
                     return i;
                 }
@@ -72,9 +72,9 @@ namespace SharpCompress.Common.SevenZip
 
         public int FindPackStreamArrayIndex(int inStreamIndex)
         {
-            for (int i = 0; i < PackStreams.Count; i++)
+            for (int i = 0; i < _packStreams.Count; i++)
             {
-                if (PackStreams[i] == inStreamIndex)
+                if (_packStreams[i] == inStreamIndex)
                 {
                     return i;
                 }
@@ -85,9 +85,9 @@ namespace SharpCompress.Common.SevenZip
 
         public bool IsEncrypted()
         {
-            for (int i = Coders.Count - 1; i >= 0; i--)
+            for (int i = _coders.Count - 1; i >= 0; i--)
             {
-                if (Coders[i].MethodId == CMethodId.kAES)
+                if (_coders[i]._methodId == CMethodId.K_AES)
                 {
                     return true;
                 }
@@ -102,25 +102,25 @@ namespace SharpCompress.Common.SevenZip
             const int kMaskSize = 32; // it must be >= kNumCodersMax
             const int kNumBindsMax = 32;
 
-            if (Coders.Count > kNumCodersMax || BindPairs.Count > kNumBindsMax)
+            if (_coders.Count > kNumCodersMax || _bindPairs.Count > kNumBindsMax)
             {
                 return false;
             }
 
             {
-                var v = new BitVector(BindPairs.Count + PackStreams.Count);
+                var v = new BitVector(_bindPairs.Count + _packStreams.Count);
 
-                for (int i = 0; i < BindPairs.Count; i++)
+                for (int i = 0; i < _bindPairs.Count; i++)
                 {
-                    if (v.GetAndSet(BindPairs[i].InIndex))
+                    if (v.GetAndSet(_bindPairs[i]._inIndex))
                     {
                         return false;
                     }
                 }
 
-                for (int i = 0; i < PackStreams.Count; i++)
+                for (int i = 0; i < _packStreams.Count; i++)
                 {
-                    if (v.GetAndSet(PackStreams[i]))
+                    if (v.GetAndSet(_packStreams[i]))
                     {
                         return false;
                     }
@@ -128,10 +128,10 @@ namespace SharpCompress.Common.SevenZip
             }
 
             {
-                var v = new BitVector(UnpackSizes.Count);
-                for (int i = 0; i < BindPairs.Count; i++)
+                var v = new BitVector(_unpackSizes.Count);
+                for (int i = 0; i < _bindPairs.Count; i++)
                 {
-                    if (v.GetAndSet(BindPairs[i].OutIndex))
+                    if (v.GetAndSet(_bindPairs[i]._outIndex))
                     {
                         return false;
                     }
@@ -143,23 +143,23 @@ namespace SharpCompress.Common.SevenZip
             {
                 List<int> inStreamToCoder = new List<int>();
                 List<int> outStreamToCoder = new List<int>();
-                for (int i = 0; i < Coders.Count; i++)
+                for (int i = 0; i < _coders.Count; i++)
                 {
-                    CCoderInfo coder = Coders[i];
-                    for (int j = 0; j < coder.NumInStreams; j++)
+                    CCoderInfo coder = _coders[i];
+                    for (int j = 0; j < coder._numInStreams; j++)
                     {
                         inStreamToCoder.Add(i);
                     }
-                    for (int j = 0; j < coder.NumOutStreams; j++)
+                    for (int j = 0; j < coder._numOutStreams; j++)
                     {
                         outStreamToCoder.Add(i);
                     }
                 }
 
-                for (int i = 0; i < BindPairs.Count; i++)
+                for (int i = 0; i < _bindPairs.Count; i++)
                 {
-                    CBindPair bp = BindPairs[i];
-                    mask[inStreamToCoder[bp.InIndex]] |= (1u << outStreamToCoder[bp.OutIndex]);
+                    CBindPair bp = _bindPairs[i];
+                    mask[inStreamToCoder[bp._inIndex]] |= (1u << outStreamToCoder[bp._outIndex]);
                 }
             }
 

@@ -6,28 +6,28 @@ namespace SharpCompress.Compressors.LZMA
 {
     internal class Bcj2DecoderStream : DecoderStream2
     {
-        private const int kNumTopBits = 24;
-        private const uint kTopValue = (1 << kNumTopBits);
+        private const int K_NUM_TOP_BITS = 24;
+        private const uint K_TOP_VALUE = (1 << K_NUM_TOP_BITS);
 
         private class RangeDecoder
         {
-            internal readonly Stream mStream;
-            internal uint Range;
-            internal uint Code;
+            internal readonly Stream _mStream;
+            internal uint _range;
+            internal uint _code;
 
             public RangeDecoder(Stream stream)
             {
-                mStream = stream;
-                Range = 0xFFFFFFFF;
+                _mStream = stream;
+                _range = 0xFFFFFFFF;
                 for (int i = 0; i < 5; i++)
                 {
-                    Code = (Code << 8) | ReadByte();
+                    _code = (_code << 8) | ReadByte();
                 }
             }
 
             public byte ReadByte()
             {
-                int bt = mStream.ReadByte();
+                int bt = _mStream.ReadByte();
                 if (bt < 0)
                 {
                     throw new EndOfStreamException();
@@ -38,22 +38,22 @@ namespace SharpCompress.Compressors.LZMA
 
             public void Dispose()
             {
-                mStream.Dispose();
+                _mStream.Dispose();
             }
         }
 
         private class StatusDecoder
         {
-            private const int numMoveBits = 5;
+            private const int NUM_MOVE_BITS = 5;
 
-            private const int kNumBitModelTotalBits = 11;
-            private const uint kBitModelTotal = 1u << kNumBitModelTotalBits;
+            private const int K_NUM_BIT_MODEL_TOTAL_BITS = 11;
+            private const uint K_BIT_MODEL_TOTAL = 1u << K_NUM_BIT_MODEL_TOTAL_BITS;
 
-            private uint Prob;
+            private uint _prob;
 
             public StatusDecoder()
             {
-                Prob = kBitModelTotal / 2;
+                _prob = K_BIT_MODEL_TOTAL / 2;
             }
 
             private void UpdateModel(uint symbol)
@@ -64,49 +64,49 @@ namespace SharpCompress.Compressors.LZMA
                 */
                 if (symbol == 0)
                 {
-                    Prob += (kBitModelTotal - Prob) >> numMoveBits;
+                    _prob += (K_BIT_MODEL_TOTAL - _prob) >> NUM_MOVE_BITS;
                 }
                 else
                 {
-                    Prob -= (Prob) >> numMoveBits;
+                    _prob -= (_prob) >> NUM_MOVE_BITS;
                 }
             }
 
             public uint Decode(RangeDecoder decoder)
             {
-                uint newBound = (decoder.Range >> kNumBitModelTotalBits) * Prob;
-                if (decoder.Code < newBound)
+                uint newBound = (decoder._range >> K_NUM_BIT_MODEL_TOTAL_BITS) * _prob;
+                if (decoder._code < newBound)
                 {
-                    decoder.Range = newBound;
-                    Prob += (kBitModelTotal - Prob) >> numMoveBits;
-                    if (decoder.Range < kTopValue)
+                    decoder._range = newBound;
+                    _prob += (K_BIT_MODEL_TOTAL - _prob) >> NUM_MOVE_BITS;
+                    if (decoder._range < K_TOP_VALUE)
                     {
-                        decoder.Code = (decoder.Code << 8) | decoder.ReadByte();
-                        decoder.Range <<= 8;
+                        decoder._code = (decoder._code << 8) | decoder.ReadByte();
+                        decoder._range <<= 8;
                     }
                     return 0;
                 }
-                decoder.Range -= newBound;
-                decoder.Code -= newBound;
-                Prob -= Prob >> numMoveBits;
-                if (decoder.Range < kTopValue)
+                decoder._range -= newBound;
+                decoder._code -= newBound;
+                _prob -= _prob >> NUM_MOVE_BITS;
+                if (decoder._range < K_TOP_VALUE)
                 {
-                    decoder.Code = (decoder.Code << 8) | decoder.ReadByte();
-                    decoder.Range <<= 8;
+                    decoder._code = (decoder._code << 8) | decoder.ReadByte();
+                    decoder._range <<= 8;
                 }
                 return 1;
             }
         }
 
-        private readonly Stream mMainStream;
-        private readonly Stream mCallStream;
-        private readonly Stream mJumpStream;
-        private readonly RangeDecoder mRangeDecoder;
-        private readonly StatusDecoder[] mStatusDecoder;
-        private long mWritten;
-        private readonly IEnumerator<byte> mIter;
-        private bool mFinished;
-        private bool isDisposed;
+        private readonly Stream _mMainStream;
+        private readonly Stream _mCallStream;
+        private readonly Stream _mJumpStream;
+        private readonly RangeDecoder _mRangeDecoder;
+        private readonly StatusDecoder[] _mStatusDecoder;
+        private long _mWritten;
+        private readonly IEnumerator<byte> _mIter;
+        private bool _mFinished;
+        private bool _isDisposed;
 
         public Bcj2DecoderStream(Stream[] streams, byte[] info, long limit)
         {
@@ -120,31 +120,31 @@ namespace SharpCompress.Compressors.LZMA
                 throw new NotSupportedException();
             }
 
-            mMainStream = streams[0];
-            mCallStream = streams[1];
-            mJumpStream = streams[2];
-            mRangeDecoder = new RangeDecoder(streams[3]);
+            _mMainStream = streams[0];
+            _mCallStream = streams[1];
+            _mJumpStream = streams[2];
+            _mRangeDecoder = new RangeDecoder(streams[3]);
 
-            mStatusDecoder = new StatusDecoder[256 + 2];
-            for (int i = 0; i < mStatusDecoder.Length; i++)
+            _mStatusDecoder = new StatusDecoder[256 + 2];
+            for (int i = 0; i < _mStatusDecoder.Length; i++)
             {
-                mStatusDecoder[i] = new StatusDecoder();
+                _mStatusDecoder[i] = new StatusDecoder();
             }
 
-            mIter = Run().GetEnumerator();
+            _mIter = Run().GetEnumerator();
         }
 
         protected override void Dispose(bool disposing)
         {
-            if (isDisposed)
+            if (_isDisposed)
             {
                 return;
             }
-            isDisposed = true;
+            _isDisposed = true;
             base.Dispose(disposing);
-            mMainStream.Dispose();
-            mCallStream.Dispose();
-            mJumpStream.Dispose();
+            _mMainStream.Dispose();
+            _mCallStream.Dispose();
+            _mJumpStream.Dispose();
         }
 
         private static bool IsJcc(byte b0, byte b1)
@@ -174,23 +174,39 @@ namespace SharpCompress.Compressors.LZMA
 
         public override int Read(byte[] buffer, int offset, int count)
         {
-            if (count == 0 || mFinished)
+            if (count == 0 || _mFinished)
             {
                 return 0;
             }
 
             for (int i = 0; i < count; i++)
             {
-                if (!mIter.MoveNext())
+                if (!_mIter.MoveNext())
                 {
-                    mFinished = true;
+                    _mFinished = true;
                     return i;
                 }
 
-                buffer[offset + i] = mIter.Current;
+                buffer[offset + i] = _mIter.Current;
             }
 
             return count;
+        }
+
+        public override int ReadByte()
+        {
+            if (_mFinished)
+            {
+                return -1;
+            }
+
+            if (!_mIter.MoveNext())
+            {
+                _mFinished = true;
+                return -1;
+            }
+
+            return _mIter.Current;
         }
 
         public IEnumerable<byte> Run()
@@ -205,14 +221,14 @@ namespace SharpCompress.Compressors.LZMA
                 uint i;
                 for (i = 0; i < kBurstSize; i++)
                 {
-                    int tmp = mMainStream.ReadByte();
+                    int tmp = _mMainStream.ReadByte();
                     if (tmp < 0)
                     {
                         yield break;
                     }
 
                     b = (byte)tmp;
-                    mWritten++;
+                    _mWritten++;
                     yield return b;
                     if (IsJ(prevByte, b))
                     {
@@ -228,9 +244,9 @@ namespace SharpCompress.Compressors.LZMA
                     continue;
                 }
 
-                if (mStatusDecoder[GetIndex(prevByte, b)].Decode(mRangeDecoder) == 1)
+                if (_mStatusDecoder[GetIndex(prevByte, b)].Decode(_mRangeDecoder) == 1)
                 {
-                    Stream s = (b == 0xE8) ? mCallStream : mJumpStream;
+                    Stream s = (b == 0xE8) ? _mCallStream : _mJumpStream;
 
                     uint src = 0;
                     for (i = 0; i < 4; i++)
@@ -245,14 +261,14 @@ namespace SharpCompress.Compressors.LZMA
                         src |= (uint)b0;
                     }
 
-                    uint dest = src - (uint)(mWritten + 4);
-                    mWritten++;
+                    uint dest = src - (uint)(_mWritten + 4);
+                    _mWritten++;
                     yield return (byte)dest;
-                    mWritten++;
+                    _mWritten++;
                     yield return (byte)(dest >> 8);
-                    mWritten++;
+                    _mWritten++;
                     yield return (byte)(dest >> 16);
-                    mWritten++;
+                    _mWritten++;
                     yield return (byte)(dest >> 24);
                     prevByte = (byte)(dest >> 24);
                     processedBytes += 4;

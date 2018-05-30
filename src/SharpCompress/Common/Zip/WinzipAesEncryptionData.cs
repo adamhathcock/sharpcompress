@@ -10,20 +10,20 @@ namespace SharpCompress.Common.Zip
     {
         private const int RFC2898_ITERATIONS = 1000;
 
-        private byte[] salt;
-        private WinzipAesKeySize keySize;
-        private byte[] passwordVerifyValue;
-        private string password;
+        private readonly byte[] _salt;
+        private readonly WinzipAesKeySize _keySize;
+        private readonly byte[] _passwordVerifyValue;
+        private readonly string _password;
 
-        private byte[] generatedVerifyValue;
+        private byte[] _generatedVerifyValue;
 
         internal WinzipAesEncryptionData(WinzipAesKeySize keySize, byte[] salt, byte[] passwordVerifyValue,
                                          string password)
         {
-            this.keySize = keySize;
-            this.salt = salt;
-            this.passwordVerifyValue = passwordVerifyValue;
-            this.password = password;
+            this._keySize = keySize;
+            this._salt = salt;
+            this._passwordVerifyValue = passwordVerifyValue;
+            this._password = password;
             Initialize();
         }
 
@@ -38,7 +38,7 @@ namespace SharpCompress.Common.Zip
 
         private int KeySizeInBytes
         {
-            get { return KeyLengthInBytes(keySize);
+            get { return KeyLengthInBytes(_keySize);
 }
         }
 
@@ -58,16 +58,16 @@ namespace SharpCompress.Common.Zip
 
         private void Initialize()
         {
-            var rfc2898 = new Rfc2898DeriveBytes(password, salt, RFC2898_ITERATIONS);
+            var rfc2898 = new Rfc2898DeriveBytes(_password, _salt, RFC2898_ITERATIONS);
 
             KeyBytes = rfc2898.GetBytes(KeySizeInBytes); // 16 or 24 or 32 ???
             IvBytes = rfc2898.GetBytes(KeySizeInBytes);
-            generatedVerifyValue = rfc2898.GetBytes(2);
+            _generatedVerifyValue = rfc2898.GetBytes(2);
 
-            short verify = DataConverter.LittleEndian.GetInt16(passwordVerifyValue, 0);
-            if (password != null)
+            short verify = DataConverter.LittleEndian.GetInt16(_passwordVerifyValue, 0);
+            if (_password != null)
             {
-                short generated = DataConverter.LittleEndian.GetInt16(generatedVerifyValue, 0);
+                short generated = DataConverter.LittleEndian.GetInt16(_generatedVerifyValue, 0);
                 if (verify != generated)
                 {
                     throw new InvalidFormatException("bad password");

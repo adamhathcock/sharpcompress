@@ -8,60 +8,60 @@ namespace SharpCompress.Compressors.PPMd
 {
     public class PpmdStream : Stream
     {
-        private readonly PpmdProperties properties;
-        private readonly Stream stream;
-        private readonly bool compress;
-        private readonly Model model;
-        private readonly ModelPPM modelH;
-        private readonly Decoder decoder;
-        private long position;
-        private bool isDisposed;
+        private readonly PpmdProperties _properties;
+        private readonly Stream _stream;
+        private readonly bool _compress;
+        private readonly Model _model;
+        private readonly ModelPpm _modelH;
+        private readonly Decoder _decoder;
+        private long _position;
+        private bool _isDisposed;
 
         public PpmdStream(PpmdProperties properties, Stream stream, bool compress)
         {
-            this.properties = properties;
-            this.stream = stream;
-            this.compress = compress;
+            _properties = properties;
+            _stream = stream;
+            _compress = compress;
 
             if (properties.Version == PpmdVersion.I1)
             {
-                model = new Model();
+                _model = new Model();
                 if (compress)
                 {
-                    model.EncodeStart(properties);
+                    _model.EncodeStart(properties);
                 }
                 else
                 {
-                    model.DecodeStart(stream, properties);
+                    _model.DecodeStart(stream, properties);
                 }
             }
             if (properties.Version == PpmdVersion.H)
             {
-                modelH = new ModelPPM();
+                _modelH = new ModelPpm();
                 if (compress)
                 {
                     throw new NotImplementedException();
                 }
-                modelH.decodeInit(stream, properties.ModelOrder, properties.AllocatorSize);
+                _modelH.DecodeInit(stream, properties.ModelOrder, properties.AllocatorSize);
             }
-            if (properties.Version == PpmdVersion.H7z)
+            if (properties.Version == PpmdVersion.H7Z)
             {
-                modelH = new ModelPPM();
+                _modelH = new ModelPpm();
                 if (compress)
                 {
                     throw new NotImplementedException();
                 }
-                modelH.decodeInit(null, properties.ModelOrder, properties.AllocatorSize);
-                decoder = new Decoder();
-                decoder.Init(stream);
+                _modelH.DecodeInit(null, properties.ModelOrder, properties.AllocatorSize);
+                _decoder = new Decoder();
+                _decoder.Init(stream);
             }
         }
 
-        public override bool CanRead => !compress;
+        public override bool CanRead => !_compress;
 
         public override bool CanSeek => false;
 
-        public override bool CanWrite => compress;
+        public override bool CanWrite => _compress;
 
         public override void Flush()
         {
@@ -69,16 +69,16 @@ namespace SharpCompress.Compressors.PPMd
 
         protected override void Dispose(bool isDisposing)
         {
-            if (isDisposed)
+            if (_isDisposed)
             {
                 return;
             }
-            isDisposed = true;
+            _isDisposed = true;
             if (isDisposing)
             {
-                if (compress)
+                if (_compress)
                 {
-                    model.EncodeBlock(stream, new MemoryStream(), true);
+                    _model.EncodeBlock(_stream, new MemoryStream(), true);
                 }
             }
             base.Dispose(isDisposing);
@@ -86,38 +86,38 @@ namespace SharpCompress.Compressors.PPMd
 
         public override long Length => throw new NotSupportedException();
 
-        public override long Position { get => position; set => throw new NotSupportedException(); }
+        public override long Position { get => _position; set => throw new NotSupportedException(); }
 
         public override int Read(byte[] buffer, int offset, int count)
         {
-            if (compress)
+            if (_compress)
             {
                 return 0;
             }
             int size = 0;
-            if (properties.Version == PpmdVersion.I1)
+            if (_properties.Version == PpmdVersion.I1)
             {
-                size = model.DecodeBlock(stream, buffer, offset, count);
+                size = _model.DecodeBlock(_stream, buffer, offset, count);
             }
-            if (properties.Version == PpmdVersion.H)
+            if (_properties.Version == PpmdVersion.H)
             {
                 int c;
-                while (size < count && (c = modelH.decodeChar()) >= 0)
+                while (size < count && (c = _modelH.DecodeChar()) >= 0)
                 {
                     buffer[offset++] = (byte)c;
                     size++;
                 }
             }
-            if (properties.Version == PpmdVersion.H7z)
+            if (_properties.Version == PpmdVersion.H7Z)
             {
                 int c;
-                while (size < count && (c = modelH.decodeChar(decoder)) >= 0)
+                while (size < count && (c = _modelH.DecodeChar(_decoder)) >= 0)
                 {
                     buffer[offset++] = (byte)c;
                     size++;
                 }
             }
-            position += size;
+            _position += size;
             return size;
         }
 
@@ -133,9 +133,9 @@ namespace SharpCompress.Compressors.PPMd
 
         public override void Write(byte[] buffer, int offset, int count)
         {
-            if (compress)
+            if (_compress)
             {
-                model.EncodeBlock(stream, new MemoryStream(buffer, offset, count), false);
+                _model.EncodeBlock(_stream, new MemoryStream(buffer, offset, count), false);
             }
         }
     }

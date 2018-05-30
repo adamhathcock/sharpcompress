@@ -6,15 +6,19 @@ namespace SharpCompress.Common
 {
     public abstract class Volume : IVolume
     {
-        private readonly Stream actualStream;
+        private readonly Stream _actualStream;
 
         internal Volume(Stream stream, ReaderOptions readerOptions)
         {
-            actualStream = stream;
             ReaderOptions = readerOptions;
+            if (readerOptions.LeaveStreamOpen)
+            {
+                stream = new NonDisposingStream(stream);
+            }
+            _actualStream = stream;
         }
 
-        internal Stream Stream => new NonDisposingStream(actualStream);
+        internal Stream Stream => _actualStream;
 
         protected ReaderOptions ReaderOptions { get; }
 
@@ -29,14 +33,14 @@ namespace SharpCompress.Common
         /// </summary>
         public virtual bool IsMultiVolume => true;
 
-        private bool disposed;
+        private bool _disposed;
 
         public void Dispose()
         {
-            if (!ReaderOptions.LeaveStreamOpen && !disposed)
+            if (!_disposed)
             {
-                actualStream.Dispose();
-                disposed = true;
+                _actualStream.Dispose();
+                _disposed = true;
             }
         }
     }

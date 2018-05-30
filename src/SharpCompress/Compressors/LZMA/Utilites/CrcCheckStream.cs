@@ -6,35 +6,35 @@ namespace SharpCompress.Compressors.LZMA.Utilites
 {
     internal class CrcCheckStream : Stream
     {
-        private readonly uint mExpectedCRC;
-        private uint mCurrentCRC;
-        private bool mClosed;
+        private readonly uint _mExpectedCrc;
+        private uint _mCurrentCrc;
+        private bool _mClosed;
 
-        private readonly long[] mBytes = new long[256];
-        private long mLength;
+        private readonly long[] _mBytes = new long[256];
+        private long _mLength;
 
         public CrcCheckStream(uint crc)
         {
-            mExpectedCRC = crc;
-            mCurrentCRC = CRC.kInitCRC;
+            _mExpectedCrc = crc;
+            _mCurrentCrc = Crc.INIT_CRC;
         }
 
         protected override void Dispose(bool disposing)
         {
-            if (mCurrentCRC != mExpectedCRC)
+            if (_mCurrentCrc != _mExpectedCrc)
             {
                 throw new InvalidOperationException();
             }
             try
             {
-                if (disposing && !mClosed)
+                if (disposing && !_mClosed)
                 {
-                    mClosed = true;
-                    mCurrentCRC = CRC.Finish(mCurrentCRC);
+                    _mClosed = true;
+                    _mCurrentCrc = Crc.Finish(_mCurrentCrc);
 #if DEBUG
-                    if (mCurrentCRC == mExpectedCRC)
+                    if (_mCurrentCrc == _mExpectedCrc)
                     {
-                        Debug.WriteLine("CRC ok: " + mExpectedCRC.ToString("x8"));
+                        Debug.WriteLine("CRC ok: " + _mExpectedCrc.ToString("x8"));
                     }
                     else
                     {
@@ -42,13 +42,13 @@ namespace SharpCompress.Compressors.LZMA.Utilites
                         Debug.WriteLine("bad CRC");
                     }
 
-                    double lengthInv = 1.0 / mLength;
+                    double lengthInv = 1.0 / _mLength;
                     double entropy = 0;
                     for (int i = 0; i < 256; i++)
                     {
-                        if (mBytes[i] != 0)
+                        if (_mBytes[i] != 0)
                         {
-                            double p = lengthInv * mBytes[i];
+                            double p = lengthInv * _mBytes[i];
                             entropy -= p * Math.Log(p, 256);
                         }
                     }
@@ -93,13 +93,13 @@ namespace SharpCompress.Compressors.LZMA.Utilites
 
         public override void Write(byte[] buffer, int offset, int count)
         {
-            mLength += count;
+            _mLength += count;
             for (int i = 0; i < count; i++)
             {
-                mBytes[buffer[offset + i]]++;
+                _mBytes[buffer[offset + i]]++;
             }
 
-            mCurrentCRC = CRC.Update(mCurrentCRC, buffer, offset, count);
+            _mCurrentCrc = Crc.Update(_mCurrentCrc, buffer, offset, count);
         }
     }
 }

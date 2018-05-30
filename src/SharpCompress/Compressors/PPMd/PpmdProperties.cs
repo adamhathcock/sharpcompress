@@ -5,12 +5,9 @@ namespace SharpCompress.Compressors.PPMd
 {
     public class PpmdProperties
     {
-        public PpmdVersion Version = PpmdVersion.I1;
-        public int ModelOrder;
-        internal ModelRestorationMethod ModelRestorationMethod;
 
-        private int allocatorSize;
-        internal Allocator Allocator;
+        private int _allocatorSize;
+        internal Allocator _allocator;
 
         public PpmdProperties()
             : this(16 << 20, 6)
@@ -26,8 +23,12 @@ namespace SharpCompress.Compressors.PPMd
         {
             AllocatorSize = allocatorSize;
             ModelOrder = modelOrder;
-            ModelRestorationMethod = modelRestorationMethod;
+            RestorationMethod = modelRestorationMethod;
         }
+        
+        public int ModelOrder { get; }
+        public PpmdVersion Version { get; } = PpmdVersion.I1;
+        internal ModelRestorationMethod RestorationMethod { get; }
 
         public PpmdProperties(byte[] properties)
         {
@@ -36,11 +37,11 @@ namespace SharpCompress.Compressors.PPMd
                 ushort props = DataConverter.LittleEndian.GetUInt16(properties, 0);
                 AllocatorSize = (((props >> 4) & 0xff) + 1) << 20;
                 ModelOrder = (props & 0x0f) + 1;
-                ModelRestorationMethod = (ModelRestorationMethod)(props >> 12);
+                RestorationMethod = (ModelRestorationMethod)(props >> 12);
             }
             else if (properties.Length == 5)
             {
-                Version = PpmdVersion.H7z;
+                Version = PpmdVersion.H7Z;
                 AllocatorSize = DataConverter.LittleEndian.GetInt32(properties, 1);
                 ModelOrder = properties[0];
             }
@@ -48,23 +49,23 @@ namespace SharpCompress.Compressors.PPMd
 
         public int AllocatorSize
         {
-            get => allocatorSize;
+            get => _allocatorSize;
             set
             {
-                allocatorSize = value;
+                _allocatorSize = value;
                 if (Version == PpmdVersion.I1)
                 {
-                    if (Allocator == null)
+                    if (_allocator == null)
                     {
-                        Allocator = new Allocator();
+                        _allocator = new Allocator();
                     }
-                    Allocator.Start(allocatorSize);
+                    _allocator.Start(_allocatorSize);
                 }
             }
         }
 
         public byte[] Properties => DataConverter.LittleEndian.GetBytes(
                                                                         (ushort)
-                                                                        ((ModelOrder - 1) + (((AllocatorSize >> 20) - 1) << 4) + ((ushort)ModelRestorationMethod << 12)));
+                                                                        ((ModelOrder - 1) + (((AllocatorSize >> 20) - 1) << 4) + ((ushort)RestorationMethod << 12)));
     }
 }

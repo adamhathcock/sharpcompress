@@ -303,16 +303,11 @@ namespace SharpCompress.Compressors.BZip2
         private int runLength;
 
         public CBZip2OutputStream(Stream inStream)
-            : this(inStream, 9, false)
+            : this(inStream, 9)
         {
         }
 
-        public CBZip2OutputStream(Stream inStream, bool leaveOpen)
-            : this(inStream, 9, leaveOpen)
-        {
-        }
-
-        public CBZip2OutputStream(Stream inStream, int inBlockSize, bool leaveOpen)
+        public CBZip2OutputStream(Stream inStream, int inBlockSize)
         {
             block = null;
             quadrant = null;
@@ -322,7 +317,7 @@ namespace SharpCompress.Compressors.BZip2
             inStream.WriteByte((byte)'B');
             inStream.WriteByte((byte)'Z');
 
-            BsSetStream(inStream, leaveOpen);
+            BsSetStream(inStream);
 
             workFactor = 50;
             if (inBlockSize > 9)
@@ -441,10 +436,7 @@ namespace SharpCompress.Compressors.BZip2
 
                 disposed = true;
                 base.Dispose();
-                if (!leaveOpen)
-                {
-                    bsStream.Dispose();
-                }
+                bsStream?.Dispose();
                 bsStream = null;
             }
         }
@@ -596,13 +588,12 @@ namespace SharpCompress.Compressors.BZip2
             }
         }
 
-        private void BsSetStream(Stream f, bool leaveOpen)
+        private void BsSetStream(Stream f)
         {
             bsStream = f;
             bsLive = 0;
             bsBuff = 0;
             bytesOut = 0;
-            this.leaveOpen = leaveOpen;
         }
 
         private void BsFinishedWithStream()
@@ -1057,7 +1048,6 @@ namespace SharpCompress.Compressors.BZip2
         }
 
         private Stream bsStream;
-        private bool leaveOpen;
 
         private void SimpleSort(int lo, int hi, int d)
         {
@@ -1937,6 +1927,11 @@ namespace SharpCompress.Compressors.BZip2
         public override int Read(byte[] buffer, int offset, int count)
         {
             return 0;
+        }
+
+        public override int ReadByte()
+        {
+            return -1;
         }
 
         public override long Seek(long offset, SeekOrigin origin)

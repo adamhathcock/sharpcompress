@@ -12,7 +12,7 @@ namespace SharpCompress.Common
         string Key { get; }
         bool IsDirectory { get; }
         bool IsEncrypted { get; }
-        bool IsSplit { get; }
+        bool IsSplitAfter { get; }
         DateTime? LastAccessedTime { get; }
         DateTime? LastModifiedTime { get; }
         long Size { get; }

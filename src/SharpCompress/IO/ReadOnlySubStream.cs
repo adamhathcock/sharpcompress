@@ -3,7 +3,7 @@ using System.IO;
 
 namespace SharpCompress.IO
 {
-    internal class ReadOnlySubStream : Stream
+    internal class ReadOnlySubStream : NonDisposingStream
     {
         public ReadOnlySubStream(Stream stream, long bytesToRead)
             : this(stream, null, bytesToRead)
@@ -11,8 +11,8 @@ namespace SharpCompress.IO
         }
 
         public ReadOnlySubStream(Stream stream, long? origin, long bytesToRead)
+            : base(stream, false)
         {
-            Stream = stream;
             if (origin != null)
             {
                 stream.Position = origin.Value;
@@ -20,17 +20,7 @@ namespace SharpCompress.IO
             BytesLeftToRead = bytesToRead;
         }
 
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                //Stream.Dispose();
-            }
-        }
-
         private long BytesLeftToRead { get; set; }
-
-        public Stream Stream { get; }
 
         public override bool CanRead => true;
 
@@ -59,6 +49,20 @@ namespace SharpCompress.IO
                 BytesLeftToRead -= read;
             }
             return read;
+        }
+
+        public override int ReadByte()
+        {
+            if (BytesLeftToRead <= 0)
+            {
+                return -1;
+            }
+            int value = Stream.ReadByte();
+            if (value != -1)
+            {
+                --BytesLeftToRead;
+            }
+            return value;
         }
 
         public override long Seek(long offset, SeekOrigin origin)

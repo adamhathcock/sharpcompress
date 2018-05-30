@@ -2,19 +2,29 @@
 
 namespace SharpCompress.Common.Rar.Headers
 {
-    internal class SignHeader : RarHeader
+    internal class AvHeader : RarHeader
     {
-        protected override void ReadFromReader(MarkingBinaryReader reader)
+        public AvHeader(RarHeader header, RarCrcBinaryReader reader) 
+            : base(header, reader, HeaderType.Av) 
         {
-            CreationTime = reader.ReadInt32();
-            ArcNameSize = reader.ReadInt16();
-            UserNameSize = reader.ReadInt16();
+            if (IsRar5) 
+                throw new InvalidFormatException("unexpected rar5 record");
         }
 
-        internal int CreationTime { get; private set; }
+        protected override void ReadFinish(MarkingBinaryReader reader)
+        {
+            UnpackVersion = reader.ReadByte();
+            Method = reader.ReadByte();
+            AvVersion = reader.ReadByte();
+            AvInfoCrc = reader.ReadInt32();
+        }
 
-        internal short ArcNameSize { get; private set; }
+        internal int AvInfoCrc { get; private set; }
 
-        internal short UserNameSize { get; private set; }
+        internal byte UnpackVersion { get; private set; }
+
+        internal byte Method { get; private set; }
+
+        internal byte AvVersion { get; private set; }
     }
 }

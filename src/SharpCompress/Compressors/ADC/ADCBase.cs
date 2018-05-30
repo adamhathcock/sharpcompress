@@ -33,47 +33,47 @@ namespace SharpCompress.Compressors.ADC
     /// </summary>
     public static class ADCBase
     {
-        const int Plain = 1;
-        const int TwoByte = 2;
-        const int ThreeByte = 3;
+        private const int PLAIN = 1;
+        private const int TWO_BYTE = 2;
+        private const int THREE_BYTE = 3;
 
-        static int GetChunkType(byte byt)
+        private static int GetChunkType(byte byt)
         {
             if ((byt & 0x80) == 0x80)
             {
-                return Plain;
+                return PLAIN;
             }
             if ((byt & 0x40) == 0x40)
             {
-                return ThreeByte;
+                return THREE_BYTE;
             }
-            return TwoByte;
+            return TWO_BYTE;
         }
 
-        static int GetChunkSize(byte byt)
+        private static int GetChunkSize(byte byt)
         {
             switch (GetChunkType(byt))
             {
-                case Plain:
+                case PLAIN:
                     return (byt & 0x7F) + 1;
-                case TwoByte:
+                case TWO_BYTE:
                     return ((byt & 0x3F) >> 2) + 3;
-                case ThreeByte:
+                case THREE_BYTE:
                     return (byt & 0x3F) + 4;
                 default:
                     return -1;
             }
         }
 
-        static int GetOffset(byte[] chunk, int position)
+        private static int GetOffset(byte[] chunk, int position)
         {
             switch (GetChunkType(chunk[position]))
             {
-                case Plain:
+                case PLAIN:
                     return 0;
-                case TwoByte:
+                case TWO_BYTE:
                     return ((chunk[position] & 0x03) << 8) + chunk[position + 1];
-                case ThreeByte:
+                case THREE_BYTE:
                     return (chunk[position + 1] << 8) + chunk[position + 2];
                 default:
                     return -1;
@@ -130,7 +130,7 @@ namespace SharpCompress.Compressors.ADC
 
                 switch (chunkType)
                 {
-                    case Plain:
+                    case PLAIN:
                         chunkSize = GetChunkSize((byte)readByte);
                         if (outPosition + chunkSize > bufferSize)
                         {
@@ -141,7 +141,7 @@ namespace SharpCompress.Compressors.ADC
                         outPosition += chunkSize;
                         position += chunkSize + 1;
                         break;
-                    case TwoByte:
+                    case TWO_BYTE:
                         tempMs = new MemoryStream();
                         chunkSize = GetChunkSize((byte)readByte);
                         tempMs.WriteByte((byte)readByte);
@@ -172,7 +172,7 @@ namespace SharpCompress.Compressors.ADC
                             position += 2;
                         }
                         break;
-                    case ThreeByte:
+                    case THREE_BYTE:
                         tempMs = new MemoryStream();
                         chunkSize = GetChunkSize((byte)readByte);
                         tempMs.WriteByte((byte)readByte);

@@ -11,23 +11,23 @@ namespace SharpCompress.Common.Zip
 
     internal class PkwareTraditionalCryptoStream : Stream
     {
-        private readonly PkwareTraditionalEncryptionData encryptor;
-        private readonly CryptoMode mode;
-        private readonly Stream stream;
-        private bool isDisposed;
+        private readonly PkwareTraditionalEncryptionData _encryptor;
+        private readonly CryptoMode _mode;
+        private readonly Stream _stream;
+        private bool _isDisposed;
 
         public PkwareTraditionalCryptoStream(Stream stream, PkwareTraditionalEncryptionData encryptor, CryptoMode mode)
         {
-            this.encryptor = encryptor;
-            this.stream = stream;
-            this.mode = mode;
+            this._encryptor = encryptor;
+            this._stream = stream;
+            this._mode = mode;
         }
 
-        public override bool CanRead => (mode == CryptoMode.Decrypt);
+        public override bool CanRead => (_mode == CryptoMode.Decrypt);
 
         public override bool CanSeek => false;
 
-        public override bool CanWrite => (mode == CryptoMode.Encrypt);
+        public override bool CanWrite => (_mode == CryptoMode.Encrypt);
 
         public override long Length => throw new NotSupportedException();
 
@@ -35,7 +35,7 @@ namespace SharpCompress.Common.Zip
 
         public override int Read(byte[] buffer, int offset, int count)
         {
-            if (mode == CryptoMode.Encrypt)
+            if (_mode == CryptoMode.Encrypt)
             {
                 throw new NotSupportedException("This stream does not encrypt via Read()");
             }
@@ -46,15 +46,15 @@ namespace SharpCompress.Common.Zip
             }
 
             byte[] temp = new byte[count];
-            int readBytes = stream.Read(temp, 0, count);
-            byte[] decrypted = encryptor.Decrypt(temp, readBytes);
+            int readBytes = _stream.Read(temp, 0, count);
+            byte[] decrypted = _encryptor.Decrypt(temp, readBytes);
             Buffer.BlockCopy(decrypted, 0, buffer, offset, readBytes);
             return readBytes;
         }
 
         public override void Write(byte[] buffer, int offset, int count)
         {
-            if (mode == CryptoMode.Decrypt)
+            if (_mode == CryptoMode.Decrypt)
             {
                 throw new NotSupportedException("This stream does not Decrypt via Write()");
             }
@@ -75,8 +75,8 @@ namespace SharpCompress.Common.Zip
                 plaintext = buffer;
             }
 
-            byte[] encrypted = encryptor.Encrypt(plaintext, count);
-            stream.Write(encrypted, 0, encrypted.Length);
+            byte[] encrypted = _encryptor.Encrypt(plaintext, count);
+            _stream.Write(encrypted, 0, encrypted.Length);
         }
 
         public override void Flush()
@@ -96,13 +96,13 @@ namespace SharpCompress.Common.Zip
 
         protected override void Dispose(bool disposing)
         {
-            if (isDisposed)
+            if (_isDisposed)
             {
                 return;
             }
-            isDisposed = true;
+            _isDisposed = true;
             base.Dispose(disposing);
-            stream.Dispose();
+            _stream.Dispose();
         }
     }
 }

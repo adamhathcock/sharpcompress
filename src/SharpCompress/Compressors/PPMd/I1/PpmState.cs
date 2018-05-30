@@ -16,34 +16,34 @@ namespace SharpCompress.Compressors.PPMd.I1
     /// instance rather than just copying a reference to the same instance).
     /// </para>
     /// <para>
-    /// Note that <see cref="Address"/> is a field rather than a property for performance reasons.
+    /// Note that <see cref="_address"/> is a field rather than a property for performance reasons.
     /// </para>
     /// </remarks>
     internal struct PpmState
     {
-        public uint Address;
-        public byte[] Memory;
-        public static readonly PpmState Zero = new PpmState(0, null);
-        public const int Size = 6;
+        public uint _address;
+        public byte[] _memory;
+        public static readonly PpmState ZERO = new PpmState(0, null);
+        public const int SIZE = 6;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="PpmState"/> structure.
         /// </summary>
         public PpmState(uint address, byte[] memory)
         {
-            Address = address;
-            Memory = memory;
+            _address = address;
+            _memory = memory;
         }
 
         /// <summary>
         /// Gets or sets the symbol.
         /// </summary>
-        public byte Symbol { get => Memory[Address]; set => Memory[Address] = value; }
+        public byte Symbol { get => _memory[_address]; set => _memory[_address] = value; }
 
         /// <summary>
         /// Gets or sets the frequency.
         /// </summary>
-        public byte Frequency { get => Memory[Address + 1]; set => Memory[Address + 1] = value; }
+        public byte Frequency { get => _memory[_address + 1]; set => _memory[_address + 1] = value; }
 
         /// <summary>
         /// Gets or sets the successor.
@@ -51,14 +51,14 @@ namespace SharpCompress.Compressors.PPMd.I1
         public Model.PpmContext Successor
         {
             get => new Model.PpmContext(
-                                        Memory[Address + 2] | ((uint)Memory[Address + 3]) << 8 |
-                                        ((uint)Memory[Address + 4]) << 16 | ((uint)Memory[Address + 5]) << 24, Memory);
+                                        _memory[_address + 2] | ((uint)_memory[_address + 3]) << 8 |
+                                        ((uint)_memory[_address + 4]) << 16 | ((uint)_memory[_address + 5]) << 24, _memory);
             set
             {
-                Memory[Address + 2] = (byte)value.Address;
-                Memory[Address + 3] = (byte)(value.Address >> 8);
-                Memory[Address + 4] = (byte)(value.Address >> 16);
-                Memory[Address + 5] = (byte)(value.Address >> 24);
+                _memory[_address + 2] = (byte)value._address;
+                _memory[_address + 3] = (byte)(value._address >> 8);
+                _memory[_address + 4] = (byte)(value._address >> 16);
+                _memory[_address + 5] = (byte)(value._address >> 24);
             }
         }
 
@@ -68,7 +68,7 @@ namespace SharpCompress.Compressors.PPMd.I1
         /// </summary>
         /// <param name="offset"></param>
         /// <returns></returns>
-        public PpmState this[int offset] => new PpmState((uint)(Address + offset * Size), Memory);
+        public PpmState this[int offset] => new PpmState((uint)(_address + offset * SIZE), _memory);
 
         /// <summary>
         /// Allow a pointer to be implicitly converted to a PPM state.
@@ -77,7 +77,7 @@ namespace SharpCompress.Compressors.PPMd.I1
         /// <returns></returns>
         public static implicit operator PpmState(Pointer pointer)
         {
-            return new PpmState(pointer.Address, pointer.Memory);
+            return new PpmState(pointer._address, pointer._memory);
         }
 
         /// <summary>
@@ -88,7 +88,7 @@ namespace SharpCompress.Compressors.PPMd.I1
         /// <returns></returns>
         public static PpmState operator +(PpmState state, int offset)
         {
-            state.Address = (uint)(state.Address + offset * Size);
+            state._address = (uint)(state._address + offset * SIZE);
             return state;
         }
 
@@ -99,7 +99,7 @@ namespace SharpCompress.Compressors.PPMd.I1
         /// <returns></returns>
         public static PpmState operator ++(PpmState state)
         {
-            state.Address += Size;
+            state._address += SIZE;
             return state;
         }
 
@@ -111,7 +111,7 @@ namespace SharpCompress.Compressors.PPMd.I1
         /// <returns></returns>
         public static PpmState operator -(PpmState state, int offset)
         {
-            state.Address = (uint)(state.Address - offset * Size);
+            state._address = (uint)(state._address - offset * SIZE);
             return state;
         }
 
@@ -122,7 +122,7 @@ namespace SharpCompress.Compressors.PPMd.I1
         /// <returns></returns>
         public static PpmState operator --(PpmState state)
         {
-            state.Address -= Size;
+            state._address -= SIZE;
             return state;
         }
 
@@ -134,7 +134,7 @@ namespace SharpCompress.Compressors.PPMd.I1
         /// <returns></returns>
         public static bool operator <=(PpmState state1, PpmState state2)
         {
-            return state1.Address <= state2.Address;
+            return state1._address <= state2._address;
         }
 
         /// <summary>
@@ -145,7 +145,7 @@ namespace SharpCompress.Compressors.PPMd.I1
         /// <returns></returns>
         public static bool operator >=(PpmState state1, PpmState state2)
         {
-            return state1.Address >= state2.Address;
+            return state1._address >= state2._address;
         }
 
         /// <summary>
@@ -156,7 +156,7 @@ namespace SharpCompress.Compressors.PPMd.I1
         /// <returns></returns>
         public static bool operator ==(PpmState state1, PpmState state2)
         {
-            return state1.Address == state2.Address;
+            return state1._address == state2._address;
         }
 
         /// <summary>
@@ -167,7 +167,7 @@ namespace SharpCompress.Compressors.PPMd.I1
         /// <returns></returns>
         public static bool operator !=(PpmState state1, PpmState state2)
         {
-            return state1.Address != state2.Address;
+            return state1._address != state2._address;
         }
 
         /// <summary>
@@ -180,7 +180,7 @@ namespace SharpCompress.Compressors.PPMd.I1
             if (obj is PpmState)
             {
                 PpmState state = (PpmState)obj;
-                return state.Address == Address;
+                return state._address == _address;
             }
             return base.Equals(obj);
         }
@@ -191,7 +191,7 @@ namespace SharpCompress.Compressors.PPMd.I1
         /// <returns>A 32-bit signed integer that is the hash code for this instance.</returns>
         public override int GetHashCode()
         {
-            return Address.GetHashCode();
+            return _address.GetHashCode();
         }
     }
 }

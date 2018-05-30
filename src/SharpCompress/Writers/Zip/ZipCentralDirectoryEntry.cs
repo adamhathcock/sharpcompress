@@ -44,7 +44,7 @@ namespace SharpCompress.Writers.Zip
             var extralength = zip64 ? (2 + 2 + 8 + 8 + 8 + 4) : 0;
             var version = (byte)(zip64 ? 45 : 20); // Version 20 required for deflate/encryption
 
-            HeaderFlags flags = Equals(archiveEncoding.GetEncoding(), Encoding.UTF8) ? HeaderFlags.UTF8 : HeaderFlags.None;
+            HeaderFlags flags = Equals(archiveEncoding.GetEncoding(), Encoding.UTF8) ? HeaderFlags.Efs : HeaderFlags.None;
             if (!outputStream.CanSeek)
             {
                 // Cannot use data descriptors with zip64:

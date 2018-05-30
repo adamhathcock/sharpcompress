@@ -43,7 +43,7 @@ namespace SharpCompress.Archives.Zip
 
         public override bool IsDirectory => false;
 
-        public override bool IsSplit => false;
+        public override bool IsSplitAfter => false;
 
         internal override IEnumerable<FilePart> Parts => throw new NotImplementedException();
 

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using SharpCompress.Common;
+using SharpCompress.IO;
 using SharpCompress.Readers;
 using SharpCompress.Readers.Zip;
 using SharpCompress.Writers;
@@ -14,7 +15,7 @@ namespace SharpCompress.Test.Zip
         {
             UseExtensionInsteadOfNameToVerify = true;
         }
-        
+
         [Fact]
         public void Issue_269_Double_Skip()
         {
@@ -41,13 +42,13 @@ namespace SharpCompress.Test.Zip
         [Fact]
         public void Zip_Zip64_Streamed_Read()
         {
-            Read("Zip.Zip64.zip", CompressionType.Deflate);
+            Read("Zip.zip64.zip", CompressionType.Deflate);
         }
 
         [Fact]
         public void Zip_ZipX_Streamed_Read()
         {
-            Read("Zip.Zipx", CompressionType.LZMA);
+            Read("Zip.zipx", CompressionType.LZMA);
         }
 
         [Fact]
@@ -101,6 +102,11 @@ namespace SharpCompress.Test.Zip
         {
             Read("Zip.deflate.zip", CompressionType.Deflate);
         }
+        [Fact]
+        public void Zip_Deflate64_Read()
+        {
+            Read("Zip.deflate64.zip", CompressionType.Deflate64);
+        }
 
         [Fact]
         public void Zip_LZMA_Streamed_Read()
@@ -141,8 +147,8 @@ namespace SharpCompress.Test.Zip
             ResetScratch();
             using (Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Zip.bzip2.pkware.zip")))
             using (var reader = ZipReader.Open(stream, new ReaderOptions()
-                                                       {
-                                                           Password = "test"
+            {
+                Password = "test"
             }))
             {
                 while (reader.MoveToNextEntry())
@@ -218,11 +224,11 @@ namespace SharpCompress.Test.Zip
                                                 using (
                                                     Stream stream =
                                                         File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH,
-                                                            "Zip.lzma.winzipaes.zip")))
+                                                            "Zip.lzma.WinzipAES.zip")))
                                                 using (var reader = ZipReader.Open(stream, new ReaderOptions()
-                                                                                           {
-                                                                                               Password = "test"
-                                                                                           }))
+                                                {
+                                                    Password = "test"
+                                                }))
                                                 {
                                                     while (reader.MoveToNextEntry())
                                                     {
@@ -248,9 +254,9 @@ namespace SharpCompress.Test.Zip
             ResetScratch();
             using (Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.WinzipAES.zip")))
             using (var reader = ZipReader.Open(stream, new ReaderOptions()
-                                                       {
-                                                           Password = "test"
-                                                       }))
+            {
+                Password = "test"
+            }))
             {
                 while (reader.MoveToNextEntry())
                 {
@@ -269,7 +275,7 @@ namespace SharpCompress.Test.Zip
             VerifyFiles();
         }
 
-        class NonSeekableMemoryStream : MemoryStream
+        private class NonSeekableMemoryStream : MemoryStream
         {
             public override bool CanSeek => false;
         }
@@ -290,7 +296,7 @@ namespace SharpCompress.Test.Zip
             stream = new MemoryStream(stream.ToArray());
             File.WriteAllBytes(Path.Combine(SCRATCH_FILES_PATH, "foo.zip"), stream.ToArray());
 
-            using (IReader zipReader = ZipReader.Open(stream))
+            using (IReader zipReader = ZipReader.Open(new NonDisposingStream(stream, true)))
             {
                 while (zipReader.MoveToNextEntry())
                 {

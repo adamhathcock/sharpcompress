@@ -9,22 +9,22 @@ namespace SharpCompress.Compressors.PPMd.H
     {
         internal const int TOP = 1 << 24;
         internal const int BOT = 1 << 15;
-        internal const long UintMask = 0xFFFFffffL;
+        internal const long UINT_MASK = 0xFFFFffffL;
 
         // uint low, code, range;
-        private long low, code, range;
-        private readonly Unpack unpackRead;
-        private readonly Stream stream;
+        private long _low, _code, _range;
+        private readonly IRarUnpack _unpackRead;
+        private readonly Stream _stream;
 
-        internal RangeCoder(Unpack unpackRead)
+        internal RangeCoder(IRarUnpack unpackRead)
         {
-            this.unpackRead = unpackRead;
+            _unpackRead = unpackRead;
             Init();
         }
 
         internal RangeCoder(Stream stream)
         {
-            this.stream = stream;
+            _stream = stream;
             Init();
         }
 
@@ -32,11 +32,11 @@ namespace SharpCompress.Compressors.PPMd.H
         {
             SubRange = new SubRange();
 
-            low = code = 0L;
-            range = 0xFFFFffffL;
+            _low = _code = 0L;
+            _range = 0xFFFFffffL;
             for (int i = 0; i < 4; i++)
             {
-                code = ((code << 8) | Char) & UintMask;
+                _code = ((_code << 8) | Char) & UINT_MASK;
             }
         }
 
@@ -44,8 +44,8 @@ namespace SharpCompress.Compressors.PPMd.H
         {
             get
             {
-                range = (range / SubRange.Scale) & UintMask;
-                return (int)((code - low) / (range));
+                _range = (_range / SubRange.Scale) & UINT_MASK;
+                return (int)((_code - _low) / (_range));
             }
         }
 
@@ -53,13 +53,13 @@ namespace SharpCompress.Compressors.PPMd.H
         {
             get
             {
-                if (unpackRead != null)
+                if (_unpackRead != null)
                 {
-                    return (unpackRead.Char);
+                    return (_unpackRead.Char);
                 }
-                if (stream != null)
+                if (_stream != null)
                 {
-                    return stream.ReadByte();
+                    return _stream.ReadByte();
                 }
                 return -1;
             }
@@ -67,16 +67,16 @@ namespace SharpCompress.Compressors.PPMd.H
 
         internal SubRange SubRange { get; private set; }
 
-        internal long GetCurrentShiftCount(int SHIFT)
+        internal long GetCurrentShiftCount(int shift)
         {
-            range = Utility.URShift(range, SHIFT);
-            return ((code - low) / (range)) & UintMask;
+            _range = Utility.URShift(_range, shift);
+            return ((_code - _low) / (_range)) & UINT_MASK;
         }
 
         internal void Decode()
         {
-            low = (low + (range * SubRange.LowCount)) & UintMask;
-            range = (range * (SubRange.HighCount - SubRange.LowCount)) & UintMask;
+            _low = (_low + (_range * SubRange.LowCount)) & UINT_MASK;
+            _range = (_range * (SubRange.HighCount - SubRange.LowCount)) & UINT_MASK;
         }
 
         internal void AriDecNormalize()
@@ -90,16 +90,16 @@ namespace SharpCompress.Compressors.PPMd.H
 
             // Rewrote for clarity
             bool c2 = false;
-            while ((low ^ (low + range)) < TOP || (c2 = range < BOT))
+            while ((_low ^ (_low + _range)) < TOP || (c2 = _range < BOT))
             {
                 if (c2)
                 {
-                    range = (-low & (BOT - 1)) & UintMask;
+                    _range = (-_low & (BOT - 1)) & UINT_MASK;
                     c2 = false;
                 }
-                code = ((code << 8) | Char) & UintMask;
-                range = (range << 8) & UintMask;
-                low = (low << 8) & UintMask;
+                _code = ((_code << 8) | Char) & UINT_MASK;
+                _range = (_range << 8) & UINT_MASK;
+                _low = (_low << 8) & UINT_MASK;
             }
         }
 
@@ -109,11 +109,11 @@ namespace SharpCompress.Compressors.PPMd.H
             StringBuilder buffer = new StringBuilder();
             buffer.Append("RangeCoder[");
             buffer.Append("\n  low=");
-            buffer.Append(low);
+            buffer.Append(_low);
             buffer.Append("\n  code=");
-            buffer.Append(code);
+            buffer.Append(_code);
             buffer.Append("\n  range=");
-            buffer.Append(range);
+            buffer.Append(_range);
             buffer.Append("\n  subrange=");
             buffer.Append(SubRange);
             buffer.Append("]");
@@ -124,18 +124,18 @@ namespace SharpCompress.Compressors.PPMd.H
     internal class SubRange
     {
         // uint LowCount, HighCount, scale;
-        private long lowCount, highCount, scale;
+        private long _lowCount, _highCount, _scale;
 
-        internal void incScale(int dScale)
+        internal void IncScale(int dScale)
         {
             Scale = Scale + dScale;
         }
 
-        internal long HighCount { get => highCount; set => highCount = value & RangeCoder.UintMask; }
+        internal long HighCount { get => _highCount; set => _highCount = value & RangeCoder.UINT_MASK; }
 
-        internal long LowCount { get => lowCount & RangeCoder.UintMask; set => lowCount = value & RangeCoder.UintMask; }
+        internal long LowCount { get => _lowCount & RangeCoder.UINT_MASK; set => _lowCount = value & RangeCoder.UINT_MASK; }
 
-        internal long Scale { get => scale; set => scale = value & RangeCoder.UintMask; }
+        internal long Scale { get => _scale; set => _scale = value & RangeCoder.UINT_MASK; }
 
         // Debug
         public override String ToString()
@@ -143,11 +143,11 @@ namespace SharpCompress.Compressors.PPMd.H
             StringBuilder buffer = new StringBuilder();
             buffer.Append("SubRange[");
             buffer.Append("\n  lowCount=");
-            buffer.Append(lowCount);
+            buffer.Append(_lowCount);
             buffer.Append("\n  highCount=");
-            buffer.Append(highCount);
+            buffer.Append(_highCount);
             buffer.Append("\n  scale=");
-            buffer.Append(scale);
+            buffer.Append(_scale);
             buffer.Append("]");
             return buffer.ToString();
         }

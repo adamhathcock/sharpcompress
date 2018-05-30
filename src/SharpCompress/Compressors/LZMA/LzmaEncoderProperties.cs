@@ -2,8 +2,8 @@
 {
     public class LzmaEncoderProperties
     {
-        internal CoderPropID[] propIDs;
-        internal object[] properties;
+        internal CoderPropId[] _propIDs;
+        internal object[] _properties;
 
         public LzmaEncoderProperties()
             : this(false)
@@ -28,18 +28,18 @@
             int algorithm = 2;
             string mf = "bt4";
 
-            propIDs = new[]
+            _propIDs = new[]
                       {
-                          CoderPropID.DictionarySize,
-                          CoderPropID.PosStateBits,
-                          CoderPropID.LitContextBits,
-                          CoderPropID.LitPosBits,
-                          CoderPropID.Algorithm,
-                          CoderPropID.NumFastBytes,
-                          CoderPropID.MatchFinder,
-                          CoderPropID.EndMarker
+                          CoderPropId.DictionarySize,
+                          CoderPropId.PosStateBits,
+                          CoderPropId.LitContextBits,
+                          CoderPropId.LitPosBits,
+                          CoderPropId.Algorithm,
+                          CoderPropId.NumFastBytes,
+                          CoderPropId.MatchFinder,
+                          CoderPropId.EndMarker
                       };
-            properties = new object[]
+            _properties = new object[]
                          {
                              dictionary,
                              posStateBits,

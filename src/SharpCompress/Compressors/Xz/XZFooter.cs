@@ -8,7 +8,7 @@ namespace SharpCompress.Compressors.Xz
     public class XZFooter
     {
         private readonly BinaryReader _reader;
-        private readonly byte[] _magicBytes = new byte[] { 0x59, 0x5A };
+        private readonly byte[] _magicBytes = { 0x59, 0x5A };
         public long StreamStartPosition { get; private set; }
         public long BackwardSize { get; private set; }
         public byte[] StreamFlags { get; private set; }
@@ -40,7 +40,7 @@ namespace SharpCompress.Compressors.Xz
                 StreamFlags = reader.ReadBytes(2);
             }
             byte[] magBy = _reader.ReadBytes(2);
-            if (!Enumerable.SequenceEqual(magBy, _magicBytes))
+            if (!magBy.SequenceEqual(_magicBytes))
             {
                 throw new InvalidDataException("Magic footer missing");
             }

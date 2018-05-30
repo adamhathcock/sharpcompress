@@ -11,7 +11,7 @@ namespace SharpCompress.Common.Tar
         internal TarFilePart(TarHeader header, Stream seekableStream)
             : base(header.ArchiveEncoding)
         {
-            this._seekableStream = seekableStream;
+            _seekableStream = seekableStream;
             Header = header;
         }
 

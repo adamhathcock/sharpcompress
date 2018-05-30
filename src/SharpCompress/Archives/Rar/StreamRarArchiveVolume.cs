@@ -19,7 +19,7 @@ namespace SharpCompress.Archives.Rar
             return GetVolumeFileParts();
         }
 
-        internal override RarFilePart CreateFilePart(FileHeader fileHeader, MarkHeader markHeader)
+        internal override RarFilePart CreateFilePart(MarkHeader markHeader, FileHeader fileHeader)
         {
             return new SeekableFilePart(markHeader, fileHeader, Stream, ReaderOptions.Password);
         }

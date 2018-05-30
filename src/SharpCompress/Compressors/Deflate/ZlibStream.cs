@@ -37,23 +37,18 @@ namespace SharpCompress.Compressors.Deflate
         private bool _disposed;
 
         public ZlibStream(Stream stream, CompressionMode mode)
-            : this(stream, mode, CompressionLevel.Default, false, Encoding.UTF8)
+            : this(stream, mode, CompressionLevel.Default, Encoding.UTF8)
         {
         }
 
         public ZlibStream(Stream stream, CompressionMode mode, CompressionLevel level)
-            : this(stream, mode, level, false, Encoding.UTF8)
+            : this(stream, mode, level, Encoding.UTF8)
         {
         }
 
-        public ZlibStream(Stream stream, CompressionMode mode, bool leaveOpen)
-            : this(stream, mode, CompressionLevel.Default, leaveOpen, Encoding.UTF8)
+        public ZlibStream(Stream stream, CompressionMode mode, CompressionLevel level, Encoding encoding)
         {
-        }
-
-        public ZlibStream(Stream stream, CompressionMode mode, CompressionLevel level, bool leaveOpen, Encoding encoding)
-        {
-            _baseStream = new ZlibBaseStream(stream, mode, level, ZlibStreamFlavor.ZLIB, leaveOpen, encoding);
+            _baseStream = new ZlibBaseStream(stream, mode, level, ZlibStreamFlavor.ZLIB, encoding);
         }
 
         #region Zlib properties
@@ -208,7 +203,6 @@ namespace SharpCompress.Compressors.Deflate
         /// </summary>
         /// <remarks>
         /// This may or may not result in a <c>Close()</c> call on the captive stream.
-        /// See the constructors that have a  <c>leaveOpen</c> parameter for more information.
         /// </remarks>
         protected override void Dispose(bool disposing)
         {
@@ -216,9 +210,9 @@ namespace SharpCompress.Compressors.Deflate
             {
                 if (!_disposed)
                 {
-                    if (disposing && (_baseStream != null))
+                    if (disposing)
                     {
-                        _baseStream.Dispose();
+                        _baseStream?.Dispose();
                     }
                     _disposed = true;
                 }
@@ -276,6 +270,15 @@ namespace SharpCompress.Compressors.Deflate
             return _baseStream.Read(buffer, offset, count);
         }
 
+        public override int ReadByte()
+        {
+            if (_disposed)
+            {
+                throw new ObjectDisposedException("ZlibStream");
+            }
+            return _baseStream.ReadByte();
+        }
+
         /// <summary>
         /// Calling this method always throws a <see cref="NotImplementedException"/>.
         /// </summary>
@@ -325,6 +328,15 @@ namespace SharpCompress.Compressors.Deflate
                 throw new ObjectDisposedException("ZlibStream");
             }
             _baseStream.Write(buffer, offset, count);
+        }
+
+        public override void WriteByte(byte value)
+        {
+            if (_disposed)
+            {
+                throw new ObjectDisposedException("ZlibStream");
+            }
+            _baseStream.WriteByte(value);
         }
 
         #endregion System.IO.Stream methods

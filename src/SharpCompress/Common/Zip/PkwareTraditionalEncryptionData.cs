@@ -7,8 +7,8 @@ namespace SharpCompress.Common.Zip
 {
     internal class PkwareTraditionalEncryptionData
     {
-        private static readonly CRC32 crc32 = new CRC32();
-        private readonly UInt32[] _Keys = {0x12345678, 0x23456789, 0x34567890};
+        private static readonly CRC32 CRC32 = new CRC32();
+        private readonly UInt32[] _keys = {0x12345678, 0x23456789, 0x34567890};
         private readonly ArchiveEncoding _archiveEncoding;
 
         private PkwareTraditionalEncryptionData(string password, ArchiveEncoding archiveEncoding)
@@ -21,7 +21,7 @@ namespace SharpCompress.Common.Zip
         {
             get
             {
-                ushort t = (ushort)((ushort)(_Keys[2] & 0xFFFF) | 2);
+                ushort t = (ushort)((ushort)(_keys[2] & 0xFFFF) | 2);
                 return (byte)((t * (t ^ 1)) >> 8);
             }
         }
@@ -56,9 +56,9 @@ namespace SharpCompress.Common.Zip
             var plainText = new byte[length];
             for (int i = 0; i < length; i++)
             {
-                var C = (byte)(cipherText[i] ^ MagicByte);
-                UpdateKeys(C);
-                plainText[i] = C;
+                var c = (byte)(cipherText[i] ^ MagicByte);
+                UpdateKeys(c);
+                plainText[i] = c;
             }
             return plainText;
         }
@@ -79,9 +79,9 @@ namespace SharpCompress.Common.Zip
             var cipherText = new byte[length];
             for (int i = 0; i < length; i++)
             {
-                byte C = plainText[i];
+                byte c = plainText[i];
                 cipherText[i] = (byte)(plainText[i] ^ MagicByte);
-                UpdateKeys(C);
+                UpdateKeys(c);
             }
             return cipherText;
         }
@@ -103,10 +103,10 @@ namespace SharpCompress.Common.Zip
 
         private void UpdateKeys(byte byteValue)
         {
-            _Keys[0] = (UInt32)crc32.ComputeCrc32((int)_Keys[0], byteValue);
-            _Keys[1] = _Keys[1] + (byte)_Keys[0];
-            _Keys[1] = _Keys[1] * 0x08088405 + 1;
-            _Keys[2] = (UInt32)crc32.ComputeCrc32((int)_Keys[2], (byte)(_Keys[1] >> 24));
+            _keys[0] = (UInt32)CRC32.ComputeCrc32((int)_keys[0], byteValue);
+            _keys[1] = _keys[1] + (byte)_keys[0];
+            _keys[1] = _keys[1] * 0x08088405 + 1;
+            _keys[2] = (UInt32)CRC32.ComputeCrc32((int)_keys[2], (byte)(_keys[1] >> 24));
         }
     }
 }

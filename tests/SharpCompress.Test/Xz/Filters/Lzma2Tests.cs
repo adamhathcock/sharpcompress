@@ -7,7 +7,7 @@ namespace SharpCompress.Test.Xz.Filters
 {
     public class Lzma2Tests : XZTestsBase
     {
-        Lzma2Filter filter;
+        private readonly Lzma2Filter filter;
     
         public Lzma2Tests()
         {

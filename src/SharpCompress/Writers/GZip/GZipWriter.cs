@@ -3,6 +3,7 @@ using System.IO;
 using SharpCompress.Common;
 using SharpCompress.Compressors;
 using SharpCompress.Compressors.Deflate;
+using SharpCompress.IO;
 
 namespace SharpCompress.Writers.GZip
 {
@@ -13,9 +14,12 @@ namespace SharpCompress.Writers.GZip
         public GZipWriter(Stream destination, GZipWriterOptions options = null)
             : base(ArchiveType.GZip, options ?? new GZipWriterOptions())
         {
+            if (WriterOptions.LeaveStreamOpen)
+            {
+                destination = new NonDisposingStream(destination);
+            }
             InitalizeStream(new GZipStream(destination, CompressionMode.Compress, 
-                                           options?.CompressionLevel ?? CompressionLevel.Default, 
-                                           WriterOptions.LeaveStreamOpen, 
+                                           options?.CompressionLevel ?? CompressionLevel.Default,
                                            WriterOptions.ArchiveEncoding.GetEncoding()));
         }
 

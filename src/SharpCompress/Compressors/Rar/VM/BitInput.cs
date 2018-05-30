@@ -5,8 +5,14 @@ namespace SharpCompress.Compressors.Rar.VM
         /// <summary> the max size of the input</summary>
         internal const int MAX_SIZE = 0x8000;
 
-        protected int inAddr;
-        protected int inBit;
+        public int inAddr;
+        public int inBit;
+
+// TODO: rename var
+        public int InAddr { get { return inAddr; } set { inAddr = value; }  }
+        public int InBit { get { return inBit; } set { inBit = value; }  }
+        public bool ExternalBuffer;
+
 
         /// <summary>  </summary>
         internal BitInput()
@@ -22,6 +28,11 @@ namespace SharpCompress.Compressors.Rar.VM
             inBit = 0;
         }
 
+        internal void faddbits(uint bits) {
+            // TODO uint
+            AddBits((int)bits);
+        }
+
         /// <summary>
         /// also named faddbits
         /// </summary>
@@ -31,6 +42,16 @@ namespace SharpCompress.Compressors.Rar.VM
             bits += inBit;
             inAddr += (bits >> 3);
             inBit = bits & 7;
+        }
+
+        internal uint fgetbits() {
+            // TODO uint
+            return (uint)GetBits();
+        }
+
+        internal uint getbits() {
+            // TODO uint
+            return (uint)GetBits();
         }
 
         /// <summary> 

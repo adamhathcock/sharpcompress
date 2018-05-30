@@ -5,12 +5,12 @@ namespace SharpCompress.Compressors.PPMd.H
 {
     internal class RarNode : Pointer
     {
-        private int next; //rarnode pointer
+        private int _next; //rarnode pointer
 
-        public const int size = 4;
+        public const int SIZE = 4;
 
-        public RarNode(byte[] Memory)
-            : base(Memory)
+        public RarNode(byte[] memory)
+            : base(memory)
         {
         }
 
@@ -18,9 +18,9 @@ namespace SharpCompress.Compressors.PPMd.H
         {
             if (Memory != null)
             {
-                next = DataConverter.LittleEndian.GetInt32(Memory, Address);
+                _next = DataConverter.LittleEndian.GetInt32(Memory, Address);
             }
-            return next;
+            return _next;
         }
 
         internal void SetNext(RarNode next)
@@ -30,7 +30,7 @@ namespace SharpCompress.Compressors.PPMd.H
 
         internal void SetNext(int next)
         {
-            this.next = next;
+            _next = next;
             if (Memory != null)
             {
                 DataConverter.LittleEndian.PutBytes(Memory, Address, next);
@@ -44,7 +44,7 @@ namespace SharpCompress.Compressors.PPMd.H
             buffer.Append("\n  Address=");
             buffer.Append(Address);
             buffer.Append("\n  size=");
-            buffer.Append(size);
+            buffer.Append(SIZE);
             buffer.Append("\n  next=");
             buffer.Append(GetNext());
             buffer.Append("\n]");

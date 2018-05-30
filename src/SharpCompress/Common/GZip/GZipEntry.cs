@@ -7,24 +7,24 @@ namespace SharpCompress.Common.GZip
 {
     public class GZipEntry : Entry
     {
-        private readonly GZipFilePart filePart;
+        private readonly GZipFilePart _filePart;
 
         internal GZipEntry(GZipFilePart filePart)
         {
-            this.filePart = filePart;
+            _filePart = filePart;
         }
 
         public override CompressionType CompressionType => CompressionType.GZip;
 
         public override long Crc => 0;
 
-        public override string Key => filePart.FilePartName;
+        public override string Key => _filePart.FilePartName;
 
         public override long CompressedSize => 0;
 
         public override long Size => 0;
 
-        public override DateTime? LastModifiedTime => filePart.DateModified;
+        public override DateTime? LastModifiedTime => _filePart.DateModified;
 
         public override DateTime? CreatedTime => null;
 
@@ -36,9 +36,9 @@ namespace SharpCompress.Common.GZip
 
         public override bool IsDirectory => false;
 
-        public override bool IsSplit => false;
+        public override bool IsSplitAfter => false;
 
-        internal override IEnumerable<FilePart> Parts => filePart.AsEnumerable<FilePart>();
+        internal override IEnumerable<FilePart> Parts => _filePart.AsEnumerable<FilePart>();
 
         internal static IEnumerable<GZipEntry> GetEntries(Stream stream, OptionsBase options)
         {
