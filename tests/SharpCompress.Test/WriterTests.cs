@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Text;
 using SharpCompress.Common;
 using SharpCompress.IO;
 using SharpCompress.Readers;
@@ -19,12 +20,15 @@ namespace SharpCompress.Test
         protected void Write(CompressionType compressionType, string archive, string archiveToVerifyAgainst)
         {
             ResetScratch();
-            using (Stream stream = File.OpenWrite(Path.Combine(SCRATCH2_FILES_PATH, archive)))
-            {
-                using (var writer = WriterFactory.Open(stream, type, new WriterOptions(compressionType)
-                                                               {
-                                                                   LeaveStreamOpen = true
-                                                               }))
+            using (Stream stream = File.OpenWrite(Path.Combine(SCRATCH2_FILES_PATH, archive))) {
+                WriterOptions writerOptions = new WriterOptions(compressionType) 
+                {
+                    LeaveStreamOpen = true,
+                };
+                
+                writerOptions.ArchiveEncoding.Default = Encoding.GetEncoding(866);
+                
+                using (var writer = WriterFactory.Open(stream, type, writerOptions))
                 {
                     writer.WriteAll(ORIGINAL_FILES_PATH, "*", SearchOption.AllDirectories);
                 }
@@ -32,13 +36,19 @@ namespace SharpCompress.Test
             CompareArchivesByPath(Path.Combine(SCRATCH2_FILES_PATH, archive),
                Path.Combine(TEST_ARCHIVES_PATH, archiveToVerifyAgainst));
 
-            using (Stream stream = File.OpenRead(Path.Combine(SCRATCH2_FILES_PATH, archive)))
-            using (var reader = ReaderFactory.Open(new NonDisposingStream(stream)))
+            using (Stream stream = File.OpenRead(Path.Combine(SCRATCH2_FILES_PATH, archive))) 
             {
-                reader.WriteAllToDirectory(SCRATCH_FILES_PATH, new ExtractionOptions()
+                ReaderOptions readerOptions = new ReaderOptions();
+                
+                readerOptions.ArchiveEncoding.Default = Encoding.GetEncoding(866);
+                
+                using (var reader = ReaderFactory.Open(new NonDisposingStream(stream), readerOptions))
                 {
-                    ExtractFullPath = true
-                });
+                    reader.WriteAllToDirectory(SCRATCH_FILES_PATH, new ExtractionOptions()
+                    {
+                        ExtractFullPath = true
+                    });
+                }
             }
             VerifyFiles();
         }
