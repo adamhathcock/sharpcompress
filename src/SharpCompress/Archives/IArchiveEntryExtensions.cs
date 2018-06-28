@@ -1,7 +1,6 @@
 ﻿using System.IO;
 using SharpCompress.Common;
 using SharpCompress.IO;
-using SharpCompress.Readers;
 
 namespace SharpCompress.Archives
 {
@@ -46,50 +45,8 @@ namespace SharpCompress.Archives
         public static void WriteToDirectory(this IArchiveEntry entry, string destinationDirectory,
                                             ExtractionOptions options = null)
         {
-            string destinationFileName;
-            string file = Path.GetFileName(entry.Key);
-            string fullDestinationDirectoryPath = Path.GetFullPath(destinationDirectory);
-
-            options = options ?? new ExtractionOptions()
-                                 {
-                                     Overwrite = true
-                                 };
-
-
-            if (options.ExtractFullPath)
-            {
-                string folder = Path.GetDirectoryName(entry.Key);
-                string destdir = Path.GetFullPath(
-                                    Path.Combine(fullDestinationDirectoryPath, folder)
-                                 );
-
-                if (!Directory.Exists(destdir))
-                {
-                    if (!destdir.StartsWith(fullDestinationDirectoryPath))
-                    {
-                        throw new ExtractionException("Entry is trying to create a directory outside of the destination directory.");
-                    }
-
-                    Directory.CreateDirectory(destdir);
-                }
-                destinationFileName = Path.Combine(destdir, file);
-            }
-            else
-            {
-                destinationFileName = Path.Combine(fullDestinationDirectoryPath, file);
-            }
-
-            if (!entry.IsDirectory)
-            {
-                destinationFileName = Path.GetFullPath(destinationFileName);
-
-                if (!destinationFileName.StartsWith(fullDestinationDirectoryPath))
-                {
-                    throw new ExtractionException("Entry is trying to write a file outside of the destination directory.");
-                }
-
-                entry.WriteToFile(destinationFileName, options);
-            }
+            ExtractionMethods.WriteEntryToDirectory(entry, destinationDirectory, options,
+                                              entry.WriteToFile);
         }
 
         /// <summary>
@@ -98,23 +55,15 @@ namespace SharpCompress.Archives
         public static void WriteToFile(this IArchiveEntry entry, string destinationFileName,
                                        ExtractionOptions options = null)
         {
-            FileMode fm = FileMode.Create;
-            options = options ?? new ExtractionOptions()
-            {
-                Overwrite = true
-            };
-
-
-            if (!options.Overwrite)
-            {
-                fm = FileMode.CreateNew;
-            }
-            using (FileStream fs = File.Open(destinationFileName, fm))
-            {
-                entry.WriteTo(fs);
-            }
-
-            entry.PreserveExtractionOptions(destinationFileName, options);
+            
+            ExtractionMethods.WriteEntryToFile(entry, destinationFileName, options,
+                                               (x, fm) =>
+                                               {
+                                                   using (FileStream fs = File.Open(destinationFileName, fm))
+                                                   {
+                                                       entry.WriteTo(fs);
+                                                   }
+                                               });
         }
 #endif
     }

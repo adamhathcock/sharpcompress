@@ -1,6 +1,6 @@
 ﻿#if !NO_FILE
 using System.Linq;
-using SharpCompress.Readers;
+using SharpCompress.Common;
 
 #endif
 
