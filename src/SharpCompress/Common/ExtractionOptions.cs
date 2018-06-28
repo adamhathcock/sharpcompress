@@ -1,4 +1,4 @@
-﻿namespace SharpCompress.Readers
+﻿namespace SharpCompress.Common
 {
     public class ExtractionOptions
     {
