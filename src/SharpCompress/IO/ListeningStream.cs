@@ -47,6 +47,19 @@ namespace SharpCompress.IO
             return read;
         }
 
+        public override int ReadByte()
+        {
+            int value = Stream.ReadByte();
+            if (value == -1)
+            {
+                return -1;
+            }
+
+            ++currentEntryTotalReadBytes;
+            listener.FireCompressedBytesRead(currentEntryTotalReadBytes, currentEntryTotalReadBytes);
+            return value;
+        }
+
         public override long Seek(long offset, SeekOrigin origin)
         {
             return Stream.Seek(offset, origin);
@@ -60,6 +73,11 @@ namespace SharpCompress.IO
         public override void Write(byte[] buffer, int offset, int count)
         {
             Stream.Write(buffer, offset, count);
+        }
+
+        public override void WriteByte(byte value)
+        {
+            Stream.WriteByte(value);
         }
     }
 }

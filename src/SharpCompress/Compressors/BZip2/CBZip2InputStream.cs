@@ -1077,6 +1077,10 @@ namespace SharpCompress.Compressors.BZip2
         {
         }
 
+        public override void WriteByte(byte value)
+        {
+        }
+
         public override bool CanRead => true;
 
         public override bool CanSeek => false;

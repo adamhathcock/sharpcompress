@@ -270,6 +270,15 @@ namespace SharpCompress.Compressors.Deflate
             return _baseStream.Read(buffer, offset, count);
         }
 
+        public override int ReadByte()
+        {
+            if (_disposed)
+            {
+                throw new ObjectDisposedException("ZlibStream");
+            }
+            return _baseStream.ReadByte();
+        }
+
         /// <summary>
         /// Calling this method always throws a <see cref="NotImplementedException"/>.
         /// </summary>
@@ -319,6 +328,15 @@ namespace SharpCompress.Compressors.Deflate
                 throw new ObjectDisposedException("ZlibStream");
             }
             _baseStream.Write(buffer, offset, count);
+        }
+
+        public override void WriteByte(byte value)
+        {
+            if (_disposed)
+            {
+                throw new ObjectDisposedException("ZlibStream");
+            }
+            _baseStream.WriteByte(value);
         }
 
         #endregion System.IO.Stream methods

@@ -47,6 +47,12 @@ namespace SharpCompress.Crypto
             hash = CalculateCrc(table, hash, buffer, offset, count);
         }
 
+        public override void WriteByte(byte value)
+        {
+            stream.WriteByte(value);
+            hash = CalculateCrc(table, hash, value);
+        }
+
         public override bool CanRead => stream.CanRead;
         public override bool CanSeek => false;
         public override bool CanWrite => stream.CanWrite;
@@ -98,9 +104,16 @@ namespace SharpCompress.Crypto
             unchecked
             {
                 for (int i = offset, end = offset + count; i < end; i++)
-                    crc = (crc >> 8) ^ table[(crc ^ buffer[i]) & 0xFF];
+                {
+                    crc = CalculateCrc(table, crc, buffer[i]);
+                }
             }
             return crc;
+        }
+
+        private static uint CalculateCrc(uint[] table, uint crc, byte b)
+        {
+            return (crc >> 8) ^ table[(crc ^ b) & 0xFF];
         }
     }
 }

@@ -56,7 +56,7 @@ namespace SharpCompress.Common
         public abstract bool IsEncrypted { get; }
 
         /// <summary>
-        /// Entry is password protected and encrypted and cannot be extracted.
+        /// Entry is directory.
         /// </summary>
         public abstract bool IsDirectory { get; }
 

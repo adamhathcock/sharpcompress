@@ -66,6 +66,16 @@ namespace SharpCompress.Common
             return read;
         }
 
+        public override int ReadByte()
+        {
+            int value = _stream.ReadByte();
+            if (value == -1)
+            {
+                _completed = true;
+            }
+            return value;
+        }
+
         public override long Seek(long offset, SeekOrigin origin)
         {
             throw new NotSupportedException();

@@ -282,6 +282,15 @@ namespace SharpCompress.Compressors.Deflate
             return _baseStream.Read(buffer, offset, count);
         }
 
+        public override int ReadByte()
+        {
+            if (_disposed)
+            {
+                throw new ObjectDisposedException("DeflateStream");
+            }
+            return _baseStream.ReadByte();
+        }
+
         /// <summary>
         /// Calling this method always throws a <see cref="NotImplementedException"/>.
         /// </summary>
@@ -338,6 +347,15 @@ namespace SharpCompress.Compressors.Deflate
                 throw new ObjectDisposedException("DeflateStream");
             }
             _baseStream.Write(buffer, offset, count);
+        }
+
+        public override void WriteByte(byte value)
+        {
+            if (_disposed)
+            {
+                throw new ObjectDisposedException("DeflateStream");
+            }
+            _baseStream.WriteByte(value);
         }
 
         #endregion
