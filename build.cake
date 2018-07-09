@@ -49,7 +49,7 @@ Task("Test")
         var settings = new DotNetCoreTestSettings
         {
             Configuration = "Release",
-            Framework = "netcoreapp2.0"
+            Framework = "netcoreapp2.1"
         };
         DotNetCoreTest(file.ToString(), settings);
     }
