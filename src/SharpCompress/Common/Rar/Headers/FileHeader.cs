@@ -104,24 +104,27 @@ namespace SharpCompress.Common.Rar.Headers
                 throw new InvalidFormatException("rar5 header size / extra size inconsistency");
             }
 
+            isEncryptedRar5 = false;
+
             while (RemainingHeaderBytes(reader) > 0) {
                 var size = reader.ReadRarVIntUInt16();
                 int n = RemainingHeaderBytes(reader);
                 var type = reader.ReadRarVIntUInt16();
                 switch (type) {
-//TODO
-//                    case 1: // file encryption
-//                        {
-//                            var version = reader.ReadRarVIntByte();
-//                            if (version != 0) throw new InvalidFormatException("unknown encryption algorithm "+ version);
-//
-//                        }
-//                        break;
-//                    case 2: // file hash
-//                        {
-//
-//                        }
-//                        break;
+                    //TODO
+                    case 1: // file encryption
+                        {
+                            isEncryptedRar5 = true;
+
+                            //var version = reader.ReadRarVIntByte();
+                            //if (version != 0) throw new InvalidFormatException("unknown encryption algorithm " + version);
+                                                    }
+                        break;
+                    //                    case 2: // file hash
+                    //                        {
+                    //
+                    //                        }
+                    //                        break;
                     case 3: // file time
                         {
                             ushort flags = reader.ReadRarVIntUInt16();
@@ -435,8 +438,8 @@ namespace SharpCompress.Common.Rar.Headers
 
         public bool IsDirectory => HasFlag(IsRar5 ? FileFlagsV5.DIRECTORY : FileFlagsV4.DIRECTORY);
 
-//!!! TODO rar5
-        public bool IsEncrypted => HasFlag(FileFlagsV4.PASSWORD);
+        private bool isEncryptedRar5 = false;
+        public bool IsEncrypted => IsRar5 ? isEncryptedRar5: HasFlag(FileFlagsV4.PASSWORD);
         
         internal DateTime? FileLastModifiedTime { get; private set; }
 
