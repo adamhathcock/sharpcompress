@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading;
 using SharpCompress.Readers;
 using Xunit;
@@ -203,13 +204,16 @@ namespace SharpCompress.Test
             Assert.Equal(fi1.Attributes, fi2.Attributes);
         }
 
-        protected void CompareArchivesByPath(string file1, string file2)
-        {
+        protected void CompareArchivesByPath(string file1, string file2) {
+            ReaderOptions readerOptions = new ReaderOptions();
+            
+            readerOptions.ArchiveEncoding.Default = Encoding.GetEncoding(866);
+            
             //don't compare the order.  OS X reads files from the file system in a different order therefore makes the archive ordering different
             var archive1Entries = new List<string>();
             var archive2Entries = new List<string>();
-            using (var archive1 = ReaderFactory.Open(File.OpenRead(file1)))
-            using (var archive2 = ReaderFactory.Open(File.OpenRead(file2)))
+            using (var archive1 = ReaderFactory.Open(File.OpenRead(file1), readerOptions))
+            using (var archive2 = ReaderFactory.Open(File.OpenRead(file2), readerOptions))
             {
                 while (archive1.MoveToNextEntry())
                 {

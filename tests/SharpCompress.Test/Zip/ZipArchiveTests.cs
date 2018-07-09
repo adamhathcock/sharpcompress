@@ -7,6 +7,7 @@ using SharpCompress.Archives.Zip;
 using SharpCompress.Common;
 using SharpCompress.Readers;
 using SharpCompress.Writers;
+using SharpCompress.Writers.Zip;
 using Xunit;
 
 namespace SharpCompress.Test.Zip
@@ -162,7 +163,11 @@ namespace SharpCompress.Test.Zip
             {
                 var entry = archive.Entries.Single(x => x.Key.EndsWith("jpg"));
                 archive.RemoveEntry(entry);
-                archive.SaveTo(scratchPath, CompressionType.Deflate);
+
+                WriterOptions writerOptions = new ZipWriterOptions(CompressionType.Deflate);
+                writerOptions.ArchiveEncoding.Default = Encoding.GetEncoding(866);
+                
+                archive.SaveTo(scratchPath, writerOptions);
             }
             CompareArchivesByPath(modified, scratchPath);
         }
@@ -179,7 +184,11 @@ namespace SharpCompress.Test.Zip
             using (var archive = ZipArchive.Open(unmodified))
             {
                 archive.AddEntry("jpg\\test.jpg", jpg);
-                archive.SaveTo(scratchPath, CompressionType.Deflate);
+
+                WriterOptions writerOptions = new ZipWriterOptions(CompressionType.Deflate);
+                writerOptions.ArchiveEncoding.Default = Encoding.GetEncoding(866);
+                
+                archive.SaveTo(scratchPath, writerOptions);
             }
             CompareArchivesByPath(modified, scratchPath);
         }
@@ -276,7 +285,11 @@ namespace SharpCompress.Test.Zip
             using (var archive = ZipArchive.Create())
             {
                 archive.AddAllFromDirectory(SCRATCH_FILES_PATH);
-                archive.SaveTo(scratchPath, CompressionType.Deflate);
+                
+                WriterOptions writerOptions = new ZipWriterOptions(CompressionType.Deflate);
+                writerOptions.ArchiveEncoding.Default = Encoding.GetEncoding(866);
+                
+                archive.SaveTo(scratchPath, writerOptions);
             }
             CompareArchivesByPath(unmodified, scratchPath);
             Directory.Delete(SCRATCH_FILES_PATH, true);

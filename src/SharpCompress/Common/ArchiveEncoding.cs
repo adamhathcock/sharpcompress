@@ -28,8 +28,13 @@ namespace SharpCompress.Common
 
         public ArchiveEncoding()
         {
-            Default = Encoding.UTF8;
-            Password = Encoding.UTF8;
+#if NETSTANDARD1_0
+            Default = Encoding.GetEncoding("cp437");
+            Password = Encoding.GetEncoding("cp437");
+#else    
+            Default = Encoding.GetEncoding(437);
+            Password = Encoding.GetEncoding(437);
+#endif            
         }
 
 #if NETSTANDARD1_3 || NETSTANDARD2_0
@@ -44,24 +49,14 @@ namespace SharpCompress.Common
             return Decode(bytes, 0, bytes.Length);
         }
 
-        public string Decode437(byte[] bytes)
-        {
-#if NETSTANDARD1_0
-            return Decode(bytes, 0, bytes.Length);
-#else
-            //allow forced and custom to override this.
-            if (CustomDecoder != null || Forced != null)
-            {
-                return Decode(bytes, 0, bytes.Length);
-            }
-            var extendedAsciiEncoding = Encoding.GetEncoding(437);
-            return extendedAsciiEncoding.GetString(bytes, 0, bytes.Length);
-#endif
-        }
-
         public string Decode(byte[] bytes, int start, int length)
         {
             return GetDecoder().Invoke(bytes, start, length);
+        }
+
+        public string DecodeUTF8(byte[] bytes)
+        {
+            return Encoding.UTF8.GetString(bytes, 0, bytes.Length);
         }
 
         public byte[] Encode(string str)
