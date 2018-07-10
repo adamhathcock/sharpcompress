@@ -4,7 +4,7 @@ using Xunit;
 
 namespace SharpCompress.Test.Streams
 {
-    public class StreamTests
+    public class LzmaStreamTests
     {
         [Fact]
         public void TestLzma2Decompress1Byte()
