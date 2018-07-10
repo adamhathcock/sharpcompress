@@ -39,6 +39,12 @@ namespace SharpCompress.Test
 
         public void Dispose()
         {
+            // WARNING: This garbage collection is needed to reclaim leaked file handles
+            // (likely due to improperly handled IDisposables). Without it, The following
+            // delete fails because files are still is use. This GC should be removed once
+            // all the files pass without it.
+            GC.Collect(2, GCCollectionMode.Forced, true, false);
+
             Directory.Delete(SCRATCH_BASE_PATH, true);
         }
 
