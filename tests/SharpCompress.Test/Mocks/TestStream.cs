@@ -1,6 +1,6 @@
 ﻿using System.IO;
 
-namespace SharpCompress.Test
+namespace SharpCompress.Test.Mocks
 {
    public class TestStream : Stream
    {

@@ -4,6 +4,7 @@ using SharpCompress.Common;
 using SharpCompress.IO;
 using SharpCompress.Readers;
 using SharpCompress.Readers.Zip;
+using SharpCompress.Test.Mocks;
 using SharpCompress.Writers;
 using Xunit;
 

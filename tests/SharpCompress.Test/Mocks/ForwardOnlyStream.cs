@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 
-namespace SharpCompress.Test
+namespace SharpCompress.Test.Mocks
 {
     public class ForwardOnlyStream : Stream
     {

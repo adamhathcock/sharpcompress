@@ -3,6 +3,7 @@ using System.IO;
 using SharpCompress.Common;
 using SharpCompress.Readers;
 using SharpCompress.Readers.Tar;
+using SharpCompress.Test.Mocks;
 using Xunit;
 
 namespace SharpCompress.Test.Tar
