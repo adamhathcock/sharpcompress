@@ -17,7 +17,6 @@ namespace SharpCompress.Test.GZip
         [Fact]
         public void GZip_Writer_Generic()
         {
-            ResetScratch();
             using (Stream stream = File.Open(Path.Combine(SCRATCH_FILES_PATH, "Tar.tar.gz"), FileMode.OpenOrCreate, FileAccess.Write))
             using (var writer = WriterFactory.Open(stream, ArchiveType.GZip, CompressionType.GZip))
             {
@@ -30,7 +29,6 @@ namespace SharpCompress.Test.GZip
         [Fact]
         public void GZip_Writer()
         {
-            ResetScratch();
             using (Stream stream = File.Open(Path.Combine(SCRATCH_FILES_PATH, "Tar.tar.gz"), FileMode.OpenOrCreate, FileAccess.Write))
             using (var writer = new GZipWriter(stream))
             {
@@ -45,7 +43,6 @@ namespace SharpCompress.Test.GZip
         {
             Assert.Throws<InvalidFormatException>(() =>
                                                   {
-                            ResetScratch();
                             using (Stream stream = File.OpenWrite(Path.Combine(SCRATCH_FILES_PATH, "Tar.tar.gz")))
                             using (var writer = WriterFactory.Open(stream, ArchiveType.GZip, CompressionType.BZip2))
                             {

@@ -19,7 +19,6 @@ namespace SharpCompress.Test.Zip
         [Fact]
         public void Issue_269_Double_Skip()
         {
-            ResetScratch();
             var path = Path.Combine(TEST_ARCHIVES_PATH, "PrePostHeaders.zip");
             using (Stream stream = new ForwardOnlyStream(File.OpenRead(path)))
             using (IReader reader = ReaderFactory.Open(stream))
@@ -77,7 +76,6 @@ namespace SharpCompress.Test.Zip
             using (Stream stream = new ForwardOnlyStream(File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.dd.zip"))))
             using (IReader reader = ReaderFactory.Open(stream))
             {
-                ResetScratch();
                 int x = 0;
                 while (reader.MoveToNextEntry())
                 {
@@ -144,7 +142,6 @@ namespace SharpCompress.Test.Zip
         [Fact]
         public void Zip_BZip2_PkwareEncryption_Read()
         {
-            ResetScratch();
             using (Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Zip.bzip2.pkware.zip")))
             using (var reader = ZipReader.Open(stream, new ReaderOptions()
             {
@@ -170,7 +167,6 @@ namespace SharpCompress.Test.Zip
         [Fact]
         public void Zip_Reader_Disposal_Test()
         {
-            ResetScratch();
             using (TestStream stream = new TestStream(File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.dd.zip"))))
             {
                 using (var reader = ReaderFactory.Open(stream))
@@ -195,7 +191,6 @@ namespace SharpCompress.Test.Zip
         [Fact]
         public void Zip_Reader_Disposal_Test2()
         {
-            ResetScratch();
             using (TestStream stream = new TestStream(File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.dd.zip"))))
             {
                 var reader = ReaderFactory.Open(stream);
@@ -220,7 +215,6 @@ namespace SharpCompress.Test.Zip
         {
             Assert.Throws<NotSupportedException>(() =>
                                             {
-                                                ResetScratch();
                                                 using (
                                                     Stream stream =
                                                         File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH,
@@ -251,7 +245,6 @@ namespace SharpCompress.Test.Zip
         [Fact]
         public void Zip_Deflate_WinzipAES_Read()
         {
-            ResetScratch();
             using (Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.WinzipAES.zip")))
             using (var reader = ZipReader.Open(stream, new ReaderOptions()
             {
@@ -283,7 +276,6 @@ namespace SharpCompress.Test.Zip
         [Fact]
         public void TestSharpCompressWithEmptyStream()
         {
-            ResetScratch();
 
             MemoryStream stream = new NonSeekableMemoryStream();
 

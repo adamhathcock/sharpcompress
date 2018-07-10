@@ -48,7 +48,6 @@ namespace SharpCompress.Test.Tar
         {
             string archive = "Tar_VeryLongFilepathReadback.tar";
 
-            ResetScratch();
 
             // create a very long filename
             string longFilename = "";
@@ -103,7 +102,6 @@ namespace SharpCompress.Test.Tar
             string scratchPath = Path.Combine(SCRATCH_FILES_PATH, "Tar.tar");
             string unmodified = Path.Combine(TEST_ARCHIVES_PATH, "Tar.noEmptyDirs.tar");
 
-            ResetScratch();
             using (var archive = TarArchive.Create())
             {
                 archive.AddAllFromDirectory(ORIGINAL_FILES_PATH);
@@ -119,7 +117,6 @@ namespace SharpCompress.Test.Tar
             string unmodified = Path.Combine(TEST_ARCHIVES_PATH, "Tar.mod.tar");
             string modified = Path.Combine(TEST_ARCHIVES_PATH, "Tar.noEmptyDirs.tar");
 
-            ResetScratch();
             using (var archive = TarArchive.Open(unmodified))
             {
                 archive.AddEntry("jpg\\test.jpg", jpg);
@@ -135,7 +132,6 @@ namespace SharpCompress.Test.Tar
             string modified = Path.Combine(TEST_ARCHIVES_PATH, "Tar.mod.tar");
             string unmodified = Path.Combine(TEST_ARCHIVES_PATH, "Tar.noEmptyDirs.tar");
 
-            ResetScratch();
             using (var archive = TarArchive.Open(unmodified))
             {
                 var entry = archive.Entries.Single(x => x.Key.EndsWith("jpg"));

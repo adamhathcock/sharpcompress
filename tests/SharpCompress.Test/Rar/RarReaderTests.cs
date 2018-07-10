@@ -33,7 +33,6 @@ namespace SharpCompress.Test.Rar
 
         private void DoRar_Multi_Reader(string[] archives)
         {
-            ResetScratch();
             using (var reader = RarReader.Open(archives.Select(s => Path.Combine(TEST_ARCHIVES_PATH, s))
                 .Select(p => File.OpenRead(p))))
             {
@@ -64,7 +63,6 @@ namespace SharpCompress.Test.Rar
         {
             Assert.Throws<InvalidFormatException>(() =>
                                                   {
-                                                      ResetScratch();
                                                       using (var reader = RarReader.Open(archives.Select(s => Path.Combine(TEST_ARCHIVES_PATH, s))
                                                                                                      .Select(p => File.OpenRead(p)),
                                                                                          new ReaderOptions()
@@ -110,7 +108,6 @@ namespace SharpCompress.Test.Rar
 
         private void DoRar_Multi_Reader_Delete_Files(string[] archives)
         {
-            ResetScratch();
 
             foreach (var file in archives)
             {
@@ -202,7 +199,6 @@ namespace SharpCompress.Test.Rar
 
         private void ReadRar(string testArchive, string password)
         {
-            ResetScratch();
             using (Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, testArchive)))
             using (var reader = RarReader.Open(stream, new ReaderOptions()
             {
@@ -237,7 +233,6 @@ namespace SharpCompress.Test.Rar
 
         private void DoRar_Entry_Stream(string filename)
         {
-            ResetScratch();
             using (Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, filename)))
             using (var reader = RarReader.Open(stream))
             {
@@ -271,7 +266,6 @@ namespace SharpCompress.Test.Rar
         [Fact]
         public void Rar_Reader_Audio_program()
         {
-            ResetScratch();
             using (var stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Rar.Audio_program.rar")))
             using (var reader = RarReader.Open(stream, new ReaderOptions()
             {
@@ -295,7 +289,6 @@ namespace SharpCompress.Test.Rar
         [Fact]
         public void Rar_Jpg_Reader()
         {
-            ResetScratch();
             using (var stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Rar.jpeg.jpg")))
             using (var reader = RarReader.Open(stream, new ReaderOptions()
             {
@@ -339,7 +332,6 @@ namespace SharpCompress.Test.Rar
 
         private void DoRar_Solid_Skip_Reader(string filename)
         {
-            ResetScratch();
             using (var stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, filename)))
             using (var reader = RarReader.Open(stream, new ReaderOptions()
             {
@@ -373,7 +365,6 @@ namespace SharpCompress.Test.Rar
 
         private void DoRar_Reader_Skip(string filename)
         {
-            ResetScratch();
             using (var stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, filename)))
             using (var reader = RarReader.Open(stream, new ReaderOptions()
             {
