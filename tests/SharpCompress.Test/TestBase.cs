@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Threading;
 using SharpCompress.Readers;
 using Xunit;
 
@@ -11,15 +10,15 @@ using Xunit;
 
 namespace SharpCompress.Test
 {
-    public class TestBase
+    public class TestBase : IDisposable
     {
         private string SOLUTION_BASE_PATH;
         protected string TEST_ARCHIVES_PATH;
         protected string ORIGINAL_FILES_PATH;
         protected string MISC_TEST_FILES_PATH;
+        private string SCRATCH_BASE_PATH;
         public string SCRATCH_FILES_PATH;
         protected string SCRATCH2_FILES_PATH;
-       
 
         public TestBase()
         {
@@ -29,23 +28,18 @@ namespace SharpCompress.Test
             TEST_ARCHIVES_PATH = Path.Combine(SOLUTION_BASE_PATH, "TestArchives", "Archives");
             ORIGINAL_FILES_PATH = Path.Combine(SOLUTION_BASE_PATH, "TestArchives", "Original");
             MISC_TEST_FILES_PATH = Path.Combine(SOLUTION_BASE_PATH, "TestArchives", "MiscTest");
-            SCRATCH_FILES_PATH = Path.Combine(SOLUTION_BASE_PATH, "TestArchives", "Scratch");
-            SCRATCH2_FILES_PATH = Path.Combine(SOLUTION_BASE_PATH, "TestArchives", "Scratch2");
-        }
-        
-        public void ResetScratch()
-        {
-            if (Directory.Exists(SCRATCH_FILES_PATH))
-            {
-                Directory.Delete(SCRATCH_FILES_PATH, true);
-            }
-            Directory.CreateDirectory(SCRATCH_FILES_PATH);
-            if (Directory.Exists(SCRATCH2_FILES_PATH))
-            {
-                Directory.Delete(SCRATCH2_FILES_PATH, true);
-            }
-            Directory.CreateDirectory(SCRATCH2_FILES_PATH);
 
+            SCRATCH_BASE_PATH = Path.Combine(SOLUTION_BASE_PATH, "TestArchives", Guid.NewGuid().ToString());
+            SCRATCH_FILES_PATH = Path.Combine(SCRATCH_BASE_PATH, "Scratch");
+            SCRATCH2_FILES_PATH = Path.Combine(SCRATCH_BASE_PATH, "Scratch2");
+
+            Directory.CreateDirectory(SCRATCH_FILES_PATH);
+            Directory.CreateDirectory(SCRATCH2_FILES_PATH);
+        }
+
+        public void Dispose()
+        {
+            Directory.Delete(SCRATCH_BASE_PATH, true);
         }
 
         public void VerifyFiles()

@@ -17,7 +17,6 @@ namespace SharpCompress.Test.GZip
         [Fact]
         public void GZip_Archive_Generic()
         {
-            ResetScratch();
             using (Stream stream = File.Open(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.gz"), FileMode.Open))
             using (var archive = ArchiveFactory.Open(stream))
             {
@@ -31,7 +30,6 @@ namespace SharpCompress.Test.GZip
         [Fact]
         public void GZip_Archive()
         {
-            ResetScratch();
             using (Stream stream = File.Open(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.gz"), FileMode.Open))
             using (var archive = GZipArchive.Open(stream))
             {
@@ -47,7 +45,6 @@ namespace SharpCompress.Test.GZip
         public void GZip_Archive_NoAdd()
         {
             string jpg = Path.Combine(ORIGINAL_FILES_PATH, "jpg", "test.jpg");
-            ResetScratch();
             using (Stream stream = File.Open(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.gz"), FileMode.Open))
             using (var archive = GZipArchive.Open(stream))
             {
@@ -60,7 +57,6 @@ namespace SharpCompress.Test.GZip
         [Fact]
         public void GZip_Archive_Multiple_Reads()
         {
-            ResetScratch();
             var inputStream = new MemoryStream();
             using (var fileStream = File.Open(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.gz"), FileMode.Open))
             {

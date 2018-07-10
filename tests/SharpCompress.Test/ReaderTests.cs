@@ -33,7 +33,6 @@ namespace SharpCompress.Test
 
         public static void UseReader(TestBase test, IReader reader, CompressionType expectedCompression)
         {
-            test.ResetScratch();
             while (reader.MoveToNextEntry())
             {
                 if (!reader.Entry.IsDirectory)

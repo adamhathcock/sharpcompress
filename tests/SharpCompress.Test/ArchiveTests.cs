@@ -23,7 +23,6 @@ namespace SharpCompress.Test
         {
             foreach (var path in testArchives)
             {
-                ResetScratch();
                 using (var stream = new NonDisposingStream(File.OpenRead(path), true))
                 using (var archive = ArchiveFactory.Open(stream))
                 {
@@ -69,7 +68,6 @@ namespace SharpCompress.Test
         {
             foreach (var path in testArchives)
             {
-                ResetScratch();
                 using (var stream = new NonDisposingStream(File.OpenRead(path), true))
                 using (var archive = ArchiveFactory.Open(stream, readerOptions))
                 {
@@ -113,7 +111,6 @@ namespace SharpCompress.Test
         {
             foreach (var path in testArchives)
             {
-                ResetScratch();
                 using (var archive = ArchiveFactory.Open(path, readerOptions))
                 {
                     //archive.EntryExtractionBegin += archive_EntryExtractionBegin;
@@ -174,7 +171,6 @@ namespace SharpCompress.Test
         {
             foreach (var path in testArchives)
             {
-                ResetScratch();
                 using (var archive = ArchiveFactory.Open(path))
                 {
                     totalSize = archive.TotalUncompressSize;

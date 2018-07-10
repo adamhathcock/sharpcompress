@@ -158,7 +158,6 @@ namespace SharpCompress.Test.Zip
             string unmodified = Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.noEmptyDirs.zip");
             string modified = Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.mod.zip");
 
-            ResetScratch();
             using (var archive = ZipArchive.Open(unmodified))
             {
                 var entry = archive.Entries.Single(x => x.Key.EndsWith("jpg"));
@@ -180,7 +179,6 @@ namespace SharpCompress.Test.Zip
             string unmodified = Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.mod.zip");
             string modified = Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.mod2.zip");
 
-            ResetScratch();
             using (var archive = ZipArchive.Open(unmodified))
             {
                 archive.AddEntry("jpg\\test.jpg", jpg);
@@ -199,7 +197,6 @@ namespace SharpCompress.Test.Zip
             string scratchPath1 = Path.Combine(SCRATCH_FILES_PATH, "a.zip");
             string scratchPath2 = Path.Combine(SCRATCH_FILES_PATH, "b.zip");
 
-            ResetScratch();
             using (var arc = ZipArchive.Create())
             {
                 string str = "test.txt";
@@ -215,7 +212,6 @@ namespace SharpCompress.Test.Zip
         [Fact]
         public void Zip_Removal_Poly()
         {
-            ResetScratch();
 
             string scratchPath = Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.noEmptyDirs.zip");
 
@@ -263,7 +259,6 @@ namespace SharpCompress.Test.Zip
         [Fact]
         public void Zip_Create_New()
         {
-            ResetScratch();
             foreach (var file in Directory.EnumerateFiles(ORIGINAL_FILES_PATH, "*.*", SearchOption.AllDirectories))
             {
                 var newFileName = file.Substring(ORIGINAL_FILES_PATH.Length);
@@ -298,7 +293,6 @@ namespace SharpCompress.Test.Zip
         [Fact]
         public void Zip_Create_New_Add_Remove()
         {
-            ResetScratch();
             foreach (var file in Directory.EnumerateFiles(ORIGINAL_FILES_PATH, "*.*", SearchOption.AllDirectories))
             {
                 var newFileName = file.Substring(ORIGINAL_FILES_PATH.Length);
@@ -328,7 +322,6 @@ namespace SharpCompress.Test.Zip
         [Fact]
         public void Zip_Deflate_WinzipAES_Read()
         {
-            ResetScratch();
             using (var reader = ZipArchive.Open(Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.WinzipAES.zip"), new ReaderOptions()
             {
                 Password = "test"
@@ -349,7 +342,6 @@ namespace SharpCompress.Test.Zip
         [Fact]
         public void Zip_Deflate_WinzipAES_MultiOpenEntryStream()
         {
-            ResetScratch();
             using (var reader = ZipArchive.Open(Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.WinzipAES2.zip"), new ReaderOptions()
             {
                 Password = "test"
@@ -368,7 +360,6 @@ namespace SharpCompress.Test.Zip
         [Fact]
         public void Zip_BZip2_Pkware_Read()
         {
-            ResetScratch();
             using (var reader = ZipArchive.Open(Path.Combine(TEST_ARCHIVES_PATH, "Zip.bzip2.pkware.zip"), new ReaderOptions()
             {
                 Password = "test"
@@ -391,7 +382,6 @@ namespace SharpCompress.Test.Zip
         {
             string unmodified = Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.noEmptyDirs.zip");
 
-            ResetScratch();
             ZipArchive a = ZipArchive.Open(unmodified);
             int count = 0;
             foreach (var e in a.Entries)

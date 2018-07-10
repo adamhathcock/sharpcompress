@@ -48,7 +48,6 @@ namespace SharpCompress.Test.Rar
 
         private void ReadRarPassword(string testArchive, string password)
         {
-            ResetScratch();
             using (Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, testArchive)))
             using (var archive = RarArchive.Open(stream, new ReaderOptions()
             {
@@ -80,7 +79,6 @@ namespace SharpCompress.Test.Rar
 
         protected void ArchiveFileReadPassword(string archiveName, string password)
         {
-            ResetScratch();
             using (var archive = RarArchive.Open(Path.Combine(TEST_ARCHIVES_PATH, archiveName), new ReaderOptions()
             {
                 Password = password,
@@ -131,7 +129,6 @@ namespace SharpCompress.Test.Rar
 
         private void DoRar_test_invalid_exttime_ArchiveStreamRead(string filename)
         {
-            ResetScratch();
             using (var stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, filename)))
             {
                 using (var archive = ArchiveFactory.Open(stream))
@@ -151,7 +148,6 @@ namespace SharpCompress.Test.Rar
         [Fact]
         public void Rar_Jpg_ArchiveStreamRead()
         {
-            ResetScratch();
             using (var stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Rar.jpeg.jpg")))
             {
                 using (var archive = RarArchive.Open(stream, new ReaderOptions()
@@ -185,7 +181,6 @@ namespace SharpCompress.Test.Rar
 
         private void DoRar_IsSolidArchiveCheck(string filename)
         {
-            ResetScratch();
             using (var stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, filename)))
             {
                 using (var archive = RarArchive.Open(stream))
@@ -253,7 +248,6 @@ namespace SharpCompress.Test.Rar
 
         private void DoRar_Multi_ArchiveStreamRead(string[] archives)
         {
-            ResetScratch();
             using (var archive = RarArchive.Open(archives.Select(s => Path.Combine(TEST_ARCHIVES_PATH, s))
                 .Select(File.OpenRead)))
             {
@@ -305,7 +299,6 @@ namespace SharpCompress.Test.Rar
 
         private void DoRar_ArchiveFileRead_HasDirectories(string filename)
         {
-            ResetScratch();
             using (var stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, filename)))
             {
                 using (var archive = RarArchive.Open(stream))
@@ -319,7 +312,6 @@ namespace SharpCompress.Test.Rar
         [Fact]
         public void Rar_Jpg_ArchiveFileRead()
         {
-            ResetScratch();
             using (var archive = RarArchive.Open(Path.Combine(TEST_ARCHIVES_PATH, "Rar.jpeg.jpg"), new ReaderOptions()
             {
                 LookForHeader = true
