@@ -61,7 +61,7 @@ namespace SharpCompress.Test.Rar
 
         private FileStream GetReaderStream(string testArchive)
         {
-            return new FileStream(Path.Combine(TEST_ARCHIVES_PATH, testArchive), FileMode.Open);
+            return new FileStream(Path.Combine(TEST_ARCHIVES_PATH, testArchive), FileMode.Open, FileAccess.Read);
         }
     }
 }
