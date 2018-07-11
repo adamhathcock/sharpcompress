@@ -50,11 +50,6 @@ namespace SharpCompress.Test.Mocks
             return stream.Read(buffer, offset, count);
         }
 
-        public override int ReadByte()
-        {
-            return stream.ReadByte();
-        }
-
         public override long Seek(long offset, SeekOrigin origin)
         {
             throw new NotSupportedException();
