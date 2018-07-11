@@ -92,7 +92,7 @@ namespace SharpCompress.Archives
         public static IArchive Open(string filePath, ReaderOptions options = null)
         {
             filePath.CheckNotNullOrEmpty("filePath");
-            return Open(new FileInfo(filePath), options ?? new ReaderOptions());
+            return Open(new FileInfo(filePath), options);
         }
 
         /// <summary>
@@ -103,36 +103,31 @@ namespace SharpCompress.Archives
         public static IArchive Open(FileInfo fileInfo, ReaderOptions options = null)
         {
             fileInfo.CheckNotNull("fileInfo");
-            options = options ?? new ReaderOptions();
+            options = options ?? new ReaderOptions { LeaveStreamOpen = false };
             using (var stream = fileInfo.OpenRead())
             {
                 if (ZipArchive.IsZipFile(stream, null))
                 {
-                    stream.Dispose();
                     return ZipArchive.Open(fileInfo, options);
                 }
                 stream.Seek(0, SeekOrigin.Begin);
                 if (SevenZipArchive.IsSevenZipFile(stream))
                 {
-                    stream.Dispose();
                     return SevenZipArchive.Open(fileInfo, options);
                 }
                 stream.Seek(0, SeekOrigin.Begin);
                 if (GZipArchive.IsGZipFile(stream))
                 {
-                    stream.Dispose();
                     return GZipArchive.Open(fileInfo, options);
                 }
                 stream.Seek(0, SeekOrigin.Begin);
                 if (RarArchive.IsRarFile(stream, options))
                 {
-                   stream.Dispose();
                    return RarArchive.Open(fileInfo, options);
                 }
                 stream.Seek(0, SeekOrigin.Begin);
                 if (TarArchive.IsTarFile(stream))
                 {
-                    stream.Dispose();
                     return TarArchive.Open(fileInfo, options);
                 }
                 throw new InvalidOperationException("Cannot determine compressed stream type. Supported Archive Formats: Zip, GZip, Tar, Rar, 7Zip");
