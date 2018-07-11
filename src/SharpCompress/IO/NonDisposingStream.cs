@@ -15,10 +15,9 @@ namespace SharpCompress.IO
 
         protected override void Dispose(bool disposing)
         {
-            GC.SuppressFinalize(this);
             if (ThrowOnDispose)
             {
-                throw new InvalidOperationException();
+                throw new InvalidOperationException($"Attempt to dispose of a {nameof(NonDisposingStream)} when {nameof(ThrowOnDispose)} is {ThrowOnDispose}");
             }
         }
 
