@@ -28,7 +28,7 @@ namespace SharpCompress.Test
                     {
                         using (var reader = ReaderFactory.Open(testStream, new ReaderOptions { LeaveStreamOpen = leaveStreamOpen }))
                         {
-                            UseReader(this, reader, expectedCompression);
+                            UseReader(reader, expectedCompression);
                             protectedStream.ThrowOnDispose = false;
                             Assert.False(testStream.IsDisposed, "{nameof(testStream)} prematurely closed");
                         }
@@ -42,14 +42,14 @@ namespace SharpCompress.Test
             }
         }
 
-        public static void UseReader(TestBase test, IReader reader, CompressionType expectedCompression)
+        public void UseReader(IReader reader, CompressionType expectedCompression)
         {
             while (reader.MoveToNextEntry())
             {
                 if (!reader.Entry.IsDirectory)
                 {
                     Assert.Equal(reader.Entry.CompressionType, expectedCompression);
-                    reader.WriteEntryToDirectory(test.SCRATCH_FILES_PATH, new ExtractionOptions()
+                    reader.WriteEntryToDirectory(SCRATCH_FILES_PATH, new ExtractionOptions()
                     {
                         ExtractFullPath = true,
                         Overwrite = true

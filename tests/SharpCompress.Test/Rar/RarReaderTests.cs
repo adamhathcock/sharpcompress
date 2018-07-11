@@ -205,7 +205,7 @@ namespace SharpCompress.Test.Rar
                 Password = password
             }))
             {
-                UseReader(this, reader, CompressionType.Rar);
+                UseReader(reader, CompressionType.Rar);
             }
         }
 

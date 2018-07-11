@@ -10,7 +10,7 @@ using Xunit;
 
 namespace SharpCompress.Test
 {
-    public class ArchiveTests : TestBase
+    public class ArchiveTests : ReaderTests
     {
         protected void ArchiveStreamReadExtractAll(string testArchive, CompressionType compression)
         {
@@ -29,7 +29,7 @@ namespace SharpCompress.Test
                     Assert.True(archive.IsSolid);
                     using (var reader = archive.ExtractAllEntries())
                     {
-                        ReaderTests.UseReader(this, reader, compression);
+                        UseReader(reader, compression);
                     }
                     VerifyFiles();
 
