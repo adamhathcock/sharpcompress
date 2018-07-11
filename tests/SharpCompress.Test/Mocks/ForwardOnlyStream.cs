@@ -16,9 +16,15 @@ namespace SharpCompress.Test.Mocks
 
         protected override void Dispose(bool disposing)
         {
-            base.Dispose(disposing);
-            stream.Dispose();
-            IsDisposed = true;
+            if (!IsDisposed)
+            {
+                if (disposing)
+                {
+                    stream.Dispose();
+                    IsDisposed = true;
+                    base.Dispose(disposing);
+                }
+            }
         }
 
         public override bool CanRead => true;
