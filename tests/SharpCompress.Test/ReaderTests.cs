@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using System.IO;
+﻿using System.IO;
 using SharpCompress.Common;
 using SharpCompress.IO;
 using SharpCompress.Readers;
@@ -13,22 +12,12 @@ namespace SharpCompress.Test
         protected void Read(string testArchive, CompressionType expectedCompression)
         {
             testArchive = Path.Combine(TEST_ARCHIVES_PATH, testArchive);
-            Read(testArchive.AsEnumerable(), expectedCompression);
-        }
 
-        protected void Read(IEnumerable<string> testArchives, CompressionType expectedCompression)
-        {
-            foreach (var path in testArchives)
+            using (var stream = new NonDisposingStream(new ForwardOnlyStream(File.OpenRead(testArchive)), true))
+            using (var reader = ReaderFactory.Open(stream, new ReaderOptions { LeaveStreamOpen = true }))
             {
-                using (var stream = new NonDisposingStream(new ForwardOnlyStream(File.OpenRead(path)), true))
-                using (var reader = ReaderFactory.Open(stream, new ReaderOptions()
-                                                               {
-                                                                   LeaveStreamOpen = true
-                                                               }))
-                {
-                    UseReader(this, reader, expectedCompression);
-                    stream.ThrowOnDispose = false;
-                }
+                UseReader(this, reader, expectedCompression);
+                stream.ThrowOnDispose = false;
             }
         }
 
