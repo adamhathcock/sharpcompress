@@ -205,8 +205,7 @@ namespace SharpCompress.Test
         }
 
         protected void CompareArchivesByPath(string file1, string file2) {
-            ReaderOptions readerOptions = new ReaderOptions();
-            
+            ReaderOptions readerOptions = new ReaderOptions { LeaveStreamOpen = false };
             readerOptions.ArchiveEncoding.Default = Encoding.GetEncoding(866);
             
             //don't compare the order.  OS X reads files from the file system in a different order therefore makes the archive ordering different
