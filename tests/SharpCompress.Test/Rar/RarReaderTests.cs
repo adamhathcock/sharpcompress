@@ -205,20 +205,8 @@ namespace SharpCompress.Test.Rar
                 Password = password
             }))
             {
-                while (reader.MoveToNextEntry())
-                {
-                    if (!reader.Entry.IsDirectory)
-                    {
-                        Assert.Equal(CompressionType.Rar, reader.Entry.CompressionType);
-                        reader.WriteEntryToDirectory(SCRATCH_FILES_PATH, new ExtractionOptions()
-                        {
-                            ExtractFullPath = true,
-                            Overwrite = true
-                        });
-                    }
-                }
+                UseReader(this, reader, CompressionType.Rar);
             }
-            VerifyFiles();
         }
 
         [Fact]

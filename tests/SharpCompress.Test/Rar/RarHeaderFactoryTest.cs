@@ -46,7 +46,7 @@ namespace SharpCompress.Test.Rar
 
         private void ReadEncryptedFlag(string testArchive, bool isEncrypted)
         {
-            using (var stream = GetReaderStream(testArchive))
+            using (var stream = new FileStream(Path.Combine(TEST_ARCHIVES_PATH, testArchive), FileMode.Open, FileAccess.Read))
             {
                 foreach (var header in rarHeaderFactory.ReadHeaders(stream))
                 {
@@ -57,11 +57,6 @@ namespace SharpCompress.Test.Rar
                     }
                 }
             }
-        }
-
-        private FileStream GetReaderStream(string testArchive)
-        {
-            return new FileStream(Path.Combine(TEST_ARCHIVES_PATH, testArchive), FileMode.Open, FileAccess.Read);
         }
     }
 }
