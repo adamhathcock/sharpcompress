@@ -43,11 +43,6 @@ namespace SharpCompress.IO
             return Stream.Read(buffer, offset, count);
         }
 
-        public override int ReadByte()
-        {
-            return Stream.ReadByte();
-        }
-
         public override long Seek(long offset, SeekOrigin origin)
         {
             return Stream.Seek(offset, origin);
@@ -61,11 +56,6 @@ namespace SharpCompress.IO
         public override void Write(byte[] buffer, int offset, int count)
         {
             Stream.Write(buffer, offset, count);
-        }
-
-        public override void WriteByte(byte value)
-        {
-            Stream.WriteByte(value);
         }
     }
 }

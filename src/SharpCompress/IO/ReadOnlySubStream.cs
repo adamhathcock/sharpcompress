@@ -11,7 +11,7 @@ namespace SharpCompress.IO
         }
 
         public ReadOnlySubStream(Stream stream, long? origin, long bytesToRead)
-            : base(stream, false)
+            : base(stream, throwOnDispose: false)
         {
             if (origin != null)
             {

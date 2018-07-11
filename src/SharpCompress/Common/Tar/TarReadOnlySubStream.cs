@@ -1,16 +1,16 @@
-﻿using System;
+﻿using SharpCompress.IO;
+using System;
 using System.IO;
 
 namespace SharpCompress.Common.Tar
 {
-    internal class TarReadOnlySubStream : Stream
+    internal class TarReadOnlySubStream : NonDisposingStream
     {
         private bool _isDisposed;
         private long _amountRead;
 
-        public TarReadOnlySubStream(Stream stream, long bytesToRead)
+        public TarReadOnlySubStream(Stream stream, long bytesToRead) : base(stream, throwOnDispose: false)
         {
-            Stream = stream;
             BytesLeftToRead = bytesToRead;
         }
 
@@ -36,11 +36,10 @@ namespace SharpCompress.Common.Tar
                 var buffer = new byte[skipBytes];
                 Stream.ReadFully(buffer);
             }
+            base.Dispose(disposing);
         }
 
         private long BytesLeftToRead { get; set; }
-
-        public Stream Stream { get; }
 
         public override bool CanRead => true;
 
