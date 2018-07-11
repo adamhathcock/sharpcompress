@@ -15,6 +15,7 @@ namespace SharpCompress.Test
 
             Read(testArchive, expectedCompression, true);
             Read(testArchive, expectedCompression, false);
+            VerifyFiles();
         }
 
         private void Read(string testArchive, CompressionType expectedCompression, bool leaveStreamOpen)
@@ -55,7 +56,6 @@ namespace SharpCompress.Test
                     });
                 }
             }
-            test.VerifyFiles();
         }
     }
 }
