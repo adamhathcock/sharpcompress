@@ -10,7 +10,7 @@ using Xunit;
 
 namespace SharpCompress.Test
 {
-    public class ArchiveTests : TestBase
+    public class ArchiveTests : ReaderTests
     {
         protected void ArchiveStreamReadExtractAll(string testArchive, CompressionType compression)
         {
@@ -29,7 +29,7 @@ namespace SharpCompress.Test
                     Assert.True(archive.IsSolid);
                     using (var reader = archive.ExtractAllEntries())
                     {
-                        ReaderTests.UseReader(this, reader, compression);
+                        UseReader(reader, compression);
                     }
                     VerifyFiles();
 
@@ -104,116 +104,42 @@ namespace SharpCompress.Test
         protected void ArchiveFileRead(string testArchive, ReaderOptions readerOptions = null)
         {
             testArchive = Path.Combine(TEST_ARCHIVES_PATH, testArchive);
-            ArchiveFileRead(testArchive.AsEnumerable(), readerOptions);
-        }
-
-        protected void ArchiveFileRead(IEnumerable<string> testArchives, ReaderOptions readerOptions = null)
-        {
-            foreach (var path in testArchives)
+            using (var archive = ArchiveFactory.Open(testArchive, readerOptions))
             {
-                using (var archive = ArchiveFactory.Open(path, readerOptions))
+                foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
                 {
-                    //archive.EntryExtractionBegin += archive_EntryExtractionBegin;
-                    //archive.FilePartExtractionBegin += archive_FilePartExtractionBegin;
-                    //archive.CompressedBytesRead += archive_CompressedBytesRead;
-
-                    foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
-                    {
-                        entry.WriteToDirectory(SCRATCH_FILES_PATH,
-                                               new ExtractionOptions()
-                                               {
-                                                   ExtractFullPath = true,
-                                                   Overwrite = true
-                                               });
-                    }
+                    entry.WriteToDirectory(SCRATCH_FILES_PATH,
+                        new ExtractionOptions()
+                        {
+                            ExtractFullPath = true,
+                            Overwrite = true
+                        });
                 }
-                VerifyFiles();
             }
+            VerifyFiles();
         }
 
-        private void archive_CompressedBytesRead(object sender, CompressedBytesReadEventArgs e)
-        {
-            Console.WriteLine("Read Compressed File Part Bytes: {0} Percentage: {1}%",
-                e.CurrentFilePartCompressedBytesRead, CreatePercentage(e.CurrentFilePartCompressedBytesRead, partTotal));
-
-            string percentage = entryTotal.HasValue ? CreatePercentage(e.CompressedBytesRead,
-                entryTotal.Value).ToString() : "Unknown";
-            Console.WriteLine("Read Compressed File Entry Bytes: {0} Percentage: {1}%",
-                e.CompressedBytesRead, percentage);
-        }
-
-        private void archive_FilePartExtractionBegin(object sender, FilePartExtractionBeginEventArgs e)
-        {
-            partTotal = e.Size;
-            Console.WriteLine("Initializing File Part Extraction: " + e.Name);
-        }
-
-        private void archive_EntryExtractionBegin(object sender, ArchiveExtractionEventArgs<IArchiveEntry> e)
-        {
-            entryTotal = e.Item.Size;
-            Console.WriteLine("Initializing File Entry Extraction: " + e.Item.Key);
-        }
-
-        private long? entryTotal;
-        private long partTotal;
-        private long totalSize;
-
+        /// <summary>
+        /// Demonstrate the ExtractionOptions.PreserveFileTime and ExtractionOptions.PreserveAttributes extract options
+        /// </summary>
         protected void ArchiveFileReadEx(string testArchive)
         {
             testArchive = Path.Combine(TEST_ARCHIVES_PATH, testArchive);
-            ArchiveFileReadEx(testArchive.AsEnumerable());
-        }
-        
-        /// <summary>
-        /// Demonstrate the TotalUncompressSize property, and the ExtractionOptions.PreserveFileTime and ExtractionOptions.PreserveAttributes extract options
-        /// </summary>
-        protected void ArchiveFileReadEx(IEnumerable<string> testArchives)
-        {
-            foreach (var path in testArchives)
+            using (var archive = ArchiveFactory.Open(testArchive))
             {
-                using (var archive = ArchiveFactory.Open(path))
+                foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
                 {
-                    totalSize = archive.TotalUncompressSize;
-                    //archive.EntryExtractionBegin += Archive_EntryExtractionBeginEx;
-                    //archive.EntryExtractionEnd += Archive_EntryExtractionEndEx;
-                    //archive.CompressedBytesRead += Archive_CompressedBytesReadEx;
-
-                    foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
-                    {
-                        entry.WriteToDirectory(SCRATCH_FILES_PATH,
-                                               new ExtractionOptions()
-                                               {
-                                                   ExtractFullPath = true,
-                                                   Overwrite = true,
-                                                   PreserveAttributes = true,
-                                                   PreserveFileTime = true
-                                               });
-                    }
+                    entry.WriteToDirectory(SCRATCH_FILES_PATH,
+                        new ExtractionOptions()
+                        {
+                            ExtractFullPath = true,
+                            Overwrite = true,
+                            PreserveAttributes = true,
+                            PreserveFileTime = true
+                        });
                 }
-                VerifyFilesEx();
             }
-        }
-
-        private void Archive_EntryExtractionEndEx(object sender, ArchiveExtractionEventArgs<IArchiveEntry> e)
-        {
-            partTotal += e.Item.Size;
-        }
-
-        private void Archive_CompressedBytesReadEx(object sender, CompressedBytesReadEventArgs e)
-        {
-            string percentage = entryTotal.HasValue ? CreatePercentage(e.CompressedBytesRead, entryTotal.Value).ToString() : "-";
-            string tortalPercentage = CreatePercentage(partTotal + e.CompressedBytesRead, totalSize).ToString();
-            Console.WriteLine(@"Read Compressed File Progress: {0}% Total Progress {1}%", percentage, tortalPercentage);
-        }
-
-        private void Archive_EntryExtractionBeginEx(object sender, ArchiveExtractionEventArgs<IArchiveEntry> e)
-        {
-            entryTotal = e.Item.Size;
-        }
-
-        private int CreatePercentage(long n, long d)
-        {
-            return (int)(((double)n / (double)d) * 100);
+            VerifyFilesEx();
         }
     }
 }

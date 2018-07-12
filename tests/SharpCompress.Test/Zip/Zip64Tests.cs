@@ -5,6 +5,7 @@ using SharpCompress.Archives;
 using SharpCompress.Common;
 using SharpCompress.Readers;
 using SharpCompress.Readers.Zip;
+using SharpCompress.Test.Mocks;
 using SharpCompress.Writers;
 using SharpCompress.Writers.Zip;
 using Xunit;
@@ -133,7 +134,7 @@ namespace SharpCompress.Test.Zip
             var eo = new ZipWriterEntryOptions() { DeflateCompressionLevel = Compressors.Deflate.CompressionLevel.None };
 
             using (var zip = File.OpenWrite(filename))
-            using(var st = forward_only ? (Stream)new NonSeekableStream(zip) : zip)
+            using(var st = forward_only ? (Stream)new ForwardOnlyStream(zip) : zip)
             using (var zipWriter = (ZipWriter)WriterFactory.Open(st, ArchiveType.Zip, opts))
             {
 
@@ -185,39 +186,6 @@ namespace SharpCompress.Test.Zip
                     archive.Entries.Select(x => x.Size).Sum()
                 );
             }
-        }
-
-        /// <summary>
-        /// Helper to create non-seekable streams from filestream
-        /// </summary>
-        private class NonSeekableStream : Stream
-        {
-            private readonly Stream stream;
-            public NonSeekableStream(Stream s) { stream = s; }
-            public override bool CanRead => stream.CanRead;
-            public override bool CanSeek => false;
-            public override bool CanWrite => stream.CanWrite;
-            public override long Length => throw new NotImplementedException();
-            public override long Position { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-            public override void Flush() { stream.Flush(); }
-
-            public override int Read(byte[] buffer, int offset, int count) 
-            { return stream.Read(buffer, offset, count); }
-
-            public override int ReadByte()
-            { return stream.ReadByte(); }
-
-            public override long Seek(long offset, SeekOrigin origin)
-            { throw new NotImplementedException(); }
-
-            public override void SetLength(long value)
-            { throw new NotImplementedException(); }
-
-            public override void Write(byte[] buffer, int offset, int count)
-            { stream.Write(buffer, offset, count); }
-
-            public override void WriteByte(byte value)
-            { stream.WriteByte(value); }
         }
     }
 }

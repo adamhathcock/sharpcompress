@@ -1,17 +1,23 @@
-﻿using System;
-using System.IO;
+﻿using System.IO;
 
-namespace SharpCompress.Test
+namespace SharpCompress.Test.Mocks
 {
-    public class ForwardOnlyStream : Stream
+    public class TestStream : Stream
     {
         private readonly Stream stream;
 
+        public TestStream(Stream stream) : this(stream, stream.CanRead, stream.CanWrite, stream.CanSeek)
+        {
+        }
+
         public bool IsDisposed { get; private set; }
 
-        public ForwardOnlyStream(Stream stream)
+        public TestStream(Stream stream, bool read, bool write, bool seek)
         {
             this.stream = stream;
+            CanRead = read;
+            CanWrite = write;
+            CanSeek = seek;
         }
 
         protected override void Dispose(bool disposing)
@@ -21,22 +27,23 @@ namespace SharpCompress.Test
             IsDisposed = true;
         }
 
-        public override bool CanRead => true;
+        public override bool CanRead { get; }
 
-        public override bool CanSeek => false;
-        public override bool CanWrite => false;
+        public override bool CanSeek { get; }
+
+        public override bool CanWrite { get; }
 
         public override void Flush()
         {
-            throw new NotSupportedException();
+            stream.Flush();
         }
 
-        public override long Length => throw new NotSupportedException();
+        public override long Length => stream.Length;
 
         public override long Position
         {
-            get => throw new NotSupportedException();
-            set => throw new NotSupportedException();
+            get => stream.Position;
+            set => stream.Position = value;
         }
 
         public override int Read(byte[] buffer, int offset, int count)
@@ -44,24 +51,19 @@ namespace SharpCompress.Test
             return stream.Read(buffer, offset, count);
         }
 
-        public override int ReadByte()
-        {
-            return stream.ReadByte();
-        }
-
         public override long Seek(long offset, SeekOrigin origin)
         {
-            throw new NotSupportedException();
+            return stream.Seek(offset, origin);
         }
 
         public override void SetLength(long value)
         {
-            throw new NotSupportedException();
+            stream.SetLength(value);
         }
 
         public override void Write(byte[] buffer, int offset, int count)
         {
-            throw new NotSupportedException();
+            stream.Write(buffer, offset, count);
         }
     }
 }

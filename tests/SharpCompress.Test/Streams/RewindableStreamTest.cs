@@ -2,7 +2,7 @@
 using SharpCompress.IO;
 using Xunit;
 
-namespace SharpCompress.Test
+namespace SharpCompress.Test.Streams
 {
     public class RewindableStreamTest
     {

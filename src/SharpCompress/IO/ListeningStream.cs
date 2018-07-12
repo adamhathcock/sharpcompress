@@ -20,6 +20,7 @@ namespace SharpCompress.IO
             {
                 Stream.Dispose();
             }
+            base.Dispose(disposing);
         }
 
         public Stream Stream { get; }
@@ -73,11 +74,6 @@ namespace SharpCompress.IO
         public override void Write(byte[] buffer, int offset, int count)
         {
             Stream.Write(buffer, offset, count);
-        }
-
-        public override void WriteByte(byte value)
-        {
-            Stream.WriteByte(value);
         }
     }
 }

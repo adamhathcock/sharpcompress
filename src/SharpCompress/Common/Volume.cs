@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using SharpCompress.IO;
 using SharpCompress.Readers;
 
@@ -33,15 +34,18 @@ namespace SharpCompress.Common
         /// </summary>
         public virtual bool IsMultiVolume => true;
 
-        private bool _disposed;
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                _actualStream.Dispose();
+            }
+        }
 
         public void Dispose()
         {
-            if (!_disposed)
-            {
-                _actualStream.Dispose();
-                _disposed = true;
-            }
+            Dispose(true);
+            GC.SuppressFinalize(this);
         }
     }
 }

@@ -17,7 +17,7 @@ namespace SharpCompress.Test.GZip
         [Fact]
         public void GZip_Archive_Generic()
         {
-            using (Stream stream = File.Open(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.gz"), FileMode.Open))
+            using (Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.gz")))
             using (var archive = ArchiveFactory.Open(stream))
             {
                 var entry = archive.Entries.First();
@@ -30,7 +30,7 @@ namespace SharpCompress.Test.GZip
         [Fact]
         public void GZip_Archive()
         {
-            using (Stream stream = File.Open(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.gz"), FileMode.Open))
+            using (Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.gz")))
             using (var archive = GZipArchive.Open(stream))
             {
                 var entry = archive.Entries.First();
@@ -45,7 +45,7 @@ namespace SharpCompress.Test.GZip
         public void GZip_Archive_NoAdd()
         {
             string jpg = Path.Combine(ORIGINAL_FILES_PATH, "jpg", "test.jpg");
-            using (Stream stream = File.Open(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.gz"), FileMode.Open))
+            using (Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.gz")))
             using (var archive = GZipArchive.Open(stream))
             {
                 Assert.Throws<InvalidOperationException>(() => archive.AddEntry("jpg\\test.jpg", jpg));
@@ -58,7 +58,7 @@ namespace SharpCompress.Test.GZip
         public void GZip_Archive_Multiple_Reads()
         {
             var inputStream = new MemoryStream();
-            using (var fileStream = File.Open(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.gz"), FileMode.Open))
+            using (var fileStream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.gz")))
             {
                 fileStream.CopyTo(inputStream);
                 inputStream.Position = 0;

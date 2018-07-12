@@ -3,32 +3,21 @@ using System.IO;
 
 namespace SharpCompress.IO
 {
-    internal class BufferedSubStream : Stream
+    internal class BufferedSubStream : NonDisposingStream
     {
         private long position;
         private int cacheOffset;
         private int cacheLength;
         private readonly byte[] cache;
 
-        public BufferedSubStream(Stream stream, long origin, long bytesToRead)
+        public BufferedSubStream(Stream stream, long origin, long bytesToRead) : base(stream, throwOnDispose: false)
         {
-            Stream = stream;
             position = origin;
             BytesLeftToRead = bytesToRead;
             cache = new byte[32 << 10];
         }
 
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                //Stream.Dispose();
-            }
-        }
-
         private long BytesLeftToRead { get; set; }
-
-        public Stream Stream { get; }
 
         public override bool CanRead => true;
 
