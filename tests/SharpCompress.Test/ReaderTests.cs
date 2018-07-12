@@ -7,18 +7,23 @@ using Xunit;
 
 namespace SharpCompress.Test
 {
-    public class ReaderTests : TestBase
+    public abstract class ReaderTests : TestBase
     {
-        protected void Read(string testArchive, CompressionType expectedCompression)
+        protected void Read(string testArchive, CompressionType expectedCompression, ReaderOptions options = null)
         {
             testArchive = Path.Combine(TEST_ARCHIVES_PATH, testArchive);
 
-            Read(testArchive, expectedCompression, true);
-            Read(testArchive, expectedCompression, false);
+            options = options ?? new ReaderOptions();
+
+            options.LeaveStreamOpen = true;
+            ReadImpl(testArchive, expectedCompression, options);
+
+            options.LeaveStreamOpen = false;
+            ReadImpl(testArchive, expectedCompression, options);
             VerifyFiles();
         }
 
-        private void Read(string testArchive, CompressionType expectedCompression, bool leaveStreamOpen)
+        private void ReadImpl(string testArchive, CompressionType expectedCompression, ReaderOptions options)
         {
             using (var file = File.OpenRead(testArchive))
             {
@@ -26,7 +31,7 @@ namespace SharpCompress.Test
                 {
                     using (var testStream = new TestStream(protectedStream))
                     {
-                        using (var reader = ReaderFactory.Open(testStream, new ReaderOptions { LeaveStreamOpen = leaveStreamOpen }))
+                        using (var reader = ReaderFactory.Open(testStream, options))
                         {
                             UseReader(reader, expectedCompression);
                             protectedStream.ThrowOnDispose = false;
@@ -35,8 +40,8 @@ namespace SharpCompress.Test
 
                         // Boolean XOR -- If the stream should be left open (true), then the stream should not be diposed (false)
                         // and if the stream should be closed (false), then the stream should be disposed (true)
-                        var message = $"{nameof(leaveStreamOpen)} is set to '{leaveStreamOpen}', so {nameof(testStream.IsDisposed)} should be set to '{!testStream.IsDisposed}', but is set to {testStream.IsDisposed}";
-                        Assert.True(leaveStreamOpen != testStream.IsDisposed, message);
+                        var message = $"{nameof(options.LeaveStreamOpen)} is set to '{options.LeaveStreamOpen}', so {nameof(testStream.IsDisposed)} should be set to '{!testStream.IsDisposed}', but is set to {testStream.IsDisposed}";
+                        Assert.True(options.LeaveStreamOpen != testStream.IsDisposed, message);
                     }
                 }
             }
@@ -48,7 +53,7 @@ namespace SharpCompress.Test
             {
                 if (!reader.Entry.IsDirectory)
                 {
-                    Assert.Equal(reader.Entry.CompressionType, expectedCompression);
+                    Assert.Equal(expectedCompression, reader.Entry.CompressionType);
                     reader.WriteEntryToDirectory(SCRATCH_FILES_PATH, new ExtractionOptions()
                     {
                         ExtractFullPath = true,

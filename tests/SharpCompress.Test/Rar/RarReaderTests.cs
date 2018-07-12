@@ -199,14 +199,7 @@ namespace SharpCompress.Test.Rar
 
         private void ReadRar(string testArchive, string password)
         {
-            using (Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, testArchive)))
-            using (var reader = RarReader.Open(stream, new ReaderOptions()
-            {
-                Password = password
-            }))
-            {
-                UseReader(reader, CompressionType.Rar);
-            }
+            Read(testArchive, CompressionType.Rar, new ReaderOptions { Password = password });
         }
 
         [Fact]
@@ -222,7 +215,7 @@ namespace SharpCompress.Test.Rar
         private void DoRar_Entry_Stream(string filename)
         {
             using (Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, filename)))
-            using (var reader = RarReader.Open(stream))
+            using (var reader = ReaderFactory.Open(stream))
             {
                 while (reader.MoveToNextEntry())
                 {
@@ -255,7 +248,7 @@ namespace SharpCompress.Test.Rar
         public void Rar_Reader_Audio_program()
         {
             using (var stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Rar.Audio_program.rar")))
-            using (var reader = RarReader.Open(stream, new ReaderOptions()
+            using (var reader = ReaderFactory.Open(stream, new ReaderOptions()
             {
                 LookForHeader = true
             }))
@@ -321,7 +314,7 @@ namespace SharpCompress.Test.Rar
         private void DoRar_Solid_Skip_Reader(string filename)
         {
             using (var stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, filename)))
-            using (var reader = RarReader.Open(stream, new ReaderOptions()
+            using (var reader = ReaderFactory.Open(stream, new ReaderOptions()
             {
                 LookForHeader = true
             }))
@@ -354,7 +347,7 @@ namespace SharpCompress.Test.Rar
         private void DoRar_Reader_Skip(string filename)
         {
             using (var stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, filename)))
-            using (var reader = RarReader.Open(stream, new ReaderOptions()
+            using (var reader = ReaderFactory.Open(stream, new ReaderOptions()
             {
                 LookForHeader = true
             }))
