@@ -269,40 +269,48 @@ namespace SharpCompress.Test.Zip
             VerifyFiles();
         }
 
-        private class NonSeekableMemoryStream : MemoryStream
-        {
-            public override bool CanSeek => false;
-        }
-
         [Fact]
         public void TestSharpCompressWithEmptyStream()
         {
-
-            MemoryStream stream = new NonSeekableMemoryStream();
-
-            using (IWriter zipWriter = WriterFactory.Open(stream, ArchiveType.Zip, CompressionType.Deflate))
+            var expected = new Tuple<string, byte[]>[]
             {
-                zipWriter.Write("foo.txt", new MemoryStream(new byte[0]));
-                zipWriter.Write("foo2.txt", new MemoryStream(new byte[10]));
-            }
+                new Tuple<string, byte[]>("foo.txt", new byte[0]),
+                new Tuple<string, byte[]>("foo2.txt", new byte[10])
+            };
 
-            stream = new MemoryStream(stream.ToArray());
-            File.WriteAllBytes(Path.Combine(SCRATCH_FILES_PATH, "foo.zip"), stream.ToArray());
-
-            using (IReader zipReader = ZipReader.Open(new NonDisposingStream(stream, true)))
+            using (var memory = new MemoryStream())
             {
-                while (zipReader.MoveToNextEntry())
+                Stream stream = new TestStream(memory, read: true, write: true, seek: false);
+
+                using (IWriter zipWriter = WriterFactory.Open(stream, ArchiveType.Zip, CompressionType.Deflate))
                 {
-                    using (EntryStream entry = zipReader.OpenEntryStream())
+                    zipWriter.Write(expected[0].Item1, new MemoryStream(expected[0].Item2));
+                    zipWriter.Write(expected[1].Item1, new MemoryStream(expected[1].Item2));
+                }
+
+                stream = new MemoryStream(memory.ToArray());
+                File.WriteAllBytes(Path.Combine(SCRATCH_FILES_PATH, "foo.zip"), memory.ToArray());
+
+                using (IReader zipReader = ZipReader.Open(new NonDisposingStream(stream, true)))
+                {
+                    var i = 0;
+                    while (zipReader.MoveToNextEntry())
                     {
-                        MemoryStream tempStream = new MemoryStream();
-                        const int bufSize = 0x1000;
-                        byte[] buf = new byte[bufSize];
-                        int bytesRead = 0;
-                        while ((bytesRead = entry.Read(buf, 0, bufSize)) > 0)
+                        using (EntryStream entry = zipReader.OpenEntryStream())
                         {
-                            tempStream.Write(buf, 0, bytesRead);
+                            MemoryStream tempStream = new MemoryStream();
+                            const int bufSize = 0x1000;
+                            byte[] buf = new byte[bufSize];
+                            int bytesRead = 0;
+                            while ((bytesRead = entry.Read(buf, 0, bufSize)) > 0)
+                            {
+                                tempStream.Write(buf, 0, bytesRead);
+                            }
+
+                            Assert.Equal(expected[i].Item1, zipReader.Entry.Key);
+                            Assert.Equal(expected[i].Item2, tempStream.ToArray());
                         }
+                        i++;
                     }
                 }
             }
