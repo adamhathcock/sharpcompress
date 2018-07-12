@@ -6,8 +6,6 @@ using System.Text;
 using SharpCompress.Readers;
 using Xunit;
 
-[assembly: CollectionBehavior(DisableTestParallelization = true)]
-
 namespace SharpCompress.Test
 {
     public class TestBase : IDisposable
@@ -39,12 +37,6 @@ namespace SharpCompress.Test
 
         public void Dispose()
         {
-            // WARNING: This garbage collection is needed to reclaim leaked file handles
-            // (likely due to improperly handled IDisposables). Without it, The following
-            // delete fails because files are still is use. This GC should be removed once
-            // all the files pass without it.
-            GC.Collect(2, GCCollectionMode.Forced, true, false);
-
             Directory.Delete(SCRATCH_BASE_PATH, true);
         }
 
@@ -169,14 +161,6 @@ namespace SharpCompress.Test
                 return;
             }
 
-            if (IsFileLocked(new FileInfo(file1)))
-            {
-                throw new InvalidOperationException($"{file1} is not disposed");
-            }
-            if (IsFileLocked(new FileInfo(file2)))
-            {
-                throw new InvalidOperationException($"{file2} is not disposed");
-            }
             using (var file1Stream = File.OpenRead(file1))
             using (var file2Stream = File.OpenRead(file2))
             {
@@ -230,29 +214,5 @@ namespace SharpCompress.Test
             }
         }
         
-        protected bool IsFileLocked(FileInfo file)
-        {
-            FileStream stream = null;
-
-            try
-            {
-                stream = file.Open(FileMode.Open, FileAccess.Read, FileShare.None);
-            }
-            catch (IOException)
-            {
-                //the file is unavailable because it is:
-                //still being written to
-                //or being processed by another thread
-                //or does not exist (has already been processed)
-                return true;
-            }
-            finally
-            {
-                stream?.Close();
-            }
-
-            //file is not locked
-            return false;
-        }
     }
 }
