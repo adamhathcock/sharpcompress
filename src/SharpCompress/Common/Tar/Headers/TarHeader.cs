@@ -181,7 +181,7 @@ namespace SharpCompress.Common.Tar.Headers
         {
             int i;
 
-            for (i = 0; i < length - 1 && i < name.Length; ++i)
+            for (i = 0; i < length && i < name.Length; ++i)
             {
                 buffer[offset + i] = (byte)name[i];
             }

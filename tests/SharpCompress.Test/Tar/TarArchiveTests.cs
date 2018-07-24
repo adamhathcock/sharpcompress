@@ -26,7 +26,40 @@ namespace SharpCompress.Test.Tar
         {
             ArchiveFileRead("Tar.tar");
         }
+        
+        [Fact]
+        public void Tar_FileName_Exactly_100_Characters()
+        {
+            string archive = "Tar_FileName_Exactly_100_Characters.tar";
 
+
+            // create the 100 char filename
+            string filename = "filename_with_exactly_100_characters_______________________________________________________________X";
+
+            // Step 1: create a tar file containing a file with the test name
+            using (Stream stream = File.OpenWrite(Path.Combine(SCRATCH2_FILES_PATH, archive)))
+            using (var writer = WriterFactory.Open(stream, ArchiveType.Tar, CompressionType.None))
+            using (Stream inputStream = new MemoryStream())
+            {
+                StreamWriter sw = new StreamWriter(inputStream);
+                sw.Write("dummy filecontent");
+                sw.Flush();
+
+                inputStream.Position = 0;
+                writer.Write(filename, inputStream, null);
+            }
+
+            // Step 2: check if the written tar file can be read correctly
+            string unmodified = Path.Combine(SCRATCH2_FILES_PATH, archive);
+            using (var archive2 = TarArchive.Open(unmodified))
+            {
+                Assert.Equal(1, archive2.Entries.Count);
+                Assert.Contains(filename, archive2.Entries.Select(entry => entry.Key));
+
+                foreach (var entry in archive2.Entries)
+                    Assert.Equal("dummy filecontent", new StreamReader(entry.OpenEntryStream()).ReadLine());
+            }
+        }
 
         [Fact]
         public void Tar_NonUstarArchiveWithLongNameDoesNotSkipEntriesAfterTheLongOne()
