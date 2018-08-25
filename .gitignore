@@ -9,3 +9,11 @@ TestArchives/Scratch2/
 TestResults/
 *.nupkg
 packages/*/
+project.lock.json
+tests/TestArchives/Scratch
+.vs
+tools
+.vscode
+.idea/
+
+.DS_Store
