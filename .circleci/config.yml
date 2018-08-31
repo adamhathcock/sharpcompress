@@ -2,14 +2,15 @@ version: 2
 jobs:
   build:
     docker:
-      - image: microsoft/dotnet:2.1.301-sdk
+      - image: microsoft/dotnet:2.1.401-sdk
     steps:
       - checkout
       - run:
-          name: Install unzip
+          name: Install Cake
           command: |
-            apt-get update
-            apt-get install -y unzip
+            dotnet tool install -g Cake.Tool
+            echo 'export PATH=$PATH:/root/.dotnet/tools' >> $BASH_ENV
+            source $BASH_ENV
       - run:
           name: Build
-          command: ./build.sh
+          command: dotnet cake build.cake
