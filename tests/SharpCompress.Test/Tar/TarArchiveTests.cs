@@ -184,5 +184,16 @@ namespace SharpCompress.Test.Tar
                 Assert.True(archive.Type == ArchiveType.Tar);
             }
         }
+
+        [Fact]
+        public void Tar_Empty_Archive()
+        {
+            string archiveFullPath = Path.Combine(TEST_ARCHIVES_PATH, "Tar.Empty.tar");
+            using (Stream stream = File.OpenRead(archiveFullPath))
+            using (IArchive archive = ArchiveFactory.Open(stream))
+            {
+                Assert.True(archive.Type == ArchiveType.Tar);
+            }
+        }
     }
 }
