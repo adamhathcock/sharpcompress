@@ -160,5 +160,31 @@ namespace SharpCompress.Test.Tar
                 Assert.True(reader.ArchiveType == ArchiveType.Tar);
             }
         }
-    }
+
+		[Fact]
+		public void Tar_With_TarGz_With_Flushed_EntryStream()
+		{
+			string archiveFullPath = Path.Combine(TEST_ARCHIVES_PATH, "Tar.ContainsTarGz.tar");
+			using(Stream stream = File.OpenRead(archiveFullPath))
+			using(IReader reader = ReaderFactory.Open(stream))
+			{
+				Assert.True(reader.MoveToNextEntry());
+				Assert.Equal("inner.tar.gz", reader.Entry.Key);
+
+				using(var entryStream = reader.OpenEntryStream()) {
+
+					using(FlushOnDisposeStream flushingStream = new FlushOnDisposeStream(entryStream)) {
+
+						// Extract inner.tar.gz
+						using(var innerReader = ReaderFactory.Open(flushingStream)) {
+
+							Assert.True(innerReader.MoveToNextEntry());
+							Assert.Equal("test", innerReader.Entry.Key);
+
+						}
+					}
+				}
+			}
+		}
+	}
 }
