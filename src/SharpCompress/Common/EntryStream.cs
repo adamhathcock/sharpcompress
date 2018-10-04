@@ -47,9 +47,7 @@ namespace SharpCompress.Common
 
         public override bool CanWrite => false;
 
-        public override void Flush()
-        {
-            throw new NotSupportedException();
+        public override void Flush() {
         }
 
         public override long Length => _stream.Length;
