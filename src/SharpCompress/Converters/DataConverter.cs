@@ -148,9 +148,7 @@ namespace SharpCompress.Converters
 
         static public DataConverter LittleEndian => BitConverter.IsLittleEndian ? Native : SwapConv;
 
-#if NOTNEEDED
         static public DataConverter BigEndian => BitConverter.IsLittleEndian ? SwapConv : Native;
-#endif
 
         static public DataConverter Native { get; } = new CopyConverter();
 
