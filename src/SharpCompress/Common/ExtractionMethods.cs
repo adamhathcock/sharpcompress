@@ -71,13 +71,6 @@ namespace SharpCompress.Common
 #if NETSTANDARD2_0
             if (entry.LinkTarget != null)
             {
-                /*
-                var parDir = System.IO.Path.GetDirectoryName(destinationFileName);
-                if (!System.IO.Directory.Exists(parDir))
-                {
-                    System.IO.Directory.CreateDirectory(parDir);
-                }
-                */
                 var link = new Mono.Unix.UnixSymbolicLinkInfo(destinationFileName);
                 if (System.IO.File.Exists(destinationFileName))
                 {
