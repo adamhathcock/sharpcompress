@@ -20,6 +20,8 @@ namespace SharpCompress.Common.GZip
 
         public override string Key => _filePart.FilePartName;
 
+        public override string LinkTarget => null;
+
         public override long CompressedSize => 0;
 
         public override long Size => 0;

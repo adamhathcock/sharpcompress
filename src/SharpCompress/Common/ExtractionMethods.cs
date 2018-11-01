@@ -68,19 +68,40 @@ namespace SharpCompress.Common
                                             ExtractionOptions options,
                                             Action<string, FileMode> openAndWrite)
         {
-            FileMode fm = FileMode.Create;
-            options = options ?? new ExtractionOptions()
-                                 {
-                                     Overwrite = true
-                                 };
-
-            if (!options.Overwrite)
+#if NETSTANDARD2_0
+            if (entry.LinkTarget != null)
             {
-                fm = FileMode.CreateNew;
+                /*
+                var parDir = System.IO.Path.GetDirectoryName(destinationFileName);
+                if (!System.IO.Directory.Exists(parDir))
+                {
+                    System.IO.Directory.CreateDirectory(parDir);
+                }
+                */
+                var link = new Mono.Unix.UnixSymbolicLinkInfo(destinationFileName);
+                if (System.IO.File.Exists(destinationFileName))
+                {
+                    link.Delete(); // equivalent to ln -s -f
+                }
+                link.CreateSymbolicLinkTo(entry.LinkTarget);
             }
+            else
+#endif
+            {
+                FileMode fm = FileMode.Create;
+                options = options ?? new ExtractionOptions()
+                                     {
+                                         Overwrite = true
+                                     };
 
-            openAndWrite(destinationFileName, fm);
-            entry.PreserveExtractionOptions(destinationFileName, options);
+                if (!options.Overwrite)
+                {
+                    fm = FileMode.CreateNew;
+                }
+
+                openAndWrite(destinationFileName, fm);
+                entry.PreserveExtractionOptions(destinationFileName, options);
+            }
         }
 #endif
     }

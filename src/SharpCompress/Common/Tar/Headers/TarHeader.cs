@@ -15,6 +15,7 @@ namespace SharpCompress.Common.Tar.Headers
         }
 
         internal string Name { get; set; }
+        internal string LinkName { get; set; }
 
         //internal int Mode { get; set; }
         //internal int UserId { get; set; }
@@ -96,6 +97,12 @@ namespace SharpCompress.Common.Tar.Headers
             if (buffer.Length == 0)
             {
                 return false;
+            }
+
+            // for symlinks, additionally read the linkname
+            if (ReadEntryType(buffer) == EntryType.SymLink)
+            {
+                LinkName = ArchiveEncoding.Decode(buffer, 157, 100).TrimNulls();
             }
 
             if (ReadEntryType(buffer) == EntryType.LongName)
