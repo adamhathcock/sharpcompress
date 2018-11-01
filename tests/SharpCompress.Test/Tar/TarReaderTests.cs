@@ -186,5 +186,42 @@ namespace SharpCompress.Test.Tar
                 }
             }
         }
+
+        [Fact]
+        public void Tar_GZip_With_Symlink_Entries()
+        {
+            using (Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "TarWithSymlink.tar.gz")))
+            using (var reader = TarReader.Open(stream))
+            {
+                List<string> names = new List<string>();
+                while (reader.MoveToNextEntry())
+                {
+                    if (reader.Entry.IsDirectory)
+                    {
+                        continue;
+                    }
+                    reader.WriteEntryToDirectory(SCRATCH_FILES_PATH,
+                                                 new ExtractionOptions()
+                                                 {
+                                                     ExtractFullPath = true,
+                                                     Overwrite = true
+                                                 });
+                    if (reader.Entry.LinkTarget != null)
+                    {
+#if NETSTANDARD2_0
+                        var link = new Mono.Unix.UnixSymbolicLinkInfo(reader.Entry.Key);
+                        if (link.HasContents)
+                        {
+                            Assert.Equal(link.GetContents(), reader.Entry.LinkTarget);
+                        }
+                        else
+                        {
+                            Assert.True(false);
+                        }
+#endif
+                    }
+                }
+            }
+        }
     }
 }
