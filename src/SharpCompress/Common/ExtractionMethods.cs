@@ -68,18 +68,15 @@ namespace SharpCompress.Common
                                             ExtractionOptions options,
                                             Action<string, FileMode> openAndWrite)
         {
-#if NETSTANDARD2_0
             if (entry.LinkTarget != null)
             {
-                var link = new Mono.Unix.UnixSymbolicLinkInfo(destinationFileName);
-                if (System.IO.File.Exists(destinationFileName))
+                if (null == options.WriteSymbolicLink)
                 {
-                    link.Delete(); // equivalent to ln -s -f
+                    throw new ExtractionException("Entry is a symbolic link but ExtractionOptions.WriteSymbolicLink delegate is null");
                 }
-                link.CreateSymbolicLinkTo(entry.LinkTarget);
+                options.WriteSymbolicLink(destinationFileName, entry.LinkTarget);
             }
             else
-#endif
             {
                 FileMode fm = FileMode.Create;
                 options = options ?? new ExtractionOptions()

@@ -190,6 +190,8 @@ namespace SharpCompress.Test.Tar
         [Fact]
         public void Tar_GZip_With_Symlink_Entries()
         {
+            var isWindows = System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(
+                System.Runtime.InteropServices.OSPlatform.Windows);
             using (Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "TarWithSymlink.tar.gz")))
             using (var reader = TarReader.Open(stream))
             {
@@ -204,21 +206,42 @@ namespace SharpCompress.Test.Tar
                                                  new ExtractionOptions()
                                                  {
                                                      ExtractFullPath = true,
-                                                     Overwrite = true
+                                                     Overwrite = true,
+                                                     WriteSymbolicLink = (sourcePath, targetPath) =>
+                                                     {
+                                                         if (!isWindows)
+                                                         {
+                                                             var link = new Mono.Unix.UnixSymbolicLinkInfo(sourcePath);
+                                                             if (System.IO.File.Exists(sourcePath))
+                                                             {
+                                                                 link.Delete(); // equivalent to ln -s -f
+                                                             }
+                                                             link.CreateSymbolicLinkTo(targetPath);
+                                                         }
+                                                     }
                                                  });
-                    if (reader.Entry.LinkTarget != null)
+                    if (!isWindows)
                     {
-#if NETSTANDARD2_0
-                        var link = new Mono.Unix.UnixSymbolicLinkInfo(reader.Entry.Key);
-                        if (link.HasContents)
+                        if (reader.Entry.LinkTarget != null)
                         {
-                            Assert.Equal(link.GetContents(), reader.Entry.LinkTarget);
+                            var path = System.IO.Path.Combine(SCRATCH_FILES_PATH, reader.Entry.Key);
+                            var link = new Mono.Unix.UnixSymbolicLinkInfo(path);
+                            if (link.HasContents)
+                            {
+                                // need to convert the link to an absolute path for comparison
+                                var target = reader.Entry.LinkTarget;
+                                var realTarget = System.IO.Path.GetFullPath(
+                                    System.IO.Path.Combine($"{System.IO.Path.GetDirectoryName(path)}",
+                                    target)
+                                );
+
+                                Assert.Equal(realTarget, link.GetContents().ToString());
+                            }
+                            else
+                            {
+                                Assert.True(false, "Symlink has no target");
+                            }
                         }
-                        else
-                        {
-                            Assert.True(false);
-                        }
-#endif
                     }
                 }
             }
