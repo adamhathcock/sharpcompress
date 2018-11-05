@@ -18,6 +18,8 @@ namespace SharpCompress.Common.SevenZip
 
         public override string Key => FilePart.Header.Name;
 
+        public override string LinkTarget => null;
+
         public override long CompressedSize => 0;
 
         public override long Size => FilePart.Header.Size;

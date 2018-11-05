@@ -23,6 +23,8 @@ namespace SharpCompress.Common.Tar
 
         public override string Key => _filePart.Header.Name;
 
+        public override string LinkTarget => _filePart.Header.LinkName;
+
         public override long CompressedSize => _filePart.Header.Size;
 
         public override long Size => _filePart.Header.Size;

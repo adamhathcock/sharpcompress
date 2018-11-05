@@ -60,6 +60,8 @@ namespace SharpCompress.Common.Zip
 
         public override string Key => _filePart.Header.Name;
 
+        public override string LinkTarget => null;
+
         public override long CompressedSize => _filePart.Header.CompressedSize;
 
         public override long Size => _filePart.Header.UncompressedSize;

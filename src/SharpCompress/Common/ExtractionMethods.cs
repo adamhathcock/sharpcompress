@@ -68,19 +68,30 @@ namespace SharpCompress.Common
                                             ExtractionOptions options,
                                             Action<string, FileMode> openAndWrite)
         {
-            FileMode fm = FileMode.Create;
-            options = options ?? new ExtractionOptions()
-                                 {
-                                     Overwrite = true
-                                 };
-
-            if (!options.Overwrite)
+            if (entry.LinkTarget != null)
             {
-                fm = FileMode.CreateNew;
+                if (null == options.WriteSymbolicLink)
+                {
+                    throw new ExtractionException("Entry is a symbolic link but ExtractionOptions.WriteSymbolicLink delegate is null");
+                }
+                options.WriteSymbolicLink(destinationFileName, entry.LinkTarget);
             }
+            else
+            {
+                FileMode fm = FileMode.Create;
+                options = options ?? new ExtractionOptions()
+                                     {
+                                         Overwrite = true
+                                     };
 
-            openAndWrite(destinationFileName, fm);
-            entry.PreserveExtractionOptions(destinationFileName, options);
+                if (!options.Overwrite)
+                {
+                    fm = FileMode.CreateNew;
+                }
+
+                openAndWrite(destinationFileName, fm);
+                entry.PreserveExtractionOptions(destinationFileName, options);
+            }
         }
 #endif
     }

@@ -21,5 +21,14 @@
         /// preserve windows file attributes
         /// </summary>
         public bool PreserveAttributes { get; set; }
+
+        /// <summary>
+        /// Delegate for writing symbolic links to disk.
+        /// sourcePath is where the symlink is created.
+        /// targetPath is what the symlink refers to.
+        /// </summary>
+        public delegate void SymbolicLinkWriterDelegate(string sourcePath, string targetPath);
+
+        public SymbolicLinkWriterDelegate WriteSymbolicLink;
     }
 }

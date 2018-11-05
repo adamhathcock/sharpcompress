@@ -16,6 +16,11 @@ namespace SharpCompress.Common
         public abstract string Key { get; }
 
         /// <summary>
+        /// The target of a symlink entry internal to the Archive. Will be null if not a symlink.
+        /// </summary>
+        public abstract string LinkTarget { get; }
+
+        /// <summary>
         /// The compressed file size
         /// </summary>
         public abstract long CompressedSize { get; }

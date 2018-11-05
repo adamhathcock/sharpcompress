@@ -22,6 +22,8 @@ namespace SharpCompress.Common.Rar
         /// </summary>
         public override string Key => FileHeader.FileName;
 
+        public override string LinkTarget => null;
+
         /// <summary>
         /// The entry last modified time in the archive, if recorded
         /// </summary>
