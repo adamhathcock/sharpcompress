@@ -93,6 +93,6 @@ namespace SharpCompress.Common.Zip.Headers
 
         public ushort DiskNumberStart { get; set; }
 
-        public string Comment { get; private set; }
+        public string Comment { get; set; }
     }
 }

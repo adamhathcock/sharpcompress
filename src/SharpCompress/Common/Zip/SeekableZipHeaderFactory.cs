@@ -58,10 +58,23 @@ namespace SharpCompress.Common.Zip
                     yield break;
                 }
 
+                if (entry.Comment.Length != 0)
+                {
+                   directoryEntryHeader.Comment = ByteArrayToString(entry.Comment);
+                }
+
                 //entry could be zero bytes so we need to know that.
                 directoryEntryHeader.HasData = directoryEntryHeader.CompressedSize != 0;
                 yield return directoryEntryHeader;
             }
+        }
+
+        internal string ByteArrayToString(byte[] ba)
+        {
+          StringBuilder hex = new StringBuilder(ba.Length * 2);
+          foreach (byte b in ba)
+            hex.AppendFormat("{0:x2}", b);
+          return hex.ToString();
         }
 
         private static void SeekBackToHeader(Stream stream, BinaryReader reader, uint headerSignature)
