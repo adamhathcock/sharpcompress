@@ -17,7 +17,7 @@ namespace SharpCompress.Common.Zip
         {
         }
 
-        internal IEnumerable<DirectoryEntryHeader> ReadSeekableHeader(Stream stream)
+        internal IEnumerable<ZipHeader> ReadSeekableHeader(Stream stream)
         {
             var reader = new BinaryReader(stream);
 
@@ -51,16 +51,22 @@ namespace SharpCompress.Common.Zip
             {
                 stream.Position = position;
                 uint signature = reader.ReadUInt32();
-                var directoryEntryHeader = ReadHeader(signature, reader, _zip64) as DirectoryEntryHeader;
+                var nextHeader = ReadHeader(signature, reader, _zip64);
                 position = stream.Position;
-                if (directoryEntryHeader == null)
-                {
-                    yield break;
-                }
 
-                //entry could be zero bytes so we need to know that.
-                directoryEntryHeader.HasData = directoryEntryHeader.CompressedSize != 0;
-                yield return directoryEntryHeader;
+                if (nextHeader == null)
+                    yield break;
+
+                if (nextHeader is DirectoryEntryHeader entryHeader)
+                {
+                    //entry could be zero bytes so we need to know that.
+                    entryHeader.HasData = entryHeader.CompressedSize != 0;
+                    yield return entryHeader;
+                }
+                else if (nextHeader is DirectoryEndHeader endHeader)
+                {
+                    yield return endHeader;
+                }
             }
         }
 
