@@ -81,12 +81,12 @@ namespace SharpCompress.Archives
         /// <summary>
         /// Returns an ReadOnlyCollection of all the RarArchiveEntries across the one or many parts of the RarArchive.
         /// </summary>
-        public virtual ICollection<TEntry> Entries { get { return lazyEntries; } }
+        public virtual ICollection<TEntry> Entries => lazyEntries;
 
         /// <summary>
         /// Returns an ReadOnlyCollection of all the RarArchiveVolumes across the one or many parts of the RarArchive.
         /// </summary>
-        public ICollection<TVolume> Volumes { get { return lazyVolumes; } }
+        public ICollection<TVolume> Volumes => lazyVolumes;
 
         /// <summary>
         /// The total size of the files compressed in the archive.
@@ -101,9 +101,9 @@ namespace SharpCompress.Archives
         protected abstract IEnumerable<TVolume> LoadVolumes(IEnumerable<Stream> streams);
         protected abstract IEnumerable<TEntry> LoadEntries(IEnumerable<TVolume> volumes);
 
-        IEnumerable<IArchiveEntry> IArchive.Entries { get { return Entries.Cast<IArchiveEntry>(); } }
+        ICollection<IArchiveEntry> IArchive.Entries => Entries as ICollection<IArchiveEntry>;
 
-        IEnumerable<IVolume> IArchive.Volumes { get { return lazyVolumes.Cast<IVolume>(); } }
+        ICollection<IVolume> IArchive.Volumes => lazyVolumes as ICollection<IVolume>;
 
         public virtual void Dispose()
         {
@@ -162,7 +162,7 @@ namespace SharpCompress.Archives
         /// <summary>
         /// Archive is SOLID (this means the Archive saved bytes by reusing information which helps for archives containing many small files).
         /// </summary>
-        public virtual bool IsSolid { get { return false; } }
+        public virtual bool IsSolid => false;
 
         /// <summary>
         /// The archive can find all the parts of the archive needed to fully extract the archive.  This forces the parsing of the entire archive.
