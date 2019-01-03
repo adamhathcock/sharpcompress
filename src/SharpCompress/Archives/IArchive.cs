@@ -13,8 +13,8 @@ namespace SharpCompress.Archives
         event EventHandler<CompressedBytesReadEventArgs> CompressedBytesRead;
         event EventHandler<FilePartExtractionBeginEventArgs> FilePartExtractionBegin;
 
-        ICollection<IArchiveEntry> Entries { get; }
-        ICollection<IVolume> Volumes { get; }
+        IReadOnlyCollection<IArchiveEntry> Entries { get; }
+        IReadOnlyCollection<IVolume> Volumes { get; }
 
         ArchiveType Type { get; }
 

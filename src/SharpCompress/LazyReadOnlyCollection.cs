@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 namespace SharpCompress
 {
-    internal class LazyReadOnlyCollection<T> : ICollection<T>
+    internal class LazyReadOnlyCollection<T> : IReadOnlyCollection<T>
     {
         private readonly List<T> backing = new List<T>();
         private readonly IEnumerator<T> source;
@@ -87,29 +87,7 @@ namespace SharpCompress
             return backing;
         }
 
-        #region ICollection<T> Members
-
-        public void Add(T item)
-        {
-            throw new NotSupportedException();
-        }
-
-        public void Clear()
-        {
-            throw new NotSupportedException();
-        }
-
-        public bool Contains(T item)
-        {
-            EnsureFullyLoaded();
-            return backing.Contains(item);
-        }
-
-        public void CopyTo(T[] array, int arrayIndex)
-        {
-            EnsureFullyLoaded();
-            backing.CopyTo(array, arrayIndex);
-        }
+        #region IReadOnlyCollection<T> Members
 
         public int Count
         {

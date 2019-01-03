@@ -81,12 +81,12 @@ namespace SharpCompress.Archives
         /// <summary>
         /// Returns an ReadOnlyCollection of all the RarArchiveEntries across the one or many parts of the RarArchive.
         /// </summary>
-        public virtual ICollection<TEntry> Entries => lazyEntries;
+        public virtual IReadOnlyCollection<TEntry> Entries => lazyEntries;
 
         /// <summary>
         /// Returns an ReadOnlyCollection of all the RarArchiveVolumes across the one or many parts of the RarArchive.
         /// </summary>
-        public ICollection<TVolume> Volumes => lazyVolumes;
+        public IReadOnlyCollection<TVolume> Volumes => lazyVolumes;
 
         /// <summary>
         /// The total size of the files compressed in the archive.
@@ -101,9 +101,9 @@ namespace SharpCompress.Archives
         protected abstract IEnumerable<TVolume> LoadVolumes(IEnumerable<Stream> streams);
         protected abstract IEnumerable<TEntry> LoadEntries(IEnumerable<TVolume> volumes);
 
-        ICollection<IArchiveEntry> IArchive.Entries => Entries as ICollection<IArchiveEntry>;
+        IReadOnlyCollection<IArchiveEntry> IArchive.Entries => lazyEntries as IReadOnlyCollection<IArchiveEntry>;
 
-        ICollection<IVolume> IArchive.Volumes => lazyVolumes as ICollection<IVolume>;
+        IReadOnlyCollection<IVolume> IArchive.Volumes => lazyVolumes as IReadOnlyCollection<IVolume>;
 
         public virtual void Dispose()
         {
