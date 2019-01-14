@@ -358,6 +358,22 @@ namespace SharpCompress.Test.Zip
         }
 
         [Fact]
+        public void Zip_Read_Volume_Comment()
+        {
+            using (var reader = ZipArchive.Open(Path.Combine(TEST_ARCHIVES_PATH, "Zip.zip64.zip"), new ReaderOptions()
+            {
+                Password = "test"
+            }))
+            {
+                var isComplete = reader.IsComplete;
+                Assert.Equal(1, reader.Volumes.Count);
+
+                string expectedComment = "Encoding:utf-8 || Compression:Deflate levelDefault || Encrypt:None || ZIP64:Always\r\nCreated at 2017-Jan-23 14:10:43 || DotNetZip Tool v1.9.1.8\r\nTest zip64 archive";
+                Assert.Equal(expectedComment, reader.Volumes.First().Comment);
+            }
+        }
+
+        [Fact]
         public void Zip_BZip2_Pkware_Read()
         {
             using (var reader = ZipArchive.Open(Path.Combine(TEST_ARCHIVES_PATH, "Zip.bzip2.pkware.zip"), new ReaderOptions()
