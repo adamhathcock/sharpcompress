@@ -1,4 +1,3 @@
-using SharpCompress.Archives;
 using SharpCompress.Common;
 
 namespace SharpCompress.Writers.Tar
@@ -18,6 +17,7 @@ namespace SharpCompress.Writers.Tar
 
         internal TarWriterOptions(WriterOptions options) : this(options.CompressionType, true)
         {
+            ArchiveEncoding = options.ArchiveEncoding;
         }
     }
 }
