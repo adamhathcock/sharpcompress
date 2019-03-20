@@ -1,7 +1,6 @@
 ﻿#if !NO_CRYPTO
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using SharpCompress.Crypto;
@@ -23,12 +22,6 @@ namespace SharpCompress.Common.Rar
             _salt = salt;
         }
 
-        private byte[] ComputeHash(byte[] input)
-        {
-            var sha = SHA1.Create();
-            return sha.ComputeHash(input);
-        }
-
         private void Initialize()
         {
 
@@ -47,28 +40,27 @@ namespace SharpCompress.Common.Rar
                 rawPassword[i + rawLength] = _salt[i];
             }
 
-
             const int noOfRounds = (1 << 18);
-            IList<byte> bytes = new List<byte>();
+            const int iblock = 3;
             byte[] digest;
+            byte[] data = new byte[(rawPassword.Length + iblock) * noOfRounds];
 
             //TODO slow code below, find ways to optimize
             for (int i = 0; i < noOfRounds; i++)
             {
-                bytes.AddRange(rawPassword);
+                rawPassword.CopyTo(data, i * (rawPassword.Length + iblock));
 
-                bytes.AddRange(new[]
+                data[i * (rawPassword.Length + iblock) + rawPassword.Length + 0] = (byte)i;
+                data[i * (rawPassword.Length + iblock) + rawPassword.Length + 1] = (byte)(i >> 8);
+                data[i * (rawPassword.Length + iblock) + rawPassword.Length + 2] = (byte)(i >> CRYPTO_BLOCK_SIZE);
+
+                if (i % (noOfRounds / CRYPTO_BLOCK_SIZE) == 0)
                 {
-                    (byte) i, (byte) (i >> 8), (byte) (i >> CRYPTO_BLOCK_SIZE)
-                });
-                if (i%(noOfRounds/CRYPTO_BLOCK_SIZE) == 0)
-                {
-                    digest = ComputeHash(bytes.ToArray());
-                    _aesInitializationVector[i/(noOfRounds/CRYPTO_BLOCK_SIZE)] = digest[19];
+                    digest = SHA1.Create().ComputeHash(data, 0, (i + 1) * (rawPassword.Length + iblock));
+                    _aesInitializationVector[i / (noOfRounds / CRYPTO_BLOCK_SIZE)] = digest[19];
                 }
             }
-
-            digest = ComputeHash(bytes.ToArray());
+            digest = SHA1.Create().ComputeHash(data);
             //slow code ends
 
             byte[] aesKey = new byte[CRYPTO_BLOCK_SIZE];
