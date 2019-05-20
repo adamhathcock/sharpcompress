@@ -58,6 +58,19 @@ namespace SharpCompress.Archives
             }
             return writableArchive.AddEntry(key, fileInfo.OpenRead(), true, fileInfo.Length, fileInfo.LastWriteTime);
         }
+
+        public static void AddAllFromDirectoryContentOnly(
+            this IWritableArchive writableArchive,
+            string filePath, string searchPattern = "*.*", SearchOption searchOption = SearchOption.AllDirectories)
+        {
+            var paths = Directory.GetFiles(filePath, searchPattern, searchOption);
+            Array.Sort(paths);
+            foreach (var path in paths)
+            {
+                var fileInfo = new FileInfo(path);
+                writableArchive.AddEntry(path.Substring(filePath.Length), fileInfo.OpenRead(), true, fileInfo.Length, null);
+            }
+        }
 #endif
     }
 }
