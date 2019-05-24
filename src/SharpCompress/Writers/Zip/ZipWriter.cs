@@ -383,6 +383,14 @@ namespace SharpCompress.Writers.Zip
                         originalStream.Position = (long)(entry.HeaderOffset + 6);
                         originalStream.WriteByte(0);
 
+                        if (counting.Count == 0 && entry.Decompressed == 0)
+                        {
+                            // set compression to STORED for zero byte files (no compression data)
+                            originalStream.Position = (long)(entry.HeaderOffset + 8);
+                            originalStream.WriteByte(0);
+                            originalStream.WriteByte(0);
+                        }
+
                         originalStream.Position = (long)(entry.HeaderOffset + 14);
 
                         writer.WriteFooter(entry.Crc, compressedvalue, decompressedvalue);

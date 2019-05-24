@@ -36,11 +36,12 @@ namespace SharpCompress.Writers.Zip
             byte[] encodedComment = archiveEncoding.Encode(Comment);
 
             var zip64_stream = Compressed >= uint.MaxValue || Decompressed >= uint.MaxValue;
-            var zip64 = zip64_stream || HeaderOffset >= uint.MaxValue || Zip64HeaderOffset != 0;
+            var zip64 = zip64_stream || HeaderOffset >= uint.MaxValue;
+            var usedCompression = compression;
 
-            var compressedvalue = zip64 ? uint.MaxValue : (uint)Compressed;
-            var decompressedvalue = zip64 ? uint.MaxValue : (uint)Decompressed;
-            var headeroffsetvalue = zip64 ? uint.MaxValue : (uint)HeaderOffset;
+            var compressedvalue = Compressed < uint.MaxValue ? (uint)Compressed : uint.MaxValue;
+            var decompressedvalue = Decompressed < uint.MaxValue ? (uint)Decompressed : uint.MaxValue;
+            var headeroffsetvalue = HeaderOffset < uint.MaxValue ? (uint)HeaderOffset : uint.MaxValue;
             var extralength = zip64 ? (2 + 2 + 8 + 8 + 8 + 4) : 0;
             var version = (byte)(zip64 ? 45 : 20); // Version 20 required for deflate/encryption
 
@@ -56,17 +57,21 @@ namespace SharpCompress.Writers.Zip
                 if (!zip64_stream)
                     flags |= HeaderFlags.UsePostDataDescriptor;
 
-                if (compression == ZipCompressionMethod.LZMA)
+                if (usedCompression == ZipCompressionMethod.LZMA)
                 {
                     flags |= HeaderFlags.Bit1; // eos marker
                 }
             }
 
+            // Support for zero byte files
+            if (Decompressed == 0 && Compressed == 0)
+                usedCompression = ZipCompressionMethod.None;
+
             //constant sig, then version made by, then version to extract
             outputStream.Write(new byte[] { 80, 75, 1, 2, version, 0, version, 0 }, 0, 8);
 
             outputStream.Write(DataConverter.LittleEndian.GetBytes((ushort)flags), 0, 2);
-            outputStream.Write(DataConverter.LittleEndian.GetBytes((ushort)compression), 0, 2); // zipping method
+            outputStream.Write(DataConverter.LittleEndian.GetBytes((ushort)usedCompression), 0, 2); // zipping method
             outputStream.Write(DataConverter.LittleEndian.GetBytes(ModificationTime.DateTimeToDosTime()), 0, 4);
 
             // zipping date and time
