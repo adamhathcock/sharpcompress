@@ -39,9 +39,9 @@ namespace SharpCompress.Writers.Zip
             var zip64 = zip64_stream || HeaderOffset >= uint.MaxValue;
             var usedCompression = compression;
 
-            var compressedvalue = Compressed < uint.MaxValue ? (uint)Compressed : uint.MaxValue;
-            var decompressedvalue = Decompressed < uint.MaxValue ? (uint)Decompressed : uint.MaxValue;
-            var headeroffsetvalue = HeaderOffset < uint.MaxValue ? (uint)HeaderOffset : uint.MaxValue;
+            var compressedvalue = zip64 ? uint.MaxValue : (uint)Compressed;
+            var decompressedvalue = zip64 ? uint.MaxValue : (uint)Decompressed;
+            var headeroffsetvalue = zip64 ? uint.MaxValue : (uint)HeaderOffset;
             var extralength = zip64 ? (2 + 2 + 8 + 8 + 8 + 4) : 0;
             var version = (byte)(zip64 ? 45 : 20); // Version 20 required for deflate/encryption
 
