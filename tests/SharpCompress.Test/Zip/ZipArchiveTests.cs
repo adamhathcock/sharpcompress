@@ -512,5 +512,29 @@ namespace SharpCompress.Test.Zip
                 }
             }
         }
+
+        [Fact]
+        public void Zip_BadLocalExtra_Read()
+        {
+            string zipPath = Path.Combine(TEST_ARCHIVES_PATH, "Zip.badlocalextra.zip");
+
+            using (ZipArchive za = ZipArchive.Open(zipPath))
+            {
+                var ex = Record.Exception(() =>
+                {
+                    var firstEntry = za.Entries.First(x => x.Key == "first.txt");
+                    var buffer = new byte[4096];
+
+                    using (var memoryStream = new MemoryStream())
+                    using (var firstStream = firstEntry.OpenEntryStream())
+                    {
+                        firstStream.CopyTo(memoryStream);
+                        Assert.Equal(199, memoryStream.Length);
+                    }
+                });
+
+                Assert.Null(ex);
+            }
+        }
     }
 }
