@@ -87,6 +87,15 @@ namespace SharpCompress.Common.Zip.Headers
                 }
 
                 ushort length = DataConverter.LittleEndian.GetUInt16(extra, i + 2);
+
+                // 7zip has this same kind of check to ignore extras blocks that don't conform to the standard 2-byte ID, 2-byte length, N-byte value.
+                // CPP/7Zip/Zip/ZipIn.cpp: CInArchive::ReadExtra
+                if (length > extra.Length)
+                {
+                    // bad extras block
+                    return;
+                }
+
                 byte[] data = new byte[length];
                 Buffer.BlockCopy(extra, i + 4, data, 0, length);
                 Extra.Add(LocalEntryHeaderExtraFactory.Create(type, length, data));
