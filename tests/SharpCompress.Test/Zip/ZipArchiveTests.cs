@@ -536,5 +536,24 @@ namespace SharpCompress.Test.Zip
                 Assert.Null(ex);
             }
         }
-    }
+
+        [Fact]
+        public void Zip_NoCompression_DataDescriptors_Read()
+        {
+            string zipPath = Path.Combine(TEST_ARCHIVES_PATH, "Zip.none.datadescriptors.zip");
+
+            using (ZipArchive za = ZipArchive.Open(zipPath))
+            {
+                var firstEntry = za.Entries.First(x => x.Key == "first.txt");
+                var buffer = new byte[4096];
+
+                using (var memoryStream = new MemoryStream())
+                using (var firstStream = firstEntry.OpenEntryStream())
+                {
+                    firstStream.CopyTo(memoryStream);
+                    Assert.Equal(199, memoryStream.Length);
+                }
+            }
+        }
+   }
 }

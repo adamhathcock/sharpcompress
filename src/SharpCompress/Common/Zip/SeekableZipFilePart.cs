@@ -1,5 +1,6 @@
 ﻿using System.IO;
 using SharpCompress.Common.Zip.Headers;
+using SharpCompress.IO;
 
 namespace SharpCompress.Common.Zip
 {
@@ -7,11 +8,13 @@ namespace SharpCompress.Common.Zip
     {
         private bool _isLocalHeaderLoaded;
         private readonly SeekableZipHeaderFactory _headerFactory;
+        private readonly DirectoryEntryHeader _directoryEntryHeader;
 
         internal SeekableZipFilePart(SeekableZipHeaderFactory headerFactory, DirectoryEntryHeader header, Stream stream)
             : base(header, stream)
         {
             _headerFactory = headerFactory;
+            _directoryEntryHeader = header;
         }
 
         internal override Stream GetCompressedStream()
@@ -36,6 +39,15 @@ namespace SharpCompress.Common.Zip
         protected override Stream CreateBaseStream()
         {
             BaseStream.Position = Header.DataStartPosition.Value;
+
+            if ((Header.CompressedSize == 0)
+                && FlagUtility.HasFlag(Header.Flags, HeaderFlags.UsePostDataDescriptor)
+                && (_directoryEntryHeader?.HasData == true)
+                && (_directoryEntryHeader?.CompressedSize != 0))
+            {
+                return new ReadOnlySubStream(BaseStream, _directoryEntryHeader.CompressedSize);
+            }
+
             return BaseStream;
         }
     }
