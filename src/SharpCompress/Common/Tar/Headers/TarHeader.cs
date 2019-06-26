@@ -39,16 +39,17 @@ namespace SharpCompress.Common.Tar.Headers
             WriteOctalBytes(0, buffer, 116, 8); // group ID
 
             //ArchiveEncoding.UTF8.GetBytes("magic").CopyTo(buffer, 257);
-            if (Name.Length > 100)
+            var nameByteCount = ArchiveEncoding.GetEncoding().GetByteCount(Name);
+            if (nameByteCount > 100)
             {
                 // Set mock filename and filetype to indicate the next block is the actual name of the file
                 WriteStringBytes("././@LongLink", buffer, 0, 100);
                 buffer[156] = (byte)EntryType.LongName;
-                WriteOctalBytes(Name.Length + 1, buffer, 124, 12);
+                WriteOctalBytes(nameByteCount + 1, buffer, 124, 12);
             }
             else
             {
-                WriteStringBytes(Name, buffer, 0, 100);
+                WriteStringBytes(ArchiveEncoding.Encode(Name), buffer, 0, 100);
                 WriteOctalBytes(Size, buffer, 124, 12);
                 var time = (long)(LastModifiedTime.ToUniversalTime() - EPOCH).TotalSeconds;
                 WriteOctalBytes(time, buffer, 136, 12);
@@ -69,10 +70,10 @@ namespace SharpCompress.Common.Tar.Headers
 
             output.Write(buffer, 0, buffer.Length);
 
-            if (Name.Length > 100)
+            if (nameByteCount > 100)
             {
                 WriteLongFilenameHeader(output);
-                Name = Name.Substring(0, 100);
+                Name = ArchiveEncoding.Decode(ArchiveEncoding.Encode(Name), 0, 90);
                 Write(output);
             }
         }
@@ -182,6 +183,21 @@ namespace SharpCompress.Common.Tar.Headers
                 throw new InvalidOperationException("Buffer is invalid size");
             }
             return buffer;
+        }
+
+        private static void WriteStringBytes(byte[] name, byte[] buffer, int offset, int length)
+        {
+            int i;
+
+            for (i = 0; i < length && i < name.Length; ++i)
+            {
+                buffer[offset + i] = (byte)name[i];
+            }
+
+            for (; i < length; ++i)
+            {
+                buffer[offset + i] = 0;
+            }
         }
 
         private static void WriteStringBytes(string name, byte[] buffer, int offset, int length)
