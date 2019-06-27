@@ -187,13 +187,9 @@ namespace SharpCompress.Common.Tar.Headers
 
         private static void WriteStringBytes(byte[] name, byte[] buffer, int offset, int length)
         {
-            int i;
-
-            for (i = 0; i < length && i < name.Length; ++i)
-            {
-                buffer[offset + i] = (byte)name[i];
-            }
-
+            int i = Math.Min(length, name.Length);
+            Buffer.BlockCopy(name, 0, buffer, offset, i);
+            // if Span<byte>.Fill can be used, it is more efficient
             for (; i < length; ++i)
             {
                 buffer[offset + i] = 0;
