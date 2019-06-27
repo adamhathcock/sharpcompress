@@ -5,6 +5,10 @@ using SharpCompress.Archives.Tar;
 using SharpCompress.Common;
 using SharpCompress.Writers;
 using Xunit;
+using System.Text;
+using SharpCompress.Readers;
+using SharpCompress.Writers.Tar;
+using SharpCompress.Readers.Tar;
 
 namespace SharpCompress.Test.Tar
 {
@@ -26,7 +30,7 @@ namespace SharpCompress.Test.Tar
         {
             ArchiveFileRead("Tar.tar");
         }
-        
+
         [Fact]
         public void Tar_FileName_Exactly_100_Characters()
         {
@@ -135,10 +139,17 @@ namespace SharpCompress.Test.Tar
             string scratchPath = Path.Combine(SCRATCH_FILES_PATH, "Tar.tar");
             string unmodified = Path.Combine(TEST_ARCHIVES_PATH, "Tar.noEmptyDirs.tar");
 
+            // var aropt = new Ar
+
             using (var archive = TarArchive.Create())
             {
                 archive.AddAllFromDirectory(ORIGINAL_FILES_PATH);
-                archive.SaveTo(scratchPath, CompressionType.None);
+                var twopt = new TarWriterOptions(CompressionType.None, true);
+                twopt.ArchiveEncoding = new ArchiveEncoding()
+                {
+                    Default = Encoding.GetEncoding(866)
+                };
+                archive.SaveTo(scratchPath, twopt);
             }
             CompareArchivesByPath(unmodified, scratchPath);
         }
@@ -193,6 +204,41 @@ namespace SharpCompress.Test.Tar
             using (IArchive archive = ArchiveFactory.Open(stream))
             {
                 Assert.True(archive.Type == ArchiveType.Tar);
+            }
+        }
+        [Theory]
+        [InlineData(10)]
+        [InlineData(128)]
+        public void Tar_Japanese_Name(int length)
+        {
+            using (var mstm = new MemoryStream())
+            {
+                var enc = new ArchiveEncoding()
+                {
+                    Default = Encoding.UTF8
+                };
+                var twopt = new TarWriterOptions(CompressionType.None, true);
+                twopt.ArchiveEncoding = enc;
+                var fname = new string((char)0x3042, length);
+                using (var tw = new TarWriter(mstm, twopt))
+                using (var input = new MemoryStream(new byte[32]))
+                {
+                    tw.Write(fname, input, null);
+                }
+                using (var inputMemory = new MemoryStream(mstm.ToArray()))
+                {
+                    var tropt = new ReaderOptions()
+                    {
+                        ArchiveEncoding = enc
+                    };
+                    using (var tr = TarReader.Open(inputMemory, tropt))
+                    {
+                        while (tr.MoveToNextEntry())
+                        {
+                            Assert.Equal(fname, tr.Entry.Key);
+                        }
+                    }
+                }
             }
         }
     }

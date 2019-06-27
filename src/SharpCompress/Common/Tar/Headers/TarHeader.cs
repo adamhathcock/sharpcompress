@@ -39,16 +39,17 @@ namespace SharpCompress.Common.Tar.Headers
             WriteOctalBytes(0, buffer, 116, 8); // group ID
 
             //ArchiveEncoding.UTF8.GetBytes("magic").CopyTo(buffer, 257);
-            if (Name.Length > 100)
+            var nameByteCount = ArchiveEncoding.GetEncoding().GetByteCount(Name);
+            if (nameByteCount > 100)
             {
                 // Set mock filename and filetype to indicate the next block is the actual name of the file
                 WriteStringBytes("././@LongLink", buffer, 0, 100);
                 buffer[156] = (byte)EntryType.LongName;
-                WriteOctalBytes(Name.Length + 1, buffer, 124, 12);
+                WriteOctalBytes(nameByteCount + 1, buffer, 124, 12);
             }
             else
             {
-                WriteStringBytes(Name, buffer, 0, 100);
+                WriteStringBytes(ArchiveEncoding.Encode(Name), buffer, 0, 100);
                 WriteOctalBytes(Size, buffer, 124, 12);
                 var time = (long)(LastModifiedTime.ToUniversalTime() - EPOCH).TotalSeconds;
                 WriteOctalBytes(time, buffer, 136, 12);
@@ -69,10 +70,17 @@ namespace SharpCompress.Common.Tar.Headers
 
             output.Write(buffer, 0, buffer.Length);
 
-            if (Name.Length > 100)
+            if (nameByteCount > 100)
             {
                 WriteLongFilenameHeader(output);
-                Name = Name.Substring(0, 100);
+                // update to short name lower than 100 - [max bytes of one character].
+                // subtracting bytes is needed because preventing infinite loop(example code is here).
+                //
+                // var bytes = Encoding.UTF8.GetBytes(new string(0x3042, 100));
+                // var truncated = Encoding.UTF8.GetBytes(Encoding.UTF8.GetString(bytes, 0, 100));
+                //
+                // and then infinite recursion is occured in WriteLongFilenameHeader because truncated.Length is 102.
+                Name = ArchiveEncoding.Decode(ArchiveEncoding.Encode(Name), 0, 100 - ArchiveEncoding.GetEncoding().GetMaxByteCount(1));
                 Write(output);
             }
         }
@@ -182,6 +190,17 @@ namespace SharpCompress.Common.Tar.Headers
                 throw new InvalidOperationException("Buffer is invalid size");
             }
             return buffer;
+        }
+
+        private static void WriteStringBytes(byte[] name, byte[] buffer, int offset, int length)
+        {
+            int i = Math.Min(length, name.Length);
+            Buffer.BlockCopy(name, 0, buffer, offset, i);
+            // if Span<byte>.Fill can be used, it is more efficient
+            for (; i < length; ++i)
+            {
+                buffer[offset + i] = 0;
+            }
         }
 
         private static void WriteStringBytes(string name, byte[] buffer, int offset, int length)
