@@ -79,7 +79,7 @@ namespace SharpCompress.Common.Tar.Headers
                 // var bytes = Encoding.UTF8.GetBytes(new string(0x3042, 100));
                 // var truncated = Encoding.UTF8.GetBytes(Encoding.UTF8.GetString(bytes, 0, 100));
                 //
-                // and then truncated.Length is 102.
+                // and then infinite recursion is occured in WriteLongFilenameHeader because truncated.Length is 102.
                 Name = ArchiveEncoding.Decode(ArchiveEncoding.Encode(Name), 0, 100 - ArchiveEncoding.GetEncoding().GetMaxByteCount(1));
                 Write(output);
             }
