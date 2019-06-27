@@ -73,6 +73,13 @@ namespace SharpCompress.Common.Tar.Headers
             if (nameByteCount > 100)
             {
                 WriteLongFilenameHeader(output);
+                // update to short name lower than 100 - [max bytes of one character].
+                // subtracting bytes is needed because preventing infinite loop(example code is here).
+                //
+                // var bytes = Encoding.UTF8.GetBytes(new string(0x3042, 100));
+                // var truncated = Encoding.UTF8.GetBytes(Encoding.UTF8.GetString(bytes, 0, 100));
+                //
+                // and then truncated.Length is 102.
                 Name = ArchiveEncoding.Decode(ArchiveEncoding.Encode(Name), 0, 100 - ArchiveEncoding.GetEncoding().GetMaxByteCount(1));
                 Write(output);
             }
