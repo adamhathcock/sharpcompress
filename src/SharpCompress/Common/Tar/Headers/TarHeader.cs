@@ -73,7 +73,7 @@ namespace SharpCompress.Common.Tar.Headers
             if (nameByteCount > 100)
             {
                 WriteLongFilenameHeader(output);
-                Name = ArchiveEncoding.Decode(ArchiveEncoding.Encode(Name), 0, 90);
+                Name = ArchiveEncoding.Decode(ArchiveEncoding.Encode(Name), 0, 100 - ArchiveEncoding.GetEncoding().GetMaxByteCount(1));
                 Write(output);
             }
         }
