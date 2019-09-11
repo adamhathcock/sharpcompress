@@ -35,7 +35,7 @@ namespace SharpCompress.Archives
         }
 #endif
 
-        public override ICollection<TEntry> Entries
+        public override IReadOnlyCollection<TEntry> Entries
         {
             get
             {

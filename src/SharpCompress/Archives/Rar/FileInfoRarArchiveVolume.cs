@@ -1,6 +1,7 @@
 ﻿
 #if !NO_FILE
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.IO;
 using SharpCompress.Common.Rar;
 using SharpCompress.Common.Rar.Headers;
