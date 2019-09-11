@@ -1,29 +1,26 @@
 using System;
+#if NETCORE
+using System.Buffers;
+#endif
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Reflection;
-using System.Reflection.Emit;
-using System.Runtime.InteropServices;
-#if NETCORE
-using SharpCompress.Buffers;
-#endif
+
 using SharpCompress.Readers;
 
 namespace SharpCompress
 {
     internal static class Utility
     {
-        public static ReadOnlyCollection<T> ToReadOnly<T>(this IEnumerable<T> items)
+        public static ReadOnlyCollection<T> ToReadOnly<T>(this ICollection<T> items)
         {
-            return new ReadOnlyCollection<T>(items.ToList());
+            return new ReadOnlyCollection<T>(items);
         }
 
         /// <summary>
         /// Performs an unsigned bitwise right shift with the specified number
         /// </summary>
         /// <param name="number">Number to operate on</param>
-        /// <param name="bits">Ammount of bits to shift</param>
+        /// <param name="bits">Amount of bits to shift</param>
         /// <returns>The resulting number from the shift operation</returns>
         public static int URShift(int number, int bits)
         {
@@ -38,7 +35,7 @@ namespace SharpCompress
         /// Performs an unsigned bitwise right shift with the specified number
         /// </summary>
         /// <param name="number">Number to operate on</param>
-        /// <param name="bits">Ammount of bits to shift</param>
+        /// <param name="bits">Amount of bits to shift</param>
         /// <returns>The resulting number from the shift operation</returns>
         public static long URShift(long number, int bits)
         {
@@ -81,7 +78,8 @@ namespace SharpCompress
         // see https://stackoverflow.com/questions/1897555/what-is-the-equivalent-of-memset-in-c
         private static readonly Action<IntPtr, byte, uint> MemsetDelegate = CreateMemsetDelegate();
 
-        private static Action<IntPtr, byte, uint> CreateMemsetDelegate() {
+        private static Action<IntPtr, byte, uint> CreateMemsetDelegate()
+        {
             var dynamicMethod = new DynamicMethod(
                 "Memset",
                 MethodAttributes.Public | MethodAttributes.Static,
@@ -108,7 +106,7 @@ namespace SharpCompress
 #else
         public static void Memset(byte[] array, byte what, int length)
         {
-            for(var i = 0; i < length; i++)
+            for (var i = 0; i < length; i++)
             {
                 array[i] = what;
             }
@@ -117,7 +115,7 @@ namespace SharpCompress
 
         public static void Memset<T>(T[] array, T what, int length)
         {
-            for(var i = 0; i < length; i++)
+            for (var i = 0; i < length; i++)
             {
                 array[i] = what;
             }
@@ -184,7 +182,7 @@ namespace SharpCompress
                 action(item);
             }
         }
-        
+
         public static void Copy(Array sourceArray, long sourceIndex, Array destinationArray, long destinationIndex, long length)
         {
             if (sourceIndex > Int32.MaxValue || sourceIndex < Int32.MinValue)
