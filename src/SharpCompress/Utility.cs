@@ -226,9 +226,7 @@ namespace SharpCompress
             }
             finally
             {
-#if NETCORE
                 ArrayPool<byte>.Shared.Return(buffer);
-#endif
             }
         }
 
@@ -244,9 +242,7 @@ namespace SharpCompress
             }
             finally
             {
-#if NETCORE
                 ArrayPool<byte>.Shared.Return(buffer);
-#endif
             }
         }
 
@@ -331,9 +327,7 @@ namespace SharpCompress
             }
             finally
             {
-#if NETCORE
                 ArrayPool<byte>.Shared.Return(array);
-#endif
             }
         }
 
@@ -356,9 +350,7 @@ namespace SharpCompress
             }
             finally
             {
-#if NETCORE
                 ArrayPool<byte>.Shared.Return(array);
-#endif
             }
         }
 
@@ -369,11 +361,7 @@ namespace SharpCompress
 
         private static byte[] GetTransferByteArray()
         {
-#if NETCORE
             return ArrayPool<byte>.Shared.Rent(81920);
-#else
-            return new byte[81920];
-#endif
         }
 
         public static bool ReadFully(this Stream stream, byte[] buffer)
