@@ -2,6 +2,7 @@
 #if !NO_FILE
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using SharpCompress.Common.Rar;
 using SharpCompress.Common.Rar.Headers;
 using SharpCompress.IO;
@@ -18,7 +19,7 @@ namespace SharpCompress.Archives.Rar
             : base(StreamingMode.Seekable, fileInfo.OpenRead(), FixOptions(options))
         {
             FileInfo = fileInfo;
-            FileParts = GetVolumeFileParts().ToReadOnly();
+            FileParts = GetVolumeFileParts().ToArray().ToReadOnly();
         }
 
         private static ReaderOptions FixOptions(ReaderOptions options)
