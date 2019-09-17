@@ -217,7 +217,7 @@ namespace SharpCompress
             obj.CheckNotNull(name);
             if (obj.Length == 0)
             {
-                throw new ArgumentException("String is empty.");
+                throw new ArgumentException("String is empty.", name);
             }
         }
 

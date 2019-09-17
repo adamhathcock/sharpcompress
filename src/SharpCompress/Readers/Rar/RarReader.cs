@@ -33,7 +33,7 @@ namespace SharpCompress.Readers.Rar
         /// <returns></returns>
         public static RarReader Open(Stream stream, ReaderOptions options = null)
         {
-            stream.CheckNotNull("stream");
+            stream.CheckNotNull(nameof(stream));
             return new SingleVolumeRarReader(stream, options ?? new ReaderOptions());
         }
 
@@ -45,7 +45,7 @@ namespace SharpCompress.Readers.Rar
         /// <returns></returns>
         public static RarReader Open(IEnumerable<Stream> streams, ReaderOptions options = null)
         {
-            streams.CheckNotNull("streams");
+            streams.CheckNotNull(nameof(streams));
             return new MultiVolumeRarReader(streams, options ?? new ReaderOptions());
         }
 
@@ -64,7 +64,7 @@ namespace SharpCompress.Readers.Rar
             return Entry.Parts;
         }
 
-        protected override EntryStream GetEntryStream() 
+        protected override EntryStream GetEntryStream()
         {
             var stream = new MultiVolumeReadOnlyStream(CreateFilePartEnumerableForCurrentEntry().Cast<RarFilePart>(), this);
             if (Entry.IsRarV3)
