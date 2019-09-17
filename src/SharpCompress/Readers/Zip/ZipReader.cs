@@ -29,7 +29,7 @@ namespace SharpCompress.Readers.Zip
         /// <returns></returns>
         public static ZipReader Open(Stream stream, ReaderOptions options = null)
         {
-            stream.CheckNotNull("stream");
+            stream.CheckNotNull(nameof(stream));
             return new ZipReader(stream, options ?? new ReaderOptions());
         }
 

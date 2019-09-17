@@ -22,7 +22,7 @@ namespace SharpCompress.Archives.GZip
         /// <param name="readerOptions"></param>
         public static GZipArchive Open(string filePath, ReaderOptions readerOptions = null)
         {
-            filePath.CheckNotNullOrEmpty("filePath");
+            filePath.CheckNotNullOrEmpty(nameof(filePath));
             return Open(new FileInfo(filePath), readerOptions ?? new ReaderOptions());
         }
 
@@ -33,7 +33,7 @@ namespace SharpCompress.Archives.GZip
         /// <param name="readerOptions"></param>
         public static GZipArchive Open(FileInfo fileInfo, ReaderOptions readerOptions = null)
         {
-            fileInfo.CheckNotNull("fileInfo");
+            fileInfo.CheckNotNull(nameof(fileInfo));
             return new GZipArchive(fileInfo, readerOptions ?? new ReaderOptions());
         }
 #endif
@@ -45,7 +45,7 @@ namespace SharpCompress.Archives.GZip
         /// <param name="readerOptions"></param>
         public static GZipArchive Open(Stream stream, ReaderOptions readerOptions = null)
         {
-            stream.CheckNotNull("stream");
+            stream.CheckNotNull(nameof(stream));
             return new GZipArchive(stream, readerOptions ?? new ReaderOptions());
         }
 

@@ -73,7 +73,7 @@ namespace SharpCompress.Archives.Rar
         /// <param name="options"></param>
         public static RarArchive Open(string filePath, ReaderOptions options = null)
         {
-            filePath.CheckNotNullOrEmpty("filePath");
+            filePath.CheckNotNullOrEmpty(nameof(filePath));
             return new RarArchive(new FileInfo(filePath), options ?? new ReaderOptions());
         }
 
@@ -84,7 +84,7 @@ namespace SharpCompress.Archives.Rar
         /// <param name="options"></param>
         public static RarArchive Open(FileInfo fileInfo, ReaderOptions options = null)
         {
-            fileInfo.CheckNotNull("fileInfo");
+            fileInfo.CheckNotNull(nameof(fileInfo));
             return new RarArchive(fileInfo, options ?? new ReaderOptions());
         }
 #endif
@@ -96,7 +96,7 @@ namespace SharpCompress.Archives.Rar
         /// <param name="options"></param>
         public static RarArchive Open(Stream stream, ReaderOptions options = null)
         {
-            stream.CheckNotNull("stream");
+            stream.CheckNotNull(nameof(stream));
             return Open(stream.AsEnumerable(), options ?? new ReaderOptions());
         }
 
@@ -107,7 +107,7 @@ namespace SharpCompress.Archives.Rar
         /// <param name="options"></param>
         public static RarArchive Open(IEnumerable<Stream> streams, ReaderOptions options = null)
         {
-            streams.CheckNotNull("streams");
+            streams.CheckNotNull(nameof(streams));
             return new RarArchive(streams, options ?? new ReaderOptions());
         }
 
@@ -129,7 +129,7 @@ namespace SharpCompress.Archives.Rar
             }
         }
 #endif
-        
+
         public static bool IsRarFile(Stream stream, ReaderOptions options = null)
         {
             try

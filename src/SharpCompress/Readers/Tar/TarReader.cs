@@ -69,7 +69,7 @@ namespace SharpCompress.Readers.Tar
         /// <returns></returns>
         public static TarReader Open(Stream stream, ReaderOptions options = null)
         {
-            stream.CheckNotNull("stream");
+            stream.CheckNotNull(nameof(stream));
             options = options ?? new ReaderOptions();
             RewindableStream rewindableStream = new RewindableStream(stream);
             rewindableStream.StartRecording();

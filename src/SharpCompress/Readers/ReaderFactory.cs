@@ -28,7 +28,7 @@ namespace SharpCompress.Readers
         /// <returns></returns>
         public static IReader Open(Stream stream, ReaderOptions options = null)
         {
-            stream.CheckNotNull("stream");
+            stream.CheckNotNull(nameof(stream));
             options = options ?? new ReaderOptions()
                                  {
                                      LeaveStreamOpen = false
