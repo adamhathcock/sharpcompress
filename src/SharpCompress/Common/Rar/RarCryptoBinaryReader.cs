@@ -1,5 +1,4 @@
-﻿#if !NO_CRYPTO
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 
 namespace SharpCompress.Common.Rar
@@ -112,4 +111,3 @@ namespace SharpCompress.Common.Rar
         }
     }
 }
-#endif

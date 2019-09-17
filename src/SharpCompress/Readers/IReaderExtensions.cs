@@ -1,13 +1,10 @@
-﻿#if !NO_FILE
-using System.IO;
+﻿using System.IO;
 using SharpCompress.Common;
-#endif
 
 namespace SharpCompress.Readers
 {
     public static class IReaderExtensions
     {
-#if !NO_FILE
         public static void WriteEntryTo(this IReader reader, string filePath)
         {
             using (Stream stream = File.Open(filePath, FileMode.Create, FileAccess.Write))
@@ -61,6 +58,5 @@ namespace SharpCompress.Readers
                                                    }
                                                });
         }
-#endif
     }
 }

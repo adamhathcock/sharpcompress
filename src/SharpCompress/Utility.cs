@@ -1,13 +1,7 @@
 using System;
-#if NETCORE
 using System.Buffers;
-#endif
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Reflection;
-using System.Reflection.Emit;
-using System.Runtime.InteropServices;
 
 using SharpCompress.Readers;
 

@@ -65,10 +65,8 @@ namespace SharpCompress.Common.Zip.Headers
 
             return encryptionData;
         }
-
-#if !NO_CRYPTO
+        
         internal WinzipAesEncryptionData WinzipAesEncryptionData { get; set; }
-#endif
 
         internal ushort LastModifiedDate { get; set; }
 

@@ -1,6 +1,4 @@
-﻿
-#if !NO_CRYPTO
-using System;
+﻿using System;
 using System.IO;
 using System.Security.Cryptography;
 using System.Text;
@@ -262,5 +260,3 @@ namespace SharpCompress.Compressors.LZMA
         #endregion
     }
 }
-
-#endif

@@ -1,6 +1,4 @@
-﻿#if !NO_FILE
-using System;
-#endif
+﻿using System;
 using System.IO;
 using SharpCompress.Writers;
 
@@ -8,8 +6,6 @@ namespace SharpCompress.Archives
 {
     public static class IWritableArchiveExtensions
     {
-#if !NO_FILE
-
         public static void AddEntry(this IWritableArchive writableArchive,
                                                      string entryPath, string filePath)
         {
@@ -39,11 +35,7 @@ namespace SharpCompress.Archives
             this IWritableArchive writableArchive,
             string filePath, string searchPattern = "*.*", SearchOption searchOption = SearchOption.AllDirectories)
         {
-#if NET35
-            foreach (var path in Directory.GetFiles(filePath, searchPattern, searchOption))
-#else
             foreach (var path in Directory.EnumerateFiles(filePath, searchPattern, searchOption))
-#endif
             {
                 var fileInfo = new FileInfo(path);
                 writableArchive.AddEntry(path.Substring(filePath.Length), fileInfo.OpenRead(), true, fileInfo.Length,
@@ -58,6 +50,5 @@ namespace SharpCompress.Archives
             }
             return writableArchive.AddEntry(key, fileInfo.OpenRead(), true, fileInfo.Length, fileInfo.LastWriteTime);
         }
-#endif
     }
 }

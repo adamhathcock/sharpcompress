@@ -13,8 +13,6 @@ namespace SharpCompress.Archives.SevenZip
     public class SevenZipArchive : AbstractArchive<SevenZipArchiveEntry, SevenZipVolume>
     {
         private ArchiveDatabase database;
-#if !NO_FILE
-
         /// <summary>
         /// Constructor expects a filepath to an existing file.
         /// </summary>
@@ -36,7 +34,6 @@ namespace SharpCompress.Archives.SevenZip
             fileInfo.CheckNotNull("fileInfo");
             return new SevenZipArchive(fileInfo, readerOptions ?? new ReaderOptions());
         }
-#endif
         /// <summary>
         /// Takes a seekable Stream as a source
         /// </summary>
@@ -48,7 +45,6 @@ namespace SharpCompress.Archives.SevenZip
             return new SevenZipArchive(stream, readerOptions ?? new ReaderOptions());
         }
 
-#if !NO_FILE
         internal SevenZipArchive(FileInfo fileInfo, ReaderOptions readerOptions)
             : base(ArchiveType.SevenZip, fileInfo, readerOptions)
         {
@@ -75,7 +71,6 @@ namespace SharpCompress.Archives.SevenZip
                 return IsSevenZipFile(stream);
             }
         }
-#endif
 
         internal SevenZipArchive(Stream stream, ReaderOptions readerOptions)
             : base(ArchiveType.SevenZip, stream.AsEnumerable(), readerOptions)
