@@ -17,6 +17,7 @@ namespace SharpCompress.Archives
 
         private readonly List<TEntry> modifiedEntries = new List<TEntry>();
         private bool hasModifications;
+        private bool shouldRebuildModifiedCollection = true;
 
         internal AbstractWritableArchive(ArchiveType type)
             : base(type)
@@ -96,8 +97,20 @@ namespace SharpCompress.Archives
             }
             var entry = CreateEntry(key, source, size, modified, closeStream);
             newEntries.Add(entry);
-            RebuildModifiedCollection();
+            if(shouldRebuildModifiedCollection)
+                RebuildModifiedCollection();
             return entry;
+        }
+
+        public void PauseInternalEntryUpdates()
+        {
+            shouldRebuildModifiedCollection = false;
+        }
+
+        public void ResumeInternalEntryUpdates()
+        {
+            shouldRebuildModifiedCollection = true;
+            RebuildModifiedCollection();
         }
 
         private bool DoesKeyMatchExisting(string key)

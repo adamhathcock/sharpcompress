@@ -39,6 +39,7 @@ namespace SharpCompress.Archives
             this IWritableArchive writableArchive,
             string filePath, string searchPattern = "*.*", SearchOption searchOption = SearchOption.AllDirectories)
         {
+            writableArchive.PauseInternalEntryUpdates();
 #if NET35
             foreach (var path in Directory.GetFiles(filePath, searchPattern, searchOption))
 #else
@@ -49,7 +50,9 @@ namespace SharpCompress.Archives
                 writableArchive.AddEntry(path.Substring(filePath.Length), fileInfo.OpenRead(), true, fileInfo.Length,
                                          fileInfo.LastWriteTime);
             }
+            writableArchive.ResumeInternalEntryUpdates();
         }
+
         public static IArchiveEntry AddEntry(this IWritableArchive writableArchive, string key, FileInfo fileInfo)
         {
             if (!fileInfo.Exists)

@@ -11,5 +11,9 @@ namespace SharpCompress.Archives
         IArchiveEntry AddEntry(string key, Stream source, bool closeStream, long size = 0, DateTime? modified = null);
 
         void SaveTo(Stream stream, WriterOptions options);
+
+        void PauseInternalEntryUpdates();
+
+        void ResumeInternalEntryUpdates();
     }
 }
