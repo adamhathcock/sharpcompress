@@ -1,6 +1,7 @@
 ﻿#if !NO_FILE
 using System;
 #endif
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
@@ -15,7 +16,7 @@ namespace SharpCompress.Writers
         }
 
 #if !NO_FILE
-        public static void Write(this IWriter writer, string entryPath, FileInfo source)
+        public static void Write(this IWriter writer, string entryPath, FileInfo source, bool contentOnly = false)
         {
             if (!source.Exists)
             {
@@ -23,22 +24,33 @@ namespace SharpCompress.Writers
             }
             using (var stream = source.OpenRead())
             {
-                writer.Write(entryPath, stream, source.LastWriteTime);
+                var modified = contentOnly ? (DateTime?)null : source.LastWriteTime;
+                writer.Write(entryPath, stream, modified);
             }
         }
 
-        public static void Write(this IWriter writer, string entryPath, string source)
+        public static void Write(this IWriter writer, string entryPath, string source, bool contentOnly = false)
         {
-            writer.Write(entryPath, new FileInfo(source));
+            writer.Write(entryPath, new FileInfo(source), contentOnly);
         }
 
-        public static void WriteAll(this IWriter writer, string directory, string searchPattern = "*", SearchOption option = SearchOption.TopDirectoryOnly)
+        public static void WriteAll(
+            this IWriter writer,
+            string directory,
+            string searchPattern = "*",
+            SearchOption option = SearchOption.TopDirectoryOnly,
+            bool contentOnly = false)
         {
-            writer.WriteAll(directory, searchPattern, null, option);
+            writer.WriteAll(directory, searchPattern, null, option, contentOnly);
         }
 
-        public static void WriteAll(this IWriter writer, string directory, string searchPattern = "*", Expression<Func<string, bool>> fileSearchFunc = null,
-                                    SearchOption option = SearchOption.TopDirectoryOnly)
+        public static void WriteAll(
+            this IWriter writer,
+            string directory,
+            string searchPattern = "*",
+            Expression<Func<string, bool>> fileSearchFunc = null,
+            SearchOption option = SearchOption.TopDirectoryOnly,
+            bool contentOnly = false)
         {
             if (!Directory.Exists(directory))
             {
@@ -50,12 +62,22 @@ namespace SharpCompress.Writers
                 fileSearchFunc = n => true;
             }
 #if NET35
-            foreach (var file in Directory.GetDirectories(directory, searchPattern, option).Where(fileSearchFunc.Compile()))
+            IEnumerable<string> paths = Directory.GetFiles(directory, searchPattern, option);
 #else
-            foreach (var file in Directory.EnumerateFiles(directory, searchPattern, option).Where(fileSearchFunc.Compile()))
+            IEnumerable<string> paths = Directory.EnumerateFiles(directory, searchPattern, option);
 #endif
+            paths = paths.Where(fileSearchFunc.Compile());
+
+            if (contentOnly)
             {
-                writer.Write(file.Substring(directory.Length), file);
+                var pathList = paths.ToList();
+                pathList.Sort();
+                paths = pathList;
+            }
+
+            foreach (var path in paths)
+            {
+                writer.Write(path.Substring(directory.Length), path, contentOnly);
             }
         }
 
