@@ -59,6 +59,52 @@ namespace SharpCompress.Archives
             throw new InvalidOperationException("Cannot determine compressed stream type. Supported Archive Formats: Zip, GZip, Tar, Rar, 7Zip, LZip");
         }
 
+        public static bool TryOpen(Stream stream, ReaderOptions readerOptions,ArchiveTypeMask archiveTypes, out IArchive archive)
+        {
+            stream.CheckNotNull("stream");
+            if (!stream.CanRead || !stream.CanSeek)
+            {
+                throw new ArgumentException("Stream should be readable and seekable");
+            }
+            readerOptions = readerOptions ?? new ReaderOptions();
+            if (archiveTypes.HasFlag(ArchiveTypeMask.Zip) && ZipArchive.IsZipFile(stream, null))
+            {
+                stream.Seek(0, SeekOrigin.Begin);
+                archive = ZipArchive.Open(stream, readerOptions);
+                return true;
+            }
+            stream.Seek(0, SeekOrigin.Begin);
+            if (archiveTypes.HasFlag(ArchiveTypeMask.SevenZip) && SevenZipArchive.IsSevenZipFile(stream))
+            {
+                stream.Seek(0, SeekOrigin.Begin);
+                archive = SevenZipArchive.Open(stream, readerOptions);
+                return true;
+            }
+            stream.Seek(0, SeekOrigin.Begin);
+            if (archiveTypes.HasFlag(ArchiveTypeMask.GZip) && GZipArchive.IsGZipFile(stream))
+            {
+                stream.Seek(0, SeekOrigin.Begin);
+                archive = GZipArchive.Open(stream, readerOptions);
+                return true;
+            }
+            stream.Seek(0, SeekOrigin.Begin);
+            if (archiveTypes.HasFlag(ArchiveTypeMask.Rar) && RarArchive.IsRarFile(stream, readerOptions))
+            {
+                stream.Seek(0, SeekOrigin.Begin);
+                archive = RarArchive.Open(stream, readerOptions);
+                return true;
+            }
+            stream.Seek(0, SeekOrigin.Begin);
+            if (archiveTypes.HasFlag(ArchiveTypeMask.Tar) && TarArchive.IsTarFile(stream))
+            {
+                stream.Seek(0, SeekOrigin.Begin);
+                archive = TarArchive.Open(stream, readerOptions);
+                return true;
+            }
+            archive = null;
+            return false;
+        }
+
         public static IWritableArchive Create(ArchiveType type)
         {
             switch (type)
@@ -83,6 +129,51 @@ namespace SharpCompress.Archives
         }
 
 #if !NO_FILE
+
+        public static bool TryOpen(string filePath, ReaderOptions options, ArchiveTypeMask archiveTypes, out IArchive archive)
+        {
+            filePath.CheckNotNullOrEmpty("filePath");
+            return TryOpen(new FileInfo(filePath), options, archiveTypes, out archive);
+        }
+
+        public static bool TryOpen(FileInfo fileInfo, ReaderOptions options, ArchiveTypeMask archiveTypes, out IArchive archive)
+        {
+            fileInfo.CheckNotNull("fileInfo");
+            options = options ?? new ReaderOptions { LeaveStreamOpen = false };
+            using (var stream = fileInfo.OpenRead())
+            {
+                if (archiveTypes.HasFlag(ArchiveTypeMask.Zip) && ZipArchive.IsZipFile(stream, null))
+                {
+                    archive = ZipArchive.Open(fileInfo, options);
+                }
+                stream.Seek(0, SeekOrigin.Begin);
+                if (archiveTypes.HasFlag(ArchiveTypeMask.SevenZip) && SevenZipArchive.IsSevenZipFile(stream))
+                {
+                    archive = SevenZipArchive.Open(fileInfo, options);
+                }
+                stream.Seek(0, SeekOrigin.Begin);
+                if (archiveTypes.HasFlag(ArchiveTypeMask.GZip) && GZipArchive.IsGZipFile(stream))
+                {
+                    archive = GZipArchive.Open(fileInfo, options);
+                    return true;
+                }
+                stream.Seek(0, SeekOrigin.Begin);
+                if (archiveTypes.HasFlag(ArchiveTypeMask.Rar) && RarArchive.IsRarFile(stream, options))
+                {
+                    archive = RarArchive.Open(fileInfo, options);
+                    return true;
+                }
+                stream.Seek(0, SeekOrigin.Begin);
+                if (archiveTypes.HasFlag(ArchiveTypeMask.Tar) && TarArchive.IsTarFile(stream))
+                {
+                    archive = TarArchive.Open(fileInfo, options);
+                    return true;
+                }
+            }
+            archive = null;
+            return false;
+        }
+
 
         /// <summary>
         /// Constructor expects a filepath to an existing file.
