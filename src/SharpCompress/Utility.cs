@@ -2,7 +2,7 @@ using System;
 using System.Buffers;
 using System.Collections.Generic;
 using System.IO;
-
+using System.Runtime.CompilerServices;
 using SharpCompress.Readers;
 
 namespace SharpCompress
@@ -70,22 +70,11 @@ namespace SharpCompress
                 array[index] = val;
             }
         }
-#if  NETSTANDARD2_0
-
         public static void Memset(byte[] array, byte what, int length)
         {
             ref byte ptr = ref array[0];
-            System.Runtime.CompilerServices.Unsafe.InitBlock(ref ptr, what, (uint)length);
+            Unsafe.InitBlock(ref ptr, what, (uint)length);
         }
-#else
-        public static void Memset(byte[] array, byte what, int length)
-        {
-            for (var i = 0; i < length; i++)
-            {
-                array[i] = what;
-            }
-        }
-#endif
 
         public static void Memset<T>(T[] array, T what, int length)
         {
