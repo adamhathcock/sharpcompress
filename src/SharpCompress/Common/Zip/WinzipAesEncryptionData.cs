@@ -1,5 +1,3 @@
-
-#if !NO_CRYPTO
 using System;
 using System.Security.Cryptography;
 using SharpCompress.Converters;
@@ -76,4 +74,3 @@ namespace SharpCompress.Common.Zip
         }
     }
 }
-#endif

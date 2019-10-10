@@ -36,12 +36,10 @@ namespace SharpCompress.Archives
             }
             streamListener.FireEntryExtractionEnd(archiveEntry);
         }
-
-#if !NO_FILE
-
-/// <summary>
-/// Extract to specific directory, retaining filename
-/// </summary>
+        
+        /// <summary>
+        /// Extract to specific directory, retaining filename
+        /// </summary>
         public static void WriteToDirectory(this IArchiveEntry entry, string destinationDirectory,
                                             ExtractionOptions options = null)
         {
@@ -65,6 +63,5 @@ namespace SharpCompress.Archives
                                                    }
                                                });
         }
-#endif
     }
 }

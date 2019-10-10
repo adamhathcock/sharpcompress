@@ -1,8 +1,6 @@
 ﻿using System;
 using System.IO;
-#if !NO_CRYPTO
 using System.Linq;
-#endif
 using SharpCompress.Common.Zip.Headers;
 using SharpCompress.IO;
 using System.Text;
@@ -132,10 +130,6 @@ namespace SharpCompress.Common.Zip
 
                 if (entryHeader.CompressionMethod == ZipCompressionMethod.WinzipAes)
                 {
-#if NO_CRYPTO
-                    throw new NotSupportedException("Cannot decrypt Winzip AES with Silverlight or WP7.");
-#else
-
                     ExtraData data = entryHeader.Extra.SingleOrDefault(x => x.Type == ExtraDataType.WinZipAes);
                     if (data != null)
                     {
@@ -150,7 +144,6 @@ namespace SharpCompress.Common.Zip
 
                         entryHeader.CompressedSize -= (uint)(salt.Length + 2);
                     }
-#endif
                 }
             }
 

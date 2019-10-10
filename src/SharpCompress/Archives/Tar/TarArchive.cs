@@ -15,8 +15,6 @@ namespace SharpCompress.Archives.Tar
 {
     public class TarArchive : AbstractWritableArchive<TarArchiveEntry, TarVolume>
     {
-#if !NO_FILE
-
         /// <summary>
         /// Constructor expects a filepath to an existing file.
         /// </summary>
@@ -38,7 +36,6 @@ namespace SharpCompress.Archives.Tar
             fileInfo.CheckNotNull(nameof(fileInfo));
             return new TarArchive(fileInfo, readerOptions ?? new ReaderOptions());
         }
-#endif
 
         /// <summary>
         /// Takes a seekable Stream as a source
@@ -50,8 +47,6 @@ namespace SharpCompress.Archives.Tar
             stream.CheckNotNull(nameof(stream));
             return new TarArchive(stream, readerOptions ?? new ReaderOptions());
         }
-
-#if !NO_FILE
 
         public static bool IsTarFile(string filePath)
         {
@@ -69,7 +64,6 @@ namespace SharpCompress.Archives.Tar
                 return IsTarFile(stream);
             }
         }
-#endif
 
         public static bool IsTarFile(Stream stream)
         {
@@ -85,9 +79,7 @@ namespace SharpCompress.Archives.Tar
             }
             return false;
         }
-
-#if !NO_FILE
-
+        
         /// <summary>
         /// Constructor with a FileInfo object to an existing file.
         /// </summary>
@@ -102,7 +94,6 @@ namespace SharpCompress.Archives.Tar
         {
             return new TarVolume(file.OpenRead(), ReaderOptions).AsEnumerable();
         }
-#endif
 
         /// <summary>
         /// Takes multiple seekable Streams for a multi-part archive

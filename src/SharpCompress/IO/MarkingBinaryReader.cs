@@ -74,13 +74,6 @@ namespace SharpCompress.IO
             throw new NotSupportedException();
         }
 
-#if !SILVERLIGHT
-        public override decimal ReadDecimal()
-        {
-            throw new NotSupportedException();
-        }
-#endif
-
         public override double ReadDouble()
         {
             throw new NotSupportedException();

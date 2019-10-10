@@ -195,17 +195,12 @@ namespace SharpCompress.Common.Rar.Headers
 
         private static string ConvertPathV5(string path)
         {
-#if NO_FILE
-            // not sure what to do here
-            throw new NotImplementedException("TODO");
-#else
             if (Path.DirectorySeparatorChar == '\\')
             {
                 // replace embedded \\ with valid filename char
                 return path.Replace('\\', '-').Replace('/', '\\');
             } 
             return path;
-#endif
         }
 
 
@@ -361,9 +356,6 @@ namespace SharpCompress.Common.Rar.Headers
 
         private static string ConvertPathV4(string path)
         {
-#if NO_FILE
-            return path.Replace('\\', '/');
-#else
             if (Path.DirectorySeparatorChar == '/')
             {
                 return path.Replace('\\', '/');
@@ -373,7 +365,6 @@ namespace SharpCompress.Common.Rar.Headers
                 return path.Replace('/', '\\');
             }
             return path;
-#endif
         }
 
         public override string ToString()
