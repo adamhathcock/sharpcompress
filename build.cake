@@ -24,14 +24,11 @@ Task("Build")
     {
         var settings = new DotNetCoreBuildSettings
         {
-            Framework = "netstandard1.0",
+            Framework = "netstandard1.3",
             Configuration = "Release",
             NoRestore = true
         };
 
-        DotNetCoreBuild("./src/SharpCompress/SharpCompress.csproj", settings);
-
-        settings.Framework = "netstandard1.3";
         DotNetCoreBuild("./src/SharpCompress/SharpCompress.csproj", settings);
 
         settings.Framework = "netstandard2.0";

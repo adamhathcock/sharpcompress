@@ -34,34 +34,26 @@ namespace SharpCompress.Compressors.LZMA
             if (NEEDS_INDENT)
             {
                 NEEDS_INDENT = false;
-#if !NO_FILE
                 Debug.Write(INDENT.Peek());
-#endif
             }
         }
 
         public static void Write(object value)
         {
             EnsureIndent();
-#if !NO_FILE
             Debug.Write(value);
-#endif
         }
 
         public static void Write(string text)
         {
             EnsureIndent();
-#if !NO_FILE
             Debug.Write(text);
-#endif
         }
 
         public static void Write(string format, params object[] args)
         {
             EnsureIndent();
-#if !NO_FILE
             Debug.Write(string.Format(format, args));
-#endif
         }
 
         public static void WriteLine()

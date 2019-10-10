@@ -10,13 +10,11 @@ namespace SharpCompress.Common.GZip
         {
         }
 
-#if !NO_FILE
         public GZipVolume(FileInfo fileInfo, ReaderOptions options)
             : base(fileInfo.OpenRead(), options)
         {
             options.LeaveStreamOpen = false;
         }
-#endif
 
         public override bool IsFirstVolume => true;
 

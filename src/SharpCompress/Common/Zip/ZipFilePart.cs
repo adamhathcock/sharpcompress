@@ -165,12 +165,10 @@ namespace SharpCompress.Common.Zip
 
                     case ZipCompressionMethod.WinzipAes:
                     {
-#if !NO_FILE
                         if (Header.WinzipAesEncryptionData != null)
                         {
                             return new WinzipAesCryptoStream(plainStream, Header.WinzipAesEncryptionData, Header.CompressedSize - 10);
                         }
-#endif
                         return plainStream;
                     }
 

@@ -1,14 +1,10 @@
-﻿#if !NO_FILE
-using System;
+﻿using System;
 using System.IO;
-#endif
 
 namespace SharpCompress.Common
 {
     internal static class ExtractionMethods
     {
-        
-#if !NO_FILE
         /// <summary>
         /// Extract to specific directory, retaining filename
         /// </summary>
@@ -93,6 +89,5 @@ namespace SharpCompress.Common
                 entry.PreserveExtractionOptions(destinationFileName, options);
             }
         }
-#endif
     }
 }

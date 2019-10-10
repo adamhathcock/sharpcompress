@@ -48,15 +48,11 @@ namespace SharpCompress.Common.Rar.Headers
             } 
             else 
             {
-#if !NO_CRYPTO
                 if (Options.Password == null)
                 {
                     throw new CryptographicException("Encrypted Rar archive has no password specified.");
                 }
                 reader = new RarCryptoBinaryReader(stream, Options.Password);
-#else
-                throw new CryptographicException("Rar encryption unsupported on this platform");
-#endif
             }
 
             var header = RarHeader.TryReadBase(reader, _isRar5, Options.ArchiveEncoding);
@@ -138,11 +134,7 @@ namespace SharpCompress.Common.Rar.Headers
                                     }
                                     else
                                     {
-#if !NO_CRYPTO
                                         fh.PackedStream = new RarCryptoWrapper(ms, Options.Password, fh.R4Salt);
-#else
-                                        throw new NotSupportedException("RarCrypto not supported");
-#endif
                                     }
                                 }
                                 break;

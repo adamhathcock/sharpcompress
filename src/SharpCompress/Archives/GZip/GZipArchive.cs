@@ -13,8 +13,6 @@ namespace SharpCompress.Archives.GZip
 {
     public class GZipArchive : AbstractWritableArchive<GZipArchiveEntry, GZipVolume>
     {
-#if !NO_FILE
-
         /// <summary>
         /// Constructor expects a filepath to an existing file.
         /// </summary>
@@ -36,7 +34,6 @@ namespace SharpCompress.Archives.GZip
             fileInfo.CheckNotNull(nameof(fileInfo));
             return new GZipArchive(fileInfo, readerOptions ?? new ReaderOptions());
         }
-#endif
 
         /// <summary>
         /// Takes a seekable Stream as a source
@@ -53,8 +50,6 @@ namespace SharpCompress.Archives.GZip
         {
             return new GZipArchive();
         }
-
-#if !NO_FILE
 
         /// <summary>
         /// Constructor with a FileInfo object to an existing file.
@@ -100,7 +95,6 @@ namespace SharpCompress.Archives.GZip
                 SaveTo(stream, new WriterOptions(CompressionType.GZip));
             }
         }
-#endif
 
         public static bool IsGZipFile(Stream stream)
         {

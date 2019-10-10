@@ -6,7 +6,6 @@ using SharpCompress.Archives.SevenZip;
 using SharpCompress.Archives.Tar;
 using SharpCompress.Archives.Zip;
 using SharpCompress.Common;
-using SharpCompress.Compressors.LZMA;
 using SharpCompress.Readers;
 
 namespace SharpCompress.Archives
@@ -82,8 +81,6 @@ namespace SharpCompress.Archives
             }
         }
 
-#if !NO_FILE
-
         /// <summary>
         /// Constructor expects a filepath to an existing file.
         /// </summary>
@@ -148,6 +145,5 @@ namespace SharpCompress.Archives
                 }
             }
         }
-#endif
     }
 }

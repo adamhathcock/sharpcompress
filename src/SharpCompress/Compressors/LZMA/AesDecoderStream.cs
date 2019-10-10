@@ -1,6 +1,4 @@
-﻿
-#if !NO_CRYPTO
-using System;
+﻿using System;
 using System.IO;
 using System.Security.Cryptography;
 using System.Text;
@@ -195,7 +193,7 @@ namespace SharpCompress.Compressors.LZMA
             }
             else
             {
-#if NETSTANDARD1_3
+#if NETSTANDARD1_3 || NETSTANDARD2_0
                 using (IncrementalHash sha = IncrementalHash.CreateHash(HashAlgorithmName.SHA256))
                 {
                     byte[] counter = new byte[8];
@@ -262,5 +260,3 @@ namespace SharpCompress.Compressors.LZMA
         #endregion
     }
 }
-
-#endif
