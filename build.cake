@@ -49,14 +49,21 @@ Task("Test")
 Task("Pack")
     .IsDependentOn("Build")
     .Does(() => 
-{
-    var settings = new DotNetCorePackSettings
+{ 
+    if (IsRunningOnWindows())
     {
-        Configuration = "Release",
-        NoBuild = true
-    };
+        var settings = new DotNetCorePackSettings
+        {
+            Configuration = "Release",
+            NoBuild = true
+        };
 
-    DotNetCorePack("src/SharpCompress/SharpCompress.csproj", settings);
+        DotNetCorePack("src/SharpCompress/SharpCompress.csproj", settings);
+    }
+    else 
+    {
+        Information("Skipping Pack as this is not Windows");
+    }
 });
 
 Task("Default")
