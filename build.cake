@@ -11,29 +11,23 @@ Task("Build")
   .IsDependentOn("Restore")
   .Does(() =>
 {
+    var settings = new DotNetCoreBuildSettings
+    {
+        Framework = "netstandard1.4",
+        Configuration = "Release",
+        NoRestore = true
+    };
+
+    DotNetCoreBuild("./src/SharpCompress/SharpCompress.csproj", settings);
+
     if (IsRunningOnWindows())
     {
-        MSBuild("./sharpcompress.sln", c => 
-        { 
-            c.SetConfiguration("Release")
-            .SetVerbosity(Verbosity.Minimal)
-            .UseToolVersion(MSBuildToolVersion.VS2017);
-        });
-    }
-    else 
-    {
-        var settings = new DotNetCoreBuildSettings
-        {
-            Framework = "netstandard1.3",
-            Configuration = "Release",
-            NoRestore = true
-        };
-
-        DotNetCoreBuild("./src/SharpCompress/SharpCompress.csproj", settings);
-
-        settings.Framework = "netstandard2.0";
+        settings.Framework = "net46";
         DotNetCoreBuild("./src/SharpCompress/SharpCompress.csproj", settings);
     }
+
+    settings.Framework = "netstandard2.0";
+    DotNetCoreBuild("./src/SharpCompress/SharpCompress.csproj", settings);
 });
 
 Task("Test")
@@ -56,19 +50,13 @@ Task("Pack")
     .IsDependentOn("Build")
     .Does(() => 
 {
-    if (IsRunningOnWindows())
+    var settings = new DotNetCorePackSettings
     {
-        MSBuild("src/SharpCompress/SharpCompress.csproj", c => c
-            .SetConfiguration("Release")
-            .SetVerbosity(Verbosity.Minimal)
-            .UseToolVersion(MSBuildToolVersion.VS2017)
-            .WithProperty("NoBuild", "true")
-            .WithTarget("Pack"));
-    } 
-    else 
-    {
-        Information("Skipping Pack as this is not Windows");
-    }
+        Configuration = "Release",
+        NoBuild = true
+    };
+
+    DotNetCorePack("src/SharpCompress/SharpCompress.csproj", settings);
 });
 
 Task("Default")
