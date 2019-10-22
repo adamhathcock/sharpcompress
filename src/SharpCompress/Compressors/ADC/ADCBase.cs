@@ -142,7 +142,7 @@ namespace SharpCompress.Compressors.ADC
                         position += chunkSize + 1;
                         break;
                     case TWO_BYTE:
-                        tempMs = new MemoryStream();
+                        tempMs = Utility.RECYCLABLE_MEMORY_STREAM_MANAGER.GetStream();
                         chunkSize = GetChunkSize((byte)readByte);
                         tempMs.WriteByte((byte)readByte);
                         tempMs.WriteByte((byte)input.ReadByte());
@@ -173,7 +173,7 @@ namespace SharpCompress.Compressors.ADC
                         }
                         break;
                     case THREE_BYTE:
-                        tempMs = new MemoryStream();
+                        tempMs = Utility.RECYCLABLE_MEMORY_STREAM_MANAGER.GetStream();
                         chunkSize = GetChunkSize((byte)readByte);
                         tempMs.WriteByte((byte)readByte);
                         tempMs.WriteByte((byte)input.ReadByte());

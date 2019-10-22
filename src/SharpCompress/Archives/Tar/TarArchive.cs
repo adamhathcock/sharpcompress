@@ -138,7 +138,7 @@ namespace SharpCompress.Archives.Tar
 
                             using (var entryStream = entry.OpenEntryStream())
                             {
-                                using (var memoryStream = new MemoryStream())
+                                using (var memoryStream = Utility.RECYCLABLE_MEMORY_STREAM_MANAGER.GetStream())
                                 {
                                     entryStream.TransferTo(memoryStream);
                                     memoryStream.Position = 0;

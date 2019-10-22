@@ -3,12 +3,14 @@ using System.Buffers;
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.CompilerServices;
+using Microsoft.IO;
 using SharpCompress.Readers;
 
 namespace SharpCompress
 {
     internal static class Utility
     {
+        public static readonly RecyclableMemoryStreamManager RECYCLABLE_MEMORY_STREAM_MANAGER = new RecyclableMemoryStreamManager();
         public static ReadOnlyCollection<T> ToReadOnly<T>(this ICollection<T> items)
         {
             return new ReadOnlyCollection<T>(items);

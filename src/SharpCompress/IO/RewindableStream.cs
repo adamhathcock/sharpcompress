@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using Microsoft.IO;
 using SharpCompress.Compressors.Filters;
 
 namespace SharpCompress.IO
@@ -7,7 +8,7 @@ namespace SharpCompress.IO
     internal class RewindableStream : Stream
     {
         private readonly Stream stream;
-        private MemoryStream bufferStream = new MemoryStream();
+        private MemoryStream bufferStream = Utility.RECYCLABLE_MEMORY_STREAM_MANAGER.GetStream();
         private bool isRewound;
         private bool isDisposed;
 
@@ -29,6 +30,7 @@ namespace SharpCompress.IO
             if (disposing)
             {
                 stream.Dispose();
+                bufferStream.Dispose();
             }
         }
 
@@ -51,7 +53,8 @@ namespace SharpCompress.IO
                 bufferStream.TransferTo(buffer);
                 //create new memorystream to allow proper resizing as memorystream could be a user provided buffer
                 //https://github.com/adamhathcock/sharpcompress/issues/306
-                bufferStream = new MemoryStream();
+                bufferStream.Dispose();
+                bufferStream = Utility.RECYCLABLE_MEMORY_STREAM_MANAGER.GetStream();
                 buffer.Position = 0;
                 buffer.TransferTo(bufferStream);
                 bufferStream.Position = 0;

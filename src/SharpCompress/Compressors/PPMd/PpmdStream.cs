@@ -78,7 +78,10 @@ namespace SharpCompress.Compressors.PPMd
             {
                 if (_compress)
                 {
-                    _model.EncodeBlock(_stream, new MemoryStream(), true);
+                    using (var stream = Utility.RECYCLABLE_MEMORY_STREAM_MANAGER.GetStream())
+                    {
+                        _model.EncodeBlock(_stream, stream, true);
+                    }
                 }
             }
             base.Dispose(isDisposing);

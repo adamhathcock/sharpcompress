@@ -1396,7 +1396,7 @@ namespace SharpCompress.Common.SevenZip
                 }
                 else
                 {
-                    _stream = new MemoryStream();
+                    _stream = Utility.RECYCLABLE_MEMORY_STREAM_MANAGER.GetStream();
                 }
                 _rem = _db._files[index].Size;
             }
