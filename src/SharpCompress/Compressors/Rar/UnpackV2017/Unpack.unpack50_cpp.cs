@@ -30,7 +30,7 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017
     // Check TablesRead5 to be sure that we read tables at least once
     // regardless of current block header TablePresent flag.
     // So we can safefly use these tables below.
-    if (!ReadBlockHeader(Inp,ref BlockHeader) || 
+    if (!ReadBlockHeader(Inp,ref BlockHeader) ||
         !ReadTables(Inp,ref BlockHeader, ref BlockTables) || !TablesRead5)
       return;
   }
@@ -45,8 +45,8 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017
 
       // We use 'while', because for empty block containing only Huffman table,
       // we'll be on the block border once again just after reading the table.
-      while (Inp.InAddr>BlockHeader.BlockStart+BlockHeader.BlockSize-1 || 
-             Inp.InAddr==BlockHeader.BlockStart+BlockHeader.BlockSize-1 && 
+      while (Inp.InAddr>BlockHeader.BlockStart+BlockHeader.BlockSize-1 ||
+             Inp.InAddr==BlockHeader.BlockStart+BlockHeader.BlockSize-1 &&
              Inp.InBit>=BlockHeader.BlockBitSize)
       {
         if (BlockHeader.LastBlockInFile)
@@ -415,7 +415,7 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017
 
   // Choose the nearest among WriteBorder and WrPtr actual written border.
   // If border is equal to UnpPtr, it means that we have MaxWinSize data ahead.
-  if (WriteBorder==UnpPtr || 
+  if (WriteBorder==UnpPtr ||
       WrPtr!=UnpPtr && ((WrPtr-UnpPtr)&MaxWinMask)<((WriteBorder-UnpPtr)&MaxWinMask))
     WriteBorder=WrPtr;
 }
@@ -563,11 +563,11 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017
     if (!UnpReadBuf())
       return false;
   Inp.faddbits((uint)((8-Inp.InBit)&7));
-  
+
   byte BlockFlags=(byte)(Inp.fgetbits()>>8);
   Inp.faddbits(8);
   uint ByteCount=(uint)(((BlockFlags>>3)&3)+1); // Block size byte count.
-  
+
   if (ByteCount==4)
     return false;
 

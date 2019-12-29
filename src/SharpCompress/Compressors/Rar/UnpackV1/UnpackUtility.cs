@@ -1,4 +1,5 @@
-﻿using SharpCompress.Compressors.Rar.VM;
+﻿using System;
+using SharpCompress.Compressors.Rar.VM;
 
 namespace SharpCompress.Compressors.Rar.UnpackV1
 {
@@ -186,9 +187,7 @@ namespace SharpCompress.Compressors.Rar.UnpackV1
             int i;
             long M, N;
 
-            Utility.Fill(lenCount, 0); // memset(LenCount,0,sizeof(LenCount));
-
-            Utility.Fill(dec.DecodeNum, 0); // memset(Dec->DecodeNum,0,Size*sizeof(*Dec->DecodeNum));
+            new Span<int>(dec.DecodeNum).Fill(0); // memset(Dec->DecodeNum,0,Size*sizeof(*Dec->DecodeNum));
 
             for (i = 0; i < size; i++)
             {
