@@ -135,7 +135,7 @@ namespace SharpCompress.Archives.SevenZip
         {
             BinaryReader reader = new BinaryReader(stream);
             byte[] signatureBytes = reader.ReadBytes(6);
-            return signatureBytes.BinaryEquals(SIGNATURE);
+            return signatureBytes.SequenceEqual(SIGNATURE);
         }
 
         protected override IReader CreateReaderForSolidExtraction()
@@ -201,7 +201,7 @@ namespace SharpCompress.Archives.SevenZip
                 return CreateEntryStream(new ReadOnlySubStream(currentStream, currentItem.Size));
             }
         }
-        
+
         private class PasswordProvider : IPasswordProvider
         {
             private readonly string _password;
@@ -209,7 +209,6 @@ namespace SharpCompress.Archives.SevenZip
             public PasswordProvider(string password)
             {
                 _password = password;
-
             }
 
             public string CryptoGetTextPassword()

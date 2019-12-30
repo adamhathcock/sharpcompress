@@ -23,7 +23,7 @@ namespace SharpCompress.Archives
         protected ReaderOptions ReaderOptions { get; }
 
         private bool disposed;
-        
+
         internal AbstractArchive(ArchiveType type, FileInfo fileInfo, ReaderOptions readerOptions)
         {
             Type = type;
@@ -140,12 +140,12 @@ namespace SharpCompress.Archives
 
         /// <summary>
         /// Use this method to extract all entries in an archive in order.
-        /// This is primarily for SOLID Rar Archives or 7Zip Archives as they need to be 
+        /// This is primarily for SOLID Rar Archives or 7Zip Archives as they need to be
         /// extracted sequentially for the best performance.
-        /// 
+        ///
         /// This method will load all entry information from the archive.
-        /// 
-        /// WARNING: this will reuse the underlying stream for the archive.  Errors may 
+        ///
+        /// WARNING: this will reuse the underlying stream for the archive.  Errors may
         /// occur if this is used at the same time as other extraction methods on this instance.
         /// </summary>
         /// <returns></returns>

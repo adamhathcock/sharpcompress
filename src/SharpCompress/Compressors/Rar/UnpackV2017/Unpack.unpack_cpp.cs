@@ -246,7 +246,7 @@ public Unpack(/* ComprDataIO *DataIO */)
 
   // Set the entire DecodeNum to zero.
   //memset(Dec->DecodeNum,0,Size*sizeof(*Dec->DecodeNum));
-  Utility.FillFast<ushort>(Dec.DecodeNum, 0);
+  new Span<ushort>(Dec.DecodeNum).Fill(0);
 
   // Initialize not really used entry for zero length code.
   Dec.DecodePos[0]=0;
@@ -272,7 +272,7 @@ public Unpack(/* ComprDataIO *DataIO */)
     Dec.DecodeLen[I]=(uint)LeftAligned;
 
     // Every item of this array contains the sum of all preceding items.
-    // So it contains the start position in code list for every bit length. 
+    // So it contains the start position in code list for every bit length.
     Dec.DecodePos[I]=Dec.DecodePos[I-1]+LengthCount[I-1];
   }
 
@@ -337,7 +337,7 @@ public Unpack(/* ComprDataIO *DataIO */)
     uint BitField=Code<<(int)(16-Dec.QuickBits);
 
     // Prepare the table for quick decoding of bit lengths.
-  
+
     // Find the upper limit for current bit field and adjust the bit length
     // accordingly if necessary.
     while (CurBitLength<Dec.DecodeLen.Length && BitField>=Dec.DecodeLen[CurBitLength])

@@ -32,9 +32,9 @@ namespace SharpCompress.Compressors.Rar.UnpackV1
             }
         }
 
-        public bool Suspended { 
+        public bool Suspended {
             get => suspended;
-            set => suspended = value; 
+            set => suspended = value;
         }
 
         public int Char
@@ -139,12 +139,12 @@ namespace SharpCompress.Compressors.Rar.UnpackV1
                 case 36: // alternative hash
                     Unpack29(fileHeader.IsSolid);
                     break;
-                
+
                 case 50: // rar 5.x compression
                     Unpack5(fileHeader.IsSolid);
                     break;
 
-                default: 
+                default:
                     throw new InvalidFormatException("unknown rar compression version " + fileHeader.CompressionAlgorithm);
             }
         }
@@ -729,13 +729,13 @@ namespace SharpCompress.Compressors.Rar.UnpackV1
             if (!solid)
             {
                 tablesRead = false;
-                Utility.Fill(oldDist, 0); // memset(oldDist,0,sizeof(OldDist));
+                new Span<int>(oldDist).Fill(0); // memset(oldDist,0,sizeof(OldDist));
 
                 oldDistPtr = 0;
                 lastDist = 0;
                 lastLength = 0;
 
-                Utility.Fill(unpOldTable, (byte)0); // memset(UnpOldTable,0,sizeof(UnpOldTable));
+                new Span<byte>(unpOldTable).Fill(0); // memset(UnpOldTable,0,sizeof(UnpOldTable));
 
                 unpPtr = 0;
                 wrPtr = 0;
@@ -837,7 +837,7 @@ WriteBorder=Math.Min(MaxWinSize,UNPACK_MAX_WRITE)&MaxWinMask;
 
             if ((bitField & 0x4000) == 0)
             {
-                Utility.Fill(unpOldTable, (byte)0); // memset(UnpOldTable,0,sizeof(UnpOldTable));
+                new Span<byte>(unpOldTable).Fill(0); // memset(UnpOldTable,0,sizeof(UnpOldTable));
             }
             AddBits(2);
 
@@ -1109,7 +1109,7 @@ WriteBorder=Math.Min(MaxWinSize,UNPACK_MAX_WRITE)&MaxWinMask;
             oldFilterLengths[FiltPos] = StackFilter.BlockLength;
 
             // memset(StackFilter->Prg.InitR,0,sizeof(StackFilter->Prg.InitR));
-            Utility.Fill(StackFilter.Program.InitR, 0);
+            new Span<int>(StackFilter.Program.InitR).Fill(0);
             StackFilter.Program.InitR[3] = RarVM.VM_GLOBALMEMADDR; // StackFilter->Prg.InitR[3]=VM_GLOBALMEMADDR;
             StackFilter.Program.InitR[4] = StackFilter.BlockLength;
 

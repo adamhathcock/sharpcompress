@@ -3,7 +3,7 @@
 * Original author: Edmund Wagner
 * Creation date: 21.06.2007
 *
-* the unrar licence applies to all junrar source and binary distributions 
+* the unrar licence applies to all junrar source and binary distributions
 * you are not allowed to use this source to re-create the RAR compression algorithm
 */
 
@@ -263,7 +263,7 @@ namespace SharpCompress.Compressors.Rar.UnpackV1
             if (0 == (BitField & 0x4000))
             {
                 // memset(UnpOldTable20,0,sizeof(UnpOldTable20));
-                Utility.Fill(UnpOldTable20, (byte)0);
+                new Span<byte>(UnpOldTable20).Fill(0);
             }
             AddBits(2);
 
@@ -371,7 +371,7 @@ namespace SharpCompress.Compressors.Rar.UnpackV1
                 AudV[3] = new AudioVariables();
 
                 // memset(UnpOldTable20,0,sizeof(UnpOldTable20));
-                Utility.Fill(UnpOldTable20, (byte)0);
+                new Span<byte>(UnpOldTable20).Fill(0);
             }
         }
 

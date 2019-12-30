@@ -7,6 +7,7 @@
     <FileVersion>0.24.0</FileVersion>
     <Authors>Adam Hathcock</Authors>
     <TargetFrameworks Condition="'$(LibraryFrameworks)'==''">netstandard1.3;netstandard2.0;net46</TargetFrameworks>
+    <TargetFrameworks Condition=" '$(OS)' != 'Windows_NT' ">netstandard1.3;netstandard2.0</TargetFrameworks>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <AssemblyName>SharpCompress</AssemblyName>
@@ -24,6 +25,6 @@
   <ItemGroup>
     <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="4.6.0" />
     <PackageReference Include="System.Text.Encoding.CodePages" Version="4.6.0" />
-    <PackageReference Include="System.Buffers" Version="4.5.0" />
+    <PackageReference Include="System.Memory" Version="4.5.3" />
   </ItemGroup>
 </Project>
