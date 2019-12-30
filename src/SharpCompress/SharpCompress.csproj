@@ -9,7 +9,7 @@
     <TargetFrameworks Condition="'$(LibraryFrameworks)'==''">netstandard1.3;netstandard2.0;net46</TargetFrameworks>
     <TargetFrameworks Condition=" '$(OS)' != 'Windows_NT' ">netstandard1.3;netstandard2.0</TargetFrameworks>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
     <AssemblyName>SharpCompress</AssemblyName>
     <AssemblyOriginatorKeyFile>../../SharpCompress.snk</AssemblyOriginatorKeyFile>
     <SignAssembly>true</SignAssembly>

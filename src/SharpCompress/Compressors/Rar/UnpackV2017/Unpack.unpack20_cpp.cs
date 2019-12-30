@@ -191,7 +191,7 @@ internal static class Unpack20Local {
   UnpAudioBlock=(BitField & 0x8000)!=0;
 
   if ((BitField & 0x4000) != 0)
-    Utility.Memset(UnpOldTable20,0,UnpOldTable20.Length);
+    new Span<byte>(UnpOldTable20).Fill(0);
   Inp.addbits(2);
 
   uint TableSize;
@@ -296,7 +296,7 @@ internal static class Unpack20Local {
 
     //memset(AudV,0,sizeof(AudV));
     AudV = new AudioVariables[4];
-    Utility.Memset(UnpOldTable20, 0, UnpOldTable20.Length);
+    new Span<byte>(UnpOldTable20).Fill(0);
     //memset(MD,0,sizeof(MD));
     MD = new DecodeTable[4];
   }

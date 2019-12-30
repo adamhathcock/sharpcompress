@@ -50,10 +50,10 @@ namespace SharpCompress.Common.Rar
             if (sizeToRead > 0)
             {
                 int alignedSize = sizeToRead + ((~sizeToRead + 1) & 0xf);
+                byte[] cipherText = new byte[RarRijndael.CRYPTO_BLOCK_SIZE];
                 for (int i = 0; i < alignedSize / 16; i++)
                 {
                     //long ax = System.currentTimeMillis();
-                    byte[] cipherText = new byte[RarRijndael.CRYPTO_BLOCK_SIZE];
                     _actualStream.Read(cipherText, 0, RarRijndael.CRYPTO_BLOCK_SIZE);
 
                     var readBytes = _rijndael.ProcessBlock(cipherText);

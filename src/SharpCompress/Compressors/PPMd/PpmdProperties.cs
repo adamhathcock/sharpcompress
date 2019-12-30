@@ -1,5 +1,6 @@
-﻿using SharpCompress.Compressors.PPMd.I1;
-using SharpCompress.Converters;
+﻿using System;
+using System.Buffers.Binary;
+using SharpCompress.Compressors.PPMd.I1;
 
 namespace SharpCompress.Compressors.PPMd
 {
@@ -25,7 +26,7 @@ namespace SharpCompress.Compressors.PPMd
             ModelOrder = modelOrder;
             RestorationMethod = modelRestorationMethod;
         }
-        
+
         public int ModelOrder { get; }
         public PpmdVersion Version { get; } = PpmdVersion.I1;
         internal ModelRestorationMethod RestorationMethod { get; }
@@ -34,7 +35,7 @@ namespace SharpCompress.Compressors.PPMd
         {
             if (properties.Length == 2)
             {
-                ushort props = DataConverter.LittleEndian.GetUInt16(properties, 0);
+                ushort props = BinaryPrimitives.ReadUInt16LittleEndian(properties);
                 AllocatorSize = (((props >> 4) & 0xff) + 1) << 20;
                 ModelOrder = (props & 0x0f) + 1;
                 RestorationMethod = (ModelRestorationMethod)(props >> 12);
@@ -42,7 +43,7 @@ namespace SharpCompress.Compressors.PPMd
             else if (properties.Length == 5)
             {
                 Version = PpmdVersion.H7Z;
-                AllocatorSize = DataConverter.LittleEndian.GetInt32(properties, 1);
+                AllocatorSize = BinaryPrimitives.ReadInt32LittleEndian(properties.AsSpan(1));
                 ModelOrder = properties[0];
             }
         }
@@ -64,8 +65,16 @@ namespace SharpCompress.Compressors.PPMd
             }
         }
 
-        public byte[] Properties => DataConverter.LittleEndian.GetBytes(
-                                                                        (ushort)
-                                                                        ((ModelOrder - 1) + (((AllocatorSize >> 20) - 1) << 4) + ((ushort)RestorationMethod << 12)));
+        public byte[] Properties
+        {
+            get
+            {
+                byte[] bytes = new byte[2];
+                BinaryPrimitives.WriteUInt16LittleEndian(
+                    bytes,
+                    (ushort)((ModelOrder - 1) + (((AllocatorSize >> 20) - 1) << 4) + ((ushort)RestorationMethod << 12)));
+                return bytes;
+            }
+        }
     }
 }

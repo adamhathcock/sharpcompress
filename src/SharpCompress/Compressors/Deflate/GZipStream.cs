@@ -27,9 +27,8 @@
 // ------------------------------------------------------------------
 
 using System;
+using System.Buffers.Binary;
 using System.IO;
-using SharpCompress.Common;
-using SharpCompress.Converters;
 using System.Text;
 
 namespace SharpCompress.Compressors.Deflate
@@ -442,7 +441,7 @@ namespace SharpCompress.Compressors.Deflate
             }
             TimeSpan delta = LastModified.Value - UNIX_EPOCH;
             var timet = (Int32)delta.TotalSeconds;
-            DataConverter.LittleEndian.PutBytes(header, i, timet);
+            BinaryPrimitives.WriteInt32LittleEndian(header.AsSpan(i), timet);
             i += 4;
 
             // xflg

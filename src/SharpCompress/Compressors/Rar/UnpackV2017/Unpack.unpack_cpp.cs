@@ -196,7 +196,7 @@ public Unpack(/* ComprDataIO *DataIO */)
 {
   if (!Solid)
   {
-    Utility.Memset<uint>(OldDist, 0, OldDist.Length);
+    new Span<uint>(OldDist).Fill(0);
     OldDistPtr=0;
     LastDist=LastLength=0;
 //    memset(Window,0,MaxWinSize);

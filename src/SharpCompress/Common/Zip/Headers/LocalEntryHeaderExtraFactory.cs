@@ -1,6 +1,6 @@
 ﻿using System;
+using System.Buffers.Binary;
 using System.Text;
-using SharpCompress.Converters;
 
 namespace SharpCompress.Common.Zip.Headers
 {
@@ -76,34 +76,34 @@ namespace SharpCompress.Common.Zip.Headers
             switch (DataBytes.Length)
             {
                 case 4:
-                    VolumeNumber = DataConverter.LittleEndian.GetUInt32(DataBytes, 0);
+                    VolumeNumber = BinaryPrimitives.ReadUInt32LittleEndian(DataBytes);
                     return;
                 case 8:
-                    RelativeOffsetOfEntryHeader = (long)DataConverter.LittleEndian.GetUInt64(DataBytes, 0);
+                    RelativeOffsetOfEntryHeader = BinaryPrimitives.ReadInt64LittleEndian(DataBytes);
                     return;
                 case 12:
-                    RelativeOffsetOfEntryHeader = (long)DataConverter.LittleEndian.GetUInt64(DataBytes, 0);
-                    VolumeNumber = DataConverter.LittleEndian.GetUInt32(DataBytes, 8);
+                    RelativeOffsetOfEntryHeader = BinaryPrimitives.ReadInt64LittleEndian(DataBytes);
+                    VolumeNumber = BinaryPrimitives.ReadUInt32LittleEndian(DataBytes.AsSpan(8));
                     return;
                 case 16:
-                     UncompressedSize = (long)DataConverter.LittleEndian.GetUInt64(DataBytes, 0);
-                     CompressedSize = (long)DataConverter.LittleEndian.GetUInt64(DataBytes, 8);
+                    UncompressedSize = BinaryPrimitives.ReadInt64LittleEndian(DataBytes);
+                    CompressedSize = BinaryPrimitives.ReadInt64LittleEndian(DataBytes.AsSpan(8));
                     return;
                 case 20:
-                    UncompressedSize = (long)DataConverter.LittleEndian.GetUInt64(DataBytes, 0);
-                    CompressedSize = (long)DataConverter.LittleEndian.GetUInt64(DataBytes, 8);
-                    VolumeNumber = DataConverter.LittleEndian.GetUInt32(DataBytes, 16);
+                    UncompressedSize = BinaryPrimitives.ReadInt64LittleEndian(DataBytes);
+                    CompressedSize = BinaryPrimitives.ReadInt64LittleEndian(DataBytes.AsSpan(8));
+                    VolumeNumber = BinaryPrimitives.ReadUInt32LittleEndian(DataBytes.AsSpan(16));
                     return;
                 case 24:
-                    UncompressedSize = (long)DataConverter.LittleEndian.GetUInt64(DataBytes, 0);
-                    CompressedSize = (long)DataConverter.LittleEndian.GetUInt64(DataBytes, 8);
-                    RelativeOffsetOfEntryHeader = (long)DataConverter.LittleEndian.GetUInt64(DataBytes, 16);
+                    UncompressedSize = BinaryPrimitives.ReadInt64LittleEndian(DataBytes);
+                    CompressedSize = BinaryPrimitives.ReadInt64LittleEndian(DataBytes.AsSpan(8));
+                    RelativeOffsetOfEntryHeader = BinaryPrimitives.ReadInt64LittleEndian(DataBytes.AsSpan(16));
                     return;
                 case 28:
-                    UncompressedSize = (long)DataConverter.LittleEndian.GetUInt64(DataBytes, 0);
-                    CompressedSize = (long)DataConverter.LittleEndian.GetUInt64(DataBytes, 8);
-                    RelativeOffsetOfEntryHeader = (long)DataConverter.LittleEndian.GetUInt64(DataBytes, 16);
-                    VolumeNumber = DataConverter.LittleEndian.GetUInt32(DataBytes, 24);
+                    UncompressedSize = BinaryPrimitives.ReadInt64LittleEndian(DataBytes);
+                    CompressedSize = BinaryPrimitives.ReadInt64LittleEndian(DataBytes.AsSpan(8));
+                    RelativeOffsetOfEntryHeader = BinaryPrimitives.ReadInt64LittleEndian(DataBytes.AsSpan(16));
+                    VolumeNumber = BinaryPrimitives.ReadUInt32LittleEndian(DataBytes.AsSpan(24));
                     return;
                 default:
                 throw new ArchiveException("Unexpected size of of Zip64 extended information extra field");
@@ -132,7 +132,7 @@ namespace SharpCompress.Common.Zip.Headers
                 case ExtraDataType.Zip64ExtendedInformationExtraField:
                     return new Zip64ExtendedInformationExtraField
                             (
-                                type, 
+                                type,
                                 length,
                                 extraData
                            );

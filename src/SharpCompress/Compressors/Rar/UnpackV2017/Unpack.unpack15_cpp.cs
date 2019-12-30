@@ -1,4 +1,5 @@
-﻿using static SharpCompress.Compressors.Rar.UnpackV2017.Unpack.Unpack15Local;
+﻿using System;
+using static SharpCompress.Compressors.Rar.UnpackV2017.Unpack.Unpack15Local;
 
 namespace SharpCompress.Compressors.Rar.UnpackV2017
 {
@@ -461,9 +462,9 @@ internal static class Unpack15Local {
     ChSetA[I]=(ushort)I;
     ChSetC[I]=(ushort)(((~I+1) & 0xff)<<8);
   }
-  Utility.Memset(NToPl,0,NToPl.Length);
-  Utility.Memset(NToPlB,0,NToPlB.Length);
-  Utility.Memset(NToPlC,0,NToPlC.Length);
+  new Span<byte>(NToPl).Fill(0);
+  new Span<byte>(NToPlB).Fill(0);
+  new Span<byte>(NToPlC).Fill(0);
   CorrHuff(ChSetB,NToPlB);
 }
 
@@ -473,7 +474,7 @@ internal static class Unpack15Local {
   for (I=7;I>=0;I--)
     for (J=0;J<32;J++)
       CharSet[J]=(ushort)((CharSet[J] & ~0xff) | I);
-  Utility.Memset(NumToPlace,0,NToPl.Length);
+  new Span<byte>(NumToPlace, 0, NToPl.Length).Fill(0);
   for (I=6;I>=0;I--)
     NumToPlace[I]=(byte)((7-I)*32);
 }

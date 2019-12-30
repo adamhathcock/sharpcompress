@@ -65,7 +65,7 @@ namespace SharpCompress.Compressors.ADC
             }
         }
 
-        private static int GetOffset(byte[] chunk, int position)
+        private static int GetOffset(ReadOnlySpan<byte> chunk, int position)
         {
             switch (GetChunkType(chunk[position]))
             {
@@ -116,7 +116,6 @@ namespace SharpCompress.Compressors.ADC
             byte[] buffer = new byte[bufferSize];
             int outPosition = 0;
             bool full = false;
-            MemoryStream tempMs;
 
             while (position < input.Length)
             {
@@ -142,11 +141,11 @@ namespace SharpCompress.Compressors.ADC
                         position += chunkSize + 1;
                         break;
                     case TWO_BYTE:
-                        tempMs = new MemoryStream();
                         chunkSize = GetChunkSize((byte)readByte);
-                        tempMs.WriteByte((byte)readByte);
-                        tempMs.WriteByte((byte)input.ReadByte());
-                        offset = GetOffset(tempMs.ToArray(), 0);
+                        Span<byte> temp = stackalloc byte[2];
+                        temp[0] = (byte)readByte;
+                        temp[1] = (byte)input.ReadByte();
+                        offset = GetOffset(temp, 0);
                         if (outPosition + chunkSize > bufferSize)
                         {
                             full = true;
@@ -173,12 +172,12 @@ namespace SharpCompress.Compressors.ADC
                         }
                         break;
                     case THREE_BYTE:
-                        tempMs = new MemoryStream();
                         chunkSize = GetChunkSize((byte)readByte);
-                        tempMs.WriteByte((byte)readByte);
-                        tempMs.WriteByte((byte)input.ReadByte());
-                        tempMs.WriteByte((byte)input.ReadByte());
-                        offset = GetOffset(tempMs.ToArray(), 0);
+                        Span<byte> temp2 = stackalloc byte[3];
+                        temp2[0] = (byte)readByte;
+                        temp2[1] = (byte)input.ReadByte();
+                        temp2[2] = (byte)input.ReadByte();
+                        offset = GetOffset(temp2, 0);
                         if (outPosition + chunkSize > bufferSize)
                         {
                             full = true;
