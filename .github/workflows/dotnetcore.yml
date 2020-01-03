@@ -1,10 +1,8 @@
-name: Build and Test CaseFunnel
-
+name: SharpCompress
 on: [push]
 
 jobs:
   build:
-    name: SharpCompress
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
