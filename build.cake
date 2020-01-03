@@ -49,11 +49,8 @@ Task("Test")
         var settings = new DotNetCoreTestSettings
         {
             Configuration = "Release",
-            Framework = "netcoreapp2.2"
+            Framework = "netcoreapp3.1"
         };
-        DotNetCoreTest(file.ToString(), settings);
-       
-        settings.Framework = "netcoreapp3.1";
         DotNetCoreTest(file.ToString(), settings);
     }
 });
@@ -67,7 +64,7 @@ Task("Pack")
         MSBuild("src/SharpCompress/SharpCompress.csproj", c => c
             .SetConfiguration("Release")
             .SetVerbosity(Verbosity.Minimal)
-            .UseToolVersion(MSBuildToolVersion.VS2017)
+            .UseToolVersion(MSBuildToolVersion.VS2019)
             .WithProperty("NoBuild", "true")
             .WithTarget("Pack"));
     } 
