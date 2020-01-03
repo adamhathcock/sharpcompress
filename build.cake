@@ -17,7 +17,7 @@ Task("Build")
         { 
             c.SetConfiguration("Release")
             .SetVerbosity(Verbosity.Minimal)
-            .UseToolVersion(MSBuildToolVersion.VS2017);
+            .UseToolVersion(MSBuildToolVersion.VS2019);
         });
     }
     else 
@@ -32,6 +32,9 @@ Task("Build")
         DotNetCoreBuild("./src/SharpCompress/SharpCompress.csproj", settings);
 
         settings.Framework = "netstandard2.0";
+        DotNetCoreBuild("./src/SharpCompress/SharpCompress.csproj", settings);
+
+        settings.Framework = "netstandard2.1";
         DotNetCoreBuild("./src/SharpCompress/SharpCompress.csproj", settings);
     }
 });
@@ -48,6 +51,9 @@ Task("Test")
             Configuration = "Release",
             Framework = "netcoreapp2.2"
         };
+        DotNetCoreTest(file.ToString(), settings);
+       
+        settings.Framework = "netcoreapp3.1";
         DotNetCoreTest(file.ToString(), settings);
     }
 });
