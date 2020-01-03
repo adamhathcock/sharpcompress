@@ -17,7 +17,7 @@ Task("Build")
         { 
             c.SetConfiguration("Release")
             .SetVerbosity(Verbosity.Minimal)
-            .UseToolVersion(MSBuildToolVersion.VS2017);
+            .UseToolVersion(MSBuildToolVersion.VS2019);
         });
     }
     else 
@@ -33,6 +33,9 @@ Task("Build")
 
         settings.Framework = "netstandard2.0";
         DotNetCoreBuild("./src/SharpCompress/SharpCompress.csproj", settings);
+
+        settings.Framework = "netstandard2.1";
+        DotNetCoreBuild("./src/SharpCompress/SharpCompress.csproj", settings);
     }
 });
 
@@ -46,7 +49,7 @@ Task("Test")
         var settings = new DotNetCoreTestSettings
         {
             Configuration = "Release",
-            Framework = "netcoreapp2.2"
+            Framework = "netcoreapp3.1"
         };
         DotNetCoreTest(file.ToString(), settings);
     }
@@ -61,7 +64,7 @@ Task("Pack")
         MSBuild("src/SharpCompress/SharpCompress.csproj", c => c
             .SetConfiguration("Release")
             .SetVerbosity(Verbosity.Minimal)
-            .UseToolVersion(MSBuildToolVersion.VS2017)
+            .UseToolVersion(MSBuildToolVersion.VS2019)
             .WithProperty("NoBuild", "true")
             .WithTarget("Pack"));
     } 
