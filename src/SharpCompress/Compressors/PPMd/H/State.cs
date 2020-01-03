@@ -1,6 +1,6 @@
 using System;
+using System.Buffers.Binary;
 using System.Text;
-using SharpCompress.Converters;
 
 namespace SharpCompress.Compressors.PPMd.H
 {
@@ -29,7 +29,7 @@ namespace SharpCompress.Compressors.PPMd.H
 
         internal int GetSuccessor()
         {
-            return DataConverter.LittleEndian.GetInt32(Memory, Address + 2);
+            return BinaryPrimitives.ReadInt32LittleEndian(Memory.AsSpan(Address + 2));
         }
 
         internal void SetSuccessor(PpmContext successor)
@@ -39,7 +39,7 @@ namespace SharpCompress.Compressors.PPMd.H
 
         internal void SetSuccessor(int successor)
         {
-            DataConverter.LittleEndian.PutBytes(Memory, Address + 2, successor);
+            BinaryPrimitives.WriteInt32LittleEndian(Memory.AsSpan(Address + 2), successor);
         }
 
         internal void SetValues(StateRef state)

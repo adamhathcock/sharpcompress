@@ -1,11 +1,10 @@
 ﻿using System;
+using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.IO;
 using SharpCompress.Common.Tar.Headers;
 using SharpCompress.Compressors;
 using SharpCompress.Compressors.Deflate;
-using SharpCompress.Converters;
-using System.Text;
 
 namespace SharpCompress.Common.GZip
 {
@@ -60,7 +59,7 @@ namespace SharpCompress.Common.GZip
                 throw new ZlibException("Bad GZIP header.");
             }
 
-            Int32 timet = DataConverter.LittleEndian.GetInt32(header, 4);
+            int timet = BinaryPrimitives.ReadInt32LittleEndian(header.AsSpan(4));
             DateModified = TarHeader.EPOCH.AddSeconds(timet);
             if ((header[3] & 0x04) == 0x04)
             {
@@ -69,7 +68,7 @@ namespace SharpCompress.Common.GZip
 
                 Int16 extraLength = (Int16)(header[0] + header[1] * 256);
                 byte[] extra = new byte[extraLength];
-                
+
                 if (!stream.ReadFully(extra))
                 {
                     throw new ZlibException("Unexpected end-of-file reading GZIP header.");

@@ -1,7 +1,7 @@
 ﻿using System;
+using System.Buffers.Binary;
 using System.IO;
 using SharpCompress.Compressors.LZMA.LZ;
-using SharpCompress.Converters;
 
 namespace SharpCompress.Compressors.LZMA
 {
@@ -56,7 +56,7 @@ namespace SharpCompress.Compressors.LZMA
 
             if (!isLzma2)
             {
-                _dictionarySize = DataConverter.LittleEndian.GetInt32(properties, 1);
+                _dictionarySize = BinaryPrimitives.ReadInt32LittleEndian(properties.AsSpan(1));
                 _outWindow.Create(_dictionarySize);
                 if (presetDictionary != null)
                 {
@@ -107,9 +107,9 @@ namespace SharpCompress.Compressors.LZMA
 
             _encoder = new Encoder();
             _encoder.SetCoderProperties(properties._propIDs, properties._properties);
-            MemoryStream propStream = new MemoryStream(5);
-            _encoder.WriteCoderProperties(propStream);
-            Properties = propStream.ToArray();
+            byte[] prop = new byte[5];
+            _encoder.WriteCoderProperties(prop);
+            Properties = prop;
 
             _encoder.SetStreams(null, outputStream, -1, -1);
             if (presetDictionary != null)

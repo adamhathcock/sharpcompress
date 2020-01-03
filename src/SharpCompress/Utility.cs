@@ -43,12 +43,6 @@ namespace SharpCompress
             return (number >> bits) + (2L << ~bits);
         }
 
-        public static void Memset(byte[] array, byte what, int length)
-            => new Span<byte>(array, 0, length).Fill(what);
-
-        public static void Memset<T>(T[] array, T what, int length)
-            => new Span<T>(array, 0, length).Fill(what);
-
         public static void SetSize(this List<byte> list, int count)
         {
             if (count > list.Count)

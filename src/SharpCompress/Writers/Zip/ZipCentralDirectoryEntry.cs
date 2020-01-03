@@ -1,10 +1,10 @@
 ﻿using System;
+using System.Buffers.Binary;
 using System.IO;
 using System.Text;
 using SharpCompress.Common;
 using SharpCompress.Common.Zip;
 using SharpCompress.Common.Zip.Headers;
-using SharpCompress.Converters;
 
 namespace SharpCompress.Writers.Zip
 {
@@ -67,39 +67,60 @@ namespace SharpCompress.Writers.Zip
             if (Decompressed == 0 && Compressed == 0)
                 usedCompression = ZipCompressionMethod.None;
 
+            byte[] intBuf = new byte[] { 80, 75, 1, 2, version, 0, version, 0 };
             //constant sig, then version made by, then version to extract
-            outputStream.Write(new byte[] { 80, 75, 1, 2, version, 0, version, 0 }, 0, 8);
+            outputStream.Write(intBuf, 0, 8);
 
-            outputStream.Write(DataConverter.LittleEndian.GetBytes((ushort)flags), 0, 2);
-            outputStream.Write(DataConverter.LittleEndian.GetBytes((ushort)usedCompression), 0, 2); // zipping method
-            outputStream.Write(DataConverter.LittleEndian.GetBytes(ModificationTime.DateTimeToDosTime()), 0, 4);
+            BinaryPrimitives.WriteUInt16LittleEndian(intBuf, (ushort)flags);
+            outputStream.Write(intBuf, 0, 2);
+            BinaryPrimitives.WriteUInt16LittleEndian(intBuf, (ushort)usedCompression);
+            outputStream.Write(intBuf, 0, 2); // zipping method
+            BinaryPrimitives.WriteUInt32LittleEndian(intBuf, ModificationTime.DateTimeToDosTime());
+            outputStream.Write(intBuf, 0, 4);
 
             // zipping date and time
-            outputStream.Write(DataConverter.LittleEndian.GetBytes(Crc), 0, 4); // file CRC
-            outputStream.Write(DataConverter.LittleEndian.GetBytes(compressedvalue), 0, 4); // compressed file size
-            outputStream.Write(DataConverter.LittleEndian.GetBytes(decompressedvalue), 0, 4); // uncompressed file size
-            outputStream.Write(DataConverter.LittleEndian.GetBytes((ushort)encodedFilename.Length), 0, 2); // Filename in zip
-            outputStream.Write(DataConverter.LittleEndian.GetBytes((ushort)extralength), 0, 2); // extra length
-            outputStream.Write(DataConverter.LittleEndian.GetBytes((ushort)encodedComment.Length), 0, 2);
+            BinaryPrimitives.WriteUInt32LittleEndian(intBuf, Crc);
+            outputStream.Write(intBuf, 0, 4); // file CRC
+            BinaryPrimitives.WriteUInt32LittleEndian(intBuf, compressedvalue);
+            outputStream.Write(intBuf, 0, 4); // compressed file size
+            BinaryPrimitives.WriteUInt32LittleEndian(intBuf, decompressedvalue);
+            outputStream.Write(intBuf, 0, 4); // uncompressed file size
+            BinaryPrimitives.WriteUInt16LittleEndian(intBuf, (ushort)encodedFilename.Length);
+            outputStream.Write(intBuf, 0, 2); // Filename in zip
+            BinaryPrimitives.WriteUInt16LittleEndian(intBuf, (ushort)extralength);
+            outputStream.Write(intBuf, 0, 2); // extra length
+            BinaryPrimitives.WriteUInt16LittleEndian(intBuf, (ushort)encodedComment.Length);
+            outputStream.Write(intBuf, 0, 2);
 
-            outputStream.Write(DataConverter.LittleEndian.GetBytes((ushort)0), 0, 2); // disk=0
-            outputStream.Write(DataConverter.LittleEndian.GetBytes((ushort)0), 0, 2); // file type: binary
-            outputStream.Write(DataConverter.LittleEndian.GetBytes((ushort)0), 0, 2); // Internal file attributes
-            outputStream.Write(DataConverter.LittleEndian.GetBytes((ushort)0x8100), 0, 2);
+            BinaryPrimitives.WriteUInt16LittleEndian(intBuf, 0);
+            outputStream.Write(intBuf, 0, 2); // disk=0
+            BinaryPrimitives.WriteUInt16LittleEndian(intBuf, (ushort)flags);
+            outputStream.Write(intBuf, 0, 2); // file type: binary
+            BinaryPrimitives.WriteUInt16LittleEndian(intBuf, (ushort)flags);
+            outputStream.Write(intBuf, 0, 2); // Internal file attributes
+            BinaryPrimitives.WriteUInt16LittleEndian(intBuf, 0x8100);
+            outputStream.Write(intBuf, 0, 2);
 
             // External file attributes (normal/readable)
-            outputStream.Write(DataConverter.LittleEndian.GetBytes(headeroffsetvalue), 0, 4); // Offset of header
+            BinaryPrimitives.WriteUInt32LittleEndian(intBuf, headeroffsetvalue);
+            outputStream.Write(intBuf, 0, 4); // Offset of header
 
             outputStream.Write(encodedFilename, 0, encodedFilename.Length);
             if (zip64)
             {
-                outputStream.Write(DataConverter.LittleEndian.GetBytes((ushort)0x0001), 0, 2);
-                outputStream.Write(DataConverter.LittleEndian.GetBytes((ushort)(extralength - 4)), 0, 2);
+                BinaryPrimitives.WriteUInt16LittleEndian(intBuf, 0x0001);
+                outputStream.Write(intBuf, 0, 2);
+                BinaryPrimitives.WriteUInt16LittleEndian(intBuf, (ushort)(extralength - 4));
+                outputStream.Write(intBuf, 0, 2);
 
-                outputStream.Write(DataConverter.LittleEndian.GetBytes(Decompressed), 0, 8);
-                outputStream.Write(DataConverter.LittleEndian.GetBytes(Compressed), 0, 8);
-                outputStream.Write(DataConverter.LittleEndian.GetBytes(HeaderOffset), 0, 8);
-                outputStream.Write(DataConverter.LittleEndian.GetBytes(0), 0, 4); // VolumeNumber = 0
+                BinaryPrimitives.WriteUInt64LittleEndian(intBuf, Decompressed);
+                outputStream.Write(intBuf, 0, 8);
+                BinaryPrimitives.WriteUInt64LittleEndian(intBuf, Compressed);
+                outputStream.Write(intBuf, 0, 8);
+                BinaryPrimitives.WriteUInt64LittleEndian(intBuf, HeaderOffset);
+                outputStream.Write(intBuf, 0, 8);
+                BinaryPrimitives.WriteUInt32LittleEndian(intBuf, 0);
+                outputStream.Write(intBuf, 0, 4); // VolumeNumber = 0
             }
 
             outputStream.Write(encodedComment, 0, encodedComment.Length);

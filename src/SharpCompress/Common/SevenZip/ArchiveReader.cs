@@ -1449,13 +1449,14 @@ namespace SharpCompress.Common.SevenZip
                 CFolder folderInfo = db._folders[folderIndex];
                 int packStreamIndex = db._folders[folderIndex]._firstPackStreamId;
                 long folderStartPackPos = db.GetFolderStreamPos(folderInfo, 0);
-                List<long> packSizes = new List<long>();
-                for (int j = 0; j < folderInfo._packStreams.Count; j++)
+                var count = folderInfo._packStreams.Count;
+                long[] packSizes = new long[count];
+                for (int j = 0; j < count; j++)
                 {
-                    packSizes.Add(db._packSizes[packStreamIndex + j]);
+                    packSizes[j] = db._packSizes[packStreamIndex + j];
                 }
 
-                s = DecoderStreamHelper.CreateDecoderStream(_stream, folderStartPackPos, packSizes.ToArray(), folderInfo,
+                s = DecoderStreamHelper.CreateDecoderStream(_stream, folderStartPackPos, packSizes, folderInfo,
                                                             db.PasswordProvider);
                 _cachedStreams.Add(folderIndex, s);
             }
@@ -1553,15 +1554,16 @@ namespace SharpCompress.Common.SevenZip
                 int packStreamIndex = db._folders[folderIndex]._firstPackStreamId;
                 long folderStartPackPos = db.GetFolderStreamPos(folderInfo, 0);
 
-                List<long> packSizes = new List<long>();
-                for (int j = 0; j < folderInfo._packStreams.Count; j++)
+                var count = folderInfo._packStreams.Count;
+                long[] packSizes = new long[count];
+                for (int j = 0; j < count; j++)
                 {
-                    packSizes.Add(db._packSizes[packStreamIndex + j]);
+                    packSizes[j] = db._packSizes[packStreamIndex + j];
                 }
 
                 // TODO: If the decoding fails the last file may be extracted incompletely. Delete it?
 
-                Stream s = DecoderStreamHelper.CreateDecoderStream(_stream, folderStartPackPos, packSizes.ToArray(),
+                Stream s = DecoderStreamHelper.CreateDecoderStream(_stream, folderStartPackPos, packSizes,
                                                                    folderInfo, db.PasswordProvider);
                 byte[] buffer = new byte[4 << 10];
                 for (;;)

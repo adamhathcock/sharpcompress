@@ -22,7 +22,7 @@ namespace SharpCompress.Common.SevenZip
         internal List<long> _packStreamStartPositions = new List<long>();
         internal List<int> _folderStartFileIndex = new List<int>();
         internal List<int> _fileIndexToFolderIndexMap = new List<int>();
-        
+
         internal IPasswordProvider PasswordProvider { get; }
 
         public ArchiveDatabase(IPasswordProvider passwordProvider)
@@ -152,13 +152,14 @@ namespace SharpCompress.Common.SevenZip
         {
             int packStreamIndex = folder._firstPackStreamId;
             long folderStartPackPos = GetFolderStreamPos(folder, 0);
-            List<long> packSizes = new List<long>();
-            for (int j = 0; j < folder._packStreams.Count; j++)
+            int count = folder._packStreams.Count;
+            long[] packSizes = new long[count];
+            for (int j = 0; j < count; j++)
             {
-                packSizes.Add(_packSizes[packStreamIndex + j]);
+                packSizes[j] = _packSizes[packStreamIndex + j];
             }
 
-            return DecoderStreamHelper.CreateDecoderStream(stream, folderStartPackPos, packSizes.ToArray(), folder, pw);
+            return DecoderStreamHelper.CreateDecoderStream(stream, folderStartPackPos, packSizes, folder, pw);
         }
 
         private long GetFolderPackStreamSize(int folderIndex, int streamIndex)

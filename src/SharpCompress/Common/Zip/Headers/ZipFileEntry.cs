@@ -1,8 +1,7 @@
 ﻿using System;
+using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.IO;
-using System.Text;
-using SharpCompress.Converters;
 
 namespace SharpCompress.Common.Zip.Headers
 {
@@ -30,7 +29,7 @@ namespace SharpCompress.Common.Zip.Headers
                        && Name.EndsWith("\\");
             }
         }
-        
+
         internal Stream PackedStream { get; set; }
 
         internal ArchiveEncoding ArchiveEncoding { get; }
@@ -65,7 +64,7 @@ namespace SharpCompress.Common.Zip.Headers
 
             return encryptionData;
         }
-        
+
         internal WinzipAesEncryptionData WinzipAesEncryptionData { get; set; }
 
         internal ushort LastModifiedDate { get; set; }
@@ -78,13 +77,13 @@ namespace SharpCompress.Common.Zip.Headers
         {
             for (int i = 0; i < extra.Length - 4;)
             {
-                ExtraDataType type = (ExtraDataType)DataConverter.LittleEndian.GetUInt16(extra, i);
+                ExtraDataType type = (ExtraDataType)BinaryPrimitives.ReadUInt16LittleEndian(extra.AsSpan(i));
                 if (!Enum.IsDefined(typeof(ExtraDataType), type))
                 {
                     type = ExtraDataType.NotImplementedExtraData;
                 }
 
-                ushort length = DataConverter.LittleEndian.GetUInt16(extra, i + 2);
+                ushort length = BinaryPrimitives.ReadUInt16LittleEndian(extra.AsSpan(i + 2));
 
                 // 7zip has this same kind of check to ignore extras blocks that don't conform to the standard 2-byte ID, 2-byte length, N-byte value.
                 // CPP/7Zip/Zip/ZipIn.cpp: CInArchive::ReadExtra

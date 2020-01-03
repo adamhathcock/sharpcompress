@@ -1,6 +1,6 @@
 using System;
+using System.Buffers.Binary;
 using System.IO;
-using SharpCompress.Converters;
 using SharpCompress.Crypto;
 using SharpCompress.IO;
 
@@ -58,16 +58,17 @@ namespace SharpCompress.Compressors.LZMA
                     crc32Stream.WrappedStream.Dispose();
                     crc32Stream.Dispose();
                     var compressedCount = _countingWritableSubStream.Count;
-                    
-                    var bytes = DataConverter.LittleEndian.GetBytes(crc32Stream.Crc);
-                    _countingWritableSubStream.Write(bytes, 0, bytes.Length);
 
-                    bytes = DataConverter.LittleEndian.GetBytes(_writeCount);
-                    _countingWritableSubStream.Write(bytes, 0, bytes.Length);
+                    byte[] intBuf = new byte[8];
+                    BinaryPrimitives.WriteUInt32LittleEndian(intBuf, crc32Stream.Crc);
+                    _countingWritableSubStream.Write(intBuf, 0, 4);
+
+                    BinaryPrimitives.WriteInt64LittleEndian(intBuf, _writeCount);
+                    _countingWritableSubStream.Write(intBuf, 0, 8);
 
                     //total with headers
-                    bytes = DataConverter.LittleEndian.GetBytes(compressedCount + 6 + 20);
-                    _countingWritableSubStream.Write(bytes, 0, bytes.Length);
+                    BinaryPrimitives.WriteUInt64LittleEndian(intBuf, compressedCount + 6 + 20);
+                    _countingWritableSubStream.Write(intBuf, 0, 8);
                 }
                 _finished = true;
             }
@@ -101,7 +102,7 @@ namespace SharpCompress.Compressors.LZMA
         {
             _stream.Flush();
         }
-    
+
         // TODO: Both Length and Position are sometimes feasible, but would require
         // reading the output length when we initialize.
         public override long Length => throw new NotImplementedException();

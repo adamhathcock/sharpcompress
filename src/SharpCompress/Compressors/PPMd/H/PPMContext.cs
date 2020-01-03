@@ -1,6 +1,6 @@
 using System;
+using System.Buffers.Binary;
 using System.Text;
-using SharpCompress.Converters;
 
 namespace SharpCompress.Compressors.PPMd.H
 {
@@ -22,7 +22,7 @@ namespace SharpCompress.Compressors.PPMd.H
             {
                 if (Memory != null)
                 {
-                    _numStats = DataConverter.LittleEndian.GetInt16(Memory, Address) & 0xffff;
+                    _numStats = BinaryPrimitives.ReadInt16LittleEndian(Memory.AsSpan(Address)) & 0xffff;
                 }
                 return _numStats;
             }
@@ -32,7 +32,7 @@ namespace SharpCompress.Compressors.PPMd.H
                 _numStats = value & 0xffff;
                 if (Memory != null)
                 {
-                    DataConverter.LittleEndian.PutBytes(Memory, Address, (short)value);
+                    BinaryPrimitives.WriteInt16LittleEndian(Memory.AsSpan(Address), (short)value);
                 }
             }
         }
@@ -109,7 +109,7 @@ namespace SharpCompress.Compressors.PPMd.H
         {
             if (Memory != null)
             {
-                _suffix = DataConverter.LittleEndian.GetInt32(Memory, Address + 8);
+                _suffix = BinaryPrimitives.ReadInt32LittleEndian(Memory.AsSpan(Address + 8));
             }
             return _suffix;
         }
@@ -124,7 +124,7 @@ namespace SharpCompress.Compressors.PPMd.H
             _suffix = suffix;
             if (Memory != null)
             {
-                DataConverter.LittleEndian.PutBytes(Memory, Address + 8, suffix);
+                BinaryPrimitives.WriteInt32LittleEndian(Memory.AsSpan(Address + 8), suffix);
             }
         }
 
@@ -307,7 +307,7 @@ namespace SharpCompress.Compressors.PPMd.H
         //		byte[] bytes = model.getSubAlloc().getHeap();
         //		int p1 = state1.Address;
         //		int p2 = state2.Address;
-        //		
+        //
         //		for (int i = 0; i < StatePtr.size; i++) {
         //			byte temp = bytes[p1+i];
         //			bytes[p1+i] = bytes[p2+i];

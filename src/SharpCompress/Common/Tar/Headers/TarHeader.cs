@@ -1,7 +1,7 @@
 ﻿using System;
+using System.Buffers.Binary;
 using System.IO;
 using System.Text;
-using SharpCompress.Converters;
 
 namespace SharpCompress.Common.Tar.Headers
 {
@@ -49,7 +49,7 @@ namespace SharpCompress.Common.Tar.Headers
             }
             else
             {
-                WriteStringBytes(ArchiveEncoding.Encode(Name), buffer, 0, 100);
+                WriteStringBytes(ArchiveEncoding.Encode(Name), buffer, 100);
                 WriteOctalBytes(Size, buffer, 124, 12);
                 var time = (long)(LastModifiedTime.ToUniversalTime() - EPOCH).TotalSeconds;
                 WriteOctalBytes(time, buffer, 136, 12);
@@ -57,11 +57,10 @@ namespace SharpCompress.Common.Tar.Headers
 
                 if (Size >= 0x1FFFFFFFF)
                 {
-                    byte[] bytes = DataConverter.BigEndian.GetBytes(Size);
-                    var bytes12 = new byte[12];
-                    bytes.CopyTo(bytes12, 12 - bytes.Length);
+                    Span<byte> bytes12 = stackalloc byte[12];
+                    BinaryPrimitives.WriteInt64BigEndian(bytes12.Slice(4), Size);
                     bytes12[0] |= 0x80;
-                    bytes12.CopyTo(buffer, 124);
+                    bytes12.CopyTo(buffer.AsSpan(124));
                 }
             }
 
@@ -176,8 +175,9 @@ namespace SharpCompress.Common.Tar.Headers
         {
             if ((buffer[124] & 0x80) == 0x80) // if size in binary
             {
-                return DataConverter.BigEndian.GetInt64(buffer, 0x80);
+                return BinaryPrimitives.ReadInt64BigEndian(buffer.AsSpan(0x80));
             }
+
             return ReadAsciiInt64Base8(buffer, 124, 11);
         }
 
@@ -192,15 +192,11 @@ namespace SharpCompress.Common.Tar.Headers
             return buffer;
         }
 
-        private static void WriteStringBytes(byte[] name, byte[] buffer, int offset, int length)
+        private static void WriteStringBytes(ReadOnlySpan<byte> name, Span<byte> buffer, int length)
         {
+            name.CopyTo(buffer);
             int i = Math.Min(length, name.Length);
-            Buffer.BlockCopy(name, 0, buffer, offset, i);
-            // if Span<byte>.Fill can be used, it is more efficient
-            for (; i < length; ++i)
-            {
-                buffer[offset + i] = 0;
-            }
+            buffer.Slice(i, length - i).Fill(0);
         }
 
         private static void WriteStringBytes(string name, byte[] buffer, int offset, int length)

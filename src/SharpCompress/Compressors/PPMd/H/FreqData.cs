@@ -1,6 +1,6 @@
 using System;
+using System.Buffers.Binary;
 using System.Text;
-using SharpCompress.Converters;
 
 namespace SharpCompress.Compressors.PPMd.H
 {
@@ -19,7 +19,11 @@ namespace SharpCompress.Compressors.PPMd.H
         {
         }
 
-        internal int SummFreq { get => DataConverter.LittleEndian.GetInt16(Memory, Address) & 0xffff; set => DataConverter.LittleEndian.PutBytes(Memory, Address, (short)value); }
+        internal int SummFreq
+        {
+            get => BinaryPrimitives.ReadInt16LittleEndian(Memory.AsSpan(Address)) & 0xffff;
+            set => BinaryPrimitives.WriteInt16LittleEndian(Memory.AsSpan(Address), (short)value);
+        }
 
         internal FreqData Initialize(byte[] mem)
         {
@@ -28,14 +32,12 @@ namespace SharpCompress.Compressors.PPMd.H
 
         internal void IncrementSummFreq(int dSummFreq)
         {
-            short summFreq = DataConverter.LittleEndian.GetInt16(Memory, Address);
-            summFreq += (short)dSummFreq;
-            DataConverter.LittleEndian.PutBytes(Memory, Address, summFreq);
+            SummFreq += (short)dSummFreq;
         }
 
         internal int GetStats()
         {
-            return DataConverter.LittleEndian.GetInt32(Memory, Address + 2);
+            return BinaryPrimitives.ReadInt32LittleEndian(Memory.AsSpan(Address + 2));
         }
 
         internal virtual void SetStats(State state)
@@ -45,7 +47,7 @@ namespace SharpCompress.Compressors.PPMd.H
 
         internal void SetStats(int state)
         {
-            DataConverter.LittleEndian.PutBytes(Memory, Address + 2, state);
+            BinaryPrimitives.WriteInt32LittleEndian(Memory.AsSpan(Address + 2), state);
         }
 
         public override String ToString()

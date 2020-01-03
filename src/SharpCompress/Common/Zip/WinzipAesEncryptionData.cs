@@ -1,6 +1,6 @@
 using System;
+using System.Buffers.Binary;
 using System.Security.Cryptography;
-using SharpCompress.Converters;
 
 namespace SharpCompress.Common.Zip
 {
@@ -62,10 +62,10 @@ namespace SharpCompress.Common.Zip
             IvBytes = rfc2898.GetBytes(KeySizeInBytes);
             _generatedVerifyValue = rfc2898.GetBytes(2);
 
-            short verify = DataConverter.LittleEndian.GetInt16(_passwordVerifyValue, 0);
+            short verify = BinaryPrimitives.ReadInt16LittleEndian(_passwordVerifyValue);
             if (_password != null)
             {
-                short generated = DataConverter.LittleEndian.GetInt16(_generatedVerifyValue, 0);
+                short generated = BinaryPrimitives.ReadInt16LittleEndian(_generatedVerifyValue);
                 if (verify != generated)
                 {
                     throw new InvalidFormatException("bad password");

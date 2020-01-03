@@ -1,5 +1,6 @@
+using System;
+using System.Buffers.Binary;
 using System.Text;
-using SharpCompress.Converters;
 
 namespace SharpCompress.Compressors.PPMd.H
 {
@@ -18,7 +19,7 @@ namespace SharpCompress.Compressors.PPMd.H
         {
             if (Memory != null)
             {
-                _next = DataConverter.LittleEndian.GetInt32(Memory, Address);
+                _next = BinaryPrimitives.ReadInt32LittleEndian(Memory.AsSpan(Address));
             }
             return _next;
         }
@@ -33,7 +34,7 @@ namespace SharpCompress.Compressors.PPMd.H
             _next = next;
             if (Memory != null)
             {
-                DataConverter.LittleEndian.PutBytes(Memory, Address, next);
+                BinaryPrimitives.WriteInt32LittleEndian(Memory.AsSpan(Address), next);
             }
         }
 
