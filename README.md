@@ -7,8 +7,8 @@ The major feature is support for non-seekable streams so large files can be proc
 AppVeyor Build -
 [![Build status](https://ci.appveyor.com/api/projects/status/voxg971oemmvxh1e/branch/master?svg=true)](https://ci.appveyor.com/project/adamhathcock/sharpcompress/branch/master)
 
-Circle CI Build -
-[![CircleCI](https://circleci.com/gh/adamhathcock/sharpcompress.svg?style=svg)](https://circleci.com/gh/adamhathcock/sharpcompress)
+GitHub Actions Build -
+[![GitHubActions](https://github.com/adamhathcock/sharpcompress/workflows/SharpCompress/badge.svg)](https://circleci.com/gh/adamhathcock/sharpcompress)
 
 ## Need Help?
 
