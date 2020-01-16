@@ -315,5 +315,30 @@ namespace SharpCompress.Test.Zip
                 }
             }
         }
+
+        [Fact]
+        public void Zip_None_Issue86_Streamed_Read()
+        {
+            var keys = new string[] { "Empty1", "Empty2", "Dir1/", "Dir2/", "Fake1", "Fake2", "Internal.zip" };
+
+            using (Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Zip.none.issue86.zip")))
+            using (var reader = ZipReader.Open(stream))
+            {
+                foreach( var key in keys )
+                {
+                    reader.MoveToNextEntry();
+
+                    Assert.Equal( reader.Entry.Key, key );
+
+                    if (!reader.Entry.IsDirectory)
+                    {
+                        Assert.Equal(CompressionType.None, reader.Entry.CompressionType);
+                    }
+                }
+
+                Assert.False(reader.MoveToNextEntry());
+            }
+        }
+
     }
 }

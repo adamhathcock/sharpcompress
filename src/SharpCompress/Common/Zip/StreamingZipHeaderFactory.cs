@@ -54,14 +54,30 @@ namespace SharpCompress.Common.Zip
                 //entry could be zero bytes so we need to know that.
                 if (header.ZipHeaderType == ZipHeaderType.LocalEntry)
                 {
-                    bool isRecording = rewindableStream.IsRecording;
-                    if (!isRecording)
+                    var local_header = ((LocalEntryHeader)header);
+
+                    // If we have CompressedSize, there is data to be read
+                    if( local_header.CompressedSize > 0 )
                     {
-                        rewindableStream.StartRecording();
+                        header.HasData = true;
+                    } // Check if zip is streaming ( Length is 0 and is declared in PostDataDescriptor )
+                    else if( local_header.Flags.HasFlag(HeaderFlags.UsePostDataDescriptor) )
+                    {
+                        bool isRecording = rewindableStream.IsRecording;
+                        if (!isRecording)
+                        {
+                            rewindableStream.StartRecording();
+                        }
+                        uint nextHeaderBytes = reader.ReadUInt32();
+
+                        // Check if next data is PostDataDescriptor, streamed file with 0 length
+                        header.HasData = !IsHeader(nextHeaderBytes);
+                        rewindableStream.Rewind(!isRecording);
                     }
-                    uint nextHeaderBytes = reader.ReadUInt32();
-                    header.HasData = !IsHeader(nextHeaderBytes);
-                    rewindableStream.Rewind(!isRecording);
+                    else // We are not streaming and compressed size is 0, we have no data
+                    {
+                        header.HasData = false;
+                    }
                 }
                 yield return header;
             }
