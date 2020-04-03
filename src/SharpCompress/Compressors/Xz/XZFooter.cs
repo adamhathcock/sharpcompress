@@ -32,7 +32,10 @@ namespace SharpCompress.Compressors.Xz
             byte[] footerBytes = _reader.ReadBytes(6);
             uint myCrc = Crc32.Compute(footerBytes);
             if (crc != myCrc)
+            {
                 throw new InvalidDataException("Footer corrupt");
+            }
+
             using (var stream = new MemoryStream(footerBytes))
             using (var reader = new BinaryReader(stream))
             {

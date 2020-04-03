@@ -35,12 +35,18 @@ namespace SharpCompress.Compressors.Xz.Filters
         {
             var filterType = (FilterTypes)reader.ReadXZInteger();
             if (!FilterMap.ContainsKey(filterType))
+            {
                 throw new NotImplementedException($"Filter {filterType} has not yet been implemented");
+            }
+
             var filter = Activator.CreateInstance(FilterMap[filterType]) as BlockFilter;
 
             var sizeOfProperties = reader.ReadXZInteger();
             if (sizeOfProperties > int.MaxValue)
+            {
                 throw new InvalidDataException("Block filter information too large");
+            }
+
             byte[] properties = reader.ReadBytes((int)sizeOfProperties);
             filter.Init(properties);
             return filter;

@@ -30,7 +30,9 @@ public BitInput(bool AllocBuffer)
     //memset(InBuf,0,BufSize);
     }
     else
-    InBuf=null;
+    {
+        InBuf=null;
+    }
 }
 
 

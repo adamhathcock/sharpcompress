@@ -23,7 +23,9 @@ namespace SharpCompress.Compressors.Xz
             _indexMarkerAlreadyVerified = indexMarkerAlreadyVerified;
             StreamStartPosition = reader.BaseStream.Position;
             if (indexMarkerAlreadyVerified)
+            {
                 StreamStartPosition--;
+            }
         }
 
         public static XZIndex FromStream(Stream stream, bool indexMarkerAlreadyVerified)
@@ -36,7 +38,10 @@ namespace SharpCompress.Compressors.Xz
         public void Process()
         {
             if (!_indexMarkerAlreadyVerified)
+            {
                 VerifyIndexMarker();
+            }
+
             NumberOfRecords = _reader.ReadXZInteger();
             for (ulong i = 0; i < NumberOfRecords; i++)
             {
@@ -50,7 +55,9 @@ namespace SharpCompress.Compressors.Xz
         {
             byte marker = _reader.ReadByte();
             if (marker != 0)
+            {
                 throw new InvalidDataException("Not an index block");
+            }
         }
 
         private void SkipPadding()
@@ -60,7 +67,9 @@ namespace SharpCompress.Compressors.Xz
             {
                 byte[] paddingBytes = _reader.ReadBytes(4 - bytes);
                 if (paddingBytes.Any(b => b != 0))
+                {
                     throw new InvalidDataException("Padding bytes were non-null");
+                }
             }
         }
 

@@ -104,23 +104,36 @@ namespace SharpCompress.Test.Zip
             filename = Path.Combine(SCRATCH2_FILES_PATH, filename);
             
             if (File.Exists(filename))
+            {
                 File.Delete(filename);
+            }
 
             if (!File.Exists(filename))
+            {
                 CreateZipArchive(filename, files, filesize, write_chunk_size, set_zip64, forward_only);
+            }
 
             var resForward = ReadForwardOnly(filename);
             if (resForward.Item1 != files)
+            {
                 throw new Exception($"Incorrect number of items reported: {resForward.Item1}, should have been {files}");
+            }
 
-			if (resForward.Item2 != files * filesize)
-				throw new Exception($"Incorrect combined size reported: {resForward.Item2}, should have been {files * filesize}");
+            if (resForward.Item2 != files * filesize)
+            {
+                throw new Exception($"Incorrect combined size reported: {resForward.Item2}, should have been {files * filesize}");
+            }
 
             var resArchive = ReadArchive(filename);
             if (resArchive.Item1 != files)
+            {
                 throw new Exception($"Incorrect number of items reported: {resArchive.Item1}, should have been {files}");
+            }
+
             if (resArchive.Item2 != files * filesize)
+            {
                 throw new Exception($"Incorrect number of items reported: {resArchive.Item2}, should have been {files * filesize}");
+            }
         }
 
         public void CreateZipArchive(string filename, long files, long filesize, long chunksize, bool set_zip64, bool forward_only)
@@ -166,13 +179,17 @@ namespace SharpCompress.Test.Zip
 
                     count++;
 					if (prev != null)
-						size += prev.Size;
-				
-					prev = rd.Entry;
+                    {
+                        size += prev.Size;
+                    }
+
+                    prev = rd.Entry;
                 }
 
 			if (prev != null)
-				size += prev.Size;
+            {
+                size += prev.Size;
+            }
 
             return new Tuple<long, long>(count, size);
         }

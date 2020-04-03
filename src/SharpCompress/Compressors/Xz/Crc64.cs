@@ -19,7 +19,9 @@ namespace SharpCompress.Compressors.Xz
         public static UInt64 Compute(UInt64 seed, byte[] buffer)
         {
             if (Table == null)
+            {
                 Table = CreateTable(Iso3309Polynomial);
+            }
 
             return CalculateHash(seed, Table, buffer, 0, buffer.Length);
         }
@@ -45,9 +47,14 @@ namespace SharpCompress.Compressors.Xz
                 var entry = (UInt64)i;
                 for (var j = 0; j < 8; ++j)
                     if ((entry & 1) == 1)
+                    {
                         entry = (entry >> 1) ^ polynomial;
+                    }
                     else
+                    {
                         entry = entry >> 1;
+                    }
+
                 createTable[i] = entry;
             }
             return createTable;

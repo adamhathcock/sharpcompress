@@ -8,7 +8,9 @@ namespace SharpCompress.Compressors.Xz
         {
             BaseStream = stream;
             if (!BaseStream.CanRead)
+            {
                 throw new InvalidDataException("Must be able to read from stream");
+            }
         }
     }
 }

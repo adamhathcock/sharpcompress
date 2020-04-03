@@ -220,7 +220,9 @@ namespace SharpCompress.Compressors.Deflate64
                 // reading bfinal bit
                 // Need 1 bit
                 if (!_input.EnsureBitsAvailable(1))
+                {
                     return false;
+                }
 
                 _bfinal = _input.GetBits(1);
                 _state = InflaterState.ReadingBType;

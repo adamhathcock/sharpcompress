@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using SharpCompress.Common.Zip.Headers;
 using SharpCompress.IO;
-using System.Text;
 
 namespace SharpCompress.Common.Zip
 {
@@ -35,7 +34,9 @@ namespace SharpCompress.Common.Zip
                 stream.Seek(zip64Locator.RelativeOffsetOfTheEndOfDirectoryRecord, SeekOrigin.Begin);
                 uint zip64Signature = reader.ReadUInt32();
                 if (zip64Signature != ZIP64_END_OF_CENTRAL_DIRECTORY)
+                {
                     throw new ArchiveException("Failed to locate the Zip64 Header");
+                }
 
                 var zip64Entry = new Zip64DirectoryEndHeader();
                 zip64Entry.Read(reader);
@@ -55,7 +56,9 @@ namespace SharpCompress.Common.Zip
                 position = stream.Position;
 
                 if (nextHeader == null)
+                {
                     yield break;
+                }
 
                 if (nextHeader is DirectoryEntryHeader entryHeader)
                 {

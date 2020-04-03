@@ -132,7 +132,9 @@ namespace SharpCompress.Writers.Zip
             // Use the archive default setting for zip64 and allow overrides
             var useZip64 = isZip64;
             if (options.EnableZip64.HasValue)
+            {
                 useZip64 = options.EnableZip64.Value;
+            }
 
             var headersize = (uint)WriteHeader(entryPath, options, entry, useZip64);
             streamPosition += headersize;
@@ -157,7 +159,9 @@ namespace SharpCompress.Writers.Zip
         {
             // We err on the side of caution until the zip specification clarifies how to support this
             if (!OutputStream.CanSeek && useZip64)
+            {
                 throw new NotSupportedException("Zip64 extensions are not supported on non-seekable streams");
+            }
 
             var explicitZipCompressionInfo = ToZipCompressionMethod(zipWriterEntryOptions.CompressionType ?? compressionType);
             byte[] encodedFilename = WriterOptions.ArchiveEncoding.Encode(filename);
@@ -169,9 +173,13 @@ namespace SharpCompress.Writers.Zip
             if (explicitZipCompressionInfo == ZipCompressionMethod.Deflate)
             {
                 if (OutputStream.CanSeek && useZip64)
+                {
                     OutputStream.Write(new byte[] { 45, 0 }, 0, 2); //smallest allowed version for zip64
+                }
                 else
+                {
                     OutputStream.Write(new byte[] { 20, 0 }, 0, 2); //older version which is more compatible
+                }
             }
             else
             {
@@ -204,7 +212,9 @@ namespace SharpCompress.Writers.Zip
 
             var extralength = 0;
             if (OutputStream.CanSeek && useZip64)
+            {
                 extralength = 2 + 2 + 8 + 8;
+            }
 
             BinaryPrimitives.WriteUInt16LittleEndian(intBuf, (ushort)extralength);
             OutputStream.Write(intBuf, 0, 2); // extra length
@@ -428,7 +438,9 @@ namespace SharpCompress.Writers.Zip
                         // Ideally, we should not throw from Dispose()
                         // We should not get here as the Write call checks the limits
                         if (zip64 && entry.Zip64HeaderOffset == 0)
+                        {
                             throw new NotSupportedException("Attempted to write a stream that is larger than 4GiB without setting the zip64 option");
+                        }
 
                         // If we have pre-allocated space for zip64 data,
                         // fill it out, even if it is not required
@@ -459,7 +471,9 @@ namespace SharpCompress.Writers.Zip
                         // Ideally, we should not throw from Dispose()
                         // We should not get here as the Write call checks the limits
                         if (zip64)
+                        {
                             throw new NotSupportedException("Streams larger than 4GiB are not supported for non-seekable streams");
+                        }
 
                         byte[] intBuf = new byte[4];
                         BinaryPrimitives.WriteUInt32LittleEndian(intBuf, ZipHeaderFactory.POST_DATA_DESCRIPTOR);
@@ -501,7 +515,9 @@ namespace SharpCompress.Writers.Zip
                 {
                     // Pre-check, the counting.Count is not exact, as we do not know the size before having actually compressed it
                     if (limitsExceeded || ((decompressed + (uint)count) > uint.MaxValue) || (counting.Count + (uint)count) > uint.MaxValue)
+                    {
                         throw new NotSupportedException("Attempted to write a stream that is larger than 4GiB without setting the zip64 option");
+                    }
                 }
 
                 decompressed += (uint)count;

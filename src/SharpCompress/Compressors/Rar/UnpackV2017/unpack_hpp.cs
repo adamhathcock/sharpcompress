@@ -432,7 +432,10 @@ internal partial class Unpack
     private uint GetChar()
     {
       if (Inp.InAddr>MAX_SIZE-30)
-        UnpReadBuf();
+      {
+          UnpReadBuf();
+      }
+
       return(Inp.InBuf[Inp.InAddr++]);
     }
 

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.IO;
-using SharpCompress.Compressors.Filters;
 
 namespace SharpCompress.IO
 {

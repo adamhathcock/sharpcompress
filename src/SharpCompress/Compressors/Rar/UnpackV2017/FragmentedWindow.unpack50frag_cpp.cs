@@ -60,13 +60,18 @@ public void Init(size_t WinSize)
     {
       NewMem=new byte[Size];
       if (NewMem!=null)
+      {
         break;
+      }
+
       Size-=Size/32;
     }
     if (NewMem==null)
       //throw std::bad_alloc();
+    {
       throw new InvalidOperationException();
-    
+    }
+
     // Clean the window to generate the same output when unpacking corrupt
     // RAR files, which may access to unused areas of sliding dictionary.
     // sharpcompress: don't need this, freshly allocated above
@@ -79,17 +84,25 @@ public void Init(size_t WinSize)
   }
   if (TotalSize<WinSize) // Not found enough free blocks.
     //throw std::bad_alloc();
+  {
     throw new InvalidOperationException();
+  }
 }
 
 
 public byte this[size_t Item] {
 get {
   if (Item<MemSize[0])
+  {
     return Mem[0][Item];
+  }
+
   for (uint I=1;I<MemSize.Length;I++)
     if (Item<MemSize[I])
+    {
       return Mem[I][Item-MemSize[I-1]];
+    }
+
   return Mem[0][0]; // Must never happen;
 }
 set {
@@ -146,7 +159,10 @@ public size_t GetBlockSize(size_t StartPos,size_t RequiredSize)
 {
   for (uint I=0;I<MemSize.Length;I++)
     if (StartPos<MemSize[I])
+    {
       return Math.Min(MemSize[I]-StartPos,RequiredSize);
+    }
+
   return 0; // Must never be here.
 }
 

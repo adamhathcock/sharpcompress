@@ -1,5 +1,4 @@
-﻿using SharpCompress.Archives;
-using SharpCompress.Common;
+﻿using SharpCompress.Common;
 using SharpCompress.Compressors.Deflate;
 
 namespace SharpCompress.Writers.Zip

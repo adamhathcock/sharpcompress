@@ -25,14 +25,18 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017
   {
     UnpInitData(Solid);
     if (!UnpReadBuf())
+    {
       return;
+    }
 
     // Check TablesRead5 to be sure that we read tables at least once
     // regardless of current block header TablePresent flag.
     // So we can safefly use these tables below.
     if (!ReadBlockHeader(Inp,ref BlockHeader) ||
         !ReadTables(Inp,ref BlockHeader, ref BlockTables) || !TablesRead5)
+    {
       return;
+    }
   }
 
   while (true)
@@ -55,17 +59,24 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017
           break;
         }
         if (!ReadBlockHeader(Inp,ref BlockHeader) || !ReadTables(Inp, ref BlockHeader, ref BlockTables))
+        {
           return;
+        }
       }
       if (FileDone || !UnpReadBuf())
+      {
         break;
+      }
     }
 
     if (((WriteBorder-UnpPtr) & MaxWinMask)<MAX_LZ_MATCH+3 && WriteBorder!=UnpPtr)
     {
       UnpWriteBuf();
       if (WrittenFileSize>DestUnpSize)
+      {
         return;
+      }
+
       if (Suspended)
       {
         FileExtracted=false;
@@ -77,9 +88,14 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017
     if (MainSlot<256)
     {
       if (Fragmented)
+      {
         FragWindow[UnpPtr++]=(byte)MainSlot;
+      }
       else
+      {
         Window[UnpPtr++]=(byte)MainSlot;
+      }
+
       continue;
     }
     if (MainSlot>=262)
@@ -124,32 +140,49 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017
         {
           Length++;
           if (Distance>0x40000)
+          {
             Length++;
+          }
         }
       }
 
       InsertOldDist(Distance);
       LastLength=Length;
       if (Fragmented)
+      {
         FragWindow.CopyString(Length,Distance,ref UnpPtr,MaxWinMask);
+      }
       else
+      {
         CopyString(Length,Distance);
+      }
+
       continue;
     }
     if (MainSlot==256)
     {
       UnpackFilter Filter = new UnpackFilter();
       if (!ReadFilter(Inp,Filter) || !AddFilter(Filter))
+      {
         break;
+      }
+
       continue;
     }
     if (MainSlot==257)
     {
       if (LastLength!=0)
+      {
         if (Fragmented)
+        {
           FragWindow.CopyString(LastLength,OldDist[0],ref UnpPtr,MaxWinMask);
+        }
         else
+        {
           CopyString(LastLength,OldDist[0]);
+        }
+      }
+
       continue;
     }
     if (MainSlot<262)
@@ -164,9 +197,14 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017
       uint Length=SlotToLength(Inp,LengthSlot);
       LastLength=Length;
       if (Fragmented)
+      {
         FragWindow.CopyString(Length,Distance,ref UnpPtr,MaxWinMask);
+      }
       else
+      {
         CopyString(Length,Distance);
+      }
+
       continue;
     }
   }
@@ -190,13 +228,19 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017
       private bool ReadFilter(BitInput Inp,UnpackFilter Filter)
 {
   if (!Inp.ExternalBuffer && Inp.InAddr>ReadTop-16)
+  {
     if (!UnpReadBuf())
+    {
       return false;
+    }
+  }
 
   Filter.BlockStart=ReadFilterData(Inp);
   Filter.BlockLength=ReadFilterData(Inp);
   if (Filter.BlockLength>MAX_FILTER_BLOCK_SIZE)
+  {
     Filter.BlockLength=0;
+  }
 
   Filter.Type=(byte)(Inp.fgetbits()>>13);
   Inp.faddbits(3);
@@ -216,7 +260,9 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017
   {
     UnpWriteBuf(); // Write data, apply and flush filters.
     if (Filters.Count>=MAX_UNPACK_FILTERS)
+    {
       InitFilters(); // Still too many filters, prevent excessive memory use.
+    }
   }
 
   // If distance to filter start is that large that due to circular dictionary
@@ -233,7 +279,10 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017
 {
   int DataSize=ReadTop-Inp.InAddr; // Data left to process.
   if (DataSize<0)
+  {
     return false;
+  }
+
   BlockHeader.BlockSize-=Inp.InAddr-BlockHeader.BlockStart;
   if (Inp.InAddr>MAX_SIZE/2)
   {
@@ -245,17 +294,29 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017
     // to make it zero.
     if (DataSize>0)
       //x memmove(Inp.InBuf,Inp.InBuf+Inp.InAddr,DataSize);
+    {
       Buffer.BlockCopy(Inp.InBuf, Inp.InAddr, Inp.InBuf, 0, DataSize);
+    }
+
     Inp.InAddr=0;
     ReadTop=DataSize;
   }
   else
+  {
     DataSize=ReadTop;
+  }
+
   int ReadCode=0;
   if (MAX_SIZE!=DataSize)
+  {
     ReadCode=UnpIO_UnpRead(Inp.InBuf,DataSize,MAX_SIZE-DataSize);
+  }
+
   if (ReadCode>0) // Can be also -1.
+  {
     ReadTop+=ReadCode;
+  }
+
   ReadBorder=ReadTop-30;
   BlockHeader.BlockStart=Inp.InAddr;
   if (BlockHeader.BlockSize!=-1) // '-1' means not defined yet.
@@ -285,7 +346,10 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017
 
     UnpackFilter flt=Filters[I];
     if (flt.Type==FILTER_NONE)
+    {
       continue;
+    }
+
     if (flt.NextWindow)
     {
       // Here we skip filters which have block start in current data range
@@ -301,7 +365,10 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017
       // our write here, we can safely assume that filter is applicable
       // to next block on no further wrap arounds is possible.
       if (((flt.BlockStart-WrPtr)&MaxWinMask)<=FullWriteSize)
+      {
         flt.NextWindow=false;
+      }
+
       continue;
     }
     uint BlockStart=flt.BlockStart;
@@ -326,10 +393,14 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017
           if (BlockStart<BlockEnd || BlockEnd==0)
           {
             if (Fragmented)
+            {
               FragWindow.CopyData(Mem,0,BlockStart,BlockLength);
+            }
             else
               //x memcpy(Mem,Window+BlockStart,BlockLength);
+            {
               Utility.Copy(Window, BlockStart, Mem, 0, BlockLength);
+            }
           }
           else
           {
@@ -353,7 +424,9 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017
           Filters[I].Type=FILTER_NONE;
 
           if (OutMem!=null)
+          {
             UnpIO_UnpWrite(OutMem,0,BlockLength);
+          }
 
           UnpSomeRead=true;
           WrittenFileSize+=BlockLength;
@@ -376,7 +449,9 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017
         {
           UnpackFilter _flt=Filters[J];
           if (_flt.Type!=FILTER_NONE)
+          {
             _flt.NextWindow=false;
+          }
         }
 
         // Do not write data left after current filter now.
@@ -393,13 +468,20 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017
   for (int I=0;I<Filters.Count;I++)
   {
     if (EmptyCount>0)
+    {
       Filters[I-EmptyCount]=Filters[I];
+    }
+
     if (Filters[I].Type==FILTER_NONE)
+    {
       EmptyCount++;
+    }
   }
   if (EmptyCount>0)
     //Filters.Alloc(Filters.Count-EmptyCount);
+  {
     Filters.RemoveRange(Filters.Count-EmptyCount, EmptyCount);
+  }
 
   if (!NotAllFiltersProcessed) // Only if all filters are processed.
   {
@@ -417,7 +499,9 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017
   // If border is equal to UnpPtr, it means that we have MaxWinSize data ahead.
   if (WriteBorder==UnpPtr ||
       WrPtr!=UnpPtr && ((WrPtr-UnpPtr)&MaxWinMask)<((WriteBorder-UnpPtr)&MaxWinMask))
+  {
     WriteBorder=WrPtr;
+  }
 }
 
       private byte[] ApplyFilter(byte[] __d,uint DataSize,UnpackFilter Flt)
@@ -450,11 +534,15 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017
             if ((Addr & 0x80000000)!=0)              // Addr<0
             {
               if (((Addr+Offset) & 0x80000000)==0)   // Addr+Offset>=0
+              {
                 RawPut4(Addr+FileSize,__d,Data);
+              }
             }
             else
               if (((Addr-FileSize) & 0x80000000)!=0) // Addr<FileSize
+              {
                 RawPut4(Addr-Offset,__d,Data);
+              }
 
             Data+=4;
             CurPos+=4;
@@ -510,9 +598,14 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017
       private void UnpWriteArea(size_t StartPtr,size_t EndPtr)
 {
   if (EndPtr!=StartPtr)
+  {
     UnpSomeRead=true;
+  }
+
   if (EndPtr<StartPtr)
+  {
     UnpAllBuf=true;
+  }
 
   if (Fragmented)
   {
@@ -534,17 +627,25 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017
       UnpWriteData(Window,0,EndPtr);
     }
     else
+    {
       UnpWriteData(Window,StartPtr,EndPtr-StartPtr);
+    }
 }
 
       private void UnpWriteData(byte[] Data, size_t offset, size_t Size)
 {
   if (WrittenFileSize>=DestUnpSize)
+  {
     return;
+  }
+
   size_t WriteSize=Size;
   int64 LeftToWrite=DestUnpSize-WrittenFileSize;
   if ((int64)WriteSize>LeftToWrite)
+  {
     WriteSize=(size_t)LeftToWrite;
+  }
+
   UnpIO_UnpWrite(Data, offset, WriteSize);
   WrittenFileSize+=Size;
 }
@@ -552,7 +653,9 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017
       private void UnpInitData50(bool Solid)
 {
   if (!Solid)
+  {
     TablesRead5=false;
+  }
 }
 
       private bool ReadBlockHeader(BitInput Inp,ref UnpackBlockHeader Header)
@@ -560,8 +663,13 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017
   Header.HeaderSize=0;
 
   if (!Inp.ExternalBuffer && Inp.InAddr>ReadTop-7)
+  {
     if (!UnpReadBuf())
+    {
       return false;
+    }
+  }
+
   Inp.faddbits((uint)((8-Inp.InBit)&7));
 
   byte BlockFlags=(byte)(Inp.fgetbits()>>8);
@@ -569,7 +677,9 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017
   uint ByteCount=(uint)(((BlockFlags>>3)&3)+1); // Block size byte count.
 
   if (ByteCount==4)
+  {
     return false;
+  }
 
   Header.HeaderSize=(int)(2+ByteCount);
 
@@ -588,7 +698,9 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017
   Header.BlockSize=BlockSize;
   byte CheckSum=(byte)(0x5a^BlockFlags^BlockSize^(BlockSize>>8)^(BlockSize>>16));
   if (CheckSum!=SavedCheckSum)
+  {
     return false;
+  }
 
   Header.BlockStart=Inp.InAddr;
   ReadBorder=Math.Min(ReadBorder,Header.BlockStart+Header.BlockSize-1);
@@ -601,11 +713,17 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017
       private bool ReadTables(BitInput Inp,ref UnpackBlockHeader Header, ref UnpackBlockTables Tables)
 {
   if (!Header.TablePresent)
+  {
     return true;
+  }
 
   if (!Inp.ExternalBuffer && Inp.InAddr>ReadTop-25)
+  {
     if (!UnpReadBuf())
+    {
       return false;
+    }
+  }
 
   byte[] BitLength = new byte[BC];
   for (uint I=0;I<BC;I++)
@@ -617,7 +735,9 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017
       uint ZeroCount=(byte)(Inp.fgetbits() >> 12);
       Inp.faddbits(4);
       if (ZeroCount==0)
+      {
         BitLength[I]=15;
+      }
       else
       {
         ZeroCount+=2;
@@ -627,7 +747,9 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017
       }
     }
     else
+    {
       BitLength[I]=(byte)Length;
+    }
   }
 
   MakeDecodeTables(BitLength,0,Tables.BD,BC);
@@ -637,8 +759,13 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017
   for (uint I=0;I<TableSize;)
   {
     if (!Inp.ExternalBuffer && Inp.InAddr>ReadTop-5)
+    {
       if (!UnpReadBuf())
+      {
         return false;
+      }
+    }
+
     uint Number=DecodeNumber(Inp,Tables.BD);
     if (Number<16)
     {
@@ -669,11 +796,13 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017
           return false;
         }
         else
+        {
           while (N-- > 0 && I<TableSize)
           {
             Table[I]=Table[I-1];
             I++;
           }
+        }
       }
       else
       {
@@ -694,7 +823,10 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017
   }
   TablesRead5=true;
   if (!Inp.ExternalBuffer && Inp.InAddr>ReadTop)
+  {
     return false;
+  }
+
   MakeDecodeTables(Table, 0, Tables.LD,NC);
   MakeDecodeTables(Table, (int)NC,Tables.DD,DC);
   MakeDecodeTables(Table, (int)(NC+DC),Tables.LDD,LDC);

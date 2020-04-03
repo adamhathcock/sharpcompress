@@ -70,7 +70,9 @@ public Unpack(/* ComprDataIO *DataIO */)
   // will be 0 because of size_t overflow. Let's issue the memory error.
   if (WinSize==0)
     //ErrHandler.MemoryError();
+  {
     throw new InvalidFormatException("invalid window size (possibly due to a rar file with a 4GB being unpacked on a 32-bit platform)");
+  }
 
   // Minimum window size must be at least twice more than maximum possible
   // size of filter block, which is 0x10000 in RAR now. If window size is
@@ -79,12 +81,19 @@ public Unpack(/* ComprDataIO *DataIO */)
   // use 0x40000 for extra safety and possible filter area size expansion.
   const size_t MinAllocSize=0x40000;
   if (WinSize<MinAllocSize)
+  {
     WinSize=MinAllocSize;
+  }
 
   if (WinSize<=MaxWinSize) // Use the already allocated window.
+  {
     return;
+  }
+
   if ((WinSize>>16)>0x10000) // Window size must not exceed 4 GB.
+  {
     return;
+  }
 
   // Archiving code guarantees that window size does not grow in the same
   // solid stream. So if we are here, we are either creating a new window
@@ -96,11 +105,14 @@ public Unpack(/* ComprDataIO *DataIO */)
   // We do not handle growth for existing fragmented window.
   if (Grow && Fragmented)
     //throw std::bad_alloc();
+  {
     throw new InvalidFormatException("Grow && Fragmented");
+  }
 
   byte[] NewWindow=Fragmented ? null : new byte[WinSize];
 
   if (NewWindow==null)
+  {
     if (Grow || WinSize<0x1000000)
     {
       // We do not support growth for new fragmented window.
@@ -118,6 +130,7 @@ public Unpack(/* ComprDataIO *DataIO */)
       FragWindow.Init(WinSize);
       Fragmented=true;
     }
+  }
 
   if (!Fragmented)
   {
@@ -132,8 +145,10 @@ public Unpack(/* ComprDataIO *DataIO */)
     // RAR archiving code does not allow it in solid streams now,
     // but let's implement it anyway just in case we'll change it sometimes.
     if (Grow)
+    {
       for (size_t I=1;I<=MaxWinSize;I++)
         NewWindow[(UnpPtr-I)&(WinSize-1)]=Window[(UnpPtr-I)&(MaxWinSize-1)];
+    }
 
     //if (Window!=null)
     //  free(Window);
@@ -154,18 +169,27 @@ public Unpack(/* ComprDataIO *DataIO */)
 #if !RarV2017_SFX_MODULE
     case 15: // rar 1.5 compression
       if (!Fragmented)
+      {
         Unpack15(Solid);
+      }
+
       break;
     case 20: // rar 2.x compression
     case 26: // files larger than 2GB
       if (!Fragmented)
+      {
         Unpack20(Solid);
+      }
+
       break;
 #endif
 #if !RarV2017_RAR5ONLY
     case 29: // rar 3.x compression
       if (!Fragmented)
+      {
         throw new NotImplementedException();
+      }
+
       break;
 #endif
     case 50: // RAR 5.0 compression algorithm.

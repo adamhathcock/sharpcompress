@@ -55,7 +55,9 @@ namespace SharpCompress.Writers.Zip
                 // so this extra guard is not required, but kept to simplify changing the code
                 // once the zip64 post-data issue is resolved
                 if (!zip64_stream)
+                {
                     flags |= HeaderFlags.UsePostDataDescriptor;
+                }
 
                 if (usedCompression == ZipCompressionMethod.LZMA)
                 {
@@ -65,7 +67,9 @@ namespace SharpCompress.Writers.Zip
 
             // Support for zero byte files
             if (Decompressed == 0 && Compressed == 0)
+            {
                 usedCompression = ZipCompressionMethod.None;
+            }
 
             byte[] intBuf = new byte[] { 80, 75, 1, 2, version, 0, version, 0 };
             //constant sig, then version made by, then version to extract

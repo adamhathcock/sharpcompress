@@ -10,10 +10,6 @@ using size_t = System.UInt64;
 using int64 = System.Int64;
 using uint32 = System.UInt32;
 
-using System;
-using System.Collections.Generic;
-using System.Text;
-
 namespace SharpCompress.Compressors.Rar.UnpackV2017
 {
     internal partial class Unpack

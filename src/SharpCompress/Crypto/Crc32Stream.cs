@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 
 namespace SharpCompress.Crypto
@@ -79,7 +78,9 @@ namespace SharpCompress.Crypto
         private static uint[] InitializeTable(uint polynomial)
         {
             if (polynomial == DefaultPolynomial && defaultTable != null)
+            {
                 return defaultTable;
+            }
 
             var createTable = new uint[256];
             for (var i = 0; i < 256; i++)
@@ -87,14 +88,21 @@ namespace SharpCompress.Crypto
                 var entry = (uint)i;
                 for (var j = 0; j < 8; j++)
                     if ((entry & 1) == 1)
+                    {
                         entry = (entry >> 1) ^ polynomial;
+                    }
                     else
+                    {
                         entry = entry >> 1;
+                    }
+
                 createTable[i] = entry;
             }
 
             if (polynomial == DefaultPolynomial)
+            {
                 defaultTable = createTable;
+            }
 
             return createTable;
         }

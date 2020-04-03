@@ -38,7 +38,11 @@ namespace SharpCompress.Common.Rar.Headers
         private void ReadLocator(MarkingBinaryReader reader) {
             var size = reader.ReadRarVIntUInt16();
             var type = reader.ReadRarVIntUInt16();
-            if (type != 1) throw new InvalidFormatException("expected locator record");
+            if (type != 1)
+            {
+                throw new InvalidFormatException("expected locator record");
+            }
+
             var flags = reader.ReadRarVIntUInt16();
             const ushort hasQuickOpenOffset = 0x01;
             const ushort hasRecoveryOffset = 0x02;

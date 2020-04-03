@@ -1,6 +1,5 @@
 ﻿using System.IO;
 using System.Linq;
-using System.Text;
 
 namespace SharpCompress.Common.Zip.Headers
 {

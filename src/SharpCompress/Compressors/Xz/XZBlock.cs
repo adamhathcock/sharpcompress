@@ -33,17 +33,35 @@ namespace SharpCompress.Compressors.Xz
         {
             int bytesRead = 0;
             if (!HeaderIsLoaded)
+            {
                 LoadHeader();
+            }
+
             if (!_streamConnected)
+            {
                 ConnectStream();
+            }
+
             if (!_endOfStream)
+            {
                 bytesRead = _decomStream.Read(buffer, offset, count);
+            }
+
             if (bytesRead != count)
+            {
                 _endOfStream = true;
+            }
+
             if (_endOfStream && !_paddingSkipped)
+            {
                 SkipPadding();
+            }
+
             if (_endOfStream && !_crcChecked)
+            {
                 CheckCrc();
+            }
+
             _bytesRead += (ulong)bytesRead;
             return bytesRead;
         }
@@ -56,7 +74,9 @@ namespace SharpCompress.Compressors.Xz
                 byte[] paddingBytes = new byte[4 - bytes];
                 BaseStream.Read(paddingBytes, 0, paddingBytes.Length);
                 if (paddingBytes.Any(b => b != 0))
+                {
                     throw new InvalidDataException("Padding bytes were non-null");
+                }
             }
             _paddingSkipped = true;
         }
@@ -101,7 +121,9 @@ namespace SharpCompress.Compressors.Xz
         {
             _blockHeaderSizeByte = (byte)BaseStream.ReadByte();
             if (_blockHeaderSizeByte == 0)
+            {
                 throw new XZIndexMarkerReachedException();
+            }
         }
 
         private byte[] CacheHeader()
@@ -110,12 +132,16 @@ namespace SharpCompress.Compressors.Xz
             blockHeaderWithoutCrc[0] = _blockHeaderSizeByte;
             var read = BaseStream.Read(blockHeaderWithoutCrc, 1, BlockHeaderSize - 5);
             if (read != BlockHeaderSize - 5)
+            {
                 throw new EndOfStreamException("Reached end of stream unexectedly");
+            }
 
             uint crc = BaseStream.ReadLittleEndianUInt32();
             uint calcCrc = Crc32.Compute(blockHeaderWithoutCrc);
             if (crc != calcCrc)
+            {
                 throw new InvalidDataException("Block header corrupt");
+            }
 
             return blockHeaderWithoutCrc;
         }
@@ -127,15 +153,22 @@ namespace SharpCompress.Compressors.Xz
             byte reserved = (byte)(blockFlags & 0x3C);
 
             if (reserved != 0)
+            {
                 throw new InvalidDataException("Reserved bytes used, perhaps an unknown XZ implementation");
+            }
 
             bool compressedSizePresent = (blockFlags & 0x40) != 0;
             bool uncompressedSizePresent = (blockFlags & 0x80) != 0;
 
             if (compressedSizePresent)
+            {
                 CompressedSize = reader.ReadXZInteger();
+            }
+
             if (uncompressedSizePresent)
+            {
                 UncompressedSize = reader.ReadXZInteger();
+            }
         }
 
         private void ReadFilters(BinaryReader reader, long baseStreamOffset = 0)
@@ -146,20 +179,30 @@ namespace SharpCompress.Compressors.Xz
                 var filter = BlockFilter.Read(reader);
                 if ((i + 1 == _numFilters && !filter.AllowAsLast)
                     || (i + 1 < _numFilters && !filter.AllowAsNonLast))
+                {
                     throw new InvalidDataException("Block Filters in bad order");
+                }
+
                 if (filter.ChangesDataSize && i + 1 < _numFilters)
+                {
                     nonLastSizeChangers++;
+                }
+
                 filter.ValidateFilter();
                 Filters.Push(filter);
             }
             if (nonLastSizeChangers > 2)
+            {
                 throw new InvalidDataException("More than two non-last block filters cannot change stream size");
+            }
 
             int blockHeaderPaddingSize = BlockHeaderSize -
-                (4 + (int)(reader.BaseStream.Position - baseStreamOffset));
+                                         (4 + (int)(reader.BaseStream.Position - baseStreamOffset));
             byte[] blockHeaderPadding = reader.ReadBytes(blockHeaderPaddingSize);
             if (!blockHeaderPadding.All(b => b == 0))
+            {
                 throw new InvalidDataException("Block header contains unknown fields");
+            }
         }
     }
 }

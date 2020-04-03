@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Text;
 using SharpCompress.Common.Zip.Headers;
 using SharpCompress.Compressors.Deflate;
 

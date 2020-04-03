@@ -2,8 +2,6 @@
 using System;
 using System.Collections.Generic;
 using SharpCompress.Compressors.Rar.UnpackV1.Decode;
-using SharpCompress.Compressors.Rar.VM;
-
 using size_t=System.UInt32;
 using UnpackBlockHeader = SharpCompress.Compressors.Rar.UnpackV1;
 
@@ -139,14 +137,18 @@ public bool TablePresent;
             {
                 UnpInitData(Solid);
                 if (!UnpReadBuf())
-                    return;
+                {
+                  return;
+                }
 
                 // Check TablesRead5 to be sure that we read tables at least once
                 // regardless of current block header TablePresent flag.
                 // So we can safefly use these tables below.
                 if (!ReadBlockHeader() || 
                     !ReadTables() || !TablesRead5)
-                    return;
+                {
+                  return;
+                }
             }
 
             while (true)
@@ -169,17 +171,24 @@ public bool TablePresent;
                   break;
                 }
                 if (!ReadBlockHeader() || !ReadTables())
+                {
                   return;
+                }
               }
               if (FileDone || !UnpReadBuf())
+              {
                 break;
+              }
             }
 
             if (((WriteBorder-UnpPtr) & MaxWinMask)<PackDef.MAX_LZ_MATCH+3 && WriteBorder!=UnpPtr)
             {
               UnpWriteBuf();
               if (WrittenFileSize>DestUnpSize)
+              {
                 return;
+              }
+
               if (Suspended)
               {
                 FileExtracted=false;
@@ -243,7 +252,9 @@ public bool TablePresent;
                 {
                   Length++;
                   if (Distance>0x40000)
+                  {
                     Length++;
+                  }
                 }
               }
 
@@ -259,7 +270,10 @@ public bool TablePresent;
             {
               UnpackFilter Filter = new UnpackFilter();
               if (!ReadFilter(Filter) || !AddFilter(Filter))
+              {
                 break;
+              }
+
               continue;
             }
             if (MainSlot==257)
@@ -269,7 +283,10 @@ public bool TablePresent;
 //                  FragWindow.CopyString(LastLength,OldDist[0],UnpPtr,MaxWinMask);
 //                else
                   //CopyString(LastLength,OldDist[0]);
-                  CopyString(LastLength,OldDistN(0));
+              {
+                CopyString(LastLength,OldDistN(0));
+              }
+
               continue;
             }
             if (MainSlot<262)
@@ -316,13 +333,19 @@ public bool TablePresent;
       private bool ReadFilter(UnpackFilter Filter)
         {
           if (!Inp.ExternalBuffer && Inp.InAddr>ReadTop-16)
+          {
             if (!UnpReadBuf())
+            {
               return false;
+            }
+          }
 
           Filter.uBlockStart=ReadFilterData();
           Filter.uBlockLength=ReadFilterData();
           if (Filter.BlockLength>MAX_FILTER_BLOCK_SIZE)
+          {
             Filter.BlockLength=0;
+          }
 
           //Filter.Type=Inp.fgetbits()>>13;
           Filter.Type=(byte)(Inp.fgetbits()>>13);
@@ -344,7 +367,9 @@ public bool TablePresent;
           {
             UnpWriteBuf(); // Write data, apply and flush filters.
             if (Filters.Count>=MAX_UNPACK_FILTERS)
+            {
               InitFilters(); // Still too many filters, prevent excessive memory use.
+            }
           }
 
           // If distance to filter start is that large that due to circular dictionary
@@ -361,7 +386,10 @@ public bool TablePresent;
         {
           int DataSize=ReadTop-Inp.InAddr; // Data left to process.
           if (DataSize<0)
+          {
             return false;
+          }
+
           BlockHeader.BlockSize-=Inp.InAddr-BlockHeader.BlockStart;
           if (Inp.InAddr>MAX_SIZE/2)
           {
@@ -373,21 +401,33 @@ public bool TablePresent;
             // to make it zero.
             if (DataSize>0)
               //memmove(Inp.InBuf,Inp.InBuf+Inp.InAddr,DataSize);
+            {
               Array.Copy(InBuf, inAddr, InBuf, 0, DataSize);
-              // TODO: perf
+            }
+
+            // TODO: perf
               //Buffer.BlockCopy(InBuf, inAddr, InBuf, 0, DataSize);
 
             Inp.InAddr=0;
             ReadTop=DataSize;
           }
           else
+          {
             DataSize=ReadTop;
+          }
+
           int ReadCode=0;
           if (MAX_SIZE!=DataSize)
             //ReadCode=UnpIO->UnpRead(Inp.InBuf+DataSize,BitInput.MAX_SIZE-DataSize);
+          {
             ReadCode = readStream.Read(InBuf, DataSize, MAX_SIZE-DataSize);
+          }
+
           if (ReadCode>0) // Can be also -1.
+          {
             ReadTop+=ReadCode;
+          }
+
           ReadBorder=ReadTop-30;
           BlockHeader.BlockStart=Inp.InAddr;
           if (BlockHeader.BlockSize!=-1) // '-1' means not defined yet.
@@ -674,7 +714,9 @@ public bool TablePresent;
       private void UnpInitData50(bool Solid)
         {
           if (!Solid)
+          {
             TablesRead5=false;
+          }
         }
 
       private bool ReadBlockHeader()
@@ -682,8 +724,13 @@ public bool TablePresent;
           Header.HeaderSize=0;
 
           if (!Inp.ExternalBuffer && Inp.InAddr>ReadTop-7)
+          {
             if (!UnpReadBuf())
+            {
               return false;
+            }
+          }
+
           //Inp.faddbits((8-Inp.InBit)&7);
           Inp.faddbits((uint)((8-Inp.InBit)&7));
   
@@ -693,7 +740,9 @@ public bool TablePresent;
           uint ByteCount=(uint)(((BlockFlags>>3)&3)+1); // Block size byte count.
   
           if (ByteCount==4)
+          {
             return false;
+          }
 
           //Header.HeaderSize=2+ByteCount;
           Header.HeaderSize=(int)(2+ByteCount);
@@ -715,7 +764,9 @@ public bool TablePresent;
           Header.BlockSize=BlockSize;
           byte CheckSum=(byte)(0x5a^BlockFlags^BlockSize^(BlockSize>>8)^(BlockSize>>16));
           if (CheckSum!=SavedCheckSum)
+          {
             return false;
+          }
 
           Header.BlockStart=Inp.InAddr;
           ReadBorder=Math.Min(ReadBorder,Header.BlockStart+Header.BlockSize-1);

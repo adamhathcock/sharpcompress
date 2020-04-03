@@ -277,9 +277,14 @@ namespace SharpCompress.Compressors.Deflate64
                 {
                     symbol = -symbol;
                     if ((bitBuffer & mask) == 0)
+                    {
                         symbol = _left[symbol];
+                    }
                     else
+                    {
                         symbol = _right[symbol];
+                    }
+
                     mask <<= 1;
                 } while (symbol < 0);
             }

@@ -30,7 +30,9 @@ namespace SharpCompress.Compressors.LZMA
             mLimit = limit;
 
             if (((uint) input.Length & 15) != 0)
+            {
                 throw new NotSupportedException("AES decoder does not support padding.");
+            }
 
             int numCyclesPower;
             byte[] salt, seed;
@@ -90,10 +92,14 @@ namespace SharpCompress.Compressors.LZMA
         {
             if (count == 0
                 || mWritten == mLimit)
+            {
                 return 0;
+            }
 
             if (mUnderflow > 0)
+            {
                 return HandleUnderflow(buffer, offset, count);
+            }
 
             // Need at least 16 bytes to proceed.
             if (mEnding - mOffset < 16)
@@ -120,16 +126,22 @@ namespace SharpCompress.Compressors.LZMA
             // Currently this is handled by forcing an underflow if
             // the stream length is not a multiple of the block size.
             if (count > mLimit - mWritten)
+            {
                 count = (int) (mLimit - mWritten);
+            }
 
             // We cannot transform less than 16 bytes into the target buffer,
             // but we also cannot return zero, so we need to handle this.
             // We transform the data locally and use our own buffer as cache.
             if (count < 16)
+            {
                 return HandleUnderflow(buffer, offset, count);
+            }
 
             if (count > mEnding - mOffset)
+            {
                 count = mEnding - mOffset;
+            }
 
             // Otherwise we transform directly into the target buffer.
             int processed = mDecoder.TransformBlock(mBuffer, mOffset, count & ~15, buffer, offset);
@@ -157,13 +169,17 @@ namespace SharpCompress.Compressors.LZMA
             int saltSize = (bt >> 7) & 1;
             int ivSize = (bt >> 6) & 1;
             if (info.Length == 1)
+            {
                 throw new InvalidOperationException();
+            }
 
             byte bt2 = info[1];
             saltSize += (bt2 >> 4);
             ivSize += (bt2 & 15);
             if (info.Length < 2 + saltSize + ivSize)
+            {
                 throw new InvalidOperationException();
+            }
 
             salt = new byte[saltSize];
             for (int i = 0; i < saltSize; i++)
@@ -174,7 +190,9 @@ namespace SharpCompress.Compressors.LZMA
                 iv[i] = info[i + saltSize + 2];
 
             if (numCyclesPower > 24)
+            {
                 throw new NotSupportedException();
+            }
         }
 
         private byte[] InitKey(int mNumCyclesPower, byte[] salt, byte[] pass)
@@ -208,7 +226,9 @@ namespace SharpCompress.Compressors.LZMA
                         // (It also ensures the counter is little endian, which BitConverter does not.)
                         for (int i = 0; i < 8; i++)
                             if (++counter[i] != 0)
+                            {
                                 break;
+                            }
                     }
                     return sha.GetHashAndReset();
                 }
@@ -227,7 +247,9 @@ namespace SharpCompress.Compressors.LZMA
                         // (It also ensures the counter is little endian, which BitConverter does not.)
                         for (int i = 0; i < 8; i++)
                             if (++counter[i] != 0)
+                            {
                                 break;
+                            }
                     }
 
                     sha.TransformFinalBlock(counter, 0, 0);
@@ -248,7 +270,9 @@ namespace SharpCompress.Compressors.LZMA
             }
 
             if (count > mUnderflow)
+            {
                 count = mUnderflow;
+            }
 
             Buffer.BlockCopy(mBuffer, mOffset, buffer, offset, count);
             mWritten += count;
