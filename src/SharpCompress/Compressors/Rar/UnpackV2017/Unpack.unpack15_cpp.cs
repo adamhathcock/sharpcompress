@@ -546,9 +546,9 @@ internal static class Unpack15Local {
     ChSetA[I]=(ushort)I;
     ChSetC[I]=(ushort)(((~I+1) & 0xff)<<8);
   }
-  new Span<byte>(NToPl).Fill(0);
-  new Span<byte>(NToPlB).Fill(0);
-  new Span<byte>(NToPlC).Fill(0);
+  new Span<byte>(NToPl).Clear();
+  new Span<byte>(NToPlB).Clear();
+  new Span<byte>(NToPlC).Clear();
   CorrHuff(ChSetB,NToPlB);
 }
 
@@ -558,7 +558,7 @@ internal static class Unpack15Local {
   for (I=7;I>=0;I--)
     for (J=0;J<32;J++)
       CharSet[J]=(ushort)((CharSet[J] & ~0xff) | I);
-  new Span<byte>(NumToPlace, 0, NToPl.Length).Fill(0);
+  new Span<byte>(NumToPlace, 0, NToPl.Length).Clear();
   for (I=6;I>=0;I--)
     NumToPlace[I]=(byte)((7-I)*32);
 }

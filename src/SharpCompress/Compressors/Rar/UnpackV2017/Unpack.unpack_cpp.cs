@@ -220,7 +220,7 @@ public Unpack(/* ComprDataIO *DataIO */)
 {
   if (!Solid)
   {
-    new Span<uint>(OldDist).Fill(0);
+    new Span<uint>(OldDist).Clear();
     OldDistPtr=0;
     LastDist=LastLength=0;
 //    memset(Window,0,MaxWinSize);
@@ -270,7 +270,7 @@ public Unpack(/* ComprDataIO *DataIO */)
 
   // Set the entire DecodeNum to zero.
   //memset(Dec->DecodeNum,0,Size*sizeof(*Dec->DecodeNum));
-  new Span<ushort>(Dec.DecodeNum).Fill(0);
+  new Span<ushort>(Dec.DecodeNum).Clear();
 
   // Initialize not really used entry for zero length code.
   Dec.DecodePos[0]=0;

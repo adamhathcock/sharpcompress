@@ -263,7 +263,7 @@ namespace SharpCompress.Compressors.Rar.UnpackV1
             if (0 == (BitField & 0x4000))
             {
                 // memset(UnpOldTable20,0,sizeof(UnpOldTable20));
-                new Span<byte>(UnpOldTable20).Fill(0);
+                new Span<byte>(UnpOldTable20).Clear();
             }
             AddBits(2);
 
@@ -371,7 +371,7 @@ namespace SharpCompress.Compressors.Rar.UnpackV1
                 AudV[3] = new AudioVariables();
 
                 // memset(UnpOldTable20,0,sizeof(UnpOldTable20));
-                new Span<byte>(UnpOldTable20).Fill(0);
+                new Span<byte>(UnpOldTable20).Clear();
             }
         }
 
