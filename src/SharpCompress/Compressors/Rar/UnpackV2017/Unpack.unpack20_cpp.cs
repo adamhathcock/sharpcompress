@@ -328,7 +328,7 @@ internal static class Unpack20Local {
     MakeDecodeTables(Table,(int)(NC20+DC20),BlockTables.RD,RC20);
   }
   //x memcpy(UnpOldTable20,Table,sizeof(UnpOldTable20));
-  Array.Copy(Table,0,UnpOldTable20,0,UnpOldTable20.Length);
+  Array.Copy(Table,UnpOldTable20,UnpOldTable20.Length);
   return true;
 }
 

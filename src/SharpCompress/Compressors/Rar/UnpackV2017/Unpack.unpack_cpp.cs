@@ -304,7 +304,7 @@ public Unpack(/* ComprDataIO *DataIO */)
   // so we cannot use the original DecodePos.
   uint[] CopyDecodePos = new uint[Dec.DecodePos.Length];
   //memcpy(CopyDecodePos,Dec->DecodePos,sizeof(CopyDecodePos));
-  Array.Copy(Dec.DecodePos, 0, CopyDecodePos, 0, CopyDecodePos.Length);
+  Array.Copy(Dec.DecodePos, CopyDecodePos, CopyDecodePos.Length);
 
   // For every bit length in the bit length table and so for every item
   // of alphabet.
