@@ -38,7 +38,7 @@ namespace SharpCompress.Compressors.Rar.UnpackV1
             56, 64, 80, 96, 112, 128, 160, 192, 224
         };
 
-        private static readonly byte[] LBits =
+        private static ReadOnlySpan<byte> LBits => new byte[]
         {
             0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4,
             4, 5, 5, 5, 5
