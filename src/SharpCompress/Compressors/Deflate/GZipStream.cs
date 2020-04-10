@@ -372,17 +372,16 @@ namespace SharpCompress.Compressors.Deflate
                 {
                     return;
                 }
-                if (_fileName.IndexOf("/") != -1)
+                if (_fileName.Contains("/"))
                 {
-                    _fileName = _fileName.Replace("/", "\\");
+                    _fileName = _fileName.Replace('/', '\\');
                 }
                 if (_fileName.EndsWith("\\"))
                 {
                     throw new InvalidOperationException("Illegal filename");
                 }
 
-                var index = _fileName.IndexOf("\\");
-                if (index != -1)
+                if (_fileName.Contains("\\"))
                 {
                     // trim any leading path
                     int length = _fileName.Length;
