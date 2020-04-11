@@ -9,7 +9,7 @@ namespace SharpCompress.Crypto
 
         private static readonly int MAXKC = (256 / 4);
 
-        private static readonly byte[] Logtable =
+        private static ReadOnlySpan<byte> Logtable => new byte[]
         {
             0, 0, 25, 1, 50, 2, 26, 198,
             75, 199, 27, 104, 51, 238, 223, 3,
@@ -45,7 +45,7 @@ namespace SharpCompress.Crypto
             13, 99, 140, 128, 192, 247, 112, 7
         };
 
-        private static readonly byte[] Alogtable =
+        private static ReadOnlySpan<byte> Alogtable => new byte[]
         {
             0, 3, 5, 15, 17, 51, 85, 255, 26, 46, 114, 150, 161, 248, 19, 53,
             95, 225, 56, 72, 216, 115, 149, 164, 247, 2, 6, 10, 30, 34, 102, 170,
@@ -121,7 +121,7 @@ namespace SharpCompress.Crypto
             23, 43, 4, 126, 186, 119, 214, 38, 225, 105, 20, 99, 85, 33, 12, 125
         };
 
-        private static readonly byte[] rcon =
+        private static ReadOnlySpan<byte> rcon => new byte[]
         {
             0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1b, 0x36, 0x6c, 0xd8, 0xab, 0x4d, 0x9a,
             0x2f, 0x5e, 0xbc, 0x63, 0xc6, 0x97, 0x35, 0x6a, 0xd4, 0xb3, 0x7d, 0xfa, 0xef, 0xc5, 0x91

@@ -211,7 +211,7 @@ namespace SharpCompress.Compressors.ADC
             }
 
             output = new byte[outPosition];
-            Array.Copy(buffer, 0, output, 0, outPosition);
+            Array.Copy(buffer, output, outPosition);
             return position - start;
         }
     }

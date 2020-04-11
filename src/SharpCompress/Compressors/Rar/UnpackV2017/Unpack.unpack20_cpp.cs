@@ -231,7 +231,7 @@ internal static class Unpack20Local {
 
   if ((BitField & 0x4000) != 0)
   {
-    new Span<byte>(UnpOldTable20).Fill(0);
+    new Span<byte>(UnpOldTable20).Clear();
   }
 
   Inp.addbits(2);
@@ -328,7 +328,7 @@ internal static class Unpack20Local {
     MakeDecodeTables(Table,(int)(NC20+DC20),BlockTables.RD,RC20);
   }
   //x memcpy(UnpOldTable20,Table,sizeof(UnpOldTable20));
-  Array.Copy(Table,0,UnpOldTable20,0,UnpOldTable20.Length);
+  Array.Copy(Table,UnpOldTable20,UnpOldTable20.Length);
   return true;
 }
 
@@ -363,7 +363,7 @@ internal static class Unpack20Local {
 
     //memset(AudV,0,sizeof(AudV));
     AudV = new AudioVariables[4];
-    new Span<byte>(UnpOldTable20).Fill(0);
+    new Span<byte>(UnpOldTable20).Clear();
     //memset(MD,0,sizeof(MD));
     MD = new DecodeTable[4];
   }

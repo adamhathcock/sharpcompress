@@ -137,7 +137,7 @@ namespace SharpCompress.Compressors.PPMd.H
 
         private void RestartModelRare()
         {
-            new Span<int>(_charMask).Fill(0);
+            new Span<int>(_charMask).Clear();
             SubAlloc.InitSubAllocator();
             _initRl = -(_maxOrder < 12 ? _maxOrder : 12) - 1;
             int addr = SubAlloc.AllocContext();
@@ -228,7 +228,7 @@ namespace SharpCompress.Compressors.PPMd.H
         private void ClearMask()
         {
             _escCount = 1;
-            new Span<int>(_charMask).Fill(0);
+            new Span<int>(_charMask).Clear();
         }
 
         internal bool DecodeInit(IRarUnpack unpackRead, int escChar)

@@ -652,9 +652,9 @@ namespace SharpCompress.Compressors.Rar.UnpackV1
                 ChSetC[I] = ((~I + 1) & 0xff) << 8;
             }
 
-            new Span<int>(NToPl).Fill(0); // memset(NToPl,0,sizeof(NToPl));
-            new Span<int>(NToPlB).Fill(0); // memset(NToPlB,0,sizeof(NToPlB));
-            new Span<int>(NToPlC).Fill(0); // memset(NToPlC,0,sizeof(NToPlC));
+            new Span<int>(NToPl).Clear(); // memset(NToPl,0,sizeof(NToPl));
+            new Span<int>(NToPlB).Clear(); // memset(NToPlB,0,sizeof(NToPlB));
+            new Span<int>(NToPlC).Clear(); // memset(NToPlC,0,sizeof(NToPlC));
             corrHuff(ChSetB, NToPlB);
         }
 
@@ -670,7 +670,7 @@ namespace SharpCompress.Compressors.Rar.UnpackV1
                     // & ~0xff) | I;
                 }
             }
-            new Span<int>(NumToPlace).Fill(0); // memset(NumToPlace,0,sizeof(NToPl));
+            new Span<int>(NumToPlace).Clear(); // memset(NumToPlace,0,sizeof(NToPl));
             for (I = 6; I >= 0; I--)
             {
                 NumToPlace[I] = (7 - I) * 32;

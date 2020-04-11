@@ -196,7 +196,7 @@ namespace SharpCompress.Common.Tar.Headers
         {
             name.CopyTo(buffer);
             int i = Math.Min(length, name.Length);
-            buffer.Slice(i, length - i).Fill(0);
+            buffer.Slice(i, length - i).Clear();
         }
 
         private static void WriteStringBytes(string name, byte[] buffer, int offset, int length)

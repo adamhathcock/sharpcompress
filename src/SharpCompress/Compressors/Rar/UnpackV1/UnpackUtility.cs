@@ -187,7 +187,7 @@ namespace SharpCompress.Compressors.Rar.UnpackV1
             int i;
             long M, N;
 
-            new Span<int>(dec.DecodeNum).Fill(0); // memset(Dec->DecodeNum,0,Size*sizeof(*Dec->DecodeNum));
+            new Span<int>(dec.DecodeNum).Clear(); // memset(Dec->DecodeNum,0,Size*sizeof(*Dec->DecodeNum));
 
             for (i = 0; i < size; i++)
             {
