@@ -208,7 +208,9 @@ namespace SharpCompress.Compressors.Deflate64
             for (code = 0; code < 16; code++)
             {
                 for (int n = 0; n < (1 << EXTRA_DISTANCE_BITS[code]); n++)
+                {
                     result[dist++] = (byte)code;
+                }
             }
 
             dist >>= 7; // from now on, all distances are divided by 128
@@ -216,7 +218,9 @@ namespace SharpCompress.Compressors.Deflate64
             for (; code < NUM_DIST_BASE_CODES; code++)
             {
                 for (int n = 0; n < (1 << (EXTRA_DISTANCE_BITS[code] - 7)); n++)
+                {
                     result[256 + dist++] = (byte)code;
+                }
             }
 
             return result;

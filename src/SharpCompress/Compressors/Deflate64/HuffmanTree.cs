@@ -82,16 +82,24 @@ namespace SharpCompress.Compressors.Deflate64
         {
             byte[] literalTreeLength = new byte[MAX_LITERAL_TREE_ELEMENTS];
             for (int i = 0; i <= 143; i++)
+            {
                 literalTreeLength[i] = 8;
+            }
 
             for (int i = 144; i <= 255; i++)
+            {
                 literalTreeLength[i] = 9;
+            }
 
             for (int i = 256; i <= 279; i++)
+            {
                 literalTreeLength[i] = 7;
+            }
 
             for (int i = 280; i <= 287; i++)
+            {
                 literalTreeLength[i] = 8;
+            }
 
             return literalTreeLength;
         }

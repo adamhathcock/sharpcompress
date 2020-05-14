@@ -87,6 +87,7 @@ namespace SharpCompress.Crypto
             {
                 var entry = (uint)i;
                 for (var j = 0; j < 8; j++)
+                {
                     if ((entry & 1) == 1)
                     {
                         entry = (entry >> 1) ^ polynomial;
@@ -95,6 +96,7 @@ namespace SharpCompress.Crypto
                     {
                         entry = entry >> 1;
                     }
+                }
 
                 createTable[i] = entry;
             }

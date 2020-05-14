@@ -147,7 +147,9 @@ public Unpack(/* ComprDataIO *DataIO */)
     if (Grow)
     {
       for (size_t I=1;I<=MaxWinSize;I++)
+      {
         NewWindow[(UnpPtr-I)&(WinSize-1)]=Window[(UnpPtr-I)&(MaxWinSize-1)];
+      }
     }
 
     //if (Window!=null)
@@ -263,7 +265,9 @@ public Unpack(/* ComprDataIO *DataIO */)
   uint[] LengthCount = new uint[16];
   //memset(LengthCount,0,sizeof(LengthCount));
   for (size_t I=0;I<Size;I++)
+  {
     LengthCount[LengthTable[offset+I] & 0xf]++;
+  }
 
   // We must not calculate the number of zero length codes.
   LengthCount[0]=0;
@@ -365,7 +369,9 @@ public Unpack(/* ComprDataIO *DataIO */)
     // Find the upper limit for current bit field and adjust the bit length
     // accordingly if necessary.
     while (CurBitLength<Dec.DecodeLen.Length && BitField>=Dec.DecodeLen[CurBitLength])
+    {
       CurBitLength++;
+    }
 
     // Translation of right aligned bit string to bit length.
     Dec.QuickLen[Code]=CurBitLength;
