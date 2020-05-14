@@ -12,6 +12,6 @@ jobs:
     - uses: actions/checkout@v1
     - uses: actions/setup-dotnet@v1
       with:
-        dotnet-version: 3.1.100
+        dotnet-version: 3.1.202
     - name: Run the Cake script
       uses: ecampidoglio/cake-action@master
