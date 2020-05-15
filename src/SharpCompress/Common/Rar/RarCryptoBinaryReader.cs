@@ -81,7 +81,9 @@ namespace SharpCompress.Common.Rar
                     byte[] cipherText = ReadBytesNoCrc(16);
                     var readBytes = _rijndael.ProcessBlock(cipherText);
                     foreach (var readByte in readBytes)
+                    {
                         _data.Enqueue(readByte);
+                    }
                 }
             }
 

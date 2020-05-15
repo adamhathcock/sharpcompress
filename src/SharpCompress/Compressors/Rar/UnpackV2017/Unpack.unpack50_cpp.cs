@@ -190,7 +190,10 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017
       uint DistNum=MainSlot-258;
       uint Distance=OldDist[DistNum];
       for (uint I=DistNum;I>0;I--)
+      {
         OldDist[I]=OldDist[I-1];
+      }
+
       OldDist[0]=Distance;
 
       uint LengthSlot=DecodeNumber(Inp,BlockTables.RD);
@@ -586,7 +589,9 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017
         {
           byte PrevByte=0;
           for (uint DestPos=CurChannel;DestPos<DataSize;DestPos+=Channels)
+          {
             DstData[DestPos]=(PrevByte-=__d[Data+SrcPos++]);
+          }
         }
         return DstData;
       }
@@ -742,7 +747,10 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017
       {
         ZeroCount+=2;
         while (ZeroCount-- > 0 && I<BitLength.Length)
+        {
           BitLength[I++]=0;
+        }
+
         I--;
       }
     }
@@ -818,7 +826,9 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017
           Inp.faddbits(7);
         }
         while (N-- > 0 && I<TableSize)
+        {
           Table[I++]=0;
+        }
       }
   }
   TablesRead5=true;

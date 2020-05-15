@@ -58,12 +58,15 @@ namespace SharpCompress.Common.Rar
 
                     var readBytes = _rijndael.ProcessBlock(cipherText);
                     foreach (var readByte in readBytes)
+                    {
                         _data.Enqueue(readByte);
-
+                    }
                 }
 
                 for (int i = 0; i < count; i++)
+                {
                     buffer[offset + i] = _data.Dequeue();
+                }
             }
             return count;
         }

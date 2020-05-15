@@ -185,20 +185,24 @@ internal static class Unpack15Local {
   if (AvrLn1<37)
   {
     for (Length=0;;Length++)
+    {
       if (((BitField^ShortXor1[Length]) & (~(0xff>>(int)GetShortLen1(Length))))==0)
       {
         break;
       }
+    }
 
     Inp.faddbits(GetShortLen1(Length));
   }
   else
   {
     for (Length=0;;Length++)
+    {
       if (((BitField^ShortXor2[Length]) & (~(0xff>>(int)GetShortLen2(Length))))==0)
       {
         break;
       }
+    }
 
     Inp.faddbits(GetShortLen2(Length));
   }
@@ -305,7 +309,10 @@ internal static class Unpack15Local {
       else
       {
         for (Length=0;((BitField<<(int)Length)&0x8000)==0;Length++)
+        {
           ;
+        }
+
         Inp.faddbits(Length+1);
       }
 
@@ -557,10 +564,15 @@ internal static class Unpack15Local {
   int I,J;
   for (I=7;I>=0;I--)
     for (J=0;J<32;J++)
+    {
       CharSet[J]=(ushort)((CharSet[J] & ~0xff) | I);
+    }
+
   new Span<byte>(NumToPlace, 0, NToPl.Length).Clear();
   for (I=6;I>=0;I--)
+  {
     NumToPlace[I]=(byte)((7-I)*32);
+  }
 }
 
       private void CopyString15(uint Distance,uint Length)
@@ -577,7 +589,10 @@ internal static class Unpack15Local {
 {
   int I;
   for (Num&=0xfff0,I=0;DecTab[I]<=Num;I++)
+  {
     StartPos++;
+  }
+
   Inp.faddbits(StartPos);
   return(((Num-(I != 0 ? DecTab[I-1]:0))>>(int)(16-StartPos))+PosTab[StartPos]);
 }

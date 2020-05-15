@@ -61,7 +61,9 @@ namespace SharpCompress.Test.Tar
                 Assert.Contains(filename, archive2.Entries.Select(entry => entry.Key));
 
                 foreach (var entry in archive2.Entries)
+                {
                     Assert.Equal("dummy filecontent", new StreamReader(entry.OpenEntryStream()).ReadLine());
+                }
             }
         }
 
@@ -89,7 +91,10 @@ namespace SharpCompress.Test.Tar
             // create a very long filename
             string longFilename = "";
             for (int i = 0; i < 600; i = longFilename.Length)
+            {
                 longFilename += i.ToString("D10") + "-";
+            }
+
             longFilename += ".txt";
 
             // Step 1: create a tar file containing a file with a long name
@@ -113,7 +118,9 @@ namespace SharpCompress.Test.Tar
                 Assert.Contains(longFilename, archive2.Entries.Select(entry => entry.Key));
 
                 foreach (var entry in archive2.Entries)
+                {
                     Assert.Equal("dummy filecontent", new StreamReader(entry.OpenEntryStream()).ReadLine());
+                }
             }
         }
 

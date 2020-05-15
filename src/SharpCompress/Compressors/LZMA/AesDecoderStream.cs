@@ -183,11 +183,15 @@ namespace SharpCompress.Compressors.LZMA
 
             salt = new byte[saltSize];
             for (int i = 0; i < saltSize; i++)
+            {
                 salt[i] = info[i + 2];
+            }
 
             iv = new byte[16];
             for (int i = 0; i < ivSize; i++)
+            {
                 iv[i] = info[i + saltSize + 2];
+            }
 
             if (numCyclesPower > 24)
             {
@@ -203,9 +207,14 @@ namespace SharpCompress.Compressors.LZMA
 
                 int pos;
                 for (pos = 0; pos < salt.Length; pos++)
+                {
                     key[pos] = salt[pos];
+                }
+
                 for (int i = 0; i < pass.Length && pos < 32; i++)
+                {
                     key[pos++] = pass[i];
+                }
 
                 return key;
             }
@@ -225,10 +234,12 @@ namespace SharpCompress.Compressors.LZMA
                         // This mirrors the counter so we don't have to convert long to byte[] each round.
                         // (It also ensures the counter is little endian, which BitConverter does not.)
                         for (int i = 0; i < 8; i++)
+                        {
                             if (++counter[i] != 0)
                             {
                                 break;
                             }
+                        }
                     }
                     return sha.GetHashAndReset();
                 }
@@ -246,10 +257,12 @@ namespace SharpCompress.Compressors.LZMA
                         // This mirrors the counter so we don't have to convert long to byte[] each round.
                         // (It also ensures the counter is little endian, which BitConverter does not.)
                         for (int i = 0; i < 8; i++)
+                        {
                             if (++counter[i] != 0)
                             {
                                 break;
                             }
+                        }
                     }
 
                     sha.TransformFinalBlock(counter, 0, 0);

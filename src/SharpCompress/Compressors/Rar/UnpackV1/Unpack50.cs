@@ -298,7 +298,10 @@ public bool TablePresent;
               //for (uint I=DistNum;I>0;I--)
               for (int I=DistNum;I>0;I--)
                 //OldDistN[I]=OldDistN(I-1);
+              {
                 SetOldDistN(I, OldDistN(I-1));
+              }
+
               //OldDistN[0]=Distance;
               SetOldDistN(0, Distance);
 
