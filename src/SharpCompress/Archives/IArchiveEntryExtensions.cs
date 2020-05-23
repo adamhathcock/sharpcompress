@@ -18,12 +18,12 @@ namespace SharpCompress.Archives
                 throw new ExtractionException("Entry is a file directory and cannot be extracted.");
             }
 
-            var streamListener = archiveEntry.Archive as IArchiveExtractionListener;
+            var streamListener = (IArchiveExtractionListener)archiveEntry.Archive;
             streamListener.EnsureEntriesLoaded();
             streamListener.FireEntryExtractionBegin(archiveEntry);
             streamListener.FireFilePartExtractionBegin(archiveEntry.Key, archiveEntry.Size, archiveEntry.CompressedSize);
             var entryStream = archiveEntry.OpenEntryStream();
-            if (entryStream == null)
+            if (entryStream is null)
             {
                 return;
             }
@@ -41,7 +41,7 @@ namespace SharpCompress.Archives
         /// Extract to specific directory, retaining filename
         /// </summary>
         public static void WriteToDirectory(this IArchiveEntry entry, string destinationDirectory,
-                                            ExtractionOptions options = null)
+                                            ExtractionOptions? options = null)
         {
             ExtractionMethods.WriteEntryToDirectory(entry, destinationDirectory, options,
                                               entry.WriteToFile);
@@ -51,7 +51,7 @@ namespace SharpCompress.Archives
         /// Extract to specific file
         /// </summary>
         public static void WriteToFile(this IArchiveEntry entry, string destinationFileName,
-                                       ExtractionOptions options = null)
+                                       ExtractionOptions? options = null)
         {
             
             ExtractionMethods.WriteEntryToFile(entry, destinationFileName, options,

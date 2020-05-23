@@ -19,7 +19,7 @@ namespace SharpCompress.Common.Rar
 
         internal FileHeader FileHeader { get; }
 
-        internal override Stream GetRawStream()
+        internal override Stream? GetRawStream()
         {
             return null;
         }

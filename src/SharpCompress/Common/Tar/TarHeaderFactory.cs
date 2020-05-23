@@ -7,11 +7,11 @@ namespace SharpCompress.Common.Tar
 {
     internal static class TarHeaderFactory
     {
-        internal static IEnumerable<TarHeader> ReadHeader(StreamingMode mode, Stream stream, ArchiveEncoding archiveEncoding)
+        internal static IEnumerable<TarHeader?> ReadHeader(StreamingMode mode, Stream stream, ArchiveEncoding archiveEncoding)
         {
             while (true)
             {
-                TarHeader header = null;
+                TarHeader? header = null;
                 try
                 {
                     BinaryReader reader = new BinaryReader(stream);

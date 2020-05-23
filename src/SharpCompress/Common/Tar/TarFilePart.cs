@@ -4,7 +4,7 @@ using SharpCompress.IO;
 
 namespace SharpCompress.Common.Tar
 {
-    internal class TarFilePart : FilePart
+    internal sealed class TarFilePart : FilePart
     {
         private readonly Stream _seekableStream;
 
@@ -23,13 +23,13 @@ namespace SharpCompress.Common.Tar
         {
             if (_seekableStream != null)
             {
-                _seekableStream.Position = Header.DataStartPosition.Value;
+                _seekableStream.Position = Header.DataStartPosition!.Value;
                 return new ReadOnlySubStream(_seekableStream, Header.Size);
             }
             return Header.PackedStream;
         }
 
-        internal override Stream GetRawStream()
+        internal override Stream? GetRawStream()
         {
             return null;
         }

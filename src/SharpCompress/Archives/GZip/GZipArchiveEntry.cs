@@ -15,7 +15,7 @@ namespace SharpCompress.Archives.GZip
         public virtual Stream OpenEntryStream()
         {
             //this is to reset the stream to be read multiple times
-            var part = Parts.Single() as GZipFilePart;
+            var part = (GZipFilePart)Parts.Single();
             if (part.GetRawStream().Position != part.EntryStartPosition)
             {
                 part.GetRawStream().Position = part.EntryStartPosition;

@@ -59,6 +59,8 @@
 //
 // -----------------------------------------------------------------------
 
+#nullable disable
+
 using System;
 
 namespace SharpCompress.Compressors.Deflate
@@ -542,7 +544,7 @@ namespace SharpCompress.Compressors.Deflate
 
         private void initWorkArea(int vsize)
         {
-            if (hn == null)
+            if (hn is null)
             {
                 hn = new int[1];
                 v = new int[vsize];

@@ -1,4 +1,6 @@
-﻿using System;
+﻿#nullable disable
+
+using System;
 using System.IO;
 using SharpCompress.Compressors.LZMA.RangeCoder;
 using SharpCompress.Compressors.PPMd.H;

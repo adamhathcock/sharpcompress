@@ -17,7 +17,7 @@ namespace SharpCompress.Compressors.LZMA
     public class LZipStream : Stream
     {
         private readonly Stream _stream;
-        private readonly CountingWritableSubStream _countingWritableSubStream;
+        private readonly CountingWritableSubStream? _countingWritableSubStream;
         private bool _disposed;
         private bool _finished;
 
@@ -57,7 +57,7 @@ namespace SharpCompress.Compressors.LZMA
                     var crc32Stream = (Crc32Stream)_stream;
                     crc32Stream.WrappedStream.Dispose();
                     crc32Stream.Dispose();
-                    var compressedCount = _countingWritableSubStream.Count;
+                    var compressedCount = _countingWritableSubStream!.Count;
 
                     byte[] intBuf = new byte[8];
                     BinaryPrimitives.WriteUInt32LittleEndian(intBuf, crc32Stream.Crc);
@@ -147,7 +147,7 @@ namespace SharpCompress.Compressors.LZMA
         /// </summary>
         public static int ValidateAndReadSize(Stream stream)
         {
-            if (stream == null)
+            if (stream is null)
             {
                 throw new ArgumentNullException(nameof(stream));
             }
@@ -171,15 +171,17 @@ namespace SharpCompress.Compressors.LZMA
             return (1 << basePower) - subtractionNumerator * (1 << (basePower - 4));
         }
 
+        private static readonly byte[] headerBytes = new byte[6] { (byte)'L', (byte)'Z', (byte)'I', (byte)'P', 1, 113 };
+
         public static void WriteHeaderSize(Stream stream)
         {
-            if (stream == null)
+            if (stream is null)
             {
                 throw new ArgumentNullException(nameof(stream));
             }
+
             // hard coding the dictionary size encoding
-            byte[] header = new byte[6] {(byte)'L', (byte)'Z', (byte)'I', (byte)'P', 1, 113};
-            stream.Write(header, 0, 6);
+            stream.Write(headerBytes, 0, 6);
         }
 
         /// <summary>

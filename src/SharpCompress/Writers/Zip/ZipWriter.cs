@@ -22,7 +22,7 @@ namespace SharpCompress.Writers.Zip
         private readonly List<ZipCentralDirectoryEntry> entries = new List<ZipCentralDirectoryEntry>();
         private readonly string zipComment;
         private long streamPosition;
-        private PpmdProperties ppmdProps;
+        private PpmdProperties? ppmdProps;
         private readonly bool isZip64;
 
         public ZipWriter(Stream destination, ZipWriterOptions zipWriterOptions)
@@ -49,11 +49,7 @@ namespace SharpCompress.Writers.Zip
         {
             get
             {
-                if (ppmdProps == null)
-                {
-                    ppmdProps = new PpmdProperties();
-                }
-                return ppmdProps;
+                return ppmdProps ??= new PpmdProperties();
             }
         }
 
@@ -121,8 +117,8 @@ namespace SharpCompress.Writers.Zip
             var compression = ToZipCompressionMethod(options.CompressionType ?? compressionType);
 
             entryPath = NormalizeFilename(entryPath);
-            options.ModificationDateTime = options.ModificationDateTime ?? DateTime.Now;
-            options.EntryComment = options.EntryComment ?? string.Empty;
+            options.ModificationDateTime ??= DateTime.Now;
+            options.EntryComment ??= string.Empty;
             var entry = new ZipCentralDirectoryEntry(compression, entryPath, (ulong)streamPosition, WriterOptions.ArchiveEncoding)
             {
                 Comment = options.EntryComment,
@@ -316,7 +312,7 @@ namespace SharpCompress.Writers.Zip
             private readonly ZipWriter writer;
             private readonly ZipCompressionMethod zipCompressionMethod;
             private readonly CompressionLevel compressionLevel;
-            private CountingWritableSubStream counting;
+            private CountingWritableSubStream? counting;
             private ulong decompressed;
 
             // Flag to prevent throwing exceptions on Dispose
@@ -411,7 +407,7 @@ namespace SharpCompress.Writers.Zip
                     }
 
                     entry.Crc = (uint)crc.Crc32Result;
-                    entry.Compressed = counting.Count;
+                    entry.Compressed = counting!.Count;
                     entry.Decompressed = decompressed;
 
                     var zip64 = entry.Compressed >= uint.MaxValue || entry.Decompressed >= uint.MaxValue;
@@ -514,7 +510,7 @@ namespace SharpCompress.Writers.Zip
                 if (entry.Zip64HeaderOffset == 0)
                 {
                     // Pre-check, the counting.Count is not exact, as we do not know the size before having actually compressed it
-                    if (limitsExceeded || ((decompressed + (uint)count) > uint.MaxValue) || (counting.Count + (uint)count) > uint.MaxValue)
+                    if (limitsExceeded || ((decompressed + (uint)count) > uint.MaxValue) || (counting!.Count + (uint)count) > uint.MaxValue)
                     {
                         throw new NotSupportedException("Attempted to write a stream that is larger than 4GiB without setting the zip64 option");
                     }
@@ -527,7 +523,7 @@ namespace SharpCompress.Writers.Zip
                 if (entry.Zip64HeaderOffset == 0)
                 {
                     // Post-check, this is accurate
-                    if ((decompressed > uint.MaxValue) || counting.Count > uint.MaxValue)
+                    if ((decompressed > uint.MaxValue) || counting!.Count > uint.MaxValue)
                     {
                         // We have written the data, so the archive is now broken
                         // Throwing the exception here, allows us to avoid

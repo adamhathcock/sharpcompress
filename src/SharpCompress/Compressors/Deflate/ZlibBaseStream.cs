@@ -1,3 +1,5 @@
+#nullable disable
+
 // ZlibBaseStream.cs
 // ------------------------------------------------------------------
 //
@@ -65,17 +67,7 @@ namespace SharpCompress.Compressors.Deflate
 
         private readonly Encoding _encoding;
 
-        internal int Crc32
-        {
-            get
-            {
-                if (crc == null)
-                {
-                    return 0;
-                }
-                return crc.Crc32Result;
-            }
-        }
+        internal int Crc32 => crc?.Crc32Result ?? 0;
 
         public ZlibBaseStream(Stream stream,
                               CompressionMode compressionMode,
@@ -106,7 +98,7 @@ namespace SharpCompress.Compressors.Deflate
         {
             get
             {
-                if (_z == null)
+                if (_z is null)
                 {
                     bool wantRfc1950Header = (_flavor == ZlibStreamFlavor.ZLIB);
                     _z = new ZlibCodec();
@@ -126,17 +118,10 @@ namespace SharpCompress.Compressors.Deflate
 
         private byte[] workingBuffer
         {
-            get
-            {
-                if (_workingBuffer == null)
-                {
-                    _workingBuffer = new byte[_bufferSize];
-                }
-                return _workingBuffer;
-            }
+            get => _workingBuffer ??= new byte[_bufferSize];
         }
 
-        public override void Write(Byte[] buffer, int offset, int count)
+        public override void Write(byte[] buffer, int offset, int count)
         {
             // workitem 7159
             // calculate the CRC on the unccompressed data  (before writing)
@@ -193,7 +178,7 @@ namespace SharpCompress.Compressors.Deflate
 
         private void finish()
         {
-            if (_z == null)
+            if (_z is null)
             {
                 return;
             }
@@ -213,7 +198,7 @@ namespace SharpCompress.Compressors.Deflate
                     if (rc != ZlibConstants.Z_STREAM_END && rc != ZlibConstants.Z_OK)
                     {
                         string verb = (_wantCompress ? "de" : "in") + "flating";
-                        if (_z.Message == null)
+                        if (_z.Message is null)
                         {
                             throw new ZlibException(String.Format("{0}: (rc = {1})", verb, rc));
                         }
@@ -323,7 +308,7 @@ namespace SharpCompress.Compressors.Deflate
 
         private void end()
         {
-            if (z == null)
+            if (z is null)
             {
                 return;
             }
@@ -348,7 +333,7 @@ namespace SharpCompress.Compressors.Deflate
             base.Dispose(disposing);
             if (disposing)
             {
-                if (_stream == null)
+                if (_stream is null)
                 {
                     return;
                 }
@@ -527,7 +512,7 @@ namespace SharpCompress.Compressors.Deflate
             {
                 return 0; // workitem 8557
             }
-            if (buffer == null)
+            if (buffer is null)
             {
                 throw new ArgumentNullException(nameof(buffer));
             }

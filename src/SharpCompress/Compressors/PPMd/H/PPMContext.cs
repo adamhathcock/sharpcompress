@@ -1,3 +1,5 @@
+#nullable disable
+
 using System;
 using System.Buffers.Binary;
 using System.Text;
@@ -141,7 +143,7 @@ namespace SharpCompress.Compressors.PPMd.H
 
         private PpmContext GetTempPpmContext(byte[] memory)
         {
-            if (_tempPpmContext == null)
+            if (_tempPpmContext is null)
             {
                 _tempPpmContext = new PpmContext(null);
             }

@@ -25,7 +25,7 @@ namespace SharpCompress.Readers
         /// Extract all remaining unread entries to specific directory, retaining filename
         /// </summary>
         public static void WriteAllToDirectory(this IReader reader, string destinationDirectory,
-                                               ExtractionOptions options = null)
+                                               ExtractionOptions? options = null)
         {
             while (reader.MoveToNextEntry())
             {
@@ -37,7 +37,7 @@ namespace SharpCompress.Readers
         /// Extract to specific directory, retaining filename
         /// </summary>
         public static void WriteEntryToDirectory(this IReader reader, string destinationDirectory,
-                                                 ExtractionOptions options = null)
+                                                 ExtractionOptions? options = null)
         {
             ExtractionMethods.WriteEntryToDirectory(reader.Entry, destinationDirectory, options,
                                               reader.WriteEntryToFile);
@@ -47,7 +47,7 @@ namespace SharpCompress.Readers
         /// Extract to specific file
         /// </summary>
         public static void WriteEntryToFile(this IReader reader, string destinationFileName,
-                                            ExtractionOptions options = null)
+                                            ExtractionOptions? options = null)
         {
             ExtractionMethods.WriteEntryToFile(reader.Entry, destinationFileName, options,
                                                (x, fm) =>

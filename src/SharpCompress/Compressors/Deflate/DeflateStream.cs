@@ -37,7 +37,7 @@ namespace SharpCompress.Compressors.Deflate
 
         public DeflateStream(Stream stream, CompressionMode mode,
                              CompressionLevel level = CompressionLevel.Default,
-                             Encoding forceEncoding = null)
+                             Encoding? forceEncoding = null)
         {
             _baseStream = new ZlibBaseStream(stream, mode, level, ZlibStreamFlavor.DEFLATE, forceEncoding);
         }

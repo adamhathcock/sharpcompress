@@ -7,9 +7,9 @@ namespace SharpCompress.Archives.Rar
     internal class SeekableFilePart : RarFilePart
     {
         private readonly Stream stream;
-        private readonly string password;
+        private readonly string? password;
 
-        internal SeekableFilePart(MarkHeader mh, FileHeader fh, Stream stream, string password)
+        internal SeekableFilePart(MarkHeader mh, FileHeader fh, Stream stream, string? password)
             : base(mh, fh)
         {
             this.stream = stream;
@@ -21,7 +21,7 @@ namespace SharpCompress.Archives.Rar
             stream.Position = FileHeader.DataStartPosition;
             if (FileHeader.R4Salt != null)
             {
-                return new RarCryptoWrapper(stream, password, FileHeader.R4Salt);
+                return new RarCryptoWrapper(stream, password!, FileHeader.R4Salt);
             }
             return stream;
         }

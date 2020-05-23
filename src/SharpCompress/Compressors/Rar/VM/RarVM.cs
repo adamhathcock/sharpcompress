@@ -1,10 +1,12 @@
+#nullable disable
+
 using System;
 using System.Buffers.Binary;
 using System.Collections.Generic;
 
 namespace SharpCompress.Compressors.Rar.VM
 {
-    internal class RarVM : BitInput
+    internal sealed class RarVM : BitInput
     {
         //private void  InitBlock()
         //{
@@ -49,10 +51,7 @@ namespace SharpCompress.Compressors.Rar.VM
 
         internal void init()
         {
-            if (Mem == null)
-            {
-                Mem = new byte[VM_MEMSIZE + 4];
-            }
+            Mem ??= new byte[VM_MEMSIZE + 4];   
         }
 
         private bool IsVMMem(byte[] mem)
@@ -1430,7 +1429,7 @@ namespace SharpCompress.Compressors.Rar.VM
             return (bitField & (Utility.URShift(unchecked((int)0xffffffff), (32 - bitCount))));
         }
 
-        public virtual void setMemory(int pos, byte[] data, int offset, int dataSize)
+        public void setMemory(int pos, byte[] data, int offset, int dataSize)
         {
             if (pos < VM_MEMSIZE)
             {

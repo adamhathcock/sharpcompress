@@ -18,7 +18,7 @@ namespace SharpCompress.Archives
         /// <param name="stream"></param>
         /// <param name="readerOptions"></param>
         /// <returns></returns>
-        public static IArchive Open(Stream stream, ReaderOptions readerOptions = null)
+        public static IArchive Open(Stream stream, ReaderOptions? readerOptions = null)
         {
             stream.CheckNotNull(nameof(stream));
             if (!stream.CanRead || !stream.CanSeek)
@@ -86,7 +86,7 @@ namespace SharpCompress.Archives
         /// </summary>
         /// <param name="filePath"></param>
         /// <param name="options"></param>
-        public static IArchive Open(string filePath, ReaderOptions options = null)
+        public static IArchive Open(string filePath, ReaderOptions? options = null)
         {
             filePath.CheckNotNullOrEmpty(nameof(filePath));
             return Open(new FileInfo(filePath), options);
@@ -97,7 +97,7 @@ namespace SharpCompress.Archives
         /// </summary>
         /// <param name="fileInfo"></param>
         /// <param name="options"></param>
-        public static IArchive Open(FileInfo fileInfo, ReaderOptions options = null)
+        public static IArchive Open(FileInfo fileInfo, ReaderOptions? options = null)
         {
             fileInfo.CheckNotNull(nameof(fileInfo));
             options = options ?? new ReaderOptions { LeaveStreamOpen = false };
@@ -135,7 +135,7 @@ namespace SharpCompress.Archives
         /// Extract to specific directory, retaining filename
         /// </summary>
         public static void WriteToDirectory(string sourceArchive, string destinationDirectory,
-                                            ExtractionOptions options = null)
+                                            ExtractionOptions? options = null)
         {
             using (IArchive archive = Open(sourceArchive))
             {

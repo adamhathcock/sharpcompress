@@ -10,6 +10,6 @@ namespace SharpCompress.Common.Zip
         {
         }
 
-        public string Comment { get; internal set; }
+        public string? Comment { get; internal set; }
     }
 }

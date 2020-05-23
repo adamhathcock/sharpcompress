@@ -1,4 +1,6 @@
-﻿using SharpCompress.IO;
+﻿#nullable disable
+
+using SharpCompress.IO;
 
 namespace SharpCompress.Common.Rar.Headers
 {

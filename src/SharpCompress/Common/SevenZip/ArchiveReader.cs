@@ -1,4 +1,6 @@
-﻿using System;
+﻿#nullable disable
+
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -465,7 +467,7 @@ namespace SharpCompress.Common.SevenZip
                     SkipData();
                 }
 
-                if (packCrCs == null)
+                if (packCrCs is null)
                 {
                     packCrCs = new List<uint?>(numPackStreams);
                     for (int i = 0; i < numPackStreams; i++)
@@ -611,7 +613,7 @@ namespace SharpCompress.Common.SevenZip
                     SkipData();
                 }
 
-                if (numUnpackStreamsInFolders == null)
+                if (numUnpackStreamsInFolders is null)
                 {
                     numUnpackStreamsInFolders = new List<int>(folders.Count);
                     for (int i = 0; i < folders.Count; i++)
@@ -703,7 +705,7 @@ namespace SharpCompress.Common.SevenZip
                     }
                     else if (type == BlockType.End)
                     {
-                        if (digests == null)
+                        if (digests is null)
                         {
                             digests = new List<uint?>(numDigestsTotal);
                             for (int i = 0; i < numDigestsTotal; i++)
@@ -1487,17 +1489,12 @@ namespace SharpCompress.Common.SevenZip
 
         public void Extract(ArchiveDatabase db, int[] indices)
         {
-            int numItems;
-            bool allFilesMode = (indices == null);
-            if (allFilesMode)
-            {
-                numItems = db._files.Count;
-            }
-            else
-            {
-                numItems = indices.Length;
-            }
+            bool allFilesMode = (indices is null);
 
+            int numItems = allFilesMode
+                ? db._files.Count
+                : indices.Length;
+            
             if (numItems == 0)
             {
                 return;
