@@ -23,7 +23,7 @@ namespace SharpCompress.Writers.Zip
         }
 
         internal DateTime? ModificationTime { get; set; }
-        internal string Comment { get; set; }
+        internal string? Comment { get; set; }
         internal uint Crc { get; set; }
         internal ulong Compressed { get; set; }
         internal ulong Decompressed { get; set; }
@@ -33,7 +33,7 @@ namespace SharpCompress.Writers.Zip
         internal uint Write(Stream outputStream)
         {
             byte[] encodedFilename = archiveEncoding.Encode(fileName);
-            byte[] encodedComment = archiveEncoding.Encode(Comment);
+            byte[] encodedComment = archiveEncoding.Encode(Comment ?? string.Empty);
 
             var zip64_stream = Compressed >= uint.MaxValue || Decompressed >= uint.MaxValue;
             var zip64 = zip64_stream || HeaderOffset >= uint.MaxValue;

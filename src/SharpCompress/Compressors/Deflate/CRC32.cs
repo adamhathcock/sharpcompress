@@ -111,9 +111,9 @@ namespace SharpCompress.Compressors.Deflate
         /// <param name="input">The stream over which to calculate the CRC32</param>
         /// <param name="output">The stream into which to deflate the input</param>
         /// <returns>the CRC32 calculation</returns>
-        public UInt32 GetCrc32AndCopy(Stream input, Stream output)
+        public UInt32 GetCrc32AndCopy(Stream input, Stream? output)
         {
-            if (input == null)
+            if (input is null)
             {
                 throw new ZlibException("The input stream must not be null.");
             }
@@ -159,7 +159,7 @@ namespace SharpCompress.Compressors.Deflate
             return _InternalComputeCrc32((UInt32)W, B);
         }
 
-        internal Int32 _InternalComputeCrc32(UInt32 W, byte B)
+        internal int _InternalComputeCrc32(UInt32 W, byte B)
         {
             return (Int32)(crc32Table[(W ^ B) & 0xFF] ^ (W >> 8));
         }
@@ -173,7 +173,7 @@ namespace SharpCompress.Compressors.Deflate
         /// <param name="count">how many bytes within the block to slurp</param>
         public void SlurpBlock(byte[] block, int offset, int count)
         {
-            if (block == null)
+            if (block is null)
             {
                 throw new ZlibException("The data buffer must not be null.");
             }

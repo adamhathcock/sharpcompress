@@ -6,7 +6,7 @@ namespace SharpCompress.Archives.Zip
 {
     public class ZipArchiveEntry : ZipEntry, IArchiveEntry
     {
-        internal ZipArchiveEntry(ZipArchive archive, SeekableZipFilePart part)
+        internal ZipArchiveEntry(ZipArchive archive, SeekableZipFilePart? part)
             : base(part)
         {
             Archive = archive;
@@ -25,6 +25,6 @@ namespace SharpCompress.Archives.Zip
 
         #endregion
 
-        public string Comment => (Parts.Single() as SeekableZipFilePart).Comment;
+        public string? Comment => ((SeekableZipFilePart)Parts.Single()).Comment;
     }
 }

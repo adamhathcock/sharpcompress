@@ -1,4 +1,6 @@
-﻿using System.IO;
+﻿#nullable disable
+
+using System.IO;
 
 /*
  * Copyright 2001,2004-2005 The Apache Software Foundation

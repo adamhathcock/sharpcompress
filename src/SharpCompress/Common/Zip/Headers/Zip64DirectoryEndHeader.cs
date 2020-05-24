@@ -43,6 +43,6 @@ namespace SharpCompress.Common.Zip.Headers
 
         public long DirectoryStartOffsetRelativeToDisk { get; private set; }
 
-        public byte[] DataSector { get; private set; }
+        public byte[]? DataSector { get; private set; }
     }
 }

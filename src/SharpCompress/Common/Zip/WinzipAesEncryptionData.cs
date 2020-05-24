@@ -1,3 +1,5 @@
+#nullable disable
+
 using System;
 using System.Buffers.Binary;
 using System.Security.Cryptography;
@@ -25,14 +27,9 @@ namespace SharpCompress.Common.Zip
             Initialize();
         }
 
-        internal byte[] IvBytes
-{
-    get; set;
-}
-        internal byte[] KeyBytes
-{
-    get; set;
-}
+        internal byte[] IvBytes { get; set; }
+
+        internal byte[] KeyBytes { get; set; }
 
         private int KeySizeInBytes
         {
@@ -42,16 +39,13 @@ namespace SharpCompress.Common.Zip
 
         internal static int KeyLengthInBytes(WinzipAesKeySize keySize)
         {
-            switch (keySize)
+            return keySize switch
             {
-                case WinzipAesKeySize.KeySize128:
-                    return 16;
-                case WinzipAesKeySize.KeySize192:
-                    return 24;
-                case WinzipAesKeySize.KeySize256:
-                    return 32;
-            }
-            throw new InvalidOperationException();
+                WinzipAesKeySize.KeySize128 => 16,
+                WinzipAesKeySize.KeySize192 => 24,
+                WinzipAesKeySize.KeySize256 => 32,
+                _ => throw new InvalidOperationException(),
+            };
         }
 
         private void Initialize()

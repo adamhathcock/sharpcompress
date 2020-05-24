@@ -95,7 +95,7 @@ namespace SharpCompress
 
         public static void CheckNotNull(this object obj, string name)
         {
-            if (obj == null)
+            if (obj is null)
             {
                 throw new ArgumentNullException(name);
             }
@@ -200,7 +200,7 @@ namespace SharpCompress
 
         public static uint DateTimeToDosTime(this DateTime? dateTime)
         {
-            if (dateTime == null)
+            if (dateTime is null)
             {
                 return 0;
             }

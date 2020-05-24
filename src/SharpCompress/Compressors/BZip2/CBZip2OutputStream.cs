@@ -22,6 +22,8 @@
  * great code.
  */
 
+#nullable disable
+
 namespace SharpCompress.Compressors.BZip2
 {
     /**
@@ -35,14 +37,14 @@ namespace SharpCompress.Compressors.BZip2
       * start of the BZIP2 stream to make it compatible with other PGP programs.
       */
 
-    internal class CBZip2OutputStream : Stream
+    internal sealed class CBZip2OutputStream : Stream
     {
-        protected const int SETMASK = (1 << 21);
-        protected const int CLEARMASK = (~SETMASK);
-        protected const int GREATER_ICOST = 15;
-        protected const int LESSER_ICOST = 0;
-        protected const int SMALL_THRESH = 20;
-        protected const int DEPTH_THRESH = 10;
+        private const int SETMASK = (1 << 21);
+        private const int CLEARMASK = (~SETMASK);
+        private const int GREATER_ICOST = 15;
+        private const int LESSER_ICOST = 0;
+        private const int SMALL_THRESH = 20;
+        private const int DEPTH_THRESH = 10;
 
         /*
         If you are ever unlucky/improbable enough
@@ -52,7 +54,7 @@ namespace SharpCompress.Compressors.BZip2
         stack go above 27 elems, so the following
         limit seems very generous.
         */
-        protected const int QSORT_STACK_SIZE = 1000;
+        private const int QSORT_STACK_SIZE = 1000;
         private bool finished;
 
         private static void Panic()
@@ -76,7 +78,7 @@ namespace SharpCompress.Compressors.BZip2
             }
         }
 
-        protected static void HbMakeCodeLengths(char[] len, int[] freq,
+        private static void HbMakeCodeLengths(char[] len, int[] freq,
                                                 int alphaSize, int maxLen)
         {
             /*
@@ -1786,8 +1788,7 @@ namespace SharpCompress.Compressors.BZip2
             zptr = new int[n];
             ftab = new int[65537];
 
-            if (block == null || quadrant == null || zptr == null
-                || ftab == null)
+            if (block is null || quadrant is null || zptr is null || ftab is null)
             {
                 //int totalDraw = (n + 1 + NUM_OVERSHOOT_BYTES) + (n + NUM_OVERSHOOT_BYTES) + n + 65537;
                 //compressOutOfMemory ( totalDraw, n );

@@ -3,7 +3,7 @@ using System.IO;
 
 namespace SharpCompress.Common.Rar
 {
-    internal class RarCryptoBinaryReader : RarCrcBinaryReader
+    internal sealed class RarCryptoBinaryReader : RarCrcBinaryReader
     {
         private RarRijndael _rijndael;
         private byte[] _salt;
@@ -19,7 +19,9 @@ namespace SharpCompress.Common.Rar
             // coderb: not sure why this was being done at this logical point
             //SkipQueue();
             byte[] salt = ReadBytes(8);
-            InitializeAes(salt);
+
+            _salt = salt;
+            _rijndael = RarRijndael.InitializeFrom(_password, salt);
         }
 
         // track read count ourselves rather than using the underlying stream since we buffer
@@ -38,12 +40,6 @@ namespace SharpCompress.Common.Rar
         }
 
         private bool UseEncryption => _salt != null;
-
-        internal void InitializeAes(byte[] salt)
-        {
-            _salt = salt;
-            _rijndael = RarRijndael.InitializeFrom(_password, salt);
-        }
 
         public override byte ReadByte()
         {

@@ -12,7 +12,7 @@ namespace SharpCompress.Readers.Rar
     /// </summary>
     public abstract class RarReader : AbstractReader<RarReaderEntry, RarVolume>
     {
-        private RarVolume volume;
+        private RarVolume? volume;
         internal Lazy<IRarUnpack> UnpackV2017 { get; } = new Lazy<IRarUnpack>(() => new SharpCompress.Compressors.Rar.UnpackV2017.Unpack());
         internal Lazy<IRarUnpack> UnpackV1 { get; } = new Lazy<IRarUnpack>(() => new SharpCompress.Compressors.Rar.UnpackV1.Unpack());
 
@@ -23,7 +23,7 @@ namespace SharpCompress.Readers.Rar
 
         internal abstract void ValidateArchive(RarVolume archive);
 
-        public override RarVolume Volume => volume;
+        public override RarVolume Volume => volume!;
 
         /// <summary>
         /// Opens a RarReader for Non-seeking usage with a single volume
@@ -31,7 +31,7 @@ namespace SharpCompress.Readers.Rar
         /// <param name="stream"></param>
         /// <param name="options"></param>
         /// <returns></returns>
-        public static RarReader Open(Stream stream, ReaderOptions options = null)
+        public static RarReader Open(Stream stream, ReaderOptions? options = null)
         {
             stream.CheckNotNull(nameof(stream));
             return new SingleVolumeRarReader(stream, options ?? new ReaderOptions());
@@ -43,7 +43,7 @@ namespace SharpCompress.Readers.Rar
         /// <param name="streams"></param>
         /// <param name="options"></param>
         /// <returns></returns>
-        public static RarReader Open(IEnumerable<Stream> streams, ReaderOptions options = null)
+        public static RarReader Open(IEnumerable<Stream> streams, ReaderOptions? options = null)
         {
             streams.CheckNotNull(nameof(streams));
             return new MultiVolumeRarReader(streams, options ?? new ReaderOptions());

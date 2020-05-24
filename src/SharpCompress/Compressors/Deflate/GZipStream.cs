@@ -39,8 +39,8 @@ namespace SharpCompress.Compressors.Deflate
 
         public DateTime? LastModified { get; set; }
 
-        private string _comment;
-        private string _fileName;
+        private string? _comment;
+        private string? _fileName;
 
         internal ZlibBaseStream BaseStream;
         private bool _disposed;
@@ -345,30 +345,30 @@ namespace SharpCompress.Compressors.Deflate
 
         #endregion Stream methods
 
-        public String Comment
+        public string? Comment
         {
             get => _comment;
             set
             {
                 if (_disposed)
                 {
-                    throw new ObjectDisposedException("GZipStream");
+                    throw new ObjectDisposedException(nameof(GZipStream));
                 }
                 _comment = value;
             }
         }
 
-        public string FileName
+        public string? FileName
         {
             get => _fileName;
             set
             {
                 if (_disposed)
                 {
-                    throw new ObjectDisposedException("GZipStream");
+                    throw new ObjectDisposedException(nameof(GZipStream));
                 }
                 _fileName = value;
-                if (_fileName == null)
+                if (_fileName is null)
                 {
                     return;
                 }
@@ -402,13 +402,13 @@ namespace SharpCompress.Compressors.Deflate
 
         private int EmitHeader()
         {
-            byte[] commentBytes = (Comment == null) ? null
+            byte[]? commentBytes = (Comment is null) ? null
                 : _encoding.GetBytes(Comment);
-            byte[] filenameBytes = (FileName == null) ? null
+            byte[]? filenameBytes = (FileName is null) ? null
                 : _encoding.GetBytes(FileName);
 
-            int cbLength = (Comment == null) ? 0 : commentBytes.Length + 1;
-            int fnLength = (FileName == null) ? 0 : filenameBytes.Length + 1;
+            int cbLength = (commentBytes is null) ? 0 : commentBytes.Length + 1;
+            int fnLength = (filenameBytes is null) ? 0 : filenameBytes.Length + 1;
 
             int bufferLength = 10 + cbLength + fnLength;
             var header = new byte[bufferLength];
@@ -439,7 +439,7 @@ namespace SharpCompress.Compressors.Deflate
                 LastModified = DateTime.Now;
             }
             TimeSpan delta = LastModified.Value - UNIX_EPOCH;
-            var timet = (Int32)delta.TotalSeconds;
+            var timet = (int)delta.TotalSeconds;
             BinaryPrimitives.WriteInt32LittleEndian(header.AsSpan(i), timet);
             i += 4;
 

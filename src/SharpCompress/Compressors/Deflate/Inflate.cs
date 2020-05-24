@@ -1,3 +1,5 @@
+#nullable disable
+
 // Inflate.cs
 // ------------------------------------------------------------------
 //
@@ -367,7 +369,7 @@ namespace SharpCompress.Compressors.Deflate
                             return Flush(r);
                         }
                         t = 258 + (t & 0x1f) + ((t >> 5) & 0x1f);
-                        if (blens == null || blens.Length < t)
+                        if (blens is null || blens.Length < t)
                         {
                             blens = new int[t];
                         }
@@ -1651,7 +1653,7 @@ namespace SharpCompress.Compressors.Deflate
         {
             int b;
 
-            if (_codec.InputBuffer == null)
+            if (_codec.InputBuffer is null)
             {
                 throw new ZlibException("InputBuffer is null. ");
             }

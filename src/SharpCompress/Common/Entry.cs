@@ -18,7 +18,7 @@ namespace SharpCompress.Common
         /// <summary>
         /// The target of a symlink entry internal to the Archive. Will be null if not a symlink.
         /// </summary>
-        public abstract string LinkTarget { get; }
+        public abstract string? LinkTarget { get; }
 
         /// <summary>
         /// The compressed file size
@@ -71,12 +71,10 @@ namespace SharpCompress.Common
         public abstract bool IsSplitAfter { get; }
 
         /// <inheritdoc/>
-        public override string ToString()
-        {
-            return Key;
-        }
+        public override string ToString() => Key;
 
         internal abstract IEnumerable<FilePart> Parts { get; }
+
         internal bool IsSolid { get; set; }
 
         internal virtual void Close()

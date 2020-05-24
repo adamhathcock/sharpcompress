@@ -10,11 +10,11 @@ namespace SharpCompress.Common.GZip
 {
     internal class GZipFilePart : FilePart
     {
-        private string _name;
+        private string? _name;
         private readonly Stream _stream;
 
         internal GZipFilePart(Stream stream, ArchiveEncoding archiveEncoding)
-        : base(archiveEncoding)
+            : base(archiveEncoding)
         {
             ReadAndValidateGzipHeader(stream);
             EntryStartPosition = stream.Position;
@@ -25,7 +25,7 @@ namespace SharpCompress.Common.GZip
 
         internal DateTime? DateModified { get; private set; }
 
-        internal override string FilePartName => _name;
+        internal override string FilePartName => _name!;
 
         internal override Stream GetCompressedStream()
         {

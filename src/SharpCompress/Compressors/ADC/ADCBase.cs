@@ -87,7 +87,7 @@ namespace SharpCompress.Compressors.ADC
         /// <param name="output">Buffer to hold decompressed data</param>
         /// <param name="bufferSize">Max size for decompressed data</param>
         /// <returns>How many bytes are stored on <paramref name="output"/></returns>
-        public static int Decompress(byte[] input, out byte[] output, int bufferSize = 262144)
+        public static int Decompress(byte[] input, out byte[]? output, int bufferSize = 262144)
         {
             return Decompress(new MemoryStream(input), out output, bufferSize);
         }
@@ -99,11 +99,11 @@ namespace SharpCompress.Compressors.ADC
         /// <param name="output">Buffer to hold decompressed data</param>
         /// <param name="bufferSize">Max size for decompressed data</param>
         /// <returns>How many bytes are stored on <paramref name="output"/></returns>
-        public static int Decompress(Stream input, out byte[] output, int bufferSize = 262144)
+        public static int Decompress(Stream input, out byte[]? output, int bufferSize = 262144)
         {
             output = null;
 
-            if (input == null || input.Length == 0)
+            if (input is null || input.Length == 0)
             {
                 return 0;
             }

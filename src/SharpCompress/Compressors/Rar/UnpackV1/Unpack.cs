@@ -1,3 +1,5 @@
+#nullable disable
+
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -32,7 +34,8 @@ namespace SharpCompress.Compressors.Rar.UnpackV1
             }
         }
 
-        public bool Suspended {
+        public bool Suspended
+        {
             get => suspended;
             set => suspended = value;
         }
@@ -89,7 +92,7 @@ namespace SharpCompress.Compressors.Rar.UnpackV1
 
         private void Init(byte[] window)
         {
-            if (window == null)
+            if (window is null)
             {
                 this.window = new byte[PackDef.MAXWINSIZE];
             }
@@ -454,7 +457,7 @@ namespace SharpCompress.Compressors.Rar.UnpackV1
             for (int I = 0; I < prgStack.Count; I++)
             {
                 UnpackFilter flt = prgStack[I];
-                if (flt == null)
+                if (flt is null)
                 {
                     continue;
                 }
@@ -549,7 +552,7 @@ namespace SharpCompress.Compressors.Rar.UnpackV1
                         while (I + 1 < prgStack.Count)
                         {
                             UnpackFilter NextFilter = prgStack[I + 1];
-                            if (NextFilter == null || NextFilter.BlockStart != BlockStart ||
+                            if (NextFilter is null || NextFilter.BlockStart != BlockStart ||
                                 NextFilter.BlockLength != FilteredDataSize || NextFilter.NextWindow)
                             {
                                 break;

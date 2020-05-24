@@ -1,9 +1,7 @@
-#region Using
+#nullable disable
 
 using System;
 using System.IO;
-
-#endregion
 
 // This is a port of Dmitry Shkarin's PPMd Variant I Revision 1.
 // Ported by Michael Bone (mjbone03@yahoo.com.au).
@@ -144,12 +142,12 @@ namespace SharpCompress.Compressors.PPMd.I1
         /// </summary>
         public void Encode(Stream target, Stream source, PpmdProperties properties)
         {
-            if (target == null)
+            if (target is null)
             {
                 throw new ArgumentNullException(nameof(target));
             }
 
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
@@ -233,12 +231,12 @@ namespace SharpCompress.Compressors.PPMd.I1
         /// </summary>
         public void Decode(Stream target, Stream source, PpmdProperties properties)
         {
-            if (target == null)
+            if (target is null)
             {
                 throw new ArgumentNullException(nameof(target));
             }
 
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }

@@ -489,7 +489,7 @@ namespace SharpCompress.Crypto
         private readonly long BC_MASK;
         private int ROUNDS;
         private readonly int blockBits;
-        private long[][] workingKey;
+        private long[][]? workingKey;
         private long A0, A1, A2, A3;
         private bool forEncryption;
         private readonly byte[] shifts0SC;
@@ -591,7 +591,7 @@ namespace SharpCompress.Crypto
             byte[] output,
             int outOff)
         {
-            if (workingKey == null)
+            if (workingKey is null)
             {
                 throw new InvalidOperationException("Rijndael engine not initialised");
             }

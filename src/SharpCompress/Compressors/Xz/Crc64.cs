@@ -1,4 +1,6 @@
-﻿using System;
+﻿#nullable disable
+
+using System;
 using System.Collections.Generic;
 
 namespace SharpCompress.Compressors.Xz
@@ -18,11 +20,8 @@ namespace SharpCompress.Compressors.Xz
 
         public static UInt64 Compute(UInt64 seed, byte[] buffer)
         {
-            if (Table == null)
-            {
-                Table = CreateTable(Iso3309Polynomial);
-            }
-
+            Table ??= CreateTable(Iso3309Polynomial);
+            
             return CalculateHash(seed, Table, buffer, 0, buffer.Length);
         }
 

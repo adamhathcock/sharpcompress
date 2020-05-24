@@ -18,13 +18,13 @@ namespace SharpCompress.Common
         /// <summary>
         /// Set this encoding when you want to force it for all encoding operations.
         /// </summary>
-        public Encoding Forced { get; set; }
+        public Encoding? Forced { get; set; }
 
         /// <summary>
         /// Set this when you want to use a custom method for all decoding operations.
         /// </summary>
         /// <returns>string Func(bytes, index, length)</returns>
-        public Func<byte[], int, int, string> CustomDecoder { get; set; }
+        public Func<byte[], int, int, string>? CustomDecoder { get; set; }
 
         public ArchiveEncoding()
         {

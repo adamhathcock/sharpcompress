@@ -1,3 +1,5 @@
+#nullable disable
+
 namespace SharpCompress.Compressors.PPMd.I1
 {
     /// <summary>
