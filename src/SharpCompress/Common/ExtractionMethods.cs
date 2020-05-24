@@ -8,17 +8,19 @@ namespace SharpCompress.Common
         /// <summary>
         /// Extract to specific directory, retaining filename
         /// </summary>
-        public static void WriteEntryToDirectory(IEntry entry, string destinationDirectory,
-                                                 ExtractionOptions? options, Action<string, ExtractionOptions> write)
+        public static void WriteEntryToDirectory(IEntry entry, 
+                                                 string destinationDirectory,
+                                                 ExtractionOptions? options, 
+                                                 Action<string, ExtractionOptions?> write)
         {
             string destinationFileName;
             string file = Path.GetFileName(entry.Key);
             string fullDestinationDirectoryPath = Path.GetFullPath(destinationDirectory);
 
-            options = options ?? new ExtractionOptions()
-                                 {
-                                     Overwrite = true
-                                 };
+            options ??= new ExtractionOptions()
+                        {
+                            Overwrite = true
+                        };
 
             if (options.ExtractFullPath)
             {

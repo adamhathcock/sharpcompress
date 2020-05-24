@@ -50,7 +50,8 @@ namespace SharpCompress.Archives
         /// <summary>
         /// Extract to specific file
         /// </summary>
-        public static void WriteToFile(this IArchiveEntry entry, string destinationFileName,
+        public static void WriteToFile(this IArchiveEntry entry, 
+                                       string destinationFileName,
                                        ExtractionOptions? options = null)
         {
             

@@ -46,7 +46,8 @@ namespace SharpCompress.Readers
         /// <summary>
         /// Extract to specific file
         /// </summary>
-        public static void WriteEntryToFile(this IReader reader, string destinationFileName,
+        public static void WriteEntryToFile(this IReader reader, 
+                                            string destinationFileName,
                                             ExtractionOptions? options = null)
         {
             ExtractionMethods.WriteEntryToFile(reader.Entry, destinationFileName, options,
