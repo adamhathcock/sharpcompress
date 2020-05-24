@@ -59,14 +59,14 @@ class Program
 
                 foreach (var file in GetFiles("*.Tests/**/*.csproj"))
                 {
-                    Run("dotnet", $"test {file} -c Release -f {framework} --no-restore --no-build -o artifacts/");
+                    Run("dotnet", $"test {file} -c Release -f {framework} --no-restore --no-build");
                 }
             });
         
         Target(Publish, DependsOn(Test),
                () =>
                {
-                   Run("dotnet", "pack src/SharpCompress/SharpCompress.csproj -c Release");
+                   Run("dotnet", "pack src/SharpCompress/SharpCompress.csproj -c Release -o artifacts/");
                });
 
         Target("default", DependsOn(Publish), () => Console.WriteLine("Done!"));
