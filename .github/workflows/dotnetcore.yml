@@ -14,3 +14,7 @@ jobs:
       with:
         dotnet-version: 3.1.300
     - run: dotnet run -p src/build/build.csproj
+    - uses: actions/upload-artifact@v2
+        with:
+          name: ${{ matrix.os }}-sharpcompress.nupkg
+          path: src\SharpCompress\bin\Release\SharpCompress.*.nupkg
