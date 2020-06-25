@@ -57,7 +57,7 @@ class Program
                     return Glob.Files(".", d);
                 }
 
-                foreach (var file in GetFiles("*.Tests/**/*.csproj"))
+                foreach (var file in GetFiles("**/*.Test.csproj"))
                 {
                     Run("dotnet", $"test {file} -c Release -f {framework} --no-restore --no-build");
                 }
