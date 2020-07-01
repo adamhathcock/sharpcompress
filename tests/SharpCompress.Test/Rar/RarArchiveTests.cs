@@ -203,13 +203,13 @@ namespace SharpCompress.Test.Rar
         [Fact]
         public void Rar_Solid_ArchiveStreamRead()
         {
-            Assert.Throws<InvalidFormatException>(() => ArchiveStreamRead("Rar.solid.rar"));
+            ArchiveStreamRead("Rar.solid.rar");
         }
 
         [Fact]
         public void Rar5_Solid_ArchiveStreamRead()
         {
-            Assert.Throws<InvalidFormatException>(() => ArchiveStreamRead("Rar5.solid.rar"));
+            ArchiveStreamRead("Rar5.solid.rar");
         }
 
         [Fact]
@@ -232,7 +232,7 @@ namespace SharpCompress.Test.Rar
                 "Rar.multi.part03.rar",
                 "Rar.multi.part04.rar",
                 "Rar.multi.part05.rar",
-                "Rar.multi.part06.rar"});
+                "Rar.multi.part06.rar"}, false);
         }
 
         [Fact]
@@ -243,14 +243,15 @@ namespace SharpCompress.Test.Rar
                 "Rar5.multi.part03.rar",
                 "Rar5.multi.part04.rar",
                 "Rar5.multi.part05.rar",
-                "Rar5.multi.part06.rar"});
+                "Rar5.multi.part06.rar"}, false);
         }
 
-        private void DoRar_Multi_ArchiveStreamRead(string[] archives)
+        private void DoRar_Multi_ArchiveStreamRead(string[] archives, bool isSolid)
         {
             using (var archive = RarArchive.Open(archives.Select(s => Path.Combine(TEST_ARCHIVES_PATH, s))
                 .Select(File.OpenRead)))
             {
+                Assert.Equal(archive.IsSolid, isSolid);
                 foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
                 {
                     entry.WriteToDirectory(SCRATCH_FILES_PATH, new ExtractionOptions()
@@ -260,7 +261,18 @@ namespace SharpCompress.Test.Rar
                     });
                 }
             }
-            VerifyFiles();
+        }
+
+        [Fact]
+        public void Rar5_MultiSolid_ArchiveStreamRead()
+        {
+            DoRar_Multi_ArchiveStreamRead(new string[] {
+                "Rar.multi.solid.part01.rar",
+                "Rar.multi.solid.part02.rar",
+                "Rar.multi.solid.part03.rar",
+                "Rar.multi.solid.part04.rar",
+                "Rar.multi.solid.part05.rar",
+                "Rar.multi.solid.part06.rar"}, true);
         }
 
         [Fact]
@@ -332,13 +344,13 @@ namespace SharpCompress.Test.Rar
         [Fact]
         public void Rar_Solid_ArchiveFileRead()
         {
-            Assert.Throws<InvalidFormatException>(() => ArchiveFileRead("Rar.solid.rar"));
+            ArchiveFileRead("Rar.solid.rar");
         }
 
         [Fact]
         public void Rar5_Solid_ArchiveFileRead()
         {
-            Assert.Throws<InvalidFormatException>(() => ArchiveFileRead("Rar5.solid.rar"));
+            ArchiveFileRead("Rar5.solid.rar");
         }
 
         [Fact]
