@@ -83,12 +83,6 @@ namespace SharpCompress.Test
                                                    });
                         }
                     }
-                    catch (InvalidFormatException)
-                    {
-                        //rar SOLID test needs this
-                        stream.ThrowOnDispose = false;
-                        throw;
-                    }
                     catch (IndexOutOfRangeException)
                     {
                         //SevenZipArchive_BZip2_Split test needs this

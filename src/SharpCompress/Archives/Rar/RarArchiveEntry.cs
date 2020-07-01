@@ -57,11 +57,6 @@ namespace SharpCompress.Archives.Rar
 
         public Stream OpenEntryStream()
         {
-            if (archive.IsSolid)
-            {
-                throw new InvalidOperationException("Use ExtractAllEntries to extract SOLID archives.");
-            }
-
             if (IsRarV3)
             {
                 return new RarStream(archive.UnpackV1.Value, FileHeader, new MultiVolumeReadOnlyStream(Parts.Cast<RarFilePart>(), archive));
