@@ -264,7 +264,7 @@ namespace SharpCompress.Test.Rar
         }
 
         [Fact]
-        public void Rar5_MultiSolid_Extract_All()
+        public void Rar5_MultiSolid_ArchiveStreamRead()
         {
             DoRar_Multi_ArchiveStreamRead(new string[] {
                 "Rar.multi.solid.part01.rar",
