@@ -248,5 +248,45 @@ namespace SharpCompress.Test.Tar
                 }
             }
         }
+
+        [Fact]
+        public void Tar_Read_One_At_A_Time()
+        {
+            var archiveEncoding = new ArchiveEncoding { Default = Encoding.UTF8, };
+            var tarWriterOptions = new TarWriterOptions(CompressionType.None, true) { ArchiveEncoding = archiveEncoding, };
+            var testBytes = Encoding.UTF8.GetBytes("This is a test.");
+
+            using (var memoryStream = new MemoryStream())
+            {
+                using (var tarWriter = new TarWriter(memoryStream, tarWriterOptions))
+                using (var testFileStream = new MemoryStream(testBytes))
+                {
+                    tarWriter.Write("test1.txt", testFileStream);
+                    testFileStream.Position = 0;
+                    tarWriter.Write("test2.txt", testFileStream);
+                }
+
+                memoryStream.Position = 0;
+
+                var numberOfEntries = 0;
+
+                using (var archiveFactory = TarArchive.Open(memoryStream))
+                {
+                    foreach (var entry in archiveFactory.Entries)
+                    {
+                        ++numberOfEntries;
+
+                        using (var tarEntryStream = entry.OpenEntryStream())
+                        using (var testFileStream = new MemoryStream())
+                        {
+                            tarEntryStream.CopyTo(testFileStream);
+                            Assert.Equal(testBytes.Length, testFileStream.Length);
+                        }
+                    }
+                }
+
+                Assert.Equal(2, numberOfEntries);
+            }
+        }
     }
 }
