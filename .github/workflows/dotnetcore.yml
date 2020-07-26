@@ -16,5 +16,9 @@ jobs:
     - run: dotnet run -p build/build.csproj
     - uses: actions/upload-artifact@v2
       with:
-        name: ${{ matrix.os }}-sharpcompress.*nupkg
+        name: ${{ matrix.os }}-sharpcompress.nupkg
+        path: artifacts/*
+    - uses: actions/upload-artifact@v2
+      with:
+        name: ${{ matrix.os }}-sharpcompress.snupkg
         path: artifacts/*

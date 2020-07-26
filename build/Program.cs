@@ -59,7 +59,7 @@ class Program
 
                 foreach (var file in GetFiles("**/*.Test.csproj"))
                 {
-                    Run("dotnet", $"test {file} -c Release -f {framework} --no-restore --no-build");
+                    Run("dotnet", $"test {file} -c Release -f {framework}");
                 }
             });
         
