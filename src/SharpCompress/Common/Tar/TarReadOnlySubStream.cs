@@ -20,22 +20,24 @@ namespace SharpCompress.Common.Tar
             {
                 return;
             }
+
             _isDisposed = true;
+
             if (disposing)
             {
-                long skipBytes = _amountRead % 512;
-                if (skipBytes == 0)
+                // Ensure we read all remaining blocks for this entry.
+                Stream.Skip(BytesLeftToRead);
+                _amountRead += BytesLeftToRead;
+
+                // If the last block wasn't a full 512 bytes, skip the remaining padding bytes.
+                var bytesInLastBlock = _amountRead % 512;
+
+                if (bytesInLastBlock != 0)
                 {
-                    return;
+                    Stream.Skip(512 - bytesInLastBlock);
                 }
-                skipBytes = 512 - skipBytes;
-                if (skipBytes == 0)
-                {
-                    return;
-                }
-                var buffer = new byte[skipBytes];
-                Stream.ReadFully(buffer);
             }
+
             base.Dispose(disposing);
         }
 
