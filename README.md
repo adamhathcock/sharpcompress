@@ -1,6 +1,6 @@
 # SharpCompress
 
-SharpCompress is a compression library in pure C# for .NET Standard 1.3 and 2.0 that can unrar, un7zip, unzip, untar unbzip2 and ungzip with forward-only reading and file random access APIs. Write support for zip/tar/bzip2/gzip are implemented.
+SharpCompress is a compression library in pure C# for .NET Standard 1.3 and 2.0 that can unrar, un7zip, unzip, untar unbzip2, ungzip, unlzip with forward-only reading and file random access APIs. Write support for zip/tar/bzip2/gzip/lzip are implemented.
 
 The major feature is support for non-seekable streams so large files can be processed on the fly (i.e. download stream).
 

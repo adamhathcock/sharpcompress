@@ -27,9 +27,13 @@ namespace SharpCompress.Common
         public Func<byte[], int, int, string>? CustomDecoder { get; set; }
 
         public ArchiveEncoding()
+        : this(Encoding.Default, Encoding.Default)
         {
-            Default = Encoding.GetEncoding(437);
-            Password = Encoding.GetEncoding(437);
+        }
+        public ArchiveEncoding(Encoding def, Encoding password)
+        {
+            Default = def;
+            Password = password;
         }
 
 #if NETSTANDARD1_3 || NETSTANDARD2_0 || NETSTANDARD2_1
