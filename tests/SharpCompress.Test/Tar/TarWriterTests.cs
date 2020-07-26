@@ -1,4 +1,5 @@
 ﻿using System.IO;
+using System.Text;
 using SharpCompress.Common;
 using SharpCompress.Writers.Tar;
 using Xunit;
@@ -16,19 +17,19 @@ namespace SharpCompress.Test.Tar
         [Fact]
         public void Tar_Writer()
         {
-            Write(CompressionType.None, "Tar.noEmptyDirs.tar", "Tar.noEmptyDirs.tar");
+            Write(CompressionType.None, "Tar.noEmptyDirs.tar", "Tar.noEmptyDirs.tar", Encoding.GetEncoding(866));
         }
 
         [Fact]
         public void Tar_BZip2_Writer()
         {
-            Write(CompressionType.BZip2, "Tar.noEmptyDirs.tar.bz2", "Tar.noEmptyDirs.tar.bz2");
+            Write(CompressionType.BZip2, "Tar.noEmptyDirs.tar.bz2", "Tar.noEmptyDirs.tar.bz2", Encoding.GetEncoding(866));
         }
 
         [Fact]
         public void Tar_LZip_Writer()
         {
-            Write(CompressionType.LZip, "Tar.noEmptyDirs.tar.lz", "Tar.noEmptyDirs.tar.lz");
+            Write(CompressionType.LZip, "Tar.noEmptyDirs.tar.lz", "Tar.noEmptyDirs.tar.lz", Encoding.GetEncoding(866));
         }
 
         [Fact]

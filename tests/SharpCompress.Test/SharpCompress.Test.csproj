@@ -15,7 +15,7 @@
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.6.1" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.4.2" />
     <PackageReference Include="xunit" Version="2.4.1" />
-    <PackageReference Include="Xunit.SkippableFact" Version="1.4.8" />
+    <PackageReference Include="Xunit.SkippableFact" Version="1.4.13" />
     <PackageReference Include="Mono.Posix.NETStandard" Version="1.0.0" />
   </ItemGroup>
 </Project>

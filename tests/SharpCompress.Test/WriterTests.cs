@@ -16,15 +16,15 @@ namespace SharpCompress.Test
             this.type = type;
         }
 
-        protected void Write(CompressionType compressionType, string archive, string archiveToVerifyAgainst)
+        protected void Write(CompressionType compressionType, string archive, string archiveToVerifyAgainst, Encoding encoding = null)
         {
             using (Stream stream = File.OpenWrite(Path.Combine(SCRATCH2_FILES_PATH, archive))) {
                 WriterOptions writerOptions = new WriterOptions(compressionType) 
                 {
                     LeaveStreamOpen = true,
                 };
-                
-                writerOptions.ArchiveEncoding.Default = Encoding.GetEncoding(866);
+
+                writerOptions.ArchiveEncoding.Default = encoding ?? Encoding.Default;
                 
                 using (var writer = WriterFactory.Open(stream, type, writerOptions))
                 {
@@ -37,8 +37,8 @@ namespace SharpCompress.Test
             using (Stream stream = File.OpenRead(Path.Combine(SCRATCH2_FILES_PATH, archive))) 
             {
                 ReaderOptions readerOptions = new ReaderOptions();
-                
-                readerOptions.ArchiveEncoding.Default = Encoding.GetEncoding(866);
+
+                readerOptions.ArchiveEncoding.Default = encoding ?? Encoding.Default;
                 
                 using (var reader = ReaderFactory.Open(new NonDisposingStream(stream), readerOptions))
                 {

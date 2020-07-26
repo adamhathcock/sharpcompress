@@ -168,7 +168,7 @@ namespace SharpCompress.Test.Zip
                 
                 archive.SaveTo(scratchPath, writerOptions);
             }
-            CompareArchivesByPath(modified, scratchPath);
+            CompareArchivesByPath(modified, scratchPath, Encoding.GetEncoding(866));
         }
 
         [Fact]
@@ -188,7 +188,7 @@ namespace SharpCompress.Test.Zip
                 
                 archive.SaveTo(scratchPath, writerOptions);
             }
-            CompareArchivesByPath(modified, scratchPath);
+            CompareArchivesByPath(modified, scratchPath, Encoding.GetEncoding(866));
         }
 
         [Fact]
@@ -286,7 +286,7 @@ namespace SharpCompress.Test.Zip
                 
                 archive.SaveTo(scratchPath, writerOptions);
             }
-            CompareArchivesByPath(unmodified, scratchPath);
+            CompareArchivesByPath(unmodified, scratchPath, Encoding.GetEncoding(866));
             Directory.Delete(SCRATCH_FILES_PATH, true);
         }
 
