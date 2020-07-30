@@ -1,6 +1,4 @@
-﻿#nullable disable
-
-using System;
+﻿using System;
 using System.Buffers.Binary;
 using System.Text;
 
@@ -20,13 +18,25 @@ namespace SharpCompress.Common.Zip.Headers
 
     internal class ExtraData
     {
-        internal ExtraDataType Type { get; set; }
-        internal ushort Length { get; set; }
-        internal byte[] DataBytes { get; set; }
+        public ExtraData(ExtraDataType type, ushort length, byte[] dataBytes)
+        {
+            Type = type;
+            Length = length;
+            DataBytes = dataBytes;
+        }
+
+        internal ExtraDataType Type { get; }
+        internal ushort Length { get; }
+        internal byte[] DataBytes { get; }
     }
 
-    internal class ExtraUnicodePathExtraField : ExtraData
+    internal sealed class ExtraUnicodePathExtraField : ExtraData
     {
+        public ExtraUnicodePathExtraField(ExtraDataType type, ushort length, byte[] dataBytes)
+            : base(type, length, dataBytes)
+        {
+        }
+            
         internal byte Version => DataBytes[0];
 
         internal byte[] NameCrc32
@@ -51,14 +61,11 @@ namespace SharpCompress.Common.Zip.Headers
         }
     }
 
-    internal class Zip64ExtendedInformationExtraField : ExtraData
+    internal sealed class Zip64ExtendedInformationExtraField : ExtraData
     {
-
         public Zip64ExtendedInformationExtraField(ExtraDataType type, ushort length, byte[] dataBytes)
+            : base(type, length, dataBytes)
         {
-            Type = type;
-            Length = length;
-            DataBytes = dataBytes;
             Process();
         }
 
@@ -122,30 +129,12 @@ namespace SharpCompress.Common.Zip.Headers
     {
         internal static ExtraData Create(ExtraDataType type, ushort length, byte[] extraData)
         {
-            switch (type)
+            return type switch
             {
-                case ExtraDataType.UnicodePathExtraField:
-                    return new ExtraUnicodePathExtraField
-                           {
-                               Type = type,
-                               Length = length,
-                               DataBytes = extraData
-                           };
-                case ExtraDataType.Zip64ExtendedInformationExtraField:
-                    return new Zip64ExtendedInformationExtraField
-                            (
-                                type,
-                                length,
-                                extraData
-                           );
-                default:
-                    return new ExtraData
-                           {
-                               Type = type,
-                               Length = length,
-                               DataBytes = extraData
-                           };
-            }
+                ExtraDataType.UnicodePathExtraField => new ExtraUnicodePathExtraField(type, length, extraData),
+                ExtraDataType.Zip64ExtendedInformationExtraField => new Zip64ExtendedInformationExtraField(type, length, extraData),
+                _ => new ExtraData(type, length, extraData)
+            };
         }
     }
 }
