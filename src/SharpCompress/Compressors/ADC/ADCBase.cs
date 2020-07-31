@@ -52,32 +52,24 @@ namespace SharpCompress.Compressors.ADC
 
         private static int GetChunkSize(byte byt)
         {
-            switch (GetChunkType(byt))
+            return GetChunkType(byt) switch
             {
-                case PLAIN:
-                    return (byt & 0x7F) + 1;
-                case TWO_BYTE:
-                    return ((byt & 0x3F) >> 2) + 3;
-                case THREE_BYTE:
-                    return (byt & 0x3F) + 4;
-                default:
-                    return -1;
-            }
+                PLAIN => (byt & 0x7F) + 1,
+                TWO_BYTE => ((byt & 0x3F) >> 2) + 3,
+                THREE_BYTE => (byt & 0x3F) + 4,
+                _ => -1,
+            };
         }
 
         private static int GetOffset(ReadOnlySpan<byte> chunk)
         {
-            switch (GetChunkType(chunk[0]))
+            return GetChunkType(chunk[0]) switch
             {
-                case PLAIN:
-                    return 0;
-                case TWO_BYTE:
-                    return ((chunk[0] & 0x03) << 8) + chunk[1];
-                case THREE_BYTE:
-                    return (chunk[1] << 8) + chunk[2];
-                default:
-                    return -1;
-            }
+                PLAIN => 0,
+                TWO_BYTE => ((chunk[0] & 0x03) << 8) + chunk[1],
+                THREE_BYTE => (chunk[1] << 8) + chunk[2],
+                _ => -1,
+            };
         }
 
         /// <summary>
