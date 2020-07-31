@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 
 /*
  * Copyright 2001,2004-2005 The Apache Software Foundation
@@ -1328,8 +1329,8 @@ namespace SharpCompress.Compressors.BZip2
         private void MainSort()
         {
             int i, j, ss, sb;
-            int[] runningOrder = new int[256];
-            int[] copy = new int[256];
+            Span<int> runningOrder = stackalloc int[256];
+            Span<int> copy = stackalloc int[256];
             bool[] bigDone = new bool[256];
             int c1, c2;
             int numQSorted;

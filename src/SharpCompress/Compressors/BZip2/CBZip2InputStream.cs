@@ -1,5 +1,6 @@
 ﻿#nullable disable
 
+using System;
 using System.IO;
 
 /*
@@ -835,7 +836,7 @@ namespace SharpCompress.Compressors.BZip2
 
         private void SetupBlock()
         {
-            int[] cftab = new int[257];
+            Span<int> cftab = stackalloc int[257];
             char ch;
 
             cftab[0] = 0;
@@ -854,7 +855,6 @@ namespace SharpCompress.Compressors.BZip2
                 tt[cftab[ch]] = i;
                 cftab[ch]++;
             }
-            cftab = null;
 
             tPos = tt[origPtr];
 
