@@ -10,33 +10,35 @@ namespace SharpCompress.Test.Zip
         {
         }
 
+        // Failing on net461
         [Fact]
         public void Zip_Deflate_Write()
         {
             Write(CompressionType.Deflate, "Zip.deflate.noEmptyDirs.zip", "Zip.deflate.noEmptyDirs.zip");
         }
 
-
+        // Failing on net461
         [Fact]
         public void Zip_BZip2_Write()
         {
             Write(CompressionType.BZip2, "Zip.bzip2.noEmptyDirs.zip", "Zip.bzip2.noEmptyDirs.zip");
         }
 
-
+        // Failing on net461
         [Fact]
         public void Zip_None_Write()
         {
             Write(CompressionType.None, "Zip.none.noEmptyDirs.zip", "Zip.none.noEmptyDirs.zip");
         }
 
-
+        // Failing on net461
         [Fact]
         public void Zip_LZMA_Write()
         {
             Write(CompressionType.LZMA, "Zip.lzma.noEmptyDirs.zip", "Zip.lzma.noEmptyDirs.zip");
         }
 
+        // Failing on net461
         [Fact]
         public void Zip_PPMd_Write()
         {
