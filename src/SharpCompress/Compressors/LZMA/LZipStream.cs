@@ -168,9 +168,10 @@ namespace SharpCompress.Compressors.LZMA
             {
                 throw new ArgumentNullException(nameof(stream));
             }
+
             // Read the header
-            byte[] header = new byte[6];
-            int n = stream.Read(header, 0, header.Length);
+            Span<byte> header = stackalloc byte[6];
+            int n = stream.Read(header);
 
             // TODO: Handle reading only part of the header?
 
