@@ -228,12 +228,12 @@ namespace SharpCompress.Compressors.Deflate
                     if (_wantCompress)
                     {
                         // Emit the GZIP trailer: CRC32 and  size mod 2^32
-                        byte[] intBuf = new byte[4];
+                        Span<byte> intBuf = stackalloc byte[4];
                         BinaryPrimitives.WriteInt32LittleEndian(intBuf, crc.Crc32Result);
-                        _stream.Write(intBuf, 0, 4);
-                        int c2 = (Int32)(crc.TotalBytesRead & 0x00000000FFFFFFFF);
+                        _stream.Write(intBuf);
+                        int c2 = (int)(crc.TotalBytesRead & 0x00000000FFFFFFFF);
                         BinaryPrimitives.WriteInt32LittleEndian(intBuf, c2);
-                        _stream.Write(intBuf, 0, 4);
+                        _stream.Write(intBuf);
                     }
                     else
                     {

@@ -117,6 +117,23 @@ namespace SharpCompress.Compressors.LZMA
 
         public override void SetLength(long value) => throw new NotImplementedException();
 
+
+#if NETSTANDARD2_1
+
+        public override int Read(Span<byte> buffer)
+        {
+            return _stream.Read(buffer);
+        }
+
+        public override void Write(ReadOnlySpan<byte> buffer)
+        {
+            _stream.Write(buffer);
+
+            _writeCount += buffer.Length;
+        }
+
+#endif
+
         public override void Write(byte[] buffer, int offset, int count)
         {
             _stream.Write(buffer, offset, count);

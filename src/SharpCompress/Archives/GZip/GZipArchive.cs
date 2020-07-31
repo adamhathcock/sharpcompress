@@ -77,10 +77,9 @@ namespace SharpCompress.Archives.GZip
             {
                 return false;
             }
-            using (Stream stream = fileInfo.OpenRead())
-            {
-                return IsGZipFile(stream);
-            }
+
+            using Stream stream = fileInfo.OpenRead();
+            return IsGZipFile(stream);
         }
 
         public void SaveTo(string filePath)
