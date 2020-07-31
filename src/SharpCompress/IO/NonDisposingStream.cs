@@ -62,7 +62,7 @@ namespace SharpCompress.IO
 
         public override int Read(Span<byte> buffer)
         {
-            Stream.Read(buffer);
+            return Stream.Read(buffer);
         }
 
         public override void Write(ReadOnlySpan<byte> buffer)
