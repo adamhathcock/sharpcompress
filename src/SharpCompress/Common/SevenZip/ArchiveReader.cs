@@ -791,22 +791,14 @@ namespace SharpCompress.Common.SevenZip
 #endif
             try
             {
-                long dataStartPos;
-                List<long> packSizes;
-                List<uint?> packCrCs;
-                List<CFolder> folders;
-                List<int> numUnpackStreamsInFolders;
-                List<long> unpackSizes;
-                List<uint?> digests;
-
                 ReadStreamsInfo(null,
-                                out dataStartPos,
-                                out packSizes,
-                                out packCrCs,
-                                out folders,
-                                out numUnpackStreamsInFolders,
-                                out unpackSizes,
-                                out digests);
+                                out long dataStartPos,
+                                out List<long> packSizes,
+                                out List<uint?> packCrCs,
+                                out List<CFolder> folders,
+                                out List<int> numUnpackStreamsInFolders,
+                                out List<long> unpackSizes,
+                                out List<uint?> digests);
 
                 dataStartPos += baseOffset;
 
@@ -1445,8 +1437,7 @@ namespace SharpCompress.Common.SevenZip
 
         private Stream GetCachedDecoderStream(ArchiveDatabase db, int folderIndex)
         {
-            Stream s;
-            if (!_cachedStreams.TryGetValue(folderIndex, out s))
+            if (!_cachedStreams.TryGetValue(folderIndex, out Stream s))
             {
                 CFolder folderInfo = db._folders[folderIndex];
                 int packStreamIndex = db._folders[folderIndex]._firstPackStreamId;

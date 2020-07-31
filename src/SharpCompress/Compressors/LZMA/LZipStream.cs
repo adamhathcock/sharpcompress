@@ -14,7 +14,7 @@ namespace SharpCompress.Compressors.LZMA
     /// <summary>
     /// Stream supporting the LZIP format, as documented at http://www.nongnu.org/lzip/manual/lzip_manual.html
     /// </summary>
-    public class LZipStream : Stream
+    public sealed class LZipStream : Stream
     {
         private readonly Stream _stream;
         private readonly CountingWritableSubStream? _countingWritableSubStream;
@@ -116,6 +116,23 @@ namespace SharpCompress.Compressors.LZMA
         public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
 
         public override void SetLength(long value) => throw new NotImplementedException();
+
+
+#if NETSTANDARD2_1
+
+        public override int Read(Span<byte> buffer)
+        {
+            return _stream.Read(buffer);
+        }
+
+        public override void Write(ReadOnlySpan<byte> buffer)
+        {
+            _stream.Write(buffer);
+
+            _writeCount += buffer.Length;
+        }
+
+#endif
 
         public override void Write(byte[] buffer, int offset, int count)
         {
