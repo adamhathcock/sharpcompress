@@ -1,4 +1,5 @@
 ﻿using System;
+
 using SharpCompress.Compressors.Rar.VM;
 
 namespace SharpCompress.Compressors.Rar.UnpackV1
@@ -182,8 +183,8 @@ namespace SharpCompress.Compressors.Rar.UnpackV1
 
         internal static void makeDecodeTables(byte[] lenTab, int offset, Decode.Decode dec, int size)
         {
-            int[] lenCount = new int[16];
-            int[] tmpPos = new int[16];
+            Span<int> lenCount = stackalloc int[16];
+            Span<int> tmpPos = stackalloc int[16];
             int i;
             long M, N;
 
