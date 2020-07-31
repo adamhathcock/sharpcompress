@@ -89,9 +89,9 @@ namespace SharpCompress.Compressors.BZip2
             int nNodes, nHeap, n1, n2, i, j, k;
             bool tooLong;
 
-            int[] heap = new int[BZip2Constants.MAX_ALPHA_SIZE + 2];
-            int[] weight = new int[BZip2Constants.MAX_ALPHA_SIZE * 2];
-            int[] parent = new int[BZip2Constants.MAX_ALPHA_SIZE * 2];
+            Span<int> heap = stackalloc int[BZip2Constants.MAX_ALPHA_SIZE + 2]; // 1040 bytes
+            Span<int> weight = stackalloc int[BZip2Constants.MAX_ALPHA_SIZE * 2];  // 1040 bytes
+            Span<int> parent = stackalloc int[BZip2Constants.MAX_ALPHA_SIZE * 2];  // 1040 bytes
 
             for (i = 0; i < alphaSize; i++)
             {
