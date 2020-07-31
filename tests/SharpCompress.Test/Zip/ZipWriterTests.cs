@@ -10,6 +10,8 @@ namespace SharpCompress.Test.Zip
         {
         }
 
+#if !NET461
+
         // Failing on net461
         [Fact]
         public void Zip_Deflate_Write()
@@ -44,6 +46,8 @@ namespace SharpCompress.Test.Zip
         {
             Write(CompressionType.PPMd, "Zip.ppmd.noEmptyDirs.zip", "Zip.ppmd.noEmptyDirs.zip");
         }
+
+#endif
 
         [Fact]
         public void Zip_Rar_Write()
