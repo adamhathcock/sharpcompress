@@ -187,6 +187,7 @@ namespace SharpCompress.Test.Tar
             }
         }
 
+#if !NET461
         [Fact]
         public void Tar_GZip_With_Symlink_Entries()
         {
@@ -212,7 +213,7 @@ namespace SharpCompress.Test.Tar
                                                          if (!isWindows)
                                                          {
                                                              var link = new Mono.Unix.UnixSymbolicLinkInfo(sourcePath);
-                                                             if (System.IO.File.Exists(sourcePath))
+                                                             if (File.Exists(sourcePath))
                                                              {
                                                                  link.Delete(); // equivalent to ln -s -f
                                                              }
@@ -246,5 +247,7 @@ namespace SharpCompress.Test.Tar
                 }
             }
         }
+#endif
+
     }
 }
