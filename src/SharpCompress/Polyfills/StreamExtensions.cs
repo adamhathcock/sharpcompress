@@ -8,7 +8,9 @@ namespace System.IO
     {
         public static void Write(this Stream stream, ReadOnlySpan<byte> buffer)
         {
-            var temp = ArrayPool<byte>.Shared.Rent(buffer.Length);
+            byte[] temp = ArrayPool<byte>.Shared.Rent(buffer.Length);
+
+            buffer.CopyTo(temp);
 
             try
             {
