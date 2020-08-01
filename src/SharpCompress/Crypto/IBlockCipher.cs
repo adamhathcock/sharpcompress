@@ -1,4 +1,6 @@
-﻿namespace SharpCompress.Crypto
+﻿using System;
+
+namespace SharpCompress.Crypto
 {
     /// <remarks>Base interface for a symmetric key block cipher.</remarks>
     public interface IBlockCipher
@@ -19,12 +21,10 @@
 
         /// <summary>Process a block.</summary>
         /// <param name="inBuf">The input buffer.</param>
-        /// <param name="inOff">The offset into <paramref>inBuf</paramref> that the input block begins.</param>
         /// <param name="outBuf">The output buffer.</param>
-        /// <param name="outOff">The offset into <paramref>outBuf</paramref> to write the output block.</param>
         /// <exception cref="DataLengthException">If input block is wrong size, or outBuf too small.</exception>
         /// <returns>The number of bytes processed and produced.</returns>
-        int ProcessBlock(byte[] inBuf, int inOff, byte[] outBuf, int outOff);
+        int ProcessBlock(ReadOnlySpan<byte> inBuf, Span<byte> outBuf);
 
         /// <summary>
         /// Reset the cipher to the same state as it was after the last init (if there was one).

@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System;
 using System.Diagnostics;
 using System.IO;
 
@@ -118,14 +119,14 @@ namespace SharpCompress.Compressors.Deflate64
         // This algorithm is described in standard RFC 1951
         private uint[] CalculateHuffmanCode()
         {
-            uint[] bitLengthCount = new uint[17];
+            Span<uint> bitLengthCount = stackalloc uint[17];
             foreach (int codeLength in _codeLengthArray)
             {
                 bitLengthCount[codeLength]++;
             }
             bitLengthCount[0] = 0;  // clear count for length 0
 
-            uint[] nextCode = new uint[17];
+            Span<uint> nextCode = stackalloc uint[17];
             uint tempCode = 0;
             for (int bits = 1; bits <= 16; bits++)
             {

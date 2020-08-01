@@ -8,7 +8,7 @@ using SharpCompress.Compressors.Deflate;
 
 namespace SharpCompress.Common.GZip
 {
-    internal class GZipFilePart : FilePart
+    internal sealed class GZipFilePart : FilePart
     {
         private string? _name;
         private readonly Stream _stream;
@@ -40,8 +40,8 @@ namespace SharpCompress.Common.GZip
         private void ReadAndValidateGzipHeader(Stream stream)
         {
             // read the header on the first read
-            byte[] header = new byte[10];
-            int n = stream.Read(header, 0, header.Length);
+            Span<byte> header = stackalloc byte[10];
+            int n = stream.Read(header);
 
             // workitem 8501: handle edge case (decompress empty stream)
             if (n == 0)
@@ -59,14 +59,14 @@ namespace SharpCompress.Common.GZip
                 throw new ZlibException("Bad GZIP header.");
             }
 
-            int timet = BinaryPrimitives.ReadInt32LittleEndian(header.AsSpan(4));
+            int timet = BinaryPrimitives.ReadInt32LittleEndian(header.Slice(4));
             DateModified = TarHeader.EPOCH.AddSeconds(timet);
             if ((header[3] & 0x04) == 0x04)
             {
                 // read and discard extra field
-                n = stream.Read(header, 0, 2); // 2-byte length field
+                n = stream.Read(header.Slice(0, 2)); // 2-byte length field
 
-                Int16 extraLength = (Int16)(header[0] + header[1] * 256);
+                short extraLength = (short)(header[0] + header[1] * 256);
                 byte[] extra = new byte[extraLength];
 
                 if (!stream.ReadFully(extra))

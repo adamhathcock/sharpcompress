@@ -413,8 +413,8 @@ namespace SharpCompress.Compressors.Deflate
             int totalBytesRead = 0;
 
             // read the header on the first read
-            byte[] header = new byte[10];
-            int n = _stream.Read(header, 0, header.Length);
+            Span<byte> header = stackalloc byte[10];
+            int n = _stream.Read(header);
 
             // workitem 8501: handle edge case (decompress empty stream)
             if (n == 0)
@@ -432,16 +432,16 @@ namespace SharpCompress.Compressors.Deflate
                 throw new ZlibException("Bad GZIP header.");
             }
 
-            Int32 timet = BinaryPrimitives.ReadInt32LittleEndian(header.AsSpan(4));
+            int timet = BinaryPrimitives.ReadInt32LittleEndian(header.Slice(4));
             _GzipMtime = TarHeader.EPOCH.AddSeconds(timet);
             totalBytesRead += n;
             if ((header[3] & 0x04) == 0x04)
             {
                 // read and discard extra field
-                n = _stream.Read(header, 0, 2); // 2-byte length field
+                n = _stream.Read(header.Slice(0, 2)); // 2-byte length field
                 totalBytesRead += n;
 
-                Int16 extraLength = (Int16)(header[0] + header[1] * 256);
+                short extraLength = (short)(header[0] + header[1] * 256);
                 byte[] extra = new byte[extraLength];
                 n = _stream.Read(extra, 0, extra.Length);
                 if (n != extraLength)

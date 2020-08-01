@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 
 /*
  * Copyright 2001,2004-2005 The Apache Software Foundation
@@ -88,9 +89,9 @@ namespace SharpCompress.Compressors.BZip2
             int nNodes, nHeap, n1, n2, i, j, k;
             bool tooLong;
 
-            int[] heap = new int[BZip2Constants.MAX_ALPHA_SIZE + 2];
-            int[] weight = new int[BZip2Constants.MAX_ALPHA_SIZE * 2];
-            int[] parent = new int[BZip2Constants.MAX_ALPHA_SIZE * 2];
+            Span<int> heap = stackalloc int[BZip2Constants.MAX_ALPHA_SIZE + 2]; // 1040 bytes
+            Span<int> weight = stackalloc int[BZip2Constants.MAX_ALPHA_SIZE * 2];  // 1040 bytes
+            Span<int> parent = stackalloc int[BZip2Constants.MAX_ALPHA_SIZE * 2];  // 1040 bytes
 
             for (i = 0; i < alphaSize; i++)
             {
@@ -1328,8 +1329,8 @@ namespace SharpCompress.Compressors.BZip2
         private void MainSort()
         {
             int i, j, ss, sb;
-            int[] runningOrder = new int[256];
-            int[] copy = new int[256];
+            Span<int> runningOrder = stackalloc int[256];
+            Span<int> copy = stackalloc int[256];
             bool[] bigDone = new bool[256];
             int c1, c2;
             int numQSorted;

@@ -214,8 +214,7 @@ namespace SharpCompress.Crypto
         * xor corresponding text input and round key input bytes
         */
 
-        private void KeyAddition(
-            long[] rk)
+        private void KeyAddition(long[] rk)
         {
             A0 ^= rk[0];
             A1 ^= rk[1];
@@ -568,28 +567,24 @@ namespace SharpCompress.Crypto
             return BC / 2;
         }
 
-        public int ProcessBlock(
-            byte[] input,
-            int inOff,
-            byte[] output,
-            int outOff)
+        public int ProcessBlock(ReadOnlySpan<byte> input, Span<byte> output)
         {
             if (workingKey is null)
             {
                 throw new InvalidOperationException("Rijndael engine not initialised");
             }
 
-            if ((inOff + (BC / 2)) > input.Length)
+            if (BC / 2 > input.Length)
             {
                 throw new DataLengthException("input buffer too short");
             }
 
-            if ((outOff + (BC / 2)) > output.Length)
+            if (BC / 2 > output.Length)
             {
                 throw new DataLengthException("output buffer too short");
             }
 
-            UnPackBlock(input, inOff);
+            UnPackBlock(input);
 
             if (forEncryption)
             {
@@ -600,7 +595,7 @@ namespace SharpCompress.Crypto
                 DecryptBlock(workingKey);
             }
 
-            PackBlock(output, outOff);
+            PackBlock(output);
 
             return BC / 2;
         }
@@ -609,11 +604,9 @@ namespace SharpCompress.Crypto
         {
         }
 
-        private void UnPackBlock(
-            byte[] bytes,
-            int off)
+        private void UnPackBlock(ReadOnlySpan<byte> bytes)
         {
-            int index = off;
+            int index = 0;
 
             A0 = bytes[index++] & 0xff;
             A1 = bytes[index++] & 0xff;
@@ -629,11 +622,9 @@ namespace SharpCompress.Crypto
             }
         }
 
-        private void PackBlock(
-            byte[] bytes,
-            int off)
+        private void PackBlock(Span<byte> bytes)
         {
-            int index = off;
+            int index = 0;
 
             for (int j = 0; j != BC; j += 8)
             {
@@ -644,8 +635,7 @@ namespace SharpCompress.Crypto
             }
         }
 
-        private void EncryptBlock(
-            long[][] rk)
+        private void EncryptBlock(long[][] rk)
         {
             int r;
 

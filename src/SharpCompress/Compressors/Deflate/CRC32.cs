@@ -189,7 +189,7 @@ namespace SharpCompress.Compressors.Deflate
 
         // pre-initialize the crc table for speed of lookup.
 
-        private uint gf2_matrix_times(uint[] matrix, uint vec)
+        private uint gf2_matrix_times(ReadOnlySpan<uint> matrix, uint vec)
         {
             uint sum = 0;
             int i = 0;
@@ -205,7 +205,7 @@ namespace SharpCompress.Compressors.Deflate
             return sum;
         }
 
-        private void gf2_matrix_square(uint[] square, uint[] mat)
+        private void gf2_matrix_square(Span<uint> square, Span<uint> mat)
         {
             for (int i = 0; i < 32; i++)
             {
@@ -225,8 +225,8 @@ namespace SharpCompress.Compressors.Deflate
         /// <param name="length">the length of data the CRC value was calculated on</param>
         public void Combine(int crc, int length)
         {
-            var even = new uint[32]; // even-power-of-two zeros operator
-            var odd = new uint[32]; // odd-power-of-two zeros operator
+            Span<uint> even = stackalloc uint[32]; // even-power-of-two zeros operator
+            Span<uint> odd = stackalloc uint[32]; // odd-power-of-two zeros operator
 
             if (length == 0)
             {

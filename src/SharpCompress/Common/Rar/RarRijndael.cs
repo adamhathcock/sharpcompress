@@ -87,11 +87,11 @@ namespace SharpCompress.Common.Rar
             return rijndael;
         }
 
-        public byte[] ProcessBlock(byte[] cipherText)
+        public byte[] ProcessBlock(ReadOnlySpan<byte> cipherText)
         {
-            var plainText = new byte[CRYPTO_BLOCK_SIZE];
+            Span<byte> plainText = stackalloc byte[CRYPTO_BLOCK_SIZE]; // 16 bytes
             byte[] decryptedBytes = new byte[CRYPTO_BLOCK_SIZE];
-            _rijndael.ProcessBlock(cipherText, 0, plainText, 0);
+            _rijndael.ProcessBlock(cipherText, plainText);
 
             for (int j = 0; j < CRYPTO_BLOCK_SIZE; j++)
             {

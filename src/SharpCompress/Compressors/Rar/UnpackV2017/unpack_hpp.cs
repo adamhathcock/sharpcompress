@@ -12,6 +12,7 @@ using int64 = System.Int64;
 using System.Collections.Generic;
 using static SharpCompress.Compressors.Rar.UnpackV2017.PackDef;
 using static SharpCompress.Compressors.Rar.UnpackV2017.UnpackGlobal;
+using System;
 
 // TODO: REMOVE THIS... WIP
 #pragma warning disable 169
@@ -271,8 +272,8 @@ internal partial class Unpack
     byte *ReadBufMT;
 #endif
 
-    private byte[] FilterSrcMemory = new byte[0];
-    private byte[] FilterDstMemory = new byte[0];
+    private byte[] FilterSrcMemory = Array.Empty<byte>();
+    private byte[] FilterDstMemory = Array.Empty<byte>();
 
     // Filters code, one entry per filter.
     private readonly List<UnpackFilter> Filters = new List<UnpackFilter>();
