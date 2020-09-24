@@ -1,4 +1,6 @@
-﻿using System;
+﻿#nullable disable
+
+using System;
 using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.IO;
@@ -52,7 +54,7 @@ namespace SharpCompress.Common.Zip.Headers
 
         internal PkwareTraditionalEncryptionData ComposeEncryptionData(Stream archiveStream)
         {
-            if (archiveStream == null)
+            if (archiveStream is null)
             {
                 throw new ArgumentNullException(nameof(archiveStream));
             }
@@ -60,7 +62,7 @@ namespace SharpCompress.Common.Zip.Headers
             var buffer = new byte[12];
             archiveStream.ReadFully(buffer);
 
-            PkwareTraditionalEncryptionData encryptionData = PkwareTraditionalEncryptionData.ForRead(Password, this, buffer);
+            PkwareTraditionalEncryptionData encryptionData = PkwareTraditionalEncryptionData.ForRead(Password!, this, buffer);
 
             return encryptionData;
         }

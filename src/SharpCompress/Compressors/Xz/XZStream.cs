@@ -1,4 +1,6 @@
-﻿using System;
+﻿#nullable disable
+
+using System;
 using System.IO;
 
 namespace SharpCompress.Compressors.Xz
@@ -91,7 +93,7 @@ namespace SharpCompress.Compressors.Xz
         private int ReadBlocks(byte[] buffer, int offset, int count)
         {
             int bytesRead = 0;
-            if (_currentBlock == null)
+            if (_currentBlock is null)
             {
                 NextBlock();
             }

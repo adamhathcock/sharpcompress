@@ -1,11 +1,13 @@
-﻿using System;
+﻿#nullable disable
+
+using System;
 using System.Buffers.Binary;
 using System.IO;
 using System.Text;
 
 namespace SharpCompress.Common.Tar.Headers
 {
-    internal class TarHeader
+    internal sealed class TarHeader
     {
         internal static readonly DateTime EPOCH = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 
@@ -258,10 +260,16 @@ namespace SharpCompress.Common.Tar.Headers
             return Convert.ToInt64(s);
         }
 
+
+        private static readonly byte[] eightSpaces = { 
+            (byte)' ', (byte)' ', (byte)' ', (byte)' ',
+            (byte)' ', (byte)' ', (byte)' ', (byte)' ' 
+        };
+
         internal static int RecalculateChecksum(byte[] buf)
         {
             // Set default value for checksum. That is 8 spaces.
-            Encoding.UTF8.GetBytes("        ").CopyTo(buf, 148);
+            eightSpaces.CopyTo(buf, 148);
 
             // Calculate checksum
             int headerChecksum = 0;
@@ -274,7 +282,7 @@ namespace SharpCompress.Common.Tar.Headers
 
         internal static int RecalculateAltChecksum(byte[] buf)
         {
-            Encoding.UTF8.GetBytes("        ").CopyTo(buf, 148);
+            eightSpaces.CopyTo(buf, 148);
             int headerChecksum = 0;
             foreach (byte b in buf)
             {

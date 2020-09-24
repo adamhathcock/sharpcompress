@@ -1,3 +1,5 @@
+#nullable disable
+
 using System;
 using System.IO;
 using SharpCompress.Compressors.LZMA.LZ;
@@ -425,9 +427,9 @@ namespace SharpCompress.Compressors.LZMA
 
         private void Create()
         {
-            if (_matchFinder == null)
+            if (_matchFinder is null)
             {
-                BinTree bt = new BinTree();
+                var bt = new BinTree();
                 int numHashBytes = 4;
                 if (_matchFinderType == EMatchFinderType.Bt2)
                 {

@@ -152,6 +152,7 @@ namespace SharpCompress.Test.Zip
             {
 
                 for (var i = 0; i < files; i++)
+                {
                     using (var str = zipWriter.WriteToStream(i.ToString(), eo))
                     {
                         var left = filesize;
@@ -162,6 +163,7 @@ namespace SharpCompress.Test.Zip
                             left -= b;
                         }
                     }
+                }
             }
         }
 
@@ -172,21 +174,23 @@ namespace SharpCompress.Test.Zip
 			Common.Zip.ZipEntry prev = null;
             using (var fs = File.OpenRead(filename))
             using (var rd = ZipReader.Open(fs, new ReaderOptions() { LookForHeader = false }))
+            {
                 while (rd.MoveToNextEntry())
                 {
-					using (rd.OpenEntryStream())
-					{ }
+                    using (rd.OpenEntryStream())
+                    { }
 
                     count++;
-					if (prev != null)
+                    if (prev != null)
                     {
                         size += prev.Size;
                     }
 
                     prev = rd.Entry;
                 }
+            }
 
-			if (prev != null)
+            if (prev != null)
             {
                 size += prev.Size;
             }

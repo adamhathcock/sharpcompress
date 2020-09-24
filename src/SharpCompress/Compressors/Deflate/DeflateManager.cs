@@ -1,3 +1,5 @@
+#nullable disable
+
 // Deflate.cs
 // ------------------------------------------------------------------
 //
@@ -1756,7 +1758,7 @@ namespace SharpCompress.Compressors.Deflate
             int length = dictionary.Length;
             int index = 0;
 
-            if (dictionary == null || status != INIT_STATE)
+            if (dictionary is null || status != INIT_STATE)
             {
                 throw new ZlibException("Stream error.");
             }
@@ -1796,8 +1798,8 @@ namespace SharpCompress.Compressors.Deflate
         {
             int old_flush;
 
-            if (_codec.OutputBuffer == null ||
-                (_codec.InputBuffer == null && _codec.AvailableBytesIn != 0) ||
+            if (_codec.OutputBuffer is null ||
+                (_codec.InputBuffer is null && _codec.AvailableBytesIn != 0) ||
                 (status == FINISH_STATE && flush != FlushType.Finish))
             {
                 _codec.Message = _ErrorMessage[ZlibConstants.Z_NEED_DICT - (ZlibConstants.Z_STREAM_ERROR)];

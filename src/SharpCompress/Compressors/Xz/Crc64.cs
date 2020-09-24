@@ -1,4 +1,6 @@
-﻿using System;
+﻿#nullable disable
+
+using System;
 using System.Collections.Generic;
 
 namespace SharpCompress.Compressors.Xz
@@ -18,11 +20,8 @@ namespace SharpCompress.Compressors.Xz
 
         public static UInt64 Compute(UInt64 seed, byte[] buffer)
         {
-            if (Table == null)
-            {
-                Table = CreateTable(Iso3309Polynomial);
-            }
-
+            Table ??= CreateTable(Iso3309Polynomial);
+            
             return CalculateHash(seed, Table, buffer, 0, buffer.Length);
         }
 
@@ -31,10 +30,12 @@ namespace SharpCompress.Compressors.Xz
             var crc = seed;
 
             for (var i = start; i < size; i++)
+            {
                 unchecked
                 {
                     crc = (crc >> 8) ^ table[(buffer[i] ^ crc) & 0xff];
                 }
+            }
 
             return crc;
         }
@@ -46,6 +47,7 @@ namespace SharpCompress.Compressors.Xz
             {
                 var entry = (UInt64)i;
                 for (var j = 0; j < 8; ++j)
+                {
                     if ((entry & 1) == 1)
                     {
                         entry = (entry >> 1) ^ polynomial;
@@ -54,6 +56,7 @@ namespace SharpCompress.Compressors.Xz
                     {
                         entry = entry >> 1;
                     }
+                }
 
                 createTable[i] = entry;
             }

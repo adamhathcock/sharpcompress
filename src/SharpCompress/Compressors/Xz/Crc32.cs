@@ -1,4 +1,6 @@
-﻿using System;
+﻿#nullable disable
+
+using System;
 using System.Collections.Generic;
 
 namespace SharpCompress.Compressors.Xz
@@ -37,6 +39,7 @@ namespace SharpCompress.Compressors.Xz
             {
                 var entry = (UInt32)i;
                 for (var j = 0; j < 8; j++)
+                {
                     if ((entry & 1) == 1)
                     {
                         entry = (entry >> 1) ^ polynomial;
@@ -45,6 +48,7 @@ namespace SharpCompress.Compressors.Xz
                     {
                         entry = entry >> 1;
                     }
+                }
 
                 createTable[i] = entry;
             }
@@ -61,7 +65,10 @@ namespace SharpCompress.Compressors.Xz
         {
             var crc = seed;
             for (var i = start; i < size - start; i++)
+            {
                 crc = (crc >> 8) ^ table[buffer[i] ^ crc & 0xff];
+            }
+
             return crc;
         }
 

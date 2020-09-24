@@ -14,13 +14,13 @@ namespace SharpCompress.Readers
         where TVolume : Volume
     {
         private bool completed;
-        private IEnumerator<TEntry> entriesForCurrentReadStream;
+        private IEnumerator<TEntry>? entriesForCurrentReadStream;
         private bool wroteCurrentEntry;
         
-        public event EventHandler<ReaderExtractionEventArgs<IEntry>> EntryExtractionProgress;
+        public event EventHandler<ReaderExtractionEventArgs<IEntry>>? EntryExtractionProgress;
 
-        public event EventHandler<CompressedBytesReadEventArgs> CompressedBytesRead;
-        public event EventHandler<FilePartExtractionBeginEventArgs> FilePartExtractionBegin;
+        public event EventHandler<CompressedBytesReadEventArgs>? CompressedBytesRead;
+        public event EventHandler<FilePartExtractionBeginEventArgs>? FilePartExtractionBegin;
 
         internal AbstractReader(ReaderOptions options, ArchiveType archiveType)
         {
@@ -40,7 +40,7 @@ namespace SharpCompress.Readers
         /// <summary>
         /// Current file entry 
         /// </summary>
-        public TEntry Entry => entriesForCurrentReadStream.Current;
+        public TEntry Entry => entriesForCurrentReadStream!.Current;
 
         #region IDisposable Members
 
@@ -77,7 +77,7 @@ namespace SharpCompress.Readers
             {
                 throw new InvalidOperationException("Reader has been cancelled.");
             }
-            if (entriesForCurrentReadStream == null)
+            if (entriesForCurrentReadStream is null)
             {
                 return LoadStreamForReading(RequestInitialStream());
             }
@@ -97,7 +97,7 @@ namespace SharpCompress.Readers
         protected bool LoadStreamForReading(Stream stream)
         {
             entriesForCurrentReadStream?.Dispose();
-            if ((stream == null) || (!stream.CanRead))
+            if ((stream is null) || (!stream.CanRead))
             {
                 throw new MultipartStreamRequiredException("File is split into multiple archives: '"
                                                            + Entry.Key +
@@ -114,7 +114,7 @@ namespace SharpCompress.Readers
 
         internal virtual bool NextEntryForCurrentStream()
         {
-            return entriesForCurrentReadStream.MoveNext();
+            return entriesForCurrentReadStream!.MoveNext();
         }
 
         protected abstract IEnumerable<TEntry> GetEntries(Stream stream);
@@ -160,7 +160,7 @@ namespace SharpCompress.Readers
             {
                 throw new ArgumentException("WriteEntryTo or OpenEntryStream can only be called once.");
             }
-            if ((writableStream == null) || (!writableStream.CanWrite))
+            if ((writableStream is null) || (!writableStream.CanWrite))
             {
                 throw new ArgumentNullException("A writable Stream was required.  Use Cancel if that was intended.");
             }
@@ -208,22 +208,21 @@ namespace SharpCompress.Readers
 
         void IExtractionListener.FireCompressedBytesRead(long currentPartCompressedBytes, long compressedReadBytes)
         {
-            CompressedBytesRead?.Invoke(this, new CompressedBytesReadEventArgs
-            {
-                CurrentFilePartCompressedBytesRead = currentPartCompressedBytes,
-                CompressedBytesRead = compressedReadBytes
-            });
+            CompressedBytesRead?.Invoke(this, new CompressedBytesReadEventArgs(
+                currentFilePartCompressedBytesRead: currentPartCompressedBytes,
+                compressedBytesRead: compressedReadBytes
+            ));
         }
 
         void IExtractionListener.FireFilePartExtractionBegin(string name, long size, long compressedSize)
         {
-            FilePartExtractionBegin?.Invoke(this, new FilePartExtractionBeginEventArgs
-            {
-                CompressedSize = compressedSize,
-                Size = size,
-                Name = name
-            });
+            FilePartExtractionBegin?.Invoke(this, new FilePartExtractionBeginEventArgs(
+                compressedSize: compressedSize,
+                size: size,
+                name: name
+            ));
         }
+
         void IReaderExtractionListener.FireEntryExtractionProgress(Entry entry, long bytesTransferred, int iterations)
         {
             EntryExtractionProgress?.Invoke(this, new ReaderExtractionEventArgs<IEntry>(entry, new ReaderProgress(entry, bytesTransferred, iterations)));

@@ -1,4 +1,6 @@
-﻿using System;
+﻿#nullable disable
+
+using System;
 using System.IO;
 
 namespace SharpCompress.Crypto
@@ -40,10 +42,20 @@ namespace SharpCompress.Crypto
 
         public override void SetLength(long value) => throw new NotSupportedException();
 
+#if NETSTANDARD2_1
+
+        public override void Write(ReadOnlySpan<byte> buffer)
+        {
+            stream.Write(buffer);
+
+            hash = CalculateCrc(table, hash, buffer);
+        }
+#endif
+
         public override void Write(byte[] buffer, int offset, int count)
         {
             stream.Write(buffer, offset, count);
-            hash = CalculateCrc(table, hash, buffer, offset, count);
+            hash = CalculateCrc(table, hash, buffer.AsSpan(offset, count));
         }
 
         public override void WriteByte(byte value)
@@ -70,9 +82,9 @@ namespace SharpCompress.Crypto
             return Compute(DefaultPolynomial, seed, buffer);
         }
 
-        public static uint Compute(uint polynomial, uint seed, byte[] buffer)
+        public static uint Compute(uint polynomial, uint seed, ReadOnlySpan<byte> buffer)
         {
-            return ~CalculateCrc(InitializeTable(polynomial), seed, buffer, 0, buffer.Length);
+            return ~CalculateCrc(InitializeTable(polynomial), seed, buffer);
         }
 
         private static uint[] InitializeTable(uint polynomial)
@@ -87,6 +99,7 @@ namespace SharpCompress.Crypto
             {
                 var entry = (uint)i;
                 for (var j = 0; j < 8; j++)
+                {
                     if ((entry & 1) == 1)
                     {
                         entry = (entry >> 1) ^ polynomial;
@@ -95,6 +108,7 @@ namespace SharpCompress.Crypto
                     {
                         entry = entry >> 1;
                     }
+                }
 
                 createTable[i] = entry;
             }
@@ -107,11 +121,11 @@ namespace SharpCompress.Crypto
             return createTable;
         }
 
-        private static uint CalculateCrc(uint[] table, uint crc, byte[] buffer, int offset, int count)
+        private static uint CalculateCrc(uint[] table, uint crc, ReadOnlySpan<byte> buffer)
         {
             unchecked
             {
-                for (int i = offset, end = offset + count; i < end; i++)
+                for (int i = 0; i < buffer.Length; i++)
                 {
                     crc = CalculateCrc(table, crc, buffer[i]);
                 }

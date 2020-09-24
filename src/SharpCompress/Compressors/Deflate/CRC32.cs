@@ -111,9 +111,9 @@ namespace SharpCompress.Compressors.Deflate
         /// <param name="input">The stream over which to calculate the CRC32</param>
         /// <param name="output">The stream into which to deflate the input</param>
         /// <returns>the CRC32 calculation</returns>
-        public UInt32 GetCrc32AndCopy(Stream input, Stream output)
+        public UInt32 GetCrc32AndCopy(Stream input, Stream? output)
         {
-            if (input == null)
+            if (input is null)
             {
                 throw new ZlibException("The input stream must not be null.");
             }
@@ -159,7 +159,7 @@ namespace SharpCompress.Compressors.Deflate
             return _InternalComputeCrc32((UInt32)W, B);
         }
 
-        internal Int32 _InternalComputeCrc32(UInt32 W, byte B)
+        internal int _InternalComputeCrc32(UInt32 W, byte B)
         {
             return (Int32)(crc32Table[(W ^ B) & 0xFF] ^ (W >> 8));
         }
@@ -173,7 +173,7 @@ namespace SharpCompress.Compressors.Deflate
         /// <param name="count">how many bytes within the block to slurp</param>
         public void SlurpBlock(byte[] block, int offset, int count)
         {
-            if (block == null)
+            if (block is null)
             {
                 throw new ZlibException("The data buffer must not be null.");
             }
@@ -189,7 +189,7 @@ namespace SharpCompress.Compressors.Deflate
 
         // pre-initialize the crc table for speed of lookup.
 
-        private uint gf2_matrix_times(uint[] matrix, uint vec)
+        private uint gf2_matrix_times(ReadOnlySpan<uint> matrix, uint vec)
         {
             uint sum = 0;
             int i = 0;
@@ -205,7 +205,7 @@ namespace SharpCompress.Compressors.Deflate
             return sum;
         }
 
-        private void gf2_matrix_square(uint[] square, uint[] mat)
+        private void gf2_matrix_square(Span<uint> square, Span<uint> mat)
         {
             for (int i = 0; i < 32; i++)
             {
@@ -225,8 +225,8 @@ namespace SharpCompress.Compressors.Deflate
         /// <param name="length">the length of data the CRC value was calculated on</param>
         public void Combine(int crc, int length)
         {
-            var even = new uint[32]; // even-power-of-two zeros operator
-            var odd = new uint[32]; // odd-power-of-two zeros operator
+            Span<uint> even = stackalloc uint[32]; // even-power-of-two zeros operator
+            Span<uint> odd = stackalloc uint[32]; // odd-power-of-two zeros operator
 
             if (length == 0)
             {

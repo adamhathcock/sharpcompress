@@ -25,12 +25,12 @@ namespace SharpCompress.Common.SevenZip
         }
 
         internal CFileItem Header { get; }
-        internal CFolder Folder { get; }
+        internal CFolder? Folder { get; }
         internal int Index { get; }
 
         internal override string FilePartName => Header.Name;
 
-        internal override Stream GetRawStream()
+        internal override Stream? GetRawStream()
         {
             return null;
         }
@@ -39,11 +39,11 @@ namespace SharpCompress.Common.SevenZip
         {
             if (!Header.HasStream)
             {
-                return null;
+                return null!;
             }
-            var folderStream = _database.GetFolderStream(_stream, Folder, _database.PasswordProvider);
+            var folderStream = _database.GetFolderStream(_stream, Folder!, _database.PasswordProvider);
 
-            int firstFileIndex = _database._folderStartFileIndex[_database._folders.IndexOf(Folder)];
+            int firstFileIndex = _database._folderStartFileIndex[_database._folders.IndexOf(Folder!)];
             int skipCount = Index - firstFileIndex;
             long skipSize = 0;
             for (int i = 0; i < skipCount; i++)
@@ -61,7 +61,7 @@ namespace SharpCompress.Common.SevenZip
         {
             get
             {
-                if (_type == null)
+                if (_type is null)
                 {
                     _type = GetCompression();
                 }
@@ -82,7 +82,7 @@ namespace SharpCompress.Common.SevenZip
 
         internal CompressionType GetCompression()
         {
-            var coder = Folder._coders.First();
+            var coder = Folder!._coders.First();
             switch (coder._methodId._id)
             {                
                 case K_LZMA:

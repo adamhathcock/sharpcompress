@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿#nullable disable
+
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using SharpCompress.Compressors.Xz.Filters;
@@ -23,7 +25,8 @@ namespace SharpCompress.Compressors.Xz
         private bool _crcChecked;
         private ulong _bytesRead;
 
-        public XZBlock(Stream stream, CheckType checkType, int checkSize) : base(stream)
+        public XZBlock(Stream stream, CheckType checkType, int checkSize) 
+            : base(stream)
         {
             _checkType = checkType;
             _checkSize = checkSize;
@@ -95,7 +98,7 @@ namespace SharpCompress.Compressors.Xz
             _decomStream = BaseStream;
             while (Filters.Any())
             {
-                var filter = Filters.Pop();
+                BlockFilter filter = Filters.Pop();
                 filter.SetBaseStream(_decomStream);
                 _decomStream = filter;
             }

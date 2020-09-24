@@ -1,4 +1,7 @@
-﻿using System.IO;
+﻿#nullable disable
+
+using System;
+using System.IO;
 
 /*
  * Copyright 2001,2004-2005 The Apache Software Foundation
@@ -833,7 +836,7 @@ namespace SharpCompress.Compressors.BZip2
 
         private void SetupBlock()
         {
-            int[] cftab = new int[257];
+            Span<int> cftab = stackalloc int[257];
             char ch;
 
             cftab[0] = 0;
@@ -852,7 +855,6 @@ namespace SharpCompress.Compressors.BZip2
                 tt[cftab[ch]] = i;
                 cftab[ch]++;
             }
-            cftab = null;
 
             tPos = tt[origPtr];
 

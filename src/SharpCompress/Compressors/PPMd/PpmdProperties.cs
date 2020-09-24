@@ -8,7 +8,7 @@ namespace SharpCompress.Compressors.PPMd
     {
 
         private int _allocatorSize;
-        internal Allocator _allocator;
+        internal Allocator? _allocator;
 
         public PpmdProperties()
             : this(16 << 20, 6)
@@ -56,10 +56,8 @@ namespace SharpCompress.Compressors.PPMd
                 _allocatorSize = value;
                 if (Version == PpmdVersion.I1)
                 {
-                    if (_allocator == null)
-                    {
-                        _allocator = new Allocator();
-                    }
+                    _allocator ??= new Allocator();
+                    
                     _allocator.Start(_allocatorSize);
                 }
             }

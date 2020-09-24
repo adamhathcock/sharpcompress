@@ -307,7 +307,9 @@ internal static class Unpack20Local {
           Inp.addbits(7);
         }
         while (N-- > 0 && I<TableSize)
+        {
           Table[I++]=0;
+        }
       }
   }
   TablesRead2=true;
@@ -319,7 +321,9 @@ internal static class Unpack20Local {
   if (UnpAudioBlock)
   {
     for (uint I=0;I<UnpChannels;I++)
+    {
       MakeDecodeTables(Table,(int)(I*MC20),MD[I],MC20);
+    }
   }
   else
   {

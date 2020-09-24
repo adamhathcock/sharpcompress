@@ -6,12 +6,12 @@ using SharpCompress.IO;
 
 namespace SharpCompress.Common.Zip
 {
-    internal class SeekableZipHeaderFactory : ZipHeaderFactory
+    internal sealed class SeekableZipHeaderFactory : ZipHeaderFactory
     {
         private const int MAX_ITERATIONS_FOR_DIRECTORY_HEADER = 4096;
         private bool _zip64;
 
-        internal SeekableZipHeaderFactory(string password, ArchiveEncoding archiveEncoding)
+        internal SeekableZipHeaderFactory(string? password, ArchiveEncoding archiveEncoding)
             : base(StreamingMode.Seekable, password, archiveEncoding)
         {
         }
@@ -55,7 +55,7 @@ namespace SharpCompress.Common.Zip
                 var nextHeader = ReadHeader(signature, reader, _zip64);
                 position = stream.Position;
 
-                if (nextHeader == null)
+                if (nextHeader is null)
                 {
                     yield break;
                 }
@@ -102,7 +102,7 @@ namespace SharpCompress.Common.Zip
             BinaryReader reader = new BinaryReader(stream);
             uint signature = reader.ReadUInt32();
             var localEntryHeader = ReadHeader(signature, reader, _zip64) as LocalEntryHeader;
-            if (localEntryHeader == null)
+            if (localEntryHeader is null)
             {
                 throw new InvalidOperationException();
             }

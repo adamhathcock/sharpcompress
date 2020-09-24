@@ -4,7 +4,7 @@ using System.IO;
 
 namespace SharpCompress.Common.Rar
 {
-    internal class RarCryptoWrapper : Stream
+    internal sealed class RarCryptoWrapper : Stream
     {
         private readonly Stream _actualStream;
         private readonly byte[] _salt;
@@ -35,7 +35,7 @@ namespace SharpCompress.Common.Rar
 
         public override int Read(byte[] buffer, int offset, int count)
         {
-            if (_salt == null)
+            if (_salt is null)
             {
                 return _actualStream.Read(buffer, offset, count);
             }
@@ -58,12 +58,15 @@ namespace SharpCompress.Common.Rar
 
                     var readBytes = _rijndael.ProcessBlock(cipherText);
                     foreach (var readByte in readBytes)
+                    {
                         _data.Enqueue(readByte);
-
+                    }
                 }
 
                 for (int i = 0; i < count; i++)
+                {
                     buffer[offset + i] = _data.Dequeue();
+                }
             }
             return count;
         }
@@ -88,7 +91,7 @@ namespace SharpCompress.Common.Rar
             if (_rijndael != null)
             {
                 _rijndael.Dispose();
-                _rijndael = null;
+                _rijndael = null!;
             }
             base.Dispose(disposing);
         }

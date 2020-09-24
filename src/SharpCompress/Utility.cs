@@ -95,7 +95,7 @@ namespace SharpCompress
 
         public static void CheckNotNull(this object obj, string name)
         {
-            if (obj == null)
+            if (obj is null)
             {
                 throw new ArgumentNullException(name);
             }
@@ -200,7 +200,7 @@ namespace SharpCompress
 
         public static uint DateTimeToDosTime(this DateTime? dateTime)
         {
-            if (dateTime == null)
+            if (dateTime is null)
             {
                 return 0;
             }
@@ -235,9 +235,8 @@ namespace SharpCompress
             byte[] array = GetTransferByteArray();
             try
             {
-                int count;
                 long total = 0;
-                while (ReadTransferBlock(source, array, out count))
+                while (ReadTransferBlock(source, array, out int count))
                 {
                     total += count;
                     destination.Write(array, 0, count);
@@ -255,10 +254,9 @@ namespace SharpCompress
             byte[] array = GetTransferByteArray();
             try
             {
-                int count;
                 var iterations = 0;
                 long total = 0;
-                while (ReadTransferBlock(source, array, out count))
+                while (ReadTransferBlock(source, array, out int count))
                 {
                     total += count;
                     destination.Write(array, 0, count);

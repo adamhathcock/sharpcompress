@@ -67,7 +67,7 @@ namespace SharpCompress.Readers.Tar
         /// <param name="stream"></param>
         /// <param name="options"></param>
         /// <returns></returns>
-        public static TarReader Open(Stream stream, ReaderOptions options = null)
+        public static TarReader Open(Stream stream, ReaderOptions? options = null)
         {
             stream.CheckNotNull(nameof(stream));
             options = options ?? new ReaderOptions();

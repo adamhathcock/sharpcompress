@@ -2,6 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+#nullable disable
+
 using SharpCompress.Common.Zip;
 using System;
 using System.Diagnostics;
@@ -21,7 +23,7 @@ namespace SharpCompress.Compressors.Deflate64
 
         public Deflate64Stream(Stream stream, CompressionMode mode)
         {
-            if (stream == null)
+            if (stream is null)
             {
                 throw new ArgumentNullException(nameof(stream));
             }
@@ -62,7 +64,7 @@ namespace SharpCompress.Compressors.Deflate64
         {
             get
             {
-                if (_stream == null)
+                if (_stream is null)
                 {
                     return false;
                 }
@@ -75,7 +77,7 @@ namespace SharpCompress.Compressors.Deflate64
         {
             get
             {
-                if (_stream == null)
+                if (_stream is null)
                 {
                     return false;
                 }
@@ -160,7 +162,7 @@ namespace SharpCompress.Compressors.Deflate64
 
         private void ValidateParameters(byte[] array, int offset, int count)
         {
-            if (array == null)
+            if (array is null)
             {
                 throw new ArgumentNullException(nameof(array));
             }
@@ -183,7 +185,7 @@ namespace SharpCompress.Compressors.Deflate64
 
         private void EnsureNotDisposed()
         {
-            if (_stream == null)
+            if (_stream is null)
             {
                 ThrowStreamClosedException();
             }
@@ -236,7 +238,7 @@ namespace SharpCompress.Compressors.Deflate64
                 return;
             }
 
-            if (_stream == null)
+            if (_stream is null)
             {
                 return;
             }

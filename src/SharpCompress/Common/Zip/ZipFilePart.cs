@@ -100,7 +100,7 @@ namespace SharpCompress.Common.Zip
                 case ZipCompressionMethod.WinzipAes:
                 {
                     ExtraData data = Header.Extra.Where(x => x.Type == ExtraDataType.WinZipAes).SingleOrDefault();
-                    if (data == null)
+                    if (data is null)
                     {
                         throw new InvalidFormatException("No Winzip AES extra data found.");
                     }

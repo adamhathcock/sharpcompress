@@ -14,11 +14,11 @@ namespace SharpCompress.Archives
         private readonly LazyReadOnlyCollection<TVolume> lazyVolumes;
         private readonly LazyReadOnlyCollection<TEntry> lazyEntries;
 
-        public event EventHandler<ArchiveExtractionEventArgs<IArchiveEntry>> EntryExtractionBegin;
-        public event EventHandler<ArchiveExtractionEventArgs<IArchiveEntry>> EntryExtractionEnd;
+        public event EventHandler<ArchiveExtractionEventArgs<IArchiveEntry>>? EntryExtractionBegin;
+        public event EventHandler<ArchiveExtractionEventArgs<IArchiveEntry>>? EntryExtractionEnd;
 
-        public event EventHandler<CompressedBytesReadEventArgs> CompressedBytesRead;
-        public event EventHandler<FilePartExtractionBeginEventArgs> FilePartExtractionBegin;
+        public event EventHandler<CompressedBytesReadEventArgs>? CompressedBytesRead;
+        public event EventHandler<FilePartExtractionBeginEventArgs>? FilePartExtractionBegin;
 
         protected ReaderOptions ReaderOptions { get; }
 
@@ -48,12 +48,14 @@ namespace SharpCompress.Archives
             lazyEntries = new LazyReadOnlyCollection<TEntry>(LoadEntries(Volumes));
         }
 
+#nullable disable
         internal AbstractArchive(ArchiveType type)
         {
             Type = type;
             lazyVolumes = new LazyReadOnlyCollection<TVolume>(Enumerable.Empty<TVolume>());
             lazyEntries = new LazyReadOnlyCollection<TEntry>(Enumerable.Empty<TEntry>());
         }
+#nullable enable
 
         public ArchiveType Type { get; }
 
@@ -121,21 +123,19 @@ namespace SharpCompress.Archives
 
         void IExtractionListener.FireCompressedBytesRead(long currentPartCompressedBytes, long compressedReadBytes)
         {
-            CompressedBytesRead?.Invoke(this, new CompressedBytesReadEventArgs
-            {
-                CurrentFilePartCompressedBytesRead = currentPartCompressedBytes,
-                CompressedBytesRead = compressedReadBytes
-            });
+            CompressedBytesRead?.Invoke(this, new CompressedBytesReadEventArgs(
+                currentFilePartCompressedBytesRead: currentPartCompressedBytes,
+                compressedBytesRead: compressedReadBytes
+            ));
         }
 
         void IExtractionListener.FireFilePartExtractionBegin(string name, long size, long compressedSize)
         {
-            FilePartExtractionBegin?.Invoke(this, new FilePartExtractionBeginEventArgs
-            {
-                CompressedSize = compressedSize,
-                Size = size,
-                Name = name
-            });
+            FilePartExtractionBegin?.Invoke(this, new FilePartExtractionBeginEventArgs(
+                compressedSize : compressedSize,
+                size           : size,
+                name           : name
+            ));
         }
 
         /// <summary>

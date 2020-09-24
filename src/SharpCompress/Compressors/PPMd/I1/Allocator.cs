@@ -1,3 +1,5 @@
+#nullable disable
+
 namespace SharpCompress.Compressors.PPMd.I1
 {
     /// Allocate a single, large array and then provide sections of this array to callers.  Callers are provided with

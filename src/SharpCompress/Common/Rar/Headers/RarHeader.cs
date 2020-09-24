@@ -11,7 +11,7 @@ namespace SharpCompress.Common.Rar.Headers
         private readonly HeaderType _headerType;
         private readonly bool _isRar5;
 
-        internal static RarHeader TryReadBase(RarCrcBinaryReader reader, bool isRar5, ArchiveEncoding archiveEncoding)
+        internal static RarHeader? TryReadBase(RarCrcBinaryReader reader, bool isRar5, ArchiveEncoding archiveEncoding)
         {
             try
             {

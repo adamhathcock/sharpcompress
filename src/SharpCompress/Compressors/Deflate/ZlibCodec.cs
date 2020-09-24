@@ -1,3 +1,5 @@
+#nullable disable
+
 // ZlibCodec.cs
 // ------------------------------------------------------------------
 //
@@ -130,7 +132,7 @@ namespace SharpCompress.Compressors.Deflate
         /// <summary>
         /// used for diagnostics, when something goes wrong!
         /// </summary>
-        public String Message;
+        public string Message;
 
         internal DeflateManager dstate;
         internal InflateManager istate;
@@ -358,7 +360,7 @@ namespace SharpCompress.Compressors.Deflate
         /// <returns>Z_OK if everything goes well.</returns>
         public int Inflate(FlushType flush)
         {
-            if (istate == null)
+            if (istate is null)
             {
                 throw new ZlibException("No Inflate State!");
             }
@@ -376,7 +378,7 @@ namespace SharpCompress.Compressors.Deflate
         /// <returns>Z_OK if everything goes well.</returns>
         public int EndInflate()
         {
-            if (istate == null)
+            if (istate is null)
             {
                 throw new ZlibException("No Inflate State!");
             }
@@ -391,7 +393,7 @@ namespace SharpCompress.Compressors.Deflate
         /// <returns>Z_OK if everything goes well.</returns>
         public int SyncInflate()
         {
-            if (istate == null)
+            if (istate is null)
             {
                 throw new ZlibException("No Inflate State!");
             }
@@ -594,7 +596,7 @@ namespace SharpCompress.Compressors.Deflate
         /// <returns>Z_OK if all goes well.</returns>
         public int Deflate(FlushType flush)
         {
-            if (dstate == null)
+            if (dstate is null)
             {
                 throw new ZlibException("No Deflate State!");
             }
@@ -610,7 +612,7 @@ namespace SharpCompress.Compressors.Deflate
         /// <returns>Z_OK if all goes well.</returns>
         public int EndDeflate()
         {
-            if (dstate == null)
+            if (dstate is null)
             {
                 throw new ZlibException("No Deflate State!");
             }
@@ -632,7 +634,7 @@ namespace SharpCompress.Compressors.Deflate
         /// <returns>Z_OK if all goes well.</returns>
         public void ResetDeflate()
         {
-            if (dstate == null)
+            if (dstate is null)
             {
                 throw new ZlibException("No Deflate State!");
             }
@@ -647,7 +649,7 @@ namespace SharpCompress.Compressors.Deflate
         /// <returns>Z_OK if all goes well.</returns>
         public int SetDeflateParams(CompressionLevel level, CompressionStrategy strategy)
         {
-            if (dstate == null)
+            if (dstate is null)
             {
                 throw new ZlibException("No Deflate State!");
             }

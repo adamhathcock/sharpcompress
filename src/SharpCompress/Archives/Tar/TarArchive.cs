@@ -20,7 +20,7 @@ namespace SharpCompress.Archives.Tar
         /// </summary>
         /// <param name="filePath"></param>
         /// <param name="readerOptions"></param>
-        public static TarArchive Open(string filePath, ReaderOptions readerOptions = null)
+        public static TarArchive Open(string filePath, ReaderOptions? readerOptions = null)
         {
             filePath.CheckNotNullOrEmpty(nameof(filePath));
             return Open(new FileInfo(filePath), readerOptions ?? new ReaderOptions());
@@ -31,7 +31,7 @@ namespace SharpCompress.Archives.Tar
         /// </summary>
         /// <param name="fileInfo"></param>
         /// <param name="readerOptions"></param>
-        public static TarArchive Open(FileInfo fileInfo, ReaderOptions readerOptions = null)
+        public static TarArchive Open(FileInfo fileInfo, ReaderOptions? readerOptions = null)
         {
             fileInfo.CheckNotNull(nameof(fileInfo));
             return new TarArchive(fileInfo, readerOptions ?? new ReaderOptions());
@@ -42,7 +42,7 @@ namespace SharpCompress.Archives.Tar
         /// </summary>
         /// <param name="stream"></param>
         /// <param name="readerOptions"></param>
-        public static TarArchive Open(Stream stream, ReaderOptions readerOptions = null)
+        public static TarArchive Open(Stream stream, ReaderOptions? readerOptions = null)
         {
             stream.CheckNotNull(nameof(stream));
             return new TarArchive(stream, readerOptions ?? new ReaderOptions());
@@ -118,8 +118,8 @@ namespace SharpCompress.Archives.Tar
         protected override IEnumerable<TarArchiveEntry> LoadEntries(IEnumerable<TarVolume> volumes)
         {
             Stream stream = volumes.Single().Stream;
-            TarHeader previousHeader = null;
-            foreach (TarHeader header in TarHeaderFactory.ReadHeader(StreamingMode.Seekable, stream, ReaderOptions.ArchiveEncoding))
+            TarHeader? previousHeader = null;
+            foreach (TarHeader? header in TarHeaderFactory.ReadHeader(StreamingMode.Seekable, stream, ReaderOptions.ArchiveEncoding))
             {
                 if (header != null)
                 {

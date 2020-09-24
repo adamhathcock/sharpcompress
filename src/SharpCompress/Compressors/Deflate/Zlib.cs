@@ -380,13 +380,13 @@ namespace SharpCompress.Compressors.Deflate
         internal static readonly StaticTree Distances;
         internal static readonly StaticTree BitLengths;
 
-        internal short[] treeCodes; // static tree or null
-        internal int[] extraBits; // extra bits for each code or null
+        internal short[]? treeCodes; // static tree or null
+        internal int[]? extraBits; // extra bits for each code or null
         internal int extraBase; // base index for extra_bits
         internal int elems; // max number of elements in the tree
         internal int maxLength; // max bit length for the codes
 
-        private StaticTree(short[] treeCodes, int[] extraBits, int extraBase, int elems, int maxLength)
+        private StaticTree(short[]? treeCodes, int[]? extraBits, int extraBase, int elems, int maxLength)
         {
             this.treeCodes = treeCodes;
             this.extraBits = extraBits;
@@ -423,9 +423,9 @@ namespace SharpCompress.Compressors.Deflate
         // NMAX is the largest n such that 255n(n+1)/2 + (n+1)(BASE-1) <= 2^32-1
         private static readonly int NMAX = 5552;
 
-        internal static uint Adler32(uint adler, byte[] buf, int index, int len)
+        internal static uint Adler32(uint adler, byte[]? buf, int index, int len)
         {
-            if (buf == null)
+            if (buf is null)
             {
                 return 1;
             }

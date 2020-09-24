@@ -34,20 +34,20 @@ namespace SharpCompress.Archives.Rar
             {
                 yield break; //if file isn't volume then there is no reason to look
             }
-            fileInfo = GetNextFileInfo(ah, part.FileParts.FirstOrDefault() as FileInfoRarFilePart);
+            fileInfo = GetNextFileInfo(ah, part.FileParts.FirstOrDefault() as FileInfoRarFilePart)!;
             //we use fileinfo because rar is dumb and looks at file names rather than archive info for another volume
             while (fileInfo != null && fileInfo.Exists)
             {
                 part = new FileInfoRarArchiveVolume(fileInfo, options);
 
-                fileInfo = GetNextFileInfo(ah, part.FileParts.FirstOrDefault() as FileInfoRarFilePart);
+                fileInfo = GetNextFileInfo(ah, part.FileParts.FirstOrDefault() as FileInfoRarFilePart)!;
                 yield return part;
             }
         }
 
-        private static FileInfo GetNextFileInfo(ArchiveHeader ah, FileInfoRarFilePart currentFilePart)
+        private static FileInfo? GetNextFileInfo(ArchiveHeader ah, FileInfoRarFilePart? currentFilePart)
         {
-            if (currentFilePart == null)
+            if (currentFilePart is null)
             {
                 return null;
             }

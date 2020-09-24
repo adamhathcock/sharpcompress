@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System;
 using System.Diagnostics;
 
 namespace SharpCompress.Compressors.Deflate64
@@ -10,7 +11,7 @@ namespace SharpCompress.Compressors.Deflate64
     {
         // static information for encoding, DO NOT MODIFY
 
-        internal static readonly byte[] FAST_ENCODER_TREE_STRUCTURE_DATA =
+        internal static ReadOnlySpan<byte> FAST_ENCODER_TREE_STRUCTURE_DATA => new byte[]
         {
             0xec,0xbd,0x07,0x60,0x1c,0x49,0x96,0x25,0x26,0x2f,0x6d,0xca,
             0x7b,0x7f,0x4a,0xf5,0x4a,0xd7,0xe0,0x74,0xa1,0x08,0x80,0x60,
@@ -23,7 +24,7 @@ namespace SharpCompress.Compressors.Deflate64
             0x1f,0x3f
         };
 
-        internal static readonly byte[] B_FINAL_FAST_ENCODER_TREE_STRUCTURE_DATA =
+        internal static ReadOnlySpan<byte> B_FINAL_FAST_ENCODER_TREE_STRUCTURE_DATA => new byte[]
         {
             0xed,0xbd,0x07,0x60,0x1c,0x49,0x96,0x25,0x26,0x2f,0x6d,0xca,
             0x7b,0x7f,0x4a,0xf5,0x4a,0xd7,0xe0,0x74,0xa1,0x08,0x80,0x60,
@@ -208,7 +209,9 @@ namespace SharpCompress.Compressors.Deflate64
             for (code = 0; code < 16; code++)
             {
                 for (int n = 0; n < (1 << EXTRA_DISTANCE_BITS[code]); n++)
+                {
                     result[dist++] = (byte)code;
+                }
             }
 
             dist >>= 7; // from now on, all distances are divided by 128
@@ -216,7 +219,9 @@ namespace SharpCompress.Compressors.Deflate64
             for (; code < NUM_DIST_BASE_CODES; code++)
             {
                 for (int n = 0; n < (1 << (EXTRA_DISTANCE_BITS[code] - 7)); n++)
+                {
                     result[256 + dist++] = (byte)code;
+                }
             }
 
             return result;

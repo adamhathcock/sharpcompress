@@ -7,11 +7,11 @@ using SharpCompress.IO;
 
 namespace SharpCompress.Writers.GZip
 {
-    public class GZipWriter : AbstractWriter
+    public sealed class GZipWriter : AbstractWriter
     {
         private bool _wroteToStream;
 
-        public GZipWriter(Stream destination, GZipWriterOptions options = null)
+        public GZipWriter(Stream destination, GZipWriterOptions? options = null)
             : base(ArchiveType.GZip, options ?? new GZipWriterOptions())
         {
             if (WriterOptions.LeaveStreamOpen)
@@ -39,7 +39,7 @@ namespace SharpCompress.Writers.GZip
             {
                 throw new ArgumentException("Can only write a single stream to a GZip file.");
             }
-            GZipStream stream = OutputStream as GZipStream;
+            GZipStream stream = (GZipStream)OutputStream;
             stream.FileName = filename;
             stream.LastModified = modificationTime;
             source.TransferTo(stream);

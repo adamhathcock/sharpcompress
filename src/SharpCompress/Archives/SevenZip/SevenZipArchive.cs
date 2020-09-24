@@ -1,4 +1,6 @@
-﻿using System;
+﻿#nullable disable
+
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -108,7 +110,7 @@ namespace SharpCompress.Archives.SevenZip
 
         private void LoadFactory(Stream stream)
         {
-            if (database == null)
+            if (database is null)
             {
                 stream.Position = 0;
                 var reader = new ArchiveReader();
@@ -154,7 +156,7 @@ namespace SharpCompress.Archives.SevenZip
             }
         }
 
-        private class SevenZipReader : AbstractReader<SevenZipEntry, SevenZipVolume>
+        private sealed class SevenZipReader : AbstractReader<SevenZipEntry, SevenZipVolume>
         {
             private readonly SevenZipArchive archive;
             private CFolder currentFolder;
@@ -180,7 +182,7 @@ namespace SharpCompress.Archives.SevenZip
                 foreach (var group in entries.Where(x => !x.IsDirectory).GroupBy(x => x.FilePart.Folder))
                 {
                     currentFolder = group.Key;
-                    if (group.Key == null)
+                    if (group.Key is null)
                     {
                         currentStream = Stream.Null;
                     }

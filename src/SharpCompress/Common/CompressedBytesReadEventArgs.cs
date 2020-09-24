@@ -2,16 +2,22 @@
 
 namespace SharpCompress.Common
 {
-    public class CompressedBytesReadEventArgs : EventArgs
+    public sealed class CompressedBytesReadEventArgs : EventArgs
     {
+        public CompressedBytesReadEventArgs(long compressedBytesRead, long currentFilePartCompressedBytesRead)
+        {
+            CompressedBytesRead = compressedBytesRead;
+            CurrentFilePartCompressedBytesRead = currentFilePartCompressedBytesRead;
+        }
+
         /// <summary>
         /// Compressed bytes read for the current entry
         /// </summary>
-        public long CompressedBytesRead { get; internal set; }
+        public long CompressedBytesRead { get; }
 
         /// <summary>
         /// Current file part read for Multipart files (e.g. Rar)
         /// </summary>
-        public long CurrentFilePartCompressedBytesRead { get; internal set; }
+        public long CurrentFilePartCompressedBytesRead { get; }
     }
 }

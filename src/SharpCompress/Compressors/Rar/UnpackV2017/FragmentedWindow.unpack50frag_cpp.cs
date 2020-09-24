@@ -1,4 +1,6 @@
-﻿#if !Rar2017_64bit
+﻿#nullable disable
+
+#if !Rar2017_64bit
 using nint = System.Int32;
 using nuint = System.UInt32;
 using size_t = System.UInt32;
@@ -31,11 +33,13 @@ public FragmentedWindow()
       private void Reset()
 {
   for (uint I=0;I<Mem.Length;I++)
+  {
     if (Mem[I]!=null)
     {
       //free(Mem[I]);
       Mem[I]=null;
     }
+  }
 }
 
 
@@ -98,10 +102,12 @@ get {
   }
 
   for (uint I=1;I<MemSize.Length;I++)
+  {
     if (Item<MemSize[I])
     {
       return Mem[I][Item-MemSize[I-1]];
     }
+  }
 
   return Mem[0][0]; // Must never happen;
 }
@@ -111,10 +117,13 @@ set {
     return;
   }                
   for (uint I=1;I<MemSize.Length;I++)
+  {
     if (Item<MemSize[I]) {
       Mem[I][Item-MemSize[I-1]] = value;
       return;
-    }                        
+    }
+  }
+
   Mem[0][0] = value; // Must never happen;
 }
 }
@@ -151,17 +160,21 @@ public void CopyString(uint Length,uint Distance,ref size_t UnpPtr,size_t MaxWin
 public void CopyData(byte[] Dest, size_t destOffset, size_t WinPos,size_t Size)
 {
   for (size_t I=0;I<Size;I++)
+  {
     Dest[destOffset+I]=this[WinPos+I];
+  }
 }
 
 
 public size_t GetBlockSize(size_t StartPos,size_t RequiredSize)
 {
   for (uint I=0;I<MemSize.Length;I++)
+  {
     if (StartPos<MemSize[I])
     {
       return Math.Min(MemSize[I]-StartPos,RequiredSize);
     }
+  }
 
   return 0; // Must never be here.
 }

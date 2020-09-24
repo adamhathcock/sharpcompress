@@ -12,7 +12,7 @@ namespace SharpCompress.Writers.Zip
         /// </summary>
         public CompressionLevel? DeflateCompressionLevel { get; set; }
 
-        public string EntryComment { get; set; }
+        public string? EntryComment { get; set; }
 
         public DateTime? ModificationDateTime { get; set; }
 

@@ -120,11 +120,13 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017
   // Detect the real bit length for current code.
   uint Bits=15;
   for (uint I=Dec.QuickBits+1;I<15;I++)
+  {
     if (BitField<Dec.DecodeLen[I])
     {
       Bits=I;
       break;
     }
+  }
 
   Inp.addbits(Bits);
   

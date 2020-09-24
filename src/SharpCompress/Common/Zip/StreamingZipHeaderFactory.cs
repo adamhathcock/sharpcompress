@@ -7,7 +7,7 @@ namespace SharpCompress.Common.Zip
 {
     internal class StreamingZipHeaderFactory : ZipHeaderFactory
     {
-        internal StreamingZipHeaderFactory(string password, ArchiveEncoding archiveEncoding)
+        internal StreamingZipHeaderFactory(string? password, ArchiveEncoding archiveEncoding)
             : base(StreamingMode.Streaming, password, archiveEncoding)
         {
         }
@@ -15,9 +15,10 @@ namespace SharpCompress.Common.Zip
         internal IEnumerable<ZipHeader> ReadStreamHeader(Stream stream)
         {
             RewindableStream rewindableStream;
-            if (stream is RewindableStream)
+
+            if (stream is RewindableStream rs)
             {
-                rewindableStream = stream as RewindableStream;
+                rewindableStream = rs;
             }
             else
             {
@@ -25,12 +26,12 @@ namespace SharpCompress.Common.Zip
             }
             while (true)
             {
-                ZipHeader header = null;
+                ZipHeader? header;
                 BinaryReader reader = new BinaryReader(rewindableStream);
                 if (_lastEntryHeader != null &&
                     (FlagUtility.HasFlag(_lastEntryHeader.Flags, HeaderFlags.UsePostDataDescriptor) || _lastEntryHeader.IsZip64))
                 {
-                    reader = (_lastEntryHeader.Part as StreamingZipFilePart).FixStreamedFileLocation(ref rewindableStream);
+                    reader = ((StreamingZipFilePart)_lastEntryHeader.Part).FixStreamedFileLocation(ref rewindableStream);
                     long? pos = rewindableStream.CanSeek ? (long?)rewindableStream.Position : null;
                     uint crc = reader.ReadUInt32();
                     if (crc == POST_DATA_DESCRIPTOR)
@@ -48,7 +49,7 @@ namespace SharpCompress.Common.Zip
                 _lastEntryHeader = null;
                 uint headerBytes = reader.ReadUInt32();
                 header = ReadHeader(headerBytes, reader);
-                if (header == null) { yield break; }
+                if (header is null) { yield break; }
 
                 //entry could be zero bytes so we need to know that.
                 if (header.ZipHeaderType == ZipHeaderType.LocalEntry)
