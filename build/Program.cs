@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using GlobExpressions;
 using static Bullseye.Targets;
@@ -15,6 +17,8 @@ class Program
     
     static void Main(string[] args)
     {
+        string version = args.Length > 0 ? args[0] : "";
+        
         Target(Clean,
             ForEach("**/bin", "**/obj"),
             dir =>
@@ -42,12 +46,13 @@ class Program
         Target(Build, ForEach("net46", "netstandard2.0", "netstandard2.1"), 
                framework =>
                {
-                    if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && framework == "net46")
-                    {
-                        return;
-                    }
-                    Run("dotnet", "build src/SharpCompress/SharpCompress.csproj -c Release");
-                });
+                   if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && framework == "net46")
+                   {
+                       return;
+                   }
+
+                   Run("dotnet", String.IsNullOrWhiteSpace(version) ? $"build src/SharpCompress/SharpCompress.csproj -c Release" : $"build src/SharpCompress/SharpCompress.csproj -c Release /p:FileVersion={version} /p:AssemblyVersion={version} /p:VersionPrefix={version}");
+               });
 
         Target(Test, DependsOn(Build), ForEach("netcoreapp3.1"), 
             framework =>
@@ -66,11 +71,12 @@ class Program
         Target(Publish, DependsOn(Test),
                () =>
                {
-                   Run("dotnet", "pack src/SharpCompress/SharpCompress.csproj -c Release -o artifacts/");
+                   Run("dotnet", String.IsNullOrWhiteSpace(version) ? "pack src/SharpCompress/SharpCompress.csproj -c Release -o artifacts/" : $"pack src/SharpCompress/SharpCompress.csproj -c Release -o artifacts/ /p:FileVersion={version} /p:AssemblyVersion={version} /p:VersionPrefix={version}");
+                   ;
                });
 
         Target("default", DependsOn(Publish), () => Console.WriteLine("Done!"));
         
-        RunTargetsAndExit(args);
+        RunTargetsAndExit(args.Skip(1).ToArray());
     }
 }

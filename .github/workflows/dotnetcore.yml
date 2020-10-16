@@ -9,7 +9,7 @@ jobs:
         os: [windows-latest, ubuntu-latest]
 
     steps:
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v2.3.3
     - run: dotnet run -p build/build.csproj
     - uses: actions/upload-artifact@v2
       with:
@@ -19,3 +19,24 @@ jobs:
       with:
         name: ${{ matrix.os }}-sharpcompress.snupkg
         path: artifacts/*
+
+  Publish: 
+    needs: build
+    if: github.ref == 'refs/heads/master'
+    runs-on: windows-latest
+    steps:
+        - uses: actions/checkout@v2.3.3
+          with:
+            fetch-depth: 0
+
+        - name: pub
+          shell: pwsh
+          run:  |
+                dotnet tool install GitVersion.Tool --global
+                $version = ((dotnet gitversion src/SharpCompress/SharpCompress.csproj)| ConvertFrom-Json).NuGetVersionV2
+                dotnet run -p build/build.csproj -- $version
+                write-output ${{ secrets.SharpCompress_Token }} | gh auth login --with-token
+                gh release create $version "./artifacts/SharpCompress.$version.nupkg" "./artifacts/SharpCompress.$version.snupkg" --target master --draft
+                dotnet nuget push ./artifacts/SharpCompress.$version.nupkg -k ${{ secrets.SharpCompress_NuGet_Token }} -s https://api.nuget.org/v3/index.json
+                dotnet nuget push ./artifacts/SharpCompress.$version.snupkg -k ${{ secrets.SharpCompress_NuGet_Token }} -s https://api.nuget.org/v3/index.json
+
