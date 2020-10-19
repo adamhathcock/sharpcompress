@@ -384,16 +384,7 @@ namespace SharpCompress.Compressors.Deflate
                 if (_fileName.Contains("\\"))
                 {
                     // trim any leading path
-                    int length = _fileName.Length;
-                    int num = length;
-                    while (--num >= 0)
-                    {
-                        char c = _fileName[num];
-                        if (c == '\\')
-                        {
-                            _fileName = _fileName.Substring(num + 1, length - num - 1);
-                        }
-                    }
+                    _fileName = Path.GetFileName(_fileName);
                 }
             }
         }
