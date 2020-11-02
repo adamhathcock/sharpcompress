@@ -24,7 +24,7 @@
             return _id.GetHashCode();
         }
 
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
             return obj is CMethodId other && Equals(other);
         }
