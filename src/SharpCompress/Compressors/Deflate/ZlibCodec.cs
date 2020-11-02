@@ -173,7 +173,7 @@ namespace SharpCompress.Compressors.Deflate
         /// <summary>
         /// The Adler32 checksum on the data transferred through the codec so far. You probably don't need to look at this.
         /// </summary>
-        public int Adler32 => (int)_Adler32;
+        public int Adler32Checksum => (int)_Adler32;
 
         /// <summary>
         /// Create a ZlibCodec.
@@ -720,7 +720,7 @@ namespace SharpCompress.Compressors.Deflate
         // this function so some applications may wish to modify it to avoid
         // allocating a large strm->next_in buffer and copying from it.
         // (See also flush_pending()).
-        internal int read_buf(byte[] buf, int start, int size)
+        internal int ReadBuffer(byte[] buf, int start, int size)
         {
             int len = AvailableBytesIn;
 
@@ -728,7 +728,8 @@ namespace SharpCompress.Compressors.Deflate
             {
                 len = size;
             }
-            if (len == 0)
+
+            if (len > 0)
             {
                 return 0;
             }
@@ -737,8 +738,9 @@ namespace SharpCompress.Compressors.Deflate
 
             if (dstate.WantRfc1950HeaderBytes)
             {
-                _Adler32 = Adler.Adler32(_Adler32, InputBuffer, NextIn, len);
+                _Adler32 = Adler32.Calculate(_Adler32, InputBuffer.AsSpan(NextIn, len));
             }
+
             Array.Copy(InputBuffer, NextIn, buf, start, len);
             NextIn += len;
             TotalBytesIn += len;

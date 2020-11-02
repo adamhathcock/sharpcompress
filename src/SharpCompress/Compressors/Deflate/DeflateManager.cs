@@ -1190,7 +1190,7 @@ namespace SharpCompress.Compressors.Deflate
                 // Otherwise, window_size == 2*WSIZE so more >= 2.
                 // If there was sliding, more >= WSIZE. So in all cases, more >= 2.
 
-                n = _codec.read_buf(window, strstart + lookahead, more);
+                n = _codec.ReadBuffer(window, strstart + lookahead, more);
                 lookahead += n;
 
                 // Initialize the hash value now that we have some input:
@@ -1685,7 +1685,7 @@ namespace SharpCompress.Compressors.Deflate
             Rfc1950BytesEmitted = false;
 
             status = (WantRfc1950HeaderBytes) ? INIT_STATE : BUSY_STATE;
-            _codec._Adler32 = Adler.Adler32(0, null, 0, 0);
+            _codec._Adler32 = Adler32.Calculate(Array.Empty<byte>().AsSpan());
 
             last_flush = (int)FlushType.None;
 
@@ -1763,7 +1763,7 @@ namespace SharpCompress.Compressors.Deflate
                 throw new ZlibException("Stream error.");
             }
 
-            _codec._Adler32 = Adler.Adler32(_codec._Adler32, dictionary, 0, dictionary.Length);
+            _codec._Adler32 = Adler32.Calculate(dictionary.AsSpan());
 
             if (length < MIN_MATCH)
             {
@@ -1855,7 +1855,7 @@ namespace SharpCompress.Compressors.Deflate
                     pending[pendingCount++] = (byte)((_codec._Adler32 & 0x0000FF00) >> 8);
                     pending[pendingCount++] = (byte)(_codec._Adler32 & 0x000000FF);
                 }
-                _codec._Adler32 = Adler.Adler32(0, null, 0, 0);
+                _codec._Adler32 = Adler32.Calculate(Array.Empty<byte>().AsSpan());
             }
 
             // Flush as much pending output as possible

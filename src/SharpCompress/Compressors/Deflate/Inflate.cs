@@ -118,8 +118,9 @@ namespace SharpCompress.Compressors.Deflate
 
             if (checkfn != null)
             {
-                _codec._Adler32 = check = Adler.Adler32(0, null, 0, 0);
+                _codec._Adler32 = check = Adler32.Calculate(Array.Empty<byte>().AsSpan());
             }
+
             return oldCheck;
         }
 
@@ -739,7 +740,7 @@ namespace SharpCompress.Compressors.Deflate
                 // update check information
                 if (checkfn != null)
                 {
-                    _codec._Adler32 = check = Adler.Adler32(check, window, readAt, nBytes);
+                    _codec._Adler32 = check = Adler32.Calculate(check, window.AsSpan(readAt, nBytes));
                 }
 
                 // copy as far as end of window
@@ -1879,12 +1880,12 @@ namespace SharpCompress.Compressors.Deflate
                 throw new ZlibException("Stream error.");
             }
 
-            if (Adler.Adler32(1, dictionary, 0, dictionary.Length) != _codec._Adler32)
+            if (Adler32.Calculate(1, dictionary.AsSpan()) != _codec._Adler32)
             {
                 return ZlibConstants.Z_DATA_ERROR;
             }
 
-            _codec._Adler32 = Adler.Adler32(0, null, 0, 0);
+            _codec._Adler32 = Adler32.Calculate(0, Array.Empty<byte>());
 
             if (length >= (1 << wbits))
             {
