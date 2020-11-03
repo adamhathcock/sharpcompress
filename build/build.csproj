@@ -6,9 +6,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Bullseye" Version="3.3.0" />
-    <PackageReference Include="Glob" Version="1.1.7" />
-    <PackageReference Include="SimpleExec" Version="6.2.0" />
+    <PackageReference Include="Bullseye" Version="3.5.0" />
+    <PackageReference Include="Glob" Version="1.1.8" />
+    <PackageReference Include="SimpleExec" Version="6.3.0" />
   </ItemGroup>
 
 </Project>
