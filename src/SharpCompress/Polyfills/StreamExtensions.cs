@@ -1,4 +1,4 @@
-﻿#if !NETSTANDARD2_1
+﻿#if NETSTANDARD2_0 || NET46
 
 using System.Buffers;
 
