@@ -65,6 +65,8 @@
 
 using System;
 
+using SharpCompress.Algorithms;
+
 namespace SharpCompress.Compressors.Deflate
 {
     internal sealed class InflateBlocks
@@ -118,7 +120,7 @@ namespace SharpCompress.Compressors.Deflate
 
             if (checkfn != null)
             {
-                _codec._Adler32 = check = Adler32.Calculate(Array.Empty<byte>().AsSpan());
+                _codec._Adler32 = check = 1;
             }
 
             return oldCheck;
@@ -1885,7 +1887,7 @@ namespace SharpCompress.Compressors.Deflate
                 return ZlibConstants.Z_DATA_ERROR;
             }
 
-            _codec._Adler32 = Adler32.Calculate(0, Array.Empty<byte>());
+            _codec._Adler32 = 1;
 
             if (length >= (1 << wbits))
             {

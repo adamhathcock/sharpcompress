@@ -9,7 +9,7 @@ using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
 #endif
 
-namespace SharpCompress.Compressors.Deflate
+namespace SharpCompress.Algorithms
 {
     /// <summary>
     /// Calculates the 32 bit Adler checksum of a given buffer according to
@@ -39,7 +39,9 @@ namespace SharpCompress.Compressors.Deflate
         /// <returns>The <see cref="uint"/>.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static uint Calculate(ReadOnlySpan<byte> buffer)
-            => Calculate(SeedValue, buffer);
+        {
+            return Calculate(SeedValue, buffer);
+        }
 
         /// <summary>
         /// Calculates the Adler32 checksum with the bytes taken from the span and seed.
@@ -47,7 +49,6 @@ namespace SharpCompress.Compressors.Deflate
         /// <param name="adler">The input Adler32 value.</param>
         /// <param name="buffer">The readonly span of bytes.</param>
         /// <returns>The <see cref="uint"/>.</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static uint Calculate(uint adler, ReadOnlySpan<byte> buffer)
         {
             if (buffer.IsEmpty)
@@ -69,7 +70,6 @@ namespace SharpCompress.Compressors.Deflate
 
         // Based on https://github.com/chromium/chromium/blob/master/third_party/zlib/adler32_simd.c
 #if NETCOREAPP3_1
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static unsafe uint CalculateSse(uint adler, ReadOnlySpan<byte> buffer)
         {
             uint s1 = adler & 0xFFFF;
@@ -213,7 +213,6 @@ namespace SharpCompress.Compressors.Deflate
         }
 #endif
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static uint CalculateScalar(uint adler, ReadOnlySpan<byte> buffer)
         {
             uint s1 = adler & 0xFFFF;

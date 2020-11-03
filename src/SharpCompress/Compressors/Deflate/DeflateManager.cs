@@ -70,6 +70,8 @@
 
 using System;
 
+using SharpCompress.Algorithms;
+
 namespace SharpCompress.Compressors.Deflate
 {
     internal sealed partial class DeflateManager
@@ -1685,7 +1687,7 @@ namespace SharpCompress.Compressors.Deflate
             Rfc1950BytesEmitted = false;
 
             status = (WantRfc1950HeaderBytes) ? INIT_STATE : BUSY_STATE;
-            _codec._Adler32 = Adler32.Calculate(Array.Empty<byte>().AsSpan());
+            _codec._Adler32 = 1;
 
             last_flush = (int)FlushType.None;
 
@@ -1855,7 +1857,7 @@ namespace SharpCompress.Compressors.Deflate
                     pending[pendingCount++] = (byte)((_codec._Adler32 & 0x0000FF00) >> 8);
                     pending[pendingCount++] = (byte)(_codec._Adler32 & 0x000000FF);
                 }
-                _codec._Adler32 = Adler32.Calculate(Array.Empty<byte>().AsSpan());
+                _codec._Adler32 = 1;
             }
 
             // Flush as much pending output as possible
