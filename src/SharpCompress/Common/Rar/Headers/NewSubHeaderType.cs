@@ -37,6 +37,7 @@ namespace SharpCompress.Common.Rar.Headers
             {
                 return false;
             }
+
             for (int i = 0; i < bytes.Length; ++i)
             {
                 if (_bytes[i] != bytes[i])
@@ -47,9 +48,9 @@ namespace SharpCompress.Common.Rar.Headers
             return true;
         }
 
-        public bool Equals(NewSubHeaderType other)
+        public bool Equals(NewSubHeaderType? other)
         {
-            return Equals(other._bytes);
+            return other is not null && Equals(other._bytes);
         }
     }
 }

@@ -39,7 +39,7 @@ namespace SharpCompress.Compressors.Xz.Filters
                 throw new NotImplementedException($"Filter {filterType} has not yet been implemented");
             }
 
-            var filter = (BlockFilter)Activator.CreateInstance(FilterMap[filterType]);
+            var filter = (BlockFilter)Activator.CreateInstance(FilterMap[filterType])!;
 
             var sizeOfProperties = reader.ReadXZInteger();
             if (sizeOfProperties > int.MaxValue)

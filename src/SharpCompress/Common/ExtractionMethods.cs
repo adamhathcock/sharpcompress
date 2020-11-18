@@ -24,7 +24,7 @@ namespace SharpCompress.Common
 
             if (options.ExtractFullPath)
             {
-                string folder = Path.GetDirectoryName(entry.Key);
+                string folder = Path.GetDirectoryName(entry.Key)!;
                 string destdir = Path.GetFullPath(Path.Combine(fullDestinationDirectoryPath, folder));
 
                 if (!Directory.Exists(destdir))
