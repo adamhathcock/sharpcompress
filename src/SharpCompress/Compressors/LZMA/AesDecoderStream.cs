@@ -34,9 +34,7 @@ namespace SharpCompress.Compressors.LZMA
                 throw new NotSupportedException("AES decoder does not support padding.");
             }
 
-            int numCyclesPower;
-            byte[] salt, seed;
-            Init(info, out numCyclesPower, out salt, out seed);
+            Init(info, out int numCyclesPower, out byte[] salt, out byte[]  seed);
 
             byte[] password = Encoding.Unicode.GetBytes(pass.CryptoGetTextPassword());
             byte[] key = InitKey(numCyclesPower, salt, password);
