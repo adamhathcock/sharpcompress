@@ -58,7 +58,7 @@ namespace SharpCompress.IO
             Stream.Write(buffer, offset, count);
         }
 
-#if NETSTANDARD2_1
+#if !NET461 && !NETSTANDARD2_0
 
         public override int Read(Span<byte> buffer)
         {
