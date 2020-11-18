@@ -218,7 +218,7 @@ namespace SharpCompress.Compressors.LZMA
             }
             else
             {
-#if NETSTANDARD1_3 || NETSTANDARD2_0
+#if NETSTANDARD2_0
                 using (IncrementalHash sha = IncrementalHash.CreateHash(HashAlgorithmName.SHA256))
                 {
                     byte[] counter = new byte[8];
