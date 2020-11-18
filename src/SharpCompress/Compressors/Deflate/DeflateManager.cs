@@ -70,6 +70,8 @@
 
 using System;
 
+using SharpCompress.Algorithms;
+
 namespace SharpCompress.Compressors.Deflate
 {
     internal sealed partial class DeflateManager
@@ -1685,7 +1687,7 @@ namespace SharpCompress.Compressors.Deflate
             Rfc1950BytesEmitted = false;
 
             status = (WantRfc1950HeaderBytes) ? INIT_STATE : BUSY_STATE;
-            _codec._Adler32 = Adler.Adler32(0, null, 0, 0);
+            _codec._adler32 = 1;
 
             last_flush = (int)FlushType.None;
 
@@ -1763,7 +1765,7 @@ namespace SharpCompress.Compressors.Deflate
                 throw new ZlibException("Stream error.");
             }
 
-            _codec._Adler32 = Adler.Adler32(_codec._Adler32, dictionary, 0, dictionary.Length);
+            _codec._adler32 = Adler32.Calculate(_codec._adler32, dictionary);
 
             if (length < MIN_MATCH)
             {
@@ -1850,12 +1852,12 @@ namespace SharpCompress.Compressors.Deflate
                     ////putShortMSB((int)(SharedUtils.URShift(_codec._Adler32, 16)));
                     //putShortMSB((int)((UInt64)_codec._Adler32 >> 16));
                     //putShortMSB((int)(_codec._Adler32 & 0xffff));
-                    pending[pendingCount++] = (byte)((_codec._Adler32 & 0xFF000000) >> 24);
-                    pending[pendingCount++] = (byte)((_codec._Adler32 & 0x00FF0000) >> 16);
-                    pending[pendingCount++] = (byte)((_codec._Adler32 & 0x0000FF00) >> 8);
-                    pending[pendingCount++] = (byte)(_codec._Adler32 & 0x000000FF);
+                    pending[pendingCount++] = (byte)((_codec._adler32 & 0xFF000000) >> 24);
+                    pending[pendingCount++] = (byte)((_codec._adler32 & 0x00FF0000) >> 16);
+                    pending[pendingCount++] = (byte)((_codec._adler32 & 0x0000FF00) >> 8);
+                    pending[pendingCount++] = (byte)(_codec._adler32 & 0x000000FF);
                 }
-                _codec._Adler32 = Adler.Adler32(0, null, 0, 0);
+                _codec._adler32 = 1;
             }
 
             // Flush as much pending output as possible
@@ -1968,10 +1970,10 @@ namespace SharpCompress.Compressors.Deflate
             }
 
             // Write the zlib trailer (adler32)
-            pending[pendingCount++] = (byte)((_codec._Adler32 & 0xFF000000) >> 24);
-            pending[pendingCount++] = (byte)((_codec._Adler32 & 0x00FF0000) >> 16);
-            pending[pendingCount++] = (byte)((_codec._Adler32 & 0x0000FF00) >> 8);
-            pending[pendingCount++] = (byte)(_codec._Adler32 & 0x000000FF);
+            pending[pendingCount++] = (byte)((_codec._adler32 & 0xFF000000) >> 24);
+            pending[pendingCount++] = (byte)((_codec._adler32 & 0x00FF0000) >> 16);
+            pending[pendingCount++] = (byte)((_codec._adler32 & 0x0000FF00) >> 8);
+            pending[pendingCount++] = (byte)(_codec._adler32 & 0x000000FF);
 
             //putShortMSB((int)(SharedUtils.URShift(_codec._Adler32, 16)));
             //putShortMSB((int)(_codec._Adler32 & 0xffff));

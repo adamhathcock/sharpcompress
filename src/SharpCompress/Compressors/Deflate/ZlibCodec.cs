@@ -137,7 +137,7 @@ namespace SharpCompress.Compressors.Deflate
         internal DeflateManager dstate;
         internal InflateManager istate;
 
-        internal uint _Adler32;
+        internal uint _adler32;
 
         /// <summary>
         /// The compression level to use in this codec.  Useful only in compression mode.
@@ -173,7 +173,7 @@ namespace SharpCompress.Compressors.Deflate
         /// <summary>
         /// The Adler32 checksum on the data transferred through the codec so far. You probably don't need to look at this.
         /// </summary>
-        public int Adler32 => (int)_Adler32;
+        public int Adler32 => (int)_adler32;
 
         /// <summary>
         /// Create a ZlibCodec.
@@ -737,7 +737,7 @@ namespace SharpCompress.Compressors.Deflate
 
             if (dstate.WantRfc1950HeaderBytes)
             {
-                _Adler32 = Adler.Adler32(_Adler32, InputBuffer, NextIn, len);
+                _adler32 = Algorithms.Adler32.Calculate(_adler32, InputBuffer.AsSpan(NextIn, len));
             }
             Array.Copy(InputBuffer, NextIn, buf, start, len);
             NextIn += len;
