@@ -6,8 +6,8 @@
     <AssemblyVersion>0.26.0</AssemblyVersion>
     <FileVersion>0.26.0</FileVersion>
     <Authors>Adam Hathcock</Authors>
-    <TargetFrameworks Condition="'$(LibraryFrameworks)'==''">netstandard2.0;netstandard2.1;net46</TargetFrameworks>
-    <TargetFrameworks Condition=" '$(OS)' != 'Windows_NT' ">netstandard2.0;netstandard2.1</TargetFrameworks>
+    <TargetFrameworks Condition="'$(LibraryFrameworks)'==''">netstandard2.0;netstandard2.1;netcoreapp3.1;net461</TargetFrameworks>
+    <TargetFrameworks Condition=" '$(OS)' != 'Windows_NT' ">netstandard2.0;netstandard2.1;netcoreapp3.1;</TargetFrameworks>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
     <AssemblyName>SharpCompress</AssemblyName>
@@ -21,8 +21,9 @@
     <GenerateAssemblyTitleAttribute>false</GenerateAssemblyTitleAttribute>
     <GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>
     <Description>SharpCompress is a compression library for NET Standard 2.0/2.1//NET 4.6 that can unrar, decompress 7zip, decompress xz, zip/unzip, tar/untar lzip/unlzip, bzip2/unbzip2 and gzip/ungzip with forward-only reading and file random access APIs. Write support for zip/tar/bzip2/gzip is implemented.</Description>
-    <LangVersion>8</LangVersion>
+    <LangVersion>9</LangVersion>
     <Nullable>enable</Nullable>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
@@ -38,6 +39,6 @@
   </ItemGroup>
 
   <ItemGroup Condition=" '$(TargetFramework)' != 'net46' ">
-    <PackageReference Include="System.Text.Encoding.CodePages" Version="4.7.1" />
+    <PackageReference Include="System.Text.Encoding.CodePages" Version="5.0.0" />
   </ItemGroup>
 </Project>

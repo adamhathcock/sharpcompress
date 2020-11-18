@@ -372,16 +372,16 @@ namespace SharpCompress.Compressors.Deflate
                 {
                     return;
                 }
-                if (_fileName.Contains("/"))
+                if (_fileName.Contains('/'))
                 {
                     _fileName = _fileName.Replace('/', '\\');
                 }
-                if (_fileName.EndsWith("\\"))
+                if (_fileName.EndsWith('\\'))
                 {
                     throw new InvalidOperationException("Illegal filename");
                 }
 
-                if (_fileName.Contains("\\"))
+                if (_fileName.Contains('\\'))
                 {
                     // trim any leading path
                     _fileName = Path.GetFileName(_fileName);
@@ -447,7 +447,7 @@ namespace SharpCompress.Compressors.Deflate
             // filename
             if (fnLength != 0)
             {
-                Array.Copy(filenameBytes, 0, header, i, fnLength - 1);
+                Array.Copy(filenameBytes!, 0, header, i, fnLength - 1);
                 i += fnLength - 1;
                 header[i++] = 0; // terminate
             }
@@ -455,7 +455,7 @@ namespace SharpCompress.Compressors.Deflate
             // comment
             if (cbLength != 0)
             {
-                Array.Copy(commentBytes, 0, header, i, cbLength - 1);
+                Array.Copy(commentBytes!, 0, header, i, cbLength - 1);
                 i += cbLength - 1;
                 header[i++] = 0; // terminate
             }

@@ -24,14 +24,12 @@ namespace SharpCompress.Common
 
             if (options.ExtractFullPath)
             {
-                string folder = Path.GetDirectoryName(entry.Key);
-                string destdir = Path.GetFullPath(
-                                                  Path.Combine(fullDestinationDirectoryPath, folder)
-                                                 );
+                string folder = Path.GetDirectoryName(entry.Key)!;
+                string destdir = Path.GetFullPath(Path.Combine(fullDestinationDirectoryPath, folder));
 
                 if (!Directory.Exists(destdir))
                 {
-                    if (!destdir.StartsWith(fullDestinationDirectoryPath))
+                    if (!destdir.StartsWith(fullDestinationDirectoryPath, StringComparison.Ordinal))
                     {
                         throw new ExtractionException("Entry is trying to create a directory outside of the destination directory.");
                     }
@@ -50,7 +48,7 @@ namespace SharpCompress.Common
             {
                 destinationFileName = Path.GetFullPath(destinationFileName);
 
-                if (!destinationFileName.StartsWith(fullDestinationDirectoryPath))
+                if (!destinationFileName.StartsWith(fullDestinationDirectoryPath, StringComparison.Ordinal))
                 {
                     throw new ExtractionException("Entry is trying to write a file outside of the destination directory.");
                 }

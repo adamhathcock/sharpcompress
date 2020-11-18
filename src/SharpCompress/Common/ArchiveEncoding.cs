@@ -36,7 +36,7 @@ namespace SharpCompress.Common
             Password = password;
         }
 
-#if NETSTANDARD1_3 || NETSTANDARD2_0 || NETSTANDARD2_1
+#if !NET461
         static ArchiveEncoding()
         {
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);

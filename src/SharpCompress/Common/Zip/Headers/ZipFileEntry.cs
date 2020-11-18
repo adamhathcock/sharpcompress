@@ -20,7 +20,7 @@ namespace SharpCompress.Common.Zip.Headers
         {
             get
             {
-                if (Name.EndsWith("/"))
+                if (Name.EndsWith('/'))
                 {
                     return true;
                 }
@@ -28,7 +28,7 @@ namespace SharpCompress.Common.Zip.Headers
                 //.NET Framework 4.5 : System.IO.Compression::CreateFromDirectory() probably writes backslashes to headers
                 return CompressedSize == 0
                        && UncompressedSize == 0
-                       && Name.EndsWith("\\");
+                       && Name.EndsWith('\\');
             }
         }
 

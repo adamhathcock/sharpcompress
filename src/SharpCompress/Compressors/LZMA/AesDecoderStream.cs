@@ -6,10 +6,8 @@ using SharpCompress.Compressors.LZMA.Utilites;
 
 namespace SharpCompress.Compressors.LZMA
 {
-    internal class AesDecoderStream : DecoderStream2
+    internal sealed class AesDecoderStream : DecoderStream2
     {
-        #region Variables
-
         private readonly Stream mStream;
         private readonly ICryptoTransform mDecoder;
         private readonly byte[] mBuffer;
@@ -19,10 +17,6 @@ namespace SharpCompress.Compressors.LZMA
         private int mEnding;
         private int mUnderflow;
         private bool isDisposed;
-
-        #endregion
-
-        #region Stream Methods
 
         public AesDecoderStream(Stream input, byte[] info, IPasswordProvider pass, long limit)
         {
@@ -34,9 +28,7 @@ namespace SharpCompress.Compressors.LZMA
                 throw new NotSupportedException("AES decoder does not support padding.");
             }
 
-            int numCyclesPower;
-            byte[] salt, seed;
-            Init(info, out numCyclesPower, out salt, out seed);
+            Init(info, out int numCyclesPower, out byte[] salt, out byte[]  seed);
 
             byte[] password = Encoding.Unicode.GetBytes(pass.CryptoGetTextPassword());
             byte[] key = InitKey(numCyclesPower, salt, password);
@@ -72,22 +64,10 @@ namespace SharpCompress.Compressors.LZMA
             }
         }
 
-        public override long Position
-        {
-            get
-            {
-                return mWritten;
-            }
-        }
+        public override long Position => mWritten;
 
-        public override long Length
-        {
-            get
-            {
-                return mLimit;
-            }
-        }
-
+        public override long Length => mLimit;
+      
         public override int Read(byte[] buffer, int offset, int count)
         {
             if (count == 0
@@ -149,8 +129,6 @@ namespace SharpCompress.Compressors.LZMA
             mWritten += processed;
             return processed;
         }
-
-        #endregion
 
         #region Private Methods
 
@@ -220,54 +198,50 @@ namespace SharpCompress.Compressors.LZMA
             }
             else
             {
-#if NETSTANDARD1_3 || NETSTANDARD2_0
-                using (IncrementalHash sha = IncrementalHash.CreateHash(HashAlgorithmName.SHA256))
+#if NETSTANDARD2_0
+                using IncrementalHash sha = IncrementalHash.CreateHash(HashAlgorithmName.SHA256);
+                byte[] counter = new byte[8];
+                long numRounds = 1L << mNumCyclesPower;
+                for (long round = 0; round < numRounds; round++)
                 {
-                    byte[] counter = new byte[8];
-                    long numRounds = 1L << mNumCyclesPower;
-                    for (long round = 0; round < numRounds; round++)
-                    {
-                        sha.AppendData(salt, 0, salt.Length);
-                        sha.AppendData(pass, 0, pass.Length);
-                        sha.AppendData(counter, 0, 8);
+                    sha.AppendData(salt, 0, salt.Length);
+                    sha.AppendData(pass, 0, pass.Length);
+                    sha.AppendData(counter, 0, 8);
 
-                        // This mirrors the counter so we don't have to convert long to byte[] each round.
-                        // (It also ensures the counter is little endian, which BitConverter does not.)
-                        for (int i = 0; i < 8; i++)
+                    // This mirrors the counter so we don't have to convert long to byte[] each round.
+                    // (It also ensures the counter is little endian, which BitConverter does not.)
+                    for (int i = 0; i < 8; i++)
+                    {
+                        if (++counter[i] != 0)
                         {
-                            if (++counter[i] != 0)
-                            {
-                                break;
-                            }
+                            break;
                         }
                     }
-                    return sha.GetHashAndReset();
                 }
+                return sha.GetHashAndReset();
 #else
-                using (var sha = SHA256.Create())
+                using var sha = SHA256.Create();
+                byte[] counter = new byte[8];
+                long numRounds = 1L << mNumCyclesPower;
+                for (long round = 0; round < numRounds; round++)
                 {
-                    byte[] counter = new byte[8];
-                    long numRounds = 1L << mNumCyclesPower;
-                    for (long round = 0; round < numRounds; round++)
-                    {
-                        sha.TransformBlock(salt, 0, salt.Length, null, 0);
-                        sha.TransformBlock(pass, 0, pass.Length, null, 0);
-                        sha.TransformBlock(counter, 0, 8, null, 0);
+                    sha.TransformBlock(salt, 0, salt.Length, null, 0);
+                    sha.TransformBlock(pass, 0, pass.Length, null, 0);
+                    sha.TransformBlock(counter, 0, 8, null, 0);
 
-                        // This mirrors the counter so we don't have to convert long to byte[] each round.
-                        // (It also ensures the counter is little endian, which BitConverter does not.)
-                        for (int i = 0; i < 8; i++)
+                    // This mirrors the counter so we don't have to convert long to byte[] each round.
+                    // (It also ensures the counter is little endian, which BitConverter does not.)
+                    for (int i = 0; i < 8; i++)
+                    {
+                        if (++counter[i] != 0)
                         {
-                            if (++counter[i] != 0)
-                            {
-                                break;
-                            }
+                            break;
                         }
                     }
-
-                    sha.TransformFinalBlock(counter, 0, 0);
-                    return sha.Hash;
                 }
+
+                sha.TransformFinalBlock(counter, 0, 0);
+                return sha.Hash;
 #endif
             }
         }

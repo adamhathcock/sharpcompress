@@ -1,4 +1,4 @@
-﻿#if !NETSTANDARD2_1
+﻿#if NET461 || NETSTANDARD2_0
 
 using System.Buffers;
 

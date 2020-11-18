@@ -602,7 +602,7 @@ namespace SharpCompress.Common.SevenZip
 #endif
                         continue;
                     }
-                    if (type == BlockType.Crc || type == BlockType.Size)
+                    if (type is BlockType.Crc or BlockType.Size)
                     {
                         break;
                     }

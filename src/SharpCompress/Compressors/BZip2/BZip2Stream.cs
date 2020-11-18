@@ -83,7 +83,7 @@ namespace SharpCompress.Compressors.BZip2
             stream.SetLength(value);
         }
 
-#if NETSTANDARD2_1
+#if !NET461 && !NETSTANDARD2_0
 
         public override int Read(Span<byte> buffer)
         {
