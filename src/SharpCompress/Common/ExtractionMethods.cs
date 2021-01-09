@@ -8,9 +8,9 @@ namespace SharpCompress.Common
         /// <summary>
         /// Extract to specific directory, retaining filename
         /// </summary>
-        public static void WriteEntryToDirectory(IEntry entry, 
+        public static void WriteEntryToDirectory(IEntry entry,
                                                  string destinationDirectory,
-                                                 ExtractionOptions? options, 
+                                                 ExtractionOptions? options,
                                                  Action<string, ExtractionOptions?> write)
         {
             string destinationFileName;
@@ -18,9 +18,9 @@ namespace SharpCompress.Common
             string fullDestinationDirectoryPath = Path.GetFullPath(destinationDirectory);
 
             options ??= new ExtractionOptions()
-                        {
-                            Overwrite = true
-                        };
+            {
+                Overwrite = true
+            };
 
             if (options.ExtractFullPath)
             {
@@ -39,7 +39,7 @@ namespace SharpCompress.Common
                 destinationFileName = Path.Combine(destdir, file);
             }
             else
-            {        
+            {
                 destinationFileName = Path.Combine(fullDestinationDirectoryPath, file);
 
             }
@@ -59,7 +59,7 @@ namespace SharpCompress.Common
                 Directory.CreateDirectory(destinationFileName);
             }
         }
-        
+
         public static void WriteEntryToFile(IEntry entry, string destinationFileName,
                                             ExtractionOptions? options,
                                             Action<string, FileMode> openAndWrite)
@@ -76,9 +76,9 @@ namespace SharpCompress.Common
             {
                 FileMode fm = FileMode.Create;
                 options ??= new ExtractionOptions()
-                                {
-                                    Overwrite = true
-                                };
+                {
+                    Overwrite = true
+                };
 
                 if (!options.Overwrite)
                 {

@@ -6,8 +6,9 @@ namespace SharpCompress.Compressors.Rar
     {
         private static readonly uint[] crcTab;
 
-        public static uint CheckCrc(uint startCrc, byte b) {
-                return (crcTab[((int) ((int) startCrc ^ (int) b)) & 0xff] ^ (startCrc >> 8));
+        public static uint CheckCrc(uint startCrc, byte b)
+        {
+            return (crcTab[((int)((int)startCrc ^ (int)b)) & 0xff] ^ (startCrc >> 8));
         }
 
         public static uint CheckCrc(uint startCrc, byte[] data, int offset, int count)

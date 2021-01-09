@@ -38,14 +38,14 @@ namespace SharpCompress.Compressors.Deflate64
         public void WriteLengthDistance(int length, int distance)
         {
             Debug.Assert((_bytesUsed + length) <= WINDOW_SIZE, "No Enough space");
-            
+
             // move backwards distance bytes in the output stream,
             // and copy length bytes from this position to the output stream.
             _bytesUsed += length;
             int copyStart = (_end - distance) & WINDOW_MASK; // start position for coping.
 
             int border = WINDOW_SIZE - length;
-            if (copyStart <= border && _end < border) 
+            if (copyStart <= border && _end < border)
             {
                 if (length <= distance)
                 {

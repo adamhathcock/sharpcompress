@@ -144,7 +144,7 @@ namespace SharpCompress.Test
                 var crc32a = crcStream.Crc;
 
                 var crc32b = Crc32Stream.Compute(memory.ToArray());
-                
+
                 Assert.Equal(crc32, crc32a);
                 Assert.Equal(crc32, crc32b);
             }

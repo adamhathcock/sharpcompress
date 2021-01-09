@@ -9,7 +9,7 @@ namespace SharpCompress
         private readonly Func<T> _lazyFunc;
         private bool _evaluated;
         private T _value;
-        
+
         public Lazy(Func<T> lazyFunc)
         {
             _lazyFunc = lazyFunc;

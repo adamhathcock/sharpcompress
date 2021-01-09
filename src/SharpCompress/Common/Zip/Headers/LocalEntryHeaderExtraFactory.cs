@@ -36,7 +36,7 @@ namespace SharpCompress.Common.Zip.Headers
             : base(type, length, dataBytes)
         {
         }
-            
+
         internal byte Version => DataBytes[0];
 
         internal byte[] NameCrc32
@@ -115,7 +115,7 @@ namespace SharpCompress.Common.Zip.Headers
                     VolumeNumber = BinaryPrimitives.ReadUInt32LittleEndian(DataBytes.AsSpan(24));
                     return;
                 default:
-                throw new ArchiveException("Unexpected size of of Zip64 extended information extra field");
+                    throw new ArchiveException("Unexpected size of of Zip64 extended information extra field");
             }
         }
 

@@ -18,14 +18,15 @@ namespace SharpCompress.Test
 
         protected void Write(CompressionType compressionType, string archive, string archiveToVerifyAgainst, Encoding encoding = null)
         {
-            using (Stream stream = File.OpenWrite(Path.Combine(SCRATCH2_FILES_PATH, archive))) {
-                WriterOptions writerOptions = new WriterOptions(compressionType) 
+            using (Stream stream = File.OpenWrite(Path.Combine(SCRATCH2_FILES_PATH, archive)))
+            {
+                WriterOptions writerOptions = new WriterOptions(compressionType)
                 {
                     LeaveStreamOpen = true,
                 };
 
                 writerOptions.ArchiveEncoding.Default = encoding ?? Encoding.Default;
-                
+
                 using (var writer = WriterFactory.Open(stream, type, writerOptions))
                 {
                     writer.WriteAll(ORIGINAL_FILES_PATH, "*", SearchOption.AllDirectories);
@@ -34,12 +35,12 @@ namespace SharpCompress.Test
             CompareArchivesByPath(Path.Combine(SCRATCH2_FILES_PATH, archive),
                Path.Combine(TEST_ARCHIVES_PATH, archiveToVerifyAgainst));
 
-            using (Stream stream = File.OpenRead(Path.Combine(SCRATCH2_FILES_PATH, archive))) 
+            using (Stream stream = File.OpenRead(Path.Combine(SCRATCH2_FILES_PATH, archive)))
             {
                 ReaderOptions readerOptions = new ReaderOptions();
 
                 readerOptions.ArchiveEncoding.Default = encoding ?? Encoding.Default;
-                
+
                 using (var reader = ReaderFactory.Open(new NonDisposingStream(stream), readerOptions))
                 {
                     reader.WriteAllToDirectory(SCRATCH_FILES_PATH, new ExtractionOptions()

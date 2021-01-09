@@ -33,8 +33,10 @@ namespace SharpCompress.Common.Zip
 
         private int KeySizeInBytes
         {
-            get { return KeyLengthInBytes(_keySize);
-}
+            get
+            {
+                return KeyLengthInBytes(_keySize);
+            }
         }
 
         internal static int KeyLengthInBytes(WinzipAesKeySize keySize)

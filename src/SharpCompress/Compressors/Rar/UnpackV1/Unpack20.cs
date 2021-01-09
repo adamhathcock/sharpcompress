@@ -60,9 +60,9 @@ namespace SharpCompress.Compressors.Rar.UnpackV1
             , 16, 16, 16, 16, 16, 16, 16
         };
 
-        private static readonly int[] SDDecode = {0, 4, 8, 16, 32, 64, 128, 192};
+        private static readonly int[] SDDecode = { 0, 4, 8, 16, 32, 64, 128, 192 };
 
-        private static readonly int[] SDBits = {2, 2, 3, 4, 5, 6, 6, 6};
+        private static readonly int[] SDBits = { 2, 2, 3, 4, 5, 6, 6, 6 };
 
         private void unpack20(bool solid)
         {

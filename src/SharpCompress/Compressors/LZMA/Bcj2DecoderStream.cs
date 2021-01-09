@@ -215,7 +215,7 @@ namespace SharpCompress.Compressors.LZMA
 
             byte prevByte = 0;
             uint processedBytes = 0;
-            for (;;)
+            for (; ; )
             {
                 byte b = 0;
                 uint i;

@@ -98,7 +98,7 @@ namespace SharpCompress.Compressors.Xz
                 NextBlock();
             }
 
-            for (;;)
+            for (; ; )
             {
                 try
                 {

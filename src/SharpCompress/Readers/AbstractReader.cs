@@ -16,7 +16,7 @@ namespace SharpCompress.Readers
         private bool completed;
         private IEnumerator<TEntry>? entriesForCurrentReadStream;
         private bool wroteCurrentEntry;
-        
+
         public event EventHandler<ReaderExtractionEventArgs<IEntry>>? EntryExtractionProgress;
 
         public event EventHandler<CompressedBytesReadEventArgs>? CompressedBytesRead;
@@ -131,8 +131,8 @@ namespace SharpCompress.Readers
 
         private void Skip()
         {
-            if (ArchiveType != ArchiveType.Rar 
-                && !Entry.IsSolid 
+            if (ArchiveType != ArchiveType.Rar
+                && !Entry.IsSolid
                 && Entry.CompressedSize > 0)
             {
                 //not solid and has a known compressed size then we can skip raw bytes.

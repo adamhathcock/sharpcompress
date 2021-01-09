@@ -35,20 +35,20 @@ namespace SharpCompress.Common.Zip
             switch (headerBytes)
             {
                 case ENTRY_HEADER_BYTES:
-                {
-                    var entryHeader = new LocalEntryHeader(_archiveEncoding);
-                    entryHeader.Read(reader);
-                    LoadHeader(entryHeader, reader.BaseStream);
+                    {
+                        var entryHeader = new LocalEntryHeader(_archiveEncoding);
+                        entryHeader.Read(reader);
+                        LoadHeader(entryHeader, reader.BaseStream);
 
-                    _lastEntryHeader = entryHeader;
-                    return entryHeader;
-                }
+                        _lastEntryHeader = entryHeader;
+                        return entryHeader;
+                    }
                 case DIRECTORY_START_HEADER_BYTES:
-                {
-                    var entry = new DirectoryEntryHeader(_archiveEncoding);
-                    entry.Read(reader);
-                    return entry;
-                }
+                    {
+                        var entry = new DirectoryEntryHeader(_archiveEncoding);
+                        entry.Read(reader);
+                        return entry;
+                    }
                 case POST_DATA_DESCRIPTOR:
                     {
                         if (FlagUtility.HasFlag(_lastEntryHeader!.Flags, HeaderFlags.UsePostDataDescriptor))

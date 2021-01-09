@@ -7,7 +7,7 @@ namespace SharpCompress.Common
         /// <summary>
         /// overwrite target if it exists
         /// </summary>
-        public bool Overwrite  {get; set; }
+        public bool Overwrite { get; set; }
 
         /// <summary>
         /// extract with internal directory structure
