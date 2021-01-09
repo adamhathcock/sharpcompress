@@ -98,17 +98,17 @@ namespace SharpCompress.Common.Zip
                         return new PpmdStream(new PpmdProperties(props), stream, false);
                     }
                 case ZipCompressionMethod.WinzipAes:
-                {
-                    ExtraData? data = Header.Extra.SingleOrDefault(x => x.Type == ExtraDataType.WinZipAes);
-                    if (data is null)
                     {
-                        throw new InvalidFormatException("No Winzip AES extra data found.");
-                    }
-                    if (data.Length != 7)
-                    {
-                        throw new InvalidFormatException("Winzip data length is not 7.");
-                    }
-                    ushort compressedMethod = BinaryPrimitives.ReadUInt16LittleEndian(data.DataBytes);
+                        ExtraData? data = Header.Extra.SingleOrDefault(x => x.Type == ExtraDataType.WinZipAes);
+                        if (data is null)
+                        {
+                            throw new InvalidFormatException("No Winzip AES extra data found.");
+                        }
+                        if (data.Length != 7)
+                        {
+                            throw new InvalidFormatException("Winzip data length is not 7.");
+                        }
+                        ushort compressedMethod = BinaryPrimitives.ReadUInt16LittleEndian(data.DataBytes);
 
                         if (compressedMethod != 0x01 && compressedMethod != 0x02)
                         {
