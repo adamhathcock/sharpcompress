@@ -129,7 +129,7 @@ namespace SharpCompress.Common.Zip
 
                 if (entryHeader.CompressionMethod == ZipCompressionMethod.WinzipAes)
                 {
-                    ExtraData data = entryHeader.Extra.SingleOrDefault(x => x.Type == ExtraDataType.WinZipAes);
+                    ExtraData? data = entryHeader.Extra.SingleOrDefault(x => x.Type == ExtraDataType.WinZipAes);
                     if (data != null)
                     {
                         var keySize = (WinzipAesKeySize)data.DataBytes[4];

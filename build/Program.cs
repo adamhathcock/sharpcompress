@@ -46,7 +46,7 @@ class Program
             Run("dotnet", "format --check");
         });
 
-        Target(Build, DependsOn(Format), ForEach("net46", "netstandard2.0", "netstandard2.1"),
+        Target(Build, DependsOn(Format),
                framework =>
                {
                    if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && framework == "net46")
@@ -56,19 +56,19 @@ class Program
                    Run("dotnet", "build src/SharpCompress/SharpCompress.csproj -c Release");
                });
 
-        Target(Test, DependsOn(Build), ForEach("netcoreapp3.1"),
-            framework =>
-            {
-                IEnumerable<string> GetFiles(string d)
-                {
-                    return Glob.Files(".", d);
-                }
+        Target(Test, DependsOn(Build), ForEach("net5.0"),
+               framework =>
+               {
+                   IEnumerable<string> GetFiles(string d)
+                   {
+                       return Glob.Files(".", d);
+                   }
 
-                foreach (var file in GetFiles("**/*.Test.csproj"))
-                {
-                    Run("dotnet", $"test {file} -c Release -f {framework}");
-                }
-            });
+                   foreach (var file in GetFiles("**/*.Test.csproj"))
+                   {
+                       Run("dotnet", $"test {file} -c Release -f {framework}");
+                   }
+               });
 
         Target(Publish, DependsOn(Test),
                () =>

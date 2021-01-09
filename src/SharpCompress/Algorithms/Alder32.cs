@@ -4,7 +4,7 @@
 using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-#if NETCOREAPP3_1
+#if !NETSTANDARD2_0 && !NETSTANDARD2_1
 using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
 #endif
@@ -22,7 +22,7 @@ namespace SharpCompress.Algorithms
         /// </summary>
         public const uint SeedValue = 1U;
 
-#if NETCOREAPP3_1
+#if !NETSTANDARD2_0 && !NETSTANDARD2_1
         private const int MinBufferSize = 64;
 #endif
 
@@ -56,7 +56,7 @@ namespace SharpCompress.Algorithms
                 return SeedValue;
             }
 
-#if NETCOREAPP3_1
+#if !NETSTANDARD2_0 && !NETSTANDARD2_1
             if (Sse3.IsSupported && buffer.Length >= MinBufferSize)
             {
                 return CalculateSse(adler, buffer);
@@ -69,7 +69,7 @@ namespace SharpCompress.Algorithms
         }
 
         // Based on https://github.com/chromium/chromium/blob/master/third_party/zlib/adler32_simd.c
-#if NETCOREAPP3_1
+#if !NETSTANDARD2_0 && !NETSTANDARD2_1
         private static unsafe uint CalculateSse(uint adler, ReadOnlySpan<byte> buffer)
         {
             uint s1 = adler & 0xFFFF;

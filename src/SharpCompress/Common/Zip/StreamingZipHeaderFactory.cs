@@ -49,7 +49,10 @@ namespace SharpCompress.Common.Zip
                 _lastEntryHeader = null;
                 uint headerBytes = reader.ReadUInt32();
                 header = ReadHeader(headerBytes, reader);
-                if (header is null) { yield break; }
+                if (header is null)
+                {
+                    yield break;
+                }
 
                 //entry could be zero bytes so we need to know that.
                 if (header.ZipHeaderType == ZipHeaderType.LocalEntry)

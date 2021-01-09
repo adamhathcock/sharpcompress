@@ -31,7 +31,11 @@ namespace SharpCompress.Compressors.LZMA
             Init(info, out int numCyclesPower, out byte[] salt, out byte[] seed);
 
             byte[] password = Encoding.Unicode.GetBytes(pass.CryptoGetTextPassword());
-            byte[] key = InitKey(numCyclesPower, salt, password);
+            byte[]? key = InitKey(numCyclesPower, salt, password);
+            if (key == null)
+            {
+                throw new InvalidOperationException("Initialized with null key");
+            }
 
             using (var aes = Aes.Create())
             {
@@ -177,7 +181,7 @@ namespace SharpCompress.Compressors.LZMA
             }
         }
 
-        private byte[] InitKey(int mNumCyclesPower, byte[] salt, byte[] pass)
+        private byte[]? InitKey(int mNumCyclesPower, byte[] salt, byte[] pass)
         {
             if (mNumCyclesPower == 0x3F)
             {
