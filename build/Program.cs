@@ -39,17 +39,12 @@ class Program
                 }
             });
 
-        Target(Build, ForEach("net46", "netstandard2.0", "netstandard2.1"), 
-               framework =>
+        Target(Build, () =>
                {
-                    if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && framework == "net46")
-                    {
-                        return;
-                    }
                     Run("dotnet", "build src/SharpCompress/SharpCompress.csproj -c Release");
                 });
 
-        Target(Test, DependsOn(Build), ForEach("netcoreapp3.1"), 
+        Target(Test, DependsOn(Build), ForEach("net5.0"), 
             framework =>
             {
                 IEnumerable<string> GetFiles(string d)

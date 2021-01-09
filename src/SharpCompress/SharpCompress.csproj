@@ -6,14 +6,12 @@
     <AssemblyVersion>0.26.0</AssemblyVersion>
     <FileVersion>0.26.0</FileVersion>
     <Authors>Adam Hathcock</Authors>
-    <TargetFrameworks Condition="'$(LibraryFrameworks)'==''">netstandard2.0;netstandard2.1;netcoreapp3.1;net461</TargetFrameworks>
-    <TargetFrameworks Condition=" '$(OS)' != 'Windows_NT' ">netstandard2.0;netstandard2.1;netcoreapp3.1;</TargetFrameworks>
+    <TargetFrameworks>netstandard2.0;netstandard2.1;netcoreapp3.1;net5.0</TargetFrameworks>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
     <AssemblyName>SharpCompress</AssemblyName>
     <AssemblyOriginatorKeyFile>../../SharpCompress.snk</AssemblyOriginatorKeyFile>
     <SignAssembly>true</SignAssembly>
-    <PublicSign Condition=" '$(OS)' != 'Windows_NT' ">true</PublicSign>
     <PackageId>SharpCompress</PackageId>
     <PackageTags>rar;unrar;zip;unzip;bzip2;gzip;tar;7zip;lzip;xz</PackageTags>
     <PackageProjectUrl>https://github.com/adamhathcock/sharpcompress</PackageProjectUrl>
@@ -31,14 +29,12 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0" PrivateAssets="All" />
+  </ItemGroup>  
+  <ItemGroup Condition=" '$(TargetFramework)' != 'net5.0' ">
+    <PackageReference Include="System.Text.Encoding.CodePages" Version="5.0.0" />
   </ItemGroup>
-
-
   <ItemGroup Condition=" '$(TargetFramework)' != 'netstandard2.1' ">
     <PackageReference Include="System.Memory" Version="4.5.4" />
   </ItemGroup>
 
-  <ItemGroup Condition=" '$(TargetFramework)' != 'net46' ">
-    <PackageReference Include="System.Text.Encoding.CodePages" Version="5.0.0" />
-  </ItemGroup>
 </Project>

@@ -80,8 +80,7 @@ namespace SharpCompress.Archives.Zip
             StreamingZipHeaderFactory headerFactory = new StreamingZipHeaderFactory(password, new ArchiveEncoding());
             try
             {
-                ZipHeader header =
-                    headerFactory.ReadStreamHeader(stream).FirstOrDefault(x => x.ZipHeaderType != ZipHeaderType.Split);
+                ZipHeader? header = headerFactory.ReadStreamHeader(stream).FirstOrDefault(x => x.ZipHeaderType != ZipHeaderType.Split);
                 if (header is null)
                 {
                     return false;
