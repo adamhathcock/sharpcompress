@@ -161,7 +161,7 @@ namespace SharpCompress.Common.SevenZip
         {
             int ending = Offset;
 
-            for (;;)
+            for (; ; )
             {
                 if (ending + 2 > _ending)
                 {

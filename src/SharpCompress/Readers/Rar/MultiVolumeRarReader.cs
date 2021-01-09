@@ -35,7 +35,8 @@ namespace SharpCompress.Readers.Rar
 
         internal override bool NextEntryForCurrentStream()
         {
-            if (!base.NextEntryForCurrentStream()) {
+            if (!base.NextEntryForCurrentStream())
+            {
                 // if we're got another stream to try to process then do so
                 return streams.MoveNext() && LoadStreamForReading(streams.Current);
             }

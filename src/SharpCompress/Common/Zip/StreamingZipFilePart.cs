@@ -42,7 +42,7 @@ namespace SharpCompress.Common.Zip
             if (Header.HasData && !Skipped)
             {
                 _decompressionStream ??= GetCompressedStream();
-                
+
                 _decompressionStream.Skip();
 
                 if (_decompressionStream is DeflateStream deflateStream)

@@ -23,12 +23,12 @@ namespace SharpCompress.Compressors.LZMA
             mStream = input;
             mLimit = limit;
 
-            if (((uint) input.Length & 15) != 0)
+            if (((uint)input.Length & 15) != 0)
             {
                 throw new NotSupportedException("AES decoder does not support padding.");
             }
 
-            Init(info, out int numCyclesPower, out byte[] salt, out byte[]  seed);
+            Init(info, out int numCyclesPower, out byte[] salt, out byte[] seed);
 
             byte[] password = Encoding.Unicode.GetBytes(pass.CryptoGetTextPassword());
             byte[] key = InitKey(numCyclesPower, salt, password);
@@ -67,7 +67,7 @@ namespace SharpCompress.Compressors.LZMA
         public override long Position => mWritten;
 
         public override long Length => mLimit;
-      
+
         public override int Read(byte[] buffer, int offset, int count)
         {
             if (count == 0
@@ -107,7 +107,7 @@ namespace SharpCompress.Compressors.LZMA
             // the stream length is not a multiple of the block size.
             if (count > mLimit - mWritten)
             {
-                count = (int) (mLimit - mWritten);
+                count = (int)(mLimit - mWritten);
             }
 
             // We cannot transform less than 16 bytes into the target buffer,

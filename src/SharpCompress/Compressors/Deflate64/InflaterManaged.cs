@@ -114,7 +114,7 @@ namespace SharpCompress.Compressors.Deflate64
         private void Reset()
         {
             _state = //_hasFormatReader ?
-                //InflaterState.ReadingHeader :   // start by reading Header info
+                     //InflaterState.ReadingHeader :   // start by reading Header info
                 InflaterState.ReadingBFinal;    // start by reading BFinal bit
         }
 
@@ -294,7 +294,7 @@ namespace SharpCompress.Compressors.Deflate64
                 //if (_hasFormatReader)
                 //    _state = InflaterState.StartReadingFooter;
                 //else
-                    _state = InflaterState.Done;
+                _state = InflaterState.Done;
             }
             return result;
         }

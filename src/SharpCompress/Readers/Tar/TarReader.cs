@@ -33,29 +33,29 @@ namespace SharpCompress.Readers.Tar
             switch (compressionType)
             {
                 case CompressionType.BZip2:
-                {
-                    return new BZip2Stream(stream, CompressionMode.Decompress, false);
-                }
+                    {
+                        return new BZip2Stream(stream, CompressionMode.Decompress, false);
+                    }
                 case CompressionType.GZip:
-                {
-                    return new GZipStream(stream, CompressionMode.Decompress);
-                }
+                    {
+                        return new GZipStream(stream, CompressionMode.Decompress);
+                    }
                 case CompressionType.LZip:
-                {
-                    return new LZipStream(stream, CompressionMode.Decompress);
-                }
+                    {
+                        return new LZipStream(stream, CompressionMode.Decompress);
+                    }
                 case CompressionType.Xz:
-                {
-                    return new XZStream(stream);
-                }
+                    {
+                        return new XZStream(stream);
+                    }
                 case CompressionType.None:
-                {
-                    return stream;
-                }
+                    {
+                        return stream;
+                    }
                 default:
-                {
-                    throw new NotSupportedException("Invalid compression type: " + compressionType);
-                }
+                    {
+                        throw new NotSupportedException("Invalid compression type: " + compressionType);
+                    }
             }
         }
 

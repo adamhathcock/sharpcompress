@@ -74,7 +74,7 @@ namespace SharpCompress.Compressors.Deflate
         private const int MANY = 1440;
 
         // Table for deflate from PKZIP's appnote.txt.
-        internal static readonly int[] border = {16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1, 15};
+        internal static readonly int[] border = { 16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1, 15 };
 
         internal ZlibCodec _codec; // pointer back to this zlib stream
         internal int[] bb = new int[1]; // bit length tree depth
@@ -561,35 +561,35 @@ namespace SharpCompress.Compressors.Deflate
                         }
 
                         tb[0] = -1;
-                    {
-                        var bl = new[] {9}; // must be <= 9 for lookahead assumptions
-                        var bd = new[] {6}; // must be <= 9 for lookahead assumptions
-                        var tl = new int[1];
-                        var td = new int[1];
-
-                        t = table;
-                        t = inftree.inflate_trees_dynamic(257 + (t & 0x1f), 1 + ((t >> 5) & 0x1f), blens, bl, bd, tl,
-                                                          td, hufts, _codec);
-
-                        if (t != ZlibConstants.Z_OK)
                         {
-                            if (t == ZlibConstants.Z_DATA_ERROR)
-                            {
-                                blens = null;
-                                mode = InflateBlockMode.BAD;
-                            }
-                            r = t;
+                            var bl = new[] { 9 }; // must be <= 9 for lookahead assumptions
+                            var bd = new[] { 6 }; // must be <= 9 for lookahead assumptions
+                            var tl = new int[1];
+                            var td = new int[1];
 
-                            bitb = b;
-                            bitk = k;
-                            _codec.AvailableBytesIn = n;
-                            _codec.TotalBytesIn += p - _codec.NextIn;
-                            _codec.NextIn = p;
-                            writeAt = q;
-                            return Flush(r);
+                            t = table;
+                            t = inftree.inflate_trees_dynamic(257 + (t & 0x1f), 1 + ((t >> 5) & 0x1f), blens, bl, bd, tl,
+                                                              td, hufts, _codec);
+
+                            if (t != ZlibConstants.Z_OK)
+                            {
+                                if (t == ZlibConstants.Z_DATA_ERROR)
+                                {
+                                    blens = null;
+                                    mode = InflateBlockMode.BAD;
+                                }
+                                r = t;
+
+                                bitb = b;
+                                bitk = k;
+                                _codec.AvailableBytesIn = n;
+                                _codec.TotalBytesIn += p - _codec.NextIn;
+                                _codec.NextIn = p;
+                                writeAt = q;
+                                return Flush(r);
+                            }
+                            codes.Init(bl[0], bd[0], hufts, tl[0], hufts, td[0]);
                         }
-                        codes.Init(bl[0], bd[0], hufts, tl[0], hufts, td[0]);
-                    }
                         mode = InflateBlockMode.CODES;
                         goto case InflateBlockMode.CODES;
 
@@ -1567,7 +1567,7 @@ namespace SharpCompress.Compressors.Deflate
         private const int PRESET_DICT = 0x20;
 
         private const int Z_DEFLATED = 8;
-        private static readonly byte[] mark = {0, 0, 0xff, 0xff};
+        private static readonly byte[] mark = { 0, 0, 0xff, 0xff };
 
         internal ZlibCodec _codec; // pointer back to this zlib stream
         internal InflateBlocks blocks; // current inflate_blocks state

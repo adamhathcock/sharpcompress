@@ -21,18 +21,22 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017
         private Stream readStream;
         private Stream writeStream;
 
-        private void _UnpackCtor() {
-            for (int i = 0; i < AudV.Length; i++) {
+        private void _UnpackCtor()
+        {
+            for (int i = 0; i < AudV.Length; i++)
+            {
                 AudV[i] = new AudioVariables();
             }
         }
 
-        private int UnpIO_UnpRead(byte[] buf, int offset, int count) {
+        private int UnpIO_UnpRead(byte[] buf, int offset, int count)
+        {
             // NOTE: caller has logic to check for -1 for error we throw instead.
             return readStream.Read(buf, offset, count);
         }
 
-        private void UnpIO_UnpWrite(byte[] buf, size_t offset, uint count) {
+        private void UnpIO_UnpWrite(byte[] buf, size_t offset, uint count)
+        {
             writeStream.Write(buf, checked((int)offset), checked((int)count));
         }
 
@@ -49,7 +53,8 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017
             this.fileHeader = fileHeader;
             this.readStream = readStream;
             this.writeStream = writeStream;
-            if (!fileHeader.IsStored) {
+            if (!fileHeader.IsStored)
+            {
                 Init(fileHeader.WindowSize, fileHeader.IsSolid);
             }
             Suspended = false;
@@ -61,7 +66,9 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017
             if (fileHeader.IsStored)
             {
                 UnstoreFile();
-            } else {
+            }
+            else
+            {
                 DoUnpack(fileHeader.CompressionAlgorithm, fileHeader.IsSolid);
             }
         }
@@ -69,7 +76,8 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017
         private void UnstoreFile()
         {
             var b = new byte[0x10000];
-            do {
+            do
+            {
                 int n = readStream.Read(b, 0, (int)Math.Min(b.Length, DestUnpSize));
                 if (n == 0)
                 {
@@ -79,12 +87,12 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017
                 DestUnpSize -= n;
             } while (!Suspended);
         }
-        
+
         public bool Suspended { get; set; }
 
         public long DestSize { get => DestUnpSize; }
 
-        public int Char 
+        public int Char
         {
             get
             {
@@ -97,9 +105,10 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017
             }
         }
 
-        public int PpmEscChar { get => PPMEscChar; set => PPMEscChar = value; } 
+        public int PpmEscChar { get => PPMEscChar; set => PPMEscChar = value; }
 
-        public static byte[] EnsureCapacity(byte[] array, int length) {
+        public static byte[] EnsureCapacity(byte[] array, int length)
+        {
             return array.Length < length ? new byte[length] : array;
         }
 

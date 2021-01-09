@@ -23,7 +23,7 @@ namespace SharpCompress.Archives.Rar
                 yield return part;
             }
         }
-        
+
         internal static IEnumerable<RarVolume> GetParts(FileInfo fileInfo, ReaderOptions options)
         {
             FileInfoRarArchiveVolume part = new FileInfoRarArchiveVolume(fileInfo, options);

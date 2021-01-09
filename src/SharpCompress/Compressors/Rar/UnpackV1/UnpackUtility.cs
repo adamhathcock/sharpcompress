@@ -6,8 +6,9 @@ namespace SharpCompress.Compressors.Rar.UnpackV1
 {
     internal static class UnpackUtility
     {
-//!!! TODO rename methods
-        internal static uint DecodeNumber(this BitInput input, Decode.Decode dec) {
+        //!!! TODO rename methods
+        internal static uint DecodeNumber(this BitInput input, Decode.Decode dec)
+        {
             return (uint)input.decodeNumber(dec);
         }
 

@@ -363,7 +363,7 @@ namespace SharpCompress.Compressors.PPMd.I1
             _numberMasked = context.NumberStatistics;
             return;
 
-            SymbolFound:
+        SymbolFound:
             _coder._lowCount = lowCount;
             lowCount += state.Frequency;
             _coder._highCount = lowCount;

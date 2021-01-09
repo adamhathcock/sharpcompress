@@ -11,7 +11,8 @@ namespace SharpCompress.Test.Mocks
     {
         private Stream inner;
 
-        public FlushOnDisposeStream(Stream innerStream) {
+        public FlushOnDisposeStream(Stream innerStream)
+        {
             this.inner = innerStream;
         }
 
@@ -25,28 +26,35 @@ namespace SharpCompress.Test.Mocks
 
         public override long Position { get => this.inner.Position; set => this.inner.Position = value; }
 
-        public override void Flush() {
+        public override void Flush()
+        {
             throw new NotImplementedException();
         }
 
-        public override int Read(byte[] buffer, int offset, int count) {
+        public override int Read(byte[] buffer, int offset, int count)
+        {
             return this.inner.Read(buffer, offset, count);
         }
 
-        public override long Seek(long offset, SeekOrigin origin) {
+        public override long Seek(long offset, SeekOrigin origin)
+        {
             throw new NotImplementedException();
         }
 
-        public override void SetLength(long value) {
+        public override void SetLength(long value)
+        {
             throw new NotImplementedException();
         }
 
-        public override void Write(byte[] buffer, int offset, int count) {
+        public override void Write(byte[] buffer, int offset, int count)
+        {
             throw new NotImplementedException();
         }
 
-        protected override void Dispose(bool disposing) {
-            if(disposing) {
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
                 this.inner.Flush();
                 this.inner.Close();
             }

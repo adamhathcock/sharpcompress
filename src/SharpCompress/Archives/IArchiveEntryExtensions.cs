@@ -31,7 +31,7 @@ namespace SharpCompress.Archives
             }
             streamListener.FireEntryExtractionEnd(archiveEntry);
         }
-        
+
         /// <summary>
         /// Extract to specific directory, retaining filename
         /// </summary>
@@ -45,11 +45,11 @@ namespace SharpCompress.Archives
         /// <summary>
         /// Extract to specific file
         /// </summary>
-        public static void WriteToFile(this IArchiveEntry entry, 
+        public static void WriteToFile(this IArchiveEntry entry,
                                        string destinationFileName,
                                        ExtractionOptions? options = null)
         {
-            
+
             ExtractionMethods.WriteEntryToFile(entry, destinationFileName, options,
                                                (x, fm) =>
                                                {

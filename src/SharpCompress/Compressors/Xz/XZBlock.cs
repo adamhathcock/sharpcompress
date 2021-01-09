@@ -25,7 +25,7 @@ namespace SharpCompress.Compressors.Xz
         private bool _crcChecked;
         private ulong _bytesRead;
 
-        public XZBlock(Stream stream, CheckType checkType, int checkSize) 
+        public XZBlock(Stream stream, CheckType checkType, int checkSize)
             : base(stream)
         {
             _checkType = checkType;

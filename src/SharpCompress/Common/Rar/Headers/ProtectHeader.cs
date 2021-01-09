@@ -5,8 +5,8 @@ namespace SharpCompress.Common.Rar.Headers
     // ProtectHeader is part of the Recovery Record feature
     internal sealed class ProtectHeader : RarHeader
     {
-        public ProtectHeader(RarHeader header, RarCrcBinaryReader reader) 
-            : base(header, reader, HeaderType.Protect) 
+        public ProtectHeader(RarHeader header, RarCrcBinaryReader reader)
+            : base(header, reader, HeaderType.Protect)
         {
             if (IsRar5)
             {

@@ -42,10 +42,10 @@ namespace SharpCompress.Common.Rar.Headers
     }
 
     internal static class EncryptionFlagsV5
-    {   
+    {
         // RAR 5.0 archive encryption header specific flags.
         public const uint CHFL_CRYPT_PSWCHECK = 0x01; // Password check data is present.
-        
+
         public const uint FHEXTRA_CRYPT_PSWCHECK = 0x01; // Password check data is present.
         public const uint FHEXTRA_CRYPT_HASHMAC = 0x02;
     }
