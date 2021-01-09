@@ -132,25 +132,30 @@ namespace SharpCompress.IO
         // and highest bit in every byte is the continuation flag. If highest bit is 0, this is the last byte in sequence.
         // So first byte contains 7 least significant bits of integer and continuation flag. Second byte, if present,
         // contains next 7 bits and so on.
-        public ulong ReadRarVInt(int maxBytes = 10) {
+        public ulong ReadRarVInt(int maxBytes = 10)
+        {
             // hopefully this gets inlined
             return DoReadRarVInt((maxBytes - 1) * 7);
         }
 
-        private ulong DoReadRarVInt(int maxShift) {
+        private ulong DoReadRarVInt(int maxShift)
+        {
             int shift = 0;
             ulong result = 0;
-            do {
+            do
+            {
                 byte b0 = ReadByte();
                 uint b1 = ((uint)b0) & 0x7f;
                 ulong n = b1;
                 ulong shifted = n << shift;
-                if (n != shifted >> shift) {
+                if (n != shifted >> shift)
+                {
                     // overflow
                     break;
                 }
                 result |= shifted;
-                if (b0 == b1) {
+                if (b0 == b1)
+                {
                     return result;
                 }
                 shift += 7;
@@ -159,35 +164,42 @@ namespace SharpCompress.IO
             throw new FormatException("malformed vint");
         }
 
-        public uint ReadRarVIntUInt32(int maxBytes = 5) {
+        public uint ReadRarVIntUInt32(int maxBytes = 5)
+        {
             // hopefully this gets inlined
             return DoReadRarVIntUInt32((maxBytes - 1) * 7);
         }
 
-        public ushort ReadRarVIntUInt16(int maxBytes = 3) {
+        public ushort ReadRarVIntUInt16(int maxBytes = 3)
+        {
             // hopefully this gets inlined
             return checked((ushort)DoReadRarVIntUInt32((maxBytes - 1) * 7));
         }
 
-        public byte ReadRarVIntByte(int maxBytes = 2) {
+        public byte ReadRarVIntByte(int maxBytes = 2)
+        {
             // hopefully this gets inlined
             return checked((byte)DoReadRarVIntUInt32((maxBytes - 1) * 7));
         }
 
-        private uint DoReadRarVIntUInt32(int maxShift) {
+        private uint DoReadRarVIntUInt32(int maxShift)
+        {
             int shift = 0;
             uint result = 0;
-            do {
+            do
+            {
                 byte b0 = ReadByte();
                 uint b1 = ((uint)b0) & 0x7f;
                 uint n = b1;
                 uint shifted = n << shift;
-                if (n != shifted >> shift) {
+                if (n != shifted >> shift)
+                {
                     // overflow
                     break;
                 }
                 result |= shifted;
-                if (b0 == b1) {
+                if (b0 == b1)
+                {
                     return result;
                 }
                 shift += 7;

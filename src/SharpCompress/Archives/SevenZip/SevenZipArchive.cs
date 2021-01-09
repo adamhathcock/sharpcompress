@@ -131,7 +131,7 @@ namespace SharpCompress.Archives.SevenZip
             }
         }
 
-        private static ReadOnlySpan<byte> SIGNATURE => new byte[] {(byte)'7', (byte)'z', 0xBC, 0xAF, 0x27, 0x1C};
+        private static ReadOnlySpan<byte> SIGNATURE => new byte[] { (byte)'7', (byte)'z', 0xBC, 0xAF, 0x27, 0x1C };
 
         private static bool SignatureMatch(Stream stream)
         {

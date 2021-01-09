@@ -120,7 +120,7 @@ namespace SharpCompress.Archives.Rar
                 return IsRarFile(stream);
             }
         }
-        
+
         public static bool IsRarFile(Stream stream, ReaderOptions? options = null)
         {
             try

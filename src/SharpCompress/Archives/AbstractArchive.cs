@@ -132,9 +132,9 @@ namespace SharpCompress.Archives
         void IExtractionListener.FireFilePartExtractionBegin(string name, long size, long compressedSize)
         {
             FilePartExtractionBegin?.Invoke(this, new FilePartExtractionBeginEventArgs(
-                compressedSize : compressedSize,
-                size           : size,
-                name           : name
+                compressedSize: compressedSize,
+                size: size,
+                name: name
             ));
         }
 

@@ -44,8 +44,10 @@ namespace SharpCompress.Test.Tar
         public void Tar_Finalize_Archive(bool finalizeArchive)
         {
             using (MemoryStream stream = new MemoryStream())
-            using (Stream content = File.OpenRead(Path.Combine(ORIGINAL_FILES_PATH, "jpg", "test.jpg"))) {
-                using (TarWriter writer = new TarWriter(stream, new TarWriterOptions(CompressionType.None, finalizeArchive)))             {
+            using (Stream content = File.OpenRead(Path.Combine(ORIGINAL_FILES_PATH, "jpg", "test.jpg")))
+            {
+                using (TarWriter writer = new TarWriter(stream, new TarWriterOptions(CompressionType.None, finalizeArchive)))
+                {
                     writer.Write("doesn't matter", content, null);
                 }
 

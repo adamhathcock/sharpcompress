@@ -261,9 +261,9 @@ namespace SharpCompress.Common.Tar.Headers
         }
 
 
-        private static readonly byte[] eightSpaces = { 
+        private static readonly byte[] eightSpaces = {
             (byte)' ', (byte)' ', (byte)' ', (byte)' ',
-            (byte)' ', (byte)' ', (byte)' ', (byte)' ' 
+            (byte)' ', (byte)' ', (byte)' ', (byte)' '
         };
 
         internal static int RecalculateChecksum(byte[] buf)

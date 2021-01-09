@@ -374,7 +374,7 @@ namespace SharpCompress.Compressors.Deflate
         };
 
         // extra bits for each bit length code
-        internal static readonly int[] extra_blbits = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 3, 7};
+        internal static readonly int[] extra_blbits = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 3, 7 };
 
         internal static readonly StaticTree Literals;
         internal static readonly StaticTree Distances;

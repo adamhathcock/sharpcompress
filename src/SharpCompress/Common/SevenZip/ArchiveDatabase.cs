@@ -89,7 +89,7 @@ namespace SharpCompress.Common.SevenZip
                 {
                     // v3.13 incorrectly worked with empty folders
                     // v4.07: Loop for skipping empty folders
-                    for (;;)
+                    for (; ; )
                     {
                         if (folderIndex >= _folders.Count)
                         {

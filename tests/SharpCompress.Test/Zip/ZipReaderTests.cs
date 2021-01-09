@@ -324,11 +324,11 @@ namespace SharpCompress.Test.Zip
             using (Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Zip.none.issue86.zip")))
             using (var reader = ZipReader.Open(stream))
             {
-                foreach( var key in keys )
+                foreach (var key in keys)
                 {
                     reader.MoveToNextEntry();
 
-                    Assert.Equal( reader.Entry.Key, key );
+                    Assert.Equal(reader.Entry.Key, key);
 
                     if (!reader.Entry.IsDirectory)
                     {

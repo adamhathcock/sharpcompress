@@ -57,7 +57,7 @@ namespace SharpCompress.Compressors.PPMd
                 if (Version == PpmdVersion.I1)
                 {
                     _allocator ??= new Allocator();
-                    
+
                     _allocator.Start(_allocatorSize);
                 }
             }
