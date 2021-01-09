@@ -22,6 +22,13 @@ namespace SharpCompress.Test.GZip
             {
                 var entry = archive.Entries.First();
                 entry.WriteToFile(Path.Combine(SCRATCH_FILES_PATH, entry.Key));
+
+                long size = entry.Size;
+                var scratch = new FileInfo(Path.Combine(SCRATCH_FILES_PATH, "Tar.tar"));
+                var test = new FileInfo(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar"));
+                
+                Assert.Equal(size, scratch.Length);
+                Assert.Equal(size, test.Length);
             }
             CompareArchivesByPath(Path.Combine(SCRATCH_FILES_PATH, "Tar.tar"),
                 Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar"));
@@ -35,6 +42,13 @@ namespace SharpCompress.Test.GZip
             {
                 var entry = archive.Entries.First();
                 entry.WriteToFile(Path.Combine(SCRATCH_FILES_PATH, entry.Key));
+
+                long size = entry.Size;
+                var scratch = new FileInfo(Path.Combine(SCRATCH_FILES_PATH, "Tar.tar"));
+                var test = new FileInfo(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar"));
+                
+                Assert.Equal(size, scratch.Length);
+                Assert.Equal(size, test.Length);
             }
             CompareArchivesByPath(Path.Combine(SCRATCH_FILES_PATH, "Tar.tar"),
                 Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar"));
