@@ -84,20 +84,20 @@ namespace SharpCompress.Common.SevenZip
         {
             var coder = Folder!._coders.First();
             switch (coder._methodId._id)
-            {                
+            {
                 case K_LZMA:
                 case K_LZMA2:
-                {
-                    return CompressionType.LZMA;
-                }
+                    {
+                        return CompressionType.LZMA;
+                    }
                 case K_PPMD:
-                {
-                    return CompressionType.PPMd;
-                }
+                    {
+                        return CompressionType.PPMd;
+                    }
                 case K_B_ZIP2:
-                {
-                    return CompressionType.BZip2;
-                }
+                    {
+                        return CompressionType.BZip2;
+                    }
                 default:
                     throw new NotImplementedException();
             }

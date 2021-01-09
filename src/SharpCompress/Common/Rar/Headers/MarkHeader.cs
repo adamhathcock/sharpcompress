@@ -11,39 +11,39 @@ namespace SharpCompress.Common.Rar.Headers
 
         public bool IsRar5 { get; }
 
-        private MarkHeader(bool isRar5) 
-        { 
+        private MarkHeader(bool isRar5)
+        {
             IsRar5 = isRar5;
         }
 
         public HeaderType HeaderType => HeaderType.Mark;
 
-        private static byte GetByte(Stream stream) 
+        private static byte GetByte(Stream stream)
         {
             var b = stream.ReadByte();
-            if (b != -1) 
+            if (b != -1)
             {
                 return (byte)b;
             }
             throw new EndOfStreamException();
         }
 
-        public static MarkHeader Read(Stream stream, bool leaveStreamOpen, bool lookForHeader) 
+        public static MarkHeader Read(Stream stream, bool leaveStreamOpen, bool lookForHeader)
         {
             int maxScanIndex = lookForHeader ? MAX_SFX_SIZE : 0;
             try
             {
                 int start = -1;
                 var b = GetByte(stream); start++;
-                while (start <= maxScanIndex) 
+                while (start <= maxScanIndex)
                 {
                     // Rar old signature: 52 45 7E 5E
                     // Rar4 signature:    52 61 72 21 1A 07 00
                     // Rar5 signature:    52 61 72 21 1A 07 01 00
-                    if (b == 0x52) 
+                    if (b == 0x52)
                     {
                         b = GetByte(stream); start++;
-                        if (b == 0x61) 
+                        if (b == 0x61)
                         {
                             b = GetByte(stream); start++;
                             if (b != 0x72)
@@ -70,7 +70,7 @@ namespace SharpCompress.Common.Rar.Headers
                             }
 
                             b = GetByte(stream); start++;
-                            if (b == 1) 
+                            if (b == 1)
                             {
                                 b = GetByte(stream); start++;
                                 if (b != 0)
@@ -79,13 +79,13 @@ namespace SharpCompress.Common.Rar.Headers
                                 }
 
                                 return new MarkHeader(true); // Rar5
-                            } 
-                            else if (b == 0) 
+                            }
+                            else if (b == 0)
                             {
                                 return new MarkHeader(false); // Rar4
-                            } 
-                        } 
-                        else if (b == 0x45) 
+                            }
+                        }
+                        else if (b == 0x45)
                         {
                             b = GetByte(stream); start++;
                             if (b != 0x7e)
@@ -100,9 +100,9 @@ namespace SharpCompress.Common.Rar.Headers
                             }
 
                             throw new InvalidFormatException("Rar format version pre-4 is unsupported.");
-                        } 
-                    } 
-                    else 
+                        }
+                    }
+                    else
                     {
                         b = GetByte(stream); start++;
                     }

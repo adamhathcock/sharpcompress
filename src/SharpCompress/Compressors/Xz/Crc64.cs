@@ -21,7 +21,7 @@ namespace SharpCompress.Compressors.Xz
         public static UInt64 Compute(UInt64 seed, byte[] buffer)
         {
             Table ??= CreateTable(Iso3309Polynomial);
-            
+
             return CalculateHash(seed, Table, buffer, 0, buffer.Length);
         }
 

@@ -79,7 +79,7 @@ namespace SharpCompress.Archives.Tar
             }
             return false;
         }
-        
+
         /// <summary>
         /// Constructor with a FileInfo object to an existing file.
         /// </summary>

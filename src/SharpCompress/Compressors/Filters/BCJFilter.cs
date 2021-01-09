@@ -4,9 +4,9 @@ namespace SharpCompress.Compressors.Filters
 {
     internal class BCJFilter : Filter
     {
-        private static readonly bool[] MASK_TO_ALLOWED_STATUS = {true, true, true, false, true, false, false, false};
+        private static readonly bool[] MASK_TO_ALLOWED_STATUS = { true, true, true, false, true, false, false, false };
 
-        private static readonly int[] MASK_TO_BIT_NUMBER = {0, 1, 2, 2, 3, 3, 3, 3};
+        private static readonly int[] MASK_TO_BIT_NUMBER = { 0, 1, 2, 2, 3, 3, 3, 3 };
 
         private int _pos;
         private int _prevMask;

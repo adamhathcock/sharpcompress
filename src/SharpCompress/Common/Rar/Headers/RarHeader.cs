@@ -23,12 +23,12 @@ namespace SharpCompress.Common.Rar.Headers
             }
         }
 
-        private RarHeader(RarCrcBinaryReader reader, bool isRar5, ArchiveEncoding archiveEncoding) 
+        private RarHeader(RarCrcBinaryReader reader, bool isRar5, ArchiveEncoding archiveEncoding)
         {
             _headerType = HeaderType.Null;
             _isRar5 = isRar5;
             ArchiveEncoding = archiveEncoding;
-            if (IsRar5) 
+            if (IsRar5)
             {
                 HeaderCrc = reader.ReadUInt32();
                 reader.ResetCrc();
@@ -45,7 +45,9 @@ namespace SharpCompress.Common.Rar.Headers
                 {
                     AdditionalDataSize = (long)reader.ReadRarVInt();
                 }
-            } else {
+            }
+            else
+            {
                 reader.Mark();
                 HeaderCrc = reader.ReadUInt16();
                 reader.ResetCrc();
@@ -59,7 +61,8 @@ namespace SharpCompress.Common.Rar.Headers
             }
         }
 
-        protected RarHeader(RarHeader header, RarCrcBinaryReader reader, HeaderType headerType) {
+        protected RarHeader(RarHeader header, RarCrcBinaryReader reader, HeaderType headerType)
+        {
             _headerType = headerType;
             _isRar5 = header.IsRar5;
             HeaderCrc = header.HeaderCrc;
@@ -80,7 +83,8 @@ namespace SharpCompress.Common.Rar.Headers
             VerifyHeaderCrc(reader.GetCrc32());
         }
 
-        protected int RemainingHeaderBytes(MarkingBinaryReader reader) {
+        protected int RemainingHeaderBytes(MarkingBinaryReader reader)
+        {
             return checked(HeaderSize - (int)reader.CurrentReadByteCount);
         }
 
@@ -108,7 +112,7 @@ namespace SharpCompress.Common.Rar.Headers
 
         protected ushort HeaderFlags { get; }
 
-        protected bool HasHeaderFlag(ushort flag) 
+        protected bool HasHeaderFlag(ushort flag)
         {
             return (HeaderFlags & flag) == flag;
         }

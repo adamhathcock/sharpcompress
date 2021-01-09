@@ -27,33 +27,33 @@ namespace SharpCompress.Common.Zip
                 switch (_filePart.Header.CompressionMethod)
                 {
                     case ZipCompressionMethod.BZip2:
-                    {
-                        return CompressionType.BZip2;
-                    }
+                        {
+                            return CompressionType.BZip2;
+                        }
                     case ZipCompressionMethod.Deflate:
-                    {
-                        return CompressionType.Deflate;
-                    }
+                        {
+                            return CompressionType.Deflate;
+                        }
                     case ZipCompressionMethod.Deflate64:
-                    {
-                        return CompressionType.Deflate64;
-                    }
+                        {
+                            return CompressionType.Deflate64;
+                        }
                     case ZipCompressionMethod.LZMA:
-                    {
-                        return CompressionType.LZMA;
-                    }
+                        {
+                            return CompressionType.LZMA;
+                        }
                     case ZipCompressionMethod.PPMd:
-                    {
-                        return CompressionType.PPMd;
-                    }
+                        {
+                            return CompressionType.PPMd;
+                        }
                     case ZipCompressionMethod.None:
-                    {
-                        return CompressionType.None;
-                    }
+                        {
+                            return CompressionType.None;
+                        }
                     default:
-                    {
-                        return CompressionType.Unknown;
-                    }
+                        {
+                            return CompressionType.Unknown;
+                        }
                 }
             }
         }

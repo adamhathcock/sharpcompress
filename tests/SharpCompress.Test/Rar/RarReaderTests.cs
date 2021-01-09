@@ -10,8 +10,9 @@ namespace SharpCompress.Test.Rar
     public class RarReaderTests : ReaderTests
     {
         [Fact]
-        public void Rar_Multi_Reader() {
-            DoRar_Multi_Reader(new string[] { 
+        public void Rar_Multi_Reader()
+        {
+            DoRar_Multi_Reader(new string[] {
                 "Rar.multi.part01.rar",
                 "Rar.multi.part02.rar",
                 "Rar.multi.part03.rar",
@@ -21,8 +22,9 @@ namespace SharpCompress.Test.Rar
         }
 
         [Fact]
-        public void Rar5_Multi_Reader() {
-            DoRar_Multi_Reader(new string[] { 
+        public void Rar5_Multi_Reader()
+        {
+            DoRar_Multi_Reader(new string[] {
                 "Rar5.multi.part01.rar",
                 "Rar5.multi.part02.rar",
                 "Rar5.multi.part03.rar",
@@ -49,8 +51,9 @@ namespace SharpCompress.Test.Rar
         }
 
         [Fact]
-        public void Rar_Multi_Reader_Encrypted() {
-            DoRar_Multi_Reader_Encrypted(new string[] { 
+        public void Rar_Multi_Reader_Encrypted()
+        {
+            DoRar_Multi_Reader_Encrypted(new string[] {
                 "Rar.EncryptedParts.part01.rar",
                 "Rar.EncryptedParts.part02.rar",
                 "Rar.EncryptedParts.part03.rar",
@@ -85,8 +88,9 @@ namespace SharpCompress.Test.Rar
         }
 
         [Fact]
-        public void Rar_Multi_Reader_Delete_Files() {
-            DoRar_Multi_Reader_Delete_Files(new string[] { 
+        public void Rar_Multi_Reader_Delete_Files()
+        {
+            DoRar_Multi_Reader_Delete_Files(new string[] {
                 "Rar.multi.part01.rar",
                 "Rar.multi.part02.rar",
                 "Rar.multi.part03.rar",
@@ -96,8 +100,9 @@ namespace SharpCompress.Test.Rar
         }
 
         [Fact]
-        public void Rar5_Multi_Reader_Delete_Files() {
-            DoRar_Multi_Reader_Delete_Files(new string[] { 
+        public void Rar5_Multi_Reader_Delete_Files()
+        {
+            DoRar_Multi_Reader_Delete_Files(new string[] {
                 "Rar5.multi.part01.rar",
                 "Rar5.multi.part02.rar",
                 "Rar5.multi.part03.rar",
@@ -203,12 +208,14 @@ namespace SharpCompress.Test.Rar
         }
 
         [Fact]
-        public void Rar_Entry_Stream() {
+        public void Rar_Entry_Stream()
+        {
             DoRar_Entry_Stream("Rar.rar");
         }
 
         [Fact]
-        public void Rar5_Entry_Stream() {
+        public void Rar5_Entry_Stream()
+        {
             DoRar_Entry_Stream("Rar5.rar");
         }
 
@@ -302,12 +309,14 @@ namespace SharpCompress.Test.Rar
         }
 
         [Fact]
-        public void Rar_Solid_Skip_Reader() {
+        public void Rar_Solid_Skip_Reader()
+        {
             DoRar_Solid_Skip_Reader("Rar.solid.rar");
         }
 
         [Fact]
-        public void Rar5_Solid_Skip_Reader() {
+        public void Rar5_Solid_Skip_Reader()
+        {
             DoRar_Solid_Skip_Reader("Rar5.solid.rar");
         }
 
@@ -335,12 +344,14 @@ namespace SharpCompress.Test.Rar
         }
 
         [Fact]
-        public void Rar_Reader_Skip() {
+        public void Rar_Reader_Skip()
+        {
             DoRar_Reader_Skip("Rar.rar");
         }
 
         [Fact]
-        public void Rar5_Reader_Skip() {
+        public void Rar5_Reader_Skip()
+        {
             DoRar_Reader_Skip("Rar5.rar");
         }
 

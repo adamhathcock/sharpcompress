@@ -16,7 +16,8 @@ namespace SharpCompress.Readers.Rar
 
         internal override void ValidateArchive(RarVolume archive)
         {
-            if (archive.IsMultiVolume) {
+            if (archive.IsMultiVolume)
+            {
                 var msg = "Streamed archive is a Multi-volume archive.  Use different RarReader method to extract.";
                 throw new MultiVolumeExtractionException(msg);
             }

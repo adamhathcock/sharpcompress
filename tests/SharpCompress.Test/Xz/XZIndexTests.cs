@@ -39,7 +39,7 @@ namespace SharpCompress.Test.Xz
             {
                 BinaryReader br = new BinaryReader(badStream);
                 var index = new XZIndex(br, false);
-                Assert.Throws<InvalidDataException>( () => index.Process());
+                Assert.Throws<InvalidDataException>(() => index.Process());
             }
         }
 

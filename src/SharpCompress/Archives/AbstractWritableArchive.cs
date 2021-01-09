@@ -12,7 +12,7 @@ namespace SharpCompress.Archives
         where TEntry : IArchiveEntry
         where TVolume : IVolume
     {
-        private class RebuildPauseDisposable: IDisposable
+        private class RebuildPauseDisposable : IDisposable
         {
             private readonly AbstractWritableArchive<TEntry, TVolume> archive;
 

@@ -165,7 +165,7 @@ namespace SharpCompress.Test.Zip
 
                 WriterOptions writerOptions = new ZipWriterOptions(CompressionType.Deflate);
                 writerOptions.ArchiveEncoding.Default = Encoding.GetEncoding(866);
-                
+
                 archive.SaveTo(scratchPath, writerOptions);
             }
             CompareArchivesByPath(modified, scratchPath, Encoding.GetEncoding(866));
@@ -185,7 +185,7 @@ namespace SharpCompress.Test.Zip
 
                 WriterOptions writerOptions = new ZipWriterOptions(CompressionType.Deflate);
                 writerOptions.ArchiveEncoding.Default = Encoding.GetEncoding(866);
-                
+
                 archive.SaveTo(scratchPath, writerOptions);
             }
             CompareArchivesByPath(modified, scratchPath, Encoding.GetEncoding(866));
@@ -280,10 +280,10 @@ namespace SharpCompress.Test.Zip
             using (var archive = ZipArchive.Create())
             {
                 archive.AddAllFromDirectory(SCRATCH_FILES_PATH);
-                
+
                 WriterOptions writerOptions = new ZipWriterOptions(CompressionType.Deflate);
                 writerOptions.ArchiveEncoding.Default = Encoding.GetEncoding(866);
-                
+
                 archive.SaveTo(scratchPath, writerOptions);
             }
             CompareArchivesByPath(unmodified, scratchPath, Encoding.GetEncoding(866));
@@ -465,10 +465,11 @@ namespace SharpCompress.Test.Zip
         {
             //windows only because of the paths
             Skip.IfNot(Environment.OSVersion.Platform == PlatformID.Win32NT);
-            
+
             string zipFile = Path.Combine(TEST_ARCHIVES_PATH, "Zip.Evil.zip");
 
-            Assert.ThrowsAny<Exception>(() => {
+            Assert.ThrowsAny<Exception>(() =>
+            {
                 using (var archive = ZipArchive.Open(zipFile))
                 {
                     foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
@@ -563,5 +564,5 @@ namespace SharpCompress.Test.Zip
                 }
             }
         }
-   }
+    }
 }

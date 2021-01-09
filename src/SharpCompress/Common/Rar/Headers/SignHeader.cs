@@ -5,8 +5,8 @@ namespace SharpCompress.Common.Rar.Headers
     internal class SignHeader : RarHeader
     {
         protected SignHeader(RarHeader header, RarCrcBinaryReader reader)
-            : base(header, reader, HeaderType.Sign) 
-        { 
+            : base(header, reader, HeaderType.Sign)
+        {
             if (IsRar5)
             {
                 throw new InvalidFormatException("unexpected rar5 record");
