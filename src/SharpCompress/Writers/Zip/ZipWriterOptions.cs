@@ -1,5 +1,4 @@
-﻿using SharpCompress.Archives;
-using SharpCompress.Common;
+﻿using SharpCompress.Common;
 using SharpCompress.Compressors.Deflate;
 
 namespace SharpCompress.Writers.Zip
@@ -30,7 +29,7 @@ namespace SharpCompress.Writers.Zip
         /// </summary>
         public CompressionLevel DeflateCompressionLevel { get; set; } = CompressionLevel.Default;
 
-        public string ArchiveComment { get; set; }
+        public string? ArchiveComment { get; set; }
 
         /// <summary>
         /// Sets a value indicating if zip64 support is enabled. 

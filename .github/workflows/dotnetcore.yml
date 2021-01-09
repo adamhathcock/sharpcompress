@@ -1,0 +1,24 @@
+name: SharpCompress
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [windows-latest, ubuntu-latest]
+
+    steps:
+    - uses: actions/checkout@v1
+    - uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 3.1.403
+    - run: dotnet run -p build/build.csproj
+    - uses: actions/upload-artifact@v2
+      with:
+        name: ${{ matrix.os }}-sharpcompress.nupkg
+        path: artifacts/*
+    - uses: actions/upload-artifact@v2
+      with:
+        name: ${{ matrix.os }}-sharpcompress.snupkg
+        path: artifacts/*

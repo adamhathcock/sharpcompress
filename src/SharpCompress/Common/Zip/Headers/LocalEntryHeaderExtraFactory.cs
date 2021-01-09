@@ -1,6 +1,6 @@
 ﻿using System;
+using System.Buffers.Binary;
 using System.Text;
-using SharpCompress.Converters;
 
 namespace SharpCompress.Common.Zip.Headers
 {
@@ -18,13 +18,25 @@ namespace SharpCompress.Common.Zip.Headers
 
     internal class ExtraData
     {
-        internal ExtraDataType Type { get; set; }
-        internal ushort Length { get; set; }
-        internal byte[] DataBytes { get; set; }
+        public ExtraData(ExtraDataType type, ushort length, byte[] dataBytes)
+        {
+            Type = type;
+            Length = length;
+            DataBytes = dataBytes;
+        }
+
+        internal ExtraDataType Type { get; }
+        internal ushort Length { get; }
+        internal byte[] DataBytes { get; }
     }
 
-    internal class ExtraUnicodePathExtraField : ExtraData
+    internal sealed class ExtraUnicodePathExtraField : ExtraData
     {
+        public ExtraUnicodePathExtraField(ExtraDataType type, ushort length, byte[] dataBytes)
+            : base(type, length, dataBytes)
+        {
+        }
+            
         internal byte Version => DataBytes[0];
 
         internal byte[] NameCrc32
@@ -49,14 +61,11 @@ namespace SharpCompress.Common.Zip.Headers
         }
     }
 
-    internal class Zip64ExtendedInformationExtraField : ExtraData
+    internal sealed class Zip64ExtendedInformationExtraField : ExtraData
     {
-
         public Zip64ExtendedInformationExtraField(ExtraDataType type, ushort length, byte[] dataBytes)
+            : base(type, length, dataBytes)
         {
-            Type = type;
-            Length = length;
-            DataBytes = dataBytes;
             Process();
         }
 
@@ -76,34 +85,34 @@ namespace SharpCompress.Common.Zip.Headers
             switch (DataBytes.Length)
             {
                 case 4:
-                    VolumeNumber = DataConverter.LittleEndian.GetUInt32(DataBytes, 0);
+                    VolumeNumber = BinaryPrimitives.ReadUInt32LittleEndian(DataBytes);
                     return;
                 case 8:
-                    RelativeOffsetOfEntryHeader = (long)DataConverter.LittleEndian.GetUInt64(DataBytes, 0);
+                    RelativeOffsetOfEntryHeader = BinaryPrimitives.ReadInt64LittleEndian(DataBytes);
                     return;
                 case 12:
-                    RelativeOffsetOfEntryHeader = (long)DataConverter.LittleEndian.GetUInt64(DataBytes, 0);
-                    VolumeNumber = DataConverter.LittleEndian.GetUInt32(DataBytes, 8);
+                    RelativeOffsetOfEntryHeader = BinaryPrimitives.ReadInt64LittleEndian(DataBytes);
+                    VolumeNumber = BinaryPrimitives.ReadUInt32LittleEndian(DataBytes.AsSpan(8));
                     return;
                 case 16:
-                     UncompressedSize = (long)DataConverter.LittleEndian.GetUInt64(DataBytes, 0);
-                     CompressedSize = (long)DataConverter.LittleEndian.GetUInt64(DataBytes, 8);
+                    UncompressedSize = BinaryPrimitives.ReadInt64LittleEndian(DataBytes);
+                    CompressedSize = BinaryPrimitives.ReadInt64LittleEndian(DataBytes.AsSpan(8));
                     return;
                 case 20:
-                    UncompressedSize = (long)DataConverter.LittleEndian.GetUInt64(DataBytes, 0);
-                    CompressedSize = (long)DataConverter.LittleEndian.GetUInt64(DataBytes, 8);
-                    VolumeNumber = DataConverter.LittleEndian.GetUInt32(DataBytes, 16);
+                    UncompressedSize = BinaryPrimitives.ReadInt64LittleEndian(DataBytes);
+                    CompressedSize = BinaryPrimitives.ReadInt64LittleEndian(DataBytes.AsSpan(8));
+                    VolumeNumber = BinaryPrimitives.ReadUInt32LittleEndian(DataBytes.AsSpan(16));
                     return;
                 case 24:
-                    UncompressedSize = (long)DataConverter.LittleEndian.GetUInt64(DataBytes, 0);
-                    CompressedSize = (long)DataConverter.LittleEndian.GetUInt64(DataBytes, 8);
-                    RelativeOffsetOfEntryHeader = (long)DataConverter.LittleEndian.GetUInt64(DataBytes, 16);
+                    UncompressedSize = BinaryPrimitives.ReadInt64LittleEndian(DataBytes);
+                    CompressedSize = BinaryPrimitives.ReadInt64LittleEndian(DataBytes.AsSpan(8));
+                    RelativeOffsetOfEntryHeader = BinaryPrimitives.ReadInt64LittleEndian(DataBytes.AsSpan(16));
                     return;
                 case 28:
-                    UncompressedSize = (long)DataConverter.LittleEndian.GetUInt64(DataBytes, 0);
-                    CompressedSize = (long)DataConverter.LittleEndian.GetUInt64(DataBytes, 8);
-                    RelativeOffsetOfEntryHeader = (long)DataConverter.LittleEndian.GetUInt64(DataBytes, 16);
-                    VolumeNumber = DataConverter.LittleEndian.GetUInt32(DataBytes, 24);
+                    UncompressedSize = BinaryPrimitives.ReadInt64LittleEndian(DataBytes);
+                    CompressedSize = BinaryPrimitives.ReadInt64LittleEndian(DataBytes.AsSpan(8));
+                    RelativeOffsetOfEntryHeader = BinaryPrimitives.ReadInt64LittleEndian(DataBytes.AsSpan(16));
+                    VolumeNumber = BinaryPrimitives.ReadUInt32LittleEndian(DataBytes.AsSpan(24));
                     return;
                 default:
                 throw new ArchiveException("Unexpected size of of Zip64 extended information extra field");
@@ -120,30 +129,12 @@ namespace SharpCompress.Common.Zip.Headers
     {
         internal static ExtraData Create(ExtraDataType type, ushort length, byte[] extraData)
         {
-            switch (type)
+            return type switch
             {
-                case ExtraDataType.UnicodePathExtraField:
-                    return new ExtraUnicodePathExtraField
-                           {
-                               Type = type,
-                               Length = length,
-                               DataBytes = extraData
-                           };
-                case ExtraDataType.Zip64ExtendedInformationExtraField:
-                    return new Zip64ExtendedInformationExtraField
-                            (
-                                type, 
-                                length,
-                                extraData
-                           );
-                default:
-                    return new ExtraData
-                           {
-                               Type = type,
-                               Length = length,
-                               DataBytes = extraData
-                           };
-            }
+                ExtraDataType.UnicodePathExtraField => new ExtraUnicodePathExtraField(type, length, extraData),
+                ExtraDataType.Zip64ExtendedInformationExtraField => new Zip64ExtendedInformationExtraField(type, length, extraData),
+                _ => new ExtraData(type, length, extraData)
+            };
         }
     }
 }

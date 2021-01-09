@@ -1,4 +1,5 @@
-﻿using static SharpCompress.Compressors.Rar.UnpackV2017.Unpack.Unpack15Local;
+﻿using System;
+using static SharpCompress.Compressors.Rar.UnpackV2017.Unpack.Unpack15Local;
 
 namespace SharpCompress.Compressors.Rar.UnpackV2017
 {
@@ -61,7 +62,10 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017
     UnpPtr=0;
   }
   else
+  {
     UnpPtr=WrPtr;
+  }
+
   --DestUnpSize;
   if (DestUnpSize>=0)
   {
@@ -74,9 +78,15 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017
     UnpPtr&=MaxWinMask;
 
     if (Inp.InAddr>ReadTop-30 && !UnpReadBuf())
+    {
       break;
+    }
+
     if (((WrPtr-UnpPtr) & MaxWinMask)<270 && WrPtr!=UnpPtr)
+    {
       UnpWriteBuf20();
+    }
+
     if (StMode != 0)
     {
       HuffDecode();
@@ -93,9 +103,13 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017
     {
       FlagBuf<<=1;
       if (Nlzb > Nhfb)
+      {
         LongLZ();
+      }
       else
+      {
         HuffDecode();
+      }
     }
     else
     {
@@ -109,9 +123,13 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017
       {
         FlagBuf<<=1;
         if (Nlzb > Nhfb)
+        {
           HuffDecode();
+        }
         else
+        {
           LongLZ();
+        }
       }
       else
       {
@@ -167,15 +185,25 @@ internal static class Unpack15Local {
   if (AvrLn1<37)
   {
     for (Length=0;;Length++)
+    {
       if (((BitField^ShortXor1[Length]) & (~(0xff>>(int)GetShortLen1(Length))))==0)
+      {
         break;
+      }
+    }
+
     Inp.faddbits(GetShortLen1(Length));
   }
   else
   {
     for (Length=0;;Length++)
+    {
       if (((BitField^ShortXor2[Length]) & (~(0xff>>(int)GetShortLen2(Length))))==0)
+      {
         break;
+      }
+    }
+
     Inp.faddbits(GetShortLen2(Length));
   }
 
@@ -209,9 +237,14 @@ internal static class Unpack15Local {
       return;
     }
     if (Distance > 256)
+    {
       Length++;
+    }
+
     if (Distance >= MaxDist3)
+    {
       Length++;
+    }
 
     OldDist[OldDistPtr++]=Distance;
     OldDistPtr = OldDistPtr & 3;
@@ -259,10 +292,14 @@ internal static class Unpack15Local {
 
   uint BitField=Inp.fgetbits();
   if (AvrLn2 >= 122)
+  {
     Length=DecodeNum(BitField,STARTL2,DecL2,PosL2);
+  }
   else
     if (AvrLn2 >= 64)
+    {
       Length=DecodeNum(BitField,STARTL1,DecL1,PosL1);
+    }
     else
       if (BitField < 0x100)
       {
@@ -272,7 +309,10 @@ internal static class Unpack15Local {
       else
       {
         for (Length=0;((BitField<<(int)Length)&0x8000)==0;Length++)
+        {
           ;
+        }
+
         Inp.faddbits(Length+1);
       }
 
@@ -281,12 +321,18 @@ internal static class Unpack15Local {
 
   BitField=Inp.fgetbits();
   if (AvrPlcB > 0x28ff)
+  {
     DistancePlace=DecodeNum(BitField,STARTHF2,DecHf2,PosHf2);
+  }
   else
     if (AvrPlcB > 0x6ff)
+    {
       DistancePlace=DecodeNum(BitField,STARTHF1,DecHf1,PosHf1);
+    }
     else
+    {
       DistancePlace=DecodeNum(BitField,STARTHF0,DecHf0,PosHf0);
+    }
 
   AvrPlcB += DistancePlace;
   AvrPlcB -= AvrPlcB >> 8;
@@ -295,9 +341,13 @@ internal static class Unpack15Local {
     Distance = ChSetB[DistancePlace & 0xff];
     NewDistancePlace = NToPlB[Distance++ & 0xff]++;
     if ((Distance & 0xff) != 0)
+    {
       CorrHuff(ChSetB,NToPlB);
+    }
     else
+    {
       break;
+    }
   }
 
   ChSetB[DistancePlace & 0xff]=ChSetB[NewDistancePlace];
@@ -308,23 +358,39 @@ internal static class Unpack15Local {
 
   OldAvr3=AvrLn3;
   if (Length!=1 && Length!=4)
+  {
     if (Length==0 && Distance <= MaxDist3)
     {
       AvrLn3++;
       AvrLn3 -= AvrLn3 >> 8;
     }
     else
-      if (AvrLn3 > 0)
-        AvrLn3--;
+    if (AvrLn3 > 0)
+    {
+      AvrLn3--;
+    }
+  }
+
   Length+=3;
   if (Distance >= MaxDist3)
+  {
     Length++;
+  }
+
   if (Distance <= 256)
+  {
     Length+=8;
+  }
+
   if (OldAvr3 > 0xb0 || AvrPlc >= 0x2a00 && OldAvr2 < 0x40)
+  {
     MaxDist3=0x7f00;
+  }
   else
+  {
     MaxDist3=0x2001;
+  }
+
   OldDist[OldDistPtr++]=Distance;
   OldDistPtr = OldDistPtr & 3;
   LastLength=Length;
@@ -342,23 +408,37 @@ internal static class Unpack15Local {
   uint BitField=Inp.fgetbits();
 
   if (AvrPlc > 0x75ff)
+  {
     BytePlace=(int)DecodeNum(BitField,STARTHF4,DecHf4,PosHf4);
+  }
   else
     if (AvrPlc > 0x5dff)
+    {
       BytePlace=(int)DecodeNum(BitField,STARTHF3,DecHf3,PosHf3);
+    }
     else
       if (AvrPlc > 0x35ff)
+      {
         BytePlace=(int)DecodeNum(BitField,STARTHF2,DecHf2,PosHf2);
+      }
       else
         if (AvrPlc > 0x0dff)
+        {
           BytePlace=(int)DecodeNum(BitField,STARTHF1,DecHf1,PosHf1);
+        }
         else
+        {
           BytePlace=(int)DecodeNum(BitField,STARTHF0,DecHf0,PosHf0);
+        }
+
   BytePlace&=0xff;
   if (StMode != 0)
   {
     if (BytePlace==0 && BitField > 0xfff)
+    {
       BytePlace=0x100;
+    }
+
     if (--BytePlace==-1)
     {
       BitField=Inp.fgetbits();
@@ -382,7 +462,10 @@ internal static class Unpack15Local {
   }
   else
     if (NumHuf++ >= 16 && FlagsCnt==0)
+    {
       StMode=1;
+    }
+
   AvrPlc += (uint)BytePlace;
   AvrPlc -= AvrPlc >> 8;
   Nhfb+=16;
@@ -400,9 +483,13 @@ internal static class Unpack15Local {
     CurByte=ChSet[BytePlace];
     NewBytePlace=NToPl[CurByte++ & 0xff]++;
     if ((CurByte & 0xff) > 0xa1)
+    {
       CorrHuff(ChSet,NToPl);
+    }
     else
+    {
       break;
+    }
   }
 
   ChSet[BytePlace]=ChSet[NewBytePlace];
@@ -420,7 +507,9 @@ internal static class Unpack15Local {
   // we need to check for value 256 when unpacking in case we unpack
   // a corrupt archive.
   if (FlagsPlace>=ChSetC.Length)
+  {
     return;
+  }
 
   while (true)
   {
@@ -428,7 +517,10 @@ internal static class Unpack15Local {
     FlagBuf=Flags>>8;
     NewFlagsPlace=NToPlC[Flags++ & 0xff]++;
     if ((Flags & 0xff) != 0)
+    {
       break;
+    }
+
     CorrHuff(ChSetC,NToPlC);
   }
 
@@ -461,9 +553,9 @@ internal static class Unpack15Local {
     ChSetA[I]=(ushort)I;
     ChSetC[I]=(ushort)(((~I+1) & 0xff)<<8);
   }
-  Utility.Memset(NToPl,0,NToPl.Length);
-  Utility.Memset(NToPlB,0,NToPlB.Length);
-  Utility.Memset(NToPlC,0,NToPlC.Length);
+  new Span<byte>(NToPl).Clear();
+  new Span<byte>(NToPlB).Clear();
+  new Span<byte>(NToPlC).Clear();
   CorrHuff(ChSetB,NToPlB);
 }
 
@@ -472,10 +564,15 @@ internal static class Unpack15Local {
   int I,J;
   for (I=7;I>=0;I--)
     for (J=0;J<32;J++)
+    {
       CharSet[J]=(ushort)((CharSet[J] & ~0xff) | I);
-  Utility.Memset(NumToPlace,0,NToPl.Length);
+    }
+
+  new Span<byte>(NumToPlace, 0, NToPl.Length).Clear();
   for (I=6;I>=0;I--)
+  {
     NumToPlace[I]=(byte)((7-I)*32);
+  }
 }
 
       private void CopyString15(uint Distance,uint Length)
@@ -492,7 +589,10 @@ internal static class Unpack15Local {
 {
   int I;
   for (Num&=0xfff0,I=0;DecTab[I]<=Num;I++)
+  {
     StartPos++;
+  }
+
   Inp.faddbits(StartPos);
   return(((Num-(I != 0 ? DecTab[I-1]:0))>>(int)(16-StartPos))+PosTab[StartPos]);
 }

@@ -22,7 +22,10 @@ namespace SharpCompress.Test.Xz
             byte[] buffer = new byte[bytesToRead];
             var read = block.Read(buffer, 0, bytesToRead);
             if (read != bytesToRead)
+            {
                 throw new EndOfStreamException();
+            }
+
             return buffer;
         }
 

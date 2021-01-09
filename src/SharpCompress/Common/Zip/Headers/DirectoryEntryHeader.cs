@@ -1,6 +1,5 @@
 ﻿using System.IO;
 using System.Linq;
-using System.Text;
 
 namespace SharpCompress.Common.Zip.Headers
 {
@@ -93,6 +92,6 @@ namespace SharpCompress.Common.Zip.Headers
 
         public ushort DiskNumberStart { get; set; }
 
-        public string Comment { get; private set; }
+        public string? Comment { get; private set; }
     }
 }

@@ -1,3 +1,5 @@
+#nullable disable
+
 #if !Rar2017_64bit
 using nint = System.Int32;
 using nuint = System.UInt32;

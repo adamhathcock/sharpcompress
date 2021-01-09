@@ -2,7 +2,6 @@ using System;
 using System.Buffers;
 using System.Collections.Generic;
 using System.IO;
-using System.Runtime.CompilerServices;
 using SharpCompress.Readers;
 
 namespace SharpCompress
@@ -44,78 +43,12 @@ namespace SharpCompress
             return (number >> bits) + (2L << ~bits);
         }
 
-        /// <summary>
-        /// Fills the array with an specific value from an specific index to an specific index.
-        /// </summary>
-        /// <param name="array">The array to be filled.</param>
-        /// <param name="fromindex">The first index to be filled.</param>
-        /// <param name="toindex">The last index to be filled.</param>
-        /// <param name="val">The value to fill the array with.</param>
-        public static void Fill<T>(T[] array, int fromindex, int toindex, T val) where T : struct
-        {
-            if (array.Length == 0)
-            {
-                throw new NullReferenceException();
-            }
-            if (fromindex > toindex)
-            {
-                throw new ArgumentException();
-            }
-            if ((fromindex < 0) || array.Length < toindex)
-            {
-                throw new IndexOutOfRangeException();
-            }
-            for (int index = (fromindex > 0) ? fromindex-- : fromindex; index < toindex; index++)
-            {
-                array[index] = val;
-            }
-        }
-        public static void Memset(byte[] array, byte what, int length)
-        {
-            ref byte ptr = ref array[0];
-            Unsafe.InitBlock(ref ptr, what, (uint)length);
-        }
-
-        public static void Memset<T>(T[] array, T what, int length)
-        {
-            for (var i = 0; i < length; i++)
-            {
-                array[i] = what;
-            }
-        }
-
-        public static void FillFast<T>(T[] array, T val) where T : struct
-        {
-            for (int i = 0; i < array.Length; i++)
-            {
-                array[i] = val;
-            }
-        }
-
-        public static void FillFast<T>(T[] array, int start, int length, T val) where T : struct
-        {
-            int toIndex = start + length;
-            for (int i = start; i < toIndex; i++)
-            {
-                array[i] = val;
-            }
-        }
-
-
-        /// <summary>
-        /// Fills the array with an specific value.
-        /// </summary>
-        /// <param name="array">The array to be filled.</param>
-        /// <param name="val">The value to fill the array with.</param>
-        public static void Fill<T>(T[] array, T val) where T : struct
-        {
-            Fill(array, 0, array.Length, val);
-        }
-
         public static void SetSize(this List<byte> list, int count)
         {
             if (count > list.Count)
             {
+                // Ensure the list only needs to grow once
+                list.Capacity = count;
                 for (int i = list.Count; i < count; i++)
                 {
                     list.Add(0x0);
@@ -123,18 +56,7 @@ namespace SharpCompress
             }
             else
             {
-                byte[] temp = new byte[count];
-                list.CopyTo(temp, 0);
-                list.Clear();
-                list.AddRange(temp);
-            }
-        }
-
-        public static void AddRange<T>(this ICollection<T> destination, IEnumerable<T> source)
-        {
-            foreach (T item in source)
-            {
-                destination.Add(item);
+                list.RemoveRange(count, list.Count - count);
             }
         }
 
@@ -149,11 +71,19 @@ namespace SharpCompress
         public static void Copy(Array sourceArray, long sourceIndex, Array destinationArray, long destinationIndex, long length)
         {
             if (sourceIndex > Int32.MaxValue || sourceIndex < Int32.MinValue)
+            {
                 throw new ArgumentOutOfRangeException();
+            }
+
             if (destinationIndex > Int32.MaxValue || destinationIndex < Int32.MinValue)
+            {
                 throw new ArgumentOutOfRangeException();
+            }
+
             if (length > Int32.MaxValue || length < Int32.MinValue)
+            {
                 throw new ArgumentOutOfRangeException();
+            }
 
             Array.Copy(sourceArray, (int)sourceIndex, destinationArray, (int)destinationIndex, (int)length);
         }
@@ -165,7 +95,7 @@ namespace SharpCompress
 
         public static void CheckNotNull(this object obj, string name)
         {
-            if (obj == null)
+            if (obj is null)
             {
                 throw new ArgumentNullException(name);
             }
@@ -270,7 +200,7 @@ namespace SharpCompress
 
         public static uint DateTimeToDosTime(this DateTime? dateTime)
         {
-            if (dateTime == null)
+            if (dateTime is null)
             {
                 return 0;
             }
@@ -305,9 +235,8 @@ namespace SharpCompress
             byte[] array = GetTransferByteArray();
             try
             {
-                int count;
                 long total = 0;
-                while (ReadTransferBlock(source, array, out count))
+                while (ReadTransferBlock(source, array, out int count))
                 {
                     total += count;
                     destination.Write(array, 0, count);
@@ -325,10 +254,9 @@ namespace SharpCompress
             byte[] array = GetTransferByteArray();
             try
             {
-                int count;
                 var iterations = 0;
                 long total = 0;
-                while (ReadTransferBlock(source, array, out count))
+                while (ReadTransferBlock(source, array, out int count))
                 {
                     total += count;
                     destination.Write(array, 0, count);
@@ -371,22 +299,6 @@ namespace SharpCompress
         public static string TrimNulls(this string source)
         {
             return source.Replace('\0', ' ').Trim();
-        }
-
-        public static bool BinaryEquals(this byte[] source, byte[] target)
-        {
-            if (source.Length != target.Length)
-            {
-                return false;
-            }
-            for (int i = 0; i < source.Length; ++i)
-            {
-                if (source[i] != target[i])
-                {
-                    return false;
-                }
-            }
-            return true;
         }
     }
 }

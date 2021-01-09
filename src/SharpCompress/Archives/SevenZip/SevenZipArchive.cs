@@ -1,4 +1,6 @@
-﻿using System;
+﻿#nullable disable
+
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -108,7 +110,7 @@ namespace SharpCompress.Archives.SevenZip
 
         private void LoadFactory(Stream stream)
         {
-            if (database == null)
+            if (database is null)
             {
                 stream.Position = 0;
                 var reader = new ArchiveReader();
@@ -129,13 +131,13 @@ namespace SharpCompress.Archives.SevenZip
             }
         }
 
-        private static readonly byte[] SIGNATURE = {(byte)'7', (byte)'z', 0xBC, 0xAF, 0x27, 0x1C};
+        private static ReadOnlySpan<byte> SIGNATURE => new byte[] {(byte)'7', (byte)'z', 0xBC, 0xAF, 0x27, 0x1C};
 
         private static bool SignatureMatch(Stream stream)
         {
             BinaryReader reader = new BinaryReader(stream);
-            byte[] signatureBytes = reader.ReadBytes(6);
-            return signatureBytes.BinaryEquals(SIGNATURE);
+            ReadOnlySpan<byte> signatureBytes = reader.ReadBytes(6);
+            return signatureBytes.SequenceEqual(SIGNATURE);
         }
 
         protected override IReader CreateReaderForSolidExtraction()
@@ -154,7 +156,7 @@ namespace SharpCompress.Archives.SevenZip
             }
         }
 
-        private class SevenZipReader : AbstractReader<SevenZipEntry, SevenZipVolume>
+        private sealed class SevenZipReader : AbstractReader<SevenZipEntry, SevenZipVolume>
         {
             private readonly SevenZipArchive archive;
             private CFolder currentFolder;
@@ -180,7 +182,7 @@ namespace SharpCompress.Archives.SevenZip
                 foreach (var group in entries.Where(x => !x.IsDirectory).GroupBy(x => x.FilePart.Folder))
                 {
                     currentFolder = group.Key;
-                    if (group.Key == null)
+                    if (group.Key is null)
                     {
                         currentStream = Stream.Null;
                     }
@@ -201,7 +203,7 @@ namespace SharpCompress.Archives.SevenZip
                 return CreateEntryStream(new ReadOnlySubStream(currentStream, currentItem.Size));
             }
         }
-        
+
         private class PasswordProvider : IPasswordProvider
         {
             private readonly string _password;
@@ -209,7 +211,6 @@ namespace SharpCompress.Archives.SevenZip
             public PasswordProvider(string password)
             {
                 _password = password;
-
             }
 
             public string CryptoGetTextPassword()

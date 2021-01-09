@@ -1,8 +1,9 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 
 namespace SharpCompress.Compressors.BZip2
 {
-    public class BZip2Stream : Stream
+    public sealed class BZip2Stream : Stream
     {
         private readonly Stream stream;
         private bool isDisposed;
@@ -81,6 +82,20 @@ namespace SharpCompress.Compressors.BZip2
         {
             stream.SetLength(value);
         }
+
+#if !NET461 && !NETSTANDARD2_0
+
+        public override int Read(Span<byte> buffer)
+        {
+            return stream.Read(buffer);
+        }
+
+        public override void Write(ReadOnlySpan<byte> buffer)
+        {
+            stream.Write(buffer);
+        }
+
+#endif
 
         public override void Write(byte[] buffer, int offset, int count)
         {

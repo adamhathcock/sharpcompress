@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Buffers.Binary;
 using System.IO;
 using System.Linq;
 using SharpCompress.Common.Zip.Headers;
@@ -8,7 +9,6 @@ using SharpCompress.Compressors.Deflate;
 using SharpCompress.Compressors.Deflate64;
 using SharpCompress.Compressors.LZMA;
 using SharpCompress.Compressors.PPMd;
-using SharpCompress.Converters;
 using SharpCompress.IO;
 
 namespace SharpCompress.Common.Zip
@@ -100,7 +100,7 @@ namespace SharpCompress.Common.Zip
                 case ZipCompressionMethod.WinzipAes:
                 {
                     ExtraData data = Header.Extra.Where(x => x.Type == ExtraDataType.WinZipAes).SingleOrDefault();
-                    if (data == null)
+                    if (data is null)
                     {
                         throw new InvalidFormatException("No Winzip AES extra data found.");
                     }
@@ -108,19 +108,19 @@ namespace SharpCompress.Common.Zip
                     {
                         throw new InvalidFormatException("Winzip data length is not 7.");
                     }
-                    ushort compressedMethod = DataConverter.LittleEndian.GetUInt16(data.DataBytes, 0);
+                    ushort compressedMethod = BinaryPrimitives.ReadUInt16LittleEndian(data.DataBytes);
 
                     if (compressedMethod != 0x01 && compressedMethod != 0x02)
                     {
                         throw new InvalidFormatException("Unexpected vendor version number for WinZip AES metadata");
                     }
 
-                    ushort vendorId = DataConverter.LittleEndian.GetUInt16(data.DataBytes, 2);
+                    ushort vendorId = BinaryPrimitives.ReadUInt16LittleEndian(data.DataBytes.AsSpan(2));
                     if (vendorId != 0x4541)
                     {
                         throw new InvalidFormatException("Unexpected vendor ID for WinZip AES metadata");
                     }
-                    return CreateDecompressionStream(stream, (ZipCompressionMethod)DataConverter.LittleEndian.GetUInt16(data.DataBytes, 5));
+                    return CreateDecompressionStream(stream, (ZipCompressionMethod)BinaryPrimitives.ReadUInt16LittleEndian(data.DataBytes.AsSpan(5)));
                 }
                 default:
                 {
@@ -142,7 +142,7 @@ namespace SharpCompress.Common.Zip
                 && FlagUtility.HasFlag(Header.Flags, HeaderFlags.UsePostDataDescriptor))
                 || Header.IsZip64)
             {
-                plainStream = new NonDisposingStream(plainStream); //make sure AES doesn't close    
+                plainStream = new NonDisposingStream(plainStream); //make sure AES doesn't close
             }
             else
             {

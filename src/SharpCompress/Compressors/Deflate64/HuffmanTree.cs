@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System;
 using System.Diagnostics;
 using System.IO;
 
@@ -35,7 +36,7 @@ namespace SharpCompress.Compressors.Deflate64
         private readonly short[] _right;
         private readonly byte[] _codeLengthArray;
 #if DEBUG
-        private uint[] _codeArrayDebug;
+        private uint[]? _codeArrayDebug;
 #endif
 
         private readonly int _tableMask;
@@ -82,16 +83,24 @@ namespace SharpCompress.Compressors.Deflate64
         {
             byte[] literalTreeLength = new byte[MAX_LITERAL_TREE_ELEMENTS];
             for (int i = 0; i <= 143; i++)
+            {
                 literalTreeLength[i] = 8;
+            }
 
             for (int i = 144; i <= 255; i++)
+            {
                 literalTreeLength[i] = 9;
+            }
 
             for (int i = 256; i <= 279; i++)
+            {
                 literalTreeLength[i] = 7;
+            }
 
             for (int i = 280; i <= 287; i++)
+            {
                 literalTreeLength[i] = 8;
+            }
 
             return literalTreeLength;
         }
@@ -110,14 +119,14 @@ namespace SharpCompress.Compressors.Deflate64
         // This algorithm is described in standard RFC 1951
         private uint[] CalculateHuffmanCode()
         {
-            uint[] bitLengthCount = new uint[17];
+            Span<uint> bitLengthCount = stackalloc uint[17];
             foreach (int codeLength in _codeLengthArray)
             {
                 bitLengthCount[codeLength]++;
             }
             bitLengthCount[0] = 0;  // clear count for length 0
 
-            uint[] nextCode = new uint[17];
+            Span<uint> nextCode = stackalloc uint[17];
             uint tempCode = 0;
             for (int bits = 1; bits <= 16; bits++)
             {
@@ -277,9 +286,14 @@ namespace SharpCompress.Compressors.Deflate64
                 {
                     symbol = -symbol;
                     if ((bitBuffer & mask) == 0)
+                    {
                         symbol = _left[symbol];
+                    }
                     else
+                    {
                         symbol = _right[symbol];
+                    }
+
                     mask <<= 1;
                 } while (symbol < 0);
             }

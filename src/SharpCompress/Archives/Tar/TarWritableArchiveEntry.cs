@@ -1,4 +1,6 @@
-﻿using System;
+﻿#nullable disable
+
+using System;
 using System.Collections.Generic;
 using System.IO;
 using SharpCompress.Common;
@@ -6,7 +8,7 @@ using SharpCompress.IO;
 
 namespace SharpCompress.Archives.Tar
 {
-    internal class TarWritableArchiveEntry : TarArchiveEntry, IWritableArchiveEntry
+    internal sealed class TarWritableArchiveEntry : TarArchiveEntry, IWritableArchiveEntry
     {
         private readonly bool closeStream;
         private readonly Stream stream;

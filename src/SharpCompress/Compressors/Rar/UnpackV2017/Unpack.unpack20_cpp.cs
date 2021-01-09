@@ -40,14 +40,22 @@ internal static class Unpack20Local {
   uint Bits;
 
   if (Suspended)
+  {
     UnpPtr=WrPtr;
+  }
   else
   {
     UnpInitData(Solid);
     if (!UnpReadBuf())
+    {
       return;
+    }
+
     if ((!Solid || !TablesRead2) && !ReadTables20())
+    {
       return;
+    }
+
     --DestUnpSize;
   }
 
@@ -56,13 +64,20 @@ internal static class Unpack20Local {
     UnpPtr&=MaxWinMask;
 
     if (Inp.InAddr>ReadTop-30)
+    {
       if (!UnpReadBuf())
+      {
         break;
+      }
+    }
+
     if (((WrPtr-UnpPtr) & MaxWinMask)<270 && WrPtr!=UnpPtr)
     {
       UnpWriteBuf20();
       if (Suspended)
+      {
         return;
+      }
     }
     if (UnpAudioBlock)
     {
@@ -71,12 +86,18 @@ internal static class Unpack20Local {
       if (AudioNumber==256)
       {
         if (!ReadTables20())
+        {
           break;
+        }
+
         continue;
       }
       Window[UnpPtr++]=DecodeAudio((int)AudioNumber);
       if (++UnpCurChannel==UnpChannels)
+      {
         UnpCurChannel=0;
+      }
+
       --DestUnpSize;
       continue;
     }
@@ -109,7 +130,9 @@ internal static class Unpack20Local {
       {
         Length++;
         if (Distance>=0x40000L)
+        {
           Length++;
+        }
       }
 
       CopyString20(Length,Distance);
@@ -118,7 +141,10 @@ internal static class Unpack20Local {
     if (Number==269)
     {
       if (!ReadTables20())
+      {
         break;
+      }
+
       continue;
     }
     if (Number==256)
@@ -143,7 +169,9 @@ internal static class Unpack20Local {
         {
           Length++;
           if (Distance>=0x40000)
+          {
             Length++;
+          }
         }
       }
       CopyString20(Length,Distance);
@@ -168,7 +196,10 @@ internal static class Unpack20Local {
       private void UnpWriteBuf20()
 {
   if (UnpPtr!=WrPtr)
+  {
     UnpSomeRead=true;
+  }
+
   if (UnpPtr<WrPtr)
   {
     UnpIO_UnpWrite(Window, WrPtr,(uint)(-(int)WrPtr & MaxWinMask));
@@ -176,7 +207,10 @@ internal static class Unpack20Local {
     UnpAllBuf=true;
   }
   else
+  {
     UnpIO_UnpWrite(Window,WrPtr,UnpPtr-WrPtr);
+  }
+
   WrPtr=UnpPtr;
 }
 
@@ -185,13 +219,21 @@ internal static class Unpack20Local {
   byte[] BitLength = new byte[BC20];
   byte[] Table = new byte[MC20*4];
   if (Inp.InAddr>ReadTop-25)
+  {
     if (!UnpReadBuf())
+    {
       return false;
+    }
+  }
+
   uint BitField=Inp.getbits();
   UnpAudioBlock=(BitField & 0x8000)!=0;
 
   if ((BitField & 0x4000) != 0)
-    Utility.Memset(UnpOldTable20,0,UnpOldTable20.Length);
+  {
+    new Span<byte>(UnpOldTable20).Clear();
+  }
+
   Inp.addbits(2);
 
   uint TableSize;
@@ -199,12 +241,17 @@ internal static class Unpack20Local {
   {
     UnpChannels=((BitField>>12) & 3)+1;
     if (UnpCurChannel>=UnpChannels)
+    {
       UnpCurChannel=0;
+    }
+
     Inp.addbits(2);
     TableSize=MC20*UnpChannels;
   }
   else
+  {
     TableSize=NC20+DC20+RC20;
+  }
 
   for (uint I=0;I<BC20;I++)
   {
@@ -215,8 +262,13 @@ internal static class Unpack20Local {
   for (uint I=0;I<TableSize;)
   {
     if (Inp.InAddr>ReadTop-5)
+    {
       if (!UnpReadBuf())
+      {
         return false;
+      }
+    }
+
     uint Number=DecodeNumber(Inp,BlockTables.BD);
     if (Number<16)
     {
@@ -229,13 +281,17 @@ internal static class Unpack20Local {
         uint N=(Inp.getbits() >> 14)+3;
         Inp.addbits(2);
         if (I==0)
+        {
           return false; // We cannot have "repeat previous" code at the first position.
+        }
         else
+        {
           while (N-- > 0 && I<TableSize)
           {
             Table[I]=Table[I-1];
             I++;
           }
+        }
       }
       else
       {
@@ -251,15 +307,24 @@ internal static class Unpack20Local {
           Inp.addbits(7);
         }
         while (N-- > 0 && I<TableSize)
+        {
           Table[I++]=0;
+        }
       }
   }
   TablesRead2=true;
   if (Inp.InAddr>ReadTop)
+  {
     return true;
+  }
+
   if (UnpAudioBlock)
+  {
     for (uint I=0;I<UnpChannels;I++)
+    {
       MakeDecodeTables(Table,(int)(I*MC20),MD[I],MC20);
+    }
+  }
   else
   {
     MakeDecodeTables(Table,0,BlockTables.LD,NC20);
@@ -267,21 +332,27 @@ internal static class Unpack20Local {
     MakeDecodeTables(Table,(int)(NC20+DC20),BlockTables.RD,RC20);
   }
   //x memcpy(UnpOldTable20,Table,sizeof(UnpOldTable20));
-  Array.Copy(Table,0,UnpOldTable20,0,UnpOldTable20.Length);
+  Array.Copy(Table,UnpOldTable20,UnpOldTable20.Length);
   return true;
 }
 
       private void ReadLastTables()
 {
   if (ReadTop>=Inp.InAddr+5)
+  {
     if (UnpAudioBlock)
     {
       if (DecodeNumber(Inp,MD[UnpCurChannel])==256)
+      {
         ReadTables20();
+      }
     }
     else
-      if (DecodeNumber(Inp,BlockTables.LD)==269)
-        ReadTables20();
+    if (DecodeNumber(Inp,BlockTables.LD)==269)
+    {
+      ReadTables20();
+    }
+  }
 }
 
       private void UnpInitData20(bool Solid)
@@ -296,7 +367,7 @@ internal static class Unpack20Local {
 
     //memset(AudV,0,sizeof(AudV));
     AudV = new AudioVariables[4];
-    Utility.Memset(UnpOldTable20, 0, UnpOldTable20.Length);
+    new Span<byte>(UnpOldTable20).Clear();
     //memset(MD,0,sizeof(MD));
     MD = new DecodeTable[4];
   }
@@ -352,43 +423,73 @@ internal static class Unpack20Local {
     {
       case 1:
         if (V.K1>=-16)
+        {
           V.K1--;
+        }
+
         break;
       case 2:
         if (V.K1<16)
+        {
           V.K1++;
+        }
+
         break;
       case 3:
         if (V.K2>=-16)
+        {
           V.K2--;
+        }
+
         break;
       case 4:
         if (V.K2<16)
+        {
           V.K2++;
+        }
+
         break;
       case 5:
         if (V.K3>=-16)
+        {
           V.K3--;
+        }
+
         break;
       case 6:
         if (V.K3<16)
+        {
           V.K3++;
+        }
+
         break;
       case 7:
         if (V.K4>=-16)
+        {
           V.K4--;
+        }
+
         break;
       case 8:
         if (V.K4<16)
+        {
           V.K4++;
+        }
+
         break;
       case 9:
         if (V.K5>=-16)
+        {
           V.K5--;
+        }
+
         break;
       case 10:
         if (V.K5<16)
+        {
           V.K5++;
+        }
+
         break;
     }
   }

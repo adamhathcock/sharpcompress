@@ -1,21 +1,20 @@
 ﻿using System;
+using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.IO;
 using SharpCompress.Common.Tar.Headers;
 using SharpCompress.Compressors;
 using SharpCompress.Compressors.Deflate;
-using SharpCompress.Converters;
-using System.Text;
 
 namespace SharpCompress.Common.GZip
 {
-    internal class GZipFilePart : FilePart
+    internal sealed class GZipFilePart : FilePart
     {
-        private string _name;
+        private string? _name;
         private readonly Stream _stream;
 
         internal GZipFilePart(Stream stream, ArchiveEncoding archiveEncoding)
-        : base(archiveEncoding)
+            : base(archiveEncoding)
         {
             ReadAndValidateGzipHeader(stream);
             EntryStartPosition = stream.Position;
@@ -26,7 +25,7 @@ namespace SharpCompress.Common.GZip
 
         internal DateTime? DateModified { get; private set; }
 
-        internal override string FilePartName => _name;
+        internal override string FilePartName => _name!;
 
         internal override Stream GetCompressedStream()
         {
@@ -41,8 +40,8 @@ namespace SharpCompress.Common.GZip
         private void ReadAndValidateGzipHeader(Stream stream)
         {
             // read the header on the first read
-            byte[] header = new byte[10];
-            int n = stream.Read(header, 0, header.Length);
+            Span<byte> header = stackalloc byte[10];
+            int n = stream.Read(header);
 
             // workitem 8501: handle edge case (decompress empty stream)
             if (n == 0)
@@ -60,16 +59,16 @@ namespace SharpCompress.Common.GZip
                 throw new ZlibException("Bad GZIP header.");
             }
 
-            Int32 timet = DataConverter.LittleEndian.GetInt32(header, 4);
+            int timet = BinaryPrimitives.ReadInt32LittleEndian(header.Slice(4));
             DateModified = TarHeader.EPOCH.AddSeconds(timet);
             if ((header[3] & 0x04) == 0x04)
             {
                 // read and discard extra field
-                n = stream.Read(header, 0, 2); // 2-byte length field
+                n = stream.Read(header.Slice(0, 2)); // 2-byte length field
 
-                Int16 extraLength = (Int16)(header[0] + header[1] * 256);
+                short extraLength = (short)(header[0] + header[1] * 256);
                 byte[] extra = new byte[extraLength];
-                
+
                 if (!stream.ReadFully(extra))
                 {
                     throw new ZlibException("Unexpected end-of-file reading GZIP header.");

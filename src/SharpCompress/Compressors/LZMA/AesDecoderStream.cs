@@ -6,10 +6,8 @@ using SharpCompress.Compressors.LZMA.Utilites;
 
 namespace SharpCompress.Compressors.LZMA
 {
-    internal class AesDecoderStream : DecoderStream2
+    internal sealed class AesDecoderStream : DecoderStream2
     {
-        #region Variables
-
         private readonly Stream mStream;
         private readonly ICryptoTransform mDecoder;
         private readonly byte[] mBuffer;
@@ -20,21 +18,17 @@ namespace SharpCompress.Compressors.LZMA
         private int mUnderflow;
         private bool isDisposed;
 
-        #endregion
-
-        #region Stream Methods
-
         public AesDecoderStream(Stream input, byte[] info, IPasswordProvider pass, long limit)
         {
             mStream = input;
             mLimit = limit;
 
             if (((uint) input.Length & 15) != 0)
+            {
                 throw new NotSupportedException("AES decoder does not support padding.");
+            }
 
-            int numCyclesPower;
-            byte[] salt, seed;
-            Init(info, out numCyclesPower, out salt, out seed);
+            Init(info, out int numCyclesPower, out byte[] salt, out byte[]  seed);
 
             byte[] password = Encoding.Unicode.GetBytes(pass.CryptoGetTextPassword());
             byte[] key = InitKey(numCyclesPower, salt, password);
@@ -70,30 +64,22 @@ namespace SharpCompress.Compressors.LZMA
             }
         }
 
-        public override long Position
-        {
-            get
-            {
-                return mWritten;
-            }
-        }
+        public override long Position => mWritten;
 
-        public override long Length
-        {
-            get
-            {
-                return mLimit;
-            }
-        }
-
+        public override long Length => mLimit;
+      
         public override int Read(byte[] buffer, int offset, int count)
         {
             if (count == 0
                 || mWritten == mLimit)
+            {
                 return 0;
+            }
 
             if (mUnderflow > 0)
+            {
                 return HandleUnderflow(buffer, offset, count);
+            }
 
             // Need at least 16 bytes to proceed.
             if (mEnding - mOffset < 16)
@@ -120,16 +106,22 @@ namespace SharpCompress.Compressors.LZMA
             // Currently this is handled by forcing an underflow if
             // the stream length is not a multiple of the block size.
             if (count > mLimit - mWritten)
+            {
                 count = (int) (mLimit - mWritten);
+            }
 
             // We cannot transform less than 16 bytes into the target buffer,
             // but we also cannot return zero, so we need to handle this.
             // We transform the data locally and use our own buffer as cache.
             if (count < 16)
+            {
                 return HandleUnderflow(buffer, offset, count);
+            }
 
             if (count > mEnding - mOffset)
+            {
                 count = mEnding - mOffset;
+            }
 
             // Otherwise we transform directly into the target buffer.
             int processed = mDecoder.TransformBlock(mBuffer, mOffset, count & ~15, buffer, offset);
@@ -137,8 +129,6 @@ namespace SharpCompress.Compressors.LZMA
             mWritten += processed;
             return processed;
         }
-
-        #endregion
 
         #region Private Methods
 
@@ -157,24 +147,34 @@ namespace SharpCompress.Compressors.LZMA
             int saltSize = (bt >> 7) & 1;
             int ivSize = (bt >> 6) & 1;
             if (info.Length == 1)
+            {
                 throw new InvalidOperationException();
+            }
 
             byte bt2 = info[1];
             saltSize += (bt2 >> 4);
             ivSize += (bt2 & 15);
             if (info.Length < 2 + saltSize + ivSize)
+            {
                 throw new InvalidOperationException();
+            }
 
             salt = new byte[saltSize];
             for (int i = 0; i < saltSize; i++)
+            {
                 salt[i] = info[i + 2];
+            }
 
             iv = new byte[16];
             for (int i = 0; i < ivSize; i++)
+            {
                 iv[i] = info[i + saltSize + 2];
+            }
 
             if (numCyclesPower > 24)
+            {
                 throw new NotSupportedException();
+            }
         }
 
         private byte[] InitKey(int mNumCyclesPower, byte[] salt, byte[] pass)
@@ -185,54 +185,63 @@ namespace SharpCompress.Compressors.LZMA
 
                 int pos;
                 for (pos = 0; pos < salt.Length; pos++)
+                {
                     key[pos] = salt[pos];
+                }
+
                 for (int i = 0; i < pass.Length && pos < 32; i++)
+                {
                     key[pos++] = pass[i];
+                }
 
                 return key;
             }
             else
             {
-#if NETSTANDARD1_3 || NETSTANDARD2_0
-                using (IncrementalHash sha = IncrementalHash.CreateHash(HashAlgorithmName.SHA256))
+#if NETSTANDARD2_0
+                using IncrementalHash sha = IncrementalHash.CreateHash(HashAlgorithmName.SHA256);
+                byte[] counter = new byte[8];
+                long numRounds = 1L << mNumCyclesPower;
+                for (long round = 0; round < numRounds; round++)
                 {
-                    byte[] counter = new byte[8];
-                    long numRounds = 1L << mNumCyclesPower;
-                    for (long round = 0; round < numRounds; round++)
-                    {
-                        sha.AppendData(salt, 0, salt.Length);
-                        sha.AppendData(pass, 0, pass.Length);
-                        sha.AppendData(counter, 0, 8);
+                    sha.AppendData(salt, 0, salt.Length);
+                    sha.AppendData(pass, 0, pass.Length);
+                    sha.AppendData(counter, 0, 8);
 
-                        // This mirrors the counter so we don't have to convert long to byte[] each round.
-                        // (It also ensures the counter is little endian, which BitConverter does not.)
-                        for (int i = 0; i < 8; i++)
-                            if (++counter[i] != 0)
-                                break;
+                    // This mirrors the counter so we don't have to convert long to byte[] each round.
+                    // (It also ensures the counter is little endian, which BitConverter does not.)
+                    for (int i = 0; i < 8; i++)
+                    {
+                        if (++counter[i] != 0)
+                        {
+                            break;
+                        }
                     }
-                    return sha.GetHashAndReset();
                 }
+                return sha.GetHashAndReset();
 #else
-                using (var sha = SHA256.Create())
+                using var sha = SHA256.Create();
+                byte[] counter = new byte[8];
+                long numRounds = 1L << mNumCyclesPower;
+                for (long round = 0; round < numRounds; round++)
                 {
-                    byte[] counter = new byte[8];
-                    long numRounds = 1L << mNumCyclesPower;
-                    for (long round = 0; round < numRounds; round++)
+                    sha.TransformBlock(salt, 0, salt.Length, null, 0);
+                    sha.TransformBlock(pass, 0, pass.Length, null, 0);
+                    sha.TransformBlock(counter, 0, 8, null, 0);
+
+                    // This mirrors the counter so we don't have to convert long to byte[] each round.
+                    // (It also ensures the counter is little endian, which BitConverter does not.)
+                    for (int i = 0; i < 8; i++)
                     {
-                        sha.TransformBlock(salt, 0, salt.Length, null, 0);
-                        sha.TransformBlock(pass, 0, pass.Length, null, 0);
-                        sha.TransformBlock(counter, 0, 8, null, 0);
-
-                        // This mirrors the counter so we don't have to convert long to byte[] each round.
-                        // (It also ensures the counter is little endian, which BitConverter does not.)
-                        for (int i = 0; i < 8; i++)
-                            if (++counter[i] != 0)
-                                break;
+                        if (++counter[i] != 0)
+                        {
+                            break;
+                        }
                     }
-
-                    sha.TransformFinalBlock(counter, 0, 0);
-                    return sha.Hash;
                 }
+
+                sha.TransformFinalBlock(counter, 0, 0);
+                return sha.Hash;
 #endif
             }
         }
@@ -248,7 +257,9 @@ namespace SharpCompress.Compressors.LZMA
             }
 
             if (count > mUnderflow)
+            {
                 count = mUnderflow;
+            }
 
             Buffer.BlockCopy(mBuffer, mOffset, buffer, offset, count);
             mWritten += count;

@@ -1,3 +1,5 @@
+#nullable disable
+
 using System;
 using System.IO;
 
@@ -69,7 +71,7 @@ namespace SharpCompress.Compressors.LZMA.LZ
 
         public void Flush()
         {
-            if (_stream == null)
+            if (_stream is null)
             {
                 return;
             }

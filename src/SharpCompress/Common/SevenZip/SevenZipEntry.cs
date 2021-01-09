@@ -18,7 +18,7 @@ namespace SharpCompress.Common.SevenZip
 
         public override string Key => FilePart.Header.Name;
 
-        public override string LinkTarget => null;
+        public override string? LinkTarget => null;
 
         public override long CompressedSize => 0;
 
@@ -38,7 +38,7 @@ namespace SharpCompress.Common.SevenZip
 
         public override bool IsSplitAfter => false;
 
-        public override int? Attrib => (int)FilePart.Header.Attrib;
+        public override int? Attrib => FilePart.Header.Attrib.HasValue ? (int?)FilePart.Header.Attrib.Value : null;
 
         internal override IEnumerable<FilePart> Parts => FilePart.AsEnumerable<FilePart>();
     }

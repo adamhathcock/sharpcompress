@@ -1,10 +1,12 @@
-﻿using System;
+﻿#nullable disable
+
+using System;
 using System.Collections;
 using System.Collections.Generic;
 
 namespace SharpCompress
 {
-    internal class LazyReadOnlyCollection<T> : ICollection<T>
+    internal sealed class LazyReadOnlyCollection<T> : ICollection<T>
     {
         private readonly List<T> backing = new List<T>();
         private readonly IEnumerator<T> source;

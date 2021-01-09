@@ -1,4 +1,3 @@
-using System.IO;
 using SharpCompress.Common;
 using SharpCompress.Common.Rar.Headers;
 

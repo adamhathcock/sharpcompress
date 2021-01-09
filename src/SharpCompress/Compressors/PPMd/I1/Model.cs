@@ -1,9 +1,7 @@
-#region Using
+#nullable disable
 
 using System;
 using System.IO;
-
-#endregion
 
 // This is a port of Dmitry Shkarin's PPMd Variant I Revision 1.
 // Ported by Michael Bone (mjbone03@yahoo.com.au).
@@ -58,7 +56,7 @@ namespace SharpCompress.Compressors.PPMd.I1
             0x6051
         };
 
-        private static readonly byte[] EXPONENTIAL_ESCAPES = {25, 14, 9, 7, 5, 5, 4, 4, 4, 3, 3, 3, 2, 2, 2, 2};
+        private static ReadOnlySpan<byte> EXPONENTIAL_ESCAPES => new byte[] {25, 14, 9, 7, 5, 5, 4, 4, 4, 3, 3, 3, 2, 2, 2, 2};
 
         #region Public Methods
 
@@ -144,12 +142,12 @@ namespace SharpCompress.Compressors.PPMd.I1
         /// </summary>
         public void Encode(Stream target, Stream source, PpmdProperties properties)
         {
-            if (target == null)
+            if (target is null)
             {
                 throw new ArgumentNullException(nameof(target));
             }
 
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
@@ -233,12 +231,12 @@ namespace SharpCompress.Compressors.PPMd.I1
         /// </summary>
         public void Decode(Stream target, Stream source, PpmdProperties properties)
         {
-            if (target == null)
+            if (target is null)
             {
                 throw new ArgumentNullException(nameof(target));
             }
 
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }

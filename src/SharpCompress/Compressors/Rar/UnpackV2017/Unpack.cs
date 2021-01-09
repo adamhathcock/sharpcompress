@@ -12,7 +12,6 @@ using int64 = System.Int64;
 using System;
 using System.IO;
 using SharpCompress.Common.Rar.Headers;
-using static SharpCompress.Compressors.Rar.UnpackV2017.PackDef;
 
 namespace SharpCompress.Compressors.Rar.UnpackV2017
 {

@@ -46,19 +46,38 @@ namespace SharpCompress.Common.Rar.Headers
                         if (b == 0x61) 
                         {
                             b = GetByte(stream); start++;
-                            if (b != 0x72) continue;
+                            if (b != 0x72)
+                            {
+                                continue;
+                            }
+
                             b = GetByte(stream); start++;
-                            if (b != 0x21) continue;
+                            if (b != 0x21)
+                            {
+                                continue;
+                            }
+
                             b = GetByte(stream); start++;
-                            if (b != 0x1a) continue;
+                            if (b != 0x1a)
+                            {
+                                continue;
+                            }
+
                             b = GetByte(stream); start++;
-                            if (b != 0x07) continue;
+                            if (b != 0x07)
+                            {
+                                continue;
+                            }
 
                             b = GetByte(stream); start++;
                             if (b == 1) 
                             {
                                 b = GetByte(stream); start++;
-                                if (b != 0) continue;
+                                if (b != 0)
+                                {
+                                    continue;
+                                }
+
                                 return new MarkHeader(true); // Rar5
                             } 
                             else if (b == 0) 
@@ -69,9 +88,17 @@ namespace SharpCompress.Common.Rar.Headers
                         else if (b == 0x45) 
                         {
                             b = GetByte(stream); start++;
-                            if (b != 0x7e) continue;
+                            if (b != 0x7e)
+                            {
+                                continue;
+                            }
+
                             b = GetByte(stream); start++;
-                            if (b != 0x5e) continue;
+                            if (b != 0x5e)
+                            {
+                                continue;
+                            }
+
                             throw new InvalidFormatException("Rar format version pre-4 is unsupported.");
                         } 
                     } 

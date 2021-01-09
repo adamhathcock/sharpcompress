@@ -3,7 +3,6 @@ using System.IO;
 using System.Linq;
 using SharpCompress.Common.Zip.Headers;
 using SharpCompress.IO;
-using System.Text;
 
 namespace SharpCompress.Common.Zip
 {
@@ -19,19 +18,19 @@ namespace SharpCompress.Common.Zip
         internal const uint ZIP64_END_OF_CENTRAL_DIRECTORY = 0x06064b50;
         internal const uint ZIP64_END_OF_CENTRAL_DIRECTORY_LOCATOR = 0x07064b50;
 
-        protected LocalEntryHeader _lastEntryHeader;
-        private readonly string _password;
+        protected LocalEntryHeader? _lastEntryHeader;
+        private readonly string? _password;
         private readonly StreamingMode _mode;
         private readonly ArchiveEncoding _archiveEncoding;
 
-        protected ZipHeaderFactory(StreamingMode mode, string password, ArchiveEncoding archiveEncoding)
+        protected ZipHeaderFactory(StreamingMode mode, string? password, ArchiveEncoding archiveEncoding)
         {
             this._mode = mode;
             this._password = password;
             this._archiveEncoding = archiveEncoding;
         }
 
-        protected ZipHeader ReadHeader(uint headerBytes, BinaryReader reader, bool zip64 = false)
+        protected ZipHeader? ReadHeader(uint headerBytes, BinaryReader reader, bool zip64 = false)
         {
             switch (headerBytes)
             {
@@ -52,7 +51,7 @@ namespace SharpCompress.Common.Zip
                 }
                 case POST_DATA_DESCRIPTOR:
                     {
-                        if (FlagUtility.HasFlag(_lastEntryHeader.Flags, HeaderFlags.UsePostDataDescriptor))
+                        if (FlagUtility.HasFlag(_lastEntryHeader!.Flags, HeaderFlags.UsePostDataDescriptor))
                         {
                             _lastEntryHeader.Crc = reader.ReadUInt32();
                             _lastEntryHeader.CompressedSize = zip64 ? (long)reader.ReadUInt64() : reader.ReadUInt32();
@@ -121,7 +120,7 @@ namespace SharpCompress.Common.Zip
                     throw new NotSupportedException("SharpCompress cannot currently read non-seekable Zip Streams with encrypted data that has been written in a non-seekable manner.");
                 }
 
-                if (_password == null)
+                if (_password is null)
                 {
                     throw new CryptographicException("No password supplied for encrypted zip.");
                 }

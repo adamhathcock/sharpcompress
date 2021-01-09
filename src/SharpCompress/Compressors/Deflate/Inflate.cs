@@ -1,3 +1,5 @@
+#nullable disable
+
 // Inflate.cs
 // ------------------------------------------------------------------
 //
@@ -63,6 +65,8 @@
 
 using System;
 
+using SharpCompress.Algorithms;
+
 namespace SharpCompress.Compressors.Deflate
 {
     internal sealed class InflateBlocks
@@ -116,7 +120,7 @@ namespace SharpCompress.Compressors.Deflate
 
             if (checkfn != null)
             {
-                _codec._Adler32 = check = Adler.Adler32(0, null, 0, 0);
+                _codec._adler32 = check = 1;
             }
             return oldCheck;
         }
@@ -367,7 +371,7 @@ namespace SharpCompress.Compressors.Deflate
                             return Flush(r);
                         }
                         t = 258 + (t & 0x1f) + ((t >> 5) & 0x1f);
-                        if (blens == null || blens.Length < t)
+                        if (blens is null || blens.Length < t)
                         {
                             blens = new int[t];
                         }
@@ -737,7 +741,7 @@ namespace SharpCompress.Compressors.Deflate
                 // update check information
                 if (checkfn != null)
                 {
-                    _codec._Adler32 = check = Adler.Adler32(check, window, readAt, nBytes);
+                    _codec._adler32 = check = Adler32.Calculate(check, window.AsSpan(readAt, nBytes));
                 }
 
                 // copy as far as end of window
@@ -1651,7 +1655,7 @@ namespace SharpCompress.Compressors.Deflate
         {
             int b;
 
-            if (_codec.InputBuffer == null)
+            if (_codec.InputBuffer is null)
             {
                 throw new ZlibException("InputBuffer is null. ");
             }
@@ -1762,7 +1766,7 @@ namespace SharpCompress.Compressors.Deflate
                         _codec.AvailableBytesIn--;
                         _codec.TotalBytesIn++;
                         expectedCheck += (uint)(_codec.InputBuffer[_codec.NextIn++] & 0x000000ff);
-                        _codec._Adler32 = expectedCheck;
+                        _codec._adler32 = expectedCheck;
                         mode = InflateManagerMode.DICT0;
                         return ZlibConstants.Z_NEED_DICT;
 
@@ -1877,12 +1881,12 @@ namespace SharpCompress.Compressors.Deflate
                 throw new ZlibException("Stream error.");
             }
 
-            if (Adler.Adler32(1, dictionary, 0, dictionary.Length) != _codec._Adler32)
+            if (Adler32.Calculate(1, dictionary) != _codec._adler32)
             {
                 return ZlibConstants.Z_DATA_ERROR;
             }
 
-            _codec._Adler32 = Adler.Adler32(0, null, 0, 0);
+            _codec._adler32 = 1;
 
             if (length >= (1 << wbits))
             {

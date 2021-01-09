@@ -1,3 +1,5 @@
+#nullable disable
+
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -6,7 +8,7 @@ using SharpCompress.Common.Rar;
 
 namespace SharpCompress.Compressors.Rar
 {
-    internal class MultiVolumeReadOnlyStream : Stream
+    internal sealed class MultiVolumeReadOnlyStream : Stream
     {
         private long currentPosition;
         private long maxPosition;

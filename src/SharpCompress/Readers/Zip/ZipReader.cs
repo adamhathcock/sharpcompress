@@ -27,7 +27,7 @@ namespace SharpCompress.Readers.Zip
         /// <param name="stream"></param>
         /// <param name="options"></param>
         /// <returns></returns>
-        public static ZipReader Open(Stream stream, ReaderOptions options = null)
+        public static ZipReader Open(Stream stream, ReaderOptions? options = null)
         {
             stream.CheckNotNull(nameof(stream));
             return new ZipReader(stream, options ?? new ReaderOptions());
@@ -45,8 +45,7 @@ namespace SharpCompress.Readers.Zip
                     {
                         case ZipHeaderType.LocalEntry:
                             {
-                                yield return new ZipEntry(new StreamingZipFilePart(h as LocalEntryHeader,
-                                                                                   stream));
+                                yield return new ZipEntry(new StreamingZipFilePart((LocalEntryHeader)h, stream));
                             }
                             break;
                         case ZipHeaderType.DirectoryEnd:

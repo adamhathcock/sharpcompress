@@ -1,3 +1,5 @@
+#nullable disable
+
 // ZlibBaseStream.cs
 // ------------------------------------------------------------------
 //
@@ -25,11 +27,10 @@
 // ------------------------------------------------------------------
 
 using System;
+using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.IO;
-using SharpCompress.Common;
 using SharpCompress.Common.Tar.Headers;
-using SharpCompress.Converters;
 using System.Text;
 
 namespace SharpCompress.Compressors.Deflate
@@ -66,17 +67,7 @@ namespace SharpCompress.Compressors.Deflate
 
         private readonly Encoding _encoding;
 
-        internal int Crc32
-        {
-            get
-            {
-                if (crc == null)
-                {
-                    return 0;
-                }
-                return crc.Crc32Result;
-            }
-        }
+        internal int Crc32 => crc?.Crc32Result ?? 0;
 
         public ZlibBaseStream(Stream stream,
                               CompressionMode compressionMode,
@@ -107,7 +98,7 @@ namespace SharpCompress.Compressors.Deflate
         {
             get
             {
-                if (_z == null)
+                if (_z is null)
                 {
                     bool wantRfc1950Header = (_flavor == ZlibStreamFlavor.ZLIB);
                     _z = new ZlibCodec();
@@ -127,17 +118,10 @@ namespace SharpCompress.Compressors.Deflate
 
         private byte[] workingBuffer
         {
-            get
-            {
-                if (_workingBuffer == null)
-                {
-                    _workingBuffer = new byte[_bufferSize];
-                }
-                return _workingBuffer;
-            }
+            get => _workingBuffer ??= new byte[_bufferSize];
         }
 
-        public override void Write(Byte[] buffer, int offset, int count)
+        public override void Write(byte[] buffer, int offset, int count)
         {
             // workitem 7159
             // calculate the CRC on the unccompressed data  (before writing)
@@ -194,7 +178,7 @@ namespace SharpCompress.Compressors.Deflate
 
         private void finish()
         {
-            if (_z == null)
+            if (_z is null)
             {
                 return;
             }
@@ -214,7 +198,7 @@ namespace SharpCompress.Compressors.Deflate
                     if (rc != ZlibConstants.Z_STREAM_END && rc != ZlibConstants.Z_OK)
                     {
                         string verb = (_wantCompress ? "de" : "in") + "flating";
-                        if (_z.Message == null)
+                        if (_z.Message is null)
                         {
                             throw new ZlibException(String.Format("{0}: (rc = {1})", verb, rc));
                         }
@@ -244,10 +228,12 @@ namespace SharpCompress.Compressors.Deflate
                     if (_wantCompress)
                     {
                         // Emit the GZIP trailer: CRC32 and  size mod 2^32
-                        int c1 = crc.Crc32Result;
-                        _stream.Write(DataConverter.LittleEndian.GetBytes(c1), 0, 4);
-                        int c2 = (Int32)(crc.TotalBytesRead & 0x00000000FFFFFFFF);
-                        _stream.Write(DataConverter.LittleEndian.GetBytes(c2), 0, 4);
+                        Span<byte> intBuf = stackalloc byte[4];
+                        BinaryPrimitives.WriteInt32LittleEndian(intBuf, crc.Crc32Result);
+                        _stream.Write(intBuf);
+                        int c2 = (int)(crc.TotalBytesRead & 0x00000000FFFFFFFF);
+                        BinaryPrimitives.WriteInt32LittleEndian(intBuf, c2);
+                        _stream.Write(intBuf);
                     }
                     else
                     {
@@ -293,9 +279,9 @@ namespace SharpCompress.Compressors.Deflate
                             Array.Copy(_z.InputBuffer, _z.NextIn, trailer, 0, trailer.Length);
                         }
 
-                        Int32 crc32_expected = DataConverter.LittleEndian.GetInt32(trailer, 0);
+                        Int32 crc32_expected = BinaryPrimitives.ReadInt32LittleEndian(trailer);
                         Int32 crc32_actual = crc.Crc32Result;
-                        Int32 isize_expected = DataConverter.LittleEndian.GetInt32(trailer, 4);
+                        Int32 isize_expected = BinaryPrimitives.ReadInt32LittleEndian(trailer.AsSpan(4));
                         Int32 isize_actual = (Int32)(_z.TotalBytesOut & 0x00000000FFFFFFFF);
 
                         if (crc32_actual != crc32_expected)
@@ -322,7 +308,7 @@ namespace SharpCompress.Compressors.Deflate
 
         private void end()
         {
-            if (z == null)
+            if (z is null)
             {
                 return;
             }
@@ -347,7 +333,7 @@ namespace SharpCompress.Compressors.Deflate
             base.Dispose(disposing);
             if (disposing)
             {
-                if (_stream == null)
+                if (_stream is null)
                 {
                     return;
                 }
@@ -427,8 +413,8 @@ namespace SharpCompress.Compressors.Deflate
             int totalBytesRead = 0;
 
             // read the header on the first read
-            byte[] header = new byte[10];
-            int n = _stream.Read(header, 0, header.Length);
+            Span<byte> header = stackalloc byte[10];
+            int n = _stream.Read(header);
 
             // workitem 8501: handle edge case (decompress empty stream)
             if (n == 0)
@@ -446,16 +432,16 @@ namespace SharpCompress.Compressors.Deflate
                 throw new ZlibException("Bad GZIP header.");
             }
 
-            Int32 timet = DataConverter.LittleEndian.GetInt32(header, 4);
+            int timet = BinaryPrimitives.ReadInt32LittleEndian(header.Slice(4));
             _GzipMtime = TarHeader.EPOCH.AddSeconds(timet);
             totalBytesRead += n;
             if ((header[3] & 0x04) == 0x04)
             {
                 // read and discard extra field
-                n = _stream.Read(header, 0, 2); // 2-byte length field
+                n = _stream.Read(header.Slice(0, 2)); // 2-byte length field
                 totalBytesRead += n;
 
-                Int16 extraLength = (Int16)(header[0] + header[1] * 256);
+                short extraLength = (short)(header[0] + header[1] * 256);
                 byte[] extra = new byte[extraLength];
                 n = _stream.Read(extra, 0, extra.Length);
                 if (n != extraLength)
@@ -526,7 +512,7 @@ namespace SharpCompress.Compressors.Deflate
             {
                 return 0; // workitem 8557
             }
-            if (buffer == null)
+            if (buffer is null)
             {
                 throw new ArgumentNullException(nameof(buffer));
             }

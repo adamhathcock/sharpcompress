@@ -109,8 +109,7 @@ namespace SharpCompress.Archives
         public TEntry AddEntry(string key, Stream source, bool closeStream,
                                long size = 0, DateTime? modified = null)
         {
-            if (key.StartsWith("/")
-                || key.StartsWith("\\"))
+            if (key.Length > 0 && key[0] is '/' or '\\')
             {
                 key = key.Substring(1);
             }
@@ -129,7 +128,7 @@ namespace SharpCompress.Archives
             foreach (var path in Entries.Select(x => x.Key))
             {
                 var p = path.Replace('/', '\\');
-                if (p.StartsWith("\\"))
+                if (p.Length > 0 && p[0] == '\\')
                 {
                     p = p.Substring(1);
                 }

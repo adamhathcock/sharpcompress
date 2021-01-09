@@ -1,6 +1,6 @@
 ﻿using System;
+using System.Buffers.Binary;
 using System.IO;
-using SharpCompress.Converters;
 
 namespace SharpCompress.IO
 {
@@ -81,17 +81,17 @@ namespace SharpCompress.IO
 
         public override short ReadInt16()
         {
-            return DataConverter.LittleEndian.GetInt16(ReadBytes(2), 0);
+            return BinaryPrimitives.ReadInt16LittleEndian(ReadBytes(2));
         }
 
         public override int ReadInt32()
         {
-            return DataConverter.LittleEndian.GetInt32(ReadBytes(4), 0);
+            return BinaryPrimitives.ReadInt32LittleEndian(ReadBytes(4));
         }
 
         public override long ReadInt64()
         {
-            return DataConverter.LittleEndian.GetInt64(ReadBytes(8), 0);
+            return BinaryPrimitives.ReadInt64LittleEndian(ReadBytes(8));
         }
 
         public override sbyte ReadSByte()
@@ -111,17 +111,17 @@ namespace SharpCompress.IO
 
         public override ushort ReadUInt16()
         {
-            return DataConverter.LittleEndian.GetUInt16(ReadBytes(2), 0);
+            return BinaryPrimitives.ReadUInt16LittleEndian(ReadBytes(2));
         }
 
         public override uint ReadUInt32()
         {
-            return DataConverter.LittleEndian.GetUInt32(ReadBytes(4), 0);
+            return BinaryPrimitives.ReadUInt32LittleEndian(ReadBytes(4));
         }
 
         public override ulong ReadUInt64()
         {
-            return DataConverter.LittleEndian.GetUInt64(ReadBytes(8), 0);
+            return BinaryPrimitives.ReadUInt64LittleEndian(ReadBytes(8));
         }
 
         // RAR5 style variable length encoded value

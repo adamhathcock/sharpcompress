@@ -1,6 +1,6 @@
 ﻿namespace SharpCompress.Common.SevenZip
 {
-    internal struct CMethodId
+    internal readonly struct CMethodId
     {
         public const ulong K_COPY_ID = 0;
         public const ulong K_LZMA_ID = 0x030101;
@@ -24,9 +24,9 @@
             return _id.GetHashCode();
         }
 
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
-            return obj is CMethodId && (CMethodId)obj == this;
+            return obj is CMethodId other && Equals(other);
         }
 
         public bool Equals(CMethodId other)

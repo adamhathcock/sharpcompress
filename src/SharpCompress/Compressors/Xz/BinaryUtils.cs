@@ -36,7 +36,9 @@ namespace SharpCompress.Compressors.Xz
             var result = BitConverter.GetBytes(uint32);
 
             if (BitConverter.IsLittleEndian)
+            {
                 Array.Reverse(result);
+            }
 
             return result;
         }
@@ -46,7 +48,9 @@ namespace SharpCompress.Compressors.Xz
             var result = BitConverter.GetBytes(uint32);
 
             if (!BitConverter.IsLittleEndian)
+            {
                 Array.Reverse(result);
+            }
 
             return result;
         }

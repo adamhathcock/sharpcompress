@@ -94,6 +94,7 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017
 //    if (Length>6) { Dest[6]=Src[6]; } } } } } } } // Close all nested "if"s.
   }
   else
+  {
     while (Length-- > 0) // Slow copying with all possible precautions.
     {
       Window[UnpPtr]=Window[SrcPtr++ & MaxWinMask];
@@ -101,6 +102,7 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017
       // be replaced with 'Window[UnpPtr++ & MaxWinMask]'
       UnpPtr=(UnpPtr+1) & MaxWinMask;
     }
+  }
 }
 
       private uint DecodeNumber(BitInput Inp,DecodeTable Dec)
@@ -118,11 +120,13 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017
   // Detect the real bit length for current code.
   uint Bits=15;
   for (uint I=Dec.QuickBits+1;I<15;I++)
+  {
     if (BitField<Dec.DecodeLen[I])
     {
       Bits=I;
       break;
     }
+  }
 
   Inp.addbits(Bits);
   
@@ -140,7 +144,9 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017
 
   // Out of bounds safety check required for damaged archives.
   if (Pos>=Dec.MaxNum)
+  {
     Pos=0;
+  }
 
   // Convert the position in the code list to position in alphabet
   // and return it.

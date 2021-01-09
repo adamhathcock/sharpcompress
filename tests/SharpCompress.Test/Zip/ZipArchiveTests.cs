@@ -168,7 +168,7 @@ namespace SharpCompress.Test.Zip
                 
                 archive.SaveTo(scratchPath, writerOptions);
             }
-            CompareArchivesByPath(modified, scratchPath);
+            CompareArchivesByPath(modified, scratchPath, Encoding.GetEncoding(866));
         }
 
         [Fact]
@@ -188,7 +188,7 @@ namespace SharpCompress.Test.Zip
                 
                 archive.SaveTo(scratchPath, writerOptions);
             }
-            CompareArchivesByPath(modified, scratchPath);
+            CompareArchivesByPath(modified, scratchPath, Encoding.GetEncoding(866));
         }
 
         [Fact]
@@ -286,7 +286,7 @@ namespace SharpCompress.Test.Zip
                 
                 archive.SaveTo(scratchPath, writerOptions);
             }
-            CompareArchivesByPath(unmodified, scratchPath);
+            CompareArchivesByPath(unmodified, scratchPath, Encoding.GetEncoding(866));
             Directory.Delete(SCRATCH_FILES_PATH, true);
         }
 
@@ -401,7 +401,9 @@ namespace SharpCompress.Test.Zip
             ZipArchive a = ZipArchive.Open(unmodified);
             int count = 0;
             foreach (var e in a.Entries)
+            {
                 count++;
+            }
 
             //Prints 3
             Assert.Equal(3, count);
@@ -426,7 +428,9 @@ namespace SharpCompress.Test.Zip
 
             int count3 = 0;
             foreach (var e in a.Entries)
+            {
                 count3++;
+            }
 
             Assert.Equal(3, count3);
         }
@@ -447,7 +451,9 @@ namespace SharpCompress.Test.Zip
                         {
                             using (var memoryStream = new MemoryStream())
                             using (Stream entryStream = entry.OpenEntryStream())
+                            {
                                 entryStream.CopyTo(memoryStream);
+                            }
                         }
                     }
                 }
@@ -507,7 +513,9 @@ namespace SharpCompress.Test.Zip
                         byte[] buf = new byte[bufSize];
                         int bytesRead = 0;
                         while ((bytesRead = entryStream.Read(buf, 0, bufSize)) > 0)
+                        {
                             tempStream.Write(buf, 0, bytesRead);
+                        }
                     }
                 }
             }

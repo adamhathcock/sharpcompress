@@ -1,5 +1,4 @@
-﻿using System;
-using System.IO;
+﻿using System.IO;
 
 namespace SharpCompress.Common.Zip.Headers
 {
@@ -44,6 +43,6 @@ namespace SharpCompress.Common.Zip.Headers
 
         public long DirectoryStartOffsetRelativeToDisk { get; private set; }
 
-        public byte[] DataSector { get; private set; }
+        public byte[]? DataSector { get; private set; }
     }
 }

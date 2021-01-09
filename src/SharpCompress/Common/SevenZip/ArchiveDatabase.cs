@@ -1,4 +1,6 @@
-﻿using System;
+﻿#nullable disable
+
+using System;
 using System.Collections.Generic;
 using System.IO;
 using SharpCompress.Compressors.LZMA;
@@ -22,7 +24,7 @@ namespace SharpCompress.Common.SevenZip
         internal List<long> _packStreamStartPositions = new List<long>();
         internal List<int> _folderStartFileIndex = new List<int>();
         internal List<int> _fileIndexToFolderIndexMap = new List<int>();
-        
+
         internal IPasswordProvider PasswordProvider { get; }
 
         public ArchiveDatabase(IPasswordProvider passwordProvider)
@@ -35,7 +37,7 @@ namespace SharpCompress.Common.SevenZip
             _packSizes.Clear();
             _packCrCs.Clear();
             _folders.Clear();
-            _numUnpackStreamsVector = null;
+            _numUnpackStreamsVector = null!;
             _files.Clear();
 
             _packStreamStartPositions.Clear();
@@ -96,7 +98,7 @@ namespace SharpCompress.Common.SevenZip
 
                         _folderStartFileIndex.Add(i); // check it
 
-                        if (_numUnpackStreamsVector[folderIndex] != 0)
+                        if (_numUnpackStreamsVector![folderIndex] != 0)
                         {
                             break;
                         }
@@ -114,7 +116,7 @@ namespace SharpCompress.Common.SevenZip
 
                 indexInFolder++;
 
-                if (indexInFolder >= _numUnpackStreamsVector[folderIndex])
+                if (indexInFolder >= _numUnpackStreamsVector![folderIndex])
                 {
                     folderIndex++;
                     indexInFolder = 0;
@@ -152,13 +154,14 @@ namespace SharpCompress.Common.SevenZip
         {
             int packStreamIndex = folder._firstPackStreamId;
             long folderStartPackPos = GetFolderStreamPos(folder, 0);
-            List<long> packSizes = new List<long>();
-            for (int j = 0; j < folder._packStreams.Count; j++)
+            int count = folder._packStreams.Count;
+            long[] packSizes = new long[count];
+            for (int j = 0; j < count; j++)
             {
-                packSizes.Add(_packSizes[packStreamIndex + j]);
+                packSizes[j] = _packSizes[packStreamIndex + j];
             }
 
-            return DecoderStreamHelper.CreateDecoderStream(stream, folderStartPackPos, packSizes.ToArray(), folder, pw);
+            return DecoderStreamHelper.CreateDecoderStream(stream, folderStartPackPos, packSizes, folder, pw);
         }
 
         private long GetFolderPackStreamSize(int folderIndex, int streamIndex)

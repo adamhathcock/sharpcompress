@@ -1,4 +1,6 @@
-﻿#if !Rar2017_64bit
+﻿#nullable disable
+
+#if !Rar2017_64bit
 using nint = System.Int32;
 using nuint = System.UInt32;
 using size_t = System.UInt32;
@@ -70,7 +72,9 @@ public Unpack(/* ComprDataIO *DataIO */)
   // will be 0 because of size_t overflow. Let's issue the memory error.
   if (WinSize==0)
     //ErrHandler.MemoryError();
+  {
     throw new InvalidFormatException("invalid window size (possibly due to a rar file with a 4GB being unpacked on a 32-bit platform)");
+  }
 
   // Minimum window size must be at least twice more than maximum possible
   // size of filter block, which is 0x10000 in RAR now. If window size is
@@ -79,12 +83,19 @@ public Unpack(/* ComprDataIO *DataIO */)
   // use 0x40000 for extra safety and possible filter area size expansion.
   const size_t MinAllocSize=0x40000;
   if (WinSize<MinAllocSize)
+  {
     WinSize=MinAllocSize;
+  }
 
   if (WinSize<=MaxWinSize) // Use the already allocated window.
+  {
     return;
+  }
+
   if ((WinSize>>16)>0x10000) // Window size must not exceed 4 GB.
+  {
     return;
+  }
 
   // Archiving code guarantees that window size does not grow in the same
   // solid stream. So if we are here, we are either creating a new window
@@ -96,11 +107,14 @@ public Unpack(/* ComprDataIO *DataIO */)
   // We do not handle growth for existing fragmented window.
   if (Grow && Fragmented)
     //throw std::bad_alloc();
+  {
     throw new InvalidFormatException("Grow && Fragmented");
+  }
 
   byte[] NewWindow=Fragmented ? null : new byte[WinSize];
 
   if (NewWindow==null)
+  {
     if (Grow || WinSize<0x1000000)
     {
       // We do not support growth for new fragmented window.
@@ -118,6 +132,7 @@ public Unpack(/* ComprDataIO *DataIO */)
       FragWindow.Init(WinSize);
       Fragmented=true;
     }
+  }
 
   if (!Fragmented)
   {
@@ -132,8 +147,12 @@ public Unpack(/* ComprDataIO *DataIO */)
     // RAR archiving code does not allow it in solid streams now,
     // but let's implement it anyway just in case we'll change it sometimes.
     if (Grow)
+    {
       for (size_t I=1;I<=MaxWinSize;I++)
+      {
         NewWindow[(UnpPtr-I)&(WinSize-1)]=Window[(UnpPtr-I)&(MaxWinSize-1)];
+      }
+    }
 
     //if (Window!=null)
     //  free(Window);
@@ -154,18 +173,27 @@ public Unpack(/* ComprDataIO *DataIO */)
 #if !RarV2017_SFX_MODULE
     case 15: // rar 1.5 compression
       if (!Fragmented)
+      {
         Unpack15(Solid);
+      }
+
       break;
     case 20: // rar 2.x compression
     case 26: // files larger than 2GB
       if (!Fragmented)
+      {
         Unpack20(Solid);
+      }
+
       break;
 #endif
 #if !RarV2017_RAR5ONLY
     case 29: // rar 3.x compression
       if (!Fragmented)
+      {
         throw new NotImplementedException();
+      }
+
       break;
 #endif
     case 50: // RAR 5.0 compression algorithm.
@@ -196,7 +224,7 @@ public Unpack(/* ComprDataIO *DataIO */)
 {
   if (!Solid)
   {
-    Utility.Memset<uint>(OldDist, 0, OldDist.Length);
+    new Span<uint>(OldDist).Clear();
     OldDistPtr=0;
     LastDist=LastLength=0;
 //    memset(Window,0,MaxWinSize);
@@ -239,14 +267,16 @@ public Unpack(/* ComprDataIO *DataIO */)
   uint[] LengthCount = new uint[16];
   //memset(LengthCount,0,sizeof(LengthCount));
   for (size_t I=0;I<Size;I++)
+  {
     LengthCount[LengthTable[offset+I] & 0xf]++;
+  }
 
   // We must not calculate the number of zero length codes.
   LengthCount[0]=0;
 
   // Set the entire DecodeNum to zero.
   //memset(Dec->DecodeNum,0,Size*sizeof(*Dec->DecodeNum));
-  Utility.FillFast<ushort>(Dec.DecodeNum, 0);
+  new Span<ushort>(Dec.DecodeNum).Clear();
 
   // Initialize not really used entry for zero length code.
   Dec.DecodePos[0]=0;
@@ -272,7 +302,7 @@ public Unpack(/* ComprDataIO *DataIO */)
     Dec.DecodeLen[I]=(uint)LeftAligned;
 
     // Every item of this array contains the sum of all preceding items.
-    // So it contains the start position in code list for every bit length. 
+    // So it contains the start position in code list for every bit length.
     Dec.DecodePos[I]=Dec.DecodePos[I-1]+LengthCount[I-1];
   }
 
@@ -280,7 +310,7 @@ public Unpack(/* ComprDataIO *DataIO */)
   // so we cannot use the original DecodePos.
   uint[] CopyDecodePos = new uint[Dec.DecodePos.Length];
   //memcpy(CopyDecodePos,Dec->DecodePos,sizeof(CopyDecodePos));
-  Array.Copy(Dec.DecodePos, 0, CopyDecodePos, 0, CopyDecodePos.Length);
+  Array.Copy(Dec.DecodePos, CopyDecodePos, CopyDecodePos.Length);
 
   // For every bit length in the bit length table and so for every item
   // of alphabet.
@@ -337,11 +367,13 @@ public Unpack(/* ComprDataIO *DataIO */)
     uint BitField=Code<<(int)(16-Dec.QuickBits);
 
     // Prepare the table for quick decoding of bit lengths.
-  
+
     // Find the upper limit for current bit field and adjust the bit length
     // accordingly if necessary.
     while (CurBitLength<Dec.DecodeLen.Length && BitField>=Dec.DecodeLen[CurBitLength])
+    {
       CurBitLength++;
+    }
 
     // Translation of right aligned bit string to bit length.
     Dec.QuickLen[Code]=CurBitLength;

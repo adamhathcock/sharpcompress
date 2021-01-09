@@ -1,10 +1,12 @@
+#nullable disable
+
 using System;
+using System.Buffers.Binary;
 using System.Collections.Generic;
-using SharpCompress.Converters;
 
 namespace SharpCompress.Compressors.Rar.VM
 {
-    internal class RarVM : BitInput
+    internal sealed class RarVM : BitInput
     {
         //private void  InitBlock()
         //{
@@ -49,10 +51,7 @@ namespace SharpCompress.Compressors.Rar.VM
 
         internal void init()
         {
-            if (Mem == null)
-            {
-                Mem = new byte[VM_MEMSIZE + 4];
-            }
+            Mem ??= new byte[VM_MEMSIZE + 4];   
         }
 
         private bool IsVMMem(byte[] mem)
@@ -72,9 +71,9 @@ namespace SharpCompress.Compressors.Rar.VM
             }
             if (IsVMMem(mem))
             {
-                return DataConverter.LittleEndian.GetInt32(mem, offset);
+                return BinaryPrimitives.ReadInt32LittleEndian(mem.AsSpan(offset));
             }
-            return DataConverter.BigEndian.GetInt32(mem, offset);
+            return BinaryPrimitives.ReadInt32BigEndian(mem.AsSpan(offset));
         }
 
         private void SetValue(bool byteMode, byte[] mem, int offset, int value)
@@ -94,11 +93,11 @@ namespace SharpCompress.Compressors.Rar.VM
             {
                 if (IsVMMem(mem))
                 {
-                    DataConverter.LittleEndian.PutBytes(mem, offset, value);
+                    BinaryPrimitives.WriteInt32LittleEndian(mem.AsSpan(offset), value);
                 }
                 else
                 {
-                    DataConverter.BigEndian.PutBytes(mem, offset, value);
+                    BinaryPrimitives.WriteInt32BigEndian(mem.AsSpan(offset), value);
                 }
             }
 
@@ -120,12 +119,12 @@ namespace SharpCompress.Compressors.Rar.VM
             if (cmdOp.Type == VMOpType.VM_OPREGMEM)
             {
                 int pos = (cmdOp.Offset + cmdOp.Base) & VM_MEMMASK;
-                ret = DataConverter.LittleEndian.GetInt32(Mem, pos);
+                ret = BinaryPrimitives.ReadInt32LittleEndian(Mem.AsSpan(pos));
             }
             else
             {
                 int pos = cmdOp.Offset;
-                ret = DataConverter.LittleEndian.GetInt32(Mem, pos);
+                ret = BinaryPrimitives.ReadInt32LittleEndian(Mem.AsSpan(pos));
             }
             return ret;
         }
@@ -190,12 +189,12 @@ namespace SharpCompress.Compressors.Rar.VM
             {
                 //prg.GlobalData.Clear();
                 // ->GlobalData.Add(dataSize+VM_FIXEDGLOBALSIZE);
-                prg.GlobalData.SetSize(dataSize + VM_FIXEDGLOBALSIZE);
+                prg.GlobalData.Capacity = dataSize + VM_FIXEDGLOBALSIZE;
                 for (int i = 0; i < dataSize + VM_FIXEDGLOBALSIZE; i++)
 
                     // memcpy(&Prg->GlobalData[0],&Mem[VM_GLOBALMEMADDR],DataSize+VM_FIXEDGLOBALSIZE);
                 {
-                    prg.GlobalData[i] = Mem[VM_GLOBALMEMADDR + i];
+                    prg.GlobalData.Add(Mem[VM_GLOBALMEMADDR + i]);
                 }
             }
         }
@@ -1430,7 +1429,7 @@ namespace SharpCompress.Compressors.Rar.VM
             return (bitField & (Utility.URShift(unchecked((int)0xffffffff), (32 - bitCount))));
         }
 
-        public virtual void setMemory(int pos, byte[] data, int offset, int dataSize)
+        public void setMemory(int pos, byte[] data, int offset, int dataSize)
         {
             if (pos < VM_MEMSIZE)
             {

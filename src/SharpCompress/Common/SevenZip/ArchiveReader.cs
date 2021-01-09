@@ -1,4 +1,6 @@
-﻿using System;
+﻿#nullable disable
+
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -465,7 +467,7 @@ namespace SharpCompress.Common.SevenZip
                     SkipData();
                 }
 
-                if (packCrCs == null)
+                if (packCrCs is null)
                 {
                     packCrCs = new List<uint?>(numPackStreams);
                     for (int i = 0; i < numPackStreams; i++)
@@ -600,7 +602,7 @@ namespace SharpCompress.Common.SevenZip
 #endif
                         continue;
                     }
-                    if (type == BlockType.Crc || type == BlockType.Size)
+                    if (type is BlockType.Crc or BlockType.Size)
                     {
                         break;
                     }
@@ -611,7 +613,7 @@ namespace SharpCompress.Common.SevenZip
                     SkipData();
                 }
 
-                if (numUnpackStreamsInFolders == null)
+                if (numUnpackStreamsInFolders is null)
                 {
                     numUnpackStreamsInFolders = new List<int>(folders.Count);
                     for (int i = 0; i < folders.Count; i++)
@@ -703,7 +705,7 @@ namespace SharpCompress.Common.SevenZip
                     }
                     else if (type == BlockType.End)
                     {
-                        if (digests == null)
+                        if (digests is null)
                         {
                             digests = new List<uint?>(numDigestsTotal);
                             for (int i = 0; i < numDigestsTotal; i++)
@@ -789,22 +791,14 @@ namespace SharpCompress.Common.SevenZip
 #endif
             try
             {
-                long dataStartPos;
-                List<long> packSizes;
-                List<uint?> packCrCs;
-                List<CFolder> folders;
-                List<int> numUnpackStreamsInFolders;
-                List<long> unpackSizes;
-                List<uint?> digests;
-
                 ReadStreamsInfo(null,
-                                out dataStartPos,
-                                out packSizes,
-                                out packCrCs,
-                                out folders,
-                                out numUnpackStreamsInFolders,
-                                out unpackSizes,
-                                out digests);
+                                out long dataStartPos,
+                                out List<long> packSizes,
+                                out List<uint?> packCrCs,
+                                out List<CFolder> folders,
+                                out List<int> numUnpackStreamsInFolders,
+                                out List<long> unpackSizes,
+                                out List<uint?> digests);
 
                 dataStartPos += baseOffset;
 
@@ -1443,19 +1437,19 @@ namespace SharpCompress.Common.SevenZip
 
         private Stream GetCachedDecoderStream(ArchiveDatabase db, int folderIndex)
         {
-            Stream s;
-            if (!_cachedStreams.TryGetValue(folderIndex, out s))
+            if (!_cachedStreams.TryGetValue(folderIndex, out Stream s))
             {
                 CFolder folderInfo = db._folders[folderIndex];
                 int packStreamIndex = db._folders[folderIndex]._firstPackStreamId;
                 long folderStartPackPos = db.GetFolderStreamPos(folderInfo, 0);
-                List<long> packSizes = new List<long>();
-                for (int j = 0; j < folderInfo._packStreams.Count; j++)
+                var count = folderInfo._packStreams.Count;
+                long[] packSizes = new long[count];
+                for (int j = 0; j < count; j++)
                 {
-                    packSizes.Add(db._packSizes[packStreamIndex + j]);
+                    packSizes[j] = db._packSizes[packStreamIndex + j];
                 }
 
-                s = DecoderStreamHelper.CreateDecoderStream(_stream, folderStartPackPos, packSizes.ToArray(), folderInfo,
+                s = DecoderStreamHelper.CreateDecoderStream(_stream, folderStartPackPos, packSizes, folderInfo,
                                                             db.PasswordProvider);
                 _cachedStreams.Add(folderIndex, s);
             }
@@ -1486,17 +1480,12 @@ namespace SharpCompress.Common.SevenZip
 
         public void Extract(ArchiveDatabase db, int[] indices)
         {
-            int numItems;
-            bool allFilesMode = (indices == null);
-            if (allFilesMode)
-            {
-                numItems = db._files.Count;
-            }
-            else
-            {
-                numItems = indices.Length;
-            }
+            bool allFilesMode = (indices is null);
 
+            int numItems = allFilesMode
+                ? db._files.Count
+                : indices.Length;
+            
             if (numItems == 0)
             {
                 return;
@@ -1553,15 +1542,16 @@ namespace SharpCompress.Common.SevenZip
                 int packStreamIndex = db._folders[folderIndex]._firstPackStreamId;
                 long folderStartPackPos = db.GetFolderStreamPos(folderInfo, 0);
 
-                List<long> packSizes = new List<long>();
-                for (int j = 0; j < folderInfo._packStreams.Count; j++)
+                var count = folderInfo._packStreams.Count;
+                long[] packSizes = new long[count];
+                for (int j = 0; j < count; j++)
                 {
-                    packSizes.Add(db._packSizes[packStreamIndex + j]);
+                    packSizes[j] = db._packSizes[packStreamIndex + j];
                 }
 
                 // TODO: If the decoding fails the last file may be extracted incompletely. Delete it?
 
-                Stream s = DecoderStreamHelper.CreateDecoderStream(_stream, folderStartPackPos, packSizes.ToArray(),
+                Stream s = DecoderStreamHelper.CreateDecoderStream(_stream, folderStartPackPos, packSizes,
                                                                    folderInfo, db.PasswordProvider);
                 byte[] buffer = new byte[4 << 10];
                 for (;;)

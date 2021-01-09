@@ -74,7 +74,7 @@ namespace SharpCompress.Writers.Tar
 
         public void Write(string filename, Stream source, DateTime? modificationTime, long? size)
         {
-            if (!source.CanSeek && size == null)
+            if (!source.CanSeek && size is null)
             {
                 throw new ArgumentException("Seekable stream is required if no size is given.");
             }

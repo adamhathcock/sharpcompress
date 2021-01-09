@@ -23,6 +23,9 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
+
+#nullable disable
+
 using System;
 using System.IO;
 
@@ -31,7 +34,7 @@ namespace SharpCompress.Compressors.ADC
     /// <summary>
     /// Provides a forward readable only stream that decompresses ADC data
     /// </summary>
-    public class ADCStream : Stream
+    public sealed class ADCStream : Stream
     {
         /// <summary>
         /// This stream holds the compressed data
@@ -103,7 +106,7 @@ namespace SharpCompress.Compressors.ADC
             {
                 return 0;
             }
-            if (buffer == null)
+            if (buffer is null)
             {
                 throw new ArgumentNullException(nameof(buffer));
             }
@@ -122,7 +125,7 @@ namespace SharpCompress.Compressors.ADC
 
             int size = -1;
 
-            if (_outBuffer == null)
+            if (_outBuffer is null)
             {
                 size = ADCBase.Decompress(_stream, out _outBuffer);
                 _outPosition = 0;
@@ -142,7 +145,7 @@ namespace SharpCompress.Compressors.ADC
                 toCopy -= piece;
                 size = ADCBase.Decompress(_stream, out _outBuffer);
                 _outPosition = 0;
-                if (size == 0 || _outBuffer == null || _outBuffer.Length == 0)
+                if (size == 0 || _outBuffer is null || _outBuffer.Length == 0)
                 {
                     return copied;
                 }

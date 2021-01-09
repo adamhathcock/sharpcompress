@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Text;
 using SharpCompress.Common.Zip.Headers;
 using SharpCompress.Compressors.Deflate;
 
@@ -65,9 +64,9 @@ namespace SharpCompress.Common.Zip
 
         public byte[] Encrypt(byte[] plainText, int length)
         {
-            if (plainText == null)
+            if (plainText is null)
             {
-                throw new ArgumentNullException("plaintext");
+                throw new ArgumentNullException(nameof(plainText));
             }
 
             if (length > plainText.Length)

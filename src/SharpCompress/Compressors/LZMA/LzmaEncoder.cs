@@ -1,3 +1,5 @@
+#nullable disable
+
 using System;
 using System.IO;
 using SharpCompress.Compressors.LZMA.LZ;
@@ -425,9 +427,9 @@ namespace SharpCompress.Compressors.LZMA
 
         private void Create()
         {
-            if (_matchFinder == null)
+            if (_matchFinder is null)
             {
-                BinTree bt = new BinTree();
+                var bt = new BinTree();
                 int numHashBytes = 4;
                 if (_matchFinderType == EMatchFinderType.Bt2)
                 {
@@ -996,7 +998,7 @@ namespace SharpCompress.Compressors.LZMA
                     }
                 }
 
-                UInt32 startLen = 2; // speed optimization 
+                UInt32 startLen = 2; // speed optimization
 
                 for (UInt32 repIndex = 0; repIndex < Base.K_NUM_REP_DISTANCES; repIndex++)
                 {
@@ -1571,12 +1573,17 @@ namespace SharpCompress.Compressors.LZMA
 
         public void WriteCoderProperties(Stream outStream)
         {
-            _properties[0] = (Byte)((_posStateBits * 5 + _numLiteralPosStateBits) * 9 + _numLiteralContextBits);
+            WriteCoderProperties(_properties);
+            outStream.Write(_properties, 0, K_PROP_SIZE);
+        }
+
+        public void WriteCoderProperties(Span<byte> span)
+        {
+            span[0] = (byte)((_posStateBits * 5 + _numLiteralPosStateBits) * 9 + _numLiteralContextBits);
             for (int i = 0; i < 4; i++)
             {
-                _properties[1 + i] = (Byte)((_dictionarySize >> (8 * i)) & 0xFF);
+                span[1 + i] = (byte)((_dictionarySize >> (8 * i)) & 0xFF);
             }
-            outStream.Write(_properties, 0, K_PROP_SIZE);
         }
 
         private readonly UInt32[] _tempPrices = new UInt32[Base.K_NUM_FULL_DISTANCES];
