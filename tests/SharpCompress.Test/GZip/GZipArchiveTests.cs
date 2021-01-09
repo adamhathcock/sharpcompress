@@ -26,7 +26,7 @@ namespace SharpCompress.Test.GZip
                 long size = entry.Size;
                 var scratch = new FileInfo(Path.Combine(SCRATCH_FILES_PATH, "Tar.tar"));
                 var test = new FileInfo(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar"));
-                
+
                 Assert.Equal(size, scratch.Length);
                 Assert.Equal(size, test.Length);
             }
@@ -46,7 +46,7 @@ namespace SharpCompress.Test.GZip
                 long size = entry.Size;
                 var scratch = new FileInfo(Path.Combine(SCRATCH_FILES_PATH, "Tar.tar"));
                 var test = new FileInfo(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar"));
-                
+
                 Assert.Equal(size, scratch.Length);
                 Assert.Equal(size, test.Length);
             }

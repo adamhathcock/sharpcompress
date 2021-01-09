@@ -357,8 +357,8 @@ namespace SharpCompress.Compressors.Deflate
                 _comment = value;
             }
         }
-        
-        
+
+
         public DateTime? LastModified
         {
             get => _lastModified;
