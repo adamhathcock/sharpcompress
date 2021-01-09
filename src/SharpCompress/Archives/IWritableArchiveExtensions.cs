@@ -35,11 +35,14 @@ namespace SharpCompress.Archives
             this IWritableArchive writableArchive,
             string filePath, string searchPattern = "*.*", SearchOption searchOption = SearchOption.AllDirectories)
         {
-            foreach (var path in Directory.EnumerateFiles(filePath, searchPattern, searchOption))
+            using (writableArchive.PauseEntryRebuilding())
             {
-                var fileInfo = new FileInfo(path);
-                writableArchive.AddEntry(path.Substring(filePath.Length), fileInfo.OpenRead(), true, fileInfo.Length,
-                                         fileInfo.LastWriteTime);
+                foreach (var path in Directory.EnumerateFiles(filePath, searchPattern, searchOption))
+                {
+                    var fileInfo = new FileInfo(path);
+                    writableArchive.AddEntry(path.Substring(filePath.Length), fileInfo.OpenRead(), true, fileInfo.Length,
+                                            fileInfo.LastWriteTime);
+                }
             }
         }
         public static IArchiveEntry AddEntry(this IWritableArchive writableArchive, string key, FileInfo fileInfo)

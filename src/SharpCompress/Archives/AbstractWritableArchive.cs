@@ -12,11 +12,28 @@ namespace SharpCompress.Archives
         where TEntry : IArchiveEntry
         where TVolume : IVolume
     {
+        private class RebuildPauseDisposable: IDisposable
+        {
+            private readonly AbstractWritableArchive<TEntry, TVolume> archive;
+
+            public RebuildPauseDisposable(AbstractWritableArchive<TEntry, TVolume> archive)
+            {
+                this.archive = archive;
+                archive.pauseRebuilding = true;
+            }
+
+            public void Dispose()
+            {
+                archive.pauseRebuilding = false;
+                archive.RebuildModifiedCollection();
+            }
+        }
         private readonly List<TEntry> newEntries = new List<TEntry>();
         private readonly List<TEntry> removedEntries = new List<TEntry>();
 
         private readonly List<TEntry> modifiedEntries = new List<TEntry>();
         private bool hasModifications;
+        private bool pauseRebuilding;
 
         internal AbstractWritableArchive(ArchiveType type)
             : base(type)
@@ -45,8 +62,17 @@ namespace SharpCompress.Archives
             }
         }
 
+        public IDisposable PauseEntryRebuilding()
+        {
+            return new RebuildPauseDisposable(this);
+        }
+
         private void RebuildModifiedCollection()
         {
+            if (pauseRebuilding)
+            {
+                return;
+            }
             hasModifications = true;
             newEntries.RemoveAll(v => removedEntries.Contains(v));
             modifiedEntries.Clear();
