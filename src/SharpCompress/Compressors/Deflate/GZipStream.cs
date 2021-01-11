@@ -37,10 +37,9 @@ namespace SharpCompress.Compressors.Deflate
     {
         internal static readonly DateTime UNIX_EPOCH = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 
-        public DateTime? LastModified { get; set; }
-
         private string? _comment;
         private string? _fileName;
+        private DateTime? _lastModified;
 
         internal ZlibBaseStream BaseStream;
         private bool _disposed;
@@ -274,6 +273,7 @@ namespace SharpCompress.Compressors.Deflate
                 _firstReadDone = true;
                 FileName = BaseStream._GzipFileName;
                 Comment = BaseStream._GzipComment;
+                LastModified = BaseStream._GzipMtime;
             }
             return n;
         }
@@ -358,6 +358,20 @@ namespace SharpCompress.Compressors.Deflate
             }
         }
 
+
+        public DateTime? LastModified
+        {
+            get => _lastModified;
+            set
+            {
+                if (_disposed)
+                {
+                    throw new ObjectDisposedException(nameof(GZipStream));
+                }
+                _lastModified = value;
+            }
+        }
+
         public string? FileName
         {
             get => _fileName;
@@ -398,8 +412,8 @@ namespace SharpCompress.Compressors.Deflate
             byte[]? filenameBytes = (FileName is null) ? null
                 : _encoding.GetBytes(FileName);
 
-            int cbLength = (commentBytes is null) ? 0 : commentBytes.Length + 1;
-            int fnLength = (filenameBytes is null) ? 0 : filenameBytes.Length + 1;
+            int cbLength = commentBytes?.Length + 1 ?? 0;
+            int fnLength = filenameBytes?.Length + 1 ?? 0;
 
             int bufferLength = 10 + cbLength + fnLength;
             var header = new byte[bufferLength];
@@ -425,7 +439,7 @@ namespace SharpCompress.Compressors.Deflate
             header[i++] = flag;
 
             // mtime
-            if (!LastModified.HasValue)
+            if (LastModified is null)
             {
                 LastModified = DateTime.Now;
             }
