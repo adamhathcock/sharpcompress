@@ -15,7 +15,7 @@ namespace SharpCompress.Common.GZip
 
         public override CompressionType CompressionType => CompressionType.GZip;
 
-        public override long Crc => 0;
+        public override long Crc => _filePart.Crc ?? 0;
 
         public override string Key => _filePart.FilePartName;
 
@@ -23,7 +23,7 @@ namespace SharpCompress.Common.GZip
 
         public override long CompressedSize => 0;
 
-        public override long Size => 0;
+        public override long Size => _filePart.UncompressedSize ?? 0;
 
         public override DateTime? LastModifiedTime => _filePart.DateModified;
 

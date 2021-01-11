@@ -16,14 +16,23 @@ namespace SharpCompress.Common.GZip
         internal GZipFilePart(Stream stream, ArchiveEncoding archiveEncoding)
             : base(archiveEncoding)
         {
-            ReadAndValidateGzipHeader(stream);
-            EntryStartPosition = stream.Position;
             _stream = stream;
+            ReadAndValidateGzipHeader();
+            if (stream.CanSeek)
+            {
+                long position = stream.Position;
+                stream.Position = stream.Length - 8;
+                ReadTrailer();
+                stream.Position = position;
+            }
+            EntryStartPosition = stream.Position;
         }
 
         internal long EntryStartPosition { get; }
 
         internal DateTime? DateModified { get; private set; }
+        internal int? Crc { get; private set; }
+        internal int? UncompressedSize { get; private set; }
 
         internal override string FilePartName => _name!;
 
@@ -37,11 +46,21 @@ namespace SharpCompress.Common.GZip
             return _stream;
         }
 
-        private void ReadAndValidateGzipHeader(Stream stream)
+        private void ReadTrailer()
+        {
+            // Read and potentially verify the GZIP trailer: CRC32 and  size mod 2^32
+            Span<byte> trailer = stackalloc byte[8];
+            int n = _stream.Read(trailer);
+
+            Crc = BinaryPrimitives.ReadInt32LittleEndian(trailer);
+            UncompressedSize = BinaryPrimitives.ReadInt32LittleEndian(trailer.Slice(4));
+        }
+
+        private void ReadAndValidateGzipHeader()
         {
             // read the header on the first read
             Span<byte> header = stackalloc byte[10];
-            int n = stream.Read(header);
+            int n = _stream.Read(header);
 
             // workitem 8501: handle edge case (decompress empty stream)
             if (n == 0)
@@ -64,12 +83,12 @@ namespace SharpCompress.Common.GZip
             if ((header[3] & 0x04) == 0x04)
             {
                 // read and discard extra field
-                n = stream.Read(header.Slice(0, 2)); // 2-byte length field
+                n = _stream.Read(header.Slice(0, 2)); // 2-byte length field
 
                 short extraLength = (short)(header[0] + header[1] * 256);
                 byte[] extra = new byte[extraLength];
 
-                if (!stream.ReadFully(extra))
+                if (!_stream.ReadFully(extra))
                 {
                     throw new ZlibException("Unexpected end-of-file reading GZIP header.");
                 }
@@ -77,15 +96,15 @@ namespace SharpCompress.Common.GZip
             }
             if ((header[3] & 0x08) == 0x08)
             {
-                _name = ReadZeroTerminatedString(stream);
+                _name = ReadZeroTerminatedString(_stream);
             }
             if ((header[3] & 0x10) == 0x010)
             {
-                ReadZeroTerminatedString(stream);
+                ReadZeroTerminatedString(_stream);
             }
             if ((header[3] & 0x02) == 0x02)
             {
-                stream.ReadByte(); // CRC16, ignore
+                _stream.ReadByte(); // CRC16, ignore
             }
         }
 
