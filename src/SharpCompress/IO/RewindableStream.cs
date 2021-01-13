@@ -84,11 +84,11 @@ namespace SharpCompress.IO
             throw new NotSupportedException();
         }
 
-        public override long Length => throw new NotSupportedException();
+        public override long Length => stream.Length;
 
         public override long Position
         {
-            get { return stream.Position + bufferStream.Position - bufferStream.Length; }
+            get => stream.Position + bufferStream.Position - bufferStream.Length;
             set
             {
                 if (!isRewound)
