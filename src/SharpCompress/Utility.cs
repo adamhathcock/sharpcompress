@@ -2,6 +2,7 @@ using System;
 using System.Buffers;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading.Tasks;
 using SharpCompress.Readers;
 
 namespace SharpCompress
@@ -228,6 +229,24 @@ namespace SharpCompress
         {
             DateTime sTime = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
             return sTime.AddSeconds(unixtime);
+        }
+        
+        public static async Task<long> TransferToAsync(this Stream source, Stream destination)
+        {
+            using var buffer = MemoryPool<byte>.Shared.Rent(81920);
+            long total = 0;
+            while (true)
+            {
+                int bytesRead = await source.ReadAsync(buffer.Memory);
+                if (bytesRead == 0)
+                {
+                    break;
+                }
+
+                total += bytesRead;
+                await destination.WriteAsync(buffer.Memory);
+            }
+            return total;
         }
 
         public static long TransferTo(this Stream source, Stream destination)

@@ -30,18 +30,20 @@ using System;
 using System.Buffers.Binary;
 using System.IO;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace SharpCompress.Compressors.Deflate
 {
     public class GZipStream : Stream
     {
-        internal static readonly DateTime UNIX_EPOCH = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+        private static readonly DateTime UNIX_EPOCH = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 
         private string? _comment;
         private string? _fileName;
         private DateTime? _lastModified;
 
-        internal ZlibBaseStream BaseStream;
+        private readonly ZlibBaseStream _baseStream;
         private bool _disposed;
         private bool _firstReadDone;
         private int _headerByteCount;
@@ -60,7 +62,7 @@ namespace SharpCompress.Compressors.Deflate
 
         public GZipStream(Stream stream, CompressionMode mode, CompressionLevel level, Encoding encoding)
         {
-            BaseStream = new ZlibBaseStream(stream, mode, level, ZlibStreamFlavor.GZIP, encoding);
+            _baseStream = new ZlibBaseStream(stream, mode, level, ZlibStreamFlavor.GZIP, encoding);
             _encoding = encoding;
         }
 
@@ -68,27 +70,27 @@ namespace SharpCompress.Compressors.Deflate
 
         public virtual FlushType FlushMode
         {
-            get => (BaseStream._flushMode);
+            get => (_baseStream._flushMode);
             set
             {
                 if (_disposed)
                 {
                     throw new ObjectDisposedException("GZipStream");
                 }
-                BaseStream._flushMode = value;
+                _baseStream._flushMode = value;
             }
         }
 
         public int BufferSize
         {
-            get => BaseStream._bufferSize;
+            get => _baseStream._bufferSize;
             set
             {
                 if (_disposed)
                 {
                     throw new ObjectDisposedException("GZipStream");
                 }
-                if (BaseStream._workingBuffer != null)
+                if (_baseStream._workingBuffer != null)
                 {
                     throw new ZlibException("The working buffer is already set.");
                 }
@@ -98,13 +100,13 @@ namespace SharpCompress.Compressors.Deflate
                                             String.Format("Don't be silly. {0} bytes?? Use a bigger buffer, at least {1}.", value,
                                                           ZlibConstants.WorkingBufferSizeMin));
                 }
-                BaseStream._bufferSize = value;
+                _baseStream._bufferSize = value;
             }
         }
 
-        internal virtual long TotalIn => BaseStream._z.TotalBytesIn;
+        internal virtual long TotalIn => _baseStream._z.TotalBytesIn;
 
-        internal virtual long TotalOut => BaseStream._z.TotalBytesOut;
+        internal virtual long TotalOut => _baseStream._z.TotalBytesOut;
 
         #endregion
 
@@ -124,7 +126,7 @@ namespace SharpCompress.Compressors.Deflate
                 {
                     throw new ObjectDisposedException("GZipStream");
                 }
-                return BaseStream._stream.CanRead;
+                return _baseStream._stream.CanRead;
             }
         }
 
@@ -150,7 +152,7 @@ namespace SharpCompress.Compressors.Deflate
                 {
                     throw new ObjectDisposedException("GZipStream");
                 }
-                return BaseStream._stream.CanWrite;
+                return _baseStream._stream.CanWrite;
             }
         }
 
@@ -174,13 +176,13 @@ namespace SharpCompress.Compressors.Deflate
         {
             get
             {
-                if (BaseStream._streamMode == ZlibBaseStream.StreamMode.Writer)
+                if (_baseStream._streamMode == ZlibBaseStream.StreamMode.Writer)
                 {
-                    return BaseStream._z.TotalBytesOut + _headerByteCount;
+                    return _baseStream._z.TotalBytesOut + _headerByteCount;
                 }
-                if (BaseStream._streamMode == ZlibBaseStream.StreamMode.Reader)
+                if (_baseStream._streamMode == ZlibBaseStream.StreamMode.Reader)
                 {
-                    return BaseStream._z.TotalBytesIn + BaseStream._gzipHeaderByteCount;
+                    return _baseStream._z.TotalBytesIn + _baseStream._gzipHeaderByteCount;
                 }
                 return 0;
             }
@@ -200,10 +202,10 @@ namespace SharpCompress.Compressors.Deflate
             {
                 if (!_disposed)
                 {
-                    if (disposing && (BaseStream != null))
+                    if (disposing && (_baseStream != null))
                     {
-                        BaseStream.Dispose();
-                        Crc32 = BaseStream.Crc32;
+                        _baseStream.Dispose();
+                        Crc32 = _baseStream.Crc32;
                     }
                     _disposed = true;
                 }
@@ -223,7 +225,7 @@ namespace SharpCompress.Compressors.Deflate
             {
                 throw new ObjectDisposedException("GZipStream");
             }
-            BaseStream.Flush();
+            _baseStream.Flush();
         }
 
         /// <summary>
@@ -259,11 +261,16 @@ namespace SharpCompress.Compressors.Deflate
         /// <returns>the number of bytes actually read</returns>
         public override int Read(byte[] buffer, int offset, int count)
         {
+            throw new NotImplementedException();
+        }
+
+       public override async Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+        {
             if (_disposed)
             {
                 throw new ObjectDisposedException("GZipStream");
             }
-            int n = BaseStream.Read(buffer, offset, count);
+            int n = await _baseStream.ReadAsync(buffer, offset, count, cancellationToken);
 
             // Console.WriteLine("GZipStream::Read(buffer, off({0}), c({1}) = {2}", offset, count, n);
             // Console.WriteLine( Util.FormatByteArray(buffer, offset, n) );
@@ -271,9 +278,9 @@ namespace SharpCompress.Compressors.Deflate
             if (!_firstReadDone)
             {
                 _firstReadDone = true;
-                FileName = BaseStream._GzipFileName;
-                Comment = BaseStream._GzipComment;
-                LastModified = BaseStream._GzipMtime;
+                FileName = _baseStream._GzipFileName;
+                Comment = _baseStream._GzipComment;
+                LastModified = _baseStream._GzipMtime;
             }
             return n;
         }
@@ -322,17 +329,21 @@ namespace SharpCompress.Compressors.Deflate
         /// <param name="count">the number of bytes to write.</param>
         public override void Write(byte[] buffer, int offset, int count)
         {
+        }
+
+        public override async Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+        {
             if (_disposed)
             {
                 throw new ObjectDisposedException("GZipStream");
             }
-            if (BaseStream._streamMode == ZlibBaseStream.StreamMode.Undefined)
+            if (_baseStream._streamMode == ZlibBaseStream.StreamMode.Undefined)
             {
                 //Console.WriteLine("GZipStream: First write");
-                if (BaseStream._wantCompress)
+                if (_baseStream._wantCompress)
                 {
                     // first write in compression, therefore, emit the GZIP header
-                    _headerByteCount = EmitHeader();
+                    _headerByteCount = await EmitHeaderAsync();
                 }
                 else
                 {
@@ -340,7 +351,7 @@ namespace SharpCompress.Compressors.Deflate
                 }
             }
 
-            BaseStream.Write(buffer, offset, count);
+            await _baseStream.WriteAsync(buffer, offset, count, cancellationToken);
         }
 
         #endregion Stream methods
@@ -405,7 +416,7 @@ namespace SharpCompress.Compressors.Deflate
 
         public int Crc32 { get; private set; }
 
-        private int EmitHeader()
+        private async Task<int> EmitHeaderAsync()
         {
             byte[]? commentBytes = (Comment is null) ? null
                 : _encoding.GetBytes(Comment);
@@ -474,7 +485,7 @@ namespace SharpCompress.Compressors.Deflate
                 header[i++] = 0; // terminate
             }
 
-            BaseStream._stream.Write(header, 0, header.Length);
+            await _baseStream._stream.WriteAsync(header, 0, header.Length);
 
             return header.Length; // bytes written
         }

@@ -1,9 +1,11 @@
 ﻿#nullable disable
 
 using System;
+using System.Buffers;
 using System.Buffers.Binary;
 using System.IO;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace SharpCompress.Common.Tar.Headers
 {
@@ -32,48 +34,48 @@ namespace SharpCompress.Common.Tar.Headers
 
         internal const int BLOCK_SIZE = 512;
 
-        internal void Write(Stream output)
+        internal async Task WriteAsync(Stream output)
         {
-            byte[] buffer = new byte[BLOCK_SIZE];
+            using var buffer = MemoryPool<byte>.Shared.Rent(BLOCK_SIZE);
 
-            WriteOctalBytes(511, buffer, 100, 8); // file mode
-            WriteOctalBytes(0, buffer, 108, 8); // owner ID
-            WriteOctalBytes(0, buffer, 116, 8); // group ID
+            WriteOctalBytes(511, buffer.Memory.Span, 100, 8); // file mode
+            WriteOctalBytes(0, buffer.Memory.Span, 108, 8); // owner ID
+            WriteOctalBytes(0, buffer.Memory.Span, 116, 8); // group ID
 
             //ArchiveEncoding.UTF8.GetBytes("magic").CopyTo(buffer, 257);
             var nameByteCount = ArchiveEncoding.GetEncoding().GetByteCount(Name);
             if (nameByteCount > 100)
             {
                 // Set mock filename and filetype to indicate the next block is the actual name of the file
-                WriteStringBytes("././@LongLink", buffer, 0, 100);
-                buffer[156] = (byte)EntryType.LongName;
-                WriteOctalBytes(nameByteCount + 1, buffer, 124, 12);
+                WriteStringBytes("././@LongLink", buffer.Memory.Span, 0, 100);
+                buffer.Memory.Span[156] = (byte)EntryType.LongName;
+                WriteOctalBytes(nameByteCount + 1, buffer.Memory.Span, 124, 12);
             }
             else
             {
-                WriteStringBytes(ArchiveEncoding.Encode(Name), buffer, 100);
-                WriteOctalBytes(Size, buffer, 124, 12);
+                WriteStringBytes(ArchiveEncoding.Encode(Name), buffer.Memory.Span, 100);
+                WriteOctalBytes(Size, buffer.Memory.Span, 124, 12);
                 var time = (long)(LastModifiedTime.ToUniversalTime() - EPOCH).TotalSeconds;
-                WriteOctalBytes(time, buffer, 136, 12);
-                buffer[156] = (byte)EntryType;
+                WriteOctalBytes(time, buffer.Memory.Span, 136, 12);
+                buffer.Memory.Span[156] = (byte)EntryType;
 
                 if (Size >= 0x1FFFFFFFF)
                 {
-                    Span<byte> bytes12 = stackalloc byte[12];
-                    BinaryPrimitives.WriteInt64BigEndian(bytes12.Slice(4), Size);
-                    bytes12[0] |= 0x80;
-                    bytes12.CopyTo(buffer.AsSpan(124));
+                    using var bytes12 = MemoryPool<byte>.Shared.Rent(12);
+                    BinaryPrimitives.WriteInt64BigEndian(bytes12.Memory.Span.Slice(4), Size);
+                    bytes12.Memory.Span[0] |= 0x80;
+                    bytes12.Memory.CopyTo(buffer.Memory.Slice(124));
                 }
             }
 
-            int crc = RecalculateChecksum(buffer);
-            WriteOctalBytes(crc, buffer, 148, 8);
+            int crc = RecalculateChecksum(buffer.Memory.Span);
+            WriteOctalBytes(crc, buffer.Memory.Span, 148, 8);
 
-            output.Write(buffer, 0, buffer.Length);
+            await output.WriteAsync(buffer.Memory);
 
             if (nameByteCount > 100)
             {
-                WriteLongFilenameHeader(output);
+                await WriteLongFilenameHeaderAsync(output);
                 // update to short name lower than 100 - [max bytes of one character].
                 // subtracting bytes is needed because preventing infinite loop(example code is here).
                 //
@@ -82,14 +84,14 @@ namespace SharpCompress.Common.Tar.Headers
                 //
                 // and then infinite recursion is occured in WriteLongFilenameHeader because truncated.Length is 102.
                 Name = ArchiveEncoding.Decode(ArchiveEncoding.Encode(Name), 0, 100 - ArchiveEncoding.GetEncoding().GetMaxByteCount(1));
-                Write(output);
+                await WriteAsync(output);
             }
         }
 
-        private void WriteLongFilenameHeader(Stream output)
+        private async Task WriteLongFilenameHeaderAsync(Stream output)
         {
             byte[] nameBytes = ArchiveEncoding.Encode(Name);
-            output.Write(nameBytes, 0, nameBytes.Length);
+            await output.WriteAsync(nameBytes, 0, nameBytes.Length);
 
             // pad to multiple of BlockSize bytes, and make sure a terminating null is added
             int numPaddingBytes = BLOCK_SIZE - (nameBytes.Length % BLOCK_SIZE);
@@ -97,7 +99,10 @@ namespace SharpCompress.Common.Tar.Headers
             {
                 numPaddingBytes = BLOCK_SIZE;
             }
-            output.Write(new byte[numPaddingBytes], 0, numPaddingBytes);
+
+            using var padding = MemoryPool<byte>.Shared.Rent(numPaddingBytes);
+            padding.Memory.Span.Clear();
+            await output.WriteAsync(padding.Memory);
         }
 
         internal bool Read(BinaryReader reader)
@@ -201,7 +206,7 @@ namespace SharpCompress.Common.Tar.Headers
             buffer.Slice(i, length - i).Clear();
         }
 
-        private static void WriteStringBytes(string name, byte[] buffer, int offset, int length)
+        private static void WriteStringBytes(string name, Span<byte> buffer, int offset, int length)
         {
             int i;
 
@@ -216,7 +221,7 @@ namespace SharpCompress.Common.Tar.Headers
             }
         }
 
-        private static void WriteOctalBytes(long value, byte[] buffer, int offset, int length)
+        private static void WriteOctalBytes(long value, Span<byte> buffer, int offset, int length)
         {
             string val = Convert.ToString(value, 8);
             int shift = length - val.Length - 1;
@@ -266,10 +271,10 @@ namespace SharpCompress.Common.Tar.Headers
             (byte)' ', (byte)' ', (byte)' ', (byte)' '
         };
 
-        internal static int RecalculateChecksum(byte[] buf)
+        private static int RecalculateChecksum(Span<byte> buf)
         {
             // Set default value for checksum. That is 8 spaces.
-            eightSpaces.CopyTo(buf, 148);
+            eightSpaces.AsSpan(148).CopyTo(buf);
 
             // Calculate checksum
             int headerChecksum = 0;

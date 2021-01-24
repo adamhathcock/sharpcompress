@@ -28,6 +28,8 @@
 using System;
 using System.IO;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace SharpCompress.Compressors.Deflate
 {
@@ -269,6 +271,15 @@ namespace SharpCompress.Compressors.Deflate
             }
             return _baseStream.Read(buffer, offset, count);
         }
+        
+        public override async Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+        {
+            if (_disposed)
+            {
+                throw new ObjectDisposedException("ZlibStream");
+            }
+            return await _baseStream.ReadAsync(buffer, offset, count, cancellationToken);
+        }
 
         public override int ReadByte()
         {
@@ -328,6 +339,15 @@ namespace SharpCompress.Compressors.Deflate
                 throw new ObjectDisposedException("ZlibStream");
             }
             _baseStream.Write(buffer, offset, count);
+        }
+        
+        public override async Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+        {
+            if (_disposed)
+            {
+                throw new ObjectDisposedException("ZlibStream");
+            }
+            await _baseStream.WriteAsync(buffer, offset, count, cancellationToken);
         }
 
         public override void WriteByte(byte value)
