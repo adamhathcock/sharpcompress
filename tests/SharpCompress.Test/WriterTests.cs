@@ -1,5 +1,6 @@
 ﻿using System.IO;
 using System.Text;
+using System.Threading.Tasks;
 using SharpCompress.Common;
 using SharpCompress.IO;
 using SharpCompress.Readers;
@@ -16,7 +17,7 @@ namespace SharpCompress.Test
             this.type = type;
         }
 
-        protected void Write(CompressionType compressionType, string archive, string archiveToVerifyAgainst, Encoding encoding = null)
+        protected async Task WriteAsync(CompressionType compressionType, string archive, string archiveToVerifyAgainst, Encoding encoding = null)
         {
             using (Stream stream = File.OpenWrite(Path.Combine(SCRATCH2_FILES_PATH, archive)))
             {
@@ -27,7 +28,7 @@ namespace SharpCompress.Test
 
                 writerOptions.ArchiveEncoding.Default = encoding ?? Encoding.Default;
 
-                using (var writer = WriterFactory.Open(stream, type, writerOptions))
+                await using (var writer = WriterFactory.Open(stream, type, writerOptions))
                 {
                     writer.WriteAll(ORIGINAL_FILES_PATH, "*", SearchOption.AllDirectories);
                 }

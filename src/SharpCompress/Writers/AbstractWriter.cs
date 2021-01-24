@@ -29,7 +29,14 @@ namespace SharpCompress.Writers
 
         public abstract Task WriteAsync(string filename, Stream source, DateTime? modificationTime, CancellationToken cancellationToken);
 
-        public virtual ValueTask DisposeAsync()
+        public async ValueTask DisposeAsync()
+        {
+            await DisposeAsyncCore();
+
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual ValueTask DisposeAsyncCore()
         {
             return OutputStream.DisposeAsync();
         }

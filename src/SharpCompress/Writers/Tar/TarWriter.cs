@@ -57,7 +57,7 @@ namespace SharpCompress.Writers.Tar
             InitializeStream(destination);
         }
 
-        public override async Task WriteAsync(string filename, Stream source, DateTime? modificationTime, CancellationToken cancellationToken)
+        public override async Task WriteAsync(string filename, Stream source, DateTime? modificationTime, CancellationToken cancellationToken = default)
         {
             if (!source.CanSeek)
             {
@@ -102,7 +102,7 @@ namespace SharpCompress.Writers.Tar
             await OutputStream.WriteAsync(zeroBuffer.Memory);
         }
 
-        public override async ValueTask DisposeAsync()
+        protected override async ValueTask DisposeAsyncCore()
         {
             if (finalizeArchiveOnClose)
             {

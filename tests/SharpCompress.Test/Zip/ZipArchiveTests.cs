@@ -2,6 +2,7 @@
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using SharpCompress.Archives;
 using SharpCompress.Archives.Zip;
 using SharpCompress.Common;
@@ -490,11 +491,11 @@ namespace SharpCompress.Test.Zip
         }
 
         [Fact]
-        public void TestSharpCompressWithEmptyStream()
+        public async Task TestSharpCompressWithEmptyStream()
         {
             MemoryStream stream = new NonSeekableMemoryStream();
 
-            using (IWriter zipWriter = WriterFactory.Open(stream, ArchiveType.Zip, CompressionType.Deflate))
+            await using (IWriter zipWriter = WriterFactory.Open(stream, ArchiveType.Zip, CompressionType.Deflate))
             {
                 zipWriter.Write("foo.txt", new MemoryStream(new byte[0]));
                 zipWriter.Write("foo2.txt", new MemoryStream(new byte[10]));

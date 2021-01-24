@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using SharpCompress.Archives;
 using SharpCompress.Common;
 using SharpCompress.Readers;
@@ -136,7 +137,7 @@ namespace SharpCompress.Test.Zip
             }
         }
 
-        public void CreateZipArchive(string filename, long files, long filesize, long chunksize, bool set_zip64, bool forward_only)
+        public async Task CreateZipArchive(string filename, long files, long filesize, long chunksize, bool set_zip64, bool forward_only)
         {
             var data = new byte[chunksize];
 
@@ -148,7 +149,7 @@ namespace SharpCompress.Test.Zip
 
             using (var zip = File.OpenWrite(filename))
             using (var st = forward_only ? (Stream)new ForwardOnlyStream(zip) : zip)
-            using (var zipWriter = (ZipWriter)WriterFactory.Open(st, ArchiveType.Zip, opts))
+            await using (var zipWriter = (ZipWriter)WriterFactory.Open(st, ArchiveType.Zip, opts))
             {
 
                 for (var i = 0; i < files; i++)

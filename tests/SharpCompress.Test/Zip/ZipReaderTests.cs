@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Threading.Tasks;
 using SharpCompress.Common;
 using SharpCompress.IO;
 using SharpCompress.Readers;
@@ -270,7 +271,7 @@ namespace SharpCompress.Test.Zip
         }
 
         [Fact]
-        public void TestSharpCompressWithEmptyStream()
+        public async Task TestSharpCompressWithEmptyStream()
         {
             var expected = new Tuple<string, byte[]>[]
             {
@@ -282,7 +283,7 @@ namespace SharpCompress.Test.Zip
             {
                 Stream stream = new TestStream(memory, read: true, write: true, seek: false);
 
-                using (IWriter zipWriter = WriterFactory.Open(stream, ArchiveType.Zip, CompressionType.Deflate))
+                await using (IWriter zipWriter = WriterFactory.Open(stream, ArchiveType.Zip, CompressionType.Deflate))
                 {
                     zipWriter.Write(expected[0].Item1, new MemoryStream(expected[0].Item2));
                     zipWriter.Write(expected[1].Item1, new MemoryStream(expected[1].Item2));
