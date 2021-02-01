@@ -32,6 +32,30 @@
   </ItemGroup>  
   <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.1' ">
     <PackageReference Include="System.Text.Encoding.CodePages" Version="5.0.0" />
+  </ItemGroup>  
+  <ItemGroup>
+    <Compile Remove="Archives\SevenZip\**" />
+    <Compile Remove="Archives\Rar\**" />
+    <Compile Remove="Archives\Tar\**" />
+    <Compile Remove="Readers\Rar\**" />
+    <Compile Remove="Readers\Tar\**" />
+    <Compile Remove="Writers\Tar\**" />
+  </ItemGroup>  
+  <ItemGroup>
+    <EmbeddedResource Remove="Archives\SevenZip\**" />
+    <EmbeddedResource Remove="Archives\Rar\**" />
+    <EmbeddedResource Remove="Archives\Tar\**" />
+    <EmbeddedResource Remove="Readers\Rar\**" />
+    <EmbeddedResource Remove="Readers\Tar\**" />
+    <EmbeddedResource Remove="Writers\Tar\**" />
+  </ItemGroup>  
+  <ItemGroup>
+    <None Remove="Archives\SevenZip\**" />
+    <None Remove="Archives\Rar\**" />
+    <None Remove="Archives\Tar\**" />
+    <None Remove="Readers\Rar\**" />
+    <None Remove="Readers\Tar\**" />
+    <None Remove="Writers\Tar\**" />
   </ItemGroup>
 
 </Project>

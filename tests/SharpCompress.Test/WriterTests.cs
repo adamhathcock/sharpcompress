@@ -30,7 +30,7 @@ namespace SharpCompress.Test
 
                 await using (var writer = WriterFactory.Open(stream, type, writerOptions))
                 {
-                    writer.WriteAll(ORIGINAL_FILES_PATH, "*", SearchOption.AllDirectories);
+                    await writer.WriteAllAsync(ORIGINAL_FILES_PATH, "*", SearchOption.AllDirectories);
                 }
             }
             CompareArchivesByPath(Path.Combine(SCRATCH2_FILES_PATH, archive),

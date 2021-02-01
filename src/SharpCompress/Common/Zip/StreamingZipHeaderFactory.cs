@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.IO;
+using System.Threading.Tasks;
 using SharpCompress.Common.Zip.Headers;
 using SharpCompress.IO;
 
@@ -12,8 +13,10 @@ namespace SharpCompress.Common.Zip
         {
         }
 
-        internal IEnumerable<ZipHeader> ReadStreamHeader(Stream stream)
+        internal async IAsyncEnumerable<ZipHeader> ReadStreamHeader(Stream stream)
         {
+            //TODO async stream reader?
+            await Task.CompletedTask;
             RewindableStream rewindableStream;
 
             if (stream is RewindableStream rs)
@@ -27,7 +30,7 @@ namespace SharpCompress.Common.Zip
             while (true)
             {
                 ZipHeader? header;
-                BinaryReader reader = new BinaryReader(rewindableStream);
+                BinaryReader reader = new(rewindableStream);
                 if (_lastEntryHeader != null &&
                     (FlagUtility.HasFlag(_lastEntryHeader.Flags, HeaderFlags.UsePostDataDescriptor) || _lastEntryHeader.IsZip64))
                 {

@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Threading.Tasks;
 using SharpCompress.Writers;
 
 namespace SharpCompress.Archives
@@ -10,7 +11,7 @@ namespace SharpCompress.Archives
 
         IArchiveEntry AddEntry(string key, Stream source, bool closeStream, long size = 0, DateTime? modified = null);
 
-        void SaveTo(Stream stream, WriterOptions options);
+        Task SaveToAsync(Stream stream, WriterOptions options);
 
         /// <summary>
         /// Use this to pause entry rebuilding when adding large collections of entries.  Dispose when complete.  A  using statement is recommended.

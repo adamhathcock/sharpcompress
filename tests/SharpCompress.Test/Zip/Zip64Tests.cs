@@ -24,47 +24,47 @@ namespace SharpCompress.Test.Zip
         private const long FOUR_GB_LIMIT = ((long)uint.MaxValue) + 1;
 
         [Trait("format", "zip64")]
-        public void Zip64_Single_Large_File()
+        public async Task Zip64_Single_Large_File()
         {
             // One single file, requires zip64
-            RunSingleTest(1, FOUR_GB_LIMIT, set_zip64: true, forward_only: false);
+            await RunSingleTest(1, FOUR_GB_LIMIT, set_zip64: true, forward_only: false);
         }
 
         [Trait("format", "zip64")]
-        public void Zip64_Two_Large_Files()
+        public async Task Zip64_Two_Large_Files()
         {
             // One single file, requires zip64
-            RunSingleTest(2, FOUR_GB_LIMIT, set_zip64: true, forward_only: false);
+            await RunSingleTest(2, FOUR_GB_LIMIT, set_zip64: true, forward_only: false);
         }
 
         [Trait("format", "zip64")]
-        public void Zip64_Two_Small_files()
+        public async Task Zip64_Two_Small_files()
         {
             // Multiple files, does not require zip64
-            RunSingleTest(2, FOUR_GB_LIMIT / 2, set_zip64: false, forward_only: false);
+            await RunSingleTest(2, FOUR_GB_LIMIT / 2, set_zip64: false, forward_only: false);
         }
 
         [Trait("format", "zip64")]
-        public void Zip64_Two_Small_files_stream()
+        public async Task Zip64_Two_Small_files_stream()
         {
             // Multiple files, does not require zip64, and works with streams
-            RunSingleTest(2, FOUR_GB_LIMIT / 2, set_zip64: false, forward_only: true);
+            await RunSingleTest(2, FOUR_GB_LIMIT / 2, set_zip64: false, forward_only: true);
         }
 
         [Trait("format", "zip64")]
-        public void Zip64_Two_Small_Files_Zip64()
+        public async Task Zip64_Two_Small_Files_Zip64()
         {
             // Multiple files, use zip64 even though it is not required
-            RunSingleTest(2, FOUR_GB_LIMIT / 2, set_zip64: true, forward_only: false);
+            await RunSingleTest(2, FOUR_GB_LIMIT / 2, set_zip64: true, forward_only: false);
         }
 
         [Trait("format", "zip64")]
-        public void Zip64_Single_Large_File_Fail()
+        public async Task Zip64_Single_Large_File_Fail()
         {
             try
             {
                 // One single file, should fail
-                RunSingleTest(1, FOUR_GB_LIMIT, set_zip64: false, forward_only: false);
+                await RunSingleTest(1, FOUR_GB_LIMIT, set_zip64: false, forward_only: false);
                 throw new Exception("Test did not fail?");
             }
             catch (NotSupportedException)
@@ -73,12 +73,12 @@ namespace SharpCompress.Test.Zip
         }
 
         [Trait("zip64", "true")]
-        public void Zip64_Single_Large_File_Zip64_Streaming_Fail()
+        public async Task Zip64_Single_Large_File_Zip64_Streaming_Fail()
         {
             try
             {
                 // One single file, should fail (fast) with zip64
-                RunSingleTest(1, FOUR_GB_LIMIT, set_zip64: true, forward_only: true);
+                await RunSingleTest(1, FOUR_GB_LIMIT, set_zip64: true, forward_only: true);
                 throw new Exception("Test did not fail?");
             }
             catch (NotSupportedException)
@@ -87,12 +87,12 @@ namespace SharpCompress.Test.Zip
         }
 
         [Trait("zip64", "true")]
-        public void Zip64_Single_Large_File_Streaming_Fail()
+        public async Task Zip64_Single_Large_File_Streaming_Fail()
         {
             try
             {
                 // One single file, should fail once the write discovers the problem
-                RunSingleTest(1, FOUR_GB_LIMIT, set_zip64: false, forward_only: true);
+                await RunSingleTest(1, FOUR_GB_LIMIT, set_zip64: false, forward_only: true);
                 throw new Exception("Test did not fail?");
             }
             catch (NotSupportedException)
@@ -100,7 +100,7 @@ namespace SharpCompress.Test.Zip
             }
         }
 
-        public void RunSingleTest(long files, long filesize, bool set_zip64, bool forward_only, long write_chunk_size = 1024 * 1024, string filename = "zip64-test.zip")
+        public async Task RunSingleTest(long files, long filesize, bool set_zip64, bool forward_only, long write_chunk_size = 1024 * 1024, string filename = "zip64-test.zip")
         {
             filename = Path.Combine(SCRATCH2_FILES_PATH, filename);
 
@@ -111,7 +111,7 @@ namespace SharpCompress.Test.Zip
 
             if (!File.Exists(filename))
             {
-                CreateZipArchive(filename, files, filesize, write_chunk_size, set_zip64, forward_only);
+                await CreateZipArchive(filename, files, filesize, write_chunk_size, set_zip64, forward_only);
             }
 
             var resForward = ReadForwardOnly(filename);
@@ -154,13 +154,13 @@ namespace SharpCompress.Test.Zip
 
                 for (var i = 0; i < files; i++)
                 {
-                    using (var str = zipWriter.WriteToStream(i.ToString(), eo))
+                    await using (var str = await zipWriter.WriteToStreamAsync(i.ToString(), eo))
                     {
                         var left = filesize;
                         while (left > 0)
                         {
                             var b = (int)Math.Min(left, data.Length);
-                            str.Write(data, 0, b);
+                            await str.WriteAsync(data, 0, b);
                             left -= b;
                         }
                     }

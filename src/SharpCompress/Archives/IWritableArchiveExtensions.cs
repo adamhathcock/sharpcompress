@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Threading.Tasks;
 using SharpCompress.Writers;
 
 namespace SharpCompress.Archives
@@ -18,17 +19,15 @@ namespace SharpCompress.Archives
                                      fileInfo.LastWriteTime);
         }
 
-        public static void SaveTo(this IWritableArchive writableArchive, string filePath, WriterOptions options)
+        public static Task SaveToAsync(this IWritableArchive writableArchive, string filePath, WriterOptions options)
         {
-            writableArchive.SaveTo(new FileInfo(filePath), options);
+            return writableArchive.SaveToAsync(new FileInfo(filePath), options);
         }
 
-        public static void SaveTo(this IWritableArchive writableArchive, FileInfo fileInfo, WriterOptions options)
+        public static async Task SaveToAsync(this IWritableArchive writableArchive, FileInfo fileInfo, WriterOptions options)
         {
-            using (var stream = fileInfo.Open(FileMode.Create, FileAccess.Write))
-            {
-                writableArchive.SaveTo(stream, options);
-            }
+            await using var stream = fileInfo.Open(FileMode.Create, FileAccess.Write);
+            await writableArchive.SaveToAsync(stream, options);
         }
 
         public static void AddAllFromDirectory(

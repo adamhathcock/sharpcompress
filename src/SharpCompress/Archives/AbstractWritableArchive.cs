@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using SharpCompress.Common;
 using SharpCompress.Readers;
 using SharpCompress.Writers;
@@ -137,11 +139,11 @@ namespace SharpCompress.Archives
             return false;
         }
 
-        public void SaveTo(Stream stream, WriterOptions options)
+        public async Task SaveToAsync(Stream stream, WriterOptions options)
         {
             //reset streams of new entries
             newEntries.Cast<IWritableArchiveEntry>().ForEach(x => x.Stream.Seek(0, SeekOrigin.Begin));
-            SaveTo(stream, options, OldEntries, newEntries);
+            await SaveToAsync(stream, options, OldEntries, newEntries);
         }
 
         protected TEntry CreateEntry(string key, Stream source, long size, DateTime? modified,
@@ -157,7 +159,8 @@ namespace SharpCompress.Archives
         protected abstract TEntry CreateEntryInternal(string key, Stream source, long size, DateTime? modified,
                                                       bool closeStream);
 
-        protected abstract void SaveTo(Stream stream, WriterOptions options, IEnumerable<TEntry> oldEntries, IEnumerable<TEntry> newEntries);
+        protected abstract Task SaveToAsync(Stream stream, WriterOptions options, IEnumerable<TEntry> oldEntries, IEnumerable<TEntry> newEntries,
+                                            CancellationToken cancellationToken = default);
 
         public override void Dispose()
         {

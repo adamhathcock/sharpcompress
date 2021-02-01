@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using SharpCompress.Common;
 using SharpCompress.Common.GZip;
 using SharpCompress.Readers;
@@ -82,17 +84,15 @@ namespace SharpCompress.Archives.GZip
             return IsGZipFile(stream);
         }
 
-        public void SaveTo(string filePath)
+        public Task SaveToAsync(string filePath)
         {
-            SaveTo(new FileInfo(filePath));
+            return SaveToAsync(new FileInfo(filePath));
         }
 
-        public void SaveTo(FileInfo fileInfo)
+        public async Task SaveToAsync(FileInfo fileInfo)
         {
-            using (var stream = fileInfo.Open(FileMode.Create, FileAccess.Write))
-            {
-                SaveTo(stream, new WriterOptions(CompressionType.GZip));
-            }
+            using var stream = fileInfo.Open(FileMode.Create, FileAccess.Write);
+            await SaveToAsync(stream, new WriterOptions(CompressionType.GZip));
         }
 
         public static bool IsGZipFile(Stream stream)
@@ -139,24 +139,22 @@ namespace SharpCompress.Archives.GZip
             return new GZipWritableArchiveEntry(this, source, filePath, size, modified, closeStream);
         }
 
-        protected override void SaveTo(Stream stream, WriterOptions options,
-                                       IEnumerable<GZipArchiveEntry> oldEntries,
-                                       IEnumerable<GZipArchiveEntry> newEntries)
+        protected override async Task SaveToAsync(Stream stream, WriterOptions options,
+                                            IEnumerable<GZipArchiveEntry> oldEntries,
+                                            IEnumerable<GZipArchiveEntry> newEntries, 
+                                            CancellationToken cancellationToken = default)
         {
             if (Entries.Count > 1)
             {
                 throw new InvalidOperationException("Only one entry is allowed in a GZip Archive");
             }
-            using (var writer = new GZipWriter(stream, new GZipWriterOptions(options)))
+
+            await using var writer = new GZipWriter(stream, new GZipWriterOptions(options));
+            foreach (var entry in oldEntries.Concat(newEntries)
+                                            .Where(x => !x.IsDirectory))
             {
-                foreach (var entry in oldEntries.Concat(newEntries)
-                                                .Where(x => !x.IsDirectory))
-                {
-                    using (var entryStream = entry.OpenEntryStream())
-                    {
-                        writer.Write(entry.Key, entryStream, entry.LastModifiedTime);
-                    }
-                }
+                await using var entryStream = entry.OpenEntryStream();
+                await writer.WriteAsync(entry.Key, entryStream, entry.LastModifiedTime, cancellationToken);
             }
         }
 

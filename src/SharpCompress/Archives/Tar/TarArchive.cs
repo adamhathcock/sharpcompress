@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using SharpCompress.Common;
 using SharpCompress.Common.Tar;
 using SharpCompress.Common.Tar.Headers;
@@ -59,10 +61,9 @@ namespace SharpCompress.Archives.Tar
             {
                 return false;
             }
-            using (Stream stream = fileInfo.OpenRead())
-            {
-                return IsTarFile(stream);
-            }
+
+            using Stream stream = fileInfo.OpenRead();
+            return IsTarFile(stream);
         }
 
         public static bool IsTarFile(Stream stream)
@@ -170,20 +171,17 @@ namespace SharpCompress.Archives.Tar
                                                closeStream);
         }
 
-        protected override void SaveTo(Stream stream, WriterOptions options,
-                                       IEnumerable<TarArchiveEntry> oldEntries,
-                                       IEnumerable<TarArchiveEntry> newEntries)
+        protected override async Task SaveToAsync(Stream stream, WriterOptions options,
+                                            IEnumerable<TarArchiveEntry> oldEntries,
+                                            IEnumerable<TarArchiveEntry> newEntries,
+                                            CancellationToken cancellationToken = default)
         {
-            using (var writer = new TarWriter(stream, new TarWriterOptions(options)))
+            await using var writer = new TarWriter(stream, new TarWriterOptions(options));
+            foreach (var entry in oldEntries.Concat(newEntries)
+                                            .Where(x => !x.IsDirectory))
             {
-                foreach (var entry in oldEntries.Concat(newEntries)
-                                                .Where(x => !x.IsDirectory))
-                {
-                    using (var entryStream = entry.OpenEntryStream())
-                    {
-                        writer.Write(entry.Key, entryStream, entry.LastModifiedTime, entry.Size);
-                    }
-                }
+                await using var entryStream = entry.OpenEntryStream();
+                await writer.WriteAsync(entry.Key, entryStream, entry.LastModifiedTime, cancellationToken);
             }
         }
 

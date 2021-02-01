@@ -1,10 +1,12 @@
 ﻿using System;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 using SharpCompress.Common;
 
 namespace SharpCompress.Readers
 {
-    public interface IReader : IDisposable
+    public interface IReader : IAsyncDisposable
     {
         event EventHandler<ReaderExtractionEventArgs<IEntry>> EntryExtractionProgress;
 
@@ -13,13 +15,13 @@ namespace SharpCompress.Readers
 
         ArchiveType ArchiveType { get; }
 
-        IEntry Entry { get; }
+        IEntry? Entry { get; }
 
         /// <summary>
         /// Decompresses the current entry to the stream.  This cannot be called twice for the current entry.
         /// </summary>
         /// <param name="writableStream"></param>
-        void WriteEntryTo(Stream writableStream);
+        ValueTask WriteEntryToAsync(Stream writableStream, CancellationToken cancellationToken = default);
 
         bool Cancelled { get; }
         void Cancel();
@@ -28,7 +30,7 @@ namespace SharpCompress.Readers
         /// Moves to the next entry by reading more data from the underlying stream.  This skips if data has not been read.
         /// </summary>
         /// <returns></returns>
-        bool MoveToNextEntry();
+        ValueTask<bool> MoveToNextEntry();
 
         /// <summary>
         /// Opens the current entry as a stream that will decompress as it is read.

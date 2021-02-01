@@ -1,5 +1,7 @@
 ﻿using System;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace SharpCompress.Common
 {
@@ -8,10 +10,11 @@ namespace SharpCompress.Common
         /// <summary>
         /// Extract to specific directory, retaining filename
         /// </summary>
-        public static void WriteEntryToDirectory(IEntry entry,
+        public static async ValueTask WriteEntryToDirectoryAsync(IEntry entry,
                                                  string destinationDirectory,
                                                  ExtractionOptions? options,
-                                                 Action<string, ExtractionOptions?> write)
+                                                 Func<string, ExtractionOptions?, CancellationToken, ValueTask> write,
+                                                 CancellationToken cancellationToken = default)
         {
             string destinationFileName;
             string file = Path.GetFileName(entry.Key);
@@ -52,7 +55,7 @@ namespace SharpCompress.Common
                 {
                     throw new ExtractionException("Entry is trying to write a file outside of the destination directory.");
                 }
-                write(destinationFileName, options);
+                await write(destinationFileName, options, cancellationToken);
             }
             else if (options.ExtractFullPath && !Directory.Exists(destinationFileName))
             {
@@ -60,11 +63,12 @@ namespace SharpCompress.Common
             }
         }
 
-        public static void WriteEntryToFile(IEntry entry, string destinationFileName,
+        public static async ValueTask WriteEntryToFileAsync(IEntry entry, string destinationFileName,
                                             ExtractionOptions? options,
-                                            Action<string, FileMode> openAndWrite)
+                                            Func<string, FileMode, CancellationToken, ValueTask> openAndWrite,
+                                            CancellationToken cancellationToken = default)
         {
-            if (entry.LinkTarget != null)
+            if (entry.LinkTarget is not null)
             {
                 if (options?.WriteSymbolicLink is null)
                 {
@@ -85,7 +89,7 @@ namespace SharpCompress.Common
                     fm = FileMode.CreateNew;
                 }
 
-                openAndWrite(destinationFileName, fm);
+                await openAndWrite(destinationFileName, fm, cancellationToken);
                 entry.PreserveExtractionOptions(destinationFileName, options);
             }
         }

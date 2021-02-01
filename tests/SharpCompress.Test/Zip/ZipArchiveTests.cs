@@ -153,7 +153,7 @@ namespace SharpCompress.Test.Zip
         }
 
         [Fact]
-        public void Zip_Random_Write_Remove()
+        public async Task Zip_Random_Write_Remove()
         {
             string scratchPath = Path.Combine(SCRATCH_FILES_PATH, "Zip.deflate.mod.zip");
             string unmodified = Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.noEmptyDirs.zip");
@@ -167,13 +167,13 @@ namespace SharpCompress.Test.Zip
                 WriterOptions writerOptions = new ZipWriterOptions(CompressionType.Deflate);
                 writerOptions.ArchiveEncoding.Default = Encoding.GetEncoding(866);
 
-                archive.SaveTo(scratchPath, writerOptions);
+                await archive.SaveToAsync(scratchPath, writerOptions);
             }
             CompareArchivesByPath(modified, scratchPath, Encoding.GetEncoding(866));
         }
 
         [Fact]
-        public void Zip_Random_Write_Add()
+        public async Task Zip_Random_Write_Add()
         {
             string jpg = Path.Combine(ORIGINAL_FILES_PATH, "jpg", "test.jpg");
             string scratchPath = Path.Combine(SCRATCH_FILES_PATH, "Zip.deflate.mod.zip");
@@ -187,13 +187,13 @@ namespace SharpCompress.Test.Zip
                 WriterOptions writerOptions = new ZipWriterOptions(CompressionType.Deflate);
                 writerOptions.ArchiveEncoding.Default = Encoding.GetEncoding(866);
 
-                archive.SaveTo(scratchPath, writerOptions);
+                await archive.SaveToAsync(scratchPath, writerOptions);
             }
             CompareArchivesByPath(modified, scratchPath, Encoding.GetEncoding(866));
         }
 
         [Fact]
-        public void Zip_Save_Twice()
+        public async Task Zip_Save_Twice()
         {
             string scratchPath1 = Path.Combine(SCRATCH_FILES_PATH, "a.zip");
             string scratchPath2 = Path.Combine(SCRATCH_FILES_PATH, "b.zip");
@@ -203,8 +203,8 @@ namespace SharpCompress.Test.Zip
                 string str = "test.txt";
                 var source = new MemoryStream(Encoding.UTF8.GetBytes(str));
                 arc.AddEntry("test.txt", source, true, source.Length);
-                arc.SaveTo(scratchPath1, CompressionType.Deflate);
-                arc.SaveTo(scratchPath2, CompressionType.Deflate);
+                await arc.SaveToAsync(scratchPath1, CompressionType.Deflate);
+                await arc.SaveToAsync(scratchPath2, CompressionType.Deflate);
             }
 
             Assert.Equal(new FileInfo(scratchPath1).Length, new FileInfo(scratchPath2).Length);
@@ -238,7 +238,7 @@ namespace SharpCompress.Test.Zip
         }
 
         [Fact]
-        public void Zip_Create_Same_Stream()
+        public async Task Zip_Create_Same_Stream()
         {
             string scratchPath1 = Path.Combine(SCRATCH_FILES_PATH, "a.zip");
             string scratchPath2 = Path.Combine(SCRATCH_FILES_PATH, "b.zip");
@@ -249,8 +249,8 @@ namespace SharpCompress.Test.Zip
                 {
                     arc.AddEntry("1.txt", stream, false, stream.Length);
                     arc.AddEntry("2.txt", stream, false, stream.Length);
-                    arc.SaveTo(scratchPath1, CompressionType.Deflate);
-                    arc.SaveTo(scratchPath2, CompressionType.Deflate);
+                    await arc.SaveToAsync(scratchPath1, CompressionType.Deflate);
+                    await arc.SaveToAsync(scratchPath2, CompressionType.Deflate);
                 }
             }
 
@@ -258,7 +258,7 @@ namespace SharpCompress.Test.Zip
         }
 
         [Fact]
-        public void Zip_Create_New()
+        public async Task Zip_Create_New()
         {
             foreach (var file in Directory.EnumerateFiles(ORIGINAL_FILES_PATH, "*.*", SearchOption.AllDirectories))
             {
@@ -285,7 +285,7 @@ namespace SharpCompress.Test.Zip
                 WriterOptions writerOptions = new ZipWriterOptions(CompressionType.Deflate);
                 writerOptions.ArchiveEncoding.Default = Encoding.GetEncoding(866);
 
-                archive.SaveTo(scratchPath, writerOptions);
+                await archive.SaveToAsync(scratchPath, writerOptions);
             }
             CompareArchivesByPath(unmodified, scratchPath, Encoding.GetEncoding(866));
             Directory.Delete(SCRATCH_FILES_PATH, true);
@@ -395,7 +395,7 @@ namespace SharpCompress.Test.Zip
         }
 
         [Fact]
-        public void Zip_Random_Entry_Access()
+        public async Task Zip_Random_Entry_Access()
         {
             string unmodified = Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.noEmptyDirs.zip");
 
@@ -421,8 +421,9 @@ namespace SharpCompress.Test.Zip
                 if (count2 == count)
                 {
                     var s = e.OpenEntryStream();
-                    s.ReadByte(); //Actually access stream
-                    s.Dispose();
+                    byte[] b = new byte[1]; 
+                    await s.ReadAsync(b, 0, 1); //Actually access stream
+                    await s.DisposeAsync();
                     break;
                 }
             }
@@ -497,26 +498,26 @@ namespace SharpCompress.Test.Zip
 
             await using (IWriter zipWriter = WriterFactory.Open(stream, ArchiveType.Zip, CompressionType.Deflate))
             {
-                zipWriter.Write("foo.txt", new MemoryStream(new byte[0]));
-                zipWriter.Write("foo2.txt", new MemoryStream(new byte[10]));
+                await zipWriter.WriteAsync("foo.txt", new MemoryStream(new byte[0]));
+                await zipWriter.WriteAsync("foo2.txt", new MemoryStream(new byte[10]));
             }
 
             stream = new MemoryStream(stream.ToArray());
-            File.WriteAllBytes(Path.Combine(SCRATCH_FILES_PATH, "foo.zip"), stream.ToArray());
+            await File.WriteAllBytesAsync(Path.Combine(SCRATCH_FILES_PATH, "foo.zip"), stream.ToArray());
 
             using (var zipArchive = ZipArchive.Open(stream))
             {
                 foreach (var entry in zipArchive.Entries)
                 {
-                    using (var entryStream = entry.OpenEntryStream())
+                    await using (var entryStream = entry.OpenEntryStream())
                     {
                         MemoryStream tempStream = new MemoryStream();
                         const int bufSize = 0x1000;
                         byte[] buf = new byte[bufSize];
                         int bytesRead = 0;
-                        while ((bytesRead = entryStream.Read(buf, 0, bufSize)) > 0)
+                        while ((bytesRead = await entryStream.ReadAsync(buf, 0, bufSize)) > 0)
                         {
-                            tempStream.Write(buf, 0, bytesRead);
+                            await tempStream.WriteAsync(buf, 0, bytesRead);
                         }
                     }
                 }
@@ -524,13 +525,13 @@ namespace SharpCompress.Test.Zip
         }
 
         [Fact]
-        public void Zip_BadLocalExtra_Read()
+        public async Task Zip_BadLocalExtra_Read()
         {
             string zipPath = Path.Combine(TEST_ARCHIVES_PATH, "Zip.badlocalextra.zip");
 
             using (ZipArchive za = ZipArchive.Open(zipPath))
             {
-                var ex = Record.Exception(() =>
+                var ex = await Record.ExceptionAsync(async () =>
                 {
                     var firstEntry = za.Entries.First(x => x.Key == "first.txt");
                     var buffer = new byte[4096];
@@ -538,7 +539,7 @@ namespace SharpCompress.Test.Zip
                     using (var memoryStream = new MemoryStream())
                     using (var firstStream = firstEntry.OpenEntryStream())
                     {
-                        firstStream.CopyTo(memoryStream);
+                        await firstStream.CopyToAsync(memoryStream);
                         Assert.Equal(199, memoryStream.Length);
                     }
                 });

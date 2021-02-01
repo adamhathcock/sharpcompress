@@ -279,25 +279,25 @@ namespace SharpCompress.Test.Zip
                 new Tuple<string, byte[]>("foo2.txt", new byte[10])
             };
 
-            using (var memory = new MemoryStream())
+            await using (var memory = new MemoryStream())
             {
                 Stream stream = new TestStream(memory, read: true, write: true, seek: false);
 
                 await using (IWriter zipWriter = WriterFactory.Open(stream, ArchiveType.Zip, CompressionType.Deflate))
                 {
-                    zipWriter.Write(expected[0].Item1, new MemoryStream(expected[0].Item2));
-                    zipWriter.Write(expected[1].Item1, new MemoryStream(expected[1].Item2));
+                    await zipWriter.WriteAsync(expected[0].Item1, new MemoryStream(expected[0].Item2));
+                    await zipWriter.WriteAsync(expected[1].Item1, new MemoryStream(expected[1].Item2));
                 }
 
                 stream = new MemoryStream(memory.ToArray());
-                File.WriteAllBytes(Path.Combine(SCRATCH_FILES_PATH, "foo.zip"), memory.ToArray());
+                await File.WriteAllBytesAsync(Path.Combine(SCRATCH_FILES_PATH, "foo.zip"), memory.ToArray());
 
                 using (IReader zipReader = ZipReader.Open(new NonDisposingStream(stream, true)))
                 {
                     var i = 0;
                     while (zipReader.MoveToNextEntry())
                     {
-                        using (EntryStream entry = zipReader.OpenEntryStream())
+                        await using (EntryStream entry = zipReader.OpenEntryStream())
                         {
                             MemoryStream tempStream = new MemoryStream();
                             const int bufSize = 0x1000;

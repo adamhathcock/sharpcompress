@@ -1,5 +1,7 @@
 ﻿using System;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 using SharpCompress.Common;
 using SharpCompress.Compressors;
 using SharpCompress.Compressors.Deflate;
@@ -18,22 +20,18 @@ namespace SharpCompress.Writers.GZip
             {
                 destination = new NonDisposingStream(destination);
             }
-            InitalizeStream(new GZipStream(destination, CompressionMode.Compress,
+            InitializeStream(new GZipStream(destination, CompressionMode.Compress,
                                            options?.CompressionLevel ?? CompressionLevel.Default,
                                            WriterOptions.ArchiveEncoding.GetEncoding()));
         }
 
-        protected override void Dispose(bool isDisposing)
+        protected override ValueTask DisposeAsyncCore()
         {
-            if (isDisposing)
-            {
-                //dispose here to finish the GZip, GZip won't close the underlying stream
-                OutputStream.Dispose();
-            }
-            base.Dispose(isDisposing);
+            //dispose here to finish the GZip, GZip won't close the underlying stream
+            return OutputStream.DisposeAsync();
         }
 
-        public override void Write(string filename, Stream source, DateTime? modificationTime)
+        public override async Task WriteAsync(string filename, Stream source, DateTime? modificationTime, CancellationToken cancellationToken)
         {
             if (_wroteToStream)
             {
@@ -42,7 +40,7 @@ namespace SharpCompress.Writers.GZip
             GZipStream stream = (GZipStream)OutputStream;
             stream.FileName = filename;
             stream.LastModified = modificationTime;
-            source.TransferTo(stream);
+            await source.TransferToAsync(stream);
             _wroteToStream = true;
         }
     }

@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using SharpCompress.Common;
 using SharpCompress.Common.Zip;
 using SharpCompress.Common.Zip.Headers;
@@ -163,23 +165,24 @@ namespace SharpCompress.Archives.Zip
             }
         }
 
-        public void SaveTo(Stream stream)
+        public Task SaveToAsync(Stream stream)
         {
-            SaveTo(stream, new WriterOptions(CompressionType.Deflate));
+            return SaveToAsync(stream, new WriterOptions(CompressionType.Deflate));
         }
 
-        protected override void SaveTo(Stream stream, WriterOptions options,
-                                       IEnumerable<ZipArchiveEntry> oldEntries,
-                                       IEnumerable<ZipArchiveEntry> newEntries)
+        protected override async Task SaveToAsync(Stream stream, WriterOptions options,
+                                            IEnumerable<ZipArchiveEntry> oldEntries,
+                                            IEnumerable<ZipArchiveEntry> newEntries,
+                                            CancellationToken cancellationToken = default)
         {
-            using (var writer = new ZipWriter(stream, new ZipWriterOptions(options)))
+            await using (var writer = new ZipWriter(stream, new ZipWriterOptions(options)))
             {
                 foreach (var entry in oldEntries.Concat(newEntries)
                                                 .Where(x => !x.IsDirectory))
                 {
-                    using (var entryStream = entry.OpenEntryStream())
+                    await using (var entryStream = entry.OpenEntryStream())
                     {
-                        writer.Write(entry.Key, entryStream, entry.LastModifiedTime);
+                        await writer.WriteAsync(entry.Key, entryStream, entry.LastModifiedTime, cancellationToken);
                     }
                 }
             }

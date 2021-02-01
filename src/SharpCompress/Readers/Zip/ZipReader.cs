@@ -35,9 +35,9 @@ namespace SharpCompress.Readers.Zip
 
         #endregion Open
 
-        protected override IEnumerable<ZipEntry> GetEntries(Stream stream)
+        protected override async IAsyncEnumerable<ZipEntry> GetEntries(Stream stream)
         {
-            foreach (ZipHeader h in _headerFactory.ReadStreamHeader(stream))
+            await foreach (ZipHeader h in _headerFactory.ReadStreamHeader(stream))
             {
                 if (h != null)
                 {

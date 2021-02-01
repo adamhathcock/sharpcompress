@@ -2,17 +2,19 @@
 using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace SharpCompress.Writers
 {
     public static class IWriterExtensions
     {
-        public static void Write(this IWriter writer, string entryPath, Stream source)
+        public static Task WriteAsync(this IWriter writer, string entryPath, Stream source, CancellationToken cancellationToken = default)
         {
-            writer.Write(entryPath, source, null);
+            return writer.WriteAsync(entryPath, source, null, cancellationToken);
         }
 
-        public static void Write(this IWriter writer, string entryPath, FileInfo source)
+        public static async Task WriteAsync(this IWriter writer, string entryPath, FileInfo source, CancellationToken cancellationToken = default)
         {
             if (!source.Exists)
             {
@@ -20,25 +22,25 @@ namespace SharpCompress.Writers
             }
             using (var stream = source.OpenRead())
             {
-                writer.Write(entryPath, stream, source.LastWriteTime);
+                await writer.WriteAsync(entryPath, stream, source.LastWriteTime, cancellationToken);
             }
         }
 
-        public static void Write(this IWriter writer, string entryPath, string source)
+        public static Task WriteAsync(this IWriter writer, string entryPath, string source, CancellationToken cancellationToken = default)
         {
-            writer.Write(entryPath, new FileInfo(source));
+            return writer.WriteAsync(entryPath, new FileInfo(source), cancellationToken);
         }
 
-        public static void WriteAll(this IWriter writer, string directory, string searchPattern = "*", SearchOption option = SearchOption.TopDirectoryOnly)
+        public static Task WriteAllAsync(this IWriter writer, string directory, string searchPattern = "*", SearchOption option = SearchOption.TopDirectoryOnly, CancellationToken cancellationToken = default)
         {
-            writer.WriteAll(directory, searchPattern, null, option);
+            return writer.WriteAllAsync(directory, searchPattern, null, option, cancellationToken);
         }
 
-        public static void WriteAll(this IWriter writer,
-                                    string directory,
-                                    string searchPattern = "*",
-                                    Expression<Func<string, bool>>? fileSearchFunc = null,
-                                    SearchOption option = SearchOption.TopDirectoryOnly)
+        public static async Task WriteAllAsync(this IWriter writer,
+                                         string directory,
+                                         string searchPattern = "*",
+                                         Expression<Func<string, bool>>? fileSearchFunc = null,
+                                         SearchOption option = SearchOption.TopDirectoryOnly, CancellationToken cancellationToken = default)
         {
             if (!Directory.Exists(directory))
             {
@@ -51,7 +53,7 @@ namespace SharpCompress.Writers
             }
             foreach (var file in Directory.EnumerateFiles(directory, searchPattern, option).Where(fileSearchFunc.Compile()))
             {
-                writer.Write(file.Substring(directory.Length), file);
+                await writer.WriteAsync(file.Substring(directory.Length), file, cancellationToken);
             }
         }
     }

@@ -1,63 +1,73 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 using SharpCompress.Common;
 
 namespace SharpCompress.Readers
 {
     public static class IReaderExtensions
     {
-        public static void WriteEntryTo(this IReader reader, string filePath)
+        public static async ValueTask WriteEntryToAsync(this IReader reader, string filePath)
         {
-            using (Stream stream = File.Open(filePath, FileMode.Create, FileAccess.Write))
-            {
-                reader.WriteEntryTo(stream);
-            }
+            await using Stream stream = File.Open(filePath, FileMode.Create, FileAccess.Write);
+            await reader.WriteEntryToAsync(stream);
         }
 
-        public static void WriteEntryTo(this IReader reader, FileInfo filePath)
+        public static async ValueTask WriteEntryTo(this IReader reader, FileInfo filePath)
         {
-            using (Stream stream = filePath.Open(FileMode.Create))
-            {
-                reader.WriteEntryTo(stream);
-            }
+            await using Stream stream = filePath.Open(FileMode.Create);
+            await reader.WriteEntryToAsync(stream);
         }
 
         /// <summary>
         /// Extract all remaining unread entries to specific directory, retaining filename
         /// </summary>
-        public static void WriteAllToDirectory(this IReader reader, string destinationDirectory,
+        public static async ValueTask WriteAllToDirectoryAsync(this IReader reader, string destinationDirectory,
                                                ExtractionOptions? options = null)
         {
-            while (reader.MoveToNextEntry())
+            while (await reader.MoveToNextEntry())
             {
-                reader.WriteEntryToDirectory(destinationDirectory, options);
+               await reader.WriteEntryToDirectoryAsync(destinationDirectory, options);
             }
         }
 
         /// <summary>
         /// Extract to specific directory, retaining filename
         /// </summary>
-        public static void WriteEntryToDirectory(this IReader reader, string destinationDirectory,
-                                                 ExtractionOptions? options = null)
+        public static ValueTask WriteEntryToDirectoryAsync(this IReader reader, string destinationDirectory,
+                                                      ExtractionOptions? options = null,
+                                                      CancellationToken cancellationToken = default)
         {
-            ExtractionMethods.WriteEntryToDirectory(reader.Entry, destinationDirectory, options,
-                                              reader.WriteEntryToFile);
+            if (reader.Entry is null)
+            {
+                throw new ArgumentException("Entry is null");
+            }
+            return ExtractionMethods.WriteEntryToDirectoryAsync(reader.Entry, destinationDirectory, options,
+                                                                async (x, o, ct) =>
+                                                                {
+                                                                    await reader.WriteEntryToFileAsync(x, o, ct);
+                                                                }, cancellationToken);
         }
 
         /// <summary>
         /// Extract to specific file
         /// </summary>
-        public static void WriteEntryToFile(this IReader reader,
+        public static async ValueTask WriteEntryToFileAsync(this IReader reader,
                                             string destinationFileName,
-                                            ExtractionOptions? options = null)
+                                            ExtractionOptions? options = null,
+                                            CancellationToken cancellationToken = default)
         {
-            ExtractionMethods.WriteEntryToFile(reader.Entry, destinationFileName, options,
-                                               (x, fm) =>
+            if (reader.Entry is null)
+            {
+                throw new ArgumentException("Entry is null");
+            }
+            await ExtractionMethods.WriteEntryToFileAsync(reader.Entry, destinationFileName, options,
+                                               async (x, fm, ct) =>
                                                {
-                                                   using (FileStream fs = File.Open(destinationFileName, fm))
-                                                   {
-                                                       reader.WriteEntryTo(fs);
-                                                   }
-                                               });
+                                                   await using FileStream fs = File.Open(x, fm);
+                                                   await reader.WriteEntryToAsync(fs, ct);
+                                               }, cancellationToken);
         }
     }
 }

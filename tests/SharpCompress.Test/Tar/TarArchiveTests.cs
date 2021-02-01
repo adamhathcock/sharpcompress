@@ -125,7 +125,7 @@ namespace SharpCompress.Test.Tar
         }
 
         [Fact]
-        public async Task Tar_UstarArchivePathReadLongName()
+        public void Tar_UstarArchivePathReadLongName()
         {
             string unmodified = Path.Combine(TEST_ARCHIVES_PATH, "ustar with long names.tar");
             using var archive = TarArchive.Open(unmodified);
@@ -154,7 +154,7 @@ namespace SharpCompress.Test.Tar
                 {
                     Default = Encoding.GetEncoding(866)
                 };
-                archive.SaveTo(scratchPath, twopt);
+                await archive.SaveToAsync(scratchPath, twopt);
             }
             CompareArchivesByPath(unmodified, scratchPath);
         }
@@ -169,7 +169,7 @@ namespace SharpCompress.Test.Tar
             using (var archive = TarArchive.Open(unmodified))
             {
                 archive.AddEntry("jpg\\test.jpg", jpg);
-                archive.SaveTo(scratchPath, CompressionType.None);
+                await archive.SaveToAsync(scratchPath, CompressionType.None);
             }
             CompareArchivesByPath(modified, scratchPath);
         }
@@ -185,13 +185,13 @@ namespace SharpCompress.Test.Tar
             {
                 var entry = archive.Entries.Single(x => x.Key.EndsWith("jpg"));
                 archive.RemoveEntry(entry);
-                archive.SaveTo(scratchPath, CompressionType.None);
+                await archive.SaveToAsync(scratchPath, CompressionType.None);
             }
             CompareArchivesByPath(modified, scratchPath);
         }
 
         [Fact]
-        public async Task Tar_Containing_Rar_Archive()
+        public void Tar_Containing_Rar_Archive()
         {
             string archiveFullPath = Path.Combine(TEST_ARCHIVES_PATH, "Tar.ContainsRar.tar");
             using Stream stream = File.OpenRead(archiveFullPath);
@@ -200,7 +200,7 @@ namespace SharpCompress.Test.Tar
         }
 
         [Fact]
-        public async Task Tar_Empty_Archive()
+        public void Tar_Empty_Archive()
         {
             string archiveFullPath = Path.Combine(TEST_ARCHIVES_PATH, "Tar.Empty.tar");
             using Stream stream = File.OpenRead(archiveFullPath);
@@ -252,9 +252,9 @@ namespace SharpCompress.Test.Tar
             await using (var tarWriter = new TarWriter(memoryStream, tarWriterOptions))
             using (var testFileStream = new MemoryStream(testBytes))
             {
-                tarWriter.Write("test1.txt", testFileStream);
+                await tarWriter.WriteAsync("test1.txt", testFileStream);
                 testFileStream.Position = 0;
-                tarWriter.Write("test2.txt", testFileStream);
+                await tarWriter.WriteAsync("test2.txt", testFileStream);
             }
 
             memoryStream.Position = 0;

@@ -21,7 +21,7 @@ namespace SharpCompress.Test.GZip
             using (Stream stream = File.Open(Path.Combine(SCRATCH_FILES_PATH, "Tar.tar.gz"), FileMode.OpenOrCreate, FileAccess.Write))
             await using (var writer = WriterFactory.Open(stream, ArchiveType.GZip, CompressionType.GZip))
             {
-                writer.Write("Tar.tar", Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar"));
+                await writer.WriteAsync("Tar.tar", Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar"));
             }
             CompareArchivesByPath(Path.Combine(SCRATCH_FILES_PATH, "Tar.tar.gz"),
                 Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.gz"));
@@ -33,7 +33,7 @@ namespace SharpCompress.Test.GZip
             using (Stream stream = File.Open(Path.Combine(SCRATCH_FILES_PATH, "Tar.tar.gz"), FileMode.OpenOrCreate, FileAccess.Write))
             await using (var writer = new GZipWriter(stream))
             {
-                writer.Write("Tar.tar", Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar"));
+                await writer.WriteAsync("Tar.tar", Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar"));
             }
             CompareArchivesByPath(Path.Combine(SCRATCH_FILES_PATH, "Tar.tar.gz"),
                 Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.gz"));
@@ -58,7 +58,7 @@ namespace SharpCompress.Test.GZip
             await using (var writer = new GZipWriter(stream))
             {
                 var path = Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar");
-                writer.Write(path, path); //covers issue #532
+                await writer.WriteAsync(path, path); //covers issue #532
             }
             CompareArchivesByPath(Path.Combine(SCRATCH_FILES_PATH, "Tar.tar.gz"),
                 Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.gz"));
