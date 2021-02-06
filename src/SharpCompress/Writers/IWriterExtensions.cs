@@ -9,12 +9,12 @@ namespace SharpCompress.Writers
 {
     public static class IWriterExtensions
     {
-        public static Task WriteAsync(this IWriter writer, string entryPath, Stream source, CancellationToken cancellationToken = default)
+        public static ValueTask WriteAsync(this IWriter writer, string entryPath, Stream source, CancellationToken cancellationToken = default)
         {
             return writer.WriteAsync(entryPath, source, null, cancellationToken);
         }
 
-        public static async Task WriteAsync(this IWriter writer, string entryPath, FileInfo source, CancellationToken cancellationToken = default)
+        public static async ValueTask WriteAsync(this IWriter writer, string entryPath, FileInfo source, CancellationToken cancellationToken = default)
         {
             if (!source.Exists)
             {
@@ -26,21 +26,21 @@ namespace SharpCompress.Writers
             }
         }
 
-        public static Task WriteAsync(this IWriter writer, string entryPath, string source, CancellationToken cancellationToken = default)
+        public static ValueTask WriteAsync(this IWriter writer, string entryPath, string source, CancellationToken cancellationToken = default)
         {
             return writer.WriteAsync(entryPath, new FileInfo(source), cancellationToken);
         }
 
-        public static Task WriteAllAsync(this IWriter writer, string directory, string searchPattern = "*", SearchOption option = SearchOption.TopDirectoryOnly, CancellationToken cancellationToken = default)
+        public static ValueTask WriteAllAsync(this IWriter writer, string directory, string searchPattern = "*", SearchOption option = SearchOption.TopDirectoryOnly, CancellationToken cancellationToken = default)
         {
             return writer.WriteAllAsync(directory, searchPattern, null, option, cancellationToken);
         }
 
-        public static async Task WriteAllAsync(this IWriter writer,
-                                         string directory,
-                                         string searchPattern = "*",
-                                         Expression<Func<string, bool>>? fileSearchFunc = null,
-                                         SearchOption option = SearchOption.TopDirectoryOnly, CancellationToken cancellationToken = default)
+        public static async ValueTask WriteAllAsync(this IWriter writer,
+                                                    string directory,
+                                                    string searchPattern = "*",
+                                                    Expression<Func<string, bool>>? fileSearchFunc = null,
+                                                    SearchOption option = SearchOption.TopDirectoryOnly, CancellationToken cancellationToken = default)
         {
             if (!Directory.Exists(directory))
             {

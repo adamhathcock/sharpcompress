@@ -100,7 +100,7 @@ namespace SharpCompress.Test.Zip
             }
         }
 
-        public async Task RunSingleTest(long files, long filesize, bool set_zip64, bool forward_only, long write_chunk_size = 1024 * 1024, string filename = "zip64-test.zip")
+        public async ValueTask RunSingleTest(long files, long filesize, bool set_zip64, bool forward_only, long write_chunk_size = 1024 * 1024, string filename = "zip64-test.zip")
         {
             filename = Path.Combine(SCRATCH2_FILES_PATH, filename);
 
@@ -114,7 +114,7 @@ namespace SharpCompress.Test.Zip
                 await CreateZipArchive(filename, files, filesize, write_chunk_size, set_zip64, forward_only);
             }
 
-            var resForward = ReadForwardOnly(filename);
+            var resForward = await ReadForwardOnly(filename);
             if (resForward.Item1 != files)
             {
                 throw new Exception($"Incorrect number of items reported: {resForward.Item1}, should have been {files}");
@@ -125,7 +125,7 @@ namespace SharpCompress.Test.Zip
                 throw new Exception($"Incorrect combined size reported: {resForward.Item2}, should have been {files * filesize}");
             }
 
-            var resArchive = ReadArchive(filename);
+            var resArchive = await ReadArchive(filename);
             if (resArchive.Item1 != files)
             {
                 throw new Exception($"Incorrect number of items reported: {resArchive.Item1}, should have been {files}");
@@ -168,15 +168,15 @@ namespace SharpCompress.Test.Zip
             }
         }
 
-        public Tuple<long, long> ReadForwardOnly(string filename)
+        public async ValueTask<(long, long)> ReadForwardOnly(string filename)
         {
             long count = 0;
             long size = 0;
             Common.Zip.ZipEntry prev = null;
             using (var fs = File.OpenRead(filename))
-            using (var rd = ZipReader.Open(fs, new ReaderOptions() { LookForHeader = false }))
+            await using (var rd = ZipReader.Open(fs, new ReaderOptions() { LookForHeader = false }))
             {
-                while (rd.MoveToNextEntry())
+                while (await rd.MoveToNextEntry())
                 {
                     using (rd.OpenEntryStream())
                     { }
@@ -196,14 +196,14 @@ namespace SharpCompress.Test.Zip
                 size += prev.Size;
             }
 
-            return new Tuple<long, long>(count, size);
+            return (count, size);
         }
 
-        public Tuple<long, long> ReadArchive(string filename)
+        public async ValueTask<(long, long)> ReadArchive(string filename)
         {
-            using (var archive = ArchiveFactory.Open(filename))
+            using (var archive = await ArchiveFactory.OpenAsync(filename))
             {
-                return new Tuple<long, long>(
+                return (
                     archive.Entries.Count(),
                     archive.Entries.Select(x => x.Size).Sum()
                 );

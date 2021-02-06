@@ -9,6 +9,6 @@ namespace SharpCompress.Writers
     public interface IWriter : IAsyncDisposable
     {
         ArchiveType WriterType { get; }
-        Task WriteAsync(string filename, Stream source, DateTime? modificationTime, CancellationToken cancellationToken = default);
+        ValueTask WriteAsync(string filename, Stream source, DateTime? modificationTime, CancellationToken cancellationToken = default);
     }
 }

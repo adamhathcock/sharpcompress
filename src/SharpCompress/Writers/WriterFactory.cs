@@ -2,7 +2,7 @@
 using System.IO;
 using SharpCompress.Common;
 using SharpCompress.Writers.GZip;
-using SharpCompress.Writers.Tar;
+//using SharpCompress.Writers.Tar;
 using SharpCompress.Writers.Zip;
 
 namespace SharpCompress.Writers
@@ -26,9 +26,10 @@ namespace SharpCompress.Writers
                         return new ZipWriter(stream, new ZipWriterOptions(writerOptions));
                     }
                 case ArchiveType.Tar:
-                    {
-                        return new TarWriter(stream, new TarWriterOptions(writerOptions));
-                    }
+                {
+                    throw new NotImplementedException();
+                    //return new TarWriter(stream, new TarWriterOptions(writerOptions));
+                }
                 default:
                     {
                         throw new NotSupportedException("Archive Type does not have a Writer: " + archiveType);

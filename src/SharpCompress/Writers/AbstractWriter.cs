@@ -27,7 +27,7 @@ namespace SharpCompress.Writers
 
         protected WriterOptions WriterOptions { get; }
 
-        public abstract Task WriteAsync(string filename, Stream source, DateTime? modificationTime, CancellationToken cancellationToken);
+        public abstract ValueTask WriteAsync(string filename, Stream source, DateTime? modificationTime, CancellationToken cancellationToken);
 
         public async ValueTask DisposeAsync()
         {

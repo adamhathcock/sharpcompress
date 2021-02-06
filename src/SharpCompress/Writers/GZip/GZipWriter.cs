@@ -31,7 +31,7 @@ namespace SharpCompress.Writers.GZip
             return OutputStream.DisposeAsync();
         }
 
-        public override async Task WriteAsync(string filename, Stream source, DateTime? modificationTime, CancellationToken cancellationToken)
+        public override async ValueTask WriteAsync(string filename, Stream source, DateTime? modificationTime, CancellationToken cancellationToken)
         {
             if (_wroteToStream)
             {
@@ -40,7 +40,7 @@ namespace SharpCompress.Writers.GZip
             GZipStream stream = (GZipStream)OutputStream;
             stream.FileName = filename;
             stream.LastModified = modificationTime;
-            await source.TransferToAsync(stream);
+            await source.TransferToAsync(stream, cancellationToken);
             _wroteToStream = true;
         }
     }

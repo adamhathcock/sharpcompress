@@ -60,29 +60,37 @@ namespace SharpCompress.Archives.Zip
             return new ZipArchive(stream, readerOptions ?? new ReaderOptions());
         }
 
-        public static bool IsZipFile(string filePath, string? password = null)
+        public static ValueTask<bool> IsZipFile(string filePath, string? password = null)
         {
-            return IsZipFile(new FileInfo(filePath), password);
+            return IsZipFileAsync(new FileInfo(filePath), password);
         }
 
-        public static bool IsZipFile(FileInfo fileInfo, string? password = null)
+        public static async ValueTask<bool> IsZipFileAsync(FileInfo fileInfo, string? password = null)
         {
             if (!fileInfo.Exists)
             {
                 return false;
             }
-            using (Stream stream = fileInfo.OpenRead())
-            {
-                return IsZipFile(stream, password);
-            }
+
+            await using Stream stream = fileInfo.OpenRead();
+            return await IsZipFileAsync(stream, password);
         }
 
-        public static bool IsZipFile(Stream stream, string? password = null)
+        public static async ValueTask<bool> IsZipFileAsync(Stream stream, string? password = null)
         {
-            StreamingZipHeaderFactory headerFactory = new StreamingZipHeaderFactory(password, new ArchiveEncoding());
+            StreamingZipHeaderFactory headerFactory = new(password, new ArchiveEncoding());
             try
             {
-                ZipHeader? header = headerFactory.ReadStreamHeader(stream).FirstOrDefault(x => x.ZipHeaderType != ZipHeaderType.Split);
+                var headers = headerFactory.ReadStreamHeader(stream);
+                ZipHeader? header = null;
+                await foreach (ZipHeader zipHeader in headers)
+                {
+                    if (zipHeader.ZipHeaderType == ZipHeaderType.Split)
+                    {
+                        header = zipHeader;
+                        break;
+                    }
+                }
                 if (header is null)
                 {
                     return false;
@@ -196,7 +204,7 @@ namespace SharpCompress.Archives.Zip
 
         public static ZipArchive Create()
         {
-            return new ZipArchive();
+            return new();
         }
 
         protected override IReader CreateReaderForSolidExtraction()

@@ -16,13 +16,13 @@ namespace SharpCompress.Test.GZip
         }
 
         [Fact]
-        public void GZip_Archive_Generic()
+        public async ValueTask GZip_Archive_Generic()
         {
             using (Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.gz")))
-            using (var archive = ArchiveFactory.Open(stream))
+            using (var archive = await ArchiveFactory.OpenAsync(stream))
             {
                 var entry = archive.Entries.First();
-                entry.WriteToFile(Path.Combine(SCRATCH_FILES_PATH, entry.Key));
+                await entry.WriteToFileAsync(Path.Combine(SCRATCH_FILES_PATH, entry.Key));
 
                 long size = entry.Size;
                 var scratch = new FileInfo(Path.Combine(SCRATCH_FILES_PATH, "Tar.tar"));
@@ -31,18 +31,18 @@ namespace SharpCompress.Test.GZip
                 Assert.Equal(size, scratch.Length);
                 Assert.Equal(size, test.Length);
             }
-            CompareArchivesByPath(Path.Combine(SCRATCH_FILES_PATH, "Tar.tar"),
-                Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar"));
+            await CompareArchivesByPathAsync(Path.Combine(SCRATCH_FILES_PATH, "Tar.tar"),
+                                       Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar"));
         }
 
         [Fact]
-        public void GZip_Archive()
+        public async ValueTask GZip_Archive()
         {
             using (Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.gz")))
             using (var archive = GZipArchive.Open(stream))
             {
                 var entry = archive.Entries.First();
-                entry.WriteToFile(Path.Combine(SCRATCH_FILES_PATH, entry.Key));
+                await entry.WriteToFileAsync(Path.Combine(SCRATCH_FILES_PATH, entry.Key));
 
                 long size = entry.Size;
                 var scratch = new FileInfo(Path.Combine(SCRATCH_FILES_PATH, "Tar.tar"));
@@ -51,8 +51,8 @@ namespace SharpCompress.Test.GZip
                 Assert.Equal(size, scratch.Length);
                 Assert.Equal(size, test.Length);
             }
-            CompareArchivesByPath(Path.Combine(SCRATCH_FILES_PATH, "Tar.tar"),
-                Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar"));
+            await CompareArchivesByPathAsync(Path.Combine(SCRATCH_FILES_PATH, "Tar.tar"),
+                                       Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar"));
         }
 
 
@@ -95,11 +95,11 @@ namespace SharpCompress.Test.GZip
                     entryStream.CopyTo(tarStream);
                 }
                 Assert.Equal(size, tarStream.Length);
-                using (var entryStream = archiveEntry.OpenEntryStream())
+                /*using (var entryStream = archiveEntry.OpenEntryStream())
                 {
                     var result = Archives.Tar.TarArchive.IsTarFile(entryStream);
                 }
-                Assert.Equal(size, tarStream.Length);
+                Assert.Equal(size, tarStream.Length);           */
                 using (var entryStream = archiveEntry.OpenEntryStream())
                 {
                     tarStream = new MemoryStream();

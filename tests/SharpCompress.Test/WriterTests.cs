@@ -33,8 +33,8 @@ namespace SharpCompress.Test
                     await writer.WriteAllAsync(ORIGINAL_FILES_PATH, "*", SearchOption.AllDirectories);
                 }
             }
-            CompareArchivesByPath(Path.Combine(SCRATCH2_FILES_PATH, archive),
-               Path.Combine(TEST_ARCHIVES_PATH, archiveToVerifyAgainst));
+            await CompareArchivesByPathAsync(Path.Combine(SCRATCH2_FILES_PATH, archive),
+                                       Path.Combine(TEST_ARCHIVES_PATH, archiveToVerifyAgainst));
 
             using (Stream stream = File.OpenRead(Path.Combine(SCRATCH2_FILES_PATH, archive)))
             {
@@ -42,9 +42,9 @@ namespace SharpCompress.Test
 
                 readerOptions.ArchiveEncoding.Default = encoding ?? Encoding.Default;
 
-                using (var reader = ReaderFactory.Open(new NonDisposingStream(stream), readerOptions))
+                await using (var reader = await ReaderFactory.OpenAsync(new NonDisposingStream(stream), readerOptions))
                 {
-                    reader.WriteAllToDirectory(SCRATCH_FILES_PATH, new ExtractionOptions()
+                    await reader.WriteEntryToDirectoryAsync(SCRATCH_FILES_PATH, new ExtractionOptions()
                     {
                         ExtractFullPath = true
                     });

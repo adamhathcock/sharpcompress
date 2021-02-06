@@ -96,21 +96,21 @@ namespace SharpCompress.Writers.Zip
             }
         }
 
-        public override Task WriteAsync(string filename, Stream source, DateTime? modificationTime, CancellationToken cancellationToken)
+        public override ValueTask WriteAsync(string filename, Stream source, DateTime? modificationTime, CancellationToken cancellationToken = default)
         {
             return WriteAsync(filename, source, new ZipWriterEntryOptions()
                                          {
                                              ModificationDateTime = modificationTime
-                                         });
+                                         }, cancellationToken);
         }
 
-        public async Task WriteAsync(string entryPath, Stream source, ZipWriterEntryOptions zipWriterEntryOptions)
+        public async ValueTask WriteAsync(string entryPath, Stream source, ZipWriterEntryOptions zipWriterEntryOptions, CancellationToken cancellationToken = default)
         {
-            await using Stream output = await WriteToStreamAsync(entryPath, zipWriterEntryOptions);
-            await source.TransferToAsync(output);
+            await using Stream output = await WriteToStreamAsync(entryPath, zipWriterEntryOptions, cancellationToken);
+            await source.TransferToAsync(output, cancellationToken);
         }
 
-        public async Task<Stream> WriteToStreamAsync(string entryPath, ZipWriterEntryOptions options)
+        public async ValueTask<Stream> WriteToStreamAsync(string entryPath, ZipWriterEntryOptions options, CancellationToken cancellationToken = default)
         {
             var compression = ToZipCompressionMethod(options.CompressionType ?? compressionType);
 
@@ -130,7 +130,7 @@ namespace SharpCompress.Writers.Zip
                 useZip64 = options.EnableZip64.Value;
             }
 
-            var headersize = (uint)(await WriteHeaderAsync(entryPath, options, entry, useZip64));
+            var headersize = (uint)(await WriteHeaderAsync(entryPath, options, entry, useZip64, cancellationToken));
             streamPosition += headersize;
             return new ZipWritingStream(this, OutputStream, entry, compression,
                 options.DeflateCompressionLevel ?? compressionLevel);
@@ -149,7 +149,8 @@ namespace SharpCompress.Writers.Zip
             return filename.Trim('/');
         }
 
-        private async Task<int> WriteHeaderAsync(string filename, ZipWriterEntryOptions zipWriterEntryOptions, ZipCentralDirectoryEntry entry, bool useZip64)
+        private async Task<int> WriteHeaderAsync(string filename, ZipWriterEntryOptions zipWriterEntryOptions, ZipCentralDirectoryEntry entry, bool useZip64, 
+                                                 CancellationToken cancellationToken)
         {
             // We err on the side of caution until the zip specification clarifies how to support this
             if (!OutputStream.CanSeek && useZip64)
@@ -163,7 +164,7 @@ namespace SharpCompress.Writers.Zip
             // TODO: Use stackalloc when we exclusively support netstandard2.1 or higher
             using var intBuf = MemoryPool<byte>.Shared.Rent(4);
             BinaryPrimitives.WriteUInt32LittleEndian(intBuf.Memory.Span, ZipHeaderFactory.ENTRY_HEADER_BYTES);
-            await OutputStream.WriteAsync(intBuf.Memory);
+            await OutputStream.WriteAsync(intBuf.Memory, cancellationToken);
             if (explicitZipCompressionInfo == ZipCompressionMethod.Deflate)
             {
                 if (OutputStream.CanSeek && useZip64)
@@ -171,14 +172,14 @@ namespace SharpCompress.Writers.Zip
                     using var buf1 = MemoryPool<byte>.Shared.Rent(2);
                     buf1.Memory.Span[0] = 45;
                     buf1.Memory.Span[1] = 0;
-                    await OutputStream.WriteAsync(buf1.Memory); //smallest allowed version for zip64
+                    await OutputStream.WriteAsync(buf1.Memory, cancellationToken); //smallest allowed version for zip64
                 }
                 else
                 {
                     using var buf1 = MemoryPool<byte>.Shared.Rent(2);
                     buf1.Memory.Span[0] = 20;
                     buf1.Memory.Span[1] = 0;
-                    await OutputStream.WriteAsync(buf1.Memory);  //older version which is more compatible
+                    await OutputStream.WriteAsync(buf1.Memory, cancellationToken);  //older version which is more compatible
                 }
             }
             else
@@ -186,7 +187,7 @@ namespace SharpCompress.Writers.Zip
                 using var buf1 = MemoryPool<byte>.Shared.Rent(2);
                 buf1.Memory.Span[0] = 63;
                 buf1.Memory.Span[1] = 0;
-                await OutputStream.WriteAsync(buf1.Memory); //version says we used PPMd or LZMA
+                await OutputStream.WriteAsync(buf1.Memory, cancellationToken); //version says we used PPMd or LZMA
             }
             HeaderFlags flags = Equals(WriterOptions.ArchiveEncoding.GetEncoding(), Encoding.UTF8) ? HeaderFlags.Efs : 0;
             if (!OutputStream.CanSeek)
@@ -200,20 +201,20 @@ namespace SharpCompress.Writers.Zip
             }
 
             BinaryPrimitives.WriteUInt16LittleEndian(intBuf.Memory.Span, (ushort)flags);
-            await OutputStream.WriteAsync(intBuf.Memory.Slice(0,2));
+            await OutputStream.WriteAsync(intBuf.Memory.Slice(0,2), cancellationToken);
             BinaryPrimitives.WriteUInt16LittleEndian(intBuf.Memory.Span, (ushort)explicitZipCompressionInfo);
-            await OutputStream.WriteAsync(intBuf.Memory.Slice(0,2)); // zipping method
+            await OutputStream.WriteAsync(intBuf.Memory.Slice(0,2), cancellationToken); // zipping method
             BinaryPrimitives.WriteUInt32LittleEndian(intBuf.Memory.Span, zipWriterEntryOptions.ModificationDateTime.DateTimeToDosTime());
-            await OutputStream.WriteAsync(intBuf.Memory);
+            await OutputStream.WriteAsync(intBuf.Memory, cancellationToken);
 
             // zipping date and time
             using var buf2 = MemoryPool<byte>.Shared.Rent(12);
             buf2.Memory.Span.Clear();
-            await OutputStream.WriteAsync(buf2.Memory);
+            await OutputStream.WriteAsync(buf2.Memory, cancellationToken);
 
             // unused CRC, un/compressed size, updated later
             BinaryPrimitives.WriteUInt16LittleEndian(intBuf.Memory.Span, (ushort)encodedFilename.Length);
-            await OutputStream.WriteAsync(intBuf.Memory.Slice(0,2));// filename length
+            await OutputStream.WriteAsync(intBuf.Memory.Slice(0,2), cancellationToken);// filename length
 
             var extralength = 0;
             if (OutputStream.CanSeek && useZip64)
@@ -222,14 +223,14 @@ namespace SharpCompress.Writers.Zip
             }
 
             BinaryPrimitives.WriteUInt16LittleEndian(intBuf.Memory.Span, (ushort)extralength);
-            await OutputStream.WriteAsync(intBuf.Memory.Slice(0,2));// extra length
-            await OutputStream.WriteAsync(encodedFilename, 0, encodedFilename.Length);
+            await OutputStream.WriteAsync(intBuf.Memory.Slice(0,2), cancellationToken);// extra length
+            await OutputStream.WriteAsync(encodedFilename, 0, encodedFilename.Length, cancellationToken);
 
             if (extralength != 0)
             {
                 using var buf3 = MemoryPool<byte>.Shared.Rent(extralength);
                 buf2.Memory.Span.Clear();
-                await OutputStream.WriteAsync(buf3.Memory); // reserve space for zip64 data
+                await OutputStream.WriteAsync(buf3.Memory, cancellationToken); // reserve space for zip64 data
                 entry.Zip64HeaderOffset = (ushort)(6 + 2 + 2 + 4 + 12 + 2 + 2 + encodedFilename.Length);
             }
 

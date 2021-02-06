@@ -14,7 +14,7 @@ namespace SharpCompress.Readers
             await reader.WriteEntryToAsync(stream);
         }
 
-        public static async ValueTask WriteEntryTo(this IReader reader, FileInfo filePath)
+        public static async ValueTask WriteEntryToAsync(this IReader reader, FileInfo filePath)
         {
             await using Stream stream = filePath.Open(FileMode.Create);
             await reader.WriteEntryToAsync(stream);

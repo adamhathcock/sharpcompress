@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using SharpCompress.Archives;
 using SharpCompress.Common;
 using SharpCompress.IO;
@@ -12,24 +13,24 @@ namespace SharpCompress.Test
 {
     public class ArchiveTests : ReaderTests
     {
-        protected void ArchiveStreamReadExtractAll(string testArchive, CompressionType compression)
+        protected async ValueTask ArchiveStreamReadExtractAll(string testArchive, CompressionType compression)
         {
             testArchive = Path.Combine(TEST_ARCHIVES_PATH, testArchive);
-            ArchiveStreamReadExtractAll(testArchive.AsEnumerable(), compression);
+            await ArchiveStreamReadExtractAll(testArchive.AsEnumerable(), compression);
         }
 
 
-        protected void ArchiveStreamReadExtractAll(IEnumerable<string> testArchives, CompressionType compression)
+        protected async ValueTask ArchiveStreamReadExtractAll(IEnumerable<string> testArchives, CompressionType compression)
         {
             foreach (var path in testArchives)
             {
-                using (var stream = new NonDisposingStream(File.OpenRead(path), true))
-                using (var archive = ArchiveFactory.Open(stream))
+                await using (var stream = new NonDisposingStream(File.OpenRead(path), true))
+                using (var archive = await ArchiveFactory.OpenAsync(stream))
                 {
                     Assert.True(archive.IsSolid);
-                    using (var reader = archive.ExtractAllEntries())
+                    await using (var reader = archive.ExtractAllEntries())
                     {
-                        UseReader(reader, compression);
+                        await ReadAsync(reader, compression);
                     }
                     VerifyFiles();
 
@@ -40,7 +41,7 @@ namespace SharpCompress.Test
                     }
                     foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
                     {
-                        entry.WriteToDirectory(SCRATCH_FILES_PATH,
+                        await entry.WriteEntryToDirectoryAsync(SCRATCH_FILES_PATH,
                                                new ExtractionOptions
                                                {
                                                    ExtractFullPath = true,
@@ -53,29 +54,29 @@ namespace SharpCompress.Test
             }
         }
 
-        protected void ArchiveStreamRead(string testArchive, ReaderOptions readerOptions = null)
+        protected ValueTask ArchiveStreamReadAsync(string testArchive, ReaderOptions readerOptions = null)
         {
             testArchive = Path.Combine(TEST_ARCHIVES_PATH, testArchive);
-            ArchiveStreamRead(readerOptions, testArchive.AsEnumerable());
+            return ArchiveStreamReadAsync(readerOptions, testArchive.AsEnumerable());
         }
 
-        protected void ArchiveStreamRead(ReaderOptions readerOptions = null, params string[] testArchives)
+        protected ValueTask ArchiveStreamReadAsync(ReaderOptions readerOptions = null, params string[] testArchives)
         {
-            ArchiveStreamRead(readerOptions, testArchives.Select(x => Path.Combine(TEST_ARCHIVES_PATH, x)));
+            return ArchiveStreamReadAsync(readerOptions, testArchives.Select(x => Path.Combine(TEST_ARCHIVES_PATH, x)));
         }
 
-        protected void ArchiveStreamRead(ReaderOptions readerOptions, IEnumerable<string> testArchives)
+        protected async ValueTask ArchiveStreamReadAsync(ReaderOptions readerOptions, IEnumerable<string> testArchives)
         {
             foreach (var path in testArchives)
             {
                 using (var stream = new NonDisposingStream(File.OpenRead(path), true))
-                using (var archive = ArchiveFactory.Open(stream, readerOptions))
+                using (var archive = await ArchiveFactory.OpenAsync(stream, readerOptions))
                 {
                     try
                     {
                         foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
                         {
-                            entry.WriteToDirectory(SCRATCH_FILES_PATH,
+                            await entry.WriteEntryToDirectoryAsync(SCRATCH_FILES_PATH,
                                                    new ExtractionOptions()
                                                    {
                                                        ExtractFullPath = true,
@@ -95,14 +96,14 @@ namespace SharpCompress.Test
             }
         }
 
-        protected void ArchiveFileRead(string testArchive, ReaderOptions readerOptions = null)
+        protected async ValueTask ArchiveFileReadAsync(string testArchive, ReaderOptions readerOptions = null)
         {
             testArchive = Path.Combine(TEST_ARCHIVES_PATH, testArchive);
-            using (var archive = ArchiveFactory.Open(testArchive, readerOptions))
+            using (var archive = await ArchiveFactory.OpenAsync(testArchive, readerOptions))
             {
                 foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
                 {
-                    entry.WriteToDirectory(SCRATCH_FILES_PATH,
+                    await entry.WriteEntryToDirectoryAsync(SCRATCH_FILES_PATH,
                         new ExtractionOptions()
                         {
                             ExtractFullPath = true,
@@ -116,14 +117,14 @@ namespace SharpCompress.Test
         /// <summary>
         /// Demonstrate the ExtractionOptions.PreserveFileTime and ExtractionOptions.PreserveAttributes extract options
         /// </summary>
-        protected void ArchiveFileReadEx(string testArchive)
+        protected async ValueTask ArchiveFileReadEx(string testArchive)
         {
             testArchive = Path.Combine(TEST_ARCHIVES_PATH, testArchive);
-            using (var archive = ArchiveFactory.Open(testArchive))
+            using (var archive = await ArchiveFactory.OpenAsync(testArchive))
             {
                 foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
                 {
-                    entry.WriteToDirectory(SCRATCH_FILES_PATH,
+                    await entry.WriteEntryToDirectoryAsync(SCRATCH_FILES_PATH,
                         new ExtractionOptions()
                         {
                             ExtractFullPath = true,

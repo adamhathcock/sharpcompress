@@ -1,4 +1,6 @@
 ﻿using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using SharpCompress.Common;
 
 namespace SharpCompress.Archives
@@ -8,12 +10,14 @@ namespace SharpCompress.Archives
         /// <summary>
         /// Extract to specific directory, retaining filename
         /// </summary>
-        public static void WriteToDirectory(this IArchive archive, string destinationDirectory,
-                                            ExtractionOptions? options = null)
+        public static async ValueTask WriteToDirectoryAsync(this IArchive archive, 
+                                            string destinationDirectory,
+                                            ExtractionOptions? options = null,
+                                            CancellationToken cancellationToken = default)
         {
             foreach (IArchiveEntry entry in archive.Entries.Where(x => !x.IsDirectory))
             {
-                entry.WriteToDirectory(destinationDirectory, options);
+                await entry.WriteEntryToDirectoryAsync(destinationDirectory, options, cancellationToken);
             }
         }
     }
