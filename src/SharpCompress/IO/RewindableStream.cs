@@ -1,12 +1,14 @@
 ﻿using System;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace SharpCompress.IO
 {
     internal class RewindableStream : Stream
     {
         private readonly Stream stream;
-        private MemoryStream bufferStream = new MemoryStream();
+        private MemoryStream bufferStream = new();
         private bool isRewound;
         private bool isDisposed;
 
@@ -110,6 +112,12 @@ namespace SharpCompress.IO
 
         public override int Read(byte[] buffer, int offset, int count)
         {
+            throw new NotImplementedException();
+        }
+
+        public override async ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default)
+        {
+            var count = buffer.Length;
             //don't actually read if we don't really want to read anything
             //currently a network stream bug on Windows for .NET Core
             if (count == 0)
@@ -119,13 +127,13 @@ namespace SharpCompress.IO
             int read;
             if (isRewound && bufferStream.Position != bufferStream.Length)
             {
-                read = bufferStream.Read(buffer, offset, count);
+                read = await bufferStream.ReadAsync(buffer, cancellationToken);
                 if (read < count)
                 {
-                    int tempRead = stream.Read(buffer, offset + read, count - read);
+                    int tempRead = await stream.ReadAsync(buffer.Slice(read, count - read), cancellationToken);
                     if (IsRecording)
                     {
-                        bufferStream.Write(buffer, offset + read, tempRead);
+                        await bufferStream.WriteAsync(buffer.Slice(read, tempRead), cancellationToken);
                     }
                     read += tempRead;
                 }
@@ -137,10 +145,10 @@ namespace SharpCompress.IO
                 return read;
             }
 
-            read = stream.Read(buffer, offset, count);
+            read = await stream.ReadAsync(buffer, cancellationToken);
             if (IsRecording)
             {
-                bufferStream.Write(buffer, offset, read);
+                await bufferStream.WriteAsync(buffer, cancellationToken);
             }
             return read;
         }

@@ -11,6 +11,11 @@ namespace SharpCompress.Test
 {
     public class TestBase : IDisposable
     {
+        static TestBase()
+        {
+            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+        }
+        
         private string SOLUTION_BASE_PATH;
         protected string TEST_ARCHIVES_PATH;
         protected string ORIGINAL_FILES_PATH;
