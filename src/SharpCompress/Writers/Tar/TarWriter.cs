@@ -57,14 +57,19 @@ namespace SharpCompress.Writers.Tar
             InitializeStream(destination);
         }
 
-        public override async Task WriteAsync(string filename, Stream source, DateTime? modificationTime, CancellationToken cancellationToken = default)
+        public override ValueTask WriteAsync(string filename, Stream source, DateTime? modificationTime, CancellationToken cancellationToken = default)
         {
-            if (!source.CanSeek)
+            return WriteAsync(filename, source, modificationTime, null, cancellationToken);
+        }
+
+        public async ValueTask WriteAsync(string filename, Stream source, DateTime? modificationTime, long? size, CancellationToken cancellationToken = default)
+        {
+            if (!source.CanSeek && size == null)
             {
                 throw new ArgumentException("Seekable stream is required if no size is given.");
             }
 
-            long realSize = source.Length;
+            long realSize = size ?? source.Length;
 
             TarHeader header = new(WriterOptions.ArchiveEncoding);
 
@@ -72,8 +77,8 @@ namespace SharpCompress.Writers.Tar
             header.Name = NormalizeFilename(filename);
             header.Size = realSize;
             await header.WriteAsync(OutputStream);
-            var size = await source.TransferToAsync(OutputStream);
-            await PadTo512Async(size, false);
+            size = await source.TransferToAsync(OutputStream, cancellationToken);
+            await PadTo512Async(size.Value, false);
         }
 
         private string NormalizeFilename(string filename)
@@ -99,7 +104,7 @@ namespace SharpCompress.Writers.Tar
             zeros = 512 - zeros;
             using var zeroBuffer = MemoryPool<byte>.Shared.Rent(zeros);
             zeroBuffer.Memory.Span.Clear();
-            await OutputStream.WriteAsync(zeroBuffer.Memory);
+            await OutputStream.WriteAsync(zeroBuffer.Memory.Slice(0, zeros));
         }
 
         protected override async ValueTask DisposeAsyncCore()

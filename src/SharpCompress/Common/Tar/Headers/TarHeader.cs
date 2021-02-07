@@ -5,6 +5,7 @@ using System.Buffers;
 using System.Buffers.Binary;
 using System.IO;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace SharpCompress.Common.Tar.Headers
@@ -53,7 +54,7 @@ namespace SharpCompress.Common.Tar.Headers
             }
             else
             {
-                WriteStringBytes(ArchiveEncoding.Encode(Name), buffer.Memory.Span, 100);
+                WriteStringBytes(ArchiveEncoding.Encode(Name), buffer.Memory, 100);
                 WriteOctalBytes(Size, buffer.Memory.Span, 124, 12);
                 var time = (long)(LastModifiedTime.ToUniversalTime() - EPOCH).TotalSeconds;
                 WriteOctalBytes(time, buffer.Memory.Span, 136, 12);
@@ -68,10 +69,10 @@ namespace SharpCompress.Common.Tar.Headers
                 }
             }
 
-            int crc = RecalculateChecksum(buffer.Memory.Span);
+            int crc = RecalculateChecksum(buffer.Memory);
             WriteOctalBytes(crc, buffer.Memory.Span, 148, 8);
 
-            await output.WriteAsync(buffer.Memory);
+            await output.WriteAsync(buffer.Memory.Slice(0, BLOCK_SIZE));
 
             if (nameByteCount > 100)
             {
@@ -91,7 +92,7 @@ namespace SharpCompress.Common.Tar.Headers
         private async Task WriteLongFilenameHeaderAsync(Stream output)
         {
             byte[] nameBytes = ArchiveEncoding.Encode(Name);
-            await output.WriteAsync(nameBytes, 0, nameBytes.Length);
+            await output.WriteAsync(nameBytes.AsMemory());
 
             // pad to multiple of BlockSize bytes, and make sure a terminating null is added
             int numPaddingBytes = BLOCK_SIZE - (nameBytes.Length % BLOCK_SIZE);
@@ -102,48 +103,53 @@ namespace SharpCompress.Common.Tar.Headers
 
             using var padding = MemoryPool<byte>.Shared.Rent(numPaddingBytes);
             padding.Memory.Span.Clear();
-            await output.WriteAsync(padding.Memory);
+            await output.WriteAsync(padding.Memory.Slice(0, numPaddingBytes));
         }
 
-        internal bool Read(BinaryReader reader)
+        internal async ValueTask<bool> Read(Stream stream, CancellationToken cancellationToken)
         {
-            var buffer = ReadBlock(reader);
-            if (buffer.Length == 0)
+            var block = MemoryPool<byte>.Shared.Rent(BLOCK_SIZE);
+            bool readFullyAsync = await stream.ReadFullyAsync(block.Memory.Slice(0, BLOCK_SIZE), cancellationToken);
+            if (readFullyAsync is false)
             {
                 return false;
             }
 
             // for symlinks, additionally read the linkname
-            if (ReadEntryType(buffer) == EntryType.SymLink)
+            if (ReadEntryType(block.Memory.Span) == EntryType.SymLink)
             {
-                LinkName = ArchiveEncoding.Decode(buffer, 157, 100).TrimNulls();
+                LinkName = ArchiveEncoding.Decode(block.Memory.Span.Slice(157, 100)).TrimNulls();
             }
 
-            if (ReadEntryType(buffer) == EntryType.LongName)
+            if (ReadEntryType(block.Memory.Span) == EntryType.LongName)
             {
-                Name = ReadLongName(reader, buffer);
-                buffer = ReadBlock(reader);
+                Name = await ReadLongName(stream, block.Memory.Slice(0,BLOCK_SIZE), cancellationToken);
+                readFullyAsync = await stream.ReadFullyAsync(block.Memory.Slice(0, BLOCK_SIZE), cancellationToken);
+                if (readFullyAsync is false)
+                {
+                    return false;
+                }
             }
             else
             {
-                Name = ArchiveEncoding.Decode(buffer, 0, 100).TrimNulls();
+                Name = ArchiveEncoding.Decode(block.Memory.Span.Slice( 0, 100)).TrimNulls();
             }
 
-            EntryType = ReadEntryType(buffer);
-            Size = ReadSize(buffer);
+            EntryType = ReadEntryType(block.Memory.Span);
+            Size = ReadSize(block.Memory.Slice(0, BLOCK_SIZE));
 
             //Mode = ReadASCIIInt32Base8(buffer, 100, 7);
             //UserId = ReadASCIIInt32Base8(buffer, 108, 7);
             //GroupId = ReadASCIIInt32Base8(buffer, 116, 7);
-            long unixTimeStamp = ReadAsciiInt64Base8(buffer, 136, 11);
+            long unixTimeStamp = ReadAsciiInt64Base8(block.Memory.Span.Slice(136, 11));
             LastModifiedTime = EPOCH.AddSeconds(unixTimeStamp).ToLocalTime();
 
-            Magic = ArchiveEncoding.Decode(buffer, 257, 6).TrimNulls();
+            Magic = ArchiveEncoding.Decode(block.Memory.Span.Slice( 257, 6)).TrimNulls();
 
             if (!string.IsNullOrEmpty(Magic)
                 && "ustar".Equals(Magic))
             {
-                string namePrefix = ArchiveEncoding.Decode(buffer, 345, 157);
+                string namePrefix = ArchiveEncoding.Decode(block.Memory.Span.Slice( 345, 157));
                 namePrefix = namePrefix.TrimNulls();
                 if (!string.IsNullOrEmpty(namePrefix))
                 {
@@ -158,52 +164,42 @@ namespace SharpCompress.Common.Tar.Headers
             return true;
         }
 
-        private string ReadLongName(BinaryReader reader, byte[] buffer)
+        private async ValueTask<string> ReadLongName(Stream reader, ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken)
         {
             var size = ReadSize(buffer);
             var nameLength = (int)size;
-            var nameBytes = reader.ReadBytes(nameLength);
+            using var nameBytes = MemoryPool<byte>.Shared.Rent(nameLength);
+            await reader.ReadFullyAsync(nameBytes.Memory.Slice(0, nameLength), cancellationToken);
             var remainingBytesToRead = BLOCK_SIZE - (nameLength % BLOCK_SIZE);
 
             // Read the rest of the block and discard the data
             if (remainingBytesToRead < BLOCK_SIZE)
             {
-                reader.ReadBytes(remainingBytesToRead);
+                using var remaining = MemoryPool<byte>.Shared.Rent(remainingBytesToRead);
+                await reader.ReadFullyAsync(remaining.Memory.Slice(0, remainingBytesToRead), cancellationToken);
             }
-            return ArchiveEncoding.Decode(nameBytes, 0, nameBytes.Length).TrimNulls();
+            return ArchiveEncoding.Decode(nameBytes.Memory.Span.Slice(0, nameLength)).TrimNulls();
         }
 
-        private static EntryType ReadEntryType(byte[] buffer)
+        private static EntryType ReadEntryType(Span<byte> buffer)
         {
             return (EntryType)buffer[156];
         }
 
-        private long ReadSize(byte[] buffer)
+        private long ReadSize(ReadOnlyMemory<byte> buffer)
         {
-            if ((buffer[124] & 0x80) == 0x80) // if size in binary
+            if ((buffer.Span[124] & 0x80) == 0x80) // if size in binary
             {
-                return BinaryPrimitives.ReadInt64BigEndian(buffer.AsSpan(0x80));
+                return BinaryPrimitives.ReadInt64BigEndian(buffer.Span.Slice(0x80));
             }
 
-            return ReadAsciiInt64Base8(buffer, 124, 11);
+            return ReadAsciiInt64Base8(buffer.Span.Slice(124, 11));
         }
-
-        private static byte[] ReadBlock(BinaryReader reader)
+        private static void WriteStringBytes(ReadOnlySpan<byte> name, Memory<byte> buffer, int length)
         {
-            byte[] buffer = reader.ReadBytes(BLOCK_SIZE);
-
-            if (buffer.Length != 0 && buffer.Length < BLOCK_SIZE)
-            {
-                throw new InvalidOperationException("Buffer is invalid size");
-            }
-            return buffer;
-        }
-
-        private static void WriteStringBytes(ReadOnlySpan<byte> name, Span<byte> buffer, int length)
-        {
-            name.CopyTo(buffer);
+            name.CopyTo(buffer.Span.Slice(0));
             int i = Math.Min(length, name.Length);
-            buffer.Slice(i, length - i).Clear();
+            buffer.Slice(i, length - i).Span.Clear();
         }
 
         private static void WriteStringBytes(string name, Span<byte> buffer, int offset, int length)
@@ -235,19 +231,9 @@ namespace SharpCompress.Common.Tar.Headers
             }
         }
 
-        private static int ReadAsciiInt32Base8(byte[] buffer, int offset, int count)
+        private static long ReadAsciiInt64Base8(ReadOnlySpan<byte> buffer)
         {
-            string s = Encoding.UTF8.GetString(buffer, offset, count).TrimNulls();
-            if (string.IsNullOrEmpty(s))
-            {
-                return 0;
-            }
-            return Convert.ToInt32(s, 8);
-        }
-
-        private static long ReadAsciiInt64Base8(byte[] buffer, int offset, int count)
-        {
-            string s = Encoding.UTF8.GetString(buffer, offset, count).TrimNulls();
+            string s = Encoding.UTF8.GetString(buffer).TrimNulls();
             if (string.IsNullOrEmpty(s))
             {
                 return 0;
@@ -271,34 +257,16 @@ namespace SharpCompress.Common.Tar.Headers
             (byte)' ', (byte)' ', (byte)' ', (byte)' '
         };
 
-        private static int RecalculateChecksum(Span<byte> buf)
+        private static int RecalculateChecksum(Memory<byte> buf)
         {
             // Set default value for checksum. That is 8 spaces.
-            eightSpaces.AsSpan(148).CopyTo(buf);
+            eightSpaces.CopyTo(buf.Slice(148));
 
             // Calculate checksum
             int headerChecksum = 0;
-            foreach (byte b in buf)
+            foreach (byte b in buf.Span)
             {
                 headerChecksum += b;
-            }
-            return headerChecksum;
-        }
-
-        internal static int RecalculateAltChecksum(byte[] buf)
-        {
-            eightSpaces.CopyTo(buf, 148);
-            int headerChecksum = 0;
-            foreach (byte b in buf)
-            {
-                if ((b & 0x80) == 0x80)
-                {
-                    headerChecksum -= b ^ 0x80;
-                }
-                else
-                {
-                    headerChecksum += b;
-                }
             }
             return headerChecksum;
         }

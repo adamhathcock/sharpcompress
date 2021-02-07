@@ -78,12 +78,12 @@ namespace SharpCompress.Readers
                      return new TarReader(rewindableStream, options, CompressionType.LZip);
                  }  
             }
-            rewindableStream.Rewind(false);
-           /* if (RarArchive.IsRarFile(rewindableStream, options))
-            {
-                rewindableStream.Rewind(true);
-                return RarReader.Open(rewindableStream, options);
-            }   */
+            /*  rewindableStream.Rewind(false);
+            if (RarArchive.IsRarFile(rewindableStream, options))
+             {
+                 rewindableStream.Rewind(true);
+                 return RarReader.Open(rewindableStream, options);
+             }   */
 
             rewindableStream.Rewind(false);
             if (await TarArchive.IsTarFileAsync(rewindableStream))
@@ -95,12 +95,12 @@ namespace SharpCompress.Readers
             if (XZStream.IsXZStream(rewindableStream))
             {
                 rewindableStream.Rewind(true);
-                /* XZStream testStream = new XZStream(rewindableStream);
-                 if (TarArchive.IsTarFile(testStream))
-                 {
-                     rewindableStream.Rewind(true);
-                     return new TarReader(rewindableStream, options, CompressionType.Xz);
-                 }   */
+                XZStream testStream = new XZStream(rewindableStream);
+                if (await TarArchive.IsTarFileAsync(testStream))
+                {
+                    rewindableStream.Rewind(true);
+                    return new TarReader(rewindableStream, options, CompressionType.Xz);
+                }   
             }
             throw new InvalidOperationException("Cannot determine compressed stream type.  Supported Reader Formats: Zip, GZip, BZip2, Tar, Rar, LZip, XZ");
         }

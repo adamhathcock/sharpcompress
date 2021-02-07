@@ -81,15 +81,21 @@ namespace SharpCompress.Readers
             }
             if (entriesForCurrentReadStream is null)
             {
-                //TODO: real token?
-                return await LoadStreamForReading(RequestInitialStream(), cancellationToken);
-            }
-            if (!wroteCurrentEntry)
+                var stream = RequestInitialStream();
+                if (stream is null || !stream.CanRead)
+                {
+                    throw new MultipartStreamRequiredException("File is split into multiple archives: '"
+                                                               + (Entry?.Key ?? "unknown") +
+                                                               "'. A new readable stream is required.  Use Cancel if it was intended.");
+                }
+                entriesForCurrentReadStream = GetEntries(stream, cancellationToken).GetAsyncEnumerator(cancellationToken);
+            } 
+            else if (!wroteCurrentEntry)
             {
                 await SkipEntry(cancellationToken);
             }
             wroteCurrentEntry = false;
-            if (await NextEntryForCurrentStream())
+            if (await entriesForCurrentReadStream.MoveNextAsync())
             {
                 return true;
             }
@@ -97,27 +103,9 @@ namespace SharpCompress.Readers
             return false;
         }
 
-        protected async Task<bool> LoadStreamForReading(Stream stream, CancellationToken cancellationToken)
-        {
-            await (entriesForCurrentReadStream?.DisposeAsync() ?? new ValueTask(Task.CompletedTask));
-            if (stream is null || !stream.CanRead)
-            {
-                throw new MultipartStreamRequiredException("File is split into multiple archives: '"
-                                                           + (Entry?.Key ?? "unknown") +
-                                                           "'. A new readable stream is required.  Use Cancel if it was intended.");
-            }
-            entriesForCurrentReadStream = GetEntries(stream, cancellationToken).GetAsyncEnumerator(cancellationToken);
-            return await (entriesForCurrentReadStream?.MoveNextAsync() ?? new ValueTask<bool>(Task.FromResult(false)));
-        }
-
         protected virtual Stream RequestInitialStream()
         {
             return Volume.Stream;
-        }
-
-        internal virtual async ValueTask<bool> NextEntryForCurrentStream()
-        {
-            return await (entriesForCurrentReadStream?.MoveNextAsync() ?? new ValueTask<bool>(Task.FromResult(false)));
         }
 
         protected abstract IAsyncEnumerable<TEntry> GetEntries(Stream stream, CancellationToken cancellationToken);
@@ -126,7 +114,7 @@ namespace SharpCompress.Readers
 
         private async ValueTask SkipEntry(CancellationToken cancellationToken)
         {
-            if (Entry?.IsDirectory == true)
+            if (Entry?.IsDirectory != true)
             {
                 await SkipAsync(cancellationToken);
             }

@@ -160,7 +160,7 @@ namespace SharpCompress.Compressors.Deflate
                 }
 
                 //if (_workingBuffer.Length - _z.AvailableBytesOut > 0)
-                await _stream.WriteAsync(_workingBuffer, 0, _workingBuffer.Length - _z.AvailableBytesOut, cancellationToken);
+                await _stream.WriteAsync(new Memory<byte>(_workingBuffer).Slice(0, _workingBuffer.Length - _z.AvailableBytesOut), cancellationToken);
 
                 done = _z.AvailableBytesIn == 0 && _z.AvailableBytesOut != 0;
 
@@ -232,10 +232,10 @@ namespace SharpCompress.Compressors.Deflate
                         // Emit the GZIP trailer: CRC32 and  size mod 2^32
                         using var intBuf = MemoryPool<byte>.Shared.Rent(4);
                         BinaryPrimitives.WriteInt32LittleEndian(intBuf.Memory.Span, crc.Crc32Result);
-                        await _stream.WriteAsync(intBuf.Memory);
+                        await _stream.WriteAsync(intBuf.Memory.Slice(0,4));
                         var c2 = (int)(crc.TotalBytesRead & 0x00000000FFFFFFFF);
                         BinaryPrimitives.WriteInt32LittleEndian(intBuf.Memory.Span, c2);
-                        await _stream.WriteAsync(intBuf.Memory);
+                        await _stream.WriteAsync(intBuf.Memory.Slice(0,4));
                     }
                     else
                     {
@@ -414,7 +414,7 @@ namespace SharpCompress.Compressors.Deflate
 
             // read the header on the first read
             using var rented = MemoryPool<byte>.Shared.Rent(10);
-            int n = await _stream.ReadAsync(rented.Memory);
+            int n = await _stream.ReadAsync(rented.Memory.Slice(0,10));
             var header = rented.Memory;
 
             // workitem 8501: handle edge case (decompress empty stream)
@@ -444,7 +444,7 @@ namespace SharpCompress.Compressors.Deflate
 
                 var extraLength = (short)(header.Span[0] + header.Span[1] * 256);
                 using var extra = MemoryPool<byte>.Shared.Rent(extraLength);
-                n = await _stream.ReadAsync(extra.Memory);
+                n = await _stream.ReadAsync(extra.Memory.Slice(0, extraLength));
                 if (n != extraLength)
                 {
                     throw new ZlibException("Unexpected end-of-file reading GZIP header.");
