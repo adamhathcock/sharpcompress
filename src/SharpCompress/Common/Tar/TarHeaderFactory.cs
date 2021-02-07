@@ -1,5 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.IO;
+using System.Runtime.CompilerServices;
+using System.Threading;
 using SharpCompress.Common.Tar.Headers;
 using SharpCompress.IO;
 
@@ -7,17 +9,17 @@ namespace SharpCompress.Common.Tar
 {
     internal static class TarHeaderFactory
     {
-        internal static IEnumerable<TarHeader?> ReadHeader(StreamingMode mode, Stream stream, ArchiveEncoding archiveEncoding)
+        internal static async IAsyncEnumerable<TarHeader?> ReadHeader(StreamingMode mode, Stream stream, ArchiveEncoding archiveEncoding, 
+                                                                      [EnumeratorCancellation]CancellationToken cancellationToken)
         {
             while (true)
             {
                 TarHeader? header = null;
                 try
                 {
-                    BinaryReader reader = new BinaryReader(stream);
                     header = new TarHeader(archiveEncoding);
 
-                    if (!header.Read(reader))
+                    if (!await header.Read(stream, cancellationToken))
                     {
                         yield break;
                     }
@@ -25,10 +27,10 @@ namespace SharpCompress.Common.Tar
                     {
                         case StreamingMode.Seekable:
                             {
-                                header.DataStartPosition = reader.BaseStream.Position;
+                                header.DataStartPosition = stream.Position;
 
                                 //skip to nearest 512
-                                reader.BaseStream.Position += PadTo512(header.Size);
+                                stream.Position += PadTo512(header.Size);
                             }
                             break;
                         case StreamingMode.Streaming:

@@ -42,13 +42,15 @@ namespace SharpCompress.Archives
         {
         }
 
-        internal AbstractWritableArchive(ArchiveType type, Stream stream, ReaderOptions readerFactoryOptions)
-            : base(type, stream.AsAsyncEnumerable(), readerFactoryOptions)
+        internal AbstractWritableArchive(ArchiveType type, Stream stream, ReaderOptions readerFactoryOptions,
+                                         CancellationToken cancellationToken)
+            : base(type, stream.AsAsyncEnumerable(), readerFactoryOptions, cancellationToken)
         {
         }
 
-        internal AbstractWritableArchive(ArchiveType type, FileInfo fileInfo, ReaderOptions readerFactoryOptions)
-            : base(type, fileInfo, readerFactoryOptions)
+        internal AbstractWritableArchive(ArchiveType type, FileInfo fileInfo, ReaderOptions readerFactoryOptions,
+                                         CancellationToken cancellationToken)
+            : base(type, fileInfo, readerFactoryOptions, cancellationToken)
         {
         }
 

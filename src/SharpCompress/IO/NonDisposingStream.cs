@@ -1,5 +1,7 @@
 ﻿using System;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace SharpCompress.IO
 {
@@ -12,6 +14,16 @@ namespace SharpCompress.IO
         }
 
         public bool ThrowOnDispose { get; set; }
+
+        public override ValueTask DisposeAsync()
+        {
+            if (ThrowOnDispose)
+            {
+                throw new InvalidOperationException($"Attempt to dispose of a {nameof(NonDisposingStream)} when {nameof(ThrowOnDispose)} is {ThrowOnDispose}");
+            }
+
+            return base.DisposeAsync();
+        }
 
         protected override void Dispose(bool disposing)
         {
@@ -40,7 +52,17 @@ namespace SharpCompress.IO
 
         public override int Read(byte[] buffer, int offset, int count)
         {
-            return Stream.Read(buffer, offset, count);
+            throw new NotImplementedException();
+        }
+
+        public override ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = new CancellationToken())
+        {
+            return Stream.ReadAsync(buffer, cancellationToken);
+        }
+
+        public override Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+        {
+            return Stream.ReadAsync(buffer, offset, count, cancellationToken);
         }
 
         public override long Seek(long offset, SeekOrigin origin)
@@ -55,7 +77,17 @@ namespace SharpCompress.IO
 
         public override void Write(byte[] buffer, int offset, int count)
         {
-            Stream.Write(buffer, offset, count);
+            throw new NotImplementedException();
+        }
+
+        public override Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override ValueTask WriteAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken = new CancellationToken())
+        {
+            return Stream.WriteAsync(buffer, cancellationToken);
         }
 
 #if !NET461 && !NETSTANDARD2_0

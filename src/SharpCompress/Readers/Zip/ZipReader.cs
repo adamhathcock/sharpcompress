@@ -1,5 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.IO;
+using System.Runtime.CompilerServices;
+using System.Threading;
+using System.Threading.Tasks;
 using SharpCompress.Common;
 using SharpCompress.Common.Zip;
 using SharpCompress.Common.Zip.Headers;
@@ -35,9 +38,9 @@ namespace SharpCompress.Readers.Zip
 
         #endregion Open
 
-        protected override async IAsyncEnumerable<ZipEntry> GetEntries(Stream stream)
+        protected override async IAsyncEnumerable<ZipEntry> GetEntries(Stream stream, [EnumeratorCancellation] CancellationToken cancellationToken)
         {
-            await foreach (ZipHeader h in _headerFactory.ReadStreamHeader(stream))
+            await foreach (ZipHeader h in _headerFactory.ReadStreamHeader(stream).WithCancellation(cancellationToken))
             {
                 if (h != null)
                 {

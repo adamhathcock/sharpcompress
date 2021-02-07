@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using SharpCompress.Common;
 using SharpCompress.Readers;
@@ -19,7 +20,7 @@ namespace SharpCompress.Archives
 
         private bool disposed;
 
-        internal AbstractArchive(ArchiveType type, FileInfo fileInfo, ReaderOptions readerOptions)
+        internal AbstractArchive(ArchiveType type, FileInfo fileInfo, ReaderOptions readerOptions, CancellationToken cancellationToken)
         {
             Type = type;
             if (!fileInfo.Exists)
@@ -28,19 +29,19 @@ namespace SharpCompress.Archives
             }
             ReaderOptions = readerOptions;
             readerOptions.LeaveStreamOpen = false;
-            lazyVolumes = new LazyReadOnlyCollection<TVolume>(LoadVolumes(fileInfo));
-            lazyEntries = new LazyReadOnlyCollection<TEntry>(LoadEntries(Volumes));
+            lazyVolumes = new LazyReadOnlyCollection<TVolume>(LoadVolumes(fileInfo, cancellationToken));
+            lazyEntries = new LazyReadOnlyCollection<TEntry>(LoadEntries(Volumes, cancellationToken));
         }
 
 
-        protected abstract IAsyncEnumerable<TVolume> LoadVolumes(FileInfo file);
+        protected abstract IAsyncEnumerable<TVolume> LoadVolumes(FileInfo file, CancellationToken cancellationToken);
 
-        internal AbstractArchive(ArchiveType type, IAsyncEnumerable<Stream> streams, ReaderOptions readerOptions)
+        internal AbstractArchive(ArchiveType type, IAsyncEnumerable<Stream> streams, ReaderOptions readerOptions, CancellationToken cancellationToken)
         {
             Type = type;
             ReaderOptions = readerOptions;
-            lazyVolumes = new LazyReadOnlyCollection<TVolume>(LoadVolumes(streams.Select(CheckStreams)));
-            lazyEntries = new LazyReadOnlyCollection<TEntry>(LoadEntries(Volumes));
+            lazyVolumes = new LazyReadOnlyCollection<TVolume>(LoadVolumes(streams.Select(CheckStreams), cancellationToken));
+            lazyEntries = new LazyReadOnlyCollection<TEntry>(LoadEntries(Volumes, cancellationToken));
         }
 
         internal AbstractArchive(ArchiveType type)
@@ -89,8 +90,8 @@ namespace SharpCompress.Archives
             return await Entries.AggregateAsync(0L, (total, cf) => total + cf.Size);
         }
 
-        protected abstract IAsyncEnumerable<TVolume> LoadVolumes(IAsyncEnumerable<Stream> streams);
-        protected abstract IAsyncEnumerable<TEntry> LoadEntries(IAsyncEnumerable<TVolume> volumes);
+        protected abstract IAsyncEnumerable<TVolume> LoadVolumes(IAsyncEnumerable<Stream> streams, CancellationToken cancellationToken);
+        protected abstract IAsyncEnumerable<TEntry> LoadEntries(IAsyncEnumerable<TVolume> volumes, CancellationToken cancellationToken);
 
         IAsyncEnumerable<IArchiveEntry> IArchive.Entries => Entries.Select(x => (IArchiveEntry)x);
 

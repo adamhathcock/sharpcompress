@@ -2,7 +2,7 @@
 using System.IO;
 using SharpCompress.Common;
 using SharpCompress.Writers.GZip;
-//using SharpCompress.Writers.Tar;
+using SharpCompress.Writers.Tar;
 using SharpCompress.Writers.Zip;
 
 namespace SharpCompress.Writers
@@ -27,8 +27,7 @@ namespace SharpCompress.Writers
                     }
                 case ArchiveType.Tar:
                 {
-                    throw new NotImplementedException();
-                    //return new TarWriter(stream, new TarWriterOptions(writerOptions));
+                    return new TarWriter(stream, new TarWriterOptions(writerOptions));
                 }
                 default:
                     {

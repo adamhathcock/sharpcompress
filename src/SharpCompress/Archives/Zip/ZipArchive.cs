@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using SharpCompress.Common;
@@ -43,10 +44,11 @@ namespace SharpCompress.Archives.Zip
         /// </summary>
         /// <param name="fileInfo"></param>
         /// <param name="readerOptions"></param>
-        public static ZipArchive Open(FileInfo fileInfo, ReaderOptions? readerOptions = null)
+        public static ZipArchive Open(FileInfo fileInfo, ReaderOptions? readerOptions = null,
+                                      CancellationToken cancellationToken = default)
         {
             fileInfo.CheckNotNull(nameof(fileInfo));
-            return new ZipArchive(fileInfo, readerOptions ?? new ReaderOptions());
+            return new ZipArchive(fileInfo, readerOptions ?? new ReaderOptions(), cancellationToken);
         }
 
         /// <summary>
@@ -54,10 +56,11 @@ namespace SharpCompress.Archives.Zip
         /// </summary>
         /// <param name="stream"></param>
         /// <param name="readerOptions"></param>
-        public static ZipArchive Open(Stream stream, ReaderOptions? readerOptions = null)
+        public static ZipArchive Open(Stream stream, ReaderOptions? readerOptions = null,
+                                      CancellationToken cancellationToken = default)
         {
             stream.CheckNotNull(nameof(stream));
-            return new ZipArchive(stream, readerOptions ?? new ReaderOptions());
+            return new ZipArchive(stream, readerOptions ?? new ReaderOptions(), cancellationToken);
         }
 
         public static ValueTask<bool> IsZipFile(string filePath, string? password = null)
@@ -112,13 +115,15 @@ namespace SharpCompress.Archives.Zip
         /// </summary>
         /// <param name="fileInfo"></param>
         /// <param name="readerOptions"></param>
-        internal ZipArchive(FileInfo fileInfo, ReaderOptions readerOptions)
-            : base(ArchiveType.Zip, fileInfo, readerOptions)
+        internal ZipArchive(FileInfo fileInfo, ReaderOptions readerOptions,
+                            CancellationToken cancellationToken)
+            : base(ArchiveType.Zip, fileInfo, readerOptions, cancellationToken)
         {
             headerFactory = new SeekableZipHeaderFactory(readerOptions.Password, readerOptions.ArchiveEncoding);
         }
 
-        protected override IAsyncEnumerable<ZipVolume> LoadVolumes(FileInfo file)
+        protected override IAsyncEnumerable<ZipVolume> LoadVolumes(FileInfo file,
+                                                                   CancellationToken cancellationToken)
         {
             return new ZipVolume(file.OpenRead(), ReaderOptions).AsAsyncEnumerable();
         }
@@ -133,21 +138,24 @@ namespace SharpCompress.Archives.Zip
         /// </summary>
         /// <param name="stream"></param>
         /// <param name="readerOptions"></param>
-        internal ZipArchive(Stream stream, ReaderOptions readerOptions)
-            : base(ArchiveType.Zip, stream, readerOptions)
+        internal ZipArchive(Stream stream, ReaderOptions readerOptions,
+                            CancellationToken cancellationToken)
+            : base(ArchiveType.Zip, stream, readerOptions, cancellationToken)
         {
             headerFactory = new SeekableZipHeaderFactory(readerOptions.Password, readerOptions.ArchiveEncoding);
         }
 
-        protected override async IAsyncEnumerable<ZipVolume> LoadVolumes(IAsyncEnumerable<Stream> streams)
+        protected override async IAsyncEnumerable<ZipVolume> LoadVolumes(IAsyncEnumerable<Stream> streams,
+                                                                         [EnumeratorCancellation]CancellationToken cancellationToken)
         {
-            yield return new ZipVolume(await streams.FirstAsync(), ReaderOptions);
+            yield return new ZipVolume(await streams.FirstAsync(cancellationToken: cancellationToken), ReaderOptions);
         }
 
-        protected override async IAsyncEnumerable<ZipArchiveEntry> LoadEntries(IAsyncEnumerable<ZipVolume> volumes)
+        protected override async IAsyncEnumerable<ZipArchiveEntry> LoadEntries(IAsyncEnumerable<ZipVolume> volumes,
+                                                                               [EnumeratorCancellation]CancellationToken cancellationToken)
         {
             await Task.CompletedTask;
-            var volume = await volumes.SingleAsync();
+            var volume = await volumes.SingleAsync(cancellationToken: cancellationToken);
             Stream stream = volume.Stream;
             foreach (ZipHeader h in headerFactory.ReadSeekableHeader(stream))
             {

@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.IO;
+using System.Threading;
 using SharpCompress.Common;
 using SharpCompress.Common.GZip;
 
@@ -31,9 +32,9 @@ namespace SharpCompress.Readers.GZip
 
         #endregion Open
 
-        protected override IAsyncEnumerable<GZipEntry> GetEntries(Stream stream)
+        protected override IAsyncEnumerable<GZipEntry> GetEntries(Stream stream, CancellationToken cancellationToken)
         {
-            return GZipEntry.GetEntries(stream, Options);
+            return GZipEntry.GetEntries(stream, Options, cancellationToken);
         }
     }
 }

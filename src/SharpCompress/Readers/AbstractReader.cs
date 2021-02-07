@@ -81,11 +81,12 @@ namespace SharpCompress.Readers
             }
             if (entriesForCurrentReadStream is null)
             {
-                return await LoadStreamForReading(RequestInitialStream());
+                //TODO: real token?
+                return await LoadStreamForReading(RequestInitialStream(), CancellationToken.None);
             }
             if (!wroteCurrentEntry)
             {
-                SkipEntry();
+                await SkipEntry(CancellationToken.None);
             }
             wroteCurrentEntry = false;
             if (await NextEntryForCurrentStream())
@@ -96,7 +97,7 @@ namespace SharpCompress.Readers
             return false;
         }
 
-        protected async Task<bool> LoadStreamForReading(Stream stream)
+        protected async Task<bool> LoadStreamForReading(Stream stream, CancellationToken cancellationToken)
         {
             await (entriesForCurrentReadStream?.DisposeAsync() ?? new ValueTask(Task.CompletedTask));
             if (stream is null || !stream.CanRead)
@@ -105,7 +106,7 @@ namespace SharpCompress.Readers
                                                            + (Entry?.Key ?? "unknown") +
                                                            "'. A new readable stream is required.  Use Cancel if it was intended.");
             }
-            entriesForCurrentReadStream = GetEntries(stream).GetAsyncEnumerator();
+            entriesForCurrentReadStream = GetEntries(stream, cancellationToken).GetAsyncEnumerator(cancellationToken);
             return await (entriesForCurrentReadStream?.MoveNextAsync() ?? new ValueTask<bool>(Task.FromResult(false)));
         }
 
@@ -119,19 +120,19 @@ namespace SharpCompress.Readers
             return await (entriesForCurrentReadStream?.MoveNextAsync() ?? new ValueTask<bool>(Task.FromResult(false)));
         }
 
-        protected abstract IAsyncEnumerable<TEntry> GetEntries(Stream stream);
+        protected abstract IAsyncEnumerable<TEntry> GetEntries(Stream stream, CancellationToken cancellationToken);
 
         #region Entry Skip/Write
 
-        private void SkipEntry()
+        private async ValueTask SkipEntry(CancellationToken cancellationToken)
         {
             if (Entry?.IsDirectory == true)
             {
-                Skip();
+                await SkipAsync(cancellationToken);
             }
         }
 
-        private void Skip()
+        private async ValueTask SkipAsync(CancellationToken cancellationToken)
         {
             if (Entry is null)
             {
@@ -148,15 +149,15 @@ namespace SharpCompress.Readers
                 if (rawStream != null)
                 {
                     var bytesToAdvance = Entry.CompressedSize;
-                    rawStream.Skip(bytesToAdvance);
+                    await rawStream.SkipAsync(bytesToAdvance, cancellationToken: cancellationToken);
                     part.Skipped = true;
                     return;
                 }
             }
             //don't know the size so we have to try to decompress to skip
-            using (var s = OpenEntryStream())
+            await using (var s = OpenEntryStream())
             {
-                s.Skip();
+                await s.SkipAsync(cancellationToken);
             }
         }
 

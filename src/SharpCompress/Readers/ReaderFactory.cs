@@ -3,7 +3,7 @@ using System.IO;
 using System.Threading.Tasks;
 using SharpCompress.Archives.GZip;
 //using SharpCompress.Archives.Rar;
-//using SharpCompress.Archives.Tar;
+using SharpCompress.Archives.Tar;
 using SharpCompress.Archives.Zip;
 using SharpCompress.Common;
 using SharpCompress.Compressors;
@@ -12,7 +12,7 @@ using SharpCompress.Compressors.Deflate;
 using SharpCompress.IO;
 using SharpCompress.Readers.GZip;
 //using SharpCompress.Readers.Rar;
-//using SharpCompress.Readers.Tar;
+using SharpCompress.Readers.Tar;
 using SharpCompress.Readers.Zip;
 using SharpCompress.Compressors.LZMA;
 using SharpCompress.Compressors.Xz;
@@ -45,12 +45,12 @@ namespace SharpCompress.Readers
             if (await GZipArchive.IsGZipFileAsync(rewindableStream))
             {
                 rewindableStream.Rewind(false);
-                /*GZipStream testStream = new GZipStream(rewindableStream, CompressionMode.Decompress);
-                if (TarArchive.IsTarFile(testStream))
+                GZipStream testStream = new GZipStream(rewindableStream, CompressionMode.Decompress);
+                if (await TarArchive.IsTarFileAsync(testStream))
                 {
                     rewindableStream.Rewind(true);
                     return new TarReader(rewindableStream, options, CompressionType.GZip);
-                }           */
+                }          
                 rewindableStream.Rewind(true);
                 return GZipReader.Open(rewindableStream, options);
             }
@@ -59,38 +59,38 @@ namespace SharpCompress.Readers
             if (BZip2Stream.IsBZip2(rewindableStream))
             {
                 rewindableStream.Rewind(false);
-                /*BZip2Stream testStream = new BZip2Stream(new NonDisposingStream(rewindableStream), CompressionMode.Decompress, false);
-                if (TarArchive.IsTarFile(testStream))
+                BZip2Stream testStream = new BZip2Stream(new NonDisposingStream(rewindableStream), CompressionMode.Decompress, false);
+                if (await TarArchive.IsTarFileAsync(testStream))
                 {
                     rewindableStream.Rewind(true);
                     return new TarReader(rewindableStream, options, CompressionType.BZip2);
-                }    */
+                }    
             }
 
             rewindableStream.Rewind(false);
             if (LZipStream.IsLZipFile(rewindableStream))
             {
                 rewindableStream.Rewind(false);
-                /* LZipStream testStream = new LZipStream(new NonDisposingStream(rewindableStream), CompressionMode.Decompress);
-                 if (TarArchive.IsTarFile(testStream))
+                 LZipStream testStream = new LZipStream(new NonDisposingStream(rewindableStream), CompressionMode.Decompress);
+                 if (await TarArchive.IsTarFileAsync(testStream))
                  {
                      rewindableStream.Rewind(true);
                      return new TarReader(rewindableStream, options, CompressionType.LZip);
-                 }  */
+                 }  
             }
             rewindableStream.Rewind(false);
            /* if (RarArchive.IsRarFile(rewindableStream, options))
             {
                 rewindableStream.Rewind(true);
                 return RarReader.Open(rewindableStream, options);
-            }
+            }   */
 
             rewindableStream.Rewind(false);
-            if (TarArchive.IsTarFile(rewindableStream))
+            if (await TarArchive.IsTarFileAsync(rewindableStream))
             {
                 rewindableStream.Rewind(true);
-                return TarReader.Open(rewindableStream, options);
-            }  */
+                return await TarReader.OpenAsync(rewindableStream, options);
+            }  
             rewindableStream.Rewind(false);
             if (XZStream.IsXZStream(rewindableStream))
             {

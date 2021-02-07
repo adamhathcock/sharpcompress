@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using SharpCompress.Common;
@@ -33,10 +34,11 @@ namespace SharpCompress.Archives.Tar
         /// </summary>
         /// <param name="fileInfo"></param>
         /// <param name="readerOptions"></param>
-        public static TarArchive Open(FileInfo fileInfo, ReaderOptions? readerOptions = null)
+        public static TarArchive Open(FileInfo fileInfo, ReaderOptions? readerOptions = null,
+                                      CancellationToken cancellationToken = default)
         {
             fileInfo.CheckNotNull(nameof(fileInfo));
-            return new TarArchive(fileInfo, readerOptions ?? new ReaderOptions());
+            return new TarArchive(fileInfo, readerOptions ?? new ReaderOptions(), cancellationToken);
         }
 
         /// <summary>
@@ -44,34 +46,35 @@ namespace SharpCompress.Archives.Tar
         /// </summary>
         /// <param name="stream"></param>
         /// <param name="readerOptions"></param>
-        public static TarArchive Open(Stream stream, ReaderOptions? readerOptions = null)
+        public static TarArchive Open(Stream stream, ReaderOptions? readerOptions = null,
+                    CancellationToken cancellationToken = default)
         {
             stream.CheckNotNull(nameof(stream));
-            return new TarArchive(stream, readerOptions ?? new ReaderOptions());
+            return new TarArchive(stream, readerOptions ?? new ReaderOptions(), cancellationToken);
         }
 
-        public static bool IsTarFile(string filePath)
+        public static ValueTask<bool> IsTarFileAsync(string filePath, CancellationToken cancellationToken = default)
         {
-            return IsTarFile(new FileInfo(filePath));
+            return IsTarFileAsync(new FileInfo(filePath), cancellationToken);
         }
 
-        public static bool IsTarFile(FileInfo fileInfo)
+        public static async ValueTask<bool> IsTarFileAsync(FileInfo fileInfo, CancellationToken cancellationToken = default)
         {
             if (!fileInfo.Exists)
             {
                 return false;
             }
 
-            using Stream stream = fileInfo.OpenRead();
-            return IsTarFile(stream);
+            await using Stream stream = fileInfo.OpenRead();
+            return await IsTarFileAsync(stream, cancellationToken);
         }
 
-        public static bool IsTarFile(Stream stream)
+        public static async ValueTask<bool> IsTarFileAsync(Stream stream, CancellationToken cancellationToken = default)
         {
             try
             {
-                TarHeader tarHeader = new TarHeader(new ArchiveEncoding());
-                bool readSucceeded = tarHeader.Read(new BinaryReader(stream));
+                TarHeader tarHeader = new(new ArchiveEncoding());
+                bool readSucceeded = await tarHeader.Read(stream, cancellationToken);
                 bool isEmptyArchive = tarHeader.Name.Length == 0 && tarHeader.Size == 0 && Enum.IsDefined(typeof(EntryType), tarHeader.EntryType);
                 return readSucceeded || isEmptyArchive;
             }
@@ -86,14 +89,15 @@ namespace SharpCompress.Archives.Tar
         /// </summary>
         /// <param name="fileInfo"></param>
         /// <param name="readerOptions"></param>
-        internal TarArchive(FileInfo fileInfo, ReaderOptions readerOptions)
-            : base(ArchiveType.Tar, fileInfo, readerOptions)
+        internal TarArchive(FileInfo fileInfo, ReaderOptions readerOptions,
+                            CancellationToken cancellationToken)
+            : base(ArchiveType.Tar, fileInfo, readerOptions, cancellationToken)
         {
         }
 
-        protected override IEnumerable<TarVolume> LoadVolumes(FileInfo file)
+        protected override IAsyncEnumerable<TarVolume> LoadVolumes(FileInfo file, CancellationToken cancellationToken)
         {
-            return new TarVolume(file.OpenRead(), ReaderOptions).AsEnumerable();
+            return new TarVolume(file.OpenRead(), ReaderOptions).AsAsyncEnumerable();
         }
 
         /// <summary>
@@ -101,8 +105,9 @@ namespace SharpCompress.Archives.Tar
         /// </summary>
         /// <param name="stream"></param>
         /// <param name="readerOptions"></param>
-        internal TarArchive(Stream stream, ReaderOptions readerOptions)
-            : base(ArchiveType.Tar, stream, readerOptions)
+        internal TarArchive(Stream stream, ReaderOptions readerOptions,
+                            CancellationToken cancellationToken)
+            : base(ArchiveType.Tar, stream, readerOptions, cancellationToken)
         {
         }
 
@@ -111,16 +116,18 @@ namespace SharpCompress.Archives.Tar
         {
         }
 
-        protected override IEnumerable<TarVolume> LoadVolumes(IEnumerable<Stream> streams)
+        protected override async IAsyncEnumerable<TarVolume> LoadVolumes(IAsyncEnumerable<Stream> streams, 
+                                                                         [EnumeratorCancellation]CancellationToken cancellationToken)
         {
-            return new TarVolume(streams.First(), ReaderOptions).AsEnumerable();
+            yield return new TarVolume(await streams.FirstAsync(cancellationToken: cancellationToken), ReaderOptions);
         }
 
-        protected override IEnumerable<TarArchiveEntry> LoadEntries(IEnumerable<TarVolume> volumes)
+        protected override async IAsyncEnumerable<TarArchiveEntry> LoadEntries(IAsyncEnumerable<TarVolume> volumes, 
+                                                                               [EnumeratorCancellation]CancellationToken cancellationToken)
         {
-            Stream stream = volumes.Single().Stream;
+            Stream stream = (await volumes.SingleAsync(cancellationToken: cancellationToken)).Stream;
             TarHeader? previousHeader = null;
-            foreach (TarHeader? header in TarHeaderFactory.ReadHeader(StreamingMode.Seekable, stream, ReaderOptions.ArchiveEncoding))
+            await foreach (TarHeader? header in TarHeaderFactory.ReadHeader(StreamingMode.Seekable, stream, ReaderOptions.ArchiveEncoding, cancellationToken))
             {
                 if (header != null)
                 {
@@ -161,35 +168,37 @@ namespace SharpCompress.Archives.Tar
 
         public static TarArchive Create()
         {
-            return new TarArchive();
+            return new();
         }
 
-        protected override TarArchiveEntry CreateEntryInternal(string filePath, Stream source,
-                                                               long size, DateTime? modified, bool closeStream)
+        protected override ValueTask<TarArchiveEntry> CreateEntryInternal(string filePath, Stream source,
+                                                               long size, DateTime? modified, bool closeStream,
+                                                               CancellationToken cancellationToken)
         {
-            return new TarWritableArchiveEntry(this, source, CompressionType.Unknown, filePath, size, modified,
-                                               closeStream);
+            return new (new TarWritableArchiveEntry(this, source, CompressionType.Unknown, filePath, size, modified,
+                                               closeStream));
         }
 
-        protected override async Task SaveToAsync(Stream stream, WriterOptions options,
-                                            IEnumerable<TarArchiveEntry> oldEntries,
-                                            IEnumerable<TarArchiveEntry> newEntries,
-                                            CancellationToken cancellationToken = default)
+        protected override async ValueTask SaveToAsync(Stream stream, WriterOptions options,
+                                                       IAsyncEnumerable<TarArchiveEntry> oldEntries,
+                                                       IAsyncEnumerable<TarArchiveEntry> newEntries,
+                                                       CancellationToken cancellationToken = default)
         {
             await using var writer = new TarWriter(stream, new TarWriterOptions(options));
-            foreach (var entry in oldEntries.Concat(newEntries)
-                                            .Where(x => !x.IsDirectory))
+            await foreach (var entry in oldEntries.Concat(newEntries)
+                                                  .Where(x => !x.IsDirectory)
+                                                  .WithCancellation(cancellationToken))
             {
                 await using var entryStream = entry.OpenEntryStream();
                 await writer.WriteAsync(entry.Key, entryStream, entry.LastModifiedTime, cancellationToken);
             }
         }
 
-        protected override IReader CreateReaderForSolidExtraction()
+        protected override async ValueTask<IReader> CreateReaderForSolidExtraction()
         {
-            var stream = Volumes.Single().Stream;
+            var stream = (await Volumes.SingleAsync()).Stream;
             stream.Position = 0;
-            return TarReader.Open(stream);
+            return await TarReader.OpenAsync(stream);
         }
     }
 }

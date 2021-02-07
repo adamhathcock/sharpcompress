@@ -1,5 +1,7 @@
 ﻿using System;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 using SharpCompress.Readers;
 
 namespace SharpCompress.Common
@@ -20,25 +22,29 @@ namespace SharpCompress.Common
         /// <summary>
         /// When reading a stream from OpenEntryStream, the stream must be completed so use this to finish reading the entire entry.
         /// </summary>
-        public void SkipEntry()
+        public async ValueTask SkipEntryAsync(CancellationToken cancellationToken = default)
         {
-            this.Skip();
+            await this.SkipAsync(cancellationToken);
             _completed = true;
         }
 
-        protected override void Dispose(bool disposing)
+        public override async ValueTask DisposeAsync()
         {
             if (!(_completed || _reader.Cancelled))
             {
-                SkipEntry();
+                await SkipEntryAsync();
             }
             if (_isDisposed)
             {
                 return;
             }
             _isDisposed = true;
-            base.Dispose(disposing);
-            _stream.Dispose();
+            await _stream.DisposeAsync();
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            throw new NotImplementedException();
         }
 
         public override bool CanRead => true;
@@ -55,9 +61,9 @@ namespace SharpCompress.Common
 
         public override long Position { get => throw new NotSupportedException(); set => throw new NotSupportedException(); }
 
-        public override int Read(byte[] buffer, int offset, int count)
+        public override async ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default)
         {
-            int read = _stream.Read(buffer, offset, count);
+            int read = await _stream.ReadAsync(buffer, cancellationToken);
             if (read <= 0)
             {
                 _completed = true;
@@ -65,14 +71,14 @@ namespace SharpCompress.Common
             return read;
         }
 
+        public override int Read(byte[] buffer, int offset, int count)
+        {
+            throw new NotImplementedException();
+        }
+
         public override int ReadByte()
         {
-            int value = _stream.ReadByte();
-            if (value == -1)
-            {
-                _completed = true;
-            }
-            return value;
+            throw new NotImplementedException();
         }
 
         public override long Seek(long offset, SeekOrigin origin)
