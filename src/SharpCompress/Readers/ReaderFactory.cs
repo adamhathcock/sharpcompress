@@ -42,7 +42,7 @@ namespace SharpCompress.Readers
                 return ZipReader.Open(rewindableStream, options);
             }
             rewindableStream.Rewind(false);
-            if (GZipArchive.IsGZipFile(rewindableStream))
+            if (await GZipArchive.IsGZipFileAsync(rewindableStream))
             {
                 rewindableStream.Rewind(false);
                 /*GZipStream testStream = new GZipStream(rewindableStream, CompressionMode.Decompress);

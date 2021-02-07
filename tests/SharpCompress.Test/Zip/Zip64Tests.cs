@@ -201,11 +201,11 @@ namespace SharpCompress.Test.Zip
 
         public async ValueTask<(long, long)> ReadArchive(string filename)
         {
-            using (var archive = await ArchiveFactory.OpenAsync(filename))
+            await using (var archive = await ArchiveFactory.OpenAsync(filename))
             {
                 return (
-                    archive.Entries.Count(),
-                    archive.Entries.Select(x => x.Size).Sum()
+                    await archive.Entries.CountAsync(),
+                    await archive.Entries.Select(x => x.Size).SumAsync()
                 );
             }
         }

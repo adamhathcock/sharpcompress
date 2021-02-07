@@ -2,25 +2,20 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using SharpCompress.Common;
 using SharpCompress.Readers;
 
 namespace SharpCompress.Archives
 {
-    public abstract class AbstractArchive<TEntry, TVolume> : IArchive, IArchiveExtractionListener
+    public abstract class AbstractArchive<TEntry, TVolume> : IArchive
         where TEntry : IArchiveEntry
         where TVolume : IVolume
     {
         private readonly LazyReadOnlyCollection<TVolume> lazyVolumes;
         private readonly LazyReadOnlyCollection<TEntry> lazyEntries;
 
-        public event EventHandler<ArchiveExtractionEventArgs<IArchiveEntry>>? EntryExtractionBegin;
-        public event EventHandler<ArchiveExtractionEventArgs<IArchiveEntry>>? EntryExtractionEnd;
-
-        public event EventHandler<CompressedBytesReadEventArgs>? CompressedBytesRead;
-        public event EventHandler<FilePartExtractionBeginEventArgs>? FilePartExtractionBegin;
-
-        protected ReaderOptions ReaderOptions { get; }
+        protected ReaderOptions ReaderOptions { get; } = new ();
 
         private bool disposed;
 
@@ -38,9 +33,9 @@ namespace SharpCompress.Archives
         }
 
 
-        protected abstract IEnumerable<TVolume> LoadVolumes(FileInfo file);
+        protected abstract IAsyncEnumerable<TVolume> LoadVolumes(FileInfo file);
 
-        internal AbstractArchive(ArchiveType type, IEnumerable<Stream> streams, ReaderOptions readerOptions)
+        internal AbstractArchive(ArchiveType type, IAsyncEnumerable<Stream> streams, ReaderOptions readerOptions)
         {
             Type = type;
             ReaderOptions = readerOptions;
@@ -48,26 +43,14 @@ namespace SharpCompress.Archives
             lazyEntries = new LazyReadOnlyCollection<TEntry>(LoadEntries(Volumes));
         }
 
-#nullable disable
         internal AbstractArchive(ArchiveType type)
         {
             Type = type;
-            lazyVolumes = new LazyReadOnlyCollection<TVolume>(Enumerable.Empty<TVolume>());
-            lazyEntries = new LazyReadOnlyCollection<TEntry>(Enumerable.Empty<TEntry>());
+            lazyVolumes = new LazyReadOnlyCollection<TVolume>( AsyncEnumerable.Empty<TVolume>());
+            lazyEntries = new LazyReadOnlyCollection<TEntry>(AsyncEnumerable.Empty<TEntry>());
         }
-#nullable enable
 
         public ArchiveType Type { get; }
-
-        void IArchiveExtractionListener.FireEntryExtractionBegin(IArchiveEntry entry)
-        {
-            EntryExtractionBegin?.Invoke(this, new ArchiveExtractionEventArgs<IArchiveEntry>(entry));
-        }
-
-        void IArchiveExtractionListener.FireEntryExtractionEnd(IArchiveEntry entry)
-        {
-            EntryExtractionEnd?.Invoke(this, new ArchiveExtractionEventArgs<IArchiveEntry>(entry));
-        }
 
         private static Stream CheckStreams(Stream stream)
         {
@@ -81,61 +64,46 @@ namespace SharpCompress.Archives
         /// <summary>
         /// Returns an ReadOnlyCollection of all the RarArchiveEntries across the one or many parts of the RarArchive.
         /// </summary>
-        public virtual ICollection<TEntry> Entries => lazyEntries;
+        public virtual IAsyncEnumerable<TEntry> Entries => lazyEntries;
 
         /// <summary>
         /// Returns an ReadOnlyCollection of all the RarArchiveVolumes across the one or many parts of the RarArchive.
         /// </summary>
-        public ICollection<TVolume> Volumes => lazyVolumes;
+        public IAsyncEnumerable<TVolume> Volumes => lazyVolumes;
 
         /// <summary>
         /// The total size of the files compressed in the archive.
         /// </summary>
-        public virtual long TotalSize => Entries.Aggregate(0L, (total, cf) => total + cf.CompressedSize);
+        public virtual async ValueTask<long> TotalSizeAsync()
+        {
+            await EnsureEntriesLoaded();
+            return await Entries.AggregateAsync(0L, (total, cf) => total + cf.CompressedSize);
+        }
 
         /// <summary>
         /// The total size of the files as uncompressed in the archive.
         /// </summary>
-        public virtual long TotalUncompressSize => Entries.Aggregate(0L, (total, cf) => total + cf.Size);
+        public virtual async ValueTask<long> TotalUncompressedSizeAsync()
+        {
+            await EnsureEntriesLoaded();
+            return await Entries.AggregateAsync(0L, (total, cf) => total + cf.Size);
+        }
 
-        protected abstract IEnumerable<TVolume> LoadVolumes(IEnumerable<Stream> streams);
-        protected abstract IEnumerable<TEntry> LoadEntries(IEnumerable<TVolume> volumes);
+        protected abstract IAsyncEnumerable<TVolume> LoadVolumes(IAsyncEnumerable<Stream> streams);
+        protected abstract IAsyncEnumerable<TEntry> LoadEntries(IAsyncEnumerable<TVolume> volumes);
 
-        IEnumerable<IArchiveEntry> IArchive.Entries => Entries.Cast<IArchiveEntry>();
+        IAsyncEnumerable<IArchiveEntry> IArchive.Entries => Entries.Select(x => (IArchiveEntry)x);
 
-        IEnumerable<IVolume> IArchive.Volumes => lazyVolumes.Cast<IVolume>();
+        IAsyncEnumerable<IVolume> IArchive.Volumes => lazyVolumes.Select(x => (IVolume)x);
 
-        public virtual void Dispose()
+        public virtual async ValueTask DisposeAsync()
         {
             if (!disposed)
             {
-                lazyVolumes.ForEach(v => v.Dispose());
+                await lazyVolumes.ForEachAsync(v => v.Dispose());
                 lazyEntries.GetLoaded().Cast<Entry>().ForEach(x => x.Close());
                 disposed = true;
             }
-        }
-
-        void IArchiveExtractionListener.EnsureEntriesLoaded()
-        {
-            lazyEntries.EnsureFullyLoaded();
-            lazyVolumes.EnsureFullyLoaded();
-        }
-
-        void IExtractionListener.FireCompressedBytesRead(long currentPartCompressedBytes, long compressedReadBytes)
-        {
-            CompressedBytesRead?.Invoke(this, new CompressedBytesReadEventArgs(
-                currentFilePartCompressedBytesRead: currentPartCompressedBytes,
-                compressedBytesRead: compressedReadBytes
-            ));
-        }
-
-        void IExtractionListener.FireFilePartExtractionBegin(string name, long size, long compressedSize)
-        {
-            FilePartExtractionBegin?.Invoke(this, new FilePartExtractionBeginEventArgs(
-                compressedSize: compressedSize,
-                size: size,
-                name: name
-            ));
         }
 
         /// <summary>
@@ -149,29 +117,32 @@ namespace SharpCompress.Archives
         /// occur if this is used at the same time as other extraction methods on this instance.
         /// </summary>
         /// <returns></returns>
-        public IReader ExtractAllEntries()
+        public async ValueTask<IReader> ExtractAllEntries()
         {
-            ((IArchiveExtractionListener)this).EnsureEntriesLoaded();
-            return CreateReaderForSolidExtraction();
+            await EnsureEntriesLoaded();
+            return await CreateReaderForSolidExtraction();
+        }
+        
+        public async ValueTask EnsureEntriesLoaded()
+        {
+            await lazyEntries.EnsureFullyLoaded();
+            await lazyVolumes.EnsureFullyLoaded();
         }
 
-        protected abstract IReader CreateReaderForSolidExtraction();
+        protected abstract ValueTask<IReader> CreateReaderForSolidExtraction();
 
         /// <summary>
         /// Archive is SOLID (this means the Archive saved bytes by reusing information which helps for archives containing many small files).
         /// </summary>
-        public virtual bool IsSolid => false;
+        public virtual ValueTask<bool> IsSolidAsync() => new(false);
 
         /// <summary>
         /// The archive can find all the parts of the archive needed to fully extract the archive.  This forces the parsing of the entire archive.
         /// </summary>
-        public bool IsComplete
+        public async ValueTask<bool> IsCompleteAsync()
         {
-            get
-            {
-                ((IArchiveExtractionListener)this).EnsureEntriesLoaded();
-                return Entries.All(x => x.IsComplete);
-            }
+            await EnsureEntriesLoaded();
+            return await Entries.AllAsync(x => x.IsComplete);
         }
     }
 }

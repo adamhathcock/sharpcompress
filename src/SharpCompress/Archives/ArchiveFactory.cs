@@ -20,7 +20,7 @@ namespace SharpCompress.Archives
         /// <param name="stream"></param>
         /// <param name="readerOptions"></param>
         /// <returns></returns>
-        public static async ValueTask<IArchive> OpenAsync(Stream stream, ReaderOptions? readerOptions = null)
+        public static async ValueTask<IArchive> OpenAsync(Stream stream, ReaderOptions? readerOptions = null, CancellationToken cancellationToken = default)
         {
             stream.CheckNotNull(nameof(stream));
             if (!stream.CanRead || !stream.CanSeek)
@@ -40,7 +40,7 @@ namespace SharpCompress.Archives
                 return SevenZipArchive.Open(stream, readerOptions);
             }
             stream.Seek(0, SeekOrigin.Begin);  */
-            if (GZipArchive.IsGZipFile(stream))
+            if (await GZipArchive.IsGZipFileAsync(stream, cancellationToken))
             {
                 stream.Seek(0, SeekOrigin.Begin);
                 return GZipArchive.Open(stream, readerOptions);
@@ -87,7 +87,7 @@ namespace SharpCompress.Archives
         /// </summary>
         /// <param name="fileInfo"></param>
         /// <param name="options"></param>
-        public static async ValueTask<IArchive> OpenAsync(FileInfo fileInfo, ReaderOptions? options = null)
+        public static async ValueTask<IArchive> OpenAsync(FileInfo fileInfo, ReaderOptions? options = null, CancellationToken cancellationToken = default)
         {
             fileInfo.CheckNotNull(nameof(fileInfo));
             options ??= new ReaderOptions { LeaveStreamOpen = false };
@@ -103,7 +103,7 @@ namespace SharpCompress.Archives
                 return SevenZipArchive.Open(fileInfo, options);
             }
             stream.Seek(0, SeekOrigin.Begin);     */
-            if (GZipArchive.IsGZipFile(stream))
+            if (await GZipArchive.IsGZipFileAsync(stream, cancellationToken))
             {
                 return GZipArchive.Open(fileInfo, options);
             }
@@ -128,8 +128,8 @@ namespace SharpCompress.Archives
                                                  ExtractionOptions? options = null, 
                                                  CancellationToken cancellationToken = default)
         {
-            using IArchive archive = await OpenAsync(sourceArchive);
-            foreach (IArchiveEntry entry in archive.Entries)
+            await using IArchive archive = await OpenAsync(sourceArchive);
+            await foreach (IArchiveEntry entry in archive.Entries.WithCancellation(cancellationToken))
             {
                 await entry.WriteEntryToDirectoryAsync(destinationDirectory, options, cancellationToken);
             }

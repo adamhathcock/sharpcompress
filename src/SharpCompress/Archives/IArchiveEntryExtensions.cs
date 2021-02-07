@@ -15,10 +15,8 @@ namespace SharpCompress.Archives
                 throw new ExtractionException("Entry is a file directory and cannot be extracted.");
             }
 
-            var streamListener = (IArchiveExtractionListener)archiveEntry.Archive;
-            streamListener.EnsureEntriesLoaded();
-            streamListener.FireEntryExtractionBegin(archiveEntry);
-            streamListener.FireFilePartExtractionBegin(archiveEntry.Key, archiveEntry.Size, archiveEntry.CompressedSize);
+            var archive = archiveEntry.Archive;
+            await archive.EnsureEntriesLoaded();
             var entryStream = archiveEntry.OpenEntryStream();
             if (entryStream is null)
             {
@@ -26,12 +24,8 @@ namespace SharpCompress.Archives
             }
             await using (entryStream)
             {
-                await using (Stream s = new ListeningStream(streamListener, entryStream))
-                {
-                    await s.TransferToAsync(streamToWriteTo, cancellationToken);
-                }
+                await entryStream.TransferToAsync(streamToWriteTo, cancellationToken);
             }
-            streamListener.FireEntryExtractionEnd(archiveEntry);
         }
 
         /// <summary>

@@ -14,7 +14,7 @@ namespace SharpCompress.Archives
         where TEntry : IArchiveEntry
         where TVolume : IVolume
     {
-        private class RebuildPauseDisposable : IDisposable
+        private class RebuildPauseDisposable : IAsyncDisposable
         {
             private readonly AbstractWritableArchive<TEntry, TVolume> archive;
 
@@ -24,16 +24,16 @@ namespace SharpCompress.Archives
                 archive.pauseRebuilding = true;
             }
 
-            public void Dispose()
+            public async ValueTask DisposeAsync()
             {
                 archive.pauseRebuilding = false;
-                archive.RebuildModifiedCollection();
+                await archive.RebuildModifiedCollection();
             }
         }
-        private readonly List<TEntry> newEntries = new List<TEntry>();
-        private readonly List<TEntry> removedEntries = new List<TEntry>();
+        private readonly List<TEntry> newEntries = new();
+        private readonly List<TEntry> removedEntries = new();
 
-        private readonly List<TEntry> modifiedEntries = new List<TEntry>();
+        private readonly List<TEntry> modifiedEntries = new();
         private bool hasModifications;
         private bool pauseRebuilding;
 
@@ -43,7 +43,7 @@ namespace SharpCompress.Archives
         }
 
         internal AbstractWritableArchive(ArchiveType type, Stream stream, ReaderOptions readerFactoryOptions)
-            : base(type, stream.AsEnumerable(), readerFactoryOptions)
+            : base(type, stream.AsAsyncEnumerable(), readerFactoryOptions)
         {
         }
 
@@ -52,24 +52,24 @@ namespace SharpCompress.Archives
         {
         }
 
-        public override ICollection<TEntry> Entries
+        public override IAsyncEnumerable<TEntry> Entries
         {
             get
             {
                 if (hasModifications)
                 {
-                    return modifiedEntries;
+                    return modifiedEntries.ToAsyncEnumerable();
                 }
                 return base.Entries;
             }
         }
 
-        public IDisposable PauseEntryRebuilding()
+        public IAsyncDisposable PauseEntryRebuilding()
         {
             return new RebuildPauseDisposable(this);
         }
 
-        private void RebuildModifiedCollection()
+        private async ValueTask RebuildModifiedCollection()
         {
             if (pauseRebuilding)
             {
@@ -78,56 +78,57 @@ namespace SharpCompress.Archives
             hasModifications = true;
             newEntries.RemoveAll(v => removedEntries.Contains(v));
             modifiedEntries.Clear();
-            modifiedEntries.AddRange(OldEntries.Concat(newEntries));
+            modifiedEntries.AddRange(await OldEntries.Concat(newEntries.ToAsyncEnumerable()).ToListAsync());
         }
 
-        private IEnumerable<TEntry> OldEntries { get { return base.Entries.Where(x => !removedEntries.Contains(x)); } }
+        private IAsyncEnumerable<TEntry> OldEntries { get { return base.Entries.Where(x => !removedEntries.Contains(x)); } }
 
-        public void RemoveEntry(TEntry entry)
+        public async ValueTask RemoveEntryAsync(TEntry entry)
         {
             if (!removedEntries.Contains(entry))
             {
                 removedEntries.Add(entry);
-                RebuildModifiedCollection();
+                await RebuildModifiedCollection();
             }
         }
 
-        void IWritableArchive.RemoveEntry(IArchiveEntry entry)
+        ValueTask IWritableArchive.RemoveEntryAsync(IArchiveEntry entry, CancellationToken cancellationToken)
         {
-            RemoveEntry((TEntry)entry);
+            return RemoveEntryAsync((TEntry)entry);
         }
 
-        public TEntry AddEntry(string key, Stream source,
-                               long size = 0, DateTime? modified = null)
+        public ValueTask<TEntry>  AddEntryAsync(string key, Stream source,
+                                                       long size = 0, DateTime? modified = null, 
+                                                       CancellationToken cancellationToken = default)
         {
-            return AddEntry(key, source, false, size, modified);
+            return AddEntryAsync(key, source, false, size, modified, cancellationToken);
         }
 
-        IArchiveEntry IWritableArchive.AddEntry(string key, Stream source, bool closeStream, long size, DateTime? modified)
+        async ValueTask<IArchiveEntry> IWritableArchive.AddEntryAsync(string key, Stream source, bool closeStream, long size, DateTime? modified, CancellationToken cancellationToken)
         {
-            return AddEntry(key, source, closeStream, size, modified);
+            return await AddEntryAsync(key, source, closeStream, size, modified, cancellationToken);
         }
 
-        public TEntry AddEntry(string key, Stream source, bool closeStream,
-                               long size = 0, DateTime? modified = null)
+        public async ValueTask<TEntry> AddEntryAsync(string key, Stream source, bool closeStream,
+                                    long size = 0, DateTime? modified = null, CancellationToken cancellationToken = default)
         {
             if (key.Length > 0 && key[0] is '/' or '\\')
             {
                 key = key.Substring(1);
             }
-            if (DoesKeyMatchExisting(key))
+            if (await DoesKeyMatchExisting(key))
             {
                 throw new ArchiveException("Cannot add entry with duplicate key: " + key);
             }
-            var entry = CreateEntry(key, source, size, modified, closeStream);
+            var entry = await CreateEntry(key, source, size, modified, closeStream, cancellationToken);
             newEntries.Add(entry);
-            RebuildModifiedCollection();
+            await RebuildModifiedCollection();
             return entry;
         }
 
-        private bool DoesKeyMatchExisting(string key)
+        private async ValueTask<bool> DoesKeyMatchExisting(string key)
         {
-            foreach (var path in Entries.Select(x => x.Key))
+            await foreach (var path in Entries.Select(x => x.Key))
             {
                 var p = path.Replace('/', '\\');
                 if (p.Length > 0 && p[0] == '\\')
@@ -139,32 +140,32 @@ namespace SharpCompress.Archives
             return false;
         }
 
-        public async Task SaveToAsync(Stream stream, WriterOptions options)
+        public async ValueTask SaveToAsync(Stream stream, WriterOptions options, CancellationToken cancellationToken = default)
         {
             //reset streams of new entries
             newEntries.Cast<IWritableArchiveEntry>().ForEach(x => x.Stream.Seek(0, SeekOrigin.Begin));
-            await SaveToAsync(stream, options, OldEntries, newEntries);
+            await SaveToAsync(stream, options, OldEntries, newEntries.ToAsyncEnumerable(), cancellationToken);
         }
 
-        protected TEntry CreateEntry(string key, Stream source, long size, DateTime? modified,
-                                     bool closeStream)
+        protected ValueTask<TEntry> CreateEntry(string key, Stream source, long size, DateTime? modified,
+                                                bool closeStream, CancellationToken cancellationToken)
         {
             if (!source.CanRead || !source.CanSeek)
             {
                 throw new ArgumentException("Streams must be readable and seekable to use the Writing Archive API");
             }
-            return CreateEntryInternal(key, source, size, modified, closeStream);
+            return CreateEntryInternal(key, source, size, modified, closeStream, cancellationToken);
         }
 
-        protected abstract TEntry CreateEntryInternal(string key, Stream source, long size, DateTime? modified,
-                                                      bool closeStream);
+        protected abstract ValueTask<TEntry> CreateEntryInternal(string key, Stream source, long size, DateTime? modified,
+                                                      bool closeStream, CancellationToken cancellationToken);
 
-        protected abstract Task SaveToAsync(Stream stream, WriterOptions options, IEnumerable<TEntry> oldEntries, IEnumerable<TEntry> newEntries,
-                                            CancellationToken cancellationToken = default);
+        protected abstract ValueTask SaveToAsync(Stream stream, WriterOptions options, IAsyncEnumerable<TEntry> oldEntries, IAsyncEnumerable<TEntry> newEntries,
+                                                 CancellationToken cancellationToken = default);
 
-        public override void Dispose()
+        public override async ValueTask DisposeAsync()
         {
-            base.Dispose();
+            await base.DisposeAsync();
             newEntries.Cast<Entry>().ForEach(x => x.Close());
             removedEntries.Cast<Entry>().ForEach(x => x.Close());
             modifiedEntries.Cast<Entry>().ForEach(x => x.Close());

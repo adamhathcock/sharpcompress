@@ -15,7 +15,7 @@ namespace SharpCompress.Archives
                                             ExtractionOptions? options = null,
                                             CancellationToken cancellationToken = default)
         {
-            foreach (IArchiveEntry entry in archive.Entries.Where(x => !x.IsDirectory))
+            await foreach (IArchiveEntry entry in archive.Entries.Where(x => !x.IsDirectory).WithCancellation(cancellationToken))
             {
                 await entry.WriteEntryToDirectoryAsync(destinationDirectory, options, cancellationToken);
             }

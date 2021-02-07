@@ -25,21 +25,21 @@ namespace SharpCompress.Test
             foreach (var path in testArchives)
             {
                 await using (var stream = new NonDisposingStream(File.OpenRead(path), true))
-                using (var archive = await ArchiveFactory.OpenAsync(stream))
+                await using (var archive = await ArchiveFactory.OpenAsync(stream))
                 {
-                    Assert.True(archive.IsSolid);
-                    await using (var reader = archive.ExtractAllEntries())
+                    Assert.True(await archive.IsSolidAsync());
+                    await using (var reader = await archive.ExtractAllEntries())
                     {
                         await ReadAsync(reader, compression);
                     }
                     VerifyFiles();
 
-                    if (archive.Entries.First().CompressionType == CompressionType.Rar)
+                    if ((await archive.Entries.FirstAsync()).CompressionType == CompressionType.Rar)
                     {
                         stream.ThrowOnDispose = false;
                         return;
                     }
-                    foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
+                    await foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
                     {
                         await entry.WriteEntryToDirectoryAsync(SCRATCH_FILES_PATH,
                                                new ExtractionOptions
@@ -70,11 +70,11 @@ namespace SharpCompress.Test
             foreach (var path in testArchives)
             {
                 using (var stream = new NonDisposingStream(File.OpenRead(path), true))
-                using (var archive = await ArchiveFactory.OpenAsync(stream, readerOptions))
+                await using (var archive = await ArchiveFactory.OpenAsync(stream, readerOptions))
                 {
                     try
                     {
-                        foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
+                        await foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
                         {
                             await entry.WriteEntryToDirectoryAsync(SCRATCH_FILES_PATH,
                                                    new ExtractionOptions()
@@ -99,9 +99,9 @@ namespace SharpCompress.Test
         protected async ValueTask ArchiveFileReadAsync(string testArchive, ReaderOptions readerOptions = null)
         {
             testArchive = Path.Combine(TEST_ARCHIVES_PATH, testArchive);
-            using (var archive = await ArchiveFactory.OpenAsync(testArchive, readerOptions))
+            await using (var archive = await ArchiveFactory.OpenAsync(testArchive, readerOptions))
             {
-                foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
+                await foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
                 {
                     await entry.WriteEntryToDirectoryAsync(SCRATCH_FILES_PATH,
                         new ExtractionOptions()
@@ -120,9 +120,9 @@ namespace SharpCompress.Test
         protected async ValueTask ArchiveFileReadEx(string testArchive)
         {
             testArchive = Path.Combine(TEST_ARCHIVES_PATH, testArchive);
-            using (var archive = await ArchiveFactory.OpenAsync(testArchive))
+            await using (var archive = await ArchiveFactory.OpenAsync(testArchive))
             {
-                foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
+                await foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
                 {
                     await entry.WriteEntryToDirectoryAsync(SCRATCH_FILES_PATH,
                         new ExtractionOptions()

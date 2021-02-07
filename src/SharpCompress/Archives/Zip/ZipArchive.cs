@@ -118,9 +118,9 @@ namespace SharpCompress.Archives.Zip
             headerFactory = new SeekableZipHeaderFactory(readerOptions.Password, readerOptions.ArchiveEncoding);
         }
 
-        protected override IEnumerable<ZipVolume> LoadVolumes(FileInfo file)
+        protected override IAsyncEnumerable<ZipVolume> LoadVolumes(FileInfo file)
         {
-            return new ZipVolume(file.OpenRead(), ReaderOptions).AsEnumerable();
+            return new ZipVolume(file.OpenRead(), ReaderOptions).AsAsyncEnumerable();
         }
 
         internal ZipArchive()
@@ -139,14 +139,15 @@ namespace SharpCompress.Archives.Zip
             headerFactory = new SeekableZipHeaderFactory(readerOptions.Password, readerOptions.ArchiveEncoding);
         }
 
-        protected override IEnumerable<ZipVolume> LoadVolumes(IEnumerable<Stream> streams)
+        protected override async IAsyncEnumerable<ZipVolume> LoadVolumes(IAsyncEnumerable<Stream> streams)
         {
-            return new ZipVolume(streams.First(), ReaderOptions).AsEnumerable();
+            yield return new ZipVolume(await streams.FirstAsync(), ReaderOptions);
         }
 
-        protected override IEnumerable<ZipArchiveEntry> LoadEntries(IEnumerable<ZipVolume> volumes)
+        protected override async IAsyncEnumerable<ZipArchiveEntry> LoadEntries(IAsyncEnumerable<ZipVolume> volumes)
         {
-            var volume = volumes.Single();
+            await Task.CompletedTask;
+            var volume = await volumes.SingleAsync();
             Stream stream = volume.Stream;
             foreach (ZipHeader h in headerFactory.ReadSeekableHeader(stream))
             {
@@ -155,51 +156,50 @@ namespace SharpCompress.Archives.Zip
                     switch (h.ZipHeaderType)
                     {
                         case ZipHeaderType.DirectoryEntry:
-                            {
-                                yield return new ZipArchiveEntry(this,
-                                                                 new SeekableZipFilePart(headerFactory,
-                                                                                         (DirectoryEntryHeader)h,
-                                                                                         stream));
-                            }
+                        {
+                            yield return new ZipArchiveEntry(this,
+                                                             new SeekableZipFilePart(headerFactory,
+                                                                                     (DirectoryEntryHeader)h,
+                                                                                     stream));
+                        }
                             break;
                         case ZipHeaderType.DirectoryEnd:
-                            {
-                                byte[] bytes = ((DirectoryEndHeader)h).Comment ?? Array.Empty<byte>();
-                                volume.Comment = ReaderOptions.ArchiveEncoding.Decode(bytes);
-                                yield break;
-                            }
+                        {
+                            byte[] bytes = ((DirectoryEndHeader)h).Comment ?? Array.Empty<byte>();
+                            volume.Comment = ReaderOptions.ArchiveEncoding.Decode(bytes);
+                            yield break;
+                        }
                     }
                 }
             }
         }
 
-        public Task SaveToAsync(Stream stream)
+        public ValueTask SaveToAsync(Stream stream, CancellationToken cancellationToken = default)
         {
-            return SaveToAsync(stream, new WriterOptions(CompressionType.Deflate));
+            return SaveToAsync(stream, new WriterOptions(CompressionType.Deflate), cancellationToken);
         }
 
-        protected override async Task SaveToAsync(Stream stream, WriterOptions options,
-                                            IEnumerable<ZipArchiveEntry> oldEntries,
-                                            IEnumerable<ZipArchiveEntry> newEntries,
-                                            CancellationToken cancellationToken = default)
+        protected override async ValueTask SaveToAsync(Stream stream, WriterOptions options, 
+                                                       IAsyncEnumerable<ZipArchiveEntry> oldEntries, 
+                                                       IAsyncEnumerable<ZipArchiveEntry> newEntries, 
+                                                       CancellationToken cancellationToken = default)
         {
-            await using (var writer = new ZipWriter(stream, new ZipWriterOptions(options)))
+            await using var writer = new ZipWriter(stream, new ZipWriterOptions(options));
+            await foreach (var entry in oldEntries.Concat(newEntries)
+                                                  .Where(x => !x.IsDirectory)
+                                                  .WithCancellation(cancellationToken))
             {
-                foreach (var entry in oldEntries.Concat(newEntries)
-                                                .Where(x => !x.IsDirectory))
+                await using (var entryStream = entry.OpenEntryStream())
                 {
-                    await using (var entryStream = entry.OpenEntryStream())
-                    {
-                        await writer.WriteAsync(entry.Key, entryStream, entry.LastModifiedTime, cancellationToken);
-                    }
+                    await writer.WriteAsync(entry.Key, entryStream, entry.LastModifiedTime, cancellationToken);
                 }
             }
         }
 
-        protected override ZipArchiveEntry CreateEntryInternal(string filePath, Stream source, long size, DateTime? modified,
-                                                               bool closeStream)
+        protected override ValueTask<ZipArchiveEntry> CreateEntryInternal(string filePath, Stream source, long size, DateTime? modified,
+                                                               bool closeStream, CancellationToken cancellationToken = default)
         {
-            return new ZipWritableArchiveEntry(this, source, filePath, size, modified, closeStream);
+            return new(new ZipWritableArchiveEntry(this, source, filePath, size, modified, closeStream));
         }
 
         public static ZipArchive Create()
@@ -207,9 +207,9 @@ namespace SharpCompress.Archives.Zip
             return new();
         }
 
-        protected override IReader CreateReaderForSolidExtraction()
+        protected override async ValueTask<IReader> CreateReaderForSolidExtraction()
         {
-            var stream = Volumes.Single().Stream;
+            var stream = (await Volumes.SingleAsync()).Stream;
             stream.Position = 0;
             return ZipReader.Open(stream, ReaderOptions);
         }
