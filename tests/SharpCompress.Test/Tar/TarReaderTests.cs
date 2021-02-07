@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.IO;
+using System.Threading.Tasks;
 using SharpCompress.Common;
 using SharpCompress.Readers;
 using SharpCompress.Readers.Tar;
@@ -16,26 +17,26 @@ namespace SharpCompress.Test.Tar
         }
 
         [Fact]
-        public void Tar_Reader()
+        public async ValueTask Tar_Reader()
         {
-            Read("Tar.tar", CompressionType.None);
+            await ReadAsync("Tar.tar", CompressionType.None);
         }
 
         [Fact]
-        public void Tar_Skip()
+        public async ValueTask Tar_Skip()
         {
-            using (Stream stream = new ForwardOnlyStream(File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar"))))
-            using (IReader reader = ReaderFactory.Open(stream))
+            await using (Stream stream = new ForwardOnlyStream(File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar"))))
+            await using (IReader reader = await ReaderFactory.OpenAsync(stream))
             {
                 int x = 0;
-                while (reader.MoveToNextEntry())
+                while (await reader.MoveToNextEntryAsync())
                 {
                     if (!reader.Entry.IsDirectory)
                     {
                         x++;
                         if (x % 2 == 0)
                         {
-                            reader.WriteEntryToDirectory(SCRATCH_FILES_PATH,
+                            await reader.WriteEntryToDirectoryAsync(SCRATCH_FILES_PATH,
                                                          new ExtractionOptions()
                                                          {
                                                              ExtractFullPath = true,
@@ -48,41 +49,41 @@ namespace SharpCompress.Test.Tar
         }
 
         [Fact]
-        public void Tar_BZip2_Reader()
+        public async ValueTask Tar_BZip2_Reader()
         {
-            Read("Tar.tar.bz2", CompressionType.BZip2);
+            await ReadAsync("Tar.tar.bz2", CompressionType.BZip2);
         }
 
         [Fact]
-        public void Tar_GZip_Reader()
+        public async ValueTask Tar_GZip_Reader()
         {
-            Read("Tar.tar.gz", CompressionType.GZip);
+            await ReadAsync("Tar.tar.gz", CompressionType.GZip);
         }
 
         [Fact]
-        public void Tar_LZip_Reader()
+        public async ValueTask Tar_LZip_Reader()
         {
-            Read("Tar.tar.lz", CompressionType.LZip);
+            await ReadAsync("Tar.tar.lz", CompressionType.LZip);
         }
 
         [Fact]
-        public void Tar_Xz_Reader()
+        public async ValueTask Tar_Xz_Reader()
         {
-            Read("Tar.tar.xz", CompressionType.Xz);
+            await ReadAsync("Tar.tar.xz", CompressionType.Xz);
         }
 
         [Fact]
-        public void Tar_BZip2_Entry_Stream()
+        public async ValueTask Tar_BZip2_Entry_Stream()
         {
-            using (Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.bz2")))
-            using (var reader = TarReader.Open(stream))
+            await using (Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.bz2")))
+            await using (var reader = await TarReader.OpenAsync(stream))
             {
-                while (reader.MoveToNextEntry())
+                while (await reader.MoveToNextEntryAsync())
                 {
                     if (!reader.Entry.IsDirectory)
                     {
                         Assert.Equal(CompressionType.BZip2, reader.Entry.CompressionType);
-                        using (var entryStream = reader.OpenEntryStream())
+                        await using (var entryStream = reader.OpenEntryStream())
                         {
                             string file = Path.GetFileName(reader.Entry.Key);
                             string folder = Path.GetDirectoryName(reader.Entry.Key);
@@ -93,7 +94,7 @@ namespace SharpCompress.Test.Tar
                             }
                             string destinationFileName = Path.Combine(destdir, file);
 
-                            using (FileStream fs = File.OpenWrite(destinationFileName))
+                            await using (FileStream fs = File.OpenWrite(destinationFileName))
                             {
                                 entryStream.TransferTo(fs);
                             }
@@ -105,14 +106,14 @@ namespace SharpCompress.Test.Tar
         }
 
         [Fact]
-        public void Tar_LongNamesWithLongNameExtension()
+        public async ValueTask Tar_LongNamesWithLongNameExtension()
         {
             var filePaths = new List<string>();
 
-            using (Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.LongPathsWithLongNameExtension.tar")))
-            using (var reader = TarReader.Open(stream))
+            await using (Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.LongPathsWithLongNameExtension.tar")))
+            await using (var reader = await TarReader.OpenAsync(stream))
             {
-                while (reader.MoveToNextEntry())
+                while (await reader.MoveToNextEntryAsync())
                 {
                     if (!reader.Entry.IsDirectory)
                     {
@@ -128,20 +129,20 @@ namespace SharpCompress.Test.Tar
         }
 
         [Fact]
-        public void Tar_BZip2_Skip_Entry_Stream()
+        public async ValueTask Tar_BZip2_Skip_Entry_Stream()
         {
-            using (Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.bz2")))
-            using (var reader = TarReader.Open(stream))
+            await using (Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.bz2")))
+            await using (var reader = await TarReader.OpenAsync(stream))
             {
                 List<string> names = new List<string>();
-                while (reader.MoveToNextEntry())
+                while (await reader.MoveToNextEntryAsync())
                 {
                     if (!reader.Entry.IsDirectory)
                     {
                         Assert.Equal(CompressionType.BZip2, reader.Entry.CompressionType);
-                        using (var entryStream = reader.OpenEntryStream())
+                        await using (var entryStream = reader.OpenEntryStream())
                         {
-                            entryStream.SkipEntry();
+                            await entryStream.SkipEntryAsync();
                             names.Add(reader.Entry.Key);
                         }
                     }
@@ -151,37 +152,36 @@ namespace SharpCompress.Test.Tar
         }
 
         [Fact]
-        public void Tar_Containing_Rar_Reader()
+        public async ValueTask Tar_Containing_Rar_Reader()
         {
             string archiveFullPath = Path.Combine(TEST_ARCHIVES_PATH, "Tar.ContainsRar.tar");
-            using (Stream stream = File.OpenRead(archiveFullPath))
-            using (IReader reader = ReaderFactory.Open(stream))
+            await using (Stream stream = File.OpenRead(archiveFullPath))
+            await using (IReader reader = await ReaderFactory.OpenAsync(stream))
             {
                 Assert.True(reader.ArchiveType == ArchiveType.Tar);
             }
         }
 
         [Fact]
-        public void Tar_With_TarGz_With_Flushed_EntryStream()
+        public async ValueTask Tar_With_TarGz_With_Flushed_EntryStream()
         {
             string archiveFullPath = Path.Combine(TEST_ARCHIVES_PATH, "Tar.ContainsTarGz.tar");
-            using (Stream stream = File.OpenRead(archiveFullPath))
-            using (IReader reader = ReaderFactory.Open(stream))
+            await using (Stream stream = File.OpenRead(archiveFullPath))
+            await using (IReader reader = await ReaderFactory.OpenAsync(stream))
             {
-                Assert.True(reader.MoveToNextEntry());
+                Assert.True(await reader.MoveToNextEntryAsync());
                 Assert.Equal("inner.tar.gz", reader.Entry.Key);
 
-                using (var entryStream = reader.OpenEntryStream())
+                await using (var entryStream = reader.OpenEntryStream())
                 {
-
-                    using (FlushOnDisposeStream flushingStream = new FlushOnDisposeStream(entryStream))
+                    await using (FlushOnDisposeStream flushingStream = new FlushOnDisposeStream(entryStream))
                     {
 
                         // Extract inner.tar.gz
-                        using (var innerReader = ReaderFactory.Open(flushingStream))
+                        await using (var innerReader = await ReaderFactory.OpenAsync(flushingStream))
                         {
 
-                            Assert.True(innerReader.MoveToNextEntry());
+                            Assert.True(await innerReader.MoveToNextEntryAsync());
                             Assert.Equal("test", innerReader.Entry.Key);
 
                         }
@@ -192,21 +192,21 @@ namespace SharpCompress.Test.Tar
 
 #if !NET461
         [Fact]
-        public void Tar_GZip_With_Symlink_Entries()
+        public async ValueTask Tar_GZip_With_Symlink_Entries()
         {
             var isWindows = System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(
                 System.Runtime.InteropServices.OSPlatform.Windows);
-            using (Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "TarWithSymlink.tar.gz")))
-            using (var reader = TarReader.Open(stream))
+            await using (Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "TarWithSymlink.tar.gz")))
+            await using (var reader = await TarReader.OpenAsync(stream))
             {
                 List<string> names = new List<string>();
-                while (reader.MoveToNextEntry())
+                while (await reader.MoveToNextEntryAsync())
                 {
                     if (reader.Entry.IsDirectory)
                     {
                         continue;
                     }
-                    reader.WriteEntryToDirectory(SCRATCH_FILES_PATH,
+                    await reader.WriteEntryToDirectoryAsync(SCRATCH_FILES_PATH,
                                                  new ExtractionOptions()
                                                  {
                                                      ExtractFullPath = true,

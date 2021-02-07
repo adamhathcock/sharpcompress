@@ -27,7 +27,7 @@ namespace SharpCompress.Test.GZip
             using (Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.gz")))
             await using (var reader = SharpCompress.Readers.GZip.GZipReader.Open(new RewindableStream(stream)))
             {
-                while (await reader.MoveToNextEntry()) // Crash here
+                while (await reader.MoveToNextEntryAsync()) // Crash here
                 {
                     Assert.NotEqual(0, reader.Entry.Size);
                     Assert.NotEqual(0, reader.Entry.Crc);

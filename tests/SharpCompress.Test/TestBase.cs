@@ -200,13 +200,13 @@ namespace SharpCompress.Test
             await using (var archive1 = await ReaderFactory.OpenAsync(File.OpenRead(file1), readerOptions))
             await using (var archive2 = await ReaderFactory.OpenAsync(File.OpenRead(file2), readerOptions))
             {
-                while (await archive1.MoveToNextEntry())
+                while (await archive1.MoveToNextEntryAsync())
                 {
-                    Assert.True(await archive2.MoveToNextEntry());
+                    Assert.True(await archive2.MoveToNextEntryAsync());
                     archive1Entries.Add(archive1.Entry.Key);
                     archive2Entries.Add(archive2.Entry.Key);
                 }
-                Assert.False(await archive2.MoveToNextEntry());
+                Assert.False(await archive2.MoveToNextEntryAsync());
             }
             archive1Entries.Sort();
             archive2Entries.Sort();

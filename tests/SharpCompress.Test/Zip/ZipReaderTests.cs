@@ -26,7 +26,7 @@ namespace SharpCompress.Test.Zip
             await using (IReader reader = await ReaderFactory.OpenAsync(stream))
             {
                 int count = 0;
-                while (await reader.MoveToNextEntry())
+                while (await reader.MoveToNextEntryAsync())
                 {
                     count++;
                     if (!reader.Entry.IsDirectory)
@@ -79,7 +79,7 @@ namespace SharpCompress.Test.Zip
             await using (IReader reader = await ReaderFactory.OpenAsync(stream))
             {
                 int x = 0;
-                while (await reader.MoveToNextEntry())
+                while (await reader.MoveToNextEntryAsync())
                 {
                     if (!reader.Entry.IsDirectory)
                     {
@@ -150,7 +150,7 @@ namespace SharpCompress.Test.Zip
                 Password = "test"
             }))
             {
-                while (await reader.MoveToNextEntry())
+                while (await reader.MoveToNextEntryAsync())
                 {
                     if (!reader.Entry.IsDirectory)
                     {
@@ -173,7 +173,7 @@ namespace SharpCompress.Test.Zip
             {
                 await using (var reader = await ReaderFactory.OpenAsync(stream))
                 {
-                    while (await reader.MoveToNextEntry())
+                    while (await reader.MoveToNextEntryAsync())
                     {
                         if (!reader.Entry.IsDirectory)
                         {
@@ -196,7 +196,7 @@ namespace SharpCompress.Test.Zip
             using (TestStream stream = new TestStream(File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.dd.zip"))))
             {
                 var reader = await ReaderFactory.OpenAsync(stream);
-                while (await reader.MoveToNextEntry())
+                while (await reader.MoveToNextEntryAsync())
                 {
                     if (!reader.Entry.IsDirectory)
                     {
@@ -226,7 +226,7 @@ namespace SharpCompress.Test.Zip
                                                     Password = "test"
                                                 }))
                                                 {
-                                                    while (await reader.MoveToNextEntry())
+                                                    while (await reader.MoveToNextEntryAsync())
                                                     {
                                                         if (!reader.Entry.IsDirectory)
                                                         {
@@ -253,7 +253,7 @@ namespace SharpCompress.Test.Zip
                 Password = "test"
             }))
             {
-                while (await reader.MoveToNextEntry())
+                while (await reader.MoveToNextEntryAsync())
                 {
                     if (!reader.Entry.IsDirectory)
                     {
@@ -295,7 +295,7 @@ namespace SharpCompress.Test.Zip
                 await using (IReader zipReader = ZipReader.Open(new NonDisposingStream(stream, true)))
                 {
                     var i = 0;
-                    while (await zipReader.MoveToNextEntry())
+                    while (await zipReader.MoveToNextEntryAsync())
                     {
                         await using (EntryStream entry = zipReader.OpenEntryStream())
                         {
@@ -327,7 +327,7 @@ namespace SharpCompress.Test.Zip
             {
                 foreach (var key in keys)
                 {
-                    await reader.MoveToNextEntry();
+                    await reader.MoveToNextEntryAsync();
 
                     Assert.Equal(reader.Entry.Key, key);
 
@@ -337,7 +337,7 @@ namespace SharpCompress.Test.Zip
                     }
                 }
 
-                Assert.False(await reader.MoveToNextEntry());
+                Assert.False(await reader.MoveToNextEntryAsync());
             }
         }
 

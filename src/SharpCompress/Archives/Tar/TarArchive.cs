@@ -144,11 +144,11 @@ namespace SharpCompress.Archives.Tar
 
                             var oldStreamPos = stream.Position;
 
-                            using (var entryStream = entry.OpenEntryStream())
+                            await using (var entryStream = entry.OpenEntryStream())
                             {
-                                using (var memoryStream = new MemoryStream())
+                                await using (var memoryStream = new MemoryStream())
                                 {
-                                    entryStream.TransferTo(memoryStream);
+                                    await entryStream.TransferToAsync(memoryStream, cancellationToken);
                                     memoryStream.Position = 0;
                                     var bytes = memoryStream.ToArray();
 
@@ -190,7 +190,7 @@ namespace SharpCompress.Archives.Tar
                                                   .WithCancellation(cancellationToken))
             {
                 await using var entryStream = entry.OpenEntryStream();
-                await writer.WriteAsync(entry.Key, entryStream, entry.LastModifiedTime, cancellationToken);
+                await writer.WriteAsync(entry.Key, entryStream, entry.LastModifiedTime, entry.Size, cancellationToken);
             }
         }
 

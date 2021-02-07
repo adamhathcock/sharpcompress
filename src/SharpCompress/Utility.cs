@@ -116,6 +116,36 @@ namespace SharpCompress
                 throw new ArgumentException("String is empty.", name);
             }
         }
+        
+        public static async ValueTask SkipAsync(this Stream source, long advanceAmount, CancellationToken cancellationToken = default)
+        {
+            if (source.CanSeek)
+            {
+                source.Position += advanceAmount;
+                return;
+            }
+
+            using var buffer = MemoryPool<byte>.Shared.Rent(81920);
+            do
+            {
+                var readCount = 81920;
+                if (readCount > advanceAmount)
+                {
+                    readCount = (int)advanceAmount;
+                }
+                int read = await source.ReadAsync(buffer.Memory.Slice(0, readCount), cancellationToken);
+                if (read <= 0)
+                {
+                    break;
+                }
+                advanceAmount -= read;
+                if (advanceAmount == 0)
+                {
+                    break;
+                }
+            }
+            while (true);
+        }
 
         public static void Skip(this Stream source, long advanceAmount)
         {
@@ -170,6 +200,15 @@ namespace SharpCompress
             {
                 ArrayPool<byte>.Shared.Return(buffer);
             }
+        }
+        
+        public static async ValueTask SkipAsync(this Stream source, CancellationToken cancellationToken)
+        {
+            using var buffer = MemoryPool<byte>.Shared.Rent(81920);
+            do
+            {
+            }
+            while (await source.ReadAsync(buffer.Memory.Slice(0, 81920), cancellationToken) > 0);
         }
 
         public static DateTime DosDateToDateTime(UInt16 iDate, UInt16 iTime)
@@ -243,14 +282,14 @@ namespace SharpCompress
             long total = 0;
             while (true)
             {
-                int bytesRead = await source.ReadAsync(buffer.Memory, cancellationToken);
+                int bytesRead = await source.ReadAsync(buffer.Memory.Slice(0, 81920), cancellationToken);
                 if (bytesRead == 0)
                 {
                     break;
                 }
 
                 total += bytesRead;
-                await destination.WriteAsync(buffer.Memory, cancellationToken);
+                await destination.WriteAsync(buffer.Memory.Slice(0, bytesRead), cancellationToken);
             }
             return total;
         }

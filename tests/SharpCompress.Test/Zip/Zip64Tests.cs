@@ -176,7 +176,7 @@ namespace SharpCompress.Test.Zip
             using (var fs = File.OpenRead(filename))
             await using (var rd = ZipReader.Open(fs, new ReaderOptions() { LookForHeader = false }))
             {
-                while (await rd.MoveToNextEntry())
+                while (await rd.MoveToNextEntryAsync())
                 {
                     using (rd.OpenEntryStream())
                     { }

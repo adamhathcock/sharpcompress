@@ -26,16 +26,13 @@
   <ItemGroup>
     <Compile Remove="Rar\**" />
     <Compile Remove="SevenZip\**" />
-    <Compile Remove="Tar\**" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Remove="Rar\**" />
     <EmbeddedResource Remove="SevenZip\**" />
-    <EmbeddedResource Remove="Tar\**" />
   </ItemGroup>
   <ItemGroup>
     <None Remove="Rar\**" />
     <None Remove="SevenZip\**" />
-    <None Remove="Tar\**" />
   </ItemGroup>
 </Project>

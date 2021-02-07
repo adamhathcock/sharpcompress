@@ -19,7 +19,7 @@ namespace SharpCompress.Test
 
         protected async Task WriteAsync(CompressionType compressionType, string archive, string archiveToVerifyAgainst, Encoding encoding = null)
         {
-            using (Stream stream = File.OpenWrite(Path.Combine(SCRATCH2_FILES_PATH, archive)))
+            await using (Stream stream = File.OpenWrite(Path.Combine(SCRATCH2_FILES_PATH, archive)))
             {
                 WriterOptions writerOptions = new WriterOptions(compressionType)
                 {
@@ -36,7 +36,7 @@ namespace SharpCompress.Test
             await CompareArchivesByPathAsync(Path.Combine(SCRATCH2_FILES_PATH, archive),
                                        Path.Combine(TEST_ARCHIVES_PATH, archiveToVerifyAgainst));
 
-            using (Stream stream = File.OpenRead(Path.Combine(SCRATCH2_FILES_PATH, archive)))
+            await using (Stream stream = File.OpenRead(Path.Combine(SCRATCH2_FILES_PATH, archive)))
             {
                 ReaderOptions readerOptions = new ReaderOptions();
 

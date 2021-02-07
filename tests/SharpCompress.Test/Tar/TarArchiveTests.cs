@@ -22,15 +22,15 @@ namespace SharpCompress.Test.Tar
         }
 
         [Fact]
-        public void TarArchiveStreamRead()
+        public async ValueTask TarArchiveStreamRead()
         {
-            ArchiveStreamRead("Tar.tar");
+            await ArchiveStreamReadAsync("Tar.tar");
         }
 
         [Fact]
-        public void TarArchivePathRead()
+        public async ValueTask TarArchivePathRead()
         {
-            ArchiveFileRead("Tar.tar");
+            await ArchiveFileReadAsync("Tar.tar");
         }
 
         [Fact]
@@ -57,12 +57,12 @@ namespace SharpCompress.Test.Tar
 
             // Step 2: check if the written tar file can be read correctly
             string unmodified = Path.Combine(SCRATCH2_FILES_PATH, archive);
-            using (var archive2 = TarArchive.Open(unmodified))
+            await using (var archive2 = TarArchive.Open(unmodified))
             {
-                Assert.Equal(1, archive2.Entries.Count);
-                Assert.Contains(filename, archive2.Entries.Select(entry => entry.Key));
+                Assert.Equal(1, await archive2.Entries.CountAsync());
+                Assert.Contains(filename, await archive2.Entries.Select(entry => entry.Key).ToListAsync());
 
-                foreach (var entry in archive2.Entries)
+                await foreach (var entry in archive2.Entries)
                 {
                     Assert.Equal("dummy filecontent", await new StreamReader(entry.OpenEntryStream()).ReadLineAsync());
                 }
@@ -70,20 +70,20 @@ namespace SharpCompress.Test.Tar
         }
 
         [Fact]
-        public void Tar_NonUstarArchiveWithLongNameDoesNotSkipEntriesAfterTheLongOne()
+        public async ValueTask Tar_NonUstarArchiveWithLongNameDoesNotSkipEntriesAfterTheLongOne()
         {
             string unmodified = Path.Combine(TEST_ARCHIVES_PATH, "very long filename.tar");
-            using var archive = TarArchive.Open(unmodified);
-            Assert.Equal(5, archive.Entries.Count);
-            Assert.Contains("very long filename/", archive.Entries.Select(entry => entry.Key));
-            Assert.Contains("very long filename/very long filename very long filename very long filename very long filename very long filename very long filename very long filename very long filename very long filename very long filename.jpg", archive.Entries.Select(entry => entry.Key));
-            Assert.Contains("z_file 1.txt", archive.Entries.Select(entry => entry.Key));
-            Assert.Contains("z_file 2.txt", archive.Entries.Select(entry => entry.Key));
-            Assert.Contains("z_file 3.txt", archive.Entries.Select(entry => entry.Key));
+            await using var archive = TarArchive.Open(unmodified);
+            Assert.Equal(5, await archive.Entries.CountAsync());
+            Assert.Contains("very long filename/", await archive.Entries.Select(entry => entry.Key).ToListAsync());
+            Assert.Contains("very long filename/very long filename very long filename very long filename very long filename very long filename very long filename very long filename very long filename very long filename very long filename.jpg", await archive.Entries.Select(entry => entry.Key).ToListAsync());
+            Assert.Contains("z_file 1.txt", await archive.Entries.Select(entry => entry.Key).ToListAsync());
+            Assert.Contains("z_file 2.txt", await archive.Entries.Select(entry => entry.Key).ToListAsync());
+            Assert.Contains("z_file 3.txt", await archive.Entries.Select(entry => entry.Key).ToListAsync());
         }
 
         [Fact]
-        public async Task Tar_VeryLongFilepathReadback()
+        public async ValueTask Tar_VeryLongFilepathReadback()
         {
             string archive = "Tar_VeryLongFilepathReadback.tar";
 
@@ -112,12 +112,12 @@ namespace SharpCompress.Test.Tar
 
             // Step 2: check if the written tar file can be read correctly
             string unmodified = Path.Combine(SCRATCH2_FILES_PATH, archive);
-            using (var archive2 = TarArchive.Open(unmodified))
+            await using (var archive2 = TarArchive.Open(unmodified))
             {
-                Assert.Equal(1, archive2.Entries.Count);
-                Assert.Contains(longFilename, archive2.Entries.Select(entry => entry.Key));
+                Assert.Equal(1, await archive2.Entries.CountAsync());
+                Assert.Contains(longFilename, await archive2.Entries.Select(entry => entry.Key).ToListAsync());
 
-                foreach (var entry in archive2.Entries)
+                await foreach (var entry in archive2.Entries)
                 {
                     Assert.Equal("dummy filecontent", await new StreamReader(entry.OpenEntryStream()).ReadLineAsync());
                 }
@@ -125,17 +125,17 @@ namespace SharpCompress.Test.Tar
         }
 
         [Fact]
-        public void Tar_UstarArchivePathReadLongName()
+        public async ValueTask Tar_UstarArchivePathReadLongName()
         {
             string unmodified = Path.Combine(TEST_ARCHIVES_PATH, "ustar with long names.tar");
-            using var archive = TarArchive.Open(unmodified);
-            Assert.Equal(6, archive.Entries.Count);
-            Assert.Contains("Directory/", archive.Entries.Select(entry => entry.Key));
-            Assert.Contains("Directory/Some file with veeeeeeeeeery loooooooooong name", archive.Entries.Select(entry => entry.Key));
-            Assert.Contains("Directory/Directory with veeeeeeeeeery loooooooooong name/", archive.Entries.Select(entry => entry.Key));
-            Assert.Contains("Directory/Directory with veeeeeeeeeery loooooooooong name/Some file with veeeeeeeeeery loooooooooong name", archive.Entries.Select(entry => entry.Key));
-            Assert.Contains("Directory/Directory with veeeeeeeeeery loooooooooong name/Directory with veeeeeeeeeery loooooooooong name/", archive.Entries.Select(entry => entry.Key));
-            Assert.Contains("Directory/Directory with veeeeeeeeeery loooooooooong name/Directory with veeeeeeeeeery loooooooooong name/Some file with veeeeeeeeeery loooooooooong name", archive.Entries.Select(entry => entry.Key));
+            await using var archive = TarArchive.Open(unmodified);
+            Assert.Equal(6, await archive.Entries.CountAsync());
+            Assert.Contains("Directory/", await archive.Entries.Select(entry => entry.Key).ToListAsync());
+            Assert.Contains("Directory/Some file with veeeeeeeeeery loooooooooong name", await archive.Entries.Select(entry => entry.Key).ToListAsync());
+            Assert.Contains("Directory/Directory with veeeeeeeeeery loooooooooong name/", await archive.Entries.Select(entry => entry.Key).ToListAsync());
+            Assert.Contains("Directory/Directory with veeeeeeeeeery loooooooooong name/Some file with veeeeeeeeeery loooooooooong name", await archive.Entries.Select(entry => entry.Key).ToListAsync());
+            Assert.Contains("Directory/Directory with veeeeeeeeeery loooooooooong name/Directory with veeeeeeeeeery loooooooooong name/", await archive.Entries.Select(entry => entry.Key).ToListAsync());
+            Assert.Contains("Directory/Directory with veeeeeeeeeery loooooooooong name/Directory with veeeeeeeeeery loooooooooong name/Some file with veeeeeeeeeery loooooooooong name", await archive.Entries.Select(entry => entry.Key).ToListAsync());
         }
 
         [Fact]
@@ -146,9 +146,9 @@ namespace SharpCompress.Test.Tar
 
             // var aropt = new Ar
 
-            using (var archive = TarArchive.Create())
+            await using (var archive = TarArchive.Create())
             {
-                archive.AddAllFromDirectory(ORIGINAL_FILES_PATH);
+                await archive.AddAllFromDirectoryAsync(ORIGINAL_FILES_PATH);
                 var twopt = new TarWriterOptions(CompressionType.None, true);
                 twopt.ArchiveEncoding = new ArchiveEncoding()
                 {
@@ -156,7 +156,7 @@ namespace SharpCompress.Test.Tar
                 };
                 await archive.SaveToAsync(scratchPath, twopt);
             }
-            CompareArchivesByPath(unmodified, scratchPath);
+            await CompareArchivesByPathAsync(unmodified, scratchPath);
         }
         [Fact]
         public async Task Tar_Random_Write_Add()
@@ -166,12 +166,12 @@ namespace SharpCompress.Test.Tar
             string unmodified = Path.Combine(TEST_ARCHIVES_PATH, "Tar.mod.tar");
             string modified = Path.Combine(TEST_ARCHIVES_PATH, "Tar.noEmptyDirs.tar");
 
-            using (var archive = TarArchive.Open(unmodified))
+            await using (var archive = TarArchive.Open(unmodified))
             {
-                archive.AddEntry("jpg\\test.jpg", jpg);
+                await archive.AddEntryAsync("jpg\\test.jpg", jpg);
                 await archive.SaveToAsync(scratchPath, CompressionType.None);
             }
-            CompareArchivesByPath(modified, scratchPath);
+            await CompareArchivesByPathAsync(modified, scratchPath);
         }
 
         [Fact]
@@ -181,30 +181,30 @@ namespace SharpCompress.Test.Tar
             string modified = Path.Combine(TEST_ARCHIVES_PATH, "Tar.mod.tar");
             string unmodified = Path.Combine(TEST_ARCHIVES_PATH, "Tar.noEmptyDirs.tar");
 
-            using (var archive = TarArchive.Open(unmodified))
+            await using (var archive = TarArchive.Open(unmodified))
             {
-                var entry = archive.Entries.Single(x => x.Key.EndsWith("jpg"));
-                archive.RemoveEntry(entry);
+                var entry = await archive.Entries.SingleAsync(x => x.Key.EndsWith("jpg"));
+                await archive.RemoveEntryAsync(entry);
                 await archive.SaveToAsync(scratchPath, CompressionType.None);
             }
-            CompareArchivesByPath(modified, scratchPath);
+            await CompareArchivesByPathAsync(modified, scratchPath);
         }
 
         [Fact]
-        public void Tar_Containing_Rar_Archive()
+        public async ValueTask Tar_Containing_Rar_Archive()
         {
             string archiveFullPath = Path.Combine(TEST_ARCHIVES_PATH, "Tar.ContainsRar.tar");
-            using Stream stream = File.OpenRead(archiveFullPath);
-            using IArchive archive = ArchiveFactory.Open(stream);
+            await using Stream stream = File.OpenRead(archiveFullPath);
+            await using IArchive archive = await ArchiveFactory.OpenAsync(stream);
             Assert.True(archive.Type == ArchiveType.Tar);
         }
 
         [Fact]
-        public void Tar_Empty_Archive()
+        public async ValueTask Tar_Empty_Archive()
         {
             string archiveFullPath = Path.Combine(TEST_ARCHIVES_PATH, "Tar.Empty.tar");
-            using Stream stream = File.OpenRead(archiveFullPath);
-            using IArchive archive = ArchiveFactory.Open(stream);
+            await using Stream stream = File.OpenRead(archiveFullPath);
+            await using IArchive archive = await ArchiveFactory.OpenAsync(stream);
             Assert.True(archive.Type == ArchiveType.Tar);
         }
         [Theory]
@@ -212,7 +212,7 @@ namespace SharpCompress.Test.Tar
         [InlineData(128)]
         public async Task Tar_Japanese_Name(int length)
         {
-            using var mstm = new MemoryStream();
+            await using var mstm = new MemoryStream();
             var enc = new ArchiveEncoding()
                       {
                           Default = Encoding.UTF8
@@ -221,19 +221,20 @@ namespace SharpCompress.Test.Tar
             twopt.ArchiveEncoding = enc;
             var fname = new string((char)0x3042, length);
             await using (var tw = new TarWriter(mstm, twopt))
-            using (var input = new MemoryStream(new byte[32]))
+            await using (var input = new MemoryStream(new byte[32]))
             {
                 await tw.WriteAsync(fname, input, null);
             }
-            using (var inputMemory = new MemoryStream(mstm.ToArray()))
+
+            await using (var inputMemory = new MemoryStream(mstm.ToArray()))
             {
                 var tropt = new ReaderOptions()
                             {
                                 ArchiveEncoding = enc
                             };
-                using (var tr = TarReader.Open(inputMemory, tropt))
+                await using (var tr = await TarReader.OpenAsync(inputMemory, tropt))
                 {
-                    while (tr.MoveToNextEntry())
+                    while (await tr.MoveToNextEntryAsync())
                     {
                         Assert.Equal(fname, tr.Entry.Key);
                     }
@@ -248,9 +249,9 @@ namespace SharpCompress.Test.Tar
             var tarWriterOptions = new TarWriterOptions(CompressionType.None, true) { ArchiveEncoding = archiveEncoding, };
             var testBytes = Encoding.UTF8.GetBytes("This is a test.");
 
-            using var memoryStream = new MemoryStream();
+            await using var memoryStream = new MemoryStream();
             await using (var tarWriter = new TarWriter(memoryStream, tarWriterOptions))
-            using (var testFileStream = new MemoryStream(testBytes))
+            await using (var testFileStream = new MemoryStream(testBytes))
             {
                 await tarWriter.WriteAsync("test1.txt", testFileStream);
                 testFileStream.Position = 0;
@@ -261,14 +262,14 @@ namespace SharpCompress.Test.Tar
 
             var numberOfEntries = 0;
 
-            using (var archiveFactory = TarArchive.Open(memoryStream))
+            await using (var archiveFactory = TarArchive.Open(memoryStream))
             {
-                foreach (var entry in archiveFactory.Entries)
+                await foreach (var entry in archiveFactory.Entries)
                 {
                     ++numberOfEntries;
 
-                    using var tarEntryStream = entry.OpenEntryStream();
-                    using var testFileStream = new MemoryStream();
+                    await using var tarEntryStream = entry.OpenEntryStream();
+                    await using var testFileStream = new MemoryStream();
                     await tarEntryStream.CopyToAsync(testFileStream);
                     Assert.Equal(testBytes.Length, testFileStream.Length);
                 }

@@ -26,7 +26,7 @@ namespace SharpCompress.Readers
         public static async ValueTask WriteAllToDirectoryAsync(this IReader reader, string destinationDirectory,
                                                ExtractionOptions? options = null)
         {
-            while (await reader.MoveToNextEntry())
+            while (await reader.MoveToNextEntryAsync())
             {
                await reader.WriteEntryToDirectoryAsync(destinationDirectory, options);
             }

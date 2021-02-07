@@ -21,15 +21,15 @@ namespace SharpCompress.Archives
                                      fileInfo.LastWriteTime, cancellationToken);
         }
 
-        public static Task SaveToAsync(this IWritableArchive writableArchive, string filePath, WriterOptions options)
+        public static Task SaveToAsync(this IWritableArchive writableArchive, string filePath, WriterOptions options, CancellationToken cancellationToken = default)
         {
-            return writableArchive.SaveToAsync(new FileInfo(filePath), options);
+            return writableArchive.SaveToAsync(new FileInfo(filePath), options, cancellationToken);
         }
 
-        public static async Task SaveToAsync(this IWritableArchive writableArchive, FileInfo fileInfo, WriterOptions options)
+        public static async Task SaveToAsync(this IWritableArchive writableArchive, FileInfo fileInfo, WriterOptions options, CancellationToken cancellationToken = default)
         {
             await using var stream = fileInfo.Open(FileMode.Create, FileAccess.Write);
-            await writableArchive.SaveToAsync(stream, options);
+            await writableArchive.SaveToAsync(stream, options, cancellationToken);
         }
 
         public static async ValueTask AddAllFromDirectoryAsync(

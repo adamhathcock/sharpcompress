@@ -69,7 +69,7 @@ namespace SharpCompress.Readers
             }
         }
 
-        public async ValueTask<bool> MoveToNextEntry()
+        public async ValueTask<bool> MoveToNextEntryAsync(CancellationToken cancellationToken = default)
         {
             if (completed)
             {
@@ -82,11 +82,11 @@ namespace SharpCompress.Readers
             if (entriesForCurrentReadStream is null)
             {
                 //TODO: real token?
-                return await LoadStreamForReading(RequestInitialStream(), CancellationToken.None);
+                return await LoadStreamForReading(RequestInitialStream(), cancellationToken);
             }
             if (!wroteCurrentEntry)
             {
-                await SkipEntry(CancellationToken.None);
+                await SkipEntry(cancellationToken);
             }
             wroteCurrentEntry = false;
             if (await NextEntryForCurrentStream())

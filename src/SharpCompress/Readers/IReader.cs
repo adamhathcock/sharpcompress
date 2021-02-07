@@ -30,7 +30,7 @@ namespace SharpCompress.Readers
         /// Moves to the next entry by reading more data from the underlying stream.  This skips if data has not been read.
         /// </summary>
         /// <returns></returns>
-        ValueTask<bool> MoveToNextEntry();
+        ValueTask<bool> MoveToNextEntryAsync(CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Opens the current entry as a stream that will decompress as it is read.

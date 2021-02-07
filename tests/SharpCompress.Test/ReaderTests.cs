@@ -50,7 +50,7 @@ namespace SharpCompress.Test
 
         public async ValueTask ReadAsync(IReader reader, CompressionType expectedCompression)
         {
-            while (await reader.MoveToNextEntry())
+            while (await reader.MoveToNextEntryAsync())
             {
                 if (!reader.Entry.IsDirectory)
                 {
