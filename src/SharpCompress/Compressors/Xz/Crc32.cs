@@ -12,17 +12,17 @@ namespace SharpCompress.Compressors.Xz
 
         private static UInt32[] defaultTable;
 
-        public static UInt32 Compute(byte[] buffer)
+        public static UInt32 Compute(ReadOnlyMemory<byte> buffer)
         {
             return Compute(DefaultSeed, buffer);
         }
 
-        public static UInt32 Compute(UInt32 seed, byte[] buffer)
+        public static UInt32 Compute(UInt32 seed, ReadOnlyMemory<byte> buffer)
         {
             return Compute(DefaultPolynomial, seed, buffer);
         }
 
-        public static UInt32 Compute(UInt32 polynomial, UInt32 seed, byte[] buffer)
+        public static UInt32 Compute(UInt32 polynomial, UInt32 seed, ReadOnlyMemory<byte> buffer)
         {
             return ~CalculateHash(InitializeTable(polynomial), seed, buffer, 0, buffer.Length);
         }
@@ -61,12 +61,12 @@ namespace SharpCompress.Compressors.Xz
             return createTable;
         }
 
-        private static UInt32 CalculateHash(UInt32[] table, UInt32 seed, IList<byte> buffer, int start, int size)
+        private static UInt32 CalculateHash(UInt32[] table, UInt32 seed, ReadOnlyMemory<byte> buffer, int start, int size)
         {
             var crc = seed;
             for (var i = start; i < size - start; i++)
             {
-                crc = (crc >> 8) ^ table[buffer[i] ^ crc & 0xff];
+                crc = (crc >> 8) ^ table[buffer.Span[i] ^ crc & 0xff];
             }
 
             return crc;

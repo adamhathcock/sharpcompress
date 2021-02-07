@@ -69,17 +69,17 @@ namespace SharpCompress.Readers.Tar
         /// <param name="stream"></param>
         /// <param name="options"></param>
         /// <returns></returns>
-        public static async ValueTask<TarReader> OpenAsync(Stream stream, ReaderOptions? options = null)
+        public static async ValueTask<TarReader> OpenAsync(Stream stream, ReaderOptions? options = null, CancellationToken cancellationToken = default)
         {
             stream.CheckNotNull(nameof(stream));
-            options = options ?? new ReaderOptions();
-            RewindableStream rewindableStream = new RewindableStream(stream);
+            options ??= new ReaderOptions();
+            RewindableStream rewindableStream = new(stream);
             rewindableStream.StartRecording();
-            if (await GZipArchive.IsGZipFileAsync(rewindableStream))
+            if (await GZipArchive.IsGZipFileAsync(rewindableStream, cancellationToken))
             {
                 rewindableStream.Rewind(false);
-                GZipStream testStream = new GZipStream(rewindableStream, CompressionMode.Decompress);
-                if (await TarArchive.IsTarFileAsync(testStream))
+                GZipStream testStream = new(rewindableStream, CompressionMode.Decompress);
+                if (await TarArchive.IsTarFileAsync(testStream, cancellationToken))
                 {
                     rewindableStream.Rewind(true);
                     return new TarReader(rewindableStream, options, CompressionType.GZip);
@@ -88,11 +88,11 @@ namespace SharpCompress.Readers.Tar
             }
 
             rewindableStream.Rewind(false);
-            if (BZip2Stream.IsBZip2(rewindableStream))
+            if (await BZip2Stream.IsBZip2Async(rewindableStream, cancellationToken))
             {
                 rewindableStream.Rewind(false);
-                BZip2Stream testStream = new BZip2Stream(rewindableStream, CompressionMode.Decompress, false);
-                if (await TarArchive.IsTarFileAsync(testStream))
+                BZip2Stream testStream = new(rewindableStream, CompressionMode.Decompress, false);
+                if (await TarArchive.IsTarFileAsync(testStream, cancellationToken))
                 {
                     rewindableStream.Rewind(true);
                     return new TarReader(rewindableStream, options, CompressionType.BZip2);
@@ -104,8 +104,8 @@ namespace SharpCompress.Readers.Tar
             if (LZipStream.IsLZipFile(rewindableStream))
             {
                 rewindableStream.Rewind(false);
-                LZipStream testStream = new LZipStream(rewindableStream, CompressionMode.Decompress);
-                if (await TarArchive.IsTarFileAsync(testStream))
+                LZipStream testStream = new(rewindableStream, CompressionMode.Decompress);
+                if (await TarArchive.IsTarFileAsync(testStream, cancellationToken))
                 {
                     rewindableStream.Rewind(true);
                     return new TarReader(rewindableStream, options, CompressionType.LZip);

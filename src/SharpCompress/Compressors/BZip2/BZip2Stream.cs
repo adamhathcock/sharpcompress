@@ -1,5 +1,8 @@
 ﻿using System;
+using System.Buffers;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace SharpCompress.Compressors.BZip2
 {
@@ -65,12 +68,17 @@ namespace SharpCompress.Compressors.BZip2
 
         public override int Read(byte[] buffer, int offset, int count)
         {
-            return stream.Read(buffer, offset, count);
+            throw new NotImplementedException();
+        }
+
+        public override ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default)
+        {
+            return stream.ReadAsync(buffer, cancellationToken);
         }
 
         public override int ReadByte()
         {
-            return stream.ReadByte();
+            throw new NotImplementedException();
         }
 
         public override long Seek(long offset, SeekOrigin origin)
@@ -83,28 +91,19 @@ namespace SharpCompress.Compressors.BZip2
             stream.SetLength(value);
         }
 
-#if !NET461 && !NETSTANDARD2_0
-
-        public override int Read(Span<byte> buffer)
+        public override ValueTask WriteAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken = new CancellationToken())
         {
-            return stream.Read(buffer);
+            return stream.WriteAsync(buffer, cancellationToken);
         }
-
-        public override void Write(ReadOnlySpan<byte> buffer)
-        {
-            stream.Write(buffer);
-        }
-
-#endif
 
         public override void Write(byte[] buffer, int offset, int count)
         {
-            stream.Write(buffer, offset, count);
+            throw new NotImplementedException();
         }
 
         public override void WriteByte(byte value)
         {
-            stream.WriteByte(value);
+            throw new NotImplementedException();
         }
 
         /// <summary>
@@ -112,11 +111,12 @@ namespace SharpCompress.Compressors.BZip2
         /// </summary>
         /// <param name="stream"></param>
         /// <returns></returns>
-        public static bool IsBZip2(Stream stream)
+        public static async ValueTask<bool> IsBZip2Async(Stream stream, CancellationToken cancellationToken)
         {
-            BinaryReader br = new BinaryReader(stream);
-            byte[] chars = br.ReadBytes(2);
-            if (chars.Length < 2 || chars[0] != 'B' || chars[1] != 'Z')
+            using var rented = MemoryPool<byte>.Shared.Rent(2);
+            var chars = rented.Memory.Slice(0, 2);
+            await stream.ReadAsync(chars, cancellationToken);
+            if (chars.Length < 2 || chars.Span[0] != 'B' || chars.Span[1] != 'Z')
             {
                 return false;
             }

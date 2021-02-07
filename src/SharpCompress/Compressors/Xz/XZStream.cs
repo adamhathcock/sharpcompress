@@ -1,18 +1,18 @@
-﻿#nullable disable
-
-using System;
+﻿using System;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace SharpCompress.Compressors.Xz
 {
     [CLSCompliant(false)]
     public sealed class XZStream : XZReadOnlyStream
     {
-        public static bool IsXZStream(Stream stream)
+        public static async ValueTask<bool> IsXZStreamAsync(Stream stream, CancellationToken cancellationToken = default)
         {
             try
             {
-                return null != XZHeader.FromStream(stream);
+                return null != await XZHeader.FromStream(stream, cancellationToken);
             }
             catch (Exception)
             {
@@ -22,7 +22,7 @@ namespace SharpCompress.Compressors.Xz
 
         private void AssertBlockCheckTypeIsSupported()
         {
-            switch (Header.BlockCheckType)
+            switch (Header?.BlockCheckType)
             {
                 case CheckType.NONE:
                     break;
@@ -36,11 +36,11 @@ namespace SharpCompress.Compressors.Xz
                     throw new NotSupportedException("Check Type unknown to this version of decoder.");
             }
         }
-        public XZHeader Header { get; private set; }
-        public XZIndex Index { get; private set; }
-        public XZFooter Footer { get; private set; }
+        public XZHeader? Header { get; private set; }
+        public XZIndex? Index { get; private set; }
+        public XZFooter? Footer { get; private set; }
         public bool HeaderIsRead { get; private set; }
-        private XZBlock _currentBlock;
+        private XZBlock? _currentBlock;
 
         private bool _endOfStream;
 
@@ -48,7 +48,7 @@ namespace SharpCompress.Compressors.Xz
         {
         }
 
-        public override int Read(byte[] buffer, int offset, int count)
+        public override async ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default)
         {
             int bytesRead = 0;
             if (_endOfStream)
@@ -58,11 +58,11 @@ namespace SharpCompress.Compressors.Xz
 
             if (!HeaderIsRead)
             {
-                ReadHeader();
+                await ReadHeader();
             }
 
-            bytesRead = ReadBlocks(buffer, offset, count);
-            if (bytesRead < count)
+            bytesRead = await ReadBlocks(buffer, cancellationToken);
+            if (bytesRead < buffer.Length)
             {
                 _endOfStream = true;
                 ReadIndex();
@@ -71,9 +71,9 @@ namespace SharpCompress.Compressors.Xz
             return bytesRead;
         }
 
-        private void ReadHeader()
+        private async ValueTask ReadHeader()
         {
-            Header = XZHeader.FromStream(BaseStream);
+            Header = await XZHeader.FromStream(BaseStream);
             AssertBlockCheckTypeIsSupported();
             HeaderIsRead = true;
         }
@@ -90,29 +90,29 @@ namespace SharpCompress.Compressors.Xz
             // TODO verify footer
         }
 
-        private int ReadBlocks(byte[] buffer, int offset, int count)
+        private async ValueTask<int> ReadBlocks(Memory<byte> buffer, CancellationToken cancellationToken)
         {
             int bytesRead = 0;
             if (_currentBlock is null)
             {
-                NextBlock();
+                _currentBlock = NextBlock();
             }
 
             for (; ; )
             {
                 try
                 {
-                    if (bytesRead >= count)
+                    if (bytesRead >= buffer.Length)
                     {
                         break;
                     }
 
-                    int remaining = count - bytesRead;
-                    int newOffset = offset + bytesRead;
-                    int justRead = _currentBlock.Read(buffer, newOffset, remaining);
+                    int remaining = buffer.Length - bytesRead;
+                    int newOffset = bytesRead;
+                    int justRead = await _currentBlock.ReadAsync(buffer.Slice(newOffset, remaining), cancellationToken);
                     if (justRead < remaining)
                     {
-                        NextBlock();
+                        _currentBlock = NextBlock();
                     }
 
                     bytesRead += justRead;
@@ -125,9 +125,9 @@ namespace SharpCompress.Compressors.Xz
             return bytesRead;
         }
 
-        private void NextBlock()
+        private XZBlock NextBlock()
         {
-            _currentBlock = new XZBlock(BaseStream, Header.BlockCheckType, Header.BlockCheckSize);
+            return new XZBlock(BaseStream, Header!.BlockCheckType, Header!.BlockCheckSize);
         }
     }
 }

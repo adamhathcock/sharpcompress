@@ -1,58 +1,65 @@
 ﻿using System;
+using System.Buffers;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 using SharpCompress.IO;
 
 namespace SharpCompress.Compressors.Xz
 {
     public class XZHeader
     {
-        private readonly BinaryReader _reader;
-        private readonly byte[] MagicHeader = { 0xFD, 0x37, 0x7A, 0x58, 0x5a, 0x00 };
+        private readonly Stream _stream;
+        private static readonly ReadOnlyMemory<byte> MagicHeader = new(new byte[]{ 0xFD, 0x37, 0x7A, 0x58, 0x5a, 0x00 });
 
         public CheckType BlockCheckType { get; private set; }
         public int BlockCheckSize => ((((int)BlockCheckType) + 2) / 3) * 4;
 
-        public XZHeader(BinaryReader reader)
+        public XZHeader(Stream reader)
         {
-            _reader = reader;
+            _stream = reader;
         }
 
-        public static XZHeader FromStream(Stream stream)
+        public static async ValueTask<XZHeader> FromStream(Stream stream, CancellationToken cancellationToken = default)
         {
-            var header = new XZHeader(new BinaryReader(new NonDisposingStream(stream), Encoding.UTF8));
-            header.Process();
+            var header = new XZHeader(new NonDisposingStream(stream));
+            await header.Process(cancellationToken);
             return header;
         }
 
-        public void Process()
+        public async ValueTask Process(CancellationToken cancellationToken = default)
         {
-            CheckMagicBytes(_reader.ReadBytes(6));
-            ProcessStreamFlags();
+            using var header = MemoryPool<byte>.Shared.Rent(6);
+            await _stream.ReadAsync(header.Memory.Slice(0, 6), cancellationToken);
+            CheckMagicBytes(header.Memory.Slice(0, 6));
+            await ProcessStreamFlags(cancellationToken);
         }
 
-        private void ProcessStreamFlags()
+        private async ValueTask ProcessStreamFlags(CancellationToken cancellationToken)
         {
-            byte[] streamFlags = _reader.ReadBytes(2);
-            UInt32 crc = _reader.ReadLittleEndianUInt32();
-            UInt32 calcCrc = Crc32.Compute(streamFlags);
+            using var header = MemoryPool<byte>.Shared.Rent(6);
+            await _stream.ReadAsync(header.Memory.Slice(0, 2), cancellationToken);
+
+            BlockCheckType = (CheckType)(header.Memory.Span[1] & 0x0F);
+            byte futureUse = (byte)(header.Memory.Span[1] & 0xF0);
+            if (futureUse != 0 || header.Memory.Span[0] != 0)
+            {
+                throw new InvalidDataException("Unknown XZ Stream Version");
+            }
+            
+            UInt32 crc = await _stream.ReadLittleEndianUInt32(cancellationToken);
+            UInt32 calcCrc = Crc32.Compute(header.Memory.Slice(0, 2));
             if (crc != calcCrc)
             {
                 throw new InvalidDataException("Stream header corrupt");
             }
-
-            BlockCheckType = (CheckType)(streamFlags[1] & 0x0F);
-            byte futureUse = (byte)(streamFlags[1] & 0xF0);
-            if (futureUse != 0 || streamFlags[0] != 0)
-            {
-                throw new InvalidDataException("Unknown XZ Stream Version");
-            }
         }
 
-        private void CheckMagicBytes(byte[] header)
+        private void CheckMagicBytes(ReadOnlyMemory<byte> header)
         {
-            if (!header.SequenceEqual(MagicHeader))
+            if (!header.Equals(MagicHeader))
             {
                 throw new InvalidDataException("Invalid XZ Stream");
             }
