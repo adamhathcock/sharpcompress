@@ -19,7 +19,7 @@ namespace SharpCompress.Test.GZip
         public async Task GZip_Writer_Generic()
         {
             await using (Stream stream = File.Open(Path.Combine(SCRATCH_FILES_PATH, "Tar.tar.gz"), FileMode.OpenOrCreate, FileAccess.Write))
-            await using (var writer = WriterFactory.Open(stream, ArchiveType.GZip, CompressionType.GZip))
+            await using (var writer = await WriterFactory.OpenAsync(stream, ArchiveType.GZip, CompressionType.GZip))
             {
                 await writer.WriteAsync("Tar.tar", Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar"));
             }
@@ -45,7 +45,7 @@ namespace SharpCompress.Test.GZip
             await Assert.ThrowsAsync<InvalidFormatException>(async () =>
             {
                 await using (Stream stream = File.OpenWrite(Path.Combine(SCRATCH_FILES_PATH, "Tar.tar.gz")))
-                await using (var writer = WriterFactory.Open(stream, ArchiveType.GZip, CompressionType.BZip2))
+                await using (var writer = await WriterFactory.OpenAsync(stream, ArchiveType.GZip, CompressionType.BZip2))
                 {
                 }
             });

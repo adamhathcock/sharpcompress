@@ -39,15 +39,30 @@
     <Compile Remove="Archives\SevenZip\**" />
     <Compile Remove="Archives\Rar\**" />
     <Compile Remove="Readers\Rar\**" />
+    <Compile Remove="Common\Rar\**" />
+    <Compile Remove="Common\SevenZip\ArchiveDatabase.cs" />
+    <Compile Remove="Common\SevenZip\ArchiveReader.cs" />
+    <Compile Remove="Common\SevenZip\CStreamSwitch.cs" />
+    <Compile Remove="Common\SevenZip\SevenZipEntry.cs" />
+    <Compile Remove="Common\SevenZip\SevenZipFilePart.cs" />
+    <Compile Remove="Common\SevenZip\SevenZipVolume.cs" />
+    <Compile Remove="Compressors\Rar\**" />
+    <Compile Remove="Compressors\PPMd\**" />
   </ItemGroup>  
   <ItemGroup>
     <EmbeddedResource Remove="Archives\SevenZip\**" />
     <EmbeddedResource Remove="Readers\Rar\**" />
+    <EmbeddedResource Remove="Common\Rar\**" />
+    <EmbeddedResource Remove="Compressors\Rar\**" />
+    <EmbeddedResource Remove="Compressors\PPMd\**" />
   </ItemGroup>  
   <ItemGroup>
     <None Remove="Archives\SevenZip\**" />
     <None Remove="Archives\Rar\**" />
     <None Remove="Readers\Rar\**" />
+    <None Remove="Common\Rar\**" />
+    <None Remove="Compressors\Rar\**" />
+    <None Remove="Compressors\PPMd\**" />
   </ItemGroup>
 
 </Project>

@@ -81,7 +81,7 @@ namespace SharpCompress.Readers
             }
             if (entriesForCurrentReadStream is null)
             {
-                var stream = RequestInitialStream();
+                var stream = await RequestInitialStream(cancellationToken);
                 if (stream is null || !stream.CanRead)
                 {
                     throw new MultipartStreamRequiredException("File is split into multiple archives: '"
@@ -103,9 +103,9 @@ namespace SharpCompress.Readers
             return false;
         }
 
-        protected virtual Stream RequestInitialStream()
+        protected virtual ValueTask<Stream> RequestInitialStream(CancellationToken cancellationToken)
         {
-            return Volume.Stream;
+            return new(Volume.Stream);
         }
 
         protected abstract IAsyncEnumerable<TEntry> GetEntries(Stream stream, CancellationToken cancellationToken);

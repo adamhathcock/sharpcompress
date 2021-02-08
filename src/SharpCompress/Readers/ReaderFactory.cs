@@ -60,7 +60,7 @@ namespace SharpCompress.Readers
             if (await BZip2Stream.IsBZip2Async(rewindableStream, cancellationToken))
             {
                 rewindableStream.Rewind(false);
-                BZip2Stream testStream = new(new NonDisposingStream(rewindableStream), CompressionMode.Decompress, false);
+                var testStream = await BZip2Stream.CreateAsync(new NonDisposingStream(rewindableStream), CompressionMode.Decompress, false, cancellationToken);
                 if (await TarArchive.IsTarFileAsync(testStream, cancellationToken))
                 {
                     rewindableStream.Rewind(true);

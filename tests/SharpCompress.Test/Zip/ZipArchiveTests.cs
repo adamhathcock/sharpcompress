@@ -488,7 +488,7 @@ namespace SharpCompress.Test.Zip
         {
             MemoryStream stream = new NonSeekableMemoryStream();
 
-            await using (IWriter zipWriter = WriterFactory.Open(stream, ArchiveType.Zip, CompressionType.Deflate))
+            await using (IWriter zipWriter = await WriterFactory.OpenAsync(stream, ArchiveType.Zip, CompressionType.Deflate))
             {
                 await zipWriter.WriteAsync("foo.txt", new MemoryStream(new byte[0]));
                 await zipWriter.WriteAsync("foo2.txt", new MemoryStream(new byte[10]));

@@ -44,7 +44,7 @@ namespace SharpCompress.Test.Tar
 
             // Step 1: create a tar file containing a file with the test name
             await using (Stream stream = File.OpenWrite(Path.Combine(SCRATCH2_FILES_PATH, archive)))
-            await using (var writer = WriterFactory.Open(stream, ArchiveType.Tar, CompressionType.None))
+            await using (var writer = await WriterFactory.OpenAsync(stream, ArchiveType.Tar, CompressionType.None))
             await using (Stream inputStream = new MemoryStream())
             {
                 StreamWriter sw = new StreamWriter(inputStream);
@@ -99,7 +99,7 @@ namespace SharpCompress.Test.Tar
 
             // Step 1: create a tar file containing a file with a long name
             await using (Stream stream = File.OpenWrite(Path.Combine(SCRATCH2_FILES_PATH, archive)))
-            await using (var writer = WriterFactory.Open(stream, ArchiveType.Tar, CompressionType.None))
+            await using (var writer = await WriterFactory.OpenAsync(stream, ArchiveType.Tar, CompressionType.None))
             await using (Stream inputStream = new MemoryStream())
             {
                 StreamWriter sw = new StreamWriter(inputStream);
@@ -220,7 +220,7 @@ namespace SharpCompress.Test.Tar
             var twopt = new TarWriterOptions(CompressionType.None, true);
             twopt.ArchiveEncoding = enc;
             var fname = new string((char)0x3042, length);
-            await using (var tw = new TarWriter(mstm, twopt))
+            await using (var tw = await TarWriter.CreateAsync(mstm, twopt))
             await using (var input = new MemoryStream(new byte[32]))
             {
                 await tw.WriteAsync(fname, input, null);
@@ -250,7 +250,7 @@ namespace SharpCompress.Test.Tar
             var testBytes = Encoding.UTF8.GetBytes("This is a test.");
 
             await using var memoryStream = new MemoryStream();
-            await using (var tarWriter = new TarWriter(memoryStream, tarWriterOptions))
+            await using (var tarWriter = await TarWriter.CreateAsync(memoryStream, tarWriterOptions))
             await using (var testFileStream = new MemoryStream(testBytes))
             {
                 await tarWriter.WriteAsync("test1.txt", testFileStream);

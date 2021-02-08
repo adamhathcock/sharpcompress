@@ -1,12 +1,14 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using SharpCompress.Common.SevenZip;
 using SharpCompress.Compressors.BZip2;
 using SharpCompress.Compressors.Deflate;
 using SharpCompress.Compressors.Filters;
 using SharpCompress.Compressors.LZMA.Utilites;
-using SharpCompress.Compressors.PPMd;
+//using SharpCompress.Compressors.PPMd;
 
 namespace SharpCompress.Compressors.LZMA
 {
@@ -22,8 +24,8 @@ namespace SharpCompress.Compressors.LZMA
         private const uint K_DEFLATE = 0x040108;
         private const uint K_B_ZIP2 = 0x040202;
 
-        internal static Stream CreateDecoderStream(CMethodId id, Stream[] inStreams, byte[] info, IPasswordProvider pass,
-                                                   long limit)
+        internal static async ValueTask<Stream> CreateDecoderStream(CMethodId id, Stream[] inStreams, byte[] info, IPasswordProvider pass,
+                                                                    long limit, CancellationToken cancellationToken)
         {
             switch (id._id)
             {
@@ -43,9 +45,9 @@ namespace SharpCompress.Compressors.LZMA
                 case K_BCJ2:
                     return new Bcj2DecoderStream(inStreams, info, limit);
                 case K_B_ZIP2:
-                    return new BZip2Stream(inStreams.Single(), CompressionMode.Decompress, true);
-                case K_PPMD:
-                    return new PpmdStream(new PpmdProperties(info), inStreams.Single(), false);
+                    return await BZip2Stream.CreateAsync(inStreams.Single(), CompressionMode.Decompress, true, cancellationToken);
+                /*case K_PPMD:
+                    return new PpmdStream(new PpmdProperties(info), inStreams.Single(), false);*/
                 case K_DEFLATE:
                     return new DeflateStream(inStreams.Single(), CompressionMode.Decompress);
                 default:

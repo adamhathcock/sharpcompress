@@ -15,18 +15,23 @@ namespace SharpCompress.Writers.Tar
 {
     public class TarWriter : AbstractWriter
     {
-        private readonly bool finalizeArchiveOnClose;
+        private bool finalizeArchiveOnClose;
 
-        public TarWriter(Stream destination, TarWriterOptions options)
+        private TarWriter(TarWriterOptions options)
             : base(ArchiveType.Tar, options)
         {
-            finalizeArchiveOnClose = options.FinalizeArchiveOnClose;
+        }
+
+        public static async ValueTask<TarWriter> CreateAsync(Stream destination, TarWriterOptions options, CancellationToken cancellationToken = default)
+        {
+            var tw = new TarWriter(options);
+            tw.finalizeArchiveOnClose = options.FinalizeArchiveOnClose;
 
             if (!destination.CanWrite)
             {
                 throw new ArgumentException("Tars require writable streams.");
             }
-            if (WriterOptions.LeaveStreamOpen)
+            if (tw.WriterOptions.LeaveStreamOpen)
             {
                 destination = new NonDisposingStream(destination);
             }
@@ -36,7 +41,7 @@ namespace SharpCompress.Writers.Tar
                     break;
                 case CompressionType.BZip2:
                     {
-                        destination = new BZip2Stream(destination, CompressionMode.Compress, false);
+                        destination = await BZip2Stream.CreateAsync(destination, CompressionMode.Compress, false, cancellationToken);
                     }
                     break;
                 case CompressionType.GZip:
@@ -54,7 +59,8 @@ namespace SharpCompress.Writers.Tar
                         throw new InvalidFormatException("Tar does not support compression: " + options.CompressionType);
                     }
             }
-            InitializeStream(destination);
+            tw.InitializeStream(destination);
+            return tw;
         }
 
         public override ValueTask WriteAsync(string filename, Stream source, DateTime? modificationTime, CancellationToken cancellationToken = default)
@@ -118,7 +124,7 @@ namespace SharpCompress.Writers.Tar
             {
                 case BZip2Stream b:
                     {
-                        b.Finish();
+                        await b.FinishAsync(CancellationToken.None);
                         break;
                     }
                 case LZipStream l:

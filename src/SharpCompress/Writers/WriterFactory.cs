@@ -1,5 +1,7 @@
 ﻿using System;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 using SharpCompress.Common;
 using SharpCompress.Writers.GZip;
 using SharpCompress.Writers.Tar;
@@ -9,7 +11,7 @@ namespace SharpCompress.Writers
 {
     public static class WriterFactory
     {
-        public static IWriter Open(Stream stream, ArchiveType archiveType, WriterOptions writerOptions)
+        public static async ValueTask<IWriter> OpenAsync(Stream stream, ArchiveType archiveType, WriterOptions writerOptions, CancellationToken cancellationToken = default)
         {
             switch (archiveType)
             {
@@ -27,7 +29,7 @@ namespace SharpCompress.Writers
                     }
                 case ArchiveType.Tar:
                 {
-                    return new TarWriter(stream, new TarWriterOptions(writerOptions));
+                    return await TarWriter.CreateAsync(stream, new TarWriterOptions(writerOptions), cancellationToken);
                 }
                 default:
                     {

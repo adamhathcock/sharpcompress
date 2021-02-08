@@ -149,7 +149,7 @@ namespace SharpCompress.Test.Zip
 
             using (var zip = File.OpenWrite(filename))
             using (var st = forward_only ? (Stream)new ForwardOnlyStream(zip) : zip)
-            await using (var zipWriter = (ZipWriter)WriterFactory.Open(st, ArchiveType.Zip, opts))
+            await using (var zipWriter = (ZipWriter)await WriterFactory.OpenAsync(st, ArchiveType.Zip, opts))
             {
 
                 for (var i = 0; i < files; i++)

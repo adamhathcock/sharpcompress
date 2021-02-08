@@ -284,7 +284,7 @@ namespace SharpCompress.Test.Zip
             {
                 Stream stream = new TestStream(memory, read: true, write: true, seek: false);
 
-                await using (IWriter zipWriter = WriterFactory.Open(stream, ArchiveType.Zip, CompressionType.Deflate))
+                await using (IWriter zipWriter = await WriterFactory.OpenAsync(stream, ArchiveType.Zip, CompressionType.Deflate))
                 {
                     await zipWriter.WriteAsync(expected[0].Item1, new MemoryStream(expected[0].Item2));
                     await zipWriter.WriteAsync(expected[1].Item1, new MemoryStream(expected[1].Item2));

@@ -28,7 +28,7 @@ namespace SharpCompress.Test
 
                 writerOptions.ArchiveEncoding.Default = encoding ?? Encoding.Default;
 
-                await using (var writer = WriterFactory.Open(stream, type, writerOptions))
+                await using (var writer = await WriterFactory.OpenAsync(stream, type, writerOptions))
                 {
                     await writer.WriteAllAsync(ORIGINAL_FILES_PATH, "*", SearchOption.AllDirectories);
                 }

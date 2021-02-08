@@ -29,14 +29,14 @@ namespace SharpCompress.Readers.Tar
 
         public override TarVolume Volume { get; }
 
-        protected override Stream RequestInitialStream()
+        protected override async ValueTask<Stream> RequestInitialStream(CancellationToken cancellationToken)
         {
-            var stream = base.RequestInitialStream();
+            var stream = await base.RequestInitialStream(cancellationToken);
             switch (compressionType)
             {
                 case CompressionType.BZip2:
                     {
-                        return new BZip2Stream(stream, CompressionMode.Decompress, false);
+                        return await BZip2Stream.CreateAsync(stream, CompressionMode.Decompress, false, cancellationToken);
                     }
                 case CompressionType.GZip:
                     {
@@ -91,7 +91,7 @@ namespace SharpCompress.Readers.Tar
             if (await BZip2Stream.IsBZip2Async(rewindableStream, cancellationToken))
             {
                 rewindableStream.Rewind(false);
-                BZip2Stream testStream = new(rewindableStream, CompressionMode.Decompress, false);
+                var testStream = await BZip2Stream.CreateAsync(rewindableStream, CompressionMode.Decompress, false, cancellationToken);
                 if (await TarArchive.IsTarFileAsync(testStream, cancellationToken))
                 {
                     rewindableStream.Rewind(true);

@@ -13,7 +13,7 @@ using SharpCompress.Compressors;
 using SharpCompress.Compressors.BZip2;
 using SharpCompress.Compressors.Deflate;
 using SharpCompress.Compressors.LZMA;
-using SharpCompress.Compressors.PPMd;
+//using SharpCompress.Compressors.PPMd;
 using SharpCompress.IO;
 
 namespace SharpCompress.Writers.Zip
@@ -25,7 +25,7 @@ namespace SharpCompress.Writers.Zip
         private readonly List<ZipCentralDirectoryEntry> entries = new();
         private readonly string zipComment;
         private long streamPosition;
-        private PpmdProperties? ppmdProps;
+       // private PpmdProperties? ppmdProps;
         private readonly bool isZip64;
 
         public ZipWriter(Stream destination, ZipWriterOptions zipWriterOptions)
@@ -48,13 +48,13 @@ namespace SharpCompress.Writers.Zip
             InitializeStream(destination);
         }
 
-        private PpmdProperties PpmdProperties
+       /* private PpmdProperties PpmdProperties
         {
             get
             {
                 return ppmdProps ??= new PpmdProperties();
             }
-        }
+        }          */
 
         protected override async ValueTask DisposeAsyncCore()
         {
@@ -132,8 +132,10 @@ namespace SharpCompress.Writers.Zip
 
             var headersize = (uint)(await WriteHeaderAsync(entryPath, options, entry, useZip64, cancellationToken));
             streamPosition += headersize;
-            return new ZipWritingStream(this, OutputStream, entry, compression,
+            var s = new ZipWritingStream(this, OutputStream, entry, compression,
                 options.DeflateCompressionLevel ?? compressionLevel);
+            await s.InitializeAsync(cancellationToken);
+            return s;
         }
 
         private string NormalizeFilename(string filename)
@@ -336,7 +338,9 @@ namespace SharpCompress.Writers.Zip
             private readonly CRC32 crc = new CRC32();
             private readonly ZipCentralDirectoryEntry entry;
             private readonly Stream originalStream;
-            private readonly Stream writeStream;
+#nullable disable
+            private Stream writeStream;
+#nullable enable
             private readonly ZipWriter writer;
             private readonly ZipCompressionMethod zipCompressionMethod;
             private readonly CompressionLevel compressionLevel;
@@ -356,7 +360,11 @@ namespace SharpCompress.Writers.Zip
                 this.entry = entry;
                 this.zipCompressionMethod = zipCompressionMethod;
                 this.compressionLevel = compressionLevel;
-                writeStream = GetWriteStream(originalStream);
+            }
+
+            public async ValueTask InitializeAsync(CancellationToken cancellationToken)
+            {
+                writeStream = await GetWriteStream(originalStream, cancellationToken);
             }
 
             public override bool CanRead => false;
@@ -369,7 +377,7 @@ namespace SharpCompress.Writers.Zip
 
             public override long Position { get => throw new NotSupportedException(); set => throw new NotSupportedException(); }
 
-            private Stream GetWriteStream(Stream writeStream)
+            private async ValueTask<Stream> GetWriteStream(Stream writeStream, CancellationToken cancellationToken)
             {
                 counting = new CountingWritableSubStream(writeStream);
                 Stream output = counting;
@@ -385,7 +393,7 @@ namespace SharpCompress.Writers.Zip
                         }
                     case ZipCompressionMethod.BZip2:
                         {
-                            return new BZip2Stream(counting, CompressionMode.Compress, false);
+                            return await BZip2Stream.CreateAsync(counting, CompressionMode.Compress, false, cancellationToken);
                         }
                     case ZipCompressionMethod.LZMA:
                         {
@@ -399,11 +407,11 @@ namespace SharpCompress.Writers.Zip
                             counting.Write(lzmaStream.Properties, 0, lzmaStream.Properties.Length);
                             return lzmaStream;
                         }
-                    case ZipCompressionMethod.PPMd:
+                  /*  case ZipCompressionMethod.PPMd:
                         {
                             counting.Write(writer.PpmdProperties.Properties, 0, 2);
                             return new PpmdStream(writer.PpmdProperties, counting, true);
-                        }
+                        }                         */
                     default:
                         {
                             throw new NotSupportedException("CompressionMethod: " + zipCompressionMethod);

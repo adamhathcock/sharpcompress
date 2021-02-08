@@ -10,7 +10,7 @@ using SharpCompress.Compressors.BZip2;
 using SharpCompress.Compressors.Deflate;
 using SharpCompress.Compressors.Deflate64;
 using SharpCompress.Compressors.LZMA;
-using SharpCompress.Compressors.PPMd;
+//using SharpCompress.Compressors.PPMd;
 using SharpCompress.IO;
 
 namespace SharpCompress.Common.Zip
@@ -75,7 +75,7 @@ namespace SharpCompress.Common.Zip
                     }
                 case ZipCompressionMethod.BZip2:
                     {
-                        return new BZip2Stream(stream, CompressionMode.Decompress, false);
+                        return await BZip2Stream.CreateAsync(stream, CompressionMode.Decompress, false, cancellationToken);
                     }
                 case ZipCompressionMethod.LZMA:
                     {
@@ -93,11 +93,11 @@ namespace SharpCompress.Common.Zip
                                                   ? -1
                                                   : (long)Header.UncompressedSize);
                     }
-                case ZipCompressionMethod.PPMd:
+              /*  case ZipCompressionMethod.PPMd:
                 {
                     var props = await stream.ReadBytes(2, cancellationToken);
                         return new PpmdStream(new PpmdProperties(props), stream, false);
-                    }
+                    }  */
                 case ZipCompressionMethod.WinzipAes:
                     {
                         ExtraData? data = Header.Extra.SingleOrDefault(x => x.Type == ExtraDataType.WinZipAes);

@@ -184,7 +184,7 @@ namespace SharpCompress.Archives.Tar
                                                        IAsyncEnumerable<TarArchiveEntry> newEntries,
                                                        CancellationToken cancellationToken = default)
         {
-            await using var writer = new TarWriter(stream, new TarWriterOptions(options));
+            await using var writer = await TarWriter.CreateAsync(stream, new TarWriterOptions(options), cancellationToken);
             await foreach (var entry in oldEntries.Concat(newEntries)
                                                   .Where(x => !x.IsDirectory)
                                                   .WithCancellation(cancellationToken))
