@@ -17,7 +17,7 @@ namespace SharpCompress.Archives
 
             var archive = archiveEntry.Archive;
             await archive.EnsureEntriesLoaded();
-            var entryStream = archiveEntry.OpenEntryStream();
+            var entryStream = await archiveEntry.OpenEntryStreamAsync(cancellationToken);
             if (entryStream is null)
             {
                 return;

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 using SharpCompress.Common;
 using SharpCompress.IO;
@@ -273,7 +274,7 @@ namespace SharpCompress.Test.Zip
         [Fact]
         public async Task TestSharpCompressWithEmptyStream()
         {
-            var expected = new Tuple<string, byte[]>[]
+            var expected = new[]
             {
                 new Tuple<string, byte[]>("foo.txt", new byte[0]),
                 new Tuple<string, byte[]>("foo2.txt", new byte[10])
@@ -297,17 +298,10 @@ namespace SharpCompress.Test.Zip
                     var i = 0;
                     while (await zipReader.MoveToNextEntryAsync())
                     {
-                        await using (EntryStream entry = zipReader.OpenEntryStream())
+                        await using (EntryStream entry = await zipReader.OpenEntryStreamAsync())
                         {
                             MemoryStream tempStream = new MemoryStream();
-                            const int bufSize = 0x1000;
-                            byte[] buf = new byte[bufSize];
-                            int bytesRead = 0;
-                            while ((bytesRead = entry.Read(buf, 0, bufSize)) > 0)
-                            {
-                                tempStream.Write(buf, 0, bytesRead);
-                            }
-
+                            await entry.TransferToAsync(tempStream, CancellationToken.None);
                             Assert.Equal(expected[i].Item1, zipReader.Entry.Key);
                             Assert.Equal(expected[i].Item2, tempStream.ToArray());
                         }

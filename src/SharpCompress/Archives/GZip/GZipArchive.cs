@@ -161,7 +161,7 @@ namespace SharpCompress.Archives.GZip
                                                   .Where(x => !x.IsDirectory)
                                                   .WithCancellation(cancellationToken))
             {
-                await using var entryStream = entry.OpenEntryStream();
+                await using var entryStream = await entry.OpenEntryStreamAsync(cancellationToken);
                 await writer.WriteAsync(entry.Key, entryStream, entry.LastModifiedTime, cancellationToken);
             }
         }

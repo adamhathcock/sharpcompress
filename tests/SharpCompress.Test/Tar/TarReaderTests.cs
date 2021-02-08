@@ -83,7 +83,7 @@ namespace SharpCompress.Test.Tar
                     if (!reader.Entry.IsDirectory)
                     {
                         Assert.Equal(CompressionType.BZip2, reader.Entry.CompressionType);
-                        await using (var entryStream = reader.OpenEntryStream())
+                        await using (var entryStream = await reader.OpenEntryStreamAsync())
                         {
                             string file = Path.GetFileName(reader.Entry.Key);
                             string folder = Path.GetDirectoryName(reader.Entry.Key);
@@ -140,7 +140,7 @@ namespace SharpCompress.Test.Tar
                     if (!reader.Entry.IsDirectory)
                     {
                         Assert.Equal(CompressionType.BZip2, reader.Entry.CompressionType);
-                        await using (var entryStream = reader.OpenEntryStream())
+                        await using (var entryStream = await reader.OpenEntryStreamAsync())
                         {
                             await entryStream.SkipEntryAsync();
                             names.Add(reader.Entry.Key);
@@ -172,7 +172,7 @@ namespace SharpCompress.Test.Tar
                 Assert.True(await reader.MoveToNextEntryAsync());
                 Assert.Equal("inner.tar.gz", reader.Entry.Key);
 
-                await using (var entryStream = reader.OpenEntryStream())
+                await using (var entryStream = await reader.OpenEntryStreamAsync())
                 {
                     await using (FlushOnDisposeStream flushingStream = new FlushOnDisposeStream(entryStream))
                     {

@@ -1,6 +1,8 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using SharpCompress.Common.Zip.Headers;
 using SharpCompress.IO;
 
@@ -30,15 +32,15 @@ namespace SharpCompress.Common.Zip
             this._archiveEncoding = archiveEncoding;
         }
 
-        protected ZipHeader? ReadHeader(uint headerBytes, BinaryReader reader, bool zip64 = false)
+        protected async ValueTask<ZipHeader?> ReadHeader(uint headerBytes, Stream stream, CancellationToken cancellationToken, bool zip64 = false)
         {
             switch (headerBytes)
             {
                 case ENTRY_HEADER_BYTES:
                     {
                         var entryHeader = new LocalEntryHeader(_archiveEncoding);
-                        entryHeader.Read(reader);
-                        LoadHeader(entryHeader, reader.BaseStream);
+                        await entryHeader.Read(stream, cancellationToken);
+                        await LoadHeader(entryHeader, stream, cancellationToken);
 
                         _lastEntryHeader = entryHeader;
                         return entryHeader;
@@ -46,20 +48,20 @@ namespace SharpCompress.Common.Zip
                 case DIRECTORY_START_HEADER_BYTES:
                     {
                         var entry = new DirectoryEntryHeader(_archiveEncoding);
-                        entry.Read(reader);
+                        await entry.Read(stream, cancellationToken);
                         return entry;
                     }
                 case POST_DATA_DESCRIPTOR:
                     {
                         if (FlagUtility.HasFlag(_lastEntryHeader!.Flags, HeaderFlags.UsePostDataDescriptor))
                         {
-                            _lastEntryHeader.Crc = reader.ReadUInt32();
-                            _lastEntryHeader.CompressedSize = zip64 ? (long)reader.ReadUInt64() : reader.ReadUInt32();
-                            _lastEntryHeader.UncompressedSize = zip64 ? (long)reader.ReadUInt64() : reader.ReadUInt32();
+                            _lastEntryHeader.Crc = await stream.ReadUInt32(cancellationToken);
+                            _lastEntryHeader.CompressedSize = zip64 ? (long)await stream.ReadUInt64(cancellationToken) : await stream.ReadUInt32(cancellationToken);
+                            _lastEntryHeader.UncompressedSize = zip64 ? (long)await stream.ReadUInt64(cancellationToken) : await stream.ReadUInt32(cancellationToken);
                         }
                         else
                         {
-                            reader.ReadBytes(zip64 ? 20 : 12);
+                            await stream.ReadBytes(zip64 ? 20 : 12, cancellationToken);
                         }
                         return null;
                     }
@@ -68,7 +70,7 @@ namespace SharpCompress.Common.Zip
                 case DIRECTORY_END_HEADER_BYTES:
                     {
                         var entry = new DirectoryEndHeader();
-                        entry.Read(reader);
+                        await entry.Read(stream, cancellationToken);
                         return entry;
                     }
                 case SPLIT_ARCHIVE_HEADER_BYTES:
@@ -78,13 +80,13 @@ namespace SharpCompress.Common.Zip
                 case ZIP64_END_OF_CENTRAL_DIRECTORY:
                     {
                         var entry = new Zip64DirectoryEndHeader();
-                        entry.Read(reader);
+                        await entry.Read(stream, cancellationToken);
                         return entry;
                     }
                 case ZIP64_END_OF_CENTRAL_DIRECTORY_LOCATOR:
                     {
                         var entry = new Zip64DirectoryEndLocatorHeader();
-                        entry.Read(reader);
+                        await entry.Read(stream, cancellationToken);
                         return entry;
                     }
                 default:
@@ -110,7 +112,7 @@ namespace SharpCompress.Common.Zip
             }
         }
 
-        private void LoadHeader(ZipFileEntry entryHeader, Stream stream)
+        private async ValueTask LoadHeader(ZipFileEntry entryHeader, Stream stream, CancellationToken cancellationToken)
         {
             if (FlagUtility.HasFlag(entryHeader.Flags, HeaderFlags.Encrypted))
             {
@@ -134,10 +136,8 @@ namespace SharpCompress.Common.Zip
                     {
                         var keySize = (WinzipAesKeySize)data.DataBytes[4];
 
-                        var salt = new byte[WinzipAesEncryptionData.KeyLengthInBytes(keySize) / 2];
-                        var passwordVerifyValue = new byte[2];
-                        stream.Read(salt, 0, salt.Length);
-                        stream.Read(passwordVerifyValue, 0, 2);
+                        var salt = await stream.ReadBytes(WinzipAesEncryptionData.KeyLengthInBytes(keySize) / 2, cancellationToken);
+                        var passwordVerifyValue = await stream.ReadBytes(2, cancellationToken);
                         entryHeader.WinzipAesEncryptionData =
                             new WinzipAesEncryptionData(keySize, salt, passwordVerifyValue, _password);
 

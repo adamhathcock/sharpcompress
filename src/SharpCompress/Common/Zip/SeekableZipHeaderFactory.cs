@@ -1,7 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Runtime.CompilerServices;
+using System.Threading;
+using System.Threading.Tasks;
 using SharpCompress.Common.Zip.Headers;
+using SharpCompress.Compressors.Xz;
 using SharpCompress.IO;
 
 namespace SharpCompress.Common.Zip
@@ -16,43 +20,41 @@ namespace SharpCompress.Common.Zip
         {
         }
 
-        internal IEnumerable<ZipHeader> ReadSeekableHeader(Stream stream)
+        internal async IAsyncEnumerable<ZipHeader> ReadSeekableHeader(Stream stream, [EnumeratorCancellation]CancellationToken cancellationToken)
         {
-            var reader = new BinaryReader(stream);
-
-            SeekBackToHeader(stream, reader, DIRECTORY_END_HEADER_BYTES);
+            await SeekBackToHeader(stream, DIRECTORY_END_HEADER_BYTES, cancellationToken);
             var entry = new DirectoryEndHeader();
-            entry.Read(reader);
+            await entry.Read(stream, cancellationToken);
 
             if (entry.IsZip64)
             {
                 _zip64 = true;
-                SeekBackToHeader(stream, reader, ZIP64_END_OF_CENTRAL_DIRECTORY_LOCATOR);
+                await SeekBackToHeader(stream, ZIP64_END_OF_CENTRAL_DIRECTORY_LOCATOR, cancellationToken);
                 var zip64Locator = new Zip64DirectoryEndLocatorHeader();
-                zip64Locator.Read(reader);
+                await zip64Locator.Read(stream, cancellationToken);
 
                 stream.Seek(zip64Locator.RelativeOffsetOfTheEndOfDirectoryRecord, SeekOrigin.Begin);
-                uint zip64Signature = reader.ReadUInt32();
+                uint zip64Signature = await stream.ReadUInt32(cancellationToken);
                 if (zip64Signature != ZIP64_END_OF_CENTRAL_DIRECTORY)
                 {
                     throw new ArchiveException("Failed to locate the Zip64 Header");
                 }
 
                 var zip64Entry = new Zip64DirectoryEndHeader();
-                zip64Entry.Read(reader);
+                await zip64Entry.Read(stream, cancellationToken);
                 stream.Seek(zip64Entry.DirectoryStartOffsetRelativeToDisk, SeekOrigin.Begin);
             }
             else
             {
-                stream.Seek(entry.DirectoryStartOffsetRelativeToDisk, SeekOrigin.Begin);
+                stream.Seek(entry.DirectoryStartOffsetRelativeToDisk ?? 0, SeekOrigin.Begin);
             }
 
             long position = stream.Position;
             while (true)
             {
                 stream.Position = position;
-                uint signature = reader.ReadUInt32();
-                var nextHeader = ReadHeader(signature, reader, _zip64);
+                uint signature = await stream.ReadUInt32(cancellationToken);
+                var nextHeader = await ReadHeader(signature, stream, cancellationToken, _zip64);
                 position = stream.Position;
 
                 if (nextHeader is null)
@@ -73,7 +75,7 @@ namespace SharpCompress.Common.Zip
             }
         }
 
-        private static void SeekBackToHeader(Stream stream, BinaryReader reader, uint headerSignature)
+        private static async ValueTask SeekBackToHeader(Stream stream, uint headerSignature, CancellationToken cancellationToken)
         {
             long offset = 0;
             uint signature;
@@ -85,7 +87,7 @@ namespace SharpCompress.Common.Zip
                     throw new ArchiveException("Failed to locate the Zip Header");
                 }
                 stream.Seek(offset - 4, SeekOrigin.End);
-                signature = reader.ReadUInt32();
+                signature = await stream.ReadLittleEndianUInt32(cancellationToken);
                 offset--;
                 iterationCount++;
                 if (iterationCount > MAX_ITERATIONS_FOR_DIRECTORY_HEADER)
@@ -96,12 +98,11 @@ namespace SharpCompress.Common.Zip
             while (signature != headerSignature);
         }
 
-        internal LocalEntryHeader GetLocalHeader(Stream stream, DirectoryEntryHeader directoryEntryHeader)
+        internal async ValueTask<LocalEntryHeader> GetLocalHeader(Stream stream, DirectoryEntryHeader directoryEntryHeader, CancellationToken cancellationToken)
         {
             stream.Seek(directoryEntryHeader.RelativeOffsetOfEntryHeader, SeekOrigin.Begin);
-            BinaryReader reader = new BinaryReader(stream);
-            uint signature = reader.ReadUInt32();
-            var localEntryHeader = ReadHeader(signature, reader, _zip64) as LocalEntryHeader;
+            uint signature = await stream.ReadUInt32(cancellationToken);
+            var localEntryHeader = await ReadHeader(signature, stream, cancellationToken, _zip64) as LocalEntryHeader;
             if (localEntryHeader is null)
             {
                 throw new InvalidOperationException();

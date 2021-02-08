@@ -37,7 +37,7 @@ namespace SharpCompress.Readers
                         };
             RewindableStream rewindableStream = new(stream);
             rewindableStream.StartRecording();
-            if (await ZipArchive.IsZipFileAsync(rewindableStream, options.Password))
+            if (await ZipArchive.IsZipFileAsync(rewindableStream, options.Password, cancellationToken))
             {
                 rewindableStream.Rewind(true);
                 return ZipReader.Open(rewindableStream, options);

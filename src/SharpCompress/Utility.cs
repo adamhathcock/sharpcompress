@@ -1,5 +1,6 @@
 using System;
 using System.Buffers;
+using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading;
@@ -10,11 +11,33 @@ namespace SharpCompress
 {
     internal static class Utility
     {
-        public static ReadOnlyCollection<T> ToReadOnly<T>(this ICollection<T> items)
+        public static async ValueTask<T> ReadPrimitive<T>(this Stream stream, int bytes, Func<ReadOnlyMemory<byte>, T> func, CancellationToken cancellationToken)
         {
-            return new ReadOnlyCollection<T>(items);
+            using var buffer = MemoryPool<byte>.Shared.Rent(bytes);
+            await stream.ReadAsync(buffer.Memory.Slice(0, bytes), cancellationToken);
+            return func(buffer.Memory.Slice(0, bytes));
+        }
+        public static ValueTask<ushort> ReadUInt16(this Stream stream, CancellationToken cancellationToken)
+        {
+            return stream.ReadPrimitive(2, x => BinaryPrimitives.ReadUInt16LittleEndian(x.Span), cancellationToken);
+        }
+        public static ValueTask<uint> ReadUInt32(this Stream stream, CancellationToken cancellationToken)
+        {
+            return stream.ReadPrimitive(4, x => BinaryPrimitives.ReadUInt32LittleEndian(x.Span), cancellationToken);
+        }
+        
+        public static ValueTask<ulong> ReadUInt64(this Stream stream, CancellationToken cancellationToken)
+        {
+            return stream.ReadPrimitive(8, x => BinaryPrimitives.ReadUInt64LittleEndian(x.Span), cancellationToken);
         }
 
+        public static async ValueTask<byte[]> ReadBytes(this Stream stream, int bytes, CancellationToken cancellationToken)
+        {
+            using var buffer = MemoryPool<byte>.Shared.Rent(bytes);
+            await stream.ReadAsync(buffer.Memory.Slice(0, bytes), cancellationToken);
+            return buffer.Memory.Slice(0, bytes).ToArray();
+        }
+        
         /// <summary>
         /// Performs an unsigned bitwise right shift with the specified number
         /// </summary>

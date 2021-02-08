@@ -1,5 +1,7 @@
 ﻿using System.IO;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using SharpCompress.Common.Zip;
 
 namespace SharpCompress.Archives.Zip
@@ -12,9 +14,9 @@ namespace SharpCompress.Archives.Zip
             Archive = archive;
         }
 
-        public virtual Stream OpenEntryStream()
+        public virtual ValueTask<Stream> OpenEntryStreamAsync(CancellationToken cancellationToken = default)
         {
-            return Parts.Single().GetCompressedStream();
+            return Parts.Single().GetCompressedStreamAsync(cancellationToken);
         }
 
         #region IArchiveEntry Members

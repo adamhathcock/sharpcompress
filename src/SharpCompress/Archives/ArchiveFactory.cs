@@ -28,7 +28,7 @@ namespace SharpCompress.Archives
                 throw new ArgumentException("Stream should be readable and seekable");
             }
             readerOptions ??= new ReaderOptions();
-            if (await ZipArchive.IsZipFileAsync(stream, null))
+            if (await ZipArchive.IsZipFileAsync(stream, null, cancellationToken))
             {
                 stream.Seek(0, SeekOrigin.Begin);
                 return ZipArchive.Open(stream, readerOptions);
@@ -93,7 +93,7 @@ namespace SharpCompress.Archives
             options ??= new ReaderOptions { LeaveStreamOpen = false };
 
             await using var stream = fileInfo.OpenRead();
-            if (await ZipArchive.IsZipFileAsync(stream, null))
+            if (await ZipArchive.IsZipFileAsync(stream, null, cancellationToken))
             {
                 return ZipArchive.Open(fileInfo, options);
             }

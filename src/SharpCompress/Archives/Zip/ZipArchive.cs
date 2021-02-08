@@ -79,12 +79,13 @@ namespace SharpCompress.Archives.Zip
             return await IsZipFileAsync(stream, password);
         }
 
-        public static async ValueTask<bool> IsZipFileAsync(Stream stream, string? password = null)
+        public static async ValueTask<bool> IsZipFileAsync(Stream stream, string? password = null, CancellationToken cancellationToken = default)
         {
             StreamingZipHeaderFactory headerFactory = new(password, new ArchiveEncoding());
             try
             {
-                ZipHeader? header = await headerFactory.ReadStreamHeader(stream).FirstOrDefaultAsync(x => x.ZipHeaderType != ZipHeaderType.Split);
+                ZipHeader? header = await headerFactory.ReadStreamHeader(stream, cancellationToken)
+                                                       .FirstOrDefaultAsync(x => x.ZipHeaderType != ZipHeaderType.Split, cancellationToken: cancellationToken);
                 if (header is null)
                 {
                     return false;
@@ -148,7 +149,7 @@ namespace SharpCompress.Archives.Zip
             await Task.CompletedTask;
             var volume = await volumes.SingleAsync(cancellationToken: cancellationToken);
             Stream stream = volume.Stream;
-            foreach (ZipHeader h in headerFactory.ReadSeekableHeader(stream))
+            await foreach (ZipHeader h in headerFactory.ReadSeekableHeader(stream, cancellationToken))
             {
                 if (h != null)
                 {
@@ -188,7 +189,7 @@ namespace SharpCompress.Archives.Zip
                                                   .Where(x => !x.IsDirectory)
                                                   .WithCancellation(cancellationToken))
             {
-                await using (var entryStream = entry.OpenEntryStream())
+                await using (var entryStream = await entry.OpenEntryStreamAsync(cancellationToken))
                 {
                     await writer.WriteAsync(entry.Key, entryStream, entry.LastModifiedTime, cancellationToken);
                 }

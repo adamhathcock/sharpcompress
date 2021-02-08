@@ -1,4 +1,6 @@
 ﻿using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 using SharpCompress.Common.Zip.Headers;
 using SharpCompress.Compressors.Deflate;
 using SharpCompress.IO;
@@ -19,13 +21,13 @@ namespace SharpCompress.Common.Zip
             return Header.PackedStream;
         }
 
-        internal override Stream GetCompressedStream()
+        internal override async ValueTask<Stream> GetCompressedStreamAsync(CancellationToken cancellationToken)
         {
             if (!Header.HasData)
             {
                 return Stream.Null;
             }
-            _decompressionStream = CreateDecompressionStream(GetCryptoStream(CreateBaseStream()), Header.CompressionMethod);
+            _decompressionStream = await CreateDecompressionStream(GetCryptoStream(CreateBaseStream()), Header.CompressionMethod, cancellationToken);
             if (LeaveStreamOpen)
             {
                 return new NonDisposingStream(_decompressionStream);
@@ -33,17 +35,17 @@ namespace SharpCompress.Common.Zip
             return _decompressionStream;
         }
 
-        internal BinaryReader FixStreamedFileLocation(ref RewindableStream rewindableStream)
+        internal async ValueTask FixStreamedFileLocation(RewindableStream rewindableStream, CancellationToken cancellationToken)
         {
             if (Header.IsDirectory)
             {
-                return new BinaryReader(rewindableStream);
+                return;
             }
             if (Header.HasData && !Skipped)
             {
-                _decompressionStream ??= GetCompressedStream();
+                _decompressionStream ??= await GetCompressedStreamAsync(cancellationToken);
 
-                _decompressionStream.Skip();
+                await _decompressionStream.SkipAsync(cancellationToken);
 
                 if (_decompressionStream is DeflateStream deflateStream)
                 {
@@ -51,9 +53,7 @@ namespace SharpCompress.Common.Zip
                 }
                 Skipped = true;
             }
-            var reader = new BinaryReader(rewindableStream);
             _decompressionStream = null;
-            return reader;
         }
     }
 }

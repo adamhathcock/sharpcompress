@@ -1,6 +1,7 @@
 ﻿using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 using SharpCompress.Common.Tar.Headers;
-using SharpCompress.IO;
 
 namespace SharpCompress.Common.Tar
 {
@@ -19,14 +20,14 @@ namespace SharpCompress.Common.Tar
 
         internal override string FilePartName => Header.Name;
 
-        internal override Stream GetCompressedStream()
+        internal override ValueTask<Stream> GetCompressedStreamAsync(CancellationToken cancellationToken)
         {
             if (_seekableStream != null)
             {
                 _seekableStream.Position = Header.DataStartPosition!.Value;
-                return new TarReadOnlySubStream(_seekableStream, Header.Size);
+                return new(new TarReadOnlySubStream(_seekableStream, Header.Size));
             }
-            return Header.PackedStream;
+            return new(Header.PackedStream);
         }
 
         internal override Stream? GetRawStream()

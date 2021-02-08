@@ -143,10 +143,8 @@ namespace SharpCompress.Readers
                 }
             }
             //don't know the size so we have to try to decompress to skip
-            await using (var s = OpenEntryStream())
-            {
-                await s.SkipAsync(cancellationToken);
-            }
+            await using var s = await OpenEntryStreamAsync(cancellationToken);
+            await s.SkipAsync(cancellationToken);
         }
 
         public async ValueTask WriteEntryToAsync(Stream writableStream, CancellationToken cancellationToken = default)
@@ -164,26 +162,24 @@ namespace SharpCompress.Readers
             wroteCurrentEntry = true;
         }
 
-        internal async ValueTask WriteAsync(Stream writeStream, CancellationToken cancellationToken)
+        private async ValueTask WriteAsync(Stream writeStream, CancellationToken cancellationToken)
         {
             if (Entry is null)
             {
                 throw new ArgumentException("Entry is null");
             }
             var streamListener = this as IReaderExtractionListener;
-            using (Stream s = OpenEntryStream())
-            {
-                await s.TransferToAsync(writeStream, Entry, streamListener, cancellationToken);
-            }
+            await using Stream s = await OpenEntryStreamAsync(cancellationToken);
+            await s.TransferToAsync(writeStream, Entry, streamListener, cancellationToken);
         }
 
-        public EntryStream OpenEntryStream()
+        public async ValueTask<EntryStream> OpenEntryStreamAsync(CancellationToken cancellationToken = default)
         {
             if (wroteCurrentEntry)
             {
                 throw new ArgumentException("WriteEntryTo or OpenEntryStream can only be called once.");
             }
-            var stream = GetEntryStream();
+            var stream = await GetEntryStreamAsync(cancellationToken);
             wroteCurrentEntry = true;
             return stream;
         }
@@ -193,16 +189,16 @@ namespace SharpCompress.Readers
         /// </summary>
         protected EntryStream CreateEntryStream(Stream decompressed)
         {
-            return new EntryStream(this, decompressed);
+            return new(this, decompressed);
         }
 
-        protected virtual EntryStream GetEntryStream()
+        protected async ValueTask<EntryStream> GetEntryStreamAsync(CancellationToken cancellationToken)
         {
             if (Entry is null)
             {
                 throw new ArgumentException("Entry is null");
             }
-            return CreateEntryStream(Entry.Parts.First().GetCompressedStream());
+            return CreateEntryStream(await Entry.Parts.First().GetCompressedStreamAsync(cancellationToken));
         }
 
         #endregion

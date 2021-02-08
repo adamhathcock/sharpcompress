@@ -178,7 +178,7 @@ namespace SharpCompress.Test.Zip
             {
                 while (await rd.MoveToNextEntryAsync())
                 {
-                    using (rd.OpenEntryStream())
+                    await using (await rd.OpenEntryStreamAsync())
                     { }
 
                     count++;

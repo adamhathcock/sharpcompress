@@ -346,9 +346,9 @@ namespace SharpCompress.Test.Zip
             {
                 await foreach (var entry in reader.Entries.Where(x => !x.IsDirectory))
                 {
-                    var stream = entry.OpenEntryStream();
+                    var stream = await entry.OpenEntryStreamAsync();
                     Assert.NotNull(stream);
-                    var ex = Record.Exception(() => stream = entry.OpenEntryStream());
+                    var ex = await Record.ExceptionAsync(async () => stream = await entry.OpenEntryStreamAsync());
                     Assert.Null(ex);
                 }
             }
@@ -416,7 +416,7 @@ namespace SharpCompress.Test.Zip
                 //Stop at last file
                 if (count2 == count)
                 {
-                    var s = e.OpenEntryStream();
+                    var s = await e.OpenEntryStreamAsync();
                     byte[] b = new byte[1]; 
                     await s.ReadAsync(b, 0, 1); //Actually access stream
                     await s.DisposeAsync();
@@ -446,7 +446,7 @@ namespace SharpCompress.Test.Zip
                 for (var i = 0; i < 100; i++)
                 {
                     await using (var memoryStream = new MemoryStream())
-                    await using (Stream entryStream = entry.OpenEntryStream())
+                    await using (Stream entryStream = await entry.OpenEntryStreamAsync())
                     {
                         await entryStream.CopyToAsync(memoryStream);
                     }
@@ -501,7 +501,7 @@ namespace SharpCompress.Test.Zip
             {
                 await foreach (var entry in zipArchive.Entries)
                 {
-                    await using (var entryStream = entry.OpenEntryStream())
+                    await using (var entryStream = await entry.OpenEntryStreamAsync())
                     {
                         MemoryStream tempStream = new MemoryStream();
                         const int bufSize = 0x1000;
@@ -529,7 +529,7 @@ namespace SharpCompress.Test.Zip
                     var buffer = new byte[4096];
 
                     await using (var memoryStream = new MemoryStream())
-                    using (var firstStream = firstEntry.OpenEntryStream())
+                    using (var firstStream = await firstEntry.OpenEntryStreamAsync())
                     {
                         await firstStream.CopyToAsync(memoryStream);
                         Assert.Equal(199, memoryStream.Length);
@@ -551,7 +551,7 @@ namespace SharpCompress.Test.Zip
                 var buffer = new byte[4096];
 
                 using (var memoryStream = new MemoryStream())
-                using (var firstStream = firstEntry.OpenEntryStream())
+                using (var firstStream = await firstEntry.OpenEntryStreamAsync())
                 {
                     await firstStream.CopyToAsync(memoryStream);
                     Assert.Equal(199, memoryStream.Length);

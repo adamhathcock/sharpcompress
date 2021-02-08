@@ -46,9 +46,9 @@ namespace SharpCompress.Common.GZip
 
         internal override string FilePartName => _name!;
 
-        internal override Stream GetCompressedStream()
+        internal override ValueTask<Stream> GetCompressedStreamAsync(CancellationToken cancellationToken)
         {
-            return new DeflateStream(_stream, CompressionMode.Decompress, CompressionLevel.Default);
+            return new(new DeflateStream(_stream, CompressionMode.Decompress, CompressionLevel.Default));
         }
 
         internal override Stream GetRawStream()

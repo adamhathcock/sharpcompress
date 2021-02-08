@@ -3,6 +3,8 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 using SharpCompress.Common;
 using SharpCompress.IO;
 
@@ -49,11 +51,11 @@ namespace SharpCompress.Archives.Tar
         internal override IEnumerable<FilePart> Parts => throw new NotImplementedException();
         Stream IWritableArchiveEntry.Stream => stream;
 
-        public override Stream OpenEntryStream()
+        public override ValueTask<Stream> OpenEntryStreamAsync(CancellationToken cancellationToken = default)
         {
             //ensure new stream is at the start, this could be reset
             stream.Seek(0, SeekOrigin.Begin);
-            return new NonDisposingStream(stream);
+            return new(new NonDisposingStream(stream));
         }
 
         internal override void Close()

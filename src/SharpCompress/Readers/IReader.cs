@@ -36,6 +36,6 @@ namespace SharpCompress.Readers
         /// Opens the current entry as a stream that will decompress as it is read.
         /// Read the entire stream or use SkipEntry on EntryStream.
         /// </summary>
-        EntryStream OpenEntryStream();
+        ValueTask<EntryStream> OpenEntryStreamAsync(CancellationToken cancellationToken = default);
     }
 }

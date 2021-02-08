@@ -64,7 +64,7 @@ namespace SharpCompress.Test.Tar
 
                 await foreach (var entry in archive2.Entries)
                 {
-                    Assert.Equal("dummy filecontent", await new StreamReader(entry.OpenEntryStream()).ReadLineAsync());
+                    Assert.Equal("dummy filecontent", await new StreamReader(await entry.OpenEntryStreamAsync()).ReadLineAsync());
                 }
             }
         }
@@ -119,7 +119,7 @@ namespace SharpCompress.Test.Tar
 
                 await foreach (var entry in archive2.Entries)
                 {
-                    Assert.Equal("dummy filecontent", await new StreamReader(entry.OpenEntryStream()).ReadLineAsync());
+                    Assert.Equal("dummy filecontent", await new StreamReader(await entry.OpenEntryStreamAsync()).ReadLineAsync());
                 }
             }
         }
@@ -268,7 +268,7 @@ namespace SharpCompress.Test.Tar
                 {
                     ++numberOfEntries;
 
-                    await using var tarEntryStream = entry.OpenEntryStream();
+                    await using var tarEntryStream = await entry.OpenEntryStreamAsync();
                     await using var testFileStream = new MemoryStream();
                     await tarEntryStream.CopyToAsync(testFileStream);
                     Assert.Equal(testBytes.Length, testFileStream.Length);

@@ -83,13 +83,13 @@ namespace SharpCompress.Test.GZip
                 var archiveEntry = await archive.Entries.FirstAsync();
 
                 MemoryStream tarStream;
-                await using (var entryStream = archiveEntry.OpenEntryStream())
+                await using (var entryStream = await archiveEntry.OpenEntryStreamAsync())
                 {
                     tarStream = new MemoryStream();
                     await entryStream.CopyToAsync(tarStream);
                 }
                 var size = tarStream.Length;
-                await using (var entryStream = archiveEntry.OpenEntryStream())
+                await using (var entryStream = await archiveEntry.OpenEntryStreamAsync())
                 {
                     tarStream = new MemoryStream();
                     await entryStream.CopyToAsync(tarStream);
@@ -100,7 +100,7 @@ namespace SharpCompress.Test.GZip
                     var result = Archives.Tar.TarArchive.IsTarFile(entryStream);
                 }
                 Assert.Equal(size, tarStream.Length);           */
-                await using (var entryStream = archiveEntry.OpenEntryStream())
+                await using (var entryStream = await archiveEntry.OpenEntryStreamAsync())
                 {
                     tarStream = new MemoryStream();
                     await entryStream.CopyToAsync(tarStream);

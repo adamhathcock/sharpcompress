@@ -40,7 +40,7 @@ namespace SharpCompress.Readers.Zip
 
         protected override async IAsyncEnumerable<ZipEntry> GetEntries(Stream stream, [EnumeratorCancellation] CancellationToken cancellationToken)
         {
-            await foreach (ZipHeader h in _headerFactory.ReadStreamHeader(stream).WithCancellation(cancellationToken))
+            await foreach (ZipHeader h in _headerFactory.ReadStreamHeader(stream, cancellationToken).WithCancellation(cancellationToken))
             {
                 if (h != null)
                 {
