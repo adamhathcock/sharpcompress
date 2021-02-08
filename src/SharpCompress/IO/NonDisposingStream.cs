@@ -87,7 +87,7 @@ namespace SharpCompress.IO
 
         public override void Write(byte[] buffer, int offset, int count)
         {
-            throw new NotImplementedException();
+            Stream.Write(buffer, offset, count);
         }
 
         public override Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)

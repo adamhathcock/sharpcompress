@@ -25,6 +25,10 @@ namespace SharpCompress
         {
             return stream.ReadPrimitive(4, x => BinaryPrimitives.ReadUInt32LittleEndian(x.Span), cancellationToken);
         }
+        public static ValueTask<int> ReadInt32(this Stream stream, CancellationToken cancellationToken)
+        {
+            return stream.ReadPrimitive(4, x => BinaryPrimitives.ReadInt32LittleEndian(x.Span), cancellationToken);
+        }
         
         public static ValueTask<ulong> ReadUInt64(this Stream stream, CancellationToken cancellationToken)
         {
@@ -317,6 +321,11 @@ namespace SharpCompress
             return total;
         }
 
+        public static async ValueTask WriteByte(this Stream stream, byte b, CancellationToken cancellationToken = default)
+        {
+            await stream.WriteAsync(new ReadOnlyMemory<byte>(new[] {b}), cancellationToken);
+        }
+
         public static long TransferTo(this Stream source, Stream destination)
         {
             byte[] array = GetTransferByteArray();
@@ -339,25 +348,19 @@ namespace SharpCompress
 
         public static async ValueTask<long> TransferToAsync(this Stream source, Stream destination, Common.Entry entry, IReaderExtractionListener readerExtractionListener, CancellationToken cancellationToken)
         {
-            byte[] array = GetTransferByteArray();
-            try
+            using var buffer = MemoryPool<byte>.Shared.Rent(81920);
+            var iterations = 0;
+            long total = 0;
+            var count = 0;
+            var slice = buffer.Memory.Slice(0, 81920);
+            while ((count = await source.ReadAsync(slice, cancellationToken)) != 0)
             {
-                var iterations = 0;
-                long total = 0;
-                var count = 0;
-                while ((count = await source.ReadAsync(array, 0, array.Length, cancellationToken)) != 0)
-                {
-                    total += count;
-                    await destination.WriteAsync(array, 0, count, cancellationToken);
-                    iterations++;
-                    readerExtractionListener.FireEntryExtractionProgress(entry, total, iterations);
-                }
-                return total;
+                total += count;
+                await destination.WriteAsync(slice.Slice(0, count), cancellationToken);
+                iterations++;
+                readerExtractionListener.FireEntryExtractionProgress(entry, total, iterations);
             }
-            finally
-            {
-                ArrayPool<byte>.Shared.Return(array);
-            }
+            return total;
         }
 
         private static byte[] GetTransferByteArray()

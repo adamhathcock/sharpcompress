@@ -32,7 +32,7 @@ namespace SharpCompress.Common.GZip
             {
                 long position = stream.Position;
                 stream.Position = stream.Length - 8;
-                ReadTrailer();
+                await ReadTrailerAsync(cancellationToken);
                 stream.Position = position;
             }
             EntryStartPosition = stream.Position;
@@ -56,14 +56,12 @@ namespace SharpCompress.Common.GZip
             return _stream;
         }
 
-        private void ReadTrailer()
+        private async ValueTask ReadTrailerAsync(CancellationToken cancellationToken)
         {
             // Read and potentially verify the GZIP trailer: CRC32 and  size mod 2^32
-            Span<byte> trailer = stackalloc byte[8];
-            int n = _stream.Read(trailer);
 
-            Crc = BinaryPrimitives.ReadInt32LittleEndian(trailer);
-            UncompressedSize = BinaryPrimitives.ReadInt32LittleEndian(trailer.Slice(4));
+            Crc = await _stream.ReadInt32(cancellationToken);
+            UncompressedSize = await _stream.ReadInt32(cancellationToken);
         }
 
         private async ValueTask ReadAndValidateGzipHeaderAsync(CancellationToken cancellationToken)

@@ -44,7 +44,7 @@ namespace SharpCompress.Test
 
                 await using (var reader = await ReaderFactory.OpenAsync(new NonDisposingStream(stream), readerOptions))
                 {
-                    await reader.WriteEntryToDirectoryAsync(SCRATCH_FILES_PATH, new ExtractionOptions()
+                    await reader.WriteAllToDirectoryAsync(SCRATCH_FILES_PATH, new ExtractionOptions()
                     {
                         ExtractFullPath = true
                     });
