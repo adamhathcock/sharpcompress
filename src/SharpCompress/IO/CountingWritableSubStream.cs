@@ -1,5 +1,7 @@
 using System;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace SharpCompress.IO
 {
@@ -39,6 +41,18 @@ namespace SharpCompress.IO
         public override void SetLength(long value)
         {
             throw new NotSupportedException();
+        }
+
+        public override async Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+        {
+            await Stream.WriteAsync(buffer, offset, count, cancellationToken);
+            Count += (uint)buffer.Length;
+        }
+
+        public override async ValueTask WriteAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken = default)
+        {
+            await Stream.WriteAsync(buffer, cancellationToken);
+            Count += (uint)buffer.Length;
         }
 
         public override void Write(byte[] buffer, int offset, int count)

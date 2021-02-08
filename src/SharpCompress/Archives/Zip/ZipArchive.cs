@@ -9,6 +9,7 @@ using SharpCompress.Common;
 using SharpCompress.Common.Zip;
 using SharpCompress.Common.Zip.Headers;
 using SharpCompress.Compressors.Deflate;
+using SharpCompress.IO;
 using SharpCompress.Readers;
 using SharpCompress.Readers.Zip;
 using SharpCompress.Writers;
@@ -84,7 +85,16 @@ namespace SharpCompress.Archives.Zip
             StreamingZipHeaderFactory headerFactory = new(password, new ArchiveEncoding());
             try
             {
-                ZipHeader? header = await headerFactory.ReadStreamHeader(stream, cancellationToken)
+                RewindableStream rewindableStream;
+                if (stream is RewindableStream rs)
+                {
+                    rewindableStream = rs;
+                }
+                else
+                {
+                    rewindableStream = new RewindableStream(stream);
+                }
+                ZipHeader? header = await headerFactory.ReadStreamHeader(rewindableStream, cancellationToken)
                                                        .FirstOrDefaultAsync(x => x.ZipHeaderType != ZipHeaderType.Split, cancellationToken: cancellationToken);
                 if (header is null)
                 {

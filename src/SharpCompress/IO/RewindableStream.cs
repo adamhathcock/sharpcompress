@@ -115,6 +115,43 @@ namespace SharpCompress.IO
             throw new NotImplementedException();
         }
 
+        public override async Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+        {
+            //don't actually read if we don't really want to read anything
+            //currently a network stream bug on Windows for .NET Core
+            if (count == 0)
+            {
+                return 0;
+            }
+            int read;
+            if (isRewound && bufferStream.Position != bufferStream.Length)
+            {
+                read = await bufferStream.ReadAsync(buffer, offset, count, cancellationToken);
+                if (read < count)
+                {
+                    int tempRead = await stream.ReadAsync(buffer, read, count - read, cancellationToken);
+                    if (IsRecording)
+                    {
+                        await bufferStream.WriteAsync(buffer, read, tempRead, cancellationToken);
+                    }
+                    read += tempRead;
+                }
+                if (bufferStream.Position == bufferStream.Length && !IsRecording)
+                {
+                    isRewound = false;
+                    bufferStream.SetLength(0);
+                }
+                return read;
+            }
+
+            read = await stream.ReadAsync(buffer, cancellationToken);
+            if (IsRecording)
+            {
+                await bufferStream.WriteAsync(buffer, cancellationToken);
+            }
+            return read;
+        }
+
         public override async ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default)
         {
             var count = buffer.Length;

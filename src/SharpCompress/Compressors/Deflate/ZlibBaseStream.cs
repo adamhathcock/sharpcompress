@@ -321,6 +321,14 @@ namespace SharpCompress.Compressors.Deflate
             _z = null;
         }
 
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                throw new NotImplementedException();
+            }
+        }
+
         public override async ValueTask DisposeAsync()
         {
             if (_isDisposed)
@@ -328,7 +336,6 @@ namespace SharpCompress.Compressors.Deflate
                 return;
             }
             _isDisposed = true;
-            await base.DisposeAsync();
             if (_stream is null)
             {
                 return;
@@ -340,7 +347,10 @@ namespace SharpCompress.Compressors.Deflate
             finally
             {
                 End();
-                _stream?.Dispose();
+                if (_stream is not null)
+                {
+                    await _stream.DisposeAsync();
+                }
                 _stream = null;
             }
         }
@@ -408,13 +418,13 @@ namespace SharpCompress.Compressors.Deflate
             return _encoding.GetString(buffer, 0, buffer.Length);
         }
 
-        private async Task<int> ReadAndValidateGzipHeaderAsync()
+        private async Task<int> ReadAndValidateGzipHeaderAsync(CancellationToken cancellationToken)
         {
             var totalBytesRead = 0;
 
             // read the header on the first read
             using var rented = MemoryPool<byte>.Shared.Rent(10);
-            int n = await _stream.ReadAsync(rented.Memory.Slice(0,10));
+            int n = await _stream.ReadAsync(rented.Memory.Slice(0,10), cancellationToken);
             var header = rented.Memory;
 
             // workitem 8501: handle edge case (decompress empty stream)
@@ -439,12 +449,12 @@ namespace SharpCompress.Compressors.Deflate
             if ((header.Span[3] & 0x04) == 0x04)
             {
                 // read and discard extra field
-                n = _stream.Read(header.Span.Slice(0, 2)); // 2-byte length field
+                n = await _stream.ReadAsync(header.Slice(0, 2), cancellationToken); // 2-byte length field
                 totalBytesRead += n;
 
                 var extraLength = (short)(header.Span[0] + header.Span[1] * 256);
                 using var extra = MemoryPool<byte>.Shared.Rent(extraLength);
-                n = await _stream.ReadAsync(extra.Memory.Slice(0, extraLength));
+                n = await _stream.ReadAsync(extra.Memory.Slice(0, extraLength), cancellationToken);
                 if (n != extraLength)
                 {
                     throw new ZlibException("Unexpected end-of-file reading GZIP header.");
@@ -461,7 +471,7 @@ namespace SharpCompress.Compressors.Deflate
             }
             if ((header.Span[3] & 0x02) == 0x02)
             {
-                await ReadAsync(_buf1, 0, 1); // CRC16, ignore
+                await ReadAsync(_buf1, 0, 1, cancellationToken); // CRC16, ignore
             }
 
             return totalBytesRead;
@@ -490,7 +500,7 @@ namespace SharpCompress.Compressors.Deflate
                 z.AvailableBytesIn = 0;
                 if (_flavor == ZlibStreamFlavor.GZIP)
                 {
-                    _gzipHeaderByteCount = await ReadAndValidateGzipHeaderAsync();
+                    _gzipHeaderByteCount = await ReadAndValidateGzipHeaderAsync(cancellationToken);
 
                     // workitem 8501: handle edge case (decompress empty stream)
                     if (_gzipHeaderByteCount == 0)

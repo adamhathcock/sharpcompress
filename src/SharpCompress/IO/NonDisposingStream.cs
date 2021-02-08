@@ -55,9 +55,19 @@ namespace SharpCompress.IO
             throw new NotImplementedException();
         }
 
-        public override ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = new CancellationToken())
+        public override ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken)
         {
             return Stream.ReadAsync(buffer, cancellationToken);
+        }
+
+        public override IAsyncResult BeginRead(byte[] buffer, int offset, int count, AsyncCallback? callback, object? state)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override int EndRead(IAsyncResult asyncResult)
+        {
+            throw new NotImplementedException();
         }
 
         public override Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
@@ -82,7 +92,7 @@ namespace SharpCompress.IO
 
         public override Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
         {
-            throw new NotImplementedException();
+            return Stream.WriteAsync(buffer, offset, count, cancellationToken);
         }
 
         public override ValueTask WriteAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken = new CancellationToken())

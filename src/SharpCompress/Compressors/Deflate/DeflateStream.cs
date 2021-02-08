@@ -220,20 +220,18 @@ namespace SharpCompress.Compressors.Deflate
         /// </remarks>
         protected override void Dispose(bool disposing)
         {
-            try
+            if (disposing)
             {
-                if (!_disposed)
-                {
-                    if (disposing)
-                    {
-                        _baseStream?.Dispose();
-                    }
-                    _disposed = true;
-                }
+                throw new NotImplementedException();
             }
-            finally
+        }
+
+        public override async ValueTask DisposeAsync()
+        {
+            if (!_disposed)
             {
-                base.Dispose(disposing);
+                await _baseStream.DisposeAsync();
+                _disposed = true;
             }
         }
 

@@ -2,6 +2,8 @@
 using System.Buffers.Binary;
 using System.IO;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 using SharpCompress.Common;
 using SharpCompress.Common.Zip;
 using SharpCompress.Common.Zip.Headers;
@@ -30,7 +32,7 @@ namespace SharpCompress.Writers.Zip
         internal ushort Zip64HeaderOffset { get; set; }
         internal ulong HeaderOffset { get; }
 
-        internal uint Write(Stream outputStream)
+        internal async ValueTask<uint> WriteAsync(Stream outputStream, CancellationToken cancellationToken)
         {
             byte[] encodedFilename = archiveEncoding.Encode(fileName);
             byte[] encodedComment = archiveEncoding.Encode(Comment ?? string.Empty);
@@ -73,61 +75,61 @@ namespace SharpCompress.Writers.Zip
 
             byte[] intBuf = new byte[] { 80, 75, 1, 2, version, 0, version, 0 };
             //constant sig, then version made by, then version to extract
-            outputStream.Write(intBuf, 0, 8);
+            await outputStream.WriteAsync(intBuf, 0, 8, cancellationToken);
 
             BinaryPrimitives.WriteUInt16LittleEndian(intBuf, (ushort)flags);
-            outputStream.Write(intBuf, 0, 2);
+            await outputStream.WriteAsync(intBuf, 0, 2, cancellationToken);
             BinaryPrimitives.WriteUInt16LittleEndian(intBuf, (ushort)usedCompression);
-            outputStream.Write(intBuf, 0, 2); // zipping method
+            await outputStream.WriteAsync(intBuf, 0, 2, cancellationToken); // zipping method
             BinaryPrimitives.WriteUInt32LittleEndian(intBuf, ModificationTime.DateTimeToDosTime());
-            outputStream.Write(intBuf, 0, 4);
+            await outputStream.WriteAsync(intBuf, 0, 4, cancellationToken);
 
             // zipping date and time
             BinaryPrimitives.WriteUInt32LittleEndian(intBuf, Crc);
-            outputStream.Write(intBuf, 0, 4); // file CRC
+            await outputStream.WriteAsync(intBuf, 0, 4, cancellationToken); // file CRC
             BinaryPrimitives.WriteUInt32LittleEndian(intBuf, compressedvalue);
-            outputStream.Write(intBuf, 0, 4); // compressed file size
+            await outputStream.WriteAsync(intBuf, 0, 4, cancellationToken); // compressed file size
             BinaryPrimitives.WriteUInt32LittleEndian(intBuf, decompressedvalue);
-            outputStream.Write(intBuf, 0, 4); // uncompressed file size
+            await outputStream.WriteAsync(intBuf, 0, 4, cancellationToken); // uncompressed file size
             BinaryPrimitives.WriteUInt16LittleEndian(intBuf, (ushort)encodedFilename.Length);
-            outputStream.Write(intBuf, 0, 2); // Filename in zip
+            await outputStream.WriteAsync(intBuf, 0, 2, cancellationToken); // Filename in zip
             BinaryPrimitives.WriteUInt16LittleEndian(intBuf, (ushort)extralength);
-            outputStream.Write(intBuf, 0, 2); // extra length
+            await outputStream.WriteAsync(intBuf, 0, 2, cancellationToken); // extra length
             BinaryPrimitives.WriteUInt16LittleEndian(intBuf, (ushort)encodedComment.Length);
-            outputStream.Write(intBuf, 0, 2);
+            await outputStream.WriteAsync(intBuf, 0, 2, cancellationToken);
 
             BinaryPrimitives.WriteUInt16LittleEndian(intBuf, 0);
-            outputStream.Write(intBuf, 0, 2); // disk=0
+            await outputStream.WriteAsync(intBuf, 0, 2, cancellationToken); // disk=0
             BinaryPrimitives.WriteUInt16LittleEndian(intBuf, (ushort)flags);
-            outputStream.Write(intBuf, 0, 2); // file type: binary
+            await outputStream.WriteAsync(intBuf, 0, 2, cancellationToken); // file type: binary
             BinaryPrimitives.WriteUInt16LittleEndian(intBuf, (ushort)flags);
-            outputStream.Write(intBuf, 0, 2); // Internal file attributes
+            await outputStream.WriteAsync(intBuf, 0, 2, cancellationToken); // Internal file attributes
             BinaryPrimitives.WriteUInt16LittleEndian(intBuf, 0x8100);
-            outputStream.Write(intBuf, 0, 2);
+            await outputStream.WriteAsync(intBuf, 0, 2, cancellationToken);
 
             // External file attributes (normal/readable)
             BinaryPrimitives.WriteUInt32LittleEndian(intBuf, headeroffsetvalue);
-            outputStream.Write(intBuf, 0, 4); // Offset of header
+            await outputStream.WriteAsync(intBuf, 0, 4, cancellationToken); // Offset of header
 
-            outputStream.Write(encodedFilename, 0, encodedFilename.Length);
+            await outputStream.WriteAsync(encodedFilename, 0, encodedFilename.Length, cancellationToken);
             if (zip64)
             {
                 BinaryPrimitives.WriteUInt16LittleEndian(intBuf, 0x0001);
-                outputStream.Write(intBuf, 0, 2);
+                await outputStream.WriteAsync(intBuf, 0, 2, cancellationToken);
                 BinaryPrimitives.WriteUInt16LittleEndian(intBuf, (ushort)(extralength - 4));
-                outputStream.Write(intBuf, 0, 2);
+                await outputStream.WriteAsync(intBuf, 0, 2, cancellationToken);
 
                 BinaryPrimitives.WriteUInt64LittleEndian(intBuf, Decompressed);
-                outputStream.Write(intBuf, 0, 8);
+                await outputStream.WriteAsync(intBuf, 0, 8, cancellationToken);
                 BinaryPrimitives.WriteUInt64LittleEndian(intBuf, Compressed);
-                outputStream.Write(intBuf, 0, 8);
+                await outputStream.WriteAsync(intBuf, 0, 8, cancellationToken);
                 BinaryPrimitives.WriteUInt64LittleEndian(intBuf, HeaderOffset);
-                outputStream.Write(intBuf, 0, 8);
+                await outputStream.WriteAsync(intBuf, 0, 8, cancellationToken);
                 BinaryPrimitives.WriteUInt32LittleEndian(intBuf, 0);
-                outputStream.Write(intBuf, 0, 4); // VolumeNumber = 0
+                await outputStream.WriteAsync(intBuf, 0, 4, cancellationToken); // VolumeNumber = 0
             }
 
-            outputStream.Write(encodedComment, 0, encodedComment.Length);
+            await outputStream.WriteAsync(encodedComment, 0, encodedComment.Length, cancellationToken);
 
             return (uint)(8 + 2 + 2 + 4 + 4 + 4 + 4 + 2 + 2 + 2
                                     + 2 + 2 + 2 + 2 + 4 + encodedFilename.Length + extralength + encodedComment.Length);

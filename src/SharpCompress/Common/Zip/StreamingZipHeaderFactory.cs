@@ -1,8 +1,6 @@
 ﻿using System.Collections.Generic;
-using System.IO;
 using System.Runtime.CompilerServices;
 using System.Threading;
-using System.Threading.Tasks;
 using SharpCompress.Common.Zip.Headers;
 using SharpCompress.IO;
 
@@ -15,20 +13,8 @@ namespace SharpCompress.Common.Zip
         {
         }
 
-        internal async IAsyncEnumerable<ZipHeader> ReadStreamHeader(Stream stream, [EnumeratorCancellation] CancellationToken cancellationToken)
+        internal async IAsyncEnumerable<ZipHeader> ReadStreamHeader(RewindableStream rewindableStream, [EnumeratorCancellation] CancellationToken cancellationToken)
         {
-            //TODO async stream reader?
-            await Task.CompletedTask;
-            RewindableStream rewindableStream;
-
-            if (stream is RewindableStream rs)
-            {
-                rewindableStream = rs;
-            }
-            else
-            {
-                rewindableStream = new RewindableStream(stream);
-            }
             while (true)
             {
                 ZipHeader? header;
@@ -37,22 +23,22 @@ namespace SharpCompress.Common.Zip
                 {
                     await ((StreamingZipFilePart)_lastEntryHeader.Part).FixStreamedFileLocation(rewindableStream, cancellationToken);
                     long? pos = rewindableStream.CanSeek ? (long?)rewindableStream.Position : null;
-                    uint crc = await stream.ReadUInt32(cancellationToken);
+                    uint crc = await rewindableStream.ReadUInt32(cancellationToken);
                     if (crc == POST_DATA_DESCRIPTOR)
                     {
-                        crc = await stream.ReadUInt32(cancellationToken);
+                        crc = await rewindableStream.ReadUInt32(cancellationToken);
                     }
                     _lastEntryHeader.Crc = crc;
-                    _lastEntryHeader.CompressedSize = await stream.ReadUInt32(cancellationToken);
-                    _lastEntryHeader.UncompressedSize = await stream.ReadUInt32(cancellationToken);
+                    _lastEntryHeader.CompressedSize = await rewindableStream.ReadUInt32(cancellationToken);
+                    _lastEntryHeader.UncompressedSize = await rewindableStream.ReadUInt32(cancellationToken);
                     if (pos.HasValue)
                     {
                         _lastEntryHeader.DataStartPosition = pos - _lastEntryHeader.CompressedSize;
                     }
                 }
                 _lastEntryHeader = null;
-                uint headerBytes = await stream.ReadUInt32(cancellationToken);
-                header = await ReadHeader(headerBytes, stream, cancellationToken);
+                uint headerBytes = await rewindableStream.ReadUInt32(cancellationToken);
+                header = await ReadHeader(headerBytes, rewindableStream, cancellationToken);
                 if (header is null)
                 {
                     yield break;
@@ -75,10 +61,10 @@ namespace SharpCompress.Common.Zip
                         {
                             rewindableStream.StartRecording();
                         }
-                        uint nextHeaderBytes = await stream.ReadUInt32(cancellationToken);
+                        uint nextHeaderBytes = await rewindableStream.ReadUInt32(cancellationToken);
 
                         // Check if next data is PostDataDescriptor, streamed file with 0 length
-                        header.HasData = !IsHeader(nextHeaderBytes);
+                        header.HasData = nextHeaderBytes != POST_DATA_DESCRIPTOR;
                         rewindableStream.Rewind(!isRecording);
                     }
                     else // We are not streaming and compressed size is 0, we have no data

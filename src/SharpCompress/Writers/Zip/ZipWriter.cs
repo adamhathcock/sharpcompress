@@ -22,7 +22,7 @@ namespace SharpCompress.Writers.Zip
     {
         private readonly CompressionType compressionType;
         private readonly CompressionLevel compressionLevel;
-        private readonly List<ZipCentralDirectoryEntry> entries = new List<ZipCentralDirectoryEntry>();
+        private readonly List<ZipCentralDirectoryEntry> entries = new();
         private readonly string zipComment;
         private long streamPosition;
         private PpmdProperties? ppmdProps;
@@ -61,7 +61,7 @@ namespace SharpCompress.Writers.Zip
             ulong size = 0;
             foreach (ZipCentralDirectoryEntry entry in entries)
             {
-                size += entry.Write(OutputStream);
+                size += await entry.WriteAsync(OutputStream, CancellationToken.None);
             }
             await WriteEndRecordAsync(size);
             await base.DisposeAsyncCore();

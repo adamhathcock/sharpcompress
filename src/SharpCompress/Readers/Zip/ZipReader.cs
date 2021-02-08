@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using SharpCompress.Common;
 using SharpCompress.Common.Zip;
 using SharpCompress.Common.Zip.Headers;
+using SharpCompress.IO;
 
 namespace SharpCompress.Readers.Zip
 {
@@ -40,7 +41,16 @@ namespace SharpCompress.Readers.Zip
 
         protected override async IAsyncEnumerable<ZipEntry> GetEntries(Stream stream, [EnumeratorCancellation] CancellationToken cancellationToken)
         {
-            await foreach (ZipHeader h in _headerFactory.ReadStreamHeader(stream, cancellationToken).WithCancellation(cancellationToken))
+            RewindableStream rewindableStream;
+            if (stream is RewindableStream rs)
+            {
+                rewindableStream = rs;
+            }
+            else
+            {
+                rewindableStream = new RewindableStream(stream);
+            }
+            await foreach (ZipHeader h in _headerFactory.ReadStreamHeader(rewindableStream, cancellationToken).WithCancellation(cancellationToken))
             {
                 if (h != null)
                 {
