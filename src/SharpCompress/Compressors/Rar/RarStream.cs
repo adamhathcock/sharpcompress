@@ -36,7 +36,8 @@ namespace SharpCompress.Compressors.Rar
 
         protected override void Dispose(bool disposing)
         {
-            if (!isDisposed) {
+            if (!isDisposed)
+            {
                 isDisposed = true;
                 base.Dispose(disposing);
                 readStream.Dispose();

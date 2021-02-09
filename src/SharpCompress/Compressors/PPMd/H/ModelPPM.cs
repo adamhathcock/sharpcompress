@@ -92,7 +92,7 @@ namespace SharpCompress.Compressors.PPMd.H
 
         private readonly int[][] _binSumm = new int[128][]; // binary SEE-contexts
 
-        private static readonly int[] INIT_BIN_ESC = {0x3CDD, 0x1F3F, 0x59BF, 0x48F3, 0x64A1, 0x5ABC, 0x6632, 0x6051};
+        private static readonly int[] INIT_BIN_ESC = { 0x3CDD, 0x1F3F, 0x59BF, 0x48F3, 0x64A1, 0x5ABC, 0x6632, 0x6051 };
 
         // Temp fields
         //UPGRADE_NOTE: Final was removed from the declaration of 'tempState1 '. "ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?index='!DefaultContextWindowIndex'&keyword='jlca1003'"
@@ -846,7 +846,7 @@ namespace SharpCompress.Compressors.PPMd.H
                 _charMask[rs.Symbol] = 0;
                 _prevSuccess = 0;
             }
-            for (;;)
+            for (; ; )
             {
                 State s = _tempState1.Initialize(Heap);
                 int i;

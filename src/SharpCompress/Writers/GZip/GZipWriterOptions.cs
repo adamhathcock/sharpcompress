@@ -9,7 +9,7 @@ namespace SharpCompress.Writers.GZip
             : base(CompressionType.GZip)
         {
         }
-        
+
         internal GZipWriterOptions(WriterOptions options)
             : base(options.CompressionType)
         {
@@ -22,7 +22,7 @@ namespace SharpCompress.Writers.GZip
                 CompressionLevel = writerOptions.CompressionLevel;
             }
         }
-        
+
         public CompressionLevel CompressionLevel { get; set; } = CompressionLevel.Default;
     }
 }

@@ -766,7 +766,7 @@ namespace SharpCompress.Compressors.LZMA
                 {
                     offs += 2;
                 }
-                for (;; len++)
+                for (; ; len++)
                 {
                     UInt32 distance = _matchDistances[offs + 1];
                     UInt32 curAndLenPrice = normalMatchPrice + GetPosLenPrice(distance, len, posState);
@@ -1107,7 +1107,7 @@ namespace SharpCompress.Compressors.LZMA
                         offs += 2;
                     }
 
-                    for (UInt32 lenTest = startLen;; lenTest++)
+                    for (UInt32 lenTest = startLen; ; lenTest++)
                     {
                         UInt32 curBack = _matchDistances[offs + 1];
                         UInt32 curAndLenPrice = normalMatchPrice + GetPosLenPrice(curBack, lenTest, posState);
@@ -1665,129 +1665,129 @@ namespace SharpCompress.Compressors.LZMA
                 switch (propIDs[i])
                 {
                     case CoderPropId.NumFastBytes:
-                    {
-                        if (!(prop is Int32))
                         {
-                            throw new InvalidParamException();
-                        }
-                        Int32 numFastBytes = (Int32)prop;
-                        if (numFastBytes < 5 || numFastBytes > Base.K_MATCH_MAX_LEN)
-                        {
-                            throw new InvalidParamException();
-                        }
-                        _numFastBytes = (UInt32)numFastBytes;
-                        break;
-                    }
-                    case CoderPropId.Algorithm:
-                    {
-                        /*
-                        if (!(prop is Int32))
-                            throw new InvalidParamException();
-                        Int32 maximize = (Int32)prop;
-                        _fastMode = (maximize == 0);
-                        _maxMode = (maximize >= 2);
-                        */
-                        break;
-                    }
-                    case CoderPropId.MatchFinder:
-                    {
-                        if (!(prop is String))
-                        {
-                            throw new InvalidParamException();
-                        }
-                        EMatchFinderType matchFinderIndexPrev = _matchFinderType;
-                        int m = FindMatchFinder(((string)prop).ToUpper());
-                        if (m < 0)
-                        {
-                            throw new InvalidParamException();
-                        }
-                        _matchFinderType = (EMatchFinderType)m;
-                        if (_matchFinder != null && matchFinderIndexPrev != _matchFinderType)
-                        {
-                            _dictionarySizePrev = 0xFFFFFFFF;
-                            _matchFinder = null;
-                        }
-                        break;
-                    }
-                    case CoderPropId.DictionarySize:
-                    {
-                        const int kDicLogSizeMaxCompress = 30;
-                        if (!(prop is Int32))
-                        {
-                            throw new InvalidParamException();
-                        }
-                        ;
-                        Int32 dictionarySize = (Int32)prop;
-                        if (dictionarySize < (UInt32)(1 << Base.K_DIC_LOG_SIZE_MIN) ||
-                            dictionarySize > (UInt32)(1 << kDicLogSizeMaxCompress))
-                        {
-                            throw new InvalidParamException();
-                        }
-                        _dictionarySize = (UInt32)dictionarySize;
-                        int dicLogSize;
-                        for (dicLogSize = 0; dicLogSize < (UInt32)kDicLogSizeMaxCompress; dicLogSize++)
-                        {
-                            if (dictionarySize <= ((UInt32)(1) << dicLogSize))
+                            if (!(prop is Int32))
                             {
-                                break;
+                                throw new InvalidParamException();
                             }
+                            Int32 numFastBytes = (Int32)prop;
+                            if (numFastBytes < 5 || numFastBytes > Base.K_MATCH_MAX_LEN)
+                            {
+                                throw new InvalidParamException();
+                            }
+                            _numFastBytes = (UInt32)numFastBytes;
+                            break;
                         }
-                        _distTableSize = (UInt32)dicLogSize * 2;
-                        break;
-                    }
-                    case CoderPropId.PosStateBits:
-                    {
-                        if (!(prop is Int32))
+                    case CoderPropId.Algorithm:
                         {
-                            throw new InvalidParamException();
+                            /*
+                            if (!(prop is Int32))
+                                throw new InvalidParamException();
+                            Int32 maximize = (Int32)prop;
+                            _fastMode = (maximize == 0);
+                            _maxMode = (maximize >= 2);
+                            */
+                            break;
                         }
-                        Int32 v = (Int32)prop;
-                        if (v < 0 || v > (UInt32)Base.K_NUM_POS_STATES_BITS_ENCODING_MAX)
+                    case CoderPropId.MatchFinder:
                         {
-                            throw new InvalidParamException();
+                            if (!(prop is String))
+                            {
+                                throw new InvalidParamException();
+                            }
+                            EMatchFinderType matchFinderIndexPrev = _matchFinderType;
+                            int m = FindMatchFinder(((string)prop).ToUpper());
+                            if (m < 0)
+                            {
+                                throw new InvalidParamException();
+                            }
+                            _matchFinderType = (EMatchFinderType)m;
+                            if (_matchFinder != null && matchFinderIndexPrev != _matchFinderType)
+                            {
+                                _dictionarySizePrev = 0xFFFFFFFF;
+                                _matchFinder = null;
+                            }
+                            break;
                         }
-                        _posStateBits = v;
-                        _posStateMask = (((UInt32)1) << _posStateBits) - 1;
-                        break;
-                    }
-                    case CoderPropId.LitPosBits:
-                    {
-                        if (!(prop is Int32))
+                    case CoderPropId.DictionarySize:
                         {
-                            throw new InvalidParamException();
-                        }
-                        Int32 v = (Int32)prop;
-                        if (v < 0 || v > Base.K_NUM_LIT_POS_STATES_BITS_ENCODING_MAX)
-                        {
-                            throw new InvalidParamException();
-                        }
-                        _numLiteralPosStateBits = v;
-                        break;
-                    }
-                    case CoderPropId.LitContextBits:
-                    {
-                        if (!(prop is Int32))
-                        {
-                            throw new InvalidParamException();
-                        }
-                        Int32 v = (Int32)prop;
-                        if (v < 0 || v > Base.K_NUM_LIT_CONTEXT_BITS_MAX)
-                        {
-                            throw new InvalidParamException();
-                        }
+                            const int kDicLogSizeMaxCompress = 30;
+                            if (!(prop is Int32))
+                            {
+                                throw new InvalidParamException();
+                            }
                         ;
-                        _numLiteralContextBits = v;
-                        break;
-                    }
-                    case CoderPropId.EndMarker:
-                    {
-                        if (!(prop is Boolean))
-                        {
-                            throw new InvalidParamException();
+                            Int32 dictionarySize = (Int32)prop;
+                            if (dictionarySize < (UInt32)(1 << Base.K_DIC_LOG_SIZE_MIN) ||
+                                dictionarySize > (UInt32)(1 << kDicLogSizeMaxCompress))
+                            {
+                                throw new InvalidParamException();
+                            }
+                            _dictionarySize = (UInt32)dictionarySize;
+                            int dicLogSize;
+                            for (dicLogSize = 0; dicLogSize < (UInt32)kDicLogSizeMaxCompress; dicLogSize++)
+                            {
+                                if (dictionarySize <= ((UInt32)(1) << dicLogSize))
+                                {
+                                    break;
+                                }
+                            }
+                            _distTableSize = (UInt32)dicLogSize * 2;
+                            break;
                         }
-                        SetWriteEndMarkerMode((Boolean)prop);
-                        break;
-                    }
+                    case CoderPropId.PosStateBits:
+                        {
+                            if (!(prop is Int32))
+                            {
+                                throw new InvalidParamException();
+                            }
+                            Int32 v = (Int32)prop;
+                            if (v < 0 || v > (UInt32)Base.K_NUM_POS_STATES_BITS_ENCODING_MAX)
+                            {
+                                throw new InvalidParamException();
+                            }
+                            _posStateBits = v;
+                            _posStateMask = (((UInt32)1) << _posStateBits) - 1;
+                            break;
+                        }
+                    case CoderPropId.LitPosBits:
+                        {
+                            if (!(prop is Int32))
+                            {
+                                throw new InvalidParamException();
+                            }
+                            Int32 v = (Int32)prop;
+                            if (v < 0 || v > Base.K_NUM_LIT_POS_STATES_BITS_ENCODING_MAX)
+                            {
+                                throw new InvalidParamException();
+                            }
+                            _numLiteralPosStateBits = v;
+                            break;
+                        }
+                    case CoderPropId.LitContextBits:
+                        {
+                            if (!(prop is Int32))
+                            {
+                                throw new InvalidParamException();
+                            }
+                            Int32 v = (Int32)prop;
+                            if (v < 0 || v > Base.K_NUM_LIT_CONTEXT_BITS_MAX)
+                            {
+                                throw new InvalidParamException();
+                            }
+                        ;
+                            _numLiteralContextBits = v;
+                            break;
+                        }
+                    case CoderPropId.EndMarker:
+                        {
+                            if (!(prop is Boolean))
+                            {
+                                throw new InvalidParamException();
+                            }
+                            SetWriteEndMarkerMode((Boolean)prop);
+                            break;
+                        }
                     default:
                         throw new InvalidParamException();
                 }

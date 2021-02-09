@@ -14,12 +14,12 @@ namespace SharpCompress.Test.Zip
 {
     public class Zip64Tests : WriterTests
     {
-		public Zip64Tests()
+        public Zip64Tests()
             : base(ArchiveType.Zip)
         {
-		}
+        }
 
-		// 4GiB + 1
+        // 4GiB + 1
         private const long FOUR_GB_LIMIT = ((long)uint.MaxValue) + 1;
 
         [Trait("format", "zip64")]
@@ -31,9 +31,9 @@ namespace SharpCompress.Test.Zip
 
         [Trait("format", "zip64")]
         public void Zip64_Two_Large_Files()
-		{
-			// One single file, requires zip64
-			RunSingleTest(2, FOUR_GB_LIMIT, set_zip64: true, forward_only: false);
+        {
+            // One single file, requires zip64
+            RunSingleTest(2, FOUR_GB_LIMIT, set_zip64: true, forward_only: false);
         }
 
         [Trait("format", "zip64")]
@@ -96,13 +96,13 @@ namespace SharpCompress.Test.Zip
             }
             catch (NotSupportedException)
             {
-            }           
+            }
         }
 
         public void RunSingleTest(long files, long filesize, bool set_zip64, bool forward_only, long write_chunk_size = 1024 * 1024, string filename = "zip64-test.zip")
         {
             filename = Path.Combine(SCRATCH2_FILES_PATH, filename);
-            
+
             if (File.Exists(filename))
             {
                 File.Delete(filename);
@@ -147,7 +147,7 @@ namespace SharpCompress.Test.Zip
             var eo = new ZipWriterEntryOptions() { DeflateCompressionLevel = Compressors.Deflate.CompressionLevel.None };
 
             using (var zip = File.OpenWrite(filename))
-            using(var st = forward_only ? (Stream)new ForwardOnlyStream(zip) : zip)
+            using (var st = forward_only ? (Stream)new ForwardOnlyStream(zip) : zip)
             using (var zipWriter = (ZipWriter)WriterFactory.Open(st, ArchiveType.Zip, opts))
             {
 
@@ -171,7 +171,7 @@ namespace SharpCompress.Test.Zip
         {
             long count = 0;
             long size = 0;
-			Common.Zip.ZipEntry prev = null;
+            Common.Zip.ZipEntry prev = null;
             using (var fs = File.OpenRead(filename))
             using (var rd = ZipReader.Open(fs, new ReaderOptions() { LookForHeader = false }))
             {

@@ -14,25 +14,25 @@ namespace SharpCompress.Writers
             switch (archiveType)
             {
                 case ArchiveType.GZip:
-                {
-                    if (writerOptions.CompressionType != CompressionType.GZip)
                     {
-                        throw new InvalidFormatException("GZip archives only support GZip compression type.");
+                        if (writerOptions.CompressionType != CompressionType.GZip)
+                        {
+                            throw new InvalidFormatException("GZip archives only support GZip compression type.");
+                        }
+                        return new GZipWriter(stream, new GZipWriterOptions(writerOptions));
                     }
-                    return new GZipWriter(stream, new GZipWriterOptions(writerOptions));
-                }
                 case ArchiveType.Zip:
-                {
-                    return new ZipWriter(stream, new ZipWriterOptions(writerOptions));
-                }
+                    {
+                        return new ZipWriter(stream, new ZipWriterOptions(writerOptions));
+                    }
                 case ArchiveType.Tar:
-                {
-                    return new TarWriter(stream, new TarWriterOptions(writerOptions));
-                }
+                    {
+                        return new TarWriter(stream, new TarWriterOptions(writerOptions));
+                    }
                 default:
-                {
-                    throw new NotSupportedException("Archive Type does not have a Writer: " + archiveType);
-                }
+                    {
+                        throw new NotSupportedException("Archive Type does not have a Writer: " + archiveType);
+                    }
             }
         }
     }

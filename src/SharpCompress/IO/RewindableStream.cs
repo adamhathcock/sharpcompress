@@ -46,7 +46,7 @@ namespace SharpCompress.IO
             }
             else
             {
-                
+
                 bufferStream.TransferTo(buffer);
                 //create new memorystream to allow proper resizing as memorystream could be a user provided buffer
                 //https://github.com/adamhathcock/sharpcompress/issues/306
@@ -84,11 +84,11 @@ namespace SharpCompress.IO
             throw new NotSupportedException();
         }
 
-        public override long Length => throw new NotSupportedException();
+        public override long Length => stream.Length;
 
         public override long Position
         {
-            get { return stream.Position + bufferStream.Position - bufferStream.Length; }
+            get => stream.Position + bufferStream.Position - bufferStream.Length;
             set
             {
                 if (!isRewound)

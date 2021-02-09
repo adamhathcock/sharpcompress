@@ -111,7 +111,7 @@ namespace SharpCompress.Compressors.Deflate
         /// <summary>
         /// The size of the working buffer used in the ZlibCodec class. Defaults to 8192 bytes.
         /// </summary>
-#if NETCF        
+#if NETCF
         public const int WorkingBufferSizeDefault = 8192;
 #else
         public const int WorkingBufferSizeDefault = 16384;

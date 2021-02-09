@@ -32,7 +32,7 @@ namespace SharpCompress.Common.Zip.Headers
             byte[] name = reader.ReadBytes(nameLength);
             byte[] extra = reader.ReadBytes(extraLength);
             byte[] comment = reader.ReadBytes(commentLength);
-            
+
             // According to .ZIP File Format Specification
             //
             // For example: https://pkware.cachefly.net/webdocs/casestudies/APPNOTE.TXT
@@ -40,7 +40,7 @@ namespace SharpCompress.Common.Zip.Headers
             // Bit 11: Language encoding flag (EFS).  If this bit is set,
             //         the filename and comment fields for this file
             //         MUST be encoded using UTF-8. (see APPENDIX D)
-            
+
             if (Flags.HasFlag(HeaderFlags.Efs))
             {
                 Name = ArchiveEncoding.DecodeUTF8(name);

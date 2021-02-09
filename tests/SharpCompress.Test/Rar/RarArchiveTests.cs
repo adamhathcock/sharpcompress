@@ -123,7 +123,8 @@ namespace SharpCompress.Test.Rar
         }
 
         [Fact]
-        public void Rar_test_invalid_exttime_ArchiveStreamRead() {
+        public void Rar_test_invalid_exttime_ArchiveStreamRead()
+        {
             DoRar_test_invalid_exttime_ArchiveStreamRead("Rar.test_invalid_exttime.rar");
         }
 
@@ -170,12 +171,14 @@ namespace SharpCompress.Test.Rar
         }
 
         [Fact]
-        public void Rar_IsSolidArchiveCheck() {
+        public void Rar_IsSolidArchiveCheck()
+        {
             DoRar_IsSolidArchiveCheck("Rar.rar");
         }
 
         [Fact]
-        public void Rar5_IsSolidArchiveCheck() {
+        public void Rar5_IsSolidArchiveCheck()
+        {
             DoRar_IsSolidArchiveCheck("Rar5.rar");
         }
 
@@ -225,8 +228,9 @@ namespace SharpCompress.Test.Rar
         }
 
         [Fact]
-        public void Rar_Multi_ArchiveStreamRead() {
-            DoRar_Multi_ArchiveStreamRead(new string[] { 
+        public void Rar_Multi_ArchiveStreamRead()
+        {
+            DoRar_Multi_ArchiveStreamRead(new string[] {
                 "Rar.multi.part01.rar",
                 "Rar.multi.part02.rar",
                 "Rar.multi.part03.rar",
@@ -236,8 +240,9 @@ namespace SharpCompress.Test.Rar
         }
 
         [Fact]
-        public void Rar5_Multi_ArchiveStreamRead() {
-            DoRar_Multi_ArchiveStreamRead(new string[] { 
+        public void Rar5_Multi_ArchiveStreamRead()
+        {
+            DoRar_Multi_ArchiveStreamRead(new string[] {
                 "Rar5.multi.part01.rar",
                 "Rar5.multi.part02.rar",
                 "Rar5.multi.part03.rar",
@@ -300,12 +305,14 @@ namespace SharpCompress.Test.Rar
         }
 
         [Fact]
-        public void Rar_ArchiveFileRead_HasDirectories() {
+        public void Rar_ArchiveFileRead_HasDirectories()
+        {
             DoRar_ArchiveFileRead_HasDirectories("Rar.rar");
         }
 
         [Fact]
-        public void Rar5_ArchiveFileRead_HasDirectories() {
+        public void Rar5_ArchiveFileRead_HasDirectories()
+        {
             DoRar_ArchiveFileRead_HasDirectories("Rar5.rar");
         }
 
@@ -366,12 +373,14 @@ namespace SharpCompress.Test.Rar
         }
 
         [Fact]
-        public void Rar_IsFirstVolume_True() {
+        public void Rar_IsFirstVolume_True()
+        {
             DoRar_IsFirstVolume_True("Rar.multi.part01.rar");
         }
 
         [Fact]
-        public void Rar5_IsFirstVolume_True() {
+        public void Rar5_IsFirstVolume_True()
+        {
             DoRar_IsFirstVolume_True("Rar5.multi.part01.rar");
         }
 
@@ -385,12 +394,14 @@ namespace SharpCompress.Test.Rar
         }
 
         [Fact]
-        public void Rar_IsFirstVolume_False() {
+        public void Rar_IsFirstVolume_False()
+        {
             DoRar_IsFirstVolume_False("Rar.multi.part03.rar");
         }
 
         [Fact]
-        public void Rar5_IsFirstVolume_False() {
+        public void Rar5_IsFirstVolume_False()
+        {
             DoRar_IsFirstVolume_False("Rar5.multi.part03.rar");
         }
 

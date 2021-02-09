@@ -39,20 +39,20 @@ namespace SharpCompress.Common.Rar
                 switch (header.HeaderType)
                 {
                     case HeaderType.Mark:
-                    {
-                        lastMarkHeader = (MarkHeader)header;
-                    }
+                        {
+                            lastMarkHeader = (MarkHeader)header;
+                        }
                         break;
                     case HeaderType.Archive:
-                    {
-                        ArchiveHeader = (ArchiveHeader)header;
-                    }
+                        {
+                            ArchiveHeader = (ArchiveHeader)header;
+                        }
                         break;
                     case HeaderType.File:
-                    {
-                        var fh = (FileHeader)header;
-                        yield return CreateFilePart(lastMarkHeader!, fh);
-                    }
+                        {
+                            var fh = (FileHeader)header;
+                            yield return CreateFilePart(lastMarkHeader!, fh);
+                        }
                         break;
                 }
             }

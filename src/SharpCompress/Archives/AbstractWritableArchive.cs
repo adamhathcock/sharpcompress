@@ -12,11 +12,28 @@ namespace SharpCompress.Archives
         where TEntry : IArchiveEntry
         where TVolume : IVolume
     {
+        private class RebuildPauseDisposable : IDisposable
+        {
+            private readonly AbstractWritableArchive<TEntry, TVolume> archive;
+
+            public RebuildPauseDisposable(AbstractWritableArchive<TEntry, TVolume> archive)
+            {
+                this.archive = archive;
+                archive.pauseRebuilding = true;
+            }
+
+            public void Dispose()
+            {
+                archive.pauseRebuilding = false;
+                archive.RebuildModifiedCollection();
+            }
+        }
         private readonly List<TEntry> newEntries = new List<TEntry>();
         private readonly List<TEntry> removedEntries = new List<TEntry>();
 
         private readonly List<TEntry> modifiedEntries = new List<TEntry>();
         private bool hasModifications;
+        private bool pauseRebuilding;
 
         internal AbstractWritableArchive(ArchiveType type)
             : base(type)
@@ -45,8 +62,17 @@ namespace SharpCompress.Archives
             }
         }
 
+        public IDisposable PauseEntryRebuilding()
+        {
+            return new RebuildPauseDisposable(this);
+        }
+
         private void RebuildModifiedCollection()
         {
+            if (pauseRebuilding)
+            {
+                return;
+            }
             hasModifications = true;
             newEntries.RemoveAll(v => removedEntries.Contains(v));
             modifiedEntries.Clear();
@@ -83,8 +109,7 @@ namespace SharpCompress.Archives
         public TEntry AddEntry(string key, Stream source, bool closeStream,
                                long size = 0, DateTime? modified = null)
         {
-            if (key.StartsWith("/")
-                || key.StartsWith("\\"))
+            if (key.Length > 0 && key[0] is '/' or '\\')
             {
                 key = key.Substring(1);
             }
@@ -103,7 +128,7 @@ namespace SharpCompress.Archives
             foreach (var path in Entries.Select(x => x.Key))
             {
                 var p = path.Replace('/', '\\');
-                if (p.StartsWith("\\"))
+                if (p.Length > 0 && p[0] == '\\')
                 {
                     p = p.Substring(1);
                 }

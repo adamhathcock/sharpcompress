@@ -18,7 +18,7 @@ namespace SharpCompress.Writers.GZip
             {
                 destination = new NonDisposingStream(destination);
             }
-            InitalizeStream(new GZipStream(destination, CompressionMode.Compress, 
+            InitalizeStream(new GZipStream(destination, CompressionMode.Compress,
                                            options?.CompressionLevel ?? CompressionLevel.Default,
                                            WriterOptions.ArchiveEncoding.GetEncoding()));
         }

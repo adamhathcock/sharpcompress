@@ -604,14 +604,7 @@ namespace SharpCompress.Compressors.BZip2
             while (bsLive > 0)
             {
                 int ch = (bsBuff >> 24);
-                try
-                {
-                    bsStream.WriteByte((byte)ch); // write 8-bit
-                }
-                catch (IOException e)
-                {
-                    throw e;
-                }
+                bsStream.WriteByte((byte)ch); // write 8-bit
                 bsBuff <<= 8;
                 bsLive -= 8;
                 bytesOut++;
@@ -623,14 +616,7 @@ namespace SharpCompress.Compressors.BZip2
             while (bsLive >= 8)
             {
                 int ch = (bsBuff >> 24);
-                try
-                {
-                    bsStream.WriteByte((byte)ch); // write 8-bit
-                }
-                catch (IOException e)
-                {
-                    throw e;
-                }
+                bsStream.WriteByte((byte)ch); // write 8-bit
                 bsBuff <<= 8;
                 bsLive -= 8;
                 bytesOut++;

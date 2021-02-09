@@ -16,7 +16,8 @@ namespace SharpCompress.Compressors.Rar.UnpackV1
     {
         private readonly BitInput Inp;
 
-        public Unpack() {
+        public Unpack()
+        {
             // to ease in porting Unpack50.cs
             Inp = this;
         }
@@ -86,7 +87,7 @@ namespace SharpCompress.Compressors.Rar.UnpackV1
 
         private int lowDistRepCount;
 
-        private static readonly int[] DBitLengthCounts = {4, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 14, 0, 12};
+        private static readonly int[] DBitLengthCounts = { 4, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 14, 0, 12 };
 
         private FileHeader fileHeader;
 
@@ -677,7 +678,8 @@ namespace SharpCompress.Compressors.Rar.UnpackV1
             destUnpSize -= size;
         }
 
-        private void InsertOldDist(uint distance) {
+        private void InsertOldDist(uint distance)
+        {
             // TODO uint
             InsertOldDist((int)distance);
         }
@@ -696,9 +698,10 @@ namespace SharpCompress.Compressors.Rar.UnpackV1
             lastLength = length;
         }
 
-        private void CopyString(uint length, uint distance) {
+        private void CopyString(uint length, uint distance)
+        {
             // TODO uint
-            CopyString((int)length, (int)distance) ;
+            CopyString((int)length, (int)distance);
         }
 
         private void CopyString(int length, int distance)
@@ -743,7 +746,7 @@ namespace SharpCompress.Compressors.Rar.UnpackV1
                 unpPtr = 0;
                 wrPtr = 0;
                 PpmEscChar = 2;
-WriteBorder=Math.Min(MaxWinSize,UNPACK_MAX_WRITE)&MaxWinMask;
+                WriteBorder = Math.Min(MaxWinSize, UNPACK_MAX_WRITE) & MaxWinMask;
 
                 InitFilters();
             }
@@ -755,35 +758,35 @@ WriteBorder=Math.Min(MaxWinSize,UNPACK_MAX_WRITE)&MaxWinMask;
             unpInitData20(solid);
         }
 
-//void Unpack::UnpInitData(bool Solid)
-//{
-//  if (!Solid)
-//  {
-//    memset(OldDist,0,sizeof(OldDist));
-//    OldDistPtr=0;
-//    LastDist=LastLength=0;
-////    memset(Window,0,MaxWinSize);
-//    memset(&BlockTables,0,sizeof(BlockTables));
-//    UnpPtr=WrPtr=0;
-//    WriteBorder=Min(MaxWinSize,UNPACK_MAX_WRITE)&MaxWinMask;
-//  }
-//  // Filters never share several solid files, so we can safely reset them
-//  // even in solid archive.
-//  InitFilters();
-//
-//  Inp.InitBitInput();
-//  WrittenFileSize=0;
-//  ReadTop=0;
-//  ReadBorder=0;
-//
-//  memset(&BlockHeader,0,sizeof(BlockHeader));
-//  BlockHeader.BlockSize=-1;  // '-1' means not defined yet.
-//#ifndef SFX_MODULE
-//  UnpInitData20(Solid);
-//#endif
-//  UnpInitData30(Solid);
-//  UnpInitData50(Solid);
-//}
+        //void Unpack::UnpInitData(bool Solid)
+        //{
+        //  if (!Solid)
+        //  {
+        //    memset(OldDist,0,sizeof(OldDist));
+        //    OldDistPtr=0;
+        //    LastDist=LastLength=0;
+        ////    memset(Window,0,MaxWinSize);
+        //    memset(&BlockTables,0,sizeof(BlockTables));
+        //    UnpPtr=WrPtr=0;
+        //    WriteBorder=Min(MaxWinSize,UNPACK_MAX_WRITE)&MaxWinMask;
+        //  }
+        //  // Filters never share several solid files, so we can safely reset them
+        //  // even in solid archive.
+        //  InitFilters();
+        //
+        //  Inp.InitBitInput();
+        //  WrittenFileSize=0;
+        //  ReadTop=0;
+        //  ReadBorder=0;
+        //
+        //  memset(&BlockHeader,0,sizeof(BlockHeader));
+        //  BlockHeader.BlockSize=-1;  // '-1' means not defined yet.
+        //#ifndef SFX_MODULE
+        //  UnpInitData20(Solid);
+        //#endif
+        //  UnpInitData30(Solid);
+        //  UnpInitData50(Solid);
+        //}
 
         private void InitFilters()
         {
@@ -1063,7 +1066,7 @@ WriteBorder=Math.Min(MaxWinSize,UNPACK_MAX_WRITE)&MaxWinMask;
             UnpackFilter Filter;
             if (NewFilter)
 
-                // new filter code, never used before since VM reset
+            // new filter code, never used before since VM reset
             {
                 // too many different filters, corrupt archive
                 if (FiltPos > 1024)
@@ -1121,8 +1124,8 @@ WriteBorder=Math.Min(MaxWinSize,UNPACK_MAX_WRITE)&MaxWinMask;
 
             if ((firstByte & 0x10) != 0)
 
-                // set registers to optional parameters
-                // if any
+            // set registers to optional parameters
+            // if any
             {
                 int InitMask = Utility.URShift(Inp.GetBits(), 9);
                 Inp.AddBits(7);
@@ -1208,7 +1211,7 @@ WriteBorder=Math.Min(MaxWinSize,UNPACK_MAX_WRITE)&MaxWinMask;
             }
             if ((firstByte & 8) != 0)
 
-                // put data block passed as parameter if any
+            // put data block passed as parameter if any
             {
                 if (Inp.Overflow(3))
                 {
