@@ -69,54 +69,19 @@ namespace SharpCompress.Common.Zip.Headers
             Process();
         }
 
-        //From the spec values are only in the extradata if the standard
-        //value is set to 0xFFFF, but if one of the sizes are present, both are.
-        //Hence if length == 4 volume only
-        //      if length == 8 offset only
-        //      if length == 12 offset + volume
-        //      if length == 16 sizes only
-        //      if length == 20 sizes + volume
-        //      if length == 24 sizes + offset
-        //      if length == 28 everything.
-        //It is unclear how many of these are used in the wild.
-
         private void Process()
         {
-            switch (DataBytes.Length)
-            {
-                case 4:
-                    VolumeNumber = BinaryPrimitives.ReadUInt32LittleEndian(DataBytes);
-                    return;
-                case 8:
-                    RelativeOffsetOfEntryHeader = BinaryPrimitives.ReadInt64LittleEndian(DataBytes);
-                    return;
-                case 12:
-                    RelativeOffsetOfEntryHeader = BinaryPrimitives.ReadInt64LittleEndian(DataBytes);
-                    VolumeNumber = BinaryPrimitives.ReadUInt32LittleEndian(DataBytes.AsSpan(8));
-                    return;
-                case 16:
-                    UncompressedSize = BinaryPrimitives.ReadInt64LittleEndian(DataBytes);
-                    CompressedSize = BinaryPrimitives.ReadInt64LittleEndian(DataBytes.AsSpan(8));
-                    return;
-                case 20:
-                    UncompressedSize = BinaryPrimitives.ReadInt64LittleEndian(DataBytes);
-                    CompressedSize = BinaryPrimitives.ReadInt64LittleEndian(DataBytes.AsSpan(8));
-                    VolumeNumber = BinaryPrimitives.ReadUInt32LittleEndian(DataBytes.AsSpan(16));
-                    return;
-                case 24:
-                    UncompressedSize = BinaryPrimitives.ReadInt64LittleEndian(DataBytes);
-                    CompressedSize = BinaryPrimitives.ReadInt64LittleEndian(DataBytes.AsSpan(8));
-                    RelativeOffsetOfEntryHeader = BinaryPrimitives.ReadInt64LittleEndian(DataBytes.AsSpan(16));
-                    return;
-                case 28:
-                    UncompressedSize = BinaryPrimitives.ReadInt64LittleEndian(DataBytes);
-                    CompressedSize = BinaryPrimitives.ReadInt64LittleEndian(DataBytes.AsSpan(8));
-                    RelativeOffsetOfEntryHeader = BinaryPrimitives.ReadInt64LittleEndian(DataBytes.AsSpan(16));
-                    VolumeNumber = BinaryPrimitives.ReadUInt32LittleEndian(DataBytes.AsSpan(24));
-                    return;
-                default:
-                    throw new ArchiveException("Unexpected size of of Zip64 extended information extra field");
-            }
+            if (DataBytes.Length >= 8)
+                UncompressedSize = BinaryPrimitives.ReadInt64LittleEndian(DataBytes);
+            if (DataBytes.Length >= 16)
+                CompressedSize = BinaryPrimitives.ReadInt64LittleEndian(DataBytes.AsSpan(8));
+            if (DataBytes.Length >= 24)
+                RelativeOffsetOfEntryHeader = BinaryPrimitives.ReadInt64LittleEndian(DataBytes.AsSpan(16));
+            if (DataBytes.Length >= 28)
+                VolumeNumber = BinaryPrimitives.ReadUInt32LittleEndian(DataBytes.AsSpan(24));
+
+            if (DataBytes.Length > 28)
+                throw new ArchiveException("Unexpected size of of Zip64 extended information extra field");
         }
 
         public long UncompressedSize { get; private set; }
