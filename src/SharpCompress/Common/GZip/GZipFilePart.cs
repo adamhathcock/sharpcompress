@@ -110,13 +110,13 @@ namespace SharpCompress.Common.GZip
 
         private string ReadZeroTerminatedString(Stream stream)
         {
-            byte[] buf1 = new byte[1];
+            Span<byte> buf1 = stackalloc byte[1];
             var list = new List<byte>();
             bool done = false;
             do
             {
                 // workitem 7740
-                int n = stream.Read(buf1, 0, 1);
+                int n = stream.Read(buf1);
                 if (n != 1)
                 {
                     throw new ZlibException("Unexpected EOF reading GZIP header.");

@@ -1,7 +1,6 @@
 ﻿#nullable disable
 
 using System;
-using System.Collections.Generic;
 
 namespace SharpCompress.Compressors.Xz
 {
@@ -24,7 +23,7 @@ namespace SharpCompress.Compressors.Xz
 
         public static UInt32 Compute(UInt32 polynomial, UInt32 seed, byte[] buffer)
         {
-            return ~CalculateHash(InitializeTable(polynomial), seed, buffer, 0, buffer.Length);
+            return ~CalculateHash(InitializeTable(polynomial), seed, buffer);
         }
 
         private static UInt32[] InitializeTable(UInt32 polynomial)
@@ -61,16 +60,16 @@ namespace SharpCompress.Compressors.Xz
             return createTable;
         }
 
-        private static UInt32 CalculateHash(UInt32[] table, UInt32 seed, IList<byte> buffer, int start, int size)
+        private static UInt32 CalculateHash(UInt32[] table, UInt32 seed, ReadOnlySpan<byte> buffer)
         {
             var crc = seed;
-            for (var i = start; i < size - start; i++)
+            int len = buffer.Length;
+            for (var i = 0; i < len; i++)
             {
-                crc = (crc >> 8) ^ table[buffer[i] ^ crc & 0xff];
+                crc = (crc >> 8) ^ table[(buffer[i] ^ crc) & 0xff];
             }
 
             return crc;
         }
-
     }
 }

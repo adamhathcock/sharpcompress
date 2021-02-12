@@ -98,7 +98,7 @@ namespace SharpCompress.Archives.GZip
         public static bool IsGZipFile(Stream stream)
         {
             // read the header on the first read
-            byte[] header = new byte[10];
+            Span<byte> header = stackalloc byte[10];
 
             // workitem 8501: handle edge case (decompress empty stream)
             if (!stream.ReadFully(header))

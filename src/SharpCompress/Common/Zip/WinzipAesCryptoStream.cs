@@ -75,7 +75,7 @@ namespace SharpCompress.Common.Zip
             if (disposing)
             {
                 //read out last 10 auth bytes
-                var ten = new byte[10];
+                Span<byte> ten = stackalloc byte[10];
                 _stream.ReadFully(ten);
                 _stream.Dispose();
             }

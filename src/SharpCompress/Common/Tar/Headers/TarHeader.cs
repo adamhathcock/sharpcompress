@@ -97,7 +97,7 @@ namespace SharpCompress.Common.Tar.Headers
             {
                 numPaddingBytes = BLOCK_SIZE;
             }
-            output.Write(new byte[numPaddingBytes], 0, numPaddingBytes);
+            output.Write(stackalloc byte[numPaddingBytes]);
         }
 
         internal bool Read(BinaryReader reader)

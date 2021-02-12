@@ -22,14 +22,14 @@ namespace SharpCompress.Compressors.Xz
         {
             Table ??= CreateTable(Iso3309Polynomial);
 
-            return CalculateHash(seed, Table, buffer, 0, buffer.Length);
+            return CalculateHash(seed, Table, buffer);
         }
 
-        public static UInt64 CalculateHash(UInt64 seed, UInt64[] table, IList<byte> buffer, int start, int size)
+        public static UInt64 CalculateHash(UInt64 seed, UInt64[] table, ReadOnlySpan<byte> buffer)
         {
             var crc = seed;
-
-            for (var i = start; i < size; i++)
+            int len = buffer.Length;
+            for (var i = 0; i < len; i++)
             {
                 unchecked
                 {

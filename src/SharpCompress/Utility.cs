@@ -281,11 +281,11 @@ namespace SharpCompress
             return ArrayPool<byte>.Shared.Rent(81920);
         }
 
-        public static bool ReadFully(this Stream stream, byte[] buffer)
+        public static bool ReadFully(this Stream stream, Span<byte> buffer)
         {
             int total = 0;
             int read;
-            while ((read = stream.Read(buffer, total, buffer.Length - total)) > 0)
+            while ((read = stream.Read(buffer.Slice(total, buffer.Length - total))) > 0)
             {
                 total += read;
                 if (total >= buffer.Length)

@@ -93,7 +93,7 @@ namespace SharpCompress.Common.Zip
                     }
                 case ZipCompressionMethod.PPMd:
                     {
-                        var props = new byte[2];
+                        Span<byte> props = stackalloc byte[2];
                         stream.ReadFully(props);
                         return new PpmdStream(new PpmdProperties(props), stream, false);
                     }

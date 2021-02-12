@@ -99,7 +99,7 @@ namespace SharpCompress.Writers.Tar
                 return;
             }
             zeros = 512 - zeros;
-            OutputStream.Write(new byte[zeros], 0, zeros);
+            OutputStream.Write(stackalloc byte[zeros]);
         }
 
         protected override void Dispose(bool isDisposing)

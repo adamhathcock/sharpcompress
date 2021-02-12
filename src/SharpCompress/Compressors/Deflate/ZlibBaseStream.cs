@@ -256,17 +256,15 @@ namespace SharpCompress.Compressors.Deflate
                         }
 
                         // Read and potentially verify the GZIP trailer: CRC32 and  size mod 2^32
-                        byte[] trailer = new byte[8];
+                        Span<byte> trailer = stackalloc byte[8];
 
                         // workitem 8679
                         if (_z.AvailableBytesIn != 8)
                         {
                             // Make sure we have read to the end of the stream
-                            Array.Copy(_z.InputBuffer, _z.NextIn, trailer, 0, _z.AvailableBytesIn);
+                            _z.InputBuffer.AsSpan(_z.NextIn, _z.AvailableBytesIn).CopyTo(trailer);
                             int bytesNeeded = 8 - _z.AvailableBytesIn;
-                            int bytesRead = _stream.Read(trailer,
-                                                         _z.AvailableBytesIn,
-                                                         bytesNeeded);
+                            int bytesRead = _stream.Read(trailer.Slice(_z.AvailableBytesIn, bytesNeeded));
                             if (bytesNeeded != bytesRead)
                             {
                                 throw new ZlibException(String.Format(
@@ -276,12 +274,12 @@ namespace SharpCompress.Compressors.Deflate
                         }
                         else
                         {
-                            Array.Copy(_z.InputBuffer, _z.NextIn, trailer, 0, trailer.Length);
+                            _z.InputBuffer.AsSpan(_z.NextIn, trailer.Length).CopyTo(trailer);
                         }
 
                         Int32 crc32_expected = BinaryPrimitives.ReadInt32LittleEndian(trailer);
                         Int32 crc32_actual = crc.Crc32Result;
-                        Int32 isize_expected = BinaryPrimitives.ReadInt32LittleEndian(trailer.AsSpan(4));
+                        Int32 isize_expected = BinaryPrimitives.ReadInt32LittleEndian(trailer.Slice(4));
                         Int32 isize_actual = (Int32)(_z.TotalBytesOut & 0x00000000FFFFFFFF);
 
                         if (crc32_actual != crc32_expected)
