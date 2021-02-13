@@ -127,12 +127,15 @@ namespace SharpCompress
             yield return item;
         }
 
-        public static void CheckNotNull(this object obj, string name)
+        public static T CheckNotNull<T>(this T? obj, string name)
+            where T : class
         {
             if (obj is null)
             {
                 throw new ArgumentNullException(name);
             }
+
+            return obj;
         }
 
         public static void CheckNotNullOrEmpty(this string obj, string name)

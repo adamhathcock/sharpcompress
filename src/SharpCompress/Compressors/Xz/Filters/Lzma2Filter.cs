@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Threading.Tasks;
 using SharpCompress.Compressors.LZMA;
 
 namespace SharpCompress.Compressors.Xz.Filters
@@ -49,9 +50,9 @@ namespace SharpCompress.Compressors.Xz.Filters
         {
         }
 
-        public override void SetBaseStream(Stream stream)
+        public override async ValueTask SetBaseStreamAsync(Stream stream)
         {
-            BaseStream = new LzmaStream(new[] { _dictionarySize }, stream);
+            BaseStream = await LzmaStream.CreateAsync(new[] { _dictionarySize }, stream);
         }
 
         public override int Read(byte[] buffer, int offset, int count)

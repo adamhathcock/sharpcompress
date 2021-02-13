@@ -27,6 +27,7 @@ namespace SharpCompress.Compressors.LZMA
         internal static async ValueTask<Stream> CreateDecoderStream(CMethodId id, Stream[] inStreams, byte[] info, IPasswordProvider pass,
                                                                     long limit, CancellationToken cancellationToken)
         {
+            await Task.CompletedTask;
             switch (id._id)
             {
                 case K_COPY:
@@ -37,17 +38,17 @@ namespace SharpCompress.Compressors.LZMA
                     return inStreams.Single();
                 case K_LZMA:
                 case K_LZMA2:
-                    return new LzmaStream(info, inStreams.Single(), -1, limit);
+                    return await LzmaStream.CreateAsync(info, inStreams.Single(), -1, limit);
                 case CMethodId.K_AES_ID:
                     return new AesDecoderStream(inStreams.Single(), info, pass, limit);
                 case K_BCJ:
                     return new BCJFilter(false, inStreams.Single());
                 case K_BCJ2:
                     return new Bcj2DecoderStream(inStreams, info, limit);
-                case K_B_ZIP2:
-                    return await BZip2Stream.CreateAsync(inStreams.Single(), CompressionMode.Decompress, true, cancellationToken);
-                /*case K_PPMD:
-                    return new PpmdStream(new PpmdProperties(info), inStreams.Single(), false);*/
+                /* case K_B_ZIP2:
+                     return await BZip2Stream.CreateAsync(inStreams.Single(), CompressionMode.Decompress, true, cancellationToken);
+                 case K_PPMD:
+                     return new PpmdStream(new PpmdProperties(info), inStreams.Single(), false);*/
                 case K_DEFLATE:
                     return new DeflateStream(inStreams.Single(), CompressionMode.Decompress);
                 default:

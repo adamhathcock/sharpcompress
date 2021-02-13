@@ -24,6 +24,7 @@ namespace SharpCompress.Writers.Tar
 
         public static async ValueTask<TarWriter> CreateAsync(Stream destination, TarWriterOptions options, CancellationToken cancellationToken = default)
         {
+            await Task.CompletedTask;
             var tw = new TarWriter(options);
             tw.finalizeArchiveOnClose = options.FinalizeArchiveOnClose;
 
@@ -39,11 +40,11 @@ namespace SharpCompress.Writers.Tar
             {
                 case CompressionType.None:
                     break;
-                case CompressionType.BZip2:
+               /* case CompressionType.BZip2:
                     {
                         destination = await BZip2Stream.CreateAsync(destination, CompressionMode.Compress, false, cancellationToken);
                     }
-                    break;
+                    break;     */
                 case CompressionType.GZip:
                     {
                         destination = new GZipStream(destination, CompressionMode.Compress);
@@ -51,7 +52,7 @@ namespace SharpCompress.Writers.Tar
                     break;
                 case CompressionType.LZip:
                     {
-                        destination = new LZipStream(destination, CompressionMode.Compress);
+                        destination = await LZipStream.CreateAsync(destination, CompressionMode.Compress);
                     }
                     break;
                 default:
@@ -122,11 +123,11 @@ namespace SharpCompress.Writers.Tar
             }
             switch (OutputStream)
             {
-                case BZip2Stream b:
+              /*  case BZip2Stream b:
                     {
                         await b.FinishAsync(CancellationToken.None);
                         break;
-                    }
+                    }     */
                 case LZipStream l:
                     {
                         l.Finish();

@@ -1,7 +1,6 @@
-#nullable disable
-
 using System;
 using System.IO;
+using System.Threading.Tasks;
 using SharpCompress.Compressors.LZMA.LZ;
 using SharpCompress.Compressors.LZMA.RangeCoder;
 
@@ -11,11 +10,11 @@ namespace SharpCompress.Compressors.LZMA
     {
         private class LenDecoder
         {
-            private BitDecoder _choice = new BitDecoder();
-            private BitDecoder _choice2 = new BitDecoder();
+            private BitDecoder _choice = new();
+            private BitDecoder _choice2 = new();
             private readonly BitTreeDecoder[] _lowCoder = new BitTreeDecoder[Base.K_NUM_POS_STATES_MAX];
             private readonly BitTreeDecoder[] _midCoder = new BitTreeDecoder[Base.K_NUM_POS_STATES_MAX];
-            private BitTreeDecoder _highCoder = new BitTreeDecoder(Base.K_NUM_HIGH_LEN_BITS);
+            private BitTreeDecoder _highCoder = new(Base.K_NUM_HIGH_LEN_BITS);
             private uint _numPosStates;
 
             public void Create(uint numPosStates)
@@ -113,12 +112,12 @@ namespace SharpCompress.Compressors.LZMA
                 }
             }
 
-            private Decoder2[] _coders;
-            private int _numPrevBits;
-            private int _numPosBits;
-            private uint _posMask;
-
-            public void Create(int numPosBits, int numPrevBits)
+            private readonly Decoder2[]_coders;
+            private readonly int _numPrevBits;
+            private readonly int _numPosBits;
+            private readonly uint _posMask;
+            
+            public LiteralDecoder(int numPosBits, int numPrevBits)
             {
                 if (_coders != null && _numPrevBits == numPrevBits &&
                     _numPosBits == numPosBits)
@@ -161,7 +160,7 @@ namespace SharpCompress.Compressors.LZMA
             }
         }
 
-        private OutWindow _outWindow;
+        private OutWindow? _outWindow;
 
         private readonly BitDecoder[] _isMatchDecoders = new BitDecoder[Base.K_NUM_STATES << Base.K_NUM_POS_STATES_BITS_MAX];
         private readonly BitDecoder[] _isRepDecoders = new BitDecoder[Base.K_NUM_STATES];
@@ -173,18 +172,18 @@ namespace SharpCompress.Compressors.LZMA
         private readonly BitTreeDecoder[] _posSlotDecoder = new BitTreeDecoder[Base.K_NUM_LEN_TO_POS_STATES];
         private readonly BitDecoder[] _posDecoders = new BitDecoder[Base.K_NUM_FULL_DISTANCES - Base.K_END_POS_MODEL_INDEX];
 
-        private BitTreeDecoder _posAlignDecoder = new BitTreeDecoder(Base.K_NUM_ALIGN_BITS);
+        private BitTreeDecoder _posAlignDecoder = new(Base.K_NUM_ALIGN_BITS);
 
-        private readonly LenDecoder _lenDecoder = new LenDecoder();
-        private readonly LenDecoder _repLenDecoder = new LenDecoder();
+        private readonly LenDecoder _lenDecoder = new();
+        private readonly LenDecoder _repLenDecoder = new();
 
-        private readonly LiteralDecoder _literalDecoder = new LiteralDecoder();
+        private LiteralDecoder? _literalDecoder;
 
         private int _dictionarySize;
 
         private uint _posStateMask;
 
-        private Base.State _state = new Base.State();
+        private Base.State _state = new();
         private uint _rep0, _rep1, _rep2, _rep3;
 
         public Decoder()
@@ -196,15 +195,16 @@ namespace SharpCompress.Compressors.LZMA
             }
         }
 
-        private void CreateDictionary()
+        private OutWindow CreateDictionary()
         {
             if (_dictionarySize < 0)
             {
                 throw new InvalidParamException();
             }
-            _outWindow = new OutWindow();
+            var outWindow = new OutWindow();
             int blockSize = Math.Max(_dictionarySize, (1 << 12));
-            _outWindow.Create(blockSize);
+            outWindow.Create(blockSize);
+            return outWindow;
         }
 
         private void SetLiteralProperties(int lp, int lc)
@@ -217,7 +217,7 @@ namespace SharpCompress.Compressors.LZMA
             {
                 throw new InvalidParamException();
             }
-            _literalDecoder.Create(lp, lc);
+            _literalDecoder = new(lp, lc);
         }
 
         private void SetPosBitsProperties(int pb)
@@ -249,7 +249,7 @@ namespace SharpCompress.Compressors.LZMA
                 _isRepG2Decoders[i].Init();
             }
 
-            _literalDecoder.Init();
+            _literalDecoder?.Init();
             for (i = 0; i < Base.K_NUM_LEN_TO_POS_STATES; i++)
             {
                 _posSlotDecoder[i].Init();
@@ -272,12 +272,12 @@ namespace SharpCompress.Compressors.LZMA
             _rep3 = 0;
         }
 
-        public void Code(Stream inStream, Stream outStream,
+        public async ValueTask CodeAsync(Stream inStream, Stream outStream,
                          Int64 inSize, Int64 outSize, ICodeProgress progress)
         {
             if (_outWindow is null)
             {
-                CreateDictionary();
+                _outWindow = CreateDictionary();
             }
             _outWindow.Init(outStream);
             if (outSize > 0)
@@ -290,7 +290,7 @@ namespace SharpCompress.Compressors.LZMA
             }
 
             RangeCoder.Decoder rangeDecoder = new RangeCoder.Decoder();
-            rangeDecoder.Init(inStream);
+            await rangeDecoder.InitAsync(inStream);
 
             Code(_dictionarySize, _outWindow, rangeDecoder);
 
@@ -310,6 +310,7 @@ namespace SharpCompress.Compressors.LZMA
 
         internal bool Code(int dictionarySize, OutWindow outWindow, RangeCoder.Decoder rangeDecoder)
         {
+            _literalDecoder ??= _literalDecoder.CheckNotNull(nameof(_literalDecoder));
             int dictionarySizeCheck = Math.Max(dictionarySize, 1);
 
             outWindow.CopyPending();
@@ -450,7 +451,7 @@ namespace SharpCompress.Compressors.LZMA
         {
             if (_outWindow is null)
             {
-                CreateDictionary();
+                _outWindow = CreateDictionary();
             }
             _outWindow.Train(stream);
         }

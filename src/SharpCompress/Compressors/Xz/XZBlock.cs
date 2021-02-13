@@ -44,7 +44,7 @@ namespace SharpCompress.Compressors.Xz
 
             if (!_streamConnected)
             {
-                ConnectStream();
+                await ConnectStreamAsync();
             }
 
             if (!_endOfStream && _decomStream is not null)
@@ -95,13 +95,13 @@ namespace SharpCompress.Compressors.Xz
             _crcChecked = true;
         }
 
-        private void ConnectStream()
+        private async ValueTask ConnectStreamAsync()
         {
             _decomStream = BaseStream;
             while (Filters.Any())
             {
                 BlockFilter filter = Filters.Pop();
-                filter.SetBaseStream(_decomStream);
+                await filter.SetBaseStreamAsync(_decomStream);
                 _decomStream = filter;
             }
             _streamConnected = true;

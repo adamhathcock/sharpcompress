@@ -1,21 +1,24 @@
 ﻿#nullable disable
 
 using System;
+using System.Buffers;
 using System.Buffers.Binary;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 using SharpCompress.Compressors.LZMA.LZ;
 
 namespace SharpCompress.Compressors.LZMA
 {
     public class LzmaStream : Stream
     {
-        private readonly Stream _inputStream;
-        private readonly long _inputSize;
-        private readonly long _outputSize;
+        private Stream _inputStream;
+        private long _inputSize;
+        private long _outputSize;
 
-        private readonly int _dictionarySize;
-        private readonly OutWindow _outWindow = new OutWindow();
-        private readonly RangeCoder.Decoder _rangeDecoder = new RangeCoder.Decoder();
+        private int _dictionarySize;
+        private OutWindow _outWindow = new OutWindow();
+        private RangeCoder.Decoder _rangeDecoder = new RangeCoder.Decoder();
         private Decoder _decoder;
 
         private long _position;
@@ -25,70 +28,60 @@ namespace SharpCompress.Compressors.LZMA
         private long _inputPosition;
 
         // LZMA2
-        private readonly bool _isLzma2;
+        private bool _isLzma2;
         private bool _uncompressedChunk;
         private bool _needDictReset = true;
         private bool _needProps = true;
 
         private readonly Encoder _encoder;
         private bool _isDisposed;
+        
+        private LzmaStream() {}
 
-        public LzmaStream(byte[] properties, Stream inputStream)
-            : this(properties, inputStream, -1, -1, null, properties.Length < 5)
+        public static async ValueTask<LzmaStream> CreateAsync(byte[] properties, Stream inputStream, long inputSize = -1, long outputSize = -1,
+                                                       Stream presetDictionary = null, bool? isLzma2 = null)
         {
-        }
+            var ls = new LzmaStream();
+            ls._inputStream = inputStream;
+            ls._inputSize = inputSize;
+            ls._outputSize = outputSize;
+            ls._isLzma2 = isLzma2 ?? properties.Length < 5;
 
-        public LzmaStream(byte[] properties, Stream inputStream, long inputSize)
-            : this(properties, inputStream, inputSize, -1, null, properties.Length < 5)
-        {
-        }
-
-        public LzmaStream(byte[] properties, Stream inputStream, long inputSize, long outputSize)
-            : this(properties, inputStream, inputSize, outputSize, null, properties.Length < 5)
-        {
-        }
-
-        public LzmaStream(byte[] properties, Stream inputStream, long inputSize, long outputSize,
-                          Stream presetDictionary, bool isLzma2)
-        {
-            _inputStream = inputStream;
-            _inputSize = inputSize;
-            _outputSize = outputSize;
-            _isLzma2 = isLzma2;
-
-            if (!isLzma2)
+            if (!ls._isLzma2)
             {
-                _dictionarySize = BinaryPrimitives.ReadInt32LittleEndian(properties.AsSpan(1));
-                _outWindow.Create(_dictionarySize);
+                ls._dictionarySize = BinaryPrimitives.ReadInt32LittleEndian(properties.AsSpan(1));
+                ls._outWindow.Create(ls._dictionarySize);
                 if (presetDictionary != null)
                 {
-                    _outWindow.Train(presetDictionary);
+                    ls._outWindow.Train(presetDictionary);
                 }
 
-                _rangeDecoder.Init(inputStream);
+                await ls._rangeDecoder.InitAsync(inputStream);
 
-                _decoder = new Decoder();
-                _decoder.SetDecoderProperties(properties);
-                Properties = properties;
+                ls._decoder = new Decoder();
+                ls._decoder.SetDecoderProperties(properties);
+                ls.Properties = properties;
 
-                _availableBytes = outputSize < 0 ? long.MaxValue : outputSize;
-                _rangeDecoderLimit = inputSize;
+                ls._availableBytes = outputSize < 0 ? long.MaxValue : outputSize;
+                ls._rangeDecoderLimit = inputSize;
             }
             else
             {
-                _dictionarySize = 2 | (properties[0] & 1);
-                _dictionarySize <<= (properties[0] >> 1) + 11;
+                ls. _dictionarySize = 2 | (properties[0] & 1);
+                ls. _dictionarySize <<= (properties[0] >> 1) + 11;
 
-                _outWindow.Create(_dictionarySize);
+                ls._outWindow.Create(ls._dictionarySize);
                 if (presetDictionary != null)
                 {
-                    _outWindow.Train(presetDictionary);
-                    _needDictReset = false;
+                    ls._outWindow.Train(presetDictionary);
+                    ls._needDictReset = false;
                 }
 
-                Properties = new byte[1];
-                _availableBytes = 0;
+                ls. Properties = new byte[1];
+                ls._availableBytes = 0;
             }
+
+            return ls;
         }
 
         public LzmaStream(LzmaEncoderProperties properties, bool isLzma2, Stream outputStream)
@@ -128,24 +121,26 @@ namespace SharpCompress.Compressors.LZMA
 
         public override void Flush()
         {
+            throw new NotSupportedException();
         }
 
-        protected override void Dispose(bool disposing)
+        public override async ValueTask DisposeAsync()
         {
             if (_isDisposed)
             {
                 return;
             }
             _isDisposed = true;
-            if (disposing)
+            if (_encoder != null)
             {
-                if (_encoder != null)
-                {
-                    _position = _encoder.Code(null, true);
-                }
-                _inputStream?.Dispose();
+                _position = await _encoder.CodeAsync(null, true);
             }
-            base.Dispose(disposing);
+            _inputStream?.DisposeAsync();
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            throw new NotSupportedException();
         }
 
         public override long Length => _position + _availableBytes;
@@ -153,6 +148,11 @@ namespace SharpCompress.Compressors.LZMA
         public override long Position { get => _position; set => throw new NotSupportedException(); }
 
         public override int Read(byte[] buffer, int offset, int count)
+        {
+            throw new NotSupportedException();
+        }
+
+        public override async Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
         {
             if (_endReached)
             {
@@ -166,7 +166,7 @@ namespace SharpCompress.Compressors.LZMA
                 {
                     if (_isLzma2)
                     {
-                        DecodeChunkHeader();
+                        await DecodeChunkHeader();
                     }
                     else
                     {
@@ -231,7 +231,7 @@ namespace SharpCompress.Compressors.LZMA
             return total;
         }
 
-        private void DecodeChunkHeader()
+        private async ValueTask DecodeChunkHeader()
         {
             int control = _inputStream.ReadByte();
             _inputPosition++;
@@ -283,7 +283,7 @@ namespace SharpCompress.Compressors.LZMA
                     _decoder.SetDecoderProperties(Properties);
                 }
 
-                _rangeDecoder.Init(_inputStream);
+                await _rangeDecoder.InitAsync(_inputStream);
             }
             else if (control > 0x02)
             {
@@ -307,14 +307,22 @@ namespace SharpCompress.Compressors.LZMA
             throw new NotSupportedException();
         }
 
-        public override void Write(byte[] buffer, int offset, int count)
+        public override async ValueTask WriteAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken = new CancellationToken())
         {
             if (_encoder != null)
             {
-                _position = _encoder.Code(new MemoryStream(buffer, offset, count), false);
+                 var m = ArrayPool<byte>.Shared.Rent(buffer.Length);
+                 buffer.CopyTo(m.AsMemory());
+                _position = await _encoder.CodeAsync(new MemoryStream(m), false);
+                ArrayPool<byte>.Shared.Return(m);
             }
         }
 
-        public byte[] Properties { get; } = new byte[5];
+        public override void Write(byte[] buffer, int offset, int count)
+        {
+            throw new NotSupportedException();
+        }
+
+        public byte[] Properties { get; private set; }
     }
 }

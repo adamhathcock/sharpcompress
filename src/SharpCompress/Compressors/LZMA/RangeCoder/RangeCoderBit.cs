@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 
 namespace SharpCompress.Compressors.LZMA.RangeCoder
 {
@@ -29,7 +30,7 @@ namespace SharpCompress.Compressors.LZMA.RangeCoder
             }
         }
 
-        public void Encode(Encoder encoder, uint symbol)
+        public async ValueTask EncodeAsync(Encoder encoder, uint symbol)
         {
             // encoder.EncodeBit(Prob, kNumBitModelTotalBits, symbol);
             // UpdateModel(symbol);
@@ -48,7 +49,7 @@ namespace SharpCompress.Compressors.LZMA.RangeCoder
             if (encoder._range < Encoder.K_TOP_VALUE)
             {
                 encoder._range <<= 8;
-                encoder.ShiftLow();
+                await encoder.ShiftLowAsync();
             }
         }
 

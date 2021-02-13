@@ -379,6 +379,7 @@ namespace SharpCompress.Writers.Zip
 
             private async ValueTask<Stream> GetWriteStream(Stream writeStream, CancellationToken cancellationToken)
             {
+                await Task.CompletedTask;
                 counting = new CountingWritableSubStream(writeStream);
                 Stream output = counting;
                 switch (zipCompressionMethod)
@@ -391,10 +392,10 @@ namespace SharpCompress.Writers.Zip
                         {
                             return new DeflateStream(counting, CompressionMode.Compress, compressionLevel);
                         }
-                    case ZipCompressionMethod.BZip2:
+                    /*case ZipCompressionMethod.BZip2:
                         {
                             return await BZip2Stream.CreateAsync(counting, CompressionMode.Compress, false, cancellationToken);
-                        }
+                        } */
                     case ZipCompressionMethod.LZMA:
                         {
                             counting.WriteByte(9);

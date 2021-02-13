@@ -1,6 +1,8 @@
 using System;
+using System.Buffers;
 using System.Buffers.Binary;
 using System.IO;
+using System.Threading.Tasks;
 using SharpCompress.Crypto;
 using SharpCompress.IO;
 
@@ -16,26 +18,34 @@ namespace SharpCompress.Compressors.LZMA
     /// </summary>
     public sealed class LZipStream : Stream
     {
-        private readonly Stream _stream;
-        private readonly CountingWritableSubStream? _countingWritableSubStream;
+        #nullable disable
+        private Stream _stream;
+#nullable enable
+        private CountingWritableSubStream? _countingWritableSubStream;
         private bool _disposed;
         private bool _finished;
 
         private long _writeCount;
 
-        public LZipStream(Stream stream, CompressionMode mode)
+        private LZipStream()
         {
-            Mode = mode;
+            
+        }
+
+        public static async ValueTask<LZipStream> CreateAsync(Stream stream, CompressionMode mode)
+        {
+            var lzip = new LZipStream();
+            lzip.Mode = mode;
 
             if (mode == CompressionMode.Decompress)
             {
-                int dSize = ValidateAndReadSize(stream);
+                int dSize = await ValidateAndReadSize(stream);
                 if (dSize == 0)
                 {
                     throw new IOException("Not an LZip stream");
                 }
                 byte[] properties = GetProperties(dSize);
-                _stream = new LzmaStream(properties, stream);
+                lzip._stream = await LzmaStream.CreateAsync(properties, stream);
             }
             else
             {
@@ -43,9 +53,10 @@ namespace SharpCompress.Compressors.LZMA
                 int dSize = 104 * 1024;
                 WriteHeaderSize(stream);
 
-                _countingWritableSubStream = new CountingWritableSubStream(stream);
-                _stream = new Crc32Stream(new LzmaStream(new LzmaEncoderProperties(true, dSize), false, _countingWritableSubStream));
+                lzip._countingWritableSubStream = new CountingWritableSubStream(stream);
+                lzip._stream = new Crc32Stream(new LzmaStream(new LzmaEncoderProperties(true, dSize), false, lzip._countingWritableSubStream));
             }
+            return lzip;
         }
 
         public void Finish()
@@ -90,7 +101,7 @@ namespace SharpCompress.Compressors.LZMA
             }
         }
 
-        public CompressionMode Mode { get; }
+        public CompressionMode Mode { get; private set; }
 
         public override bool CanRead => Mode == CompressionMode.Decompress;
 
@@ -155,14 +166,14 @@ namespace SharpCompress.Compressors.LZMA
         /// </summary>
         /// <param name="stream">The stream to read from. Must not be null.</param>
         /// <returns><c>true</c> if the given stream is an LZip file, <c>false</c> otherwise.</returns>
-        public static bool IsLZipFile(Stream stream) => ValidateAndReadSize(stream) != 0;
+        public static async ValueTask<bool> IsLZipFileAsync(Stream stream) => await ValidateAndReadSize(stream) != 0;
 
         /// <summary>
         /// Reads the 6-byte header of the stream, and returns 0 if either the header
         /// couldn't be read or it isn't a validate LZIP header, or the dictionary
         /// size if it *is* a valid LZIP file.
         /// </summary>
-        public static int ValidateAndReadSize(Stream stream)
+        private static async ValueTask<int> ValidateAndReadSize(Stream stream)
         {
             if (stream is null)
             {
@@ -170,8 +181,9 @@ namespace SharpCompress.Compressors.LZMA
             }
 
             // Read the header
-            Span<byte> header = stackalloc byte[6];
-            int n = stream.Read(header);
+            using var buffer = MemoryPool<byte>.Shared.Rent(6);
+            var header = buffer.Memory.Slice(0,6);
+            int n = await stream.ReadAsync(header);
 
             // TODO: Handle reading only part of the header?
 
@@ -180,12 +192,12 @@ namespace SharpCompress.Compressors.LZMA
                 return 0;
             }
 
-            if (header[0] != 'L' || header[1] != 'Z' || header[2] != 'I' || header[3] != 'P' || header[4] != 1 /* version 1 */)
+            if (header.Span[0] != 'L' || header.Span[1] != 'Z' || header.Span[2] != 'I' || header.Span[3] != 'P' || header.Span[4] != 1 /* version 1 */)
             {
                 return 0;
             }
-            int basePower = header[5] & 0x1F;
-            int subtractionNumerator = (header[5] & 0xE0) >> 5;
+            int basePower = header.Span[5] & 0x1F;
+            int subtractionNumerator = (header.Span[5] & 0xE0) >> 5;
             return (1 << basePower) - subtractionNumerator * (1 << (basePower - 4));
         }
 

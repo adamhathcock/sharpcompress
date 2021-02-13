@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 
 namespace SharpCompress.Compressors.LZMA.RangeCoder
 {
@@ -21,25 +22,25 @@ namespace SharpCompress.Compressors.LZMA.RangeCoder
             }
         }
 
-        public void Encode(Encoder rangeEncoder, UInt32 symbol)
+        public async ValueTask EncodeAsync(Encoder rangeEncoder, UInt32 symbol)
         {
             UInt32 m = 1;
             for (int bitIndex = _numBitLevels; bitIndex > 0;)
             {
                 bitIndex--;
                 UInt32 bit = (symbol >> bitIndex) & 1;
-                _models[m].Encode(rangeEncoder, bit);
+                await _models[m].EncodeAsync(rangeEncoder, bit);
                 m = (m << 1) | bit;
             }
         }
 
-        public void ReverseEncode(Encoder rangeEncoder, UInt32 symbol)
+        public async ValueTask ReverseEncodeAsync(Encoder rangeEncoder, UInt32 symbol)
         {
             UInt32 m = 1;
             for (UInt32 i = 0; i < _numBitLevels; i++)
             {
                 UInt32 bit = symbol & 1;
-                _models[m].Encode(rangeEncoder, bit);
+                await _models[m].EncodeAsync(rangeEncoder, bit);
                 m = (m << 1) | bit;
                 symbol >>= 1;
             }
@@ -88,14 +89,14 @@ namespace SharpCompress.Compressors.LZMA.RangeCoder
             return price;
         }
 
-        public static void ReverseEncode(BitEncoder[] models, UInt32 startIndex,
+        public static async ValueTask ReverseEncodeAsync(BitEncoder[] models, UInt32 startIndex,
                                          Encoder rangeEncoder, int numBitLevels, UInt32 symbol)
         {
             UInt32 m = 1;
             for (int i = 0; i < numBitLevels; i++)
             {
                 UInt32 bit = symbol & 1;
-                models[startIndex + m].Encode(rangeEncoder, bit);
+                await models[startIndex + m].EncodeAsync(rangeEncoder, bit);
                 m = (m << 1) | bit;
                 symbol >>= 1;
             }
