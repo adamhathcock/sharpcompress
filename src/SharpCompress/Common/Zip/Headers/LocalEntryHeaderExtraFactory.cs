@@ -72,16 +72,35 @@ namespace SharpCompress.Common.Zip.Headers
         private void Process()
         {
             if (DataBytes.Length >= 8)
+            {
                 UncompressedSize = BinaryPrimitives.ReadInt64LittleEndian(DataBytes);
-            if (DataBytes.Length >= 16)
-                CompressedSize = BinaryPrimitives.ReadInt64LittleEndian(DataBytes.AsSpan(8));
-            if (DataBytes.Length >= 24)
-                RelativeOffsetOfEntryHeader = BinaryPrimitives.ReadInt64LittleEndian(DataBytes.AsSpan(16));
-            if (DataBytes.Length >= 28)
-                VolumeNumber = BinaryPrimitives.ReadUInt32LittleEndian(DataBytes.AsSpan(24));
+            }
 
-            if (DataBytes.Length > 28)
-                throw new ArchiveException("Unexpected size of of Zip64 extended information extra field");
+            if (DataBytes.Length >= 16)
+            {
+                CompressedSize = BinaryPrimitives.ReadInt64LittleEndian(DataBytes.AsSpan(8));
+            }
+
+            if (DataBytes.Length >= 24)
+            {
+                RelativeOffsetOfEntryHeader = BinaryPrimitives.ReadInt64LittleEndian(DataBytes.AsSpan(16));
+            }
+
+            if (DataBytes.Length >= 28)
+            {
+                VolumeNumber = BinaryPrimitives.ReadUInt32LittleEndian(DataBytes.AsSpan(24));
+            }
+
+            switch (DataBytes.Length)
+            {
+                case 8:
+                case 16:
+                case 24:
+                case 28:
+                    break;
+                default:
+                    throw new ArchiveException($"Unexpected size of of Zip64 extended information extra field: {DataBytes.Length}");
+            }
         }
 
         public long UncompressedSize { get; private set; }
