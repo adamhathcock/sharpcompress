@@ -3,10 +3,11 @@ using System.Buffers;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using SharpCompress.IO;
 
 namespace SharpCompress.Compressors.BZip2
 {
-    public sealed class BZip2Stream : Stream
+    public sealed class BZip2Stream : AsyncStream
     {
         private readonly Stream stream;
         private bool isDisposed;
@@ -36,17 +37,14 @@ namespace SharpCompress.Compressors.BZip2
             (stream as CBZip2OutputStream)?.Finish();
         }
 
-        protected override void Dispose(bool disposing)
+        public override async ValueTask DisposeAsync()
         {
             if (isDisposed)
             {
                 return;
             }
             isDisposed = true;
-            if (disposing)
-            {
-                stream.Dispose();
-            }
+            await stream.DisposeAsync();
         }
 
         public CompressionMode Mode { get; }
@@ -57,28 +55,18 @@ namespace SharpCompress.Compressors.BZip2
 
         public override bool CanWrite => stream.CanWrite;
 
-        public override void Flush()
+        public override Task FlushAsync(CancellationToken cancellationToken)
         {
-            stream.Flush();
+            return stream.FlushAsync(cancellationToken);
         }
 
         public override long Length => stream.Length;
 
         public override long Position { get => stream.Position; set => stream.Position = value; }
 
-        public override int Read(byte[] buffer, int offset, int count)
-        {
-            throw new NotImplementedException();
-        }
-
         public override ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default)
         {
             return stream.ReadAsync(buffer, cancellationToken);
-        }
-
-        public override int ReadByte()
-        {
-            throw new NotImplementedException();
         }
 
         public override long Seek(long offset, SeekOrigin origin)
@@ -91,19 +79,14 @@ namespace SharpCompress.Compressors.BZip2
             stream.SetLength(value);
         }
 
+        public override Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+        {
+            return stream.WriteAsync(buffer, offset, count, cancellationToken);
+        }
+
         public override ValueTask WriteAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken = new CancellationToken())
         {
             return stream.WriteAsync(buffer, cancellationToken);
-        }
-
-        public override void Write(byte[] buffer, int offset, int count)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override void WriteByte(byte value)
-        {
-            throw new NotImplementedException();
         }
 
         /// <summary>
