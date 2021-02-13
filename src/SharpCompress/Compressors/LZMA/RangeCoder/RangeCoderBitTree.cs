@@ -122,23 +122,23 @@ namespace SharpCompress.Compressors.LZMA.RangeCoder
             }
         }
 
-        public uint Decode(Decoder rangeDecoder)
+        public async ValueTask<uint> DecodeAsync(Decoder rangeDecoder)
         {
             uint m = 1;
             for (int bitIndex = _numBitLevels; bitIndex > 0; bitIndex--)
             {
-                m = (m << 1) + _models[m].Decode(rangeDecoder);
+                m = (m << 1) + await _models[m].DecodeAsync(rangeDecoder);
             }
             return m - ((uint)1 << _numBitLevels);
         }
 
-        public uint ReverseDecode(Decoder rangeDecoder)
+        public async ValueTask<uint> ReverseDecode(Decoder rangeDecoder)
         {
             uint m = 1;
             uint symbol = 0;
             for (int bitIndex = 0; bitIndex < _numBitLevels; bitIndex++)
             {
-                uint bit = _models[m].Decode(rangeDecoder);
+                uint bit = await _models[m].DecodeAsync(rangeDecoder);
                 m <<= 1;
                 m += bit;
                 symbol |= (bit << bitIndex);
@@ -146,14 +146,14 @@ namespace SharpCompress.Compressors.LZMA.RangeCoder
             return symbol;
         }
 
-        public static uint ReverseDecode(BitDecoder[] models, UInt32 startIndex,
-                                         Decoder rangeDecoder, int numBitLevels)
+        public static async ValueTask<uint> ReverseDecode(BitDecoder[] models, UInt32 startIndex,
+                                                          Decoder rangeDecoder, int numBitLevels)
         {
             uint m = 1;
             uint symbol = 0;
             for (int bitIndex = 0; bitIndex < numBitLevels; bitIndex++)
             {
-                uint bit = models[startIndex + m].Decode(rangeDecoder);
+                uint bit = await models[startIndex + m].DecodeAsync(rangeDecoder);
                 m <<= 1;
                 m += bit;
                 symbol |= (bit << bitIndex);

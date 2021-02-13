@@ -69,7 +69,7 @@ namespace SharpCompress.Test
         {
             foreach (var path in testArchives)
             {
-                using (var stream = new NonDisposingStream(File.OpenRead(path), true))
+                await using (var stream = new NonDisposingStream(File.OpenRead(path), true))
                 await using (var archive = await ArchiveFactory.OpenAsync(stream, readerOptions))
                 {
                     try

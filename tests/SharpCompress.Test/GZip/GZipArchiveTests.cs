@@ -18,7 +18,7 @@ namespace SharpCompress.Test.GZip
         [Fact]
         public async ValueTask GZip_Archive_Generic()
         {
-            using (Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.gz")))
+            await using (Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.gz")))
             await using (var archive = await ArchiveFactory.OpenAsync(stream))
             {
                 var entry = await archive.Entries.FirstAsync();
@@ -38,7 +38,7 @@ namespace SharpCompress.Test.GZip
         [Fact]
         public async ValueTask GZip_Archive()
         {
-            using (Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.gz")))
+            await using (Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.gz")))
             await using (var archive = GZipArchive.Open(stream))
             {
                 var entry = await archive.Entries.FirstAsync();

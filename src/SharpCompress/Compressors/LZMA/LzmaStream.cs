@@ -175,7 +175,7 @@ namespace SharpCompress.Compressors.LZMA
                 {
                     _inputPosition += _outWindow.CopyStream(_inputStream, toProcess);
                 }
-                else if (_decoder.Code(_dictionarySize, _outWindow, _rangeDecoder)
+                else if (await _decoder.CodeAsync(_dictionarySize, _outWindow, _rangeDecoder)
                          && _outputSize < 0)
                 {
                     _availableBytes = _outWindow.AvailableBytes;

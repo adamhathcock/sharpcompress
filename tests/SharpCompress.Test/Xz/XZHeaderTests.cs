@@ -25,7 +25,7 @@ namespace SharpCompress.Test.Xz
         {
             var bytes = Compressed.Clone() as byte[];
             bytes[8]++;
-            using (Stream badCrcStream = new MemoryStream(bytes))
+            await using (Stream badCrcStream = new MemoryStream(bytes))
             {
                 var header = new XZHeader(badCrcStream);
                 var ex = await Assert.ThrowsAsync<InvalidDataException>(async () => { await header.Process(); });
@@ -41,7 +41,7 @@ namespace SharpCompress.Test.Xz
             byte[] crc = Crc32.Compute(streamFlags).ToLittleEndianBytes();
             streamFlags.CopyTo(bytes, 6);
             crc.CopyTo(bytes, 8);
-            using (Stream badFlagStream = new MemoryStream(bytes))
+            await using (Stream badFlagStream = new MemoryStream(bytes))
             {
                 var header = new XZHeader(badFlagStream);
                 var ex = await Assert.ThrowsAsync<InvalidDataException>(async () => { await header.Process(); });

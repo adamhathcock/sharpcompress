@@ -17,9 +17,9 @@ namespace SharpCompress.Compressors.LZMA
     /// <summary>
     /// Stream supporting the LZIP format, as documented at http://www.nongnu.org/lzip/manual/lzip_manual.html
     /// </summary>
-    public sealed class LZipStream : Stream
+    public sealed class LZipStream : AsyncStream
     {
-        #nullable disable
+#nullable disable
         private Stream _stream;
 #nullable enable
         private CountingWritableSubStream? _countingWritableSubStream;
@@ -52,7 +52,7 @@ namespace SharpCompress.Compressors.LZMA
             {
                 //default
                 int dSize = 104 * 1024;
-                WriteHeaderSize(stream);
+                await WriteHeaderSizeAsync(stream);
 
                 lzip._countingWritableSubStream = new CountingWritableSubStream(stream);
                 lzip._stream = new Crc32Stream(new LzmaStream(new LzmaEncoderProperties(true, dSize), false, lzip._countingWritableSubStream));
@@ -73,14 +73,14 @@ namespace SharpCompress.Compressors.LZMA
 
                     byte[] intBuf = new byte[8];
                     BinaryPrimitives.WriteUInt32LittleEndian(intBuf, crc32Stream.Crc);
-                    _countingWritableSubStream.Write(intBuf, 0, 4);
+                    await _countingWritableSubStream.WriteAsync(intBuf, 0, 4);
 
                     BinaryPrimitives.WriteInt64LittleEndian(intBuf, _writeCount);
-                    _countingWritableSubStream.Write(intBuf, 0, 8);
+                    await _countingWritableSubStream.WriteAsync(intBuf, 0, 8);
 
                     //total with headers
                     BinaryPrimitives.WriteUInt64LittleEndian(intBuf, compressedCount + 6 + 20);
-                    _countingWritableSubStream.Write(intBuf, 0, 8);
+                    await _countingWritableSubStream.WriteAsync(intBuf, 0, 8);
                 }
                 _finished = true;
             }
@@ -99,14 +99,6 @@ namespace SharpCompress.Compressors.LZMA
                 await _stream.DisposeAsync();
         }
 
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                throw new NotSupportedException();
-            }
-        }
-
         public CompressionMode Mode { get; private set; }
 
         public override bool CanRead => Mode == CompressionMode.Decompress;
@@ -115,20 +107,16 @@ namespace SharpCompress.Compressors.LZMA
 
         public override bool CanWrite => Mode == CompressionMode.Compress;
 
-        public override void Flush()
+        public override Task FlushAsync(CancellationToken cancellationToken)
         {
-            _stream.Flush();
+            return _stream.FlushAsync(cancellationToken);
         }
 
         // TODO: Both Length and Position are sometimes feasible, but would require
         // reading the output length when we initialize.
-        public override long Length => throw new NotImplementedException();
+        public override long Length => throw new NotSupportedException();
 
-        public override long Position { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-
-        public override int Read(byte[] buffer, int offset, int count)  => throw new NotImplementedException();
-
-        public override int ReadByte()  => throw new NotSupportedException();
+        public override long Position { get => throw new NotImplementedException(); set => throw new NotSupportedException(); }
 
         public override ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = new CancellationToken())
         {
@@ -137,13 +125,7 @@ namespace SharpCompress.Compressors.LZMA
 
         public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
 
-        public override void SetLength(long value) => throw new NotImplementedException();
-        
-
-        public override void Write(byte[] buffer, int offset, int count)
-        {
-            throw new NotSupportedException();
-        }
+        public override void SetLength(long value) => throw new NotSupportedException();
 
         public override async ValueTask WriteAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken = new CancellationToken())
         {
@@ -155,11 +137,6 @@ namespace SharpCompress.Compressors.LZMA
         {
             await _stream.WriteAsync(buffer, offset, count, cancellationToken);
             _writeCount += count;
-        }
-
-        public override void WriteByte(byte value)
-        {
-            throw new NotSupportedException();
         }
 
         #endregion
@@ -208,7 +185,7 @@ namespace SharpCompress.Compressors.LZMA
 
         private static readonly byte[] headerBytes = new byte[6] { (byte)'L', (byte)'Z', (byte)'I', (byte)'P', 1, 113 };
 
-        public static void WriteHeaderSize(Stream stream)
+        public static async ValueTask WriteHeaderSizeAsync(Stream stream)
         {
             if (stream is null)
             {
@@ -216,7 +193,7 @@ namespace SharpCompress.Compressors.LZMA
             }
 
             // hard coding the dictionary size encoding
-            stream.Write(headerBytes, 0, 6);
+            await stream.WriteAsync(headerBytes, 0, 6);
         }
 
         /// <summary>

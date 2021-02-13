@@ -147,8 +147,8 @@ namespace SharpCompress.Test.Zip
             // Use no compression to ensure we hit the limits (actually inflates a bit, but seems better than using method==Store)
             var eo = new ZipWriterEntryOptions() { DeflateCompressionLevel = Compressors.Deflate.CompressionLevel.None };
 
-            using (var zip = File.OpenWrite(filename))
-            using (var st = forward_only ? (Stream)new ForwardOnlyStream(zip) : zip)
+            await using (var zip = File.OpenWrite(filename))
+            await using (var st = forward_only ? (Stream)new ForwardOnlyStream(zip) : zip)
             await using (var zipWriter = (ZipWriter)await WriterFactory.OpenAsync(st, ArchiveType.Zip, opts))
             {
 
@@ -173,7 +173,7 @@ namespace SharpCompress.Test.Zip
             long count = 0;
             long size = 0;
             Common.Zip.ZipEntry prev = null;
-            using (var fs = File.OpenRead(filename))
+            await using (var fs = File.OpenRead(filename))
             await using (var rd = ZipReader.Open(fs, new ReaderOptions() { LookForHeader = false }))
             {
                 while (await rd.MoveToNextEntryAsync())

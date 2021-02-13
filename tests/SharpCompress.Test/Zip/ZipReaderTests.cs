@@ -194,7 +194,7 @@ namespace SharpCompress.Test.Zip
         [Fact]
         public async ValueTask Zip_Reader_Disposal_Test2()
         {
-            using (TestStream stream = new TestStream(File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.dd.zip"))))
+            await using (TestStream stream = new TestStream(File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.dd.zip"))))
             {
                 var reader = await ReaderFactory.OpenAsync(stream);
                 while (await reader.MoveToNextEntryAsync())
@@ -218,7 +218,7 @@ namespace SharpCompress.Test.Zip
         {
             await Assert.ThrowsAsync<NotSupportedException>(async () =>
                                             {
-                                                using (
+                                                await using (
                                                     Stream stream =
                                                         File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH,
                                                             "Zip.lzma.WinzipAES.zip")))
@@ -316,7 +316,7 @@ namespace SharpCompress.Test.Zip
         {
             var keys = new string[] { "Empty1", "Empty2", "Dir1/", "Dir2/", "Fake1", "Fake2", "Internal.zip" };
 
-            using (Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Zip.none.issue86.zip")))
+            await using (Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Zip.none.issue86.zip")))
             await using (var reader = ZipReader.Open(stream))
             {
                 foreach (var key in keys)

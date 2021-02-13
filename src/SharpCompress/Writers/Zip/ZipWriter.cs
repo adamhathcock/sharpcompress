@@ -333,7 +333,7 @@ namespace SharpCompress.Writers.Zip
 
         #region Nested type: ZipWritingStream
 
-        private class ZipWritingStream : Stream
+        private class ZipWritingStream : AsyncStream
         {
             private readonly CRC32 crc = new CRC32();
             private readonly ZipCentralDirectoryEntry entry;
@@ -397,15 +397,21 @@ namespace SharpCompress.Writers.Zip
                             return await BZip2Stream.CreateAsync(counting, CompressionMode.Compress, false, cancellationToken);
                         } */
                     case ZipCompressionMethod.LZMA:
-                        {
-                            counting.WriteByte(9);
-                            counting.WriteByte(20);
-                            counting.WriteByte(5);
-                            counting.WriteByte(0);
+                    {
+                        using var byteBuffer = MemoryPool<byte>.Shared.Rent(1);
+                        var bite = byteBuffer.Memory.Slice(0, 1);
+                        bite.Span[0] = 9;
+                            await counting.WriteAsync(bite, cancellationToken);
+                            bite.Span[0] = 20;
+                            await counting.WriteAsync(bite, cancellationToken);
+                            bite.Span[0] = 5;
+                            await counting.WriteAsync(bite, cancellationToken);
+                            bite.Span[0] = 0;
+                            await counting.WriteAsync(bite, cancellationToken);
 
                             LzmaStream lzmaStream = new LzmaStream(new LzmaEncoderProperties(!originalStream.CanSeek),
                                                                    false, counting);
-                            counting.Write(lzmaStream.Properties, 0, lzmaStream.Properties.Length);
+                            await counting.WriteAsync(lzmaStream.Properties, 0, lzmaStream.Properties.Length, cancellationToken);
                             return lzmaStream;
                         }
                   /*  case ZipCompressionMethod.PPMd:
@@ -429,7 +435,6 @@ namespace SharpCompress.Writers.Zip
 
                 isDisposed = true;
 
-                await base.DisposeAsync();
                 await writeStream.DisposeAsync();
 
                 if (limitsExceeded)
@@ -452,14 +457,17 @@ namespace SharpCompress.Writers.Zip
                 if (originalStream.CanSeek)
                 {
                     originalStream.Position = (long)(entry.HeaderOffset + 6);
-                    originalStream.WriteByte(0);
+                    using var byteBuffer = MemoryPool<byte>.Shared.Rent(1);
+                    var bite = byteBuffer.Memory.Slice(0, 1);
+                    bite.Span[0] = 0;
+                    await originalStream.WriteAsync(bite);
 
                     if (counting.Count == 0 && entry.Decompressed == 0)
                     {
                         // set compression to STORED for zero byte files (no compression data)
                         originalStream.Position = (long)(entry.HeaderOffset + 8);
-                        originalStream.WriteByte(0);
-                        originalStream.WriteByte(0);
+                        await originalStream.WriteAsync(bite);
+                        await originalStream.WriteAsync(bite);
                     }
 
                     originalStream.Position = (long)(entry.HeaderOffset + 14);
@@ -517,21 +525,10 @@ namespace SharpCompress.Writers.Zip
                 writer.entries.Add(entry);
             }
 
-            public override void Flush()
-            {
-                writeStream.Flush();
-            }
-
             public override Task FlushAsync(CancellationToken cancellationToken)
             {
                 return writeStream.FlushAsync(cancellationToken);
             }
-
-            public override int Read(byte[] buffer, int offset, int count)
-            {
-                throw new NotSupportedException();
-            }
-
             public override long Seek(long offset, SeekOrigin origin)
             {
                 throw new NotSupportedException();
@@ -540,11 +537,6 @@ namespace SharpCompress.Writers.Zip
             public override void SetLength(long value)
             {
                 throw new NotSupportedException();
-            }
-
-            public override void Write(byte[] buffer, int offset, int count)
-            {
-                throw new NotImplementedException();
             }
 
             public override async Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)

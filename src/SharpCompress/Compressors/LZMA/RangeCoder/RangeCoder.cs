@@ -190,18 +190,20 @@ namespace SharpCompress.Compressors.LZMA.RangeCoder
             return _code / (_range /= total);
         }
 
-        public async ValueTask Decode(uint start, uint size)
+        public async ValueTask DecodeAsync(uint start, uint size)
         {
             _code -= start * _range;
             _range *= size;
             await NormalizeAsync();
         }
 
-        public uint DecodeDirectBits(int numTotalBits)
+        public async ValueTask<uint> DecodeDirectBitsAsync(int numTotalBits)
         {
             uint range = _range;
             uint code = _code;
             uint result = 0;
+            using var byteBuffer = MemoryPool<byte>.Shared.Rent(1);
+            var bite = byteBuffer.Memory.Slice(0, 1);
             for (int i = numTotalBits; i > 0; i--)
             {
                 range >>= 1;
@@ -219,7 +221,8 @@ namespace SharpCompress.Compressors.LZMA.RangeCoder
 
                 if (range < K_TOP_VALUE)
                 {
-                    code = (code << 8) | (byte)_stream.ReadByte();
+                    await _stream.ReadAsync(bite);
+                    code = (code << 8) | bite.Span[0];
                     range <<= 8;
                     _total++;
                 }

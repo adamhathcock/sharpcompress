@@ -83,10 +83,9 @@ namespace SharpCompress.Common.Zip
                         {
                             throw new NotSupportedException("LZMA with pkware encryption.");
                         }
-                        var reader = new BinaryReader(stream);
-                        reader.ReadUInt16(); //LZMA version
-                        var props = new byte[reader.ReadUInt16()];
-                        reader.Read(props, 0, props.Length);
+                        await stream.ReadUInt16(cancellationToken); //LZMA version
+                        var props = new byte[await stream.ReadUInt16(cancellationToken)];
+                        await stream.ReadAsync(props, 0, props.Length, cancellationToken);
                         return await LzmaStream.CreateAsync(props, stream,
                                               Header.CompressedSize > 0 ? Header.CompressedSize - 4 - props.Length : -1,
                                               FlagUtility.HasFlag(Header.Flags, HeaderFlags.Bit1)

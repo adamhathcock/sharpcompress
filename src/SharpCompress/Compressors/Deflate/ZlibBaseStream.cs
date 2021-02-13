@@ -35,6 +35,7 @@ using SharpCompress.Common.Tar.Headers;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using SharpCompress.IO;
 
 namespace SharpCompress.Compressors.Deflate
 {
@@ -45,7 +46,7 @@ namespace SharpCompress.Compressors.Deflate
         GZIP = 1952
     }
 
-    internal class ZlibBaseStream : Stream
+    internal class ZlibBaseStream : AsyncStream
     {
         protected internal ZlibCodec _z; // deferred init... new ZlibCodec();
 
@@ -171,11 +172,6 @@ namespace SharpCompress.Compressors.Deflate
                 }
             }
             while (!done);
-        }
-
-        public override void Write(byte[] buffer, int offset, int count)
-        {
-            throw new NotImplementedException();
         }
 
         private async Task FinishAsync()
@@ -321,14 +317,6 @@ namespace SharpCompress.Compressors.Deflate
             _z = null;
         }
 
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                throw new NotImplementedException();
-            }
-        }
-
         public override async ValueTask DisposeAsync()
         {
             if (_isDisposed)
@@ -353,11 +341,6 @@ namespace SharpCompress.Compressors.Deflate
                 }
                 _stream = null;
             }
-        }
-
-        public override void Flush()
-        {
-            throw new NotSupportedException();
         }
 
         public override Task FlushAsync(CancellationToken cancellationToken)
@@ -621,11 +604,6 @@ namespace SharpCompress.Compressors.Deflate
             crc?.SlurpBlock(buffer, offset, rc);
 
             return rc;
-        }
-
-        public override int Read(byte[] buffer, int offset, int count)
-        {
-            throw new NotImplementedException();
         }
 
         public override Boolean CanRead => _stream.CanRead;

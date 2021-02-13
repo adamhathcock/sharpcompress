@@ -44,8 +44,8 @@ namespace SharpCompress.Test.Tar
         [InlineData(false)]
         public async Task Tar_Finalize_Archive(bool finalizeArchive)
         {
-            using (MemoryStream stream = new MemoryStream())
-            using (Stream content = File.OpenRead(Path.Combine(ORIGINAL_FILES_PATH, "jpg", "test.jpg")))
+            await using (MemoryStream stream = new MemoryStream())
+            await using (Stream content = File.OpenRead(Path.Combine(ORIGINAL_FILES_PATH, "jpg", "test.jpg")))
             {
                 await using (TarWriter writer = await TarWriter.CreateAsync(stream, new TarWriterOptions(CompressionType.None, finalizeArchive)))
                 {

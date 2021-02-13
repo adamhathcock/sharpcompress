@@ -24,7 +24,7 @@ namespace SharpCompress.Test.GZip
         public async ValueTask GZip_Reader_Generic2()
         {
             //read only as GZip itme
-            using (Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.gz")))
+            await using (Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.gz")))
             await using (var reader = SharpCompress.Readers.GZip.GZipReader.Open(new RewindableStream(stream)))
             {
                 while (await reader.MoveToNextEntryAsync()) // Crash here

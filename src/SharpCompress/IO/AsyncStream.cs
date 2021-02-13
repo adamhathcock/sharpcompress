@@ -54,8 +54,6 @@ namespace SharpCompress.IO
 
         public abstract override Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken);
 
-        public abstract override ValueTask WriteAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken = default);
-
 #if !NET461 && !NETSTANDARD2_0
 
         public sealed override int Read(Span<byte> buffer)
