@@ -2,10 +2,13 @@
 
 using System;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
+using SharpCompress.IO;
 
 namespace SharpCompress.Compressors.Xz
 {
-    public abstract class ReadOnlyStream : Stream
+    public abstract class ReadOnlyStream : AsyncStream
     {
         public Stream BaseStream { get; protected set; }
 
@@ -23,16 +26,6 @@ namespace SharpCompress.Compressors.Xz
             set => throw new NotSupportedException();
         }
 
-        public override int Read(byte[] buffer, int offset, int count)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override void Flush()
-        {
-            throw new NotSupportedException();
-        }
-
         public override long Seek(long offset, SeekOrigin origin)
         {
             throw new NotSupportedException();
@@ -43,7 +36,12 @@ namespace SharpCompress.Compressors.Xz
             throw new NotSupportedException();
         }
 
-        public override void Write(byte[] buffer, int offset, int count)
+        public override ValueTask DisposeAsync()
+        {
+            return new();
+        }
+
+        public override Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
         {
             throw new NotSupportedException();
         }

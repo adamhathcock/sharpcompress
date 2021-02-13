@@ -52,6 +52,11 @@ namespace SharpCompress.IO
             throw new NotSupportedException();
         }
 
+        public override async Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+        {
+            return await ReadAsync(new Memory<byte>(buffer, offset, count), cancellationToken);
+        }
+
         public abstract override Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken);
 
 #if !NET461 && !NETSTANDARD2_0

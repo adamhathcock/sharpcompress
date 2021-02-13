@@ -48,6 +48,11 @@ namespace SharpCompress.Compressors.Xz
         {
         }
 
+        public override async Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+        {
+            return await ReadAsync(new Memory<byte>(buffer, offset, count), cancellationToken);
+        }
+
         public override async ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default)
         {
             int bytesRead = 0;

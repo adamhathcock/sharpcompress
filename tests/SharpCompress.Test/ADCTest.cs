@@ -24,6 +24,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 using System.IO;
+using System.Threading.Tasks;
 using SharpCompress.Compressors;
 using SharpCompress.Compressors.ADC;
 using SharpCompress.Compressors.Deflate;
@@ -128,16 +129,16 @@ namespace SharpCompress.Test
         }
 
         [Fact]
-        public void TestCrc32Stream()
+        public async Task TestCrc32Stream()
         {
-            using (FileStream decFs = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar")))
+            await using (FileStream decFs = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar")))
             {
                 var crc32 = new CRC32().GetCrc32(decFs);
                 decFs.Seek(0, SeekOrigin.Begin);
 
                 var memory = new MemoryStream();
                 var crcStream = new Crc32Stream(memory, 0xEDB88320, 0xFFFFFFFF);
-                decFs.CopyTo(crcStream);
+                await decFs.CopyToAsync(crcStream);
 
                 decFs.Seek(0, SeekOrigin.Begin);
 
