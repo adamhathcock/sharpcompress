@@ -72,7 +72,7 @@ namespace SharpCompress.Archives.Rar
         {
             get
             {
-                return parts.Select(fp => fp.FileHeader).Any(fh => !fh.IsSplitAfter);
+                return parts.Select(fp => fp.FileHeader).Any(fh => !fh.IsSplitBefore && !fh.IsSplitAfter);
             }
         }
 
