@@ -58,11 +58,11 @@ namespace SharpCompress.Archives.Tar
             return new(new NonDisposingStream(stream));
         }
 
-        internal override void Close()
+        internal override async ValueTask CloseAsync()
         {
             if (closeStream)
             {
-                stream.Dispose();
+                await stream.DisposeAsync();
             }
         }
     }

@@ -2,6 +2,7 @@ using System;
 using System.Buffers;
 using System.Buffers.Binary;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 using SharpCompress.Crypto;
 using SharpCompress.IO;
@@ -59,15 +60,15 @@ namespace SharpCompress.Compressors.LZMA
             return lzip;
         }
 
-        public void Finish()
+        public async ValueTask FinishAsync()
         {
             if (!_finished)
             {
                 if (Mode == CompressionMode.Compress)
                 {
                     var crc32Stream = (Crc32Stream)_stream;
-                    crc32Stream.WrappedStream.Dispose();
-                    crc32Stream.Dispose();
+                    await crc32Stream.WrappedStream.DisposeAsync();
+                    await crc32Stream.DisposeAsync();
                     var compressedCount = _countingWritableSubStream!.Count;
 
                     byte[] intBuf = new byte[8];
@@ -87,17 +88,22 @@ namespace SharpCompress.Compressors.LZMA
 
         #region Stream methods
 
-        protected override void Dispose(bool disposing)
+        public override async ValueTask DisposeAsync()
         {
             if (_disposed)
             {
                 return;
             }
             _disposed = true;
+                await FinishAsync();
+                await _stream.DisposeAsync();
+        }
+
+        protected override void Dispose(bool disposing)
+        {
             if (disposing)
             {
-                Finish();
-                _stream.Dispose();
+                throw new NotSupportedException();
             }
         }
 
@@ -120,41 +126,40 @@ namespace SharpCompress.Compressors.LZMA
 
         public override long Position { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
 
-        public override int Read(byte[] buffer, int offset, int count) => _stream.Read(buffer, offset, count);
+        public override int Read(byte[] buffer, int offset, int count)  => throw new NotImplementedException();
 
-        public override int ReadByte() => _stream.ReadByte();
+        public override int ReadByte()  => throw new NotSupportedException();
+
+        public override ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = new CancellationToken())
+        {
+            return _stream.ReadAsync(buffer, cancellationToken);
+        }
 
         public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
 
         public override void SetLength(long value) => throw new NotImplementedException();
-
-
-#if !NET461 && !NETSTANDARD2_0
-
-        public override int Read(Span<byte> buffer)
-        {
-            return _stream.Read(buffer);
-        }
-
-        public override void Write(ReadOnlySpan<byte> buffer)
-        {
-            _stream.Write(buffer);
-
-            _writeCount += buffer.Length;
-        }
-
-#endif
+        
 
         public override void Write(byte[] buffer, int offset, int count)
         {
-            _stream.Write(buffer, offset, count);
+            throw new NotSupportedException();
+        }
+
+        public override async ValueTask WriteAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken = new CancellationToken())
+        {
+            await _stream.WriteAsync(buffer, cancellationToken);
+            _writeCount += buffer.Length;
+        }
+
+        public override async Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+        {
+            await _stream.WriteAsync(buffer, offset, count, cancellationToken);
             _writeCount += count;
         }
 
         public override void WriteByte(byte value)
         {
-            _stream.WriteByte(value);
-            ++_writeCount;
+            throw new NotSupportedException();
         }
 
         #endregion

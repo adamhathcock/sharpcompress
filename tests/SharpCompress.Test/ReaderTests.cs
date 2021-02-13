@@ -26,11 +26,11 @@ namespace SharpCompress.Test
 
         private async ValueTask ReadImplAsync(string testArchive, CompressionType expectedCompression, ReaderOptions options)
         {
-            using (var file = File.OpenRead(testArchive))
+            await using (var file = File.OpenRead(testArchive))
             {
-                using (var protectedStream = new NonDisposingStream(new ForwardOnlyStream(file), throwOnDispose: true))
+                await using (var protectedStream = new NonDisposingStream(new ForwardOnlyStream(file), throwOnDispose: true))
                 {
-                    using (var testStream = new TestStream(protectedStream))
+                    await using (var testStream = new TestStream(protectedStream))
                     {
                         await using (var reader = await ReaderFactory.OpenAsync(testStream, options))
                         {

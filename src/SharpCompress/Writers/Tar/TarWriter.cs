@@ -130,7 +130,7 @@ namespace SharpCompress.Writers.Tar
                     }     */
                 case LZipStream l:
                     {
-                        l.Finish();
+                        await l.FinishAsync();
                         break;
                     }
             }

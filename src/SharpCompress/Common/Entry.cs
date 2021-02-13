@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace SharpCompress.Common
 {
@@ -77,8 +78,9 @@ namespace SharpCompress.Common
 
         internal bool IsSolid { get; set; }
 
-        internal virtual void Close()
+        internal virtual ValueTask CloseAsync()
         {
+            return new ();
         }
 
         /// <summary>

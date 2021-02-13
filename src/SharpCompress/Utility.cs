@@ -11,6 +11,13 @@ namespace SharpCompress
 {
     internal static class Utility
     {
+        public static async ValueTask ForEachAsync<T>(this IEnumerable<T> collection, Func<T, Task> action)
+        {
+            foreach (T item in collection)
+            {
+                await action(item);
+            }
+        }
         public static async ValueTask<T> ReadPrimitive<T>(this Stream stream, int bytes, Func<ReadOnlyMemory<byte>, T> func, CancellationToken cancellationToken)
         {
             using var buffer = MemoryPool<byte>.Shared.Rent(bytes);

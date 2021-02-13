@@ -1,4 +1,7 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace SharpCompress.Test.Mocks
 {
@@ -22,8 +25,12 @@ namespace SharpCompress.Test.Mocks
 
         protected override void Dispose(bool disposing)
         {
-            base.Dispose(disposing);
-            stream.Dispose();
+            throw new NotSupportedException();
+        }
+
+        public override async ValueTask DisposeAsync()
+        {
+            await stream.DisposeAsync();
             IsDisposed = true;
         }
 
@@ -46,10 +53,17 @@ namespace SharpCompress.Test.Mocks
             set => stream.Position = value;
         }
 
+        public override Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+        {
+            return stream.ReadAsync(buffer, offset, count, cancellationToken);
+        }
+
         public override int Read(byte[] buffer, int offset, int count)
         {
             return stream.Read(buffer, offset, count);
         }
+        
+        
 
         public override long Seek(long offset, SeekOrigin origin)
         {
@@ -64,6 +78,11 @@ namespace SharpCompress.Test.Mocks
         public override void Write(byte[] buffer, int offset, int count)
         {
             stream.Write(buffer, offset, count);
+        }
+
+        public override Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+        {
+            return stream.WriteAsync(buffer, offset, count, cancellationToken);
         }
     }
 }

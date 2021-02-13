@@ -58,11 +58,11 @@ namespace SharpCompress.Archives.Zip
             return new(new NonDisposingStream(stream));
         }
 
-        internal override void Close()
+        internal override async ValueTask CloseAsync()
         {
             if (closeStream && !isDisposed)
             {
-                stream.Dispose();
+                await stream.DisposeAsync();
                 isDisposed = true;
             }
         }

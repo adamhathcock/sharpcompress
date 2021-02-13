@@ -224,7 +224,7 @@ namespace SharpCompress.Compressors.LZMA
                 _highCoder.Init();
             }
 
-            public virtual async ValueTask EncodeAsync(RangeCoder.Encoder rangeEncoder, UInt32 symbol, UInt32 posState)
+            public async ValueTask EncodeAsync(RangeCoder.Encoder rangeEncoder, UInt32 symbol, UInt32 posState)
             {
                 if (symbol < Base.K_NUM_LOW_LEN_SYMBOLS)
                 {
@@ -310,7 +310,7 @@ namespace SharpCompress.Compressors.LZMA
                 }
             }
 
-            public override async ValueTask EncodeAsync(RangeCoder.Encoder rangeEncoder, UInt32 symbol, UInt32 posState)
+            public new async ValueTask EncodeAsync(RangeCoder.Encoder rangeEncoder, UInt32 symbol, UInt32 posState)
             {
                 await base.EncodeAsync(rangeEncoder, symbol, posState);
                 if (--_counters[posState] == 0)

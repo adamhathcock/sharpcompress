@@ -2,6 +2,8 @@
 
 using System;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace SharpCompress.Crypto
 {
@@ -52,16 +54,20 @@ namespace SharpCompress.Crypto
         }
 #endif
 
+        public override async ValueTask WriteAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken = new CancellationToken())
+        {
+            await stream.WriteAsync(buffer, cancellationToken);
+            hash = CalculateCrc(table, hash, buffer.Span);
+        }
+
         public override void Write(byte[] buffer, int offset, int count)
         {
-            stream.Write(buffer, offset, count);
-            hash = CalculateCrc(table, hash, buffer.AsSpan(offset, count));
+            throw new NotSupportedException();
         }
 
         public override void WriteByte(byte value)
         {
-            stream.WriteByte(value);
-            hash = CalculateCrc(table, hash, value);
+            throw new NotSupportedException();
         }
 
         public override bool CanRead => stream.CanRead;

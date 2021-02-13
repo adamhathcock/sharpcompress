@@ -7,10 +7,11 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using SharpCompress.Compressors.LZMA.LZ;
+using SharpCompress.IO;
 
 namespace SharpCompress.Compressors.LZMA
 {
-    public class LzmaStream : Stream
+    public class LzmaStream : AsyncStream
     {
         private Stream _inputStream;
         private long _inputSize;
@@ -119,11 +120,6 @@ namespace SharpCompress.Compressors.LZMA
 
         public override bool CanWrite => _encoder != null;
 
-        public override void Flush()
-        {
-            throw new NotSupportedException();
-        }
-
         public override async ValueTask DisposeAsync()
         {
             if (_isDisposed)
@@ -138,19 +134,9 @@ namespace SharpCompress.Compressors.LZMA
             _inputStream?.DisposeAsync();
         }
 
-        protected override void Dispose(bool disposing)
-        {
-            throw new NotSupportedException();
-        }
-
         public override long Length => _position + _availableBytes;
 
         public override long Position { get => _position; set => throw new NotSupportedException(); }
-
-        public override int Read(byte[] buffer, int offset, int count)
-        {
-            throw new NotSupportedException();
-        }
 
         public override async Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
         {
@@ -307,20 +293,23 @@ namespace SharpCompress.Compressors.LZMA
             throw new NotSupportedException();
         }
 
+        public override async Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+        {
+            if (_encoder != null)
+            {
+                _position = await _encoder.CodeAsync(new MemoryStream(buffer, offset, count), false);
+            }
+        }
+
         public override async ValueTask WriteAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken = new CancellationToken())
         {
             if (_encoder != null)
             {
                  var m = ArrayPool<byte>.Shared.Rent(buffer.Length);
-                 buffer.CopyTo(m.AsMemory());
-                _position = await _encoder.CodeAsync(new MemoryStream(m), false);
+                 buffer.CopyTo(m.AsMemory().Slice(0, buffer.Length));
+                _position = await _encoder.CodeAsync(new MemoryStream(m, 0, buffer.Length), false);
                 ArrayPool<byte>.Shared.Return(m);
             }
-        }
-
-        public override void Write(byte[] buffer, int offset, int count)
-        {
-            throw new NotSupportedException();
         }
 
         public byte[] Properties { get; private set; }

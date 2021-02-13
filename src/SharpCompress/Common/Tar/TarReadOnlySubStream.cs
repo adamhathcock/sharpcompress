@@ -38,11 +38,6 @@ namespace SharpCompress.Common.Tar
             }
         }
 
-        protected override void Dispose(bool disposing)
-        {
-            throw new NotImplementedException();
-        }
-
         private long BytesLeftToRead { get; set; }
 
         public override bool CanRead => true;
@@ -50,11 +45,6 @@ namespace SharpCompress.Common.Tar
         public override bool CanSeek => false;
 
         public override bool CanWrite => false;
-
-        public override void Flush()
-        {
-            throw new NotSupportedException();
-        }
 
         public override long Length => throw new NotSupportedException();
 
@@ -76,28 +66,12 @@ namespace SharpCompress.Common.Tar
             return read;
         }
 
-        public override int Read(byte[] buffer, int offset, int count)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override int ReadByte()
-        {
-            throw new NotImplementedException();
-
-        }
-
         public override long Seek(long offset, SeekOrigin origin)
         {
             throw new NotSupportedException();
         }
 
         public override void SetLength(long value)
-        {
-            throw new NotSupportedException();
-        }
-
-        public override void Write(byte[] buffer, int offset, int count)
         {
             throw new NotSupportedException();
         }

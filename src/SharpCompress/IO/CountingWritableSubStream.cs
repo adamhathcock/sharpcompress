@@ -19,19 +19,14 @@ namespace SharpCompress.IO
 
         public override bool CanWrite => true;
 
-        public override void Flush()
+        public override Task FlushAsync(CancellationToken cancellationToken)
         {
-            Stream.Flush();
+            return Stream.FlushAsync(cancellationToken);
         }
 
         public override long Length => throw new NotSupportedException();
 
         public override long Position { get => throw new NotSupportedException(); set => throw new NotSupportedException(); }
-
-        public override int Read(byte[] buffer, int offset, int count)
-        {
-            throw new NotSupportedException();
-        }
 
         public override long Seek(long offset, SeekOrigin origin)
         {
@@ -53,18 +48,6 @@ namespace SharpCompress.IO
         {
             await Stream.WriteAsync(buffer, cancellationToken);
             Count += (uint)buffer.Length;
-        }
-
-        public override void Write(byte[] buffer, int offset, int count)
-        {
-            Stream.Write(buffer, offset, count);
-            Count += (uint)count;
-        }
-
-        public override void WriteByte(byte value)
-        {
-            Stream.WriteByte(value);
-            ++Count;
         }
     }
 }

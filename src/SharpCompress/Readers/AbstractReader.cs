@@ -48,8 +48,8 @@ namespace SharpCompress.Readers
 
         public async ValueTask DisposeAsync()
         {
-            await (entriesForCurrentReadStream?.DisposeAsync() ?? new ValueTask(Task.CompletedTask));
-            Volume?.Dispose();
+            await (entriesForCurrentReadStream?.DisposeAsync() ?? new ValueTask());
+            await Volume.DisposeAsync();
         }
 
         #endregion

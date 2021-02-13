@@ -168,9 +168,9 @@ namespace SharpCompress.Archives
         public override async ValueTask DisposeAsync()
         {
             await base.DisposeAsync();
-            newEntries.Cast<Entry>().ForEach(x => x.Close());
-            removedEntries.Cast<Entry>().ForEach(x => x.Close());
-            modifiedEntries.Cast<Entry>().ForEach(x => x.Close());
+            await newEntries.Cast<Entry>().ForEachAsync(async x => await x.CloseAsync());
+            await removedEntries.Cast<Entry>().ForEachAsync(async x => await x.CloseAsync());
+            await modifiedEntries.Cast<Entry>().ForEachAsync(async x => await x.CloseAsync());
         }
     }
 }

@@ -101,8 +101,8 @@ namespace SharpCompress.Archives
         {
             if (!disposed)
             {
-                await lazyVolumes.ForEachAsync(v => v.Dispose());
-                lazyEntries.GetLoaded().Cast<Entry>().ForEach(x => x.Close());
+                await lazyVolumes.ForEachAsync(async v => await v.DisposeAsync());
+                await lazyEntries.GetLoaded().Cast<Entry>().ForEachAsync(async x => await x.CloseAsync());
                 disposed = true;
             }
         }

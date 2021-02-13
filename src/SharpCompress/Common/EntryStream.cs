@@ -2,11 +2,12 @@
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using SharpCompress.IO;
 using SharpCompress.Readers;
 
 namespace SharpCompress.Common
 {
-    public class EntryStream : Stream
+    public class EntryStream : AsyncStream
     {
         private readonly IReader _reader;
         private readonly Stream _stream;
@@ -42,21 +43,11 @@ namespace SharpCompress.Common
             await _stream.DisposeAsync();
         }
 
-        protected override void Dispose(bool disposing)
-        {
-            throw new NotImplementedException();
-        }
-
         public override bool CanRead => true;
 
         public override bool CanSeek => false;
 
         public override bool CanWrite => false;
-
-        public override void Flush()
-        {
-        }
-
         public override long Length => _stream.Length;
 
         public override long Position { get => throw new NotSupportedException(); set => throw new NotSupportedException(); }
@@ -71,14 +62,14 @@ namespace SharpCompress.Common
             return read;
         }
 
-        public override int Read(byte[] buffer, int offset, int count)
+        public override ValueTask WriteAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken = default)
         {
-            throw new NotImplementedException();
+            throw new NotSupportedException();
         }
 
-        public override int ReadByte()
+        public override Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
         {
-            throw new NotImplementedException();
+            throw new NotSupportedException();
         }
 
         public override long Seek(long offset, SeekOrigin origin)
@@ -87,11 +78,6 @@ namespace SharpCompress.Common
         }
 
         public override void SetLength(long value)
-        {
-            throw new NotSupportedException();
-        }
-
-        public override void Write(byte[] buffer, int offset, int count)
         {
             throw new NotSupportedException();
         }
