@@ -20,7 +20,8 @@ namespace SharpCompress.Writers
             {
                 throw new ArgumentException("Source does not exist: " + source.FullName);
             }
-            using (var stream = source.OpenRead())
+
+            await using (var stream = source.OpenRead())
             {
                 await writer.WriteAsync(entryPath, stream, source.LastWriteTime, cancellationToken);
             }

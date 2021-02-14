@@ -107,7 +107,7 @@ namespace SharpCompress.Writers.Zip
         public async ValueTask WriteAsync(string entryPath, Stream source, ZipWriterEntryOptions zipWriterEntryOptions, CancellationToken cancellationToken = default)
         {
             await using Stream output = await WriteToStreamAsync(entryPath, zipWriterEntryOptions, cancellationToken);
-            await source.TransferToAsync(output, cancellationToken);
+            await source.CopyToAsync(output, cancellationToken);
         }
 
         public async ValueTask<Stream> WriteToStreamAsync(string entryPath, ZipWriterEntryOptions options, CancellationToken cancellationToken = default)
