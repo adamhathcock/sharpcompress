@@ -109,7 +109,7 @@ namespace SharpCompress.Common.Tar.Headers
         internal async ValueTask<bool> Read(Stream stream, CancellationToken cancellationToken)
         {
             var block = MemoryPool<byte>.Shared.Rent(BLOCK_SIZE);
-            bool readFullyAsync = await stream.ReadFullyAsync(block.Memory.Slice(0, BLOCK_SIZE), cancellationToken);
+            bool readFullyAsync = await stream.ReadAsync(block.Memory.Slice(0, BLOCK_SIZE), cancellationToken) == BLOCK_SIZE;
             if (readFullyAsync is false)
             {
                 return false;
@@ -124,7 +124,7 @@ namespace SharpCompress.Common.Tar.Headers
             if (ReadEntryType(block.Memory.Span) == EntryType.LongName)
             {
                 Name = await ReadLongName(stream, block.Memory.Slice(0,BLOCK_SIZE), cancellationToken);
-                readFullyAsync = await stream.ReadFullyAsync(block.Memory.Slice(0, BLOCK_SIZE), cancellationToken);
+                readFullyAsync = await stream.ReadAsync(block.Memory.Slice(0, BLOCK_SIZE), cancellationToken) == BLOCK_SIZE;
                 if (readFullyAsync is false)
                 {
                     return false;
@@ -168,17 +168,18 @@ namespace SharpCompress.Common.Tar.Headers
         {
             var size = ReadSize(buffer);
             var nameLength = (int)size;
-            using var nameBytes = MemoryPool<byte>.Shared.Rent(nameLength);
-            await reader.ReadFullyAsync(nameBytes.Memory.Slice(0, nameLength), cancellationToken);
+            using var rented = MemoryPool<byte>.Shared.Rent(nameLength);
+            var nameBytes = rented.Memory.Slice(0, nameLength);
+            await reader.ReadAsync(nameBytes, cancellationToken);
             var remainingBytesToRead = BLOCK_SIZE - (nameLength % BLOCK_SIZE);
 
             // Read the rest of the block and discard the data
             if (remainingBytesToRead < BLOCK_SIZE)
             {
                 using var remaining = MemoryPool<byte>.Shared.Rent(remainingBytesToRead);
-                await reader.ReadFullyAsync(remaining.Memory.Slice(0, remainingBytesToRead), cancellationToken);
+                await reader.ReadAsync(remaining.Memory.Slice(0, remainingBytesToRead), cancellationToken);
             }
-            return ArchiveEncoding.Decode(nameBytes.Memory.Span.Slice(0, nameLength)).TrimNulls();
+            return ArchiveEncoding.Decode(nameBytes.Span).TrimNulls();
         }
 
         private static EntryType ReadEntryType(Span<byte> buffer)

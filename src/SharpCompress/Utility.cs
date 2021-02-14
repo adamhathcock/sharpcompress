@@ -392,21 +392,6 @@ namespace SharpCompress
             }
             return (total >= buffer.Length);
         }
-        
-        public static async ValueTask<bool> ReadFullyAsync(this Stream stream, Memory<byte> buffer, CancellationToken cancellationToken)
-        {
-            int total = 0;
-            int read;
-            while ((read = await stream.ReadAsync(buffer, cancellationToken)) > 0)
-            {
-                total += read;
-                if (total >= buffer.Length)
-                {
-                    return true;
-                }
-            }
-            return (total >= buffer.Length);
-        }
 
         public static string TrimNulls(this string source)
         {

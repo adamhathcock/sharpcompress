@@ -23,7 +23,7 @@ namespace SharpCompress.Compressors.Xz
 
         public static UInt32 Compute(UInt32 polynomial, UInt32 seed, ReadOnlyMemory<byte> buffer)
         {
-            return ~CalculateHash(InitializeTable(polynomial), seed, buffer);
+            return ~CalculateHash(InitializeTable(polynomial), seed, buffer.Span);
         }
 
         private static UInt32[] InitializeTable(UInt32 polynomial)

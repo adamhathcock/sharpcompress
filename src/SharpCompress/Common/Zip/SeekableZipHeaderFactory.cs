@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.CompilerServices;
@@ -25,9 +26,7 @@ namespace SharpCompress.Common.Zip
 
         internal async IAsyncEnumerable<ZipHeader> ReadSeekableHeader(Stream stream, [EnumeratorCancellation]CancellationToken cancellationToken)
         {
-            var reader = new BinaryReader(stream);
-
-            SeekBackToHeader(stream, reader);
+            await SeekBackToHeaderAsync(stream);
 
             var eocd_location = stream.Position;
             var entry = new DirectoryEndHeader();
@@ -39,7 +38,7 @@ namespace SharpCompress.Common.Zip
 
                 // ZIP64_END_OF_CENTRAL_DIRECTORY_LOCATOR should be before the EOCD
                 stream.Seek(eocd_location - ZIP64_EOCD_LENGTH - 4, SeekOrigin.Begin);
-                uint zip64_locator = reader.ReadUInt32();
+                uint zip64_locator = await stream.ReadUInt32(cancellationToken);
                 if( zip64_locator != ZIP64_END_OF_CENTRAL_DIRECTORY_LOCATOR )
                 {
                     throw new ArchiveException("Failed to locate the Zip64 Directory Locator");
@@ -90,7 +89,7 @@ namespace SharpCompress.Common.Zip
             }
         }
 
-        private static bool IsMatch( byte[] haystack, int position, byte[] needle)
+        private static bool IsMatch (Span<byte> haystack, int position, byte[] needle)
         {
             for( int i = 0; i < needle.Length; i++ )
             {
@@ -102,7 +101,7 @@ namespace SharpCompress.Common.Zip
 
             return true;
         }
-        private static void SeekBackToHeader(Stream stream, BinaryReader reader)
+        private static async ValueTask SeekBackToHeaderAsync(Stream stream)
         {
             // Minimum EOCD length
             if (stream.Length < MINIMUM_EOCD_LENGTH)
@@ -116,16 +115,18 @@ namespace SharpCompress.Common.Zip
 
             stream.Seek(-len, SeekOrigin.End);
 
-            byte[] seek = reader.ReadBytes(len);
+            using var rented = MemoryPool<byte>.Shared.Rent(len);
+            var buffer = rented.Memory.Slice(0, len);
+            await stream.ReadAsync(buffer);
 
             // Search in reverse
-            Array.Reverse(seek);
+            buffer.Span.Reverse();
 
             var max_search_area = len - MINIMUM_EOCD_LENGTH;
 
             for( int pos_from_end = 0; pos_from_end < max_search_area; ++pos_from_end)
             {
-                if( IsMatch(seek, pos_from_end, needle) )
+                if( IsMatch( buffer.Span, pos_from_end, needle) )
                 {
                     stream.Seek(-pos_from_end, SeekOrigin.End);
                     return;

@@ -548,7 +548,6 @@ namespace SharpCompress.Test.Zip
             await using (ZipArchive za = ZipArchive.Open(zipPath))
             {
                 var firstEntry = await za.Entries.FirstAsync(x => x.Key == "first.txt");
-                var buffer = new byte[4096];
 
                 await using (var memoryStream = new MemoryStream())
                 await using (var firstStream = await firstEntry.OpenEntryStreamAsync())
@@ -560,13 +559,13 @@ namespace SharpCompress.Test.Zip
         }
 
         [Fact]
-        public void Zip_LongComment_Read()
+        public async Task Zip_LongComment_Read()
         {
             string zipPath = Path.Combine(TEST_ARCHIVES_PATH, "Zip.LongComment.zip");
 
-            using(ZipArchive za = ZipArchive.Open(zipPath))
+            await using(ZipArchive za = ZipArchive.Open(zipPath))
             {
-                var count = za.Entries.Count;
+                var count = await za.Entries.CountAsync();
                 Assert.Equal(1, count);
             }
         }

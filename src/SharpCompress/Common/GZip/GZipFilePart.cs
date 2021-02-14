@@ -96,7 +96,7 @@ namespace SharpCompress.Common.GZip
                 short extraLength = (short)(header.Memory.Span[0] + header.Memory.Span[1] * 256);
 
                 using var extra = MemoryPool<byte>.Shared.Rent(extraLength);
-                if (!await _stream.ReadFullyAsync(extra.Memory.Slice(0, extraLength), cancellationToken))
+                if (await _stream.ReadAsync(extra.Memory.Slice(0, extraLength), cancellationToken) != extraLength)
                 {
                     throw new ZlibException("Unexpected end-of-file reading GZIP header.");
                 }

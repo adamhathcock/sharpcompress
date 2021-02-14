@@ -108,7 +108,7 @@ namespace SharpCompress.Archives.GZip
             var slice = header.Memory.Slice(0, 10);
 
             // workitem 8501: handle edge case (decompress empty stream)
-            if (!await stream.ReadFullyAsync(, cancellationToken))
+            if (await stream.ReadAsync(slice, cancellationToken) != 10)
             {
                 return false;
             }
