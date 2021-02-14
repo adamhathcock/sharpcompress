@@ -72,7 +72,8 @@ namespace SharpCompress.Archives.Rar
         {
             get
             {
-                return parts.Select(fp => fp.FileHeader).Any(fh => !fh.IsSplitBefore && !fh.IsSplitAfter);
+                var headers = parts.Select(x => x.FileHeader);
+                return !headers.First().IsSplitBefore && !headers.Last().IsSplitAfter;
             }
         }
 
