@@ -24,6 +24,11 @@ namespace SharpCompress
             await stream.ReadAsync(buffer.Memory.Slice(0, bytes), cancellationToken);
             return func(buffer.Memory.Slice(0, bytes));
         }
+        
+        public static ValueTask<byte> ReadByteAsync(this Stream stream, CancellationToken cancellationToken)
+        {
+            return stream.ReadPrimitive(1, x => x.Span[0], cancellationToken);
+        }
         public static ValueTask<ushort> ReadUInt16(this Stream stream, CancellationToken cancellationToken)
         {
             return stream.ReadPrimitive(2, x => BinaryPrimitives.ReadUInt16LittleEndian(x.Span), cancellationToken);

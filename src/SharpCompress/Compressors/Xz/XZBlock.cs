@@ -127,9 +127,7 @@ namespace SharpCompress.Compressors.Xz
 
         private async ValueTask ReadHeaderSize(CancellationToken cancellationToken)
         {
-            using var buffer = MemoryPool<byte>.Shared.Rent(1);
-            await BaseStream.ReadAsync(buffer.Memory.Slice(0, 1), cancellationToken);
-            _blockHeaderSizeByte = buffer.Memory.Span[0];
+            _blockHeaderSizeByte = await BaseStream.ReadByteAsync(cancellationToken);
             if (_blockHeaderSizeByte == 0)
             {
                 throw new XZIndexMarkerReachedException();
@@ -142,7 +140,7 @@ namespace SharpCompress.Compressors.Xz
             var read = await BaseStream.ReadAsync(blockHeaderWithoutCrc.Slice( 1, BlockHeaderSize - 5), cancellationToken);
             if (read != BlockHeaderSize - 5)
             {
-                throw new EndOfStreamException("Reached end of stream unexectedly");
+                throw new EndOfStreamException("Reached end of stream unexpectedly");
             }
 
             uint crc = await BaseStream.ReadLittleEndianUInt32(cancellationToken);

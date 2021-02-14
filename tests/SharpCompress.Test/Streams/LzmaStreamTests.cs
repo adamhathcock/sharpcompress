@@ -1,4 +1,5 @@
 ﻿using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 using SharpCompress.Compressors.LZMA;
 using Xunit;
@@ -15,7 +16,7 @@ namespace SharpCompress.Test.Streams
             MemoryStream lzma2Stream = new MemoryStream(compressedData);
 
             LzmaStream decompressor = await LzmaStream.CreateAsync(properties, lzma2Stream, 5, 1);
-            Assert.Equal('X', decompressor.ReadByte());
+            Assert.Equal('X', (char)await decompressor.ReadByteAsync(CancellationToken.None));
         }
     }
 }
