@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 using SharpCompress.Compressors.LZMA.LZ;
 using SharpCompress.Compressors.LZMA.RangeCoder;
@@ -39,21 +40,21 @@ namespace SharpCompress.Compressors.LZMA
                 _highCoder.Init();
             }
 
-            public async ValueTask<uint> DecodeAsync(RangeCoder.Decoder rangeDecoder, uint posState)
+            public async ValueTask<uint> DecodeAsync(RangeCoder.Decoder rangeDecoder, uint posState, CancellationToken cancellationToken)
             {
-                if (await _choice.DecodeAsync(rangeDecoder) == 0)
+                if (await _choice.DecodeAsync(rangeDecoder, cancellationToken) == 0)
                 {
-                    return await _lowCoder[posState].DecodeAsync(rangeDecoder);
+                    return await _lowCoder[posState].DecodeAsync(rangeDecoder, cancellationToken);
                 }
                 uint symbol = Base.K_NUM_LOW_LEN_SYMBOLS;
-                if (await _choice2.DecodeAsync(rangeDecoder) == 0)
+                if (await _choice2.DecodeAsync(rangeDecoder, cancellationToken) == 0)
                 {
-                    symbol += await _midCoder[posState].DecodeAsync(rangeDecoder);
+                    symbol += await _midCoder[posState].DecodeAsync(rangeDecoder, cancellationToken);
                 }
                 else
                 {
                     symbol += Base.K_NUM_MID_LEN_SYMBOLS;
-                    symbol += await _highCoder.DecodeAsync(rangeDecoder);
+                    symbol += await _highCoder.DecodeAsync(rangeDecoder, cancellationToken);
                 }
                 return symbol;
             }
@@ -78,31 +79,31 @@ namespace SharpCompress.Compressors.LZMA
                     }
                 }
 
-                public async ValueTask<byte> DecodeNormalAsync(RangeCoder.Decoder rangeDecoder)
+                public async ValueTask<byte> DecodeNormalAsync(RangeCoder.Decoder rangeDecoder, CancellationToken cancellationToken)
                 {
                     uint symbol = 1;
                     do
                     {
-                        symbol = (symbol << 1) | await _decoders[symbol].DecodeAsync(rangeDecoder);
+                        symbol = (symbol << 1) | await _decoders[symbol].DecodeAsync(rangeDecoder, cancellationToken);
                     }
                     while (symbol < 0x100);
                     return (byte)symbol;
                 }
 
-                public async ValueTask<byte> DecodeWithMatchByteAsync(RangeCoder.Decoder rangeDecoder, byte matchByte)
+                public async ValueTask<byte> DecodeWithMatchByteAsync(RangeCoder.Decoder rangeDecoder, byte matchByte, CancellationToken cancellationToken)
                 {
                     uint symbol = 1;
                     do
                     {
                         uint matchBit = (uint)(matchByte >> 7) & 1;
                         matchByte <<= 1;
-                        uint bit = await _decoders[((1 + matchBit) << 8) + symbol].DecodeAsync(rangeDecoder);
+                        uint bit = await _decoders[((1 + matchBit) << 8) + symbol].DecodeAsync(rangeDecoder, cancellationToken);
                         symbol = (symbol << 1) | bit;
                         if (matchBit != bit)
                         {
                             while (symbol < 0x100)
                             {
-                                symbol = (symbol << 1) | await _decoders[symbol].DecodeAsync(rangeDecoder);
+                                symbol = (symbol << 1) | await _decoders[symbol].DecodeAsync(rangeDecoder, cancellationToken);
                             }
                             break;
                         }
@@ -149,14 +150,14 @@ namespace SharpCompress.Compressors.LZMA
                 return ((pos & _posMask) << _numPrevBits) + (uint)(prevByte >> (8 - _numPrevBits));
             }
 
-            public ValueTask<byte> DecodeNormalAsync(RangeCoder.Decoder rangeDecoder, uint pos, byte prevByte)
+            public ValueTask<byte> DecodeNormalAsync(RangeCoder.Decoder rangeDecoder, uint pos, byte prevByte, CancellationToken cancellationToken)
             {
-                return _coders[GetState(pos, prevByte)].DecodeNormalAsync(rangeDecoder);
+                return _coders[GetState(pos, prevByte)].DecodeNormalAsync(rangeDecoder, cancellationToken);
             }
 
-            public ValueTask<byte> DecodeWithMatchByteAsync(RangeCoder.Decoder rangeDecoder, uint pos, byte prevByte, byte matchByte)
+            public ValueTask<byte> DecodeWithMatchByteAsync(RangeCoder.Decoder rangeDecoder, uint pos, byte prevByte, byte matchByte, CancellationToken cancellationToken)
             {
-                return _coders[GetState(pos, prevByte)].DecodeWithMatchByteAsync(rangeDecoder, matchByte);
+                return _coders[GetState(pos, prevByte)].DecodeWithMatchByteAsync(rangeDecoder, matchByte, cancellationToken);
             }
         }
 
@@ -249,7 +250,7 @@ namespace SharpCompress.Compressors.LZMA
                 _isRepG2Decoders[i].Init();
             }
 
-            _literalDecoder?.Init();
+            _literalDecoder!.Init();
             for (i = 0; i < Base.K_NUM_LEN_TO_POS_STATES; i++)
             {
                 _posSlotDecoder[i].Init();
@@ -273,7 +274,7 @@ namespace SharpCompress.Compressors.LZMA
         }
 
         public async ValueTask CodeAsync(Stream inStream, Stream outStream,
-                         Int64 inSize, Int64 outSize, ICodeProgress progress)
+                         Int64 inSize, Int64 outSize, ICodeProgress progress, CancellationToken cancellationToken)
         {
             if (_outWindow is null)
             {
@@ -290,9 +291,9 @@ namespace SharpCompress.Compressors.LZMA
             }
 
             RangeCoder.Decoder rangeDecoder = new RangeCoder.Decoder();
-            await rangeDecoder.InitAsync(inStream);
+            await rangeDecoder.InitAsync(inStream, cancellationToken);
 
-            await CodeAsync(_dictionarySize, _outWindow, rangeDecoder);
+            await CodeAsync(_dictionarySize, _outWindow, rangeDecoder, cancellationToken);
 
             _outWindow.ReleaseStream();
             rangeDecoder.ReleaseStream();
@@ -308,7 +309,7 @@ namespace SharpCompress.Compressors.LZMA
             _outWindow = null;
         }
 
-        internal async ValueTask<bool> CodeAsync(int dictionarySize, OutWindow outWindow, RangeCoder.Decoder rangeDecoder)
+        internal async ValueTask<bool> CodeAsync(int dictionarySize, OutWindow outWindow, RangeCoder.Decoder rangeDecoder, CancellationToken cancellationToken)
         {
             _literalDecoder ??= _literalDecoder.CheckNotNull(nameof(_literalDecoder));
             int dictionarySizeCheck = Math.Max(dictionarySize, 1);
@@ -318,7 +319,7 @@ namespace SharpCompress.Compressors.LZMA
             while (outWindow.HasSpace)
             {
                 uint posState = (uint)outWindow._total & _posStateMask;
-                if (await _isMatchDecoders[(_state._index << Base.K_NUM_POS_STATES_BITS_MAX) + posState].DecodeAsync(rangeDecoder) == 0)
+                if (await _isMatchDecoders[(_state._index << Base.K_NUM_POS_STATES_BITS_MAX) + posState].DecodeAsync(rangeDecoder, cancellationToken) == 0)
                 {
                     byte b;
                     byte prevByte = outWindow.GetByte(0);
@@ -326,11 +327,11 @@ namespace SharpCompress.Compressors.LZMA
                     {
                         b = await _literalDecoder.DecodeWithMatchByteAsync(rangeDecoder,
                                                                  (uint)outWindow._total, prevByte,
-                                                                 outWindow.GetByte((int)_rep0));
+                                                                 outWindow.GetByte((int)_rep0), cancellationToken);
                     }
                     else
                     {
-                        b = await _literalDecoder.DecodeNormalAsync(rangeDecoder, (uint)outWindow._total, prevByte);
+                        b = await _literalDecoder.DecodeNormalAsync(rangeDecoder, (uint)outWindow._total, prevByte, cancellationToken);
                     }
                     outWindow.PutByte(b);
                     _state.UpdateChar();
@@ -338,13 +339,13 @@ namespace SharpCompress.Compressors.LZMA
                 else
                 {
                     uint len;
-                    if (await _isRepDecoders[_state._index].DecodeAsync(rangeDecoder) == 1)
+                    if (await _isRepDecoders[_state._index].DecodeAsync(rangeDecoder, cancellationToken) == 1)
                     {
-                        if (await _isRepG0Decoders[_state._index].DecodeAsync(rangeDecoder) == 0)
+                        if (await _isRepG0Decoders[_state._index].DecodeAsync(rangeDecoder, cancellationToken) == 0)
                         {
                             if (
                                 await _isRep0LongDecoders[(_state._index << Base.K_NUM_POS_STATES_BITS_MAX) + posState].DecodeAsync(
-                                                                                                                              rangeDecoder) == 0)
+                                                                                                                              rangeDecoder, cancellationToken) == 0)
                             {
                                 _state.UpdateShortRep();
                                 outWindow.PutByte(outWindow.GetByte((int)_rep0));
@@ -354,13 +355,13 @@ namespace SharpCompress.Compressors.LZMA
                         else
                         {
                             UInt32 distance;
-                            if (await _isRepG1Decoders[_state._index].DecodeAsync(rangeDecoder) == 0)
+                            if (await _isRepG1Decoders[_state._index].DecodeAsync(rangeDecoder, cancellationToken) == 0)
                             {
                                 distance = _rep1;
                             }
                             else
                             {
-                                if (await _isRepG2Decoders[_state._index].DecodeAsync(rangeDecoder) == 0)
+                                if (await _isRepG2Decoders[_state._index].DecodeAsync(rangeDecoder, cancellationToken) == 0)
                                 {
                                     distance = _rep2;
                                 }
@@ -374,7 +375,7 @@ namespace SharpCompress.Compressors.LZMA
                             _rep1 = _rep0;
                             _rep0 = distance;
                         }
-                        len = await _repLenDecoder.DecodeAsync(rangeDecoder, posState) + Base.K_MATCH_MIN_LEN;
+                        len = await _repLenDecoder.DecodeAsync(rangeDecoder, posState, cancellationToken) + Base.K_MATCH_MIN_LEN;
                         _state.UpdateRep();
                     }
                     else
@@ -382,9 +383,9 @@ namespace SharpCompress.Compressors.LZMA
                         _rep3 = _rep2;
                         _rep2 = _rep1;
                         _rep1 = _rep0;
-                        len = Base.K_MATCH_MIN_LEN + await _lenDecoder.DecodeAsync(rangeDecoder, posState);
+                        len = Base.K_MATCH_MIN_LEN + await _lenDecoder.DecodeAsync(rangeDecoder, posState, cancellationToken);
                         _state.UpdateMatch();
-                        uint posSlot = await _posSlotDecoder[Base.GetLenToPosState(len)].DecodeAsync(rangeDecoder);
+                        uint posSlot = await _posSlotDecoder[Base.GetLenToPosState(len)].DecodeAsync(rangeDecoder, cancellationToken);
                         if (posSlot >= Base.K_START_POS_MODEL_INDEX)
                         {
                             int numDirectBits = (int)((posSlot >> 1) - 1);
@@ -392,12 +393,12 @@ namespace SharpCompress.Compressors.LZMA
                             if (posSlot < Base.K_END_POS_MODEL_INDEX)
                             {
                                 _rep0 += await BitTreeDecoder.ReverseDecode(_posDecoders,
-                                                                     _rep0 - posSlot - 1, rangeDecoder, numDirectBits);
+                                                                     _rep0 - posSlot - 1, rangeDecoder, numDirectBits, cancellationToken);
                             }
                             else
                             {
-                                _rep0 += (await rangeDecoder.DecodeDirectBitsAsync(numDirectBits - Base.K_NUM_ALIGN_BITS) << Base.K_NUM_ALIGN_BITS);
-                                _rep0 += await _posAlignDecoder.ReverseDecode(rangeDecoder);
+                                _rep0 += (await rangeDecoder.DecodeDirectBitsAsync(numDirectBits - Base.K_NUM_ALIGN_BITS, cancellationToken) << Base.K_NUM_ALIGN_BITS);
+                                _rep0 += await _posAlignDecoder.ReverseDecode(rangeDecoder, cancellationToken);
                             }
                         }
                         else

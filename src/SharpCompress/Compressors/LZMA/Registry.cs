@@ -38,7 +38,7 @@ namespace SharpCompress.Compressors.LZMA
                     return inStreams.Single();
                 case K_LZMA:
                 case K_LZMA2:
-                    return await LzmaStream.CreateAsync(info, inStreams.Single(), -1, limit);
+                    return await LzmaStream.CreateAsync(info, inStreams.Single(), -1, limit, cancellationToken: cancellationToken);
                 case CMethodId.K_AES_ID:
                     return new AesDecoderStream(inStreams.Single(), info, pass, limit);
                 case K_BCJ:

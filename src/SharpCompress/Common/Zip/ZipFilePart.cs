@@ -90,7 +90,8 @@ namespace SharpCompress.Common.Zip
                                               Header.CompressedSize > 0 ? Header.CompressedSize - 4 - props.Length : -1,
                                               FlagUtility.HasFlag(Header.Flags, HeaderFlags.Bit1)
                                                   ? -1
-                                                  : (long)Header.UncompressedSize);
+                                                  : (long)Header.UncompressedSize,
+                                              cancellationToken: cancellationToken);
                     }
               /*  case ZipCompressionMethod.PPMd:
                 {

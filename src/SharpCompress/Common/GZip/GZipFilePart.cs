@@ -112,31 +112,29 @@ namespace SharpCompress.Common.GZip
             }
             if ((header.Memory.Span[3] & 0x02) == 0x02)
             {
-                using var one = MemoryPool<byte>.Shared.Rent(1);
-                await _stream.ReadAsync(one.Memory.Slice(0,1), cancellationToken); // CRC16, ignore
+                await _stream.ReadByteAsync(cancellationToken); // CRC16, ignore
             }
         }
 
         private async ValueTask<string> ReadZeroTerminatedStringAsync(Stream stream, CancellationToken cancellationToken)
         {
-            using var buf1 = MemoryPool<byte>.Shared.Rent(1);
             var list = new List<byte>();
             bool done = false;
             do
             {
                 // workitem 7740
-                int n = await stream.ReadAsync(buf1.Memory.Slice(0, 1), cancellationToken);
+                byte n = await stream.ReadByteAsync(cancellationToken);
                 if (n != 1)
                 {
                     throw new ZlibException("Unexpected EOF reading GZIP header.");
                 }
-                if (buf1.Memory.Span[0] == 0)
+                if (n == 0)
                 {
                     done = true;
                 }
                 else
                 {
-                    list.Add(buf1.Memory.Span[0]);
+                    list.Add(n);
                 }
             }
             while (!done);

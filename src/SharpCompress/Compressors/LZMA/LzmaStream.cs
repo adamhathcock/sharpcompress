@@ -40,7 +40,7 @@ namespace SharpCompress.Compressors.LZMA
         private LzmaStream() {}
 
         public static async ValueTask<LzmaStream> CreateAsync(byte[] properties, Stream inputStream, long inputSize = -1, long outputSize = -1,
-                                                       Stream presetDictionary = null, bool? isLzma2 = null)
+                                                       Stream presetDictionary = null, bool? isLzma2 = null, CancellationToken cancellationToken = default)
         {
             var ls = new LzmaStream();
             ls._inputStream = inputStream;
@@ -57,7 +57,7 @@ namespace SharpCompress.Compressors.LZMA
                     ls._outWindow.Train(presetDictionary);
                 }
 
-                await ls._rangeDecoder.InitAsync(inputStream);
+                await ls._rangeDecoder.InitAsync(inputStream, cancellationToken);
 
                 ls._decoder = new Decoder();
                 ls._decoder.SetDecoderProperties(properties);
@@ -152,7 +152,7 @@ namespace SharpCompress.Compressors.LZMA
                 {
                     if (_isLzma2)
                     {
-                        await DecodeChunkHeader();
+                        await DecodeChunkHeader(cancellationToken);
                     }
                     else
                     {
@@ -175,7 +175,7 @@ namespace SharpCompress.Compressors.LZMA
                 {
                     _inputPosition += _outWindow.CopyStream(_inputStream, toProcess);
                 }
-                else if (await _decoder.CodeAsync(_dictionarySize, _outWindow, _rangeDecoder)
+                else if (await _decoder.CodeAsync(_dictionarySize, _outWindow, _rangeDecoder, cancellationToken)
                          && _outputSize < 0)
                 {
                     _availableBytes = _outWindow.AvailableBytes;
@@ -217,7 +217,7 @@ namespace SharpCompress.Compressors.LZMA
             return total;
         }
 
-        private async ValueTask DecodeChunkHeader()
+        private async ValueTask DecodeChunkHeader(CancellationToken cancellationToken)
         {
             int control = _inputStream.ReadByte();
             _inputPosition++;
@@ -269,7 +269,7 @@ namespace SharpCompress.Compressors.LZMA
                     _decoder.SetDecoderProperties(Properties);
                 }
 
-                await _rangeDecoder.InitAsync(_inputStream);
+                await _rangeDecoder.InitAsync(_inputStream, cancellationToken);
             }
             else if (control > 0x02)
             {

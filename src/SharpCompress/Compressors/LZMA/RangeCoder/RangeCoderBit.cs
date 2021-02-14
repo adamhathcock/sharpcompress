@@ -1,5 +1,6 @@
 using System;
 using System.Buffers;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace SharpCompress.Compressors.LZMA.RangeCoder
@@ -112,10 +113,8 @@ namespace SharpCompress.Compressors.LZMA.RangeCoder
             _prob = K_BIT_MODEL_TOTAL >> 1;
         }
 
-        public async ValueTask<uint> DecodeAsync(Decoder rangeDecoder)
+        public async ValueTask<uint> DecodeAsync(Decoder rangeDecoder, CancellationToken cancellationToken)
         {
-            using var byteBuffer = MemoryPool<byte>.Shared.Rent(1);
-            var bite = byteBuffer.Memory.Slice(0, 1);
             uint newBound = (rangeDecoder._range >> K_NUM_BIT_MODEL_TOTAL_BITS) * _prob;
             if (rangeDecoder._code < newBound)
             {
@@ -123,8 +122,7 @@ namespace SharpCompress.Compressors.LZMA.RangeCoder
                 _prob += (K_BIT_MODEL_TOTAL - _prob) >> K_NUM_MOVE_BITS;
                 if (rangeDecoder._range < Decoder.K_TOP_VALUE)
                 {
-                    await rangeDecoder._stream.ReadAsync(bite);
-                    rangeDecoder._code = (rangeDecoder._code << 8) | bite.Span[0];
+                    rangeDecoder._code = (rangeDecoder._code << 8) | await rangeDecoder._stream.ReadByteAsync(cancellationToken);
                     rangeDecoder._range <<= 8;
                     rangeDecoder._total++;
                 }
@@ -135,8 +133,7 @@ namespace SharpCompress.Compressors.LZMA.RangeCoder
             _prob -= (_prob) >> K_NUM_MOVE_BITS;
             if (rangeDecoder._range < Decoder.K_TOP_VALUE)
             {
-                await rangeDecoder._stream.ReadAsync(bite);
-                rangeDecoder._code = (rangeDecoder._code << 8) | bite.Span[0];
+                rangeDecoder._code = (rangeDecoder._code << 8) | await rangeDecoder._stream.ReadByteAsync(cancellationToken);
                 rangeDecoder._range <<= 8;
                 rangeDecoder._total++;
             }

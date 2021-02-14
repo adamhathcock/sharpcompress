@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace SharpCompress.Compressors.LZMA.RangeCoder
@@ -122,23 +123,23 @@ namespace SharpCompress.Compressors.LZMA.RangeCoder
             }
         }
 
-        public async ValueTask<uint> DecodeAsync(Decoder rangeDecoder)
+        public async ValueTask<uint> DecodeAsync(Decoder rangeDecoder, CancellationToken cancellationToken)
         {
             uint m = 1;
             for (int bitIndex = _numBitLevels; bitIndex > 0; bitIndex--)
             {
-                m = (m << 1) + await _models[m].DecodeAsync(rangeDecoder);
+                m = (m << 1) + await _models[m].DecodeAsync(rangeDecoder, cancellationToken);
             }
             return m - ((uint)1 << _numBitLevels);
         }
 
-        public async ValueTask<uint> ReverseDecode(Decoder rangeDecoder)
+        public async ValueTask<uint> ReverseDecode(Decoder rangeDecoder, CancellationToken cancellationToken)
         {
             uint m = 1;
             uint symbol = 0;
             for (int bitIndex = 0; bitIndex < _numBitLevels; bitIndex++)
             {
-                uint bit = await _models[m].DecodeAsync(rangeDecoder);
+                uint bit = await _models[m].DecodeAsync(rangeDecoder, cancellationToken);
                 m <<= 1;
                 m += bit;
                 symbol |= (bit << bitIndex);
@@ -147,13 +148,13 @@ namespace SharpCompress.Compressors.LZMA.RangeCoder
         }
 
         public static async ValueTask<uint> ReverseDecode(BitDecoder[] models, UInt32 startIndex,
-                                                          Decoder rangeDecoder, int numBitLevels)
+                                                          Decoder rangeDecoder, int numBitLevels, CancellationToken cancellationToken)
         {
             uint m = 1;
             uint symbol = 0;
             for (int bitIndex = 0; bitIndex < numBitLevels; bitIndex++)
             {
-                uint bit = await models[startIndex + m].DecodeAsync(rangeDecoder);
+                uint bit = await models[startIndex + m].DecodeAsync(rangeDecoder, cancellationToken);
                 m <<= 1;
                 m += bit;
                 symbol |= (bit << bitIndex);

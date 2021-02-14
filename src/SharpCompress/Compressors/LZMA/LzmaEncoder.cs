@@ -2,6 +2,7 @@
 
 using System;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 using SharpCompress.Compressors.LZMA.LZ;
 using SharpCompress.Compressors.LZMA.RangeCoder;
@@ -1490,7 +1491,7 @@ namespace SharpCompress.Compressors.LZMA
         }
 
         public async ValueTask CodeAsync(Stream inStream, Stream outStream,
-                         Int64 inSize, Int64 outSize, ICodeProgress progress)
+                         Int64 inSize, Int64 outSize, ICodeProgress progress, CancellationToken cancellationToken)
         {
             _needReleaseMfStream = false;
             _processingMode = false;
