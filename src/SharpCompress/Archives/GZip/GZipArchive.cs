@@ -105,14 +105,15 @@ namespace SharpCompress.Archives.GZip
         {
             // read the header on the first read
             using var header = MemoryPool<byte>.Shared.Rent(10);
+            var slice = header.Memory.Slice(0, 10);
 
             // workitem 8501: handle edge case (decompress empty stream)
-            if (!await stream.ReadFullyAsync(header.Memory.Slice(0, 10), cancellationToken))
+            if (!await stream.ReadFullyAsync(, cancellationToken))
             {
                 return false;
             }
 
-            if (header.Memory.Span[0] != 0x1F || header.Memory.Span[1] != 0x8B || header.Memory.Span[2] != 8)
+            if (slice.Span[0] != 0x1F || slice.Span[1] != 0x8B || slice.Span[2] != 8)
             {
                 return false;
             }

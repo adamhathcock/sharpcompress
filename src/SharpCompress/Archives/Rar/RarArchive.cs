@@ -10,7 +10,8 @@ using SharpCompress.Readers.Rar;
 
 namespace SharpCompress.Archives.Rar
 {
-    public class RarArchive : AbstractArchive<RarArchiveEntry, RarVolume>
+    public class 
+        RarArchive : AbstractArchive<RarArchiveEntry, RarVolume>
     {
         internal Lazy<IRarUnpack> UnpackV2017 { get; } = new Lazy<IRarUnpack>(() => new SharpCompress.Compressors.Rar.UnpackV2017.Unpack());
         internal Lazy<IRarUnpack> UnpackV1 { get; } = new Lazy<IRarUnpack>(() => new SharpCompress.Compressors.Rar.UnpackV1.Unpack());
@@ -42,7 +43,7 @@ namespace SharpCompress.Archives.Rar
 
         protected override IEnumerable<RarArchiveEntry> LoadEntries(IEnumerable<RarVolume> volumes)
         {
-            return RarArchiveEntryFactory.GetEntries(this, volumes);
+            return RarArchiveEntryFactory.GetEntries(this, volumes, ReaderOptions);
         }
 
         protected override IEnumerable<RarVolume> LoadVolumes(IEnumerable<Stream> streams)

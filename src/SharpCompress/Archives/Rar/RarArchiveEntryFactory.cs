@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using SharpCompress.Common.Rar;
+using SharpCompress.Readers;
 
 namespace SharpCompress.Archives.Rar
 {
@@ -36,11 +37,12 @@ namespace SharpCompress.Archives.Rar
         }
 
         internal static IEnumerable<RarArchiveEntry> GetEntries(RarArchive archive,
-                                                                IEnumerable<RarVolume> rarParts)
+                                                                IEnumerable<RarVolume> rarParts,
+                                                                ReaderOptions readerOptions)
         {
             foreach (var groupedParts in GetMatchedFileParts(rarParts))
             {
-                yield return new RarArchiveEntry(archive, groupedParts);
+                yield return new RarArchiveEntry(archive, groupedParts, readerOptions);
             }
         }
     }

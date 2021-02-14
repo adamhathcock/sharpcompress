@@ -18,8 +18,8 @@ namespace SharpCompress.Test.GZip
         {
             await ReadAsync("Tar.tar.gz", CompressionType.GZip);
         }
-        
-        
+
+
         [Fact]
         public async ValueTask GZip_Reader_Generic2()
         {

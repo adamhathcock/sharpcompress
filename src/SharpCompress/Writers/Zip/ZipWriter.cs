@@ -163,10 +163,10 @@ namespace SharpCompress.Writers.Zip
             var explicitZipCompressionInfo = ToZipCompressionMethod(zipWriterEntryOptions.CompressionType ?? compressionType);
             byte[] encodedFilename = WriterOptions.ArchiveEncoding.Encode(filename);
 
-            // TODO: Use stackalloc when we exclusively support netstandard2.1 or higher
-            using var intBuf = MemoryPool<byte>.Shared.Rent(4);
-            BinaryPrimitives.WriteUInt32LittleEndian(intBuf.Memory.Span, ZipHeaderFactory.ENTRY_HEADER_BYTES);
-            await OutputStream.WriteAsync(intBuf.Memory.Slice(0,4), cancellationToken);
+            using var buffer = MemoryPool<byte>.Shared.Rent(4);
+            var intBuf = buffer.Memory.Slice(0, 4);
+            BinaryPrimitives.WriteUInt32LittleEndian(intBuf.Span, ZipHeaderFactory.ENTRY_HEADER_BYTES);
+            await OutputStream.WriteAsync(intBuf, cancellationToken);
             if (explicitZipCompressionInfo == ZipCompressionMethod.Deflate)
             {
                 if (OutputStream.CanSeek && useZip64)
@@ -202,12 +202,12 @@ namespace SharpCompress.Writers.Zip
                 }
             }
 
-            BinaryPrimitives.WriteUInt16LittleEndian(intBuf.Memory.Span, (ushort)flags);
-            await OutputStream.WriteAsync(intBuf.Memory.Slice(0,2), cancellationToken);
-            BinaryPrimitives.WriteUInt16LittleEndian(intBuf.Memory.Span, (ushort)explicitZipCompressionInfo);
-            await OutputStream.WriteAsync(intBuf.Memory.Slice(0,2), cancellationToken); // zipping method
-            BinaryPrimitives.WriteUInt32LittleEndian(intBuf.Memory.Span, zipWriterEntryOptions.ModificationDateTime.DateTimeToDosTime());
-            await OutputStream.WriteAsync(intBuf.Memory.Slice(0,4), cancellationToken);
+            BinaryPrimitives.WriteUInt16LittleEndian(intBuf.Span, (ushort)flags);
+            await OutputStream.WriteAsync(intBuf.Slice(0,2), cancellationToken);
+            BinaryPrimitives.WriteUInt16LittleEndian(intBuf.Span, (ushort)explicitZipCompressionInfo);
+            await OutputStream.WriteAsync(intBuf.Slice(0,2), cancellationToken); // zipping method
+            BinaryPrimitives.WriteUInt32LittleEndian(intBuf.Span, zipWriterEntryOptions.ModificationDateTime.DateTimeToDosTime());
+            await OutputStream.WriteAsync(intBuf, cancellationToken);
 
             // zipping date and time
             using var buf2 = MemoryPool<byte>.Shared.Rent(12);
@@ -215,8 +215,8 @@ namespace SharpCompress.Writers.Zip
             await OutputStream.WriteAsync(buf2.Memory.Slice(0, 12), cancellationToken);
 
             // unused CRC, un/compressed size, updated later
-            BinaryPrimitives.WriteUInt16LittleEndian(intBuf.Memory.Span, (ushort)encodedFilename.Length);
-            await OutputStream.WriteAsync(intBuf.Memory.Slice(0,2), cancellationToken);// filename length
+            BinaryPrimitives.WriteUInt16LittleEndian(intBuf.Span, (ushort)encodedFilename.Length);
+            await OutputStream.WriteAsync(intBuf.Slice(0,2), cancellationToken);// filename length
 
             var extralength = 0;
             if (OutputStream.CanSeek && useZip64)
@@ -224,8 +224,8 @@ namespace SharpCompress.Writers.Zip
                 extralength = 2 + 2 + 8 + 8;
             }
 
-            BinaryPrimitives.WriteUInt16LittleEndian(intBuf.Memory.Span, (ushort)extralength);
-            await OutputStream.WriteAsync(intBuf.Memory.Slice(0,2), cancellationToken);// extra length
+            BinaryPrimitives.WriteUInt16LittleEndian(intBuf.Span, (ushort)extralength);
+            await OutputStream.WriteAsync(intBuf.Slice(0,2), cancellationToken);// extra length
             await OutputStream.WriteAsync(encodedFilename.AsMemory(), cancellationToken);
 
             if (extralength != 0)
@@ -241,13 +241,14 @@ namespace SharpCompress.Writers.Zip
 
         private async Task WriteFooterAsync(uint crc, uint compressed, uint uncompressed)
         {
-            using var intBuf = MemoryPool<byte>.Shared.Rent(4);
-            BinaryPrimitives.WriteUInt32LittleEndian(intBuf.Memory.Span, crc);
-            await OutputStream.WriteAsync(intBuf.Memory.Slice(0, 4));
-            BinaryPrimitives.WriteUInt32LittleEndian(intBuf.Memory.Span, compressed);
-            await OutputStream.WriteAsync(intBuf.Memory.Slice(0, 4));
-            BinaryPrimitives.WriteUInt32LittleEndian(intBuf.Memory.Span, uncompressed);
-            await OutputStream.WriteAsync(intBuf.Memory.Slice(0, 4));
+            using var buffer = MemoryPool<byte>.Shared.Rent(4);
+            var intBuf = buffer.Memory.Slice(0, 4);
+            BinaryPrimitives.WriteUInt32LittleEndian(intBuf.Span, crc);
+            await OutputStream.WriteAsync(intBuf);
+            BinaryPrimitives.WriteUInt32LittleEndian(intBuf.Span, compressed);
+            await OutputStream.WriteAsync(intBuf);
+            BinaryPrimitives.WriteUInt32LittleEndian(intBuf.Span, uncompressed);
+            await OutputStream.WriteAsync(intBuf);
         }
 
         private async Task WriteEndRecordAsync(ulong size)
@@ -258,76 +259,76 @@ namespace SharpCompress.Writers.Zip
             var sizevalue = size >= uint.MaxValue ? uint.MaxValue : (uint)size;
             var streampositionvalue = streamPosition >= uint.MaxValue ? uint.MaxValue : (uint)streamPosition;
 
-            using var intBuf = MemoryPool<byte>.Shared.Rent(8);
+            using var buffer = MemoryPool<byte>.Shared.Rent(8);
+            var intBuf = buffer.Memory.Slice(0, 8);
             if (zip64)
             {
                 var recordlen = 2 + 2 + 4 + 4 + 8 + 8 + 8 + 8;
 
                 // Write zip64 end of central directory record
-                var s = intBuf.Memory.Slice(0, 4);
+                var s = intBuf.Slice(0, 4);
                 s.Span[0] = 80;
                 s.Span[1] = 75;
                 s.Span[2] = 6;
                 s.Span[3] = 6;
                 await OutputStream.WriteAsync(s);
 
-                BinaryPrimitives.WriteUInt64LittleEndian(intBuf.Memory.Span, (ulong)recordlen);
-                await OutputStream.WriteAsync(intBuf.Memory.Slice(0,8));// Size of zip64 end of central directory record
-                BinaryPrimitives.WriteUInt16LittleEndian(intBuf.Memory.Span, 0);
-                await OutputStream.WriteAsync(intBuf.Memory.Slice(0, 2)); // Made by
-                BinaryPrimitives.WriteUInt16LittleEndian(intBuf.Memory.Span, 45);
-                await OutputStream.WriteAsync(intBuf.Memory.Slice(0, 2)); // Version needed
+                BinaryPrimitives.WriteUInt64LittleEndian(intBuf.Span, (ulong)recordlen);
+                await OutputStream.WriteAsync(intBuf.Slice(0,8));// Size of zip64 end of central directory record
+                BinaryPrimitives.WriteUInt16LittleEndian(intBuf.Span, 45);
+                await OutputStream.WriteAsync(intBuf.Slice(0, 2)); // Made by
+                BinaryPrimitives.WriteUInt16LittleEndian(intBuf.Span, 45);
+                await OutputStream.WriteAsync(intBuf.Slice(0, 2)); // Version needed
 
-                intBuf.Memory.Span.Clear();
-                await OutputStream.WriteAsync(intBuf.Memory.Slice(0, 4));  // Disk number
-                await OutputStream.WriteAsync(intBuf.Memory.Slice(0, 4));  // Central dir disk
+                BinaryPrimitives.WriteUInt32LittleEndian(intBuf.Span, 0);
+                await OutputStream.WriteAsync(intBuf.Slice(0, 4));  // Disk number
+                await OutputStream.WriteAsync(intBuf.Slice(0, 4));  // Central dir disk
 
                 // TODO: entries.Count is int, so max 2^31 files
-                BinaryPrimitives.WriteUInt64LittleEndian(intBuf.Memory.Span, (ulong)entries.Count);
-                await OutputStream.WriteAsync(intBuf.Memory.Slice(0,8)); // Entries in this disk
-                await OutputStream.WriteAsync(intBuf.Memory.Slice(0,8)); // Total entries
-                BinaryPrimitives.WriteUInt64LittleEndian(intBuf.Memory.Span, size);
-                await OutputStream.WriteAsync(intBuf.Memory.Slice(0,8)); // Central Directory size
-                BinaryPrimitives.WriteUInt64LittleEndian(intBuf.Memory.Span, (ulong)streamPosition);
-                await OutputStream.WriteAsync(intBuf.Memory.Slice(0,8)); // Disk offset
+                BinaryPrimitives.WriteUInt64LittleEndian(intBuf.Span, (ulong)entries.Count);
+                await OutputStream.WriteAsync(intBuf); // Entries in this disk
+                await OutputStream.WriteAsync(intBuf); // Total entries
+                BinaryPrimitives.WriteUInt64LittleEndian(intBuf.Span, size);
+                await OutputStream.WriteAsync(intBuf); // Central Directory size
+                BinaryPrimitives.WriteUInt64LittleEndian(intBuf.Span, (ulong)streamPosition);
+                await OutputStream.WriteAsync(intBuf); // Disk offset
 
                 // Write zip64 end of central directory locator
-                s = intBuf.Memory.Slice(0, 4);
+                s = intBuf.Slice(0, 4);
                 s.Span[0] = 80;
                 s.Span[1] = 75;
                 s.Span[2] = 6;
                 s.Span[3] = 7;
                 await OutputStream.WriteAsync(s);
 
-                BinaryPrimitives.WriteUInt32LittleEndian(intBuf.Memory.Span, 0);
-                await OutputStream.WriteAsync(intBuf.Memory.Slice(0, 4)); // Entry disk
-                BinaryPrimitives.WriteUInt64LittleEndian(intBuf.Memory.Span, (ulong)streamPosition + size);
-                await OutputStream.WriteAsync(intBuf.Memory.Slice(0,8)); // Offset to the zip64 central directory
-                BinaryPrimitives.WriteUInt32LittleEndian(intBuf.Memory.Span, 0);
-                await OutputStream.WriteAsync(intBuf.Memory.Slice(0, 4)); // Number of disks
+                BinaryPrimitives.WriteUInt32LittleEndian(intBuf.Span, 0);
+                await OutputStream.WriteAsync(intBuf.Slice(0, 4)); // Entry disk
+                BinaryPrimitives.WriteUInt64LittleEndian(intBuf.Span, (ulong)streamPosition + size);
+                await OutputStream.WriteAsync(intBuf); // Offset to the zip64 central directory
+                BinaryPrimitives.WriteUInt32LittleEndian(intBuf.Span, 1);
+                await OutputStream.WriteAsync(intBuf.Slice(0, 4)); // Number of disks
 
                 streamPosition += recordlen + (4 + 4 + 8 + 4);
                 streampositionvalue = streamPosition >= uint.MaxValue ? uint.MaxValue : (uint)streampositionvalue;
             }
 
             // Write normal end of central directory record
-            intBuf.Memory.Span.Clear();
-            var x = intBuf.Memory.Slice(0, 4);
-            x.Span[0] = 80;
-            x.Span[1] = 75;
-            x.Span[2] = 5;
-            x.Span[3] = 6;
-            await OutputStream.WriteAsync(intBuf.Memory.Slice(0,8));
-            BinaryPrimitives.WriteUInt16LittleEndian(intBuf.Memory.Span, (ushort)entries.Count);
-            await OutputStream.WriteAsync(intBuf.Memory.Slice(0, 2));
-            await OutputStream.WriteAsync(intBuf.Memory.Slice(0, 2));//TODO: this is twice?
-            BinaryPrimitives.WriteUInt32LittleEndian(intBuf.Memory.Span, sizevalue);
-            await OutputStream.WriteAsync(intBuf.Memory.Slice(0, 4));
-            BinaryPrimitives.WriteUInt32LittleEndian(intBuf.Memory.Span, streampositionvalue);
-            await OutputStream.WriteAsync(intBuf.Memory.Slice(0, 4));
+            intBuf.Span.Clear();
+            intBuf.Span[0] = 80;
+            intBuf.Span[1] = 75;
+            intBuf.Span[2] = 5;
+            intBuf.Span[3] = 6;
+            await OutputStream.WriteAsync(intBuf);
+            BinaryPrimitives.WriteUInt16LittleEndian(intBuf.Span, (ushort)entries.Count);
+            await OutputStream.WriteAsync(intBuf.Slice(0, 2));
+            await OutputStream.WriteAsync(intBuf.Slice(0, 2));//TODO: this is twice?
+            BinaryPrimitives.WriteUInt32LittleEndian(intBuf.Span, sizevalue);
+            await OutputStream.WriteAsync(intBuf.Slice(0, 4));
+            BinaryPrimitives.WriteUInt32LittleEndian(intBuf.Span, streampositionvalue);
+            await OutputStream.WriteAsync(intBuf.Slice(0, 4));
             byte[] encodedComment = WriterOptions.ArchiveEncoding.Encode(zipComment);
-            BinaryPrimitives.WriteUInt16LittleEndian(intBuf.Memory.Span, (ushort)encodedComment.Length);
-            await OutputStream.WriteAsync(intBuf.Memory.Slice(0, 2));
+            BinaryPrimitives.WriteUInt16LittleEndian(intBuf.Span, (ushort)encodedComment.Length);
+            await OutputStream.WriteAsync(intBuf.Slice(0, 2));
             await OutputStream.WriteAsync(encodedComment.AsMemory());
         }
 
@@ -514,9 +515,10 @@ namespace SharpCompress.Writers.Zip
                         throw new NotSupportedException("Streams larger than 4GiB are not supported for non-seekable streams");
                     }
 
-                    using var intBuf = MemoryPool<byte>.Shared.Rent(4);
-                    BinaryPrimitives.WriteUInt32LittleEndian(intBuf.Memory.Span, ZipHeaderFactory.POST_DATA_DESCRIPTOR);
-                    await originalStream.WriteAsync(intBuf.Memory.Slice(0,4));
+                    using var buffer = MemoryPool<byte>.Shared.Rent(4);
+                    var intBuf = buffer.Memory.Slice(0, 4);
+                    BinaryPrimitives.WriteUInt32LittleEndian(intBuf.Span, ZipHeaderFactory.POST_DATA_DESCRIPTOR);
+                    await originalStream.WriteAsync(intBuf);
                     await writer.WriteFooterAsync(entry.Crc,
                                             compressedvalue,
                                             decompressedvalue);

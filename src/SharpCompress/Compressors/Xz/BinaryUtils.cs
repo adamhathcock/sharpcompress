@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Buffers.Binary;
 using System.Buffers;
 using System.IO;
 using System.Threading;
@@ -11,7 +12,7 @@ namespace SharpCompress.Compressors.Xz
         public static int ReadLittleEndianInt32(this BinaryReader reader)
         {
             byte[] bytes = reader.ReadBytes(4);
-            return (bytes[0] + (bytes[1] << 8) + (bytes[2] << 16) + (bytes[3] << 24));
+            return BinaryPrimitives.ReadInt32LittleEndian(bytes);
         }
 
         internal static uint ReadLittleEndianUInt32(this BinaryReader reader)
@@ -21,12 +22,13 @@ namespace SharpCompress.Compressors.Xz
         public static async ValueTask<int> ReadLittleEndianInt32(this Stream stream, CancellationToken cancellationToken)
         {
             using var buffer = MemoryPool<byte>.Shared.Rent(4);
-            var read = await stream.ReadAsync(buffer.Memory.Slice(0, 4), cancellationToken);
+            var slice = buffer.Memory.Slice(0, 4);
+            var read = await stream.ReadAsync(slice, cancellationToken);
             if (read != 4)
             {
                 throw new EndOfStreamException();
             }
-            return (buffer.Memory.Span[0] + (buffer.Memory.Span[1] << 8) + (buffer.Memory.Span[2] << 16) + (buffer.Memory.Span[3] << 24));
+            return BinaryPrimitives.ReadInt32LittleEndian(slice.Span);
         }
 
         internal static async ValueTask<uint> ReadLittleEndianUInt32(this Stream stream, CancellationToken cancellationToken)

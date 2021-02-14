@@ -260,7 +260,7 @@ namespace SharpCompress.Compressors.Deflate
                         if (_z.AvailableBytesIn != 8)
                         {
                             // Make sure we have read to the end of the stream
-                            Array.Copy(_z.InputBuffer, _z.NextIn, trailer, 0, _z.AvailableBytesIn);
+                            _z.InputBuffer.AsSpan(_z.NextIn, _z.AvailableBytesIn).CopyTo(trailer);
                             int bytesNeeded = 8 - _z.AvailableBytesIn;
                             int bytesRead = await _stream.ReadAsync(trailer,
                                                                     _z.AvailableBytesIn,
@@ -272,7 +272,7 @@ namespace SharpCompress.Compressors.Deflate
                         }
                         else
                         {
-                            Array.Copy(_z.InputBuffer, _z.NextIn, trailer, 0, trailer.Length);
+                            _z.InputBuffer.AsSpan(_z.NextIn, trailer.Length).CopyTo(trailer);
                         }
 
                         Int32 crc32_expected = BinaryPrimitives.ReadInt32LittleEndian(trailer);

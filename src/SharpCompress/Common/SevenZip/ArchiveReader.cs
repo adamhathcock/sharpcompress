@@ -1519,6 +1519,7 @@ namespace SharpCompress.Common.SevenZip
                 }
             }
 
+            byte[] buffer = null;
             foreach (CExtractFolderInfo efi in extractFolderInfoVector)
             {
                 int startIndex;
@@ -1555,7 +1556,7 @@ namespace SharpCompress.Common.SevenZip
 
                 Stream s = DecoderStreamHelper.CreateDecoderStream(_stream, folderStartPackPos, packSizes,
                                                                    folderInfo, db.PasswordProvider);
-                byte[] buffer = new byte[4 << 10];
+                buffer ??= new byte[4 << 10];
                 for (; ; )
                 {
                     int processed = s.Read(buffer, 0, buffer.Length);
