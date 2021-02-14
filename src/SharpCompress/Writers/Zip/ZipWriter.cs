@@ -253,7 +253,7 @@ namespace SharpCompress.Writers.Zip
 
                 BinaryPrimitives.WriteUInt64LittleEndian(intBuf, (ulong)recordlen);
                 OutputStream.Write(intBuf); // Size of zip64 end of central directory record
-                BinaryPrimitives.WriteUInt16LittleEndian(intBuf, 0);
+                BinaryPrimitives.WriteUInt16LittleEndian(intBuf, 45);
                 OutputStream.Write(intBuf.Slice(0, 2)); // Made by
                 BinaryPrimitives.WriteUInt16LittleEndian(intBuf, 45);
                 OutputStream.Write(intBuf.Slice(0, 2)); // Version needed
@@ -278,8 +278,8 @@ namespace SharpCompress.Writers.Zip
                 OutputStream.Write(intBuf.Slice(0, 4)); // Entry disk
                 BinaryPrimitives.WriteUInt64LittleEndian(intBuf, (ulong)streamPosition + size);
                 OutputStream.Write(intBuf); // Offset to the zip64 central directory
-                BinaryPrimitives.WriteUInt32LittleEndian(intBuf, 0);
-                OutputStream.Write(intBuf); // Number of disks
+                BinaryPrimitives.WriteUInt32LittleEndian(intBuf, 1);
+                OutputStream.Write(intBuf.Slice(0, 4)); // Number of disks
 
                 streamPosition += recordlen + (4 + 4 + 8 + 4);
                 streampositionvalue = streamPosition >= uint.MaxValue ? uint.MaxValue : (uint)streampositionvalue;
