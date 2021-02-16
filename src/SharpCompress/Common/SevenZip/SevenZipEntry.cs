@@ -32,7 +32,7 @@ namespace SharpCompress.Common.SevenZip
 
         public override DateTime? ArchivedTime => null;
 
-        public override bool IsEncrypted => false;
+        public override bool IsEncrypted => FilePart.IsEncrypted;
 
         public override bool IsDirectory => FilePart.Header.IsDir;
 

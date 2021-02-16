@@ -102,5 +102,7 @@ namespace SharpCompress.Common.SevenZip
                     throw new NotImplementedException();
             }
         }
+
+        internal bool IsEncrypted => Folder!._coders.FindIndex(c => c._methodId._id == CMethodId.K_AES_ID) != -1;
     }
 }
