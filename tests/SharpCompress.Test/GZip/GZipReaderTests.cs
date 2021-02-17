@@ -17,8 +17,8 @@ namespace SharpCompress.Test.GZip
         {
             Read("Tar.tar.gz", CompressionType.GZip);
         }
-        
-        
+
+
         [Fact]
         public void GZip_Reader_Generic2()
         {

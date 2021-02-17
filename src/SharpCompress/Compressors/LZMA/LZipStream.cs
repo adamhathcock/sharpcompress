@@ -59,16 +59,16 @@ namespace SharpCompress.Compressors.LZMA
                     crc32Stream.Dispose();
                     var compressedCount = _countingWritableSubStream!.Count;
 
-                    byte[] intBuf = new byte[8];
+                    Span<byte> intBuf = stackalloc byte[8];
                     BinaryPrimitives.WriteUInt32LittleEndian(intBuf, crc32Stream.Crc);
-                    _countingWritableSubStream.Write(intBuf, 0, 4);
+                    _countingWritableSubStream.Write(intBuf.Slice(0, 4));
 
                     BinaryPrimitives.WriteInt64LittleEndian(intBuf, _writeCount);
-                    _countingWritableSubStream.Write(intBuf, 0, 8);
+                    _countingWritableSubStream.Write(intBuf);
 
                     //total with headers
                     BinaryPrimitives.WriteUInt64LittleEndian(intBuf, compressedCount + 6 + 20);
-                    _countingWritableSubStream.Write(intBuf, 0, 8);
+                    _countingWritableSubStream.Write(intBuf);
                 }
                 _finished = true;
             }

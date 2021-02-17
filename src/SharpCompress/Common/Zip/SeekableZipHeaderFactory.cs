@@ -8,7 +8,10 @@ namespace SharpCompress.Common.Zip
 {
     internal sealed class SeekableZipHeaderFactory : ZipHeaderFactory
     {
-        private const int MAX_ITERATIONS_FOR_DIRECTORY_HEADER = 4096;
+        private const int MINIMUM_EOCD_LENGTH = 22;
+        private const int ZIP64_EOCD_LENGTH = 20;
+        // Comment may be within 64kb + structure 22 bytes
+        private const int MAX_SEARCH_LENGTH_FOR_EOCD = 65557;
         private bool _zip64;
 
         internal SeekableZipHeaderFactory(string? password, ArchiveEncoding archiveEncoding)
@@ -20,14 +23,24 @@ namespace SharpCompress.Common.Zip
         {
             var reader = new BinaryReader(stream);
 
-            SeekBackToHeader(stream, reader, DIRECTORY_END_HEADER_BYTES);
+            SeekBackToHeader(stream, reader);
+
+            var eocd_location = stream.Position;
             var entry = new DirectoryEndHeader();
             entry.Read(reader);
 
             if (entry.IsZip64)
             {
                 _zip64 = true;
-                SeekBackToHeader(stream, reader, ZIP64_END_OF_CENTRAL_DIRECTORY_LOCATOR);
+
+                // ZIP64_END_OF_CENTRAL_DIRECTORY_LOCATOR should be before the EOCD
+                stream.Seek(eocd_location - ZIP64_EOCD_LENGTH - 4, SeekOrigin.Begin);
+                uint zip64_locator = reader.ReadUInt32();
+                if( zip64_locator != ZIP64_END_OF_CENTRAL_DIRECTORY_LOCATOR )
+                {
+                    throw new ArchiveException("Failed to locate the Zip64 Directory Locator");
+                }
+
                 var zip64Locator = new Zip64DirectoryEndLocatorHeader();
                 zip64Locator.Read(reader);
 
@@ -73,27 +86,49 @@ namespace SharpCompress.Common.Zip
             }
         }
 
-        private static void SeekBackToHeader(Stream stream, BinaryReader reader, uint headerSignature)
+        private static bool IsMatch( byte[] haystack, int position, byte[] needle)
         {
-            long offset = 0;
-            uint signature;
-            int iterationCount = 0;
-            do
+            for( int i = 0; i < needle.Length; i++ )
             {
-                if ((stream.Length + offset) - 4 < 0)
+                if( haystack[ position + i ] != needle[ i ] )
                 {
-                    throw new ArchiveException("Failed to locate the Zip Header");
-                }
-                stream.Seek(offset - 4, SeekOrigin.End);
-                signature = reader.ReadUInt32();
-                offset--;
-                iterationCount++;
-                if (iterationCount > MAX_ITERATIONS_FOR_DIRECTORY_HEADER)
-                {
-                    throw new ArchiveException("Could not find Zip file Directory at the end of the file.  File may be corrupted.");
+                    return false;
                 }
             }
-            while (signature != headerSignature);
+
+            return true;
+        }
+        private static void SeekBackToHeader(Stream stream, BinaryReader reader)
+        {
+            // Minimum EOCD length
+            if (stream.Length < MINIMUM_EOCD_LENGTH)
+            {
+                throw new ArchiveException("Could not find Zip file Directory at the end of the file. File may be corrupted.");
+            }
+
+            int len = stream.Length < MAX_SEARCH_LENGTH_FOR_EOCD ? (int)stream.Length : MAX_SEARCH_LENGTH_FOR_EOCD;
+            // We search for marker in reverse to find the first occurance
+            byte[] needle = { 0x06, 0x05, 0x4b, 0x50 };
+
+            stream.Seek(-len, SeekOrigin.End);
+
+            byte[] seek = reader.ReadBytes(len);
+
+            // Search in reverse
+            Array.Reverse(seek);
+
+            var max_search_area = len - MINIMUM_EOCD_LENGTH;
+
+            for( int pos_from_end = 0; pos_from_end < max_search_area; ++pos_from_end)
+            {
+                if( IsMatch(seek, pos_from_end, needle) )
+                {
+                    stream.Seek(-pos_from_end, SeekOrigin.End);
+                    return;
+                }
+            }
+
+            throw new ArchiveException("Failed to locate the Zip Header");
         }
 
         internal LocalEntryHeader GetLocalHeader(Stream stream, DirectoryEntryHeader directoryEntryHeader)

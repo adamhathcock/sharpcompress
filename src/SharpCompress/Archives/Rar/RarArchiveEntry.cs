@@ -6,6 +6,7 @@ using SharpCompress.Common;
 using SharpCompress.Common.Rar;
 using SharpCompress.Common.Rar.Headers;
 using SharpCompress.Compressors.Rar;
+using SharpCompress.Readers;
 
 namespace SharpCompress.Archives.Rar
 {
@@ -13,11 +14,13 @@ namespace SharpCompress.Archives.Rar
     {
         private readonly ICollection<RarFilePart> parts;
         private readonly RarArchive archive;
+        private readonly ReaderOptions readerOptions;
 
-        internal RarArchiveEntry(RarArchive archive, IEnumerable<RarFilePart> parts)
+        internal RarArchiveEntry(RarArchive archive, IEnumerable<RarFilePart> parts, ReaderOptions readerOptions)
         {
             this.parts = parts.ToList();
             this.archive = archive;
+            this.readerOptions = readerOptions;
         }
 
         public override CompressionType CompressionType => CompressionType.Rar;
@@ -69,13 +72,14 @@ namespace SharpCompress.Archives.Rar
         {
             get
             {
-                return parts.Select(fp => fp.FileHeader).Any(fh => !fh.IsSplitAfter);
+                var headers = parts.Select(x => x.FileHeader);
+                return !headers.First().IsSplitBefore && !headers.Last().IsSplitAfter;
             }
         }
 
         private void CheckIncomplete()
         {
-            if (!IsComplete)
+            if (!readerOptions.DisableCheckIncomplete && !IsComplete)
             {
                 throw new IncompleteArchiveException("ArchiveEntry is incomplete and cannot perform this operation.");
             }

@@ -564,5 +564,17 @@ namespace SharpCompress.Test.Zip
                 }
             }
         }
+
+        [Fact]
+        public void Zip_LongComment_Read()
+        {
+            string zipPath = Path.Combine(TEST_ARCHIVES_PATH, "Zip.LongComment.zip");
+
+            using(ZipArchive za = ZipArchive.Open(zipPath))
+            {
+                var count = za.Entries.Count;
+                Assert.Equal(1, count);
+            }
+        }
     }
 }
