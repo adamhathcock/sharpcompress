@@ -12,7 +12,7 @@ namespace System.IO
 
             try
             {
-                int read = stream.Read(buffer);
+                int read = stream.Read(temp, 0, buffer.Length);
 
                 temp.AsSpan(0, read).CopyTo(buffer);
 

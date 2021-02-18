@@ -2,9 +2,9 @@
   <PropertyGroup>
     <AssemblyTitle>SharpCompress - Pure C# Decompression/Compression</AssemblyTitle>
     <NeutralLanguage>en-US</NeutralLanguage>
-    <VersionPrefix>0.28.0</VersionPrefix>
-    <AssemblyVersion>0.28.0</AssemblyVersion>
-    <FileVersion>0.28.0</FileVersion>
+    <VersionPrefix>0.28.1</VersionPrefix>
+    <AssemblyVersion>0.28.1</AssemblyVersion>
+    <FileVersion>0.28.1</FileVersion>
     <Authors>Adam Hathcock</Authors>
     <TargetFrameworks>netstandard2.0;netstandard2.1;netcoreapp3.1;net5.0</TargetFrameworks>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
