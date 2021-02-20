@@ -199,17 +199,17 @@ namespace SharpCompress.Compressors.Deflate
         /// This may or may not result in a <c>Close()</c> call on the captive stream.
         /// </remarks>
         public override async ValueTask DisposeAsync()
-        {
-            if (!_disposed)
             {
-                if ((_baseStream != null))
+                if (!_disposed)
                 {
-                    await _baseStream.DisposeAsync();
-                    Crc32 = _baseStream.Crc32;
+                    if (_baseStream is not null)
+                    {
+                        await _baseStream.DisposeAsync();
+                        Crc32 = _baseStream.Crc32;
+                    }
+                    _disposed = true;
                 }
-                _disposed = true;
             }
-        }
 
         /// <summary>
         /// Flush the stream.
@@ -402,21 +402,26 @@ namespace SharpCompress.Compressors.Deflate
 
         public int Crc32 { get; private set; }
 
-        private async Task<int> EmitHeaderAsync()
+        private async ValueTask<int> EmitHeaderAsync()
         {
-            int cbLength = Comment is null ? 0 : _encoding.GetByteCount(Comment);
-            int fnLength = FileName is null ? 0 : _encoding.GetByteCount(FileName);
+            byte[]? commentBytes = (Comment is null) ? null
+                : _encoding.GetBytes(Comment);
+            byte[]? filenameBytes = (FileName is null) ? null
+                : _encoding.GetBytes(FileName);
+
+            int cbLength = commentBytes?.Length + 1 ?? 0;
+            int fnLength = filenameBytes?.Length + 1 ?? 0;
 
             int bufferLength = 10 + cbLength + fnLength;
-            using var header = MemoryPool<byte>.Shared.Rent(bufferLength);
+            var header = new byte[bufferLength];
             int i = 0;
 
             // ID
-            header.Memory.Span[i++] = 0x1F;
-            header.Memory.Span[i++] = 0x8B;
+            header[i++] = 0x1F;
+            header[i++] = 0x8B;
 
             // compression method
-            header.Memory.Span[i++] = 8;
+            header[i++] = 8;
             byte flag = 0;
             if (Comment != null)
             {
@@ -428,7 +433,7 @@ namespace SharpCompress.Compressors.Deflate
             }
 
             // flag
-            header.Memory.Span[i++] = flag;
+            header[i++] = flag;
 
             // mtime
             if (LastModified is null)
@@ -437,14 +442,14 @@ namespace SharpCompress.Compressors.Deflate
             }
             TimeSpan delta = LastModified.Value - UNIX_EPOCH;
             var timet = (int)delta.TotalSeconds;
-            BinaryPrimitives.WriteInt32LittleEndian(header.Memory.Span.Slice(i), timet);
+            BinaryPrimitives.WriteInt32LittleEndian(header.AsSpan(i), timet);
             i += 4;
 
             // xflg
-            header.Memory.Span[i++] = 0; // this field is totally useless
+            header[i++] = 0; // this field is totally useless
 
             // OS
-            header.Memory.Span[i++] = 0xFF; // 0xFF == unspecified
+            header[i++] = 0xFF; // 0xFF == unspecified
 
             // extra field length - only if FEXTRA is set, which it is not.
             //header[i++]= 0;
@@ -453,22 +458,22 @@ namespace SharpCompress.Compressors.Deflate
             // filename
             if (fnLength != 0)
             {
-                _encoding.GetBytes(FileName, header.Memory.Span.Slice(i, fnLength));
-                i += fnLength;
-                header.Memory.Span[i++] = 0; // terminate
+                Array.Copy(filenameBytes!, 0, header, i, fnLength - 1);
+                i += fnLength - 1;
+                header[i++] = 0; // terminate
             }
 
             // comment
             if (cbLength != 0)
             {
-                _encoding.GetBytes(Comment, header.Memory.Span.Slice(i, cbLength));
+                Array.Copy(commentBytes!, 0, header, i, cbLength - 1);
                 i += cbLength - 1;
-                header.Memory.Span[i++] = 0; // terminate
+                header[i++] = 0; // terminate
             }
 
-            await _baseStream._stream.WriteAsync(header.Memory.Slice(0, bufferLength));
+            await _baseStream._stream.WriteAsync(header, 0, header.Length);
 
-            return bufferLength; // bytes written
+            return header.Length; // bytes written
         }
     }
 }
