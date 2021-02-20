@@ -161,7 +161,7 @@ namespace SharpCompress.Compressors.Deflate
                 }
 
                 //if (_workingBuffer.Length - _z.AvailableBytesOut > 0)
-                await _stream.WriteAsync(new Memory<byte>(_workingBuffer).Slice(0, _workingBuffer.Length - _z.AvailableBytesOut), cancellationToken);
+                await _stream.WriteAsync(_workingBuffer, 0, _workingBuffer.Length - _z.AvailableBytesOut, cancellationToken);
 
                 done = _z.AvailableBytesIn == 0 && _z.AvailableBytesOut != 0;
 
@@ -226,12 +226,13 @@ namespace SharpCompress.Compressors.Deflate
                     if (_wantCompress)
                     {
                         // Emit the GZIP trailer: CRC32 and  size mod 2^32
-                        using var intBuf = MemoryPool<byte>.Shared.Rent(4);
-                        BinaryPrimitives.WriteInt32LittleEndian(intBuf.Memory.Span, crc.Crc32Result);
-                        await _stream.WriteAsync(intBuf.Memory.Slice(0,4));
-                        var c2 = (int)(crc.TotalBytesRead & 0x00000000FFFFFFFF);
-                        BinaryPrimitives.WriteInt32LittleEndian(intBuf.Memory.Span, c2);
-                        await _stream.WriteAsync(intBuf.Memory.Slice(0,4));
+                        using var rented = MemoryPool<byte>.Shared.Rent(4);
+                        var intBuf = rented.Memory.Slice(0, 4);
+                        BinaryPrimitives.WriteInt32LittleEndian(intBuf.Span, crc.Crc32Result);
+                        await _stream.WriteAsync(intBuf, CancellationToken.None);
+                        int c2 = (int)(crc.TotalBytesRead & 0x00000000FFFFFFFF);
+                        BinaryPrimitives.WriteInt32LittleEndian(intBuf.Span, c2);
+                        await _stream.WriteAsync(intBuf, CancellationToken.None);
                     }
                     else
                     {
@@ -254,17 +255,16 @@ namespace SharpCompress.Compressors.Deflate
                         }
 
                         // Read and potentially verify the GZIP trailer: CRC32 and  size mod 2^32
-                        var trailer = new byte[8];
+                        using var rented = MemoryPool<byte>.Shared.Rent(8);
+                        var trailer = rented.Memory.Slice(0, 8);
 
                         // workitem 8679
                         if (_z.AvailableBytesIn != 8)
                         {
                             // Make sure we have read to the end of the stream
-                            _z.InputBuffer.AsSpan(_z.NextIn, _z.AvailableBytesIn).CopyTo(trailer);
+                            _z.InputBuffer.AsSpan(_z.NextIn, _z.AvailableBytesIn).CopyTo(trailer.Span);
                             int bytesNeeded = 8 - _z.AvailableBytesIn;
-                            int bytesRead = await _stream.ReadAsync(trailer,
-                                                                    _z.AvailableBytesIn,
-                                                                    bytesNeeded);
+                            int bytesRead = await _stream.ReadAsync(trailer.Slice(_z.AvailableBytesIn, bytesNeeded));
                             if (bytesNeeded != bytesRead)
                             {
                                 throw new ZlibException($"Protocol error. AvailableBytesIn={_z.AvailableBytesIn + bytesRead}, expected 8");
@@ -272,13 +272,13 @@ namespace SharpCompress.Compressors.Deflate
                         }
                         else
                         {
-                            _z.InputBuffer.AsSpan(_z.NextIn, trailer.Length).CopyTo(trailer);
+                            _z.InputBuffer.AsSpan(_z.NextIn, trailer.Length).CopyTo(trailer.Span);
                         }
 
-                        Int32 crc32_expected = BinaryPrimitives.ReadInt32LittleEndian(trailer);
+                        Int32 crc32_expected = BinaryPrimitives.ReadInt32LittleEndian(trailer.Span);
                         Int32 crc32_actual = crc.Crc32Result;
-                        Int32 isize_expected = BinaryPrimitives.ReadInt32LittleEndian(trailer.AsSpan(4));
-                        var isize_actual = (Int32)(_z.TotalBytesOut & 0x00000000FFFFFFFF);
+                        Int32 isize_expected = BinaryPrimitives.ReadInt32LittleEndian(trailer.Span.Slice(4));
+                        Int32 isize_actual = (Int32)(_z.TotalBytesOut & 0x00000000FFFFFFFF);
 
                         if (crc32_actual != crc32_expected)
                         {
@@ -324,23 +324,20 @@ namespace SharpCompress.Compressors.Deflate
                 return;
             }
             _isDisposed = true;
-            if (_stream is null)
-            {
-                return;
-            }
-            try
-            {
-                await FinishAsync();
-            }
-            finally
-            {
-                End();
-                if (_stream is not null)
+                if (_stream is null)
                 {
-                    await _stream.DisposeAsync();
+                    return;
                 }
-                _stream = null;
-            }
+                try
+                {
+                    await FinishAsync();
+                }
+                finally
+                {
+                    End();
+                    _stream?.DisposeAsync();
+                    _stream = null;
+                }
         }
 
         public override Task FlushAsync(CancellationToken cancellationToken)
@@ -407,8 +404,8 @@ namespace SharpCompress.Compressors.Deflate
 
             // read the header on the first read
             using var rented = MemoryPool<byte>.Shared.Rent(10);
-            int n = await _stream.ReadAsync(rented.Memory.Slice(0,10), cancellationToken);
-            var header = rented.Memory;
+            var header = rented.Memory.Slice(0, 10);
+            int n = await _stream.ReadAsync(header, cancellationToken);
 
             // workitem 8501: handle edge case (decompress empty stream)
             if (n == 0)
@@ -435,9 +432,9 @@ namespace SharpCompress.Compressors.Deflate
                 n = await _stream.ReadAsync(header.Slice(0, 2), cancellationToken); // 2-byte length field
                 totalBytesRead += n;
 
-                var extraLength = (short)(header.Span[0] + header.Span[1] * 256);
-                using var extra = MemoryPool<byte>.Shared.Rent(extraLength);
-                n = await _stream.ReadAsync(extra.Memory.Slice(0, extraLength), cancellationToken);
+                short extraLength = (short)(header.Span[0] + header.Span[1] * 256);
+                byte[] extra = new byte[extraLength];
+                n = await _stream.ReadAsync(extra, 0, extra.Length, cancellationToken);
                 if (n != extraLength)
                 {
                     throw new ZlibException("Unexpected end-of-file reading GZIP header.");
