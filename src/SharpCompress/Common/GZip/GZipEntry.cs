@@ -19,7 +19,7 @@ namespace SharpCompress.Common.GZip
 
         public override long Crc => _filePart.Crc ?? 0;
 
-        public override string Key => _filePart.FilePartName;
+        public override string Key => _filePart.FilePartName ?? string.Empty;
 
         public override string? LinkTarget => null;
 
