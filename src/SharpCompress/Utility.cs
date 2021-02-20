@@ -21,8 +21,13 @@ namespace SharpCompress
         public static async ValueTask<T> ReadPrimitive<T>(this Stream stream, int bytes, Func<ReadOnlyMemory<byte>, T> func, CancellationToken cancellationToken)
         {
             using var buffer = MemoryPool<byte>.Shared.Rent(bytes);
-            await stream.ReadAsync(buffer.Memory.Slice(0, bytes), cancellationToken);
-            return func(buffer.Memory.Slice(0, bytes));
+            var memory = buffer.Memory.Slice(0, bytes);
+            var n = await stream.ReadAsync(memory, cancellationToken);
+            if (n != memory.Length)
+            {
+                throw new InvalidOperationException("Unexpected length");
+            }
+            return func(memory);
         }
         
         public static ValueTask<byte> ReadByteAsync(this Stream stream, CancellationToken cancellationToken)
