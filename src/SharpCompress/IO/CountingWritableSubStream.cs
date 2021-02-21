@@ -41,7 +41,7 @@ namespace SharpCompress.IO
         public override async Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
         {
             await Stream.WriteAsync(buffer, offset, count, cancellationToken);
-            Count += (uint)buffer.Length;
+            Count += (uint)count;
         }
 
         public override async ValueTask WriteAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken = default)
