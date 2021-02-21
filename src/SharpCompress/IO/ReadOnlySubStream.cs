@@ -34,11 +34,36 @@ namespace SharpCompress.IO
 
         public override long Position { get => throw new NotSupportedException(); set => throw new NotSupportedException(); }
 
+        public override async ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default)
+        {
+            var count = buffer.Length;
+            if (BytesLeftToRead < count)
+            {
+                count = (int)BytesLeftToRead;
+            }
+
+            if (count == 0)
+            {
+                return 0;
+            }
+            int read = await Stream.ReadAsync(buffer.Slice(0, count), cancellationToken);
+            if (read > 0)
+            {
+                BytesLeftToRead -= read;
+            }
+            return read;
+        }
+        
         public override async Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
         {
             if (BytesLeftToRead < count)
             {
                 count = (int)BytesLeftToRead;
+            }
+
+            if (count == 0)
+            {
+                return 0;
             }
             int read = await Stream.ReadAsync(buffer, offset, count, cancellationToken);
             if (read > 0)
