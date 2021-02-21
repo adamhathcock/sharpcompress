@@ -3,6 +3,7 @@ using System.Buffers;
 using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using SharpCompress.Readers;
@@ -18,38 +19,81 @@ namespace SharpCompress
                 await action(item);
             }
         }
-        public static async ValueTask<T> ReadPrimitive<T>(this Stream stream, int bytes, Func<ReadOnlyMemory<byte>, T> func, CancellationToken cancellationToken)
+        
+        private static async ValueTask WritePrimitive<T>(this Stream stream, Action<Memory<byte>> func, CancellationToken cancellationToken)
+            where T : struct
         {
+            var bytes = Marshal.SizeOf<T>(); 
+            using var buffer = MemoryPool<byte>.Shared.Rent(bytes);
+            var memory = buffer.Memory.Slice(0, bytes);
+            func(memory);
+            await stream.WriteAsync(memory, cancellationToken);
+        }
+        
+        public static ValueTask WriteByteAsync(this Stream stream, byte val, CancellationToken cancellationToken = default)
+        {
+            return stream.WritePrimitive<byte>( x => x.Span[0] = val, cancellationToken);
+        }
+        
+        public static async ValueTask WriteBytes(this Stream stream, params byte[] val)
+        { 
+            using var buffer = MemoryPool<byte>.Shared.Rent(val.Length);
+            var memory = buffer.Memory.Slice(0, val.Length);
+            val.CopyTo(memory);
+            await stream.WriteAsync(memory);
+        }
+        
+        public static ValueTask WriteUInt16(this Stream stream, ushort val, CancellationToken cancellationToken =default)
+        {
+            return stream.WritePrimitive<ushort>( x => BinaryPrimitives.WriteUInt16LittleEndian(x.Span, val), cancellationToken);
+        }
+        public static ValueTask WriteUInt32(this Stream stream, uint val, CancellationToken cancellationToken= default)
+        {
+            return stream.WritePrimitive<uint>( x => BinaryPrimitives.WriteUInt32LittleEndian(x.Span, val), cancellationToken);
+        }
+        public static ValueTask WriteUInt64(this Stream stream, ulong val, CancellationToken cancellationToken= default)
+        {
+            return stream.WritePrimitive<ulong>( x => BinaryPrimitives.WriteUInt64LittleEndian(x.Span, val), cancellationToken);
+        }
+        
+        private static async ValueTask<T?> ReadPrimitive<T>(this Stream stream, Func<ReadOnlyMemory<byte>, T> func, CancellationToken cancellationToken)
+            where T : struct
+        {
+            var bytes = Marshal.SizeOf<T>();
             using var buffer = MemoryPool<byte>.Shared.Rent(bytes);
             var memory = buffer.Memory.Slice(0, bytes);
             var n = await stream.ReadAsync(memory, cancellationToken);
             if (n != memory.Length)
             {
-                throw new InvalidOperationException("Unexpected length");
+                return null;
             }
             return func(memory);
         }
         
-        public static ValueTask<byte> ReadByteAsync(this Stream stream, CancellationToken cancellationToken)
+        public static async ValueTask<byte> ReadByteAsync(this Stream stream, CancellationToken cancellationToken)
         {
-            return stream.ReadPrimitive(1, x => x.Span[0], cancellationToken);
+            return await stream.ReadPrimitive(x => x.Span[0], cancellationToken) ?? default;
         }
-        public static ValueTask<ushort> ReadUInt16(this Stream stream, CancellationToken cancellationToken)
+        public static async ValueTask<ushort> ReadUInt16(this Stream stream, CancellationToken cancellationToken)
         {
-            return stream.ReadPrimitive(2, x => BinaryPrimitives.ReadUInt16LittleEndian(x.Span), cancellationToken);
+            return await stream.ReadPrimitive( x => BinaryPrimitives.ReadUInt16LittleEndian(x.Span), cancellationToken)?? default;
         }
-        public static ValueTask<uint> ReadUInt32(this Stream stream, CancellationToken cancellationToken)
+        public static async ValueTask<uint> ReadUInt32(this Stream stream, CancellationToken cancellationToken)
         {
-            return stream.ReadPrimitive(4, x => BinaryPrimitives.ReadUInt32LittleEndian(x.Span), cancellationToken);
+            return await stream.ReadPrimitive( x => BinaryPrimitives.ReadUInt32LittleEndian(x.Span), cancellationToken)?? default;
         }
-        public static ValueTask<int> ReadInt32(this Stream stream, CancellationToken cancellationToken)
+        public static ValueTask<uint?> ReadUInt32OrNull(this Stream stream, CancellationToken cancellationToken)
         {
-            return stream.ReadPrimitive(4, x => BinaryPrimitives.ReadInt32LittleEndian(x.Span), cancellationToken);
+            return stream.ReadPrimitive(x => BinaryPrimitives.ReadUInt32LittleEndian(x.Span), cancellationToken);
+        }
+        public static async ValueTask<int> ReadInt32(this Stream stream, CancellationToken cancellationToken)
+        {
+            return await stream.ReadPrimitive( x => BinaryPrimitives.ReadInt32LittleEndian(x.Span), cancellationToken)?? default;
         }
         
-        public static ValueTask<ulong> ReadUInt64(this Stream stream, CancellationToken cancellationToken)
+        public static async ValueTask<ulong> ReadUInt64(this Stream stream, CancellationToken cancellationToken)
         {
-            return stream.ReadPrimitive(8, x => BinaryPrimitives.ReadUInt64LittleEndian(x.Span), cancellationToken);
+            return await stream.ReadPrimitive( x => BinaryPrimitives.ReadUInt64LittleEndian(x.Span), cancellationToken)?? default;
         }
 
         public static async ValueTask<byte[]> ReadBytes(this Stream stream, int bytes, CancellationToken cancellationToken)
@@ -339,11 +383,6 @@ namespace SharpCompress
                 await destination.WriteAsync(buffer.Memory.Slice(0, bytesRead), cancellationToken);
             }
             return total;
-        }
-
-        public static async ValueTask WriteByte(this Stream stream, byte b, CancellationToken cancellationToken = default)
-        {
-            await stream.WriteAsync(new ReadOnlyMemory<byte>(new[] {b}), cancellationToken);
         }
 
         public static long TransferTo(this Stream source, Stream destination)

@@ -37,8 +37,12 @@ namespace SharpCompress.Common.Zip
                     }
                 }
                 _lastEntryHeader = null;
-                uint headerBytes = await rewindableStream.ReadUInt32(cancellationToken);
-                header = await ReadHeader(headerBytes, rewindableStream, cancellationToken);
+                var headerBytes = await rewindableStream.ReadUInt32OrNull(cancellationToken);
+                if (headerBytes is null)
+                {
+                    yield break;
+                }
+                header = await ReadHeader(headerBytes.Value, rewindableStream, cancellationToken);
                 if (header is null)
                 {
                     yield break;

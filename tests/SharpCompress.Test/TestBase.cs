@@ -82,7 +82,7 @@ namespace SharpCompress.Test
                 Directory.EnumerateFiles(ORIGINAL_FILES_PATH, "*.*", SearchOption.AllDirectories)
                 .ToLookup(path => path.Substring(ORIGINAL_FILES_PATH.Length));
 
-            Assert.Equal(extracted.Count, original.Count);
+            Assert.Equal(original.Count, extracted.Count);
 
             foreach (var orig in original)
             {
