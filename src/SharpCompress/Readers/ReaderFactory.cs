@@ -56,7 +56,7 @@ namespace SharpCompress.Readers
                 return GZipReader.Open(rewindableStream, options);
             }
 
-           /* rewindableStream.Rewind(false);
+            rewindableStream.Rewind(false);
             if (await BZip2Stream.IsBZip2Async(rewindableStream, cancellationToken))
             {
                 rewindableStream.Rewind(false);
@@ -66,8 +66,8 @@ namespace SharpCompress.Readers
                     rewindableStream.Rewind(true);
                     return new TarReader(rewindableStream, options, CompressionType.BZip2);
                 }    
-            } */
-
+            } 
+           
             rewindableStream.Rewind(false);
             if (await LZipStream.IsLZipFileAsync(rewindableStream))
             {

@@ -40,11 +40,11 @@ namespace SharpCompress.Writers.Tar
             {
                 case CompressionType.None:
                     break;
-               /* case CompressionType.BZip2:
+               case CompressionType.BZip2:
                     {
                         destination = await BZip2Stream.CreateAsync(destination, CompressionMode.Compress, false, cancellationToken);
                     }
-                    break;     */
+                    break;     
                 case CompressionType.GZip:
                     {
                         destination = new GZipStream(destination, CompressionMode.Compress);

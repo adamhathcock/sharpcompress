@@ -333,10 +333,10 @@ namespace SharpCompress.Writers.Zip
                         {
                             return new DeflateStream(counting, CompressionMode.Compress, compressionLevel);
                         }
-                    /*case ZipCompressionMethod.BZip2:
+                    case ZipCompressionMethod.BZip2:
                         {
                             return await BZip2Stream.CreateAsync(counting, CompressionMode.Compress, false, cancellationToken);
-                        } */
+                        } 
                     case ZipCompressionMethod.LZMA:
                         {
                             await counting.WriteBytes(9, 20, 5, 0);

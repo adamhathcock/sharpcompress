@@ -70,7 +70,7 @@ namespace SharpCompress
             return func(memory);
         }
         
-        public static async ValueTask<byte> ReadByteAsync(this Stream stream, CancellationToken cancellationToken)
+        public static async ValueTask<byte> ReadByteAsync(this Stream stream, CancellationToken cancellationToken = default)
         {
             return await stream.ReadPrimitive(x => x.Span[0], cancellationToken) ?? default;
         }

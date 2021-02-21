@@ -73,10 +73,10 @@ namespace SharpCompress.Common.Zip
                     {
                         return new Deflate64Stream(stream, CompressionMode.Decompress);
                     }
-               /**  case ZipCompressionMethod.BZip2:
+                case ZipCompressionMethod.BZip2:
                     {
                         return await BZip2Stream.CreateAsync(stream, CompressionMode.Decompress, false, cancellationToken);
-                    }                                                                                          */
+                    }                                                                                          
                 case ZipCompressionMethod.LZMA:
                     {
                         if (FlagUtility.HasFlag(Header.Flags, HeaderFlags.Encrypted))

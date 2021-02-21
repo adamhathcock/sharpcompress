@@ -66,6 +66,11 @@ namespace SharpCompress.Common.Tar
             return read;
         }
 
+        public override Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+        {
+            throw new NotSupportedException();
+        }
+
         public override long Seek(long offset, SeekOrigin origin)
         {
             throw new NotSupportedException();
