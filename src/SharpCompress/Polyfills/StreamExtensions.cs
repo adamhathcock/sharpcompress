@@ -1,12 +1,14 @@
 ﻿#if NET461 || NETSTANDARD2_0
 
+using System;
 using System.Buffers;
+using System.IO;
 
-namespace System.IO
+namespace SharpCompress
 {
-    public static class StreamExtensions
+    internal static class StreamExtensions
     {
-        public static int Read(this Stream stream, Span<byte> buffer)
+        internal static int Read(this Stream stream, Span<byte> buffer)
         {
             byte[] temp = ArrayPool<byte>.Shared.Rent(buffer.Length);
 
@@ -24,7 +26,7 @@ namespace System.IO
             }
         }
 
-        public static void Write(this Stream stream, ReadOnlySpan<byte> buffer)
+        internal static void Write(this Stream stream, ReadOnlySpan<byte> buffer)
         {
             byte[] temp = ArrayPool<byte>.Shared.Rent(buffer.Length);
 
