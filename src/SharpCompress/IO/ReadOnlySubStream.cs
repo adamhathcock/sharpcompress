@@ -6,23 +6,18 @@ namespace SharpCompress.IO
     internal class ReadOnlySubStream : NonDisposingStream
     {
         private readonly long startIndexInBaseStream;
-        private readonly long endIndexInBaseStream;
-        private long positionInBaseStream;
         private readonly long length;
         private readonly Stream baseStream;
+        private long position;
         private bool canRead;
         private bool canSeek;
         private bool disposedValue;
 
-        public ReadOnlySubStream(Stream stream) : this(stream, stream.Position, stream.Length - stream.Position)
+        public ReadOnlySubStream(Stream stream, long length) : this(stream, null, length)
         {
         }
 
-        public ReadOnlySubStream(Stream stream, long length) : this(stream, stream.Position, length)
-        {
-        }
-
-        public ReadOnlySubStream(Stream stream, long startIndex, long length) : base(stream, false)
+        public ReadOnlySubStream(Stream stream, long? startIndex, long length) : base(stream, false)
         {
             if (stream == null)
                 throw new ArgumentNullException("the stream is null");
@@ -30,11 +25,17 @@ namespace SharpCompress.IO
             if (!stream.CanRead)
                 throw new NotSupportedException("A stream that can be read is required");
 
-            this.endIndexInBaseStream = startIndex + length;
+            if (startIndex != null)
+                stream.Position = startIndex.Value;
+
             this.canSeek = stream.CanSeek;
+            if (this.canSeek)
+                this.startIndexInBaseStream = stream.Position;
+            else
+                this.startIndexInBaseStream = 0;
+
+            this.position = 0;
             this.baseStream = stream;
-            this.startIndexInBaseStream = startIndex;
-            this.positionInBaseStream = startIndex;
             this.length = length;
             this.canRead = true;
             this.disposedValue = false;
@@ -63,7 +64,7 @@ namespace SharpCompress.IO
             get
             {
                 ThrowIfDisposed();
-                return positionInBaseStream - startIndexInBaseStream;
+                return position;
             }
             set
             {
@@ -71,9 +72,10 @@ namespace SharpCompress.IO
                 if (!canSeek)
                     throw new NotSupportedException();
 
-                if (value == Position)
+                if (value == position)
                     return;
-                Seek(value, SeekOrigin.Begin);
+
+                this.position = value;
             }
         }
 
@@ -114,31 +116,31 @@ namespace SharpCompress.IO
 
             lock (baseStream)
             {
-                long remaining = endIndexInBaseStream - positionInBaseStream;
+                long remaining = length - position;
                 if (remaining <= 0)
                     return 0;
 
                 if (count > remaining)
                     count = (int)remaining;
 
-                if (canSeek && baseStream.Position != positionInBaseStream)
-                    baseStream.Seek(positionInBaseStream, SeekOrigin.Begin);
+                if (canSeek && baseStream.Position != startIndexInBaseStream + position)
+                    baseStream.Seek(startIndexInBaseStream + position, SeekOrigin.Begin);
 
                 int read = baseStream.Read(array, offset, count);
-                this.positionInBaseStream += read;
+                position += read;
                 return read;
             }
         }
 
         public override int ReadByte()
         {
-            long remaining = endIndexInBaseStream - positionInBaseStream;
+            long remaining = length - position;
             if (remaining <= 0)
                 return -1;
 
             int value = baseStream.ReadByte();
             if (value != -1)
-                this.positionInBaseStream += 1;
+                position += 1;
 
             return value;
         }
@@ -164,7 +166,7 @@ namespace SharpCompress.IO
                     break;
             }
 
-            this.positionInBaseStream = startIndexInBaseStream + newPos;
+            this.position = newPos;
             return newPos;
         }
 
