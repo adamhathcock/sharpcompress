@@ -52,6 +52,7 @@ namespace SharpCompress.IO
             this.length = length;
             this.bufferOffset = 0;
             this.bufferLength = 0;
+            this.buffer = null;
             this.bufferSize = bufferSize <= 4096 ? DEFAULT_BUFFER_SIZE : bufferSize;
             this.canRead = true;
             this.disposedValue = false;
@@ -239,11 +240,12 @@ namespace SharpCompress.IO
         {
             if (disposing && !disposedValue)
             {
-                canRead = false;
-                disposedValue = true;
-                buffer = null;
-                bufferLength = 0;
-                bufferOffset = 0;
+                this.canRead = false;
+                this.disposedValue = true;
+                if (this.buffer != null)
+                    this.buffer = null;
+                this.bufferLength = 0;
+                this.bufferOffset = 0;
             }
             base.Dispose(disposing);
         }
