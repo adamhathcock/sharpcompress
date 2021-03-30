@@ -136,6 +136,19 @@ namespace SharpCompress.IO
             }
         }
 
+        public override int ReadByte()
+        {
+            long remaining = endIndexInBaseStream - positionInBaseStream;
+            if (remaining <= 0)
+                return -1;
+
+            int value = baseStream.ReadByte();
+            if (value != -1)
+                this.positionInBaseStream += 1;
+
+            return value;
+        }
+
         public override long Seek(long offset, SeekOrigin origin)
         {
             ThrowIfDisposed();
