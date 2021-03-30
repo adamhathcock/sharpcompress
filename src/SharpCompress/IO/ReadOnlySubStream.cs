@@ -31,12 +31,6 @@ namespace SharpCompress.IO
                 throw new NotSupportedException("A stream that can be read is required");
 
             this.endIndexInBaseStream = startIndex + length;
-            if (this.endIndexInBaseStream > stream.Length)
-                throw new ArgumentException("length");
-
-            if (!stream.CanSeek && stream.Position != startIndex)
-                throw new NotSupportedException("A stream that supports seeking is required");
-
             this.canSeek = stream.CanSeek;
             this.baseStream = stream;
             this.startIndexInBaseStream = startIndex;
