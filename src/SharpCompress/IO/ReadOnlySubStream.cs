@@ -11,6 +11,7 @@ namespace SharpCompress.IO
         private readonly long length;
         private readonly Stream baseStream;
         private bool canRead;
+        private bool canSeek;
         private bool disposedValue;
 
         public ReadOnlySubStream(Stream stream) : this(stream, stream.Position, stream.Length - stream.Position)
@@ -29,13 +30,14 @@ namespace SharpCompress.IO
             if (!stream.CanRead)
                 throw new NotSupportedException("A stream that can be read is required");
 
-            if (!stream.CanSeek)
-                throw new NotSupportedException("A stream that supports seeking is required");
-
             this.endIndexInBaseStream = startIndex + length;
             if (this.endIndexInBaseStream > stream.Length)
                 throw new ArgumentException("length");
 
+            if (!stream.CanSeek && stream.Position != startIndex)
+                throw new NotSupportedException("A stream that supports seeking is required");
+
+            this.canSeek = stream.CanSeek;
             this.baseStream = stream;
             this.startIndexInBaseStream = startIndex;
             this.positionInBaseStream = startIndex;
@@ -72,6 +74,9 @@ namespace SharpCompress.IO
             set
             {
                 ThrowIfDisposed();
+                if (!canSeek)
+                    throw new NotSupportedException();
+
                 if (value == Position)
                     return;
                 Seek(value, SeekOrigin.Begin);
@@ -80,7 +85,7 @@ namespace SharpCompress.IO
 
         public override bool CanRead => canRead && baseStream.CanRead;
 
-        public override bool CanSeek => true;
+        public override bool CanSeek => canSeek;
 
         public override bool CanWrite => false;
 
@@ -122,7 +127,7 @@ namespace SharpCompress.IO
                 if (count > remaining)
                     count = (int)remaining;
 
-                if (baseStream.Position != positionInBaseStream)
+                if (canSeek && baseStream.Position != positionInBaseStream)
                     baseStream.Seek(positionInBaseStream, SeekOrigin.Begin);
 
                 int read = baseStream.Read(array, offset, count);
@@ -134,6 +139,10 @@ namespace SharpCompress.IO
         public override long Seek(long offset, SeekOrigin origin)
         {
             ThrowIfDisposed();
+
+            if (!canSeek)
+                throw new NotSupportedException();
+
             long newPos = 0;
             switch (origin)
             {
