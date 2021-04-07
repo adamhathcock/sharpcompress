@@ -1,5 +1,8 @@
 ﻿using System;
+using System.Buffers;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 using SharpCompress.Common;
 using SharpCompress.Common.Tar.Headers;
 using SharpCompress.Compressors;
@@ -12,18 +15,24 @@ namespace SharpCompress.Writers.Tar
 {
     public class TarWriter : AbstractWriter
     {
-        private readonly bool finalizeArchiveOnClose;
+        private bool finalizeArchiveOnClose;
 
-        public TarWriter(Stream destination, TarWriterOptions options)
+        private TarWriter(TarWriterOptions options)
             : base(ArchiveType.Tar, options)
         {
-            finalizeArchiveOnClose = options.FinalizeArchiveOnClose;
+        }
+
+        public static async ValueTask<TarWriter> CreateAsync(Stream destination, TarWriterOptions options, CancellationToken cancellationToken = default)
+        {
+            await Task.CompletedTask;
+            var tw = new TarWriter(options);
+            tw.finalizeArchiveOnClose = options.FinalizeArchiveOnClose;
 
             if (!destination.CanWrite)
             {
                 throw new ArgumentException("Tars require writable streams.");
             }
-            if (WriterOptions.LeaveStreamOpen)
+            if (tw.WriterOptions.LeaveStreamOpen)
             {
                 destination = new NonDisposingStream(destination);
             }
@@ -31,11 +40,11 @@ namespace SharpCompress.Writers.Tar
             {
                 case CompressionType.None:
                     break;
-                case CompressionType.BZip2:
+               case CompressionType.BZip2:
                     {
-                        destination = new BZip2Stream(destination, CompressionMode.Compress, false);
+                        destination = await BZip2Stream.CreateAsync(destination, CompressionMode.Compress, false, cancellationToken);
                     }
-                    break;
+                    break;     
                 case CompressionType.GZip:
                     {
                         destination = new GZipStream(destination, CompressionMode.Compress);
@@ -43,7 +52,7 @@ namespace SharpCompress.Writers.Tar
                     break;
                 case CompressionType.LZip:
                     {
-                        destination = new LZipStream(destination, CompressionMode.Compress);
+                        destination = await LZipStream.CreateAsync(destination, CompressionMode.Compress);
                     }
                     break;
                 default:
@@ -51,12 +60,32 @@ namespace SharpCompress.Writers.Tar
                         throw new InvalidFormatException("Tar does not support compression: " + options.CompressionType);
                     }
             }
-            InitalizeStream(destination);
+            tw.InitializeStream(destination);
+            return tw;
         }
 
-        public override void Write(string filename, Stream source, DateTime? modificationTime)
+        public override ValueTask WriteAsync(string filename, Stream source, DateTime? modificationTime, CancellationToken cancellationToken = default)
         {
-            Write(filename, source, modificationTime, null);
+            return WriteAsync(filename, source, modificationTime, null, cancellationToken);
+        }
+
+        public async ValueTask WriteAsync(string filename, Stream source, DateTime? modificationTime, long? size, CancellationToken cancellationToken = default)
+        {
+            if (!source.CanSeek && size == null)
+            {
+                throw new ArgumentException("Seekable stream is required if no size is given.");
+            }
+
+            long realSize = size ?? source.Length;
+
+            TarHeader header = new(WriterOptions.ArchiveEncoding);
+
+            header.LastModifiedTime = modificationTime ?? TarHeader.EPOCH;
+            header.Name = NormalizeFilename(filename);
+            header.Size = realSize;
+            await header.WriteAsync(OutputStream);
+            size = await source.TransferToAsync(OutputStream, cancellationToken);
+            await PadTo512Async(size.Value, false);
         }
 
         private string NormalizeFilename(string filename)
@@ -72,26 +101,7 @@ namespace SharpCompress.Writers.Tar
             return filename.Trim('/');
         }
 
-        public void Write(string filename, Stream source, DateTime? modificationTime, long? size)
-        {
-            if (!source.CanSeek && size is null)
-            {
-                throw new ArgumentException("Seekable stream is required if no size is given.");
-            }
-
-            long realSize = size ?? source.Length;
-
-            TarHeader header = new TarHeader(WriterOptions.ArchiveEncoding);
-
-            header.LastModifiedTime = modificationTime ?? TarHeader.EPOCH;
-            header.Name = NormalizeFilename(filename);
-            header.Size = realSize;
-            header.Write(OutputStream);
-            size = source.TransferTo(OutputStream);
-            PadTo512(size.Value, false);
-        }
-
-        private void PadTo512(long size, bool forceZeros)
+        private async Task PadTo512Async(long size, bool forceZeros)
         {
             int zeros = (int)size % 512;
             if (zeros == 0 && !forceZeros)
@@ -99,33 +109,31 @@ namespace SharpCompress.Writers.Tar
                 return;
             }
             zeros = 512 - zeros;
-            OutputStream.Write(stackalloc byte[zeros]);
+            using var zeroBuffer = MemoryPool<byte>.Shared.Rent(zeros);
+            zeroBuffer.Memory.Span.Clear();
+            await OutputStream.WriteAsync(zeroBuffer.Memory.Slice(0, zeros));
         }
 
-        protected override void Dispose(bool isDisposing)
+        protected override async ValueTask DisposeAsyncCore()
         {
-            if (isDisposing)
+            if (finalizeArchiveOnClose)
             {
-                if (finalizeArchiveOnClose)
-                {
-                    PadTo512(0, true);
-                    PadTo512(0, true);
-                }
-                switch (OutputStream)
-                {
-                    case BZip2Stream b:
-                        {
-                            b.Finish();
-                            break;
-                        }
-                    case LZipStream l:
-                        {
-                            l.Finish();
-                            break;
-                        }
-                }
+                await PadTo512Async(0, true);
+                await PadTo512Async(0, true);
             }
-            base.Dispose(isDisposing);
+            switch (OutputStream)
+            {
+              /*  case BZip2Stream b:
+                    {
+                        await b.FinishAsync(CancellationToken.None);
+                        break;
+                    }     */
+                case LZipStream l:
+                    {
+                        await l.FinishAsync();
+                        break;
+                    }
+            }
         }
     }
 }

@@ -28,10 +28,13 @@
 using System;
 using System.IO;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
+using SharpCompress.IO;
 
 namespace SharpCompress.Compressors.Deflate
 {
-    public class ZlibStream : Stream
+    public class ZlibStream : AsyncStream
     {
         private readonly ZlibBaseStream _baseStream;
         private bool _disposed;
@@ -204,35 +207,25 @@ namespace SharpCompress.Compressors.Deflate
         /// <remarks>
         /// This may or may not result in a <c>Close()</c> call on the captive stream.
         /// </remarks>
-        protected override void Dispose(bool disposing)
+        public override async ValueTask DisposeAsync()
         {
-            try
+            if (!_disposed)
             {
-                if (!_disposed)
-                {
-                    if (disposing)
-                    {
-                        _baseStream?.Dispose();
-                    }
-                    _disposed = true;
-                }
-            }
-            finally
-            {
-                base.Dispose(disposing);
+                await _baseStream.DisposeAsync();
+                _disposed = true;
             }
         }
 
         /// <summary>
         /// Flush the stream.
         /// </summary>
-        public override void Flush()
+        public override Task FlushAsync(CancellationToken cancellationToken)
         {
             if (_disposed)
             {
                 throw new ObjectDisposedException("ZlibStream");
             }
-            _baseStream.Flush();
+            return _baseStream.FlushAsync(cancellationToken);
         }
 
         /// <summary>
@@ -261,22 +254,13 @@ namespace SharpCompress.Compressors.Deflate
         /// <param name="buffer">The buffer into which the read data should be placed.</param>
         /// <param name="offset">the offset within that data array to put the first byte read.</param>
         /// <param name="count">the number of bytes to read.</param>
-        public override int Read(byte[] buffer, int offset, int count)
+        public override async Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
         {
             if (_disposed)
             {
                 throw new ObjectDisposedException("ZlibStream");
             }
-            return _baseStream.Read(buffer, offset, count);
-        }
-
-        public override int ReadByte()
-        {
-            if (_disposed)
-            {
-                throw new ObjectDisposedException("ZlibStream");
-            }
-            return _baseStream.ReadByte();
+            return await _baseStream.ReadAsync(buffer, offset, count, cancellationToken);
         }
 
         /// <summary>
@@ -321,24 +305,14 @@ namespace SharpCompress.Compressors.Deflate
         /// <param name="buffer">The buffer holding data to write to the stream.</param>
         /// <param name="offset">the offset within that data array to find the first byte to write.</param>
         /// <param name="count">the number of bytes to write.</param>
-        public override void Write(byte[] buffer, int offset, int count)
+        public override async Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
         {
             if (_disposed)
             {
                 throw new ObjectDisposedException("ZlibStream");
             }
-            _baseStream.Write(buffer, offset, count);
+            await _baseStream.WriteAsync(buffer, offset, count, cancellationToken);
         }
-
-        public override void WriteByte(byte value)
-        {
-            if (_disposed)
-            {
-                throw new ObjectDisposedException("ZlibStream");
-            }
-            _baseStream.WriteByte(value);
-        }
-
         #endregion System.IO.Stream methods
     }
 }

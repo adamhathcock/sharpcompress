@@ -1,7 +1,11 @@
 ﻿using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
+using System.Threading;
+using System.Threading.Tasks;
 using SharpCompress.Common;
 using SharpCompress.Common.GZip;
 using SharpCompress.Readers;
@@ -29,10 +33,11 @@ namespace SharpCompress.Archives.GZip
         /// </summary>
         /// <param name="fileInfo"></param>
         /// <param name="readerOptions"></param>
-        public static GZipArchive Open(FileInfo fileInfo, ReaderOptions? readerOptions = null)
+        public static GZipArchive Open(FileInfo fileInfo, ReaderOptions? readerOptions = null,
+                                       CancellationToken cancellationToken = default)
         {
             fileInfo.CheckNotNull(nameof(fileInfo));
-            return new GZipArchive(fileInfo, readerOptions ?? new ReaderOptions());
+            return new GZipArchive(fileInfo, readerOptions ?? new ReaderOptions(), cancellationToken);
         }
 
         /// <summary>
@@ -40,10 +45,11 @@ namespace SharpCompress.Archives.GZip
         /// </summary>
         /// <param name="stream"></param>
         /// <param name="readerOptions"></param>
-        public static GZipArchive Open(Stream stream, ReaderOptions? readerOptions = null)
+        public static GZipArchive Open(Stream stream, ReaderOptions? readerOptions = null,
+                                       CancellationToken cancellationToken = default)
         {
             stream.CheckNotNull(nameof(stream));
-            return new GZipArchive(stream, readerOptions ?? new ReaderOptions());
+            return new GZipArchive(stream, readerOptions ?? new ReaderOptions(), cancellationToken);
         }
 
         public static GZipArchive Create()
@@ -56,57 +62,58 @@ namespace SharpCompress.Archives.GZip
         /// </summary>
         /// <param name="fileInfo"></param>
         /// <param name="options"></param>
-        internal GZipArchive(FileInfo fileInfo, ReaderOptions options)
-            : base(ArchiveType.GZip, fileInfo, options)
+        internal GZipArchive(FileInfo fileInfo, ReaderOptions options,
+                             CancellationToken cancellationToken)
+            : base(ArchiveType.GZip, fileInfo, options, cancellationToken)
         {
         }
 
-        protected override IEnumerable<GZipVolume> LoadVolumes(FileInfo file)
+        protected override IAsyncEnumerable<GZipVolume> LoadVolumes(FileInfo file,
+                                                                    CancellationToken cancellationToken)
         {
-            return new GZipVolume(file, ReaderOptions).AsEnumerable();
+            return  new GZipVolume(file, ReaderOptions).AsAsyncEnumerable();
         }
 
-        public static bool IsGZipFile(string filePath)
+        public static ValueTask<bool> IsGZipFileAsync(string filePath, CancellationToken cancellationToken = default)
         {
-            return IsGZipFile(new FileInfo(filePath));
+            return IsGZipFileAsync(new FileInfo(filePath), cancellationToken);
         }
 
-        public static bool IsGZipFile(FileInfo fileInfo)
+        public static async ValueTask<bool> IsGZipFileAsync(FileInfo fileInfo, CancellationToken cancellationToken = default)
         {
             if (!fileInfo.Exists)
             {
                 return false;
             }
 
-            using Stream stream = fileInfo.OpenRead();
-            return IsGZipFile(stream);
+            await using Stream stream = fileInfo.OpenRead();
+            return await IsGZipFileAsync(stream, cancellationToken);
         }
 
-        public void SaveTo(string filePath)
+        public Task SaveToAsync(string filePath, CancellationToken cancellationToken = default)
         {
-            SaveTo(new FileInfo(filePath));
+            return SaveToAsync(new FileInfo(filePath), cancellationToken);
         }
 
-        public void SaveTo(FileInfo fileInfo)
+        public async Task SaveToAsync(FileInfo fileInfo, CancellationToken cancellationToken = default)
         {
-            using (var stream = fileInfo.Open(FileMode.Create, FileAccess.Write))
-            {
-                SaveTo(stream, new WriterOptions(CompressionType.GZip));
-            }
+            await using var stream = fileInfo.Open(FileMode.Create, FileAccess.Write);
+            await SaveToAsync(stream, new WriterOptions(CompressionType.GZip), cancellationToken);
         }
 
-        public static bool IsGZipFile(Stream stream)
+        public static async ValueTask<bool> IsGZipFileAsync(Stream stream, CancellationToken cancellationToken = default)
         {
             // read the header on the first read
-            Span<byte> header = stackalloc byte[10];
+            using var header = MemoryPool<byte>.Shared.Rent(10);
+            var slice = header.Memory.Slice(0, 10);
 
             // workitem 8501: handle edge case (decompress empty stream)
-            if (!stream.ReadFully(header))
+            if (await stream.ReadAsync(slice, cancellationToken) != 10)
             {
                 return false;
             }
 
-            if (header[0] != 0x1F || header[1] != 0x8B || header[2] != 8)
+            if (slice.Span[0] != 0x1F || slice.Span[1] != 0x8B || slice.Span[2] != 8)
             {
                 return false;
             }
@@ -119,8 +126,9 @@ namespace SharpCompress.Archives.GZip
         /// </summary>
         /// <param name="stream"></param>
         /// <param name="options"></param>
-        internal GZipArchive(Stream stream, ReaderOptions options)
-            : base(ArchiveType.GZip, stream, options)
+        internal GZipArchive(Stream stream, ReaderOptions options,
+                             CancellationToken cancellationToken)
+            : base(ArchiveType.GZip, stream, options, cancellationToken)
         {
         }
 
@@ -129,51 +137,54 @@ namespace SharpCompress.Archives.GZip
         {
         }
 
-        protected override GZipArchiveEntry CreateEntryInternal(string filePath, Stream source, long size, DateTime? modified,
-                                                                bool closeStream)
+        protected override async ValueTask<GZipArchiveEntry> CreateEntryInternal(string filePath, Stream source, long size, DateTime? modified,
+                                                                bool closeStream, CancellationToken cancellationToken = default)
         {
-            if (Entries.Any())
+            if (await Entries.AnyAsync(cancellationToken: cancellationToken))
             {
                 throw new InvalidOperationException("Only one entry is allowed in a GZip Archive");
             }
             return new GZipWritableArchiveEntry(this, source, filePath, size, modified, closeStream);
         }
 
-        protected override void SaveTo(Stream stream, WriterOptions options,
-                                       IEnumerable<GZipArchiveEntry> oldEntries,
-                                       IEnumerable<GZipArchiveEntry> newEntries)
+        protected override async ValueTask SaveToAsync(Stream stream, WriterOptions options,
+                                            IAsyncEnumerable<GZipArchiveEntry> oldEntries,
+                                            IAsyncEnumerable<GZipArchiveEntry> newEntries, 
+                                            CancellationToken cancellationToken = default)
         {
-            if (Entries.Count > 1)
+            if (await Entries.CountAsync(cancellationToken: cancellationToken) > 1)
             {
                 throw new InvalidOperationException("Only one entry is allowed in a GZip Archive");
             }
-            using (var writer = new GZipWriter(stream, new GZipWriterOptions(options)))
+
+            await using var writer = new GZipWriter(stream, new GZipWriterOptions(options));
+            await foreach (var entry in oldEntries.Concat(newEntries)
+                                                  .Where(x => !x.IsDirectory)
+                                                  .WithCancellation(cancellationToken))
             {
-                foreach (var entry in oldEntries.Concat(newEntries)
-                                                .Where(x => !x.IsDirectory))
-                {
-                    using (var entryStream = entry.OpenEntryStream())
-                    {
-                        writer.Write(entry.Key, entryStream, entry.LastModifiedTime);
-                    }
-                }
+                await using var entryStream = await entry.OpenEntryStreamAsync(cancellationToken);
+                await writer.WriteAsync(entry.Key, entryStream, entry.LastModifiedTime, cancellationToken);
             }
         }
 
-        protected override IEnumerable<GZipVolume> LoadVolumes(IEnumerable<Stream> streams)
+        protected override async IAsyncEnumerable<GZipVolume> LoadVolumes(IAsyncEnumerable<Stream> streams,
+                                                                          [EnumeratorCancellation]CancellationToken cancellationToken)
         {
-            return new GZipVolume(streams.First(), ReaderOptions).AsEnumerable();
+            yield return new GZipVolume(await streams.FirstAsync(cancellationToken: cancellationToken), ReaderOptions);
         }
 
-        protected override IEnumerable<GZipArchiveEntry> LoadEntries(IEnumerable<GZipVolume> volumes)
+        protected override async IAsyncEnumerable<GZipArchiveEntry> LoadEntries(IAsyncEnumerable<GZipVolume> volumes,
+                                                                                [EnumeratorCancellation]CancellationToken cancellationToken)
         {
-            Stream stream = volumes.Single().Stream;
-            yield return new GZipArchiveEntry(this, new GZipFilePart(stream, ReaderOptions.ArchiveEncoding));
+            Stream stream = (await volumes.SingleAsync(cancellationToken: cancellationToken)).Stream;
+            var part = new GZipFilePart(ReaderOptions.ArchiveEncoding);
+            await part.Initialize(stream, cancellationToken);
+            yield return new GZipArchiveEntry(this, part);
         }
 
-        protected override IReader CreateReaderForSolidExtraction()
+        protected override async ValueTask<IReader> CreateReaderForSolidExtraction()
         {
-            var stream = Volumes.Single().Stream;
+            var stream = (await Volumes.SingleAsync()).Stream;
             stream.Position = 0;
             return GZipReader.Open(stream);
         }

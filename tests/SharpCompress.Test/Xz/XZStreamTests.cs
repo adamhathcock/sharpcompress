@@ -1,5 +1,6 @@
 ﻿using SharpCompress.Compressors.Xz;
 using System.IO;
+using System.Threading.Tasks;
 using Xunit;
 
 namespace SharpCompress.Test.Xz
@@ -7,34 +8,34 @@ namespace SharpCompress.Test.Xz
     public class XZStreamTests : XZTestsBase
     {
         [Fact]
-        public void CanReadEmptyStream()
+        public async ValueTask CanReadEmptyStream()
         {
             XZStream xz = new XZStream(CompressedEmptyStream);
             using (var sr = new StreamReader(xz))
             {
-                string uncompressed = sr.ReadToEnd();
+                string uncompressed = await sr.ReadToEndAsync();
                 Assert.Equal(OriginalEmpty, uncompressed);
             }
         }
 
         [Fact]
-        public void CanReadStream()
+        public async ValueTask CanReadStream()
         {
             XZStream xz = new XZStream(CompressedStream);
             using (var sr = new StreamReader(xz))
             {
-                string uncompressed = sr.ReadToEnd();
+                string uncompressed = await sr.ReadToEndAsync();
                 Assert.Equal(Original, uncompressed);
             }
         }
 
         [Fact]
-        public void CanReadIndexedStream()
+        public async ValueTask CanReadIndexedStream()
         {
             XZStream xz = new XZStream(CompressedIndexedStream);
             using (var sr = new StreamReader(xz))
             {
-                string uncompressed = sr.ReadToEnd();
+                string uncompressed = await sr.ReadToEndAsync();
                 Assert.Equal(OriginalIndexed, uncompressed);
             }
         }

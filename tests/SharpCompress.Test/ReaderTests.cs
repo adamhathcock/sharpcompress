@@ -1,4 +1,5 @@
 ﻿using System.IO;
+using System.Threading.Tasks;
 using SharpCompress.Common;
 using SharpCompress.IO;
 using SharpCompress.Readers;
@@ -9,31 +10,31 @@ namespace SharpCompress.Test
 {
     public abstract class ReaderTests : TestBase
     {
-        protected void Read(string testArchive, CompressionType expectedCompression, ReaderOptions options = null)
+        protected async ValueTask ReadAsync(string testArchive, CompressionType expectedCompression, ReaderOptions options = null)
         {
             testArchive = Path.Combine(TEST_ARCHIVES_PATH, testArchive);
 
-            options = options ?? new ReaderOptions();
+            options ??= new ReaderOptions();
 
             options.LeaveStreamOpen = true;
-            ReadImpl(testArchive, expectedCompression, options);
+            await ReadImplAsync(testArchive, expectedCompression, options);
 
             options.LeaveStreamOpen = false;
-            ReadImpl(testArchive, expectedCompression, options);
+            await ReadImplAsync(testArchive, expectedCompression, options);
             VerifyFiles();
         }
 
-        private void ReadImpl(string testArchive, CompressionType expectedCompression, ReaderOptions options)
+        private async ValueTask ReadImplAsync(string testArchive, CompressionType expectedCompression, ReaderOptions options)
         {
-            using (var file = File.OpenRead(testArchive))
+            await using (var file = File.OpenRead(testArchive))
             {
-                using (var protectedStream = new NonDisposingStream(new ForwardOnlyStream(file), throwOnDispose: true))
+                await using (var protectedStream = new NonDisposingStream(new ForwardOnlyStream(file), throwOnDispose: true))
                 {
-                    using (var testStream = new TestStream(protectedStream))
+                    await using (var testStream = new TestStream(protectedStream))
                     {
-                        using (var reader = ReaderFactory.Open(testStream, options))
+                        await using (var reader = await ReaderFactory.OpenAsync(testStream, options))
                         {
-                            UseReader(reader, expectedCompression);
+                            await ReadAsync(reader, expectedCompression);
                             protectedStream.ThrowOnDispose = false;
                             Assert.False(testStream.IsDisposed, "{nameof(testStream)} prematurely closed");
                         }
@@ -47,14 +48,14 @@ namespace SharpCompress.Test
             }
         }
 
-        public void UseReader(IReader reader, CompressionType expectedCompression)
+        public async ValueTask ReadAsync(IReader reader, CompressionType expectedCompression)
         {
-            while (reader.MoveToNextEntry())
+            while (await reader.MoveToNextEntryAsync())
             {
                 if (!reader.Entry.IsDirectory)
                 {
                     Assert.Equal(expectedCompression, reader.Entry.CompressionType);
-                    reader.WriteEntryToDirectory(SCRATCH_FILES_PATH, new ExtractionOptions()
+                    await reader.WriteEntryToDirectoryAsync(SCRATCH_FILES_PATH, new ExtractionOptions()
                     {
                         ExtractFullPath = true,
                         Overwrite = true

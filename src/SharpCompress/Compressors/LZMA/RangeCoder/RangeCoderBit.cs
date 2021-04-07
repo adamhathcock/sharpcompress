@@ -1,4 +1,7 @@
 using System;
+using System.Buffers;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace SharpCompress.Compressors.LZMA.RangeCoder
 {
@@ -29,7 +32,7 @@ namespace SharpCompress.Compressors.LZMA.RangeCoder
             }
         }
 
-        public void Encode(Encoder encoder, uint symbol)
+        public async ValueTask EncodeAsync(Encoder encoder, uint symbol)
         {
             // encoder.EncodeBit(Prob, kNumBitModelTotalBits, symbol);
             // UpdateModel(symbol);
@@ -48,7 +51,7 @@ namespace SharpCompress.Compressors.LZMA.RangeCoder
             if (encoder._range < Encoder.K_TOP_VALUE)
             {
                 encoder._range <<= 8;
-                encoder.ShiftLow();
+                await encoder.ShiftLowAsync();
             }
         }
 
@@ -110,7 +113,7 @@ namespace SharpCompress.Compressors.LZMA.RangeCoder
             _prob = K_BIT_MODEL_TOTAL >> 1;
         }
 
-        public uint Decode(Decoder rangeDecoder)
+        public async ValueTask<uint> DecodeAsync(Decoder rangeDecoder, CancellationToken cancellationToken)
         {
             uint newBound = (rangeDecoder._range >> K_NUM_BIT_MODEL_TOTAL_BITS) * _prob;
             if (rangeDecoder._code < newBound)
@@ -119,7 +122,7 @@ namespace SharpCompress.Compressors.LZMA.RangeCoder
                 _prob += (K_BIT_MODEL_TOTAL - _prob) >> K_NUM_MOVE_BITS;
                 if (rangeDecoder._range < Decoder.K_TOP_VALUE)
                 {
-                    rangeDecoder._code = (rangeDecoder._code << 8) | (byte)rangeDecoder._stream.ReadByte();
+                    rangeDecoder._code = (rangeDecoder._code << 8) | await rangeDecoder._stream.ReadByteAsync(cancellationToken);
                     rangeDecoder._range <<= 8;
                     rangeDecoder._total++;
                 }
@@ -130,7 +133,7 @@ namespace SharpCompress.Compressors.LZMA.RangeCoder
             _prob -= (_prob) >> K_NUM_MOVE_BITS;
             if (rangeDecoder._range < Decoder.K_TOP_VALUE)
             {
-                rangeDecoder._code = (rangeDecoder._code << 8) | (byte)rangeDecoder._stream.ReadByte();
+                rangeDecoder._code = (rangeDecoder._code << 8) | await rangeDecoder._stream.ReadByteAsync(cancellationToken);
                 rangeDecoder._range <<= 8;
                 rangeDecoder._total++;
             }

@@ -11,19 +11,19 @@ namespace SharpCompress.Compressors.Xz
 
         private static UInt32[] defaultTable;
 
-        public static UInt32 Compute(byte[] buffer)
+        public static UInt32 Compute(ReadOnlyMemory<byte> buffer)
         {
             return Compute(DefaultSeed, buffer);
         }
 
-        public static UInt32 Compute(UInt32 seed, byte[] buffer)
+        public static UInt32 Compute(UInt32 seed, ReadOnlyMemory<byte> buffer)
         {
             return Compute(DefaultPolynomial, seed, buffer);
         }
 
-        public static UInt32 Compute(UInt32 polynomial, UInt32 seed, byte[] buffer)
+        public static UInt32 Compute(UInt32 polynomial, UInt32 seed, ReadOnlyMemory<byte> buffer)
         {
-            return ~CalculateHash(InitializeTable(polynomial), seed, buffer);
+            return ~CalculateHash(InitializeTable(polynomial), seed, buffer.Span);
         }
 
         private static UInt32[] InitializeTable(UInt32 polynomial)

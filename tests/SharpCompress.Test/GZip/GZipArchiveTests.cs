@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using SharpCompress.Archives;
 using SharpCompress.Archives.GZip;
 using Xunit;
@@ -15,13 +16,13 @@ namespace SharpCompress.Test.GZip
         }
 
         [Fact]
-        public void GZip_Archive_Generic()
+        public async ValueTask GZip_Archive_Generic()
         {
-            using (Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.gz")))
-            using (var archive = ArchiveFactory.Open(stream))
+            await using (Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.gz")))
+            await using (var archive = await ArchiveFactory.OpenAsync(stream))
             {
-                var entry = archive.Entries.First();
-                entry.WriteToFile(Path.Combine(SCRATCH_FILES_PATH, entry.Key));
+                var entry = await archive.Entries.FirstAsync();
+                await entry.WriteToFileAsync(Path.Combine(SCRATCH_FILES_PATH, entry.Key));
 
                 long size = entry.Size;
                 var scratch = new FileInfo(Path.Combine(SCRATCH_FILES_PATH, "Tar.tar"));
@@ -30,18 +31,18 @@ namespace SharpCompress.Test.GZip
                 Assert.Equal(size, scratch.Length);
                 Assert.Equal(size, test.Length);
             }
-            CompareArchivesByPath(Path.Combine(SCRATCH_FILES_PATH, "Tar.tar"),
-                Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar"));
+            await CompareArchivesByPathAsync(Path.Combine(SCRATCH_FILES_PATH, "Tar.tar"),
+                                       Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar"));
         }
 
         [Fact]
-        public void GZip_Archive()
+        public async ValueTask GZip_Archive()
         {
-            using (Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.gz")))
-            using (var archive = GZipArchive.Open(stream))
+            await using (Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.gz")))
+            await using (var archive = GZipArchive.Open(stream))
             {
-                var entry = archive.Entries.First();
-                entry.WriteToFile(Path.Combine(SCRATCH_FILES_PATH, entry.Key));
+                var entry = await archive.Entries.FirstAsync();
+                await entry.WriteToFileAsync(Path.Combine(SCRATCH_FILES_PATH, entry.Key));
 
                 long size = entry.Size;
                 var scratch = new FileInfo(Path.Combine(SCRATCH_FILES_PATH, "Tar.tar"));
@@ -50,59 +51,59 @@ namespace SharpCompress.Test.GZip
                 Assert.Equal(size, scratch.Length);
                 Assert.Equal(size, test.Length);
             }
-            CompareArchivesByPath(Path.Combine(SCRATCH_FILES_PATH, "Tar.tar"),
-                Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar"));
+            await CompareArchivesByPathAsync(Path.Combine(SCRATCH_FILES_PATH, "Tar.tar"),
+                                       Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar"));
         }
 
 
         [Fact]
-        public void GZip_Archive_NoAdd()
+        public async Task GZip_Archive_NoAdd()
         {
             string jpg = Path.Combine(ORIGINAL_FILES_PATH, "jpg", "test.jpg");
-            using (Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.gz")))
-            using (var archive = GZipArchive.Open(stream))
+            await using (Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.gz")))
+            await using (var archive = GZipArchive.Open(stream))
             {
-                Assert.Throws<InvalidOperationException>(() => archive.AddEntry("jpg\\test.jpg", jpg));
-                archive.SaveTo(Path.Combine(SCRATCH_FILES_PATH, "Tar.tar.gz"));
+                await Assert.ThrowsAsync<InvalidOperationException>(async () => await archive.AddEntryAsync("jpg\\test.jpg", jpg));
+                await archive.SaveToAsync(Path.Combine(SCRATCH_FILES_PATH, "Tar.tar.gz"));
             }
         }
 
 
         [Fact]
-        public void GZip_Archive_Multiple_Reads()
+        public async ValueTask GZip_Archive_Multiple_Reads()
         {
             var inputStream = new MemoryStream();
-            using (var fileStream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.gz")))
+            await using (var fileStream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.gz")))
             {
-                fileStream.CopyTo(inputStream);
+                await fileStream.CopyToAsync(inputStream);
                 inputStream.Position = 0;
             }
-            using (var archive = GZipArchive.Open(inputStream))
+            await using (var archive = GZipArchive.Open(inputStream))
             {
-                var archiveEntry = archive.Entries.First();
+                var archiveEntry = await archive.Entries.FirstAsync();
 
                 MemoryStream tarStream;
-                using (var entryStream = archiveEntry.OpenEntryStream())
+                await using (var entryStream = await archiveEntry.OpenEntryStreamAsync())
                 {
                     tarStream = new MemoryStream();
-                    entryStream.CopyTo(tarStream);
+                    await entryStream.CopyToAsync(tarStream);
                 }
                 var size = tarStream.Length;
-                using (var entryStream = archiveEntry.OpenEntryStream())
+                await using (var entryStream = await archiveEntry.OpenEntryStreamAsync())
                 {
                     tarStream = new MemoryStream();
-                    entryStream.CopyTo(tarStream);
+                    await entryStream.CopyToAsync(tarStream);
                 }
                 Assert.Equal(size, tarStream.Length);
-                using (var entryStream = archiveEntry.OpenEntryStream())
+                /*using (var entryStream = archiveEntry.OpenEntryStream())
                 {
                     var result = Archives.Tar.TarArchive.IsTarFile(entryStream);
                 }
-                Assert.Equal(size, tarStream.Length);
-                using (var entryStream = archiveEntry.OpenEntryStream())
+                Assert.Equal(size, tarStream.Length);           */
+                await using (var entryStream = await archiveEntry.OpenEntryStreamAsync())
                 {
                     tarStream = new MemoryStream();
-                    entryStream.CopyTo(tarStream);
+                    await entryStream.CopyToAsync(tarStream);
                 }
                 Assert.Equal(size, tarStream.Length);
             }

@@ -1,5 +1,7 @@
 ﻿using System;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace SharpCompress.IO
 {
@@ -25,16 +27,11 @@ namespace SharpCompress.IO
 
         public override bool CanWrite => false;
 
-        public override void Flush()
-        {
-            throw new NotSupportedException();
-        }
-
         public override long Length => BytesLeftToRead;
 
         public override long Position { get => throw new NotSupportedException(); set => throw new NotSupportedException(); }
 
-        public override int Read(byte[] buffer, int offset, int count)
+        public override async Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
         {
             if (count > BytesLeftToRead)
             {
@@ -47,7 +44,7 @@ namespace SharpCompress.IO
                 {
                     cacheOffset = 0;
                     Stream.Position = position;
-                    cacheLength = Stream.Read(cache, 0, cache.Length);
+                    cacheLength = await Stream.ReadAsync(cache, 0, cache.Length, cancellationToken);
                     position += cacheLength;
                 }
 
@@ -71,11 +68,6 @@ namespace SharpCompress.IO
         }
 
         public override void SetLength(long value)
-        {
-            throw new NotSupportedException();
-        }
-
-        public override void Write(byte[] buffer, int offset, int count)
         {
             throw new NotSupportedException();
         }

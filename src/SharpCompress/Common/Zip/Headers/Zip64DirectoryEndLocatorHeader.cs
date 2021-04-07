@@ -1,4 +1,6 @@
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace SharpCompress.Common.Zip.Headers
 {
@@ -9,11 +11,11 @@ namespace SharpCompress.Common.Zip.Headers
         {
         }
 
-        internal override void Read(BinaryReader reader)
+        internal override async ValueTask Read(Stream stream, CancellationToken cancellationToken)
         {
-            FirstVolumeWithDirectory = reader.ReadUInt32();
-            RelativeOffsetOfTheEndOfDirectoryRecord = (long)reader.ReadUInt64();
-            TotalNumberOfVolumes = reader.ReadUInt32();
+            FirstVolumeWithDirectory = await stream.ReadUInt32(cancellationToken);
+            RelativeOffsetOfTheEndOfDirectoryRecord = (long)await stream.ReadUInt64(cancellationToken);
+            TotalNumberOfVolumes = await stream.ReadUInt32(cancellationToken);
         }
 
         public uint FirstVolumeWithDirectory { get; private set; }

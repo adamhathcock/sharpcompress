@@ -1,5 +1,7 @@
 ﻿using System.IO;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace SharpCompress.Common.Zip.Headers
 {
@@ -10,28 +12,28 @@ namespace SharpCompress.Common.Zip.Headers
         {
         }
 
-        internal override void Read(BinaryReader reader)
+        internal override async ValueTask Read(Stream stream, CancellationToken cancellationToken)
         {
-            Version = reader.ReadUInt16();
-            VersionNeededToExtract = reader.ReadUInt16();
-            Flags = (HeaderFlags)reader.ReadUInt16();
-            CompressionMethod = (ZipCompressionMethod)reader.ReadUInt16();
-            LastModifiedTime = reader.ReadUInt16();
-            LastModifiedDate = reader.ReadUInt16();
-            Crc = reader.ReadUInt32();
-            CompressedSize = reader.ReadUInt32();
-            UncompressedSize = reader.ReadUInt32();
-            ushort nameLength = reader.ReadUInt16();
-            ushort extraLength = reader.ReadUInt16();
-            ushort commentLength = reader.ReadUInt16();
-            DiskNumberStart = reader.ReadUInt16();
-            InternalFileAttributes = reader.ReadUInt16();
-            ExternalFileAttributes = reader.ReadUInt32();
-            RelativeOffsetOfEntryHeader = reader.ReadUInt32();
+            Version = await stream.ReadUInt16(cancellationToken);
+            VersionNeededToExtract = await stream.ReadUInt16(cancellationToken);
+            Flags = (HeaderFlags)await stream.ReadUInt16(cancellationToken);
+            CompressionMethod = (ZipCompressionMethod)await stream.ReadUInt16(cancellationToken);
+            LastModifiedTime = await stream.ReadUInt16(cancellationToken);
+            LastModifiedDate = await stream.ReadUInt16(cancellationToken);
+            Crc = await stream.ReadUInt32(cancellationToken);
+            CompressedSize = await stream.ReadUInt32(cancellationToken);
+            UncompressedSize = await stream.ReadUInt32(cancellationToken);
+            ushort nameLength = await stream.ReadUInt16(cancellationToken);
+            ushort extraLength = await stream.ReadUInt16(cancellationToken);
+            ushort commentLength = await stream.ReadUInt16(cancellationToken);
+            DiskNumberStart = await stream.ReadUInt16(cancellationToken);
+            InternalFileAttributes = await stream.ReadUInt16(cancellationToken);
+            ExternalFileAttributes = await stream.ReadUInt32(cancellationToken);
+            RelativeOffsetOfEntryHeader = await stream.ReadUInt32(cancellationToken);
 
-            byte[] name = reader.ReadBytes(nameLength);
-            byte[] extra = reader.ReadBytes(extraLength);
-            byte[] comment = reader.ReadBytes(commentLength);
+            byte[] name = await stream.ReadBytes(nameLength, cancellationToken);
+            byte[] extra = await stream.ReadBytes(extraLength, cancellationToken);
+            byte[] comment = await stream.ReadBytes(commentLength, cancellationToken);
 
             // According to .ZIP File Format Specification
             //

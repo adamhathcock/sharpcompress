@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using SharpCompress.Readers;
 using Xunit;
 
@@ -10,6 +11,11 @@ namespace SharpCompress.Test
 {
     public class TestBase : IDisposable
     {
+        static TestBase()
+        {
+            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+        }
+        
         private string SOLUTION_BASE_PATH;
         protected string TEST_ARCHIVES_PATH;
         protected string ORIGINAL_FILES_PATH;
@@ -76,7 +82,7 @@ namespace SharpCompress.Test
                 Directory.EnumerateFiles(ORIGINAL_FILES_PATH, "*.*", SearchOption.AllDirectories)
                 .ToLookup(path => path.Substring(ORIGINAL_FILES_PATH.Length));
 
-            Assert.Equal(extracted.Count, original.Count);
+            Assert.Equal(original.Count, extracted.Count);
 
             foreach (var orig in original)
             {
@@ -188,7 +194,7 @@ namespace SharpCompress.Test
             Assert.Equal(fi1.Attributes, fi2.Attributes);
         }
 
-        protected void CompareArchivesByPath(string file1, string file2, Encoding encoding = null)
+        protected async ValueTask CompareArchivesByPathAsync(string file1, string file2, Encoding encoding = null)
         {
             ReaderOptions readerOptions = new ReaderOptions { LeaveStreamOpen = false };
             readerOptions.ArchiveEncoding.Default = encoding ?? Encoding.Default;
@@ -196,16 +202,16 @@ namespace SharpCompress.Test
             //don't compare the order.  OS X reads files from the file system in a different order therefore makes the archive ordering different
             var archive1Entries = new List<string>();
             var archive2Entries = new List<string>();
-            using (var archive1 = ReaderFactory.Open(File.OpenRead(file1), readerOptions))
-            using (var archive2 = ReaderFactory.Open(File.OpenRead(file2), readerOptions))
+            await using (var archive1 = await ReaderFactory.OpenAsync(File.OpenRead(file1), readerOptions))
+            await using (var archive2 = await ReaderFactory.OpenAsync(File.OpenRead(file2), readerOptions))
             {
-                while (archive1.MoveToNextEntry())
+                while (await archive1.MoveToNextEntryAsync())
                 {
-                    Assert.True(archive2.MoveToNextEntry());
+                    Assert.True(await archive2.MoveToNextEntryAsync());
                     archive1Entries.Add(archive1.Entry.Key);
                     archive2Entries.Add(archive2.Entry.Key);
                 }
-                Assert.False(archive2.MoveToNextEntry());
+                Assert.False(await archive2.MoveToNextEntryAsync());
             }
             archive1Entries.Sort();
             archive2Entries.Sort();

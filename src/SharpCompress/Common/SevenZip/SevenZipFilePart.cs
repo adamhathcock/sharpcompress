@@ -1,6 +1,8 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using SharpCompress.IO;
 
 namespace SharpCompress.Common.SevenZip
@@ -35,11 +37,11 @@ namespace SharpCompress.Common.SevenZip
             return null;
         }
 
-        internal override Stream GetCompressedStream()
+        internal override async ValueTask<Stream> GetCompressedStreamAsync(CancellationToken cancellationToken)
         {
             if (!Header.HasStream)
             {
-                return null!;
+                return Stream.Null;
             }
             var folderStream = _database.GetFolderStream(_stream, Folder!, _database.PasswordProvider);
 
@@ -52,7 +54,7 @@ namespace SharpCompress.Common.SevenZip
             }
             if (skipSize > 0)
             {
-                folderStream.Skip(skipSize);
+                await folderStream.SkipAsync(skipSize, cancellationToken);
             }
             return new ReadOnlySubStream(folderStream, Header.Size);
         }

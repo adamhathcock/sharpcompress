@@ -1,18 +1,108 @@
 using System;
 using System.Buffers;
+using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.IO;
+using System.Runtime.InteropServices;
+using System.Threading;
+using System.Threading.Tasks;
 using SharpCompress.Readers;
 
 namespace SharpCompress
 {
     internal static class Utility
     {
-        public static ReadOnlyCollection<T> ToReadOnly<T>(this ICollection<T> items)
+        public static async ValueTask ForEachAsync<T>(this IEnumerable<T> collection, Func<T, Task> action)
         {
-            return new ReadOnlyCollection<T>(items);
+            foreach (T item in collection)
+            {
+                await action(item);
+            }
+        }
+        
+        private static async ValueTask WritePrimitive<T>(this Stream stream, Action<Memory<byte>> func, CancellationToken cancellationToken)
+            where T : struct
+        {
+            var bytes = Marshal.SizeOf<T>(); 
+            using var buffer = MemoryPool<byte>.Shared.Rent(bytes);
+            var memory = buffer.Memory.Slice(0, bytes);
+            func(memory);
+            await stream.WriteAsync(memory, cancellationToken);
+        }
+        
+        public static ValueTask WriteByteAsync(this Stream stream, byte val, CancellationToken cancellationToken = default)
+        {
+            return stream.WritePrimitive<byte>( x => x.Span[0] = val, cancellationToken);
+        }
+        
+        public static async ValueTask WriteBytes(this Stream stream, params byte[] val)
+        { 
+            using var buffer = MemoryPool<byte>.Shared.Rent(val.Length);
+            var memory = buffer.Memory.Slice(0, val.Length);
+            val.CopyTo(memory);
+            await stream.WriteAsync(memory);
+        }
+        
+        public static ValueTask WriteUInt16(this Stream stream, ushort val, CancellationToken cancellationToken =default)
+        {
+            return stream.WritePrimitive<ushort>( x => BinaryPrimitives.WriteUInt16LittleEndian(x.Span, val), cancellationToken);
+        }
+        public static ValueTask WriteUInt32(this Stream stream, uint val, CancellationToken cancellationToken= default)
+        {
+            return stream.WritePrimitive<uint>( x => BinaryPrimitives.WriteUInt32LittleEndian(x.Span, val), cancellationToken);
+        }
+        public static ValueTask WriteUInt64(this Stream stream, ulong val, CancellationToken cancellationToken= default)
+        {
+            return stream.WritePrimitive<ulong>( x => BinaryPrimitives.WriteUInt64LittleEndian(x.Span, val), cancellationToken);
+        }
+        
+        private static async ValueTask<T?> ReadPrimitive<T>(this Stream stream, Func<ReadOnlyMemory<byte>, T> func, CancellationToken cancellationToken)
+            where T : struct
+        {
+            var bytes = Marshal.SizeOf<T>();
+            using var buffer = MemoryPool<byte>.Shared.Rent(bytes);
+            var memory = buffer.Memory.Slice(0, bytes);
+            var n = await stream.ReadAsync(memory, cancellationToken);
+            if (n != memory.Length)
+            {
+                return null;
+            }
+            return func(memory);
+        }
+        
+        public static async ValueTask<byte> ReadByteAsync(this Stream stream, CancellationToken cancellationToken = default)
+        {
+            return await stream.ReadPrimitive(x => x.Span[0], cancellationToken) ?? default;
+        }
+        public static async ValueTask<ushort> ReadUInt16(this Stream stream, CancellationToken cancellationToken)
+        {
+            return await stream.ReadPrimitive( x => BinaryPrimitives.ReadUInt16LittleEndian(x.Span), cancellationToken)?? default;
+        }
+        public static async ValueTask<uint> ReadUInt32(this Stream stream, CancellationToken cancellationToken)
+        {
+            return await stream.ReadPrimitive( x => BinaryPrimitives.ReadUInt32LittleEndian(x.Span), cancellationToken)?? default;
+        }
+        public static ValueTask<uint?> ReadUInt32OrNull(this Stream stream, CancellationToken cancellationToken)
+        {
+            return stream.ReadPrimitive(x => BinaryPrimitives.ReadUInt32LittleEndian(x.Span), cancellationToken);
+        }
+        public static async ValueTask<int> ReadInt32(this Stream stream, CancellationToken cancellationToken)
+        {
+            return await stream.ReadPrimitive( x => BinaryPrimitives.ReadInt32LittleEndian(x.Span), cancellationToken)?? default;
+        }
+        
+        public static async ValueTask<ulong> ReadUInt64(this Stream stream, CancellationToken cancellationToken)
+        {
+            return await stream.ReadPrimitive( x => BinaryPrimitives.ReadUInt64LittleEndian(x.Span), cancellationToken)?? default;
         }
 
+        public static async ValueTask<byte[]> ReadBytes(this Stream stream, int bytes, CancellationToken cancellationToken)
+        {
+            using var buffer = MemoryPool<byte>.Shared.Rent(bytes);
+            await stream.ReadAsync(buffer.Memory.Slice(0, bytes), cancellationToken);
+            return buffer.Memory.Slice(0, bytes).ToArray();
+        }
+        
         /// <summary>
         /// Performs an unsigned bitwise right shift with the specified number
         /// </summary>
@@ -92,13 +182,21 @@ namespace SharpCompress
         {
             yield return item;
         }
+        public static async IAsyncEnumerable<T> AsAsyncEnumerable<T>(this T item)
+        {
+            await Task.CompletedTask;
+            yield return item;
+        }
 
-        public static void CheckNotNull(this object obj, string name)
+        public static T CheckNotNull<T>(this T? obj, string name)
+            where T : class
         {
             if (obj is null)
             {
                 throw new ArgumentNullException(name);
             }
+
+            return obj;
         }
 
         public static void CheckNotNullOrEmpty(this string obj, string name)
@@ -108,6 +206,36 @@ namespace SharpCompress
             {
                 throw new ArgumentException("String is empty.", name);
             }
+        }
+        
+        public static async ValueTask SkipAsync(this Stream source, long advanceAmount, CancellationToken cancellationToken = default)
+        {
+            if (source.CanSeek)
+            {
+                source.Position += advanceAmount;
+                return;
+            }
+
+            using var buffer = MemoryPool<byte>.Shared.Rent(81920);
+            do
+            {
+                var readCount = 81920;
+                if (readCount > advanceAmount)
+                {
+                    readCount = (int)advanceAmount;
+                }
+                int read = await source.ReadAsync(buffer.Memory.Slice(0, readCount), cancellationToken);
+                if (read <= 0)
+                {
+                    break;
+                }
+                advanceAmount -= read;
+                if (advanceAmount == 0)
+                {
+                    break;
+                }
+            }
+            while (true);
         }
 
         public static void Skip(this Stream source, long advanceAmount)
@@ -163,6 +291,15 @@ namespace SharpCompress
             {
                 ArrayPool<byte>.Shared.Return(buffer);
             }
+        }
+        
+        public static async ValueTask SkipAsync(this Stream source, CancellationToken cancellationToken)
+        {
+            using var buffer = MemoryPool<byte>.Shared.Rent(81920);
+            do
+            {
+            }
+            while (await source.ReadAsync(buffer.Memory.Slice(0, 81920), cancellationToken) > 0);
         }
 
         public static DateTime DosDateToDateTime(UInt16 iDate, UInt16 iTime)
@@ -229,6 +366,24 @@ namespace SharpCompress
             DateTime sTime = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
             return sTime.AddSeconds(unixtime);
         }
+        
+        public static async Task<long> TransferToAsync(this Stream source, Stream destination, CancellationToken cancellationToken)
+        {
+            using var buffer = MemoryPool<byte>.Shared.Rent(81920);
+            long total = 0;
+            while (true)
+            {
+                int bytesRead = await source.ReadAsync(buffer.Memory.Slice(0, 81920), cancellationToken);
+                if (bytesRead == 0)
+                {
+                    break;
+                }
+
+                total += bytesRead;
+                await destination.WriteAsync(buffer.Memory.Slice(0, bytesRead), cancellationToken);
+            }
+            return total;
+        }
 
         public static long TransferTo(this Stream source, Stream destination)
         {
@@ -236,7 +391,8 @@ namespace SharpCompress
             try
             {
                 long total = 0;
-                while (ReadTransferBlock(source, array, out int count))
+                var count = 0;
+                while ((count = source.Read(array, 0, array.Length)) != 0)
                 {
                     total += count;
                     destination.Write(array, 0, count);
@@ -249,31 +405,21 @@ namespace SharpCompress
             }
         }
 
-        public static long TransferTo(this Stream source, Stream destination, Common.Entry entry, IReaderExtractionListener readerExtractionListener)
+        public static async ValueTask<long> TransferToAsync(this Stream source, Stream destination, Common.Entry entry, IReaderExtractionListener readerExtractionListener, CancellationToken cancellationToken)
         {
-            byte[] array = GetTransferByteArray();
-            try
+            using var buffer = MemoryPool<byte>.Shared.Rent(81920);
+            var iterations = 0;
+            long total = 0;
+            var count = 0;
+            var slice = buffer.Memory.Slice(0, 81920);
+            while ((count = await source.ReadAsync(slice, cancellationToken)) != 0)
             {
-                var iterations = 0;
-                long total = 0;
-                while (ReadTransferBlock(source, array, out int count))
-                {
-                    total += count;
-                    destination.Write(array, 0, count);
-                    iterations++;
-                    readerExtractionListener.FireEntryExtractionProgress(entry, total, iterations);
-                }
-                return total;
+                total += count;
+                await destination.WriteAsync(slice.Slice(0, count), cancellationToken);
+                iterations++;
+                readerExtractionListener.FireEntryExtractionProgress(entry, total, iterations);
             }
-            finally
-            {
-                ArrayPool<byte>.Shared.Return(array);
-            }
-        }
-
-        private static bool ReadTransferBlock(Stream source, byte[] array, out int count)
-        {
-            return (count = source.Read(array, 0, array.Length)) != 0;
+            return total;
         }
 
         private static byte[] GetTransferByteArray()

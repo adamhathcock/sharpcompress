@@ -1,4 +1,6 @@
 ﻿using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 using SharpCompress.IO;
 using Xunit;
 
@@ -7,7 +9,7 @@ namespace SharpCompress.Test.Streams
     public class RewindableStreamTest
     {
         [Fact]
-        public void TestRewind()
+        public async Task TestRewind()
         {
             MemoryStream ms = new MemoryStream();
             BinaryWriter bw = new BinaryWriter(ms);
@@ -22,30 +24,29 @@ namespace SharpCompress.Test.Streams
             ms.Position = 0;
             RewindableStream stream = new RewindableStream(ms);
             stream.StartRecording();
-            BinaryReader br = new BinaryReader(stream);
-            Assert.Equal(1, br.ReadInt32());
-            Assert.Equal(2, br.ReadInt32());
-            Assert.Equal(3, br.ReadInt32());
-            Assert.Equal(4, br.ReadInt32());
+            Assert.Equal(1, await stream.ReadInt32(CancellationToken.None));
+            Assert.Equal(2, await stream.ReadInt32(CancellationToken.None));
+            Assert.Equal(3, await stream.ReadInt32(CancellationToken.None));
+            Assert.Equal(4, await stream.ReadInt32(CancellationToken.None));
             stream.Rewind(true);
             stream.StartRecording();
-            Assert.Equal(1, br.ReadInt32());
-            Assert.Equal(2, br.ReadInt32());
-            Assert.Equal(3, br.ReadInt32());
-            Assert.Equal(4, br.ReadInt32());
-            Assert.Equal(5, br.ReadInt32());
-            Assert.Equal(6, br.ReadInt32());
-            Assert.Equal(7, br.ReadInt32());
+            Assert.Equal(1, await stream.ReadInt32(CancellationToken.None));
+            Assert.Equal(2, await stream.ReadInt32(CancellationToken.None));
+            Assert.Equal(3, await stream.ReadInt32(CancellationToken.None));
+            Assert.Equal(4, await stream.ReadInt32(CancellationToken.None));
+            Assert.Equal(5, await stream.ReadInt32(CancellationToken.None));
+            Assert.Equal(6, await stream.ReadInt32(CancellationToken.None));
+            Assert.Equal(7, await stream.ReadInt32(CancellationToken.None));
             stream.Rewind(true);
             stream.StartRecording();
-            Assert.Equal(1, br.ReadInt32());
-            Assert.Equal(2, br.ReadInt32());
-            Assert.Equal(3, br.ReadInt32());
-            Assert.Equal(4, br.ReadInt32());
+            Assert.Equal(1, await stream.ReadInt32(CancellationToken.None));
+            Assert.Equal(2, await stream.ReadInt32(CancellationToken.None));
+            Assert.Equal(3, await stream.ReadInt32(CancellationToken.None));
+            Assert.Equal(4, await stream.ReadInt32(CancellationToken.None));
         }
 
         [Fact]
-        public void TestIncompleteRewind()
+        public async Task TestIncompleteRewind()
         {
             MemoryStream ms = new MemoryStream();
             BinaryWriter bw = new BinaryWriter(ms);
@@ -60,24 +61,23 @@ namespace SharpCompress.Test.Streams
             ms.Position = 0;
             RewindableStream stream = new RewindableStream(ms);
             stream.StartRecording();
-            BinaryReader br = new BinaryReader(stream);
-            Assert.Equal(1, br.ReadInt32());
-            Assert.Equal(2, br.ReadInt32());
-            Assert.Equal(3, br.ReadInt32());
-            Assert.Equal(4, br.ReadInt32());
+            Assert.Equal(1, await stream.ReadInt32(CancellationToken.None));
+            Assert.Equal(2, await stream.ReadInt32(CancellationToken.None));
+            Assert.Equal(3, await stream.ReadInt32(CancellationToken.None));
+            Assert.Equal(4, await stream.ReadInt32(CancellationToken.None));
             stream.Rewind(true);
-            Assert.Equal(1, br.ReadInt32());
-            Assert.Equal(2, br.ReadInt32());
+            Assert.Equal(1, await stream.ReadInt32(CancellationToken.None));
+            Assert.Equal(2, await stream.ReadInt32(CancellationToken.None));
             stream.StartRecording();
-            Assert.Equal(3, br.ReadInt32());
-            Assert.Equal(4, br.ReadInt32());
-            Assert.Equal(5, br.ReadInt32());
+            Assert.Equal(3, await stream.ReadInt32(CancellationToken.None));
+            Assert.Equal(4, await stream.ReadInt32(CancellationToken.None));
+            Assert.Equal(5, await stream.ReadInt32(CancellationToken.None));
             stream.Rewind(true);
-            Assert.Equal(3, br.ReadInt32());
-            Assert.Equal(4, br.ReadInt32());
-            Assert.Equal(5, br.ReadInt32());
-            Assert.Equal(6, br.ReadInt32());
-            Assert.Equal(7, br.ReadInt32());
+            Assert.Equal(3, await stream.ReadInt32(CancellationToken.None));
+            Assert.Equal(4, await stream.ReadInt32(CancellationToken.None));
+            Assert.Equal(5, await stream.ReadInt32(CancellationToken.None));
+            Assert.Equal(6, await stream.ReadInt32(CancellationToken.None));
+            Assert.Equal(7, await stream.ReadInt32(CancellationToken.None));
         }
     }
 }

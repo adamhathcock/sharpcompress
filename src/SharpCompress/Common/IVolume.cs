@@ -2,7 +2,7 @@
 
 namespace SharpCompress.Common
 {
-    public interface IVolume : IDisposable
+    public interface IVolume : IAsyncDisposable
     {
     }
 }

@@ -1,4 +1,6 @@
 using System;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace SharpCompress.Compressors.LZMA.RangeCoder
 {
@@ -21,25 +23,25 @@ namespace SharpCompress.Compressors.LZMA.RangeCoder
             }
         }
 
-        public void Encode(Encoder rangeEncoder, UInt32 symbol)
+        public async ValueTask EncodeAsync(Encoder rangeEncoder, UInt32 symbol)
         {
             UInt32 m = 1;
             for (int bitIndex = _numBitLevels; bitIndex > 0;)
             {
                 bitIndex--;
                 UInt32 bit = (symbol >> bitIndex) & 1;
-                _models[m].Encode(rangeEncoder, bit);
+                await _models[m].EncodeAsync(rangeEncoder, bit);
                 m = (m << 1) | bit;
             }
         }
 
-        public void ReverseEncode(Encoder rangeEncoder, UInt32 symbol)
+        public async ValueTask ReverseEncodeAsync(Encoder rangeEncoder, UInt32 symbol)
         {
             UInt32 m = 1;
             for (UInt32 i = 0; i < _numBitLevels; i++)
             {
                 UInt32 bit = symbol & 1;
-                _models[m].Encode(rangeEncoder, bit);
+                await _models[m].EncodeAsync(rangeEncoder, bit);
                 m = (m << 1) | bit;
                 symbol >>= 1;
             }
@@ -88,14 +90,14 @@ namespace SharpCompress.Compressors.LZMA.RangeCoder
             return price;
         }
 
-        public static void ReverseEncode(BitEncoder[] models, UInt32 startIndex,
+        public static async ValueTask ReverseEncodeAsync(BitEncoder[] models, UInt32 startIndex,
                                          Encoder rangeEncoder, int numBitLevels, UInt32 symbol)
         {
             UInt32 m = 1;
             for (int i = 0; i < numBitLevels; i++)
             {
                 UInt32 bit = symbol & 1;
-                models[startIndex + m].Encode(rangeEncoder, bit);
+                await models[startIndex + m].EncodeAsync(rangeEncoder, bit);
                 m = (m << 1) | bit;
                 symbol >>= 1;
             }
@@ -121,23 +123,23 @@ namespace SharpCompress.Compressors.LZMA.RangeCoder
             }
         }
 
-        public uint Decode(Decoder rangeDecoder)
+        public async ValueTask<uint> DecodeAsync(Decoder rangeDecoder, CancellationToken cancellationToken)
         {
             uint m = 1;
             for (int bitIndex = _numBitLevels; bitIndex > 0; bitIndex--)
             {
-                m = (m << 1) + _models[m].Decode(rangeDecoder);
+                m = (m << 1) + await _models[m].DecodeAsync(rangeDecoder, cancellationToken);
             }
             return m - ((uint)1 << _numBitLevels);
         }
 
-        public uint ReverseDecode(Decoder rangeDecoder)
+        public async ValueTask<uint> ReverseDecode(Decoder rangeDecoder, CancellationToken cancellationToken)
         {
             uint m = 1;
             uint symbol = 0;
             for (int bitIndex = 0; bitIndex < _numBitLevels; bitIndex++)
             {
-                uint bit = _models[m].Decode(rangeDecoder);
+                uint bit = await _models[m].DecodeAsync(rangeDecoder, cancellationToken);
                 m <<= 1;
                 m += bit;
                 symbol |= (bit << bitIndex);
@@ -145,14 +147,14 @@ namespace SharpCompress.Compressors.LZMA.RangeCoder
             return symbol;
         }
 
-        public static uint ReverseDecode(BitDecoder[] models, UInt32 startIndex,
-                                         Decoder rangeDecoder, int numBitLevels)
+        public static async ValueTask<uint> ReverseDecode(BitDecoder[] models, UInt32 startIndex,
+                                                          Decoder rangeDecoder, int numBitLevels, CancellationToken cancellationToken)
         {
             uint m = 1;
             uint symbol = 0;
             for (int bitIndex = 0; bitIndex < numBitLevels; bitIndex++)
             {
-                uint bit = models[startIndex + m].Decode(rangeDecoder);
+                uint bit = await models[startIndex + m].DecodeAsync(rangeDecoder, cancellationToken);
                 m <<= 1;
                 m += bit;
                 symbol |= (bit << bitIndex);

@@ -1,4 +1,6 @@
 ﻿using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 using SharpCompress.Common.Zip.Headers;
 using SharpCompress.IO;
 
@@ -17,22 +19,22 @@ namespace SharpCompress.Common.Zip
             _directoryEntryHeader = header;
         }
 
-        internal override Stream GetCompressedStream()
+        internal override async ValueTask<Stream> GetCompressedStreamAsync(CancellationToken cancellationToken)
         {
             if (!_isLocalHeaderLoaded)
             {
-                LoadLocalHeader();
+                await LoadLocalHeader(cancellationToken);
                 _isLocalHeaderLoaded = true;
             }
-            return base.GetCompressedStream();
+            return await base.GetCompressedStreamAsync(cancellationToken);
         }
 
         internal string? Comment => ((DirectoryEntryHeader)Header).Comment;
 
-        private void LoadLocalHeader()
+        private async ValueTask LoadLocalHeader(CancellationToken cancellationToken)
         {
             bool hasData = Header.HasData;
-            Header = _headerFactory.GetLocalHeader(BaseStream, ((DirectoryEntryHeader)Header));
+            Header = await _headerFactory.GetLocalHeader(BaseStream, (DirectoryEntryHeader)Header, cancellationToken);
             Header.HasData = hasData;
         }
 

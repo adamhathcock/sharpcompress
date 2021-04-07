@@ -1,9 +1,13 @@
 ﻿using System;
+using System.Buffers;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
+using SharpCompress.IO;
 
 namespace SharpCompress.Compressors.BZip2
 {
-    public sealed class BZip2Stream : Stream
+    public sealed class BZip2Stream : AsyncStream
     {
         private readonly Stream stream;
         private bool isDisposed;
@@ -33,17 +37,14 @@ namespace SharpCompress.Compressors.BZip2
             (stream as CBZip2OutputStream)?.Finish();
         }
 
-        protected override void Dispose(bool disposing)
+        public override async ValueTask DisposeAsync()
         {
             if (isDisposed)
             {
                 return;
             }
             isDisposed = true;
-            if (disposing)
-            {
-                stream.Dispose();
-            }
+            await stream.DisposeAsync();
         }
 
         public CompressionMode Mode { get; }
@@ -54,23 +55,18 @@ namespace SharpCompress.Compressors.BZip2
 
         public override bool CanWrite => stream.CanWrite;
 
-        public override void Flush()
+        public override Task FlushAsync(CancellationToken cancellationToken)
         {
-            stream.Flush();
+            return stream.FlushAsync(cancellationToken);
         }
 
         public override long Length => stream.Length;
 
         public override long Position { get => stream.Position; set => stream.Position = value; }
 
-        public override int Read(byte[] buffer, int offset, int count)
+        public override ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default)
         {
-            return stream.Read(buffer, offset, count);
-        }
-
-        public override int ReadByte()
-        {
-            return stream.ReadByte();
+            return stream.ReadAsync(buffer, cancellationToken);
         }
 
         public override long Seek(long offset, SeekOrigin origin)
@@ -83,28 +79,14 @@ namespace SharpCompress.Compressors.BZip2
             stream.SetLength(value);
         }
 
-#if !NET461 && !NETSTANDARD2_0
-
-        public override int Read(Span<byte> buffer)
+        public override Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
         {
-            return stream.Read(buffer);
+            return stream.WriteAsync(buffer, offset, count, cancellationToken);
         }
 
-        public override void Write(ReadOnlySpan<byte> buffer)
+        public override ValueTask WriteAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken = new CancellationToken())
         {
-            stream.Write(buffer);
-        }
-
-#endif
-
-        public override void Write(byte[] buffer, int offset, int count)
-        {
-            stream.Write(buffer, offset, count);
-        }
-
-        public override void WriteByte(byte value)
-        {
-            stream.WriteByte(value);
+            return stream.WriteAsync(buffer, cancellationToken);
         }
 
         /// <summary>
@@ -112,11 +94,12 @@ namespace SharpCompress.Compressors.BZip2
         /// </summary>
         /// <param name="stream"></param>
         /// <returns></returns>
-        public static bool IsBZip2(Stream stream)
+        public static async ValueTask<bool> IsBZip2Async(Stream stream, CancellationToken cancellationToken)
         {
-            BinaryReader br = new BinaryReader(stream);
-            byte[] chars = br.ReadBytes(2);
-            if (chars.Length < 2 || chars[0] != 'B' || chars[1] != 'Z')
+            using var rented = MemoryPool<byte>.Shared.Rent(2);
+            var chars = rented.Memory.Slice(0, 2);
+            await stream.ReadAsync(chars, cancellationToken);
+            if (chars.Length < 2 || chars.Span[0] != 'B' || chars.Span[1] != 'Z')
             {
                 return false;
             }

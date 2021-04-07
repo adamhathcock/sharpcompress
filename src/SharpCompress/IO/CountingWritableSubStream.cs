@@ -1,5 +1,7 @@
 using System;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace SharpCompress.IO
 {
@@ -17,19 +19,14 @@ namespace SharpCompress.IO
 
         public override bool CanWrite => true;
 
-        public override void Flush()
+        public override Task FlushAsync(CancellationToken cancellationToken)
         {
-            Stream.Flush();
+            return Stream.FlushAsync(cancellationToken);
         }
 
         public override long Length => throw new NotSupportedException();
 
         public override long Position { get => throw new NotSupportedException(); set => throw new NotSupportedException(); }
-
-        public override int Read(byte[] buffer, int offset, int count)
-        {
-            throw new NotSupportedException();
-        }
 
         public override long Seek(long offset, SeekOrigin origin)
         {
@@ -41,16 +38,16 @@ namespace SharpCompress.IO
             throw new NotSupportedException();
         }
 
-        public override void Write(byte[] buffer, int offset, int count)
+        public override async Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
         {
-            Stream.Write(buffer, offset, count);
+            await Stream.WriteAsync(buffer, offset, count, cancellationToken);
             Count += (uint)count;
         }
 
-        public override void WriteByte(byte value)
+        public override async ValueTask WriteAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken = default)
         {
-            Stream.WriteByte(value);
-            ++Count;
+            await Stream.WriteAsync(buffer, cancellationToken);
+            Count += (uint)buffer.Length;
         }
     }
 }

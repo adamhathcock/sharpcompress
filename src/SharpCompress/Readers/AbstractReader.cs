@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using SharpCompress.Common;
 
 namespace SharpCompress.Readers
@@ -14,7 +16,7 @@ namespace SharpCompress.Readers
         where TVolume : Volume
     {
         private bool completed;
-        private IEnumerator<TEntry>? entriesForCurrentReadStream;
+        private IAsyncEnumerator<TEntry>? entriesForCurrentReadStream;
         private bool wroteCurrentEntry;
 
         public event EventHandler<ReaderExtractionEventArgs<IEntry>>? EntryExtractionProgress;
@@ -40,14 +42,14 @@ namespace SharpCompress.Readers
         /// <summary>
         /// Current file entry 
         /// </summary>
-        public TEntry Entry => entriesForCurrentReadStream!.Current;
+        public TEntry? Entry => entriesForCurrentReadStream?.Current ?? default;
 
         #region IDisposable Members
 
-        public void Dispose()
+        public async ValueTask DisposeAsync()
         {
-            entriesForCurrentReadStream?.Dispose();
-            Volume?.Dispose();
+            await (entriesForCurrentReadStream?.DisposeAsync() ?? new ValueTask());
+            await Volume.DisposeAsync();
         }
 
         #endregion
@@ -67,7 +69,7 @@ namespace SharpCompress.Readers
             }
         }
 
-        public bool MoveToNextEntry()
+        public async ValueTask<bool> MoveToNextEntryAsync(CancellationToken cancellationToken = default)
         {
             if (completed)
             {
@@ -79,14 +81,21 @@ namespace SharpCompress.Readers
             }
             if (entriesForCurrentReadStream is null)
             {
-                return LoadStreamForReading(RequestInitialStream());
-            }
-            if (!wroteCurrentEntry)
+                var stream = await RequestInitialStream(cancellationToken);
+                if (stream is null || !stream.CanRead)
+                {
+                    throw new MultipartStreamRequiredException("File is split into multiple archives: '"
+                                                               + (Entry?.Key ?? "unknown") +
+                                                               "'. A new readable stream is required.  Use Cancel if it was intended.");
+                }
+                entriesForCurrentReadStream = GetEntries(stream, cancellationToken).GetAsyncEnumerator(cancellationToken);
+            } 
+            else if (!wroteCurrentEntry)
             {
-                SkipEntry();
+                await SkipEntry(cancellationToken);
             }
             wroteCurrentEntry = false;
-            if (NextEntryForCurrentStream())
+            if (await entriesForCurrentReadStream.MoveNextAsync())
             {
                 return true;
             }
@@ -94,43 +103,29 @@ namespace SharpCompress.Readers
             return false;
         }
 
-        protected bool LoadStreamForReading(Stream stream)
+        protected virtual ValueTask<Stream> RequestInitialStream(CancellationToken cancellationToken)
         {
-            entriesForCurrentReadStream?.Dispose();
-            if ((stream is null) || (!stream.CanRead))
-            {
-                throw new MultipartStreamRequiredException("File is split into multiple archives: '"
-                                                           + Entry.Key +
-                                                           "'. A new readable stream is required.  Use Cancel if it was intended.");
-            }
-            entriesForCurrentReadStream = GetEntries(stream).GetEnumerator();
-            return entriesForCurrentReadStream.MoveNext();
+            return new(Volume.Stream);
         }
 
-        protected virtual Stream RequestInitialStream()
-        {
-            return Volume.Stream;
-        }
-
-        internal virtual bool NextEntryForCurrentStream()
-        {
-            return entriesForCurrentReadStream!.MoveNext();
-        }
-
-        protected abstract IEnumerable<TEntry> GetEntries(Stream stream);
+        protected abstract IAsyncEnumerable<TEntry> GetEntries(Stream stream, CancellationToken cancellationToken);
 
         #region Entry Skip/Write
 
-        private void SkipEntry()
+        private async ValueTask SkipEntry(CancellationToken cancellationToken)
         {
-            if (!Entry.IsDirectory)
+            if (Entry?.IsDirectory != true)
             {
-                Skip();
+                await SkipAsync(cancellationToken);
             }
         }
 
-        private void Skip()
+        private async ValueTask SkipAsync(CancellationToken cancellationToken)
         {
+            if (Entry is null)
+            {
+                return;
+            }
             if (ArchiveType != ArchiveType.Rar
                 && !Entry.IsSolid
                 && Entry.CompressedSize > 0)
@@ -142,19 +137,17 @@ namespace SharpCompress.Readers
                 if (rawStream != null)
                 {
                     var bytesToAdvance = Entry.CompressedSize;
-                    rawStream.Skip(bytesToAdvance);
+                    await rawStream.SkipAsync(bytesToAdvance, cancellationToken: cancellationToken);
                     part.Skipped = true;
                     return;
                 }
             }
             //don't know the size so we have to try to decompress to skip
-            using (var s = OpenEntryStream())
-            {
-                s.Skip();
-            }
+            await using var s = await OpenEntryStreamAsync(cancellationToken);
+            await s.SkipAsync(cancellationToken);
         }
 
-        public void WriteEntryTo(Stream writableStream)
+        public async ValueTask WriteEntryToAsync(Stream writableStream, CancellationToken cancellationToken = default)
         {
             if (wroteCurrentEntry)
             {
@@ -165,26 +158,28 @@ namespace SharpCompress.Readers
                 throw new ArgumentNullException("A writable Stream was required.  Use Cancel if that was intended.");
             }
 
-            Write(writableStream);
+            await WriteAsync(writableStream, cancellationToken);
             wroteCurrentEntry = true;
         }
 
-        internal void Write(Stream writeStream)
+        private async ValueTask WriteAsync(Stream writeStream, CancellationToken cancellationToken)
         {
-            var streamListener = this as IReaderExtractionListener;
-            using (Stream s = OpenEntryStream())
+            if (Entry is null)
             {
-                s.TransferTo(writeStream, Entry, streamListener);
+                throw new ArgumentException("Entry is null");
             }
+            var streamListener = this as IReaderExtractionListener;
+            await using Stream s = await OpenEntryStreamAsync(cancellationToken);
+            await s.TransferToAsync(writeStream, Entry, streamListener, cancellationToken);
         }
 
-        public EntryStream OpenEntryStream()
+        public async ValueTask<EntryStream> OpenEntryStreamAsync(CancellationToken cancellationToken = default)
         {
             if (wroteCurrentEntry)
             {
                 throw new ArgumentException("WriteEntryTo or OpenEntryStream can only be called once.");
             }
-            var stream = GetEntryStream();
+            var stream = await GetEntryStreamAsync(cancellationToken);
             wroteCurrentEntry = true;
             return stream;
         }
@@ -194,17 +189,21 @@ namespace SharpCompress.Readers
         /// </summary>
         protected EntryStream CreateEntryStream(Stream decompressed)
         {
-            return new EntryStream(this, decompressed);
+            return new(this, decompressed);
         }
 
-        protected virtual EntryStream GetEntryStream()
+        protected async ValueTask<EntryStream> GetEntryStreamAsync(CancellationToken cancellationToken)
         {
-            return CreateEntryStream(Entry.Parts.First().GetCompressedStream());
+            if (Entry is null)
+            {
+                throw new ArgumentException("Entry is null");
+            }
+            return CreateEntryStream(await Entry.Parts.First().GetCompressedStreamAsync(cancellationToken));
         }
 
         #endregion
 
-        IEntry IReader.Entry => Entry;
+        IEntry? IReader.Entry => Entry;
 
         void IExtractionListener.FireCompressedBytesRead(long currentPartCompressedBytes, long compressedReadBytes)
         {

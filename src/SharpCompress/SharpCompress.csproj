@@ -6,8 +6,9 @@
     <AssemblyVersion>0.28.1</AssemblyVersion>
     <FileVersion>0.28.1</FileVersion>
     <Authors>Adam Hathcock</Authors>
-    <TargetFrameworks>netstandard2.0;netstandard2.1;netcoreapp3.1;net5.0</TargetFrameworks>
+    <TargetFrameworks>netstandard2.1;netcoreapp3.1;net5.0</TargetFrameworks>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <WarningsAsErrors>true</WarningsAsErrors>
     <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
     <AssemblyName>SharpCompress</AssemblyName>
     <AssemblyOriginatorKeyFile>../../SharpCompress.snk</AssemblyOriginatorKeyFile>
@@ -29,13 +30,39 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0" PrivateAssets="All" />
+    <PackageReference Include="System.Linq.Async" Version="5.0.0" />
   </ItemGroup>  
   <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.1' ">
     <PackageReference Include="System.Text.Encoding.CodePages" Version="5.0.0" />
-  </ItemGroup>
-  <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' ">
-    <PackageReference Include="System.Text.Encoding.CodePages" Version="5.0.0" />
-    <PackageReference Include="System.Memory" Version="4.5.4" />
+  </ItemGroup>  
+  <ItemGroup>
+    <Compile Remove="Archives\SevenZip\**" />
+    <Compile Remove="Archives\Rar\**" />
+    <Compile Remove="Readers\Rar\**" />
+    <Compile Remove="Common\Rar\**" />
+    <Compile Remove="Common\SevenZip\ArchiveDatabase.cs" />
+    <Compile Remove="Common\SevenZip\ArchiveReader.cs" />
+    <Compile Remove="Common\SevenZip\CStreamSwitch.cs" />
+    <Compile Remove="Common\SevenZip\SevenZipEntry.cs" />
+    <Compile Remove="Common\SevenZip\SevenZipFilePart.cs" />
+    <Compile Remove="Common\SevenZip\SevenZipVolume.cs" />
+    <Compile Remove="Compressors\Rar\**" />
+    <Compile Remove="Compressors\PPMd\**" />
+  </ItemGroup>  
+  <ItemGroup>
+    <EmbeddedResource Remove="Archives\SevenZip\**" />
+    <EmbeddedResource Remove="Readers\Rar\**" />
+    <EmbeddedResource Remove="Common\Rar\**" />
+    <EmbeddedResource Remove="Compressors\Rar\**" />
+    <EmbeddedResource Remove="Compressors\PPMd\**" />
+  </ItemGroup>  
+  <ItemGroup>
+    <None Remove="Archives\SevenZip\**" />
+    <None Remove="Archives\Rar\**" />
+    <None Remove="Readers\Rar\**" />
+    <None Remove="Common\Rar\**" />
+    <None Remove="Compressors\Rar\**" />
+    <None Remove="Compressors\PPMd\**" />
   </ItemGroup>
 
 </Project>

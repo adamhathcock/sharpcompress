@@ -1,8 +1,10 @@
-﻿#nullable disable
-
+﻿using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using SharpCompress.Compressors.Xz.Filters;
 
 namespace SharpCompress.Compressors.Xz
@@ -19,7 +21,7 @@ namespace SharpCompress.Compressors.Xz
         private bool _streamConnected;
         private int _numFilters;
         private byte _blockHeaderSizeByte;
-        private Stream _decomStream;
+        private Stream? _decomStream;
         private bool _endOfStream;
         private bool _paddingSkipped;
         private bool _crcChecked;
@@ -32,25 +34,25 @@ namespace SharpCompress.Compressors.Xz
             _checkSize = checkSize;
         }
 
-        public override int Read(byte[] buffer, int offset, int count)
+        public override async ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default)
         {
             int bytesRead = 0;
             if (!HeaderIsLoaded)
             {
-                LoadHeader();
+                await LoadHeader(cancellationToken);
             }
 
             if (!_streamConnected)
             {
-                ConnectStream();
+                await ConnectStreamAsync();
             }
 
-            if (!_endOfStream)
+            if (!_endOfStream && _decomStream is not null)
             {
-                bytesRead = _decomStream.Read(buffer, offset, count);
+                bytesRead = await _decomStream.ReadAsync(buffer, cancellationToken);
             }
 
-            if (bytesRead != count)
+            if (bytesRead != buffer.Length)
             {
                 _endOfStream = true;
             }
@@ -93,24 +95,27 @@ namespace SharpCompress.Compressors.Xz
             _crcChecked = true;
         }
 
-        private void ConnectStream()
+        private async ValueTask ConnectStreamAsync()
         {
             _decomStream = BaseStream;
             while (Filters.Any())
             {
                 BlockFilter filter = Filters.Pop();
-                filter.SetBaseStream(_decomStream);
+                await filter.SetBaseStreamAsync(_decomStream);
                 _decomStream = filter;
             }
             _streamConnected = true;
         }
 
-        private void LoadHeader()
+        private async ValueTask LoadHeader(CancellationToken cancellationToken)
         {
-            ReadHeaderSize();
-            byte[] headerCache = CacheHeader();
+            await ReadHeaderSize(cancellationToken);
+            using var blockHeaderWithoutCrc = MemoryPool<byte>.Shared.Rent(BlockHeaderSize - 4);
+            var headerCache = blockHeaderWithoutCrc.Memory.Slice(0, BlockHeaderSize - 4);
+            await CacheHeader(headerCache, cancellationToken);
 
-            using (var cache = new MemoryStream(headerCache))
+            //TODO: memory-size this
+            await using (var cache = new MemoryStream(headerCache.ToArray()))
             using (var cachedReader = new BinaryReader(cache))
             {
                 cachedReader.BaseStream.Position = 1; // skip the header size byte
@@ -120,33 +125,30 @@ namespace SharpCompress.Compressors.Xz
             HeaderIsLoaded = true;
         }
 
-        private void ReadHeaderSize()
+        private async ValueTask ReadHeaderSize(CancellationToken cancellationToken)
         {
-            _blockHeaderSizeByte = (byte)BaseStream.ReadByte();
+            _blockHeaderSizeByte = await BaseStream.ReadByteAsync(cancellationToken);
             if (_blockHeaderSizeByte == 0)
             {
                 throw new XZIndexMarkerReachedException();
             }
         }
 
-        private byte[] CacheHeader()
+        private async ValueTask CacheHeader(Memory<byte> blockHeaderWithoutCrc, CancellationToken cancellationToken)
         {
-            byte[] blockHeaderWithoutCrc = new byte[BlockHeaderSize - 4];
-            blockHeaderWithoutCrc[0] = _blockHeaderSizeByte;
-            var read = BaseStream.Read(blockHeaderWithoutCrc, 1, BlockHeaderSize - 5);
+            blockHeaderWithoutCrc.Span[0] = _blockHeaderSizeByte;
+            var read = await BaseStream.ReadAsync(blockHeaderWithoutCrc.Slice( 1, BlockHeaderSize - 5), cancellationToken);
             if (read != BlockHeaderSize - 5)
             {
-                throw new EndOfStreamException("Reached end of stream unexectedly");
+                throw new EndOfStreamException("Reached end of stream unexpectedly");
             }
 
-            uint crc = BaseStream.ReadLittleEndianUInt32();
+            uint crc = await BaseStream.ReadLittleEndianUInt32(cancellationToken);
             uint calcCrc = Crc32.Compute(blockHeaderWithoutCrc);
             if (crc != calcCrc)
             {
                 throw new InvalidDataException("Block header corrupt");
             }
-
-            return blockHeaderWithoutCrc;
         }
 
         private void ReadBlockFlags(BinaryReader reader)

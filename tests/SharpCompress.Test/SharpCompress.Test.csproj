@@ -7,6 +7,8 @@
     <PublicSign Condition=" '$(OS)' != 'Windows_NT' ">true</PublicSign>
     <PackageId>SharpCompress.Test</PackageId>
     <GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <WarningsAsErrors>true</WarningsAsErrors>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\SharpCompress\SharpCompress.csproj" />
@@ -20,5 +22,17 @@
     <PackageReference Include="xunit" Version="2.4.1" />
     <PackageReference Include="Xunit.SkippableFact" Version="1.4.13" />
     <PackageReference Include="Mono.Posix.NETStandard" Version="1.0.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Remove="Rar\**" />
+    <Compile Remove="SevenZip\**" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Remove="Rar\**" />
+    <EmbeddedResource Remove="SevenZip\**" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Remove="Rar\**" />
+    <None Remove="SevenZip\**" />
   </ItemGroup>
 </Project>

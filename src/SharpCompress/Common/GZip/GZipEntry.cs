@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Runtime.CompilerServices;
+using System.Threading;
 
 namespace SharpCompress.Common.GZip
 {
@@ -17,7 +19,7 @@ namespace SharpCompress.Common.GZip
 
         public override long Crc => _filePart.Crc ?? 0;
 
-        public override string Key => _filePart.FilePartName;
+        public override string Key => _filePart.FilePartName ?? string.Empty;
 
         public override string? LinkTarget => null;
 
@@ -41,9 +43,12 @@ namespace SharpCompress.Common.GZip
 
         internal override IEnumerable<FilePart> Parts => _filePart.AsEnumerable<FilePart>();
 
-        internal static IEnumerable<GZipEntry> GetEntries(Stream stream, OptionsBase options)
+        internal static async IAsyncEnumerable<GZipEntry> GetEntries(Stream stream, OptionsBase options,
+                                                                     [EnumeratorCancellation] CancellationToken cancellationToken)
         {
-            yield return new GZipEntry(new GZipFilePart(stream, options.ArchiveEncoding));
+            var part = new GZipFilePart(options.ArchiveEncoding);
+            await part.Initialize(stream, cancellationToken);
+            yield return new GZipEntry(part);
         }
     }
 }

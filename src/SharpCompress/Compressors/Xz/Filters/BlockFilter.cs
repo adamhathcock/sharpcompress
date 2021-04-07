@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading.Tasks;
 
 namespace SharpCompress.Compressors.Xz.Filters
 {
@@ -52,6 +53,6 @@ namespace SharpCompress.Compressors.Xz.Filters
             return filter;
         }
 
-        public abstract void SetBaseStream(Stream stream);
+        public abstract ValueTask SetBaseStreamAsync(Stream stream);
     }
 }

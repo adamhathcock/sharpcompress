@@ -5,6 +5,8 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using SharpCompress.Compressors.LZMA;
 using SharpCompress.Compressors.LZMA.Utilites;
 using SharpCompress.IO;
@@ -783,7 +785,7 @@ namespace SharpCompress.Common.SevenZip
             }
         }
 
-        private List<byte[]> ReadAndDecodePackedStreams(long baseOffset, IPasswordProvider pass)
+        private async ValueTask<List<byte[]>> ReadAndDecodePackedStreams(long baseOffset, IPasswordProvider pass, CancellationToken cancellationToken)
         {
 #if DEBUG
             Log.WriteLine("-- ReadAndDecodePackedStreams --");
@@ -815,8 +817,8 @@ namespace SharpCompress.Common.SevenZip
                         dataStartPos += packSize;
                     }
 
-                    var outStream = DecoderStreamHelper.CreateDecoderStream(_stream, oldDataStartPos, myPackSizes,
-                                                                            folder, pass);
+                    var outStream = await DecoderStreamHelper.CreateDecoderStream(_stream, oldDataStartPos, myPackSizes,
+                                                                            folder, pass, cancellationToken);
 
                     int unpackSize = checked((int)folder.GetUnpackSize());
                     byte[] data = new byte[unpackSize];
@@ -845,7 +847,7 @@ namespace SharpCompress.Common.SevenZip
             }
         }
 
-        private void ReadHeader(ArchiveDatabase db, IPasswordProvider getTextPassword)
+        private async ValueTask ReadHeader(ArchiveDatabase db, IPasswordProvider getTextPassword, CancellationToken cancellationToken)
         {
 #if DEBUG
             Log.WriteLine("-- ReadHeader --");
@@ -864,7 +866,7 @@ namespace SharpCompress.Common.SevenZip
                 List<byte[]> dataVector = null;
                 if (type == BlockType.AdditionalStreamsInfo)
                 {
-                    dataVector = ReadAndDecodePackedStreams(db._startPositionAfterHeader, getTextPassword);
+                    dataVector = await ReadAndDecodePackedStreams(db._startPositionAfterHeader, getTextPassword, cancellationToken);
                     type = ReadId();
                 }
 

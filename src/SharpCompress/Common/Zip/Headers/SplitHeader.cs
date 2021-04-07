@@ -1,5 +1,7 @@
 ﻿using System;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace SharpCompress.Common.Zip.Headers
 {
@@ -10,7 +12,7 @@ namespace SharpCompress.Common.Zip.Headers
         {
         }
 
-        internal override void Read(BinaryReader reader)
+        internal override ValueTask Read(Stream stream, CancellationToken cancellationToken)
         {
             throw new NotImplementedException();
         }

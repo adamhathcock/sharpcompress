@@ -1,5 +1,5 @@
-﻿using System;
-using System.IO;
+﻿using System.IO;
+using System.Threading.Tasks;
 using SharpCompress.IO;
 using SharpCompress.Readers;
 
@@ -33,19 +33,10 @@ namespace SharpCompress.Common
         /// RarArchive is part of a multi-part archive.
         /// </summary>
         public virtual bool IsMultiVolume => true;
-
-        protected virtual void Dispose(bool disposing)
+        
+        public ValueTask DisposeAsync()
         {
-            if (disposing)
-            {
-                _actualStream.Dispose();
-            }
-        }
-
-        public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
+            return _actualStream.DisposeAsync();
         }
     }
 }

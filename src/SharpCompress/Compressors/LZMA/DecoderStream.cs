@@ -1,5 +1,7 @@
 ﻿using System;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 using SharpCompress.Common.SevenZip;
 using SharpCompress.Compressors.LZMA.Utilites;
 using SharpCompress.IO;
@@ -91,8 +93,9 @@ namespace SharpCompress.Compressors.LZMA
             }
         }
 
-        private static Stream CreateDecoderStream(Stream[] packStreams, long[] packSizes, Stream[] outStreams,
-                                                  CFolder folderInfo, int coderIndex, IPasswordProvider pass)
+        private static async ValueTask<Stream> CreateDecoderStream(Stream[] packStreams, long[] packSizes, Stream[] outStreams,
+                                                                   CFolder folderInfo, int coderIndex, IPasswordProvider pass,
+                                                                   CancellationToken cancellationToken)
         {
             var coderInfo = folderInfo._coders[coderIndex];
             if (coderInfo._numOutStreams != 1)
@@ -127,8 +130,8 @@ namespace SharpCompress.Compressors.LZMA
                     }
 
                     int otherCoderIndex = FindCoderIndexForOutStreamIndex(folderInfo, pairedOutIndex);
-                    inStreams[i] = CreateDecoderStream(packStreams, packSizes, outStreams, folderInfo, otherCoderIndex,
-                                                       pass);
+                    inStreams[i] = await CreateDecoderStream(packStreams, packSizes, outStreams, folderInfo, otherCoderIndex,
+                                                       pass, cancellationToken);
 
                     //inStreamSizes[i] = folderInfo.UnpackSizes[pairedOutIndex];
 
@@ -154,11 +157,11 @@ namespace SharpCompress.Compressors.LZMA
             }
 
             long unpackSize = folderInfo._unpackSizes[outStreamId];
-            return DecoderRegistry.CreateDecoderStream(coderInfo._methodId, inStreams, coderInfo._props, pass, unpackSize);
+            return await DecoderRegistry.CreateDecoderStream(coderInfo._methodId, inStreams, coderInfo._props, pass, unpackSize, cancellationToken);
         }
 
-        internal static Stream CreateDecoderStream(Stream inStream, long startPos, long[] packSizes, CFolder folderInfo,
-                                                   IPasswordProvider pass)
+        internal static async ValueTask<Stream> CreateDecoderStream(Stream inStream, long startPos, long[] packSizes, CFolder folderInfo,
+                                                   IPasswordProvider pass, CancellationToken cancellationToken)
         {
             if (!folderInfo.CheckStructure())
             {
@@ -176,7 +179,7 @@ namespace SharpCompress.Compressors.LZMA
 
             int primaryCoderIndex, primaryOutStreamIndex;
             FindPrimaryOutStreamIndex(folderInfo, out primaryCoderIndex, out primaryOutStreamIndex);
-            return CreateDecoderStream(inStreams, packSizes, outStreams, folderInfo, primaryCoderIndex, pass);
+            return await CreateDecoderStream(inStreams, packSizes, outStreams, folderInfo, primaryCoderIndex, pass, cancellationToken);
         }
     }
 }

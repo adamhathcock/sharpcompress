@@ -1,4 +1,6 @@
 ﻿using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 using SharpCompress.Common;
 using SharpCompress.IO;
 
@@ -6,58 +8,53 @@ namespace SharpCompress.Archives
 {
     public static class IArchiveEntryExtensions
     {
-        public static void WriteTo(this IArchiveEntry archiveEntry, Stream streamToWriteTo)
+        public static async ValueTask WriteToAsync(this IArchiveEntry archiveEntry, Stream streamToWriteTo, CancellationToken cancellationToken = default)
         {
             if (archiveEntry.IsDirectory)
             {
                 throw new ExtractionException("Entry is a file directory and cannot be extracted.");
             }
 
-            var streamListener = (IArchiveExtractionListener)archiveEntry.Archive;
-            streamListener.EnsureEntriesLoaded();
-            streamListener.FireEntryExtractionBegin(archiveEntry);
-            streamListener.FireFilePartExtractionBegin(archiveEntry.Key, archiveEntry.Size, archiveEntry.CompressedSize);
-            var entryStream = archiveEntry.OpenEntryStream();
+            var archive = archiveEntry.Archive;
+            await archive.EnsureEntriesLoaded();
+            var entryStream = await archiveEntry.OpenEntryStreamAsync(cancellationToken);
             if (entryStream is null)
             {
                 return;
             }
-            using (entryStream)
+            await using (entryStream)
             {
-                using (Stream s = new ListeningStream(streamListener, entryStream))
-                {
-                    s.TransferTo(streamToWriteTo);
-                }
+                await entryStream.TransferToAsync(streamToWriteTo, cancellationToken);
             }
-            streamListener.FireEntryExtractionEnd(archiveEntry);
         }
 
         /// <summary>
         /// Extract to specific directory, retaining filename
         /// </summary>
-        public static void WriteToDirectory(this IArchiveEntry entry, string destinationDirectory,
-                                            ExtractionOptions? options = null)
+        public static ValueTask WriteEntryToDirectoryAsync(this IArchiveEntry entry, 
+                                                           string destinationDirectory,
+                                                           ExtractionOptions? options = null, 
+                                                           CancellationToken cancellationToken = default)
         {
-            ExtractionMethods.WriteEntryToDirectory(entry, destinationDirectory, options,
-                                              entry.WriteToFile);
+            return ExtractionMethods.WriteEntryToDirectoryAsync(entry, destinationDirectory, options,
+                                              entry.WriteToFileAsync, cancellationToken);
         }
 
         /// <summary>
         /// Extract to specific file
         /// </summary>
-        public static void WriteToFile(this IArchiveEntry entry,
+        public static ValueTask WriteToFileAsync(this IArchiveEntry entry,
                                        string destinationFileName,
-                                       ExtractionOptions? options = null)
+                                       ExtractionOptions? options = null, 
+                                       CancellationToken cancellationToken = default)
         {
 
-            ExtractionMethods.WriteEntryToFile(entry, destinationFileName, options,
-                                               (x, fm) =>
+            return ExtractionMethods.WriteEntryToFileAsync(entry, destinationFileName, options,
+                                               async (x, fm, ct) =>
                                                {
-                                                   using (FileStream fs = File.Open(destinationFileName, fm))
-                                                   {
-                                                       entry.WriteTo(fs);
-                                                   }
-                                               });
+                                                   await using FileStream fs = File.Open(x, fm);
+                                                   await entry.WriteToAsync(fs, ct);
+                                               }, cancellationToken);
         }
     }
 }

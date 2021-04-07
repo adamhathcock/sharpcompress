@@ -3,6 +3,8 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 using SharpCompress.Common;
 using SharpCompress.Common.Rar;
 
@@ -13,7 +15,7 @@ namespace SharpCompress.Compressors.Rar
         private long currentPosition;
         private long maxPosition;
 
-        private IEnumerator<RarFilePart> filePartEnumerator;
+        private IAsyncEnumerator<RarFilePart> filePartEnumerator;
         private Stream currentStream;
 
         private readonly IExtractionListener streamListener;
@@ -21,34 +23,33 @@ namespace SharpCompress.Compressors.Rar
         private long currentPartTotalReadBytes;
         private long currentEntryTotalReadBytes;
 
-        internal MultiVolumeReadOnlyStream(IEnumerable<RarFilePart> parts, IExtractionListener streamListener)
+        internal MultiVolumeReadOnlyStream(IExtractionListener streamListener)
         {
             this.streamListener = streamListener;
-
-            filePartEnumerator = parts.GetEnumerator();
-            filePartEnumerator.MoveNext();
-            InitializeNextFilePart();
         }
 
-        protected override void Dispose(bool disposing)
+        internal async ValueTask Initialize(IAsyncEnumerable<RarFilePart> parts, CancellationToken cancellationToken)
         {
-            base.Dispose(disposing);
-            if (disposing)
-            {
-                if (filePartEnumerator != null)
-                {
-                    filePartEnumerator.Dispose();
-                    filePartEnumerator = null;
-                }
-                currentStream = null;
-            }
+            filePartEnumerator = parts.GetAsyncEnumerator(cancellationToken);
+            await filePartEnumerator.MoveNextAsync(cancellationToken);
+            await InitializeNextFilePartAsync(cancellationToken);
         }
 
-        private void InitializeNextFilePart()
+        public override async ValueTask DisposeAsync()
+        {
+            if (filePartEnumerator != null)
+            {
+                await filePartEnumerator.DisposeAsync();
+                filePartEnumerator = null;
+            }
+            currentStream = null;
+        }
+
+        private async ValueTask InitializeNextFilePartAsync(CancellationToken cancellationToken)
         {
             maxPosition = filePartEnumerator.Current.FileHeader.CompressedSize;
             currentPosition = 0;
-            currentStream = filePartEnumerator.Current.GetCompressedStream();
+            currentStream = await filePartEnumerator.Current.GetCompressedStreamAsync(cancellationToken);
 
             currentPartTotalReadBytes = 0;
 
@@ -61,9 +62,14 @@ namespace SharpCompress.Compressors.Rar
 
         public override int Read(byte[] buffer, int offset, int count)
         {
+            throw new NotImplementedException();
+        }
+
+        public override async ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken)
+        {
             int totalRead = 0;
-            int currentOffset = offset;
-            int currentCount = count;
+            int currentOffset = 0;
+            int currentCount = buffer.Length;
             while (currentCount > 0)
             {
                 int readSize = currentCount;
@@ -72,7 +78,7 @@ namespace SharpCompress.Compressors.Rar
                     readSize = (int)(maxPosition - currentPosition);
                 }
 
-                int read = currentStream.Read(buffer, currentOffset, readSize);
+                int read = await currentStream.ReadAsync(buffer.Slice(currentOffset, readSize), cancellationToken);
                 if (read < 0)
                 {
                     throw new EndOfStreamException();
@@ -90,12 +96,12 @@ namespace SharpCompress.Compressors.Rar
                         throw new InvalidFormatException("Sharpcompress currently does not support multi-volume decryption.");
                     }
                     string fileName = filePartEnumerator.Current.FileHeader.FileName;
-                    if (!filePartEnumerator.MoveNext())
+                    if (!await filePartEnumerator.MoveNextAsync(cancellationToken))
                     {
                         throw new InvalidFormatException(
                                                          "Multi-part rar file is incomplete.  Entry expects a new volume: " + fileName);
                     }
-                    InitializeNextFilePart();
+                    await InitializeNextFilePartAsync(cancellationToken);
                 }
                 else
                 {

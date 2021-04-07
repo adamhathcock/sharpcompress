@@ -24,7 +24,7 @@ namespace SharpCompress.Common
         /// Set this when you want to use a custom method for all decoding operations.
         /// </summary>
         /// <returns>string Func(bytes, index, length)</returns>
-        public Func<byte[], int, int, string>? CustomDecoder { get; set; }
+        //public Func<byte[], int, int, string>? CustomDecoder { get; set; }
 
         public ArchiveEncoding()
         : this(Encoding.Default, Encoding.Default)
@@ -50,7 +50,12 @@ namespace SharpCompress.Common
 
         public string Decode(byte[] bytes, int start, int length)
         {
-            return GetDecoder().Invoke(bytes, start, length);
+            return GetEncoding().GetString(bytes, start, length);
+        }
+        
+        public string Decode(ReadOnlySpan<byte> span)
+        {
+            return GetEncoding().GetString(span);
         }
 
         public string DecodeUTF8(byte[] bytes)
@@ -66,11 +71,6 @@ namespace SharpCompress.Common
         public Encoding GetEncoding()
         {
             return Forced ?? Default ?? Encoding.UTF8;
-        }
-
-        public Func<byte[], int, int, string> GetDecoder()
-        {
-            return CustomDecoder ?? ((bytes, index, count) => GetEncoding().GetString(bytes, index, count));
         }
     }
 }

@@ -1,11 +1,14 @@
 #nullable disable
 
 using System;
+using System.Buffers;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace SharpCompress.Compressors.LZMA.RangeCoder
 {
-    internal class Encoder
+    internal class Encoder : IAsyncDisposable
     {
         public const uint K_TOP_VALUE = (1 << 24);
 
@@ -38,43 +41,46 @@ namespace SharpCompress.Compressors.LZMA.RangeCoder
             _cache = 0;
         }
 
-        public void FlushData()
+        public async ValueTask FlushData()
         {
             for (int i = 0; i < 5; i++)
             {
-                ShiftLow();
+                await ShiftLowAsync();
             }
         }
 
-        public void FlushStream()
+        public Task FlushAsync()
         {
-            _stream.Flush();
+            return _stream.FlushAsync();
         }
 
-        public void CloseStream()
+        public ValueTask DisposeAsync()
         {
-            _stream.Dispose();
+            return _stream.DisposeAsync();
         }
 
-        public void Encode(uint start, uint size, uint total)
+        public async ValueTask EncodeAsync(uint start, uint size, uint total)
         {
             _low += start * (_range /= total);
             _range *= size;
             while (_range < K_TOP_VALUE)
             {
                 _range <<= 8;
-                ShiftLow();
+                await ShiftLowAsync();
             }
         }
 
-        public void ShiftLow()
+        public async ValueTask ShiftLowAsync()
         {
             if ((uint)_low < 0xFF000000 || (uint)(_low >> 32) == 1)
             {
+                using var buffer = MemoryPool<byte>.Shared.Rent(1);
+                var b = buffer.Memory.Slice(0,1);
                 byte temp = _cache;
                 do
                 {
-                    _stream.WriteByte((byte)(temp + (_low >> 32)));
+                    b.Span[0] = (byte)(temp + (_low >> 32));
+                    await _stream.WriteAsync(b);
                     temp = 0xFF;
                 }
                 while (--_cacheSize != 0);
@@ -84,7 +90,7 @@ namespace SharpCompress.Compressors.LZMA.RangeCoder
             _low = ((uint)_low) << 8;
         }
 
-        public void EncodeDirectBits(uint v, int numTotalBits)
+        public async ValueTask EncodeDirectBits(uint v, int numTotalBits)
         {
             for (int i = numTotalBits - 1; i >= 0; i--)
             {
@@ -96,12 +102,12 @@ namespace SharpCompress.Compressors.LZMA.RangeCoder
                 if (_range < K_TOP_VALUE)
                 {
                     _range <<= 8;
-                    ShiftLow();
+                    await ShiftLowAsync();
                 }
             }
         }
 
-        public void EncodeBit(uint size0, int numTotalBits, uint symbol)
+        public async ValueTask EncodeBitAsync(uint size0, int numTotalBits, uint symbol)
         {
             uint newBound = (_range >> numTotalBits) * size0;
             if (symbol == 0)
@@ -116,7 +122,7 @@ namespace SharpCompress.Compressors.LZMA.RangeCoder
             while (_range < K_TOP_VALUE)
             {
                 _range <<= 8;
-                ShiftLow();
+                await ShiftLowAsync();
             }
         }
 
@@ -129,7 +135,7 @@ namespace SharpCompress.Compressors.LZMA.RangeCoder
         }
     }
 
-    internal class Decoder
+    internal class Decoder: IAsyncDisposable
     {
         public const uint K_TOP_VALUE = (1 << 24);
         public uint _range;
@@ -139,7 +145,7 @@ namespace SharpCompress.Compressors.LZMA.RangeCoder
         public Stream _stream;
         public long _total;
 
-        public void Init(Stream stream)
+        public async ValueTask InitAsync(Stream stream, CancellationToken cancellationToken)
         {
             // Stream.Init(stream);
             _stream = stream;
@@ -148,7 +154,7 @@ namespace SharpCompress.Compressors.LZMA.RangeCoder
             _range = 0xFFFFFFFF;
             for (int i = 0; i < 5; i++)
             {
-                _code = (_code << 8) | (byte)_stream.ReadByte();
+                _code = (_code << 8) | await _stream.ReadByteAsync(cancellationToken);
             }
             _total = 5;
         }
@@ -159,44 +165,34 @@ namespace SharpCompress.Compressors.LZMA.RangeCoder
             _stream = null;
         }
 
-        public void CloseStream()
+        public ValueTask DisposeAsync()
         {
-            _stream.Dispose();
+            return _stream.DisposeAsync();
         }
 
-        public void Normalize()
+        public async ValueTask NormalizeAsync(CancellationToken cancellationToken)
         {
             while (_range < K_TOP_VALUE)
             {
-                _code = (_code << 8) | (byte)_stream.ReadByte();
+                _code = (_code << 8) | await _stream.ReadByteAsync(cancellationToken);
                 _range <<= 8;
                 _total++;
             }
         }
-
-        public void Normalize2()
-        {
-            if (_range < K_TOP_VALUE)
-            {
-                _code = (_code << 8) | (byte)_stream.ReadByte();
-                _range <<= 8;
-                _total++;
-            }
-        }
-
+        
         public uint GetThreshold(uint total)
         {
             return _code / (_range /= total);
         }
 
-        public void Decode(uint start, uint size)
+        public async ValueTask DecodeAsync(uint start, uint size, CancellationToken cancellationToken)
         {
             _code -= start * _range;
             _range *= size;
-            Normalize();
+            await NormalizeAsync(cancellationToken);
         }
 
-        public uint DecodeDirectBits(int numTotalBits)
+        public async ValueTask<uint> DecodeDirectBitsAsync(int numTotalBits, CancellationToken cancellationToken)
         {
             uint range = _range;
             uint code = _code;
@@ -218,7 +214,7 @@ namespace SharpCompress.Compressors.LZMA.RangeCoder
 
                 if (range < K_TOP_VALUE)
                 {
-                    code = (code << 8) | (byte)_stream.ReadByte();
+                    code = (code << 8) | await _stream.ReadByteAsync(cancellationToken);
                     range <<= 8;
                     _total++;
                 }
@@ -228,7 +224,7 @@ namespace SharpCompress.Compressors.LZMA.RangeCoder
             return result;
         }
 
-        public uint DecodeBit(uint size0, int numTotalBits)
+        public async ValueTask<uint> DecodeBitAsync(uint size0, int numTotalBits, CancellationToken cancellationToken)
         {
             uint newBound = (_range >> numTotalBits) * size0;
             uint symbol;
@@ -243,7 +239,7 @@ namespace SharpCompress.Compressors.LZMA.RangeCoder
                 _code -= newBound;
                 _range -= newBound;
             }
-            Normalize();
+            await NormalizeAsync(cancellationToken);
             return symbol;
         }
 

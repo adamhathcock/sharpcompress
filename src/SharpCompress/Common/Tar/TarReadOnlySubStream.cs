@@ -1,6 +1,8 @@
 ﻿using SharpCompress.IO;
 using System;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace SharpCompress.Common.Tar
 {
@@ -14,7 +16,7 @@ namespace SharpCompress.Common.Tar
             BytesLeftToRead = bytesToRead;
         }
 
-        protected override void Dispose(bool disposing)
+        public override async ValueTask DisposeAsync()
         {
             if (_isDisposed)
             {
@@ -23,22 +25,17 @@ namespace SharpCompress.Common.Tar
 
             _isDisposed = true;
 
-            if (disposing)
+            // Ensure we read all remaining blocks for this entry.
+            await Stream.SkipAsync(BytesLeftToRead);
+            _amountRead += BytesLeftToRead;
+
+            // If the last block wasn't a full 512 bytes, skip the remaining padding bytes.
+            var bytesInLastBlock = _amountRead % 512;
+
+            if (bytesInLastBlock != 0)
             {
-                // Ensure we read all remaining blocks for this entry.
-                Stream.Skip(BytesLeftToRead);
-                _amountRead += BytesLeftToRead;
-
-                // If the last block wasn't a full 512 bytes, skip the remaining padding bytes.
-                var bytesInLastBlock = _amountRead % 512;
-
-                if (bytesInLastBlock != 0)
-                {
-                    Stream.Skip(512 - bytesInLastBlock);
-                }
+                await Stream.SkipAsync(512 - bytesInLastBlock);
             }
-
-            base.Dispose(disposing);
         }
 
         private long BytesLeftToRead { get; set; }
@@ -49,22 +46,18 @@ namespace SharpCompress.Common.Tar
 
         public override bool CanWrite => false;
 
-        public override void Flush()
-        {
-            throw new NotSupportedException();
-        }
-
         public override long Length => throw new NotSupportedException();
 
         public override long Position { get => throw new NotSupportedException(); set => throw new NotSupportedException(); }
 
-        public override int Read(byte[] buffer, int offset, int count)
+        public override async ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default)
         {
-            if (BytesLeftToRead < count)
+            var count = buffer.Length;
+            if (BytesLeftToRead < buffer.Length)
             {
                 count = (int)BytesLeftToRead;
             }
-            int read = Stream.Read(buffer, offset, count);
+            int read = await Stream.ReadAsync(buffer.Slice(0, count), cancellationToken);
             if (read > 0)
             {
                 BytesLeftToRead -= read;
@@ -73,20 +66,9 @@ namespace SharpCompress.Common.Tar
             return read;
         }
 
-        public override int ReadByte()
+        public override Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
         {
-            if (BytesLeftToRead <= 0)
-            {
-                return -1;
-            }
-            int value = Stream.ReadByte();
-            if (value != -1)
-            {
-                --BytesLeftToRead;
-                ++_amountRead;
-            }
-            return value;
-
+            throw new NotSupportedException();
         }
 
         public override long Seek(long offset, SeekOrigin origin)
@@ -95,11 +77,6 @@ namespace SharpCompress.Common.Tar
         }
 
         public override void SetLength(long value)
-        {
-            throw new NotSupportedException();
-        }
-
-        public override void Write(byte[] buffer, int offset, int count)
         {
             throw new NotSupportedException();
         }

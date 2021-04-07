@@ -1,5 +1,7 @@
 using System;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace SharpCompress.Compressors.LZMA
 {
@@ -59,8 +61,8 @@ namespace SharpCompress.Compressors.LZMA
         /// <param name="progress">
         /// callback progress reference.
         /// </param>
-        void Code(Stream inStream, Stream outStream,
-                  Int64 inSize, Int64 outSize, ICodeProgress progress);
+        ValueTask CodeAsync(Stream inStream, Stream outStream,
+                  Int64 inSize, Int64 outSize, ICodeProgress progress, CancellationToken cancellationToken);
     }
 
     /*
