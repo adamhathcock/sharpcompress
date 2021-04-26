@@ -53,6 +53,8 @@ namespace SharpCompress.Common.Zip.Headers
             var zip64ExtraData = Extra.OfType<Zip64ExtendedInformationExtraField>().FirstOrDefault();
             if (zip64ExtraData != null)
             {
+                zip64ExtraData.Process(UncompressedSize, CompressedSize, 0, 0);
+
                 if (CompressedSize == uint.MaxValue)
                 {
                     CompressedSize = zip64ExtraData.CompressedSize;
