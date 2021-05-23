@@ -238,13 +238,13 @@ namespace SharpCompress.Writers.Zip
         private void WriteEndRecord(ulong size)
         {
 
-            var zip64 = isZip64 || entries.Count > ushort.MaxValue || streamPosition >= uint.MaxValue || size >= uint.MaxValue;
+            var zip64EndOfCentralDirectoryNeeded = entries.Count > ushort.MaxValue || streamPosition >= uint.MaxValue || size >= uint.MaxValue;
 
             var sizevalue = size >= uint.MaxValue ? uint.MaxValue : (uint)size;
             var streampositionvalue = streamPosition >= uint.MaxValue ? uint.MaxValue : (uint)streamPosition;
 
             Span<byte> intBuf = stackalloc byte[8];
-            if (zip64)
+            if (zip64EndOfCentralDirectoryNeeded)
             {
                 var recordlen = 2 + 2 + 4 + 4 + 8 + 8 + 8 + 8;
 
@@ -281,8 +281,7 @@ namespace SharpCompress.Writers.Zip
                 BinaryPrimitives.WriteUInt32LittleEndian(intBuf, 1);
                 OutputStream.Write(intBuf.Slice(0, 4)); // Number of disks
 
-                streamPosition += recordlen + (4 + 4 + 8 + 4);
-                streampositionvalue = streamPosition >= uint.MaxValue ? uint.MaxValue : (uint)streampositionvalue;
+                streamPosition += 4 + 8 + recordlen + (4 + 4 + 8 + 4);
             }
 
             // Write normal end of central directory record
