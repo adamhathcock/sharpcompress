@@ -8,5 +8,10 @@ namespace SharpCompress.Common
             : base(message)
         {
         }
+
+        public ArchiveException(string message, Exception inner)
+            : base(message, inner)
+        {
+        }
     }
 }

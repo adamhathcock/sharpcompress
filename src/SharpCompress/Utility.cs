@@ -315,5 +315,12 @@ namespace SharpCompress
         {
             return source.Replace('\0', ' ').Trim();
         }
+
+        public static string NullTerminate(this string source)
+        {
+            int index = source.IndexOf('\0');
+            if (index < 0) return source;
+            return source.Substring(0, index);
+        }
     }
 }
