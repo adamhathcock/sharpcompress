@@ -66,46 +66,74 @@ namespace SharpCompress.Common.Zip.Headers
         public Zip64ExtendedInformationExtraField(ExtraDataType type, ushort length, byte[] dataBytes)
             : base(type, length, dataBytes)
         {
-            Process();
         }
 
-        private void Process()
+        // From the spec, values are only in the extradata if the standard
+        // value is set to 0xFFFFFFFF (or 0xFFFF for the Disk Start Number).
+        // Values, if present, must appear in the following order:
+        // - Original Size
+        // - Compressed Size
+        // - Relative Header Offset
+        // - Disk Start Number
+        public void Process(long uncompressedFileSize, long compressedFileSize, long relativeHeaderOffset, ushort diskNumber)
         {
-            if (DataBytes.Length >= 8)
+            var bytesRequired = ((uncompressedFileSize == uint.MaxValue) ? 8 : 0)
+                + ((compressedFileSize == uint.MaxValue) ? 8 : 0)
+                + ((relativeHeaderOffset == uint.MaxValue) ? 8 : 0)
+                + ((diskNumber == ushort.MaxValue) ? 4 : 0);
+            var currentIndex = 0;
+
+            if (bytesRequired > DataBytes.Length)
             {
-                UncompressedSize = BinaryPrimitives.ReadInt64LittleEndian(DataBytes);
+                throw new ArchiveException("Zip64 extended information extra field is not large enough for the required information");
             }
 
-            if (DataBytes.Length >= 16)
+            if (uncompressedFileSize == uint.MaxValue)
             {
-                CompressedSize = BinaryPrimitives.ReadInt64LittleEndian(DataBytes.AsSpan(8));
+                UncompressedSize = BinaryPrimitives.ReadInt64LittleEndian(DataBytes.AsSpan(currentIndex));
+                currentIndex += 8;
             }
 
-            if (DataBytes.Length >= 24)
+            if (compressedFileSize == uint.MaxValue)
             {
-                RelativeOffsetOfEntryHeader = BinaryPrimitives.ReadInt64LittleEndian(DataBytes.AsSpan(16));
+                CompressedSize = BinaryPrimitives.ReadInt64LittleEndian(DataBytes.AsSpan(currentIndex));
+                currentIndex += 8;
             }
 
-            if (DataBytes.Length >= 28)
+            if (relativeHeaderOffset == uint.MaxValue)
             {
-                VolumeNumber = BinaryPrimitives.ReadUInt32LittleEndian(DataBytes.AsSpan(24));
+                RelativeOffsetOfEntryHeader = BinaryPrimitives.ReadInt64LittleEndian(DataBytes.AsSpan(currentIndex));
+                currentIndex += 8;
             }
 
-            switch (DataBytes.Length)
+            if (diskNumber == ushort.MaxValue)
             {
-                case 8:
-                case 16:
-                case 24:
-                case 28:
-                    break;
-                default:
-                    throw new ArchiveException($"Unexpected size of of Zip64 extended information extra field: {DataBytes.Length}");
+                VolumeNumber = BinaryPrimitives.ReadUInt32LittleEndian(DataBytes.AsSpan(currentIndex));
             }
         }
 
+        /// <summary>
+        /// Uncompressed file size. Only valid after <see cref="Process(long, long, long, ushort)"/> has been called and if the
+        /// original entry header had a corresponding 0xFFFFFFFF value.
+        /// </summary>
         public long UncompressedSize { get; private set; }
+
+        /// <summary>
+        /// Compressed file size. Only valid after <see cref="Process(long, long, long, ushort)"/> has been called and if the
+        /// original entry header had a corresponding 0xFFFFFFFF value.
+        /// </summary>
         public long CompressedSize { get; private set; }
+
+        /// <summary>
+        /// Relative offset of the entry header. Only valid after <see cref="Process(long, long, long, ushort)"/> has been called and if the
+        /// original entry header had a corresponding 0xFFFFFFFF value.
+        /// </summary>
         public long RelativeOffsetOfEntryHeader { get; private set; }
+
+        /// <summary>
+        /// Volume number. Only valid after <see cref="Process(long, long, long, ushort)"/> has been called and if the
+        /// original entry header had a corresponding 0xFFFF value.
+        /// </summary>
         public uint VolumeNumber { get; private set; }
     }
 

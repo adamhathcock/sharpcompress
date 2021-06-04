@@ -576,5 +576,23 @@ namespace SharpCompress.Test.Zip
                 Assert.Equal(1, count);
             }
         }
+
+        [Fact]
+        public void Zip_Zip64_CompressedSizeExtraOnly_Read()
+        {
+            string zipPath = Path.Combine(TEST_ARCHIVES_PATH, "Zip.zip64.compressedonly.zip");
+
+            using (ZipArchive za = ZipArchive.Open(zipPath))
+            {
+                var firstEntry = za.Entries.First(x => x.Key == "test/test.txt");
+
+                using (var memoryStream = new MemoryStream())
+                using (var firstStream = firstEntry.OpenEntryStream())
+                {
+                    firstStream.CopyTo(memoryStream);
+                    Assert.Equal(15, memoryStream.Length);
+                }
+            }
+        }
     }
 }
