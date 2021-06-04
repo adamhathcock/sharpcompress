@@ -6,23 +6,23 @@ namespace SharpCompress.Test.Dmg
     {
         // ToDo: create the required test archives
 
-        //[Fact]
-        //public void DmgArchive_StreamRead()
-        //{
-        //    ArchiveStreamRead("Dmg.dmg");
-        //}
+        [Fact]
+        public void DmgArchive_StreamRead()
+        {
+            ArchiveStreamRead("Dmg.dmg");
+        }
 
-        //[Fact]
-        //public void DmgArchive_PathRead()
-        //{
-        //    ArchiveFileRead("Dmg.dmg");
-        //}
+        [Fact]
+        public void DmgArchive_PathRead()
+        {
+            ArchiveFileRead("Dmg.dmg");
+        }
 
-        //[Fact]
-        //public void DmgArchive_ADC_StreamRead()
-        //{
-        //    ArchiveStreamRead("Dmg_ADC.dmg");
-        //}
+        [Fact]
+        public void DmgArchive_ADC_StreamRead()
+        {
+            ArchiveStreamRead("Dmg.dmg");
+        }
 
         //[Fact]
         //public void DmgArchive_ADC_PathRead()
