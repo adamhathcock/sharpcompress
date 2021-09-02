@@ -117,7 +117,8 @@ namespace SharpCompress.Common.Zip
             // Search in reverse
             Array.Reverse(seek);
 
-            var max_search_area = len - MINIMUM_EOCD_LENGTH;
+            // don't exclude the minimum eocd region, otherwise you fail to locate the header in empty zip files
+            var max_search_area = len; // - MINIMUM_EOCD_LENGTH;
 
             for( int pos_from_end = 0; pos_from_end < max_search_area; ++pos_from_end)
             {
