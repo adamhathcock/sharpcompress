@@ -290,6 +290,28 @@ namespace SharpCompress.Test.Zip
             Directory.Delete(SCRATCH_FILES_PATH, true);
         }
 
+        /// <summary>
+        /// Creates an empty zip file and attempts to read it right afterwards. 
+        /// Ensures that parsing file headers works even in that case
+        /// </summary>
+        [Fact]
+        public void Zip_Create_Empty_And_Read()
+        {
+            var archive = ZipArchive.Create();
+
+            var archiveStream = new MemoryStream();
+
+            archive.SaveTo(archiveStream, CompressionType.LZMA);
+
+            archiveStream.Position = 0;
+
+            var readArchive = ArchiveFactory.Open(archiveStream);
+
+            var count = readArchive.Entries.Count();
+
+            Assert.Equal(0, count);
+        }
+
         [Fact]
         public void Zip_Create_New_Add_Remove()
         {
