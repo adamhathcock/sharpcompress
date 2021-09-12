@@ -87,18 +87,15 @@ namespace SharpCompress.Writers.Tar
             header.Name = NormalizeFilename(filename);
             header.Size = realSize;
             header.Write(OutputStream);
+
             size = source.TransferTo(OutputStream);
-            PadTo512(size.Value, false);
+            PadTo512(size.Value);
         }
 
-        private void PadTo512(long size, bool forceZeros)
+        private void PadTo512(long size)
         {
-            int zeros = (int)size % 512;
-            if (zeros == 0 && !forceZeros)
-            {
-                return;
-            }
-            zeros = 512 - zeros;
+            int zeros = unchecked((int)(((size + 511L) & ~511L) - size));
+
             OutputStream.Write(stackalloc byte[zeros]);
         }
 
@@ -108,8 +105,7 @@ namespace SharpCompress.Writers.Tar
             {
                 if (finalizeArchiveOnClose)
                 {
-                    PadTo512(0, true);
-                    PadTo512(0, true);
+                    OutputStream.Write(stackalloc byte[1024]);
                 }
                 switch (OutputStream)
                 {
