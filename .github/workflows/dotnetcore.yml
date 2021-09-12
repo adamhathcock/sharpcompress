@@ -12,7 +12,7 @@ jobs:
     - uses: actions/checkout@v1
     - uses: actions/setup-dotnet@v1
       with:
-        dotnet-version: 5.0.300
+        dotnet-version: 5.0.400
     - run: dotnet run -p build/build.csproj
     - uses: actions/upload-artifact@v2
       with:
