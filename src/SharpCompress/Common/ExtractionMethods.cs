@@ -14,14 +14,25 @@ namespace SharpCompress.Common
                                                  Action<string, ExtractionOptions?> write)
         {
             string destinationFileName;
-            string file = Path.GetFileName(entry.Key);
             string fullDestinationDirectoryPath = Path.GetFullPath(destinationDirectory);
+            
+            //check for trailing slash.
+            if (fullDestinationDirectoryPath[fullDestinationDirectoryPath.Length - 1] != Path.DirectorySeparatorChar)
+            {
+                fullDestinationDirectoryPath += Path.DirectorySeparatorChar;
+            }
+
+            if (!Directory.Exists(fullDestinationDirectoryPath))
+            {
+                throw new ExtractionException($"Directory does not exist to extract to: {fullDestinationDirectoryPath}");
+            }
 
             options ??= new ExtractionOptions()
             {
                 Overwrite = true
             };
 
+            string file = Path.GetFileName(entry.Key);
             if (options.ExtractFullPath)
             {
                 string folder = Path.GetDirectoryName(entry.Key)!;
