@@ -519,13 +519,37 @@ namespace SharpCompress.Compressors.Deflate
                 throw new ZlibException("Cannot Read after Writing.");
             }
 
+            int rc = 0;
+
+            // set up the output of the deflate/inflate codec:
+            _z.OutputBuffer = buffer;
+            _z.NextOut = offset;
+            _z.AvailableBytesOut = count;
+
             if (count == 0)
             {
                 return 0;
             }
             if (nomoreinput && _wantCompress)
             {
-                return 0; // workitem 8557
+                // no more input data available; therefore we flush to
+                // try to complete the read
+                rc = _z.Deflate(FlushType.Finish);
+
+                if (rc != ZlibConstants.Z_OK && rc != ZlibConstants.Z_STREAM_END)
+                {
+                    throw new ZlibException(String.Format("Deflating:  rc={0}  msg={1}", rc, _z.Message));
+                }
+
+                rc = (count - _z.AvailableBytesOut);
+
+                // calculate CRC after reading
+                if (crc != null)
+                {
+                    crc.SlurpBlock(buffer, offset, rc);
+                }
+
+                return rc;
             }
             if (buffer == null)
             {
@@ -543,13 +567,6 @@ namespace SharpCompress.Compressors.Deflate
             {
                 throw new ArgumentOutOfRangeException(nameof(count));
             }
-
-            int rc = 0;
-
-            // set up the output of the deflate/inflate codec:
-            _z.OutputBuffer = buffer;
-            _z.NextOut = offset;
-            _z.AvailableBytesOut = count;
 
             // This is necessary in case _workingBuffer has been resized. (new byte[])
             // (The first reference to _workingBuffer goes through the private accessor which
