@@ -1,10 +1,12 @@
-﻿using SharpCompress.IO;
+﻿#nullable disable
+
+using SharpCompress.IO;
 
 namespace SharpCompress.Common.Rar.Headers
 {
     internal class ArchiveCryptHeader : RarHeader
     {
-        
+
         private const int CRYPT_VERSION = 0; // Supported encryption version.
         private const int SIZE_SALT50 = 16;
         private const int SIZE_SALT30 = 8;
@@ -13,14 +15,14 @@ namespace SharpCompress.Common.Rar.Headers
         private const int SIZE_PSWCHECK_CSUM = 4;
         private const int CRYPT5_KDF_LG2_COUNT = 15; // LOG2 of PDKDF2 iteration count.
         private const int CRYPT5_KDF_LG2_COUNT_MAX = 24; // LOG2 of maximum accepted iteration count.
-        
-        
+
+
         private bool _usePswCheck;
         private uint _lg2Count; // Log2 of PBKDF2 repetition count.
         private byte[] _salt;
         private byte[] _pswCheck;
         private byte[] _pswCheckCsm;
-        
+
         public ArchiveCryptHeader(RarHeader header, RarCrcBinaryReader reader)
             : base(header, reader, HeaderType.Crypt)
         {
@@ -33,12 +35,12 @@ namespace SharpCompress.Common.Rar.Headers
             {
                 //error?
                 return;
-            } 
+            }
             var encryptionFlags = reader.ReadRarVIntUInt32();
             _usePswCheck = FlagUtility.HasFlag(encryptionFlags, EncryptionFlagsV5.CHFL_CRYPT_PSWCHECK);
             _lg2Count = reader.ReadRarVIntByte(1);
 
-            
+
             //UsePswCheck = HasHeaderFlag(EncryptionFlagsV5.CHFL_CRYPT_PSWCHECK);
             if (_lg2Count > CRYPT5_KDF_LG2_COUNT_MAX)
             {

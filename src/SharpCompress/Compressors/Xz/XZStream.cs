@@ -1,4 +1,6 @@
-﻿using System;
+﻿#nullable disable
+
+using System;
 using System.IO;
 
 namespace SharpCompress.Compressors.Xz
@@ -50,9 +52,15 @@ namespace SharpCompress.Compressors.Xz
         {
             int bytesRead = 0;
             if (_endOfStream)
+            {
                 return bytesRead;
+            }
+
             if (!HeaderIsRead)
+            {
                 ReadHeader();
+            }
+
             bytesRead = ReadBlocks(buffer, offset, count);
             if (bytesRead < count)
             {
@@ -85,19 +93,28 @@ namespace SharpCompress.Compressors.Xz
         private int ReadBlocks(byte[] buffer, int offset, int count)
         {
             int bytesRead = 0;
-            if (_currentBlock == null)
+            if (_currentBlock is null)
+            {
                 NextBlock();
-            for (;;)
+            }
+
+            for (; ; )
             {
                 try
                 {
                     if (bytesRead >= count)
+                    {
                         break;
+                    }
+
                     int remaining = count - bytesRead;
                     int newOffset = offset + bytesRead;
                     int justRead = _currentBlock.Read(buffer, newOffset, remaining);
                     if (justRead < remaining)
+                    {
                         NextBlock();
+                    }
+
                     bytesRead += justRead;
                 }
                 catch (XZIndexMarkerReachedException)

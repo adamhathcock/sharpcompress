@@ -40,7 +40,7 @@ namespace SharpCompress.Common.Zip
                 throw new NotSupportedException("This stream does not encrypt via Read()");
             }
 
-            if (buffer == null)
+            if (buffer is null)
             {
                 throw new ArgumentNullException(nameof(buffer));
             }
@@ -64,7 +64,7 @@ namespace SharpCompress.Common.Zip
                 return;
             }
 
-            byte[] plaintext = null;
+            byte[] plaintext;
             if (offset != 0)
             {
                 plaintext = new byte[count];

@@ -15,20 +15,22 @@ namespace SharpCompress.Archives.Zip
 {
     public class ZipArchive : AbstractWritableArchive<ZipArchiveEntry, ZipVolume>
     {
+#nullable disable
         private readonly SeekableZipHeaderFactory headerFactory;
+#nullable enable
 
         /// <summary>
         /// Gets or sets the compression level applied to files added to the archive,
         /// if the compression method is set to deflate
         /// </summary>
         public CompressionLevel DeflateCompressionLevel { get; set; }
-        
+
         /// <summary>
         /// Constructor expects a filepath to an existing file.
         /// </summary>
         /// <param name="filePath"></param>
         /// <param name="readerOptions"></param>
-        public static ZipArchive Open(string filePath, ReaderOptions readerOptions = null)
+        public static ZipArchive Open(string filePath, ReaderOptions? readerOptions = null)
         {
             filePath.CheckNotNullOrEmpty(nameof(filePath));
             return Open(new FileInfo(filePath), readerOptions ?? new ReaderOptions());
@@ -39,7 +41,7 @@ namespace SharpCompress.Archives.Zip
         /// </summary>
         /// <param name="fileInfo"></param>
         /// <param name="readerOptions"></param>
-        public static ZipArchive Open(FileInfo fileInfo, ReaderOptions readerOptions = null)
+        public static ZipArchive Open(FileInfo fileInfo, ReaderOptions? readerOptions = null)
         {
             fileInfo.CheckNotNull(nameof(fileInfo));
             return new ZipArchive(fileInfo, readerOptions ?? new ReaderOptions());
@@ -50,18 +52,18 @@ namespace SharpCompress.Archives.Zip
         /// </summary>
         /// <param name="stream"></param>
         /// <param name="readerOptions"></param>
-        public static ZipArchive Open(Stream stream, ReaderOptions readerOptions = null)
+        public static ZipArchive Open(Stream stream, ReaderOptions? readerOptions = null)
         {
             stream.CheckNotNull(nameof(stream));
             return new ZipArchive(stream, readerOptions ?? new ReaderOptions());
         }
-        
-        public static bool IsZipFile(string filePath, string password = null)
+
+        public static bool IsZipFile(string filePath, string? password = null)
         {
             return IsZipFile(new FileInfo(filePath), password);
         }
 
-        public static bool IsZipFile(FileInfo fileInfo, string password = null)
+        public static bool IsZipFile(FileInfo fileInfo, string? password = null)
         {
             if (!fileInfo.Exists)
             {
@@ -73,14 +75,13 @@ namespace SharpCompress.Archives.Zip
             }
         }
 
-        public static bool IsZipFile(Stream stream, string password = null)
+        public static bool IsZipFile(Stream stream, string? password = null)
         {
             StreamingZipHeaderFactory headerFactory = new StreamingZipHeaderFactory(password, new ArchiveEncoding());
             try
             {
-                ZipHeader header =
-                    headerFactory.ReadStreamHeader(stream).FirstOrDefault(x => x.ZipHeaderType != ZipHeaderType.Split);
-                if (header == null)
+                ZipHeader? header = headerFactory.ReadStreamHeader(stream).FirstOrDefault(x => x.ZipHeaderType != ZipHeaderType.Split);
+                if (header is null)
                 {
                     return false;
                 }
@@ -95,7 +96,7 @@ namespace SharpCompress.Archives.Zip
                 return false;
             }
         }
-        
+
         /// <summary>
         /// Constructor with a FileInfo object to an existing file.
         /// </summary>
@@ -147,13 +148,13 @@ namespace SharpCompress.Archives.Zip
                             {
                                 yield return new ZipArchiveEntry(this,
                                                                  new SeekableZipFilePart(headerFactory,
-                                                                                         h as DirectoryEntryHeader,
+                                                                                         (DirectoryEntryHeader)h,
                                                                                          stream));
                             }
                             break;
                         case ZipHeaderType.DirectoryEnd:
                             {
-                                byte[] bytes = (h as DirectoryEndHeader).Comment;
+                                byte[] bytes = ((DirectoryEndHeader)h).Comment ?? Array.Empty<byte>();
                                 volume.Comment = ReaderOptions.ArchiveEncoding.Decode(bytes);
                                 yield break;
                             }

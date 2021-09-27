@@ -23,7 +23,7 @@ namespace SharpCompress.Archives.Rar
                 yield return part;
             }
         }
-        
+
         internal static IEnumerable<RarVolume> GetParts(FileInfo fileInfo, ReaderOptions options)
         {
             FileInfoRarArchiveVolume part = new FileInfoRarArchiveVolume(fileInfo, options);
@@ -34,20 +34,20 @@ namespace SharpCompress.Archives.Rar
             {
                 yield break; //if file isn't volume then there is no reason to look
             }
-            fileInfo = GetNextFileInfo(ah, part.FileParts.FirstOrDefault() as FileInfoRarFilePart);
+            fileInfo = GetNextFileInfo(ah, part.FileParts.FirstOrDefault() as FileInfoRarFilePart)!;
             //we use fileinfo because rar is dumb and looks at file names rather than archive info for another volume
             while (fileInfo != null && fileInfo.Exists)
             {
                 part = new FileInfoRarArchiveVolume(fileInfo, options);
 
-                fileInfo = GetNextFileInfo(ah, part.FileParts.FirstOrDefault() as FileInfoRarFilePart);
+                fileInfo = GetNextFileInfo(ah, part.FileParts.FirstOrDefault() as FileInfoRarFilePart)!;
                 yield return part;
             }
         }
 
-        private static FileInfo GetNextFileInfo(ArchiveHeader ah, FileInfoRarFilePart currentFilePart)
+        private static FileInfo? GetNextFileInfo(ArchiveHeader ah, FileInfoRarFilePart? currentFilePart)
         {
-            if (currentFilePart == null)
+            if (currentFilePart is null)
             {
                 return null;
             }
@@ -68,7 +68,7 @@ namespace SharpCompress.Archives.Rar
             // .rar, .r00, .r01, ...
             string extension = currentFileInfo.Extension;
 
-            StringBuilder buffer = new StringBuilder(currentFileInfo.FullName.Length);
+            var buffer = new StringBuilder(currentFileInfo.FullName.Length);
             buffer.Append(currentFileInfo.FullName.Substring(0,
                                                              currentFileInfo.FullName.Length - extension.Length));
             if (string.Compare(extension, ".rar", StringComparison.OrdinalIgnoreCase) == 0)
@@ -77,8 +77,7 @@ namespace SharpCompress.Archives.Rar
             }
             else
             {
-                int num = 0;
-                if (int.TryParse(extension.Substring(2, 2), out num))
+                if (int.TryParse(extension.Substring(2, 2), out int num))
                 {
                     num++;
                     buffer.Append(".r");
@@ -111,12 +110,11 @@ namespace SharpCompress.Archives.Rar
             }
             StringBuilder buffer = new StringBuilder(currentFileInfo.FullName.Length);
             buffer.Append(currentFileInfo.FullName, 0, startIndex);
-            int num = 0;
             string numString = currentFileInfo.FullName.Substring(startIndex + 5,
                                                                   currentFileInfo.FullName.IndexOf('.', startIndex + 5) -
                                                                   startIndex - 5);
             buffer.Append(".part");
-            if (int.TryParse(numString, out num))
+            if (int.TryParse(numString, out int num))
             {
                 num++;
                 for (int i = 0; i < numString.Length - num.ToString().Length; i++)

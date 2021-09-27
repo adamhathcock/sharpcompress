@@ -1,4 +1,6 @@
-﻿using System.Collections;
+﻿#nullable disable
+
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -33,7 +35,8 @@ namespace SharpCompress.Readers.Rar
 
         internal override bool NextEntryForCurrentStream()
         {
-            if (!base.NextEntryForCurrentStream()) {
+            if (!base.NextEntryForCurrentStream())
+            {
                 // if we're got another stream to try to process then do so
                 return streams.MoveNext() && LoadStreamForReading(streams.Current);
             }

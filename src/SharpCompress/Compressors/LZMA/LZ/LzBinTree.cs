@@ -1,9 +1,11 @@
+#nullable disable
+
 using System;
 using System.IO;
 
 namespace SharpCompress.Compressors.LZMA.LZ
 {
-    internal class BinTree : InWindow
+    internal sealed class BinTree : InWindow
     {
         private UInt32 _cyclicBufferPos;
         private UInt32 _cyclicBufferSize;

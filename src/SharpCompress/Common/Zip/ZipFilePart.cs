@@ -60,72 +60,72 @@ namespace SharpCompress.Common.Zip
             switch (method)
             {
                 case ZipCompressionMethod.None:
-                {
-                    return stream;
-                }
+                    {
+                        return stream;
+                    }
                 case ZipCompressionMethod.Deflate:
-                {
-                    return new DeflateStream(stream, CompressionMode.Decompress);
-                }
+                    {
+                        return new DeflateStream(stream, CompressionMode.Decompress);
+                    }
                 case ZipCompressionMethod.Deflate64:
-                {
-                    return new Deflate64Stream(stream, CompressionMode.Decompress);
-                }
+                    {
+                        return new Deflate64Stream(stream, CompressionMode.Decompress);
+                    }
                 case ZipCompressionMethod.BZip2:
-                {
-                    return new BZip2Stream(stream, CompressionMode.Decompress, false);
-                }
+                    {
+                        return new BZip2Stream(stream, CompressionMode.Decompress, false);
+                    }
                 case ZipCompressionMethod.LZMA:
-                {
-                    if (FlagUtility.HasFlag(Header.Flags, HeaderFlags.Encrypted))
                     {
-                        throw new NotSupportedException("LZMA with pkware encryption.");
+                        if (FlagUtility.HasFlag(Header.Flags, HeaderFlags.Encrypted))
+                        {
+                            throw new NotSupportedException("LZMA with pkware encryption.");
+                        }
+                        var reader = new BinaryReader(stream);
+                        reader.ReadUInt16(); //LZMA version
+                        var props = new byte[reader.ReadUInt16()];
+                        reader.Read(props, 0, props.Length);
+                        return new LzmaStream(props, stream,
+                                              Header.CompressedSize > 0 ? Header.CompressedSize - 4 - props.Length : -1,
+                                              FlagUtility.HasFlag(Header.Flags, HeaderFlags.Bit1)
+                                                  ? -1
+                                                  : (long)Header.UncompressedSize);
                     }
-                    var reader = new BinaryReader(stream);
-                    reader.ReadUInt16(); //LZMA version
-                    var props = new byte[reader.ReadUInt16()];
-                    reader.Read(props, 0, props.Length);
-                    return new LzmaStream(props, stream,
-                                          Header.CompressedSize > 0 ? Header.CompressedSize - 4 - props.Length : -1,
-                                          FlagUtility.HasFlag(Header.Flags, HeaderFlags.Bit1)
-                                              ? -1
-                                              : (long)Header.UncompressedSize);
-                }
                 case ZipCompressionMethod.PPMd:
-                {
-                    var props = new byte[2];
-                    stream.ReadFully(props);
-                    return new PpmdStream(new PpmdProperties(props), stream, false);
-                }
+                    {
+                        Span<byte> props = stackalloc byte[2];
+                        stream.ReadFully(props);
+                        return new PpmdStream(new PpmdProperties(props), stream, false);
+                    }
                 case ZipCompressionMethod.WinzipAes:
-                {
-                    ExtraData data = Header.Extra.Where(x => x.Type == ExtraDataType.WinZipAes).SingleOrDefault();
-                    if (data == null)
                     {
-                        throw new InvalidFormatException("No Winzip AES extra data found.");
-                    }
-                    if (data.Length != 7)
-                    {
-                        throw new InvalidFormatException("Winzip data length is not 7.");
-                    }
-                    ushort compressedMethod = BinaryPrimitives.ReadUInt16LittleEndian(data.DataBytes);
+                        ExtraData? data = Header.Extra.SingleOrDefault(x => x.Type == ExtraDataType.WinZipAes);
+                        if (data is null)
+                        {
+                            throw new InvalidFormatException("No Winzip AES extra data found.");
+                        }
+                        if (data.Length != 7)
+                        {
+                            throw new InvalidFormatException("Winzip data length is not 7.");
+                        }
+                        ushort compressedMethod = BinaryPrimitives.ReadUInt16LittleEndian(data.DataBytes);
 
-                    if (compressedMethod != 0x01 && compressedMethod != 0x02)
-                    {
-                        throw new InvalidFormatException("Unexpected vendor version number for WinZip AES metadata");
-                    }
+                        if (compressedMethod != 0x01 && compressedMethod != 0x02)
+                        {
+                            throw new InvalidFormatException("Unexpected vendor version number for WinZip AES metadata");
+                        }
 
-                    ushort vendorId = BinaryPrimitives.ReadUInt16LittleEndian(data.DataBytes.AsSpan(2));
-                    if (vendorId != 0x4541)
-                    {
-                        throw new InvalidFormatException("Unexpected vendor ID for WinZip AES metadata");
+                        ushort vendorId = BinaryPrimitives.ReadUInt16LittleEndian(data.DataBytes.AsSpan(2));
+                        if (vendorId != 0x4541)
+                        {
+                            throw new InvalidFormatException("Unexpected vendor ID for WinZip AES metadata");
+                        }
+                        return CreateDecompressionStream(stream, (ZipCompressionMethod)BinaryPrimitives.ReadUInt16LittleEndian(data.DataBytes.AsSpan(5)));
                     }
-                    return CreateDecompressionStream(stream, (ZipCompressionMethod)BinaryPrimitives.ReadUInt16LittleEndian(data.DataBytes.AsSpan(5)));
-                }
                 default:
-                {
-                    throw new NotSupportedException("CompressionMethod: " + Header.CompressionMethod);
-                }
+                    {
+                        throw new NotSupportedException("CompressionMethod: " + Header.CompressionMethod);
+                    }
             }
         }
 
@@ -159,23 +159,23 @@ namespace SharpCompress.Common.Zip
                     case ZipCompressionMethod.BZip2:
                     case ZipCompressionMethod.LZMA:
                     case ZipCompressionMethod.PPMd:
-                    {
-                        return new PkwareTraditionalCryptoStream(plainStream, Header.ComposeEncryptionData(plainStream), CryptoMode.Decrypt);
-                    }
+                        {
+                            return new PkwareTraditionalCryptoStream(plainStream, Header.ComposeEncryptionData(plainStream), CryptoMode.Decrypt);
+                        }
 
                     case ZipCompressionMethod.WinzipAes:
-                    {
-                        if (Header.WinzipAesEncryptionData != null)
                         {
-                            return new WinzipAesCryptoStream(plainStream, Header.WinzipAesEncryptionData, Header.CompressedSize - 10);
+                            if (Header.WinzipAesEncryptionData != null)
+                            {
+                                return new WinzipAesCryptoStream(plainStream, Header.WinzipAesEncryptionData, Header.CompressedSize - 10);
+                            }
+                            return plainStream;
                         }
-                        return plainStream;
-                    }
 
                     default:
-                    {
-                        throw new ArgumentOutOfRangeException();
-                    }
+                        {
+                            throw new ArgumentOutOfRangeException();
+                        }
 
                 }
             }

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Text;
 using SharpCompress.Common.Zip.Headers;
 using SharpCompress.Compressors.Deflate;
 
@@ -8,7 +7,7 @@ namespace SharpCompress.Common.Zip
     internal class PkwareTraditionalEncryptionData
     {
         private static readonly CRC32 CRC32 = new CRC32();
-        private readonly UInt32[] _keys = {0x12345678, 0x23456789, 0x34567890};
+        private readonly UInt32[] _keys = { 0x12345678, 0x23456789, 0x34567890 };
         private readonly ArchiveEncoding _archiveEncoding;
 
         private PkwareTraditionalEncryptionData(string password, ArchiveEncoding archiveEncoding)
@@ -65,9 +64,9 @@ namespace SharpCompress.Common.Zip
 
         public byte[] Encrypt(byte[] plainText, int length)
         {
-            if (plainText == null)
+            if (plainText is null)
             {
-                throw new ArgumentNullException("plaintext");
+                throw new ArgumentNullException(nameof(plainText));
             }
 
             if (length > plainText.Length)

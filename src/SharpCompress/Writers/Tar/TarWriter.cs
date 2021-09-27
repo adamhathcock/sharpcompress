@@ -32,24 +32,24 @@ namespace SharpCompress.Writers.Tar
                 case CompressionType.None:
                     break;
                 case CompressionType.BZip2:
-                {
-                    destination = new BZip2Stream(destination, CompressionMode.Compress, false);
-                }
+                    {
+                        destination = new BZip2Stream(destination, CompressionMode.Compress, false);
+                    }
                     break;
                 case CompressionType.GZip:
-                {
-                    destination = new GZipStream(destination, CompressionMode.Compress);
-                }
+                    {
+                        destination = new GZipStream(destination, CompressionMode.Compress);
+                    }
                     break;
                 case CompressionType.LZip:
-                {
-                    destination = new LZipStream(destination, CompressionMode.Compress);
-                }
+                    {
+                        destination = new LZipStream(destination, CompressionMode.Compress);
+                    }
                     break;
                 default:
-                {
-                    throw new InvalidFormatException("Tar does not support compression: " + options.CompressionType);
-                }
+                    {
+                        throw new InvalidFormatException("Tar does not support compression: " + options.CompressionType);
+                    }
             }
             InitalizeStream(destination);
         }
@@ -74,7 +74,7 @@ namespace SharpCompress.Writers.Tar
 
         public void Write(string filename, Stream source, DateTime? modificationTime, long? size)
         {
-            if (!source.CanSeek && size == null)
+            if (!source.CanSeek && size is null)
             {
                 throw new ArgumentException("Seekable stream is required if no size is given.");
             }
@@ -87,41 +87,38 @@ namespace SharpCompress.Writers.Tar
             header.Name = NormalizeFilename(filename);
             header.Size = realSize;
             header.Write(OutputStream);
+
             size = source.TransferTo(OutputStream);
-            PadTo512(size.Value, false);
+            PadTo512(size.Value);
         }
 
-        private void PadTo512(long size, bool forceZeros)
+        private void PadTo512(long size)
         {
-            int zeros = (int)size % 512;
-            if (zeros == 0 && !forceZeros)
-            {
-                return;
-            }
-            zeros = 512 - zeros;
-            OutputStream.Write(new byte[zeros], 0, zeros);
+            int zeros = unchecked((int)(((size + 511L) & ~511L) - size));
+
+            OutputStream.Write(stackalloc byte[zeros]);
         }
 
         protected override void Dispose(bool isDisposing)
         {
             if (isDisposing)
             {
-                if (finalizeArchiveOnClose) {
-                    PadTo512(0, true);
-                    PadTo512(0, true);
+                if (finalizeArchiveOnClose)
+                {
+                    OutputStream.Write(stackalloc byte[1024]);
                 }
                 switch (OutputStream)
                 {
                     case BZip2Stream b:
-                    {
-                        b.Finish();
-                        break;
-                    }
+                        {
+                            b.Finish();
+                            break;
+                        }
                     case LZipStream l:
-                    {
-                        l.Finish();
-                        break;
-                    }
+                        {
+                            l.Finish();
+                            break;
+                        }
                 }
             }
             base.Dispose(isDisposing);

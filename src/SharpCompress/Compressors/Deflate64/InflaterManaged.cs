@@ -26,6 +26,8 @@
 //
 //
 
+#nullable disable
+
 using System;
 using System.Diagnostics;
 using System.IO;
@@ -37,7 +39,7 @@ namespace SharpCompress.Compressors.Deflate64
         // const tables used in decoding:
 
         // Extra bits for length code 257 - 285.
-        private static readonly byte[] S_EXTRA_LENGTH_BITS =
+        private static ReadOnlySpan<byte> S_EXTRA_LENGTH_BITS => new byte[]
             { 0,0,0,0,0,0,0,0,1,1,1,1,2,2,2,2,3,3,3,3,4,4,4,4,5,5,5,5,16 };
 
         // The base length for length code 257 - 285.
@@ -51,9 +53,9 @@ namespace SharpCompress.Compressors.Deflate64
             { 1,2,3,4,5,7,9,13,17,25,33,49,65,97,129,193,257,385,513,769,1025,1537,2049,3073,4097,6145,8193,12289,16385,24577,32769,49153 };
 
         // code lengths for code length alphabet is stored in following order
-        private static readonly byte[] S_CODE_ORDER = { 16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1, 15 };
+        private static ReadOnlySpan<byte> S_CODE_ORDER => new byte[] { 16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1, 15 };
 
-        private static readonly byte[] S_STATIC_DISTANCE_TREE_TABLE =
+        private static ReadOnlySpan<byte> S_STATIC_DISTANCE_TREE_TABLE => new byte[]
         {
             0x00,0x10,0x08,0x18,0x04,0x14,0x0c,0x1c,0x02,0x12,0x0a,0x1a,
             0x06,0x16,0x0e,0x1e,0x01,0x11,0x09,0x19,0x05,0x15,0x0d,0x1d,
@@ -112,7 +114,7 @@ namespace SharpCompress.Compressors.Deflate64
         private void Reset()
         {
             _state = //_hasFormatReader ?
-                //InflaterState.ReadingHeader :   // start by reading Header info
+                     //InflaterState.ReadingHeader :   // start by reading Header info
                 InflaterState.ReadingBFinal;    // start by reading BFinal bit
         }
 
@@ -220,7 +222,9 @@ namespace SharpCompress.Compressors.Deflate64
                 // reading bfinal bit
                 // Need 1 bit
                 if (!_input.EnsureBitsAvailable(1))
+                {
                     return false;
+                }
 
                 _bfinal = _input.GetBits(1);
                 _state = InflaterState.ReadingBType;
@@ -290,7 +294,7 @@ namespace SharpCompress.Compressors.Deflate64
                 //if (_hasFormatReader)
                 //    _state = InflaterState.StartReadingFooter;
                 //else
-                    _state = InflaterState.Done;
+                _state = InflaterState.Done;
             }
             return result;
         }
@@ -718,7 +722,7 @@ namespace SharpCompress.Compressors.Deflate64
             byte[] distanceTreeCodeLength = new byte[HuffmanTree.MAX_DIST_TREE_ELEMENTS];
 
             // Create literal and distance tables
-            Array.Copy(_codeList, 0, literalTreeCodeLength, 0, _literalLengthCodeCount);
+            Array.Copy(_codeList, literalTreeCodeLength, _literalLengthCodeCount);
             Array.Copy(_codeList, _literalLengthCodeCount, distanceTreeCodeLength, 0, _distanceCodeCount);
 
             // Make sure there is an end-of-block code, otherwise how could we ever end?

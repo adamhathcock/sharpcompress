@@ -1,3 +1,5 @@
+#nullable disable
+
 using System;
 using System.IO;
 using SharpCompress.Compressors.LZMA.LZ;
@@ -273,7 +275,7 @@ namespace SharpCompress.Compressors.LZMA
         public void Code(Stream inStream, Stream outStream,
                          Int64 inSize, Int64 outSize, ICodeProgress progress)
         {
-            if (_outWindow == null)
+            if (_outWindow is null)
             {
                 CreateDictionary();
             }
@@ -446,7 +448,7 @@ namespace SharpCompress.Compressors.LZMA
 
         public void Train(Stream stream)
         {
-            if (_outWindow == null)
+            if (_outWindow is null)
             {
                 CreateDictionary();
             }

@@ -16,7 +16,10 @@ namespace SharpCompress.Compressors.Xz.Filters
             get
             {
                 if (_dictionarySize > 40)
+                {
                     throw new OverflowException("Dictionary size greater than UInt32.Max");
+                }
+
                 if (_dictionarySize == 40)
                 {
                     return uint.MaxValue;
@@ -30,12 +33,16 @@ namespace SharpCompress.Compressors.Xz.Filters
         public override void Init(byte[] properties)
         {
             if (properties.Length != 1)
+            {
                 throw new InvalidDataException("LZMA properties unexpected length");
+            }
 
             _dictionarySize = (byte)(properties[0] & 0x3F);
             var reserved = properties[0] & 0xC0;
             if (reserved != 0)
+            {
                 throw new InvalidDataException("Reserved bits used in LZMA properties");
+            }
         }
 
         public override void ValidateFilter()

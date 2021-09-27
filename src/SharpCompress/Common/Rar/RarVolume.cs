@@ -21,7 +21,9 @@ namespace SharpCompress.Common.Rar
             _headerFactory = new RarHeaderFactory(mode, options);
         }
 
+#nullable disable
         internal ArchiveHeader ArchiveHeader { get; private set; }
+#nullable enable
 
         internal StreamingMode Mode => _headerFactory.StreamingMode;
 
@@ -31,26 +33,26 @@ namespace SharpCompress.Common.Rar
 
         internal IEnumerable<RarFilePart> GetVolumeFileParts()
         {
-            MarkHeader lastMarkHeader = null;
+            MarkHeader? lastMarkHeader = null;
             foreach (var header in _headerFactory.ReadHeaders(Stream))
             {
                 switch (header.HeaderType)
                 {
                     case HeaderType.Mark:
-                    {
-                        lastMarkHeader = header as MarkHeader;
-                    }
+                        {
+                            lastMarkHeader = (MarkHeader)header;
+                        }
                         break;
                     case HeaderType.Archive:
-                    {
-                        ArchiveHeader = header as ArchiveHeader;
-                    }
+                        {
+                            ArchiveHeader = (ArchiveHeader)header;
+                        }
                         break;
                     case HeaderType.File:
-                    {
-                        var fh = header as FileHeader;
-                        yield return CreateFilePart(lastMarkHeader, fh);
-                    }
+                        {
+                            var fh = (FileHeader)header;
+                            yield return CreateFilePart(lastMarkHeader!, fh);
+                        }
                         break;
                 }
             }
@@ -58,7 +60,7 @@ namespace SharpCompress.Common.Rar
 
         private void EnsureArchiveHeaderLoaded()
         {
-            if (ArchiveHeader == null)
+            if (ArchiveHeader is null)
             {
                 if (Mode == StreamingMode.Streaming)
                 {

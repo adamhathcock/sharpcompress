@@ -14,10 +14,10 @@ namespace SharpCompress.Compressors.LZMA
     /// <summary>
     /// Stream supporting the LZIP format, as documented at http://www.nongnu.org/lzip/manual/lzip_manual.html
     /// </summary>
-    public class LZipStream : Stream
+    public sealed class LZipStream : Stream
     {
         private readonly Stream _stream;
-        private readonly CountingWritableSubStream _countingWritableSubStream;
+        private readonly CountingWritableSubStream? _countingWritableSubStream;
         private bool _disposed;
         private bool _finished;
 
@@ -57,18 +57,18 @@ namespace SharpCompress.Compressors.LZMA
                     var crc32Stream = (Crc32Stream)_stream;
                     crc32Stream.WrappedStream.Dispose();
                     crc32Stream.Dispose();
-                    var compressedCount = _countingWritableSubStream.Count;
+                    var compressedCount = _countingWritableSubStream!.Count;
 
-                    byte[] intBuf = new byte[8];
+                    Span<byte> intBuf = stackalloc byte[8];
                     BinaryPrimitives.WriteUInt32LittleEndian(intBuf, crc32Stream.Crc);
-                    _countingWritableSubStream.Write(intBuf, 0, 4);
+                    _countingWritableSubStream.Write(intBuf.Slice(0, 4));
 
                     BinaryPrimitives.WriteInt64LittleEndian(intBuf, _writeCount);
-                    _countingWritableSubStream.Write(intBuf, 0, 8);
+                    _countingWritableSubStream.Write(intBuf);
 
                     //total with headers
                     BinaryPrimitives.WriteUInt64LittleEndian(intBuf, compressedCount + 6 + 20);
-                    _countingWritableSubStream.Write(intBuf, 0, 8);
+                    _countingWritableSubStream.Write(intBuf);
                 }
                 _finished = true;
             }
@@ -117,6 +117,23 @@ namespace SharpCompress.Compressors.LZMA
 
         public override void SetLength(long value) => throw new NotImplementedException();
 
+
+#if !NET461 && !NETSTANDARD2_0
+
+        public override int Read(Span<byte> buffer)
+        {
+            return _stream.Read(buffer);
+        }
+
+        public override void Write(ReadOnlySpan<byte> buffer)
+        {
+            _stream.Write(buffer);
+
+            _writeCount += buffer.Length;
+        }
+
+#endif
+
         public override void Write(byte[] buffer, int offset, int count)
         {
             _stream.Write(buffer, offset, count);
@@ -147,13 +164,14 @@ namespace SharpCompress.Compressors.LZMA
         /// </summary>
         public static int ValidateAndReadSize(Stream stream)
         {
-            if (stream == null)
+            if (stream is null)
             {
                 throw new ArgumentNullException(nameof(stream));
             }
+
             // Read the header
-            byte[] header = new byte[6];
-            int n = stream.Read(header, 0, header.Length);
+            Span<byte> header = stackalloc byte[6];
+            int n = stream.Read(header);
 
             // TODO: Handle reading only part of the header?
 
@@ -171,15 +189,17 @@ namespace SharpCompress.Compressors.LZMA
             return (1 << basePower) - subtractionNumerator * (1 << (basePower - 4));
         }
 
+        private static readonly byte[] headerBytes = new byte[6] { (byte)'L', (byte)'Z', (byte)'I', (byte)'P', 1, 113 };
+
         public static void WriteHeaderSize(Stream stream)
         {
-            if (stream == null)
+            if (stream is null)
             {
                 throw new ArgumentNullException(nameof(stream));
             }
+
             // hard coding the dictionary size encoding
-            byte[] header = new byte[6] {(byte)'L', (byte)'Z', (byte)'I', (byte)'P', 1, 113};
-            stream.Write(header, 0, 6);
+            stream.Write(headerBytes, 0, 6);
         }
 
         /// <summary>

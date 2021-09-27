@@ -165,10 +165,10 @@ namespace SharpCompress.Test.Zip
 
                 WriterOptions writerOptions = new ZipWriterOptions(CompressionType.Deflate);
                 writerOptions.ArchiveEncoding.Default = Encoding.GetEncoding(866);
-                
+
                 archive.SaveTo(scratchPath, writerOptions);
             }
-            CompareArchivesByPath(modified, scratchPath);
+            CompareArchivesByPath(modified, scratchPath, Encoding.GetEncoding(866));
         }
 
         [Fact]
@@ -185,10 +185,10 @@ namespace SharpCompress.Test.Zip
 
                 WriterOptions writerOptions = new ZipWriterOptions(CompressionType.Deflate);
                 writerOptions.ArchiveEncoding.Default = Encoding.GetEncoding(866);
-                
+
                 archive.SaveTo(scratchPath, writerOptions);
             }
-            CompareArchivesByPath(modified, scratchPath);
+            CompareArchivesByPath(modified, scratchPath, Encoding.GetEncoding(866));
         }
 
         [Fact]
@@ -280,14 +280,36 @@ namespace SharpCompress.Test.Zip
             using (var archive = ZipArchive.Create())
             {
                 archive.AddAllFromDirectory(SCRATCH_FILES_PATH);
-                
+
                 WriterOptions writerOptions = new ZipWriterOptions(CompressionType.Deflate);
                 writerOptions.ArchiveEncoding.Default = Encoding.GetEncoding(866);
-                
+
                 archive.SaveTo(scratchPath, writerOptions);
             }
-            CompareArchivesByPath(unmodified, scratchPath);
+            CompareArchivesByPath(unmodified, scratchPath, Encoding.GetEncoding(866));
             Directory.Delete(SCRATCH_FILES_PATH, true);
+        }
+
+        /// <summary>
+        /// Creates an empty zip file and attempts to read it right afterwards. 
+        /// Ensures that parsing file headers works even in that case
+        /// </summary>
+        [Fact]
+        public void Zip_Create_Empty_And_Read()
+        {
+            var archive = ZipArchive.Create();
+
+            var archiveStream = new MemoryStream();
+
+            archive.SaveTo(archiveStream, CompressionType.LZMA);
+
+            archiveStream.Position = 0;
+
+            var readArchive = ArchiveFactory.Open(archiveStream);
+
+            var count = readArchive.Entries.Count();
+
+            Assert.Equal(0, count);
         }
 
         [Fact]
@@ -401,7 +423,9 @@ namespace SharpCompress.Test.Zip
             ZipArchive a = ZipArchive.Open(unmodified);
             int count = 0;
             foreach (var e in a.Entries)
+            {
                 count++;
+            }
 
             //Prints 3
             Assert.Equal(3, count);
@@ -426,7 +450,9 @@ namespace SharpCompress.Test.Zip
 
             int count3 = 0;
             foreach (var e in a.Entries)
+            {
                 count3++;
+            }
 
             Assert.Equal(3, count3);
         }
@@ -447,7 +473,9 @@ namespace SharpCompress.Test.Zip
                         {
                             using (var memoryStream = new MemoryStream())
                             using (Stream entryStream = entry.OpenEntryStream())
+                            {
                                 entryStream.CopyTo(memoryStream);
+                            }
                         }
                     }
                 }
@@ -459,10 +487,11 @@ namespace SharpCompress.Test.Zip
         {
             //windows only because of the paths
             Skip.IfNot(Environment.OSVersion.Platform == PlatformID.Win32NT);
-            
+
             string zipFile = Path.Combine(TEST_ARCHIVES_PATH, "Zip.Evil.zip");
 
-            Assert.ThrowsAny<Exception>(() => {
+            Assert.ThrowsAny<Exception>(() =>
+            {
                 using (var archive = ZipArchive.Open(zipFile))
                 {
                     foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
@@ -507,7 +536,9 @@ namespace SharpCompress.Test.Zip
                         byte[] buf = new byte[bufSize];
                         int bytesRead = 0;
                         while ((bytesRead = entryStream.Read(buf, 0, bufSize)) > 0)
+                        {
                             tempStream.Write(buf, 0, bytesRead);
+                        }
                     }
                 }
             }
@@ -555,5 +586,35 @@ namespace SharpCompress.Test.Zip
                 }
             }
         }
-   }
+
+        [Fact]
+        public void Zip_LongComment_Read()
+        {
+            string zipPath = Path.Combine(TEST_ARCHIVES_PATH, "Zip.LongComment.zip");
+
+            using(ZipArchive za = ZipArchive.Open(zipPath))
+            {
+                var count = za.Entries.Count;
+                Assert.Equal(1, count);
+            }
+        }
+
+        [Fact]
+        public void Zip_Zip64_CompressedSizeExtraOnly_Read()
+        {
+            string zipPath = Path.Combine(TEST_ARCHIVES_PATH, "Zip.zip64.compressedonly.zip");
+
+            using (ZipArchive za = ZipArchive.Open(zipPath))
+            {
+                var firstEntry = za.Entries.First(x => x.Key == "test/test.txt");
+
+                using (var memoryStream = new MemoryStream())
+                using (var firstStream = firstEntry.OpenEntryStream())
+                {
+                    firstStream.CopyTo(memoryStream);
+                    Assert.Equal(15, memoryStream.Length);
+                }
+            }
+        }
+    }
 }

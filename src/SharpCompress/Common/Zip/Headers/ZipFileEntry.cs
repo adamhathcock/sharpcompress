@@ -1,4 +1,6 @@
-﻿using System;
+﻿#nullable disable
+
+using System;
 using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.IO;
@@ -18,7 +20,7 @@ namespace SharpCompress.Common.Zip.Headers
         {
             get
             {
-                if (Name.EndsWith("/"))
+                if (Name.EndsWith('/'))
                 {
                     return true;
                 }
@@ -26,7 +28,7 @@ namespace SharpCompress.Common.Zip.Headers
                 //.NET Framework 4.5 : System.IO.Compression::CreateFromDirectory() probably writes backslashes to headers
                 return CompressedSize == 0
                        && UncompressedSize == 0
-                       && Name.EndsWith("\\");
+                       && Name.EndsWith('\\');
             }
         }
 
@@ -52,7 +54,7 @@ namespace SharpCompress.Common.Zip.Headers
 
         internal PkwareTraditionalEncryptionData ComposeEncryptionData(Stream archiveStream)
         {
-            if (archiveStream == null)
+            if (archiveStream is null)
             {
                 throw new ArgumentNullException(nameof(archiveStream));
             }
@@ -60,7 +62,7 @@ namespace SharpCompress.Common.Zip.Headers
             var buffer = new byte[12];
             archiveStream.ReadFully(buffer);
 
-            PkwareTraditionalEncryptionData encryptionData = PkwareTraditionalEncryptionData.ForRead(Password, this, buffer);
+            PkwareTraditionalEncryptionData encryptionData = PkwareTraditionalEncryptionData.ForRead(Password!, this, buffer);
 
             return encryptionData;
         }
@@ -103,6 +105,6 @@ namespace SharpCompress.Common.Zip.Headers
 
         internal ZipFilePart Part { get; set; }
 
-        internal bool IsZip64 => CompressedSize == uint.MaxValue;
+        internal bool IsZip64 => CompressedSize >= uint.MaxValue;
     }
 }

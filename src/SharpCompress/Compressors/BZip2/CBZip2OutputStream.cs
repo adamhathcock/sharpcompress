@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 
 /*
  * Copyright 2001,2004-2005 The Apache Software Foundation
@@ -22,6 +23,8 @@
  * great code.
  */
 
+#nullable disable
+
 namespace SharpCompress.Compressors.BZip2
 {
     /**
@@ -35,14 +38,14 @@ namespace SharpCompress.Compressors.BZip2
       * start of the BZIP2 stream to make it compatible with other PGP programs.
       */
 
-    internal class CBZip2OutputStream : Stream
+    internal sealed class CBZip2OutputStream : Stream
     {
-        protected const int SETMASK = (1 << 21);
-        protected const int CLEARMASK = (~SETMASK);
-        protected const int GREATER_ICOST = 15;
-        protected const int LESSER_ICOST = 0;
-        protected const int SMALL_THRESH = 20;
-        protected const int DEPTH_THRESH = 10;
+        private const int SETMASK = (1 << 21);
+        private const int CLEARMASK = (~SETMASK);
+        private const int GREATER_ICOST = 15;
+        private const int LESSER_ICOST = 0;
+        private const int SMALL_THRESH = 20;
+        private const int DEPTH_THRESH = 10;
 
         /*
         If you are ever unlucky/improbable enough
@@ -52,7 +55,7 @@ namespace SharpCompress.Compressors.BZip2
         stack go above 27 elems, so the following
         limit seems very generous.
         */
-        protected const int QSORT_STACK_SIZE = 1000;
+        private const int QSORT_STACK_SIZE = 1000;
         private bool finished;
 
         private static void Panic()
@@ -76,7 +79,7 @@ namespace SharpCompress.Compressors.BZip2
             }
         }
 
-        protected static void HbMakeCodeLengths(char[] len, int[] freq,
+        private static void HbMakeCodeLengths(char[] len, int[] freq,
                                                 int alphaSize, int maxLen)
         {
             /*
@@ -86,9 +89,9 @@ namespace SharpCompress.Compressors.BZip2
             int nNodes, nHeap, n1, n2, i, j, k;
             bool tooLong;
 
-            int[] heap = new int[BZip2Constants.MAX_ALPHA_SIZE + 2];
-            int[] weight = new int[BZip2Constants.MAX_ALPHA_SIZE * 2];
-            int[] parent = new int[BZip2Constants.MAX_ALPHA_SIZE * 2];
+            Span<int> heap = stackalloc int[BZip2Constants.MAX_ALPHA_SIZE + 2]; // 1040 bytes
+            Span<int> weight = stackalloc int[BZip2Constants.MAX_ALPHA_SIZE * 2];  // 1040 bytes
+            Span<int> parent = stackalloc int[BZip2Constants.MAX_ALPHA_SIZE * 2];  // 1040 bytes
 
             for (i = 0; i < alphaSize; i++)
             {
@@ -601,14 +604,7 @@ namespace SharpCompress.Compressors.BZip2
             while (bsLive > 0)
             {
                 int ch = (bsBuff >> 24);
-                try
-                {
-                    bsStream.WriteByte((byte)ch); // write 8-bit
-                }
-                catch (IOException e)
-                {
-                    throw e;
-                }
+                bsStream.WriteByte((byte)ch); // write 8-bit
                 bsBuff <<= 8;
                 bsLive -= 8;
                 bytesOut++;
@@ -620,14 +616,7 @@ namespace SharpCompress.Compressors.BZip2
             while (bsLive >= 8)
             {
                 int ch = (bsBuff >> 24);
-                try
-                {
-                    bsStream.WriteByte((byte)ch); // write 8-bit
-                }
-                catch (IOException e)
-                {
-                    throw e;
-                }
+                bsStream.WriteByte((byte)ch); // write 8-bit
                 bsBuff <<= 8;
                 bsLive -= 8;
                 bytesOut++;
@@ -1326,8 +1315,8 @@ namespace SharpCompress.Compressors.BZip2
         private void MainSort()
         {
             int i, j, ss, sb;
-            int[] runningOrder = new int[256];
-            int[] copy = new int[256];
+            Span<int> runningOrder = stackalloc int[256];
+            Span<int> copy = stackalloc int[256];
             bool[] bigDone = new bool[256];
             int c1, c2;
             int numQSorted;
@@ -1786,8 +1775,7 @@ namespace SharpCompress.Compressors.BZip2
             zptr = new int[n];
             ftab = new int[65537];
 
-            if (block == null || quadrant == null || zptr == null
-                || ftab == null)
+            if (block is null || quadrant is null || zptr is null || ftab is null)
             {
                 //int totalDraw = (n + 1 + NUM_OVERSHOOT_BYTES) + (n + NUM_OVERSHOOT_BYTES) + n + 65537;
                 //compressOutOfMemory ( totalDraw, n );

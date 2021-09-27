@@ -71,11 +71,19 @@ namespace SharpCompress
         public static void Copy(Array sourceArray, long sourceIndex, Array destinationArray, long destinationIndex, long length)
         {
             if (sourceIndex > Int32.MaxValue || sourceIndex < Int32.MinValue)
+            {
                 throw new ArgumentOutOfRangeException();
+            }
+
             if (destinationIndex > Int32.MaxValue || destinationIndex < Int32.MinValue)
+            {
                 throw new ArgumentOutOfRangeException();
+            }
+
             if (length > Int32.MaxValue || length < Int32.MinValue)
+            {
                 throw new ArgumentOutOfRangeException();
+            }
 
             Array.Copy(sourceArray, (int)sourceIndex, destinationArray, (int)destinationIndex, (int)length);
         }
@@ -87,7 +95,7 @@ namespace SharpCompress
 
         public static void CheckNotNull(this object obj, string name)
         {
-            if (obj == null)
+            if (obj is null)
             {
                 throw new ArgumentNullException(name);
             }
@@ -192,7 +200,7 @@ namespace SharpCompress
 
         public static uint DateTimeToDosTime(this DateTime? dateTime)
         {
-            if (dateTime == null)
+            if (dateTime is null)
             {
                 return 0;
             }
@@ -227,9 +235,8 @@ namespace SharpCompress
             byte[] array = GetTransferByteArray();
             try
             {
-                int count;
                 long total = 0;
-                while (ReadTransferBlock(source, array, out count))
+                while (ReadTransferBlock(source, array, out int count))
                 {
                     total += count;
                     destination.Write(array, 0, count);
@@ -247,10 +254,9 @@ namespace SharpCompress
             byte[] array = GetTransferByteArray();
             try
             {
-                int count;
                 var iterations = 0;
                 long total = 0;
-                while (ReadTransferBlock(source, array, out count))
+                while (ReadTransferBlock(source, array, out int count))
                 {
                     total += count;
                     destination.Write(array, 0, count);
@@ -274,12 +280,27 @@ namespace SharpCompress
         {
             return ArrayPool<byte>.Shared.Rent(81920);
         }
-
+        
         public static bool ReadFully(this Stream stream, byte[] buffer)
         {
             int total = 0;
             int read;
             while ((read = stream.Read(buffer, total, buffer.Length - total)) > 0)
+            {
+                total += read;
+                if (total >= buffer.Length)
+                {
+                    return true;
+                }
+            }
+            return (total >= buffer.Length);
+        }
+        
+        public static bool ReadFully(this Stream stream, Span<byte> buffer)
+        {
+            int total = 0;
+            int read;
+            while ((read = stream.Read(buffer.Slice(total, buffer.Length - total))) > 0)
             {
                 total += read;
                 if (total >= buffer.Length)

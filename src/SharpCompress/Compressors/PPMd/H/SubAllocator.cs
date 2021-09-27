@@ -1,3 +1,5 @@
+#nullable disable
+
 using System;
 using System.Text;
 
@@ -360,7 +362,7 @@ namespace SharpCompress.Compressors.PPMd.H
         public virtual void InitSubAllocator()
         {
             int i, k;
-            new Span<byte>(_heap, _freeListPos, SizeOfFreeList()).Fill(0);
+            new Span<byte>(_heap, _freeListPos, SizeOfFreeList()).Clear();
 
             _pText = _heapStart;
 

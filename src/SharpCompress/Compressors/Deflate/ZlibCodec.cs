@@ -1,3 +1,5 @@
+#nullable disable
+
 // ZlibCodec.cs
 // ------------------------------------------------------------------
 //
@@ -130,12 +132,12 @@ namespace SharpCompress.Compressors.Deflate
         /// <summary>
         /// used for diagnostics, when something goes wrong!
         /// </summary>
-        public String Message;
+        public string Message;
 
         internal DeflateManager dstate;
         internal InflateManager istate;
 
-        internal uint _Adler32;
+        internal uint _adler32;
 
         /// <summary>
         /// The compression level to use in this codec.  Useful only in compression mode.
@@ -171,7 +173,7 @@ namespace SharpCompress.Compressors.Deflate
         /// <summary>
         /// The Adler32 checksum on the data transferred through the codec so far. You probably don't need to look at this.
         /// </summary>
-        public int Adler32 => (int)_Adler32;
+        public int Adler32 => (int)_adler32;
 
         /// <summary>
         /// Create a ZlibCodec.
@@ -358,7 +360,7 @@ namespace SharpCompress.Compressors.Deflate
         /// <returns>Z_OK if everything goes well.</returns>
         public int Inflate(FlushType flush)
         {
-            if (istate == null)
+            if (istate is null)
             {
                 throw new ZlibException("No Inflate State!");
             }
@@ -376,7 +378,7 @@ namespace SharpCompress.Compressors.Deflate
         /// <returns>Z_OK if everything goes well.</returns>
         public int EndInflate()
         {
-            if (istate == null)
+            if (istate is null)
             {
                 throw new ZlibException("No Inflate State!");
             }
@@ -391,7 +393,7 @@ namespace SharpCompress.Compressors.Deflate
         /// <returns>Z_OK if everything goes well.</returns>
         public int SyncInflate()
         {
-            if (istate == null)
+            if (istate is null)
             {
                 throw new ZlibException("No Inflate State!");
             }
@@ -594,7 +596,7 @@ namespace SharpCompress.Compressors.Deflate
         /// <returns>Z_OK if all goes well.</returns>
         public int Deflate(FlushType flush)
         {
-            if (dstate == null)
+            if (dstate is null)
             {
                 throw new ZlibException("No Deflate State!");
             }
@@ -610,7 +612,7 @@ namespace SharpCompress.Compressors.Deflate
         /// <returns>Z_OK if all goes well.</returns>
         public int EndDeflate()
         {
-            if (dstate == null)
+            if (dstate is null)
             {
                 throw new ZlibException("No Deflate State!");
             }
@@ -632,7 +634,7 @@ namespace SharpCompress.Compressors.Deflate
         /// <returns>Z_OK if all goes well.</returns>
         public void ResetDeflate()
         {
-            if (dstate == null)
+            if (dstate is null)
             {
                 throw new ZlibException("No Deflate State!");
             }
@@ -647,7 +649,7 @@ namespace SharpCompress.Compressors.Deflate
         /// <returns>Z_OK if all goes well.</returns>
         public int SetDeflateParams(CompressionLevel level, CompressionStrategy strategy)
         {
-            if (dstate == null)
+            if (dstate is null)
             {
                 throw new ZlibException("No Deflate State!");
             }
@@ -735,7 +737,7 @@ namespace SharpCompress.Compressors.Deflate
 
             if (dstate.WantRfc1950HeaderBytes)
             {
-                _Adler32 = Adler.Adler32(_Adler32, InputBuffer, NextIn, len);
+                _adler32 = Algorithms.Adler32.Calculate(_adler32, InputBuffer.AsSpan(NextIn, len));
             }
             Array.Copy(InputBuffer, NextIn, buf, start, len);
             NextIn += len;

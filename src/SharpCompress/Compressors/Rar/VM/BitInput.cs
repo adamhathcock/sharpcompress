@@ -8,9 +8,9 @@ namespace SharpCompress.Compressors.Rar.VM
         public int inAddr;
         public int inBit;
 
-// TODO: rename var
-        public int InAddr { get { return inAddr; } set { inAddr = value; }  }
-        public int InBit { get { return inBit; } set { inBit = value; }  }
+        // TODO: rename var
+        public int InAddr { get { return inAddr; } set { inAddr = value; } }
+        public int InBit { get { return inBit; } set { inBit = value; } }
         public bool ExternalBuffer;
 
 
@@ -28,7 +28,8 @@ namespace SharpCompress.Compressors.Rar.VM
             inBit = 0;
         }
 
-        internal void faddbits(uint bits) {
+        internal void faddbits(uint bits)
+        {
             // TODO uint
             AddBits((int)bits);
         }
@@ -44,12 +45,14 @@ namespace SharpCompress.Compressors.Rar.VM
             inBit = bits & 7;
         }
 
-        internal uint fgetbits() {
+        internal uint fgetbits()
+        {
             // TODO uint
             return (uint)GetBits();
         }
 
-        internal uint getbits() {
+        internal uint getbits()
+        {
             // TODO uint
             return (uint)GetBits();
         }

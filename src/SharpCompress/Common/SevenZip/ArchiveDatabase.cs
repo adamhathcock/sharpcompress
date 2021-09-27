@@ -1,4 +1,6 @@
-﻿using System;
+﻿#nullable disable
+
+using System;
 using System.Collections.Generic;
 using System.IO;
 using SharpCompress.Compressors.LZMA;
@@ -35,7 +37,7 @@ namespace SharpCompress.Common.SevenZip
             _packSizes.Clear();
             _packCrCs.Clear();
             _folders.Clear();
-            _numUnpackStreamsVector = null;
+            _numUnpackStreamsVector = null!;
             _files.Clear();
 
             _packStreamStartPositions.Clear();
@@ -87,7 +89,7 @@ namespace SharpCompress.Common.SevenZip
                 {
                     // v3.13 incorrectly worked with empty folders
                     // v4.07: Loop for skipping empty folders
-                    for (;;)
+                    for (; ; )
                     {
                         if (folderIndex >= _folders.Count)
                         {
@@ -96,7 +98,7 @@ namespace SharpCompress.Common.SevenZip
 
                         _folderStartFileIndex.Add(i); // check it
 
-                        if (_numUnpackStreamsVector[folderIndex] != 0)
+                        if (_numUnpackStreamsVector![folderIndex] != 0)
                         {
                             break;
                         }
@@ -114,7 +116,7 @@ namespace SharpCompress.Common.SevenZip
 
                 indexInFolder++;
 
-                if (indexInFolder >= _numUnpackStreamsVector[folderIndex])
+                if (indexInFolder >= _numUnpackStreamsVector![folderIndex])
                 {
                     folderIndex++;
                     indexInFolder = 0;

@@ -1,3 +1,5 @@
+#nullable disable
+
 #if !Rar2017_64bit
 using nint = System.Int32;
 using nuint = System.UInt32;
@@ -19,18 +21,18 @@ namespace SharpCompress.Common.Rar.Headers
     {
         private uint _fileCrc;
 
-        public FileHeader(RarHeader header, RarCrcBinaryReader reader, HeaderType headerType) 
-            : base(header, reader, headerType) 
+        public FileHeader(RarHeader header, RarCrcBinaryReader reader, HeaderType headerType)
+            : base(header, reader, headerType)
         {
         }
 
-        protected override void ReadFinish(MarkingBinaryReader reader) 
+        protected override void ReadFinish(MarkingBinaryReader reader)
         {
-            if (IsRar5) 
+            if (IsRar5)
             {
                 ReadFromReaderV5(reader);
-            } 
-            else 
+            }
+            else
             {
                 ReadFromReaderV4(reader);
             }
@@ -47,11 +49,13 @@ namespace SharpCompress.Common.Rar.Headers
 
             FileAttributes = reader.ReadRarVIntUInt32();
 
-            if (HasFlag(FileFlagsV5.HAS_MOD_TIME)) {
+            if (HasFlag(FileFlagsV5.HAS_MOD_TIME))
+            {
                 FileLastModifiedTime = Utility.UnixTimeToDateTime(reader.ReadUInt32());
             }
 
-            if (HasFlag(FileFlagsV5.HAS_CRC32)) {
+            if (HasFlag(FileFlagsV5.HAS_CRC32))
+            {
                 FileCrc = reader.ReadUInt32();
             }
 
@@ -63,7 +67,7 @@ namespace SharpCompress.Common.Rar.Headers
             // but it was already used in RAR 1.5 and Unpack needs to distinguish
             // them.
             CompressionAlgorithm = (byte)((compressionInfo & 0x3f) + 50);
-            
+
             // 7th bit (0x0040) defines the solid flag. If it is set, RAR continues to use the compression dictionary left after processing preceding files. 
             // It can be set only for file headers and is never set for service headers.
             IsSolid = (compressionInfo & 0x40) == 0x40;
@@ -72,7 +76,7 @@ namespace SharpCompress.Common.Rar.Headers
             CompressionMethod = (byte)((compressionInfo >> 7) & 0x7);
 
             // Bits 11 - 14 (0x3c00) define the minimum size of dictionary size required to extract data. Value 0 means 128 KB, 1 - 256 KB, ..., 14 - 2048 MB, 15 - 4096 MB.
-            WindowSize = IsDirectory ? 0 : ((size_t)0x20000) << ((compressionInfo>>10) & 0xf);
+            WindowSize = IsDirectory ? 0 : ((size_t)0x20000) << ((compressionInfo >> 10) & 0xf);
 
             HostOs = reader.ReadRarVIntByte();
 
@@ -99,18 +103,20 @@ namespace SharpCompress.Common.Rar.Headers
             FileName = ConvertPathV5(Encoding.UTF8.GetString(b, 0, b.Length));
 
             // extra size seems to be redudant since we know the total header size
-            if (ExtraSize != RemainingHeaderBytes(reader)) 
+            if (ExtraSize != RemainingHeaderBytes(reader))
             {
                 throw new InvalidFormatException("rar5 header size / extra size inconsistency");
             }
 
             isEncryptedRar5 = false;
 
-            while (RemainingHeaderBytes(reader) > 0) {
+            while (RemainingHeaderBytes(reader) > 0)
+            {
                 var size = reader.ReadRarVIntUInt16();
                 int n = RemainingHeaderBytes(reader);
                 var type = reader.ReadRarVIntUInt16();
-                switch (type) {
+                switch (type)
+                {
                     //TODO
                     case 1: // file encryption
                         {
@@ -118,7 +124,7 @@ namespace SharpCompress.Common.Rar.Headers
 
                             //var version = reader.ReadRarVIntByte();
                             //if (version != 0) throw new InvalidFormatException("unknown encryption algorithm " + version);
-                                                    }
+                        }
                         break;
                     //                    case 2: // file hash
                     //                        {
@@ -129,38 +135,41 @@ namespace SharpCompress.Common.Rar.Headers
                         {
                             ushort flags = reader.ReadRarVIntUInt16();
                             var isWindowsTime = (flags & 1) == 0;
-                            if ((flags & 0x2) == 0x2) {
+                            if ((flags & 0x2) == 0x2)
+                            {
                                 FileLastModifiedTime = ReadExtendedTimeV5(reader, isWindowsTime);
                             }
-                            if ((flags & 0x4) == 0x4) {
+                            if ((flags & 0x4) == 0x4)
+                            {
                                 FileCreatedTime = ReadExtendedTimeV5(reader, isWindowsTime);
                             }
-                            if ((flags & 0x8) == 0x8) {
+                            if ((flags & 0x8) == 0x8)
+                            {
                                 FileLastAccessedTime = ReadExtendedTimeV5(reader, isWindowsTime);
                             }
                         }
                         break;
-//TODO
-//                    case 4: // file version
-//                        {
-//
-//                        }
-//                        break;
-//                    case 5: // file system redirection
-//                        {
-//
-//                        }
-//                        break;
-//                    case 6: // unix owner
-//                        {
-//
-//                        }
-//                        break;
-//                    case 7: // service data
-//                        {
-//
-//                        }
-//                        break;
+                    //TODO
+                    //                    case 4: // file version
+                    //                        {
+                    //
+                    //                        }
+                    //                        break;
+                    //                    case 5: // file system redirection
+                    //                        {
+                    //
+                    //                        }
+                    //                        break;
+                    //                    case 6: // unix owner
+                    //                        {
+                    //
+                    //                        }
+                    //                        break;
+                    //                    case 7: // service data
+                    //                        {
+                    //
+                    //                        }
+                    //                        break;
 
                     default:
                         // skip unknown record types to allow new record types to be added in the future
@@ -169,25 +178,26 @@ namespace SharpCompress.Common.Rar.Headers
                 // drain any trailing bytes of extra record
                 int did = n - RemainingHeaderBytes(reader);
                 int drain = size - did;
-                if (drain > 0) 
+                if (drain > 0)
                 {
                     reader.ReadBytes(drain);
                 }
             }
 
-            if (AdditionalDataSize != 0) {
+            if (AdditionalDataSize != 0)
+            {
                 CompressedSize = AdditionalDataSize;
             }
         }
 
 
-        private static DateTime ReadExtendedTimeV5(MarkingBinaryReader reader, bool isWindowsTime) 
+        private static DateTime ReadExtendedTimeV5(MarkingBinaryReader reader, bool isWindowsTime)
         {
-            if (isWindowsTime) 
+            if (isWindowsTime)
             {
                 return DateTime.FromFileTime(reader.ReadInt64());
-            } 
-            else 
+            }
+            else
             {
                 return Utility.UnixTimeToDateTime(reader.ReadUInt32());
             }
@@ -199,7 +209,7 @@ namespace SharpCompress.Common.Rar.Headers
             {
                 // replace embedded \\ with valid filename char
                 return path.Replace('\\', '-').Replace('/', '\\');
-            } 
+            }
             return path;
         }
 
@@ -374,20 +384,22 @@ namespace SharpCompress.Common.Rar.Headers
 
         private ushort Flags { get; set; }
 
-        private bool HasFlag(ushort flag) 
+        private bool HasFlag(ushort flag)
         {
             return (Flags & flag) == flag;
         }
 
-        internal uint FileCrc 
-        { 
-            get { 
-                if (IsRar5 && !HasFlag(FileFlagsV5.HAS_CRC32)) {
-//!!! rar5: 
+        internal uint FileCrc
+        {
+            get
+            {
+                if (IsRar5 && !HasFlag(FileFlagsV5.HAS_CRC32))
+                {
+                    //!!! rar5: 
                     throw new InvalidOperationException("TODO rar5");
                 }
-                return _fileCrc; 
-            } 
+                return _fileCrc;
+            }
             private set => _fileCrc = value;
         }
 
@@ -407,7 +419,7 @@ namespace SharpCompress.Common.Rar.Headers
         //case 29: // rar 3.x compression
         //case 50: // RAR 5.0 compression algorithm.
         internal byte CompressionAlgorithm { get; private set; }
-        
+
         public bool IsSolid { get; private set; }
 
         // unused for UnpackV1 implementation (limitation)
@@ -425,13 +437,14 @@ namespace SharpCompress.Common.Rar.Headers
         internal long DataStartPosition { get; set; }
         public Stream PackedStream { get; set; }
 
+        public bool IsSplitBefore => IsRar5 ? HasHeaderFlag(HeaderFlagsV5.SPLIT_BEFORE) : HasFlag(FileFlagsV4.SPLIT_BEFORE);
         public bool IsSplitAfter => IsRar5 ? HasHeaderFlag(HeaderFlagsV5.SPLIT_AFTER) : HasFlag(FileFlagsV4.SPLIT_AFTER);
 
         public bool IsDirectory => HasFlag(IsRar5 ? FileFlagsV5.DIRECTORY : FileFlagsV4.DIRECTORY);
 
         private bool isEncryptedRar5 = false;
-        public bool IsEncrypted => IsRar5 ? isEncryptedRar5: HasFlag(FileFlagsV4.PASSWORD);
-        
+        public bool IsEncrypted => IsRar5 ? isEncryptedRar5 : HasFlag(FileFlagsV4.PASSWORD);
+
         internal DateTime? FileLastModifiedTime { get; private set; }
 
         internal DateTime? FileCreatedTime { get; private set; }

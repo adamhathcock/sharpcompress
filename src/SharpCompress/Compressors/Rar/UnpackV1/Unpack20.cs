@@ -38,7 +38,7 @@ namespace SharpCompress.Compressors.Rar.UnpackV1
             56, 64, 80, 96, 112, 128, 160, 192, 224
         };
 
-        private static readonly byte[] LBits =
+        private static ReadOnlySpan<byte> LBits => new byte[]
         {
             0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4,
             4, 5, 5, 5, 5
@@ -60,9 +60,9 @@ namespace SharpCompress.Compressors.Rar.UnpackV1
             , 16, 16, 16, 16, 16, 16, 16
         };
 
-        private static readonly int[] SDDecode = {0, 4, 8, 16, 32, 64, 128, 192};
+        private static readonly int[] SDDecode = { 0, 4, 8, 16, 32, 64, 128, 192 };
 
-        private static readonly int[] SDBits = {2, 2, 3, 4, 5, 6, 6, 6};
+        private static readonly int[] SDBits = { 2, 2, 3, 4, 5, 6, 6, 6 };
 
         private void unpack20(bool solid)
         {
@@ -263,7 +263,7 @@ namespace SharpCompress.Compressors.Rar.UnpackV1
             if (0 == (BitField & 0x4000))
             {
                 // memset(UnpOldTable20,0,sizeof(UnpOldTable20));
-                new Span<byte>(UnpOldTable20).Fill(0);
+                new Span<byte>(UnpOldTable20).Clear();
             }
             AddBits(2);
 
@@ -371,7 +371,7 @@ namespace SharpCompress.Compressors.Rar.UnpackV1
                 AudV[3] = new AudioVariables();
 
                 // memset(UnpOldTable20,0,sizeof(UnpOldTable20));
-                new Span<byte>(UnpOldTable20).Fill(0);
+                new Span<byte>(UnpOldTable20).Clear();
             }
         }
 

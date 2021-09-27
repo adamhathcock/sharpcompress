@@ -11,7 +11,7 @@ namespace SharpCompress.Common.Rar
         /// As the V2017 port isn't complete, add this check to use the legacy Rar code.
         /// </summary>
         internal bool IsRarV3 => FileHeader.CompressionAlgorithm == 29 || FileHeader.CompressionAlgorithm == 36;
-        
+
         /// <summary>
         /// The File's 32 bit CRC Hash
         /// </summary>
@@ -22,7 +22,7 @@ namespace SharpCompress.Common.Rar
         /// </summary>
         public override string Key => FileHeader.FileName;
 
-        public override string LinkTarget => null;
+        public override string? LinkTarget => null;
 
         /// <summary>
         /// The entry last modified time in the archive, if recorded

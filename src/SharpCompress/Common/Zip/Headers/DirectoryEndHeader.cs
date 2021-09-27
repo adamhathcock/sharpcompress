@@ -33,7 +33,7 @@ namespace SharpCompress.Common.Zip.Headers
 
         public ushort CommentLength { get; private set; }
 
-        public byte[] Comment { get; private set; }
+        public byte[]? Comment { get; private set; }
 
         public ushort TotalNumberOfEntries { get; private set; }
 

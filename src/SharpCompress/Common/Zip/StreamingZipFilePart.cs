@@ -5,9 +5,9 @@ using SharpCompress.IO;
 
 namespace SharpCompress.Common.Zip
 {
-    internal class StreamingZipFilePart : ZipFilePart
+    internal sealed class StreamingZipFilePart : ZipFilePart
     {
-        private Stream _decompressionStream;
+        private Stream? _decompressionStream;
 
         internal StreamingZipFilePart(ZipFileEntry header, Stream stream)
             : base(header, stream)
@@ -41,14 +41,11 @@ namespace SharpCompress.Common.Zip
             }
             if (Header.HasData && !Skipped)
             {
-                if (_decompressionStream == null)
-                {
-                    _decompressionStream = GetCompressedStream();
-                }
+                _decompressionStream ??= GetCompressedStream();
+
                 _decompressionStream.Skip();
 
-                DeflateStream deflateStream = _decompressionStream as DeflateStream;
-                if (deflateStream != null)
+                if (_decompressionStream is DeflateStream deflateStream)
                 {
                     rewindableStream.Rewind(deflateStream.InputBuffer);
                 }

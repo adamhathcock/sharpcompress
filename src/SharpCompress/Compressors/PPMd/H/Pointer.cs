@@ -1,3 +1,5 @@
+#nullable disable
+
 namespace SharpCompress.Compressors.PPMd.H
 {
     internal abstract class Pointer

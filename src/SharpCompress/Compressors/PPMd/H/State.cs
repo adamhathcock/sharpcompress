@@ -4,11 +4,11 @@ using System.Text;
 
 namespace SharpCompress.Compressors.PPMd.H
 {
-    internal class State : Pointer
+    internal sealed class State : Pointer
     {
         internal const int SIZE = 6;
 
-        internal State(byte[] memory)
+        internal State(byte[]? memory)
             : base(memory)
         {
         }

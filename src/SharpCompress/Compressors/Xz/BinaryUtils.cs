@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Buffers.Binary;
 using System.IO;
 
 namespace SharpCompress.Compressors.Xz
@@ -8,7 +9,7 @@ namespace SharpCompress.Compressors.Xz
         public static int ReadLittleEndianInt32(this BinaryReader reader)
         {
             byte[] bytes = reader.ReadBytes(4);
-            return (bytes[0] + (bytes[1] << 8) + (bytes[2] << 16) + (bytes[3] << 24));
+            return BinaryPrimitives.ReadInt32LittleEndian(bytes);
         }
 
         internal static uint ReadLittleEndianUInt32(this BinaryReader reader)
@@ -17,13 +18,13 @@ namespace SharpCompress.Compressors.Xz
         }
         public static int ReadLittleEndianInt32(this Stream stream)
         {
-            byte[] bytes = new byte[4];
+            Span<byte> bytes = stackalloc byte[4];
             var read = stream.ReadFully(bytes);
             if (!read)
             {
                 throw new EndOfStreamException();
             }
-            return (bytes[0] + (bytes[1] << 8) + (bytes[2] << 16) + (bytes[3] << 24));
+            return BinaryPrimitives.ReadInt32LittleEndian(bytes);
         }
 
         internal static uint ReadLittleEndianUInt32(this Stream stream)
@@ -36,7 +37,9 @@ namespace SharpCompress.Compressors.Xz
             var result = BitConverter.GetBytes(uint32);
 
             if (BitConverter.IsLittleEndian)
+            {
                 Array.Reverse(result);
+            }
 
             return result;
         }
@@ -46,7 +49,9 @@ namespace SharpCompress.Compressors.Xz
             var result = BitConverter.GetBytes(uint32);
 
             if (!BitConverter.IsLittleEndian)
+            {
                 Array.Reverse(result);
+            }
 
             return result;
         }

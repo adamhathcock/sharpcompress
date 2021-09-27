@@ -1,12 +1,14 @@
 ﻿using System;
+
 using SharpCompress.Compressors.Rar.VM;
 
 namespace SharpCompress.Compressors.Rar.UnpackV1
 {
     internal static class UnpackUtility
     {
-//!!! TODO rename methods
-        internal static uint DecodeNumber(this BitInput input, Decode.Decode dec) {
+        //!!! TODO rename methods
+        internal static uint DecodeNumber(this BitInput input, Decode.Decode dec)
+        {
             return (uint)input.decodeNumber(dec);
         }
 
@@ -182,12 +184,12 @@ namespace SharpCompress.Compressors.Rar.UnpackV1
 
         internal static void makeDecodeTables(byte[] lenTab, int offset, Decode.Decode dec, int size)
         {
-            int[] lenCount = new int[16];
-            int[] tmpPos = new int[16];
+            Span<int> lenCount = stackalloc int[16];
+            Span<int> tmpPos = stackalloc int[16];
             int i;
             long M, N;
 
-            new Span<int>(dec.DecodeNum).Fill(0); // memset(Dec->DecodeNum,0,Size*sizeof(*Dec->DecodeNum));
+            new Span<int>(dec.DecodeNum).Clear(); // memset(Dec->DecodeNum,0,Size*sizeof(*Dec->DecodeNum));
 
             for (i = 0; i < size; i++)
             {

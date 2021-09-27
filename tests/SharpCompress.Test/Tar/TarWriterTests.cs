@@ -1,4 +1,5 @@
 ﻿using System.IO;
+using System.Text;
 using SharpCompress.Common;
 using SharpCompress.Writers.Tar;
 using Xunit;
@@ -16,19 +17,19 @@ namespace SharpCompress.Test.Tar
         [Fact]
         public void Tar_Writer()
         {
-            Write(CompressionType.None, "Tar.noEmptyDirs.tar", "Tar.noEmptyDirs.tar");
+            Write(CompressionType.None, "Tar.noEmptyDirs.tar", "Tar.noEmptyDirs.tar", Encoding.GetEncoding(866));
         }
 
         [Fact]
         public void Tar_BZip2_Writer()
         {
-            Write(CompressionType.BZip2, "Tar.noEmptyDirs.tar.bz2", "Tar.noEmptyDirs.tar.bz2");
+            Write(CompressionType.BZip2, "Tar.noEmptyDirs.tar.bz2", "Tar.noEmptyDirs.tar.bz2", Encoding.GetEncoding(866));
         }
 
         [Fact]
         public void Tar_LZip_Writer()
         {
-            Write(CompressionType.LZip, "Tar.noEmptyDirs.tar.lz", "Tar.noEmptyDirs.tar.lz");
+            Write(CompressionType.LZip, "Tar.noEmptyDirs.tar.lz", "Tar.noEmptyDirs.tar.lz", Encoding.GetEncoding(866));
         }
 
         [Fact]
@@ -43,8 +44,10 @@ namespace SharpCompress.Test.Tar
         public void Tar_Finalize_Archive(bool finalizeArchive)
         {
             using (MemoryStream stream = new MemoryStream())
-            using (Stream content = File.OpenRead(Path.Combine(ORIGINAL_FILES_PATH, "jpg", "test.jpg"))) {
-                using (TarWriter writer = new TarWriter(stream, new TarWriterOptions(CompressionType.None, finalizeArchive)))             {
+            using (Stream content = File.OpenRead(Path.Combine(ORIGINAL_FILES_PATH, "jpg", "test.jpg")))
+            {
+                using (TarWriter writer = new TarWriter(stream, new TarWriterOptions(CompressionType.None, finalizeArchive)))
+                {
                     writer.Write("doesn't matter", content, null);
                 }
 

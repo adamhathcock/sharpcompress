@@ -8,7 +8,7 @@ namespace SharpCompress.Compressors.PPMd
     {
 
         private int _allocatorSize;
-        internal Allocator _allocator;
+        internal Allocator? _allocator;
 
         public PpmdProperties()
             : this(16 << 20, 6)
@@ -31,7 +31,11 @@ namespace SharpCompress.Compressors.PPMd
         public PpmdVersion Version { get; } = PpmdVersion.I1;
         internal ModelRestorationMethod RestorationMethod { get; }
 
-        public PpmdProperties(byte[] properties)
+        public PpmdProperties(byte[] properties) : this(properties.AsSpan())
+        {
+        }
+
+        public PpmdProperties(ReadOnlySpan<byte> properties)
         {
             if (properties.Length == 2)
             {
@@ -43,7 +47,7 @@ namespace SharpCompress.Compressors.PPMd
             else if (properties.Length == 5)
             {
                 Version = PpmdVersion.H7Z;
-                AllocatorSize = BinaryPrimitives.ReadInt32LittleEndian(properties.AsSpan(1));
+                AllocatorSize = BinaryPrimitives.ReadInt32LittleEndian(properties.Slice(1));
                 ModelOrder = properties[0];
             }
         }
@@ -56,10 +60,8 @@ namespace SharpCompress.Compressors.PPMd
                 _allocatorSize = value;
                 if (Version == PpmdVersion.I1)
                 {
-                    if (_allocator == null)
-                    {
-                        _allocator = new Allocator();
-                    }
+                    _allocator ??= new Allocator();
+
                     _allocator.Start(_allocatorSize);
                 }
             }

@@ -1,11 +1,13 @@
-﻿namespace SharpCompress.Common
+﻿using System;
+
+namespace SharpCompress.Common
 {
     public class ExtractionOptions
     {
         /// <summary>
         /// overwrite target if it exists
         /// </summary>
-        public bool Overwrite  {get; set; }
+        public bool Overwrite { get; set; }
 
         /// <summary>
         /// extract with internal directory structure
@@ -29,6 +31,10 @@
         /// </summary>
         public delegate void SymbolicLinkWriterDelegate(string sourcePath, string targetPath);
 
-        public SymbolicLinkWriterDelegate WriteSymbolicLink;
+        public SymbolicLinkWriterDelegate WriteSymbolicLink =
+            (sourcePath, targetPath) =>
+            {
+                Console.WriteLine($"Could not write symlink {sourcePath} -> {targetPath}, for more information please see https://github.com/dotnet/runtime/issues/24271");
+            };
     }
 }

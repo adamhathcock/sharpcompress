@@ -2,8 +2,9 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+#nullable disable
+
 using SharpCompress.Common.Zip;
-using SharpCompress.Compressors.Deflate;
 using System;
 using System.Diagnostics;
 using System.IO;
@@ -22,12 +23,20 @@ namespace SharpCompress.Compressors.Deflate64
 
         public Deflate64Stream(Stream stream, CompressionMode mode)
         {
-            if (stream == null)
+            if (stream is null)
+            {
                 throw new ArgumentNullException(nameof(stream));
+            }
+
             if (mode != CompressionMode.Decompress)
+            {
                 throw new NotImplementedException("Deflate64: this implementation only supports decompression");
+            }
+
             if (!stream.CanRead)
+            {
                 throw new ArgumentException("Deflate64: input stream is not readable", nameof(stream));
+            }
 
             InitializeInflater(stream, ZipCompressionMethod.Deflate64);
         }
@@ -40,7 +49,9 @@ namespace SharpCompress.Compressors.Deflate64
             Debug.Assert(stream != null);
             Debug.Assert(method == ZipCompressionMethod.Deflate || method == ZipCompressionMethod.Deflate64);
             if (!stream.CanRead)
+            {
                 throw new ArgumentException("Deflate64: input stream is not readable", nameof(stream));
+            }
 
             _inflater = new InflaterManaged(method == ZipCompressionMethod.Deflate64);
 
@@ -53,7 +64,7 @@ namespace SharpCompress.Compressors.Deflate64
         {
             get
             {
-                if (_stream == null)
+                if (_stream is null)
                 {
                     return false;
                 }
@@ -66,7 +77,7 @@ namespace SharpCompress.Compressors.Deflate64
         {
             get
             {
-                if (_stream == null)
+                if (_stream is null)
                 {
                     return false;
                 }
@@ -151,23 +162,33 @@ namespace SharpCompress.Compressors.Deflate64
 
         private void ValidateParameters(byte[] array, int offset, int count)
         {
-            if (array == null)
+            if (array is null)
+            {
                 throw new ArgumentNullException(nameof(array));
+            }
 
             if (offset < 0)
+            {
                 throw new ArgumentOutOfRangeException(nameof(offset));
+            }
 
             if (count < 0)
+            {
                 throw new ArgumentOutOfRangeException(nameof(count));
+            }
 
             if (array.Length - offset < count)
+            {
                 throw new ArgumentException("Deflate64: invalid offset/count combination");
+            }
         }
 
         private void EnsureNotDisposed()
         {
-            if (_stream == null)
+            if (_stream is null)
+            {
                 ThrowStreamClosedException();
+            }
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
@@ -179,7 +200,9 @@ namespace SharpCompress.Compressors.Deflate64
         private void EnsureDecompressionMode()
         {
             if (_mode != CompressionMode.Decompress)
+            {
                 ThrowCannotReadFromDeflateManagedStreamException();
+            }
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
@@ -191,7 +214,9 @@ namespace SharpCompress.Compressors.Deflate64
         private void EnsureCompressionMode()
         {
             if (_mode != CompressionMode.Compress)
+            {
                 ThrowCannotWriteToDeflateManagedStreamException();
+            }
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
@@ -209,10 +234,14 @@ namespace SharpCompress.Compressors.Deflate64
         private void PurgeBuffers(bool disposing)
         {
             if (!disposing)
+            {
                 return;
+            }
 
-            if (_stream == null)
+            if (_stream is null)
+            {
                 return;
+            }
 
             Flush();
         }

@@ -37,7 +37,7 @@ namespace SharpCompress.Writers
         public static void WriteAll(this IWriter writer,
                                     string directory,
                                     string searchPattern = "*",
-                                    Expression<Func<string, bool>> fileSearchFunc = null,
+                                    Expression<Func<string, bool>>? fileSearchFunc = null,
                                     SearchOption option = SearchOption.TopDirectoryOnly)
         {
             if (!Directory.Exists(directory))
@@ -45,7 +45,7 @@ namespace SharpCompress.Writers
                 throw new ArgumentException("Directory does not exist: " + directory);
             }
 
-            if (fileSearchFunc == null)
+            if (fileSearchFunc is null)
             {
                 fileSearchFunc = n => true;
             }

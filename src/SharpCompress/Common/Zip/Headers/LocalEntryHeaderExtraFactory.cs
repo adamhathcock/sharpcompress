@@ -18,13 +18,25 @@ namespace SharpCompress.Common.Zip.Headers
 
     internal class ExtraData
     {
-        internal ExtraDataType Type { get; set; }
-        internal ushort Length { get; set; }
-        internal byte[] DataBytes { get; set; }
+        public ExtraData(ExtraDataType type, ushort length, byte[] dataBytes)
+        {
+            Type = type;
+            Length = length;
+            DataBytes = dataBytes;
+        }
+
+        internal ExtraDataType Type { get; }
+        internal ushort Length { get; }
+        internal byte[] DataBytes { get; }
     }
 
-    internal class ExtraUnicodePathExtraField : ExtraData
+    internal sealed class ExtraUnicodePathExtraField : ExtraData
     {
+        public ExtraUnicodePathExtraField(ExtraDataType type, ushort length, byte[] dataBytes)
+            : base(type, length, dataBytes)
+        {
+        }
+
         internal byte Version => DataBytes[0];
 
         internal byte[] NameCrc32
@@ -49,70 +61,79 @@ namespace SharpCompress.Common.Zip.Headers
         }
     }
 
-    internal class Zip64ExtendedInformationExtraField : ExtraData
+    internal sealed class Zip64ExtendedInformationExtraField : ExtraData
     {
-
         public Zip64ExtendedInformationExtraField(ExtraDataType type, ushort length, byte[] dataBytes)
+            : base(type, length, dataBytes)
         {
-            Type = type;
-            Length = length;
-            DataBytes = dataBytes;
-            Process();
         }
 
-        //From the spec values are only in the extradata if the standard
-        //value is set to 0xFFFF, but if one of the sizes are present, both are.
-        //Hence if length == 4 volume only
-        //      if length == 8 offset only
-        //      if length == 12 offset + volume
-        //      if length == 16 sizes only
-        //      if length == 20 sizes + volume
-        //      if length == 24 sizes + offset
-        //      if length == 28 everything.
-        //It is unclear how many of these are used in the wild.
-
-        private void Process()
+        // From the spec, values are only in the extradata if the standard
+        // value is set to 0xFFFFFFFF (or 0xFFFF for the Disk Start Number).
+        // Values, if present, must appear in the following order:
+        // - Original Size
+        // - Compressed Size
+        // - Relative Header Offset
+        // - Disk Start Number
+        public void Process(long uncompressedFileSize, long compressedFileSize, long relativeHeaderOffset, ushort diskNumber)
         {
-            switch (DataBytes.Length)
+            var bytesRequired = ((uncompressedFileSize == uint.MaxValue) ? 8 : 0)
+                + ((compressedFileSize == uint.MaxValue) ? 8 : 0)
+                + ((relativeHeaderOffset == uint.MaxValue) ? 8 : 0)
+                + ((diskNumber == ushort.MaxValue) ? 4 : 0);
+            var currentIndex = 0;
+
+            if (bytesRequired > DataBytes.Length)
             {
-                case 4:
-                    VolumeNumber = BinaryPrimitives.ReadUInt32LittleEndian(DataBytes);
-                    return;
-                case 8:
-                    RelativeOffsetOfEntryHeader = BinaryPrimitives.ReadInt64LittleEndian(DataBytes);
-                    return;
-                case 12:
-                    RelativeOffsetOfEntryHeader = BinaryPrimitives.ReadInt64LittleEndian(DataBytes);
-                    VolumeNumber = BinaryPrimitives.ReadUInt32LittleEndian(DataBytes.AsSpan(8));
-                    return;
-                case 16:
-                    UncompressedSize = BinaryPrimitives.ReadInt64LittleEndian(DataBytes);
-                    CompressedSize = BinaryPrimitives.ReadInt64LittleEndian(DataBytes.AsSpan(8));
-                    return;
-                case 20:
-                    UncompressedSize = BinaryPrimitives.ReadInt64LittleEndian(DataBytes);
-                    CompressedSize = BinaryPrimitives.ReadInt64LittleEndian(DataBytes.AsSpan(8));
-                    VolumeNumber = BinaryPrimitives.ReadUInt32LittleEndian(DataBytes.AsSpan(16));
-                    return;
-                case 24:
-                    UncompressedSize = BinaryPrimitives.ReadInt64LittleEndian(DataBytes);
-                    CompressedSize = BinaryPrimitives.ReadInt64LittleEndian(DataBytes.AsSpan(8));
-                    RelativeOffsetOfEntryHeader = BinaryPrimitives.ReadInt64LittleEndian(DataBytes.AsSpan(16));
-                    return;
-                case 28:
-                    UncompressedSize = BinaryPrimitives.ReadInt64LittleEndian(DataBytes);
-                    CompressedSize = BinaryPrimitives.ReadInt64LittleEndian(DataBytes.AsSpan(8));
-                    RelativeOffsetOfEntryHeader = BinaryPrimitives.ReadInt64LittleEndian(DataBytes.AsSpan(16));
-                    VolumeNumber = BinaryPrimitives.ReadUInt32LittleEndian(DataBytes.AsSpan(24));
-                    return;
-                default:
-                throw new ArchiveException("Unexpected size of of Zip64 extended information extra field");
+                throw new ArchiveException("Zip64 extended information extra field is not large enough for the required information");
+            }
+
+            if (uncompressedFileSize == uint.MaxValue)
+            {
+                UncompressedSize = BinaryPrimitives.ReadInt64LittleEndian(DataBytes.AsSpan(currentIndex));
+                currentIndex += 8;
+            }
+
+            if (compressedFileSize == uint.MaxValue)
+            {
+                CompressedSize = BinaryPrimitives.ReadInt64LittleEndian(DataBytes.AsSpan(currentIndex));
+                currentIndex += 8;
+            }
+
+            if (relativeHeaderOffset == uint.MaxValue)
+            {
+                RelativeOffsetOfEntryHeader = BinaryPrimitives.ReadInt64LittleEndian(DataBytes.AsSpan(currentIndex));
+                currentIndex += 8;
+            }
+
+            if (diskNumber == ushort.MaxValue)
+            {
+                VolumeNumber = BinaryPrimitives.ReadUInt32LittleEndian(DataBytes.AsSpan(currentIndex));
             }
         }
 
+        /// <summary>
+        /// Uncompressed file size. Only valid after <see cref="Process(long, long, long, ushort)"/> has been called and if the
+        /// original entry header had a corresponding 0xFFFFFFFF value.
+        /// </summary>
         public long UncompressedSize { get; private set; }
+
+        /// <summary>
+        /// Compressed file size. Only valid after <see cref="Process(long, long, long, ushort)"/> has been called and if the
+        /// original entry header had a corresponding 0xFFFFFFFF value.
+        /// </summary>
         public long CompressedSize { get; private set; }
+
+        /// <summary>
+        /// Relative offset of the entry header. Only valid after <see cref="Process(long, long, long, ushort)"/> has been called and if the
+        /// original entry header had a corresponding 0xFFFFFFFF value.
+        /// </summary>
         public long RelativeOffsetOfEntryHeader { get; private set; }
+
+        /// <summary>
+        /// Volume number. Only valid after <see cref="Process(long, long, long, ushort)"/> has been called and if the
+        /// original entry header had a corresponding 0xFFFF value.
+        /// </summary>
         public uint VolumeNumber { get; private set; }
     }
 
@@ -120,30 +141,12 @@ namespace SharpCompress.Common.Zip.Headers
     {
         internal static ExtraData Create(ExtraDataType type, ushort length, byte[] extraData)
         {
-            switch (type)
+            return type switch
             {
-                case ExtraDataType.UnicodePathExtraField:
-                    return new ExtraUnicodePathExtraField
-                           {
-                               Type = type,
-                               Length = length,
-                               DataBytes = extraData
-                           };
-                case ExtraDataType.Zip64ExtendedInformationExtraField:
-                    return new Zip64ExtendedInformationExtraField
-                            (
-                                type,
-                                length,
-                                extraData
-                           );
-                default:
-                    return new ExtraData
-                           {
-                               Type = type,
-                               Length = length,
-                               DataBytes = extraData
-                           };
-            }
+                ExtraDataType.UnicodePathExtraField => new ExtraUnicodePathExtraField(type, length, extraData),
+                ExtraDataType.Zip64ExtendedInformationExtraField => new Zip64ExtendedInformationExtraField(type, length, extraData),
+                _ => new ExtraData(type, length, extraData)
+            };
         }
     }
 }

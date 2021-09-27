@@ -1,6 +1,5 @@
 ﻿using System.IO;
 using System.Linq;
-using System.Text;
 
 namespace SharpCompress.Common.Zip.Headers
 {
@@ -25,7 +24,7 @@ namespace SharpCompress.Common.Zip.Headers
             ushort extraLength = reader.ReadUInt16();
             byte[] name = reader.ReadBytes(nameLength);
             byte[] extra = reader.ReadBytes(extraLength);
-            
+
             // According to .ZIP File Format Specification
             //
             // For example: https://pkware.cachefly.net/webdocs/casestudies/APPNOTE.TXT
@@ -33,7 +32,7 @@ namespace SharpCompress.Common.Zip.Headers
             // Bit 11: Language encoding flag (EFS).  If this bit is set,
             //         the filename and comment fields for this file
             //         MUST be encoded using UTF-8. (see APPENDIX D)
-            
+
             if (Flags.HasFlag(HeaderFlags.Efs))
             {
                 Name = ArchiveEncoding.DecodeUTF8(name);
@@ -42,7 +41,7 @@ namespace SharpCompress.Common.Zip.Headers
             {
                 Name = ArchiveEncoding.Decode(name);
             }
-            
+
             LoadExtra(extra);
 
             var unicodePathExtra = Extra.FirstOrDefault(u => u.Type == ExtraDataType.UnicodePathExtraField);
@@ -54,6 +53,8 @@ namespace SharpCompress.Common.Zip.Headers
             var zip64ExtraData = Extra.OfType<Zip64ExtendedInformationExtraField>().FirstOrDefault();
             if (zip64ExtraData != null)
             {
+                zip64ExtraData.Process(UncompressedSize, CompressedSize, 0, 0);
+
                 if (CompressedSize == uint.MaxValue)
                 {
                     CompressedSize = zip64ExtraData.CompressedSize;

@@ -1,8 +1,6 @@
-#region Using
+#nullable disable
 
 using System;
-
-#endregion
 
 namespace SharpCompress.Compressors.PPMd.I1
 {

@@ -35,7 +35,8 @@ namespace SharpCompress.Test.Xz
         }
 
         [Fact]
-        public void BadVersionIfCrcOkButStreamFlagUnknown() { 
+        public void BadVersionIfCrcOkButStreamFlagUnknown()
+        {
             var bytes = Compressed.Clone() as byte[];
             byte[] streamFlags = { 0x00, 0xF4 };
             byte[] crc = Crc32.Compute(streamFlags).ToLittleEndianBytes();
@@ -48,7 +49,7 @@ namespace SharpCompress.Test.Xz
                 var ex = Assert.Throws<InvalidDataException>(() => { header.Process(); });
                 Assert.Equal("Unknown XZ Stream Version", ex.Message);
             }
-}
+        }
 
         [Fact]
         public void ProcessesBlockCheckType()

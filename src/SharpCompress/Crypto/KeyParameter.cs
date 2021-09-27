@@ -10,7 +10,7 @@ namespace SharpCompress.Crypto
         public KeyParameter(
             byte[] key)
         {
-            if (key == null)
+            if (key is null)
             {
                 throw new ArgumentNullException(nameof(key));
             }
@@ -23,7 +23,7 @@ namespace SharpCompress.Crypto
             int keyOff,
             int keyLen)
         {
-            if (key == null)
+            if (key is null)
             {
                 throw new ArgumentNullException(nameof(key));
             }

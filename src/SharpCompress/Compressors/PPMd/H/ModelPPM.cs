@@ -1,3 +1,5 @@
+#nullable disable
+
 using System;
 using System.IO;
 using System.Text;
@@ -90,7 +92,7 @@ namespace SharpCompress.Compressors.PPMd.H
 
         private readonly int[][] _binSumm = new int[128][]; // binary SEE-contexts
 
-        private static readonly int[] INIT_BIN_ESC = {0x3CDD, 0x1F3F, 0x59BF, 0x48F3, 0x64A1, 0x5ABC, 0x6632, 0x6051};
+        private static readonly int[] INIT_BIN_ESC = { 0x3CDD, 0x1F3F, 0x59BF, 0x48F3, 0x64A1, 0x5ABC, 0x6632, 0x6051 };
 
         // Temp fields
         //UPGRADE_NOTE: Final was removed from the declaration of 'tempState1 '. "ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?index='!DefaultContextWindowIndex'&keyword='jlca1003'"
@@ -137,7 +139,7 @@ namespace SharpCompress.Compressors.PPMd.H
 
         private void RestartModelRare()
         {
-            new Span<int>(_charMask).Fill(0);
+            new Span<int>(_charMask).Clear();
             SubAlloc.InitSubAllocator();
             _initRl = -(_maxOrder < 12 ? _maxOrder : 12) - 1;
             int addr = SubAlloc.AllocContext();
@@ -228,7 +230,7 @@ namespace SharpCompress.Compressors.PPMd.H
         private void ClearMask()
         {
             _escCount = 1;
-            new Span<int>(_charMask).Fill(0);
+            new Span<int>(_charMask).Clear();
         }
 
         internal bool DecodeInit(IRarUnpack unpackRead, int escChar)
@@ -844,7 +846,7 @@ namespace SharpCompress.Compressors.PPMd.H
                 _charMask[rs.Symbol] = 0;
                 _prevSuccess = 0;
             }
-            for (;;)
+            for (; ; )
             {
                 State s = _tempState1.Initialize(Heap);
                 int i;

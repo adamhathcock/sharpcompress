@@ -1,4 +1,6 @@
-﻿using System;
+﻿#nullable disable
+
+using System;
 using System.Security.Cryptography;
 using System.Text;
 using SharpCompress.Crypto;
@@ -25,13 +27,13 @@ namespace SharpCompress.Common.Rar
 
             _rijndael = new RijndaelEngine();
             _aesInitializationVector = new byte[CRYPTO_BLOCK_SIZE];
-            int rawLength = 2*_password.Length;
+            int rawLength = 2 * _password.Length;
             byte[] rawPassword = new byte[rawLength + 8];
             byte[] passwordBytes = Encoding.UTF8.GetBytes(_password);
             for (int i = 0; i < _password.Length; i++)
             {
-                rawPassword[i*2] = passwordBytes[i];
-                rawPassword[i*2 + 1] = 0;
+                rawPassword[i * 2] = passwordBytes[i];
+                rawPassword[i * 2 + 1] = 0;
             }
             for (int i = 0; i < _salt.Length; i++)
             {
@@ -66,11 +68,11 @@ namespace SharpCompress.Common.Rar
             {
                 for (int j = 0; j < 4; j++)
                 {
-                    aesKey[i*4 + j] = (byte)
-                        (((digest[i*4]*0x1000000) & 0xff000000 |
-                          (uint) ((digest[i*4 + 1]*0x10000) & 0xff0000) |
-                          (uint) ((digest[i*4 + 2]*0x100) & 0xff00) |
-                          (uint) (digest[i*4 + 3] & 0xff)) >> (j*8));
+                    aesKey[i * 4 + j] = (byte)
+                        (((digest[i * 4] * 0x1000000) & 0xff000000 |
+                          (uint)((digest[i * 4 + 1] * 0x10000) & 0xff0000) |
+                          (uint)((digest[i * 4 + 2] * 0x100) & 0xff00) |
+                          (uint)(digest[i * 4 + 3] & 0xff)) >> (j * 8));
                 }
             }
 
@@ -85,11 +87,11 @@ namespace SharpCompress.Common.Rar
             return rijndael;
         }
 
-        public byte[] ProcessBlock(byte[] cipherText)
+        public byte[] ProcessBlock(ReadOnlySpan<byte> cipherText)
         {
-            var plainText = new byte[CRYPTO_BLOCK_SIZE];
+            Span<byte> plainText = stackalloc byte[CRYPTO_BLOCK_SIZE]; // 16 bytes
             byte[] decryptedBytes = new byte[CRYPTO_BLOCK_SIZE];
-            _rijndael.ProcessBlock(cipherText, 0, plainText, 0);
+            _rijndael.ProcessBlock(cipherText, plainText);
 
             for (int j = 0; j < CRYPTO_BLOCK_SIZE; j++)
             {

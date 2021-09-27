@@ -9,6 +9,8 @@ namespace SharpCompress.Readers
         /// </summary>
         public bool LookForHeader { get; set; }
 
-        public string Password { get; set; }
+        public string? Password { get; set; }
+
+        public bool DisableCheckIncomplete { get; set; }
     }
 }
