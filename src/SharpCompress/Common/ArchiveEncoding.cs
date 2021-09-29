@@ -36,12 +36,10 @@ namespace SharpCompress.Common
             Password = password;
         }
 
-#if !NET461
         static ArchiveEncoding()
         {
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
         }
-#endif
 
         public string Decode(byte[] bytes)
         {
