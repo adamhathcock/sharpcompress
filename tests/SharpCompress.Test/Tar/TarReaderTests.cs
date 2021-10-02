@@ -190,7 +190,7 @@ namespace SharpCompress.Test.Tar
             }
         }
 
-#if !NET461
+#if !NETFRAMEWORK
         [Fact]
         public void Tar_GZip_With_Symlink_Entries()
         {
