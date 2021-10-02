@@ -49,19 +49,19 @@ class Program
         Target(Build, DependsOn(Format),
                framework =>
                {
-                   if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && framework == "net46")
-                   {
-                       return;
-                   }
                    Run("dotnet", "build src/SharpCompress/SharpCompress.csproj -c Release");
                });
 
-        Target(Test, DependsOn(Build), ForEach("net5.0"),
+        Target(Test, DependsOn(Build), ForEach("net5.0", "net461"),
                framework =>
                {
                    IEnumerable<string> GetFiles(string d)
                    {
                        return Glob.Files(".", d);
+                   }
+                   if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && framework == "net461")
+                   {
+                       return;
                    }
 
                    foreach (var file in GetFiles("**/*.Test.csproj"))

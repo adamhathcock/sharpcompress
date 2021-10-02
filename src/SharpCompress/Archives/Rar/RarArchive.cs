@@ -10,7 +10,7 @@ using SharpCompress.Readers.Rar;
 
 namespace SharpCompress.Archives.Rar
 {
-    public class 
+    public class
         RarArchive : AbstractArchive<RarArchiveEntry, RarVolume>
     {
         internal Lazy<IRarUnpack> UnpackV2017 { get; } = new Lazy<IRarUnpack>(() => new SharpCompress.Compressors.Rar.UnpackV2017.Unpack());

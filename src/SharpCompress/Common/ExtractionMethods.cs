@@ -15,7 +15,7 @@ namespace SharpCompress.Common
         {
             string destinationFileName;
             string fullDestinationDirectoryPath = Path.GetFullPath(destinationDirectory);
-            
+
             //check for trailing slash.
             if (fullDestinationDirectoryPath[fullDestinationDirectoryPath.Length - 1] != Path.DirectorySeparatorChar)
             {
