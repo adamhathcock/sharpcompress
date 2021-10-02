@@ -280,7 +280,7 @@ namespace SharpCompress
         {
             return ArrayPool<byte>.Shared.Rent(81920);
         }
-        
+
         public static bool ReadFully(this Stream stream, byte[] buffer)
         {
             int total = 0;
@@ -295,7 +295,7 @@ namespace SharpCompress
             }
             return (total >= buffer.Length);
         }
-        
+
         public static bool ReadFully(this Stream stream, Span<byte> buffer)
         {
             int total = 0;

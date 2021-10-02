@@ -43,7 +43,7 @@ class Program
         Target(Format, () =>
         {
             Run("dotnet", "tool restore");
-            Run("dotnet", "format");
+            Run("dotnet", "format --check");
         });
 
         Target(Build, DependsOn(Format),
@@ -59,7 +59,7 @@ class Program
                    {
                        return Glob.Files(".", d);
                    }
-                    if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && framework == "net461")
+                   if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && framework == "net461")
                    {
                        return;
                    }

@@ -592,7 +592,7 @@ namespace SharpCompress.Test.Zip
         {
             string zipPath = Path.Combine(TEST_ARCHIVES_PATH, "Zip.LongComment.zip");
 
-            using(ZipArchive za = ZipArchive.Open(zipPath))
+            using (ZipArchive za = ZipArchive.Open(zipPath))
             {
                 var count = za.Entries.Count;
                 Assert.Equal(1, count);

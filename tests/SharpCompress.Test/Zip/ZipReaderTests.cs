@@ -268,16 +268,16 @@ namespace SharpCompress.Test.Zip
             }
             VerifyFiles();
         }
-        
+
         [Fact]
         public void Zip_Deflate_ZipCrypto_Read()
         {
             int count = 0;
             using (Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "zipcrypto.zip")))
             using (var reader = ZipReader.Open(stream, new ReaderOptions()
-                                                       {
-                                                           Password = "test"
-                                                       }))
+            {
+                Password = "test"
+            }))
             {
                 while (reader.MoveToNextEntry())
                 {

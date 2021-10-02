@@ -36,7 +36,7 @@ namespace SharpCompress.Common.Zip
                 // ZIP64_END_OF_CENTRAL_DIRECTORY_LOCATOR should be before the EOCD
                 stream.Seek(eocd_location - ZIP64_EOCD_LENGTH - 4, SeekOrigin.Begin);
                 uint zip64_locator = reader.ReadUInt32();
-                if( zip64_locator != ZIP64_END_OF_CENTRAL_DIRECTORY_LOCATOR )
+                if (zip64_locator != ZIP64_END_OF_CENTRAL_DIRECTORY_LOCATOR)
                 {
                     throw new ArchiveException("Failed to locate the Zip64 Directory Locator");
                 }
@@ -86,11 +86,11 @@ namespace SharpCompress.Common.Zip
             }
         }
 
-        private static bool IsMatch( byte[] haystack, int position, byte[] needle)
+        private static bool IsMatch(byte[] haystack, int position, byte[] needle)
         {
-            for( int i = 0; i < needle.Length; i++ )
+            for (int i = 0; i < needle.Length; i++)
             {
-                if( haystack[ position + i ] != needle[ i ] )
+                if (haystack[position + i] != needle[i])
                 {
                     return false;
                 }
@@ -120,9 +120,9 @@ namespace SharpCompress.Common.Zip
             // don't exclude the minimum eocd region, otherwise you fail to locate the header in empty zip files
             var max_search_area = len; // - MINIMUM_EOCD_LENGTH;
 
-            for( int pos_from_end = 0; pos_from_end < max_search_area; ++pos_from_end)
+            for (int pos_from_end = 0; pos_from_end < max_search_area; ++pos_from_end)
             {
-                if( IsMatch(seek, pos_from_end, needle) )
+                if (IsMatch(seek, pos_from_end, needle))
                 {
                     stream.Seek(-pos_from_end, SeekOrigin.End);
                     return;
