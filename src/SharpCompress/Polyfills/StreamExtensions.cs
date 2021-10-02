@@ -1,4 +1,4 @@
-﻿#if NET461 || NETSTANDARD2_0
+﻿#if NETFRAMEWORK || NETSTANDARD2_0
 
 using System;
 using System.Buffers;

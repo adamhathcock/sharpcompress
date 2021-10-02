@@ -42,7 +42,7 @@ namespace SharpCompress.Crypto
 
         public override void SetLength(long value) => throw new NotSupportedException();
 
-#if !NET461 && !NETSTANDARD2_0
+#if !NETFRAMEWORK && !NETSTANDARD2_0
 
         public override void Write(ReadOnlySpan<byte> buffer)
         {
