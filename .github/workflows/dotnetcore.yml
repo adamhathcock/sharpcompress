@@ -18,7 +18,3 @@ jobs:
       with:
         name: ${{ matrix.os }}-sharpcompress.nupkg
         path: artifacts/*
-    - uses: actions/upload-artifact@v2
-      with:
-        name: ${{ matrix.os }}-sharpcompress.snupkg
-        path: artifacts/*
