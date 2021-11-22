@@ -51,11 +51,6 @@ namespace SharpCompress.Algorithms
         /// <returns>The <see cref="uint"/>.</returns>
         public static uint Calculate(uint adler, ReadOnlySpan<byte> buffer)
         {
-            if (buffer.IsEmpty)
-            {
-                return SeedValue;
-            }
-
 #if !NETSTANDARD2_0 && !NETSTANDARD2_1 && !NETFRAMEWORK
             if (Sse3.IsSupported && buffer.Length >= MinBufferSize)
             {

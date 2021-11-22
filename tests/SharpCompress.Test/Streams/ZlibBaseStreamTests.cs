@@ -1,6 +1,9 @@
 using System.IO;
+using System.Text;
+using FluentAssertions;
 using SharpCompress.Compressors;
 using SharpCompress.Compressors.Deflate;
+using SharpCompress.IO;
 using Xunit;
 
 namespace SharpCompress.Test.Streams
@@ -30,6 +33,56 @@ namespace SharpCompress.Test.Streams
             }
 
             Assert.Equal(total, realCompressedSize);
+        }
+        
+        [Fact]
+        public void Zlib_should_read_the_previously_written_message()
+        {
+            var message = new string('a', 131073);  // 131073 causes the failure, but 131072 (-1) doesn't
+            var bytes = Encoding.ASCII.GetBytes(message);
+
+            using (var inputStream = new MemoryStream(bytes))
+            {
+                using (var compressedStream = new MemoryStream())
+                using (var byteBufferStream = new BufferedStream(inputStream)) // System.IO
+                {
+                    Compress(byteBufferStream, compressedStream, compressionLevel: 1);
+                    compressedStream.Position = 0;
+
+                    using (var decompressedStream = new MemoryStream())
+                    {
+                        Decompress(compressedStream, decompressedStream);
+
+                        byteBufferStream.Position = 0;
+                        var result = Encoding.ASCII.GetString(GetBytes(byteBufferStream));
+                        result.Should().Be(message);
+                    }
+                }
+            }
+        }
+
+        public void Compress(Stream input, Stream output, int compressionLevel)
+        {
+            using (var zlibStream = new ZlibStream(new NonDisposingStream(output), CompressionMode.Compress, (CompressionLevel)compressionLevel))
+            {
+                zlibStream.FlushMode = FlushType.Sync;
+                input.CopyTo(zlibStream);
+            }
+        }
+
+        public void Decompress(Stream input, Stream output)
+        {
+            using (var zlibStream = new ZlibStream(new NonDisposingStream(input), CompressionMode.Decompress))
+            {
+                zlibStream.CopyTo(output);
+            }
+        }
+
+        byte[] GetBytes(BufferedStream stream)
+        {
+            byte[] bytes = new byte[stream.Length];
+            stream.Read(bytes, 0, (int)stream.Length);
+            return bytes;
         }
     }
 }
