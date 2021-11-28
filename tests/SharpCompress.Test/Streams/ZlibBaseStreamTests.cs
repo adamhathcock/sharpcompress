@@ -61,7 +61,7 @@ namespace SharpCompress.Test.Streams
             }
         }
 
-        public void Compress(Stream input, Stream output, int compressionLevel)
+        private void Compress(Stream input, Stream output, int compressionLevel)
         {
             using (var zlibStream = new ZlibStream(new NonDisposingStream(output), CompressionMode.Compress, (CompressionLevel)compressionLevel))
             {
@@ -70,7 +70,7 @@ namespace SharpCompress.Test.Streams
             }
         }
 
-        public void Decompress(Stream input, Stream output)
+        private void Decompress(Stream input, Stream output)
         {
             using (var zlibStream = new ZlibStream(new NonDisposingStream(input), CompressionMode.Decompress))
             {
@@ -78,7 +78,7 @@ namespace SharpCompress.Test.Streams
             }
         }
 
-        byte[] GetBytes(BufferedStream stream)
+        private byte[] GetBytes(BufferedStream stream)
         {
             byte[] bytes = new byte[stream.Length];
             stream.Read(bytes, 0, (int)stream.Length);

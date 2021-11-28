@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFrameworks>net5.0;net461</TargetFrameworks>
     <AssemblyName>SharpCompress.Test</AssemblyName>
@@ -7,6 +7,7 @@
     <PublicSign Condition=" '$(OS)' != 'Windows_NT' ">true</PublicSign>
     <PackageId>SharpCompress.Test</PackageId>
     <GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
+    <LangVersion>9</LangVersion>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\SharpCompress\SharpCompress.csproj" />
@@ -17,6 +18,7 @@
     <PackageReference Include="xunit.runner.visualstudio" Version="2.4.3" />
     <PackageReference Include="xunit" Version="2.4.1" />
     <PackageReference Include="Xunit.SkippableFact" Version="1.4.13" />
+    <PackageReference Include="Xunit.Combinatorial" Version="1.4.1" />
   </ItemGroup>
   <ItemGroup Condition=" '$(VersionlessImplicitFrameworkDefine)' != 'NETFRAMEWORK' ">
     <PackageReference Include="Mono.Posix.NETStandard" Version="1.0.0" />
