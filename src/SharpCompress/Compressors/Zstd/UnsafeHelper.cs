@@ -8,7 +8,7 @@ using static InlineIL.IL.Emit;
 // ReSharper disable InconsistentNaming
 // ReSharper disable IdentifierTypo
 
-[module: SkipLocalsInit]
+//[module: SkipLocalsInit]
 
 namespace ZstdSharp
 {
