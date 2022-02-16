@@ -361,6 +361,31 @@ namespace SharpCompress.Test.Rar
         }
 
         [Fact]
+        public void Rar2_Multi_ArchiveStreamRead()
+        {
+            DoRar_Multi_ArchiveStreamRead(new string[] {
+                "Rar2.multi.rar",
+                "Rar2.multi.r00",
+                "Rar2.multi.r01",
+                "Rar2.multi.r02",
+                "Rar2.multi.r03",
+                "Rar2.multi.r04",
+                "Rar2.multi.r05"}, false);
+        }
+
+        [Fact]
+        public void Rar2_Multi_ArchiveFileRead()
+        {
+            ArchiveFileRead("Rar2.multi.rar"); //r00, r01...
+        }
+
+        [Fact]
+        public void Rar2_ArchiveFileRead()
+        {
+            ArchiveFileRead("Rar2.rar");
+        }
+
+        [Fact]
         public void Rar_Multi_ArchiveFileRead()
         {
             ArchiveFileRead("Rar.multi.part01.rar");
