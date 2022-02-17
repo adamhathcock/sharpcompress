@@ -86,6 +86,12 @@ namespace SharpCompress.Writers.Tar
             header.LastModifiedTime = modificationTime ?? TarHeader.EPOCH;
             header.Name = NormalizeFilename(filename);
             header.Size = realSize;
+
+            Write(header, content);
+        }
+
+        public void Write(TarHeader header, Stream content)
+        {
             header.Write(OutputStream);
 
             size = source.TransferTo(OutputStream);
