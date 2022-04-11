@@ -52,7 +52,7 @@ class Program
                    Run("dotnet", "build src/SharpCompress/SharpCompress.csproj -c Release");
                });
 
-        Target(Test, DependsOn(Build), ForEach("net5.0", "net461"),
+        Target(Test, DependsOn(Build), ForEach("net5.0", "net6.0", "net461"),
                framework =>
                {
                    IEnumerable<string> GetFiles(string d)
