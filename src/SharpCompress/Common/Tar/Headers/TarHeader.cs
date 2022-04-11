@@ -19,11 +19,9 @@ namespace SharpCompress.Common.Tar.Headers
         internal string Name { get; set; }
         internal string LinkName { get; set; }
 
-        //internal int Mode { get; set; }
-        //internal int UserId { get; set; }
-        //internal string UserName { get; set; }
-        //internal int GroupId { get; set; }
-        //internal string GroupName { get; set; }
+        internal long Mode { get; set; }
+        internal long UserId { get; set; }
+        internal long GroupId { get; set; }
         internal long Size { get; set; }
         internal DateTime LastModifiedTime { get; set; }
         internal EntryType EntryType { get; set; }
@@ -127,9 +125,12 @@ namespace SharpCompress.Common.Tar.Headers
             EntryType = ReadEntryType(buffer);
             Size = ReadSize(buffer);
 
-            //Mode = ReadASCIIInt32Base8(buffer, 100, 7);
-            //UserId = ReadASCIIInt32Base8(buffer, 108, 7);
-            //GroupId = ReadASCIIInt32Base8(buffer, 116, 7);
+            Mode = ReadAsciiInt64Base8(buffer, 100, 7);
+            if(EntryType == EntryType.Directory) 
+                Mode |= 0b1_000_000_000;
+
+            UserId = ReadAsciiInt64Base8(buffer, 108, 7);
+            GroupId = ReadAsciiInt64Base8(buffer, 116, 7);
             long unixTimeStamp = ReadAsciiInt64Base8(buffer, 136, 11);
             LastModifiedTime = EPOCH.AddSeconds(unixTimeStamp).ToLocalTime();
 
