@@ -5,7 +5,7 @@ using System.Runtime.CompilerServices;
 [assembly: AssemblyTitle("SharpCompress")]
 [assembly: AssemblyProduct("SharpCompress")]
 [assembly: InternalsVisibleTo("SharpCompress.Test" + SharpCompress.AssemblyInfo.PublicKeySuffix)]
-[assembly: CLSCompliant(true)]
+[assembly: CLSCompliant(false)]
 
 namespace SharpCompress
 {

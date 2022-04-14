@@ -78,7 +78,7 @@ namespace SharpCompress.Test.Streams
             }
         }
 
-        byte[] GetBytes(BufferedStream stream)
+        private byte[] GetBytes(BufferedStream stream)
         {
             byte[] bytes = new byte[stream.Length];
             stream.Read(bytes, 0, (int)stream.Length);

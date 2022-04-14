@@ -14,6 +14,7 @@
         LZip,
         Xz,
         Unknown,
-        Deflate64
+        Deflate64,
+        ZStandard,
     }
 }
