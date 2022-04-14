@@ -616,5 +616,23 @@ namespace SharpCompress.Test.Zip
                 }
             }
         }
+
+        [Fact]
+        public void When_adding_empty_folder_should_only_contain_folders()
+        {
+          var stream = new MemoryStream();
+          string folderName = "EmptyFolder";
+          using (var zipArchive = ZipArchive.Create())
+          {
+            zipArchive.AddDirectory(folderName);
+            zipArchive.SaveTo(stream);
+          }
+
+          using (var zipArchive = ZipArchive.Open(stream))
+          {
+            Assert.True(zipArchive.Entries.SingleOrDefault(me => me.Key.Contains("folderName")) != null);
+            Assert.True(zipArchive.Entries.All(me => me.IsDirectory));
+          }
+        }
     }
 }

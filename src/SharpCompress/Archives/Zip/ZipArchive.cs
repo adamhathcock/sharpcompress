@@ -174,12 +174,18 @@ namespace SharpCompress.Archives.Zip
         {
             using (var writer = new ZipWriter(stream, new ZipWriterOptions(options)))
             {
-                foreach (var entry in oldEntries.Concat(newEntries)
-                                                .Where(x => !x.IsDirectory))
+                foreach (var entry in oldEntries.Concat(newEntries))
                 {
-                    using (var entryStream = entry.OpenEntryStream())
+                    if (entry.IsDirectory)
                     {
+                       //TODO What do to here?
+                    }
+                    else
+                    {
+                      using (var entryStream = entry.OpenEntryStream())
+                      {
                         writer.Write(entry.Key, entryStream, entry.LastModifiedTime);
+                      }
                     }
                 }
             }
@@ -202,5 +208,11 @@ namespace SharpCompress.Archives.Zip
             stream.Position = 0;
             return ZipReader.Open(stream, ReaderOptions);
         }
+
+      public void AddDirectory(string combine)
+      {
+        combine +=  "/";
+       var entry = AddEntry(combine, new MemoryStream());
+      }
     }
 }

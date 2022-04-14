@@ -41,7 +41,19 @@ namespace SharpCompress.Archives.Zip
 
         public override bool IsEncrypted => false;
 
-        public override bool IsDirectory => false;
+        public override bool IsDirectory 
+        {
+          get
+          {
+            if (Key.EndsWith("/"))
+            {
+              return true;
+            }
+
+            //.NET Framework 4.5 : System.IO.Compression::CreateFromDirectory() probably writes backslashes to headers
+            return CompressedSize == 0 && Key.EndsWith("\\");
+          }
+        }
 
         public override bool IsSplitAfter => false;
 
