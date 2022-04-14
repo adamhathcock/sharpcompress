@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using SharpCompress.Archives.Dmg;
 using SharpCompress.Archives.GZip;
 using SharpCompress.Archives.Rar;
 using SharpCompress.Archives.SevenZip;
@@ -44,6 +45,12 @@ namespace SharpCompress.Archives
                 return GZipArchive.Open(stream, readerOptions);
             }
             stream.Seek(0, SeekOrigin.Begin);
+            if (DmgArchive.IsDmgFile(stream))
+            {
+                stream.Seek(0, SeekOrigin.Begin);
+                return DmgArchive.Open(stream, readerOptions);
+            }
+            stream.Seek(0, SeekOrigin.Begin);
             if (RarArchive.IsRarFile(stream, readerOptions))
             {
                 stream.Seek(0, SeekOrigin.Begin);
@@ -55,7 +62,7 @@ namespace SharpCompress.Archives
                 stream.Seek(0, SeekOrigin.Begin);
                 return TarArchive.Open(stream, readerOptions);
             }
-            throw new InvalidOperationException("Cannot determine compressed stream type. Supported Archive Formats: Zip, GZip, Tar, Rar, 7Zip, LZip");
+            throw new InvalidOperationException("Cannot determine compressed stream type. Supported Archive Formats: Zip, GZip, Tar, Rar, 7Zip, LZip, Dmg");
         }
 
         public static IWritableArchive Create(ArchiveType type)
@@ -106,6 +113,12 @@ namespace SharpCompress.Archives
                 return GZipArchive.Open(fileInfo, options);
             }
             stream.Seek(0, SeekOrigin.Begin);
+            if (DmgArchive.IsDmgFile(stream))
+            {
+                stream.Seek(0, SeekOrigin.Begin);
+                return DmgArchive.Open(fileInfo, options);
+            }
+            stream.Seek(0, SeekOrigin.Begin);
             if (RarArchive.IsRarFile(stream, options))
             {
                 return RarArchive.Open(fileInfo, options);
@@ -115,7 +128,7 @@ namespace SharpCompress.Archives
             {
                 return TarArchive.Open(fileInfo, options);
             }
-            throw new InvalidOperationException("Cannot determine compressed stream type. Supported Archive Formats: Zip, GZip, Tar, Rar, 7Zip");
+            throw new InvalidOperationException("Cannot determine compressed stream type. Supported Archive Formats: Zip, GZip, Tar, Rar, 7Zip, Dmg");
         }
 
         /// <summary>
