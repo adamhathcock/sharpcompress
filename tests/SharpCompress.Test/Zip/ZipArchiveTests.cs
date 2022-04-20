@@ -108,6 +108,16 @@ namespace SharpCompress.Test.Zip
             ArchiveFileRead("Zip.deflate.zip");
         }
         [Fact]
+        public void Zip_Deflate_Split_ArchiveFileRead()
+        {
+            ArchiveStreamSplitRead(null, "Zip.deflate.split.001",
+                                        "Zip.deflate.split.002",
+                                        "Zip.deflate.split.003",
+                                        "Zip.deflate.split.004",
+                                        "Zip.deflate.split.005",
+                                        "Zip.deflate.split.006");
+        }
+        [Fact]
         public void Zip_Deflate64_ArchiveFileRead()
         {
             ArchiveFileRead("Zip.deflate64.zip");
@@ -616,5 +626,6 @@ namespace SharpCompress.Test.Zip
                 }
             }
         }
+
     }
 }

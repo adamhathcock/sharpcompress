@@ -386,6 +386,71 @@ namespace SharpCompress.Test.Rar
         }
 
         [Fact]
+        public void Rar4_Multi_ArchiveFileRead()
+        {
+            ArchiveFileRead("Rar4.multi.part01.rar");
+        }
+
+        [Fact]
+        public void Rar4_ArchiveFileRead()
+        {
+            ArchiveFileRead("Rar4.rar");
+        }
+
+        [Fact]
+        public void Rar4_Multi_ArchiveStreamRead()
+        {
+            DoRar_Multi_ArchiveStreamRead(new string[] {
+                "Rar4.multi.part01.rar",
+                "Rar4.multi.part02.rar",
+                "Rar4.multi.part03.rar",
+                "Rar4.multi.part04.rar",
+                "Rar4.multi.part05.rar",
+                "Rar4.multi.part06.rar",
+                "Rar4.multi.part07.rar"}, false);
+        }
+
+        //no extension to test the lib identifies the archive by content not ext
+        [Fact]
+        public void Rar4_Split_ArchiveStreamRead()
+        {
+            ArchiveStreamSplitRead(null, new string[] {
+                "Rar4.split.001",
+                "Rar4.split.002",
+                "Rar4.split.003",
+                "Rar4.split.004",
+                "Rar4.split.005",
+                "Rar4.split.006"});
+        }
+
+        //open with ArchiveFactory.Open and stream
+        [Fact]
+        public void Rar4_Split_ArchiveOpen()
+        {
+            ArchiveOpenStreamRead(null,
+                "Rar4.split.001",
+                "Rar4.split.002",
+                "Rar4.split.003",
+                "Rar4.split.004",
+                "Rar4.split.005",
+                "Rar4.split.006");
+        }
+
+        //open with ArchiveFactory.Open and stream
+        [Fact]
+        public void Rar4_Multi_ArchiveOpen()
+        {
+            ArchiveOpenStreamRead(null,
+                "Rar4.multi.part01.rar",
+                "Rar4.multi.part02.rar",
+                "Rar4.multi.part03.rar",
+                "Rar4.multi.part04.rar",
+                "Rar4.multi.part05.rar",
+                "Rar4.multi.part06.rar",
+                "Rar4.multi.part07.rar");
+        }
+
+    [Fact]
         public void Rar_Multi_ArchiveFileRead()
         {
             ArchiveFileRead("Rar.multi.part01.rar");

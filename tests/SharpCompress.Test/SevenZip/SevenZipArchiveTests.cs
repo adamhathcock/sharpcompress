@@ -101,5 +101,19 @@ namespace SharpCompress.Test.SevenZip
                                                                             "Original.7z.006",
                                                                             "Original.7z.007"));
         }
+
+        //Same as archive as Original.7z.001 ... 007 files without the root directory 'Original\' in the archive - this caused the verify to fail
+        [Fact]
+        public void SevenZipArchive_BZip2_Split_Working()
+        {
+            ArchiveStreamSplitRead(null, "7Zip.BZip2.split.001",
+                                        "7Zip.BZip2.split.002",
+                                        "7Zip.BZip2.split.003",
+                                        "7Zip.BZip2.split.004",
+                                        "7Zip.BZip2.split.005",
+                                        "7Zip.BZip2.split.006",
+                                        "7Zip.BZip2.split.007");
+        }
+
     }
 }
