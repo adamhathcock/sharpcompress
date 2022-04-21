@@ -1,20 +1,20 @@
 // Zlib.cs
 // ------------------------------------------------------------------
 //
-// Copyright (c) 2009 Dino Chiesa and Microsoft Corporation.  
+// Copyright (c) 2009 Dino Chiesa and Microsoft Corporation.
 // All rights reserved.
 //
 // This code module is part of DotNetZip, a zipfile class library.
 //
 // ------------------------------------------------------------------
 //
-// This code is licensed under the Microsoft Public License. 
+// This code is licensed under the Microsoft Public License.
 // See the file License.txt for the license details.
 // More info on: http://dotnetzip.codeplex.com
 //
 // ------------------------------------------------------------------
 //
-// last saved (in emacs): 
+// last saved (in emacs):
 // Time-stamp: <2009-November-07 05:26:55>
 //
 // ------------------------------------------------------------------
@@ -27,22 +27,22 @@
 // included below.
 //
 // ------------------------------------------------------------------
-// 
+//
 // Copyright (c) 2000,2001,2002,2003 ymnk, JCraft,Inc. All rights reserved.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
-// 
+//
 // 1. Redistributions of source code must retain the above copyright notice,
 // this list of conditions and the following disclaimer.
-// 
-// 2. Redistributions in binary form must reproduce the above copyright 
-// notice, this list of conditions and the following disclaimer in 
+//
+// 2. Redistributions in binary form must reproduce the above copyright
+// notice, this list of conditions and the following disclaimer in
 // the documentation and/or other materials provided with the distribution.
-// 
+//
 // 3. The names of the authors may not be used to endorse or promote products
 // derived from this software without specific prior written permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESSED OR IMPLIED WARRANTIES,
 // INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND
 // FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL JCRAFT,
@@ -53,7 +53,7 @@
 // LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 // NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 // EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-// 
+//
 // -----------------------------------------------------------------------
 //
 // This program is based on zlib-1.1.3; credit to authors
@@ -82,7 +82,7 @@ namespace SharpCompress.Compressors.Deflate
         /// <summary>
         /// Same as None.
         /// </summary>
-        Level0 = 0,
+        Level0 = None,
 
         /// <summary>
         /// The fastest but least effective compression.
@@ -92,7 +92,7 @@ namespace SharpCompress.Compressors.Deflate
         /// <summary>
         /// A synonym for BestSpeed.
         /// </summary>
-        Level1 = 1,
+        Level1 = BestSpeed,
 
         /// <summary>
         /// A little slower, but better, than level 1.
@@ -115,14 +115,14 @@ namespace SharpCompress.Compressors.Deflate
         Level5 = 5,
 
         /// <summary>
-        /// The default compression level, with a good balance of speed and compression efficiency.   
+        /// The default compression level, with a good balance of speed and compression efficiency.
         /// </summary>
         Default = 6,
 
         /// <summary>
         /// A synonym for Default.
         /// </summary>
-        Level6 = 6,
+        Level6 = Default,
 
         /// <summary>
         /// Pretty good compression!
@@ -135,7 +135,7 @@ namespace SharpCompress.Compressors.Deflate
         Level8 = 8,
 
         /// <summary>
-        /// The "best" compression, where best means greatest reduction in size of the input data stream. 
+        /// The "best" compression, where best means greatest reduction in size of the input data stream.
         /// This is also the slowest compression.
         /// </summary>
         BestCompression = 9,
@@ -143,7 +143,7 @@ namespace SharpCompress.Compressors.Deflate
         /// <summary>
         /// A synonym for BestCompression.
         /// </summary>
-        Level9 = 9
+        Level9 = BestCompression
     }
 
     /// <summary>
@@ -154,7 +154,7 @@ namespace SharpCompress.Compressors.Deflate
     public enum CompressionStrategy
     {
         /// <summary>
-        /// The default strategy is probably the best for normal data. 
+        /// The default strategy is probably the best for normal data.
         /// </summary>
         Default = 0,
 
@@ -181,7 +181,7 @@ namespace SharpCompress.Compressors.Deflate
     {
         /// <summary>
         /// The ZlibException class captures exception information generated
-        /// by the Zlib library. 
+        /// by the Zlib library.
         /// </summary>
         public ZlibException()
         {
@@ -233,7 +233,7 @@ namespace SharpCompress.Compressors.Deflate
         /// <param name="target">Contains the array of characteres read from the source TextReader.</param>
         /// <param name="start">The starting index of the target array.</param>
         /// <param name="count">The maximum number of characters to read from the source TextReader.</param>
-        /// 
+        ///
         /// <returns>
         ///   The number of characters read. The number will be less than or equal to
         ///   count depending on the data available in the source TextReader. Returns -1

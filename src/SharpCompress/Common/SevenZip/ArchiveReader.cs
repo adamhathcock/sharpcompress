@@ -1248,7 +1248,7 @@ namespace SharpCompress.Common.SevenZip
 
             if (nextHeaderOffset > _streamEnding - db._startPositionAfterHeader)
             {
-                throw new IndexOutOfRangeException();
+                throw new InvalidOperationException("nextHeaderOffset is invalid");
             }
 
             _stream.Seek(nextHeaderOffset, SeekOrigin.Current);

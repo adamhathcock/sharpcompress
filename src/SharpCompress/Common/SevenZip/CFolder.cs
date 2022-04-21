@@ -30,7 +30,7 @@ namespace SharpCompress.Common.SevenZip
                 }
             }
 
-            throw new Exception();
+            throw new InvalidOperationException();
         }
 
         public int GetNumOutStreams()

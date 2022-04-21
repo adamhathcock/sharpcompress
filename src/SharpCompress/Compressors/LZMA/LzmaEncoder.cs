@@ -1649,7 +1649,7 @@ namespace SharpCompress.Compressors.LZMA
         {
             for (int m = 0; m < K_MATCH_FINDER_I_DS.Length; m++)
             {
-                if (s == K_MATCH_FINDER_I_DS[m])
+                if (string.Equals(s, K_MATCH_FINDER_I_DS[m], StringComparison.OrdinalIgnoreCase))
                 {
                     return m;
                 }
@@ -1696,7 +1696,7 @@ namespace SharpCompress.Compressors.LZMA
                                 throw new InvalidParamException();
                             }
                             EMatchFinderType matchFinderIndexPrev = _matchFinderType;
-                            int m = FindMatchFinder(((string)prop).ToUpper());
+                            int m = FindMatchFinder(((string)prop));
                             if (m < 0)
                             {
                                 throw new InvalidParamException();

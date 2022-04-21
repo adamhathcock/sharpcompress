@@ -72,17 +72,17 @@ namespace SharpCompress
         {
             if (sourceIndex > Int32.MaxValue || sourceIndex < Int32.MinValue)
             {
-                throw new ArgumentOutOfRangeException();
+                throw new ArgumentOutOfRangeException(nameof(sourceIndex));
             }
 
             if (destinationIndex > Int32.MaxValue || destinationIndex < Int32.MinValue)
             {
-                throw new ArgumentOutOfRangeException();
+                throw new ArgumentOutOfRangeException(nameof(destinationIndex));
             }
 
             if (length > Int32.MaxValue || length < Int32.MinValue)
             {
-                throw new ArgumentOutOfRangeException();
+                throw new ArgumentOutOfRangeException(nameof(length));
             }
 
             Array.Copy(sourceArray, (int)sourceIndex, destinationArray, (int)destinationIndex, (int)length);

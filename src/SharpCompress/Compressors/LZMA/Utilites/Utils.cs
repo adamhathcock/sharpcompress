@@ -50,7 +50,7 @@ namespace SharpCompress.Compressors.LZMA.Utilites
                     Debugger.Break();
                 }
 
-                throw new Exception("Assertion failed.");
+                throw new InvalidOperationException("Assertion failed.");
             }
         }
 

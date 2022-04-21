@@ -71,7 +71,7 @@ namespace SharpCompress.Archives.Rar
             var buffer = new StringBuilder(currentFileInfo.FullName.Length);
             buffer.Append(currentFileInfo.FullName.Substring(0,
                                                              currentFileInfo.FullName.Length - extension.Length));
-            if (string.Compare(extension, ".rar", StringComparison.OrdinalIgnoreCase) == 0)
+            if (string.Equals(extension, ".rar", StringComparison.OrdinalIgnoreCase))
             {
                 buffer.Append(".r00");
             }
@@ -99,11 +99,11 @@ namespace SharpCompress.Archives.Rar
         {
             // part1.rar, part2.rar, ...
             string extension = currentFileInfo.Extension;
-            if (string.Compare(extension, ".rar", StringComparison.OrdinalIgnoreCase) != 0)
+            if (!string.Equals(extension, ".rar", StringComparison.OrdinalIgnoreCase))
             {
                 throw new ArgumentException("Invalid extension, expected 'rar': " + currentFileInfo.FullName);
             }
-            int startIndex = currentFileInfo.FullName.LastIndexOf(".part");
+            int startIndex = currentFileInfo.FullName.LastIndexOf(".part", StringComparison.OrdinalIgnoreCase);
             if (startIndex < 0)
             {
                 ThrowInvalidFileName(currentFileInfo);

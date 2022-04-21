@@ -170,7 +170,7 @@ namespace SharpCompress.Test.Zip
 
             using (var archive = ZipArchive.Open(unmodified))
             {
-                var entry = archive.Entries.Single(x => x.Key.EndsWith("jpg"));
+                var entry = archive.Entries.Single(x => x.Key.EndsWith("jpg", StringComparison.OrdinalIgnoreCase));
                 archive.RemoveEntry(entry);
 
                 WriterOptions writerOptions = new ZipWriterOptions(CompressionType.Deflate);
@@ -229,10 +229,10 @@ namespace SharpCompress.Test.Zip
 
             using (ZipArchive vfs = (ZipArchive)ArchiveFactory.Open(scratchPath))
             {
-                var e = vfs.Entries.First(v => v.Key.EndsWith("jpg"));
+                var e = vfs.Entries.First(v => v.Key.EndsWith("jpg", StringComparison.OrdinalIgnoreCase));
                 vfs.RemoveEntry(e);
-                Assert.Null(vfs.Entries.FirstOrDefault(v => v.Key.EndsWith("jpg")));
-                Assert.Null(((IArchive)vfs).Entries.FirstOrDefault(v => v.Key.EndsWith("jpg")));
+                Assert.Null(vfs.Entries.FirstOrDefault(v => v.Key.EndsWith("jpg", StringComparison.OrdinalIgnoreCase)));
+                Assert.Null(((IArchive)vfs).Entries.FirstOrDefault(v => v.Key.EndsWith("jpg", StringComparison.OrdinalIgnoreCase)));
             }
         }
 
@@ -272,7 +272,7 @@ namespace SharpCompress.Test.Zip
             foreach (var file in Directory.EnumerateFiles(ORIGINAL_FILES_PATH, "*.*", SearchOption.AllDirectories))
             {
                 var newFileName = file.Substring(ORIGINAL_FILES_PATH.Length);
-                if (newFileName.StartsWith(Path.DirectorySeparatorChar.ToString()))
+                if (newFileName.StartsWith(Path.DirectorySeparatorChar.ToString(), StringComparison.OrdinalIgnoreCase))
                 {
                     newFileName = newFileName.Substring(1);
                 }
@@ -301,7 +301,7 @@ namespace SharpCompress.Test.Zip
         }
 
         /// <summary>
-        /// Creates an empty zip file and attempts to read it right afterwards. 
+        /// Creates an empty zip file and attempts to read it right afterwards.
         /// Ensures that parsing file headers works even in that case
         /// </summary>
         [Fact]
@@ -328,7 +328,7 @@ namespace SharpCompress.Test.Zip
             foreach (var file in Directory.EnumerateFiles(ORIGINAL_FILES_PATH, "*.*", SearchOption.AllDirectories))
             {
                 var newFileName = file.Substring(ORIGINAL_FILES_PATH.Length);
-                if (newFileName.StartsWith(Path.DirectorySeparatorChar.ToString()))
+                if (newFileName.StartsWith(Path.DirectorySeparatorChar.ToString(), StringComparison.OrdinalIgnoreCase))
                 {
                     newFileName = newFileName.Substring(1);
                 }
@@ -346,7 +346,7 @@ namespace SharpCompress.Test.Zip
             {
                 archive.AddAllFromDirectory(SCRATCH_FILES_PATH);
                 archive.RemoveEntry(archive.Entries.Single(x => x.Key.EndsWith("jpg", StringComparison.OrdinalIgnoreCase)));
-                Assert.Null(archive.Entries.FirstOrDefault(x => x.Key.EndsWith("jpg")));
+                Assert.Null(archive.Entries.FirstOrDefault(x => x.Key.EndsWith("jpg", StringComparison.OrdinalIgnoreCase)));
             }
             Directory.Delete(SCRATCH_FILES_PATH, true);
         }
@@ -528,7 +528,7 @@ namespace SharpCompress.Test.Zip
 
             using (IWriter zipWriter = WriterFactory.Open(stream, ArchiveType.Zip, CompressionType.Deflate))
             {
-                zipWriter.Write("foo.txt", new MemoryStream(new byte[0]));
+                zipWriter.Write("foo.txt", new MemoryStream(Array.Empty<byte>()));
                 zipWriter.Write("foo2.txt", new MemoryStream(new byte[10]));
             }
 
