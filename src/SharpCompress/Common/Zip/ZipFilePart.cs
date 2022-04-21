@@ -174,7 +174,7 @@ namespace SharpCompress.Common.Zip
 
                     default:
                         {
-                            throw new ArgumentOutOfRangeException();
+                            throw new InvalidOperationException("Header.CompressionMethod is invalid");
                         }
 
                 }

@@ -9,7 +9,7 @@ namespace SharpCompress.Compressors.Xz
         {
             if (MaxBytes <= 0)
             {
-                throw new ArgumentOutOfRangeException();
+                throw new ArgumentOutOfRangeException(nameof(MaxBytes));
             }
 
             if (MaxBytes > 9)

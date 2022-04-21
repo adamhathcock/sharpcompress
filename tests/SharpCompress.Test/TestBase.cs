@@ -156,7 +156,7 @@ namespace SharpCompress.Test
         protected void CompareFilesByPath(string file1, string file2)
         {
             //TODO: fix line ending issues with the text file
-            if (file1.EndsWith("txt"))
+            if (file1.EndsWith("txt", StringComparison.OrdinalIgnoreCase))
             {
                 return;
             }

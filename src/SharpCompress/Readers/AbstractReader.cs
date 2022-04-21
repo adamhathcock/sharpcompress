@@ -38,7 +38,7 @@ namespace SharpCompress.Readers
         public abstract TVolume Volume { get; }
 
         /// <summary>
-        /// Current file entry 
+        /// Current file entry
         /// </summary>
         public TEntry Entry => entriesForCurrentReadStream!.Current;
 
@@ -160,9 +160,14 @@ namespace SharpCompress.Readers
             {
                 throw new ArgumentException("WriteEntryTo or OpenEntryStream can only be called once.");
             }
-            if ((writableStream is null) || (!writableStream.CanWrite))
+
+            if (writableStream is null)
             {
-                throw new ArgumentNullException("A writable Stream was required.  Use Cancel if that was intended.");
+                throw new ArgumentNullException(nameof(writableStream));
+            }
+            if (!writableStream.CanWrite)
+            {
+                throw new ArgumentException("A writable Stream was required.  Use Cancel if that was intended.");
             }
 
             Write(writableStream);

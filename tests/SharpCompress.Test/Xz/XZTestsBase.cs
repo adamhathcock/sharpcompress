@@ -1,15 +1,23 @@
-﻿using System.Text;
+﻿using System;
+using System.Text;
 using System.IO;
 
 namespace SharpCompress.Test.Xz
 {
-    public abstract class XZTestsBase
+    public abstract class XZTestsBase : IDisposable
     {
         public XZTestsBase()
         {
             RewindEmpty(CompressedEmptyStream);
             Rewind(CompressedStream);
             RewindIndexed(CompressedIndexedStream);
+        }
+
+        public void Dispose()
+        {
+            CompressedEmptyStream?.Dispose();
+            CompressedStream?.Dispose();
+            CompressedIndexedStream?.Dispose();
         }
 
         protected virtual void RewindEmpty(Stream stream)

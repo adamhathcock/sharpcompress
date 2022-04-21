@@ -103,7 +103,7 @@ namespace SharpCompress.Compressors.LZMA.LZ
         {
             if (historySize > K_MAX_VAL_FOR_NORMALIZE - 256)
             {
-                throw new Exception();
+                throw new ArgumentOutOfRangeException(nameof(historySize));
             }
             _cutValue = 16 + (matchMaxLen >> 1);
 

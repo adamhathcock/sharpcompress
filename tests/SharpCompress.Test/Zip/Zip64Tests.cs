@@ -64,7 +64,7 @@ namespace SharpCompress.Test.Zip
             {
                 // One single file, should fail
                 RunSingleTest(1, FOUR_GB_LIMIT, set_zip64: false, forward_only: false);
-                throw new Exception("Test did not fail?");
+                throw new InvalidOperationException("Test did not fail?");
             }
             catch (NotSupportedException)
             {
@@ -78,7 +78,7 @@ namespace SharpCompress.Test.Zip
             {
                 // One single file, should fail (fast) with zip64
                 RunSingleTest(1, FOUR_GB_LIMIT, set_zip64: true, forward_only: true);
-                throw new Exception("Test did not fail?");
+                throw new InvalidOperationException("Test did not fail?");
             }
             catch (NotSupportedException)
             {
@@ -92,7 +92,7 @@ namespace SharpCompress.Test.Zip
             {
                 // One single file, should fail once the write discovers the problem
                 RunSingleTest(1, FOUR_GB_LIMIT, set_zip64: false, forward_only: true);
-                throw new Exception("Test did not fail?");
+                throw new InvalidOperationException("Test did not fail?");
             }
             catch (NotSupportedException)
             {
@@ -116,23 +116,23 @@ namespace SharpCompress.Test.Zip
             var resForward = ReadForwardOnly(filename);
             if (resForward.Item1 != files)
             {
-                throw new Exception($"Incorrect number of items reported: {resForward.Item1}, should have been {files}");
+                throw new InvalidOperationException($"Incorrect number of items reported: {resForward.Item1}, should have been {files}");
             }
 
             if (resForward.Item2 != files * filesize)
             {
-                throw new Exception($"Incorrect combined size reported: {resForward.Item2}, should have been {files * filesize}");
+                throw new InvalidOperationException($"Incorrect combined size reported: {resForward.Item2}, should have been {files * filesize}");
             }
 
             var resArchive = ReadArchive(filename);
             if (resArchive.Item1 != files)
             {
-                throw new Exception($"Incorrect number of items reported: {resArchive.Item1}, should have been {files}");
+                throw new InvalidOperationException($"Incorrect number of items reported: {resArchive.Item1}, should have been {files}");
             }
 
             if (resArchive.Item2 != files * filesize)
             {
-                throw new Exception($"Incorrect number of items reported: {resArchive.Item2}, should have been {files * filesize}");
+                throw new InvalidOperationException($"Incorrect number of items reported: {resArchive.Item2}, should have been {files * filesize}");
             }
         }
 

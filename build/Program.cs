@@ -6,78 +6,78 @@ using GlobExpressions;
 using static Bullseye.Targets;
 using static SimpleExec.Command;
 
-class Program
-{
-    private const string Clean = "clean";
-    private const string Format = "format";
-    private const string Build = "build";
-    private const string Test = "test";
-    private const string Publish = "publish";
+const string Clean = "clean";
+const string Format = "format";
+const string Build = "build";
+const string Test = "test";
+const string Publish = "publish";
 
-    static void Main(string[] args)
-    {
-        Target(Clean,
-            ForEach("**/bin", "**/obj"),
-            dir =>
-            {
-                IEnumerable<string> GetDirectories(string d)
-                {
-                    return Glob.Directories(".", d);
-                }
+Target(Clean,
+       ForEach("**/bin", "**/obj"),
+       dir =>
+       {
+           IEnumerable<string> GetDirectories(string d)
+           {
+               return Glob.Directories(".", d);
+           }
 
-                void RemoveDirectory(string d)
-                {
-                    if (Directory.Exists(d))
-                    {
-                        Console.WriteLine(d);
-                        Directory.Delete(d, true);
-                    }
-                }
-
-                foreach (var d in GetDirectories(dir))
-                {
-                    RemoveDirectory(d);
-                }
-            });
-
-        Target(Format, () =>
-        {
-            Run("dotnet", "tool restore");
-            Run("dotnet", "format --check");
-        });
-
-        Target(Build, DependsOn(Format),
-               framework =>
+           void RemoveDirectory(string d)
+           {
+               if (Directory.Exists(d))
                {
-                   Run("dotnet", "build src/SharpCompress/SharpCompress.csproj -c Release");
-               });
+                   Console.WriteLine(d);
+                   Directory.Delete(d, true);
+               }
+           }
 
-        Target(Test, DependsOn(Build), ForEach("net5.0", "net6.0", "net461"),
-               framework =>
-               {
-                   IEnumerable<string> GetFiles(string d)
-                   {
-                       return Glob.Files(".", d);
-                   }
-                   if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && framework == "net461")
-                   {
-                       return;
-                   }
+           foreach (var d in GetDirectories(dir))
+           {
+               RemoveDirectory(d);
+           }
+       });
 
-                   foreach (var file in GetFiles("**/*.Test.csproj"))
-                   {
-                       Run("dotnet", $"test {file} -c Release -f {framework}");
-                   }
-               });
+Target(Format,
+       () =>
+       {
+           Run("dotnet", "tool restore");
+           Run("dotnet", "format --check");
+       });
 
-        Target(Publish, DependsOn(Test),
-               () =>
-               {
-                   Run("dotnet", "pack src/SharpCompress/SharpCompress.csproj -c Release -o artifacts/");
-               });
+Target(Build,
+       DependsOn(Format),
+       framework =>
+       {
+           Run("dotnet", "build src/SharpCompress/SharpCompress.csproj -c Release");
+       });
 
-        Target("default", DependsOn(Publish), () => Console.WriteLine("Done!"));
+Target(Test,
+       DependsOn(Build),
+       ForEach("net5.0", "net6.0", "net461"),
+       framework =>
+       {
+           IEnumerable<string> GetFiles(string d)
+           {
+               return Glob.Files(".", d);
+           }
 
-        RunTargetsAndExit(args);
-    }
-}
+           if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && framework == "net461")
+           {
+               return;
+           }
+
+           foreach (var file in GetFiles("**/*.Test.csproj"))
+           {
+               Run("dotnet", $"test {file} -c Release -f {framework}");
+           }
+       });
+
+Target(Publish,
+       DependsOn(Test),
+       () =>
+       {
+           Run("dotnet", "pack src/SharpCompress/SharpCompress.csproj -c Release -o artifacts/");
+       });
+
+Target("default", DependsOn(Publish), () => Console.WriteLine("Done!"));
+
+await RunTargetsAndExitAsync(args);

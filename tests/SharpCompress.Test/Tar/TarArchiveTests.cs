@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Linq;
 using SharpCompress.Archives;
 using SharpCompress.Archives.Tar;
@@ -185,7 +186,7 @@ namespace SharpCompress.Test.Tar
 
             using (var archive = TarArchive.Open(unmodified))
             {
-                var entry = archive.Entries.Single(x => x.Key.EndsWith("jpg"));
+                var entry = archive.Entries.Single(x => x.Key.EndsWith("jpg", StringComparison.OrdinalIgnoreCase));
                 archive.RemoveEntry(entry);
                 archive.SaveTo(scratchPath, CompressionType.None);
             }

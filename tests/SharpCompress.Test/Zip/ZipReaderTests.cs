@@ -302,7 +302,7 @@ namespace SharpCompress.Test.Zip
         {
             var expected = new Tuple<string, byte[]>[]
             {
-                new Tuple<string, byte[]>("foo.txt", new byte[0]),
+                new Tuple<string, byte[]>("foo.txt", Array.Empty<byte>()),
                 new Tuple<string, byte[]>("foo2.txt", new byte[10])
             };
 

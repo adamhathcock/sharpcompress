@@ -83,7 +83,7 @@ namespace SharpCompress.Compressors.PPMd.H
 
         internal void AriDecNormalize()
         {
-            //		while ((low ^ (low + range)) < TOP || range < BOT && ((range = -low & (BOT - 1)) != 0 ? true : true)) 
+            //		while ((low ^ (low + range)) < TOP || range < BOT && ((range = -low & (BOT - 1)) != 0 ? true : true))
             //		{
             //			code = ((code << 8) | unpackRead.getChar()&0xff)&uintMask;
             //			range = (range << 8)&uintMask;
@@ -118,7 +118,7 @@ namespace SharpCompress.Compressors.PPMd.H
             buffer.Append(_range);
             buffer.Append("\n  subrange=");
             buffer.Append(SubRange);
-            buffer.Append("]");
+            buffer.Append(']');
             return buffer.ToString();
         }
     }
@@ -150,7 +150,7 @@ namespace SharpCompress.Compressors.PPMd.H
             buffer.Append(_highCount);
             buffer.Append("\n  scale=");
             buffer.Append(_scale);
-            buffer.Append("]");
+            buffer.Append(']');
             return buffer.ToString();
         }
     }

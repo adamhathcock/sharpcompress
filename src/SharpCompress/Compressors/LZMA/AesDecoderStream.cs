@@ -143,8 +143,8 @@ namespace SharpCompress.Compressors.LZMA
 
             if ((bt & 0xC0) == 0)
             {
-                salt = new byte[0];
-                iv = new byte[0];
+                salt = Array.Empty<byte>();
+                iv = Array.Empty<byte>();
                 return;
             }
 
