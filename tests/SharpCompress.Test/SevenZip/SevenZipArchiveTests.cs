@@ -93,13 +93,13 @@ namespace SharpCompress.Test.SevenZip
         [Fact]
         public void SevenZipArchive_BZip2_Split()
         {
-            Assert.Throws<IndexOutOfRangeException>(() => ArchiveStreamRead(null, "Original.7z.001",
-                                                                            "Original.7z.002",
-                                                                            "Original.7z.003",
-                                                                            "Original.7z.004",
-                                                                            "Original.7z.005",
-                                                                            "Original.7z.006",
-                                                                            "Original.7z.007"));
+            Assert.Throws<InvalidOperationException>(() => ArchiveStreamRead(null, "Original.7z.001",
+                                                                             "Original.7z.002",
+                                                                             "Original.7z.003",
+                                                                             "Original.7z.004",
+                                                                             "Original.7z.005",
+                                                                             "Original.7z.006",
+                                                                             "Original.7z.007"));
         }
 
         //Same as archive as Original.7z.001 ... 007 files without the root directory 'Original\' in the archive - this caused the verify to fail
