@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -93,6 +93,33 @@ namespace SharpCompress.Test.Zip
             ArchiveFileRead("Zip.bzip2.zip");
         }
         [Fact]
+        public void WinZip26_ArchiveFileRead()
+        {
+            ArchiveFileRead("WinZip26.zip");
+        }
+        [Fact]
+        public void WinZip26_Multi_ArchiveFileRead()
+        {
+            ArchiveStreamMultiRead(null, "WinZip26.nocomp.multi.zip",
+                                        "WinZip26.nocomp.multi.z01"); //min split size is 64k so no compression used
+        }
+        [Fact]
+        public void WinZip26_X_BZip2_ArchiveFileRead()
+        {
+            ArchiveFileRead("WinZip26_BZip2.zipx");
+        }
+        [Fact]
+        public void WinZip26_X_Lzma_ArchiveFileRead()
+        {
+            ArchiveFileRead("WinZip26_LZMA.zipx");
+        }
+        [Fact]
+        public void WinZip26_X_Multi_ArchiveFileRead()
+        {
+            ArchiveStreamMultiRead(null, "WinZip26.nocomp.multi.zipx",
+                                        "WinZip26.nocomp.multi.zx01"); //min split size is 64k so no compression used
+        }
+        [Fact]
         public void Zip_Deflate_Streamed2_ArchiveFileRead()
         {
             ArchiveFileRead("Zip.deflate.dd-.zip");
@@ -116,6 +143,12 @@ namespace SharpCompress.Test.Zip
                                         "Zip.deflate.split.004",
                                         "Zip.deflate.split.005",
                                         "Zip.deflate.split.006");
+        }
+        [Fact]
+        public void Zip_InfoZip_Multi_ArchiveFileRead()
+        {
+            ArchiveStreamMultiRead(null, "Infozip.nocomp.multi.zip",
+                                        "Infozip.nocomp.multi.z01"); //min split size is 64k so no compression used
         }
         [Fact]
         public void Zip_Deflate64_ArchiveFileRead()

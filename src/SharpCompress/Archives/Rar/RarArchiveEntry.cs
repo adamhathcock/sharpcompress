@@ -21,6 +21,7 @@ namespace SharpCompress.Archives.Rar
             this.parts = parts.ToList();
             this.archive = archive;
             this.readerOptions = readerOptions;
+            this.IsSolid = this.FileHeader.IsSolid;
         }
 
         public override CompressionType CompressionType => CompressionType.Rar;

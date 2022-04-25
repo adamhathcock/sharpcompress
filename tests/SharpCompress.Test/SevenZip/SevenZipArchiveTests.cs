@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using SharpCompress.Common;
 using SharpCompress.Readers;
 using Xunit;
@@ -7,6 +7,16 @@ namespace SharpCompress.Test.SevenZip
 {
     public class SevenZipArchiveTests : ArchiveTests
     {
+        [Fact]
+        public void SevenZipArchive_Solid_StreamRead()
+        {
+            ArchiveStreamRead("7Zip.solid.7z");
+        }
+        [Fact]
+        public void SevenZipArchive_NonSolid_StreamRead()
+        {
+            ArchiveStreamRead("7Zip.nonsolid.7z");
+        }
         [Fact]
         public void SevenZipArchive_LZMA_StreamRead()
         {

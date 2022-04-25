@@ -1,4 +1,4 @@
-﻿#nullable disable
+#nullable disable
 
 using System;
 using System.Collections.Generic;
@@ -101,11 +101,23 @@ namespace SharpCompress.Archives.SevenZip
         {
             var stream = volumes.Single().Stream;
             LoadFactory(stream);
+            var entries = new SevenZipArchiveEntry[database._files.Count];
             for (int i = 0; i < database._files.Count; i++)
             {
                 var file = database._files[i];
-                yield return new SevenZipArchiveEntry(this, new SevenZipFilePart(stream, database, i, file, ReaderOptions.ArchiveEncoding));
+                entries[i] = new SevenZipArchiveEntry(this, new SevenZipFilePart(stream, database, i, file, ReaderOptions.ArchiveEncoding));
             }
+            foreach (var group in entries.Where(x => !x.IsDirectory).GroupBy(x => x.FilePart.Folder))
+            {
+                var isSolid = false;
+                foreach (var entry in group)
+                {
+                    entry.IsSolid = isSolid;
+                    isSolid = true; //mark others in this group as solid - same as rar behaviour.
+                }
+            }
+
+            return entries;
         }
 
         private void LoadFactory(Stream stream)

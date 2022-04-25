@@ -75,7 +75,7 @@ namespace SharpCompress.Common
 
         internal abstract IEnumerable<FilePart> Parts { get; }
 
-        internal bool IsSolid { get; set; }
+        public bool IsSolid { get; set; }
 
         internal virtual void Close()
         {
