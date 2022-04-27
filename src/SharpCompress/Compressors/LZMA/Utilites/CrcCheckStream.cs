@@ -41,7 +41,6 @@ namespace SharpCompress.Compressors.LZMA.Utilites
                     {
                         Debugger.Break();
                         Debug.WriteLine("bad CRC");
-                        throw new InvalidOperationException(); //moved exception to here
                     }
 
                     double lengthInv = 1.0 / _mLength;
@@ -56,6 +55,10 @@ namespace SharpCompress.Compressors.LZMA.Utilites
                     }
                     Debug.WriteLine("entropy: " + (int)(entropy * 100) + "%");
 #endif
+                    if (_mCurrentCrc != _mExpectedCrc) //moved test to here
+                    {
+                        throw new InvalidOperationException();
+                    }
                 }
             }
             finally

@@ -232,9 +232,9 @@ namespace SharpCompress.Test.Rar
                         {
                             using (Stream eStream = entry.OpenEntryStream()) //bug fix in RarStream to report the correct Position
                                 eStream.CopyTo(crcStream);
-                            if (entry == testEntry)
-                                break;
                         } //throws if not valid
+                        if (entry == testEntry)
+                            break;
                     }
                 }
             }
