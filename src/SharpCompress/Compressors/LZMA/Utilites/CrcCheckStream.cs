@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 using System.IO;
 
@@ -21,16 +21,17 @@ namespace SharpCompress.Compressors.LZMA.Utilites
 
         protected override void Dispose(bool disposing)
         {
-            if (_mCurrentCrc != _mExpectedCrc)
-            {
-                throw new InvalidOperationException();
-            }
+            //Nanook - is not equal here - _mCurrentCrc is yet to be negated
+            //if (_mCurrentCrc != _mExpectedCrc)
+            //{
+            //    throw new InvalidOperationException();
+            //}
             try
             {
                 if (disposing && !_mClosed)
                 {
                     _mClosed = true;
-                    _mCurrentCrc = Crc.Finish(_mCurrentCrc);
+                    _mCurrentCrc = Crc.Finish(_mCurrentCrc); //now becomes equal
 #if DEBUG
                     if (_mCurrentCrc == _mExpectedCrc)
                     {
@@ -54,6 +55,10 @@ namespace SharpCompress.Compressors.LZMA.Utilites
                     }
                     Debug.WriteLine("entropy: " + (int)(entropy * 100) + "%");
 #endif
+                    if (_mCurrentCrc != _mExpectedCrc) //moved test to here
+                    {
+                        throw new InvalidOperationException();
+                    }
                 }
             }
             finally

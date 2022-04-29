@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -137,6 +137,16 @@ namespace SharpCompress.Archives
                 switch (type.Value)
                 {
                     case ArchiveType.Zip:
+                        using (Stream prt2z = files[1].OpenRead())
+                        {
+                            try
+                            {
+                                prt2z.Position += 4; //skip the POST_DATA_DESCRIPTOR to prevent an exception
+                                if (ZipArchive.IsZipFile(prt2z)) //if part2 is a zip then it's multi not split  zip, z01,z02... zip is moved to the end when opened
+                                    return ZipArchive.Open(fileInfos.Select(a => a.OpenRead()), options);
+                            }
+                            catch { }
+                        }
                         return ZipArchive.Open(new SplitStream(files), options);
                     case ArchiveType.SevenZip:
                         return SevenZipArchive.Open(new SplitStream(files), options);
@@ -214,6 +224,12 @@ namespace SharpCompress.Archives
             {
                 if (TarArchive.IsTarFile(stream))
                     type = ArchiveType.Tar;
+                stream.Seek(0, SeekOrigin.Begin);
+            }
+            if (type == null) //test multipartzip as it could find zips in other non compressed archive types?
+            {
+                if (ZipArchive.IsZipMulti(stream)) //test the zip (last) file of a multipart zip
+                    type = ArchiveType.Zip;
                 stream.Seek(0, SeekOrigin.Begin);
             }
 

@@ -1,8 +1,9 @@
-﻿using System.IO;
+using System.IO;
 using System.Linq;
 using SharpCompress.Archives;
 using SharpCompress.Archives.Rar;
 using SharpCompress.Common;
+using SharpCompress.Compressors.LZMA.Utilites;
 using SharpCompress.Readers;
 using Xunit;
 
@@ -202,6 +203,43 @@ namespace SharpCompress.Test.Rar
             }
             VerifyFiles();
         }
+
+
+        [Fact]
+        public void Rar_IsSolidEntryStreamCheck()
+        {
+            DoRar_IsSolidEntryStreamCheck("Rar.solid.rar");
+        }
+
+        //Extract the 2nd file in a solid archive to check that the first file is skipped properly
+        private void DoRar_IsSolidEntryStreamCheck(string filename)
+        {
+            using (var stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, filename)))
+            {
+                using (var archive = RarArchive.Open(stream))
+                {
+                    Assert.True(archive.IsSolid);
+                    IArchiveEntry[] entries = archive.Entries.Where(a => !a.IsDirectory).ToArray();
+                    Assert.NotInRange(entries.Length, 0, 1);
+                    Assert.False(entries[0].IsSolid); //first item in a solid archive is not marked solid and is seekable
+                    IArchiveEntry testEntry = entries[1];
+                    Assert.True(testEntry.IsSolid); //the target. The non seekable entry
+
+                    //process all entries in solid archive until the one we want to test
+                    foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
+                    {
+                        using (CrcCheckStream crcStream = new CrcCheckStream((uint)entry.Crc)) //use the 7zip CRC stream for convenience (required a bug fix)
+                        {
+                            using (Stream eStream = entry.OpenEntryStream()) //bug fix in RarStream to report the correct Position
+                                eStream.CopyTo(crcStream);
+                        } //throws if not valid
+                        if (entry == testEntry)
+                            break;
+                    }
+                }
+            }
+        }
+
 
         [Fact]
         public void Rar_Solid_ArchiveStreamRead()

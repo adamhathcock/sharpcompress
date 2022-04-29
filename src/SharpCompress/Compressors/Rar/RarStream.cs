@@ -1,4 +1,4 @@
-﻿#nullable disable
+#nullable disable
 
 using System;
 using System.IO;
@@ -23,6 +23,7 @@ namespace SharpCompress.Compressors.Rar
         private int outCount;
         private int outTotal;
         private bool isDisposed;
+        private long _position;
 
         public RarStream(IRarUnpack unpack, FileHeader fileHeader, Stream readStream)
         {
@@ -32,6 +33,7 @@ namespace SharpCompress.Compressors.Rar
             fetch = true;
             unpack.DoUnpack(fileHeader, readStream, this);
             fetch = false;
+            _position = 0;
         }
 
         protected override void Dispose(bool disposing)
@@ -56,7 +58,8 @@ namespace SharpCompress.Compressors.Rar
 
         public override long Length => fileHeader.UncompressedSize;
 
-        public override long Position { get => fileHeader.UncompressedSize - unpack.DestSize; set => throw new NotSupportedException(); }
+        //commented out code always returned the length of the file
+        public override long Position { get => _position; /* fileHeader.UncompressedSize - unpack.DestSize;*/ set => throw new NotSupportedException(); }
 
         public override int Read(byte[] buffer, int offset, int count)
         {
@@ -80,6 +83,7 @@ namespace SharpCompress.Compressors.Rar
                 unpack.DoUnpack();
                 fetch = false;
             }
+            _position += (long)outTotal;
             return outTotal;
         }
 

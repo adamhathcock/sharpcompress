@@ -14,6 +14,7 @@ namespace SharpCompress.Common
         bool IsDirectory { get; }
         bool IsEncrypted { get; }
         bool IsSplitAfter { get; }
+        bool IsSolid { get; }
         DateTime? LastAccessedTime { get; }
         DateTime? LastModifiedTime { get; }
         long Size { get; }

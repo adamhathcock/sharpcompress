@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -125,6 +125,35 @@ namespace SharpCompress.Test
                 }
                 VerifyFiles();
             }
+        }
+
+        protected void ArchiveStreamMultiRead(ReaderOptions readerOptions = null, params string[] testArchives)
+        {
+            ArchiveStreamMultiRead(readerOptions, testArchives.Select(x => Path.Combine(TEST_ARCHIVES_PATH, x)));
+        }
+
+        protected void ArchiveStreamMultiRead(ReaderOptions readerOptions, IEnumerable<string> testArchives)
+        {
+                using (var archive = ArchiveFactory.Open(testArchives.Select(a => new FileInfo(a)), readerOptions))
+                {
+                    try
+                    {
+                        foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
+                        {
+                            entry.WriteToDirectory(SCRATCH_FILES_PATH,
+                                                    new ExtractionOptions()
+                                                    {
+                                                        ExtractFullPath = true,
+                                                        Overwrite = true
+                                                    });
+                        }
+                    }
+                    catch (IndexOutOfRangeException)
+                    {
+                        throw;
+                    }
+                }
+                VerifyFiles();
         }
 
         protected void ArchiveOpenStreamRead(ReaderOptions readerOptions = null, params string[] testArchives)

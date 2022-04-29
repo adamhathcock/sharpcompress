@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -49,6 +49,12 @@ namespace SharpCompress.Archives
             : base(type, fileInfo, readerFactoryOptions)
         {
         }
+
+        internal AbstractWritableArchive(ArchiveType type, IEnumerable<Stream> streams, ReaderOptions readerFactoryOptions)
+            : base(type, streams, readerFactoryOptions)
+        {
+        }
+
 
         public override ICollection<TEntry> Entries
         {
