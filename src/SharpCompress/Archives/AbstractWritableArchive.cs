@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using SharpCompress.Common;
+using SharpCompress.IO;
 using SharpCompress.Readers;
 using SharpCompress.Writers;
 
@@ -40,21 +41,10 @@ namespace SharpCompress.Archives
         {
         }
 
-        internal AbstractWritableArchive(ArchiveType type, Stream stream, ReaderOptions readerFactoryOptions)
-            : base(type, stream.AsEnumerable(), readerFactoryOptions)
+        internal AbstractWritableArchive(ArchiveType type, SourceStream srcStream)
+            : base(type, srcStream)
         {
         }
-
-        internal AbstractWritableArchive(ArchiveType type, FileInfo fileInfo, ReaderOptions readerFactoryOptions)
-            : base(type, fileInfo, readerFactoryOptions)
-        {
-        }
-
-        internal AbstractWritableArchive(ArchiveType type, IEnumerable<Stream> streams, ReaderOptions readerFactoryOptions)
-            : base(type, streams, readerFactoryOptions)
-        {
-        }
-
 
         public override ICollection<TEntry> Entries
         {

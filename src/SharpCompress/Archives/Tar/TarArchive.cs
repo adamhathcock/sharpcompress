@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -34,7 +34,31 @@ namespace SharpCompress.Archives.Tar
         public static TarArchive Open(FileInfo fileInfo, ReaderOptions? readerOptions = null)
         {
             fileInfo.CheckNotNull(nameof(fileInfo));
-            return new TarArchive(fileInfo, readerOptions ?? new ReaderOptions());
+            return new TarArchive(new SourceStream(fileInfo, i => ArchiveVolumeFactory.GetFilePart(i, fileInfo), readerOptions ?? new ReaderOptions()));
+        }
+
+        /// <summary>
+        /// Constructor with all file parts passed in
+        /// </summary>
+        /// <param name="fileInfos"></param>
+        /// <param name="readerOptions"></param>
+        public static TarArchive Open(IEnumerable<FileInfo> fileInfos, ReaderOptions? readerOptions = null)
+        {
+            fileInfos.CheckNotNull(nameof(fileInfos));
+            FileInfo[] files = fileInfos.ToArray();
+            return new TarArchive(new SourceStream(files[0], i => i < files.Length ? files[i] : null, readerOptions ?? new ReaderOptions()));
+        }
+
+        /// <summary>
+        /// Constructor with all stream parts passed in
+        /// </summary>
+        /// <param name="streams"></param>
+        /// <param name="readerOptions"></param>
+        public static TarArchive Open(IEnumerable<Stream> streams, ReaderOptions? readerOptions = null)
+        {
+            streams.CheckNotNull(nameof(streams));
+            Stream[] strms = streams.ToArray();
+            return new TarArchive(new SourceStream(strms[0], i => i < strms.Length ? strms[i] : null, readerOptions ?? new ReaderOptions()));
         }
 
         /// <summary>
@@ -45,7 +69,7 @@ namespace SharpCompress.Archives.Tar
         public static TarArchive Open(Stream stream, ReaderOptions? readerOptions = null)
         {
             stream.CheckNotNull(nameof(stream));
-            return new TarArchive(stream, readerOptions ?? new ReaderOptions());
+            return new TarArchive(new SourceStream(stream, i => null, readerOptions ?? new ReaderOptions()));
         }
 
         public static bool IsTarFile(string filePath)
@@ -80,39 +104,25 @@ namespace SharpCompress.Archives.Tar
             return false;
         }
 
-        /// <summary>
-        /// Constructor with a FileInfo object to an existing file.
-        /// </summary>
-        /// <param name="fileInfo"></param>
-        /// <param name="readerOptions"></param>
-        internal TarArchive(FileInfo fileInfo, ReaderOptions readerOptions)
-            : base(ArchiveType.Tar, fileInfo, readerOptions)
+        protected override IEnumerable<TarVolume> LoadVolumes(SourceStream srcStream)
         {
-        }
-
-        protected override IEnumerable<TarVolume> LoadVolumes(FileInfo file)
-        {
-            return new TarVolume(file.OpenRead(), ReaderOptions).AsEnumerable();
+            base.SrcStream.LoadAllParts(); //request all streams
+            return new TarVolume(srcStream, ReaderOptions).AsEnumerable(); //simple single volume or split, multivolume not supported
         }
 
         /// <summary>
-        /// Takes multiple seekable Streams for a multi-part archive
+        /// Constructor with a SourceStream able to handle FileInfo and Streams.
         /// </summary>
-        /// <param name="stream"></param>
-        /// <param name="readerOptions"></param>
-        internal TarArchive(Stream stream, ReaderOptions readerOptions)
-            : base(ArchiveType.Tar, stream, readerOptions)
+        /// <param name="srcStream"></param>
+        /// <param name="options"></param>
+        internal TarArchive(SourceStream srcStream)
+            : base(ArchiveType.Tar, srcStream)
         {
         }
 
         internal TarArchive()
             : base(ArchiveType.Tar)
         {
-        }
-
-        protected override IEnumerable<TarVolume> LoadVolumes(IEnumerable<Stream> streams)
-        {
-            return new TarVolume(streams.First(), ReaderOptions).AsEnumerable();
         }
 
         protected override IEnumerable<TarArchiveEntry> LoadEntries(IEnumerable<TarVolume> volumes)

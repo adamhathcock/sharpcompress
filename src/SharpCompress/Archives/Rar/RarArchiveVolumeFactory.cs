@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using SharpCompress.Common.Rar;
@@ -6,135 +6,35 @@ using SharpCompress.Readers;
 using System.Linq;
 using System.Text;
 using SharpCompress.Common.Rar.Headers;
+using System.Text.RegularExpressions;
 
 namespace SharpCompress.Archives.Rar
 {
     internal static class RarArchiveVolumeFactory
     {
-        internal static IEnumerable<RarVolume> GetParts(IEnumerable<Stream> streams, ReaderOptions options)
+        internal static FileInfo? GetFilePart(int index, FileInfo part1) //base the name on the first part
         {
-            foreach (Stream s in streams)
-            {
-                if (!s.CanRead || !s.CanSeek)
-                {
-                    throw new ArgumentException("Stream is not readable and seekable");
-                }
-                StreamRarArchiveVolume part = new StreamRarArchiveVolume(s, options);
-                yield return part;
-            }
-        }
+            FileInfo? item = null;
 
-        internal static IEnumerable<RarVolume> GetParts(FileInfo fileInfo, ReaderOptions options)
-        {
-            FileInfoRarArchiveVolume part = new FileInfoRarArchiveVolume(fileInfo, options);
-            yield return part;
-
-            ArchiveHeader ah = part.ArchiveHeader;
-            if (!ah.IsVolume)
-            {
-                yield break; //if file isn't volume then there is no reason to look
-            }
-            fileInfo = GetNextFileInfo(ah, part.FileParts.FirstOrDefault() as FileInfoRarFilePart)!;
-            //we use fileinfo because rar is dumb and looks at file names rather than archive info for another volume
-            while (fileInfo != null && fileInfo.Exists)
-            {
-                part = new FileInfoRarArchiveVolume(fileInfo, options);
-
-                fileInfo = GetNextFileInfo(ah, part.FileParts.FirstOrDefault() as FileInfoRarFilePart)!;
-                yield return part;
-            }
-        }
-
-        private static FileInfo? GetNextFileInfo(ArchiveHeader ah, FileInfoRarFilePart? currentFilePart)
-        {
-            if (currentFilePart is null)
-            {
-                return null;
-            }
-            bool oldNumbering = ah.OldNumberingFormat
-                                || currentFilePart.MarkHeader.OldNumberingFormat;
-            if (oldNumbering)
-            {
-                return FindNextFileWithOldNumbering(currentFilePart.FileInfo);
-            }
+            //new style rar - ..part1 | /part01 | part001 ....
+            Match m = Regex.Match(part1.Name, @"^(.*\.part)([0-9]+)(\.rar)$", RegexOptions.IgnoreCase);
+            if (m.Success)
+                item = new FileInfo(Path.Combine(part1.DirectoryName!, String.Concat(m.Groups[1].Value, (index + 1).ToString().PadLeft(m.Groups[2].Value.Length, '0'), m.Groups[3].Value)));
             else
             {
-                return FindNextFileWithNewNumbering(currentFilePart.FileInfo);
+                //old style - ...rar, .r00, .r01 ...
+                m = Regex.Match(part1.Name, @"^(.*\.r)(ar|[0-9]+)$", RegexOptions.IgnoreCase);
+                if (m.Success)
+                    item = new FileInfo(Path.Combine(part1.DirectoryName!, String.Concat(m.Groups[1].Value, index == 0 ? "ar" : (index - 1).ToString().PadLeft(m.Groups[2].Value.Length, '0'))));
+                else //split .001, .002 ....
+                    return ArchiveVolumeFactory.GetFilePart(index, part1);
             }
+
+            if (item != null && item.Exists)
+                return item;
+
+            return null; //no more items
         }
 
-        private static FileInfo FindNextFileWithOldNumbering(FileInfo currentFileInfo)
-        {
-            // .rar, .r00, .r01, ...
-            string extension = currentFileInfo.Extension;
-
-            var buffer = new StringBuilder(currentFileInfo.FullName.Length);
-            buffer.Append(currentFileInfo.FullName.Substring(0,
-                                                             currentFileInfo.FullName.Length - extension.Length));
-            if (string.Equals(extension, ".rar", StringComparison.OrdinalIgnoreCase))
-            {
-                buffer.Append(".r00");
-            }
-            else
-            {
-                if (int.TryParse(extension.Substring(2, 2), out int num))
-                {
-                    num++;
-                    buffer.Append(".r");
-                    if (num < 10)
-                    {
-                        buffer.Append('0');
-                    }
-                    buffer.Append(num);
-                }
-                else
-                {
-                    ThrowInvalidFileName(currentFileInfo);
-                }
-            }
-            return new FileInfo(buffer.ToString());
-        }
-
-        private static FileInfo FindNextFileWithNewNumbering(FileInfo currentFileInfo)
-        {
-            // part1.rar, part2.rar, ...
-            string extension = currentFileInfo.Extension;
-            if (!string.Equals(extension, ".rar", StringComparison.OrdinalIgnoreCase))
-            {
-                throw new ArgumentException("Invalid extension, expected 'rar': " + currentFileInfo.FullName);
-            }
-            int startIndex = currentFileInfo.FullName.LastIndexOf(".part", StringComparison.OrdinalIgnoreCase);
-            if (startIndex < 0)
-            {
-                ThrowInvalidFileName(currentFileInfo);
-            }
-            StringBuilder buffer = new StringBuilder(currentFileInfo.FullName.Length);
-            buffer.Append(currentFileInfo.FullName, 0, startIndex);
-            string numString = currentFileInfo.FullName.Substring(startIndex + 5,
-                                                                  currentFileInfo.FullName.IndexOf('.', startIndex + 5) -
-                                                                  startIndex - 5);
-            buffer.Append(".part");
-            if (int.TryParse(numString, out int num))
-            {
-                num++;
-                for (int i = 0; i < numString.Length - num.ToString().Length; i++)
-                {
-                    buffer.Append('0');
-                }
-                buffer.Append(num);
-            }
-            else
-            {
-                ThrowInvalidFileName(currentFileInfo);
-            }
-            buffer.Append(".rar");
-            return new FileInfo(buffer.ToString());
-        }
-
-        private static void ThrowInvalidFileName(FileInfo fileInfo)
-        {
-            throw new ArgumentException("Filename invalid or next archive could not be found:"
-                                        + fileInfo.FullName);
-        }
     }
 }

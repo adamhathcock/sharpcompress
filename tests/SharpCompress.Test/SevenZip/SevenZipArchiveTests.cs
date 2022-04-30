@@ -116,7 +116,7 @@ namespace SharpCompress.Test.SevenZip
         [Fact]
         public void SevenZipArchive_BZip2_Split_Working()
         {
-            ArchiveStreamSplitRead(null, "7Zip.BZip2.split.001",
+            ArchiveStreamMultiRead(null, "7Zip.BZip2.split.001",
                                         "7Zip.BZip2.split.002",
                                         "7Zip.BZip2.split.003",
                                         "7Zip.BZip2.split.004",
@@ -124,6 +124,20 @@ namespace SharpCompress.Test.SevenZip
                                         "7Zip.BZip2.split.006",
                                         "7Zip.BZip2.split.007");
         }
+
+        //will detect and load other files
+        [Fact]
+        public void SevenZipArchive_BZip2_Split_FirstFileRead()
+        {
+            ArchiveFileRead("7Zip.BZip2.split.001");
+                                        //"7Zip.BZip2.split.002",
+                                        //"7Zip.BZip2.split.003",
+                                        //"7Zip.BZip2.split.004",
+                                        //"7Zip.BZip2.split.005",
+                                        //"7Zip.BZip2.split.006",
+                                        //"7Zip.BZip2.split.007"
+        }
+
 
     }
 }
