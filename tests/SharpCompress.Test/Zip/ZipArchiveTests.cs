@@ -134,10 +134,63 @@ namespace SharpCompress.Test.Zip
         {
             ArchiveFileRead("Zip.deflate.zip");
         }
+        //will detect and load other files
+        [Fact]
+        public void Zip_Deflate_Multi_ArchiveFirstFileRead()
+        {
+            ArchiveFileRead("WinZip26.nocomp.multi.zip");
+            //"WinZip26.nocomp.multi.z01"
+        }
+        //will detect and load other files
+        [Fact]
+        public void ZipX_Deflate_Multi_ArchiveFirstFileRead()
+        {
+            ArchiveFileRead("WinZip26.nocomp.multi.zipx");
+                            //"WinZip26.nocomp.multi.zx01"
+        }
+        [Fact]
+        public void Zip_GetParts()
+        {
+            //uses first part to search for all parts and compares against this array
+            ArchiveGetParts(new string[] {
+                "Infozip.nocomp.multi.zip",
+                "Infozip.nocomp.multi.z01"});
+        }
+        [Fact]
+        public void ZipX_GetParts()
+        {
+            //uses first part to search for all parts and compares against this array
+            ArchiveGetParts(new string[] {
+                "WinZip26.nocomp.multi.zipx",
+                "WinZip26.nocomp.multi.zx01"});
+        }
+        [Fact]
+        public void Zip_GetPartsSplit()
+        {
+            //uses first part to search for all parts and compares against this array
+            ArchiveGetParts(new string[] {
+                "Zip.deflate.split.001",
+                "Zip.deflate.split.002",
+                "Zip.deflate.split.003",
+                "Zip.deflate.split.004",
+                "Zip.deflate.split.005",
+                "Zip.deflate.split.006"});
+        }
+        //will detect and load other files
+        [Fact]
+        public void Zip_Deflate_Split_ArchiveFirstFileRead()
+        {
+            ArchiveFileRead("Zip.deflate.split.001");
+                            //"Zip.deflate.split.002",
+                            //"Zip.deflate.split.003",
+                            //"Zip.deflate.split.004",
+                            //"Zip.deflate.split.005",
+                            //"Zip.deflate.split.006"
+        }
         [Fact]
         public void Zip_Deflate_Split_ArchiveFileRead()
         {
-            ArchiveStreamSplitRead(null, "Zip.deflate.split.001",
+            ArchiveStreamMultiRead(null, "Zip.deflate.split.001",
                                         "Zip.deflate.split.002",
                                         "Zip.deflate.split.003",
                                         "Zip.deflate.split.004",

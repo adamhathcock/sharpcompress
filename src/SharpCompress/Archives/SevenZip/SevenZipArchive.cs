@@ -34,8 +34,33 @@ namespace SharpCompress.Archives.SevenZip
         public static SevenZipArchive Open(FileInfo fileInfo, ReaderOptions readerOptions = null)
         {
             fileInfo.CheckNotNull("fileInfo");
-            return new SevenZipArchive(fileInfo, readerOptions ?? new ReaderOptions());
+            return new SevenZipArchive(new SourceStream(fileInfo, i => ArchiveVolumeFactory.GetFilePart(i, fileInfo), readerOptions ?? new ReaderOptions()));
         }
+
+        /// <summary>
+        /// Constructor with all file parts passed in
+        /// </summary>
+        /// <param name="fileInfos"></param>
+        /// <param name="readerOptions"></param>
+        public static SevenZipArchive Open(IEnumerable<FileInfo> fileInfos, ReaderOptions readerOptions = null)
+        {
+            fileInfos.CheckNotNull(nameof(fileInfos));
+            FileInfo[] files = fileInfos.ToArray();
+            return new SevenZipArchive(new SourceStream(files[0], i => i < files.Length ? files[i] : null, readerOptions ?? new ReaderOptions()));
+        }
+
+        /// <summary>
+        /// Constructor with all stream parts passed in
+        /// </summary>
+        /// <param name="streams"></param>
+        /// <param name="readerOptions"></param>
+        public static SevenZipArchive Open(IEnumerable<Stream> streams, ReaderOptions readerOptions = null)
+        {
+            streams.CheckNotNull(nameof(streams));
+            Stream[] strms = streams.ToArray();
+            return new SevenZipArchive(new SourceStream(strms[0], i => i < strms.Length ? strms[i] : null, readerOptions ?? new ReaderOptions()));
+        }
+
         /// <summary>
         /// Takes a seekable Stream as a source
         /// </summary>
@@ -44,17 +69,23 @@ namespace SharpCompress.Archives.SevenZip
         public static SevenZipArchive Open(Stream stream, ReaderOptions readerOptions = null)
         {
             stream.CheckNotNull("stream");
-            return new SevenZipArchive(stream, readerOptions ?? new ReaderOptions());
+            return new SevenZipArchive(new SourceStream(stream, i => null, readerOptions ?? new ReaderOptions()));
         }
 
-        internal SevenZipArchive(FileInfo fileInfo, ReaderOptions readerOptions)
-            : base(ArchiveType.SevenZip, fileInfo, readerOptions)
+        /// <summary>
+        /// Constructor with a SourceStream able to handle FileInfo and Streams.
+        /// </summary>
+        /// <param name="srcStream"></param>
+        /// <param name="options"></param>
+        internal SevenZipArchive(SourceStream srcStream)
+            : base(ArchiveType.SevenZip, srcStream)
         {
         }
 
-        protected override IEnumerable<SevenZipVolume> LoadVolumes(FileInfo file)
+        protected override IEnumerable<SevenZipVolume> LoadVolumes(SourceStream srcStream)
         {
-            return new SevenZipVolume(file.OpenRead(), ReaderOptions).AsEnumerable();
+            base.SrcStream.LoadAllParts(); //request all streams
+            return new SevenZipVolume(srcStream, ReaderOptions).AsEnumerable(); //simple single volume or split, multivolume not supported
         }
 
         public static bool IsSevenZipFile(string filePath)
@@ -74,27 +105,9 @@ namespace SharpCompress.Archives.SevenZip
             }
         }
 
-        internal SevenZipArchive(Stream stream, ReaderOptions readerOptions)
-            : base(ArchiveType.SevenZip, stream.AsEnumerable(), readerOptions)
-        {
-        }
-
         internal SevenZipArchive()
             : base(ArchiveType.SevenZip)
         {
-        }
-
-        protected override IEnumerable<SevenZipVolume> LoadVolumes(IEnumerable<Stream> streams)
-        {
-            foreach (Stream s in streams)
-            {
-                if (!s.CanRead || !s.CanSeek)
-                {
-                    throw new ArgumentException("Stream is not readable and seekable");
-                }
-                SevenZipVolume volume = new SevenZipVolume(s, ReaderOptions);
-                yield return volume;
-            }
         }
 
         protected override IEnumerable<SevenZipArchiveEntry> LoadEntries(IEnumerable<SevenZipVolume> volumes)

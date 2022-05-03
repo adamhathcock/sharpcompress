@@ -12,6 +12,15 @@ namespace SharpCompress.Test
 {
     public class ArchiveTests : ReaderTests
     {
+        protected void ArchiveGetParts(IEnumerable<string> testArchives)
+        {
+            string[] arcs = testArchives.Select(a => Path.Combine(TEST_ARCHIVES_PATH, a)).ToArray();
+            string[] found = ArchiveFactory.GetFileParts(arcs[0]).ToArray();
+            Assert.Equal(arcs.Length, found.Length);
+            for (int i = 0; i < arcs.Length; i++)
+                Assert.Equal(arcs[i], found[i]);
+        }
+
         protected void ArchiveStreamReadExtractAll(string testArchive, CompressionType compression)
         {
             testArchive = Path.Combine(TEST_ARCHIVES_PATH, testArchive);
@@ -90,38 +99,6 @@ namespace SharpCompress.Test
                         throw;
                     }
                     stream.ThrowOnDispose = false;
-                }
-                VerifyFiles();
-            }
-        }
-
-        protected void ArchiveStreamSplitRead(ReaderOptions readerOptions = null, params string[] testArchives)
-        {
-            ArchiveStreamSplitRead(readerOptions, testArchives.Select(x => Path.Combine(TEST_ARCHIVES_PATH, x)));
-        }
-
-        protected void ArchiveStreamSplitRead(ReaderOptions readerOptions, IEnumerable<string> testArchives)
-        {
-            using (SplitStream stream = new SplitStream(testArchives.Select(f => new FileInfo(f))))
-            {
-                using (var archive = ArchiveFactory.Open(stream, readerOptions))
-                {
-                    try
-                    {
-                        foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
-                        {
-                            entry.WriteToDirectory(SCRATCH_FILES_PATH,
-                                                    new ExtractionOptions()
-                                                    {
-                                                        ExtractFullPath = true,
-                                                        Overwrite = true
-                                                    });
-                        }
-                    }
-                    catch (IndexOutOfRangeException)
-                    {
-                        throw;
-                    }
                 }
                 VerifyFiles();
             }

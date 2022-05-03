@@ -137,34 +137,54 @@ namespace SharpCompress.Archives
                 switch (type.Value)
                 {
                     case ArchiveType.Zip:
-                        using (Stream prt2z = files[1].OpenRead())
-                        {
-                            try
-                            {
-                                prt2z.Position += 4; //skip the POST_DATA_DESCRIPTOR to prevent an exception
-                                if (ZipArchive.IsZipFile(prt2z)) //if part2 is a zip then it's multi not split  zip, z01,z02... zip is moved to the end when opened
-                                    return ZipArchive.Open(fileInfos.Select(a => a.OpenRead()), options);
-                            }
-                            catch { }
-                        }
-                        return ZipArchive.Open(new SplitStream(files), options);
+                        return ZipArchive.Open(files, options);
                     case ArchiveType.SevenZip:
-                        return SevenZipArchive.Open(new SplitStream(files), options);
+                        return SevenZipArchive.Open(files, options);
                     case ArchiveType.GZip:
-                        return GZipArchive.Open(new SplitStream(files), options);
+                        return GZipArchive.Open(files, options);
                     case ArchiveType.Rar:
-                        using (Stream prt2 = files[1].OpenRead())
-                        {
-                            try
-                            {
-                                if (RarArchive.IsRarFile(prt2, options)) //if part2 is a rar then it's multi not split
-                                    return RarArchive.Open(files.Select(f => File.OpenRead(f.FullName))); //multipart read
-                            }
-                            catch { }
-                        }
-                        return RarArchive.Open(new SplitStream(files), options);
+                        return RarArchive.Open(files, options);
                     case ArchiveType.Tar:
-                        return TarArchive.Open(new SplitStream(files), options);
+                        return TarArchive.Open(files, options);
+                }
+            }
+            throw new InvalidOperationException("Cannot determine compressed stream type. Supported Archive Formats: Zip, GZip, Tar, Rar, 7Zip");
+        }
+
+        /// <summary>
+        /// Constructor with IEnumerable FileInfo objects, multi and split support.
+        /// </summary>
+        /// <param name="streams"></param>
+        /// <param name="options"></param>
+        public static IArchive Open(IEnumerable<Stream> streams, ReaderOptions? options = null)
+        {
+            streams.CheckNotNull(nameof(streams));
+            if (streams.Count() == 0)
+                throw new InvalidOperationException("No streams");
+            if (streams.Count() == 1)
+                return Open(streams.First(), options);
+
+
+            options ??= new ReaderOptions();
+
+            ArchiveType? type;
+            using (Stream stream = streams.First())
+                IsArchive(stream, out type); //test and reset stream position
+
+            if (type != null)
+            {
+                switch (type.Value)
+                {
+                    case ArchiveType.Zip:
+                        return ZipArchive.Open(streams, options);
+                    case ArchiveType.SevenZip:
+                        return SevenZipArchive.Open(streams, options);
+                    case ArchiveType.GZip:
+                        return GZipArchive.Open(streams, options);
+                    case ArchiveType.Rar:
+                        return RarArchive.Open(streams, options);
+                    case ArchiveType.Tar:
+                        return TarArchive.Open(streams, options);
                 }
             }
             throw new InvalidOperationException("Cannot determine compressed stream type. Supported Archive Formats: Zip, GZip, Tar, Rar, 7Zip");
@@ -234,6 +254,43 @@ namespace SharpCompress.Archives
             }
 
             return type != null;
+        }
+
+        /// <summary>
+        /// From a passed in archive (zip, rar, 7z, 001), return all parts.
+        /// </summary>
+        /// <param name="part1"></param>
+        /// <returns></returns>
+        public static IEnumerable<string> GetFileParts(string part1)
+        {
+            part1.CheckNotNullOrEmpty(nameof(part1));
+            return GetFileParts(new FileInfo(part1)).Select(a => a.FullName);
+        }
+
+        /// <summary>
+        /// From a passed in archive (zip, rar, 7z, 001), return all parts.
+        /// </summary>
+        /// <param name="part1"></param>
+        /// <returns></returns>
+        public static IEnumerable<FileInfo> GetFileParts(FileInfo part1)
+        {
+            part1.CheckNotNull(nameof(part1));
+            yield return part1;
+            int i = 1;
+
+            FileInfo? part = RarArchiveVolumeFactory.GetFilePart(i++, part1);
+            if (part != null)
+            {
+                yield return part;
+                while ((part = RarArchiveVolumeFactory.GetFilePart(i++, part1)) != null) //tests split too
+                    yield return part;
+            }
+            else
+            {
+                i = 1;
+                while ((part = ZipArchiveVolumeFactory.GetFilePart(i++, part1)) != null) //tests split too
+                    yield return part;
+            }
         }
     }
 }

@@ -27,6 +27,17 @@ namespace SharpCompress.Archives.Zip
         public CompressionLevel DeflateCompressionLevel { get; set; }
 
         /// <summary>
+        /// Constructor with a SourceStream able to handle FileInfo and Streams.
+        /// </summary>
+        /// <param name="srcStream"></param>
+        /// <param name="options"></param>
+        internal ZipArchive(SourceStream srcStream)
+            : base(ArchiveType.Zip, srcStream)
+        {
+            headerFactory = new SeekableZipHeaderFactory(srcStream.ReaderOptions.Password, srcStream.ReaderOptions.ArchiveEncoding);
+        }
+
+        /// <summary>
         /// Constructor expects a filepath to an existing file.
         /// </summary>
         /// <param name="filePath"></param>
@@ -45,31 +56,32 @@ namespace SharpCompress.Archives.Zip
         public static ZipArchive Open(FileInfo fileInfo, ReaderOptions? readerOptions = null)
         {
             fileInfo.CheckNotNull(nameof(fileInfo));
-            return new ZipArchive(fileInfo, readerOptions ?? new ReaderOptions());
+            return new ZipArchive(new SourceStream(fileInfo, i => ZipArchiveVolumeFactory.GetFilePart(i, fileInfo), readerOptions ?? new ReaderOptions()));
         }
 
         /// <summary>
-        /// Takes multiple seekable Streams for a multi-part archive
+        /// Constructor with all file parts passed in
+        /// </summary>
+        /// <param name="fileInfos"></param>
+        /// <param name="readerOptions"></param>
+        public static ZipArchive Open(IEnumerable<FileInfo> fileInfos, ReaderOptions? readerOptions = null)
+        {
+            fileInfos.CheckNotNull(nameof(fileInfos));
+            FileInfo[] files = fileInfos.ToArray();
+            return new ZipArchive(new SourceStream(files[0], i => i < files.Length ? files[i] : null, readerOptions ?? new ReaderOptions()));
+        }
+
+        /// <summary>
+        /// Constructor with all stream parts passed in
         /// </summary>
         /// <param name="streams"></param>
-        /// <param name="options"></param>
-        public static ZipArchive Open(IEnumerable<Stream> streams, ReaderOptions? options = null)
+        /// <param name="readerOptions"></param>
+        public static ZipArchive Open(IEnumerable<Stream> streams, ReaderOptions? readerOptions = null)
         {
             streams.CheckNotNull(nameof(streams));
-            return new ZipArchive(streams, options ?? new ReaderOptions());
+            Stream[] strms = streams.ToArray();
+            return new ZipArchive(new SourceStream(strms[0], i => i < strms.Length ? strms[i] : null, readerOptions ?? new ReaderOptions()));
         }
-
-        /// <summary>
-        /// Takes multiple seekable Streams for a multi-part archive
-        /// </summary>
-        /// <param name="streams"></param>
-        /// <param name="options"></param>
-        internal ZipArchive(IEnumerable<Stream> streams, ReaderOptions options)
-            : base(ArchiveType.Zip, streams, options)
-        {
-            headerFactory = new SeekableZipHeaderFactory(options.Password, options.ArchiveEncoding);
-        }
-
 
         /// <summary>
         /// Takes a seekable Stream as a source
@@ -79,7 +91,7 @@ namespace SharpCompress.Archives.Zip
         public static ZipArchive Open(Stream stream, ReaderOptions? readerOptions = null)
         {
             stream.CheckNotNull(nameof(stream));
-            return new ZipArchive(stream, readerOptions ?? new ReaderOptions());
+            return new ZipArchive(new SourceStream(stream, i => null, readerOptions ?? new ReaderOptions()));
         }
 
         public static bool IsZipFile(string filePath, string? password = null)
@@ -150,47 +162,37 @@ namespace SharpCompress.Archives.Zip
             }
         }
 
-        /// <summary>
-        /// Constructor with a FileInfo object to an existing file.
-        /// </summary>
-        /// <param name="fileInfo"></param>
-        /// <param name="readerOptions"></param>
-        internal ZipArchive(FileInfo fileInfo, ReaderOptions readerOptions)
-            : base(ArchiveType.Zip, fileInfo, readerOptions)
+        protected override IEnumerable<ZipVolume> LoadVolumes(SourceStream srcStream)
         {
-            headerFactory = new SeekableZipHeaderFactory(readerOptions.Password, readerOptions.ArchiveEncoding);
-        }
+            base.SrcStream.LoadAllParts(); //request all streams
+            base.SrcStream.Position = 0;
 
-        protected override IEnumerable<ZipVolume> LoadVolumes(FileInfo file)
-        {
-            return new ZipVolume(file.OpenRead(), ReaderOptions).AsEnumerable();
+            List<Stream> streams = base.SrcStream.Streams.ToList();
+            if (streams.Count > 1) //test part 2 - true = multipart not split
+            {
+                streams[1].Position += 4; //skip the POST_DATA_DESCRIPTOR to prevent an exception
+                bool isZip = IsZipFile(streams[1], ReaderOptions.Password);
+                streams[1].Position -= 4;
+                if (isZip)
+                {
+                    base.SrcStream.IsVolumes = true;
+
+                    var tmp = streams[0]; //arcs as zip, z01 ... swap the zip the end
+                    streams.RemoveAt(0);
+                    streams.Add(tmp);
+
+                    //streams[0].Position = 4; //skip the POST_DATA_DESCRIPTOR to prevent an exception
+                    return streams.Select(a => new ZipVolume(a, ReaderOptions));
+                }
+            }
+
+            //split mode or single file
+            return new ZipVolume(base.SrcStream, ReaderOptions).AsEnumerable();
         }
 
         internal ZipArchive()
             : base(ArchiveType.Zip)
         {
-        }
-
-        /// <summary>
-        /// Takes multiple seekable Streams for a multi-part archive
-        /// </summary>
-        /// <param name="stream"></param>
-        /// <param name="readerOptions"></param>
-        internal ZipArchive(Stream stream, ReaderOptions readerOptions)
-            : base(ArchiveType.Zip, stream, readerOptions)
-        {
-            headerFactory = new SeekableZipHeaderFactory(readerOptions.Password, readerOptions.ArchiveEncoding);
-        }
-
-        protected override IEnumerable<ZipVolume> LoadVolumes(IEnumerable<Stream> streams)
-        {
-            var st = streams.ToList(); //swap the zip to the end
-            var tmp = st[0];
-            st.RemoveAt(0);
-            st.Add(tmp);
-
-            foreach (var s in st)
-                yield return new ZipVolume(s, base.ReaderOptions);
         }
 
         protected override IEnumerable<ZipArchiveEntry> LoadEntries(IEnumerable<ZipVolume> volumes)
@@ -207,7 +209,10 @@ namespace SharpCompress.Archives.Zip
                             DirectoryEntryHeader deh = (DirectoryEntryHeader)h;
                             Stream s;
                             if (deh.RelativeOffsetOfEntryHeader + deh.CompressedSize > vols[deh.DiskNumberStart].Stream.Length)
-                                s = new SplitStream(vols.Skip(deh.DiskNumberStart).Select(a => a.Stream));
+                            {
+                                var v = vols.Skip(deh.DiskNumberStart).ToArray();
+                                s = new SourceStream(v[0].Stream, i => i < v.Length ? v[i].Stream : null, new ReaderOptions() { LeaveStreamOpen = true });
+                            }
                             else
                                 s = vols[deh.DiskNumberStart].Stream;
                             yield return new ZipArchiveEntry(this, new SeekableZipFilePart(headerFactory, deh, s));

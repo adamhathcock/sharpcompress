@@ -1,8 +1,9 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using SharpCompress.Common;
+using SharpCompress.IO;
 using SharpCompress.Readers;
 
 namespace SharpCompress.Archives
@@ -23,28 +24,14 @@ namespace SharpCompress.Archives
         protected ReaderOptions ReaderOptions { get; }
 
         private bool disposed;
+        protected SourceStream SrcStream;
 
-        internal AbstractArchive(ArchiveType type, FileInfo fileInfo, ReaderOptions readerOptions)
+        internal AbstractArchive(ArchiveType type, SourceStream srcStream)
         {
             Type = type;
-            if (!fileInfo.Exists)
-            {
-                throw new ArgumentException("File does not exist: " + fileInfo.FullName);
-            }
-            ReaderOptions = readerOptions;
-            readerOptions.LeaveStreamOpen = false;
-            lazyVolumes = new LazyReadOnlyCollection<TVolume>(LoadVolumes(fileInfo));
-            lazyEntries = new LazyReadOnlyCollection<TEntry>(LoadEntries(Volumes));
-        }
-
-
-        protected abstract IEnumerable<TVolume> LoadVolumes(FileInfo file);
-
-        internal AbstractArchive(ArchiveType type, IEnumerable<Stream> streams, ReaderOptions readerOptions)
-        {
-            Type = type;
-            ReaderOptions = readerOptions;
-            lazyVolumes = new LazyReadOnlyCollection<TVolume>(LoadVolumes(streams.Select(CheckStreams)));
+            ReaderOptions = srcStream.ReaderOptions;
+            SrcStream = srcStream;
+            lazyVolumes = new LazyReadOnlyCollection<TVolume>(LoadVolumes(SrcStream));
             lazyEntries = new LazyReadOnlyCollection<TEntry>(LoadEntries(Volumes));
         }
 
@@ -98,7 +85,7 @@ namespace SharpCompress.Archives
         /// </summary>
         public virtual long TotalUncompressSize => Entries.Aggregate(0L, (total, cf) => total + cf.Size);
 
-        protected abstract IEnumerable<TVolume> LoadVolumes(IEnumerable<Stream> streams);
+        protected abstract IEnumerable<TVolume> LoadVolumes(SourceStream srcStream);
         protected abstract IEnumerable<TEntry> LoadEntries(IEnumerable<TVolume> volumes);
 
         IEnumerable<IArchiveEntry> IArchive.Entries => Entries.Cast<IArchiveEntry>();
@@ -111,6 +98,8 @@ namespace SharpCompress.Archives
             {
                 lazyVolumes.ForEach(v => v.Dispose());
                 lazyEntries.GetLoaded().Cast<Entry>().ForEach(x => x.Close());
+                if (SrcStream != null)
+                    SrcStream.Dispose();
                 disposed = true;
             }
         }
