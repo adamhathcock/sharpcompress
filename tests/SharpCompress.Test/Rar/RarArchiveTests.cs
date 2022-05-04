@@ -17,11 +17,23 @@ namespace SharpCompress.Test.Rar
             ReadRarPassword("Rar.encrypted_filesAndHeader.rar", "test");
         }
 
+        [Fact]
+        public void Rar_EncryptedFileAndHeader_NoPasswordExceptionTest()
+        {
+            Assert.Throws(typeof(CryptographicException), () => ReadRarPassword("Rar.encrypted_filesAndHeader.rar", null));
+        }
+
         /*[Fact]
         public void Rar5_EncryptedFileAndHeader_Archive()
         {
             ReadRarPassword("Rar5.encrypted_filesAndHeader.rar", "test");
         }*/
+
+        [Fact]
+        public void Rar5_EncryptedFileAndHeader_NoPasswordExceptionTest()
+        {
+            Assert.Throws(typeof(CryptographicException), () => ReadRarPassword("Rar5.encrypted_filesAndHeader.rar", null));
+        }
 
         [Fact]
         public void Rar_EncryptedFileOnly_Archive()
