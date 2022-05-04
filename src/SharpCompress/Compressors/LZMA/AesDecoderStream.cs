@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Security.Cryptography;
 using System.Text;
@@ -20,6 +20,11 @@ namespace SharpCompress.Compressors.LZMA
 
         public AesDecoderStream(Stream input, byte[] info, IPasswordProvider pass, long limit)
         {
+            if (pass.CryptoGetTextPassword() == null)
+            {
+                throw new SharpCompress.Common.CryptographicException("Encrypted 7Zip archive has no password specified.");
+            }
+
             mStream = input;
             mLimit = limit;
 

@@ -41,6 +41,11 @@ namespace SharpCompress.Test.SevenZip
             ArchiveFileRead("7Zip.LZMA.Aes.7z", new ReaderOptions() { Password = "testpassword" });
         }
         [Fact]
+        public void SevenZipArchive_LZMAAES_NoPasswordExceptionTest()
+        {
+            Assert.Throws(typeof(CryptographicException), () => ArchiveFileRead("7Zip.LZMA.Aes.7z", new ReaderOptions() { Password = null })); //was failing with ArgumentNullException not CryptographicException like rar
+        }
+        [Fact]
         public void SevenZipArchive_PPMd_StreamRead()
         {
             ArchiveStreamRead("7Zip.PPMd.7z");
