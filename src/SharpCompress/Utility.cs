@@ -315,5 +315,46 @@ namespace SharpCompress
         {
             return source.Replace('\0', ' ').Trim();
         }
+
+        /// <summary>
+        /// Swap the endianness of a UINT32
+        /// </summary>
+        /// <param name="number">The UINT32 you want to swap his endianness</param>
+        /// <returns>Return the new UINT32 in the other endianness format</returns>
+        public static UInt32 SwapUINT32(UInt32 number)
+        {
+            return (number >> 24) |
+                 ((number << 8) & 0x00FF0000) |
+                 ((number >> 8) & 0x0000FF00) |
+                 (number << 24);
+        }
+
+        /// <summary>
+        /// Insert a little endian UINT32 into a byte array
+        /// </summary>
+        /// <param name="buffer">The buffer to insert into</param>
+        /// <param name="number">The UINT32 to insert</param>
+        /// <param name="offset">Offset of the buffer to insert into</param>
+        public static void SetLittleUInt32(ref byte[] buffer, UInt32 number, long offset)
+        {
+            buffer[offset] = (byte)(number);
+            buffer[offset + 1] = (byte)(number >> 8);
+            buffer[offset + 2] = (byte)(number >> 16);
+            buffer[offset + 3] = (byte)(number >> 24);
+        }
+
+        /// <summary>
+        /// Insert a big endian UINT32 into a byte array
+        /// </summary>
+        /// <param name="buffer">The buffer to insert into</param>
+        /// <param name="number">The UINT32 to insert</param>
+        /// <param name="offset">Offset of the buffer to insert into</param>
+        public static void SetBigUInt32(ref byte[] buffer, UInt32 number, long offset)
+        {
+            buffer[offset] = (byte)(number >> 24);
+            buffer[offset + 1] = (byte)(number >> 16);
+            buffer[offset + 2] = (byte)(number >> 8);
+            buffer[offset + 3] = (byte)number;
+        }
     }
 }
