@@ -10,9 +10,12 @@ namespace SharpCompress.Archives.Tar
     public class TarArchiveFactory : IArchiveFactory
     {
         /// <inheritdoc/>
-        public IEnumerable<KeyValuePair<string, string>> GetSupportedExtensions()
+        public string Name => "Tar";
+
+        /// <inheritdoc/>
+        public IEnumerable<string> GetSupportedExtensions()
         {
-            yield return new KeyValuePair<string, string>("Tar", "tar");
+            yield return "tar";
         }
 
         /// <inheritdoc/>

@@ -10,11 +10,14 @@ namespace SharpCompress.Archives.Zip
     public class ZipArchiveFactory : IArchiveFactory
     {
         /// <inheritdoc/>
-        public IEnumerable<KeyValuePair<string, string>> GetSupportedExtensions()
+        public string Name => "Zip";
+
+        /// <inheritdoc/>
+        public IEnumerable<string> GetSupportedExtensions()
         {
-            yield return new KeyValuePair<string, string>("Zip", "zip");
-            yield return new KeyValuePair<string, string>("Zip", "zipx");
-            yield return new KeyValuePair<string, string>("Zip", "cbz");
+            yield return "zip";
+            yield return "zipx";
+            yield return "cbz";
         }
 
         /// <inheritdoc/>

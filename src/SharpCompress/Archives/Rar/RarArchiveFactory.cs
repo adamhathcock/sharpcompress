@@ -10,10 +10,13 @@ namespace SharpCompress.Archives.Rar
     public class RarArchiveFactory : IArchiveFactory
     {
         /// <inheritdoc/>
-        public IEnumerable<KeyValuePair<string, string>> GetSupportedExtensions()
+        public string Name => "Rar";
+
+        /// <inheritdoc/>
+        public IEnumerable<string> GetSupportedExtensions()
         {
-            yield return new KeyValuePair<string, string>("Rar", "rar");
-            yield return new KeyValuePair<string, string>("Rar", "cbr");
+            yield return "rar";
+            yield return "cbr";
         }
 
         /// <inheritdoc/>

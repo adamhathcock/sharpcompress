@@ -76,9 +76,7 @@ namespace SharpCompress.Archives
             }
 
             var extensions = Factories
-                .SelectMany(item => item.GetSupportedExtensions())
-                .Select(item => item.Key)
-                .Distinct()
+                .Select(item => item.Name)
                 .Aggregate((a,b) => a + ", " + b );
 
             throw new InvalidOperationException($"Cannot determine compressed stream type. Supported Archive Formats: {extensions}");

@@ -23,10 +23,15 @@ namespace SharpCompress.Archives
     public interface IArchiveFactory
     {
         /// <summary>
+        /// Gets the archive Type name
+        /// </summary>
+        string Name { get; }
+
+        /// <summary>
         /// returns the extensions typically used by this archive type.
         /// </summary>
         /// <returns></returns>
-        IEnumerable<KeyValuePair<string, string>> GetSupportedExtensions();
+        IEnumerable<string> GetSupportedExtensions();
 
         /// <summary>
         /// Returns true if the stream represents an archive of the format defined by this type.

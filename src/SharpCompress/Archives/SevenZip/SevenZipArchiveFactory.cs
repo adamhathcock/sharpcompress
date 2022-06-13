@@ -10,9 +10,12 @@ namespace SharpCompress.Archives.SevenZip
     public class SevenZipArchiveFactory : IArchiveFactory
     {
         /// <inheritdoc/>
-        public IEnumerable<KeyValuePair<string, string>> GetSupportedExtensions()
+        public string Name => "7Zip";
+
+        /// <inheritdoc/>
+        public IEnumerable<string> GetSupportedExtensions()
         {
-            yield return new KeyValuePair<string, string>("7Zip", "7z");
+            yield return "7z";
         }
 
         /// <inheritdoc/>

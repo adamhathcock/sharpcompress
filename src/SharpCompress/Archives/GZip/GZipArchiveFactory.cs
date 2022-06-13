@@ -10,9 +10,12 @@ namespace SharpCompress.Archives.GZip
     public class GZipArchiveFactory : IArchiveFactory
     {
         /// <inheritdoc/>
-        public IEnumerable<KeyValuePair<string, string>> GetSupportedExtensions()
+        public string Name => "GZip";
+
+        /// <inheritdoc/>
+        public IEnumerable<string> GetSupportedExtensions()
         {
-            yield return new KeyValuePair<string, string>("GZip", "gz");
+            yield return "gz";
         }
 
         /// <inheritdoc/>
