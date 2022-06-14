@@ -36,14 +36,36 @@ namespace SharpCompress.Archives
         /// <summary>
         /// Returns true if the stream represents an archive of the format defined by this type.
         /// </summary>
-        /// <param name="stream"></param>        
-        bool IsArchive(Stream stream);
+        /// <param name="stream"></param>
+        /// /// <param name="password">optional password</param>
+        bool IsArchive(Stream stream, string? password = null);
 
         /// <summary>
         /// Opens an Archive for random access.
         /// </summary>
         /// <param name="stream">An open, readable and seekable stream.</param>
-        /// <param name="readerOptions">reading options.</param>        
+        /// <param name="readerOptions">reading options.</param>
         IArchive Open(Stream stream, ReaderOptions? readerOptions = null);
+
+        /// <summary>
+        /// Constructor with a FileInfo object to an existing file.
+        /// </summary>
+        /// <param name="fileInfo">the file to open.</param>
+        /// <param name="readerOptions">reading options.</param>
+        IArchive Open(System.IO.FileInfo fileInfo, ReaderOptions? readerOptions = null);
+
+        /// <summary>
+        /// Constructor with IEnumerable FileInfo objects, multi and split support.
+        /// </summary>
+        /// <param name="streams"></param>
+        /// <param name="readerOptions">reading options.</param>
+        IArchive Open(IEnumerable<Stream> streams, ReaderOptions? readerOptions = null);
+
+        /// <summary>
+        /// Constructor with IEnumerable Stream objects, multi and split support.
+        /// </summary>
+        /// <param name="fileInfos"></param>
+        /// <param name="readerOptions">reading options.</param>
+        IArchive Open(IEnumerable<System.IO.FileInfo> fileInfos, ReaderOptions? readerOptions = null);
     }
 }

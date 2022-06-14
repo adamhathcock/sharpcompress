@@ -21,15 +21,42 @@ namespace SharpCompress.Archives.Zip
         }
 
         /// <inheritdoc/>
-        public bool IsArchive(Stream stream)
+        public bool IsArchive(Stream stream, string? password = null)
         {
-            return ZipArchive.IsZipFile(stream);
+            long startPosition = stream.Position;
+
+            if (ZipArchive.IsZipFile(stream, password)) return true;
+
+            stream.Seek(startPosition, SeekOrigin.Begin);
+
+            //test the zip (last) file of a multipart zip
+            if (ZipArchive.IsZipMulti(stream)) return true;
+
+            return false;
         }
 
         /// <inheritdoc/>
         public IArchive Open(Stream stream, ReaderOptions? readerOptions = null)
         {
             return ZipArchive.Open(stream, readerOptions);
+        }
+
+        /// <inheritdoc/>
+        public IArchive Open(FileInfo fileInfo, ReaderOptions? readerOptions = null)
+        {
+            return ZipArchive.Open(fileInfo, readerOptions);
+        }
+
+        /// <inheritdoc/>
+        public IArchive Open(IEnumerable<Stream> streams, ReaderOptions? readerOptions = null)
+        {
+            return ZipArchive.Open(streams, readerOptions);
+        }
+
+        /// <inheritdoc/>
+        public IArchive Open(IEnumerable<FileInfo> fileInfos, ReaderOptions? readerOptions = null)
+        {
+            return ZipArchive.Open(fileInfos, readerOptions);
         }
     }
 }

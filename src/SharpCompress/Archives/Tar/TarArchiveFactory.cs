@@ -19,7 +19,7 @@ namespace SharpCompress.Archives.Tar
         }
 
         /// <inheritdoc/>
-        public bool IsArchive(Stream stream)
+        public bool IsArchive(Stream stream, string? password = null)
         {
             return TarArchive.IsTarFile(stream);
         }
@@ -29,5 +29,24 @@ namespace SharpCompress.Archives.Tar
         {
             return TarArchive.Open(stream, readerOptions);
         }
+
+        /// <inheritdoc/>
+        public IArchive Open(FileInfo fileInfo, ReaderOptions? readerOptions = null)
+        {
+            return TarArchive.Open(fileInfo, readerOptions);
+        }
+
+        /// <inheritdoc/>
+        public IArchive Open(IEnumerable<Stream> streams, ReaderOptions? readerOptions = null)
+        {
+            return TarArchive.Open(streams, readerOptions);
+        }
+
+        /// <inheritdoc/>
+        public IArchive Open(IEnumerable<FileInfo> fileInfos, ReaderOptions? readerOptions = null)
+        {
+            return TarArchive.Open(fileInfos, readerOptions);
+        }
+
     }
 }

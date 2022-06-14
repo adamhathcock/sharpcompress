@@ -20,7 +20,7 @@ namespace SharpCompress.Archives.Rar
         }
 
         /// <inheritdoc/>
-        public bool IsArchive(Stream stream)
+        public bool IsArchive(Stream stream, string? password = null)
         {
             return RarArchive.IsRarFile(stream);
         }
@@ -29,6 +29,24 @@ namespace SharpCompress.Archives.Rar
         public IArchive Open(Stream stream, ReaderOptions? readerOptions = null)
         {
             return RarArchive.Open(stream, readerOptions);
+        }
+
+        /// <inheritdoc/>
+        public IArchive Open(FileInfo fileInfo, ReaderOptions? readerOptions = null)
+        {
+            return RarArchive.Open(fileInfo, readerOptions);
+        }
+
+        /// <inheritdoc/>
+        public IArchive Open(IEnumerable<Stream> streams, ReaderOptions? readerOptions = null)
+        {
+            return RarArchive.Open(streams, readerOptions);
+        }
+
+        /// <inheritdoc/>
+        public IArchive Open(IEnumerable<FileInfo> fileInfos, ReaderOptions? readerOptions = null)
+        {
+            return RarArchive.Open(fileInfos, readerOptions);
         }
     }
 }
