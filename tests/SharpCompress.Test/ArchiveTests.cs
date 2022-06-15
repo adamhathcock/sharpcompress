@@ -33,30 +33,41 @@ namespace SharpCompress.Test
             foreach (var path in testArchives)
             {
                 using (var stream = new NonDisposingStream(File.OpenRead(path), true))
-                using (var archive = ArchiveFactory.Open(stream))
                 {
-                    Assert.True(archive.IsSolid);
-                    using (var reader = archive.ExtractAllEntries())
+                    try
                     {
-                        UseReader(reader, compression);
-                    }
-                    VerifyFiles();
+                        using (var archive = ArchiveFactory.Open(stream))
+                        {
+                            Assert.True(archive.IsSolid);
+                            using (var reader = archive.ExtractAllEntries())
+                            {
+                                UseReader(reader, compression);
+                            }
+                            VerifyFiles();
 
-                    if (archive.Entries.First().CompressionType == CompressionType.Rar)
+                            if (archive.Entries.First().CompressionType == CompressionType.Rar)
+                            {
+                                stream.ThrowOnDispose = false;
+                                return;
+                            }
+                            foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
+                            {
+                                entry.WriteToDirectory(SCRATCH_FILES_PATH,
+                                                       new ExtractionOptions
+                                                       {
+                                                           ExtractFullPath = true,
+                                                           Overwrite = true
+                                                       });
+                            }
+                            stream.ThrowOnDispose = false;
+                        }
+                    }
+                    catch (Exception)
                     {
+                        // Otherwise this will hide the original exception.
                         stream.ThrowOnDispose = false;
-                        return;
+                        throw;
                     }
-                    foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
-                    {
-                        entry.WriteToDirectory(SCRATCH_FILES_PATH,
-                                               new ExtractionOptions
-                                               {
-                                                   ExtractFullPath = true,
-                                                   Overwrite = true
-                                               });
-                    }
-                    stream.ThrowOnDispose = false;
                 }
                 VerifyFiles();
             }
