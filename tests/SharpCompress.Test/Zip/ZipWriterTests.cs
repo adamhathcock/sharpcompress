@@ -1,7 +1,10 @@
-﻿using System.Text;
+using System.Text;
 
 using SharpCompress.Common;
 using Xunit;
+using System.IO;
+using SharpCompress.Writers.Zip;
+using SharpCompress.Compressors.Deflate;
 
 namespace SharpCompress.Test.Zip
 {
@@ -48,6 +51,24 @@ namespace SharpCompress.Test.Zip
         public void Zip_Rar_Write()
         {
             Assert.Throws<InvalidFormatException>(() => Write(CompressionType.Rar, "Zip.ppmd.noEmptyDirs.zip", "Zip.ppmd.noEmptyDirs.zip"));
+        }
+
+        [Fact]
+        public void Zip_Write_MemoryStream()
+        {
+            var ms = new MemoryStream();
+            var zw = new ZipWriter(ms, new ZipWriterOptions(compressionType: CompressionType.Deflate ) { DeflateCompressionLevel = CompressionLevel.None } );
+            var payload = new string('\n', 100000);
+            using (var stream = zw.WriteToStream("test.txt", new ZipWriterEntryOptions()))
+                using (var streamWriter = new StreamWriter(stream: stream))
+            {
+                streamWriter.Write(payload);
+            }
+
+            using( var file = new FileStream("d:\\projects\\test.zip", FileMode.Create, FileAccess.Write))
+            {
+                ms.WriteTo(file);
+            }
         }
     }
 }
