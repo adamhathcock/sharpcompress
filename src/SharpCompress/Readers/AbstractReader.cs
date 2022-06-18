@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -131,26 +131,27 @@ namespace SharpCompress.Readers
 
         private void Skip()
         {
+            var part = Entry.Parts.First();
+            part.Skipped = true;
+
             if (ArchiveType != ArchiveType.Rar
                 && !Entry.IsSolid
                 && Entry.CompressedSize > 0)
             {
                 //not solid and has a known compressed size then we can skip raw bytes.
-                var part = Entry.Parts.First();
                 var rawStream = part.GetRawStream();
 
                 if (rawStream != null)
                 {
                     var bytesToAdvance = Entry.CompressedSize;
                     rawStream.Skip(bytesToAdvance);
-                    part.Skipped = true;
                     return;
                 }
             }
             //don't know the size so we have to try to decompress to skip
             using (var s = OpenEntryStream())
             {
-                s.Skip();
+                s.SkipEntry();
             }
         }
 
