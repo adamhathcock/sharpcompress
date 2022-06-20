@@ -63,7 +63,7 @@ namespace SharpCompress.Test.Streams
 
         private void Compress(Stream input, Stream output, int compressionLevel)
         {
-            using (var zlibStream = new ZlibStream(new NonDisposingStream(output), CompressionMode.Compress, (CompressionLevel)compressionLevel))
+            using (var zlibStream = new ZlibStream(NonDisposingStream.Create(output), CompressionMode.Compress, (CompressionLevel)compressionLevel))
             {
                 zlibStream.FlushMode = FlushType.Sync;
                 input.CopyTo(zlibStream);
@@ -72,7 +72,7 @@ namespace SharpCompress.Test.Streams
 
         private void Decompress(Stream input, Stream output)
         {
-            using (var zlibStream = new ZlibStream(new NonDisposingStream(input), CompressionMode.Decompress))
+            using (var zlibStream = new ZlibStream(NonDisposingStream.Create(input), CompressionMode.Decompress))
             {
                 zlibStream.CopyTo(output);
             }

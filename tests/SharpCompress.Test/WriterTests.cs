@@ -1,4 +1,4 @@
-﻿using System.IO;
+using System.IO;
 using System.Text;
 using SharpCompress.Common;
 using SharpCompress.IO;
@@ -41,7 +41,7 @@ namespace SharpCompress.Test
 
                 readerOptions.ArchiveEncoding.Default = encoding ?? Encoding.Default;
 
-                using (var reader = ReaderFactory.Open(new NonDisposingStream(stream), readerOptions))
+                using (var reader = ReaderFactory.Open(NonDisposingStream.Create(stream), readerOptions))
                 {
                     reader.WriteAllToDirectory(SCRATCH_FILES_PATH, new ExtractionOptions()
                     {
