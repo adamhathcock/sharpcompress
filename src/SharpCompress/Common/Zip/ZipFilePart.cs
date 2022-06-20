@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Buffers.Binary;
 using System.IO;
 using System.Linq;
@@ -37,7 +37,7 @@ namespace SharpCompress.Common.Zip
             Stream decompressionStream = CreateDecompressionStream(GetCryptoStream(CreateBaseStream()), Header.CompressionMethod);
             if (LeaveStreamOpen)
             {
-                return new NonDisposingStream(decompressionStream);
+                return NonDisposingStream.Create(decompressionStream);
             }
             return decompressionStream;
         }
@@ -142,7 +142,7 @@ namespace SharpCompress.Common.Zip
                 && FlagUtility.HasFlag(Header.Flags, HeaderFlags.UsePostDataDescriptor))
                 || Header.IsZip64)
             {
-                plainStream = new NonDisposingStream(plainStream); //make sure AES doesn't close
+                plainStream = NonDisposingStream.Create(plainStream); //make sure AES doesn't close
             }
             else
             {

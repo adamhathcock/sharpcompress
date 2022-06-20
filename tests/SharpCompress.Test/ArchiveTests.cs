@@ -32,7 +32,7 @@ namespace SharpCompress.Test
         {
             foreach (var path in testArchives)
             {
-                using (var stream = new NonDisposingStream(File.OpenRead(path), true))
+                using (var stream = NonDisposingStream.Create(File.OpenRead(path), true))
                 {
                     try
                     {
@@ -88,7 +88,7 @@ namespace SharpCompress.Test
         {
             foreach (var path in testArchives)
             {
-                using (var stream = new NonDisposingStream(File.OpenRead(path), true))
+                using (var stream = NonDisposingStream.Create(File.OpenRead(path), true))
                 using (var archive = ArchiveFactory.Open(stream, readerOptions))
                 {
                     try

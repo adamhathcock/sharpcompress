@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using SharpCompress.Common;
 using SharpCompress.Compressors;
@@ -16,7 +16,7 @@ namespace SharpCompress.Writers.GZip
         {
             if (WriterOptions.LeaveStreamOpen)
             {
-                destination = new NonDisposingStream(destination);
+                destination = NonDisposingStream.Create(destination);
             }
             InitalizeStream(new GZipStream(destination, CompressionMode.Compress,
                                            options?.CompressionLevel ?? CompressionLevel.Default,

@@ -1,4 +1,4 @@
-﻿using System.IO;
+using System.IO;
 using SharpCompress.Common;
 using SharpCompress.IO;
 using SharpCompress.Readers;
@@ -27,7 +27,7 @@ namespace SharpCompress.Test
         {
             using (var file = File.OpenRead(testArchive))
             {
-                using (var protectedStream = new NonDisposingStream(new ForwardOnlyStream(file), throwOnDispose: true))
+                using (var protectedStream = NonDisposingStream.Create(new ForwardOnlyStream(file), throwOnDispose: true))
                 {
                     using (var testStream = new TestStream(protectedStream))
                     {
