@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -21,7 +21,7 @@ namespace SharpCompress.Compressors.Xz
 
         public static XZHeader FromStream(Stream stream)
         {
-            var header = new XZHeader(new BinaryReader(new NonDisposingStream(stream), Encoding.UTF8));
+            var header = new XZHeader(new BinaryReader(NonDisposingStream.Create(stream), Encoding.UTF8));
             header.Process();
             return header;
         }

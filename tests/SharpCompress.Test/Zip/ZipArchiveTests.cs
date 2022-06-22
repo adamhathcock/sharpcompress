@@ -735,5 +735,17 @@ namespace SharpCompress.Test.Zip
             }
         }
 
+        [Fact]
+        public void Zip_Uncompressed_Skip_All()
+        {
+            string zipPath = Path.Combine(TEST_ARCHIVES_PATH, "Zip.uncompressed.zip");
+            using (var stream = File.Open(zipPath, FileMode.Open, FileAccess.Read))
+            {
+                IArchive archive = ArchiveFactory.Open(stream);
+                IReader reader = archive.ExtractAllEntries();
+                while (reader.MoveToNextEntry())
+                    ;
+            }
+        }
     }
 }

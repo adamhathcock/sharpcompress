@@ -1,4 +1,4 @@
-﻿using System.IO;
+using System.IO;
 using SharpCompress.Common.Zip.Headers;
 using SharpCompress.Compressors.Deflate;
 using SharpCompress.IO;
@@ -28,7 +28,7 @@ namespace SharpCompress.Common.Zip
             _decompressionStream = CreateDecompressionStream(GetCryptoStream(CreateBaseStream()), Header.CompressionMethod);
             if (LeaveStreamOpen)
             {
-                return new NonDisposingStream(_decompressionStream);
+                return NonDisposingStream.Create(_decompressionStream);
             }
             return _decompressionStream;
         }
