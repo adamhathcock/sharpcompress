@@ -297,14 +297,6 @@ namespace SharpCompress.Compressors.LZMA
             _outWindow.ReleaseStream();
             rangeDecoder.ReleaseStream();
 
-            if (!rangeDecoder.IsFinished || (inSize > 0 && rangeDecoder._total != inSize))
-            {
-                throw new DataErrorException();
-            }
-            if (_outWindow.HasPending)
-            {
-                throw new DataErrorException();
-            }
             _outWindow = null;
         }
 
