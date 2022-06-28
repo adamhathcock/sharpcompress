@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using SharpCompress.Common;
@@ -53,7 +53,7 @@ namespace SharpCompress.Archives.Zip
         {
             //ensure new stream is at the start, this could be reset
             stream.Seek(0, SeekOrigin.Begin);
-            return new NonDisposingStream(stream);
+            return NonDisposingStream.Create(stream);
         }
 
         internal override void Close()

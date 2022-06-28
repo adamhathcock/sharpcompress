@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 
 namespace SharpCompress.IO
@@ -119,8 +119,10 @@ namespace SharpCompress.IO
             int read;
             if (isRewound && bufferStream.Position != bufferStream.Length)
             {
-                read = bufferStream.Read(buffer, offset, count);
-                if (read < count)
+                // don't read more than left
+                int readCount = Math.Min(count, (int)(bufferStream.Length - bufferStream.Position));
+                read = bufferStream.Read(buffer, offset, readCount);
+                if (read < readCount)
                 {
                     int tempRead = stream.Read(buffer, offset + read, count - read);
                     if (IsRecording)

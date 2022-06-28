@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using SharpCompress.IO;
 using SharpCompress.Readers;
@@ -14,7 +14,7 @@ namespace SharpCompress.Common
             ReaderOptions = readerOptions;
             if (readerOptions.LeaveStreamOpen)
             {
-                stream = new NonDisposingStream(stream);
+                stream = NonDisposingStream.Create(stream);
             }
             _actualStream = stream;
         }
