@@ -107,7 +107,8 @@ namespace SharpCompress.Archives.Tar
         protected override IEnumerable<TarVolume> LoadVolumes(SourceStream srcStream)
         {
             base.SrcStream.LoadAllParts(); //request all streams
-            return new TarVolume(srcStream, ReaderOptions).AsEnumerable(); //simple single volume or split, multivolume not supported
+            int idx = 0;
+            return new TarVolume(srcStream, ReaderOptions, idx++).AsEnumerable(); //simple single volume or split, multivolume not supported
         }
 
         /// <summary>

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.IO;
@@ -31,8 +31,8 @@ namespace SharpCompress.Common.GZip
         internal long EntryStartPosition { get; }
 
         internal DateTime? DateModified { get; private set; }
-        internal int? Crc { get; private set; }
-        internal int? UncompressedSize { get; private set; }
+        internal uint? Crc { get; private set; }
+        internal uint? UncompressedSize { get; private set; }
 
         internal override string FilePartName => _name!;
 
@@ -52,8 +52,8 @@ namespace SharpCompress.Common.GZip
             Span<byte> trailer = stackalloc byte[8];
             int n = _stream.Read(trailer);
 
-            Crc = BinaryPrimitives.ReadInt32LittleEndian(trailer);
-            UncompressedSize = BinaryPrimitives.ReadInt32LittleEndian(trailer.Slice(4));
+            Crc = BinaryPrimitives.ReadUInt32LittleEndian(trailer);
+            UncompressedSize = BinaryPrimitives.ReadUInt32LittleEndian(trailer.Slice(4));
         }
 
         private void ReadAndValidateGzipHeader()

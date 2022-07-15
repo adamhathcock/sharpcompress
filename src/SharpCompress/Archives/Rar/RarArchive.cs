@@ -37,16 +37,17 @@ namespace SharpCompress.Archives.Rar
         {
             base.SrcStream.LoadAllParts(); //request all streams
             Stream[] streams = base.SrcStream.Streams.ToArray();
+            int idx = 0;
             if (streams.Length > 1 && IsRarFile(streams[1], ReaderOptions)) //test part 2 - true = multipart not split
             {
                 base.SrcStream.IsVolumes = true;
                 streams[1].Position = 0;
                 base.SrcStream.Position = 0;
 
-                return srcStream.Streams.Select(a => new StreamRarArchiveVolume(a, ReaderOptions));
+                return srcStream.Streams.Select(a => new StreamRarArchiveVolume(idx++, a, ReaderOptions));
             }
             else //split mode or single file
-                return new StreamRarArchiveVolume(base.SrcStream, ReaderOptions).AsEnumerable();
+                return new StreamRarArchiveVolume(idx++, base.SrcStream, ReaderOptions).AsEnumerable();
         }
 
         protected override IReader CreateReaderForSolidExtraction()
@@ -57,6 +58,9 @@ namespace SharpCompress.Archives.Rar
         }
 
         public override bool IsSolid => Volumes.First().IsSolidArchive;
+
+        public virtual int MinVersion => Volumes.First().MinVersion;
+        public virtual int MaxVersion => Volumes.First().MaxVersion;
 
         #region Creation
         /// <summary>

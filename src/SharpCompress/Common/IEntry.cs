@@ -1,4 +1,5 @@
-﻿using System;
+using System;
+using System.Collections.Generic;
 
 namespace SharpCompress.Common
 {
@@ -15,6 +16,8 @@ namespace SharpCompress.Common
         bool IsEncrypted { get; }
         bool IsSplitAfter { get; }
         bool IsSolid { get; }
+        int VolumeIndexFirst { get; }
+        int VolumeIndexLast { get; }
         DateTime? LastAccessedTime { get; }
         DateTime? LastModifiedTime { get; }
         long Size { get; }

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Linq;
 using SharpCompress.IO;
@@ -26,7 +26,6 @@ namespace SharpCompress.Common.SevenZip
 
         internal CFileItem Header { get; }
         internal CFolder? Folder { get; }
-        internal int Index { get; }
 
         internal override string FilePartName => Header.Name;
 
