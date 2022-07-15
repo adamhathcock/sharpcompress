@@ -44,10 +44,10 @@ namespace SharpCompress.Archives.Rar
                 streams[1].Position = 0;
                 base.SrcStream.Position = 0;
 
-                return srcStream.Streams.Select(a => new StreamRarArchiveVolume(idx++, a, ReaderOptions));
+                return srcStream.Streams.Select(a => new StreamRarArchiveVolume(a, ReaderOptions, idx++));
             }
             else //split mode or single file
-                return new StreamRarArchiveVolume(idx++, base.SrcStream, ReaderOptions).AsEnumerable();
+                return new StreamRarArchiveVolume(base.SrcStream, ReaderOptions, idx++).AsEnumerable();
         }
 
         protected override IReader CreateReaderForSolidExtraction()
