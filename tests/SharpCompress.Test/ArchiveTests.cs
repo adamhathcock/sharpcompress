@@ -173,6 +173,38 @@ namespace SharpCompress.Test
             VerifyFiles();
         }
 
+        protected void ArchiveOpenEntryVolumeIndexTest(int[][] results, ReaderOptions readerOptions = null, params string[] testArchives)
+        {
+            ArchiveOpenEntryVolumeIndexTest(results, readerOptions, testArchives.Select(x => Path.Combine(TEST_ARCHIVES_PATH, x)));
+        }
+
+
+        protected void ArchiveOpenEntryVolumeIndexTest(int[][] results, ReaderOptions readerOptions, IEnumerable<string> testArchives)
+        {
+            string[] src = testArchives.ToArray();
+            using (var archive = ArchiveFactory.Open(testArchives.Select(f => new FileInfo(f)), null))
+            {
+                try
+                {
+                    int idx = 0;
+                    foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
+                    {
+                        Assert.Equal(entry.VolumeIndexFirst, results[idx][0]);
+                        Assert.Equal(entry.VolumeIndexLast, results[idx][1]);
+                        Assert.Equal(src[entry.VolumeIndexFirst], archive.Volumes.First(a => a.Index == entry.VolumeIndexFirst).FileName);
+                        Assert.Equal(src[entry.VolumeIndexLast], archive.Volumes.First(a => a.Index == entry.VolumeIndexLast).FileName);
+
+                        idx++;
+                    }
+                }
+                catch (IndexOutOfRangeException)
+                {
+                    throw;
+                }
+            }
+        }
+
+
 
         protected void ArchiveFileRead(string testArchive, ReaderOptions readerOptions = null)
         {

@@ -436,6 +436,42 @@ namespace SharpCompress.Test.Rar
         }
 
         [Fact]
+        public void Rar2_ArchiveVersionTest()
+        {
+            string testArchive = Path.Combine(TEST_ARCHIVES_PATH, "Rar2.rar");
+
+            using (var archive = RarArchive.Open(testArchive))
+            {
+                Assert.Equal(2, archive.MinVersion);
+                Assert.Equal(2, archive.MaxVersion);
+            }
+        }
+
+        [Fact]
+        public void Rar4_ArchiveVersionTest()
+        {
+            string testArchive = Path.Combine(TEST_ARCHIVES_PATH, "Rar4.multi.part01.rar");
+
+            using (var archive = RarArchive.Open(testArchive))
+            {
+                Assert.Equal(3, archive.MinVersion);
+                Assert.Equal(4, archive.MaxVersion);
+            }
+        }
+
+        [Fact]
+        public void Rar5_ArchiveVersionTest()
+        {
+            string testArchive = Path.Combine(TEST_ARCHIVES_PATH, "Rar5.solid.rar");
+
+            using (var archive = RarArchive.Open(testArchive))
+            {
+                Assert.Equal(5, archive.MinVersion);
+                Assert.Equal(6, archive.MaxVersion);
+            }
+        }
+
+        [Fact]
         public void Rar4_Multi_ArchiveFileRead()
         {
             ArchiveFileRead("Rar4.multi.part01.rar");
@@ -566,6 +602,25 @@ namespace SharpCompress.Test.Rar
         public void Rar4_Multi_ArchiveOpen()
         {
             ArchiveOpenStreamRead(null,
+                "Rar4.multi.part01.rar",
+                "Rar4.multi.part02.rar",
+                "Rar4.multi.part03.rar",
+                "Rar4.multi.part04.rar",
+                "Rar4.multi.part05.rar",
+                "Rar4.multi.part06.rar",
+                "Rar4.multi.part07.rar");
+        }
+
+        [Fact]
+        public void Rar4_Multi_ArchiveOpenEntryVolumeIndexTest()
+        {
+            ArchiveOpenEntryVolumeIndexTest(
+                new[] {
+                    new[] { 0, 1 }, //exe - Rar4.multi.part01.rar to Rar4.multi.part02.rar
+                    new[] { 1, 5 }, //jpg - Rar4.multi.part02.rar to Rar4.multi.part06.rar
+                    new[] { 5, 6 }  //txt - Rar4.multi.part06.rar to Rar4.multi.part07.rar
+                },
+                null,
                 "Rar4.multi.part01.rar",
                 "Rar4.multi.part02.rar",
                 "Rar4.multi.part03.rar",

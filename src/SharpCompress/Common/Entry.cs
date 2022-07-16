@@ -1,5 +1,6 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace SharpCompress.Common
 {
@@ -70,6 +71,8 @@ namespace SharpCompress.Common
         /// </summary>
         public abstract bool IsSplitAfter { get; }
 
+        public int VolumeIndexFirst => this.Parts?.FirstOrDefault()?.Index ?? 0;
+        public int VolumeIndexLast => this.Parts?.LastOrDefault()?.Index ?? 0;
         /// <inheritdoc/>
         public override string ToString() => Key;
 

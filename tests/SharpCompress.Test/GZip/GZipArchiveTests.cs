@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Linq;
 using SharpCompress.Archives;
@@ -105,6 +105,22 @@ namespace SharpCompress.Test.GZip
                     entryStream.CopyTo(tarStream);
                 }
                 Assert.Equal(size, tarStream.Length);
+            }
+        }
+
+        [Fact]
+        public void TestGzCrcWithMostSignificaltBitNotNegative()
+        {
+            using (var stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.gz")))
+            {
+                using (var archive = GZipArchive.Open(stream))
+                {
+                    //process all entries in solid archive until the one we want to test
+                    foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
+                    {
+                        Assert.InRange(entry.Crc, 0L, 0xFFFFFFFFL);
+                    }
+                }
             }
         }
     }

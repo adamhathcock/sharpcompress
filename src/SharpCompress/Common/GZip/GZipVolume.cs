@@ -1,12 +1,12 @@
-﻿using System.IO;
+using System.IO;
 using SharpCompress.Readers;
 
 namespace SharpCompress.Common.GZip
 {
     public class GZipVolume : Volume
     {
-        public GZipVolume(Stream stream, ReaderOptions options)
-            : base(stream, options)
+        public GZipVolume(Stream stream, ReaderOptions options, int index = 0)
+            : base(stream, options, index)
         {
         }
 
