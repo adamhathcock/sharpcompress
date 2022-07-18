@@ -31,6 +31,9 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Include="..\..\LICENSE.txt" Pack="true" PackagePath=""/>
+  </ItemGroup>
+  <ItemGroup>
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1" PrivateAssets="All" />
   </ItemGroup>
   <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.1' ">
