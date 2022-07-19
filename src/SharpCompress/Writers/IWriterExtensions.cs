@@ -37,7 +37,7 @@ namespace SharpCompress.Writers
         public static void WriteAll(this IWriter writer,
                                     string directory,
                                     string searchPattern = "*",
-                                    Func<string, bool>? fileSearchFunc = null,
+                                    Predicate<string>? fileSearchFunc = null,
                                     SearchOption option = SearchOption.TopDirectoryOnly)
         {
             if (!Directory.Exists(directory))
