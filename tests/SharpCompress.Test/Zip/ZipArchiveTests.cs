@@ -751,9 +751,7 @@ namespace SharpCompress.Test.Zip
                     x++;
                 }
 
-                // if we implement searching for DataDescriptor on none compressed streams
-                // this would work, see StreamingZipFilePart function FixStreamedFileLocation
-                // Assert.Equal(4, x);
+                Assert.Equal(4, x);
             }
         }
     }

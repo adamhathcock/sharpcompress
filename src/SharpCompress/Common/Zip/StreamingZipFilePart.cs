@@ -55,6 +55,24 @@ namespace SharpCompress.Common.Zip
                 else
                 {
                     // We would need to search for the magic word
+                    rewindableStream.Position -= 4;
+                    var pos = rewindableStream.Position;
+                    while( Utility.Find(rewindableStream, new byte[] { 0x50,0x4b,0x07,0x08 } ) )
+                    {
+                        // We should probably check CRC32 for positive matching as well
+                        var size = rewindableStream.Position - pos;
+                        var br = new BinaryReader(rewindableStream);
+                        br.ReadUInt32();
+                        br.ReadUInt32(); // CRC32
+                        var compressed_size = br.ReadUInt32();
+                        var uncompressed_size = br.ReadUInt32();
+                        if (compressed_size == size && compressed_size == uncompressed_size )
+                        {
+                            rewindableStream.Position -= 16;
+                            break;
+                        }
+                        rewindableStream.Position -= 12;
+                    }
                 }
 
                 Skipped = true;
