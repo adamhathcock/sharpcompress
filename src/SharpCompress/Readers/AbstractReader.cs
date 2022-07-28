@@ -132,7 +132,6 @@ namespace SharpCompress.Readers
         private void Skip()
         {
             var part = Entry.Parts.First();
-            part.Skipped = true;
 
             if (ArchiveType != ArchiveType.Rar
                 && !Entry.IsSolid
@@ -145,6 +144,7 @@ namespace SharpCompress.Readers
                 {
                     var bytesToAdvance = Entry.CompressedSize;
                     rawStream.Skip(bytesToAdvance);
+                    part.Skipped = true;
                     return;
                 }
             }

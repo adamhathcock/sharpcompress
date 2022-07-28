@@ -43,12 +43,20 @@ namespace SharpCompress.Common.Zip
             {
                 _decompressionStream ??= GetCompressedStream();
 
-                _decompressionStream.Skip();
-
-                if (_decompressionStream is DeflateStream deflateStream)
+                if( Header.CompressionMethod != ZipCompressionMethod.None )
                 {
-                    rewindableStream.Rewind(deflateStream.InputBuffer);
+                    _decompressionStream.Skip();
+
+                    if (_decompressionStream is DeflateStream deflateStream)
+                    {
+                        rewindableStream.Rewind(deflateStream.InputBuffer);
+                    }
                 }
+                else
+                {
+                    // We would need to search for the magic word
+                }
+
                 Skipped = true;
             }
             var reader = new BinaryReader(rewindableStream);
