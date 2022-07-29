@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using SharpCompress.Common;
 using SharpCompress.IO;
@@ -368,5 +368,21 @@ namespace SharpCompress.Test.Zip
             }
         }
 
+        [Fact]
+        public void Zip_ReaderMoveToNextEntry()
+        {
+            var keys = new string[] { "version", "sizehint", "data/0/metadata", "data/0/records" };
+
+            using (var fileStream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "test_477.zip")))
+            using (var reader = ZipReader.Open(fileStream))
+            {
+                foreach( var key in keys)
+                {
+                    reader.MoveToNextEntry();
+
+                    Assert.Equal(reader.Entry.Key, key);
+                }
+            }
+        }
     }
 }

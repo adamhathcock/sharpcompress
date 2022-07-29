@@ -165,6 +165,41 @@ namespace SharpCompress
             }
         }
 
+        public static bool Find(this Stream source, byte[] array)
+        {
+            byte[] buffer = GetTransferByteArray();
+            try
+            {
+                var pos = source.Position;
+                int count = 0;
+                var len = source.Read(buffer, 0, buffer.Length);
+                source.Position = pos + len;
+
+                do
+                {
+                    for (int i = 0; i < len; i++)
+                    {
+                        if (array[count] == buffer[i])
+                        {
+                            count++;
+                            if (count == array.Length)
+                            {
+                                source.Position = source.Position - len + i - array.Length +1;
+                                return true;
+                            }
+                        }
+                    }
+                }
+                while ((len = source.Read(buffer, 0, buffer.Length)) > 0);
+            }
+            finally
+            {
+                ArrayPool<byte>.Shared.Return(buffer);
+            }
+
+            return false;
+        }
+
         public static DateTime DosDateToDateTime(UInt16 iDate, UInt16 iTime)
         {
             int year = iDate / 512 + 1980;

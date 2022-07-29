@@ -738,13 +738,20 @@ namespace SharpCompress.Test.Zip
         [Fact]
         public void Zip_Uncompressed_Skip_All()
         {
-            string zipPath = Path.Combine(TEST_ARCHIVES_PATH, "Zip.uncompressed.zip");
+            var keys = new string[] { "Folder/File1.txt", "Folder/File2.rtf", "Folder2/File1.txt", "Folder2/File2.txt", "DEADBEEF" };
+            var zipPath = Path.Combine(TEST_ARCHIVES_PATH, "Zip.uncompressed.zip");
             using (var stream = File.Open(zipPath, FileMode.Open, FileAccess.Read))
             {
                 IArchive archive = ArchiveFactory.Open(stream);
                 IReader reader = archive.ExtractAllEntries();
+                int x = 0;
                 while (reader.MoveToNextEntry())
-                    ;
+                {
+                    Assert.Equal(keys[x], reader.Entry.Key);
+                    x++;
+                }
+
+                Assert.Equal(4, x);
             }
         }
     }
