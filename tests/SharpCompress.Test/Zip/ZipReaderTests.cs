@@ -384,5 +384,36 @@ namespace SharpCompress.Test.Zip
                 }
             }
         }
+        [Fact]
+        public void Issue_685()
+        {
+            var count = 0;
+            using (var fileStream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Issue_685.zip")))
+            using (var reader = ZipReader.Open(fileStream))
+            {
+
+                while (reader.MoveToNextEntry())
+                {
+                    count++;
+                    reader.OpenEntryStream().Dispose(); // Uncomment for workaround
+                }
+                Assert.Equal(4, count);
+            }
+        }
+
+
+
+        [Fact]
+        public void Zip_Uncompressed_Skip_All()
+        {
+            var zipPath = Path.Combine(TEST_ARCHIVES_PATH, "Zip.uncompressed.zip");
+            using (var stream = File.Open(zipPath, FileMode.Open, FileAccess.Read))
+            {
+                using (var reader = ReaderFactory.Open(stream))
+                {
+                    while (reader.MoveToNextEntry()) { }
+                }
+            }
+        }
     }
 }
