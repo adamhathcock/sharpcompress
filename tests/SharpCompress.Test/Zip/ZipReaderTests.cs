@@ -319,7 +319,7 @@ namespace SharpCompress.Test.Zip
                 stream = new MemoryStream(memory.ToArray());
                 File.WriteAllBytes(Path.Combine(SCRATCH_FILES_PATH, "foo.zip"), memory.ToArray());
 
-                using (IReader zipReader = ZipReader.Open(new NonDisposingStream(stream, true)))
+                using (IReader zipReader = ZipReader.Open(NonDisposingStream.Create(stream, true)))
                 {
                     var i = 0;
                     while (zipReader.MoveToNextEntry())

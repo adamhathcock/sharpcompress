@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Buffers.Binary;
 using System.IO;
 using System.Text;
@@ -98,10 +98,24 @@ namespace SharpCompress.Writers.Zip
 
             BinaryPrimitives.WriteUInt16LittleEndian(intBuf, 0);
             outputStream.Write(intBuf.Slice(0, 2)); // disk=0
-            BinaryPrimitives.WriteUInt16LittleEndian(intBuf, (ushort)flags);
-            outputStream.Write(intBuf.Slice(0, 2)); // file type: binary
-            BinaryPrimitives.WriteUInt16LittleEndian(intBuf, (ushort)flags);
-            outputStream.Write(intBuf.Slice(0, 2)); // Internal file attributes
+
+            // Internal file attributes:
+            // Bit 0: apparent ASCII/ text file
+            // Bit 1: reserved
+            // Bit 2: control field records precede logical records
+            // Bits 3 - 16: unused
+            BinaryPrimitives.WriteUInt16LittleEndian(intBuf, 0);
+            outputStream.Write(intBuf.Slice(0, 2)); // file type: binary, Internal file attributes
+
+            // External flags are host-dependent, this might match DOS
+            // Bit 0: Read-Only
+            // Bit 1: Hidden
+            // Bit 2: System
+            // Bit 3: Label
+            // Bit 4: Directory
+            // Bit 5: Archive
+            BinaryPrimitives.WriteUInt16LittleEndian(intBuf, 0);
+            outputStream.Write(intBuf.Slice(0, 2)); // External file attributes
             BinaryPrimitives.WriteUInt16LittleEndian(intBuf, 0x8100);
             outputStream.Write(intBuf.Slice(0, 2));
 

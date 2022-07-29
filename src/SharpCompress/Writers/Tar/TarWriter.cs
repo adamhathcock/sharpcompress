@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using SharpCompress.Common;
 using SharpCompress.Common.Tar.Headers;
@@ -25,7 +25,7 @@ namespace SharpCompress.Writers.Tar
             }
             if (WriterOptions.LeaveStreamOpen)
             {
-                destination = new NonDisposingStream(destination);
+                destination = NonDisposingStream.Create(destination);
             }
             switch (options.CompressionType)
             {

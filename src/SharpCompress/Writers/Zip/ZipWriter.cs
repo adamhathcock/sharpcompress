@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.IO;
@@ -40,7 +40,7 @@ namespace SharpCompress.Writers.Zip
 
             if (WriterOptions.LeaveStreamOpen)
             {
-                destination = new NonDisposingStream(destination);
+                destination = NonDisposingStream.Create(destination);
             }
             InitalizeStream(destination);
         }
