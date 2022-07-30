@@ -32,31 +32,42 @@ namespace SharpCompress.Test
         {
             foreach (var path in testArchives)
             {
-                using (var stream = new NonDisposingStream(File.OpenRead(path), true))
-                using (var archive = ArchiveFactory.Open(stream))
+                using (var stream = NonDisposingStream.Create(File.OpenRead(path), true))
                 {
-                    Assert.True(archive.IsSolid);
-                    using (var reader = archive.ExtractAllEntries())
+                    try
                     {
-                        UseReader(reader, compression);
-                    }
-                    VerifyFiles();
+                        using (var archive = ArchiveFactory.Open(stream))
+                        {
+                            Assert.True(archive.IsSolid);
+                            using (var reader = archive.ExtractAllEntries())
+                            {
+                                UseReader(reader, compression);
+                            }
+                            VerifyFiles();
 
-                    if (archive.Entries.First().CompressionType == CompressionType.Rar)
+                            if (archive.Entries.First().CompressionType == CompressionType.Rar)
+                            {
+                                stream.ThrowOnDispose = false;
+                                return;
+                            }
+                            foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
+                            {
+                                entry.WriteToDirectory(SCRATCH_FILES_PATH,
+                                                       new ExtractionOptions
+                                                       {
+                                                           ExtractFullPath = true,
+                                                           Overwrite = true
+                                                       });
+                            }
+                            stream.ThrowOnDispose = false;
+                        }
+                    }
+                    catch (Exception)
                     {
+                        // Otherwise this will hide the original exception.
                         stream.ThrowOnDispose = false;
-                        return;
+                        throw;
                     }
-                    foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
-                    {
-                        entry.WriteToDirectory(SCRATCH_FILES_PATH,
-                                               new ExtractionOptions
-                                               {
-                                                   ExtractFullPath = true,
-                                                   Overwrite = true
-                                               });
-                    }
-                    stream.ThrowOnDispose = false;
                 }
                 VerifyFiles();
             }
@@ -77,7 +88,7 @@ namespace SharpCompress.Test
         {
             foreach (var path in testArchives)
             {
-                using (var stream = new NonDisposingStream(File.OpenRead(path), true))
+                using (var stream = NonDisposingStream.Create(File.OpenRead(path), true))
                 using (var archive = ArchiveFactory.Open(stream, readerOptions))
                 {
                     try
@@ -161,6 +172,38 @@ namespace SharpCompress.Test
             }
             VerifyFiles();
         }
+
+        protected void ArchiveOpenEntryVolumeIndexTest(int[][] results, ReaderOptions readerOptions = null, params string[] testArchives)
+        {
+            ArchiveOpenEntryVolumeIndexTest(results, readerOptions, testArchives.Select(x => Path.Combine(TEST_ARCHIVES_PATH, x)));
+        }
+
+
+        protected void ArchiveOpenEntryVolumeIndexTest(int[][] results, ReaderOptions readerOptions, IEnumerable<string> testArchives)
+        {
+            string[] src = testArchives.ToArray();
+            using (var archive = ArchiveFactory.Open(testArchives.Select(f => new FileInfo(f)), null))
+            {
+                try
+                {
+                    int idx = 0;
+                    foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
+                    {
+                        Assert.Equal(entry.VolumeIndexFirst, results[idx][0]);
+                        Assert.Equal(entry.VolumeIndexLast, results[idx][1]);
+                        Assert.Equal(src[entry.VolumeIndexFirst], archive.Volumes.First(a => a.Index == entry.VolumeIndexFirst).FileName);
+                        Assert.Equal(src[entry.VolumeIndexLast], archive.Volumes.First(a => a.Index == entry.VolumeIndexLast).FileName);
+
+                        idx++;
+                    }
+                }
+                catch (IndexOutOfRangeException)
+                {
+                    throw;
+                }
+            }
+        }
+
 
 
         protected void ArchiveFileRead(string testArchive, ReaderOptions readerOptions = null)

@@ -1,11 +1,20 @@
-﻿using System;
+using System;
 using System.IO;
 
 namespace SharpCompress.IO
 {
     public class NonDisposingStream : Stream
     {
-        public NonDisposingStream(Stream stream, bool throwOnDispose = false)
+        public static NonDisposingStream Create(Stream stream, bool throwOnDispose = false)
+        {
+            if (stream is NonDisposingStream nonDisposingStream && nonDisposingStream.ThrowOnDispose == throwOnDispose)
+            {
+                return nonDisposingStream;
+            }
+            return new NonDisposingStream(stream, throwOnDispose);
+        }
+
+        protected NonDisposingStream(Stream stream, bool throwOnDispose = false)
         {
             Stream = stream;
             ThrowOnDispose = throwOnDispose;

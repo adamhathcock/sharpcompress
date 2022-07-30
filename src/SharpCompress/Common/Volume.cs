@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using SharpCompress.IO;
 using SharpCompress.Readers;
@@ -9,12 +9,13 @@ namespace SharpCompress.Common
     {
         private readonly Stream _actualStream;
 
-        internal Volume(Stream stream, ReaderOptions readerOptions)
+        internal Volume(Stream stream, ReaderOptions readerOptions, int index = 0)
         {
+            Index = index;
             ReaderOptions = readerOptions;
             if (readerOptions.LeaveStreamOpen)
             {
-                stream = new NonDisposingStream(stream);
+                stream = NonDisposingStream.Create(stream);
             }
             _actualStream = stream;
         }
@@ -28,6 +29,10 @@ namespace SharpCompress.Common
         /// Only Rar 3.0 format and higher
         /// </summary>
         public virtual bool IsFirstVolume => true;
+
+        public virtual int Index { get; internal set; }
+
+        public string FileName { get { return (_actualStream as FileStream)?.Name!; } }
 
         /// <summary>
         /// RarArchive is part of a multi-part archive.

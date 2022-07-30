@@ -1,4 +1,4 @@
-﻿using System.IO;
+using System.IO;
 
 namespace SharpCompress.Common
 {
@@ -12,6 +12,7 @@ namespace SharpCompress.Common
         internal ArchiveEncoding ArchiveEncoding { get; }
 
         internal abstract string FilePartName { get; }
+        public int Index { get; set; }
 
         internal abstract Stream GetCompressedStream();
         internal abstract Stream? GetRawStream();

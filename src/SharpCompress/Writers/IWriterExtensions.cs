@@ -37,7 +37,7 @@ namespace SharpCompress.Writers
         public static void WriteAll(this IWriter writer,
                                     string directory,
                                     string searchPattern = "*",
-                                    Expression<Func<string, bool>>? fileSearchFunc = null,
+                                    Func<string, bool>? fileSearchFunc = null,
                                     SearchOption option = SearchOption.TopDirectoryOnly)
         {
             if (!Directory.Exists(directory))
@@ -49,7 +49,7 @@ namespace SharpCompress.Writers
             {
                 fileSearchFunc = n => true;
             }
-            foreach (var file in Directory.EnumerateFiles(directory, searchPattern, option).Where(fileSearchFunc.Compile()))
+            foreach (var file in Directory.EnumerateFiles(directory, searchPattern, option).Where(fileSearchFunc))
             {
                 writer.Write(file.Substring(directory.Length), file);
             }

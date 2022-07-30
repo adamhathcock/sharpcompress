@@ -85,7 +85,8 @@ namespace SharpCompress.Archives.SevenZip
         protected override IEnumerable<SevenZipVolume> LoadVolumes(SourceStream srcStream)
         {
             base.SrcStream.LoadAllParts(); //request all streams
-            return new SevenZipVolume(srcStream, ReaderOptions).AsEnumerable(); //simple single volume or split, multivolume not supported
+            int idx = 0;
+            return new SevenZipVolume(srcStream, ReaderOptions, idx++).AsEnumerable(); //simple single volume or split, multivolume not supported
         }
 
         public static bool IsSevenZipFile(string filePath)

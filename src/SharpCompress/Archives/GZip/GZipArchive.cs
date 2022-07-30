@@ -89,7 +89,8 @@ namespace SharpCompress.Archives.GZip
         protected override IEnumerable<GZipVolume> LoadVolumes(SourceStream srcStream)
         {
             srcStream.LoadAllParts();
-            return srcStream.Streams.Select(a => new GZipVolume(a, ReaderOptions));
+            int idx = 0;
+            return srcStream.Streams.Select(a => new GZipVolume(a, ReaderOptions, idx++));
         }
         public static bool IsGZipFile(string filePath)
         {

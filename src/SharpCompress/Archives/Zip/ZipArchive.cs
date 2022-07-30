@@ -168,6 +168,7 @@ namespace SharpCompress.Archives.Zip
             base.SrcStream.Position = 0;
 
             List<Stream> streams = base.SrcStream.Streams.ToList();
+            int idx = 0;
             if (streams.Count > 1) //test part 2 - true = multipart not split
             {
                 streams[1].Position += 4; //skip the POST_DATA_DESCRIPTOR to prevent an exception
@@ -182,12 +183,12 @@ namespace SharpCompress.Archives.Zip
                     streams.Add(tmp);
 
                     //streams[0].Position = 4; //skip the POST_DATA_DESCRIPTOR to prevent an exception
-                    return streams.Select(a => new ZipVolume(a, ReaderOptions));
+                    return streams.Select(a => new ZipVolume(a, ReaderOptions, idx++));
                 }
             }
 
             //split mode or single file
-            return new ZipVolume(base.SrcStream, ReaderOptions).AsEnumerable();
+            return new ZipVolume(base.SrcStream, ReaderOptions, idx++).AsEnumerable();
         }
 
         internal ZipArchive()

@@ -680,6 +680,28 @@ namespace SharpCompress.Test.Zip
                     firstStream.CopyTo(memoryStream);
                     Assert.Equal(199, memoryStream.Length);
                 }
+
+                var len1 = 0;
+                var buffer1 = new byte[firstEntry.Size + 256];
+
+                using (var firstStream = firstEntry.OpenEntryStream())
+                {
+                    len1 = firstStream.Read(buffer1, 0, buffer.Length);
+                }
+
+                Assert.Equal(199, len1);
+
+#if !NETFRAMEWORK && !NETSTANDARD2_0
+                var len2 = 0;
+                var buffer2 = new byte[firstEntry.Size + 256];
+
+                using (var firstStream = firstEntry.OpenEntryStream())
+                {
+                    len2 = firstStream.Read(buffer2.AsSpan());
+                }
+                Assert.Equal(len1, len2);
+                Assert.Equal(buffer1, buffer2);
+#endif
             }
         }
 
@@ -713,5 +735,24 @@ namespace SharpCompress.Test.Zip
             }
         }
 
+        [Fact]
+        public void Zip_Uncompressed_Skip_All()
+        {
+            var keys = new string[] { "Folder/File1.txt", "Folder/File2.rtf", "Folder2/File1.txt", "Folder2/File2.txt", "DEADBEEF" };
+            var zipPath = Path.Combine(TEST_ARCHIVES_PATH, "Zip.uncompressed.zip");
+            using (var stream = File.Open(zipPath, FileMode.Open, FileAccess.Read))
+            {
+                IArchive archive = ArchiveFactory.Open(stream);
+                IReader reader = archive.ExtractAllEntries();
+                int x = 0;
+                while (reader.MoveToNextEntry())
+                {
+                    Assert.Equal(keys[x], reader.Entry.Key);
+                    x++;
+                }
+
+                Assert.Equal(4, x);
+            }
+        }
     }
 }

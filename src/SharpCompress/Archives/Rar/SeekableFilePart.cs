@@ -1,4 +1,4 @@
-﻿using System.IO;
+using System.IO;
 using SharpCompress.Common.Rar;
 using SharpCompress.Common.Rar.Headers;
 
@@ -9,8 +9,8 @@ namespace SharpCompress.Archives.Rar
         private readonly Stream stream;
         private readonly string? password;
 
-        internal SeekableFilePart(MarkHeader mh, FileHeader fh, Stream stream, string? password)
-            : base(mh, fh)
+        internal SeekableFilePart(MarkHeader mh, FileHeader fh, int index, Stream stream, string? password)
+            : base(mh, fh, index)
         {
             this.stream = stream;
             this.password = password;

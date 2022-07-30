@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -14,9 +14,10 @@ namespace SharpCompress.Common.Rar
     public abstract class RarVolume : Volume
     {
         private readonly RarHeaderFactory _headerFactory;
+        internal int _maxCompressionAlgorithm;
 
-        internal RarVolume(StreamingMode mode, Stream stream, ReaderOptions options)
-            : base(stream, options)
+        internal RarVolume(StreamingMode mode, Stream stream, ReaderOptions options, int index = 0)
+            : base(stream, options, index)
         {
             _headerFactory = new RarHeaderFactory(mode, options);
         }
@@ -51,6 +52,8 @@ namespace SharpCompress.Common.Rar
                     case HeaderType.File:
                         {
                             var fh = (FileHeader)header;
+                            if (_maxCompressionAlgorithm < fh.CompressionAlgorithm)
+                                _maxCompressionAlgorithm = fh.CompressionAlgorithm;
                             yield return CreateFilePart(lastMarkHeader!, fh);
                         }
                         break;
@@ -108,6 +111,38 @@ namespace SharpCompress.Common.Rar
             {
                 EnsureArchiveHeaderLoaded();
                 return ArchiveHeader.IsSolid;
+            }
+        }
+
+        public int MinVersion
+        {
+            get
+            {
+                EnsureArchiveHeaderLoaded();
+                if (_maxCompressionAlgorithm >= 50)
+                    return 5; //5-6
+                else if (_maxCompressionAlgorithm >= 29)
+                    return 3; //3-4
+                else if (_maxCompressionAlgorithm >= 20)
+                    return 2; //2
+                else
+                    return 1;
+            }
+        }
+
+        public int MaxVersion
+        {
+            get
+            {
+                EnsureArchiveHeaderLoaded();
+                if (_maxCompressionAlgorithm >= 50)
+                    return 6; //5-6
+                else if (_maxCompressionAlgorithm >= 29)
+                    return 4; //3-4
+                else if (_maxCompressionAlgorithm >= 20)
+                    return 2; //2
+                else
+                    return 1;
             }
         }
     }
