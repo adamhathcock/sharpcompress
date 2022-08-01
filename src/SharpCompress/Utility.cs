@@ -170,10 +170,8 @@ namespace SharpCompress
             byte[] buffer = GetTransferByteArray();
             try
             {
-                var pos = source.Position;
                 int count = 0;
                 var len = source.Read(buffer, 0, buffer.Length);
-                source.Position = pos + len;
 
                 do
                 {
