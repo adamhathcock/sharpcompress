@@ -47,6 +47,9 @@ namespace SharpCompress.Common.Zip
                 {
                     _decompressionStream.Skip();
 
+                    // If we had TotalIn / TotalOut we could have used them
+                    Header.CompressedSize = _decompressionStream.Position;
+
                     if (_decompressionStream is DeflateStream deflateStream)
                     {
                         rewindableStream.Rewind(deflateStream.InputBuffer);
@@ -66,12 +69,26 @@ namespace SharpCompress.Common.Zip
                         br.ReadUInt32(); // CRC32
                         var compressed_size = br.ReadUInt32();
                         var uncompressed_size = br.ReadUInt32();
-                        if (compressed_size == size && compressed_size == uncompressed_size )
+                        var uncompressed_64bit = br.ReadInt64();
+
+                        long test_64bit = (long)uncompressed_size << 32 | (long)compressed_size;
+
+                        if( test_64bit == size && test_64bit == uncompressed_64bit )
                         {
-                            rewindableStream.Position -= 16;
+                            Header.CompressedSize = test_64bit;
+                            Header.UncompressedSize = uncompressed_64bit;
+                            rewindableStream.Position -= 24;
                             break;
                         }
-                        rewindableStream.Position -= 12;
+
+                        if (compressed_size == size && compressed_size == uncompressed_size )
+                        {
+                            Header.CompressedSize = compressed_size;
+                            Header.UncompressedSize = uncompressed_size;
+                            rewindableStream.Position -= 24;
+                            break;
+                        }
+                        rewindableStream.Position -= 20;
                     }
                 }
 

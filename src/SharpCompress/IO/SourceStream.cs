@@ -143,9 +143,11 @@ namespace SharpCompress.IO
 
                 if (!IsVolumes && count != 0 && Current.Position == Current.Length)
                 {
-                    _prevSize += Current.Length;
+                    var length = Current.Length;
+                    
                     if (!SetStream(_stream + 1)) //will load next file if present
                         break;
+                    _prevSize += length;
                     Current.Seek(0, SeekOrigin.Begin);
                 }
             }
