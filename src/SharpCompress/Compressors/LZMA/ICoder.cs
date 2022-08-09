@@ -25,7 +25,7 @@ namespace SharpCompress.Compressors.LZMA
         }
     }
 
-    internal interface ICodeProgress
+    public interface ICodeProgress
     {
         /// <summary>
         /// Callback progress.
