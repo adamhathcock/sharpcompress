@@ -15,6 +15,36 @@ namespace SharpCompress.Archives
 {
     public static class ArchiveFactory
     {
+        private static readonly HashSet<IArchiveFactory> archiveFactories;
+
+        /// <summary>
+        /// Gets the collection of registered archive factories
+        /// </summary>
+        public static IReadOnlyCollection<IArchiveFactory> Factories => archiveFactories;
+
+        static ArchiveFactory()
+        {
+            archiveFactories = new HashSet<IArchiveFactory>();
+
+            RegisterFactory(new Zip.ZipArchiveFactory());
+            RegisterFactory(new Rar.RarArchiveFactory());
+            RegisterFactory(new SevenZip.SevenZipArchiveFactory());
+            RegisterFactory(new GZip.GZipArchiveFactory());
+            RegisterFactory(new Tar.TarArchiveFactory());
+        }
+
+        /// <summary>
+        /// Registers an archive factory.
+        /// </summary>
+        /// <param name="factory">The factory to register.</param>
+        /// <exception cref="ArgumentNullException"><paramref name="factory"/> must not be null.</exception>
+        public static void RegisterFactory(IArchiveFactory factory)
+        {
+            factory.CheckNotNull(nameof(factory));
+
+            archiveFactories.Add(factory);
+        }
+
         /// <summary>
         /// Opens an Archive for random access
         /// </summary>
@@ -28,28 +58,10 @@ namespace SharpCompress.Archives
             {
                 throw new ArgumentException("Stream should be readable and seekable");
             }
+
             readerOptions ??= new ReaderOptions();
 
-            ArchiveType? type;
-            IsArchive(stream, out type); //test and reset stream position
-
-            if (type != null)
-            {
-                switch (type.Value)
-                {
-                    case ArchiveType.Zip:
-                        return ZipArchive.Open(stream, readerOptions);
-                    case ArchiveType.SevenZip:
-                        return SevenZipArchive.Open(stream, readerOptions);
-                    case ArchiveType.GZip:
-                        return GZipArchive.Open(stream, readerOptions);
-                    case ArchiveType.Rar:
-                        return RarArchive.Open(stream, readerOptions);
-                    case ArchiveType.Tar:
-                        return TarArchive.Open(stream, readerOptions);
-                }
-            }
-            throw new InvalidOperationException("Cannot determine compressed stream type. Supported Archive Formats: Zip, GZip, Tar, Rar, 7Zip, LZip");
+            return FindArchiveFactory(stream).Open(stream, readerOptions);
         }
 
         public static IWritableArchive Create(ArchiveType type)
@@ -84,29 +96,7 @@ namespace SharpCompress.Archives
             fileInfo.CheckNotNull(nameof(fileInfo));
             options ??= new ReaderOptions { LeaveStreamOpen = false };
 
-            ArchiveType? type;
-            using (Stream stream = fileInfo.OpenRead())
-            {
-                IsArchive(stream, out type); //test and reset stream position
-
-                if (type != null)
-                {
-                    switch (type.Value)
-                    {
-                        case ArchiveType.Zip:
-                            return ZipArchive.Open(fileInfo, options);
-                        case ArchiveType.SevenZip:
-                            return SevenZipArchive.Open(fileInfo, options);
-                        case ArchiveType.GZip:
-                            return GZipArchive.Open(fileInfo, options);
-                        case ArchiveType.Rar:
-                            return RarArchive.Open(fileInfo, options);
-                        case ArchiveType.Tar:
-                            return TarArchive.Open(fileInfo, options);
-                    }
-                }
-            }
-            throw new InvalidOperationException("Cannot determine compressed stream type. Supported Archive Formats: Zip, GZip, Tar, Rar, 7Zip");
+            return FindArchiveFactory(fileInfo).Open(fileInfo, options);
         }
 
         /// <summary>
@@ -124,31 +114,10 @@ namespace SharpCompress.Archives
             if (files.Length == 1)
                 return Open(fileInfo, options);
 
-
             fileInfo.CheckNotNull(nameof(fileInfo));
             options ??= new ReaderOptions { LeaveStreamOpen = false };
 
-            ArchiveType? type;
-            using (Stream stream = fileInfo.OpenRead())
-                IsArchive(stream, out type); //test and reset stream position
-
-            if (type != null)
-            {
-                switch (type.Value)
-                {
-                    case ArchiveType.Zip:
-                        return ZipArchive.Open(files, options);
-                    case ArchiveType.SevenZip:
-                        return SevenZipArchive.Open(files, options);
-                    case ArchiveType.GZip:
-                        return GZipArchive.Open(files, options);
-                    case ArchiveType.Rar:
-                        return RarArchive.Open(files, options);
-                    case ArchiveType.Tar:
-                        return TarArchive.Open(files, options);
-                }
-            }
-            throw new InvalidOperationException("Cannot determine compressed stream type. Supported Archive Formats: Zip, GZip, Tar, Rar, 7Zip");
+            return FindArchiveFactory(fileInfo).Open(fileInfos, options);
         }
 
         /// <summary>
@@ -159,36 +128,18 @@ namespace SharpCompress.Archives
         public static IArchive Open(IEnumerable<Stream> streams, ReaderOptions? options = null)
         {
             streams.CheckNotNull(nameof(streams));
-            if (streams.Count() == 0)
+            Stream[] streamsArray = streams.ToArray();
+            if (streamsArray.Length == 0)
                 throw new InvalidOperationException("No streams");
-            if (streams.Count() == 1)
-                return Open(streams.First(), options);
+            Stream firstStream = streamsArray[0];
+            if (streamsArray.Length == 1)
+                return Open(firstStream, options);
 
-
+            firstStream.CheckNotNull(nameof(firstStream));
             options ??= new ReaderOptions();
 
-            ArchiveType? type;
-            using (Stream stream = streams.First())
-                IsArchive(stream, out type); //test and reset stream position
-
-            if (type != null)
-            {
-                switch (type.Value)
-                {
-                    case ArchiveType.Zip:
-                        return ZipArchive.Open(streams, options);
-                    case ArchiveType.SevenZip:
-                        return SevenZipArchive.Open(streams, options);
-                    case ArchiveType.GZip:
-                        return GZipArchive.Open(streams, options);
-                    case ArchiveType.Rar:
-                        return RarArchive.Open(streams, options);
-                    case ArchiveType.Tar:
-                        return TarArchive.Open(streams, options);
-                }
-            }
-            throw new InvalidOperationException("Cannot determine compressed stream type. Supported Archive Formats: Zip, GZip, Tar, Rar, 7Zip");
-        }
+            return FindArchiveFactory(firstStream).Open(streamsArray, options);            
+        }        
 
         /// <summary>
         /// Extract to specific directory, retaining filename
@@ -201,6 +152,44 @@ namespace SharpCompress.Archives
             {
                 entry.WriteToDirectory(destinationDirectory, options);
             }
+        }
+
+        private static IArchiveFactory FindArchiveFactory(FileInfo finfo)
+        {
+            finfo.CheckNotNull(nameof(finfo));
+            using (Stream stream = finfo.OpenRead())
+            {
+                return FindArchiveFactory(stream);
+            }
+        }
+
+        private static IArchiveFactory FindArchiveFactory(Stream stream)
+        {
+            stream.CheckNotNull(nameof(stream));
+            if (!stream.CanRead || !stream.CanSeek)
+            {
+                throw new ArgumentException("Stream should be readable and seekable");
+            }
+
+            long startPosition = stream.Position;
+
+            foreach (var factory in Factories)
+            {
+                stream.Seek(startPosition, SeekOrigin.Begin);
+
+                if (factory.IsArchive(stream))
+                {
+                    stream.Seek(startPosition, SeekOrigin.Begin);
+
+                    return factory;
+                }
+            }
+
+            var extensions = Factories
+                .Select(item => item.Name)
+                .Aggregate((a, b) => a + ", " + b);
+
+            throw new InvalidOperationException($"Cannot determine compressed stream type. Supported Archive Formats: {extensions}");
         }
 
         public static bool IsArchive(string filePath, out ArchiveType? type)
