@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.IO;
 using SharpCompress.Common.Zip.Headers;
 using SharpCompress.IO;
@@ -28,6 +28,7 @@ namespace SharpCompress.Common.Zip
             {
                 ZipHeader? header;
                 BinaryReader reader = new BinaryReader(rewindableStream);
+                uint headerBytes = 0;
                 if (_lastEntryHeader != null &&
                     (FlagUtility.HasFlag(_lastEntryHeader.Flags, HeaderFlags.UsePostDataDescriptor) || _lastEntryHeader.IsZip64))
                 {
@@ -39,15 +40,37 @@ namespace SharpCompress.Common.Zip
                         crc = reader.ReadUInt32();
                     }
                     _lastEntryHeader.Crc = crc;
-                    _lastEntryHeader.CompressedSize = reader.ReadUInt32();
-                    _lastEntryHeader.UncompressedSize = reader.ReadUInt32();
+
+                    // The DataDescriptor can be either 64bit or 32bit
+                    var compressed_size = reader.ReadUInt32();
+                    var uncompressed_size = reader.ReadUInt32();
+
+                    // Check if we have header or 64bit DataDescriptor
+                    headerBytes = reader.ReadUInt32();
+                    bool test_header = !(headerBytes == 0x04034b50 || headerBytes == 0x02014b50);
+
+                    long test_64bit = (long)uncompressed_size << 32 | (long)compressed_size;
+                    if ( test_64bit == _lastEntryHeader.CompressedSize && test_header )
+                    {
+                        _lastEntryHeader.UncompressedSize = (long)reader.ReadUInt32() << 32 | (long)headerBytes;
+                        headerBytes = reader.ReadUInt32();
+                    }
+                    else
+                    {
+                        _lastEntryHeader.UncompressedSize = uncompressed_size;
+                    }
+
                     if (pos.HasValue)
                     {
                         _lastEntryHeader.DataStartPosition = pos - _lastEntryHeader.CompressedSize;
                     }
                 }
+                else
+                {
+                    headerBytes = reader.ReadUInt32();
+                }
+
                 _lastEntryHeader = null;
-                uint headerBytes = reader.ReadUInt32();
                 header = ReadHeader(headerBytes, reader);
                 if (header is null)
                 {

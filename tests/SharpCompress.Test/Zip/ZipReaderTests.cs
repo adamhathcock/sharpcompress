@@ -401,8 +401,6 @@ namespace SharpCompress.Test.Zip
             }
         }
 
-
-
         [Fact]
         public void Zip_Uncompressed_Skip_All()
         {
@@ -415,5 +413,26 @@ namespace SharpCompress.Test.Zip
                 }
             }
         }
+
+        [Fact]
+        public void Zip_Uncompressed_64bit()
+        {
+            var zipPath = Path.Combine(TEST_ARCHIVES_PATH, "64bitstream.zip.7z");
+            using (var stream = File.Open(zipPath, FileMode.Open, FileAccess.Read))
+            {
+                var archive = Archives.ArchiveFactory.Open(stream);
+                var reader = archive.ExtractAllEntries();
+                reader.MoveToNextEntry();
+                var zipReader = ZipReader.Open(reader.OpenEntryStream());
+                var x = 0;
+                while (zipReader.MoveToNextEntry())
+                {
+                    x++;
+                }
+
+                Assert.Equal(4, x);
+            }
+        }
+
     }
 }
