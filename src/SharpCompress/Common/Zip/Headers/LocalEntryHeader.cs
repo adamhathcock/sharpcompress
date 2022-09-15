@@ -45,7 +45,7 @@ namespace SharpCompress.Common.Zip.Headers
             LoadExtra(extra);
 
             var unicodePathExtra = Extra.FirstOrDefault(u => u.Type == ExtraDataType.UnicodePathExtraField);
-            if (unicodePathExtra != null)
+            if (unicodePathExtra != null && ArchiveEncoding.Forced == null)
             {
                 Name = ((ExtraUnicodePathExtraField)unicodePathExtra).UnicodeName;
             }

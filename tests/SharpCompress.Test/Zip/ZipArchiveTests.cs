@@ -754,5 +754,37 @@ namespace SharpCompress.Test.Zip
                 Assert.Equal(4, x);
             }
         }
+
+        [Fact]
+        public void Zip_Forced_Ignores_UnicodePathExtra()
+        {
+            var zipPath = Path.Combine(TEST_ARCHIVES_PATH, "Zip.UnicodePathExtra.zip");
+            using (var stream = File.Open(zipPath, FileMode.Open, FileAccess.Read))
+            {
+                IArchive archive = ArchiveFactory.Open(stream, new ReaderOptions
+                {
+                    ArchiveEncoding = new ArchiveEncoding
+                    {
+                        Default = Encoding.GetEncoding("shift_jis"),
+                    }
+                });
+                IReader reader = archive.ExtractAllEntries();
+                reader.MoveToNextEntry();
+                Assert.Equal("궖귛궖귙귪궖귗귪궖귙_wav.frq", reader.Entry.Key);
+            }
+            using (var stream = File.Open(zipPath, FileMode.Open, FileAccess.Read))
+            {
+                IArchive archive = ArchiveFactory.Open(stream, new ReaderOptions
+                {
+                    ArchiveEncoding = new ArchiveEncoding
+                    {
+                        Forced = Encoding.GetEncoding("shift_jis"),
+                    }
+                });
+                IReader reader = archive.ExtractAllEntries();
+                reader.MoveToNextEntry();
+                Assert.Equal("きょきゅんきゃんきゅ_wav.frq", reader.Entry.Key);
+            }
+        }
     }
 }
