@@ -63,7 +63,7 @@ namespace SharpCompress.Common.Rar
 						    if (fh.FileName == "CMT")
 						    {
 							    var part = CreateFilePart(lastMarkHeader!, fh);
-							    var buffer = new byte[fh.CompressedSize - 1];
+							    var buffer = new byte[fh.CompressedSize];
 							    part.GetCompressedStream().Read(buffer, 0, buffer.Length);
 							    Comment = System.Text.Encoding.UTF8.GetString(buffer);
 						    }
