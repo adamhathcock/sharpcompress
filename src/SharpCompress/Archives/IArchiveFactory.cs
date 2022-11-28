@@ -28,7 +28,13 @@ namespace SharpCompress.Archives
         string Name { get; }
 
         /// <summary>
-        /// returns the extensions typically used by this archive type.
+        /// Indicates whether the archive supports reading entries in a random order,
+        /// or needs to read the entries sequentially using <see cref="IReader"/>.
+        /// </summary>
+        bool SupportsRandomAccess { get; }
+
+        /// <summary>
+        /// Returns the extensions typically used by this archive type.
         /// </summary>
         /// <returns></returns>
         IEnumerable<string> GetSupportedExtensions();

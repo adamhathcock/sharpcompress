@@ -13,6 +13,9 @@ namespace SharpCompress.Archives.Zip
         public string Name => "Zip";
 
         /// <inheritdoc/>
+        public bool SupportsRandomAccess => true;
+
+        /// <inheritdoc/>
         public IEnumerable<string> GetSupportedExtensions()
         {
             yield return "zip";

@@ -13,6 +13,9 @@ namespace SharpCompress.Archives.SevenZip
         public string Name => "7Zip";
 
         /// <inheritdoc/>
+        public bool SupportsRandomAccess => true;
+
+        /// <inheritdoc/>
         public IEnumerable<string> GetSupportedExtensions()
         {
             yield return "7z";

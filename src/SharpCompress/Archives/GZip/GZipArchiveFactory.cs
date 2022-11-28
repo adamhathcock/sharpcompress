@@ -13,6 +13,9 @@ namespace SharpCompress.Archives.GZip
         public string Name => "GZip";
 
         /// <inheritdoc/>
+        public bool SupportsRandomAccess => false;
+
+        /// <inheritdoc/>
         public IEnumerable<string> GetSupportedExtensions()
         {
             yield return "gz";

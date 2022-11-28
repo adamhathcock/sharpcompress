@@ -13,6 +13,9 @@ namespace SharpCompress.Archives.Rar
         public string Name => "Rar";
 
         /// <inheritdoc/>
+        public bool SupportsRandomAccess => true;
+
+        /// <inheritdoc/>
         public IEnumerable<string> GetSupportedExtensions()
         {
             yield return "rar";

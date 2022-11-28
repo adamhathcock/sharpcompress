@@ -13,9 +13,13 @@ namespace SharpCompress.Archives.Tar
         public string Name => "Tar";
 
         /// <inheritdoc/>
+        public bool SupportsRandomAccess => false;
+
+        /// <inheritdoc/>
         public IEnumerable<string> GetSupportedExtensions()
         {
             yield return "tar";
+            yield return "tgz";
         }
 
         /// <inheritdoc/>
