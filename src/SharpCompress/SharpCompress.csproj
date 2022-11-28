@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <AssemblyTitle>SharpCompress - Pure C# Decompression/Compression</AssemblyTitle>
     <NeutralLanguage>en-US</NeutralLanguage>
@@ -15,7 +15,8 @@
     <PackageId>SharpCompress</PackageId>
     <PackageTags>rar;unrar;zip;unzip;bzip2;gzip;tar;7zip;lzip;xz</PackageTags>
     <PackageProjectUrl>https://github.com/adamhathcock/sharpcompress</PackageProjectUrl>
-    <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <Copyright>Copyright (c) 2014  Adam Hathcock</Copyright>
     <GenerateAssemblyTitleAttribute>false</GenerateAssemblyTitleAttribute>
     <GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>
     <Description>SharpCompress is a compression library for NET Standard 2.0/2.1/NET 5.0 that can unrar, decompress 7zip, decompress xz, zip/unzip, tar/untar lzip/unlzip, bzip2/unbzip2 and gzip/ungzip with forward-only reading and file random access APIs. Write support for zip/tar/bzip2/gzip is implemented.</Description>
@@ -29,10 +30,7 @@
     <RunAnalyzersDuringLiveAnalysis>False</RunAnalyzersDuringLiveAnalysis>
     <RunAnalyzersDuringBuild>False</RunAnalyzersDuringBuild>
   </PropertyGroup>
-
-  <ItemGroup>
-    <None Include="..\..\LICENSE.txt" Pack="true" Visible="false" PackagePath=""/>
-  </ItemGroup>
+  
   <ItemGroup>
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1" PrivateAssets="All" />
   </ItemGroup>
