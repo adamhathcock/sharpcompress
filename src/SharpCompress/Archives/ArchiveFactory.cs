@@ -15,36 +15,6 @@ namespace SharpCompress.Archives
 {
     public static class ArchiveFactory
     {
-        private static readonly HashSet<IArchiveFactory> archiveFactories;
-
-        /// <summary>
-        /// Gets the collection of registered archive factories
-        /// </summary>
-        public static IReadOnlyCollection<IArchiveFactory> Factories => archiveFactories;
-
-        static ArchiveFactory()
-        {
-            archiveFactories = new HashSet<IArchiveFactory>();
-
-            RegisterFactory(new Zip.ZipArchiveFactory());
-            RegisterFactory(new Rar.RarArchiveFactory());
-            RegisterFactory(new SevenZip.SevenZipArchiveFactory());
-            RegisterFactory(new GZip.GZipArchiveFactory());
-            RegisterFactory(new Tar.TarArchiveFactory());
-        }
-
-        /// <summary>
-        /// Registers an archive factory.
-        /// </summary>
-        /// <param name="factory">The factory to register.</param>
-        /// <exception cref="ArgumentNullException"><paramref name="factory"/> must not be null.</exception>
-        public static void RegisterFactory(IArchiveFactory factory)
-        {
-            factory.CheckNotNull(nameof(factory));
-
-            archiveFactories.Add(factory);
-        }
-
         /// <summary>
         /// Opens an Archive for random access
         /// </summary>
@@ -171,9 +141,11 @@ namespace SharpCompress.Archives
                 throw new ArgumentException("Stream should be readable and seekable");
             }
 
+            var factores = Factories.Factory.Factories.OfType<IArchiveFactory>();
+
             long startPosition = stream.Position;
 
-            foreach (var factory in Factories)
+            foreach (var factory in factores)
             {
                 stream.Seek(startPosition, SeekOrigin.Begin);
 
@@ -185,9 +157,7 @@ namespace SharpCompress.Archives
                 }
             }
 
-            var extensions = Factories
-                .Select(item => item.Name)
-                .Aggregate((a, b) => a + ", " + b);
+            var extensions = string.Join(", ", factores.Select(item => item.Name));
 
             throw new InvalidOperationException($"Cannot determine compressed stream type. Supported Archive Formats: {extensions}");
         }
@@ -208,41 +178,21 @@ namespace SharpCompress.Archives
             {
                 throw new ArgumentException("Stream should be readable and seekable");
             }
-            if (ZipArchive.IsZipFile(stream, null))
-                type = ArchiveType.Zip;
-            stream.Seek(0, SeekOrigin.Begin);
-            if (type == null)
+
+            var startPosition = stream.Position;
+
+            foreach(var factory in Factories.Factory.Factories)
             {
-                if (SevenZipArchive.IsSevenZipFile(stream))
-                    type = ArchiveType.SevenZip;
-                stream.Seek(0, SeekOrigin.Begin);
-            }
-            if (type == null)
-            {
-                if (GZipArchive.IsGZipFile(stream))
-                    type = ArchiveType.GZip;
-                stream.Seek(0, SeekOrigin.Begin);
-            }
-            if (type == null)
-            {
-                if (RarArchive.IsRarFile(stream))
-                    type = ArchiveType.Rar;
-                stream.Seek(0, SeekOrigin.Begin);
-            }
-            if (type == null)
-            {
-                if (TarArchive.IsTarFile(stream))
-                    type = ArchiveType.Tar;
-                stream.Seek(0, SeekOrigin.Begin);
-            }
-            if (type == null) //test multipartzip as it could find zips in other non compressed archive types?
-            {
-                if (ZipArchive.IsZipMulti(stream)) //test the zip (last) file of a multipart zip
-                    type = ArchiveType.Zip;
-                stream.Seek(0, SeekOrigin.Begin);
+                stream.Position = startPosition;
+
+                if (factory.IsArchive(stream, null))
+                {
+                    type = factory.KnownArchiveType;
+                    return true;
+                }
             }
 
-            return type != null;
+            return false;
         }
 
         /// <summary>

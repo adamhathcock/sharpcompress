@@ -2,27 +2,39 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-
+using SharpCompress.Archives;
+using SharpCompress.Archives.SevenZip;
+using SharpCompress.Common;
+using SharpCompress.IO;
 using SharpCompress.Readers;
 
-namespace SharpCompress.Archives.SevenZip
+namespace SharpCompress.Factories
 {
-    public class SevenZipArchiveFactory : IArchiveFactory
+    public class SevenZipFactory : Factory, IArchiveFactory
     {
-        /// <inheritdoc/>
-        public string Name => "7Zip";
+        #region IFactory
 
         /// <inheritdoc/>
-        public IEnumerable<string> GetSupportedExtensions()
+        public override string Name => "7Zip";
+
+        /// <inheritdoc/>
+        public override ArchiveType? KnownArchiveType => ArchiveType.SevenZip;
+
+        /// <inheritdoc/>
+        public override IEnumerable<string> GetSupportedExtensions()
         {
             yield return "7z";
         }
 
         /// <inheritdoc/>
-        public bool IsArchive(Stream stream, string? password = null)
+        public override bool IsArchive(Stream stream, string? password = null)
         {
             return SevenZipArchive.IsSevenZipFile(stream);
         }
+
+        #endregion
+
+        #region IArchiveFactory
 
         /// <inheritdoc/>
         public IArchive Open(Stream stream, ReaderOptions? readerOptions = null)
@@ -46,6 +58,18 @@ namespace SharpCompress.Archives.SevenZip
         public IArchive Open(IEnumerable<FileInfo> fileInfos, ReaderOptions? readerOptions = null)
         {
             return SevenZipArchive.Open(fileInfos, readerOptions);
+        }        
+
+        #endregion
+
+        #region reader
+
+        internal override bool TryOpenReader(RewindableStream rewindableStream, ReaderOptions options, out IReader? reader)
+        {
+            reader = null;
+            return false;
         }
+        
+        #endregion
     }
 }
