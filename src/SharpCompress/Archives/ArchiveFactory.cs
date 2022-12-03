@@ -8,6 +8,7 @@ using SharpCompress.Archives.SevenZip;
 using SharpCompress.Archives.Tar;
 using SharpCompress.Archives.Zip;
 using SharpCompress.Common;
+using SharpCompress.Factories;
 using SharpCompress.IO;
 using SharpCompress.Readers;
 
@@ -23,15 +24,9 @@ namespace SharpCompress.Archives
         /// <returns></returns>
         public static IArchive Open(Stream stream, ReaderOptions? readerOptions = null)
         {
-            stream.CheckNotNull(nameof(stream));
-            if (!stream.CanRead || !stream.CanSeek)
-            {
-                throw new ArgumentException("Stream should be readable and seekable");
-            }
-
             readerOptions ??= new ReaderOptions();
 
-            return FindArchiveFactory(stream).Open(stream, readerOptions);
+            return FindFactory<IArchiveFactory>(stream).Open(stream, readerOptions);
         }
 
         public static IWritableArchive Create(ArchiveType type)
@@ -62,11 +57,10 @@ namespace SharpCompress.Archives
         /// <param name="fileInfo"></param>
         /// <param name="options"></param>
         public static IArchive Open(FileInfo fileInfo, ReaderOptions? options = null)
-        {
-            fileInfo.CheckNotNull(nameof(fileInfo));
+        {            
             options ??= new ReaderOptions { LeaveStreamOpen = false };
 
-            return FindArchiveFactory(fileInfo).Open(fileInfo, options);
+            return FindFactory<IArchiveFactory>(fileInfo).Open(fileInfo, options);
         }
 
         /// <summary>
@@ -87,7 +81,7 @@ namespace SharpCompress.Archives
             fileInfo.CheckNotNull(nameof(fileInfo));
             options ??= new ReaderOptions { LeaveStreamOpen = false };
 
-            return FindArchiveFactory(fileInfo).Open(fileInfos, options);
+            return FindFactory<IMultiArchiveFactory>(fileInfo).Open(fileInfos, options);
         }
 
         /// <summary>
@@ -108,7 +102,7 @@ namespace SharpCompress.Archives
             firstStream.CheckNotNull(nameof(firstStream));
             options ??= new ReaderOptions();
 
-            return FindArchiveFactory(firstStream).Open(streamsArray, options);            
+            return FindFactory<IMultiArchiveFactory>(firstStream).Open(streamsArray, options);            
         }        
 
         /// <summary>
@@ -124,16 +118,18 @@ namespace SharpCompress.Archives
             }
         }
 
-        private static IArchiveFactory FindArchiveFactory(FileInfo finfo)
+        private static T FindFactory<T>(FileInfo finfo)
+            where T : IFactory
         {
             finfo.CheckNotNull(nameof(finfo));
             using (Stream stream = finfo.OpenRead())
             {
-                return FindArchiveFactory(stream);
+                return FindFactory<T>(stream);
             }
         }
 
-        private static IArchiveFactory FindArchiveFactory(Stream stream)
+        private static T FindFactory<T>(Stream stream)
+            where T: IFactory
         {
             stream.CheckNotNull(nameof(stream));
             if (!stream.CanRead || !stream.CanSeek)
@@ -141,7 +137,7 @@ namespace SharpCompress.Archives
                 throw new ArgumentException("Stream should be readable and seekable");
             }
 
-            var factores = Factories.Factory.Factories.OfType<IArchiveFactory>();
+            var factores = Factories.Factory.Factories.OfType<T>();
 
             long startPosition = stream.Position;
 
@@ -214,21 +210,21 @@ namespace SharpCompress.Archives
         public static IEnumerable<FileInfo> GetFileParts(FileInfo part1)
         {
             part1.CheckNotNull(nameof(part1));
-            yield return part1;
-            int i = 1;
+            yield return part1;            
 
-            FileInfo? part = RarArchiveVolumeFactory.GetFilePart(i++, part1);
-            if (part != null)
+            foreach(var factory in Factory.Factories.OfType<IFactory>())
             {
-                yield return part;
-                while ((part = RarArchiveVolumeFactory.GetFilePart(i++, part1)) != null) //tests split too
+                int i = 1;
+                FileInfo? part = factory.GetFilePart(i++, part1);
+
+                if (part != null)
+                {
                     yield return part;
-            }
-            else
-            {
-                i = 1;
-                while ((part = ZipArchiveVolumeFactory.GetFilePart(i++, part1)) != null) //tests split too
-                    yield return part;
+                    while ((part = factory.GetFilePart(i++, part1)) != null) //tests split too
+                        yield return part;
+
+                    yield break;
+                }
             }
         }
     }

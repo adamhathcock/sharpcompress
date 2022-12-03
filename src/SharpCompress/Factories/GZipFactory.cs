@@ -17,7 +17,7 @@ using SharpCompress.Writers.GZip;
 
 namespace SharpCompress.Factories
 {
-    public class GZipFactory : Factory, IArchiveFactory, IReaderFactory, IWriterFactory
+    public class GZipFactory : Factory, IArchiveFactory, IMultiArchiveFactory, IReaderFactory, IWriterFactory
     {
         #region IFactory
 
@@ -54,6 +54,10 @@ namespace SharpCompress.Factories
         {
             return GZipArchive.Open(fileInfo, readerOptions);
         }
+
+        #endregion
+
+        #region IMultiArchiveFactory        
 
         /// <inheritdoc/>
         public IArchive Open(IEnumerable<Stream> streams, ReaderOptions? readerOptions = null)

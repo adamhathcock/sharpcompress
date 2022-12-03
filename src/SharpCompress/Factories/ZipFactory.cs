@@ -15,7 +15,7 @@ using SharpCompress.Writers.Zip;
 
 namespace SharpCompress.Factories
 {
-    public class ZipFactory : Factory, IArchiveFactory, IReaderFactory, IWriterFactory
+    public class ZipFactory : Factory, IArchiveFactory, IMultiArchiveFactory, IReaderFactory, IWriterFactory
     {
         #region IFactory
 
@@ -59,6 +59,12 @@ namespace SharpCompress.Factories
             return false;
         }
 
+        /// <inheritdoc/>
+        public override FileInfo? GetFilePart(int index, FileInfo part1)
+        {
+            return ZipArchiveVolumeFactory.GetFilePart(index, part1);
+        }
+
         #endregion
 
         #region IArchiveFactory
@@ -74,6 +80,10 @@ namespace SharpCompress.Factories
         {
             return ZipArchive.Open(fileInfo, readerOptions);
         }
+
+        #endregion
+
+        #region IMultiArchiveFactory        
 
         /// <inheritdoc/>
         public IArchive Open(IEnumerable<Stream> streams, ReaderOptions? readerOptions = null)

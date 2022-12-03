@@ -2,8 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+
 using SharpCompress.Archives;
 using SharpCompress.Archives.Tar;
+using SharpCompress.Archives.Zip;
 using SharpCompress.Common;
 using SharpCompress.Compressors;
 using SharpCompress.Compressors.BZip2;
@@ -17,7 +19,7 @@ using SharpCompress.Writers.Tar;
 
 namespace SharpCompress.Factories
 {
-    public class TarFactory : Factory, IArchiveFactory, IReaderFactory, IWriterFactory
+    public class TarFactory : Factory, IArchiveFactory, IMultiArchiveFactory, IReaderFactory, IWriterFactory
     {
         #region IFactory
 
@@ -55,6 +57,10 @@ namespace SharpCompress.Factories
         {
             return TarArchive.Open(fileInfo, readerOptions);
         }
+
+        #endregion
+
+        #region IMultiArchiveFactory
 
         /// <inheritdoc/>
         public IArchive Open(IEnumerable<Stream> streams, ReaderOptions? readerOptions = null)

@@ -55,6 +55,12 @@ namespace SharpCompress.Factories
         /// <inheritdoc/>
         public abstract bool IsArchive(Stream stream, string? password = null);
 
+        /// <inheritdoc/>
+        public virtual FileInfo? GetFilePart(int index, FileInfo part1)
+        {
+            return null;
+        }
+
         /// <summary>
         /// Tries to open an <see cref="IReader"/> from a <see cref="RewindableStream"/>.
         /// </summary>

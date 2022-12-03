@@ -40,6 +40,16 @@ namespace SharpCompress.Factories
         /// <param name="stream">A stream, pointing to the beginning of the archive.</param>
         /// <param name="password">optional password</param>
         bool IsArchive(Stream stream, string? password = null);
+
+        /// <summary>
+        /// From a passed in archive (zip, rar, 7z, 001), return all parts.
+        /// </summary>
+        /// <param name="part1">Path to the first part.</param>
+        /// <returns>
+        /// The path to the requested part,
+        /// or NULL if the part does not exist.
+        /// </returns>
+        FileInfo? GetFilePart(int index, FileInfo part1);
     }
 }
 

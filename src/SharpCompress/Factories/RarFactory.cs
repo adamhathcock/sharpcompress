@@ -11,7 +11,7 @@ using SharpCompress.Readers.Rar;
 
 namespace SharpCompress.Factories
 {
-    public class RarFactory : Factory, IArchiveFactory, IReaderFactory
+    public class RarFactory : Factory, IArchiveFactory, IMultiArchiveFactory, IReaderFactory
     {
         #region IArchive
 
@@ -34,9 +34,15 @@ namespace SharpCompress.Factories
             return RarArchive.IsRarFile(stream);
         }
 
+        /// <inheritdoc/>
+        public override FileInfo? GetFilePart(int index, FileInfo part1)
+        {
+            return RarArchiveVolumeFactory.GetFilePart(index, part1);
+        }
+
         #endregion
 
-        #region IArchiveFactory
+        #region IArchiveFactory        
 
         /// <inheritdoc/>
         public IArchive Open(Stream stream, ReaderOptions? readerOptions = null)
@@ -49,6 +55,10 @@ namespace SharpCompress.Factories
         {
             return RarArchive.Open(fileInfo, readerOptions);
         }
+
+        #endregion
+
+        #region IMultiArchiveFactory
 
         /// <inheritdoc/>
         public IArchive Open(IEnumerable<Stream> streams, ReaderOptions? readerOptions = null)

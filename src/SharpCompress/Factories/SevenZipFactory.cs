@@ -5,12 +5,13 @@ using System.Linq;
 using SharpCompress.Archives;
 using SharpCompress.Archives.SevenZip;
 using SharpCompress.Common;
+using SharpCompress.Common.SevenZip;
 using SharpCompress.IO;
 using SharpCompress.Readers;
 
 namespace SharpCompress.Factories
 {
-    public class SevenZipFactory : Factory, IArchiveFactory
+    public class SevenZipFactory : Factory, IArchiveFactory, IMultiArchiveFactory
     {
         #region IFactory
 
@@ -34,7 +35,7 @@ namespace SharpCompress.Factories
 
         #endregion
 
-        #region IArchiveFactory
+        #region IArchiveFactory        
 
         /// <inheritdoc/>
         public IArchive Open(Stream stream, ReaderOptions? readerOptions = null)
@@ -47,6 +48,10 @@ namespace SharpCompress.Factories
         {
             return SevenZipArchive.Open(fileInfo, readerOptions);
         }
+
+        #endregion
+
+        #region IMultiArchiveFactory
 
         /// <inheritdoc/>
         public IArchive Open(IEnumerable<Stream> streams, ReaderOptions? readerOptions = null)
