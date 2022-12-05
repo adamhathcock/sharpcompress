@@ -24,15 +24,15 @@ namespace SharpCompress.Factories
         string Name { get; }
 
         /// <summary>
+        /// Gets the archive Type in case it is a well known archive format.
+        /// </summary>
+        Common.ArchiveType? KnownArchiveType { get; }
+
+        /// <summary>
         /// returns the extensions typically used by this archive type.
         /// </summary>
         /// <returns></returns>
-        IEnumerable<string> GetSupportedExtensions();
-
-        /// <summary>
-        /// returns the archive type in case it is a well known archive.
-        /// </summary>
-        Common.ArchiveType? KnownArchiveType { get; }
+        IEnumerable<string> GetSupportedExtensions();        
 
         /// <summary>
         /// Returns true if the stream represents an archive of the format defined by this type.
