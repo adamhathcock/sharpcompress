@@ -40,8 +40,32 @@ namespace SharpCompress.Factories
         /// <inheritdoc/>
         public override IEnumerable<string> GetSupportedExtensions()
         {
+            // from https://en.wikipedia.org/wiki/Tar_(computing)#Suffixes_for_compressed_files
+
             yield return "tar";
+
+            // gzip
+            yield return "taz";
             yield return "tgz";
+
+            // bzip2
+            yield return "tb2";
+            yield return "tbz";
+            yield return "tbz2";
+            yield return "tz2";
+
+            // lzma
+            yield return "tlz";
+
+            // xz
+            yield return "txz";
+
+            // compress
+            yield return "tZ";
+            yield return "taZ";
+
+            // zstd
+            yield return "tzst";
         }
 
         /// <inheritdoc/>
