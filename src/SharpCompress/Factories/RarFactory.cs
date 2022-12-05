@@ -11,7 +11,13 @@ using SharpCompress.Readers.Rar;
 
 namespace SharpCompress.Factories
 {
-    public class RarFactory : Factory, IArchiveFactory, IMultiArchiveFactory, IReaderFactory
+    /// <summary>
+    /// Represents the foundation factory of RAR archive.
+    /// </summary>
+    public class RarFactory : Factory,
+        IArchiveFactory,
+        IMultiArchiveFactory,
+        IReaderFactory
     {
         #region IArchive
 
@@ -61,13 +67,13 @@ namespace SharpCompress.Factories
         #region IMultiArchiveFactory
 
         /// <inheritdoc/>
-        public IArchive Open(IEnumerable<Stream> streams, ReaderOptions? readerOptions = null)
+        public IArchive Open(IReadOnlyList<Stream> streams, ReaderOptions? readerOptions = null)
         {
             return RarArchive.Open(streams, readerOptions);
         }
 
         /// <inheritdoc/>
-        public IArchive Open(IEnumerable<FileInfo> fileInfos, ReaderOptions? readerOptions = null)
+        public IArchive Open(IReadOnlyList<FileInfo> fileInfos, ReaderOptions? readerOptions = null)
         {
             return RarArchive.Open(fileInfos, readerOptions);
         }

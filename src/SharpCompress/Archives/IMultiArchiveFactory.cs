@@ -12,7 +12,7 @@ namespace SharpCompress.Archives
     /// Represents a factory used to identify and open archives.
     /// </summary>
     /// <remarks>
-    /// Currently implemented by:<br/>
+    /// Implemented by:<br/>
     /// <list type="table">
     /// <item><see cref="Factories.TarFactory"/></item>
     /// <item><see cref="Factories.RarFactory"/></item>
@@ -28,13 +28,13 @@ namespace SharpCompress.Archives
         /// </summary>
         /// <param name="streams"></param>
         /// <param name="readerOptions">reading options.</param>
-        IArchive Open(IEnumerable<Stream> streams, ReaderOptions? readerOptions = null);
+        IArchive Open(IReadOnlyList<Stream> streams, ReaderOptions? readerOptions = null);
 
         /// <summary>
         /// Constructor with IEnumerable Stream objects, multi and split support.
         /// </summary>
         /// <param name="fileInfos"></param>
         /// <param name="readerOptions">reading options.</param>
-        IArchive Open(IEnumerable<System.IO.FileInfo> fileInfos, ReaderOptions? readerOptions = null);
+        IArchive Open(IReadOnlyList<System.IO.FileInfo> fileInfos, ReaderOptions? readerOptions = null);
     }
 }

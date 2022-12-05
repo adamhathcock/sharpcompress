@@ -19,7 +19,15 @@ using SharpCompress.Writers.Tar;
 
 namespace SharpCompress.Factories
 {
-    public class TarFactory : Factory, IArchiveFactory, IMultiArchiveFactory, IReaderFactory, IWriterFactory
+    /// <summary>
+    /// Represents the foundation factory of TAR archive.
+    /// </summary>
+    public class TarFactory : Factory,
+        IArchiveFactory,
+        IMultiArchiveFactory,
+        IReaderFactory,
+        IWriterFactory,
+        IWriteableArchiveFactory
     {
         #region IFactory
 
@@ -63,13 +71,13 @@ namespace SharpCompress.Factories
         #region IMultiArchiveFactory
 
         /// <inheritdoc/>
-        public IArchive Open(IEnumerable<Stream> streams, ReaderOptions? readerOptions = null)
+        public IArchive Open(IReadOnlyList<Stream> streams, ReaderOptions? readerOptions = null)
         {
             return TarArchive.Open(streams, readerOptions);
         }
 
         /// <inheritdoc/>
-        public IArchive Open(IEnumerable<FileInfo> fileInfos, ReaderOptions? readerOptions = null)
+        public IArchive Open(IReadOnlyList<FileInfo> fileInfos, ReaderOptions? readerOptions = null)
         {
             return TarArchive.Open(fileInfos, readerOptions);
         }
@@ -147,6 +155,16 @@ namespace SharpCompress.Factories
         public IWriter Open(Stream stream, WriterOptions writerOptions)
         {
             return new TarWriter(stream, new TarWriterOptions(writerOptions));
+        }
+
+        #endregion
+
+        #region IWriteableArchiveFactory
+
+        /// <inheritdoc/>
+        public IWritableArchive CreateWriteableArchive()
+        {
+            return TarArchive.Create();
         }
 
         #endregion

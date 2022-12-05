@@ -31,13 +31,16 @@ namespace SharpCompress.Archives
 
         public static IWritableArchive Create(ArchiveType type)
         {
-            return type switch
-            {
-                ArchiveType.Zip => ZipArchive.Create(),
-                ArchiveType.Tar => TarArchive.Create(),
-                ArchiveType.GZip => GZipArchive.Create(),
-                _ => throw new NotSupportedException("Cannot create Archives of type: " + type)
-            };
+            var factory = Factories.Factory
+                .Factories
+                .OfType<IWriteableArchiveFactory>()
+                .Where(item => item.KnownArchiveType == type)
+                .FirstOrDefault();
+
+            if (factory != null)
+                return factory.CreateWriteableArchive();            
+
+            throw new NotSupportedException("Cannot create Archives of type: " + type);
         }
 
         /// <summary>
@@ -71,17 +74,17 @@ namespace SharpCompress.Archives
         public static IArchive Open(IEnumerable<FileInfo> fileInfos, ReaderOptions? options = null)
         {
             fileInfos.CheckNotNull(nameof(fileInfos));
-            FileInfo[] files = fileInfos.ToArray();
-            if (files.Length == 0)
+            FileInfo[] filesArray = fileInfos.ToArray();
+            if (filesArray.Length == 0)
                 throw new InvalidOperationException("No files to open");
-            FileInfo fileInfo = files[0];
-            if (files.Length == 1)
+            FileInfo fileInfo = filesArray[0];
+            if (filesArray.Length == 1)
                 return Open(fileInfo, options);
 
             fileInfo.CheckNotNull(nameof(fileInfo));
             options ??= new ReaderOptions { LeaveStreamOpen = false };
 
-            return FindFactory<IMultiArchiveFactory>(fileInfo).Open(fileInfos, options);
+            return FindFactory<IMultiArchiveFactory>(fileInfo).Open(filesArray, options);
         }
 
         /// <summary>
@@ -137,11 +140,11 @@ namespace SharpCompress.Archives
                 throw new ArgumentException("Stream should be readable and seekable");
             }
 
-            var factores = Factories.Factory.Factories.OfType<T>();
+            var factories = Factories.Factory.Factories.OfType<T>();
 
             long startPosition = stream.Position;
 
-            foreach (var factory in factores)
+            foreach (var factory in factories)
             {
                 stream.Seek(startPosition, SeekOrigin.Begin);
 
@@ -153,7 +156,7 @@ namespace SharpCompress.Archives
                 }
             }
 
-            var extensions = string.Join(", ", factores.Select(item => item.Name));
+            var extensions = string.Join(", ", factories.Select(item => item.Name));
 
             throw new InvalidOperationException($"Cannot determine compressed stream type. Supported Archive Formats: {extensions}");
         }

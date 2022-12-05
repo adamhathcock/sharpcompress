@@ -17,7 +17,15 @@ using SharpCompress.Writers.GZip;
 
 namespace SharpCompress.Factories
 {
-    public class GZipFactory : Factory, IArchiveFactory, IMultiArchiveFactory, IReaderFactory, IWriterFactory
+    /// <summary>
+    /// Represents the foundation factory of GZip archive.
+    /// </summary>
+    public class GZipFactory : Factory,
+        IArchiveFactory,
+        IMultiArchiveFactory,
+        IReaderFactory,
+        IWriterFactory,
+        IWriteableArchiveFactory
     {
         #region IFactory
 
@@ -60,13 +68,13 @@ namespace SharpCompress.Factories
         #region IMultiArchiveFactory        
 
         /// <inheritdoc/>
-        public IArchive Open(IEnumerable<Stream> streams, ReaderOptions? readerOptions = null)
+        public IArchive Open(IReadOnlyList<Stream> streams, ReaderOptions? readerOptions = null)
         {
             return GZipArchive.Open(streams, readerOptions);
         }
 
         /// <inheritdoc/>
-        public IArchive Open(IEnumerable<FileInfo> fileInfos, ReaderOptions? readerOptions = null)
+        public IArchive Open(IReadOnlyList<FileInfo> fileInfos, ReaderOptions? readerOptions = null)
         {
             return GZipArchive.Open(fileInfos, readerOptions);
         }
@@ -118,6 +126,16 @@ namespace SharpCompress.Factories
                 throw new InvalidFormatException("GZip archives only support GZip compression type.");
             }
             return new GZipWriter(stream, new GZipWriterOptions(writerOptions));
+        }
+
+        #endregion
+
+        #region IWriteableArchiveFactory
+
+        /// <inheritdoc/>
+        public IWritableArchive CreateWriteableArchive()
+        {
+            return GZipArchive.Create();
         }
 
         #endregion
