@@ -8,6 +8,7 @@ using SharpCompress.Archives.SevenZip;
 using SharpCompress.Archives.Tar;
 using SharpCompress.Archives.Zip;
 using SharpCompress.Common;
+using SharpCompress.Factories;
 using SharpCompress.IO;
 using SharpCompress.Readers;
 
@@ -15,36 +16,6 @@ namespace SharpCompress.Archives
 {
     public static class ArchiveFactory
     {
-        private static readonly HashSet<IArchiveFactory> archiveFactories;
-
-        /// <summary>
-        /// Gets the collection of registered archive factories
-        /// </summary>
-        public static IReadOnlyCollection<IArchiveFactory> Factories => archiveFactories;
-
-        static ArchiveFactory()
-        {
-            archiveFactories = new HashSet<IArchiveFactory>();
-
-            RegisterFactory(new Zip.ZipArchiveFactory());
-            RegisterFactory(new Rar.RarArchiveFactory());
-            RegisterFactory(new SevenZip.SevenZipArchiveFactory());
-            RegisterFactory(new GZip.GZipArchiveFactory());
-            RegisterFactory(new Tar.TarArchiveFactory());
-        }
-
-        /// <summary>
-        /// Registers an archive factory.
-        /// </summary>
-        /// <param name="factory">The factory to register.</param>
-        /// <exception cref="ArgumentNullException"><paramref name="factory"/> must not be null.</exception>
-        public static void RegisterFactory(IArchiveFactory factory)
-        {
-            factory.CheckNotNull(nameof(factory));
-
-            archiveFactories.Add(factory);
-        }
-
         /// <summary>
         /// Opens an Archive for random access
         /// </summary>
@@ -53,26 +24,23 @@ namespace SharpCompress.Archives
         /// <returns></returns>
         public static IArchive Open(Stream stream, ReaderOptions? readerOptions = null)
         {
-            stream.CheckNotNull(nameof(stream));
-            if (!stream.CanRead || !stream.CanSeek)
-            {
-                throw new ArgumentException("Stream should be readable and seekable");
-            }
-
             readerOptions ??= new ReaderOptions();
 
-            return FindArchiveFactory(stream).Open(stream, readerOptions);
+            return FindFactory<IArchiveFactory>(stream).Open(stream, readerOptions);
         }
 
         public static IWritableArchive Create(ArchiveType type)
         {
-            return type switch
-            {
-                ArchiveType.Zip => ZipArchive.Create(),
-                ArchiveType.Tar => TarArchive.Create(),
-                ArchiveType.GZip => GZipArchive.Create(),
-                _ => throw new NotSupportedException("Cannot create Archives of type: " + type)
-            };
+            var factory = Factories.Factory
+                .Factories
+                .OfType<IWriteableArchiveFactory>()
+                .Where(item => item.KnownArchiveType == type)
+                .FirstOrDefault();
+
+            if (factory != null)
+                return factory.CreateWriteableArchive();            
+
+            throw new NotSupportedException("Cannot create Archives of type: " + type);
         }
 
         /// <summary>
@@ -92,11 +60,10 @@ namespace SharpCompress.Archives
         /// <param name="fileInfo"></param>
         /// <param name="options"></param>
         public static IArchive Open(FileInfo fileInfo, ReaderOptions? options = null)
-        {
-            fileInfo.CheckNotNull(nameof(fileInfo));
+        {            
             options ??= new ReaderOptions { LeaveStreamOpen = false };
 
-            return FindArchiveFactory(fileInfo).Open(fileInfo, options);
+            return FindFactory<IArchiveFactory>(fileInfo).Open(fileInfo, options);
         }
 
         /// <summary>
@@ -107,17 +74,17 @@ namespace SharpCompress.Archives
         public static IArchive Open(IEnumerable<FileInfo> fileInfos, ReaderOptions? options = null)
         {
             fileInfos.CheckNotNull(nameof(fileInfos));
-            FileInfo[] files = fileInfos.ToArray();
-            if (files.Length == 0)
+            FileInfo[] filesArray = fileInfos.ToArray();
+            if (filesArray.Length == 0)
                 throw new InvalidOperationException("No files to open");
-            FileInfo fileInfo = files[0];
-            if (files.Length == 1)
+            FileInfo fileInfo = filesArray[0];
+            if (filesArray.Length == 1)
                 return Open(fileInfo, options);
 
             fileInfo.CheckNotNull(nameof(fileInfo));
             options ??= new ReaderOptions { LeaveStreamOpen = false };
 
-            return FindArchiveFactory(fileInfo).Open(fileInfos, options);
+            return FindFactory<IMultiArchiveFactory>(fileInfo).Open(filesArray, options);
         }
 
         /// <summary>
@@ -138,7 +105,7 @@ namespace SharpCompress.Archives
             firstStream.CheckNotNull(nameof(firstStream));
             options ??= new ReaderOptions();
 
-            return FindArchiveFactory(firstStream).Open(streamsArray, options);            
+            return FindFactory<IMultiArchiveFactory>(firstStream).Open(streamsArray, options);            
         }        
 
         /// <summary>
@@ -154,16 +121,18 @@ namespace SharpCompress.Archives
             }
         }
 
-        private static IArchiveFactory FindArchiveFactory(FileInfo finfo)
+        private static T FindFactory<T>(FileInfo finfo)
+            where T : IFactory
         {
             finfo.CheckNotNull(nameof(finfo));
             using (Stream stream = finfo.OpenRead())
             {
-                return FindArchiveFactory(stream);
+                return FindFactory<T>(stream);
             }
         }
 
-        private static IArchiveFactory FindArchiveFactory(Stream stream)
+        private static T FindFactory<T>(Stream stream)
+            where T: IFactory
         {
             stream.CheckNotNull(nameof(stream));
             if (!stream.CanRead || !stream.CanSeek)
@@ -171,9 +140,11 @@ namespace SharpCompress.Archives
                 throw new ArgumentException("Stream should be readable and seekable");
             }
 
+            var factories = Factories.Factory.Factories.OfType<T>();
+
             long startPosition = stream.Position;
 
-            foreach (var factory in Factories)
+            foreach (var factory in factories)
             {
                 stream.Seek(startPosition, SeekOrigin.Begin);
 
@@ -185,9 +156,7 @@ namespace SharpCompress.Archives
                 }
             }
 
-            var extensions = Factories
-                .Select(item => item.Name)
-                .Aggregate((a, b) => a + ", " + b);
+            var extensions = string.Join(", ", factories.Select(item => item.Name));
 
             throw new InvalidOperationException($"Cannot determine compressed stream type. Supported Archive Formats: {extensions}");
         }
@@ -208,41 +177,21 @@ namespace SharpCompress.Archives
             {
                 throw new ArgumentException("Stream should be readable and seekable");
             }
-            if (ZipArchive.IsZipFile(stream, null))
-                type = ArchiveType.Zip;
-            stream.Seek(0, SeekOrigin.Begin);
-            if (type == null)
+
+            var startPosition = stream.Position;
+
+            foreach(var factory in Factories.Factory.Factories)
             {
-                if (SevenZipArchive.IsSevenZipFile(stream))
-                    type = ArchiveType.SevenZip;
-                stream.Seek(0, SeekOrigin.Begin);
-            }
-            if (type == null)
-            {
-                if (GZipArchive.IsGZipFile(stream))
-                    type = ArchiveType.GZip;
-                stream.Seek(0, SeekOrigin.Begin);
-            }
-            if (type == null)
-            {
-                if (RarArchive.IsRarFile(stream))
-                    type = ArchiveType.Rar;
-                stream.Seek(0, SeekOrigin.Begin);
-            }
-            if (type == null)
-            {
-                if (TarArchive.IsTarFile(stream))
-                    type = ArchiveType.Tar;
-                stream.Seek(0, SeekOrigin.Begin);
-            }
-            if (type == null) //test multipartzip as it could find zips in other non compressed archive types?
-            {
-                if (ZipArchive.IsZipMulti(stream)) //test the zip (last) file of a multipart zip
-                    type = ArchiveType.Zip;
-                stream.Seek(0, SeekOrigin.Begin);
+                stream.Position = startPosition;
+
+                if (factory.IsArchive(stream, null))
+                {
+                    type = factory.KnownArchiveType;
+                    return true;
+                }
             }
 
-            return type != null;
+            return false;
         }
 
         /// <summary>
@@ -264,21 +213,21 @@ namespace SharpCompress.Archives
         public static IEnumerable<FileInfo> GetFileParts(FileInfo part1)
         {
             part1.CheckNotNull(nameof(part1));
-            yield return part1;
-            int i = 1;
+            yield return part1;            
 
-            FileInfo? part = RarArchiveVolumeFactory.GetFilePart(i++, part1);
-            if (part != null)
+            foreach(var factory in Factory.Factories.OfType<IFactory>())
             {
-                yield return part;
-                while ((part = RarArchiveVolumeFactory.GetFilePart(i++, part1)) != null) //tests split too
+                int i = 1;
+                FileInfo? part = factory.GetFilePart(i++, part1);
+
+                if (part != null)
+                {
                     yield return part;
-            }
-            else
-            {
-                i = 1;
-                while ((part = ZipArchiveVolumeFactory.GetFilePart(i++, part1)) != null) //tests split too
-                    yield return part;
+                    while ((part = factory.GetFilePart(i++, part1)) != null) //tests split too
+                        yield return part;
+
+                    yield break;
+                }
             }
         }
     }

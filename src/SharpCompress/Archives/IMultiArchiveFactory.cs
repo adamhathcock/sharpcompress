@@ -12,7 +12,7 @@ namespace SharpCompress.Archives
     /// Represents a factory used to identify and open archives.
     /// </summary>
     /// <remarks>
-    /// Currently implemented by:<br/>
+    /// Implemented by:<br/>
     /// <list type="table">
     /// <item><see cref="Factories.TarFactory"/></item>
     /// <item><see cref="Factories.RarFactory"/></item>
@@ -21,20 +21,20 @@ namespace SharpCompress.Archives
     /// <item><see cref="Factories.SevenZipFactory"/></item>
     /// </list>
     /// </remarks>
-    public interface IArchiveFactory : IFactory
+    public interface IMultiArchiveFactory : IFactory
     {
         /// <summary>
-        /// Opens an Archive for random access.
+        /// Constructor with IEnumerable FileInfo objects, multi and split support.
         /// </summary>
-        /// <param name="stream">An open, readable and seekable stream.</param>
+        /// <param name="streams"></param>
         /// <param name="readerOptions">reading options.</param>
-        IArchive Open(Stream stream, ReaderOptions? readerOptions = null);
+        IArchive Open(IReadOnlyList<Stream> streams, ReaderOptions? readerOptions = null);
 
         /// <summary>
-        /// Constructor with a FileInfo object to an existing file.
+        /// Constructor with IEnumerable Stream objects, multi and split support.
         /// </summary>
-        /// <param name="fileInfo">the file to open.</param>
+        /// <param name="fileInfos"></param>
         /// <param name="readerOptions">reading options.</param>
-        IArchive Open(System.IO.FileInfo fileInfo, ReaderOptions? readerOptions = null);
+        IArchive Open(IReadOnlyList<System.IO.FileInfo> fileInfos, ReaderOptions? readerOptions = null);
     }
 }
