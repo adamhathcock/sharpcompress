@@ -55,17 +55,17 @@ namespace SharpCompress.Factories
             yield return "tz2";
 
             // lzma
-            yield return "tlz";
+            // yield return "tlz"; // unsupported
 
             // xz
-            yield return "txz";
+            // yield return "txz"; // unsupported
 
             // compress
             yield return "tZ";
             yield return "taZ";
 
             // zstd
-            yield return "tzst";
+            // yield return "tzst"; // unsupported
         }
 
         /// <inheritdoc/>
