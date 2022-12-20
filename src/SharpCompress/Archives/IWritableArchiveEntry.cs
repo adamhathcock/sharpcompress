@@ -1,9 +1,8 @@
-﻿using System.IO;
+using System.IO;
 
-namespace SharpCompress.Archives
+namespace SharpCompress.Archives;
+
+internal interface IWritableArchiveEntry
 {
-    internal interface IWritableArchiveEntry
-    {
-        Stream Stream { get; }
-    }
+    Stream Stream { get; }
 }

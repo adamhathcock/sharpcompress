@@ -2,30 +2,29 @@
 
 using System;
 
-namespace SharpCompress
+namespace SharpCompress;
+
+public class Lazy<T>
 {
-    public class Lazy<T>
+    private readonly Func<T> _lazyFunc;
+    private bool _evaluated;
+    private T _value;
+
+    public Lazy(Func<T> lazyFunc)
     {
-        private readonly Func<T> _lazyFunc;
-        private bool _evaluated;
-        private T _value;
+        _lazyFunc = lazyFunc;
+    }
 
-        public Lazy(Func<T> lazyFunc)
+    public T Value
+    {
+        get
         {
-            _lazyFunc = lazyFunc;
-        }
-
-        public T Value
-        {
-            get
+            if (!_evaluated)
             {
-                if (!_evaluated)
-                {
-                    _value = _lazyFunc();
-                    _evaluated = true;
-                }
-                return _value;
+                _value = _lazyFunc();
+                _evaluated = true;
             }
+            return _value;
         }
     }
 }

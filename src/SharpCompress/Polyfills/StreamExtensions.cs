@@ -1,45 +1,44 @@
-﻿#if NETFRAMEWORK || NETSTANDARD2_0
+#if NETFRAMEWORK || NETSTANDARD2_0
 
 using System;
 using System.Buffers;
 using System.IO;
 
-namespace SharpCompress
+namespace SharpCompress;
+
+internal static class StreamExtensions
 {
-    internal static class StreamExtensions
+    internal static int Read(this Stream stream, Span<byte> buffer)
     {
-        internal static int Read(this Stream stream, Span<byte> buffer)
+        var temp = ArrayPool<byte>.Shared.Rent(buffer.Length);
+
+        try
         {
-            byte[] temp = ArrayPool<byte>.Shared.Rent(buffer.Length);
+            var read = stream.Read(temp, 0, buffer.Length);
 
-            try
-            {
-                int read = stream.Read(temp, 0, buffer.Length);
+            temp.AsSpan(0, read).CopyTo(buffer);
 
-                temp.AsSpan(0, read).CopyTo(buffer);
-
-                return read;
-            }
-            finally
-            {
-                ArrayPool<byte>.Shared.Return(temp);
-            }
+            return read;
         }
-
-        internal static void Write(this Stream stream, ReadOnlySpan<byte> buffer)
+        finally
         {
-            byte[] temp = ArrayPool<byte>.Shared.Rent(buffer.Length);
+            ArrayPool<byte>.Shared.Return(temp);
+        }
+    }
 
-            buffer.CopyTo(temp);
+    internal static void Write(this Stream stream, ReadOnlySpan<byte> buffer)
+    {
+        var temp = ArrayPool<byte>.Shared.Rent(buffer.Length);
 
-            try
-            {
-                stream.Write(temp, 0, buffer.Length);
-            }
-            finally
-            {
-                ArrayPool<byte>.Shared.Return(temp);
-            }
+        buffer.CopyTo(temp);
+
+        try
+        {
+            stream.Write(temp, 0, buffer.Length);
+        }
+        finally
+        {
+            ArrayPool<byte>.Shared.Return(temp);
         }
     }
 }

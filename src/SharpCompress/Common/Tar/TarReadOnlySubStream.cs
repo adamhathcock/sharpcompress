@@ -1,4 +1,4 @@
-﻿using SharpCompress.IO;
+using SharpCompress.IO;
 using System;
 using System.IO;
 

@@ -1,38 +1,37 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.IO;
 using SharpCompress.Common;
 using SharpCompress.Common.GZip;
 
-namespace SharpCompress.Readers.GZip
+namespace SharpCompress.Readers.GZip;
+
+public class GZipReader : AbstractReader<GZipEntry, GZipVolume>
 {
-    public class GZipReader : AbstractReader<GZipEntry, GZipVolume>
+    internal GZipReader(Stream stream, ReaderOptions options) : base(options, ArchiveType.GZip)
     {
-        internal GZipReader(Stream stream, ReaderOptions options) : base(options, ArchiveType.GZip)
-        {
-            Volume = new GZipVolume(stream, options);
-        }
+        Volume = new GZipVolume(stream, options);
+    }
 
-        public override GZipVolume Volume { get; }
+    public override GZipVolume Volume { get; }
 
-        #region Open
+    #region Open
 
-        /// <summary>
-        /// Opens a GZipReader for Non-seeking usage with a single volume
-        /// </summary>
-        /// <param name="stream"></param>
-        /// <param name="options"></param>
-        /// <returns></returns>
-        public static GZipReader Open(Stream stream, ReaderOptions? options = null)
-        {
-            stream.CheckNotNull(nameof(stream));
-            return new GZipReader(stream, options ?? new ReaderOptions());
-        }
+    /// <summary>
+    /// Opens a GZipReader for Non-seeking usage with a single volume
+    /// </summary>
+    /// <param name="stream"></param>
+    /// <param name="options"></param>
+    /// <returns></returns>
+    public static GZipReader Open(Stream stream, ReaderOptions? options = null)
+    {
+        stream.CheckNotNull(nameof(stream));
+        return new GZipReader(stream, options ?? new ReaderOptions());
+    }
 
-        #endregion Open
+    #endregion Open
 
-        protected override IEnumerable<GZipEntry> GetEntries(Stream stream)
-        {
-            return GZipEntry.GetEntries(stream, Options);
-        }
+    protected override IEnumerable<GZipEntry> GetEntries(Stream stream)
+    {
+        return GZipEntry.GetEntries(stream, Options);
     }
 }

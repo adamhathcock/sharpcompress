@@ -4,21 +4,20 @@ using SharpCompress.Common.Rar;
 using SharpCompress.Common.Rar.Headers;
 using SharpCompress.IO;
 
-namespace SharpCompress.Readers.Rar
+namespace SharpCompress.Readers.Rar;
+
+public class RarReaderVolume : RarVolume
 {
-    public class RarReaderVolume : RarVolume
+    internal RarReaderVolume(Stream stream, ReaderOptions options, int index = 0)
+        : base(StreamingMode.Streaming, stream, options, index) { }
+
+    internal override RarFilePart CreateFilePart(MarkHeader markHeader, FileHeader fileHeader)
     {
-        internal RarReaderVolume(Stream stream, ReaderOptions options, int index = 0)
-            : base(StreamingMode.Streaming, stream, options, index) { }
+        return new NonSeekableStreamFilePart(markHeader, fileHeader, Index);
+    }
 
-        internal override RarFilePart CreateFilePart(MarkHeader markHeader, FileHeader fileHeader)
-        {
-            return new NonSeekableStreamFilePart(markHeader, fileHeader, this.Index);
-        }
-
-        internal override IEnumerable<RarFilePart> ReadFileParts()
-        {
-            return GetVolumeFileParts();
-        }
+    internal override IEnumerable<RarFilePart> ReadFileParts()
+    {
+        return GetVolumeFileParts();
     }
 }

@@ -1,31 +1,30 @@
-﻿using System.IO;
+using System.IO;
 using SharpCompress.Common;
 using SharpCompress.Common.Rar;
 
-namespace SharpCompress.Readers.Rar
+namespace SharpCompress.Readers.Rar;
+
+internal class SingleVolumeRarReader : RarReader
 {
-    internal class SingleVolumeRarReader : RarReader
+    private readonly Stream stream;
+
+    internal SingleVolumeRarReader(Stream stream, ReaderOptions options) : base(options)
     {
-        private readonly Stream stream;
+        this.stream = stream;
+    }
 
-        internal SingleVolumeRarReader(Stream stream, ReaderOptions options) : base(options)
+    internal override void ValidateArchive(RarVolume archive)
+    {
+        if (archive.IsMultiVolume)
         {
-            this.stream = stream;
+            var msg =
+                "Streamed archive is a Multi-volume archive.  Use different RarReader method to extract.";
+            throw new MultiVolumeExtractionException(msg);
         }
+    }
 
-        internal override void ValidateArchive(RarVolume archive)
-        {
-            if (archive.IsMultiVolume)
-            {
-                var msg =
-                    "Streamed archive is a Multi-volume archive.  Use different RarReader method to extract.";
-                throw new MultiVolumeExtractionException(msg);
-            }
-        }
-
-        protected override Stream RequestInitialStream()
-        {
-            return stream;
-        }
+    protected override Stream RequestInitialStream()
+    {
+        return stream;
     }
 }

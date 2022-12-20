@@ -1,8 +1,7 @@
-namespace SharpCompress.Compressors.Rar.UnpackV1.PPM
+namespace SharpCompress.Compressors.Rar.UnpackV1.PPM;
+
+internal enum BlockTypes
 {
-    internal enum BlockTypes
-    {
-        BLOCK_LZ = 0,
-        BLOCK_PPM = 1
-    }
+    BLOCK_LZ = 0,
+    BLOCK_PPM = 1
 }

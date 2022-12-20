@@ -2,46 +2,45 @@ using System.IO;
 using SharpCompress.Compressors.Rar;
 using SharpCompress.IO;
 
-namespace SharpCompress.Common.Rar
+namespace SharpCompress.Common.Rar;
+
+internal class RarCrcBinaryReader : MarkingBinaryReader
 {
-    internal class RarCrcBinaryReader : MarkingBinaryReader
+    private uint _currentCrc;
+
+    public RarCrcBinaryReader(Stream stream) : base(stream) { }
+
+    public uint GetCrc32()
     {
-        private uint _currentCrc;
+        return ~_currentCrc;
+    }
 
-        public RarCrcBinaryReader(Stream stream) : base(stream) { }
+    public void ResetCrc()
+    {
+        _currentCrc = 0xffffffff;
+    }
 
-        public uint GetCrc32()
-        {
-            return ~_currentCrc;
-        }
+    protected void UpdateCrc(byte b)
+    {
+        _currentCrc = RarCRC.CheckCrc(_currentCrc, b);
+    }
 
-        public void ResetCrc()
-        {
-            _currentCrc = 0xffffffff;
-        }
+    protected byte[] ReadBytesNoCrc(int count)
+    {
+        return base.ReadBytes(count);
+    }
 
-        protected void UpdateCrc(byte b)
-        {
-            _currentCrc = RarCRC.CheckCrc(_currentCrc, b);
-        }
+    public override byte ReadByte()
+    {
+        var b = base.ReadByte();
+        _currentCrc = RarCRC.CheckCrc(_currentCrc, b);
+        return b;
+    }
 
-        protected byte[] ReadBytesNoCrc(int count)
-        {
-            return base.ReadBytes(count);
-        }
-
-        public override byte ReadByte()
-        {
-            var b = base.ReadByte();
-            _currentCrc = RarCRC.CheckCrc(_currentCrc, b);
-            return b;
-        }
-
-        public override byte[] ReadBytes(int count)
-        {
-            var result = base.ReadBytes(count);
-            _currentCrc = RarCRC.CheckCrc(_currentCrc, result, 0, result.Length);
-            return result;
-        }
+    public override byte[] ReadBytes(int count)
+    {
+        var result = base.ReadBytes(count);
+        _currentCrc = RarCRC.CheckCrc(_currentCrc, result, 0, result.Length);
+        return result;
     }
 }

@@ -1,9 +1,8 @@
-﻿namespace SharpCompress.Common.Zip
+namespace SharpCompress.Common.Zip;
+
+internal enum WinzipAesKeySize
 {
-    internal enum WinzipAesKeySize
-    {
-        KeySize128 = 1,
-        KeySize192 = 2,
-        KeySize256 = 3
-    }
+    KeySize128 = 1,
+    KeySize192 = 2,
+    KeySize256 = 3
 }

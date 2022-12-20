@@ -1,4 +1,4 @@
-﻿using SharpCompress.Compressors.Xz;
+using SharpCompress.Compressors.Xz;
 using System.IO;
 using Xunit;
 

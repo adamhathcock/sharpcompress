@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -8,96 +7,95 @@ using SharpCompress.Common.Rar.Headers;
 using SharpCompress.Compressors.Rar;
 using SharpCompress.Readers;
 
-namespace SharpCompress.Archives.Rar
+namespace SharpCompress.Archives.Rar;
+
+public class RarArchiveEntry : RarEntry, IArchiveEntry
 {
-    public class RarArchiveEntry : RarEntry, IArchiveEntry
+    private readonly ICollection<RarFilePart> parts;
+    private readonly RarArchive archive;
+    private readonly ReaderOptions readerOptions;
+
+    internal RarArchiveEntry(
+        RarArchive archive,
+        IEnumerable<RarFilePart> parts,
+        ReaderOptions readerOptions
+    )
     {
-        private readonly ICollection<RarFilePart> parts;
-        private readonly RarArchive archive;
-        private readonly ReaderOptions readerOptions;
+        this.parts = parts.ToList();
+        this.archive = archive;
+        this.readerOptions = readerOptions;
+        IsSolid = FileHeader.IsSolid;
+    }
 
-        internal RarArchiveEntry(
-            RarArchive archive,
-            IEnumerable<RarFilePart> parts,
-            ReaderOptions readerOptions
-        )
+    public override CompressionType CompressionType => CompressionType.Rar;
+
+    public IArchive Archive => archive;
+
+    internal override IEnumerable<FilePart> Parts => parts.Cast<FilePart>();
+
+    internal override FileHeader FileHeader => parts.First().FileHeader;
+
+    public override long Crc
+    {
+        get
         {
-            this.parts = parts.ToList();
-            this.archive = archive;
-            this.readerOptions = readerOptions;
-            this.IsSolid = this.FileHeader.IsSolid;
+            CheckIncomplete();
+            return parts.Select(fp => fp.FileHeader).Single(fh => !fh.IsSplitAfter).FileCrc;
         }
+    }
 
-        public override CompressionType CompressionType => CompressionType.Rar;
-
-        public IArchive Archive => archive;
-
-        internal override IEnumerable<FilePart> Parts => parts.Cast<FilePart>();
-
-        internal override FileHeader FileHeader => parts.First().FileHeader;
-
-        public override long Crc
+    public override long Size
+    {
+        get
         {
-            get
-            {
-                CheckIncomplete();
-                return parts.Select(fp => fp.FileHeader).Single(fh => !fh.IsSplitAfter).FileCrc;
-            }
+            CheckIncomplete();
+            return parts.First().FileHeader.UncompressedSize;
         }
+    }
 
-        public override long Size
+    public override long CompressedSize
+    {
+        get
         {
-            get
-            {
-                CheckIncomplete();
-                return parts.First().FileHeader.UncompressedSize;
-            }
+            CheckIncomplete();
+            return parts.Aggregate(0L, (total, fp) => total + fp.FileHeader.CompressedSize);
         }
+    }
 
-        public override long CompressedSize
+    public Stream OpenEntryStream()
+    {
+        if (IsRarV3)
         {
-            get
-            {
-                CheckIncomplete();
-                return parts.Aggregate(0L, (total, fp) => total + fp.FileHeader.CompressedSize);
-            }
-        }
-
-        public Stream OpenEntryStream()
-        {
-            if (IsRarV3)
-            {
-                return new RarStream(
-                    archive.UnpackV1.Value,
-                    FileHeader,
-                    new MultiVolumeReadOnlyStream(Parts.Cast<RarFilePart>(), archive)
-                );
-            }
-
             return new RarStream(
-                archive.UnpackV2017.Value,
+                archive.UnpackV1.Value,
                 FileHeader,
                 new MultiVolumeReadOnlyStream(Parts.Cast<RarFilePart>(), archive)
             );
         }
 
-        public bool IsComplete
-        {
-            get
-            {
-                var headers = parts.Select(x => x.FileHeader);
-                return !headers.First().IsSplitBefore && !headers.Last().IsSplitAfter;
-            }
-        }
+        return new RarStream(
+            archive.UnpackV2017.Value,
+            FileHeader,
+            new MultiVolumeReadOnlyStream(Parts.Cast<RarFilePart>(), archive)
+        );
+    }
 
-        private void CheckIncomplete()
+    public bool IsComplete
+    {
+        get
         {
-            if (!readerOptions.DisableCheckIncomplete && !IsComplete)
-            {
-                throw new IncompleteArchiveException(
-                    "ArchiveEntry is incomplete and cannot perform this operation."
-                );
-            }
+            var headers = parts.Select(x => x.FileHeader);
+            return !headers.First().IsSplitBefore && !headers.Last().IsSplitAfter;
+        }
+    }
+
+    private void CheckIncomplete()
+    {
+        if (!readerOptions.DisableCheckIncomplete && !IsComplete)
+        {
+            throw new IncompleteArchiveException(
+                "ArchiveEntry is incomplete and cannot perform this operation."
+            );
         }
     }
 }

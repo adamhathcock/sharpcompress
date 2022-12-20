@@ -6,45 +6,44 @@ using SharpCompress.Common.Rar.Headers;
 using SharpCompress.IO;
 using SharpCompress.Readers;
 
-namespace SharpCompress.Archives.Rar
+namespace SharpCompress.Archives.Rar;
+
+/// <summary>
+/// A rar part based on a FileInfo object
+/// </summary>
+internal class FileInfoRarArchiveVolume : RarVolume
 {
-    /// <summary>
-    /// A rar part based on a FileInfo object
-    /// </summary>
-    internal class FileInfoRarArchiveVolume : RarVolume
+    internal FileInfoRarArchiveVolume(FileInfo fileInfo, ReaderOptions options, int index = 0)
+        : base(StreamingMode.Seekable, fileInfo.OpenRead(), FixOptions(options), index)
     {
-        internal FileInfoRarArchiveVolume(FileInfo fileInfo, ReaderOptions options, int index = 0)
-            : base(StreamingMode.Seekable, fileInfo.OpenRead(), FixOptions(options), index)
-        {
-            FileInfo = fileInfo;
-            FileParts = GetVolumeFileParts().ToArray().ToReadOnly();
-        }
+        FileInfo = fileInfo;
+        FileParts = GetVolumeFileParts().ToArray().ToReadOnly();
+    }
 
-        private static ReaderOptions FixOptions(ReaderOptions options)
-        {
-            //make sure we're closing streams with fileinfo
-            options.LeaveStreamOpen = false;
-            return options;
-        }
+    private static ReaderOptions FixOptions(ReaderOptions options)
+    {
+        //make sure we're closing streams with fileinfo
+        options.LeaveStreamOpen = false;
+        return options;
+    }
 
-        internal ReadOnlyCollection<RarFilePart> FileParts { get; }
+    internal ReadOnlyCollection<RarFilePart> FileParts { get; }
 
-        internal FileInfo FileInfo { get; }
+    internal FileInfo FileInfo { get; }
 
-        internal override RarFilePart CreateFilePart(MarkHeader markHeader, FileHeader fileHeader)
-        {
-            return new FileInfoRarFilePart(
-                this,
-                ReaderOptions.Password,
-                markHeader,
-                fileHeader,
-                FileInfo
-            );
-        }
+    internal override RarFilePart CreateFilePart(MarkHeader markHeader, FileHeader fileHeader)
+    {
+        return new FileInfoRarFilePart(
+            this,
+            ReaderOptions.Password,
+            markHeader,
+            fileHeader,
+            FileInfo
+        );
+    }
 
-        internal override IEnumerable<RarFilePart> ReadFileParts()
-        {
-            return FileParts;
-        }
+    internal override IEnumerable<RarFilePart> ReadFileParts()
+    {
+        return FileParts;
     }
 }

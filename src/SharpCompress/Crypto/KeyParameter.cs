@@ -1,43 +1,42 @@
-﻿using System;
+using System;
 
-namespace SharpCompress.Crypto
+namespace SharpCompress.Crypto;
+
+public class KeyParameter : ICipherParameters
 {
-    public class KeyParameter : ICipherParameters
+    private readonly byte[] key;
+
+    public KeyParameter(byte[] key)
     {
-        private readonly byte[] key;
-
-        public KeyParameter(byte[] key)
+        if (key is null)
         {
-            if (key is null)
-            {
-                throw new ArgumentNullException(nameof(key));
-            }
-
-            this.key = (byte[])key.Clone();
+            throw new ArgumentNullException(nameof(key));
         }
 
-        public KeyParameter(byte[] key, int keyOff, int keyLen)
-        {
-            if (key is null)
-            {
-                throw new ArgumentNullException(nameof(key));
-            }
-            if (keyOff < 0 || keyOff > key.Length)
-            {
-                throw new ArgumentOutOfRangeException(nameof(keyOff));
-            }
-            if (keyLen < 0 || (keyOff + keyLen) > key.Length)
-            {
-                throw new ArgumentOutOfRangeException(nameof(keyLen));
-            }
+        this.key = (byte[])key.Clone();
+    }
 
-            this.key = new byte[keyLen];
-            Array.Copy(key, keyOff, this.key, 0, keyLen);
+    public KeyParameter(byte[] key, int keyOff, int keyLen)
+    {
+        if (key is null)
+        {
+            throw new ArgumentNullException(nameof(key));
+        }
+        if (keyOff < 0 || keyOff > key.Length)
+        {
+            throw new ArgumentOutOfRangeException(nameof(keyOff));
+        }
+        if (keyLen < 0 || (keyOff + keyLen) > key.Length)
+        {
+            throw new ArgumentOutOfRangeException(nameof(keyLen));
         }
 
-        public byte[] GetKey()
-        {
-            return (byte[])key.Clone();
-        }
+        this.key = new byte[keyLen];
+        Array.Copy(key, keyOff, this.key, 0, keyLen);
+    }
+
+    public byte[] GetKey()
+    {
+        return (byte[])key.Clone();
     }
 }
