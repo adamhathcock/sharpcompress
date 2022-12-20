@@ -77,18 +77,12 @@ public sealed class XZStream : XZReadOnlyStream
         HeaderIsRead = true;
     }
 
-    private void ReadIndex()
-    {
-        Index = XZIndex.FromStream(BaseStream, true);
-        // TODO veryfy Index
-    }
+    private void ReadIndex() => Index = XZIndex.FromStream(BaseStream, true);
 
-    private void ReadFooter()
-    {
-        Footer = XZFooter.FromStream(BaseStream);
-        // TODO verify footer
-    }
+    // TODO veryfy Index
+    private void ReadFooter() => Footer = XZFooter.FromStream(BaseStream);
 
+    // TODO verify footer
     private int ReadBlocks(byte[] buffer, int offset, int count)
     {
         var bytesRead = 0;
@@ -124,8 +118,6 @@ public sealed class XZStream : XZReadOnlyStream
         return bytesRead;
     }
 
-    private void NextBlock()
-    {
+    private void NextBlock() =>
         _currentBlock = new XZBlock(BaseStream, Header.BlockCheckType, Header.BlockCheckSize);
-    }
 }

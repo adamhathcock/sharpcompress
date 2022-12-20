@@ -356,15 +356,9 @@ internal partial class Unpack
         return (readCode != -1);
     }
 
-    private int getShortLen1(int pos)
-    {
-        return pos == 1 ? Buf60 + 3 : ShortLen1[pos];
-    }
+    private int getShortLen1(int pos) => pos == 1 ? Buf60 + 3 : ShortLen1[pos];
 
-    private int getShortLen2(int pos)
-    {
-        return pos == 3 ? Buf60 + 3 : ShortLen2[pos];
-    }
+    private int getShortLen2(int pos) => pos == 3 ? Buf60 + 3 : ShortLen2[pos];
 
     private void shortLZ()
     {

@@ -40,21 +40,13 @@ internal sealed class RarVM : BitInput
 
     private int IP;
 
-    internal RarVM()
-    {
+    internal RarVM() =>
         //InitBlock();
         Mem = null;
-    }
 
-    internal void init()
-    {
-        Mem ??= new byte[VM_MEMSIZE + 4];
-    }
+    internal void init() => Mem ??= new byte[VM_MEMSIZE + 4];
 
-    private bool IsVMMem(byte[] mem)
-    {
-        return Mem == mem;
-    }
+    private bool IsVMMem(byte[] mem) => Mem == mem;
 
     private int GetValue(bool byteMode, byte[] mem, int offset)
     {

@@ -131,10 +131,7 @@ internal class SubRange
         _highCount,
         _scale;
 
-    internal void IncScale(int dScale)
-    {
-        Scale += dScale;
-    }
+    internal void IncScale(int dScale) => Scale += dScale;
 
     internal long HighCount
     {

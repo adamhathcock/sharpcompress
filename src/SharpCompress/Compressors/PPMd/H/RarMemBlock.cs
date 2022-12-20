@@ -67,10 +67,7 @@ internal class RarMemBlock : Pointer
         return _next;
     }
 
-    internal void SetNext(RarMemBlock next)
-    {
-        SetNext(next.Address);
-    }
+    internal void SetNext(RarMemBlock next) => SetNext(next.Address);
 
     internal void SetNext(int next)
     {
@@ -108,10 +105,7 @@ internal class RarMemBlock : Pointer
         return _prev;
     }
 
-    internal void SetPrev(RarMemBlock prev)
-    {
-        SetPrev(prev.Address);
-    }
+    internal void SetPrev(RarMemBlock prev) => SetPrev(prev.Address);
 
     internal void SetPrev(int prev)
     {

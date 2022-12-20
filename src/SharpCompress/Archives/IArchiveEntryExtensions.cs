@@ -41,15 +41,13 @@ public static class IArchiveEntryExtensions
         this IArchiveEntry entry,
         string destinationDirectory,
         ExtractionOptions? options = null
-    )
-    {
+    ) =>
         ExtractionMethods.WriteEntryToDirectory(
             entry,
             destinationDirectory,
             options,
             entry.WriteToFile
         );
-    }
 
     /// <summary>
     /// Extract to specific file
@@ -58,8 +56,7 @@ public static class IArchiveEntryExtensions
         this IArchiveEntry entry,
         string destinationFileName,
         ExtractionOptions? options = null
-    )
-    {
+    ) =>
         ExtractionMethods.WriteEntryToFile(
             entry,
             destinationFileName,
@@ -70,5 +67,4 @@ public static class IArchiveEntryExtensions
                 entry.WriteTo(fs);
             }
         );
-    }
 }

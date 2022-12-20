@@ -1,4 +1,4 @@
-#nullable disable
+﻿#nullable disable
 
 using System;
 using System.Buffers.Binary;
@@ -11,10 +11,7 @@ internal sealed class TarHeader
 {
     internal static readonly DateTime EPOCH = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 
-    public TarHeader(ArchiveEncoding archiveEncoding)
-    {
-        ArchiveEncoding = archiveEncoding;
-    }
+    public TarHeader(ArchiveEncoding archiveEncoding) => ArchiveEncoding = archiveEncoding;
 
     internal string Name { get; set; }
     internal string LinkName { get; set; }
@@ -173,10 +170,7 @@ internal sealed class TarHeader
         return ArchiveEncoding.Decode(nameBytes, 0, nameBytes.Length).TrimNulls();
     }
 
-    private static EntryType ReadEntryType(byte[] buffer)
-    {
-        return (EntryType)buffer[156];
-    }
+    private static EntryType ReadEntryType(byte[] buffer) => (EntryType)buffer[156];
 
     private long ReadSize(byte[] buffer)
     {

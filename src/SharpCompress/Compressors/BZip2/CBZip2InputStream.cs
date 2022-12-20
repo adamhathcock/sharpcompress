@@ -1,4 +1,4 @@
-#nullable disable
+﻿#nullable disable
 
 using System;
 using System.IO;
@@ -45,20 +45,11 @@ internal class CBZip2InputStream : Stream
         //throw new CCoruptionError();
     }
 
-    private static void BadBGLengths()
-    {
-        Cadvise();
-    }
+    private static void BadBGLengths() => Cadvise();
 
-    private static void BitStreamEOF()
-    {
-        Cadvise();
-    }
+    private static void BitStreamEOF() => Cadvise();
 
-    private static void CompressedStreamEOF()
-    {
-        Cadvise();
-    }
+    private static void CompressedStreamEOF() => Cadvise();
 
     private void MakeMaps()
     {
@@ -366,20 +357,11 @@ internal class CBZip2InputStream : Stream
         return complete;
     }
 
-    private static void BlockOverrun()
-    {
-        Cadvise();
-    }
+    private static void BlockOverrun() => Cadvise();
 
-    private static void BadBlockHeader()
-    {
-        Cadvise();
-    }
+    private static void BadBlockHeader() => Cadvise();
 
-    private static void CrcError()
-    {
-        Cadvise();
-    }
+    private static void CrcError() => Cadvise();
 
     private void BsFinishedWithStream()
     {
@@ -423,10 +405,7 @@ internal class CBZip2InputStream : Stream
         return v;
     }
 
-    private char BsGetUChar()
-    {
-        return (char)BsR(8);
-    }
+    private char BsGetUChar() => (char)BsR(8);
 
     private int BsGetint()
     {
@@ -438,15 +417,9 @@ internal class CBZip2InputStream : Stream
         return u;
     }
 
-    private int BsGetIntVS(int numBits)
-    {
-        return BsR(numBits);
-    }
+    private int BsGetIntVS(int numBits) => BsR(numBits);
 
-    private int BsGetInt32()
-    {
-        return BsGetint();
-    }
+    private int BsGetInt32() => BsGetint();
 
     private void HbCreateDecodeTables(
         int[] limit,
@@ -1118,10 +1091,7 @@ internal class CBZip2InputStream : Stream
         return k;
     }
 
-    public override long Seek(long offset, SeekOrigin origin)
-    {
-        return 0;
-    }
+    public override long Seek(long offset, SeekOrigin origin) => 0;
 
     public override void SetLength(long value) { }
 
@@ -1139,7 +1109,7 @@ internal class CBZip2InputStream : Stream
 
     public override long Position
     {
-        get { return 0; }
+        get => 0;
         set { }
     }
 }

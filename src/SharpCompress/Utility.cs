@@ -9,10 +9,8 @@ namespace SharpCompress;
 [CLSCompliant(false)]
 public static class Utility
 {
-    public static ReadOnlyCollection<T> ToReadOnly<T>(this ICollection<T> items)
-    {
-        return new ReadOnlyCollection<T>(items);
-    }
+    public static ReadOnlyCollection<T> ToReadOnly<T>(this ICollection<T> items) =>
+        new ReadOnlyCollection<T>(items);
 
     /// <summary>
     /// Performs an unsigned bitwise right shift with the specified number
@@ -258,10 +256,8 @@ public static class Utility
         );
     }
 
-    public static DateTime DosDateToDateTime(uint iTime)
-    {
-        return DosDateToDateTime((ushort)(iTime / 65536), (ushort)(iTime % 65536));
-    }
+    public static DateTime DosDateToDateTime(uint iTime) =>
+        DosDateToDateTime((ushort)(iTime / 65536), (ushort)(iTime % 65536));
 
     /// <summary>
     /// Convert Unix time value to a DateTime object.
@@ -320,15 +316,10 @@ public static class Utility
         }
     }
 
-    private static bool ReadTransferBlock(Stream source, byte[] array, out int count)
-    {
-        return (count = source.Read(array, 0, array.Length)) != 0;
-    }
+    private static bool ReadTransferBlock(Stream source, byte[] array, out int count) =>
+        (count = source.Read(array, 0, array.Length)) != 0;
 
-    private static byte[] GetTransferByteArray()
-    {
-        return ArrayPool<byte>.Shared.Rent(81920);
-    }
+    private static byte[] GetTransferByteArray() => ArrayPool<byte>.Shared.Rent(81920);
 
     public static bool ReadFully(this Stream stream, byte[] buffer)
     {
@@ -360,23 +351,18 @@ public static class Utility
         return (total >= buffer.Length);
     }
 
-    public static string TrimNulls(this string source)
-    {
-        return source.Replace('\0', ' ').Trim();
-    }
+    public static string TrimNulls(this string source) => source.Replace('\0', ' ').Trim();
 
     /// <summary>
     /// Swap the endianness of a UINT32
     /// </summary>
     /// <param name="number">The UINT32 you want to swap his endianness</param>
     /// <returns>Return the new UINT32 in the other endianness format</returns>
-    public static uint SwapUINT32(uint number)
-    {
-        return (number >> 24)
-            | ((number << 8) & 0x00FF0000)
-            | ((number >> 8) & 0x0000FF00)
-            | (number << 24);
-    }
+    public static uint SwapUINT32(uint number) =>
+        (number >> 24)
+        | ((number << 8) & 0x00FF0000)
+        | ((number >> 8) & 0x0000FF00)
+        | (number << 24);
 
     /// <summary>
     /// Insert a little endian UINT32 into a byte array

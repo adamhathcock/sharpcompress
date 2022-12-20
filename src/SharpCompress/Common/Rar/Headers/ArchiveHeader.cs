@@ -35,10 +35,7 @@ internal sealed class ArchiveHeader : RarHeader
 
     private ushort Flags { get; set; }
 
-    private bool HasFlag(ushort flag)
-    {
-        return (Flags & flag) == flag;
-    }
+    private bool HasFlag(ushort flag) => (Flags & flag) == flag;
 
     internal int? VolumeNumber { get; private set; }
 

@@ -17,10 +17,7 @@ public abstract class RarVolume : Volume
     internal int _maxCompressionAlgorithm;
 
     internal RarVolume(StreamingMode mode, Stream stream, ReaderOptions options, int index = 0)
-        : base(stream, options, index)
-    {
-        _headerFactory = new RarHeaderFactory(mode, options);
-    }
+        : base(stream, options, index) => _headerFactory = new RarHeaderFactory(mode, options);
 
 #nullable disable
     internal ArchiveHeader ArchiveHeader { get; private set; }

@@ -1,4 +1,4 @@
-#nullable disable
+﻿#nullable disable
 
 using System.Collections;
 using System.Collections.Generic;
@@ -15,10 +15,7 @@ internal class MultiVolumeRarReader : RarReader
     private Stream tempStream;
 
     internal MultiVolumeRarReader(IEnumerable<Stream> streams, ReaderOptions options)
-        : base(options)
-    {
-        this.streams = streams.GetEnumerator();
-    }
+        : base(options) => this.streams = streams.GetEnumerator();
 
     internal override void ValidateArchive(RarVolume archive) { }
 
@@ -68,15 +65,9 @@ internal class MultiVolumeRarReader : RarReader
             this.tempStream = tempStream;
         }
 
-        public IEnumerator<FilePart> GetEnumerator()
-        {
-            return this;
-        }
+        public IEnumerator<FilePart> GetEnumerator() => this;
 
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return this;
-        }
+        IEnumerator IEnumerable.GetEnumerator() => this;
 
         public FilePart Current { get; private set; }
 

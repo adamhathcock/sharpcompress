@@ -1,4 +1,4 @@
-using System.IO;
+﻿using System.IO;
 using SharpCompress.Common;
 
 namespace SharpCompress.Readers;
@@ -39,15 +39,13 @@ public static class IReaderExtensions
         this IReader reader,
         string destinationDirectory,
         ExtractionOptions? options = null
-    )
-    {
+    ) =>
         ExtractionMethods.WriteEntryToDirectory(
             reader.Entry,
             destinationDirectory,
             options,
             reader.WriteEntryToFile
         );
-    }
 
     /// <summary>
     /// Extract to specific file
@@ -56,8 +54,7 @@ public static class IReaderExtensions
         this IReader reader,
         string destinationFileName,
         ExtractionOptions? options = null
-    )
-    {
+    ) =>
         ExtractionMethods.WriteEntryToFile(
             reader.Entry,
             destinationFileName,
@@ -68,5 +65,4 @@ public static class IReaderExtensions
                 reader.WriteEntryTo(fs);
             }
         );
-    }
 }

@@ -1,4 +1,4 @@
-using System.IO;
+﻿using System.IO;
 using SharpCompress.Common;
 using SharpCompress.Common.Rar;
 
@@ -8,10 +8,8 @@ internal class SingleVolumeRarReader : RarReader
 {
     private readonly Stream stream;
 
-    internal SingleVolumeRarReader(Stream stream, ReaderOptions options) : base(options)
-    {
+    internal SingleVolumeRarReader(Stream stream, ReaderOptions options) : base(options) =>
         this.stream = stream;
-    }
 
     internal override void ValidateArchive(RarVolume archive)
     {
@@ -23,8 +21,5 @@ internal class SingleVolumeRarReader : RarReader
         }
     }
 
-    protected override Stream RequestInitialStream()
-    {
-        return stream;
-    }
+    protected override Stream RequestInitialStream() => stream;
 }

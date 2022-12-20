@@ -10,10 +10,7 @@ public class RewindableStream : Stream
     private bool isRewound;
     private bool isDisposed;
 
-    public RewindableStream(Stream stream)
-    {
-        this.stream = stream;
-    }
+    public RewindableStream(Stream stream) => this.stream = stream;
 
     internal bool IsRecording { get; private set; }
 
@@ -78,10 +75,7 @@ public class RewindableStream : Stream
 
     public override bool CanWrite => false;
 
-    public override void Flush()
-    {
-        throw new NotSupportedException();
-    }
+    public override void Flush() => throw new NotSupportedException();
 
     public override long Length => stream.Length;
 
@@ -146,18 +140,10 @@ public class RewindableStream : Stream
         return read;
     }
 
-    public override long Seek(long offset, SeekOrigin origin)
-    {
-        throw new NotSupportedException();
-    }
+    public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
 
-    public override void SetLength(long value)
-    {
-        throw new NotSupportedException();
-    }
+    public override void SetLength(long value) => throw new NotSupportedException();
 
-    public override void Write(byte[] buffer, int offset, int count)
-    {
+    public override void Write(byte[] buffer, int offset, int count) =>
         throw new NotSupportedException();
-    }
 }

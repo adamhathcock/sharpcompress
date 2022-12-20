@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using static SharpCompress.Compressors.Rar.UnpackV2017.Unpack.Unpack15Local;
 
 namespace SharpCompress.Compressors.Rar.UnpackV2017;
@@ -201,16 +201,10 @@ internal partial class Unpack
     }
 
     //#define GetShortLen1(pos) ((pos)==1 ? Buf60+3:ShortLen1[pos])
-    private uint GetShortLen1(uint pos)
-    {
-        return ((pos) == 1 ? (uint)(Buf60 + 3) : ShortLen1[pos]);
-    }
+    private uint GetShortLen1(uint pos) => ((pos) == 1 ? (uint)(Buf60 + 3) : ShortLen1[pos]);
 
     //#define GetShortLen2(pos) ((pos)==3 ? Buf60+3:ShortLen2[pos])
-    private uint GetShortLen2(uint pos)
-    {
-        return ((pos) == 3 ? (uint)(Buf60 + 3) : ShortLen2[pos]);
-    }
+    private uint GetShortLen2(uint pos) => ((pos) == 3 ? (uint)(Buf60 + 3) : ShortLen2[pos]);
 
     internal static class Unpack15Local
     {

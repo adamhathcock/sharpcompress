@@ -95,15 +95,9 @@ internal class PpmContext : Pointer
         return Initialize<PpmContext>(mem);
     }
 
-    internal State GetOneState()
-    {
-        return _oneState;
-    }
+    internal State GetOneState() => _oneState;
 
-    internal void SetOneState(StateRef oneState)
-    {
-        _oneState.SetValues(oneState);
-    }
+    internal void SetOneState(StateRef oneState) => _oneState.SetValues(oneState);
 
     internal int GetSuffix()
     {
@@ -114,10 +108,7 @@ internal class PpmContext : Pointer
         return _suffix;
     }
 
-    internal void SetSuffix(PpmContext suffix)
-    {
-        SetSuffix(suffix.Address);
-    }
+    internal void SetSuffix(PpmContext suffix) => SetSuffix(suffix.Address);
 
     internal void SetSuffix(int suffix)
     {
@@ -263,10 +254,8 @@ internal class PpmContext : Pointer
         return ret;
     }
 
-    internal int GetMean(int summ, int shift, int round)
-    {
-        return (Utility.URShift((summ + (1 << (shift - round))), (shift)));
-    }
+    internal int GetMean(int summ, int shift, int round) =>
+        (Utility.URShift((summ + (1 << (shift - round))), (shift)));
 
     internal void DecodeBinSymbol(ModelPpm model)
     {
@@ -558,8 +547,5 @@ internal class PpmContext : Pointer
         return buffer.ToString();
     }
 
-    static PpmContext()
-    {
-        UNION_SIZE = Math.Max(FreqData.SIZE, State.SIZE);
-    }
+    static PpmContext() => UNION_SIZE = Math.Max(FreqData.SIZE, State.SIZE);
 }

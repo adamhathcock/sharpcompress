@@ -109,15 +109,9 @@ public abstract class AbstractReader<TEntry, TVolume> : IReader, IReaderExtracti
         return entriesForCurrentReadStream.MoveNext();
     }
 
-    protected virtual Stream RequestInitialStream()
-    {
-        return Volume.Stream;
-    }
+    protected virtual Stream RequestInitialStream() => Volume.Stream;
 
-    internal virtual bool NextEntryForCurrentStream()
-    {
-        return entriesForCurrentReadStream!.MoveNext();
-    }
+    internal virtual bool NextEntryForCurrentStream() => entriesForCurrentReadStream!.MoveNext();
 
     protected abstract IEnumerable<TEntry> GetEntries(Stream stream);
 
@@ -196,15 +190,11 @@ public abstract class AbstractReader<TEntry, TVolume> : IReader, IReaderExtracti
     /// <summary>
     /// Retains a reference to the entry stream, so we can check whether it completed later.
     /// </summary>
-    protected EntryStream CreateEntryStream(Stream decompressed)
-    {
-        return new EntryStream(this, decompressed);
-    }
+    protected EntryStream CreateEntryStream(Stream decompressed) =>
+        new EntryStream(this, decompressed);
 
-    protected virtual EntryStream GetEntryStream()
-    {
-        return CreateEntryStream(Entry.Parts.First().GetCompressedStream());
-    }
+    protected virtual EntryStream GetEntryStream() =>
+        CreateEntryStream(Entry.Parts.First().GetCompressedStream());
 
     #endregion
 
@@ -213,8 +203,7 @@ public abstract class AbstractReader<TEntry, TVolume> : IReader, IReaderExtracti
     void IExtractionListener.FireCompressedBytesRead(
         long currentPartCompressedBytes,
         long compressedReadBytes
-    )
-    {
+    ) =>
         CompressedBytesRead?.Invoke(
             this,
             new CompressedBytesReadEventArgs(
@@ -222,14 +211,12 @@ public abstract class AbstractReader<TEntry, TVolume> : IReader, IReaderExtracti
                 compressedBytesRead: compressedReadBytes
             )
         );
-    }
 
     void IExtractionListener.FireFilePartExtractionBegin(
         string name,
         long size,
         long compressedSize
-    )
-    {
+    ) =>
         FilePartExtractionBegin?.Invoke(
             this,
             new FilePartExtractionBeginEventArgs(
@@ -238,14 +225,12 @@ public abstract class AbstractReader<TEntry, TVolume> : IReader, IReaderExtracti
                 name: name
             )
         );
-    }
 
     void IReaderExtractionListener.FireEntryExtractionProgress(
         Entry entry,
         long bytesTransferred,
         int iterations
-    )
-    {
+    ) =>
         EntryExtractionProgress?.Invoke(
             this,
             new ReaderExtractionEventArgs<IEntry>(
@@ -253,5 +238,4 @@ public abstract class AbstractReader<TEntry, TVolume> : IReader, IReaderExtracti
                 new ReaderProgress(entry, bytesTransferred, iterations)
             )
         );
-    }
 }

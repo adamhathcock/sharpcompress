@@ -1,4 +1,4 @@
-using System.IO;
+﻿using System.IO;
 using System.Linq;
 using SharpCompress.Common.GZip;
 
@@ -6,10 +6,8 @@ namespace SharpCompress.Archives.GZip;
 
 public class GZipArchiveEntry : GZipEntry, IArchiveEntry
 {
-    internal GZipArchiveEntry(GZipArchive archive, GZipFilePart part) : base(part)
-    {
+    internal GZipArchiveEntry(GZipArchive archive, GZipFilePart part) : base(part) =>
         Archive = archive;
-    }
 
     public virtual Stream OpenEntryStream()
     {

@@ -10,10 +10,7 @@ internal struct BitEncoder
 
     private uint _prob;
 
-    public void Init()
-    {
-        _prob = K_BIT_MODEL_TOTAL >> 1;
-    }
+    public void Init() => _prob = K_BIT_MODEL_TOTAL >> 1;
 
     public void UpdateModel(uint symbol)
     {
@@ -70,23 +67,15 @@ internal struct BitEncoder
         }
     }
 
-    public uint GetPrice(uint symbol)
-    {
-        return PROB_PRICES[
+    public uint GetPrice(uint symbol) =>
+        PROB_PRICES[
             (((_prob - symbol) ^ ((-(int)symbol))) & (K_BIT_MODEL_TOTAL - 1))
                 >> K_NUM_MOVE_REDUCING_BITS
         ];
-    }
 
-    public uint GetPrice0()
-    {
-        return PROB_PRICES[_prob >> K_NUM_MOVE_REDUCING_BITS];
-    }
+    public uint GetPrice0() => PROB_PRICES[_prob >> K_NUM_MOVE_REDUCING_BITS];
 
-    public uint GetPrice1()
-    {
-        return PROB_PRICES[(K_BIT_MODEL_TOTAL - _prob) >> K_NUM_MOVE_REDUCING_BITS];
-    }
+    public uint GetPrice1() => PROB_PRICES[(K_BIT_MODEL_TOTAL - _prob) >> K_NUM_MOVE_REDUCING_BITS];
 }
 
 internal struct BitDecoder
@@ -109,10 +98,7 @@ internal struct BitDecoder
         }
     }
 
-    public void Init()
-    {
-        _prob = K_BIT_MODEL_TOTAL >> 1;
-    }
+    public void Init() => _prob = K_BIT_MODEL_TOTAL >> 1;
 
     public uint Decode(Decoder rangeDecoder)
     {

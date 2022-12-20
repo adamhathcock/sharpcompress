@@ -1,19 +1,14 @@
-using System.IO;
+﻿using System.IO;
 using SharpCompress.Common.SevenZip;
 
 namespace SharpCompress.Archives.SevenZip;
 
 public class SevenZipArchiveEntry : SevenZipEntry, IArchiveEntry
 {
-    internal SevenZipArchiveEntry(SevenZipArchive archive, SevenZipFilePart part) : base(part)
-    {
+    internal SevenZipArchiveEntry(SevenZipArchive archive, SevenZipFilePart part) : base(part) =>
         Archive = archive;
-    }
 
-    public Stream OpenEntryStream()
-    {
-        return FilePart.GetCompressedStream();
-    }
+    public Stream OpenEntryStream() => FilePart.GetCompressedStream();
 
     public IArchive Archive { get; }
 

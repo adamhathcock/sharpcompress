@@ -1,4 +1,4 @@
-using System.IO;
+﻿using System.IO;
 using SharpCompress.Common;
 using SharpCompress.Writers;
 using SharpCompress.Writers.GZip;
@@ -8,10 +8,7 @@ namespace SharpCompress.Test.GZip;
 
 public class GZipWriterTests : WriterTests
 {
-    public GZipWriterTests() : base(ArchiveType.GZip)
-    {
-        UseExtensionInsteadOfNameToVerify = true;
-    }
+    public GZipWriterTests() : base(ArchiveType.GZip) => UseExtensionInsteadOfNameToVerify = true;
 
     [Fact]
     public void GZip_Writer_Generic()
@@ -54,14 +51,12 @@ public class GZipWriterTests : WriterTests
     }
 
     [Fact]
-    public void GZip_Writer_Generic_Bad_Compression()
-    {
+    public void GZip_Writer_Generic_Bad_Compression() =>
         Assert.Throws<InvalidFormatException>(() =>
         {
             using Stream stream = File.OpenWrite(Path.Combine(SCRATCH_FILES_PATH, "Tar.tar.gz"));
             using var writer = WriterFactory.Open(stream, ArchiveType.GZip, CompressionType.BZip2);
         });
-    }
 
     [Fact]
     public void GZip_Writer_Entry_Path_With_Dir()

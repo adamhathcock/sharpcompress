@@ -113,10 +113,7 @@ public class SevenZipArchive : AbstractArchive<SevenZipArchiveEntry, SevenZipVol
         return new SevenZipVolume(srcStream, ReaderOptions, idx++).AsEnumerable(); //simple single volume or split, multivolume not supported
     }
 
-    public static bool IsSevenZipFile(string filePath)
-    {
-        return IsSevenZipFile(new FileInfo(filePath));
-    }
+    public static bool IsSevenZipFile(string filePath) => IsSevenZipFile(new FileInfo(filePath));
 
     public static bool IsSevenZipFile(FileInfo fileInfo)
     {
@@ -191,18 +188,11 @@ public class SevenZipArchive : AbstractArchive<SevenZipArchiveEntry, SevenZipVol
         return signatureBytes.SequenceEqual(SIGNATURE);
     }
 
-    protected override IReader CreateReaderForSolidExtraction()
-    {
-        return new SevenZipReader(ReaderOptions, this);
-    }
+    protected override IReader CreateReaderForSolidExtraction() =>
+        new SevenZipReader(ReaderOptions, this);
 
-    public override bool IsSolid
-    {
-        get
-        {
-            return Entries.Where(x => !x.IsDirectory).GroupBy(x => x.FilePart.Folder).Count() > 1;
-        }
-    }
+    public override bool IsSolid =>
+        Entries.Where(x => !x.IsDirectory).GroupBy(x => x.FilePart.Folder).Count() > 1;
 
     public override long TotalSize
     {
@@ -221,10 +211,7 @@ public class SevenZipArchive : AbstractArchive<SevenZipArchiveEntry, SevenZipVol
         private CFileItem currentItem;
 
         internal SevenZipReader(ReaderOptions readerOptions, SevenZipArchive archive)
-            : base(readerOptions, ArchiveType.SevenZip)
-        {
-            this.archive = archive;
-        }
+            : base(readerOptions, ArchiveType.SevenZip) => this.archive = archive;
 
         public override SevenZipVolume Volume => archive.Volumes.Single();
 
@@ -261,24 +248,16 @@ public class SevenZipArchive : AbstractArchive<SevenZipArchiveEntry, SevenZipVol
             }
         }
 
-        protected override EntryStream GetEntryStream()
-        {
-            return CreateEntryStream(new ReadOnlySubStream(currentStream, currentItem.Size));
-        }
+        protected override EntryStream GetEntryStream() =>
+            CreateEntryStream(new ReadOnlySubStream(currentStream, currentItem.Size));
     }
 
     private class PasswordProvider : IPasswordProvider
     {
         private readonly string _password;
 
-        public PasswordProvider(string password)
-        {
-            _password = password;
-        }
+        public PasswordProvider(string password) => _password = password;
 
-        public string CryptoGetTextPassword()
-        {
-            return _password;
-        }
+        public string CryptoGetTextPassword() => _password;
     }
 }

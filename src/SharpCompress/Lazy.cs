@@ -10,10 +10,7 @@ public class Lazy<T>
     private bool _evaluated;
     private T _value;
 
-    public Lazy(Func<T> lazyFunc)
-    {
-        _lazyFunc = lazyFunc;
-    }
+    public Lazy(Func<T> lazyFunc) => _lazyFunc = lazyFunc;
 
     public T Value
     {

@@ -1,4 +1,3 @@
-using System;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -14,10 +13,7 @@ public class XZHeader
     public CheckType BlockCheckType { get; private set; }
     public int BlockCheckSize => ((((int)BlockCheckType) + 2) / 3) * 4;
 
-    public XZHeader(BinaryReader reader)
-    {
-        _reader = reader;
-    }
+    public XZHeader(BinaryReader reader) => _reader = reader;
 
     public static XZHeader FromStream(Stream stream)
     {

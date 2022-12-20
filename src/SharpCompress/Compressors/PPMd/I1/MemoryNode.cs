@@ -117,10 +117,7 @@ internal struct MemoryNode
     /// <summary>
     /// Unlink this memory node.
     /// </summary>
-    public void Unlink()
-    {
-        Next = Next.Next;
-    }
+    public void Unlink() => Next = Next.Next;
 
     /// <summary>
     /// Insert the memory node into the linked list.
@@ -152,10 +149,8 @@ internal struct MemoryNode
     /// </summary>
     /// <param name="pointer"></param>
     /// <returns></returns>
-    public static implicit operator MemoryNode(Pointer pointer)
-    {
-        return new MemoryNode(pointer._address, pointer._memory);
-    }
+    public static implicit operator MemoryNode(Pointer pointer) =>
+        new MemoryNode(pointer._address, pointer._memory);
 
     /// <summary>
     /// Allow pointer-like addition on a memory node.
@@ -211,10 +206,8 @@ internal struct MemoryNode
     /// <param name="memoryNode1"></param>
     /// <param name="memoryNode2"></param>
     /// <returns></returns>
-    public static bool operator ==(MemoryNode memoryNode1, MemoryNode memoryNode2)
-    {
-        return memoryNode1._address == memoryNode2._address;
-    }
+    public static bool operator ==(MemoryNode memoryNode1, MemoryNode memoryNode2) =>
+        memoryNode1._address == memoryNode2._address;
 
     /// <summary>
     /// Compare two memory nodes.
@@ -222,10 +215,8 @@ internal struct MemoryNode
     /// <param name="memoryNode1"></param>
     /// <param name="memoryNode2"></param>
     /// <returns></returns>
-    public static bool operator !=(MemoryNode memoryNode1, MemoryNode memoryNode2)
-    {
-        return memoryNode1._address != memoryNode2._address;
-    }
+    public static bool operator !=(MemoryNode memoryNode1, MemoryNode memoryNode2) =>
+        memoryNode1._address != memoryNode2._address;
 
     /// <summary>
     /// Indicates whether this instance and a specified object are equal.
@@ -245,8 +236,5 @@ internal struct MemoryNode
     /// Returns the hash code for this instance.
     /// </summary>
     /// <returns>A 32-bit signed integer that is the hash code for this instance.</returns>
-    public override int GetHashCode()
-    {
-        return _address.GetHashCode();
-    }
+    public override int GetHashCode() => _address.GetHashCode();
 }

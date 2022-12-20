@@ -9,10 +9,7 @@ namespace SharpCompress.Test.GZip;
 
 public class GZipArchiveTests : ArchiveTests
 {
-    public GZipArchiveTests()
-    {
-        UseExtensionInsteadOfNameToVerify = true;
-    }
+    public GZipArchiveTests() => UseExtensionInsteadOfNameToVerify = true;
 
     [Fact]
     public void GZip_Archive_Generic()

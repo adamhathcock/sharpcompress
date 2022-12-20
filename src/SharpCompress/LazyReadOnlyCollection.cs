@@ -1,4 +1,4 @@
-#nullable disable
+﻿#nullable disable
 
 using System;
 using System.Collections;
@@ -12,10 +12,7 @@ internal sealed class LazyReadOnlyCollection<T> : ICollection<T>
     private readonly IEnumerator<T> source;
     private bool fullyLoaded;
 
-    public LazyReadOnlyCollection(IEnumerable<T> source)
-    {
-        this.source = source.GetEnumerator();
-    }
+    public LazyReadOnlyCollection(IEnumerable<T> source) => this.source = source.GetEnumerator();
 
     private class LazyLoader : IEnumerator<T>
     {
@@ -23,10 +20,8 @@ internal sealed class LazyReadOnlyCollection<T> : ICollection<T>
         private bool disposed;
         private int index = -1;
 
-        internal LazyLoader(LazyReadOnlyCollection<T> lazyReadOnlyCollection)
-        {
+        internal LazyLoader(LazyReadOnlyCollection<T> lazyReadOnlyCollection) =>
             this.lazyReadOnlyCollection = lazyReadOnlyCollection;
-        }
 
         #region IEnumerator<T> Members
 
@@ -67,10 +62,7 @@ internal sealed class LazyReadOnlyCollection<T> : ICollection<T>
             return false;
         }
 
-        public void Reset()
-        {
-            throw new NotSupportedException();
-        }
+        public void Reset() => throw new NotSupportedException();
 
         #endregion
     }
@@ -84,22 +76,13 @@ internal sealed class LazyReadOnlyCollection<T> : ICollection<T>
         }
     }
 
-    internal IEnumerable<T> GetLoaded()
-    {
-        return backing;
-    }
+    internal IEnumerable<T> GetLoaded() => backing;
 
     #region ICollection<T> Members
 
-    public void Add(T item)
-    {
-        throw new NotSupportedException();
-    }
+    public void Add(T item) => throw new NotSupportedException();
 
-    public void Clear()
-    {
-        throw new NotSupportedException();
-    }
+    public void Clear() => throw new NotSupportedException();
 
     public bool Contains(T item)
     {
@@ -124,29 +107,20 @@ internal sealed class LazyReadOnlyCollection<T> : ICollection<T>
 
     public bool IsReadOnly => true;
 
-    public bool Remove(T item)
-    {
-        throw new NotSupportedException();
-    }
+    public bool Remove(T item) => throw new NotSupportedException();
 
     #endregion
 
     #region IEnumerable<T> Members
 
     //TODO check for concurrent access
-    public IEnumerator<T> GetEnumerator()
-    {
-        return new LazyLoader(this);
-    }
+    public IEnumerator<T> GetEnumerator() => new LazyLoader(this);
 
     #endregion
 
     #region IEnumerable Members
 
-    IEnumerator IEnumerable.GetEnumerator()
-    {
-        return GetEnumerator();
-    }
+    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
     #endregion
 }

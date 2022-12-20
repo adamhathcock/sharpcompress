@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.IO;
 
 namespace SharpCompress.Compressors.BZip2;
@@ -27,10 +27,7 @@ public sealed class BZip2Stream : Stream
         }
     }
 
-    public void Finish()
-    {
-        (stream as CBZip2OutputStream)?.Finish();
-    }
+    public void Finish() => (stream as CBZip2OutputStream)?.Finish();
 
     protected override void Dispose(bool disposing)
     {
@@ -53,10 +50,7 @@ public sealed class BZip2Stream : Stream
 
     public override bool CanWrite => stream.CanWrite;
 
-    public override void Flush()
-    {
-        stream.Flush();
-    }
+    public override void Flush() => stream.Flush();
 
     public override long Length => stream.Length;
 
@@ -66,48 +60,26 @@ public sealed class BZip2Stream : Stream
         set => stream.Position = value;
     }
 
-    public override int Read(byte[] buffer, int offset, int count)
-    {
-        return stream.Read(buffer, offset, count);
-    }
+    public override int Read(byte[] buffer, int offset, int count) =>
+        stream.Read(buffer, offset, count);
 
-    public override int ReadByte()
-    {
-        return stream.ReadByte();
-    }
+    public override int ReadByte() => stream.ReadByte();
 
-    public override long Seek(long offset, SeekOrigin origin)
-    {
-        return stream.Seek(offset, origin);
-    }
+    public override long Seek(long offset, SeekOrigin origin) => stream.Seek(offset, origin);
 
-    public override void SetLength(long value)
-    {
-        stream.SetLength(value);
-    }
+    public override void SetLength(long value) => stream.SetLength(value);
 
 #if !NETFRAMEWORK && !NETSTANDARD2_0
 
-    public override int Read(Span<byte> buffer)
-    {
-        return stream.Read(buffer);
-    }
+    public override int Read(Span<byte> buffer) => stream.Read(buffer);
 
-    public override void Write(ReadOnlySpan<byte> buffer)
-    {
-        stream.Write(buffer);
-    }
+    public override void Write(ReadOnlySpan<byte> buffer) => stream.Write(buffer);
 #endif
 
-    public override void Write(byte[] buffer, int offset, int count)
-    {
+    public override void Write(byte[] buffer, int offset, int count) =>
         stream.Write(buffer, offset, count);
-    }
 
-    public override void WriteByte(byte value)
-    {
-        stream.WriteByte(value);
-    }
+    public override void WriteByte(byte value) => stream.WriteByte(value);
 
     /// <summary>
     /// Consumes two bytes to test if there is a BZip2 header

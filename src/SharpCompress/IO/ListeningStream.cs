@@ -1,4 +1,4 @@
-using System.IO;
+﻿using System.IO;
 using SharpCompress.Common;
 
 namespace SharpCompress.IO;
@@ -31,10 +31,7 @@ internal class ListeningStream : Stream
 
     public override bool CanWrite => Stream.CanWrite;
 
-    public override void Flush()
-    {
-        Stream.Flush();
-    }
+    public override void Flush() => Stream.Flush();
 
     public override long Length => Stream.Length;
 
@@ -65,18 +62,10 @@ internal class ListeningStream : Stream
         return value;
     }
 
-    public override long Seek(long offset, SeekOrigin origin)
-    {
-        return Stream.Seek(offset, origin);
-    }
+    public override long Seek(long offset, SeekOrigin origin) => Stream.Seek(offset, origin);
 
-    public override void SetLength(long value)
-    {
-        Stream.SetLength(value);
-    }
+    public override void SetLength(long value) => Stream.SetLength(value);
 
-    public override void Write(byte[] buffer, int offset, int count)
-    {
+    public override void Write(byte[] buffer, int offset, int count) =>
         Stream.Write(buffer, offset, count);
-    }
 }

@@ -17,15 +17,9 @@ internal class Encoder
 
     //long StartPosition;
 
-    public void SetStream(Stream stream)
-    {
-        _stream = stream;
-    }
+    public void SetStream(Stream stream) => _stream = stream;
 
-    public void ReleaseStream()
-    {
-        _stream = null;
-    }
+    public void ReleaseStream() => _stream = null;
 
     public void Init()
     {
@@ -45,15 +39,9 @@ internal class Encoder
         }
     }
 
-    public void FlushStream()
-    {
-        _stream.Flush();
-    }
+    public void FlushStream() => _stream.Flush();
 
-    public void CloseStream()
-    {
-        _stream.Dispose();
-    }
+    public void CloseStream() => _stream.Dispose();
 
     public void Encode(uint start, uint size, uint total)
     {
@@ -118,13 +106,10 @@ internal class Encoder
         }
     }
 
-    public long GetProcessedSizeAdd()
-    {
-        return -1;
+    public long GetProcessedSizeAdd() => -1;
 
-        //return _cacheSize + Stream.Position - StartPosition + 4;
-        // (long)Stream.GetProcessedSize();
-    }
+    //return _cacheSize + Stream.Position - StartPosition + 4;
+    // (long)Stream.GetProcessedSize();
 }
 
 internal class Decoder
@@ -151,16 +136,11 @@ internal class Decoder
         _total = 5;
     }
 
-    public void ReleaseStream()
-    {
+    public void ReleaseStream() =>
         // Stream.ReleaseStream();
         _stream = null;
-    }
 
-    public void CloseStream()
-    {
-        _stream.Dispose();
-    }
+    public void CloseStream() => _stream.Dispose();
 
     public void Normalize()
     {
@@ -182,10 +162,7 @@ internal class Decoder
         }
     }
 
-    public uint GetThreshold(uint total)
-    {
-        return _code / (_range /= total);
-    }
+    public uint GetThreshold(uint total) => _code / (_range /= total);
 
     public void Decode(uint start, uint size)
     {

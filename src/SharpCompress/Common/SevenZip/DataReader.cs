@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.IO;
 using System.Text;
 using SharpCompress.Compressors.LZMA;
@@ -9,25 +9,21 @@ internal class DataReader
 {
     #region Static Methods
 
-    public static uint Get32(byte[] buffer, int offset)
-    {
-        return buffer[offset]
-            + ((uint)buffer[offset + 1] << 8)
-            + ((uint)buffer[offset + 2] << 16)
-            + ((uint)buffer[offset + 3] << 24);
-    }
+    public static uint Get32(byte[] buffer, int offset) =>
+        buffer[offset]
+        + ((uint)buffer[offset + 1] << 8)
+        + ((uint)buffer[offset + 2] << 16)
+        + ((uint)buffer[offset + 3] << 24);
 
-    public static ulong Get64(byte[] buffer, int offset)
-    {
-        return buffer[offset]
-            + ((ulong)buffer[offset + 1] << 8)
-            + ((ulong)buffer[offset + 2] << 16)
-            + ((ulong)buffer[offset + 3] << 24)
-            + ((ulong)buffer[offset + 4] << 32)
-            + ((ulong)buffer[offset + 5] << 40)
-            + ((ulong)buffer[offset + 6] << 48)
-            + ((ulong)buffer[offset + 7] << 56);
-    }
+    public static ulong Get64(byte[] buffer, int offset) =>
+        buffer[offset]
+        + ((ulong)buffer[offset + 1] << 8)
+        + ((ulong)buffer[offset + 2] << 16)
+        + ((ulong)buffer[offset + 3] << 24)
+        + ((ulong)buffer[offset + 4] << 32)
+        + ((ulong)buffer[offset + 5] << 40)
+        + ((ulong)buffer[offset + 6] << 48)
+        + ((ulong)buffer[offset + 7] << 56);
 
     #endregion
 
@@ -85,10 +81,7 @@ internal class DataReader
 #endif
     }
 
-    public void SkipData()
-    {
-        SkipData(checked((long)ReadNumber()));
-    }
+    public void SkipData() => SkipData(checked((long)ReadNumber()));
 
     public ulong ReadNumber()
     {

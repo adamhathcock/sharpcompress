@@ -8,10 +8,7 @@ namespace SharpCompress.Compressors.Deflate64;
 
 internal sealed class DeflateInput
 {
-    public DeflateInput(byte[] buffer)
-    {
-        Buffer = buffer;
-    }
+    public DeflateInput(byte[] buffer) => Buffer = buffer;
 
     public byte[] Buffer { get; }
     public int Count { get; set; }

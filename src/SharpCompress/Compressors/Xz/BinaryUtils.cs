@@ -13,10 +13,8 @@ public static class BinaryUtils
         return BinaryPrimitives.ReadInt32LittleEndian(bytes);
     }
 
-    internal static uint ReadLittleEndianUInt32(this BinaryReader reader)
-    {
-        return unchecked((uint)ReadLittleEndianInt32(reader));
-    }
+    internal static uint ReadLittleEndianUInt32(this BinaryReader reader) =>
+        unchecked((uint)ReadLittleEndianInt32(reader));
 
     public static int ReadLittleEndianInt32(this Stream stream)
     {
@@ -29,10 +27,8 @@ public static class BinaryUtils
         return BinaryPrimitives.ReadInt32LittleEndian(bytes);
     }
 
-    internal static uint ReadLittleEndianUInt32(this Stream stream)
-    {
-        return unchecked((uint)ReadLittleEndianInt32(stream));
-    }
+    internal static uint ReadLittleEndianUInt32(this Stream stream) =>
+        unchecked((uint)ReadLittleEndianInt32(stream));
 
     internal static byte[] ToBigEndianBytes(this uint uint32)
     {

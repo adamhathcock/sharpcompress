@@ -84,10 +84,8 @@ internal struct PpmState
     /// </summary>
     /// <param name="pointer"></param>
     /// <returns></returns>
-    public static implicit operator PpmState(Pointer pointer)
-    {
-        return new PpmState(pointer._address, pointer._memory);
-    }
+    public static implicit operator PpmState(Pointer pointer) =>
+        new PpmState(pointer._address, pointer._memory);
 
     /// <summary>
     /// Allow pointer-like addition on a PPM state.
@@ -141,10 +139,8 @@ internal struct PpmState
     /// <param name="state1"></param>
     /// <param name="state2"></param>
     /// <returns></returns>
-    public static bool operator <=(PpmState state1, PpmState state2)
-    {
-        return state1._address <= state2._address;
-    }
+    public static bool operator <=(PpmState state1, PpmState state2) =>
+        state1._address <= state2._address;
 
     /// <summary>
     /// Compare two PPM states.
@@ -152,10 +148,8 @@ internal struct PpmState
     /// <param name="state1"></param>
     /// <param name="state2"></param>
     /// <returns></returns>
-    public static bool operator >=(PpmState state1, PpmState state2)
-    {
-        return state1._address >= state2._address;
-    }
+    public static bool operator >=(PpmState state1, PpmState state2) =>
+        state1._address >= state2._address;
 
     /// <summary>
     /// Compare two PPM states.
@@ -163,10 +157,8 @@ internal struct PpmState
     /// <param name="state1"></param>
     /// <param name="state2"></param>
     /// <returns></returns>
-    public static bool operator ==(PpmState state1, PpmState state2)
-    {
-        return state1._address == state2._address;
-    }
+    public static bool operator ==(PpmState state1, PpmState state2) =>
+        state1._address == state2._address;
 
     /// <summary>
     /// Compare two PPM states.
@@ -174,10 +166,8 @@ internal struct PpmState
     /// <param name="state1"></param>
     /// <param name="state2"></param>
     /// <returns></returns>
-    public static bool operator !=(PpmState state1, PpmState state2)
-    {
-        return state1._address != state2._address;
-    }
+    public static bool operator !=(PpmState state1, PpmState state2) =>
+        state1._address != state2._address;
 
     /// <summary>
     /// Indicates whether this instance and a specified object are equal.
@@ -197,8 +187,5 @@ internal struct PpmState
     /// Returns the hash code for this instance.
     /// </summary>
     /// <returns>A 32-bit signed integer that is the hash code for this instance.</returns>
-    public override int GetHashCode()
-    {
-        return _address.GetHashCode();
-    }
+    public override int GetHashCode() => _address.GetHashCode();
 }

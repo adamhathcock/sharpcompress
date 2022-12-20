@@ -1,4 +1,4 @@
-#nullable disable
+﻿#nullable disable
 
 using System;
 using System.Collections.Generic;
@@ -27,10 +27,8 @@ internal class ArchiveDatabase
 
     internal IPasswordProvider PasswordProvider { get; }
 
-    public ArchiveDatabase(IPasswordProvider passwordProvider)
-    {
+    public ArchiveDatabase(IPasswordProvider passwordProvider) =>
         PasswordProvider = passwordProvider;
-    }
 
     internal void Clear()
     {
@@ -45,14 +43,12 @@ internal class ArchiveDatabase
         _fileIndexToFolderIndexMap.Clear();
     }
 
-    internal bool IsEmpty()
-    {
-        return _packSizes.Count == 0
-            && _packCrCs.Count == 0
-            && _folders.Count == 0
-            && _numUnpackStreamsVector.Count == 0
-            && _files.Count == 0;
-    }
+    internal bool IsEmpty() =>
+        _packSizes.Count == 0
+        && _packCrCs.Count == 0
+        && _folders.Count == 0
+        && _numUnpackStreamsVector.Count == 0
+        && _files.Count == 0;
 
     private void FillStartPos()
     {

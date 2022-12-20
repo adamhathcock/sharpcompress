@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Buffers.Binary;
 using System.IO;
 
@@ -10,30 +10,17 @@ internal class MarkingBinaryReader : BinaryReader
 
     public virtual long CurrentReadByteCount { get; protected set; }
 
-    public virtual void Mark()
-    {
-        CurrentReadByteCount = 0;
-    }
+    public virtual void Mark() => CurrentReadByteCount = 0;
 
-    public override int Read()
-    {
+    public override int Read() => throw new NotSupportedException();
+
+    public override int Read(byte[] buffer, int index, int count) =>
         throw new NotSupportedException();
-    }
 
-    public override int Read(byte[] buffer, int index, int count)
-    {
+    public override int Read(char[] buffer, int index, int count) =>
         throw new NotSupportedException();
-    }
 
-    public override int Read(char[] buffer, int index, int count)
-    {
-        throw new NotSupportedException();
-    }
-
-    public override bool ReadBoolean()
-    {
-        return ReadByte() != 0;
-    }
+    public override bool ReadBoolean() => ReadByte() != 0;
 
     // NOTE: there is a somewhat fragile dependency on the internals of this class
     // with RarCrcBinaryReader and RarCryptoBinaryReader.
@@ -67,65 +54,29 @@ internal class MarkingBinaryReader : BinaryReader
         return bytes;
     }
 
-    public override char ReadChar()
-    {
-        throw new NotSupportedException();
-    }
+    public override char ReadChar() => throw new NotSupportedException();
 
-    public override char[] ReadChars(int count)
-    {
-        throw new NotSupportedException();
-    }
+    public override char[] ReadChars(int count) => throw new NotSupportedException();
 
-    public override double ReadDouble()
-    {
-        throw new NotSupportedException();
-    }
+    public override double ReadDouble() => throw new NotSupportedException();
 
-    public override short ReadInt16()
-    {
-        return BinaryPrimitives.ReadInt16LittleEndian(ReadBytes(2));
-    }
+    public override short ReadInt16() => BinaryPrimitives.ReadInt16LittleEndian(ReadBytes(2));
 
-    public override int ReadInt32()
-    {
-        return BinaryPrimitives.ReadInt32LittleEndian(ReadBytes(4));
-    }
+    public override int ReadInt32() => BinaryPrimitives.ReadInt32LittleEndian(ReadBytes(4));
 
-    public override long ReadInt64()
-    {
-        return BinaryPrimitives.ReadInt64LittleEndian(ReadBytes(8));
-    }
+    public override long ReadInt64() => BinaryPrimitives.ReadInt64LittleEndian(ReadBytes(8));
 
-    public override sbyte ReadSByte()
-    {
-        return (sbyte)ReadByte();
-    }
+    public override sbyte ReadSByte() => (sbyte)ReadByte();
 
-    public override float ReadSingle()
-    {
-        throw new NotSupportedException();
-    }
+    public override float ReadSingle() => throw new NotSupportedException();
 
-    public override string ReadString()
-    {
-        throw new NotSupportedException();
-    }
+    public override string ReadString() => throw new NotSupportedException();
 
-    public override ushort ReadUInt16()
-    {
-        return BinaryPrimitives.ReadUInt16LittleEndian(ReadBytes(2));
-    }
+    public override ushort ReadUInt16() => BinaryPrimitives.ReadUInt16LittleEndian(ReadBytes(2));
 
-    public override uint ReadUInt32()
-    {
-        return BinaryPrimitives.ReadUInt32LittleEndian(ReadBytes(4));
-    }
+    public override uint ReadUInt32() => BinaryPrimitives.ReadUInt32LittleEndian(ReadBytes(4));
 
-    public override ulong ReadUInt64()
-    {
-        return BinaryPrimitives.ReadUInt64LittleEndian(ReadBytes(8));
-    }
+    public override ulong ReadUInt64() => BinaryPrimitives.ReadUInt64LittleEndian(ReadBytes(8));
 
     // RAR5 style variable length encoded value
     // maximum value of 0xffffffffffffffff (64 bits)
@@ -135,11 +86,9 @@ internal class MarkingBinaryReader : BinaryReader
     // and highest bit in every byte is the continuation flag. If highest bit is 0, this is the last byte in sequence.
     // So first byte contains 7 least significant bits of integer and continuation flag. Second byte, if present,
     // contains next 7 bits and so on.
-    public ulong ReadRarVInt(int maxBytes = 10)
-    {
+    public ulong ReadRarVInt(int maxBytes = 10) =>
         // hopefully this gets inlined
-        return DoReadRarVInt((maxBytes - 1) * 7);
-    }
+        DoReadRarVInt((maxBytes - 1) * 7);
 
     private ulong DoReadRarVInt(int maxShift)
     {
@@ -167,23 +116,17 @@ internal class MarkingBinaryReader : BinaryReader
         throw new FormatException("malformed vint");
     }
 
-    public uint ReadRarVIntUInt32(int maxBytes = 5)
-    {
+    public uint ReadRarVIntUInt32(int maxBytes = 5) =>
         // hopefully this gets inlined
-        return DoReadRarVIntUInt32((maxBytes - 1) * 7);
-    }
+        DoReadRarVIntUInt32((maxBytes - 1) * 7);
 
-    public ushort ReadRarVIntUInt16(int maxBytes = 3)
-    {
+    public ushort ReadRarVIntUInt16(int maxBytes = 3) =>
         // hopefully this gets inlined
-        return checked((ushort)DoReadRarVIntUInt32((maxBytes - 1) * 7));
-    }
+        checked((ushort)DoReadRarVIntUInt32((maxBytes - 1) * 7));
 
-    public byte ReadRarVIntByte(int maxBytes = 2)
-    {
+    public byte ReadRarVIntByte(int maxBytes = 2) =>
         // hopefully this gets inlined
-        return checked((byte)DoReadRarVIntUInt32((maxBytes - 1) * 7));
-    }
+        checked((byte)DoReadRarVIntUInt32((maxBytes - 1) * 7));
 
     private uint DoReadRarVIntUInt32(int maxShift)
     {

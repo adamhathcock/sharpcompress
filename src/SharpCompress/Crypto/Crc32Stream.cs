@@ -29,10 +29,7 @@ public sealed class Crc32Stream : Stream
 
     public Stream WrappedStream => stream;
 
-    public override void Flush()
-    {
-        stream.Flush();
-    }
+    public override void Flush() => stream.Flush();
 
     public override int Read(byte[] buffer, int offset, int count) =>
         throw new NotSupportedException();
@@ -75,20 +72,13 @@ public sealed class Crc32Stream : Stream
 
     public uint Crc => ~hash;
 
-    public static uint Compute(byte[] buffer)
-    {
-        return Compute(DefaultSeed, buffer);
-    }
+    public static uint Compute(byte[] buffer) => Compute(DefaultSeed, buffer);
 
-    public static uint Compute(uint seed, byte[] buffer)
-    {
-        return Compute(DefaultPolynomial, seed, buffer);
-    }
+    public static uint Compute(uint seed, byte[] buffer) =>
+        Compute(DefaultPolynomial, seed, buffer);
 
-    public static uint Compute(uint polynomial, uint seed, ReadOnlySpan<byte> buffer)
-    {
-        return ~CalculateCrc(InitializeTable(polynomial), seed, buffer);
-    }
+    public static uint Compute(uint polynomial, uint seed, ReadOnlySpan<byte> buffer) =>
+        ~CalculateCrc(InitializeTable(polynomial), seed, buffer);
 
     private static uint[] InitializeTable(uint polynomial)
     {
@@ -136,8 +126,6 @@ public sealed class Crc32Stream : Stream
         return crc;
     }
 
-    private static uint CalculateCrc(uint[] table, uint crc, byte b)
-    {
-        return (crc >> 8) ^ table[(crc ^ b) & 0xFF];
-    }
+    private static uint CalculateCrc(uint[] table, uint crc, byte b) =>
+        (crc >> 8) ^ table[(crc ^ b) & 0xFF];
 }

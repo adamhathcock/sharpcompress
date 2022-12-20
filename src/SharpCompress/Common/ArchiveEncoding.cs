@@ -35,40 +35,20 @@ public class ArchiveEncoding
     }
 
 #if !NETFRAMEWORK
-    static ArchiveEncoding()
-    {
-        Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-    }
+    static ArchiveEncoding() => Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 #endif
 
-    public string Decode(byte[] bytes)
-    {
-        return Decode(bytes, 0, bytes.Length);
-    }
+    public string Decode(byte[] bytes) => Decode(bytes, 0, bytes.Length);
 
-    public string Decode(byte[] bytes, int start, int length)
-    {
-        return GetDecoder().Invoke(bytes, start, length);
-    }
+    public string Decode(byte[] bytes, int start, int length) =>
+        GetDecoder().Invoke(bytes, start, length);
 
-    public string DecodeUTF8(byte[] bytes)
-    {
-        return Encoding.UTF8.GetString(bytes, 0, bytes.Length);
-    }
+    public string DecodeUTF8(byte[] bytes) => Encoding.UTF8.GetString(bytes, 0, bytes.Length);
 
-    public byte[] Encode(string str)
-    {
-        return GetEncoding().GetBytes(str);
-    }
+    public byte[] Encode(string str) => GetEncoding().GetBytes(str);
 
-    public Encoding GetEncoding()
-    {
-        return Forced ?? Default ?? Encoding.UTF8;
-    }
+    public Encoding GetEncoding() => Forced ?? Default ?? Encoding.UTF8;
 
-    public Func<byte[], int, int, string> GetDecoder()
-    {
-        return CustomDecoder
-            ?? ((bytes, index, count) => GetEncoding().GetString(bytes, index, count));
-    }
+    public Func<byte[], int, int, string> GetDecoder() =>
+        CustomDecoder ?? ((bytes, index, count) => GetEncoding().GetString(bytes, index, count));
 }

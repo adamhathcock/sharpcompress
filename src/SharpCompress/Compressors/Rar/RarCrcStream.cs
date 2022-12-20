@@ -18,15 +18,9 @@ internal class RarCrcStream : RarStream
         ResetCrc();
     }
 
-    public uint GetCrc()
-    {
-        return ~currentCrc;
-    }
+    public uint GetCrc() => ~currentCrc;
 
-    public void ResetCrc()
-    {
-        currentCrc = 0xffffffff;
-    }
+    public void ResetCrc() => currentCrc = 0xffffffff;
 
     public override int Read(byte[] buffer, int offset, int count)
     {

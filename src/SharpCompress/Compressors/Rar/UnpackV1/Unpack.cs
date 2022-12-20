@@ -16,11 +16,9 @@ internal sealed partial class Unpack : BitInput, IRarUnpack
 {
     private readonly BitInput Inp;
 
-    public Unpack()
-    {
+    public Unpack() =>
         // to ease in porting Unpack50.cs
         Inp = this;
-    }
 
     public bool FileExtracted { get; private set; }
 
@@ -723,11 +721,9 @@ internal sealed partial class Unpack : BitInput, IRarUnpack
         destUnpSize -= size;
     }
 
-    private void InsertOldDist(uint distance)
-    {
+    private void InsertOldDist(uint distance) =>
         // TODO uint
         InsertOldDist((int)distance);
-    }
 
     private void InsertOldDist(int distance)
     {
@@ -743,11 +739,9 @@ internal sealed partial class Unpack : BitInput, IRarUnpack
         lastLength = length;
     }
 
-    private void CopyString(uint length, uint distance)
-    {
+    private void CopyString(uint length, uint distance) =>
         // TODO uint
         CopyString((int)length, (int)distance);
-    }
 
     private void CopyString(int length, int distance)
     {

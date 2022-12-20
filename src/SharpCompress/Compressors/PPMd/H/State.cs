@@ -22,30 +22,18 @@ internal sealed class State : Pointer
         set => Memory[Address + 1] = (byte)value;
     }
 
-    internal State Initialize(byte[] mem)
-    {
-        return Initialize<State>(mem);
-    }
+    internal State Initialize(byte[] mem) => Initialize<State>(mem);
 
-    internal void IncrementFreq(int dFreq)
-    {
+    internal void IncrementFreq(int dFreq) =>
         Memory[Address + 1] = (byte)(Memory[Address + 1] + dFreq);
-    }
 
-    internal int GetSuccessor()
-    {
-        return BinaryPrimitives.ReadInt32LittleEndian(Memory.AsSpan(Address + 2));
-    }
+    internal int GetSuccessor() =>
+        BinaryPrimitives.ReadInt32LittleEndian(Memory.AsSpan(Address + 2));
 
-    internal void SetSuccessor(PpmContext successor)
-    {
-        SetSuccessor(successor.Address);
-    }
+    internal void SetSuccessor(PpmContext successor) => SetSuccessor(successor.Address);
 
-    internal void SetSuccessor(int successor)
-    {
+    internal void SetSuccessor(int successor) =>
         BinaryPrimitives.WriteInt32LittleEndian(Memory.AsSpan(Address + 2), successor);
-    }
 
     internal void SetValues(StateRef state)
     {
@@ -54,10 +42,8 @@ internal sealed class State : Pointer
         SetSuccessor(state.GetSuccessor());
     }
 
-    internal void SetValues(State ptr)
-    {
+    internal void SetValues(State ptr) =>
         Array.Copy(ptr.Memory, ptr.Address, Memory, Address, SIZE);
-    }
 
     internal State DecrementAddress()
     {

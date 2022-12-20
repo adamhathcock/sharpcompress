@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.IO;
 using SharpCompress.Writers;
 
@@ -30,10 +30,7 @@ public static class IWritableArchiveExtensions
         this IWritableArchive writableArchive,
         string filePath,
         WriterOptions options
-    )
-    {
-        writableArchive.SaveTo(new FileInfo(filePath), options);
-    }
+    ) => writableArchive.SaveTo(new FileInfo(filePath), options);
 
     public static void SaveTo(
         this IWritableArchive writableArchive,

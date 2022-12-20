@@ -47,15 +47,11 @@ public abstract class AbstractArchive<TEntry, TVolume> : IArchive, IArchiveExtra
 
     public ArchiveType Type { get; }
 
-    void IArchiveExtractionListener.FireEntryExtractionBegin(IArchiveEntry entry)
-    {
+    void IArchiveExtractionListener.FireEntryExtractionBegin(IArchiveEntry entry) =>
         EntryExtractionBegin?.Invoke(this, new ArchiveExtractionEventArgs<IArchiveEntry>(entry));
-    }
 
-    void IArchiveExtractionListener.FireEntryExtractionEnd(IArchiveEntry entry)
-    {
+    void IArchiveExtractionListener.FireEntryExtractionEnd(IArchiveEntry entry) =>
         EntryExtractionEnd?.Invoke(this, new ArchiveExtractionEventArgs<IArchiveEntry>(entry));
-    }
 
     private static Stream CheckStreams(Stream stream)
     {
@@ -116,8 +112,7 @@ public abstract class AbstractArchive<TEntry, TVolume> : IArchive, IArchiveExtra
     void IExtractionListener.FireCompressedBytesRead(
         long currentPartCompressedBytes,
         long compressedReadBytes
-    )
-    {
+    ) =>
         CompressedBytesRead?.Invoke(
             this,
             new CompressedBytesReadEventArgs(
@@ -125,14 +120,12 @@ public abstract class AbstractArchive<TEntry, TVolume> : IArchive, IArchiveExtra
                 compressedBytesRead: compressedReadBytes
             )
         );
-    }
 
     void IExtractionListener.FireFilePartExtractionBegin(
         string name,
         long size,
         long compressedSize
-    )
-    {
+    ) =>
         FilePartExtractionBegin?.Invoke(
             this,
             new FilePartExtractionBeginEventArgs(
@@ -141,7 +134,6 @@ public abstract class AbstractArchive<TEntry, TVolume> : IArchive, IArchiveExtra
                 name: name
             )
         );
-    }
 
     /// <summary>
     /// Use this method to extract all entries in an archive in order.

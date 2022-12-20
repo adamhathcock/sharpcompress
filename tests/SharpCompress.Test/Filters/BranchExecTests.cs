@@ -1184,10 +1184,8 @@ public class BranchExecTests
             0x00,
         };
 
-    private void CompareBuffer(byte[] testBuffer, byte[] targetBuffer)
-    {
+    private void CompareBuffer(byte[] testBuffer, byte[] targetBuffer) =>
         Assert.Equal(testBuffer, targetBuffer);
-    }
 
     [Fact]
     public void X86ConverterDecodeTest()

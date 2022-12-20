@@ -1,4 +1,4 @@
-namespace SharpCompress.Common.SevenZip;
+﻿namespace SharpCompress.Common.SevenZip;
 
 internal readonly struct CMethodId
 {
@@ -14,35 +14,17 @@ internal readonly struct CMethodId
 
     public readonly ulong _id;
 
-    public CMethodId(ulong id)
-    {
-        _id = id;
-    }
+    public CMethodId(ulong id) => _id = id;
 
-    public override int GetHashCode()
-    {
-        return _id.GetHashCode();
-    }
+    public override int GetHashCode() => _id.GetHashCode();
 
-    public override bool Equals(object? obj)
-    {
-        return obj is CMethodId other && Equals(other);
-    }
+    public override bool Equals(object? obj) => obj is CMethodId other && Equals(other);
 
-    public bool Equals(CMethodId other)
-    {
-        return _id == other._id;
-    }
+    public bool Equals(CMethodId other) => _id == other._id;
 
-    public static bool operator ==(CMethodId left, CMethodId right)
-    {
-        return left._id == right._id;
-    }
+    public static bool operator ==(CMethodId left, CMethodId right) => left._id == right._id;
 
-    public static bool operator !=(CMethodId left, CMethodId right)
-    {
-        return left._id != right._id;
-    }
+    public static bool operator !=(CMethodId left, CMethodId right) => left._id != right._id;
 
     public int GetLength()
     {

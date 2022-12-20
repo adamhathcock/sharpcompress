@@ -296,19 +296,13 @@ public class GZipStream : Stream
     /// <param name="offset">irrelevant; it will always throw!</param>
     /// <param name="origin">irrelevant; it will always throw!</param>
     /// <returns>irrelevant!</returns>
-    public override long Seek(long offset, SeekOrigin origin)
-    {
-        throw new NotSupportedException();
-    }
+    public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
 
     /// <summary>
     ///   Calling this method always throws a <see cref="NotImplementedException"/>.
     /// </summary>
     /// <param name="value">irrelevant; this method will always throw!</param>
-    public override void SetLength(long value)
-    {
-        throw new NotSupportedException();
-    }
+    public override void SetLength(long value) => throw new NotSupportedException();
 
     /// <summary>
     ///   Write data to the stream.

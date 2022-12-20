@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.IO;
 
 namespace SharpCompress.Compressors.Filters;
@@ -40,10 +40,7 @@ internal abstract class Filter : Stream
 
     public override bool CanWrite => _isEncoder;
 
-    public override void Flush()
-    {
-        throw new NotSupportedException();
-    }
+    public override void Flush() => throw new NotSupportedException();
 
     public override long Length => _baseStream.Length;
 
@@ -137,15 +134,9 @@ internal abstract class Filter : Stream
         return size;
     }
 
-    public override long Seek(long offset, SeekOrigin origin)
-    {
-        throw new NotSupportedException();
-    }
+    public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
 
-    public override void SetLength(long value)
-    {
-        throw new NotSupportedException();
-    }
+    public override void SetLength(long value) => throw new NotSupportedException();
 
     public override void Write(byte[] buffer, int offset, int count)
     {

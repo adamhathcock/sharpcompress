@@ -32,10 +32,7 @@ public abstract class Volume : IVolume
 
     public virtual int Index { get; internal set; }
 
-    public string FileName
-    {
-        get { return (_actualStream as FileStream)?.Name!; }
-    }
+    public string FileName => (_actualStream as FileStream)?.Name!;
 
     /// <summary>
     /// RarArchive is part of a multi-part archive.

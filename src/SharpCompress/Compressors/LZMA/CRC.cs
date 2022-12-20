@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.IO;
 
 namespace SharpCompress.Compressors.LZMA;
@@ -47,15 +47,9 @@ internal static class Crc
         return Finish(crc);
     }
 
-    public static uint Finish(uint crc)
-    {
-        return ~crc;
-    }
+    public static uint Finish(uint crc) => ~crc;
 
-    public static uint Update(uint crc, byte bt)
-    {
-        return TABLE[(crc & 0xFF) ^ bt] ^ (crc >> 8);
-    }
+    public static uint Update(uint crc, byte bt) => TABLE[(crc & 0xFF) ^ bt] ^ (crc >> 8);
 
     public static uint Update(uint crc, uint value)
     {
@@ -66,15 +60,10 @@ internal static class Crc
             ^ TABLE[0x000 + (crc >> 24)];
     }
 
-    public static uint Update(uint crc, ulong value)
-    {
-        return Update(Update(crc, (uint)value), (uint)(value >> 32));
-    }
+    public static uint Update(uint crc, ulong value) =>
+        Update(Update(crc, (uint)value), (uint)(value >> 32));
 
-    public static uint Update(uint crc, long value)
-    {
-        return Update(crc, (ulong)value);
-    }
+    public static uint Update(uint crc, long value) => Update(crc, (ulong)value);
 
     public static uint Update(uint crc, byte[] buffer, int offset, int length)
     {

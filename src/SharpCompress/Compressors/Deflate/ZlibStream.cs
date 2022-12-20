@@ -47,10 +47,7 @@ public class ZlibStream : Stream
         CompressionMode mode,
         CompressionLevel level,
         Encoding encoding
-    )
-    {
-        _baseStream = new ZlibBaseStream(stream, mode, level, ZlibStreamFlavor.ZLIB, encoding);
-    }
+    ) => _baseStream = new ZlibBaseStream(stream, mode, level, ZlibStreamFlavor.ZLIB, encoding);
 
     #region Zlib properties
 
@@ -286,18 +283,12 @@ public class ZlibStream : Stream
     /// <summary>
     /// Calling this method always throws a <see cref="NotImplementedException"/>.
     /// </summary>
-    public override long Seek(long offset, SeekOrigin origin)
-    {
-        throw new NotSupportedException();
-    }
+    public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
 
     /// <summary>
     /// Calling this method always throws a <see cref="NotImplementedException"/>.
     /// </summary>
-    public override void SetLength(long value)
-    {
-        throw new NotSupportedException();
-    }
+    public override void SetLength(long value) => throw new NotSupportedException();
 
     /// <summary>
     /// Write data to the stream.

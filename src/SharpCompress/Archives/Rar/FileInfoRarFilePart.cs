@@ -11,15 +11,10 @@ internal sealed class FileInfoRarFilePart : SeekableFilePart
         MarkHeader mh,
         FileHeader fh,
         FileInfo fi
-    ) : base(mh, fh, volume.Index, volume.Stream, password)
-    {
-        FileInfo = fi;
-    }
+    ) : base(mh, fh, volume.Index, volume.Stream, password) => FileInfo = fi;
 
     internal FileInfo FileInfo { get; }
 
-    internal override string FilePartName
-    {
-        get { return "Rar File: " + FileInfo.FullName + " File Entry: " + FileHeader.FileName; }
-    }
+    internal override string FilePartName =>
+        "Rar File: " + FileInfo.FullName + " File Entry: " + FileHeader.FileName;
 }

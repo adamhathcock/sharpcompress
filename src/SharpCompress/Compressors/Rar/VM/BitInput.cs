@@ -11,21 +11,18 @@ internal class BitInput
     // TODO: rename var
     public int InAddr
     {
-        get { return inAddr; }
-        set { inAddr = value; }
+        get => inAddr;
+        set => inAddr = value;
     }
     public int InBit
     {
-        get { return inBit; }
-        set { inBit = value; }
+        get => inBit;
+        set => inBit = value;
     }
     public bool ExternalBuffer;
 
     /// <summary>  </summary>
-    internal BitInput()
-    {
-        InBuf = new byte[MAX_SIZE];
-    }
+    internal BitInput() => InBuf = new byte[MAX_SIZE];
 
     internal byte[] InBuf { get; }
 
@@ -35,11 +32,9 @@ internal class BitInput
         inBit = 0;
     }
 
-    internal void faddbits(uint bits)
-    {
+    internal void faddbits(uint bits) =>
         // TODO uint
         AddBits((int)bits);
-    }
 
     /// <summary>
     /// also named faddbits
@@ -52,17 +47,13 @@ internal class BitInput
         inBit = bits & 7;
     }
 
-    internal uint fgetbits()
-    {
+    internal uint fgetbits() =>
         // TODO uint
-        return (uint)GetBits();
-    }
+        (uint)GetBits();
 
-    internal uint getbits()
-    {
+    internal uint getbits() =>
         // TODO uint
-        return (uint)GetBits();
-    }
+        (uint)GetBits();
 
     /// <summary>
     /// (also named fgetbits)
@@ -70,15 +61,14 @@ internal class BitInput
     /// <returns>
     /// the bits (unsigned short)
     /// </returns>
-    internal int GetBits()
-    {
+    internal int GetBits() =>
         //      int BitField=0;
         //      BitField|=(int)(inBuf[inAddr] << 16)&0xFF0000;
         //      BitField|=(int)(inBuf[inAddr+1] << 8)&0xff00;
         //      BitField|=(int)(inBuf[inAddr+2])&0xFF;
         //      BitField >>>= (8-inBit);
         //      return (BitField & 0xffff);
-        return (
+        (
             (
                 Utility.URShift(
                     (
@@ -90,15 +80,11 @@ internal class BitInput
                 )
             ) & 0xffff
         );
-    }
 
     /// <summary> Indicates an Overfow</summary>
     /// <param name="IncPtr">how many bytes to inc
     /// </param>
     /// <returns> true if an Oververflow would occur
     /// </returns>
-    internal bool Overflow(int IncPtr)
-    {
-        return (inAddr + IncPtr >= MAX_SIZE);
-    }
+    internal bool Overflow(int IncPtr) => (inAddr + IncPtr >= MAX_SIZE);
 }

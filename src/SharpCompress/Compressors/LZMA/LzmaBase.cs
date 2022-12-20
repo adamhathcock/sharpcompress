@@ -14,10 +14,7 @@ internal abstract class Base
     {
         public uint _index;
 
-        public void Init()
-        {
-            _index = 0;
-        }
+        public void Init() => _index = 0;
 
         public void UpdateChar()
         {
@@ -35,25 +32,13 @@ internal abstract class Base
             }
         }
 
-        public void UpdateMatch()
-        {
-            _index = (uint)(_index < 7 ? 7 : 10);
-        }
+        public void UpdateMatch() => _index = (uint)(_index < 7 ? 7 : 10);
 
-        public void UpdateRep()
-        {
-            _index = (uint)(_index < 7 ? 8 : 11);
-        }
+        public void UpdateRep() => _index = (uint)(_index < 7 ? 8 : 11);
 
-        public void UpdateShortRep()
-        {
-            _index = (uint)(_index < 7 ? 9 : 11);
-        }
+        public void UpdateShortRep() => _index = (uint)(_index < 7 ? 9 : 11);
 
-        public bool IsCharState()
-        {
-            return _index < 7;
-        }
+        public bool IsCharState() => _index < 7;
     }
 
     public const int K_NUM_POS_SLOT_BITS = 6;

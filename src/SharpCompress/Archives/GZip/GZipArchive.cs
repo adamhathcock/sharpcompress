@@ -94,10 +94,7 @@ public class GZipArchive : AbstractWritableArchive<GZipArchiveEntry, GZipVolume>
         );
     }
 
-    public static GZipArchive Create()
-    {
-        return new GZipArchive();
-    }
+    public static GZipArchive Create() => new GZipArchive();
 
     /// <summary>
     /// Constructor with a SourceStream able to handle FileInfo and Streams.
@@ -113,10 +110,7 @@ public class GZipArchive : AbstractWritableArchive<GZipArchiveEntry, GZipVolume>
         return srcStream.Streams.Select(a => new GZipVolume(a, ReaderOptions, idx++));
     }
 
-    public static bool IsGZipFile(string filePath)
-    {
-        return IsGZipFile(new FileInfo(filePath));
-    }
+    public static bool IsGZipFile(string filePath) => IsGZipFile(new FileInfo(filePath));
 
     public static bool IsGZipFile(FileInfo fileInfo)
     {
@@ -129,10 +123,7 @@ public class GZipArchive : AbstractWritableArchive<GZipArchiveEntry, GZipVolume>
         return IsGZipFile(stream);
     }
 
-    public void SaveTo(string filePath)
-    {
-        SaveTo(new FileInfo(filePath));
-    }
+    public void SaveTo(string filePath) => SaveTo(new FileInfo(filePath));
 
     public void SaveTo(FileInfo fileInfo)
     {

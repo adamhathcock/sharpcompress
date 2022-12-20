@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.IO;
 
 namespace SharpCompress.Test.Mocks;
@@ -11,10 +11,7 @@ public class FlushOnDisposeStream : Stream, IDisposable
 {
     private Stream inner;
 
-    public FlushOnDisposeStream(Stream innerStream)
-    {
-        inner = innerStream;
-    }
+    public FlushOnDisposeStream(Stream innerStream) => inner = innerStream;
 
     public override bool CanRead => inner.CanRead;
 
@@ -30,30 +27,18 @@ public class FlushOnDisposeStream : Stream, IDisposable
         set => inner.Position = value;
     }
 
-    public override void Flush()
-    {
-        throw new NotImplementedException();
-    }
+    public override void Flush() => throw new NotImplementedException();
 
-    public override int Read(byte[] buffer, int offset, int count)
-    {
-        return inner.Read(buffer, offset, count);
-    }
+    public override int Read(byte[] buffer, int offset, int count) =>
+        inner.Read(buffer, offset, count);
 
-    public override long Seek(long offset, SeekOrigin origin)
-    {
+    public override long Seek(long offset, SeekOrigin origin) =>
         throw new NotImplementedException();
-    }
 
-    public override void SetLength(long value)
-    {
-        throw new NotImplementedException();
-    }
+    public override void SetLength(long value) => throw new NotImplementedException();
 
-    public override void Write(byte[] buffer, int offset, int count)
-    {
+    public override void Write(byte[] buffer, int offset, int count) =>
         throw new NotImplementedException();
-    }
 
     protected override void Dispose(bool disposing)
     {

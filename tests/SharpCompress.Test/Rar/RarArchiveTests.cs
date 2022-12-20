@@ -1,12 +1,9 @@
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 using SharpCompress.Archives;
 using SharpCompress.Archives.Rar;
 using SharpCompress.Common;
 using SharpCompress.Compressors.LZMA.Utilites;
-using SharpCompress.Factories;
 using SharpCompress.Readers;
 using Xunit;
 
@@ -15,19 +12,15 @@ namespace SharpCompress.Test.Rar;
 public class RarArchiveTests : ArchiveTests
 {
     [Fact]
-    public void Rar_EncryptedFileAndHeader_Archive()
-    {
+    public void Rar_EncryptedFileAndHeader_Archive() =>
         ReadRarPassword("Rar.encrypted_filesAndHeader.rar", "test");
-    }
 
     [Fact]
-    public void Rar_EncryptedFileAndHeader_NoPasswordExceptionTest()
-    {
+    public void Rar_EncryptedFileAndHeader_NoPasswordExceptionTest() =>
         Assert.Throws(
             typeof(CryptographicException),
             () => ReadRarPassword("Rar.encrypted_filesAndHeader.rar", null)
         );
-    }
 
     /*[Fact]
     public void Rar5_EncryptedFileAndHeader_Archive()
@@ -36,19 +29,15 @@ public class RarArchiveTests : ArchiveTests
     }*/
 
     [Fact]
-    public void Rar5_EncryptedFileAndHeader_NoPasswordExceptionTest()
-    {
+    public void Rar5_EncryptedFileAndHeader_NoPasswordExceptionTest() =>
         Assert.Throws(
             typeof(CryptographicException),
             () => ReadRarPassword("Rar5.encrypted_filesAndHeader.rar", null)
         );
-    }
 
     [Fact]
-    public void Rar_EncryptedFileOnly_Archive()
-    {
+    public void Rar_EncryptedFileOnly_Archive() =>
         ReadRarPassword("Rar.encrypted_filesOnly.rar", "test");
-    }
 
     /*[Fact]
     public void Rar5_EncryptedFileOnly_Archive()
@@ -57,10 +46,7 @@ public class RarArchiveTests : ArchiveTests
     }*/
 
     [Fact]
-    public void Rar_Encrypted_Archive()
-    {
-        ReadRarPassword("Rar.Encrypted.rar", "test");
-    }
+    public void Rar_Encrypted_Archive() => ReadRarPassword("Rar.Encrypted.rar", "test");
 
     /*[Fact]
     public void Rar5_Encrypted_Archive()
@@ -94,12 +80,10 @@ public class RarArchiveTests : ArchiveTests
     }
 
     [Fact]
-    public void Rar_Multi_Archive_Encrypted()
-    {
+    public void Rar_Multi_Archive_Encrypted() =>
         Assert.Throws<InvalidFormatException>(
             () => ArchiveFileReadPassword("Rar.EncryptedParts.part01.rar", "test")
         );
-    }
 
     protected void ArchiveFileReadPassword(string archiveName, string password)
     {
@@ -122,34 +106,20 @@ public class RarArchiveTests : ArchiveTests
     }
 
     [Fact]
-    public void Rar_None_ArchiveStreamRead()
-    {
-        ArchiveStreamRead("Rar.none.rar");
-    }
+    public void Rar_None_ArchiveStreamRead() => ArchiveStreamRead("Rar.none.rar");
 
     [Fact]
-    public void Rar5_None_ArchiveStreamRead()
-    {
-        ArchiveStreamRead("Rar5.none.rar");
-    }
+    public void Rar5_None_ArchiveStreamRead() => ArchiveStreamRead("Rar5.none.rar");
 
     [Fact]
-    public void Rar_ArchiveStreamRead()
-    {
-        ArchiveStreamRead("Rar.rar");
-    }
+    public void Rar_ArchiveStreamRead() => ArchiveStreamRead("Rar.rar");
 
     [Fact]
-    public void Rar5_ArchiveStreamRead()
-    {
-        ArchiveStreamRead("Rar5.rar");
-    }
+    public void Rar5_ArchiveStreamRead() => ArchiveStreamRead("Rar5.rar");
 
     [Fact]
-    public void Rar_test_invalid_exttime_ArchiveStreamRead()
-    {
+    public void Rar_test_invalid_exttime_ArchiveStreamRead() =>
         DoRar_test_invalid_exttime_ArchiveStreamRead("Rar.test_invalid_exttime.rar");
-    }
 
     private void DoRar_test_invalid_exttime_ArchiveStreamRead(string filename)
     {
@@ -182,16 +152,10 @@ public class RarArchiveTests : ArchiveTests
     }
 
     [Fact]
-    public void Rar_IsSolidArchiveCheck()
-    {
-        DoRar_IsSolidArchiveCheck("Rar.rar");
-    }
+    public void Rar_IsSolidArchiveCheck() => DoRar_IsSolidArchiveCheck("Rar.rar");
 
     [Fact]
-    public void Rar5_IsSolidArchiveCheck()
-    {
-        DoRar_IsSolidArchiveCheck("Rar5.rar");
-    }
+    public void Rar5_IsSolidArchiveCheck() => DoRar_IsSolidArchiveCheck("Rar5.rar");
 
     private void DoRar_IsSolidArchiveCheck(string filename)
     {
@@ -211,48 +175,7 @@ public class RarArchiveTests : ArchiveTests
     }
 
     [Fact]
-    public void QuickTest()
-    {
-        var textItems = new List<string>();
-        using var reader = new RarFactory().OpenReader(
-            new FileInfo("/Users/adam/Downloads/Kuuki_Aether_chinesevcv_1.0.rar").OpenRead(),
-            null
-        );
-        textItems.Clear();
-        while (reader.MoveToNextEntry())
-        {
-            var entry = reader.Entry;
-            if (!(entry.Key.EndsWith("character.txt") || entry.Key.EndsWith("oto.ini")))
-            {
-                continue;
-            }
-            using var stream = reader.OpenEntryStream();
-            // Crashes here
-            using var streamReader = new StreamReader(stream, Encoding.UTF8);
-            textItems.Add($"------ {entry.Key} ------");
-            var count = 0;
-            while (count < 256 && !streamReader.EndOfStream)
-            {
-                var line = streamReader.ReadLine();
-                if (!string.IsNullOrWhiteSpace(line))
-                {
-                    textItems.Add(line);
-                    count++;
-                }
-            }
-
-            if (!streamReader.EndOfStream)
-            {
-                textItems.Add($"...");
-            }
-        }
-    }
-
-    [Fact]
-    public void Rar_IsSolidEntryStreamCheck()
-    {
-        DoRar_IsSolidEntryStreamCheck("Rar.solid.rar");
-    }
+    public void Rar_IsSolidEntryStreamCheck() => DoRar_IsSolidEntryStreamCheck("Rar.solid.rar");
 
     //Extract the 2nd file in a solid archive to check that the first file is skipped properly
     private void DoRar_IsSolidEntryStreamCheck(string filename)
@@ -282,34 +205,23 @@ public class RarArchiveTests : ArchiveTests
     }
 
     [Fact]
-    public void Rar_Solid_ArchiveStreamRead()
-    {
-        ArchiveStreamRead("Rar.solid.rar");
-    }
+    public void Rar_Solid_ArchiveStreamRead() => ArchiveStreamRead("Rar.solid.rar");
 
     [Fact]
-    public void Rar5_Solid_ArchiveStreamRead()
-    {
-        ArchiveStreamRead("Rar5.solid.rar");
-    }
+    public void Rar5_Solid_ArchiveStreamRead() => ArchiveStreamRead("Rar5.solid.rar");
 
     [Fact]
-    public void Rar_Solid_StreamRead_Extract_All()
-    {
+    public void Rar_Solid_StreamRead_Extract_All() =>
         ArchiveStreamReadExtractAll("Rar.solid.rar", CompressionType.Rar);
-    }
 
     [Fact]
-    public void Rar5_Solid_StreamRead_Extract_All()
-    {
+    public void Rar5_Solid_StreamRead_Extract_All() =>
         ArchiveStreamReadExtractAll("Rar5.solid.rar", CompressionType.Rar);
-    }
 
     [Fact]
-    public void Rar_Multi_ArchiveStreamRead()
-    {
+    public void Rar_Multi_ArchiveStreamRead() =>
         DoRar_Multi_ArchiveStreamRead(
-            new string[]
+            new[]
             {
                 "Rar.multi.part01.rar",
                 "Rar.multi.part02.rar",
@@ -320,13 +232,11 @@ public class RarArchiveTests : ArchiveTests
             },
             false
         );
-    }
 
     [Fact]
-    public void Rar5_Multi_ArchiveStreamRead()
-    {
+    public void Rar5_Multi_ArchiveStreamRead() =>
         DoRar_Multi_ArchiveStreamRead(
-            new string[]
+            new[]
             {
                 "Rar5.multi.part01.rar",
                 "Rar5.multi.part02.rar",
@@ -337,7 +247,6 @@ public class RarArchiveTests : ArchiveTests
             },
             false
         );
-    }
 
     private void DoRar_Multi_ArchiveStreamRead(string[] archives, bool isSolid)
     {
@@ -355,10 +264,9 @@ public class RarArchiveTests : ArchiveTests
     }
 
     [Fact]
-    public void Rar5_MultiSolid_ArchiveStreamRead()
-    {
+    public void Rar5_MultiSolid_ArchiveStreamRead() =>
         DoRar_Multi_ArchiveStreamRead(
-            new string[]
+            new[]
             {
                 "Rar.multi.solid.part01.rar",
                 "Rar.multi.solid.part02.rar",
@@ -369,43 +277,26 @@ public class RarArchiveTests : ArchiveTests
             },
             true
         );
-    }
 
     [Fact]
-    public void RarNoneArchiveFileRead()
-    {
-        ArchiveFileRead("Rar.none.rar");
-    }
+    public void RarNoneArchiveFileRead() => ArchiveFileRead("Rar.none.rar");
 
     [Fact]
-    public void Rar5NoneArchiveFileRead()
-    {
-        ArchiveFileRead("Rar5.none.rar");
-    }
+    public void Rar5NoneArchiveFileRead() => ArchiveFileRead("Rar5.none.rar");
 
     [Fact]
-    public void Rar_ArchiveFileRead()
-    {
-        ArchiveFileRead("Rar.rar");
-    }
+    public void Rar_ArchiveFileRead() => ArchiveFileRead("Rar.rar");
 
     [Fact]
-    public void Rar5_ArchiveFileRead()
-    {
-        ArchiveFileRead("Rar5.rar");
-    }
+    public void Rar5_ArchiveFileRead() => ArchiveFileRead("Rar5.rar");
 
     [Fact]
-    public void Rar_ArchiveFileRead_HasDirectories()
-    {
+    public void Rar_ArchiveFileRead_HasDirectories() =>
         DoRar_ArchiveFileRead_HasDirectories("Rar.rar");
-    }
 
     [Fact]
-    public void Rar5_ArchiveFileRead_HasDirectories()
-    {
+    public void Rar5_ArchiveFileRead_HasDirectories() =>
         DoRar_ArchiveFileRead_HasDirectories("Rar5.rar");
-    }
 
     private void DoRar_ArchiveFileRead_HasDirectories(string filename)
     {
@@ -437,22 +328,15 @@ public class RarArchiveTests : ArchiveTests
     }
 
     [Fact]
-    public void Rar_Solid_ArchiveFileRead()
-    {
-        ArchiveFileRead("Rar.solid.rar");
-    }
+    public void Rar_Solid_ArchiveFileRead() => ArchiveFileRead("Rar.solid.rar");
 
     [Fact]
-    public void Rar5_Solid_ArchiveFileRead()
-    {
-        ArchiveFileRead("Rar5.solid.rar");
-    }
+    public void Rar5_Solid_ArchiveFileRead() => ArchiveFileRead("Rar5.solid.rar");
 
     [Fact]
-    public void Rar2_Multi_ArchiveStreamRead()
-    {
+    public void Rar2_Multi_ArchiveStreamRead() =>
         DoRar_Multi_ArchiveStreamRead(
-            new string[]
+            new[]
             {
                 "Rar2.multi.rar",
                 "Rar2.multi.r00",
@@ -464,19 +348,12 @@ public class RarArchiveTests : ArchiveTests
             },
             false
         );
-    }
 
     [Fact]
-    public void Rar2_Multi_ArchiveFileRead()
-    {
-        ArchiveFileRead("Rar2.multi.rar"); //r00, r01...
-    }
+    public void Rar2_Multi_ArchiveFileRead() => ArchiveFileRead("Rar2.multi.rar"); //r00, r01...
 
     [Fact]
-    public void Rar2_ArchiveFileRead()
-    {
-        ArchiveFileRead("Rar2.rar");
-    }
+    public void Rar2_ArchiveFileRead() => ArchiveFileRead("Rar2.rar");
 
     [Fact]
     public void Rar2_ArchiveVersionTest()
@@ -509,23 +386,16 @@ public class RarArchiveTests : ArchiveTests
     }
 
     [Fact]
-    public void Rar4_Multi_ArchiveFileRead()
-    {
-        ArchiveFileRead("Rar4.multi.part01.rar");
-    }
+    public void Rar4_Multi_ArchiveFileRead() => ArchiveFileRead("Rar4.multi.part01.rar");
 
     [Fact]
-    public void Rar4_ArchiveFileRead()
-    {
-        ArchiveFileRead("Rar4.rar");
-    }
+    public void Rar4_ArchiveFileRead() => ArchiveFileRead("Rar4.rar");
 
     [Fact]
-    public void Rar_GetPartsSplit()
-    {
+    public void Rar_GetPartsSplit() =>
         //uses first part to search for all parts and compares against this array
         ArchiveGetParts(
-            new string[]
+            new[]
             {
                 "Rar4.split.001",
                 "Rar4.split.002",
@@ -535,14 +405,12 @@ public class RarArchiveTests : ArchiveTests
                 "Rar4.split.006"
             }
         );
-    }
 
     [Fact]
-    public void Rar_GetPartsOld()
-    {
+    public void Rar_GetPartsOld() =>
         //uses first part to search for all parts and compares against this array
         ArchiveGetParts(
-            new string[]
+            new[]
             {
                 "Rar2.multi.rar",
                 "Rar2.multi.r00",
@@ -553,14 +421,12 @@ public class RarArchiveTests : ArchiveTests
                 "Rar2.multi.r05"
             }
         );
-    }
 
     [Fact]
-    public void Rar_GetPartsNew()
-    {
+    public void Rar_GetPartsNew() =>
         //uses first part to search for all parts and compares against this array
         ArchiveGetParts(
-            new string[]
+            new[]
             {
                 "Rar4.multi.part01.rar",
                 "Rar4.multi.part02.rar",
@@ -571,13 +437,11 @@ public class RarArchiveTests : ArchiveTests
                 "Rar4.multi.part07.rar"
             }
         );
-    }
 
     [Fact]
-    public void Rar4_Multi_ArchiveStreamRead()
-    {
+    public void Rar4_Multi_ArchiveStreamRead() =>
         DoRar_Multi_ArchiveStreamRead(
-            new string[]
+            new[]
             {
                 "Rar4.multi.part01.rar",
                 "Rar4.multi.part02.rar",
@@ -589,15 +453,13 @@ public class RarArchiveTests : ArchiveTests
             },
             false
         );
-    }
 
     //no extension to test the lib identifies the archive by content not ext
     [Fact]
-    public void Rar4_Split_ArchiveStreamRead()
-    {
+    public void Rar4_Split_ArchiveStreamRead() =>
         ArchiveStreamMultiRead(
             null,
-            new string[]
+            new[]
             {
                 "Rar4.split.001",
                 "Rar4.split.002",
@@ -607,40 +469,32 @@ public class RarArchiveTests : ArchiveTests
                 "Rar4.split.006"
             }
         );
-    }
 
     //will detect and load other files
     [Fact]
-    public void Rar4_Multi_ArchiveFirstFileRead()
-    {
-        ArchiveFileRead("Rar4.multi.part01.rar");
-        //"Rar4.multi.part02.rar",
-        //"Rar4.multi.part03.rar",
-        //"Rar4.multi.part04.rar",
-        //"Rar4.multi.part05.rar",
-        //"Rar4.multi.part06.rar",
-        //"Rar4.multi.part07.rar"
-    }
+    public void Rar4_Multi_ArchiveFirstFileRead() => ArchiveFileRead("Rar4.multi.part01.rar");
 
+    //"Rar4.multi.part02.rar",
+    //"Rar4.multi.part03.rar",
+    //"Rar4.multi.part04.rar",
+    //"Rar4.multi.part05.rar",
+    //"Rar4.multi.part06.rar",
+    //"Rar4.multi.part07.rar"
     //will detect and load other files
     [Fact]
-    public void Rar4_Split_ArchiveFirstFileRead()
-    {
-        ArchiveFileRead("Rar4.split.001");
-        //"Rar4.split.002",
-        //"Rar4.split.003",
-        //"Rar4.split.004",
-        //"Rar4.split.005",
-        //"Rar4.split.006"
-    }
+    public void Rar4_Split_ArchiveFirstFileRead() => ArchiveFileRead("Rar4.split.001");
 
+    //"Rar4.split.002",
+    //"Rar4.split.003",
+    //"Rar4.split.004",
+    //"Rar4.split.005",
+    //"Rar4.split.006"
     //will detect and load other files
     [Fact]
-    public void Rar4_Split_ArchiveStreamFirstFileRead()
-    {
+    public void Rar4_Split_ArchiveStreamFirstFileRead() =>
         ArchiveStreamMultiRead(
             null,
-            new string[]
+            new[]
             {
                 "Rar4.split.001",
                 //"Rar4.split.002",
@@ -650,12 +504,10 @@ public class RarArchiveTests : ArchiveTests
                 //"Rar4.split.006"
             }
         );
-    }
 
     //open with ArchiveFactory.Open and stream
     [Fact]
-    public void Rar4_Split_ArchiveOpen()
-    {
+    public void Rar4_Split_ArchiveOpen() =>
         ArchiveOpenStreamRead(
             null,
             "Rar4.split.001",
@@ -665,12 +517,10 @@ public class RarArchiveTests : ArchiveTests
             "Rar4.split.005",
             "Rar4.split.006"
         );
-    }
 
     //open with ArchiveFactory.Open and stream
     [Fact]
-    public void Rar4_Multi_ArchiveOpen()
-    {
+    public void Rar4_Multi_ArchiveOpen() =>
         ArchiveOpenStreamRead(
             null,
             "Rar4.multi.part01.rar",
@@ -681,11 +531,9 @@ public class RarArchiveTests : ArchiveTests
             "Rar4.multi.part06.rar",
             "Rar4.multi.part07.rar"
         );
-    }
 
     [Fact]
-    public void Rar4_Multi_ArchiveOpenEntryVolumeIndexTest()
-    {
+    public void Rar4_Multi_ArchiveOpenEntryVolumeIndexTest() =>
         ArchiveOpenEntryVolumeIndexTest(
             new[]
             {
@@ -702,31 +550,18 @@ public class RarArchiveTests : ArchiveTests
             "Rar4.multi.part06.rar",
             "Rar4.multi.part07.rar"
         );
-    }
 
     [Fact]
-    public void Rar_Multi_ArchiveFileRead()
-    {
-        ArchiveFileRead("Rar.multi.part01.rar");
-    }
+    public void Rar_Multi_ArchiveFileRead() => ArchiveFileRead("Rar.multi.part01.rar");
 
     [Fact]
-    public void Rar5_Multi_ArchiveFileRead()
-    {
-        ArchiveFileRead("Rar5.multi.part01.rar");
-    }
+    public void Rar5_Multi_ArchiveFileRead() => ArchiveFileRead("Rar5.multi.part01.rar");
 
     [Fact]
-    public void Rar_IsFirstVolume_True()
-    {
-        DoRar_IsFirstVolume_True("Rar.multi.part01.rar");
-    }
+    public void Rar_IsFirstVolume_True() => DoRar_IsFirstVolume_True("Rar.multi.part01.rar");
 
     [Fact]
-    public void Rar5_IsFirstVolume_True()
-    {
-        DoRar_IsFirstVolume_True("Rar5.multi.part01.rar");
-    }
+    public void Rar5_IsFirstVolume_True() => DoRar_IsFirstVolume_True("Rar5.multi.part01.rar");
 
     private void DoRar_IsFirstVolume_True(string firstFilename)
     {
@@ -736,16 +571,10 @@ public class RarArchiveTests : ArchiveTests
     }
 
     [Fact]
-    public void Rar_IsFirstVolume_False()
-    {
-        DoRar_IsFirstVolume_False("Rar.multi.part03.rar");
-    }
+    public void Rar_IsFirstVolume_False() => DoRar_IsFirstVolume_False("Rar.multi.part03.rar");
 
     [Fact]
-    public void Rar5_IsFirstVolume_False()
-    {
-        DoRar_IsFirstVolume_False("Rar5.multi.part03.rar");
-    }
+    public void Rar5_IsFirstVolume_False() => DoRar_IsFirstVolume_False("Rar5.multi.part03.rar");
 
     private void DoRar_IsFirstVolume_False(string notFirstFilename)
     {

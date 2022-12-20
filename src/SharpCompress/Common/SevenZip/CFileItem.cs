@@ -1,4 +1,4 @@
-#nullable disable
+﻿#nullable disable
 
 using System;
 
@@ -18,10 +18,7 @@ internal class CFileItem
 
     public bool AttribDefined => Attrib != null;
 
-    public void SetAttrib(uint attrib)
-    {
-        Attrib = attrib;
-    }
+    public void SetAttrib(uint attrib) => Attrib = attrib;
 
     public DateTime? CTime { get; internal set; }
     public DateTime? ATime { get; internal set; }
@@ -30,8 +27,5 @@ internal class CFileItem
     public long? StartPos { get; internal set; }
     public bool IsAnti { get; internal set; }
 
-    internal CFileItem()
-    {
-        HasStream = true;
-    }
+    internal CFileItem() => HasStream = true;
 }

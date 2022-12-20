@@ -6,10 +6,8 @@ internal static class RarCRC
 {
     private static readonly uint[] crcTab;
 
-    public static uint CheckCrc(uint startCrc, byte b)
-    {
-        return (crcTab[((int)startCrc ^ b) & 0xff] ^ (startCrc >> 8));
-    }
+    public static uint CheckCrc(uint startCrc, byte b) =>
+        (crcTab[((int)startCrc ^ b) & 0xff] ^ (startCrc >> 8));
 
     public static uint CheckCrc(uint startCrc, byte[] data, int offset, int count)
     {

@@ -1,4 +1,4 @@
-#nullable disable
+﻿#nullable disable
 
 using System;
 using System.IO;
@@ -23,23 +23,12 @@ public abstract class ReadOnlyStream : Stream
         set => throw new NotSupportedException();
     }
 
-    public override void Flush()
-    {
-        throw new NotSupportedException();
-    }
+    public override void Flush() => throw new NotSupportedException();
 
-    public override long Seek(long offset, SeekOrigin origin)
-    {
-        throw new NotSupportedException();
-    }
+    public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
 
-    public override void SetLength(long value)
-    {
-        throw new NotSupportedException();
-    }
+    public override void SetLength(long value) => throw new NotSupportedException();
 
-    public override void Write(byte[] buffer, int offset, int count)
-    {
+    public override void Write(byte[] buffer, int offset, int count) =>
         throw new NotSupportedException();
-    }
 }

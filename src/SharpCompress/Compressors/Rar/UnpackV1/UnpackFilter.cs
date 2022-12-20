@@ -7,21 +7,18 @@ internal class UnpackFilter
     public byte Type;
     public byte Channels;
 
-    internal UnpackFilter()
-    {
-        Program = new VMPreparedProgram();
-    }
+    internal UnpackFilter() => Program = new VMPreparedProgram();
 
     // TODO uint
     internal uint uBlockStart
     {
-        get { return (uint)BlockStart; }
-        set { BlockStart = (int)value; }
+        get => (uint)BlockStart;
+        set => BlockStart = (int)value;
     }
     internal uint uBlockLength
     {
-        get { return (uint)BlockLength; }
-        set { BlockLength = (int)value; }
+        get => (uint)BlockLength;
+        set => BlockLength = (int)value;
     }
 
     internal int BlockStart { get; set; }

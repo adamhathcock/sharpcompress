@@ -20,39 +20,29 @@ public class Zip64Tests : WriterTests
     private const long FOUR_GB_LIMIT = ((long)uint.MaxValue) + 1;
 
     [Trait("format", "zip64")]
-    public void Zip64_Single_Large_File()
-    {
+    public void Zip64_Single_Large_File() =>
         // One single file, requires zip64
         RunSingleTest(1, FOUR_GB_LIMIT, set_zip64: true, forward_only: false);
-    }
 
     [Trait("format", "zip64")]
-    public void Zip64_Two_Large_Files()
-    {
+    public void Zip64_Two_Large_Files() =>
         // One single file, requires zip64
         RunSingleTest(2, FOUR_GB_LIMIT, set_zip64: true, forward_only: false);
-    }
 
     [Trait("format", "zip64")]
-    public void Zip64_Two_Small_files()
-    {
+    public void Zip64_Two_Small_files() =>
         // Multiple files, does not require zip64
         RunSingleTest(2, FOUR_GB_LIMIT / 2, set_zip64: false, forward_only: false);
-    }
 
     [Trait("format", "zip64")]
-    public void Zip64_Two_Small_files_stream()
-    {
+    public void Zip64_Two_Small_files_stream() =>
         // Multiple files, does not require zip64, and works with streams
         RunSingleTest(2, FOUR_GB_LIMIT / 2, set_zip64: false, forward_only: true);
-    }
 
     [Trait("format", "zip64")]
-    public void Zip64_Two_Small_Files_Zip64()
-    {
+    public void Zip64_Two_Small_Files_Zip64() =>
         // Multiple files, use zip64 even though it is not required
         RunSingleTest(2, FOUR_GB_LIMIT / 2, set_zip64: true, forward_only: false);
-    }
 
     [Trait("format", "zip64")]
     public void Zip64_Single_Large_File_Fail()

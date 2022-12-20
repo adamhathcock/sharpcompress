@@ -82,13 +82,11 @@ public class ArchiveTests : ReaderTests
     protected void ArchiveStreamRead(
         ReaderOptions? readerOptions = null,
         params string[] testArchives
-    )
-    {
+    ) =>
         ArchiveStreamRead(
             readerOptions,
             testArchives.Select(x => Path.Combine(TEST_ARCHIVES_PATH, x))
         );
-    }
 
     protected void ArchiveStreamRead(ReaderOptions? readerOptions, IEnumerable<string> testArchives)
     {
@@ -122,13 +120,11 @@ public class ArchiveTests : ReaderTests
     protected void ArchiveStreamMultiRead(
         ReaderOptions? readerOptions = null,
         params string[] testArchives
-    )
-    {
+    ) =>
         ArchiveStreamMultiRead(
             readerOptions,
             testArchives.Select(x => Path.Combine(TEST_ARCHIVES_PATH, x))
         );
-    }
 
     protected void ArchiveStreamMultiRead(
         ReaderOptions? readerOptions,
@@ -163,13 +159,11 @@ public class ArchiveTests : ReaderTests
     protected void ArchiveOpenStreamRead(
         ReaderOptions? readerOptions = null,
         params string[] testArchives
-    )
-    {
+    ) =>
         ArchiveOpenStreamRead(
             readerOptions,
             testArchives.Select(x => Path.Combine(TEST_ARCHIVES_PATH, x))
         );
-    }
 
     protected void ArchiveOpenStreamRead(
         ReaderOptions? readerOptions,
@@ -205,14 +199,12 @@ public class ArchiveTests : ReaderTests
         int[][] results,
         ReaderOptions? readerOptions = null,
         params string[] testArchives
-    )
-    {
+    ) =>
         ArchiveOpenEntryVolumeIndexTest(
             results,
             readerOptions,
             testArchives.Select(x => Path.Combine(TEST_ARCHIVES_PATH, x))
         );
-    }
 
     protected void ArchiveOpenEntryVolumeIndexTest(
         int[][] results,

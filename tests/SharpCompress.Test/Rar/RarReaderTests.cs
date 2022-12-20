@@ -11,10 +11,9 @@ namespace SharpCompress.Test.Rar;
 public class RarReaderTests : ReaderTests
 {
     [Fact]
-    public void Rar_Multi_Reader()
-    {
+    public void Rar_Multi_Reader() =>
         DoRar_Multi_Reader(
-            new string[]
+            new[]
             {
                 "Rar.multi.part01.rar",
                 "Rar.multi.part02.rar",
@@ -24,13 +23,11 @@ public class RarReaderTests : ReaderTests
                 "Rar.multi.part06.rar"
             }
         );
-    }
 
     [Fact]
-    public void Rar5_Multi_Reader()
-    {
+    public void Rar5_Multi_Reader() =>
         DoRar_Multi_Reader(
-            new string[]
+            new[]
             {
                 "Rar5.multi.part01.rar",
                 "Rar5.multi.part02.rar",
@@ -40,7 +37,6 @@ public class RarReaderTests : ReaderTests
                 "Rar5.multi.part06.rar"
             }
         );
-    }
 
     private void DoRar_Multi_Reader(string[] archives)
     {
@@ -64,10 +60,9 @@ public class RarReaderTests : ReaderTests
     }
 
     [Fact]
-    public void Rar_Multi_Reader_Encrypted()
-    {
+    public void Rar_Multi_Reader_Encrypted() =>
         DoRar_Multi_Reader_Encrypted(
-            new string[]
+            new[]
             {
                 "Rar.EncryptedParts.part01.rar",
                 "Rar.EncryptedParts.part02.rar",
@@ -77,10 +72,8 @@ public class RarReaderTests : ReaderTests
                 "Rar.EncryptedParts.part06.rar"
             }
         );
-    }
 
-    private void DoRar_Multi_Reader_Encrypted(string[] archives)
-    {
+    private void DoRar_Multi_Reader_Encrypted(string[] archives) =>
         Assert.Throws<InvalidFormatException>(() =>
         {
             using (
@@ -102,13 +95,11 @@ public class RarReaderTests : ReaderTests
             }
             VerifyFiles();
         });
-    }
 
     [Fact]
-    public void Rar_Multi_Reader_Delete_Files()
-    {
+    public void Rar_Multi_Reader_Delete_Files() =>
         DoRar_Multi_Reader_Delete_Files(
-            new string[]
+            new[]
             {
                 "Rar.multi.part01.rar",
                 "Rar.multi.part02.rar",
@@ -118,13 +109,11 @@ public class RarReaderTests : ReaderTests
                 "Rar.multi.part06.rar"
             }
         );
-    }
 
     [Fact]
-    public void Rar5_Multi_Reader_Delete_Files()
-    {
+    public void Rar5_Multi_Reader_Delete_Files() =>
         DoRar_Multi_Reader_Delete_Files(
-            new string[]
+            new[]
             {
                 "Rar5.multi.part01.rar",
                 "Rar5.multi.part02.rar",
@@ -134,7 +123,6 @@ public class RarReaderTests : ReaderTests
                 "Rar5.multi.part06.rar"
             }
         );
-    }
 
     private void DoRar_Multi_Reader_Delete_Files(string[] archives)
     {
@@ -172,34 +160,20 @@ public class RarReaderTests : ReaderTests
     }
 
     [Fact]
-    public void Rar_None_Reader()
-    {
-        Read("Rar.none.rar", CompressionType.Rar);
-    }
+    public void Rar_None_Reader() => Read("Rar.none.rar", CompressionType.Rar);
 
     [Fact]
-    public void Rar5_None_Reader()
-    {
-        Read("Rar5.none.rar", CompressionType.Rar);
-    }
+    public void Rar5_None_Reader() => Read("Rar5.none.rar", CompressionType.Rar);
 
     [Fact]
-    public void Rar_Reader()
-    {
-        Read("Rar.rar", CompressionType.Rar);
-    }
+    public void Rar_Reader() => Read("Rar.rar", CompressionType.Rar);
 
     [Fact]
-    public void Rar5_Reader()
-    {
-        Read("Rar5.rar", CompressionType.Rar);
-    }
+    public void Rar5_Reader() => Read("Rar5.rar", CompressionType.Rar);
 
     [Fact]
-    public void Rar_EncryptedFileAndHeader_Reader()
-    {
+    public void Rar_EncryptedFileAndHeader_Reader() =>
         ReadRar("Rar.encrypted_filesAndHeader.rar", "test");
-    }
 
     /*[Fact]
     public void Rar5_EncryptedFileAndHeader_Reader()
@@ -208,10 +182,7 @@ public class RarReaderTests : ReaderTests
     }*/
 
     [Fact]
-    public void Rar_EncryptedFileOnly_Reader()
-    {
-        ReadRar("Rar.encrypted_filesOnly.rar", "test");
-    }
+    public void Rar_EncryptedFileOnly_Reader() => ReadRar("Rar.encrypted_filesOnly.rar", "test");
 
     /*[Fact]
     public void Rar5_EncryptedFileOnly_Reader()
@@ -220,10 +191,7 @@ public class RarReaderTests : ReaderTests
     }*/
 
     [Fact]
-    public void Rar_Encrypted_Reader()
-    {
-        ReadRar("Rar.Encrypted.rar", "test");
-    }
+    public void Rar_Encrypted_Reader() => ReadRar("Rar.Encrypted.rar", "test");
 
     /*[Fact]
     public void Rar5_Encrypted_Reader()
@@ -231,22 +199,14 @@ public class RarReaderTests : ReaderTests
         ReadRar("Rar5.encrypted_filesOnly.rar", "test");
     }*/
 
-    private void ReadRar(string testArchive, string password)
-    {
+    private void ReadRar(string testArchive, string password) =>
         Read(testArchive, CompressionType.Rar, new ReaderOptions { Password = password });
-    }
 
     [Fact]
-    public void Rar_Entry_Stream()
-    {
-        DoRar_Entry_Stream("Rar.rar");
-    }
+    public void Rar_Entry_Stream() => DoRar_Entry_Stream("Rar.rar");
 
     [Fact]
-    public void Rar5_Entry_Stream()
-    {
-        DoRar_Entry_Stream("Rar5.rar");
-    }
+    public void Rar5_Entry_Stream() => DoRar_Entry_Stream("Rar5.rar");
 
     private void DoRar_Entry_Stream(string filename)
     {
@@ -322,28 +282,16 @@ public class RarReaderTests : ReaderTests
     }
 
     [Fact]
-    public void Rar_Solid_Reader()
-    {
-        Read("Rar.solid.rar", CompressionType.Rar);
-    }
+    public void Rar_Solid_Reader() => Read("Rar.solid.rar", CompressionType.Rar);
 
     [Fact]
-    public void Rar5_Solid_Reader()
-    {
-        Read("Rar5.solid.rar", CompressionType.Rar);
-    }
+    public void Rar5_Solid_Reader() => Read("Rar5.solid.rar", CompressionType.Rar);
 
     [Fact]
-    public void Rar_Solid_Skip_Reader()
-    {
-        DoRar_Solid_Skip_Reader("Rar.solid.rar");
-    }
+    public void Rar_Solid_Skip_Reader() => DoRar_Solid_Skip_Reader("Rar.solid.rar");
 
     [Fact]
-    public void Rar5_Solid_Skip_Reader()
-    {
-        DoRar_Solid_Skip_Reader("Rar5.solid.rar");
-    }
+    public void Rar5_Solid_Skip_Reader() => DoRar_Solid_Skip_Reader("Rar5.solid.rar");
 
     private void DoRar_Solid_Skip_Reader(string filename)
     {
@@ -363,16 +311,10 @@ public class RarReaderTests : ReaderTests
     }
 
     [Fact]
-    public void Rar_Reader_Skip()
-    {
-        DoRar_Reader_Skip("Rar.rar");
-    }
+    public void Rar_Reader_Skip() => DoRar_Reader_Skip("Rar.rar");
 
     [Fact]
-    public void Rar5_Reader_Skip()
-    {
-        DoRar_Reader_Skip("Rar5.rar");
-    }
+    public void Rar5_Reader_Skip() => DoRar_Reader_Skip("Rar5.rar");
 
     private void DoRar_Reader_Skip(string filename)
     {

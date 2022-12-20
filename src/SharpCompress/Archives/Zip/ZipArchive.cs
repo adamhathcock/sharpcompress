@@ -32,13 +32,11 @@ public class ZipArchive : AbstractWritableArchive<ZipArchiveEntry, ZipVolume>
     /// </summary>
     /// <param name="srcStream"></param>
     /// <param name="options"></param>
-    internal ZipArchive(SourceStream srcStream) : base(ArchiveType.Zip, srcStream)
-    {
+    internal ZipArchive(SourceStream srcStream) : base(ArchiveType.Zip, srcStream) =>
         headerFactory = new SeekableZipHeaderFactory(
             srcStream.ReaderOptions.Password,
             srcStream.ReaderOptions.ArchiveEncoding
         );
-    }
 
     /// <summary>
     /// Constructor expects a filepath to an existing file.
@@ -120,10 +118,8 @@ public class ZipArchive : AbstractWritableArchive<ZipArchiveEntry, ZipVolume>
         );
     }
 
-    public static bool IsZipFile(string filePath, string? password = null)
-    {
-        return IsZipFile(new FileInfo(filePath), password);
-    }
+    public static bool IsZipFile(string filePath, string? password = null) =>
+        IsZipFile(new FileInfo(filePath), password);
 
     public static bool IsZipFile(FileInfo fileInfo, string? password = null)
     {
@@ -271,10 +267,7 @@ public class ZipArchive : AbstractWritableArchive<ZipArchiveEntry, ZipVolume>
         }
     }
 
-    public void SaveTo(Stream stream)
-    {
-        SaveTo(stream, new WriterOptions(CompressionType.Deflate));
-    }
+    public void SaveTo(Stream stream) => SaveTo(stream, new WriterOptions(CompressionType.Deflate));
 
     protected override void SaveTo(
         Stream stream,
@@ -297,15 +290,9 @@ public class ZipArchive : AbstractWritableArchive<ZipArchiveEntry, ZipVolume>
         long size,
         DateTime? modified,
         bool closeStream
-    )
-    {
-        return new ZipWritableArchiveEntry(this, source, filePath, size, modified, closeStream);
-    }
+    ) => new ZipWritableArchiveEntry(this, source, filePath, size, modified, closeStream);
 
-    public static ZipArchive Create()
-    {
-        return new ZipArchive();
-    }
+    public static ZipArchive Create() => new ZipArchive();
 
     protected override IReader CreateReaderForSolidExtraction()
     {

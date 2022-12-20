@@ -131,10 +131,7 @@ public class SourceStream : Stream
         set => Seek(value, SeekOrigin.Begin);
     }
 
-    public override void Flush()
-    {
-        Current.Flush();
-    }
+    public override void Flush() => Current.Flush();
 
     public override int Read(byte[] buffer, int offset, int count)
     {
@@ -211,15 +208,10 @@ public class SourceStream : Stream
         return pos;
     }
 
-    public override void SetLength(long value)
-    {
-        throw new NotImplementedException();
-    }
+    public override void SetLength(long value) => throw new NotImplementedException();
 
-    public override void Write(byte[] buffer, int offset, int count)
-    {
+    public override void Write(byte[] buffer, int offset, int count) =>
         throw new NotImplementedException();
-    }
 
     public override void Close()
     {

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.IO;
 using System.Text;
 
@@ -20,20 +20,11 @@ public abstract class XZTestsBase : IDisposable
         CompressedIndexedStream?.Dispose();
     }
 
-    protected virtual void RewindEmpty(Stream stream)
-    {
-        stream.Position = 0;
-    }
+    protected virtual void RewindEmpty(Stream stream) => stream.Position = 0;
 
-    protected virtual void Rewind(Stream stream)
-    {
-        stream.Position = 0;
-    }
+    protected virtual void Rewind(Stream stream) => stream.Position = 0;
 
-    protected virtual void RewindIndexed(Stream stream)
-    {
-        stream.Position = 0;
-    }
+    protected virtual void RewindIndexed(Stream stream) => stream.Position = 0;
 
     protected Stream CompressedEmptyStream { get; } = new MemoryStream(CompressedEmpty);
 

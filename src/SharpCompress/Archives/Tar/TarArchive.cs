@@ -95,10 +95,7 @@ public class TarArchive : AbstractWritableArchive<TarArchiveEntry, TarVolume>
         );
     }
 
-    public static bool IsTarFile(string filePath)
-    {
-        return IsTarFile(new FileInfo(filePath));
-    }
+    public static bool IsTarFile(string filePath) => IsTarFile(new FileInfo(filePath));
 
     public static bool IsTarFile(FileInfo fileInfo)
     {
@@ -196,10 +193,7 @@ public class TarArchive : AbstractWritableArchive<TarArchiveEntry, TarVolume>
         }
     }
 
-    public static TarArchive Create()
-    {
-        return new TarArchive();
-    }
+    public static TarArchive Create() => new TarArchive();
 
     protected override TarArchiveEntry CreateEntryInternal(
         string filePath,
@@ -207,9 +201,8 @@ public class TarArchive : AbstractWritableArchive<TarArchiveEntry, TarVolume>
         long size,
         DateTime? modified,
         bool closeStream
-    )
-    {
-        return new TarWritableArchiveEntry(
+    ) =>
+        new TarWritableArchiveEntry(
             this,
             source,
             CompressionType.Unknown,
@@ -218,7 +211,6 @@ public class TarArchive : AbstractWritableArchive<TarArchiveEntry, TarVolume>
             modified,
             closeStream
         );
-    }
 
     protected override void SaveTo(
         Stream stream,

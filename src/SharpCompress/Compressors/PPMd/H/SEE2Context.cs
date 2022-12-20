@@ -62,10 +62,7 @@ internal class See2Context
         _shift &= 0xff;
     }
 
-    public virtual void IncSumm(int dSumm)
-    {
-        Summ += dSumm;
-    }
+    public virtual void IncSumm(int dSumm) => Summ += dSumm;
 
     public override string ToString()
     {

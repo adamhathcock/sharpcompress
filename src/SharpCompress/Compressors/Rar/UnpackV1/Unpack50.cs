@@ -1,4 +1,4 @@
-#if true
+﻿#if true
 using System;
 using System.Collections.Generic;
 using SharpCompress.Compressors.Rar.UnpackV1.Decode;
@@ -107,66 +107,51 @@ internal partial class Unpack
     // TODO: rename var
     private int UnpPtr
     {
-        get { return unpPtr; }
-        set { unpPtr = value; }
+        get => unpPtr;
+        set => unpPtr = value;
     }
     private int ReadBorder
     {
-        get { return readBorder; }
-        set { readBorder = value; }
+        get => readBorder;
+        set => readBorder = value;
     }
     private long DestUnpSize
     {
-        get { return destUnpSize; }
-        set { destUnpSize = value; }
+        get => destUnpSize;
+        set => destUnpSize = value;
     }
     private long WrittenFileSize
     {
-        get { return writtenFileSize; }
-        set { writtenFileSize = value; }
+        get => writtenFileSize;
+        set => writtenFileSize = value;
     }
-    private byte[] Window
-    {
-        get { return window; }
-    }
+    private byte[] Window => window;
+
     private uint LastLength
     {
-        get { return (uint)lastLength; }
-        set { lastLength = (int)value; }
+        get => (uint)lastLength;
+        set => lastLength = (int)value;
     }
 
-    private uint OldDistN(int i)
-    {
-        return (uint)oldDist[i];
-    }
+    private uint OldDistN(int i) => (uint)oldDist[i];
 
-    private void SetOldDistN(int i, uint value)
-    {
-        oldDist[i] = (int)value;
-    }
+    private void SetOldDistN(int i, uint value) => oldDist[i] = (int)value;
 
     private int WrPtr
     {
-        get { return wrPtr; }
-        set { wrPtr = value; }
+        get => wrPtr;
+        set => wrPtr = value;
     }
-    private Unpack BlockHeader
-    {
-        get { return this; }
-    }
-    private Unpack Header
-    {
-        get { return this; }
-    }
+    private Unpack BlockHeader => this;
+
+    private Unpack Header => this;
+
     private int ReadTop
     {
-        get { return readTop; }
-        set { readTop = value; }
+        get => readTop;
+        set => readTop = value;
     }
-    private List<UnpackFilter> Filters
-    {
-        get { return filters; }
-    }
+    private List<UnpackFilter> Filters => filters;
 
     // TODO: make sure these aren't already somewhere else
     public int BlockSize;

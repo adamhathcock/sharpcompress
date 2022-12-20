@@ -11,10 +11,7 @@ public class WriterTests : TestBase
 {
     private readonly ArchiveType type;
 
-    protected WriterTests(ArchiveType type)
-    {
-        this.type = type;
-    }
+    protected WriterTests(ArchiveType type) => this.type = type;
 
     protected void Write(
         CompressionType compressionType,

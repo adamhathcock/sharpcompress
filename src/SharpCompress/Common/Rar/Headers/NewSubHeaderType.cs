@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 
 namespace SharpCompress.Common.Rar.Headers;
 
@@ -41,8 +41,5 @@ internal sealed class NewSubHeaderType : IEquatable<NewSubHeaderType>
         return _bytes.AsSpan().SequenceEqual(bytes);
     }
 
-    public bool Equals(NewSubHeaderType? other)
-    {
-        return other is not null && Equals(other._bytes);
-    }
+    public bool Equals(NewSubHeaderType? other) => other is not null && Equals(other._bytes);
 }

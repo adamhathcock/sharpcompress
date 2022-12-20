@@ -43,10 +43,7 @@ public class TestBase : IDisposable
         Directory.CreateDirectory(SCRATCH2_FILES_PATH);
     }
 
-    public void Dispose()
-    {
-        Directory.Delete(SCRATCH_BASE_PATH, true);
-    }
+    public void Dispose() => Directory.Delete(SCRATCH_BASE_PATH, true);
 
     public void VerifyFiles()
     {

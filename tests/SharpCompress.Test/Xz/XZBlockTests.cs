@@ -7,15 +7,9 @@ namespace SharpCompress.Test.Xz;
 
 public class XZBlockTests : XZTestsBase
 {
-    protected override void Rewind(Stream stream)
-    {
-        stream.Position = 12;
-    }
+    protected override void Rewind(Stream stream) => stream.Position = 12;
 
-    protected override void RewindIndexed(Stream stream)
-    {
-        stream.Position = 12;
-    }
+    protected override void RewindIndexed(Stream stream) => stream.Position = 12;
 
     private byte[] ReadBytes(XZBlock block, int bytesToRead)
     {

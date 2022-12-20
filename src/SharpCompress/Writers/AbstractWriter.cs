@@ -1,4 +1,4 @@
-#nullable disable
+﻿#nullable disable
 
 using System;
 using System.IO;
@@ -16,10 +16,7 @@ public abstract class AbstractWriter : IWriter
         WriterOptions = writerOptions;
     }
 
-    protected void InitalizeStream(Stream stream)
-    {
-        OutputStream = stream;
-    }
+    protected void InitalizeStream(Stream stream) => OutputStream = stream;
 
     protected Stream OutputStream { get; private set; }
 

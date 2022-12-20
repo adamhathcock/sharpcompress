@@ -1,4 +1,4 @@
-using SharpCompress.IO;
+﻿using SharpCompress.IO;
 
 namespace SharpCompress.Common.Rar.Headers;
 
@@ -29,10 +29,7 @@ internal class EndArchiveHeader : RarHeader
 
     private ushort Flags { get; set; }
 
-    private bool HasFlag(ushort flag)
-    {
-        return (Flags & flag) == flag;
-    }
+    private bool HasFlag(ushort flag) => (Flags & flag) == flag;
 
     internal int? ArchiveCrc { get; private set; }
 

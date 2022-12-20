@@ -1,4 +1,4 @@
-using System.IO;
+﻿using System.IO;
 using SharpCompress.Common.Tar.Headers;
 
 namespace SharpCompress.Common.Tar;
@@ -27,8 +27,5 @@ internal sealed class TarFilePart : FilePart
         return Header.PackedStream;
     }
 
-    internal override Stream? GetRawStream()
-    {
-        return null;
-    }
+    internal override Stream? GetRawStream() => null;
 }

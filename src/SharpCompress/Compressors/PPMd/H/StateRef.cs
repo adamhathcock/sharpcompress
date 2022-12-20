@@ -32,30 +32,15 @@ internal class StateRef
         }
     }
 
-    public virtual void IncrementFreq(int dFreq)
-    {
-        _freq = (_freq + dFreq) & 0xff;
-    }
+    public virtual void IncrementFreq(int dFreq) => _freq = (_freq + dFreq) & 0xff;
 
-    public virtual void DecrementFreq(int dFreq)
-    {
-        _freq = (_freq - dFreq) & 0xff;
-    }
+    public virtual void DecrementFreq(int dFreq) => _freq = (_freq - dFreq) & 0xff;
 
-    public virtual int GetSuccessor()
-    {
-        return _successor;
-    }
+    public virtual int GetSuccessor() => _successor;
 
-    public virtual void SetSuccessor(PpmContext successor)
-    {
-        SetSuccessor(successor.Address);
-    }
+    public virtual void SetSuccessor(PpmContext successor) => SetSuccessor(successor.Address);
 
-    public virtual void SetSuccessor(int successor)
-    {
-        _successor = successor;
-    }
+    public virtual void SetSuccessor(int successor) => _successor = successor;
 
     public override string ToString()
     {

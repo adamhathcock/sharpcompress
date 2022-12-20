@@ -49,15 +49,9 @@ internal sealed class BinTree : InWindow
         }
     }
 
-    public new void SetStream(Stream stream)
-    {
-        base.SetStream(stream);
-    }
+    public new void SetStream(Stream stream) => base.SetStream(stream);
 
-    public new void ReleaseStream()
-    {
-        base.ReleaseStream();
-    }
+    public new void ReleaseStream() => base.ReleaseStream();
 
     public new void Init()
     {
@@ -83,20 +77,12 @@ internal sealed class BinTree : InWindow
         }
     }
 
-    public new byte GetIndexByte(int index)
-    {
-        return base.GetIndexByte(index);
-    }
+    public new byte GetIndexByte(int index) => base.GetIndexByte(index);
 
-    public new uint GetMatchLen(int index, uint distance, uint limit)
-    {
-        return base.GetMatchLen(index, distance, limit);
-    }
+    public new uint GetMatchLen(int index, uint distance, uint limit) =>
+        base.GetMatchLen(index, distance, limit);
 
-    public new uint GetNumAvailableBytes()
-    {
-        return base.GetNumAvailableBytes();
-    }
+    public new uint GetNumAvailableBytes() => base.GetNumAvailableBytes();
 
     public void Create(
         uint historySize,
@@ -437,8 +423,5 @@ internal sealed class BinTree : InWindow
         ReduceOffsets((int)subValue);
     }
 
-    public void SetCutValue(uint cutValue)
-    {
-        _cutValue = cutValue;
-    }
+    public void SetCutValue(uint cutValue) => _cutValue = cutValue;
 }

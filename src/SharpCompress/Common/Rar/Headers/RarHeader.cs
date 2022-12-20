@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.IO;
 using SharpCompress.IO;
 
@@ -87,15 +87,11 @@ internal class RarHeader : IRarHeader
         VerifyHeaderCrc(reader.GetCrc32());
     }
 
-    protected int RemainingHeaderBytes(MarkingBinaryReader reader)
-    {
-        return checked(HeaderSize - (int)reader.CurrentReadByteCount);
-    }
+    protected int RemainingHeaderBytes(MarkingBinaryReader reader) =>
+        checked(HeaderSize - (int)reader.CurrentReadByteCount);
 
-    protected virtual void ReadFinish(MarkingBinaryReader reader)
-    {
+    protected virtual void ReadFinish(MarkingBinaryReader reader) =>
         throw new NotImplementedException();
-    }
 
     private void VerifyHeaderCrc(uint crc32)
     {
@@ -116,10 +112,7 @@ internal class RarHeader : IRarHeader
 
     protected ushort HeaderFlags { get; }
 
-    protected bool HasHeaderFlag(ushort flag)
-    {
-        return (HeaderFlags & flag) == flag;
-    }
+    protected bool HasHeaderFlag(ushort flag) => (HeaderFlags & flag) == flag;
 
     protected int HeaderSize { get; }
 

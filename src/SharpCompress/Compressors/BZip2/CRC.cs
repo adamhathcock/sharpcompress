@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Copyright 2001,2004-2005 The Apache Software Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -291,30 +291,15 @@ internal class CRC
         unchecked((int)0xb1f740b4)
     };
 
-    public CRC()
-    {
-        InitialiseCRC();
-    }
+    public CRC() => InitialiseCRC();
 
-    internal void InitialiseCRC()
-    {
-        globalCrc = unchecked((int)0xffffffff);
-    }
+    internal void InitialiseCRC() => globalCrc = unchecked((int)0xffffffff);
 
-    internal int GetFinalCRC()
-    {
-        return ~globalCrc;
-    }
+    internal int GetFinalCRC() => ~globalCrc;
 
-    internal int GetGlobalCRC()
-    {
-        return globalCrc;
-    }
+    internal int GetGlobalCRC() => globalCrc;
 
-    internal void SetGlobalCRC(int newCrc)
-    {
-        globalCrc = newCrc;
-    }
+    internal void SetGlobalCRC(int newCrc) => globalCrc = newCrc;
 
     internal void UpdateCRC(int inCh)
     {

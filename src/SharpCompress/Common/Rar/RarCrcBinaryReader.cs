@@ -10,25 +10,13 @@ internal class RarCrcBinaryReader : MarkingBinaryReader
 
     public RarCrcBinaryReader(Stream stream) : base(stream) { }
 
-    public uint GetCrc32()
-    {
-        return ~_currentCrc;
-    }
+    public uint GetCrc32() => ~_currentCrc;
 
-    public void ResetCrc()
-    {
-        _currentCrc = 0xffffffff;
-    }
+    public void ResetCrc() => _currentCrc = 0xffffffff;
 
-    protected void UpdateCrc(byte b)
-    {
-        _currentCrc = RarCRC.CheckCrc(_currentCrc, b);
-    }
+    protected void UpdateCrc(byte b) => _currentCrc = RarCRC.CheckCrc(_currentCrc, b);
 
-    protected byte[] ReadBytesNoCrc(int count)
-    {
-        return base.ReadBytes(count);
-    }
+    protected byte[] ReadBytesNoCrc(int count) => base.ReadBytes(count);
 
     public override byte ReadByte()
     {

@@ -41,42 +41,32 @@ public class GZipFactory
     }
 
     /// <inheritdoc/>
-    public override bool IsArchive(Stream stream, string? password = null)
-    {
-        return GZipArchive.IsGZipFile(stream);
-    }
+    public override bool IsArchive(Stream stream, string? password = null) =>
+        GZipArchive.IsGZipFile(stream);
 
     #endregion
 
     #region IArchiveFactory
 
     /// <inheritdoc/>
-    public IArchive Open(Stream stream, ReaderOptions? readerOptions = null)
-    {
-        return GZipArchive.Open(stream, readerOptions);
-    }
+    public IArchive Open(Stream stream, ReaderOptions? readerOptions = null) =>
+        GZipArchive.Open(stream, readerOptions);
 
     /// <inheritdoc/>
-    public IArchive Open(FileInfo fileInfo, ReaderOptions? readerOptions = null)
-    {
-        return GZipArchive.Open(fileInfo, readerOptions);
-    }
+    public IArchive Open(FileInfo fileInfo, ReaderOptions? readerOptions = null) =>
+        GZipArchive.Open(fileInfo, readerOptions);
 
     #endregion
 
     #region IMultiArchiveFactory
 
     /// <inheritdoc/>
-    public IArchive Open(IReadOnlyList<Stream> streams, ReaderOptions? readerOptions = null)
-    {
-        return GZipArchive.Open(streams, readerOptions);
-    }
+    public IArchive Open(IReadOnlyList<Stream> streams, ReaderOptions? readerOptions = null) =>
+        GZipArchive.Open(streams, readerOptions);
 
     /// <inheritdoc/>
-    public IArchive Open(IReadOnlyList<FileInfo> fileInfos, ReaderOptions? readerOptions = null)
-    {
-        return GZipArchive.Open(fileInfos, readerOptions);
-    }
+    public IArchive Open(IReadOnlyList<FileInfo> fileInfos, ReaderOptions? readerOptions = null) =>
+        GZipArchive.Open(fileInfos, readerOptions);
 
     #endregion
 
@@ -112,10 +102,8 @@ public class GZipFactory
     }
 
     /// <inheritdoc/>
-    public IReader OpenReader(Stream stream, ReaderOptions? options)
-    {
-        return GZipReader.Open(stream, options);
-    }
+    public IReader OpenReader(Stream stream, ReaderOptions? options) =>
+        GZipReader.Open(stream, options);
 
     #endregion
 
@@ -136,10 +124,7 @@ public class GZipFactory
     #region IWriteableArchiveFactory
 
     /// <inheritdoc/>
-    public IWritableArchive CreateWriteableArchive()
-    {
-        return GZipArchive.Create();
-    }
+    public IWritableArchive CreateWriteableArchive() => GZipArchive.Create();
 
     #endregion
 }

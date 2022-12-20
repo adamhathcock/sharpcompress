@@ -34,10 +34,7 @@ internal class SevenZipFilePart : FilePart
 
     internal override string FilePartName => Header.Name;
 
-    internal override Stream? GetRawStream()
-    {
-        return null;
-    }
+    internal override Stream? GetRawStream() => null;
 
     internal override Stream GetCompressedStream()
     {

@@ -68,30 +68,24 @@ internal struct Pointer
     /// </summary>
     /// <param name="memoryNode"></param>
     /// <returns></returns>
-    public static implicit operator Pointer(MemoryNode memoryNode)
-    {
-        return new Pointer(memoryNode._address, memoryNode._memory);
-    }
+    public static implicit operator Pointer(MemoryNode memoryNode) =>
+        new Pointer(memoryNode._address, memoryNode._memory);
 
     /// <summary>
     /// Allow a <see cref="Model.PpmContext"/> to be implicitly converted to a <see cref="Pointer"/>.
     /// </summary>
     /// <param name="context"></param>
     /// <returns></returns>
-    public static implicit operator Pointer(Model.PpmContext context)
-    {
-        return new Pointer(context._address, context._memory);
-    }
+    public static implicit operator Pointer(Model.PpmContext context) =>
+        new Pointer(context._address, context._memory);
 
     /// <summary>
     /// Allow a <see cref="PpmState"/> to be implicitly converted to a <see cref="Pointer"/>.
     /// </summary>
     /// <param name="state"></param>
     /// <returns></returns>
-    public static implicit operator Pointer(PpmState state)
-    {
-        return new Pointer(state._address, state._memory);
-    }
+    public static implicit operator Pointer(PpmState state) =>
+        new Pointer(state._address, state._memory);
 
     /// <summary>
     /// Increase the address of a pointer by the given number of bytes.
@@ -330,10 +324,8 @@ internal struct Pointer
     /// <param name="pointer1"></param>
     /// <param name="pointer2"></param>
     /// <returns></returns>
-    public static bool operator ==(Pointer pointer1, Pointer pointer2)
-    {
-        return pointer1._address == pointer2._address;
-    }
+    public static bool operator ==(Pointer pointer1, Pointer pointer2) =>
+        pointer1._address == pointer2._address;
 
     /// <summary>
     /// Compare two pointers.
@@ -341,10 +333,8 @@ internal struct Pointer
     /// <param name="pointer1"></param>
     /// <param name="pointer2"></param>
     /// <returns></returns>
-    public static bool operator !=(Pointer pointer1, Pointer pointer2)
-    {
-        return pointer1._address != pointer2._address;
-    }
+    public static bool operator !=(Pointer pointer1, Pointer pointer2) =>
+        pointer1._address != pointer2._address;
 
     /// <summary>
     /// Indicates whether this instance and a specified object are equal.
@@ -364,8 +354,5 @@ internal struct Pointer
     /// Returns the hash code for this instance.
     /// </summary>
     /// <returns>A 32-bit signed integer that is the hash code for this instance.</returns>
-    public override int GetHashCode()
-    {
-        return _address.GetHashCode();
-    }
+    public override int GetHashCode() => _address.GetHashCode();
 }

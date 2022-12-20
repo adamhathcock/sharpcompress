@@ -1,4 +1,4 @@
-using System.IO;
+﻿using System.IO;
 using System.Text;
 using SharpCompress.Common;
 using SharpCompress.Writers.Tar;
@@ -8,51 +8,40 @@ namespace SharpCompress.Test.Tar;
 
 public class TarWriterTests : WriterTests
 {
-    public TarWriterTests() : base(ArchiveType.Tar)
-    {
-        UseExtensionInsteadOfNameToVerify = true;
-    }
+    public TarWriterTests() : base(ArchiveType.Tar) => UseExtensionInsteadOfNameToVerify = true;
 
     [Fact]
-    public void Tar_Writer()
-    {
+    public void Tar_Writer() =>
         Write(
             CompressionType.None,
             "Tar.noEmptyDirs.tar",
             "Tar.noEmptyDirs.tar",
             Encoding.GetEncoding(866)
         );
-    }
 
     [Fact]
-    public void Tar_BZip2_Writer()
-    {
+    public void Tar_BZip2_Writer() =>
         Write(
             CompressionType.BZip2,
             "Tar.noEmptyDirs.tar.bz2",
             "Tar.noEmptyDirs.tar.bz2",
             Encoding.GetEncoding(866)
         );
-    }
 
     [Fact]
-    public void Tar_LZip_Writer()
-    {
+    public void Tar_LZip_Writer() =>
         Write(
             CompressionType.LZip,
             "Tar.noEmptyDirs.tar.lz",
             "Tar.noEmptyDirs.tar.lz",
             Encoding.GetEncoding(866)
         );
-    }
 
     [Fact]
-    public void Tar_Rar_Write()
-    {
+    public void Tar_Rar_Write() =>
         Assert.Throws<InvalidFormatException>(
             () => Write(CompressionType.Rar, "Zip.ppmd.noEmptyDirs.zip", "Zip.ppmd.noEmptyDirs.zip")
         );
-    }
 
     [Theory]
     [InlineData(true)]

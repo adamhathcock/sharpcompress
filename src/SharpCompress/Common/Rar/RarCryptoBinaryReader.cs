@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 
 namespace SharpCompress.Common.Rar;
@@ -33,10 +33,7 @@ internal sealed class RarCryptoBinaryReader : RarCrcBinaryReader
         }
     }
 
-    public override void Mark()
-    {
-        _readCount = 0;
-    }
+    public override void Mark() => _readCount = 0;
 
     private bool UseEncryption => _salt != null;
 
@@ -95,10 +92,7 @@ internal sealed class RarCryptoBinaryReader : RarCrcBinaryReader
         return decryptedBytes;
     }
 
-    public void ClearQueue()
-    {
-        _data.Clear();
-    }
+    public void ClearQueue() => _data.Clear();
 
     public void SkipQueue()
     {

@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using SharpCompress.Common;
 using SharpCompress.Common.GZip;
@@ -7,10 +7,8 @@ namespace SharpCompress.Readers.GZip;
 
 public class GZipReader : AbstractReader<GZipEntry, GZipVolume>
 {
-    internal GZipReader(Stream stream, ReaderOptions options) : base(options, ArchiveType.GZip)
-    {
+    internal GZipReader(Stream stream, ReaderOptions options) : base(options, ArchiveType.GZip) =>
         Volume = new GZipVolume(stream, options);
-    }
 
     public override GZipVolume Volume { get; }
 
@@ -30,8 +28,6 @@ public class GZipReader : AbstractReader<GZipEntry, GZipVolume>
 
     #endregion Open
 
-    protected override IEnumerable<GZipEntry> GetEntries(Stream stream)
-    {
-        return GZipEntry.GetEntries(stream, Options);
-    }
+    protected override IEnumerable<GZipEntry> GetEntries(Stream stream) =>
+        GZipEntry.GetEntries(stream, Options);
 }

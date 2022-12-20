@@ -252,7 +252,7 @@ internal partial class Unpack
 
     //ComprDataIO *UnpIO;
     //BitInput Inp;
-    private BitInput Inp { get { return this; } } // hopefully this gets inlined
+    private BitInput Inp => this; // hopefully this gets inlined
 
 #if RarV2017_RAR_SMP
 void InitMT();

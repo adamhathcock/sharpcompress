@@ -201,13 +201,9 @@ internal sealed partial class DeflateManager
             Flavor = flavor;
         }
 
-        public static Config Lookup(CompressionLevel level)
-        {
-            return Table[(int)level];
-        }
+        public static Config Lookup(CompressionLevel level) => Table[(int)level];
 
-        static Config()
-        {
+        static Config() =>
             Table = new[]
             {
                 new Config(0, 0, 0, 0, DeflateFlavor.Store),
@@ -221,7 +217,6 @@ internal sealed partial class DeflateManager
                 new Config(32, 128, 258, 1024, DeflateFlavor.Slow),
                 new Config(32, 258, 258, 4096, DeflateFlavor.Slow)
             };
-        }
 
         private static readonly Config[] Table;
     }
@@ -1679,25 +1674,18 @@ internal sealed partial class DeflateManager
 
     internal bool WantRfc1950HeaderBytes { get; set; } = true;
 
-    internal int Initialize(ZlibCodec codec, CompressionLevel level)
-    {
-        return Initialize(codec, level, ZlibConstants.WindowBitsMax);
-    }
+    internal int Initialize(ZlibCodec codec, CompressionLevel level) =>
+        Initialize(codec, level, ZlibConstants.WindowBitsMax);
 
-    internal int Initialize(ZlibCodec codec, CompressionLevel level, int bits)
-    {
-        return Initialize(codec, level, bits, MEM_LEVEL_DEFAULT, CompressionStrategy.Default);
-    }
+    internal int Initialize(ZlibCodec codec, CompressionLevel level, int bits) =>
+        Initialize(codec, level, bits, MEM_LEVEL_DEFAULT, CompressionStrategy.Default);
 
     internal int Initialize(
         ZlibCodec codec,
         CompressionLevel level,
         int bits,
         CompressionStrategy compressionStrategy
-    )
-    {
-        return Initialize(codec, level, bits, MEM_LEVEL_DEFAULT, compressionStrategy);
-    }
+    ) => Initialize(codec, level, bits, MEM_LEVEL_DEFAULT, compressionStrategy);
 
     internal int Initialize(
         ZlibCodec codec,

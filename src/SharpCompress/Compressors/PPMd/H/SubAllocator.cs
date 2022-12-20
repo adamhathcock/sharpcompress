@@ -77,15 +77,9 @@ internal class SubAllocator
     private RarMemBlock _tempRarMemBlock2;
     private RarMemBlock _tempRarMemBlock3;
 
-    public SubAllocator()
-    {
-        Clean();
-    }
+    public SubAllocator() => Clean();
 
-    public virtual void Clean()
-    {
-        _subAllocatorSize = 0;
-    }
+    public virtual void Clean() => _subAllocatorSize = 0;
 
     private void InsertNode(int p, int indx)
     {
@@ -95,10 +89,7 @@ internal class SubAllocator
         _freeList[indx].SetNext(temp);
     }
 
-    public virtual void IncPText()
-    {
-        _pText++;
-    }
+    public virtual void IncPText() => _pText++;
 
     private int RemoveNode(int indx)
     {
@@ -109,17 +100,11 @@ internal class SubAllocator
         return retVal;
     }
 
-    private int U2B(int nu)
-    {
-        return UNIT_SIZE * nu;
-    }
+    private int U2B(int nu) => UNIT_SIZE * nu;
 
     /* memblockptr */
 
-    private int MbPtr(int basePtr, int items)
-    {
-        return (basePtr + U2B(items));
-    }
+    private int MbPtr(int basePtr, int items) => (basePtr + U2B(items));
 
     private void SplitBlock(int pv, int oldIndx, int newIndx)
     {
@@ -154,10 +139,7 @@ internal class SubAllocator
         }
     }
 
-    public virtual int GetAllocatedMemory()
-    {
-        return _subAllocatorSize;
-    }
+    public virtual int GetAllocatedMemory() => _subAllocatorSize;
 
     public virtual bool StartSubAllocator(int saSize)
     {
@@ -368,15 +350,9 @@ internal class SubAllocator
         return oldPtr;
     }
 
-    public virtual void FreeUnits(int ptr, int oldNu)
-    {
-        InsertNode(ptr, _units2Indx[oldNu - 1]);
-    }
+    public virtual void FreeUnits(int ptr, int oldNu) => InsertNode(ptr, _units2Indx[oldNu - 1]);
 
-    public virtual void DecPText(int dPText)
-    {
-        PText -= dPText;
-    }
+    public virtual void DecPText(int dPText) => PText -= dPText;
 
     public virtual void InitSubAllocator()
     {
@@ -419,10 +395,7 @@ internal class SubAllocator
         }
     }
 
-    private int SizeOfFreeList()
-    {
-        return _freeList.Length * RarNode.SIZE;
-    }
+    private int SizeOfFreeList() => _freeList.Length * RarNode.SIZE;
 
     // Debug
     // public void dumpHeap() {
@@ -465,8 +438,5 @@ internal class SubAllocator
         return buffer.ToString();
     }
 
-    static SubAllocator()
-    {
-        UNIT_SIZE = Math.Max(PpmContext.SIZE, RarMemBlock.SIZE);
-    }
+    static SubAllocator() => UNIT_SIZE = Math.Max(PpmContext.SIZE, RarMemBlock.SIZE);
 }

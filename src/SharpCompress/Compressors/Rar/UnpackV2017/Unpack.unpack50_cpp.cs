@@ -1,4 +1,4 @@
-#nullable disable
+﻿#nullable disable
 
 #if !Rar2017_64bit
 using size_t = System.UInt32;
@@ -866,9 +866,7 @@ internal partial class Unpack
         return true;
     }
 
-    private void InitFilters()
-    {
+    private void InitFilters() =>
         //Filters.SoftReset();
         Filters.Clear();
-    }
 }

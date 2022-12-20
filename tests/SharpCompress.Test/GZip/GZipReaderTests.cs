@@ -7,16 +7,10 @@ namespace SharpCompress.Test.GZip;
 
 public class GZipReaderTests : ReaderTests
 {
-    public GZipReaderTests()
-    {
-        UseExtensionInsteadOfNameToVerify = true;
-    }
+    public GZipReaderTests() => UseExtensionInsteadOfNameToVerify = true;
 
     [Fact]
-    public void GZip_Reader_Generic()
-    {
-        Read("Tar.tar.gz", CompressionType.GZip);
-    }
+    public void GZip_Reader_Generic() => Read("Tar.tar.gz", CompressionType.GZip);
 
     [Fact]
     public void GZip_Reader_Generic2()

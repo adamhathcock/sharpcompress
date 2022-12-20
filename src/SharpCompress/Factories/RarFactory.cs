@@ -29,58 +29,44 @@ public class RarFactory : Factory, IArchiveFactory, IMultiArchiveFactory, IReade
     }
 
     /// <inheritdoc/>
-    public override bool IsArchive(Stream stream, string? password = null)
-    {
-        return RarArchive.IsRarFile(stream);
-    }
+    public override bool IsArchive(Stream stream, string? password = null) =>
+        RarArchive.IsRarFile(stream);
 
     /// <inheritdoc/>
-    public override FileInfo? GetFilePart(int index, FileInfo part1)
-    {
-        return RarArchiveVolumeFactory.GetFilePart(index, part1);
-    }
+    public override FileInfo? GetFilePart(int index, FileInfo part1) =>
+        RarArchiveVolumeFactory.GetFilePart(index, part1);
 
     #endregion
 
     #region IArchiveFactory
 
     /// <inheritdoc/>
-    public IArchive Open(Stream stream, ReaderOptions? readerOptions = null)
-    {
-        return RarArchive.Open(stream, readerOptions);
-    }
+    public IArchive Open(Stream stream, ReaderOptions? readerOptions = null) =>
+        RarArchive.Open(stream, readerOptions);
 
     /// <inheritdoc/>
-    public IArchive Open(FileInfo fileInfo, ReaderOptions? readerOptions = null)
-    {
-        return RarArchive.Open(fileInfo, readerOptions);
-    }
+    public IArchive Open(FileInfo fileInfo, ReaderOptions? readerOptions = null) =>
+        RarArchive.Open(fileInfo, readerOptions);
 
     #endregion
 
     #region IMultiArchiveFactory
 
     /// <inheritdoc/>
-    public IArchive Open(IReadOnlyList<Stream> streams, ReaderOptions? readerOptions = null)
-    {
-        return RarArchive.Open(streams, readerOptions);
-    }
+    public IArchive Open(IReadOnlyList<Stream> streams, ReaderOptions? readerOptions = null) =>
+        RarArchive.Open(streams, readerOptions);
 
     /// <inheritdoc/>
-    public IArchive Open(IReadOnlyList<FileInfo> fileInfos, ReaderOptions? readerOptions = null)
-    {
-        return RarArchive.Open(fileInfos, readerOptions);
-    }
+    public IArchive Open(IReadOnlyList<FileInfo> fileInfos, ReaderOptions? readerOptions = null) =>
+        RarArchive.Open(fileInfos, readerOptions);
 
     #endregion
 
     #region IReaderFactory
 
     /// <inheritdoc/>
-    public IReader OpenReader(Stream stream, ReaderOptions? options)
-    {
-        return RarReader.Open(stream, options);
-    }
+    public IReader OpenReader(Stream stream, ReaderOptions? options) =>
+        RarReader.Open(stream, options);
 
     #endregion
 }

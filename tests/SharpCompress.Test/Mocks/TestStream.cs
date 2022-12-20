@@ -1,4 +1,4 @@
-using System.IO;
+﻿using System.IO;
 
 namespace SharpCompress.Test.Mocks;
 
@@ -32,10 +32,7 @@ public class TestStream : Stream
 
     public override bool CanWrite { get; }
 
-    public override void Flush()
-    {
-        stream.Flush();
-    }
+    public override void Flush() => stream.Flush();
 
     public override long Length => stream.Length;
 
@@ -45,23 +42,13 @@ public class TestStream : Stream
         set => stream.Position = value;
     }
 
-    public override int Read(byte[] buffer, int offset, int count)
-    {
-        return stream.Read(buffer, offset, count);
-    }
+    public override int Read(byte[] buffer, int offset, int count) =>
+        stream.Read(buffer, offset, count);
 
-    public override long Seek(long offset, SeekOrigin origin)
-    {
-        return stream.Seek(offset, origin);
-    }
+    public override long Seek(long offset, SeekOrigin origin) => stream.Seek(offset, origin);
 
-    public override void SetLength(long value)
-    {
-        stream.SetLength(value);
-    }
+    public override void SetLength(long value) => stream.SetLength(value);
 
-    public override void Write(byte[] buffer, int offset, int count)
-    {
+    public override void Write(byte[] buffer, int offset, int count) =>
         stream.Write(buffer, offset, count);
-    }
 }

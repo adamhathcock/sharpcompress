@@ -19,8 +19,5 @@ internal abstract class RarFilePart : FilePart
 
     internal FileHeader FileHeader { get; }
 
-    internal override Stream? GetRawStream()
-    {
-        return null;
-    }
+    internal override Stream? GetRawStream() => null;
 }

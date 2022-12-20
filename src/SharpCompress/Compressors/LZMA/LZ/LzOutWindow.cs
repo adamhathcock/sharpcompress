@@ -36,10 +36,7 @@ internal class OutWindow
         _limit = 0;
     }
 
-    public void Reset()
-    {
-        Create(_windowSize);
-    }
+    public void Reset() => Create(_windowSize);
 
     public void Init(Stream stream)
     {
@@ -163,10 +160,7 @@ internal class OutWindow
         return len - size;
     }
 
-    public void SetLimit(long size)
-    {
-        _limit = _total + size;
-    }
+    public void SetLimit(long size) => _limit = _total + size;
 
     public bool HasSpace => _pos < _windowSize && _total < _limit;
 

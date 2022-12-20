@@ -52,8 +52,5 @@ public class PowerPCFilter : BlockFilter
         return bytesRead;
     }
 
-    public override void SetBaseStream(Stream stream)
-    {
-        BaseStream = stream;
-    }
+    public override void SetBaseStream(Stream stream) => BaseStream = stream;
 }

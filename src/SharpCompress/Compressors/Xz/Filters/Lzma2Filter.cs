@@ -48,18 +48,11 @@ public class Lzma2Filter : BlockFilter
 
     public override void ValidateFilter() { }
 
-    public override void SetBaseStream(Stream stream)
-    {
+    public override void SetBaseStream(Stream stream) =>
         BaseStream = new LzmaStream(new[] { _dictionarySize }, stream);
-    }
 
-    public override int Read(byte[] buffer, int offset, int count)
-    {
-        return BaseStream.Read(buffer, offset, count);
-    }
+    public override int Read(byte[] buffer, int offset, int count) =>
+        BaseStream.Read(buffer, offset, count);
 
-    public override int ReadByte()
-    {
-        return BaseStream.ReadByte();
-    }
+    public override int ReadByte() => BaseStream.ReadByte();
 }

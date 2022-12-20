@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 
 namespace SharpCompress.Crypto;
 
@@ -35,8 +35,5 @@ public class KeyParameter : ICipherParameters
         Array.Copy(key, keyOff, this.key, 0, keyLen);
     }
 
-    public byte[] GetKey()
-    {
-        return (byte[])key.Clone();
-    }
+    public byte[] GetKey() => (byte[])key.Clone();
 }

@@ -35,15 +35,10 @@ internal sealed class GZipFilePart : FilePart
 
     internal override string FilePartName => _name!;
 
-    internal override Stream GetCompressedStream()
-    {
-        return new DeflateStream(_stream, CompressionMode.Decompress, CompressionLevel.Default);
-    }
+    internal override Stream GetCompressedStream() =>
+        new DeflateStream(_stream, CompressionMode.Decompress, CompressionLevel.Default);
 
-    internal override Stream GetRawStream()
-    {
-        return _stream;
-    }
+    internal override Stream GetRawStream() => _stream;
 
     private void ReadTrailer()
     {

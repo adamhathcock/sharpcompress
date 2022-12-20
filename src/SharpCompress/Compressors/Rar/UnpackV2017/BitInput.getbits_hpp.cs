@@ -1,4 +1,4 @@
-namespace SharpCompress.Compressors.Rar.UnpackV2017;
+﻿namespace SharpCompress.Compressors.Rar.UnpackV2017;
 
 internal partial class BitInput
 {
@@ -14,10 +14,7 @@ internal partial class BitInput
 
     public byte[] InBuf; // Dynamically allocated input buffer.
 
-    public void InitBitInput()
-    {
-        InAddr = InBit = 0;
-    }
+    public void InitBitInput() => InAddr = InBit = 0;
 
     // Move forward by 'Bits' bits.
     public void addbits(uint _Bits)

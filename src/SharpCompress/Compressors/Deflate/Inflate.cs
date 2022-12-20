@@ -728,10 +728,7 @@ internal sealed class InflateBlocks
 
     // Returns true if inflate is currently at the end of a block generated
     // by Z_SYNC_FLUSH or Z_FULL_FLUSH.
-    internal int SyncPoint()
-    {
-        return mode == InflateBlockMode.LENS ? 1 : 0;
-    }
+    internal int SyncPoint() => mode == InflateBlockMode.LENS ? 1 : 0;
 
     // copy as much as possible from the sliding window to the output area
     internal int Flush(int r)
@@ -1655,10 +1652,8 @@ internal sealed class InflateManager
 
     public InflateManager() { }
 
-    public InflateManager(bool expectRfc1950HeaderBytes)
-    {
+    public InflateManager(bool expectRfc1950HeaderBytes) =>
         HandleRfc1950HeaderBytes = expectRfc1950HeaderBytes;
-    }
 
     internal bool HandleRfc1950HeaderBytes { get; set; } = true;
 
@@ -2041,10 +2036,7 @@ internal sealed class InflateManager
     // but removes the length bytes of the resulting empty stored block. When
     // decompressing, PPP checks that at the end of input packet, inflate is
     // waiting for these length bytes.
-    internal int SyncPoint(ZlibCodec z)
-    {
-        return blocks.SyncPoint();
-    }
+    internal int SyncPoint(ZlibCodec z) => blocks.SyncPoint();
 
     #region Nested type: InflateManagerMode
 

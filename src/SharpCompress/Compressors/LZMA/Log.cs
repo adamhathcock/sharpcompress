@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 
@@ -9,15 +9,9 @@ internal static class Log
     private static readonly Stack<string> INDENT = new Stack<string>();
     private static bool NEEDS_INDENT = true;
 
-    static Log()
-    {
-        INDENT.Push("");
-    }
+    static Log() => INDENT.Push("");
 
-    public static void PushIndent(string indent = "  ")
-    {
-        INDENT.Push(INDENT.Peek() + indent);
-    }
+    public static void PushIndent(string indent = "  ") => INDENT.Push(INDENT.Peek() + indent);
 
     public static void PopIndent()
     {

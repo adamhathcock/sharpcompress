@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 
@@ -36,10 +36,7 @@ internal class Bcj2DecoderStream : DecoderStream2
             return (byte)bt;
         }
 
-        public void Dispose()
-        {
-            _mStream.Dispose();
-        }
+        public void Dispose() => _mStream.Dispose();
     }
 
     private class StatusDecoder
@@ -51,10 +48,7 @@ internal class Bcj2DecoderStream : DecoderStream2
 
         private uint _prob;
 
-        public StatusDecoder()
-        {
-            _prob = K_BIT_MODEL_TOTAL / 2;
-        }
+        public StatusDecoder() => _prob = K_BIT_MODEL_TOTAL / 2;
 
         public uint Decode(RangeDecoder decoder)
         {
@@ -131,15 +125,9 @@ internal class Bcj2DecoderStream : DecoderStream2
         _mJumpStream.Dispose();
     }
 
-    private static bool IsJcc(byte b0, byte b1)
-    {
-        return b0 == 0x0F && (b1 & 0xF0) == 0x80;
-    }
+    private static bool IsJcc(byte b0, byte b1) => b0 == 0x0F && (b1 & 0xF0) == 0x80;
 
-    private static bool IsJ(byte b0, byte b1)
-    {
-        return (b1 & 0xFE) == 0xE8 || IsJcc(b0, b1);
-    }
+    private static bool IsJ(byte b0, byte b1) => (b1 & 0xFE) == 0xE8 || IsJcc(b0, b1);
 
     private static int GetIndex(byte b0, byte b1)
     {

@@ -938,10 +938,8 @@ internal partial class Model
         state1.Successor = state2.Successor;
     }
 
-    private static int Mean(int sum, int shift, int round)
-    {
-        return (sum + (1 << (shift - round))) >> shift;
-    }
+    private static int Mean(int sum, int shift, int round) =>
+        (sum + (1 << (shift - round))) >> shift;
 
     private void ClearMask()
     {

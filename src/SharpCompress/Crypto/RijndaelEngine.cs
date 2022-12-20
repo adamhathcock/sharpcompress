@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 
 namespace SharpCompress.Crypto;
 
@@ -1773,10 +1773,7 @@ public sealed class RijndaelEngine : IBlockCipher
 
     public bool IsPartialBlockOkay => false;
 
-    public int GetBlockSize()
-    {
-        return BC / 2;
-    }
+    public int GetBlockSize() => BC / 2;
 
     public int ProcessBlock(ReadOnlySpan<byte> input, Span<byte> output)
     {

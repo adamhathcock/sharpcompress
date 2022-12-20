@@ -13,37 +13,25 @@ public class RarHeaderFactoryTest : TestBase
 {
     private readonly RarHeaderFactory rarHeaderFactory;
 
-    public RarHeaderFactoryTest()
-    {
+    public RarHeaderFactoryTest() =>
         rarHeaderFactory = new RarHeaderFactory(
             StreamingMode.Seekable,
             new ReaderOptions { LeaveStreamOpen = true }
         );
-    }
 
     [Fact]
-    public void Rar_ReadHeaders_RecognizeEncryptedFlag()
-    {
+    public void Rar_ReadHeaders_RecognizeEncryptedFlag() =>
         ReadEncryptedFlag("Rar.encrypted_filesAndHeader.rar", true);
-    }
 
     [Fact]
-    public void Rar5_ReadHeaders_RecognizeEncryptedFlag()
-    {
+    public void Rar5_ReadHeaders_RecognizeEncryptedFlag() =>
         ReadEncryptedFlag("Rar5.encrypted_filesAndHeader.rar", true);
-    }
 
     [Fact]
-    public void Rar_ReadHeaders_RecognizeNoEncryptedFlag()
-    {
-        ReadEncryptedFlag("Rar.rar", false);
-    }
+    public void Rar_ReadHeaders_RecognizeNoEncryptedFlag() => ReadEncryptedFlag("Rar.rar", false);
 
     [Fact]
-    public void Rar5_ReadHeaders_RecognizeNoEncryptedFlag()
-    {
-        ReadEncryptedFlag("Rar5.rar", false);
-    }
+    public void Rar5_ReadHeaders_RecognizeNoEncryptedFlag() => ReadEncryptedFlag("Rar5.rar", false);
 
     private void ReadEncryptedFlag(string testArchive, bool isEncrypted)
     {

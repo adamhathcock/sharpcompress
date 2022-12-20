@@ -21,10 +21,7 @@ internal class RarNode : Pointer
         return _next;
     }
 
-    internal void SetNext(RarNode next)
-    {
-        SetNext(next.Address);
-    }
+    internal void SetNext(RarNode next) => SetNext(next.Address);
 
     internal void SetNext(int next)
     {

@@ -1,4 +1,4 @@
-#if !Rar2017_64bit
+﻿#if !Rar2017_64bit
 using size_t = System.UInt32;
 #else
 using nint = System.Int64;
@@ -25,16 +25,12 @@ internal partial class Unpack : IRarUnpack
         }
     }
 
-    private int UnpIO_UnpRead(byte[] buf, int offset, int count)
-    {
+    private int UnpIO_UnpRead(byte[] buf, int offset, int count) =>
         // NOTE: caller has logic to check for -1 for error we throw instead.
-        return readStream.Read(buf, offset, count);
-    }
+        readStream.Read(buf, offset, count);
 
-    private void UnpIO_UnpWrite(byte[] buf, size_t offset, uint count)
-    {
+    private void UnpIO_UnpWrite(byte[] buf, size_t offset, uint count) =>
         writeStream.Write(buf, checked((int)offset), checked((int)count));
-    }
 
     public void DoUnpack(FileHeader fileHeader, Stream readStream, Stream writeStream)
     {
@@ -86,10 +82,7 @@ internal partial class Unpack : IRarUnpack
 
     public bool Suspended { get; set; }
 
-    public long DestSize
-    {
-        get => DestUnpSize;
-    }
+    public long DestSize => DestUnpSize;
 
     public int Char
     {
@@ -110,8 +103,6 @@ internal partial class Unpack : IRarUnpack
         set => PPMEscChar = value;
     }
 
-    public static byte[] EnsureCapacity(byte[] array, int length)
-    {
-        return array.Length < length ? new byte[length] : array;
-    }
+    public static byte[] EnsureCapacity(byte[] array, int length) =>
+        array.Length < length ? new byte[length] : array;
 }

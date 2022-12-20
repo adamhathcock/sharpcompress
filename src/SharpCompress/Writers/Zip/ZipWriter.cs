@@ -45,10 +45,7 @@ public class ZipWriter : AbstractWriter
         InitalizeStream(destination);
     }
 
-    private PpmdProperties PpmdProperties
-    {
-        get { return ppmdProps ??= new PpmdProperties(); }
-    }
+    private PpmdProperties PpmdProperties => ppmdProps ??= new PpmdProperties();
 
     protected override void Dispose(bool isDisposing)
     {
@@ -93,14 +90,12 @@ public class ZipWriter : AbstractWriter
         }
     }
 
-    public override void Write(string entryPath, Stream source, DateTime? modificationTime)
-    {
+    public override void Write(string entryPath, Stream source, DateTime? modificationTime) =>
         Write(
             entryPath,
             source,
             new ZipWriterEntryOptions() { ModificationDateTime = modificationTime }
         );
-    }
 
     public void Write(string entryPath, Stream source, ZipWriterEntryOptions zipWriterEntryOptions)
     {
@@ -524,25 +519,15 @@ public class ZipWriter : AbstractWriter
             }
         }
 
-        public override void Flush()
-        {
-            writeStream.Flush();
-        }
+        public override void Flush() => writeStream.Flush();
 
-        public override int Read(byte[] buffer, int offset, int count)
-        {
+        public override int Read(byte[] buffer, int offset, int count) =>
             throw new NotSupportedException();
-        }
 
-        public override long Seek(long offset, SeekOrigin origin)
-        {
+        public override long Seek(long offset, SeekOrigin origin) =>
             throw new NotSupportedException();
-        }
 
-        public override void SetLength(long value)
-        {
-            throw new NotSupportedException();
-        }
+        public override void SetLength(long value) => throw new NotSupportedException();
 
         public override void Write(byte[] buffer, int offset, int count)
         {

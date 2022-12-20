@@ -78,10 +78,7 @@ internal class InWindow
         }
     }
 
-    private void Free()
-    {
-        _bufferBase = null;
-    }
+    private void Free() => _bufferBase = null;
 
     public void Create(uint keepSizeBefore, uint keepSizeAfter, uint keepSizeReserv)
     {
@@ -111,10 +108,7 @@ internal class InWindow
         }
     }
 
-    public void ReleaseStream()
-    {
-        _stream = null;
-    }
+    public void ReleaseStream() => _stream = null;
 
     public void Init()
     {
@@ -139,10 +133,7 @@ internal class InWindow
         }
     }
 
-    public byte GetIndexByte(int index)
-    {
-        return _bufferBase[_bufferOffset + _pos + index];
-    }
+    public byte GetIndexByte(int index) => _bufferBase[_bufferOffset + _pos + index];
 
     // index + limit have not to exceed _keepSizeAfter;
     public uint GetMatchLen(int index, uint distance, uint limit)
@@ -167,10 +158,7 @@ internal class InWindow
         return i;
     }
 
-    public uint GetNumAvailableBytes()
-    {
-        return _streamPos - _pos;
-    }
+    public uint GetNumAvailableBytes() => _streamPos - _pos;
 
     public void ReduceOffsets(int subValue)
     {

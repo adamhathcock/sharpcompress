@@ -40,8 +40,7 @@ public class DeflateStream : Stream
         CompressionMode mode,
         CompressionLevel level = CompressionLevel.Default,
         Encoding? forceEncoding = null
-    )
-    {
+    ) =>
         _baseStream = new ZlibBaseStream(
             stream,
             mode,
@@ -49,7 +48,6 @@ public class DeflateStream : Stream
             ZlibStreamFlavor.DEFLATE,
             forceEncoding
         );
-    }
 
     #region Zlib properties
 
@@ -310,19 +308,13 @@ public class DeflateStream : Stream
     /// <param name="offset">this is irrelevant, since it will always throw!</param>
     /// <param name="origin">this is irrelevant, since it will always throw!</param>
     /// <returns>irrelevant!</returns>
-    public override long Seek(long offset, SeekOrigin origin)
-    {
-        throw new NotSupportedException();
-    }
+    public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
 
     /// <summary>
     /// Calling this method always throws a <see cref="NotImplementedException"/>.
     /// </summary>
     /// <param name="value">this is irrelevant, since it will always throw!</param>
-    public override void SetLength(long value)
-    {
-        throw new NotSupportedException();
-    }
+    public override void SetLength(long value) => throw new NotSupportedException();
 
     /// <summary>
     ///   Write data to the stream.

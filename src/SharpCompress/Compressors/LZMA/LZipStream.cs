@@ -104,10 +104,7 @@ public sealed class LZipStream : Stream
 
     public override bool CanWrite => Mode == CompressionMode.Compress;
 
-    public override void Flush()
-    {
-        _stream.Flush();
-    }
+    public override void Flush() => _stream.Flush();
 
     // TODO: Both Length and Position are sometimes feasible, but would require
     // reading the output length when we initialize.
@@ -130,10 +127,7 @@ public sealed class LZipStream : Stream
 
 #if !NETFRAMEWORK && !NETSTANDARD2_0
 
-    public override int Read(Span<byte> buffer)
-    {
-        return _stream.Read(buffer);
-    }
+    public override int Read(Span<byte> buffer) => _stream.Read(buffer);
 
     public override void Write(ReadOnlySpan<byte> buffer)
     {

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.IO;
 
 namespace SharpCompress.IO;
@@ -26,10 +26,7 @@ internal class BufferedSubStream : NonDisposingStream
 
     public override bool CanWrite => false;
 
-    public override void Flush()
-    {
-        throw new NotSupportedException();
-    }
+    public override void Flush() => throw new NotSupportedException();
 
     public override long Length => BytesLeftToRead;
 
@@ -70,18 +67,10 @@ internal class BufferedSubStream : NonDisposingStream
         return count;
     }
 
-    public override long Seek(long offset, SeekOrigin origin)
-    {
-        throw new NotSupportedException();
-    }
+    public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
 
-    public override void SetLength(long value)
-    {
-        throw new NotSupportedException();
-    }
+    public override void SetLength(long value) => throw new NotSupportedException();
 
-    public override void Write(byte[] buffer, int offset, int count)
-    {
+    public override void Write(byte[] buffer, int offset, int count) =>
         throw new NotSupportedException();
-    }
 }

@@ -12,10 +12,7 @@ namespace SharpCompress.Test.Zip;
 
 public class ZipReaderTests : ReaderTests
 {
-    public ZipReaderTests()
-    {
-        UseExtensionInsteadOfNameToVerify = true;
-    }
+    public ZipReaderTests() => UseExtensionInsteadOfNameToVerify = true;
 
     [Fact]
     public void Issue_269_Double_Skip()
@@ -38,40 +35,23 @@ public class ZipReaderTests : ReaderTests
     }
 
     [Fact]
-    public void Zip_Zip64_Streamed_Read()
-    {
-        Read("Zip.zip64.zip", CompressionType.Deflate);
-    }
+    public void Zip_Zip64_Streamed_Read() => Read("Zip.zip64.zip", CompressionType.Deflate);
 
     [Fact]
-    public void Zip_ZipX_Streamed_Read()
-    {
-        Read("Zip.zipx", CompressionType.LZMA);
-    }
+    public void Zip_ZipX_Streamed_Read() => Read("Zip.zipx", CompressionType.LZMA);
 
     [Fact]
-    public void Zip_BZip2_Streamed_Read()
-    {
-        Read("Zip.bzip2.dd.zip", CompressionType.BZip2);
-    }
+    public void Zip_BZip2_Streamed_Read() => Read("Zip.bzip2.dd.zip", CompressionType.BZip2);
 
     [Fact]
-    public void Zip_BZip2_Read()
-    {
-        Read("Zip.bzip2.zip", CompressionType.BZip2);
-    }
+    public void Zip_BZip2_Read() => Read("Zip.bzip2.zip", CompressionType.BZip2);
 
     [Fact]
-    public void Zip_Deflate_Streamed2_Read()
-    {
+    public void Zip_Deflate_Streamed2_Read() =>
         Read("Zip.deflate.dd-.zip", CompressionType.Deflate);
-    }
 
     [Fact]
-    public void Zip_Deflate_Streamed_Read()
-    {
-        Read("Zip.deflate.dd.zip", CompressionType.Deflate);
-    }
+    public void Zip_Deflate_Streamed_Read() => Read("Zip.deflate.dd.zip", CompressionType.Deflate);
 
     [Fact]
     public void Zip_Deflate_Streamed_Skip()
@@ -98,52 +78,29 @@ public class ZipReaderTests : ReaderTests
     }
 
     [Fact]
-    public void Zip_Deflate_Read()
-    {
-        Read("Zip.deflate.zip", CompressionType.Deflate);
-    }
+    public void Zip_Deflate_Read() => Read("Zip.deflate.zip", CompressionType.Deflate);
 
     [Fact]
-    public void Zip_Deflate64_Read()
-    {
-        Read("Zip.deflate64.zip", CompressionType.Deflate64);
-    }
+    public void Zip_Deflate64_Read() => Read("Zip.deflate64.zip", CompressionType.Deflate64);
 
     [Fact]
-    public void Zip_LZMA_Streamed_Read()
-    {
-        Read("Zip.lzma.dd.zip", CompressionType.LZMA);
-    }
+    public void Zip_LZMA_Streamed_Read() => Read("Zip.lzma.dd.zip", CompressionType.LZMA);
 
     [Fact]
-    public void Zip_LZMA_Read()
-    {
-        Read("Zip.lzma.zip", CompressionType.LZMA);
-    }
+    public void Zip_LZMA_Read() => Read("Zip.lzma.zip", CompressionType.LZMA);
 
     [Fact]
-    public void Zip_PPMd_Streamed_Read()
-    {
-        Read("Zip.ppmd.dd.zip", CompressionType.PPMd);
-    }
+    public void Zip_PPMd_Streamed_Read() => Read("Zip.ppmd.dd.zip", CompressionType.PPMd);
 
     [Fact]
-    public void Zip_PPMd_Read()
-    {
-        Read("Zip.ppmd.zip", CompressionType.PPMd);
-    }
+    public void Zip_PPMd_Read() => Read("Zip.ppmd.zip", CompressionType.PPMd);
 
     [Fact]
-    public void Zip_None_Read()
-    {
-        Read("Zip.none.zip", CompressionType.None);
-    }
+    public void Zip_None_Read() => Read("Zip.none.zip", CompressionType.None);
 
     [Fact]
-    public void Zip_Deflate_NoEmptyDirs_Read()
-    {
+    public void Zip_Deflate_NoEmptyDirs_Read() =>
         Read("Zip.deflate.noEmptyDirs.zip", CompressionType.Deflate);
-    }
 
     [Fact]
     public void Zip_BZip2_PkwareEncryption_Read()
@@ -211,8 +168,7 @@ public class ZipReaderTests : ReaderTests
     }
 
     [Fact]
-    public void Zip_LZMA_WinzipAES_Read()
-    {
+    public void Zip_LZMA_WinzipAES_Read() =>
         Assert.Throws<NotSupportedException>(() =>
         {
             using (
@@ -236,7 +192,6 @@ public class ZipReaderTests : ReaderTests
             }
             VerifyFiles();
         });
-    }
 
     [Fact]
     public void Zip_Deflate_WinzipAES_Read()
@@ -289,7 +244,7 @@ public class ZipReaderTests : ReaderTests
     [Fact]
     public void TestSharpCompressWithEmptyStream()
     {
-        var expected = new Tuple<string, byte[]>[]
+        var expected = new[]
         {
             new Tuple<string, byte[]>("foo.txt", Array.Empty<byte>()),
             new Tuple<string, byte[]>("foo2.txt", new byte[10])
@@ -332,16 +287,7 @@ public class ZipReaderTests : ReaderTests
     [Fact]
     public void Zip_None_Issue86_Streamed_Read()
     {
-        var keys = new string[]
-        {
-            "Empty1",
-            "Empty2",
-            "Dir1/",
-            "Dir2/",
-            "Fake1",
-            "Fake2",
-            "Internal.zip"
-        };
+        var keys = new[] { "Empty1", "Empty2", "Dir1/", "Dir2/", "Fake1", "Fake2", "Internal.zip" };
 
         using Stream stream = File.OpenRead(
             Path.Combine(TEST_ARCHIVES_PATH, "Zip.none.issue86.zip")
@@ -365,7 +311,7 @@ public class ZipReaderTests : ReaderTests
     [Fact]
     public void Zip_ReaderMoveToNextEntry()
     {
-        var keys = new string[] { "version", "sizehint", "data/0/metadata", "data/0/records" };
+        var keys = new[] { "version", "sizehint", "data/0/metadata", "data/0/records" };
 
         using var fileStream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "test_477.zip"));
         using var reader = ZipReader.Open(fileStream);

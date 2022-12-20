@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 
 using SharpCompress.Compressors.Rar.VM;
 
@@ -7,10 +7,8 @@ namespace SharpCompress.Compressors.Rar.UnpackV1;
 internal static class UnpackUtility
 {
     //!!! TODO rename methods
-    internal static uint DecodeNumber(this BitInput input, Decode.Decode dec)
-    {
-        return (uint)input.decodeNumber(dec);
-    }
+    internal static uint DecodeNumber(this BitInput input, Decode.Decode dec) =>
+        (uint)input.decodeNumber(dec);
 
     internal static int decodeNumber(this BitInput input, Decode.Decode dec)
     {

@@ -67,42 +67,32 @@ public class TarFactory
     }
 
     /// <inheritdoc/>
-    public override bool IsArchive(Stream stream, string? password = null)
-    {
-        return TarArchive.IsTarFile(stream);
-    }
+    public override bool IsArchive(Stream stream, string? password = null) =>
+        TarArchive.IsTarFile(stream);
 
     #endregion
 
     #region IArchiveFactory
 
     /// <inheritdoc/>
-    public IArchive Open(Stream stream, ReaderOptions? readerOptions = null)
-    {
-        return TarArchive.Open(stream, readerOptions);
-    }
+    public IArchive Open(Stream stream, ReaderOptions? readerOptions = null) =>
+        TarArchive.Open(stream, readerOptions);
 
     /// <inheritdoc/>
-    public IArchive Open(FileInfo fileInfo, ReaderOptions? readerOptions = null)
-    {
-        return TarArchive.Open(fileInfo, readerOptions);
-    }
+    public IArchive Open(FileInfo fileInfo, ReaderOptions? readerOptions = null) =>
+        TarArchive.Open(fileInfo, readerOptions);
 
     #endregion
 
     #region IMultiArchiveFactory
 
     /// <inheritdoc/>
-    public IArchive Open(IReadOnlyList<Stream> streams, ReaderOptions? readerOptions = null)
-    {
-        return TarArchive.Open(streams, readerOptions);
-    }
+    public IArchive Open(IReadOnlyList<Stream> streams, ReaderOptions? readerOptions = null) =>
+        TarArchive.Open(streams, readerOptions);
 
     /// <inheritdoc/>
-    public IArchive Open(IReadOnlyList<FileInfo> fileInfos, ReaderOptions? readerOptions = null)
-    {
-        return TarArchive.Open(fileInfos, readerOptions);
-    }
+    public IArchive Open(IReadOnlyList<FileInfo> fileInfos, ReaderOptions? readerOptions = null) =>
+        TarArchive.Open(fileInfos, readerOptions);
 
     #endregion
 
@@ -175,30 +165,23 @@ public class TarFactory
     }
 
     /// <inheritdoc/>
-    public IReader OpenReader(Stream stream, ReaderOptions? options)
-    {
-        return TarReader.Open(stream, options);
-    }
+    public IReader OpenReader(Stream stream, ReaderOptions? options) =>
+        TarReader.Open(stream, options);
 
     #endregion
 
     #region IWriterFactory
 
     /// <inheritdoc/>
-    public IWriter Open(Stream stream, WriterOptions writerOptions)
-    {
-        return new TarWriter(stream, new TarWriterOptions(writerOptions));
-    }
+    public IWriter Open(Stream stream, WriterOptions writerOptions) =>
+        new TarWriter(stream, new TarWriterOptions(writerOptions));
 
     #endregion
 
     #region IWriteableArchiveFactory
 
     /// <inheritdoc/>
-    public IWritableArchive CreateWriteableArchive()
-    {
-        return TarArchive.Create();
-    }
+    public IWritableArchive CreateWriteableArchive() => TarArchive.Create();
 
     #endregion
 }

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Buffers.Binary;
 using System.Text;
 
@@ -147,9 +147,8 @@ internal sealed class Zip64ExtendedInformationExtraField : ExtraData
 
 internal static class LocalEntryHeaderExtraFactory
 {
-    internal static ExtraData Create(ExtraDataType type, ushort length, byte[] extraData)
-    {
-        return type switch
+    internal static ExtraData Create(ExtraDataType type, ushort length, byte[] extraData) =>
+        type switch
         {
             ExtraDataType.UnicodePathExtraField
                 => new ExtraUnicodePathExtraField(type, length, extraData),
@@ -157,5 +156,4 @@ internal static class LocalEntryHeaderExtraFactory
                 => new Zip64ExtendedInformationExtraField(type, length, extraData),
             _ => new ExtraData(type, length, extraData)
         };
-    }
 }

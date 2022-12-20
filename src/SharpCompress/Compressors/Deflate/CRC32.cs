@@ -101,10 +101,7 @@ public class CRC32
     /// </summary>
     /// <param name="input">The stream over which to calculate the CRC32</param>
     /// <returns>the CRC32 calculation</returns>
-    public uint GetCrc32(Stream input)
-    {
-        return GetCrc32AndCopy(input, null);
-    }
+    public uint GetCrc32(Stream input) => GetCrc32AndCopy(input, null);
 
     /// <summary>
     /// Returns the CRC32 for the specified stream, and writes the input into the
@@ -149,15 +146,10 @@ public class CRC32
     /// <param name="W">The word to start with.</param>
     /// <param name="B">The byte to combine it with.</param>
     /// <returns>The CRC-ized result.</returns>
-    public int ComputeCrc32(int W, byte B)
-    {
-        return _InternalComputeCrc32((uint)W, B);
-    }
+    public int ComputeCrc32(int W, byte B) => _InternalComputeCrc32((uint)W, B);
 
-    internal int _InternalComputeCrc32(uint W, byte B)
-    {
-        return (int)(crc32Table[(W ^ B) & 0xFF] ^ (W >> 8));
-    }
+    internal int _InternalComputeCrc32(uint W, byte B) =>
+        (int)(crc32Table[(W ^ B) & 0xFF] ^ (W >> 8));
 
     /// <summary>
     /// Update the value for the running CRC32 using the given block of bytes.

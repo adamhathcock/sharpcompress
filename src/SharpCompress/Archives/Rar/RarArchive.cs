@@ -25,10 +25,8 @@ public class RarArchive : AbstractArchive<RarArchiveEntry, RarVolume>
     /// <param name="options"></param>
     internal RarArchive(SourceStream srcStream) : base(ArchiveType.Rar, srcStream) { }
 
-    protected override IEnumerable<RarArchiveEntry> LoadEntries(IEnumerable<RarVolume> volumes)
-    {
-        return RarArchiveEntryFactory.GetEntries(this, volumes, ReaderOptions);
-    }
+    protected override IEnumerable<RarArchiveEntry> LoadEntries(IEnumerable<RarVolume> volumes) =>
+        RarArchiveEntryFactory.GetEntries(this, volumes, ReaderOptions);
 
     protected override IEnumerable<RarVolume> LoadVolumes(SourceStream srcStream)
     {
@@ -149,10 +147,7 @@ public class RarArchive : AbstractArchive<RarArchiveEntry, RarVolume>
         );
     }
 
-    public static bool IsRarFile(string filePath)
-    {
-        return IsRarFile(new FileInfo(filePath));
-    }
+    public static bool IsRarFile(string filePath) => IsRarFile(new FileInfo(filePath));
 
     public static bool IsRarFile(FileInfo fileInfo)
     {

@@ -12,20 +12,13 @@ public static class Crc32
 
     private static uint[] defaultTable;
 
-    public static uint Compute(byte[] buffer)
-    {
-        return Compute(DefaultSeed, buffer);
-    }
+    public static uint Compute(byte[] buffer) => Compute(DefaultSeed, buffer);
 
-    public static uint Compute(uint seed, byte[] buffer)
-    {
-        return Compute(DefaultPolynomial, seed, buffer);
-    }
+    public static uint Compute(uint seed, byte[] buffer) =>
+        Compute(DefaultPolynomial, seed, buffer);
 
-    public static uint Compute(uint polynomial, uint seed, byte[] buffer)
-    {
-        return ~CalculateHash(InitializeTable(polynomial), seed, buffer);
-    }
+    public static uint Compute(uint polynomial, uint seed, byte[] buffer) =>
+        ~CalculateHash(InitializeTable(polynomial), seed, buffer);
 
     private static uint[] InitializeTable(uint polynomial)
     {

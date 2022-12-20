@@ -13,10 +13,7 @@ public static class Crc64
 
     public const ulong Iso3309Polynomial = 0xD800000000000000;
 
-    public static ulong Compute(byte[] buffer)
-    {
-        return Compute(DefaultSeed, buffer);
-    }
+    public static ulong Compute(byte[] buffer) => Compute(DefaultSeed, buffer);
 
     public static ulong Compute(ulong seed, byte[] buffer)
     {

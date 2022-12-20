@@ -241,12 +241,10 @@ internal sealed class InflaterManaged
         Reset();
     }
 
-    private void Reset()
-    {
+    private void Reset() =>
         _state = //_hasFormatReader ?
         //InflaterState.ReadingHeader :   // start by reading Header info
         InflaterState.ReadingBFinal; // start by reading BFinal bit
-    }
 
     public void SetInput(byte[] inputBytes, int offset, int length) =>
         _input.SetInput(inputBytes, offset, length); // append the bytes

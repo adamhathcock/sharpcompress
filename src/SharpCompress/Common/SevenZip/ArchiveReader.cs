@@ -28,42 +28,22 @@ internal class ArchiveReader
         _currentReader = new DataReader(buffer, offset, length);
     }
 
-    internal void DeleteByteStream()
-    {
-        _currentReader = _readerStack.Pop();
-    }
+    internal void DeleteByteStream() => _currentReader = _readerStack.Pop();
 
     #region Private Methods - Data Reader
 
-    internal byte ReadByte()
-    {
-        return _currentReader.ReadByte();
-    }
+    internal byte ReadByte() => _currentReader.ReadByte();
 
-    private void ReadBytes(byte[] buffer, int offset, int length)
-    {
+    private void ReadBytes(byte[] buffer, int offset, int length) =>
         _currentReader.ReadBytes(buffer, offset, length);
-    }
 
-    private ulong ReadNumber()
-    {
-        return _currentReader.ReadNumber();
-    }
+    private ulong ReadNumber() => _currentReader.ReadNumber();
 
-    internal int ReadNum()
-    {
-        return _currentReader.ReadNum();
-    }
+    internal int ReadNum() => _currentReader.ReadNum();
 
-    private uint ReadUInt32()
-    {
-        return _currentReader.ReadUInt32();
-    }
+    private uint ReadUInt32() => _currentReader.ReadUInt32();
 
-    private ulong ReadUInt64()
-    {
-        return _currentReader.ReadUInt64();
-    }
+    private ulong ReadUInt64() => _currentReader.ReadUInt64();
 
     private BlockType? ReadId()
     {
@@ -78,15 +58,9 @@ internal class ArchiveReader
         return (BlockType)id;
     }
 
-    private void SkipData(long size)
-    {
-        _currentReader.SkipData(size);
-    }
+    private void SkipData(long size) => _currentReader.SkipData(size);
 
-    private void SkipData()
-    {
-        _currentReader.SkipData();
-    }
+    private void SkipData() => _currentReader.SkipData();
 
     private void WaitAttribute(BlockType attribute)
     {
@@ -174,11 +148,9 @@ internal class ArchiveReader
         }
     }
 
-    private DateTime TranslateTime(long time)
-    {
+    private DateTime TranslateTime(long time) =>
         // FILETIME = 100-nanosecond intervals since January 1, 1601 (UTC)
-        return DateTime.FromFileTimeUtc(time).ToLocalTime();
-    }
+        DateTime.FromFileTimeUtc(time).ToLocalTime();
 
     private DateTime? TranslateTime(long? time)
     {
@@ -193,14 +165,12 @@ internal class ArchiveReader
         List<byte[]> dataVector,
         int numFiles,
         Action<int, DateTime?> action
-    )
-    {
+    ) =>
         ReadNumberVector(
             dataVector,
             numFiles,
             (index, value) => action(index, TranslateTime(value))
         );
-    }
 
     private void ReadAttributeVector(
         List<byte[]> dataVector,
@@ -1423,10 +1393,7 @@ internal class ArchiveReader
 
         public override bool CanWrite => false;
 
-        public override void Flush()
-        {
-            throw new NotSupportedException();
-        }
+        public override void Flush() => throw new NotSupportedException();
 
         public override long Length => throw new NotSupportedException();
 
@@ -1436,20 +1403,13 @@ internal class ArchiveReader
             set => throw new NotSupportedException();
         }
 
-        public override int Read(byte[] buffer, int offset, int count)
-        {
+        public override int Read(byte[] buffer, int offset, int count) =>
             throw new NotSupportedException();
-        }
 
-        public override long Seek(long offset, SeekOrigin origin)
-        {
+        public override long Seek(long offset, SeekOrigin origin) =>
             throw new NotSupportedException();
-        }
 
-        public override void SetLength(long value)
-        {
-            throw new NotSupportedException();
-        }
+        public override void SetLength(long value) => throw new NotSupportedException();
 
         private Stream _stream;
         private long _rem;
@@ -1669,15 +1629,9 @@ internal class ArchiveReader
         }
     }
 
-    public IEnumerable<CFileItem> GetFiles(ArchiveDatabase db)
-    {
-        return db._files;
-    }
+    public IEnumerable<CFileItem> GetFiles(ArchiveDatabase db) => db._files;
 
-    public int GetFileIndex(ArchiveDatabase db, CFileItem item)
-    {
-        return db._files.IndexOf(item);
-    }
+    public int GetFileIndex(ArchiveDatabase db, CFileItem item) => db._files.IndexOf(item);
 
     #endregion
 }

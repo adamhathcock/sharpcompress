@@ -43,10 +43,7 @@ public class NonDisposingStream : Stream
 
     public override bool CanWrite => Stream.CanWrite;
 
-    public override void Flush()
-    {
-        Stream.Flush();
-    }
+    public override void Flush() => Stream.Flush();
 
     public override long Length => Stream.Length;
 
@@ -56,37 +53,21 @@ public class NonDisposingStream : Stream
         set => Stream.Position = value;
     }
 
-    public override int Read(byte[] buffer, int offset, int count)
-    {
-        return Stream.Read(buffer, offset, count);
-    }
+    public override int Read(byte[] buffer, int offset, int count) =>
+        Stream.Read(buffer, offset, count);
 
-    public override long Seek(long offset, SeekOrigin origin)
-    {
-        return Stream.Seek(offset, origin);
-    }
+    public override long Seek(long offset, SeekOrigin origin) => Stream.Seek(offset, origin);
 
-    public override void SetLength(long value)
-    {
-        Stream.SetLength(value);
-    }
+    public override void SetLength(long value) => Stream.SetLength(value);
 
-    public override void Write(byte[] buffer, int offset, int count)
-    {
+    public override void Write(byte[] buffer, int offset, int count) =>
         Stream.Write(buffer, offset, count);
-    }
 
 #if !NETFRAMEWORK && !NETSTANDARD2_0
 
-    public override int Read(Span<byte> buffer)
-    {
-        return Stream.Read(buffer);
-    }
+    public override int Read(Span<byte> buffer) => Stream.Read(buffer);
 
-    public override void Write(ReadOnlySpan<byte> buffer)
-    {
-        Stream.Write(buffer);
-    }
+    public override void Write(ReadOnlySpan<byte> buffer) => Stream.Write(buffer);
 
 #endif
 }

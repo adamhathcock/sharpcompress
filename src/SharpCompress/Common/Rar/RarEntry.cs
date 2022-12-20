@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using SharpCompress.Common.Rar.Headers;
 
 namespace SharpCompress.Common.Rar;
@@ -60,14 +60,12 @@ public abstract class RarEntry : Entry
 
     public override bool IsSplitAfter => FileHeader.IsSplitAfter;
 
-    public override string ToString()
-    {
-        return string.Format(
+    public override string ToString() =>
+        string.Format(
             "Entry Path: {0} Compressed Size: {1} Uncompressed Size: {2} CRC: {3}",
             Key,
             CompressedSize,
             Size,
             Crc
         );
-    }
 }

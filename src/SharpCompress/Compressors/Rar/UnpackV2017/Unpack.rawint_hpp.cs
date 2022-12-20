@@ -1,4 +1,4 @@
-#if !Rar2017_64bit
+﻿#if !Rar2017_64bit
 #else
 using nint = System.Int64;
 using nuint = System.UInt64;
@@ -21,12 +21,8 @@ internal partial class Unpack
     //  return D[0]+(D[1]<<8);
     //}
 
-    private uint32 RawGet4(byte[] D, int offset)
-    {
-        return (uint)(
-            D[offset] + (D[offset + 1] << 8) + (D[offset + 2] << 16) + (D[offset + 3] << 24)
-        );
-    }
+    private uint32 RawGet4(byte[] D, int offset) =>
+        (uint)(D[offset] + (D[offset + 1] << 8) + (D[offset + 2] << 16) + (D[offset + 3] << 24));
 
     //inline uint64 RawGet8(const void *Data)
     //{

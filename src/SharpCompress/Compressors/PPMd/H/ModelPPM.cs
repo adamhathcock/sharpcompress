@@ -400,35 +400,17 @@ internal class ModelPpm
         return (symbol);
     }
 
-    public virtual See2Context[][] GetSee2Cont()
-    {
-        return _see2Cont;
-    }
+    public virtual See2Context[][] GetSee2Cont() => _see2Cont;
 
-    public virtual void IncEscCount(int dEscCount)
-    {
-        EscCount += dEscCount;
-    }
+    public virtual void IncEscCount(int dEscCount) => EscCount += dEscCount;
 
-    public virtual void IncRunLength(int dRunLength)
-    {
-        RunLength += dRunLength;
-    }
+    public virtual void IncRunLength(int dRunLength) => RunLength += dRunLength;
 
-    public virtual int[] GetHb2Flag()
-    {
-        return _hb2Flag;
-    }
+    public virtual int[] GetHb2Flag() => _hb2Flag;
 
-    public virtual int[] GetNs2BsIndx()
-    {
-        return _ns2BsIndx;
-    }
+    public virtual int[] GetNs2BsIndx() => _ns2BsIndx;
 
-    public virtual int[] GetNs2Indx()
-    {
-        return _ns2Indx;
-    }
+    public virtual int[] GetNs2Indx() => _ns2Indx;
 
     private int CreateSuccessors(bool skip, State p1)
     {

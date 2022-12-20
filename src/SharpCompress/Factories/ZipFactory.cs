@@ -69,72 +69,55 @@ public class ZipFactory
     }
 
     /// <inheritdoc/>
-    public override FileInfo? GetFilePart(int index, FileInfo part1)
-    {
-        return ZipArchiveVolumeFactory.GetFilePart(index, part1);
-    }
+    public override FileInfo? GetFilePart(int index, FileInfo part1) =>
+        ZipArchiveVolumeFactory.GetFilePart(index, part1);
 
     #endregion
 
     #region IArchiveFactory
 
     /// <inheritdoc/>
-    public IArchive Open(Stream stream, ReaderOptions? readerOptions = null)
-    {
-        return ZipArchive.Open(stream, readerOptions);
-    }
+    public IArchive Open(Stream stream, ReaderOptions? readerOptions = null) =>
+        ZipArchive.Open(stream, readerOptions);
 
     /// <inheritdoc/>
-    public IArchive Open(FileInfo fileInfo, ReaderOptions? readerOptions = null)
-    {
-        return ZipArchive.Open(fileInfo, readerOptions);
-    }
+    public IArchive Open(FileInfo fileInfo, ReaderOptions? readerOptions = null) =>
+        ZipArchive.Open(fileInfo, readerOptions);
 
     #endregion
 
     #region IMultiArchiveFactory
 
     /// <inheritdoc/>
-    public IArchive Open(IReadOnlyList<Stream> streams, ReaderOptions? readerOptions = null)
-    {
-        return ZipArchive.Open(streams, readerOptions);
-    }
+    public IArchive Open(IReadOnlyList<Stream> streams, ReaderOptions? readerOptions = null) =>
+        ZipArchive.Open(streams, readerOptions);
 
     /// <inheritdoc/>
-    public IArchive Open(IReadOnlyList<FileInfo> fileInfos, ReaderOptions? readerOptions = null)
-    {
-        return ZipArchive.Open(fileInfos, readerOptions);
-    }
+    public IArchive Open(IReadOnlyList<FileInfo> fileInfos, ReaderOptions? readerOptions = null) =>
+        ZipArchive.Open(fileInfos, readerOptions);
 
     #endregion
 
     #region IReaderFactory
 
     /// <inheritdoc/>
-    public IReader OpenReader(Stream stream, ReaderOptions? options)
-    {
-        return ZipReader.Open(stream, options);
-    }
+    public IReader OpenReader(Stream stream, ReaderOptions? options) =>
+        ZipReader.Open(stream, options);
 
     #endregion
 
     #region IWriterFactory
 
     /// <inheritdoc/>
-    public IWriter Open(Stream stream, WriterOptions writerOptions)
-    {
-        return new ZipWriter(stream, new ZipWriterOptions(writerOptions));
-    }
+    public IWriter Open(Stream stream, WriterOptions writerOptions) =>
+        new ZipWriter(stream, new ZipWriterOptions(writerOptions));
 
     #endregion
 
     #region IWriteableArchiveFactory
 
     /// <inheritdoc/>
-    public IWritableArchive CreateWriteableArchive()
-    {
-        return ZipArchive.Create();
-    }
+    public IWritableArchive CreateWriteableArchive() => ZipArchive.Create();
 
     #endregion
 }

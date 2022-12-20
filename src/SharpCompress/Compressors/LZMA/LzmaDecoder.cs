@@ -66,10 +66,7 @@ public class Decoder : ICoder, ISetDecoderProperties // ,System.IO.Stream
         {
             private BitDecoder[] _decoders;
 
-            public void Create()
-            {
-                _decoders = new BitDecoder[0x300];
-            }
+            public void Create() => _decoders = new BitDecoder[0x300];
 
             public void Init()
             {
@@ -142,25 +139,18 @@ public class Decoder : ICoder, ISetDecoderProperties // ,System.IO.Stream
             }
         }
 
-        private uint GetState(uint pos, byte prevByte)
-        {
-            return ((pos & _posMask) << _numPrevBits) + (uint)(prevByte >> (8 - _numPrevBits));
-        }
+        private uint GetState(uint pos, byte prevByte) =>
+            ((pos & _posMask) << _numPrevBits) + (uint)(prevByte >> (8 - _numPrevBits));
 
-        public byte DecodeNormal(RangeCoder.Decoder rangeDecoder, uint pos, byte prevByte)
-        {
-            return _coders[GetState(pos, prevByte)].DecodeNormal(rangeDecoder);
-        }
+        public byte DecodeNormal(RangeCoder.Decoder rangeDecoder, uint pos, byte prevByte) =>
+            _coders[GetState(pos, prevByte)].DecodeNormal(rangeDecoder);
 
         public byte DecodeWithMatchByte(
             RangeCoder.Decoder rangeDecoder,
             uint pos,
             byte prevByte,
             byte matchByte
-        )
-        {
-            return _coders[GetState(pos, prevByte)].DecodeWithMatchByte(rangeDecoder, matchByte);
-        }
+        ) => _coders[GetState(pos, prevByte)].DecodeWithMatchByte(rangeDecoder, matchByte);
     }
 
     private OutWindow _outWindow;

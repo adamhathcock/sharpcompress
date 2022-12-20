@@ -7,10 +7,7 @@ namespace SharpCompress.Common.Rar.Headers;
 /// </summary>
 internal static class FileNameDecoder
 {
-    internal static int GetChar(byte[] name, int pos)
-    {
-        return name[pos] & 0xff;
-    }
+    internal static int GetChar(byte[] name, int pos) => name[pos] & 0xff;
 
     internal static string Decode(byte[] name, int encPos)
     {

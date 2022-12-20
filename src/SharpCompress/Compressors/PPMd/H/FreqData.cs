@@ -22,30 +22,16 @@ internal class FreqData : Pointer
         set => BinaryPrimitives.WriteInt16LittleEndian(Memory.AsSpan(Address), (short)value);
     }
 
-    internal FreqData Initialize(byte[] mem)
-    {
-        return Initialize<FreqData>(mem);
-    }
+    internal FreqData Initialize(byte[] mem) => Initialize<FreqData>(mem);
 
-    internal void IncrementSummFreq(int dSummFreq)
-    {
-        SummFreq += (short)dSummFreq;
-    }
+    internal void IncrementSummFreq(int dSummFreq) => SummFreq += (short)dSummFreq;
 
-    internal int GetStats()
-    {
-        return BinaryPrimitives.ReadInt32LittleEndian(Memory.AsSpan(Address + 2));
-    }
+    internal int GetStats() => BinaryPrimitives.ReadInt32LittleEndian(Memory.AsSpan(Address + 2));
 
-    internal virtual void SetStats(State state)
-    {
-        SetStats(state.Address);
-    }
+    internal virtual void SetStats(State state) => SetStats(state.Address);
 
-    internal void SetStats(int state)
-    {
+    internal void SetStats(int state) =>
         BinaryPrimitives.WriteInt32LittleEndian(Memory.AsSpan(Address + 2), state);
-    }
 
     public override string ToString()
     {

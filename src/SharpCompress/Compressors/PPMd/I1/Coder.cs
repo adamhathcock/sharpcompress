@@ -89,15 +89,10 @@ internal class Coder
         }
     }
 
-    public uint RangeGetCurrentCount()
-    {
-        return (_code - _low) / (_range /= _scale);
-    }
+    public uint RangeGetCurrentCount() => (_code - _low) / (_range /= _scale);
 
-    public uint RangeGetCurrentShiftCount(int rangeShift)
-    {
-        return (_code - _low) / (_range >>= rangeShift);
-    }
+    public uint RangeGetCurrentShiftCount(int rangeShift) =>
+        (_code - _low) / (_range >>= rangeShift);
 
     public void RangeRemoveSubrange()
     {

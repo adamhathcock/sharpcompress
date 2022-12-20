@@ -223,10 +223,7 @@ internal sealed class ZlibCodec
     /// It is implicitly called when you call the constructor.
     /// </remarks>
     /// <returns>Z_OK if everything goes well.</returns>
-    public int InitializeInflate()
-    {
-        return InitializeInflate(WindowBits);
-    }
+    public int InitializeInflate() => InitializeInflate(WindowBits);
 
     /// <summary>
     /// Initialize the inflation state with an explicit flag to
@@ -246,10 +243,8 @@ internal sealed class ZlibCodec
     /// pair when reading the stream of data to be inflated.</param>
     ///
     /// <returns>Z_OK if everything goes well.</returns>
-    public int InitializeInflate(bool expectRfc1950Header)
-    {
-        return InitializeInflate(WindowBits, expectRfc1950Header);
-    }
+    public int InitializeInflate(bool expectRfc1950Header) =>
+        InitializeInflate(WindowBits, expectRfc1950Header);
 
     /// <summary>
     /// Initialize the ZlibCodec for inflation, with the specified number of window bits.
@@ -440,10 +435,7 @@ internal sealed class ZlibCodec
     /// </code>
     /// </example>
     /// <returns>Z_OK if all goes well. You generally don't need to check the return code.</returns>
-    public int InitializeDeflate()
-    {
-        return _InternalInitializeDeflate(true);
-    }
+    public int InitializeDeflate() => _InternalInitializeDeflate(true);
 
     /// <summary>
     /// Initialize the ZlibCodec for deflation operation, using the specified CompressionLevel.

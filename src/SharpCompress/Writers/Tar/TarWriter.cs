@@ -58,10 +58,8 @@ public class TarWriter : AbstractWriter
         InitalizeStream(destination);
     }
 
-    public override void Write(string filename, Stream source, DateTime? modificationTime)
-    {
+    public override void Write(string filename, Stream source, DateTime? modificationTime) =>
         Write(filename, source, modificationTime, null);
-    }
 
     private string NormalizeFilename(string filename)
     {

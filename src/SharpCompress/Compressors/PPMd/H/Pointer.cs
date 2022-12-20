@@ -7,10 +7,7 @@ internal abstract class Pointer
     /// <summary> Initialize the object with the array (may be null)</summary>
     /// <param name="mem">the byte array
     /// </param>
-    internal Pointer(byte[] mem)
-    {
-        Memory = mem;
-    }
+    internal Pointer(byte[] mem) => Memory = mem;
 
     internal byte[] Memory { get; private set; }
 

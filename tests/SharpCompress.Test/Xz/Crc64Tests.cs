@@ -1,4 +1,3 @@
-using System;
 using System.Text;
 using SharpCompress.Compressors.Xz;
 using Xunit;

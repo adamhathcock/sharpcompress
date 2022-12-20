@@ -84,10 +84,7 @@ internal class Encoder : ICoder, ISetCoderProperties, IWriteCoderProperties
         {
             private BitEncoder[] _encoders;
 
-            public void Create()
-            {
-                _encoders = new BitEncoder[0x300];
-            }
+            public void Create() => _encoders = new BitEncoder[0x300];
 
             public void Init()
             {
@@ -188,12 +185,8 @@ internal class Encoder : ICoder, ISetCoderProperties, IWriteCoderProperties
             }
         }
 
-        public Encoder2 GetSubCoder(uint pos, byte prevByte)
-        {
-            return _coders[
-                ((pos & _posMask) << _numPrevBits) + (uint)(prevByte >> (8 - _numPrevBits))
-            ];
-        }
+        public Encoder2 GetSubCoder(uint pos, byte prevByte) =>
+            _coders[((pos & _posMask) << _numPrevBits) + (uint)(prevByte >> (8 - _numPrevBits))];
     }
 
     private class LenEncoder
@@ -298,15 +291,10 @@ internal class Encoder : ICoder, ISetCoderProperties, IWriteCoderProperties
         private uint _tableSize;
         private readonly uint[] _counters = new uint[Base.K_NUM_POS_STATES_ENCODING_MAX];
 
-        public void SetTableSize(uint tableSize)
-        {
-            _tableSize = tableSize;
-        }
+        public void SetTableSize(uint tableSize) => _tableSize = tableSize;
 
-        public uint GetPrice(uint symbol, uint posState)
-        {
-            return _prices[(posState * Base.K_NUM_LEN_SYMBOLS) + symbol];
-        }
+        public uint GetPrice(uint symbol, uint posState) =>
+            _prices[(posState * Base.K_NUM_LEN_SYMBOLS) + symbol];
 
         private void UpdateTable(uint posState)
         {
@@ -366,10 +354,7 @@ internal class Encoder : ICoder, ISetCoderProperties, IWriteCoderProperties
             _prev1IsChar = false;
         }
 
-        public bool IsShortRep()
-        {
-            return (_backPrev == 0);
-        }
+        public bool IsShortRep() => (_backPrev == 0);
     }
 
     private readonly Optimal[] _optimum = new Optimal[K_NUM_OPTS];
@@ -488,10 +473,7 @@ internal class Encoder : ICoder, ISetCoderProperties, IWriteCoderProperties
         }
     }
 
-    private void SetWriteEndMarkerMode(bool writeEndMarker)
-    {
-        _writeEndMark = writeEndMarker;
-    }
+    private void SetWriteEndMarkerMode(bool writeEndMarker) => _writeEndMark = writeEndMarker;
 
     private void Init()
     {
@@ -561,11 +543,9 @@ internal class Encoder : ICoder, ISetCoderProperties, IWriteCoderProperties
         }
     }
 
-    private uint GetRepLen1Price(Base.State state, uint posState)
-    {
-        return _isRepG0[state._index].GetPrice0()
-            + _isRep0Long[(state._index << Base.K_NUM_POS_STATES_BITS_MAX) + posState].GetPrice0();
-    }
+    private uint GetRepLen1Price(Base.State state, uint posState) =>
+        _isRepG0[state._index].GetPrice0()
+        + _isRep0Long[(state._index << Base.K_NUM_POS_STATES_BITS_MAX) + posState].GetPrice0();
 
     private uint GetPureRepPrice(uint repIndex, Base.State state, uint posState)
     {
@@ -1543,15 +1523,9 @@ internal class Encoder : ICoder, ISetCoderProperties, IWriteCoderProperties
         }
     }
 
-    private void SetOutStream(Stream outStream)
-    {
-        _rangeEncoder.SetStream(outStream);
-    }
+    private void SetOutStream(Stream outStream) => _rangeEncoder.SetStream(outStream);
 
-    private void ReleaseOutStream()
-    {
-        _rangeEncoder.ReleaseStream();
-    }
+    private void ReleaseOutStream() => _rangeEncoder.ReleaseStream();
 
     private void ReleaseStreams()
     {
@@ -1892,8 +1866,5 @@ internal class Encoder : ICoder, ISetCoderProperties, IWriteCoderProperties
 
     private uint _trainSize;
 
-    public void SetTrainSize(uint trainSize)
-    {
-        _trainSize = trainSize;
-    }
+    public void SetTrainSize(uint trainSize) => _trainSize = trainSize;
 }

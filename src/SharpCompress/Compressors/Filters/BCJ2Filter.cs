@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.IO;
 
 namespace SharpCompress.Compressors.Filters;
@@ -37,15 +37,9 @@ internal class BCJ2Filter : Stream
     private const int K_BIT_MODEL_TOTAL = 1 << K_NUM_BIT_MODEL_TOTAL_BITS;
     private const int K_NUM_MOVE_BITS = 5;
 
-    private static bool IsJ(byte b0, byte b1)
-    {
-        return (b1 & 0xFE) == 0xE8 || IsJcc(b0, b1);
-    }
+    private static bool IsJ(byte b0, byte b1) => (b1 & 0xFE) == 0xE8 || IsJcc(b0, b1);
 
-    private static bool IsJcc(byte b0, byte b1)
-    {
-        return b0 == 0x0F && (b1 & 0xF0) == 0x80;
-    }
+    private static bool IsJcc(byte b0, byte b1) => b0 == 0x0F && (b1 & 0xF0) == 0x80;
 
     public BCJ2Filter(byte[] control, byte[] data1, byte[] data2, Stream baseStream)
     {
@@ -85,10 +79,7 @@ internal class BCJ2Filter : Stream
 
     public override bool CanWrite => false;
 
-    public override void Flush()
-    {
-        throw new NotSupportedException();
-    }
+    public override void Flush() => throw new NotSupportedException();
 
     public override long Length => _baseStream.Length + _data1.Length + _data2.Length;
 
@@ -212,18 +203,10 @@ internal class BCJ2Filter : Stream
         return size;
     }
 
-    public override long Seek(long offset, SeekOrigin origin)
-    {
-        throw new NotSupportedException();
-    }
+    public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
 
-    public override void SetLength(long value)
-    {
-        throw new NotSupportedException();
-    }
+    public override void SetLength(long value) => throw new NotSupportedException();
 
-    public override void Write(byte[] buffer, int offset, int count)
-    {
+    public override void Write(byte[] buffer, int offset, int count) =>
         throw new NotSupportedException();
-    }
 }

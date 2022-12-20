@@ -1,4 +1,4 @@
-#if !Rar2017_64bit
+﻿#if !Rar2017_64bit
 using size_t = System.UInt32;
 #else
 using nint = System.Int64;
@@ -41,15 +41,11 @@ internal partial class BitInput
     //}
     //
 
-    public void faddbits(uint Bits)
-    {
+    public void faddbits(uint Bits) =>
         // Function wrapped version of inline addbits to save code size.
         addbits(Bits);
-    }
 
-    public uint fgetbits()
-    {
+    public uint fgetbits() =>
         // Function wrapped version of inline getbits to save code size.
-        return getbits();
-    }
+        getbits();
 }

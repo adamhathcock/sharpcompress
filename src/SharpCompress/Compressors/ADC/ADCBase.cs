@@ -1,4 +1,4 @@
-//
+﻿//
 // ADC.cs
 //
 // Author:
@@ -50,27 +50,23 @@ public static class ADCBase
         return TWO_BYTE;
     }
 
-    private static int GetChunkSize(byte byt)
-    {
-        return GetChunkType(byt) switch
+    private static int GetChunkSize(byte byt) =>
+        GetChunkType(byt) switch
         {
             PLAIN => (byt & 0x7F) + 1,
             TWO_BYTE => ((byt & 0x3F) >> 2) + 3,
             THREE_BYTE => (byt & 0x3F) + 4,
             _ => -1,
         };
-    }
 
-    private static int GetOffset(ReadOnlySpan<byte> chunk)
-    {
-        return GetChunkType(chunk[0]) switch
+    private static int GetOffset(ReadOnlySpan<byte> chunk) =>
+        GetChunkType(chunk[0]) switch
         {
             PLAIN => 0,
             TWO_BYTE => ((chunk[0] & 0x03) << 8) + chunk[1],
             THREE_BYTE => (chunk[1] << 8) + chunk[2],
             _ => -1,
         };
-    }
 
     /// <summary>
     /// Decompresses a byte buffer that's compressed with ADC
@@ -79,10 +75,8 @@ public static class ADCBase
     /// <param name="output">Buffer to hold decompressed data</param>
     /// <param name="bufferSize">Max size for decompressed data</param>
     /// <returns>How many bytes are stored on <paramref name="output"/></returns>
-    public static int Decompress(byte[] input, out byte[]? output, int bufferSize = 262144)
-    {
-        return Decompress(new MemoryStream(input), out output, bufferSize);
-    }
+    public static int Decompress(byte[] input, out byte[]? output, int bufferSize = 262144) =>
+        Decompress(new MemoryStream(input), out output, bufferSize);
 
     /// <summary>
     /// Decompresses a stream that's compressed with ADC

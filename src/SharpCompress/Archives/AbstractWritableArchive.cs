@@ -55,10 +55,7 @@ public abstract class AbstractWritableArchive<TEntry, TVolume>
         }
     }
 
-    public IDisposable PauseEntryRebuilding()
-    {
-        return new RebuildPauseDisposable(this);
-    }
+    public IDisposable PauseEntryRebuilding() => new RebuildPauseDisposable(this);
 
     private void RebuildModifiedCollection()
     {
@@ -72,10 +69,7 @@ public abstract class AbstractWritableArchive<TEntry, TVolume>
         modifiedEntries.AddRange(OldEntries.Concat(newEntries));
     }
 
-    private IEnumerable<TEntry> OldEntries
-    {
-        get { return base.Entries.Where(x => !removedEntries.Contains(x)); }
-    }
+    private IEnumerable<TEntry> OldEntries => base.Entries.Where(x => !removedEntries.Contains(x));
 
     public void RemoveEntry(TEntry entry)
     {
@@ -86,15 +80,10 @@ public abstract class AbstractWritableArchive<TEntry, TVolume>
         }
     }
 
-    void IWritableArchive.RemoveEntry(IArchiveEntry entry)
-    {
-        RemoveEntry((TEntry)entry);
-    }
+    void IWritableArchive.RemoveEntry(IArchiveEntry entry) => RemoveEntry((TEntry)entry);
 
-    public TEntry AddEntry(string key, Stream source, long size = 0, DateTime? modified = null)
-    {
-        return AddEntry(key, source, false, size, modified);
-    }
+    public TEntry AddEntry(string key, Stream source, long size = 0, DateTime? modified = null) =>
+        AddEntry(key, source, false, size, modified);
 
     IArchiveEntry IWritableArchive.AddEntry(
         string key,
@@ -102,10 +91,7 @@ public abstract class AbstractWritableArchive<TEntry, TVolume>
         bool closeStream,
         long size,
         DateTime? modified
-    )
-    {
-        return AddEntry(key, source, closeStream, size, modified);
-    }
+    ) => AddEntry(key, source, closeStream, size, modified);
 
     public TEntry AddEntry(
         string key,

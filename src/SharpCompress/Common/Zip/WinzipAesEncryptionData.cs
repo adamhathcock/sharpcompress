@@ -35,21 +35,16 @@ internal class WinzipAesEncryptionData
 
     internal byte[] KeyBytes { get; set; }
 
-    private int KeySizeInBytes
-    {
-        get { return KeyLengthInBytes(_keySize); }
-    }
+    private int KeySizeInBytes => KeyLengthInBytes(_keySize);
 
-    internal static int KeyLengthInBytes(WinzipAesKeySize keySize)
-    {
-        return keySize switch
+    internal static int KeyLengthInBytes(WinzipAesKeySize keySize) =>
+        keySize switch
         {
             WinzipAesKeySize.KeySize128 => 16,
             WinzipAesKeySize.KeySize192 => 24,
             WinzipAesKeySize.KeySize256 => 32,
             _ => throw new InvalidOperationException(),
         };
-    }
 
     private void Initialize()
     {

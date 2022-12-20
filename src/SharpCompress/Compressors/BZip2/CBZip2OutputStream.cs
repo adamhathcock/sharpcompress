@@ -473,10 +473,7 @@ internal sealed class CBZip2OutputStream : Stream
         Flush();
     }
 
-    public override void Flush()
-    {
-        bsStream.Flush();
-    }
+    public override void Flush() => bsStream.Flush();
 
     private int blockCRC,
         combinedCRC;
@@ -638,10 +635,7 @@ internal sealed class CBZip2OutputStream : Stream
         bsLive += n;
     }
 
-    private void BsPutUChar(int c)
-    {
-        BsW(8, c);
-    }
+    private void BsPutUChar(int c) => BsW(8, c);
 
     private void BsPutint(int u)
     {
@@ -651,10 +645,7 @@ internal sealed class CBZip2OutputStream : Stream
         BsW(8, u & 0xff);
     }
 
-    private void BsPutIntVS(int numBits, int c)
-    {
-        BsW(numBits, c);
-    }
+    private void BsPutIntVS(int numBits, int c) => BsW(numBits, c);
 
     private void SendMTFValues()
     {
@@ -1986,20 +1977,11 @@ internal sealed class CBZip2OutputStream : Stream
         nMTF = wr;
     }
 
-    public override int Read(byte[] buffer, int offset, int count)
-    {
-        return 0;
-    }
+    public override int Read(byte[] buffer, int offset, int count) => 0;
 
-    public override int ReadByte()
-    {
-        return -1;
-    }
+    public override int ReadByte() => -1;
 
-    public override long Seek(long offset, SeekOrigin origin)
-    {
-        return 0;
-    }
+    public override long Seek(long offset, SeekOrigin origin) => 0;
 
     public override void SetLength(long value) { }
 
@@ -2021,7 +2003,7 @@ internal sealed class CBZip2OutputStream : Stream
 
     public override long Position
     {
-        get { return 0; }
+        get => 0;
         set { }
     }
 }
