@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
@@ -52,7 +52,7 @@ Target(Build,
 
 Target(Test,
        DependsOn(Build),
-       ForEach("net6.0", "net461"),
+       ForEach("net7.0", "net462"),
        framework =>
        {
            IEnumerable<string> GetFiles(string d)
@@ -60,7 +60,7 @@ Target(Test,
                return Glob.Files(".", d);
            }
 
-           if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && framework == "net461")
+           if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && framework == "net462")
            {
                return;
            }
