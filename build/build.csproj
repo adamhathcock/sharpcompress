@@ -2,13 +2,13 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net6.0</TargetFramework>
+    <TargetFramework>net7.0</TargetFramework>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Bullseye" Version="4.0.0" />
+    <PackageReference Include="Bullseye" Version="4.2.0" />
     <PackageReference Include="Glob" Version="1.1.9" />
-    <PackageReference Include="SimpleExec" Version="10.0.0" />
+    <PackageReference Include="SimpleExec" Version="11.0.0" />
   </ItemGroup>
 
 </Project>
