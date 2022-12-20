@@ -107,9 +107,7 @@ public class RarArchive : AbstractArchive<RarArchiveEntry, RarVolume>
     public static RarArchive Open(Stream stream, ReaderOptions? options = null)
     {
         stream.CheckNotNull(nameof(stream));
-        return new RarArchive(
-            new SourceStream(stream, i => null, options ?? new ReaderOptions())
-        );
+        return new RarArchive(new SourceStream(stream, i => null, options ?? new ReaderOptions()));
     }
 
     /// <summary>
@@ -138,10 +136,7 @@ public class RarArchive : AbstractArchive<RarArchiveEntry, RarVolume>
     /// </summary>
     /// <param name="streams"></param>
     /// <param name="readerOptions"></param>
-    public static RarArchive Open(
-        IEnumerable<Stream> streams,
-        ReaderOptions? readerOptions = null
-    )
+    public static RarArchive Open(IEnumerable<Stream> streams, ReaderOptions? readerOptions = null)
     {
         streams.CheckNotNull(nameof(streams));
         var strms = streams.ToArray();

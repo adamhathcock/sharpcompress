@@ -14,8 +14,7 @@ public class TarWriter : AbstractWriter
 {
     private readonly bool finalizeArchiveOnClose;
 
-    public TarWriter(Stream destination, TarWriterOptions options)
-        : base(ArchiveType.Tar, options)
+    public TarWriter(Stream destination, TarWriterOptions options) : base(ArchiveType.Tar, options)
     {
         finalizeArchiveOnClose = options.FinalizeArchiveOnClose;
 
@@ -33,22 +32,22 @@ public class TarWriter : AbstractWriter
                 break;
             case CompressionType.BZip2:
 
-            {
-                destination = new BZip2Stream(destination, CompressionMode.Compress, false);
-            }
-            break;
+                {
+                    destination = new BZip2Stream(destination, CompressionMode.Compress, false);
+                }
+                break;
             case CompressionType.GZip:
 
-            {
-                destination = new GZipStream(destination, CompressionMode.Compress);
-            }
-            break;
+                {
+                    destination = new GZipStream(destination, CompressionMode.Compress);
+                }
+                break;
             case CompressionType.LZip:
 
-            {
-                destination = new LZipStream(destination, CompressionMode.Compress);
-            }
-            break;
+                {
+                    destination = new LZipStream(destination, CompressionMode.Compress);
+                }
+                break;
             default:
             {
                 throw new InvalidFormatException(

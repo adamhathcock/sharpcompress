@@ -145,10 +145,7 @@ internal static class DecoderStreamHelper
                     );
                 }
 
-                var otherCoderIndex = FindCoderIndexForOutStreamIndex(
-                    folderInfo,
-                    pairedOutIndex
-                );
+                var otherCoderIndex = FindCoderIndexForOutStreamIndex(folderInfo, pairedOutIndex);
                 inStreams[i] = CreateDecoderStream(
                     packStreams,
                     packSizes,
@@ -215,7 +212,11 @@ internal static class DecoderStreamHelper
 
         var outStreams = new Stream[folderInfo._unpackSizes.Count];
 
-        FindPrimaryOutStreamIndex(folderInfo, out var primaryCoderIndex, out var primaryOutStreamIndex);
+        FindPrimaryOutStreamIndex(
+            folderInfo,
+            out var primaryCoderIndex,
+            out var primaryOutStreamIndex
+        );
         return CreateDecoderStream(
             inStreams,
             packSizes,

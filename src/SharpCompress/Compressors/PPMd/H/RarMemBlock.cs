@@ -21,8 +21,7 @@ internal class RarMemBlock : Pointer
         {
             if (Memory != null)
             {
-                _stamp =
-                    BinaryPrimitives.ReadInt16LittleEndian(Memory.AsSpan(Address)) & 0xffff;
+                _stamp = BinaryPrimitives.ReadInt16LittleEndian(Memory.AsSpan(Address)) & 0xffff;
             }
             return _stamp;
         }

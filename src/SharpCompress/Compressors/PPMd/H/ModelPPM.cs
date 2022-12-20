@@ -367,10 +367,7 @@ internal class ModelPpm
             {
                 _orderFall++;
                 _minContext.Address = _minContext.GetSuffix(); // =MinContext->Suffix;
-                if (
-                    _minContext.Address <= SubAlloc.PText
-                    || _minContext.Address > SubAlloc.HeapEnd
-                )
+                if (_minContext.Address <= SubAlloc.PText || _minContext.Address > SubAlloc.HeapEnd)
                 {
                     return (-1);
                 }
@@ -683,11 +680,10 @@ internal class ModelPpm
                 //								.getSummFreq() <= 8 * ns1) ? 1 : 0));
                 var sum =
                     ((2 * ns1 < ns) ? 1 : 0)
-                    + (2
-                        * (
-                            ((4 * ns1 <= ns) ? 1 : 0)
-                            & ((pc.FreqData.SummFreq <= 8 * ns1) ? 1 : 0)
-                        ));
+                    + (
+                        2
+                        * (((4 * ns1 <= ns) ? 1 : 0) & ((pc.FreqData.SummFreq <= 8 * ns1) ? 1 : 0))
+                    );
                 pc.FreqData.IncrementSummFreq(sum);
             }
             else
@@ -719,11 +715,7 @@ internal class ModelPpm
             }
             else
             {
-                cf =
-                    4
-                    + (cf >= 9 * sf ? 1 : 0)
-                    + (cf >= 12 * sf ? 1 : 0)
-                    + (cf >= 15 * sf ? 1 : 0);
+                cf = 4 + (cf >= 9 * sf ? 1 : 0) + (cf >= 12 * sf ? 1 : 0) + (cf >= 15 * sf ? 1 : 0);
                 pc.FreqData.IncrementSummFreq(cf);
             }
             p.Address = pc.FreqData.GetStats() + (ns1 * State.SIZE);
@@ -926,10 +918,7 @@ internal class ModelPpm
             {
                 _orderFall++;
                 _minContext.Address = _minContext.GetSuffix();
-                if (
-                    _minContext.Address <= SubAlloc.PText
-                    || _minContext.Address > SubAlloc.HeapEnd
-                )
+                if (_minContext.Address <= SubAlloc.PText || _minContext.Address > SubAlloc.HeapEnd)
                 {
                     return -1;
                 }

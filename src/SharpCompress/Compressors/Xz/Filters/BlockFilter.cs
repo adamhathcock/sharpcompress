@@ -45,9 +45,7 @@ public abstract class BlockFilter : ReadOnlyStream
         var filterType = (FilterTypes)reader.ReadXZInteger();
         if (!FilterMap.ContainsKey(filterType))
         {
-            throw new NotImplementedException(
-                $"Filter {filterType} has not yet been implemented"
-            );
+            throw new NotImplementedException($"Filter {filterType} has not yet been implemented");
         }
 
         var filter = (BlockFilter)Activator.CreateInstance(FilterMap[filterType])!;

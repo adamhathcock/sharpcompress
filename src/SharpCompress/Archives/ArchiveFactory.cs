@@ -27,7 +27,7 @@ public static class ArchiveFactory
     {
         var factory = Factory.Factories
             .OfType<IWriteableArchiveFactory>()
-.FirstOrDefault(item => item.KnownArchiveType == type);
+            .FirstOrDefault(item => item.KnownArchiveType == type);
 
         if (factory != null)
         {

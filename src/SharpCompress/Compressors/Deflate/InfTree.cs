@@ -2187,13 +2187,7 @@ internal sealed class InfTree
         return Z_OK;
     }
 
-    internal static int inflate_trees_fixed(
-        int[] bl,
-        int[] bd,
-        int[][] tl,
-        int[][] td,
-        ZlibCodec z
-    )
+    internal static int inflate_trees_fixed(int[] bl, int[] bd, int[][] tl, int[][] td, ZlibCodec z)
     {
         bl[0] = fixed_bl;
         bd[0] = fixed_bd;

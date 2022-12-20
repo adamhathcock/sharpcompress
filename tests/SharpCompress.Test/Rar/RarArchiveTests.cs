@@ -168,12 +168,7 @@ public class RarArchiveTests : ArchiveTests
     public void Rar_Jpg_ArchiveStreamRead()
     {
         using var stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Rar.jpeg.jpg"));
-        using (
-            var archive = RarArchive.Open(
-                stream,
-                new ReaderOptions() { LookForHeader = true }
-            )
-        )
+        using (var archive = RarArchive.Open(stream, new ReaderOptions() { LookForHeader = true }))
         {
             foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
             {
@@ -219,7 +214,10 @@ public class RarArchiveTests : ArchiveTests
     public void QuickTest()
     {
         var textItems = new List<string>();
-        using var reader = new RarFactory().OpenReader(new FileInfo("/Users/adam/Downloads/Kuuki_Aether_chinesevcv_1.0.rar").OpenRead(), null);
+        using var reader = new RarFactory().OpenReader(
+            new FileInfo("/Users/adam/Downloads/Kuuki_Aether_chinesevcv_1.0.rar").OpenRead(),
+            null
+        );
         textItems.Clear();
         while (reader.MoveToNextEntry())
         {
@@ -344,8 +342,8 @@ public class RarArchiveTests : ArchiveTests
     private void DoRar_Multi_ArchiveStreamRead(string[] archives, bool isSolid)
     {
         using var archive = RarArchive.Open(
-                archives.Select(s => Path.Combine(TEST_ARCHIVES_PATH, s)).Select(File.OpenRead)
-            );
+            archives.Select(s => Path.Combine(TEST_ARCHIVES_PATH, s)).Select(File.OpenRead)
+        );
         Assert.Equal(archive.IsSolid, isSolid);
         foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
         {

@@ -146,9 +146,7 @@ public abstract class AbstractWritableArchive<TEntry, TVolume>
     public void SaveTo(Stream stream, WriterOptions options)
     {
         //reset streams of new entries
-        newEntries
-            .Cast<IWritableArchiveEntry>()
-            .ForEach(x => x.Stream.Seek(0, SeekOrigin.Begin));
+        newEntries.Cast<IWritableArchiveEntry>().ForEach(x => x.Stream.Seek(0, SeekOrigin.Begin));
         SaveTo(stream, options, OldEntries, newEntries);
     }
 

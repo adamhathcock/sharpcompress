@@ -30,10 +30,8 @@ internal class StreamingZipHeaderFactory : ZipHeaderFactory
             if (
                 _lastEntryHeader != null
                 && (
-                    FlagUtility.HasFlag(
-                        _lastEntryHeader.Flags,
-                        HeaderFlags.UsePostDataDescriptor
-                    ) || _lastEntryHeader.IsZip64
+                    FlagUtility.HasFlag(_lastEntryHeader.Flags, HeaderFlags.UsePostDataDescriptor)
+                    || _lastEntryHeader.IsZip64
                 )
             )
             {

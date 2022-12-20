@@ -50,9 +50,7 @@ internal class LocalEntryHeader : ZipFileEntry
             Name = ((ExtraUnicodePathExtraField)unicodePathExtra).UnicodeName;
         }
 
-        var zip64ExtraData = Extra
-            .OfType<Zip64ExtendedInformationExtraField>()
-            .FirstOrDefault();
+        var zip64ExtraData = Extra.OfType<Zip64ExtendedInformationExtraField>().FirstOrDefault();
         if (zip64ExtraData != null)
         {
             zip64ExtraData.Process(UncompressedSize, CompressedSize, 0, 0);

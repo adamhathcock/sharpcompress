@@ -25,10 +25,7 @@ public class WriterTests : TestBase
     {
         using (Stream stream = File.OpenWrite(Path.Combine(SCRATCH2_FILES_PATH, archive)))
         {
-            var writerOptions = new WriterOptions(compressionType)
-            {
-                LeaveStreamOpen = true,
-            };
+            var writerOptions = new WriterOptions(compressionType) { LeaveStreamOpen = true, };
 
             writerOptions.ArchiveEncoding.Default = encoding ?? Encoding.Default;
 
@@ -46,10 +43,7 @@ public class WriterTests : TestBase
 
             readerOptions.ArchiveEncoding.Default = encoding ?? Encoding.Default;
 
-            using var reader = ReaderFactory.Open(
-                    NonDisposingStream.Create(stream),
-                    readerOptions
-                );
+            using var reader = ReaderFactory.Open(NonDisposingStream.Create(stream), readerOptions);
             reader.WriteAllToDirectory(
                 SCRATCH_FILES_PATH,
                 new ExtractionOptions() { ExtractFullPath = true }

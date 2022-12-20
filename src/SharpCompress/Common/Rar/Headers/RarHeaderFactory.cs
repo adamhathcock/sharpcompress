@@ -21,11 +21,7 @@ public class RarHeaderFactory
 
     public IEnumerable<IRarHeader> ReadHeaders(Stream stream)
     {
-        var markHeader = MarkHeader.Read(
-            stream,
-            Options.LeaveStreamOpen,
-            Options.LookForHeader
-        );
+        var markHeader = MarkHeader.Read(stream, Options.LeaveStreamOpen, Options.LookForHeader);
         _isRar5 = markHeader.IsRar5;
         yield return markHeader;
 
@@ -87,16 +83,16 @@ public class RarHeaderFactory
                 {
                     case StreamingMode.Seekable:
 
-                    {
-                        reader.BaseStream.Position += ph.DataSize;
-                    }
-                    break;
+                        {
+                            reader.BaseStream.Position += ph.DataSize;
+                        }
+                        break;
                     case StreamingMode.Streaming:
 
-                    {
-                        reader.BaseStream.Skip(ph.DataSize);
-                    }
-                    break;
+                        {
+                            reader.BaseStream.Skip(ph.DataSize);
+                        }
+                        break;
                     default:
                     {
                         throw new InvalidFormatException("Invalid StreamingMode");
@@ -128,32 +124,29 @@ public class RarHeaderFactory
                 {
                     case StreamingMode.Seekable:
 
-                    {
-                        fh.DataStartPosition = reader.BaseStream.Position;
-                        reader.BaseStream.Position += fh.CompressedSize;
-                    }
-                    break;
+                        {
+                            fh.DataStartPosition = reader.BaseStream.Position;
+                            reader.BaseStream.Position += fh.CompressedSize;
+                        }
+                        break;
                     case StreamingMode.Streaming:
 
-                    {
-                        var ms = new ReadOnlySubStream(
-                            reader.BaseStream,
-                            fh.CompressedSize
-                        );
-                        if (fh.R4Salt is null)
                         {
-                            fh.PackedStream = ms;
+                            var ms = new ReadOnlySubStream(reader.BaseStream, fh.CompressedSize);
+                            if (fh.R4Salt is null)
+                            {
+                                fh.PackedStream = ms;
+                            }
+                            else
+                            {
+                                fh.PackedStream = new RarCryptoWrapper(
+                                    ms,
+                                    Options.Password!,
+                                    fh.R4Salt
+                                );
+                            }
                         }
-                        else
-                        {
-                            fh.PackedStream = new RarCryptoWrapper(
-                                ms,
-                                Options.Password!,
-                                fh.R4Salt
-                            );
-                        }
-                    }
-                    break;
+                        break;
                     default:
                     {
                         throw new InvalidFormatException("Invalid StreamingMode");
@@ -185,18 +178,18 @@ public class RarHeaderFactory
         {
             case StreamingMode.Seekable:
 
-            {
-                fh.DataStartPosition = reader.BaseStream.Position;
-                reader.BaseStream.Position += fh.CompressedSize;
-            }
-            break;
+                {
+                    fh.DataStartPosition = reader.BaseStream.Position;
+                    reader.BaseStream.Position += fh.CompressedSize;
+                }
+                break;
             case StreamingMode.Streaming:
 
-            {
-                //skip the data because it's useless?
-                reader.BaseStream.Skip(fh.CompressedSize);
-            }
-            break;
+                {
+                    //skip the data because it's useless?
+                    reader.BaseStream.Skip(fh.CompressedSize);
+                }
+                break;
             default:
             {
                 throw new InvalidFormatException("Invalid StreamingMode");

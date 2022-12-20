@@ -64,11 +64,7 @@ public sealed class BranchExecFilter
                 mask >>= (int)d;
                 if (
                     mask != 0
-                    && (
-                        mask > 4
-                        || mask == 3
-                        || (((((data[(mask >> 1) + 1])) + 1) & 0xFE) == 0)
-                    )
+                    && (mask > 4 || mask == 3 || (((((data[(mask >> 1) + 1])) + 1) & 0xFE) == 0))
                 )
                 {
                     mask = (mask >> 1) | 4;
@@ -253,10 +249,8 @@ public sealed class BranchExecFilter
                     var iterator = (i + (m * 5) - 8);
                     if (
                         ((data[iterator + 3] >> (int)m) & 15) == 5
-                        && (
-                            ((data[iterator - 1] | ((uint)data[iterator] << 8)) >> (int)m)
-                            & 0x70
-                        ) == 0
+                        && (((data[iterator - 1] | ((uint)data[iterator] << 8)) >> (int)m) & 0x70)
+                            == 0
                     )
                     {
                         var raw = BitConverter.ToUInt32(data, (int)iterator);

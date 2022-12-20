@@ -18,6 +18,5 @@ public class DataLengthException : CryptoException
 
     public DataLengthException(string message) : base(message) { }
 
-    public DataLengthException(string message, Exception exception) : base(message, exception)
-    { }
+    public DataLengthException(string message, Exception exception) : base(message, exception) { }
 }

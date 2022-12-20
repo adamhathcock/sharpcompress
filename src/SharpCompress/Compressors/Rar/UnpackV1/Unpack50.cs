@@ -430,8 +430,7 @@ internal partial class Unpack
         // If distance to filter start is that large that due to circular dictionary
         // mode now it points to old not written yet data, then we set 'NextWindow'
         // flag and process this filter only after processing that older data.
-        Filter.NextWindow =
-            WrPtr != UnpPtr && ((WrPtr - UnpPtr) & MaxWinMask) <= Filter.BlockStart;
+        Filter.NextWindow = WrPtr != UnpPtr && ((WrPtr - UnpPtr) & MaxWinMask) <= Filter.BlockStart;
 
         Filter.uBlockStart = (uint)((Filter.BlockStart + UnpPtr) & MaxWinMask);
         Filters.Add(Filter);
@@ -490,10 +489,7 @@ internal partial class Unpack
         {
             // We may need to quit from main extraction loop and read new block header
             // and trees earlier than data in input buffer ends.
-            ReadBorder = Math.Min(
-                ReadBorder,
-                BlockHeader.BlockStart + BlockHeader.BlockSize - 1
-            );
+            ReadBorder = Math.Min(ReadBorder, BlockHeader.BlockStart + BlockHeader.BlockSize - 1);
         }
         return ReadCode != -1;
     }
@@ -821,9 +817,7 @@ internal partial class Unpack
         }
 
         Header.BlockSize = BlockSize;
-        var CheckSum = (byte)(
-            0x5a ^ BlockFlags ^ BlockSize ^ (BlockSize >> 8) ^ (BlockSize >> 16)
-        );
+        var CheckSum = (byte)(0x5a ^ BlockFlags ^ BlockSize ^ (BlockSize >> 8) ^ (BlockSize >> 16));
         if (CheckSum != SavedCheckSum)
         {
             return false;

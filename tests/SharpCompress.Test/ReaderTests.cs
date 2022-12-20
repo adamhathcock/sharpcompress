@@ -35,18 +35,15 @@ public abstract class ReaderTests : TestBase
     {
         using var file = File.OpenRead(testArchive);
         using var protectedStream = NonDisposingStream.Create(
-                new ForwardOnlyStream(file),
-                throwOnDispose: true
-            );
+            new ForwardOnlyStream(file),
+            throwOnDispose: true
+        );
         using var testStream = new TestStream(protectedStream);
         using (var reader = ReaderFactory.Open(testStream, options))
         {
             UseReader(reader, expectedCompression);
             protectedStream.ThrowOnDispose = false;
-            Assert.False(
-                testStream.IsDisposed,
-                "{nameof(testStream)} prematurely closed"
-            );
+            Assert.False(testStream.IsDisposed, "{nameof(testStream)} prematurely closed");
         }
 
         // Boolean XOR -- If the stream should be left open (true), then the stream should not be diposed (false)

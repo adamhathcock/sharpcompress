@@ -68,10 +68,7 @@ public class GZipArchive : AbstractWritableArchive<GZipArchiveEntry, GZipVolume>
     /// </summary>
     /// <param name="streams"></param>
     /// <param name="readerOptions"></param>
-    public static GZipArchive Open(
-        IEnumerable<Stream> streams,
-        ReaderOptions? readerOptions = null
-    )
+    public static GZipArchive Open(IEnumerable<Stream> streams, ReaderOptions? readerOptions = null)
     {
         streams.CheckNotNull(nameof(streams));
         var strms = streams.ToArray();
@@ -176,14 +173,7 @@ public class GZipArchive : AbstractWritableArchive<GZipArchiveEntry, GZipVolume>
         {
             throw new InvalidOperationException("Only one entry is allowed in a GZip Archive");
         }
-        return new GZipWritableArchiveEntry(
-            this,
-            source,
-            filePath,
-            size,
-            modified,
-            closeStream
-        );
+        return new GZipWritableArchiveEntry(this, source, filePath, size, modified, closeStream);
     }
 
     protected override void SaveTo(
@@ -205,9 +195,7 @@ public class GZipArchive : AbstractWritableArchive<GZipArchiveEntry, GZipVolume>
         }
     }
 
-    protected override IEnumerable<GZipArchiveEntry> LoadEntries(
-        IEnumerable<GZipVolume> volumes
-    )
+    protected override IEnumerable<GZipArchiveEntry> LoadEntries(IEnumerable<GZipVolume> volumes)
     {
         var stream = volumes.Single().Stream;
         yield return new GZipArchiveEntry(

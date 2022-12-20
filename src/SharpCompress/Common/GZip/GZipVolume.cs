@@ -8,8 +8,7 @@ public class GZipVolume : Volume
     public GZipVolume(Stream stream, ReaderOptions options, int index = 0)
         : base(stream, options, index) { }
 
-    public GZipVolume(FileInfo fileInfo, ReaderOptions options)
-        : base(fileInfo.OpenRead(), options)
+    public GZipVolume(FileInfo fileInfo, ReaderOptions options) : base(fileInfo.OpenRead(), options)
     {
         options.LeaveStreamOpen = false;
     }

@@ -50,12 +50,7 @@ public class TarWriterTests : WriterTests
     public void Tar_Rar_Write()
     {
         Assert.Throws<InvalidFormatException>(
-            () =>
-                Write(
-                    CompressionType.Rar,
-                    "Zip.ppmd.noEmptyDirs.zip",
-                    "Zip.ppmd.noEmptyDirs.zip"
-                )
+            () => Write(CompressionType.Rar, "Zip.ppmd.noEmptyDirs.zip", "Zip.ppmd.noEmptyDirs.zip")
         );
     }
 

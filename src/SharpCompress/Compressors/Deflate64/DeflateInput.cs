@@ -34,7 +34,7 @@ internal sealed class DeflateInput
     }
 
     internal /*readonly */
-readonly struct InputState
+    readonly struct InputState
     {
         internal readonly int _count;
         internal readonly int _startIndex;

@@ -94,10 +94,7 @@ public class ZipArchive : AbstractWritableArchive<ZipArchiveEntry, ZipVolume>
     /// </summary>
     /// <param name="streams"></param>
     /// <param name="readerOptions"></param>
-    public static ZipArchive Open(
-        IEnumerable<Stream> streams,
-        ReaderOptions? readerOptions = null
-    )
+    public static ZipArchive Open(IEnumerable<Stream> streams, ReaderOptions? readerOptions = null)
     {
         streams.CheckNotNull(nameof(streams));
         var strms = streams.ToArray();
@@ -140,10 +137,7 @@ public class ZipArchive : AbstractWritableArchive<ZipArchiveEntry, ZipVolume>
 
     public static bool IsZipFile(Stream stream, string? password = null)
     {
-        var headerFactory = new StreamingZipHeaderFactory(
-            password,
-            new ArchiveEncoding()
-        );
+        var headerFactory = new StreamingZipHeaderFactory(password, new ArchiveEncoding());
         try
         {
             var header = headerFactory
@@ -167,10 +161,7 @@ public class ZipArchive : AbstractWritableArchive<ZipArchiveEntry, ZipVolume>
 
     public static bool IsZipMulti(Stream stream, string? password = null)
     {
-        var headerFactory = new StreamingZipHeaderFactory(
-            password,
-            new ArchiveEncoding()
-        );
+        var headerFactory = new StreamingZipHeaderFactory(password, new ArchiveEncoding());
         try
         {
             var header = headerFactory
@@ -180,10 +171,7 @@ public class ZipArchive : AbstractWritableArchive<ZipArchiveEntry, ZipVolume>
             {
                 if (stream.CanSeek) //could be multipart. Test for central directory - might not be z64 safe
                 {
-                    var z = new SeekableZipHeaderFactory(
-                        password,
-                        new ArchiveEncoding()
-                    );
+                    var z = new SeekableZipHeaderFactory(password, new ArchiveEncoding());
                     var x = z.ReadSeekableHeader(stream).FirstOrDefault();
                     return x?.ZipHeaderType == ZipHeaderType.DirectoryEntry;
                 }
@@ -246,32 +234,32 @@ public class ZipArchive : AbstractWritableArchive<ZipArchiveEntry, ZipVolume>
                 {
                     case ZipHeaderType.DirectoryEntry:
 
-                    {
-                        var deh = (DirectoryEntryHeader)h;
-                        Stream s;
-                        if (
-                            deh.RelativeOffsetOfEntryHeader + deh.CompressedSize
-                            > vols[deh.DiskNumberStart].Stream.Length
-                        )
                         {
-                            var v = vols.Skip(deh.DiskNumberStart).ToArray();
-                            s = new SourceStream(
-                                v[0].Stream,
-                                i => i < v.Length ? v[i].Stream : null,
-                                new ReaderOptions() { LeaveStreamOpen = true }
+                            var deh = (DirectoryEntryHeader)h;
+                            Stream s;
+                            if (
+                                deh.RelativeOffsetOfEntryHeader + deh.CompressedSize
+                                > vols[deh.DiskNumberStart].Stream.Length
+                            )
+                            {
+                                var v = vols.Skip(deh.DiskNumberStart).ToArray();
+                                s = new SourceStream(
+                                    v[0].Stream,
+                                    i => i < v.Length ? v[i].Stream : null,
+                                    new ReaderOptions() { LeaveStreamOpen = true }
+                                );
+                            }
+                            else
+                            {
+                                s = vols[deh.DiskNumberStart].Stream;
+                            }
+
+                            yield return new ZipArchiveEntry(
+                                this,
+                                new SeekableZipFilePart(headerFactory, deh, s)
                             );
                         }
-                        else
-                        {
-                            s = vols[deh.DiskNumberStart].Stream;
-                        }
-
-                        yield return new ZipArchiveEntry(
-                            this,
-                            new SeekableZipFilePart(headerFactory, deh, s)
-                        );
-                    }
-                    break;
+                        break;
                     case ZipHeaderType.DirectoryEnd:
                     {
                         var bytes = ((DirectoryEndHeader)h).Comment ?? Array.Empty<byte>();

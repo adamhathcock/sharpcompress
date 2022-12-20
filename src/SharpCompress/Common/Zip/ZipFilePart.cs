@@ -105,9 +105,7 @@ internal abstract class ZipFilePart : FilePart
             }
             case ZipCompressionMethod.WinzipAes:
             {
-                var data = Header.Extra.SingleOrDefault(
-                    x => x.Type == ExtraDataType.WinZipAes
-                );
+                var data = Header.Extra.SingleOrDefault(x => x.Type == ExtraDataType.WinZipAes);
                 if (data is null)
                 {
                     throw new InvalidFormatException("No Winzip AES extra data found.");
@@ -116,9 +114,7 @@ internal abstract class ZipFilePart : FilePart
                 {
                     throw new InvalidFormatException("Winzip data length is not 7.");
                 }
-                var compressedMethod = BinaryPrimitives.ReadUInt16LittleEndian(
-                    data.DataBytes
-                );
+                var compressedMethod = BinaryPrimitives.ReadUInt16LittleEndian(data.DataBytes);
 
                 if (compressedMethod != 0x01 && compressedMethod != 0x02)
                 {
@@ -127,9 +123,7 @@ internal abstract class ZipFilePart : FilePart
                     );
                 }
 
-                var vendorId = BinaryPrimitives.ReadUInt16LittleEndian(
-                    data.DataBytes.AsSpan(2)
-                );
+                var vendorId = BinaryPrimitives.ReadUInt16LittleEndian(data.DataBytes.AsSpan(2));
                 if (vendorId != 0x4541)
                 {
                     throw new InvalidFormatException(
@@ -144,9 +138,7 @@ internal abstract class ZipFilePart : FilePart
             }
             default:
             {
-                throw new NotSupportedException(
-                    "CompressionMethod: " + Header.CompressionMethod
-                );
+                throw new NotSupportedException("CompressionMethod: " + Header.CompressionMethod);
             }
         }
     }

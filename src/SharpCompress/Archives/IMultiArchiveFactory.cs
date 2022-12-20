@@ -32,8 +32,5 @@ public interface IMultiArchiveFactory : IFactory
     /// </summary>
     /// <param name="fileInfos"></param>
     /// <param name="readerOptions">reading options.</param>
-    IArchive Open(
-        IReadOnlyList<FileInfo> fileInfos,
-        ReaderOptions? readerOptions = null
-    );
+    IArchive Open(IReadOnlyList<FileInfo> fileInfos, ReaderOptions? readerOptions = null);
 }

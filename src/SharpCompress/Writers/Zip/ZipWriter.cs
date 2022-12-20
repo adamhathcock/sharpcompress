@@ -19,8 +19,7 @@ public class ZipWriter : AbstractWriter
 {
     private readonly CompressionType compressionType;
     private readonly CompressionLevel compressionLevel;
-    private readonly List<ZipCentralDirectoryEntry> entries =
-        new List<ZipCentralDirectoryEntry>();
+    private readonly List<ZipCentralDirectoryEntry> entries = new List<ZipCentralDirectoryEntry>();
     private readonly string zipComment;
     private long streamPosition;
     private PpmdProperties? ppmdProps;
@@ -90,9 +89,7 @@ public class ZipWriter : AbstractWriter
                 return ZipCompressionMethod.PPMd;
             }
             default:
-                throw new InvalidFormatException(
-                    "Invalid compression method: " + compressionType
-                );
+                throw new InvalidFormatException("Invalid compression method: " + compressionType);
         }
     }
 
@@ -105,11 +102,7 @@ public class ZipWriter : AbstractWriter
         );
     }
 
-    public void Write(
-        string entryPath,
-        Stream source,
-        ZipWriterEntryOptions zipWriterEntryOptions
-    )
+    public void Write(string entryPath, Stream source, ZipWriterEntryOptions zipWriterEntryOptions)
     {
         using var output = WriteToStream(entryPath, zipWriterEntryOptions);
         source.TransferTo(output);
@@ -245,9 +238,7 @@ public class ZipWriter : AbstractWriter
         if (extralength != 0)
         {
             OutputStream.Write(new byte[extralength], 0, extralength); // reserve space for zip64 data
-            entry.Zip64HeaderOffset = (ushort)(
-                6 + 2 + 2 + 4 + 12 + 2 + 2 + encodedFilename.Length
-            );
+            entry.Zip64HeaderOffset = (ushort)(6 + 2 + 2 + 4 + 12 + 2 + 2 + encodedFilename.Length);
         }
 
         return 6 + 2 + 2 + 4 + 12 + 2 + 2 + encodedFilename.Length + extralength;
@@ -392,11 +383,7 @@ public class ZipWriter : AbstractWriter
                 }
                 case ZipCompressionMethod.Deflate:
                 {
-                    return new DeflateStream(
-                        counting,
-                        CompressionMode.Compress,
-                        compressionLevel
-                    );
+                    return new DeflateStream(counting, CompressionMode.Compress, compressionLevel);
                 }
                 case ZipCompressionMethod.BZip2:
                 {
@@ -424,9 +411,7 @@ public class ZipWriter : AbstractWriter
                 }
                 default:
                 {
-                    throw new NotSupportedException(
-                        "CompressionMethod: " + zipCompressionMethod
-                    );
+                    throw new NotSupportedException("CompressionMethod: " + zipCompressionMethod);
                 }
             }
         }

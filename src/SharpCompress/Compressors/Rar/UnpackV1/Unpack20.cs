@@ -492,12 +492,7 @@ internal partial class Unpack
         {
             UnpackUtility.makeDecodeTables(Table, 0, LD, PackDef.NC20);
             UnpackUtility.makeDecodeTables(Table, PackDef.NC20, DD, PackDef.DC20);
-            UnpackUtility.makeDecodeTables(
-                Table,
-                PackDef.NC20 + PackDef.DC20,
-                RD,
-                PackDef.RC20
-            );
+            UnpackUtility.makeDecodeTables(Table, PackDef.NC20 + PackDef.DC20, RD, PackDef.RC20);
         }
 
         // memcpy(UnpOldTable20,Table,sizeof(UnpOldTable20));

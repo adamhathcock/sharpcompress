@@ -33,9 +33,7 @@ public sealed class XZStream : XZReadOnlyStream
             case CheckType.SHA256:
                 throw new NotImplementedException();
             default:
-                throw new NotSupportedException(
-                    "Check Type unknown to this version of decoder."
-                );
+                throw new NotSupportedException("Check Type unknown to this version of decoder.");
         }
     }
 

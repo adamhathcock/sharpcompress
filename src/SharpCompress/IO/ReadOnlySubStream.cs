@@ -5,8 +5,7 @@ namespace SharpCompress.IO;
 
 internal class ReadOnlySubStream : NonDisposingStream
 {
-    public ReadOnlySubStream(Stream stream, long bytesToRead) : this(stream, null, bytesToRead)
-    { }
+    public ReadOnlySubStream(Stream stream, long bytesToRead) : this(stream, null, bytesToRead) { }
 
     public ReadOnlySubStream(Stream stream, long? origin, long bytesToRead)
         : base(stream, throwOnDispose: false)

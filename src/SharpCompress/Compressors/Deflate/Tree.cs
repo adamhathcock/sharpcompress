@@ -960,9 +960,7 @@ internal sealed partial class DeflateManager
         /// </remarks>
         internal static int DistanceCode(int dist)
         {
-            return (dist < 256)
-                ? _dist_code[dist]
-                : _dist_code[256 + SharedUtils.URShift(dist, 7)];
+            return (dist < 256) ? _dist_code[dist] : _dist_code[256 + SharedUtils.URShift(dist, 7)];
         }
 
         // Compute the optimal bit lengths for a tree and update the total bit length

@@ -236,17 +236,11 @@ internal static class Adler32 // From https://github.com/SixLabors/ImageSharp/bl
 
                         // Horizontally add the bytes for s1, multiply-adds the
                         // bytes by [ 32, 31, 30, ... ] for s2.
-                        v_s1 = Sse2.Add(
-                            v_s1,
-                            Sse2.SumAbsoluteDifferences(bytes1, zero).AsUInt32()
-                        );
+                        v_s1 = Sse2.Add(v_s1, Sse2.SumAbsoluteDifferences(bytes1, zero).AsUInt32());
                         Vector128<short> mad1 = Ssse3.MultiplyAddAdjacent(bytes1, tap1);
                         v_s2 = Sse2.Add(v_s2, Sse2.MultiplyAddAdjacent(mad1, ones).AsUInt32());
 
-                        v_s1 = Sse2.Add(
-                            v_s1,
-                            Sse2.SumAbsoluteDifferences(bytes2, zero).AsUInt32()
-                        );
+                        v_s1 = Sse2.Add(v_s1, Sse2.SumAbsoluteDifferences(bytes2, zero).AsUInt32());
                         Vector128<short> mad2 = Ssse3.MultiplyAddAdjacent(bytes2, tap2);
                         v_s2 = Sse2.Add(v_s2, Sse2.MultiplyAddAdjacent(mad2, ones).AsUInt32());
 

@@ -321,10 +321,7 @@ internal partial class Unpack
         {
             for (Length = 0; ; Length++)
             {
-                if (
-                    ((BitField ^ ShortXor1[Length]) & (~(0xff >> (int)GetShortLen1(Length))))
-                    == 0
-                )
+                if (((BitField ^ ShortXor1[Length]) & (~(0xff >> (int)GetShortLen1(Length)))) == 0)
                 {
                     break;
                 }
@@ -336,10 +333,7 @@ internal partial class Unpack
         {
             for (Length = 0; ; Length++)
             {
-                if (
-                    ((BitField ^ ShortXor2[Length]) & (~(0xff >> (int)GetShortLen2(Length))))
-                    == 0
-                )
+                if (((BitField ^ ShortXor2[Length]) & (~(0xff >> (int)GetShortLen2(Length)))) == 0)
                 {
                     break;
                 }
@@ -734,8 +728,6 @@ internal partial class Unpack
         }
 
         Inp.faddbits(StartPos);
-        return (
-            ((Num - (I != 0 ? DecTab[I - 1] : 0)) >> (int)(16 - StartPos)) + PosTab[StartPos]
-        );
+        return (((Num - (I != 0 ? DecTab[I - 1] : 0)) >> (int)(16 - StartPos)) + PosTab[StartPos]);
     }
 }

@@ -166,8 +166,7 @@ public static class Utility
         var buffer = GetTransferByteArray();
         try
         {
-            do
-            { } while (source.Read(buffer, 0, buffer.Length) == buffer.Length);
+            do { } while (source.Read(buffer, 0, buffer.Length) == buffer.Length);
         }
         finally
         {

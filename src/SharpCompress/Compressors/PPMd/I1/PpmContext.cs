@@ -402,7 +402,7 @@ internal partial class Model
         _coder._lowCount = lowCount;
         lowCount += state.Frequency;
         _coder._highCount = lowCount;
-        for (var p1 = state; --index != 0;)
+        for (var p1 = state; --index != 0; )
         {
             do
             {

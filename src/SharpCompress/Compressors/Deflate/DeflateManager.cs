@@ -1150,19 +1150,12 @@ internal sealed partial class DeflateManager
         else if (static_lenb == opt_lenb)
         {
             send_bits((STATIC_TREES << 1) + (eof ? 1 : 0), 3);
-            send_compressed_block(
-                StaticTree.lengthAndLiteralsTreeCodes,
-                StaticTree.distTreeCodes
-            );
+            send_compressed_block(StaticTree.lengthAndLiteralsTreeCodes, StaticTree.distTreeCodes);
         }
         else
         {
             send_bits((DYN_TREES << 1) + (eof ? 1 : 0), 3);
-            send_all_trees(
-                treeLiterals.max_code + 1,
-                treeDistances.max_code + 1,
-                max_blindex + 1
-            );
+            send_all_trees(treeLiterals.max_code + 1, treeDistances.max_code + 1, max_blindex + 1);
             send_compressed_block(dyn_ltree, dyn_dtree);
         }
 
@@ -1352,10 +1345,8 @@ internal sealed partial class DeflateManager
                         strstart++;
 
                         ins_h =
-                            (
-                                (ins_h << hash_shift)
-                                ^ (window[(strstart) + (MIN_MATCH - 1)] & 0xff)
-                            ) & hash_mask;
+                            ((ins_h << hash_shift) ^ (window[(strstart) + (MIN_MATCH - 1)] & 0xff))
+                            & hash_mask;
 
                         //      prev[strstart&w_mask]=hash_head=head[ins_h];
                         hash_head = (head[ins_h] & 0xffff);
@@ -1373,8 +1364,7 @@ internal sealed partial class DeflateManager
                     match_length = 0;
                     ins_h = window[strstart] & 0xff;
 
-                    ins_h =
-                        (((ins_h) << hash_shift) ^ (window[strstart + 1] & 0xff)) & hash_mask;
+                    ins_h = (((ins_h) << hash_shift) ^ (window[strstart + 1] & 0xff)) & hash_mask;
 
                     // If lookahead < MIN_MATCH, ins_h is garbage, but it does not
                     // matter since it will be recomputed at next deflate call.
@@ -1595,8 +1585,7 @@ internal sealed partial class DeflateManager
         int match; // matched string
         int len; // length of current match
         var best_len = prev_length; // best match length so far
-        var limit =
-            strstart > (w_size - MIN_LOOKAHEAD) ? strstart - (w_size - MIN_LOOKAHEAD) : 0;
+        var limit = strstart > (w_size - MIN_LOOKAHEAD) ? strstart - (w_size - MIN_LOOKAHEAD) : 0;
 
         var niceLength = config.NiceLength;
 
@@ -1651,8 +1640,7 @@ internal sealed partial class DeflateManager
 
             // We check for insufficient lookahead only every 8th comparison;
             // the 256th check will be made at strstart+258.
-            do
-            { } while (
+            do { } while (
                 window[++scan] == window[++match]
                 && window[++scan] == window[++match]
                 && window[++scan] == window[++match]
@@ -1678,9 +1666,7 @@ internal sealed partial class DeflateManager
                 scan_end1 = window[scan + best_len - 1];
                 scan_end = window[scan + best_len];
             }
-        } while (
-            (cur_match = (prev[cur_match & wmask] & 0xffff)) > limit && --chain_length != 0
-        );
+        } while ((cur_match = (prev[cur_match & wmask] & 0xffff)) > limit && --chain_length != 0);
 
         if (best_len <= lookahead)
         {
@@ -1890,8 +1876,7 @@ internal sealed partial class DeflateManager
 
         for (var n = 0; n <= length - MIN_MATCH; n++)
         {
-            ins_h =
-                (((ins_h) << hash_shift) ^ (window[(n) + (MIN_MATCH - 1)] & 0xff)) & hash_mask;
+            ins_h = (((ins_h) << hash_shift) ^ (window[(n) + (MIN_MATCH - 1)] & 0xff)) & hash_mask;
             prev[n & w_mask] = head[ins_h];
             head[ins_h] = (short)n;
         }
@@ -1917,9 +1902,7 @@ internal sealed partial class DeflateManager
         }
         if (_codec.AvailableBytesOut == 0)
         {
-            _codec.Message = _ErrorMessage[
-                ZlibConstants.Z_NEED_DICT - (ZlibConstants.Z_BUF_ERROR)
-            ];
+            _codec.Message = _ErrorMessage[ZlibConstants.Z_NEED_DICT - (ZlibConstants.Z_BUF_ERROR)];
             throw new ZlibException("OutputBuffer is full (AvailableBytesOut == 0)");
 
             //return ZlibConstants.Z_BUF_ERROR;
@@ -2006,9 +1989,7 @@ internal sealed partial class DeflateManager
         // User must not provide more input after the first FINISH:
         if (status == FINISH_STATE && _codec.AvailableBytesIn != 0)
         {
-            _codec.Message = _ErrorMessage[
-                ZlibConstants.Z_NEED_DICT - (ZlibConstants.Z_BUF_ERROR)
-            ];
+            _codec.Message = _ErrorMessage[ZlibConstants.Z_NEED_DICT - (ZlibConstants.Z_BUF_ERROR)];
             throw new ZlibException("status == FINISH_STATE && _codec.AvailableBytesIn != 0");
         }
 

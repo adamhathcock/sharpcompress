@@ -13,8 +13,7 @@ internal sealed class GZipFilePart : FilePart
     private string? _name;
     private readonly Stream _stream;
 
-    internal GZipFilePart(Stream stream, ArchiveEncoding archiveEncoding)
-        : base(archiveEncoding)
+    internal GZipFilePart(Stream stream, ArchiveEncoding archiveEncoding) : base(archiveEncoding)
     {
         _stream = stream;
         ReadAndValidateGzipHeader();

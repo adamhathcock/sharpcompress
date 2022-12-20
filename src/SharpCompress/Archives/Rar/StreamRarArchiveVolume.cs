@@ -19,12 +19,6 @@ internal class StreamRarArchiveVolume : RarVolume
 
     internal override RarFilePart CreateFilePart(MarkHeader markHeader, FileHeader fileHeader)
     {
-        return new SeekableFilePart(
-            markHeader,
-            fileHeader,
-            Index,
-            Stream,
-            ReaderOptions.Password
-        );
+        return new SeekableFilePart(markHeader, fileHeader, Index, Stream, ReaderOptions.Password);
     }
 }

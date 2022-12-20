@@ -23,10 +23,7 @@ public static class ReaderFactory
 
         foreach (var factory in Factories.Factory.Factories.OfType<Factories.Factory>())
         {
-            if (
-                factory.TryOpenReader(rewindableStream, options, out var reader)
-                && reader != null
-            )
+            if (factory.TryOpenReader(rewindableStream, options, out var reader) && reader != null)
             {
                 return reader;
             }

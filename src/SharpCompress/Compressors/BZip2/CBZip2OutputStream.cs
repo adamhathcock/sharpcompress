@@ -1275,15 +1275,15 @@ internal sealed class CBZip2OutputStream : Stream
             unLo = ltLo = lo;
             unHi = gtHi = hi;
 
+            while (true)
+            {
                 while (true)
                 {
-                    while (true)
+                    if (unLo > unHi)
                     {
-                        if (unLo > unHi)
-                        {
-                            break;
-                        }
-                        n = block[zptr[unLo] + d + 1] - med;
+                        break;
+                    }
+                    n = block[zptr[unLo] + d + 1] - med;
                     if (n == 0)
                     {
                         var temp = 0;
@@ -1311,30 +1311,30 @@ internal sealed class CBZip2OutputStream : Stream
                     if (n == 0)
                     {
                         var temp = 0;
-                            temp = zptr[unHi];
-                            zptr[unHi] = zptr[gtHi];
-                            zptr[gtHi] = temp;
-                            gtHi--;
-                            unHi--;
-                            continue;
-                        }
-                        ;
-                        if (n < 0)
-                        {
-                            break;
-                        }
+                        temp = zptr[unHi];
+                        zptr[unHi] = zptr[gtHi];
+                        zptr[gtHi] = temp;
+                        gtHi--;
                         unHi--;
+                        continue;
                     }
-                    if (unLo > unHi)
+                    ;
+                    if (n < 0)
                     {
                         break;
                     }
-                    var tempx = zptr[unLo];
-                    zptr[unLo] = zptr[unHi];
-                    zptr[unHi] = tempx;
-                    unLo++;
                     unHi--;
                 }
+                if (unLo > unHi)
+                {
+                    break;
+                }
+                var tempx = zptr[unLo];
+                zptr[unLo] = zptr[unHi];
+                zptr[unHi] = tempx;
+                unLo++;
+                unHi--;
+            }
 
             if (gtHi < ltLo)
             {

@@ -64,9 +64,7 @@ public class GZipArchiveTests : ArchiveTests
         var jpg = Path.Combine(ORIGINAL_FILES_PATH, "jpg", "test.jpg");
         using Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.gz"));
         using var archive = GZipArchive.Open(stream);
-        Assert.Throws<InvalidOperationException>(
-            () => archive.AddEntry("jpg\\test.jpg", jpg)
-        );
+        Assert.Throws<InvalidOperationException>(() => archive.AddEntry("jpg\\test.jpg", jpg));
         archive.SaveTo(Path.Combine(SCRATCH_FILES_PATH, "Tar.tar.gz"));
     }
 

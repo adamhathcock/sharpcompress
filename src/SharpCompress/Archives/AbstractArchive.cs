@@ -49,10 +49,7 @@ public abstract class AbstractArchive<TEntry, TVolume> : IArchive, IArchiveExtra
 
     void IArchiveExtractionListener.FireEntryExtractionBegin(IArchiveEntry entry)
     {
-        EntryExtractionBegin?.Invoke(
-            this,
-            new ArchiveExtractionEventArgs<IArchiveEntry>(entry)
-        );
+        EntryExtractionBegin?.Invoke(this, new ArchiveExtractionEventArgs<IArchiveEntry>(entry));
     }
 
     void IArchiveExtractionListener.FireEntryExtractionEnd(IArchiveEntry entry)

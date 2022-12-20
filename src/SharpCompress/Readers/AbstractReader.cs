@@ -157,9 +157,7 @@ public abstract class AbstractReader<TEntry, TVolume> : IReader, IReaderExtracti
     {
         if (wroteCurrentEntry)
         {
-            throw new ArgumentException(
-                "WriteEntryTo or OpenEntryStream can only be called once."
-            );
+            throw new ArgumentException("WriteEntryTo or OpenEntryStream can only be called once.");
         }
 
         if (writableStream is null)
@@ -188,9 +186,7 @@ public abstract class AbstractReader<TEntry, TVolume> : IReader, IReaderExtracti
     {
         if (wroteCurrentEntry)
         {
-            throw new ArgumentException(
-                "WriteEntryTo or OpenEntryStream can only be called once."
-            );
+            throw new ArgumentException("WriteEntryTo or OpenEntryStream can only be called once.");
         }
         var stream = GetEntryStream();
         wroteCurrentEntry = true;

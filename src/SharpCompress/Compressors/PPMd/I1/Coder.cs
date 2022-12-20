@@ -35,8 +35,7 @@ internal class Coder
     {
         while (
             (_low ^ (_low + _range)) < RANGE_TOP
-            || _range < RANGE_BOTTOM
-                && ((_range = (uint)-_low & (RANGE_BOTTOM - 1)) != 0 || true)
+            || _range < RANGE_BOTTOM && ((_range = (uint)-_low & (RANGE_BOTTOM - 1)) != 0 || true)
         )
         {
             stream.WriteByte((byte)(_low >> 24));
@@ -81,8 +80,7 @@ internal class Coder
     {
         while (
             (_low ^ (_low + _range)) < RANGE_TOP
-            || _range < RANGE_BOTTOM
-                && ((_range = (uint)-_low & (RANGE_BOTTOM - 1)) != 0 || true)
+            || _range < RANGE_BOTTOM && ((_range = (uint)-_low & (RANGE_BOTTOM - 1)) != 0 || true)
         )
         {
             _code = (_code << 8) | (byte)stream.ReadByte();

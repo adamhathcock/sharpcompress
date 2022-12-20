@@ -145,9 +145,7 @@ public class SevenZipArchive : AbstractArchive<SevenZipArchiveEntry, SevenZipVol
                 new SevenZipFilePart(stream, database, i, file, ReaderOptions.ArchiveEncoding)
             );
         }
-        foreach (
-            var group in entries.Where(x => !x.IsDirectory).GroupBy(x => x.FilePart.Folder)
-        )
+        foreach (var group in entries.Where(x => !x.IsDirectory).GroupBy(x => x.FilePart.Folder))
         {
             var isSolid = false;
             foreach (var entry in group)
@@ -202,8 +200,7 @@ public class SevenZipArchive : AbstractArchive<SevenZipArchiveEntry, SevenZipVol
     {
         get
         {
-            return Entries.Where(x => !x.IsDirectory).GroupBy(x => x.FilePart.Folder).Count()
-                > 1;
+            return Entries.Where(x => !x.IsDirectory).GroupBy(x => x.FilePart.Folder).Count() > 1;
         }
     }
 

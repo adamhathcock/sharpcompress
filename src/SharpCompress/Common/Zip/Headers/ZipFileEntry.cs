@@ -59,8 +59,7 @@ internal abstract class ZipFileEntry : ZipHeader
         var buffer = new byte[12];
         archiveStream.ReadFully(buffer);
 
-        var encryptionData =
-            PkwareTraditionalEncryptionData.ForRead(Password!, this, buffer);
+        var encryptionData = PkwareTraditionalEncryptionData.ForRead(Password!, this, buffer);
 
         return encryptionData;
     }
@@ -75,10 +74,9 @@ internal abstract class ZipFileEntry : ZipHeader
 
     protected void LoadExtra(byte[] extra)
     {
-        for (var i = 0; i < extra.Length - 4;)
+        for (var i = 0; i < extra.Length - 4; )
         {
-            var type = (ExtraDataType)
-                BinaryPrimitives.ReadUInt16LittleEndian(extra.AsSpan(i));
+            var type = (ExtraDataType)BinaryPrimitives.ReadUInt16LittleEndian(extra.AsSpan(i));
             if (!Enum.IsDefined(typeof(ExtraDataType), type))
             {
                 type = ExtraDataType.NotImplementedExtraData;

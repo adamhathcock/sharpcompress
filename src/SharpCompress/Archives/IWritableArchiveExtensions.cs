@@ -54,9 +54,7 @@ public static class IWritableArchiveExtensions
     {
         using (writableArchive.PauseEntryRebuilding())
         {
-            foreach (
-                var path in Directory.EnumerateFiles(filePath, searchPattern, searchOption)
-            )
+            foreach (var path in Directory.EnumerateFiles(filePath, searchPattern, searchOption))
             {
                 var fileInfo = new FileInfo(path);
                 writableArchive.AddEntry(

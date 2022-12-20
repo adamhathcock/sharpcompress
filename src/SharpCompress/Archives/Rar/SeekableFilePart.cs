@@ -31,6 +31,5 @@ internal class SeekableFilePart : RarFilePart
         return stream;
     }
 
-    internal override string FilePartName =>
-        "Unknown Stream - File Entry: " + FileHeader.FileName;
+    internal override string FilePartName => "Unknown Stream - File Entry: " + FileHeader.FileName;
 }

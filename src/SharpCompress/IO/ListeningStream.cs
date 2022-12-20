@@ -48,10 +48,7 @@ internal class ListeningStream : Stream
     {
         var read = Stream.Read(buffer, offset, count);
         currentEntryTotalReadBytes += read;
-        listener.FireCompressedBytesRead(
-            currentEntryTotalReadBytes,
-            currentEntryTotalReadBytes
-        );
+        listener.FireCompressedBytesRead(currentEntryTotalReadBytes, currentEntryTotalReadBytes);
         return read;
     }
 
@@ -64,10 +61,7 @@ internal class ListeningStream : Stream
         }
 
         ++currentEntryTotalReadBytes;
-        listener.FireCompressedBytesRead(
-            currentEntryTotalReadBytes,
-            currentEntryTotalReadBytes
-        );
+        listener.FireCompressedBytesRead(currentEntryTotalReadBytes, currentEntryTotalReadBytes);
         return value;
     }
 

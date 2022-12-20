@@ -108,11 +108,7 @@ internal class Encoder : ICoder, ISetCoderProperties, IWriteCoderProperties
                 }
             }
 
-            public void EncodeMatched(
-                RangeCoder.Encoder rangeEncoder,
-                byte matchByte,
-                byte symbol
-            )
+            public void EncodeMatched(RangeCoder.Encoder rangeEncoder, byte matchByte, byte symbol)
             {
                 uint context = 1;
                 var same = true;
@@ -278,8 +274,7 @@ internal class Encoder : ICoder, ISetCoderProperties, IWriteCoderProperties
                 {
                     return;
                 }
-                prices[st + i] =
-                    b0 + _midCoder[posState].GetPrice(i - Base.K_NUM_LOW_LEN_SYMBOLS);
+                prices[st + i] = b0 + _midCoder[posState].GetPrice(i - Base.K_NUM_LOW_LEN_SYMBOLS);
             }
             for (; i < numSymbols; i++)
             {
@@ -569,9 +564,7 @@ internal class Encoder : ICoder, ISetCoderProperties, IWriteCoderProperties
     private uint GetRepLen1Price(Base.State state, uint posState)
     {
         return _isRepG0[state._index].GetPrice0()
-            + _isRep0Long[
-                (state._index << Base.K_NUM_POS_STATES_BITS_MAX) + posState
-            ].GetPrice0();
+            + _isRep0Long[(state._index << Base.K_NUM_POS_STATES_BITS_MAX) + posState].GetPrice0();
     }
 
     private uint GetPureRepPrice(uint repIndex, Base.State state, uint posState)
@@ -786,8 +779,7 @@ internal class Encoder : ICoder, ISetCoderProperties, IWriteCoderProperties
             var price = repMatchPrice + GetPureRepPrice(i, _state, posState);
             do
             {
-                var curAndLenPrice =
-                    price + _repMatchLenEncoder.GetPrice(repLen - 2, posState);
+                var curAndLenPrice = price + _repMatchLenEncoder.GetPrice(repLen - 2, posState);
                 var optimum = _optimum[repLen];
                 if (curAndLenPrice < optimum._price)
                 {
@@ -812,8 +804,7 @@ internal class Encoder : ICoder, ISetCoderProperties, IWriteCoderProperties
             for (; ; len++)
             {
                 var distance = _matchDistances[offs + 1];
-                var curAndLenPrice =
-                    normalMatchPrice + GetPosLenPrice(distance, len, posState);
+                var curAndLenPrice = normalMatchPrice + GetPosLenPrice(distance, len, posState);
                 var optimum = _optimum[len];
                 if (curAndLenPrice < optimum._price)
                 {
@@ -964,9 +955,7 @@ internal class Encoder : ICoder, ISetCoderProperties, IWriteCoderProperties
 
             var curAnd1Price =
                 curPrice
-                + _isMatch[
-                    (state._index << Base.K_NUM_POS_STATES_BITS_MAX) + posState
-                ].GetPrice0()
+                + _isMatch[(state._index << Base.K_NUM_POS_STATES_BITS_MAX) + posState].GetPrice0()
                 + _literalEncoder
                     .GetSubCoder(position, _matchFinder.GetIndexByte(0 - 2))
                     .GetPrice(!state.IsCharState(), matchByte, currentByte);
@@ -984,9 +973,7 @@ internal class Encoder : ICoder, ISetCoderProperties, IWriteCoderProperties
 
             matchPrice =
                 curPrice
-                + _isMatch[
-                    (state._index << Base.K_NUM_POS_STATES_BITS_MAX) + posState
-                ].GetPrice1();
+                + _isMatch[(state._index << Base.K_NUM_POS_STATES_BITS_MAX) + posState].GetPrice1();
             repMatchPrice = matchPrice + _isRep[state._index].GetPrice1();
 
             if (
@@ -1057,11 +1044,7 @@ internal class Encoder : ICoder, ISetCoderProperties, IWriteCoderProperties
 
             for (uint repIndex = 0; repIndex < Base.K_NUM_REP_DISTANCES; repIndex++)
             {
-                var lenTest = _matchFinder.GetMatchLen(
-                    0 - 1,
-                    _reps[repIndex],
-                    numAvailableBytes
-                );
+                var lenTest = _matchFinder.GetMatchLen(0 - 1, _reps[repIndex], numAvailableBytes);
                 if (lenTest < 2)
                 {
                     continue;
@@ -1095,11 +1078,7 @@ internal class Encoder : ICoder, ISetCoderProperties, IWriteCoderProperties
                 if (lenTest < numAvailableBytesFull)
                 {
                     var t = Math.Min(numAvailableBytesFull - 1 - lenTest, _numFastBytes);
-                    var lenTest2 = _matchFinder.GetMatchLen(
-                        (int)lenTest,
-                        _reps[repIndex],
-                        t
-                    );
+                    var lenTest2 = _matchFinder.GetMatchLen((int)lenTest, _reps[repIndex], t);
                     if (lenTest2 >= 2)
                     {
                         var state2 = state;
@@ -1130,8 +1109,7 @@ internal class Encoder : ICoder, ISetCoderProperties, IWriteCoderProperties
                             + _isMatch[
                                 (state2._index << Base.K_NUM_POS_STATES_BITS_MAX) + posStateNext
                             ].GetPrice1();
-                        var nextRepMatchPrice =
-                            nextMatchPrice + _isRep[state2._index].GetPrice1();
+                        var nextRepMatchPrice = nextMatchPrice + _isRep[state2._index].GetPrice1();
 
                         // for(; lenTest2 >= 2; lenTest2--)
                         {
@@ -1141,8 +1119,7 @@ internal class Encoder : ICoder, ISetCoderProperties, IWriteCoderProperties
                                 _optimum[++lenEnd]._price = K_IFINITY_PRICE;
                             }
                             var curAndLenPrice =
-                                nextRepMatchPrice
-                                + GetRepPrice(0, lenTest2, state2, posStateNext);
+                                nextRepMatchPrice + GetRepPrice(0, lenTest2, state2, posStateNext);
                             var optimum = _optimum[cur + offset];
                             if (curAndLenPrice < optimum._price)
                             {
@@ -1205,15 +1182,8 @@ internal class Encoder : ICoder, ISetCoderProperties, IWriteCoderProperties
                     {
                         if (lenTest < numAvailableBytesFull)
                         {
-                            var t = Math.Min(
-                                numAvailableBytesFull - 1 - lenTest,
-                                _numFastBytes
-                            );
-                            var lenTest2 = _matchFinder.GetMatchLen(
-                                (int)lenTest,
-                                curBack,
-                                t
-                            );
+                            var t = Math.Min(numAvailableBytesFull - 1 - lenTest, _numFastBytes);
+                            var lenTest2 = _matchFinder.GetMatchLen((int)lenTest, curBack, t);
                             if (lenTest2 >= 2)
                             {
                                 var state2 = state;
@@ -1410,10 +1380,7 @@ internal class Encoder : ICoder, ISetCoderProperties, IWriteCoderProperties
             {
                 _isMatch[complexState].Encode(_rangeEncoder, 0);
                 var curByte = _matchFinder.GetIndexByte((int)(0 - _additionalOffset));
-                var subCoder = _literalEncoder.GetSubCoder(
-                    (uint)_nowPos64,
-                    _previousByte
-                );
+                var subCoder = _literalEncoder.GetSubCoder((uint)_nowPos64, _previousByte);
                 if (!_state.IsCharState())
                 {
                     var matchByte = _matchFinder.GetIndexByte(
@@ -1729,11 +1696,7 @@ internal class Encoder : ICoder, ISetCoderProperties, IWriteCoderProperties
             );
         }
 
-        for (
-            uint lenToPosState = 0;
-            lenToPosState < Base.K_NUM_LEN_TO_POS_STATES;
-            lenToPosState++
-        )
+        for (uint lenToPosState = 0; lenToPosState < Base.K_NUM_LEN_TO_POS_STATES; lenToPosState++)
         {
             uint posSlot;
             var encoder = _posSlotEncoder[lenToPosState];
@@ -1858,11 +1821,7 @@ internal class Encoder : ICoder, ISetCoderProperties, IWriteCoderProperties
                     }
                     _dictionarySize = (uint)dictionarySize;
                     int dicLogSize;
-                    for (
-                        dicLogSize = 0;
-                        dicLogSize < (uint)kDicLogSizeMaxCompress;
-                        dicLogSize++
-                    )
+                    for (dicLogSize = 0; dicLogSize < (uint)kDicLogSizeMaxCompress; dicLogSize++)
                     {
                         if (dictionarySize <= ((uint)(1) << dicLogSize))
                         {

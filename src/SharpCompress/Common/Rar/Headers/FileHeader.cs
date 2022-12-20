@@ -116,13 +116,13 @@ internal class FileHeader : RarHeader
                 //TODO
                 case 1: // file encryption
 
-                {
-                    isEncryptedRar5 = true;
+                    {
+                        isEncryptedRar5 = true;
 
-                    //var version = reader.ReadRarVIntByte();
-                    //if (version != 0) throw new InvalidFormatException("unknown encryption algorithm " + version);
-                }
-                break;
+                        //var version = reader.ReadRarVIntByte();
+                        //if (version != 0) throw new InvalidFormatException("unknown encryption algorithm " + version);
+                    }
+                    break;
                 //                    case 2: // file hash
                 //                        {
                 //
@@ -130,23 +130,23 @@ internal class FileHeader : RarHeader
                 //                        break;
                 case 3: // file time
 
-                {
-                    var flags = reader.ReadRarVIntUInt16();
-                    var isWindowsTime = (flags & 1) == 0;
-                    if ((flags & 0x2) == 0x2)
                     {
-                        FileLastModifiedTime = ReadExtendedTimeV5(reader, isWindowsTime);
+                        var flags = reader.ReadRarVIntUInt16();
+                        var isWindowsTime = (flags & 1) == 0;
+                        if ((flags & 0x2) == 0x2)
+                        {
+                            FileLastModifiedTime = ReadExtendedTimeV5(reader, isWindowsTime);
+                        }
+                        if ((flags & 0x4) == 0x4)
+                        {
+                            FileCreatedTime = ReadExtendedTimeV5(reader, isWindowsTime);
+                        }
+                        if ((flags & 0x8) == 0x8)
+                        {
+                            FileLastAccessedTime = ReadExtendedTimeV5(reader, isWindowsTime);
+                        }
                     }
-                    if ((flags & 0x4) == 0x4)
-                    {
-                        FileCreatedTime = ReadExtendedTimeV5(reader, isWindowsTime);
-                    }
-                    if ((flags & 0x8) == 0x8)
-                    {
-                        FileLastAccessedTime = ReadExtendedTimeV5(reader, isWindowsTime);
-                    }
-                }
-                break;
+                    break;
                 //TODO
                 //                    case 4: // file version
                 //                        {
@@ -262,54 +262,54 @@ internal class FileHeader : RarHeader
         {
             case HeaderCodeV.RAR4_FILE_HEADER:
 
-            {
-                if (HasFlag(FileFlagsV4.UNICODE))
                 {
-                    var length = 0;
-                    while (length < fileNameBytes.Length && fileNameBytes[length] != 0)
+                    if (HasFlag(FileFlagsV4.UNICODE))
                     {
-                        length++;
-                    }
-                    if (length != nameSize)
-                    {
-                        length++;
-                        FileName = FileNameDecoder.Decode(fileNameBytes, length);
+                        var length = 0;
+                        while (length < fileNameBytes.Length && fileNameBytes[length] != 0)
+                        {
+                            length++;
+                        }
+                        if (length != nameSize)
+                        {
+                            length++;
+                            FileName = FileNameDecoder.Decode(fileNameBytes, length);
+                        }
+                        else
+                        {
+                            FileName = ArchiveEncoding.Decode(fileNameBytes);
+                        }
                     }
                     else
                     {
                         FileName = ArchiveEncoding.Decode(fileNameBytes);
                     }
+                    FileName = ConvertPathV4(FileName);
                 }
-                else
-                {
-                    FileName = ArchiveEncoding.Decode(fileNameBytes);
-                }
-                FileName = ConvertPathV4(FileName);
-            }
-            break;
+                break;
             case HeaderCodeV.RAR4_NEW_SUB_HEADER:
 
-            {
-                var datasize = HeaderSize - newLhdSize - nameSize;
-                if (HasFlag(FileFlagsV4.SALT))
                 {
-                    datasize -= saltSize;
-                }
-                if (datasize > 0)
-                {
-                    SubData = reader.ReadBytes(datasize);
-                }
+                    var datasize = HeaderSize - newLhdSize - nameSize;
+                    if (HasFlag(FileFlagsV4.SALT))
+                    {
+                        datasize -= saltSize;
+                    }
+                    if (datasize > 0)
+                    {
+                        SubData = reader.ReadBytes(datasize);
+                    }
 
-                if (NewSubHeaderType.SUBHEAD_TYPE_RR.Equals(fileNameBytes))
-                {
-                    RecoverySectors =
-                        SubData[8]
-                        + (SubData[9] << 8)
-                        + (SubData[10] << 16)
-                        + (SubData[11] << 24);
+                    if (NewSubHeaderType.SUBHEAD_TYPE_RR.Equals(fileNameBytes))
+                    {
+                        RecoverySectors =
+                            SubData[8]
+                            + (SubData[9] << 8)
+                            + (SubData[10] << 16)
+                            + (SubData[11] << 24);
+                    }
                 }
-            }
-            break;
+                break;
         }
 
         if (HasFlag(FileFlagsV4.SALT))

@@ -555,11 +555,7 @@ internal sealed partial class Unpack : BitInput, IRarUnpack
                         }
 
                         // memcpy(&ParentPrg->GlobalData[VM_FIXEDGLOBALSIZE],&Prg->GlobalData[VM_FIXEDGLOBALSIZE],Prg->GlobalData.Size()-VM_FIXEDGLOBALSIZE);
-                        for (
-                            var i = 0;
-                            i < Prg.GlobalData.Count - RarVM.VM_FIXEDGLOBALSIZE;
-                            i++
-                        )
+                        for (var i = 0; i < Prg.GlobalData.Count - RarVM.VM_FIXEDGLOBALSIZE; i++)
                         {
                             ParentPrg.GlobalData[RarVM.VM_FIXEDGLOBALSIZE + i] = Prg.GlobalData[
                                 RarVM.VM_FIXEDGLOBALSIZE + i
@@ -621,8 +617,9 @@ internal sealed partial class Unpack : BitInput, IRarUnpack
                                 i++
                             )
                             {
-                                NextPrg.GlobalData[RarVM.VM_FIXEDGLOBALSIZE + i] =
-                                    pPrg.GlobalData[RarVM.VM_FIXEDGLOBALSIZE + i];
+                                NextPrg.GlobalData[RarVM.VM_FIXEDGLOBALSIZE + i] = pPrg.GlobalData[
+                                    RarVM.VM_FIXEDGLOBALSIZE + i
+                                ];
                             }
                         }
 
@@ -643,8 +640,9 @@ internal sealed partial class Unpack : BitInput, IRarUnpack
                                 i++
                             )
                             {
-                                pPrg.GlobalData[RarVM.VM_FIXEDGLOBALSIZE + i] =
-                                    NextPrg.GlobalData[RarVM.VM_FIXEDGLOBALSIZE + i];
+                                pPrg.GlobalData[RarVM.VM_FIXEDGLOBALSIZE + i] = NextPrg.GlobalData[
+                                    RarVM.VM_FIXEDGLOBALSIZE + i
+                                ];
                             }
                         }
                         else
@@ -758,11 +756,7 @@ internal sealed partial class Unpack : BitInput, IRarUnpack
         var destPtr = unpPtr - distance;
 
         // System.out.println(unpPtr+":"+distance);
-        if (
-            destPtr >= 0
-            && destPtr < PackDef.MAXWINSIZE - 260
-            && unpPtr < PackDef.MAXWINSIZE - 260
-        )
+        if (destPtr >= 0 && destPtr < PackDef.MAXWINSIZE - 260 && unpPtr < PackDef.MAXWINSIZE - 260)
         {
             window[unpPtr++] = window[destPtr++];
 
@@ -931,7 +925,7 @@ internal sealed partial class Unpack : BitInput, IRarUnpack
 
         var TableSize = PackDef.HUFF_TABLE_SIZE;
 
-        for (var i = 0; i < TableSize;)
+        for (var i = 0; i < TableSize; )
         {
             if (inAddr > readTop - 5)
             {

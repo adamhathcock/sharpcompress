@@ -13,10 +13,7 @@ public class ZipReader : AbstractReader<ZipEntry, ZipVolume>
     private ZipReader(Stream stream, ReaderOptions options) : base(options, ArchiveType.Zip)
     {
         Volume = new ZipVolume(stream, options);
-        _headerFactory = new StreamingZipHeaderFactory(
-            options.Password,
-            options.ArchiveEncoding
-        );
+        _headerFactory = new StreamingZipHeaderFactory(options.Password, options.ArchiveEncoding);
     }
 
     public override ZipVolume Volume { get; }
@@ -47,12 +44,12 @@ public class ZipReader : AbstractReader<ZipEntry, ZipVolume>
                 {
                     case ZipHeaderType.LocalEntry:
 
-                    {
-                        yield return new ZipEntry(
-                            new StreamingZipFilePart((LocalEntryHeader)h, stream)
-                        );
-                    }
-                    break;
+                        {
+                            yield return new ZipEntry(
+                                new StreamingZipFilePart((LocalEntryHeader)h, stream)
+                            );
+                        }
+                        break;
                     case ZipHeaderType.DirectoryEnd:
                     {
                         yield break;

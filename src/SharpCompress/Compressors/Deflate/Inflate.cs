@@ -562,10 +562,7 @@ internal sealed class InflateBlocks
 
                             i = index;
                             t = table;
-                            if (
-                                i + j > 258 + (t & 0x1f) + ((t >> 5) & 0x1f)
-                                || (c == 16 && i < 1)
-                            )
+                            if (i + j > 258 + (t & 0x1f) + ((t >> 5) & 0x1f) || (c == 16 && i < 1))
                             {
                                 blens = null;
                                 mode = InflateBlockMode.BAD;
@@ -781,10 +778,7 @@ internal sealed class InflateBlocks
             // update check information
             if (checkfn != null)
             {
-                _codec._adler32 = check = Adler32.Calculate(
-                    check,
-                    window.AsSpan(readAt, nBytes)
-                );
+                _codec._adler32 = check = Adler32.Calculate(check, window.AsSpan(readAt, nBytes));
             }
 
             // copy as far as end of window
@@ -983,8 +977,7 @@ internal sealed class InflateCodes
                         {
                             // Handling missing trailing bit(s)
                             var tmp_tindex =
-                                (tree_index + (b & InternalInflateConstants.InflateMask[k]))
-                                * 3;
+                                (tree_index + (b & InternalInflateConstants.InflateMask[k])) * 3;
                             if (k >= tree[tmp_tindex + 1])
                             {
                                 break;
@@ -1098,8 +1091,7 @@ internal sealed class InflateCodes
                         {
                             // Handling missing trailing bit(s)
                             var tmp_tindex =
-                                (tree_index + (b & InternalInflateConstants.InflateMask[k]))
-                                * 3;
+                                (tree_index + (b & InternalInflateConstants.InflateMask[k])) * 3;
                             if (k >= tree[tmp_tindex + 1])
                             {
                                 break;
@@ -1209,10 +1201,7 @@ internal sealed class InflateCodes
                                 if (q == blocks.end && blocks.readAt != 0)
                                 {
                                     q = 0;
-                                    m =
-                                        q < blocks.readAt
-                                            ? blocks.readAt - q - 1
-                                            : blocks.end - q;
+                                    m = q < blocks.readAt ? blocks.readAt - q - 1 : blocks.end - q;
                                 }
 
                                 if (m == 0)

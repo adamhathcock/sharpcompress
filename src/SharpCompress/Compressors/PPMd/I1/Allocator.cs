@@ -338,11 +338,7 @@ internal class Allocator
 
         for (uint index = 0; index < INDEX_COUNT; index++)
         {
-            for (
-                memoryNode = _memoryNodes[index];
-                counts[index] != 0;
-                memoryNode = memoryNode.Next
-            )
+            for (memoryNode = _memoryNodes[index]; counts[index] != 0; memoryNode = memoryNode.Next)
             {
                 while (memoryNode.Next.Stamp == 0)
                 {
@@ -435,8 +431,7 @@ internal class Allocator
                 if (memoryNode0.UnitCount != 0)
                 {
                     while (
-                        (memoryNode2 = memoryNode0 + memoryNode0.UnitCount).Stamp
-                        == uint.MaxValue
+                        (memoryNode2 = memoryNode0 + memoryNode0.UnitCount).Stamp == uint.MaxValue
                     )
                     {
                         memoryNode0.UnitCount += memoryNode2.UnitCount;

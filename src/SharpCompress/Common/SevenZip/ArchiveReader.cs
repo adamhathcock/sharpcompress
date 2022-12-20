@@ -154,11 +154,7 @@ internal class ArchiveReader
         return ReadBitVector(length);
     }
 
-    private void ReadNumberVector(
-        List<byte[]> dataVector,
-        int numFiles,
-        Action<int, long?> action
-    )
+    private void ReadNumberVector(List<byte[]> dataVector, int numFiles, Action<int, long?> action)
     {
         var defined = ReadOptionalBitVector(numFiles);
 
@@ -877,9 +873,7 @@ internal class ArchiveReader
                 outStream.ReadExact(data, 0, data.Length);
                 if (outStream.ReadByte() >= 0)
                 {
-                    throw new InvalidOperationException(
-                        "Decoded stream is longer than expected."
-                    );
+                    throw new InvalidOperationException("Decoded stream is longer than expected.");
                 }
                 dataVector.Add(data);
 
@@ -1030,7 +1024,7 @@ internal class ArchiveReader
                         ReadAttributeVector(
                             dataVector,
                             numFiles,
-                            delegate (int i, uint? attr)
+                            delegate(int i, uint? attr)
                             {
                                 // Some third party implementations established an unofficial extension
                                 // of the 7z archive format by placing posix file attributes in the high
@@ -1124,17 +1118,12 @@ internal class ArchiveReader
                         ReadNumberVector(
                             dataVector,
                             numFiles,
-                            delegate (int i, long? startPos)
+                            delegate(int i, long? startPos)
                             {
                                 db._files[i].StartPos = startPos;
 #if DEBUG
                                 Log.Write(
-                                    "  "
-                                        + (
-                                            startPos.HasValue
-                                                ? startPos.Value.ToString()
-                                                : "n/a"
-                                        )
+                                    "  " + (startPos.HasValue ? startPos.Value.ToString() : "n/a")
                                 );
 #endif
                             }
@@ -1150,13 +1139,11 @@ internal class ArchiveReader
                         ReadDateTimeVector(
                             dataVector,
                             numFiles,
-                            delegate (int i, DateTime? time)
+                            delegate(int i, DateTime? time)
                             {
                                 db._files[i].CTime = time;
 #if DEBUG
-                                Log.Write(
-                                    "  " + (time.HasValue ? time.Value.ToString() : "n/a")
-                                );
+                                Log.Write("  " + (time.HasValue ? time.Value.ToString() : "n/a"));
 #endif
                             }
                         );
@@ -1171,13 +1158,11 @@ internal class ArchiveReader
                         ReadDateTimeVector(
                             dataVector,
                             numFiles,
-                            delegate (int i, DateTime? time)
+                            delegate(int i, DateTime? time)
                             {
                                 db._files[i].ATime = time;
 #if DEBUG
-                                Log.Write(
-                                    "  " + (time.HasValue ? time.Value.ToString() : "n/a")
-                                );
+                                Log.Write("  " + (time.HasValue ? time.Value.ToString() : "n/a"));
 #endif
                             }
                         );
@@ -1192,13 +1177,11 @@ internal class ArchiveReader
                         ReadDateTimeVector(
                             dataVector,
                             numFiles,
-                            delegate (int i, DateTime? time)
+                            delegate(int i, DateTime? time)
                             {
                                 db._files[i].MTime = time;
 #if DEBUG
-                                Log.Write(
-                                    "  " + (time.HasValue ? time.Value.ToString() : "n/a")
-                                );
+                                Log.Write("  " + (time.HasValue ? time.Value.ToString() : "n/a"));
 #endif
                             }
                         );
@@ -1276,7 +1259,7 @@ internal class ArchiveReader
 
         // TODO: Check Signature!
         _header = new byte[0x20];
-        for (var offset = 0; offset < 0x20;)
+        for (var offset = 0; offset < 0x20; )
         {
             var delta = stream.Read(_header, offset, 0x20 - offset);
             if (delta == 0)
@@ -1625,11 +1608,7 @@ internal class ArchiveReader
             var efi = extractFolderInfoVector.Last();
 
             var startIndex = db._folderStartFileIndex[folderIndex];
-            for (
-                var index = efi._extractStatuses.Count;
-                index <= fileIndex - startIndex;
-                index++
-            )
+            for (var index = efi._extractStatuses.Count; index <= fileIndex - startIndex; index++)
             {
                 efi._extractStatuses.Add(index == fileIndex - startIndex);
             }

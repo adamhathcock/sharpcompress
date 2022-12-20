@@ -9,15 +9,7 @@ namespace SharpCompress.Common.Tar.Headers;
 
 internal sealed class TarHeader
 {
-    internal static readonly DateTime EPOCH = new DateTime(
-        1970,
-        1,
-        1,
-        0,
-        0,
-        0,
-        DateTimeKind.Utc
-    );
+    internal static readonly DateTime EPOCH = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 
     public TarHeader(ArchiveEncoding archiveEncoding)
     {

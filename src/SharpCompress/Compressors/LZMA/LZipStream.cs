@@ -124,8 +124,7 @@ public sealed class LZipStream : Stream
 
     public override int ReadByte() => _stream.ReadByte();
 
-    public override long Seek(long offset, SeekOrigin origin) =>
-        throw new NotSupportedException();
+    public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
 
     public override void SetLength(long value) => throw new NotImplementedException();
 

@@ -22,7 +22,7 @@ internal readonly struct BitTreeEncoder
     public void Encode(Encoder rangeEncoder, uint symbol)
     {
         uint m = 1;
-        for (var bitIndex = _numBitLevels; bitIndex > 0;)
+        for (var bitIndex = _numBitLevels; bitIndex > 0; )
         {
             bitIndex--;
             var bit = (symbol >> bitIndex) & 1;
@@ -47,7 +47,7 @@ internal readonly struct BitTreeEncoder
     {
         uint price = 0;
         uint m = 1;
-        for (var bitIndex = _numBitLevels; bitIndex > 0;)
+        for (var bitIndex = _numBitLevels; bitIndex > 0; )
         {
             bitIndex--;
             var bit = (symbol >> bitIndex) & 1;

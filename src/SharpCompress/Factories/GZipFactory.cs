@@ -126,9 +126,7 @@ public class GZipFactory
     {
         if (writerOptions.CompressionType != CompressionType.GZip)
         {
-            throw new InvalidFormatException(
-                "GZip archives only support GZip compression type."
-            );
+            throw new InvalidFormatException("GZip archives only support GZip compression type.");
         }
         return new GZipWriter(stream, new GZipWriterOptions(writerOptions));
     }

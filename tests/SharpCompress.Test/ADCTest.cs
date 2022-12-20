@@ -1,4 +1,4 @@
-//
+﻿//
 // ADC.cs
 //
 // Author:
@@ -37,15 +37,11 @@ public class ADCTest : TestBase
     [Fact]
     public void TestBuffer()
     {
-        using var decFs = File.OpenRead(
-                Path.Combine(TEST_ARCHIVES_PATH, "adc_decompressed.bin")
-            );
+        using var decFs = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "adc_decompressed.bin"));
         var decompressed = new byte[decFs.Length];
         decFs.Read(decompressed, 0, decompressed.Length);
 
-        using var cmpFs = File.OpenRead(
-                Path.Combine(TEST_ARCHIVES_PATH, "adc_compressed.bin")
-            );
+        using var cmpFs = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "adc_compressed.bin"));
         var compressed = new byte[cmpFs.Length];
         cmpFs.Read(compressed, 0, compressed.Length);
 
@@ -57,15 +53,11 @@ public class ADCTest : TestBase
     [Fact]
     public void TestBaseStream()
     {
-        using var decFs = File.OpenRead(
-                Path.Combine(TEST_ARCHIVES_PATH, "adc_decompressed.bin")
-            );
+        using var decFs = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "adc_decompressed.bin"));
         var decompressed = new byte[decFs.Length];
         decFs.Read(decompressed, 0, decompressed.Length);
 
-        using var cmpFs = File.OpenRead(
-                Path.Combine(TEST_ARCHIVES_PATH, "adc_compressed.bin")
-            );
+        using var cmpFs = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "adc_compressed.bin"));
 
         ADCBase.Decompress(cmpFs, out var test);
 
@@ -75,15 +67,11 @@ public class ADCTest : TestBase
     [Fact]
     public void TestADCStreamWholeChunk()
     {
-        using var decFs = File.OpenRead(
-                Path.Combine(TEST_ARCHIVES_PATH, "adc_decompressed.bin")
-            );
+        using var decFs = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "adc_decompressed.bin"));
         var decompressed = new byte[decFs.Length];
         decFs.Read(decompressed, 0, decompressed.Length);
 
-        using var cmpFs = File.OpenRead(
-                Path.Combine(TEST_ARCHIVES_PATH, "adc_compressed.bin")
-            );
+        using var cmpFs = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "adc_compressed.bin"));
         using var decStream = new ADCStream(cmpFs, CompressionMode.Decompress);
         var test = new byte[262144];
 
@@ -95,15 +83,11 @@ public class ADCTest : TestBase
     [Fact]
     public void TestADCStream()
     {
-        using var decFs = File.OpenRead(
-                Path.Combine(TEST_ARCHIVES_PATH, "adc_decompressed.bin")
-            );
+        using var decFs = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "adc_decompressed.bin"));
         var decompressed = new byte[decFs.Length];
         decFs.Read(decompressed, 0, decompressed.Length);
 
-        using var cmpFs = File.OpenRead(
-                Path.Combine(TEST_ARCHIVES_PATH, "adc_compressed.bin")
-            );
+        using var cmpFs = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "adc_compressed.bin"));
         using var decStream = new ADCStream(cmpFs, CompressionMode.Decompress);
         using var decMs = new MemoryStream();
         var test = new byte[512];

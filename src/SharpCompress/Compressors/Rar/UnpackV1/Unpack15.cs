@@ -181,25 +181,7 @@ internal partial class Unpack
 
     private static readonly int[] PosHf4 = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 255, 0, 0, 0 };
 
-    private static readonly int[] ShortLen1 =
-    {
-        1,
-        3,
-        4,
-        4,
-        5,
-        6,
-        7,
-        8,
-        8,
-        4,
-        4,
-        5,
-        6,
-        6,
-        4,
-        0
-    };
+    private static readonly int[] ShortLen1 = { 1, 3, 4, 4, 5, 6, 7, 8, 8, 4, 4, 5, 6, 6, 4, 0 };
 
     private static readonly int[] ShortXor1 =
     {
@@ -220,25 +202,7 @@ internal partial class Unpack
         0xb0
     };
 
-    private static readonly int[] ShortLen2 =
-    {
-        2,
-        3,
-        3,
-        3,
-        4,
-        4,
-        5,
-        6,
-        6,
-        4,
-        4,
-        5,
-        6,
-        6,
-        4,
-        0
-    };
+    private static readonly int[] ShortLen2 = { 2, 3, 3, 3, 4, 4, 5, 6, 6, 4, 4, 5, 6, 6, 4, 0 };
 
     private static readonly int[] ShortXor2 =
     {

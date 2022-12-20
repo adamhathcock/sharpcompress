@@ -29,19 +29,19 @@ internal static class TarHeaderFactory
                 {
                     case StreamingMode.Seekable:
 
-                    {
-                        header.DataStartPosition = reader.BaseStream.Position;
+                        {
+                            header.DataStartPosition = reader.BaseStream.Position;
 
-                        //skip to nearest 512
-                        reader.BaseStream.Position += PadTo512(header.Size);
-                    }
-                    break;
+                            //skip to nearest 512
+                            reader.BaseStream.Position += PadTo512(header.Size);
+                        }
+                        break;
                     case StreamingMode.Streaming:
 
-                    {
-                        header.PackedStream = new TarReadOnlySubStream(stream, header.Size);
-                    }
-                    break;
+                        {
+                            header.PackedStream = new TarReadOnlySubStream(stream, header.Size);
+                        }
+                        break;
                     default:
                     {
                         throw new InvalidFormatException("Invalid StreamingMode");

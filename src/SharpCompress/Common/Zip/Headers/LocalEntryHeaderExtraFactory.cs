@@ -61,11 +61,8 @@ internal sealed class ExtraUnicodePathExtraField : ExtraData
 
 internal sealed class Zip64ExtendedInformationExtraField : ExtraData
 {
-    public Zip64ExtendedInformationExtraField(
-        ExtraDataType type,
-        ushort length,
-        byte[] dataBytes
-    ) : base(type, length, dataBytes) { }
+    public Zip64ExtendedInformationExtraField(ExtraDataType type, ushort length, byte[] dataBytes)
+        : base(type, length, dataBytes) { }
 
     // From the spec, values are only in the extradata if the standard
     // value is set to 0xFFFFFFFF (or 0xFFFF for the Disk Start Number).
@@ -105,9 +102,7 @@ internal sealed class Zip64ExtendedInformationExtraField : ExtraData
 
         if (compressedFileSize == uint.MaxValue)
         {
-            CompressedSize = BinaryPrimitives.ReadInt64LittleEndian(
-                DataBytes.AsSpan(currentIndex)
-            );
+            CompressedSize = BinaryPrimitives.ReadInt64LittleEndian(DataBytes.AsSpan(currentIndex));
             currentIndex += 8;
         }
 
@@ -121,9 +116,7 @@ internal sealed class Zip64ExtendedInformationExtraField : ExtraData
 
         if (diskNumber == ushort.MaxValue)
         {
-            VolumeNumber = BinaryPrimitives.ReadUInt32LittleEndian(
-                DataBytes.AsSpan(currentIndex)
-            );
+            VolumeNumber = BinaryPrimitives.ReadUInt32LittleEndian(DataBytes.AsSpan(currentIndex));
         }
     }
 

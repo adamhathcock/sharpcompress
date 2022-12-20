@@ -66,11 +66,7 @@ internal static class FileNameDecoder
                     }
                     else
                     {
-                        for (
-                            length += 2;
-                            length > 0 && decPos < name.Length;
-                            length--, decPos++
-                        )
+                        for (length += 2; length > 0 && decPos < name.Length; length--, decPos++)
                         {
                             buf.Append((char)(GetChar(name, decPos)));
                         }

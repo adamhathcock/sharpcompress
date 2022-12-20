@@ -14,11 +14,7 @@ public sealed class BZip2Stream : Stream
     /// <param name="stream">The stream to read from</param>
     /// <param name="compressionMode">Compression Mode</param>
     /// <param name="decompressConcatenated">Decompress Concatenated</param>
-    public BZip2Stream(
-        Stream stream,
-        CompressionMode compressionMode,
-        bool decompressConcatenated
-    )
+    public BZip2Stream(Stream stream, CompressionMode compressionMode, bool decompressConcatenated)
     {
         Mode = compressionMode;
         if (Mode == CompressionMode.Compress)

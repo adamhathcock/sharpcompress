@@ -45,15 +45,9 @@ internal class SevenZipFilePart : FilePart
         {
             return null!;
         }
-        var folderStream = _database.GetFolderStream(
-            _stream,
-            Folder!,
-            _database.PasswordProvider
-        );
+        var folderStream = _database.GetFolderStream(_stream, Folder!, _database.PasswordProvider);
 
-        var firstFileIndex = _database._folderStartFileIndex[
-            _database._folders.IndexOf(Folder!)
-        ];
+        var firstFileIndex = _database._folderStartFileIndex[_database._folders.IndexOf(Folder!)];
         var skipCount = Index - firstFileIndex;
         long skipSize = 0;
         for (var i = 0; i < skipCount; i++)

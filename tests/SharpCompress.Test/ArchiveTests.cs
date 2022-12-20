@@ -53,17 +53,11 @@ public class ArchiveTests : ReaderTests
                         stream.ThrowOnDispose = false;
                         return;
                     }
-                    foreach (
-                        var entry in archive.Entries.Where(entry => !entry.IsDirectory)
-                    )
+                    foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
                     {
                         entry.WriteToDirectory(
                             SCRATCH_FILES_PATH,
-                            new ExtractionOptions
-                            {
-                                ExtractFullPath = true,
-                                Overwrite = true
-                            }
+                            new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
                         );
                     }
                     stream.ThrowOnDispose = false;
@@ -96,10 +90,7 @@ public class ArchiveTests : ReaderTests
         );
     }
 
-    protected void ArchiveStreamRead(
-        ReaderOptions? readerOptions,
-        IEnumerable<string> testArchives
-    )
+    protected void ArchiveStreamRead(ReaderOptions? readerOptions, IEnumerable<string> testArchives)
     {
         foreach (var path in testArchives)
         {
@@ -231,9 +222,9 @@ public class ArchiveTests : ReaderTests
     {
         var src = testArchives.ToArray();
         using var archive = ArchiveFactory.Open(
-                testArchives.Select(f => new FileInfo(f)),
-                readerOptions
-            );
+            testArchives.Select(f => new FileInfo(f)),
+            readerOptions
+        );
         try
         {
             var idx = 0;

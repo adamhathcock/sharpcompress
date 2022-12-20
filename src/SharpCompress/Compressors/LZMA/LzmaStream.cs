@@ -194,9 +194,7 @@ public class LzmaStream : Stream
             {
                 _inputPosition += _outWindow.CopyStream(_inputStream, toProcess);
             }
-            else if (
-                _decoder.Code(_dictionarySize, _outWindow, _rangeDecoder) && _outputSize < 0
-            )
+            else if (_decoder.Code(_dictionarySize, _outWindow, _rangeDecoder) && _outputSize < 0)
             {
                 _availableBytes = _outWindow.AvailableBytes;
             }

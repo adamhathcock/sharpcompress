@@ -13,12 +13,8 @@ public class Decoder : ICoder, ISetDecoderProperties // ,System.IO.Stream
     {
         private BitDecoder _choice = new BitDecoder();
         private BitDecoder _choice2 = new BitDecoder();
-        private readonly BitTreeDecoder[] _lowCoder = new BitTreeDecoder[
-            Base.K_NUM_POS_STATES_MAX
-        ];
-        private readonly BitTreeDecoder[] _midCoder = new BitTreeDecoder[
-            Base.K_NUM_POS_STATES_MAX
-        ];
+        private readonly BitTreeDecoder[] _lowCoder = new BitTreeDecoder[Base.K_NUM_POS_STATES_MAX];
+        private readonly BitTreeDecoder[] _midCoder = new BitTreeDecoder[Base.K_NUM_POS_STATES_MAX];
         private BitTreeDecoder _highCoder = new BitTreeDecoder(Base.K_NUM_HIGH_LEN_BITS);
         private uint _numPosStates;
 
@@ -163,10 +159,7 @@ public class Decoder : ICoder, ISetDecoderProperties // ,System.IO.Stream
             byte matchByte
         )
         {
-            return _coders[GetState(pos, prevByte)].DecodeWithMatchByte(
-                rangeDecoder,
-                matchByte
-            );
+            return _coders[GetState(pos, prevByte)].DecodeWithMatchByte(rangeDecoder, matchByte);
         }
     }
 
@@ -413,9 +406,7 @@ public class Decoder : ICoder, ISetDecoderProperties // ,System.IO.Stream
                     _rep1 = _rep0;
                     len = Base.K_MATCH_MIN_LEN + _lenDecoder.Decode(rangeDecoder, posState);
                     _state.UpdateMatch();
-                    var posSlot = _posSlotDecoder[Base.GetLenToPosState(len)].Decode(
-                        rangeDecoder
-                    );
+                    var posSlot = _posSlotDecoder[Base.GetLenToPosState(len)].Decode(rangeDecoder);
                     if (posSlot >= Base.K_START_POS_MODEL_INDEX)
                     {
                         var numDirectBits = (int)((posSlot >> 1) - 1);
@@ -432,9 +423,8 @@ public class Decoder : ICoder, ISetDecoderProperties // ,System.IO.Stream
                         else
                         {
                             _rep0 += (
-                                rangeDecoder.DecodeDirectBits(
-                                    numDirectBits - Base.K_NUM_ALIGN_BITS
-                                ) << Base.K_NUM_ALIGN_BITS
+                                rangeDecoder.DecodeDirectBits(numDirectBits - Base.K_NUM_ALIGN_BITS)
+                                << Base.K_NUM_ALIGN_BITS
                             );
                             _rep0 += _posAlignDecoder.ReverseDecode(rangeDecoder);
                         }

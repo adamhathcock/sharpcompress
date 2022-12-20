@@ -372,9 +372,7 @@ internal sealed partial class Unpack : BitInput
 
             // Find the upper limit for current bit field and adjust the bit length
             // accordingly if necessary.
-            while (
-                CurBitLength < Dec.DecodeLen.Length && BitField >= Dec.DecodeLen[CurBitLength]
-            )
+            while (CurBitLength < Dec.DecodeLen.Length && BitField >= Dec.DecodeLen[CurBitLength])
             {
                 CurBitLength++;
             }

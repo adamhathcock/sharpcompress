@@ -853,11 +853,7 @@ internal partial class Model
             }
             else
             {
-                Refresh(
-                    (uint)((currentContext.NumberStatistics + 3) >> 1),
-                    false,
-                    currentContext
-                );
+                Refresh((uint)((currentContext.NumberStatistics + 3) >> 1), false, currentContext);
             }
         }
 
@@ -870,24 +866,17 @@ internal partial class Model
                 );
             }
             else if (
-                (currentContext.SummaryFrequency += 4)
-                > 128 + (4 * currentContext.NumberStatistics)
+                (currentContext.SummaryFrequency += 4) > 128 + (4 * currentContext.NumberStatistics)
             )
             {
-                Refresh(
-                    (uint)((currentContext.NumberStatistics + 2) >> 1),
-                    true,
-                    currentContext
-                );
+                Refresh((uint)((currentContext.NumberStatistics + 2) >> 1), true, currentContext);
             }
         }
 
         if (_method > ModelRestorationMethod.Freeze)
         {
             _maximumContext = foundStateSuccessor;
-            _allocator._glueCount += (uint)(
-                ((_allocator._memoryNodes[1].Stamp & 1) == 0) ? 1 : 0
-            );
+            _allocator._glueCount += (uint)(((_allocator._memoryNodes[1].Stamp & 1) == 0) ? 1 : 0);
         }
         else if (_method == ModelRestorationMethod.Freeze)
         {

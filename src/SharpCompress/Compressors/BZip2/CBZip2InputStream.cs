@@ -342,8 +342,7 @@ internal class CBZip2InputStream : Stream
             CrcError();
         }
 
-        computedCombinedCRC =
-            (computedCombinedCRC << 1) | (int)(((uint)computedCombinedCRC) >> 31);
+        computedCombinedCRC = (computedCombinedCRC << 1) | (int)(((uint)computedCombinedCRC) >> 31);
         computedCombinedCRC ^= computedBlockCRC;
     }
 
@@ -631,15 +630,7 @@ internal class CBZip2InputStream : Stream
                     minLen = len[t][i];
                 }
             }
-            HbCreateDecodeTables(
-                limit[t],
-                basev[t],
-                perm[t],
-                len[t],
-                minLen,
-                maxLen,
-                alphaSize
-            );
+            HbCreateDecodeTables(limit[t], basev[t], perm[t], len[t], minLen, maxLen, alphaSize);
             minLens[t] = minLen;
         }
     }

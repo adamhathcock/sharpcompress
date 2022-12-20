@@ -48,16 +48,13 @@ public class RarHeaderFactoryTest : TestBase
     private void ReadEncryptedFlag(string testArchive, bool isEncrypted)
     {
         using var stream = new FileStream(
-                Path.Combine(TEST_ARCHIVES_PATH, testArchive),
-                FileMode.Open,
-                FileAccess.Read
-            );
+            Path.Combine(TEST_ARCHIVES_PATH, testArchive),
+            FileMode.Open,
+            FileAccess.Read
+        );
         foreach (var header in rarHeaderFactory.ReadHeaders(stream))
         {
-            if (
-                header.HeaderType == HeaderType.Archive
-                || header.HeaderType == HeaderType.Crypt
-            )
+            if (header.HeaderType == HeaderType.Archive || header.HeaderType == HeaderType.Crypt)
             {
                 Assert.Equal(isEncrypted, rarHeaderFactory.IsEncrypted);
                 break;

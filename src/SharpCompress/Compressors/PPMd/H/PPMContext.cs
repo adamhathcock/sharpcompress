@@ -24,8 +24,7 @@ internal class PpmContext : Pointer
         {
             if (Memory != null)
             {
-                _numStats =
-                    BinaryPrimitives.ReadInt16LittleEndian(Memory.AsSpan(Address)) & 0xffff;
+                _numStats = BinaryPrimitives.ReadInt16LittleEndian(Memory.AsSpan(Address)) & 0xffff;
             }
             return _numStats;
         }
@@ -61,25 +60,7 @@ internal class PpmContext : Pointer
     private int _suffix; // pointer ppmcontext
 
     //UPGRADE_NOTE: Final was removed from the declaration of 'ExpEscape'. "ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?index='!DefaultContextWindowIndex'&keyword='jlca1003'"
-    public static readonly int[] EXP_ESCAPE =
-    {
-        25,
-        14,
-        9,
-        7,
-        5,
-        5,
-        4,
-        4,
-        4,
-        3,
-        3,
-        3,
-        2,
-        2,
-        2,
-        2
-    };
+    public static readonly int[] EXP_ESCAPE = { 25, 14, 9, 7, 5, 5, 4, 4, 4, 3, 3, 3, 2, 2, 2, 2 };
 
     // Temp fields
     //UPGRADE_NOTE: Final was removed from the declaration of 'tempState1 '. "ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?index='!DefaultContextWindowIndex'&keyword='jlca1003'"

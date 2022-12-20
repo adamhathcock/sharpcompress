@@ -77,10 +77,7 @@ internal partial class Unpack
                 }
             }
 
-            if (
-                ((WriteBorder - UnpPtr) & MaxWinMask) < MAX_LZ_MATCH + 3
-                && WriteBorder != UnpPtr
-            )
+            if (((WriteBorder - UnpPtr) & MaxWinMask) < MAX_LZ_MATCH + 3 && WriteBorder != UnpPtr)
             {
                 UnpWriteBuf();
                 if (WrittenFileSize > DestUnpSize)
@@ -284,8 +281,7 @@ internal partial class Unpack
         // If distance to filter start is that large that due to circular dictionary
         // mode now it points to old not written yet data, then we set 'NextWindow'
         // flag and process this filter only after processing that older data.
-        Filter.NextWindow =
-            WrPtr != UnpPtr && ((WrPtr - UnpPtr) & MaxWinMask) <= Filter.BlockStart;
+        Filter.NextWindow = WrPtr != UnpPtr && ((WrPtr - UnpPtr) & MaxWinMask) <= Filter.BlockStart;
 
         Filter.BlockStart = (Filter.BlockStart + UnpPtr) & MaxWinMask;
         Filters.Add(Filter);
@@ -340,10 +336,7 @@ internal partial class Unpack
         {
             // We may need to quit from main extraction loop and read new block header
             // and trees earlier than data in input buffer ends.
-            ReadBorder = Math.Min(
-                ReadBorder,
-                BlockHeader.BlockStart + BlockHeader.BlockSize - 1
-            );
+            ReadBorder = Math.Min(ReadBorder, BlockHeader.BlockStart + BlockHeader.BlockSize - 1);
         }
         return ReadCode != -1;
     }
@@ -539,66 +532,66 @@ internal partial class Unpack
             case FILTER_E8:
             case FILTER_E8E9:
 
-            {
-                var FileOffset = (uint)WrittenFileSize;
-
-                const uint FileSize = 0x1000000;
-                var CmpByte2 = Flt.Type == FILTER_E8E9 ? (byte)0xe9 : (byte)0xe8;
-                // DataSize is unsigned, so we use "CurPos+4" and not "DataSize-4"
-                // to avoid overflow for DataSize<4.
-                for (uint CurPos = 0; CurPos + 4 < DataSize;)
                 {
-                    //x byte CurByte=*(Data++);
-                    var CurByte = __d[Data++];
-                    CurPos++;
-                    if (CurByte == 0xe8 || CurByte == CmpByte2)
+                    var FileOffset = (uint)WrittenFileSize;
+
+                    const uint FileSize = 0x1000000;
+                    var CmpByte2 = Flt.Type == FILTER_E8E9 ? (byte)0xe9 : (byte)0xe8;
+                    // DataSize is unsigned, so we use "CurPos+4" and not "DataSize-4"
+                    // to avoid overflow for DataSize<4.
+                    for (uint CurPos = 0; CurPos + 4 < DataSize; )
                     {
-                        var Offset = (CurPos + FileOffset) % FileSize;
-                        var Addr = RawGet4(__d, Data);
-
-                        // We check 0x80000000 bit instead of '< 0' comparison
-                        // not assuming int32 presence or uint size and endianness.
-                        if ((Addr & 0x80000000) != 0) // Addr<0
+                        //x byte CurByte=*(Data++);
+                        var CurByte = __d[Data++];
+                        CurPos++;
+                        if (CurByte == 0xe8 || CurByte == CmpByte2)
                         {
-                            if (((Addr + Offset) & 0x80000000) == 0) // Addr+Offset>=0
+                            var Offset = (CurPos + FileOffset) % FileSize;
+                            var Addr = RawGet4(__d, Data);
+
+                            // We check 0x80000000 bit instead of '< 0' comparison
+                            // not assuming int32 presence or uint size and endianness.
+                            if ((Addr & 0x80000000) != 0) // Addr<0
                             {
-                                RawPut4(Addr + FileSize, __d, Data);
+                                if (((Addr + Offset) & 0x80000000) == 0) // Addr+Offset>=0
+                                {
+                                    RawPut4(Addr + FileSize, __d, Data);
+                                }
                             }
-                        }
-                        else if (((Addr - FileSize) & 0x80000000) != 0) // Addr<FileSize
-                        {
-                            RawPut4(Addr - Offset, __d, Data);
-                        }
+                            else if (((Addr - FileSize) & 0x80000000) != 0) // Addr<FileSize
+                            {
+                                RawPut4(Addr - Offset, __d, Data);
+                            }
 
-                        Data += 4;
-                        CurPos += 4;
+                            Data += 4;
+                            CurPos += 4;
+                        }
                     }
                 }
-            }
-            return SrcData;
+                return SrcData;
             case FILTER_ARM:
 
-            {
-                var FileOffset = (uint)WrittenFileSize;
-                // DataSize is unsigned, so we use "CurPos+3" and not "DataSize-3"
-                // to avoid overflow for DataSize<3.
-                for (uint CurPos = 0; CurPos + 3 < DataSize; CurPos += 4)
                 {
-                    var D = Data + CurPos;
-                    if (__d[D + 3] == 0xeb) // BL command with '1110' (Always) condition.
+                    var FileOffset = (uint)WrittenFileSize;
+                    // DataSize is unsigned, so we use "CurPos+3" and not "DataSize-3"
+                    // to avoid overflow for DataSize<3.
+                    for (uint CurPos = 0; CurPos + 3 < DataSize; CurPos += 4)
                     {
-                        var Offset =
-                            __d[D]
-                            + ((uint)(__d[D + 1]) * 0x100)
-                            + ((uint)(__d[D + 2]) * 0x10000);
-                        Offset -= (FileOffset + CurPos) / 4;
-                        __d[D] = (byte)Offset;
-                        __d[D + 1] = (byte)(Offset >> 8);
-                        __d[D + 2] = (byte)(Offset >> 16);
+                        var D = Data + CurPos;
+                        if (__d[D + 3] == 0xeb) // BL command with '1110' (Always) condition.
+                        {
+                            var Offset =
+                                __d[D]
+                                + ((uint)(__d[D + 1]) * 0x100)
+                                + ((uint)(__d[D + 2]) * 0x10000);
+                            Offset -= (FileOffset + CurPos) / 4;
+                            __d[D] = (byte)Offset;
+                            __d[D + 1] = (byte)(Offset >> 8);
+                            __d[D + 2] = (byte)(Offset >> 16);
+                        }
                     }
                 }
-            }
-            return SrcData;
+                return SrcData;
             case FILTER_DELTA:
             {
                 // Unlike RAR3, we do not need to reject excessive channel
@@ -727,9 +720,7 @@ internal partial class Unpack
         }
 
         Header.BlockSize = BlockSize;
-        var CheckSum = (byte)(
-            0x5a ^ BlockFlags ^ BlockSize ^ (BlockSize >> 8) ^ (BlockSize >> 16)
-        );
+        var CheckSum = (byte)(0x5a ^ BlockFlags ^ BlockSize ^ (BlockSize >> 8) ^ (BlockSize >> 16));
         if (CheckSum != SavedCheckSum)
         {
             return false;
@@ -796,7 +787,7 @@ internal partial class Unpack
 
         var Table = new byte[HUFF_TABLE_SIZE];
         const uint TableSize = HUFF_TABLE_SIZE;
-        for (uint I = 0; I < TableSize;)
+        for (uint I = 0; I < TableSize; )
         {
             if (!Inp.ExternalBuffer && Inp.InAddr > ReadTop - 5)
             {

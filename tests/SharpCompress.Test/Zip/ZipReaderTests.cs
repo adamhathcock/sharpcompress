@@ -77,8 +77,8 @@ public class ZipReaderTests : ReaderTests
     public void Zip_Deflate_Streamed_Skip()
     {
         using Stream stream = new ForwardOnlyStream(
-                File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.dd.zip"))
-            );
+            File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.dd.zip"))
+        );
         using var reader = ReaderFactory.Open(stream);
         var x = 0;
         while (reader.MoveToNextEntry())
@@ -149,9 +149,7 @@ public class ZipReaderTests : ReaderTests
     public void Zip_BZip2_PkwareEncryption_Read()
     {
         using (
-            Stream stream = File.OpenRead(
-                Path.Combine(TEST_ARCHIVES_PATH, "Zip.bzip2.pkware.zip")
-            )
+            Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Zip.bzip2.pkware.zip"))
         )
         using (var reader = ZipReader.Open(stream, new ReaderOptions() { Password = "test" }))
         {
@@ -174,8 +172,8 @@ public class ZipReaderTests : ReaderTests
     public void Zip_Reader_Disposal_Test()
     {
         using var stream = new TestStream(
-                File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.dd.zip"))
-            );
+            File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.dd.zip"))
+        );
         using (var reader = ReaderFactory.Open(stream))
         {
             while (reader.MoveToNextEntry())
@@ -196,8 +194,8 @@ public class ZipReaderTests : ReaderTests
     public void Zip_Reader_Disposal_Test2()
     {
         using var stream = new TestStream(
-                File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.dd.zip"))
-            );
+            File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.dd.zip"))
+        );
         var reader = ReaderFactory.Open(stream);
         while (reader.MoveToNextEntry())
         {
@@ -222,9 +220,7 @@ public class ZipReaderTests : ReaderTests
                     Path.Combine(TEST_ARCHIVES_PATH, "Zip.lzma.WinzipAES.zip")
                 )
             )
-            using (
-                var reader = ZipReader.Open(stream, new ReaderOptions() { Password = "test" })
-            )
+            using (var reader = ZipReader.Open(stream, new ReaderOptions() { Password = "test" }))
             {
                 while (reader.MoveToNextEntry())
                 {
@@ -302,13 +298,7 @@ public class ZipReaderTests : ReaderTests
         using var memory = new MemoryStream();
         Stream stream = new TestStream(memory, read: true, write: true, seek: false);
 
-        using (
-            var zipWriter = WriterFactory.Open(
-                stream,
-                ArchiveType.Zip,
-                CompressionType.Deflate
-            )
-        )
+        using (var zipWriter = WriterFactory.Open(stream, ArchiveType.Zip, CompressionType.Deflate))
         {
             zipWriter.Write(expected[0].Item1, new MemoryStream(expected[0].Item2));
             zipWriter.Write(expected[1].Item1, new MemoryStream(expected[1].Item2));
@@ -354,8 +344,8 @@ public class ZipReaderTests : ReaderTests
         };
 
         using Stream stream = File.OpenRead(
-                Path.Combine(TEST_ARCHIVES_PATH, "Zip.none.issue86.zip")
-            );
+            Path.Combine(TEST_ARCHIVES_PATH, "Zip.none.issue86.zip")
+        );
         using var reader = ZipReader.Open(stream);
         foreach (var key in keys)
         {
@@ -407,8 +397,7 @@ public class ZipReaderTests : ReaderTests
         var zipPath = Path.Combine(TEST_ARCHIVES_PATH, "Zip.uncompressed.zip");
         using var stream = File.Open(zipPath, FileMode.Open, FileAccess.Read);
         using var reader = ReaderFactory.Open(stream);
-        while (reader.MoveToNextEntry())
-        { }
+        while (reader.MoveToNextEntry()) { }
     }
 
     [Fact]

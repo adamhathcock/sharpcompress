@@ -58,8 +58,7 @@ public class SourceStream : Stream
 
     public void LoadAllParts()
     {
-        for (var i = 1; SetStream(i); i++)
-        { }
+        for (var i = 1; SetStream(i); i++) { }
         SetStream(0);
     }
 

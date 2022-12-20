@@ -1,4 +1,4 @@
-//
+﻿//
 // ADC.cs
 //
 // Author:
@@ -66,10 +66,7 @@ public sealed class ADCStream : Stream
     /// </summary>
     /// <param name="stream">Stream that contains the compressed data</param>
     /// <param name="compressionMode">Must be set to <see cref="CompressionMode.Decompress"/> because compression is not implemented</param>
-    public ADCStream(
-        Stream stream,
-        CompressionMode compressionMode = CompressionMode.Decompress
-    )
+    public ADCStream(Stream stream, CompressionMode compressionMode = CompressionMode.Decompress)
     {
         if (compressionMode == CompressionMode.Compress)
         {

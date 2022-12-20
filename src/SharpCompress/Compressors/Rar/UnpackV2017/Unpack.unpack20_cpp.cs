@@ -414,7 +414,7 @@ internal partial class Unpack
             Inp.addbits(4);
         }
         MakeDecodeTables(BitLength, 0, BlockTables.BD, BC20);
-        for (uint I = 0; I < TableSize;)
+        for (uint I = 0; I < TableSize; )
         {
             if (Inp.InAddr > ReadTop - 5)
             {

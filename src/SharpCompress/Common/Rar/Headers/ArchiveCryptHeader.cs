@@ -30,10 +30,7 @@ internal class ArchiveCryptHeader : RarHeader
             return;
         }
         var encryptionFlags = reader.ReadRarVIntUInt32();
-        _usePswCheck = FlagUtility.HasFlag(
-            encryptionFlags,
-            EncryptionFlagsV5.CHFL_CRYPT_PSWCHECK
-        );
+        _usePswCheck = FlagUtility.HasFlag(encryptionFlags, EncryptionFlagsV5.CHFL_CRYPT_PSWCHECK);
         _lg2Count = reader.ReadRarVIntByte(1);
 
         //UsePswCheck = HasHeaderFlag(EncryptionFlagsV5.CHFL_CRYPT_PSWCHECK);

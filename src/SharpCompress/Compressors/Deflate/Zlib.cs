@@ -234,12 +234,7 @@ internal class SharedUtils
     ///   count depending on the data available in the source TextReader. Returns -1
     ///   if the end of the stream is reached.
     /// </returns>
-    public static int ReadInput(
-        TextReader sourceTextReader,
-        byte[] target,
-        int start,
-        int count
-    )
+    public static int ReadInput(TextReader sourceTextReader, byte[] target, int start, int count)
     {
         // Returns 0 bytes if not enough space in target
         if (target.Length == 0)

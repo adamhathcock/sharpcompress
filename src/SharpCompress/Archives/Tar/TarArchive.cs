@@ -69,10 +69,7 @@ public class TarArchive : AbstractWritableArchive<TarArchiveEntry, TarVolume>
     /// </summary>
     /// <param name="streams"></param>
     /// <param name="readerOptions"></param>
-    public static TarArchive Open(
-        IEnumerable<Stream> streams,
-        ReaderOptions? readerOptions = null
-    )
+    public static TarArchive Open(IEnumerable<Stream> streams, ReaderOptions? readerOptions = null)
     {
         streams.CheckNotNull(nameof(streams));
         var strms = streams.ToArray();
@@ -182,9 +179,7 @@ public class TarArchive : AbstractWritableArchive<TarArchiveEntry, TarVolume>
                             memoryStream.Position = 0;
                             var bytes = memoryStream.ToArray();
 
-                            header.Name = ReaderOptions.ArchiveEncoding
-                                .Decode(bytes)
-                                .TrimNulls();
+                            header.Name = ReaderOptions.ArchiveEncoding.Decode(bytes).TrimNulls();
                         }
 
                         stream.Position = oldStreamPos;

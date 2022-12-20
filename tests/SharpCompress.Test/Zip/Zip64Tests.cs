@@ -108,14 +108,7 @@ public class Zip64Tests : WriterTests
 
         if (!File.Exists(filename))
         {
-            CreateZipArchive(
-                filename,
-                files,
-                filesize,
-                write_chunk_size,
-                set_zip64,
-                forward_only
-            );
+            CreateZipArchive(filename, files, filesize, write_chunk_size, set_zip64, forward_only);
         }
 
         var resForward = ReadForwardOnly(filename);
@@ -195,8 +188,7 @@ public class Zip64Tests : WriterTests
         {
             while (rd.MoveToNextEntry())
             {
-                using (rd.OpenEntryStream())
-                { }
+                using (rd.OpenEntryStream()) { }
 
                 count++;
                 if (prev != null)

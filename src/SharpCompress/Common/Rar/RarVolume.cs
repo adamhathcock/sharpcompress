@@ -42,45 +42,45 @@ public abstract class RarVolume : Volume
             {
                 case HeaderType.Mark:
 
-                {
-                    lastMarkHeader = (MarkHeader)header;
-                }
-                break;
+                    {
+                        lastMarkHeader = (MarkHeader)header;
+                    }
+                    break;
                 case HeaderType.Archive:
 
-                {
-                    ArchiveHeader = (ArchiveHeader)header;
-                }
-                break;
+                    {
+                        ArchiveHeader = (ArchiveHeader)header;
+                    }
+                    break;
                 case HeaderType.File:
 
-                {
-                    var fh = (FileHeader)header;
-                    if (_maxCompressionAlgorithm < fh.CompressionAlgorithm)
                     {
-                        _maxCompressionAlgorithm = fh.CompressionAlgorithm;
-                    }
+                        var fh = (FileHeader)header;
+                        if (_maxCompressionAlgorithm < fh.CompressionAlgorithm)
+                        {
+                            _maxCompressionAlgorithm = fh.CompressionAlgorithm;
+                        }
 
-                    yield return CreateFilePart(lastMarkHeader!, fh);
-                }
-                break;
+                        yield return CreateFilePart(lastMarkHeader!, fh);
+                    }
+                    break;
                 case HeaderType.Service:
 
-                {
-                    var fh = (FileHeader)header;
-                    if (fh.FileName == "CMT")
                     {
-                        var part = CreateFilePart(lastMarkHeader!, fh);
-                        var buffer = new byte[fh.CompressedSize];
-                        part.GetCompressedStream().Read(buffer, 0, buffer.Length);
-                        Comment = System.Text.Encoding.UTF8.GetString(
-                            buffer,
-                            0,
-                            buffer.Length - 1
-                        );
+                        var fh = (FileHeader)header;
+                        if (fh.FileName == "CMT")
+                        {
+                            var part = CreateFilePart(lastMarkHeader!, fh);
+                            var buffer = new byte[fh.CompressedSize];
+                            part.GetCompressedStream().Read(buffer, 0, buffer.Length);
+                            Comment = System.Text.Encoding.UTF8.GetString(
+                                buffer,
+                                0,
+                                buffer.Length - 1
+                            );
+                        }
                     }
-                }
-                break;
+                    break;
             }
         }
     }

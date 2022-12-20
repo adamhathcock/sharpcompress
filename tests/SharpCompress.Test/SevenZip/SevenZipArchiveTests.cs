@@ -34,10 +34,7 @@ public class SevenZipArchiveTests : ArchiveTests
     [Fact]
     public void SevenZipArchive_LZMAAES_StreamRead()
     {
-        ArchiveStreamRead(
-            "7Zip.LZMA.Aes.7z",
-            new ReaderOptions() { Password = "testpassword" }
-        );
+        ArchiveStreamRead("7Zip.LZMA.Aes.7z", new ReaderOptions() { Password = "testpassword" });
     }
 
     [Fact]

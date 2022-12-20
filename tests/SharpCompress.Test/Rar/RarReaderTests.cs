@@ -282,15 +282,10 @@ public class RarReaderTests : ReaderTests
     public void Rar_Reader_Audio_program()
     {
         using (
-            var stream = File.OpenRead(
-                Path.Combine(TEST_ARCHIVES_PATH, "Rar.Audio_program.rar")
-            )
+            var stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Rar.Audio_program.rar"))
         )
         using (
-            var reader = ReaderFactory.Open(
-                stream,
-                new ReaderOptions() { LookForHeader = true }
-            )
+            var reader = ReaderFactory.Open(stream, new ReaderOptions() { LookForHeader = true })
         )
         {
             while (reader.MoveToNextEntry())
@@ -312,9 +307,7 @@ public class RarReaderTests : ReaderTests
     public void Rar_Jpg_Reader()
     {
         using (var stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Rar.jpeg.jpg")))
-        using (
-            var reader = RarReader.Open(stream, new ReaderOptions() { LookForHeader = true })
-        )
+        using (var reader = RarReader.Open(stream, new ReaderOptions() { LookForHeader = true }))
         {
             while (reader.MoveToNextEntry())
             {
@@ -355,10 +348,7 @@ public class RarReaderTests : ReaderTests
     private void DoRar_Solid_Skip_Reader(string filename)
     {
         using var stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, filename));
-        using var reader = ReaderFactory.Open(
-                stream,
-                new ReaderOptions() { LookForHeader = true }
-            );
+        using var reader = ReaderFactory.Open(stream, new ReaderOptions() { LookForHeader = true });
         while (reader.MoveToNextEntry())
         {
             if (reader.Entry.Key.Contains("jpg"))
@@ -387,10 +377,7 @@ public class RarReaderTests : ReaderTests
     private void DoRar_Reader_Skip(string filename)
     {
         using var stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, filename));
-        using var reader = ReaderFactory.Open(
-                stream,
-                new ReaderOptions() { LookForHeader = true }
-            );
+        using var reader = ReaderFactory.Open(stream, new ReaderOptions() { LookForHeader = true });
         while (reader.MoveToNextEntry())
         {
             if (reader.Entry.Key.Contains("jpg"))

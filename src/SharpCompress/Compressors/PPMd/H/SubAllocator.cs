@@ -247,11 +247,7 @@ internal class SubAllocator
         p.Address = s0.GetNext();
         while (p.Address != s0.Address)
         {
-            for (
-                p.Remove(), sz = p.GetNu();
-                sz > 128;
-                sz -= 128, p.Address = MbPtr(p.Address, 128)
-            )
+            for (p.Remove(), sz = p.GetNu(); sz > 128; sz -= 128, p.Address = MbPtr(p.Address, 128))
             {
                 InsertNode(p.Address, N_INDEXES - 1);
             }

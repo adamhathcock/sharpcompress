@@ -46,9 +46,7 @@ internal struct Pointer
 #if DEBUG
             if (_address == 0)
             {
-                throw new InvalidOperationException(
-                    "The pointer being indexed is a null pointer."
-                );
+                throw new InvalidOperationException("The pointer being indexed is a null pointer.");
             }
 #endif
             return _memory[_address + offset];
@@ -58,9 +56,7 @@ internal struct Pointer
 #if DEBUG
             if (_address == 0)
             {
-                throw new InvalidOperationException(
-                    "The pointer being indexed is a null pointer."
-                );
+                throw new InvalidOperationException("The pointer being indexed is a null pointer.");
             }
 #endif
             _memory[_address + offset] = value;
@@ -143,9 +139,7 @@ internal struct Pointer
 #if DEBUG
         if (pointer._address == 0)
         {
-            throw new InvalidOperationException(
-                "The pointer being incremented is a null pointer."
-            );
+            throw new InvalidOperationException("The pointer being incremented is a null pointer.");
         }
 #endif
         pointer._address++;
@@ -198,9 +192,7 @@ internal struct Pointer
 #if DEBUG
         if (pointer._address == 0)
         {
-            throw new InvalidOperationException(
-                "The pointer being decremented is a null pointer."
-            );
+            throw new InvalidOperationException("The pointer being decremented is a null pointer.");
         }
 #endif
         pointer._address--;
