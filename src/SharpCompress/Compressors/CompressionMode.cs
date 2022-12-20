@@ -1,8 +1,7 @@
-﻿namespace SharpCompress.Compressors
+namespace SharpCompress.Compressors;
+
+public enum CompressionMode
 {
-    public enum CompressionMode
-    {
-        Compress = 0,
-        Decompress = 1
-    }
+    Compress = 0,
+    Decompress = 1
 }

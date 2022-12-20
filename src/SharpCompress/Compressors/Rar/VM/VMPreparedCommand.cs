@@ -1,17 +1,16 @@
-namespace SharpCompress.Compressors.Rar.VM
+namespace SharpCompress.Compressors.Rar.VM;
+
+internal class VMPreparedCommand
 {
-    internal class VMPreparedCommand
+    internal VMPreparedCommand()
     {
-        internal VMPreparedCommand()
-        {
-            Op1 = new VMPreparedOperand();
-            Op2 = new VMPreparedOperand();
-        }
-
-        internal VMCommands OpCode { get; set; }
-        internal bool IsByteMode { get; set; }
-        internal VMPreparedOperand Op1 { get; }
-
-        internal VMPreparedOperand Op2 { get; }
+        Op1 = new VMPreparedOperand();
+        Op2 = new VMPreparedOperand();
     }
+
+    internal VMCommands OpCode { get; set; }
+    internal bool IsByteMode { get; set; }
+    internal VMPreparedOperand Op1 { get; }
+
+    internal VMPreparedOperand Op2 { get; }
 }

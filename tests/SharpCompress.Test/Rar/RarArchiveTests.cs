@@ -7,681 +7,579 @@ using SharpCompress.Compressors.LZMA.Utilites;
 using SharpCompress.Readers;
 using Xunit;
 
-namespace SharpCompress.Test.Rar
+namespace SharpCompress.Test.Rar;
+
+public class RarArchiveTests : ArchiveTests
 {
-    public class RarArchiveTests : ArchiveTests
+    [Fact]
+    public void Rar_EncryptedFileAndHeader_Archive() =>
+        ReadRarPassword("Rar.encrypted_filesAndHeader.rar", "test");
+
+    [Fact]
+    public void Rar_EncryptedFileAndHeader_NoPasswordExceptionTest() =>
+        Assert.Throws(
+            typeof(CryptographicException),
+            () => ReadRarPassword("Rar.encrypted_filesAndHeader.rar", null)
+        );
+
+    /*[Fact]
+    public void Rar5_EncryptedFileAndHeader_Archive()
     {
-        [Fact]
-        public void Rar_EncryptedFileAndHeader_Archive()
-        {
-            ReadRarPassword("Rar.encrypted_filesAndHeader.rar", "test");
-        }
+        ReadRarPassword("Rar5.encrypted_filesAndHeader.rar", "test");
+    }*/
 
-        [Fact]
-        public void Rar_EncryptedFileAndHeader_NoPasswordExceptionTest()
-        {
-            Assert.Throws(typeof(CryptographicException), () => ReadRarPassword("Rar.encrypted_filesAndHeader.rar", null));
-        }
+    [Fact]
+    public void Rar5_EncryptedFileAndHeader_NoPasswordExceptionTest() =>
+        Assert.Throws(
+            typeof(CryptographicException),
+            () => ReadRarPassword("Rar5.encrypted_filesAndHeader.rar", null)
+        );
 
-        /*[Fact]
-        public void Rar5_EncryptedFileAndHeader_Archive()
-        {
-            ReadRarPassword("Rar5.encrypted_filesAndHeader.rar", "test");
-        }*/
+    [Fact]
+    public void Rar_EncryptedFileOnly_Archive() =>
+        ReadRarPassword("Rar.encrypted_filesOnly.rar", "test");
 
-        [Fact]
-        public void Rar5_EncryptedFileAndHeader_NoPasswordExceptionTest()
-        {
-            Assert.Throws(typeof(CryptographicException), () => ReadRarPassword("Rar5.encrypted_filesAndHeader.rar", null));
-        }
+    /*[Fact]
+    public void Rar5_EncryptedFileOnly_Archive()
+    {
+        ReadRarPassword("Rar5.encrypted_filesOnly.rar", "test");
+    }*/
 
-        [Fact]
-        public void Rar_EncryptedFileOnly_Archive()
-        {
-            ReadRarPassword("Rar.encrypted_filesOnly.rar", "test");
-        }
+    [Fact]
+    public void Rar_Encrypted_Archive() => ReadRarPassword("Rar.Encrypted.rar", "test");
 
-        /*[Fact]
-        public void Rar5_EncryptedFileOnly_Archive()
-        {
-            ReadRarPassword("Rar5.encrypted_filesOnly.rar", "test");
-        }*/
+    /*[Fact]
+    public void Rar5_Encrypted_Archive()
+    {
+        ReadRarPassword("Rar5.encrypted_filesAndHeader.rar", "test");
+    }*/
 
-        [Fact]
-        public void Rar_Encrypted_Archive()
+    private void ReadRarPassword(string testArchive, string? password)
+    {
+        using (Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, testArchive)))
+        using (
+            var archive = RarArchive.Open(
+                stream,
+                new ReaderOptions() { Password = password, LeaveStreamOpen = true }
+            )
+        )
         {
-            ReadRarPassword("Rar.Encrypted.rar", "test");
-        }
-
-        /*[Fact]
-        public void Rar5_Encrypted_Archive()
-        {
-            ReadRarPassword("Rar5.encrypted_filesAndHeader.rar", "test");
-        }*/
-
-        private void ReadRarPassword(string testArchive, string password)
-        {
-            using (Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, testArchive)))
-            using (var archive = RarArchive.Open(stream, new ReaderOptions()
+            foreach (var entry in archive.Entries)
             {
-                Password = password,
-                LeaveStreamOpen = true
-            }))
-            {
-                foreach (var entry in archive.Entries)
+                if (!entry.IsDirectory)
                 {
-                    if (!entry.IsDirectory)
-                    {
-                        Assert.Equal(CompressionType.Rar, entry.CompressionType);
-                        entry.WriteToDirectory(SCRATCH_FILES_PATH, new ExtractionOptions()
-                        {
-                            ExtractFullPath = true,
-                            Overwrite = true
-                        });
-                    }
-                }
-            }
-            VerifyFiles();
-        }
-
-        [Fact]
-        public void Rar_Multi_Archive_Encrypted()
-        {
-            Assert.Throws<InvalidFormatException>(() => ArchiveFileReadPassword("Rar.EncryptedParts.part01.rar", "test"));
-        }
-
-        protected void ArchiveFileReadPassword(string archiveName, string password)
-        {
-            using (var archive = RarArchive.Open(Path.Combine(TEST_ARCHIVES_PATH, archiveName), new ReaderOptions()
-            {
-                Password = password,
-                LeaveStreamOpen = true
-            }))
-            {
-                foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
-                {
-                    entry.WriteToDirectory(SCRATCH_FILES_PATH,
-                                            new ExtractionOptions()
-                                            {
-                                                ExtractFullPath = true,
-                                                Overwrite = true
-                                            });
-                }
-            }
-            VerifyFiles();
-        }
-
-        [Fact]
-        public void Rar_None_ArchiveStreamRead()
-        {
-            ArchiveStreamRead("Rar.none.rar");
-        }
-
-        [Fact]
-        public void Rar5_None_ArchiveStreamRead()
-        {
-            ArchiveStreamRead("Rar5.none.rar");
-        }
-
-        [Fact]
-        public void Rar_ArchiveStreamRead()
-        {
-            ArchiveStreamRead("Rar.rar");
-        }
-
-        [Fact]
-        public void Rar5_ArchiveStreamRead()
-        {
-            ArchiveStreamRead("Rar5.rar");
-        }
-
-        [Fact]
-        public void Rar_test_invalid_exttime_ArchiveStreamRead()
-        {
-            DoRar_test_invalid_exttime_ArchiveStreamRead("Rar.test_invalid_exttime.rar");
-        }
-
-        private void DoRar_test_invalid_exttime_ArchiveStreamRead(string filename)
-        {
-            using (var stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, filename)))
-            {
-                using (var archive = ArchiveFactory.Open(stream))
-                {
-                    foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
-                    {
-                        entry.WriteToDirectory(SCRATCH_FILES_PATH, new ExtractionOptions()
-                        {
-                            ExtractFullPath = true,
-                            Overwrite = true
-                        });
-                    }
+                    Assert.Equal(CompressionType.Rar, entry.CompressionType);
+                    entry.WriteToDirectory(
+                        SCRATCH_FILES_PATH,
+                        new ExtractionOptions() { ExtractFullPath = true, Overwrite = true }
+                    );
                 }
             }
         }
+        VerifyFiles();
+    }
 
-        [Fact]
-        public void Rar_Jpg_ArchiveStreamRead()
+    [Fact]
+    public void Rar_Multi_Archive_Encrypted() =>
+        Assert.Throws<InvalidFormatException>(
+            () => ArchiveFileReadPassword("Rar.EncryptedParts.part01.rar", "test")
+        );
+
+    protected void ArchiveFileReadPassword(string archiveName, string password)
+    {
+        using (
+            var archive = RarArchive.Open(
+                Path.Combine(TEST_ARCHIVES_PATH, archiveName),
+                new ReaderOptions() { Password = password, LeaveStreamOpen = true }
+            )
+        )
         {
-            using (var stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Rar.jpeg.jpg")))
+            foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
             {
-                using (var archive = RarArchive.Open(stream, new ReaderOptions()
-                {
-                    LookForHeader = true
-                }))
-                {
-                    foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
-                    {
-                        entry.WriteToDirectory(SCRATCH_FILES_PATH,
-                                               new ExtractionOptions()
-                                               {
-                                                   ExtractFullPath = true,
-                                                   Overwrite = true
-                                               });
-                    }
-                }
-                VerifyFiles();
+                entry.WriteToDirectory(
+                    SCRATCH_FILES_PATH,
+                    new ExtractionOptions() { ExtractFullPath = true, Overwrite = true }
+                );
             }
         }
+        VerifyFiles();
+    }
 
-        [Fact]
-        public void Rar_IsSolidArchiveCheck()
+    [Fact]
+    public void Rar_None_ArchiveStreamRead() => ArchiveStreamRead("Rar.none.rar");
+
+    [Fact]
+    public void Rar5_None_ArchiveStreamRead() => ArchiveStreamRead("Rar5.none.rar");
+
+    [Fact]
+    public void Rar_ArchiveStreamRead() => ArchiveStreamRead("Rar.rar");
+
+    [Fact]
+    public void Rar5_ArchiveStreamRead() => ArchiveStreamRead("Rar5.rar");
+
+    [Fact]
+    public void Rar_test_invalid_exttime_ArchiveStreamRead() =>
+        DoRar_test_invalid_exttime_ArchiveStreamRead("Rar.test_invalid_exttime.rar");
+
+    private void DoRar_test_invalid_exttime_ArchiveStreamRead(string filename)
+    {
+        using var stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, filename));
+        using var archive = ArchiveFactory.Open(stream);
+        foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
         {
-            DoRar_IsSolidArchiveCheck("Rar.rar");
+            entry.WriteToDirectory(
+                SCRATCH_FILES_PATH,
+                new ExtractionOptions() { ExtractFullPath = true, Overwrite = true }
+            );
         }
+    }
 
-        [Fact]
-        public void Rar5_IsSolidArchiveCheck()
+    [Fact]
+    public void Rar_Jpg_ArchiveStreamRead()
+    {
+        using var stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Rar.jpeg.jpg"));
+        using (var archive = RarArchive.Open(stream, new ReaderOptions() { LookForHeader = true }))
         {
-            DoRar_IsSolidArchiveCheck("Rar5.rar");
-        }
-
-        private void DoRar_IsSolidArchiveCheck(string filename)
-        {
-            using (var stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, filename)))
+            foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
             {
-                using (var archive = RarArchive.Open(stream))
-                {
-                    Assert.False(archive.IsSolid);
-                    foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
-                    {
-                        entry.WriteToDirectory(SCRATCH_FILES_PATH,
-                                               new ExtractionOptions()
-                                               {
-                                                   ExtractFullPath = true,
-                                                   Overwrite = true
-                                               });
-                    }
-                }
-            }
-            VerifyFiles();
-        }
-
-
-        [Fact]
-        public void Rar_IsSolidEntryStreamCheck()
-        {
-            DoRar_IsSolidEntryStreamCheck("Rar.solid.rar");
-        }
-
-        //Extract the 2nd file in a solid archive to check that the first file is skipped properly
-        private void DoRar_IsSolidEntryStreamCheck(string filename)
-        {
-            using (var stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, filename)))
-            {
-                using (var archive = RarArchive.Open(stream))
-                {
-                    Assert.True(archive.IsSolid);
-                    IArchiveEntry[] entries = archive.Entries.Where(a => !a.IsDirectory).ToArray();
-                    Assert.NotInRange(entries.Length, 0, 1);
-                    Assert.False(entries[0].IsSolid); //first item in a solid archive is not marked solid and is seekable
-                    IArchiveEntry testEntry = entries[1];
-                    Assert.True(testEntry.IsSolid); //the target. The non seekable entry
-
-                    //process all entries in solid archive until the one we want to test
-                    foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
-                    {
-                        using (CrcCheckStream crcStream = new CrcCheckStream((uint)entry.Crc)) //use the 7zip CRC stream for convenience (required a bug fix)
-                        {
-                            using (Stream eStream = entry.OpenEntryStream()) //bug fix in RarStream to report the correct Position
-                                eStream.CopyTo(crcStream);
-                        } //throws if not valid
-                        if (entry == testEntry)
-                            break;
-                    }
-                }
+                entry.WriteToDirectory(
+                    SCRATCH_FILES_PATH,
+                    new ExtractionOptions() { ExtractFullPath = true, Overwrite = true }
+                );
             }
         }
+        VerifyFiles();
+    }
 
+    [Fact]
+    public void Rar_IsSolidArchiveCheck() => DoRar_IsSolidArchiveCheck("Rar.rar");
 
-        [Fact]
-        public void Rar_Solid_ArchiveStreamRead()
+    [Fact]
+    public void Rar5_IsSolidArchiveCheck() => DoRar_IsSolidArchiveCheck("Rar5.rar");
+
+    private void DoRar_IsSolidArchiveCheck(string filename)
+    {
+        using (var stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, filename)))
         {
-            ArchiveStreamRead("Rar.solid.rar");
+            using var archive = RarArchive.Open(stream);
+            Assert.False(archive.IsSolid);
+            foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
+            {
+                entry.WriteToDirectory(
+                    SCRATCH_FILES_PATH,
+                    new ExtractionOptions() { ExtractFullPath = true, Overwrite = true }
+                );
+            }
         }
+        VerifyFiles();
+    }
 
-        [Fact]
-        public void Rar5_Solid_ArchiveStreamRead()
+    [Fact]
+    public void Rar_IsSolidEntryStreamCheck() => DoRar_IsSolidEntryStreamCheck("Rar.solid.rar");
+
+    //Extract the 2nd file in a solid archive to check that the first file is skipped properly
+    private void DoRar_IsSolidEntryStreamCheck(string filename)
+    {
+        using var stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, filename));
+        using var archive = RarArchive.Open(stream);
+        Assert.True(archive.IsSolid);
+        IArchiveEntry[] entries = archive.Entries.Where(a => !a.IsDirectory).ToArray();
+        Assert.NotInRange(entries.Length, 0, 1);
+        Assert.False(entries[0].IsSolid); //first item in a solid archive is not marked solid and is seekable
+        var testEntry = entries[1];
+        Assert.True(testEntry.IsSolid); //the target. The non seekable entry
+
+        //process all entries in solid archive until the one we want to test
+        foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
         {
-            ArchiveStreamRead("Rar5.solid.rar");
+            using (var crcStream = new CrcCheckStream((uint)entry.Crc)) //use the 7zip CRC stream for convenience (required a bug fix)
+            {
+                using var eStream = entry.OpenEntryStream(); //bug fix in RarStream to report the correct Position
+                eStream.CopyTo(crcStream);
+            } //throws if not valid
+            if (entry == testEntry)
+            {
+                break;
+            }
         }
+    }
 
-        [Fact]
-        public void Rar_Solid_StreamRead_Extract_All()
-        {
-            ArchiveStreamReadExtractAll("Rar.solid.rar", CompressionType.Rar);
-        }
+    [Fact]
+    public void Rar_Solid_ArchiveStreamRead() => ArchiveStreamRead("Rar.solid.rar");
 
-        [Fact]
-        public void Rar5_Solid_StreamRead_Extract_All()
-        {
-            ArchiveStreamReadExtractAll("Rar5.solid.rar", CompressionType.Rar);
-        }
+    [Fact]
+    public void Rar5_Solid_ArchiveStreamRead() => ArchiveStreamRead("Rar5.solid.rar");
 
-        [Fact]
-        public void Rar_Multi_ArchiveStreamRead()
-        {
-            DoRar_Multi_ArchiveStreamRead(new string[] {
+    [Fact]
+    public void Rar_Solid_StreamRead_Extract_All() =>
+        ArchiveStreamReadExtractAll("Rar.solid.rar", CompressionType.Rar);
+
+    [Fact]
+    public void Rar5_Solid_StreamRead_Extract_All() =>
+        ArchiveStreamReadExtractAll("Rar5.solid.rar", CompressionType.Rar);
+
+    [Fact]
+    public void Rar_Multi_ArchiveStreamRead() =>
+        DoRar_Multi_ArchiveStreamRead(
+            new[]
+            {
                 "Rar.multi.part01.rar",
                 "Rar.multi.part02.rar",
                 "Rar.multi.part03.rar",
                 "Rar.multi.part04.rar",
                 "Rar.multi.part05.rar",
-                "Rar.multi.part06.rar"}, false);
-        }
+                "Rar.multi.part06.rar"
+            },
+            false
+        );
 
-        [Fact]
-        public void Rar5_Multi_ArchiveStreamRead()
-        {
-            DoRar_Multi_ArchiveStreamRead(new string[] {
+    [Fact]
+    public void Rar5_Multi_ArchiveStreamRead() =>
+        DoRar_Multi_ArchiveStreamRead(
+            new[]
+            {
                 "Rar5.multi.part01.rar",
                 "Rar5.multi.part02.rar",
                 "Rar5.multi.part03.rar",
                 "Rar5.multi.part04.rar",
                 "Rar5.multi.part05.rar",
-                "Rar5.multi.part06.rar"}, false);
-        }
+                "Rar5.multi.part06.rar"
+            },
+            false
+        );
 
-        private void DoRar_Multi_ArchiveStreamRead(string[] archives, bool isSolid)
+    private void DoRar_Multi_ArchiveStreamRead(string[] archives, bool isSolid)
+    {
+        using var archive = RarArchive.Open(
+            archives.Select(s => Path.Combine(TEST_ARCHIVES_PATH, s)).Select(File.OpenRead)
+        );
+        Assert.Equal(archive.IsSolid, isSolid);
+        foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
         {
-            using (var archive = RarArchive.Open(archives.Select(s => Path.Combine(TEST_ARCHIVES_PATH, s))
-                .Select(File.OpenRead)))
+            entry.WriteToDirectory(
+                SCRATCH_FILES_PATH,
+                new ExtractionOptions() { ExtractFullPath = true, Overwrite = true }
+            );
+        }
+    }
+
+    [Fact]
+    public void Rar5_MultiSolid_ArchiveStreamRead() =>
+        DoRar_Multi_ArchiveStreamRead(
+            new[]
             {
-                Assert.Equal(archive.IsSolid, isSolid);
-                foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
-                {
-                    entry.WriteToDirectory(SCRATCH_FILES_PATH, new ExtractionOptions()
-                    {
-                        ExtractFullPath = true,
-                        Overwrite = true
-                    });
-                }
-            }
-        }
-
-        [Fact]
-        public void Rar5_MultiSolid_ArchiveStreamRead()
-        {
-            DoRar_Multi_ArchiveStreamRead(new string[] {
                 "Rar.multi.solid.part01.rar",
                 "Rar.multi.solid.part02.rar",
                 "Rar.multi.solid.part03.rar",
                 "Rar.multi.solid.part04.rar",
                 "Rar.multi.solid.part05.rar",
-                "Rar.multi.solid.part06.rar"}, true);
-        }
+                "Rar.multi.solid.part06.rar"
+            },
+            true
+        );
 
-        [Fact]
-        public void RarNoneArchiveFileRead()
-        {
-            ArchiveFileRead("Rar.none.rar");
-        }
+    [Fact]
+    public void RarNoneArchiveFileRead() => ArchiveFileRead("Rar.none.rar");
 
-        [Fact]
-        public void Rar5NoneArchiveFileRead()
-        {
-            ArchiveFileRead("Rar5.none.rar");
-        }
+    [Fact]
+    public void Rar5NoneArchiveFileRead() => ArchiveFileRead("Rar5.none.rar");
 
-        [Fact]
-        public void Rar_ArchiveFileRead()
-        {
-            ArchiveFileRead("Rar.rar");
-        }
+    [Fact]
+    public void Rar_ArchiveFileRead() => ArchiveFileRead("Rar.rar");
 
-        [Fact]
-        public void Rar5_ArchiveFileRead()
-        {
-            ArchiveFileRead("Rar5.rar");
-        }
+    [Fact]
+    public void Rar5_ArchiveFileRead() => ArchiveFileRead("Rar5.rar");
 
-        [Fact]
-        public void Rar_ArchiveFileRead_HasDirectories()
-        {
-            DoRar_ArchiveFileRead_HasDirectories("Rar.rar");
-        }
+    [Fact]
+    public void Rar_ArchiveFileRead_HasDirectories() =>
+        DoRar_ArchiveFileRead_HasDirectories("Rar.rar");
 
-        [Fact]
-        public void Rar5_ArchiveFileRead_HasDirectories()
-        {
-            DoRar_ArchiveFileRead_HasDirectories("Rar5.rar");
-        }
+    [Fact]
+    public void Rar5_ArchiveFileRead_HasDirectories() =>
+        DoRar_ArchiveFileRead_HasDirectories("Rar5.rar");
 
-        private void DoRar_ArchiveFileRead_HasDirectories(string filename)
+    private void DoRar_ArchiveFileRead_HasDirectories(string filename)
+    {
+        using var stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, filename));
+        using var archive = RarArchive.Open(stream);
+        Assert.False(archive.IsSolid);
+        Assert.Contains(true, archive.Entries.Select(entry => entry.IsDirectory));
+    }
+
+    [Fact]
+    public void Rar_Jpg_ArchiveFileRead()
+    {
+        using (
+            var archive = RarArchive.Open(
+                Path.Combine(TEST_ARCHIVES_PATH, "Rar.jpeg.jpg"),
+                new ReaderOptions() { LookForHeader = true }
+            )
+        )
         {
-            using (var stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, filename)))
+            foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
             {
-                using (var archive = RarArchive.Open(stream))
-                {
-                    Assert.False(archive.IsSolid);
-                    Assert.Contains(true, archive.Entries.Select(entry => entry.IsDirectory));
-                }
+                entry.WriteToDirectory(
+                    SCRATCH_FILES_PATH,
+                    new ExtractionOptions() { ExtractFullPath = true, Overwrite = true }
+                );
             }
         }
+        VerifyFiles();
+    }
 
-        [Fact]
-        public void Rar_Jpg_ArchiveFileRead()
-        {
-            using (var archive = RarArchive.Open(Path.Combine(TEST_ARCHIVES_PATH, "Rar.jpeg.jpg"), new ReaderOptions()
+    [Fact]
+    public void Rar_Solid_ArchiveFileRead() => ArchiveFileRead("Rar.solid.rar");
+
+    [Fact]
+    public void Rar5_Solid_ArchiveFileRead() => ArchiveFileRead("Rar5.solid.rar");
+
+    [Fact]
+    public void Rar2_Multi_ArchiveStreamRead() =>
+        DoRar_Multi_ArchiveStreamRead(
+            new[]
             {
-                LookForHeader = true
-            }))
-            {
-                foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
-                {
-                    entry.WriteToDirectory(SCRATCH_FILES_PATH, new ExtractionOptions()
-                    {
-                        ExtractFullPath = true,
-                        Overwrite = true
-                    });
-                }
-            }
-            VerifyFiles();
-        }
-
-        [Fact]
-        public void Rar_Solid_ArchiveFileRead()
-        {
-            ArchiveFileRead("Rar.solid.rar");
-        }
-
-        [Fact]
-        public void Rar5_Solid_ArchiveFileRead()
-        {
-            ArchiveFileRead("Rar5.solid.rar");
-        }
-
-        [Fact]
-        public void Rar2_Multi_ArchiveStreamRead()
-        {
-            DoRar_Multi_ArchiveStreamRead(new string[] {
                 "Rar2.multi.rar",
                 "Rar2.multi.r00",
                 "Rar2.multi.r01",
                 "Rar2.multi.r02",
                 "Rar2.multi.r03",
                 "Rar2.multi.r04",
-                "Rar2.multi.r05"}, false);
-        }
+                "Rar2.multi.r05"
+            },
+            false
+        );
 
-        [Fact]
-        public void Rar2_Multi_ArchiveFileRead()
-        {
-            ArchiveFileRead("Rar2.multi.rar"); //r00, r01...
-        }
+    [Fact]
+    public void Rar2_Multi_ArchiveFileRead() => ArchiveFileRead("Rar2.multi.rar"); //r00, r01...
 
-        [Fact]
-        public void Rar2_ArchiveFileRead()
-        {
-            ArchiveFileRead("Rar2.rar");
-        }
+    [Fact]
+    public void Rar2_ArchiveFileRead() => ArchiveFileRead("Rar2.rar");
 
-        [Fact]
-        public void Rar2_ArchiveVersionTest()
-        {
-            string testArchive = Path.Combine(TEST_ARCHIVES_PATH, "Rar2.rar");
+    [Fact]
+    public void Rar2_ArchiveVersionTest()
+    {
+        var testArchive = Path.Combine(TEST_ARCHIVES_PATH, "Rar2.rar");
 
-            using (var archive = RarArchive.Open(testArchive))
+        using var archive = RarArchive.Open(testArchive);
+        Assert.Equal(2, archive.MinVersion);
+        Assert.Equal(2, archive.MaxVersion);
+    }
+
+    [Fact]
+    public void Rar4_ArchiveVersionTest()
+    {
+        var testArchive = Path.Combine(TEST_ARCHIVES_PATH, "Rar4.multi.part01.rar");
+
+        using var archive = RarArchive.Open(testArchive);
+        Assert.Equal(3, archive.MinVersion);
+        Assert.Equal(4, archive.MaxVersion);
+    }
+
+    [Fact]
+    public void Rar5_ArchiveVersionTest()
+    {
+        var testArchive = Path.Combine(TEST_ARCHIVES_PATH, "Rar5.solid.rar");
+
+        using var archive = RarArchive.Open(testArchive);
+        Assert.Equal(5, archive.MinVersion);
+        Assert.Equal(6, archive.MaxVersion);
+    }
+
+    [Fact]
+    public void Rar4_Multi_ArchiveFileRead() => ArchiveFileRead("Rar4.multi.part01.rar");
+
+    [Fact]
+    public void Rar4_ArchiveFileRead() => ArchiveFileRead("Rar4.rar");
+
+    [Fact]
+    public void Rar_GetPartsSplit() =>
+        //uses first part to search for all parts and compares against this array
+        ArchiveGetParts(
+            new[]
             {
-                Assert.Equal(2, archive.MinVersion);
-                Assert.Equal(2, archive.MaxVersion);
-            }
-        }
-
-        [Fact]
-        public void Rar4_ArchiveVersionTest()
-        {
-            string testArchive = Path.Combine(TEST_ARCHIVES_PATH, "Rar4.multi.part01.rar");
-
-            using (var archive = RarArchive.Open(testArchive))
-            {
-                Assert.Equal(3, archive.MinVersion);
-                Assert.Equal(4, archive.MaxVersion);
-            }
-        }
-
-        [Fact]
-        public void Rar5_ArchiveVersionTest()
-        {
-            string testArchive = Path.Combine(TEST_ARCHIVES_PATH, "Rar5.solid.rar");
-
-            using (var archive = RarArchive.Open(testArchive))
-            {
-                Assert.Equal(5, archive.MinVersion);
-                Assert.Equal(6, archive.MaxVersion);
-            }
-        }
-
-        [Fact]
-        public void Rar4_Multi_ArchiveFileRead()
-        {
-            ArchiveFileRead("Rar4.multi.part01.rar");
-        }
-
-        [Fact]
-        public void Rar4_ArchiveFileRead()
-        {
-            ArchiveFileRead("Rar4.rar");
-        }
-
-        [Fact]
-        public void Rar_GetPartsSplit()
-        {
-            //uses first part to search for all parts and compares against this array
-            ArchiveGetParts(new string[] {
                 "Rar4.split.001",
                 "Rar4.split.002",
                 "Rar4.split.003",
                 "Rar4.split.004",
                 "Rar4.split.005",
-                "Rar4.split.006"});
-        }
-        [Fact]
-        public void Rar_GetPartsOld()
-        {
-            //uses first part to search for all parts and compares against this array
-            ArchiveGetParts(new string[] {
+                "Rar4.split.006"
+            }
+        );
+
+    [Fact]
+    public void Rar_GetPartsOld() =>
+        //uses first part to search for all parts and compares against this array
+        ArchiveGetParts(
+            new[]
+            {
                 "Rar2.multi.rar",
                 "Rar2.multi.r00",
                 "Rar2.multi.r01",
                 "Rar2.multi.r02",
                 "Rar2.multi.r03",
                 "Rar2.multi.r04",
-                "Rar2.multi.r05"});
-        }
-        [Fact]
-        public void Rar_GetPartsNew()
-        {
-            //uses first part to search for all parts and compares against this array
-            ArchiveGetParts(new string[] {
+                "Rar2.multi.r05"
+            }
+        );
+
+    [Fact]
+    public void Rar_GetPartsNew() =>
+        //uses first part to search for all parts and compares against this array
+        ArchiveGetParts(
+            new[]
+            {
                 "Rar4.multi.part01.rar",
                 "Rar4.multi.part02.rar",
                 "Rar4.multi.part03.rar",
                 "Rar4.multi.part04.rar",
                 "Rar4.multi.part05.rar",
                 "Rar4.multi.part06.rar",
-                "Rar4.multi.part07.rar"});
-        }
+                "Rar4.multi.part07.rar"
+            }
+        );
 
-        [Fact]
-        public void Rar4_Multi_ArchiveStreamRead()
-        {
-            DoRar_Multi_ArchiveStreamRead(new string[] {
+    [Fact]
+    public void Rar4_Multi_ArchiveStreamRead() =>
+        DoRar_Multi_ArchiveStreamRead(
+            new[]
+            {
                 "Rar4.multi.part01.rar",
                 "Rar4.multi.part02.rar",
                 "Rar4.multi.part03.rar",
                 "Rar4.multi.part04.rar",
                 "Rar4.multi.part05.rar",
                 "Rar4.multi.part06.rar",
-                "Rar4.multi.part07.rar"}, false);
-        }
+                "Rar4.multi.part07.rar"
+            },
+            false
+        );
 
-        //no extension to test the lib identifies the archive by content not ext
-        [Fact]
-        public void Rar4_Split_ArchiveStreamRead()
-        {
-            ArchiveStreamMultiRead(null, new string[] {
+    //no extension to test the lib identifies the archive by content not ext
+    [Fact]
+    public void Rar4_Split_ArchiveStreamRead() =>
+        ArchiveStreamMultiRead(
+            null,
+            new[]
+            {
                 "Rar4.split.001",
                 "Rar4.split.002",
                 "Rar4.split.003",
                 "Rar4.split.004",
                 "Rar4.split.005",
-                "Rar4.split.006"});
-        }
-        //will detect and load other files
-        [Fact]
-        public void Rar4_Multi_ArchiveFirstFileRead()
-        {
-            ArchiveFileRead("Rar4.multi.part01.rar");
-                //"Rar4.multi.part02.rar",
-                //"Rar4.multi.part03.rar",
-                //"Rar4.multi.part04.rar",
-                //"Rar4.multi.part05.rar",
-                //"Rar4.multi.part06.rar",
-                //"Rar4.multi.part07.rar"
-        }
+                "Rar4.split.006"
+            }
+        );
+
     //will detect and load other files
     [Fact]
-        public void Rar4_Split_ArchiveFirstFileRead()
-        {
-            ArchiveFileRead("Rar4.split.001");
-                //"Rar4.split.002",
-                //"Rar4.split.003",
-                //"Rar4.split.004",
-                //"Rar4.split.005",
-                //"Rar4.split.006"
-        }
-        //will detect and load other files
-        [Fact]
-        public void Rar4_Split_ArchiveStreamFirstFileRead()
-        {
-            ArchiveStreamMultiRead(null, new string[] {
+    public void Rar4_Multi_ArchiveFirstFileRead() => ArchiveFileRead("Rar4.multi.part01.rar");
+
+    //"Rar4.multi.part02.rar",
+    //"Rar4.multi.part03.rar",
+    //"Rar4.multi.part04.rar",
+    //"Rar4.multi.part05.rar",
+    //"Rar4.multi.part06.rar",
+    //"Rar4.multi.part07.rar"
+    //will detect and load other files
+    [Fact]
+    public void Rar4_Split_ArchiveFirstFileRead() => ArchiveFileRead("Rar4.split.001");
+
+    //"Rar4.split.002",
+    //"Rar4.split.003",
+    //"Rar4.split.004",
+    //"Rar4.split.005",
+    //"Rar4.split.006"
+    //will detect and load other files
+    [Fact]
+    public void Rar4_Split_ArchiveStreamFirstFileRead() =>
+        ArchiveStreamMultiRead(
+            null,
+            new[]
+            {
                 "Rar4.split.001",
                 //"Rar4.split.002",
                 //"Rar4.split.003",
                 //"Rar4.split.004",
                 //"Rar4.split.005",
                 //"Rar4.split.006"
-                });
-        }
+            }
+        );
 
-        //open with ArchiveFactory.Open and stream
-        [Fact]
-        public void Rar4_Split_ArchiveOpen()
-        {
-            ArchiveOpenStreamRead(null,
-                "Rar4.split.001",
-                "Rar4.split.002",
-                "Rar4.split.003",
-                "Rar4.split.004",
-                "Rar4.split.005",
-                "Rar4.split.006");
-        }
+    //open with ArchiveFactory.Open and stream
+    [Fact]
+    public void Rar4_Split_ArchiveOpen() =>
+        ArchiveOpenStreamRead(
+            null,
+            "Rar4.split.001",
+            "Rar4.split.002",
+            "Rar4.split.003",
+            "Rar4.split.004",
+            "Rar4.split.005",
+            "Rar4.split.006"
+        );
 
-        //open with ArchiveFactory.Open and stream
-        [Fact]
-        public void Rar4_Multi_ArchiveOpen()
-        {
-            ArchiveOpenStreamRead(null,
-                "Rar4.multi.part01.rar",
-                "Rar4.multi.part02.rar",
-                "Rar4.multi.part03.rar",
-                "Rar4.multi.part04.rar",
-                "Rar4.multi.part05.rar",
-                "Rar4.multi.part06.rar",
-                "Rar4.multi.part07.rar");
-        }
-
-        [Fact]
-        public void Rar4_Multi_ArchiveOpenEntryVolumeIndexTest()
-        {
-            ArchiveOpenEntryVolumeIndexTest(
-                new[] {
-                    new[] { 0, 1 }, //exe - Rar4.multi.part01.rar to Rar4.multi.part02.rar
-                    new[] { 1, 5 }, //jpg - Rar4.multi.part02.rar to Rar4.multi.part06.rar
-                    new[] { 5, 6 }  //txt - Rar4.multi.part06.rar to Rar4.multi.part07.rar
-                },
-                null,
-                "Rar4.multi.part01.rar",
-                "Rar4.multi.part02.rar",
-                "Rar4.multi.part03.rar",
-                "Rar4.multi.part04.rar",
-                "Rar4.multi.part05.rar",
-                "Rar4.multi.part06.rar",
-                "Rar4.multi.part07.rar");
-        }
+    //open with ArchiveFactory.Open and stream
+    [Fact]
+    public void Rar4_Multi_ArchiveOpen() =>
+        ArchiveOpenStreamRead(
+            null,
+            "Rar4.multi.part01.rar",
+            "Rar4.multi.part02.rar",
+            "Rar4.multi.part03.rar",
+            "Rar4.multi.part04.rar",
+            "Rar4.multi.part05.rar",
+            "Rar4.multi.part06.rar",
+            "Rar4.multi.part07.rar"
+        );
 
     [Fact]
-        public void Rar_Multi_ArchiveFileRead()
-        {
-            ArchiveFileRead("Rar.multi.part01.rar");
-        }
-
-        [Fact]
-        public void Rar5_Multi_ArchiveFileRead()
-        {
-            ArchiveFileRead("Rar5.multi.part01.rar");
-        }
-
-        [Fact]
-        public void Rar_IsFirstVolume_True()
-        {
-            DoRar_IsFirstVolume_True("Rar.multi.part01.rar");
-        }
-
-        [Fact]
-        public void Rar5_IsFirstVolume_True()
-        {
-            DoRar_IsFirstVolume_True("Rar5.multi.part01.rar");
-        }
-
-        private void DoRar_IsFirstVolume_True(string firstFilename)
-        {
-            using (var archive = RarArchive.Open(Path.Combine(TEST_ARCHIVES_PATH, firstFilename)))
+    public void Rar4_Multi_ArchiveOpenEntryVolumeIndexTest() =>
+        ArchiveOpenEntryVolumeIndexTest(
+            new[]
             {
-                Assert.True(archive.IsMultipartVolume());
-                Assert.True(archive.IsFirstVolume());
-            }
-        }
+                new[] { 0, 1 }, //exe - Rar4.multi.part01.rar to Rar4.multi.part02.rar
+                new[] { 1, 5 }, //jpg - Rar4.multi.part02.rar to Rar4.multi.part06.rar
+                new[] { 5, 6 } //txt - Rar4.multi.part06.rar to Rar4.multi.part07.rar
+            },
+            null,
+            "Rar4.multi.part01.rar",
+            "Rar4.multi.part02.rar",
+            "Rar4.multi.part03.rar",
+            "Rar4.multi.part04.rar",
+            "Rar4.multi.part05.rar",
+            "Rar4.multi.part06.rar",
+            "Rar4.multi.part07.rar"
+        );
 
-        [Fact]
-        public void Rar_IsFirstVolume_False()
-        {
-            DoRar_IsFirstVolume_False("Rar.multi.part03.rar");
-        }
+    [Fact]
+    public void Rar_Multi_ArchiveFileRead() => ArchiveFileRead("Rar.multi.part01.rar");
 
-        [Fact]
-        public void Rar5_IsFirstVolume_False()
-        {
-            DoRar_IsFirstVolume_False("Rar5.multi.part03.rar");
-        }
+    [Fact]
+    public void Rar5_Multi_ArchiveFileRead() => ArchiveFileRead("Rar5.multi.part01.rar");
 
-        private void DoRar_IsFirstVolume_False(string notFirstFilename)
-        {
-            using (var archive = RarArchive.Open(Path.Combine(TEST_ARCHIVES_PATH, notFirstFilename)))
-            {
-                Assert.True(archive.IsMultipartVolume());
-                Assert.False(archive.IsFirstVolume());
-            }
-        }
+    [Fact]
+    public void Rar_IsFirstVolume_True() => DoRar_IsFirstVolume_True("Rar.multi.part01.rar");
+
+    [Fact]
+    public void Rar5_IsFirstVolume_True() => DoRar_IsFirstVolume_True("Rar5.multi.part01.rar");
+
+    private void DoRar_IsFirstVolume_True(string firstFilename)
+    {
+        using var archive = RarArchive.Open(Path.Combine(TEST_ARCHIVES_PATH, firstFilename));
+        Assert.True(archive.IsMultipartVolume());
+        Assert.True(archive.IsFirstVolume());
+    }
+
+    [Fact]
+    public void Rar_IsFirstVolume_False() => DoRar_IsFirstVolume_False("Rar.multi.part03.rar");
+
+    [Fact]
+    public void Rar5_IsFirstVolume_False() => DoRar_IsFirstVolume_False("Rar5.multi.part03.rar");
+
+    private void DoRar_IsFirstVolume_False(string notFirstFilename)
+    {
+        using var archive = RarArchive.Open(Path.Combine(TEST_ARCHIVES_PATH, notFirstFilename));
+        Assert.True(archive.IsMultipartVolume());
+        Assert.False(archive.IsFirstVolume());
     }
 }

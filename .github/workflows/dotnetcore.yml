@@ -1,5 +1,10 @@
 name: SharpCompress
-on: [push, pull_request]
+on:
+  push:
+    branches:
+      - 'master'
+  pull_request:
+    types: [ opened, synchronize, reopened, ready_for_review ]
 
 jobs:
   build:
@@ -12,8 +17,8 @@ jobs:
     - uses: actions/checkout@v3
     - uses: actions/setup-dotnet@v3
       with:
-        dotnet-version: 6.0.x
-    - run: dotnet run -p build/build.csproj
+        dotnet-version: 7.0.x
+    - run: dotnet run --project build/build.csproj
     - uses: actions/upload-artifact@v3
       with:
         name: ${{ matrix.os }}-sharpcompress.nupkg

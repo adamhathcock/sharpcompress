@@ -1,48 +1,45 @@
 using System;
 
-namespace SharpCompress.Compressors.Rar
+namespace SharpCompress.Compressors.Rar;
+
+internal static class RarCRC
 {
-    internal static class RarCRC
+    private static readonly uint[] crcTab;
+
+    public static uint CheckCrc(uint startCrc, byte b) =>
+        (crcTab[((int)startCrc ^ b) & 0xff] ^ (startCrc >> 8));
+
+    public static uint CheckCrc(uint startCrc, byte[] data, int offset, int count)
     {
-        private static readonly uint[] crcTab;
+        var size = Math.Min(data.Length - offset, count);
 
-        public static uint CheckCrc(uint startCrc, byte b)
+        for (var i = 0; i < size; i++)
         {
-            return (crcTab[((int)((int)startCrc ^ (int)b)) & 0xff] ^ (startCrc >> 8));
+            startCrc = (crcTab[((int)startCrc ^ data[offset + i]) & 0xff] ^ (startCrc >> 8));
         }
+        return (startCrc);
+    }
 
-        public static uint CheckCrc(uint startCrc, byte[] data, int offset, int count)
+    static RarCRC()
+    {
         {
-            int size = Math.Min(data.Length - offset, count);
-
-            for (int i = 0; i < size; i++)
+            crcTab = new uint[256];
+            for (uint i = 0; i < 256; i++)
             {
-                startCrc = (crcTab[((int)startCrc ^ data[offset + i]) & 0xff] ^ (startCrc >> 8));
-            }
-            return (startCrc);
-        }
-
-        static RarCRC()
-        {
-            {
-                crcTab = new uint[256];
-                for (uint i = 0; i < 256; i++)
+                var c = i;
+                for (var j = 0; j < 8; j++)
                 {
-                    uint c = i;
-                    for (int j = 0; j < 8; j++)
+                    if ((c & 1) != 0)
                     {
-                        if ((c & 1) != 0)
-                        {
-                            c = c >> 1;
-                            c ^= 0xEDB88320;
-                        }
-                        else
-                        {
-                            c = c >> 1;
-                        }
+                        c >>= 1;
+                        c ^= 0xEDB88320;
                     }
-                    crcTab[i] = c;
+                    else
+                    {
+                        c >>= 1;
+                    }
                 }
+                crcTab[i] = c;
             }
         }
     }

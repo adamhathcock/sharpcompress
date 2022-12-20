@@ -1,10 +1,6 @@
-﻿namespace SharpCompress.Common
+namespace SharpCompress.Common;
+
+public class MultipartStreamRequiredException : ExtractionException
 {
-    public class MultipartStreamRequiredException : ExtractionException
-    {
-        public MultipartStreamRequiredException(string message)
-            : base(message)
-        {
-        }
-    }
+    public MultipartStreamRequiredException(string message) : base(message) { }
 }

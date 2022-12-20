@@ -1,9 +1,8 @@
-﻿using SharpCompress.Common;
+using SharpCompress.Common;
 
-namespace SharpCompress.Readers
+namespace SharpCompress.Readers;
+
+public interface IReaderExtractionListener : IExtractionListener
 {
-    internal interface IReaderExtractionListener : IExtractionListener
-    {
-        void FireEntryExtractionProgress(Entry entry, long sizeTransferred, int iterations);
-    }
+    void FireEntryExtractionProgress(Entry entry, long sizeTransferred, int iterations);
 }

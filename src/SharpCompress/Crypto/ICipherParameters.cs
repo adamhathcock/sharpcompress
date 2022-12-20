@@ -1,6 +1,3 @@
-﻿namespace SharpCompress.Crypto
-{
-    public interface ICipherParameters
-    {
-    }
-}
+namespace SharpCompress.Crypto;
+
+public interface ICipherParameters { }

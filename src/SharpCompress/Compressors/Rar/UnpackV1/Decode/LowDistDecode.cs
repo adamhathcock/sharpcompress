@@ -1,10 +1,6 @@
-namespace SharpCompress.Compressors.Rar.UnpackV1.Decode
+namespace SharpCompress.Compressors.Rar.UnpackV1.Decode;
+
+internal class LowDistDecode : Decode
 {
-    internal class LowDistDecode : Decode
-    {
-        internal LowDistDecode()
-            : base(new int[PackDef.LDC])
-        {
-        }
-    }
+    internal LowDistDecode() : base(new int[PackDef.LDC]) { }
 }

@@ -1,17 +1,11 @@
-﻿using System;
+using System;
 
-namespace SharpCompress.Common
+namespace SharpCompress.Common;
+
+public class MultiVolumeExtractionException : ExtractionException
 {
-    public class MultiVolumeExtractionException : ExtractionException
-    {
-        public MultiVolumeExtractionException(string message)
-            : base(message)
-        {
-        }
+    public MultiVolumeExtractionException(string message) : base(message) { }
 
-        public MultiVolumeExtractionException(string message, Exception inner)
-            : base(message, inner)
-        {
-        }
-    }
+    public MultiVolumeExtractionException(string message, Exception inner) : base(message, inner)
+    { }
 }

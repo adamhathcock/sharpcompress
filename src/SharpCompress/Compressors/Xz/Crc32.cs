@@ -1,75 +1,68 @@
-﻿#nullable disable
+#nullable disable
 
 using System;
 
-namespace SharpCompress.Compressors.Xz
+namespace SharpCompress.Compressors.Xz;
+
+[CLSCompliant(false)]
+public static class Crc32
 {
-    internal static class Crc32
+    public const uint DefaultPolynomial = 0xedb88320u;
+    public const uint DefaultSeed = 0xffffffffu;
+
+    private static uint[] defaultTable;
+
+    public static uint Compute(byte[] buffer) => Compute(DefaultSeed, buffer);
+
+    public static uint Compute(uint seed, byte[] buffer) =>
+        Compute(DefaultPolynomial, seed, buffer);
+
+    public static uint Compute(uint polynomial, uint seed, byte[] buffer) =>
+        ~CalculateHash(InitializeTable(polynomial), seed, buffer);
+
+    private static uint[] InitializeTable(uint polynomial)
     {
-        public const UInt32 DefaultPolynomial = 0xedb88320u;
-        public const UInt32 DefaultSeed = 0xffffffffu;
-
-        private static UInt32[] defaultTable;
-
-        public static UInt32 Compute(byte[] buffer)
+        if (polynomial == DefaultPolynomial && defaultTable != null)
         {
-            return Compute(DefaultSeed, buffer);
+            return defaultTable;
         }
 
-        public static UInt32 Compute(UInt32 seed, byte[] buffer)
+        var createTable = new uint[256];
+        for (var i = 0; i < 256; i++)
         {
-            return Compute(DefaultPolynomial, seed, buffer);
-        }
-
-        public static UInt32 Compute(UInt32 polynomial, UInt32 seed, byte[] buffer)
-        {
-            return ~CalculateHash(InitializeTable(polynomial), seed, buffer);
-        }
-
-        private static UInt32[] InitializeTable(UInt32 polynomial)
-        {
-            if (polynomial == DefaultPolynomial && defaultTable != null)
+            var entry = (uint)i;
+            for (var j = 0; j < 8; j++)
             {
-                return defaultTable;
-            }
-
-            var createTable = new UInt32[256];
-            for (var i = 0; i < 256; i++)
-            {
-                var entry = (UInt32)i;
-                for (var j = 0; j < 8; j++)
+                if ((entry & 1) == 1)
                 {
-                    if ((entry & 1) == 1)
-                    {
-                        entry = (entry >> 1) ^ polynomial;
-                    }
-                    else
-                    {
-                        entry = entry >> 1;
-                    }
+                    entry = (entry >> 1) ^ polynomial;
                 }
-
-                createTable[i] = entry;
+                else
+                {
+                    entry >>= 1;
+                }
             }
 
-            if (polynomial == DefaultPolynomial)
-            {
-                defaultTable = createTable;
-            }
-
-            return createTable;
+            createTable[i] = entry;
         }
 
-        private static UInt32 CalculateHash(UInt32[] table, UInt32 seed, ReadOnlySpan<byte> buffer)
+        if (polynomial == DefaultPolynomial)
         {
-            var crc = seed;
-            int len = buffer.Length;
-            for (var i = 0; i < len; i++)
-            {
-                crc = (crc >> 8) ^ table[(buffer[i] ^ crc) & 0xff];
-            }
-
-            return crc;
+            defaultTable = createTable;
         }
+
+        return createTable;
+    }
+
+    private static uint CalculateHash(uint[] table, uint seed, ReadOnlySpan<byte> buffer)
+    {
+        var crc = seed;
+        var len = buffer.Length;
+        for (var i = 0; i < len; i++)
+        {
+            crc = (crc >> 8) ^ table[(buffer[i] ^ crc) & 0xff];
+        }
+
+        return crc;
     }
 }

@@ -1,11 +1,10 @@
-﻿namespace SharpCompress.Common
+namespace SharpCompress.Common;
+
+public enum ArchiveType
 {
-    public enum ArchiveType
-    {
-        Rar,
-        Zip,
-        Tar,
-        SevenZip,
-        GZip
-    }
+    Rar,
+    Zip,
+    Tar,
+    SevenZip,
+    GZip
 }

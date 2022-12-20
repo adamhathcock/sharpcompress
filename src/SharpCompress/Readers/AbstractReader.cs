@@ -4,234 +4,238 @@ using System.IO;
 using System.Linq;
 using SharpCompress.Common;
 
-namespace SharpCompress.Readers
+namespace SharpCompress.Readers;
+
+/// <summary>
+/// A generic push reader that reads unseekable comrpessed streams.
+/// </summary>
+public abstract class AbstractReader<TEntry, TVolume> : IReader, IReaderExtractionListener
+    where TEntry : Entry
+    where TVolume : Volume
 {
-    /// <summary>
-    /// A generic push reader that reads unseekable comrpessed streams.
-    /// </summary>
-    public abstract class AbstractReader<TEntry, TVolume> : IReader, IReaderExtractionListener
-        where TEntry : Entry
-        where TVolume : Volume
+    private bool completed;
+    private IEnumerator<TEntry>? entriesForCurrentReadStream;
+    private bool wroteCurrentEntry;
+
+    public event EventHandler<ReaderExtractionEventArgs<IEntry>>? EntryExtractionProgress;
+
+    public event EventHandler<CompressedBytesReadEventArgs>? CompressedBytesRead;
+    public event EventHandler<FilePartExtractionBeginEventArgs>? FilePartExtractionBegin;
+
+    internal AbstractReader(ReaderOptions options, ArchiveType archiveType)
     {
-        private bool completed;
-        private IEnumerator<TEntry>? entriesForCurrentReadStream;
-        private bool wroteCurrentEntry;
+        ArchiveType = archiveType;
+        Options = options;
+    }
 
-        public event EventHandler<ReaderExtractionEventArgs<IEntry>>? EntryExtractionProgress;
+    internal ReaderOptions Options { get; }
 
-        public event EventHandler<CompressedBytesReadEventArgs>? CompressedBytesRead;
-        public event EventHandler<FilePartExtractionBeginEventArgs>? FilePartExtractionBegin;
+    public ArchiveType ArchiveType { get; }
 
-        internal AbstractReader(ReaderOptions options, ArchiveType archiveType)
+    /// <summary>
+    /// Current volume that the current entry resides in
+    /// </summary>
+    public abstract TVolume Volume { get; }
+
+    /// <summary>
+    /// Current file entry
+    /// </summary>
+    public TEntry Entry => entriesForCurrentReadStream!.Current;
+
+    #region IDisposable Members
+
+    public void Dispose()
+    {
+        entriesForCurrentReadStream?.Dispose();
+        Volume?.Dispose();
+    }
+
+    #endregion
+
+    public bool Cancelled { get; private set; }
+
+    /// <summary>
+    /// Indicates that the remaining entries are not required.
+    /// On dispose of an EntryStream, the stream will not skip to the end of the entry.
+    /// An attempt to move to the next entry will throw an exception, as the compressed stream is not positioned at an entry boundary.
+    /// </summary>
+    public void Cancel()
+    {
+        if (!completed)
         {
-            ArchiveType = archiveType;
-            Options = options;
+            Cancelled = true;
         }
+    }
 
-        internal ReaderOptions Options { get; }
-
-        public ArchiveType ArchiveType { get; }
-
-        /// <summary>
-        /// Current volume that the current entry resides in
-        /// </summary>
-        public abstract TVolume Volume { get; }
-
-        /// <summary>
-        /// Current file entry
-        /// </summary>
-        public TEntry Entry => entriesForCurrentReadStream!.Current;
-
-        #region IDisposable Members
-
-        public void Dispose()
+    public bool MoveToNextEntry()
+    {
+        if (completed)
         {
-            entriesForCurrentReadStream?.Dispose();
-            Volume?.Dispose();
-        }
-
-        #endregion
-
-        public bool Cancelled { get; private set; }
-
-        /// <summary>
-        /// Indicates that the remaining entries are not required.
-        /// On dispose of an EntryStream, the stream will not skip to the end of the entry.
-        /// An attempt to move to the next entry will throw an exception, as the compressed stream is not positioned at an entry boundary.
-        /// </summary>
-        public void Cancel()
-        {
-            if (!completed)
-            {
-                Cancelled = true;
-            }
-        }
-
-        public bool MoveToNextEntry()
-        {
-            if (completed)
-            {
-                return false;
-            }
-            if (Cancelled)
-            {
-                throw new InvalidOperationException("Reader has been cancelled.");
-            }
-            if (entriesForCurrentReadStream is null)
-            {
-                return LoadStreamForReading(RequestInitialStream());
-            }
-            if (!wroteCurrentEntry)
-            {
-                SkipEntry();
-            }
-            wroteCurrentEntry = false;
-            if (NextEntryForCurrentStream())
-            {
-                return true;
-            }
-            completed = true;
             return false;
         }
-
-        protected bool LoadStreamForReading(Stream stream)
+        if (Cancelled)
         {
-            entriesForCurrentReadStream?.Dispose();
-            if ((stream is null) || (!stream.CanRead))
-            {
-                throw new MultipartStreamRequiredException("File is split into multiple archives: '"
-                                                           + Entry.Key +
-                                                           "'. A new readable stream is required.  Use Cancel if it was intended.");
-            }
-            entriesForCurrentReadStream = GetEntries(stream).GetEnumerator();
-            return entriesForCurrentReadStream.MoveNext();
+            throw new InvalidOperationException("Reader has been cancelled.");
         }
-
-        protected virtual Stream RequestInitialStream()
+        if (entriesForCurrentReadStream is null)
         {
-            return Volume.Stream;
+            return LoadStreamForReading(RequestInitialStream());
         }
-
-        internal virtual bool NextEntryForCurrentStream()
+        if (!wroteCurrentEntry)
         {
-            return entriesForCurrentReadStream!.MoveNext();
+            SkipEntry();
         }
-
-        protected abstract IEnumerable<TEntry> GetEntries(Stream stream);
-
-        #region Entry Skip/Write
-
-        private void SkipEntry()
+        wroteCurrentEntry = false;
+        if (NextEntryForCurrentStream())
         {
-            if (!Entry.IsDirectory)
-            {
-                Skip();
-            }
+            return true;
         }
+        completed = true;
+        return false;
+    }
 
-        private void Skip()
+    protected bool LoadStreamForReading(Stream stream)
+    {
+        entriesForCurrentReadStream?.Dispose();
+        if ((stream is null) || (!stream.CanRead))
         {
-            var part = Entry.Parts.First();
-
-            if (ArchiveType != ArchiveType.Rar
-                && !Entry.IsSolid
-                && Entry.CompressedSize > 0)
-            {
-                //not solid and has a known compressed size then we can skip raw bytes.
-                var rawStream = part.GetRawStream();
-
-                if (rawStream != null)
-                {
-                    var bytesToAdvance = Entry.CompressedSize;
-                    rawStream.Skip(bytesToAdvance);
-                    part.Skipped = true;
-                    return;
-                }
-            }
-            //don't know the size so we have to try to decompress to skip
-            using (var s = OpenEntryStream())
-            {
-                s.SkipEntry();
-            }
+            throw new MultipartStreamRequiredException(
+                "File is split into multiple archives: '"
+                    + Entry.Key
+                    + "'. A new readable stream is required.  Use Cancel if it was intended."
+            );
         }
+        entriesForCurrentReadStream = GetEntries(stream).GetEnumerator();
+        return entriesForCurrentReadStream.MoveNext();
+    }
 
-        public void WriteEntryTo(Stream writableStream)
+    protected virtual Stream RequestInitialStream() => Volume.Stream;
+
+    internal virtual bool NextEntryForCurrentStream() => entriesForCurrentReadStream!.MoveNext();
+
+    protected abstract IEnumerable<TEntry> GetEntries(Stream stream);
+
+    #region Entry Skip/Write
+
+    private void SkipEntry()
+    {
+        if (!Entry.IsDirectory)
         {
-            if (wroteCurrentEntry)
-            {
-                throw new ArgumentException("WriteEntryTo or OpenEntryStream can only be called once.");
-            }
-
-            if (writableStream is null)
-            {
-                throw new ArgumentNullException(nameof(writableStream));
-            }
-            if (!writableStream.CanWrite)
-            {
-                throw new ArgumentException("A writable Stream was required.  Use Cancel if that was intended.");
-            }
-
-            Write(writableStream);
-            wroteCurrentEntry = true;
+            Skip();
         }
+    }
 
-        internal void Write(Stream writeStream)
+    private void Skip()
+    {
+        var part = Entry.Parts.First();
+
+        if (ArchiveType != ArchiveType.Rar && !Entry.IsSolid && Entry.CompressedSize > 0)
         {
-            var streamListener = this as IReaderExtractionListener;
-            using (Stream s = OpenEntryStream())
+            //not solid and has a known compressed size then we can skip raw bytes.
+            var rawStream = part.GetRawStream();
+
+            if (rawStream != null)
             {
-                s.TransferTo(writeStream, Entry, streamListener);
+                var bytesToAdvance = Entry.CompressedSize;
+                rawStream.Skip(bytesToAdvance);
+                part.Skipped = true;
+                return;
             }
         }
+        //don't know the size so we have to try to decompress to skip
+        using var s = OpenEntryStream();
+        s.SkipEntry();
+    }
 
-        public EntryStream OpenEntryStream()
+    public void WriteEntryTo(Stream writableStream)
+    {
+        if (wroteCurrentEntry)
         {
-            if (wroteCurrentEntry)
-            {
-                throw new ArgumentException("WriteEntryTo or OpenEntryStream can only be called once.");
-            }
-            var stream = GetEntryStream();
-            wroteCurrentEntry = true;
-            return stream;
+            throw new ArgumentException("WriteEntryTo or OpenEntryStream can only be called once.");
         }
 
-        /// <summary>
-        /// Retains a reference to the entry stream, so we can check whether it completed later.
-        /// </summary>
-        protected EntryStream CreateEntryStream(Stream decompressed)
+        if (writableStream is null)
         {
-            return new EntryStream(this, decompressed);
+            throw new ArgumentNullException(nameof(writableStream));
+        }
+        if (!writableStream.CanWrite)
+        {
+            throw new ArgumentException(
+                "A writable Stream was required.  Use Cancel if that was intended."
+            );
         }
 
-        protected virtual EntryStream GetEntryStream()
+        Write(writableStream);
+        wroteCurrentEntry = true;
+    }
+
+    internal void Write(Stream writeStream)
+    {
+        var streamListener = this as IReaderExtractionListener;
+        using Stream s = OpenEntryStream();
+        s.TransferTo(writeStream, Entry, streamListener);
+    }
+
+    public EntryStream OpenEntryStream()
+    {
+        if (wroteCurrentEntry)
         {
-            return CreateEntryStream(Entry.Parts.First().GetCompressedStream());
+            throw new ArgumentException("WriteEntryTo or OpenEntryStream can only be called once.");
         }
+        var stream = GetEntryStream();
+        wroteCurrentEntry = true;
+        return stream;
+    }
 
-        #endregion
+    /// <summary>
+    /// Retains a reference to the entry stream, so we can check whether it completed later.
+    /// </summary>
+    protected EntryStream CreateEntryStream(Stream decompressed) =>
+        new EntryStream(this, decompressed);
 
-        IEntry IReader.Entry => Entry;
+    protected virtual EntryStream GetEntryStream() =>
+        CreateEntryStream(Entry.Parts.First().GetCompressedStream());
 
-        void IExtractionListener.FireCompressedBytesRead(long currentPartCompressedBytes, long compressedReadBytes)
-        {
-            CompressedBytesRead?.Invoke(this, new CompressedBytesReadEventArgs(
+    #endregion
+
+    IEntry IReader.Entry => Entry;
+
+    void IExtractionListener.FireCompressedBytesRead(
+        long currentPartCompressedBytes,
+        long compressedReadBytes
+    ) =>
+        CompressedBytesRead?.Invoke(
+            this,
+            new CompressedBytesReadEventArgs(
                 currentFilePartCompressedBytesRead: currentPartCompressedBytes,
                 compressedBytesRead: compressedReadBytes
-            ));
-        }
+            )
+        );
 
-        void IExtractionListener.FireFilePartExtractionBegin(string name, long size, long compressedSize)
-        {
-            FilePartExtractionBegin?.Invoke(this, new FilePartExtractionBeginEventArgs(
+    void IExtractionListener.FireFilePartExtractionBegin(
+        string name,
+        long size,
+        long compressedSize
+    ) =>
+        FilePartExtractionBegin?.Invoke(
+            this,
+            new FilePartExtractionBeginEventArgs(
                 compressedSize: compressedSize,
                 size: size,
                 name: name
-            ));
-        }
+            )
+        );
 
-        void IReaderExtractionListener.FireEntryExtractionProgress(Entry entry, long bytesTransferred, int iterations)
-        {
-            EntryExtractionProgress?.Invoke(this, new ReaderExtractionEventArgs<IEntry>(entry, new ReaderProgress(entry, bytesTransferred, iterations)));
-        }
-    }
+    void IReaderExtractionListener.FireEntryExtractionProgress(
+        Entry entry,
+        long bytesTransferred,
+        int iterations
+    ) =>
+        EntryExtractionProgress?.Invoke(
+            this,
+            new ReaderExtractionEventArgs<IEntry>(
+                entry,
+                new ReaderProgress(entry, bytesTransferred, iterations)
+            )
+        );
 }

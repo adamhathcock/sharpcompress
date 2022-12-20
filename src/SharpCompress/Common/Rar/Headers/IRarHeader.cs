@@ -1,7 +1,6 @@
-﻿namespace SharpCompress.Common.Rar.Headers
+namespace SharpCompress.Common.Rar.Headers;
+
+public interface IRarHeader
 {
-    internal interface IRarHeader
-    {
-        HeaderType HeaderType { get; }
-    }
+    HeaderType HeaderType { get; }
 }

@@ -1,16 +1,10 @@
-﻿using System.IO;
+using System.IO;
 
-namespace SharpCompress.Common.Zip.Headers
+namespace SharpCompress.Common.Zip.Headers;
+
+internal class IgnoreHeader : ZipHeader
 {
-    internal class IgnoreHeader : ZipHeader
-    {
-        public IgnoreHeader(ZipHeaderType type)
-            : base(type)
-        {
-        }
+    public IgnoreHeader(ZipHeaderType type) : base(type) { }
 
-        internal override void Read(BinaryReader reader)
-        {
-        }
-    }
+    internal override void Read(BinaryReader reader) { }
 }

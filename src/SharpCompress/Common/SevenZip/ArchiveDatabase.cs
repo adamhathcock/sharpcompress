@@ -6,180 +6,163 @@ using System.IO;
 using SharpCompress.Compressors.LZMA;
 using SharpCompress.Compressors.LZMA.Utilites;
 
-namespace SharpCompress.Common.SevenZip
+namespace SharpCompress.Common.SevenZip;
+
+internal class ArchiveDatabase
 {
-    internal class ArchiveDatabase
+    internal byte _majorVersion;
+    internal byte _minorVersion;
+    internal long _startPositionAfterHeader;
+    internal long _dataStartPosition;
+
+    internal List<long> _packSizes = new List<long>();
+    internal List<uint?> _packCrCs = new List<uint?>();
+    internal List<CFolder> _folders = new List<CFolder>();
+    internal List<int> _numUnpackStreamsVector;
+    internal List<CFileItem> _files = new List<CFileItem>();
+
+    internal List<long> _packStreamStartPositions = new List<long>();
+    internal List<int> _folderStartFileIndex = new List<int>();
+    internal List<int> _fileIndexToFolderIndexMap = new List<int>();
+
+    internal IPasswordProvider PasswordProvider { get; }
+
+    public ArchiveDatabase(IPasswordProvider passwordProvider) =>
+        PasswordProvider = passwordProvider;
+
+    internal void Clear()
     {
-        internal byte _majorVersion;
-        internal byte _minorVersion;
-        internal long _startPositionAfterHeader;
-        internal long _dataStartPosition;
+        _packSizes.Clear();
+        _packCrCs.Clear();
+        _folders.Clear();
+        _numUnpackStreamsVector = null!;
+        _files.Clear();
 
-        internal List<long> _packSizes = new List<long>();
-        internal List<uint?> _packCrCs = new List<uint?>();
-        internal List<CFolder> _folders = new List<CFolder>();
-        internal List<int> _numUnpackStreamsVector;
-        internal List<CFileItem> _files = new List<CFileItem>();
+        _packStreamStartPositions.Clear();
+        _folderStartFileIndex.Clear();
+        _fileIndexToFolderIndexMap.Clear();
+    }
 
-        internal List<long> _packStreamStartPositions = new List<long>();
-        internal List<int> _folderStartFileIndex = new List<int>();
-        internal List<int> _fileIndexToFolderIndexMap = new List<int>();
+    internal bool IsEmpty() =>
+        _packSizes.Count == 0
+        && _packCrCs.Count == 0
+        && _folders.Count == 0
+        && _numUnpackStreamsVector.Count == 0
+        && _files.Count == 0;
 
-        internal IPasswordProvider PasswordProvider { get; }
+    private void FillStartPos()
+    {
+        _packStreamStartPositions.Clear();
 
-        public ArchiveDatabase(IPasswordProvider passwordProvider)
+        long startPos = 0;
+        for (var i = 0; i < _packSizes.Count; i++)
         {
-            PasswordProvider = passwordProvider;
+            _packStreamStartPositions.Add(startPos);
+            startPos += _packSizes[i];
         }
+    }
 
-        internal void Clear()
+    private void FillFolderStartFileIndex()
+    {
+        _folderStartFileIndex.Clear();
+        _fileIndexToFolderIndexMap.Clear();
+
+        var folderIndex = 0;
+        var indexInFolder = 0;
+        for (var i = 0; i < _files.Count; i++)
         {
-            _packSizes.Clear();
-            _packCrCs.Clear();
-            _folders.Clear();
-            _numUnpackStreamsVector = null!;
-            _files.Clear();
+            var file = _files[i];
 
-            _packStreamStartPositions.Clear();
-            _folderStartFileIndex.Clear();
-            _fileIndexToFolderIndexMap.Clear();
-        }
+            var emptyStream = !file.HasStream;
 
-        internal bool IsEmpty()
-        {
-            return _packSizes.Count == 0
-                   && _packCrCs.Count == 0
-                   && _folders.Count == 0
-                   && _numUnpackStreamsVector.Count == 0
-                   && _files.Count == 0;
-        }
-
-        private void FillStartPos()
-        {
-            _packStreamStartPositions.Clear();
-
-            long startPos = 0;
-            for (int i = 0; i < _packSizes.Count; i++)
+            if (emptyStream && indexInFolder == 0)
             {
-                _packStreamStartPositions.Add(startPos);
-                startPos += _packSizes[i];
+                _fileIndexToFolderIndexMap.Add(-1);
+                continue;
             }
-        }
 
-        private void FillFolderStartFileIndex()
-        {
-            _folderStartFileIndex.Clear();
-            _fileIndexToFolderIndexMap.Clear();
-
-            int folderIndex = 0;
-            int indexInFolder = 0;
-            for (int i = 0; i < _files.Count; i++)
+            if (indexInFolder == 0)
             {
-                CFileItem file = _files[i];
-
-                bool emptyStream = !file.HasStream;
-
-                if (emptyStream && indexInFolder == 0)
+                // v3.13 incorrectly worked with empty folders
+                // v4.07: Loop for skipping empty folders
+                for (; ; )
                 {
-                    _fileIndexToFolderIndexMap.Add(-1);
-                    continue;
-                }
-
-                if (indexInFolder == 0)
-                {
-                    // v3.13 incorrectly worked with empty folders
-                    // v4.07: Loop for skipping empty folders
-                    for (; ; )
+                    if (folderIndex >= _folders.Count)
                     {
-                        if (folderIndex >= _folders.Count)
-                        {
-                            throw new InvalidOperationException();
-                        }
-
-                        _folderStartFileIndex.Add(i); // check it
-
-                        if (_numUnpackStreamsVector![folderIndex] != 0)
-                        {
-                            break;
-                        }
-
-                        folderIndex++;
+                        throw new InvalidOperationException();
                     }
-                }
 
-                _fileIndexToFolderIndexMap.Add(folderIndex);
+                    _folderStartFileIndex.Add(i); // check it
 
-                if (emptyStream)
-                {
-                    continue;
-                }
+                    if (_numUnpackStreamsVector![folderIndex] != 0)
+                    {
+                        break;
+                    }
 
-                indexInFolder++;
-
-                if (indexInFolder >= _numUnpackStreamsVector![folderIndex])
-                {
                     folderIndex++;
-                    indexInFolder = 0;
                 }
             }
-        }
 
-        public void Fill()
-        {
-            FillStartPos();
-            FillFolderStartFileIndex();
-        }
+            _fileIndexToFolderIndexMap.Add(folderIndex);
 
-        internal long GetFolderStreamPos(CFolder folder, int indexInFolder)
-        {
-            int index = folder._firstPackStreamId + indexInFolder;
-            return _dataStartPosition + _packStreamStartPositions[index];
-        }
-
-        internal long GetFolderFullPackSize(int folderIndex)
-        {
-            int packStreamIndex = _folders[folderIndex]._firstPackStreamId;
-            CFolder folder = _folders[folderIndex];
-
-            long size = 0;
-            for (int i = 0; i < folder._packStreams.Count; i++)
+            if (emptyStream)
             {
-                size += _packSizes[packStreamIndex + i];
+                continue;
             }
 
-            return size;
-        }
+            indexInFolder++;
 
-        internal Stream GetFolderStream(Stream stream, CFolder folder, IPasswordProvider pw)
-        {
-            int packStreamIndex = folder._firstPackStreamId;
-            long folderStartPackPos = GetFolderStreamPos(folder, 0);
-            int count = folder._packStreams.Count;
-            long[] packSizes = new long[count];
-            for (int j = 0; j < count; j++)
+            if (indexInFolder >= _numUnpackStreamsVector![folderIndex])
             {
-                packSizes[j] = _packSizes[packStreamIndex + j];
+                folderIndex++;
+                indexInFolder = 0;
             }
-
-            return DecoderStreamHelper.CreateDecoderStream(stream, folderStartPackPos, packSizes, folder, pw);
         }
+    }
 
-        private long GetFolderPackStreamSize(int folderIndex, int streamIndex)
+    public void Fill()
+    {
+        FillStartPos();
+        FillFolderStartFileIndex();
+    }
+
+    internal long GetFolderStreamPos(CFolder folder, int indexInFolder)
+    {
+        var index = folder._firstPackStreamId + indexInFolder;
+        return _dataStartPosition + _packStreamStartPositions[index];
+    }
+
+    internal long GetFolderFullPackSize(int folderIndex)
+    {
+        var packStreamIndex = _folders[folderIndex]._firstPackStreamId;
+        var folder = _folders[folderIndex];
+
+        long size = 0;
+        for (var i = 0; i < folder._packStreams.Count; i++)
         {
-            return _packSizes[_folders[folderIndex]._firstPackStreamId + streamIndex];
+            size += _packSizes[packStreamIndex + i];
         }
 
-        private long GetFilePackSize(int fileIndex)
+        return size;
+    }
+
+    internal Stream GetFolderStream(Stream stream, CFolder folder, IPasswordProvider pw)
+    {
+        var packStreamIndex = folder._firstPackStreamId;
+        var folderStartPackPos = GetFolderStreamPos(folder, 0);
+        var count = folder._packStreams.Count;
+        var packSizes = new long[count];
+        for (var j = 0; j < count; j++)
         {
-            int folderIndex = _fileIndexToFolderIndexMap[fileIndex];
-            if (folderIndex != -1)
-            {
-                if (_folderStartFileIndex[folderIndex] == fileIndex)
-                {
-                    return GetFolderFullPackSize(folderIndex);
-                }
-            }
-            return 0;
+            packSizes[j] = _packSizes[packStreamIndex + j];
         }
+
+        return DecoderStreamHelper.CreateDecoderStream(
+            stream,
+            folderStartPackPos,
+            packSizes,
+            folder,
+            pw
+        );
     }
 }

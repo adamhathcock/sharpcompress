@@ -2,41 +2,40 @@
 using System.IO;
 using Xunit;
 
-namespace SharpCompress.Test.Xz
+namespace SharpCompress.Test.Xz;
+
+public class XZStreamTests : XZTestsBase
 {
-    public class XZStreamTests : XZTestsBase
+    [Fact]
+    public void CanReadEmptyStream()
     {
-        [Fact]
-        public void CanReadEmptyStream()
+        XZStream xz = new XZStream(CompressedEmptyStream);
+        using (var sr = new StreamReader(xz))
         {
-            XZStream xz = new XZStream(CompressedEmptyStream);
-            using (var sr = new StreamReader(xz))
-            {
-                string uncompressed = sr.ReadToEnd();
-                Assert.Equal(OriginalEmpty, uncompressed);
-            }
+            string uncompressed = sr.ReadToEnd();
+            Assert.Equal(OriginalEmpty, uncompressed);
         }
+    }
 
-        [Fact]
-        public void CanReadStream()
+    [Fact]
+    public void CanReadStream()
+    {
+        XZStream xz = new XZStream(CompressedStream);
+        using (var sr = new StreamReader(xz))
         {
-            XZStream xz = new XZStream(CompressedStream);
-            using (var sr = new StreamReader(xz))
-            {
-                string uncompressed = sr.ReadToEnd();
-                Assert.Equal(Original, uncompressed);
-            }
+            string uncompressed = sr.ReadToEnd();
+            Assert.Equal(Original, uncompressed);
         }
+    }
 
-        [Fact]
-        public void CanReadIndexedStream()
+    [Fact]
+    public void CanReadIndexedStream()
+    {
+        XZStream xz = new XZStream(CompressedIndexedStream);
+        using (var sr = new StreamReader(xz))
         {
-            XZStream xz = new XZStream(CompressedIndexedStream);
-            using (var sr = new StreamReader(xz))
-            {
-                string uncompressed = sr.ReadToEnd();
-                Assert.Equal(OriginalIndexed, uncompressed);
-            }
+            string uncompressed = sr.ReadToEnd();
+            Assert.Equal(OriginalIndexed, uncompressed);
         }
     }
 }

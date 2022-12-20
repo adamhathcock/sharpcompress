@@ -1,7 +1,6 @@
-﻿namespace SharpCompress.Compressors.LZMA.Utilites
+namespace SharpCompress.Compressors.LZMA.Utilites;
+
+internal interface IPasswordProvider
 {
-    internal interface IPasswordProvider
-    {
-        string CryptoGetTextPassword();
-    }
+    string CryptoGetTextPassword();
 }

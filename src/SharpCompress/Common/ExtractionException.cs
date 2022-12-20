@@ -1,17 +1,10 @@
-﻿using System;
+using System;
 
-namespace SharpCompress.Common
+namespace SharpCompress.Common;
+
+public class ExtractionException : Exception
 {
-    public class ExtractionException : Exception
-    {
-        public ExtractionException(string message)
-            : base(message)
-        {
-        }
+    public ExtractionException(string message) : base(message) { }
 
-        public ExtractionException(string message, Exception inner)
-            : base(message, inner)
-        {
-        }
-    }
+    public ExtractionException(string message, Exception inner) : base(message, inner) { }
 }

@@ -1,20 +1,22 @@
-﻿using System.Linq;
+using System.Linq;
 using SharpCompress.Common;
 
-namespace SharpCompress.Archives
+namespace SharpCompress.Archives;
+
+public static class IArchiveExtensions
 {
-    public static class IArchiveExtensions
+    /// <summary>
+    /// Extract to specific directory, retaining filename
+    /// </summary>
+    public static void WriteToDirectory(
+        this IArchive archive,
+        string destinationDirectory,
+        ExtractionOptions? options = null
+    )
     {
-        /// <summary>
-        /// Extract to specific directory, retaining filename
-        /// </summary>
-        public static void WriteToDirectory(this IArchive archive, string destinationDirectory,
-                                            ExtractionOptions? options = null)
+        foreach (var entry in archive.Entries.Where(x => !x.IsDirectory))
         {
-            foreach (IArchiveEntry entry in archive.Entries.Where(x => !x.IsDirectory))
-            {
-                entry.WriteToDirectory(destinationDirectory, options);
-            }
+            entry.WriteToDirectory(destinationDirectory, options);
         }
     }
 }

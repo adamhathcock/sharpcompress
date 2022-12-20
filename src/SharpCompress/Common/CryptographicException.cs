@@ -1,12 +1,8 @@
-﻿using System;
+using System;
 
-namespace SharpCompress.Common
+namespace SharpCompress.Common;
+
+public class CryptographicException : Exception
 {
-    public class CryptographicException : Exception
-    {
-        public CryptographicException(string message)
-            : base(message)
-        {
-        }
-    }
+    public CryptographicException(string message) : base(message) { }
 }

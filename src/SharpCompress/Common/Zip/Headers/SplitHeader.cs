@@ -1,18 +1,11 @@
 ﻿using System;
 using System.IO;
 
-namespace SharpCompress.Common.Zip.Headers
-{
-    internal class SplitHeader : ZipHeader
-    {
-        public SplitHeader()
-            : base(ZipHeaderType.Split)
-        {
-        }
+namespace SharpCompress.Common.Zip.Headers;
 
-        internal override void Read(BinaryReader reader)
-        {
-            throw new NotImplementedException();
-        }
-    }
+internal class SplitHeader : ZipHeader
+{
+    public SplitHeader() : base(ZipHeaderType.Split) { }
+
+    internal override void Read(BinaryReader reader) => throw new NotImplementedException();
 }

@@ -1,10 +1,6 @@
-namespace SharpCompress.Compressors.Rar.UnpackV1.Decode
+namespace SharpCompress.Compressors.Rar.UnpackV1.Decode;
+
+internal class BitDecode : Decode
 {
-    internal class BitDecode : Decode
-    {
-        internal BitDecode()
-            : base(new int[PackDef.BC])
-        {
-        }
-    }
+    internal BitDecode() : base(new int[PackDef.BC]) { }
 }

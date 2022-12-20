@@ -1,10 +1,6 @@
-namespace SharpCompress.Compressors.Rar.UnpackV1.Decode
+namespace SharpCompress.Compressors.Rar.UnpackV1.Decode;
+
+internal class RepDecode : Decode
 {
-    internal class RepDecode : Decode
-    {
-        internal RepDecode()
-            : base(new int[PackDef.RC])
-        {
-        }
-    }
+    internal RepDecode() : base(new int[PackDef.RC]) { }
 }

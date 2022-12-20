@@ -1,8 +1,7 @@
-﻿namespace SharpCompress.Common.SevenZip
+namespace SharpCompress.Common.SevenZip;
+
+internal class CBindPair
 {
-    internal class CBindPair
-    {
-        internal int _inIndex;
-        internal int _outIndex;
-    }
+    internal int _inIndex;
+    internal int _outIndex;
 }

@@ -30,124 +30,96 @@ using SharpCompress.Compressors.Deflate;
 using SharpCompress.Crypto;
 using Xunit;
 
-namespace SharpCompress.Test
+namespace SharpCompress.Test;
+
+public class ADCTest : TestBase
 {
-    public class ADCTest : TestBase
+    [Fact]
+    public void TestBuffer()
     {
-        [Fact]
-        public void TestBuffer()
+        using var decFs = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "adc_decompressed.bin"));
+        var decompressed = new byte[decFs.Length];
+        decFs.Read(decompressed, 0, decompressed.Length);
+
+        using var cmpFs = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "adc_compressed.bin"));
+        var compressed = new byte[cmpFs.Length];
+        cmpFs.Read(compressed, 0, compressed.Length);
+
+        ADCBase.Decompress(compressed, out var test);
+
+        Assert.Equal(decompressed, test);
+    }
+
+    [Fact]
+    public void TestBaseStream()
+    {
+        using var decFs = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "adc_decompressed.bin"));
+        var decompressed = new byte[decFs.Length];
+        decFs.Read(decompressed, 0, decompressed.Length);
+
+        using var cmpFs = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "adc_compressed.bin"));
+
+        ADCBase.Decompress(cmpFs, out var test);
+
+        Assert.Equal(decompressed, test);
+    }
+
+    [Fact]
+    public void TestADCStreamWholeChunk()
+    {
+        using var decFs = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "adc_decompressed.bin"));
+        var decompressed = new byte[decFs.Length];
+        decFs.Read(decompressed, 0, decompressed.Length);
+
+        using var cmpFs = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "adc_compressed.bin"));
+        using var decStream = new ADCStream(cmpFs, CompressionMode.Decompress);
+        var test = new byte[262144];
+
+        decStream.Read(test, 0, test.Length);
+
+        Assert.Equal(decompressed, test);
+    }
+
+    [Fact]
+    public void TestADCStream()
+    {
+        using var decFs = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "adc_decompressed.bin"));
+        var decompressed = new byte[decFs.Length];
+        decFs.Read(decompressed, 0, decompressed.Length);
+
+        using var cmpFs = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "adc_compressed.bin"));
+        using var decStream = new ADCStream(cmpFs, CompressionMode.Decompress);
+        using var decMs = new MemoryStream();
+        var test = new byte[512];
+        var count = 0;
+
+        do
         {
-            using (FileStream decFs = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "adc_decompressed.bin")))
-            {
-                byte[] decompressed = new byte[decFs.Length];
-                decFs.Read(decompressed, 0, decompressed.Length);
+            count = decStream.Read(test, 0, test.Length);
+            decMs.Write(test, 0, count);
+        } while (count > 0);
 
-                using (FileStream cmpFs = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "adc_compressed.bin")))
-                {
-                    byte[] compressed = new byte[cmpFs.Length];
-                    cmpFs.Read(compressed, 0, compressed.Length);
-                    byte[] test;
+        Assert.Equal(decompressed, decMs.ToArray());
+    }
 
-                    ADCBase.Decompress(compressed, out test);
+    [Fact]
+    public void TestCrc32Stream()
+    {
+        using var decFs = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar"));
+        var crc32 = new CRC32().GetCrc32(decFs);
+        decFs.Seek(0, SeekOrigin.Begin);
 
-                    Assert.Equal(decompressed, test);
-                }
-            }
-        }
+        var memory = new MemoryStream();
+        var crcStream = new Crc32Stream(memory, 0xEDB88320, 0xFFFFFFFF);
+        decFs.CopyTo(crcStream);
 
-        [Fact]
-        public void TestBaseStream()
-        {
-            using (FileStream decFs = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "adc_decompressed.bin")))
-            {
-                byte[] decompressed = new byte[decFs.Length];
-                decFs.Read(decompressed, 0, decompressed.Length);
+        decFs.Seek(0, SeekOrigin.Begin);
 
-                using (FileStream cmpFs = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "adc_compressed.bin")))
-                {
-                    byte[] test;
+        var crc32a = crcStream.Crc;
 
-                    ADCBase.Decompress(cmpFs, out test);
+        var crc32b = Crc32Stream.Compute(memory.ToArray());
 
-                    Assert.Equal(decompressed, test);
-                }
-            }
-        }
-
-        [Fact]
-        public void TestADCStreamWholeChunk()
-        {
-            using (FileStream decFs = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "adc_decompressed.bin")))
-            {
-                byte[] decompressed = new byte[decFs.Length];
-                decFs.Read(decompressed, 0, decompressed.Length);
-
-                using (FileStream cmpFs = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "adc_compressed.bin")))
-                {
-                    using (ADCStream decStream = new ADCStream(cmpFs, CompressionMode.Decompress))
-                    {
-                        byte[] test = new byte[262144];
-
-                        decStream.Read(test, 0, test.Length);
-
-                        Assert.Equal(decompressed, test);
-                    }
-                }
-            }
-        }
-
-        [Fact]
-        public void TestADCStream()
-        {
-            using (FileStream decFs = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "adc_decompressed.bin")))
-            {
-                byte[] decompressed = new byte[decFs.Length];
-                decFs.Read(decompressed, 0, decompressed.Length);
-
-                using (FileStream cmpFs = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "adc_compressed.bin")))
-                {
-                    using (ADCStream decStream = new ADCStream(cmpFs, CompressionMode.Decompress))
-                    {
-                        using (MemoryStream decMs = new MemoryStream())
-                        {
-                            byte[] test = new byte[512];
-                            int count = 0;
-
-                            do
-                            {
-                                count = decStream.Read(test, 0, test.Length);
-                                decMs.Write(test, 0, count);
-                            }
-                            while (count > 0);
-
-                            Assert.Equal(decompressed, decMs.ToArray());
-                        }
-                    }
-                }
-            }
-        }
-
-        [Fact]
-        public void TestCrc32Stream()
-        {
-            using (FileStream decFs = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar")))
-            {
-                var crc32 = new CRC32().GetCrc32(decFs);
-                decFs.Seek(0, SeekOrigin.Begin);
-
-                var memory = new MemoryStream();
-                var crcStream = new Crc32Stream(memory, 0xEDB88320, 0xFFFFFFFF);
-                decFs.CopyTo(crcStream);
-
-                decFs.Seek(0, SeekOrigin.Begin);
-
-                var crc32a = crcStream.Crc;
-
-                var crc32b = Crc32Stream.Compute(memory.ToArray());
-
-                Assert.Equal(crc32, crc32a);
-                Assert.Equal(crc32, crc32b);
-            }
-        }
+        Assert.Equal(crc32, crc32a);
+        Assert.Equal(crc32, crc32b);
     }
 }

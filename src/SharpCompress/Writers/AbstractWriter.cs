@@ -4,56 +4,52 @@ using System;
 using System.IO;
 using SharpCompress.Common;
 
-namespace SharpCompress.Writers
+namespace SharpCompress.Writers;
+
+public abstract class AbstractWriter : IWriter
 {
-    public abstract class AbstractWriter : IWriter
+    private bool _isDisposed;
+
+    protected AbstractWriter(ArchiveType type, WriterOptions writerOptions)
     {
-        private bool _isDisposed;
+        WriterType = type;
+        WriterOptions = writerOptions;
+    }
 
-        protected AbstractWriter(ArchiveType type, WriterOptions writerOptions)
+    protected void InitalizeStream(Stream stream) => OutputStream = stream;
+
+    protected Stream OutputStream { get; private set; }
+
+    public ArchiveType WriterType { get; }
+
+    protected WriterOptions WriterOptions { get; }
+
+    public abstract void Write(string filename, Stream source, DateTime? modificationTime);
+
+    protected virtual void Dispose(bool isDisposing)
+    {
+        if (isDisposing)
         {
-            WriterType = type;
-            WriterOptions = writerOptions;
+            OutputStream.Dispose();
         }
+    }
 
-        protected void InitalizeStream(Stream stream)
+    public void Dispose()
+    {
+        if (!_isDisposed)
         {
-            OutputStream = stream;
+            GC.SuppressFinalize(this);
+            Dispose(true);
+            _isDisposed = true;
         }
+    }
 
-        protected Stream OutputStream { get; private set; }
-
-        public ArchiveType WriterType { get; }
-
-        protected WriterOptions WriterOptions { get; }
-
-        public abstract void Write(string filename, Stream source, DateTime? modificationTime);
-
-        protected virtual void Dispose(bool isDisposing)
+    ~AbstractWriter()
+    {
+        if (!_isDisposed)
         {
-            if (isDisposing)
-            {
-                OutputStream.Dispose();
-            }
-        }
-
-        public void Dispose()
-        {
-            if (!_isDisposed)
-            {
-                GC.SuppressFinalize(this);
-                Dispose(true);
-                _isDisposed = true;
-            }
-        }
-
-        ~AbstractWriter()
-        {
-            if (!_isDisposed)
-            {
-                Dispose(false);
-                _isDisposed = true;
-            }
+            Dispose(false);
+            _isDisposed = true;
         }
     }
 }

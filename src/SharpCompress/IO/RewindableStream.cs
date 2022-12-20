@@ -1,165 +1,149 @@
 using System;
 using System.IO;
 
-namespace SharpCompress.IO
+namespace SharpCompress.IO;
+
+public class RewindableStream : Stream
 {
-    internal class RewindableStream : Stream
+    private readonly Stream stream;
+    private MemoryStream bufferStream = new MemoryStream();
+    private bool isRewound;
+    private bool isDisposed;
+
+    public RewindableStream(Stream stream) => this.stream = stream;
+
+    internal bool IsRecording { get; private set; }
+
+    protected override void Dispose(bool disposing)
     {
-        private readonly Stream stream;
-        private MemoryStream bufferStream = new MemoryStream();
-        private bool isRewound;
-        private bool isDisposed;
-
-        public RewindableStream(Stream stream)
+        if (isDisposed)
         {
-            this.stream = stream;
+            return;
         }
-
-        internal bool IsRecording { get; private set; }
-
-        protected override void Dispose(bool disposing)
+        isDisposed = true;
+        base.Dispose(disposing);
+        if (disposing)
         {
-            if (isDisposed)
-            {
-                return;
-            }
-            isDisposed = true;
-            base.Dispose(disposing);
-            if (disposing)
-            {
-                stream.Dispose();
-            }
+            stream.Dispose();
         }
+    }
 
-        public void Rewind(bool stopRecording)
+    public void Rewind(bool stopRecording)
+    {
+        isRewound = true;
+        IsRecording = !stopRecording;
+        bufferStream.Position = 0;
+    }
+
+    public void Rewind(MemoryStream buffer)
+    {
+        if (bufferStream.Position >= buffer.Length)
         {
-            isRewound = true;
-            IsRecording = !stopRecording;
+            bufferStream.Position -= buffer.Length;
+        }
+        else
+        {
+            bufferStream.TransferTo(buffer);
+            //create new memorystream to allow proper resizing as memorystream could be a user provided buffer
+            //https://github.com/adamhathcock/sharpcompress/issues/306
+            bufferStream = new MemoryStream();
+            buffer.Position = 0;
+            buffer.TransferTo(bufferStream);
             bufferStream.Position = 0;
         }
+        isRewound = true;
+    }
 
-        public void Rewind(MemoryStream buffer)
+    public void StartRecording()
+    {
+        //if (isRewound && bufferStream.Position != 0)
+        //   throw new System.NotImplementedException();
+        if (bufferStream.Position != 0)
         {
-            if (bufferStream.Position >= buffer.Length)
+            var data = bufferStream.ToArray();
+            var position = bufferStream.Position;
+            bufferStream.SetLength(0);
+            bufferStream.Write(data, (int)position, data.Length - (int)position);
+            bufferStream.Position = 0;
+        }
+        IsRecording = true;
+    }
+
+    public override bool CanRead => true;
+
+    public override bool CanSeek => stream.CanSeek;
+
+    public override bool CanWrite => false;
+
+    public override void Flush() => throw new NotSupportedException();
+
+    public override long Length => stream.Length;
+
+    public override long Position
+    {
+        get => stream.Position + bufferStream.Position - bufferStream.Length;
+        set
+        {
+            if (!isRewound)
             {
-                bufferStream.Position -= buffer.Length;
+                stream.Position = value;
+            }
+            else if (value < stream.Position - bufferStream.Length || value >= stream.Position)
+            {
+                stream.Position = value;
+                isRewound = false;
+                bufferStream.SetLength(0);
             }
             else
             {
-
-                bufferStream.TransferTo(buffer);
-                //create new memorystream to allow proper resizing as memorystream could be a user provided buffer
-                //https://github.com/adamhathcock/sharpcompress/issues/306
-                bufferStream = new MemoryStream();
-                buffer.Position = 0;
-                buffer.TransferTo(bufferStream);
-                bufferStream.Position = 0;
+                bufferStream.Position = value - stream.Position + bufferStream.Length;
             }
-            isRewound = true;
         }
+    }
 
-        public void StartRecording()
+    public override int Read(byte[] buffer, int offset, int count)
+    {
+        //don't actually read if we don't really want to read anything
+        //currently a network stream bug on Windows for .NET Core
+        if (count == 0)
         {
-            //if (isRewound && bufferStream.Position != 0)
-            //   throw new System.NotImplementedException();
-            if (bufferStream.Position != 0)
+            return 0;
+        }
+        int read;
+        if (isRewound && bufferStream.Position != bufferStream.Length)
+        {
+            // don't read more than left
+            var readCount = Math.Min(count, (int)(bufferStream.Length - bufferStream.Position));
+            read = bufferStream.Read(buffer, offset, readCount);
+            if (read < readCount)
             {
-                byte[] data = bufferStream.ToArray();
-                long position = bufferStream.Position;
+                var tempRead = stream.Read(buffer, offset + read, count - read);
+                if (IsRecording)
+                {
+                    bufferStream.Write(buffer, offset + read, tempRead);
+                }
+                read += tempRead;
+            }
+            if (bufferStream.Position == bufferStream.Length && !IsRecording)
+            {
+                isRewound = false;
                 bufferStream.SetLength(0);
-                bufferStream.Write(data, (int)position, data.Length - (int)position);
-                bufferStream.Position = 0;
-            }
-            IsRecording = true;
-        }
-
-        public override bool CanRead => true;
-
-        public override bool CanSeek => stream.CanSeek;
-
-        public override bool CanWrite => false;
-
-        public override void Flush()
-        {
-            throw new NotSupportedException();
-        }
-
-        public override long Length => stream.Length;
-
-        public override long Position
-        {
-            get => stream.Position + bufferStream.Position - bufferStream.Length;
-            set
-            {
-                if (!isRewound)
-                {
-                    stream.Position = value;
-                }
-                else if (value < stream.Position - bufferStream.Length || value >= stream.Position)
-                {
-                    stream.Position = value;
-                    isRewound = false;
-                    bufferStream.SetLength(0);
-                }
-                else
-                {
-                    bufferStream.Position = value - stream.Position + bufferStream.Length;
-                }
-            }
-        }
-
-        public override int Read(byte[] buffer, int offset, int count)
-        {
-            //don't actually read if we don't really want to read anything
-            //currently a network stream bug on Windows for .NET Core
-            if (count == 0)
-            {
-                return 0;
-            }
-            int read;
-            if (isRewound && bufferStream.Position != bufferStream.Length)
-            {
-                // don't read more than left
-                int readCount = Math.Min(count, (int)(bufferStream.Length - bufferStream.Position));
-                read = bufferStream.Read(buffer, offset, readCount);
-                if (read < readCount)
-                {
-                    int tempRead = stream.Read(buffer, offset + read, count - read);
-                    if (IsRecording)
-                    {
-                        bufferStream.Write(buffer, offset + read, tempRead);
-                    }
-                    read += tempRead;
-                }
-                if (bufferStream.Position == bufferStream.Length && !IsRecording)
-                {
-                    isRewound = false;
-                    bufferStream.SetLength(0);
-                }
-                return read;
-            }
-
-            read = stream.Read(buffer, offset, count);
-            if (IsRecording)
-            {
-                bufferStream.Write(buffer, offset, read);
             }
             return read;
         }
 
-        public override long Seek(long offset, SeekOrigin origin)
+        read = stream.Read(buffer, offset, count);
+        if (IsRecording)
         {
-            throw new NotSupportedException();
+            bufferStream.Write(buffer, offset, read);
         }
-
-        public override void SetLength(long value)
-        {
-            throw new NotSupportedException();
-        }
-
-        public override void Write(byte[] buffer, int offset, int count)
-        {
-            throw new NotSupportedException();
-        }
+        return read;
     }
+
+    public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
+
+    public override void SetLength(long value) => throw new NotSupportedException();
+
+    public override void Write(byte[] buffer, int offset, int count) =>
+        throw new NotSupportedException();
 }

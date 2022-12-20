@@ -1,13 +1,9 @@
-﻿#if !Rar2017_64bit
-using nint = System.Int32;
-using nuint = System.UInt32;
-using size_t = System.UInt32;
+#if !Rar2017_64bit
 #else
 using nint = System.Int64;
 using nuint = System.UInt64;
 using size_t = System.UInt64;
 #endif
-using int64 = System.Int64;
 
 //using static SharpCompress.Compressors.Rar.UnpackV2017.Unpack.Unpack30Local;
 /*
@@ -307,7 +303,7 @@ bool ReadEndOfBlock()
 
 bool ReadVMCode()
 {
-  // Entire VM code is guaranteed to fully present in block defined 
+  // Entire VM code is guaranteed to fully present in block defined
   // by current Huffman table. Compressor checks that VM code does not cross
   // Huffman block boundaries.
   uint FirstByte=Inp.getbits()>>8;
@@ -418,7 +414,7 @@ bool AddVMCode(uint FirstByte,byte[] Code,int CodeSize)
     Filters30[Filters30.Count-1]=Filter=new UnpackFilter30();
     StackFilter.ParentFilter=(uint)(Filters30.Count-1);
 
-    // Reserve one item to store the data block length of our new filter 
+    // Reserve one item to store the data block length of our new filter
     // entry. We'll set it to real block length below, after reading it.
     // But we need to initialize it now, because when processing corrupt
     // data, we can access this item even before we set it to real value.
@@ -466,7 +462,7 @@ bool AddVMCode(uint FirstByte,byte[] Code,int CodeSize)
   else
   {
     // Set the data block size to same value as the previous block size
-    // for same filter. It is possible for corrupt data to access a new 
+    // for same filter. It is possible for corrupt data to access a new
     // and not filled yet item of OldFilterLengths array here. This is why
     // we set new OldFilterLengths items to zero above.
     StackFilter.BlockLength=FiltPos<OldFilterLengths.Count ? OldFilterLengths[(int)FiltPos]:0;

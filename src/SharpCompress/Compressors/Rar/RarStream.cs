@@ -4,133 +4,131 @@ using System;
 using System.IO;
 using SharpCompress.Common.Rar.Headers;
 
-namespace SharpCompress.Compressors.Rar
+namespace SharpCompress.Compressors.Rar;
+
+internal class RarStream : Stream
 {
-    internal class RarStream : Stream
+    private readonly IRarUnpack unpack;
+    private readonly FileHeader fileHeader;
+    private readonly Stream readStream;
+
+    private bool fetch;
+
+    private byte[] tmpBuffer = new byte[65536];
+    private int tmpOffset;
+    private int tmpCount;
+
+    private byte[] outBuffer;
+    private int outOffset;
+    private int outCount;
+    private int outTotal;
+    private bool isDisposed;
+    private long _position;
+
+    public RarStream(IRarUnpack unpack, FileHeader fileHeader, Stream readStream)
     {
-        private readonly IRarUnpack unpack;
-        private readonly FileHeader fileHeader;
-        private readonly Stream readStream;
+        this.unpack = unpack;
+        this.fileHeader = fileHeader;
+        this.readStream = readStream;
+        fetch = true;
+        unpack.DoUnpack(fileHeader, readStream, this);
+        fetch = false;
+        _position = 0;
+    }
 
-        private bool fetch;
-
-        private byte[] tmpBuffer = new byte[65536];
-        private int tmpOffset;
-        private int tmpCount;
-
-        private byte[] outBuffer;
-        private int outOffset;
-        private int outCount;
-        private int outTotal;
-        private bool isDisposed;
-        private long _position;
-
-        public RarStream(IRarUnpack unpack, FileHeader fileHeader, Stream readStream)
+    protected override void Dispose(bool disposing)
+    {
+        if (!isDisposed)
         {
-            this.unpack = unpack;
-            this.fileHeader = fileHeader;
-            this.readStream = readStream;
+            isDisposed = true;
+            base.Dispose(disposing);
+            readStream.Dispose();
+        }
+    }
+
+    public override bool CanRead => true;
+
+    public override bool CanSeek => false;
+
+    public override bool CanWrite => false;
+
+    public override void Flush() { }
+
+    public override long Length => fileHeader.UncompressedSize;
+
+    //commented out code always returned the length of the file
+    public override long Position
+    {
+        get => _position; /* fileHeader.UncompressedSize - unpack.DestSize;*/
+        set => throw new NotSupportedException();
+    }
+
+    public override int Read(byte[] buffer, int offset, int count)
+    {
+        outTotal = 0;
+        if (tmpCount > 0)
+        {
+            var toCopy = tmpCount < count ? tmpCount : count;
+            Buffer.BlockCopy(tmpBuffer, tmpOffset, buffer, offset, toCopy);
+            tmpOffset += toCopy;
+            tmpCount -= toCopy;
+            offset += toCopy;
+            count -= toCopy;
+            outTotal += toCopy;
+        }
+        if (count > 0 && unpack.DestSize > 0)
+        {
+            outBuffer = buffer;
+            outOffset = offset;
+            outCount = count;
             fetch = true;
-            unpack.DoUnpack(fileHeader, readStream, this);
+            unpack.DoUnpack();
             fetch = false;
-            _position = 0;
         }
+        _position += outTotal;
+        return outTotal;
+    }
 
-        protected override void Dispose(bool disposing)
-        {
-            if (!isDisposed)
-            {
-                isDisposed = true;
-                base.Dispose(disposing);
-                readStream.Dispose();
-            }
-        }
+    public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
 
-        public override bool CanRead => true;
+    public override void SetLength(long value) => throw new NotSupportedException();
 
-        public override bool CanSeek => false;
-
-        public override bool CanWrite => false;
-
-        public override void Flush()
-        {
-        }
-
-        public override long Length => fileHeader.UncompressedSize;
-
-        //commented out code always returned the length of the file
-        public override long Position { get => _position; /* fileHeader.UncompressedSize - unpack.DestSize;*/ set => throw new NotSupportedException(); }
-
-        public override int Read(byte[] buffer, int offset, int count)
-        {
-            outTotal = 0;
-            if (tmpCount > 0)
-            {
-                int toCopy = tmpCount < count ? tmpCount : count;
-                Buffer.BlockCopy(tmpBuffer, tmpOffset, buffer, offset, toCopy);
-                tmpOffset += toCopy;
-                tmpCount -= toCopy;
-                offset += toCopy;
-                count -= toCopy;
-                outTotal += toCopy;
-            }
-            if (count > 0 && unpack.DestSize > 0)
-            {
-                outBuffer = buffer;
-                outOffset = offset;
-                outCount = count;
-                fetch = true;
-                unpack.DoUnpack();
-                fetch = false;
-            }
-            _position += (long)outTotal;
-            return outTotal;
-        }
-
-        public override long Seek(long offset, SeekOrigin origin)
+    public override void Write(byte[] buffer, int offset, int count)
+    {
+        if (!fetch)
         {
             throw new NotSupportedException();
         }
-
-        public override void SetLength(long value)
+        if (outCount > 0)
         {
-            throw new NotSupportedException();
+            var toCopy = outCount < count ? outCount : count;
+            Buffer.BlockCopy(buffer, offset, outBuffer, outOffset, toCopy);
+            outOffset += toCopy;
+            outCount -= toCopy;
+            offset += toCopy;
+            count -= toCopy;
+            outTotal += toCopy;
         }
-
-        public override void Write(byte[] buffer, int offset, int count)
+        if (count > 0)
         {
-            if (!fetch)
+            if (tmpBuffer.Length < tmpCount + count)
             {
-                throw new NotSupportedException();
+                var newBuffer = new byte[
+                    tmpBuffer.Length * 2 > tmpCount + count
+                        ? tmpBuffer.Length * 2
+                        : tmpCount + count
+                ];
+                Buffer.BlockCopy(tmpBuffer, 0, newBuffer, 0, tmpCount);
+                tmpBuffer = newBuffer;
             }
-            if (outCount > 0)
-            {
-                int toCopy = outCount < count ? outCount : count;
-                Buffer.BlockCopy(buffer, offset, outBuffer, outOffset, toCopy);
-                outOffset += toCopy;
-                outCount -= toCopy;
-                offset += toCopy;
-                count -= toCopy;
-                outTotal += toCopy;
-            }
-            if (count > 0)
-            {
-                if (tmpBuffer.Length < tmpCount + count)
-                {
-                    byte[] newBuffer =
-                        new byte[tmpBuffer.Length * 2 > tmpCount + count ? tmpBuffer.Length * 2 : tmpCount + count];
-                    Buffer.BlockCopy(tmpBuffer, 0, newBuffer, 0, tmpCount);
-                    tmpBuffer = newBuffer;
-                }
-                Buffer.BlockCopy(buffer, offset, tmpBuffer, tmpCount, count);
-                tmpCount += count;
-                tmpOffset = 0;
-                unpack.Suspended = true;
-            }
-            else
-            {
-                unpack.Suspended = false;
-            }
+            Buffer.BlockCopy(buffer, offset, tmpBuffer, tmpCount, count);
+            tmpCount += count;
+            tmpOffset = 0;
+            unpack.Suspended = true;
+        }
+        else
+        {
+            unpack.Suspended = false;
         }
     }
 }

@@ -1,49 +1,52 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using SharpCompress.Common.Rar;
 using SharpCompress.Readers;
 
-namespace SharpCompress.Archives.Rar
+namespace SharpCompress.Archives.Rar;
+
+internal static class RarArchiveEntryFactory
 {
-    internal static class RarArchiveEntryFactory
+    private static IEnumerable<RarFilePart> GetFileParts(IEnumerable<RarVolume> parts)
     {
-        private static IEnumerable<RarFilePart> GetFileParts(IEnumerable<RarVolume> parts)
+        foreach (var rarPart in parts)
         {
-            foreach (RarVolume rarPart in parts)
+            foreach (var fp in rarPart.ReadFileParts())
             {
-                foreach (RarFilePart fp in rarPart.ReadFileParts())
-                {
-                    yield return fp;
-                }
+                yield return fp;
             }
         }
+    }
 
-        private static IEnumerable<IEnumerable<RarFilePart>> GetMatchedFileParts(IEnumerable<RarVolume> parts)
+    private static IEnumerable<IEnumerable<RarFilePart>> GetMatchedFileParts(
+        IEnumerable<RarVolume> parts
+    )
+    {
+        var groupedParts = new List<RarFilePart>();
+        foreach (var fp in GetFileParts(parts))
         {
-            var groupedParts = new List<RarFilePart>();
-            foreach (RarFilePart fp in GetFileParts(parts))
-            {
-                groupedParts.Add(fp);
+            groupedParts.Add(fp);
 
-                if (!fp.FileHeader.IsSplitAfter)
-                {
-                    yield return groupedParts;
-                    groupedParts = new List<RarFilePart>();
-                }
-            }
-            if (groupedParts.Count > 0)
+            if (!fp.FileHeader.IsSplitAfter)
             {
                 yield return groupedParts;
+                groupedParts = new List<RarFilePart>();
             }
         }
-
-        internal static IEnumerable<RarArchiveEntry> GetEntries(RarArchive archive,
-                                                                IEnumerable<RarVolume> rarParts,
-                                                                ReaderOptions readerOptions)
+        if (groupedParts.Count > 0)
         {
-            foreach (var groupedParts in GetMatchedFileParts(rarParts))
-            {
-                yield return new RarArchiveEntry(archive, groupedParts, readerOptions);
-            }
+            yield return groupedParts;
+        }
+    }
+
+    internal static IEnumerable<RarArchiveEntry> GetEntries(
+        RarArchive archive,
+        IEnumerable<RarVolume> rarParts,
+        ReaderOptions readerOptions
+    )
+    {
+        foreach (var groupedParts in GetMatchedFileParts(rarParts))
+        {
+            yield return new RarArchiveEntry(archive, groupedParts, readerOptions);
         }
     }
 }

@@ -195,8 +195,6 @@ csharp_prefer_static_local_function = true:warning
 csharp_prefer_simple_using_statement = true:suggestion
 dotnet_diagnostic.IDE0063.severity = suggestion
 
-csharp_style_namespace_declarations = file_scoped
-
 ##########################################
 # .NET Formatting Conventions
 # https://docs.microsoft.com/visualstudio/ide/editorconfig-code-style-settings-reference#formatting-conventions
@@ -251,6 +249,8 @@ csharp_space_between_square_brackets = false
 csharp_preserve_single_line_statements = false
 csharp_preserve_single_line_blocks = true
 
+csharp_style_namespace_declarations = file_scoped
+
 ##########################################
 # .NET Naming Conventions
 # https://docs.microsoft.com/visualstudio/ide/editorconfig-naming-conventions
@@ -260,11 +260,13 @@ csharp_preserve_single_line_blocks = true
 dotnet_diagnostic.CA1000.severity = suggestion
 dotnet_diagnostic.CA1001.severity = error
 dotnet_diagnostic.CA1018.severity = error
+dotnet_diagnostic.CA1036.severity = silent
 dotnet_diagnostic.CA1051.severity = suggestion
 dotnet_diagnostic.CA1068.severity = error
 dotnet_diagnostic.CA1069.severity = error
 dotnet_diagnostic.CA1304.severity = error
 dotnet_diagnostic.CA1305.severity = suggestion
+dotnet_diagnostic.CA1307.severity = suggestion
 dotnet_diagnostic.CA1309.severity = suggestion
 dotnet_diagnostic.CA1310.severity = error
 dotnet_diagnostic.CA1707.severity = suggestion
@@ -283,6 +285,7 @@ dotnet_diagnostic.CA1829.severity = suggestion
 dotnet_diagnostic.CA1834.severity = error
 dotnet_diagnostic.CA1845.severity = suggestion
 dotnet_diagnostic.CA1848.severity = suggestion
+dotnet_diagnostic.CA1852.severity = suggestion
 dotnet_diagnostic.CA2016.severity = suggestion
 dotnet_diagnostic.CA2201.severity = error
 dotnet_diagnostic.CA2206.severity = error
@@ -295,6 +298,7 @@ dotnet_diagnostic.CA2254.severity = suggestion
 
 dotnet_diagnostic.CS0169.severity = error
 dotnet_diagnostic.CS0219.severity = error
+dotnet_diagnostic.CS0649.severity = suggestion
 dotnet_diagnostic.CS1998.severity = error
 dotnet_diagnostic.CS8602.severity = error
 dotnet_diagnostic.CS8604.severity = error
@@ -305,43 +309,53 @@ dotnet_diagnostic.CS4014.severity = error
 dotnet_diagnostic.CS8600.severity = error
 dotnet_diagnostic.CS8603.severity = error
 dotnet_diagnostic.CS8625.severity = error
+dotnet_diagnostic.CS8981.severity = suggestion
 
 dotnet_diagnostic.BL0005.severity = suggestion
 
 dotnet_diagnostic.MVC1000.severity = suggestion
 
-dotnet_diagnostic.IDE0055.severity = suggestion # Fix formatting
-dotnet_diagnostic.IDE0023.severity = suggestion # use expression body for operators
-dotnet_diagnostic.IDE0025.severity = suggestion # use expression body for properties
-dotnet_diagnostic.IDE1006.severity = suggestion # Naming rule violation: These words cannot contain lower case characters
-dotnet_diagnostic.IDE0072.severity = suggestion # Populate switch - forces population of all cases even when default specified
-dotnet_diagnostic.IDE0027.severity = suggestion # Use expression body for accessors
-dotnet_diagnostic.IDE0032.severity = suggestion # Use auto property
-dotnet_diagnostic.IDE0007.severity = error # Use var
-dotnet_diagnostic.IDE0160.severity = suggestion # Use block scoped
-dotnet_diagnostic.IDE0011.severity = error # Use braces on if statements
-dotnet_diagnostic.IDE0057.severity = suggestion # substring can be simplified
+dotnet_diagnostic.RZ10012.severity = error
+
 dotnet_diagnostic.IDE0004.severity = error # redundant cast
+dotnet_diagnostic.IDE0005.severity = error
+dotnet_diagnostic.IDE0007.severity = error # Use var
+dotnet_diagnostic.IDE0011.severity = error # Use braces on if statements
 dotnet_diagnostic.IDE0010.severity = silent # populate switch
+dotnet_diagnostic.IDE0017.severity = suggestion # initialization can be simplified
 dotnet_diagnostic.IDE0021.severity = silent # expression body for constructors
 dotnet_diagnostic.IDE0022.severity = silent # expression body for methods
+dotnet_diagnostic.IDE0023.severity = suggestion # use expression body for operators
 dotnet_diagnostic.IDE0024.severity = silent # expression body for operators
+dotnet_diagnostic.IDE0025.severity = suggestion # use expression body for properties
+dotnet_diagnostic.IDE0027.severity = suggestion # Use expression body for accessors
 dotnet_diagnostic.IDE0028.severity = silent
+dotnet_diagnostic.IDE0032.severity = suggestion # Use auto property
 dotnet_diagnostic.IDE0033.severity = error # prefer tuple name
+dotnet_diagnostic.IDE0037.severity = suggestion # simplify anonymous type
 dotnet_diagnostic.IDE0040.severity = error # modifiers required
 dotnet_diagnostic.IDE0041.severity = error # simplify null
 dotnet_diagnostic.IDE0042.severity = error # deconstruct variable
-dotnet_diagnostic.IDE0044.severity = error # make field only when possible
+dotnet_diagnostic.IDE0044.severity = suggestion # make field only when possible
 dotnet_diagnostic.IDE0047.severity = suggestion # paratemeter name
 dotnet_diagnostic.IDE0051.severity = error # unused field
 dotnet_diagnostic.IDE0052.severity = error # unused member
+dotnet_diagnostic.IDE0053.severity = suggestion # lambda not needed
+dotnet_diagnostic.IDE0055.severity = suggestion # Fix formatting
+dotnet_diagnostic.IDE0057.severity = suggestion # substring can be simplified
 dotnet_diagnostic.IDE0060.severity = suggestion # unused parameters
+dotnet_diagnostic.IDE0061.severity = suggestion # local expression body
+dotnet_diagnostic.IDE0062.severity = suggestion # local to static
+dotnet_diagnostic.IDE0063.severity = error # simplify using
 dotnet_diagnostic.IDE0066.severity = suggestion # switch expression
+dotnet_diagnostic.IDE0072.severity = suggestion # Populate switch - forces population of all cases even when default specified
 dotnet_diagnostic.IDE0078.severity = suggestion # use pattern matching
 dotnet_diagnostic.IDE0090.severity = suggestion # new can be simplified
-dotnet_diagnostic.IDE0130.severity = suggestion # namespace folder structure
+dotnet_diagnostic.IDE0130.severity = error # namespace folder structure
 dotnet_diagnostic.IDE0160.severity = silent # Use block namespaces ARE NOT required
-dotnet_diagnostic.IDE0161.severity = suggestion # Please use file namespaces
+dotnet_diagnostic.IDE0161.severity = error # Please use file namespaces
+dotnet_diagnostic.IDE0200.severity = suggestion # lambda not needed
+dotnet_diagnostic.IDE1006.severity = suggestion # Naming rule violation: These words cannot contain lower case characters
 
 ##########################################
 # Styles

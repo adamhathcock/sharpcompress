@@ -1,10 +1,6 @@
-namespace SharpCompress.Compressors.Rar.UnpackV1.Decode
+namespace SharpCompress.Compressors.Rar.UnpackV1.Decode;
+
+internal class MultDecode : Decode
 {
-    internal class MultDecode : Decode
-    {
-        internal MultDecode()
-            : base(new int[PackDef.MC20])
-        {
-        }
-    }
+    internal MultDecode() : base(new int[PackDef.MC20]) { }
 }

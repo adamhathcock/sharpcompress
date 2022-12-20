@@ -1,101 +1,99 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace SharpCompress.Compressors.LZMA
+namespace SharpCompress.Compressors.LZMA;
+
+internal class BitVector
 {
-    internal class BitVector
+    private readonly uint[] _mBits;
+
+    public BitVector(int length)
     {
-        private readonly uint[] _mBits;
+        Length = length;
+        _mBits = new uint[(length + 31) >> 5];
+    }
 
-        public BitVector(int length)
+    public BitVector(int length, bool initValue)
+    {
+        Length = length;
+        _mBits = new uint[(length + 31) >> 5];
+
+        if (initValue)
         {
-            Length = length;
-            _mBits = new uint[(length + 31) >> 5];
-        }
-
-        public BitVector(int length, bool initValue)
-        {
-            Length = length;
-            _mBits = new uint[(length + 31) >> 5];
-
-            if (initValue)
+            for (var i = 0; i < _mBits.Length; i++)
             {
-                for (int i = 0; i < _mBits.Length; i++)
-                {
-                    _mBits[i] = ~0u;
-                }
+                _mBits[i] = ~0u;
             }
         }
+    }
 
-        public BitVector(List<bool> bits)
-            : this(bits.Count)
+    public BitVector(List<bool> bits) : this(bits.Count)
+    {
+        for (var i = 0; i < bits.Count; i++)
         {
-            for (int i = 0; i < bits.Count; i++)
+            if (bits[i])
             {
-                if (bits[i])
-                {
-                    SetBit(i);
-                }
+                SetBit(i);
             }
         }
+    }
 
-        public bool[] ToArray()
+    public bool[] ToArray()
+    {
+        var bits = new bool[Length];
+        for (var i = 0; i < bits.Length; i++)
         {
-            bool[] bits = new bool[Length];
-            for (int i = 0; i < bits.Length; i++)
-            {
-                bits[i] = this[i];
-            }
-            return bits;
+            bits[i] = this[i];
         }
+        return bits;
+    }
 
-        public int Length { get; }
+    public int Length { get; }
 
-        public bool this[int index]
-        {
-            get
-            {
-                if (index < 0 || index >= Length)
-                {
-                    throw new ArgumentOutOfRangeException(nameof(index));
-                }
-
-                return (_mBits[index >> 5] & (1u << (index & 31))) != 0;
-            }
-        }
-
-        public void SetBit(int index)
+    public bool this[int index]
+    {
+        get
         {
             if (index < 0 || index >= Length)
             {
                 throw new ArgumentOutOfRangeException(nameof(index));
             }
 
-            _mBits[index >> 5] |= 1u << (index & 31);
+            return (_mBits[index >> 5] & (1u << (index & 31))) != 0;
         }
+    }
 
-        internal bool GetAndSet(int index)
+    public void SetBit(int index)
+    {
+        if (index < 0 || index >= Length)
         {
-            if (index < 0 || index >= Length)
-            {
-                throw new ArgumentOutOfRangeException(nameof(index));
-            }
-
-            uint bits = _mBits[index >> 5];
-            uint mask = 1u << (index & 31);
-            _mBits[index >> 5] |= mask;
-            return (bits & mask) != 0;
+            throw new ArgumentOutOfRangeException(nameof(index));
         }
 
-        public override string ToString()
+        _mBits[index >> 5] |= 1u << (index & 31);
+    }
+
+    internal bool GetAndSet(int index)
+    {
+        if (index < 0 || index >= Length)
         {
-            StringBuilder sb = new StringBuilder(Length);
-            for (int i = 0; i < Length; i++)
-            {
-                sb.Append(this[i] ? 'x' : '.');
-            }
-            return sb.ToString();
+            throw new ArgumentOutOfRangeException(nameof(index));
         }
+
+        var bits = _mBits[index >> 5];
+        var mask = 1u << (index & 31);
+        _mBits[index >> 5] |= mask;
+        return (bits & mask) != 0;
+    }
+
+    public override string ToString()
+    {
+        var sb = new StringBuilder(Length);
+        for (var i = 0; i < Length; i++)
+        {
+            sb.Append(this[i] ? 'x' : '.');
+        }
+        return sb.ToString();
     }
 }

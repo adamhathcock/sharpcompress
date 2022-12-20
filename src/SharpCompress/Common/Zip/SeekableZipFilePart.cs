@@ -1,54 +1,58 @@
-﻿using System.IO;
+using System.IO;
 using SharpCompress.Common.Zip.Headers;
 using SharpCompress.IO;
 
-namespace SharpCompress.Common.Zip
+namespace SharpCompress.Common.Zip;
+
+internal class SeekableZipFilePart : ZipFilePart
 {
-    internal class SeekableZipFilePart : ZipFilePart
+    private bool _isLocalHeaderLoaded;
+    private readonly SeekableZipHeaderFactory _headerFactory;
+    private readonly DirectoryEntryHeader _directoryEntryHeader;
+
+    internal SeekableZipFilePart(
+        SeekableZipHeaderFactory headerFactory,
+        DirectoryEntryHeader header,
+        Stream stream
+    ) : base(header, stream)
     {
-        private bool _isLocalHeaderLoaded;
-        private readonly SeekableZipHeaderFactory _headerFactory;
-        private readonly DirectoryEntryHeader _directoryEntryHeader;
+        _headerFactory = headerFactory;
+        _directoryEntryHeader = header;
+    }
 
-        internal SeekableZipFilePart(SeekableZipHeaderFactory headerFactory, DirectoryEntryHeader header, Stream stream)
-            : base(header, stream)
+    internal override Stream GetCompressedStream()
+    {
+        if (!_isLocalHeaderLoaded)
         {
-            _headerFactory = headerFactory;
-            _directoryEntryHeader = header;
+            LoadLocalHeader();
+            _isLocalHeaderLoaded = true;
+        }
+        return base.GetCompressedStream();
+    }
+
+    internal string? Comment => ((DirectoryEntryHeader)Header).Comment;
+
+    private void LoadLocalHeader()
+    {
+        var hasData = Header.HasData;
+        Header = _headerFactory.GetLocalHeader(BaseStream, ((DirectoryEntryHeader)Header));
+        Header.HasData = hasData;
+    }
+
+    protected override Stream CreateBaseStream()
+    {
+        BaseStream.Position = Header.DataStartPosition!.Value;
+
+        if (
+            (Header.CompressedSize == 0)
+            && FlagUtility.HasFlag(Header.Flags, HeaderFlags.UsePostDataDescriptor)
+            && (_directoryEntryHeader?.HasData == true)
+            && (_directoryEntryHeader?.CompressedSize != 0)
+        )
+        {
+            return new ReadOnlySubStream(BaseStream, _directoryEntryHeader!.CompressedSize);
         }
 
-        internal override Stream GetCompressedStream()
-        {
-            if (!_isLocalHeaderLoaded)
-            {
-                LoadLocalHeader();
-                _isLocalHeaderLoaded = true;
-            }
-            return base.GetCompressedStream();
-        }
-
-        internal string? Comment => ((DirectoryEntryHeader)Header).Comment;
-
-        private void LoadLocalHeader()
-        {
-            bool hasData = Header.HasData;
-            Header = _headerFactory.GetLocalHeader(BaseStream, ((DirectoryEntryHeader)Header));
-            Header.HasData = hasData;
-        }
-
-        protected override Stream CreateBaseStream()
-        {
-            BaseStream.Position = Header.DataStartPosition!.Value;
-
-            if ((Header.CompressedSize == 0)
-                && FlagUtility.HasFlag(Header.Flags, HeaderFlags.UsePostDataDescriptor)
-                && (_directoryEntryHeader?.HasData == true)
-                && (_directoryEntryHeader?.CompressedSize != 0))
-            {
-                return new ReadOnlySubStream(BaseStream, _directoryEntryHeader!.CompressedSize);
-            }
-
-            return BaseStream;
-        }
+        return BaseStream;
     }
 }

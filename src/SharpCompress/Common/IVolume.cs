@@ -1,11 +1,10 @@
 using System;
 
-namespace SharpCompress.Common
-{
-    public interface IVolume : IDisposable
-    {
-        int Index { get; }
+namespace SharpCompress.Common;
 
-        string FileName { get; }
-    }
+public interface IVolume : IDisposable
+{
+    int Index { get; }
+
+    string FileName { get; }
 }

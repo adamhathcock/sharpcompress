@@ -1,17 +1,10 @@
-﻿using System;
+using System;
 
-namespace SharpCompress.Common
+namespace SharpCompress.Common;
+
+public class PasswordProtectedException : ExtractionException
 {
-    public class PasswordProtectedException : ExtractionException
-    {
-        public PasswordProtectedException(string message)
-            : base(message)
-        {
-        }
+    public PasswordProtectedException(string message) : base(message) { }
 
-        public PasswordProtectedException(string message, Exception inner)
-            : base(message, inner)
-        {
-        }
-    }
+    public PasswordProtectedException(string message, Exception inner) : base(message, inner) { }
 }

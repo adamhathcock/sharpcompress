@@ -1,25 +1,12 @@
-﻿using System;
+using System;
 
-namespace SharpCompress.Crypto
+namespace SharpCompress.Crypto;
+
+public class CryptoException : Exception
 {
-    public class CryptoException
-        : Exception
-    {
-        public CryptoException()
-        {
-        }
+    public CryptoException() { }
 
-        public CryptoException(
-            string message)
-            : base(message)
-        {
-        }
+    public CryptoException(string message) : base(message) { }
 
-        public CryptoException(
-            string message,
-            Exception exception)
-            : base(message, exception)
-        {
-        }
-    }
+    public CryptoException(string message, Exception exception) : base(message, exception) { }
 }
