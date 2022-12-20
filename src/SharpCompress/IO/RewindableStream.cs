@@ -46,7 +46,6 @@ namespace SharpCompress.IO
             }
             else
             {
-
                 bufferStream.TransferTo(buffer);
                 //create new memorystream to allow proper resizing as memorystream could be a user provided buffer
                 //https://github.com/adamhathcock/sharpcompress/issues/306

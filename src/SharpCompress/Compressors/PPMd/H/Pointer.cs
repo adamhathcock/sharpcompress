@@ -16,8 +16,7 @@ namespace SharpCompress.Compressors.PPMd.H
 
         internal virtual int Address { get; set; }
 
-        protected T Initialize<T>(byte[] mem)
-            where T : Pointer
+        protected T Initialize<T>(byte[] mem) where T : Pointer
         {
             Memory = mem;
             Address = 0;

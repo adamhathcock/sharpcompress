@@ -15,6 +15,7 @@ namespace SharpCompress.Archives.SevenZip
     public class SevenZipArchive : AbstractArchive<SevenZipArchiveEntry, SevenZipVolume>
     {
         private ArchiveDatabase database;
+
         /// <summary>
         /// Constructor expects a filepath to an existing file.
         /// </summary>
@@ -34,7 +35,13 @@ namespace SharpCompress.Archives.SevenZip
         public static SevenZipArchive Open(FileInfo fileInfo, ReaderOptions readerOptions = null)
         {
             fileInfo.CheckNotNull("fileInfo");
-            return new SevenZipArchive(new SourceStream(fileInfo, i => ArchiveVolumeFactory.GetFilePart(i, fileInfo), readerOptions ?? new ReaderOptions()));
+            return new SevenZipArchive(
+                new SourceStream(
+                    fileInfo,
+                    i => ArchiveVolumeFactory.GetFilePart(i, fileInfo),
+                    readerOptions ?? new ReaderOptions()
+                )
+            );
         }
 
         /// <summary>
@@ -42,11 +49,20 @@ namespace SharpCompress.Archives.SevenZip
         /// </summary>
         /// <param name="fileInfos"></param>
         /// <param name="readerOptions"></param>
-        public static SevenZipArchive Open(IEnumerable<FileInfo> fileInfos, ReaderOptions readerOptions = null)
+        public static SevenZipArchive Open(
+            IEnumerable<FileInfo> fileInfos,
+            ReaderOptions readerOptions = null
+        )
         {
             fileInfos.CheckNotNull(nameof(fileInfos));
             FileInfo[] files = fileInfos.ToArray();
-            return new SevenZipArchive(new SourceStream(files[0], i => i < files.Length ? files[i] : null, readerOptions ?? new ReaderOptions()));
+            return new SevenZipArchive(
+                new SourceStream(
+                    files[0],
+                    i => i < files.Length ? files[i] : null,
+                    readerOptions ?? new ReaderOptions()
+                )
+            );
         }
 
         /// <summary>
@@ -54,11 +70,20 @@ namespace SharpCompress.Archives.SevenZip
         /// </summary>
         /// <param name="streams"></param>
         /// <param name="readerOptions"></param>
-        public static SevenZipArchive Open(IEnumerable<Stream> streams, ReaderOptions readerOptions = null)
+        public static SevenZipArchive Open(
+            IEnumerable<Stream> streams,
+            ReaderOptions readerOptions = null
+        )
         {
             streams.CheckNotNull(nameof(streams));
             Stream[] strms = streams.ToArray();
-            return new SevenZipArchive(new SourceStream(strms[0], i => i < strms.Length ? strms[i] : null, readerOptions ?? new ReaderOptions()));
+            return new SevenZipArchive(
+                new SourceStream(
+                    strms[0],
+                    i => i < strms.Length ? strms[i] : null,
+                    readerOptions ?? new ReaderOptions()
+                )
+            );
         }
 
         /// <summary>
@@ -69,7 +94,9 @@ namespace SharpCompress.Archives.SevenZip
         public static SevenZipArchive Open(Stream stream, ReaderOptions readerOptions = null)
         {
             stream.CheckNotNull("stream");
-            return new SevenZipArchive(new SourceStream(stream, i => null, readerOptions ?? new ReaderOptions()));
+            return new SevenZipArchive(
+                new SourceStream(stream, i => null, readerOptions ?? new ReaderOptions())
+            );
         }
 
         /// <summary>
@@ -77,10 +104,7 @@ namespace SharpCompress.Archives.SevenZip
         /// </summary>
         /// <param name="srcStream"></param>
         /// <param name="options"></param>
-        internal SevenZipArchive(SourceStream srcStream)
-            : base(ArchiveType.SevenZip, srcStream)
-        {
-        }
+        internal SevenZipArchive(SourceStream srcStream) : base(ArchiveType.SevenZip, srcStream) { }
 
         protected override IEnumerable<SevenZipVolume> LoadVolumes(SourceStream srcStream)
         {
@@ -106,12 +130,11 @@ namespace SharpCompress.Archives.SevenZip
             }
         }
 
-        internal SevenZipArchive()
-            : base(ArchiveType.SevenZip)
-        {
-        }
+        internal SevenZipArchive() : base(ArchiveType.SevenZip) { }
 
-        protected override IEnumerable<SevenZipArchiveEntry> LoadEntries(IEnumerable<SevenZipVolume> volumes)
+        protected override IEnumerable<SevenZipArchiveEntry> LoadEntries(
+            IEnumerable<SevenZipVolume> volumes
+        )
         {
             var stream = volumes.Single().Stream;
             LoadFactory(stream);
@@ -119,9 +142,14 @@ namespace SharpCompress.Archives.SevenZip
             for (int i = 0; i < database._files.Count; i++)
             {
                 var file = database._files[i];
-                entries[i] = new SevenZipArchiveEntry(this, new SevenZipFilePart(stream, database, i, file, ReaderOptions.ArchiveEncoding));
+                entries[i] = new SevenZipArchiveEntry(
+                    this,
+                    new SevenZipFilePart(stream, database, i, file, ReaderOptions.ArchiveEncoding)
+                );
             }
-            foreach (var group in entries.Where(x => !x.IsDirectory).GroupBy(x => x.FilePart.Folder))
+            foreach (
+                var group in entries.Where(x => !x.IsDirectory).GroupBy(x => x.FilePart.Folder)
+            )
             {
                 var isSolid = false;
                 foreach (var entry in group)
@@ -157,7 +185,8 @@ namespace SharpCompress.Archives.SevenZip
             }
         }
 
-        private static ReadOnlySpan<byte> SIGNATURE => new byte[] { (byte)'7', (byte)'z', 0xBC, 0xAF, 0x27, 0x1C };
+        private static ReadOnlySpan<byte> SIGNATURE =>
+            new byte[] { (byte)'7', (byte)'z', 0xBC, 0xAF, 0x27, 0x1C };
 
         private static bool SignatureMatch(Stream stream)
         {
@@ -171,7 +200,14 @@ namespace SharpCompress.Archives.SevenZip
             return new SevenZipReader(ReaderOptions, this);
         }
 
-        public override bool IsSolid { get { return Entries.Where(x => !x.IsDirectory).GroupBy(x => x.FilePart.Folder).Count() > 1; } }
+        public override bool IsSolid
+        {
+            get
+            {
+                return Entries.Where(x => !x.IsDirectory).GroupBy(x => x.FilePart.Folder).Count()
+                    > 1;
+            }
+        }
 
         public override long TotalSize
         {
@@ -205,7 +241,9 @@ namespace SharpCompress.Archives.SevenZip
                 {
                     yield return dir;
                 }
-                foreach (var group in entries.Where(x => !x.IsDirectory).GroupBy(x => x.FilePart.Folder))
+                foreach (
+                    var group in entries.Where(x => !x.IsDirectory).GroupBy(x => x.FilePart.Folder)
+                )
                 {
                     currentFolder = group.Key;
                     if (group.Key is null)
@@ -214,7 +252,11 @@ namespace SharpCompress.Archives.SevenZip
                     }
                     else
                     {
-                        currentStream = archive.database.GetFolderStream(stream, currentFolder, new PasswordProvider(Options.Password));
+                        currentStream = archive.database.GetFolderStream(
+                            stream,
+                            currentFolder,
+                            new PasswordProvider(Options.Password)
+                        );
                     }
                     foreach (var entry in group)
                     {

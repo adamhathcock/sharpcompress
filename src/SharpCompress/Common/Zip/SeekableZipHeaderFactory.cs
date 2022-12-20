@@ -10,14 +10,13 @@ namespace SharpCompress.Common.Zip
     {
         private const int MINIMUM_EOCD_LENGTH = 22;
         private const int ZIP64_EOCD_LENGTH = 20;
+
         // Comment may be within 64kb + structure 22 bytes
         private const int MAX_SEARCH_LENGTH_FOR_EOCD = 65557;
         private bool _zip64;
 
         internal SeekableZipHeaderFactory(string? password, ArchiveEncoding archiveEncoding)
-            : base(StreamingMode.Seekable, password, archiveEncoding)
-        {
-        }
+            : base(StreamingMode.Seekable, password, archiveEncoding) { }
 
         internal IEnumerable<ZipHeader> ReadSeekableHeader(Stream stream)
         {
@@ -98,15 +97,21 @@ namespace SharpCompress.Common.Zip
 
             return true;
         }
+
         private static void SeekBackToHeader(Stream stream, BinaryReader reader)
         {
             // Minimum EOCD length
             if (stream.Length < MINIMUM_EOCD_LENGTH)
             {
-                throw new ArchiveException("Could not find Zip file Directory at the end of the file. File may be corrupted.");
+                throw new ArchiveException(
+                    "Could not find Zip file Directory at the end of the file. File may be corrupted."
+                );
             }
 
-            int len = stream.Length < MAX_SEARCH_LENGTH_FOR_EOCD ? (int)stream.Length : MAX_SEARCH_LENGTH_FOR_EOCD;
+            int len =
+                stream.Length < MAX_SEARCH_LENGTH_FOR_EOCD
+                    ? (int)stream.Length
+                    : MAX_SEARCH_LENGTH_FOR_EOCD;
             // We search for marker in reverse to find the first occurance
             byte[] needle = { 0x06, 0x05, 0x4b, 0x50 };
 
@@ -132,7 +137,10 @@ namespace SharpCompress.Common.Zip
             throw new ArchiveException("Failed to locate the Zip Header");
         }
 
-        internal LocalEntryHeader GetLocalHeader(Stream stream, DirectoryEntryHeader directoryEntryHeader)
+        internal LocalEntryHeader GetLocalHeader(
+            Stream stream,
+            DirectoryEntryHeader directoryEntryHeader
+        )
         {
             stream.Seek(directoryEntryHeader.RelativeOffsetOfEntryHeader, SeekOrigin.Begin);
             BinaryReader reader = new BinaryReader(stream);

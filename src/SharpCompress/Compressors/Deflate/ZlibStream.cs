@@ -37,16 +37,17 @@ namespace SharpCompress.Compressors.Deflate
         private bool _disposed;
 
         public ZlibStream(Stream stream, CompressionMode mode)
-            : this(stream, mode, CompressionLevel.Default, Encoding.UTF8)
-        {
-        }
+            : this(stream, mode, CompressionLevel.Default, Encoding.UTF8) { }
 
         public ZlibStream(Stream stream, CompressionMode mode, CompressionLevel level)
-            : this(stream, mode, level, Encoding.UTF8)
-        {
-        }
+            : this(stream, mode, level, Encoding.UTF8) { }
 
-        public ZlibStream(Stream stream, CompressionMode mode, CompressionLevel level, Encoding encoding)
+        public ZlibStream(
+            Stream stream,
+            CompressionMode mode,
+            CompressionLevel level,
+            Encoding encoding
+        )
         {
             _baseStream = new ZlibBaseStream(stream, mode, level, ZlibStreamFlavor.ZLIB, encoding);
         }
@@ -103,8 +104,12 @@ namespace SharpCompress.Compressors.Deflate
                 if (value < ZlibConstants.WorkingBufferSizeMin)
                 {
                     throw new ZlibException(
-                                            String.Format("Don't be silly. {0} bytes?? Use a bigger buffer, at least {1}.", value,
-                                                          ZlibConstants.WorkingBufferSizeMin));
+                        String.Format(
+                            "Don't be silly. {0} bytes?? Use a bigger buffer, at least {1}.",
+                            value,
+                            ZlibConstants.WorkingBufferSizeMin
+                        )
+                    );
                 }
                 _baseStream._bufferSize = value;
             }
@@ -194,7 +199,6 @@ namespace SharpCompress.Compressors.Deflate
                 }
                 return 0;
             }
-
             set => throw new NotSupportedException();
         }
 

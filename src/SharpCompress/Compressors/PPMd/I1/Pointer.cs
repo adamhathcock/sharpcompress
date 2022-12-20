@@ -46,7 +46,9 @@ namespace SharpCompress.Compressors.PPMd.I1
 #if DEBUG
                 if (_address == 0)
                 {
-                    throw new InvalidOperationException("The pointer being indexed is a null pointer.");
+                    throw new InvalidOperationException(
+                        "The pointer being indexed is a null pointer."
+                    );
                 }
 #endif
                 return _memory[_address + offset];
@@ -56,7 +58,9 @@ namespace SharpCompress.Compressors.PPMd.I1
 #if DEBUG
                 if (_address == 0)
                 {
-                    throw new InvalidOperationException("The pointer being indexed is a null pointer.");
+                    throw new InvalidOperationException(
+                        "The pointer being indexed is a null pointer."
+                    );
                 }
 #endif
                 _memory[_address + offset] = value;
@@ -139,7 +143,9 @@ namespace SharpCompress.Compressors.PPMd.I1
 #if DEBUG
             if (pointer._address == 0)
             {
-                throw new InvalidOperationException("The pointer being incremented is a null pointer.");
+                throw new InvalidOperationException(
+                    "The pointer being incremented is a null pointer."
+                );
             }
 #endif
             pointer._address++;
@@ -192,7 +198,9 @@ namespace SharpCompress.Compressors.PPMd.I1
 #if DEBUG
             if (pointer._address == 0)
             {
-                throw new InvalidOperationException("The pointer being decremented is a null pointer.");
+                throw new InvalidOperationException(
+                    "The pointer being decremented is a null pointer."
+                );
             }
 #endif
             pointer._address--;
@@ -211,12 +219,14 @@ namespace SharpCompress.Compressors.PPMd.I1
             if (pointer1._address == 0)
             {
                 throw new InvalidOperationException(
-                                                    "The pointer to the left of the subtraction operator is a null pointer.");
+                    "The pointer to the left of the subtraction operator is a null pointer."
+                );
             }
             if (pointer2._address == 0)
             {
                 throw new InvalidOperationException(
-                                                    "The pointer to the right of the subtraction operator is a null pointer.");
+                    "The pointer to the right of the subtraction operator is a null pointer."
+                );
             }
 #endif
             return pointer1._address - pointer2._address;
@@ -234,12 +244,14 @@ namespace SharpCompress.Compressors.PPMd.I1
             if (pointer1._address == 0)
             {
                 throw new InvalidOperationException(
-                                                    "The pointer to the left of the less than operator is a null pointer.");
+                    "The pointer to the left of the less than operator is a null pointer."
+                );
             }
             if (pointer2._address == 0)
             {
                 throw new InvalidOperationException(
-                                                    "The pointer to the right of the less than operator is a null pointer.");
+                    "The pointer to the right of the less than operator is a null pointer."
+                );
             }
 #endif
             return pointer1._address < pointer2._address;
@@ -257,12 +269,14 @@ namespace SharpCompress.Compressors.PPMd.I1
             if (pointer1._address == 0)
             {
                 throw new InvalidOperationException(
-                                                    "The pointer to the left of the less than or equal to operator is a null pointer.");
+                    "The pointer to the left of the less than or equal to operator is a null pointer."
+                );
             }
             if (pointer2._address == 0)
             {
                 throw new InvalidOperationException(
-                                                    "The pointer to the right of the less than or equal to operator is a null pointer.");
+                    "The pointer to the right of the less than or equal to operator is a null pointer."
+                );
             }
 #endif
             return pointer1._address <= pointer2._address;
@@ -280,12 +294,14 @@ namespace SharpCompress.Compressors.PPMd.I1
             if (pointer1._address == 0)
             {
                 throw new InvalidOperationException(
-                                                    "The pointer to the left of the greater than operator is a null pointer.");
+                    "The pointer to the left of the greater than operator is a null pointer."
+                );
             }
             if (pointer2._address == 0)
             {
                 throw new InvalidOperationException(
-                                                    "The pointer to the right of the greater than operator is a null pointer.");
+                    "The pointer to the right of the greater than operator is a null pointer."
+                );
             }
 #endif
             return pointer1._address > pointer2._address;
@@ -303,12 +319,14 @@ namespace SharpCompress.Compressors.PPMd.I1
             if (pointer1._address == 0)
             {
                 throw new InvalidOperationException(
-                                                    "The pointer to the left of the greater than or equal to operator is a null pointer.");
+                    "The pointer to the left of the greater than or equal to operator is a null pointer."
+                );
             }
             if (pointer2._address == 0)
             {
                 throw new InvalidOperationException(
-                                                    "The pointer to the right of the greater than or equal to operator is a null pointer.");
+                    "The pointer to the right of the greater than or equal to operator is a null pointer."
+                );
             }
 #endif
             return pointer1._address >= pointer2._address;

@@ -28,7 +28,6 @@ namespace SharpCompress.Compressors.Xz.Filters
 
         public override void Init(byte[] properties)
         {
-
             if (properties.Length != 0 && properties.Length != 4)
             {
                 throw new InvalidDataException("PPC properties unexpected length");

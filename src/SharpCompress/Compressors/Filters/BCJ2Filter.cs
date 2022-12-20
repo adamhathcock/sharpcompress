@@ -25,7 +25,8 @@ namespace SharpCompress.Compressors.Filters
         private int _data2Pos;
 
         private readonly ushort[] _p = new ushort[256 + 2];
-        private uint _range, _code;
+        private uint _range,
+            _code;
         private byte _prevByte;
         private bool _isDisposed;
 
@@ -91,7 +92,11 @@ namespace SharpCompress.Compressors.Filters
 
         public override long Length => _baseStream.Length + _data1.Length + _data2.Length;
 
-        public override long Position { get => _position; set => throw new NotSupportedException(); }
+        public override long Position
+        {
+            get => _position;
+            set => throw new NotSupportedException();
+        }
 
         public override int Read(byte[] buffer, int offset, int count)
         {
@@ -176,17 +181,21 @@ namespace SharpCompress.Compressors.Filters
                         uint dest;
                         if (b == 0xE8)
                         {
-                            dest =
-                                (uint)
-                                ((_data1[_data1Pos++] << 24) | (_data1[_data1Pos++] << 16) | (_data1[_data1Pos++] << 8) |
-                                 _data1[_data1Pos++]);
+                            dest = (uint)(
+                                (_data1[_data1Pos++] << 24)
+                                | (_data1[_data1Pos++] << 16)
+                                | (_data1[_data1Pos++] << 8)
+                                | _data1[_data1Pos++]
+                            );
                         }
                         else
                         {
-                            dest =
-                                (uint)
-                                ((_data2[_data2Pos++] << 24) | (_data2[_data2Pos++] << 16) | (_data2[_data2Pos++] << 8) |
-                                 _data2[_data2Pos++]);
+                            dest = (uint)(
+                                (_data2[_data2Pos++] << 24)
+                                | (_data2[_data2Pos++] << 16)
+                                | (_data2[_data2Pos++] << 8)
+                                | _data2[_data2Pos++]
+                            );
                         }
                         dest -= (uint)(_position + 4);
 

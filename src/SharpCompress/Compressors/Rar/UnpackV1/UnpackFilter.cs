@@ -13,8 +13,16 @@ namespace SharpCompress.Compressors.Rar.UnpackV1
         }
 
         // TODO uint
-        internal uint uBlockStart { get { return (uint)BlockStart; } set { BlockStart = (int)value; } }
-        internal uint uBlockLength { get { return (uint)BlockLength; } set { BlockLength = (int)value; } }
+        internal uint uBlockStart
+        {
+            get { return (uint)BlockStart; }
+            set { BlockStart = (int)value; }
+        }
+        internal uint uBlockLength
+        {
+            get { return (uint)BlockLength; }
+            set { BlockLength = (int)value; }
+        }
 
         internal int BlockStart { get; set; }
 

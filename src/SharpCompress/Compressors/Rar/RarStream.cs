@@ -52,14 +52,16 @@ namespace SharpCompress.Compressors.Rar
 
         public override bool CanWrite => false;
 
-        public override void Flush()
-        {
-        }
+        public override void Flush() { }
 
         public override long Length => fileHeader.UncompressedSize;
 
         //commented out code always returned the length of the file
-        public override long Position { get => _position; /* fileHeader.UncompressedSize - unpack.DestSize;*/ set => throw new NotSupportedException(); }
+        public override long Position
+        {
+            get => _position; /* fileHeader.UncompressedSize - unpack.DestSize;*/
+            set => throw new NotSupportedException();
+        }
 
         public override int Read(byte[] buffer, int offset, int count)
         {
@@ -117,8 +119,11 @@ namespace SharpCompress.Compressors.Rar
             {
                 if (tmpBuffer.Length < tmpCount + count)
                 {
-                    byte[] newBuffer =
-                        new byte[tmpBuffer.Length * 2 > tmpCount + count ? tmpBuffer.Length * 2 : tmpCount + count];
+                    byte[] newBuffer = new byte[
+                        tmpBuffer.Length * 2 > tmpCount + count
+                            ? tmpBuffer.Length * 2
+                            : tmpCount + count
+                    ];
                     Buffer.BlockCopy(tmpBuffer, 0, newBuffer, 0, tmpCount);
                     tmpBuffer = newBuffer;
                 }

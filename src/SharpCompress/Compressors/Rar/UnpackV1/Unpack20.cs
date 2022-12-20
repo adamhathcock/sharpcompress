@@ -18,7 +18,10 @@ namespace SharpCompress.Compressors.Rar.UnpackV1
 
         private readonly byte[] UnpOldTable20 = new byte[PackDef.MC20 * 4];
 
-        private int UnpAudioBlock, UnpChannels, UnpCurChannel, UnpChannelDelta;
+        private int UnpAudioBlock,
+            UnpChannels,
+            UnpCurChannel,
+            UnpChannelDelta;
 
         private readonly AudioVariables[] AudV = new AudioVariables[4];
 
@@ -34,30 +37,171 @@ namespace SharpCompress.Compressors.Rar.UnpackV1
 
         private static readonly int[] LDecode =
         {
-            0, 1, 2, 3, 4, 5, 6, 7, 8, 10, 12, 14, 16, 20, 24, 28, 32, 40, 48,
-            56, 64, 80, 96, 112, 128, 160, 192, 224
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            10,
+            12,
+            14,
+            16,
+            20,
+            24,
+            28,
+            32,
+            40,
+            48,
+            56,
+            64,
+            80,
+            96,
+            112,
+            128,
+            160,
+            192,
+            224
         };
 
-        private static ReadOnlySpan<byte> LBits => new byte[]
-        {
-            0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4,
-            4, 5, 5, 5, 5
-        };
+        private static ReadOnlySpan<byte> LBits =>
+            new byte[]
+            {
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                1,
+                1,
+                1,
+                1,
+                2,
+                2,
+                2,
+                2,
+                3,
+                3,
+                3,
+                3,
+                4,
+                4,
+                4,
+                4,
+                5,
+                5,
+                5,
+                5
+            };
 
         private static readonly int[] DDecode =
         {
-            0, 1, 2, 3, 4, 6, 8, 12, 16, 24, 32, 48, 64, 96, 128, 192, 256, 384,
-            512, 768, 1024, 1536, 2048, 3072, 4096, 6144, 8192, 12288, 16384,
-            24576, 32768, 49152, 65536, 98304, 131072, 196608, 262144, 327680,
-            393216, 458752, 524288, 589824, 655360, 720896, 786432, 851968,
-            917504, 983040
+            0,
+            1,
+            2,
+            3,
+            4,
+            6,
+            8,
+            12,
+            16,
+            24,
+            32,
+            48,
+            64,
+            96,
+            128,
+            192,
+            256,
+            384,
+            512,
+            768,
+            1024,
+            1536,
+            2048,
+            3072,
+            4096,
+            6144,
+            8192,
+            12288,
+            16384,
+            24576,
+            32768,
+            49152,
+            65536,
+            98304,
+            131072,
+            196608,
+            262144,
+            327680,
+            393216,
+            458752,
+            524288,
+            589824,
+            655360,
+            720896,
+            786432,
+            851968,
+            917504,
+            983040
         };
 
         private static readonly int[] DBits =
         {
-            0, 0, 0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 10,
-            10, 11, 11, 12, 12, 13, 13, 14, 14, 15, 15, 16, 16, 16, 16, 16, 16, 16
-            , 16, 16, 16, 16, 16, 16, 16
+            0,
+            0,
+            0,
+            0,
+            1,
+            1,
+            2,
+            2,
+            3,
+            3,
+            4,
+            4,
+            5,
+            5,
+            6,
+            6,
+            7,
+            7,
+            8,
+            8,
+            9,
+            9,
+            10,
+            10,
+            11,
+            11,
+            12,
+            12,
+            13,
+            13,
+            14,
+            14,
+            15,
+            15,
+            16,
+            16,
+            16,
+            16,
+            16,
+            16,
+            16,
+            16,
+            16,
+            16,
+            16,
+            16,
+            16,
+            16
         };
 
         private static readonly int[] SDDecode = { 0, 4, 8, 16, 32, 64, 128, 192 };
@@ -249,7 +393,9 @@ namespace SharpCompress.Compressors.Rar.UnpackV1
         {
             byte[] BitLength = new byte[PackDef.BC20];
             byte[] Table = new byte[PackDef.MC20 * 4];
-            int TableSize, N, I;
+            int TableSize,
+                N,
+                I;
             if (inAddr > readTop - 25)
             {
                 if (!unpReadBuf())
@@ -346,7 +492,12 @@ namespace SharpCompress.Compressors.Rar.UnpackV1
             {
                 UnpackUtility.makeDecodeTables(Table, 0, LD, PackDef.NC20);
                 UnpackUtility.makeDecodeTables(Table, PackDef.NC20, DD, PackDef.DC20);
-                UnpackUtility.makeDecodeTables(Table, PackDef.NC20 + PackDef.DC20, RD, PackDef.RC20);
+                UnpackUtility.makeDecodeTables(
+                    Table,
+                    PackDef.NC20 + PackDef.DC20,
+                    RD,
+                    PackDef.RC20
+                );
             }
 
             // memcpy(UnpOldTable20,Table,sizeof(UnpOldTable20));
@@ -434,7 +585,8 @@ namespace SharpCompress.Compressors.Rar.UnpackV1
 
             if ((v.ByteCount & 0x1F) == 0)
             {
-                int MinDif = v.Dif[0], NumMinDif = 0;
+                int MinDif = v.Dif[0],
+                    NumMinDif = 0;
                 v.Dif[0] = 0; // ->Dif[0]=0;
                 for (int I = 1; I < v.Dif.Length; I++)
                 {

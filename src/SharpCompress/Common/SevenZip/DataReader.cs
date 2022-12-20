@@ -12,21 +12,21 @@ namespace SharpCompress.Common.SevenZip
         public static uint Get32(byte[] buffer, int offset)
         {
             return buffer[offset]
-                   + ((uint)buffer[offset + 1] << 8)
-                   + ((uint)buffer[offset + 2] << 16)
-                   + ((uint)buffer[offset + 3] << 24);
+                + ((uint)buffer[offset + 1] << 8)
+                + ((uint)buffer[offset + 2] << 16)
+                + ((uint)buffer[offset + 3] << 24);
         }
 
         public static ulong Get64(byte[] buffer, int offset)
         {
             return buffer[offset]
-                   + ((ulong)buffer[offset + 1] << 8)
-                   + ((ulong)buffer[offset + 2] << 16)
-                   + ((ulong)buffer[offset + 3] << 24)
-                   + ((ulong)buffer[offset + 4] << 32)
-                   + ((ulong)buffer[offset + 5] << 40)
-                   + ((ulong)buffer[offset + 6] << 48)
-                   + ((ulong)buffer[offset + 7] << 56);
+                + ((ulong)buffer[offset + 1] << 8)
+                + ((ulong)buffer[offset + 2] << 16)
+                + ((ulong)buffer[offset + 3] << 24)
+                + ((ulong)buffer[offset + 4] << 32)
+                + ((ulong)buffer[offset + 5] << 40)
+                + ((ulong)buffer[offset + 6] << 48)
+                + ((ulong)buffer[offset + 7] << 56);
         }
 
         #endregion

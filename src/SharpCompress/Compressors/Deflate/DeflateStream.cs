@@ -35,11 +35,20 @@ namespace SharpCompress.Compressors.Deflate
         private readonly ZlibBaseStream _baseStream;
         private bool _disposed;
 
-        public DeflateStream(Stream stream, CompressionMode mode,
-                             CompressionLevel level = CompressionLevel.Default,
-                             Encoding? forceEncoding = null)
+        public DeflateStream(
+            Stream stream,
+            CompressionMode mode,
+            CompressionLevel level = CompressionLevel.Default,
+            Encoding? forceEncoding = null
+        )
         {
-            _baseStream = new ZlibBaseStream(stream, mode, level, ZlibStreamFlavor.DEFLATE, forceEncoding);
+            _baseStream = new ZlibBaseStream(
+                stream,
+                mode,
+                level,
+                ZlibStreamFlavor.DEFLATE,
+                forceEncoding
+            );
         }
 
         #region Zlib properties
@@ -95,8 +104,12 @@ namespace SharpCompress.Compressors.Deflate
                 if (value < ZlibConstants.WorkingBufferSizeMin)
                 {
                     throw new ZlibException(
-                                            String.Format("Don't be silly. {0} bytes?? Use a bigger buffer, at least {1}.", value,
-                                                          ZlibConstants.WorkingBufferSizeMin));
+                        String.Format(
+                            "Don't be silly. {0} bytes?? Use a bigger buffer, at least {1}.",
+                            value,
+                            ZlibConstants.WorkingBufferSizeMin
+                        )
+                    );
                 }
                 _baseStream._bufferSize = value;
             }
@@ -360,7 +373,11 @@ namespace SharpCompress.Compressors.Deflate
 
         #endregion
 
-        public MemoryStream InputBuffer => new MemoryStream(_baseStream._z.InputBuffer, _baseStream._z.NextIn,
-                                                            _baseStream._z.AvailableBytesIn);
+        public MemoryStream InputBuffer =>
+            new MemoryStream(
+                _baseStream._z.InputBuffer,
+                _baseStream._z.NextIn,
+                _baseStream._z.AvailableBytesIn
+            );
     }
 }

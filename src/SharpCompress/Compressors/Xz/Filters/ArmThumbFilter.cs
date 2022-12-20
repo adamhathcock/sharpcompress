@@ -28,7 +28,6 @@ namespace SharpCompress.Compressors.Xz.Filters
 
         public override void Init(byte[] properties)
         {
-
             if (properties.Length != 0 && properties.Length != 4)
             {
                 throw new InvalidDataException("ARM Thumb properties unexpected length");
@@ -48,10 +47,7 @@ namespace SharpCompress.Compressors.Xz.Filters
             }
         }
 
-        public override void ValidateFilter()
-        {
-
-        }
+        public override void ValidateFilter() { }
 
         public override int Read(byte[] buffer, int offset, int count)
         {

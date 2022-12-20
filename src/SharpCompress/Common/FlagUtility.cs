@@ -6,35 +6,33 @@ namespace SharpCompress.Common
     {
         /// <summary>
         /// Returns true if the flag is set on the specified bit field.
-        /// Currently only works with 32-bit bitfields. 
+        /// Currently only works with 32-bit bitfields.
         /// </summary>
         /// <typeparam name="T">Enumeration with Flags attribute</typeparam>
         /// <param name="bitField">Flagged variable</param>
         /// <param name="flag">Flag to test</param>
         /// <returns></returns>
-        public static bool HasFlag<T>(long bitField, T flag)
-            where T : struct
+        public static bool HasFlag<T>(long bitField, T flag) where T : struct
         {
             return HasFlag(bitField, flag);
         }
 
         /// <summary>
         /// Returns true if the flag is set on the specified bit field.
-        /// Currently only works with 32-bit bitfields. 
+        /// Currently only works with 32-bit bitfields.
         /// </summary>
         /// <typeparam name="T">Enumeration with Flags attribute</typeparam>
         /// <param name="bitField">Flagged variable</param>
         /// <param name="flag">Flag to test</param>
         /// <returns></returns>
-        public static bool HasFlag<T>(ulong bitField, T flag)
-            where T : struct
+        public static bool HasFlag<T>(ulong bitField, T flag) where T : struct
         {
             return HasFlag(bitField, flag);
         }
 
         /// <summary>
         /// Returns true if the flag is set on the specified bit field.
-        /// Currently only works with 32-bit bitfields. 
+        /// Currently only works with 32-bit bitfields.
         /// </summary>
         /// <param name="bitField">Flagged variable</param>
         /// <param name="flag">Flag to test</param>
@@ -51,21 +49,20 @@ namespace SharpCompress.Common
 
         /// <summary>
         /// Returns true if the flag is set on the specified bit field.
-        /// Currently only works with 32-bit bitfields. 
+        /// Currently only works with 32-bit bitfields.
         /// </summary>
         /// <typeparam name="T">Enumeration with Flags attribute</typeparam>
         /// <param name="bitField">Flagged variable</param>
         /// <param name="flag">Flag to test</param>
         /// <returns></returns>
-        public static bool HasFlag<T>(T bitField, T flag)
-            where T : struct
+        public static bool HasFlag<T>(T bitField, T flag) where T : struct
         {
             return HasFlag(Convert.ToInt64(bitField), Convert.ToInt64(flag));
         }
 
         /// <summary>
         /// Returns true if the flag is set on the specified bit field.
-        /// Currently only works with 32-bit bitfields. 
+        /// Currently only works with 32-bit bitfields.
         /// </summary>
         /// <param name="bitField">Flagged variable</param>
         /// <param name="flag">Flag to test</param>
@@ -99,8 +96,7 @@ namespace SharpCompress.Common
         /// <param name="flag">Flag to change</param>
         /// <param name="on">bool</param>
         /// <returns>The flagged variable with the flag changed</returns>
-        public static long SetFlag<T>(T bitField, T flag, bool on)
-            where T : struct
+        public static long SetFlag<T>(T bitField, T flag, bool on) where T : struct
         {
             return SetFlag(Convert.ToInt64(bitField), Convert.ToInt64(flag), on);
         }

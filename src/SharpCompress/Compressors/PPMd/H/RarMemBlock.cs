@@ -7,14 +7,13 @@ namespace SharpCompress.Compressors.PPMd.H
     {
         public const int SIZE = 12;
 
-        private int _stamp, _nu;
+        private int _stamp,
+            _nu;
 
-        private int _next, _prev; // Pointer RarMemBlock
+        private int _next,
+            _prev; // Pointer RarMemBlock
 
-        public RarMemBlock(byte[] memory)
-            : base(memory)
-        {
-        }
+        public RarMemBlock(byte[] memory) : base(memory) { }
 
         internal int Stamp
         {
@@ -22,11 +21,11 @@ namespace SharpCompress.Compressors.PPMd.H
             {
                 if (Memory != null)
                 {
-                    _stamp = BinaryPrimitives.ReadInt16LittleEndian(Memory.AsSpan(Address)) & 0xffff;
+                    _stamp =
+                        BinaryPrimitives.ReadInt16LittleEndian(Memory.AsSpan(Address)) & 0xffff;
                 }
                 return _stamp;
             }
-
             set
             {
                 _stamp = value;

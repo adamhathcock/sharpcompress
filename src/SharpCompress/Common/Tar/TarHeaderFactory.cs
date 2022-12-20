@@ -7,7 +7,11 @@ namespace SharpCompress.Common.Tar
 {
     internal static class TarHeaderFactory
     {
-        internal static IEnumerable<TarHeader?> ReadHeader(StreamingMode mode, Stream stream, ArchiveEncoding archiveEncoding)
+        internal static IEnumerable<TarHeader?> ReadHeader(
+            StreamingMode mode,
+            Stream stream,
+            ArchiveEncoding archiveEncoding
+        )
         {
             while (true)
             {
@@ -24,6 +28,7 @@ namespace SharpCompress.Common.Tar
                     switch (mode)
                     {
                         case StreamingMode.Seekable:
+
                             {
                                 header.DataStartPosition = reader.BaseStream.Position;
 
@@ -32,14 +37,15 @@ namespace SharpCompress.Common.Tar
                             }
                             break;
                         case StreamingMode.Streaming:
+
                             {
                                 header.PackedStream = new TarReadOnlySubStream(stream, header.Size);
                             }
                             break;
                         default:
-                            {
-                                throw new InvalidFormatException("Invalid StreamingMode");
-                            }
+                        {
+                            throw new InvalidFormatException("Invalid StreamingMode");
+                        }
                     }
                 }
                 catch

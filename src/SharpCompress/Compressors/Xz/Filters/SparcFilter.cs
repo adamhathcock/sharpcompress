@@ -26,8 +26,8 @@ namespace SharpCompress.Compressors.Xz.Filters
 
         //private UInt32 _offset = 0;
 
-        public override void Init(byte[] properties) {
-
+        public override void Init(byte[] properties)
+        {
             if (properties.Length != 0 && properties.Length != 4)
             {
                 throw new InvalidDataException("SPARC properties unexpected length");
@@ -47,18 +47,18 @@ namespace SharpCompress.Compressors.Xz.Filters
             }
         }
 
-        public override void ValidateFilter() {
+        public override void ValidateFilter() { }
 
-        }
-
-        public override int Read(byte[] buffer, int offset, int count){
+        public override int Read(byte[] buffer, int offset, int count)
+        {
             int bytesRead = BaseStream.Read(buffer, offset, count);
             BranchExecFilter.SPARCConverter(buffer, _ip);
             _ip += (UInt32)bytesRead;
             return bytesRead;
         }
 
-        public override void SetBaseStream(Stream stream) {
+        public override void SetBaseStream(Stream stream)
+        {
             BaseStream = stream;
         }
     }

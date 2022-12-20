@@ -54,7 +54,7 @@ namespace SharpCompress.Common.Rar.Headers
     {
         public const ushort HAS_EXTRA = 0x0001;
         public const ushort HAS_DATA = 0x0002;
-        public const ushort KEEP = 0x0004;  // block must be kept during an update
+        public const ushort KEEP = 0x0004; // block must be kept during an update
         public const ushort SPLIT_BEFORE = 0x0008;
         public const ushort SPLIT_AFTER = 0x0010;
         public const ushort CHILD = 0x0020; // ??? Block depends on preceding file block.

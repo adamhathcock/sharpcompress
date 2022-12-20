@@ -47,10 +47,7 @@ namespace SharpCompress.Compressors.Xz.Filters
             }
         }
 
-        public override void ValidateFilter()
-        {
-
-        }
+        public override void ValidateFilter() { }
 
         public override int Read(byte[] buffer, int offset, int count)
         {
@@ -59,6 +56,7 @@ namespace SharpCompress.Compressors.Xz.Filters
             _ip += (UInt32)bytesRead;
             return bytesRead;
         }
+
         public override void SetBaseStream(Stream stream)
         {
             BaseStream = stream;

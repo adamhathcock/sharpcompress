@@ -20,7 +20,7 @@ namespace SharpCompress.Archives
 
         /// <summary>
         /// Use this method to extract all entries in an archive in order.
-        /// This is primarily for SOLID Rar Archives or 7Zip Archives as they need to be 
+        /// This is primarily for SOLID Rar Archives or 7Zip Archives as they need to be
         /// extracted sequentially for the best performance.
         /// </summary>
         IReader ExtractAllEntries();

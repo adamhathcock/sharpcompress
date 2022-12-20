@@ -24,7 +24,11 @@ namespace SharpCompress.Test.Mocks
 
         public override long Length => this.inner.Length;
 
-        public override long Position { get => this.inner.Position; set => this.inner.Position = value; }
+        public override long Position
+        {
+            get => this.inner.Position;
+            set => this.inner.Position = value;
+        }
 
         public override void Flush()
         {

@@ -30,8 +30,10 @@ namespace SharpCompress.Test.GZip
                 Assert.Equal(size, scratch.Length);
                 Assert.Equal(size, test.Length);
             }
-            CompareArchivesByPath(Path.Combine(SCRATCH_FILES_PATH, "Tar.tar"),
-                Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar"));
+            CompareArchivesByPath(
+                Path.Combine(SCRATCH_FILES_PATH, "Tar.tar"),
+                Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar")
+            );
         }
 
         [Fact]
@@ -50,10 +52,11 @@ namespace SharpCompress.Test.GZip
                 Assert.Equal(size, scratch.Length);
                 Assert.Equal(size, test.Length);
             }
-            CompareArchivesByPath(Path.Combine(SCRATCH_FILES_PATH, "Tar.tar"),
-                Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar"));
+            CompareArchivesByPath(
+                Path.Combine(SCRATCH_FILES_PATH, "Tar.tar"),
+                Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar")
+            );
         }
-
 
         [Fact]
         public void GZip_Archive_NoAdd()
@@ -62,11 +65,12 @@ namespace SharpCompress.Test.GZip
             using (Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.gz")))
             using (var archive = GZipArchive.Open(stream))
             {
-                Assert.Throws<InvalidOperationException>(() => archive.AddEntry("jpg\\test.jpg", jpg));
+                Assert.Throws<InvalidOperationException>(
+                    () => archive.AddEntry("jpg\\test.jpg", jpg)
+                );
                 archive.SaveTo(Path.Combine(SCRATCH_FILES_PATH, "Tar.tar.gz"));
             }
         }
-
 
         [Fact]
         public void GZip_Archive_Multiple_Reads()

@@ -76,8 +76,7 @@ namespace SharpCompress.Compressors.LZMA.RangeCoder
                 {
                     _stream.WriteByte((byte)(temp + (_low >> 32)));
                     temp = 0xFF;
-                }
-                while (--_cacheSize != 0);
+                } while (--_cacheSize != 0);
                 _cache = (byte)(((uint)_low) >> 24);
             }
             _cacheSize++;

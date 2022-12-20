@@ -12,9 +12,14 @@ namespace SharpCompress.Archives.Zip
         private readonly Stream stream;
         private bool isDisposed;
 
-        internal ZipWritableArchiveEntry(ZipArchive archive, Stream stream, string path, long size,
-                                         DateTime? lastModified, bool closeStream)
-            : base(archive, null)
+        internal ZipWritableArchiveEntry(
+            ZipArchive archive,
+            Stream stream,
+            string path,
+            long size,
+            DateTime? lastModified,
+            bool closeStream
+        ) : base(archive, null)
         {
             this.stream = stream;
             Key = path;

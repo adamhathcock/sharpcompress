@@ -47,7 +47,11 @@ namespace SharpCompress.Compressors.Filters
 
         public override long Length => _baseStream.Length;
 
-        public override long Position { get => _baseStream.Position; set => throw new NotSupportedException(); }
+        public override long Position
+        {
+            get => _baseStream.Position;
+            set => throw new NotSupportedException();
+        }
 
         public override int Read(byte[] buffer, int offset, int count)
         {

@@ -20,7 +20,10 @@ namespace SharpCompress.Test
 
         public TestBase()
         {
-            var index = AppDomain.CurrentDomain.BaseDirectory.IndexOf("SharpCompress.Test", StringComparison.OrdinalIgnoreCase);
+            var index = AppDomain.CurrentDomain.BaseDirectory.IndexOf(
+                "SharpCompress.Test",
+                StringComparison.OrdinalIgnoreCase
+            );
             var path = AppDomain.CurrentDomain.BaseDirectory.Substring(0, index);
             SOLUTION_BASE_PATH = Path.GetDirectoryName(path) ?? throw new ArgumentNullException();
 
@@ -28,7 +31,11 @@ namespace SharpCompress.Test
             ORIGINAL_FILES_PATH = Path.Combine(SOLUTION_BASE_PATH, "TestArchives", "Original");
             MISC_TEST_FILES_PATH = Path.Combine(SOLUTION_BASE_PATH, "TestArchives", "MiscTest");
 
-            SCRATCH_BASE_PATH = Path.Combine(SOLUTION_BASE_PATH, "TestArchives", Guid.NewGuid().ToString());
+            SCRATCH_BASE_PATH = Path.Combine(
+                SOLUTION_BASE_PATH,
+                "TestArchives",
+                Guid.NewGuid().ToString()
+            );
             SCRATCH_FILES_PATH = Path.Combine(SCRATCH_BASE_PATH, "Scratch");
             SCRATCH2_FILES_PATH = Path.Combine(SCRATCH_BASE_PATH, "Scratch2");
 
@@ -70,11 +77,11 @@ namespace SharpCompress.Test
 
         protected void VerifyFilesByName()
         {
-            var extracted =
-                Directory.EnumerateFiles(SCRATCH_FILES_PATH, "*.*", SearchOption.AllDirectories)
+            var extracted = Directory
+                .EnumerateFiles(SCRATCH_FILES_PATH, "*.*", SearchOption.AllDirectories)
                 .ToLookup(path => path.Substring(SCRATCH_FILES_PATH.Length));
-            var original =
-                Directory.EnumerateFiles(ORIGINAL_FILES_PATH, "*.*", SearchOption.AllDirectories)
+            var original = Directory
+                .EnumerateFiles(ORIGINAL_FILES_PATH, "*.*", SearchOption.AllDirectories)
                 .ToLookup(path => path.Substring(ORIGINAL_FILES_PATH.Length));
 
             Assert.Equal(extracted.Count, original.Count);
@@ -92,11 +99,11 @@ namespace SharpCompress.Test
         /// </summary>
         protected void VerifyFilesByNameEx()
         {
-            var extracted =
-                Directory.EnumerateFiles(SCRATCH_FILES_PATH, "*.*", SearchOption.AllDirectories)
+            var extracted = Directory
+                .EnumerateFiles(SCRATCH_FILES_PATH, "*.*", SearchOption.AllDirectories)
                 .ToLookup(path => path.Substring(SCRATCH_FILES_PATH.Length));
-            var original =
-                Directory.EnumerateFiles(ORIGINAL_FILES_PATH, "*.*", SearchOption.AllDirectories)
+            var original = Directory
+                .EnumerateFiles(ORIGINAL_FILES_PATH, "*.*", SearchOption.AllDirectories)
                 .ToLookup(path => path.Substring(ORIGINAL_FILES_PATH.Length));
 
             Assert.Equal(extracted.Count, original.Count);
@@ -115,11 +122,11 @@ namespace SharpCompress.Test
         /// </summary>
         protected void VerifyFilesByExtensionEx()
         {
-            var extracted =
-                Directory.EnumerateFiles(SCRATCH_FILES_PATH, "*.*", SearchOption.AllDirectories)
+            var extracted = Directory
+                .EnumerateFiles(SCRATCH_FILES_PATH, "*.*", SearchOption.AllDirectories)
                 .ToLookup(path => Path.GetExtension(path));
-            var original =
-                Directory.EnumerateFiles(ORIGINAL_FILES_PATH, "*.*", SearchOption.AllDirectories)
+            var original = Directory
+                .EnumerateFiles(ORIGINAL_FILES_PATH, "*.*", SearchOption.AllDirectories)
                 .ToLookup(path => Path.GetExtension(path));
 
             Assert.Equal(extracted.Count, original.Count);
@@ -137,11 +144,11 @@ namespace SharpCompress.Test
 
         protected void VerifyFilesByExtension()
         {
-            var extracted =
-                Directory.EnumerateFiles(SCRATCH_FILES_PATH, "*.*", SearchOption.AllDirectories)
+            var extracted = Directory
+                .EnumerateFiles(SCRATCH_FILES_PATH, "*.*", SearchOption.AllDirectories)
                 .ToLookup(path => Path.GetExtension(path));
-            var original =
-                Directory.EnumerateFiles(ORIGINAL_FILES_PATH, "*.*", SearchOption.AllDirectories)
+            var original = Directory
+                .EnumerateFiles(ORIGINAL_FILES_PATH, "*.*", SearchOption.AllDirectories)
                 .ToLookup(path => Path.GetExtension(path));
 
             Assert.Equal(extracted.Count, original.Count);
@@ -215,6 +222,5 @@ namespace SharpCompress.Test
                 Assert.Equal(archive1Entries[i], archive2Entries[i]);
             }
         }
-
     }
 }

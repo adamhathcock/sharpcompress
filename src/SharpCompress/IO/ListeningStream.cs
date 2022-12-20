@@ -38,13 +38,20 @@ namespace SharpCompress.IO
 
         public override long Length => Stream.Length;
 
-        public override long Position { get => Stream.Position; set => Stream.Position = value; }
+        public override long Position
+        {
+            get => Stream.Position;
+            set => Stream.Position = value;
+        }
 
         public override int Read(byte[] buffer, int offset, int count)
         {
             int read = Stream.Read(buffer, offset, count);
             currentEntryTotalReadBytes += read;
-            listener.FireCompressedBytesRead(currentEntryTotalReadBytes, currentEntryTotalReadBytes);
+            listener.FireCompressedBytesRead(
+                currentEntryTotalReadBytes,
+                currentEntryTotalReadBytes
+            );
             return read;
         }
 
@@ -57,7 +64,10 @@ namespace SharpCompress.IO
             }
 
             ++currentEntryTotalReadBytes;
-            listener.FireCompressedBytesRead(currentEntryTotalReadBytes, currentEntryTotalReadBytes);
+            listener.FireCompressedBytesRead(
+                currentEntryTotalReadBytes,
+                currentEntryTotalReadBytes
+            );
             return value;
         }
 

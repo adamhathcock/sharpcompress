@@ -14,7 +14,6 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017
 {
     internal partial class BitInput
     {
-
         public BitInput(bool AllocBuffer)
         {
             ExternalBuffer = false;
@@ -37,7 +36,6 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017
             }
         }
 
-
         //BitInput::~BitInput()
         //{
         //    if (!ExternalBuffer)
@@ -45,15 +43,13 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017
         //}
         //
 
-        public
-        void faddbits(uint Bits)
+        public void faddbits(uint Bits)
         {
             // Function wrapped version of inline addbits to save code size.
             addbits(Bits);
         }
 
-        public
-        uint fgetbits()
+        public uint fgetbits()
         {
             // Function wrapped version of inline getbits to save code size.
             return getbits();
@@ -66,6 +62,5 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017
             InBuf = Buf;
             ExternalBuffer = true;
         }
-
     }
 }

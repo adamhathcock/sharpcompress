@@ -31,14 +31,13 @@ namespace SharpCompress.Archives
 
         public static IWritableArchive Create(ArchiveType type)
         {
-            var factory = Factories.Factory
-                .Factories
+            var factory = Factories.Factory.Factories
                 .OfType<IWriteableArchiveFactory>()
                 .Where(item => item.KnownArchiveType == type)
                 .FirstOrDefault();
 
             if (factory != null)
-                return factory.CreateWriteableArchive();            
+                return factory.CreateWriteableArchive();
 
             throw new NotSupportedException("Cannot create Archives of type: " + type);
         }
@@ -60,7 +59,7 @@ namespace SharpCompress.Archives
         /// <param name="fileInfo"></param>
         /// <param name="options"></param>
         public static IArchive Open(FileInfo fileInfo, ReaderOptions? options = null)
-        {            
+        {
             options ??= new ReaderOptions { LeaveStreamOpen = false };
 
             return FindFactory<IArchiveFactory>(fileInfo).Open(fileInfo, options);
@@ -105,14 +104,17 @@ namespace SharpCompress.Archives
             firstStream.CheckNotNull(nameof(firstStream));
             options ??= new ReaderOptions();
 
-            return FindFactory<IMultiArchiveFactory>(firstStream).Open(streamsArray, options);            
-        }        
+            return FindFactory<IMultiArchiveFactory>(firstStream).Open(streamsArray, options);
+        }
 
         /// <summary>
         /// Extract to specific directory, retaining filename
         /// </summary>
-        public static void WriteToDirectory(string sourceArchive, string destinationDirectory,
-                                            ExtractionOptions? options = null)
+        public static void WriteToDirectory(
+            string sourceArchive,
+            string destinationDirectory,
+            ExtractionOptions? options = null
+        )
         {
             using IArchive archive = Open(sourceArchive);
             foreach (IArchiveEntry entry in archive.Entries)
@@ -121,8 +123,7 @@ namespace SharpCompress.Archives
             }
         }
 
-        private static T FindFactory<T>(FileInfo finfo)
-            where T : IFactory
+        private static T FindFactory<T>(FileInfo finfo) where T : IFactory
         {
             finfo.CheckNotNull(nameof(finfo));
             using (Stream stream = finfo.OpenRead())
@@ -131,8 +132,7 @@ namespace SharpCompress.Archives
             }
         }
 
-        private static T FindFactory<T>(Stream stream)
-            where T: IFactory
+        private static T FindFactory<T>(Stream stream) where T : IFactory
         {
             stream.CheckNotNull(nameof(stream));
             if (!stream.CanRead || !stream.CanSeek)
@@ -158,7 +158,9 @@ namespace SharpCompress.Archives
 
             var extensions = string.Join(", ", factories.Select(item => item.Name));
 
-            throw new InvalidOperationException($"Cannot determine compressed stream type. Supported Archive Formats: {extensions}");
+            throw new InvalidOperationException(
+                $"Cannot determine compressed stream type. Supported Archive Formats: {extensions}"
+            );
         }
 
         public static bool IsArchive(string filePath, out ArchiveType? type)
@@ -180,7 +182,7 @@ namespace SharpCompress.Archives
 
             var startPosition = stream.Position;
 
-            foreach(var factory in Factories.Factory.Factories)
+            foreach (var factory in Factories.Factory.Factories)
             {
                 stream.Position = startPosition;
 
@@ -213,9 +215,9 @@ namespace SharpCompress.Archives
         public static IEnumerable<FileInfo> GetFileParts(FileInfo part1)
         {
             part1.CheckNotNull(nameof(part1));
-            yield return part1;            
+            yield return part1;
 
-            foreach(var factory in Factory.Factories.OfType<IFactory>())
+            foreach (var factory in Factory.Factories.OfType<IFactory>())
             {
                 int i = 1;
                 FileInfo? part = factory.GetFilePart(i++, part1);

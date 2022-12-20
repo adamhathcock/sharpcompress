@@ -22,7 +22,6 @@ namespace SharpCompress.Compressors.Rar.UnpackV1
             Inp = this;
         }
 
-
         public bool FileExtracted { get; private set; }
 
         public long DestSize
@@ -87,7 +86,28 @@ namespace SharpCompress.Compressors.Rar.UnpackV1
 
         private int lowDistRepCount;
 
-        private static readonly int[] DBitLengthCounts = { 4, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 14, 0, 12 };
+        private static readonly int[] DBitLengthCounts =
+        {
+            4,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            14,
+            0,
+            12
+        };
 
         private FileHeader fileHeader;
 
@@ -149,7 +169,9 @@ namespace SharpCompress.Compressors.Rar.UnpackV1
                     break;
 
                 default:
-                    throw new InvalidFormatException("unknown rar compression version " + fileHeader.CompressionAlgorithm);
+                    throw new InvalidFormatException(
+                        "unknown rar compression version " + fileHeader.CompressionAlgorithm
+                    );
             }
         }
 
@@ -185,7 +207,9 @@ namespace SharpCompress.Compressors.Rar.UnpackV1
 
             if (DDecode[1] == 0)
             {
-                int Dist = 0, BitLength = 0, Slot = 0;
+                int Dist = 0,
+                    BitLength = 0,
+                    Slot = 0;
                 for (int I = 0; I < DBitLengthCounts.Length; I++, BitLength++)
                 {
                     int count = DBitLengthCounts[I];
@@ -277,7 +301,8 @@ namespace SharpCompress.Compressors.Rar.UnpackV1
                         }
                         if (NextCh == 4)
                         {
-                            int Distance = 0, Length = 0;
+                            int Distance = 0,
+                                Length = 0;
                             bool failed = false;
                             for (int I = 0; I < 4 && !failed; I++)
                             {
@@ -506,10 +531,15 @@ namespace SharpCompress.Compressors.Rar.UnpackV1
                             // Prg->GlobalData.Alloc(ParentPrg->GlobalData.Size());
                             // memcpy(&Prg->GlobalData[VM_FIXEDGLOBALSIZE],&ParentPrg->GlobalData[VM_FIXEDGLOBALSIZE],ParentPrg->GlobalData.Size()-VM_FIXEDGLOBALSIZE);
                             Prg.GlobalData.Clear();
-                            for (int i = 0; i < ParentPrg.GlobalData.Count - RarVM.VM_FIXEDGLOBALSIZE; i++)
+                            for (
+                                int i = 0;
+                                i < ParentPrg.GlobalData.Count - RarVM.VM_FIXEDGLOBALSIZE;
+                                i++
+                            )
                             {
-                                Prg.GlobalData[RarVM.VM_FIXEDGLOBALSIZE + i] =
-                                    ParentPrg.GlobalData[RarVM.VM_FIXEDGLOBALSIZE + i];
+                                Prg.GlobalData[RarVM.VM_FIXEDGLOBALSIZE + i] = ParentPrg.GlobalData[
+                                    RarVM.VM_FIXEDGLOBALSIZE + i
+                                ];
                             }
                         }
 
@@ -525,10 +555,15 @@ namespace SharpCompress.Compressors.Rar.UnpackV1
                             }
 
                             // memcpy(&ParentPrg->GlobalData[VM_FIXEDGLOBALSIZE],&Prg->GlobalData[VM_FIXEDGLOBALSIZE],Prg->GlobalData.Size()-VM_FIXEDGLOBALSIZE);
-                            for (int i = 0; i < Prg.GlobalData.Count - RarVM.VM_FIXEDGLOBALSIZE; i++)
+                            for (
+                                int i = 0;
+                                i < Prg.GlobalData.Count - RarVM.VM_FIXEDGLOBALSIZE;
+                                i++
+                            )
                             {
-                                ParentPrg.GlobalData[RarVM.VM_FIXEDGLOBALSIZE + i] =
-                                    Prg.GlobalData[RarVM.VM_FIXEDGLOBALSIZE + i];
+                                ParentPrg.GlobalData[RarVM.VM_FIXEDGLOBALSIZE + i] = Prg.GlobalData[
+                                    RarVM.VM_FIXEDGLOBALSIZE + i
+                                ];
                             }
                         }
                         else
@@ -553,8 +588,12 @@ namespace SharpCompress.Compressors.Rar.UnpackV1
                         while (I + 1 < prgStack.Count)
                         {
                             UnpackFilter NextFilter = prgStack[I + 1];
-                            if (NextFilter is null || NextFilter.BlockStart != BlockStart ||
-                                NextFilter.BlockLength != FilteredDataSize || NextFilter.NextWindow)
+                            if (
+                                NextFilter is null
+                                || NextFilter.BlockStart != BlockStart
+                                || NextFilter.BlockLength != FilteredDataSize
+                                || NextFilter.NextWindow
+                            )
                             {
                                 break;
                             }
@@ -576,7 +615,11 @@ namespace SharpCompress.Compressors.Rar.UnpackV1
                                 NextPrg.GlobalData.SetSize(pPrg.GlobalData.Count);
 
                                 // memcpy(&NextPrg->GlobalData[VM_FIXEDGLOBALSIZE],&ParentPrg->GlobalData[VM_FIXEDGLOBALSIZE],ParentPrg->GlobalData.Size()-VM_FIXEDGLOBALSIZE);
-                                for (int i = 0; i < pPrg.GlobalData.Count - RarVM.VM_FIXEDGLOBALSIZE; i++)
+                                for (
+                                    int i = 0;
+                                    i < pPrg.GlobalData.Count - RarVM.VM_FIXEDGLOBALSIZE;
+                                    i++
+                                )
                                 {
                                     NextPrg.GlobalData[RarVM.VM_FIXEDGLOBALSIZE + i] =
                                         pPrg.GlobalData[RarVM.VM_FIXEDGLOBALSIZE + i];
@@ -594,7 +637,11 @@ namespace SharpCompress.Compressors.Rar.UnpackV1
                                 }
 
                                 // memcpy(&ParentPrg->GlobalData[VM_FIXEDGLOBALSIZE],&NextPrg->GlobalData[VM_FIXEDGLOBALSIZE],NextPrg->GlobalData.Size()-VM_FIXEDGLOBALSIZE);
-                                for (int i = 0; i < NextPrg.GlobalData.Count - RarVM.VM_FIXEDGLOBALSIZE; i++)
+                                for (
+                                    int i = 0;
+                                    i < NextPrg.GlobalData.Count - RarVM.VM_FIXEDGLOBALSIZE;
+                                    i++
+                                )
                                 {
                                     pPrg.GlobalData[RarVM.VM_FIXEDGLOBALSIZE + i] =
                                         NextPrg.GlobalData[RarVM.VM_FIXEDGLOBALSIZE + i];
@@ -711,7 +758,11 @@ namespace SharpCompress.Compressors.Rar.UnpackV1
             int destPtr = unpPtr - distance;
 
             // System.out.println(unpPtr+":"+distance);
-            if (destPtr >= 0 && destPtr < PackDef.MAXWINSIZE - 260 && unpPtr < PackDef.MAXWINSIZE - 260)
+            if (
+                destPtr >= 0
+                && destPtr < PackDef.MAXWINSIZE - 260
+                && unpPtr < PackDef.MAXWINSIZE - 260
+            )
             {
                 window[unpPtr++] = window[destPtr++];
 
@@ -801,7 +852,8 @@ namespace SharpCompress.Compressors.Rar.UnpackV1
         private bool ReadEndOfBlock()
         {
             int BitField = GetBits();
-            bool NewTable, NewFile = false;
+            bool NewTable,
+                NewFile = false;
             if ((BitField & 0x8000) != 0)
             {
                 NewTable = true;
@@ -879,7 +931,7 @@ namespace SharpCompress.Compressors.Rar.UnpackV1
 
             int TableSize = PackDef.HUFF_TABLE_SIZE;
 
-            for (int i = 0; i < TableSize;)
+            for (int i = 0; i < TableSize; )
             {
                 if (inAddr > readTop - 5)
                 {
@@ -940,7 +992,12 @@ namespace SharpCompress.Compressors.Rar.UnpackV1
             UnpackUtility.makeDecodeTables(table, 0, LD, PackDef.NC);
             UnpackUtility.makeDecodeTables(table, PackDef.NC, DD, PackDef.DC);
             UnpackUtility.makeDecodeTables(table, PackDef.NC + PackDef.DC, LDD, PackDef.LDC);
-            UnpackUtility.makeDecodeTables(table, PackDef.NC + PackDef.DC + PackDef.LDC, RD, PackDef.RC);
+            UnpackUtility.makeDecodeTables(
+                table,
+                PackDef.NC + PackDef.DC + PackDef.LDC,
+                RD,
+                PackDef.RC
+            );
 
             // memcpy(unpOldTable,table,sizeof(unpOldTable));
 
@@ -1065,7 +1122,6 @@ namespace SharpCompress.Compressors.Rar.UnpackV1
 
             UnpackFilter Filter;
             if (NewFilter)
-
             // new filter code, never used before since VM reset
             {
                 // too many different filters, corrupt archive
@@ -1081,7 +1137,6 @@ namespace SharpCompress.Compressors.Rar.UnpackV1
                 oldFilterLengths.Add(0);
                 Filter.ExecCount = 0;
             }
-
             // filter was used in the past
             else
             {
@@ -1105,9 +1160,11 @@ namespace SharpCompress.Compressors.Rar.UnpackV1
             }
             else
             {
-                StackFilter.BlockLength = FiltPos < oldFilterLengths.Count ? oldFilterLengths[FiltPos] : 0;
+                StackFilter.BlockLength =
+                    FiltPos < oldFilterLengths.Count ? oldFilterLengths[FiltPos] : 0;
             }
-            StackFilter.NextWindow = (wrPtr != unpPtr) && ((wrPtr - unpPtr) & PackDef.MAXWINMASK) <= BlockStart;
+            StackFilter.NextWindow =
+                (wrPtr != unpPtr) && ((wrPtr - unpPtr) & PackDef.MAXWINMASK) <= BlockStart;
 
             // DebugLog("\nNextWindow: UnpPtr=%08x WrPtr=%08x
             // BlockStart=%08x",UnpPtr,WrPtr,BlockStart);
@@ -1123,7 +1180,6 @@ namespace SharpCompress.Compressors.Rar.UnpackV1
             StackFilter.Program.InitR[5] = StackFilter.ExecCount; // StackFilter->Prg.InitR[5]=StackFilter->ExecCount;
 
             if ((firstByte & 0x10) != 0)
-
             // set registers to optional parameters
             // if any
             {
@@ -1210,7 +1266,6 @@ namespace SharpCompress.Compressors.Rar.UnpackV1
                 globalData[0x30 + i] = 0x0;
             }
             if ((firstByte & 8) != 0)
-
             // put data block passed as parameter if any
             {
                 if (Inp.Overflow(3))
@@ -1226,7 +1281,9 @@ namespace SharpCompress.Compressors.Rar.UnpackV1
                 if (CurSize < DataSize + RarVM.VM_FIXEDGLOBALSIZE)
                 {
                     // StackFilter->Prg.GlobalData.Add(DataSize+VM_FIXEDGLOBALSIZE-CurSize);
-                    StackFilter.Program.GlobalData.SetSize(DataSize + RarVM.VM_FIXEDGLOBALSIZE - CurSize);
+                    StackFilter.Program.GlobalData.SetSize(
+                        DataSize + RarVM.VM_FIXEDGLOBALSIZE - CurSize
+                    );
                 }
                 int offset = RarVM.VM_FIXEDGLOBALSIZE;
                 globalData = StackFilter.Program.GlobalData;
@@ -1256,7 +1313,11 @@ namespace SharpCompress.Compressors.Rar.UnpackV1
 
                 // rarVM.SetLowEndianValue((uint
                 // *)&Prg->GlobalData[0x28],int64to32(WrittenFileSize>>32));
-                rarVM.SetLowEndianValue(Prg.GlobalData, 0x28, (int)(Utility.URShift(writtenFileSize, 32)));
+                rarVM.SetLowEndianValue(
+                    Prg.GlobalData,
+                    0x28,
+                    (int)(Utility.URShift(writtenFileSize, 32))
+                );
                 rarVM.execute(Prg);
             }
         }

@@ -3,52 +3,52 @@
 // Deflate.cs
 // ------------------------------------------------------------------
 //
-// Copyright (c) 2009 Dino Chiesa and Microsoft Corporation.  
+// Copyright (c) 2009 Dino Chiesa and Microsoft Corporation.
 // All rights reserved.
 //
 // This code module is part of DotNetZip, a zipfile class library.
 //
 // ------------------------------------------------------------------
 //
-// This code is licensed under the Microsoft Public License. 
+// This code is licensed under the Microsoft Public License.
 // See the file License.txt for the license details.
 // More info on: http://dotnetzip.codeplex.com
 //
 // ------------------------------------------------------------------
 //
-// last saved (in emacs): 
+// last saved (in emacs):
 // Time-stamp: <2009-October-28 13:44:59>
 //
 // ------------------------------------------------------------------
 //
 // This module defines logic for handling the Deflate or compression.
 //
-// This code is based on multiple sources: 
+// This code is based on multiple sources:
 // - the original zlib v1.2.3 source, which is Copyright (C) 1995-2005 Jean-loup Gailly.
-// - the original jzlib, which is Copyright (c) 2000-2003 ymnk, JCraft,Inc. 
+// - the original jzlib, which is Copyright (c) 2000-2003 ymnk, JCraft,Inc.
 //
-// However, this code is significantly different from both.  
+// However, this code is significantly different from both.
 // The object model is not the same, and many of the behaviors are different.
 //
-// In keeping with the license for these other works, the copyrights for 
+// In keeping with the license for these other works, the copyrights for
 // jzlib and zlib are here.
 //
 // -----------------------------------------------------------------------
 // Copyright (c) 2000,2001,2002,2003 ymnk, JCraft,Inc. All rights reserved.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
-// 
+//
 // 1. Redistributions of source code must retain the above copyright notice,
 // this list of conditions and the following disclaimer.
-// 
-// 2. Redistributions in binary form must reproduce the above copyright 
-// notice, this list of conditions and the following disclaimer in 
+//
+// 2. Redistributions in binary form must reproduce the above copyright
+// notice, this list of conditions and the following disclaimer in
 // the documentation and/or other materials provided with the distribution.
-// 
+//
 // 3. The names of the authors may not be used to endorse or promote products
 // derived from this software without specific prior written permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESSED OR IMPLIED WARRANTIES,
 // INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND
 // FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL JCRAFT,
@@ -59,7 +59,7 @@
 // LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 // NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 // EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-// 
+//
 // -----------------------------------------------------------------------
 //
 // This program is based on zlib-1.1.3; credit to authors
@@ -79,15 +79,70 @@ namespace SharpCompress.Compressors.Deflate
         // extra bits for each length code
         internal static readonly int[] ExtraLengthBits =
         {
-            0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2,
-            3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5, 0
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            1,
+            1,
+            1,
+            2,
+            2,
+            2,
+            2,
+            3,
+            3,
+            3,
+            3,
+            4,
+            4,
+            4,
+            4,
+            5,
+            5,
+            5,
+            5,
+            0
         };
 
         // extra bits for each distance code
         internal static readonly int[] ExtraDistanceBits =
         {
-            0, 0, 0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6,
-            7, 7, 8, 8, 9, 9, 10, 10, 11, 11, 12, 12, 13, 13
+            0,
+            0,
+            0,
+            0,
+            1,
+            1,
+            2,
+            2,
+            3,
+            3,
+            4,
+            4,
+            5,
+            5,
+            6,
+            6,
+            7,
+            7,
+            8,
+            8,
+            9,
+            9,
+            10,
+            10,
+            11,
+            11,
+            12,
+            12,
+            13,
+            13
         };
 
         internal enum BlockState
@@ -131,7 +186,13 @@ namespace SharpCompress.Compressors.Deflate
 
             internal DeflateFlavor Flavor;
 
-            private Config(int goodLength, int maxLazy, int niceLength, int maxChainLength, DeflateFlavor flavor)
+            private Config(
+                int goodLength,
+                int maxLazy,
+                int niceLength,
+                int maxChainLength,
+                DeflateFlavor flavor
+            )
             {
                 GoodLength = goodLength;
                 MaxLazy = maxLazy;
@@ -148,18 +209,18 @@ namespace SharpCompress.Compressors.Deflate
             static Config()
             {
                 Table = new[]
-                        {
-                            new Config(0, 0, 0, 0, DeflateFlavor.Store),
-                            new Config(4, 4, 8, 4, DeflateFlavor.Fast),
-                            new Config(4, 5, 16, 8, DeflateFlavor.Fast),
-                            new Config(4, 6, 32, 32, DeflateFlavor.Fast),
-                            new Config(4, 4, 16, 16, DeflateFlavor.Slow),
-                            new Config(8, 16, 32, 32, DeflateFlavor.Slow),
-                            new Config(8, 16, 128, 128, DeflateFlavor.Slow),
-                            new Config(8, 32, 128, 256, DeflateFlavor.Slow),
-                            new Config(32, 128, 258, 1024, DeflateFlavor.Slow),
-                            new Config(32, 258, 258, 4096, DeflateFlavor.Slow)
-                        };
+                {
+                    new Config(0, 0, 0, 0, DeflateFlavor.Store),
+                    new Config(4, 4, 8, 4, DeflateFlavor.Fast),
+                    new Config(4, 5, 16, 8, DeflateFlavor.Fast),
+                    new Config(4, 6, 32, 32, DeflateFlavor.Fast),
+                    new Config(4, 4, 16, 16, DeflateFlavor.Slow),
+                    new Config(8, 16, 32, 32, DeflateFlavor.Slow),
+                    new Config(8, 16, 128, 128, DeflateFlavor.Slow),
+                    new Config(8, 32, 128, 256, DeflateFlavor.Slow),
+                    new Config(32, 128, 258, 1024, DeflateFlavor.Slow),
+                    new Config(32, 258, 258, 4096, DeflateFlavor.Slow)
+                };
             }
 
             private static readonly Config[] Table;
@@ -231,7 +292,7 @@ namespace SharpCompress.Compressors.Deflate
         // and move to the first half later to keep a dictionary of at least wSize
         // bytes. With this organization, matches are limited to a distance of
         // wSize-MAX_MATCH bytes, but this ensures that IO is always
-        // performed with a length multiple of the block size. 
+        // performed with a length multiple of the block size.
         //
         // To do: use the user input buffer as sliding window.
 
@@ -306,7 +367,7 @@ namespace SharpCompress.Compressors.Deflate
         // Depth of each subtree used as tie breaker for trees of equal frequency
         private readonly sbyte[] depth = new sbyte[2 * InternalConstants.L_CODES + 1];
 
-        private int _lengthOffset; // index for literals or lengths 
+        private int _lengthOffset; // index for literals or lengths
 
         // Size of match buffer for literals/lengths.  There are 4 reasons for
         // limiting lit_bufsize to 64K:
@@ -605,8 +666,7 @@ namespace SharpCompress.Compressors.Deflate
                     do
                     {
                         send_code(curlen, bl_tree);
-                    }
-                    while (--count != 0);
+                    } while (--count != 0);
                 }
                 else if (curlen != 0)
                 {
@@ -656,11 +716,12 @@ namespace SharpCompress.Compressors.Deflate
             pendingCount += len;
         }
 
-#if NOTNEEDED        
+#if NOTNEEDED
         private void put_byte(byte c)
         {
             pending[pendingCount++] = c;
         }
+
         internal void put_short(int b)
         {
             unchecked
@@ -669,6 +730,7 @@ namespace SharpCompress.Compressors.Deflate
                 pending[pendingCount++] = (byte)(b >> 8);
             }
         }
+
         internal void putShortMSB(int b)
         {
             unchecked
@@ -776,8 +838,9 @@ namespace SharpCompress.Compressors.Deflate
                 int dcode;
                 for (dcode = 0; dcode < InternalConstants.D_CODES; dcode++)
                 {
-                    out_length =
-                        (int)(out_length + dyn_dtree[dcode * 2] * (5L + ExtraDistanceBits[dcode]));
+                    out_length = (int)(
+                        out_length + dyn_dtree[dcode * 2] * (5L + ExtraDistanceBits[dcode])
+                    );
                 }
                 out_length >>= 3;
                 if ((matches < (last_lit / 2)) && out_length < in_length / 2)
@@ -808,8 +871,7 @@ namespace SharpCompress.Compressors.Deflate
                 do
                 {
                     int ix = _distanceOffset + lx * 2;
-                    distance = ((pending[ix] << 8) & 0xff00) |
-                               (pending[ix + 1] & 0xff);
+                    distance = ((pending[ix] << 8) & 0xff00) | (pending[ix + 1] & 0xff);
                     lc = (pending[_lengthOffset + lx]) & 0xff;
                     lx++;
 
@@ -819,7 +881,7 @@ namespace SharpCompress.Compressors.Deflate
                     }
                     else
                     {
-                        // literal or match pair 
+                        // literal or match pair
                         // Here, lc is the match length - MIN_MATCH
                         code = Tree.LengthCode[lc];
 
@@ -848,8 +910,7 @@ namespace SharpCompress.Compressors.Deflate
                     }
 
                     // Check that the overlay between pending and d_buf+l_buf is ok:
-                }
-                while (lx < last_lit);
+                } while (lx < last_lit);
             }
 
             send_code(END_BLOCK, ltree);
@@ -1037,7 +1098,8 @@ namespace SharpCompress.Compressors.Deflate
         // trees or store, and output the encoded block to the zip file.
         internal void _tr_flush_block(int buf, int stored_len, bool eof)
         {
-            int opt_lenb, static_lenb; // opt_len and static_len in bytes
+            int opt_lenb,
+                static_lenb; // opt_len and static_len in bytes
             int max_blindex = 0; // index of last bit length code of non zero freq
 
             // Build the Huffman trees unless a stored block is forced
@@ -1088,12 +1150,19 @@ namespace SharpCompress.Compressors.Deflate
             else if (static_lenb == opt_lenb)
             {
                 send_bits((STATIC_TREES << 1) + (eof ? 1 : 0), 3);
-                send_compressed_block(StaticTree.lengthAndLiteralsTreeCodes, StaticTree.distTreeCodes);
+                send_compressed_block(
+                    StaticTree.lengthAndLiteralsTreeCodes,
+                    StaticTree.distTreeCodes
+                );
             }
             else
             {
                 send_bits((DYN_TREES << 1) + (eof ? 1 : 0), 3);
-                send_all_trees(treeLiterals.max_code + 1, treeDistances.max_code + 1, max_blindex + 1);
+                send_all_trees(
+                    treeLiterals.max_code + 1,
+                    treeDistances.max_code + 1,
+                    max_blindex + 1
+                );
                 send_compressed_block(dyn_ltree, dyn_dtree);
             }
 
@@ -1118,7 +1187,8 @@ namespace SharpCompress.Compressors.Deflate
         //    option -- not supported here).
         private void _fillWindow()
         {
-            int n, m;
+            int n,
+                m;
             int p;
             int more; // Amount of free space at the end of the window.
 
@@ -1159,8 +1229,7 @@ namespace SharpCompress.Compressors.Deflate
                     {
                         m = (head[--p] & 0xffff);
                         head[p] = (short)((m >= w_size) ? (m - w_size) : 0);
-                    }
-                    while (--n != 0);
+                    } while (--n != 0);
 
                     n = w_size;
                     p = n;
@@ -1171,8 +1240,7 @@ namespace SharpCompress.Compressors.Deflate
 
                         // If n is not on any hash chain, prev[n] is garbage but
                         // its value will never be used.
-                    }
-                    while (--n != 0);
+                    } while (--n != 0);
                     more += w_size;
                 }
 
@@ -1204,8 +1272,7 @@ namespace SharpCompress.Compressors.Deflate
 
                 // If the whole input has less than MIN_MATCH bytes, ins_h is garbage,
                 // but this is not important since only literal bytes will be emitted.
-            }
-            while (lookahead < MIN_LOOKAHEAD && _codec.AvailableBytesIn != 0);
+            } while (lookahead < MIN_LOOKAHEAD && _codec.AvailableBytesIn != 0);
         }
 
         // Compress as much as possible from the input stream, return the current
@@ -1242,7 +1309,9 @@ namespace SharpCompress.Compressors.Deflate
                 // dictionary, and set hash_head to the head of the hash chain:
                 if (lookahead >= MIN_MATCH)
                 {
-                    ins_h = (((ins_h) << hash_shift) ^ (window[(strstart) + (MIN_MATCH - 1)] & 0xff)) & hash_mask;
+                    ins_h =
+                        (((ins_h) << hash_shift) ^ (window[(strstart) + (MIN_MATCH - 1)] & 0xff))
+                        & hash_mask;
 
                     //  prev[strstart&w_mask]=hash_head=head[ins_h];
                     hash_head = (head[ins_h] & 0xffff);
@@ -1282,7 +1351,11 @@ namespace SharpCompress.Compressors.Deflate
                         {
                             strstart++;
 
-                            ins_h = ((ins_h << hash_shift) ^ (window[(strstart) + (MIN_MATCH - 1)] & 0xff)) & hash_mask;
+                            ins_h =
+                                (
+                                    (ins_h << hash_shift)
+                                    ^ (window[(strstart) + (MIN_MATCH - 1)] & 0xff)
+                                ) & hash_mask;
 
                             //      prev[strstart&w_mask]=hash_head=head[ins_h];
                             hash_head = (head[ins_h] & 0xffff);
@@ -1291,8 +1364,7 @@ namespace SharpCompress.Compressors.Deflate
 
                             // strstart never exceeds WSIZE-MAX_MATCH, so there are
                             // always MIN_MATCH bytes ahead.
-                        }
-                        while (--match_length != 0);
+                        } while (--match_length != 0);
                         strstart++;
                     }
                     else
@@ -1301,7 +1373,8 @@ namespace SharpCompress.Compressors.Deflate
                         match_length = 0;
                         ins_h = window[strstart] & 0xff;
 
-                        ins_h = (((ins_h) << hash_shift) ^ (window[strstart + 1] & 0xff)) & hash_mask;
+                        ins_h =
+                            (((ins_h) << hash_shift) ^ (window[strstart + 1] & 0xff)) & hash_mask;
 
                         // If lookahead < MIN_MATCH, ins_h is garbage, but it does not
                         // matter since it will be recomputed at next deflate call.
@@ -1373,7 +1446,9 @@ namespace SharpCompress.Compressors.Deflate
 
                 if (lookahead >= MIN_MATCH)
                 {
-                    ins_h = (((ins_h) << hash_shift) ^ (window[(strstart) + (MIN_MATCH - 1)] & 0xff)) & hash_mask;
+                    ins_h =
+                        (((ins_h) << hash_shift) ^ (window[(strstart) + (MIN_MATCH - 1)] & 0xff))
+                        & hash_mask;
 
                     //  prev[strstart&w_mask]=hash_head=head[ins_h];
                     hash_head = (head[ins_h] & 0xffff);
@@ -1386,8 +1461,11 @@ namespace SharpCompress.Compressors.Deflate
                 prev_match = match_start;
                 match_length = MIN_MATCH - 1;
 
-                if (hash_head != 0 && prev_length < config.MaxLazy &&
-                    ((strstart - hash_head) & 0xffff) <= w_size - MIN_LOOKAHEAD)
+                if (
+                    hash_head != 0
+                    && prev_length < config.MaxLazy
+                    && ((strstart - hash_head) & 0xffff) <= w_size - MIN_LOOKAHEAD
+                )
                 {
                     // To simplify the code, we prevent matches with the string
                     // of window index 0 (in particular we have to avoid a match
@@ -1400,8 +1478,13 @@ namespace SharpCompress.Compressors.Deflate
 
                     // longest_match() sets match_start
 
-                    if (match_length <= 5 && (compressionStrategy == CompressionStrategy.Filtered ||
-                                              (match_length == MIN_MATCH && strstart - match_start > 4096)))
+                    if (
+                        match_length <= 5
+                        && (
+                            compressionStrategy == CompressionStrategy.Filtered
+                            || (match_length == MIN_MATCH && strstart - match_start > 4096)
+                        )
+                    )
                     {
                         // If prev_match is also MIN_MATCH, match_start is garbage
                         // but we will ignore the current match anyway.
@@ -1431,16 +1514,18 @@ namespace SharpCompress.Compressors.Deflate
                     {
                         if (++strstart <= max_insert)
                         {
-                            ins_h = (((ins_h) << hash_shift) ^ (window[(strstart) + (MIN_MATCH - 1)] & 0xff)) &
-                                    hash_mask;
+                            ins_h =
+                                (
+                                    ((ins_h) << hash_shift)
+                                    ^ (window[(strstart) + (MIN_MATCH - 1)] & 0xff)
+                                ) & hash_mask;
 
                             //prev[strstart&w_mask]=hash_head=head[ins_h];
                             hash_head = (head[ins_h] & 0xffff);
                             prev[strstart & w_mask] = head[ins_h];
                             head[ins_h] = unchecked((short)strstart);
                         }
-                    }
-                    while (--prev_length != 0);
+                    } while (--prev_length != 0);
                     match_available = 0;
                     match_length = MIN_MATCH - 1;
                     strstart++;
@@ -1510,7 +1595,8 @@ namespace SharpCompress.Compressors.Deflate
             int match; // matched string
             int len; // length of current match
             int best_len = prev_length; // best match length so far
-            int limit = strstart > (w_size - MIN_LOOKAHEAD) ? strstart - (w_size - MIN_LOOKAHEAD) : 0;
+            int limit =
+                strstart > (w_size - MIN_LOOKAHEAD) ? strstart - (w_size - MIN_LOOKAHEAD) : 0;
 
             int niceLength = config.NiceLength;
 
@@ -1545,10 +1631,12 @@ namespace SharpCompress.Compressors.Deflate
 
                 // Skip to next match if the match length cannot increase
                 // or if the match length is less than 2:
-                if (window[match + best_len] != scan_end ||
-                    window[match + best_len - 1] != scan_end1 ||
-                    window[match] != window[scan] ||
-                    window[++match] != window[scan + 1])
+                if (
+                    window[match + best_len] != scan_end
+                    || window[match + best_len - 1] != scan_end1
+                    || window[match] != window[scan]
+                    || window[++match] != window[scan + 1]
+                )
                 {
                     continue;
                 }
@@ -1563,17 +1651,17 @@ namespace SharpCompress.Compressors.Deflate
 
                 // We check for insufficient lookahead only every 8th comparison;
                 // the 256th check will be made at strstart+258.
-                do
-                {
-                }
-                while (window[++scan] == window[++match] &&
-                       window[++scan] == window[++match] &&
-                       window[++scan] == window[++match] &&
-                       window[++scan] == window[++match] &&
-                       window[++scan] == window[++match] &&
-                       window[++scan] == window[++match] &&
-                       window[++scan] == window[++match] &&
-                       window[++scan] == window[++match] && scan < strend);
+                do { } while (
+                    window[++scan] == window[++match]
+                    && window[++scan] == window[++match]
+                    && window[++scan] == window[++match]
+                    && window[++scan] == window[++match]
+                    && window[++scan] == window[++match]
+                    && window[++scan] == window[++match]
+                    && window[++scan] == window[++match]
+                    && window[++scan] == window[++match]
+                    && scan < strend
+                );
 
                 len = MAX_MATCH - (strend - scan);
                 scan = strend - MAX_MATCH;
@@ -1589,8 +1677,9 @@ namespace SharpCompress.Compressors.Deflate
                     scan_end1 = window[scan + best_len - 1];
                     scan_end = window[scan + best_len];
                 }
-            }
-            while ((cur_match = (prev[cur_match & wmask] & 0xffff)) > limit && --chain_length != 0);
+            } while (
+                (cur_match = (prev[cur_match & wmask] & 0xffff)) > limit && --chain_length != 0
+            );
 
             if (best_len <= lookahead)
             {
@@ -1613,14 +1702,23 @@ namespace SharpCompress.Compressors.Deflate
             return Initialize(codec, level, bits, MEM_LEVEL_DEFAULT, CompressionStrategy.Default);
         }
 
-        internal int Initialize(ZlibCodec codec, CompressionLevel level, int bits,
-                                CompressionStrategy compressionStrategy)
+        internal int Initialize(
+            ZlibCodec codec,
+            CompressionLevel level,
+            int bits,
+            CompressionStrategy compressionStrategy
+        )
         {
             return Initialize(codec, level, bits, MEM_LEVEL_DEFAULT, compressionStrategy);
         }
 
-        internal int Initialize(ZlibCodec codec, CompressionLevel level, int windowBits, int memLevel,
-                                CompressionStrategy strategy)
+        internal int Initialize(
+            ZlibCodec codec,
+            CompressionLevel level,
+            int windowBits,
+            int memLevel,
+            CompressionStrategy strategy
+        )
         {
             _codec = codec;
             _codec.Message = null;
@@ -1633,7 +1731,9 @@ namespace SharpCompress.Compressors.Deflate
 
             if (memLevel < 1 || memLevel > MEM_LEVEL_MAX)
             {
-                throw new ZlibException(String.Format("memLevel must be in the range 1.. {0}", MEM_LEVEL_MAX));
+                throw new ZlibException(
+                    String.Format("memLevel must be in the range 1.. {0}", MEM_LEVEL_MAX)
+                );
             }
 
             _codec.dstate = this;
@@ -1655,7 +1755,7 @@ namespace SharpCompress.Compressors.Deflate
             lit_bufsize = 1 << (memLevel + 6);
 
             // Use a single array as the buffer for data pending compression,
-            // the output distance codes, and the output length codes (aka tree).  
+            // the output distance codes, and the output length codes (aka tree).
             // orig comment: This works just fine since the average
             // output size for (length,distance) codes is <= 24 bits.
             pending = new byte[lit_bufsize * 4];
@@ -1664,7 +1764,7 @@ namespace SharpCompress.Compressors.Deflate
 
             // So, for memLevel 8, the length of the pending buffer is 65536. 64k.
             // The first 16k are pending bytes.
-            // The middle slice, of 32k, is used for distance codes. 
+            // The middle slice, of 32k, is used for distance codes.
             // The final 16k are length codes.
 
             compressionLevel = level;
@@ -1749,7 +1849,7 @@ namespace SharpCompress.Compressors.Deflate
                 SetDeflater();
             }
 
-            // no need to flush with change in strategy?  Really? 
+            // no need to flush with change in strategy?  Really?
             compressionStrategy = strategy;
 
             return result;
@@ -1789,7 +1889,8 @@ namespace SharpCompress.Compressors.Deflate
 
             for (int n = 0; n <= length - MIN_MATCH; n++)
             {
-                ins_h = (((ins_h) << hash_shift) ^ (window[(n) + (MIN_MATCH - 1)] & 0xff)) & hash_mask;
+                ins_h =
+                    (((ins_h) << hash_shift) ^ (window[(n) + (MIN_MATCH - 1)] & 0xff)) & hash_mask;
                 prev[n & w_mask] = head[ins_h];
                 head[ins_h] = (short)n;
             }
@@ -1800,18 +1901,24 @@ namespace SharpCompress.Compressors.Deflate
         {
             int old_flush;
 
-            if (_codec.OutputBuffer is null ||
-                (_codec.InputBuffer is null && _codec.AvailableBytesIn != 0) ||
-                (status == FINISH_STATE && flush != FlushType.Finish))
+            if (
+                _codec.OutputBuffer is null
+                || (_codec.InputBuffer is null && _codec.AvailableBytesIn != 0)
+                || (status == FINISH_STATE && flush != FlushType.Finish)
+            )
             {
-                _codec.Message = _ErrorMessage[ZlibConstants.Z_NEED_DICT - (ZlibConstants.Z_STREAM_ERROR)];
+                _codec.Message = _ErrorMessage[
+                    ZlibConstants.Z_NEED_DICT - (ZlibConstants.Z_STREAM_ERROR)
+                ];
                 throw new ZlibException(String.Format("Something is fishy. [{0}]", _codec.Message));
 
                 //return ZlibConstants.Z_STREAM_ERROR;
             }
             if (_codec.AvailableBytesOut == 0)
             {
-                _codec.Message = _ErrorMessage[ZlibConstants.Z_NEED_DICT - (ZlibConstants.Z_BUF_ERROR)];
+                _codec.Message = _ErrorMessage[
+                    ZlibConstants.Z_NEED_DICT - (ZlibConstants.Z_BUF_ERROR)
+                ];
                 throw new ZlibException("OutputBuffer is full (AvailableBytesOut == 0)");
 
                 //return ZlibConstants.Z_BUF_ERROR;
@@ -1838,7 +1945,6 @@ namespace SharpCompress.Compressors.Deflate
                 header += 31 - (header % 31);
 
                 status = BUSY_STATE;
-
                 //putShortMSB(header);
                 unchecked
                 {
@@ -1880,9 +1986,9 @@ namespace SharpCompress.Compressors.Deflate
                 // flushes. For repeated and useless calls with Z_FINISH, we keep
                 // returning Z_STREAM_END instead of Z_BUFF_ERROR.
             }
-            else if (_codec.AvailableBytesIn == 0 &&
-                     (int)flush <= old_flush &&
-                     flush != FlushType.Finish)
+            else if (
+                _codec.AvailableBytesIn == 0 && (int)flush <= old_flush && flush != FlushType.Finish
+            )
             {
                 // workitem 8557
                 // Not sure why this needs to be an error.
@@ -1899,12 +2005,18 @@ namespace SharpCompress.Compressors.Deflate
             // User must not provide more input after the first FINISH:
             if (status == FINISH_STATE && _codec.AvailableBytesIn != 0)
             {
-                _codec.Message = _ErrorMessage[ZlibConstants.Z_NEED_DICT - (ZlibConstants.Z_BUF_ERROR)];
+                _codec.Message = _ErrorMessage[
+                    ZlibConstants.Z_NEED_DICT - (ZlibConstants.Z_BUF_ERROR)
+                ];
                 throw new ZlibException("status == FINISH_STATE && _codec.AvailableBytesIn != 0");
             }
 
             // Start a new block or continue the current one.
-            if (_codec.AvailableBytesIn != 0 || lookahead != 0 || (flush != FlushType.None && status != FINISH_STATE))
+            if (
+                _codec.AvailableBytesIn != 0
+                || lookahead != 0
+                || (flush != FlushType.None && status != FINISH_STATE)
+            )
             {
                 BlockState bstate = DeflateFunction(flush);
 

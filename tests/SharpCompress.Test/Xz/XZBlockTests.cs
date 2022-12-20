@@ -36,7 +36,10 @@ namespace SharpCompress.Test.Xz
             using (Stream indexBlockStream = new MemoryStream(bytes))
             {
                 var XZBlock = new XZBlock(indexBlockStream, CheckType.CRC64, 8);
-                Assert.Throws<XZIndexMarkerReachedException>(() => { ReadBytes(XZBlock, 1); });
+                Assert.Throws<XZIndexMarkerReachedException>(() =>
+                {
+                    ReadBytes(XZBlock, 1);
+                });
             }
         }
 
@@ -49,7 +52,10 @@ namespace SharpCompress.Test.Xz
             {
                 Rewind(badCrcStream);
                 var XZBlock = new XZBlock(badCrcStream, CheckType.CRC64, 8);
-                var ex = Assert.Throws<InvalidDataException>(() => { ReadBytes(XZBlock, 1); });
+                var ex = Assert.Throws<InvalidDataException>(() =>
+                {
+                    ReadBytes(XZBlock, 1);
+                });
                 Assert.Equal("Block header corrupt", ex.Message);
             }
         }

@@ -16,8 +16,8 @@ namespace SharpCompress.Archives
     /// <list type="table">
     /// <item><see cref="Factories.TarFactory"/></item>
     /// <item><see cref="Factories.RarFactory"/></item>
-    /// <item><see cref="Factories.ZipFactory"/></item>    
-    /// <item><see cref="Factories.GZipFactory"/></item>        
+    /// <item><see cref="Factories.ZipFactory"/></item>
+    /// <item><see cref="Factories.GZipFactory"/></item>
     /// <item><see cref="Factories.SevenZipFactory"/></item>
     /// </list>
     /// </remarks>
@@ -35,6 +35,9 @@ namespace SharpCompress.Archives
         /// </summary>
         /// <param name="fileInfos"></param>
         /// <param name="readerOptions">reading options.</param>
-        IArchive Open(IReadOnlyList<System.IO.FileInfo> fileInfos, ReaderOptions? readerOptions = null);
+        IArchive Open(
+            IReadOnlyList<System.IO.FileInfo> fileInfos,
+            ReaderOptions? readerOptions = null
+        );
     }
 }

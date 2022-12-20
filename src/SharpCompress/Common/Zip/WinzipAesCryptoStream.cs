@@ -18,7 +18,11 @@ namespace SharpCompress.Common.Zip
         private long _totalBytesLeftToRead;
         private bool _isDisposed;
 
-        internal WinzipAesCryptoStream(Stream stream, WinzipAesEncryptionData winzipAesEncryptionData, long length)
+        internal WinzipAesCryptoStream(
+            Stream stream,
+            WinzipAesEncryptionData winzipAesEncryptionData,
+            long length
+        )
         {
             this._stream = stream;
             _totalBytesLeftToRead = length;
@@ -113,9 +117,8 @@ namespace SharpCompress.Common.Zip
             }
 
             int bytesRemaining = last - offset;
-            int bytesToRead = (bytesRemaining > BLOCK_SIZE_IN_BYTES)
-                                  ? BLOCK_SIZE_IN_BYTES
-                                  : bytesRemaining;
+            int bytesToRead =
+                (bytesRemaining > BLOCK_SIZE_IN_BYTES) ? BLOCK_SIZE_IN_BYTES : bytesRemaining;
 
             // update the counter
             BinaryPrimitives.WriteInt32LittleEndian(_counter, _nonce++);
@@ -123,24 +126,23 @@ namespace SharpCompress.Common.Zip
             // Determine if this is the final block
             if ((bytesToRead == bytesRemaining) && (_totalBytesLeftToRead == 0))
             {
-                _counterOut = _transform.TransformFinalBlock(_counter,
-                                                           0,
-                                                           BLOCK_SIZE_IN_BYTES);
+                _counterOut = _transform.TransformFinalBlock(_counter, 0, BLOCK_SIZE_IN_BYTES);
                 _isFinalBlock = true;
             }
             else
             {
-                _transform.TransformBlock(_counter,
-                                         0, // offset
-                                         BLOCK_SIZE_IN_BYTES,
-                                         _counterOut,
-                                         0); // offset
+                _transform.TransformBlock(
+                    _counter,
+                    0, // offset
+                    BLOCK_SIZE_IN_BYTES,
+                    _counterOut,
+                    0
+                ); // offset
             }
 
             XorInPlace(buffer, offset, bytesToRead);
             return bytesToRead;
         }
-
 
         private void XorInPlace(byte[] buffer, int offset, int count)
         {
@@ -161,7 +163,6 @@ namespace SharpCompress.Common.Zip
                 posn += n;
             }
         }
-
 
         public override long Seek(long offset, SeekOrigin origin)
         {

@@ -2,13 +2,11 @@
 
 namespace SharpCompress.Crypto
 {
-    public class KeyParameter
-        : ICipherParameters
+    public class KeyParameter : ICipherParameters
     {
         private readonly byte[] key;
 
-        public KeyParameter(
-            byte[] key)
+        public KeyParameter(byte[] key)
         {
             if (key is null)
             {
@@ -18,10 +16,7 @@ namespace SharpCompress.Crypto
             this.key = (byte[])key.Clone();
         }
 
-        public KeyParameter(
-            byte[] key,
-            int keyOff,
-            int keyLen)
+        public KeyParameter(byte[] key, int keyOff, int keyLen)
         {
             if (key is null)
             {

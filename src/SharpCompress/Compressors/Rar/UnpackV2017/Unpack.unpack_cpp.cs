@@ -19,10 +19,10 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017
 {
     internal sealed partial class Unpack : BitInput
     {
-
-        public Unpack(/* ComprDataIO *DataIO */)
-        //:Inp(true),VMCodeInp(true)
-        : base(true)
+        public Unpack( /* ComprDataIO *DataIO */
+        )
+            //:Inp(true),VMCodeInp(true)
+            : base(true)
         {
             _UnpackCtor();
 
@@ -33,10 +33,10 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017
             UnpAllBuf = false;
             UnpSomeRead = false;
 #if RarV2017_RAR_SMP
-  MaxUserThreads=1;
-  UnpThreadPool=CreateThreadPool();
-  ReadBufMT=null;
-  UnpThreadData=null;
+            MaxUserThreads = 1;
+            UnpThreadPool = CreateThreadPool();
+            ReadBufMT = null;
+            UnpThreadData = null;
 #endif
             MaxWinSize = 0;
             MaxWinMask = 0;
@@ -73,7 +73,9 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017
             if (WinSize == 0)
             //ErrHandler.MemoryError();
             {
-                throw new InvalidFormatException("invalid window size (possibly due to a rar file with a 4GB being unpacked on a 32-bit platform)");
+                throw new InvalidFormatException(
+                    "invalid window size (possibly due to a rar file with a 4GB being unpacked on a 32-bit platform)"
+                );
             }
 
             // Minimum window size must be at least twice more than maximum possible
@@ -150,7 +152,9 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017
                 {
                     for (size_t I = 1; I <= MaxWinSize; I++)
                     {
-                        NewWindow[(UnpPtr - I) & (WinSize - 1)] = Window[(UnpPtr - I) & (MaxWinSize - 1)];
+                        NewWindow[(UnpPtr - I) & (WinSize - 1)] = Window[
+                            (UnpPtr - I) & (MaxWinSize - 1)
+                        ];
                     }
                 }
 
@@ -198,24 +202,25 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017
 #endif
                 case 50: // RAR 5.0 compression algorithm.
 #if RarV2017_RAR_SMP
-      if (MaxUserThreads>1)
-      {
-//      We do not use the multithreaded unpack routine to repack RAR archives
-//      in 'suspended' mode, because unlike the single threaded code it can
-//      write more than one dictionary for same loop pass. So we would need
-//      larger buffers of unknown size. Also we do not support multithreading
-//      in fragmented window mode.
-          if (!Fragmented)
-          {
-            Unpack5MT(Solid);
-            break;
-          }
-      }
+                    if (MaxUserThreads > 1)
+                    {
+                        //      We do not use the multithreaded unpack routine to repack RAR archives
+                        //      in 'suspended' mode, because unlike the single threaded code it can
+                        //      write more than one dictionary for same loop pass. So we would need
+                        //      larger buffers of unknown size. Also we do not support multithreading
+                        //      in fragmented window mode.
+                        if (!Fragmented)
+                        {
+                            Unpack5MT(Solid);
+                            break;
+                        }
+                    }
 #endif
                     Unpack5(Solid);
                     break;
 #if !Rar2017_NOSTRICT
-                default: throw new InvalidFormatException("unknown compression method " + Method);
+                default:
+                    throw new InvalidFormatException("unknown compression method " + Method);
 #endif
             }
         }
@@ -246,14 +251,13 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017
 
             //memset(&BlockHeader,0,sizeof(BlockHeader));
             BlockHeader = new UnpackBlockHeader();
-            BlockHeader.BlockSize = -1;  // '-1' means not defined yet.
+            BlockHeader.BlockSize = -1; // '-1' means not defined yet.
 #if !RarV2017_SFX_MODULE
             UnpInitData20(Solid);
 #endif
             //UnpInitData30(Solid);
             UnpInitData50(Solid);
         }
-
 
         // LengthTable contains the length in bits for every element of alphabet.
         // Dec is the structure to decode Huffman code/
@@ -370,7 +374,9 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017
 
                 // Find the upper limit for current bit field and adjust the bit length
                 // accordingly if necessary.
-                while (CurBitLength < Dec.DecodeLen.Length && BitField >= Dec.DecodeLen[CurBitLength])
+                while (
+                    CurBitLength < Dec.DecodeLen.Length && BitField >= Dec.DecodeLen[CurBitLength]
+                )
                 {
                     CurBitLength++;
                 }
@@ -391,8 +397,10 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017
                 // of first position for current bit length and right aligned distance
                 // between our bit field and start code for current bit length.
                 uint Pos;
-                if (CurBitLength < Dec.DecodePos.Length &&
-                    (Pos = Dec.DecodePos[CurBitLength] + Dist) < Size)
+                if (
+                    CurBitLength < Dec.DecodePos.Length
+                    && (Pos = Dec.DecodePos[CurBitLength] + Dist) < Size
+                )
                 {
                     // Define the code to alphabet number translation.
                     Dec.QuickNum[Code] = Dec.DecodeNum[Pos];
@@ -404,6 +412,5 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017
                 }
             }
         }
-
     }
 }

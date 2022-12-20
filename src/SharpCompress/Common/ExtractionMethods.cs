@@ -8,41 +8,49 @@ namespace SharpCompress.Common
         /// <summary>
         /// Extract to specific directory, retaining filename
         /// </summary>
-        public static void WriteEntryToDirectory(IEntry entry,
-                                                 string destinationDirectory,
-                                                 ExtractionOptions? options,
-                                                 Action<string, ExtractionOptions?> write)
+        public static void WriteEntryToDirectory(
+            IEntry entry,
+            string destinationDirectory,
+            ExtractionOptions? options,
+            Action<string, ExtractionOptions?> write
+        )
         {
             string destinationFileName;
             string fullDestinationDirectoryPath = Path.GetFullPath(destinationDirectory);
 
             //check for trailing slash.
-            if (fullDestinationDirectoryPath[fullDestinationDirectoryPath.Length - 1] != Path.DirectorySeparatorChar)
+            if (
+                fullDestinationDirectoryPath[fullDestinationDirectoryPath.Length - 1]
+                != Path.DirectorySeparatorChar
+            )
             {
                 fullDestinationDirectoryPath += Path.DirectorySeparatorChar;
             }
 
             if (!Directory.Exists(fullDestinationDirectoryPath))
             {
-                throw new ExtractionException($"Directory does not exist to extract to: {fullDestinationDirectoryPath}");
+                throw new ExtractionException(
+                    $"Directory does not exist to extract to: {fullDestinationDirectoryPath}"
+                );
             }
 
-            options ??= new ExtractionOptions()
-            {
-                Overwrite = true
-            };
+            options ??= new ExtractionOptions() { Overwrite = true };
 
             string file = Path.GetFileName(entry.Key);
             if (options.ExtractFullPath)
             {
                 string folder = Path.GetDirectoryName(entry.Key)!;
-                string destdir = Path.GetFullPath(Path.Combine(fullDestinationDirectoryPath, folder));
+                string destdir = Path.GetFullPath(
+                    Path.Combine(fullDestinationDirectoryPath, folder)
+                );
 
                 if (!Directory.Exists(destdir))
                 {
                     if (!destdir.StartsWith(fullDestinationDirectoryPath, StringComparison.Ordinal))
                     {
-                        throw new ExtractionException("Entry is trying to create a directory outside of the destination directory.");
+                        throw new ExtractionException(
+                            "Entry is trying to create a directory outside of the destination directory."
+                        );
                     }
 
                     Directory.CreateDirectory(destdir);
@@ -52,16 +60,22 @@ namespace SharpCompress.Common
             else
             {
                 destinationFileName = Path.Combine(fullDestinationDirectoryPath, file);
-
             }
 
             if (!entry.IsDirectory)
             {
                 destinationFileName = Path.GetFullPath(destinationFileName);
 
-                if (!destinationFileName.StartsWith(fullDestinationDirectoryPath, StringComparison.Ordinal))
+                if (
+                    !destinationFileName.StartsWith(
+                        fullDestinationDirectoryPath,
+                        StringComparison.Ordinal
+                    )
+                )
                 {
-                    throw new ExtractionException("Entry is trying to write a file outside of the destination directory.");
+                    throw new ExtractionException(
+                        "Entry is trying to write a file outside of the destination directory."
+                    );
                 }
                 write(destinationFileName, options);
             }
@@ -71,25 +85,27 @@ namespace SharpCompress.Common
             }
         }
 
-        public static void WriteEntryToFile(IEntry entry, string destinationFileName,
-                                            ExtractionOptions? options,
-                                            Action<string, FileMode> openAndWrite)
+        public static void WriteEntryToFile(
+            IEntry entry,
+            string destinationFileName,
+            ExtractionOptions? options,
+            Action<string, FileMode> openAndWrite
+        )
         {
             if (entry.LinkTarget != null)
             {
                 if (options?.WriteSymbolicLink is null)
                 {
-                    throw new ExtractionException("Entry is a symbolic link but ExtractionOptions.WriteSymbolicLink delegate is null");
+                    throw new ExtractionException(
+                        "Entry is a symbolic link but ExtractionOptions.WriteSymbolicLink delegate is null"
+                    );
                 }
                 options.WriteSymbolicLink(destinationFileName, entry.LinkTarget);
             }
             else
             {
                 FileMode fm = FileMode.Create;
-                options ??= new ExtractionOptions()
-                {
-                    Overwrite = true
-                };
+                options ??= new ExtractionOptions() { Overwrite = true };
 
                 if (!options.Overwrite)
                 {

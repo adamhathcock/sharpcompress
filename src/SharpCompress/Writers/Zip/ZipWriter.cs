@@ -19,7 +19,8 @@ namespace SharpCompress.Writers.Zip
     {
         private readonly CompressionType compressionType;
         private readonly CompressionLevel compressionLevel;
-        private readonly List<ZipCentralDirectoryEntry> entries = new List<ZipCentralDirectoryEntry>();
+        private readonly List<ZipCentralDirectoryEntry> entries =
+            new List<ZipCentralDirectoryEntry>();
         private readonly string zipComment;
         private long streamPosition;
         private PpmdProperties? ppmdProps;
@@ -47,10 +48,7 @@ namespace SharpCompress.Writers.Zip
 
         private PpmdProperties PpmdProperties
         {
-            get
-            {
-                return ppmdProps ??= new PpmdProperties();
-            }
+            get { return ppmdProps ??= new PpmdProperties(); }
         }
 
         protected override void Dispose(bool isDisposing)
@@ -72,39 +70,46 @@ namespace SharpCompress.Writers.Zip
             switch (compressionType)
             {
                 case CompressionType.None:
-                    {
-                        return ZipCompressionMethod.None;
-                    }
+                {
+                    return ZipCompressionMethod.None;
+                }
                 case CompressionType.Deflate:
-                    {
-                        return ZipCompressionMethod.Deflate;
-                    }
+                {
+                    return ZipCompressionMethod.Deflate;
+                }
                 case CompressionType.BZip2:
-                    {
-                        return ZipCompressionMethod.BZip2;
-                    }
+                {
+                    return ZipCompressionMethod.BZip2;
+                }
                 case CompressionType.LZMA:
-                    {
-                        return ZipCompressionMethod.LZMA;
-                    }
+                {
+                    return ZipCompressionMethod.LZMA;
+                }
                 case CompressionType.PPMd:
-                    {
-                        return ZipCompressionMethod.PPMd;
-                    }
+                {
+                    return ZipCompressionMethod.PPMd;
+                }
                 default:
-                    throw new InvalidFormatException("Invalid compression method: " + compressionType);
+                    throw new InvalidFormatException(
+                        "Invalid compression method: " + compressionType
+                    );
             }
         }
 
         public override void Write(string entryPath, Stream source, DateTime? modificationTime)
         {
-            Write(entryPath, source, new ZipWriterEntryOptions()
-            {
-                ModificationDateTime = modificationTime
-            });
+            Write(
+                entryPath,
+                source,
+                new ZipWriterEntryOptions() { ModificationDateTime = modificationTime }
+            );
         }
 
-        public void Write(string entryPath, Stream source, ZipWriterEntryOptions zipWriterEntryOptions)
+        public void Write(
+            string entryPath,
+            Stream source,
+            ZipWriterEntryOptions zipWriterEntryOptions
+        )
         {
             using (Stream output = WriteToStream(entryPath, zipWriterEntryOptions))
             {
@@ -119,7 +124,12 @@ namespace SharpCompress.Writers.Zip
             entryPath = NormalizeFilename(entryPath);
             options.ModificationDateTime ??= DateTime.Now;
             options.EntryComment ??= string.Empty;
-            var entry = new ZipCentralDirectoryEntry(compression, entryPath, (ulong)streamPosition, WriterOptions.ArchiveEncoding)
+            var entry = new ZipCentralDirectoryEntry(
+                compression,
+                entryPath,
+                (ulong)streamPosition,
+                WriterOptions.ArchiveEncoding
+            )
             {
                 Comment = options.EntryComment,
                 ModificationTime = options.ModificationDateTime
@@ -134,8 +144,13 @@ namespace SharpCompress.Writers.Zip
 
             var headersize = (uint)WriteHeader(entryPath, options, entry, useZip64);
             streamPosition += headersize;
-            return new ZipWritingStream(this, OutputStream, entry, compression,
-                options.DeflateCompressionLevel ?? compressionLevel);
+            return new ZipWritingStream(
+                this,
+                OutputStream,
+                entry,
+                compression,
+                options.DeflateCompressionLevel ?? compressionLevel
+            );
         }
 
         private string NormalizeFilename(string filename)
@@ -151,15 +166,24 @@ namespace SharpCompress.Writers.Zip
             return filename.Trim('/');
         }
 
-        private int WriteHeader(string filename, ZipWriterEntryOptions zipWriterEntryOptions, ZipCentralDirectoryEntry entry, bool useZip64)
+        private int WriteHeader(
+            string filename,
+            ZipWriterEntryOptions zipWriterEntryOptions,
+            ZipCentralDirectoryEntry entry,
+            bool useZip64
+        )
         {
             // We err on the side of caution until the zip specification clarifies how to support this
             if (!OutputStream.CanSeek && useZip64)
             {
-                throw new NotSupportedException("Zip64 extensions are not supported on non-seekable streams");
+                throw new NotSupportedException(
+                    "Zip64 extensions are not supported on non-seekable streams"
+                );
             }
 
-            var explicitZipCompressionInfo = ToZipCompressionMethod(zipWriterEntryOptions.CompressionType ?? compressionType);
+            var explicitZipCompressionInfo = ToZipCompressionMethod(
+                zipWriterEntryOptions.CompressionType ?? compressionType
+            );
             byte[] encodedFilename = WriterOptions.ArchiveEncoding.Encode(filename);
 
             Span<byte> intBuf = stackalloc byte[4];
@@ -180,7 +204,9 @@ namespace SharpCompress.Writers.Zip
             {
                 OutputStream.Write(stackalloc byte[] { 63, 0 }); //version says we used PPMd or LZMA
             }
-            HeaderFlags flags = Equals(WriterOptions.ArchiveEncoding.GetEncoding(), Encoding.UTF8) ? HeaderFlags.Efs : 0;
+            HeaderFlags flags = Equals(WriterOptions.ArchiveEncoding.GetEncoding(), Encoding.UTF8)
+                ? HeaderFlags.Efs
+                : 0;
             if (!OutputStream.CanSeek)
             {
                 flags |= HeaderFlags.UsePostDataDescriptor;
@@ -195,7 +221,10 @@ namespace SharpCompress.Writers.Zip
             OutputStream.Write(intBuf.Slice(0, 2));
             BinaryPrimitives.WriteUInt16LittleEndian(intBuf, (ushort)explicitZipCompressionInfo);
             OutputStream.Write(intBuf.Slice(0, 2)); // zipping method
-            BinaryPrimitives.WriteUInt32LittleEndian(intBuf, zipWriterEntryOptions.ModificationDateTime.DateTimeToDosTime());
+            BinaryPrimitives.WriteUInt32LittleEndian(
+                intBuf,
+                zipWriterEntryOptions.ModificationDateTime.DateTimeToDosTime()
+            );
             OutputStream.Write(intBuf);
 
             // zipping date and time
@@ -218,7 +247,9 @@ namespace SharpCompress.Writers.Zip
             if (extralength != 0)
             {
                 OutputStream.Write(new byte[extralength], 0, extralength); // reserve space for zip64 data
-                entry.Zip64HeaderOffset = (ushort)(6 + 2 + 2 + 4 + 12 + 2 + 2 + encodedFilename.Length);
+                entry.Zip64HeaderOffset = (ushort)(
+                    6 + 2 + 2 + 4 + 12 + 2 + 2 + encodedFilename.Length
+                );
             }
 
             return 6 + 2 + 2 + 4 + 12 + 2 + 2 + encodedFilename.Length + extralength;
@@ -237,11 +268,14 @@ namespace SharpCompress.Writers.Zip
 
         private void WriteEndRecord(ulong size)
         {
-
-            var zip64EndOfCentralDirectoryNeeded = entries.Count > ushort.MaxValue || streamPosition >= uint.MaxValue || size >= uint.MaxValue;
+            var zip64EndOfCentralDirectoryNeeded =
+                entries.Count > ushort.MaxValue
+                || streamPosition >= uint.MaxValue
+                || size >= uint.MaxValue;
 
             var sizevalue = size >= uint.MaxValue ? uint.MaxValue : (uint)size;
-            var streampositionvalue = streamPosition >= uint.MaxValue ? uint.MaxValue : (uint)streamPosition;
+            var streampositionvalue =
+                streamPosition >= uint.MaxValue ? uint.MaxValue : (uint)streamPosition;
 
             Span<byte> intBuf = stackalloc byte[8];
             if (zip64EndOfCentralDirectoryNeeded)
@@ -317,8 +351,13 @@ namespace SharpCompress.Writers.Zip
             private bool limitsExceeded;
             private bool isDisposed;
 
-            internal ZipWritingStream(ZipWriter writer, Stream originalStream, ZipCentralDirectoryEntry entry,
-                ZipCompressionMethod zipCompressionMethod, CompressionLevel compressionLevel)
+            internal ZipWritingStream(
+                ZipWriter writer,
+                Stream originalStream,
+                ZipCentralDirectoryEntry entry,
+                ZipCompressionMethod zipCompressionMethod,
+                CompressionLevel compressionLevel
+            )
             {
                 this.writer = writer;
                 this.originalStream = originalStream;
@@ -337,7 +376,11 @@ namespace SharpCompress.Writers.Zip
 
             public override long Length => throw new NotSupportedException();
 
-            public override long Position { get => throw new NotSupportedException(); set => throw new NotSupportedException(); }
+            public override long Position
+            {
+                get => throw new NotSupportedException();
+                set => throw new NotSupportedException();
+            }
 
             private Stream GetWriteStream(Stream writeStream)
             {
@@ -346,38 +389,47 @@ namespace SharpCompress.Writers.Zip
                 switch (zipCompressionMethod)
                 {
                     case ZipCompressionMethod.None:
-                        {
-                            return output;
-                        }
+                    {
+                        return output;
+                    }
                     case ZipCompressionMethod.Deflate:
-                        {
-                            return new DeflateStream(counting, CompressionMode.Compress, compressionLevel);
-                        }
+                    {
+                        return new DeflateStream(
+                            counting,
+                            CompressionMode.Compress,
+                            compressionLevel
+                        );
+                    }
                     case ZipCompressionMethod.BZip2:
-                        {
-                            return new BZip2Stream(counting, CompressionMode.Compress, false);
-                        }
+                    {
+                        return new BZip2Stream(counting, CompressionMode.Compress, false);
+                    }
                     case ZipCompressionMethod.LZMA:
-                        {
-                            counting.WriteByte(9);
-                            counting.WriteByte(20);
-                            counting.WriteByte(5);
-                            counting.WriteByte(0);
+                    {
+                        counting.WriteByte(9);
+                        counting.WriteByte(20);
+                        counting.WriteByte(5);
+                        counting.WriteByte(0);
 
-                            LzmaStream lzmaStream = new LzmaStream(new LzmaEncoderProperties(!originalStream.CanSeek),
-                                                                   false, counting);
-                            counting.Write(lzmaStream.Properties, 0, lzmaStream.Properties.Length);
-                            return lzmaStream;
-                        }
+                        LzmaStream lzmaStream = new LzmaStream(
+                            new LzmaEncoderProperties(!originalStream.CanSeek),
+                            false,
+                            counting
+                        );
+                        counting.Write(lzmaStream.Properties, 0, lzmaStream.Properties.Length);
+                        return lzmaStream;
+                    }
                     case ZipCompressionMethod.PPMd:
-                        {
-                            counting.Write(writer.PpmdProperties.Properties, 0, 2);
-                            return new PpmdStream(writer.PpmdProperties, counting, true);
-                        }
+                    {
+                        counting.Write(writer.PpmdProperties.Properties, 0, 2);
+                        return new PpmdStream(writer.PpmdProperties, counting, true);
+                    }
                     default:
-                        {
-                            throw new NotSupportedException("CompressionMethod: " + zipCompressionMethod);
-                        }
+                    {
+                        throw new NotSupportedException(
+                            "CompressionMethod: " + zipCompressionMethod
+                        );
+                    }
                 }
             }
 
@@ -408,7 +460,8 @@ namespace SharpCompress.Writers.Zip
                     entry.Compressed = counting!.Count;
                     entry.Decompressed = decompressed;
 
-                    var zip64 = entry.Compressed >= uint.MaxValue || entry.Decompressed >= uint.MaxValue;
+                    var zip64 =
+                        entry.Compressed >= uint.MaxValue || entry.Decompressed >= uint.MaxValue;
                     var compressedvalue = zip64 ? uint.MaxValue : (uint)counting.Count;
                     var decompressedvalue = zip64 ? uint.MaxValue : (uint)entry.Decompressed;
 
@@ -433,14 +486,18 @@ namespace SharpCompress.Writers.Zip
                         // We should not get here as the Write call checks the limits
                         if (zip64 && entry.Zip64HeaderOffset == 0)
                         {
-                            throw new NotSupportedException("Attempted to write a stream that is larger than 4GiB without setting the zip64 option");
+                            throw new NotSupportedException(
+                                "Attempted to write a stream that is larger than 4GiB without setting the zip64 option"
+                            );
                         }
 
                         // If we have pre-allocated space for zip64 data,
                         // fill it out, even if it is not required
                         if (entry.Zip64HeaderOffset != 0)
                         {
-                            originalStream.Position = (long)(entry.HeaderOffset + entry.Zip64HeaderOffset);
+                            originalStream.Position = (long)(
+                                entry.HeaderOffset + entry.Zip64HeaderOffset
+                            );
                             Span<byte> intBuf = stackalloc byte[8];
                             BinaryPrimitives.WriteUInt16LittleEndian(intBuf, 0x0001);
                             originalStream.Write(intBuf.Slice(0, 2));
@@ -466,15 +523,18 @@ namespace SharpCompress.Writers.Zip
                         // We should not get here as the Write call checks the limits
                         if (zip64)
                         {
-                            throw new NotSupportedException("Streams larger than 4GiB are not supported for non-seekable streams");
+                            throw new NotSupportedException(
+                                "Streams larger than 4GiB are not supported for non-seekable streams"
+                            );
                         }
 
                         Span<byte> intBuf = stackalloc byte[4];
-                        BinaryPrimitives.WriteUInt32LittleEndian(intBuf, ZipHeaderFactory.POST_DATA_DESCRIPTOR);
+                        BinaryPrimitives.WriteUInt32LittleEndian(
+                            intBuf,
+                            ZipHeaderFactory.POST_DATA_DESCRIPTOR
+                        );
                         originalStream.Write(intBuf);
-                        writer.WriteFooter(entry.Crc,
-                                           compressedvalue,
-                                           decompressedvalue);
+                        writer.WriteFooter(entry.Crc, compressedvalue, decompressedvalue);
                         writer.streamPosition += (long)entry.Compressed + 16;
                     }
                     writer.entries.Add(entry);
@@ -508,9 +568,15 @@ namespace SharpCompress.Writers.Zip
                 if (entry.Zip64HeaderOffset == 0)
                 {
                     // Pre-check, the counting.Count is not exact, as we do not know the size before having actually compressed it
-                    if (limitsExceeded || ((decompressed + (uint)count) > uint.MaxValue) || (counting!.Count + (uint)count) > uint.MaxValue)
+                    if (
+                        limitsExceeded
+                        || ((decompressed + (uint)count) > uint.MaxValue)
+                        || (counting!.Count + (uint)count) > uint.MaxValue
+                    )
                     {
-                        throw new NotSupportedException("Attempted to write a stream that is larger than 4GiB without setting the zip64 option");
+                        throw new NotSupportedException(
+                            "Attempted to write a stream that is larger than 4GiB without setting the zip64 option"
+                        );
                     }
                 }
 
@@ -528,7 +594,9 @@ namespace SharpCompress.Writers.Zip
                         // throwing an exception in Dispose() which is discouraged
                         // as it can mask other errors
                         limitsExceeded = true;
-                        throw new NotSupportedException("Attempted to write a stream that is larger than 4GiB without setting the zip64 option");
+                        throw new NotSupportedException(
+                            "Attempted to write a stream that is larger than 4GiB without setting the zip64 option"
+                        );
                     }
                 }
             }

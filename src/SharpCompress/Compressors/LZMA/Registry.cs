@@ -22,8 +22,13 @@ namespace SharpCompress.Compressors.LZMA
         private const uint K_DEFLATE = 0x040108;
         private const uint K_B_ZIP2 = 0x040202;
 
-        internal static Stream CreateDecoderStream(CMethodId id, Stream[] inStreams, byte[] info, IPasswordProvider pass,
-                                                   long limit)
+        internal static Stream CreateDecoderStream(
+            CMethodId id,
+            Stream[] inStreams,
+            byte[] info,
+            IPasswordProvider pass,
+            long limit
+        )
         {
             switch (id._id)
             {

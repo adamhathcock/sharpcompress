@@ -66,7 +66,10 @@ namespace SharpCompress.Compressors.ADC
         /// </summary>
         /// <param name="stream">Stream that contains the compressed data</param>
         /// <param name="compressionMode">Must be set to <see cref="CompressionMode.Decompress"/> because compression is not implemented</param>
-        public ADCStream(Stream stream, CompressionMode compressionMode = CompressionMode.Decompress)
+        public ADCStream(
+            Stream stream,
+            CompressionMode compressionMode = CompressionMode.Decompress
+        )
         {
             if (compressionMode == CompressionMode.Compress)
             {
@@ -84,11 +87,13 @@ namespace SharpCompress.Compressors.ADC
 
         public override long Length => throw new NotSupportedException();
 
-        public override long Position { get => _position; set => throw new NotSupportedException(); }
-
-        public override void Flush()
+        public override long Position
         {
+            get => _position;
+            set => throw new NotSupportedException();
         }
+
+        public override void Flush() { }
 
         protected override void Dispose(bool disposing)
         {

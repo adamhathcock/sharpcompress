@@ -55,9 +55,10 @@ namespace SharpCompress.Compressors.LZMA.LZ
                 {
                     return;
                 }
-                int numReadBytes = _stream != null
-                                       ? _stream.Read(_bufferBase, (int)(_bufferOffset + _streamPos), size)
-                                       : 0;
+                int numReadBytes =
+                    _stream != null
+                        ? _stream.Read(_bufferBase, (int)(_bufferOffset + _streamPos), size)
+                        : 0;
                 if (numReadBytes == 0)
                 {
                     _posLimit = _streamPos;

@@ -16,8 +16,8 @@ namespace SharpCompress.Archives
     /// <list type="table">
     /// <item><see cref="Factories.TarFactory"/></item>
     /// <item><see cref="Factories.RarFactory"/></item>
-    /// <item><see cref="Factories.ZipFactory"/></item>    
-    /// <item><see cref="Factories.GZipFactory"/></item>        
+    /// <item><see cref="Factories.ZipFactory"/></item>
+    /// <item><see cref="Factories.GZipFactory"/></item>
     /// <item><see cref="Factories.SevenZipFactory"/></item>
     /// </list>
     /// </remarks>

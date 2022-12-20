@@ -34,22 +34,22 @@ namespace SharpCompress.Compressors.LZMA
         private bool _isDisposed;
 
         public LzmaStream(byte[] properties, Stream inputStream)
-            : this(properties, inputStream, -1, -1, null, properties.Length < 5)
-        {
-        }
+            : this(properties, inputStream, -1, -1, null, properties.Length < 5) { }
 
         public LzmaStream(byte[] properties, Stream inputStream, long inputSize)
-            : this(properties, inputStream, inputSize, -1, null, properties.Length < 5)
-        {
-        }
+            : this(properties, inputStream, inputSize, -1, null, properties.Length < 5) { }
 
         public LzmaStream(byte[] properties, Stream inputStream, long inputSize, long outputSize)
-            : this(properties, inputStream, inputSize, outputSize, null, properties.Length < 5)
-        {
-        }
+            : this(properties, inputStream, inputSize, outputSize, null, properties.Length < 5) { }
 
-        public LzmaStream(byte[] properties, Stream inputStream, long inputSize, long outputSize,
-                          Stream presetDictionary, bool isLzma2)
+        public LzmaStream(
+            byte[] properties,
+            Stream inputStream,
+            long inputSize,
+            long outputSize,
+            Stream presetDictionary,
+            bool isLzma2
+        )
         {
             _inputStream = inputStream;
             _inputSize = inputSize;
@@ -92,11 +92,14 @@ namespace SharpCompress.Compressors.LZMA
         }
 
         public LzmaStream(LzmaEncoderProperties properties, bool isLzma2, Stream outputStream)
-            : this(properties, isLzma2, null, outputStream)
-        {
-        }
+            : this(properties, isLzma2, null, outputStream) { }
 
-        public LzmaStream(LzmaEncoderProperties properties, bool isLzma2, Stream presetDictionary, Stream outputStream)
+        public LzmaStream(
+            LzmaEncoderProperties properties,
+            bool isLzma2,
+            Stream presetDictionary,
+            Stream outputStream
+        )
         {
             _isLzma2 = isLzma2;
             _availableBytes = 0;
@@ -126,9 +129,7 @@ namespace SharpCompress.Compressors.LZMA
 
         public override bool CanWrite => _encoder != null;
 
-        public override void Flush()
-        {
-        }
+        public override void Flush() { }
 
         protected override void Dispose(bool disposing)
         {
@@ -150,7 +151,11 @@ namespace SharpCompress.Compressors.LZMA
 
         public override long Length => _position + _availableBytes;
 
-        public override long Position { get => _position; set => throw new NotSupportedException(); }
+        public override long Position
+        {
+            get => _position;
+            set => throw new NotSupportedException();
+        }
 
         public override int Read(byte[] buffer, int offset, int count)
         {
@@ -189,8 +194,9 @@ namespace SharpCompress.Compressors.LZMA
                 {
                     _inputPosition += _outWindow.CopyStream(_inputStream, toProcess);
                 }
-                else if (_decoder.Code(_dictionarySize, _outWindow, _rangeDecoder)
-                         && _outputSize < 0)
+                else if (
+                    _decoder.Code(_dictionarySize, _outWindow, _rangeDecoder) && _outputSize < 0
+                )
                 {
                     _availableBytes = _outWindow.AvailableBytes;
                 }
@@ -204,7 +210,10 @@ namespace SharpCompress.Compressors.LZMA
                 if (_availableBytes == 0 && !_uncompressedChunk)
                 {
                     _rangeDecoder.ReleaseStream();
-                    if (!_rangeDecoder.IsFinished || (_rangeDecoderLimit >= 0 && _rangeDecoder._total != _rangeDecoderLimit))
+                    if (
+                        !_rangeDecoder.IsFinished
+                        || (_rangeDecoderLimit >= 0 && _rangeDecoder._total != _rangeDecoderLimit)
+                    )
                     {
                         throw new DataErrorException();
                     }

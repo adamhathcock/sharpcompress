@@ -1,6 +1,4 @@
-﻿
-
-using System;
+﻿using System;
 using SharpCompress.Common;
 
 namespace SharpCompress.Readers

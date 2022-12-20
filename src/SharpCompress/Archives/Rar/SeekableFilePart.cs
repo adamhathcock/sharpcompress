@@ -9,8 +9,13 @@ namespace SharpCompress.Archives.Rar
         private readonly Stream stream;
         private readonly string? password;
 
-        internal SeekableFilePart(MarkHeader mh, FileHeader fh, int index, Stream stream, string? password)
-            : base(mh, fh, index)
+        internal SeekableFilePart(
+            MarkHeader mh,
+            FileHeader fh,
+            int index,
+            Stream stream,
+            string? password
+        ) : base(mh, fh, index)
         {
             this.stream = stream;
             this.password = password;
@@ -26,6 +31,7 @@ namespace SharpCompress.Archives.Rar
             return stream;
         }
 
-        internal override string FilePartName => "Unknown Stream - File Entry: " + FileHeader.FileName;
+        internal override string FilePartName =>
+            "Unknown Stream - File Entry: " + FileHeader.FileName;
     }
 }

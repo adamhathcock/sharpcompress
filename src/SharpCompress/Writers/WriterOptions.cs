@@ -8,6 +8,7 @@ namespace SharpCompress.Writers
         {
             CompressionType = compressionType;
         }
+
         public CompressionType CompressionType { get; set; }
 
         public static implicit operator WriterOptions(CompressionType compressionType)

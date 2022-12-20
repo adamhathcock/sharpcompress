@@ -82,7 +82,7 @@ namespace SharpCompress.Algorithms
             public static int EvenReduceSum(Vector256<int> accumulator)
             {
                 Vector128<int> vsum = Sse2.Add(accumulator.GetLower(), accumulator.GetUpper()); // add upper lane to lower lane
-                vsum = Sse2.Add(vsum, Sse2.Shuffle(vsum, 0b_11_10_11_10));                      // add high to low
+                vsum = Sse2.Add(vsum, Sse2.Shuffle(vsum, 0b_11_10_11_10)); // add high to low
 
                 // Vector128<int>.ToScalar() isn't optimized pre-net5.0 https://github.com/dotnet/runtime/pull/37882
                 return Sse2.ConvertToInt32(vsum);
@@ -107,11 +107,42 @@ namespace SharpCompress.Algorithms
         private const int BlockSize = 1 << 5;
 
         // The C# compiler emits this as a compile-time constant embedded in the PE file.
-        private static ReadOnlySpan<byte> Tap1Tap2 => new byte[]
-        {
-            32, 31, 30, 29, 28, 27, 26, 25, 24, 23, 22, 21, 20, 19, 18, 17, // tap1
-            16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1 // tap2
-        };
+        private static ReadOnlySpan<byte> Tap1Tap2 =>
+            new byte[]
+            {
+                32,
+                31,
+                30,
+                29,
+                28,
+                27,
+                26,
+                25,
+                24,
+                23,
+                22,
+                21,
+                20,
+                19,
+                18,
+                17, // tap1
+                16,
+                15,
+                14,
+                13,
+                12,
+                11,
+                10,
+                9,
+                8,
+                7,
+                6,
+                5,
+                4,
+                3,
+                2,
+                1 // tap2
+            };
 #endif
 
         /// <summary>
@@ -120,8 +151,7 @@ namespace SharpCompress.Algorithms
         /// <param name="buffer">The readonly span of bytes.</param>
         /// <returns>The <see cref="uint"/>.</returns>
         [MethodImpl(InliningOptions.ShortMethod)]
-        public static uint Calculate(ReadOnlySpan<byte> buffer)
-            => Calculate(SeedValue, buffer);
+        public static uint Calculate(ReadOnlySpan<byte> buffer) => Calculate(SeedValue, buffer);
 
         /// <summary>
         /// Calculates the Adler32 checksum with the bytes taken from the span and seed.
@@ -181,7 +211,7 @@ namespace SharpCompress.Algorithms
 
                     while (blocks > 0)
                     {
-                        uint n = NMAX / BlockSize;  /* The NMAX constraint. */
+                        uint n = NMAX / BlockSize; /* The NMAX constraint. */
                         if (n > blocks)
                         {
                             n = blocks;
@@ -206,23 +236,28 @@ namespace SharpCompress.Algorithms
 
                             // Horizontally add the bytes for s1, multiply-adds the
                             // bytes by [ 32, 31, 30, ... ] for s2.
-                            v_s1 = Sse2.Add(v_s1, Sse2.SumAbsoluteDifferences(bytes1, zero).AsUInt32());
+                            v_s1 = Sse2.Add(
+                                v_s1,
+                                Sse2.SumAbsoluteDifferences(bytes1, zero).AsUInt32()
+                            );
                             Vector128<short> mad1 = Ssse3.MultiplyAddAdjacent(bytes1, tap1);
                             v_s2 = Sse2.Add(v_s2, Sse2.MultiplyAddAdjacent(mad1, ones).AsUInt32());
 
-                            v_s1 = Sse2.Add(v_s1, Sse2.SumAbsoluteDifferences(bytes2, zero).AsUInt32());
+                            v_s1 = Sse2.Add(
+                                v_s1,
+                                Sse2.SumAbsoluteDifferences(bytes2, zero).AsUInt32()
+                            );
                             Vector128<short> mad2 = Ssse3.MultiplyAddAdjacent(bytes2, tap2);
                             v_s2 = Sse2.Add(v_s2, Sse2.MultiplyAddAdjacent(mad2, ones).AsUInt32());
 
                             localBufferPtr += BlockSize;
-                        }
-                        while (--n > 0);
+                        } while (--n > 0);
 
                         v_s2 = Sse2.Add(v_s2, Sse2.ShiftLeftLogical(v_ps, 5));
 
                         // Sum epi32 ints v_s1(s2) and accumulate in s1(s2).
-                        const byte S2301 = 0b1011_0001;  // A B C D -> B A D C
-                        const byte S1032 = 0b0100_1110;  // A B C D -> C D A B
+                        const byte S2301 = 0b1011_0001; // A B C D -> B A D C
+                        const byte S1032 = 0b0100_1110; // A B C D -> C D A B
 
                         v_s1 = Sse2.Add(v_s1, Sse2.Shuffle(v_s1, S1032));
 
@@ -262,7 +297,40 @@ namespace SharpCompress.Algorithms
 
                 Vector256<byte> zero = Vector256<byte>.Zero;
                 var dot3v = Vector256.Create((short)1);
-                var dot2v = Vector256.Create(32, 31, 30, 29, 28, 27, 26, 25, 24, 23, 22, 21, 20, 19, 18, 17, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1);
+                var dot2v = Vector256.Create(
+                    32,
+                    31,
+                    30,
+                    29,
+                    28,
+                    27,
+                    26,
+                    25,
+                    24,
+                    23,
+                    22,
+                    21,
+                    20,
+                    19,
+                    18,
+                    17,
+                    16,
+                    15,
+                    14,
+                    13,
+                    12,
+                    11,
+                    10,
+                    9,
+                    8,
+                    7,
+                    6,
+                    5,
+                    4,
+                    3,
+                    2,
+                    1
+                );
 
                 // Process n blocks of data. At most NMAX data bytes can be
                 // processed before s2 must be reduced modulo BASE.
@@ -325,7 +393,12 @@ namespace SharpCompress.Algorithms
             }
         }
 
-        private static unsafe void HandleLeftOver(byte* localBufferPtr, uint length, ref uint s1, ref uint s2)
+        private static unsafe void HandleLeftOver(
+            byte* localBufferPtr,
+            uint length,
+            ref uint s1,
+            ref uint s2
+        )
         {
             if (length >= 16)
             {

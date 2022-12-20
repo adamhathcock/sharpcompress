@@ -18,7 +18,7 @@ jobs:
     - uses: actions/setup-dotnet@v3
       with:
         dotnet-version: 7.0.x
-    - run: dotnet run -p build/build.csproj
+    - run: dotnet run --project build/build.csproj
     - uses: actions/upload-artifact@v3
       with:
         name: ${{ matrix.os }}-sharpcompress.nupkg

@@ -20,4 +20,3 @@ namespace SharpCompress.Readers
         IReader OpenReader(Stream stream, ReaderOptions? options);
     }
 }
-

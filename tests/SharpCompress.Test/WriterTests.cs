@@ -16,7 +16,12 @@ namespace SharpCompress.Test
             this.type = type;
         }
 
-        protected void Write(CompressionType compressionType, string archive, string archiveToVerifyAgainst, Encoding? encoding = null)
+        protected void Write(
+            CompressionType compressionType,
+            string archive,
+            string archiveToVerifyAgainst,
+            Encoding? encoding = null
+        )
         {
             using (Stream stream = File.OpenWrite(Path.Combine(SCRATCH2_FILES_PATH, archive)))
             {
@@ -32,8 +37,10 @@ namespace SharpCompress.Test
                     writer.WriteAll(ORIGINAL_FILES_PATH, "*", SearchOption.AllDirectories);
                 }
             }
-            CompareArchivesByPath(Path.Combine(SCRATCH2_FILES_PATH, archive),
-               Path.Combine(TEST_ARCHIVES_PATH, archiveToVerifyAgainst));
+            CompareArchivesByPath(
+                Path.Combine(SCRATCH2_FILES_PATH, archive),
+                Path.Combine(TEST_ARCHIVES_PATH, archiveToVerifyAgainst)
+            );
 
             using (Stream stream = File.OpenRead(Path.Combine(SCRATCH2_FILES_PATH, archive)))
             {
@@ -41,12 +48,17 @@ namespace SharpCompress.Test
 
                 readerOptions.ArchiveEncoding.Default = encoding ?? Encoding.Default;
 
-                using (var reader = ReaderFactory.Open(NonDisposingStream.Create(stream), readerOptions))
+                using (
+                    var reader = ReaderFactory.Open(
+                        NonDisposingStream.Create(stream),
+                        readerOptions
+                    )
+                )
                 {
-                    reader.WriteAllToDirectory(SCRATCH_FILES_PATH, new ExtractionOptions()
-                    {
-                        ExtractFullPath = true
-                    });
+                    reader.WriteAllToDirectory(
+                        SCRATCH_FILES_PATH,
+                        new ExtractionOptions() { ExtractFullPath = true }
+                    );
                 }
             }
             VerifyFiles();

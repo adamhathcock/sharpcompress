@@ -29,7 +29,7 @@ namespace SharpCompress.Factories
         /// <summary>
         /// Gets the collection of registered <see cref="IFactory"/>.
         /// </summary>
-        public static IEnumerable<IFactory> Factories => _factories;           
+        public static IEnumerable<IFactory> Factories => _factories;
 
         /// <summary>
         /// Registers an archive factory.
@@ -71,7 +71,11 @@ namespace SharpCompress.Factories
         /// <param name="options"></param>
         /// <param name="reader"></param>
         /// <returns></returns>
-        internal virtual bool TryOpenReader(RewindableStream rewindableStream, ReaderOptions options, out IReader? reader)
+        internal virtual bool TryOpenReader(
+            RewindableStream rewindableStream,
+            ReaderOptions options,
+            out IReader? reader
+        )
         {
             reader = null;
 
@@ -85,8 +89,8 @@ namespace SharpCompress.Factories
                     return true;
                 }
             }
-            
+
             return false;
-        }        
+        }
     }
 }

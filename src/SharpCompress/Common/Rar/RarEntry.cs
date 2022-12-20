@@ -10,7 +10,11 @@ namespace SharpCompress.Common.Rar
         /// <summary>
         /// As the V2017 port isn't complete, add this check to use the legacy Rar code.
         /// </summary>
-        internal bool IsRarV3 => FileHeader.CompressionAlgorithm == 20 || FileHeader.CompressionAlgorithm == 26 || FileHeader.CompressionAlgorithm == 29 || FileHeader.CompressionAlgorithm == 36; //Nanook - Added 20+26 as Test arc from WinRar2.8 (algo 20) was failing with 2017 code
+        internal bool IsRarV3 =>
+            FileHeader.CompressionAlgorithm == 20
+            || FileHeader.CompressionAlgorithm == 26
+            || FileHeader.CompressionAlgorithm == 29
+            || FileHeader.CompressionAlgorithm == 36; //Nanook - Added 20+26 as Test arc from WinRar2.8 (algo 20) was failing with 2017 code
 
         /// <summary>
         /// The File's 32 bit CRC Hash
@@ -58,8 +62,13 @@ namespace SharpCompress.Common.Rar
 
         public override string ToString()
         {
-            return string.Format("Entry Path: {0} Compressed Size: {1} Uncompressed Size: {2} CRC: {3}",
-                                 Key, CompressedSize, Size, Crc);
+            return string.Format(
+                "Entry Path: {0} Compressed Size: {1} Uncompressed Size: {2} CRC: {3}",
+                Key,
+                CompressedSize,
+                Size,
+                Crc
+            );
         }
     }
 }

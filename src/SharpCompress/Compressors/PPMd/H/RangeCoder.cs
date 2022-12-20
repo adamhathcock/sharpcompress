@@ -14,7 +14,9 @@ namespace SharpCompress.Compressors.PPMd.H
         internal const long UINT_MASK = 0xFFFFffffL;
 
         // uint low, code, range;
-        private long _low, _code, _range;
+        private long _low,
+            _code,
+            _range;
         private readonly IRarUnpack _unpackRead;
         private readonly Stream _stream;
 
@@ -126,18 +128,32 @@ namespace SharpCompress.Compressors.PPMd.H
     internal class SubRange
     {
         // uint LowCount, HighCount, scale;
-        private long _lowCount, _highCount, _scale;
+        private long _lowCount,
+            _highCount,
+            _scale;
 
         internal void IncScale(int dScale)
         {
             Scale = Scale + dScale;
         }
 
-        internal long HighCount { get => _highCount; set => _highCount = value & RangeCoder.UINT_MASK; }
+        internal long HighCount
+        {
+            get => _highCount;
+            set => _highCount = value & RangeCoder.UINT_MASK;
+        }
 
-        internal long LowCount { get => _lowCount & RangeCoder.UINT_MASK; set => _lowCount = value & RangeCoder.UINT_MASK; }
+        internal long LowCount
+        {
+            get => _lowCount & RangeCoder.UINT_MASK;
+            set => _lowCount = value & RangeCoder.UINT_MASK;
+        }
 
-        internal long Scale { get => _scale; set => _scale = value & RangeCoder.UINT_MASK; }
+        internal long Scale
+        {
+            get => _scale;
+            set => _scale = value & RangeCoder.UINT_MASK;
+        }
 
         // Debug
         public override String ToString()

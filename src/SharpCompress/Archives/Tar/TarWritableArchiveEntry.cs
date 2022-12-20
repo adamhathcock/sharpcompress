@@ -13,9 +13,15 @@ namespace SharpCompress.Archives.Tar
         private readonly bool closeStream;
         private readonly Stream stream;
 
-        internal TarWritableArchiveEntry(TarArchive archive, Stream stream, CompressionType compressionType,
-                                         string path, long size, DateTime? lastModified, bool closeStream)
-            : base(archive, null, compressionType)
+        internal TarWritableArchiveEntry(
+            TarArchive archive,
+            Stream stream,
+            CompressionType compressionType,
+            string path,
+            long size,
+            DateTime? lastModified,
+            bool closeStream
+        ) : base(archive, null, compressionType)
         {
             this.stream = stream;
             Key = path;

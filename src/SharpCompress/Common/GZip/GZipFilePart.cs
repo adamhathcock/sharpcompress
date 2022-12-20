@@ -129,8 +129,7 @@ namespace SharpCompress.Common.GZip
                 {
                     list.Add(buf1[0]);
                 }
-            }
-            while (!done);
+            } while (!done);
             byte[] buffer = list.ToArray();
             return ArchiveEncoding.Decode(buffer);
         }

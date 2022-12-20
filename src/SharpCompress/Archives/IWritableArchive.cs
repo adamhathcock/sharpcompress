@@ -8,7 +8,13 @@ namespace SharpCompress.Archives
     {
         void RemoveEntry(IArchiveEntry entry);
 
-        IArchiveEntry AddEntry(string key, Stream source, bool closeStream, long size = 0, DateTime? modified = null);
+        IArchiveEntry AddEntry(
+            string key,
+            Stream source,
+            bool closeStream,
+            long size = 0,
+            DateTime? modified = null
+        );
 
         void SaveTo(Stream stream, WriterOptions options);
 

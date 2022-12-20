@@ -27,8 +27,10 @@ namespace SharpCompress.Test
             ArchiveStreamReadExtractAll(new[] { testArchive }, compression);
         }
 
-
-        protected void ArchiveStreamReadExtractAll(IEnumerable<string> testArchives, CompressionType compression)
+        protected void ArchiveStreamReadExtractAll(
+            IEnumerable<string> testArchives,
+            CompressionType compression
+        )
         {
             foreach (var path in testArchives)
             {
@@ -50,14 +52,18 @@ namespace SharpCompress.Test
                                 stream.ThrowOnDispose = false;
                                 return;
                             }
-                            foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
+                            foreach (
+                                var entry in archive.Entries.Where(entry => !entry.IsDirectory)
+                            )
                             {
-                                entry.WriteToDirectory(SCRATCH_FILES_PATH,
-                                                       new ExtractionOptions
-                                                       {
-                                                           ExtractFullPath = true,
-                                                           Overwrite = true
-                                                       });
+                                entry.WriteToDirectory(
+                                    SCRATCH_FILES_PATH,
+                                    new ExtractionOptions
+                                    {
+                                        ExtractFullPath = true,
+                                        Overwrite = true
+                                    }
+                                );
                             }
                             stream.ThrowOnDispose = false;
                         }
@@ -79,12 +85,21 @@ namespace SharpCompress.Test
             ArchiveStreamRead(readerOptions, testArchive);
         }
 
-        protected void ArchiveStreamRead(ReaderOptions? readerOptions = null, params string[] testArchives)
+        protected void ArchiveStreamRead(
+            ReaderOptions? readerOptions = null,
+            params string[] testArchives
+        )
         {
-            ArchiveStreamRead(readerOptions, testArchives.Select(x => Path.Combine(TEST_ARCHIVES_PATH, x)));
+            ArchiveStreamRead(
+                readerOptions,
+                testArchives.Select(x => Path.Combine(TEST_ARCHIVES_PATH, x))
+            );
         }
 
-        protected void ArchiveStreamRead(ReaderOptions? readerOptions, IEnumerable<string> testArchives)
+        protected void ArchiveStreamRead(
+            ReaderOptions? readerOptions,
+            IEnumerable<string> testArchives
+        )
         {
             foreach (var path in testArchives)
             {
@@ -95,12 +110,10 @@ namespace SharpCompress.Test
                     {
                         foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
                         {
-                            entry.WriteToDirectory(SCRATCH_FILES_PATH,
-                                                   new ExtractionOptions()
-                                                   {
-                                                       ExtractFullPath = true,
-                                                       Overwrite = true
-                                                   });
+                            entry.WriteToDirectory(
+                                SCRATCH_FILES_PATH,
+                                new ExtractionOptions() { ExtractFullPath = true, Overwrite = true }
+                            );
                         }
                     }
                     catch (IndexOutOfRangeException)
@@ -115,54 +128,37 @@ namespace SharpCompress.Test
             }
         }
 
-        protected void ArchiveStreamMultiRead(ReaderOptions? readerOptions = null, params string[] testArchives)
+        protected void ArchiveStreamMultiRead(
+            ReaderOptions? readerOptions = null,
+            params string[] testArchives
+        )
         {
-            ArchiveStreamMultiRead(readerOptions, testArchives.Select(x => Path.Combine(TEST_ARCHIVES_PATH, x)));
+            ArchiveStreamMultiRead(
+                readerOptions,
+                testArchives.Select(x => Path.Combine(TEST_ARCHIVES_PATH, x))
+            );
         }
 
-        protected void ArchiveStreamMultiRead(ReaderOptions? readerOptions, IEnumerable<string> testArchives)
+        protected void ArchiveStreamMultiRead(
+            ReaderOptions? readerOptions,
+            IEnumerable<string> testArchives
+        )
         {
-                using (var archive = ArchiveFactory.Open(testArchives.Select(a => new FileInfo(a)), readerOptions))
-                {
-                    try
-                    {
-                        foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
-                        {
-                            entry.WriteToDirectory(SCRATCH_FILES_PATH,
-                                                    new ExtractionOptions()
-                                                    {
-                                                        ExtractFullPath = true,
-                                                        Overwrite = true
-                                                    });
-                        }
-                    }
-                    catch (IndexOutOfRangeException)
-                    {
-                        throw;
-                    }
-                }
-                VerifyFiles();
-        }
-
-        protected void ArchiveOpenStreamRead(ReaderOptions? readerOptions = null, params string[] testArchives)
-        {
-            ArchiveOpenStreamRead(readerOptions, testArchives.Select(x => Path.Combine(TEST_ARCHIVES_PATH, x)));
-        }
-
-        protected void ArchiveOpenStreamRead(ReaderOptions? readerOptions, IEnumerable<string> testArchives)
-        {
-            using (var archive = ArchiveFactory.Open(testArchives.Select(f => new FileInfo(f)), readerOptions))
+            using (
+                var archive = ArchiveFactory.Open(
+                    testArchives.Select(a => new FileInfo(a)),
+                    readerOptions
+                )
+            )
             {
                 try
                 {
                     foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
                     {
-                        entry.WriteToDirectory(SCRATCH_FILES_PATH,
-                                               new ExtractionOptions()
-                                               {
-                                                   ExtractFullPath = true,
-                                                   Overwrite = true
-                                               });
+                        entry.WriteToDirectory(
+                            SCRATCH_FILES_PATH,
+                            new ExtractionOptions() { ExtractFullPath = true, Overwrite = true }
+                        );
                     }
                 }
                 catch (IndexOutOfRangeException)
@@ -173,16 +169,73 @@ namespace SharpCompress.Test
             VerifyFiles();
         }
 
-        protected void ArchiveOpenEntryVolumeIndexTest(int[][] results, ReaderOptions? readerOptions = null, params string[] testArchives)
+        protected void ArchiveOpenStreamRead(
+            ReaderOptions? readerOptions = null,
+            params string[] testArchives
+        )
         {
-            ArchiveOpenEntryVolumeIndexTest(results, readerOptions, testArchives.Select(x => Path.Combine(TEST_ARCHIVES_PATH, x)));
+            ArchiveOpenStreamRead(
+                readerOptions,
+                testArchives.Select(x => Path.Combine(TEST_ARCHIVES_PATH, x))
+            );
         }
 
+        protected void ArchiveOpenStreamRead(
+            ReaderOptions? readerOptions,
+            IEnumerable<string> testArchives
+        )
+        {
+            using (
+                var archive = ArchiveFactory.Open(
+                    testArchives.Select(f => new FileInfo(f)),
+                    readerOptions
+                )
+            )
+            {
+                try
+                {
+                    foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
+                    {
+                        entry.WriteToDirectory(
+                            SCRATCH_FILES_PATH,
+                            new ExtractionOptions() { ExtractFullPath = true, Overwrite = true }
+                        );
+                    }
+                }
+                catch (IndexOutOfRangeException)
+                {
+                    throw;
+                }
+            }
+            VerifyFiles();
+        }
 
-        protected void ArchiveOpenEntryVolumeIndexTest(int[][] results, ReaderOptions? readerOptions, IEnumerable<string> testArchives)
+        protected void ArchiveOpenEntryVolumeIndexTest(
+            int[][] results,
+            ReaderOptions? readerOptions = null,
+            params string[] testArchives
+        )
+        {
+            ArchiveOpenEntryVolumeIndexTest(
+                results,
+                readerOptions,
+                testArchives.Select(x => Path.Combine(TEST_ARCHIVES_PATH, x))
+            );
+        }
+
+        protected void ArchiveOpenEntryVolumeIndexTest(
+            int[][] results,
+            ReaderOptions? readerOptions,
+            IEnumerable<string> testArchives
+        )
         {
             string[] src = testArchives.ToArray();
-            using (var archive = ArchiveFactory.Open(testArchives.Select(f => new FileInfo(f)), readerOptions))
+            using (
+                var archive = ArchiveFactory.Open(
+                    testArchives.Select(f => new FileInfo(f)),
+                    readerOptions
+                )
+            )
             {
                 try
                 {
@@ -191,8 +244,14 @@ namespace SharpCompress.Test
                     {
                         Assert.Equal(entry.VolumeIndexFirst, results[idx][0]);
                         Assert.Equal(entry.VolumeIndexLast, results[idx][1]);
-                        Assert.Equal(src[entry.VolumeIndexFirst], archive.Volumes.First(a => a.Index == entry.VolumeIndexFirst).FileName);
-                        Assert.Equal(src[entry.VolumeIndexLast], archive.Volumes.First(a => a.Index == entry.VolumeIndexLast).FileName);
+                        Assert.Equal(
+                            src[entry.VolumeIndexFirst],
+                            archive.Volumes.First(a => a.Index == entry.VolumeIndexFirst).FileName
+                        );
+                        Assert.Equal(
+                            src[entry.VolumeIndexLast],
+                            archive.Volumes.First(a => a.Index == entry.VolumeIndexLast).FileName
+                        );
 
                         idx++;
                     }
@@ -204,8 +263,6 @@ namespace SharpCompress.Test
             }
         }
 
-
-
         protected void ArchiveFileRead(string testArchive, ReaderOptions? readerOptions = null)
         {
             testArchive = Path.Combine(TEST_ARCHIVES_PATH, testArchive);
@@ -213,12 +270,10 @@ namespace SharpCompress.Test
             {
                 foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
                 {
-                    entry.WriteToDirectory(SCRATCH_FILES_PATH,
-                        new ExtractionOptions()
-                        {
-                            ExtractFullPath = true,
-                            Overwrite = true
-                        });
+                    entry.WriteToDirectory(
+                        SCRATCH_FILES_PATH,
+                        new ExtractionOptions() { ExtractFullPath = true, Overwrite = true }
+                    );
                 }
             }
             VerifyFiles();
@@ -234,14 +289,16 @@ namespace SharpCompress.Test
             {
                 foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
                 {
-                    entry.WriteToDirectory(SCRATCH_FILES_PATH,
+                    entry.WriteToDirectory(
+                        SCRATCH_FILES_PATH,
                         new ExtractionOptions()
                         {
                             ExtractFullPath = true,
                             Overwrite = true,
                             PreserveAttributes = true,
                             PreserveFileTime = true
-                        });
+                        }
+                    );
                 }
             }
             VerifyFilesEx();

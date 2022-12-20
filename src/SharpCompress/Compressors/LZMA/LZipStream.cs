@@ -44,7 +44,13 @@ namespace SharpCompress.Compressors.LZMA
                 WriteHeaderSize(stream);
 
                 _countingWritableSubStream = new CountingWritableSubStream(stream);
-                _stream = new Crc32Stream(new LzmaStream(new LzmaEncoderProperties(true, dSize), false, _countingWritableSubStream));
+                _stream = new Crc32Stream(
+                    new LzmaStream(
+                        new LzmaEncoderProperties(true, dSize),
+                        false,
+                        _countingWritableSubStream
+                    )
+                );
             }
         }
 
@@ -107,16 +113,21 @@ namespace SharpCompress.Compressors.LZMA
         // reading the output length when we initialize.
         public override long Length => throw new NotImplementedException();
 
-        public override long Position { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+        public override long Position
+        {
+            get => throw new NotImplementedException();
+            set => throw new NotImplementedException();
+        }
 
-        public override int Read(byte[] buffer, int offset, int count) => _stream.Read(buffer, offset, count);
+        public override int Read(byte[] buffer, int offset, int count) =>
+            _stream.Read(buffer, offset, count);
 
         public override int ReadByte() => _stream.ReadByte();
 
-        public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
+        public override long Seek(long offset, SeekOrigin origin) =>
+            throw new NotSupportedException();
 
         public override void SetLength(long value) => throw new NotImplementedException();
-
 
 #if !NETFRAMEWORK && !NETSTANDARD2_0
 
@@ -131,7 +142,6 @@ namespace SharpCompress.Compressors.LZMA
 
             _writeCount += buffer.Length;
         }
-
 #endif
 
         public override void Write(byte[] buffer, int offset, int count)
@@ -180,7 +190,13 @@ namespace SharpCompress.Compressors.LZMA
                 return 0;
             }
 
-            if (header[0] != 'L' || header[1] != 'Z' || header[2] != 'I' || header[3] != 'P' || header[4] != 1 /* version 1 */)
+            if (
+                header[0] != 'L'
+                || header[1] != 'Z'
+                || header[2] != 'I'
+                || header[3] != 'P'
+                || header[4] != 1 /* version 1 */
+            )
             {
                 return 0;
             }
@@ -189,7 +205,15 @@ namespace SharpCompress.Compressors.LZMA
             return (1 << basePower) - subtractionNumerator * (1 << (basePower - 4));
         }
 
-        private static readonly byte[] headerBytes = new byte[6] { (byte)'L', (byte)'Z', (byte)'I', (byte)'P', 1, 113 };
+        private static readonly byte[] headerBytes = new byte[6]
+        {
+            (byte)'L',
+            (byte)'Z',
+            (byte)'I',
+            (byte)'P',
+            1,
+            113
+        };
 
         public static void WriteHeaderSize(Stream stream)
         {

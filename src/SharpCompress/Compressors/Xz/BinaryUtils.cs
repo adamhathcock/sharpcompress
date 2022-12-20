@@ -17,6 +17,7 @@ namespace SharpCompress.Compressors.Xz
         {
             return unchecked((uint)ReadLittleEndianInt32(reader));
         }
+
         public static int ReadLittleEndianInt32(this Stream stream)
         {
             Span<byte> bytes = stackalloc byte[4];

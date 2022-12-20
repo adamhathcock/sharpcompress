@@ -22,7 +22,9 @@ namespace SharpCompress.Compressors.LZMA
         {
             if (pass.CryptoGetTextPassword() == null)
             {
-                throw new SharpCompress.Common.CryptographicException("Encrypted 7Zip archive has no password specified.");
+                throw new SharpCompress.Common.CryptographicException(
+                    "Encrypted 7Zip archive has no password specified."
+                );
             }
 
             mStream = input;
@@ -79,8 +81,7 @@ namespace SharpCompress.Compressors.LZMA
 
         public override int Read(byte[] buffer, int offset, int count)
         {
-            if (count == 0
-                || mWritten == mLimit)
+            if (count == 0 || mWritten == mLimit)
             {
                 return 0;
             }
@@ -107,8 +108,7 @@ namespace SharpCompress.Compressors.LZMA
                     }
 
                     mEnding += read;
-                }
-                while (mEnding - mOffset < 16);
+                } while (mEnding - mOffset < 16);
             }
 
             // We shouldn't return more data than we are limited to.

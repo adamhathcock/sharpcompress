@@ -7,43 +7,102 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017
     {
         private const int STARTL1 = 2;
 
-        private static readonly uint[] DecL1 ={0x8000,0xa000,0xc000,0xd000,0xe000,0xea00,
-                             0xee00,0xf000,0xf200,0xf200,0xffff};
+        private static readonly uint[] DecL1 =
+        {
+            0x8000,
+            0xa000,
+            0xc000,
+            0xd000,
+            0xe000,
+            0xea00,
+            0xee00,
+            0xf000,
+            0xf200,
+            0xf200,
+            0xffff
+        };
 
         private static readonly uint[] PosL1 = { 0, 0, 0, 2, 3, 5, 7, 11, 16, 20, 24, 32, 32 };
 
         private const int STARTL2 = 3;
 
-        private static readonly uint[] DecL2 ={0xa000,0xc000,0xd000,0xe000,0xea00,0xee00,
-                             0xf000,0xf200,0xf240,0xffff};
+        private static readonly uint[] DecL2 =
+        {
+            0xa000,
+            0xc000,
+            0xd000,
+            0xe000,
+            0xea00,
+            0xee00,
+            0xf000,
+            0xf200,
+            0xf240,
+            0xffff
+        };
 
         private static readonly uint[] PosL2 = { 0, 0, 0, 0, 5, 7, 9, 13, 18, 22, 26, 34, 36 };
 
         private const int STARTHF0 = 4;
 
-        private static readonly uint[] DecHf0 ={0x8000,0xc000,0xe000,0xf200,0xf200,0xf200,
-                              0xf200,0xf200,0xffff};
+        private static readonly uint[] DecHf0 =
+        {
+            0x8000,
+            0xc000,
+            0xe000,
+            0xf200,
+            0xf200,
+            0xf200,
+            0xf200,
+            0xf200,
+            0xffff
+        };
 
         private static readonly uint[] PosHf0 = { 0, 0, 0, 0, 0, 8, 16, 24, 33, 33, 33, 33, 33 };
 
         private const int STARTHF1 = 5;
 
-        private static readonly uint[] DecHf1 ={0x2000,0xc000,0xe000,0xf000,0xf200,0xf200,
-                              0xf7e0,0xffff};
+        private static readonly uint[] DecHf1 =
+        {
+            0x2000,
+            0xc000,
+            0xe000,
+            0xf000,
+            0xf200,
+            0xf200,
+            0xf7e0,
+            0xffff
+        };
 
         private static readonly uint[] PosHf1 = { 0, 0, 0, 0, 0, 0, 4, 44, 60, 76, 80, 80, 127 };
 
         private const int STARTHF2 = 5;
 
-        private static readonly uint[] DecHf2 ={0x1000,0x2400,0x8000,0xc000,0xfa00,0xffff,
-                              0xffff,0xffff};
+        private static readonly uint[] DecHf2 =
+        {
+            0x1000,
+            0x2400,
+            0x8000,
+            0xc000,
+            0xfa00,
+            0xffff,
+            0xffff,
+            0xffff
+        };
 
         private static readonly uint[] PosHf2 = { 0, 0, 0, 0, 0, 0, 2, 7, 53, 117, 233, 0, 0 };
 
         private const int STARTHF3 = 6;
 
-        private static readonly uint[] DecHf3 ={0x800,0x2400,0xee00,0xfe80,0xffff,0xffff,
-                              0xffff};
+        private static readonly uint[] DecHf3 =
+        {
+            0x800,
+            0x2400,
+            0xee00,
+            0xfe80,
+            0xffff,
+            0xffff,
+            0xffff
+        };
 
         private static readonly uint[] PosHf3 = { 0, 0, 0, 0, 0, 0, 0, 2, 16, 218, 251, 0, 0 };
 
@@ -141,25 +200,100 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017
             UnpWriteBuf20();
         }
 
-
         //#define GetShortLen1(pos) ((pos)==1 ? Buf60+3:ShortLen1[pos])
-        private uint GetShortLen1(uint pos) { return ((pos) == 1 ? (uint)(Buf60 + 3) : ShortLen1[pos]); }
+        private uint GetShortLen1(uint pos)
+        {
+            return ((pos) == 1 ? (uint)(Buf60 + 3) : ShortLen1[pos]);
+        }
+
         //#define GetShortLen2(pos) ((pos)==3 ? Buf60+3:ShortLen2[pos])
-        private uint GetShortLen2(uint pos) { return ((pos) == 3 ? (uint)(Buf60 + 3) : ShortLen2[pos]); }
+        private uint GetShortLen2(uint pos)
+        {
+            return ((pos) == 3 ? (uint)(Buf60 + 3) : ShortLen2[pos]);
+        }
 
         internal static class Unpack15Local
         {
-            public static readonly uint[] ShortLen1 = { 1, 3, 4, 4, 5, 6, 7, 8, 8, 4, 4, 5, 6, 6, 4, 0 };
-            public static readonly uint[] ShortXor1 ={0,0xa0,0xd0,0xe0,0xf0,0xf8,0xfc,0xfe,
-                                   0xff,0xc0,0x80,0x90,0x98,0x9c,0xb0};
-            public static readonly uint[] ShortLen2 = { 2, 3, 3, 3, 4, 4, 5, 6, 6, 4, 4, 5, 6, 6, 4, 0 };
-            public static readonly uint[] ShortXor2 ={0,0x40,0x60,0xa0,0xd0,0xe0,0xf0,0xf8,
-                                   0xfc,0xc0,0x80,0x90,0x98,0x9c,0xb0};
+            public static readonly uint[] ShortLen1 =
+            {
+                1,
+                3,
+                4,
+                4,
+                5,
+                6,
+                7,
+                8,
+                8,
+                4,
+                4,
+                5,
+                6,
+                6,
+                4,
+                0
+            };
+            public static readonly uint[] ShortXor1 =
+            {
+                0,
+                0xa0,
+                0xd0,
+                0xe0,
+                0xf0,
+                0xf8,
+                0xfc,
+                0xfe,
+                0xff,
+                0xc0,
+                0x80,
+                0x90,
+                0x98,
+                0x9c,
+                0xb0
+            };
+            public static readonly uint[] ShortLen2 =
+            {
+                2,
+                3,
+                3,
+                3,
+                4,
+                4,
+                5,
+                6,
+                6,
+                4,
+                4,
+                5,
+                6,
+                6,
+                4,
+                0
+            };
+            public static readonly uint[] ShortXor2 =
+            {
+                0,
+                0x40,
+                0x60,
+                0xa0,
+                0xd0,
+                0xe0,
+                0xf0,
+                0xf8,
+                0xfc,
+                0xc0,
+                0x80,
+                0x90,
+                0x98,
+                0x9c,
+                0xb0
+            };
         }
 
         private void ShortLZ()
         {
-            uint Length, SaveLength;
+            uint Length,
+                SaveLength;
             uint LastDistance;
             uint Distance;
             int DistancePlace;
@@ -187,7 +321,10 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017
             {
                 for (Length = 0; ; Length++)
                 {
-                    if (((BitField ^ ShortXor1[Length]) & (~(0xff >> (int)GetShortLen1(Length)))) == 0)
+                    if (
+                        ((BitField ^ ShortXor1[Length]) & (~(0xff >> (int)GetShortLen1(Length))))
+                        == 0
+                    )
                     {
                         break;
                     }
@@ -199,7 +336,10 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017
             {
                 for (Length = 0; ; Length++)
                 {
-                    if (((BitField ^ ShortXor2[Length]) & (~(0xff >> (int)GetShortLen2(Length)))) == 0)
+                    if (
+                        ((BitField ^ ShortXor2[Length]) & (~(0xff >> (int)GetShortLen2(Length))))
+                        == 0
+                    )
                     {
                         break;
                     }
@@ -279,8 +419,10 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017
         {
             uint Length;
             uint Distance;
-            uint DistancePlace, NewDistancePlace;
-            uint OldAvr2, OldAvr3;
+            uint DistancePlace,
+                NewDistancePlace;
+            uint OldAvr2,
+                OldAvr3;
 
             NumHuf = 0;
             Nlzb += 16;
@@ -296,13 +438,11 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017
             {
                 Length = DecodeNum(BitField, STARTL2, DecL2, PosL2);
             }
-            else
-              if (AvrLn2 >= 64)
+            else if (AvrLn2 >= 64)
             {
                 Length = DecodeNum(BitField, STARTL1, DecL1, PosL1);
             }
-            else
-                if (BitField < 0x100)
+            else if (BitField < 0x100)
             {
                 Length = BitField;
                 Inp.faddbits(16);
@@ -325,8 +465,7 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017
             {
                 DistancePlace = DecodeNum(BitField, STARTHF2, DecHf2, PosHf2);
             }
-            else
-              if (AvrPlcB > 0x6ff)
+            else if (AvrPlcB > 0x6ff)
             {
                 DistancePlace = DecodeNum(BitField, STARTHF1, DecHf1, PosHf1);
             }
@@ -365,8 +504,7 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017
                     AvrLn3++;
                     AvrLn3 -= AvrLn3 >> 8;
                 }
-                else
-                if (AvrLn3 > 0)
+                else if (AvrLn3 > 0)
                 {
                     AvrLn3--;
                 }
@@ -401,7 +539,8 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017
 
         private void HuffDecode()
         {
-            uint CurByte, NewBytePlace;
+            uint CurByte,
+                NewBytePlace;
             uint Length;
             uint Distance;
             int BytePlace;
@@ -412,18 +551,15 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017
             {
                 BytePlace = (int)DecodeNum(BitField, STARTHF4, DecHf4, PosHf4);
             }
-            else
-              if (AvrPlc > 0x5dff)
+            else if (AvrPlc > 0x5dff)
             {
                 BytePlace = (int)DecodeNum(BitField, STARTHF3, DecHf3, PosHf3);
             }
-            else
-                if (AvrPlc > 0x35ff)
+            else if (AvrPlc > 0x35ff)
             {
                 BytePlace = (int)DecodeNum(BitField, STARTHF2, DecHf2, PosHf2);
             }
-            else
-                  if (AvrPlc > 0x0dff)
+            else if (AvrPlc > 0x0dff)
             {
                 BytePlace = (int)DecodeNum(BitField, STARTHF1, DecHf1, PosHf1);
             }
@@ -461,8 +597,7 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017
                     }
                 }
             }
-            else
-              if (NumHuf++ >= 16 && FlagsCnt == 0)
+            else if (NumHuf++ >= 16 && FlagsCnt == 0)
             {
                 StMode = 1;
             }
@@ -499,7 +634,8 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017
 
         private void GetFlagsBuf()
         {
-            uint Flags, NewFlagsPlace;
+            uint Flags,
+                NewFlagsPlace;
             uint FlagsPlace = DecodeNum(Inp.fgetbits(), STARTHF2, DecHf2, PosHf2);
 
             // Our Huffman table stores 257 items and needs all them in other parts
@@ -562,7 +698,8 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017
 
         private void CorrHuff(ushort[] CharSet, byte[] NumToPlace)
         {
-            int I, J;
+            int I,
+                J;
             for (I = 7; I >= 0; I--)
                 for (J = 0; J < 32; J++)
                 {
@@ -595,8 +732,9 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017
             }
 
             Inp.faddbits(StartPos);
-            return (((Num - (I != 0 ? DecTab[I - 1] : 0)) >> (int)(16 - StartPos)) + PosTab[StartPos]);
+            return (
+                ((Num - (I != 0 ? DecTab[I - 1] : 0)) >> (int)(16 - StartPos)) + PosTab[StartPos]
+            );
         }
-
     }
 }

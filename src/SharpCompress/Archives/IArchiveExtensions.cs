@@ -8,8 +8,11 @@ namespace SharpCompress.Archives
         /// <summary>
         /// Extract to specific directory, retaining filename
         /// </summary>
-        public static void WriteToDirectory(this IArchive archive, string destinationDirectory,
-                                            ExtractionOptions? options = null)
+        public static void WriteToDirectory(
+            this IArchive archive,
+            string destinationDirectory,
+            ExtractionOptions? options = null
+        )
         {
             foreach (IArchiveEntry entry in archive.Entries.Where(x => !x.IsDirectory))
             {

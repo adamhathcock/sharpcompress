@@ -56,25 +56,33 @@ namespace SharpCompress.Test.Zip
         {
             Read("Zip.bzip2.dd.zip", CompressionType.BZip2);
         }
+
         [Fact]
         public void Zip_BZip2_Read()
         {
             Read("Zip.bzip2.zip", CompressionType.BZip2);
         }
+
         [Fact]
         public void Zip_Deflate_Streamed2_Read()
         {
             Read("Zip.deflate.dd-.zip", CompressionType.Deflate);
         }
+
         [Fact]
         public void Zip_Deflate_Streamed_Read()
         {
             Read("Zip.deflate.dd.zip", CompressionType.Deflate);
         }
+
         [Fact]
         public void Zip_Deflate_Streamed_Skip()
         {
-            using (Stream stream = new ForwardOnlyStream(File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.dd.zip"))))
+            using (
+                Stream stream = new ForwardOnlyStream(
+                    File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.dd.zip"))
+                )
+            )
             using (IReader reader = ReaderFactory.Open(stream))
             {
                 int x = 0;
@@ -85,22 +93,22 @@ namespace SharpCompress.Test.Zip
                         x++;
                         if (x % 2 == 0)
                         {
-                            reader.WriteEntryToDirectory(SCRATCH_FILES_PATH,
-                                                         new ExtractionOptions()
-                                                         {
-                                                             ExtractFullPath = true,
-                                                             Overwrite = true
-                                                         });
+                            reader.WriteEntryToDirectory(
+                                SCRATCH_FILES_PATH,
+                                new ExtractionOptions() { ExtractFullPath = true, Overwrite = true }
+                            );
                         }
                     }
                 }
             }
         }
+
         [Fact]
         public void Zip_Deflate_Read()
         {
             Read("Zip.deflate.zip", CompressionType.Deflate);
         }
+
         [Fact]
         public void Zip_Deflate64_Read()
         {
@@ -112,16 +120,19 @@ namespace SharpCompress.Test.Zip
         {
             Read("Zip.lzma.dd.zip", CompressionType.LZMA);
         }
+
         [Fact]
         public void Zip_LZMA_Read()
         {
             Read("Zip.lzma.zip", CompressionType.LZMA);
         }
+
         [Fact]
         public void Zip_PPMd_Streamed_Read()
         {
             Read("Zip.ppmd.dd.zip", CompressionType.PPMd);
         }
+
         [Fact]
         public void Zip_PPMd_Read()
         {
@@ -143,22 +154,22 @@ namespace SharpCompress.Test.Zip
         [Fact]
         public void Zip_BZip2_PkwareEncryption_Read()
         {
-            using (Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Zip.bzip2.pkware.zip")))
-            using (var reader = ZipReader.Open(stream, new ReaderOptions()
-            {
-                Password = "test"
-            }))
+            using (
+                Stream stream = File.OpenRead(
+                    Path.Combine(TEST_ARCHIVES_PATH, "Zip.bzip2.pkware.zip")
+                )
+            )
+            using (var reader = ZipReader.Open(stream, new ReaderOptions() { Password = "test" }))
             {
                 while (reader.MoveToNextEntry())
                 {
                     if (!reader.Entry.IsDirectory)
                     {
                         Assert.Equal(CompressionType.BZip2, reader.Entry.CompressionType);
-                        reader.WriteEntryToDirectory(SCRATCH_FILES_PATH, new ExtractionOptions()
-                        {
-                            ExtractFullPath = true,
-                            Overwrite = true
-                        });
+                        reader.WriteEntryToDirectory(
+                            SCRATCH_FILES_PATH,
+                            new ExtractionOptions() { ExtractFullPath = true, Overwrite = true }
+                        );
                     }
                 }
             }
@@ -168,7 +179,11 @@ namespace SharpCompress.Test.Zip
         [Fact]
         public void Zip_Reader_Disposal_Test()
         {
-            using (TestStream stream = new TestStream(File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.dd.zip"))))
+            using (
+                TestStream stream = new TestStream(
+                    File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.dd.zip"))
+                )
+            )
             {
                 using (var reader = ReaderFactory.Open(stream))
                 {
@@ -176,12 +191,10 @@ namespace SharpCompress.Test.Zip
                     {
                         if (!reader.Entry.IsDirectory)
                         {
-                            reader.WriteEntryToDirectory(SCRATCH_FILES_PATH,
-                                                         new ExtractionOptions()
-                                                         {
-                                                             ExtractFullPath = true,
-                                                             Overwrite = true
-                                                         });
+                            reader.WriteEntryToDirectory(
+                                SCRATCH_FILES_PATH,
+                                new ExtractionOptions() { ExtractFullPath = true, Overwrite = true }
+                            );
                         }
                     }
                 }
@@ -192,19 +205,21 @@ namespace SharpCompress.Test.Zip
         [Fact]
         public void Zip_Reader_Disposal_Test2()
         {
-            using (TestStream stream = new TestStream(File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.dd.zip"))))
+            using (
+                TestStream stream = new TestStream(
+                    File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.dd.zip"))
+                )
+            )
             {
                 var reader = ReaderFactory.Open(stream);
                 while (reader.MoveToNextEntry())
                 {
                     if (!reader.Entry.IsDirectory)
                     {
-                        reader.WriteEntryToDirectory(SCRATCH_FILES_PATH,
-                                                     new ExtractionOptions()
-                                                     {
-                                                         ExtractFullPath = true,
-                                                         Overwrite = true
-                                                     });
+                        reader.WriteEntryToDirectory(
+                            SCRATCH_FILES_PATH,
+                            new ExtractionOptions() { ExtractFullPath = true, Overwrite = true }
+                        );
                     }
                 }
                 Assert.False(stream.IsDisposed);
@@ -215,54 +230,51 @@ namespace SharpCompress.Test.Zip
         public void Zip_LZMA_WinzipAES_Read()
         {
             Assert.Throws<NotSupportedException>(() =>
-                                            {
-                                                using (
-                                                    Stream stream =
-                                                        File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH,
-                                                            "Zip.lzma.WinzipAES.zip")))
-                                                using (var reader = ZipReader.Open(stream, new ReaderOptions()
-                                                {
-                                                    Password = "test"
-                                                }))
-                                                {
-                                                    while (reader.MoveToNextEntry())
-                                                    {
-                                                        if (!reader.Entry.IsDirectory)
-                                                        {
-                                                            Assert.Equal(CompressionType.Unknown, reader.Entry.CompressionType);
-                                                            reader.WriteEntryToDirectory(SCRATCH_FILES_PATH,
-                                                                new ExtractionOptions()
-                                                                {
-                                                                    ExtractFullPath = true,
-                                                                    Overwrite = true
-                                                                });
-                                                        }
-                                                    }
-                                                }
-                                                VerifyFiles();
-                                            });
+            {
+                using (
+                    Stream stream = File.OpenRead(
+                        Path.Combine(TEST_ARCHIVES_PATH, "Zip.lzma.WinzipAES.zip")
+                    )
+                )
+                using (
+                    var reader = ZipReader.Open(stream, new ReaderOptions() { Password = "test" })
+                )
+                {
+                    while (reader.MoveToNextEntry())
+                    {
+                        if (!reader.Entry.IsDirectory)
+                        {
+                            Assert.Equal(CompressionType.Unknown, reader.Entry.CompressionType);
+                            reader.WriteEntryToDirectory(
+                                SCRATCH_FILES_PATH,
+                                new ExtractionOptions() { ExtractFullPath = true, Overwrite = true }
+                            );
+                        }
+                    }
+                }
+                VerifyFiles();
+            });
         }
 
         [Fact]
         public void Zip_Deflate_WinzipAES_Read()
         {
-            using (Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.WinzipAES.zip")))
-            using (var reader = ZipReader.Open(stream, new ReaderOptions()
-            {
-                Password = "test"
-            }))
+            using (
+                Stream stream = File.OpenRead(
+                    Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.WinzipAES.zip")
+                )
+            )
+            using (var reader = ZipReader.Open(stream, new ReaderOptions() { Password = "test" }))
             {
                 while (reader.MoveToNextEntry())
                 {
                     if (!reader.Entry.IsDirectory)
                     {
                         Assert.Equal(CompressionType.Unknown, reader.Entry.CompressionType);
-                        reader.WriteEntryToDirectory(SCRATCH_FILES_PATH,
-                                                    new ExtractionOptions()
-                                                    {
-                                                        ExtractFullPath = true,
-                                                        Overwrite = true
-                                                    });
+                        reader.WriteEntryToDirectory(
+                            SCRATCH_FILES_PATH,
+                            new ExtractionOptions() { ExtractFullPath = true, Overwrite = true }
+                        );
                     }
                 }
             }
@@ -274,22 +286,17 @@ namespace SharpCompress.Test.Zip
         {
             int count = 0;
             using (Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "zipcrypto.zip")))
-            using (var reader = ZipReader.Open(stream, new ReaderOptions()
-            {
-                Password = "test"
-            }))
+            using (var reader = ZipReader.Open(stream, new ReaderOptions() { Password = "test" }))
             {
                 while (reader.MoveToNextEntry())
                 {
                     if (!reader.Entry.IsDirectory)
                     {
                         Assert.Equal(CompressionType.None, reader.Entry.CompressionType);
-                        reader.WriteEntryToDirectory(SCRATCH_FILES_PATH,
-                                                     new ExtractionOptions()
-                                                     {
-                                                         ExtractFullPath = true,
-                                                         Overwrite = true
-                                                     });
+                        reader.WriteEntryToDirectory(
+                            SCRATCH_FILES_PATH,
+                            new ExtractionOptions() { ExtractFullPath = true, Overwrite = true }
+                        );
                         count++;
                     }
                 }
@@ -310,7 +317,13 @@ namespace SharpCompress.Test.Zip
             {
                 Stream stream = new TestStream(memory, read: true, write: true, seek: false);
 
-                using (IWriter zipWriter = WriterFactory.Open(stream, ArchiveType.Zip, CompressionType.Deflate))
+                using (
+                    IWriter zipWriter = WriterFactory.Open(
+                        stream,
+                        ArchiveType.Zip,
+                        CompressionType.Deflate
+                    )
+                )
                 {
                     zipWriter.Write(expected[0].Item1, new MemoryStream(expected[0].Item2));
                     zipWriter.Write(expected[1].Item1, new MemoryStream(expected[1].Item2));
@@ -347,9 +360,22 @@ namespace SharpCompress.Test.Zip
         [Fact]
         public void Zip_None_Issue86_Streamed_Read()
         {
-            var keys = new string[] { "Empty1", "Empty2", "Dir1/", "Dir2/", "Fake1", "Fake2", "Internal.zip" };
+            var keys = new string[]
+            {
+                "Empty1",
+                "Empty2",
+                "Dir1/",
+                "Dir2/",
+                "Fake1",
+                "Fake2",
+                "Internal.zip"
+            };
 
-            using (Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Zip.none.issue86.zip")))
+            using (
+                Stream stream = File.OpenRead(
+                    Path.Combine(TEST_ARCHIVES_PATH, "Zip.none.issue86.zip")
+                )
+            )
             using (var reader = ZipReader.Open(stream))
             {
                 foreach (var key in keys)
@@ -376,7 +402,7 @@ namespace SharpCompress.Test.Zip
             using (var fileStream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "test_477.zip")))
             using (var reader = ZipReader.Open(fileStream))
             {
-                foreach( var key in keys)
+                foreach (var key in keys)
                 {
                     reader.MoveToNextEntry();
 
@@ -384,14 +410,16 @@ namespace SharpCompress.Test.Zip
                 }
             }
         }
+
         [Fact]
         public void Issue_685()
         {
             var count = 0;
-            using (var fileStream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Issue_685.zip")))
+            using (
+                var fileStream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Issue_685.zip"))
+            )
             using (var reader = ZipReader.Open(fileStream))
             {
-
                 while (reader.MoveToNextEntry())
                 {
                     count++;
@@ -433,6 +461,5 @@ namespace SharpCompress.Test.Zip
                 Assert.Equal(4, x);
             }
         }
-
     }
 }

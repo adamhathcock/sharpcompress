@@ -26,10 +26,8 @@ namespace SharpCompress.Common
         /// <returns>string Func(bytes, index, length)</returns>
         public Func<byte[], int, int, string>? CustomDecoder { get; set; }
 
-        public ArchiveEncoding()
-        : this(Encoding.Default, Encoding.Default)
-        {
-        }
+        public ArchiveEncoding() : this(Encoding.Default, Encoding.Default) { }
+
         public ArchiveEncoding(Encoding def, Encoding password)
         {
             Default = def;
@@ -70,7 +68,8 @@ namespace SharpCompress.Common
 
         public Func<byte[], int, int, string> GetDecoder()
         {
-            return CustomDecoder ?? ((bytes, index, count) => GetEncoding().GetString(bytes, index, count));
+            return CustomDecoder
+                ?? ((bytes, index, count) => GetEncoding().GetString(bytes, index, count));
         }
     }
 }

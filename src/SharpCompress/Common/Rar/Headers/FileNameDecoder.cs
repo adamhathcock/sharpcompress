@@ -54,7 +54,11 @@ namespace SharpCompress.Common.Rar.Headers
                         if ((length & 0x80) != 0)
                         {
                             int correction = GetChar(name, encPos++);
-                            for (length = (length & 0x7f) + 2; length > 0 && decPos < name.Length; length--, decPos++)
+                            for (
+                                length = (length & 0x7f) + 2;
+                                length > 0 && decPos < name.Length;
+                                length--, decPos++
+                            )
                             {
                                 low = (GetChar(name, decPos) + correction) & 0xff;
                                 buf.Append((char)((highByte << 8) + low));
@@ -62,7 +66,11 @@ namespace SharpCompress.Common.Rar.Headers
                         }
                         else
                         {
-                            for (length += 2; length > 0 && decPos < name.Length; length--, decPos++)
+                            for (
+                                length += 2;
+                                length > 0 && decPos < name.Length;
+                                length--, decPos++
+                            )
                             {
                                 buf.Append((char)(GetChar(name, decPos)));
                             }

@@ -76,7 +76,7 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017
                 //
                 //        // This memcpy expanded inline by MSVC. We could also use uint64
                 //        // assignment, which seems to provide about the same speed.
-                //        memcpy(Dest,Src,8); 
+                //        memcpy(Dest,Src,8);
                 //
                 //        Src+=8;
                 //        Dest+=8;
@@ -155,7 +155,8 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017
 
         private uint SlotToLength(BitInput Inp, uint Slot)
         {
-            uint LBits, Length = 2;
+            uint LBits,
+                Length = 2;
             if (Slot < 8)
             {
                 LBits = 0;
@@ -174,6 +175,5 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017
             }
             return Length;
         }
-
     }
 }

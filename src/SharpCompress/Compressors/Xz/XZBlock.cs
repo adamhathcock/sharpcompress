@@ -27,8 +27,7 @@ namespace SharpCompress.Compressors.Xz
         private bool _crcChecked;
         private ulong _bytesRead;
 
-        public XZBlock(Stream stream, CheckType checkType, int checkSize)
-            : base(stream)
+        public XZBlock(Stream stream, CheckType checkType, int checkSize) : base(stream)
         {
             _checkType = checkType;
             _checkSize = checkSize;
@@ -159,7 +158,9 @@ namespace SharpCompress.Compressors.Xz
 
             if (reserved != 0)
             {
-                throw new InvalidDataException("Reserved bytes used, perhaps an unknown XZ implementation");
+                throw new InvalidDataException(
+                    "Reserved bytes used, perhaps an unknown XZ implementation"
+                );
             }
 
             bool compressedSizePresent = (blockFlags & 0x40) != 0;
@@ -182,8 +183,10 @@ namespace SharpCompress.Compressors.Xz
             for (int i = 0; i < _numFilters; i++)
             {
                 var filter = BlockFilter.Read(reader);
-                if ((i + 1 == _numFilters && !filter.AllowAsLast)
-                    || (i + 1 < _numFilters && !filter.AllowAsNonLast))
+                if (
+                    (i + 1 == _numFilters && !filter.AllowAsLast)
+                    || (i + 1 < _numFilters && !filter.AllowAsNonLast)
+                )
                 {
                     throw new InvalidDataException("Block Filters in bad order");
                 }
@@ -198,11 +201,13 @@ namespace SharpCompress.Compressors.Xz
             }
             if (nonLastSizeChangers > 2)
             {
-                throw new InvalidDataException("More than two non-last block filters cannot change stream size");
+                throw new InvalidDataException(
+                    "More than two non-last block filters cannot change stream size"
+                );
             }
 
-            int blockHeaderPaddingSize = BlockHeaderSize -
-                                         (4 + (int)(reader.BaseStream.Position - baseStreamOffset));
+            int blockHeaderPaddingSize =
+                BlockHeaderSize - (4 + (int)(reader.BaseStream.Position - baseStreamOffset));
             byte[] blockHeaderPadding = reader.ReadBytes(blockHeaderPaddingSize);
             if (!blockHeaderPadding.All(b => b == 0))
             {

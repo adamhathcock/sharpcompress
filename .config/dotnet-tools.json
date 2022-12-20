@@ -2,10 +2,10 @@
   "version": 1,
   "isRoot": true,
   "tools": {
-    "dotnet-format": {
-      "version": "4.1.131201",
+    "csharpier": {
+      "version": "0.21.0",
       "commands": [
-        "dotnet-format"
+        "dotnet-csharpier"
       ]
     }
   }

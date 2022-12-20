@@ -28,8 +28,7 @@ namespace SharpCompress.Compressors.LZMA
             }
         }
 
-        public BitVector(List<bool> bits)
-            : this(bits.Count)
+        public BitVector(List<bool> bits) : this(bits.Count)
         {
             for (int i = 0; i < bits.Count; i++)
             {

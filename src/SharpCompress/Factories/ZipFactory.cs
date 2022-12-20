@@ -18,12 +18,13 @@ namespace SharpCompress.Factories
     /// <summary>
     /// Represents the foundation factory of ZIP archive.
     /// </summary>
-    public class ZipFactory : Factory,
-        IArchiveFactory,
-        IMultiArchiveFactory,
-        IReaderFactory,
-        IWriterFactory,
-        IWriteableArchiveFactory
+    public class ZipFactory
+        : Factory,
+            IArchiveFactory,
+            IMultiArchiveFactory,
+            IReaderFactory,
+            IWriterFactory,
+            IWriteableArchiveFactory
     {
         #region IFactory
 
@@ -44,9 +45,7 @@ namespace SharpCompress.Factories
         /// <inheritdoc/>
         public override bool IsArchive(Stream stream, string? password = null)
         {
-            var startPosition = stream.CanSeek
-                ? stream.Position
-                : -1;
+            var startPosition = stream.CanSeek ? stream.Position : -1;
 
             // probe for single volume zip
 
@@ -91,7 +90,7 @@ namespace SharpCompress.Factories
 
         #endregion
 
-        #region IMultiArchiveFactory        
+        #region IMultiArchiveFactory
 
         /// <inheritdoc/>
         public IArchive Open(IReadOnlyList<Stream> streams, ReaderOptions? readerOptions = null)
@@ -107,7 +106,7 @@ namespace SharpCompress.Factories
 
         #endregion
 
-        #region IReaderFactory        
+        #region IReaderFactory
 
         /// <inheritdoc/>
         public IReader OpenReader(Stream stream, ReaderOptions? options)

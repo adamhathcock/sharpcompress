@@ -31,10 +31,11 @@ namespace SharpCompress.Common
         /// </summary>
         public delegate void SymbolicLinkWriterDelegate(string sourcePath, string targetPath);
 
-        public SymbolicLinkWriterDelegate WriteSymbolicLink =
-            (sourcePath, targetPath) =>
-            {
-                Console.WriteLine($"Could not write symlink {sourcePath} -> {targetPath}, for more information please see https://github.com/dotnet/runtime/issues/24271");
-            };
+        public SymbolicLinkWriterDelegate WriteSymbolicLink = (sourcePath, targetPath) =>
+        {
+            Console.WriteLine(
+                $"Could not write symlink {sourcePath} -> {targetPath}, for more information please see https://github.com/dotnet/runtime/issues/24271"
+            );
+        };
     }
 }

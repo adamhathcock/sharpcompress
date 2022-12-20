@@ -83,7 +83,26 @@ namespace SharpCompress.Test.Xz
         public void SkipsPadding()
         {
             // Index with 3-byte padding.
-            using (Stream badStream = new MemoryStream(new byte[] { 0x00, 0x01, 0x10, 0x80, 0x01, 0x00, 0x00, 0x00, 0xB1, 0x01, 0xD9, 0xC9, 0xFF }))
+            using (
+                Stream badStream = new MemoryStream(
+                    new byte[]
+                    {
+                        0x00,
+                        0x01,
+                        0x10,
+                        0x80,
+                        0x01,
+                        0x00,
+                        0x00,
+                        0x00,
+                        0xB1,
+                        0x01,
+                        0xD9,
+                        0xC9,
+                        0xFF
+                    }
+                )
+            )
             {
                 BinaryReader br = new BinaryReader(badStream);
                 var index = new XZIndex(br, false);

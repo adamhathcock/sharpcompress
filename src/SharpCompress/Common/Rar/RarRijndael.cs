@@ -24,7 +24,6 @@ namespace SharpCompress.Common.Rar
 
         private void Initialize()
         {
-
             _rijndael = new RijndaelEngine();
             _aesInitializationVector = new byte[CRYPTO_BLOCK_SIZE];
             int rawLength = 2 * _password.Length;
@@ -52,11 +51,14 @@ namespace SharpCompress.Common.Rar
 
                 data[i * (rawPassword.Length + iblock) + rawPassword.Length + 0] = (byte)i;
                 data[i * (rawPassword.Length + iblock) + rawPassword.Length + 1] = (byte)(i >> 8);
-                data[i * (rawPassword.Length + iblock) + rawPassword.Length + 2] = (byte)(i >> CRYPTO_BLOCK_SIZE);
+                data[i * (rawPassword.Length + iblock) + rawPassword.Length + 2] = (byte)(
+                    i >> CRYPTO_BLOCK_SIZE
+                );
 
                 if (i % (noOfRounds / CRYPTO_BLOCK_SIZE) == 0)
                 {
-                    digest = SHA1.Create().ComputeHash(data, 0, (i + 1) * (rawPassword.Length + iblock));
+                    digest = SHA1.Create()
+                        .ComputeHash(data, 0, (i + 1) * (rawPassword.Length + iblock));
                     _aesInitializationVector[i / (noOfRounds / CRYPTO_BLOCK_SIZE)] = digest[19];
                 }
             }
@@ -68,16 +70,18 @@ namespace SharpCompress.Common.Rar
             {
                 for (int j = 0; j < 4; j++)
                 {
-                    aesKey[i * 4 + j] = (byte)
-                        (((digest[i * 4] * 0x1000000) & 0xff000000 |
-                          (uint)((digest[i * 4 + 1] * 0x10000) & 0xff0000) |
-                          (uint)((digest[i * 4 + 2] * 0x100) & 0xff00) |
-                          (uint)(digest[i * 4 + 3] & 0xff)) >> (j * 8));
+                    aesKey[i * 4 + j] = (byte)(
+                        (
+                            (digest[i * 4] * 0x1000000) & 0xff000000
+                            | (uint)((digest[i * 4 + 1] * 0x10000) & 0xff0000)
+                            | (uint)((digest[i * 4 + 2] * 0x100) & 0xff00)
+                            | (uint)(digest[i * 4 + 3] & 0xff)
+                        ) >> (j * 8)
+                    );
                 }
             }
 
             _rijndael.Init(false, new KeyParameter(aesKey));
-
         }
 
         public static RarRijndael InitializeFrom(string password, byte[] salt)
@@ -106,8 +110,6 @@ namespace SharpCompress.Common.Rar
             return decryptedBytes;
         }
 
-        public void Dispose()
-        {
-        }
+        public void Dispose() { }
     }
 }

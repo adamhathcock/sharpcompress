@@ -48,10 +48,10 @@ namespace SharpCompress.Common.SevenZip
         internal bool IsEmpty()
         {
             return _packSizes.Count == 0
-                   && _packCrCs.Count == 0
-                   && _folders.Count == 0
-                   && _numUnpackStreamsVector.Count == 0
-                   && _files.Count == 0;
+                && _packCrCs.Count == 0
+                && _folders.Count == 0
+                && _numUnpackStreamsVector.Count == 0
+                && _files.Count == 0;
         }
 
         private void FillStartPos()
@@ -161,7 +161,13 @@ namespace SharpCompress.Common.SevenZip
                 packSizes[j] = _packSizes[packStreamIndex + j];
             }
 
-            return DecoderStreamHelper.CreateDecoderStream(stream, folderStartPackPos, packSizes, folder, pw);
+            return DecoderStreamHelper.CreateDecoderStream(
+                stream,
+                folderStartPackPos,
+                packSizes,
+                folder,
+                pw
+            );
         }
 
         private long GetFolderPackStreamSize(int folderIndex, int streamIndex)

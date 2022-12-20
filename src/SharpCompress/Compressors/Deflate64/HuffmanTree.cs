@@ -42,17 +42,20 @@ namespace SharpCompress.Compressors.Deflate64
         private readonly int _tableMask;
 
         // huffman tree for static block
-        public static HuffmanTree StaticLiteralLengthTree { get; } = new HuffmanTree(GetStaticLiteralTreeLength());
+        public static HuffmanTree StaticLiteralLengthTree { get; } =
+            new HuffmanTree(GetStaticLiteralTreeLength());
 
-        public static HuffmanTree StaticDistanceTree { get; } = new HuffmanTree(GetStaticDistanceTreeLength());
+        public static HuffmanTree StaticDistanceTree { get; } =
+            new HuffmanTree(GetStaticDistanceTreeLength());
 
         public HuffmanTree(byte[] codeLengths)
         {
             Debug.Assert(
-                codeLengths.Length == MAX_LITERAL_TREE_ELEMENTS ||
-                codeLengths.Length == MAX_DIST_TREE_ELEMENTS ||
-                codeLengths.Length == NUMBER_OF_CODE_LENGTH_TREE_ELEMENTS,
-                "we only expect three kinds of Length here");
+                codeLengths.Length == MAX_LITERAL_TREE_ELEMENTS
+                    || codeLengths.Length == MAX_DIST_TREE_ELEMENTS
+                    || codeLengths.Length == NUMBER_OF_CODE_LENGTH_TREE_ELEMENTS,
+                "we only expect three kinds of Length here"
+            );
             _codeLengthArray = codeLengths;
 
             if (_codeLengthArray.Length == MAX_LITERAL_TREE_ELEMENTS)
@@ -124,7 +127,7 @@ namespace SharpCompress.Compressors.Deflate64
             {
                 bitLengthCount[codeLength]++;
             }
-            bitLengthCount[0] = 0;  // clear count for length 0
+            bitLengthCount[0] = 0; // clear count for length 0
 
             Span<uint> nextCode = stackalloc uint[17];
             uint tempCode = 0;
@@ -236,7 +239,10 @@ namespace SharpCompress.Compressors.Deflate64
                                 throw new InvalidDataException("Deflate64: invalid Huffman data");
                             }
 
-                            Debug.Assert(value < 0, "CreateTable: Only negative numbers are used for tree pointers!");
+                            Debug.Assert(
+                                value < 0,
+                                "CreateTable: Only negative numbers are used for tree pointers!"
+                            );
 
                             if ((start & codeBitMask) == 0)
                             {
@@ -272,14 +278,14 @@ namespace SharpCompress.Compressors.Deflate64
             // input buffer.
             uint bitBuffer = input.TryLoad16Bits();
             if (input.AvailableBits == 0)
-            {    // running out of input.
+            { // running out of input.
                 return -1;
             }
 
             // decode an element
             int symbol = _table[bitBuffer & _tableMask];
             if (symbol < 0)
-            {       //  this will be the start of the binary tree
+            { //  this will be the start of the binary tree
                 // navigate the tree
                 uint mask = (uint)1 << _tableBits;
                 do

@@ -44,8 +44,11 @@ namespace SharpCompress.Compressors.PPMd.I1
         /// </summary>
         public uint Stamp
         {
-            get => _memory[_address] | ((uint)_memory[_address + 1]) << 8 | ((uint)_memory[_address + 2]) << 16 |
-                   ((uint)_memory[_address + 3]) << 24;
+            get =>
+                _memory[_address]
+                | ((uint)_memory[_address + 1]) << 8
+                | ((uint)_memory[_address + 2]) << 16
+                | ((uint)_memory[_address + 3]) << 24;
             set
             {
                 _memory[_address] = (byte)value;
@@ -60,9 +63,14 @@ namespace SharpCompress.Compressors.PPMd.I1
         /// </summary>
         public MemoryNode Next
         {
-            get => new MemoryNode(
-                                  _memory[_address + 4] | ((uint)_memory[_address + 5]) << 8 |
-                                  ((uint)_memory[_address + 6]) << 16 | ((uint)_memory[_address + 7]) << 24, _memory);
+            get =>
+                new MemoryNode(
+                    _memory[_address + 4]
+                        | ((uint)_memory[_address + 5]) << 8
+                        | ((uint)_memory[_address + 6]) << 16
+                        | ((uint)_memory[_address + 7]) << 24,
+                    _memory
+                );
             set
             {
                 _memory[_address + 4] = (byte)value._address;
@@ -77,8 +85,11 @@ namespace SharpCompress.Compressors.PPMd.I1
         /// </summary>
         public uint UnitCount
         {
-            get => _memory[_address + 8] | ((uint)_memory[_address + 9]) << 8 |
-                   ((uint)_memory[_address + 10]) << 16 | ((uint)_memory[_address + 11]) << 24;
+            get =>
+                _memory[_address + 8]
+                | ((uint)_memory[_address + 9]) << 8
+                | ((uint)_memory[_address + 10]) << 16
+                | ((uint)_memory[_address + 11]) << 24;
             set
             {
                 _memory[_address + 8] = (byte)value;

@@ -174,7 +174,9 @@ namespace SharpCompress.Compressors.Rar.UnpackV1
                 }
             }
             input.AddBits(bits);
-            int N = dec.DecodePos[bits] + (Utility.URShift(((int)bitField - decodeLen[bits - 1]), (16 - bits)));
+            int N =
+                dec.DecodePos[bits]
+                + (Utility.URShift(((int)bitField - decodeLen[bits - 1]), (16 - bits)));
             if (N >= dec.MaxNum)
             {
                 N = 0;
@@ -182,12 +184,18 @@ namespace SharpCompress.Compressors.Rar.UnpackV1
             return (dec.DecodeNum[N]);
         }
 
-        internal static void makeDecodeTables(byte[] lenTab, int offset, Decode.Decode dec, int size)
+        internal static void makeDecodeTables(
+            byte[] lenTab,
+            int offset,
+            Decode.Decode dec,
+            int size
+        )
         {
             Span<int> lenCount = stackalloc int[16];
             Span<int> tmpPos = stackalloc int[16];
             int i;
-            long M, N;
+            long M,
+                N;
 
             new Span<int>(dec.DecodeNum).Clear(); // memset(Dec->DecodeNum,0,Size*sizeof(*Dec->DecodeNum));
 
@@ -196,7 +204,11 @@ namespace SharpCompress.Compressors.Rar.UnpackV1
                 lenCount[lenTab[offset + i] & 0xF]++;
             }
             lenCount[0] = 0;
-            for (tmpPos[0] = 0, dec.DecodePos[0] = 0, dec.DecodeLen[0] = 0, N = 0, i = 1; i < 16; i++)
+            for (
+                tmpPos[0] = 0, dec.DecodePos[0] = 0, dec.DecodeLen[0] = 0, N = 0, i = 1;
+                i < 16;
+                i++
+            )
             {
                 N = 2 * (N + lenCount[i]);
                 M = N << (15 - i);

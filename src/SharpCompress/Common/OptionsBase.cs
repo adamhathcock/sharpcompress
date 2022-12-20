@@ -1,5 +1,4 @@
-﻿
-namespace SharpCompress.Common
+﻿namespace SharpCompress.Common
 {
     public class OptionsBase
     {

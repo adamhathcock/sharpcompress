@@ -65,9 +65,7 @@ namespace SharpCompress.Compressors.PPMd
 
         public override bool CanWrite => _compress;
 
-        public override void Flush()
-        {
-        }
+        public override void Flush() { }
 
         protected override void Dispose(bool isDisposing)
         {
@@ -88,7 +86,11 @@ namespace SharpCompress.Compressors.PPMd
 
         public override long Length => throw new NotSupportedException();
 
-        public override long Position { get => _position; set => throw new NotSupportedException(); }
+        public override long Position
+        {
+            get => _position;
+            set => throw new NotSupportedException();
+        }
 
         public override int Read(byte[] buffer, int offset, int count)
         {

@@ -29,16 +29,23 @@ namespace SharpCompress.Writers
             writer.Write(entryPath, new FileInfo(source));
         }
 
-        public static void WriteAll(this IWriter writer, string directory, string searchPattern = "*", SearchOption option = SearchOption.TopDirectoryOnly)
+        public static void WriteAll(
+            this IWriter writer,
+            string directory,
+            string searchPattern = "*",
+            SearchOption option = SearchOption.TopDirectoryOnly
+        )
         {
             writer.WriteAll(directory, searchPattern, null, option);
         }
 
-        public static void WriteAll(this IWriter writer,
-                                    string directory,
-                                    string searchPattern = "*",
-                                    Func<string, bool>? fileSearchFunc = null,
-                                    SearchOption option = SearchOption.TopDirectoryOnly)
+        public static void WriteAll(
+            this IWriter writer,
+            string directory,
+            string searchPattern = "*",
+            Func<string, bool>? fileSearchFunc = null,
+            SearchOption option = SearchOption.TopDirectoryOnly
+        )
         {
             if (!Directory.Exists(directory))
             {
@@ -49,7 +56,11 @@ namespace SharpCompress.Writers
             {
                 fileSearchFunc = n => true;
             }
-            foreach (var file in Directory.EnumerateFiles(directory, searchPattern, option).Where(fileSearchFunc))
+            foreach (
+                var file in Directory
+                    .EnumerateFiles(directory, searchPattern, option)
+                    .Where(fileSearchFunc)
+            )
             {
                 writer.Write(file.Substring(directory.Length), file);
             }

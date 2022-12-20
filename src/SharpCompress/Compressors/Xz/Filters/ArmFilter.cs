@@ -47,10 +47,7 @@ namespace SharpCompress.Compressors.Xz.Filters
             }
         }
 
-        public override void ValidateFilter()
-        {
-
-        }
+        public override void ValidateFilter() { }
 
         public override int Read(byte[] buffer, int offset, int count)
         {

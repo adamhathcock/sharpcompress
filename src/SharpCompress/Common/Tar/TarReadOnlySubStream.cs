@@ -9,7 +9,8 @@ namespace SharpCompress.Common.Tar
         private bool _isDisposed;
         private long _amountRead;
 
-        public TarReadOnlySubStream(Stream stream, long bytesToRead) : base(stream, throwOnDispose: false)
+        public TarReadOnlySubStream(Stream stream, long bytesToRead)
+            : base(stream, throwOnDispose: false)
         {
             BytesLeftToRead = bytesToRead;
         }
@@ -56,7 +57,11 @@ namespace SharpCompress.Common.Tar
 
         public override long Length => throw new NotSupportedException();
 
-        public override long Position { get => throw new NotSupportedException(); set => throw new NotSupportedException(); }
+        public override long Position
+        {
+            get => throw new NotSupportedException();
+            set => throw new NotSupportedException();
+        }
 
         public override int Read(byte[] buffer, int offset, int count)
         {
@@ -86,7 +91,6 @@ namespace SharpCompress.Common.Tar
                 ++_amountRead;
             }
             return value;
-
         }
 
         public override long Seek(long offset, SeekOrigin origin)

@@ -14,10 +14,7 @@ namespace SharpCompress.Test.Zip
 {
     public class Zip64Tests : WriterTests
     {
-        public Zip64Tests()
-            : base(ArchiveType.Zip)
-        {
-        }
+        public Zip64Tests() : base(ArchiveType.Zip) { }
 
         // 4GiB + 1
         private const long FOUR_GB_LIMIT = ((long)uint.MaxValue) + 1;
@@ -66,9 +63,7 @@ namespace SharpCompress.Test.Zip
                 RunSingleTest(1, FOUR_GB_LIMIT, set_zip64: false, forward_only: false);
                 throw new InvalidOperationException("Test did not fail?");
             }
-            catch (NotSupportedException)
-            {
-            }
+            catch (NotSupportedException) { }
         }
 
         [Trait("zip64", "true")]
@@ -80,9 +75,7 @@ namespace SharpCompress.Test.Zip
                 RunSingleTest(1, FOUR_GB_LIMIT, set_zip64: true, forward_only: true);
                 throw new InvalidOperationException("Test did not fail?");
             }
-            catch (NotSupportedException)
-            {
-            }
+            catch (NotSupportedException) { }
         }
 
         [Trait("zip64", "true")]
@@ -94,12 +87,17 @@ namespace SharpCompress.Test.Zip
                 RunSingleTest(1, FOUR_GB_LIMIT, set_zip64: false, forward_only: true);
                 throw new InvalidOperationException("Test did not fail?");
             }
-            catch (NotSupportedException)
-            {
-            }
+            catch (NotSupportedException) { }
         }
 
-        public void RunSingleTest(long files, long filesize, bool set_zip64, bool forward_only, long write_chunk_size = 1024 * 1024, string filename = "zip64-test.zip")
+        public void RunSingleTest(
+            long files,
+            long filesize,
+            bool set_zip64,
+            bool forward_only,
+            long write_chunk_size = 1024 * 1024,
+            string filename = "zip64-test.zip"
+        )
         {
             filename = Path.Combine(SCRATCH2_FILES_PATH, filename);
 
@@ -110,33 +108,55 @@ namespace SharpCompress.Test.Zip
 
             if (!File.Exists(filename))
             {
-                CreateZipArchive(filename, files, filesize, write_chunk_size, set_zip64, forward_only);
+                CreateZipArchive(
+                    filename,
+                    files,
+                    filesize,
+                    write_chunk_size,
+                    set_zip64,
+                    forward_only
+                );
             }
 
             var resForward = ReadForwardOnly(filename);
             if (resForward.Item1 != files)
             {
-                throw new InvalidOperationException($"Incorrect number of items reported: {resForward.Item1}, should have been {files}");
+                throw new InvalidOperationException(
+                    $"Incorrect number of items reported: {resForward.Item1}, should have been {files}"
+                );
             }
 
             if (resForward.Item2 != files * filesize)
             {
-                throw new InvalidOperationException($"Incorrect combined size reported: {resForward.Item2}, should have been {files * filesize}");
+                throw new InvalidOperationException(
+                    $"Incorrect combined size reported: {resForward.Item2}, should have been {files * filesize}"
+                );
             }
 
             var resArchive = ReadArchive(filename);
             if (resArchive.Item1 != files)
             {
-                throw new InvalidOperationException($"Incorrect number of items reported: {resArchive.Item1}, should have been {files}");
+                throw new InvalidOperationException(
+                    $"Incorrect number of items reported: {resArchive.Item1}, should have been {files}"
+                );
             }
 
             if (resArchive.Item2 != files * filesize)
             {
-                throw new InvalidOperationException($"Incorrect number of items reported: {resArchive.Item2}, should have been {files * filesize}");
+                throw new InvalidOperationException(
+                    $"Incorrect number of items reported: {resArchive.Item2}, should have been {files * filesize}"
+                );
             }
         }
 
-        public void CreateZipArchive(string filename, long files, long filesize, long chunksize, bool set_zip64, bool forward_only)
+        public void CreateZipArchive(
+            string filename,
+            long files,
+            long filesize,
+            long chunksize,
+            bool set_zip64,
+            bool forward_only
+        )
         {
             var data = new byte[chunksize];
 
@@ -144,13 +164,15 @@ namespace SharpCompress.Test.Zip
             var opts = new ZipWriterOptions(CompressionType.Deflate) { UseZip64 = set_zip64 };
 
             // Use no compression to ensure we hit the limits (actually inflates a bit, but seems better than using method==Store)
-            var eo = new ZipWriterEntryOptions() { DeflateCompressionLevel = Compressors.Deflate.CompressionLevel.None };
+            var eo = new ZipWriterEntryOptions()
+            {
+                DeflateCompressionLevel = Compressors.Deflate.CompressionLevel.None
+            };
 
             using (var zip = File.OpenWrite(filename))
             using (var st = forward_only ? (Stream)new ForwardOnlyStream(zip) : zip)
             using (var zipWriter = (ZipWriter)WriterFactory.Open(st, ArchiveType.Zip, opts))
             {
-
                 for (var i = 0; i < files; i++)
                 {
                     using (var str = zipWriter.WriteToStream(i.ToString(), eo))
@@ -177,8 +199,7 @@ namespace SharpCompress.Test.Zip
             {
                 while (rd.MoveToNextEntry())
                 {
-                    using (rd.OpenEntryStream())
-                    { }
+                    using (rd.OpenEntryStream()) { }
 
                     count++;
                     if (prev != null)

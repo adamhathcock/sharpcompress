@@ -17,13 +17,11 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017
 {
     internal partial class FragmentedWindow
     {
-
         public FragmentedWindow()
         {
             //memset(Mem,0,sizeof(Mem));
             //memset(MemSize,0,sizeof(MemSize));
         }
-
 
         //FragmentedWindow::~FragmentedWindow()
         //{
@@ -41,7 +39,6 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017
                 }
             }
         }
-
 
         public void Init(size_t WinSize)
         {
@@ -87,12 +84,11 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017
                 BlockNum++;
             }
             if (TotalSize < WinSize) // Not found enough free blocks.
-                                     //throw std::bad_alloc();
+            //throw std::bad_alloc();
             {
                 throw new InvalidOperationException();
             }
         }
-
 
         public byte this[size_t Item]
         {
@@ -139,18 +135,24 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017
             if (Item < MemSize[0])
             {
                 //return Mem[0][Item];
-                buf = Mem[0]; offset = Item; return;
+                buf = Mem[0];
+                offset = Item;
+                return;
             }
             for (uint I = 1; I < MemSize.Length; I++)
             {
                 if (Item < MemSize[I])
                 {
                     //return Mem[I][Item-MemSize[I-1]];
-                    buf = Mem[I]; offset = Item - MemSize[I - 1]; return;
+                    buf = Mem[I];
+                    offset = Item - MemSize[I - 1];
+                    return;
                 }
             }
             //return Mem[0][0]; // Must never happen;
-            buf = Mem[0]; offset = 0; return; // Must never happen;
+            buf = Mem[0];
+            offset = 0;
+            return; // Must never happen;
         }
 
         public void CopyString(uint Length, uint Distance, ref size_t UnpPtr, size_t MaxWinMask)
@@ -165,7 +167,6 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017
             }
         }
 
-
         public void CopyData(byte[] Dest, size_t destOffset, size_t WinPos, size_t Size)
         {
             for (size_t I = 0; I < Size; I++)
@@ -173,7 +174,6 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017
                 Dest[destOffset + I] = this[WinPos + I];
             }
         }
-
 
         public size_t GetBlockSize(size_t StartPos, size_t RequiredSize)
         {
@@ -187,6 +187,5 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017
 
             return 0; // Must never be here.
         }
-
     }
 }

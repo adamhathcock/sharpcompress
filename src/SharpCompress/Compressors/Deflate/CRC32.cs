@@ -60,7 +60,8 @@ namespace SharpCompress.Compressors.Deflate
                 // Often the polynomial is shown reversed as 0x04C11DB7.
                 // For more details, see http://en.wikipedia.org/wiki/Cyclic_redundancy_check
                 UInt32 dwPolynomial = 0xEDB88320;
-                UInt32 i, j;
+                UInt32 i,
+                    j;
 
                 crc32Table = new UInt32[256];
 
@@ -118,7 +119,6 @@ namespace SharpCompress.Compressors.Deflate
             {
                 throw new ZlibException("The input stream must not be null.");
             }
-
             unchecked
             {
                 //UInt32 crc32Result;
@@ -182,8 +182,9 @@ namespace SharpCompress.Compressors.Deflate
             for (int i = 0; i < count; i++)
             {
                 int x = offset + i;
-                runningCrc32Result = ((runningCrc32Result) >> 8) ^
-                                     crc32Table[(block[x]) ^ ((runningCrc32Result) & 0x000000FF)];
+                runningCrc32Result =
+                    ((runningCrc32Result) >> 8)
+                    ^ crc32Table[(block[x]) ^ ((runningCrc32Result) & 0x000000FF)];
             }
             TotalBytesRead += count;
         }
@@ -279,8 +280,7 @@ namespace SharpCompress.Compressors.Deflate
                     crc1 = gf2_matrix_times(odd, crc1);
                 }
                 len2 >>= 1;
-            }
-            while (len2 != 0);
+            } while (len2 != 0);
 
             crc1 ^= crc2;
 

@@ -21,7 +21,10 @@ namespace SharpCompress.Compressors.Rar
         private long currentPartTotalReadBytes;
         private long currentEntryTotalReadBytes;
 
-        internal MultiVolumeReadOnlyStream(IEnumerable<RarFilePart> parts, IExtractionListener streamListener)
+        internal MultiVolumeReadOnlyStream(
+            IEnumerable<RarFilePart> parts,
+            IExtractionListener streamListener
+        )
         {
             this.streamListener = streamListener;
 
@@ -54,9 +57,11 @@ namespace SharpCompress.Compressors.Rar
 
             CurrentCrc = filePartEnumerator.Current.FileHeader.FileCrc;
 
-            streamListener.FireFilePartExtractionBegin(filePartEnumerator.Current.FilePartName,
-                                                       filePartEnumerator.Current.FileHeader.CompressedSize,
-                                                       filePartEnumerator.Current.FileHeader.UncompressedSize);
+            streamListener.FireFilePartExtractionBegin(
+                filePartEnumerator.Current.FilePartName,
+                filePartEnumerator.Current.FileHeader.CompressedSize,
+                filePartEnumerator.Current.FileHeader.UncompressedSize
+            );
         }
 
         public override int Read(byte[] buffer, int offset, int count)
@@ -82,18 +87,24 @@ namespace SharpCompress.Compressors.Rar
                 currentOffset += read;
                 currentCount -= read;
                 totalRead += read;
-                if (((maxPosition - currentPosition) == 0)
-                    && filePartEnumerator.Current.FileHeader.IsSplitAfter)
+                if (
+                    ((maxPosition - currentPosition) == 0)
+                    && filePartEnumerator.Current.FileHeader.IsSplitAfter
+                )
                 {
                     if (filePartEnumerator.Current.FileHeader.R4Salt != null)
                     {
-                        throw new InvalidFormatException("Sharpcompress currently does not support multi-volume decryption.");
+                        throw new InvalidFormatException(
+                            "Sharpcompress currently does not support multi-volume decryption."
+                        );
                     }
                     string fileName = filePartEnumerator.Current.FileHeader.FileName;
                     if (!filePartEnumerator.MoveNext())
                     {
                         throw new InvalidFormatException(
-                                                         "Multi-part rar file is incomplete.  Entry expects a new volume: " + fileName);
+                            "Multi-part rar file is incomplete.  Entry expects a new volume: "
+                                + fileName
+                        );
                     }
                     InitializeNextFilePart();
                 }
@@ -104,7 +115,10 @@ namespace SharpCompress.Compressors.Rar
             }
             currentPartTotalReadBytes += totalRead;
             currentEntryTotalReadBytes += totalRead;
-            streamListener.FireCompressedBytesRead(currentPartTotalReadBytes, currentEntryTotalReadBytes);
+            streamListener.FireCompressedBytesRead(
+                currentPartTotalReadBytes,
+                currentEntryTotalReadBytes
+            );
             return totalRead;
         }
 
@@ -123,7 +137,11 @@ namespace SharpCompress.Compressors.Rar
 
         public override long Length => throw new NotSupportedException();
 
-        public override long Position { get => throw new NotSupportedException(); set => throw new NotSupportedException(); }
+        public override long Position
+        {
+            get => throw new NotSupportedException();
+            set => throw new NotSupportedException();
+        }
 
         public override long Seek(long offset, SeekOrigin origin)
         {

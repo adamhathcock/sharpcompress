@@ -13,9 +13,14 @@ namespace SharpCompress.Archives.GZip
         private readonly bool closeStream;
         private readonly Stream stream;
 
-        internal GZipWritableArchiveEntry(GZipArchive archive, Stream stream,
-                                          string path, long size, DateTime? lastModified, bool closeStream)
-            : base(archive, null)
+        internal GZipWritableArchiveEntry(
+            GZipArchive archive,
+            Stream stream,
+            string path,
+            long size,
+            DateTime? lastModified,
+            bool closeStream
+        ) : base(archive, null)
         {
             this.stream = stream;
             Key = path;

@@ -32,7 +32,7 @@ namespace SharpCompress.Factories
         /// returns the extensions typically used by this archive type.
         /// </summary>
         /// <returns></returns>
-        IEnumerable<string> GetSupportedExtensions();        
+        IEnumerable<string> GetSupportedExtensions();
 
         /// <summary>
         /// Returns true if the stream represents an archive of the format defined by this type.
@@ -52,4 +52,3 @@ namespace SharpCompress.Factories
         FileInfo? GetFilePart(int index, FileInfo part1);
     }
 }
-

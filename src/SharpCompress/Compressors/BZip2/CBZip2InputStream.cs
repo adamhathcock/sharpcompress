@@ -116,9 +116,18 @@ namespace SharpCompress.Compressors.BZip2
         */
         private readonly int[] unzftab = new int[256];
 
-        private readonly int[][] limit = InitIntArray(BZip2Constants.N_GROUPS, BZip2Constants.MAX_ALPHA_SIZE);
-        private readonly int[][] basev = InitIntArray(BZip2Constants.N_GROUPS, BZip2Constants.MAX_ALPHA_SIZE);
-        private readonly int[][] perm = InitIntArray(BZip2Constants.N_GROUPS, BZip2Constants.MAX_ALPHA_SIZE);
+        private readonly int[][] limit = InitIntArray(
+            BZip2Constants.N_GROUPS,
+            BZip2Constants.MAX_ALPHA_SIZE
+        );
+        private readonly int[][] basev = InitIntArray(
+            BZip2Constants.N_GROUPS,
+            BZip2Constants.MAX_ALPHA_SIZE
+        );
+        private readonly int[][] perm = InitIntArray(
+            BZip2Constants.N_GROUPS,
+            BZip2Constants.MAX_ALPHA_SIZE
+        );
         private readonly int[] minLens = new int[BZip2Constants.N_GROUPS];
 
         private Stream bsStream;
@@ -137,12 +146,18 @@ namespace SharpCompress.Compressors.BZip2
 
         private int currentState = START_BLOCK_STATE;
 
-        private int storedBlockCRC, storedCombinedCRC;
-        private int computedBlockCRC, computedCombinedCRC;
+        private int storedBlockCRC,
+            storedCombinedCRC;
+        private int computedBlockCRC,
+            computedCombinedCRC;
         private readonly bool decompressConcatenated;
 
-        private int i2, count, chPrev, ch2;
-        private int i, tPos;
+        private int i2,
+            count,
+            chPrev,
+            ch2;
+        private int i,
+            tPos;
         private int rNToGo;
         private int rTPos;
         private int j2;
@@ -256,8 +271,12 @@ namespace SharpCompress.Compressors.BZip2
 
         private void InitBlock()
         {
-            char magic1, magic2, magic3, magic4;
-            char magic5, magic6;
+            char magic1,
+                magic2,
+                magic3,
+                magic4;
+            char magic5,
+                magic6;
 
             while (true)
             {
@@ -267,8 +286,14 @@ namespace SharpCompress.Compressors.BZip2
                 magic4 = BsGetUChar();
                 magic5 = BsGetUChar();
                 magic6 = BsGetUChar();
-                if (magic1 != 0x17 || magic2 != 0x72 || magic3 != 0x45
-                    || magic4 != 0x38 || magic5 != 0x50 || magic6 != 0x90)
+                if (
+                    magic1 != 0x17
+                    || magic2 != 0x72
+                    || magic3 != 0x45
+                    || magic4 != 0x38
+                    || magic5 != 0x50
+                    || magic6 != 0x90
+                )
                 {
                     break;
                 }
@@ -279,8 +304,14 @@ namespace SharpCompress.Compressors.BZip2
                 }
             }
 
-            if (magic1 != 0x31 || magic2 != 0x41 || magic3 != 0x59
-                || magic4 != 0x26 || magic5 != 0x53 || magic6 != 0x59)
+            if (
+                magic1 != 0x31
+                || magic2 != 0x41
+                || magic3 != 0x59
+                || magic4 != 0x26
+                || magic5 != 0x53
+                || magic6 != 0x59
+            )
             {
                 BadBlockHeader();
                 streamEnd = true;
@@ -314,8 +345,8 @@ namespace SharpCompress.Compressors.BZip2
                 CrcError();
             }
 
-            computedCombinedCRC = (computedCombinedCRC << 1)
-                                  | (int)(((uint)computedCombinedCRC) >> 31);
+            computedCombinedCRC =
+                (computedCombinedCRC << 1) | (int)(((uint)computedCombinedCRC) >> 31);
             computedCombinedCRC ^= computedBlockCRC;
         }
 
@@ -421,11 +452,20 @@ namespace SharpCompress.Compressors.BZip2
             return BsGetint();
         }
 
-        private void HbCreateDecodeTables(int[] limit, int[] basev,
-                                          int[] perm, char[] length,
-                                          int minLen, int maxLen, int alphaSize)
+        private void HbCreateDecodeTables(
+            int[] limit,
+            int[] basev,
+            int[] perm,
+            char[] length,
+            int minLen,
+            int maxLen,
+            int alphaSize
+        )
         {
-            int pp, i, j, vec;
+            int pp,
+                i,
+                j,
+                vec;
 
             pp = 0;
             for (i = minLen; i <= maxLen; i++)
@@ -475,8 +515,14 @@ namespace SharpCompress.Compressors.BZip2
         private void RecvDecodingTables()
         {
             char[][] len = InitCharArray(BZip2Constants.N_GROUPS, BZip2Constants.MAX_ALPHA_SIZE);
-            int i, j, t, nGroups, nSelectors, alphaSize;
-            int minLen, maxLen;
+            int i,
+                j,
+                t,
+                nGroups,
+                nSelectors,
+                alphaSize;
+            int minLen,
+                maxLen;
             bool[] inUse16 = new bool[16];
 
             /* Receive the mapping table */
@@ -530,7 +576,8 @@ namespace SharpCompress.Compressors.BZip2
             /* Undo the MTF values for the selectors. */
             {
                 char[] pos = new char[BZip2Constants.N_GROUPS];
-                char tmp, v;
+                char tmp,
+                    v;
                 for (v = '\0'; v < nGroups; v++)
                 {
                     pos[v] = v;
@@ -587,8 +634,15 @@ namespace SharpCompress.Compressors.BZip2
                         minLen = len[t][i];
                     }
                 }
-                HbCreateDecodeTables(limit[t], basev[t], perm[t], len[t], minLen,
-                                     maxLen, alphaSize);
+                HbCreateDecodeTables(
+                    limit[t],
+                    basev[t],
+                    perm[t],
+                    len[t],
+                    minLen,
+                    maxLen,
+                    alphaSize
+                );
                 minLens[t] = minLen;
             }
         }
@@ -596,8 +650,13 @@ namespace SharpCompress.Compressors.BZip2
         private void GetAndMoveToFrontDecode()
         {
             char[] yy = new char[256];
-            int i, j, nextSym, limitLast;
-            int EOB, groupNo, groupPos;
+            int i,
+                j,
+                nextSym,
+                limitLast;
+            int EOB,
+                groupNo,
+                groupPos;
 
             limitLast = BZip2Constants.baseBlockSize * blockSize100k;
             origPtr = BsGetIntVS(24);
@@ -626,7 +685,10 @@ namespace SharpCompress.Compressors.BZip2
             last = -1;
 
             {
-                int zt, zn, zvec, zj;
+                int zt,
+                    zn,
+                    zvec,
+                    zj;
                 if (groupPos == 0)
                 {
                     groupNo++;
@@ -694,7 +756,10 @@ namespace SharpCompress.Compressors.BZip2
                         }
                         N = N * 2;
                         {
-                            int zt, zn, zvec, zj;
+                            int zt,
+                                zn,
+                                zvec,
+                                zj;
                             if (groupPos == 0)
                             {
                                 groupNo++;
@@ -737,8 +802,7 @@ namespace SharpCompress.Compressors.BZip2
                             }
                             nextSym = perm[zt][zvec - basev[zt][zn]];
                         }
-                    }
-                    while (nextSym == BZip2Constants.RUNA || nextSym == BZip2Constants.RUNB);
+                    } while (nextSym == BZip2Constants.RUNA || nextSym == BZip2Constants.RUNB);
 
                     s++;
                     ch = seqToUnseq[yy[0]];
@@ -791,7 +855,10 @@ namespace SharpCompress.Compressors.BZip2
 
                     yy[0] = tmp;
                     {
-                        int zt, zn, zvec, zj;
+                        int zt,
+                            zn,
+                            zvec,
+                            zj;
                         if (groupPos == 0)
                         {
                             groupNo++;
@@ -1028,8 +1095,7 @@ namespace SharpCompress.Compressors.BZip2
 
         private void SetDecompressStructureSizes(int newSize100k)
         {
-            if (!(0 <= newSize100k && newSize100k <= 9 && 0 <= blockSize100k
-                  && blockSize100k <= 9))
+            if (!(0 <= newSize100k && newSize100k <= 9 && 0 <= blockSize100k && blockSize100k <= 9))
             {
                 // throw new IOException("Invalid block size");
             }
@@ -1046,9 +1112,7 @@ namespace SharpCompress.Compressors.BZip2
             tt = new int[n];
         }
 
-        public override void Flush()
-        {
-        }
+        public override void Flush() { }
 
         public override int Read(byte[] buffer, int offset, int count)
         {
@@ -1071,17 +1135,11 @@ namespace SharpCompress.Compressors.BZip2
             return 0;
         }
 
-        public override void SetLength(long value)
-        {
-        }
+        public override void SetLength(long value) { }
 
-        public override void Write(byte[] buffer, int offset, int count)
-        {
-        }
+        public override void Write(byte[] buffer, int offset, int count) { }
 
-        public override void WriteByte(byte value)
-        {
-        }
+        public override void WriteByte(byte value) { }
 
         public override bool CanRead => true;
 
@@ -1091,6 +1149,10 @@ namespace SharpCompress.Compressors.BZip2
 
         public override long Length => 0;
 
-        public override long Position { get { return 0; } set { } }
+        public override long Position
+        {
+            get { return 0; }
+            set { }
+        }
     }
 }

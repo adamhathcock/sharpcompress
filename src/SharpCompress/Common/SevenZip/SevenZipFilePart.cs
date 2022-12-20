@@ -11,8 +11,13 @@ namespace SharpCompress.Common.SevenZip
         private readonly Stream _stream;
         private readonly ArchiveDatabase _database;
 
-        internal SevenZipFilePart(Stream stream, ArchiveDatabase database, int index, CFileItem fileEntry, ArchiveEncoding archiveEncoding)
-           : base(archiveEncoding)
+        internal SevenZipFilePart(
+            Stream stream,
+            ArchiveDatabase database,
+            int index,
+            CFileItem fileEntry,
+            ArchiveEncoding archiveEncoding
+        ) : base(archiveEncoding)
         {
             _stream = stream;
             _database = database;
@@ -40,9 +45,15 @@ namespace SharpCompress.Common.SevenZip
             {
                 return null!;
             }
-            var folderStream = _database.GetFolderStream(_stream, Folder!, _database.PasswordProvider);
+            var folderStream = _database.GetFolderStream(
+                _stream,
+                Folder!,
+                _database.PasswordProvider
+            );
 
-            int firstFileIndex = _database._folderStartFileIndex[_database._folders.IndexOf(Folder!)];
+            int firstFileIndex = _database._folderStartFileIndex[
+                _database._folders.IndexOf(Folder!)
+            ];
             int skipCount = Index - firstFileIndex;
             long skipSize = 0;
             for (int i = 0; i < skipCount; i++)
@@ -86,22 +97,23 @@ namespace SharpCompress.Common.SevenZip
             {
                 case K_LZMA:
                 case K_LZMA2:
-                    {
-                        return CompressionType.LZMA;
-                    }
+                {
+                    return CompressionType.LZMA;
+                }
                 case K_PPMD:
-                    {
-                        return CompressionType.PPMd;
-                    }
+                {
+                    return CompressionType.PPMd;
+                }
                 case K_B_ZIP2:
-                    {
-                        return CompressionType.BZip2;
-                    }
+                {
+                    return CompressionType.BZip2;
+                }
                 default:
                     throw new NotImplementedException();
             }
         }
 
-        internal bool IsEncrypted => Folder!._coders.FindIndex(c => c._methodId._id == CMethodId.K_AES_ID) != -1;
+        internal bool IsEncrypted =>
+            Folder!._coders.FindIndex(c => c._methodId._id == CMethodId.K_AES_ID) != -1;
     }
 }

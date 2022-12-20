@@ -8,8 +8,11 @@ namespace SharpCompress.Compressors.Rar
         private readonly MultiVolumeReadOnlyStream readStream;
         private uint currentCrc;
 
-        public RarCrcStream(IRarUnpack unpack, FileHeader fileHeader, MultiVolumeReadOnlyStream readStream)
-            : base(unpack, fileHeader, readStream)
+        public RarCrcStream(
+            IRarUnpack unpack,
+            FileHeader fileHeader,
+            MultiVolumeReadOnlyStream readStream
+        ) : base(unpack, fileHeader, readStream)
         {
             this.readStream = readStream;
             ResetCrc();

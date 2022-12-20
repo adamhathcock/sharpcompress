@@ -30,7 +30,10 @@ namespace SharpCompress.Compressors.Xz
 
         public static XZIndex FromStream(Stream stream, bool indexMarkerAlreadyVerified)
         {
-            var index = new XZIndex(new BinaryReader(NonDisposingStream.Create(stream), Encoding.UTF8), indexMarkerAlreadyVerified);
+            var index = new XZIndex(
+                new BinaryReader(NonDisposingStream.Create(stream), Encoding.UTF8),
+                indexMarkerAlreadyVerified
+            );
             index.Process();
             return index;
         }

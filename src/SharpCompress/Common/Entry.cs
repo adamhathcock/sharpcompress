@@ -73,6 +73,7 @@ namespace SharpCompress.Common
 
         public int VolumeIndexFirst => this.Parts?.FirstOrDefault()?.Index ?? 0;
         public int VolumeIndexLast => this.Parts?.LastOrDefault()?.Index ?? 0;
+
         /// <inheritdoc/>
         public override string ToString() => Key;
 
@@ -80,9 +81,7 @@ namespace SharpCompress.Common
 
         public bool IsSolid { get; set; }
 
-        internal virtual void Close()
-        {
-        }
+        internal virtual void Close() { }
 
         /// <summary>
         /// Entry file attribute.

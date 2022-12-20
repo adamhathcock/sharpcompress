@@ -9,8 +9,7 @@ namespace SharpCompress.Common.Zip.Headers
 {
     internal abstract class ZipFileEntry : ZipHeader
     {
-        protected ZipFileEntry(ZipHeaderType type, ArchiveEncoding archiveEncoding)
-            : base(type)
+        protected ZipFileEntry(ZipHeaderType type, ArchiveEncoding archiveEncoding) : base(type)
         {
             Extra = new List<ExtraData>();
             ArchiveEncoding = archiveEncoding;
@@ -26,9 +25,7 @@ namespace SharpCompress.Common.Zip.Headers
                 }
 
                 //.NET Framework 4.5 : System.IO.Compression::CreateFromDirectory() probably writes backslashes to headers
-                return CompressedSize == 0
-                       && UncompressedSize == 0
-                       && Name.EndsWith('\\');
+                return CompressedSize == 0 && UncompressedSize == 0 && Name.EndsWith('\\');
             }
         }
 
@@ -62,7 +59,8 @@ namespace SharpCompress.Common.Zip.Headers
             var buffer = new byte[12];
             archiveStream.ReadFully(buffer);
 
-            PkwareTraditionalEncryptionData encryptionData = PkwareTraditionalEncryptionData.ForRead(Password!, this, buffer);
+            PkwareTraditionalEncryptionData encryptionData =
+                PkwareTraditionalEncryptionData.ForRead(Password!, this, buffer);
 
             return encryptionData;
         }
@@ -77,9 +75,10 @@ namespace SharpCompress.Common.Zip.Headers
 
         protected void LoadExtra(byte[] extra)
         {
-            for (int i = 0; i < extra.Length - 4;)
+            for (int i = 0; i < extra.Length - 4; )
             {
-                ExtraDataType type = (ExtraDataType)BinaryPrimitives.ReadUInt16LittleEndian(extra.AsSpan(i));
+                ExtraDataType type = (ExtraDataType)
+                    BinaryPrimitives.ReadUInt16LittleEndian(extra.AsSpan(i));
                 if (!Enum.IsDefined(typeof(ExtraDataType), type))
                 {
                     type = ExtraDataType.NotImplementedExtraData;

@@ -34,21 +34,34 @@ namespace SharpCompress.Compressors.PPMd.I1
         /// <summary>
         /// Gets or sets the symbol.
         /// </summary>
-        public byte Symbol { get => _memory[_address]; set => _memory[_address] = value; }
+        public byte Symbol
+        {
+            get => _memory[_address];
+            set => _memory[_address] = value;
+        }
 
         /// <summary>
         /// Gets or sets the frequency.
         /// </summary>
-        public byte Frequency { get => _memory[_address + 1]; set => _memory[_address + 1] = value; }
+        public byte Frequency
+        {
+            get => _memory[_address + 1];
+            set => _memory[_address + 1] = value;
+        }
 
         /// <summary>
         /// Gets or sets the successor.
         /// </summary>
         public Model.PpmContext Successor
         {
-            get => new Model.PpmContext(
-                                        _memory[_address + 2] | ((uint)_memory[_address + 3]) << 8 |
-                                        ((uint)_memory[_address + 4]) << 16 | ((uint)_memory[_address + 5]) << 24, _memory);
+            get =>
+                new Model.PpmContext(
+                    _memory[_address + 2]
+                        | ((uint)_memory[_address + 3]) << 8
+                        | ((uint)_memory[_address + 4]) << 16
+                        | ((uint)_memory[_address + 5]) << 24,
+                    _memory
+                );
             set
             {
                 _memory[_address + 2] = (byte)value._address;

@@ -15,7 +15,10 @@ namespace SharpCompress.Test.Xz
             {
                 BinaryReader br = new BinaryReader(badMagicNumberStream);
                 var header = new XZHeader(br);
-                var ex = Assert.Throws<InvalidDataException>(() => { header.Process(); });
+                var ex = Assert.Throws<InvalidDataException>(() =>
+                {
+                    header.Process();
+                });
                 Assert.Equal("Invalid XZ Stream", ex.Message);
             }
         }
@@ -29,7 +32,10 @@ namespace SharpCompress.Test.Xz
             {
                 BinaryReader br = new BinaryReader(badCrcStream);
                 var header = new XZHeader(br);
-                var ex = Assert.Throws<InvalidDataException>(() => { header.Process(); });
+                var ex = Assert.Throws<InvalidDataException>(() =>
+                {
+                    header.Process();
+                });
                 Assert.Equal("Stream header corrupt", ex.Message);
             }
         }
@@ -46,7 +52,10 @@ namespace SharpCompress.Test.Xz
             {
                 BinaryReader br = new BinaryReader(badFlagStream);
                 var header = new XZHeader(br);
-                var ex = Assert.Throws<InvalidDataException>(() => { header.Process(); });
+                var ex = Assert.Throws<InvalidDataException>(() =>
+                {
+                    header.Process();
+                });
                 Assert.Equal("Unknown XZ Stream Version", ex.Message);
             }
         }

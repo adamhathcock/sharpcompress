@@ -9,7 +9,8 @@ namespace SharpCompress.Test.Xz
     {
         private const string SimpleString = @"The quick brown fox jumps over the lazy dog.";
         private readonly byte[] SimpleBytes = Encoding.ASCII.GetBytes(SimpleString);
-        private const string SimpleString2 = @"Life moves pretty fast. If you don't stop and look around once in a while, you could miss it.";
+        private const string SimpleString2 =
+            @"Life moves pretty fast. If you don't stop and look around once in a while, you could miss it.";
         private readonly byte[] SimpleBytes2 = Encoding.ASCII.GetBytes(SimpleString2);
 
         [Fact]
@@ -27,6 +28,5 @@ namespace SharpCompress.Test.Xz
 
             Assert.Equal((UInt32)0x6ee3ad88, actual);
         }
-
     }
 }

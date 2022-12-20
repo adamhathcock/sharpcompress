@@ -64,5 +64,4 @@ namespace SharpCompress.Compressors.Xz
             return createTable;
         }
     }
-
 }

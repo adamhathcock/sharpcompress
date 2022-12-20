@@ -79,19 +79,24 @@ namespace SharpCompress.Compressors.BZip2
             }
         }
 
-        private static void HbMakeCodeLengths(char[] len, int[] freq,
-                                                int alphaSize, int maxLen)
+        private static void HbMakeCodeLengths(char[] len, int[] freq, int alphaSize, int maxLen)
         {
             /*
             Nodes and heap entries run from 1.  Entry 0
             for both the heap and nodes is a sentinel.
             */
-            int nNodes, nHeap, n1, n2, i, j, k;
+            int nNodes,
+                nHeap,
+                n1,
+                n2,
+                i,
+                j,
+                k;
             bool tooLong;
 
             Span<int> heap = stackalloc int[BZip2Constants.MAX_ALPHA_SIZE + 2]; // 1040 bytes
-            Span<int> weight = stackalloc int[BZip2Constants.MAX_ALPHA_SIZE * 2];  // 1040 bytes
-            Span<int> parent = stackalloc int[BZip2Constants.MAX_ALPHA_SIZE * 2];  // 1040 bytes
+            Span<int> weight = stackalloc int[BZip2Constants.MAX_ALPHA_SIZE * 2]; // 1040 bytes
+            Span<int> parent = stackalloc int[BZip2Constants.MAX_ALPHA_SIZE * 2]; // 1040 bytes
 
             for (i = 0; i < alphaSize; i++)
             {
@@ -113,7 +118,8 @@ namespace SharpCompress.Compressors.BZip2
                     nHeap++;
                     heap[nHeap] = i;
                     {
-                        int zz, tmp;
+                        int zz,
+                            tmp;
                         zz = nHeap;
                         tmp = heap[zz];
                         while (weight[tmp] < weight[heap[zz >> 1]])
@@ -135,7 +141,9 @@ namespace SharpCompress.Compressors.BZip2
                     heap[1] = heap[nHeap];
                     nHeap--;
                     {
-                        int zz = 0, yy = 0, tmp = 0;
+                        int zz = 0,
+                            yy = 0,
+                            tmp = 0;
                         zz = 1;
                         tmp = heap[zz];
                         while (true)
@@ -145,8 +153,7 @@ namespace SharpCompress.Compressors.BZip2
                             {
                                 break;
                             }
-                            if (yy < nHeap
-                                && weight[heap[yy + 1]] < weight[heap[yy]])
+                            if (yy < nHeap && weight[heap[yy + 1]] < weight[heap[yy]])
                             {
                                 yy++;
                             }
@@ -163,7 +170,9 @@ namespace SharpCompress.Compressors.BZip2
                     heap[1] = heap[nHeap];
                     nHeap--;
                     {
-                        int zz = 0, yy = 0, tmp = 0;
+                        int zz = 0,
+                            yy = 0,
+                            tmp = 0;
                         zz = 1;
                         tmp = heap[zz];
                         while (true)
@@ -173,8 +182,7 @@ namespace SharpCompress.Compressors.BZip2
                             {
                                 break;
                             }
-                            if (yy < nHeap
-                                && weight[heap[yy + 1]] < weight[heap[yy]])
+                            if (yy < nHeap && weight[heap[yy + 1]] < weight[heap[yy]])
                             {
                                 yy++;
                             }
@@ -190,18 +198,24 @@ namespace SharpCompress.Compressors.BZip2
                     nNodes++;
                     parent[n1] = parent[n2] = nNodes;
 
-                    weight[nNodes] = (int)((uint)((weight[n1] & 0xffffff00)
-                                                  + (weight[n2] & 0xffffff00))
-                                           | (uint)(1 + (((weight[n1] & 0x000000ff) >
-                                                          (weight[n2] & 0x000000ff))
-                                                             ? (weight[n1] & 0x000000ff)
-                                                             : (weight[n2] & 0x000000ff))));
+                    weight[nNodes] = (int)(
+                        (uint)((weight[n1] & 0xffffff00) + (weight[n2] & 0xffffff00))
+                        | (uint)(
+                            1
+                            + (
+                                ((weight[n1] & 0x000000ff) > (weight[n2] & 0x000000ff))
+                                    ? (weight[n1] & 0x000000ff)
+                                    : (weight[n2] & 0x000000ff)
+                            )
+                        )
+                    );
 
                     parent[nNodes] = -1;
                     nHeap++;
                     heap[nHeap] = nNodes;
                     {
-                        int zz = 0, tmp = 0;
+                        int zz = 0,
+                            tmp = 0;
                         zz = nHeap;
                         tmp = heap[zz];
                         while (weight[tmp] < weight[heap[zz >> 1]])
@@ -305,10 +319,7 @@ namespace SharpCompress.Compressors.BZip2
         private int currentChar = -1;
         private int runLength;
 
-        public CBZip2OutputStream(Stream inStream)
-            : this(inStream, 9)
-        {
-        }
+        public CBZip2OutputStream(Stream inStream) : this(inStream, 9) { }
 
         public CBZip2OutputStream(Stream inStream, int inBlockSize)
         {
@@ -467,7 +478,8 @@ namespace SharpCompress.Compressors.BZip2
             bsStream.Flush();
         }
 
-        private int blockCRC, combinedCRC;
+        private int blockCRC,
+            combinedCRC;
 
         private void Initialize()
         {
@@ -570,10 +582,11 @@ namespace SharpCompress.Compressors.BZip2
             BsFinishedWithStream();
         }
 
-        private void HbAssignCodes(int[] code, char[] length, int minLen,
-                                   int maxLen, int alphaSize)
+        private void HbAssignCodes(int[] code, char[] length, int minLen, int maxLen, int alphaSize)
         {
-            int n, vec, i;
+            int n,
+                vec,
+                i;
 
             vec = 0;
             for (n = minLen; n <= maxLen; n++)
@@ -645,10 +658,26 @@ namespace SharpCompress.Compressors.BZip2
 
         private void SendMTFValues()
         {
-            char[][] len = CBZip2InputStream.InitCharArray(BZip2Constants.N_GROUPS, BZip2Constants.MAX_ALPHA_SIZE);
+            char[][] len = CBZip2InputStream.InitCharArray(
+                BZip2Constants.N_GROUPS,
+                BZip2Constants.MAX_ALPHA_SIZE
+            );
 
-            int v, t, i, j, gs, ge, totc, bt, bc, iter;
-            int nSelectors = 0, alphaSize, minLen, maxLen, selCtr;
+            int v,
+                t,
+                i,
+                j,
+                gs,
+                ge,
+                totc,
+                bt,
+                bc,
+                iter;
+            int nSelectors = 0,
+                alphaSize,
+                minLen,
+                maxLen,
+                selCtr;
             int nGroups; //, nBytes;
 
             alphaSize = nInUse + 2;
@@ -689,7 +718,10 @@ namespace SharpCompress.Compressors.BZip2
 
             /* Generate an initial set of coding tables */
             {
-                int nPart, remF, tFreq, aFreq;
+                int nPart,
+                    remF,
+                    tFreq,
+                    aFreq;
 
                 nPart = nGroups;
                 remF = nMTF;
@@ -705,8 +737,7 @@ namespace SharpCompress.Compressors.BZip2
                         aFreq += mtfFreq[ge];
                     }
 
-                    if (ge > gs && nPart != nGroups && nPart != 1
-                        && ((nGroups - nPart) % 2 == 1))
+                    if (ge > gs && nPart != nGroups && nPart != 1 && ((nGroups - nPart) % 2 == 1))
                     {
                         aFreq -= mtfFreq[ge];
                         ge--;
@@ -730,7 +761,10 @@ namespace SharpCompress.Compressors.BZip2
                 }
             }
 
-            int[][] rfreq = CBZip2InputStream.InitIntArray(BZip2Constants.N_GROUPS, BZip2Constants.MAX_ALPHA_SIZE);
+            int[][] rfreq = CBZip2InputStream.InitIntArray(
+                BZip2Constants.N_GROUPS,
+                BZip2Constants.MAX_ALPHA_SIZE
+            );
             int[] fave = new int[BZip2Constants.N_GROUPS];
             short[] cost = new short[BZip2Constants.N_GROUPS];
             /*
@@ -778,7 +812,12 @@ namespace SharpCompress.Compressors.BZip2
 
                     if (nGroups == 6)
                     {
-                        short cost0, cost1, cost2, cost3, cost4, cost5;
+                        short cost0,
+                            cost1,
+                            cost2,
+                            cost3,
+                            cost4,
+                            cost5;
                         cost0 = cost1 = cost2 = cost3 = cost4 = cost5 = 0;
                         for (i = gs; i <= ge; i++)
                         {
@@ -865,7 +904,9 @@ namespace SharpCompress.Compressors.BZip2
             /* Compute MTF values for the selectors. */
             {
                 char[] pos = new char[BZip2Constants.N_GROUPS];
-                char ll_i, tmp2, tmp;
+                char ll_i,
+                    tmp2,
+                    tmp;
                 for (i = 0; i < nGroups; i++)
                 {
                     pos[i] = (char)i;
@@ -887,7 +928,10 @@ namespace SharpCompress.Compressors.BZip2
                 }
             }
 
-            int[][] code = CBZip2InputStream.InitIntArray(BZip2Constants.N_GROUPS, BZip2Constants.MAX_ALPHA_SIZE);
+            int[][] code = CBZip2InputStream.InitIntArray(
+                BZip2Constants.N_GROUPS,
+                BZip2Constants.MAX_ALPHA_SIZE
+            );
 
             /* Assign actual codes for the tables. */
             for (t = 0; t < nGroups; t++)
@@ -1016,8 +1060,7 @@ namespace SharpCompress.Compressors.BZip2
                 }
                 for (i = gs; i <= ge; i++)
                 {
-                    BsW(len[selector[selCtr]][szptr[i]],
-                        code[selector[selCtr]][szptr[i]]);
+                    BsW(len[selector[selCtr]][szptr[i]], code[selector[selCtr]][szptr[i]]);
                 }
 
                 gs = ge + 1;
@@ -1040,7 +1083,11 @@ namespace SharpCompress.Compressors.BZip2
 
         private void SimpleSort(int lo, int hi, int d)
         {
-            int i, j, h, bigN, hp;
+            int i,
+                j,
+                h,
+                bigN,
+                hp;
             int v;
 
             bigN = hi - lo + 1;
@@ -1173,8 +1220,17 @@ namespace SharpCompress.Compressors.BZip2
 
         private void QSort3(int loSt, int hiSt, int dSt)
         {
-            int unLo, unHi, ltLo, gtHi, med, n, m;
-            int sp, lo, hi, d;
+            int unLo,
+                unHi,
+                ltLo,
+                gtHi,
+                med,
+                n,
+                m;
+            int sp,
+                lo,
+                hi,
+                d;
             StackElem[] stack = new StackElem[QSORT_STACK_SIZE];
             for (int count = 0; count < QSORT_STACK_SIZE; count++)
             {
@@ -1210,9 +1266,11 @@ namespace SharpCompress.Compressors.BZip2
                     continue;
                 }
 
-                med = Med3(block[zptr[lo] + d + 1],
-                           block[zptr[hi] + d + 1],
-                           block[zptr[(lo + hi) >> 1] + d + 1]);
+                med = Med3(
+                    block[zptr[lo] + d + 1],
+                    block[zptr[hi] + d + 1],
+                    block[zptr[(lo + hi) >> 1] + d + 1]
+                );
 
                 unLo = ltLo = lo;
                 unHi = gtHi = hi;
@@ -1314,11 +1372,15 @@ namespace SharpCompress.Compressors.BZip2
 
         private void MainSort()
         {
-            int i, j, ss, sb;
+            int i,
+                j,
+                ss,
+                sb;
             Span<int> runningOrder = stackalloc int[256];
             Span<int> copy = stackalloc int[256];
             bool[] bigDone = new bool[256];
-            int c1, c2;
+            int c1,
+                c2;
             int numQSorted;
 
             /*
@@ -1410,8 +1472,7 @@ namespace SharpCompress.Compressors.BZip2
                     do
                     {
                         h = 3 * h + 1;
-                    }
-                    while (h <= 256);
+                    } while (h <= 256);
                     do
                     {
                         h = h / 3;
@@ -1419,9 +1480,12 @@ namespace SharpCompress.Compressors.BZip2
                         {
                             vv = runningOrder[i];
                             j = i;
-                            while ((ftab[((runningOrder[j - h]) + 1) << 8]
-                                    - ftab[(runningOrder[j - h]) << 8]) >
-                                   (ftab[((vv) + 1) << 8] - ftab[(vv) << 8]))
+                            while (
+                                (
+                                    ftab[((runningOrder[j - h]) + 1) << 8]
+                                    - ftab[(runningOrder[j - h]) << 8]
+                                ) > (ftab[((vv) + 1) << 8] - ftab[(vv) << 8])
+                            )
                             {
                                 runningOrder[j] = runningOrder[j - h];
                                 j = j - h;
@@ -1432,8 +1496,7 @@ namespace SharpCompress.Compressors.BZip2
                             }
                             runningOrder[j] = vv;
                         }
-                    }
-                    while (h != 1);
+                    } while (h != 1);
                 }
 
                 /*
@@ -1520,9 +1583,7 @@ namespace SharpCompress.Compressors.BZip2
                         copy[j] = ftab[(j << 8) + ss] & CLEARMASK;
                     }
 
-                    for (j = ftab[ss << 8] & CLEARMASK;
-                         j < (ftab[(ss + 1) << 8] & CLEARMASK);
-                         j++)
+                    for (j = ftab[ss << 8] & CLEARMASK; j < (ftab[(ss + 1) << 8] & CLEARMASK); j++)
                     {
                         c1 = block[zptr[j]];
                         if (!bigDone[c1])
@@ -1611,8 +1672,10 @@ namespace SharpCompress.Compressors.BZip2
         private bool FullGtU(int i1, int i2)
         {
             int k;
-            char c1, c2;
-            int s1, s2;
+            char c1,
+                c2;
+            int s1,
+                s2;
 
             c1 = block[i1 + 1];
             c2 = block[i2 + 1];
@@ -1747,8 +1810,7 @@ namespace SharpCompress.Compressors.BZip2
 
                 k -= 4;
                 workDone++;
-            }
-            while (k >= 0);
+            } while (k >= 0);
 
             return false;
         }
@@ -1762,9 +1824,20 @@ namespace SharpCompress.Compressors.BZip2
 
         private readonly int[] incs =
         {
-            1, 4, 13, 40, 121, 364, 1093, 3280,
-            9841, 29524, 88573, 265720,
-            797161, 2391484
+            1,
+            4,
+            13,
+            40,
+            121,
+            364,
+            1093,
+            3280,
+            9841,
+            29524,
+            88573,
+            265720,
+            797161,
+            2391484
         };
 
         private void AllocateCompressStructures()
@@ -1799,7 +1872,8 @@ namespace SharpCompress.Compressors.BZip2
         private void GenerateMTFValues()
         {
             char[] yy = new char[256];
-            int i, j;
+            int i,
+                j;
             char tmp;
             char tmp2;
             int zPend;
@@ -1927,9 +2001,7 @@ namespace SharpCompress.Compressors.BZip2
             return 0;
         }
 
-        public override void SetLength(long value)
-        {
-        }
+        public override void SetLength(long value) { }
 
         public override void Write(byte[] buffer, int offset, int count)
         {
@@ -1947,6 +2019,10 @@ namespace SharpCompress.Compressors.BZip2
 
         public override long Length => 0;
 
-        public override long Position { get { return 0; } set { } }
+        public override long Position
+        {
+            get { return 0; }
+            set { }
+        }
     }
 }

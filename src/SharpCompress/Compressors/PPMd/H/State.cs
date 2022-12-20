@@ -8,14 +8,19 @@ namespace SharpCompress.Compressors.PPMd.H
     {
         internal const int SIZE = 6;
 
-        internal State(byte[]? memory)
-            : base(memory)
+        internal State(byte[]? memory) : base(memory) { }
+
+        internal int Symbol
         {
+            get => Memory[Address] & 0xff;
+            set => Memory[Address] = (byte)value;
         }
 
-        internal int Symbol { get => Memory[Address] & 0xff; set => Memory[Address] = (byte)value; }
-
-        internal int Freq { get => Memory[Address + 1] & 0xff; set => Memory[Address + 1] = (byte)value; }
+        internal int Freq
+        {
+            get => Memory[Address + 1] & 0xff;
+            set => Memory[Address + 1] = (byte)value;
+        }
 
         internal State Initialize(byte[] mem)
         {
@@ -68,7 +73,8 @@ namespace SharpCompress.Compressors.PPMd.H
 
         internal static void PpmdSwap(State ptr1, State ptr2)
         {
-            byte[] mem1 = ptr1.Memory, mem2 = ptr2.Memory;
+            byte[] mem1 = ptr1.Memory,
+                mem2 = ptr2.Memory;
             for (int i = 0, pos1 = ptr1.Address, pos2 = ptr2.Address; i < SIZE; i++, pos1++, pos2++)
             {
                 byte temp = mem1[pos1];

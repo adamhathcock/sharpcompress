@@ -9,7 +9,6 @@ namespace SharpCompress.Compressors.Rar.UnpackV1
 {
     internal partial class Unpack
     {
-
         // Maximum allowed number of compressed bits processed in quick mode.
         private const int MAX_QUICK_DECODE_BITS = 10;
 
@@ -108,19 +107,68 @@ namespace SharpCompress.Compressors.Rar.UnpackV1
         private const int MaxWinMask = PackDef.MAXWINMASK;
 
         // TODO: rename var
-        private int UnpPtr { get { return unpPtr; } set { unpPtr = value; } }
-        private int ReadBorder { get { return readBorder; } set { readBorder = value; } }
-        private long DestUnpSize { get { return destUnpSize; } set { destUnpSize = value; } }
-        private long WrittenFileSize { get { return writtenFileSize; } set { writtenFileSize = value; } }
-        private byte[] Window { get { return window; } }
-        private uint LastLength { get { return (uint)lastLength; } set { lastLength = (int)value; } }
-        private uint OldDistN(int i) { return (uint)oldDist[i]; }
-        private void SetOldDistN(int i, uint value) { oldDist[i] = (int)value; }
-        private int WrPtr { get { return wrPtr; } set { wrPtr = value; } }
-        private Unpack BlockHeader { get { return this; } }
-        private Unpack Header { get { return this; } }
-        private int ReadTop { get { return readTop; } set { readTop = value; } }
-        private List<UnpackFilter> Filters { get { return filters; } }
+        private int UnpPtr
+        {
+            get { return unpPtr; }
+            set { unpPtr = value; }
+        }
+        private int ReadBorder
+        {
+            get { return readBorder; }
+            set { readBorder = value; }
+        }
+        private long DestUnpSize
+        {
+            get { return destUnpSize; }
+            set { destUnpSize = value; }
+        }
+        private long WrittenFileSize
+        {
+            get { return writtenFileSize; }
+            set { writtenFileSize = value; }
+        }
+        private byte[] Window
+        {
+            get { return window; }
+        }
+        private uint LastLength
+        {
+            get { return (uint)lastLength; }
+            set { lastLength = (int)value; }
+        }
+
+        private uint OldDistN(int i)
+        {
+            return (uint)oldDist[i];
+        }
+
+        private void SetOldDistN(int i, uint value)
+        {
+            oldDist[i] = (int)value;
+        }
+
+        private int WrPtr
+        {
+            get { return wrPtr; }
+            set { wrPtr = value; }
+        }
+        private Unpack BlockHeader
+        {
+            get { return this; }
+        }
+        private Unpack Header
+        {
+            get { return this; }
+        }
+        private int ReadTop
+        {
+            get { return readTop; }
+            set { readTop = value; }
+        }
+        private List<UnpackFilter> Filters
+        {
+            get { return filters; }
+        }
 
         // TODO: make sure these aren't already somewhere else
         public int BlockSize;
@@ -145,8 +193,7 @@ namespace SharpCompress.Compressors.Rar.UnpackV1
                 // Check TablesRead5 to be sure that we read tables at least once
                 // regardless of current block header TablePresent flag.
                 // So we can safefly use these tables below.
-                if (!ReadBlockHeader() ||
-                    !ReadTables() || !TablesRead5)
+                if (!ReadBlockHeader() || !ReadTables() || !TablesRead5)
                 {
                     return;
                 }
@@ -162,9 +209,11 @@ namespace SharpCompress.Compressors.Rar.UnpackV1
 
                     // We use 'while', because for empty block containing only Huffman table,
                     // we'll be on the block border once again just after reading the table.
-                    while (Inp.InAddr > BlockHeader.BlockStart + BlockHeader.BlockSize - 1 ||
-                           Inp.InAddr == BlockHeader.BlockStart + BlockHeader.BlockSize - 1 &&
-                           Inp.InBit >= BlockHeader.BlockBitSize)
+                    while (
+                        Inp.InAddr > BlockHeader.BlockStart + BlockHeader.BlockSize - 1
+                        || Inp.InAddr == BlockHeader.BlockStart + BlockHeader.BlockSize - 1
+                            && Inp.InBit >= BlockHeader.BlockBitSize
+                    )
                     {
                         if (BlockHeader.LastBlockInFile)
                         {
@@ -182,7 +231,10 @@ namespace SharpCompress.Compressors.Rar.UnpackV1
                     }
                 }
 
-                if (((WriteBorder - UnpPtr) & MaxWinMask) < PackDef.MAX_LZ_MATCH + 3 && WriteBorder != UnpPtr)
+                if (
+                    ((WriteBorder - UnpPtr) & MaxWinMask) < PackDef.MAX_LZ_MATCH + 3
+                    && WriteBorder != UnpPtr
+                )
                 {
                     UnpWriteBuf();
                     if (WrittenFileSize > DestUnpSize)
@@ -213,7 +265,8 @@ namespace SharpCompress.Compressors.Rar.UnpackV1
 
                     //uint DBits,Distance=1,DistSlot=DecodeNumber(Inp,&BlockTables.DD);
                     int DBits;
-                    uint Distance = 1, DistSlot = this.DecodeNumber(DD);
+                    uint Distance = 1,
+                        DistSlot = this.DecodeNumber(DD);
                     if (DistSlot < 4)
                     {
                         DBits = 0;
@@ -379,7 +432,8 @@ namespace SharpCompress.Compressors.Rar.UnpackV1
             // If distance to filter start is that large that due to circular dictionary
             // mode now it points to old not written yet data, then we set 'NextWindow'
             // flag and process this filter only after processing that older data.
-            Filter.NextWindow = WrPtr != UnpPtr && ((WrPtr - UnpPtr) & MaxWinMask) <= Filter.BlockStart;
+            Filter.NextWindow =
+                WrPtr != UnpPtr && ((WrPtr - UnpPtr) & MaxWinMask) <= Filter.BlockStart;
 
             Filter.uBlockStart = (uint)((Filter.BlockStart + UnpPtr) & MaxWinMask);
             Filters.Add(Filter);
@@ -438,7 +492,10 @@ namespace SharpCompress.Compressors.Rar.UnpackV1
             {
                 // We may need to quit from main extraction loop and read new block header
                 // and trees earlier than data in input buffer ends.
-                ReadBorder = Math.Min(ReadBorder, BlockHeader.BlockStart + BlockHeader.BlockSize - 1);
+                ReadBorder = Math.Min(
+                    ReadBorder,
+                    BlockHeader.BlockStart + BlockHeader.BlockSize - 1
+                );
             }
             return ReadCode != -1;
         }
@@ -581,7 +638,7 @@ namespace SharpCompress.Compressors.Rar.UnpackV1
         //
         //          // Choose the nearest among WriteBorder and WrPtr actual written border.
         //          // If border is equal to UnpPtr, it means that we have MaxWinSize data ahead.
-        //          if (WriteBorder==UnpPtr || 
+        //          if (WriteBorder==UnpPtr ||
         //              WrPtr!=UnpPtr && ((WrPtr-UnpPtr)&MaxWinMask)<((WriteBorder-UnpPtr)&MaxWinMask))
         //            WriteBorder=WrPtr;
         //        }
@@ -766,7 +823,9 @@ namespace SharpCompress.Compressors.Rar.UnpackV1
             }
 
             Header.BlockSize = BlockSize;
-            byte CheckSum = (byte)(0x5a ^ BlockFlags ^ BlockSize ^ (BlockSize >> 8) ^ (BlockSize >> 16));
+            byte CheckSum = (byte)(
+                0x5a ^ BlockFlags ^ BlockSize ^ (BlockSize >> 8) ^ (BlockSize >> 16)
+            );
             if (CheckSum != SavedCheckSum)
             {
                 return false;
@@ -890,7 +949,6 @@ namespace SharpCompress.Compressors.Rar.UnpackV1
         //        {
         //          Filters.SoftReset();
         //        }
-
     }
 }
 #endif

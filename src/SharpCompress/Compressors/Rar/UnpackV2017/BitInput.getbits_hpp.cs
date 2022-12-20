@@ -1,12 +1,11 @@
 ﻿namespace SharpCompress.Compressors.Rar.UnpackV2017
 {
-
     internal partial class BitInput
     {
         public const int MAX_SIZE = 0x8000; // Size of input buffer.
 
         public int InAddr; // Curent byte position in the buffer.
-        public int InBit;  // Current bit position in the current byte.
+        public int InBit; // Current bit position in the current byte.
 
         public bool ExternalBuffer;
 
@@ -15,8 +14,7 @@
 
         public byte[] InBuf; // Dynamically allocated input buffer.
 
-        public
-        void InitBitInput()
+        public void InitBitInput()
         {
             InAddr = InBit = 0;
         }
@@ -66,5 +64,4 @@
 
         //void SetExternalBuffer(byte *Buf);
     }
-
 }

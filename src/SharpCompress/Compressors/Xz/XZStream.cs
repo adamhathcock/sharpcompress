@@ -33,9 +33,12 @@ namespace SharpCompress.Compressors.Xz
                 case CheckType.SHA256:
                     throw new NotImplementedException();
                 default:
-                    throw new NotSupportedException("Check Type unknown to this version of decoder.");
+                    throw new NotSupportedException(
+                        "Check Type unknown to this version of decoder."
+                    );
             }
         }
+
         public XZHeader Header { get; private set; }
         public XZIndex Index { get; private set; }
         public XZFooter Footer { get; private set; }
@@ -44,9 +47,7 @@ namespace SharpCompress.Compressors.Xz
 
         private bool _endOfStream;
 
-        public XZStream(Stream stream) : base(stream)
-        {
-        }
+        public XZStream(Stream stream) : base(stream) { }
 
         public override int Read(byte[] buffer, int offset, int count)
         {

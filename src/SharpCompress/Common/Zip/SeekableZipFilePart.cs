@@ -10,8 +10,11 @@ namespace SharpCompress.Common.Zip
         private readonly SeekableZipHeaderFactory _headerFactory;
         private readonly DirectoryEntryHeader _directoryEntryHeader;
 
-        internal SeekableZipFilePart(SeekableZipHeaderFactory headerFactory, DirectoryEntryHeader header, Stream stream)
-            : base(header, stream)
+        internal SeekableZipFilePart(
+            SeekableZipHeaderFactory headerFactory,
+            DirectoryEntryHeader header,
+            Stream stream
+        ) : base(header, stream)
         {
             _headerFactory = headerFactory;
             _directoryEntryHeader = header;
@@ -40,10 +43,12 @@ namespace SharpCompress.Common.Zip
         {
             BaseStream.Position = Header.DataStartPosition!.Value;
 
-            if ((Header.CompressedSize == 0)
+            if (
+                (Header.CompressedSize == 0)
                 && FlagUtility.HasFlag(Header.Flags, HeaderFlags.UsePostDataDescriptor)
                 && (_directoryEntryHeader?.HasData == true)
-                && (_directoryEntryHeader?.CompressedSize != 0))
+                && (_directoryEntryHeader?.CompressedSize != 0)
+            )
             {
                 return new ReadOnlySubStream(BaseStream, _directoryEntryHeader!.CompressedSize);
             }

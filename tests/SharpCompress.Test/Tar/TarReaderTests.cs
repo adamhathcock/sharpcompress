@@ -25,7 +25,11 @@ namespace SharpCompress.Test.Tar
         [Fact]
         public void Tar_Skip()
         {
-            using (Stream stream = new ForwardOnlyStream(File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar"))))
+            using (
+                Stream stream = new ForwardOnlyStream(
+                    File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar"))
+                )
+            )
             using (IReader reader = ReaderFactory.Open(stream))
             {
                 int x = 0;
@@ -36,12 +40,10 @@ namespace SharpCompress.Test.Tar
                         x++;
                         if (x % 2 == 0)
                         {
-                            reader.WriteEntryToDirectory(SCRATCH_FILES_PATH,
-                                                         new ExtractionOptions()
-                                                         {
-                                                             ExtractFullPath = true,
-                                                             Overwrite = true
-                                                         });
+                            reader.WriteEntryToDirectory(
+                                SCRATCH_FILES_PATH,
+                                new ExtractionOptions() { ExtractFullPath = true, Overwrite = true }
+                            );
                         }
                     }
                 }
@@ -86,7 +88,9 @@ namespace SharpCompress.Test.Tar
                         using (var entryStream = reader.OpenEntryStream())
                         {
                             string file = Path.GetFileName(reader.Entry.Key);
-                            string folder = Path.GetDirectoryName(reader.Entry.Key) ?? throw new ArgumentNullException();
+                            string folder =
+                                Path.GetDirectoryName(reader.Entry.Key)
+                                ?? throw new ArgumentNullException();
                             string destdir = Path.Combine(SCRATCH_FILES_PATH, folder);
                             if (!Directory.Exists(destdir))
                             {
@@ -110,7 +114,11 @@ namespace SharpCompress.Test.Tar
         {
             var filePaths = new List<string>();
 
-            using (Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.LongPathsWithLongNameExtension.tar")))
+            using (
+                Stream stream = File.OpenRead(
+                    Path.Combine(TEST_ARCHIVES_PATH, "Tar.LongPathsWithLongNameExtension.tar")
+                )
+            )
             using (var reader = TarReader.Open(stream))
             {
                 while (reader.MoveToNextEntry())
@@ -124,8 +132,14 @@ namespace SharpCompress.Test.Tar
 
             Assert.Equal(3, filePaths.Count);
             Assert.Contains("a.txt", filePaths);
-            Assert.Contains("wp-content/plugins/gravityformsextend/lib/Aws/Symfony/Component/ClassLoader/Tests/Fixtures/Apc/beta/Apc/ApcPrefixCollision/A/B/Bar.php", filePaths);
-            Assert.Contains("wp-content/plugins/gravityformsextend/lib/Aws/Symfony/Component/ClassLoader/Tests/Fixtures/Apc/beta/Apc/ApcPrefixCollision/A/B/Foo.php", filePaths);
+            Assert.Contains(
+                "wp-content/plugins/gravityformsextend/lib/Aws/Symfony/Component/ClassLoader/Tests/Fixtures/Apc/beta/Apc/ApcPrefixCollision/A/B/Bar.php",
+                filePaths
+            );
+            Assert.Contains(
+                "wp-content/plugins/gravityformsextend/lib/Aws/Symfony/Component/ClassLoader/Tests/Fixtures/Apc/beta/Apc/ApcPrefixCollision/A/B/Foo.php",
+                filePaths
+            );
         }
 
         [Fact]
@@ -174,17 +188,15 @@ namespace SharpCompress.Test.Tar
 
                 using (var entryStream = reader.OpenEntryStream())
                 {
-
-                    using (FlushOnDisposeStream flushingStream = new FlushOnDisposeStream(entryStream))
+                    using (
+                        FlushOnDisposeStream flushingStream = new FlushOnDisposeStream(entryStream)
+                    )
                     {
-
                         // Extract inner.tar.gz
                         using (var innerReader = ReaderFactory.Open(flushingStream))
                         {
-
                             Assert.True(innerReader.MoveToNextEntry());
                             Assert.Equal("test", innerReader.Entry.Key);
-
                         }
                     }
                 }
@@ -196,8 +208,13 @@ namespace SharpCompress.Test.Tar
         public void Tar_GZip_With_Symlink_Entries()
         {
             var isWindows = System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(
-                System.Runtime.InteropServices.OSPlatform.Windows);
-            using (Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "TarWithSymlink.tar.gz")))
+                System.Runtime.InteropServices.OSPlatform.Windows
+            );
+            using (
+                Stream stream = File.OpenRead(
+                    Path.Combine(TEST_ARCHIVES_PATH, "TarWithSymlink.tar.gz")
+                )
+            )
             using (var reader = TarReader.Open(stream))
             {
                 List<string> names = new List<string>();
@@ -207,24 +224,26 @@ namespace SharpCompress.Test.Tar
                     {
                         continue;
                     }
-                    reader.WriteEntryToDirectory(SCRATCH_FILES_PATH,
-                                                 new ExtractionOptions()
-                                                 {
-                                                     ExtractFullPath = true,
-                                                     Overwrite = true,
-                                                     WriteSymbolicLink = (sourcePath, targetPath) =>
-                                                     {
-                                                         if (!isWindows)
-                                                         {
-                                                             var link = new Mono.Unix.UnixSymbolicLinkInfo(sourcePath);
-                                                             if (File.Exists(sourcePath))
-                                                             {
-                                                                 link.Delete(); // equivalent to ln -s -f
-                                                             }
-                                                             link.CreateSymbolicLinkTo(targetPath);
-                                                         }
-                                                     }
-                                                 });
+                    reader.WriteEntryToDirectory(
+                        SCRATCH_FILES_PATH,
+                        new ExtractionOptions()
+                        {
+                            ExtractFullPath = true,
+                            Overwrite = true,
+                            WriteSymbolicLink = (sourcePath, targetPath) =>
+                            {
+                                if (!isWindows)
+                                {
+                                    var link = new Mono.Unix.UnixSymbolicLinkInfo(sourcePath);
+                                    if (File.Exists(sourcePath))
+                                    {
+                                        link.Delete(); // equivalent to ln -s -f
+                                    }
+                                    link.CreateSymbolicLinkTo(targetPath);
+                                }
+                            }
+                        }
+                    );
                     if (!isWindows)
                     {
                         if (reader.Entry.LinkTarget != null)
@@ -236,8 +255,10 @@ namespace SharpCompress.Test.Tar
                                 // need to convert the link to an absolute path for comparison
                                 var target = reader.Entry.LinkTarget;
                                 var realTarget = System.IO.Path.GetFullPath(
-                                    System.IO.Path.Combine($"{System.IO.Path.GetDirectoryName(path)}",
-                                    target)
+                                    System.IO.Path.Combine(
+                                        $"{System.IO.Path.GetDirectoryName(path)}",
+                                        target
+                                    )
                                 );
 
                                 Assert.Equal(realTarget, link.GetContents().ToString());
@@ -252,6 +273,5 @@ namespace SharpCompress.Test.Tar
             }
         }
 #endif
-
     }
 }

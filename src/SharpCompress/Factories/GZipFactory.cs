@@ -20,12 +20,13 @@ namespace SharpCompress.Factories
     /// <summary>
     /// Represents the foundation factory of GZip archive.
     /// </summary>
-    public class GZipFactory : Factory,
-        IArchiveFactory,
-        IMultiArchiveFactory,
-        IReaderFactory,
-        IWriterFactory,
-        IWriteableArchiveFactory
+    public class GZipFactory
+        : Factory,
+            IArchiveFactory,
+            IMultiArchiveFactory,
+            IReaderFactory,
+            IWriterFactory,
+            IWriteableArchiveFactory
     {
         #region IFactory
 
@@ -65,7 +66,7 @@ namespace SharpCompress.Factories
 
         #endregion
 
-        #region IMultiArchiveFactory        
+        #region IMultiArchiveFactory
 
         /// <inheritdoc/>
         public IArchive Open(IReadOnlyList<Stream> streams, ReaderOptions? readerOptions = null)
@@ -84,7 +85,11 @@ namespace SharpCompress.Factories
         #region IReaderFactory
 
         /// <inheritdoc/>
-        internal override bool TryOpenReader(RewindableStream rewindableStream, ReaderOptions options, out IReader? reader)
+        internal override bool TryOpenReader(
+            RewindableStream rewindableStream,
+            ReaderOptions options,
+            out IReader? reader
+        )
         {
             reader = null;
 
@@ -104,7 +109,7 @@ namespace SharpCompress.Factories
                 reader = OpenReader(rewindableStream, options);
                 return true;
             }
-            
+
             return false;
         }
 
@@ -123,7 +128,9 @@ namespace SharpCompress.Factories
         {
             if (writerOptions.CompressionType != CompressionType.GZip)
             {
-                throw new InvalidFormatException("GZip archives only support GZip compression type.");
+                throw new InvalidFormatException(
+                    "GZip archives only support GZip compression type."
+                );
             }
             return new GZipWriter(stream, new GZipWriterOptions(writerOptions));
         }

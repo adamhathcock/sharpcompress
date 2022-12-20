@@ -5,10 +5,8 @@ namespace SharpCompress.IO
 {
     internal class ReadOnlySubStream : NonDisposingStream
     {
-        public ReadOnlySubStream(Stream stream, long bytesToRead)
-            : this(stream, null, bytesToRead)
-        {
-        }
+        public ReadOnlySubStream(Stream stream, long bytesToRead) : this(stream, null, bytesToRead)
+        { }
 
         public ReadOnlySubStream(Stream stream, long? origin, long bytesToRead)
             : base(stream, throwOnDispose: false)
@@ -35,7 +33,11 @@ namespace SharpCompress.IO
 
         public override long Length => throw new NotSupportedException();
 
-        public override long Position { get => throw new NotSupportedException(); set => throw new NotSupportedException(); }
+        public override long Position
+        {
+            get => throw new NotSupportedException();
+            set => throw new NotSupportedException();
+        }
 
         public override int Read(byte[] buffer, int offset, int count)
         {
@@ -69,7 +71,7 @@ namespace SharpCompress.IO
         public override int Read(Span<byte> buffer)
         {
             var slice_len = BytesLeftToRead < buffer.Length ? BytesLeftToRead : buffer.Length;
-            var read = Stream.Read(buffer.Slice(0,(int)slice_len));
+            var read = Stream.Read(buffer.Slice(0, (int)slice_len));
             if (read > 0)
             {
                 BytesLeftToRead -= read;

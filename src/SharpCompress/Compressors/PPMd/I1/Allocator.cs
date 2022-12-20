@@ -102,7 +102,10 @@ namespace SharpCompress.Compressors.PPMd.I1
         {
             for (int index = 0; index < INDEX_COUNT; index++)
             {
-                _memoryNodes[index] = new MemoryNode((uint)(NODE_OFFSET + index * MemoryNode.SIZE), _memory);
+                _memoryNodes[index] = new MemoryNode(
+                    (uint)(NODE_OFFSET + index * MemoryNode.SIZE),
+                    _memory
+                );
                 _memoryNodes[index].Stamp = 0;
                 _memoryNodes[index].Next = MemoryNode.ZERO;
                 _memoryNodes[index].UnitCount = 0;
@@ -335,7 +338,11 @@ namespace SharpCompress.Compressors.PPMd.I1
 
             for (uint index = 0; index < INDEX_COUNT; index++)
             {
-                for (memoryNode = _memoryNodes[index]; counts[index] != 0; memoryNode = memoryNode.Next)
+                for (
+                    memoryNode = _memoryNodes[index];
+                    counts[index] != 0;
+                    memoryNode = memoryNode.Next
+                )
                 {
                     while (memoryNode.Next.Stamp == 0)
                     {
@@ -374,8 +381,7 @@ namespace SharpCompress.Compressors.PPMd.I1
                     oldIndex = INDEX_TO_UNITS[index] * UNIT_SIZE;
                     return (_baseUnit - _text > oldIndex) ? (_baseUnit -= oldIndex) : Pointer.ZERO;
                 }
-            }
-            while (!_memoryNodes[oldIndex].Available);
+            } while (!_memoryNodes[oldIndex].Available);
 
             Pointer allocatedBlock = _memoryNodes[oldIndex].Remove();
             SplitBlock(allocatedBlock, oldIndex, index);
@@ -396,7 +402,10 @@ namespace SharpCompress.Compressors.PPMd.I1
                 unitCountDifference -= unitCount;
             }
 
-            _memoryNodes[UNITS_TO_INDEX[unitCountDifference - 1]].Insert(newPointer, unitCountDifference);
+            _memoryNodes[UNITS_TO_INDEX[unitCountDifference - 1]].Insert(
+                newPointer,
+                unitCountDifference
+            );
         }
 
         private void GlueFreeBlocks()
@@ -425,7 +434,10 @@ namespace SharpCompress.Compressors.PPMd.I1
                     memoryNode0 = _memoryNodes[index].Remove();
                     if (memoryNode0.UnitCount != 0)
                     {
-                        while ((memoryNode2 = memoryNode0 + memoryNode0.UnitCount).Stamp == uint.MaxValue)
+                        while (
+                            (memoryNode2 = memoryNode0 + memoryNode0.UnitCount).Stamp
+                            == uint.MaxValue
+                        )
                         {
                             memoryNode0.UnitCount = memoryNode0.UnitCount + memoryNode2.UnitCount;
                             memoryNode2.UnitCount = 0;
@@ -453,8 +465,10 @@ namespace SharpCompress.Compressors.PPMd.I1
                     if (INDEX_TO_UNITS[index] != unitCount)
                     {
                         uint unitCountDifference = unitCount - INDEX_TO_UNITS[--index];
-                        _memoryNodes[unitCountDifference - 1].Insert(memoryNode0 + (unitCount - unitCountDifference),
-                                                                    unitCountDifference);
+                        _memoryNodes[unitCountDifference - 1].Insert(
+                            memoryNode0 + (unitCount - unitCountDifference),
+                            unitCountDifference
+                        );
                     }
 
                     _memoryNodes[index].Insert(memoryNode0, INDEX_TO_UNITS[index]);
@@ -482,8 +496,7 @@ namespace SharpCompress.Compressors.PPMd.I1
                 target[11] = source[11];
                 target += UNIT_SIZE;
                 source += UNIT_SIZE;
-            }
-            while (--unitCount != 0);
+            } while (--unitCount != 0);
         }
 
         #endregion

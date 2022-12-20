@@ -15,6 +15,7 @@ namespace SharpCompress.Compressors.Rar.UnpackV1.Decode
         public const int DC = 60;
         public const int LDC = 17;
         public const int RC = 28;
+
         // 20171217: NOTE: these constants seem to have been updated in the unrar src code
         // at some unknown point.  updating causes decompression failure, not sure why.
         //        public const int NC    = 306; /* alphabet = {0, 1, 2, ..., NC - 1} */

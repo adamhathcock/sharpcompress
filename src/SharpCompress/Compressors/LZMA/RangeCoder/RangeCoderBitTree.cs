@@ -24,7 +24,7 @@ namespace SharpCompress.Compressors.LZMA.RangeCoder
         public void Encode(Encoder rangeEncoder, UInt32 symbol)
         {
             UInt32 m = 1;
-            for (int bitIndex = _numBitLevels; bitIndex > 0;)
+            for (int bitIndex = _numBitLevels; bitIndex > 0; )
             {
                 bitIndex--;
                 UInt32 bit = (symbol >> bitIndex) & 1;
@@ -49,7 +49,7 @@ namespace SharpCompress.Compressors.LZMA.RangeCoder
         {
             UInt32 price = 0;
             UInt32 m = 1;
-            for (int bitIndex = _numBitLevels; bitIndex > 0;)
+            for (int bitIndex = _numBitLevels; bitIndex > 0; )
             {
                 bitIndex--;
                 UInt32 bit = (symbol >> bitIndex) & 1;
@@ -73,8 +73,12 @@ namespace SharpCompress.Compressors.LZMA.RangeCoder
             return price;
         }
 
-        public static UInt32 ReverseGetPrice(BitEncoder[] models, UInt32 startIndex,
-                                             int numBitLevels, UInt32 symbol)
+        public static UInt32 ReverseGetPrice(
+            BitEncoder[] models,
+            UInt32 startIndex,
+            int numBitLevels,
+            UInt32 symbol
+        )
         {
             UInt32 price = 0;
             UInt32 m = 1;
@@ -88,8 +92,13 @@ namespace SharpCompress.Compressors.LZMA.RangeCoder
             return price;
         }
 
-        public static void ReverseEncode(BitEncoder[] models, UInt32 startIndex,
-                                         Encoder rangeEncoder, int numBitLevels, UInt32 symbol)
+        public static void ReverseEncode(
+            BitEncoder[] models,
+            UInt32 startIndex,
+            Encoder rangeEncoder,
+            int numBitLevels,
+            UInt32 symbol
+        )
         {
             UInt32 m = 1;
             for (int i = 0; i < numBitLevels; i++)
@@ -145,8 +154,12 @@ namespace SharpCompress.Compressors.LZMA.RangeCoder
             return symbol;
         }
 
-        public static uint ReverseDecode(BitDecoder[] models, UInt32 startIndex,
-                                         Decoder rangeDecoder, int numBitLevels)
+        public static uint ReverseDecode(
+            BitDecoder[] models,
+            UInt32 startIndex,
+            Decoder rangeDecoder,
+            int numBitLevels
+        )
         {
             uint m = 1;
             uint symbol = 0;

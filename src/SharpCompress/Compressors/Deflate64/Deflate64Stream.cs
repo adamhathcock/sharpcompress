@@ -30,12 +30,17 @@ namespace SharpCompress.Compressors.Deflate64
 
             if (mode != CompressionMode.Decompress)
             {
-                throw new NotImplementedException("Deflate64: this implementation only supports decompression");
+                throw new NotImplementedException(
+                    "Deflate64: this implementation only supports decompression"
+                );
             }
 
             if (!stream.CanRead)
             {
-                throw new ArgumentException("Deflate64: input stream is not readable", nameof(stream));
+                throw new ArgumentException(
+                    "Deflate64: input stream is not readable",
+                    nameof(stream)
+                );
             }
 
             InitializeInflater(stream, ZipCompressionMethod.Deflate64);
@@ -44,13 +49,21 @@ namespace SharpCompress.Compressors.Deflate64
         /// <summary>
         /// Sets up this DeflateManagedStream to be used for Inflation/Decompression
         /// </summary>
-        private void InitializeInflater(Stream stream, ZipCompressionMethod method = ZipCompressionMethod.Deflate)
+        private void InitializeInflater(
+            Stream stream,
+            ZipCompressionMethod method = ZipCompressionMethod.Deflate
+        )
         {
             Debug.Assert(stream != null);
-            Debug.Assert(method == ZipCompressionMethod.Deflate || method == ZipCompressionMethod.Deflate64);
+            Debug.Assert(
+                method == ZipCompressionMethod.Deflate || method == ZipCompressionMethod.Deflate64
+            );
             if (!stream.CanRead)
             {
-                throw new ArgumentException("Deflate64: input stream is not readable", nameof(stream));
+                throw new ArgumentException(
+                    "Deflate64: input stream is not readable",
+                    nameof(stream)
+                );
             }
 
             _inflater = new InflaterManaged(method == ZipCompressionMethod.Deflate64);
@@ -138,7 +151,10 @@ namespace SharpCompress.Compressors.Deflate64
                 if (_inflater.Finished())
                 {
                     // if we finished decompressing, we can't have anything left in the outputwindow.
-                    Debug.Assert(_inflater.AvailableOutput == 0, "We should have copied all stuff out!");
+                    Debug.Assert(
+                        _inflater.AvailableOutput == 0,
+                        "We should have copied all stuff out!"
+                    );
                     break;
                 }
 

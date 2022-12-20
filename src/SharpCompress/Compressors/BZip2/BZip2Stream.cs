@@ -14,8 +14,11 @@ namespace SharpCompress.Compressors.BZip2
         /// <param name="stream">The stream to read from</param>
         /// <param name="compressionMode">Compression Mode</param>
         /// <param name="decompressConcatenated">Decompress Concatenated</param>
-        public BZip2Stream(Stream stream, CompressionMode compressionMode,
-                           bool decompressConcatenated)
+        public BZip2Stream(
+            Stream stream,
+            CompressionMode compressionMode,
+            bool decompressConcatenated
+        )
         {
             Mode = compressionMode;
             if (Mode == CompressionMode.Compress)
@@ -61,7 +64,11 @@ namespace SharpCompress.Compressors.BZip2
 
         public override long Length => stream.Length;
 
-        public override long Position { get => stream.Position; set => stream.Position = value; }
+        public override long Position
+        {
+            get => stream.Position;
+            set => stream.Position = value;
+        }
 
         public override int Read(byte[] buffer, int offset, int count)
         {
@@ -94,7 +101,6 @@ namespace SharpCompress.Compressors.BZip2
         {
             stream.Write(buffer);
         }
-
 #endif
 
         public override void Write(byte[] buffer, int offset, int count)

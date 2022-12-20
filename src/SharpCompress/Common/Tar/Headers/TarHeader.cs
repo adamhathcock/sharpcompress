@@ -9,7 +9,15 @@ namespace SharpCompress.Common.Tar.Headers
 {
     internal sealed class TarHeader
     {
-        internal static readonly DateTime EPOCH = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+        internal static readonly DateTime EPOCH = new DateTime(
+            1970,
+            1,
+            1,
+            0,
+            0,
+            0,
+            DateTimeKind.Utc
+        );
 
         public TarHeader(ArchiveEncoding archiveEncoding)
         {
@@ -79,7 +87,11 @@ namespace SharpCompress.Common.Tar.Headers
                 // var truncated = Encoding.UTF8.GetBytes(Encoding.UTF8.GetString(bytes, 0, 100));
                 //
                 // and then infinite recursion is occured in WriteLongFilenameHeader because truncated.Length is 102.
-                Name = ArchiveEncoding.Decode(ArchiveEncoding.Encode(Name), 0, 100 - ArchiveEncoding.GetEncoding().GetMaxByteCount(1));
+                Name = ArchiveEncoding.Decode(
+                    ArchiveEncoding.Encode(Name),
+                    0,
+                    100 - ArchiveEncoding.GetEncoding().GetMaxByteCount(1)
+                );
                 Write(output);
             }
         }
@@ -126,7 +138,7 @@ namespace SharpCompress.Common.Tar.Headers
             Size = ReadSize(buffer);
 
             Mode = ReadAsciiInt64Base8(buffer, 100, 7);
-            if(EntryType == EntryType.Directory) 
+            if (EntryType == EntryType.Directory)
                 Mode |= 0b1_000_000_000;
 
             UserId = ReadAsciiInt64Base8(buffer, 108, 7);
@@ -136,8 +148,7 @@ namespace SharpCompress.Common.Tar.Headers
 
             Magic = ArchiveEncoding.Decode(buffer, 257, 6).TrimNulls();
 
-            if (!string.IsNullOrEmpty(Magic)
-                && "ustar".Equals(Magic))
+            if (!string.IsNullOrEmpty(Magic) && "ustar".Equals(Magic))
             {
                 string namePrefix = ArchiveEncoding.Decode(buffer, 345, 157);
                 namePrefix = namePrefix.TrimNulls();
@@ -146,8 +157,7 @@ namespace SharpCompress.Common.Tar.Headers
                     Name = namePrefix + "/" + Name;
                 }
             }
-            if (EntryType != EntryType.LongName
-                && Name.Length == 0)
+            if (EntryType != EntryType.LongName && Name.Length == 0)
             {
                 return false;
             }
@@ -261,10 +271,16 @@ namespace SharpCompress.Common.Tar.Headers
             return Convert.ToInt64(s);
         }
 
-
-        private static readonly byte[] eightSpaces = {
-            (byte)' ', (byte)' ', (byte)' ', (byte)' ',
-            (byte)' ', (byte)' ', (byte)' ', (byte)' '
+        private static readonly byte[] eightSpaces =
+        {
+            (byte)' ',
+            (byte)' ',
+            (byte)' ',
+            (byte)' ',
+            (byte)' ',
+            (byte)' ',
+            (byte)' ',
+            (byte)' '
         };
 
         internal static int RecalculateChecksum(byte[] buf)

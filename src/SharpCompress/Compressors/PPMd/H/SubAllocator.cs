@@ -7,13 +7,25 @@ namespace SharpCompress.Compressors.PPMd.H
 {
     internal class SubAllocator
     {
-        public virtual int FakeUnitsStart { get => _fakeUnitsStart; set => _fakeUnitsStart = value; }
+        public virtual int FakeUnitsStart
+        {
+            get => _fakeUnitsStart;
+            set => _fakeUnitsStart = value;
+        }
 
         public virtual int HeapEnd => _heapEnd;
 
-        public virtual int PText { get => _pText; set => _pText = value; }
+        public virtual int PText
+        {
+            get => _pText;
+            set => _pText = value;
+        }
 
-        public virtual int UnitsStart { get => _unitsStart; set => _unitsStart = value; }
+        public virtual int UnitsStart
+        {
+            get => _unitsStart;
+            set => _unitsStart = value;
+        }
 
         public virtual byte[] Heap => _heap;
 
@@ -40,13 +52,18 @@ namespace SharpCompress.Compressors.PPMd.H
         private int _glueCount;
 
         // byte *HeapStart,*LoUnit, *HiUnit;
-        private int _heapStart, _loUnit, _hiUnit;
+        private int _heapStart,
+            _loUnit,
+            _hiUnit;
 
         //UPGRADE_NOTE: Final was removed from the declaration of 'freeList '. "ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?index='!DefaultContextWindowIndex'&keyword='jlca1003'"
         private readonly RarNode[] _freeList = new RarNode[N_INDEXES];
 
         // byte *pText, *UnitsStart,*HeapEnd,*FakeUnitsStart;
-        private int _pText, _unitsStart, _heapEnd, _fakeUnitsStart;
+        private int _pText,
+            _unitsStart,
+            _heapEnd,
+            _fakeUnitsStart;
 
         private byte[] _heap;
 
@@ -106,7 +123,8 @@ namespace SharpCompress.Compressors.PPMd.H
 
         private void SplitBlock(int pv, int oldIndx, int newIndx)
         {
-            int i, uDiff = _indx2Units[oldIndx] - _indx2Units[newIndx];
+            int i,
+                uDiff = _indx2Units[oldIndx] - _indx2Units[newIndx];
             int p = pv + U2B(_indx2Units[newIndx]);
             if (_indx2Units[i = _units2Indx[uDiff - 1]] != uDiff)
             {
@@ -193,7 +211,9 @@ namespace SharpCompress.Compressors.PPMd.H
             s0.Address = _tempMemBlockPos;
             RarMemBlock p = _tempRarMemBlock2;
             RarMemBlock p1 = _tempRarMemBlock3;
-            int i, k, sz;
+            int i,
+                k,
+                sz;
             if (_loUnit != _hiUnit)
             {
                 _heap[_loUnit] = 0;
@@ -227,7 +247,11 @@ namespace SharpCompress.Compressors.PPMd.H
             p.Address = s0.GetNext();
             while (p.Address != s0.Address)
             {
-                for (p.Remove(), sz = p.GetNu(); sz > 128; sz -= 128, p.Address = MbPtr(p.Address, 128))
+                for (
+                    p.Remove(), sz = p.GetNu();
+                    sz > 128;
+                    sz -= 128, p.Address = MbPtr(p.Address, 128)
+                )
                 {
                     InsertNode(p.Address, N_INDEXES - 1);
                 }
@@ -268,8 +292,7 @@ namespace SharpCompress.Compressors.PPMd.H
                     }
                     return (0);
                 }
-            }
-            while (_freeList[i].GetNext() == 0);
+            } while (_freeList[i].GetNext() == 0);
             int retVal = RemoveNode(i);
             SplitBlock(retVal, i, indx);
             return retVal;
@@ -361,7 +384,8 @@ namespace SharpCompress.Compressors.PPMd.H
 
         public virtual void InitSubAllocator()
         {
-            int i, k;
+            int i,
+                k;
             new Span<byte>(_heap, _freeListPos, SizeOfFreeList()).Clear();
 
             _pText = _heapStart;

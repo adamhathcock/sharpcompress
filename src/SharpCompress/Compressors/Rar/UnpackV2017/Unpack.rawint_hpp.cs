@@ -27,7 +27,9 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017
 
         private uint32 RawGet4(byte[] D, int offset)
         {
-            return (uint)(D[offset] + (D[offset + 1] << 8) + (D[offset + 2] << 16) + (D[offset + 3] << 24));
+            return (uint)(
+                D[offset] + (D[offset + 1] << 8) + (D[offset + 2] << 16) + (D[offset + 3] << 24)
+            );
         }
 
         //inline uint64 RawGet8(const void *Data)
@@ -117,6 +119,5 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017
         //  return (rotl32(i,24)&0xFF00FF00)|(rotl32(i,8)&0x00FF00FF);
         //#endif
         //}
-
     }
 }

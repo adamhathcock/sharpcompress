@@ -4,10 +4,7 @@ namespace SharpCompress.Common.Zip.Headers
 {
     internal class Zip64DirectoryEndHeader : ZipHeader
     {
-        public Zip64DirectoryEndHeader()
-            : base(ZipHeaderType.Zip64DirectoryEnd)
-        {
-        }
+        public Zip64DirectoryEndHeader() : base(ZipHeaderType.Zip64DirectoryEnd) { }
 
         internal override void Read(BinaryReader reader)
         {
@@ -20,7 +17,12 @@ namespace SharpCompress.Common.Zip.Headers
             TotalNumberOfEntries = (long)reader.ReadUInt64();
             DirectorySize = (long)reader.ReadUInt64();
             DirectoryStartOffsetRelativeToDisk = (long)reader.ReadUInt64();
-            DataSector = reader.ReadBytes((int)(SizeOfDirectoryEndRecord - SIZE_OF_FIXED_HEADER_DATA_EXCEPT_SIGNATURE_AND_SIZE_FIELDS));
+            DataSector = reader.ReadBytes(
+                (int)(
+                    SizeOfDirectoryEndRecord
+                    - SIZE_OF_FIXED_HEADER_DATA_EXCEPT_SIGNATURE_AND_SIZE_FIELDS
+                )
+            );
         }
 
         private const int SIZE_OF_FIXED_HEADER_DATA_EXCEPT_SIGNATURE_AND_SIZE_FIELDS = 44;

@@ -8,10 +8,7 @@ namespace SharpCompress.Common.Rar
     {
         private uint _currentCrc;
 
-        public RarCrcBinaryReader(Stream stream)
-            : base(stream)
-        {
-        }
+        public RarCrcBinaryReader(Stream stream) : base(stream) { }
 
         public uint GetCrc32()
         {

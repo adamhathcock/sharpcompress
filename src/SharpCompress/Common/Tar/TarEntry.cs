@@ -47,13 +47,17 @@ namespace SharpCompress.Common.Tar
         public long Mode => _filePart.Header.Mode;
 
         public long UserID => _filePart.Header.UserId;
-        
+
         public long GroupId => _filePart.Header.GroupId;
 
         internal override IEnumerable<FilePart> Parts => _filePart.AsEnumerable<FilePart>();
 
-        internal static IEnumerable<TarEntry> GetEntries(StreamingMode mode, Stream stream,
-                                                         CompressionType compressionType, ArchiveEncoding archiveEncoding)
+        internal static IEnumerable<TarEntry> GetEntries(
+            StreamingMode mode,
+            Stream stream,
+            CompressionType compressionType,
+            ArchiveEncoding archiveEncoding
+        )
         {
             foreach (TarHeader h in TarHeaderFactory.ReadHeader(mode, stream, archiveEncoding))
             {

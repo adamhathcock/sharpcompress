@@ -17,6 +17,7 @@ namespace SharpCompress.Test.Xz.Filters
         private readonly PowerPCFilter ppcFilter;
         private readonly SparcFilter sparcFilter;
         private readonly X86Filter x86Filter;
+
         public BCJTests()
         {
             armFilter = new ArmFilter();

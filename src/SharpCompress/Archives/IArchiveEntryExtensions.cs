@@ -16,7 +16,11 @@ namespace SharpCompress.Archives
             var streamListener = (IArchiveExtractionListener)archiveEntry.Archive;
             streamListener.EnsureEntriesLoaded();
             streamListener.FireEntryExtractionBegin(archiveEntry);
-            streamListener.FireFilePartExtractionBegin(archiveEntry.Key, archiveEntry.Size, archiveEntry.CompressedSize);
+            streamListener.FireFilePartExtractionBegin(
+                archiveEntry.Key,
+                archiveEntry.Size,
+                archiveEntry.CompressedSize
+            );
             var entryStream = archiveEntry.OpenEntryStream();
             if (entryStream is null)
             {
@@ -35,29 +39,41 @@ namespace SharpCompress.Archives
         /// <summary>
         /// Extract to specific directory, retaining filename
         /// </summary>
-        public static void WriteToDirectory(this IArchiveEntry entry, string destinationDirectory,
-                                            ExtractionOptions? options = null)
+        public static void WriteToDirectory(
+            this IArchiveEntry entry,
+            string destinationDirectory,
+            ExtractionOptions? options = null
+        )
         {
-            ExtractionMethods.WriteEntryToDirectory(entry, destinationDirectory, options,
-                                              entry.WriteToFile);
+            ExtractionMethods.WriteEntryToDirectory(
+                entry,
+                destinationDirectory,
+                options,
+                entry.WriteToFile
+            );
         }
 
         /// <summary>
         /// Extract to specific file
         /// </summary>
-        public static void WriteToFile(this IArchiveEntry entry,
-                                       string destinationFileName,
-                                       ExtractionOptions? options = null)
+        public static void WriteToFile(
+            this IArchiveEntry entry,
+            string destinationFileName,
+            ExtractionOptions? options = null
+        )
         {
-
-            ExtractionMethods.WriteEntryToFile(entry, destinationFileName, options,
-                                               (x, fm) =>
-                                               {
-                                                   using (FileStream fs = File.Open(destinationFileName, fm))
-                                                   {
-                                                       entry.WriteTo(fs);
-                                                   }
-                                               });
+            ExtractionMethods.WriteEntryToFile(
+                entry,
+                destinationFileName,
+                options,
+                (x, fm) =>
+                {
+                    using (FileStream fs = File.Open(destinationFileName, fm))
+                    {
+                        entry.WriteTo(fs);
+                    }
+                }
+            );
         }
     }
 }

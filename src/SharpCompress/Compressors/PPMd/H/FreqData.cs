@@ -14,10 +14,7 @@ namespace SharpCompress.Compressors.PPMd.H
         //        STATE _PACK_ATTR * Stats;
         //    };
 
-        internal FreqData(byte[] memory)
-            : base(memory)
-        {
-        }
+        internal FreqData(byte[] memory) : base(memory) { }
 
         internal int SummFreq
         {

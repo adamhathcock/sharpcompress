@@ -1,7 +1,7 @@
 ﻿namespace SharpCompress.Compressors.Deflate
 {
     /// <summary>
-    /// Describes how to flush the current deflate operation. 
+    /// Describes how to flush the current deflate operation.
     /// </summary>
     /// <remarks>
     /// The different FlushType values are useful when using a Deflate in a streaming application.
@@ -14,7 +14,7 @@
         /// <summary>Closes the current block, but doesn't flush it to
         /// the output. Used internally only in hypothetical
         /// scenarios.  This was supposed to be removed by Zlib, but it is
-        /// still in use in some edge cases. 
+        /// still in use in some edge cases.
         /// </summary>
         Partial,
 

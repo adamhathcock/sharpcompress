@@ -37,9 +37,9 @@ namespace SharpCompress.Test.Tar
         {
             string archive = "Tar_FileName_Exactly_100_Characters.tar";
 
-
             // create the 100 char filename
-            string filename = "filename_with_exactly_100_characters_______________________________________________________________X";
+            string filename =
+                "filename_with_exactly_100_characters_______________________________________________________________X";
 
             // Step 1: create a tar file containing a file with the test name
             using (Stream stream = File.OpenWrite(Path.Combine(SCRATCH2_FILES_PATH, archive)))
@@ -63,7 +63,10 @@ namespace SharpCompress.Test.Tar
 
                 foreach (var entry in archive2.Entries)
                 {
-                    Assert.Equal("dummy filecontent", new StreamReader(entry.OpenEntryStream()).ReadLine());
+                    Assert.Equal(
+                        "dummy filecontent",
+                        new StreamReader(entry.OpenEntryStream()).ReadLine()
+                    );
                 }
             }
         }
@@ -76,7 +79,10 @@ namespace SharpCompress.Test.Tar
             {
                 Assert.Equal(5, archive.Entries.Count);
                 Assert.Contains("very long filename/", archive.Entries.Select(entry => entry.Key));
-                Assert.Contains("very long filename/very long filename very long filename very long filename very long filename very long filename very long filename very long filename very long filename very long filename very long filename.jpg", archive.Entries.Select(entry => entry.Key));
+                Assert.Contains(
+                    "very long filename/very long filename very long filename very long filename very long filename very long filename very long filename very long filename very long filename very long filename very long filename.jpg",
+                    archive.Entries.Select(entry => entry.Key)
+                );
                 Assert.Contains("z_file 1.txt", archive.Entries.Select(entry => entry.Key));
                 Assert.Contains("z_file 2.txt", archive.Entries.Select(entry => entry.Key));
                 Assert.Contains("z_file 3.txt", archive.Entries.Select(entry => entry.Key));
@@ -87,7 +93,6 @@ namespace SharpCompress.Test.Tar
         public void Tar_VeryLongFilepathReadback()
         {
             string archive = "Tar_VeryLongFilepathReadback.tar";
-
 
             // create a very long filename
             string longFilename = "";
@@ -120,7 +125,10 @@ namespace SharpCompress.Test.Tar
 
                 foreach (var entry in archive2.Entries)
                 {
-                    Assert.Equal("dummy filecontent", new StreamReader(entry.OpenEntryStream()).ReadLine());
+                    Assert.Equal(
+                        "dummy filecontent",
+                        new StreamReader(entry.OpenEntryStream()).ReadLine()
+                    );
                 }
             }
         }
@@ -133,11 +141,26 @@ namespace SharpCompress.Test.Tar
             {
                 Assert.Equal(6, archive.Entries.Count);
                 Assert.Contains("Directory/", archive.Entries.Select(entry => entry.Key));
-                Assert.Contains("Directory/Some file with veeeeeeeeeery loooooooooong name", archive.Entries.Select(entry => entry.Key));
-                Assert.Contains("Directory/Directory with veeeeeeeeeery loooooooooong name/", archive.Entries.Select(entry => entry.Key));
-                Assert.Contains("Directory/Directory with veeeeeeeeeery loooooooooong name/Some file with veeeeeeeeeery loooooooooong name", archive.Entries.Select(entry => entry.Key));
-                Assert.Contains("Directory/Directory with veeeeeeeeeery loooooooooong name/Directory with veeeeeeeeeery loooooooooong name/", archive.Entries.Select(entry => entry.Key));
-                Assert.Contains("Directory/Directory with veeeeeeeeeery loooooooooong name/Directory with veeeeeeeeeery loooooooooong name/Some file with veeeeeeeeeery loooooooooong name", archive.Entries.Select(entry => entry.Key));
+                Assert.Contains(
+                    "Directory/Some file with veeeeeeeeeery loooooooooong name",
+                    archive.Entries.Select(entry => entry.Key)
+                );
+                Assert.Contains(
+                    "Directory/Directory with veeeeeeeeeery loooooooooong name/",
+                    archive.Entries.Select(entry => entry.Key)
+                );
+                Assert.Contains(
+                    "Directory/Directory with veeeeeeeeeery loooooooooong name/Some file with veeeeeeeeeery loooooooooong name",
+                    archive.Entries.Select(entry => entry.Key)
+                );
+                Assert.Contains(
+                    "Directory/Directory with veeeeeeeeeery loooooooooong name/Directory with veeeeeeeeeery loooooooooong name/",
+                    archive.Entries.Select(entry => entry.Key)
+                );
+                Assert.Contains(
+                    "Directory/Directory with veeeeeeeeeery loooooooooong name/Directory with veeeeeeeeeery loooooooooong name/Some file with veeeeeeeeeery loooooooooong name",
+                    archive.Entries.Select(entry => entry.Key)
+                );
             }
         }
 
@@ -161,6 +184,7 @@ namespace SharpCompress.Test.Tar
             }
             CompareArchivesByPath(unmodified, scratchPath);
         }
+
         [Fact]
         public void Tar_Random_Write_Add()
         {
@@ -186,7 +210,9 @@ namespace SharpCompress.Test.Tar
 
             using (var archive = TarArchive.Open(unmodified))
             {
-                var entry = archive.Entries.Single(x => x.Key.EndsWith("jpg", StringComparison.OrdinalIgnoreCase));
+                var entry = archive.Entries.Single(
+                    x => x.Key.EndsWith("jpg", StringComparison.OrdinalIgnoreCase)
+                );
                 archive.RemoveEntry(entry);
                 archive.SaveTo(scratchPath, CompressionType.None);
             }
@@ -214,6 +240,7 @@ namespace SharpCompress.Test.Tar
                 Assert.True(archive.Type == ArchiveType.Tar);
             }
         }
+
         [Theory]
         [InlineData(10)]
         [InlineData(128)]
@@ -221,10 +248,7 @@ namespace SharpCompress.Test.Tar
         {
             using (var mstm = new MemoryStream())
             {
-                var enc = new ArchiveEncoding()
-                {
-                    Default = Encoding.UTF8
-                };
+                var enc = new ArchiveEncoding() { Default = Encoding.UTF8 };
                 var twopt = new TarWriterOptions(CompressionType.None, true);
                 twopt.ArchiveEncoding = enc;
                 var fname = new string((char)0x3042, length);
@@ -235,10 +259,7 @@ namespace SharpCompress.Test.Tar
                 }
                 using (var inputMemory = new MemoryStream(mstm.ToArray()))
                 {
-                    var tropt = new ReaderOptions()
-                    {
-                        ArchiveEncoding = enc
-                    };
+                    var tropt = new ReaderOptions() { ArchiveEncoding = enc };
                     using (var tr = TarReader.Open(inputMemory, tropt))
                     {
                         while (tr.MoveToNextEntry())
@@ -254,7 +275,10 @@ namespace SharpCompress.Test.Tar
         public void Tar_Read_One_At_A_Time()
         {
             var archiveEncoding = new ArchiveEncoding { Default = Encoding.UTF8, };
-            var tarWriterOptions = new TarWriterOptions(CompressionType.None, true) { ArchiveEncoding = archiveEncoding, };
+            var tarWriterOptions = new TarWriterOptions(CompressionType.None, true)
+            {
+                ArchiveEncoding = archiveEncoding,
+            };
             var testBytes = Encoding.UTF8.GetBytes("This is a test.");
 
             using (var memoryStream = new MemoryStream())

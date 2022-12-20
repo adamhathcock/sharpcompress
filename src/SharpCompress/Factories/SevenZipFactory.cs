@@ -14,9 +14,7 @@ namespace SharpCompress.Factories
     /// <summary>
     /// Represents the foundation factory of 7Zip archive.
     /// </summary>
-    public class SevenZipFactory : Factory,
-        IArchiveFactory,
-        IMultiArchiveFactory
+    public class SevenZipFactory : Factory, IArchiveFactory, IMultiArchiveFactory
     {
         #region IFactory
 
@@ -40,7 +38,7 @@ namespace SharpCompress.Factories
 
         #endregion
 
-        #region IArchiveFactory        
+        #region IArchiveFactory
 
         /// <inheritdoc/>
         public IArchive Open(Stream stream, ReaderOptions? readerOptions = null)
@@ -68,18 +66,22 @@ namespace SharpCompress.Factories
         public IArchive Open(IReadOnlyList<FileInfo> fileInfos, ReaderOptions? readerOptions = null)
         {
             return SevenZipArchive.Open(fileInfos, readerOptions);
-        }        
+        }
 
         #endregion
 
         #region reader
 
-        internal override bool TryOpenReader(RewindableStream rewindableStream, ReaderOptions options, out IReader? reader)
+        internal override bool TryOpenReader(
+            RewindableStream rewindableStream,
+            ReaderOptions options,
+            out IReader? reader
+        )
         {
             reader = null;
             return false;
         }
-        
+
         #endregion
     }
 }

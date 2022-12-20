@@ -39,28 +39,153 @@ namespace SharpCompress.Compressors.Deflate64
         // const tables used in decoding:
 
         // Extra bits for length code 257 - 285.
-        private static ReadOnlySpan<byte> S_EXTRA_LENGTH_BITS => new byte[]
-            { 0,0,0,0,0,0,0,0,1,1,1,1,2,2,2,2,3,3,3,3,4,4,4,4,5,5,5,5,16 };
+        private static ReadOnlySpan<byte> S_EXTRA_LENGTH_BITS =>
+            new byte[]
+            {
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                1,
+                1,
+                1,
+                1,
+                2,
+                2,
+                2,
+                2,
+                3,
+                3,
+                3,
+                3,
+                4,
+                4,
+                4,
+                4,
+                5,
+                5,
+                5,
+                5,
+                16
+            };
 
         // The base length for length code 257 - 285.
         // The formula to get the real length for a length code is lengthBase[code - 257] + (value stored in extraBits)
         private static readonly int[] S_LENGTH_BASE =
-            { 3,4,5,6,7,8,9,10,11,13,15,17,19,23,27,31,35,43,51,59,67,83,99,115,131,163,195,227,3};
+        {
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            13,
+            15,
+            17,
+            19,
+            23,
+            27,
+            31,
+            35,
+            43,
+            51,
+            59,
+            67,
+            83,
+            99,
+            115,
+            131,
+            163,
+            195,
+            227,
+            3
+        };
 
         // The base distance for distance code 0 - 31
         // The real distance for a distance code is  distanceBasePosition[code] + (value stored in extraBits)
         private static readonly int[] S_DISTANCE_BASE_POSITION =
-            { 1,2,3,4,5,7,9,13,17,25,33,49,65,97,129,193,257,385,513,769,1025,1537,2049,3073,4097,6145,8193,12289,16385,24577,32769,49153 };
+        {
+            1,
+            2,
+            3,
+            4,
+            5,
+            7,
+            9,
+            13,
+            17,
+            25,
+            33,
+            49,
+            65,
+            97,
+            129,
+            193,
+            257,
+            385,
+            513,
+            769,
+            1025,
+            1537,
+            2049,
+            3073,
+            4097,
+            6145,
+            8193,
+            12289,
+            16385,
+            24577,
+            32769,
+            49153
+        };
 
         // code lengths for code length alphabet is stored in following order
-        private static ReadOnlySpan<byte> S_CODE_ORDER => new byte[] { 16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1, 15 };
+        private static ReadOnlySpan<byte> S_CODE_ORDER =>
+            new byte[] { 16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1, 15 };
 
-        private static ReadOnlySpan<byte> S_STATIC_DISTANCE_TREE_TABLE => new byte[]
-        {
-            0x00,0x10,0x08,0x18,0x04,0x14,0x0c,0x1c,0x02,0x12,0x0a,0x1a,
-            0x06,0x16,0x0e,0x1e,0x01,0x11,0x09,0x19,0x05,0x15,0x0d,0x1d,
-            0x03,0x13,0x0b,0x1b,0x07,0x17,0x0f,0x1f
-        };
+        private static ReadOnlySpan<byte> S_STATIC_DISTANCE_TREE_TABLE =>
+            new byte[]
+            {
+                0x00,
+                0x10,
+                0x08,
+                0x18,
+                0x04,
+                0x14,
+                0x0c,
+                0x1c,
+                0x02,
+                0x12,
+                0x0a,
+                0x1a,
+                0x06,
+                0x16,
+                0x0e,
+                0x1e,
+                0x01,
+                0x11,
+                0x09,
+                0x19,
+                0x05,
+                0x15,
+                0x0d,
+                0x1d,
+                0x03,
+                0x13,
+                0x0b,
+                0x1b,
+                0x07,
+                0x17,
+                0x0f,
+                0x1f
+            };
 
         private readonly OutputWindow _output;
         private readonly InputBuffer _input;
@@ -68,6 +193,7 @@ namespace SharpCompress.Compressors.Deflate64
         private HuffmanTree _distanceTree;
 
         private InflaterState _state;
+
         //private bool _hasFormatReader;
         private int _bfinal;
         private BlockType _blockType;
@@ -95,12 +221,16 @@ namespace SharpCompress.Compressors.Deflate64
 
         //private IFileFormatReader _formatReader; // class to decode header and footer (e.g. gzip)
 
-        internal InflaterManaged(/*IFileFormatReader reader, */bool deflate64)
+        internal InflaterManaged( /*IFileFormatReader reader, */
+            bool deflate64
+        )
         {
             _output = new OutputWindow();
             _input = new InputBuffer();
 
-            _codeList = new byte[HuffmanTree.MAX_LITERAL_TREE_ELEMENTS + HuffmanTree.MAX_DIST_TREE_ELEMENTS];
+            _codeList = new byte[
+                HuffmanTree.MAX_LITERAL_TREE_ELEMENTS + HuffmanTree.MAX_DIST_TREE_ELEMENTS
+            ];
             _codeLengthTreeCodeLength = new byte[HuffmanTree.NUMBER_OF_CODE_LENGTH_TREE_ELEMENTS];
             _deflate64 = deflate64;
             //if (reader != null)
@@ -114,14 +244,15 @@ namespace SharpCompress.Compressors.Deflate64
         private void Reset()
         {
             _state = //_hasFormatReader ?
-                     //InflaterState.ReadingHeader :   // start by reading Header info
-                InflaterState.ReadingBFinal;    // start by reading BFinal bit
+            //InflaterState.ReadingHeader :   // start by reading Header info
+            InflaterState.ReadingBFinal; // start by reading BFinal bit
         }
 
         public void SetInput(byte[] inputBytes, int offset, int length) =>
             _input.SetInput(inputBytes, offset, length); // append the bytes
 
-        public bool Finished() => _state == InflaterState.Done || _state == InflaterState.VerifyingFooter;
+        public bool Finished() =>
+            _state == InflaterState.Done || _state == InflaterState.VerifyingFooter;
 
         public int AvailableOutput => _output.AvailableBytes;
 
@@ -147,14 +278,14 @@ namespace SharpCompress.Compressors.Deflate64
                 }
 
                 if (length == 0)
-                {   // filled in the bytes array
+                { // filled in the bytes array
                     break;
                 }
                 // Decode will return false when more input is needed
             } while (!Finished() && Decode());
 
             if (_state == InflaterState.VerifyingFooter)
-            {  // finished reading CRC
+            { // finished reading CRC
                 // In this case finished is true and output window has all the data.
                 // But some data in output window might not be copied out.
                 if (_output.AvailableBytes == 0)
@@ -299,7 +430,6 @@ namespace SharpCompress.Compressors.Deflate64
             return result;
         }
 
-
         // Format of Non-compressed blocks (BTYPE=00):
         //
         // Any bits of input up to the next byte boundary are ignored.
@@ -320,12 +450,12 @@ namespace SharpCompress.Compressors.Deflate64
                 switch (_state)
                 {
                     case InflaterState.UncompressedAligning: // initial state when calling this function
-                                                             // we must skip to a byte boundary
+                        // we must skip to a byte boundary
                         _input.SkipToByteBoundary();
                         _state = InflaterState.UncompressedByte1;
                         goto case InflaterState.UncompressedByte1;
 
-                    case InflaterState.UncompressedByte1:   // decoding block length
+                    case InflaterState.UncompressedByte1: // decoding block length
                     case InflaterState.UncompressedByte2:
                     case InflaterState.UncompressedByte3:
                     case InflaterState.UncompressedByte4:
@@ -338,8 +468,10 @@ namespace SharpCompress.Compressors.Deflate64
                         _blockLengthBuffer[_state - InflaterState.UncompressedByte1] = (byte)bits;
                         if (_state == InflaterState.UncompressedByte4)
                         {
-                            _blockLength = _blockLengthBuffer[0] + ((int)_blockLengthBuffer[1]) * 256;
-                            int blockLengthComplement = _blockLengthBuffer[2] + ((int)_blockLengthBuffer[3]) * 256;
+                            _blockLength =
+                                _blockLengthBuffer[0] + ((int)_blockLengthBuffer[1]) * 256;
+                            int blockLengthComplement =
+                                _blockLengthBuffer[2] + ((int)_blockLengthBuffer[3]) * 256;
 
                             // make sure complement matches
                             if ((ushort)_blockLength != (ushort)(~blockLengthComplement))
@@ -376,7 +508,8 @@ namespace SharpCompress.Compressors.Deflate64
                         return false;
 
                     default:
-                        Debug./*Fail*/Assert(false, "check why we are here!");
+                        Debug. /*Fail*/
+                        Assert(false, "check why we are here!");
                         throw new InvalidDataException("Deflate64: unknown state");
                 }
             }
@@ -386,7 +519,7 @@ namespace SharpCompress.Compressors.Deflate64
         {
             endOfBlockCodeSeen = false;
 
-            int freeBytes = _output.FreeBytes;   // it is a little bit faster than frequently accessing the property
+            int freeBytes = _output.FreeBytes; // it is a little bit faster than frequently accessing the property
             while (freeBytes > 65536)
             {
                 // With Deflate64 we can have up to a 64kb length, so we ensure at least that much space is available
@@ -423,16 +556,16 @@ namespace SharpCompress.Compressors.Deflate64
                         else
                         {
                             // length/distance pair
-                            symbol -= 257;     // length code started at 257
+                            symbol -= 257; // length code started at 257
                             if (symbol < 8)
                             {
-                                symbol += 3;   // match length = 3,4,5,6,7,8,9,10
+                                symbol += 3; // match length = 3,4,5,6,7,8,9,10
                                 _extraBits = 0;
                             }
                             else if (!_deflate64 && symbol == 28)
                             {
                                 // extra bits for code 285 is 0
-                                symbol = 258;             // code 285 means length 258
+                                symbol = 258; // code 285 means length 258
                                 _extraBits = 0;
                             }
                             else
@@ -517,14 +650,14 @@ namespace SharpCompress.Compressors.Deflate64
                         break;
 
                     default:
-                        Debug./*Fail*/Assert(false, "check why we are here!");
+                        Debug. /*Fail*/
+                        Assert(false, "check why we are here!");
                         throw new InvalidDataException("Deflate64: unknown state");
                 }
             }
 
             return true;
         }
-
 
         // Format of the dynamic block header:
         //      5 Bits: HLIT, # of Literal/Length codes - 257 (257 - 286)
@@ -714,7 +847,8 @@ namespace SharpCompress.Compressors.Deflate64
                     break;
 
                 default:
-                    Debug./*Fail*/Assert(false, "check why we are here!");
+                    Debug. /*Fail*/
+                    Assert(false, "check why we are here!");
                     throw new InvalidDataException("Deflate64: unknown state");
             }
 
@@ -723,7 +857,13 @@ namespace SharpCompress.Compressors.Deflate64
 
             // Create literal and distance tables
             Array.Copy(_codeList, literalTreeCodeLength, _literalLengthCodeCount);
-            Array.Copy(_codeList, _literalLengthCodeCount, distanceTreeCodeLength, 0, _distanceCodeCount);
+            Array.Copy(
+                _codeList,
+                _literalLengthCodeCount,
+                distanceTreeCodeLength,
+                0,
+                _distanceCodeCount
+            );
 
             // Make sure there is an end-of-block code, otherwise how could we ever end?
             if (literalTreeCodeLength[HuffmanTree.END_OF_BLOCK_CODE] == 0)

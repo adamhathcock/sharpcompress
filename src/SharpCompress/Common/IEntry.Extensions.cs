@@ -4,8 +4,11 @@ namespace SharpCompress.Common
 {
     internal static class EntryExtensions
     {
-        internal static void PreserveExtractionOptions(this IEntry entry, string destinationFileName,
-                                                        ExtractionOptions options)
+        internal static void PreserveExtractionOptions(
+            this IEntry entry,
+            string destinationFileName,
+            ExtractionOptions options
+        )
         {
             if (options.PreserveFileTime || options.PreserveAttributes)
             {
@@ -38,7 +41,8 @@ namespace SharpCompress.Common
                 {
                     if (entry.Attrib.HasValue)
                     {
-                        nf.Attributes = (FileAttributes)System.Enum.ToObject(typeof(FileAttributes), entry.Attrib.Value);
+                        nf.Attributes = (FileAttributes)
+                            System.Enum.ToObject(typeof(FileAttributes), entry.Attrib.Value);
                     }
                 }
             }

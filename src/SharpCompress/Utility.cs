@@ -69,7 +69,13 @@ namespace SharpCompress
             }
         }
 
-        public static void Copy(Array sourceArray, long sourceIndex, Array destinationArray, long destinationIndex, long length)
+        public static void Copy(
+            Array sourceArray,
+            long sourceIndex,
+            Array destinationArray,
+            long destinationIndex,
+            long length
+        )
         {
             if (sourceIndex > Int32.MaxValue || sourceIndex < Int32.MinValue)
             {
@@ -86,7 +92,13 @@ namespace SharpCompress
                 throw new ArgumentOutOfRangeException(nameof(length));
             }
 
-            Array.Copy(sourceArray, (int)sourceIndex, destinationArray, (int)destinationIndex, (int)length);
+            Array.Copy(
+                sourceArray,
+                (int)sourceIndex,
+                destinationArray,
+                (int)destinationIndex,
+                (int)length
+            );
         }
 
         public static IEnumerable<T> AsEnumerable<T>(this T item)
@@ -141,8 +153,7 @@ namespace SharpCompress
                     {
                         break;
                     }
-                }
-                while (true);
+                } while (true);
             }
             finally
             {
@@ -155,10 +166,7 @@ namespace SharpCompress
             byte[] buffer = GetTransferByteArray();
             try
             {
-                do
-                {
-                }
-                while (source.Read(buffer, 0, buffer.Length) == buffer.Length);
+                do { } while (source.Read(buffer, 0, buffer.Length) == buffer.Length);
             }
             finally
             {
@@ -183,13 +191,12 @@ namespace SharpCompress
                             count++;
                             if (count == array.Length)
                             {
-                                source.Position = source.Position - len + i - array.Length +1;
+                                source.Position = source.Position - len + i - array.Length + 1;
                                 return true;
                             }
                         }
                     }
-                }
-                while ((len = source.Read(buffer, 0, buffer.Length)) > 0);
+                } while ((len = source.Read(buffer, 0, buffer.Length)) > 0);
             }
             finally
             {
@@ -242,15 +249,18 @@ namespace SharpCompress
             var localDateTime = dateTime.Value.ToLocalTime();
 
             return (uint)(
-                             (localDateTime.Second / 2) | (localDateTime.Minute << 5) | (localDateTime.Hour << 11) |
-                             (localDateTime.Day << 16) | (localDateTime.Month << 21) |
-                             ((localDateTime.Year - 1980) << 25));
+                (localDateTime.Second / 2)
+                | (localDateTime.Minute << 5)
+                | (localDateTime.Hour << 11)
+                | (localDateTime.Day << 16)
+                | (localDateTime.Month << 21)
+                | ((localDateTime.Year - 1980) << 25)
+            );
         }
 
         public static DateTime DosDateToDateTime(UInt32 iTime)
         {
-            return DosDateToDateTime((UInt16)(iTime / 65536),
-                                     (UInt16)(iTime % 65536));
+            return DosDateToDateTime((UInt16)(iTime / 65536), (UInt16)(iTime % 65536));
         }
 
         /// <summary>
@@ -283,7 +293,12 @@ namespace SharpCompress
             }
         }
 
-        public static long TransferTo(this Stream source, Stream destination, Common.Entry entry, IReaderExtractionListener readerExtractionListener)
+        public static long TransferTo(
+            this Stream source,
+            Stream destination,
+            Common.Entry entry,
+            IReaderExtractionListener readerExtractionListener
+        )
         {
             byte[] array = GetTransferByteArray();
             try
@@ -357,10 +372,10 @@ namespace SharpCompress
         /// <returns>Return the new UINT32 in the other endianness format</returns>
         public static UInt32 SwapUINT32(UInt32 number)
         {
-            return (number >> 24) |
-                 ((number << 8) & 0x00FF0000) |
-                 ((number >> 8) & 0x0000FF00) |
-                 (number << 24);
+            return (number >> 24)
+                | ((number << 8) & 0x00FF0000)
+                | ((number >> 8) & 0x0000FF00)
+                | (number << 24);
         }
 
         /// <summary>

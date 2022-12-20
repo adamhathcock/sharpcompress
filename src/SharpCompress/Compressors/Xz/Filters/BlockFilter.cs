@@ -19,15 +19,18 @@ namespace SharpCompress.Compressors.Xz.Filters
             LZMA2 = 0x21
         }
 
-        private static readonly Dictionary<FilterTypes, Type> FilterMap = new Dictionary<FilterTypes, Type>
-                                                                          {
-            {FilterTypes.ARCH_x86_FILTER, typeof(X86Filter) },
-            {FilterTypes.ARCH_PowerPC_FILTER, typeof(PowerPCFilter) },
-            {FilterTypes.ARCH_IA64_FILTER, typeof(IA64Filter) },
-            {FilterTypes.ARCH_ARM_FILTER, typeof(ArmFilter) },
-            {FilterTypes.ARCH_ARMTHUMB_FILTER, typeof(ArmThumbFilter) },
-            {FilterTypes.ARCH_SPARC_FILTER, typeof(SparcFilter) },
-            {FilterTypes.LZMA2, typeof(Lzma2Filter) }
+        private static readonly Dictionary<FilterTypes, Type> FilterMap = new Dictionary<
+            FilterTypes,
+            Type
+        >
+        {
+            { FilterTypes.ARCH_x86_FILTER, typeof(X86Filter) },
+            { FilterTypes.ARCH_PowerPC_FILTER, typeof(PowerPCFilter) },
+            { FilterTypes.ARCH_IA64_FILTER, typeof(IA64Filter) },
+            { FilterTypes.ARCH_ARM_FILTER, typeof(ArmFilter) },
+            { FilterTypes.ARCH_ARMTHUMB_FILTER, typeof(ArmThumbFilter) },
+            { FilterTypes.ARCH_SPARC_FILTER, typeof(SparcFilter) },
+            { FilterTypes.LZMA2, typeof(Lzma2Filter) }
         };
 
         public abstract bool AllowAsLast { get; }
@@ -42,7 +45,9 @@ namespace SharpCompress.Compressors.Xz.Filters
             var filterType = (FilterTypes)reader.ReadXZInteger();
             if (!FilterMap.ContainsKey(filterType))
             {
-                throw new NotImplementedException($"Filter {filterType} has not yet been implemented");
+                throw new NotImplementedException(
+                    $"Filter {filterType} has not yet been implemented"
+                );
             }
 
             var filter = (BlockFilter)Activator.CreateInstance(FilterMap[filterType])!;

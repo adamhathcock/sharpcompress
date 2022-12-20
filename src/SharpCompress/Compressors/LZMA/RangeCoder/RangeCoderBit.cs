@@ -52,7 +52,9 @@ namespace SharpCompress.Compressors.LZMA.RangeCoder
             }
         }
 
-        private static readonly UInt32[] PROB_PRICES = new UInt32[K_BIT_MODEL_TOTAL >> K_NUM_MOVE_REDUCING_BITS];
+        private static readonly UInt32[] PROB_PRICES = new UInt32[
+            K_BIT_MODEL_TOTAL >> K_NUM_MOVE_REDUCING_BITS
+        ];
 
         static BitEncoder()
         {
@@ -63,15 +65,19 @@ namespace SharpCompress.Compressors.LZMA.RangeCoder
                 UInt32 end = (UInt32)1 << (kNumBits - i);
                 for (UInt32 j = start; j < end; j++)
                 {
-                    PROB_PRICES[j] = ((UInt32)i << K_NUM_BIT_PRICE_SHIFT_BITS) +
-                                    (((end - j) << K_NUM_BIT_PRICE_SHIFT_BITS) >> (kNumBits - i - 1));
+                    PROB_PRICES[j] =
+                        ((UInt32)i << K_NUM_BIT_PRICE_SHIFT_BITS)
+                        + (((end - j) << K_NUM_BIT_PRICE_SHIFT_BITS) >> (kNumBits - i - 1));
                 }
             }
         }
 
         public uint GetPrice(uint symbol)
         {
-            return PROB_PRICES[(((_prob - symbol) ^ ((-(int)symbol))) & (K_BIT_MODEL_TOTAL - 1)) >> K_NUM_MOVE_REDUCING_BITS];
+            return PROB_PRICES[
+                (((_prob - symbol) ^ ((-(int)symbol))) & (K_BIT_MODEL_TOTAL - 1))
+                    >> K_NUM_MOVE_REDUCING_BITS
+            ];
         }
 
         public uint GetPrice0()
@@ -119,7 +125,8 @@ namespace SharpCompress.Compressors.LZMA.RangeCoder
                 _prob += (K_BIT_MODEL_TOTAL - _prob) >> K_NUM_MOVE_BITS;
                 if (rangeDecoder._range < Decoder.K_TOP_VALUE)
                 {
-                    rangeDecoder._code = (rangeDecoder._code << 8) | (byte)rangeDecoder._stream.ReadByte();
+                    rangeDecoder._code =
+                        (rangeDecoder._code << 8) | (byte)rangeDecoder._stream.ReadByte();
                     rangeDecoder._range <<= 8;
                     rangeDecoder._total++;
                 }
@@ -130,7 +137,8 @@ namespace SharpCompress.Compressors.LZMA.RangeCoder
             _prob -= (_prob) >> K_NUM_MOVE_BITS;
             if (rangeDecoder._range < Decoder.K_TOP_VALUE)
             {
-                rangeDecoder._code = (rangeDecoder._code << 8) | (byte)rangeDecoder._stream.ReadByte();
+                rangeDecoder._code =
+                    (rangeDecoder._code << 8) | (byte)rangeDecoder._stream.ReadByte();
                 rangeDecoder._range <<= 8;
                 rangeDecoder._total++;
             }

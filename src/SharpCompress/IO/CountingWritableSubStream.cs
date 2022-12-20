@@ -5,9 +5,7 @@ namespace SharpCompress.IO
 {
     internal class CountingWritableSubStream : NonDisposingStream
     {
-        internal CountingWritableSubStream(Stream stream) : base(stream, throwOnDispose: false)
-        {
-        }
+        internal CountingWritableSubStream(Stream stream) : base(stream, throwOnDispose: false) { }
 
         public ulong Count { get; private set; }
 
@@ -24,7 +22,11 @@ namespace SharpCompress.IO
 
         public override long Length => throw new NotSupportedException();
 
-        public override long Position { get => throw new NotSupportedException(); set => throw new NotSupportedException(); }
+        public override long Position
+        {
+            get => throw new NotSupportedException();
+            set => throw new NotSupportedException();
+        }
 
         public override int Read(byte[] buffer, int offset, int count)
         {

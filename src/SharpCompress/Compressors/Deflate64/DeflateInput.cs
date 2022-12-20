@@ -33,7 +33,8 @@ namespace SharpCompress.Compressors.Deflate64
             StartIndex = state._startIndex;
         }
 
-        internal /*readonly */struct InputState
+        internal /*readonly */
+        struct InputState
         {
             internal readonly int _count;
             internal readonly int _startIndex;

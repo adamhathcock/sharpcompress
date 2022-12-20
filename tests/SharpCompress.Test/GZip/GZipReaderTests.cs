@@ -18,13 +18,16 @@ namespace SharpCompress.Test.GZip
             Read("Tar.tar.gz", CompressionType.GZip);
         }
 
-
         [Fact]
         public void GZip_Reader_Generic2()
         {
             //read only as GZip itme
             using (Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.gz")))
-            using (var reader = SharpCompress.Readers.GZip.GZipReader.Open(new RewindableStream(stream)))
+            using (
+                var reader = SharpCompress.Readers.GZip.GZipReader.Open(
+                    new RewindableStream(stream)
+                )
+            )
             {
                 while (reader.MoveToNextEntry()) // Crash here
                 {

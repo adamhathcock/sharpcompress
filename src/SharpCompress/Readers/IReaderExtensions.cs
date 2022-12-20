@@ -24,8 +24,11 @@ namespace SharpCompress.Readers
         /// <summary>
         /// Extract all remaining unread entries to specific directory, retaining filename
         /// </summary>
-        public static void WriteAllToDirectory(this IReader reader, string destinationDirectory,
-                                               ExtractionOptions? options = null)
+        public static void WriteAllToDirectory(
+            this IReader reader,
+            string destinationDirectory,
+            ExtractionOptions? options = null
+        )
         {
             while (reader.MoveToNextEntry())
             {
@@ -36,28 +39,41 @@ namespace SharpCompress.Readers
         /// <summary>
         /// Extract to specific directory, retaining filename
         /// </summary>
-        public static void WriteEntryToDirectory(this IReader reader, string destinationDirectory,
-                                                 ExtractionOptions? options = null)
+        public static void WriteEntryToDirectory(
+            this IReader reader,
+            string destinationDirectory,
+            ExtractionOptions? options = null
+        )
         {
-            ExtractionMethods.WriteEntryToDirectory(reader.Entry, destinationDirectory, options,
-                                              reader.WriteEntryToFile);
+            ExtractionMethods.WriteEntryToDirectory(
+                reader.Entry,
+                destinationDirectory,
+                options,
+                reader.WriteEntryToFile
+            );
         }
 
         /// <summary>
         /// Extract to specific file
         /// </summary>
-        public static void WriteEntryToFile(this IReader reader,
-                                            string destinationFileName,
-                                            ExtractionOptions? options = null)
+        public static void WriteEntryToFile(
+            this IReader reader,
+            string destinationFileName,
+            ExtractionOptions? options = null
+        )
         {
-            ExtractionMethods.WriteEntryToFile(reader.Entry, destinationFileName, options,
-                                               (x, fm) =>
-                                               {
-                                                   using (FileStream fs = File.Open(destinationFileName, fm))
-                                                   {
-                                                       reader.WriteEntryTo(fs);
-                                                   }
-                                               });
+            ExtractionMethods.WriteEntryToFile(
+                reader.Entry,
+                destinationFileName,
+                options,
+                (x, fm) =>
+                {
+                    using (FileStream fs = File.Open(destinationFileName, fm))
+                    {
+                        reader.WriteEntryTo(fs);
+                    }
+                }
+            );
         }
     }
 }

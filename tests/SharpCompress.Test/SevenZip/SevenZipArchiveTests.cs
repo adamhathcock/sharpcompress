@@ -12,11 +12,13 @@ namespace SharpCompress.Test.SevenZip
         {
             ArchiveStreamRead("7Zip.solid.7z");
         }
+
         [Fact]
         public void SevenZipArchive_NonSolid_StreamRead()
         {
             ArchiveStreamRead("7Zip.nonsolid.7z");
         }
+
         [Fact]
         public void SevenZipArchive_LZMA_StreamRead()
         {
@@ -32,7 +34,10 @@ namespace SharpCompress.Test.SevenZip
         [Fact]
         public void SevenZipArchive_LZMAAES_StreamRead()
         {
-            ArchiveStreamRead("7Zip.LZMA.Aes.7z", new ReaderOptions() { Password = "testpassword" });
+            ArchiveStreamRead(
+                "7Zip.LZMA.Aes.7z",
+                new ReaderOptions() { Password = "testpassword" }
+            );
         }
 
         [Fact]
@@ -40,11 +45,16 @@ namespace SharpCompress.Test.SevenZip
         {
             ArchiveFileRead("7Zip.LZMA.Aes.7z", new ReaderOptions() { Password = "testpassword" });
         }
+
         [Fact]
         public void SevenZipArchive_LZMAAES_NoPasswordExceptionTest()
         {
-            Assert.Throws(typeof(CryptographicException), () => ArchiveFileRead("7Zip.LZMA.Aes.7z", new ReaderOptions() { Password = null })); //was failing with ArgumentNullException not CryptographicException like rar
+            Assert.Throws(
+                typeof(CryptographicException),
+                () => ArchiveFileRead("7Zip.LZMA.Aes.7z", new ReaderOptions() { Password = null })
+            ); //was failing with ArgumentNullException not CryptographicException like rar
         }
+
         [Fact]
         public void SevenZipArchive_PPMd_StreamRead()
         {
@@ -108,26 +118,35 @@ namespace SharpCompress.Test.SevenZip
         [Fact]
         public void SevenZipArchive_BZip2_Split()
         {
-            Assert.Throws<InvalidOperationException>(() => ArchiveStreamRead(null, "Original.7z.001",
-                                                                             "Original.7z.002",
-                                                                             "Original.7z.003",
-                                                                             "Original.7z.004",
-                                                                             "Original.7z.005",
-                                                                             "Original.7z.006",
-                                                                             "Original.7z.007"));
+            Assert.Throws<InvalidOperationException>(
+                () =>
+                    ArchiveStreamRead(
+                        null,
+                        "Original.7z.001",
+                        "Original.7z.002",
+                        "Original.7z.003",
+                        "Original.7z.004",
+                        "Original.7z.005",
+                        "Original.7z.006",
+                        "Original.7z.007"
+                    )
+            );
         }
 
         //Same as archive as Original.7z.001 ... 007 files without the root directory 'Original\' in the archive - this caused the verify to fail
         [Fact]
         public void SevenZipArchive_BZip2_Split_Working()
         {
-            ArchiveStreamMultiRead(null, "7Zip.BZip2.split.001",
-                                        "7Zip.BZip2.split.002",
-                                        "7Zip.BZip2.split.003",
-                                        "7Zip.BZip2.split.004",
-                                        "7Zip.BZip2.split.005",
-                                        "7Zip.BZip2.split.006",
-                                        "7Zip.BZip2.split.007");
+            ArchiveStreamMultiRead(
+                null,
+                "7Zip.BZip2.split.001",
+                "7Zip.BZip2.split.002",
+                "7Zip.BZip2.split.003",
+                "7Zip.BZip2.split.004",
+                "7Zip.BZip2.split.005",
+                "7Zip.BZip2.split.006",
+                "7Zip.BZip2.split.007"
+            );
         }
 
         //will detect and load other files
@@ -135,14 +154,12 @@ namespace SharpCompress.Test.SevenZip
         public void SevenZipArchive_BZip2_Split_FirstFileRead()
         {
             ArchiveFileRead("7Zip.BZip2.split.001");
-                                        //"7Zip.BZip2.split.002",
-                                        //"7Zip.BZip2.split.003",
-                                        //"7Zip.BZip2.split.004",
-                                        //"7Zip.BZip2.split.005",
-                                        //"7Zip.BZip2.split.006",
-                                        //"7Zip.BZip2.split.007"
+            //"7Zip.BZip2.split.002",
+            //"7Zip.BZip2.split.003",
+            //"7Zip.BZip2.split.004",
+            //"7Zip.BZip2.split.005",
+            //"7Zip.BZip2.split.006",
+            //"7Zip.BZip2.split.007"
         }
-
-
     }
 }

@@ -8,8 +8,7 @@ namespace SharpCompress.Readers.Rar
     {
         private readonly Stream stream;
 
-        internal SingleVolumeRarReader(Stream stream, ReaderOptions options)
-            : base(options)
+        internal SingleVolumeRarReader(Stream stream, ReaderOptions options) : base(options)
         {
             this.stream = stream;
         }
@@ -18,7 +17,8 @@ namespace SharpCompress.Readers.Rar
         {
             if (archive.IsMultiVolume)
             {
-                var msg = "Streamed archive is a Multi-volume archive.  Use different RarReader method to extract.";
+                var msg =
+                    "Streamed archive is a Multi-volume archive.  Use different RarReader method to extract.";
                 throw new MultiVolumeExtractionException(msg);
             }
         }

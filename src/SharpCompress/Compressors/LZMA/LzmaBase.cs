@@ -101,8 +101,8 @@ namespace SharpCompress.Compressors.LZMA
         public const uint K_NUM_LOW_LEN_SYMBOLS = 1 << K_NUM_LOW_LEN_BITS;
         public const uint K_NUM_MID_LEN_SYMBOLS = 1 << K_NUM_MID_LEN_BITS;
 
-        public const uint K_NUM_LEN_SYMBOLS = K_NUM_LOW_LEN_SYMBOLS + K_NUM_MID_LEN_SYMBOLS +
-                                           (1 << K_NUM_HIGH_LEN_BITS);
+        public const uint K_NUM_LEN_SYMBOLS =
+            K_NUM_LOW_LEN_SYMBOLS + K_NUM_MID_LEN_SYMBOLS + (1 << K_NUM_HIGH_LEN_BITS);
 
         public const uint K_MATCH_MAX_LEN = K_MATCH_MIN_LEN + K_NUM_LEN_SYMBOLS - 1;
     }

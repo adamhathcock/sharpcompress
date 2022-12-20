@@ -13,8 +13,12 @@ namespace SharpCompress.Compressors.LZMA
         {
             private BitDecoder _choice = new BitDecoder();
             private BitDecoder _choice2 = new BitDecoder();
-            private readonly BitTreeDecoder[] _lowCoder = new BitTreeDecoder[Base.K_NUM_POS_STATES_MAX];
-            private readonly BitTreeDecoder[] _midCoder = new BitTreeDecoder[Base.K_NUM_POS_STATES_MAX];
+            private readonly BitTreeDecoder[] _lowCoder = new BitTreeDecoder[
+                Base.K_NUM_POS_STATES_MAX
+            ];
+            private readonly BitTreeDecoder[] _midCoder = new BitTreeDecoder[
+                Base.K_NUM_POS_STATES_MAX
+            ];
             private BitTreeDecoder _highCoder = new BitTreeDecoder(Base.K_NUM_HIGH_LEN_BITS);
             private uint _numPosStates;
 
@@ -85,8 +89,7 @@ namespace SharpCompress.Compressors.LZMA
                     do
                     {
                         symbol = (symbol << 1) | _decoders[symbol].Decode(rangeDecoder);
-                    }
-                    while (symbol < 0x100);
+                    } while (symbol < 0x100);
                     return (byte)symbol;
                 }
 
@@ -107,8 +110,7 @@ namespace SharpCompress.Compressors.LZMA
                             }
                             break;
                         }
-                    }
-                    while (symbol < 0x100);
+                    } while (symbol < 0x100);
                     return (byte)symbol;
                 }
             }
@@ -120,8 +122,7 @@ namespace SharpCompress.Compressors.LZMA
 
             public void Create(int numPosBits, int numPrevBits)
             {
-                if (_coders != null && _numPrevBits == numPrevBits &&
-                    _numPosBits == numPosBits)
+                if (_coders != null && _numPrevBits == numPrevBits && _numPosBits == numPosBits)
                 {
                     return;
                 }
@@ -155,23 +156,39 @@ namespace SharpCompress.Compressors.LZMA
                 return _coders[GetState(pos, prevByte)].DecodeNormal(rangeDecoder);
             }
 
-            public byte DecodeWithMatchByte(RangeCoder.Decoder rangeDecoder, uint pos, byte prevByte, byte matchByte)
+            public byte DecodeWithMatchByte(
+                RangeCoder.Decoder rangeDecoder,
+                uint pos,
+                byte prevByte,
+                byte matchByte
+            )
             {
-                return _coders[GetState(pos, prevByte)].DecodeWithMatchByte(rangeDecoder, matchByte);
+                return _coders[GetState(pos, prevByte)].DecodeWithMatchByte(
+                    rangeDecoder,
+                    matchByte
+                );
             }
         }
 
         private OutWindow _outWindow;
 
-        private readonly BitDecoder[] _isMatchDecoders = new BitDecoder[Base.K_NUM_STATES << Base.K_NUM_POS_STATES_BITS_MAX];
+        private readonly BitDecoder[] _isMatchDecoders = new BitDecoder[
+            Base.K_NUM_STATES << Base.K_NUM_POS_STATES_BITS_MAX
+        ];
         private readonly BitDecoder[] _isRepDecoders = new BitDecoder[Base.K_NUM_STATES];
         private readonly BitDecoder[] _isRepG0Decoders = new BitDecoder[Base.K_NUM_STATES];
         private readonly BitDecoder[] _isRepG1Decoders = new BitDecoder[Base.K_NUM_STATES];
         private readonly BitDecoder[] _isRepG2Decoders = new BitDecoder[Base.K_NUM_STATES];
-        private readonly BitDecoder[] _isRep0LongDecoders = new BitDecoder[Base.K_NUM_STATES << Base.K_NUM_POS_STATES_BITS_MAX];
+        private readonly BitDecoder[] _isRep0LongDecoders = new BitDecoder[
+            Base.K_NUM_STATES << Base.K_NUM_POS_STATES_BITS_MAX
+        ];
 
-        private readonly BitTreeDecoder[] _posSlotDecoder = new BitTreeDecoder[Base.K_NUM_LEN_TO_POS_STATES];
-        private readonly BitDecoder[] _posDecoders = new BitDecoder[Base.K_NUM_FULL_DISTANCES - Base.K_END_POS_MODEL_INDEX];
+        private readonly BitTreeDecoder[] _posSlotDecoder = new BitTreeDecoder[
+            Base.K_NUM_LEN_TO_POS_STATES
+        ];
+        private readonly BitDecoder[] _posDecoders = new BitDecoder[
+            Base.K_NUM_FULL_DISTANCES - Base.K_END_POS_MODEL_INDEX
+        ];
 
         private BitTreeDecoder _posAlignDecoder = new BitTreeDecoder(Base.K_NUM_ALIGN_BITS);
 
@@ -185,7 +202,10 @@ namespace SharpCompress.Compressors.LZMA
         private uint _posStateMask;
 
         private Base.State _state = new Base.State();
-        private uint _rep0, _rep1, _rep2, _rep3;
+        private uint _rep0,
+            _rep1,
+            _rep2,
+            _rep3;
 
         public Decoder()
         {
@@ -272,8 +292,13 @@ namespace SharpCompress.Compressors.LZMA
             _rep3 = 0;
         }
 
-        public void Code(Stream inStream, Stream outStream,
-                         Int64 inSize, Int64 outSize, ICodeProgress progress)
+        public void Code(
+            Stream inStream,
+            Stream outStream,
+            Int64 inSize,
+            Int64 outSize,
+            ICodeProgress progress
+        )
         {
             if (_outWindow is null)
             {
@@ -309,19 +334,30 @@ namespace SharpCompress.Compressors.LZMA
             while (outWindow.HasSpace)
             {
                 uint posState = (uint)outWindow._total & _posStateMask;
-                if (_isMatchDecoders[(_state._index << Base.K_NUM_POS_STATES_BITS_MAX) + posState].Decode(rangeDecoder) == 0)
+                if (
+                    _isMatchDecoders[
+                        (_state._index << Base.K_NUM_POS_STATES_BITS_MAX) + posState
+                    ].Decode(rangeDecoder) == 0
+                )
                 {
                     byte b;
                     byte prevByte = outWindow.GetByte(0);
                     if (!_state.IsCharState())
                     {
-                        b = _literalDecoder.DecodeWithMatchByte(rangeDecoder,
-                                                                 (uint)outWindow._total, prevByte,
-                                                                 outWindow.GetByte((int)_rep0));
+                        b = _literalDecoder.DecodeWithMatchByte(
+                            rangeDecoder,
+                            (uint)outWindow._total,
+                            prevByte,
+                            outWindow.GetByte((int)_rep0)
+                        );
                     }
                     else
                     {
-                        b = _literalDecoder.DecodeNormal(rangeDecoder, (uint)outWindow._total, prevByte);
+                        b = _literalDecoder.DecodeNormal(
+                            rangeDecoder,
+                            (uint)outWindow._total,
+                            prevByte
+                        );
                     }
                     outWindow.PutByte(b);
                     _state.UpdateChar();
@@ -334,8 +370,10 @@ namespace SharpCompress.Compressors.LZMA
                         if (_isRepG0Decoders[_state._index].Decode(rangeDecoder) == 0)
                         {
                             if (
-                                _isRep0LongDecoders[(_state._index << Base.K_NUM_POS_STATES_BITS_MAX) + posState].Decode(
-                                                                                                                   rangeDecoder) == 0)
+                                _isRep0LongDecoders[
+                                    (_state._index << Base.K_NUM_POS_STATES_BITS_MAX) + posState
+                                ].Decode(rangeDecoder) == 0
+                            )
                             {
                                 _state.UpdateShortRep();
                                 outWindow.PutByte(outWindow.GetByte((int)_rep0));
@@ -375,20 +413,29 @@ namespace SharpCompress.Compressors.LZMA
                         _rep1 = _rep0;
                         len = Base.K_MATCH_MIN_LEN + _lenDecoder.Decode(rangeDecoder, posState);
                         _state.UpdateMatch();
-                        uint posSlot = _posSlotDecoder[Base.GetLenToPosState(len)].Decode(rangeDecoder);
+                        uint posSlot = _posSlotDecoder[Base.GetLenToPosState(len)].Decode(
+                            rangeDecoder
+                        );
                         if (posSlot >= Base.K_START_POS_MODEL_INDEX)
                         {
                             int numDirectBits = (int)((posSlot >> 1) - 1);
                             _rep0 = ((2 | (posSlot & 1)) << numDirectBits);
                             if (posSlot < Base.K_END_POS_MODEL_INDEX)
                             {
-                                _rep0 += BitTreeDecoder.ReverseDecode(_posDecoders,
-                                                                     _rep0 - posSlot - 1, rangeDecoder, numDirectBits);
+                                _rep0 += BitTreeDecoder.ReverseDecode(
+                                    _posDecoders,
+                                    _rep0 - posSlot - 1,
+                                    rangeDecoder,
+                                    numDirectBits
+                                );
                             }
                             else
                             {
-                                _rep0 += (rangeDecoder.DecodeDirectBits(
-                                                                       numDirectBits - Base.K_NUM_ALIGN_BITS) << Base.K_NUM_ALIGN_BITS);
+                                _rep0 += (
+                                    rangeDecoder.DecodeDirectBits(
+                                        numDirectBits - Base.K_NUM_ALIGN_BITS
+                                    ) << Base.K_NUM_ALIGN_BITS
+                                );
                                 _rep0 += _posAlignDecoder.ReverseDecode(rangeDecoder);
                             }
                         }
@@ -458,7 +505,7 @@ namespace SharpCompress.Compressors.LZMA
             set { }
         }
         public override void Flush() { }
-        public override int Read(byte[] buffer, int offset, int count) 
+        public override int Read(byte[] buffer, int offset, int count)
         {
             return 0;
         }

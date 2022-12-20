@@ -7,7 +7,10 @@ namespace SharpCompress.IO
     {
         public static NonDisposingStream Create(Stream stream, bool throwOnDispose = false)
         {
-            if (stream is NonDisposingStream nonDisposingStream && nonDisposingStream.ThrowOnDispose == throwOnDispose)
+            if (
+                stream is NonDisposingStream nonDisposingStream
+                && nonDisposingStream.ThrowOnDispose == throwOnDispose
+            )
             {
                 return nonDisposingStream;
             }
@@ -26,7 +29,9 @@ namespace SharpCompress.IO
         {
             if (ThrowOnDispose)
             {
-                throw new InvalidOperationException($"Attempt to dispose of a {nameof(NonDisposingStream)} when {nameof(ThrowOnDispose)} is {ThrowOnDispose}");
+                throw new InvalidOperationException(
+                    $"Attempt to dispose of a {nameof(NonDisposingStream)} when {nameof(ThrowOnDispose)} is {ThrowOnDispose}"
+                );
             }
         }
 
@@ -45,7 +50,11 @@ namespace SharpCompress.IO
 
         public override long Length => Stream.Length;
 
-        public override long Position { get => Stream.Position; set => Stream.Position = value; }
+        public override long Position
+        {
+            get => Stream.Position;
+            set => Stream.Position = value;
+        }
 
         public override int Read(byte[] buffer, int offset, int count)
         {

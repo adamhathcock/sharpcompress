@@ -34,7 +34,13 @@ namespace SharpCompress.Archives.Tar
         public static TarArchive Open(FileInfo fileInfo, ReaderOptions? readerOptions = null)
         {
             fileInfo.CheckNotNull(nameof(fileInfo));
-            return new TarArchive(new SourceStream(fileInfo, i => ArchiveVolumeFactory.GetFilePart(i, fileInfo), readerOptions ?? new ReaderOptions()));
+            return new TarArchive(
+                new SourceStream(
+                    fileInfo,
+                    i => ArchiveVolumeFactory.GetFilePart(i, fileInfo),
+                    readerOptions ?? new ReaderOptions()
+                )
+            );
         }
 
         /// <summary>
@@ -42,11 +48,20 @@ namespace SharpCompress.Archives.Tar
         /// </summary>
         /// <param name="fileInfos"></param>
         /// <param name="readerOptions"></param>
-        public static TarArchive Open(IEnumerable<FileInfo> fileInfos, ReaderOptions? readerOptions = null)
+        public static TarArchive Open(
+            IEnumerable<FileInfo> fileInfos,
+            ReaderOptions? readerOptions = null
+        )
         {
             fileInfos.CheckNotNull(nameof(fileInfos));
             FileInfo[] files = fileInfos.ToArray();
-            return new TarArchive(new SourceStream(files[0], i => i < files.Length ? files[i] : null, readerOptions ?? new ReaderOptions()));
+            return new TarArchive(
+                new SourceStream(
+                    files[0],
+                    i => i < files.Length ? files[i] : null,
+                    readerOptions ?? new ReaderOptions()
+                )
+            );
         }
 
         /// <summary>
@@ -54,11 +69,20 @@ namespace SharpCompress.Archives.Tar
         /// </summary>
         /// <param name="streams"></param>
         /// <param name="readerOptions"></param>
-        public static TarArchive Open(IEnumerable<Stream> streams, ReaderOptions? readerOptions = null)
+        public static TarArchive Open(
+            IEnumerable<Stream> streams,
+            ReaderOptions? readerOptions = null
+        )
         {
             streams.CheckNotNull(nameof(streams));
             Stream[] strms = streams.ToArray();
-            return new TarArchive(new SourceStream(strms[0], i => i < strms.Length ? strms[i] : null, readerOptions ?? new ReaderOptions()));
+            return new TarArchive(
+                new SourceStream(
+                    strms[0],
+                    i => i < strms.Length ? strms[i] : null,
+                    readerOptions ?? new ReaderOptions()
+                )
+            );
         }
 
         /// <summary>
@@ -69,7 +93,9 @@ namespace SharpCompress.Archives.Tar
         public static TarArchive Open(Stream stream, ReaderOptions? readerOptions = null)
         {
             stream.CheckNotNull(nameof(stream));
-            return new TarArchive(new SourceStream(stream, i => null, readerOptions ?? new ReaderOptions()));
+            return new TarArchive(
+                new SourceStream(stream, i => null, readerOptions ?? new ReaderOptions())
+            );
         }
 
         public static bool IsTarFile(string filePath)
@@ -95,12 +121,13 @@ namespace SharpCompress.Archives.Tar
             {
                 TarHeader tarHeader = new TarHeader(new ArchiveEncoding());
                 bool readSucceeded = tarHeader.Read(new BinaryReader(stream));
-                bool isEmptyArchive = tarHeader.Name.Length == 0 && tarHeader.Size == 0 && Enum.IsDefined(typeof(EntryType), tarHeader.EntryType);
+                bool isEmptyArchive =
+                    tarHeader.Name.Length == 0
+                    && tarHeader.Size == 0
+                    && Enum.IsDefined(typeof(EntryType), tarHeader.EntryType);
                 return readSucceeded || isEmptyArchive;
             }
-            catch
-            {
-            }
+            catch { }
             return false;
         }
 
@@ -116,21 +143,21 @@ namespace SharpCompress.Archives.Tar
         /// </summary>
         /// <param name="srcStream"></param>
         /// <param name="options"></param>
-        internal TarArchive(SourceStream srcStream)
-            : base(ArchiveType.Tar, srcStream)
-        {
-        }
+        internal TarArchive(SourceStream srcStream) : base(ArchiveType.Tar, srcStream) { }
 
-        internal TarArchive()
-            : base(ArchiveType.Tar)
-        {
-        }
+        internal TarArchive() : base(ArchiveType.Tar) { }
 
         protected override IEnumerable<TarArchiveEntry> LoadEntries(IEnumerable<TarVolume> volumes)
         {
             Stream stream = volumes.Single().Stream;
             TarHeader? previousHeader = null;
-            foreach (TarHeader? header in TarHeaderFactory.ReadHeader(StreamingMode.Seekable, stream, ReaderOptions.ArchiveEncoding))
+            foreach (
+                TarHeader? header in TarHeaderFactory.ReadHeader(
+                    StreamingMode.Seekable,
+                    stream,
+                    ReaderOptions.ArchiveEncoding
+                )
+            )
             {
                 if (header != null)
                 {
@@ -142,8 +169,11 @@ namespace SharpCompress.Archives.Tar
                     {
                         if (previousHeader != null)
                         {
-                            var entry = new TarArchiveEntry(this, new TarFilePart(previousHeader, stream),
-                                                            CompressionType.None);
+                            var entry = new TarArchiveEntry(
+                                this,
+                                new TarFilePart(previousHeader, stream),
+                                CompressionType.None
+                            );
 
                             var oldStreamPos = stream.Position;
 
@@ -155,7 +185,9 @@ namespace SharpCompress.Archives.Tar
                                     memoryStream.Position = 0;
                                     var bytes = memoryStream.ToArray();
 
-                                    header.Name = ReaderOptions.ArchiveEncoding.Decode(bytes).TrimNulls();
+                                    header.Name = ReaderOptions.ArchiveEncoding
+                                        .Decode(bytes)
+                                        .TrimNulls();
                                 }
                             }
 
@@ -163,7 +195,11 @@ namespace SharpCompress.Archives.Tar
 
                             previousHeader = null;
                         }
-                        yield return new TarArchiveEntry(this, new TarFilePart(header, stream), CompressionType.None);
+                        yield return new TarArchiveEntry(
+                            this,
+                            new TarFilePart(header, stream),
+                            CompressionType.None
+                        );
                     }
                 }
             }
@@ -174,21 +210,35 @@ namespace SharpCompress.Archives.Tar
             return new TarArchive();
         }
 
-        protected override TarArchiveEntry CreateEntryInternal(string filePath, Stream source,
-                                                               long size, DateTime? modified, bool closeStream)
+        protected override TarArchiveEntry CreateEntryInternal(
+            string filePath,
+            Stream source,
+            long size,
+            DateTime? modified,
+            bool closeStream
+        )
         {
-            return new TarWritableArchiveEntry(this, source, CompressionType.Unknown, filePath, size, modified,
-                                               closeStream);
+            return new TarWritableArchiveEntry(
+                this,
+                source,
+                CompressionType.Unknown,
+                filePath,
+                size,
+                modified,
+                closeStream
+            );
         }
 
-        protected override void SaveTo(Stream stream, WriterOptions options,
-                                       IEnumerable<TarArchiveEntry> oldEntries,
-                                       IEnumerable<TarArchiveEntry> newEntries)
+        protected override void SaveTo(
+            Stream stream,
+            WriterOptions options,
+            IEnumerable<TarArchiveEntry> oldEntries,
+            IEnumerable<TarArchiveEntry> newEntries
+        )
         {
             using (var writer = new TarWriter(stream, new TarWriterOptions(options)))
             {
-                foreach (var entry in oldEntries.Concat(newEntries)
-                                                .Where(x => !x.IsDirectory))
+                foreach (var entry in oldEntries.Concat(newEntries).Where(x => !x.IsDirectory))
                 {
                     using (var entryStream = entry.OpenEntryStream())
                     {

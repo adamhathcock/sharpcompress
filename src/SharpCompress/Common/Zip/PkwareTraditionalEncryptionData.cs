@@ -25,8 +25,11 @@ namespace SharpCompress.Common.Zip
             }
         }
 
-        public static PkwareTraditionalEncryptionData ForRead(string password, ZipFileEntry header,
-                                                              byte[] encryptionHeader)
+        public static PkwareTraditionalEncryptionData ForRead(
+            string password,
+            ZipFileEntry header,
+            byte[] encryptionHeader
+        )
         {
             var encryptor = new PkwareTraditionalEncryptionData(password, header.ArchiveEncoding);
             byte[] plainTextHeader = encryptor.Decrypt(encryptionHeader, encryptionHeader.Length);
@@ -48,8 +51,10 @@ namespace SharpCompress.Common.Zip
         {
             if (length > cipherText.Length)
             {
-                throw new ArgumentOutOfRangeException(nameof(length),
-                                                      "Bad length during Decryption: the length parameter must be smaller than or equal to the size of the destination array.");
+                throw new ArgumentOutOfRangeException(
+                    nameof(length),
+                    "Bad length during Decryption: the length parameter must be smaller than or equal to the size of the destination array."
+                );
             }
 
             var plainText = new byte[length];
@@ -71,8 +76,10 @@ namespace SharpCompress.Common.Zip
 
             if (length > plainText.Length)
             {
-                throw new ArgumentOutOfRangeException(nameof(length),
-                                                      "Bad length during Encryption: The length parameter must be smaller than or equal to the size of the destination array.");
+                throw new ArgumentOutOfRangeException(
+                    nameof(length),
+                    "Bad length during Encryption: The length parameter must be smaller than or equal to the size of the destination array."
+                );
             }
 
             var cipherText = new byte[length];

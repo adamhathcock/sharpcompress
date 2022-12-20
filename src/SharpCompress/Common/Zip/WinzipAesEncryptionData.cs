@@ -17,8 +17,12 @@ namespace SharpCompress.Common.Zip
 
         private byte[] _generatedVerifyValue;
 
-        internal WinzipAesEncryptionData(WinzipAesKeySize keySize, byte[] salt, byte[] passwordVerifyValue,
-                                         string password)
+        internal WinzipAesEncryptionData(
+            WinzipAesKeySize keySize,
+            byte[] salt,
+            byte[] passwordVerifyValue,
+            string password
+        )
         {
             this._keySize = keySize;
             this._salt = salt;
@@ -33,10 +37,7 @@ namespace SharpCompress.Common.Zip
 
         private int KeySizeInBytes
         {
-            get
-            {
-                return KeyLengthInBytes(_keySize);
-            }
+            get { return KeyLengthInBytes(_keySize); }
         }
 
         internal static int KeyLengthInBytes(WinzipAesKeySize keySize)
@@ -52,11 +53,16 @@ namespace SharpCompress.Common.Zip
 
         private void Initialize()
         {
-            #if NET7_0
-            var rfc2898 = new Rfc2898DeriveBytes(_password, _salt, RFC2898_ITERATIONS, HashAlgorithmName.SHA1);
-            #else
+#if NET7_0
+            var rfc2898 = new Rfc2898DeriveBytes(
+                _password,
+                _salt,
+                RFC2898_ITERATIONS,
+                HashAlgorithmName.SHA1
+            );
+#else
             var rfc2898 = new Rfc2898DeriveBytes(_password, _salt, RFC2898_ITERATIONS);
-            #endif
+#endif
 
             KeyBytes = rfc2898.GetBytes(KeySizeInBytes); // 16 or 24 or 32 ???
             IvBytes = rfc2898.GetBytes(KeySizeInBytes);

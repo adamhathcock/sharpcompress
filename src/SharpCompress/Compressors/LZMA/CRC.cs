@@ -61,9 +61,9 @@ namespace SharpCompress.Compressors.LZMA
         {
             crc ^= value;
             return TABLE[0x300 + (crc & 0xFF)]
-                   ^ TABLE[0x200 + ((crc >> 8) & 0xFF)]
-                   ^ TABLE[0x100 + ((crc >> 16) & 0xFF)]
-                   ^ TABLE[0x000 + (crc >> 24)];
+                ^ TABLE[0x200 + ((crc >> 8) & 0xFF)]
+                ^ TABLE[0x100 + ((crc >> 16) & 0xFF)]
+                ^ TABLE[0x000 + (crc >> 24)];
         }
 
         public static uint Update(uint crc, ulong value)

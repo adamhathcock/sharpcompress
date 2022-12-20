@@ -33,9 +33,7 @@ namespace SharpCompress.Common.Zip.Headers
     internal sealed class ExtraUnicodePathExtraField : ExtraData
     {
         public ExtraUnicodePathExtraField(ExtraDataType type, ushort length, byte[] dataBytes)
-            : base(type, length, dataBytes)
-        {
-        }
+            : base(type, length, dataBytes) { }
 
         internal byte Version => DataBytes[0];
 
@@ -63,10 +61,11 @@ namespace SharpCompress.Common.Zip.Headers
 
     internal sealed class Zip64ExtendedInformationExtraField : ExtraData
     {
-        public Zip64ExtendedInformationExtraField(ExtraDataType type, ushort length, byte[] dataBytes)
-            : base(type, length, dataBytes)
-        {
-        }
+        public Zip64ExtendedInformationExtraField(
+            ExtraDataType type,
+            ushort length,
+            byte[] dataBytes
+        ) : base(type, length, dataBytes) { }
 
         // From the spec, values are only in the extradata if the standard
         // value is set to 0xFFFFFFFF (or 0xFFFF for the Disk Start Number).
@@ -75,9 +74,15 @@ namespace SharpCompress.Common.Zip.Headers
         // - Compressed Size
         // - Relative Header Offset
         // - Disk Start Number
-        public void Process(long uncompressedFileSize, long compressedFileSize, long relativeHeaderOffset, ushort diskNumber)
+        public void Process(
+            long uncompressedFileSize,
+            long compressedFileSize,
+            long relativeHeaderOffset,
+            ushort diskNumber
+        )
         {
-            var bytesRequired = ((uncompressedFileSize == uint.MaxValue) ? 8 : 0)
+            var bytesRequired =
+                ((uncompressedFileSize == uint.MaxValue) ? 8 : 0)
                 + ((compressedFileSize == uint.MaxValue) ? 8 : 0)
                 + ((relativeHeaderOffset == uint.MaxValue) ? 8 : 0)
                 + ((diskNumber == ushort.MaxValue) ? 4 : 0);
@@ -85,30 +90,40 @@ namespace SharpCompress.Common.Zip.Headers
 
             if (bytesRequired > DataBytes.Length)
             {
-                throw new ArchiveException("Zip64 extended information extra field is not large enough for the required information");
+                throw new ArchiveException(
+                    "Zip64 extended information extra field is not large enough for the required information"
+                );
             }
 
             if (uncompressedFileSize == uint.MaxValue)
             {
-                UncompressedSize = BinaryPrimitives.ReadInt64LittleEndian(DataBytes.AsSpan(currentIndex));
+                UncompressedSize = BinaryPrimitives.ReadInt64LittleEndian(
+                    DataBytes.AsSpan(currentIndex)
+                );
                 currentIndex += 8;
             }
 
             if (compressedFileSize == uint.MaxValue)
             {
-                CompressedSize = BinaryPrimitives.ReadInt64LittleEndian(DataBytes.AsSpan(currentIndex));
+                CompressedSize = BinaryPrimitives.ReadInt64LittleEndian(
+                    DataBytes.AsSpan(currentIndex)
+                );
                 currentIndex += 8;
             }
 
             if (relativeHeaderOffset == uint.MaxValue)
             {
-                RelativeOffsetOfEntryHeader = BinaryPrimitives.ReadInt64LittleEndian(DataBytes.AsSpan(currentIndex));
+                RelativeOffsetOfEntryHeader = BinaryPrimitives.ReadInt64LittleEndian(
+                    DataBytes.AsSpan(currentIndex)
+                );
                 currentIndex += 8;
             }
 
             if (diskNumber == ushort.MaxValue)
             {
-                VolumeNumber = BinaryPrimitives.ReadUInt32LittleEndian(DataBytes.AsSpan(currentIndex));
+                VolumeNumber = BinaryPrimitives.ReadUInt32LittleEndian(
+                    DataBytes.AsSpan(currentIndex)
+                );
             }
         }
 
@@ -143,8 +158,10 @@ namespace SharpCompress.Common.Zip.Headers
         {
             return type switch
             {
-                ExtraDataType.UnicodePathExtraField => new ExtraUnicodePathExtraField(type, length, extraData),
-                ExtraDataType.Zip64ExtendedInformationExtraField => new Zip64ExtendedInformationExtraField(type, length, extraData),
+                ExtraDataType.UnicodePathExtraField
+                    => new ExtraUnicodePathExtraField(type, length, extraData),
+                ExtraDataType.Zip64ExtendedInformationExtraField
+                    => new Zip64ExtendedInformationExtraField(type, length, extraData),
                 _ => new ExtraData(type, length, extraData)
             };
         }

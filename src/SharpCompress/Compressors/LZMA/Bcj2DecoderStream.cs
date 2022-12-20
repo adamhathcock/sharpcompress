@@ -149,14 +149,12 @@ namespace SharpCompress.Compressors.LZMA
 
         private static bool IsJcc(byte b0, byte b1)
         {
-            return b0 == 0x0F
-                   && (b1 & 0xF0) == 0x80;
+            return b0 == 0x0F && (b1 & 0xF0) == 0x80;
         }
 
         private static bool IsJ(byte b0, byte b1)
         {
-            return (b1 & 0xFE) == 0xE8
-                   || IsJcc(b0, b1);
+            return (b1 & 0xFE) == 0xE8 || IsJcc(b0, b1);
         }
 
         private static int GetIndex(byte b0, byte b1)

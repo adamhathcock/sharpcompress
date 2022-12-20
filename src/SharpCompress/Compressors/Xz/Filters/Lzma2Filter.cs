@@ -46,9 +46,7 @@ namespace SharpCompress.Compressors.Xz.Filters
             }
         }
 
-        public override void ValidateFilter()
-        {
-        }
+        public override void ValidateFilter() { }
 
         public override void SetBaseStream(Stream stream)
         {

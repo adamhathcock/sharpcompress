@@ -6,10 +6,7 @@ namespace SharpCompress.IO
 {
     internal class MarkingBinaryReader : BinaryReader
     {
-        public MarkingBinaryReader(Stream stream)
-            : base(stream)
-        {
-        }
+        public MarkingBinaryReader(Stream stream) : base(stream) { }
 
         public virtual long CurrentReadByteCount { get; protected set; }
 
@@ -59,7 +56,13 @@ namespace SharpCompress.IO
             var bytes = base.ReadBytes(count);
             if (bytes.Length != count)
             {
-                throw new EndOfStreamException(string.Format("Could not read the requested amount of bytes.  End of stream reached. Requested: {0} Read: {1}", count, bytes.Length));
+                throw new EndOfStreamException(
+                    string.Format(
+                        "Could not read the requested amount of bytes.  End of stream reached. Requested: {0} Read: {1}",
+                        count,
+                        bytes.Length
+                    )
+                );
             }
             return bytes;
         }

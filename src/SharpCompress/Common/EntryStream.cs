@@ -47,13 +47,15 @@ namespace SharpCompress.Common
 
         public override bool CanWrite => false;
 
-        public override void Flush()
-        {
-        }
+        public override void Flush() { }
 
         public override long Length => _stream.Length;
 
-        public override long Position { get => throw new NotSupportedException(); set => throw new NotSupportedException(); }
+        public override long Position
+        {
+            get => throw new NotSupportedException();
+            set => throw new NotSupportedException();
+        }
 
         public override int Read(byte[] buffer, int offset, int count)
         {

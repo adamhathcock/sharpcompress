@@ -37,12 +37,20 @@ namespace SharpCompress.Test
         [Fact]
         public void TestBuffer()
         {
-            using (FileStream decFs = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "adc_decompressed.bin")))
+            using (
+                FileStream decFs = File.OpenRead(
+                    Path.Combine(TEST_ARCHIVES_PATH, "adc_decompressed.bin")
+                )
+            )
             {
                 byte[] decompressed = new byte[decFs.Length];
                 decFs.Read(decompressed, 0, decompressed.Length);
 
-                using (FileStream cmpFs = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "adc_compressed.bin")))
+                using (
+                    FileStream cmpFs = File.OpenRead(
+                        Path.Combine(TEST_ARCHIVES_PATH, "adc_compressed.bin")
+                    )
+                )
                 {
                     byte[] compressed = new byte[cmpFs.Length];
                     cmpFs.Read(compressed, 0, compressed.Length);
@@ -58,12 +66,20 @@ namespace SharpCompress.Test
         [Fact]
         public void TestBaseStream()
         {
-            using (FileStream decFs = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "adc_decompressed.bin")))
+            using (
+                FileStream decFs = File.OpenRead(
+                    Path.Combine(TEST_ARCHIVES_PATH, "adc_decompressed.bin")
+                )
+            )
             {
                 byte[] decompressed = new byte[decFs.Length];
                 decFs.Read(decompressed, 0, decompressed.Length);
 
-                using (FileStream cmpFs = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "adc_compressed.bin")))
+                using (
+                    FileStream cmpFs = File.OpenRead(
+                        Path.Combine(TEST_ARCHIVES_PATH, "adc_compressed.bin")
+                    )
+                )
                 {
                     byte[]? test;
 
@@ -77,12 +93,20 @@ namespace SharpCompress.Test
         [Fact]
         public void TestADCStreamWholeChunk()
         {
-            using (FileStream decFs = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "adc_decompressed.bin")))
+            using (
+                FileStream decFs = File.OpenRead(
+                    Path.Combine(TEST_ARCHIVES_PATH, "adc_decompressed.bin")
+                )
+            )
             {
                 byte[] decompressed = new byte[decFs.Length];
                 decFs.Read(decompressed, 0, decompressed.Length);
 
-                using (FileStream cmpFs = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "adc_compressed.bin")))
+                using (
+                    FileStream cmpFs = File.OpenRead(
+                        Path.Combine(TEST_ARCHIVES_PATH, "adc_compressed.bin")
+                    )
+                )
                 {
                     using (ADCStream decStream = new ADCStream(cmpFs, CompressionMode.Decompress))
                     {
@@ -99,12 +123,20 @@ namespace SharpCompress.Test
         [Fact]
         public void TestADCStream()
         {
-            using (FileStream decFs = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "adc_decompressed.bin")))
+            using (
+                FileStream decFs = File.OpenRead(
+                    Path.Combine(TEST_ARCHIVES_PATH, "adc_decompressed.bin")
+                )
+            )
             {
                 byte[] decompressed = new byte[decFs.Length];
                 decFs.Read(decompressed, 0, decompressed.Length);
 
-                using (FileStream cmpFs = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "adc_compressed.bin")))
+                using (
+                    FileStream cmpFs = File.OpenRead(
+                        Path.Combine(TEST_ARCHIVES_PATH, "adc_compressed.bin")
+                    )
+                )
                 {
                     using (ADCStream decStream = new ADCStream(cmpFs, CompressionMode.Decompress))
                     {
@@ -117,8 +149,7 @@ namespace SharpCompress.Test
                             {
                                 count = decStream.Read(test, 0, test.Length);
                                 decMs.Write(test, 0, count);
-                            }
-                            while (count > 0);
+                            } while (count > 0);
 
                             Assert.Equal(decompressed, decMs.ToArray());
                         }

@@ -34,8 +34,11 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017
                 // Check TablesRead5 to be sure that we read tables at least once
                 // regardless of current block header TablePresent flag.
                 // So we can safefly use these tables below.
-                if (!ReadBlockHeader(Inp, ref BlockHeader) ||
-                    !ReadTables(Inp, ref BlockHeader, ref BlockTables) || !TablesRead5)
+                if (
+                    !ReadBlockHeader(Inp, ref BlockHeader)
+                    || !ReadTables(Inp, ref BlockHeader, ref BlockTables)
+                    || !TablesRead5
+                )
                 {
                     return;
                 }
@@ -51,16 +54,21 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017
 
                     // We use 'while', because for empty block containing only Huffman table,
                     // we'll be on the block border once again just after reading the table.
-                    while (Inp.InAddr > BlockHeader.BlockStart + BlockHeader.BlockSize - 1 ||
-                           Inp.InAddr == BlockHeader.BlockStart + BlockHeader.BlockSize - 1 &&
-                           Inp.InBit >= BlockHeader.BlockBitSize)
+                    while (
+                        Inp.InAddr > BlockHeader.BlockStart + BlockHeader.BlockSize - 1
+                        || Inp.InAddr == BlockHeader.BlockStart + BlockHeader.BlockSize - 1
+                            && Inp.InBit >= BlockHeader.BlockBitSize
+                    )
                     {
                         if (BlockHeader.LastBlockInFile)
                         {
                             FileDone = true;
                             break;
                         }
-                        if (!ReadBlockHeader(Inp, ref BlockHeader) || !ReadTables(Inp, ref BlockHeader, ref BlockTables))
+                        if (
+                            !ReadBlockHeader(Inp, ref BlockHeader)
+                            || !ReadTables(Inp, ref BlockHeader, ref BlockTables)
+                        )
                         {
                             return;
                         }
@@ -71,7 +79,10 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017
                     }
                 }
 
-                if (((WriteBorder - UnpPtr) & MaxWinMask) < MAX_LZ_MATCH + 3 && WriteBorder != UnpPtr)
+                if (
+                    ((WriteBorder - UnpPtr) & MaxWinMask) < MAX_LZ_MATCH + 3
+                    && WriteBorder != UnpPtr
+                )
                 {
                     UnpWriteBuf();
                     if (WrittenFileSize > DestUnpSize)
@@ -104,7 +115,9 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017
                 {
                     uint Length = SlotToLength(Inp, MainSlot - 262);
 
-                    uint DBits, Distance = 1, DistSlot = DecodeNumber(Inp, BlockTables.DD);
+                    uint DBits,
+                        Distance = 1,
+                        DistSlot = DecodeNumber(Inp, BlockTables.DD);
                     if (DistSlot < 4)
                     {
                         DBits = 0;
@@ -273,7 +286,8 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017
             // If distance to filter start is that large that due to circular dictionary
             // mode now it points to old not written yet data, then we set 'NextWindow'
             // flag and process this filter only after processing that older data.
-            Filter.NextWindow = WrPtr != UnpPtr && ((WrPtr - UnpPtr) & MaxWinMask) <= Filter.BlockStart;
+            Filter.NextWindow =
+                WrPtr != UnpPtr && ((WrPtr - UnpPtr) & MaxWinMask) <= Filter.BlockStart;
 
             Filter.BlockStart = (uint)((Filter.BlockStart + UnpPtr) & MaxWinMask);
             Filters.Add(Filter);
@@ -328,7 +342,10 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017
             {
                 // We may need to quit from main extraction loop and read new block header
                 // and trees earlier than data in input buffer ends.
-                ReadBorder = Math.Min(ReadBorder, BlockHeader.BlockStart + BlockHeader.BlockSize - 1);
+                ReadBorder = Math.Min(
+                    ReadBorder,
+                    BlockHeader.BlockStart + BlockHeader.BlockSize - 1
+                );
             }
             return ReadCode != -1;
         }
@@ -393,7 +410,10 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017
                             uint BlockEnd = (BlockStart + BlockLength) & MaxWinMask;
 
                             //x FilterSrcMemory.Alloc(BlockLength);
-                            FilterSrcMemory = EnsureCapacity(FilterSrcMemory, checked((int)BlockLength));
+                            FilterSrcMemory = EnsureCapacity(
+                                FilterSrcMemory,
+                                checked((int)BlockLength)
+                            );
                             byte[] Mem = FilterSrcMemory;
                             if (BlockStart < BlockEnd || BlockEnd == 0)
                             {
@@ -502,8 +522,11 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017
 
             // Choose the nearest among WriteBorder and WrPtr actual written border.
             // If border is equal to UnpPtr, it means that we have MaxWinSize data ahead.
-            if (WriteBorder == UnpPtr ||
-                WrPtr != UnpPtr && ((WrPtr - UnpPtr) & MaxWinMask) < ((WriteBorder - UnpPtr) & MaxWinMask))
+            if (
+                WriteBorder == UnpPtr
+                || WrPtr != UnpPtr
+                    && ((WrPtr - UnpPtr) & MaxWinMask) < ((WriteBorder - UnpPtr) & MaxWinMask)
+            )
             {
                 WriteBorder = WrPtr;
             }
@@ -517,6 +540,7 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017
             {
                 case FILTER_E8:
                 case FILTER_E8E9:
+
                     {
                         uint FileOffset = (uint)WrittenFileSize;
 
@@ -524,7 +548,7 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017
                         byte CmpByte2 = Flt.Type == FILTER_E8E9 ? (byte)0xe9 : (byte)0xe8;
                         // DataSize is unsigned, so we use "CurPos+4" and not "DataSize-4"
                         // to avoid overflow for DataSize<4.
-                        for (uint CurPos = 0; CurPos + 4 < DataSize;)
+                        for (uint CurPos = 0; CurPos + 4 < DataSize; )
                         {
                             //x byte CurByte=*(Data++);
                             byte CurByte = __d[Data++];
@@ -536,15 +560,14 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017
 
                                 // We check 0x80000000 bit instead of '< 0' comparison
                                 // not assuming int32 presence or uint size and endianness.
-                                if ((Addr & 0x80000000) != 0)              // Addr<0
+                                if ((Addr & 0x80000000) != 0) // Addr<0
                                 {
-                                    if (((Addr + Offset) & 0x80000000) == 0)   // Addr+Offset>=0
+                                    if (((Addr + Offset) & 0x80000000) == 0) // Addr+Offset>=0
                                     {
                                         RawPut4(Addr + FileSize, __d, Data);
                                     }
                                 }
-                                else
-                                  if (((Addr - FileSize) & 0x80000000) != 0) // Addr<FileSize
+                                else if (((Addr - FileSize) & 0x80000000) != 0) // Addr<FileSize
                                 {
                                     RawPut4(Addr - Offset, __d, Data);
                                 }
@@ -556,6 +579,7 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017
                     }
                     return SrcData;
                 case FILTER_ARM:
+
                     {
                         uint FileOffset = (uint)WrittenFileSize;
                         // DataSize is unsigned, so we use "CurPos+3" and not "DataSize-3"
@@ -565,7 +589,10 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017
                             var D = Data + CurPos;
                             if (__d[D + 3] == 0xeb) // BL command with '1110' (Always) condition.
                             {
-                                uint Offset = __d[D] + (uint)(__d[D + 1]) * 0x100 + (uint)(__d[D + 2]) * 0x10000;
+                                uint Offset =
+                                    __d[D]
+                                    + (uint)(__d[D + 1]) * 0x100
+                                    + (uint)(__d[D + 2]) * 0x10000;
                                 Offset -= (FileOffset + CurPos) / 4;
                                 __d[D] = (byte)Offset;
                                 __d[D + 1] = (byte)(Offset >> 8);
@@ -575,29 +602,29 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017
                     }
                     return SrcData;
                 case FILTER_DELTA:
+                {
+                    // Unlike RAR3, we do not need to reject excessive channel
+                    // values here, since RAR5 uses only 5 bits to store channel.
+                    uint Channels = Flt.Channels,
+                        SrcPos = 0;
+
+                    //x FilterDstMemory.Alloc(DataSize);
+                    FilterDstMemory = EnsureCapacity(FilterDstMemory, checked((int)DataSize));
+
+                    byte[] DstData = FilterDstMemory;
+
+                    // Bytes from same channels are grouped to continual data blocks,
+                    // so we need to place them back to their interleaving positions.
+                    for (uint CurChannel = 0; CurChannel < Channels; CurChannel++)
                     {
-                        // Unlike RAR3, we do not need to reject excessive channel
-                        // values here, since RAR5 uses only 5 bits to store channel.
-                        uint Channels = Flt.Channels, SrcPos = 0;
-
-                        //x FilterDstMemory.Alloc(DataSize);
-                        FilterDstMemory = EnsureCapacity(FilterDstMemory, checked((int)DataSize));
-
-                        byte[] DstData = FilterDstMemory;
-
-                        // Bytes from same channels are grouped to continual data blocks,
-                        // so we need to place them back to their interleaving positions.
-                        for (uint CurChannel = 0; CurChannel < Channels; CurChannel++)
+                        byte PrevByte = 0;
+                        for (uint DestPos = CurChannel; DestPos < DataSize; DestPos += Channels)
                         {
-                            byte PrevByte = 0;
-                            for (uint DestPos = CurChannel; DestPos < DataSize; DestPos += Channels)
-                            {
-                                DstData[DestPos] = (PrevByte -= __d[Data + SrcPos++]);
-                            }
+                            DstData[DestPos] = (PrevByte -= __d[Data + SrcPos++]);
                         }
-                        return DstData;
                     }
-
+                    return DstData;
+                }
             }
             return null;
         }
@@ -627,8 +654,7 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017
                     StartPtr = (StartPtr + BlockSize) & MaxWinMask;
                 }
             }
-            else
-              if (EndPtr < StartPtr)
+            else if (EndPtr < StartPtr)
             {
                 UnpWriteData(Window, StartPtr, MaxWinSize - StartPtr);
                 UnpWriteData(Window, 0, EndPtr);
@@ -703,7 +729,9 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017
             }
 
             Header.BlockSize = BlockSize;
-            byte CheckSum = (byte)(0x5a ^ BlockFlags ^ BlockSize ^ (BlockSize >> 8) ^ (BlockSize >> 16));
+            byte CheckSum = (byte)(
+                0x5a ^ BlockFlags ^ BlockSize ^ (BlockSize >> 8) ^ (BlockSize >> 16)
+            );
             if (CheckSum != SavedCheckSum)
             {
                 return false;
@@ -717,7 +745,11 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017
             return true;
         }
 
-        private bool ReadTables(BitInput Inp, ref UnpackBlockHeader Header, ref UnpackBlockTables Tables)
+        private bool ReadTables(
+            BitInput Inp,
+            ref UnpackBlockHeader Header,
+            ref UnpackBlockTables Tables
+        )
         {
             if (!Header.TablePresent)
             {
@@ -766,7 +798,7 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017
 
             byte[] Table = new byte[HUFF_TABLE_SIZE];
             const uint TableSize = HUFF_TABLE_SIZE;
-            for (uint I = 0; I < TableSize;)
+            for (uint I = 0; I < TableSize; )
             {
                 if (!Inp.ExternalBuffer && Inp.InAddr > ReadTop - 5)
                 {
@@ -782,8 +814,7 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017
                     Table[I] = (byte)Number;
                     I++;
                 }
-                else
-                  if (Number < 18)
+                else if (Number < 18)
                 {
                     uint N;
                     if (Number == 16)
@@ -851,6 +882,5 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017
             //Filters.SoftReset();
             Filters.Clear();
         }
-
     }
 }

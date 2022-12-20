@@ -17,15 +17,19 @@ namespace SharpCompress.IO
         private Func<int, Stream?> _getStreamPart;
         private int _stream;
 
-        public SourceStream(FileInfo file, Func<int, FileInfo?> getPart, ReaderOptions options) : this(null, null, file, getPart, options)
-        {
-        }
+        public SourceStream(FileInfo file, Func<int, FileInfo?> getPart, ReaderOptions options)
+            : this(null, null, file, getPart, options) { }
 
-        public SourceStream(Stream stream, Func<int, Stream?> getPart, ReaderOptions options) : this(stream, getPart, null, null, options)
-        {
-        }
+        public SourceStream(Stream stream, Func<int, Stream?> getPart, ReaderOptions options)
+            : this(stream, getPart, null, null, options) { }
 
-        private SourceStream(Stream? stream, Func<int, Stream?>? getStreamPart, FileInfo? file, Func<int, FileInfo?>? getFilePart, ReaderOptions options)
+        private SourceStream(
+            Stream? stream,
+            Func<int, Stream?>? getStreamPart,
+            FileInfo? file,
+            Func<int, FileInfo?>? getFilePart,
+            ReaderOptions options
+        )
         {
             this.ReaderOptions = options;
             _files = new List<FileInfo>();
@@ -54,9 +58,7 @@ namespace SharpCompress.IO
 
         public void LoadAllParts()
         {
-            for (int i = 1; SetStream(i); i++)
-            {
-            }
+            for (int i = 1; SetStream(i); i++) { }
             SetStream(0);
         }
 
@@ -69,6 +71,7 @@ namespace SharpCompress.IO
         public IEnumerable<Stream> Streams => _streams;
 
         private Stream Current => _streams[_stream];
+
         public bool LoadStream(int index) //ensure all parts to id are loaded
         {
             while (_streams.Count <= index)
@@ -101,6 +104,7 @@ namespace SharpCompress.IO
             }
             return true;
         }
+
         public bool SetStream(int idx) //allow caller to switch part in multipart
         {
             if (LoadStream(idx))
@@ -137,7 +141,11 @@ namespace SharpCompress.IO
 
             while (count != 0 && r != 0)
             {
-                r = Current.Read(buffer, offset, (int)Math.Min(count, Current.Length - Current.Position));
+                r = Current.Read(
+                    buffer,
+                    offset,
+                    (int)Math.Min(count, Current.Length - Current.Position)
+                );
                 count -= r;
                 offset += r;
 
@@ -146,7 +154,7 @@ namespace SharpCompress.IO
                     var length = Current.Length;
 
                     // Load next file if present
-                    if (!SetStream(_stream + 1)) 
+                    if (!SetStream(_stream + 1))
                     {
                         break;
                     }
@@ -166,9 +174,15 @@ namespace SharpCompress.IO
             long pos = this.Position;
             switch (origin)
             {
-                case SeekOrigin.Begin: pos = offset; break;
-                case SeekOrigin.Current: pos += offset; break;
-                case SeekOrigin.End: pos = Length + offset; break;
+                case SeekOrigin.Begin:
+                    pos = offset;
+                    break;
+                case SeekOrigin.Current:
+                    pos += offset;
+                    break;
+                case SeekOrigin.End:
+                    pos = Length + offset;
+                    break;
             }
 
             _prevSize = 0;

@@ -10,7 +10,8 @@ namespace SharpCompress.IO
         private int cacheLength;
         private readonly byte[] cache;
 
-        public BufferedSubStream(Stream stream, long origin, long bytesToRead) : base(stream, throwOnDispose: false)
+        public BufferedSubStream(Stream stream, long origin, long bytesToRead)
+            : base(stream, throwOnDispose: false)
         {
             position = origin;
             BytesLeftToRead = bytesToRead;
@@ -32,7 +33,11 @@ namespace SharpCompress.IO
 
         public override long Length => BytesLeftToRead;
 
-        public override long Position { get => throw new NotSupportedException(); set => throw new NotSupportedException(); }
+        public override long Position
+        {
+            get => throw new NotSupportedException();
+            set => throw new NotSupportedException();
+        }
 
         public override int Read(byte[] buffer, int offset, int count)
         {

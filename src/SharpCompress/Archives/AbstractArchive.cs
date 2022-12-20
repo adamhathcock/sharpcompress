@@ -42,13 +42,17 @@ namespace SharpCompress.Archives
             lazyVolumes = new LazyReadOnlyCollection<TVolume>(Enumerable.Empty<TVolume>());
             lazyEntries = new LazyReadOnlyCollection<TEntry>(Enumerable.Empty<TEntry>());
         }
+
 #nullable enable
 
         public ArchiveType Type { get; }
 
         void IArchiveExtractionListener.FireEntryExtractionBegin(IArchiveEntry entry)
         {
-            EntryExtractionBegin?.Invoke(this, new ArchiveExtractionEventArgs<IArchiveEntry>(entry));
+            EntryExtractionBegin?.Invoke(
+                this,
+                new ArchiveExtractionEventArgs<IArchiveEntry>(entry)
+            );
         }
 
         void IArchiveExtractionListener.FireEntryExtractionEnd(IArchiveEntry entry)
@@ -78,12 +82,14 @@ namespace SharpCompress.Archives
         /// <summary>
         /// The total size of the files compressed in the archive.
         /// </summary>
-        public virtual long TotalSize => Entries.Aggregate(0L, (total, cf) => total + cf.CompressedSize);
+        public virtual long TotalSize =>
+            Entries.Aggregate(0L, (total, cf) => total + cf.CompressedSize);
 
         /// <summary>
         /// The total size of the files as uncompressed in the archive.
         /// </summary>
-        public virtual long TotalUncompressSize => Entries.Aggregate(0L, (total, cf) => total + cf.Size);
+        public virtual long TotalUncompressSize =>
+            Entries.Aggregate(0L, (total, cf) => total + cf.Size);
 
         protected abstract IEnumerable<TVolume> LoadVolumes(SourceStream srcStream);
         protected abstract IEnumerable<TEntry> LoadEntries(IEnumerable<TVolume> volumes);
@@ -110,21 +116,34 @@ namespace SharpCompress.Archives
             lazyVolumes.EnsureFullyLoaded();
         }
 
-        void IExtractionListener.FireCompressedBytesRead(long currentPartCompressedBytes, long compressedReadBytes)
+        void IExtractionListener.FireCompressedBytesRead(
+            long currentPartCompressedBytes,
+            long compressedReadBytes
+        )
         {
-            CompressedBytesRead?.Invoke(this, new CompressedBytesReadEventArgs(
-                currentFilePartCompressedBytesRead: currentPartCompressedBytes,
-                compressedBytesRead: compressedReadBytes
-            ));
+            CompressedBytesRead?.Invoke(
+                this,
+                new CompressedBytesReadEventArgs(
+                    currentFilePartCompressedBytesRead: currentPartCompressedBytes,
+                    compressedBytesRead: compressedReadBytes
+                )
+            );
         }
 
-        void IExtractionListener.FireFilePartExtractionBegin(string name, long size, long compressedSize)
+        void IExtractionListener.FireFilePartExtractionBegin(
+            string name,
+            long size,
+            long compressedSize
+        )
         {
-            FilePartExtractionBegin?.Invoke(this, new FilePartExtractionBeginEventArgs(
-                compressedSize: compressedSize,
-                size: size,
-                name: name
-            ));
+            FilePartExtractionBegin?.Invoke(
+                this,
+                new FilePartExtractionBeginEventArgs(
+                    compressedSize: compressedSize,
+                    size: size,
+                    name: name
+                )
+            );
         }
 
         /// <summary>

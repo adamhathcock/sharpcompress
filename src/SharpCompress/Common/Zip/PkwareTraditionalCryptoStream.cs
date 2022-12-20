@@ -16,7 +16,11 @@ namespace SharpCompress.Common.Zip
         private readonly Stream _stream;
         private bool _isDisposed;
 
-        public PkwareTraditionalCryptoStream(Stream stream, PkwareTraditionalEncryptionData encryptor, CryptoMode mode)
+        public PkwareTraditionalCryptoStream(
+            Stream stream,
+            PkwareTraditionalEncryptionData encryptor,
+            CryptoMode mode
+        )
         {
             this._encryptor = encryptor;
             this._stream = stream;
@@ -31,7 +35,11 @@ namespace SharpCompress.Common.Zip
 
         public override long Length => throw new NotSupportedException();
 
-        public override long Position { get => throw new NotSupportedException(); set => throw new NotSupportedException(); }
+        public override long Position
+        {
+            get => throw new NotSupportedException();
+            set => throw new NotSupportedException();
+        }
 
         public override int Read(byte[] buffer, int offset, int count)
         {

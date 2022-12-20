@@ -16,7 +16,11 @@ namespace SharpCompress.Archives.Rar
         private readonly RarArchive archive;
         private readonly ReaderOptions readerOptions;
 
-        internal RarArchiveEntry(RarArchive archive, IEnumerable<RarFilePart> parts, ReaderOptions readerOptions)
+        internal RarArchiveEntry(
+            RarArchive archive,
+            IEnumerable<RarFilePart> parts,
+            ReaderOptions readerOptions
+        )
         {
             this.parts = parts.ToList();
             this.archive = archive;
@@ -63,10 +67,18 @@ namespace SharpCompress.Archives.Rar
         {
             if (IsRarV3)
             {
-                return new RarStream(archive.UnpackV1.Value, FileHeader, new MultiVolumeReadOnlyStream(Parts.Cast<RarFilePart>(), archive));
+                return new RarStream(
+                    archive.UnpackV1.Value,
+                    FileHeader,
+                    new MultiVolumeReadOnlyStream(Parts.Cast<RarFilePart>(), archive)
+                );
             }
 
-            return new RarStream(archive.UnpackV2017.Value, FileHeader, new MultiVolumeReadOnlyStream(Parts.Cast<RarFilePart>(), archive));
+            return new RarStream(
+                archive.UnpackV2017.Value,
+                FileHeader,
+                new MultiVolumeReadOnlyStream(Parts.Cast<RarFilePart>(), archive)
+            );
         }
 
         public bool IsComplete
@@ -82,7 +94,9 @@ namespace SharpCompress.Archives.Rar
         {
             if (!readerOptions.DisableCheckIncomplete && !IsComplete)
             {
-                throw new IncompleteArchiveException("ArchiveEntry is incomplete and cannot perform this operation.");
+                throw new IncompleteArchiveException(
+                    "ArchiveEntry is incomplete and cannot perform this operation."
+                );
             }
         }
     }

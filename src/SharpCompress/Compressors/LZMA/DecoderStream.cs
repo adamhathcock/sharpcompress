@@ -21,7 +21,11 @@ namespace SharpCompress.Compressors.LZMA
 
         public override long Length => throw new NotSupportedException();
 
-        public override long Position { get => throw new NotSupportedException(); set => throw new NotSupportedException(); }
+        public override long Position
+        {
+            get => throw new NotSupportedException();
+            set => throw new NotSupportedException();
+        }
 
         public override long Seek(long offset, SeekOrigin origin)
         {
@@ -56,20 +60,27 @@ namespace SharpCompress.Compressors.LZMA
             throw new InvalidOperationException("Could not link output stream to coder.");
         }
 
-        private static void FindPrimaryOutStreamIndex(CFolder folderInfo, out int primaryCoderIndex,
-                                                      out int primaryOutStreamIndex)
+        private static void FindPrimaryOutStreamIndex(
+            CFolder folderInfo,
+            out int primaryCoderIndex,
+            out int primaryOutStreamIndex
+        )
         {
             bool foundPrimaryOutStream = false;
             primaryCoderIndex = -1;
             primaryOutStreamIndex = -1;
 
-            for (int outStreamIndex = 0, coderIndex = 0;
-                 coderIndex < folderInfo._coders.Count;
-                 coderIndex++)
+            for (
+                int outStreamIndex = 0, coderIndex = 0;
+                coderIndex < folderInfo._coders.Count;
+                coderIndex++
+            )
             {
-                for (int coderOutStreamIndex = 0;
-                     coderOutStreamIndex < folderInfo._coders[coderIndex]._numOutStreams;
-                     coderOutStreamIndex++, outStreamIndex++)
+                for (
+                    int coderOutStreamIndex = 0;
+                    coderOutStreamIndex < folderInfo._coders[coderIndex]._numOutStreams;
+                    coderOutStreamIndex++, outStreamIndex++
+                )
                 {
                     if (folderInfo.FindBindPairForOutStream(outStreamIndex) < 0)
                     {
@@ -91,8 +102,14 @@ namespace SharpCompress.Compressors.LZMA
             }
         }
 
-        private static Stream CreateDecoderStream(Stream[] packStreams, long[] packSizes, Stream[] outStreams,
-                                                  CFolder folderInfo, int coderIndex, IPasswordProvider pass)
+        private static Stream CreateDecoderStream(
+            Stream[] packStreams,
+            long[] packSizes,
+            Stream[] outStreams,
+            CFolder folderInfo,
+            int coderIndex,
+            IPasswordProvider pass
+        )
         {
             var coderInfo = folderInfo._coders[coderIndex];
             if (coderInfo._numOutStreams != 1)
@@ -123,18 +140,31 @@ namespace SharpCompress.Compressors.LZMA
 
                     if (outStreams[pairedOutIndex] != null)
                     {
-                        throw new NotSupportedException("Overlapping stream bindings are not supported.");
+                        throw new NotSupportedException(
+                            "Overlapping stream bindings are not supported."
+                        );
                     }
 
-                    int otherCoderIndex = FindCoderIndexForOutStreamIndex(folderInfo, pairedOutIndex);
-                    inStreams[i] = CreateDecoderStream(packStreams, packSizes, outStreams, folderInfo, otherCoderIndex,
-                                                       pass);
+                    int otherCoderIndex = FindCoderIndexForOutStreamIndex(
+                        folderInfo,
+                        pairedOutIndex
+                    );
+                    inStreams[i] = CreateDecoderStream(
+                        packStreams,
+                        packSizes,
+                        outStreams,
+                        folderInfo,
+                        otherCoderIndex,
+                        pass
+                    );
 
                     //inStreamSizes[i] = folderInfo.UnpackSizes[pairedOutIndex];
 
                     if (outStreams[pairedOutIndex] != null)
                     {
-                        throw new NotSupportedException("Overlapping stream bindings are not supported.");
+                        throw new NotSupportedException(
+                            "Overlapping stream bindings are not supported."
+                        );
                     }
 
                     outStreams[pairedOutIndex] = inStreams[i];
@@ -154,11 +184,22 @@ namespace SharpCompress.Compressors.LZMA
             }
 
             long unpackSize = folderInfo._unpackSizes[outStreamId];
-            return DecoderRegistry.CreateDecoderStream(coderInfo._methodId, inStreams, coderInfo._props, pass, unpackSize);
+            return DecoderRegistry.CreateDecoderStream(
+                coderInfo._methodId,
+                inStreams,
+                coderInfo._props,
+                pass,
+                unpackSize
+            );
         }
 
-        internal static Stream CreateDecoderStream(Stream inStream, long startPos, long[] packSizes, CFolder folderInfo,
-                                                   IPasswordProvider pass)
+        internal static Stream CreateDecoderStream(
+            Stream inStream,
+            long startPos,
+            long[] packSizes,
+            CFolder folderInfo,
+            IPasswordProvider pass
+        )
         {
             if (!folderInfo.CheckStructure())
             {
@@ -174,9 +215,17 @@ namespace SharpCompress.Compressors.LZMA
 
             Stream[] outStreams = new Stream[folderInfo._unpackSizes.Count];
 
-            int primaryCoderIndex, primaryOutStreamIndex;
+            int primaryCoderIndex,
+                primaryOutStreamIndex;
             FindPrimaryOutStreamIndex(folderInfo, out primaryCoderIndex, out primaryOutStreamIndex);
-            return CreateDecoderStream(inStreams, packSizes, outStreams, folderInfo, primaryCoderIndex, pass);
+            return CreateDecoderStream(
+                inStreams,
+                packSizes,
+                outStreams,
+                folderInfo,
+                primaryCoderIndex,
+                pass
+            );
         }
     }
 }

@@ -14,7 +14,12 @@ namespace SharpCompress.Writers.Zip
         private readonly string fileName;
         private readonly ArchiveEncoding archiveEncoding;
 
-        public ZipCentralDirectoryEntry(ZipCompressionMethod compression, string fileName, ulong headerOffset, ArchiveEncoding archiveEncoding)
+        public ZipCentralDirectoryEntry(
+            ZipCompressionMethod compression,
+            string fileName,
+            ulong headerOffset,
+            ArchiveEncoding archiveEncoding
+        )
         {
             this.compression = compression;
             this.fileName = fileName;
@@ -45,7 +50,9 @@ namespace SharpCompress.Writers.Zip
             var extralength = zip64 ? (2 + 2 + 8 + 8 + 8 + 4) : 0;
             var version = (byte)(zip64 ? 45 : 20); // Version 20 required for deflate/encryption
 
-            HeaderFlags flags = Equals(archiveEncoding.GetEncoding(), Encoding.UTF8) ? HeaderFlags.Efs : HeaderFlags.None;
+            HeaderFlags flags = Equals(archiveEncoding.GetEncoding(), Encoding.UTF8)
+                ? HeaderFlags.Efs
+                : HeaderFlags.None;
             if (!outputStream.CanSeek)
             {
                 // Cannot use data descriptors with zip64:
@@ -143,8 +150,26 @@ namespace SharpCompress.Writers.Zip
 
             outputStream.Write(encodedComment, 0, encodedComment.Length);
 
-            return (uint)(8 + 2 + 2 + 4 + 4 + 4 + 4 + 2 + 2 + 2
-                                    + 2 + 2 + 2 + 2 + 4 + encodedFilename.Length + extralength + encodedComment.Length);
+            return (uint)(
+                8
+                + 2
+                + 2
+                + 4
+                + 4
+                + 4
+                + 4
+                + 2
+                + 2
+                + 2
+                + 2
+                + 2
+                + 2
+                + 2
+                + 4
+                + encodedFilename.Length
+                + extralength
+                + encodedComment.Length
+            );
         }
     }
 }

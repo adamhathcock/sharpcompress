@@ -46,13 +46,15 @@ namespace SharpCompress.Compressors.LZMA.Utilites
 
         public override bool CanWrite => true;
 
-        public override void Flush()
-        {
-        }
+        public override void Flush() { }
 
         public override long Length => throw new NotSupportedException();
 
-        public override long Position { get => throw new NotSupportedException(); set => throw new NotSupportedException(); }
+        public override long Position
+        {
+            get => throw new NotSupportedException();
+            set => throw new NotSupportedException();
+        }
 
         public override int Read(byte[] buffer, int offset, int count)
         {

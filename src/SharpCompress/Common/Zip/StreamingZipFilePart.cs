@@ -9,10 +9,7 @@ namespace SharpCompress.Common.Zip
     {
         private Stream? _decompressionStream;
 
-        internal StreamingZipFilePart(ZipFileEntry header, Stream stream)
-            : base(header, stream)
-        {
-        }
+        internal StreamingZipFilePart(ZipFileEntry header, Stream stream) : base(header, stream) { }
 
         protected override Stream CreateBaseStream()
         {
@@ -25,7 +22,10 @@ namespace SharpCompress.Common.Zip
             {
                 return Stream.Null;
             }
-            _decompressionStream = CreateDecompressionStream(GetCryptoStream(CreateBaseStream()), Header.CompressionMethod);
+            _decompressionStream = CreateDecompressionStream(
+                GetCryptoStream(CreateBaseStream()),
+                Header.CompressionMethod
+            );
             if (LeaveStreamOpen)
             {
                 return NonDisposingStream.Create(_decompressionStream);
@@ -43,7 +43,7 @@ namespace SharpCompress.Common.Zip
             {
                 _decompressionStream ??= GetCompressedStream();
 
-                if( Header.CompressionMethod != ZipCompressionMethod.None )
+                if (Header.CompressionMethod != ZipCompressionMethod.None)
                 {
                     _decompressionStream.Skip();
 
@@ -60,7 +60,7 @@ namespace SharpCompress.Common.Zip
                     // We would need to search for the magic word
                     rewindableStream.Position -= 4;
                     var pos = rewindableStream.Position;
-                    while( Utility.Find(rewindableStream, new byte[] { 0x50,0x4b,0x07,0x08 } ) )
+                    while (Utility.Find(rewindableStream, new byte[] { 0x50, 0x4b, 0x07, 0x08 }))
                     {
                         // We should probably check CRC32 for positive matching as well
                         var size = rewindableStream.Position - pos;
@@ -73,7 +73,7 @@ namespace SharpCompress.Common.Zip
 
                         long test_64bit = (long)uncompressed_size << 32 | (long)compressed_size;
 
-                        if( test_64bit == size && test_64bit == uncompressed_64bit )
+                        if (test_64bit == size && test_64bit == uncompressed_64bit)
                         {
                             Header.CompressedSize = test_64bit;
                             Header.UncompressedSize = uncompressed_64bit;
@@ -81,7 +81,7 @@ namespace SharpCompress.Common.Zip
                             break;
                         }
 
-                        if (compressed_size == size && compressed_size == uncompressed_size )
+                        if (compressed_size == size && compressed_size == uncompressed_size)
                         {
                             Header.CompressedSize = compressed_size;
                             Header.UncompressedSize = uncompressed_size;

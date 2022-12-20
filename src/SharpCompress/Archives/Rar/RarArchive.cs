@@ -11,22 +11,19 @@ using SharpCompress.Readers.Rar;
 
 namespace SharpCompress.Archives.Rar
 {
-    public class
-        RarArchive : AbstractArchive<RarArchiveEntry, RarVolume>
+    public class RarArchive : AbstractArchive<RarArchiveEntry, RarVolume>
     {
-        internal Lazy<IRarUnpack> UnpackV2017 { get; } = new Lazy<IRarUnpack>(() => new SharpCompress.Compressors.Rar.UnpackV2017.Unpack());
-        internal Lazy<IRarUnpack> UnpackV1 { get; } = new Lazy<IRarUnpack>(() => new SharpCompress.Compressors.Rar.UnpackV1.Unpack());
-
+        internal Lazy<IRarUnpack> UnpackV2017 { get; } =
+            new Lazy<IRarUnpack>(() => new SharpCompress.Compressors.Rar.UnpackV2017.Unpack());
+        internal Lazy<IRarUnpack> UnpackV1 { get; } =
+            new Lazy<IRarUnpack>(() => new SharpCompress.Compressors.Rar.UnpackV1.Unpack());
 
         /// <summary>
         /// Constructor with a SourceStream able to handle FileInfo and Streams.
         /// </summary>
         /// <param name="srcStream"></param>
         /// <param name="options"></param>
-        internal RarArchive(SourceStream srcStream)
-            : base(ArchiveType.Rar, srcStream)
-        {
-        }
+        internal RarArchive(SourceStream srcStream) : base(ArchiveType.Rar, srcStream) { }
 
         protected override IEnumerable<RarArchiveEntry> LoadEntries(IEnumerable<RarVolume> volumes)
         {
@@ -44,7 +41,9 @@ namespace SharpCompress.Archives.Rar
                 streams[1].Position = 0;
                 base.SrcStream.Position = 0;
 
-                return srcStream.Streams.Select(a => new StreamRarArchiveVolume(a, ReaderOptions, idx++));
+                return srcStream.Streams.Select(
+                    a => new StreamRarArchiveVolume(a, ReaderOptions, idx++)
+                );
             }
             else //split mode or single file
                 return new StreamRarArchiveVolume(base.SrcStream, ReaderOptions, idx++).AsEnumerable();
@@ -72,7 +71,13 @@ namespace SharpCompress.Archives.Rar
         {
             filePath.CheckNotNullOrEmpty(nameof(filePath));
             FileInfo fileInfo = new FileInfo(filePath);
-            return new RarArchive(new SourceStream(fileInfo, i => RarArchiveVolumeFactory.GetFilePart(i, fileInfo), options ?? new ReaderOptions()));
+            return new RarArchive(
+                new SourceStream(
+                    fileInfo,
+                    i => RarArchiveVolumeFactory.GetFilePart(i, fileInfo),
+                    options ?? new ReaderOptions()
+                )
+            );
         }
 
         /// <summary>
@@ -83,7 +88,13 @@ namespace SharpCompress.Archives.Rar
         public static RarArchive Open(FileInfo fileInfo, ReaderOptions? options = null)
         {
             fileInfo.CheckNotNull(nameof(fileInfo));
-            return new RarArchive(new SourceStream(fileInfo, i => RarArchiveVolumeFactory.GetFilePart(i, fileInfo), options ?? new ReaderOptions()));
+            return new RarArchive(
+                new SourceStream(
+                    fileInfo,
+                    i => RarArchiveVolumeFactory.GetFilePart(i, fileInfo),
+                    options ?? new ReaderOptions()
+                )
+            );
         }
 
         /// <summary>
@@ -94,7 +105,9 @@ namespace SharpCompress.Archives.Rar
         public static RarArchive Open(Stream stream, ReaderOptions? options = null)
         {
             stream.CheckNotNull(nameof(stream));
-            return new RarArchive(new SourceStream(stream, i => null, options ?? new ReaderOptions()));
+            return new RarArchive(
+                new SourceStream(stream, i => null, options ?? new ReaderOptions())
+            );
         }
 
         /// <summary>
@@ -102,11 +115,20 @@ namespace SharpCompress.Archives.Rar
         /// </summary>
         /// <param name="fileInfos"></param>
         /// <param name="readerOptions"></param>
-        public static RarArchive Open(IEnumerable<FileInfo> fileInfos, ReaderOptions? readerOptions = null)
+        public static RarArchive Open(
+            IEnumerable<FileInfo> fileInfos,
+            ReaderOptions? readerOptions = null
+        )
         {
             fileInfos.CheckNotNull(nameof(fileInfos));
             FileInfo[] files = fileInfos.ToArray();
-            return new RarArchive(new SourceStream(files[0], i => i < files.Length ? files[i] : null, readerOptions ?? new ReaderOptions()));
+            return new RarArchive(
+                new SourceStream(
+                    files[0],
+                    i => i < files.Length ? files[i] : null,
+                    readerOptions ?? new ReaderOptions()
+                )
+            );
         }
 
         /// <summary>
@@ -114,13 +136,21 @@ namespace SharpCompress.Archives.Rar
         /// </summary>
         /// <param name="streams"></param>
         /// <param name="readerOptions"></param>
-        public static RarArchive Open(IEnumerable<Stream> streams, ReaderOptions? readerOptions = null)
+        public static RarArchive Open(
+            IEnumerable<Stream> streams,
+            ReaderOptions? readerOptions = null
+        )
         {
             streams.CheckNotNull(nameof(streams));
             Stream[] strms = streams.ToArray();
-            return new RarArchive(new SourceStream(strms[0], i => i < strms.Length ? strms[i] : null, readerOptions ?? new ReaderOptions()));
+            return new RarArchive(
+                new SourceStream(
+                    strms[0],
+                    i => i < strms.Length ? strms[i] : null,
+                    readerOptions ?? new ReaderOptions()
+                )
+            );
         }
-
 
         public static bool IsRarFile(string filePath)
         {

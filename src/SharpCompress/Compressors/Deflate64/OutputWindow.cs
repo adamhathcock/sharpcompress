@@ -17,13 +17,13 @@ namespace SharpCompress.Compressors.Deflate64
     internal sealed class OutputWindow
     {
         // With Deflate64 we can have up to a 65536 length as well as up to a 65538 distance. This means we need a Window that is at
-        // least 131074 bytes long so we have space to retrieve up to a full 64kb in lookback and place it in our buffer without 
+        // least 131074 bytes long so we have space to retrieve up to a full 64kb in lookback and place it in our buffer without
         // overwriting existing data. OutputWindow requires that the WindowSize be an exponent of 2, so we round up to 2^18.
         private const int WINDOW_SIZE = 262144;
         private const int WINDOW_MASK = 262143;
 
         private readonly byte[] _window = new byte[WINDOW_SIZE]; // The window is 2^18 bytes
-        private int _end;       // this is the position to where we should write next byte
+        private int _end; // this is the position to where we should write next byte
         private int _bytesUsed; // The number of bytes in the output window which is not consumed.
 
         /// <summary>Add a byte to output window.</summary>
@@ -137,14 +137,16 @@ namespace SharpCompress.Compressors.Deflate64
             {
                 // this means we need to copy two parts separately
                 // copy tailLen bytes from the end of output window
-                Array.Copy(_window, WINDOW_SIZE - tailLen,
-                                  output, offset, tailLen);
+                Array.Copy(_window, WINDOW_SIZE - tailLen, output, offset, tailLen);
                 offset += tailLen;
                 length = copyEnd;
             }
             Array.Copy(_window, copyEnd - length, output, offset, length);
             _bytesUsed -= copied;
-            Debug.Assert(_bytesUsed >= 0, "check this function and find why we copied more bytes than we have");
+            Debug.Assert(
+                _bytesUsed >= 0,
+                "check this function and find why we copied more bytes than we have"
+            );
             return copied;
         }
     }

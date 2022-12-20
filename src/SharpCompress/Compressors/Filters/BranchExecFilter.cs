@@ -26,8 +26,8 @@ namespace SharpCompress.Compressors.Filters
             ARCH_SPARC_ALIGNMENT = 4,
         }
 
-        public static void X86Converter(byte[] data, UInt32 ip, ref UInt32 state) {
-
+        public static void X86Converter(byte[] data, UInt32 ip, ref UInt32 state)
+        {
             long i = 0;
             long size = data.Length;
             UInt32 pos = 0;
@@ -36,11 +36,11 @@ namespace SharpCompress.Compressors.Filters
                 return;
             size -= 4;
             ip += 5;
-            
-            for (;;)
+
+            for (; ; )
             {
                 i = pos;
-            
+
                 for (; i < size; i++)
                 {
                     if ((data[i] & 0xFE) == 0xE8)
@@ -63,17 +63,28 @@ namespace SharpCompress.Compressors.Filters
                 else
                 {
                     mask >>= (int)d;
-                    if (mask != 0 && (mask > 4 || mask == 3 || (((((data[(UInt32)(mask >> 1) + 1])) + 1) & 0xFE) == 0) ))
+                    if (
+                        mask != 0
+                        && (
+                            mask > 4
+                            || mask == 3
+                            || (((((data[(UInt32)(mask >> 1) + 1])) + 1) & 0xFE) == 0)
+                        )
+                    )
                     {
                         mask = (mask >> 1) | 4;
                         pos++;
                         continue;
                     }
                 }
-            
+
                 if ((((data[i + 4]) + 1) & 0xFE) == 0)
                 {
-                    UInt32 inst = ((UInt32)data[i + 4] << 24) | ((UInt32)data[i + 3] << 16) | ((UInt32)data[i + 2] << 8) | ((UInt32)data[i + 1]);
+                    UInt32 inst =
+                        ((UInt32)data[i + 4] << 24)
+                        | ((UInt32)data[i + 3] << 16)
+                        | ((UInt32)data[i + 2] << 8)
+                        | ((UInt32)data[i + 1]);
                     UInt32 cur = ip + (UInt32)pos;
                     pos += 5;
 
@@ -108,9 +119,9 @@ namespace SharpCompress.Compressors.Filters
             size &= ~(UInt32)3;
             ip -= 4;
 
-            for (;; )          // infinite loop
+            for (; ; ) // infinite loop
             {
-                for (;; )          // infinite loop
+                for (; ; ) // infinite loop
                 {
                     if (i >= size)
                         return;
@@ -143,9 +154,9 @@ namespace SharpCompress.Compressors.Filters
             size &= ~(UInt32)3;
             ip += 4;
 
-            for (;;)          // infinite loop
+            for (; ; ) // infinite loop
             {
-                for (;;)          // infinite loop
+                for (; ; ) // infinite loop
                 {
                     if (i >= size)
                     {
@@ -175,10 +186,10 @@ namespace SharpCompress.Compressors.Filters
             size &= ~(UInt32)1;
             long lim = size - 4;
 
-            for (;;)
+            for (; ; )
             {
                 UInt32 b1;
-                for (;;)
+                for (; ; )
                 {
                     UInt32 b3;
                     if (i > lim)
@@ -191,21 +202,21 @@ namespace SharpCompress.Compressors.Filters
                         break;
                 }
 
-             UInt32 inst = ((UInt32)b1 << 19)
-                        + (((UInt32)data[i + 1] & 0x7) << 8)
-                        + (((UInt32)data[i - 2] << 11))
-                        + (data[i]);
-             
-            i += 2;
+                UInt32 inst =
+                    ((UInt32)b1 << 19)
+                    + (((UInt32)data[i + 1] & 0x7) << 8)
+                    + (((UInt32)data[i - 2] << 11))
+                    + (data[i]);
 
-            UInt32 cur = ((UInt32)(ip + i)) >> 1;
-            inst -= cur;
+                i += 2;
 
-            
-            data[i - 4] = (Byte)(inst >> 11);
-            data[i - 3] = (Byte)(0xF0 | ((inst >> 19) & 0x7));
-            data[i - 2] = (Byte)inst;
-            data[i - 1] = (Byte)(0xF8 | (inst >> 8));
+                UInt32 cur = ((UInt32)(ip + i)) >> 1;
+                inst -= cur;
+
+                data[i - 4] = (Byte)(inst >> 11);
+                data[i - 3] = (Byte)(0xF0 | ((inst >> 19) & 0x7));
+                data[i - 2] = (Byte)inst;
+                data[i - 1] = (Byte)(0xF8 | (inst >> 8));
             }
         }
 
@@ -225,9 +236,14 @@ namespace SharpCompress.Compressors.Filters
                     m++;
                     do
                     {
-                        UInt32 iterator = (UInt32)( (i + (m * 5) - 8));
-                        if (((data[iterator + 3] >> (int)m) & 15) == 5
-                            && (((data[iterator - 1] | ((UInt32)data[iterator] << 8)) >> (int)m) & 0x70) == 0)
+                        UInt32 iterator = (UInt32)((i + (m * 5) - 8));
+                        if (
+                            ((data[iterator + 3] >> (int)m) & 15) == 5
+                            && (
+                                ((data[iterator - 1] | ((UInt32)data[iterator] << 8)) >> (int)m)
+                                & 0x70
+                            ) == 0
+                        )
                         {
                             UInt32 raw = BitConverter.ToUInt32(data, (int)iterator);
                             UInt32 inst = raw >> (int)m;
@@ -245,12 +261,10 @@ namespace SharpCompress.Compressors.Filters
 
                             Utility.SetLittleUInt32(ref data, raw, iterator);
                         }
-                    }
-                    while (++m <= 4);
+                    } while (++m <= 4);
                 }
                 i += 16;
-            }
-            while (i <= size);
+            } while (i <= size);
             return;
         }
 
@@ -261,19 +275,21 @@ namespace SharpCompress.Compressors.Filters
             size &= ~(UInt32)3;
             ip -= 4;
 
-            for (;;)          // infinite loop
+            for (; ; ) // infinite loop
             {
-                for (;;)          // infinite loop
+                for (; ; ) // infinite loop
                 {
                     if (i >= size)
                         return;
 
                     i += 4;
-                    if ((data[i - 4] == 0x40 && (data[i - 3] & 0xC0) == 0) ||
-                        (data[i - 4] == 0x7F && (data[i - 3] >= 0xC0)))
+                    if (
+                        (data[i - 4] == 0x40 && (data[i - 3] & 0xC0) == 0)
+                        || (data[i - 4] == 0x7F && (data[i - 3] >= 0xC0))
+                    )
                         break;
                 }
-                
+
                 UInt32 inst = BitConverter.ToUInt32(data, (int)i - 4);
 
                 if (BitConverter.IsLittleEndian)

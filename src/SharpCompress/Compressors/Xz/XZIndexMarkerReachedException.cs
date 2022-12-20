@@ -2,7 +2,5 @@
 
 namespace SharpCompress.Compressors.Xz
 {
-    public class XZIndexMarkerReachedException : Exception
-    {
-    }
+    public class XZIndexMarkerReachedException : Exception { }
 }

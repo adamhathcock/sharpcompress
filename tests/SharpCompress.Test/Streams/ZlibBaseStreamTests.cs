@@ -13,7 +13,29 @@ namespace SharpCompress.Test.Streams
         [Fact]
         public void TestChunkedZlibCompressesEverything()
         {
-            byte[] plainData = new byte[] { 0xf7, 0x1b, 0xda, 0x0f, 0xb6, 0x2b, 0x3d, 0x91, 0xd7, 0xe1, 0xb5, 0x11, 0x34, 0x5a, 0x51, 0x3f, 0x8b, 0xce, 0x49, 0xd2 };
+            byte[] plainData = new byte[]
+            {
+                0xf7,
+                0x1b,
+                0xda,
+                0x0f,
+                0xb6,
+                0x2b,
+                0x3d,
+                0x91,
+                0xd7,
+                0xe1,
+                0xb5,
+                0x11,
+                0x34,
+                0x5a,
+                0x51,
+                0x3f,
+                0x8b,
+                0xce,
+                0x49,
+                0xd2
+            };
             byte[] buf = new byte[plainData.Length * 2];
 
             MemoryStream plainStream1 = new MemoryStream(plainData);
@@ -34,11 +56,11 @@ namespace SharpCompress.Test.Streams
 
             Assert.Equal(total, realCompressedSize);
         }
-        
+
         [Fact]
         public void Zlib_should_read_the_previously_written_message()
         {
-            var message = new string('a', 131073);  // 131073 causes the failure, but 131072 (-1) doesn't
+            var message = new string('a', 131073); // 131073 causes the failure, but 131072 (-1) doesn't
             var bytes = Encoding.ASCII.GetBytes(message);
 
             using (var inputStream = new MemoryStream(bytes))
@@ -63,7 +85,13 @@ namespace SharpCompress.Test.Streams
 
         private void Compress(Stream input, Stream output, int compressionLevel)
         {
-            using (var zlibStream = new ZlibStream(NonDisposingStream.Create(output), CompressionMode.Compress, (CompressionLevel)compressionLevel))
+            using (
+                var zlibStream = new ZlibStream(
+                    NonDisposingStream.Create(output),
+                    CompressionMode.Compress,
+                    (CompressionLevel)compressionLevel
+                )
+            )
             {
                 zlibStream.FlushMode = FlushType.Sync;
                 input.CopyTo(zlibStream);
@@ -72,7 +100,12 @@ namespace SharpCompress.Test.Streams
 
         private void Decompress(Stream input, Stream output)
         {
-            using (var zlibStream = new ZlibStream(NonDisposingStream.Create(input), CompressionMode.Decompress))
+            using (
+                var zlibStream = new ZlibStream(
+                    NonDisposingStream.Create(input),
+                    CompressionMode.Decompress
+                )
+            )
             {
                 zlibStream.CopyTo(output);
             }

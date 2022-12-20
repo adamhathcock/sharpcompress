@@ -99,9 +99,11 @@ namespace SharpCompress.Readers
             entriesForCurrentReadStream?.Dispose();
             if ((stream is null) || (!stream.CanRead))
             {
-                throw new MultipartStreamRequiredException("File is split into multiple archives: '"
-                                                           + Entry.Key +
-                                                           "'. A new readable stream is required.  Use Cancel if it was intended.");
+                throw new MultipartStreamRequiredException(
+                    "File is split into multiple archives: '"
+                        + Entry.Key
+                        + "'. A new readable stream is required.  Use Cancel if it was intended."
+                );
             }
             entriesForCurrentReadStream = GetEntries(stream).GetEnumerator();
             return entriesForCurrentReadStream.MoveNext();
@@ -133,9 +135,7 @@ namespace SharpCompress.Readers
         {
             var part = Entry.Parts.First();
 
-            if (ArchiveType != ArchiveType.Rar
-                && !Entry.IsSolid
-                && Entry.CompressedSize > 0)
+            if (ArchiveType != ArchiveType.Rar && !Entry.IsSolid && Entry.CompressedSize > 0)
             {
                 //not solid and has a known compressed size then we can skip raw bytes.
                 var rawStream = part.GetRawStream();
@@ -159,7 +159,9 @@ namespace SharpCompress.Readers
         {
             if (wroteCurrentEntry)
             {
-                throw new ArgumentException("WriteEntryTo or OpenEntryStream can only be called once.");
+                throw new ArgumentException(
+                    "WriteEntryTo or OpenEntryStream can only be called once."
+                );
             }
 
             if (writableStream is null)
@@ -168,7 +170,9 @@ namespace SharpCompress.Readers
             }
             if (!writableStream.CanWrite)
             {
-                throw new ArgumentException("A writable Stream was required.  Use Cancel if that was intended.");
+                throw new ArgumentException(
+                    "A writable Stream was required.  Use Cancel if that was intended."
+                );
             }
 
             Write(writableStream);
@@ -188,7 +192,9 @@ namespace SharpCompress.Readers
         {
             if (wroteCurrentEntry)
             {
-                throw new ArgumentException("WriteEntryTo or OpenEntryStream can only be called once.");
+                throw new ArgumentException(
+                    "WriteEntryTo or OpenEntryStream can only be called once."
+                );
             }
             var stream = GetEntryStream();
             wroteCurrentEntry = true;
@@ -212,26 +218,49 @@ namespace SharpCompress.Readers
 
         IEntry IReader.Entry => Entry;
 
-        void IExtractionListener.FireCompressedBytesRead(long currentPartCompressedBytes, long compressedReadBytes)
+        void IExtractionListener.FireCompressedBytesRead(
+            long currentPartCompressedBytes,
+            long compressedReadBytes
+        )
         {
-            CompressedBytesRead?.Invoke(this, new CompressedBytesReadEventArgs(
-                currentFilePartCompressedBytesRead: currentPartCompressedBytes,
-                compressedBytesRead: compressedReadBytes
-            ));
+            CompressedBytesRead?.Invoke(
+                this,
+                new CompressedBytesReadEventArgs(
+                    currentFilePartCompressedBytesRead: currentPartCompressedBytes,
+                    compressedBytesRead: compressedReadBytes
+                )
+            );
         }
 
-        void IExtractionListener.FireFilePartExtractionBegin(string name, long size, long compressedSize)
+        void IExtractionListener.FireFilePartExtractionBegin(
+            string name,
+            long size,
+            long compressedSize
+        )
         {
-            FilePartExtractionBegin?.Invoke(this, new FilePartExtractionBeginEventArgs(
-                compressedSize: compressedSize,
-                size: size,
-                name: name
-            ));
+            FilePartExtractionBegin?.Invoke(
+                this,
+                new FilePartExtractionBeginEventArgs(
+                    compressedSize: compressedSize,
+                    size: size,
+                    name: name
+                )
+            );
         }
 
-        void IReaderExtractionListener.FireEntryExtractionProgress(Entry entry, long bytesTransferred, int iterations)
+        void IReaderExtractionListener.FireEntryExtractionProgress(
+            Entry entry,
+            long bytesTransferred,
+            int iterations
+        )
         {
-            EntryExtractionProgress?.Invoke(this, new ReaderExtractionEventArgs<IEntry>(entry, new ReaderProgress(entry, bytesTransferred, iterations)));
+            EntryExtractionProgress?.Invoke(
+                this,
+                new ReaderExtractionEventArgs<IEntry>(
+                    entry,
+                    new ReaderProgress(entry, bytesTransferred, iterations)
+                )
+            );
         }
     }
 }

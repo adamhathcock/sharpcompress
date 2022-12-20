@@ -22,7 +22,9 @@ namespace SharpCompress.Compressors.Xz
 
         public static XZFooter FromStream(Stream stream)
         {
-            var footer = new XZFooter(new BinaryReader(NonDisposingStream.Create(stream), Encoding.UTF8));
+            var footer = new XZFooter(
+                new BinaryReader(NonDisposingStream.Create(stream), Encoding.UTF8)
+            );
             footer.Process();
             return footer;
         }

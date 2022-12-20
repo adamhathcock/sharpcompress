@@ -17,7 +17,9 @@ namespace SharpCompress.Archives.Rar
             }
         }
 
-        private static IEnumerable<IEnumerable<RarFilePart>> GetMatchedFileParts(IEnumerable<RarVolume> parts)
+        private static IEnumerable<IEnumerable<RarFilePart>> GetMatchedFileParts(
+            IEnumerable<RarVolume> parts
+        )
         {
             var groupedParts = new List<RarFilePart>();
             foreach (RarFilePart fp in GetFileParts(parts))
@@ -36,9 +38,11 @@ namespace SharpCompress.Archives.Rar
             }
         }
 
-        internal static IEnumerable<RarArchiveEntry> GetEntries(RarArchive archive,
-                                                                IEnumerable<RarVolume> rarParts,
-                                                                ReaderOptions readerOptions)
+        internal static IEnumerable<RarArchiveEntry> GetEntries(
+            RarArchive archive,
+            IEnumerable<RarVolume> rarParts,
+            ReaderOptions readerOptions
+        )
         {
             foreach (var groupedParts in GetMatchedFileParts(rarParts))
             {

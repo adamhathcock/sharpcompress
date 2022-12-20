@@ -22,12 +22,13 @@ namespace SharpCompress.Factories
     /// <summary>
     /// Represents the foundation factory of TAR archive.
     /// </summary>
-    public class TarFactory : Factory,
-        IArchiveFactory,
-        IMultiArchiveFactory,
-        IReaderFactory,
-        IWriterFactory,
-        IWriteableArchiveFactory
+    public class TarFactory
+        : Factory,
+            IArchiveFactory,
+            IMultiArchiveFactory,
+            IReaderFactory,
+            IWriterFactory,
+            IWriteableArchiveFactory
     {
         #region IFactory
 
@@ -111,7 +112,11 @@ namespace SharpCompress.Factories
         #region IReaderFactory
 
         /// <inheritdoc/>
-        internal override bool TryOpenReader(RewindableStream rewindableStream, ReaderOptions options, out IReader? reader)
+        internal override bool TryOpenReader(
+            RewindableStream rewindableStream,
+            ReaderOptions options,
+            out IReader? reader
+        )
         {
             reader = null;
 
@@ -127,7 +132,11 @@ namespace SharpCompress.Factories
             if (BZip2Stream.IsBZip2(rewindableStream))
             {
                 rewindableStream.Rewind(false);
-                var testStream = new BZip2Stream(NonDisposingStream.Create(rewindableStream), CompressionMode.Decompress, false);
+                var testStream = new BZip2Stream(
+                    NonDisposingStream.Create(rewindableStream),
+                    CompressionMode.Decompress,
+                    false
+                );
                 if (TarArchive.IsTarFile(testStream))
                 {
                     rewindableStream.Rewind(true);
@@ -140,7 +149,10 @@ namespace SharpCompress.Factories
             if (LZipStream.IsLZipFile(rewindableStream))
             {
                 rewindableStream.Rewind(false);
-                var testStream = new LZipStream(NonDisposingStream.Create(rewindableStream), CompressionMode.Decompress);
+                var testStream = new LZipStream(
+                    NonDisposingStream.Create(rewindableStream),
+                    CompressionMode.Decompress
+                );
                 if (TarArchive.IsTarFile(testStream))
                 {
                     rewindableStream.Rewind(true);
@@ -161,7 +173,7 @@ namespace SharpCompress.Factories
                     return true;
                 }
             }
-            
+
             return false;
         }
 
@@ -192,6 +204,5 @@ namespace SharpCompress.Factories
         }
 
         #endregion
-
     }
 }

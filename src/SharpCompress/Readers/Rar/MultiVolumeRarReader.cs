@@ -20,9 +20,7 @@ namespace SharpCompress.Readers.Rar
             this.streams = streams.GetEnumerator();
         }
 
-        internal override void ValidateArchive(RarVolume archive)
-        {
-        }
+        internal override void ValidateArchive(RarVolume archive) { }
 
         protected override Stream RequestInitialStream()
         {
@@ -30,7 +28,9 @@ namespace SharpCompress.Readers.Rar
             {
                 return streams.Current;
             }
-            throw new MultiVolumeExtractionException("No stream provided when requested by MultiVolumeRarReader");
+            throw new MultiVolumeExtractionException(
+                "No stream provided when requested by MultiVolumeRarReader"
+            );
         }
 
         internal override bool NextEntryForCurrentStream()
@@ -57,8 +57,11 @@ namespace SharpCompress.Readers.Rar
             private Stream tempStream;
             private bool isFirst = true;
 
-            internal MultiVolumeStreamEnumerator(MultiVolumeRarReader r, IEnumerator<Stream> nextReadableStreams,
-                                                 Stream tempStream)
+            internal MultiVolumeStreamEnumerator(
+                MultiVolumeRarReader r,
+                IEnumerator<Stream> nextReadableStreams,
+                Stream tempStream
+            )
             {
                 reader = r;
                 this.nextReadableStreams = nextReadableStreams;
@@ -77,9 +80,7 @@ namespace SharpCompress.Readers.Rar
 
             public FilePart Current { get; private set; }
 
-            public void Dispose()
-            {
-            }
+            public void Dispose() { }
 
             object IEnumerator.Current => Current;
 
@@ -103,7 +104,9 @@ namespace SharpCompress.Readers.Rar
                 }
                 else if (!nextReadableStreams.MoveNext())
                 {
-                    throw new MultiVolumeExtractionException("No stream provided when requested by MultiVolumeRarReader");
+                    throw new MultiVolumeExtractionException(
+                        "No stream provided when requested by MultiVolumeRarReader"
+                    );
                 }
                 else
                 {
@@ -114,9 +117,7 @@ namespace SharpCompress.Readers.Rar
                 return true;
             }
 
-            public void Reset()
-            {
-            }
+            public void Reset() { }
         }
     }
 }

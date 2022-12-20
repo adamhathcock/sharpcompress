@@ -5,20 +5,11 @@
         internal CoderPropId[] _propIDs;
         internal object[] _properties;
 
-        public LzmaEncoderProperties()
-            : this(false)
-        {
-        }
+        public LzmaEncoderProperties() : this(false) { }
 
-        public LzmaEncoderProperties(bool eos)
-            : this(eos, 1 << 20)
-        {
-        }
+        public LzmaEncoderProperties(bool eos) : this(eos, 1 << 20) { }
 
-        public LzmaEncoderProperties(bool eos, int dictionary)
-            : this(eos, dictionary, 32)
-        {
-        }
+        public LzmaEncoderProperties(bool eos, int dictionary) : this(eos, dictionary, 32) { }
 
         public LzmaEncoderProperties(bool eos, int dictionary, int numFastBytes)
         {
@@ -29,27 +20,27 @@
             string mf = "bt4";
 
             _propIDs = new[]
-                      {
-                          CoderPropId.DictionarySize,
-                          CoderPropId.PosStateBits,
-                          CoderPropId.LitContextBits,
-                          CoderPropId.LitPosBits,
-                          CoderPropId.Algorithm,
-                          CoderPropId.NumFastBytes,
-                          CoderPropId.MatchFinder,
-                          CoderPropId.EndMarker
-                      };
+            {
+                CoderPropId.DictionarySize,
+                CoderPropId.PosStateBits,
+                CoderPropId.LitContextBits,
+                CoderPropId.LitPosBits,
+                CoderPropId.Algorithm,
+                CoderPropId.NumFastBytes,
+                CoderPropId.MatchFinder,
+                CoderPropId.EndMarker
+            };
             _properties = new object[]
-                         {
-                             dictionary,
-                             posStateBits,
-                             litContextBits,
-                             litPosBits,
-                             algorithm,
-                             numFastBytes,
-                             mf,
-                             eos
-                         };
+            {
+                dictionary,
+                posStateBits,
+                litContextBits,
+                litPosBits,
+                algorithm,
+                numFastBytes,
+                mf,
+                eos
+            };
         }
     }
 }

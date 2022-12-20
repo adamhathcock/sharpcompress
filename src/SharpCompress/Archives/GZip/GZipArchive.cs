@@ -33,7 +33,13 @@ namespace SharpCompress.Archives.GZip
         public static GZipArchive Open(FileInfo fileInfo, ReaderOptions? readerOptions = null)
         {
             fileInfo.CheckNotNull(nameof(fileInfo));
-            return new GZipArchive(new SourceStream(fileInfo, i => ArchiveVolumeFactory.GetFilePart(i, fileInfo), readerOptions ?? new ReaderOptions()));
+            return new GZipArchive(
+                new SourceStream(
+                    fileInfo,
+                    i => ArchiveVolumeFactory.GetFilePart(i, fileInfo),
+                    readerOptions ?? new ReaderOptions()
+                )
+            );
         }
 
         /// <summary>
@@ -41,11 +47,20 @@ namespace SharpCompress.Archives.GZip
         /// </summary>
         /// <param name="fileInfos"></param>
         /// <param name="readerOptions"></param>
-        public static GZipArchive Open(IEnumerable<FileInfo> fileInfos, ReaderOptions? readerOptions = null)
+        public static GZipArchive Open(
+            IEnumerable<FileInfo> fileInfos,
+            ReaderOptions? readerOptions = null
+        )
         {
             fileInfos.CheckNotNull(nameof(fileInfos));
             FileInfo[] files = fileInfos.ToArray();
-            return new GZipArchive(new SourceStream(files[0], i => i < files.Length ? files[i] : null, readerOptions ?? new ReaderOptions()));
+            return new GZipArchive(
+                new SourceStream(
+                    files[0],
+                    i => i < files.Length ? files[i] : null,
+                    readerOptions ?? new ReaderOptions()
+                )
+            );
         }
 
         /// <summary>
@@ -53,11 +68,20 @@ namespace SharpCompress.Archives.GZip
         /// </summary>
         /// <param name="streams"></param>
         /// <param name="readerOptions"></param>
-        public static GZipArchive Open(IEnumerable<Stream> streams, ReaderOptions? readerOptions = null)
+        public static GZipArchive Open(
+            IEnumerable<Stream> streams,
+            ReaderOptions? readerOptions = null
+        )
         {
             streams.CheckNotNull(nameof(streams));
             Stream[] strms = streams.ToArray();
-            return new GZipArchive(new SourceStream(strms[0], i => i < strms.Length ? strms[i] : null, readerOptions ?? new ReaderOptions()));
+            return new GZipArchive(
+                new SourceStream(
+                    strms[0],
+                    i => i < strms.Length ? strms[i] : null,
+                    readerOptions ?? new ReaderOptions()
+                )
+            );
         }
 
         /// <summary>
@@ -68,7 +92,9 @@ namespace SharpCompress.Archives.GZip
         public static GZipArchive Open(Stream stream, ReaderOptions? readerOptions = null)
         {
             stream.CheckNotNull(nameof(stream));
-            return new GZipArchive(new SourceStream(stream, i => null, readerOptions ?? new ReaderOptions()));
+            return new GZipArchive(
+                new SourceStream(stream, i => null, readerOptions ?? new ReaderOptions())
+            );
         }
 
         public static GZipArchive Create()
@@ -81,10 +107,7 @@ namespace SharpCompress.Archives.GZip
         /// </summary>
         /// <param name="srcStream"></param>
         /// <param name="options"></param>
-        internal GZipArchive(SourceStream srcStream)
-            : base(ArchiveType.Tar, srcStream)
-        {
-        }
+        internal GZipArchive(SourceStream srcStream) : base(ArchiveType.Tar, srcStream) { }
 
         protected override IEnumerable<GZipVolume> LoadVolumes(SourceStream srcStream)
         {
@@ -92,6 +115,7 @@ namespace SharpCompress.Archives.GZip
             int idx = 0;
             return srcStream.Streams.Select(a => new GZipVolume(a, ReaderOptions, idx++));
         }
+
         public static bool IsGZipFile(string filePath)
         {
             return IsGZipFile(new FileInfo(filePath));
@@ -140,24 +164,36 @@ namespace SharpCompress.Archives.GZip
             return true;
         }
 
-        internal GZipArchive()
-            : base(ArchiveType.GZip)
-        {
-        }
+        internal GZipArchive() : base(ArchiveType.GZip) { }
 
-        protected override GZipArchiveEntry CreateEntryInternal(string filePath, Stream source, long size, DateTime? modified,
-                                                                bool closeStream)
+        protected override GZipArchiveEntry CreateEntryInternal(
+            string filePath,
+            Stream source,
+            long size,
+            DateTime? modified,
+            bool closeStream
+        )
         {
             if (Entries.Any())
             {
                 throw new InvalidOperationException("Only one entry is allowed in a GZip Archive");
             }
-            return new GZipWritableArchiveEntry(this, source, filePath, size, modified, closeStream);
+            return new GZipWritableArchiveEntry(
+                this,
+                source,
+                filePath,
+                size,
+                modified,
+                closeStream
+            );
         }
 
-        protected override void SaveTo(Stream stream, WriterOptions options,
-                                       IEnumerable<GZipArchiveEntry> oldEntries,
-                                       IEnumerable<GZipArchiveEntry> newEntries)
+        protected override void SaveTo(
+            Stream stream,
+            WriterOptions options,
+            IEnumerable<GZipArchiveEntry> oldEntries,
+            IEnumerable<GZipArchiveEntry> newEntries
+        )
         {
             if (Entries.Count > 1)
             {
@@ -165,8 +201,7 @@ namespace SharpCompress.Archives.GZip
             }
             using (var writer = new GZipWriter(stream, new GZipWriterOptions(options)))
             {
-                foreach (var entry in oldEntries.Concat(newEntries)
-                                                .Where(x => !x.IsDirectory))
+                foreach (var entry in oldEntries.Concat(newEntries).Where(x => !x.IsDirectory))
                 {
                     using (var entryStream = entry.OpenEntryStream())
                     {
@@ -176,10 +211,15 @@ namespace SharpCompress.Archives.GZip
             }
         }
 
-        protected override IEnumerable<GZipArchiveEntry> LoadEntries(IEnumerable<GZipVolume> volumes)
+        protected override IEnumerable<GZipArchiveEntry> LoadEntries(
+            IEnumerable<GZipVolume> volumes
+        )
         {
             Stream stream = volumes.Single().Stream;
-            yield return new GZipArchiveEntry(this, new GZipFilePart(stream, ReaderOptions.ArchiveEncoding));
+            yield return new GZipArchiveEntry(
+                this,
+                new GZipFilePart(stream, ReaderOptions.ArchiveEncoding)
+            );
         }
 
         protected override IReader CreateReaderForSolidExtraction()

@@ -11,9 +11,17 @@ namespace SharpCompress.Compressors.PPMd.H
 
         private int _successor; // pointer ppmcontext
 
-        internal int Symbol { get => _symbol; set => _symbol = value & 0xff; }
+        internal int Symbol
+        {
+            get => _symbol;
+            set => _symbol = value & 0xff;
+        }
 
-        internal int Freq { get => _freq; set => _freq = value & 0xff; }
+        internal int Freq
+        {
+            get => _freq;
+            set => _freq = value & 0xff;
+        }
 
         internal State Values
         {

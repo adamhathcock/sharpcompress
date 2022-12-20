@@ -8,9 +8,7 @@ namespace SharpCompress.Common.Zip
     internal class StreamingZipHeaderFactory : ZipHeaderFactory
     {
         internal StreamingZipHeaderFactory(string? password, ArchiveEncoding archiveEncoding)
-            : base(StreamingMode.Streaming, password, archiveEncoding)
-        {
-        }
+            : base(StreamingMode.Streaming, password, archiveEncoding) { }
 
         internal IEnumerable<ZipHeader> ReadStreamHeader(Stream stream)
         {
@@ -29,10 +27,19 @@ namespace SharpCompress.Common.Zip
                 ZipHeader? header;
                 BinaryReader reader = new BinaryReader(rewindableStream);
                 uint headerBytes = 0;
-                if (_lastEntryHeader != null &&
-                    (FlagUtility.HasFlag(_lastEntryHeader.Flags, HeaderFlags.UsePostDataDescriptor) || _lastEntryHeader.IsZip64))
+                if (
+                    _lastEntryHeader != null
+                    && (
+                        FlagUtility.HasFlag(
+                            _lastEntryHeader.Flags,
+                            HeaderFlags.UsePostDataDescriptor
+                        ) || _lastEntryHeader.IsZip64
+                    )
+                )
                 {
-                    reader = ((StreamingZipFilePart)_lastEntryHeader.Part).FixStreamedFileLocation(ref rewindableStream);
+                    reader = ((StreamingZipFilePart)_lastEntryHeader.Part).FixStreamedFileLocation(
+                        ref rewindableStream
+                    );
                     long? pos = rewindableStream.CanSeek ? (long?)rewindableStream.Position : null;
                     uint crc = reader.ReadUInt32();
                     if (crc == POST_DATA_DESCRIPTOR)
@@ -50,9 +57,10 @@ namespace SharpCompress.Common.Zip
                     bool test_header = !(headerBytes == 0x04034b50 || headerBytes == 0x02014b50);
 
                     long test_64bit = (long)uncompressed_size << 32 | (long)compressed_size;
-                    if ( test_64bit == _lastEntryHeader.CompressedSize && test_header )
+                    if (test_64bit == _lastEntryHeader.CompressedSize && test_header)
                     {
-                        _lastEntryHeader.UncompressedSize = (long)reader.ReadUInt32() << 32 | (long)headerBytes;
+                        _lastEntryHeader.UncompressedSize =
+                            (long)reader.ReadUInt32() << 32 | (long)headerBytes;
                         headerBytes = reader.ReadUInt32();
                     }
                     else

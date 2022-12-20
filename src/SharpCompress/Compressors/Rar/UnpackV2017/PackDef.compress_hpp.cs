@@ -2,7 +2,6 @@
 {
     internal static class PackDef
     {
-
         // Combine pack and unpack constants to class to avoid polluting global
         // namespace with numerous short names.
         public const uint MAX_LZ_MATCH = 0x1001;
@@ -51,6 +50,5 @@
         public const int FILTER_PPM = 7;
         public const int FILTER_NONE = 8;
         //}
-
     }
 }

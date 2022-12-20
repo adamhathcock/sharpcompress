@@ -69,11 +69,13 @@ namespace SharpCompress.Compressors.Deflate
 
         internal int Crc32 => crc?.Crc32Result ?? 0;
 
-        public ZlibBaseStream(Stream stream,
-                              CompressionMode compressionMode,
-                              CompressionLevel level,
-                              ZlibStreamFlavor flavor,
-                              Encoding encoding)
+        public ZlibBaseStream(
+            Stream stream,
+            CompressionMode compressionMode,
+            CompressionLevel level,
+            ZlibStreamFlavor flavor,
+            Encoding encoding
+        )
         {
             _flushMode = FlushType.None;
 
@@ -154,12 +156,12 @@ namespace SharpCompress.Compressors.Deflate
                 _z.OutputBuffer = workingBuffer;
                 _z.NextOut = 0;
                 _z.AvailableBytesOut = _workingBuffer.Length;
-                int rc = (_wantCompress)
-                             ? _z.Deflate(_flushMode)
-                             : _z.Inflate(_flushMode);
+                int rc = (_wantCompress) ? _z.Deflate(_flushMode) : _z.Inflate(_flushMode);
                 if (rc != ZlibConstants.Z_OK && rc != ZlibConstants.Z_STREAM_END)
                 {
-                    throw new ZlibException((_wantCompress ? "de" : "in") + "flating: " + _z.Message);
+                    throw new ZlibException(
+                        (_wantCompress ? "de" : "in") + "flating: " + _z.Message
+                    );
                 }
 
                 //if (_workingBuffer.Length - _z.AvailableBytesOut > 0)
@@ -172,8 +174,7 @@ namespace SharpCompress.Compressors.Deflate
                 {
                     done = (_z.AvailableBytesIn == 8 && _z.AvailableBytesOut != 0);
                 }
-            }
-            while (!done);
+            } while (!done);
         }
 
         private void finish()
@@ -191,9 +192,10 @@ namespace SharpCompress.Compressors.Deflate
                     _z.OutputBuffer = workingBuffer;
                     _z.NextOut = 0;
                     _z.AvailableBytesOut = _workingBuffer.Length;
-                    int rc = (_wantCompress)
-                                 ? _z.Deflate(FlushType.Finish)
-                                 : _z.Inflate(FlushType.Finish);
+                    int rc =
+                        (_wantCompress)
+                            ? _z.Deflate(FlushType.Finish)
+                            : _z.Inflate(FlushType.Finish);
 
                     if (rc != ZlibConstants.Z_STREAM_END && rc != ZlibConstants.Z_OK)
                     {
@@ -207,7 +209,11 @@ namespace SharpCompress.Compressors.Deflate
 
                     if (_workingBuffer.Length - _z.AvailableBytesOut > 0)
                     {
-                        _stream.Write(_workingBuffer, 0, _workingBuffer.Length - _z.AvailableBytesOut);
+                        _stream.Write(
+                            _workingBuffer,
+                            0,
+                            _workingBuffer.Length - _z.AvailableBytesOut
+                        );
                     }
 
                     done = _z.AvailableBytesIn == 0 && _z.AvailableBytesOut != 0;
@@ -217,8 +223,7 @@ namespace SharpCompress.Compressors.Deflate
                     {
                         done = (_z.AvailableBytesIn == 8 && _z.AvailableBytesOut != 0);
                     }
-                }
-                while (!done);
+                } while (!done);
 
                 Flush();
 
@@ -241,7 +246,6 @@ namespace SharpCompress.Compressors.Deflate
                     }
                 }
             }
-
             // workitem 7159
             else if (_streamMode == StreamMode.Reader)
             {
@@ -264,12 +268,17 @@ namespace SharpCompress.Compressors.Deflate
                             // Make sure we have read to the end of the stream
                             _z.InputBuffer.AsSpan(_z.NextIn, _z.AvailableBytesIn).CopyTo(trailer);
                             int bytesNeeded = 8 - _z.AvailableBytesIn;
-                            int bytesRead = _stream.Read(trailer.Slice(_z.AvailableBytesIn, bytesNeeded));
+                            int bytesRead = _stream.Read(
+                                trailer.Slice(_z.AvailableBytesIn, bytesNeeded)
+                            );
                             if (bytesNeeded != bytesRead)
                             {
-                                throw new ZlibException(String.Format(
-                                                                      "Protocol error. AvailableBytesIn={0}, expected 8",
-                                                                      _z.AvailableBytesIn + bytesRead));
+                                throw new ZlibException(
+                                    String.Format(
+                                        "Protocol error. AvailableBytesIn={0}, expected 8",
+                                        _z.AvailableBytesIn + bytesRead
+                                    )
+                                );
                             }
                         }
                         else
@@ -279,21 +288,31 @@ namespace SharpCompress.Compressors.Deflate
 
                         Int32 crc32_expected = BinaryPrimitives.ReadInt32LittleEndian(trailer);
                         Int32 crc32_actual = crc.Crc32Result;
-                        Int32 isize_expected = BinaryPrimitives.ReadInt32LittleEndian(trailer.Slice(4));
+                        Int32 isize_expected = BinaryPrimitives.ReadInt32LittleEndian(
+                            trailer.Slice(4)
+                        );
                         Int32 isize_actual = (Int32)(_z.TotalBytesOut & 0x00000000FFFFFFFF);
 
                         if (crc32_actual != crc32_expected)
                         {
                             throw new ZlibException(
-                                                    String.Format("Bad CRC32 in GZIP stream. (actual({0:X8})!=expected({1:X8}))",
-                                                                  crc32_actual, crc32_expected));
+                                String.Format(
+                                    "Bad CRC32 in GZIP stream. (actual({0:X8})!=expected({1:X8}))",
+                                    crc32_actual,
+                                    crc32_expected
+                                )
+                            );
                         }
 
                         if (isize_actual != isize_expected)
                         {
                             throw new ZlibException(
-                                                    String.Format("Bad size in GZIP stream. (actual({0})!=expected({1}))", isize_actual,
-                                                                  isize_expected));
+                                String.Format(
+                                    "Bad size in GZIP stream. (actual({0})!=expected({1}))",
+                                    isize_actual,
+                                    isize_expected
+                                )
+                            );
                         }
                     }
                     else
@@ -371,8 +390,8 @@ namespace SharpCompress.Compressors.Deflate
             if (Read(_buf1, 0, 1) == 0)
                 return 0;
             // calculate CRC after reading
-            if (crc!=null)
-                crc.SlurpBlock(_buf1,0,1);
+            if (crc != null)
+                crc.SlurpBlock(_buf1, 0, 1);
             return (_buf1[0] & 0xFF);
         }
 #endif
@@ -400,8 +419,7 @@ namespace SharpCompress.Compressors.Deflate
                 {
                     list.Add(_buf1[0]);
                 }
-            }
-            while (!done);
+            } while (!done);
             byte[] buffer = list.ToArray();
             return _encoding.GetString(buffer, 0, buffer.Length);
         }
@@ -521,7 +539,9 @@ namespace SharpCompress.Compressors.Deflate
 
                 if (rc != ZlibConstants.Z_OK && rc != ZlibConstants.Z_STREAM_END)
                 {
-                    throw new ZlibException(String.Format("Deflating:  rc={0}  msg={1}", rc, _z.Message));
+                    throw new ZlibException(
+                        String.Format("Deflating:  rc={0}  msg={1}", rc, _z.Message)
+                    );
                 }
 
                 rc = (count - _z.AvailableBytesOut);
@@ -571,9 +591,7 @@ namespace SharpCompress.Compressors.Deflate
                 }
 
                 // we have data in InputBuffer; now compress or decompress as appropriate
-                rc = (_wantCompress)
-                         ? _z.Deflate(_flushMode)
-                         : _z.Inflate(_flushMode);
+                rc = (_wantCompress) ? _z.Deflate(_flushMode) : _z.Inflate(_flushMode);
 
                 if (nomoreinput && (rc == ZlibConstants.Z_BUF_ERROR))
                 {
@@ -582,11 +600,20 @@ namespace SharpCompress.Compressors.Deflate
 
                 if (rc != ZlibConstants.Z_OK && rc != ZlibConstants.Z_STREAM_END)
                 {
-                    throw new ZlibException(String.Format("{0}flating:  rc={1}  msg={2}", (_wantCompress ? "de" : "in"),
-                                                          rc, _z.Message));
+                    throw new ZlibException(
+                        String.Format(
+                            "{0}flating:  rc={1}  msg={2}",
+                            (_wantCompress ? "de" : "in"),
+                            rc,
+                            _z.Message
+                        )
+                    );
                 }
 
-                if ((nomoreinput || rc == ZlibConstants.Z_STREAM_END) && (_z.AvailableBytesOut == count))
+                if (
+                    (nomoreinput || rc == ZlibConstants.Z_STREAM_END)
+                    && (_z.AvailableBytesOut == count)
+                )
                 {
                     break; // nothing more to read
                 }
@@ -614,7 +641,9 @@ namespace SharpCompress.Compressors.Deflate
 
                         if (rc != ZlibConstants.Z_OK && rc != ZlibConstants.Z_STREAM_END)
                         {
-                            throw new ZlibException(String.Format("Deflating:  rc={0}  msg={1}", rc, _z.Message));
+                            throw new ZlibException(
+                                String.Format("Deflating:  rc={0}  msg={1}", rc, _z.Message)
+                            );
                         }
                     }
                 }
@@ -639,7 +668,11 @@ namespace SharpCompress.Compressors.Deflate
 
         public override Int64 Length => _stream.Length;
 
-        public override long Position { get => throw new NotSupportedException(); set => throw new NotSupportedException(); }
+        public override long Position
+        {
+            get => throw new NotSupportedException();
+            set => throw new NotSupportedException();
+        }
 
         internal enum StreamMode
         {

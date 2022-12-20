@@ -6,9 +6,8 @@ namespace SharpCompress.Test.Mocks
     {
         private readonly Stream stream;
 
-        public TestStream(Stream stream) : this(stream, stream.CanRead, stream.CanWrite, stream.CanSeek)
-        {
-        }
+        public TestStream(Stream stream)
+            : this(stream, stream.CanRead, stream.CanWrite, stream.CanSeek) { }
 
         public bool IsDisposed { get; private set; }
 

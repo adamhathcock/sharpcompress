@@ -9,10 +9,17 @@ namespace SharpCompress.Compressors.Rar.VM
         public int inBit;
 
         // TODO: rename var
-        public int InAddr { get { return inAddr; } set { inAddr = value; } }
-        public int InBit { get { return inBit; } set { inBit = value; } }
+        public int InAddr
+        {
+            get { return inAddr; }
+            set { inAddr = value; }
+        }
+        public int InBit
+        {
+            get { return inBit; }
+            set { inBit = value; }
+        }
         public bool ExternalBuffer;
-
 
         /// <summary>  </summary>
         internal BitInput()
@@ -57,11 +64,11 @@ namespace SharpCompress.Compressors.Rar.VM
             return (uint)GetBits();
         }
 
-        /// <summary> 
+        /// <summary>
         /// (also named fgetbits)
         /// </summary>
         /// <returns>
-        /// the bits (unsigned short) 
+        /// the bits (unsigned short)
         /// </returns>
         internal int GetBits()
         {
@@ -71,9 +78,18 @@ namespace SharpCompress.Compressors.Rar.VM
             //      BitField|=(int)(inBuf[inAddr+2])&0xFF;
             //      BitField >>>= (8-inBit);
             //      return (BitField & 0xffff);
-            return ((Utility.URShift((((InBuf[inAddr] & 0xff) << 16)
-                                      + ((InBuf[inAddr + 1] & 0xff) << 8)
-                                      + ((InBuf[inAddr + 2] & 0xff))), (8 - inBit))) & 0xffff);
+            return (
+                (
+                    Utility.URShift(
+                        (
+                            ((InBuf[inAddr] & 0xff) << 16)
+                            + ((InBuf[inAddr + 1] & 0xff) << 8)
+                            + ((InBuf[inAddr + 2] & 0xff))
+                        ),
+                        (8 - inBit)
+                    )
+                ) & 0xffff
+            );
         }
 
         /// <summary> Indicates an Overfow</summary>

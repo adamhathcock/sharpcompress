@@ -18,10 +18,7 @@ namespace SharpCompress.Crypto
 
         private readonly Stream stream;
 
-        public Crc32Stream(Stream stream)
-            : this(stream, DefaultPolynomial, DefaultSeed)
-        {
-        }
+        public Crc32Stream(Stream stream) : this(stream, DefaultPolynomial, DefaultSeed) { }
 
         public Crc32Stream(Stream stream, uint polynomial, uint seed)
         {
@@ -37,9 +34,11 @@ namespace SharpCompress.Crypto
             stream.Flush();
         }
 
-        public override int Read(byte[] buffer, int offset, int count) => throw new NotSupportedException();
+        public override int Read(byte[] buffer, int offset, int count) =>
+            throw new NotSupportedException();
 
-        public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
+        public override long Seek(long offset, SeekOrigin origin) =>
+            throw new NotSupportedException();
 
         public override void SetLength(long value) => throw new NotSupportedException();
 
@@ -69,7 +68,11 @@ namespace SharpCompress.Crypto
         public override bool CanSeek => false;
         public override bool CanWrite => stream.CanWrite;
         public override long Length => throw new NotSupportedException();
-        public override long Position { get => throw new NotSupportedException(); set => throw new NotSupportedException(); }
+        public override long Position
+        {
+            get => throw new NotSupportedException();
+            set => throw new NotSupportedException();
+        }
 
         public uint Crc => ~hash;
 

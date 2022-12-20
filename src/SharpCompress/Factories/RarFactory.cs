@@ -14,10 +14,7 @@ namespace SharpCompress.Factories
     /// <summary>
     /// Represents the foundation factory of RAR archive.
     /// </summary>
-    public class RarFactory : Factory,
-        IArchiveFactory,
-        IMultiArchiveFactory,
-        IReaderFactory
+    public class RarFactory : Factory, IArchiveFactory, IMultiArchiveFactory, IReaderFactory
     {
         #region IArchive
 
@@ -48,7 +45,7 @@ namespace SharpCompress.Factories
 
         #endregion
 
-        #region IArchiveFactory        
+        #region IArchiveFactory
 
         /// <inheritdoc/>
         public IArchive Open(Stream stream, ReaderOptions? readerOptions = null)
@@ -80,7 +77,7 @@ namespace SharpCompress.Factories
 
         #endregion
 
-        #region IReaderFactory        
+        #region IReaderFactory
 
         /// <inheritdoc/>
         public IReader OpenReader(Stream stream, ReaderOptions? options)

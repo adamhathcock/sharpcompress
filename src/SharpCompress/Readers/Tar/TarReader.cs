@@ -33,29 +33,29 @@ namespace SharpCompress.Readers.Tar
             switch (compressionType)
             {
                 case CompressionType.BZip2:
-                    {
-                        return new BZip2Stream(stream, CompressionMode.Decompress, false);
-                    }
+                {
+                    return new BZip2Stream(stream, CompressionMode.Decompress, false);
+                }
                 case CompressionType.GZip:
-                    {
-                        return new GZipStream(stream, CompressionMode.Decompress);
-                    }
+                {
+                    return new GZipStream(stream, CompressionMode.Decompress);
+                }
                 case CompressionType.LZip:
-                    {
-                        return new LZipStream(stream, CompressionMode.Decompress);
-                    }
+                {
+                    return new LZipStream(stream, CompressionMode.Decompress);
+                }
                 case CompressionType.Xz:
-                    {
-                        return new XZStream(stream);
-                    }
+                {
+                    return new XZStream(stream);
+                }
                 case CompressionType.None:
-                    {
-                        return stream;
-                    }
+                {
+                    return stream;
+                }
                 default:
-                    {
-                        throw new NotSupportedException("Invalid compression type: " + compressionType);
-                    }
+                {
+                    throw new NotSupportedException("Invalid compression type: " + compressionType);
+                }
             }
         }
 
@@ -76,7 +76,10 @@ namespace SharpCompress.Readers.Tar
             if (GZipArchive.IsGZipFile(rewindableStream))
             {
                 rewindableStream.Rewind(false);
-                GZipStream testStream = new GZipStream(rewindableStream, CompressionMode.Decompress);
+                GZipStream testStream = new GZipStream(
+                    rewindableStream,
+                    CompressionMode.Decompress
+                );
                 if (TarArchive.IsTarFile(testStream))
                 {
                     rewindableStream.Rewind(true);
@@ -89,7 +92,11 @@ namespace SharpCompress.Readers.Tar
             if (BZip2Stream.IsBZip2(rewindableStream))
             {
                 rewindableStream.Rewind(false);
-                BZip2Stream testStream = new BZip2Stream(rewindableStream, CompressionMode.Decompress, false);
+                BZip2Stream testStream = new BZip2Stream(
+                    rewindableStream,
+                    CompressionMode.Decompress,
+                    false
+                );
                 if (TarArchive.IsTarFile(testStream))
                 {
                     rewindableStream.Rewind(true);
@@ -102,7 +109,10 @@ namespace SharpCompress.Readers.Tar
             if (LZipStream.IsLZipFile(rewindableStream))
             {
                 rewindableStream.Rewind(false);
-                LZipStream testStream = new LZipStream(rewindableStream, CompressionMode.Decompress);
+                LZipStream testStream = new LZipStream(
+                    rewindableStream,
+                    CompressionMode.Decompress
+                );
                 if (TarArchive.IsTarFile(testStream))
                 {
                     rewindableStream.Rewind(true);
@@ -118,7 +128,12 @@ namespace SharpCompress.Readers.Tar
 
         protected override IEnumerable<TarEntry> GetEntries(Stream stream)
         {
-            return TarEntry.GetEntries(StreamingMode.Streaming, stream, compressionType, Options.ArchiveEncoding);
+            return TarEntry.GetEntries(
+                StreamingMode.Streaming,
+                stream,
+                compressionType,
+                Options.ArchiveEncoding
+            );
         }
     }
 }

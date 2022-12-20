@@ -18,20 +18,23 @@ namespace SharpCompress.Readers
         public static IReader Open(Stream stream, ReaderOptions? options = null)
         {
             stream.CheckNotNull(nameof(stream));
-            options = options ?? new ReaderOptions()
-            {
-                LeaveStreamOpen = false
-            };
+            options = options ?? new ReaderOptions() { LeaveStreamOpen = false };
 
             RewindableStream rewindableStream = new RewindableStream(stream);
             rewindableStream.StartRecording();
 
-            foreach(var factory in Factories.Factory.Factories.OfType<Factories.Factory>())
+            foreach (var factory in Factories.Factory.Factories.OfType<Factories.Factory>())
             {
-                if (factory.TryOpenReader(rewindableStream, options, out var reader) && reader != null) return reader;
-            }            
+                if (
+                    factory.TryOpenReader(rewindableStream, options, out var reader)
+                    && reader != null
+                )
+                    return reader;
+            }
 
-            throw new InvalidOperationException("Cannot determine compressed stream type.  Supported Reader Formats: Zip, GZip, BZip2, Tar, Rar, LZip, XZ");
+            throw new InvalidOperationException(
+                "Cannot determine compressed stream type.  Supported Reader Formats: Zip, GZip, BZip2, Tar, Rar, LZip, XZ"
+            );
         }
     }
 }

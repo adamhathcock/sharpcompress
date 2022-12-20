@@ -24,6 +24,7 @@ namespace SharpCompress.Common.Rar
 
 #nullable disable
         internal ArchiveHeader ArchiveHeader { get; private set; }
+
 #nullable enable
 
         internal StreamingMode Mode => _headerFactory.StreamingMode;
@@ -40,16 +41,19 @@ namespace SharpCompress.Common.Rar
                 switch (header.HeaderType)
                 {
                     case HeaderType.Mark:
+
                         {
                             lastMarkHeader = (MarkHeader)header;
                         }
                         break;
                     case HeaderType.Archive:
+
                         {
                             ArchiveHeader = (ArchiveHeader)header;
                         }
                         break;
                     case HeaderType.File:
+
                         {
                             var fh = (FileHeader)header;
                             if (_maxCompressionAlgorithm < fh.CompressionAlgorithm)
@@ -58,17 +62,22 @@ namespace SharpCompress.Common.Rar
                         }
                         break;
                     case HeaderType.Service:
-					    {
-						    var fh = (FileHeader)header;
-						    if (fh.FileName == "CMT")
-						    {
-							    var part = CreateFilePart(lastMarkHeader!, fh);
-							    var buffer = new byte[fh.CompressedSize];
-							    part.GetCompressedStream().Read(buffer, 0, buffer.Length);
-							    Comment = System.Text.Encoding.UTF8.GetString(buffer, 0, buffer.Length - 1);
-						    }
-					    }
-					    break;        
+
+                        {
+                            var fh = (FileHeader)header;
+                            if (fh.FileName == "CMT")
+                            {
+                                var part = CreateFilePart(lastMarkHeader!, fh);
+                                var buffer = new byte[fh.CompressedSize];
+                                part.GetCompressedStream().Read(buffer, 0, buffer.Length);
+                                Comment = System.Text.Encoding.UTF8.GetString(
+                                    buffer,
+                                    0,
+                                    buffer.Length - 1
+                                );
+                            }
+                        }
+                        break;
                 }
             }
         }
@@ -79,7 +88,9 @@ namespace SharpCompress.Common.Rar
             {
                 if (Mode == StreamingMode.Streaming)
                 {
-                    throw new InvalidOperationException("ArchiveHeader should never been null in a streaming read.");
+                    throw new InvalidOperationException(
+                        "ArchiveHeader should never been null in a streaming read."
+                    );
                 }
 
                 // we only want to load the archive header to avoid overhead but have to do the nasty thing and reset the stream
@@ -157,7 +168,7 @@ namespace SharpCompress.Common.Rar
                     return 1;
             }
         }
-        
+
         public string? Comment { get; internal set; }
     }
 }

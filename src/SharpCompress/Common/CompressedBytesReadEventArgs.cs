@@ -4,7 +4,10 @@ namespace SharpCompress.Common
 {
     public sealed class CompressedBytesReadEventArgs : EventArgs
     {
-        public CompressedBytesReadEventArgs(long compressedBytesRead, long currentFilePartCompressedBytesRead)
+        public CompressedBytesReadEventArgs(
+            long compressedBytesRead,
+            long currentFilePartCompressedBytesRead
+        )
         {
             CompressedBytesRead = compressedBytesRead;
             CurrentFilePartCompressedBytesRead = currentFilePartCompressedBytesRead;
