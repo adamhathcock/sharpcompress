@@ -1,6 +1,6 @@
 namespace SharpCompress.Common.Rar.Headers
 {
-    internal enum HeaderType : byte
+    public enum HeaderType : byte
     {
         Null,
         Mark,

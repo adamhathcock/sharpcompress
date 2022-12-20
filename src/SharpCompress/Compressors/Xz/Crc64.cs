@@ -5,7 +5,8 @@ using System.Collections.Generic;
 
 namespace SharpCompress.Compressors.Xz
 {
-    internal static class Crc64
+    [CLSCompliant(false)]
+    public static class Crc64
     {
         public const UInt64 DefaultSeed = 0x0;
 

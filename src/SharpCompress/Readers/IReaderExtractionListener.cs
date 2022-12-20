@@ -2,7 +2,7 @@
 
 namespace SharpCompress.Readers
 {
-    internal interface IReaderExtractionListener : IExtractionListener
+    public interface IReaderExtractionListener : IExtractionListener
     {
         void FireEntryExtractionProgress(Entry entry, long sizeTransferred, int iterations);
     }

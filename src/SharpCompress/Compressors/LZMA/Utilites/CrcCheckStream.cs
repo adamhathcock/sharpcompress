@@ -4,7 +4,8 @@ using System.IO;
 
 namespace SharpCompress.Compressors.LZMA.Utilites
 {
-    internal class CrcCheckStream : Stream
+    [CLSCompliant(false)]
+    public class CrcCheckStream : Stream
     {
         private readonly uint _mExpectedCrc;
         private uint _mCurrentCrc;

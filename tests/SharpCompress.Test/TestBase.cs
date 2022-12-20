@@ -21,7 +21,8 @@ namespace SharpCompress.Test
         public TestBase()
         {
             var index = AppDomain.CurrentDomain.BaseDirectory.IndexOf("SharpCompress.Test", StringComparison.OrdinalIgnoreCase);
-            SOLUTION_BASE_PATH = Path.GetDirectoryName(AppDomain.CurrentDomain.BaseDirectory.Substring(0, index));
+            var path = AppDomain.CurrentDomain.BaseDirectory.Substring(0, index);
+            SOLUTION_BASE_PATH = Path.GetDirectoryName(path) ?? throw new ArgumentNullException();
 
             TEST_ARCHIVES_PATH = Path.Combine(SOLUTION_BASE_PATH, "TestArchives", "Archives");
             ORIGINAL_FILES_PATH = Path.Combine(SOLUTION_BASE_PATH, "TestArchives", "Original");
@@ -188,7 +189,7 @@ namespace SharpCompress.Test
             Assert.Equal(fi1.Attributes, fi2.Attributes);
         }
 
-        protected void CompareArchivesByPath(string file1, string file2, Encoding encoding = null)
+        protected void CompareArchivesByPath(string file1, string file2, Encoding? encoding = null)
         {
             ReaderOptions readerOptions = new ReaderOptions { LeaveStreamOpen = false };
             readerOptions.ArchiveEncoding.Default = encoding ?? Encoding.Default;

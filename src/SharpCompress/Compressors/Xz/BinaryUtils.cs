@@ -4,6 +4,7 @@ using System.IO;
 
 namespace SharpCompress.Compressors.Xz
 {
+    [CLSCompliant(false)]
     public static class BinaryUtils
     {
         public static int ReadLittleEndianInt32(this BinaryReader reader)
@@ -44,7 +45,7 @@ namespace SharpCompress.Compressors.Xz
             return result;
         }
 
-        internal static byte[] ToLittleEndianBytes(this uint uint32)
+        public static byte[] ToLittleEndianBytes(this uint uint32)
         {
             var result = BitConverter.GetBytes(uint32);
 

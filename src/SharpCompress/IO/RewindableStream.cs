@@ -3,7 +3,7 @@ using System.IO;
 
 namespace SharpCompress.IO
 {
-    internal class RewindableStream : Stream
+    public class RewindableStream : Stream
     {
         private readonly Stream stream;
         private MemoryStream bufferStream = new MemoryStream();

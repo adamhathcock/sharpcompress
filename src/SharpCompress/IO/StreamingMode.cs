@@ -1,6 +1,6 @@
 ﻿namespace SharpCompress.IO
 {
-    internal enum StreamingMode
+    public enum StreamingMode
     {
         Streaming,
         Seekable

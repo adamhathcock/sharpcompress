@@ -5,7 +5,8 @@ using System.IO;
 
 namespace SharpCompress.Crypto
 {
-    internal sealed class Crc32Stream : Stream
+    [CLSCompliant(false)]
+    public sealed class Crc32Stream : Stream
     {
         public const uint DefaultPolynomial = 0xedb88320u;
         public const uint DefaultSeed = 0xffffffffu;

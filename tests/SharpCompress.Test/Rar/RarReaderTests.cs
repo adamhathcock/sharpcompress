@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Linq;
 using SharpCompress.Common;
 using SharpCompress.Readers;
@@ -232,7 +233,7 @@ namespace SharpCompress.Test.Rar
                         using (var entryStream = reader.OpenEntryStream())
                         {
                             string file = Path.GetFileName(reader.Entry.Key);
-                            string folder = Path.GetDirectoryName(reader.Entry.Key);
+                            string folder = Path.GetDirectoryName(reader.Entry.Key) ?? throw new ArgumentNullException();
                             string destdir = Path.Combine(SCRATCH_FILES_PATH, folder);
                             if (!Directory.Exists(destdir))
                             {

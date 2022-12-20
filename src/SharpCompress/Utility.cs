@@ -6,7 +6,8 @@ using SharpCompress.Readers;
 
 namespace SharpCompress
 {
-    internal static class Utility
+    [CLSCompliant(false)]
+    public static class Utility
     {
         public static ReadOnlyCollection<T> ToReadOnly<T>(this ICollection<T> items)
         {

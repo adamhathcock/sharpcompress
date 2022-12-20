@@ -14,7 +14,7 @@ using SharpCompress.Compressors.Filters;
 
 namespace SharpCompress.Compressors.Xz.Filters
 {
-    internal class IA64Filter : BlockFilter
+    public class IA64Filter : BlockFilter
     {
         public override bool AllowAsLast => false;
 

@@ -16,7 +16,7 @@ namespace SharpCompress.Test
             this.type = type;
         }
 
-        protected void Write(CompressionType compressionType, string archive, string archiveToVerifyAgainst, Encoding encoding = null)
+        protected void Write(CompressionType compressionType, string archive, string archiveToVerifyAgainst, Encoding? encoding = null)
         {
             using (Stream stream = File.OpenWrite(Path.Combine(SCRATCH2_FILES_PATH, archive)))
             {

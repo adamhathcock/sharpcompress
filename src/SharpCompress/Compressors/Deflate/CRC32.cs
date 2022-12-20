@@ -43,7 +43,8 @@ namespace SharpCompress.Compressors.Deflate
     /// directly by applications wishing to create, read, or manipulate zip archive
     /// files.
     /// </summary>
-    internal class CRC32
+    [CLSCompliant(false)]
+    public class CRC32
     {
         private const int BUFFER_SIZE = 8192;
         private static readonly UInt32[] crc32Table;

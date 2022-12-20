@@ -46,7 +46,7 @@ namespace SharpCompress.Test
                 {
                     byte[] compressed = new byte[cmpFs.Length];
                     cmpFs.Read(compressed, 0, compressed.Length);
-                    byte[] test;
+                    byte[]? test;
 
                     ADCBase.Decompress(compressed, out test);
 
@@ -65,7 +65,7 @@ namespace SharpCompress.Test
 
                 using (FileStream cmpFs = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "adc_compressed.bin")))
                 {
-                    byte[] test;
+                    byte[]? test;
 
                     ADCBase.Decompress(cmpFs, out test);
 

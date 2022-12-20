@@ -43,7 +43,7 @@ namespace SharpCompress.Test.Xz
         [Fact]
         public void CrcIncorrectThrows()
         {
-            var bytes = Compressed.Clone() as byte[];
+            var bytes = (byte[])Compressed.Clone();
             bytes[20]++;
             using (Stream badCrcStream = new MemoryStream(bytes))
             {

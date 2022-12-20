@@ -14,7 +14,7 @@ using SharpCompress.Compressors.Filters;
 
 namespace SharpCompress.Compressors.Xz.Filters
 {
-    internal class X86Filter : BlockFilter
+    public class X86Filter : BlockFilter
     {
         public override bool AllowAsLast => false;
 

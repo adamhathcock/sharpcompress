@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -363,7 +363,7 @@ namespace SharpCompress.Test.Zip
                     newFileName = newFileName.Substring(1);
                 }
                 newFileName = Path.Combine(SCRATCH_FILES_PATH, newFileName);
-                var newDir = Path.GetDirectoryName(newFileName);
+                var newDir = Path.GetDirectoryName(newFileName) ?? throw new ArgumentNullException();
                 if (!Directory.Exists(newDir))
                 {
                     Directory.CreateDirectory(newDir);
@@ -419,7 +419,7 @@ namespace SharpCompress.Test.Zip
                     newFileName = newFileName.Substring(1);
                 }
                 newFileName = Path.Combine(SCRATCH_FILES_PATH, newFileName);
-                var newDir = Path.GetDirectoryName(newFileName);
+                var newDir = Path.GetDirectoryName(newFileName) ?? throw new ArgumentNullException();
                 if (!Directory.Exists(newDir))
                 {
                     Directory.CreateDirectory(newDir);

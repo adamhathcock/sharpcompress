@@ -14,7 +14,7 @@ using SharpCompress.Compressors.Filters;
 
 namespace SharpCompress.Compressors.Xz.Filters
 {
-    internal class ArmThumbFilter : BlockFilter
+    public class ArmThumbFilter : BlockFilter
     {
         public override bool AllowAsLast => false;
 

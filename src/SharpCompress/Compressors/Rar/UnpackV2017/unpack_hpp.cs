@@ -57,7 +57,7 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017
         // Real size of DecodeNum table.
         public uint MaxNum;
 
-        // Left aligned start and upper limit codes defining code space 
+        // Left aligned start and upper limit codes defining code space
         // ranges for bit lengths. DecodeLen[BitLength-1] defines the start of
         // range for bit length and DecodeLen[BitLength] defines next code
         // after the end of range or in other words the upper limit code
@@ -65,7 +65,7 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017
         public readonly uint[] DecodeLen = new uint[16];
 
         // Every item of this array contains the sum of all preceding items.
-        // So it contains the start position in code list for every bit length. 
+        // So it contains the start position in code list for every bit length.
         public readonly uint[] DecodePos = new uint[16];
 
         // Number of compressed bits processed in quick mode.

@@ -24,7 +24,7 @@ namespace SharpCompress.Test
         protected void ArchiveStreamReadExtractAll(string testArchive, CompressionType compression)
         {
             testArchive = Path.Combine(TEST_ARCHIVES_PATH, testArchive);
-            ArchiveStreamReadExtractAll(testArchive.AsEnumerable(), compression);
+            ArchiveStreamReadExtractAll(new[] { testArchive }, compression);
         }
 
 
@@ -73,18 +73,18 @@ namespace SharpCompress.Test
             }
         }
 
-        protected void ArchiveStreamRead(string testArchive, ReaderOptions readerOptions = null)
+        protected void ArchiveStreamRead(string testArchive, ReaderOptions? readerOptions = null)
         {
             testArchive = Path.Combine(TEST_ARCHIVES_PATH, testArchive);
-            ArchiveStreamRead(readerOptions, testArchive.AsEnumerable());
+            ArchiveStreamRead(readerOptions, testArchive);
         }
 
-        protected void ArchiveStreamRead(ReaderOptions readerOptions = null, params string[] testArchives)
+        protected void ArchiveStreamRead(ReaderOptions? readerOptions = null, params string[] testArchives)
         {
             ArchiveStreamRead(readerOptions, testArchives.Select(x => Path.Combine(TEST_ARCHIVES_PATH, x)));
         }
 
-        protected void ArchiveStreamRead(ReaderOptions readerOptions, IEnumerable<string> testArchives)
+        protected void ArchiveStreamRead(ReaderOptions? readerOptions, IEnumerable<string> testArchives)
         {
             foreach (var path in testArchives)
             {
@@ -115,12 +115,12 @@ namespace SharpCompress.Test
             }
         }
 
-        protected void ArchiveStreamMultiRead(ReaderOptions readerOptions = null, params string[] testArchives)
+        protected void ArchiveStreamMultiRead(ReaderOptions? readerOptions = null, params string[] testArchives)
         {
             ArchiveStreamMultiRead(readerOptions, testArchives.Select(x => Path.Combine(TEST_ARCHIVES_PATH, x)));
         }
 
-        protected void ArchiveStreamMultiRead(ReaderOptions readerOptions, IEnumerable<string> testArchives)
+        protected void ArchiveStreamMultiRead(ReaderOptions? readerOptions, IEnumerable<string> testArchives)
         {
                 using (var archive = ArchiveFactory.Open(testArchives.Select(a => new FileInfo(a)), readerOptions))
                 {
@@ -144,14 +144,14 @@ namespace SharpCompress.Test
                 VerifyFiles();
         }
 
-        protected void ArchiveOpenStreamRead(ReaderOptions readerOptions = null, params string[] testArchives)
+        protected void ArchiveOpenStreamRead(ReaderOptions? readerOptions = null, params string[] testArchives)
         {
             ArchiveOpenStreamRead(readerOptions, testArchives.Select(x => Path.Combine(TEST_ARCHIVES_PATH, x)));
         }
 
-        protected void ArchiveOpenStreamRead(ReaderOptions readerOptions, IEnumerable<string> testArchives)
+        protected void ArchiveOpenStreamRead(ReaderOptions? readerOptions, IEnumerable<string> testArchives)
         {
-            using (var archive = ArchiveFactory.Open(testArchives.Select(f => new FileInfo(f)), null))
+            using (var archive = ArchiveFactory.Open(testArchives.Select(f => new FileInfo(f)), readerOptions))
             {
                 try
                 {
@@ -173,16 +173,16 @@ namespace SharpCompress.Test
             VerifyFiles();
         }
 
-        protected void ArchiveOpenEntryVolumeIndexTest(int[][] results, ReaderOptions readerOptions = null, params string[] testArchives)
+        protected void ArchiveOpenEntryVolumeIndexTest(int[][] results, ReaderOptions? readerOptions = null, params string[] testArchives)
         {
             ArchiveOpenEntryVolumeIndexTest(results, readerOptions, testArchives.Select(x => Path.Combine(TEST_ARCHIVES_PATH, x)));
         }
 
 
-        protected void ArchiveOpenEntryVolumeIndexTest(int[][] results, ReaderOptions readerOptions, IEnumerable<string> testArchives)
+        protected void ArchiveOpenEntryVolumeIndexTest(int[][] results, ReaderOptions? readerOptions, IEnumerable<string> testArchives)
         {
             string[] src = testArchives.ToArray();
-            using (var archive = ArchiveFactory.Open(testArchives.Select(f => new FileInfo(f)), null))
+            using (var archive = ArchiveFactory.Open(testArchives.Select(f => new FileInfo(f)), readerOptions))
             {
                 try
                 {
@@ -206,7 +206,7 @@ namespace SharpCompress.Test
 
 
 
-        protected void ArchiveFileRead(string testArchive, ReaderOptions readerOptions = null)
+        protected void ArchiveFileRead(string testArchive, ReaderOptions? readerOptions = null)
         {
             testArchive = Path.Combine(TEST_ARCHIVES_PATH, testArchive);
             using (var archive = ArchiveFactory.Open(testArchive, readerOptions))

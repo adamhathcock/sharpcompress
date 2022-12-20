@@ -5,21 +5,21 @@ using SharpCompress.Readers;
 
 namespace SharpCompress.Common.Rar.Headers
 {
-    internal class RarHeaderFactory
+    public class RarHeaderFactory
     {
         private bool _isRar5;
 
-        internal RarHeaderFactory(StreamingMode mode, ReaderOptions options)
+        public RarHeaderFactory(StreamingMode mode, ReaderOptions options)
         {
             StreamingMode = mode;
             Options = options;
         }
 
-        private ReaderOptions Options { get; }
-        internal StreamingMode StreamingMode { get; }
-        internal bool IsEncrypted { get; private set; }
+        public ReaderOptions Options { get; }
+        public StreamingMode StreamingMode { get; }
+        public bool IsEncrypted { get; private set; }
 
-        internal IEnumerable<IRarHeader> ReadHeaders(Stream stream)
+        public IEnumerable<IRarHeader> ReadHeaders(Stream stream)
         {
             var markHeader = MarkHeader.Read(stream, Options.LeaveStreamOpen, Options.LookForHeader);
             _isRar5 = markHeader.IsRar5;

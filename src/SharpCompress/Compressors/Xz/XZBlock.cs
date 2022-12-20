@@ -1,5 +1,6 @@
 ﻿#nullable disable
 
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -7,7 +8,8 @@ using SharpCompress.Compressors.Xz.Filters;
 
 namespace SharpCompress.Compressors.Xz
 {
-    internal sealed class XZBlock : XZReadOnlyStream
+    [CLSCompliant(false)]
+    public sealed class XZBlock : XZReadOnlyStream
     {
         public int BlockHeaderSize => (_blockHeaderSizeByte + 1) * 4;
         public ulong? CompressedSize { get; private set; }

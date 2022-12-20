@@ -9,7 +9,7 @@ namespace SharpCompress.Test.Xz
         [Fact]
         public void ChecksMagicNumber()
         {
-            var bytes = Compressed.Clone() as byte[];
+            var bytes = (byte[])Compressed.Clone();
             bytes[3]++;
             using (Stream badMagicNumberStream = new MemoryStream(bytes))
             {
@@ -23,7 +23,7 @@ namespace SharpCompress.Test.Xz
         [Fact]
         public void CorruptHeaderThrows()
         {
-            var bytes = Compressed.Clone() as byte[];
+            var bytes = (byte[])Compressed.Clone();
             bytes[8]++;
             using (Stream badCrcStream = new MemoryStream(bytes))
             {
@@ -37,7 +37,7 @@ namespace SharpCompress.Test.Xz
         [Fact]
         public void BadVersionIfCrcOkButStreamFlagUnknown()
         {
-            var bytes = Compressed.Clone() as byte[];
+            var bytes = (byte[])Compressed.Clone();
             byte[] streamFlags = { 0x00, 0xF4 };
             byte[] crc = Crc32.Compute(streamFlags).ToLittleEndianBytes();
             streamFlags.CopyTo(bytes, 6);

@@ -59,7 +59,7 @@ namespace SharpCompress.Test.Rar
             ReadRarPassword("Rar5.encrypted_filesAndHeader.rar", "test");
         }*/
 
-        private void ReadRarPassword(string testArchive, string password)
+        private void ReadRarPassword(string testArchive, string? password)
         {
             using (Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, testArchive)))
             using (var archive = RarArchive.Open(stream, new ReaderOptions()

@@ -4,7 +4,8 @@ using SharpCompress.Compressors.LZMA;
 
 namespace SharpCompress.Compressors.Xz.Filters
 {
-    internal class Lzma2Filter : BlockFilter
+    [CLSCompliant(false)]
+    public class Lzma2Filter : BlockFilter
     {
         public override bool AllowAsLast => true;
         public override bool AllowAsNonLast => false;

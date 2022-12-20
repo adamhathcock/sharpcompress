@@ -9,7 +9,7 @@ namespace SharpCompress.Test
 {
     public abstract class ReaderTests : TestBase
     {
-        protected void Read(string testArchive, CompressionType expectedCompression, ReaderOptions options = null)
+        protected void Read(string testArchive, CompressionType expectedCompression, ReaderOptions? options = null)
         {
             testArchive = Path.Combine(TEST_ARCHIVES_PATH, testArchive);
 

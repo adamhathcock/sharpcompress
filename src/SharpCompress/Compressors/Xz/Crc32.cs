@@ -4,7 +4,8 @@ using System;
 
 namespace SharpCompress.Compressors.Xz
 {
-    internal static class Crc32
+    [CLSCompliant(false)]
+    public static class Crc32
     {
         public const UInt32 DefaultPolynomial = 0xedb88320u;
         public const UInt32 DefaultSeed = 0xffffffffu;

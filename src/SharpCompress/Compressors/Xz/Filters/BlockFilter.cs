@@ -4,8 +4,9 @@ using System.IO;
 
 namespace SharpCompress.Compressors.Xz.Filters
 {
-    internal abstract class BlockFilter : ReadOnlyStream
+    public abstract class BlockFilter : ReadOnlyStream
     {
+        [CLSCompliant(false)]
         public enum FilterTypes : ulong
         {
             DELTA = 0x03,
@@ -36,7 +37,6 @@ namespace SharpCompress.Compressors.Xz.Filters
         public abstract void Init(byte[] properties);
         public abstract void ValidateFilter();
 
-        public FilterTypes FilterType { get; set; }
         public static BlockFilter Read(BinaryReader reader)
         {
             var filterType = (FilterTypes)reader.ReadXZInteger();

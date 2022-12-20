@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using SharpCompress.Common;
 using SharpCompress.Readers;
@@ -85,7 +86,7 @@ namespace SharpCompress.Test.Tar
                         using (var entryStream = reader.OpenEntryStream())
                         {
                             string file = Path.GetFileName(reader.Entry.Key);
-                            string folder = Path.GetDirectoryName(reader.Entry.Key);
+                            string folder = Path.GetDirectoryName(reader.Entry.Key) ?? throw new ArgumentNullException();
                             string destdir = Path.Combine(SCRATCH_FILES_PATH, folder);
                             if (!Directory.Exists(destdir))
                             {

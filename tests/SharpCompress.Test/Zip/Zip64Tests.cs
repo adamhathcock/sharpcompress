@@ -171,7 +171,7 @@ namespace SharpCompress.Test.Zip
         {
             long count = 0;
             long size = 0;
-            Common.Zip.ZipEntry prev = null;
+            Common.Zip.ZipEntry? prev = null;
             using (var fs = File.OpenRead(filename))
             using (var rd = ZipReader.Open(fs, new ReaderOptions() { LookForHeader = false }))
             {
