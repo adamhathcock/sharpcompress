@@ -19,18 +19,18 @@ public abstract class BlockFilter : ReadOnlyStream
         LZMA2 = 0x21
     }
 
-    private static readonly Dictionary<FilterTypes, Type> FilterMap = new Dictionary<
+    private static readonly Dictionary<FilterTypes, Func<BlockFilter>> FilterMap = new Dictionary<
         FilterTypes,
         Type
     >
     {
-        { FilterTypes.ARCH_x86_FILTER, typeof(X86Filter) },
-        { FilterTypes.ARCH_PowerPC_FILTER, typeof(PowerPCFilter) },
-        { FilterTypes.ARCH_IA64_FILTER, typeof(IA64Filter) },
-        { FilterTypes.ARCH_ARM_FILTER, typeof(ArmFilter) },
-        { FilterTypes.ARCH_ARMTHUMB_FILTER, typeof(ArmThumbFilter) },
-        { FilterTypes.ARCH_SPARC_FILTER, typeof(SparcFilter) },
-        { FilterTypes.LZMA2, typeof(Lzma2Filter) }
+        { FilterTypes.ARCH_x86_FILTER, () => new X86Filter() },
+        { FilterTypes.ARCH_PowerPC_FILTER, () => new PowerPCFilter() },
+        { FilterTypes.ARCH_IA64_FILTER, () => new IA64Filter() },
+        { FilterTypes.ARCH_ARM_FILTER, () => new ArmFilter() },
+        { FilterTypes.ARCH_ARMTHUMB_FILTER, () => new ArmThumbFilter() },
+        { FilterTypes.ARCH_SPARC_FILTER, () => new SparcFilter() },
+        { FilterTypes.LZMA2, () => new Lzma2Filter() }
     };
 
     public abstract bool AllowAsLast { get; }
@@ -48,7 +48,7 @@ public abstract class BlockFilter : ReadOnlyStream
             throw new NotImplementedException($"Filter {filterType} has not yet been implemented");
         }
 
-        var filter = (BlockFilter)Activator.CreateInstance(FilterMap[filterType])!;
+        var filter = FilterMap[filterType]()!;
 
         var sizeOfProperties = reader.ReadXZInteger();
         if (sizeOfProperties > int.MaxValue)
