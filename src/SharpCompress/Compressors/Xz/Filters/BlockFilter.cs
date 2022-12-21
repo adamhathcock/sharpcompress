@@ -24,12 +24,12 @@ public abstract class BlockFilter : ReadOnlyStream
         Func<BlockFilter>
     >
     {
-        { FilterTypes.ARCH_x86_FILTER, (Func<BlockFilter>)(() => new X86Filter()) },
-        { FilterTypes.ARCH_PowerPC_FILTER, (Func<BlockFilter>)(() => new PowerPCFilter()) },
-        { FilterTypes.ARCH_IA64_FILTER, (Func<BlockFilter>)(() => new IA64Filter()) },
-        { FilterTypes.ARCH_ARM_FILTER, (Func<BlockFilter>)(() => new ArmFilter()) },
-        { FilterTypes.ARCH_ARMTHUMB_FILTER, (Func<BlockFilter>)(() => new ArmThumbFilter()) },
-        { FilterTypes.ARCH_SPARC_FILTER, (Func<BlockFilter>)(() => new SparcFilter()) },
+        { FilterTypes.ARCH_x86_FILTER, () => new X86Filter() },
+        { FilterTypes.ARCH_PowerPC_FILTER, () => new PowerPCFilter() },
+        { FilterTypes.ARCH_IA64_FILTER, () => new IA64Filter() },
+        { FilterTypes.ARCH_ARM_FILTER, () => new ArmFilter() },
+        { FilterTypes.ARCH_ARMTHUMB_FILTER, () => new ArmThumbFilter() },
+        { FilterTypes.ARCH_SPARC_FILTER, () => new SparcFilter() },
         { FilterTypes.LZMA2, () => new Lzma2Filter() }
     };
 
