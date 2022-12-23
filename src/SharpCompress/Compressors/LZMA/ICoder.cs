@@ -150,7 +150,7 @@ internal enum CoderPropId
 
 internal interface ISetCoderProperties
 {
-    void SetCoderProperties(CoderPropId[] propIDs, object[] properties);
+    void SetCoderProperties(ReadOnlySpan<CoderPropId> propIDs, ReadOnlySpan<object> properties);
 }
 
 internal interface IWriteCoderProperties

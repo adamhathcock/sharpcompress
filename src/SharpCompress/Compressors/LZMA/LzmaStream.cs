@@ -1,4 +1,4 @@
-﻿#nullable disable
+#nullable disable
 
 using System;
 using System.Buffers.Binary;
@@ -111,7 +111,7 @@ public class LzmaStream : Stream
         }
 
         _encoder = new Encoder();
-        _encoder.SetCoderProperties(properties._propIDs, properties._properties);
+        _encoder.SetCoderProperties(properties.PropIDs, properties.Properties);
         var prop = new byte[5];
         _encoder.WriteCoderProperties(prop);
         Properties = prop;

@@ -1725,9 +1725,9 @@ internal class Encoder : ICoder, ISetCoderProperties, IWriteCoderProperties
         return -1;
     }
 
-    public void SetCoderProperties(CoderPropId[] propIDs, object[] properties)
+    public void SetCoderProperties(ReadOnlySpan<CoderPropId> propIDs, ReadOnlySpan<object> properties)
     {
-        for (uint i = 0; i < properties.Length; i++)
+        for (int i = 0; i < properties.Length; i++)
         {
             var prop = properties[i];
             switch (propIDs[i])
