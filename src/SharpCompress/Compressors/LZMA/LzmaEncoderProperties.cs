@@ -1,9 +1,16 @@
+using System;
+
 namespace SharpCompress.Compressors.LZMA;
 
 public class LzmaEncoderProperties
 {
-    internal CoderPropId[] _propIDs;
-    internal object[] _properties;
+    public static LzmaEncoderProperties Default { get; } = new();
+
+    internal ReadOnlySpan<CoderPropId> PropIDs => _propIDs;
+    private readonly CoderPropId[] _propIDs;
+
+    internal ReadOnlySpan<object> Properties => _properties;
+    private readonly object[] _properties;
 
     public LzmaEncoderProperties() : this(false) { }
 

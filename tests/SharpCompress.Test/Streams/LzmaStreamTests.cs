@@ -1,4 +1,6 @@
 using System;
+using System.Buffers;
+using System.Buffers.Binary;
 using System.IO;
 using SharpCompress.Compressors.LZMA;
 using Xunit;
@@ -177,6 +179,9 @@ public class LzmaStreamTests
             0x90
         };
 
+    /// <summary>
+    /// The decoded data for <see cref="lzmaData"/>.
+    /// </summary>
     private static byte[] lzmaResultData { get; } =
         new byte[]
         {
@@ -527,5 +532,55 @@ public class LzmaStreamTests
         coder.Code(input, output, input.Length, fileLength, null);
 
         Assert.Equal(output.ToArray(), lzmaResultData);
+    }
+
+    [Fact]
+    public void TestLzmaStreamEncodingWritesData()
+    {
+        using MemoryStream inputStream = new MemoryStream(lzmaResultData);
+        using MemoryStream outputStream = new();
+        using LzmaStream lzmaStream = new LzmaStream(LzmaEncoderProperties.Default, false, outputStream);
+        inputStream.CopyTo(lzmaStream);
+        lzmaStream.Close();
+        Assert.NotEqual(0, outputStream.Length);
+    }
+
+    [Fact]
+    public void TestLzmaEncodingAccuracy()
+    {
+        var input = new MemoryStream(lzmaResultData);
+        var compressed = new MemoryStream();
+        LzmaStream lzmaEncodingStream = new LzmaStream(LzmaEncoderProperties.Default, false, compressed);
+        input.CopyTo(lzmaEncodingStream);
+        lzmaEncodingStream.Close();
+        compressed.Position = 0;
+
+        var output = new MemoryStream();
+        DecompressLzmaStream(lzmaEncodingStream.Properties, compressed, compressed.Length, output, lzmaResultData.LongLength);
+
+        Assert.Equal(output.ToArray(), lzmaResultData);
+    }
+
+    private static void DecompressLzmaStream(byte[] properties, Stream compressedStream, long compressedSize, Stream decompressedStream, long decompressedSize)
+    {
+        LzmaStream lzmaStream = new LzmaStream(properties, compressedStream, compressedSize, -1, null, false);
+
+        byte[] buffer = ArrayPool<byte>.Shared.Rent(1024);
+        long totalRead = 0;
+        while (totalRead < decompressedSize)
+        {
+            int toRead = (int)Math.Min(buffer.Length, decompressedSize - totalRead);
+            int read = lzmaStream.Read(buffer, 0, toRead);
+            if (read > 0)
+            {
+                decompressedStream.Write(buffer, 0, read);
+                totalRead += read;
+            }
+            else
+            {
+                break;
+            }
+        }
+        ArrayPool<byte>.Shared.Return(buffer);
     }
 }
