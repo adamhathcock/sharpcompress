@@ -109,4 +109,27 @@ public class SevenZipArchiveTests : ArchiveTests
     //"7Zip.BZip2.split.005",
     //"7Zip.BZip2.split.006",
     //"7Zip.BZip2.split.007"
+
+    [Fact]
+    public void SevenZipArchive_ZSTD_StreamRead() => ArchiveStreamRead("7Zip.ZSTD.7z");
+
+    [Fact]
+    public void SevenZipArchive_ZSTD_PathRead() => ArchiveFileRead("7Zip.ZSTD.7z");
+
+    [Fact]
+    public void SevenZipArchive_ZSTD_Split() =>
+        Assert.Throws<InvalidOperationException>(
+            () =>
+                ArchiveStreamRead(
+                    null,
+                    "7Zip.ZSTD.Split.7z.001",
+                    "7Zip.ZSTD.Split.7z.002",
+                    "7Zip.ZSTD.Split.7z.003",
+                    "7Zip.ZSTD.Split.7z.004",
+                    "7Zip.ZSTD.Split.7z.005",
+                    "7Zip.ZSTD.Split.7z.006"
+                )
+        );
+
+
 }
