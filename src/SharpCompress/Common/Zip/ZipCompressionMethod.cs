@@ -7,6 +7,7 @@ internal enum ZipCompressionMethod
     Deflate64 = 9,
     BZip2 = 12,
     LZMA = 14,
+    Xz = 95,
     PPMd = 98,
     WinzipAes = 0x63 //http://www.winzip.com/aes_info.htm
 }
