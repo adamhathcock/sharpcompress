@@ -20,7 +20,7 @@ namespace SharpCompress.Test.Rar
         [Fact]
         public void Rar_EncryptedFileAndHeader_NoPasswordExceptionTest()
         {
-            Assert.Throws(typeof(CryptographicException), () => ReadRarPassword("Rar.encrypted_filesAndHeader.rar", null));
+            Assert.Throws<CryptographicException>(() => ReadRarPassword("Rar.encrypted_filesAndHeader.rar", null));
         }
 
         /*[Fact]
@@ -32,7 +32,7 @@ namespace SharpCompress.Test.Rar
         [Fact]
         public void Rar5_EncryptedFileAndHeader_NoPasswordExceptionTest()
         {
-            Assert.Throws(typeof(CryptographicException), () => ReadRarPassword("Rar5.encrypted_filesAndHeader.rar", null));
+            Assert.Throws<CryptographicException>(() => ReadRarPassword("Rar5.encrypted_filesAndHeader.rar", null));
         }
 
         [Fact]

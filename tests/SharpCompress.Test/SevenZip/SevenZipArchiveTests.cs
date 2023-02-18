@@ -43,7 +43,7 @@ namespace SharpCompress.Test.SevenZip
         [Fact]
         public void SevenZipArchive_LZMAAES_NoPasswordExceptionTest()
         {
-            Assert.Throws(typeof(CryptographicException), () => ArchiveFileRead("7Zip.LZMA.Aes.7z", new ReaderOptions() { Password = null })); //was failing with ArgumentNullException not CryptographicException like rar
+            Assert.Throws<CryptographicException>(() => ArchiveFileRead("7Zip.LZMA.Aes.7z", new ReaderOptions() { Password = null })); //was failing with ArgumentNullException not CryptographicException like rar
         }
         [Fact]
         public void SevenZipArchive_PPMd_StreamRead()
@@ -143,6 +143,11 @@ namespace SharpCompress.Test.SevenZip
                                         //"7Zip.BZip2.split.007"
         }
 
+        [Fact]
+        public void SevenZipArchive_Delta_FileRead()
+        {
+            ArchiveFileRead("7Zip.delta.7z");
+        }
 
     }
 }

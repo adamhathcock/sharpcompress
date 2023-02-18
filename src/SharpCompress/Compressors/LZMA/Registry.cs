@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Linq;
 using SharpCompress.Common.SevenZip;
@@ -33,6 +33,8 @@ namespace SharpCompress.Compressors.LZMA
                         throw new NotSupportedException();
                     }
                     return inStreams.Single();
+                case K_DELTA:
+                    return new DeltaFilter(false, inStreams.Single(), info);
                 case K_LZMA:
                 case K_LZMA2:
                     return new LzmaStream(info, inStreams.Single(), -1, limit);
