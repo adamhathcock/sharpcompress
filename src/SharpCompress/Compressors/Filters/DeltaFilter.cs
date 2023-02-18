@@ -1,7 +1,5 @@
 using System;
 using System.IO;
-using System.Runtime.CompilerServices;
-using SharpCompress.Compressors.Deflate;
 
 namespace SharpCompress.Compressors.Filters
 {
