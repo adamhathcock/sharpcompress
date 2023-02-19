@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using SharpCompress.Common.Zip.Headers;
 using SharpCompress.IO;
 
@@ -7,8 +8,12 @@ namespace SharpCompress.Common.Zip;
 
 internal class StreamingZipHeaderFactory : ZipHeaderFactory
 {
-    internal StreamingZipHeaderFactory(string? password, ArchiveEncoding archiveEncoding)
-        : base(StreamingMode.Streaming, password, archiveEncoding) { }
+    private IEnumerable<ZipEntry>? _entries;
+
+    internal StreamingZipHeaderFactory(string? password, ArchiveEncoding archiveEncoding, IEnumerable<ZipEntry>? entries)
+        : base(StreamingMode.Streaming, password, archiveEncoding) {
+        _entries = entries;
+    }
 
     internal IEnumerable<ZipHeader> ReadStreamHeader(Stream stream)
     {
@@ -87,6 +92,19 @@ internal class StreamingZipHeaderFactory : ZipHeaderFactory
             if (header.ZipHeaderType == ZipHeaderType.LocalEntry)
             {
                 var local_header = ((LocalEntryHeader)header);
+                var dir_header = _entries?.FirstOrDefault(
+                    entry => entry.Key == local_header.Name
+                    && local_header.CompressedSize == 0
+                    && local_header.UncompressedSize== 0
+                    && local_header.Crc == 0
+                    && local_header.IsDirectory == false);
+
+                if(dir_header!=null)
+                {
+                    local_header.UncompressedSize = dir_header.Size;
+                    local_header.CompressedSize = dir_header.CompressedSize;
+                    local_header.Crc = (uint)dir_header.Crc;
+                }
 
                 // If we have CompressedSize, there is data to be read
                 if (local_header.CompressedSize > 0)

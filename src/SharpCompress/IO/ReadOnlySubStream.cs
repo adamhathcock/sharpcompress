@@ -31,7 +31,7 @@ internal class ReadOnlySubStream : NonDisposingStream
 
     public override long Position
     {
-        get => throw new NotSupportedException();
+        get => Stream.Position;
         set => throw new NotSupportedException();
     }
 

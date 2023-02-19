@@ -133,7 +133,7 @@ public class ZipArchive : AbstractWritableArchive<ZipArchiveEntry, ZipVolume>
 
     public static bool IsZipFile(Stream stream, string? password = null)
     {
-        var headerFactory = new StreamingZipHeaderFactory(password, new ArchiveEncoding());
+        var headerFactory = new StreamingZipHeaderFactory(password, new ArchiveEncoding(), null);
         try
         {
             var header = headerFactory
@@ -157,7 +157,7 @@ public class ZipArchive : AbstractWritableArchive<ZipArchiveEntry, ZipVolume>
 
     public static bool IsZipMulti(Stream stream, string? password = null)
     {
-        var headerFactory = new StreamingZipHeaderFactory(password, new ArchiveEncoding());
+        var headerFactory = new StreamingZipHeaderFactory(password, new ArchiveEncoding(), null);
         try
         {
             var header = headerFactory
@@ -298,6 +298,6 @@ public class ZipArchive : AbstractWritableArchive<ZipArchiveEntry, ZipVolume>
     {
         var stream = Volumes.Single().Stream;
         stream.Position = 0;
-        return ZipReader.Open(stream, ReaderOptions);
+        return ZipReader.Open(stream, ReaderOptions, Entries);
     }
 }
