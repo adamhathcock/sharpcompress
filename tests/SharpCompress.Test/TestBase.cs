@@ -138,12 +138,23 @@ public class TestBase : IDisposable
     }
 
     protected bool UseExtensionInsteadOfNameToVerify { get; set; }
+    protected bool UseCaseInsensitiveToVerify { get; set; }
 
     protected void VerifyFilesByExtension()
     {
-        var extracted = Directory
-            .EnumerateFiles(SCRATCH_FILES_PATH, "*.*", SearchOption.AllDirectories)
-            .ToLookup(path => Path.GetExtension(path));
+        ILookup<string, string> extracted;
+        if (UseCaseInsensitiveToVerify)
+        {
+            extracted = Directory
+                .EnumerateFiles(SCRATCH_FILES_PATH, "*.*", SearchOption.AllDirectories)
+                .ToLookup(path => Path.GetExtension(path).ToLowerInvariant());
+        }
+        else
+        {
+            extracted = Directory
+                .EnumerateFiles(SCRATCH_FILES_PATH, "*.*", SearchOption.AllDirectories)
+                .ToLookup(path => Path.GetExtension(path));
+        }
         var original = Directory
             .EnumerateFiles(ORIGINAL_FILES_PATH, "*.*", SearchOption.AllDirectories)
             .ToLookup(path => Path.GetExtension(path));
