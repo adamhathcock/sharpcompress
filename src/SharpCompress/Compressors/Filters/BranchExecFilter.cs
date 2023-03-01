@@ -6,6 +6,7 @@
 
 using System;
 using System.IO;
+using System.Runtime.CompilerServices;
 
 namespace SharpCompress.Compressors.Filters;
 
@@ -22,89 +23,102 @@ public sealed class BranchExecFilter
         ARCH_SPARC_ALIGNMENT = 4,
     }
 
-    public static void X86Converter(byte[] data, uint ip, ref uint state)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static bool X86TestByte(byte b)
     {
-        long i = 0;
-        long size = data.Length;
-        uint pos = 0;
-        var mask = state & 7;
-        if (size < 5)
-        {
+        return b == 0x00 || b == 0xFF;
+    }
+
+    //Replaced X86Converter with bcj_x86() - https://github.com/torvalds/linux/blob/master/lib/xz/xz_dec_bcj.c
+    //This was to fix an issue decoding a Test zip made with WinZip (that 7zip was also able to read).
+    //The previous version of the code would corrupt 2 bytes in the Test.exe at 0x6CF9 (3D6D - should be 4000) - Test zip: WinZip27.Xz.zipx
+    public static void X86Converter(byte[] buf, uint ip, ref uint state)
+    {
+        bool[] mask_to_allowed_status = new[] { true, true, true, false, true, false, false, false };
+
+        byte[] mask_to_bit_num = new byte[] { 0, 1, 2, 2, 3, 3, 3, 3 };
+
+        int i;
+        int prev_pos = -1;
+        uint prev_mask = state & 7;
+        uint src;
+        uint dest;
+        uint j;
+        byte b;
+        uint pos = ip;
+
+        uint size = (uint)buf.Length;
+
+        if (size <= 4)
             return;
-        }
 
         size -= 4;
-        ip += 5;
-
-        for (; ; )
+        for (i = 0; i < size; ++i)
         {
-            i = pos;
+            if ((buf[i] & 0xFE) != 0xE8)
+                continue;
 
-            for (; i < size; i++)
+            prev_pos = i - prev_pos;
+            if (prev_pos > 3)
             {
-                if ((data[i] & 0xFE) == 0xE8)
-                {
-                    break;
-                }
-            }
-
-            var d = (uint)(i) - pos;
-            pos = (uint)i;
-            if (i >= size)
-            {
-                state = (d > 2 ? 0 : mask >> (int)d);
-                return;
-            }
-            if (d > 2)
-            {
-                mask = 0;
+                prev_mask = 0;
             }
             else
             {
-                mask >>= (int)d;
-                if (
-                    mask != 0
-                    && (mask > 4 || mask == 3 || (((((data[(mask >> 1) + 1])) + 1) & 0xFE) == 0))
-                )
+                prev_mask = (prev_mask << (prev_pos - 1)) & 7;
+                if (prev_mask != 0)
                 {
-                    mask = (mask >> 1) | 4;
-                    pos++;
-                    continue;
-                }
-            }
-
-            if ((((data[i + 4]) + 1) & 0xFE) == 0)
-            {
-                var inst =
-                    ((uint)data[i + 4] << 24)
-                    | ((uint)data[i + 3] << 16)
-                    | ((uint)data[i + 2] << 8)
-                    | data[i + 1];
-                var cur = ip + pos;
-                pos += 5;
-
-                inst -= cur;
-                if (mask != 0)
-                {
-                    var sh = (mask & 6) << 2;
-                    if (((((((byte)(inst >> (int)sh))) + 1) & 0xFE) == 0))
+                    b = buf[i + 4 - mask_to_bit_num[prev_mask]];
+                    if (!mask_to_allowed_status[prev_mask]
+                            || X86TestByte(b))
                     {
-                        inst ^= (((uint)0x100 << (int)sh) - 1);
-                        inst -= cur;
+                        prev_pos = i;
+                        prev_mask = (prev_mask << 1) | 1;
+                        continue;
                     }
-                    mask = 0;
                 }
-                data[i + 1] = (byte)inst;
-                data[i + 2] = (byte)(inst >> 8);
-                data[i + 3] = (byte)(inst >> 16);
-                data[i + 4] = (byte)(0 - ((inst >> 24) & 1));
+            }
+
+            prev_pos = i;
+
+            if (X86TestByte(buf[i + 4]))
+            {
+                src = ((uint)buf[i + 4] << 24)
+                    | ((uint)buf[i + 3] << 16)
+                    | ((uint)buf[i + 2] << 8)
+                    | buf[i + 1];
+
+                while (true)
+                {
+                    dest = src - (pos + (uint)i + 5);
+                    if (prev_mask == 0)
+                        break;
+
+                    j = mask_to_bit_num[prev_mask] * 8u;
+                    b = (byte)(dest >> (24 - (int)j));
+                    if (!X86TestByte(b))
+                        break;
+
+                    src = dest ^ ((1u << (32 - (int)j)) - 1u);
+                }
+
+                dest &= 0x01FFFFFF;
+                dest |= 0 - (dest & 0x01000000);
+                buf[i + 1] = (byte)dest;
+                buf[i + 2] = (byte)(dest >> 8);
+                buf[i + 3] = (byte)(dest >> 16);
+                buf[i + 4] = (byte)(dest >> 24);
+                i += 4;
             }
             else
             {
-                mask = (mask >> 1) | 4;
-                pos++;
+                prev_mask = (prev_mask << 1) | 1;
             }
         }
+        prev_pos = i - prev_pos;
+        prev_mask = prev_pos > 3 ? 0 : prev_mask << (prev_pos - 1);
+        state = prev_mask;
+        return;
     }
 
     public static void PowerPCConverter(byte[] data, uint ip)
