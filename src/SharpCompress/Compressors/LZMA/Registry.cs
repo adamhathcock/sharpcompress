@@ -13,6 +13,7 @@ namespace SharpCompress.Compressors.LZMA;
 internal static class DecoderRegistry
 {
     private const uint K_COPY = 0x0;
+    private const uint K_DELTA = 0x3;
     private const uint K_LZMA2 = 0x21;
     private const uint K_LZMA = 0x030101;
     private const uint K_PPMD = 0x030401;
@@ -37,6 +38,8 @@ internal static class DecoderRegistry
                     throw new NotSupportedException();
                 }
                 return inStreams.Single();
+            case K_DELTA:
+                return new DeltaFilter(false, inStreams.Single(), info);
             case K_LZMA:
             case K_LZMA2:
                 return new LzmaStream(info, inStreams.Single(), -1, limit);
