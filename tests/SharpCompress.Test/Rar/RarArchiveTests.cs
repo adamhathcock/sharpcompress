@@ -356,6 +356,22 @@ public class RarArchiveTests : ArchiveTests
     public void Rar2_ArchiveFileRead() => ArchiveFileRead("Rar2.rar");
 
     [Fact]
+    public void Rar15_ArchiveFileRead()
+    {
+        UseExtensionInsteadOfNameToVerify = true;
+        UseCaseInsensitiveToVerify= true;
+        ArchiveFileRead("Rar15.rar");
+    }
+    [Fact]
+    public void Rar15_ArchiveVersionTest()
+    {
+        var testArchive = Path.Combine(TEST_ARCHIVES_PATH, "Rar15.rar");
+
+        using var archive = RarArchive.Open(testArchive);
+        Assert.Equal(1, archive.MinVersion);
+        Assert.Equal(1, archive.MaxVersion);
+    }
+    [Fact]
     public void Rar2_ArchiveVersionTest()
     {
         var testArchive = Path.Combine(TEST_ARCHIVES_PATH, "Rar2.rar");

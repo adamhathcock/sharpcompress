@@ -167,6 +167,7 @@ public class SourceStream : Stream
                 // Add length of previous stream
                 _prevSize += length;
                 Current.Seek(0, SeekOrigin.Begin);
+                r = -1; //BugFix: reset to allow loop if count is still not 0 - was breaking split zipx (lzma xz etc) 
             }
         }
 

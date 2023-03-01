@@ -77,6 +77,9 @@ public class ZipArchiveTests : ArchiveTests
         ArchiveStreamMultiRead(null, "WinZip26.nocomp.multi.zipx", "WinZip26.nocomp.multi.zx01"); //min split size is 64k so no compression used
 
     [Fact]
+    public void WinZip27_X_XZ_ArchiveFileRead() => ArchiveFileRead("WinZip27_XZ.zipx");
+
+    [Fact]
     public void Zip_Deflate_Streamed2_ArchiveFileRead() => ArchiveFileRead("Zip.deflate.dd-.zip");
 
     [Fact]
