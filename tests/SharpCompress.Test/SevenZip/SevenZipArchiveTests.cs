@@ -109,4 +109,8 @@ public class SevenZipArchiveTests : ArchiveTests
     //"7Zip.BZip2.split.005",
     //"7Zip.BZip2.split.006",
     //"7Zip.BZip2.split.007"
+
+    [Fact]
+    public void SevenZipArchive_delta_FileRead() =>
+        ArchiveFileRead("7Zip.delta.7z");
 }

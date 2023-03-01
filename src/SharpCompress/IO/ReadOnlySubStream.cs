@@ -2,9 +2,10 @@ using System;
 using System.IO;
 
 namespace SharpCompress.IO;
-
 internal class ReadOnlySubStream : NonDisposingStream
 {
+    private long _position;
+
     public ReadOnlySubStream(Stream stream, long bytesToRead) : this(stream, null, bytesToRead) { }
 
     public ReadOnlySubStream(Stream stream, long? origin, long bytesToRead)
@@ -15,6 +16,7 @@ internal class ReadOnlySubStream : NonDisposingStream
             stream.Position = origin.Value;
         }
         BytesLeftToRead = bytesToRead;
+        _position = 0;
     }
 
     private long BytesLeftToRead { get; set; }
@@ -31,7 +33,7 @@ internal class ReadOnlySubStream : NonDisposingStream
 
     public override long Position
     {
-        get => throw new NotSupportedException();
+        get => _position; //allow position to be read (XZ uses this to calculate alignment)
         set => throw new NotSupportedException();
     }
 
@@ -45,6 +47,7 @@ internal class ReadOnlySubStream : NonDisposingStream
         if (read > 0)
         {
             BytesLeftToRead -= read;
+            _position += read;
         }
         return read;
     }
@@ -59,6 +62,7 @@ internal class ReadOnlySubStream : NonDisposingStream
         if (value != -1)
         {
             --BytesLeftToRead;
+            _position++;
         }
         return value;
     }
