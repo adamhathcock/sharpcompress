@@ -65,7 +65,17 @@ internal abstract class ZipFilePart : FilePart
         {
             case ZipCompressionMethod.None:
             {
-                return stream;
+                if( stream is ReadOnlySubStream )
+                {
+                    return stream;
+                }
+
+                if( Header.CompressedSize > 0 )
+                {
+                    return new ReadOnlySubStream(stream, Header.CompressedSize);
+                }
+
+                return new DataDescriptorStream(stream);
             }
             case ZipCompressionMethod.Deflate:
             {

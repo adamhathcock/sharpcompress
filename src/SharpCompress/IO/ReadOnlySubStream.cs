@@ -75,6 +75,7 @@ internal class ReadOnlySubStream : NonDisposingStream
         if (read > 0)
         {
             BytesLeftToRead -= read;
+            _position += read;
         }
         return read;
     }

@@ -716,6 +716,29 @@ public class ZipArchiveTests : ArchiveTests
     }
 
     [Fact]
+    public void Zip_Uncompressed_Read_All()
+    {
+        string zipPath = Path.Combine(TEST_ARCHIVES_PATH, "Zip.uncompressed.zip");
+        using (var stream = File.Open(zipPath, FileMode.Open, FileAccess.Read))
+        {
+            IArchive archive = ArchiveFactory.Open(stream);
+            IReader reader = archive.ExtractAllEntries();
+            int entries = 0;
+            while (reader.MoveToNextEntry())
+            {
+                using (var entryStream = reader.OpenEntryStream())
+                using (var target = new MemoryStream())
+                {
+                    entryStream.CopyTo(target);
+                }
+
+                entries++;
+            }
+            Assert.Equal(4, entries);
+        }
+    }
+
+    [Fact]
     public void Zip_Uncompressed_Skip_All()
     {
         var keys = new[]
