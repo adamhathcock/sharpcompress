@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using SharpCompress.Common;
 using SharpCompress.Readers;
 using Xunit;
@@ -111,6 +112,9 @@ public class SevenZipArchiveTests : ArchiveTests
     //"7Zip.BZip2.split.007"
 
     [Fact]
-    public void SevenZipArchive_delta_FileRead() =>
+    public void SevenZipArchive_Delta_FileRead() =>
         ArchiveFileRead("7Zip.delta.7z");
+
+    [Fact]
+    public void SevenZipArchive_Delta_Distance() => ArchiveDeltaDistanceRead("7Zip.delta.distance.7z");
 }

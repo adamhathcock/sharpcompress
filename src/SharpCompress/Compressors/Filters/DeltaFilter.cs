@@ -19,11 +19,6 @@ namespace SharpCompress.Compressors.Filters
             _distance = info[0];
             _history = new byte[DISTANCE_MAX];
             _position = 0;
-
-            if (_distance < DISTANCE_MIN)
-            {
-                throw new NotSupportedException();
-            }
         }
 
         protected override int Transform(byte[] buffer, int offset, int count)
