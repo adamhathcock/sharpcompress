@@ -7,8 +7,10 @@ using static Bullseye.Targets;
 using static SimpleExec.Command;
 
 const string Clean = "clean";
+const string Restore = "restore";
 const string Build = "build";
 const string Test = "test";
+const string Format = "format";
 const string Publish = "publish";
 
 Target(
@@ -38,7 +40,18 @@ Target(
 );
 
 Target(
+    Format,
+    () =>
+    {
+        Run("dotnet", "tool restore", "./csharp");
+        Run("dotnet", "csharpier --check .", "./csharp");
+    }
+);
+Target(Restore, DependsOn(Format), () => Run("dotnet", "restore --locked-mode", "./csharp"));
+
+Target(
     Build,
+    DependsOn(Restore),
     () =>
     {
         Run("dotnet", "build src/SharpCompress/SharpCompress.csproj -c Release");
@@ -63,7 +76,10 @@ Target(
 
         foreach (var file in GetFiles("**/*.Test.csproj"))
         {
-            Run("dotnet", $"test {file} -c Release -f {framework}");
+            Run(
+                "dotnet",
+                $"test {file} -c Release -f {framework} --no-restore --no-build --verbosity=normal"
+            );
         }
     }
 );

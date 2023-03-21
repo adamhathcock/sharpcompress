@@ -18,6 +18,13 @@ jobs:
     - uses: actions/setup-dotnet@v3
       with:
         dotnet-version: 7.0.x
+    - name: NuGet Caching
+      uses: actions/cache@v3
+      with:
+        path: ~/.nuget/packages
+        key: ${{ runner.os }}-nuget-${{ hashFiles('packages.lock.json', '*/packages.lock.json') }}
+        restore-keys: |
+            ${{ runner.os }}-nuget-
     - run: dotnet run --project build/build.csproj
     - uses: actions/upload-artifact@v3
       with:
