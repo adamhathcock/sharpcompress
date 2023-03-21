@@ -76,10 +76,7 @@ Target(
 
         foreach (var file in GetFiles("**/*.Test.csproj"))
         {
-            Run(
-                "dotnet",
-                $"test {file} -c Release -f {framework} --no-restore --no-build --verbosity=normal"
-            );
+            Run("dotnet", $"test {file} -c Release -f {framework} --no-restore --verbosity=normal");
         }
     }
 );
