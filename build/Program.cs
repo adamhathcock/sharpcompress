@@ -54,7 +54,7 @@ Target(
     DependsOn(Restore),
     () =>
     {
-        Run("dotnet", "build src/SharpCompress/SharpCompress.csproj -c Release");
+        Run("dotnet", "build src/SharpCompress/SharpCompress.csproj -c Release --no-restore");
     }
 );
 
