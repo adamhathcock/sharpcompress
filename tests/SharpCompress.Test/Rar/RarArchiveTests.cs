@@ -359,9 +359,10 @@ public class RarArchiveTests : ArchiveTests
     public void Rar15_ArchiveFileRead()
     {
         UseExtensionInsteadOfNameToVerify = true;
-        UseCaseInsensitiveToVerify= true;
+        UseCaseInsensitiveToVerify = true;
         ArchiveFileRead("Rar15.rar");
     }
+
     [Fact]
     public void Rar15_ArchiveVersionTest()
     {
@@ -371,6 +372,7 @@ public class RarArchiveTests : ArchiveTests
         Assert.Equal(1, archive.MinVersion);
         Assert.Equal(1, archive.MaxVersion);
     }
+
     [Fact]
     public void Rar2_ArchiveVersionTest()
     {

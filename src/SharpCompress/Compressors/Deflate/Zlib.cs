@@ -189,7 +189,8 @@ public class ZlibException : Exception
     /// This ctor collects a message attached to the exception.
     /// </summary>
     /// <param name="s"></param>
-    public ZlibException(string s) : base(s) { }
+    public ZlibException(string s)
+        : base(s) { }
 }
 
 internal class SharedUtils

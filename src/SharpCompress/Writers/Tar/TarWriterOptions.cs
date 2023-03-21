@@ -12,6 +12,6 @@ public class TarWriterOptions : WriterOptions
     public TarWriterOptions(CompressionType compressionType, bool finalizeArchiveOnClose)
         : base(compressionType) => FinalizeArchiveOnClose = finalizeArchiveOnClose;
 
-    internal TarWriterOptions(WriterOptions options) : this(options.CompressionType, true) =>
-        ArchiveEncoding = options.ArchiveEncoding;
+    internal TarWriterOptions(WriterOptions options)
+        : this(options.CompressionType, true) => ArchiveEncoding = options.ArchiveEncoding;
 }

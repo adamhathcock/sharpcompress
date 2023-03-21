@@ -539,7 +539,11 @@ public class LzmaStreamTests
     {
         using MemoryStream inputStream = new MemoryStream(lzmaResultData);
         using MemoryStream outputStream = new();
-        using LzmaStream lzmaStream = new LzmaStream(LzmaEncoderProperties.Default, false, outputStream);
+        using LzmaStream lzmaStream = new LzmaStream(
+            LzmaEncoderProperties.Default,
+            false,
+            outputStream
+        );
         inputStream.CopyTo(lzmaStream);
         lzmaStream.Close();
         Assert.NotEqual(0, outputStream.Length);
@@ -550,20 +554,43 @@ public class LzmaStreamTests
     {
         var input = new MemoryStream(lzmaResultData);
         var compressed = new MemoryStream();
-        LzmaStream lzmaEncodingStream = new LzmaStream(LzmaEncoderProperties.Default, false, compressed);
+        LzmaStream lzmaEncodingStream = new LzmaStream(
+            LzmaEncoderProperties.Default,
+            false,
+            compressed
+        );
         input.CopyTo(lzmaEncodingStream);
         lzmaEncodingStream.Close();
         compressed.Position = 0;
 
         var output = new MemoryStream();
-        DecompressLzmaStream(lzmaEncodingStream.Properties, compressed, compressed.Length, output, lzmaResultData.LongLength);
+        DecompressLzmaStream(
+            lzmaEncodingStream.Properties,
+            compressed,
+            compressed.Length,
+            output,
+            lzmaResultData.LongLength
+        );
 
         Assert.Equal(output.ToArray(), lzmaResultData);
     }
 
-    private static void DecompressLzmaStream(byte[] properties, Stream compressedStream, long compressedSize, Stream decompressedStream, long decompressedSize)
+    private static void DecompressLzmaStream(
+        byte[] properties,
+        Stream compressedStream,
+        long compressedSize,
+        Stream decompressedStream,
+        long decompressedSize
+    )
     {
-        LzmaStream lzmaStream = new LzmaStream(properties, compressedStream, compressedSize, -1, null, false);
+        LzmaStream lzmaStream = new LzmaStream(
+            properties,
+            compressedStream,
+            compressedSize,
+            -1,
+            null,
+            false
+        );
 
         byte[] buffer = ArrayPool<byte>.Shared.Rent(1024);
         long totalRead = 0;

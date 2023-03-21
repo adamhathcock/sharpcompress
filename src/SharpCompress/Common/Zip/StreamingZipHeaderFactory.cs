@@ -10,8 +10,13 @@ internal class StreamingZipHeaderFactory : ZipHeaderFactory
 {
     private IEnumerable<ZipEntry>? _entries;
 
-    internal StreamingZipHeaderFactory(string? password, ArchiveEncoding archiveEncoding, IEnumerable<ZipEntry>? entries)
-        : base(StreamingMode.Streaming, password, archiveEncoding) {
+    internal StreamingZipHeaderFactory(
+        string? password,
+        ArchiveEncoding archiveEncoding,
+        IEnumerable<ZipEntry>? entries
+    )
+        : base(StreamingMode.Streaming, password, archiveEncoding)
+    {
         _entries = entries;
     }
 
@@ -93,13 +98,15 @@ internal class StreamingZipHeaderFactory : ZipHeaderFactory
             {
                 var local_header = ((LocalEntryHeader)header);
                 var dir_header = _entries?.FirstOrDefault(
-                    entry => entry.Key == local_header.Name
-                    && local_header.CompressedSize == 0
-                    && local_header.UncompressedSize== 0
-                    && local_header.Crc == 0
-                    && local_header.IsDirectory == false);
+                    entry =>
+                        entry.Key == local_header.Name
+                        && local_header.CompressedSize == 0
+                        && local_header.UncompressedSize == 0
+                        && local_header.Crc == 0
+                        && local_header.IsDirectory == false
+                );
 
-                if(dir_header!=null)
+                if (dir_header != null)
                 {
                     local_header.UncompressedSize = dir_header.Size;
                     local_header.CompressedSize = dir_header.CompressedSize;

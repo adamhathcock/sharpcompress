@@ -8,7 +8,8 @@ namespace SharpCompress.Compressors.LZMA;
 /// </summary>
 internal class DataErrorException : Exception
 {
-    public DataErrorException() : base("Data Error") { }
+    public DataErrorException()
+        : base("Data Error") { }
 }
 
 /// <summary>
@@ -16,7 +17,8 @@ internal class DataErrorException : Exception
 /// </summary>
 internal class InvalidParamException : Exception
 {
-    public InvalidParamException() : base("Invalid Parameter") { }
+    public InvalidParamException()
+        : base("Invalid Parameter") { }
 }
 
 public interface ICodeProgress

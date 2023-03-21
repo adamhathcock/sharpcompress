@@ -5,7 +5,8 @@ namespace SharpCompress.IO;
 
 internal class CountingWritableSubStream : NonDisposingStream
 {
-    internal CountingWritableSubStream(Stream stream) : base(stream, throwOnDispose: false) { }
+    internal CountingWritableSubStream(Stream stream)
+        : base(stream, throwOnDispose: false) { }
 
     public ulong Count { get; private set; }
 

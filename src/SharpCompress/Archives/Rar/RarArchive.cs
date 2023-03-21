@@ -23,7 +23,8 @@ public class RarArchive : AbstractArchive<RarArchiveEntry, RarVolume>
     /// </summary>
     /// <param name="srcStream"></param>
     /// <param name="options"></param>
-    internal RarArchive(SourceStream srcStream) : base(ArchiveType.Rar, srcStream) { }
+    internal RarArchive(SourceStream srcStream)
+        : base(ArchiveType.Rar, srcStream) { }
 
     protected override IEnumerable<RarArchiveEntry> LoadEntries(IEnumerable<RarVolume> volumes) =>
         RarArchiveEntryFactory.GetEntries(this, volumes, ReaderOptions);

@@ -35,7 +35,8 @@ internal static class RarArchiveVolumeFactory
                             m.Groups[1].Value,
                             index == 0
                                 ? m.Groups[2].Value + m.Groups[3].Value
-                                : (char)(m.Groups[2].Value[0] + ((index - 1)/100)) + (index - 1).ToString("D4").Substring(2)
+                                : (char)(m.Groups[2].Value[0] + ((index - 1) / 100))
+                                    + (index - 1).ToString("D4").Substring(2)
                         )
                     )
                 );

@@ -16,7 +16,8 @@ namespace SharpCompress.Common.Zip;
 
 internal abstract class ZipFilePart : FilePart
 {
-    internal ZipFilePart(ZipFileEntry header, Stream stream) : base(header.ArchiveEncoding)
+    internal ZipFilePart(ZipFileEntry header, Stream stream)
+        : base(header.ArchiveEncoding)
     {
         Header = header;
         header.Part = this;
@@ -65,12 +66,12 @@ internal abstract class ZipFilePart : FilePart
         {
             case ZipCompressionMethod.None:
             {
-                if( stream is ReadOnlySubStream )
+                if (stream is ReadOnlySubStream)
                 {
                     return stream;
                 }
 
-                if( Header.CompressedSize > 0 )
+                if (Header.CompressedSize > 0)
                 {
                     return new ReadOnlySubStream(stream, Header.CompressedSize);
                 }

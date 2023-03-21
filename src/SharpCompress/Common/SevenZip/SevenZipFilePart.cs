@@ -17,7 +17,8 @@ internal class SevenZipFilePart : FilePart
         int index,
         CFileItem fileEntry,
         ArchiveEncoding archiveEncoding
-    ) : base(archiveEncoding)
+    )
+        : base(archiveEncoding)
     {
         _stream = stream;
         _database = database;

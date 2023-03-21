@@ -5,9 +5,11 @@ namespace SharpCompress.Writers.GZip;
 
 public class GZipWriterOptions : WriterOptions
 {
-    public GZipWriterOptions() : base(CompressionType.GZip) { }
+    public GZipWriterOptions()
+        : base(CompressionType.GZip) { }
 
-    internal GZipWriterOptions(WriterOptions options) : base(options.CompressionType)
+    internal GZipWriterOptions(WriterOptions options)
+        : base(options.CompressionType)
     {
         LeaveStreamOpen = options.LeaveStreamOpen;
         ArchiveEncoding = options.ArchiveEncoding;

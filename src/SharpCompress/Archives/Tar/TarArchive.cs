@@ -135,9 +135,11 @@ public class TarArchive : AbstractWritableArchive<TarArchiveEntry, TarVolume>
     /// </summary>
     /// <param name="srcStream"></param>
     /// <param name="options"></param>
-    internal TarArchive(SourceStream srcStream) : base(ArchiveType.Tar, srcStream) { }
+    internal TarArchive(SourceStream srcStream)
+        : base(ArchiveType.Tar, srcStream) { }
 
-    internal TarArchive() : base(ArchiveType.Tar) { }
+    internal TarArchive()
+        : base(ArchiveType.Tar) { }
 
     protected override IEnumerable<TarArchiveEntry> LoadEntries(IEnumerable<TarVolume> volumes)
     {

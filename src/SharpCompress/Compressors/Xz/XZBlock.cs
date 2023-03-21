@@ -27,7 +27,8 @@ public sealed class XZBlock : XZReadOnlyStream
     private bool _crcChecked;
     private ulong _bytesRead;
 
-    public XZBlock(Stream stream, CheckType checkType, int checkSize) : base(stream)
+    public XZBlock(Stream stream, CheckType checkType, int checkSize)
+        : base(stream)
     {
         _checkType = checkType;
         _checkSize = checkSize;

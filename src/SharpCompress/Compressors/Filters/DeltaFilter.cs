@@ -25,7 +25,7 @@ namespace SharpCompress.Compressors.Filters
         {
             int end = offset + count;
 
-            for( int i = offset; i < end; i++ )
+            for (int i = offset; i < end; i++)
             {
                 buffer[i] += _history[(_distance + _position--) & DISTANCE_MASK];
                 _history[_position & DISTANCE_MASK] = buffer[i];

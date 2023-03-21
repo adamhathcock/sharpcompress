@@ -101,7 +101,8 @@ public class GZipArchive : AbstractWritableArchive<GZipArchiveEntry, GZipVolume>
     /// </summary>
     /// <param name="srcStream"></param>
     /// <param name="options"></param>
-    internal GZipArchive(SourceStream srcStream) : base(ArchiveType.Tar, srcStream) { }
+    internal GZipArchive(SourceStream srcStream)
+        : base(ArchiveType.Tar, srcStream) { }
 
     protected override IEnumerable<GZipVolume> LoadVolumes(SourceStream srcStream)
     {
@@ -150,7 +151,8 @@ public class GZipArchive : AbstractWritableArchive<GZipArchiveEntry, GZipVolume>
         return true;
     }
 
-    internal GZipArchive() : base(ArchiveType.GZip) { }
+    internal GZipArchive()
+        : base(ArchiveType.GZip) { }
 
     protected override GZipArchiveEntry CreateEntryInternal(
         string filePath,

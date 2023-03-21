@@ -4,7 +4,8 @@ namespace SharpCompress.Common.Zip.Headers;
 
 internal class Zip64DirectoryEndLocatorHeader : ZipHeader
 {
-    public Zip64DirectoryEndLocatorHeader() : base(ZipHeaderType.Zip64DirectoryEndLocator) { }
+    public Zip64DirectoryEndLocatorHeader()
+        : base(ZipHeaderType.Zip64DirectoryEndLocator) { }
 
     internal override void Read(BinaryReader reader)
     {

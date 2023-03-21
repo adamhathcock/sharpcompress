@@ -9,7 +9,8 @@ public class PpmdProperties
     private int _allocatorSize;
     internal Allocator? _allocator;
 
-    public PpmdProperties() : this(16 << 20, 6) { }
+    public PpmdProperties()
+        : this(16 << 20, 6) { }
 
     public PpmdProperties(int allocatorSize, int modelOrder)
         : this(allocatorSize, modelOrder, ModelRestorationMethod.Restart) { }
@@ -29,7 +30,8 @@ public class PpmdProperties
     public PpmdVersion Version { get; } = PpmdVersion.I1;
     internal ModelRestorationMethod RestorationMethod { get; }
 
-    public PpmdProperties(byte[] properties) : this(properties.AsSpan()) { }
+    public PpmdProperties(byte[] properties)
+        : this(properties.AsSpan()) { }
 
     public PpmdProperties(ReadOnlySpan<byte> properties)
     {

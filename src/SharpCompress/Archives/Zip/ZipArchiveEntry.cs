@@ -6,8 +6,8 @@ namespace SharpCompress.Archives.Zip;
 
 public class ZipArchiveEntry : ZipEntry, IArchiveEntry
 {
-    internal ZipArchiveEntry(ZipArchive archive, SeekableZipFilePart? part) : base(part) =>
-        Archive = archive;
+    internal ZipArchiveEntry(ZipArchive archive, SeekableZipFilePart? part)
+        : base(part) => Archive = archive;
 
     public virtual Stream OpenEntryStream() => Parts.Single().GetCompressedStream();
 

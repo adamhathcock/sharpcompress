@@ -45,7 +45,8 @@ public sealed class XZStream : XZReadOnlyStream
 
     private bool _endOfStream;
 
-    public XZStream(Stream stream) : base(stream) { }
+    public XZStream(Stream stream)
+        : base(stream) { }
 
     public override int Read(byte[] buffer, int offset, int count)
     {

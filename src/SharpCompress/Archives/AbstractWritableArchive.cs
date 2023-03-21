@@ -38,7 +38,8 @@ public abstract class AbstractWritableArchive<TEntry, TVolume>
     private bool hasModifications;
     private bool pauseRebuilding;
 
-    internal AbstractWritableArchive(ArchiveType type) : base(type) { }
+    internal AbstractWritableArchive(ArchiveType type)
+        : base(type) { }
 
     internal AbstractWritableArchive(ArchiveType type, SourceStream srcStream)
         : base(type, srcStream) { }

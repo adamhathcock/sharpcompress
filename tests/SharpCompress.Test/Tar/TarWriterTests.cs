@@ -8,7 +8,8 @@ namespace SharpCompress.Test.Tar;
 
 public class TarWriterTests : WriterTests
 {
-    public TarWriterTests() : base(ArchiveType.Tar) => UseExtensionInsteadOfNameToVerify = true;
+    public TarWriterTests()
+        : base(ArchiveType.Tar) => UseExtensionInsteadOfNameToVerify = true;
 
     [Fact]
     public void Tar_Writer() =>

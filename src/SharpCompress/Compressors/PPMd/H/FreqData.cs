@@ -14,7 +14,8 @@ internal class FreqData : Pointer
     //        STATE _PACK_ATTR * Stats;
     //    };
 
-    internal FreqData(byte[] memory) : base(memory) { }
+    internal FreqData(byte[] memory)
+        : base(memory) { }
 
     internal int SummFreq
     {

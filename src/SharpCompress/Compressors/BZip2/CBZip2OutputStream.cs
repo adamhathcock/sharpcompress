@@ -319,7 +319,8 @@ internal sealed class CBZip2OutputStream : Stream
     private int currentChar = -1;
     private int runLength;
 
-    public CBZip2OutputStream(Stream inStream) : this(inStream, 9) { }
+    public CBZip2OutputStream(Stream inStream)
+        : this(inStream, 9) { }
 
     public CBZip2OutputStream(Stream inStream, int inBlockSize)
     {

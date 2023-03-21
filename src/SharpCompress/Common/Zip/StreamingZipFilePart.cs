@@ -10,7 +10,8 @@ internal sealed class StreamingZipFilePart : ZipFilePart
 {
     private Stream? _decompressionStream;
 
-    internal StreamingZipFilePart(ZipFileEntry header, Stream stream) : base(header, stream) { }
+    internal StreamingZipFilePart(ZipFileEntry header, Stream stream)
+        : base(header, stream) { }
 
     protected override Stream CreateBaseStream() => Header.PackedStream;
 

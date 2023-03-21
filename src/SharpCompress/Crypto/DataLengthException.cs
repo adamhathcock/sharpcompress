@@ -16,7 +16,9 @@ public class DataLengthException : CryptoException
      * @param message the message to be carried with the exception.
      */
 
-    public DataLengthException(string message) : base(message) { }
+    public DataLengthException(string message)
+        : base(message) { }
 
-    public DataLengthException(string message, Exception exception) : base(message, exception) { }
+    public DataLengthException(string message, Exception exception)
+        : base(message, exception) { }
 }

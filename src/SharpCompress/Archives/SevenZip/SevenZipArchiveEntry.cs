@@ -5,8 +5,8 @@ namespace SharpCompress.Archives.SevenZip;
 
 public class SevenZipArchiveEntry : SevenZipEntry, IArchiveEntry
 {
-    internal SevenZipArchiveEntry(SevenZipArchive archive, SevenZipFilePart part) : base(part) =>
-        Archive = archive;
+    internal SevenZipArchiveEntry(SevenZipArchive archive, SevenZipFilePart part)
+        : base(part) => Archive = archive;
 
     public Stream OpenEntryStream() => FilePart.GetCompressedStream();
 

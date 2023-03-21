@@ -18,7 +18,8 @@ public sealed class Crc32Stream : Stream
 
     private readonly Stream stream;
 
-    public Crc32Stream(Stream stream) : this(stream, DefaultPolynomial, DefaultSeed) { }
+    public Crc32Stream(Stream stream)
+        : this(stream, DefaultPolynomial, DefaultSeed) { }
 
     public Crc32Stream(Stream stream, uint polynomial, uint seed)
     {

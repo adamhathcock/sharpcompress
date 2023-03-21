@@ -26,7 +26,8 @@ public class ArchiveEncoding
     /// <returns>string Func(bytes, index, length)</returns>
     public Func<byte[], int, int, string>? CustomDecoder { get; set; }
 
-    public ArchiveEncoding() : this(Encoding.Default, Encoding.Default) { }
+    public ArchiveEncoding()
+        : this(Encoding.Default, Encoding.Default) { }
 
     public ArchiveEncoding(Encoding def, Encoding password)
     {

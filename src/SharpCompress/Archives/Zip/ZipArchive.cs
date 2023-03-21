@@ -32,7 +32,8 @@ public class ZipArchive : AbstractWritableArchive<ZipArchiveEntry, ZipVolume>
     /// </summary>
     /// <param name="srcStream"></param>
     /// <param name="options"></param>
-    internal ZipArchive(SourceStream srcStream) : base(ArchiveType.Zip, srcStream) =>
+    internal ZipArchive(SourceStream srcStream)
+        : base(ArchiveType.Zip, srcStream) =>
         headerFactory = new SeekableZipHeaderFactory(
             srcStream.ReaderOptions.Password,
             srcStream.ReaderOptions.ArchiveEncoding
@@ -217,7 +218,8 @@ public class ZipArchive : AbstractWritableArchive<ZipArchiveEntry, ZipVolume>
         return new ZipVolume(SrcStream, ReaderOptions, idx++).AsEnumerable();
     }
 
-    internal ZipArchive() : base(ArchiveType.Zip) { }
+    internal ZipArchive()
+        : base(ArchiveType.Zip) { }
 
     protected override IEnumerable<ZipArchiveEntry> LoadEntries(IEnumerable<ZipVolume> volumes)
     {

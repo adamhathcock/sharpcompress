@@ -35,7 +35,7 @@ public class DataDescriptorStream : Stream
         base.Dispose(disposing);
         if (disposing)
         {
-           _stream.Dispose();
+            _stream.Dispose();
         }
     }
 
@@ -90,9 +90,9 @@ public class DataDescriptorStream : Stream
 
         int read = _stream.Read(buffer, offset, count);
 
-        for( int i = 0; i < read; i++)
+        for (int i = 0; i < read; i++)
         {
-            if (buffer[offset + i] == DataDescriptorMarker[_search_position] )
+            if (buffer[offset + i] == DataDescriptorMarker[_search_position])
             {
                 _search_position++;
 
@@ -100,12 +100,19 @@ public class DataDescriptorStream : Stream
                 {
                     _search_position = 0;
 
-                    if ( read - i > DataDescriptorSize)
+                    if (read - i > DataDescriptorSize)
                     {
-                        var check = new MemoryStream(buffer, offset + i - 3, (int)DataDescriptorSize);
-                        _done = validate_data_descriptor(check, _stream.Position - read + i - 3 - _start);
+                        var check = new MemoryStream(
+                            buffer,
+                            offset + i - 3,
+                            (int)DataDescriptorSize
+                        );
+                        _done = validate_data_descriptor(
+                            check,
+                            _stream.Position - read + i - 3 - _start
+                        );
 
-                        if( _done )
+                        if (_done)
                         {
                             _stream.Position = _stream.Position - read + i - 3;
 
@@ -128,7 +135,7 @@ public class DataDescriptorStream : Stream
             }
         }
 
-        if(_search_position > 0)
+        if (_search_position > 0)
         {
             read -= _search_position;
             _stream.Position -= _search_position;
@@ -138,11 +145,9 @@ public class DataDescriptorStream : Stream
         return read;
     }
 
-    public override long Seek(long offset, SeekOrigin origin) =>
-        throw new NotSupportedException();
+    public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
 
-    public override void SetLength(long value) =>
-        throw new NotSupportedException();
+    public override void SetLength(long value) => throw new NotSupportedException();
 
     public override void Write(byte[] buffer, int offset, int count) =>
         throw new NotSupportedException();
