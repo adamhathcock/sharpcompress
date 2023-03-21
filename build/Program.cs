@@ -43,11 +43,11 @@ Target(
     Format,
     () =>
     {
-        Run("dotnet", "tool restore", "./csharp");
-        Run("dotnet", "csharpier --check .", "./csharp");
+        Run("dotnet", "tool restore");
+        Run("dotnet", "csharpier --check .");
     }
 );
-Target(Restore, DependsOn(Format), () => Run("dotnet", "restore --locked-mode", "./csharp"));
+Target(Restore, DependsOn(Format), () => Run("dotnet", "restore"));
 
 Target(
     Build,
