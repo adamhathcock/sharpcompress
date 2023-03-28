@@ -183,6 +183,26 @@ public class TarReaderTests : ReaderTests
         }
     }
 
+    [Fact]
+    public void Tar_Broken_Stream()
+    {
+        string archiveFullPath = Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar");
+        using (Stream stream = File.OpenRead(archiveFullPath))
+        using (IReader reader = ReaderFactory.Open(stream))
+        {
+            var memoryStream = new MemoryStream();
+
+            Action action = () => reader.MoveToNextEntry();
+            var exception = Record.Exception(action);
+            Assert.Null(exception);
+            reader.MoveToNextEntry();
+            reader.WriteEntryTo(memoryStream);
+            stream.Close();
+            Assert.Throws<IncompleteArchiveException>(action);
+        }
+    }
+
+
 #if !NETFRAMEWORK
     [Fact]
     public void Tar_GZip_With_Symlink_Entries()
