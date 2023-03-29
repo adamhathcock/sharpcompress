@@ -202,7 +202,6 @@ public class TarReaderTests : ReaderTests
         }
     }
 
-
 #if !NETFRAMEWORK
     [Fact]
     public void Tar_GZip_With_Symlink_Entries()
