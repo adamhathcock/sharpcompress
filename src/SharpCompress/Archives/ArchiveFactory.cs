@@ -175,7 +175,7 @@ public static class ArchiveFactory
         return IsArchive(s, out type);
     }
 
-    private static bool IsArchive(Stream stream, out ArchiveType? type)
+    public static bool IsArchive(Stream stream, out ArchiveType? type)
     {
         type = null;
         stream.CheckNotNull(nameof(stream));
