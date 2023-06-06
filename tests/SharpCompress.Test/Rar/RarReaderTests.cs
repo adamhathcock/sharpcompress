@@ -339,13 +339,13 @@ public class RarReaderTests : ReaderTests
         {
             var archives = new[]
             {
-            "Rar.EncryptedParts.part01.rar",
-            "Rar.EncryptedParts.part02.rar",
-            "Rar.EncryptedParts.part03.rar",
-            "Rar.EncryptedParts.part04.rar",
-            "Rar.EncryptedParts.part05.rar",
-            "Rar.EncryptedParts.part06.rar"
-        };
+                "Rar.EncryptedParts.part01.rar",
+                "Rar.EncryptedParts.part02.rar",
+                "Rar.EncryptedParts.part03.rar",
+                "Rar.EncryptedParts.part04.rar",
+                "Rar.EncryptedParts.part05.rar",
+                "Rar.EncryptedParts.part06.rar"
+            };
 
             using (
                 var reader = RarReader.Open(
@@ -364,8 +364,13 @@ public class RarReaderTests : ReaderTests
         }
 
         {
-            using var stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Rar.encrypted_filesOnly.rar"));
-            using var reader = ReaderFactory.Open(stream, new ReaderOptions() { LookForHeader = true });
+            using var stream = File.OpenRead(
+                Path.Combine(TEST_ARCHIVES_PATH, "Rar.encrypted_filesOnly.rar")
+            );
+            using var reader = ReaderFactory.Open(
+                stream,
+                new ReaderOptions() { LookForHeader = true }
+            );
             while (reader.MoveToNextEntry())
             {
                 //
