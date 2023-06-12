@@ -33,6 +33,18 @@ If using Compression Stream classes directly and you don't want the wrapped stre
 
 Also, look over the tests for more thorough [examples](https://github.com/adamhathcock/sharpcompress/tree/master/tests/SharpCompress.Test)
 
+### Create Zip Archive from multiple files
+```C#
+using(var archive = ZipArchive.Create())
+{
+    archive.AddEntry("file01.txt", "C:\\file01.txt");
+    archive.AddEntry("file02.txt", "C:\\file02.txt");
+    ...
+    
+    archive.SaveTo("C:\\temp.zip", CompressionType.Deflate);
+}
+```
+
 ### Create Zip Archive from all files in a directory to a file
 
 ```C#
