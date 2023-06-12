@@ -7,6 +7,7 @@ using SharpCompress.Compressors.Deflate;
 using SharpCompress.Compressors.Filters;
 using SharpCompress.Compressors.LZMA.Utilites;
 using SharpCompress.Compressors.PPMd;
+using ZstdSharp;
 
 namespace SharpCompress.Compressors.LZMA;
 
@@ -21,6 +22,7 @@ internal static class DecoderRegistry
     private const uint K_BCJ2 = 0x0303011B;
     private const uint K_DEFLATE = 0x040108;
     private const uint K_B_ZIP2 = 0x040202;
+    private const uint K_ZSTD = 0x4F71101;
 
     internal static Stream CreateDecoderStream(
         CMethodId id,
@@ -55,6 +57,8 @@ internal static class DecoderRegistry
                 return new PpmdStream(new PpmdProperties(info), inStreams.Single(), false);
             case K_DEFLATE:
                 return new DeflateStream(inStreams.Single(), CompressionMode.Decompress);
+            case K_ZSTD:
+                return new DecompressionStream(inStreams.Single());
             default:
                 throw new NotSupportedException();
         }

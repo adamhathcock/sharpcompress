@@ -11,6 +11,7 @@ using SharpCompress.Compressors.LZMA;
 using SharpCompress.Compressors.PPMd;
 using SharpCompress.Compressors.Xz;
 using SharpCompress.IO;
+using ZstdSharp;
 
 namespace SharpCompress.Common.Zip;
 
@@ -112,6 +113,10 @@ internal abstract class ZipFilePart : FilePart
             case ZipCompressionMethod.Xz:
             {
                 return new XZStream(stream);
+            }
+            case ZipCompressionMethod.ZStd:
+            {
+                return new DecompressionStream(stream);
             }
             case ZipCompressionMethod.PPMd:
             {

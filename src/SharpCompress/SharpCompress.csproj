@@ -1,41 +1,44 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
-    <AssemblyTitle>SharpCompress - Pure C# Decompression/Compression</AssemblyTitle>
-    <NeutralLanguage>en-US</NeutralLanguage>
-    <VersionPrefix>0.33.0</VersionPrefix>
-    <AssemblyVersion>0.33.0</AssemblyVersion>
-    <FileVersion>0.33.0</FileVersion>
-    <Authors>Adam Hathcock</Authors>
-    <TargetFrameworks>net462;netstandard2.0;netstandard2.1;net6.0;net7.0</TargetFrameworks>
-    <AssemblyName>SharpCompress</AssemblyName>
-    <AssemblyOriginatorKeyFile>../../SharpCompress.snk</AssemblyOriginatorKeyFile>
-    <SignAssembly>true</SignAssembly>
-    <PackageId>SharpCompress</PackageId>
-    <PackageTags>rar;unrar;zip;unzip;bzip2;gzip;tar;7zip;lzip;xz</PackageTags>
-    <PackageProjectUrl>https://github.com/adamhathcock/sharpcompress</PackageProjectUrl>
-    <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <Copyright>Copyright (c) 2014  Adam Hathcock</Copyright>
-    <GenerateAssemblyTitleAttribute>false</GenerateAssemblyTitleAttribute>
-    <GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>
-    <Description>SharpCompress is a compression library for NET Standard 2.0/2.1/NET 6.0/NET 7.0 that can unrar, decompress 7zip, decompress xz, zip/unzip, tar/untar lzip/unlzip, bzip2/unbzip2 and gzip/ungzip with forward-only reading and file random access APIs. Write support for zip/tar/bzip2/gzip is implemented.</Description>
-    <PublishRepositoryUrl>true</PublishRepositoryUrl>
-    <IncludeSymbols>true</IncludeSymbols>
-    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
-    <IsTrimmable>true</IsTrimmable>
-  </PropertyGroup>
+<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<AssemblyTitle>SharpCompress - Pure C# Decompression/Compression</AssemblyTitle>
+		<NeutralLanguage>en-US</NeutralLanguage>
+		<VersionPrefix>0.33.0</VersionPrefix>
+		<AssemblyVersion>0.33.0</AssemblyVersion>
+		<FileVersion>0.33.0</FileVersion>
+		<Authors>Adam Hathcock</Authors>
+		<TargetFrameworks>net462;netstandard2.0;netstandard2.1;net6.0;net7.0</TargetFrameworks>
+		<AssemblyName>SharpCompress</AssemblyName>
+		<AssemblyOriginatorKeyFile>../../SharpCompress.snk</AssemblyOriginatorKeyFile>
+		<SignAssembly>False</SignAssembly>
+		<PackageId>SharpCompress</PackageId>
+		<PackageTags>rar;unrar;zip;unzip;bzip2;gzip;tar;7zip;lzip;xz</PackageTags>
+		<PackageProjectUrl>https://github.com/adamhathcock/sharpcompress</PackageProjectUrl>
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+		<Copyright>Copyright (c) 2014  Adam Hathcock</Copyright>
+		<GenerateAssemblyTitleAttribute>false</GenerateAssemblyTitleAttribute>
+		<GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>
+		<Description>SharpCompress is a compression library for NET Standard 2.0/2.1/NET 6.0/NET 7.0 that can unrar, decompress 7zip, decompress xz, zip/unzip, tar/untar lzip/unlzip, bzip2/unbzip2 and gzip/ungzip with forward-only reading and file random access APIs. Write support for zip/tar/bzip2/gzip is implemented.</Description>
+		<PublishRepositoryUrl>true</PublishRepositoryUrl>
+		<IncludeSymbols>true</IncludeSymbols>
+		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
+		<IsTrimmable>true</IsTrimmable>
+		<LangVersion>latest</LangVersion>
+		<AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1" PrivateAssets="All" />
-  </ItemGroup>
-  <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.1' ">
-    <PackageReference Include="System.Text.Encoding.CodePages" Version="7.0.0" />
-  </ItemGroup>
-  <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' ">
-    <PackageReference Include="System.Text.Encoding.CodePages" Version="7.0.0" />
-    <PackageReference Include="System.Memory" Version="4.5.5" />
-  </ItemGroup>
-  <ItemGroup Condition=" '$(VersionlessImplicitFrameworkDefine)' == 'NETFRAMEWORK' ">
-    <PackageReference Include="System.Text.Encoding.CodePages" Version="7.0.0" />
-    <PackageReference Include="System.Memory" Version="4.5.5" />
-  </ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1" PrivateAssets="All" />
+		<PackageReference Include="ZstdSharp.Port" Version="0.6.1" />
+	</ItemGroup>
+	<ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.1' ">
+		<PackageReference Include="System.Text.Encoding.CodePages" Version="7.0.0" />
+	</ItemGroup>
+	<ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' ">
+		<PackageReference Include="System.Text.Encoding.CodePages" Version="7.0.0" />
+		<PackageReference Include="System.Memory" Version="4.5.5" />
+	</ItemGroup>
+	<ItemGroup Condition=" '$(VersionlessImplicitFrameworkDefine)' == 'NETFRAMEWORK' ">
+		<PackageReference Include="System.Text.Encoding.CodePages" Version="7.0.0" />
+		<PackageReference Include="System.Memory" Version="4.5.5" />
+	</ItemGroup>
 </Project>
