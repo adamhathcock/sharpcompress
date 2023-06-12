@@ -11,7 +11,8 @@ internal sealed class RarCryptoBinaryReader : RarCrcBinaryReader
     private readonly Queue<byte> _data = new Queue<byte>();
     private long _readCount;
 
-    public RarCryptoBinaryReader(Stream stream, string password) : base(stream)
+    public RarCryptoBinaryReader(Stream stream, string password)
+        : base(stream)
     {
         _password = password;
 

@@ -1725,7 +1725,10 @@ internal class Encoder : ICoder, ISetCoderProperties, IWriteCoderProperties
         return -1;
     }
 
-    public void SetCoderProperties(ReadOnlySpan<CoderPropId> propIDs, ReadOnlySpan<object> properties)
+    public void SetCoderProperties(
+        ReadOnlySpan<CoderPropId> propIDs,
+        ReadOnlySpan<object> properties
+    )
     {
         for (int i = 0; i < properties.Length; i++)
         {

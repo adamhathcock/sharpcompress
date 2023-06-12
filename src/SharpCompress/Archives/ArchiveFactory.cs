@@ -128,14 +128,16 @@ public static class ArchiveFactory
         }
     }
 
-    private static T FindFactory<T>(FileInfo finfo) where T : IFactory
+    private static T FindFactory<T>(FileInfo finfo)
+        where T : IFactory
     {
         finfo.CheckNotNull(nameof(finfo));
         using Stream stream = finfo.OpenRead();
         return FindFactory<T>(stream);
     }
 
-    private static T FindFactory<T>(Stream stream) where T : IFactory
+    private static T FindFactory<T>(Stream stream)
+        where T : IFactory
     {
         stream.CheckNotNull(nameof(stream));
         if (!stream.CanRead || !stream.CanSeek)
@@ -173,7 +175,7 @@ public static class ArchiveFactory
         return IsArchive(s, out type);
     }
 
-    private static bool IsArchive(Stream stream, out ArchiveType? type)
+    public static bool IsArchive(Stream stream, out ArchiveType? type)
     {
         type = null;
         stream.CheckNotNull(nameof(stream));

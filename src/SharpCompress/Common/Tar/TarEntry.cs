@@ -72,6 +72,10 @@ public class TarEntry : Entry
                     yield return new TarEntry(new TarFilePart(h, null), compressionType);
                 }
             }
+            else
+            {
+                throw new IncompleteArchiveException("Unexpected EOF reading tar file");
+            }
         }
     }
 }

@@ -14,7 +14,8 @@ namespace SharpCompress.Test.Zip;
 
 public class Zip64Tests : WriterTests
 {
-    public Zip64Tests() : base(ArchiveType.Zip) { }
+    public Zip64Tests()
+        : base(ArchiveType.Zip) { }
 
     // 4GiB + 1
     private const long FOUR_GB_LIMIT = ((long)uint.MaxValue) + 1;

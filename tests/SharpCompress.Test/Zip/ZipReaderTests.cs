@@ -338,7 +338,20 @@ public class ZipReaderTests : ReaderTests
     }
 
     [Fact]
-    public void Zip_Uncompressed_Skip_All()
+    public void Zip_ReaderFactory_Uncompressed_Read_All()
+    {
+        var zipPath = Path.Combine(TEST_ARCHIVES_PATH, "Zip.uncompressed.zip");
+        using var stream = File.Open(zipPath, FileMode.Open, FileAccess.Read);
+        using var reader = ReaderFactory.Open(stream);
+        while (reader.MoveToNextEntry())
+        {
+            var target = new MemoryStream();
+            reader.OpenEntryStream().CopyTo(target);
+        }
+    }
+
+    [Fact]
+    public void Zip_ReaderFactory_Uncompressed_Skip_All()
     {
         var zipPath = Path.Combine(TEST_ARCHIVES_PATH, "Zip.uncompressed.zip");
         using var stream = File.Open(zipPath, FileMode.Open, FileAccess.Read);

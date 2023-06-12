@@ -104,7 +104,8 @@ public class SevenZipArchive : AbstractArchive<SevenZipArchiveEntry, SevenZipVol
     /// </summary>
     /// <param name="srcStream"></param>
     /// <param name="options"></param>
-    internal SevenZipArchive(SourceStream srcStream) : base(ArchiveType.SevenZip, srcStream) { }
+    internal SevenZipArchive(SourceStream srcStream)
+        : base(ArchiveType.SevenZip, srcStream) { }
 
     protected override IEnumerable<SevenZipVolume> LoadVolumes(SourceStream srcStream)
     {
@@ -125,7 +126,8 @@ public class SevenZipArchive : AbstractArchive<SevenZipArchiveEntry, SevenZipVol
         return IsSevenZipFile(stream);
     }
 
-    internal SevenZipArchive() : base(ArchiveType.SevenZip) { }
+    internal SevenZipArchive()
+        : base(ArchiveType.SevenZip) { }
 
     protected override IEnumerable<SevenZipArchiveEntry> LoadEntries(
         IEnumerable<SevenZipVolume> volumes

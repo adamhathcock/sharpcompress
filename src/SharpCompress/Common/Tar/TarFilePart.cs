@@ -7,7 +7,8 @@ internal sealed class TarFilePart : FilePart
 {
     private readonly Stream _seekableStream;
 
-    internal TarFilePart(TarHeader header, Stream seekableStream) : base(header.ArchiveEncoding)
+    internal TarFilePart(TarHeader header, Stream seekableStream)
+        : base(header.ArchiveEncoding)
     {
         _seekableStream = seekableStream;
         Header = header;

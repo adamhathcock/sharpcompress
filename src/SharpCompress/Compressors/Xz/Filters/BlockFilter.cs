@@ -6,32 +6,29 @@ namespace SharpCompress.Compressors.Xz.Filters;
 
 public abstract class BlockFilter : ReadOnlyStream
 {
-    [CLSCompliant(false)]
-    public enum FilterTypes : ulong
+    private enum FilterTypes : ulong
     {
-        DELTA = 0x03,
-        ARCH_x86_FILTER = 0x04,
-        ARCH_PowerPC_FILTER = 0x05,
-        ARCH_IA64_FILTER = 0x06,
-        ARCH_ARM_FILTER = 0x07,
-        ARCH_ARMTHUMB_FILTER = 0x08,
-        ARCH_SPARC_FILTER = 0x09,
-        LZMA2 = 0x21
+        //Delta = 0x03,
+        ArchX86Filter = 0x04,
+        ArchPowerPcFilter = 0x05,
+        ArchIa64Filter = 0x06,
+        ArchArmFilter = 0x07,
+        ArchArmThumbFilter = 0x08,
+        ArchSparcFilter = 0x09,
+        Lzma2 = 0x21
     }
 
-    private static readonly Dictionary<FilterTypes, Func<BlockFilter>> FilterMap = new Dictionary<
-        FilterTypes,
-        Func<BlockFilter>
-    >
-    {
-        { FilterTypes.ARCH_x86_FILTER, () => new X86Filter() },
-        { FilterTypes.ARCH_PowerPC_FILTER, () => new PowerPCFilter() },
-        { FilterTypes.ARCH_IA64_FILTER, () => new IA64Filter() },
-        { FilterTypes.ARCH_ARM_FILTER, () => new ArmFilter() },
-        { FilterTypes.ARCH_ARMTHUMB_FILTER, () => new ArmThumbFilter() },
-        { FilterTypes.ARCH_SPARC_FILTER, () => new SparcFilter() },
-        { FilterTypes.LZMA2, () => new Lzma2Filter() }
-    };
+    private static readonly Dictionary<FilterTypes, Func<BlockFilter>> FILTER_MAP =
+        new()
+        {
+            { FilterTypes.ArchX86Filter, () => new X86Filter() },
+            { FilterTypes.ArchPowerPcFilter, () => new PowerPCFilter() },
+            { FilterTypes.ArchIa64Filter, () => new IA64Filter() },
+            { FilterTypes.ArchArmFilter, () => new ArmFilter() },
+            { FilterTypes.ArchArmThumbFilter, () => new ArmThumbFilter() },
+            { FilterTypes.ArchSparcFilter, () => new SparcFilter() },
+            { FilterTypes.Lzma2, () => new Lzma2Filter() }
+        };
 
     public abstract bool AllowAsLast { get; }
     public abstract bool AllowAsNonLast { get; }
@@ -43,12 +40,12 @@ public abstract class BlockFilter : ReadOnlyStream
     public static BlockFilter Read(BinaryReader reader)
     {
         var filterType = (FilterTypes)reader.ReadXZInteger();
-        if (!FilterMap.ContainsKey(filterType))
+        if (!FILTER_MAP.ContainsKey(filterType))
         {
             throw new NotImplementedException($"Filter {filterType} has not yet been implemented");
         }
 
-        var filter = FilterMap[filterType]()!;
+        var filter = FILTER_MAP[filterType]();
 
         var sizeOfProperties = reader.ReadXZInteger();
         if (sizeOfProperties > int.MaxValue)

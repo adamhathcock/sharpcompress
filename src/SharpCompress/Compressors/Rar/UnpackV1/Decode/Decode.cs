@@ -2,7 +2,8 @@ namespace SharpCompress.Compressors.Rar.UnpackV1.Decode;
 
 internal class Decode
 {
-    internal Decode() : this(new int[2]) { }
+    internal Decode()
+        : this(new int[2]) { }
 
     protected Decode(int[] customDecodeNum)
     {

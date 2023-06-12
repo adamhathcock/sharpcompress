@@ -14,7 +14,8 @@ public class TarWriter : AbstractWriter
 {
     private readonly bool finalizeArchiveOnClose;
 
-    public TarWriter(Stream destination, TarWriterOptions options) : base(ArchiveType.Tar, options)
+    public TarWriter(Stream destination, TarWriterOptions options)
+        : base(ArchiveType.Tar, options)
     {
         finalizeArchiveOnClose = options.FinalizeArchiveOnClose;
 

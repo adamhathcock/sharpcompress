@@ -8,7 +8,8 @@ namespace SharpCompress.Test.GZip;
 
 public class GZipWriterTests : WriterTests
 {
-    public GZipWriterTests() : base(ArchiveType.GZip) => UseExtensionInsteadOfNameToVerify = true;
+    public GZipWriterTests()
+        : base(ArchiveType.GZip) => UseExtensionInsteadOfNameToVerify = true;
 
     [Fact]
     public void GZip_Writer_Generic()

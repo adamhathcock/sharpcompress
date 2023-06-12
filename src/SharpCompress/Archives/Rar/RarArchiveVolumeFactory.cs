@@ -26,7 +26,7 @@ internal static class RarArchiveVolumeFactory
         else
         {
             //old style - ...rar, .r00, .r01 ...
-            m = Regex.Match(part1.Name, @"^(.*\.r)(ar|[0-9]+)$", RegexOptions.IgnoreCase);
+            m = Regex.Match(part1.Name, @"^(.*\.)([r-z{])(ar|[0-9]+)$", RegexOptions.IgnoreCase);
             if (m.Success)
                 item = new FileInfo(
                     Path.Combine(
@@ -34,8 +34,9 @@ internal static class RarArchiveVolumeFactory
                         String.Concat(
                             m.Groups[1].Value,
                             index == 0
-                                ? "ar"
-                                : (index - 1).ToString().PadLeft(m.Groups[2].Value.Length, '0')
+                                ? m.Groups[2].Value + m.Groups[3].Value
+                                : (char)(m.Groups[2].Value[0] + ((index - 1) / 100))
+                                    + (index - 1).ToString("D4").Substring(2)
                         )
                     )
                 );

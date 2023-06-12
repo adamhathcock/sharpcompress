@@ -129,7 +129,7 @@ public abstract class AbstractReader<TEntry, TVolume> : IReader, IReaderExtracti
     {
         var part = Entry.Parts.First();
 
-        if (ArchiveType != ArchiveType.Rar && !Entry.IsSolid && Entry.CompressedSize > 0)
+        if (!Entry.IsSolid && Entry.CompressedSize > 0)
         {
             //not solid and has a known compressed size then we can skip raw bytes.
             var rawStream = part.GetRawStream();

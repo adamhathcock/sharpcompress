@@ -20,7 +20,8 @@ internal sealed class GZipWritableArchiveEntry : GZipArchiveEntry, IWritableArch
         long size,
         DateTime? lastModified,
         bool closeStream
-    ) : base(archive, null)
+    )
+        : base(archive, null)
     {
         this.stream = stream;
         Key = path;

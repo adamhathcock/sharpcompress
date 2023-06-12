@@ -282,4 +282,29 @@ public class ArchiveTests : ReaderTests
         }
         VerifyFilesEx();
     }
+
+    protected void ArchiveDeltaDistanceRead(string testArchive)
+    {
+        testArchive = Path.Combine(TEST_ARCHIVES_PATH, testArchive);
+        using (var archive = Archives.ArchiveFactory.Open(testArchive, null))
+        using (var reader = archive.ExtractAllEntries())
+            while (reader.MoveToNextEntry())
+            {
+                if (!reader.Entry.IsDirectory)
+                {
+                    var memory = new MemoryStream();
+                    reader.WriteEntryTo(memory);
+
+                    memory.Position = 0;
+
+                    for (int y = 0; y < 9; y++)
+                        for (int x = 0; x < 256; x++)
+                        {
+                            Assert.Equal(x, memory.ReadByte());
+                        }
+
+                    Assert.Equal((int)-1, memory.ReadByte());
+                }
+            }
+    }
 }

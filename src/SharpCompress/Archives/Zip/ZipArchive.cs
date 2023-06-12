@@ -32,7 +32,8 @@ public class ZipArchive : AbstractWritableArchive<ZipArchiveEntry, ZipVolume>
     /// </summary>
     /// <param name="srcStream"></param>
     /// <param name="options"></param>
-    internal ZipArchive(SourceStream srcStream) : base(ArchiveType.Zip, srcStream) =>
+    internal ZipArchive(SourceStream srcStream)
+        : base(ArchiveType.Zip, srcStream) =>
         headerFactory = new SeekableZipHeaderFactory(
             srcStream.ReaderOptions.Password,
             srcStream.ReaderOptions.ArchiveEncoding
@@ -133,7 +134,7 @@ public class ZipArchive : AbstractWritableArchive<ZipArchiveEntry, ZipVolume>
 
     public static bool IsZipFile(Stream stream, string? password = null)
     {
-        var headerFactory = new StreamingZipHeaderFactory(password, new ArchiveEncoding());
+        var headerFactory = new StreamingZipHeaderFactory(password, new ArchiveEncoding(), null);
         try
         {
             var header = headerFactory
@@ -157,7 +158,7 @@ public class ZipArchive : AbstractWritableArchive<ZipArchiveEntry, ZipVolume>
 
     public static bool IsZipMulti(Stream stream, string? password = null)
     {
-        var headerFactory = new StreamingZipHeaderFactory(password, new ArchiveEncoding());
+        var headerFactory = new StreamingZipHeaderFactory(password, new ArchiveEncoding(), null);
         try
         {
             var header = headerFactory
@@ -217,7 +218,8 @@ public class ZipArchive : AbstractWritableArchive<ZipArchiveEntry, ZipVolume>
         return new ZipVolume(SrcStream, ReaderOptions, idx++).AsEnumerable();
     }
 
-    internal ZipArchive() : base(ArchiveType.Zip) { }
+    internal ZipArchive()
+        : base(ArchiveType.Zip) { }
 
     protected override IEnumerable<ZipArchiveEntry> LoadEntries(IEnumerable<ZipVolume> volumes)
     {
@@ -298,6 +300,6 @@ public class ZipArchive : AbstractWritableArchive<ZipArchiveEntry, ZipVolume>
     {
         var stream = Volumes.Single().Stream;
         stream.Position = 0;
-        return ZipReader.Open(stream, ReaderOptions);
+        return ZipReader.Open(stream, ReaderOptions, Entries);
     }
 }

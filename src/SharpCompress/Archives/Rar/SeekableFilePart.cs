@@ -15,7 +15,8 @@ internal class SeekableFilePart : RarFilePart
         int index,
         Stream stream,
         string? password
-    ) : base(mh, fh, index)
+    )
+        : base(mh, fh, index)
     {
         this.stream = stream;
         this.password = password;

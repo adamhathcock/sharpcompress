@@ -1697,7 +1697,8 @@ public sealed class RijndaelEngine : IBlockCipher
     * default constructor - 128 bit block size.
     */
 
-    public RijndaelEngine() : this(128) { }
+    public RijndaelEngine()
+        : this(128) { }
 
     /**
     * basic constructor - set the cipher up for a given blocksize

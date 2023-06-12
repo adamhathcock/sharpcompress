@@ -8,7 +8,8 @@ internal sealed class State : Pointer
 {
     internal const int SIZE = 6;
 
-    internal State(byte[]? memory) : base(memory) { }
+    internal State(byte[]? memory)
+        : base(memory) { }
 
     internal int Symbol
     {

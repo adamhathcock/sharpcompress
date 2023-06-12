@@ -12,7 +12,8 @@ internal class RarCrcStream : RarStream
         IRarUnpack unpack,
         FileHeader fileHeader,
         MultiVolumeReadOnlyStream readStream
-    ) : base(unpack, fileHeader, readStream)
+    )
+        : base(unpack, fileHeader, readStream)
     {
         this.readStream = readStream;
         ResetCrc();

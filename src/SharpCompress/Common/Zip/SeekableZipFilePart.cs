@@ -14,7 +14,8 @@ internal class SeekableZipFilePart : ZipFilePart
         SeekableZipHeaderFactory headerFactory,
         DirectoryEntryHeader header,
         Stream stream
-    ) : base(header, stream)
+    )
+        : base(header, stream)
     {
         _headerFactory = headerFactory;
         _directoryEntryHeader = header;

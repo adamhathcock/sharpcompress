@@ -11,5 +11,7 @@ internal class NonSeekableStreamFilePart : RarFilePart
 
     internal override Stream GetCompressedStream() => FileHeader.PackedStream;
 
+    internal override Stream? GetRawStream() => FileHeader.PackedStream;
+
     internal override string FilePartName => "Unknown Stream - File Entry: " + FileHeader.FileName;
 }

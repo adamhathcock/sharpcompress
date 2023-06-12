@@ -10,10 +10,26 @@ public class ZipReader : AbstractReader<ZipEntry, ZipVolume>
 {
     private readonly StreamingZipHeaderFactory _headerFactory;
 
-    private ZipReader(Stream stream, ReaderOptions options) : base(options, ArchiveType.Zip)
+    private ZipReader(Stream stream, ReaderOptions options)
+        : base(options, ArchiveType.Zip)
     {
         Volume = new ZipVolume(stream, options);
-        _headerFactory = new StreamingZipHeaderFactory(options.Password, options.ArchiveEncoding);
+        _headerFactory = new StreamingZipHeaderFactory(
+            options.Password,
+            options.ArchiveEncoding,
+            null
+        );
+    }
+
+    private ZipReader(Stream stream, ReaderOptions options, IEnumerable<ZipEntry> entries)
+        : base(options, ArchiveType.Zip)
+    {
+        Volume = new ZipVolume(stream, options);
+        _headerFactory = new StreamingZipHeaderFactory(
+            options.Password,
+            options.ArchiveEncoding,
+            entries
+        );
     }
 
     public override ZipVolume Volume { get; }
@@ -30,6 +46,16 @@ public class ZipReader : AbstractReader<ZipEntry, ZipVolume>
     {
         stream.CheckNotNull(nameof(stream));
         return new ZipReader(stream, options ?? new ReaderOptions());
+    }
+
+    public static ZipReader Open(
+        Stream stream,
+        ReaderOptions? options,
+        IEnumerable<ZipEntry> entries
+    )
+    {
+        stream.CheckNotNull(nameof(stream));
+        return new ZipReader(stream, options ?? new ReaderOptions(), entries);
     }
 
     #endregion Open

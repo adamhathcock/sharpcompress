@@ -5,9 +5,11 @@ namespace SharpCompress.Writers.Zip;
 
 public class ZipWriterOptions : WriterOptions
 {
-    public ZipWriterOptions(CompressionType compressionType) : base(compressionType) { }
+    public ZipWriterOptions(CompressionType compressionType)
+        : base(compressionType) { }
 
-    internal ZipWriterOptions(WriterOptions options) : base(options.CompressionType)
+    internal ZipWriterOptions(WriterOptions options)
+        : base(options.CompressionType)
     {
         LeaveStreamOpen = options.LeaveStreamOpen;
         ArchiveEncoding = options.ArchiveEncoding;

@@ -15,7 +15,7 @@ internal sealed class RarCryptoWrapper : Stream
     {
         _actualStream = actualStream;
         _salt = salt;
-        _rijndael = RarRijndael.InitializeFrom(password, salt);
+        _rijndael = RarRijndael.InitializeFrom(password ?? "", salt);
     }
 
     public override void Flush() => throw new NotSupportedException();

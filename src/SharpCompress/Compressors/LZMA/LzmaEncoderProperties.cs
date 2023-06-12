@@ -12,11 +12,14 @@ public class LzmaEncoderProperties
     internal ReadOnlySpan<object> Properties => _properties;
     private readonly object[] _properties;
 
-    public LzmaEncoderProperties() : this(false) { }
+    public LzmaEncoderProperties()
+        : this(false) { }
 
-    public LzmaEncoderProperties(bool eos) : this(eos, 1 << 20) { }
+    public LzmaEncoderProperties(bool eos)
+        : this(eos, 1 << 20) { }
 
-    public LzmaEncoderProperties(bool eos, int dictionary) : this(eos, dictionary, 32) { }
+    public LzmaEncoderProperties(bool eos, int dictionary)
+        : this(eos, dictionary, 32) { }
 
     public LzmaEncoderProperties(bool eos, int dictionary, int numFastBytes)
     {
