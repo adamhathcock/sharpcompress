@@ -132,7 +132,6 @@ public class SevenZipArchiveTests : ArchiveTests
                 )
         );
 
-
     public void SevenZipArchive_Delta_FileRead() => ArchiveFileRead("7Zip.delta.7z");
 
     [Fact]
