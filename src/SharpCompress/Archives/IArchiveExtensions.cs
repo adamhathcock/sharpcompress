@@ -60,8 +60,7 @@ public static class IArchiveExtensions
 
             // Create each directory
             var path = Path.Combine(destination, entry.Key);
-            if (Path.GetDirectoryName(path) is { } directory
-                && seenDirectories.Add(path))
+            if (Path.GetDirectoryName(path) is { } directory && seenDirectories.Add(path))
             {
                 Directory.CreateDirectory(directory);
             }
