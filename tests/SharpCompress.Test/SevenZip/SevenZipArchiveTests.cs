@@ -1,5 +1,8 @@
 using System;
 using System.IO;
+using System.Linq;
+using SharpCompress.Archives;
+using SharpCompress.Archives.SevenZip;
 using SharpCompress.Common;
 using SharpCompress.Readers;
 using Xunit;
@@ -31,9 +34,9 @@ public class SevenZipArchiveTests : ArchiveTests
     [Fact]
     public void SevenZipArchive_LZMAAES_NoPasswordExceptionTest() =>
         Assert.Throws(
-            typeof(CryptographicException),
-            () => ArchiveFileRead("7Zip.LZMA.Aes.7z", new ReaderOptions() { Password = null })
-        ); //was failing with ArgumentNullException not CryptographicException like rar
+                      typeof(CryptographicException),
+                      () => ArchiveFileRead("7Zip.LZMA.Aes.7z", new ReaderOptions() { Password = null })
+                     ); //was failing with ArgumentNullException not CryptographicException like rar
 
     [Fact]
     public void SevenZipArchive_PPMd_StreamRead() => ArchiveStreamRead("7Zip.PPMd.7z");
@@ -66,38 +69,61 @@ public class SevenZipArchiveTests : ArchiveTests
     public void SevenZipArchive_BZip2_PathRead() => ArchiveFileRead("7Zip.BZip2.7z");
 
     [Fact]
+    public void SevenZipArchive_Tar_PathRead()
+    {
+        using (Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "7Zip.Tar.tar.7z")))
+        using (var archive = SevenZipArchive.Open(stream))
+        {
+            var entry = archive.Entries.First();
+            entry.WriteToFile(Path.Combine(SCRATCH_FILES_PATH, entry.Key));
+
+            var size = entry.Size;
+            var scratch = new FileInfo(Path.Combine(SCRATCH_FILES_PATH, "7Zip.Tar.tar"));
+            var test = new FileInfo(Path.Combine(TEST_ARCHIVES_PATH, "7Zip.Tar.tar"));
+
+            Assert.Equal(size, scratch.Length);
+            Assert.Equal(size, test.Length);
+        }
+
+        CompareArchivesByPath(
+                              Path.Combine(SCRATCH_FILES_PATH, "7Zip.Tar.tar"),
+                              Path.Combine(TEST_ARCHIVES_PATH, "7Zip.Tar.tar")
+                             );
+    }
+
+    [Fact]
     public void SevenZipArchive_LZMA_Time_Attributes_PathRead() =>
         ArchiveFileReadEx("7Zip.LZMA.7z");
 
     [Fact]
     public void SevenZipArchive_BZip2_Split() =>
         Assert.Throws<InvalidOperationException>(
-            () =>
-                ArchiveStreamRead(
-                    null,
-                    "Original.7z.001",
-                    "Original.7z.002",
-                    "Original.7z.003",
-                    "Original.7z.004",
-                    "Original.7z.005",
-                    "Original.7z.006",
-                    "Original.7z.007"
-                )
-        );
+                                                 () =>
+                                                     ArchiveStreamRead(
+                                                                       null,
+                                                                       "Original.7z.001",
+                                                                       "Original.7z.002",
+                                                                       "Original.7z.003",
+                                                                       "Original.7z.004",
+                                                                       "Original.7z.005",
+                                                                       "Original.7z.006",
+                                                                       "Original.7z.007"
+                                                                      )
+                                                );
 
     //Same as archive as Original.7z.001 ... 007 files without the root directory 'Original\' in the archive - this caused the verify to fail
     [Fact]
     public void SevenZipArchive_BZip2_Split_Working() =>
         ArchiveStreamMultiRead(
-            null,
-            "7Zip.BZip2.split.001",
-            "7Zip.BZip2.split.002",
-            "7Zip.BZip2.split.003",
-            "7Zip.BZip2.split.004",
-            "7Zip.BZip2.split.005",
-            "7Zip.BZip2.split.006",
-            "7Zip.BZip2.split.007"
-        );
+                               null,
+                               "7Zip.BZip2.split.001",
+                               "7Zip.BZip2.split.002",
+                               "7Zip.BZip2.split.003",
+                               "7Zip.BZip2.split.004",
+                               "7Zip.BZip2.split.005",
+                               "7Zip.BZip2.split.006",
+                               "7Zip.BZip2.split.007"
+                              );
 
     //will detect and load other files
     [Fact]
@@ -120,17 +146,17 @@ public class SevenZipArchiveTests : ArchiveTests
     [Fact]
     public void SevenZipArchive_ZSTD_Split() =>
         Assert.Throws<InvalidOperationException>(
-            () =>
-                ArchiveStreamRead(
-                    null,
-                    "7Zip.ZSTD.Split.7z.001",
-                    "7Zip.ZSTD.Split.7z.002",
-                    "7Zip.ZSTD.Split.7z.003",
-                    "7Zip.ZSTD.Split.7z.004",
-                    "7Zip.ZSTD.Split.7z.005",
-                    "7Zip.ZSTD.Split.7z.006"
-                )
-        );
+                                                 () =>
+                                                     ArchiveStreamRead(
+                                                                       null,
+                                                                       "7Zip.ZSTD.Split.7z.001",
+                                                                       "7Zip.ZSTD.Split.7z.002",
+                                                                       "7Zip.ZSTD.Split.7z.003",
+                                                                       "7Zip.ZSTD.Split.7z.004",
+                                                                       "7Zip.ZSTD.Split.7z.005",
+                                                                       "7Zip.ZSTD.Split.7z.006"
+                                                                      )
+                                                );
 
     public void SevenZipArchive_Delta_FileRead() => ArchiveFileRead("7Zip.delta.7z");
 
