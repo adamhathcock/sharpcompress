@@ -1,4 +1,3 @@
-using System.Drawing;
 using System.IO;
 
 namespace SharpCompress.Compressors.Filters;
