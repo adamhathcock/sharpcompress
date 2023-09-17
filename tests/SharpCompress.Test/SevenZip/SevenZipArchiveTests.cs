@@ -158,7 +158,32 @@ public class SevenZipArchiveTests : ArchiveTests
                                                                       )
                                                 );
 
+    [Fact]
     public void SevenZipArchive_Delta_FileRead() => ArchiveFileRead("7Zip.delta.7z");
+
+    [Fact]
+    public void SevenZipArchive_ARM_FileRead() => ArchiveFileRead("7Zip.ARM.7z");
+
+    [Fact]
+    public void SevenZipArchive_ARMT_FileRead() => ArchiveFileRead("7Zip.ARMT.7z");
+
+    [Fact]
+    public void SevenZipArchive_BCJ_FileRead() => ArchiveFileRead("7Zip.BCJ.7z");
+
+    [Fact]
+    public void SevenZipArchive_BCJ2_FileRead() => ArchiveFileRead("7Zip.BCJ2.7z");
+
+    [Fact]
+    public void SevenZipArchive_IA64_FileRead() => ArchiveFileRead("7Zip.IA64.7z");
+
+    [Fact]
+    public void SevenZipArchive_PPC_FileRead() => ArchiveFileRead("7Zip.PPC.7z");
+
+    [Fact]
+    public void SevenZipArchive_SPARC_FileRead() => ArchiveFileRead("7Zip.SPARC.7z");
+
+    [Fact]
+    public void SevenZipArchive_Filters_FileRead() => ArchiveFileRead("7Zip.Filters.7z");
 
     [Fact]
     public void SevenZipArchive_Delta_Distance() =>
