@@ -1,6 +1,8 @@
 using System;
 using System.IO;
 using System.Linq;
+using SharpCompress.Archives;
+using SharpCompress.Archives.SevenZip;
 using SharpCompress.Common;
 using SharpCompress.Readers;
 using Xunit;
@@ -163,4 +165,27 @@ public class SevenZipArchiveTests : ArchiveTests
     [Fact]
     public void SevenZipArchive_Delta_Distance() =>
         ArchiveDeltaDistanceRead("7Zip.delta.distance.7z");
+
+    [Fact]
+    public void SevenZipArchive_Tar_PathRead()
+    {
+        using (Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "7Zip.Tar.tar.7z")))
+        using (var archive = SevenZipArchive.Open(stream))
+        {
+            var entry = archive.Entries.First();
+            entry.WriteToFile(Path.Combine(SCRATCH_FILES_PATH, entry.Key));
+
+            var size = entry.Size;
+            var scratch = new FileInfo(Path.Combine(SCRATCH_FILES_PATH, "7Zip.Tar.tar"));
+            var test = new FileInfo(Path.Combine(TEST_ARCHIVES_PATH, "7Zip.Tar.tar"));
+
+            Assert.Equal(size, scratch.Length);
+            Assert.Equal(size, test.Length);
+        }
+
+        CompareArchivesByPath(
+                              Path.Combine(SCRATCH_FILES_PATH, "7Zip.Tar.tar"),
+                              Path.Combine(TEST_ARCHIVES_PATH, "7Zip.Tar.tar")
+                             );
+    }
 }
