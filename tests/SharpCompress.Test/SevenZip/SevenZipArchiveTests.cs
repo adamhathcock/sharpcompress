@@ -184,8 +184,8 @@ public class SevenZipArchiveTests : ArchiveTests
         }
 
         CompareArchivesByPath(
-                              Path.Combine(SCRATCH_FILES_PATH, "7Zip.Tar.tar"),
-                              Path.Combine(TEST_ARCHIVES_PATH, "7Zip.Tar.tar")
-                             );
+            Path.Combine(SCRATCH_FILES_PATH, "7Zip.Tar.tar"),
+            Path.Combine(TEST_ARCHIVES_PATH, "7Zip.Tar.tar")
+        );
     }
 }
