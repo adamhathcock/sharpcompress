@@ -75,7 +75,8 @@ internal class SevenZipFilePart : FilePart
 
     internal CompressionType GetCompression()
     {
-        if( Header.IsDir ) return CompressionType.None;
+        if (Header.IsDir)
+            return CompressionType.None;
 
         var coder = Folder!._coders.First();
         switch (coder._methodId._id)
@@ -99,5 +100,7 @@ internal class SevenZipFilePart : FilePart
     }
 
     internal bool IsEncrypted =>
-        Header.IsDir ? false : Folder!._coders.FindIndex(c => c._methodId._id == CMethodId.K_AES_ID) != -1;
+        Header.IsDir
+            ? false
+            : Folder!._coders.FindIndex(c => c._methodId._id == CMethodId.K_AES_ID) != -1;
 }
