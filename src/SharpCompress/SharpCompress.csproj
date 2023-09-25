@@ -28,7 +28,7 @@
 
 	<ItemGroup>
 		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1" PrivateAssets="All" />
-		<PackageReference Include="ZstdSharp.Port" Version="0.6.1" />
+		<PackageReference Include="ZstdSharp.Port" Version="0.7.2" />
 	</ItemGroup>
 	<ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.1' ">
 		<PackageReference Include="System.Text.Encoding.CodePages" Version="7.0.0" />
