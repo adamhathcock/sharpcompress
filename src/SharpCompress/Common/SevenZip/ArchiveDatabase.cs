@@ -35,7 +35,7 @@ internal class ArchiveDatabase
         _packSizes.Clear();
         _packCrCs.Clear();
         _folders.Clear();
-        _numUnpackStreamsVector = null!;
+        _numUnpackStreamsVector = null;
         _files.Clear();
 
         _packStreamStartPositions.Clear();

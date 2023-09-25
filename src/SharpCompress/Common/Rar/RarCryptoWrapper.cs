@@ -7,15 +7,15 @@ namespace SharpCompress.Common.Rar;
 internal sealed class RarCryptoWrapper : Stream
 {
     private readonly Stream _actualStream;
-    private readonly byte[] _salt;
-    private RarRijndael _rijndael;
-    private readonly Queue<byte> _data = new Queue<byte>();
+    private readonly byte[]? _salt;
+    private RarRijndael? _rijndael;
+    private readonly Queue<byte> _data = new ();
 
     public RarCryptoWrapper(Stream actualStream, string password, byte[] salt)
     {
         _actualStream = actualStream;
         _salt = salt;
-        _rijndael = RarRijndael.InitializeFrom(password ?? "", salt);
+        _rijndael = RarRijndael.InitializeFrom(password, salt);
     }
 
     public override void Flush() => throw new NotSupportedException();
@@ -35,6 +35,10 @@ internal sealed class RarCryptoWrapper : Stream
 
     public int ReadAndDecrypt(byte[] buffer, int offset, int count)
     {
+        if (_rijndael is null)
+        {
+            throw new ObjectDisposedException("Rijndael has been disposed");
+        }
         var queueSize = _data.Count;
         var sizeToRead = count - queueSize;
 
@@ -80,7 +84,7 @@ internal sealed class RarCryptoWrapper : Stream
         if (_rijndael != null)
         {
             _rijndael.Dispose();
-            _rijndael = null!;
+            _rijndael = null;
         }
         base.Dispose(disposing);
     }

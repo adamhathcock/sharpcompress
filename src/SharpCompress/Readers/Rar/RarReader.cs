@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -23,7 +24,7 @@ public abstract class RarReader : AbstractReader<RarReaderEntry, RarVolume>
 
     internal abstract void ValidateArchive(RarVolume archive);
 
-    public override RarVolume Volume => volume!;
+    public override RarVolume Volume => volume ?? throw new InvalidOperationException("No volume found.");
 
     /// <summary>
     /// Opens a RarReader for Non-seeking usage with a single volume
