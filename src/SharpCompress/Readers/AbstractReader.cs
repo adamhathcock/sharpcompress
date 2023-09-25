@@ -40,7 +40,10 @@ public abstract class AbstractReader<TEntry, TVolume> : IReader, IReaderExtracti
     /// <summary>
     /// Current file entry
     /// </summary>
-    public TEntry Entry => _entriesForCurrentReadStream?.Current ?? throw new InvalidOperationException("Need to call MoveToNextEntry");
+    public TEntry Entry =>
+        _entriesForCurrentReadStream?.Current
+        ?? throw new InvalidOperationException("Need to call MoveToNextEntry");
+
     //need to remove for proper nullable
 
     #region IDisposable Members
@@ -112,7 +115,8 @@ public abstract class AbstractReader<TEntry, TVolume> : IReader, IReaderExtracti
 
     protected virtual Stream RequestInitialStream() => Volume.Stream;
 
-    internal virtual bool NextEntryForCurrentStream() => _entriesForCurrentReadStream?.MoveNext() ?? false;
+    internal virtual bool NextEntryForCurrentStream() =>
+        _entriesForCurrentReadStream?.MoveNext() ?? false;
 
     protected abstract IEnumerable<TEntry> GetEntries(Stream stream);
 
@@ -196,8 +200,7 @@ public abstract class AbstractReader<TEntry, TVolume> : IReader, IReaderExtracti
     /// <summary>
     /// Retains a reference to the entry stream, so we can check whether it completed later.
     /// </summary>
-    protected EntryStream CreateEntryStream(Stream decompressed) =>
-        new (this, decompressed);
+    protected EntryStream CreateEntryStream(Stream decompressed) => new(this, decompressed);
 
     protected virtual EntryStream GetEntryStream() =>
         CreateEntryStream(Entry.Parts.First().GetCompressedStream());

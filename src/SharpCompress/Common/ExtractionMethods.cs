@@ -39,7 +39,9 @@ internal static class ExtractionMethods
         var file = Path.GetFileName(entry.Key);
         if (options.ExtractFullPath)
         {
-            var folder = Path.GetDirectoryName(entry.Key) ?? throw new InvalidOperationException($"Directory not found for {entry.Key}");
+            var folder =
+                Path.GetDirectoryName(entry.Key)
+                ?? throw new InvalidOperationException($"Directory not found for {entry.Key}");
             var destdir = Path.GetFullPath(Path.Combine(fullDestinationDirectoryPath, folder));
 
             if (!Directory.Exists(destdir))

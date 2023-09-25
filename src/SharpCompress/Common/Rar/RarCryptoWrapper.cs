@@ -9,7 +9,7 @@ internal sealed class RarCryptoWrapper : Stream
     private readonly Stream _actualStream;
     private readonly byte[]? _salt;
     private RarRijndael? _rijndael;
-    private readonly Queue<byte> _data = new ();
+    private readonly Queue<byte> _data = new();
 
     public RarCryptoWrapper(Stream actualStream, string password, byte[] salt)
     {

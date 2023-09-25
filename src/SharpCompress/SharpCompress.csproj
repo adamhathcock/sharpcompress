@@ -10,6 +10,7 @@
 		<AssemblyName>SharpCompress</AssemblyName>
 		<AssemblyOriginatorKeyFile>../../SharpCompress.snk</AssemblyOriginatorKeyFile>
 		<SignAssembly>False</SignAssembly>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
 		<PackageId>SharpCompress</PackageId>
 		<PackageTags>rar;unrar;zip;unzip;bzip2;gzip;tar;7zip;lzip;xz</PackageTags>
 		<PackageProjectUrl>https://github.com/adamhathcock/sharpcompress</PackageProjectUrl>
@@ -40,5 +41,8 @@
 	<ItemGroup Condition=" '$(VersionlessImplicitFrameworkDefine)' == 'NETFRAMEWORK' ">
 		<PackageReference Include="System.Text.Encoding.CodePages" Version="7.0.0" />
 		<PackageReference Include="System.Memory" Version="4.5.5" />
+	</ItemGroup>
+	<ItemGroup>
+	  <None Include="..\..\README.md" Pack="true" PackagePath="\"/>
 	</ItemGroup>
 </Project>

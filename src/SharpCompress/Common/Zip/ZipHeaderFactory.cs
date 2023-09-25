@@ -55,7 +55,13 @@ internal class ZipHeaderFactory
             }
             case POST_DATA_DESCRIPTOR:
             {
-                if (_lastEntryHeader is not null && FlagUtility.HasFlag(_lastEntryHeader.Flags, HeaderFlags.UsePostDataDescriptor))
+                if (
+                    _lastEntryHeader is not null
+                    && FlagUtility.HasFlag(
+                        _lastEntryHeader.Flags,
+                        HeaderFlags.UsePostDataDescriptor
+                    )
+                )
                 {
                     _lastEntryHeader.Crc = reader.ReadUInt32();
                     _lastEntryHeader.CompressedSize = zip64
