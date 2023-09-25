@@ -42,7 +42,7 @@ internal class SeekableZipFilePart : ZipFilePart
 
     protected override Stream CreateBaseStream()
     {
-        BaseStream.Position = Header.DataStartPosition!.Value;
+        BaseStream.Position = Header.DataStartPosition ?? 0;
 
         if (
             (Header.CompressedSize == 0)
@@ -51,7 +51,7 @@ internal class SeekableZipFilePart : ZipFilePart
             && (_directoryEntryHeader?.CompressedSize != 0)
         )
         {
-            return new ReadOnlySubStream(BaseStream, _directoryEntryHeader!.CompressedSize);
+            return new ReadOnlySubStream(BaseStream, _directoryEntryHeader?.CompressedSize ?? 0);
         }
 
         return BaseStream;

@@ -43,6 +43,7 @@ internal class SevenZipFilePart : FilePart
         {
             return null!;
         }
+
         var folderStream = _database.GetFolderStream(_stream, Folder!, _database.PasswordProvider);
 
         var firstFileIndex = _database._folderStartFileIndex[_database._folders.IndexOf(Folder!)];
@@ -52,10 +53,12 @@ internal class SevenZipFilePart : FilePart
         {
             skipSize += _database._files[firstFileIndex + i].Size;
         }
+
         if (skipSize > 0)
         {
             folderStream.Skip(skipSize);
         }
+
         return new ReadOnlySubStream(folderStream, Header.Size);
     }
 
@@ -75,10 +78,10 @@ internal class SevenZipFilePart : FilePart
 
     internal CompressionType GetCompression()
     {
-        if (Header.IsDir)
+        if (Header.IsDir || Folder is null)
             return CompressionType.None;
 
-        var coder = Folder!._coders.First();
+        var coder = Folder._coders.First();
         switch (coder._methodId._id)
         {
             case K_LZMA:
@@ -99,8 +102,15 @@ internal class SevenZipFilePart : FilePart
         }
     }
 
-    internal bool IsEncrypted =>
-        Header.IsDir
-            ? false
-            : Folder!._coders.FindIndex(c => c._methodId._id == CMethodId.K_AES_ID) != -1;
+    internal bool IsEncrypted
+    {
+        get
+        {
+            if (Header.IsDir || Folder is null)
+            {
+                return false;
+            }
+            return Folder._coders.FindIndex(c => c._methodId._id == CMethodId.K_AES_ID) != -1;
+        }
+    }
 }

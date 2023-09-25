@@ -13,9 +13,9 @@ public abstract class AbstractReader<TEntry, TVolume> : IReader, IReaderExtracti
     where TEntry : Entry
     where TVolume : Volume
 {
-    private bool completed;
-    private IEnumerator<TEntry>? entriesForCurrentReadStream;
-    private bool wroteCurrentEntry;
+    private bool _completed;
+    private IEnumerator<TEntry>? _entriesForCurrentReadStream;
+    private bool _wroteCurrentEntry;
 
     public event EventHandler<ReaderExtractionEventArgs<IEntry>>? EntryExtractionProgress;
 
@@ -40,14 +40,15 @@ public abstract class AbstractReader<TEntry, TVolume> : IReader, IReaderExtracti
     /// <summary>
     /// Current file entry
     /// </summary>
-    public TEntry Entry => entriesForCurrentReadStream!.Current;
+    public TEntry Entry => _entriesForCurrentReadStream?.Current ?? throw new InvalidOperationException("Need to call MoveToNextEntry");
+    //need to remove for proper nullable
 
     #region IDisposable Members
 
     public void Dispose()
     {
-        entriesForCurrentReadStream?.Dispose();
-        Volume?.Dispose();
+        _entriesForCurrentReadStream?.Dispose();
+        Volume.Dispose();
     }
 
     #endregion
@@ -61,7 +62,7 @@ public abstract class AbstractReader<TEntry, TVolume> : IReader, IReaderExtracti
     /// </summary>
     public void Cancel()
     {
-        if (!completed)
+        if (!_completed)
         {
             Cancelled = true;
         }
@@ -69,7 +70,7 @@ public abstract class AbstractReader<TEntry, TVolume> : IReader, IReaderExtracti
 
     public bool MoveToNextEntry()
     {
-        if (completed)
+        if (_completed)
         {
             return false;
         }
@@ -77,41 +78,41 @@ public abstract class AbstractReader<TEntry, TVolume> : IReader, IReaderExtracti
         {
             throw new InvalidOperationException("Reader has been cancelled.");
         }
-        if (entriesForCurrentReadStream is null)
+        if (_entriesForCurrentReadStream is null)
         {
             return LoadStreamForReading(RequestInitialStream());
         }
-        if (!wroteCurrentEntry)
+        if (!_wroteCurrentEntry)
         {
             SkipEntry();
         }
-        wroteCurrentEntry = false;
+        _wroteCurrentEntry = false;
         if (NextEntryForCurrentStream())
         {
             return true;
         }
-        completed = true;
+        _completed = true;
         return false;
     }
 
     protected bool LoadStreamForReading(Stream stream)
     {
-        entriesForCurrentReadStream?.Dispose();
+        _entriesForCurrentReadStream?.Dispose();
         if ((stream is null) || (!stream.CanRead))
         {
             throw new MultipartStreamRequiredException(
                 "File is split into multiple archives: '"
-                    + Entry.Key
+                    + Entry?.Key
                     + "'. A new readable stream is required.  Use Cancel if it was intended."
             );
         }
-        entriesForCurrentReadStream = GetEntries(stream).GetEnumerator();
-        return entriesForCurrentReadStream.MoveNext();
+        _entriesForCurrentReadStream = GetEntries(stream).GetEnumerator();
+        return _entriesForCurrentReadStream.MoveNext();
     }
 
     protected virtual Stream RequestInitialStream() => Volume.Stream;
 
-    internal virtual bool NextEntryForCurrentStream() => entriesForCurrentReadStream!.MoveNext();
+    internal virtual bool NextEntryForCurrentStream() => _entriesForCurrentReadStream?.MoveNext() ?? false;
 
     protected abstract IEnumerable<TEntry> GetEntries(Stream stream);
 
@@ -119,7 +120,7 @@ public abstract class AbstractReader<TEntry, TVolume> : IReader, IReaderExtracti
 
     private void SkipEntry()
     {
-        if (!Entry.IsDirectory)
+        if (Entry is not null && !Entry.IsDirectory)
         {
             Skip();
         }
@@ -127,6 +128,11 @@ public abstract class AbstractReader<TEntry, TVolume> : IReader, IReaderExtracti
 
     private void Skip()
     {
+        if (Entry is null)
+        {
+            return;
+        }
+
         var part = Entry.Parts.First();
 
         if (!Entry.IsSolid && Entry.CompressedSize > 0)
@@ -149,7 +155,7 @@ public abstract class AbstractReader<TEntry, TVolume> : IReader, IReaderExtracti
 
     public void WriteEntryTo(Stream writableStream)
     {
-        if (wroteCurrentEntry)
+        if (_wroteCurrentEntry)
         {
             throw new ArgumentException("WriteEntryTo or OpenEntryStream can only be called once.");
         }
@@ -166,7 +172,7 @@ public abstract class AbstractReader<TEntry, TVolume> : IReader, IReaderExtracti
         }
 
         Write(writableStream);
-        wroteCurrentEntry = true;
+        _wroteCurrentEntry = true;
     }
 
     internal void Write(Stream writeStream)
@@ -178,12 +184,12 @@ public abstract class AbstractReader<TEntry, TVolume> : IReader, IReaderExtracti
 
     public EntryStream OpenEntryStream()
     {
-        if (wroteCurrentEntry)
+        if (_wroteCurrentEntry)
         {
             throw new ArgumentException("WriteEntryTo or OpenEntryStream can only be called once.");
         }
         var stream = GetEntryStream();
-        wroteCurrentEntry = true;
+        _wroteCurrentEntry = true;
         return stream;
     }
 
@@ -191,7 +197,7 @@ public abstract class AbstractReader<TEntry, TVolume> : IReader, IReaderExtracti
     /// Retains a reference to the entry stream, so we can check whether it completed later.
     /// </summary>
     protected EntryStream CreateEntryStream(Stream decompressed) =>
-        new EntryStream(this, decompressed);
+        new (this, decompressed);
 
     protected virtual EntryStream GetEntryStream() =>
         CreateEntryStream(Entry.Parts.First().GetCompressedStream());

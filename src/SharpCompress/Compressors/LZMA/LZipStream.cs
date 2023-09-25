@@ -56,6 +56,10 @@ public sealed class LZipStream : Stream
 
     public void Finish()
     {
+        if (_countingWritableSubStream is null)
+        {
+            return;
+        }
         if (!_finished)
         {
             if (Mode == CompressionMode.Compress)
@@ -63,7 +67,7 @@ public sealed class LZipStream : Stream
                 var crc32Stream = (Crc32Stream)_stream;
                 crc32Stream.WrappedStream.Dispose();
                 crc32Stream.Dispose();
-                var compressedCount = _countingWritableSubStream!.Count;
+                var compressedCount = _countingWritableSubStream.Count;
 
                 Span<byte> intBuf = stackalloc byte[8];
                 BinaryPrimitives.WriteUInt32LittleEndian(intBuf, crc32Stream.Crc);

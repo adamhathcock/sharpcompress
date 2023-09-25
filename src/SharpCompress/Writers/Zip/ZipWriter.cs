@@ -435,12 +435,12 @@ public class ZipWriter : AbstractWriter
                 }
 
                 entry.Crc = (uint)crc.Crc32Result;
-                entry.Compressed = counting!.Count;
+                entry.Compressed = counting?.Count ?? 0;
                 entry.Decompressed = decompressed;
 
                 var zip64 =
                     entry.Compressed >= uint.MaxValue || entry.Decompressed >= uint.MaxValue;
-                var compressedvalue = zip64 ? uint.MaxValue : (uint)counting.Count;
+                var compressedvalue = zip64 ? uint.MaxValue : (uint)(counting?.Count ?? 0);
                 var decompressedvalue = zip64 ? uint.MaxValue : (uint)entry.Decompressed;
 
                 if (originalStream.CanSeek)
@@ -448,7 +448,7 @@ public class ZipWriter : AbstractWriter
                     originalStream.Position = (long)(entry.HeaderOffset + 6);
                     originalStream.WriteByte(0);
 
-                    if (counting.Count == 0 && entry.Decompressed == 0)
+                    if ((counting?.Count ?? 0) == 0 && entry.Decompressed == 0)
                     {
                         // set compression to STORED for zero byte files (no compression data)
                         originalStream.Position = (long)(entry.HeaderOffset + 8);
@@ -538,8 +538,8 @@ public class ZipWriter : AbstractWriter
                 // Pre-check, the counting.Count is not exact, as we do not know the size before having actually compressed it
                 if (
                     limitsExceeded
-                    || ((decompressed + (uint)count) > uint.MaxValue)
-                    || (counting!.Count + (uint)count) > uint.MaxValue
+                    || decompressed + (uint)count > uint.MaxValue
+                    || (counting?.Count ?? 0) + (uint)count > uint.MaxValue
                 )
                 {
                     throw new NotSupportedException(
@@ -555,7 +555,7 @@ public class ZipWriter : AbstractWriter
             if (entry.Zip64HeaderOffset == 0)
             {
                 // Post-check, this is accurate
-                if ((decompressed > uint.MaxValue) || counting!.Count > uint.MaxValue)
+                if ((decompressed > uint.MaxValue) || (counting?.Count ?? 0) > uint.MaxValue)
                 {
                     // We have written the data, so the archive is now broken
                     // Throwing the exception here, allows us to avoid
