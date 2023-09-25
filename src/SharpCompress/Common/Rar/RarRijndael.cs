@@ -1,5 +1,3 @@
-#nullable disable
-
 using System;
 using System.Security.Cryptography;
 using System.Text;
@@ -13,8 +11,8 @@ internal class RarRijndael : IDisposable
 
     private readonly string _password;
     private readonly byte[] _salt;
-    private byte[] _aesInitializationVector;
-    private RijndaelEngine _rijndael;
+    private byte[]? _aesInitializationVector;
+    private RijndaelEngine? _rijndael;
 
     private RarRijndael(string password, byte[] salt)
     {
@@ -93,6 +91,10 @@ internal class RarRijndael : IDisposable
 
     public byte[] ProcessBlock(ReadOnlySpan<byte> cipherText)
     {
+        if (_rijndael is null || _aesInitializationVector is null)
+        {
+            throw new InvalidOperationException("Initialize not called.");
+        }
         Span<byte> plainText = stackalloc byte[CRYPTO_BLOCK_SIZE]; // 16 bytes
         var decryptedBytes = new byte[CRYPTO_BLOCK_SIZE];
         _rijndael.ProcessBlock(cipherText, plainText);
