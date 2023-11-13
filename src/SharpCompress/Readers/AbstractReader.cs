@@ -75,7 +75,7 @@ public abstract class AbstractReader<TEntry, TVolume> : IReader, IReaderExtracti
         }
         if (Cancelled)
         {
-            throw new InvalidOperationException("Reader has been cancelled.");
+            throw new ReaderCancelledException("Reader has been cancelled.");
         }
         if (entriesForCurrentReadStream is null)
         {
