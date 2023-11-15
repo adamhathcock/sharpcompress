@@ -184,9 +184,9 @@ public class ZipArchiveTests : ArchiveTests
 
         using (var archive = ZipArchive.Open(unmodified))
         {
-            var entry = archive.Entries.Single(
-                x => x.Key.EndsWith("jpg", StringComparison.OrdinalIgnoreCase)
-            );
+            var entry = archive
+                .Entries
+                .Single(x => x.Key.EndsWith("jpg", StringComparison.OrdinalIgnoreCase));
             archive.RemoveEntry(entry);
 
             WriterOptions writerOptions = new ZipWriterOptions(CompressionType.Deflate);
@@ -252,9 +252,9 @@ public class ZipArchiveTests : ArchiveTests
                 )
             );
             Assert.Null(
-                ((IArchive)vfs).Entries.FirstOrDefault(
-                    v => v.Key.EndsWith("jpg", StringComparison.OrdinalIgnoreCase)
-                )
+                ((IArchive)vfs)
+                    .Entries
+                    .FirstOrDefault(v => v.Key.EndsWith("jpg", StringComparison.OrdinalIgnoreCase))
             );
         }
     }
@@ -391,14 +391,14 @@ public class ZipArchiveTests : ArchiveTests
         {
             archive.AddAllFromDirectory(SCRATCH_FILES_PATH);
             archive.RemoveEntry(
-                archive.Entries.Single(
-                    x => x.Key.EndsWith("jpg", StringComparison.OrdinalIgnoreCase)
-                )
+                archive
+                    .Entries
+                    .Single(x => x.Key.EndsWith("jpg", StringComparison.OrdinalIgnoreCase))
             );
             Assert.Null(
-                archive.Entries.FirstOrDefault(
-                    x => x.Key.EndsWith("jpg", StringComparison.OrdinalIgnoreCase)
-                )
+                archive
+                    .Entries
+                    .FirstOrDefault(x => x.Key.EndsWith("jpg", StringComparison.OrdinalIgnoreCase))
             );
         }
         Directory.Delete(SCRATCH_FILES_PATH, true);

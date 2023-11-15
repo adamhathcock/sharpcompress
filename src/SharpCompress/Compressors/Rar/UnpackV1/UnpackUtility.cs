@@ -1,5 +1,4 @@
 ﻿using System;
-
 using SharpCompress.Compressors.Rar.VM;
 
 namespace SharpCompress.Compressors.Rar.UnpackV1;

@@ -1,5 +1,4 @@
 using System.IO;
-
 using SharpCompress.Factories;
 
 namespace SharpCompress.Writers;

@@ -236,11 +236,13 @@ public class SevenZipArchive : AbstractArchive<SevenZipArchiveEntry, SevenZipVol
                 }
                 else
                 {
-                    currentStream = archive.database.GetFolderStream(
-                        stream,
-                        currentFolder,
-                        new PasswordProvider(Options.Password)
-                    );
+                    currentStream = archive
+                        .database
+                        .GetFolderStream(
+                            stream,
+                            currentFolder,
+                            new PasswordProvider(Options.Password)
+                        );
                 }
                 foreach (var entry in group)
                 {

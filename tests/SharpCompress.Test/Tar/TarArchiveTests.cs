@@ -1,15 +1,15 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Text;
 using SharpCompress.Archives;
 using SharpCompress.Archives.Tar;
 using SharpCompress.Common;
-using SharpCompress.Writers;
-using Xunit;
-using System.Text;
 using SharpCompress.Readers;
-using SharpCompress.Writers.Tar;
 using SharpCompress.Readers.Tar;
+using SharpCompress.Writers;
+using SharpCompress.Writers.Tar;
+using Xunit;
 
 namespace SharpCompress.Test.Tar;
 
@@ -198,9 +198,9 @@ public class TarArchiveTests : ArchiveTests
 
         using (var archive = TarArchive.Open(unmodified))
         {
-            var entry = archive.Entries.Single(
-                x => x.Key.EndsWith("jpg", StringComparison.OrdinalIgnoreCase)
-            );
+            var entry = archive
+                .Entries
+                .Single(x => x.Key.EndsWith("jpg", StringComparison.OrdinalIgnoreCase));
             archive.RemoveEntry(entry);
             archive.SaveTo(scratchPath, CompressionType.None);
         }
