@@ -29,12 +29,12 @@ internal sealed partial class Unpack : BitInput
         Suspended = false;
         UnpAllBuf = false;
         UnpSomeRead = false;
-#if RarV2017_RAR_SMP
-        MaxUserThreads = 1;
-        UnpThreadPool = CreateThreadPool();
-        ReadBufMT = null;
-        UnpThreadData = null;
-#endif
+        /*#if RarV2017_RAR_SMP
+                MaxUserThreads = 1;
+                UnpThreadPool = CreateThreadPool();
+                ReadBufMT = null;
+                UnpThreadData = null;
+        #endif*/
         MaxWinSize = 0;
         MaxWinMask = 0;
 
@@ -198,21 +198,21 @@ internal sealed partial class Unpack : BitInput
                 break;
 #endif
             case 50: // RAR 5.0 compression algorithm.
-#if RarV2017_RAR_SMP
-                if (MaxUserThreads > 1)
-                {
-                    //      We do not use the multithreaded unpack routine to repack RAR archives
-                    //      in 'suspended' mode, because unlike the single threaded code it can
-                    //      write more than one dictionary for same loop pass. So we would need
-                    //      larger buffers of unknown size. Also we do not support multithreading
-                    //      in fragmented window mode.
-                    if (!Fragmented)
-                    {
-                        Unpack5MT(Solid);
-                        break;
-                    }
-                }
-#endif
+                /*#if RarV2017_RAR_SMP
+                                if (MaxUserThreads > 1)
+                                {
+                                    //      We do not use the multithreaded unpack routine to repack RAR archives
+                                    //      in 'suspended' mode, because unlike the single threaded code it can
+                                    //      write more than one dictionary for same loop pass. So we would need
+                                    //      larger buffers of unknown size. Also we do not support multithreading
+                                    //      in fragmented window mode.
+                                    if (!Fragmented)
+                                    {
+                                        Unpack5MT(Solid);
+                                        break;
+                                    }
+                                }
+                #endif*/
                 Unpack5(Solid);
                 break;
 #if !Rar2017_NOSTRICT
