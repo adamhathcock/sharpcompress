@@ -1,5 +1,5 @@
-﻿using SharpCompress.Compressors.Xz;
-using System.IO;
+﻿using System.IO;
+using SharpCompress.Compressors.Xz;
 using Xunit;
 
 namespace SharpCompress.Test.Xz;

@@ -1,6 +1,6 @@
-﻿using SharpCompress.IO;
-using System;
+﻿using System;
 using System.IO;
+using SharpCompress.IO;
 
 namespace SharpCompress.Common.Tar;
 

@@ -8,9 +8,9 @@ using SharpCompress.Common.Tar;
 using SharpCompress.Compressors;
 using SharpCompress.Compressors.BZip2;
 using SharpCompress.Compressors.Deflate;
-using SharpCompress.IO;
 using SharpCompress.Compressors.LZMA;
 using SharpCompress.Compressors.Xz;
+using SharpCompress.IO;
 
 namespace SharpCompress.Readers.Tar;
 

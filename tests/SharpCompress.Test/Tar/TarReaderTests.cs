@@ -206,9 +206,11 @@ public class TarReaderTests : ReaderTests
     [Fact]
     public void Tar_GZip_With_Symlink_Entries()
     {
-        var isWindows = System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(
-            System.Runtime.InteropServices.OSPlatform.Windows
-        );
+        var isWindows = System
+            .Runtime
+            .InteropServices
+            .RuntimeInformation
+            .IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Windows);
         using (
             Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "TarWithSymlink.tar.gz"))
         )
@@ -251,12 +253,15 @@ public class TarReaderTests : ReaderTests
                         {
                             // need to convert the link to an absolute path for comparison
                             var target = reader.Entry.LinkTarget;
-                            var realTarget = System.IO.Path.GetFullPath(
-                                System.IO.Path.Combine(
-                                    $"{System.IO.Path.GetDirectoryName(path)}",
-                                    target
-                                )
-                            );
+                            var realTarget = System
+                                .IO
+                                .Path
+                                .GetFullPath(
+                                    System
+                                        .IO
+                                        .Path
+                                        .Combine($"{System.IO.Path.GetDirectoryName(path)}", target)
+                                );
 
                             Assert.Equal(realTarget, link.GetContents().ToString());
                         }

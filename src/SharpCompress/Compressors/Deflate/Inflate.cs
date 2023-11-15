@@ -64,7 +64,6 @@
 // -----------------------------------------------------------------------
 
 using System;
-
 using SharpCompress.Algorithms;
 
 namespace SharpCompress.Compressors.Deflate;

@@ -1,5 +1,4 @@
 using System.Text;
-
 using SharpCompress.Common;
 using Xunit;
 

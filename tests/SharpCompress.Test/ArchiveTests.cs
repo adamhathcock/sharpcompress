@@ -298,10 +298,10 @@ public class ArchiveTests : ReaderTests
                     memory.Position = 0;
 
                     for (int y = 0; y < 9; y++)
-                        for (int x = 0; x < 256; x++)
-                        {
-                            Assert.Equal(x, memory.ReadByte());
-                        }
+                    for (int x = 0; x < 256; x++)
+                    {
+                        Assert.Equal(x, memory.ReadByte());
+                    }
 
                     Assert.Equal((int)-1, memory.ReadByte());
                 }
