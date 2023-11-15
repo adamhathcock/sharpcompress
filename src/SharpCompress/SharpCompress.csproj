@@ -9,7 +9,7 @@
 		<TargetFrameworks>net462;netstandard2.0;netstandard2.1;net6.0;net7.0</TargetFrameworks>
 		<AssemblyName>SharpCompress</AssemblyName>
 		<AssemblyOriginatorKeyFile>../../SharpCompress.snk</AssemblyOriginatorKeyFile>
-		<SignAssembly>False</SignAssembly>
+		<SignAssembly>true</SignAssembly>
 		<PackageId>SharpCompress</PackageId>
 		<PackageTags>rar;unrar;zip;unzip;bzip2;gzip;tar;7zip;lzip;xz</PackageTags>
 		<PackageProjectUrl>https://github.com/adamhathcock/sharpcompress</PackageProjectUrl>
@@ -23,7 +23,7 @@
 		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
 		<IsTrimmable>true</IsTrimmable>
 		<LangVersion>latest</LangVersion>
-		<AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 	</PropertyGroup>
 
 	<ItemGroup>
