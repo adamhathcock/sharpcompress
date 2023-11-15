@@ -1,7 +1,7 @@
 using System;
-using Xunit;
 using System.IO;
 using SharpCompress.Compressors.Xz.Filters;
+using Xunit;
 
 namespace SharpCompress.Test.Xz.Filters;
 

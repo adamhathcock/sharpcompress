@@ -866,7 +866,8 @@ internal partial class Model
                 );
             }
             else if (
-                (currentContext.SummaryFrequency += 4) > 128 + (4 * currentContext.NumberStatistics)
+                (currentContext.SummaryFrequency += 4)
+                > 128 + (4 * currentContext.NumberStatistics)
             )
             {
                 Refresh((uint)((currentContext.NumberStatistics + 2) >> 1), true, currentContext);

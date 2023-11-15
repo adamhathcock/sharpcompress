@@ -30,8 +30,8 @@ using System;
 using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.IO;
-using SharpCompress.Common.Tar.Headers;
 using System.Text;
+using SharpCompress.Common.Tar.Headers;
 
 namespace SharpCompress.Compressors.Deflate;
 

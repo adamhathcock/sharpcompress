@@ -69,7 +69,6 @@
 // -----------------------------------------------------------------------
 
 using System;
-
 using SharpCompress.Algorithms;
 
 namespace SharpCompress.Compressors.Deflate;
@@ -1959,7 +1958,9 @@ internal sealed partial class DeflateManager
             // returning Z_STREAM_END instead of Z_BUFF_ERROR.
         }
         else if (
-            _codec.AvailableBytesIn == 0 && (int)flush <= old_flush && flush != FlushType.Finish
+            _codec.AvailableBytesIn == 0
+            && (int)flush <= old_flush
+            && flush != FlushType.Finish
         )
         {
             // workitem 8557
