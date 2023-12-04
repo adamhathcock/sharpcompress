@@ -1,4 +1,4 @@
-﻿#nullable disable
+#nullable disable
 
 using System;
 using System.Buffers.Binary;
@@ -132,8 +132,8 @@ internal sealed class TarHeader
             Mode |= 0b1_000_000_000;
         }
 
-        UserId = ReadAsciiInt64Base8(buffer, 108, 7);
-        GroupId = ReadAsciiInt64Base8(buffer, 116, 7);
+        UserId = ReadAsciiInt64Base8oldGnu(buffer, 108, 7);
+        GroupId = ReadAsciiInt64Base8oldGnu(buffer, 116, 7);
         var unixTimeStamp = ReadAsciiInt64Base8(buffer, 136, 11);
         LastModifiedTime = EPOCH.AddSeconds(unixTimeStamp).ToLocalTime();
 
@@ -242,6 +242,24 @@ internal sealed class TarHeader
     private static long ReadAsciiInt64Base8(byte[] buffer, int offset, int count)
     {
         var s = Encoding.UTF8.GetString(buffer, offset, count).TrimNulls();
+        if (string.IsNullOrEmpty(s))
+        {
+            return 0;
+        }
+        return Convert.ToInt64(s, 8);
+    }
+
+    private static long ReadAsciiInt64Base8oldGnu(byte[] buffer, int offset, int count)
+    {
+        if (buffer[offset] == 0x80 && buffer[offset + 1] == 0x00)
+        {
+            return buffer[offset + 4] << 24
+                | buffer[offset + 5] << 16
+                | buffer[offset + 6] << 8
+                | buffer[offset + 7];
+        }
+        var s = Encoding.UTF8.GetString(buffer, offset, count).TrimNulls();
+
         if (string.IsNullOrEmpty(s))
         {
             return 0;
