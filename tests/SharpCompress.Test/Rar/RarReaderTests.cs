@@ -285,6 +285,12 @@ public class RarReaderTests : ReaderTests
     public void Rar_Solid_Reader() => Read("Rar.solid.rar", CompressionType.Rar);
 
     [Fact]
+    public void Rar_Comment_Reader() => Read("Rar.comment.rar", CompressionType.Rar);
+
+    [Fact]
+    public void Rar5_Comment_Reader() => Read("Rar5.comment.rar", CompressionType.Rar);
+
+    [Fact]
     public void Rar5_Solid_Reader() => Read("Rar5.solid.rar", CompressionType.Rar);
 
     [Fact]
