@@ -136,6 +136,9 @@ public class SevenZipArchiveTests : ArchiveTests
         );
 
     [Fact]
+    public void SevenZipArchive_EOS_FileRead() => ArchiveFileRead("7Zip.eos.7z");
+
+    [Fact]
     public void SevenZipArchive_Delta_FileRead() => ArchiveFileRead("7Zip.delta.7z");
 
     [Fact]
