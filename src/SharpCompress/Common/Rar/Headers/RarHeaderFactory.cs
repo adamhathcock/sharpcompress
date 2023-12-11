@@ -105,7 +105,14 @@ public class RarHeaderFactory
             case HeaderCodeV.RAR5_SERVICE_HEADER:
             {
                 var fh = new FileHeader(header, reader, HeaderType.Service);
-                SkipData(fh, reader);
+                if (fh.FileName == "CMT")
+                {
+                    fh.PackedStream = new ReadOnlySubStream(reader.BaseStream, fh.CompressedSize);
+                }
+                else
+                {
+                    SkipData(fh, reader);
+                }
                 return fh;
             }
 
