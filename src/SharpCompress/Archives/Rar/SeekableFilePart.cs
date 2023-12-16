@@ -25,10 +25,19 @@ internal class SeekableFilePart : RarFilePart
     internal override Stream GetCompressedStream()
     {
         stream.Position = FileHeader.DataStartPosition;
+
         if (FileHeader.R4Salt != null)
         {
-            return new RarCryptoWrapper(stream, password!, FileHeader.R4Salt);
+            var cryptKey = new CryptKey3(password!);
+            return new RarCryptoWrapper(stream, FileHeader.R4Salt, cryptKey);
         }
+
+        if (FileHeader.Rar5CryptoInfo != null)
+        {
+            var cryptKey = new CryptKey5(password!, FileHeader.Rar5CryptoInfo);
+            return new RarCryptoWrapper(stream, FileHeader.Rar5CryptoInfo.Salt, cryptKey);
+        }
+
         return stream;
     }
 

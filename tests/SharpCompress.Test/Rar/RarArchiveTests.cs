@@ -22,11 +22,16 @@ public class RarArchiveTests : ArchiveTests
             () => ReadRarPassword("Rar.encrypted_filesAndHeader.rar", null)
         );
 
-    /*[Fact]
-    public void Rar5_EncryptedFileAndHeader_Archive()
-    {
+    [Fact]
+    public void Rar5_EncryptedFileAndHeader_Archive() =>
         ReadRarPassword("Rar5.encrypted_filesAndHeader.rar", "test");
-    }*/
+
+    [Fact]
+    public void Rar5_EncryptedFileAndHeader_Archive_Err() =>
+        Assert.Throws(
+            typeof(CryptographicException),
+            () => ReadRarPassword("Rar5.encrypted_filesAndHeader.rar", "failed")
+        );
 
     [Fact]
     public void Rar5_EncryptedFileAndHeader_NoPasswordExceptionTest() =>
@@ -39,20 +44,23 @@ public class RarArchiveTests : ArchiveTests
     public void Rar_EncryptedFileOnly_Archive() =>
         ReadRarPassword("Rar.encrypted_filesOnly.rar", "test");
 
-    /*[Fact]
-    public void Rar5_EncryptedFileOnly_Archive()
-    {
+    [Fact]
+    public void Rar_EncryptedFileOnly_Archive_Err() =>
+        Assert.Throws(
+            typeof(CryptographicException),
+            () => ReadRarPassword("Rar5.encrypted_filesOnly.rar", "failed")
+        );
+
+    [Fact]
+    public void Rar5_EncryptedFileOnly_Archive() =>
         ReadRarPassword("Rar5.encrypted_filesOnly.rar", "test");
-    }*/
 
     [Fact]
     public void Rar_Encrypted_Archive() => ReadRarPassword("Rar.Encrypted.rar", "test");
 
-    /*[Fact]
-    public void Rar5_Encrypted_Archive()
-    {
+    [Fact]
+    public void Rar5_Encrypted_Archive() =>
         ReadRarPassword("Rar5.encrypted_filesAndHeader.rar", "test");
-    }*/
 
     private void ReadRarPassword(string testArchive, string? password)
     {

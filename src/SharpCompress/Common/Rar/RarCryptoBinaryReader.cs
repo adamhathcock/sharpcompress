@@ -1,27 +1,30 @@
-﻿using System.Collections.Generic;
+#nullable disable
+
+using System.Collections.Generic;
 using System.IO;
+using SharpCompress.Common.Rar.Headers;
+using SharpCompress.Crypto;
 
 namespace SharpCompress.Common.Rar;
 
 internal sealed class RarCryptoBinaryReader : RarCrcBinaryReader
 {
-    private RarRijndael _rijndael;
-    private byte[] _salt;
-    private readonly string _password;
+    private BlockTransformer _rijndael;
     private readonly Queue<byte> _data = new Queue<byte>();
     private long _readCount;
 
-    public RarCryptoBinaryReader(Stream stream, string password)
+    public RarCryptoBinaryReader(Stream stream, ICryptKey cryptKey)
         : base(stream)
     {
-        _password = password;
+        var salt = base.ReadBytes(EncryptionConstV5.SIZE_SALT30);
+        _readCount += EncryptionConstV5.SIZE_SALT30;
+        _rijndael = new BlockTransformer(cryptKey.Transformer(salt));
+    }
 
-        // coderb: not sure why this was being done at this logical point
-        //SkipQueue();
-        var salt = ReadBytes(8);
-
-        _salt = salt;
-        _rijndael = RarRijndael.InitializeFrom(_password, salt);
+    public RarCryptoBinaryReader(Stream stream, ICryptKey cryptKey, byte[] salt)
+        : base(stream)
+    {
+        _rijndael = new BlockTransformer(cryptKey.Transformer(salt));
     }
 
     // track read count ourselves rather than using the underlying stream since we buffer
@@ -36,28 +39,14 @@ internal sealed class RarCryptoBinaryReader : RarCrcBinaryReader
 
     public override void Mark() => _readCount = 0;
 
-    private bool UseEncryption => _salt != null;
-
     public override byte ReadByte()
     {
-        if (UseEncryption)
-        {
-            return ReadAndDecryptBytes(1)[0];
-        }
-
-        _readCount++;
-        return base.ReadByte();
+        return ReadAndDecryptBytes(1)[0];
     }
 
     public override byte[] ReadBytes(int count)
     {
-        if (UseEncryption)
-        {
-            return ReadAndDecryptBytes(count);
-        }
-
-        _readCount += count;
-        return base.ReadBytes(count);
+        return ReadAndDecryptBytes(count);
     }
 
     private byte[] ReadAndDecryptBytes(int count)
