@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-
 using SharpCompress.Crypto;
 
 namespace SharpCompress.Common.Rar;

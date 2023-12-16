@@ -2,9 +2,8 @@
 
 using System;
 using System.Security.Cryptography;
-
-using SharpCompress.IO;
 using SharpCompress.Common.Rar.Headers;
+using SharpCompress.IO;
 
 namespace SharpCompress.Common.Rar.Headers;
 
@@ -17,6 +16,6 @@ internal class ArchiveCryptHeader : RarHeader
 
     protected override void ReadFinish(MarkingBinaryReader reader)
     {
-        CryptInfo = new Rar5CryptoInfo(reader,false);
+        CryptInfo = new Rar5CryptoInfo(reader, false);
     }
 }
