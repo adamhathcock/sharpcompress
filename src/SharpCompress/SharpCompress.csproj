@@ -14,7 +14,6 @@
 		<PackageTags>rar;unrar;zip;unzip;bzip2;gzip;tar;7zip;lzip;xz</PackageTags>
 		<PackageProjectUrl>https://github.com/adamhathcock/sharpcompress</PackageProjectUrl>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <PackageReadmeFile>../../README.md</PackageReadmeFile>
 		<Copyright>Copyright (c) 2014  Adam Hathcock</Copyright>
 		<GenerateAssemblyTitleAttribute>false</GenerateAssemblyTitleAttribute>
 		<GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>
