@@ -47,7 +47,7 @@ Target(
         Run("dotnet", "csharpier --check .");
     }
 );
-Target(Restore, DependsOn(Format), () => Run("dotnet", "restore"));
+Target(Restore, DependsOn(Format), () => Run("dotnet", "restore --locked-mode"));
 
 Target(
     Build,
