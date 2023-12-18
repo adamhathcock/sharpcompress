@@ -1269,10 +1269,9 @@ internal sealed partial class Unpack : BitInput, IRarUnpack
             if (CurSize < DataSize + RarVM.VM_FIXEDGLOBALSIZE)
             {
                 // StackFilter->Prg.GlobalData.Add(DataSize+VM_FIXEDGLOBALSIZE-CurSize);
-                StackFilter
-                    .Program
-                    .GlobalData
-                    .SetSize(DataSize + RarVM.VM_FIXEDGLOBALSIZE - CurSize);
+                StackFilter.Program.GlobalData.SetSize(
+                    DataSize + RarVM.VM_FIXEDGLOBALSIZE - CurSize
+                );
             }
             var offset = RarVM.VM_FIXEDGLOBALSIZE;
             globalData = StackFilter.Program.GlobalData;

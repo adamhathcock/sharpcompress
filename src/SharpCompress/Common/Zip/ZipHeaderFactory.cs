@@ -142,9 +142,9 @@ internal class ZipHeaderFactory
 
             if (entryHeader.CompressionMethod == ZipCompressionMethod.WinzipAes)
             {
-                var data = entryHeader
-                    .Extra
-                    .SingleOrDefault(x => x.Type == ExtraDataType.WinZipAes);
+                var data = entryHeader.Extra.SingleOrDefault(
+                    x => x.Type == ExtraDataType.WinZipAes
+                );
                 if (data != null)
                 {
                     var keySize = (WinzipAesKeySize)data.DataBytes[4];

@@ -198,9 +198,9 @@ public class TarArchiveTests : ArchiveTests
 
         using (var archive = TarArchive.Open(unmodified))
         {
-            var entry = archive
-                .Entries
-                .Single(x => x.Key.EndsWith("jpg", StringComparison.OrdinalIgnoreCase));
+            var entry = archive.Entries.Single(
+                x => x.Key.EndsWith("jpg", StringComparison.OrdinalIgnoreCase)
+            );
             archive.RemoveEntry(entry);
             archive.SaveTo(scratchPath, CompressionType.None);
         }

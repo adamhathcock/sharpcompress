@@ -20,10 +20,10 @@ public class TestBase : IDisposable
 
     public TestBase()
     {
-        var index = AppDomain
-            .CurrentDomain
-            .BaseDirectory
-            .IndexOf("SharpCompress.Test", StringComparison.OrdinalIgnoreCase);
+        var index = AppDomain.CurrentDomain.BaseDirectory.IndexOf(
+            "SharpCompress.Test",
+            StringComparison.OrdinalIgnoreCase
+        );
         var path = AppDomain.CurrentDomain.BaseDirectory.Substring(0, index);
         SOLUTION_BASE_PATH = Path.GetDirectoryName(path) ?? throw new ArgumentNullException();
 

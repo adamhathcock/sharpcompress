@@ -10,9 +10,7 @@ public static class WriterFactory
     public static IWriter Open(Stream stream, ArchiveType archiveType, WriterOptions writerOptions)
     {
         var factory = Factories
-            .Factory
-            .Factories
-            .OfType<IWriterFactory>()
+            .Factory.Factories.OfType<IWriterFactory>()
             .FirstOrDefault(item => item.KnownArchiveType == archiveType);
 
         if (factory != null)

@@ -40,9 +40,9 @@ public class RarArchive : AbstractArchive<RarArchiveEntry, RarVolume>
             streams[1].Position = 0;
             SrcStream.Position = 0;
 
-            return srcStream
-                .Streams
-                .Select(a => new StreamRarArchiveVolume(a, ReaderOptions, idx++));
+            return srcStream.Streams.Select(
+                a => new StreamRarArchiveVolume(a, ReaderOptions, idx++)
+            );
         }
         else //split mode or single file
         {
