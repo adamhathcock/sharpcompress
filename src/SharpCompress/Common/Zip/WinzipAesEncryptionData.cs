@@ -48,15 +48,15 @@ internal class WinzipAesEncryptionData
 
     private void Initialize()
     {
-#if NET7_0
-        var rfc2898 = new Rfc2898DeriveBytes(
-            _password,
-            _salt,
-            RFC2898_ITERATIONS,
-            HashAlgorithmName.SHA1
-        );
-#else
+#if NETFRAMEWORK || NETSTANDARD2_0
         var rfc2898 = new Rfc2898DeriveBytes(_password, _salt, RFC2898_ITERATIONS);
+#else
+        var rfc2898 = new Rfc2898DeriveBytes(
+                                             _password,
+                                             _salt,
+                                             RFC2898_ITERATIONS,
+                                             HashAlgorithmName.SHA1
+                                            );
 #endif
 
         KeyBytes = rfc2898.GetBytes(KeySizeInBytes); // 16 or 24 or 32 ???
