@@ -304,7 +304,10 @@ public class ZipWriter : AbstractWriter
 
         // Write normal end of central directory record
         OutputStream.Write(stackalloc byte[] { 80, 75, 5, 6, 0, 0, 0, 0 });
-        BinaryPrimitives.WriteUInt16LittleEndian(intBuf, (ushort)entries.Count);
+        BinaryPrimitives.WriteUInt16LittleEndian(
+            intBuf,
+            (ushort)(entries.Count < 0xFFFF ? entries.Count : 0xFFFF)
+        );
         OutputStream.Write(intBuf.Slice(0, 2));
         OutputStream.Write(intBuf.Slice(0, 2));
         BinaryPrimitives.WriteUInt32LittleEndian(intBuf, sizevalue);
