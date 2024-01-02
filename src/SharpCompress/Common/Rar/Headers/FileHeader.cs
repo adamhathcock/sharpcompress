@@ -18,7 +18,7 @@ namespace SharpCompress.Common.Rar.Headers;
 
 internal class FileHeader : RarHeader
 {
-    private uint _fileCrc;
+    private byte[] _hash;
 
     public FileHeader(RarHeader header, RarCrcBinaryReader reader, HeaderType headerType)
         : base(header, reader, headerType) { }
@@ -53,7 +53,7 @@ internal class FileHeader : RarHeader
 
         if (HasFlag(FileFlagsV5.HAS_CRC32))
         {
-            FileCrc = reader.ReadUInt32();
+            FileCrc = reader.ReadBytes(4);
         }
 
         var compressionInfo = reader.ReadRarVIntUInt16();
@@ -136,14 +136,12 @@ internal class FileHeader : RarHeader
 
                     {
                         const uint FHEXTRA_HASH_BLAKE2 = 0x0;
-                        const uint HASH_BLAKE2 = 0x03;
+                        //                        const uint HASH_BLAKE2 = 0x03;
                         const int BLAKE2_DIGEST_SIZE = 0x20;
                         if ((uint)reader.ReadRarVInt() == FHEXTRA_HASH_BLAKE2)
                         {
-                            var hash = HASH_BLAKE2;
-                            var digest = reader.ReadBytes(BLAKE2_DIGEST_SIZE);
-
-                            throw new InvalidFormatException("Not yet implemented " + hash);
+                            //                            var hash = HASH_BLAKE2;
+                            _hash = reader.ReadBytes(BLAKE2_DIGEST_SIZE);
                         }
                         // enum HASH_TYPE {HASH_NONE,HASH_RAR14,HASH_CRC32,HASH_BLAKE2};
                     }
@@ -242,7 +240,7 @@ internal class FileHeader : RarHeader
 
         HostOs = reader.ReadByte();
 
-        FileCrc = reader.ReadUInt32();
+        FileCrc = reader.ReadBytes(4);
 
         FileLastModifiedTime = Utility.DosDateToDateTime(reader.ReadUInt32());
 
@@ -414,18 +412,10 @@ internal class FileHeader : RarHeader
 
     private bool HasFlag(ushort flag) => (Flags & flag) == flag;
 
-    internal uint FileCrc
+    internal byte[] FileCrc
     {
-        get
-        {
-            if (IsRar5 && !HasFlag(FileFlagsV5.HAS_CRC32))
-            {
-                //!!! rar5:
-                throw new InvalidOperationException("TODO rar5");
-            }
-            return _fileCrc;
-        }
-        private set => _fileCrc = value;
+        get => _hash;
+        private set => _hash = value;
     }
 
     // 0 - storing

@@ -608,4 +608,7 @@ public class RarArchiveTests : ArchiveTests
         Assert.True(archive.IsMultipartVolume());
         Assert.False(archive.IsFirstVolume());
     }
+
+    [Fact]
+    public void Rar5_CRC_Blake2_Archive() => ArchiveFileRead("Rar5.crc_blake2.rar");
 }

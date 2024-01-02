@@ -1,3 +1,5 @@
+
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -40,7 +42,7 @@ public class RarArchiveEntry : RarEntry, IArchiveEntry
         get
         {
             CheckIncomplete();
-            return parts.Select(fp => fp.FileHeader).Single(fh => !fh.IsSplitAfter).FileCrc;
+            return BitConverter.ToUInt32( parts.Select(fp => fp.FileHeader).Single(fh => !fh.IsSplitAfter).FileCrc, 0);
         }
     }
 
