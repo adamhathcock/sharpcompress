@@ -75,7 +75,9 @@ public abstract class RarReader : AbstractReader<RarReaderEntry, RarVolume>
 
         if (Entry.FileHeader.FileCrc.Length > 5)
         {
-            return CreateEntryStream(new RarBLAKE2spStream(UnpackV2017.Value, Entry.FileHeader, stream));
+            return CreateEntryStream(
+                new RarBLAKE2spStream(UnpackV2017.Value, Entry.FileHeader, stream)
+            );
         }
 
         return CreateEntryStream(new RarCrcStream(UnpackV2017.Value, Entry.FileHeader, stream));
