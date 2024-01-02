@@ -1,4 +1,3 @@
-
 using System;
 using SharpCompress.Common;
 using SharpCompress.Common.Rar.Headers;
@@ -9,6 +8,7 @@ internal class RarCrcStream : RarStream
 {
     private readonly MultiVolumeReadOnlyStream readStream;
     private uint currentCrc;
+    private readonly bool disableCRC;
 
     public RarCrcStream(
         IRarUnpack unpack,
@@ -18,6 +18,7 @@ internal class RarCrcStream : RarStream
         : base(unpack, fileHeader, readStream)
     {
         this.readStream = readStream;
+        disableCRC = fileHeader.IsEncrypted;
         ResetCrc();
     }
 
@@ -32,7 +33,11 @@ internal class RarCrcStream : RarStream
         {
             currentCrc = RarCRC.CheckCrc(currentCrc, buffer, offset, result);
         }
-        else if (GetCrc() != BitConverter.ToUInt32(readStream.CurrentCrc, 0) && count != 0)
+        else if (
+            !disableCRC
+            && GetCrc() != BitConverter.ToUInt32(readStream.CurrentCrc, 0)
+            && count != 0
+        )
         {
             // NOTE: we use the last FileHeader in a multipart volume to check CRC
             throw new InvalidFormatException("file crc mismatch");

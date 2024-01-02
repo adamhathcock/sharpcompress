@@ -36,7 +36,7 @@ I'm always looking for help or ideas. Please submit code or email with ideas. Un
 
 ## TODOs (always lots)
 
-* RAR 5 decryption support
+* RAR 5 decryption crc check support
 * 7Zip writing
 * Zip64 (Need writing and extend Reading)
 * Multi-volume Zip support.
