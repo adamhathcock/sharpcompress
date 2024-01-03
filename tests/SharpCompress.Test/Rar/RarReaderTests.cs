@@ -172,32 +172,27 @@ public class RarReaderTests : ReaderTests
     public void Rar5_Reader() => Read("Rar5.rar", CompressionType.Rar);
 
     [Fact]
+    public void Rar5_CRC_Blake2_Reader() => Read("Rar5.crc_blake2.rar", CompressionType.Rar);
+
+    [Fact]
     public void Rar_EncryptedFileAndHeader_Reader() =>
         ReadRar("Rar.encrypted_filesAndHeader.rar", "test");
 
-    /*[Fact]
-    public void Rar5_EncryptedFileAndHeader_Reader()
-    {
+    [Fact]
+    public void Rar5_EncryptedFileAndHeader_Reader() =>
         ReadRar("Rar5.encrypted_filesAndHeader.rar", "test");
-    }*/
 
     [Fact]
     public void Rar_EncryptedFileOnly_Reader() => ReadRar("Rar.encrypted_filesOnly.rar", "test");
 
-    /*[Fact]
-    public void Rar5_EncryptedFileOnly_Reader()
-    {
-        ReadRar("Rar5.encrypted_filesOnly.rar", "test");
-    }*/
+    [Fact]
+    public void Rar5_EncryptedFileOnly_Reader() => ReadRar("Rar5.encrypted_filesOnly.rar", "test");
 
     [Fact]
     public void Rar_Encrypted_Reader() => ReadRar("Rar.Encrypted.rar", "test");
 
-    /*[Fact]
-    public void Rar5_Encrypted_Reader()
-    {
-        ReadRar("Rar5.encrypted_filesOnly.rar", "test");
-    }*/
+    [Fact]
+    public void Rar5_Encrypted_Reader() => ReadRar("Rar5.encrypted_filesOnly.rar", "test");
 
     private void ReadRar(string testArchive, string password) =>
         Read(testArchive, CompressionType.Rar, new ReaderOptions { Password = password });

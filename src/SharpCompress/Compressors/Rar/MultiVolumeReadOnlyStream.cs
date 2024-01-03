@@ -128,7 +128,7 @@ internal sealed class MultiVolumeReadOnlyStream : Stream
 
     public override bool CanWrite => false;
 
-    public uint CurrentCrc { get; private set; }
+    public byte[] CurrentCrc { get; private set; }
 
     public override void Flush() => throw new NotSupportedException();
 
