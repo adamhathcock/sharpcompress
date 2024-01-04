@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.IO;
 using SharpCompress.Common;
 using SharpCompress.IO;
@@ -64,6 +65,28 @@ public abstract class ReaderTests : TestBase
                     SCRATCH_FILES_PATH,
                     new ExtractionOptions() { ExtractFullPath = true, Overwrite = true }
                 );
+            }
+        }
+    }
+
+    protected void Iterate(
+        string testArchive,
+        string fileOrder,
+        CompressionType expectedCompression,
+        ReaderOptions? options = null
+    )
+    {
+        var expected = new Stack<string>(fileOrder.Split(' '));
+
+        testArchive = Path.Combine(TEST_ARCHIVES_PATH, testArchive);
+        using var file = File.OpenRead(testArchive);
+        using var forward = new ForwardOnlyStream(file);
+        using (var reader = ReaderFactory.Open(forward, options))
+        {
+            while (reader.MoveToNextEntry())
+            {
+                Assert.Equal(expectedCompression, reader.Entry.CompressionType);
+                Assert.Equal(expected.Pop(), reader.Entry.Key);
             }
         }
     }

@@ -611,4 +611,34 @@ public class RarArchiveTests : ArchiveTests
 
     [Fact]
     public void Rar5_CRC_Blake2_Archive() => ArchiveFileRead("Rar5.crc_blake2.rar");
+
+    [Fact]
+    void Rar_Iterate_Archive() =>
+        ArchiveFileSkip("Rar.rar", "Failure jpg exe Empty jpg\\test.jpg exe\\test.exe тест.txt");
+
+    [Fact]
+    public void Rar2_Iterate_Archive() =>
+        ArchiveFileSkip("Rar2.rar", "Failure Empty тест.txt jpg\\test.jpg exe\\test.exe jpg exe");
+
+    [Fact]
+    public void Rar4_Iterate_Archive() =>
+        ArchiveFileSkip("Rar4.rar", "Failure Empty jpg exe тест.txt jpg\\test.jpg exe\\test.exe");
+
+    [Fact]
+    public void Rar5_Iterate_Archive() =>
+        ArchiveFileSkip("Rar5.rar", "Failure jpg exe Empty тест.txt jpg\\test.jpg exe\\test.exe");
+
+    [Fact]
+    public void Rar_Encrypted_Iterate_Archive() =>
+        ArchiveFileSkip(
+            "Rar.encrypted_filesOnly.rar",
+            "Failure jpg exe Empty тест.txt jpg\\test.jpg exe\\test.exe"
+        );
+
+    [Fact]
+    public void Rar5_Encrypted_Iterate_Archive() =>
+        ArchiveFileSkip(
+            "Rar5.encrypted_filesOnly.rar",
+            "Failure jpg exe Empty тест.txt jpg\\test.jpg exe\\test.exe"
+        );
 }
