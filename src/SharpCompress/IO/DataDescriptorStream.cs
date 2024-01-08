@@ -51,7 +51,7 @@ public class DataDescriptorStream : Stream
 
     public override long Position
     {
-        get => _stream.Position;
+        get => _stream.Position - _start;
         set => _stream.Position = value;
     }
 
