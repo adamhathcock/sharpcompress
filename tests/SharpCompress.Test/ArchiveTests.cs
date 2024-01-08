@@ -258,6 +258,29 @@ public class ArchiveTests : ReaderTests
         VerifyFiles();
     }
 
+    protected void ArchiveFileSkip(
+        string testArchive,
+        string fileOrder,
+        ReaderOptions? readerOptions = null
+    )
+    {
+#if !NETFRAMEWORK
+        if (!OperatingSystem.IsWindows())
+        {
+            fileOrder = fileOrder.Replace('\\', '/');
+        }
+#endif
+        var expected = new Stack<string>(fileOrder.Split(' '));
+        testArchive = Path.Combine(TEST_ARCHIVES_PATH, testArchive);
+        using (var archive = ArchiveFactory.Open(testArchive, readerOptions))
+        {
+            foreach (var entry in archive.Entries)
+            {
+                Assert.Equal(expected.Pop(), entry.Key);
+            }
+        }
+    }
+
     /// <summary>
     /// Demonstrate the ExtractionOptions.PreserveFileTime and ExtractionOptions.PreserveAttributes extract options
     /// </summary>

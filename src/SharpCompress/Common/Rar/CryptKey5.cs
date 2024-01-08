@@ -19,7 +19,7 @@ internal class CryptKey5 : ICryptKey
 
     public CryptKey5(string password, Rar5CryptoInfo rar5CryptoInfo)
     {
-        _password = password;
+        _password = password ?? "";
         _cryptoInfo = rar5CryptoInfo;
     }
 
