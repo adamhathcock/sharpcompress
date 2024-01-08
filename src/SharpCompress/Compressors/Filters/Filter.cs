@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 
 namespace SharpCompress.Compressors.Filters;
@@ -40,7 +40,7 @@ internal abstract class Filter : Stream
 
     public override bool CanWrite => _isEncoder;
 
-    public override void Flush() => throw new NotSupportedException();
+    public override void Flush() { }
 
     public override long Length => _baseStream.Length;
 

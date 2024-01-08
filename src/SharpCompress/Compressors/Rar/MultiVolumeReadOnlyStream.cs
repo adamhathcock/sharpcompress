@@ -130,7 +130,7 @@ internal sealed class MultiVolumeReadOnlyStream : Stream
 
     public byte[] CurrentCrc { get; private set; }
 
-    public override void Flush() => throw new NotSupportedException();
+    public override void Flush() { }
 
     public override long Length => throw new NotSupportedException();
 

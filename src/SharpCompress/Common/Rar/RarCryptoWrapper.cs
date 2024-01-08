@@ -17,7 +17,7 @@ internal sealed class RarCryptoWrapper : Stream
         _rijndael = new BlockTransformer(key.Transformer(salt));
     }
 
-    public override void Flush() => throw new NotSupportedException();
+    public override void Flush() { }
 
     public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
 
