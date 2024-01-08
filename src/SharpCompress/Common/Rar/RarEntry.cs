@@ -55,7 +55,12 @@ public abstract class RarEntry : Entry
     public override bool IsEncrypted => FileHeader.IsEncrypted;
 
     /// <summary>
-    /// Entry is password protected and encrypted and cannot be extracted.
+    /// Entry Windows file attributes
+    /// </summary>
+    public override int? Attrib => (int)FileHeader.FileAttributes;
+
+    /// <summary>
+    /// Entry is a directory
     /// </summary>
     public override bool IsDirectory => FileHeader.IsDirectory;
 
