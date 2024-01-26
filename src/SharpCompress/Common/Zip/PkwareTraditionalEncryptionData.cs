@@ -39,7 +39,7 @@ internal class PkwareTraditionalEncryptionData
             {
                 throw new CryptographicException("The password did not match.");
             }
-            if (plainTextHeader[11] != (byte)((header.LastModifiedTime >> 8) & 0xff))
+            if (plainTextHeader[11] != (byte)((header.OriginalLastModifiedTime >> 8) & 0xff))
             {
                 throw new CryptographicException("The password did not match.");
             }

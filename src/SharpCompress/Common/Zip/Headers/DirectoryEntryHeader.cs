@@ -14,8 +14,8 @@ internal class DirectoryEntryHeader : ZipFileEntry
         VersionNeededToExtract = reader.ReadUInt16();
         Flags = (HeaderFlags)reader.ReadUInt16();
         CompressionMethod = (ZipCompressionMethod)reader.ReadUInt16();
-        LastModifiedTime = reader.ReadUInt16();
-        LastModifiedDate = reader.ReadUInt16();
+        OriginalLastModifiedTime = LastModifiedTime = reader.ReadUInt16();
+        OriginalLastModifiedDate = LastModifiedDate = reader.ReadUInt16();
         Crc = reader.ReadUInt32();
         CompressedSize = reader.ReadUInt32();
         UncompressedSize = reader.ReadUInt32();
