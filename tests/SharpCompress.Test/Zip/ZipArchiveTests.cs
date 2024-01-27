@@ -17,6 +17,14 @@ public class ZipArchiveTests : ArchiveTests
     public ZipArchiveTests() => UseExtensionInsteadOfNameToVerify = true;
 
     [Fact]
+    public void Zip_Shrink_ArchiveStreamRead()
+    {
+        UseExtensionInsteadOfNameToVerify = true;
+        UseCaseInsensitiveToVerify = true;
+        ArchiveStreamRead("Zip.shrink.zip");
+    }
+
+    [Fact]
     public void Zip_ZipX_ArchiveStreamRead() => ArchiveStreamRead("Zip.zipx");
 
     [Fact]

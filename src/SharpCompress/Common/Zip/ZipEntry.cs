@@ -52,6 +52,10 @@ public class ZipEntry : Entry
                 {
                     return CompressionType.None;
                 }
+                case ZipCompressionMethod.Shrink:
+                {
+                    return CompressionType.Shrink;
+                }
                 default:
                 {
                     return CompressionType.Unknown;
