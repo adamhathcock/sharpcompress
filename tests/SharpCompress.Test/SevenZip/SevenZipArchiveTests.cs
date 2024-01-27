@@ -1,5 +1,8 @@
 using System;
 using System.IO;
+using System.Linq;
+using SharpCompress.Archives;
+using SharpCompress.Archives.SevenZip;
 using SharpCompress.Common;
 using SharpCompress.Readers;
 using Xunit;
@@ -132,9 +135,60 @@ public class SevenZipArchiveTests : ArchiveTests
                 )
         );
 
+    [Fact]
+    public void SevenZipArchive_EOS_FileRead() => ArchiveFileRead("7Zip.eos.7z");
+
+    [Fact]
     public void SevenZipArchive_Delta_FileRead() => ArchiveFileRead("7Zip.delta.7z");
+
+    [Fact]
+    public void SevenZipArchive_ARM_FileRead() => ArchiveFileRead("7Zip.ARM.7z");
+
+    [Fact]
+    public void SevenZipArchive_ARMT_FileRead() => ArchiveFileRead("7Zip.ARMT.7z");
+
+    [Fact]
+    public void SevenZipArchive_BCJ_FileRead() => ArchiveFileRead("7Zip.BCJ.7z");
+
+    [Fact]
+    public void SevenZipArchive_BCJ2_FileRead() => ArchiveFileRead("7Zip.BCJ2.7z");
+
+    [Fact]
+    public void SevenZipArchive_IA64_FileRead() => ArchiveFileRead("7Zip.IA64.7z");
+
+    [Fact]
+    public void SevenZipArchive_PPC_FileRead() => ArchiveFileRead("7Zip.PPC.7z");
+
+    [Fact]
+    public void SevenZipArchive_SPARC_FileRead() => ArchiveFileRead("7Zip.SPARC.7z");
+
+    [Fact]
+    public void SevenZipArchive_Filters_FileRead() => ArchiveFileRead("7Zip.Filters.7z");
 
     [Fact]
     public void SevenZipArchive_Delta_Distance() =>
         ArchiveDeltaDistanceRead("7Zip.delta.distance.7z");
+
+    [Fact]
+    public void SevenZipArchive_Tar_PathRead()
+    {
+        using (Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "7Zip.Tar.tar.7z")))
+        using (var archive = SevenZipArchive.Open(stream))
+        {
+            var entry = archive.Entries.First();
+            entry.WriteToFile(Path.Combine(SCRATCH_FILES_PATH, entry.Key));
+
+            var size = entry.Size;
+            var scratch = new FileInfo(Path.Combine(SCRATCH_FILES_PATH, "7Zip.Tar.tar"));
+            var test = new FileInfo(Path.Combine(TEST_ARCHIVES_PATH, "7Zip.Tar.tar"));
+
+            Assert.Equal(size, scratch.Length);
+            Assert.Equal(size, test.Length);
+        }
+
+        CompareArchivesByPath(
+            Path.Combine(SCRATCH_FILES_PATH, "7Zip.Tar.tar"),
+            Path.Combine(TEST_ARCHIVES_PATH, "7Zip.Tar.tar")
+        );
+    }
 }

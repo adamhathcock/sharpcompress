@@ -57,6 +57,9 @@ public class TarReaderTests : ReaderTests
     public void Tar_Xz_Reader() => Read("Tar.tar.xz", CompressionType.Xz);
 
     [Fact]
+    public void Tar_GZip_OldGnu_Reader() => Read("Tar.oldgnu.tar.gz", CompressionType.GZip);
+
+    [Fact]
     public void Tar_BZip2_Entry_Stream()
     {
         using (Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.bz2")))

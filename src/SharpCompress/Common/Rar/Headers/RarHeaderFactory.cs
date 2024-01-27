@@ -1,5 +1,7 @@
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using SharpCompress.Common.Rar;
 using SharpCompress.IO;
 using SharpCompress.Readers;
 
@@ -8,6 +10,8 @@ namespace SharpCompress.Common.Rar.Headers;
 public class RarHeaderFactory
 {
     private bool _isRar5;
+
+    private Rar5CryptoInfo? _cryptInfo;
 
     public RarHeaderFactory(StreamingMode mode, ReaderOptions options)
     {
@@ -53,7 +57,19 @@ public class RarHeaderFactory
                     "Encrypted Rar archive has no password specified."
                 );
             }
-            reader = new RarCryptoBinaryReader(stream, Options.Password);
+
+            if (_isRar5 && _cryptInfo != null)
+            {
+                _cryptInfo.ReadInitV(new MarkingBinaryReader(stream));
+                var _headerKey = new CryptKey5(Options.Password!, _cryptInfo);
+
+                reader = new RarCryptoBinaryReader(stream, _headerKey, _cryptInfo.Salt);
+            }
+            else
+            {
+                var key = new CryptKey3(Options.Password);
+                reader = new RarCryptoBinaryReader(stream, key);
+            }
         }
 
         var header = RarHeader.TryReadBase(reader, _isRar5, Options.ArchiveEncoding);
@@ -105,7 +121,14 @@ public class RarHeaderFactory
             case HeaderCodeV.RAR5_SERVICE_HEADER:
             {
                 var fh = new FileHeader(header, reader, HeaderType.Service);
-                SkipData(fh, reader);
+                if (fh.FileName == "CMT")
+                {
+                    fh.PackedStream = new ReadOnlySubStream(reader.BaseStream, fh.CompressedSize);
+                }
+                else
+                {
+                    SkipData(fh, reader);
+                }
                 return fh;
             }
 
@@ -133,7 +156,7 @@ public class RarHeaderFactory
 
                         {
                             var ms = new ReadOnlySubStream(reader.BaseStream, fh.CompressedSize);
-                            if (fh.R4Salt is null)
+                            if (fh.R4Salt is null && fh.Rar5CryptoInfo is null)
                             {
                                 fh.PackedStream = ms;
                             }
@@ -141,8 +164,10 @@ public class RarHeaderFactory
                             {
                                 fh.PackedStream = new RarCryptoWrapper(
                                     ms,
-                                    Options.Password!,
-                                    fh.R4Salt
+                                    fh.R4Salt is null ? fh.Rar5CryptoInfo.Salt : fh.R4Salt,
+                                    fh.R4Salt is null
+                                        ? new CryptKey5(Options.Password!, fh.Rar5CryptoInfo)
+                                        : new CryptKey3(Options.Password!)
                                 );
                             }
                         }
@@ -161,9 +186,11 @@ public class RarHeaderFactory
             }
             case HeaderCodeV.RAR5_ARCHIVE_ENCRYPTION_HEADER:
             {
-                var ch = new ArchiveCryptHeader(header, reader);
+                var cryptoHeader = new ArchiveCryptHeader(header, reader);
                 IsEncrypted = true;
-                return ch;
+                _cryptInfo = cryptoHeader.CryptInfo;
+
+                return cryptoHeader;
             }
             default:
             {

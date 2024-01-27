@@ -2,14 +2,14 @@
 	<PropertyGroup>
 		<AssemblyTitle>SharpCompress - Pure C# Decompression/Compression</AssemblyTitle>
 		<NeutralLanguage>en-US</NeutralLanguage>
-		<VersionPrefix>0.33.0</VersionPrefix>
-		<AssemblyVersion>0.33.0</AssemblyVersion>
-		<FileVersion>0.33.0</FileVersion>
+		<VersionPrefix>0.36.0</VersionPrefix>
+		<AssemblyVersion>0.36.0</AssemblyVersion>
+		<FileVersion>0.36.0</FileVersion>
 		<Authors>Adam Hathcock</Authors>
-		<TargetFrameworks>net462;netstandard2.0;netstandard2.1;net6.0;net7.0</TargetFrameworks>
+		<TargetFrameworks>net462;netstandard2.0;netstandard2.1;net6.0;net7.0;net8.0</TargetFrameworks>
 		<AssemblyName>SharpCompress</AssemblyName>
 		<AssemblyOriginatorKeyFile>../../SharpCompress.snk</AssemblyOriginatorKeyFile>
-		<SignAssembly>False</SignAssembly>
+		<SignAssembly>true</SignAssembly>
 		<PackageId>SharpCompress</PackageId>
 		<PackageTags>rar;unrar;zip;unzip;bzip2;gzip;tar;7zip;lzip;xz</PackageTags>
 		<PackageProjectUrl>https://github.com/adamhathcock/sharpcompress</PackageProjectUrl>
@@ -23,22 +23,22 @@
 		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
 		<IsTrimmable>true</IsTrimmable>
 		<LangVersion>latest</LangVersion>
-		<AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1" PrivateAssets="All" />
-		<PackageReference Include="ZstdSharp.Port" Version="0.6.1" />
+		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All" />
+		<PackageReference Include="ZstdSharp.Port" Version="0.7.4" />
 	</ItemGroup>
 	<ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.1' ">
-		<PackageReference Include="System.Text.Encoding.CodePages" Version="7.0.0" />
+		<PackageReference Include="System.Text.Encoding.CodePages" Version="8.0.0" />
 	</ItemGroup>
 	<ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' ">
-		<PackageReference Include="System.Text.Encoding.CodePages" Version="7.0.0" />
+		<PackageReference Include="System.Text.Encoding.CodePages" Version="8.0.0" />
 		<PackageReference Include="System.Memory" Version="4.5.5" />
 	</ItemGroup>
 	<ItemGroup Condition=" '$(VersionlessImplicitFrameworkDefine)' == 'NETFRAMEWORK' ">
-		<PackageReference Include="System.Text.Encoding.CodePages" Version="7.0.0" />
+		<PackageReference Include="System.Text.Encoding.CodePages" Version="8.0.0" />
 		<PackageReference Include="System.Memory" Version="4.5.5" />
 	</ItemGroup>
 </Project>

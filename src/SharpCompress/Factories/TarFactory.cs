@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using System.IO;
-
 using SharpCompress.Archives;
 using SharpCompress.Archives.Tar;
 using SharpCompress.Common;

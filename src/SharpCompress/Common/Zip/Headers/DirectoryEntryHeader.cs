@@ -85,6 +85,36 @@ internal class DirectoryEntryHeader : ZipFileEntry
                 RelativeOffsetOfEntryHeader = zip64ExtraData.RelativeOffsetOfEntryHeader;
             }
         }
+
+        var unixTimeExtra = Extra.FirstOrDefault(u => u.Type == ExtraDataType.UnixTimeExtraField);
+
+        if (unixTimeExtra is not null)
+        {
+            // Tuple order is last modified time, last access time, and creation time.
+            var unixTimeTuple = ((UnixTimeExtraField)unixTimeExtra).UnicodeTimes;
+
+            if (unixTimeTuple.Item1.HasValue)
+            {
+                var dosTime = Utility.DateTimeToDosTime(unixTimeTuple.Item1.Value);
+
+                LastModifiedDate = (ushort)(dosTime >> 16);
+                LastModifiedTime = (ushort)(dosTime & 0x0FFFF);
+            }
+            else if (unixTimeTuple.Item2.HasValue)
+            {
+                var dosTime = Utility.DateTimeToDosTime(unixTimeTuple.Item2.Value);
+
+                LastModifiedDate = (ushort)(dosTime >> 16);
+                LastModifiedTime = (ushort)(dosTime & 0x0FFFF);
+            }
+            else if (unixTimeTuple.Item3.HasValue)
+            {
+                var dosTime = Utility.DateTimeToDosTime(unixTimeTuple.Item3.Value);
+
+                LastModifiedDate = (ushort)(dosTime >> 16);
+                LastModifiedTime = (ushort)(dosTime & 0x0FFFF);
+            }
+        }
     }
 
     internal ushort Version { get; private set; }

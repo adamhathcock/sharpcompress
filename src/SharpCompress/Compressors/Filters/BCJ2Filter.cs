@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 
 namespace SharpCompress.Compressors.Filters;
@@ -79,7 +79,7 @@ internal class BCJ2Filter : Stream
 
     public override bool CanWrite => false;
 
-    public override void Flush() => throw new NotSupportedException();
+    public override void Flush() { }
 
     public override long Length => _baseStream.Length + _data1.Length + _data2.Length;
 

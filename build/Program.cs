@@ -61,7 +61,7 @@ Target(
 Target(
     Test,
     DependsOn(Build),
-    ForEach("net7.0", "net462"),
+    ForEach("net8.0", "net462"),
     framework =>
     {
         IEnumerable<string> GetFiles(string d)

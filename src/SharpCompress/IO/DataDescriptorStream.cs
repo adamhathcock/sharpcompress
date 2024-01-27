@@ -45,13 +45,13 @@ public class DataDescriptorStream : Stream
 
     public override bool CanWrite => false;
 
-    public override void Flush() => throw new NotSupportedException();
+    public override void Flush() { }
 
     public override long Length => _stream.Length;
 
     public override long Position
     {
-        get => _stream.Position;
+        get => _stream.Position - _start;
         set => _stream.Position = value;
     }
 

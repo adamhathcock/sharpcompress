@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using SharpCompress.Common.SevenZip;
 using SharpCompress.Compressors.LZMA.Utilites;
@@ -14,7 +14,7 @@ internal abstract class DecoderStream2 : Stream
 
     public override bool CanWrite => false;
 
-    public override void Flush() => throw new NotSupportedException();
+    public override void Flush() { }
 
     public override long Length => throw new NotSupportedException();
 

@@ -20,6 +20,11 @@ internal static class DecoderRegistry
     private const uint K_PPMD = 0x030401;
     private const uint K_BCJ = 0x03030103;
     private const uint K_BCJ2 = 0x0303011B;
+    private const uint K_PPC = 0x03030205;
+    private const uint K_IA64 = 0x03030401;
+    private const uint K_ARM = 0x03030501;
+    private const uint K_ARMT = 0x03030701;
+    private const uint K_SPARC = 0x03030805;
     private const uint K_DEFLATE = 0x040108;
     private const uint K_B_ZIP2 = 0x040202;
     private const uint K_ZSTD = 0x4F71101;
@@ -51,6 +56,16 @@ internal static class DecoderRegistry
                 return new BCJFilter(false, inStreams.Single());
             case K_BCJ2:
                 return new Bcj2DecoderStream(inStreams, info, limit);
+            case K_PPC:
+                return new BCJFilterPPC(false, inStreams.Single());
+            case K_IA64:
+                return new BCJFilterIA64(false, inStreams.Single());
+            case K_ARM:
+                return new BCJFilterARM(false, inStreams.Single());
+            case K_ARMT:
+                return new BCJFilterARMT(false, inStreams.Single());
+            case K_SPARC:
+                return new BCJFilterSPARC(false, inStreams.Single());
             case K_B_ZIP2:
                 return new BZip2Stream(inStreams.Single(), CompressionMode.Decompress, true);
             case K_PPMD:

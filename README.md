@@ -6,6 +6,7 @@ The major feature is support for non-seekable streams so large files can be proc
 
 GitHub Actions Build -
 [![SharpCompress](https://github.com/adamhathcock/sharpcompress/actions/workflows/dotnetcore.yml/badge.svg)](https://github.com/adamhathcock/sharpcompress/actions/workflows/dotnetcore.yml)
+[![Static Badge](https://img.shields.io/badge/API%20Documentation-RobiniaDocs-43bc00?logo=readme&logoColor=white)](https://www.robiniadocs.com/d/sharpcompress/api/SharpCompress.html)
 
 ## Need Help?
 
@@ -35,12 +36,14 @@ I'm always looking for help or ideas. Please submit code or email with ideas. Un
 
 ## TODOs (always lots)
 
-* RAR 5 decryption support
+* RAR 5 decryption crc check support
 * 7Zip writing
 * Zip64 (Need writing and extend Reading)
 * Multi-volume Zip support.
 
 ## Version Log
+
+* [Releases](https://github.com/adamhathcock/sharpcompress/releases)
 
 ### Version 0.18
 

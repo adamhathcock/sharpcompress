@@ -4,11 +4,11 @@
 
 #nullable disable
 
-using SharpCompress.Common.Zip;
 using System;
 using System.Diagnostics;
 using System.IO;
 using System.Runtime.CompilerServices;
+using SharpCompress.Common.Zip;
 
 namespace SharpCompress.Compressors.Deflate64;
 

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 
 namespace SharpCompress.IO;
@@ -26,7 +26,7 @@ internal class BufferedSubStream : NonDisposingStream
 
     public override bool CanWrite => false;
 
-    public override void Flush() => throw new NotSupportedException();
+    public override void Flush() { }
 
     public override long Length => BytesLeftToRead;
 

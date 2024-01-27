@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 
 namespace SharpCompress.Test.Mocks;
@@ -27,7 +27,7 @@ public class FlushOnDisposeStream : Stream, IDisposable
         set => inner.Position = value;
     }
 
-    public override void Flush() => throw new NotImplementedException();
+    public override void Flush() { }
 
     public override int Read(byte[] buffer, int offset, int count) =>
         inner.Read(buffer, offset, count);

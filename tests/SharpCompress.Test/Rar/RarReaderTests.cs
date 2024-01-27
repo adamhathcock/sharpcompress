@@ -172,32 +172,27 @@ public class RarReaderTests : ReaderTests
     public void Rar5_Reader() => Read("Rar5.rar", CompressionType.Rar);
 
     [Fact]
+    public void Rar5_CRC_Blake2_Reader() => Read("Rar5.crc_blake2.rar", CompressionType.Rar);
+
+    [Fact]
     public void Rar_EncryptedFileAndHeader_Reader() =>
         ReadRar("Rar.encrypted_filesAndHeader.rar", "test");
 
-    /*[Fact]
-    public void Rar5_EncryptedFileAndHeader_Reader()
-    {
+    [Fact]
+    public void Rar5_EncryptedFileAndHeader_Reader() =>
         ReadRar("Rar5.encrypted_filesAndHeader.rar", "test");
-    }*/
 
     [Fact]
     public void Rar_EncryptedFileOnly_Reader() => ReadRar("Rar.encrypted_filesOnly.rar", "test");
 
-    /*[Fact]
-    public void Rar5_EncryptedFileOnly_Reader()
-    {
-        ReadRar("Rar5.encrypted_filesOnly.rar", "test");
-    }*/
+    [Fact]
+    public void Rar5_EncryptedFileOnly_Reader() => ReadRar("Rar5.encrypted_filesOnly.rar", "test");
 
     [Fact]
     public void Rar_Encrypted_Reader() => ReadRar("Rar.Encrypted.rar", "test");
 
-    /*[Fact]
-    public void Rar5_Encrypted_Reader()
-    {
-        ReadRar("Rar5.encrypted_filesOnly.rar", "test");
-    }*/
+    [Fact]
+    public void Rar5_Encrypted_Reader() => ReadRar("Rar5.encrypted_filesOnly.rar", "test");
 
     private void ReadRar(string testArchive, string password) =>
         Read(testArchive, CompressionType.Rar, new ReaderOptions { Password = password });
@@ -283,6 +278,12 @@ public class RarReaderTests : ReaderTests
 
     [Fact]
     public void Rar_Solid_Reader() => Read("Rar.solid.rar", CompressionType.Rar);
+
+    [Fact]
+    public void Rar_Comment_Reader() => Read("Rar.comment.rar", CompressionType.Rar);
+
+    [Fact]
+    public void Rar5_Comment_Reader() => Read("Rar5.comment.rar", CompressionType.Rar);
 
     [Fact]
     public void Rar5_Solid_Reader() => Read("Rar5.solid.rar", CompressionType.Rar);
@@ -377,4 +378,55 @@ public class RarReaderTests : ReaderTests
             }
         }
     }
+
+    [Fact]
+    public void Rar_Iterate_Reader() =>
+        Iterate(
+            "Rar.rar",
+            "Failure jpg exe Empty jpg\\test.jpg exe\\test.exe тест.txt",
+            CompressionType.Rar
+        );
+
+    [Fact]
+    public void Rar2_Iterate_Archive() =>
+        Iterate(
+            "Rar2.rar",
+            "Failure Empty тест.txt jpg\\test.jpg exe\\test.exe jpg exe",
+            CompressionType.Rar
+        );
+
+    [Fact]
+    public void Rar4_Iterate_Archive() =>
+        Iterate(
+            "Rar4.rar",
+            "Failure Empty jpg exe тест.txt jpg\\test.jpg exe\\test.exe",
+            CompressionType.Rar
+        );
+
+    [Fact]
+    public void Rar5_Iterate_Archive() =>
+        Iterate(
+            "Rar5.rar",
+            "Failure jpg exe Empty тест.txt jpg\\test.jpg exe\\test.exe",
+            CompressionType.Rar
+        );
+
+    [Fact]
+    public void Rar_Encrypted_Iterate_Archive() =>
+        Iterate(
+            "Rar.encrypted_filesOnly.rar",
+            "Failure jpg exe Empty тест.txt jpg\\test.jpg exe\\test.exe",
+            CompressionType.Rar
+        );
+
+    [Fact]
+    public void Rar5_Encrypted_Iterate_Archive() =>
+        Assert.Throws<CryptographicException>(
+            () =>
+                Iterate(
+                    "Rar5.encrypted_filesOnly.rar",
+                    "Failure jpg exe Empty тест.txt jpg\\test.jpg exe\\test.exe",
+                    CompressionType.Rar
+                )
+        );
 }

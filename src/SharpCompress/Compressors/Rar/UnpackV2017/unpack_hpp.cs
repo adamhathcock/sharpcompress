@@ -1,3 +1,8 @@
+using System;
+using System.Collections.Generic;
+using static SharpCompress.Compressors.Rar.UnpackV2017.PackDef;
+using static SharpCompress.Compressors.Rar.UnpackV2017.UnpackGlobal;
+using int64 = System.Int64;
 #if !Rar2017_64bit
 using size_t = System.UInt32;
 #else
@@ -5,12 +10,6 @@ using nint = System.Int64;
 using nuint = System.UInt64;
 using size_t = System.UInt64;
 #endif
-using int64 = System.Int64;
-
-using System.Collections.Generic;
-using static SharpCompress.Compressors.Rar.UnpackV2017.PackDef;
-using static SharpCompress.Compressors.Rar.UnpackV2017.UnpackGlobal;
-using System;
 
 // TODO: REMOVE THIS... WIP
 #pragma warning disable 169
@@ -20,8 +19,6 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017;
 
 internal static class UnpackGlobal
 {
-
-
     // Maximum allowed number of compressed bits processed in quick mode.
     public const int MAX_QUICK_DECODE_BITS = 10;
 
@@ -97,11 +94,11 @@ internal struct UnpackBlockHeader
 
 internal struct UnpackBlockTables
 {
-    public DecodeTable LD;  // Decode literals.
-    public DecodeTable DD;  // Decode distances.
+    public DecodeTable LD; // Decode literals.
+    public DecodeTable DD; // Decode distances.
     public DecodeTable LDD; // Decode lower bits of distances.
-    public DecodeTable RD;  // Decode repeating distances.
-    public DecodeTable BD;  // Decode bit lengths in Huffman table.
+    public DecodeTable RD; // Decode repeating distances.
+    public DecodeTable BD; // Decode bit lengths in Huffman table.
 
     public void Init()
     {
@@ -113,8 +110,7 @@ internal struct UnpackBlockTables
     }
 };
 
-
-#if RarV2017_RAR_SMP
+/*#if RarV2017_RAR_SMP
 enum UNP_DEC_TYPE {
 UNPDT_LITERAL,UNPDT_MATCH,UNPDT_FULLREP,UNPDT_REP,UNPDT_FILTER
 };
@@ -161,7 +157,7 @@ if (Decoded!=NULL)
   free(Decoded);
 }
 };
-#endif
+#endif*/
 
 
 //struct UnpackFilter
@@ -171,11 +167,11 @@ internal class UnpackFilter
     public uint BlockStart;
     public uint BlockLength;
     public byte Channels;
+
     //  uint Width;
     //  byte PosR;
     public bool NextWindow;
 };
-
 
 //struct UnpackFilter30
 internal class UnpackFilter30
@@ -195,14 +191,20 @@ internal class UnpackFilter30
 
 internal class AudioVariables // For RAR 2.0 archives only.
 {
-    public int K1, K2, K3, K4, K5;
-    public int D1, D2, D3, D4;
+    public int K1,
+        K2,
+        K3,
+        K4,
+        K5;
+    public int D1,
+        D2,
+        D3,
+        D4;
     public int LastDelta;
     public readonly uint[] Dif = new uint[11];
     public uint ByteCount;
     public int LastChar;
 };
-
 
 // We can use the fragmented dictionary in case heap does not have the single
 // large enough memory block. It is slower than normal dictionary.
@@ -223,10 +225,8 @@ internal partial class FragmentedWindow
     //size_t GetBlockSize(size_t StartPos,size_t RequiredSize);
 };
 
-
 internal partial class Unpack
 {
-
     //void Unpack5(bool Solid);
     //void Unpack5MT(bool Solid);
     //bool UnpReadBuf();
@@ -254,16 +254,16 @@ internal partial class Unpack
     //BitInput Inp;
     private BitInput Inp => this; // hopefully this gets inlined
 
-#if RarV2017_RAR_SMP
-void InitMT();
-bool UnpackLargeBlock(UnpackThreadData &D);
-bool ProcessDecoded(UnpackThreadData &D);
-
-ThreadPool *UnpThreadPool;
-UnpackThreadData *UnpThreadData;
-uint MaxUserThreads;
-byte *ReadBufMT;
-#endif
+    /*#if RarV2017_RAR_SMP
+    void InitMT();
+    bool UnpackLargeBlock(UnpackThreadData &D);
+    bool ProcessDecoded(UnpackThreadData &D);
+    
+    ThreadPool *UnpThreadPool;
+    UnpackThreadData *UnpThreadData;
+    uint MaxUserThreads;
+    byte *ReadBufMT;
+    #endif*/
 
     private byte[] FilterSrcMemory = Array.Empty<byte>();
     private byte[] FilterDstMemory = Array.Empty<byte>();
@@ -279,7 +279,8 @@ byte *ReadBufMT;
     // array. In RAR3 last distance is always stored in OldDist[0].
     private uint LastDist;
 
-    private size_t UnpPtr, WrPtr;
+    private size_t UnpPtr,
+        WrPtr;
 
     // Top border of read packed data.
     private int ReadTop;
@@ -307,7 +308,6 @@ byte *ReadBufMT;
     private int64 WrittenFileSize;
     private bool FileExtracted;
 
-
     /***************************** Unpack v 1.5 *********************************/
     //void Unpack15(bool Solid);
     //void ShortLZ();
@@ -320,12 +320,29 @@ byte *ReadBufMT;
     //void CopyString15(uint Distance,uint Length);
     //uint DecodeNum(uint Num,uint StartPos,uint *DecTab,uint *PosTab);
 
-    private readonly ushort[] ChSet = new ushort[256], ChSetA = new ushort[256], ChSetB = new ushort[256], ChSetC = new ushort[256];
-    private readonly byte[] NToPl = new byte[256], NToPlB = new byte[256], NToPlC = new byte[256];
-    private uint FlagBuf, AvrPlc, AvrPlcB, AvrLn1, AvrLn2, AvrLn3;
-    private int Buf60, NumHuf, StMode, LCount, FlagsCnt;
+    private readonly ushort[] ChSet = new ushort[256],
+        ChSetA = new ushort[256],
+        ChSetB = new ushort[256],
+        ChSetC = new ushort[256];
+    private readonly byte[] NToPl = new byte[256],
+        NToPlB = new byte[256],
+        NToPlC = new byte[256];
+    private uint FlagBuf,
+        AvrPlc,
+        AvrPlcB,
+        AvrLn1,
+        AvrLn2,
+        AvrLn3;
+    private int Buf60,
+        NumHuf,
+        StMode,
+        LCount,
+        FlagsCnt;
 
-    private uint Nhfb, Nlzb, MaxDist3;
+    private uint Nhfb,
+        Nlzb,
+        MaxDist3;
+
     /***************************** Unpack v 1.5 *********************************/
 
     /***************************** Unpack v 2.0 *********************************/
@@ -335,9 +352,11 @@ byte *ReadBufMT;
 
     private readonly byte[] UnpOldTable20 = new byte[MC20 * 4];
     private bool UnpAudioBlock;
-    private uint UnpChannels, UnpCurChannel;
+    private uint UnpChannels,
+        UnpCurChannel;
 
     private int UnpChannelDelta;
+
     //void CopyString20(uint Length,uint Distance);
     //bool ReadTables20();
     //void UnpWriteBuf20();
@@ -345,6 +364,7 @@ byte *ReadBufMT;
     //void ReadLastTables();
     //byte DecodeAudio(int Delta);
     private AudioVariables[] AudV = new AudioVariables[4];
+
     /***************************** Unpack v 2.0 *********************************/
 
     /***************************** Unpack v 3.0 *********************************/
@@ -363,7 +383,8 @@ byte *ReadBufMT;
     // because we can have a corrupt archive with one algorithm file
     // followed by another algorithm file with "solid" flag and we do not
     // want to reuse tables from one algorithm in another.
-    private bool TablesRead2, TablesRead5;
+    private bool TablesRead2,
+        TablesRead5;
 
     // Virtual machine to execute filters code.
     /*#if !RarV2017_RAR5ONLY
@@ -385,13 +406,13 @@ byte *ReadBufMT;
     // the data block length if lengths are repeating.
     private readonly List<int> OldFilterLengths = new List<int>();
 
-#if RarV2017_RAR_SMP
-// More than 8 threads are unlikely to provide a noticeable gain
-// for unpacking, but would use the additional memory.
-void SetThreads(uint Threads) {MaxUserThreads=Min(Threads,8);}
-
-void UnpackDecode(UnpackThreadData &D);
-#endif
+    /*#if RarV2017_RAR_SMP
+    // More than 8 threads are unlikely to provide a noticeable gain
+    // for unpacking, but would use the additional memory.
+    void SetThreads(uint Threads) {MaxUserThreads=Min(Threads,8);}
+    
+    void UnpackDecode(UnpackThreadData &D);
+    #endif*/
 
     private size_t MaxWinSize;
     private size_t MaxWinMask;

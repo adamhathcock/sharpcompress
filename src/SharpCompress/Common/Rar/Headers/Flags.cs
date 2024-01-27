@@ -50,6 +50,17 @@ internal static class EncryptionFlagsV5
     public const uint FHEXTRA_CRYPT_HASHMAC = 0x02;
 }
 
+internal static class EncryptionConstV5
+{
+    public const int VERSION = 0;
+    public const uint CRYPT5_KDF_LG2_COUNT_MAX = 0x24;
+    public const int SIZE_SALT30 = 0x08;
+    public const int SIZE_SALT50 = 0x10;
+    public const int SIZE_INITV = 0x10;
+    public const int SIZE_PSWCHECK = 0x08;
+    public const int SIZE_PSWCHECK_CSUM = 0x04;
+}
+
 internal static class HeaderFlagsV5
 {
     public const ushort HAS_EXTRA = 0x0001;

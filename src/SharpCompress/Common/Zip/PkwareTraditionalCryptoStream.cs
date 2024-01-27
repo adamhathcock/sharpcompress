@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 
 namespace SharpCompress.Common.Zip;
@@ -87,10 +87,7 @@ internal class PkwareTraditionalCryptoStream : Stream
         _stream.Write(encrypted, 0, encrypted.Length);
     }
 
-    public override void Flush()
-    {
-        //throw new NotSupportedException();
-    }
+    public override void Flush() { }
 
     public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
 
