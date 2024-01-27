@@ -69,9 +69,16 @@ namespace SharpCompress.Compressors.Shrink
             queue.nextIdx = 0;
         }
 
-        private static bool ReadCode(BitStream stream, ref int codeSize, CodeTabEntry[] codeTab, ref CodeQueue queue, out int nextCode)
+        private static bool ReadCode(
+            BitStream stream,
+            ref int codeSize,
+            CodeTabEntry[] codeTab,
+            ref CodeQueue queue,
+            out int nextCode
+        )
         {
-            int code, controlCode;
+            int code,
+                controlCode;
 
             code = (int)stream.NextBits(codeSize);
             if (!stream.Advance(codeSize))
@@ -130,8 +137,17 @@ namespace SharpCompress.Compressors.Shrink
             Buffer.BlockCopy(dst, prevPos, dst, dstPos, len);
         }
 
-        private static UnshrnkStatus OutputCode(int code, byte[] dst, int dstPos, int dstCap, int prevCode,
-            CodeTabEntry[] codeTab, ref CodeQueue queue, out byte firstByte, out int len)
+        private static UnshrnkStatus OutputCode(
+            int code,
+            byte[] dst,
+            int dstPos,
+            int dstCap,
+            int prevCode,
+            CodeTabEntry[] codeTab,
+            ref CodeQueue queue,
+            out byte firstByte,
+            out int len
+        )
         {
             int prefixCode;
 
@@ -174,7 +190,7 @@ namespace SharpCompress.Compressors.Shrink
             // Output a string of unknown length.
             //assert(codeTab[code].len == UNKNOWN_LEN);
             prefixCode = codeTab[code].prefixCode;
-           // assert(prefixCode > CONTROL_CODE);
+            // assert(prefixCode > CONTROL_CODE);
 
             if (prefixCode == queue.codes[queue.nextIdx])
             {
@@ -215,13 +231,24 @@ namespace SharpCompress.Compressors.Shrink
             return UnshrnkStatus.Ok;
         }
 
-        public static UnshrnkStatus Unshrink(byte[] src, int srcLen, out int srcUsed, byte[] dst, int dstCap, out int dstUsed)
+        public static UnshrnkStatus Unshrink(
+            byte[] src,
+            int srcLen,
+            out int srcUsed,
+            byte[] dst,
+            int dstCap,
+            out int dstUsed
+        )
         {
             CodeTabEntry[] codeTab = new CodeTabEntry[HASHTAB_SIZE];
             CodeQueue queue = new CodeQueue();
             var stream = new BitStream(src, srcLen);
-            int codeSize, dstPos, len;
-            int currCode, prevCode, newCode;
+            int codeSize,
+                dstPos,
+                len;
+            int currCode,
+                prevCode,
+                newCode;
             byte firstByte;
 
             CodeTabInit(codeTab);
@@ -296,7 +323,17 @@ namespace SharpCompress.Compressors.Shrink
                 }
 
                 // Output the string represented by the current code.
-                UnshrnkStatus status = OutputCode(currCode, dst, dstPos, dstCap, prevCode, codeTab, ref queue, out firstByte, out len);
+                UnshrnkStatus status = OutputCode(
+                    currCode,
+                    dst,
+                    dstPos,
+                    dstCap,
+                    prevCode,
+                    codeTab,
+                    ref queue,
+                    out firstByte,
+                    out len
+                );
                 if (status != UnshrnkStatus.Ok)
                 {
                     srcUsed = stream.BytesRead;
@@ -308,7 +345,7 @@ namespace SharpCompress.Compressors.Shrink
                 var c = currCode;
                 for (int i = 0; i < len; i++)
                 {
-                   // assert(codeTab[c].len == len - i);
+                    // assert(codeTab[c].len == len - i);
                     //assert(codeTab[c].extByte == dst[dstPos + len - i - 1]);
                     c = codeTab[c].prefixCode;
                 }
@@ -376,11 +413,13 @@ namespace SharpCompress.Compressors.Shrink
             q.codes[codeQueueSize] = INVALID_CODE; // End-of-queue marker.
             q.nextIdx = 0;
         }
+
         private static ushort CodeQueueNext(ref CodeQueue q)
         {
             //assert(q.nextIdx < q.codes.Length);
             return q.codes[q.nextIdx];
         }
+
         private static ushort CodeQueueRemoveNext(ref CodeQueue q)
         {
             ushort code = CodeQueueNext(ref q);

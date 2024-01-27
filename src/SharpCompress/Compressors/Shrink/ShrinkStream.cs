@@ -17,7 +17,12 @@ internal class ShrinkStream : Stream
     private byte[] _byteOut;
     private long _outBytesCount;
 
-    public ShrinkStream(Stream stream, CompressionMode compressionMode, long compressedSize, long uncompressedSize)
+    public ShrinkStream(
+        Stream stream,
+        CompressionMode compressionMode,
+        long compressedSize,
+        long uncompressedSize
+    )
     {
         inStream = stream;
         _compressionMode = compressionMode;
@@ -36,9 +41,14 @@ internal class ShrinkStream : Stream
 
     public override long Length => _uncompressedSize;
 
-    public override long Position { get => _outBytesCount; set => throw new NotImplementedException(); }
+    public override long Position
+    {
+        get => _outBytesCount;
+        set => throw new NotImplementedException();
+    }
 
     public override void Flush() => throw new NotImplementedException();
+
     public override int Read(byte[] buffer, int offset, int count)
     {
         if (inStream.Position == (long)_compressedSize)
@@ -50,7 +60,14 @@ internal class ShrinkStream : Stream
         int srcUsed = 0;
         int dstUsed = 0;
 
-        HwUnshrink.Unshrink(src, (int)_compressedSize, out srcUsed, _byteOut, (int)_uncompressedSize, out dstUsed);
+        HwUnshrink.Unshrink(
+            src,
+            (int)_compressedSize,
+            out srcUsed,
+            _byteOut,
+            (int)_uncompressedSize,
+            out dstUsed
+        );
         _outBytesCount = _byteOut.Length;
 
         for (int index = 0; index < _outBytesCount; ++index)
@@ -61,7 +78,12 @@ internal class ShrinkStream : Stream
         _outBytesCount = 0;
         return (int)tmp;
     }
-    public override long Seek(long offset, SeekOrigin origin) => throw new NotImplementedException();
+
+    public override long Seek(long offset, SeekOrigin origin) =>
+        throw new NotImplementedException();
+
     public override void SetLength(long value) => throw new NotImplementedException();
-    public override void Write(byte[] buffer, int offset, int count) => throw new NotImplementedException();
+
+    public override void Write(byte[] buffer, int offset, int count) =>
+        throw new NotImplementedException();
 }

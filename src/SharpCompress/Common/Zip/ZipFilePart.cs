@@ -82,7 +82,12 @@ internal abstract class ZipFilePart : FilePart
             }
             case ZipCompressionMethod.Shrink:
             {
-                return new ShrinkStream(stream, CompressionMode.Decompress, Header.CompressedSize, Header.UncompressedSize);
+                return new ShrinkStream(
+                    stream,
+                    CompressionMode.Decompress,
+                    Header.CompressedSize,
+                    Header.UncompressedSize
+                );
             }
             case ZipCompressionMethod.Deflate:
             {

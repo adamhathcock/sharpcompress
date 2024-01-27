@@ -4,7 +4,6 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-
 namespace SharpCompress.Compressors.Shrink
 {
     internal class BitStream
@@ -14,26 +13,26 @@ namespace SharpCompress.Compressors.Shrink
         private int _byteIdx;
         private int _bitIdx;
         private int _bitsLeft;
-        private ulong _bitBuffer;        
+        private ulong _bitBuffer;
         private static uint[] _maskBits = new uint[17]
         {
-                  0U,
-                  1U,
-                  3U,
-                  7U,
-                  15U,
-                  31U,
-                  63U,
-                  (uint) sbyte.MaxValue,
-                  (uint) byte.MaxValue,
-                  511U,
-                  1023U,
-                  2047U,
-                  4095U,
-                  8191U,
-                  16383U,
-                  (uint) short.MaxValue,
-                  (uint) ushort.MaxValue
+            0U,
+            1U,
+            3U,
+            7U,
+            15U,
+            31U,
+            63U,
+            (uint)sbyte.MaxValue,
+            (uint)byte.MaxValue,
+            511U,
+            1023U,
+            2047U,
+            4095U,
+            8191U,
+            16383U,
+            (uint)short.MaxValue,
+            (uint)ushort.MaxValue
         };
 
         public BitStream(byte[] src, int srcLen)
