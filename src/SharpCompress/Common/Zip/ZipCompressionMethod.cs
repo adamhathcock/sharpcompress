@@ -3,6 +3,7 @@ namespace SharpCompress.Common.Zip;
 internal enum ZipCompressionMethod
 {
     None = 0,
+    Shrink = 1,
     Deflate = 8,
     Deflate64 = 9,
     BZip2 = 12,
