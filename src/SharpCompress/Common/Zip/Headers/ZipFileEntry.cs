@@ -67,8 +67,26 @@ internal abstract class ZipFileEntry : ZipHeader
 
     internal WinzipAesEncryptionData WinzipAesEncryptionData { get; set; }
 
+    /// <summary>
+    /// The last modified date as read from the Local or Central Directory header.
+    /// </summary>
+    internal ushort OriginalLastModifiedDate { get; set; }
+
+    /// <summary>
+    /// The last modified date from the UnixTimeExtraField, if present, or the
+    /// Local or Cental Directory header, if not.
+    /// </summary>
     internal ushort LastModifiedDate { get; set; }
 
+    /// <summary>
+    /// The last modified time as read from the Local or Central Directory header.
+    /// </summary>
+    internal ushort OriginalLastModifiedTime { get; set; }
+
+    /// <summary>
+    /// The last modified time from the UnixTimeExtraField, if present, or the
+    /// Local or Cental Directory header, if not.
+    /// </summary>
     internal ushort LastModifiedTime { get; set; }
 
     internal uint Crc { get; set; }
