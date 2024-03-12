@@ -2,6 +2,8 @@ using System;
 using System.Buffers;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 using SharpCompress.Readers;
 
 namespace SharpCompress;
@@ -391,4 +393,10 @@ public static class Utility
         buffer[offset + 2] = (byte)(number >> 8);
         buffer[offset + 3] = (byte)number;
     }
+
+    public static async ValueTask WriteAsync(
+        this Stream stream,
+        byte[] bytes,
+        CancellationToken cancellationToken
+    ) => await stream.WriteAsync(bytes, 0, bytes.Length, cancellationToken).ConfigureAwait(false);
 }

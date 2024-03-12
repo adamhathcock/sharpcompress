@@ -1,5 +1,7 @@
 using System;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 using SharpCompress.Common;
 using SharpCompress.Common.Tar.Headers;
 using SharpCompress.Compressors;
@@ -126,4 +128,15 @@ public class TarWriter : AbstractWriter
         }
         base.Dispose(isDisposing);
     }
+
+#if !NETFRAMEWORK && !NETSTANDARD2_0
+    public override ValueTask DisposeAsync() => throw new NotImplementedException();
+
+    public override ValueTask WriteAsync(
+        string filename,
+        Stream source,
+        DateTime? modificationTime,
+        CancellationToken cancellationToken
+    ) => throw new NotImplementedException();
+#endif
 }
