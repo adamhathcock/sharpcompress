@@ -3,7 +3,8 @@ using System.IO;
 
 namespace SharpCompress.IO;
 
-internal class BufferedSubStream(Stream stream, long origin, long bytesToRead) : NonDisposingStream(stream, throwOnDispose: false)
+internal class BufferedSubStream(Stream stream, long origin, long bytesToRead)
+    : NonDisposingStream(stream, throwOnDispose: false)
 {
     private int _cacheOffset;
     private int _cacheLength;

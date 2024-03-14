@@ -66,11 +66,11 @@ internal struct MemoryNode
         get =>
             new(
                 _memory[_address + 4]
-                | (((uint)_memory[_address + 5]) << 8)
-                | (((uint)_memory[_address + 6]) << 16)
-                | (((uint)_memory[_address + 7]) << 24),
+                    | (((uint)_memory[_address + 5]) << 8)
+                    | (((uint)_memory[_address + 6]) << 16)
+                    | (((uint)_memory[_address + 7]) << 24),
                 _memory
-               );
+            );
         set
         {
             _memory[_address + 4] = (byte)value._address;

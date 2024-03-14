@@ -30,33 +30,15 @@ public class TarReader : AbstractReader<TarEntry, TarVolume>
     protected override Stream RequestInitialStream()
     {
         var stream = base.RequestInitialStream();
-        switch (compressionType)
+        return compressionType switch
         {
-            case CompressionType.BZip2:
-            {
-                return new BZip2Stream(stream, CompressionMode.Decompress, false);
-            }
-            case CompressionType.GZip:
-            {
-                return new GZipStream(stream, CompressionMode.Decompress);
-            }
-            case CompressionType.LZip:
-            {
-                return new LZipStream(stream, CompressionMode.Decompress);
-            }
-            case CompressionType.Xz:
-            {
-                return new XZStream(stream);
-            }
-            case CompressionType.None:
-            {
-                return stream;
-            }
-            default:
-            {
-                throw new NotSupportedException("Invalid compression type: " + compressionType);
-            }
-        }
+            CompressionType.BZip2 => new BZip2Stream(stream, CompressionMode.Decompress, false),
+            CompressionType.GZip => new GZipStream(stream, CompressionMode.Decompress),
+            CompressionType.LZip => new LZipStream(stream, CompressionMode.Decompress),
+            CompressionType.Xz => new XZStream(stream),
+            CompressionType.None => stream,
+            _ => throw new NotSupportedException("Invalid compression type: " + compressionType)
+        };
     }
 
     #region Open

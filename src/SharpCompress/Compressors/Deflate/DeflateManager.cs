@@ -1787,21 +1787,14 @@ internal sealed partial class DeflateManager
         return status == BUSY_STATE ? ZlibConstants.Z_DATA_ERROR : ZlibConstants.Z_OK;
     }
 
-    private void SetDeflater()
-    {
-        switch (config.Flavor)
+    private void SetDeflater() =>
+        DeflateFunction = config.Flavor switch
         {
-            case DeflateFlavor.Store:
-                DeflateFunction = DeflateNone;
-                break;
-            case DeflateFlavor.Fast:
-                DeflateFunction = DeflateFast;
-                break;
-            case DeflateFlavor.Slow:
-                DeflateFunction = DeflateSlow;
-                break;
-        }
-    }
+            DeflateFlavor.Store => DeflateNone,
+            DeflateFlavor.Fast => DeflateFast,
+            DeflateFlavor.Slow => DeflateSlow,
+            _ => DeflateFunction
+        };
 
     internal int SetParams(CompressionLevel level, CompressionStrategy strategy)
     {

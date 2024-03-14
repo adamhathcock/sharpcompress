@@ -84,8 +84,7 @@ internal struct Pointer
     /// </summary>
     /// <param name="state"></param>
     /// <returns></returns>
-    public static implicit operator Pointer(PpmState state) =>
-        new(state._address, state._memory);
+    public static implicit operator Pointer(PpmState state) => new(state._address, state._memory);
 
     /// <summary>
     /// Increase the address of a pointer by the given number of bytes.

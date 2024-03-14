@@ -57,11 +57,11 @@ internal struct PpmState
         get =>
             new(
                 _memory[_address + 2]
-                | (((uint)_memory[_address + 3]) << 8)
-                | (((uint)_memory[_address + 4]) << 16)
-                | (((uint)_memory[_address + 5]) << 24),
+                    | (((uint)_memory[_address + 3]) << 8)
+                    | (((uint)_memory[_address + 4]) << 16)
+                    | (((uint)_memory[_address + 5]) << 24),
                 _memory
-               );
+            );
         set
         {
             _memory[_address + 2] = (byte)value._address;

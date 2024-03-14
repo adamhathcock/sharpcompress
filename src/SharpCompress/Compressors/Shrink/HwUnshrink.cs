@@ -414,11 +414,9 @@ namespace SharpCompress.Compressors.Shrink
             q.nextIdx = 0;
         }
 
-        private static ushort CodeQueueNext(ref CodeQueue q)
-        {
+        private static ushort CodeQueueNext(ref CodeQueue q) =>
             //assert(q.nextIdx < q.codes.Length);
-            return q.codes[q.nextIdx];
-        }
+            q.codes[q.nextIdx];
 
         private static ushort CodeQueueRemoveNext(ref CodeQueue q)
         {

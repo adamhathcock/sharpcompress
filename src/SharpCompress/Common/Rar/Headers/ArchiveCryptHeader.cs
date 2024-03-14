@@ -14,8 +14,6 @@ internal class ArchiveCryptHeader : RarHeader
 
     public Rar5CryptoInfo CryptInfo = new();
 
-    protected override void ReadFinish(MarkingBinaryReader reader)
-    {
+    protected override void ReadFinish(MarkingBinaryReader reader) =>
         CryptInfo = new Rar5CryptoInfo(reader, false);
-    }
 }

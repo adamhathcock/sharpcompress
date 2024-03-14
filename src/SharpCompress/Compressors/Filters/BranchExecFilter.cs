@@ -24,10 +24,7 @@ public sealed class BranchExecFilter
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static bool X86TestByte(byte b)
-    {
-        return b == 0x00 || b == 0xFF;
-    }
+    private static bool X86TestByte(byte b) => b == 0x00 || b == 0xFF;
 
     //Replaced X86Converter with bcj_x86() - https://github.com/torvalds/linux/blob/master/lib/xz/xz_dec_bcj.c
     //This was to fix an issue decoding a Test zip made with WinZip (that 7zip was also able to read).

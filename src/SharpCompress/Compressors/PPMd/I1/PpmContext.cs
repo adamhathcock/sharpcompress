@@ -72,11 +72,11 @@ internal partial class Model
             get =>
                 new(
                     _memory[_address + 4]
-                    | (((uint)_memory[_address + 5]) << 8)
-                    | (((uint)_memory[_address + 6]) << 16)
-                    | (((uint)_memory[_address + 7]) << 24),
+                        | (((uint)_memory[_address + 5]) << 8)
+                        | (((uint)_memory[_address + 6]) << 16)
+                        | (((uint)_memory[_address + 7]) << 24),
                     _memory
-                   );
+                );
             set
             {
                 _memory[_address + 4] = (byte)value._address;
@@ -94,11 +94,11 @@ internal partial class Model
             get =>
                 new(
                     _memory[_address + 8]
-                    | (((uint)_memory[_address + 9]) << 8)
-                    | (((uint)_memory[_address + 10]) << 16)
-                    | (((uint)_memory[_address + 11]) << 24),
+                        | (((uint)_memory[_address + 9]) << 8)
+                        | (((uint)_memory[_address + 10]) << 16)
+                        | (((uint)_memory[_address + 11]) << 24),
                     _memory
-                   );
+                );
             set
             {
                 _memory[_address + 8] = (byte)value._address;
@@ -166,11 +166,11 @@ internal partial class Model
             get =>
                 new(
                     _memory[_address + 4]
-                    | (((uint)_memory[_address + 5]) << 8)
-                    | (((uint)_memory[_address + 6]) << 16)
-                    | (((uint)_memory[_address + 7]) << 24),
+                        | (((uint)_memory[_address + 5]) << 8)
+                        | (((uint)_memory[_address + 6]) << 16)
+                        | (((uint)_memory[_address + 7]) << 24),
                     _memory
-                   );
+                );
             set
             {
                 _memory[_address + 4] = (byte)value._address;
