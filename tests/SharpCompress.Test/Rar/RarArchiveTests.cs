@@ -68,7 +68,7 @@ public class RarArchiveTests : ArchiveTests
         using (
             var archive = RarArchive.Open(
                 stream,
-                new ReaderOptions() { Password = password, LeaveStreamOpen = true }
+                new ReaderOptions { Password = password, LeaveStreamOpen = true }
             )
         )
         {
@@ -79,7 +79,7 @@ public class RarArchiveTests : ArchiveTests
                     Assert.Equal(CompressionType.Rar, entry.CompressionType);
                     entry.WriteToDirectory(
                         SCRATCH_FILES_PATH,
-                        new ExtractionOptions() { ExtractFullPath = true, Overwrite = true }
+                        new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
                     );
                 }
             }
@@ -98,7 +98,7 @@ public class RarArchiveTests : ArchiveTests
         using (
             var archive = RarArchive.Open(
                 Path.Combine(TEST_ARCHIVES_PATH, archiveName),
-                new ReaderOptions() { Password = password, LeaveStreamOpen = true }
+                new ReaderOptions { Password = password, LeaveStreamOpen = true }
             )
         )
         {
@@ -106,7 +106,7 @@ public class RarArchiveTests : ArchiveTests
             {
                 entry.WriteToDirectory(
                     SCRATCH_FILES_PATH,
-                    new ExtractionOptions() { ExtractFullPath = true, Overwrite = true }
+                    new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
                 );
             }
         }
@@ -137,7 +137,7 @@ public class RarArchiveTests : ArchiveTests
         {
             entry.WriteToDirectory(
                 SCRATCH_FILES_PATH,
-                new ExtractionOptions() { ExtractFullPath = true, Overwrite = true }
+                new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
             );
         }
     }
@@ -146,13 +146,13 @@ public class RarArchiveTests : ArchiveTests
     public void Rar_Jpg_ArchiveStreamRead()
     {
         using var stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Rar.jpeg.jpg"));
-        using (var archive = RarArchive.Open(stream, new ReaderOptions() { LookForHeader = true }))
+        using (var archive = RarArchive.Open(stream, new ReaderOptions { LookForHeader = true }))
         {
             foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
             {
                 entry.WriteToDirectory(
                     SCRATCH_FILES_PATH,
-                    new ExtractionOptions() { ExtractFullPath = true, Overwrite = true }
+                    new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
                 );
             }
         }
@@ -175,7 +175,7 @@ public class RarArchiveTests : ArchiveTests
             {
                 entry.WriteToDirectory(
                     SCRATCH_FILES_PATH,
-                    new ExtractionOptions() { ExtractFullPath = true, Overwrite = true }
+                    new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
                 );
             }
         }
@@ -266,7 +266,7 @@ public class RarArchiveTests : ArchiveTests
         {
             entry.WriteToDirectory(
                 SCRATCH_FILES_PATH,
-                new ExtractionOptions() { ExtractFullPath = true, Overwrite = true }
+                new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
             );
         }
     }
@@ -320,7 +320,7 @@ public class RarArchiveTests : ArchiveTests
         using (
             var archive = RarArchive.Open(
                 Path.Combine(TEST_ARCHIVES_PATH, "Rar.jpeg.jpg"),
-                new ReaderOptions() { LookForHeader = true }
+                new ReaderOptions { LookForHeader = true }
             )
         )
         {
@@ -328,7 +328,7 @@ public class RarArchiveTests : ArchiveTests
             {
                 entry.WriteToDirectory(
                     SCRATCH_FILES_PATH,
-                    new ExtractionOptions() { ExtractFullPath = true, Overwrite = true }
+                    new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
                 );
             }
         }

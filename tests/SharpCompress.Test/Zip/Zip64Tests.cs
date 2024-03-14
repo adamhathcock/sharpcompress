@@ -3,6 +3,8 @@ using System.IO;
 using System.Linq;
 using SharpCompress.Archives;
 using SharpCompress.Common;
+using SharpCompress.Common.Zip;
+using SharpCompress.Compressors.Deflate;
 using SharpCompress.Readers;
 using SharpCompress.Readers.Zip;
 using SharpCompress.Test.Mocks;
@@ -148,10 +150,7 @@ public class Zip64Tests : WriterTests
         var opts = new ZipWriterOptions(CompressionType.Deflate) { UseZip64 = set_zip64 };
 
         // Use no compression to ensure we hit the limits (actually inflates a bit, but seems better than using method==Store)
-        var eo = new ZipWriterEntryOptions()
-        {
-            DeflateCompressionLevel = Compressors.Deflate.CompressionLevel.None
-        };
+        var eo = new ZipWriterEntryOptions { DeflateCompressionLevel = CompressionLevel.None };
 
         using var zip = File.OpenWrite(filename);
         using var st = forward_only ? (Stream)new ForwardOnlyStream(zip) : zip;
@@ -173,9 +172,9 @@ public class Zip64Tests : WriterTests
     {
         long count = 0;
         long size = 0;
-        Common.Zip.ZipEntry? prev = null;
+        ZipEntry? prev = null;
         using (var fs = File.OpenRead(filename))
-        using (var rd = ZipReader.Open(fs, new ReaderOptions() { LookForHeader = false }))
+        using (var rd = ZipReader.Open(fs, new ReaderOptions { LookForHeader = false }))
         {
             while (rd.MoveToNextEntry())
             {

@@ -19,26 +19,22 @@ public class TarReaderTests : ReaderTests
     [Fact]
     public void Tar_Skip()
     {
-        using (
-            Stream stream = new ForwardOnlyStream(
-                File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar"))
-            )
-        )
-        using (IReader reader = ReaderFactory.Open(stream))
+        using Stream stream = new ForwardOnlyStream(
+            File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar"))
+        );
+        using IReader reader = ReaderFactory.Open(stream);
+        int x = 0;
+        while (reader.MoveToNextEntry())
         {
-            int x = 0;
-            while (reader.MoveToNextEntry())
+            if (!reader.Entry.IsDirectory)
             {
-                if (!reader.Entry.IsDirectory)
+                x++;
+                if (x % 2 == 0)
                 {
-                    x++;
-                    if (x % 2 == 0)
-                    {
-                        reader.WriteEntryToDirectory(
-                            SCRATCH_FILES_PATH,
-                            new ExtractionOptions() { ExtractFullPath = true, Overwrite = true }
-                        );
-                    }
+                    reader.WriteEntryToDirectory(
+                        SCRATCH_FILES_PATH,
+                        new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
+                    );
                 }
             }
         }
@@ -70,24 +66,20 @@ public class TarReaderTests : ReaderTests
                 if (!reader.Entry.IsDirectory)
                 {
                     Assert.Equal(CompressionType.BZip2, reader.Entry.CompressionType);
-                    using (var entryStream = reader.OpenEntryStream())
+                    using var entryStream = reader.OpenEntryStream();
+                    string file = Path.GetFileName(reader.Entry.Key);
+                    string folder =
+                        Path.GetDirectoryName(reader.Entry.Key)
+                        ?? throw new ArgumentNullException();
+                    string destdir = Path.Combine(SCRATCH_FILES_PATH, folder);
+                    if (!Directory.Exists(destdir))
                     {
-                        string file = Path.GetFileName(reader.Entry.Key);
-                        string folder =
-                            Path.GetDirectoryName(reader.Entry.Key)
-                            ?? throw new ArgumentNullException();
-                        string destdir = Path.Combine(SCRATCH_FILES_PATH, folder);
-                        if (!Directory.Exists(destdir))
-                        {
-                            Directory.CreateDirectory(destdir);
-                        }
-                        string destinationFileName = Path.Combine(destdir, file);
-
-                        using (FileStream fs = File.OpenWrite(destinationFileName))
-                        {
-                            entryStream.TransferTo(fs);
-                        }
+                        Directory.CreateDirectory(destdir);
                     }
+                    string destinationFileName = Path.Combine(destdir, file);
+
+                    using FileStream fs = File.OpenWrite(destinationFileName);
+                    entryStream.TransferTo(fs);
                 }
             }
         }
@@ -130,143 +122,121 @@ public class TarReaderTests : ReaderTests
     [Fact]
     public void Tar_BZip2_Skip_Entry_Stream()
     {
-        using (Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.bz2")))
-        using (var reader = TarReader.Open(stream))
+        using Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.bz2"));
+        using var reader = TarReader.Open(stream);
+        List<string> names = new List<string>();
+        while (reader.MoveToNextEntry())
         {
-            List<string> names = new List<string>();
-            while (reader.MoveToNextEntry())
+            if (!reader.Entry.IsDirectory)
             {
-                if (!reader.Entry.IsDirectory)
-                {
-                    Assert.Equal(CompressionType.BZip2, reader.Entry.CompressionType);
-                    using (var entryStream = reader.OpenEntryStream())
-                    {
-                        entryStream.SkipEntry();
-                        names.Add(reader.Entry.Key);
-                    }
-                }
+                Assert.Equal(CompressionType.BZip2, reader.Entry.CompressionType);
+                using var entryStream = reader.OpenEntryStream();
+                entryStream.SkipEntry();
+                names.Add(reader.Entry.Key);
             }
-            Assert.Equal(3, names.Count);
         }
+        Assert.Equal(3, names.Count);
     }
 
     [Fact]
     public void Tar_Containing_Rar_Reader()
     {
         string archiveFullPath = Path.Combine(TEST_ARCHIVES_PATH, "Tar.ContainsRar.tar");
-        using (Stream stream = File.OpenRead(archiveFullPath))
-        using (IReader reader = ReaderFactory.Open(stream))
-        {
-            Assert.True(reader.ArchiveType == ArchiveType.Tar);
-        }
+        using Stream stream = File.OpenRead(archiveFullPath);
+        using IReader reader = ReaderFactory.Open(stream);
+        Assert.True(reader.ArchiveType == ArchiveType.Tar);
     }
 
     [Fact]
     public void Tar_With_TarGz_With_Flushed_EntryStream()
     {
         string archiveFullPath = Path.Combine(TEST_ARCHIVES_PATH, "Tar.ContainsTarGz.tar");
-        using (Stream stream = File.OpenRead(archiveFullPath))
-        using (IReader reader = ReaderFactory.Open(stream))
-        {
-            Assert.True(reader.MoveToNextEntry());
-            Assert.Equal("inner.tar.gz", reader.Entry.Key);
+        using Stream stream = File.OpenRead(archiveFullPath);
+        using IReader reader = ReaderFactory.Open(stream);
+        Assert.True(reader.MoveToNextEntry());
+        Assert.Equal("inner.tar.gz", reader.Entry.Key);
 
-            using (var entryStream = reader.OpenEntryStream())
-            {
-                using (FlushOnDisposeStream flushingStream = new FlushOnDisposeStream(entryStream))
-                {
-                    // Extract inner.tar.gz
-                    using (var innerReader = ReaderFactory.Open(flushingStream))
-                    {
-                        Assert.True(innerReader.MoveToNextEntry());
-                        Assert.Equal("test", innerReader.Entry.Key);
-                    }
-                }
-            }
-        }
+        using var entryStream = reader.OpenEntryStream();
+        using FlushOnDisposeStream flushingStream = new FlushOnDisposeStream(entryStream);
+
+        // Extract inner.tar.gz
+        using var innerReader = ReaderFactory.Open(flushingStream);
+        Assert.True(innerReader.MoveToNextEntry());
+        Assert.Equal("test", innerReader.Entry.Key);
     }
 
     [Fact]
     public void Tar_Broken_Stream()
     {
         string archiveFullPath = Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar");
-        using (Stream stream = File.OpenRead(archiveFullPath))
-        using (IReader reader = ReaderFactory.Open(stream))
-        {
-            var memoryStream = new MemoryStream();
+        using Stream stream = File.OpenRead(archiveFullPath);
+        using IReader reader = ReaderFactory.Open(stream);
+        var memoryStream = new MemoryStream();
 
-            Action action = () => reader.MoveToNextEntry();
-            var exception = Record.Exception(action);
-            Assert.Null(exception);
-            reader.MoveToNextEntry();
-            reader.WriteEntryTo(memoryStream);
-            stream.Close();
-            Assert.Throws<IncompleteArchiveException>(action);
-        }
+        Action action = () => reader.MoveToNextEntry();
+        var exception = Record.Exception(action);
+        Assert.Null(exception);
+        reader.MoveToNextEntry();
+        reader.WriteEntryTo(memoryStream);
+        stream.Close();
+        Assert.Throws<IncompleteArchiveException>(action);
     }
 
 #if !NETFRAMEWORK
     [Fact]
     public void Tar_GZip_With_Symlink_Entries()
     {
-        var isWindows = System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(
-            System.Runtime.InteropServices.OSPlatform.Windows
+        var isWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
+        using Stream stream = File.OpenRead(
+            Path.Combine(TEST_ARCHIVES_PATH, "TarWithSymlink.tar.gz")
         );
-        using (
-            Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "TarWithSymlink.tar.gz"))
-        )
-        using (var reader = TarReader.Open(stream))
+        using var reader = TarReader.Open(stream);
+        List<string> names = new List<string>();
+        while (reader.MoveToNextEntry())
         {
-            List<string> names = new List<string>();
-            while (reader.MoveToNextEntry())
+            if (reader.Entry.IsDirectory)
             {
-                if (reader.Entry.IsDirectory)
+                continue;
+            }
+            reader.WriteEntryToDirectory(
+                SCRATCH_FILES_PATH,
+                new ExtractionOptions
                 {
-                    continue;
-                }
-                reader.WriteEntryToDirectory(
-                    SCRATCH_FILES_PATH,
-                    new ExtractionOptions()
+                    ExtractFullPath = true,
+                    Overwrite = true,
+                    WriteSymbolicLink = (sourcePath, targetPath) =>
                     {
-                        ExtractFullPath = true,
-                        Overwrite = true,
-                        WriteSymbolicLink = (sourcePath, targetPath) =>
+                        if (!isWindows)
                         {
-                            if (!isWindows)
+                            var link = new UnixSymbolicLinkInfo(sourcePath);
+                            if (File.Exists(sourcePath))
                             {
-                                var link = new Mono.Unix.UnixSymbolicLinkInfo(sourcePath);
-                                if (File.Exists(sourcePath))
-                                {
-                                    link.Delete(); // equivalent to ln -s -f
-                                }
-                                link.CreateSymbolicLinkTo(targetPath);
+                                link.Delete(); // equivalent to ln -s -f
                             }
+                            link.CreateSymbolicLinkTo(targetPath);
                         }
                     }
-                );
-                if (!isWindows)
+                }
+            );
+            if (!isWindows)
+            {
+                if (reader.Entry.LinkTarget != null)
                 {
-                    if (reader.Entry.LinkTarget != null)
+                    var path = Path.Combine(SCRATCH_FILES_PATH, reader.Entry.Key);
+                    var link = new UnixSymbolicLinkInfo(path);
+                    if (link.HasContents)
                     {
-                        var path = System.IO.Path.Combine(SCRATCH_FILES_PATH, reader.Entry.Key);
-                        var link = new Mono.Unix.UnixSymbolicLinkInfo(path);
-                        if (link.HasContents)
-                        {
-                            // need to convert the link to an absolute path for comparison
-                            var target = reader.Entry.LinkTarget;
-                            var realTarget = System.IO.Path.GetFullPath(
-                                System.IO.Path.Combine(
-                                    $"{System.IO.Path.GetDirectoryName(path)}",
-                                    target
-                                )
-                            );
+                        // need to convert the link to an absolute path for comparison
+                        var target = reader.Entry.LinkTarget;
+                        var realTarget = Path.GetFullPath(
+                            Path.Combine($"{Path.GetDirectoryName(path)}", target)
+                        );
 
-                            Assert.Equal(realTarget, link.GetContents().ToString());
-                        }
-                        else
-                        {
-                            Assert.True(false, "Symlink has no target");
-                        }
+                        Assert.Equal(realTarget, link.GetContents().ToString());
+                    }
+                    else
+                    {
+                        Assert.True(false, "Symlink has no target");
                     }
                 }
             }

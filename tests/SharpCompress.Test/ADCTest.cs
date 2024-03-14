@@ -24,7 +24,6 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 using System.IO;
-using SharpCompress.Compressors;
 using SharpCompress.Compressors.ADC;
 using SharpCompress.Compressors.Deflate;
 using SharpCompress.Crypto;
@@ -72,7 +71,7 @@ public class ADCTest : TestBase
         decFs.Read(decompressed, 0, decompressed.Length);
 
         using var cmpFs = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "adc_compressed.bin"));
-        using var decStream = new ADCStream(cmpFs, CompressionMode.Decompress);
+        using var decStream = new ADCStream(cmpFs);
         var test = new byte[262144];
 
         decStream.Read(test, 0, test.Length);
@@ -88,7 +87,7 @@ public class ADCTest : TestBase
         decFs.Read(decompressed, 0, decompressed.Length);
 
         using var cmpFs = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "adc_compressed.bin"));
-        using var decStream = new ADCStream(cmpFs, CompressionMode.Decompress);
+        using var decStream = new ADCStream(cmpFs);
         using var decMs = new MemoryStream();
         var test = new byte[512];
         var count = 0;

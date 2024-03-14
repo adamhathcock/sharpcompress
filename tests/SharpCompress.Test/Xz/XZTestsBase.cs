@@ -29,7 +29,6 @@ public abstract class XZTestsBase : IDisposable
     protected Stream CompressedEmptyStream { get; } = new MemoryStream(CompressedEmpty);
 
     protected static byte[] CompressedEmpty { get; } =
-        new byte[]
         {
             0xfd,
             0x37,
@@ -72,7 +71,6 @@ public abstract class XZTestsBase : IDisposable
     protected Stream CompressedStream { get; } = new MemoryStream(Compressed);
 
     protected static byte[] Compressed { get; } =
-        new byte[]
         {
             0xfd,
             0x37,
@@ -481,7 +479,6 @@ public abstract class XZTestsBase : IDisposable
     protected Stream CompressedIndexedStream { get; } = new MemoryStream(CompressedIndexed);
 
     protected static byte[] CompressedIndexed { get; } =
-        new byte[]
         {
             0xfd,
             0x37,

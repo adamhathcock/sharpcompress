@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.IO;
 using SharpCompress.Common;
@@ -64,7 +63,7 @@ public abstract class ReaderTests : TestBase
                 Assert.Equal(expectedCompression, reader.Entry.CompressionType);
                 reader.WriteEntryToDirectory(
                     SCRATCH_FILES_PATH,
-                    new ExtractionOptions() { ExtractFullPath = true, Overwrite = true }
+                    new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
                 );
             }
         }
@@ -88,13 +87,11 @@ public abstract class ReaderTests : TestBase
         testArchive = Path.Combine(TEST_ARCHIVES_PATH, testArchive);
         using var file = File.OpenRead(testArchive);
         using var forward = new ForwardOnlyStream(file);
-        using (var reader = ReaderFactory.Open(forward, options))
+        using var reader = ReaderFactory.Open(forward, options);
+        while (reader.MoveToNextEntry())
         {
-            while (reader.MoveToNextEntry())
-            {
-                Assert.Equal(expectedCompression, reader.Entry.CompressionType);
-                Assert.Equal(expected.Pop(), reader.Entry.Key);
-            }
+            Assert.Equal(expectedCompression, reader.Entry.CompressionType);
+            Assert.Equal(expected.Pop(), reader.Entry.Key);
         }
     }
 }

@@ -66,18 +66,16 @@ public class TarArchiveTests : ArchiveTests
     public void Tar_NonUstarArchiveWithLongNameDoesNotSkipEntriesAfterTheLongOne()
     {
         string unmodified = Path.Combine(TEST_ARCHIVES_PATH, "very long filename.tar");
-        using (var archive = TarArchive.Open(unmodified))
-        {
-            Assert.Equal(5, archive.Entries.Count);
-            Assert.Contains("very long filename/", archive.Entries.Select(entry => entry.Key));
-            Assert.Contains(
-                "very long filename/very long filename very long filename very long filename very long filename very long filename very long filename very long filename very long filename very long filename very long filename.jpg",
-                archive.Entries.Select(entry => entry.Key)
-            );
-            Assert.Contains("z_file 1.txt", archive.Entries.Select(entry => entry.Key));
-            Assert.Contains("z_file 2.txt", archive.Entries.Select(entry => entry.Key));
-            Assert.Contains("z_file 3.txt", archive.Entries.Select(entry => entry.Key));
-        }
+        using var archive = TarArchive.Open(unmodified);
+        Assert.Equal(5, archive.Entries.Count);
+        Assert.Contains("very long filename/", archive.Entries.Select(entry => entry.Key));
+        Assert.Contains(
+            "very long filename/very long filename very long filename very long filename very long filename very long filename very long filename very long filename very long filename very long filename very long filename.jpg",
+            archive.Entries.Select(entry => entry.Key)
+        );
+        Assert.Contains("z_file 1.txt", archive.Entries.Select(entry => entry.Key));
+        Assert.Contains("z_file 2.txt", archive.Entries.Select(entry => entry.Key));
+        Assert.Contains("z_file 3.txt", archive.Entries.Select(entry => entry.Key));
     }
 
     [Fact]
@@ -128,31 +126,29 @@ public class TarArchiveTests : ArchiveTests
     public void Tar_UstarArchivePathReadLongName()
     {
         string unmodified = Path.Combine(TEST_ARCHIVES_PATH, "ustar with long names.tar");
-        using (var archive = TarArchive.Open(unmodified))
-        {
-            Assert.Equal(6, archive.Entries.Count);
-            Assert.Contains("Directory/", archive.Entries.Select(entry => entry.Key));
-            Assert.Contains(
-                "Directory/Some file with veeeeeeeeeery loooooooooong name",
-                archive.Entries.Select(entry => entry.Key)
-            );
-            Assert.Contains(
-                "Directory/Directory with veeeeeeeeeery loooooooooong name/",
-                archive.Entries.Select(entry => entry.Key)
-            );
-            Assert.Contains(
-                "Directory/Directory with veeeeeeeeeery loooooooooong name/Some file with veeeeeeeeeery loooooooooong name",
-                archive.Entries.Select(entry => entry.Key)
-            );
-            Assert.Contains(
-                "Directory/Directory with veeeeeeeeeery loooooooooong name/Directory with veeeeeeeeeery loooooooooong name/",
-                archive.Entries.Select(entry => entry.Key)
-            );
-            Assert.Contains(
-                "Directory/Directory with veeeeeeeeeery loooooooooong name/Directory with veeeeeeeeeery loooooooooong name/Some file with veeeeeeeeeery loooooooooong name",
-                archive.Entries.Select(entry => entry.Key)
-            );
-        }
+        using var archive = TarArchive.Open(unmodified);
+        Assert.Equal(6, archive.Entries.Count);
+        Assert.Contains("Directory/", archive.Entries.Select(entry => entry.Key));
+        Assert.Contains(
+            "Directory/Some file with veeeeeeeeeery loooooooooong name",
+            archive.Entries.Select(entry => entry.Key)
+        );
+        Assert.Contains(
+            "Directory/Directory with veeeeeeeeeery loooooooooong name/",
+            archive.Entries.Select(entry => entry.Key)
+        );
+        Assert.Contains(
+            "Directory/Directory with veeeeeeeeeery loooooooooong name/Some file with veeeeeeeeeery loooooooooong name",
+            archive.Entries.Select(entry => entry.Key)
+        );
+        Assert.Contains(
+            "Directory/Directory with veeeeeeeeeery loooooooooong name/Directory with veeeeeeeeeery loooooooooong name/",
+            archive.Entries.Select(entry => entry.Key)
+        );
+        Assert.Contains(
+            "Directory/Directory with veeeeeeeeeery loooooooooong name/Directory with veeeeeeeeeery loooooooooong name/Some file with veeeeeeeeeery loooooooooong name",
+            archive.Entries.Select(entry => entry.Key)
+        );
     }
 
     [Fact]
@@ -167,7 +163,7 @@ public class TarArchiveTests : ArchiveTests
         {
             archive.AddAllFromDirectory(ORIGINAL_FILES_PATH);
             var twopt = new TarWriterOptions(CompressionType.None, true);
-            twopt.ArchiveEncoding = new ArchiveEncoding() { Default = Encoding.GetEncoding(866) };
+            twopt.ArchiveEncoding = new ArchiveEncoding { Default = Encoding.GetEncoding(866) };
             archive.SaveTo(scratchPath, twopt);
         }
         CompareArchivesByPath(unmodified, scratchPath);
@@ -211,22 +207,18 @@ public class TarArchiveTests : ArchiveTests
     public void Tar_Containing_Rar_Archive()
     {
         string archiveFullPath = Path.Combine(TEST_ARCHIVES_PATH, "Tar.ContainsRar.tar");
-        using (Stream stream = File.OpenRead(archiveFullPath))
-        using (IArchive archive = ArchiveFactory.Open(stream))
-        {
-            Assert.True(archive.Type == ArchiveType.Tar);
-        }
+        using Stream stream = File.OpenRead(archiveFullPath);
+        using IArchive archive = ArchiveFactory.Open(stream);
+        Assert.True(archive.Type == ArchiveType.Tar);
     }
 
     [Fact]
     public void Tar_Empty_Archive()
     {
         string archiveFullPath = Path.Combine(TEST_ARCHIVES_PATH, "Tar.Empty.tar");
-        using (Stream stream = File.OpenRead(archiveFullPath))
-        using (IArchive archive = ArchiveFactory.Open(stream))
-        {
-            Assert.True(archive.Type == ArchiveType.Tar);
-        }
+        using Stream stream = File.OpenRead(archiveFullPath);
+        using IArchive archive = ArchiveFactory.Open(stream);
+        Assert.True(archive.Type == ArchiveType.Tar);
     }
 
     [Theory]
@@ -234,26 +226,24 @@ public class TarArchiveTests : ArchiveTests
     [InlineData(128)]
     public void Tar_Japanese_Name(int length)
     {
-        using (var mstm = new MemoryStream())
+        using var mstm = new MemoryStream();
+        var enc = new ArchiveEncoding { Default = Encoding.UTF8 };
+        var twopt = new TarWriterOptions(CompressionType.None, true);
+        twopt.ArchiveEncoding = enc;
+        var fname = new string((char)0x3042, length);
+        using (var tw = new TarWriter(mstm, twopt))
+        using (var input = new MemoryStream(new byte[32]))
         {
-            var enc = new ArchiveEncoding() { Default = Encoding.UTF8 };
-            var twopt = new TarWriterOptions(CompressionType.None, true);
-            twopt.ArchiveEncoding = enc;
-            var fname = new string((char)0x3042, length);
-            using (var tw = new TarWriter(mstm, twopt))
-            using (var input = new MemoryStream(new byte[32]))
+            tw.Write(fname, input, null);
+        }
+        using (var inputMemory = new MemoryStream(mstm.ToArray()))
+        {
+            var tropt = new ReaderOptions { ArchiveEncoding = enc };
+            using (var tr = TarReader.Open(inputMemory, tropt))
             {
-                tw.Write(fname, input, null);
-            }
-            using (var inputMemory = new MemoryStream(mstm.ToArray()))
-            {
-                var tropt = new ReaderOptions() { ArchiveEncoding = enc };
-                using (var tr = TarReader.Open(inputMemory, tropt))
+                while (tr.MoveToNextEntry())
                 {
-                    while (tr.MoveToNextEntry())
-                    {
-                        Assert.Equal(fname, tr.Entry.Key);
-                    }
+                    Assert.Equal(fname, tr.Entry.Key);
                 }
             }
         }
@@ -269,36 +259,32 @@ public class TarArchiveTests : ArchiveTests
         };
         var testBytes = Encoding.UTF8.GetBytes("This is a test.");
 
-        using (var memoryStream = new MemoryStream())
+        using var memoryStream = new MemoryStream();
+        using (var tarWriter = new TarWriter(memoryStream, tarWriterOptions))
+        using (var testFileStream = new MemoryStream(testBytes))
         {
-            using (var tarWriter = new TarWriter(memoryStream, tarWriterOptions))
-            using (var testFileStream = new MemoryStream(testBytes))
-            {
-                tarWriter.Write("test1.txt", testFileStream);
-                testFileStream.Position = 0;
-                tarWriter.Write("test2.txt", testFileStream);
-            }
-
-            memoryStream.Position = 0;
-
-            var numberOfEntries = 0;
-
-            using (var archiveFactory = TarArchive.Open(memoryStream))
-            {
-                foreach (var entry in archiveFactory.Entries)
-                {
-                    ++numberOfEntries;
-
-                    using (var tarEntryStream = entry.OpenEntryStream())
-                    using (var testFileStream = new MemoryStream())
-                    {
-                        tarEntryStream.CopyTo(testFileStream);
-                        Assert.Equal(testBytes.Length, testFileStream.Length);
-                    }
-                }
-            }
-
-            Assert.Equal(2, numberOfEntries);
+            tarWriter.Write("test1.txt", testFileStream);
+            testFileStream.Position = 0;
+            tarWriter.Write("test2.txt", testFileStream);
         }
+
+        memoryStream.Position = 0;
+
+        var numberOfEntries = 0;
+
+        using (var archiveFactory = TarArchive.Open(memoryStream))
+        {
+            foreach (var entry in archiveFactory.Entries)
+            {
+                ++numberOfEntries;
+
+                using var tarEntryStream = entry.OpenEntryStream();
+                using var testFileStream = new MemoryStream();
+                tarEntryStream.CopyTo(testFileStream);
+                Assert.Equal(testBytes.Length, testFileStream.Length);
+            }
+        }
+
+        Assert.Equal(2, numberOfEntries);
     }
 }

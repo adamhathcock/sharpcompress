@@ -43,7 +43,7 @@ public class WriterTests : TestBase
             using var reader = ReaderFactory.Open(NonDisposingStream.Create(stream), readerOptions);
             reader.WriteAllToDirectory(
                 SCRATCH_FILES_PATH,
-                new ExtractionOptions() { ExtractFullPath = true }
+                new ExtractionOptions { ExtractFullPath = true }
             );
         }
         VerifyFiles();

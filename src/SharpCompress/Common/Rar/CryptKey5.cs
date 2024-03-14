@@ -34,30 +34,28 @@ internal class CryptKey5 : ICryptKey
         int keyLength
     )
     {
-        using (HMACSHA256 hmac = new HMACSHA256(Encoding.UTF8.GetBytes(password)))
+        using HMACSHA256 hmac = new HMACSHA256(Encoding.UTF8.GetBytes(password));
+        byte[] block = hmac.ComputeHash(salt);
+        byte[] finalHash = (byte[])block.Clone();
+
+        var loop = new int[] { iterations, 17, 17 };
+        var res = new List<byte[]> { };
+
+        for (int x = 0; x < 3; x++)
         {
-            byte[] block = hmac.ComputeHash(salt);
-            byte[] finalHash = (byte[])block.Clone();
-
-            var loop = new int[] { iterations, 17, 17 };
-            var res = new List<byte[]> { };
-
-            for (int x = 0; x < 3; x++)
+            for (int i = 1; i < loop[x]; i++)
             {
-                for (int i = 1; i < loop[x]; i++)
+                block = hmac.ComputeHash(block);
+                for (int j = 0; j < finalHash.Length; j++)
                 {
-                    block = hmac.ComputeHash(block);
-                    for (int j = 0; j < finalHash.Length; j++)
-                    {
-                        finalHash[j] ^= block[j];
-                    }
+                    finalHash[j] ^= block[j];
                 }
-
-                res.Add((byte[])finalHash.Clone());
             }
 
-            return res;
+            res.Add((byte[])finalHash.Clone());
         }
+
+        return res;
     }
 
     public ICryptoTransform Transformer(byte[] salt)

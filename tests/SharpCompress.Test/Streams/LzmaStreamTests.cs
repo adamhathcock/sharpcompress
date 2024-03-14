@@ -1,6 +1,5 @@
 using System;
 using System.Buffers;
-using System.Buffers.Binary;
 using System.IO;
 using SharpCompress.Compressors.LZMA;
 using Xunit;
@@ -21,7 +20,6 @@ public class LzmaStreamTests
     }
 
     private static byte[] lzmaData { get; } =
-        new byte[]
         {
             0x5D,
             0x00,
@@ -183,7 +181,6 @@ public class LzmaStreamTests
     /// The decoded data for <see cref="lzmaData"/>.
     /// </summary>
     private static byte[] lzmaResultData { get; } =
-        new byte[]
         {
             0x01,
             0x00,

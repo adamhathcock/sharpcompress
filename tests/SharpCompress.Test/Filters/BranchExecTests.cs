@@ -13,7 +13,6 @@ namespace SharpCompress.Test.Filters;
 public class BranchExecTests
 {
     private static byte[] x86resultData { get; } =
-        new byte[]
         {
             0x12,
             0x00,
@@ -96,7 +95,6 @@ public class BranchExecTests
         };
 
     private static byte[] x86Data { get; } =
-        new byte[]
         {
             0x12,
             0x00,
@@ -179,7 +177,6 @@ public class BranchExecTests
         };
 
     private static byte[] ppcResultData { get; } =
-        new byte[]
         {
             0xF8,
             0x6B,
@@ -280,7 +277,6 @@ public class BranchExecTests
         };
 
     private static byte[] ppcData { get; } =
-        new byte[]
         {
             0xF8,
             0x6B,
@@ -381,7 +377,6 @@ public class BranchExecTests
         };
 
     private static byte[] armResultData { get; } =
-        new byte[]
         {
             0x7C,
             0xFC,
@@ -482,7 +477,6 @@ public class BranchExecTests
         };
 
     private static byte[] armData { get; } =
-        new byte[]
         {
             0x7C,
             0xFC,
@@ -583,7 +577,6 @@ public class BranchExecTests
         };
 
     private static byte[] armtResultData { get; } =
-        new byte[]
         {
             0x95,
             0x23,
@@ -700,7 +693,6 @@ public class BranchExecTests
         };
 
     private static byte[] armtData { get; } =
-        new byte[]
         {
             0x95,
             0x23,
@@ -817,7 +809,6 @@ public class BranchExecTests
         };
 
     private static byte[] ia64ResultData { get; } =
-        new byte[]
         {
             0x4D,
             0xF8,
@@ -918,7 +909,6 @@ public class BranchExecTests
         };
 
     private static byte[] ia64Data { get; } =
-        new byte[]
         {
             0x4D,
             0xF8,
@@ -1019,7 +1009,6 @@ public class BranchExecTests
         };
 
     private static byte[] sparcResultData { get; } =
-        new byte[]
         {
             0x78,
             0x2E,
@@ -1102,7 +1091,6 @@ public class BranchExecTests
         };
 
     private static byte[] sparcData { get; } =
-        new byte[]
         {
             0x78,
             0x2E,

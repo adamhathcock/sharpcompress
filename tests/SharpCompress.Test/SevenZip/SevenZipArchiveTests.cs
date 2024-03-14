@@ -25,17 +25,17 @@ public class SevenZipArchiveTests : ArchiveTests
 
     [Fact]
     public void SevenZipArchive_LZMAAES_StreamRead() =>
-        ArchiveStreamRead("7Zip.LZMA.Aes.7z", new ReaderOptions() { Password = "testpassword" });
+        ArchiveStreamRead("7Zip.LZMA.Aes.7z", new ReaderOptions { Password = "testpassword" });
 
     [Fact]
     public void SevenZipArchive_LZMAAES_PathRead() =>
-        ArchiveFileRead("7Zip.LZMA.Aes.7z", new ReaderOptions() { Password = "testpassword" });
+        ArchiveFileRead("7Zip.LZMA.Aes.7z", new ReaderOptions { Password = "testpassword" });
 
     [Fact]
     public void SevenZipArchive_LZMAAES_NoPasswordExceptionTest() =>
         Assert.Throws(
             typeof(CryptographicException),
-            () => ArchiveFileRead("7Zip.LZMA.Aes.7z", new ReaderOptions() { Password = null })
+            () => ArchiveFileRead("7Zip.LZMA.Aes.7z", new ReaderOptions { Password = null })
         ); //was failing with ArgumentNullException not CryptographicException like rar
 
     [Fact]

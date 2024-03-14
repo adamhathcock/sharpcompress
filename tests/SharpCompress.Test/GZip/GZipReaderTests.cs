@@ -1,6 +1,7 @@
 using System.IO;
 using SharpCompress.Common;
 using SharpCompress.IO;
+using SharpCompress.Readers.GZip;
 using Xunit;
 
 namespace SharpCompress.Test.GZip;
@@ -17,7 +18,7 @@ public class GZipReaderTests : ReaderTests
     {
         //read only as GZip itme
         using Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.gz"));
-        using var reader = Readers.GZip.GZipReader.Open(new RewindableStream(stream));
+        using var reader = GZipReader.Open(new RewindableStream(stream));
         while (reader.MoveToNextEntry()) // Crash here
         {
             Assert.NotEqual(0, reader.Entry.Size);

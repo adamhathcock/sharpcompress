@@ -11,16 +11,14 @@ public class XZHeaderTests : XZTestsBase
     {
         var bytes = (byte[])Compressed.Clone();
         bytes[3]++;
-        using (Stream badMagicNumberStream = new MemoryStream(bytes))
+        using Stream badMagicNumberStream = new MemoryStream(bytes);
+        BinaryReader br = new BinaryReader(badMagicNumberStream);
+        var header = new XZHeader(br);
+        var ex = Assert.Throws<InvalidDataException>(() =>
         {
-            BinaryReader br = new BinaryReader(badMagicNumberStream);
-            var header = new XZHeader(br);
-            var ex = Assert.Throws<InvalidDataException>(() =>
-            {
-                header.Process();
-            });
-            Assert.Equal("Invalid XZ Stream", ex.Message);
-        }
+            header.Process();
+        });
+        Assert.Equal("Invalid XZ Stream", ex.Message);
     }
 
     [Fact]
@@ -28,16 +26,14 @@ public class XZHeaderTests : XZTestsBase
     {
         var bytes = (byte[])Compressed.Clone();
         bytes[8]++;
-        using (Stream badCrcStream = new MemoryStream(bytes))
+        using Stream badCrcStream = new MemoryStream(bytes);
+        BinaryReader br = new BinaryReader(badCrcStream);
+        var header = new XZHeader(br);
+        var ex = Assert.Throws<InvalidDataException>(() =>
         {
-            BinaryReader br = new BinaryReader(badCrcStream);
-            var header = new XZHeader(br);
-            var ex = Assert.Throws<InvalidDataException>(() =>
-            {
-                header.Process();
-            });
-            Assert.Equal("Stream header corrupt", ex.Message);
-        }
+            header.Process();
+        });
+        Assert.Equal("Stream header corrupt", ex.Message);
     }
 
     [Fact]
@@ -48,16 +44,14 @@ public class XZHeaderTests : XZTestsBase
         byte[] crc = Crc32.Compute(streamFlags).ToLittleEndianBytes();
         streamFlags.CopyTo(bytes, 6);
         crc.CopyTo(bytes, 8);
-        using (Stream badFlagStream = new MemoryStream(bytes))
+        using Stream badFlagStream = new MemoryStream(bytes);
+        BinaryReader br = new BinaryReader(badFlagStream);
+        var header = new XZHeader(br);
+        var ex = Assert.Throws<InvalidDataException>(() =>
         {
-            BinaryReader br = new BinaryReader(badFlagStream);
-            var header = new XZHeader(br);
-            var ex = Assert.Throws<InvalidDataException>(() =>
-            {
-                header.Process();
-            });
-            Assert.Equal("Unknown XZ Stream Version", ex.Message);
-        }
+            header.Process();
+        });
+        Assert.Equal("Unknown XZ Stream Version", ex.Message);
     }
 
     [Fact]

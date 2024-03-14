@@ -248,33 +248,27 @@ public class ZipArchiveTests : ArchiveTests
     {
         string scratchPath = Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.noEmptyDirs.zip");
 
-        using (ZipArchive vfs = (ZipArchive)ArchiveFactory.Open(scratchPath))
-        {
-            var e = vfs.Entries.First(v =>
+        using ZipArchive vfs = (ZipArchive)ArchiveFactory.Open(scratchPath);
+        var e = vfs.Entries.First(v => v.Key.EndsWith("jpg", StringComparison.OrdinalIgnoreCase));
+        vfs.RemoveEntry(e);
+        Assert.Null(
+            vfs.Entries.FirstOrDefault(v =>
                 v.Key.EndsWith("jpg", StringComparison.OrdinalIgnoreCase)
-            );
-            vfs.RemoveEntry(e);
-            Assert.Null(
-                vfs.Entries.FirstOrDefault(v =>
-                    v.Key.EndsWith("jpg", StringComparison.OrdinalIgnoreCase)
-                )
-            );
-            Assert.Null(
-                ((IArchive)vfs).Entries.FirstOrDefault(v =>
-                    v.Key.EndsWith("jpg", StringComparison.OrdinalIgnoreCase)
-                )
-            );
-        }
+            )
+        );
+        Assert.Null(
+            ((IArchive)vfs).Entries.FirstOrDefault(v =>
+                v.Key.EndsWith("jpg", StringComparison.OrdinalIgnoreCase)
+            )
+        );
     }
 
     [Fact]
     public void Zip_Create_NoDups()
     {
-        using (var arc = ZipArchive.Create())
-        {
-            arc.AddEntry("1.txt", new MemoryStream());
-            Assert.Throws<ArchiveException>(() => arc.AddEntry("\\1.txt", new MemoryStream()));
-        }
+        using var arc = ZipArchive.Create();
+        arc.AddEntry("1.txt", new MemoryStream());
+        Assert.Throws<ArchiveException>(() => arc.AddEntry("\\1.txt", new MemoryStream()));
     }
 
     [Fact]
@@ -418,7 +412,7 @@ public class ZipArchiveTests : ArchiveTests
         using (
             var reader = ZipArchive.Open(
                 Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.WinzipAES.zip"),
-                new ReaderOptions() { Password = "test" }
+                new ReaderOptions { Password = "test" }
             )
         )
         {
@@ -426,7 +420,7 @@ public class ZipArchiveTests : ArchiveTests
             {
                 entry.WriteToDirectory(
                     SCRATCH_FILES_PATH,
-                    new ExtractionOptions() { ExtractFullPath = true, Overwrite = true }
+                    new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
                 );
             }
         }
@@ -436,40 +430,32 @@ public class ZipArchiveTests : ArchiveTests
     [Fact]
     public void Zip_Deflate_WinzipAES_MultiOpenEntryStream()
     {
-        using (
-            var reader = ZipArchive.Open(
-                Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.WinzipAES2.zip"),
-                new ReaderOptions() { Password = "test" }
-            )
-        )
+        using var reader = ZipArchive.Open(
+            Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.WinzipAES2.zip"),
+            new ReaderOptions { Password = "test" }
+        );
+        foreach (var entry in reader.Entries.Where(x => !x.IsDirectory))
         {
-            foreach (var entry in reader.Entries.Where(x => !x.IsDirectory))
-            {
-                var stream = entry.OpenEntryStream();
-                Assert.NotNull(stream);
-                var ex = Record.Exception(() => stream = entry.OpenEntryStream());
-                Assert.Null(ex);
-            }
+            var stream = entry.OpenEntryStream();
+            Assert.NotNull(stream);
+            var ex = Record.Exception(() => stream = entry.OpenEntryStream());
+            Assert.Null(ex);
         }
     }
 
     [Fact]
     public void Zip_Read_Volume_Comment()
     {
-        using (
-            var reader = ZipArchive.Open(
-                Path.Combine(TEST_ARCHIVES_PATH, "Zip.zip64.zip"),
-                new ReaderOptions() { Password = "test" }
-            )
-        )
-        {
-            var isComplete = reader.IsComplete;
-            Assert.Equal(1, reader.Volumes.Count);
+        using var reader = ZipArchive.Open(
+            Path.Combine(TEST_ARCHIVES_PATH, "Zip.zip64.zip"),
+            new ReaderOptions { Password = "test" }
+        );
+        var isComplete = reader.IsComplete;
+        Assert.Equal(1, reader.Volumes.Count);
 
-            string expectedComment =
-                "Encoding:utf-8 || Compression:Deflate levelDefault || Encrypt:None || ZIP64:Always\r\nCreated at 2017-Jan-23 14:10:43 || DotNetZip Tool v1.9.1.8\r\nTest zip64 archive";
-            Assert.Equal(expectedComment, reader.Volumes.First().Comment);
-        }
+        string expectedComment =
+            "Encoding:utf-8 || Compression:Deflate levelDefault || Encrypt:None || ZIP64:Always\r\nCreated at 2017-Jan-23 14:10:43 || DotNetZip Tool v1.9.1.8\r\nTest zip64 archive";
+        Assert.Equal(expectedComment, reader.Volumes.First().Comment);
     }
 
     [Fact]
@@ -478,7 +464,7 @@ public class ZipArchiveTests : ArchiveTests
         using (
             var reader = ZipArchive.Open(
                 Path.Combine(TEST_ARCHIVES_PATH, "Zip.bzip2.pkware.zip"),
-                new ReaderOptions() { Password = "test" }
+                new ReaderOptions { Password = "test" }
             )
         )
         {
@@ -486,7 +472,7 @@ public class ZipArchiveTests : ArchiveTests
             {
                 entry.WriteToDirectory(
                     SCRATCH_FILES_PATH,
-                    new ExtractionOptions() { ExtractFullPath = true, Overwrite = true }
+                    new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
                 );
             }
         }
@@ -540,27 +526,19 @@ public class ZipArchiveTests : ArchiveTests
     {
         string zipFile = Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.pkware.zip");
 
-        using (FileStream fileStream = File.Open(zipFile, FileMode.Open))
+        using FileStream fileStream = File.Open(zipFile, FileMode.Open);
+        using IArchive archive = ArchiveFactory.Open(
+            fileStream,
+            new ReaderOptions { Password = "12345678" }
+        );
+        var entries = archive.Entries.Where(entry => !entry.IsDirectory);
+        foreach (IArchiveEntry entry in entries)
         {
-            using (
-                IArchive archive = ArchiveFactory.Open(
-                    fileStream,
-                    new ReaderOptions { Password = "12345678" }
-                )
-            )
+            for (var i = 0; i < 100; i++)
             {
-                var entries = archive.Entries.Where(entry => !entry.IsDirectory);
-                foreach (IArchiveEntry entry in entries)
-                {
-                    for (var i = 0; i < 100; i++)
-                    {
-                        using (var memoryStream = new MemoryStream())
-                        using (Stream entryStream = entry.OpenEntryStream())
-                        {
-                            entryStream.CopyTo(memoryStream);
-                        }
-                    }
-                }
+                using var memoryStream = new MemoryStream();
+                using Stream entryStream = entry.OpenEntryStream();
+                entryStream.CopyTo(memoryStream);
             }
         }
     }
@@ -575,15 +553,13 @@ public class ZipArchiveTests : ArchiveTests
 
         Assert.ThrowsAny<Exception>(() =>
         {
-            using (var archive = ZipArchive.Open(zipFile))
+            using var archive = ZipArchive.Open(zipFile);
+            foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
             {
-                foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
-                {
-                    entry.WriteToDirectory(
-                        SCRATCH_FILES_PATH,
-                        new ExtractionOptions() { ExtractFullPath = true, Overwrite = true }
-                    );
-                }
+                entry.WriteToDirectory(
+                    SCRATCH_FILES_PATH,
+                    new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
+                );
             }
         });
     }
@@ -613,16 +589,14 @@ public class ZipArchiveTests : ArchiveTests
         {
             foreach (var entry in zipArchive.Entries)
             {
-                using (var entryStream = entry.OpenEntryStream())
+                using var entryStream = entry.OpenEntryStream();
+                MemoryStream tempStream = new MemoryStream();
+                const int bufSize = 0x1000;
+                byte[] buf = new byte[bufSize];
+                int bytesRead = 0;
+                while ((bytesRead = entryStream.Read(buf, 0, bufSize)) > 0)
                 {
-                    MemoryStream tempStream = new MemoryStream();
-                    const int bufSize = 0x1000;
-                    byte[] buf = new byte[bufSize];
-                    int bytesRead = 0;
-                    while ((bytesRead = entryStream.Read(buf, 0, bufSize)) > 0)
-                    {
-                        tempStream.Write(buf, 0, bytesRead);
-                    }
+                    tempStream.Write(buf, 0, bytesRead);
                 }
             }
         }
@@ -633,23 +607,19 @@ public class ZipArchiveTests : ArchiveTests
     {
         string zipPath = Path.Combine(TEST_ARCHIVES_PATH, "Zip.badlocalextra.zip");
 
-        using (ZipArchive za = ZipArchive.Open(zipPath))
+        using ZipArchive za = ZipArchive.Open(zipPath);
+        var ex = Record.Exception(() =>
         {
-            var ex = Record.Exception(() =>
-            {
-                var firstEntry = za.Entries.First(x => x.Key == "first.txt");
-                var buffer = new byte[4096];
+            var firstEntry = za.Entries.First(x => x.Key == "first.txt");
+            var buffer = new byte[4096];
 
-                using (var memoryStream = new MemoryStream())
-                using (var firstStream = firstEntry.OpenEntryStream())
-                {
-                    firstStream.CopyTo(memoryStream);
-                    Assert.Equal(199, memoryStream.Length);
-                }
-            });
+            using var memoryStream = new MemoryStream();
+            using var firstStream = firstEntry.OpenEntryStream();
+            firstStream.CopyTo(memoryStream);
+            Assert.Equal(199, memoryStream.Length);
+        });
 
-            Assert.Null(ex);
-        }
+        Assert.Null(ex);
     }
 
     [Fact]
@@ -657,40 +627,38 @@ public class ZipArchiveTests : ArchiveTests
     {
         string zipPath = Path.Combine(TEST_ARCHIVES_PATH, "Zip.none.datadescriptors.zip");
 
-        using (ZipArchive za = ZipArchive.Open(zipPath))
+        using ZipArchive za = ZipArchive.Open(zipPath);
+        var firstEntry = za.Entries.First(x => x.Key == "first.txt");
+        var buffer = new byte[4096];
+
+        using (var memoryStream = new MemoryStream())
+        using (var firstStream = firstEntry.OpenEntryStream())
         {
-            var firstEntry = za.Entries.First(x => x.Key == "first.txt");
-            var buffer = new byte[4096];
+            firstStream.CopyTo(memoryStream);
+            Assert.Equal(199, memoryStream.Length);
+        }
 
-            using (var memoryStream = new MemoryStream())
-            using (var firstStream = firstEntry.OpenEntryStream())
-            {
-                firstStream.CopyTo(memoryStream);
-                Assert.Equal(199, memoryStream.Length);
-            }
+        var len1 = 0;
+        var buffer1 = new byte[firstEntry.Size + 256];
 
-            var len1 = 0;
-            var buffer1 = new byte[firstEntry.Size + 256];
+        using (var firstStream = firstEntry.OpenEntryStream())
+        {
+            len1 = firstStream.Read(buffer1, 0, buffer.Length);
+        }
 
-            using (var firstStream = firstEntry.OpenEntryStream())
-            {
-                len1 = firstStream.Read(buffer1, 0, buffer.Length);
-            }
-
-            Assert.Equal(199, len1);
+        Assert.Equal(199, len1);
 
 #if !NETFRAMEWORK && !NETSTANDARD2_0
-            var len2 = 0;
-            var buffer2 = new byte[firstEntry.Size + 256];
+        var len2 = 0;
+        var buffer2 = new byte[firstEntry.Size + 256];
 
-            using (var firstStream = firstEntry.OpenEntryStream())
-            {
-                len2 = firstStream.Read(buffer2.AsSpan());
-            }
-            Assert.Equal(len1, len2);
-            Assert.Equal(buffer1, buffer2);
-#endif
+        using (var firstStream = firstEntry.OpenEntryStream())
+        {
+            len2 = firstStream.Read(buffer2.AsSpan());
         }
+        Assert.Equal(len1, len2);
+        Assert.Equal(buffer1, buffer2);
+#endif
     }
 
     [Fact]
@@ -698,11 +666,9 @@ public class ZipArchiveTests : ArchiveTests
     {
         string zipPath = Path.Combine(TEST_ARCHIVES_PATH, "Zip.LongComment.zip");
 
-        using (ZipArchive za = ZipArchive.Open(zipPath))
-        {
-            var count = za.Entries.Count;
-            Assert.Equal(1, count);
-        }
+        using ZipArchive za = ZipArchive.Open(zipPath);
+        var count = za.Entries.Count;
+        Assert.Equal(1, count);
     }
 
     [Fact]
@@ -710,40 +676,34 @@ public class ZipArchiveTests : ArchiveTests
     {
         string zipPath = Path.Combine(TEST_ARCHIVES_PATH, "Zip.zip64.compressedonly.zip");
 
-        using (ZipArchive za = ZipArchive.Open(zipPath))
-        {
-            var firstEntry = za.Entries.First(x => x.Key == "test/test.txt");
+        using ZipArchive za = ZipArchive.Open(zipPath);
+        var firstEntry = za.Entries.First(x => x.Key == "test/test.txt");
 
-            using (var memoryStream = new MemoryStream())
-            using (var firstStream = firstEntry.OpenEntryStream())
-            {
-                firstStream.CopyTo(memoryStream);
-                Assert.Equal(15, memoryStream.Length);
-            }
-        }
+        using var memoryStream = new MemoryStream();
+        using var firstStream = firstEntry.OpenEntryStream();
+        firstStream.CopyTo(memoryStream);
+        Assert.Equal(15, memoryStream.Length);
     }
 
     [Fact]
     public void Zip_Uncompressed_Read_All()
     {
         string zipPath = Path.Combine(TEST_ARCHIVES_PATH, "Zip.uncompressed.zip");
-        using (var stream = File.Open(zipPath, FileMode.Open, FileAccess.Read))
+        using var stream = File.Open(zipPath, FileMode.Open, FileAccess.Read);
+        IArchive archive = ArchiveFactory.Open(stream);
+        IReader reader = archive.ExtractAllEntries();
+        int entries = 0;
+        while (reader.MoveToNextEntry())
         {
-            IArchive archive = ArchiveFactory.Open(stream);
-            IReader reader = archive.ExtractAllEntries();
-            int entries = 0;
-            while (reader.MoveToNextEntry())
+            using (var entryStream = reader.OpenEntryStream())
+            using (var target = new MemoryStream())
             {
-                using (var entryStream = reader.OpenEntryStream())
-                using (var target = new MemoryStream())
-                {
-                    entryStream.CopyTo(target);
-                }
-
-                entries++;
+                entryStream.CopyTo(target);
             }
-            Assert.Equal(4, entries);
+
+            entries++;
         }
+        Assert.Equal(4, entries);
     }
 
     [Fact]
@@ -758,19 +718,17 @@ public class ZipArchiveTests : ArchiveTests
             "DEADBEEF"
         };
         var zipPath = Path.Combine(TEST_ARCHIVES_PATH, "Zip.uncompressed.zip");
-        using (var stream = File.Open(zipPath, FileMode.Open, FileAccess.Read))
+        using var stream = File.Open(zipPath, FileMode.Open, FileAccess.Read);
+        IArchive archive = ArchiveFactory.Open(stream);
+        IReader reader = archive.ExtractAllEntries();
+        int x = 0;
+        while (reader.MoveToNextEntry())
         {
-            IArchive archive = ArchiveFactory.Open(stream);
-            IReader reader = archive.ExtractAllEntries();
-            int x = 0;
-            while (reader.MoveToNextEntry())
-            {
-                Assert.Equal(keys[x], reader.Entry.Key);
-                x++;
-            }
-
-            Assert.Equal(4, x);
+            Assert.Equal(keys[x], reader.Entry.Key);
+            x++;
         }
+
+        Assert.Equal(4, x);
     }
 
     [Fact]

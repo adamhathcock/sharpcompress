@@ -15,23 +15,19 @@ public class XZIndexTests : XZTestsBase
     [Fact]
     public void RecordsStreamStartOnInit()
     {
-        using (Stream badStream = new MemoryStream(new byte[] { 1, 2, 3, 4, 5 }))
-        {
-            BinaryReader br = new BinaryReader(badStream);
-            var index = new XZIndex(br, false);
-            Assert.Equal(0, index.StreamStartPosition);
-        }
+        using Stream badStream = new MemoryStream(new byte[] { 1, 2, 3, 4, 5 });
+        BinaryReader br = new BinaryReader(badStream);
+        var index = new XZIndex(br, false);
+        Assert.Equal(0, index.StreamStartPosition);
     }
 
     [Fact]
     public void ThrowsIfHasNoIndexMarker()
     {
-        using (Stream badStream = new MemoryStream(new byte[] { 1, 2, 3, 4, 5 }))
-        {
-            BinaryReader br = new BinaryReader(badStream);
-            var index = new XZIndex(br, false);
-            Assert.Throws<InvalidDataException>(() => index.Process());
-        }
+        using Stream badStream = new MemoryStream(new byte[] { 1, 2, 3, 4, 5 });
+        BinaryReader br = new BinaryReader(badStream);
+        var index = new XZIndex(br, false);
+        Assert.Throws<InvalidDataException>(() => index.Process());
     }
 
     [Fact]
@@ -74,31 +70,27 @@ public class XZIndexTests : XZTestsBase
     public void SkipsPadding()
     {
         // Index with 3-byte padding.
-        using (
-            Stream badStream = new MemoryStream(
-                new byte[]
-                {
-                    0x00,
-                    0x01,
-                    0x10,
-                    0x80,
-                    0x01,
-                    0x00,
-                    0x00,
-                    0x00,
-                    0xB1,
-                    0x01,
-                    0xD9,
-                    0xC9,
-                    0xFF
-                }
-            )
-        )
-        {
-            BinaryReader br = new BinaryReader(badStream);
-            var index = new XZIndex(br, false);
-            index.Process();
-            Assert.Equal(0L, badStream.Position % 4L);
-        }
+        using Stream badStream = new MemoryStream(
+            new byte[]
+            {
+                0x00,
+                0x01,
+                0x10,
+                0x80,
+                0x01,
+                0x00,
+                0x00,
+                0x00,
+                0xB1,
+                0x01,
+                0xD9,
+                0xC9,
+                0xFF
+            }
+        );
+        BinaryReader br = new BinaryReader(badStream);
+        var index = new XZIndex(br, false);
+        index.Process();
+        Assert.Equal(0L, badStream.Position % 4L);
     }
 }
