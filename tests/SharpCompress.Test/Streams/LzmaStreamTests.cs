@@ -534,13 +534,9 @@ public class LzmaStreamTests
     [Fact]
     public void TestLzmaStreamEncodingWritesData()
     {
-        using MemoryStream inputStream = new MemoryStream(lzmaResultData);
+        using var inputStream = new MemoryStream(lzmaResultData);
         using MemoryStream outputStream = new();
-        using LzmaStream lzmaStream = new LzmaStream(
-            LzmaEncoderProperties.Default,
-            false,
-            outputStream
-        );
+        using var lzmaStream = new LzmaStream(LzmaEncoderProperties.Default, false, outputStream);
         inputStream.CopyTo(lzmaStream);
         lzmaStream.Close();
         Assert.NotEqual(0, outputStream.Length);
@@ -551,11 +547,7 @@ public class LzmaStreamTests
     {
         var input = new MemoryStream(lzmaResultData);
         var compressed = new MemoryStream();
-        LzmaStream lzmaEncodingStream = new LzmaStream(
-            LzmaEncoderProperties.Default,
-            false,
-            compressed
-        );
+        var lzmaEncodingStream = new LzmaStream(LzmaEncoderProperties.Default, false, compressed);
         input.CopyTo(lzmaEncodingStream);
         lzmaEncodingStream.Close();
         compressed.Position = 0;
@@ -580,7 +572,7 @@ public class LzmaStreamTests
         long decompressedSize
     )
     {
-        LzmaStream lzmaStream = new LzmaStream(
+        var lzmaStream = new LzmaStream(
             properties,
             compressedStream,
             compressedSize,
@@ -589,12 +581,12 @@ public class LzmaStreamTests
             false
         );
 
-        byte[] buffer = ArrayPool<byte>.Shared.Rent(1024);
+        var buffer = ArrayPool<byte>.Shared.Rent(1024);
         long totalRead = 0;
         while (totalRead < decompressedSize)
         {
-            int toRead = (int)Math.Min(buffer.Length, decompressedSize - totalRead);
-            int read = lzmaStream.Read(buffer, 0, toRead);
+            var toRead = (int)Math.Min(buffer.Length, decompressedSize - totalRead);
+            var read = lzmaStream.Read(buffer, 0, toRead);
             if (read > 0)
             {
                 decompressedStream.Write(buffer, 0, read);

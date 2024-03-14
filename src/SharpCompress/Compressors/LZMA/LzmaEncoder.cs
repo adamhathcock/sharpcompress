@@ -1727,7 +1727,7 @@ internal class Encoder : ICoder, ISetCoderProperties, IWriteCoderProperties
         ReadOnlySpan<object> properties
     )
     {
-        for (int i = 0; i < properties.Length; i++)
+        for (var i = 0; i < properties.Length; i++)
         {
             var prop = properties[i];
             switch (propIDs[i])

@@ -22,8 +22,8 @@ public class TarReaderTests : ReaderTests
         using Stream stream = new ForwardOnlyStream(
             File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar"))
         );
-        using IReader reader = ReaderFactory.Open(stream);
-        int x = 0;
+        using var reader = ReaderFactory.Open(stream);
+        var x = 0;
         while (reader.MoveToNextEntry())
         {
             if (!reader.Entry.IsDirectory)
@@ -67,18 +67,18 @@ public class TarReaderTests : ReaderTests
                 {
                     Assert.Equal(CompressionType.BZip2, reader.Entry.CompressionType);
                     using var entryStream = reader.OpenEntryStream();
-                    string file = Path.GetFileName(reader.Entry.Key);
-                    string folder =
+                    var file = Path.GetFileName(reader.Entry.Key);
+                    var folder =
                         Path.GetDirectoryName(reader.Entry.Key)
                         ?? throw new ArgumentNullException();
-                    string destdir = Path.Combine(SCRATCH_FILES_PATH, folder);
+                    var destdir = Path.Combine(SCRATCH_FILES_PATH, folder);
                     if (!Directory.Exists(destdir))
                     {
                         Directory.CreateDirectory(destdir);
                     }
-                    string destinationFileName = Path.Combine(destdir, file);
+                    var destinationFileName = Path.Combine(destdir, file);
 
-                    using FileStream fs = File.OpenWrite(destinationFileName);
+                    using var fs = File.OpenWrite(destinationFileName);
                     entryStream.TransferTo(fs);
                 }
             }
@@ -141,23 +141,23 @@ public class TarReaderTests : ReaderTests
     [Fact]
     public void Tar_Containing_Rar_Reader()
     {
-        string archiveFullPath = Path.Combine(TEST_ARCHIVES_PATH, "Tar.ContainsRar.tar");
+        var archiveFullPath = Path.Combine(TEST_ARCHIVES_PATH, "Tar.ContainsRar.tar");
         using Stream stream = File.OpenRead(archiveFullPath);
-        using IReader reader = ReaderFactory.Open(stream);
+        using var reader = ReaderFactory.Open(stream);
         Assert.True(reader.ArchiveType == ArchiveType.Tar);
     }
 
     [Fact]
     public void Tar_With_TarGz_With_Flushed_EntryStream()
     {
-        string archiveFullPath = Path.Combine(TEST_ARCHIVES_PATH, "Tar.ContainsTarGz.tar");
+        var archiveFullPath = Path.Combine(TEST_ARCHIVES_PATH, "Tar.ContainsTarGz.tar");
         using Stream stream = File.OpenRead(archiveFullPath);
-        using IReader reader = ReaderFactory.Open(stream);
+        using var reader = ReaderFactory.Open(stream);
         Assert.True(reader.MoveToNextEntry());
         Assert.Equal("inner.tar.gz", reader.Entry.Key);
 
         using var entryStream = reader.OpenEntryStream();
-        using FlushOnDisposeStream flushingStream = new FlushOnDisposeStream(entryStream);
+        using var flushingStream = new FlushOnDisposeStream(entryStream);
 
         // Extract inner.tar.gz
         using var innerReader = ReaderFactory.Open(flushingStream);
@@ -168,9 +168,9 @@ public class TarReaderTests : ReaderTests
     [Fact]
     public void Tar_Broken_Stream()
     {
-        string archiveFullPath = Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar");
+        var archiveFullPath = Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar");
         using Stream stream = File.OpenRead(archiveFullPath);
-        using IReader reader = ReaderFactory.Open(stream);
+        using var reader = ReaderFactory.Open(stream);
         var memoryStream = new MemoryStream();
 
         Action action = () => reader.MoveToNextEntry();

@@ -71,12 +71,12 @@ public class TarReader : AbstractReader<TarEntry, TarVolume>
     {
         stream.CheckNotNull(nameof(stream));
         options = options ?? new ReaderOptions();
-        RewindableStream rewindableStream = new RewindableStream(stream);
+        var rewindableStream = new RewindableStream(stream);
         rewindableStream.StartRecording();
         if (GZipArchive.IsGZipFile(rewindableStream))
         {
             rewindableStream.Rewind(false);
-            GZipStream testStream = new GZipStream(rewindableStream, CompressionMode.Decompress);
+            var testStream = new GZipStream(rewindableStream, CompressionMode.Decompress);
             if (TarArchive.IsTarFile(testStream))
             {
                 rewindableStream.Rewind(true);
@@ -89,11 +89,7 @@ public class TarReader : AbstractReader<TarEntry, TarVolume>
         if (BZip2Stream.IsBZip2(rewindableStream))
         {
             rewindableStream.Rewind(false);
-            BZip2Stream testStream = new BZip2Stream(
-                rewindableStream,
-                CompressionMode.Decompress,
-                false
-            );
+            var testStream = new BZip2Stream(rewindableStream, CompressionMode.Decompress, false);
             if (TarArchive.IsTarFile(testStream))
             {
                 rewindableStream.Rewind(true);
@@ -106,7 +102,7 @@ public class TarReader : AbstractReader<TarEntry, TarVolume>
         if (LZipStream.IsLZipFile(rewindableStream))
         {
             rewindableStream.Rewind(false);
-            LZipStream testStream = new LZipStream(rewindableStream, CompressionMode.Decompress);
+            var testStream = new LZipStream(rewindableStream, CompressionMode.Decompress);
             if (TarArchive.IsTarFile(testStream))
             {
                 rewindableStream.Rewind(true);

@@ -88,9 +88,9 @@ public class DataDescriptorStream : Stream
             return 0;
         }
 
-        int read = _stream.Read(buffer, offset, count);
+        var read = _stream.Read(buffer, offset, count);
 
-        for (int i = 0; i < read; i++)
+        for (var i = 0; i < read; i++)
         {
             if (buffer[offset + i] == DataDescriptorMarker[_search_position])
             {

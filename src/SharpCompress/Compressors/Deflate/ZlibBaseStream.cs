@@ -102,7 +102,7 @@ internal class ZlibBaseStream : Stream
         {
             if (_z is null)
             {
-                bool wantRfc1950Header = (_flavor == ZlibStreamFlavor.ZLIB);
+                var wantRfc1950Header = (_flavor == ZlibStreamFlavor.ZLIB);
                 _z = new ZlibCodec();
                 if (_compressionMode == CompressionMode.Decompress)
                 {
@@ -147,13 +147,13 @@ internal class ZlibBaseStream : Stream
         z.InputBuffer = buffer;
         _z.NextIn = offset;
         _z.AvailableBytesIn = count;
-        bool done = false;
+        var done = false;
         do
         {
             _z.OutputBuffer = workingBuffer;
             _z.NextOut = 0;
             _z.AvailableBytesOut = _workingBuffer.Length;
-            int rc = (_wantCompress) ? _z.Deflate(_flushMode) : _z.Inflate(_flushMode);
+            var rc = (_wantCompress) ? _z.Deflate(_flushMode) : _z.Inflate(_flushMode);
             if (rc != ZlibConstants.Z_OK && rc != ZlibConstants.Z_STREAM_END)
             {
                 throw new ZlibException((_wantCompress ? "de" : "in") + "flating: " + _z.Message);
@@ -181,18 +181,18 @@ internal class ZlibBaseStream : Stream
 
         if (_streamMode == StreamMode.Writer)
         {
-            bool done = false;
+            var done = false;
             do
             {
                 _z.OutputBuffer = workingBuffer;
                 _z.NextOut = 0;
                 _z.AvailableBytesOut = _workingBuffer.Length;
-                int rc =
+                var rc =
                     (_wantCompress) ? _z.Deflate(FlushType.Finish) : _z.Inflate(FlushType.Finish);
 
                 if (rc != ZlibConstants.Z_STREAM_END && rc != ZlibConstants.Z_OK)
                 {
-                    string verb = (_wantCompress ? "de" : "in") + "flating";
+                    var verb = (_wantCompress ? "de" : "in") + "flating";
                     if (_z.Message is null)
                     {
                         throw new ZlibException(String.Format("{0}: (rc = {1})", verb, rc));
@@ -225,7 +225,7 @@ internal class ZlibBaseStream : Stream
                     Span<byte> intBuf = stackalloc byte[4];
                     BinaryPrimitives.WriteInt32LittleEndian(intBuf, crc.Crc32Result);
                     _stream.Write(intBuf);
-                    int c2 = (int)(crc.TotalBytesRead & 0x00000000FFFFFFFF);
+                    var c2 = (int)(crc.TotalBytesRead & 0x00000000FFFFFFFF);
                     BinaryPrimitives.WriteInt32LittleEndian(intBuf, c2);
                     _stream.Write(intBuf);
                 }
@@ -256,8 +256,8 @@ internal class ZlibBaseStream : Stream
                     {
                         // Make sure we have read to the end of the stream
                         _z.InputBuffer.AsSpan(_z.NextIn, _z.AvailableBytesIn).CopyTo(trailer);
-                        int bytesNeeded = 8 - _z.AvailableBytesIn;
-                        int bytesRead = _stream.Read(
+                        var bytesNeeded = 8 - _z.AvailableBytesIn;
+                        var bytesRead = _stream.Read(
                             trailer.Slice(_z.AvailableBytesIn, bytesNeeded)
                         );
                         if (bytesNeeded != bytesRead)
@@ -275,10 +275,10 @@ internal class ZlibBaseStream : Stream
                         _z.InputBuffer.AsSpan(_z.NextIn, trailer.Length).CopyTo(trailer);
                     }
 
-                    Int32 crc32_expected = BinaryPrimitives.ReadInt32LittleEndian(trailer);
-                    Int32 crc32_actual = crc.Crc32Result;
-                    Int32 isize_expected = BinaryPrimitives.ReadInt32LittleEndian(trailer.Slice(4));
-                    Int32 isize_actual = (Int32)(_z.TotalBytesOut & 0x00000000FFFFFFFF);
+                    var crc32_expected = BinaryPrimitives.ReadInt32LittleEndian(trailer);
+                    var crc32_actual = crc.Crc32Result;
+                    var isize_expected = BinaryPrimitives.ReadInt32LittleEndian(trailer.Slice(4));
+                    var isize_actual = (Int32)(_z.TotalBytesOut & 0x00000000FFFFFFFF);
 
                     if (crc32_actual != crc32_expected)
                     {
@@ -380,11 +380,11 @@ internal class ZlibBaseStream : Stream
     private string ReadZeroTerminatedString()
     {
         var list = new List<byte>();
-        bool done = false;
+        var done = false;
         do
         {
             // workitem 7740
-            int n = _stream.Read(_buf1, 0, 1);
+            var n = _stream.Read(_buf1, 0, 1);
             if (n != 1)
             {
                 throw new ZlibException("Unexpected EOF reading GZIP header.");
@@ -398,17 +398,17 @@ internal class ZlibBaseStream : Stream
                 list.Add(_buf1[0]);
             }
         } while (!done);
-        byte[] buffer = list.ToArray();
+        var buffer = list.ToArray();
         return _encoding.GetString(buffer, 0, buffer.Length);
     }
 
     private int _ReadAndValidateGzipHeader()
     {
-        int totalBytesRead = 0;
+        var totalBytesRead = 0;
 
         // read the header on the first read
         Span<byte> header = stackalloc byte[10];
-        int n = _stream.Read(header);
+        var n = _stream.Read(header);
 
         // workitem 8501: handle edge case (decompress empty stream)
         if (n == 0)
@@ -426,7 +426,7 @@ internal class ZlibBaseStream : Stream
             throw new ZlibException("Bad GZIP header.");
         }
 
-        int timet = BinaryPrimitives.ReadInt32LittleEndian(header.Slice(4));
+        var timet = BinaryPrimitives.ReadInt32LittleEndian(header.Slice(4));
         _GzipMtime = TarHeader.EPOCH.AddSeconds(timet);
         totalBytesRead += n;
         if ((header[3] & 0x04) == 0x04)
@@ -435,8 +435,8 @@ internal class ZlibBaseStream : Stream
             n = _stream.Read(header.Slice(0, 2)); // 2-byte length field
             totalBytesRead += n;
 
-            short extraLength = (short)(header[0] + header[1] * 256);
-            byte[] extra = new byte[extraLength];
+            var extraLength = (short)(header[0] + header[1] * 256);
+            var extra = new byte[extraLength];
             n = _stream.Read(extra, 0, extra.Length);
             if (n != extraLength)
             {
@@ -498,7 +498,7 @@ internal class ZlibBaseStream : Stream
             throw new ZlibException("Cannot Read after Writing.");
         }
 
-        int rc = 0;
+        var rc = 0;
 
         // set up the output of the deflate/inflate codec:
         _z.OutputBuffer = buffer;

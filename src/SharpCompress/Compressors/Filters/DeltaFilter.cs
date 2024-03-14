@@ -23,9 +23,9 @@ namespace SharpCompress.Compressors.Filters
 
         protected override int Transform(byte[] buffer, int offset, int count)
         {
-            int end = offset + count;
+            var end = offset + count;
 
-            for (int i = offset; i < end; i++)
+            for (var i = offset; i < end; i++)
             {
                 buffer[i] += _history[(_distance + _position--) & DISTANCE_MASK];
                 _history[_position & DISTANCE_MASK] = buffer[i];

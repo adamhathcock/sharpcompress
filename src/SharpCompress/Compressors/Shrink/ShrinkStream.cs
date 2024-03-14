@@ -55,10 +55,10 @@ internal class ShrinkStream : Stream
         {
             return 0;
         }
-        byte[] src = new byte[_compressedSize];
+        var src = new byte[_compressedSize];
         inStream.Read(src, offset, (int)_compressedSize);
-        int srcUsed = 0;
-        int dstUsed = 0;
+        var srcUsed = 0;
+        var dstUsed = 0;
 
         HwUnshrink.Unshrink(
             src,
@@ -70,7 +70,7 @@ internal class ShrinkStream : Stream
         );
         _outBytesCount = _byteOut.Length;
 
-        for (int index = 0; index < _outBytesCount; ++index)
+        for (var index = 0; index < _outBytesCount; ++index)
         {
             buffer[offset + index] = _byteOut[index];
         }

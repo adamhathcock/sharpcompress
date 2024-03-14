@@ -34,30 +34,20 @@ public sealed class BranchExecFilter
     //The previous version of the code would corrupt 2 bytes in the Test.exe at 0x6CF9 (3D6D - should be 4000) - Test zip: WinZip27.Xz.zipx
     public static void X86Converter(byte[] buf, uint ip, ref uint state)
     {
-        bool[] mask_to_allowed_status = new[]
-        {
-            true,
-            true,
-            true,
-            false,
-            true,
-            false,
-            false,
-            false
-        };
+        var mask_to_allowed_status = new[] { true, true, true, false, true, false, false, false };
 
-        byte[] mask_to_bit_num = new byte[] { 0, 1, 2, 2, 3, 3, 3, 3 };
+        var mask_to_bit_num = new byte[] { 0, 1, 2, 2, 3, 3, 3, 3 };
 
         int i;
-        int prev_pos = -1;
-        uint prev_mask = state & 7;
+        var prev_pos = -1;
+        var prev_mask = state & 7;
         uint src;
         uint dest;
         uint j;
         byte b;
-        uint pos = ip;
+        var pos = ip;
 
-        uint size = (uint)buf.Length;
+        var size = (uint)buf.Length;
 
         if (size <= 4)
             return;

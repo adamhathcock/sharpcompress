@@ -73,7 +73,7 @@ internal class RarBLAKE2spStream : RarStream
         public BLAKE2SP()
         {
             S = new BLAKE2S[BLAKE2SP_PARALLEL_DEGREE];
-            for (int i = 0; i < S.Length; i++)
+            for (var i = 0; i < S.Length; i++)
             {
                 S[i] = new BLAKE2S();
             }
@@ -141,15 +141,15 @@ internal class RarBLAKE2spStream : RarStream
 
     internal void Compress(BLAKE2S hash)
     {
-        UInt32[] m = new UInt32[16];
-        UInt32[] v = new UInt32[16];
+        var m = new UInt32[16];
+        var v = new UInt32[16];
 
-        for (int i = 0; i < 16; i++)
+        for (var i = 0; i < 16; i++)
         {
             m[i] = BitConverter.ToUInt32(hash.b, i * 4);
         }
 
-        for (int i = 0; i < 8; i++)
+        for (var i = 0; i < 8; i++)
         {
             v[i] = hash.h[i];
         }
@@ -164,7 +164,7 @@ internal class RarBLAKE2spStream : RarStream
         v[14] = hash.f[0] ^ k_BLAKE2S_IV[6];
         v[15] = hash.f[1] ^ k_BLAKE2S_IV[7];
 
-        for (int r = 0; r < BLAKE2S_NUM_ROUNDS; r++)
+        for (var r = 0; r < BLAKE2S_NUM_ROUNDS; r++)
         {
             ref byte[] sigma = ref k_BLAKE2S_Sigma[r];
 
@@ -178,7 +178,7 @@ internal class RarBLAKE2spStream : RarStream
             G(ref m, ref sigma, 7, ref v[3], ref v[4], ref v[9], ref v[14]);
         }
 
-        for (int i = 0; i < 8; i++)
+        for (var i = 0; i < 8; i++)
         {
             hash.h[i] ^= v[i] ^ v[i + 8];
         }
@@ -186,7 +186,7 @@ internal class RarBLAKE2spStream : RarStream
 
     internal void Update(BLAKE2S hash, ReadOnlySpan<byte> data, int size)
     {
-        int i = 0;
+        var i = 0;
         while (size != 0)
         {
             var pos = hash.bufferPosition;
@@ -219,7 +219,7 @@ internal class RarBLAKE2spStream : RarStream
 
         var mem = new MemoryStream();
 
-        for (int i = 0; i < 8; i++)
+        for (var i = 0; i < 8; i++)
         {
             mem.Write(BitConverter.GetBytes(hash.h[i]), 0, 4);
         }
@@ -245,7 +245,7 @@ internal class RarBLAKE2spStream : RarStream
 
     internal void Update(BLAKE2SP hash, ReadOnlySpan<byte> data, int size)
     {
-        int i = 0;
+        var i = 0;
         var pos = hash.bufferPosition;
         while (size != 0)
         {
@@ -274,7 +274,7 @@ internal class RarBLAKE2spStream : RarStream
         h.h[3] ^= (1 << 16 | BLAKE2S_DIGEST_SIZE << 24);
         h.lastNodeFlag = BLAKE2S_FINAL_FLAG;
 
-        for (int i = 0; i < BLAKE2SP_PARALLEL_DEGREE; i++)
+        for (var i = 0; i < BLAKE2SP_PARALLEL_DEGREE; i++)
         {
             var digest = Final(_blake2sp.S[i]);
             Update(h, digest, BLAKE2S_DIGEST_SIZE);

@@ -52,29 +52,29 @@ internal class BCJFilterIA64 : Filter
 
         for (i = offset; i <= end; i += 16)
         {
-            int instrTemplate = buffer[i] & 0x1F;
-            int mask = BRANCH_TABLE[instrTemplate];
+            var instrTemplate = buffer[i] & 0x1F;
+            var mask = BRANCH_TABLE[instrTemplate];
 
             for (int slot = 0, bitPos = 5; slot < 3; ++slot, bitPos += 41)
             {
                 if (((mask >>> slot) & 1) == 0)
                     continue;
 
-                int bytePos = bitPos >>> 3;
-                int bitRes = bitPos & 7;
+                var bytePos = bitPos >>> 3;
+                var bitRes = bitPos & 7;
 
                 long instr = 0;
-                for (int j = 0; j < 6; ++j)
+                for (var j = 0; j < 6; ++j)
                 {
                     instr |= (buffer[i + bytePos + j] & 0xFFL) << (8 * j);
                 }
 
-                long instrNorm = instr >>> bitRes;
+                var instrNorm = instr >>> bitRes;
 
                 if (((instrNorm >>> 37) & 0x0F) != 0x05 || ((instrNorm >>> 9) & 0x07) != 0x00)
                     continue;
 
-                int src = (int)((instrNorm >>> 13) & 0x0FFFFF);
+                var src = (int)((instrNorm >>> 13) & 0x0FFFFF);
                 src |= ((int)(instrNorm >>> 36) & 1) << 20;
                 src <<= 4;
 
@@ -93,7 +93,7 @@ internal class BCJFilterIA64 : Filter
                 instr &= (1 << bitRes) - 1;
                 instr |= instrNorm << bitRes;
 
-                for (int j = 0; j < 6; ++j)
+                for (var j = 0; j < 6; ++j)
                 {
                     buffer[i + bytePos + j] = (byte)(instr >>> (8 * j));
                 }
