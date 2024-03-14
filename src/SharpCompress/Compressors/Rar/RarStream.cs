@@ -86,6 +86,13 @@ internal class RarStream : Stream
             fetch = false;
         }
         _position += outTotal;
+        if (count > 0 && outTotal == 0 && _position != Length)
+        {
+            // sanity check, eg if we try to decompress a redir entry
+            throw new InvalidOperationException(
+                $"unpacked file size does not match header: expected {Length} found {_position}"
+            );
+        }
         return outTotal;
     }
 

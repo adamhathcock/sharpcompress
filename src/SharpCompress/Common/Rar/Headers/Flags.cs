@@ -157,3 +157,17 @@ internal static class EndArchiveFlagsV5
 {
     public const ushort HAS_NEXT_VOLUME = 0x0001;
 }
+
+internal static class RedirTypeV5
+{
+    public const byte UNIX_SYMLINK = 0x0001;
+    public const byte WIN_SYMLINK = 0x0002;
+    public const byte WIN_JUNCTION = 0x0003;
+    public const byte HARD_LINK = 0x0004;
+    public const byte FILE_COPY = 0x0005;
+}
+
+internal static class RedirFlagV5
+{
+    public const byte DIRECTORY = 0x0001;
+}
