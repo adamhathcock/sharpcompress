@@ -318,9 +318,8 @@ public class Decoder : ICoder, ISetDecoderProperties // ,System.IO.Stream
         {
             var posState = (uint)outWindow._total & _posStateMask;
             if (
-                _isMatchDecoders[
-                    (_state._index << Base.K_NUM_POS_STATES_BITS_MAX) + posState
-                ].Decode(rangeDecoder) == 0
+                _isMatchDecoders[(_state._index << Base.K_NUM_POS_STATES_BITS_MAX) + posState]
+                    .Decode(rangeDecoder) == 0
             )
             {
                 byte b;
@@ -355,7 +354,8 @@ public class Decoder : ICoder, ISetDecoderProperties // ,System.IO.Stream
                         if (
                             _isRep0LongDecoders[
                                 (_state._index << Base.K_NUM_POS_STATES_BITS_MAX) + posState
-                            ].Decode(rangeDecoder) == 0
+                            ]
+                                .Decode(rangeDecoder) == 0
                         )
                         {
                             _state.UpdateShortRep();

@@ -97,13 +97,12 @@ internal class StreamingZipHeaderFactory : ZipHeaderFactory
             if (header.ZipHeaderType == ZipHeaderType.LocalEntry)
             {
                 var local_header = ((LocalEntryHeader)header);
-                var dir_header = _entries?.FirstOrDefault(
-                    entry =>
-                        entry.Key == local_header.Name
-                        && local_header.CompressedSize == 0
-                        && local_header.UncompressedSize == 0
-                        && local_header.Crc == 0
-                        && local_header.IsDirectory == false
+                var dir_header = _entries?.FirstOrDefault(entry =>
+                    entry.Key == local_header.Name
+                    && local_header.CompressedSize == 0
+                    && local_header.UncompressedSize == 0
+                    && local_header.Crc == 0
+                    && local_header.IsDirectory == false
                 );
 
                 if (dir_header != null)

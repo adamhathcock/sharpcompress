@@ -395,10 +395,8 @@ internal class Allocator
             unitCountDifference -= unitCount;
         }
 
-        _memoryNodes[UNITS_TO_INDEX[unitCountDifference - 1]].Insert(
-            newPointer,
-            unitCountDifference
-        );
+        _memoryNodes[UNITS_TO_INDEX[unitCountDifference - 1]]
+            .Insert(newPointer, unitCountDifference);
     }
 
     private void GlueFreeBlocks()
@@ -457,10 +455,11 @@ internal class Allocator
                 if (INDEX_TO_UNITS[index] != unitCount)
                 {
                     var unitCountDifference = unitCount - INDEX_TO_UNITS[--index];
-                    _memoryNodes[unitCountDifference - 1].Insert(
-                        memoryNode0 + (unitCount - unitCountDifference),
-                        unitCountDifference
-                    );
+                    _memoryNodes[unitCountDifference - 1]
+                        .Insert(
+                            memoryNode0 + (unitCount - unitCountDifference),
+                            unitCountDifference
+                        );
                 }
 
                 _memoryNodes[index].Insert(memoryNode0, INDEX_TO_UNITS[index]);

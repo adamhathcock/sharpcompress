@@ -42,8 +42,8 @@ internal class LocalEntryHeader : ZipFileEntry
 
         LoadExtra(extra);
 
-        var unicodePathExtra = Extra.FirstOrDefault(
-            u => u.Type == ExtraDataType.UnicodePathExtraField
+        var unicodePathExtra = Extra.FirstOrDefault(u =>
+            u.Type == ExtraDataType.UnicodePathExtraField
         );
         if (unicodePathExtra != null && ArchiveEncoding.Forced == null)
         {

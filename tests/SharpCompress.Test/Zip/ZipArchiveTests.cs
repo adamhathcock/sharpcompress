@@ -192,8 +192,8 @@ public class ZipArchiveTests : ArchiveTests
 
         using (var archive = ZipArchive.Open(unmodified))
         {
-            var entry = archive.Entries.Single(
-                x => x.Key.EndsWith("jpg", StringComparison.OrdinalIgnoreCase)
+            var entry = archive.Entries.Single(x =>
+                x.Key.EndsWith("jpg", StringComparison.OrdinalIgnoreCase)
             );
             archive.RemoveEntry(entry);
 
@@ -250,18 +250,18 @@ public class ZipArchiveTests : ArchiveTests
 
         using (ZipArchive vfs = (ZipArchive)ArchiveFactory.Open(scratchPath))
         {
-            var e = vfs.Entries.First(
-                v => v.Key.EndsWith("jpg", StringComparison.OrdinalIgnoreCase)
+            var e = vfs.Entries.First(v =>
+                v.Key.EndsWith("jpg", StringComparison.OrdinalIgnoreCase)
             );
             vfs.RemoveEntry(e);
             Assert.Null(
-                vfs.Entries.FirstOrDefault(
-                    v => v.Key.EndsWith("jpg", StringComparison.OrdinalIgnoreCase)
+                vfs.Entries.FirstOrDefault(v =>
+                    v.Key.EndsWith("jpg", StringComparison.OrdinalIgnoreCase)
                 )
             );
             Assert.Null(
-                ((IArchive)vfs).Entries.FirstOrDefault(
-                    v => v.Key.EndsWith("jpg", StringComparison.OrdinalIgnoreCase)
+                ((IArchive)vfs).Entries.FirstOrDefault(v =>
+                    v.Key.EndsWith("jpg", StringComparison.OrdinalIgnoreCase)
                 )
             );
         }
@@ -399,13 +399,13 @@ public class ZipArchiveTests : ArchiveTests
         {
             archive.AddAllFromDirectory(SCRATCH_FILES_PATH);
             archive.RemoveEntry(
-                archive.Entries.Single(
-                    x => x.Key.EndsWith("jpg", StringComparison.OrdinalIgnoreCase)
+                archive.Entries.Single(x =>
+                    x.Key.EndsWith("jpg", StringComparison.OrdinalIgnoreCase)
                 )
             );
             Assert.Null(
-                archive.Entries.FirstOrDefault(
-                    x => x.Key.EndsWith("jpg", StringComparison.OrdinalIgnoreCase)
+                archive.Entries.FirstOrDefault(x =>
+                    x.Key.EndsWith("jpg", StringComparison.OrdinalIgnoreCase)
                 )
             );
         }
