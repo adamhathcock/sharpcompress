@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -64,6 +65,11 @@ public abstract class RarReader : AbstractReader<RarReaderEntry, RarVolume>
 
     protected override EntryStream GetEntryStream()
     {
+        if (Entry.IsRedir)
+        {
+            throw new InvalidOperationException("no stream for redirect entry");
+        }
+
         var stream = new MultiVolumeReadOnlyStream(
             CreateFilePartEnumerableForCurrentEntry().Cast<RarFilePart>(),
             this

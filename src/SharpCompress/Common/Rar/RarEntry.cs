@@ -66,6 +66,10 @@ public abstract class RarEntry : Entry
 
     public override bool IsSplitAfter => FileHeader.IsSplitAfter;
 
+    public bool IsRedir => FileHeader.IsRedir;
+
+    public string RedirTargetName => FileHeader.RedirTargetName;
+
     public override string ToString() =>
         string.Format(
             "Entry Path: {0} Compressed Size: {1} Uncompressed Size: {2} CRC: {3}",
