@@ -259,7 +259,7 @@ internal sealed partial class Unpack : BitInput
     // LengthTable contains the length in bits for every element of alphabet.
     // Dec is the structure to decode Huffman code/
     // Size is size of length table and DecodeNum field in Dec structure,
-    private void MakeDecodeTables(byte[] LengthTable, int offset, DecodeTable Dec, uint Size)
+    private void MakeDecodeTables(Span<byte> LengthTable, int offset, DecodeTable Dec, uint Size)
     {
         // Size of alphabet and DecodePos array.
         Dec.MaxNum = Size;
@@ -269,7 +269,7 @@ internal sealed partial class Unpack : BitInput
         //memset(LengthCount,0,sizeof(LengthCount));
         for (size_t I = 0; I < Size; I++)
         {
-            LengthCount[LengthTable[offset + I] & 0xf]++;
+            LengthCount[LengthTable[checked((int)(offset + I))] & 0xf]++;
         }
 
         // We must not calculate the number of zero length codes.
@@ -318,7 +318,7 @@ internal sealed partial class Unpack : BitInput
         for (uint I = 0; I < Size; I++)
         {
             // Get the current bit length.
-            var _CurBitLength = (byte)(LengthTable[offset + I] & 0xf);
+            var _CurBitLength = (byte)(LengthTable[checked((int)(offset + I))] & 0xf);
 
             if (_CurBitLength != 0)
             {
