@@ -61,7 +61,7 @@ internal class Encoder : ICoder, ISetCoderProperties, IWriteCoderProperties
         return (uint)(G_FAST_POS[pos >> 26] + 52);
     }
 
-    private Base.State _state = new Base.State();
+    private Base.State _state = new();
     private byte _previousByte;
     private readonly uint[] _repDistances = new uint[Base.K_NUM_REP_DISTANCES];
 
@@ -191,15 +191,15 @@ internal class Encoder : ICoder, ISetCoderProperties, IWriteCoderProperties
 
     private class LenEncoder
     {
-        private BitEncoder _choice = new BitEncoder();
-        private BitEncoder _choice2 = new BitEncoder();
+        private BitEncoder _choice = new();
+        private BitEncoder _choice2 = new();
         private readonly BitTreeEncoder[] _lowCoder = new BitTreeEncoder[
             Base.K_NUM_POS_STATES_ENCODING_MAX
         ];
         private readonly BitTreeEncoder[] _midCoder = new BitTreeEncoder[
             Base.K_NUM_POS_STATES_ENCODING_MAX
         ];
-        private BitTreeEncoder _highCoder = new BitTreeEncoder(Base.K_NUM_HIGH_LEN_BITS);
+        private BitTreeEncoder _highCoder = new(Base.K_NUM_HIGH_LEN_BITS);
 
         public LenEncoder()
         {
@@ -359,7 +359,7 @@ internal class Encoder : ICoder, ISetCoderProperties, IWriteCoderProperties
 
     private readonly Optimal[] _optimum = new Optimal[K_NUM_OPTS];
     private BinTree _matchFinder;
-    private readonly RangeCoder.Encoder _rangeEncoder = new RangeCoder.Encoder();
+    private readonly RangeCoder.Encoder _rangeEncoder = new();
 
     private readonly BitEncoder[] _isMatch = new BitEncoder[
         Base.K_NUM_STATES << Base.K_NUM_POS_STATES_BITS_MAX
@@ -382,12 +382,12 @@ internal class Encoder : ICoder, ISetCoderProperties, IWriteCoderProperties
         Base.K_NUM_FULL_DISTANCES - Base.K_END_POS_MODEL_INDEX
     ];
 
-    private BitTreeEncoder _posAlignEncoder = new BitTreeEncoder(Base.K_NUM_ALIGN_BITS);
+    private BitTreeEncoder _posAlignEncoder = new(Base.K_NUM_ALIGN_BITS);
 
-    private readonly LenPriceTableEncoder _lenEncoder = new LenPriceTableEncoder();
-    private readonly LenPriceTableEncoder _repMatchLenEncoder = new LenPriceTableEncoder();
+    private readonly LenPriceTableEncoder _lenEncoder = new();
+    private readonly LenPriceTableEncoder _repMatchLenEncoder = new();
 
-    private readonly LiteralEncoder _literalEncoder = new LiteralEncoder();
+    private readonly LiteralEncoder _literalEncoder = new();
 
     private readonly uint[] _matchDistances = new uint[(Base.K_MATCH_MAX_LEN * 2) + 2];
 

@@ -342,9 +342,9 @@ internal sealed partial class DeflateManager
     private readonly short[] dyn_dtree; // distance tree
     private readonly short[] bl_tree; // Huffman tree for bit lengths
 
-    private readonly Tree treeLiterals = new Tree(); // desc for literal tree
-    private readonly Tree treeDistances = new Tree(); // desc for distance tree
-    private readonly Tree treeBitLengths = new Tree(); // desc for bit length tree
+    private readonly Tree treeLiterals = new(); // desc for literal tree
+    private readonly Tree treeDistances = new(); // desc for distance tree
+    private readonly Tree treeBitLengths = new(); // desc for bit length tree
 
     // number of codes at each bit length for an optimal tree
     private readonly short[] bl_count = new short[InternalConstants.MAX_BITS + 1];

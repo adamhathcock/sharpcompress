@@ -7,10 +7,10 @@ internal readonly struct CMethodId
     public const ulong K_LZMA2_ID = 0x21;
     public const ulong K_AES_ID = 0x06F10701;
 
-    public static readonly CMethodId K_COPY = new CMethodId(K_COPY_ID);
-    public static readonly CMethodId K_LZMA = new CMethodId(K_LZMA_ID);
-    public static readonly CMethodId K_LZMA2 = new CMethodId(K_LZMA2_ID);
-    public static readonly CMethodId K_AES = new CMethodId(K_AES_ID);
+    public static readonly CMethodId K_COPY = new(K_COPY_ID);
+    public static readonly CMethodId K_LZMA = new(K_LZMA_ID);
+    public static readonly CMethodId K_LZMA2 = new(K_LZMA2_ID);
+    public static readonly CMethodId K_AES = new(K_AES_ID);
 
     public readonly ulong _id;
 

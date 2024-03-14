@@ -6,7 +6,7 @@ namespace SharpCompress.Compressors.LZMA;
 
 internal static class Log
 {
-    private static readonly Stack<string> INDENT = new Stack<string>();
+    private static readonly Stack<string> INDENT = new();
     private static bool NEEDS_INDENT = true;
 
     static Log() => INDENT.Push("");

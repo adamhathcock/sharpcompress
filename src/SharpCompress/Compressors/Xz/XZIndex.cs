@@ -13,7 +13,7 @@ public class XZIndex
     private readonly BinaryReader _reader;
     public long StreamStartPosition { get; private set; }
     public ulong NumberOfRecords { get; private set; }
-    public List<XZIndexRecord> Records { get; } = new List<XZIndexRecord>();
+    public List<XZIndexRecord> Records { get; } = new();
 
     private readonly bool _indexMarkerAlreadyVerified;
 

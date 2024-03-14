@@ -87,7 +87,7 @@ internal class CBZip2InputStream : Stream
 
     private int bsBuff;
     private int bsLive;
-    private readonly CRC mCrc = new CRC();
+    private readonly CRC mCrc = new();
 
     private readonly bool[] inUse = new bool[256];
     private int nInUse;

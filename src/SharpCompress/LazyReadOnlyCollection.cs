@@ -8,7 +8,7 @@ namespace SharpCompress;
 
 internal sealed class LazyReadOnlyCollection<T> : ICollection<T>
 {
-    private readonly List<T> backing = new List<T>();
+    private readonly List<T> backing = new();
     private readonly IEnumerator<T> source;
     private bool fullyLoaded;
 

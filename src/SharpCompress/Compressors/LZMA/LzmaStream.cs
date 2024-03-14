@@ -14,8 +14,8 @@ public class LzmaStream : Stream
     private readonly long _outputSize;
 
     private readonly int _dictionarySize;
-    private readonly OutWindow _outWindow = new OutWindow();
-    private readonly RangeCoder.Decoder _rangeDecoder = new RangeCoder.Decoder();
+    private readonly OutWindow _outWindow = new();
+    private readonly RangeCoder.Decoder _rangeDecoder = new();
     private Decoder _decoder;
 
     private long _position;

@@ -64,19 +64,19 @@ internal class PpmContext : Pointer
 
     // Temp fields
     //UPGRADE_NOTE: Final was removed from the declaration of 'tempState1 '. "ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?index='!DefaultContextWindowIndex'&keyword='jlca1003'"
-    private readonly State _tempState1 = new State(null);
+    private readonly State _tempState1 = new(null);
 
     //UPGRADE_NOTE: Final was removed from the declaration of 'tempState2 '. "ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?index='!DefaultContextWindowIndex'&keyword='jlca1003'"
-    private readonly State _tempState2 = new State(null);
+    private readonly State _tempState2 = new(null);
 
     //UPGRADE_NOTE: Final was removed from the declaration of 'tempState3 '. "ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?index='!DefaultContextWindowIndex'&keyword='jlca1003'"
-    private readonly State _tempState3 = new State(null);
+    private readonly State _tempState3 = new(null);
 
     //UPGRADE_NOTE: Final was removed from the declaration of 'tempState4 '. "ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?index='!DefaultContextWindowIndex'&keyword='jlca1003'"
-    private readonly State _tempState4 = new State(null);
+    private readonly State _tempState4 = new(null);
 
     //UPGRADE_NOTE: Final was removed from the declaration of 'tempState5 '. "ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?index='!DefaultContextWindowIndex'&keyword='jlca1003'"
-    private readonly State _tempState5 = new State(null);
+    private readonly State _tempState5 = new(null);
     private PpmContext _tempPpmContext;
 
     //UPGRADE_NOTE: Final was removed from the declaration of 'ps '. "ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?index='!DefaultContextWindowIndex'&keyword='jlca1003'"

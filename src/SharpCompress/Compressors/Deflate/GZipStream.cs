@@ -35,15 +35,15 @@ namespace SharpCompress.Compressors.Deflate;
 
 public class GZipStream : Stream
 {
-    internal static readonly DateTime UNIX_EPOCH = new DateTime(
-        1970,
-        1,
-        1,
-        0,
-        0,
-        0,
-        DateTimeKind.Utc
-    );
+    internal static readonly DateTime UNIX_EPOCH = new(
+                                                       1970,
+                                                       1,
+                                                       1,
+                                                       0,
+                                                       0,
+                                                       0,
+                                                       DateTimeKind.Utc
+                                                      );
 
     private string? _comment;
     private string? _fileName;

@@ -5,13 +5,13 @@ namespace SharpCompress.IO;
 
 internal class ListeningStream : Stream
 {
-    private long currentEntryTotalReadBytes;
-    private readonly IExtractionListener listener;
+    private long _currentEntryTotalReadBytes;
+    private readonly IExtractionListener _listener;
 
     public ListeningStream(IExtractionListener listener, Stream stream)
     {
         Stream = stream;
-        this.listener = listener;
+        this._listener = listener;
     }
 
     protected override void Dispose(bool disposing)
@@ -44,8 +44,8 @@ internal class ListeningStream : Stream
     public override int Read(byte[] buffer, int offset, int count)
     {
         var read = Stream.Read(buffer, offset, count);
-        currentEntryTotalReadBytes += read;
-        listener.FireCompressedBytesRead(currentEntryTotalReadBytes, currentEntryTotalReadBytes);
+        _currentEntryTotalReadBytes += read;
+        _listener.FireCompressedBytesRead(_currentEntryTotalReadBytes, _currentEntryTotalReadBytes);
         return read;
     }
 
@@ -57,8 +57,8 @@ internal class ListeningStream : Stream
             return -1;
         }
 
-        ++currentEntryTotalReadBytes;
-        listener.FireCompressedBytesRead(currentEntryTotalReadBytes, currentEntryTotalReadBytes);
+        ++_currentEntryTotalReadBytes;
+        _listener.FireCompressedBytesRead(_currentEntryTotalReadBytes, _currentEntryTotalReadBytes);
         return value;
     }
 

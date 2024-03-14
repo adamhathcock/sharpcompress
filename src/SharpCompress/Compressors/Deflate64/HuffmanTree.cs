@@ -42,11 +42,9 @@ internal sealed class HuffmanTree
     private readonly int _tableMask;
 
     // huffman tree for static block
-    public static HuffmanTree StaticLiteralLengthTree { get; } =
-        new HuffmanTree(GetStaticLiteralTreeLength());
+    public static HuffmanTree StaticLiteralLengthTree { get; } = new(GetStaticLiteralTreeLength());
 
-    public static HuffmanTree StaticDistanceTree { get; } =
-        new HuffmanTree(GetStaticDistanceTreeLength());
+    public static HuffmanTree StaticDistanceTree { get; } = new(GetStaticDistanceTreeLength());
 
     public HuffmanTree(byte[] codeLengths)
     {

@@ -19,7 +19,7 @@ public class ZipWriter : AbstractWriter
 {
     private readonly CompressionType compressionType;
     private readonly CompressionLevel compressionLevel;
-    private readonly List<ZipCentralDirectoryEntry> entries = new List<ZipCentralDirectoryEntry>();
+    private readonly List<ZipCentralDirectoryEntry> entries = new();
     private readonly string zipComment;
     private long streamPosition;
     private PpmdProperties? ppmdProps;
@@ -324,7 +324,7 @@ public class ZipWriter : AbstractWriter
 
     internal class ZipWritingStream : Stream
     {
-        private readonly CRC32 crc = new CRC32();
+        private readonly CRC32 crc = new();
         private readonly ZipCentralDirectoryEntry entry;
         private readonly Stream originalStream;
         private readonly Stream writeStream;

@@ -94,7 +94,7 @@ public class GZipArchive : AbstractWritableArchive<GZipArchiveEntry, GZipVolume>
         );
     }
 
-    public static GZipArchive Create() => new GZipArchive();
+    public static GZipArchive Create() => new();
 
     /// <summary>
     /// Constructor with a SourceStream able to handle FileInfo and Streams.

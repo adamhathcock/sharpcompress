@@ -6,11 +6,11 @@ namespace SharpCompress.Common.SevenZip;
 
 internal class CFolder
 {
-    internal List<CCoderInfo> _coders = new List<CCoderInfo>();
-    internal List<CBindPair> _bindPairs = new List<CBindPair>();
-    internal List<int> _packStreams = new List<int>();
+    internal List<CCoderInfo> _coders = new();
+    internal List<CBindPair> _bindPairs = new();
+    internal List<int> _packStreams = new();
     internal int _firstPackStreamId;
-    internal List<long> _unpackSizes = new List<long>();
+    internal List<long> _unpackSizes = new();
     internal uint? _unpackCrc;
 
     internal bool UnpackCrcDefined => _unpackCrc != null;

@@ -21,7 +21,7 @@ internal partial class Model
     {
         public uint _address;
         public byte[] _memory;
-        public static readonly PpmContext ZERO = new PpmContext(0, null);
+        public static readonly PpmContext ZERO = new(0, null);
         public const int SIZE = 12;
 
         /// <summary>
@@ -70,13 +70,13 @@ internal partial class Model
         public PpmState Statistics
         {
             get =>
-                new PpmState(
+                new(
                     _memory[_address + 4]
-                        | (((uint)_memory[_address + 5]) << 8)
-                        | (((uint)_memory[_address + 6]) << 16)
-                        | (((uint)_memory[_address + 7]) << 24),
+                    | (((uint)_memory[_address + 5]) << 8)
+                    | (((uint)_memory[_address + 6]) << 16)
+                    | (((uint)_memory[_address + 7]) << 24),
                     _memory
-                );
+                   );
             set
             {
                 _memory[_address + 4] = (byte)value._address;
@@ -92,13 +92,13 @@ internal partial class Model
         public PpmContext Suffix
         {
             get =>
-                new PpmContext(
+                new(
                     _memory[_address + 8]
-                        | (((uint)_memory[_address + 9]) << 8)
-                        | (((uint)_memory[_address + 10]) << 16)
-                        | (((uint)_memory[_address + 11]) << 24),
+                    | (((uint)_memory[_address + 9]) << 8)
+                    | (((uint)_memory[_address + 10]) << 16)
+                    | (((uint)_memory[_address + 11]) << 24),
                     _memory
-                );
+                   );
             set
             {
                 _memory[_address + 8] = (byte)value._address;
@@ -133,7 +133,7 @@ internal partial class Model
         /// </para>
         /// </remarks>
         /// <returns></returns>
-        public PpmState FirstState => new PpmState(_address + 2, _memory);
+        public PpmState FirstState => new(_address + 2, _memory);
 
         /// <summary>
         /// Gets or sets the symbol of the first PPM state.  This is provided for convenience.  The same
@@ -164,13 +164,13 @@ internal partial class Model
         public PpmContext FirstStateSuccessor
         {
             get =>
-                new PpmContext(
+                new(
                     _memory[_address + 4]
-                        | (((uint)_memory[_address + 5]) << 8)
-                        | (((uint)_memory[_address + 6]) << 16)
-                        | (((uint)_memory[_address + 7]) << 24),
+                    | (((uint)_memory[_address + 5]) << 8)
+                    | (((uint)_memory[_address + 6]) << 16)
+                    | (((uint)_memory[_address + 7]) << 24),
                     _memory
-                );
+                   );
             set
             {
                 _memory[_address + 4] = (byte)value._address;
@@ -186,7 +186,7 @@ internal partial class Model
         /// <param name="pointer"></param>
         /// <returns></returns>
         public static implicit operator PpmContext(Pointer pointer) =>
-            new PpmContext(pointer._address, pointer._memory);
+            new(pointer._address, pointer._memory);
 
         /// <summary>
         /// Allow pointer-like addition on a PPM context.

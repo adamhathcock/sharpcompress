@@ -22,7 +22,7 @@ internal struct Pointer
 {
     public uint _address;
     public byte[] _memory;
-    public static readonly Pointer ZERO = new Pointer(0, null);
+    public static readonly Pointer ZERO = new(0, null);
     public const int SIZE = 1;
 
     /// <summary>
@@ -69,7 +69,7 @@ internal struct Pointer
     /// <param name="memoryNode"></param>
     /// <returns></returns>
     public static implicit operator Pointer(MemoryNode memoryNode) =>
-        new Pointer(memoryNode._address, memoryNode._memory);
+        new(memoryNode._address, memoryNode._memory);
 
     /// <summary>
     /// Allow a <see cref="Model.PpmContext"/> to be implicitly converted to a <see cref="Pointer"/>.
@@ -77,7 +77,7 @@ internal struct Pointer
     /// <param name="context"></param>
     /// <returns></returns>
     public static implicit operator Pointer(Model.PpmContext context) =>
-        new Pointer(context._address, context._memory);
+        new(context._address, context._memory);
 
     /// <summary>
     /// Allow a <see cref="PpmState"/> to be implicitly converted to a <see cref="Pointer"/>.
@@ -85,7 +85,7 @@ internal struct Pointer
     /// <param name="state"></param>
     /// <returns></returns>
     public static implicit operator Pointer(PpmState state) =>
-        new Pointer(state._address, state._memory);
+        new(state._address, state._memory);
 
     /// <summary>
     /// Increase the address of a pointer by the given number of bytes.

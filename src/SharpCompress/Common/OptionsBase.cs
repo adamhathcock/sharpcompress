@@ -7,5 +7,5 @@ public class OptionsBase
     /// </summary>
     public bool LeaveStreamOpen { get; set; } = true;
 
-    public ArchiveEncoding ArchiveEncoding { get; set; } = new ArchiveEncoding();
+    public ArchiveEncoding ArchiveEncoding { get; set; } = new();
 }
