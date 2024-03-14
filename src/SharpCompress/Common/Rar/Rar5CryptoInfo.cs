@@ -42,10 +42,8 @@ internal class Rar5CryptoInfo
         }
     }
 
-    public void ReadInitV(MarkingBinaryReader reader)
-    {
+    public void ReadInitV(MarkingBinaryReader reader) =>
         InitV = reader.ReadBytes(EncryptionConstV5.SIZE_INITV);
-    }
 
     public bool UsePswCheck = false;
 

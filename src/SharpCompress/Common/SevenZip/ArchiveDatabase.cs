@@ -15,15 +15,15 @@ internal class ArchiveDatabase
     internal long _startPositionAfterHeader;
     internal long _dataStartPosition;
 
-    internal List<long> _packSizes = new List<long>();
-    internal List<uint?> _packCrCs = new List<uint?>();
-    internal List<CFolder> _folders = new List<CFolder>();
+    internal List<long> _packSizes = new();
+    internal List<uint?> _packCrCs = new();
+    internal List<CFolder> _folders = new();
     internal List<int> _numUnpackStreamsVector;
-    internal List<CFileItem> _files = new List<CFileItem>();
+    internal List<CFileItem> _files = new();
 
-    internal List<long> _packStreamStartPositions = new List<long>();
-    internal List<int> _folderStartFileIndex = new List<int>();
-    internal List<int> _fileIndexToFolderIndexMap = new List<int>();
+    internal List<long> _packStreamStartPositions = new();
+    internal List<int> _folderStartFileIndex = new();
+    internal List<int> _fileIndexToFolderIndexMap = new();
 
     internal IPasswordProvider PasswordProvider { get; }
 

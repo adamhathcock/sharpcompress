@@ -3,6 +3,8 @@ using System.IO;
 using System.Linq;
 using SharpCompress.Archives;
 using SharpCompress.Common;
+using SharpCompress.Common.Zip;
+using SharpCompress.Compressors.Deflate;
 using SharpCompress.Readers;
 using SharpCompress.Readers.Zip;
 using SharpCompress.Test.Mocks;
@@ -23,27 +25,27 @@ public class Zip64Tests : WriterTests
     [Trait("format", "zip64")]
     public void Zip64_Single_Large_File() =>
         // One single file, requires zip64
-        RunSingleTest(1, FOUR_GB_LIMIT, set_zip64: true, forward_only: false);
+        RunSingleTest(1, FOUR_GB_LIMIT, setZip64: true, forwardOnly: false);
 
     [Trait("format", "zip64")]
     public void Zip64_Two_Large_Files() =>
         // One single file, requires zip64
-        RunSingleTest(2, FOUR_GB_LIMIT, set_zip64: true, forward_only: false);
+        RunSingleTest(2, FOUR_GB_LIMIT, setZip64: true, forwardOnly: false);
 
     [Trait("format", "zip64")]
     public void Zip64_Two_Small_files() =>
         // Multiple files, does not require zip64
-        RunSingleTest(2, FOUR_GB_LIMIT / 2, set_zip64: false, forward_only: false);
+        RunSingleTest(2, FOUR_GB_LIMIT / 2, setZip64: false, forwardOnly: false);
 
     [Trait("format", "zip64")]
     public void Zip64_Two_Small_files_stream() =>
         // Multiple files, does not require zip64, and works with streams
-        RunSingleTest(2, FOUR_GB_LIMIT / 2, set_zip64: false, forward_only: true);
+        RunSingleTest(2, FOUR_GB_LIMIT / 2, setZip64: false, forwardOnly: true);
 
     [Trait("format", "zip64")]
     public void Zip64_Two_Small_Files_Zip64() =>
         // Multiple files, use zip64 even though it is not required
-        RunSingleTest(2, FOUR_GB_LIMIT / 2, set_zip64: true, forward_only: false);
+        RunSingleTest(2, FOUR_GB_LIMIT / 2, setZip64: true, forwardOnly: false);
 
     [Trait("format", "zip64")]
     public void Zip64_Single_Large_File_Fail()
@@ -51,7 +53,7 @@ public class Zip64Tests : WriterTests
         try
         {
             // One single file, should fail
-            RunSingleTest(1, FOUR_GB_LIMIT, set_zip64: false, forward_only: false);
+            RunSingleTest(1, FOUR_GB_LIMIT, setZip64: false, forwardOnly: false);
             throw new InvalidOperationException("Test did not fail?");
         }
         catch (NotSupportedException) { }
@@ -63,7 +65,7 @@ public class Zip64Tests : WriterTests
         try
         {
             // One single file, should fail (fast) with zip64
-            RunSingleTest(1, FOUR_GB_LIMIT, set_zip64: true, forward_only: true);
+            RunSingleTest(1, FOUR_GB_LIMIT, setZip64: true, forwardOnly: true);
             throw new InvalidOperationException("Test did not fail?");
         }
         catch (NotSupportedException) { }
@@ -75,7 +77,7 @@ public class Zip64Tests : WriterTests
         try
         {
             // One single file, should fail once the write discovers the problem
-            RunSingleTest(1, FOUR_GB_LIMIT, set_zip64: false, forward_only: true);
+            RunSingleTest(1, FOUR_GB_LIMIT, setZip64: false, forwardOnly: true);
             throw new InvalidOperationException("Test did not fail?");
         }
         catch (NotSupportedException) { }
@@ -84,9 +86,9 @@ public class Zip64Tests : WriterTests
     public void RunSingleTest(
         long files,
         long filesize,
-        bool set_zip64,
-        bool forward_only,
-        long write_chunk_size = 1024 * 1024,
+        bool setZip64,
+        bool forwardOnly,
+        long writeChunkSize = 1024 * 1024,
         string filename = "zip64-test.zip"
     )
     {
@@ -99,7 +101,7 @@ public class Zip64Tests : WriterTests
 
         if (!File.Exists(filename))
         {
-            CreateZipArchive(filename, files, filesize, write_chunk_size, set_zip64, forward_only);
+            CreateZipArchive(filename, files, filesize, writeChunkSize, setZip64, forwardOnly);
         }
 
         var resForward = ReadForwardOnly(filename);
@@ -138,23 +140,20 @@ public class Zip64Tests : WriterTests
         long files,
         long filesize,
         long chunksize,
-        bool set_zip64,
-        bool forward_only
+        bool setZip64,
+        bool forwardOnly
     )
     {
         var data = new byte[chunksize];
 
         // Use deflate for speed
-        var opts = new ZipWriterOptions(CompressionType.Deflate) { UseZip64 = set_zip64 };
+        var opts = new ZipWriterOptions(CompressionType.Deflate) { UseZip64 = setZip64 };
 
         // Use no compression to ensure we hit the limits (actually inflates a bit, but seems better than using method==Store)
-        var eo = new ZipWriterEntryOptions()
-        {
-            DeflateCompressionLevel = Compressors.Deflate.CompressionLevel.None
-        };
+        var eo = new ZipWriterEntryOptions { DeflateCompressionLevel = CompressionLevel.None };
 
         using var zip = File.OpenWrite(filename);
-        using var st = forward_only ? (Stream)new ForwardOnlyStream(zip) : zip;
+        using var st = forwardOnly ? (Stream)new ForwardOnlyStream(zip) : zip;
         using var zipWriter = (ZipWriter)WriterFactory.Open(st, ArchiveType.Zip, opts);
         for (var i = 0; i < files; i++)
         {
@@ -173,9 +172,9 @@ public class Zip64Tests : WriterTests
     {
         long count = 0;
         long size = 0;
-        Common.Zip.ZipEntry? prev = null;
+        ZipEntry? prev = null;
         using (var fs = File.OpenRead(filename))
-        using (var rd = ZipReader.Open(fs, new ReaderOptions() { LookForHeader = false }))
+        using (var rd = ZipReader.Open(fs, new ReaderOptions { LookForHeader = false }))
         {
             while (rd.MoveToNextEntry())
             {

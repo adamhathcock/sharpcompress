@@ -11,11 +11,11 @@ public class Decoder : ICoder, ISetDecoderProperties // ,System.IO.Stream
 {
     private class LenDecoder
     {
-        private BitDecoder _choice = new BitDecoder();
-        private BitDecoder _choice2 = new BitDecoder();
+        private BitDecoder _choice = new();
+        private BitDecoder _choice2 = new();
         private readonly BitTreeDecoder[] _lowCoder = new BitTreeDecoder[Base.K_NUM_POS_STATES_MAX];
         private readonly BitTreeDecoder[] _midCoder = new BitTreeDecoder[Base.K_NUM_POS_STATES_MAX];
-        private BitTreeDecoder _highCoder = new BitTreeDecoder(Base.K_NUM_HIGH_LEN_BITS);
+        private BitTreeDecoder _highCoder = new(Base.K_NUM_HIGH_LEN_BITS);
         private uint _numPosStates;
 
         public void Create(uint numPosStates)
@@ -173,18 +173,18 @@ public class Decoder : ICoder, ISetDecoderProperties // ,System.IO.Stream
         Base.K_NUM_FULL_DISTANCES - Base.K_END_POS_MODEL_INDEX
     ];
 
-    private BitTreeDecoder _posAlignDecoder = new BitTreeDecoder(Base.K_NUM_ALIGN_BITS);
+    private BitTreeDecoder _posAlignDecoder = new(Base.K_NUM_ALIGN_BITS);
 
-    private readonly LenDecoder _lenDecoder = new LenDecoder();
-    private readonly LenDecoder _repLenDecoder = new LenDecoder();
+    private readonly LenDecoder _lenDecoder = new();
+    private readonly LenDecoder _repLenDecoder = new();
 
-    private readonly LiteralDecoder _literalDecoder = new LiteralDecoder();
+    private readonly LiteralDecoder _literalDecoder = new();
 
     private int _dictionarySize;
 
     private uint _posStateMask;
 
-    private Base.State _state = new Base.State();
+    private Base.State _state = new();
     private uint _rep0,
         _rep1,
         _rep2,

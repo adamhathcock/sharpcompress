@@ -9,7 +9,7 @@ internal sealed class RarCryptoWrapper : Stream
 {
     private readonly Stream _actualStream;
     private BlockTransformer _rijndael;
-    private readonly Queue<byte> _data = new Queue<byte>();
+    private readonly Queue<byte> _data = new();
 
     public RarCryptoWrapper(Stream actualStream, byte[] salt, ICryptKey key)
     {
@@ -23,10 +23,8 @@ internal sealed class RarCryptoWrapper : Stream
 
     public override void SetLength(long value) => throw new NotSupportedException();
 
-    public override int Read(byte[] buffer, int offset, int count)
-    {
-        return ReadAndDecrypt(buffer, offset, count);
-    }
+    public override int Read(byte[] buffer, int offset, int count) =>
+        ReadAndDecrypt(buffer, offset, count);
 
     public int ReadAndDecrypt(byte[] buffer, int offset, int count)
     {

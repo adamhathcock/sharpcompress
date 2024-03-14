@@ -11,7 +11,7 @@ internal static class RarArchiveVolumeFactory
         FileInfo? item = null;
 
         //new style rar - ..part1 | /part01 | part001 ....
-        Match m = Regex.Match(part1.Name, @"^(.*\.part)([0-9]+)(\.rar)$", RegexOptions.IgnoreCase);
+        var m = Regex.Match(part1.Name, @"^(.*\.part)([0-9]+)(\.rar)$", RegexOptions.IgnoreCase);
         if (m.Success)
             item = new FileInfo(
                 Path.Combine(

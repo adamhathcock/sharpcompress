@@ -18,7 +18,7 @@ internal class BCJFilterARM : Filter
         {
             if ((buffer[i + 3] & 0xFF) == 0xEB)
             {
-                int src =
+                var src =
                     ((buffer[i + 2] & 0xFF) << 16)
                     | ((buffer[i + 1] & 0xFF) << 8)
                     | (buffer[i] & 0xFF);

@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using SharpCompress.Archives;
 using SharpCompress.Archives.GZip;
+using SharpCompress.Archives.Tar;
 using Xunit;
 
 namespace SharpCompress.Test.GZip;
@@ -92,7 +93,7 @@ public class GZipArchiveTests : ArchiveTests
         Assert.Equal(size, tarStream.Length);
         using (var entryStream = archiveEntry.OpenEntryStream())
         {
-            var result = Archives.Tar.TarArchive.IsTarFile(entryStream);
+            var result = TarArchive.IsTarFile(entryStream);
         }
         Assert.Equal(size, tarStream.Length);
         using (var entryStream = archiveEntry.OpenEntryStream())

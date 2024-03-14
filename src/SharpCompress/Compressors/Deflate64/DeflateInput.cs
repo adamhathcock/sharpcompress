@@ -22,7 +22,7 @@ internal sealed class DeflateInput
         Debug.Assert(StartIndex + Count <= Buffer.Length, "Input buffer is in invalid state!");
     }
 
-    internal InputState DumpState() => new InputState(Count, StartIndex);
+    internal InputState DumpState() => new(Count, StartIndex);
 
     internal void RestoreState(InputState state)
     {

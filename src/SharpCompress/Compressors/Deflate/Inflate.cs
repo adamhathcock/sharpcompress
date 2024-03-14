@@ -105,11 +105,11 @@ internal sealed class InflateBlocks
     internal int[] blens; // bit lengths of codes
     internal uint check; // check on output
     internal object checkfn; // check function
-    internal InflateCodes codes = new InflateCodes(); // if CODES, current state
+    internal InflateCodes codes = new(); // if CODES, current state
     internal int end; // one byte after sliding window
     internal int[] hufts; // single malloc for tree space
     internal int index; // index into blens (or border)
-    internal InfTree inftree = new InfTree();
+    internal InfTree inftree = new();
     internal int last; // true if this block is the last block
     internal int left; // if STORED, bytes left to copy
     private InflateBlockMode mode; // current inflate_block mode

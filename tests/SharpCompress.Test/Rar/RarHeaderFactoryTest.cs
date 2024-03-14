@@ -11,10 +11,10 @@ namespace SharpCompress.Test.Rar;
 /// </summary>
 public class RarHeaderFactoryTest : TestBase
 {
-    private readonly RarHeaderFactory rarHeaderFactory;
+    private readonly RarHeaderFactory _rarHeaderFactory;
 
     public RarHeaderFactoryTest() =>
-        rarHeaderFactory = new RarHeaderFactory(
+        _rarHeaderFactory = new RarHeaderFactory(
             StreamingMode.Seekable,
             new ReaderOptions { LeaveStreamOpen = true }
         );
@@ -40,11 +40,11 @@ public class RarHeaderFactoryTest : TestBase
             FileMode.Open,
             FileAccess.Read
         );
-        foreach (var header in rarHeaderFactory.ReadHeaders(stream))
+        foreach (var header in _rarHeaderFactory.ReadHeaders(stream))
         {
             if (header.HeaderType == HeaderType.Archive || header.HeaderType == HeaderType.Crypt)
             {
-                Assert.Equal(isEncrypted, rarHeaderFactory.IsEncrypted);
+                Assert.Equal(isEncrypted, _rarHeaderFactory.IsEncrypted);
                 break;
             }
         }

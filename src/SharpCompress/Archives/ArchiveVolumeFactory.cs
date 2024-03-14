@@ -11,7 +11,7 @@ internal abstract class ArchiveVolumeFactory
         FileInfo? item = null;
 
         //split 001, 002 ...
-        Match m = Regex.Match(part1.Name, @"^(.*\.)([0-9]+)$", RegexOptions.IgnoreCase);
+        var m = Regex.Match(part1.Name, @"^(.*\.)([0-9]+)$", RegexOptions.IgnoreCase);
         if (m.Success)
             item = new FileInfo(
                 Path.Combine(

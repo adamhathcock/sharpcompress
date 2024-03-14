@@ -62,7 +62,7 @@ internal static class Adler32 // From https://github.com/SixLabors/ImageSharp/bl
         public static int ReduceSum(Vector256<int> accumulator)
         {
             // Add upper lane to lower lane.
-            Vector128<int> vsum = Sse2.Add(accumulator.GetLower(), accumulator.GetUpper());
+            var vsum = Sse2.Add(accumulator.GetLower(), accumulator.GetUpper());
 
             // Add odd to even.
             vsum = Sse2.Add(vsum, Sse2.Shuffle(vsum, 0b_11_11_01_01));
@@ -81,7 +81,7 @@ internal static class Adler32 // From https://github.com/SixLabors/ImageSharp/bl
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int EvenReduceSum(Vector256<int> accumulator)
         {
-            Vector128<int> vsum = Sse2.Add(accumulator.GetLower(), accumulator.GetUpper()); // add upper lane to lower lane
+            var vsum = Sse2.Add(accumulator.GetLower(), accumulator.GetUpper()); // add upper lane to lower lane
             vsum = Sse2.Add(vsum, Sse2.Shuffle(vsum, 0b_11_10_11_10)); // add high to low
 
             // Vector128<int>.ToScalar() isn't optimized pre-net5.0 https://github.com/dotnet/runtime/pull/37882
@@ -189,29 +189,29 @@ internal static class Adler32 // From https://github.com/SixLabors/ImageSharp/bl
     [MethodImpl(InliningOptions.HotPath | InliningOptions.ShortMethod)]
     private static unsafe uint CalculateSse(uint adler, ReadOnlySpan<byte> buffer)
     {
-        uint s1 = adler & 0xFFFF;
-        uint s2 = (adler >> 16) & 0xFFFF;
+        var s1 = adler & 0xFFFF;
+        var s2 = (adler >> 16) & 0xFFFF;
 
         // Process the data in blocks.
-        uint length = (uint)buffer.Length;
-        uint blocks = length / BlockSize;
+        var length = (uint)buffer.Length;
+        var blocks = length / BlockSize;
         length -= blocks * BlockSize;
 
         fixed (byte* bufferPtr = &MemoryMarshal.GetReference(buffer))
         {
             fixed (byte* tapPtr = &MemoryMarshal.GetReference(Tap1Tap2))
             {
-                byte* localBufferPtr = bufferPtr;
+                var localBufferPtr = bufferPtr;
 
                 // _mm_setr_epi8 on x86
-                Vector128<sbyte> tap1 = Sse2.LoadVector128((sbyte*)tapPtr);
-                Vector128<sbyte> tap2 = Sse2.LoadVector128((sbyte*)(tapPtr + 0x10));
-                Vector128<byte> zero = Vector128<byte>.Zero;
+                var tap1 = Sse2.LoadVector128((sbyte*)tapPtr);
+                var tap2 = Sse2.LoadVector128((sbyte*)(tapPtr + 0x10));
+                var zero = Vector128<byte>.Zero;
                 var ones = Vector128.Create((short)1);
 
                 while (blocks > 0)
                 {
-                    uint n = NMAX / BlockSize; /* The NMAX constraint. */
+                    var n = NMAX / BlockSize; /* The NMAX constraint. */
                     if (n > blocks)
                     {
                         n = blocks;
@@ -221,15 +221,15 @@ internal static class Adler32 // From https://github.com/SixLabors/ImageSharp/bl
 
                     // Process n blocks of data. At most NMAX data bytes can be
                     // processed before s2 must be reduced modulo BASE.
-                    Vector128<uint> v_ps = Vector128.CreateScalar(s1 * n);
-                    Vector128<uint> v_s2 = Vector128.CreateScalar(s2);
-                    Vector128<uint> v_s1 = Vector128<uint>.Zero;
+                    var v_ps = Vector128.CreateScalar(s1 * n);
+                    var v_s2 = Vector128.CreateScalar(s2);
+                    var v_s1 = Vector128<uint>.Zero;
 
                     do
                     {
                         // Load 32 input bytes.
-                        Vector128<byte> bytes1 = Sse3.LoadDquVector128(localBufferPtr);
-                        Vector128<byte> bytes2 = Sse3.LoadDquVector128(localBufferPtr + 0x10);
+                        var bytes1 = Sse3.LoadDquVector128(localBufferPtr);
+                        var bytes2 = Sse3.LoadDquVector128(localBufferPtr + 0x10);
 
                         // Add previous block byte sum to v_ps.
                         v_ps = Sse2.Add(v_ps, v_s1);
@@ -237,11 +237,11 @@ internal static class Adler32 // From https://github.com/SixLabors/ImageSharp/bl
                         // Horizontally add the bytes for s1, multiply-adds the
                         // bytes by [ 32, 31, 30, ... ] for s2.
                         v_s1 = Sse2.Add(v_s1, Sse2.SumAbsoluteDifferences(bytes1, zero).AsUInt32());
-                        Vector128<short> mad1 = Ssse3.MultiplyAddAdjacent(bytes1, tap1);
+                        var mad1 = Ssse3.MultiplyAddAdjacent(bytes1, tap1);
                         v_s2 = Sse2.Add(v_s2, Sse2.MultiplyAddAdjacent(mad1, ones).AsUInt32());
 
                         v_s1 = Sse2.Add(v_s1, Sse2.SumAbsoluteDifferences(bytes2, zero).AsUInt32());
-                        Vector128<short> mad2 = Ssse3.MultiplyAddAdjacent(bytes2, tap2);
+                        var mad2 = Ssse3.MultiplyAddAdjacent(bytes2, tap2);
                         v_s2 = Sse2.Add(v_s2, Sse2.MultiplyAddAdjacent(mad2, ones).AsUInt32());
 
                         localBufferPtr += BlockSize;
@@ -281,15 +281,15 @@ internal static class Adler32 // From https://github.com/SixLabors/ImageSharp/bl
     [MethodImpl(InliningOptions.HotPath | InliningOptions.ShortMethod)]
     public static unsafe uint CalculateAvx2(uint adler, ReadOnlySpan<byte> buffer)
     {
-        uint s1 = adler & 0xFFFF;
-        uint s2 = (adler >> 16) & 0xFFFF;
-        uint length = (uint)buffer.Length;
+        var s1 = adler & 0xFFFF;
+        var s2 = (adler >> 16) & 0xFFFF;
+        var length = (uint)buffer.Length;
 
         fixed (byte* bufferPtr = &MemoryMarshal.GetReference(buffer))
         {
-            byte* localBufferPtr = bufferPtr;
+            var localBufferPtr = bufferPtr;
 
-            Vector256<byte> zero = Vector256<byte>.Zero;
+            var zero = Vector256<byte>.Zero;
             var dot3v = Vector256.Create((short)1);
             var dot2v = Vector256.Create(
                 32,
@@ -333,29 +333,29 @@ internal static class Adler32 // From https://github.com/SixLabors/ImageSharp/bl
 
             while (length >= 32)
             {
-                int k = length < NMAX ? (int)length : (int)NMAX;
+                var k = length < NMAX ? (int)length : (int)NMAX;
                 k -= k % 32;
                 length -= (uint)k;
 
-                Vector256<uint> vs10 = vs1;
-                Vector256<uint> vs3 = Vector256<uint>.Zero;
+                var vs10 = vs1;
+                var vs3 = Vector256<uint>.Zero;
 
                 while (k >= 32)
                 {
                     // Load 32 input bytes.
-                    Vector256<byte> block = Avx.LoadVector256(localBufferPtr);
+                    var block = Avx.LoadVector256(localBufferPtr);
 
                     // Sum of abs diff, resulting in 2 x int32's
-                    Vector256<ushort> vs1sad = Avx2.SumAbsoluteDifferences(block, zero);
+                    var vs1sad = Avx2.SumAbsoluteDifferences(block, zero);
 
                     vs1 = Avx2.Add(vs1, vs1sad.AsUInt32());
                     vs3 = Avx2.Add(vs3, vs10);
 
                     // sum 32 uint8s to 16 shorts.
-                    Vector256<short> vshortsum2 = Avx2.MultiplyAddAdjacent(block, dot2v);
+                    var vshortsum2 = Avx2.MultiplyAddAdjacent(block, dot2v);
 
                     // sum 16 shorts to 8 uint32s.
-                    Vector256<int> vsum2 = Avx2.MultiplyAddAdjacent(vshortsum2, dot3v);
+                    var vsum2 = Avx2.MultiplyAddAdjacent(vshortsum2, dot3v);
 
                     vs2 = Avx2.Add(vsum2.AsUInt32(), vs2);
                     vs10 = vs1;
@@ -434,14 +434,14 @@ internal static class Adler32 // From https://github.com/SixLabors/ImageSharp/bl
     [MethodImpl(InliningOptions.HotPath | InliningOptions.ShortMethod)]
     private static unsafe uint CalculateScalar(uint adler, ReadOnlySpan<byte> buffer)
     {
-        uint s1 = adler & 0xFFFF;
-        uint s2 = (adler >> 16) & 0xFFFF;
+        var s1 = adler & 0xFFFF;
+        var s2 = (adler >> 16) & 0xFFFF;
         uint k;
 
         fixed (byte* bufferPtr = buffer)
         {
             var localBufferPtr = bufferPtr;
-            uint length = (uint)buffer.Length;
+            var length = (uint)buffer.Length;
 
             while (length > 0)
             {

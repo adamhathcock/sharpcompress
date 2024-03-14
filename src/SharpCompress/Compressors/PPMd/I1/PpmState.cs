@@ -19,7 +19,7 @@ internal struct PpmState
 {
     public uint _address;
     public byte[] _memory;
-    public static readonly PpmState ZERO = new PpmState(0, null);
+    public static readonly PpmState ZERO = new(0, null);
     public const int SIZE = 6;
 
     /// <summary>
@@ -55,7 +55,7 @@ internal struct PpmState
     public Model.PpmContext Successor
     {
         get =>
-            new Model.PpmContext(
+            new(
                 _memory[_address + 2]
                     | (((uint)_memory[_address + 3]) << 8)
                     | (((uint)_memory[_address + 4]) << 16)
@@ -77,7 +77,7 @@ internal struct PpmState
     /// </summary>
     /// <param name="offset"></param>
     /// <returns></returns>
-    public PpmState this[int offset] => new PpmState((uint)(_address + (offset * SIZE)), _memory);
+    public PpmState this[int offset] => new((uint)(_address + (offset * SIZE)), _memory);
 
     /// <summary>
     /// Allow a pointer to be implicitly converted to a PPM state.
@@ -85,7 +85,7 @@ internal struct PpmState
     /// <param name="pointer"></param>
     /// <returns></returns>
     public static implicit operator PpmState(Pointer pointer) =>
-        new PpmState(pointer._address, pointer._memory);
+        new(pointer._address, pointer._memory);
 
     /// <summary>
     /// Allow pointer-like addition on a PPM state.

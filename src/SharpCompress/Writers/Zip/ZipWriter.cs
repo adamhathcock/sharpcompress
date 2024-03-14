@@ -19,7 +19,7 @@ public class ZipWriter : AbstractWriter
 {
     private readonly CompressionType compressionType;
     private readonly CompressionLevel compressionLevel;
-    private readonly List<ZipCentralDirectoryEntry> entries = new List<ZipCentralDirectoryEntry>();
+    private readonly List<ZipCentralDirectoryEntry> entries = new();
     private readonly string zipComment;
     private long streamPosition;
     private PpmdProperties? ppmdProps;
@@ -61,34 +61,16 @@ public class ZipWriter : AbstractWriter
         base.Dispose(isDisposing);
     }
 
-    private static ZipCompressionMethod ToZipCompressionMethod(CompressionType compressionType)
-    {
-        switch (compressionType)
+    private static ZipCompressionMethod ToZipCompressionMethod(CompressionType compressionType) =>
+        compressionType switch
         {
-            case CompressionType.None:
-            {
-                return ZipCompressionMethod.None;
-            }
-            case CompressionType.Deflate:
-            {
-                return ZipCompressionMethod.Deflate;
-            }
-            case CompressionType.BZip2:
-            {
-                return ZipCompressionMethod.BZip2;
-            }
-            case CompressionType.LZMA:
-            {
-                return ZipCompressionMethod.LZMA;
-            }
-            case CompressionType.PPMd:
-            {
-                return ZipCompressionMethod.PPMd;
-            }
-            default:
-                throw new InvalidFormatException("Invalid compression method: " + compressionType);
-        }
-    }
+            CompressionType.None => ZipCompressionMethod.None,
+            CompressionType.Deflate => ZipCompressionMethod.Deflate,
+            CompressionType.BZip2 => ZipCompressionMethod.BZip2,
+            CompressionType.LZMA => ZipCompressionMethod.LZMA,
+            CompressionType.PPMd => ZipCompressionMethod.PPMd,
+            _ => throw new InvalidFormatException("Invalid compression method: " + compressionType)
+        };
 
     public override void Write(string entryPath, Stream source, DateTime? modificationTime) =>
         Write(
@@ -324,7 +306,7 @@ public class ZipWriter : AbstractWriter
 
     internal class ZipWritingStream : Stream
     {
-        private readonly CRC32 crc = new CRC32();
+        private readonly CRC32 crc = new();
         private readonly ZipCentralDirectoryEntry entry;
         private readonly Stream originalStream;
         private readonly Stream writeStream;

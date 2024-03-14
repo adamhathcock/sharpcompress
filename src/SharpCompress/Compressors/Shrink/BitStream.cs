@@ -57,7 +57,7 @@ namespace SharpCompress.Compressors.Shrink
 
         public int NextBits(int nbits)
         {
-            int result = 0;
+            var result = 0;
             if (nbits > _bitsLeft)
             {
                 int num;

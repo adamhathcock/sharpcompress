@@ -294,7 +294,7 @@ public class ZipArchive : AbstractWritableArchive<ZipArchiveEntry, ZipVolume>
         bool closeStream
     ) => new ZipWritableArchiveEntry(this, source, filePath, size, modified, closeStream);
 
-    public static ZipArchive Create() => new ZipArchive();
+    public static ZipArchive Create() => new();
 
     protected override IReader CreateReaderForSolidExtraction()
     {

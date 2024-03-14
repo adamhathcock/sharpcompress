@@ -9,5 +9,5 @@ public class WriterOptions : OptionsBase
     public CompressionType CompressionType { get; set; }
 
     public static implicit operator WriterOptions(CompressionType compressionType) =>
-        new WriterOptions(compressionType);
+        new(compressionType);
 }

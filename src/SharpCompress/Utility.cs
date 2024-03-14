@@ -9,8 +9,7 @@ namespace SharpCompress;
 [CLSCompliant(false)]
 public static class Utility
 {
-    public static ReadOnlyCollection<T> ToReadOnly<T>(this ICollection<T> items) =>
-        new ReadOnlyCollection<T>(items);
+    public static ReadOnlyCollection<T> ToReadOnly<T>(this ICollection<T> items) => new(items);
 
     /// <summary>
     /// Performs an unsigned bitwise right shift with the specified number

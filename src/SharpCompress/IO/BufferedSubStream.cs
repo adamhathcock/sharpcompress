@@ -3,22 +3,14 @@ using System.IO;
 
 namespace SharpCompress.IO;
 
-internal class BufferedSubStream : NonDisposingStream
+internal class BufferedSubStream(Stream stream, long origin, long bytesToRead)
+    : NonDisposingStream(stream, throwOnDispose: false)
 {
-    private long position;
-    private int cacheOffset;
-    private int cacheLength;
-    private readonly byte[] cache;
+    private int _cacheOffset;
+    private int _cacheLength;
+    private readonly byte[] _cache = new byte[32 << 10];
 
-    public BufferedSubStream(Stream stream, long origin, long bytesToRead)
-        : base(stream, throwOnDispose: false)
-    {
-        position = origin;
-        BytesLeftToRead = bytesToRead;
-        cache = new byte[32 << 10];
-    }
-
-    private long BytesLeftToRead { get; set; }
+    private long BytesLeftToRead { get; set; } = bytesToRead;
 
     public override bool CanRead => true;
 
@@ -45,22 +37,22 @@ internal class BufferedSubStream : NonDisposingStream
 
         if (count > 0)
         {
-            if (cacheLength == 0)
+            if (_cacheLength == 0)
             {
-                cacheOffset = 0;
-                Stream.Position = position;
-                cacheLength = Stream.Read(cache, 0, cache.Length);
-                position += cacheLength;
+                _cacheOffset = 0;
+                Stream.Position = origin;
+                _cacheLength = Stream.Read(_cache, 0, _cache.Length);
+                origin += _cacheLength;
             }
 
-            if (count > cacheLength)
+            if (count > _cacheLength)
             {
-                count = cacheLength;
+                count = _cacheLength;
             }
 
-            Buffer.BlockCopy(cache, cacheOffset, buffer, offset, count);
-            cacheOffset += count;
-            cacheLength -= count;
+            Buffer.BlockCopy(_cache, _cacheOffset, buffer, offset, count);
+            _cacheOffset += count;
+            _cacheLength -= count;
             BytesLeftToRead -= count;
         }
 

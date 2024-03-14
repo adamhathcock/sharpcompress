@@ -2,22 +2,12 @@
 
 namespace SharpCompress.Test.Mocks;
 
-public class TestStream : Stream
+public class TestStream(Stream stream, bool read, bool write, bool seek) : Stream
 {
-    private readonly Stream stream;
-
     public TestStream(Stream stream)
         : this(stream, stream.CanRead, stream.CanWrite, stream.CanSeek) { }
 
     public bool IsDisposed { get; private set; }
-
-    public TestStream(Stream stream, bool read, bool write, bool seek)
-    {
-        this.stream = stream;
-        CanRead = read;
-        CanWrite = write;
-        CanSeek = seek;
-    }
 
     protected override void Dispose(bool disposing)
     {
@@ -26,11 +16,11 @@ public class TestStream : Stream
         IsDisposed = true;
     }
 
-    public override bool CanRead { get; }
+    public override bool CanRead { get; } = read;
 
-    public override bool CanSeek { get; }
+    public override bool CanSeek { get; } = seek;
 
-    public override bool CanWrite { get; }
+    public override bool CanWrite { get; } = write;
 
     public override void Flush() => stream.Flush();
 

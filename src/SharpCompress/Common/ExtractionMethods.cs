@@ -16,7 +16,7 @@ internal static class ExtractionMethods
     )
     {
         string destinationFileName;
-        string fullDestinationDirectoryPath = Path.GetFullPath(destinationDirectory);
+        var fullDestinationDirectoryPath = Path.GetFullPath(destinationDirectory);
 
         //check for trailing slash.
         if (
@@ -36,11 +36,11 @@ internal static class ExtractionMethods
 
         options ??= new ExtractionOptions() { Overwrite = true };
 
-        string file = Path.GetFileName(entry.Key);
+        var file = Path.GetFileName(entry.Key);
         if (options.ExtractFullPath)
         {
-            string folder = Path.GetDirectoryName(entry.Key)!;
-            string destdir = Path.GetFullPath(Path.Combine(fullDestinationDirectoryPath, folder));
+            var folder = Path.GetDirectoryName(entry.Key)!;
+            var destdir = Path.GetFullPath(Path.Combine(fullDestinationDirectoryPath, folder));
 
             if (!Directory.Exists(destdir))
             {
@@ -102,7 +102,7 @@ internal static class ExtractionMethods
         }
         else
         {
-            FileMode fm = FileMode.Create;
+            var fm = FileMode.Create;
             options ??= new ExtractionOptions() { Overwrite = true };
 
             if (!options.Overwrite)
