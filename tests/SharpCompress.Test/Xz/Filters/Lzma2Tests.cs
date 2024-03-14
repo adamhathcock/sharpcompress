@@ -31,7 +31,7 @@ public class Lzma2Tests : XzTestsBase
     [InlineData(40, (uint)(1024 * 1024 * 1024 - 1) * 4 + 3)]
     public void CalculatesDictionarySize(byte inByte, uint dicSize)
     {
-        _filter.Init(new[] { inByte });
+        _filter.Init([inByte]);
         Assert.Equal(_filter.DictionarySize, dicSize);
     }
 
@@ -39,7 +39,7 @@ public class Lzma2Tests : XzTestsBase
     public void CalculatesDictionarySizeError()
     {
         uint temp;
-        _filter.Init(new byte[] { 41 });
+        _filter.Init([41]);
         var ex = Assert.Throws<OverflowException>(() =>
         {
             temp = _filter.DictionarySize;
@@ -59,7 +59,7 @@ public class Lzma2Tests : XzTestsBase
     [Fact]
     public void ReservedBytesThrow()
     {
-        var ex = Assert.Throws<InvalidDataException>(() => _filter.Init(new byte[] { 0xC0 }));
+        var ex = Assert.Throws<InvalidDataException>(() => _filter.Init([0xC0]));
         Assert.Equal("Reserved bits used in LZMA properties", ex.Message);
     }
 }

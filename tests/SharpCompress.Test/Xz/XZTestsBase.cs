@@ -29,7 +29,7 @@ public abstract class XzTestsBase : IDisposable
     protected Stream CompressedEmptyStream { get; } = new MemoryStream(CompressedEmpty);
 
     protected static byte[] CompressedEmpty { get; } =
-        {
+        [
             0xfd,
             0x37,
             0x7a,
@@ -62,7 +62,7 @@ public abstract class XzTestsBase : IDisposable
             0x01,
             0x59,
             0x5a
-        };
+        ];
 
     protected static byte[] OriginalEmptyBytes => Encoding.ASCII.GetBytes(OriginalEmpty);
 
@@ -71,7 +71,7 @@ public abstract class XzTestsBase : IDisposable
     protected Stream CompressedStream { get; } = new MemoryStream(Compressed);
 
     protected static byte[] Compressed { get; } =
-        {
+        [
             0xfd,
             0x37,
             0x7a,
@@ -452,7 +452,7 @@ public abstract class XzTestsBase : IDisposable
             0x04,
             0x59,
             0x5a
-        };
+        ];
     protected static byte[] OriginalBytes => Encoding.ASCII.GetBytes(Original);
 
     protected static string Original { get; } =
@@ -479,7 +479,7 @@ public abstract class XzTestsBase : IDisposable
     protected Stream CompressedIndexedStream { get; } = new MemoryStream(CompressedIndexed);
 
     protected static byte[] CompressedIndexed { get; } =
-        {
+        [
             0xfd,
             0x37,
             0x7a,
@@ -1120,7 +1120,7 @@ public abstract class XzTestsBase : IDisposable
             0x01,
             0x59,
             0x5a
-        };
+        ];
 
     protected static byte[] OriginalIndexedBytes => Encoding.ASCII.GetBytes(OriginalIndexed);
 

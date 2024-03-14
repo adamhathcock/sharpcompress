@@ -20,7 +20,7 @@ public class LzmaStreamTests
     }
 
     private static byte[] LzmaData { get; } =
-        {
+        [
             0x5D,
             0x00,
             0x20,
@@ -175,13 +175,13 @@ public class LzmaStreamTests
             0x76,
             0x03,
             0x90
-        };
+        ];
 
     /// <summary>
     /// The decoded data for <see cref="LzmaData"/>.
     /// </summary>
     private static byte[] LzmaResultData { get; } =
-        {
+        [
             0x01,
             0x00,
             0xFD,
@@ -510,7 +510,7 @@ public class LzmaStreamTests
             0x00,
             0x00,
             0x00
-        };
+        ];
 
     [Fact]
     public void TestLzmaBuffer()

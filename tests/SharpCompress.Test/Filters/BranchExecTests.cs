@@ -13,7 +13,7 @@ namespace SharpCompress.Test.Filters;
 public class BranchExecTests
 {
     private static byte[] X86ResultData { get; } =
-        {
+        [
             0x12,
             0x00,
             0x00,
@@ -91,11 +91,11 @@ public class BranchExecTests
             0x00,
             0x00,
             0x1C,
-            0x00,
-        };
+            0x00
+        ];
 
     private static byte[] X86Data { get; } =
-        {
+        [
             0x12,
             0x00,
             0x00,
@@ -173,11 +173,11 @@ public class BranchExecTests
             0x00,
             0x00,
             0x1C,
-            0x00,
-        };
+            0x00
+        ];
 
     private static byte[] PpcResultData { get; } =
-        {
+        [
             0xF8,
             0x6B,
             0x2E,
@@ -274,10 +274,10 @@ public class BranchExecTests
             0xB2,
             0xD4,
             0xED
-        };
+        ];
 
     private static byte[] PpcData { get; } =
-        {
+        [
             0xF8,
             0x6B,
             0x2E,
@@ -374,10 +374,10 @@ public class BranchExecTests
             0xB2,
             0xD4,
             0xED
-        };
+        ];
 
     private static byte[] ArmResultData { get; } =
-        {
+        [
             0x7C,
             0xFC,
             0x0A,
@@ -474,10 +474,10 @@ public class BranchExecTests
             0xC6,
             0x8F,
             0xE2
-        };
+        ];
 
     private static byte[] ArmData { get; } =
-        {
+        [
             0x7C,
             0xFC,
             0x0A,
@@ -574,10 +574,10 @@ public class BranchExecTests
             0xC6,
             0x8F,
             0xE2
-        };
+        ];
 
     private static byte[] ArmtResultData { get; } =
-        {
+        [
             0x95,
             0x23,
             0xB6,
@@ -690,10 +690,10 @@ public class BranchExecTests
             0xED,
             0x11,
             0x0F
-        };
+        ];
 
     private static byte[] ArmtData { get; } =
-        {
+        [
             0x95,
             0x23,
             0xB6,
@@ -806,10 +806,10 @@ public class BranchExecTests
             0xED,
             0x11,
             0x0F
-        };
+        ];
 
     private static byte[] Ia64ResultData { get; } =
-        {
+        [
             0x4D,
             0xF8,
             0xF2,
@@ -906,10 +906,10 @@ public class BranchExecTests
             0x72,
             0xD5,
             0x0D
-        };
+        ];
 
     private static byte[] Ia64Data { get; } =
-        {
+        [
             0x4D,
             0xF8,
             0xF2,
@@ -1006,10 +1006,10 @@ public class BranchExecTests
             0x72,
             0xD5,
             0x0D
-        };
+        ];
 
     private static byte[] SparcResultData { get; } =
-        {
+        [
             0x78,
             0x2E,
             0x73,
@@ -1087,11 +1087,11 @@ public class BranchExecTests
             0x91,
             0x00,
             0x10,
-            0x00,
-        };
+            0x00
+        ];
 
     private static byte[] SparcData { get; } =
-        {
+        [
             0x78,
             0x2E,
             0x73,
@@ -1169,8 +1169,8 @@ public class BranchExecTests
             0x91,
             0x00,
             0x10,
-            0x00,
-        };
+            0x00
+        ];
 
     private void CompareBuffer(byte[] testBuffer, byte[] targetBuffer) =>
         Assert.Equal(testBuffer, targetBuffer);

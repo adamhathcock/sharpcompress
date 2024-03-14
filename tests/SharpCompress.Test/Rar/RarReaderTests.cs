@@ -13,29 +13,27 @@ public class RarReaderTests : ReaderTests
     [Fact]
     public void Rar_Multi_Reader() =>
         DoRar_Multi_Reader(
-            new[]
-            {
+            [
                 "Rar.multi.part01.rar",
                 "Rar.multi.part02.rar",
                 "Rar.multi.part03.rar",
                 "Rar.multi.part04.rar",
                 "Rar.multi.part05.rar",
                 "Rar.multi.part06.rar"
-            }
+            ]
         );
 
     [Fact]
     public void Rar5_Multi_Reader() =>
         DoRar_Multi_Reader(
-            new[]
-            {
+            [
                 "Rar5.multi.part01.rar",
                 "Rar5.multi.part02.rar",
                 "Rar5.multi.part03.rar",
                 "Rar5.multi.part04.rar",
                 "Rar5.multi.part05.rar",
                 "Rar5.multi.part06.rar"
-            }
+            ]
         );
 
     private void DoRar_Multi_Reader(string[] archives)
@@ -62,15 +60,14 @@ public class RarReaderTests : ReaderTests
     [Fact]
     public void Rar_Multi_Reader_Encrypted() =>
         DoRar_Multi_Reader_Encrypted(
-            new[]
-            {
+            [
                 "Rar.EncryptedParts.part01.rar",
                 "Rar.EncryptedParts.part02.rar",
                 "Rar.EncryptedParts.part03.rar",
                 "Rar.EncryptedParts.part04.rar",
                 "Rar.EncryptedParts.part05.rar",
                 "Rar.EncryptedParts.part06.rar"
-            }
+            ]
         );
 
     private void DoRar_Multi_Reader_Encrypted(string[] archives) =>
@@ -99,29 +96,27 @@ public class RarReaderTests : ReaderTests
     [Fact]
     public void Rar_Multi_Reader_Delete_Files() =>
         DoRar_Multi_Reader_Delete_Files(
-            new[]
-            {
+            [
                 "Rar.multi.part01.rar",
                 "Rar.multi.part02.rar",
                 "Rar.multi.part03.rar",
                 "Rar.multi.part04.rar",
                 "Rar.multi.part05.rar",
                 "Rar.multi.part06.rar"
-            }
+            ]
         );
 
     [Fact]
     public void Rar5_Multi_Reader_Delete_Files() =>
         DoRar_Multi_Reader_Delete_Files(
-            new[]
-            {
+            [
                 "Rar5.multi.part01.rar",
                 "Rar5.multi.part02.rar",
                 "Rar5.multi.part03.rar",
                 "Rar5.multi.part04.rar",
                 "Rar5.multi.part05.rar",
                 "Rar5.multi.part06.rar"
-            }
+            ]
         );
 
     private void DoRar_Multi_Reader_Delete_Files(string[] archives)

@@ -7,30 +7,26 @@ namespace SharpCompress.Test.Mocks;
 // CryptoStream doesn't always trigger the Flush, so this class is used instead
 // See https://referencesource.microsoft.com/#mscorlib/system/security/cryptography/cryptostream.cs,141
 
-public class FlushOnDisposeStream : Stream, IDisposable
+public class FlushOnDisposeStream(Stream innerStream) : Stream
 {
-    private Stream _inner;
-
-    public FlushOnDisposeStream(Stream innerStream) => _inner = innerStream;
-
-    public override bool CanRead => _inner.CanRead;
+    public override bool CanRead => innerStream.CanRead;
 
     public override bool CanSeek => false;
 
     public override bool CanWrite => false;
 
-    public override long Length => _inner.Length;
+    public override long Length => innerStream.Length;
 
     public override long Position
     {
-        get => _inner.Position;
-        set => _inner.Position = value;
+        get => innerStream.Position;
+        set => innerStream.Position = value;
     }
 
     public override void Flush() { }
 
     public override int Read(byte[] buffer, int offset, int count) =>
-        _inner.Read(buffer, offset, count);
+        innerStream.Read(buffer, offset, count);
 
     public override long Seek(long offset, SeekOrigin origin) =>
         throw new NotImplementedException();
@@ -44,8 +40,8 @@ public class FlushOnDisposeStream : Stream, IDisposable
     {
         if (disposing)
         {
-            _inner.Flush();
-            _inner.Close();
+            innerStream.Flush();
+            innerStream.Close();
         }
 
         base.Dispose(disposing);

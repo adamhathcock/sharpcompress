@@ -15,7 +15,7 @@ public class XzIndexTests : XzTestsBase
     [Fact]
     public void RecordsStreamStartOnInit()
     {
-        using Stream badStream = new MemoryStream(new byte[] { 1, 2, 3, 4, 5 });
+        using Stream badStream = new MemoryStream([1, 2, 3, 4, 5]);
         var br = new BinaryReader(badStream);
         var index = new XZIndex(br, false);
         Assert.Equal(0, index.StreamStartPosition);
@@ -24,7 +24,7 @@ public class XzIndexTests : XzTestsBase
     [Fact]
     public void ThrowsIfHasNoIndexMarker()
     {
-        using Stream badStream = new MemoryStream(new byte[] { 1, 2, 3, 4, 5 });
+        using Stream badStream = new MemoryStream([1, 2, 3, 4, 5]);
         var br = new BinaryReader(badStream);
         var index = new XZIndex(br, false);
         Assert.Throws<InvalidDataException>(() => index.Process());
@@ -71,22 +71,7 @@ public class XzIndexTests : XzTestsBase
     {
         // Index with 3-byte padding.
         using Stream badStream = new MemoryStream(
-            new byte[]
-            {
-                0x00,
-                0x01,
-                0x10,
-                0x80,
-                0x01,
-                0x00,
-                0x00,
-                0x00,
-                0xB1,
-                0x01,
-                0xD9,
-                0xC9,
-                0xFF
-            }
+            [0x00, 0x01, 0x10, 0x80, 0x01, 0x00, 0x00, 0x00, 0xB1, 0x01, 0xD9, 0xC9, 0xFF]
         );
         var br = new BinaryReader(badStream);
         var index = new XZIndex(br, false);

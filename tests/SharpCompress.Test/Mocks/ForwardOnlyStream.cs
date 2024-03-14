@@ -3,13 +3,9 @@ using System.IO;
 
 namespace SharpCompress.Test.Mocks;
 
-public class ForwardOnlyStream : Stream
+public class ForwardOnlyStream(Stream stream) : Stream
 {
-    private readonly Stream _stream;
-
     public bool IsDisposed { get; private set; }
-
-    public ForwardOnlyStream(Stream stream) => _stream = stream;
 
     protected override void Dispose(bool disposing)
     {
@@ -17,7 +13,7 @@ public class ForwardOnlyStream : Stream
         {
             if (disposing)
             {
-                _stream.Dispose();
+                stream.Dispose();
                 IsDisposed = true;
                 base.Dispose(disposing);
             }
@@ -40,7 +36,7 @@ public class ForwardOnlyStream : Stream
     }
 
     public override int Read(byte[] buffer, int offset, int count) =>
-        _stream.Read(buffer, offset, count);
+        stream.Read(buffer, offset, count);
 
     public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
 

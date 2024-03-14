@@ -40,7 +40,7 @@ public class XzHeaderTests : XzTestsBase
     public void BadVersionIfCrcOkButStreamFlagUnknown()
     {
         var bytes = (byte[])Compressed.Clone();
-        byte[] streamFlags = { 0x00, 0xF4 };
+        byte[] streamFlags = [0x00, 0xF4];
         var crc = Crc32.Compute(streamFlags).ToLittleEndianBytes();
         streamFlags.CopyTo(bytes, 6);
         crc.CopyTo(bytes, 8);
