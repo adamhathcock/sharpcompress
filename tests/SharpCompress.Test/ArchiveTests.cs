@@ -199,10 +199,7 @@ public class ArchiveTests : ReaderTests
     )
     {
         var src = testArchives.ToArray();
-        using var archive = ArchiveFactory.Open(
-            testArchives.Select(f => new FileInfo(f)),
-            readerOptions
-        );
+        using var archive = ArchiveFactory.Open(src.Select(f => new FileInfo(f)), readerOptions);
         var idx = 0;
         foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
         {

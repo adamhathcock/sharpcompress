@@ -5,11 +5,11 @@ namespace SharpCompress.Test.Mocks;
 
 public class ForwardOnlyStream : Stream
 {
-    private readonly Stream stream;
+    private readonly Stream _stream;
 
     public bool IsDisposed { get; private set; }
 
-    public ForwardOnlyStream(Stream stream) => this.stream = stream;
+    public ForwardOnlyStream(Stream stream) => _stream = stream;
 
     protected override void Dispose(bool disposing)
     {
@@ -17,7 +17,7 @@ public class ForwardOnlyStream : Stream
         {
             if (disposing)
             {
-                stream.Dispose();
+                _stream.Dispose();
                 IsDisposed = true;
                 base.Dispose(disposing);
             }
@@ -40,7 +40,7 @@ public class ForwardOnlyStream : Stream
     }
 
     public override int Read(byte[] buffer, int offset, int count) =>
-        stream.Read(buffer, offset, count);
+        _stream.Read(buffer, offset, count);
 
     public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
 

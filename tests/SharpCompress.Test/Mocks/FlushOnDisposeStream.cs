@@ -9,28 +9,28 @@ namespace SharpCompress.Test.Mocks;
 
 public class FlushOnDisposeStream : Stream, IDisposable
 {
-    private Stream inner;
+    private Stream _inner;
 
-    public FlushOnDisposeStream(Stream innerStream) => inner = innerStream;
+    public FlushOnDisposeStream(Stream innerStream) => _inner = innerStream;
 
-    public override bool CanRead => inner.CanRead;
+    public override bool CanRead => _inner.CanRead;
 
     public override bool CanSeek => false;
 
     public override bool CanWrite => false;
 
-    public override long Length => inner.Length;
+    public override long Length => _inner.Length;
 
     public override long Position
     {
-        get => inner.Position;
-        set => inner.Position = value;
+        get => _inner.Position;
+        set => _inner.Position = value;
     }
 
     public override void Flush() { }
 
     public override int Read(byte[] buffer, int offset, int count) =>
-        inner.Read(buffer, offset, count);
+        _inner.Read(buffer, offset, count);
 
     public override long Seek(long offset, SeekOrigin origin) =>
         throw new NotImplementedException();
@@ -44,8 +44,8 @@ public class FlushOnDisposeStream : Stream, IDisposable
     {
         if (disposing)
         {
-            inner.Flush();
-            inner.Close();
+            _inner.Flush();
+            _inner.Close();
         }
 
         base.Dispose(disposing);

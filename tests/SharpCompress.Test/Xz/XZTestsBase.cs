@@ -4,9 +4,9 @@ using System.Text;
 
 namespace SharpCompress.Test.Xz;
 
-public abstract class XZTestsBase : IDisposable
+public abstract class XzTestsBase : IDisposable
 {
-    public XZTestsBase()
+    public XzTestsBase()
     {
         RewindEmpty(CompressedEmptyStream);
         Rewind(CompressedStream);

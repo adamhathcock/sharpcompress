@@ -6,6 +6,11 @@ using SharpCompress.Readers;
 using SharpCompress.Readers.Tar;
 using SharpCompress.Test.Mocks;
 using Xunit;
+#if !NETFRAMEWORK
+using System.Runtime.InteropServices;
+using Mono.Unix;
+#endif
+
 
 namespace SharpCompress.Test.Tar;
 
@@ -124,7 +129,7 @@ public class TarReaderTests : ReaderTests
     {
         using Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.bz2"));
         using var reader = TarReader.Open(stream);
-        List<string> names = new List<string>();
+        var names = new List<string>();
         while (reader.MoveToNextEntry())
         {
             if (!reader.Entry.IsDirectory)
@@ -173,13 +178,11 @@ public class TarReaderTests : ReaderTests
         using var reader = ReaderFactory.Open(stream);
         var memoryStream = new MemoryStream();
 
-        Action action = () => reader.MoveToNextEntry();
-        var exception = Record.Exception(action);
-        Assert.Null(exception);
-        reader.MoveToNextEntry();
+        Assert.True(reader.MoveToNextEntry());
+        Assert.True(reader.MoveToNextEntry());
         reader.WriteEntryTo(memoryStream);
         stream.Close();
-        Assert.Throws<IncompleteArchiveException>(action);
+        Assert.Throws<IncompleteArchiveException>(() => reader.MoveToNextEntry());
     }
 
 #if !NETFRAMEWORK
@@ -191,7 +194,6 @@ public class TarReaderTests : ReaderTests
             Path.Combine(TEST_ARCHIVES_PATH, "TarWithSymlink.tar.gz")
         );
         using var reader = TarReader.Open(stream);
-        List<string> names = new List<string>();
         while (reader.MoveToNextEntry())
         {
             if (reader.Entry.IsDirectory)

@@ -4,7 +4,7 @@ using Xunit;
 
 namespace SharpCompress.Test.Xz;
 
-public class XZHeaderTests : XZTestsBase
+public class XzHeaderTests : XzTestsBase
 {
     [Fact]
     public void ChecksMagicNumber()

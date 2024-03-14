@@ -19,7 +19,7 @@ public class LzmaStreamTests
         Assert.Equal('X', decompressor.ReadByte());
     }
 
-    private static byte[] lzmaData { get; } =
+    private static byte[] LzmaData { get; } =
         {
             0x5D,
             0x00,
@@ -178,9 +178,9 @@ public class LzmaStreamTests
         };
 
     /// <summary>
-    /// The decoded data for <see cref="lzmaData"/>.
+    /// The decoded data for <see cref="LzmaData"/>.
     /// </summary>
-    private static byte[] lzmaResultData { get; } =
+    private static byte[] LzmaResultData { get; } =
         {
             0x01,
             0x00,
@@ -515,7 +515,7 @@ public class LzmaStreamTests
     [Fact]
     public void TestLzmaBuffer()
     {
-        var input = new MemoryStream(lzmaData);
+        var input = new MemoryStream(LzmaData);
         using var output = new MemoryStream();
         var properties = new byte[5];
         input.Read(properties, 0, 5);
@@ -528,13 +528,13 @@ public class LzmaStreamTests
         coder.SetDecoderProperties(properties);
         coder.Code(input, output, input.Length, fileLength, null);
 
-        Assert.Equal(output.ToArray(), lzmaResultData);
+        Assert.Equal(output.ToArray(), LzmaResultData);
     }
 
     [Fact]
     public void TestLzmaStreamEncodingWritesData()
     {
-        using var inputStream = new MemoryStream(lzmaResultData);
+        using var inputStream = new MemoryStream(LzmaResultData);
         using MemoryStream outputStream = new();
         using var lzmaStream = new LzmaStream(LzmaEncoderProperties.Default, false, outputStream);
         inputStream.CopyTo(lzmaStream);
@@ -545,7 +545,7 @@ public class LzmaStreamTests
     [Fact]
     public void TestLzmaEncodingAccuracy()
     {
-        var input = new MemoryStream(lzmaResultData);
+        var input = new MemoryStream(LzmaResultData);
         var compressed = new MemoryStream();
         var lzmaEncodingStream = new LzmaStream(LzmaEncoderProperties.Default, false, compressed);
         input.CopyTo(lzmaEncodingStream);
@@ -558,10 +558,10 @@ public class LzmaStreamTests
             compressed,
             compressed.Length,
             output,
-            lzmaResultData.LongLength
+            LzmaResultData.LongLength
         );
 
-        Assert.Equal(output.ToArray(), lzmaResultData);
+        Assert.Equal(output.ToArray(), LzmaResultData);
     }
 
     private static void DecompressLzmaStream(

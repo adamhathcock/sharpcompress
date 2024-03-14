@@ -4,7 +4,7 @@ using Xunit;
 
 namespace SharpCompress.Test.Xz;
 
-public class XZStreamTests : XZTestsBase
+public class XzStreamTests : XzTestsBase
 {
     [Fact]
     public void CanReadEmptyStream()

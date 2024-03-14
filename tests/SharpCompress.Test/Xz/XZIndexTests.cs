@@ -4,7 +4,7 @@ using Xunit;
 
 namespace SharpCompress.Test.Xz;
 
-public class XZIndexTests : XZTestsBase
+public class XzIndexTests : XzTestsBase
 {
     protected override void RewindEmpty(Stream stream) => stream.Position = 12;
 

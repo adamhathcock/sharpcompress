@@ -31,7 +31,7 @@ using Xunit;
 
 namespace SharpCompress.Test;
 
-public class ADCTest : TestBase
+public class AdcTest : TestBase
 {
     [Fact]
     public void TestBuffer()
@@ -64,7 +64,7 @@ public class ADCTest : TestBase
     }
 
     [Fact]
-    public void TestADCStreamWholeChunk()
+    public void TestAdcStreamWholeChunk()
     {
         using var decFs = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "adc_decompressed.bin"));
         var decompressed = new byte[decFs.Length];
@@ -80,7 +80,7 @@ public class ADCTest : TestBase
     }
 
     [Fact]
-    public void TestADCStream()
+    public void TestAdcStream()
     {
         using var decFs = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "adc_decompressed.bin"));
         var decompressed = new byte[decFs.Length];
@@ -114,11 +114,11 @@ public class ADCTest : TestBase
 
         decFs.Seek(0, SeekOrigin.Begin);
 
-        var crc32a = crcStream.Crc;
+        var crc32A = crcStream.Crc;
 
-        var crc32b = Crc32Stream.Compute(memory.ToArray());
+        var crc32B = Crc32Stream.Compute(memory.ToArray());
 
-        Assert.Equal(crc32, crc32a);
-        Assert.Equal(crc32, crc32b);
+        Assert.Equal(crc32, crc32A);
+        Assert.Equal(crc32, crc32B);
     }
 }
