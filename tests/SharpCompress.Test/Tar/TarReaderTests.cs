@@ -6,11 +6,6 @@ using SharpCompress.Readers;
 using SharpCompress.Readers.Tar;
 using SharpCompress.Test.Mocks;
 using Xunit;
-#if !NETFRAMEWORK
-using System.Runtime.InteropServices;
-using Mono.Unix;
-#endif
-
 
 namespace SharpCompress.Test.Tar;
 
@@ -189,7 +184,9 @@ public class TarReaderTests : ReaderTests
     [Fact]
     public void Tar_GZip_With_Symlink_Entries()
     {
-        var isWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
+        var isWindows = System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(
+            System.Runtime.InteropServices.OSPlatform.Windows
+        );
         using Stream stream = File.OpenRead(
             Path.Combine(TEST_ARCHIVES_PATH, "TarWithSymlink.tar.gz")
         );
@@ -210,7 +207,7 @@ public class TarReaderTests : ReaderTests
                     {
                         if (!isWindows)
                         {
-                            var link = new UnixSymbolicLinkInfo(sourcePath);
+                            var link = new Mono.Unix.UnixSymbolicLinkInfo(sourcePath);
                             if (File.Exists(sourcePath))
                             {
                                 link.Delete(); // equivalent to ln -s -f
@@ -225,7 +222,7 @@ public class TarReaderTests : ReaderTests
                 if (reader.Entry.LinkTarget != null)
                 {
                     var path = Path.Combine(SCRATCH_FILES_PATH, reader.Entry.Key);
-                    var link = new UnixSymbolicLinkInfo(path);
+                    var link = new Mono.Unix.UnixSymbolicLinkInfo(path);
                     if (link.HasContents)
                     {
                         // need to convert the link to an absolute path for comparison
