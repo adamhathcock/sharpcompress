@@ -41,6 +41,9 @@ public class TarReaderTests : ReaderTests
     }
 
     [Fact]
+    public void Tar_Z_Reader() => Read("Tar.tar.Z", CompressionType.Lzw);
+
+    [Fact]
     public void Tar_BZip2_Reader() => Read("Tar.tar.bz2", CompressionType.BZip2);
 
     [Fact]

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using SharpCompress.Archives.GZip;
@@ -10,6 +10,7 @@ using SharpCompress.Compressors.BZip2;
 using SharpCompress.Compressors.Deflate;
 using SharpCompress.Compressors.LZMA;
 using SharpCompress.Compressors.Xz;
+using SharpCompress.Compressors.Lzw;
 using SharpCompress.IO;
 
 namespace SharpCompress.Readers.Tar;
@@ -36,6 +37,7 @@ public class TarReader : AbstractReader<TarEntry, TarVolume>
             CompressionType.GZip => new GZipStream(stream, CompressionMode.Decompress),
             CompressionType.LZip => new LZipStream(stream, CompressionMode.Decompress),
             CompressionType.Xz => new XZStream(stream),
+            CompressionType.Lzw => new LzwStream(stream),
             CompressionType.None => stream,
             _ => throw new NotSupportedException("Invalid compression type: " + compressionType)
         };
