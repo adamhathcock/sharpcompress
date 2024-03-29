@@ -6,6 +6,7 @@ using SharpCompress.Common;
 using SharpCompress.Compressors;
 using SharpCompress.Compressors.BZip2;
 using SharpCompress.Compressors.LZMA;
+using SharpCompress.Compressors.Lzw;
 using SharpCompress.Compressors.Xz;
 using SharpCompress.IO;
 using SharpCompress.Readers;
@@ -156,6 +157,19 @@ public class TarFactory
             {
                 rewindableStream.Rewind(true);
                 reader = new TarReader(rewindableStream, options, CompressionType.Xz);
+                return true;
+            }
+        }
+
+        rewindableStream.Rewind(false);
+        if (LzwStream.IsLzwStream(rewindableStream))
+        {
+            rewindableStream.Rewind(false);
+            var testStream = new LzwStream(rewindableStream);
+            if (TarArchive.IsTarFile(testStream))
+            {
+                rewindableStream.Rewind(true);
+                reader = new TarReader(rewindableStream, options, CompressionType.Lzw);
                 return true;
             }
         }

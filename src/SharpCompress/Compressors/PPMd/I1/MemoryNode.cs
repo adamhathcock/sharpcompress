@@ -27,7 +27,7 @@ internal struct MemoryNode
 {
     public uint _address;
     public byte[] _memory;
-    public static readonly MemoryNode ZERO = new MemoryNode(0, null);
+    public static readonly MemoryNode ZERO = new(0, null);
     public const int SIZE = 12;
 
     /// <summary>
@@ -64,7 +64,7 @@ internal struct MemoryNode
     public MemoryNode Next
     {
         get =>
-            new MemoryNode(
+            new(
                 _memory[_address + 4]
                     | (((uint)_memory[_address + 5]) << 8)
                     | (((uint)_memory[_address + 6]) << 16)
@@ -150,7 +150,7 @@ internal struct MemoryNode
     /// <param name="pointer"></param>
     /// <returns></returns>
     public static implicit operator MemoryNode(Pointer pointer) =>
-        new MemoryNode(pointer._address, pointer._memory);
+        new(pointer._address, pointer._memory);
 
     /// <summary>
     /// Allow pointer-like addition on a memory node.

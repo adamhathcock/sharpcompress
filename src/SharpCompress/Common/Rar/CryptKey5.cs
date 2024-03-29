@@ -34,35 +34,33 @@ internal class CryptKey5 : ICryptKey
         int keyLength
     )
     {
-        using (HMACSHA256 hmac = new HMACSHA256(Encoding.UTF8.GetBytes(password)))
+        using var hmac = new HMACSHA256(Encoding.UTF8.GetBytes(password));
+        var block = hmac.ComputeHash(salt);
+        var finalHash = (byte[])block.Clone();
+
+        var loop = new int[] { iterations, 17, 17 };
+        var res = new List<byte[]> { };
+
+        for (var x = 0; x < 3; x++)
         {
-            byte[] block = hmac.ComputeHash(salt);
-            byte[] finalHash = (byte[])block.Clone();
-
-            var loop = new int[] { iterations, 17, 17 };
-            var res = new List<byte[]> { };
-
-            for (int x = 0; x < 3; x++)
+            for (var i = 1; i < loop[x]; i++)
             {
-                for (int i = 1; i < loop[x]; i++)
+                block = hmac.ComputeHash(block);
+                for (var j = 0; j < finalHash.Length; j++)
                 {
-                    block = hmac.ComputeHash(block);
-                    for (int j = 0; j < finalHash.Length; j++)
-                    {
-                        finalHash[j] ^= block[j];
-                    }
+                    finalHash[j] ^= block[j];
                 }
-
-                res.Add((byte[])finalHash.Clone());
             }
 
-            return res;
+            res.Add((byte[])finalHash.Clone());
         }
+
+        return res;
     }
 
     public ICryptoTransform Transformer(byte[] salt)
     {
-        int iterations = (1 << _cryptoInfo.LG2Count); // Adjust the number of iterations as needed
+        var iterations = (1 << _cryptoInfo.LG2Count); // Adjust the number of iterations as needed
 
         var salt_rar5 = salt.Concat(new byte[] { 0, 0, 0, 1 });
         var derivedKey = GenerateRarPBKDF2Key(
@@ -76,7 +74,7 @@ internal class CryptKey5 : ICryptKey
 
         _pswCheck = new byte[EncryptionConstV5.SIZE_PSWCHECK];
 
-        for (int i = 0; i < SHA256_DIGEST_SIZE; i++)
+        for (var i = 0; i < SHA256_DIGEST_SIZE; i++)
         {
             _pswCheck[i % EncryptionConstV5.SIZE_PSWCHECK] ^= derivedKey[2][i];
         }

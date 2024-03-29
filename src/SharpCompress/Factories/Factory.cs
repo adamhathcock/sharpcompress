@@ -19,7 +19,7 @@ public abstract class Factory : IFactory
         RegisterFactory(new TarFactory());
     }
 
-    private static readonly HashSet<Factory> _factories = new HashSet<Factory>();
+    private static readonly HashSet<Factory> _factories = new();
 
     /// <summary>
     /// Gets the collection of registered <see cref="IFactory"/>.

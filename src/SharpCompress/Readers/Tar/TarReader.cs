@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using SharpCompress.Archives.GZip;
@@ -9,6 +9,7 @@ using SharpCompress.Compressors;
 using SharpCompress.Compressors.BZip2;
 using SharpCompress.Compressors.Deflate;
 using SharpCompress.Compressors.LZMA;
+using SharpCompress.Compressors.Lzw;
 using SharpCompress.Compressors.Xz;
 using SharpCompress.IO;
 
@@ -30,33 +31,16 @@ public class TarReader : AbstractReader<TarEntry, TarVolume>
     protected override Stream RequestInitialStream()
     {
         var stream = base.RequestInitialStream();
-        switch (compressionType)
+        return compressionType switch
         {
-            case CompressionType.BZip2:
-            {
-                return new BZip2Stream(stream, CompressionMode.Decompress, false);
-            }
-            case CompressionType.GZip:
-            {
-                return new GZipStream(stream, CompressionMode.Decompress);
-            }
-            case CompressionType.LZip:
-            {
-                return new LZipStream(stream, CompressionMode.Decompress);
-            }
-            case CompressionType.Xz:
-            {
-                return new XZStream(stream);
-            }
-            case CompressionType.None:
-            {
-                return stream;
-            }
-            default:
-            {
-                throw new NotSupportedException("Invalid compression type: " + compressionType);
-            }
-        }
+            CompressionType.BZip2 => new BZip2Stream(stream, CompressionMode.Decompress, false),
+            CompressionType.GZip => new GZipStream(stream, CompressionMode.Decompress),
+            CompressionType.LZip => new LZipStream(stream, CompressionMode.Decompress),
+            CompressionType.Xz => new XZStream(stream),
+            CompressionType.Lzw => new LzwStream(stream),
+            CompressionType.None => stream,
+            _ => throw new NotSupportedException("Invalid compression type: " + compressionType)
+        };
     }
 
     #region Open
@@ -71,12 +55,12 @@ public class TarReader : AbstractReader<TarEntry, TarVolume>
     {
         stream.CheckNotNull(nameof(stream));
         options = options ?? new ReaderOptions();
-        RewindableStream rewindableStream = new RewindableStream(stream);
+        var rewindableStream = new RewindableStream(stream);
         rewindableStream.StartRecording();
         if (GZipArchive.IsGZipFile(rewindableStream))
         {
             rewindableStream.Rewind(false);
-            GZipStream testStream = new GZipStream(rewindableStream, CompressionMode.Decompress);
+            var testStream = new GZipStream(rewindableStream, CompressionMode.Decompress);
             if (TarArchive.IsTarFile(testStream))
             {
                 rewindableStream.Rewind(true);
@@ -89,11 +73,7 @@ public class TarReader : AbstractReader<TarEntry, TarVolume>
         if (BZip2Stream.IsBZip2(rewindableStream))
         {
             rewindableStream.Rewind(false);
-            BZip2Stream testStream = new BZip2Stream(
-                rewindableStream,
-                CompressionMode.Decompress,
-                false
-            );
+            var testStream = new BZip2Stream(rewindableStream, CompressionMode.Decompress, false);
             if (TarArchive.IsTarFile(testStream))
             {
                 rewindableStream.Rewind(true);
@@ -106,7 +86,7 @@ public class TarReader : AbstractReader<TarEntry, TarVolume>
         if (LZipStream.IsLZipFile(rewindableStream))
         {
             rewindableStream.Rewind(false);
-            LZipStream testStream = new LZipStream(rewindableStream, CompressionMode.Decompress);
+            var testStream = new LZipStream(rewindableStream, CompressionMode.Decompress);
             if (TarArchive.IsTarFile(testStream))
             {
                 rewindableStream.Rewind(true);

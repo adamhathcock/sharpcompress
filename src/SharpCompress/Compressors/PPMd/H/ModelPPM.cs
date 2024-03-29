@@ -22,7 +22,7 @@ internal class ModelPpm
         }
     }
 
-    public SubAllocator SubAlloc { get; } = new SubAllocator();
+    public SubAllocator SubAlloc { get; } = new();
 
     public virtual See2Context DummySee2Cont => _dummySee2Cont;
 
@@ -137,34 +137,34 @@ internal class ModelPpm
 
     // Temp fields
     //UPGRADE_NOTE: Final was removed from the declaration of 'tempState1 '. "ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?index='!DefaultContextWindowIndex'&keyword='jlca1003'"
-    private readonly State _tempState1 = new State(null);
+    private readonly State _tempState1 = new(null);
 
     //UPGRADE_NOTE: Final was removed from the declaration of 'tempState2 '. "ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?index='!DefaultContextWindowIndex'&keyword='jlca1003'"
-    private readonly State _tempState2 = new State(null);
+    private readonly State _tempState2 = new(null);
 
     //UPGRADE_NOTE: Final was removed from the declaration of 'tempState3 '. "ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?index='!DefaultContextWindowIndex'&keyword='jlca1003'"
-    private readonly State _tempState3 = new State(null);
+    private readonly State _tempState3 = new(null);
 
     //UPGRADE_NOTE: Final was removed from the declaration of 'tempState4 '. "ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?index='!DefaultContextWindowIndex'&keyword='jlca1003'"
-    private readonly State _tempState4 = new State(null);
+    private readonly State _tempState4 = new(null);
 
     //UPGRADE_NOTE: Final was removed from the declaration of 'tempStateRef1 '. "ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?index='!DefaultContextWindowIndex'&keyword='jlca1003'"
-    private readonly StateRef _tempStateRef1 = new StateRef();
+    private readonly StateRef _tempStateRef1 = new();
 
     //UPGRADE_NOTE: Final was removed from the declaration of 'tempStateRef2 '. "ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?index='!DefaultContextWindowIndex'&keyword='jlca1003'"
-    private readonly StateRef _tempStateRef2 = new StateRef();
+    private readonly StateRef _tempStateRef2 = new();
 
     //UPGRADE_NOTE: Final was removed from the declaration of 'tempPPMContext1 '. "ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?index='!DefaultContextWindowIndex'&keyword='jlca1003'"
-    private readonly PpmContext _tempPpmContext1 = new PpmContext(null);
+    private readonly PpmContext _tempPpmContext1 = new(null);
 
     //UPGRADE_NOTE: Final was removed from the declaration of 'tempPPMContext2 '. "ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?index='!DefaultContextWindowIndex'&keyword='jlca1003'"
-    private readonly PpmContext _tempPpmContext2 = new PpmContext(null);
+    private readonly PpmContext _tempPpmContext2 = new(null);
 
     //UPGRADE_NOTE: Final was removed from the declaration of 'tempPPMContext3 '. "ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?index='!DefaultContextWindowIndex'&keyword='jlca1003'"
-    private readonly PpmContext _tempPpmContext3 = new PpmContext(null);
+    private readonly PpmContext _tempPpmContext3 = new(null);
 
     //UPGRADE_NOTE: Final was removed from the declaration of 'tempPPMContext4 '. "ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?index='!DefaultContextWindowIndex'&keyword='jlca1003'"
-    private readonly PpmContext _tempPpmContext4 = new PpmContext(null);
+    private readonly PpmContext _tempPpmContext4 = new(null);
 
     //UPGRADE_NOTE: Final was removed from the declaration of 'ps '. "ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?index='!DefaultContextWindowIndex'&keyword='jlca1003'"
     private readonly int[] _ps = new int[MAX_O];

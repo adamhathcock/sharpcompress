@@ -24,7 +24,6 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 using System.IO;
-using SharpCompress.Compressors;
 using SharpCompress.Compressors.ADC;
 using SharpCompress.Compressors.Deflate;
 using SharpCompress.Crypto;
@@ -32,7 +31,7 @@ using Xunit;
 
 namespace SharpCompress.Test;
 
-public class ADCTest : TestBase
+public class AdcTest : TestBase
 {
     [Fact]
     public void TestBuffer()
@@ -65,14 +64,14 @@ public class ADCTest : TestBase
     }
 
     [Fact]
-    public void TestADCStreamWholeChunk()
+    public void TestAdcStreamWholeChunk()
     {
         using var decFs = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "adc_decompressed.bin"));
         var decompressed = new byte[decFs.Length];
         decFs.Read(decompressed, 0, decompressed.Length);
 
         using var cmpFs = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "adc_compressed.bin"));
-        using var decStream = new ADCStream(cmpFs, CompressionMode.Decompress);
+        using var decStream = new ADCStream(cmpFs);
         var test = new byte[262144];
 
         decStream.Read(test, 0, test.Length);
@@ -81,14 +80,14 @@ public class ADCTest : TestBase
     }
 
     [Fact]
-    public void TestADCStream()
+    public void TestAdcStream()
     {
         using var decFs = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "adc_decompressed.bin"));
         var decompressed = new byte[decFs.Length];
         decFs.Read(decompressed, 0, decompressed.Length);
 
         using var cmpFs = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "adc_compressed.bin"));
-        using var decStream = new ADCStream(cmpFs, CompressionMode.Decompress);
+        using var decStream = new ADCStream(cmpFs);
         using var decMs = new MemoryStream();
         var test = new byte[512];
         var count = 0;
@@ -115,11 +114,11 @@ public class ADCTest : TestBase
 
         decFs.Seek(0, SeekOrigin.Begin);
 
-        var crc32a = crcStream.Crc;
+        var crc32A = crcStream.Crc;
 
-        var crc32b = Crc32Stream.Compute(memory.ToArray());
+        var crc32B = Crc32Stream.Compute(memory.ToArray());
 
-        Assert.Equal(crc32, crc32a);
-        Assert.Equal(crc32, crc32b);
+        Assert.Equal(crc32, crc32A);
+        Assert.Equal(crc32, crc32B);
     }
 }

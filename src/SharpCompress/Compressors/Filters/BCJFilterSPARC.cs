@@ -21,7 +21,7 @@ internal class BCJFilterSPARC : Filter
                 || (buffer[i] == 0x7F && (buffer[i + 1] & 0xC0) == 0xC0)
             )
             {
-                int src =
+                var src =
                     ((buffer[i] & 0xFF) << 24)
                     | ((buffer[i + 1] & 0xFF) << 16)
                     | ((buffer[i + 2] & 0xFF) << 8)

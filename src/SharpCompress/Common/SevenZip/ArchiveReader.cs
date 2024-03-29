@@ -14,13 +14,13 @@ namespace SharpCompress.Common.SevenZip;
 internal class ArchiveReader
 {
     internal Stream _stream;
-    internal Stack<DataReader> _readerStack = new Stack<DataReader>();
+    internal Stack<DataReader> _readerStack = new();
     internal DataReader _currentReader;
     internal long _streamOrigin;
     internal long _streamEnding;
     internal byte[] _header;
 
-    private readonly Dictionary<int, Stream> _cachedStreams = new Dictionary<int, Stream>();
+    private readonly Dictionary<int, Stream> _cachedStreams = new();
 
     internal void AddByteStream(byte[] buffer, int offset, int length)
     {
@@ -1359,7 +1359,7 @@ internal class ArchiveReader
     {
         internal int _fileIndex;
         internal int _folderIndex;
-        internal List<bool> _extractStatuses = new List<bool>();
+        internal List<bool> _extractStatuses = new();
 
         internal CExtractFolderInfo(int fileIndex, int folderIndex)
         {

@@ -3,13 +3,9 @@ using System.IO;
 
 namespace SharpCompress.Test.Mocks;
 
-public class ForwardOnlyStream : Stream
+public class ForwardOnlyStream(Stream stream) : Stream
 {
-    private readonly Stream stream;
-
     public bool IsDisposed { get; private set; }
-
-    public ForwardOnlyStream(Stream stream) => this.stream = stream;
 
     protected override void Dispose(bool disposing)
     {

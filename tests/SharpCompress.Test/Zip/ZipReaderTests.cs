@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using SharpCompress.Archives;
 using SharpCompress.Common;
 using SharpCompress.IO;
 using SharpCompress.Readers;
@@ -70,7 +71,7 @@ public class ZipReaderTests : ReaderTests
                 {
                     reader.WriteEntryToDirectory(
                         SCRATCH_FILES_PATH,
-                        new ExtractionOptions() { ExtractFullPath = true, Overwrite = true }
+                        new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
                     );
                 }
             }
@@ -108,7 +109,7 @@ public class ZipReaderTests : ReaderTests
         using (
             Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Zip.bzip2.pkware.zip"))
         )
-        using (var reader = ZipReader.Open(stream, new ReaderOptions() { Password = "test" }))
+        using (var reader = ZipReader.Open(stream, new ReaderOptions { Password = "test" }))
         {
             while (reader.MoveToNextEntry())
             {
@@ -117,7 +118,7 @@ public class ZipReaderTests : ReaderTests
                     Assert.Equal(CompressionType.BZip2, reader.Entry.CompressionType);
                     reader.WriteEntryToDirectory(
                         SCRATCH_FILES_PATH,
-                        new ExtractionOptions() { ExtractFullPath = true, Overwrite = true }
+                        new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
                     );
                 }
             }
@@ -139,7 +140,7 @@ public class ZipReaderTests : ReaderTests
                 {
                     reader.WriteEntryToDirectory(
                         SCRATCH_FILES_PATH,
-                        new ExtractionOptions() { ExtractFullPath = true, Overwrite = true }
+                        new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
                     );
                 }
             }
@@ -160,7 +161,7 @@ public class ZipReaderTests : ReaderTests
             {
                 reader.WriteEntryToDirectory(
                     SCRATCH_FILES_PATH,
-                    new ExtractionOptions() { ExtractFullPath = true, Overwrite = true }
+                    new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
                 );
             }
         }
@@ -176,7 +177,7 @@ public class ZipReaderTests : ReaderTests
                     Path.Combine(TEST_ARCHIVES_PATH, "Zip.lzma.WinzipAES.zip")
                 )
             )
-            using (var reader = ZipReader.Open(stream, new ReaderOptions() { Password = "test" }))
+            using (var reader = ZipReader.Open(stream, new ReaderOptions { Password = "test" }))
             {
                 while (reader.MoveToNextEntry())
                 {
@@ -185,7 +186,7 @@ public class ZipReaderTests : ReaderTests
                         Assert.Equal(CompressionType.Unknown, reader.Entry.CompressionType);
                         reader.WriteEntryToDirectory(
                             SCRATCH_FILES_PATH,
-                            new ExtractionOptions() { ExtractFullPath = true, Overwrite = true }
+                            new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
                         );
                     }
                 }
@@ -201,7 +202,7 @@ public class ZipReaderTests : ReaderTests
                 Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.WinzipAES.zip")
             )
         )
-        using (var reader = ZipReader.Open(stream, new ReaderOptions() { Password = "test" }))
+        using (var reader = ZipReader.Open(stream, new ReaderOptions { Password = "test" }))
         {
             while (reader.MoveToNextEntry())
             {
@@ -210,7 +211,7 @@ public class ZipReaderTests : ReaderTests
                     Assert.Equal(CompressionType.Unknown, reader.Entry.CompressionType);
                     reader.WriteEntryToDirectory(
                         SCRATCH_FILES_PATH,
-                        new ExtractionOptions() { ExtractFullPath = true, Overwrite = true }
+                        new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
                     );
                 }
             }
@@ -223,7 +224,7 @@ public class ZipReaderTests : ReaderTests
     {
         var count = 0;
         using (Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "zipcrypto.zip")))
-        using (var reader = ZipReader.Open(stream, new ReaderOptions() { Password = "test" }))
+        using (var reader = ZipReader.Open(stream, new ReaderOptions { Password = "test" }))
         {
             while (reader.MoveToNextEntry())
             {
@@ -232,7 +233,7 @@ public class ZipReaderTests : ReaderTests
                     Assert.Equal(CompressionType.None, reader.Entry.CompressionType);
                     reader.WriteEntryToDirectory(
                         SCRATCH_FILES_PATH,
-                        new ExtractionOptions() { ExtractFullPath = true, Overwrite = true }
+                        new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
                     );
                     count++;
                 }
@@ -364,7 +365,7 @@ public class ZipReaderTests : ReaderTests
     {
         var zipPath = Path.Combine(TEST_ARCHIVES_PATH, "64bitstream.zip.7z");
         using var stream = File.Open(zipPath, FileMode.Open, FileAccess.Read);
-        var archive = Archives.ArchiveFactory.Open(stream);
+        var archive = ArchiveFactory.Open(stream);
         var reader = archive.ExtractAllEntries();
         reader.MoveToNextEntry();
         var zipReader = ZipReader.Open(reader.OpenEntryStream());

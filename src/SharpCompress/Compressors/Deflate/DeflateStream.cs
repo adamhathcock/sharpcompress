@@ -366,9 +366,5 @@ public class DeflateStream : Stream
     #endregion
 
     public MemoryStream InputBuffer =>
-        new MemoryStream(
-            _baseStream._z.InputBuffer,
-            _baseStream._z.NextIn,
-            _baseStream._z.AvailableBytesIn
-        );
+        new(_baseStream._z.InputBuffer, _baseStream._z.NextIn, _baseStream._z.AvailableBytesIn);
 }

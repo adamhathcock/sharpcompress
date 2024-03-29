@@ -10,15 +10,15 @@ namespace SharpCompress.Test;
 
 public class TestBase : IDisposable
 {
-    private string SOLUTION_BASE_PATH;
-    protected string TEST_ARCHIVES_PATH;
-    protected string ORIGINAL_FILES_PATH;
-    protected string MISC_TEST_FILES_PATH;
-    private string SCRATCH_BASE_PATH;
-    public string SCRATCH_FILES_PATH;
-    protected string SCRATCH2_FILES_PATH;
+    private readonly string SOLUTION_BASE_PATH;
+    protected readonly string TEST_ARCHIVES_PATH;
+    protected readonly string ORIGINAL_FILES_PATH;
+    protected readonly string MISC_TEST_FILES_PATH;
+    private readonly string SCRATCH_BASE_PATH;
+    protected readonly string SCRATCH_FILES_PATH;
+    protected readonly string SCRATCH2_FILES_PATH;
 
-    public TestBase()
+    protected TestBase()
     {
         var index = AppDomain.CurrentDomain.BaseDirectory.IndexOf(
             "SharpCompress.Test",
@@ -110,14 +110,14 @@ public class TestBase : IDisposable
             Assert.True(extracted.Contains(orig.Key));
 
             CompareFilesByPath(orig.Single(), extracted[orig.Key].Single());
-            CompareFilesByTimeAndAttribut(orig.Single(), extracted[orig.Key].Single());
+            CompareFilesByTimeAndAttribute(orig.Single(), extracted[orig.Key].Single());
         }
     }
 
     /// <summary>
     /// Verifies the files by extension also check modified time and attributes.
     /// </summary>
-    protected void VerifyFilesByExtensionEx()
+    private void VerifyFilesByExtensionEx()
     {
         var extracted = Directory
             .EnumerateFiles(SCRATCH_FILES_PATH, "*.*", SearchOption.AllDirectories)
@@ -133,7 +133,7 @@ public class TestBase : IDisposable
             Assert.True(extracted.Contains(orig.Key));
 
             CompareFilesByPath(orig.Single(), extracted[orig.Key].Single());
-            CompareFilesByTimeAndAttribut(orig.Single(), extracted[orig.Key].Single());
+            CompareFilesByTimeAndAttribute(orig.Single(), extracted[orig.Key].Single());
         }
     }
 
@@ -194,7 +194,7 @@ public class TestBase : IDisposable
         }
     }
 
-    protected void CompareFilesByTimeAndAttribut(string file1, string file2)
+    private void CompareFilesByTimeAndAttribute(string file1, string file2)
     {
         var fi1 = new FileInfo(file1);
         var fi2 = new FileInfo(file2);

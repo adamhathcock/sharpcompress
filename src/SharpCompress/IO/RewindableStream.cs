@@ -5,98 +5,98 @@ namespace SharpCompress.IO;
 
 public class RewindableStream : Stream
 {
-    private readonly Stream stream;
-    private MemoryStream bufferStream = new MemoryStream();
-    private bool isRewound;
-    private bool isDisposed;
+    private readonly Stream _stream;
+    private MemoryStream _bufferStream = new();
+    private bool _isRewound;
+    private bool _isDisposed;
 
-    public RewindableStream(Stream stream) => this.stream = stream;
+    public RewindableStream(Stream stream) => this._stream = stream;
 
     internal bool IsRecording { get; private set; }
 
     protected override void Dispose(bool disposing)
     {
-        if (isDisposed)
+        if (_isDisposed)
         {
             return;
         }
-        isDisposed = true;
+        _isDisposed = true;
         base.Dispose(disposing);
         if (disposing)
         {
-            stream.Dispose();
+            _stream.Dispose();
         }
     }
 
     public void Rewind(bool stopRecording)
     {
-        isRewound = true;
+        _isRewound = true;
         IsRecording = !stopRecording;
-        bufferStream.Position = 0;
+        _bufferStream.Position = 0;
     }
 
     public void Rewind(MemoryStream buffer)
     {
-        if (bufferStream.Position >= buffer.Length)
+        if (_bufferStream.Position >= buffer.Length)
         {
-            bufferStream.Position -= buffer.Length;
+            _bufferStream.Position -= buffer.Length;
         }
         else
         {
-            bufferStream.TransferTo(buffer);
+            _bufferStream.TransferTo(buffer);
             //create new memorystream to allow proper resizing as memorystream could be a user provided buffer
             //https://github.com/adamhathcock/sharpcompress/issues/306
-            bufferStream = new MemoryStream();
+            _bufferStream = new MemoryStream();
             buffer.Position = 0;
-            buffer.TransferTo(bufferStream);
-            bufferStream.Position = 0;
+            buffer.TransferTo(_bufferStream);
+            _bufferStream.Position = 0;
         }
-        isRewound = true;
+        _isRewound = true;
     }
 
     public void StartRecording()
     {
         //if (isRewound && bufferStream.Position != 0)
         //   throw new System.NotImplementedException();
-        if (bufferStream.Position != 0)
+        if (_bufferStream.Position != 0)
         {
-            var data = bufferStream.ToArray();
-            var position = bufferStream.Position;
-            bufferStream.SetLength(0);
-            bufferStream.Write(data, (int)position, data.Length - (int)position);
-            bufferStream.Position = 0;
+            var data = _bufferStream.ToArray();
+            var position = _bufferStream.Position;
+            _bufferStream.SetLength(0);
+            _bufferStream.Write(data, (int)position, data.Length - (int)position);
+            _bufferStream.Position = 0;
         }
         IsRecording = true;
     }
 
     public override bool CanRead => true;
 
-    public override bool CanSeek => stream.CanSeek;
+    public override bool CanSeek => _stream.CanSeek;
 
     public override bool CanWrite => false;
 
     public override void Flush() { }
 
-    public override long Length => stream.Length;
+    public override long Length => _stream.Length;
 
     public override long Position
     {
-        get => stream.Position + bufferStream.Position - bufferStream.Length;
+        get => _stream.Position + _bufferStream.Position - _bufferStream.Length;
         set
         {
-            if (!isRewound)
+            if (!_isRewound)
             {
-                stream.Position = value;
+                _stream.Position = value;
             }
-            else if (value < stream.Position - bufferStream.Length || value >= stream.Position)
+            else if (value < _stream.Position - _bufferStream.Length || value >= _stream.Position)
             {
-                stream.Position = value;
-                isRewound = false;
-                bufferStream.SetLength(0);
+                _stream.Position = value;
+                _isRewound = false;
+                _bufferStream.SetLength(0);
             }
             else
             {
-                bufferStream.Position = value - stream.Position + bufferStream.Length;
+                _bufferStream.Position = value - _stream.Position + _bufferStream.Length;
             }
         }
     }
@@ -110,32 +110,32 @@ public class RewindableStream : Stream
             return 0;
         }
         int read;
-        if (isRewound && bufferStream.Position != bufferStream.Length)
+        if (_isRewound && _bufferStream.Position != _bufferStream.Length)
         {
             // don't read more than left
-            var readCount = Math.Min(count, (int)(bufferStream.Length - bufferStream.Position));
-            read = bufferStream.Read(buffer, offset, readCount);
+            var readCount = Math.Min(count, (int)(_bufferStream.Length - _bufferStream.Position));
+            read = _bufferStream.Read(buffer, offset, readCount);
             if (read < readCount)
             {
-                var tempRead = stream.Read(buffer, offset + read, count - read);
+                var tempRead = _stream.Read(buffer, offset + read, count - read);
                 if (IsRecording)
                 {
-                    bufferStream.Write(buffer, offset + read, tempRead);
+                    _bufferStream.Write(buffer, offset + read, tempRead);
                 }
                 read += tempRead;
             }
-            if (bufferStream.Position == bufferStream.Length && !IsRecording)
+            if (_bufferStream.Position == _bufferStream.Length && !IsRecording)
             {
-                isRewound = false;
-                bufferStream.SetLength(0);
+                _isRewound = false;
+                _bufferStream.SetLength(0);
             }
             return read;
         }
 
-        read = stream.Read(buffer, offset, count);
+        read = _stream.Read(buffer, offset, count);
         if (IsRecording)
         {
-            bufferStream.Write(buffer, offset, read);
+            _bufferStream.Write(buffer, offset, read);
         }
         return read;
     }

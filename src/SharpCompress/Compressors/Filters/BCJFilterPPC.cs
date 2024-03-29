@@ -18,7 +18,7 @@ internal class BCJFilterPPC : Filter
         {
             if ((buffer[i] & 0xFC) == 0x48 && (buffer[i + 3] & 0x03) == 0x01)
             {
-                int src =
+                var src =
                     ((buffer[i] & 0x03) << 24)
                     | ((buffer[i + 1] & 0xFF) << 16)
                     | ((buffer[i + 2] & 0xFF) << 8)

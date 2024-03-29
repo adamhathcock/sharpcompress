@@ -9,56 +9,56 @@ using Xunit;
 
 namespace SharpCompress.Test.Xz.Filters;
 
-public class BCJTests : XZTestsBase
+public class BcjTests : XzTestsBase
 {
-    private readonly ArmFilter armFilter;
-    private readonly ArmThumbFilter armtFilter;
-    private readonly IA64Filter ia64Filter;
-    private readonly PowerPCFilter ppcFilter;
-    private readonly SparcFilter sparcFilter;
-    private readonly X86Filter x86Filter;
+    private readonly ArmFilter _armFilter;
+    private readonly ArmThumbFilter _armtFilter;
+    private readonly IA64Filter _ia64Filter;
+    private readonly PowerPCFilter _ppcFilter;
+    private readonly SparcFilter _sparcFilter;
+    private readonly X86Filter _x86Filter;
 
-    public BCJTests()
+    public BcjTests()
     {
-        armFilter = new ArmFilter();
-        armtFilter = new ArmThumbFilter();
-        ia64Filter = new IA64Filter();
-        ppcFilter = new PowerPCFilter();
-        sparcFilter = new SparcFilter();
-        x86Filter = new X86Filter();
+        _armFilter = new ArmFilter();
+        _armtFilter = new ArmThumbFilter();
+        _ia64Filter = new IA64Filter();
+        _ppcFilter = new PowerPCFilter();
+        _sparcFilter = new SparcFilter();
+        _x86Filter = new X86Filter();
     }
 
     [Fact]
     public void IsOnlyAllowedLast()
     {
-        Assert.False(armFilter.AllowAsLast);
-        Assert.True(armFilter.AllowAsNonLast);
+        Assert.False(_armFilter.AllowAsLast);
+        Assert.True(_armFilter.AllowAsNonLast);
 
-        Assert.False(armtFilter.AllowAsLast);
-        Assert.True(armtFilter.AllowAsNonLast);
+        Assert.False(_armtFilter.AllowAsLast);
+        Assert.True(_armtFilter.AllowAsNonLast);
 
-        Assert.False(ia64Filter.AllowAsLast);
-        Assert.True(ia64Filter.AllowAsNonLast);
+        Assert.False(_ia64Filter.AllowAsLast);
+        Assert.True(_ia64Filter.AllowAsNonLast);
 
-        Assert.False(ppcFilter.AllowAsLast);
-        Assert.True(ppcFilter.AllowAsNonLast);
+        Assert.False(_ppcFilter.AllowAsLast);
+        Assert.True(_ppcFilter.AllowAsNonLast);
 
-        Assert.False(sparcFilter.AllowAsLast);
-        Assert.True(sparcFilter.AllowAsNonLast);
+        Assert.False(_sparcFilter.AllowAsLast);
+        Assert.True(_sparcFilter.AllowAsNonLast);
 
-        Assert.False(x86Filter.AllowAsLast);
-        Assert.True(x86Filter.AllowAsNonLast);
+        Assert.False(_x86Filter.AllowAsLast);
+        Assert.True(_x86Filter.AllowAsNonLast);
     }
 
     [Fact]
     public void ChangesStreamSize()
     {
-        Assert.False(armFilter.ChangesDataSize);
-        Assert.False(armtFilter.ChangesDataSize);
-        Assert.False(ia64Filter.ChangesDataSize);
-        Assert.False(ppcFilter.ChangesDataSize);
-        Assert.False(sparcFilter.ChangesDataSize);
-        Assert.False(x86Filter.ChangesDataSize);
+        Assert.False(_armFilter.ChangesDataSize);
+        Assert.False(_armtFilter.ChangesDataSize);
+        Assert.False(_ia64Filter.ChangesDataSize);
+        Assert.False(_ppcFilter.ChangesDataSize);
+        Assert.False(_sparcFilter.ChangesDataSize);
+        Assert.False(_x86Filter.ChangesDataSize);
     }
 
     [Theory]
@@ -67,22 +67,22 @@ public class BCJTests : XZTestsBase
     public void OnlyAcceptsOneByte(byte[] bytes)
     {
         InvalidDataException ex;
-        ex = Assert.Throws<InvalidDataException>(() => armFilter.Init(bytes));
+        ex = Assert.Throws<InvalidDataException>(() => _armFilter.Init(bytes));
         Assert.Equal("ARM properties unexpected length", ex.Message);
 
-        ex = Assert.Throws<InvalidDataException>(() => armtFilter.Init(bytes));
+        ex = Assert.Throws<InvalidDataException>(() => _armtFilter.Init(bytes));
         Assert.Equal("ARM Thumb properties unexpected length", ex.Message);
 
-        ex = Assert.Throws<InvalidDataException>(() => ia64Filter.Init(bytes));
+        ex = Assert.Throws<InvalidDataException>(() => _ia64Filter.Init(bytes));
         Assert.Equal("IA64 properties unexpected length", ex.Message);
 
-        ex = Assert.Throws<InvalidDataException>(() => ppcFilter.Init(bytes));
+        ex = Assert.Throws<InvalidDataException>(() => _ppcFilter.Init(bytes));
         Assert.Equal("PPC properties unexpected length", ex.Message);
 
-        ex = Assert.Throws<InvalidDataException>(() => sparcFilter.Init(bytes));
+        ex = Assert.Throws<InvalidDataException>(() => _sparcFilter.Init(bytes));
         Assert.Equal("SPARC properties unexpected length", ex.Message);
 
-        ex = Assert.Throws<InvalidDataException>(() => x86Filter.Init(bytes));
+        ex = Assert.Throws<InvalidDataException>(() => _x86Filter.Init(bytes));
         Assert.Equal("X86 properties unexpected length", ex.Message);
     }
 }

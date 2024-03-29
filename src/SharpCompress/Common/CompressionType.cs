@@ -15,5 +15,6 @@ public enum CompressionType
     Xz,
     Unknown,
     Deflate64,
-    Shrink
+    Shrink,
+    Lzw
 }

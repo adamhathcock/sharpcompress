@@ -12,10 +12,7 @@ internal class CryptKey3 : ICryptKey
 
     private string _password;
 
-    public CryptKey3(string password)
-    {
-        _password = password ?? "";
-    }
+    public CryptKey3(string password) => _password = password ?? "";
 
     public ICryptoTransform Transformer(byte[] salt)
     {

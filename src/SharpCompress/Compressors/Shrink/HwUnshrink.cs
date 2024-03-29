@@ -27,14 +27,14 @@ namespace SharpCompress.Compressors.Shrink
 
         private static void CodeTabInit(CodeTabEntry[] codeTab)
         {
-            for (int i = 0; i <= byte.MaxValue; i++)
+            for (var i = 0; i <= byte.MaxValue; i++)
             {
                 codeTab[i].prefixCode = (ushort)i;
                 codeTab[i].extByte = (byte)i;
                 codeTab[i].len = 1;
             }
 
-            for (int i = byte.MaxValue + 1; i <= MAX_CODE; i++)
+            for (var i = byte.MaxValue + 1; i <= MAX_CODE; i++)
             {
                 codeTab[i].prefixCode = INVALID_CODE;
             }
@@ -42,11 +42,11 @@ namespace SharpCompress.Compressors.Shrink
 
         private static void UnshrinkPartialClear(CodeTabEntry[] codeTab, ref CodeQueue queue)
         {
-            bool[] isPrefix = new bool[MAX_CODE + 1];
+            var isPrefix = new bool[MAX_CODE + 1];
             int codeQueueSize;
 
             // Scan for codes that have been used as a prefix.
-            for (int i = CONTROL_CODE + 1; i <= MAX_CODE; i++)
+            for (var i = CONTROL_CODE + 1; i <= MAX_CODE; i++)
             {
                 if (codeTab[i].prefixCode != INVALID_CODE)
                 {
@@ -56,7 +56,7 @@ namespace SharpCompress.Compressors.Shrink
 
             // Clear "non-prefix" codes in the table; populate the code queue.
             codeQueueSize = 0;
-            for (int i = CONTROL_CODE + 1; i <= MAX_CODE; i++)
+            for (var i = CONTROL_CODE + 1; i <= MAX_CODE; i++)
             {
                 if (!isPrefix[i])
                 {
@@ -240,8 +240,8 @@ namespace SharpCompress.Compressors.Shrink
             out int dstUsed
         )
         {
-            CodeTabEntry[] codeTab = new CodeTabEntry[HASHTAB_SIZE];
-            CodeQueue queue = new CodeQueue();
+            var codeTab = new CodeTabEntry[HASHTAB_SIZE];
+            var queue = new CodeQueue();
             var stream = new BitStream(src, srcLen);
             int codeSize,
                 dstPos,
@@ -323,7 +323,7 @@ namespace SharpCompress.Compressors.Shrink
                 }
 
                 // Output the string represented by the current code.
-                UnshrnkStatus status = OutputCode(
+                var status = OutputCode(
                     currCode,
                     dst,
                     dstPos,
@@ -343,7 +343,7 @@ namespace SharpCompress.Compressors.Shrink
 
                 // Verify that the output matches walking the prefixes.
                 var c = currCode;
-                for (int i = 0; i < len; i++)
+                for (var i = 0; i < len; i++)
                 {
                     // assert(codeTab[c].len == len - i);
                     //assert(codeTab[c].extByte == dst[dstPos + len - i - 1]);
@@ -414,15 +414,13 @@ namespace SharpCompress.Compressors.Shrink
             q.nextIdx = 0;
         }
 
-        private static ushort CodeQueueNext(ref CodeQueue q)
-        {
+        private static ushort CodeQueueNext(ref CodeQueue q) =>
             //assert(q.nextIdx < q.codes.Length);
-            return q.codes[q.nextIdx];
-        }
+            q.codes[q.nextIdx];
 
         private static ushort CodeQueueRemoveNext(ref CodeQueue q)
         {
-            ushort code = CodeQueueNext(ref q);
+            var code = CodeQueueNext(ref q);
             if (code != INVALID_CODE)
             {
                 q.nextIdx++;

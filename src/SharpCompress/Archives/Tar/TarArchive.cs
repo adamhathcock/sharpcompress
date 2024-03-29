@@ -195,7 +195,7 @@ public class TarArchive : AbstractWritableArchive<TarArchiveEntry, TarVolume>
         }
     }
 
-    public static TarArchive Create() => new TarArchive();
+    public static TarArchive Create() => new();
 
     protected override TarArchiveEntry CreateEntryInternal(
         string filePath,

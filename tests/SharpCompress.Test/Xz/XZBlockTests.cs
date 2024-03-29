@@ -5,7 +5,7 @@ using Xunit;
 
 namespace SharpCompress.Test.Xz;
 
-public class XZBlockTests : XZTestsBase
+public class XzBlockTests : XzTestsBase
 {
     protected override void Rewind(Stream stream) => stream.Position = 12;
 
@@ -28,10 +28,10 @@ public class XZBlockTests : XZTestsBase
     {
         var bytes = new byte[] { 0 };
         using Stream indexBlockStream = new MemoryStream(bytes);
-        var XZBlock = new XZBlock(indexBlockStream, CheckType.CRC64, 8);
+        var xzBlock = new XZBlock(indexBlockStream, CheckType.CRC64, 8);
         Assert.Throws<XZIndexMarkerReachedException>(() =>
         {
-            ReadBytes(XZBlock, 1);
+            ReadBytes(xzBlock, 1);
         });
     }
 
@@ -42,10 +42,10 @@ public class XZBlockTests : XZTestsBase
         bytes[20]++;
         using Stream badCrcStream = new MemoryStream(bytes);
         Rewind(badCrcStream);
-        var XZBlock = new XZBlock(badCrcStream, CheckType.CRC64, 8);
+        var xzBlock = new XZBlock(badCrcStream, CheckType.CRC64, 8);
         var ex = Assert.Throws<InvalidDataException>(() =>
         {
-            ReadBytes(XZBlock, 1);
+            ReadBytes(xzBlock, 1);
         });
         Assert.Equal("Block header corrupt", ex.Message);
     }
@@ -53,24 +53,24 @@ public class XZBlockTests : XZTestsBase
     [Fact]
     public void CanReadM()
     {
-        var XZBlock = new XZBlock(CompressedStream, CheckType.CRC64, 8);
-        Assert.Equal(Encoding.ASCII.GetBytes("M"), ReadBytes(XZBlock, 1));
+        var xzBlock = new XZBlock(CompressedStream, CheckType.CRC64, 8);
+        Assert.Equal(Encoding.ASCII.GetBytes("M"), ReadBytes(xzBlock, 1));
     }
 
     [Fact]
     public void CanReadMary()
     {
-        var XZBlock = new XZBlock(CompressedStream, CheckType.CRC64, 8);
-        Assert.Equal(Encoding.ASCII.GetBytes("M"), ReadBytes(XZBlock, 1));
-        Assert.Equal(Encoding.ASCII.GetBytes("a"), ReadBytes(XZBlock, 1));
-        Assert.Equal(Encoding.ASCII.GetBytes("ry"), ReadBytes(XZBlock, 2));
+        var xzBlock = new XZBlock(CompressedStream, CheckType.CRC64, 8);
+        Assert.Equal(Encoding.ASCII.GetBytes("M"), ReadBytes(xzBlock, 1));
+        Assert.Equal(Encoding.ASCII.GetBytes("a"), ReadBytes(xzBlock, 1));
+        Assert.Equal(Encoding.ASCII.GetBytes("ry"), ReadBytes(xzBlock, 2));
     }
 
     [Fact]
     public void CanReadPoemWithStreamReader()
     {
-        var XZBlock = new XZBlock(CompressedStream, CheckType.CRC64, 8);
-        var sr = new StreamReader(XZBlock);
+        var xzBlock = new XZBlock(CompressedStream, CheckType.CRC64, 8);
+        var sr = new StreamReader(xzBlock);
         Assert.Equal(sr.ReadToEnd(), Original);
     }
 
@@ -78,8 +78,8 @@ public class XZBlockTests : XZTestsBase
     public void NoopWhenNoPadding()
     {
         // CompressedStream's only block has no padding.
-        var XZBlock = new XZBlock(CompressedStream, CheckType.CRC64, 8);
-        var sr = new StreamReader(XZBlock);
+        var xzBlock = new XZBlock(CompressedStream, CheckType.CRC64, 8);
+        var sr = new StreamReader(xzBlock);
         sr.ReadToEnd();
         Assert.Equal(0L, CompressedStream.Position % 4L);
     }
@@ -88,8 +88,8 @@ public class XZBlockTests : XZTestsBase
     public void SkipsPaddingWhenPresent()
     {
         // CompressedIndexedStream's first block has 1-byte padding.
-        var XZBlock = new XZBlock(CompressedIndexedStream, CheckType.CRC64, 8);
-        var sr = new StreamReader(XZBlock);
+        var xzBlock = new XZBlock(CompressedIndexedStream, CheckType.CRC64, 8);
+        var sr = new StreamReader(xzBlock);
         sr.ReadToEnd();
         Assert.Equal(0L, CompressedIndexedStream.Position % 4L);
     }

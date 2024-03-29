@@ -52,19 +52,19 @@ internal sealed partial class Unpack : BitInput, IRarUnpack
 
     public int PpmEscChar { get; set; }
 
-    private readonly ModelPpm ppm = new ModelPpm();
+    private readonly ModelPpm ppm = new();
 
-    private readonly RarVM rarVM = new RarVM();
+    private readonly RarVM rarVM = new();
 
     // Filters code, one entry per filter
-    private readonly List<UnpackFilter> filters = new List<UnpackFilter>();
+    private readonly List<UnpackFilter> filters = new();
 
     // Filters stack, several entrances of same filter are possible
-    private readonly List<UnpackFilter> prgStack = new List<UnpackFilter>();
+    private readonly List<UnpackFilter> prgStack = new();
 
     // lengths of preceding blocks, one length per filter. Used to reduce size
     // required to write block length if lengths are repeating
-    private readonly List<int> oldFilterLengths = new List<int>();
+    private readonly List<int> oldFilterLengths = new();
 
     private int lastFilter;
 

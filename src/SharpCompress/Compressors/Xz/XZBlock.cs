@@ -14,7 +14,7 @@ public sealed class XZBlock : XZReadOnlyStream
     public int BlockHeaderSize => (_blockHeaderSizeByte + 1) * 4;
     public ulong? CompressedSize { get; private set; }
     public ulong? UncompressedSize { get; private set; }
-    public Stack<BlockFilter> Filters { get; private set; } = new Stack<BlockFilter>();
+    public Stack<BlockFilter> Filters { get; private set; } = new();
     public bool HeaderIsLoaded { get; private set; }
     private CheckType _checkType;
     private readonly int _checkSize;

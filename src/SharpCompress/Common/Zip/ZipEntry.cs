@@ -22,47 +22,18 @@ public class ZipEntry : Entry
         }
     }
 
-    public override CompressionType CompressionType
-    {
-        get
+    public override CompressionType CompressionType =>
+        _filePart.Header.CompressionMethod switch
         {
-            switch (_filePart.Header.CompressionMethod)
-            {
-                case ZipCompressionMethod.BZip2:
-                {
-                    return CompressionType.BZip2;
-                }
-                case ZipCompressionMethod.Deflate:
-                {
-                    return CompressionType.Deflate;
-                }
-                case ZipCompressionMethod.Deflate64:
-                {
-                    return CompressionType.Deflate64;
-                }
-                case ZipCompressionMethod.LZMA:
-                {
-                    return CompressionType.LZMA;
-                }
-                case ZipCompressionMethod.PPMd:
-                {
-                    return CompressionType.PPMd;
-                }
-                case ZipCompressionMethod.None:
-                {
-                    return CompressionType.None;
-                }
-                case ZipCompressionMethod.Shrink:
-                {
-                    return CompressionType.Shrink;
-                }
-                default:
-                {
-                    return CompressionType.Unknown;
-                }
-            }
-        }
-    }
+            ZipCompressionMethod.BZip2 => CompressionType.BZip2,
+            ZipCompressionMethod.Deflate => CompressionType.Deflate,
+            ZipCompressionMethod.Deflate64 => CompressionType.Deflate64,
+            ZipCompressionMethod.LZMA => CompressionType.LZMA,
+            ZipCompressionMethod.PPMd => CompressionType.PPMd,
+            ZipCompressionMethod.None => CompressionType.None,
+            ZipCompressionMethod.Shrink => CompressionType.Shrink,
+            _ => CompressionType.Unknown
+        };
 
     public override long Crc => _filePart.Header.Crc;
 

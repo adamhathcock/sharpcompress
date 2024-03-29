@@ -269,7 +269,7 @@ internal partial class Unpack
     private byte[] FilterDstMemory = Array.Empty<byte>();
 
     // Filters code, one entry per filter.
-    private readonly List<UnpackFilter> Filters = new List<UnpackFilter>();
+    private readonly List<UnpackFilter> Filters = new();
 
     private readonly uint[] OldDist = new uint[4];
     private uint OldDistPtr;
@@ -297,7 +297,7 @@ internal partial class Unpack
 
     private byte[] Window;
 
-    private readonly FragmentedWindow FragWindow = new FragmentedWindow();
+    private readonly FragmentedWindow FragWindow = new();
     private bool Fragmented;
 
     private int64 DestUnpSize;
@@ -393,18 +393,18 @@ internal partial class Unpack
 
     // Buffer to read VM filters code. We moved it here from AddVMCode
     // function to reduce time spent in BitInput constructor.
-    private readonly BitInput VMCodeInp = new BitInput(true);
+    private readonly BitInput VMCodeInp = new(true);
 
     // Filters code, one entry per filter.
-    private readonly List<UnpackFilter30> Filters30 = new List<UnpackFilter30>();
+    private readonly List<UnpackFilter30> Filters30 = new();
 
     // Filters stack, several entrances of same filter are possible.
-    private readonly List<UnpackFilter30> PrgStack = new List<UnpackFilter30>();
+    private readonly List<UnpackFilter30> PrgStack = new();
 
     // Lengths of preceding data blocks, one length of one last block
     // for every filter. Used to reduce the size required to write
     // the data block length if lengths are repeating.
-    private readonly List<int> OldFilterLengths = new List<int>();
+    private readonly List<int> OldFilterLengths = new();
 
     /*#if RarV2017_RAR_SMP
     // More than 8 threads are unlikely to provide a noticeable gain

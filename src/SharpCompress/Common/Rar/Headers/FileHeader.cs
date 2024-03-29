@@ -109,7 +109,7 @@ internal class FileHeader : RarHeader
         const ushort FHEXTRA_HASH = 0x02;
         const ushort FHEXTRA_HTIME = 0x03;
         // const ushort FHEXTRA_VERSION = 0x04;
-        // const ushort FHEXTRA_REDIR = 0x05;
+        const ushort FHEXTRA_REDIR = 0x05;
         // const ushort FHEXTRA_UOWNER = 0x06;
         // const ushort FHEXTRA_SUBDATA = 0x07;
 
@@ -120,7 +120,6 @@ internal class FileHeader : RarHeader
             var type = reader.ReadRarVIntUInt16();
             switch (type)
             {
-                //TODO
                 case FHEXTRA_CRYPT: // file encryption
 
                     {
@@ -171,11 +170,17 @@ internal class FileHeader : RarHeader
                 //
                 //                        }
                 //                        break;
-                //                    case FHEXTRA_REDIR: // file system redirection
-                //                        {
-                //
-                //                        }
-                //                        break;
+                case FHEXTRA_REDIR: // file system redirection
+
+                    {
+                        RedirType = reader.ReadRarVIntByte();
+                        RedirFlags = reader.ReadRarVIntByte();
+                        var nn = reader.ReadRarVIntUInt16();
+                        var bb = reader.ReadBytes(nn);
+                        RedirTargetName = ConvertPathV5(Encoding.UTF8.GetString(bb, 0, bb.Length));
+                    }
+                    break;
+                //TODO
                 //                    case FHEXTRA_UOWNER: // unix owner
                 //                        {
                 //
@@ -189,6 +194,7 @@ internal class FileHeader : RarHeader
 
                 default:
                     // skip unknown record types to allow new record types to be added in the future
+                    //Console.WriteLine($"unhandled rar header field type {type}");
                     break;
             }
             // drain any trailing bytes of extra record
@@ -436,6 +442,12 @@ internal class FileHeader : RarHeader
     internal byte CompressionAlgorithm { get; private set; }
 
     public bool IsSolid { get; private set; }
+
+    public byte RedirType { get; private set; }
+    public bool IsRedir => RedirType != 0;
+    public byte RedirFlags { get; private set; }
+    public bool IsRedirDirectory => (RedirFlags & RedirFlagV5.DIRECTORY) != 0;
+    public string RedirTargetName { get; private set; }
 
     // unused for UnpackV1 implementation (limitation)
     internal size_t WindowSize { get; private set; }

@@ -4,13 +4,13 @@ namespace SharpCompress.Compressors.Rar.VM;
 
 internal class VMPreparedProgram
 {
-    internal List<VMPreparedCommand> Commands = new List<VMPreparedCommand>();
-    internal List<VMPreparedCommand> AltCommands = new List<VMPreparedCommand>();
+    internal List<VMPreparedCommand> Commands = new();
+    internal List<VMPreparedCommand> AltCommands = new();
 
     public int CommandCount { get; set; }
 
-    internal List<byte> GlobalData = new List<byte>();
-    internal List<byte> StaticData = new List<byte>();
+    internal List<byte> GlobalData = new();
+    internal List<byte> StaticData = new();
 
     // static data contained in DB operators
     internal int[] InitR = new int[7];

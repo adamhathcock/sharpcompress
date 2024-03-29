@@ -25,15 +25,15 @@ internal partial class Unpack
 
     private readonly AudioVariables[] AudV = new AudioVariables[4];
 
-    private readonly LitDecode LD = new LitDecode();
+    private readonly LitDecode LD = new();
 
-    private readonly DistDecode DD = new DistDecode();
+    private readonly DistDecode DD = new();
 
-    private readonly LowDistDecode LDD = new LowDistDecode();
+    private readonly LowDistDecode LDD = new();
 
-    private readonly RepDecode RD = new RepDecode();
+    private readonly RepDecode RD = new();
 
-    private readonly BitDecode BD = new BitDecode();
+    private readonly BitDecode BD = new();
 
     private static readonly int[] LDecode =
     {

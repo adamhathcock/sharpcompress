@@ -72,8 +72,8 @@ internal class ReadOnlySubStream : NonDisposingStream
 #if !NETFRAMEWORK && !NETSTANDARD2_0
     public override int Read(Span<byte> buffer)
     {
-        var slice_len = BytesLeftToRead < buffer.Length ? BytesLeftToRead : buffer.Length;
-        var read = Stream.Read(buffer.Slice(0, (int)slice_len));
+        var sliceLen = BytesLeftToRead < buffer.Length ? BytesLeftToRead : buffer.Length;
+        var read = Stream.Read(buffer.Slice(0, (int)sliceLen));
         if (read > 0)
         {
             BytesLeftToRead -= read;

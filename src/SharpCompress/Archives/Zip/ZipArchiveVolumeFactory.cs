@@ -12,7 +12,7 @@ internal static class ZipArchiveVolumeFactory
 
         //load files with zip/zipx first. Swapped to end once loaded in ZipArchive
         //new style .zip, z01.. | .zipx, zx01 - if the numbers go beyond 99 then they use 100 ...1000 etc
-        Match m = Regex.Match(part1.Name, @"^(.*\.)(zipx?|zx?[0-9]+)$", RegexOptions.IgnoreCase);
+        var m = Regex.Match(part1.Name, @"^(.*\.)(zipx?|zx?[0-9]+)$", RegexOptions.IgnoreCase);
         if (m.Success)
             item = new FileInfo(
                 Path.Combine(

@@ -14,7 +14,7 @@ internal class RarStream : Stream
 
     private bool fetch;
 
-    private byte[] tmpBuffer = new byte[65536];
+    private byte[] tmpBuffer = BufferPool.Rent(65536);
     private int tmpOffset;
     private int tmpCount;
 
@@ -40,6 +40,11 @@ internal class RarStream : Stream
     {
         if (!isDisposed)
         {
+            if (disposing)
+            {
+                BufferPool.Return(this.tmpBuffer);
+                this.tmpBuffer = null;
+            }
             isDisposed = true;
             base.Dispose(disposing);
             readStream.Dispose();
@@ -86,6 +91,13 @@ internal class RarStream : Stream
             fetch = false;
         }
         _position += outTotal;
+        if (count > 0 && outTotal == 0 && _position != Length)
+        {
+            // sanity check, eg if we try to decompress a redir entry
+            throw new InvalidOperationException(
+                $"unpacked file size does not match header: expected {Length} found {_position}"
+            );
+        }
         return outTotal;
     }
 
@@ -111,16 +123,7 @@ internal class RarStream : Stream
         }
         if (count > 0)
         {
-            if (tmpBuffer.Length < tmpCount + count)
-            {
-                var newBuffer = new byte[
-                    tmpBuffer.Length * 2 > tmpCount + count
-                        ? tmpBuffer.Length * 2
-                        : tmpCount + count
-                ];
-                Buffer.BlockCopy(tmpBuffer, 0, newBuffer, 0, tmpCount);
-                tmpBuffer = newBuffer;
-            }
+            EnsureBufferCapacity(count);
             Buffer.BlockCopy(buffer, offset, tmpBuffer, tmpCount, count);
             tmpCount += count;
             tmpOffset = 0;
@@ -129,6 +132,22 @@ internal class RarStream : Stream
         else
         {
             unpack.Suspended = false;
+        }
+    }
+
+    private void EnsureBufferCapacity(int count)
+    {
+        if (this.tmpBuffer.Length < this.tmpCount + count)
+        {
+            var newLength =
+                this.tmpBuffer.Length * 2 > this.tmpCount + count
+                    ? this.tmpBuffer.Length * 2
+                    : this.tmpCount + count;
+            var newBuffer = BufferPool.Rent(newLength);
+            Buffer.BlockCopy(this.tmpBuffer, 0, newBuffer, 0, this.tmpCount);
+            var oldBuffer = this.tmpBuffer;
+            this.tmpBuffer = newBuffer;
+            BufferPool.Return(oldBuffer);
         }
     }
 }
