@@ -85,31 +85,15 @@ public class ZipWriter : AbstractWriter
 
     private static ZipCompressionMethod ToZipCompressionMethod(CompressionType compressionType)
     {
-        switch (compressionType)
+        return compressionType switch
         {
-            case CompressionType.None:
-            {
-                return ZipCompressionMethod.None;
-            }
-            case CompressionType.Deflate:
-            {
-                return ZipCompressionMethod.Deflate;
-            }
-            case CompressionType.BZip2:
-            {
-                return ZipCompressionMethod.BZip2;
-            }
-            case CompressionType.LZMA:
-            {
-                return ZipCompressionMethod.LZMA;
-            }
-            case CompressionType.PPMd:
-            {
-                return ZipCompressionMethod.PPMd;
-            }
-            default:
-                throw new InvalidFormatException("Invalid compression method: " + compressionType);
-        }
+            CompressionType.None => ZipCompressionMethod.None,
+            CompressionType.Deflate => ZipCompressionMethod.Deflate,
+            CompressionType.BZip2 => ZipCompressionMethod.BZip2,
+            CompressionType.LZMA => ZipCompressionMethod.LZMA,
+            CompressionType.PPMd => ZipCompressionMethod.PPMd,
+            _ => throw new InvalidFormatException("Invalid compression method: " + compressionType)
+        };
     }
 
     public override void Write(string entryPath, Stream source, DateTime? modificationTime) =>
@@ -619,7 +603,7 @@ public class ZipWriter : AbstractWriter
         private ulong decompressed;
 
         // Flag to prevent throwing exceptions on Dispose
-        private bool _limitsExceeded;
+        private bool limitsExceeded;
         private bool isDisposed;
 
         internal ZipWritingStream(
@@ -708,7 +692,7 @@ public class ZipWriter : AbstractWriter
 
             await writeStream.DisposeAsync();
 
-            if (_limitsExceeded)
+            if (limitsExceeded)
             {
                 // We have written invalid data into the archive,
                 // so we destroy it now, instead of allowing the user to continue
@@ -836,7 +820,7 @@ public class ZipWriter : AbstractWriter
             {
                 writeStream.Dispose();
 
-                if (_limitsExceeded)
+                if (limitsExceeded)
                 {
                     // We have written invalid data into the archive,
                     // so we destroy it now, instead of allowing the user to continue
@@ -948,7 +932,7 @@ public class ZipWriter : AbstractWriter
             {
                 // Pre-check, the counting.Count is not exact, as we do not know the size before having actually compressed it
                 if (
-                    _limitsExceeded
+                    limitsExceeded
                     || ((decompressed + (uint)count) > uint.MaxValue)
                     || (counting!.Count + (uint)count) > uint.MaxValue
                 )
@@ -972,7 +956,7 @@ public class ZipWriter : AbstractWriter
                     // Throwing the exception here, allows us to avoid
                     // throwing an exception in Dispose() which is discouraged
                     // as it can mask other errors
-                    _limitsExceeded = true;
+                    limitsExceeded = true;
                     throw new NotSupportedException(
                         "Attempted to write a stream that is larger than 4GiB without setting the zip64 option"
                     );
