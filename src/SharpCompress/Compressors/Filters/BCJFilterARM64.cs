@@ -19,7 +19,9 @@ internal class BCJFilterARM64 : Filter
         for (i = offset; i <= end; i += 4)
         {
             uint pc = (uint)(_pos + i - offset);
-            uint instr = BinaryPrimitives.ReadUInt32LittleEndian(new ReadOnlySpan<byte>(buffer, i, 4));
+            uint instr = BinaryPrimitives.ReadUInt32LittleEndian(
+                new ReadOnlySpan<byte>(buffer, i, 4)
+            );
 
             if ((instr >> 26) == 0x25)
             {
@@ -35,8 +37,7 @@ internal class BCJFilterARM64 : Filter
             }
             else if ((instr & 0x9F000000) == 0x90000000)
             {
-                uint src = ((instr >> 29) & 3)
-                    | ((instr >> 3) & 0x001FFFFC);
+                uint src = ((instr >> 29) & 3) | ((instr >> 3) & 0x001FFFFC);
 
                 if (((src + 0x00020000) & 0x001C0000) != 0)
                     continue;
