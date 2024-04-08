@@ -163,6 +163,12 @@ public class SevenZipArchiveTests : ArchiveTests
     public void SevenZipArchive_SPARC_FileRead() => ArchiveFileRead("7Zip.SPARC.7z");
 
     [Fact]
+    public void SevenZipArchive_ARM64_FileRead() => ArchiveFileRead("7Zip.ARM64.7z");
+
+    [Fact]
+    public void SevenZipArchive_RISCV_FileRead() => ArchiveFileRead("7Zip.RISCV.7z");
+
+    [Fact]
     public void SevenZipArchive_Filters_FileRead() => ArchiveFileRead("7Zip.Filters.7z");
 
     [Fact]
