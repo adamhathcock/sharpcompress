@@ -91,7 +91,13 @@ public class TarWriter : AbstractWriter
         header.Size = realSize;
         header.Write(OutputStream);
 
-        size = source.TransferTo(OutputStream, realSize);
+        if (realSize >= int.MaxValue)
+        {
+            throw new NotSupportedException(
+                "TarWriter does not support writing files larger than 2GB."
+            );
+        }
+        size = source.TransferTo(OutputStream, (int)realSize);
         PadTo512(size.Value);
     }
 

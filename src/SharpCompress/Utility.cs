@@ -269,7 +269,7 @@ public static class Utility
         return sTime.AddSeconds(unixtime);
     }
 
-    public static long TransferTo(this Stream source, Stream destination, long? size = null)
+    public static long TransferTo(this Stream source, Stream destination)
     {
         var array = GetTransferByteArray();
         try
@@ -277,16 +277,32 @@ public static class Utility
             long total = 0;
             while (ReadTransferBlock(source, array, out var count))
             {
-                if (size is not null && total + count > size)
+                destination.Write(array, 0, count);
+                total += count;
+            }
+            return total;
+        }
+        finally
+        {
+            ArrayPool<byte>.Shared.Return(array);
+        }
+    }
+
+    public static long TransferTo(this Stream source, Stream destination, int size)
+    {
+        var array = GetTransferByteArray();
+        try
+        {
+            long total = 0;
+            var remaining = size;
+            while (ReadTransferBlock(source, array, remaining, out var count))
+            {
+                destination.Write(array, 0, count);
+                total += count;
+                remaining -= count;
+                if (remaining - count < 0)
                 {
-                    var bytesToWrite = (int)(size - total);
-                    destination.Write(array, 0, bytesToWrite);
-                    total += bytesToWrite;
-                }
-                else
-                {
-                    destination.Write(array, 0, count);
-                    total += count;
+                    break;
                 }
             }
             return total;
@@ -326,6 +342,16 @@ public static class Utility
 
     private static bool ReadTransferBlock(Stream source, byte[] array, out int count) =>
         (count = source.Read(array, 0, array.Length)) != 0;
+
+    private static bool ReadTransferBlock(Stream source, byte[] array, int size, out int count)
+    {
+        if (size > array.Length)
+        {
+            size = array.Length;
+        }
+        count = source.Read(array, 0, size);
+        return count != 0;
+    }
 
     private static byte[] GetTransferByteArray() => ArrayPool<byte>.Shared.Rent(81920);
 
