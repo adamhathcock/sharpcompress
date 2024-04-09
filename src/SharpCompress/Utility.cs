@@ -269,28 +269,24 @@ public static class Utility
         return sTime.AddSeconds(unixtime);
     }
 
-    public static long TransferTo(this Stream source, Stream destination, Int64? size = null)
+    public static long TransferTo(this Stream source, Stream destination, long? size = null)
     {
-        Int64 realSize = size ?? source.Length;
         var array = GetTransferByteArray();
         try
         {
             long total = 0;
             while (ReadTransferBlock(source, array, out var count))
             {
-                total += count;
-                destination.Write(array, 0, count);
-                if (total + count > realSize)
+                if (size is not null && total + count > size)
                 {
-                    int bytesToWrite = (int)(realSize - total);
-                    destination.Write(array, 0, (int)bytesToWrite);
-                    total = realSize;
-                    break;
+                    var bytesToWrite = (int)(size - total);
+                    destination.Write(array, 0, bytesToWrite);
+                    total += bytesToWrite;
                 }
                 else
                 {
-                    total += count;
                     destination.Write(array, 0, count);
+                    total += count;
                 }
             }
             return total;
