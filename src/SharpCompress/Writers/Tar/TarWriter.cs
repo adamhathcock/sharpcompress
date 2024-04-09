@@ -91,7 +91,7 @@ public class TarWriter : AbstractWriter
         header.Size = realSize;
         header.Write(OutputStream);
 
-        size = source.TransferTo(OutputStream);
+        size = source.TransferTo(OutputStream, realSize);
         PadTo512(size.Value);
     }
 

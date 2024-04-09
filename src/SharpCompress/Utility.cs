@@ -269,8 +269,9 @@ public static class Utility
         return sTime.AddSeconds(unixtime);
     }
 
-    public static long TransferTo(this Stream source, Stream destination)
+    public static long TransferTo(this Stream source, Stream destination, Int64? size = null)
     {
+        Int64 realSize = size ?? source.Length;
         var array = GetTransferByteArray();
         try
         {
@@ -279,6 +280,18 @@ public static class Utility
             {
                 total += count;
                 destination.Write(array, 0, count);
+                if (total + count > realSize)
+                {
+                    int bytesToWrite = (int)(realSize - total);
+                    destination.Write(array, 0, (int)bytesToWrite);
+                    total = realSize;
+                    break;
+                }
+                else
+                {
+                    total += count;
+                    destination.Write(array, 0, count);
+                }
             }
             return total;
         }
