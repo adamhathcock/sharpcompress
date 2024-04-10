@@ -288,14 +288,19 @@ public static class Utility
         }
     }
 
-    public static long TransferTo(this Stream source, Stream destination, int size)
+    public static long TransferTo(this Stream source, Stream destination, long maxLength)
     {
         var array = GetTransferByteArray();
         try
         {
             long total = 0;
-            var remaining = size;
-            while (ReadTransferBlock(source, array, remaining, out var count))
+            var remaining = maxLength;
+            var maxReadSize = array.Length;
+            if (remaining < maxLength)
+            {
+                maxReadSize = (int)remaining;
+            }
+            while (ReadTransferBlock(source, array, maxReadSize, out var count))
             {
                 destination.Write(array, 0, count);
                 total += count;
