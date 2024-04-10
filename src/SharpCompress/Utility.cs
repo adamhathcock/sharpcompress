@@ -299,11 +299,11 @@ public static class Utility
             {
                 destination.Write(array, 0, count);
                 total += count;
-                remaining -= count;
                 if (remaining - count < 0)
                 {
                     break;
                 }
+                remaining -= count;
             }
             return total;
         }
