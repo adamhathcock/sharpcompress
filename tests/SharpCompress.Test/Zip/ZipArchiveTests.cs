@@ -646,7 +646,7 @@ public class ZipArchiveTests : ArchiveTests
 
         Assert.Equal(199, len1);
 
-#if !NETFRAMEWORK && !NETSTANDARD2_0
+#if !NETFRAMEWORK
         var len2 = 0;
         var buffer2 = new byte[firstEntry.Size + 256];
 

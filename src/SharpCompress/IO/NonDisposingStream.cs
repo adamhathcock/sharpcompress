@@ -63,7 +63,7 @@ public class NonDisposingStream : Stream
     public override void Write(byte[] buffer, int offset, int count) =>
         Stream.Write(buffer, offset, count);
 
-#if !NETFRAMEWORK && !NETSTANDARD2_0
+#if !NETFRAMEWORK
 
     public override int Read(Span<byte> buffer) => Stream.Read(buffer);
 

@@ -48,7 +48,7 @@ internal class WinzipAesEncryptionData
 
     private void Initialize()
     {
-#if NETFRAMEWORK || NETSTANDARD2_0
+#if NETFRAMEWORK
         var rfc2898 = new Rfc2898DeriveBytes(_password, _salt, RFC2898_ITERATIONS);
 #else
         var rfc2898 = new Rfc2898DeriveBytes(
