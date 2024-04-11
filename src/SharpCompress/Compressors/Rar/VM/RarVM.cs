@@ -228,7 +228,6 @@ internal sealed class RarVM : BitInput
                     break;
 
                 case VMCommands.VM_CMP:
-
                     {
                         var value1 = (VMFlags)GetValue(cmd.IsByteMode, Mem, op1);
                         var result = value1 - GetValue(cmd.IsByteMode, Mem, op2);
@@ -247,7 +246,6 @@ internal sealed class RarVM : BitInput
                     break;
 
                 case VMCommands.VM_CMPB:
-
                     {
                         var value1 = (VMFlags)GetValue(true, Mem, op1);
                         var result = value1 - GetValue(true, Mem, op2);
@@ -265,7 +263,6 @@ internal sealed class RarVM : BitInput
                     break;
 
                 case VMCommands.VM_CMPD:
-
                     {
                         var value1 = (VMFlags)GetValue(false, Mem, op1);
                         var result = value1 - GetValue(false, Mem, op2);
@@ -283,7 +280,6 @@ internal sealed class RarVM : BitInput
                     break;
 
                 case VMCommands.VM_ADD:
-
                     {
                         var value1 = GetValue(cmd.IsByteMode, Mem, op1);
                         var result = (int)(
@@ -351,7 +347,6 @@ internal sealed class RarVM : BitInput
                     break;
 
                 case VMCommands.VM_SUB:
-
                     {
                         var value1 = GetValue(cmd.IsByteMode, Mem, op1);
                         var result = (int)(
@@ -411,7 +406,6 @@ internal sealed class RarVM : BitInput
                     break;
 
                 case VMCommands.VM_INC:
-
                     {
                         var result = (int)(GetValue(cmd.IsByteMode, Mem, op1) & (0xFFffFFffL + 1L));
                         if (cmd.IsByteMode)
@@ -440,7 +434,6 @@ internal sealed class RarVM : BitInput
                     break;
 
                 case VMCommands.VM_DEC:
-
                     {
                         var result = (int)(GetValue(cmd.IsByteMode, Mem, op1) & (0xFFffFFff - 1));
                         SetValue(cmd.IsByteMode, Mem, op1, result);
@@ -463,7 +456,6 @@ internal sealed class RarVM : BitInput
                     continue;
 
                 case VMCommands.VM_XOR:
-
                     {
                         var result =
                             GetValue(cmd.IsByteMode, Mem, op1) ^ GetValue(cmd.IsByteMode, Mem, op2);
@@ -475,7 +467,6 @@ internal sealed class RarVM : BitInput
                     break;
 
                 case VMCommands.VM_AND:
-
                     {
                         var result =
                             GetValue(cmd.IsByteMode, Mem, op1) & GetValue(cmd.IsByteMode, Mem, op2);
@@ -487,7 +478,6 @@ internal sealed class RarVM : BitInput
                     break;
 
                 case VMCommands.VM_OR:
-
                     {
                         var result =
                             GetValue(cmd.IsByteMode, Mem, op1) | GetValue(cmd.IsByteMode, Mem, op2);
@@ -499,7 +489,6 @@ internal sealed class RarVM : BitInput
                     break;
 
                 case VMCommands.VM_TEST:
-
                     {
                         var result =
                             GetValue(cmd.IsByteMode, Mem, op1) & GetValue(cmd.IsByteMode, Mem, op2);
@@ -578,7 +567,6 @@ internal sealed class RarVM : BitInput
                     break;
 
                 case VMCommands.VM_SHL:
-
                     {
                         var value1 = GetValue(cmd.IsByteMode, Mem, op1);
                         var value2 = GetValue(cmd.IsByteMode, Mem, op2);
@@ -596,7 +584,6 @@ internal sealed class RarVM : BitInput
                     break;
 
                 case VMCommands.VM_SHR:
-
                     {
                         var value1 = GetValue(cmd.IsByteMode, Mem, op1);
                         var value2 = GetValue(cmd.IsByteMode, Mem, op2);
@@ -610,7 +597,6 @@ internal sealed class RarVM : BitInput
                     break;
 
                 case VMCommands.VM_SAR:
-
                     {
                         var value1 = GetValue(cmd.IsByteMode, Mem, op1);
                         var value2 = GetValue(cmd.IsByteMode, Mem, op2);
@@ -624,7 +610,6 @@ internal sealed class RarVM : BitInput
                     break;
 
                 case VMCommands.VM_NEG:
-
                     {
                         var result = -GetValue(cmd.IsByteMode, Mem, op1);
                         flags = (VMFlags)(
@@ -645,7 +630,6 @@ internal sealed class RarVM : BitInput
                     break;
 
                 case VMCommands.VM_PUSHA:
-
                     {
                         for (int i = 0, SP = R[7] - 4; i < regCount; i++, SP -= 4)
                         {
@@ -656,7 +640,6 @@ internal sealed class RarVM : BitInput
                     break;
 
                 case VMCommands.VM_POPA:
-
                     {
                         for (int i = 0, SP = R[7]; i < regCount; i++, SP += 4)
                         {
@@ -684,7 +667,6 @@ internal sealed class RarVM : BitInput
                     break;
 
                 case VMCommands.VM_XCHG:
-
                     {
                         var value1 = GetValue(cmd.IsByteMode, Mem, op1);
                         SetValue(cmd.IsByteMode, Mem, op1, GetValue(cmd.IsByteMode, Mem, op2));
@@ -693,7 +675,6 @@ internal sealed class RarVM : BitInput
                     break;
 
                 case VMCommands.VM_MUL:
-
                     {
                         var result = (int)(
                             (
@@ -707,7 +688,6 @@ internal sealed class RarVM : BitInput
                     break;
 
                 case VMCommands.VM_DIV:
-
                     {
                         var divider = GetValue(cmd.IsByteMode, Mem, op2);
                         if (divider != 0)
@@ -719,7 +699,6 @@ internal sealed class RarVM : BitInput
                     break;
 
                 case VMCommands.VM_ADC:
-
                     {
                         var value1 = GetValue(cmd.IsByteMode, Mem, op1);
                         var FC = (int)(flags & VMFlags.VM_FC);
@@ -749,7 +728,6 @@ internal sealed class RarVM : BitInput
                     break;
 
                 case VMCommands.VM_SBB:
-
                     {
                         var value1 = GetValue(cmd.IsByteMode, Mem, op1);
                         var FC = (int)(flags & VMFlags.VM_FC);
@@ -1156,7 +1134,6 @@ internal sealed class RarVM : BitInput
         {
             case VMStandardFilters.VMSF_E8:
             case VMStandardFilters.VMSF_E8E9:
-
                 {
                     var dataSize = R[4];
                     long fileOffset = R[6] & unchecked((int)0xFFffFFff);
@@ -1211,7 +1188,6 @@ internal sealed class RarVM : BitInput
                 break;
 
             case VMStandardFilters.VMSF_ITANIUM:
-
                 {
                     var dataSize = R[4];
                     long fileOffset = R[6] & unchecked((int)0xFFffFFff);
@@ -1269,7 +1245,6 @@ internal sealed class RarVM : BitInput
                 break;
 
             case VMStandardFilters.VMSF_DELTA:
-
                 {
                     var dataSize = R[4] & unchecked((int)0xFFffFFff);
                     var channels = R[0] & unchecked((int)0xFFffFFff);
@@ -1300,7 +1275,6 @@ internal sealed class RarVM : BitInput
                 break;
 
             case VMStandardFilters.VMSF_RGB:
-
                 {
                     // byte *SrcData=Mem,*DestData=SrcData+DataSize;
                     int dataSize = R[4],
@@ -1366,7 +1340,6 @@ internal sealed class RarVM : BitInput
                 break;
 
             case VMStandardFilters.VMSF_AUDIO:
-
                 {
                     int dataSize = R[4],
                         channels = R[0];
@@ -1497,7 +1470,6 @@ internal sealed class RarVM : BitInput
                 break;
 
             case VMStandardFilters.VMSF_UPCASE:
-
                 {
                     int dataSize = R[4],
                         srcPos = 0,

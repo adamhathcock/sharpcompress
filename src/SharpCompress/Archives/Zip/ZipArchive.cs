@@ -231,7 +231,6 @@ public class ZipArchive : AbstractWritableArchive<ZipArchiveEntry, ZipVolume>
                 switch (h.ZipHeaderType)
                 {
                     case ZipHeaderType.DirectoryEntry:
-
                         {
                             var deh = (DirectoryEntryHeader)h;
                             Stream s;

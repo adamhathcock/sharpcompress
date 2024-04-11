@@ -98,13 +98,11 @@ public class RarHeaderFactory
                 switch (StreamingMode)
                 {
                     case StreamingMode.Seekable:
-
                         {
                             reader.BaseStream.Position += ph.DataSize;
                         }
                         break;
                     case StreamingMode.Streaming:
-
                         {
                             reader.BaseStream.Skip(ph.DataSize);
                         }
@@ -146,14 +144,12 @@ public class RarHeaderFactory
                 switch (StreamingMode)
                 {
                     case StreamingMode.Seekable:
-
                         {
                             fh.DataStartPosition = reader.BaseStream.Position;
                             reader.BaseStream.Position += fh.CompressedSize;
                         }
                         break;
                     case StreamingMode.Streaming:
-
                         {
                             var ms = new ReadOnlySubStream(reader.BaseStream, fh.CompressedSize);
                             if (fh.R4Salt is null && fh.Rar5CryptoInfo is null)
@@ -204,14 +200,12 @@ public class RarHeaderFactory
         switch (StreamingMode)
         {
             case StreamingMode.Seekable:
-
                 {
                     fh.DataStartPosition = reader.BaseStream.Position;
                     reader.BaseStream.Position += fh.CompressedSize;
                 }
                 break;
             case StreamingMode.Streaming:
-
                 {
                     //skip the data because it's useless?
                     reader.BaseStream.Skip(fh.CompressedSize);
