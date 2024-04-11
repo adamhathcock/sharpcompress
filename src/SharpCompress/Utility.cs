@@ -277,8 +277,42 @@ public static class Utility
             long total = 0;
             while (ReadTransferBlock(source, array, out var count))
             {
-                total += count;
                 destination.Write(array, 0, count);
+                total += count;
+            }
+            return total;
+        }
+        finally
+        {
+            ArrayPool<byte>.Shared.Return(array);
+        }
+    }
+
+    public static long TransferTo(this Stream source, Stream destination, long maxLength)
+    {
+        var array = GetTransferByteArray();
+        var maxReadSize = array.Length;
+        try
+        {
+            long total = 0;
+            var remaining = maxLength;
+            if (remaining < maxReadSize)
+            {
+                maxReadSize = (int)remaining;
+            }
+            while (ReadTransferBlock(source, array, maxReadSize, out var count))
+            {
+                destination.Write(array, 0, count);
+                total += count;
+                if (remaining - count < 0)
+                {
+                    break;
+                }
+                remaining -= count;
+                if (remaining < maxReadSize)
+                {
+                    maxReadSize = (int)remaining;
+                }
             }
             return total;
         }
@@ -317,6 +351,16 @@ public static class Utility
 
     private static bool ReadTransferBlock(Stream source, byte[] array, out int count) =>
         (count = source.Read(array, 0, array.Length)) != 0;
+
+    private static bool ReadTransferBlock(Stream source, byte[] array, int size, out int count)
+    {
+        if (size > array.Length)
+        {
+            size = array.Length;
+        }
+        count = source.Read(array, 0, size);
+        return count != 0;
+    }
 
     private static byte[] GetTransferByteArray() => ArrayPool<byte>.Shared.Rent(81920);
 
