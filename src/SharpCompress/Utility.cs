@@ -291,12 +291,12 @@ public static class Utility
     public static long TransferTo(this Stream source, Stream destination, long maxLength)
     {
         var array = GetTransferByteArray();
+        var maxReadSize = array.Length;
         try
         {
             long total = 0;
             var remaining = maxLength;
-            var maxReadSize = array.Length;
-            if (remaining < maxLength)
+            if (remaining < maxReadSize)
             {
                 maxReadSize = (int)remaining;
             }
@@ -309,6 +309,10 @@ public static class Utility
                     break;
                 }
                 remaining -= count;
+                if (remaining < maxReadSize)
+                {
+                    maxReadSize = (int)remaining;
+                }
             }
             return total;
         }
