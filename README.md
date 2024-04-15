@@ -6,7 +6,7 @@ The major feature is support for non-seekable streams so large files can be proc
 
 GitHub Actions Build -
 [![SharpCompress](https://github.com/adamhathcock/sharpcompress/actions/workflows/dotnetcore.yml/badge.svg)](https://github.com/adamhathcock/sharpcompress/actions/workflows/dotnetcore.yml)
-[![Static Badge](https://img.shields.io/badge/API%20Documentation-RobiniaDocs-43bc00?logo=readme&logoColor=white)](https://www.robiniadocs.com/d/sharpcompress/api/SharpCompress.html)
+[![Static Badge](https://img.shields.io/badge/API%20Docs-DNDocs-190088?logo=readme&logoColor=white)](https://dndocs.com/d/sharpcompress/api/index.html)
 
 ## Need Help?
 
