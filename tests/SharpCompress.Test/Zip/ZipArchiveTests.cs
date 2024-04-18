@@ -258,7 +258,7 @@ public class ZipArchiveTests : ArchiveTests
         );
         Assert.Null(
             ((IArchive)vfs).Entries.FirstOrDefault(v =>
-                v.Key.EndsWith("jpg", StringComparison.OrdinalIgnoreCase)
+                v.Key.NotNull().EndsWith("jpg", StringComparison.OrdinalIgnoreCase)
             )
         );
     }

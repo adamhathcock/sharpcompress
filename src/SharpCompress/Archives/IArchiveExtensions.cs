@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
-using System.Threading.Tasks;
 using SharpCompress.Common;
 
 namespace SharpCompress.Archives;
@@ -59,7 +58,7 @@ public static class IArchiveExtensions
             }
 
             // Create each directory
-            var path = Path.Combine(destination, entry.Key);
+            var path = Path.Combine(destination, entry.Key.NotNull("Entry Key is null"));
             if (Path.GetDirectoryName(path) is { } directory && seenDirectories.Add(path))
             {
                 Directory.CreateDirectory(directory);

@@ -9,6 +9,22 @@ namespace SharpCompress;
 [CLSCompliant(false)]
 public static class Utility
 {
+    public static T NotNull<T>(this T? item, string message) where T : class
+    {
+        if (item is null)
+        {
+            throw new InvalidOperationException(message);
+        }
+        return item;
+    }
+    public static T NotNull<T>(this T? item) where T : class
+    {
+        if (item is null)
+        {
+            throw new InvalidOperationException("Item is null");
+        }
+        return item;
+    }
     public static ReadOnlyCollection<T> ToReadOnly<T>(this ICollection<T> items) => new(items);
 
     /// <summary>

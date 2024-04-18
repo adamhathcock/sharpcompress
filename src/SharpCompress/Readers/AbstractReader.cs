@@ -35,7 +35,7 @@ public abstract class AbstractReader<TEntry, TVolume> : IReader, IReaderExtracti
     /// <summary>
     /// Current volume that the current entry resides in
     /// </summary>
-    public abstract TVolume Volume { get; }
+    public abstract TVolume? Volume { get; }
 
     /// <summary>
     /// Current file entry
@@ -109,7 +109,7 @@ public abstract class AbstractReader<TEntry, TVolume> : IReader, IReaderExtracti
         return entriesForCurrentReadStream.MoveNext();
     }
 
-    protected virtual Stream RequestInitialStream() => Volume.Stream;
+    protected virtual Stream RequestInitialStream() => Volume.NotNull("Volume isn't loaded.").Stream;
 
     internal virtual bool NextEntryForCurrentStream() => entriesForCurrentReadStream!.MoveNext();
 

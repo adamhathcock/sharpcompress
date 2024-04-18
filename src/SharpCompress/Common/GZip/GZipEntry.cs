@@ -14,7 +14,7 @@ public class GZipEntry : Entry
 
     public override long Crc => _filePart.Crc ?? 0;
 
-    public override string Key => _filePart.FilePartName;
+    public override string? Key => _filePart.FilePartName;
 
     public override string? LinkTarget => null;
 

@@ -120,6 +120,10 @@ public abstract class AbstractWritableArchive<TEntry, TVolume>
     {
         foreach (var path in Entries.Select(x => x.Key))
         {
+            if (path is null)
+            {
+                continue;
+            }
             var p = path.Replace('/', '\\');
             if (p.Length > 0 && p[0] == '\\')
             {

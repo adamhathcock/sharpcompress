@@ -17,15 +17,11 @@ public static class IArchiveEntryExtensions
         streamListener.EnsureEntriesLoaded();
         streamListener.FireEntryExtractionBegin(archiveEntry);
         streamListener.FireFilePartExtractionBegin(
-            archiveEntry.Key,
+            archiveEntry.Key ?? "Key",
             archiveEntry.Size,
             archiveEntry.CompressedSize
         );
         var entryStream = archiveEntry.OpenEntryStream();
-        if (entryStream is null)
-        {
-            return;
-        }
         using (entryStream)
         {
             using Stream s = new ListeningStream(streamListener, entryStream);
