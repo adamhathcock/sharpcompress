@@ -9,11 +9,11 @@ public abstract class Volume : IVolume
 {
     private readonly Stream _actualStream;
 
-    internal Volume(Stream stream, ReaderOptions readerOptions, int index = 0)
+    internal Volume(Stream stream, ReaderOptions? readerOptions, int index = 0)
     {
         Index = index;
-        ReaderOptions = readerOptions;
-        if (readerOptions.LeaveStreamOpen)
+        ReaderOptions = readerOptions ?? new ReaderOptions();
+        if (ReaderOptions.LeaveStreamOpen)
         {
             stream = NonDisposingStream.Create(stream);
         }

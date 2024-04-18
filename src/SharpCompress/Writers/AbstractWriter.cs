@@ -1,28 +1,24 @@
-﻿#nullable disable
-
-using System;
+﻿using System;
 using System.IO;
 using SharpCompress.Common;
 
 namespace SharpCompress.Writers;
 
-public abstract class AbstractWriter : IWriter
+#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
+public abstract class AbstractWriter(ArchiveType type, WriterOptions writerOptions) : IWriter
 {
     private bool _isDisposed;
 
-    protected AbstractWriter(ArchiveType type, WriterOptions writerOptions)
-    {
-        WriterType = type;
-        WriterOptions = writerOptions;
-    }
+    //always initializes the stream
 
-    protected void InitalizeStream(Stream stream) => OutputStream = stream;
+    protected void InitializeStream(Stream stream) => OutputStream = stream;
 
     protected Stream OutputStream { get; private set; }
+#pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
 
-    public ArchiveType WriterType { get; }
+    public ArchiveType WriterType { get; } = type;
 
-    protected WriterOptions WriterOptions { get; }
+    protected WriterOptions WriterOptions { get; } = writerOptions;
 
     public abstract void Write(string filename, Stream source, DateTime? modificationTime);
 

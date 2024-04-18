@@ -13,7 +13,7 @@ internal sealed class StreamingZipFilePart : ZipFilePart
     internal StreamingZipFilePart(ZipFileEntry header, Stream stream)
         : base(header, stream) { }
 
-    protected override Stream CreateBaseStream() => Header.PackedStream;
+    protected override Stream CreateBaseStream() => Header.PackedStream.NotNull();
 
     internal override Stream GetCompressedStream()
     {

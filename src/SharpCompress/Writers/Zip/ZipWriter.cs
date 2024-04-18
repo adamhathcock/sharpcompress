@@ -42,14 +42,14 @@ public class ZipWriter : AbstractWriter
         {
             destination = NonDisposingStream.Create(destination);
         }
-        InitalizeStream(destination);
+        InitializeStream(destination);
     }
 
     private PpmdProperties PpmdProperties => ppmdProps ??= new PpmdProperties();
 
     protected override void Dispose(bool isDisposing)
     {
-        if (isDisposing)
+        if (isDisposing && OutputStream is not null)
         {
             ulong size = 0;
             foreach (var entry in entries)
@@ -114,7 +114,7 @@ public class ZipWriter : AbstractWriter
         streamPosition += headersize;
         return new ZipWritingStream(
             this,
-            OutputStream,
+            OutputStream.NotNull(),
             entry,
             compression,
             options.DeflateCompressionLevel ?? compressionLevel

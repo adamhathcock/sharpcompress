@@ -5,9 +5,9 @@ namespace SharpCompress.Common.Tar;
 
 internal sealed class TarFilePart : FilePart
 {
-    private readonly Stream _seekableStream;
+    private readonly Stream? _seekableStream;
 
-    internal TarFilePart(TarHeader header, Stream seekableStream)
+    internal TarFilePart(TarHeader header, Stream? seekableStream)
         : base(header.ArchiveEncoding)
     {
         _seekableStream = seekableStream;
@@ -16,7 +16,7 @@ internal sealed class TarFilePart : FilePart
 
     internal TarHeader Header { get; }
 
-    internal override string FilePartName => Header.Name;
+    internal override string? FilePartName => Header?.Name;
 
     internal override Stream GetCompressedStream()
     {
@@ -25,7 +25,7 @@ internal sealed class TarFilePart : FilePart
             _seekableStream.Position = Header.DataStartPosition!.Value;
             return new TarReadOnlySubStream(_seekableStream, Header.Size);
         }
-        return Header.PackedStream;
+        return Header.PackedStream.NotNull();
     }
 
     internal override Stream? GetRawStream() => null;

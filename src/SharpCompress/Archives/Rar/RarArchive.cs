@@ -31,14 +31,15 @@ public class RarArchive : AbstractArchive<RarArchiveEntry, RarVolume>
 
     protected override IEnumerable<RarVolume> LoadVolumes(SourceStream srcStream)
     {
-        SrcStream.LoadAllParts(); //request all streams
-        var streams = SrcStream.Streams.ToArray();
+        var sourceStream = SrcStream.NotNull("SourceStream is null");
+        sourceStream    .LoadAllParts(); //request all streams
+        var streams = sourceStream.Streams.ToArray();
         var idx = 0;
         if (streams.Length > 1 && IsRarFile(streams[1], ReaderOptions)) //test part 2 - true = multipart not split
         {
-            SrcStream.IsVolumes = true;
+            sourceStream.IsVolumes = true;
             streams[1].Position = 0;
-            SrcStream.Position = 0;
+            sourceStream.Position = 0;
 
             return srcStream.Streams.Select(a => new StreamRarArchiveVolume(
                 a,
@@ -48,7 +49,7 @@ public class RarArchive : AbstractArchive<RarArchiveEntry, RarVolume>
         }
         else //split mode or single file
         {
-            return new StreamRarArchiveVolume(SrcStream, ReaderOptions, idx++).AsEnumerable();
+            return new StreamRarArchiveVolume(sourceStream, ReaderOptions, idx++).AsEnumerable();
         }
     }
 

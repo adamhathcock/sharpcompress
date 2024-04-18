@@ -24,7 +24,7 @@ public abstract class AbstractArchive<TEntry, TVolume> : IArchive, IArchiveExtra
     protected ReaderOptions ReaderOptions { get; }
 
     private bool disposed;
-    protected SourceStream SrcStream;
+    protected SourceStream? SrcStream;
 
     internal AbstractArchive(ArchiveType type, SourceStream srcStream)
     {
@@ -35,15 +35,14 @@ public abstract class AbstractArchive<TEntry, TVolume> : IArchive, IArchiveExtra
         lazyEntries = new LazyReadOnlyCollection<TEntry>(LoadEntries(Volumes));
     }
 
-#nullable disable
     internal AbstractArchive(ArchiveType type)
     {
         Type = type;
+        ReaderOptions = new();
         lazyVolumes = new LazyReadOnlyCollection<TVolume>(Enumerable.Empty<TVolume>());
         lazyEntries = new LazyReadOnlyCollection<TEntry>(Enumerable.Empty<TEntry>());
     }
 
-#nullable enable
 
     public ArchiveType Type { get; }
 

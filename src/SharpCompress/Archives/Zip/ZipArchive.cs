@@ -16,10 +16,7 @@ namespace SharpCompress.Archives.Zip;
 
 public class ZipArchive : AbstractWritableArchive<ZipArchiveEntry, ZipVolume>
 {
-#nullable disable
-    private readonly SeekableZipHeaderFactory headerFactory;
-
-#nullable enable
+    private readonly SeekableZipHeaderFactory? headerFactory;
 
     /// <summary>
     /// Gets or sets the compression level applied to files added to the archive,
@@ -191,10 +188,11 @@ public class ZipArchive : AbstractWritableArchive<ZipArchiveEntry, ZipVolume>
 
     protected override IEnumerable<ZipVolume> LoadVolumes(SourceStream srcStream)
     {
-        SrcStream.LoadAllParts(); //request all streams
-        SrcStream.Position = 0;
+        var stream = SrcStream.NotNull("SrcStream is null");
+        stream.LoadAllParts(); //request all streams
+        stream.Position = 0;
 
-        var streams = SrcStream.Streams.ToList();
+        var streams = stream.Streams.ToList();
         var idx = 0;
         if (streams.Count > 1) //test part 2 - true = multipart not split
         {
@@ -203,7 +201,7 @@ public class ZipArchive : AbstractWritableArchive<ZipArchiveEntry, ZipVolume>
             streams[1].Position -= 4;
             if (isZip)
             {
-                SrcStream.IsVolumes = true;
+                stream.IsVolumes = true;
 
                 var tmp = streams[0]; //arcs as zip, z01 ... swap the zip the end
                 streams.RemoveAt(0);
@@ -215,7 +213,7 @@ public class ZipArchive : AbstractWritableArchive<ZipArchiveEntry, ZipVolume>
         }
 
         //split mode or single file
-        return new ZipVolume(SrcStream, ReaderOptions, idx++).AsEnumerable();
+        return new ZipVolume(stream, ReaderOptions, idx++).AsEnumerable();
     }
 
     internal ZipArchive()
@@ -224,7 +222,7 @@ public class ZipArchive : AbstractWritableArchive<ZipArchiveEntry, ZipVolume>
     protected override IEnumerable<ZipArchiveEntry> LoadEntries(IEnumerable<ZipVolume> volumes)
     {
         var vols = volumes.ToArray();
-        foreach (var h in headerFactory.ReadSeekableHeader(vols.Last().Stream))
+        foreach (var h in headerFactory.NotNull().ReadSeekableHeader(vols.Last().Stream))
         {
             if (h != null)
             {
@@ -254,14 +252,14 @@ public class ZipArchive : AbstractWritableArchive<ZipArchiveEntry, ZipVolume>
 
                             yield return new ZipArchiveEntry(
                                 this,
-                                new SeekableZipFilePart(headerFactory, deh, s)
+                                new SeekableZipFilePart(headerFactory.NotNull(), deh, s)
                             );
                         }
                         break;
                     case ZipHeaderType.DirectoryEnd:
                     {
                         var bytes = ((DirectoryEndHeader)h).Comment ?? Array.Empty<byte>();
-                        volumes.Last().Comment = ReaderOptions.ArchiveEncoding.Decode(bytes);
+                        vols.Last().Comment = ReaderOptions.ArchiveEncoding.Decode(bytes);
                         yield break;
                     }
                 }
@@ -282,7 +280,7 @@ public class ZipArchive : AbstractWritableArchive<ZipArchiveEntry, ZipVolume>
         foreach (var entry in oldEntries.Concat(newEntries).Where(x => !x.IsDirectory))
         {
             using var entryStream = entry.OpenEntryStream();
-            writer.Write(entry.Key, entryStream, entry.LastModifiedTime);
+            writer.Write(entry.Key.NotNull("Entry Key is null"), entryStream, entry.LastModifiedTime);
         }
     }
 

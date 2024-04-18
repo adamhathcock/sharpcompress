@@ -2,6 +2,7 @@ using System;
 using System.Buffers;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using SharpCompress.Readers;
 
 namespace SharpCompress;
@@ -24,6 +25,22 @@ public static class Utility
             throw new InvalidOperationException("Item is null");
         }
         return item;
+    }
+    public static IEnumerable<T> Empty<T>(this  IEnumerable<T>? item) where T : class
+    {
+        if (item is null)
+        {
+            return Enumerable.Empty<T>();
+        }
+        return item;
+    }
+    public static IEnumerable<T> Empty<T>(this  T? item) where T : class
+    {
+        if (item is null)
+        {
+            return Enumerable.Empty<T>();
+        }
+        return item.AsEnumerable();
     }
     public static ReadOnlyCollection<T> ToReadOnly<T>(this ICollection<T> items) => new(items);
 

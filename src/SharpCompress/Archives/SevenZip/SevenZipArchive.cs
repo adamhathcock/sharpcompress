@@ -1,5 +1,3 @@
-#nullable disable
-
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -14,14 +12,14 @@ namespace SharpCompress.Archives.SevenZip;
 
 public class SevenZipArchive : AbstractArchive<SevenZipArchiveEntry, SevenZipVolume>
 {
-    private ArchiveDatabase database;
+    private ArchiveDatabase? database;
 
     /// <summary>
     /// Constructor expects a filepath to an existing file.
     /// </summary>
     /// <param name="filePath"></param>
     /// <param name="readerOptions"></param>
-    public static SevenZipArchive Open(string filePath, ReaderOptions readerOptions = null)
+    public static SevenZipArchive Open(string filePath, ReaderOptions? readerOptions = null)
     {
         filePath.CheckNotNullOrEmpty("filePath");
         return Open(new FileInfo(filePath), readerOptions ?? new ReaderOptions());
@@ -32,7 +30,7 @@ public class SevenZipArchive : AbstractArchive<SevenZipArchiveEntry, SevenZipVol
     /// </summary>
     /// <param name="fileInfo"></param>
     /// <param name="readerOptions"></param>
-    public static SevenZipArchive Open(FileInfo fileInfo, ReaderOptions readerOptions = null)
+    public static SevenZipArchive Open(FileInfo fileInfo, ReaderOptions? readerOptions = null)
     {
         fileInfo.CheckNotNull("fileInfo");
         return new SevenZipArchive(
@@ -51,7 +49,7 @@ public class SevenZipArchive : AbstractArchive<SevenZipArchiveEntry, SevenZipVol
     /// <param name="readerOptions"></param>
     public static SevenZipArchive Open(
         IEnumerable<FileInfo> fileInfos,
-        ReaderOptions readerOptions = null
+        ReaderOptions? readerOptions = null
     )
     {
         fileInfos.CheckNotNull(nameof(fileInfos));
@@ -72,7 +70,7 @@ public class SevenZipArchive : AbstractArchive<SevenZipArchiveEntry, SevenZipVol
     /// <param name="readerOptions"></param>
     public static SevenZipArchive Open(
         IEnumerable<Stream> streams,
-        ReaderOptions readerOptions = null
+        ReaderOptions? readerOptions = null
     )
     {
         streams.CheckNotNull(nameof(streams));
@@ -91,7 +89,7 @@ public class SevenZipArchive : AbstractArchive<SevenZipArchiveEntry, SevenZipVol
     /// </summary>
     /// <param name="stream"></param>
     /// <param name="readerOptions"></param>
-    public static SevenZipArchive Open(Stream stream, ReaderOptions readerOptions = null)
+    public static SevenZipArchive Open(Stream stream, ReaderOptions? readerOptions = null)
     {
         stream.CheckNotNull("stream");
         return new SevenZipArchive(
@@ -103,13 +101,12 @@ public class SevenZipArchive : AbstractArchive<SevenZipArchiveEntry, SevenZipVol
     /// Constructor with a SourceStream able to handle FileInfo and Streams.
     /// </summary>
     /// <param name="srcStream"></param>
-    /// <param name="options"></param>
     internal SevenZipArchive(SourceStream srcStream)
         : base(ArchiveType.SevenZip, srcStream) { }
 
     protected override IEnumerable<SevenZipVolume> LoadVolumes(SourceStream srcStream)
     {
-        SrcStream.LoadAllParts(); //request all streams
+        SrcStream.NotNull("SourceStream is null").LoadAllParts(); //request all streams
         var idx = 0;
         return new SevenZipVolume(srcStream, ReaderOptions, idx++).AsEnumerable(); //simple single volume or split, multivolume not supported
     }
@@ -133,6 +130,10 @@ public class SevenZipArchive : AbstractArchive<SevenZipArchiveEntry, SevenZipVol
         IEnumerable<SevenZipVolume> volumes
     )
     {
+        if (database is null)
+        {
+            return Enumerable.Empty<SevenZipArchiveEntry>();
+        }
         var stream = volumes.Single().Stream;
         LoadFactory(stream);
         var entries = new SevenZipArchiveEntry[database._files.Count];
@@ -196,21 +197,14 @@ public class SevenZipArchive : AbstractArchive<SevenZipArchiveEntry, SevenZipVol
     public override bool IsSolid =>
         Entries.Where(x => !x.IsDirectory).GroupBy(x => x.FilePart.Folder).Count() > 1;
 
-    public override long TotalSize
-    {
-        get
-        {
-            var i = Entries.Count;
-            return database._packSizes.Aggregate(0L, (total, packSize) => total + packSize);
-        }
-    }
+    public override long TotalSize => database?._packSizes.Aggregate(0L, (total, packSize) => total + packSize) ?? 0;
 
     private sealed class SevenZipReader : AbstractReader<SevenZipEntry, SevenZipVolume>
     {
         private readonly SevenZipArchive archive;
-        private CFolder currentFolder;
-        private Stream currentStream;
-        private CFileItem currentItem;
+        private CFolder? currentFolder;
+        private Stream? currentStream;
+        private CFileItem? currentItem;
 
         internal SevenZipReader(ReaderOptions readerOptions, SevenZipArchive archive)
             : base(readerOptions, ArchiveType.SevenZip) => this.archive = archive;
@@ -236,7 +230,7 @@ public class SevenZipArchive : AbstractArchive<SevenZipArchiveEntry, SevenZipVol
                 }
                 else
                 {
-                    currentStream = archive.database.GetFolderStream(
+                    currentStream = archive.database?.GetFolderStream(
                         stream,
                         currentFolder,
                         new PasswordProvider(Options.Password)
@@ -251,15 +245,15 @@ public class SevenZipArchive : AbstractArchive<SevenZipArchiveEntry, SevenZipVol
         }
 
         protected override EntryStream GetEntryStream() =>
-            CreateEntryStream(new ReadOnlySubStream(currentStream, currentItem.Size));
+            CreateEntryStream(new ReadOnlySubStream(currentStream.NotNull("currentStream is not null"), currentItem?.Size ?? 0));
     }
 
     private class PasswordProvider : IPasswordProvider
     {
-        private readonly string _password;
+        private readonly string? _password;
 
-        public PasswordProvider(string password) => _password = password;
+        public PasswordProvider(string? password) => _password = password;
 
-        public string CryptoGetTextPassword() => _password;
+        public string CryptoGetTextPassword() => _password.NotNull();
     }
 }

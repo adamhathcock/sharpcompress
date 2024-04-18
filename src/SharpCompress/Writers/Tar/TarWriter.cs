@@ -56,7 +56,7 @@ public class TarWriter : AbstractWriter
                 );
             }
         }
-        InitalizeStream(destination);
+        InitializeStream(destination);
     }
 
     public override void Write(string filename, Stream source, DateTime? modificationTime) =>
