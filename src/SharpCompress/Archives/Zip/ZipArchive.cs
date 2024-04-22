@@ -27,13 +27,13 @@ public class ZipArchive : AbstractWritableArchive<ZipArchiveEntry, ZipVolume>
     /// <summary>
     /// Constructor with a SourceStream able to handle FileInfo and Streams.
     /// </summary>
-    /// <param name="srcStream"></param>
+    /// <param name="sourceStream"></param>
     /// <param name="options"></param>
-    internal ZipArchive(SourceStream srcStream)
-        : base(ArchiveType.Zip, srcStream) =>
+    internal ZipArchive(SourceStream sourceStream)
+        : base(ArchiveType.Zip, sourceStream) =>
         headerFactory = new SeekableZipHeaderFactory(
-            srcStream.ReaderOptions.Password,
-            srcStream.ReaderOptions.ArchiveEncoding
+            sourceStream.ReaderOptions.Password,
+            sourceStream.ReaderOptions.ArchiveEncoding
         );
 
     /// <summary>
@@ -186,9 +186,8 @@ public class ZipArchive : AbstractWritableArchive<ZipArchiveEntry, ZipVolume>
         }
     }
 
-    protected override IEnumerable<ZipVolume> LoadVolumes(SourceStream srcStream)
+    protected override IEnumerable<ZipVolume> LoadVolumes(SourceStream stream)
     {
-        var stream = SrcStream.NotNull("SrcStream is null");
         stream.LoadAllParts(); //request all streams
         stream.Position = 0;
 

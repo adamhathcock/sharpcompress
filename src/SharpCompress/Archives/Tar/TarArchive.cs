@@ -123,21 +123,20 @@ public class TarArchive : AbstractWritableArchive<TarArchiveEntry, TarVolume>
         return false;
     }
 
-    protected override IEnumerable<TarVolume> LoadVolumes(SourceStream srcStream)
+    protected override IEnumerable<TarVolume> LoadVolumes(SourceStream sourceStream)
     {
-        SrcStream.NotNull("SourceStream is null").LoadAllParts(); //request all streams
-        var idx = 0;
-        return new TarVolume(srcStream, ReaderOptions, idx++).AsEnumerable(); //simple single volume or split, multivolume not supported
+        sourceStream.NotNull("SourceStream is null").LoadAllParts(); //request all streams
+        return new TarVolume(sourceStream, ReaderOptions, 0).AsEnumerable(); //simple single volume or split, multivolume not supported
     }
 
     /// <summary>
     /// Constructor with a SourceStream able to handle FileInfo and Streams.
     /// </summary>
-    /// <param name="srcStream"></param>
-    internal TarArchive(SourceStream srcStream)
-        : base(ArchiveType.Tar, srcStream) { }
+    /// <param name="sourceStream"></param>
+    private TarArchive(SourceStream sourceStream)
+        : base(ArchiveType.Tar, sourceStream) { }
 
-    internal TarArchive()
+    private TarArchive()
         : base(ArchiveType.Tar) { }
 
     protected override IEnumerable<TarArchiveEntry> LoadEntries(IEnumerable<TarVolume> volumes)

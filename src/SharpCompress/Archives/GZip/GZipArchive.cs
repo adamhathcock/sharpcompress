@@ -99,16 +99,15 @@ public class GZipArchive : AbstractWritableArchive<GZipArchiveEntry, GZipVolume>
     /// <summary>
     /// Constructor with a SourceStream able to handle FileInfo and Streams.
     /// </summary>
-    /// <param name="srcStream"></param>
-    /// <param name="options"></param>
-    internal GZipArchive(SourceStream srcStream)
-        : base(ArchiveType.Tar, srcStream) { }
+    /// <param name="sourceStream"></param>
+    private GZipArchive(SourceStream sourceStream)
+        : base(ArchiveType.Tar, sourceStream) { }
 
-    protected override IEnumerable<GZipVolume> LoadVolumes(SourceStream srcStream)
+    protected override IEnumerable<GZipVolume> LoadVolumes(SourceStream sourceStream)
     {
-        srcStream.LoadAllParts();
+        sourceStream.LoadAllParts();
         var idx = 0;
-        return srcStream.Streams.Select(a => new GZipVolume(a, ReaderOptions, idx++));
+        return sourceStream.Streams.Select(a => new GZipVolume(a, ReaderOptions, idx++));
     }
 
     public static bool IsGZipFile(string filePath) => IsGZipFile(new FileInfo(filePath));

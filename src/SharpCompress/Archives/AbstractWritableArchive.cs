@@ -41,8 +41,8 @@ public abstract class AbstractWritableArchive<TEntry, TVolume>
     internal AbstractWritableArchive(ArchiveType type)
         : base(type) { }
 
-    internal AbstractWritableArchive(ArchiveType type, SourceStream srcStream)
-        : base(type, srcStream) { }
+    internal AbstractWritableArchive(ArchiveType type, SourceStream sourceStream)
+        : base(type, sourceStream) { }
 
     public override ICollection<TEntry> Entries
     {

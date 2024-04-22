@@ -21,35 +21,31 @@ public class RarArchive : AbstractArchive<RarArchiveEntry, RarVolume>
     /// <summary>
     /// Constructor with a SourceStream able to handle FileInfo and Streams.
     /// </summary>
-    /// <param name="srcStream"></param>
-    /// <param name="options"></param>
-    internal RarArchive(SourceStream srcStream)
-        : base(ArchiveType.Rar, srcStream) { }
+    /// <param name="sourceStream"></param>
+    private RarArchive(SourceStream sourceStream)
+        : base(ArchiveType.Rar, sourceStream) { }
 
     protected override IEnumerable<RarArchiveEntry> LoadEntries(IEnumerable<RarVolume> volumes) =>
         RarArchiveEntryFactory.GetEntries(this, volumes, ReaderOptions);
 
-    protected override IEnumerable<RarVolume> LoadVolumes(SourceStream srcStream)
+    protected override IEnumerable<RarVolume> LoadVolumes(SourceStream sourceStream)
     {
-        var sourceStream = SrcStream.NotNull("SourceStream is null");
         sourceStream.LoadAllParts(); //request all streams
         var streams = sourceStream.Streams.ToArray();
-        var idx = 0;
         if (streams.Length > 1 && IsRarFile(streams[1], ReaderOptions)) //test part 2 - true = multipart not split
         {
             sourceStream.IsVolumes = true;
             streams[1].Position = 0;
             sourceStream.Position = 0;
 
-            return srcStream.Streams.Select(a => new StreamRarArchiveVolume(
+            return sourceStream.Streams.Select(a => new StreamRarArchiveVolume(
                 a,
-                ReaderOptions,
-                idx++
+                ReaderOptions
             ));
         }
         else //split mode or single file
         {
-            return new StreamRarArchiveVolume(sourceStream, ReaderOptions, idx++).AsEnumerable();
+            return new StreamRarArchiveVolume(sourceStream, ReaderOptions).AsEnumerable();
         }
     }
 
@@ -109,7 +105,7 @@ public class RarArchive : AbstractArchive<RarArchiveEntry, RarVolume>
     public static RarArchive Open(Stream stream, ReaderOptions? options = null)
     {
         stream.CheckNotNull(nameof(stream));
-        return new RarArchive(new SourceStream(stream, i => null, options ?? new ReaderOptions()));
+        return new RarArchive(new SourceStream(stream, _ => null, options ?? new ReaderOptions()));
     }
 
     /// <summary>
