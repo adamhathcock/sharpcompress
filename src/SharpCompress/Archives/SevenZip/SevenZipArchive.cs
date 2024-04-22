@@ -130,12 +130,12 @@ public class SevenZipArchive : AbstractArchive<SevenZipArchiveEntry, SevenZipVol
         IEnumerable<SevenZipVolume> volumes
     )
     {
+        var stream = volumes.Single().Stream;
+        LoadFactory(stream);
         if (database is null)
         {
             return Enumerable.Empty<SevenZipArchiveEntry>();
         }
-        var stream = volumes.Single().Stream;
-        LoadFactory(stream);
         var entries = new SevenZipArchiveEntry[database._files.Count];
         for (var i = 0; i < database._files.Count; i++)
         {
@@ -260,6 +260,6 @@ public class SevenZipArchive : AbstractArchive<SevenZipArchiveEntry, SevenZipVol
 
         public PasswordProvider(string? password) => _password = password;
 
-        public string CryptoGetTextPassword() => _password.NotNull();
+        public string? CryptoGetTextPassword() => _password;
     }
 }
