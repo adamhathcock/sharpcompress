@@ -57,17 +57,17 @@ public class TarEntry : Entry
         ArchiveEncoding archiveEncoding
     )
     {
-        foreach (var h in TarHeaderFactory.ReadHeader(mode, stream, archiveEncoding))
+        foreach (var header in TarHeaderFactory.ReadHeader(mode, stream, archiveEncoding))
         {
-            if (h != null)
+            if (header != null)
             {
                 if (mode == StreamingMode.Seekable)
                 {
-                    yield return new TarEntry(new TarFilePart(h, stream), compressionType);
+                    yield return new TarEntry(new TarFilePart(header, stream), compressionType);
                 }
                 else
                 {
-                    yield return new TarEntry(new TarFilePart(h, null), compressionType);
+                    yield return new TarEntry(new TarFilePart(header, null), compressionType);
                 }
             }
             else
