@@ -34,7 +34,9 @@ internal sealed class TarHeader
         WriteOctalBytes(0, buffer, 116, 8); // group ID
 
         //ArchiveEncoding.UTF8.GetBytes("magic").CopyTo(buffer, 257);
-        var nameByteCount = ArchiveEncoding.GetEncoding().GetByteCount(Name.NotNull("Name is null"));
+        var nameByteCount = ArchiveEncoding
+            .GetEncoding()
+            .GetByteCount(Name.NotNull("Name is null"));
         if (nameByteCount > 100)
         {
             // Set mock filename and filetype to indicate the next block is the actual name of the file

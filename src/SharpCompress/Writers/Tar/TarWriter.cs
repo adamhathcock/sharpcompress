@@ -32,19 +32,16 @@ public class TarWriter : AbstractWriter
             case CompressionType.None:
                 break;
             case CompressionType.BZip2:
-
                 {
                     destination = new BZip2Stream(destination, CompressionMode.Compress, false);
                 }
                 break;
             case CompressionType.GZip:
-
                 {
                     destination = new GZipStream(destination, CompressionMode.Compress);
                 }
                 break;
             case CompressionType.LZip:
-
                 {
                     destination = new LZipStream(destination, CompressionMode.Compress);
                 }

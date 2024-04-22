@@ -69,7 +69,6 @@ public class ZipReader : AbstractReader<ZipEntry, ZipVolume>
                 switch (h.ZipHeaderType)
                 {
                     case ZipHeaderType.LocalEntry:
-
                         {
                             yield return new ZipEntry(
                                 new StreamingZipFilePart((LocalEntryHeader)h, stream)

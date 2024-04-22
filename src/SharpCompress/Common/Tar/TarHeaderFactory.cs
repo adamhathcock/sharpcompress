@@ -28,7 +28,6 @@ internal static class TarHeaderFactory
                 switch (mode)
                 {
                     case StreamingMode.Seekable:
-
                         {
                             header.DataStartPosition = reader.BaseStream.Position;
 
@@ -37,7 +36,6 @@ internal static class TarHeaderFactory
                         }
                         break;
                     case StreamingMode.Streaming:
-
                         {
                             header.PackedStream = new TarReadOnlySubStream(stream, header.Size);
                         }

@@ -121,7 +121,6 @@ internal class FileHeader : RarHeader
             switch (type)
             {
                 case FHEXTRA_CRYPT: // file encryption
-
                     {
                         Rar5CryptoInfo = new Rar5CryptoInfo(reader, true);
 
@@ -132,7 +131,6 @@ internal class FileHeader : RarHeader
                     }
                     break;
                 case FHEXTRA_HASH:
-
                     {
                         const uint FHEXTRA_HASH_BLAKE2 = 0x0;
                         //                        const uint HASH_BLAKE2 = 0x03;
@@ -146,7 +144,6 @@ internal class FileHeader : RarHeader
                     }
                     break;
                 case FHEXTRA_HTIME: // file time
-
                     {
                         var flags = reader.ReadRarVIntUInt16();
                         var isWindowsTime = (flags & 1) == 0;
@@ -171,7 +168,6 @@ internal class FileHeader : RarHeader
                 //                        }
                 //                        break;
                 case FHEXTRA_REDIR: // file system redirection
-
                     {
                         RedirType = reader.ReadRarVIntByte();
                         RedirFlags = reader.ReadRarVIntByte();
@@ -284,7 +280,6 @@ internal class FileHeader : RarHeader
         switch (HeaderCode)
         {
             case HeaderCodeV.RAR4_FILE_HEADER:
-
                 {
                     if (HasFlag(FileFlagsV4.UNICODE))
                     {
@@ -311,7 +306,6 @@ internal class FileHeader : RarHeader
                 }
                 break;
             case HeaderCodeV.RAR4_NEW_SUB_HEADER:
-
                 {
                     var datasize = HeaderSize - newLhdSize - nameSize;
                     if (HasFlag(FileFlagsV4.SALT))

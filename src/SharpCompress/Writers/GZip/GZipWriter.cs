@@ -19,13 +19,13 @@ public sealed class GZipWriter : AbstractWriter
             destination = NonDisposingStream.Create(destination);
         }
         InitializeStream(
-                         new GZipStream(
-                                        destination,
-                                        CompressionMode.Compress,
-                                        options?.CompressionLevel ?? CompressionLevel.Default,
-                                        WriterOptions.ArchiveEncoding.GetEncoding()
-                                       )
-                        );
+            new GZipStream(
+                destination,
+                CompressionMode.Compress,
+                options?.CompressionLevel ?? CompressionLevel.Default,
+                WriterOptions.ArchiveEncoding.GetEncoding()
+            )
+        );
     }
 
     protected override void Dispose(bool isDisposing)

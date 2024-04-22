@@ -32,7 +32,7 @@ public class RarArchive : AbstractArchive<RarArchiveEntry, RarVolume>
     protected override IEnumerable<RarVolume> LoadVolumes(SourceStream srcStream)
     {
         var sourceStream = SrcStream.NotNull("SourceStream is null");
-        sourceStream    .LoadAllParts(); //request all streams
+        sourceStream.LoadAllParts(); //request all streams
         var streams = sourceStream.Streams.ToArray();
         var idx = 0;
         if (streams.Length > 1 && IsRarFile(streams[1], ReaderOptions)) //test part 2 - true = multipart not split

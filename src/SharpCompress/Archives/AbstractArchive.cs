@@ -43,7 +43,6 @@ public abstract class AbstractArchive<TEntry, TVolume> : IArchive, IArchiveExtra
         lazyEntries = new LazyReadOnlyCollection<TEntry>(Enumerable.Empty<TEntry>());
     }
 
-
     public ArchiveType Type { get; }
 
     void IArchiveExtractionListener.FireEntryExtractionBegin(IArchiveEntry entry) =>

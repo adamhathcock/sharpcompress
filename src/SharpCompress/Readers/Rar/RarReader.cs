@@ -19,9 +19,7 @@ public abstract class RarReader : AbstractReader<RarReaderEntry, RarVolume>
     internal Lazy<IRarUnpack> UnpackV1 { get; } = new(() => new Compressors.Rar.UnpackV1.Unpack());
 
     internal RarReader(ReaderOptions options)
-        : base(options, ArchiveType.Rar)
-    {
-    }
+        : base(options, ArchiveType.Rar) { }
 
     internal abstract void ValidateArchive(RarVolume archive);
 

@@ -197,7 +197,8 @@ public class SevenZipArchive : AbstractArchive<SevenZipArchiveEntry, SevenZipVol
     public override bool IsSolid =>
         Entries.Where(x => !x.IsDirectory).GroupBy(x => x.FilePart.Folder).Count() > 1;
 
-    public override long TotalSize => database?._packSizes.Aggregate(0L, (total, packSize) => total + packSize) ?? 0;
+    public override long TotalSize =>
+        database?._packSizes.Aggregate(0L, (total, packSize) => total + packSize) ?? 0;
 
     private sealed class SevenZipReader : AbstractReader<SevenZipEntry, SevenZipVolume>
     {
@@ -245,7 +246,12 @@ public class SevenZipArchive : AbstractArchive<SevenZipArchiveEntry, SevenZipVol
         }
 
         protected override EntryStream GetEntryStream() =>
-            CreateEntryStream(new ReadOnlySubStream(currentStream.NotNull("currentStream is not null"), currentItem?.Size ?? 0));
+            CreateEntryStream(
+                new ReadOnlySubStream(
+                    currentStream.NotNull("currentStream is not null"),
+                    currentItem?.Size ?? 0
+                )
+            );
     }
 
     private class PasswordProvider : IPasswordProvider

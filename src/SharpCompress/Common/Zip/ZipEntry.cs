@@ -14,11 +14,11 @@ public class ZipEntry : Entry
         {
             return;
         }
-            _filePart = filePart;
-            LastModifiedTime = Utility.DosDateToDateTime(
-                filePart.Header.LastModifiedDate,
-                filePart.Header.LastModifiedTime
-            );
+        _filePart = filePart;
+        LastModifiedTime = Utility.DosDateToDateTime(
+            filePart.Header.LastModifiedDate,
+            filePart.Header.LastModifiedTime
+        );
     }
 
     public override CompressionType CompressionType =>

@@ -194,7 +194,7 @@ public class ZipArchive : AbstractWritableArchive<ZipArchiveEntry, ZipVolume>
 
         var streams = stream.Streams.ToList();
         var idx = 0;
-        if (streams.Count > 1) //test part 2 - true = multipart not split
+        if (streams.Count() > 1) //test part 2 - true = multipart not split
         {
             streams[1].Position += 4; //skip the POST_DATA_DESCRIPTOR to prevent an exception
             var isZip = IsZipFile(streams[1], ReaderOptions.Password);
@@ -229,7 +229,6 @@ public class ZipArchive : AbstractWritableArchive<ZipArchiveEntry, ZipVolume>
                 switch (h.ZipHeaderType)
                 {
                     case ZipHeaderType.DirectoryEntry:
-
                         {
                             var deh = (DirectoryEntryHeader)h;
                             Stream s;
@@ -280,7 +279,11 @@ public class ZipArchive : AbstractWritableArchive<ZipArchiveEntry, ZipVolume>
         foreach (var entry in oldEntries.Concat(newEntries).Where(x => !x.IsDirectory))
         {
             using var entryStream = entry.OpenEntryStream();
-            writer.Write(entry.Key.NotNull("Entry Key is null"), entryStream, entry.LastModifiedTime);
+            writer.Write(
+                entry.Key.NotNull("Entry Key is null"),
+                entryStream,
+                entry.LastModifiedTime
+            );
         }
     }
 

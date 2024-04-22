@@ -184,7 +184,11 @@ public class GZipArchive : AbstractWritableArchive<GZipArchiveEntry, GZipVolume>
         foreach (var entry in oldEntries.Concat(newEntries).Where(x => !x.IsDirectory))
         {
             using var entryStream = entry.OpenEntryStream();
-            writer.Write(entry.Key.NotNull("Entry Key is null"), entryStream, entry.LastModifiedTime);
+            writer.Write(
+                entry.Key.NotNull("Entry Key is null"),
+                entryStream,
+                entry.LastModifiedTime
+            );
         }
     }
 

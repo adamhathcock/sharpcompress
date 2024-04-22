@@ -249,7 +249,9 @@ public class ZipArchiveTests : ArchiveTests
         var scratchPath = Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.noEmptyDirs.zip");
 
         using var vfs = (ZipArchive)ArchiveFactory.Open(scratchPath);
-        var e = vfs.Entries.First(v => v.Key.NotNull().EndsWith("jpg", StringComparison.OrdinalIgnoreCase));
+        var e = vfs.Entries.First(v =>
+            v.Key.NotNull().EndsWith("jpg", StringComparison.OrdinalIgnoreCase)
+        );
         vfs.RemoveEntry(e);
         Assert.Null(
             vfs.Entries.FirstOrDefault(v =>

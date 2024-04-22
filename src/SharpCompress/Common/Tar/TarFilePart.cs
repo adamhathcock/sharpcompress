@@ -22,7 +22,7 @@ internal sealed class TarFilePart : FilePart
     {
         if (_seekableStream != null)
         {
-            _seekableStream.Position = Header.DataStartPosition!.Value;
+            _seekableStream.Position = Header.DataStartPosition ?? 0;
             return new TarReadOnlySubStream(_seekableStream, Header.Size);
         }
         return Header.PackedStream.NotNull();

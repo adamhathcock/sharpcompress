@@ -39,19 +39,16 @@ public abstract class RarVolume : Volume
             switch (header.HeaderType)
             {
                 case HeaderType.Mark:
-
                     {
                         lastMarkHeader = (MarkHeader)header;
                     }
                     break;
                 case HeaderType.Archive:
-
                     {
                         ArchiveHeader = (ArchiveHeader)header;
                     }
                     break;
                 case HeaderType.File:
-
                     {
                         var fh = (FileHeader)header;
                         if (_maxCompressionAlgorithm < fh.CompressionAlgorithm)
@@ -63,7 +60,6 @@ public abstract class RarVolume : Volume
                     }
                     break;
                 case HeaderType.Service:
-
                     {
                         var fh = (FileHeader)header;
                         if (fh.FileName == "CMT")
