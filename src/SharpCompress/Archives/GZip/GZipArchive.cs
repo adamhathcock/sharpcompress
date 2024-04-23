@@ -90,7 +90,7 @@ public class GZipArchive : AbstractWritableArchive<GZipArchiveEntry, GZipVolume>
     {
         stream.CheckNotNull(nameof(stream));
         return new GZipArchive(
-            new SourceStream(stream, i => null, readerOptions ?? new ReaderOptions())
+            new SourceStream(stream, _ => null, readerOptions ?? new ReaderOptions())
         );
     }
 
@@ -106,8 +106,7 @@ public class GZipArchive : AbstractWritableArchive<GZipArchiveEntry, GZipVolume>
     protected override IEnumerable<GZipVolume> LoadVolumes(SourceStream sourceStream)
     {
         sourceStream.LoadAllParts();
-        var idx = 0;
-        return sourceStream.Streams.Select(a => new GZipVolume(a, ReaderOptions, idx++));
+        return sourceStream.Streams.Select(a => new GZipVolume(a, ReaderOptions, 0));
     }
 
     public static bool IsGZipFile(string filePath) => IsGZipFile(new FileInfo(filePath));
