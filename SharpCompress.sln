@@ -17,6 +17,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Config", "Config", "{CDB425
 	ProjectSection(SolutionItems) = preProject
 		Directory.Build.props = Directory.Build.props
 		global.json = global.json
+		.editorconfig = .editorconfig
+		Directory.Packages.props = Directory.Packages.props
+		NuGet.config = NuGet.config
 	EndProjectSection
 EndProject
 Global

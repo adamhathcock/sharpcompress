@@ -69,7 +69,7 @@ public sealed class BZip2Stream : Stream
 
     public override void SetLength(long value) => stream.SetLength(value);
 
-#if !NETFRAMEWORK && !NETSTANDARD2_0
+#if !NETFRAMEWORK&& !NETSTANDARD2_0
 
     public override int Read(Span<byte> buffer) => stream.Read(buffer);
 

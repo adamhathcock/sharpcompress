@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "dependencies": {
+    "net7.0": {
+      "Bullseye": {
+        "type": "Direct",
+        "requested": "[5.0.0, )",
+        "resolved": "5.0.0",
+        "contentHash": "bqyt+m17ym+5aN45C5oZRAjuLDt8jKiCm/ys1XfymIXSkrTFwvI/QsbY3ucPSHDz7SF7uON7B57kXFv5H2k1ew=="
+      },
+      "Glob": {
+        "type": "Direct",
+        "requested": "[1.1.9, )",
+        "resolved": "1.1.9",
+        "contentHash": "AfK5+ECWYTP7G3AAdnU8IfVj+QpGjrh9GC2mpdcJzCvtQ4pnerAGwHsxJ9D4/RnhDUz2DSzd951O/lQjQby2Sw=="
+      },
+      "SimpleExec": {
+        "type": "Direct",
+        "requested": "[12.0.0, )",
+        "resolved": "12.0.0",
+        "contentHash": "ptxlWtxC8vM6Y6e3h9ZTxBBkOWnWrm/Sa1HT+2i1xcXY3Hx2hmKDZP5RShPf8Xr9D+ivlrXNy57ktzyH8kyt+Q=="
+      }
+    }
+  }
+}
