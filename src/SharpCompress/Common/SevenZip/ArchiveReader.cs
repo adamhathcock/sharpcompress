@@ -855,8 +855,8 @@ internal class ArchiveReader
                     )
                     {
                         throw new InvalidFormatException(
-                                                         "Decoded stream does not match expected CRC."
-                                                        );
+                            "Decoded stream does not match expected CRC."
+                        );
                     }
                 }
             }

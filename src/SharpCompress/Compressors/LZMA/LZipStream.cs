@@ -205,7 +205,6 @@ public sealed class LZipStream : Stream
     ];
 
     public static void WriteHeaderSize(Stream stream) =>
-
         // hard coding the dictionary size encoding
         stream.Write(headerBytes, 0, 6);
 
@@ -213,8 +212,8 @@ public sealed class LZipStream : Stream
     /// Creates a byte array to communicate the parameters and dictionary size to LzmaStream.
     /// </summary>
     private static byte[] GetProperties(int dictionarySize) =>
-    [
-        // Parameters as per http://www.nongnu.org/lzip/manual/lzip_manual.html#Stream-format
+        [
+            // Parameters as per http://www.nongnu.org/lzip/manual/lzip_manual.html#Stream-format
             // but encoded as a single byte in the format LzmaStream expects.
             // literal_context_bits = 3
             // literal_pos_state_bits = 0
@@ -225,5 +224,5 @@ public sealed class LZipStream : Stream
             (byte)((dictionarySize >> 8) & 0xff),
             (byte)((dictionarySize >> 16) & 0xff),
             (byte)((dictionarySize >> 24) & 0xff)
-    ];
+        ];
 }

@@ -31,7 +31,7 @@ public static class ReaderFactory
         }
 
         throw new InvalidFormatException(
-                                         "Cannot determine compressed stream type.  Supported Reader Formats: Zip, GZip, BZip2, Tar, Rar, LZip, XZ"
-                                        );
+            "Cannot determine compressed stream type.  Supported Reader Formats: Zip, GZip, BZip2, Tar, Rar, LZip, XZ"
+        );
     }
 }
