@@ -1,4 +1,4 @@
-#if NETFRAMEWORK
+#if NETFRAMEWORK || NETSTANDARD2_0
 
 using System;
 using System.Buffers;

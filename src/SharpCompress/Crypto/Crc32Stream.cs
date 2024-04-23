@@ -29,7 +29,7 @@ public sealed class Crc32Stream(Stream stream, uint polynomial, uint seed) : Str
 
     public override void SetLength(long value) => throw new NotSupportedException();
 
-#if !NETFRAMEWORK
+#if !NETFRAMEWORK && !NETSTANDARD2_0
 
     public override void Write(ReadOnlySpan<byte> buffer)
     {

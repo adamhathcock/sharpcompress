@@ -69,7 +69,7 @@ internal class ReadOnlySubStream : NonDisposingStream
         return value;
     }
 
-#if !NETFRAMEWORK
+#if !NETFRAMEWORK && !NETSTANDARD2_0
     public override int Read(Span<byte> buffer)
     {
         var sliceLen = BytesLeftToRead < buffer.Length ? BytesLeftToRead : buffer.Length;

@@ -125,7 +125,7 @@ public sealed class LZipStream : Stream
 
     public override void SetLength(long value) => throw new NotImplementedException();
 
-#if !NETFRAMEWORK
+#if !NETFRAMEWORK && !NETSTANDARD2_0
 
     public override int Read(Span<byte> buffer) => _stream.Read(buffer);
 
