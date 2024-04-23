@@ -344,11 +344,11 @@ internal class FileHeader : RarHeader
                 if (FileLastModifiedTime is not null)
                 {
                     FileLastModifiedTime = ProcessExtendedTimeV4(
-                                                                 extendedFlags,
-                                                                 FileLastModifiedTime,
-                                                                 reader,
-                                                                 0
-                                                                );
+                        extendedFlags,
+                        FileLastModifiedTime,
+                        reader,
+                        0
+                    );
                 }
 
                 FileCreatedTime = ProcessExtendedTimeV4(extendedFlags, null, reader, 1);
