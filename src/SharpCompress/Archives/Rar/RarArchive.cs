@@ -32,18 +32,22 @@ public class RarArchive : AbstractArchive<RarArchiveEntry, RarVolume>
     {
         sourceStream.LoadAllParts(); //request all streams
         var streams = sourceStream.Streams.ToArray();
+        var i = 0;
         if (streams.Length > 1 && IsRarFile(streams[1], ReaderOptions)) //test part 2 - true = multipart not split
         {
             sourceStream.IsVolumes = true;
             streams[1].Position = 0;
             sourceStream.Position = 0;
 
-            return sourceStream.Streams.Select(a => new StreamRarArchiveVolume(a, ReaderOptions, 0));
+            return sourceStream.Streams.Select(a => new StreamRarArchiveVolume(
+                a,
+                ReaderOptions,
+                i++
+            ));
         }
-        else //split mode or single file
-        {
-            return new StreamRarArchiveVolume(sourceStream, ReaderOptions, 0).AsEnumerable();
-        }
+
+        //split mode or single file
+        return new StreamRarArchiveVolume(sourceStream, ReaderOptions, i++).AsEnumerable();
     }
 
     protected override IReader CreateReaderForSolidExtraction()
