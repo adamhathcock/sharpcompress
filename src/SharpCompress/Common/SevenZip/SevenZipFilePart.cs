@@ -41,7 +41,7 @@ internal class SevenZipFilePart : FilePart
     {
         if (!Header.HasStream)
         {
-            return null!;
+            throw new InvalidOperationException("File does not have a stream.");
         }
         var folderStream = _database.GetFolderStream(_stream, Folder!, _database.PasswordProvider);
 
@@ -73,7 +73,7 @@ internal class SevenZipFilePart : FilePart
     private const uint K_PPMD = 0x030401;
     private const uint K_B_ZIP2 = 0x040202;
 
-    internal CompressionType GetCompression()
+    private CompressionType GetCompression()
     {
         if (Header.IsDir)
         {
@@ -81,24 +81,13 @@ internal class SevenZipFilePart : FilePart
         }
 
         var coder = Folder.NotNull()._coders.First();
-        switch (coder._methodId._id)
+        return coder._methodId._id switch
         {
-            case K_LZMA:
-            case K_LZMA2:
-            {
-                return CompressionType.LZMA;
-            }
-            case K_PPMD:
-            {
-                return CompressionType.PPMd;
-            }
-            case K_B_ZIP2:
-            {
-                return CompressionType.BZip2;
-            }
-            default:
-                throw new NotImplementedException();
-        }
+            K_LZMA or K_LZMA2 => CompressionType.LZMA,
+            K_PPMD => CompressionType.PPMd,
+            K_B_ZIP2 => CompressionType.BZip2,
+            _ => throw new NotImplementedException()
+        };
     }
 
     internal bool IsEncrypted =>
