@@ -20,7 +20,8 @@ internal sealed class AesDecoderStream : DecoderStream2
 
     public AesDecoderStream(Stream input, byte[] info, IPasswordProvider pass, long limit)
     {
-        if (pass.CryptoGetTextPassword() == null)
+        var password = pass.CryptoGetTextPassword();
+        if (password == null)
         {
             throw new SharpCompress.Common.CryptographicException(
                 "Encrypted 7Zip archive has no password specified."
@@ -37,8 +38,8 @@ internal sealed class AesDecoderStream : DecoderStream2
 
         Init(info, out var numCyclesPower, out var salt, out var seed);
 
-        var password = Encoding.Unicode.GetBytes(pass.CryptoGetTextPassword());
-        var key = InitKey(numCyclesPower, salt, password);
+        var passwordBytes = Encoding.Unicode.GetBytes(password);
+        var key = InitKey(numCyclesPower, salt, passwordBytes);
         if (key == null)
         {
             throw new InvalidOperationException("Initialized with null key");

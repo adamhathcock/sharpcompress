@@ -29,7 +29,7 @@ internal abstract class ZipFilePart : FilePart
     internal Stream BaseStream { get; }
     internal ZipFileEntry Header { get; set; }
 
-    internal override string FilePartName => Header.Name;
+    internal override string? FilePartName => Header.Name;
 
     internal override Stream GetCompressedStream()
     {

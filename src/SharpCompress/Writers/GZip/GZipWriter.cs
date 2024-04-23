@@ -18,7 +18,7 @@ public sealed class GZipWriter : AbstractWriter
         {
             destination = NonDisposingStream.Create(destination);
         }
-        InitalizeStream(
+        InitializeStream(
             new GZipStream(
                 destination,
                 CompressionMode.Compress,

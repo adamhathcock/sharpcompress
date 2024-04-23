@@ -42,6 +42,10 @@ internal class StreamingZipHeaderFactory : ZipHeaderFactory
                 )
             )
             {
+                if (_lastEntryHeader.Part is null)
+                {
+                    continue;
+                }
                 reader = ((StreamingZipFilePart)_lastEntryHeader.Part).FixStreamedFileLocation(
                     ref rewindableStream
                 );

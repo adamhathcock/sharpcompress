@@ -11,8 +11,8 @@ public class SourceStream : Stream
     private long _prevSize;
     private readonly List<FileInfo> _files;
     private readonly List<Stream> _streams;
-    private readonly Func<int, FileInfo?> _getFilePart;
-    private readonly Func<int, Stream?> _getStreamPart;
+    private readonly Func<int, FileInfo?>? _getFilePart;
+    private readonly Func<int, Stream?>? _getStreamPart;
     private int _stream;
 
     public SourceStream(FileInfo file, Func<int, FileInfo?> getPart, ReaderOptions options)
@@ -38,8 +38,8 @@ public class SourceStream : Stream
         if (!IsFileMode)
         {
             _streams.Add(stream!);
-            _getStreamPart = getStreamPart!;
-            _getFilePart = _ => null!;
+            _getStreamPart = getStreamPart;
+            _getFilePart = _ => null;
             if (stream is FileStream fileStream)
             {
                 _files.Add(new FileInfo(fileStream.Name));
@@ -49,8 +49,8 @@ public class SourceStream : Stream
         {
             _files.Add(file!);
             _streams.Add(_files[0].OpenRead());
-            _getFilePart = getFilePart!;
-            _getStreamPart = _ => null!;
+            _getFilePart = getFilePart;
+            _getStreamPart = _ => null;
         }
         _stream = 0;
         _prevSize = 0;
@@ -78,7 +78,7 @@ public class SourceStream : Stream
         {
             if (IsFileMode)
             {
-                var f = _getFilePart(_streams.Count);
+                var f = _getFilePart.NotNull("GetFilePart is null")(_streams.Count);
                 if (f == null)
                 {
                     _stream = _streams.Count - 1;
@@ -90,7 +90,7 @@ public class SourceStream : Stream
             }
             else
             {
-                var s = _getStreamPart(_streams.Count);
+                var s = _getStreamPart.NotNull("GetStreamPart is null")(_streams.Count);
                 if (s == null)
                 {
                     _stream = _streams.Count - 1;

@@ -7,7 +7,7 @@ namespace SharpCompress.Archives.Tar;
 
 public class TarArchiveEntry : TarEntry, IArchiveEntry
 {
-    internal TarArchiveEntry(TarArchive archive, TarFilePart part, CompressionType compressionType)
+    internal TarArchiveEntry(TarArchive archive, TarFilePart? part, CompressionType compressionType)
         : base(part, compressionType) => Archive = archive;
 
     public virtual Stream OpenEntryStream() => Parts.Single().GetCompressedStream();

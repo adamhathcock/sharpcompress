@@ -6,5 +6,5 @@ public interface IVolume : IDisposable
 {
     int Index { get; }
 
-    string FileName { get; }
+    string? FileName { get; }
 }

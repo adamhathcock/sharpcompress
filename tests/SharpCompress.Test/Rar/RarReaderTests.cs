@@ -209,7 +209,7 @@ public class RarReaderTests : ReaderTests
                 {
                     Assert.Equal(CompressionType.Rar, reader.Entry.CompressionType);
                     using var entryStream = reader.OpenEntryStream();
-                    var file = Path.GetFileName(reader.Entry.Key);
+                    var file = Path.GetFileName(reader.Entry.Key).NotNull();
                     var folder =
                         Path.GetDirectoryName(reader.Entry.Key)
                         ?? throw new ArgumentNullException();
@@ -293,7 +293,7 @@ public class RarReaderTests : ReaderTests
         using var reader = ReaderFactory.Open(stream, new ReaderOptions { LookForHeader = true });
         while (reader.MoveToNextEntry())
         {
-            if (reader.Entry.Key.Contains("jpg"))
+            if (reader.Entry.Key.NotNull().Contains("jpg"))
             {
                 Assert.Equal(CompressionType.Rar, reader.Entry.CompressionType);
                 reader.WriteEntryToDirectory(
@@ -316,7 +316,7 @@ public class RarReaderTests : ReaderTests
         using var reader = ReaderFactory.Open(stream, new ReaderOptions { LookForHeader = true });
         while (reader.MoveToNextEntry())
         {
-            if (reader.Entry.Key.Contains("jpg"))
+            if (reader.Entry.Key.NotNull().Contains("jpg"))
             {
                 Assert.Equal(CompressionType.Rar, reader.Entry.CompressionType);
                 reader.WriteEntryToDirectory(

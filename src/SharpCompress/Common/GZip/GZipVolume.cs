@@ -5,7 +5,7 @@ namespace SharpCompress.Common.GZip;
 
 public class GZipVolume : Volume
 {
-    public GZipVolume(Stream stream, ReaderOptions options, int index = 0)
+    public GZipVolume(Stream stream, ReaderOptions? options, int index)
         : base(stream, options, index) { }
 
     public GZipVolume(FileInfo fileInfo, ReaderOptions options)

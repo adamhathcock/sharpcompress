@@ -103,7 +103,7 @@ internal class PkwareTraditionalEncryptionData
 
     internal byte[] StringToByteArray(string value)
     {
-        var a = _archiveEncoding.Password.GetBytes(value);
+        var a = _archiveEncoding.GetPasswordEncoding().GetBytes(value);
         return a;
     }
 

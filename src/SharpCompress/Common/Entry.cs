@@ -14,7 +14,7 @@ public abstract class Entry : IEntry
     /// <summary>
     /// The string key of the file internal to the Archive.
     /// </summary>
-    public abstract string Key { get; }
+    public abstract string? Key { get; }
 
     /// <summary>
     /// The target of a symlink entry internal to the Archive. Will be null if not a symlink.
@@ -71,11 +71,11 @@ public abstract class Entry : IEntry
     /// </summary>
     public abstract bool IsSplitAfter { get; }
 
-    public int VolumeIndexFirst => Parts?.FirstOrDefault()?.Index ?? 0;
-    public int VolumeIndexLast => Parts?.LastOrDefault()?.Index ?? 0;
+    public int VolumeIndexFirst => Parts.FirstOrDefault()?.Index ?? 0;
+    public int VolumeIndexLast => Parts.LastOrDefault()?.Index ?? 0;
 
     /// <inheritdoc/>
-    public override string ToString() => Key;
+    public override string ToString() => Key ?? "Entry";
 
     internal abstract IEnumerable<FilePart> Parts { get; }
 

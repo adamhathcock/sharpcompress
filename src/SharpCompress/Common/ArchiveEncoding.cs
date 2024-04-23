@@ -8,12 +8,12 @@ public class ArchiveEncoding
     /// <summary>
     /// Default encoding to use when archive format doesn't specify one.
     /// </summary>
-    public Encoding Default { get; set; }
+    public Encoding? Default { get; set; }
 
     /// <summary>
     /// ArchiveEncoding used by encryption schemes which don't comply with RFC 2898.
     /// </summary>
-    public Encoding Password { get; set; }
+    public Encoding? Password { get; set; }
 
     /// <summary>
     /// Set this encoding when you want to force it for all encoding operations.
@@ -49,6 +49,8 @@ public class ArchiveEncoding
     public byte[] Encode(string str) => GetEncoding().GetBytes(str);
 
     public Encoding GetEncoding() => Forced ?? Default ?? Encoding.UTF8;
+
+    public Encoding GetPasswordEncoding() => Password ?? Encoding.UTF8;
 
     public Func<byte[], int, int, string> GetDecoder() =>
         CustomDecoder ?? ((bytes, index, count) => GetEncoding().GetString(bytes, index, count));

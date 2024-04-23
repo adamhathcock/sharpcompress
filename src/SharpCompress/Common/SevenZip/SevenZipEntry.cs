@@ -13,7 +13,7 @@ public class SevenZipEntry : Entry
 
     public override long Crc => FilePart.Header.Crc ?? 0;
 
-    public override string Key => FilePart.Header.Name;
+    public override string? Key => FilePart.Header.Name;
 
     public override string? LinkTarget => null;
 

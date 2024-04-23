@@ -77,12 +77,10 @@ public abstract class ReaderTests : TestBase
         ReaderOptions? options = null
     )
     {
-#if !NETFRAMEWORK
-        if (!OperatingSystem.IsWindows())
+        if (!Environment.OSVersion.IsWindows())
         {
             fileOrder = fileOrder.Replace('\\', '/');
         }
-#endif
         var expected = new Stack<string>(fileOrder.Split(' '));
 
         testArchive = Path.Combine(TEST_ARCHIVES_PATH, testArchive);

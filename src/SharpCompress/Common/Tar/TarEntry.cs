@@ -1,5 +1,3 @@
-#nullable disable
-
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -10,9 +8,9 @@ namespace SharpCompress.Common.Tar;
 
 public class TarEntry : Entry
 {
-    private readonly TarFilePart _filePart;
+    private readonly TarFilePart? _filePart;
 
-    internal TarEntry(TarFilePart filePart, CompressionType type)
+    internal TarEntry(TarFilePart? filePart, CompressionType type)
     {
         _filePart = filePart;
         CompressionType = type;
@@ -22,15 +20,15 @@ public class TarEntry : Entry
 
     public override long Crc => 0;
 
-    public override string Key => _filePart.Header.Name;
+    public override string? Key => _filePart?.Header.Name;
 
-    public override string LinkTarget => _filePart.Header.LinkName;
+    public override string? LinkTarget => _filePart?.Header.LinkName;
 
-    public override long CompressedSize => _filePart.Header.Size;
+    public override long CompressedSize => _filePart?.Header.Size ?? 0;
 
-    public override long Size => _filePart.Header.Size;
+    public override long Size => _filePart?.Header.Size ?? 0;
 
-    public override DateTime? LastModifiedTime => _filePart.Header.LastModifiedTime;
+    public override DateTime? LastModifiedTime => _filePart?.Header.LastModifiedTime;
 
     public override DateTime? CreatedTime => null;
 
@@ -40,17 +38,17 @@ public class TarEntry : Entry
 
     public override bool IsEncrypted => false;
 
-    public override bool IsDirectory => _filePart.Header.EntryType == EntryType.Directory;
+    public override bool IsDirectory => _filePart?.Header.EntryType == EntryType.Directory;
 
     public override bool IsSplitAfter => false;
 
-    public long Mode => _filePart.Header.Mode;
+    public long Mode => _filePart?.Header.Mode ?? 0;
 
-    public long UserID => _filePart.Header.UserId;
+    public long UserID => _filePart?.Header.UserId ?? 0;
 
-    public long GroupId => _filePart.Header.GroupId;
+    public long GroupId => _filePart?.Header.GroupId ?? 0;
 
-    internal override IEnumerable<FilePart> Parts => _filePart.AsEnumerable<FilePart>();
+    internal override IEnumerable<FilePart> Parts => _filePart.Empty();
 
     internal static IEnumerable<TarEntry> GetEntries(
         StreamingMode mode,
@@ -59,17 +57,17 @@ public class TarEntry : Entry
         ArchiveEncoding archiveEncoding
     )
     {
-        foreach (var h in TarHeaderFactory.ReadHeader(mode, stream, archiveEncoding))
+        foreach (var header in TarHeaderFactory.ReadHeader(mode, stream, archiveEncoding))
         {
-            if (h != null)
+            if (header != null)
             {
                 if (mode == StreamingMode.Seekable)
                 {
-                    yield return new TarEntry(new TarFilePart(h, stream), compressionType);
+                    yield return new TarEntry(new TarFilePart(header, stream), compressionType);
                 }
                 else
                 {
-                    yield return new TarEntry(new TarFilePart(h, null), compressionType);
+                    yield return new TarEntry(new TarFilePart(header, null), compressionType);
                 }
             }
             else

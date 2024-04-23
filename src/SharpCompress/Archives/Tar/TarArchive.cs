@@ -114,7 +114,7 @@ public class TarArchive : AbstractWritableArchive<TarArchiveEntry, TarVolume>
             var tarHeader = new TarHeader(new ArchiveEncoding());
             var readSucceeded = tarHeader.Read(new BinaryReader(stream));
             var isEmptyArchive =
-                tarHeader.Name.Length == 0
+                tarHeader.Name?.Length == 0
                 && tarHeader.Size == 0
                 && Enum.IsDefined(typeof(EntryType), tarHeader.EntryType);
             return readSucceeded || isEmptyArchive;
@@ -123,22 +123,20 @@ public class TarArchive : AbstractWritableArchive<TarArchiveEntry, TarVolume>
         return false;
     }
 
-    protected override IEnumerable<TarVolume> LoadVolumes(SourceStream srcStream)
+    protected override IEnumerable<TarVolume> LoadVolumes(SourceStream sourceStream)
     {
-        SrcStream.LoadAllParts(); //request all streams
-        var idx = 0;
-        return new TarVolume(srcStream, ReaderOptions, idx++).AsEnumerable(); //simple single volume or split, multivolume not supported
+        sourceStream.NotNull("SourceStream is null").LoadAllParts(); //request all streams
+        return new TarVolume(sourceStream, ReaderOptions, 1).AsEnumerable(); //simple single volume or split, multivolume not supported
     }
 
     /// <summary>
     /// Constructor with a SourceStream able to handle FileInfo and Streams.
     /// </summary>
-    /// <param name="srcStream"></param>
-    /// <param name="options"></param>
-    internal TarArchive(SourceStream srcStream)
-        : base(ArchiveType.Tar, srcStream) { }
+    /// <param name="sourceStream"></param>
+    private TarArchive(SourceStream sourceStream)
+        : base(ArchiveType.Tar, sourceStream) { }
 
-    internal TarArchive()
+    private TarArchive()
         : base(ArchiveType.Tar) { }
 
     protected override IEnumerable<TarArchiveEntry> LoadEntries(IEnumerable<TarVolume> volumes)
@@ -225,7 +223,12 @@ public class TarArchive : AbstractWritableArchive<TarArchiveEntry, TarVolume>
         foreach (var entry in oldEntries.Concat(newEntries).Where(x => !x.IsDirectory))
         {
             using var entryStream = entry.OpenEntryStream();
-            writer.Write(entry.Key, entryStream, entry.LastModifiedTime, entry.Size);
+            writer.Write(
+                entry.Key.NotNull("Entry Key is null"),
+                entryStream,
+                entry.LastModifiedTime,
+                entry.Size
+            );
         }
     }
 

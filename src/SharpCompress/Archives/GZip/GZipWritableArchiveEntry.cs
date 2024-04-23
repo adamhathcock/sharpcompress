@@ -1,5 +1,3 @@
-#nullable disable
-
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -32,7 +30,7 @@ internal sealed class GZipWritableArchiveEntry : GZipArchiveEntry, IWritableArch
 
     public override long Crc => 0;
 
-    public override string Key { get; }
+    public override string? Key { get; }
 
     public override long CompressedSize => 0;
 

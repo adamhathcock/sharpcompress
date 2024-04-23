@@ -12,38 +12,34 @@ public abstract class AbstractArchive<TEntry, TVolume> : IArchive, IArchiveExtra
     where TEntry : IArchiveEntry
     where TVolume : IVolume
 {
-    private readonly LazyReadOnlyCollection<TVolume> lazyVolumes;
-    private readonly LazyReadOnlyCollection<TEntry> lazyEntries;
+    private readonly LazyReadOnlyCollection<TVolume> _lazyVolumes;
+    private readonly LazyReadOnlyCollection<TEntry> _lazyEntries;
+    private bool _disposed;
+    private readonly SourceStream? _sourceStream;
 
     public event EventHandler<ArchiveExtractionEventArgs<IArchiveEntry>>? EntryExtractionBegin;
     public event EventHandler<ArchiveExtractionEventArgs<IArchiveEntry>>? EntryExtractionEnd;
 
     public event EventHandler<CompressedBytesReadEventArgs>? CompressedBytesRead;
     public event EventHandler<FilePartExtractionBeginEventArgs>? FilePartExtractionBegin;
-
     protected ReaderOptions ReaderOptions { get; }
 
-    private bool disposed;
-    protected SourceStream SrcStream;
-
-    internal AbstractArchive(ArchiveType type, SourceStream srcStream)
+    internal AbstractArchive(ArchiveType type, SourceStream sourceStream)
     {
         Type = type;
-        ReaderOptions = srcStream.ReaderOptions;
-        SrcStream = srcStream;
-        lazyVolumes = new LazyReadOnlyCollection<TVolume>(LoadVolumes(SrcStream));
-        lazyEntries = new LazyReadOnlyCollection<TEntry>(LoadEntries(Volumes));
+        ReaderOptions = sourceStream.ReaderOptions;
+        _sourceStream = sourceStream;
+        _lazyVolumes = new LazyReadOnlyCollection<TVolume>(LoadVolumes(_sourceStream));
+        _lazyEntries = new LazyReadOnlyCollection<TEntry>(LoadEntries(Volumes));
     }
 
-#nullable disable
     internal AbstractArchive(ArchiveType type)
     {
         Type = type;
-        lazyVolumes = new LazyReadOnlyCollection<TVolume>(Enumerable.Empty<TVolume>());
-        lazyEntries = new LazyReadOnlyCollection<TEntry>(Enumerable.Empty<TEntry>());
+        ReaderOptions = new();
+        _lazyVolumes = new LazyReadOnlyCollection<TVolume>(Enumerable.Empty<TVolume>());
+        _lazyEntries = new LazyReadOnlyCollection<TEntry>(Enumerable.Empty<TEntry>());
     }
-
-#nullable enable
 
     public ArchiveType Type { get; }
 
@@ -65,12 +61,12 @@ public abstract class AbstractArchive<TEntry, TVolume> : IArchive, IArchiveExtra
     /// <summary>
     /// Returns an ReadOnlyCollection of all the RarArchiveEntries across the one or many parts of the RarArchive.
     /// </summary>
-    public virtual ICollection<TEntry> Entries => lazyEntries;
+    public virtual ICollection<TEntry> Entries => _lazyEntries;
 
     /// <summary>
     /// Returns an ReadOnlyCollection of all the RarArchiveVolumes across the one or many parts of the RarArchive.
     /// </summary>
-    public ICollection<TVolume> Volumes => lazyVolumes;
+    public ICollection<TVolume> Volumes => _lazyVolumes;
 
     /// <summary>
     /// The total size of the files compressed in the archive.
@@ -84,29 +80,29 @@ public abstract class AbstractArchive<TEntry, TVolume> : IArchive, IArchiveExtra
     public virtual long TotalUncompressSize =>
         Entries.Aggregate(0L, (total, cf) => total + cf.Size);
 
-    protected abstract IEnumerable<TVolume> LoadVolumes(SourceStream srcStream);
+    protected abstract IEnumerable<TVolume> LoadVolumes(SourceStream sourceStream);
     protected abstract IEnumerable<TEntry> LoadEntries(IEnumerable<TVolume> volumes);
 
     IEnumerable<IArchiveEntry> IArchive.Entries => Entries.Cast<IArchiveEntry>();
 
-    IEnumerable<IVolume> IArchive.Volumes => lazyVolumes.Cast<IVolume>();
+    IEnumerable<IVolume> IArchive.Volumes => _lazyVolumes.Cast<IVolume>();
 
     public virtual void Dispose()
     {
-        if (!disposed)
+        if (!_disposed)
         {
-            lazyVolumes.ForEach(v => v.Dispose());
-            lazyEntries.GetLoaded().Cast<Entry>().ForEach(x => x.Close());
-            SrcStream?.Dispose();
+            _lazyVolumes.ForEach(v => v.Dispose());
+            _lazyEntries.GetLoaded().Cast<Entry>().ForEach(x => x.Close());
+            _sourceStream?.Dispose();
 
-            disposed = true;
+            _disposed = true;
         }
     }
 
     void IArchiveExtractionListener.EnsureEntriesLoaded()
     {
-        lazyEntries.EnsureFullyLoaded();
-        lazyVolumes.EnsureFullyLoaded();
+        _lazyEntries.EnsureFullyLoaded();
+        _lazyVolumes.EnsureFullyLoaded();
     }
 
     void IExtractionListener.FireCompressedBytesRead(

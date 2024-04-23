@@ -1,5 +1,3 @@
-#nullable disable
-
 using System;
 using System.Buffers.Binary;
 using System.IO;
@@ -13,8 +11,8 @@ internal sealed class TarHeader
 
     public TarHeader(ArchiveEncoding archiveEncoding) => ArchiveEncoding = archiveEncoding;
 
-    internal string Name { get; set; }
-    internal string LinkName { get; set; }
+    internal string? Name { get; set; }
+    internal string? LinkName { get; set; }
 
     internal long Mode { get; set; }
     internal long UserId { get; set; }
@@ -22,7 +20,7 @@ internal sealed class TarHeader
     internal long Size { get; set; }
     internal DateTime LastModifiedTime { get; set; }
     internal EntryType EntryType { get; set; }
-    internal Stream PackedStream { get; set; }
+    internal Stream? PackedStream { get; set; }
     internal ArchiveEncoding ArchiveEncoding { get; }
 
     internal const int BLOCK_SIZE = 512;
@@ -36,7 +34,9 @@ internal sealed class TarHeader
         WriteOctalBytes(0, buffer, 116, 8); // group ID
 
         //ArchiveEncoding.UTF8.GetBytes("magic").CopyTo(buffer, 257);
-        var nameByteCount = ArchiveEncoding.GetEncoding().GetByteCount(Name);
+        var nameByteCount = ArchiveEncoding
+            .GetEncoding()
+            .GetByteCount(Name.NotNull("Name is null"));
         if (nameByteCount > 100)
         {
             // Set mock filename and filetype to indicate the next block is the actual name of the file
@@ -46,7 +46,7 @@ internal sealed class TarHeader
         }
         else
         {
-            WriteStringBytes(ArchiveEncoding.Encode(Name), buffer, 100);
+            WriteStringBytes(ArchiveEncoding.Encode(Name.NotNull("Name is null")), buffer, 100);
             WriteOctalBytes(Size, buffer, 124, 12);
             var time = (long)(LastModifiedTime.ToUniversalTime() - EPOCH).TotalSeconds;
             WriteOctalBytes(time, buffer, 136, 12);
@@ -77,7 +77,7 @@ internal sealed class TarHeader
             //
             // and then infinite recursion is occured in WriteLongFilenameHeader because truncated.Length is 102.
             Name = ArchiveEncoding.Decode(
-                ArchiveEncoding.Encode(Name),
+                ArchiveEncoding.Encode(Name.NotNull("Name is null")),
                 0,
                 100 - ArchiveEncoding.GetEncoding().GetMaxByteCount(1)
             );
@@ -87,7 +87,7 @@ internal sealed class TarHeader
 
     private void WriteLongFilenameHeader(Stream output)
     {
-        var nameBytes = ArchiveEncoding.Encode(Name);
+        var nameBytes = ArchiveEncoding.Encode(Name.NotNull("Name is null"));
         output.Write(nameBytes, 0, nameBytes.Length);
 
         // pad to multiple of BlockSize bytes, and make sure a terminating null is added
@@ -323,5 +323,5 @@ internal sealed class TarHeader
 
     public long? DataStartPosition { get; set; }
 
-    public string Magic { get; set; }
+    public string? Magic { get; set; }
 }

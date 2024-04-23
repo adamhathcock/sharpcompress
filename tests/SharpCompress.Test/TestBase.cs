@@ -216,8 +216,8 @@ public class TestBase : IDisposable
             while (archive1.MoveToNextEntry())
             {
                 Assert.True(archive2.MoveToNextEntry());
-                archive1Entries.Add(archive1.Entry.Key);
-                archive2Entries.Add(archive2.Entry.Key);
+                archive1Entries.Add(archive1.Entry.Key.NotNull());
+                archive2Entries.Add(archive2.Entry.Key.NotNull());
             }
             Assert.False(archive2.MoveToNextEntry());
         }
