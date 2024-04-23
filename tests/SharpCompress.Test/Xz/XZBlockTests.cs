@@ -1,5 +1,6 @@
 using System.IO;
 using System.Text;
+using SharpCompress.Common;
 using SharpCompress.Compressors.Xz;
 using Xunit;
 
