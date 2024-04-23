@@ -182,7 +182,7 @@ public class SevenZipArchiveTests : ArchiveTests
         using (var archive = SevenZipArchive.Open(stream))
         {
             var entry = archive.Entries.First();
-            entry.WriteToFile(Path.Combine(SCRATCH_FILES_PATH, entry.Key));
+            entry.WriteToFile(Path.Combine(SCRATCH_FILES_PATH, entry.Key.NotNull()));
 
             var size = entry.Size;
             var scratch = new FileInfo(Path.Combine(SCRATCH_FILES_PATH, "7Zip.Tar.tar"));

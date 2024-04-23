@@ -70,11 +70,11 @@ internal sealed class RarCryptoWrapper : Stream
 
     protected override void Dispose(bool disposing)
     {
-        if (_rijndael != null)
+        if (disposing)
         {
             _rijndael.Dispose();
-            _rijndael = null!;
         }
+
         base.Dispose(disposing);
     }
 }

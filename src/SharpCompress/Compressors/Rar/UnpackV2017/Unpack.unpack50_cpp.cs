@@ -530,7 +530,6 @@ internal partial class Unpack
         {
             case FILTER_E8:
             case FILTER_E8E9:
-
                 {
                     var FileOffset = (uint)WrittenFileSize;
 
@@ -569,7 +568,6 @@ internal partial class Unpack
                 }
                 return SrcData;
             case FILTER_ARM:
-
                 {
                     var FileOffset = (uint)WrittenFileSize;
                     // DataSize is unsigned, so we use "CurPos+3" and not "DataSize-3"

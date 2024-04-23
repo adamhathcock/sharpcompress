@@ -14,16 +14,16 @@ namespace SharpCompress.Readers.Rar;
 public abstract class RarReader : AbstractReader<RarReaderEntry, RarVolume>
 {
     private RarVolume? volume;
-    internal Lazy<IRarUnpack> UnpackV2017 { get; } =
+    private Lazy<IRarUnpack> UnpackV2017 { get; } =
         new(() => new Compressors.Rar.UnpackV2017.Unpack());
-    internal Lazy<IRarUnpack> UnpackV1 { get; } = new(() => new Compressors.Rar.UnpackV1.Unpack());
+    private Lazy<IRarUnpack> UnpackV1 { get; } = new(() => new Compressors.Rar.UnpackV1.Unpack());
 
     internal RarReader(ReaderOptions options)
         : base(options, ArchiveType.Rar) { }
 
-    internal abstract void ValidateArchive(RarVolume archive);
+    protected abstract void ValidateArchive(RarVolume archive);
 
-    public override RarVolume Volume => volume!;
+    public override RarVolume? Volume => volume;
 
     /// <summary>
     /// Opens a RarReader for Non-seeking usage with a single volume
@@ -51,7 +51,7 @@ public abstract class RarReader : AbstractReader<RarReaderEntry, RarVolume>
 
     protected override IEnumerable<RarReaderEntry> GetEntries(Stream stream)
     {
-        volume = new RarReaderVolume(stream, Options);
+        volume = new RarReaderVolume(stream, Options, 0);
         foreach (var fp in volume.ReadFileParts())
         {
             ValidateArchive(volume);

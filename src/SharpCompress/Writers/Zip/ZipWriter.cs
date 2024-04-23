@@ -42,14 +42,14 @@ public class ZipWriter : AbstractWriter
         {
             destination = NonDisposingStream.Create(destination);
         }
-        InitalizeStream(destination);
+        InitializeStream(destination);
     }
 
     private PpmdProperties PpmdProperties => ppmdProps ??= new PpmdProperties();
 
     protected override void Dispose(bool isDisposing)
     {
-        if (isDisposing)
+        if (isDisposing && OutputStream is not null)
         {
             ulong size = 0;
             foreach (var entry in entries)
@@ -114,7 +114,7 @@ public class ZipWriter : AbstractWriter
         streamPosition += headersize;
         return new ZipWritingStream(
             this,
-            OutputStream,
+            OutputStream.NotNull(),
             entry,
             compression,
             options.DeflateCompressionLevel ?? compressionLevel
@@ -419,13 +419,14 @@ public class ZipWriter : AbstractWriter
                     return;
                 }
 
+                var countingCount = counting?.Count ?? 0;
                 entry.Crc = (uint)crc.Crc32Result;
-                entry.Compressed = counting!.Count;
+                entry.Compressed = countingCount;
                 entry.Decompressed = decompressed;
 
                 var zip64 =
                     entry.Compressed >= uint.MaxValue || entry.Decompressed >= uint.MaxValue;
-                var compressedvalue = zip64 ? uint.MaxValue : (uint)counting.Count;
+                var compressedvalue = zip64 ? uint.MaxValue : (uint)countingCount;
                 var decompressedvalue = zip64 ? uint.MaxValue : (uint)entry.Decompressed;
 
                 if (originalStream.CanSeek)
@@ -433,7 +434,7 @@ public class ZipWriter : AbstractWriter
                     originalStream.Position = (long)(entry.HeaderOffset + 6);
                     originalStream.WriteByte(0);
 
-                    if (counting.Count == 0 && entry.Decompressed == 0)
+                    if (countingCount == 0 && entry.Decompressed == 0)
                     {
                         // set compression to STORED for zero byte files (no compression data)
                         originalStream.Position = (long)(entry.HeaderOffset + 8);
@@ -520,11 +521,12 @@ public class ZipWriter : AbstractWriter
             // if we can prevent the writes from happening
             if (entry.Zip64HeaderOffset == 0)
             {
+                var countingCount = counting?.Count ?? 0;
                 // Pre-check, the counting.Count is not exact, as we do not know the size before having actually compressed it
                 if (
                     limitsExceeded
                     || ((decompressed + (uint)count) > uint.MaxValue)
-                    || (counting!.Count + (uint)count) > uint.MaxValue
+                    || (countingCount + (uint)count) > uint.MaxValue
                 )
                 {
                     throw new NotSupportedException(
@@ -539,8 +541,9 @@ public class ZipWriter : AbstractWriter
 
             if (entry.Zip64HeaderOffset == 0)
             {
+                var countingCount = counting?.Count ?? 0;
                 // Post-check, this is accurate
-                if ((decompressed > uint.MaxValue) || counting!.Count > uint.MaxValue)
+                if ((decompressed > uint.MaxValue) || countingCount > uint.MaxValue)
                 {
                     // We have written the data, so the archive is now broken
                     // Throwing the exception here, allows us to avoid

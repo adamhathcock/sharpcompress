@@ -19,7 +19,7 @@ public class GZipArchiveTests : ArchiveTests
         using (var archive = ArchiveFactory.Open(stream))
         {
             var entry = archive.Entries.First();
-            entry.WriteToFile(Path.Combine(SCRATCH_FILES_PATH, entry.Key));
+            entry.WriteToFile(Path.Combine(SCRATCH_FILES_PATH, entry.Key.NotNull()));
 
             var size = entry.Size;
             var scratch = new FileInfo(Path.Combine(SCRATCH_FILES_PATH, "Tar.tar"));
@@ -41,7 +41,7 @@ public class GZipArchiveTests : ArchiveTests
         using (var archive = GZipArchive.Open(stream))
         {
             var entry = archive.Entries.First();
-            entry.WriteToFile(Path.Combine(SCRATCH_FILES_PATH, entry.Key));
+            entry.WriteToFile(Path.Combine(SCRATCH_FILES_PATH, entry.Key.NotNull()));
 
             var size = entry.Size;
             var scratch = new FileInfo(Path.Combine(SCRATCH_FILES_PATH, "Tar.tar"));
@@ -94,6 +94,7 @@ public class GZipArchiveTests : ArchiveTests
         using (var entryStream = archiveEntry.OpenEntryStream())
         {
             var result = TarArchive.IsTarFile(entryStream);
+            Assert.True(result);
         }
         Assert.Equal(size, tarStream.Length);
         using (var entryStream = archiveEntry.OpenEntryStream())

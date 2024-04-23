@@ -8,7 +8,7 @@ public abstract class FilePart
 
     internal ArchiveEncoding ArchiveEncoding { get; }
 
-    internal abstract string FilePartName { get; }
+    internal abstract string? FilePartName { get; }
     public int Index { get; set; }
 
     internal abstract Stream GetCompressedStream();

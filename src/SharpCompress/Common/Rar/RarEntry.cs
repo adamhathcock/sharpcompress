@@ -25,7 +25,7 @@ public abstract class RarEntry : Entry
     /// <summary>
     /// The path of the file internal to the Rar Archive.
     /// </summary>
-    public override string Key => FileHeader.FileName;
+    public override string? Key => FileHeader.FileName;
 
     public override string? LinkTarget => null;
 

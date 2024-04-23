@@ -36,10 +36,11 @@ internal static class ExtractionMethods
 
         options ??= new ExtractionOptions() { Overwrite = true };
 
-        var file = Path.GetFileName(entry.Key);
+        var file = Path.GetFileName(entry.Key.NotNull("Entry Key is null")).NotNull("File is null");
         if (options.ExtractFullPath)
         {
-            var folder = Path.GetDirectoryName(entry.Key)!;
+            var folder = Path.GetDirectoryName(entry.Key.NotNull("Entry Key is null"))
+                .NotNull("Directory is null");
             var destdir = Path.GetFullPath(Path.Combine(fullDestinationDirectoryPath, folder));
 
             if (!Directory.Exists(destdir))
