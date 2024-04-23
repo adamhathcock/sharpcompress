@@ -126,7 +126,7 @@ public class TarArchive : AbstractWritableArchive<TarArchiveEntry, TarVolume>
     protected override IEnumerable<TarVolume> LoadVolumes(SourceStream sourceStream)
     {
         sourceStream.NotNull("SourceStream is null").LoadAllParts(); //request all streams
-        return new TarVolume(sourceStream, ReaderOptions, 0).AsEnumerable(); //simple single volume or split, multivolume not supported
+        return new TarVolume(sourceStream, ReaderOptions, 1).AsEnumerable(); //simple single volume or split, multivolume not supported
     }
 
     /// <summary>

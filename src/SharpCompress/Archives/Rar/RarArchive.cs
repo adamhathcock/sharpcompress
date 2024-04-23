@@ -38,11 +38,11 @@ public class RarArchive : AbstractArchive<RarArchiveEntry, RarVolume>
             streams[1].Position = 0;
             sourceStream.Position = 0;
 
-            return sourceStream.Streams.Select(a => new StreamRarArchiveVolume(a, ReaderOptions));
+            return sourceStream.Streams.Select(a => new StreamRarArchiveVolume(a, ReaderOptions, 1));
         }
         else //split mode or single file
         {
-            return new StreamRarArchiveVolume(sourceStream, ReaderOptions).AsEnumerable();
+            return new StreamRarArchiveVolume(sourceStream, ReaderOptions, 1).AsEnumerable();
         }
     }
 
