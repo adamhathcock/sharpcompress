@@ -162,7 +162,7 @@ public class GZipArchive : AbstractWritableArchive<GZipArchiveEntry, GZipVolume>
     {
         if (Entries.Any())
         {
-            throw new InvalidOperationException("Only one entry is allowed in a GZip Archive");
+            throw new InvalidFormatException("Only one entry is allowed in a GZip Archive");
         }
         return new GZipWritableArchiveEntry(this, source, filePath, size, modified, closeStream);
     }
@@ -176,7 +176,7 @@ public class GZipArchive : AbstractWritableArchive<GZipArchiveEntry, GZipVolume>
     {
         if (Entries.Count > 1)
         {
-            throw new InvalidOperationException("Only one entry is allowed in a GZip Archive");
+            throw new InvalidFormatException("Only one entry is allowed in a GZip Archive");
         }
         using var writer = new GZipWriter(stream, new GZipWriterOptions(options));
         foreach (var entry in oldEntries.Concat(newEntries).Where(x => !x.IsDirectory))

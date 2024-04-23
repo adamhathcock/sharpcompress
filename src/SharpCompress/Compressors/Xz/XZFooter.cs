@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Text;
+using SharpCompress.Common;
 using SharpCompress.IO;
 
 namespace SharpCompress.Compressors.Xz;
@@ -35,7 +36,7 @@ public class XZFooter
         var myCrc = Crc32.Compute(footerBytes);
         if (crc != myCrc)
         {
-            throw new InvalidDataException("Footer corrupt");
+            throw new InvalidFormatException("Footer corrupt");
         }
 
         using (var stream = new MemoryStream(footerBytes))
@@ -47,7 +48,7 @@ public class XZFooter
         var magBy = _reader.ReadBytes(2);
         if (!magBy.AsSpan().SequenceEqual(_magicBytes))
         {
-            throw new InvalidDataException("Magic footer missing");
+            throw new InvalidFormatException("Magic footer missing");
         }
     }
 }

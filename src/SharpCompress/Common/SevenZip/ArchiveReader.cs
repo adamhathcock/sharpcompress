@@ -784,7 +784,7 @@ internal class ArchiveReader
                         );
                         break;
                     default:
-                        throw new InvalidOperationException();
+                        throw new InvalidFormatException();
                 }
             }
         }
@@ -843,7 +843,7 @@ internal class ArchiveReader
                 outStream.ReadExact(data, 0, data.Length);
                 if (outStream.ReadByte() >= 0)
                 {
-                    throw new InvalidOperationException("Decoded stream is longer than expected.");
+                    throw new InvalidFormatException("Decoded stream is longer than expected.");
                 }
                 dataVector.Add(data);
 
@@ -854,9 +854,9 @@ internal class ArchiveReader
                         != folder._unpackCrc
                     )
                     {
-                        throw new InvalidOperationException(
-                            "Decoded stream does not match expected CRC."
-                        );
+                        throw new InvalidFormatException(
+                                                         "Decoded stream does not match expected CRC."
+                                                        );
                     }
                 }
             }

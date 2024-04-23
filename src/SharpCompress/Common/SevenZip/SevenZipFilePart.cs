@@ -41,7 +41,7 @@ internal class SevenZipFilePart : FilePart
     {
         if (!Header.HasStream)
         {
-            throw new InvalidOperationException("File does not have a stream.");
+            throw new InvalidFormatException("File does not have a stream.");
         }
         var folderStream = _database.GetFolderStream(_stream, Folder!, _database.PasswordProvider);
 
@@ -86,7 +86,7 @@ internal class SevenZipFilePart : FilePart
             K_LZMA or K_LZMA2 => CompressionType.LZMA,
             K_PPMD => CompressionType.PPMd,
             K_B_ZIP2 => CompressionType.BZip2,
-            _ => throw new NotImplementedException()
+            _ => throw new InvalidFormatException()
         };
     }
 

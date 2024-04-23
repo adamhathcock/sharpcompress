@@ -4,6 +4,7 @@
  */
 
 using System.IO;
+using SharpCompress.Common;
 using SharpCompress.Compressors.Xz.Filters;
 using Xunit;
 
@@ -66,23 +67,23 @@ public class BcjTests : XzTestsBase
     [InlineData(new byte[] { 0, 0, 0, 0, 0 })]
     public void OnlyAcceptsOneByte(byte[] bytes)
     {
-        InvalidDataException ex;
-        ex = Assert.Throws<InvalidDataException>(() => _armFilter.Init(bytes));
+        InvalidFormatException ex;
+        ex = Assert.Throws<InvalidFormatException>(() => _armFilter.Init(bytes));
         Assert.Equal("ARM properties unexpected length", ex.Message);
 
-        ex = Assert.Throws<InvalidDataException>(() => _armtFilter.Init(bytes));
+        ex = Assert.Throws<InvalidFormatException>(() => _armtFilter.Init(bytes));
         Assert.Equal("ARM Thumb properties unexpected length", ex.Message);
 
-        ex = Assert.Throws<InvalidDataException>(() => _ia64Filter.Init(bytes));
+        ex = Assert.Throws<InvalidFormatException>(() => _ia64Filter.Init(bytes));
         Assert.Equal("IA64 properties unexpected length", ex.Message);
 
-        ex = Assert.Throws<InvalidDataException>(() => _ppcFilter.Init(bytes));
+        ex = Assert.Throws<InvalidFormatException>(() => _ppcFilter.Init(bytes));
         Assert.Equal("PPC properties unexpected length", ex.Message);
 
-        ex = Assert.Throws<InvalidDataException>(() => _sparcFilter.Init(bytes));
+        ex = Assert.Throws<InvalidFormatException>(() => _sparcFilter.Init(bytes));
         Assert.Equal("SPARC properties unexpected length", ex.Message);
 
-        ex = Assert.Throws<InvalidDataException>(() => _x86Filter.Init(bytes));
+        ex = Assert.Throws<InvalidFormatException>(() => _x86Filter.Init(bytes));
         Assert.Equal("X86 properties unexpected length", ex.Message);
     }
 }
