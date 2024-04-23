@@ -1,9 +1,9 @@
-using System;
 using System.IO;
 using System.Linq;
 using SharpCompress.Archives;
 using SharpCompress.Archives.GZip;
 using SharpCompress.Archives.Tar;
+using SharpCompress.Common;
 using Xunit;
 
 namespace SharpCompress.Test.GZip;
@@ -62,7 +62,7 @@ public class GZipArchiveTests : ArchiveTests
         var jpg = Path.Combine(ORIGINAL_FILES_PATH, "jpg", "test.jpg");
         using Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.gz"));
         using var archive = GZipArchive.Open(stream);
-        Assert.Throws<InvalidOperationException>(() => archive.AddEntry("jpg\\test.jpg", jpg));
+        Assert.Throws<InvalidFormatException>(() => archive.AddEntry("jpg\\test.jpg", jpg));
         archive.SaveTo(Path.Combine(SCRATCH_FILES_PATH, "Tar.tar.gz"));
     }
 

@@ -1,5 +1,4 @@
 using System;
-using System.IO;
 using SharpCompress.Common;
 using SharpCompress.Compressors.Xz.Filters;
 using Xunit;

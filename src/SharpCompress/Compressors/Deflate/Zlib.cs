@@ -62,7 +62,6 @@
 //
 // -----------------------------------------------------------------------
 
-using System;
 using System.IO;
 using SharpCompress.Common;
 

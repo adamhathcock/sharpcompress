@@ -30,7 +30,6 @@
 
 using System;
 using System.Diagnostics;
-using System.IO;
 using SharpCompress.Compressors.Deflate;
 
 namespace SharpCompress.Compressors.Deflate64;

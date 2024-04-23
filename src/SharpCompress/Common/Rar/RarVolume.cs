@@ -63,7 +63,7 @@ public abstract class RarVolume : Volume
                         {
                             var part = CreateFilePart(lastMarkHeader!, fh);
                             var buffer = new byte[fh.CompressedSize];
-                            part.GetCompressedStream().Read(buffer, 0, buffer.Length);
+                            part.GetCompressedStream().NotNull().Read(buffer, 0, buffer.Length);
                             Comment = Encoding.UTF8.GetString(buffer, 0, buffer.Length - 1);
                         }
                     }

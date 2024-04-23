@@ -4,7 +4,6 @@
 
 using System;
 using System.Diagnostics;
-using System.IO;
 using SharpCompress.Common;
 
 namespace SharpCompress.Compressors.Deflate64;

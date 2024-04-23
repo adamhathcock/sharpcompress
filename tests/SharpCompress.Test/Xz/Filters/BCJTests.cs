@@ -3,7 +3,6 @@
  * <Contribution by Louis-Michel Bergeron, on behalf of aDolus Technolog Inc., 2022>
  */
 
-using System.IO;
 using SharpCompress.Common;
 using SharpCompress.Compressors.Xz.Filters;
 using Xunit;

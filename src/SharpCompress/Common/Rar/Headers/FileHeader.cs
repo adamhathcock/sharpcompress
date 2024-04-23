@@ -1,9 +1,6 @@
-#nullable disable
-
 using System;
 using System.IO;
 using System.Linq;
-using System.Security.Cryptography;
 using System.Text;
 using SharpCompress.IO;
 #if !Rar2017_64bit
@@ -18,7 +15,7 @@ namespace SharpCompress.Common.Rar.Headers;
 
 internal class FileHeader : RarHeader
 {
-    private byte[] _hash;
+    private byte[]? _hash;
 
     public FileHeader(RarHeader header, RarCrcBinaryReader reader, HeaderType headerType)
         : base(header, reader, headerType) { }
@@ -319,6 +316,10 @@ internal class FileHeader : RarHeader
 
                     if (NewSubHeaderType.SUBHEAD_TYPE_RR.Equals(fileNameBytes))
                     {
+                        if (SubData is null)
+                        {
+                            throw new InvalidFormatException();
+                        }
                         RecoverySectors =
                             SubData[8]
                             + (SubData[9] << 8)
@@ -340,12 +341,16 @@ internal class FileHeader : RarHeader
             if (RemainingHeaderBytes(reader) >= 2)
             {
                 var extendedFlags = reader.ReadUInt16();
-                FileLastModifiedTime = ProcessExtendedTimeV4(
-                    extendedFlags,
-                    FileLastModifiedTime,
-                    reader,
-                    0
-                );
+                if (FileLastModifiedTime is not null)
+                {
+                    FileLastModifiedTime = ProcessExtendedTimeV4(
+                                                                 extendedFlags,
+                                                                 FileLastModifiedTime,
+                                                                 reader,
+                                                                 0
+                                                                );
+                }
+
                 FileCreatedTime = ProcessExtendedTimeV4(extendedFlags, null, reader, 1);
                 FileLastAccessedTime = ProcessExtendedTimeV4(extendedFlags, null, reader, 2);
                 FileArchivedTime = ProcessExtendedTimeV4(extendedFlags, null, reader, 3);
@@ -377,7 +382,7 @@ internal class FileHeader : RarHeader
             var dosTime = reader.ReadUInt32();
             time = Utility.DosDateToDateTime(dosTime);
         }
-        if ((rmode & 4) == 0)
+        if ((rmode & 4) == 0 && time is not null)
         {
             time = time.Value.AddSeconds(1);
         }
@@ -390,7 +395,11 @@ internal class FileHeader : RarHeader
         }
 
         //10^-7 to 10^-3
-        return time.Value.AddMilliseconds(nanosecondHundreds * Math.Pow(10, -4));
+        if (time is not null)
+        {
+            return time.Value.AddMilliseconds(nanosecondHundreds * Math.Pow(10, -4));
+        }
+        return null;
     }
 
     private static string ConvertPathV4(string path)
@@ -406,13 +415,13 @@ internal class FileHeader : RarHeader
         return path;
     }
 
-    public override string ToString() => FileName;
+    public override string ToString() => FileName ?? "FileHeader";
 
     private ushort Flags { get; set; }
 
     private bool HasFlag(ushort flag) => (Flags & flag) == flag;
 
-    internal byte[] FileCrc
+    internal byte[]? FileCrc
     {
         get => _hash;
         private set => _hash = value;
@@ -441,22 +450,22 @@ internal class FileHeader : RarHeader
     public bool IsRedir => RedirType != 0;
     public byte RedirFlags { get; private set; }
     public bool IsRedirDirectory => (RedirFlags & RedirFlagV5.DIRECTORY) != 0;
-    public string RedirTargetName { get; private set; }
+    public string? RedirTargetName { get; private set; }
 
     // unused for UnpackV1 implementation (limitation)
     internal size_t WindowSize { get; private set; }
 
-    internal byte[] R4Salt { get; private set; }
-    internal Rar5CryptoInfo Rar5CryptoInfo { get; private set; }
+    internal byte[]? R4Salt { get; private set; }
+    internal Rar5CryptoInfo? Rar5CryptoInfo { get; private set; }
     private byte HostOs { get; set; }
     internal uint FileAttributes { get; private set; }
     internal long CompressedSize { get; private set; }
     internal long UncompressedSize { get; private set; }
-    internal string FileName { get; private set; }
-    internal byte[] SubData { get; private set; }
+    internal string? FileName { get; private set; }
+    internal byte[]? SubData { get; private set; }
     internal int RecoverySectors { get; private set; }
     internal long DataStartPosition { get; set; }
-    public Stream PackedStream { get; set; }
+    public Stream? PackedStream { get; set; }
 
     public bool IsSplitBefore =>
         IsRar5 ? HasHeaderFlag(HeaderFlagsV5.SPLIT_BEFORE) : HasFlag(FileFlagsV4.SPLIT_BEFORE);
