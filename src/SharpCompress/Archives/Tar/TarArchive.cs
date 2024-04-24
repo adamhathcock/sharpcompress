@@ -189,6 +189,8 @@ public class TarArchive : AbstractWritableArchive<TarArchiveEntry, TarVolume>
                         CompressionType.None
                     );
                 }
+            } else {
+                throw new IncompleteArchiveException("Failed to read TAR header");
             }
         }
     }
