@@ -101,57 +101,79 @@ internal sealed class TarHeader
 
     internal bool Read(BinaryReader reader)
     {
-        var buffer = ReadBlock(reader);
-        if (buffer.Length == 0)
-        {
-            return false;
-        }
+        string? longName = null;
+        string? longLinkName = null;
+        var hasLongValue = true;
+        byte[] buffer;
+        EntryType entryType;
 
-        // for symlinks, additionally read the linkname
-        if (ReadEntryType(buffer) == EntryType.SymLink)
+        do
         {
-            LinkName = ArchiveEncoding.Decode(buffer, 157, 100).TrimNulls();
-        }
-
-        if (ReadEntryType(buffer) == EntryType.LongName)
-        {
-            Name = ReadLongName(reader, buffer);
             buffer = ReadBlock(reader);
-        }
-        else
-        {
-            Name = ArchiveEncoding.Decode(buffer, 0, 100).TrimNulls();
-        }
 
-        EntryType = ReadEntryType(buffer);
+            if (buffer.Length == 0)
+            {
+                return false;
+            }
+
+            entryType = ReadEntryType(buffer);
+
+            // LongName and LongLink headers can follow each other and need
+            // to apply to the header that follows them.
+            if (entryType == EntryType.LongName)
+            {
+                longName = ReadLongName(reader, buffer);
+                continue;
+            }
+            else if (entryType == EntryType.LongLink)
+            {
+                longLinkName = ReadLongName(reader, buffer);
+                continue;
+            }
+
+            hasLongValue = false;
+        } while (hasLongValue);
+
+        Name = longName ?? ArchiveEncoding.Decode(buffer, 0, 100).TrimNulls();
+        EntryType = entryType;
         Size = ReadSize(buffer);
 
+        // for symlinks, additionally read the linkname
+        if (entryType == EntryType.SymLink || entryType == EntryType.HardLink)
+        {
+            LinkName = longLinkName ?? ArchiveEncoding.Decode(buffer, 157, 100).TrimNulls();
+        }
+
         Mode = ReadAsciiInt64Base8(buffer, 100, 7);
-        if (EntryType == EntryType.Directory)
+
+        if (entryType == EntryType.Directory)
         {
             Mode |= 0b1_000_000_000;
         }
 
         UserId = ReadAsciiInt64Base8oldGnu(buffer, 108, 7);
         GroupId = ReadAsciiInt64Base8oldGnu(buffer, 116, 7);
-        var unixTimeStamp = ReadAsciiInt64Base8(buffer, 136, 11);
-        LastModifiedTime = EPOCH.AddSeconds(unixTimeStamp).ToLocalTime();
 
+        var unixTimeStamp = ReadAsciiInt64Base8(buffer, 136, 11);
+
+        LastModifiedTime = EPOCH.AddSeconds(unixTimeStamp).ToLocalTime();
         Magic = ArchiveEncoding.Decode(buffer, 257, 6).TrimNulls();
 
         if (!string.IsNullOrEmpty(Magic) && "ustar".Equals(Magic))
         {
-            var namePrefix = ArchiveEncoding.Decode(buffer, 345, 157);
-            namePrefix = namePrefix.TrimNulls();
+            var namePrefix = ArchiveEncoding.Decode(buffer, 345, 157).TrimNulls();
+
             if (!string.IsNullOrEmpty(namePrefix))
             {
                 Name = namePrefix + "/" + Name;
             }
         }
-        if (EntryType != EntryType.LongName && Name.Length == 0)
+
+        if (entryType != EntryType.LongName && Name.Length == 0)
         {
             return false;
         }
+
         return true;
     }
 
