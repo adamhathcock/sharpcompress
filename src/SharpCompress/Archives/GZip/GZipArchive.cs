@@ -101,7 +101,7 @@ public class GZipArchive : AbstractWritableArchive<GZipArchiveEntry, GZipVolume>
     /// </summary>
     /// <param name="sourceStream"></param>
     private GZipArchive(SourceStream sourceStream)
-        : base(ArchiveType.Tar, sourceStream) { }
+        : base(ArchiveType.GZip, sourceStream) { }
 
     protected override IEnumerable<GZipVolume> LoadVolumes(SourceStream sourceStream)
     {
