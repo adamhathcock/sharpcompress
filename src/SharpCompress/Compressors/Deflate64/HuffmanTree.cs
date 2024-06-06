@@ -4,7 +4,7 @@
 
 using System;
 using System.Diagnostics;
-using System.IO;
+using SharpCompress.Common;
 
 namespace SharpCompress.Compressors.Deflate64;
 
@@ -192,7 +192,7 @@ internal sealed class HuffmanTree
                     var increment = 1 << len;
                     if (start >= increment)
                     {
-                        throw new InvalidDataException("Deflate64: invalid Huffman data");
+                        throw new InvalidFormatException("Deflate64: invalid Huffman data");
                     }
 
                     // Note the bits in the table are reverted.
@@ -234,7 +234,7 @@ internal sealed class HuffmanTree
                         if (value > 0)
                         {
                             // prevent an IndexOutOfRangeException from array[index]
-                            throw new InvalidDataException("Deflate64: invalid Huffman data");
+                            throw new InvalidFormatException("Deflate64: invalid Huffman data");
                         }
 
                         Debug.Assert(
@@ -307,7 +307,7 @@ internal sealed class HuffmanTree
         // huffman code lengths must be at least 1 bit long
         if (codeLength <= 0)
         {
-            throw new InvalidDataException("Deflate64: invalid Huffman data");
+            throw new InvalidFormatException("Deflate64: invalid Huffman data");
         }
 
         //

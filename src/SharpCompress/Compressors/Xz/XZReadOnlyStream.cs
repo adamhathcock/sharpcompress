@@ -1,4 +1,5 @@
 using System.IO;
+using SharpCompress.Common;
 
 namespace SharpCompress.Compressors.Xz;
 
@@ -9,7 +10,7 @@ public abstract class XZReadOnlyStream : ReadOnlyStream
         BaseStream = stream;
         if (!BaseStream.CanRead)
         {
-            throw new InvalidDataException("Must be able to read from stream");
+            throw new InvalidFormatException("Must be able to read from stream");
         }
     }
 }

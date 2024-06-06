@@ -11,7 +11,7 @@ public abstract class FilePart
     internal abstract string? FilePartName { get; }
     public int Index { get; set; }
 
-    internal abstract Stream GetCompressedStream();
+    internal abstract Stream? GetCompressedStream();
     internal abstract Stream? GetRawStream();
     internal bool Skipped { get; set; }
 }

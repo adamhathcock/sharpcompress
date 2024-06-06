@@ -3,7 +3,6 @@
 using System;
 using static SharpCompress.Compressors.Rar.UnpackV2017.PackDef;
 using static SharpCompress.Compressors.Rar.UnpackV2017.UnpackGlobal;
-using int64 = System.Int64;
 #if !Rar2017_64bit
 using size_t = System.UInt32;
 #else

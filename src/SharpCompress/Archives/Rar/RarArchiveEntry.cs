@@ -42,7 +42,7 @@ public class RarArchiveEntry : RarEntry, IArchiveEntry
         {
             CheckIncomplete();
             return BitConverter.ToUInt32(
-                parts.Select(fp => fp.FileHeader).Single(fh => !fh.IsSplitAfter).FileCrc,
+                parts.Select(fp => fp.FileHeader).Single(fh => !fh.IsSplitAfter).FileCrc.NotNull(),
                 0
             );
         }

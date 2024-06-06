@@ -5,8 +5,8 @@
  */
 
 using System;
-using System.IO;
 using System.Runtime.CompilerServices;
+using SharpCompress.Common;
 
 namespace SharpCompress.Compressors.Filters;
 
@@ -244,7 +244,7 @@ public sealed class BranchExecFilter
         long size = data.Length;
         if (size < 16)
         {
-            throw new InvalidDataException("Unexpected data size");
+            throw new InvalidFormatException("Unexpected data size");
         }
 
         size -= 16;

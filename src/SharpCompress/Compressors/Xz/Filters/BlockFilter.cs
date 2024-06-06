@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using SharpCompress.Common;
 
 namespace SharpCompress.Compressors.Xz.Filters;
 
@@ -50,7 +51,7 @@ public abstract class BlockFilter : ReadOnlyStream
         var sizeOfProperties = reader.ReadXZInteger();
         if (sizeOfProperties > int.MaxValue)
         {
-            throw new InvalidDataException("Block filter information too large");
+            throw new InvalidFormatException("Block filter information too large");
         }
 
         var properties = reader.ReadBytes((int)sizeOfProperties);

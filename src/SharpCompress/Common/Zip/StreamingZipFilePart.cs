@@ -1,5 +1,4 @@
 using System.IO;
-using System.Net.Sockets;
 using SharpCompress.Common.Zip.Headers;
 using SharpCompress.Compressors.Deflate;
 using SharpCompress.IO;

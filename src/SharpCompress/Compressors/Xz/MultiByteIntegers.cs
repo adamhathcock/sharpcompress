@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using SharpCompress.Common;
 
 namespace SharpCompress.Compressors.Xz;
 
@@ -25,13 +26,13 @@ internal static class MultiByteIntegers
         {
             if (++i >= MaxBytes)
             {
-                throw new InvalidDataException();
+                throw new InvalidFormatException();
             }
 
             LastByte = reader.ReadByte();
             if (LastByte == 0)
             {
-                throw new InvalidDataException();
+                throw new InvalidFormatException();
             }
 
             Output |= ((ulong)(LastByte & 0x7F)) << (i * 7);

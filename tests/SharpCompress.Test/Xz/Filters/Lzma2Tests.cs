@@ -1,5 +1,5 @@
 using System;
-using System.IO;
+using SharpCompress.Common;
 using SharpCompress.Compressors.Xz.Filters;
 using Xunit;
 
@@ -52,14 +52,14 @@ public class Lzma2Tests : XzTestsBase
     [InlineData(new byte[] { 0, 0 })]
     public void OnlyAcceptsOneByte(byte[] bytes)
     {
-        var ex = Assert.Throws<InvalidDataException>(() => _filter.Init(bytes));
+        var ex = Assert.Throws<InvalidFormatException>(() => _filter.Init(bytes));
         Assert.Equal("LZMA properties unexpected length", ex.Message);
     }
 
     [Fact]
     public void ReservedBytesThrow()
     {
-        var ex = Assert.Throws<InvalidDataException>(() => _filter.Init([0xC0]));
+        var ex = Assert.Throws<InvalidFormatException>(() => _filter.Init([0xC0]));
         Assert.Equal("Reserved bits used in LZMA properties", ex.Message);
     }
 }

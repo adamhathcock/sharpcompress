@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using SharpCompress.Common;
 using SharpCompress.IO;
 
 namespace SharpCompress.Compressors.Xz;
@@ -59,7 +60,7 @@ public class XZIndex
         var marker = _reader.ReadByte();
         if (marker != 0)
         {
-            throw new InvalidDataException("Not an index block");
+            throw new InvalidFormatException("Not an index block");
         }
     }
 
@@ -71,7 +72,7 @@ public class XZIndex
             var paddingBytes = _reader.ReadBytes(4 - bytes);
             if (paddingBytes.Any(b => b != 0))
             {
-                throw new InvalidDataException("Padding bytes were non-null");
+                throw new InvalidFormatException("Padding bytes were non-null");
             }
         }
     }

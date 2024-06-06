@@ -1,4 +1,5 @@
 using System.IO;
+using SharpCompress.Common;
 using SharpCompress.Compressors.Xz;
 using Xunit;
 
@@ -14,7 +15,7 @@ public class XzHeaderTests : XzTestsBase
         using Stream badMagicNumberStream = new MemoryStream(bytes);
         var br = new BinaryReader(badMagicNumberStream);
         var header = new XZHeader(br);
-        var ex = Assert.Throws<InvalidDataException>(() =>
+        var ex = Assert.Throws<InvalidFormatException>(() =>
         {
             header.Process();
         });
@@ -29,7 +30,7 @@ public class XzHeaderTests : XzTestsBase
         using Stream badCrcStream = new MemoryStream(bytes);
         var br = new BinaryReader(badCrcStream);
         var header = new XZHeader(br);
-        var ex = Assert.Throws<InvalidDataException>(() =>
+        var ex = Assert.Throws<InvalidFormatException>(() =>
         {
             header.Process();
         });
@@ -47,7 +48,7 @@ public class XzHeaderTests : XzTestsBase
         using Stream badFlagStream = new MemoryStream(bytes);
         var br = new BinaryReader(badFlagStream);
         var header = new XZHeader(br);
-        var ex = Assert.Throws<InvalidDataException>(() =>
+        var ex = Assert.Throws<InvalidFormatException>(() =>
         {
             header.Process();
         });

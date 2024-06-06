@@ -20,7 +20,7 @@ public abstract class RarEntry : Entry
     /// <summary>
     /// The File's 32 bit CRC Hash
     /// </summary>
-    public override long Crc => BitConverter.ToUInt32(FileHeader.FileCrc, 0);
+    public override long Crc => BitConverter.ToUInt32(FileHeader.FileCrc.NotNull(), 0);
 
     /// <summary>
     /// The path of the file internal to the Rar Archive.
@@ -68,7 +68,7 @@ public abstract class RarEntry : Entry
 
     public bool IsRedir => FileHeader.IsRedir;
 
-    public string RedirTargetName => FileHeader.RedirTargetName;
+    public string? RedirTargetName => FileHeader.RedirTargetName;
 
     public override string ToString() =>
         string.Format(

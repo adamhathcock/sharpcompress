@@ -1,7 +1,5 @@
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using SharpCompress.Common.Rar;
 using SharpCompress.IO;
 using SharpCompress.Readers;
 
@@ -160,10 +158,15 @@ public class RarHeaderFactory
                             {
                                 fh.PackedStream = new RarCryptoWrapper(
                                     ms,
-                                    fh.R4Salt is null ? fh.Rar5CryptoInfo.Salt : fh.R4Salt,
                                     fh.R4Salt is null
-                                        ? new CryptKey5(Options.Password!, fh.Rar5CryptoInfo)
-                                        : new CryptKey3(Options.Password!)
+                                        ? fh.Rar5CryptoInfo.NotNull().Salt
+                                        : fh.R4Salt,
+                                    fh.R4Salt is null
+                                        ? new CryptKey5(
+                                            Options.Password,
+                                            fh.Rar5CryptoInfo.NotNull()
+                                        )
+                                        : new CryptKey3(Options.Password)
                                 );
                             }
                         }

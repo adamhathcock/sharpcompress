@@ -5,6 +5,7 @@
  */
 
 using System.IO;
+using SharpCompress.Common;
 using SharpCompress.Compressors.Filters;
 
 namespace SharpCompress.Compressors.Xz.Filters;
@@ -27,19 +28,19 @@ public class X86Filter : BlockFilter
     {
         if (properties.Length != 0 && properties.Length != 4)
         {
-            throw new InvalidDataException("X86 properties unexpected length");
+            throw new InvalidFormatException("X86 properties unexpected length");
         }
 
         if (properties.Length == 4)
         {
             // Even XZ doesn't support it.
-            throw new InvalidDataException("X86 properties offset is not supported");
+            throw new InvalidFormatException("X86 properties offset is not supported");
 
             //_offset = BitConverter.ToUInt32(properties, 0);
             //
             //if (_offset % (UInt32)BranchExec.Alignment.ARCH_x86_ALIGNMENT != 0)
             //{
-            //    throw new InvalidDataException("Filter offset does not match alignment");
+            //    throw new InvalidFormatException("Filter offset does not match alignment");
             //}
         }
     }

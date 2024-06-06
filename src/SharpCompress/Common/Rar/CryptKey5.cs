@@ -17,7 +17,7 @@ internal class CryptKey5 : ICryptKey
     private byte[] _pswCheck = { };
     private byte[] _hashKey = { };
 
-    public CryptKey5(string password, Rar5CryptoInfo rar5CryptoInfo)
+    public CryptKey5(string? password, Rar5CryptoInfo rar5CryptoInfo)
     {
         _password = password ?? "";
         _cryptoInfo = rar5CryptoInfo;

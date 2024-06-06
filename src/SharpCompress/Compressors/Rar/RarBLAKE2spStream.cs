@@ -1,7 +1,6 @@
 using System;
 using System.IO;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using SharpCompress.Common;
 using SharpCompress.Common.Rar.Headers;
 
@@ -93,7 +92,7 @@ internal class RarBLAKE2spStream : RarStream
     {
         this.readStream = readStream;
         disableCRCCheck = fileHeader.IsEncrypted;
-        _hash = fileHeader.FileCrc;
+        _hash = fileHeader.FileCrc.NotNull();
         _blake2sp = new BLAKE2SP();
         ResetCrc();
     }

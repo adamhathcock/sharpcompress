@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using SharpCompress.Common;
 using SharpCompress.Compressors.LZMA;
 
 namespace SharpCompress.Compressors.Xz.Filters;
@@ -35,14 +36,14 @@ public class Lzma2Filter : BlockFilter
     {
         if (properties.Length != 1)
         {
-            throw new InvalidDataException("LZMA properties unexpected length");
+            throw new InvalidFormatException("LZMA properties unexpected length");
         }
 
         _dictionarySize = (byte)(properties[0] & 0x3F);
         var reserved = properties[0] & 0xC0;
         if (reserved != 0)
         {
-            throw new InvalidDataException("Reserved bits used in LZMA properties");
+            throw new InvalidFormatException("Reserved bits used in LZMA properties");
         }
     }
 

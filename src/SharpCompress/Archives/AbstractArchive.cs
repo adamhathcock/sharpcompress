@@ -53,7 +53,7 @@ public abstract class AbstractArchive<TEntry, TVolume> : IArchive, IArchiveExtra
     {
         if (!stream.CanSeek || !stream.CanRead)
         {
-            throw new ArgumentException("Archive streams must be Readable and Seekable");
+            throw new ArchiveException("Archive streams must be Readable and Seekable");
         }
         return stream;
     }

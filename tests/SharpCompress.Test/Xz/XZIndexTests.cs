@@ -1,4 +1,5 @@
 ﻿using System.IO;
+using SharpCompress.Common;
 using SharpCompress.Compressors.Xz;
 using Xunit;
 
@@ -27,7 +28,7 @@ public class XzIndexTests : XzTestsBase
         using Stream badStream = new MemoryStream([1, 2, 3, 4, 5]);
         var br = new BinaryReader(badStream);
         var index = new XZIndex(br, false);
-        Assert.Throws<InvalidDataException>(() => index.Process());
+        Assert.Throws<InvalidFormatException>(() => index.Process());
     }
 
     [Fact]

@@ -2,6 +2,7 @@
 
 using System;
 using System.IO;
+using SharpCompress.Common;
 using SharpCompress.Compressors.LZMA.LZ;
 using SharpCompress.Compressors.LZMA.RangeCoder;
 
@@ -1611,7 +1612,7 @@ internal class Encoder : ICoder, ISetCoderProperties, IWriteCoderProperties
     {
         if (_nowPos64 > 0)
         {
-            throw new InvalidOperationException();
+            throw new InvalidFormatException();
         }
         _trainSize = (uint)trainStream.Length;
         if (_trainSize > 0)

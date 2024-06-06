@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using SharpCompress.Common;
 using SharpCompress.Compressors.Xz.Filters;
 
 namespace SharpCompress.Compressors.Xz;
@@ -80,7 +81,7 @@ public sealed class XZBlock : XZReadOnlyStream
             BaseStream.Read(paddingBytes, 0, paddingBytes.Length);
             if (paddingBytes.Any(b => b != 0))
             {
-                throw new InvalidDataException("Padding bytes were non-null");
+                throw new InvalidFormatException("Padding bytes were non-null");
             }
         }
         _paddingSkipped = true;
@@ -145,7 +146,7 @@ public sealed class XZBlock : XZReadOnlyStream
         var calcCrc = Crc32.Compute(blockHeaderWithoutCrc);
         if (crc != calcCrc)
         {
-            throw new InvalidDataException("Block header corrupt");
+            throw new InvalidFormatException("Block header corrupt");
         }
 
         return blockHeaderWithoutCrc;
@@ -159,7 +160,7 @@ public sealed class XZBlock : XZReadOnlyStream
 
         if (reserved != 0)
         {
-            throw new InvalidDataException(
+            throw new InvalidFormatException(
                 "Reserved bytes used, perhaps an unknown XZ implementation"
             );
         }
@@ -189,7 +190,7 @@ public sealed class XZBlock : XZReadOnlyStream
                 || (i + 1 < _numFilters && !filter.AllowAsNonLast)
             )
             {
-                throw new InvalidDataException("Block Filters in bad order");
+                throw new InvalidFormatException("Block Filters in bad order");
             }
 
             if (filter.ChangesDataSize && i + 1 < _numFilters)
@@ -202,7 +203,7 @@ public sealed class XZBlock : XZReadOnlyStream
         }
         if (nonLastSizeChangers > 2)
         {
-            throw new InvalidDataException(
+            throw new InvalidFormatException(
                 "More than two non-last block filters cannot change stream size"
             );
         }
@@ -212,7 +213,7 @@ public sealed class XZBlock : XZReadOnlyStream
         var blockHeaderPadding = reader.ReadBytes(blockHeaderPaddingSize);
         if (!blockHeaderPadding.All(b => b == 0))
         {
-            throw new InvalidDataException("Block header contains unknown fields");
+            throw new InvalidFormatException("Block header contains unknown fields");
         }
     }
 }
