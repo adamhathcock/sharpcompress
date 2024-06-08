@@ -61,9 +61,8 @@ public abstract class RarVolume : Volume
                         var fh = (FileHeader)header;
                         if (fh.FileName == "CMT")
                         {
-                            var part = CreateFilePart(lastMarkHeader!, fh);
                             var buffer = new byte[fh.CompressedSize];
-                            part.GetCompressedStream().Read(buffer, 0, buffer.Length);
+                            fh.PackedStream.Read(buffer, 0, buffer.Length);
                             Comment = Encoding.UTF8.GetString(buffer, 0, buffer.Length - 1);
                         }
                     }
