@@ -1,5 +1,7 @@
 ﻿using System;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 using SharpCompress.Common;
 
 namespace SharpCompress.Writers;
@@ -21,6 +23,16 @@ public abstract class AbstractWriter(ArchiveType type, WriterOptions writerOptio
     protected WriterOptions WriterOptions { get; } = writerOptions;
 
     public abstract void Write(string filename, Stream source, DateTime? modificationTime);
+#if !NETFRAMEWORK && !NETSTANDARD2_0
+    public abstract ValueTask WriteAsync(
+        string filename,
+        Stream source,
+        DateTime? modificationTime,
+        CancellationToken cancellationToken
+    );
+
+    public abstract ValueTask DisposeAsync();
+#endif
 
     protected virtual void Dispose(bool isDisposing)
     {
