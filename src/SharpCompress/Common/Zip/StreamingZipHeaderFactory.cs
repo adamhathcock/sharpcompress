@@ -49,7 +49,17 @@ internal class StreamingZipHeaderFactory : ZipHeaderFactory
                 reader = ((StreamingZipFilePart)_lastEntryHeader.Part).FixStreamedFileLocation(
                     ref rewindableStream
                 );
+
                 var pos = rewindableStream.CanSeek ? (long?)rewindableStream.Position : null;
+
+                headerBytes = reader.ReadUInt32();
+
+                var version = reader.ReadUInt16();
+                var flags = (HeaderFlags)reader.ReadUInt16();
+                var compressionMethod = (ZipCompressionMethod)reader.ReadUInt16();
+                var lastModifiedTime = reader.ReadUInt16();
+                var lastModifiedDate = reader.ReadUInt16();
+
                 var crc = reader.ReadUInt32();
                 if (crc == POST_DATA_DESCRIPTOR)
                 {
@@ -62,7 +72,6 @@ internal class StreamingZipHeaderFactory : ZipHeaderFactory
                 var uncompressed_size = reader.ReadUInt32();
 
                 // Check if we have header or 64bit DataDescriptor
-                headerBytes = reader.ReadUInt32();
                 var test_header = !(headerBytes == 0x04034b50 || headerBytes == 0x02014b50);
 
                 var test_64bit = ((long)uncompressed_size << 32) | compressed_size;
@@ -80,6 +89,9 @@ internal class StreamingZipHeaderFactory : ZipHeaderFactory
                 if (pos.HasValue)
                 {
                     _lastEntryHeader.DataStartPosition = pos - _lastEntryHeader.CompressedSize;
+
+                    // 4 = First 4 bytes of the entry header (i.e. 50 4B 03 04)
+                    rewindableStream.Position = pos.Value + 4;
                 }
             }
             else
