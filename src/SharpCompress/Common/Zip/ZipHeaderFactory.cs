@@ -56,8 +56,8 @@ internal class ZipHeaderFactory
             case POST_DATA_DESCRIPTOR:
             {
                 if (
-                    _lastEntryHeader != null &&
-                    FlagUtility.HasFlag(
+                    _lastEntryHeader != null
+                    && FlagUtility.HasFlag(
                         _lastEntryHeader.NotNull().Flags,
                         HeaderFlags.UsePostDataDescriptor
                     )

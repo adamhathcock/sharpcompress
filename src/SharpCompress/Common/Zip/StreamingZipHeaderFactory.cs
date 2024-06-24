@@ -34,7 +34,10 @@ internal class StreamingZipHeaderFactory : ZipHeaderFactory
             ZipHeader? header;
             var reader = new BinaryReader(rewindableStream);
             uint headerBytes = 0;
-            if (_lastEntryHeader != null && FlagUtility.HasFlag(_lastEntryHeader.Flags, HeaderFlags.UsePostDataDescriptor))
+            if (
+                _lastEntryHeader != null
+                && FlagUtility.HasFlag(_lastEntryHeader.Flags, HeaderFlags.UsePostDataDescriptor)
+            )
             {
                 if (_lastEntryHeader.Part is null)
                 {
@@ -83,7 +86,9 @@ internal class StreamingZipHeaderFactory : ZipHeaderFactory
                 if (_lastEntryHeader.Part is null)
                     continue;
 
-                reader = ((StreamingZipFilePart)_lastEntryHeader.Part).FixStreamedFileLocation(ref rewindableStream);
+                reader = ((StreamingZipFilePart)_lastEntryHeader.Part).FixStreamedFileLocation(
+                    ref rewindableStream
+                );
 
                 var pos = rewindableStream.CanSeek ? (long?)rewindableStream.Position : null;
 
