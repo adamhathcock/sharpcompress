@@ -31,6 +31,11 @@ public class ZipEntry : Entry
             ZipCompressionMethod.PPMd => CompressionType.PPMd,
             ZipCompressionMethod.None => CompressionType.None,
             ZipCompressionMethod.Shrink => CompressionType.Shrink,
+            ZipCompressionMethod.Reduce1 => CompressionType.Reduce1,
+            ZipCompressionMethod.Reduce2 => CompressionType.Reduce2,
+            ZipCompressionMethod.Reduce3 => CompressionType.Reduce3,
+            ZipCompressionMethod.Reduce4 => CompressionType.Reduce4,
+            ZipCompressionMethod.Explode => CompressionType.Explode,
             _ => CompressionType.Unknown
         };
 
