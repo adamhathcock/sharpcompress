@@ -36,10 +36,7 @@ internal class StreamingZipHeaderFactory : ZipHeaderFactory
             uint headerBytes = 0;
             if (
                 _lastEntryHeader != null
-                && (
-                    FlagUtility.HasFlag(_lastEntryHeader.Flags, HeaderFlags.UsePostDataDescriptor)
-                    || _lastEntryHeader.IsZip64
-                )
+                && FlagUtility.HasFlag(_lastEntryHeader.Flags, HeaderFlags.UsePostDataDescriptor)
             )
             {
                 if (_lastEntryHeader.Part is null)
@@ -49,7 +46,9 @@ internal class StreamingZipHeaderFactory : ZipHeaderFactory
                 reader = ((StreamingZipFilePart)_lastEntryHeader.Part).FixStreamedFileLocation(
                     ref rewindableStream
                 );
+
                 var pos = rewindableStream.CanSeek ? (long?)rewindableStream.Position : null;
+
                 var crc = reader.ReadUInt32();
                 if (crc == POST_DATA_DESCRIPTOR)
                 {
@@ -80,6 +79,60 @@ internal class StreamingZipHeaderFactory : ZipHeaderFactory
                 if (pos.HasValue)
                 {
                     _lastEntryHeader.DataStartPosition = pos - _lastEntryHeader.CompressedSize;
+                }
+            }
+            else if (_lastEntryHeader != null && _lastEntryHeader.IsZip64)
+            {
+                if (_lastEntryHeader.Part is null)
+                    continue;
+
+                reader = ((StreamingZipFilePart)_lastEntryHeader.Part).FixStreamedFileLocation(
+                    ref rewindableStream
+                );
+
+                var pos = rewindableStream.CanSeek ? (long?)rewindableStream.Position : null;
+
+                headerBytes = reader.ReadUInt32();
+
+                var version = reader.ReadUInt16();
+                var flags = (HeaderFlags)reader.ReadUInt16();
+                var compressionMethod = (ZipCompressionMethod)reader.ReadUInt16();
+                var lastModifiedDate = reader.ReadUInt16();
+                var lastModifiedTime = reader.ReadUInt16();
+
+                var crc = reader.ReadUInt32();
+
+                if (crc == POST_DATA_DESCRIPTOR)
+                {
+                    crc = reader.ReadUInt32();
+                }
+                _lastEntryHeader.Crc = crc;
+
+                // The DataDescriptor can be either 64bit or 32bit
+                var compressed_size = reader.ReadUInt32();
+                var uncompressed_size = reader.ReadUInt32();
+
+                // Check if we have header or 64bit DataDescriptor
+                var test_header = !(headerBytes == 0x04034b50 || headerBytes == 0x02014b50);
+
+                var test_64bit = ((long)uncompressed_size << 32) | compressed_size;
+                if (test_64bit == _lastEntryHeader.CompressedSize && test_header)
+                {
+                    _lastEntryHeader.UncompressedSize =
+                        ((long)reader.ReadUInt32() << 32) | headerBytes;
+                    headerBytes = reader.ReadUInt32();
+                }
+                else
+                {
+                    _lastEntryHeader.UncompressedSize = uncompressed_size;
+                }
+
+                if (pos.HasValue)
+                {
+                    _lastEntryHeader.DataStartPosition = pos - _lastEntryHeader.CompressedSize;
+
+                    // 4 = First 4 bytes of the entry header (i.e. 50 4B 03 04)
+                    rewindableStream.Position = pos.Value + 4;
                 }
             }
             else
