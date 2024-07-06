@@ -41,7 +41,7 @@ internal class SevenZipFilePart : FilePart
     {
         if (!Header.HasStream)
         {
-            throw new InvalidOperationException("File does not have a stream.");
+            return Stream.Null;
         }
         var folderStream = _database.GetFolderStream(_stream, Folder!, _database.PasswordProvider);
 
