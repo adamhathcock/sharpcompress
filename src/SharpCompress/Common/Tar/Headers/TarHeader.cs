@@ -134,6 +134,13 @@ internal sealed class TarHeader
             hasLongValue = false;
         } while (hasLongValue);
 
+        var crc = ReadAsciiInt64Base8(buffer, 148, 7);
+
+        if (crc != RecalculateChecksum(buffer))
+        {
+            return false;
+        }
+
         Name = longName ?? ArchiveEncoding.Decode(buffer, 0, 100).TrimNulls();
         EntryType = entryType;
         Size = ReadSize(buffer);
