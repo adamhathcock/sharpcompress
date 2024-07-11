@@ -2,7 +2,6 @@ using System;
 using System.Buffers.Binary;
 using System.IO;
 using System.Text;
-using ZstdSharp.Unsafe;
 
 namespace SharpCompress.Common.Tar.Headers;
 
