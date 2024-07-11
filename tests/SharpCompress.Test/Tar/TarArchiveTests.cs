@@ -217,7 +217,8 @@ public class TarArchiveTests : ArchiveTests
     {
         var archiveFullPath = Path.Combine(TEST_ARCHIVES_PATH, "Tar.Empty.tar");
         using Stream stream = File.OpenRead(archiveFullPath);
-        Assert.Throws<InvalidOperationException>(() => ArchiveFactory.Open(stream));
+        using var archive = ArchiveFactory.Open(stream);
+        Assert.True(archive.Type == ArchiveType.Tar);
     }
 
     [Theory]
