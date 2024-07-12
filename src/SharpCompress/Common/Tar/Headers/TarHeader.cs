@@ -134,6 +134,12 @@ internal sealed class TarHeader
             hasLongValue = false;
         } while (hasLongValue);
 
+        // Check header checksum
+        if (!checkChecksum(buffer))
+        {
+            return false;
+        }
+
         Name = longName ?? ArchiveEncoding.Decode(buffer, 0, 100).TrimNulls();
         EntryType = entryType;
         Size = ReadSize(buffer);
@@ -310,6 +316,42 @@ internal sealed class TarHeader
         (byte)' ',
         (byte)' '
     };
+
+    internal static bool checkChecksum(byte[] buf)
+    {
+        const int eightSpacesChksum = 256;
+        var buffer = new Span<byte>(buf).Slice(0, 512);
+        int posix_sum = eightSpacesChksum;
+        int sun_sum = eightSpacesChksum;
+
+        foreach (byte b in buffer)
+        {
+            posix_sum += b;
+            sun_sum += unchecked((sbyte)b);
+        }
+
+        // Special case, empty file header
+        if (posix_sum == eightSpacesChksum)
+        {
+            return true;
+        }
+
+        // Remove current checksum from calculation
+        foreach (byte b in buffer.Slice(148, 8))
+        {
+            posix_sum -= b;
+            sun_sum -= unchecked((sbyte)b);
+        }
+
+        // Read and compare checksum for header
+        var crc = ReadAsciiInt64Base8(buf, 148, 7);
+        if (crc != posix_sum && crc != sun_sum)
+        {
+            return false;
+        }
+
+        return true;
+    }
 
     internal static int RecalculateChecksum(byte[] buf)
     {
