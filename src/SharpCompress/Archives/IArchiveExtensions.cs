@@ -55,7 +55,10 @@ public static class IArchiveExtensions
             if (entry.IsDirectory)
             {
                 var dirPath = Path.Combine(destination, entry.Key.NotNull("Entry Key is null"));
-                if (Path.GetDirectoryName(dirPath + "/") is { } emptyDirectory && seenDirectories.Add(dirPath))
+                if (
+                    Path.GetDirectoryName(dirPath + "/") is { } emptyDirectory
+                    && seenDirectories.Add(dirPath)
+                )
                 {
                     Directory.CreateDirectory(emptyDirectory);
                 }
