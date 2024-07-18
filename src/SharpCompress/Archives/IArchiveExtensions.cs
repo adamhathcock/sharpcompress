@@ -54,14 +54,26 @@ public static class IArchiveExtensions
             var entry = entries.Entry;
             if (entry.IsDirectory)
             {
+                var dirPath = Path.Combine(destination, entry.Key.NotNull("Entry Key is null"));
+                if (
+                    Path.GetDirectoryName(dirPath + "/") is { } emptyDirectory
+                    && seenDirectories.Add(dirPath)
+                )
+                {
+                    Directory.CreateDirectory(emptyDirectory);
+                }
                 continue;
             }
 
-            // Create each directory
+            // Create each directory if not already created
             var path = Path.Combine(destination, entry.Key.NotNull("Entry Key is null"));
-            if (Path.GetDirectoryName(path) is { } directory && seenDirectories.Add(path))
+            if (Path.GetDirectoryName(path) is { } directory)
             {
-                Directory.CreateDirectory(directory);
+                if (!Directory.Exists(directory) && !seenDirectories.Contains(directory))
+                {
+                    Directory.CreateDirectory(directory);
+                    seenDirectories.Add(directory);
+                }
             }
 
             // Write file
