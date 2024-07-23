@@ -287,4 +287,12 @@ public class TarArchiveTests : ArchiveTests
 
         Assert.Equal(2, numberOfEntries);
     }
+
+    [Fact]
+    public void Tar_Detect_Test()
+    {
+        var isTar = TarArchive.IsTarFile(Path.Combine(TEST_ARCHIVES_PATH, "false.positive.tar"));
+
+        Assert.False(isTar);
+    }
 }
