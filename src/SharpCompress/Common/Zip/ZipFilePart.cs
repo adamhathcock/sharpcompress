@@ -7,12 +7,12 @@ using SharpCompress.Compressors;
 using SharpCompress.Compressors.BZip2;
 using SharpCompress.Compressors.Deflate;
 using SharpCompress.Compressors.Deflate64;
+using SharpCompress.Compressors.Explode;
 using SharpCompress.Compressors.LZMA;
 using SharpCompress.Compressors.PPMd;
+using SharpCompress.Compressors.Reduce;
 using SharpCompress.Compressors.Shrink;
 using SharpCompress.Compressors.Xz;
-using SharpCompress.Compressors.Reduce;
-using SharpCompress.Compressors.Explode;
 using SharpCompress.IO;
 using ZstdSharp;
 
@@ -109,7 +109,12 @@ internal abstract class ZipFilePart : FilePart
             }
             case ZipCompressionMethod.Explode:
             {
-                return new ExplodeStream(stream, Header.CompressedSize, Header.UncompressedSize, Header.Flags);
+                return new ExplodeStream(
+                    stream,
+                    Header.CompressedSize,
+                    Header.UncompressedSize,
+                    Header.Flags
+                );
             }
 
             case ZipCompressionMethod.Deflate:

@@ -16,7 +16,6 @@ public class ZipArchiveTests : ArchiveTests
 {
     public ZipArchiveTests() => UseExtensionInsteadOfNameToVerify = true;
 
-   
     [Fact]
     public void Zip_ZipX_ArchiveStreamRead() => ArchiveStreamRead("Zip.zipx");
 
@@ -183,6 +182,7 @@ public class ZipArchiveTests : ArchiveTests
         UseCaseInsensitiveToVerify = true;
         ArchiveStreamRead("Zip.shrink.zip");
     }
+
     [Fact]
     public void Zip_Implode_ArchiveStreamRead()
     {
@@ -190,6 +190,7 @@ public class ZipArchiveTests : ArchiveTests
         UseCaseInsensitiveToVerify = true;
         ArchiveStreamRead("Zip.implode.zip");
     }
+
     [Fact]
     public void Zip_Reduce1_ArchiveStreamRead()
     {
@@ -197,6 +198,7 @@ public class ZipArchiveTests : ArchiveTests
         UseCaseInsensitiveToVerify = true;
         ArchiveStreamRead("Zip.reduce1.zip");
     }
+
     [Fact]
     public void Zip_Reduce2_ArchiveStreamRead()
     {
@@ -204,6 +206,7 @@ public class ZipArchiveTests : ArchiveTests
         UseCaseInsensitiveToVerify = true;
         ArchiveStreamRead("Zip.reduce2.zip");
     }
+
     [Fact]
     public void Zip_Reduce3_ArchiveStreamRead()
     {
@@ -211,6 +214,7 @@ public class ZipArchiveTests : ArchiveTests
         UseCaseInsensitiveToVerify = true;
         ArchiveStreamRead("Zip.reduce3.zip");
     }
+
     [Fact]
     public void Zip_Reduce4_ArchiveStreamRead()
     {
@@ -218,6 +222,7 @@ public class ZipArchiveTests : ArchiveTests
         UseCaseInsensitiveToVerify = true;
         ArchiveStreamRead("Zip.reduce4.zip");
     }
+
     [Fact]
     public void Zip_Random_Write_Remove()
     {
