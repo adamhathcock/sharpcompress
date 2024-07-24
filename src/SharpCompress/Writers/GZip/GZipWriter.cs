@@ -1,5 +1,7 @@
 using System;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 using SharpCompress.Common;
 using SharpCompress.Compressors;
 using SharpCompress.Compressors.Deflate;
@@ -50,4 +52,15 @@ public sealed class GZipWriter : AbstractWriter
         source.TransferTo(stream);
         _wroteToStream = true;
     }
+
+#if !NETFRAMEWORK && !NETSTANDARD2_0
+    public override ValueTask DisposeAsync() => throw new NotImplementedException();
+
+    public override ValueTask WriteAsync(
+        string filename,
+        Stream source,
+        DateTime? modificationTime,
+        CancellationToken cancellationToken
+    ) => throw new NotImplementedException();
+#endif
 }
