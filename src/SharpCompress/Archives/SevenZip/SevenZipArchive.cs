@@ -163,7 +163,7 @@ public class SevenZipArchive : AbstractArchive<SevenZipArchiveEntry, SevenZipVol
         {
             stream.Position = 0;
             var reader = new ArchiveReader();
-            reader.Open(stream);
+            reader.Open(stream, lookForHeader: ReaderOptions.LookForHeader);
             _database = reader.ReadDatabase(new PasswordProvider(ReaderOptions.Password));
         }
     }
