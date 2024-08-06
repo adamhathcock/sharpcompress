@@ -1220,23 +1220,46 @@ internal class ArchiveReader
 
     #region Public Methods
 
-    public void Open(Stream stream)
+    public void Open(Stream stream, bool lookForHeader)
     {
         Close();
 
         _streamOrigin = stream.Position;
         _streamEnding = stream.Length;
 
-        // TODO: Check Signature!
-        _header = new byte[0x20];
-        for (var offset = 0; offset < 0x20; )
+        var canScan = lookForHeader ? 0x80000 - 20 : 0;
+        while (true)
         {
-            var delta = stream.Read(_header, offset, 0x20 - offset);
-            if (delta == 0)
+            // TODO: Check Signature!
+            _header = new byte[0x20];
+            for (var offset = 0; offset < 0x20; )
             {
-                throw new EndOfStreamException();
+                var delta = stream.Read(_header, offset, 0x20 - offset);
+                if (delta == 0)
+                {
+                    throw new EndOfStreamException();
+                }
+
+                offset += delta;
             }
-            offset += delta;
+
+            if (
+                !lookForHeader
+                || _header
+                    .AsSpan(0, length: 6)
+                    .SequenceEqual<byte>([0x37, 0x7A, 0xBC, 0xAF, 0x27, 0x1C])
+            )
+            {
+                break;
+            }
+
+            if (canScan == 0)
+            {
+                throw new InvalidFormatException("Unable to find 7z signature");
+            }
+
+            canScan--;
+            stream.Position = ++_streamOrigin;
         }
 
         _stream = stream;

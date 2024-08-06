@@ -239,4 +239,6 @@ public static class ArchiveFactory
             }
         }
     }
+
+    public static IArchiveFactory AutoFactory { get; } = new AutoArchiveFactory();
 }
