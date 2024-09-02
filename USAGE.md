@@ -27,7 +27,7 @@ To deal with the "correct" rules as well as the expectations of users, I've deci
 
 To be explicit though, consider always using the overloads that use `ReaderOptions` or `WriterOptions` and explicitly set `LeaveStreamOpen` the way you want.
 
-If using Compression Stream classes directly and you don't want the wrapped stream to be closed.  Use the `NonDisposingStream` as a wrapped to prevent the stream being disposed.  The change in 0.21 simplified a lot even though the usage is a bit more convoluted.
+If using Compression Stream classes directly and you don't want the wrapped stream to be closed.  Use the `NonDisposingStream` as a wrapper to prevent the stream being disposed.  The change in 0.21 simplified a lot even though the usage is a bit more convoluted.
 
 ## Samples
 
