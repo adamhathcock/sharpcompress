@@ -25,13 +25,14 @@ public sealed class XZBlock : XZReadOnlyStream
     private bool _endOfStream;
     private bool _paddingSkipped;
     private bool _crcChecked;
-    private ulong _bytesRead;
+    private readonly long _startPosition;
 
     public XZBlock(Stream stream, CheckType checkType, int checkSize)
         : base(stream)
     {
         _checkType = checkType;
         _checkSize = checkSize;
+        _startPosition = stream.Position;
     }
 
     public override int Read(byte[] buffer, int offset, int count)
@@ -67,13 +68,12 @@ public sealed class XZBlock : XZReadOnlyStream
             CheckCrc();
         }
 
-        _bytesRead += (ulong)bytesRead;
         return bytesRead;
     }
 
     private void SkipPadding()
     {
-        var bytes = (int)(BaseStream.Position % 4);
+        var bytes = (BaseStream.Position - _startPosition) % 4;
         if (bytes > 0)
         {
             var paddingBytes = new byte[4 - bytes];
