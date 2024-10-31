@@ -22,7 +22,10 @@ public class ZipEntry : Entry
             filePart.Header.LastModifiedTime
         );
 
-        var times = filePart.Header.Extra.FirstOrDefault(header => header.GetType() == typeof(UnixTimeExtraField)) as UnixTimeExtraField;
+        var times =
+            filePart.Header.Extra.FirstOrDefault(header =>
+                header.GetType() == typeof(UnixTimeExtraField)
+            ) as UnixTimeExtraField;
 
         LastAccessedTime = times?.UnicodeTimes.Item2;
         CreatedTime = times?.UnicodeTimes.Item3;
