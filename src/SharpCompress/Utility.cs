@@ -1,3 +1,4 @@
+global using SharpCompress.Helpers;
 using System;
 using System.Buffers;
 using System.Collections.Generic;
@@ -5,7 +6,7 @@ using System.IO;
 using System.Text;
 using SharpCompress.Readers;
 
-namespace SharpCompress;
+namespace SharpCompress.Helpers;
 
 [CLSCompliant(false)]
 public static class Utility

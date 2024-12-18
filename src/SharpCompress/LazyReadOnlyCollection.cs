@@ -4,7 +4,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 
-namespace SharpCompress;
+namespace SharpCompress.Helpers;
 
 internal sealed class LazyReadOnlyCollection<T> : ICollection<T>
 {
