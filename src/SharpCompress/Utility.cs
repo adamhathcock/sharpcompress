@@ -1,16 +1,18 @@
+global using SharpCompress.Helpers;
 using System;
 using System.Buffers;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.IO;
 using System.Text;
 using SharpCompress.Readers;
 
-namespace SharpCompress;
+namespace SharpCompress.Helpers;
 
 [CLSCompliant(false)]
 public static class Utility
 {
-    public static ReadOnlyCollection<T> ToReadOnly<T>(this ICollection<T> items) => new(items);
+    public static ReadOnlyCollection<T> ToReadOnly<T>(this IList<T> items) => new(items);
 
     /// <summary>
     /// Performs an unsigned bitwise right shift with the specified number

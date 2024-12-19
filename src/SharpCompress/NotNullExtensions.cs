@@ -4,7 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.CompilerServices;
 
-namespace SharpCompress;
+namespace SharpCompress.Helpers;
 
 public static class NotNullExtensions
 {
