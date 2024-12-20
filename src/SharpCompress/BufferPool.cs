@@ -1,6 +1,6 @@
 using System.Buffers;
 
-namespace SharpCompress;
+namespace SharpCompress.Helpers;
 
 internal static class BufferPool
 {
