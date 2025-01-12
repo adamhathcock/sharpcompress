@@ -5,6 +5,7 @@
 * Archive classes allow random access to a seekable stream.
 * Reader classes allow forward-only reading on a stream.
 * Writer classes allow forward-only Writing on a stream.
+* ISO archives are now supported for reading and extraction.
 
 ## Supported Format Table
 
@@ -19,6 +20,7 @@
 | Tar.XZ                 | LZMA2                                             | Decompress          | TarArchive      | TarReader  | TarWriter (3) |
 | GZip (single file)     | DEFLATE                                           | Both                | GZipArchive     | GZipReader | GZipWriter    |
 | 7Zip (4)               | LZMA, LZMA2, BZip2, PPMd, BCJ, BCJ2, Deflate      | Decompress          | SevenZipArchive | N/A        | N/A           |
+| ISO                    | None                                              | Decompress          | IsoArchive      | N/A        | N/A           |
 
 1. SOLID Rars are only supported in the RarReader API.
 2. Zip format supports pkware and WinzipAES encryption. However, encrypted LZMA is not supported. Zip64 reading/writing is supported but only with seekable streams as the Zip spec doesn't support Zip64 data in post data descriptors. Deflate64 is only supported for reading.

@@ -9,6 +9,7 @@ namespace SharpCompress.Archives;
 /// <item><see cref="Factories.TarFactory"/></item>
 /// <item><see cref="Factories.ZipFactory"/></item>
 /// <item><see cref="Factories.GZipFactory"/></item>
+/// <item><see cref="Factories.IsoFactory"/></item>
 /// </list>
 public interface IWriteableArchiveFactory : Factories.IFactory
 {

@@ -1,6 +1,6 @@
 # SharpCompress
 
-SharpCompress is a compression library in pure C# for .NET Framework 4.62, .NET Standard 2.1, .NET 6.0 and NET 8.0 that can unrar, un7zip, unzip, untar unbzip2, ungzip, unlzip with forward-only reading and file random access APIs. Write support for zip/tar/bzip2/gzip/lzip are implemented.
+SharpCompress is a compression library in pure C# for .NET Framework 4.62, .NET Standard 2.1, .NET 6.0 and NET 8.0 that can unrar, un7zip, unzip, untar unbzip2, ungzip, unlzip, uniso with forward-only reading and file random access APIs. Write support for zip/tar/bzip2/gzip/lzip are implemented.
 
 The major feature is support for non-seekable streams so large files can be processed on the fly (i.e. download stream).
 
@@ -23,6 +23,8 @@ Zip is okay, but it's a very hap-hazard format and the variation in headers and 
 RAR is not recommended as it's a propriatory format and the compression is closed source. Use Tar/LZip for LZMA
 
 7Zip and XZ both are overly complicated. 7Zip does not support streamable formats. XZ has known holes explained here: (http://www.nongnu.org/lzip/xz_inadequate.html) Use Tar/LZip for LZMA compression instead.
+
+ISO is now supported for reading and extraction, making it a viable option for certain use cases.
 
 ## A Simple Request
 

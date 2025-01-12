@@ -14,8 +14,29 @@ class AutoArchiveFactory : IArchiveFactory
 
     public IEnumerable<string> GetSupportedExtensions() => throw new NotSupportedException();
 
-    public bool IsArchive(Stream stream, string? password = null) =>
-        throw new NotSupportedException();
+    public bool IsArchive(Stream stream, string? password = null)
+    {
+        stream.CheckNotNull(nameof(stream));
+        if (!stream.CanRead || !stream.CanSeek)
+        {
+            throw new ArgumentException("Stream should be readable and seekable");
+        }
+
+        var startPosition = stream.Position;
+
+        foreach (var factory in Factory.Factories)
+        {
+            var isArchive = factory.IsArchive(stream);
+            stream.Position = startPosition;
+
+            if (isArchive)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
 
     public FileInfo? GetFilePart(int index, FileInfo part1) => throw new NotSupportedException();
 

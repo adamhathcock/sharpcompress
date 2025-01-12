@@ -15,6 +15,7 @@ namespace SharpCompress.Archives;
 /// <item><see cref="ZipFactory"/></item>
 /// <item><see cref="GZipFactory"/></item>
 /// <item><see cref="SevenZipFactory"/></item>
+/// <item><see cref="IsoFactory"/></item>
 /// </list>
 /// </remarks>
 public interface IArchiveFactory : IFactory
