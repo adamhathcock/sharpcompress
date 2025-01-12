@@ -188,31 +188,24 @@ internal sealed partial class Unpack : BitInput, IRarUnpack, IDisposable
 
     private void UnstoreFile()
     {
-        var buffer = new byte[0x10000];
-        while (true)
+        Span<byte> buffer = stackalloc byte[(int)Math.Min(0x10000, destUnpSize)];
+        do
         {
-            var code = readStream.Read(buffer, 0, (int)Math.Min(buffer.Length, destUnpSize));
+            var code = readStream.Read(buffer);
             if (code == 0 || code == -1)
             {
                 break;
             }
             code = code < destUnpSize ? code : (int)destUnpSize;
-            writeStream.Write(buffer, 0, code);
-            if (destUnpSize >= 0)
-            {
-                destUnpSize -= code;
-            }
-            if (suspended)
-            {
-                return;
-            }
-        }
+            writeStream.Write(buffer.Slice(0, code));
+            destUnpSize -= code;
+        } while (!suspended && destUnpSize > 0);
     }
 
     private void Unpack29(bool solid)
     {
-        var DDecode = new int[PackDef.DC];
-        var DBits = new byte[PackDef.DC];
+        Span<int> DDecode = stackalloc int[PackDef.DC];
+        Span<byte> DBits = stackalloc byte[PackDef.DC];
 
         int Bits;
 
