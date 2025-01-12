@@ -1,6 +1,7 @@
 #nullable disable
 
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.IO;
 using SharpCompress.Common;
@@ -12,13 +13,26 @@ using SharpCompress.Compressors.Rar.VM;
 
 namespace SharpCompress.Compressors.Rar.UnpackV1;
 
-internal sealed partial class Unpack : BitInput, IRarUnpack
+internal sealed partial class Unpack : BitInput, IRarUnpack, IDisposable
 {
     private readonly BitInput Inp;
+    private bool disposed;
 
     public Unpack() =>
         // to ease in porting Unpack50.cs
         Inp = this;
+
+    public void Dispose()
+    {
+        if (!disposed)
+        {
+            if (!externalWindow)
+            {
+                ArrayPool<byte>.Shared.Return(window);
+            }
+            disposed = true;
+        }
+    }
 
     public bool FileExtracted { get; private set; }
 
@@ -74,7 +88,7 @@ internal sealed partial class Unpack : BitInput, IRarUnpack
 
     private BlockTypes unpBlockType;
 
-    //private bool externalWindow;
+    private bool externalWindow;
 
     private long writtenFileSize;
 
@@ -113,13 +127,12 @@ internal sealed partial class Unpack : BitInput, IRarUnpack
     {
         if (window is null)
         {
-            this.window = new byte[PackDef.MAXWINSIZE];
+            this.window = ArrayPool<byte>.Shared.Rent(PackDef.MAXWINSIZE);
         }
         else
         {
             this.window = window;
-
-            //externalWindow = true;
+            externalWindow = true;
         }
         inAddr = 0;
         UnpInitData(false);
