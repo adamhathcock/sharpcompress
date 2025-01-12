@@ -312,9 +312,9 @@
     "net8.0": {
       "Microsoft.NET.ILLink.Tasks": {
         "type": "Direct",
-        "requested": "[8.0.0, )",
-        "resolved": "8.0.0",
-        "contentHash": "B3etT5XQ2nlWkZGO2m/ytDYrOmSsQG1XNBaM6ZYlX5Ch/tDrMFadr0/mK6gjZwaQc55g+5+WZMw4Cz3m8VEF7g=="
+        "requested": "[8.0.7, )",
+        "resolved": "8.0.7",
+        "contentHash": "iI52ptEKby2ymQ6B7h4TWbFmm85T4VvLgc/HvS45Yr3lgi4IIFbQtjON3bQbX/Vc94jXNSLvrDOp5Kh7SJyFYQ=="
       },
       "Microsoft.SourceLink.GitHub": {
         "type": "Direct",
