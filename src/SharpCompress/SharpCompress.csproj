@@ -33,6 +33,7 @@
     <IsTrimmable>true</IsTrimmable>
   </PropertyGroup>
   <ItemGroup>
+		<PackageReference Include="System.Buffers" />
 		<PackageReference Include="ZstdSharp.Port" />
   </ItemGroup>
 	<ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.1' ">
