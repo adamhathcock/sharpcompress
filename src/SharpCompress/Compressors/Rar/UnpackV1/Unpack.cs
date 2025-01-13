@@ -29,6 +29,7 @@ internal sealed partial class Unpack : BitInput, IRarUnpack, IDisposable
             if (!externalWindow)
             {
                 ArrayPool<byte>.Shared.Return(window);
+                window = null;
             }
             disposed = true;
         }
@@ -125,11 +126,11 @@ internal sealed partial class Unpack : BitInput, IRarUnpack, IDisposable
 
     private void Init(byte[] window)
     {
-        if (window is null)
+        if (this.window is null && window is null)
         {
             this.window = ArrayPool<byte>.Shared.Rent(PackDef.MAXWINSIZE);
         }
-        else
+        else if (window is not null)
         {
             this.window = window;
             externalWindow = true;
