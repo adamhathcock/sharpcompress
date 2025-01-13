@@ -866,9 +866,9 @@ internal sealed partial class Unpack : BitInput, IRarUnpack, IDisposable
 
     private bool ReadTables()
     {
-        var bitLength = new byte[PackDef.BC];
+        Span<byte> bitLength = stackalloc byte[PackDef.BC];
+        Span<byte> table = stackalloc byte[PackDef.HUFF_TABLE_SIZE];
 
-        var table = new byte[PackDef.HUFF_TABLE_SIZE];
         if (inAddr > readTop - 25)
         {
             if (!unpReadBuf())
@@ -996,7 +996,7 @@ internal sealed partial class Unpack : BitInput, IRarUnpack, IDisposable
 
         // memcpy(unpOldTable,table,sizeof(unpOldTable));
 
-        Buffer.BlockCopy(table, 0, unpOldTable, 0, unpOldTable.Length);
+        table.CopyTo(unpOldTable);
         return (true);
     }
 

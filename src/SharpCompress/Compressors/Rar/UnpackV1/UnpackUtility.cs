@@ -181,13 +181,12 @@ internal static class UnpackUtility
         return (dec.DecodeNum[N]);
     }
 
-    internal static void makeDecodeTables(byte[] lenTab, int offset, Decode.Decode dec, int size)
+    internal static void makeDecodeTables(Span<byte> lenTab, int offset, Decode.Decode dec, int size)
     {
         Span<int> lenCount = stackalloc int[16];
         Span<int> tmpPos = stackalloc int[16];
         int i;
-        long M,
-            N;
+        long M, N;
 
         new Span<int>(dec.DecodeNum).Clear(); // memset(Dec->DecodeNum,0,Size*sizeof(*Dec->DecodeNum));
 
