@@ -1197,7 +1197,7 @@ internal sealed partial class Unpack : BitInput, IRarUnpack, IDisposable
             {
                 return (false);
             }
-            var VMCode = new byte[VMCodeSize];
+            Span<byte> VMCode = stackalloc byte[VMCodeSize];
             for (var I = 0; I < VMCodeSize; I++)
             {
                 if (Inp.Overflow(3))
