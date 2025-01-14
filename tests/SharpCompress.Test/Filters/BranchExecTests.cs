@@ -91,7 +91,7 @@ public class BranchExecTests
             0x00,
             0x00,
             0x1C,
-            0x00
+            0x00,
         ];
 
     private static byte[] X86Data { get; } =
@@ -173,7 +173,7 @@ public class BranchExecTests
             0x00,
             0x00,
             0x1C,
-            0x00
+            0x00,
         ];
 
     private static byte[] PpcResultData { get; } =
@@ -273,7 +273,7 @@ public class BranchExecTests
             0x7A,
             0xB2,
             0xD4,
-            0xED
+            0xED,
         ];
 
     private static byte[] PpcData { get; } =
@@ -373,7 +373,7 @@ public class BranchExecTests
             0x7A,
             0xB2,
             0xD4,
-            0xED
+            0xED,
         ];
 
     private static byte[] ArmResultData { get; } =
@@ -473,7 +473,7 @@ public class BranchExecTests
             0x00,
             0xC6,
             0x8F,
-            0xE2
+            0xE2,
         ];
 
     private static byte[] ArmData { get; } =
@@ -573,7 +573,7 @@ public class BranchExecTests
             0x00,
             0xC6,
             0x8F,
-            0xE2
+            0xE2,
         ];
 
     private static byte[] ArmtResultData { get; } =
@@ -689,7 +689,7 @@ public class BranchExecTests
             0x7D,
             0xED,
             0x11,
-            0x0F
+            0x0F,
         ];
 
     private static byte[] ArmtData { get; } =
@@ -805,7 +805,7 @@ public class BranchExecTests
             0x7D,
             0xED,
             0x11,
-            0x0F
+            0x0F,
         ];
 
     private static byte[] Ia64ResultData { get; } =
@@ -905,7 +905,7 @@ public class BranchExecTests
             0x2B,
             0x72,
             0xD5,
-            0x0D
+            0x0D,
         ];
 
     private static byte[] Ia64Data { get; } =
@@ -1005,7 +1005,7 @@ public class BranchExecTests
             0x2B,
             0x72,
             0xD5,
-            0x0D
+            0x0D,
         ];
 
     private static byte[] SparcResultData { get; } =
@@ -1087,7 +1087,7 @@ public class BranchExecTests
             0x91,
             0x00,
             0x10,
-            0x00
+            0x00,
         ];
 
     private static byte[] SparcData { get; } =
@@ -1169,7 +1169,7 @@ public class BranchExecTests
             0x91,
             0x00,
             0x10,
-            0x00
+            0x00,
         ];
 
     private void CompareBuffer(byte[] testBuffer, byte[] targetBuffer) =>

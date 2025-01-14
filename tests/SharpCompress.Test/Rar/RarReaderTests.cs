@@ -19,7 +19,7 @@ public class RarReaderTests : ReaderTests
                 "Rar.multi.part03.rar",
                 "Rar.multi.part04.rar",
                 "Rar.multi.part05.rar",
-                "Rar.multi.part06.rar"
+                "Rar.multi.part06.rar",
             ]
         );
 
@@ -32,7 +32,7 @@ public class RarReaderTests : ReaderTests
                 "Rar5.multi.part03.rar",
                 "Rar5.multi.part04.rar",
                 "Rar5.multi.part05.rar",
-                "Rar5.multi.part06.rar"
+                "Rar5.multi.part06.rar",
             ]
         );
 
@@ -66,7 +66,7 @@ public class RarReaderTests : ReaderTests
                 "Rar.EncryptedParts.part03.rar",
                 "Rar.EncryptedParts.part04.rar",
                 "Rar.EncryptedParts.part05.rar",
-                "Rar.EncryptedParts.part06.rar"
+                "Rar.EncryptedParts.part06.rar",
             ]
         );
 
@@ -102,7 +102,7 @@ public class RarReaderTests : ReaderTests
                 "Rar.multi.part03.rar",
                 "Rar.multi.part04.rar",
                 "Rar.multi.part05.rar",
-                "Rar.multi.part06.rar"
+                "Rar.multi.part06.rar",
             ]
         );
 
@@ -115,7 +115,7 @@ public class RarReaderTests : ReaderTests
                 "Rar5.multi.part03.rar",
                 "Rar5.multi.part04.rar",
                 "Rar5.multi.part05.rar",
-                "Rar5.multi.part06.rar"
+                "Rar5.multi.part06.rar",
             ]
         );
 
@@ -338,7 +338,7 @@ public class RarReaderTests : ReaderTests
                 "Rar.EncryptedParts.part03.rar",
                 "Rar.EncryptedParts.part04.rar",
                 "Rar.EncryptedParts.part05.rar",
-                "Rar.EncryptedParts.part06.rar"
+                "Rar.EncryptedParts.part06.rar",
             };
 
             using var reader = RarReader.Open(

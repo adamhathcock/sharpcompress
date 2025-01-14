@@ -121,7 +121,7 @@ public class ZipArchiveTests : ArchiveTests
                 "Zip.deflate.split.003",
                 "Zip.deflate.split.004",
                 "Zip.deflate.split.005",
-                "Zip.deflate.split.006"
+                "Zip.deflate.split.006",
             }
         );
 
@@ -755,7 +755,7 @@ public class ZipArchiveTests : ArchiveTests
             "Folder/File2.rtf",
             "Folder2/File1.txt",
             "Folder2/File2.txt",
-            "DEADBEEF"
+            "DEADBEEF",
         };
         var zipPath = Path.Combine(TEST_ARCHIVES_PATH, "Zip.uncompressed.zip");
         using var stream = File.Open(zipPath, FileMode.Open, FileAccess.Read);
@@ -784,7 +784,7 @@ public class ZipArchiveTests : ArchiveTests
                     ArchiveEncoding = new ArchiveEncoding
                     {
                         Default = Encoding.GetEncoding("shift_jis"),
-                    }
+                    },
                 }
             );
             var reader = archive.ExtractAllEntries();
@@ -800,7 +800,7 @@ public class ZipArchiveTests : ArchiveTests
                     ArchiveEncoding = new ArchiveEncoding
                     {
                         Forced = Encoding.GetEncoding("shift_jis"),
-                    }
+                    },
                 }
             );
             var reader = archive.ExtractAllEntries();

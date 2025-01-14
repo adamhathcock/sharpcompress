@@ -295,7 +295,7 @@ public class ArchiveTests : ReaderTests
                         ExtractFullPath = true,
                         Overwrite = true,
                         PreserveAttributes = true,
-                        PreserveFileTime = true
+                        PreserveFileTime = true,
                     }
                 );
             }

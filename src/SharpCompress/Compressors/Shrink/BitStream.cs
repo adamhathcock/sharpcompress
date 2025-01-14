@@ -32,7 +32,7 @@ namespace SharpCompress.Compressors.Shrink
             8191U,
             16383U,
             (uint)short.MaxValue,
-            (uint)ushort.MaxValue
+            (uint)ushort.MaxValue,
         };
 
         public BitStream(byte[] src, int srcLen)

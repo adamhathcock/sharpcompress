@@ -132,7 +132,7 @@ internal class ModelPpm
         0x64A1,
         0x5ABC,
         0x6632,
-        0x6051
+        0x6051,
     };
 
     // Temp fields

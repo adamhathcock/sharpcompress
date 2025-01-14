@@ -147,7 +147,7 @@ internal enum CoderPropId
     /// <summary>
     /// Specifies mode with end marker.
     /// </summary>
-    EndMarker
+    EndMarker,
 }
 
 internal interface ISetCoderProperties

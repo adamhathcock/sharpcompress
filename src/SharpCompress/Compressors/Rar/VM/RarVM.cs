@@ -1115,7 +1115,7 @@ internal sealed class RarVM : BitInput
             new(29, 0x0e06077d, VMStandardFilters.VMSF_DELTA),
             new(149, 0x1c2c5dc8, VMStandardFilters.VMSF_RGB),
             new(216, 0xbc85e701, VMStandardFilters.VMSF_AUDIO),
-            new(40, 0x46b9c560, VMStandardFilters.VMSF_UPCASE)
+            new(40, 0x46b9c560, VMStandardFilters.VMSF_UPCASE),
         };
         var CodeCRC = RarCRC.CheckCrc(0xffffffff, code, 0, code.Length) ^ 0xffffffff;
         for (var i = 0; i < stdList.Length; i++)

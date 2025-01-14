@@ -13,7 +13,7 @@ internal class BCJFilter : Filter
         true,
         false,
         false,
-        false
+        false,
     };
 
     private static readonly int[] MASK_TO_BIT_NUMBER = { 0, 1, 2, 2, 3, 3, 3, 3 };

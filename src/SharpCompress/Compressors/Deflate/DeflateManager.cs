@@ -106,7 +106,7 @@ internal sealed partial class DeflateManager
         5,
         5,
         5,
-        0
+        0,
     };
 
     // extra bits for each distance code
@@ -141,7 +141,7 @@ internal sealed partial class DeflateManager
         12,
         12,
         13,
-        13
+        13,
     };
 
     internal enum BlockState
@@ -149,14 +149,14 @@ internal sealed partial class DeflateManager
         NeedMore = 0, // block not completed, need more input or more output
         BlockDone, // block flush performed
         FinishStarted, // finish started, need only more output at next deflate
-        FinishDone // finish done, accept no more input or output
+        FinishDone, // finish done, accept no more input or output
     }
 
     internal enum DeflateFlavor
     {
         Store,
         Fast,
-        Slow
+        Slow,
     }
 
     private const int MEM_LEVEL_MAX = 9;
@@ -214,7 +214,7 @@ internal sealed partial class DeflateManager
                 new Config(8, 16, 128, 128, DeflateFlavor.Slow),
                 new Config(8, 32, 128, 256, DeflateFlavor.Slow),
                 new Config(32, 128, 258, 1024, DeflateFlavor.Slow),
-                new Config(32, 258, 258, 4096, DeflateFlavor.Slow)
+                new Config(32, 258, 258, 4096, DeflateFlavor.Slow),
             };
 
         private static readonly Config[] Table;
@@ -233,7 +233,7 @@ internal sealed partial class DeflateManager
         "insufficient memory",
         "buffer error",
         "incompatible version",
-        ""
+        "",
     };
 
     // preset dictionary flag in zlib header
@@ -1793,7 +1793,7 @@ internal sealed partial class DeflateManager
             DeflateFlavor.Store => DeflateNone,
             DeflateFlavor.Fast => DeflateFast,
             DeflateFlavor.Slow => DeflateSlow,
-            _ => DeflateFunction
+            _ => DeflateFunction,
         };
 
     internal int SetParams(CompressionLevel level, CompressionStrategy strategy)
