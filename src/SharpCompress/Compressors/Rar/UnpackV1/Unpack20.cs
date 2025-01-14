@@ -391,8 +391,8 @@ internal partial class Unpack
 
     private bool ReadTables20()
     {
-        var BitLength = new byte[PackDef.BC20];
-        var Table = new byte[PackDef.MC20 * 4];
+        Span<byte> BitLength = stackalloc byte[PackDef.BC20];
+        Span<byte> Table = stackalloc byte[PackDef.MC20 * 4];
         int TableSize,
             N,
             I;

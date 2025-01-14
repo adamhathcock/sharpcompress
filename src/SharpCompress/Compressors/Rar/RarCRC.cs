@@ -9,7 +9,7 @@ internal static class RarCRC
     public static uint CheckCrc(uint startCrc, byte b) =>
         (crcTab[((int)startCrc ^ b) & 0xff] ^ (startCrc >> 8));
 
-    public static uint CheckCrc(uint startCrc, byte[] data, int offset, int count)
+    public static uint CheckCrc(uint startCrc, ReadOnlySpan<byte> data, int offset, int count)
     {
         var size = Math.Min(data.Length - offset, count);
 

@@ -776,14 +776,14 @@ internal sealed class RarVM : BitInput
         }
     }
 
-    public void prepare(byte[] code, int codeSize, VMPreparedProgram prg)
+    public void prepare(ReadOnlySpan<byte> code, int codeSize, VMPreparedProgram prg)
     {
         InitBitInput();
         var cpLength = Math.Min(MAX_SIZE, codeSize);
 
         // memcpy(inBuf,Code,Min(CodeSize,BitInput::MAX_SIZE));
 
-        Buffer.BlockCopy(code, 0, InBuf, 0, cpLength);
+        code.Slice(0, cpLength).CopyTo(InBuf);
         byte xorSum = 0;
         for (var i = 1; i < codeSize; i++)
         {
@@ -1105,7 +1105,7 @@ internal sealed class RarVM : BitInput
         }
     }
 
-    private VMStandardFilters IsStandardFilter(byte[] code, int codeSize)
+    private VMStandardFilters IsStandardFilter(ReadOnlySpan<byte> code, int codeSize)
     {
         VMStandardFilterSignature[] stdList =
         {

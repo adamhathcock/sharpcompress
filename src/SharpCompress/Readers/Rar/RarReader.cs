@@ -13,6 +13,7 @@ namespace SharpCompress.Readers.Rar;
 /// </summary>
 public abstract class RarReader : AbstractReader<RarReaderEntry, RarVolume>
 {
+    private bool _disposed;
     private RarVolume? volume;
     private Lazy<IRarUnpack> UnpackV2017 { get; } =
         new(() => new Compressors.Rar.UnpackV2017.Unpack());
@@ -20,6 +21,20 @@ public abstract class RarReader : AbstractReader<RarReaderEntry, RarVolume>
 
     internal RarReader(ReaderOptions options)
         : base(options, ArchiveType.Rar) { }
+
+    public override void Dispose()
+    {
+        if (!_disposed)
+        {
+            if (UnpackV1.IsValueCreated && UnpackV1.Value is IDisposable unpackV1)
+            {
+                unpackV1.Dispose();
+            }
+
+            _disposed = true;
+            base.Dispose();
+        }
+    }
 
     protected abstract void ValidateArchive(RarVolume archive);
 

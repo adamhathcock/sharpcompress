@@ -14,6 +14,7 @@ namespace SharpCompress.Archives.Rar;
 
 public class RarArchive : AbstractArchive<RarArchiveEntry, RarVolume>
 {
+    private bool _disposed;
     internal Lazy<IRarUnpack> UnpackV2017 { get; } =
         new(() => new Compressors.Rar.UnpackV2017.Unpack());
     internal Lazy<IRarUnpack> UnpackV1 { get; } = new(() => new Compressors.Rar.UnpackV1.Unpack());
@@ -24,6 +25,20 @@ public class RarArchive : AbstractArchive<RarArchiveEntry, RarVolume>
     /// <param name="sourceStream"></param>
     private RarArchive(SourceStream sourceStream)
         : base(ArchiveType.Rar, sourceStream) { }
+
+    public override void Dispose()
+    {
+        if (!_disposed)
+        {
+            if (UnpackV1.IsValueCreated && UnpackV1.Value is IDisposable unpackV1)
+            {
+                unpackV1.Dispose();
+            }
+
+            _disposed = true;
+            base.Dispose();
+        }
+    }
 
     protected override IEnumerable<RarArchiveEntry> LoadEntries(IEnumerable<RarVolume> volumes) =>
         RarArchiveEntryFactory.GetEntries(this, volumes, ReaderOptions);
