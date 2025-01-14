@@ -15,7 +15,8 @@ public abstract class RarReader : AbstractReader<RarReaderEntry, RarVolume>
 {
     private bool _disposed;
     private RarVolume? volume;
-    private Lazy<IRarUnpack> UnpackV2017 { get; } = new(() => new Compressors.Rar.UnpackV2017.Unpack());
+    private Lazy<IRarUnpack> UnpackV2017 { get; } =
+        new(() => new Compressors.Rar.UnpackV2017.Unpack());
     private Lazy<IRarUnpack> UnpackV1 { get; } = new(() => new Compressors.Rar.UnpackV1.Unpack());
 
     internal RarReader(ReaderOptions options)

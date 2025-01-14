@@ -393,7 +393,9 @@ internal partial class Unpack
     {
         Span<byte> BitLength = stackalloc byte[PackDef.BC20];
         Span<byte> Table = stackalloc byte[PackDef.MC20 * 4];
-        int TableSize, N, I;
+        int TableSize,
+            N,
+            I;
         if (inAddr > readTop - 25)
         {
             if (!unpReadBuf())
