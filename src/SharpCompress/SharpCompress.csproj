@@ -6,7 +6,7 @@
 		<AssemblyVersion>0.38.0</AssemblyVersion>
 		<FileVersion>0.38.0</FileVersion>
 		<Authors>Adam Hathcock</Authors>
-		<TargetFrameworks>net462;netstandard2.0;netstandard2.1;net6.0;net8.0</TargetFrameworks>
+		<TargetFrameworks>netstandard2.0;net6.0;net8.0</TargetFrameworks>
 		<AssemblyName>SharpCompress</AssemblyName>
 		<AssemblyOriginatorKeyFile>../../SharpCompress.snk</AssemblyOriginatorKeyFile>
 		<SignAssembly>true</SignAssembly>
@@ -28,7 +28,6 @@
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
     <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
 	</PropertyGroup>
-
   <PropertyGroup Condition=" '$(TargetFramework)' == 'net8.0' ">
     <IsTrimmable>true</IsTrimmable>
   </PropertyGroup>
@@ -36,20 +35,11 @@
 		<PackageReference Include="System.Buffers" />
 		<PackageReference Include="ZstdSharp.Port" />
   </ItemGroup>
-	<ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.1' ">
-    <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" />
-		<PackageReference Include="System.Text.Encoding.CodePages"  />
-	</ItemGroup>
   <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' ">
     <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" />
     <PackageReference Include="System.Text.Encoding.CodePages" />
     <PackageReference Include="System.Memory" />
   </ItemGroup>
-	<ItemGroup Condition=" '$(VersionlessImplicitFrameworkDefine)' == 'NETFRAMEWORK' ">
-    <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" />
-		<PackageReference Include="System.Text.Encoding.CodePages"  />
-		<PackageReference Include="System.Memory"  />
-	</ItemGroup>
   <ItemGroup>
     <None Include="..\..\README.md" Pack="true" PackagePath="\" />
   </ItemGroup>
