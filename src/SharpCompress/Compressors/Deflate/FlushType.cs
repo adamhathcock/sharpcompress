@@ -39,5 +39,5 @@ public enum FlushType
     Full,
 
     /// <summary>Signals the end of the compression/decompression stream.</summary>
-    Finish
+    Finish,
 }

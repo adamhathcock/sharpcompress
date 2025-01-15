@@ -143,7 +143,7 @@ public enum CompressionLevel
     /// <summary>
     /// A synonym for BestCompression.
     /// </summary>
-    Level9 = BestCompression
+    Level9 = BestCompression,
 }
 
 /// <summary>
@@ -171,7 +171,7 @@ public enum CompressionStrategy
     /// Using <c>HuffmanOnly</c> will force the compressor to do Huffman encoding only, with no
     /// string matching.
     /// </summary>
-    HuffmanOnly = 2
+    HuffmanOnly = 2,
 }
 
 /// <summary>
@@ -859,7 +859,7 @@ internal sealed class StaticTree
         99,
         8,
         227,
-        8
+        8,
     };
 
     internal static readonly short[] distTreeCodes =
@@ -923,7 +923,7 @@ internal sealed class StaticTree
         7,
         5,
         23,
-        5
+        5,
     };
 
     // extra bits for each bit length code
@@ -947,7 +947,7 @@ internal sealed class StaticTree
         0,
         2,
         3,
-        7
+        7,
     };
 
     internal static readonly StaticTree Literals;

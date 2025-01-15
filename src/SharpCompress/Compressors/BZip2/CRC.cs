@@ -288,7 +288,7 @@ internal class CRC
         unchecked((int)0xbcb4666d),
         unchecked((int)0xb8757bda),
         unchecked((int)0xb5365d03),
-        unchecked((int)0xb1f740b4)
+        unchecked((int)0xb1f740b4),
     };
 
     public CRC() => InitialiseCRC();

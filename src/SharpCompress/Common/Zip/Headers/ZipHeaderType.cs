@@ -8,5 +8,5 @@ internal enum ZipHeaderType
     DirectoryEnd,
     Split,
     Zip64DirectoryEnd,
-    Zip64DirectoryEndLocator
+    Zip64DirectoryEndLocator,
 }

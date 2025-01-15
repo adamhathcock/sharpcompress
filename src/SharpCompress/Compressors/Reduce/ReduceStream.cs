@@ -98,7 +98,7 @@ public class ReduceStream : Stream
         0x1fff,
         0x3fff,
         0x7fff,
-        0xffff
+        0xffff,
     };
 
     private int bitBufferCount;

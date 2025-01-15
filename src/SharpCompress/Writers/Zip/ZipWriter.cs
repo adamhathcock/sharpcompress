@@ -69,7 +69,7 @@ public class ZipWriter : AbstractWriter
             CompressionType.BZip2 => ZipCompressionMethod.BZip2,
             CompressionType.LZMA => ZipCompressionMethod.LZMA,
             CompressionType.PPMd => ZipCompressionMethod.PPMd,
-            _ => throw new InvalidFormatException("Invalid compression method: " + compressionType)
+            _ => throw new InvalidFormatException("Invalid compression method: " + compressionType),
         };
 
     public override void Write(string entryPath, Stream source, DateTime? modificationTime) =>
@@ -100,7 +100,7 @@ public class ZipWriter : AbstractWriter
         )
         {
             Comment = options.EntryComment,
-            ModificationTime = options.ModificationDateTime
+            ModificationTime = options.ModificationDateTime,
         };
 
         // Use the archive default setting for zip64 and allow overrides

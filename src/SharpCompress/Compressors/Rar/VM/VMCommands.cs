@@ -66,5 +66,5 @@ internal enum VMCommands
     VM_NEGB = 52,
     VM_NEGD = 53,
 
-    VM_STANDARD = 54
+    VM_STANDARD = 54,
 }

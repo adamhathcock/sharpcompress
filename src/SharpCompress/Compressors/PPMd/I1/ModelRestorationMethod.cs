@@ -24,5 +24,5 @@ internal enum ModelRestorationMethod
     /// <summary>
     /// Freeze the context tree (in some cases may result in poor compression).
     /// </summary>
-    Freeze = 2
+    Freeze = 2,
 }

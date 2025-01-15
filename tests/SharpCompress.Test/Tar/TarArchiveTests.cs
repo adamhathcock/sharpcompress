@@ -252,7 +252,7 @@ public class TarArchiveTests : ArchiveTests
     [Fact]
     public void Tar_Read_One_At_A_Time()
     {
-        var archiveEncoding = new ArchiveEncoding { Default = Encoding.UTF8, };
+        var archiveEncoding = new ArchiveEncoding { Default = Encoding.UTF8 };
         var tarWriterOptions = new TarWriterOptions(CompressionType.None, true)
         {
             ArchiveEncoding = archiveEncoding,

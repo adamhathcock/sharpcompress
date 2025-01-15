@@ -10,5 +10,5 @@ internal enum CodeType
     CODE_STARTFILE,
     CODE_ENDFILE,
     CODE_VM,
-    CODE_VMDATA
+    CODE_VMDATA,
 }

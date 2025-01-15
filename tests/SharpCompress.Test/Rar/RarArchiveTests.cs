@@ -235,7 +235,7 @@ public class RarArchiveTests : ArchiveTests
                 "Rar.multi.part03.rar",
                 "Rar.multi.part04.rar",
                 "Rar.multi.part05.rar",
-                "Rar.multi.part06.rar"
+                "Rar.multi.part06.rar",
             ],
             false
         );
@@ -249,7 +249,7 @@ public class RarArchiveTests : ArchiveTests
                 "Rar5.multi.part03.rar",
                 "Rar5.multi.part04.rar",
                 "Rar5.multi.part05.rar",
-                "Rar5.multi.part06.rar"
+                "Rar5.multi.part06.rar",
             ],
             false
         );
@@ -278,7 +278,7 @@ public class RarArchiveTests : ArchiveTests
                 "Rar.multi.solid.part03.rar",
                 "Rar.multi.solid.part04.rar",
                 "Rar.multi.solid.part05.rar",
-                "Rar.multi.solid.part06.rar"
+                "Rar.multi.solid.part06.rar",
             ],
             true
         );
@@ -348,7 +348,7 @@ public class RarArchiveTests : ArchiveTests
                 "Rar2.multi.r02",
                 "Rar2.multi.r03",
                 "Rar2.multi.r04",
-                "Rar2.multi.r05"
+                "Rar2.multi.r05",
             ],
             false
         );
@@ -424,7 +424,7 @@ public class RarArchiveTests : ArchiveTests
                 "Rar4.split.003",
                 "Rar4.split.004",
                 "Rar4.split.005",
-                "Rar4.split.006"
+                "Rar4.split.006",
             }
         );
 
@@ -440,7 +440,7 @@ public class RarArchiveTests : ArchiveTests
                 "Rar2.multi.r02",
                 "Rar2.multi.r03",
                 "Rar2.multi.r04",
-                "Rar2.multi.r05"
+                "Rar2.multi.r05",
             }
         );
 
@@ -456,7 +456,7 @@ public class RarArchiveTests : ArchiveTests
                 "Rar4.multi.part04.rar",
                 "Rar4.multi.part05.rar",
                 "Rar4.multi.part06.rar",
-                "Rar4.multi.part07.rar"
+                "Rar4.multi.part07.rar",
             }
         );
 
@@ -470,7 +470,7 @@ public class RarArchiveTests : ArchiveTests
                 "Rar4.multi.part04.rar",
                 "Rar4.multi.part05.rar",
                 "Rar4.multi.part06.rar",
-                "Rar4.multi.part07.rar"
+                "Rar4.multi.part07.rar",
             ],
             false
         );
@@ -486,7 +486,7 @@ public class RarArchiveTests : ArchiveTests
                 "Rar4.split.003",
                 "Rar4.split.004",
                 "Rar4.split.005",
-                "Rar4.split.006"
+                "Rar4.split.006",
             ]
         );
 
@@ -515,7 +515,7 @@ public class RarArchiveTests : ArchiveTests
         ArchiveStreamMultiRead(
             null,
             [
-                "Rar4.split.001"
+                "Rar4.split.001",
                 //"Rar4.split.002",
                 //"Rar4.split.003",
                 //"Rar4.split.004",
@@ -557,7 +557,7 @@ public class RarArchiveTests : ArchiveTests
             [
                 [0, 1], //exe - Rar4.multi.part01.rar to Rar4.multi.part02.rar
                 [1, 5], //jpg - Rar4.multi.part02.rar to Rar4.multi.part06.rar
-                [5, 6] //txt - Rar4.multi.part06.rar to Rar4.multi.part07.rar
+                [5, 6], //txt - Rar4.multi.part06.rar to Rar4.multi.part07.rar
             ],
             null,
             "Rar4.multi.part01.rar",

@@ -15,20 +15,19 @@ public abstract class BlockFilter : ReadOnlyStream
         ArchArmFilter = 0x07,
         ArchArmThumbFilter = 0x08,
         ArchSparcFilter = 0x09,
-        Lzma2 = 0x21
+        Lzma2 = 0x21,
     }
 
-    private static readonly Dictionary<FilterTypes, Func<BlockFilter>> FILTER_MAP =
-        new()
-        {
-            { FilterTypes.ArchX86Filter, () => new X86Filter() },
-            { FilterTypes.ArchPowerPcFilter, () => new PowerPCFilter() },
-            { FilterTypes.ArchIa64Filter, () => new IA64Filter() },
-            { FilterTypes.ArchArmFilter, () => new ArmFilter() },
-            { FilterTypes.ArchArmThumbFilter, () => new ArmThumbFilter() },
-            { FilterTypes.ArchSparcFilter, () => new SparcFilter() },
-            { FilterTypes.Lzma2, () => new Lzma2Filter() }
-        };
+    private static readonly Dictionary<FilterTypes, Func<BlockFilter>> FILTER_MAP = new()
+    {
+        { FilterTypes.ArchX86Filter, () => new X86Filter() },
+        { FilterTypes.ArchPowerPcFilter, () => new PowerPCFilter() },
+        { FilterTypes.ArchIa64Filter, () => new IA64Filter() },
+        { FilterTypes.ArchArmFilter, () => new ArmFilter() },
+        { FilterTypes.ArchArmThumbFilter, () => new ArmThumbFilter() },
+        { FilterTypes.ArchSparcFilter, () => new SparcFilter() },
+        { FilterTypes.Lzma2, () => new Lzma2Filter() },
+    };
 
     public abstract bool AllowAsLast { get; }
     public abstract bool AllowAsNonLast { get; }

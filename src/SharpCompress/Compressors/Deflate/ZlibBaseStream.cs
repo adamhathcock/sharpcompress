@@ -39,7 +39,7 @@ internal enum ZlibStreamFlavor
 {
     ZLIB = 1950,
     DEFLATE = 1951,
-    GZIP = 1952
+    GZIP = 1952,
 }
 
 internal class ZlibBaseStream : Stream
@@ -655,6 +655,6 @@ internal class ZlibBaseStream : Stream
     {
         Writer,
         Reader,
-        Undefined
+        Undefined,
     }
 }

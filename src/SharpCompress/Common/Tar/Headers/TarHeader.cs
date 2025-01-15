@@ -314,7 +314,7 @@ internal sealed class TarHeader
         (byte)' ',
         (byte)' ',
         (byte)' ',
-        (byte)' '
+        (byte)' ',
     };
 
     internal static bool checkChecksum(byte[] buf)

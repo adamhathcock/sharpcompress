@@ -12,5 +12,5 @@ internal enum FilterType : byte
     FILTER_RGB,
     FILTER_ITANIUM,
     FILTER_PPM,
-    FILTER_NONE
+    FILTER_NONE,
 }

@@ -199,7 +199,7 @@ public static class HuftTree
                         {
                             NumberOfBitsUsed = arrLX[stackOfBitsPerTable + tableLevel - 1], /* bits to dump before this table */
                             NumberOfExtraBits = 32 + counter, /* bits in this table */
-                            ChildNodes = pointerToCurrentTable /* pointer to this table */
+                            ChildNodes = pointerToCurrentTable, /* pointer to this table */
                         };
 
                         counter =
@@ -212,7 +212,7 @@ public static class HuftTree
                 /* set up table entry in r */
                 huftNode vHuft1 = new huftNode
                 {
-                    NumberOfBitsUsed = numberOfBitsInCurrentCode - bitsBeforeThisTable
+                    NumberOfBitsUsed = numberOfBitsInCurrentCode - bitsBeforeThisTable,
                 };
 
                 if (pIndex >= numberOfCodes)

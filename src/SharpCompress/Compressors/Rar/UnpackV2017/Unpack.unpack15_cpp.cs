@@ -19,7 +19,7 @@ internal partial class Unpack
         0xf000,
         0xf200,
         0xf200,
-        0xffff
+        0xffff,
     };
 
     private static readonly uint[] PosL1 = { 0, 0, 0, 2, 3, 5, 7, 11, 16, 20, 24, 32, 32 };
@@ -37,7 +37,7 @@ internal partial class Unpack
         0xf000,
         0xf200,
         0xf240,
-        0xffff
+        0xffff,
     };
 
     private static readonly uint[] PosL2 = { 0, 0, 0, 0, 5, 7, 9, 13, 18, 22, 26, 34, 36 };
@@ -54,7 +54,7 @@ internal partial class Unpack
         0xf200,
         0xf200,
         0xf200,
-        0xffff
+        0xffff,
     };
 
     private static readonly uint[] PosHf0 = { 0, 0, 0, 0, 0, 8, 16, 24, 33, 33, 33, 33, 33 };
@@ -70,7 +70,7 @@ internal partial class Unpack
         0xf200,
         0xf200,
         0xf7e0,
-        0xffff
+        0xffff,
     };
 
     private static readonly uint[] PosHf1 = { 0, 0, 0, 0, 0, 0, 4, 44, 60, 76, 80, 80, 127 };
@@ -86,7 +86,7 @@ internal partial class Unpack
         0xfa00,
         0xffff,
         0xffff,
-        0xffff
+        0xffff,
     };
 
     private static readonly uint[] PosHf2 = { 0, 0, 0, 0, 0, 0, 2, 7, 53, 117, 233, 0, 0 };
@@ -101,7 +101,7 @@ internal partial class Unpack
         0xfe80,
         0xffff,
         0xffff,
-        0xffff
+        0xffff,
     };
 
     private static readonly uint[] PosHf3 = { 0, 0, 0, 0, 0, 0, 0, 2, 16, 218, 251, 0, 0 };
@@ -225,7 +225,7 @@ internal partial class Unpack
             6,
             6,
             4,
-            0
+            0,
         };
         public static readonly uint[] ShortXor1 =
         {
@@ -243,7 +243,7 @@ internal partial class Unpack
             0x90,
             0x98,
             0x9c,
-            0xb0
+            0xb0,
         };
         public static readonly uint[] ShortLen2 =
         {
@@ -262,7 +262,7 @@ internal partial class Unpack
             6,
             6,
             4,
-            0
+            0,
         };
         public static readonly uint[] ShortXor2 =
         {
@@ -280,7 +280,7 @@ internal partial class Unpack
             0x90,
             0x98,
             0x9c,
-            0xb0
+            0xb0,
         };
     }
 

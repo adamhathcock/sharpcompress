@@ -95,7 +95,7 @@ internal sealed partial class DeflateManager
             2,
             14,
             1,
-            15
+            15,
         };
 
         // The lengths of the bit length codes are sent in order of decreasing
@@ -618,7 +618,7 @@ internal sealed partial class DeflateManager
             29,
             29,
             29,
-            29
+            29,
         };
 
         internal static readonly sbyte[] LengthCode =
@@ -878,7 +878,7 @@ internal sealed partial class DeflateManager
             27,
             27,
             27,
-            28
+            28,
         };
 
         internal static readonly int[] LengthBase =
@@ -911,7 +911,7 @@ internal sealed partial class DeflateManager
             160,
             192,
             224,
-            0
+            0,
         };
 
         internal static readonly int[] DistanceBase =
@@ -945,7 +945,7 @@ internal sealed partial class DeflateManager
             8192,
             12288,
             16384,
-            24576
+            24576,
         };
 
         internal short[] dyn_tree; // the dynamic tree

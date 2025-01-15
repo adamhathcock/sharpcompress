@@ -70,7 +70,7 @@ internal sealed class InflaterManaged
             5,
             5,
             5,
-            16
+            16,
         };
 
     // The base length for length code 257 - 285.
@@ -105,7 +105,7 @@ internal sealed class InflaterManaged
         163,
         195,
         227,
-        3
+        3,
     };
 
     // The base distance for distance code 0 - 31
@@ -143,7 +143,7 @@ internal sealed class InflaterManaged
         16385,
         24577,
         32769,
-        49153
+        49153,
     };
 
     // code lengths for code length alphabet is stored in following order
@@ -184,7 +184,7 @@ internal sealed class InflaterManaged
             0x07,
             0x17,
             0x0f,
-            0x1f
+            0x1f,
         };
 
     private readonly OutputWindow _output;

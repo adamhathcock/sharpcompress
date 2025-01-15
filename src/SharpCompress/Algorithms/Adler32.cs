@@ -141,7 +141,7 @@ internal static class Adler32 // From https://github.com/SixLabors/ImageSharp/bl
             4,
             3,
             2,
-            1 // tap2
+            1, // tap2
         };
 #endif
 

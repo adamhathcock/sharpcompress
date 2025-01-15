@@ -93,7 +93,7 @@ internal sealed class InflateBlocks
         2,
         14,
         1,
-        15
+        15,
     };
 
     internal ZlibCodec _codec; // pointer back to this zlib stream
@@ -815,7 +815,7 @@ internal sealed class InflateBlocks
         CODES = 6, // processing fixed or dynamic block
         DRY = 7, // output remaining window bytes
         DONE = 8, // finished last block, done
-        BAD = 9 // ot a data error--stuck here
+        BAD = 9, // ot a data error--stuck here
     }
 
     #endregion
@@ -842,7 +842,7 @@ internal static class InternalInflateConstants
         0x00001fff,
         0x00003fff,
         0x00007fff,
-        0x0000ffff
+        0x0000ffff,
     };
 }
 
@@ -2054,7 +2054,7 @@ internal sealed class InflateManager
         CHECK2 = 10, // two check bytes to go
         CHECK1 = 11, // one check byte to go
         DONE = 12, // finished check, done
-        BAD = 13 // got an error--stay here
+        BAD = 13, // got an error--stay here
     }
 
     #endregion

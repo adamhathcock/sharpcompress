@@ -9,5 +9,5 @@ internal enum VMStandardFilters
     VMSF_RGB = 4,
     VMSF_AUDIO = 5,
     VMSF_DELTA = 6,
-    VMSF_UPCASE = 7
+    VMSF_UPCASE = 7,
 }

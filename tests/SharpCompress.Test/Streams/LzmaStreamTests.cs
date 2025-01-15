@@ -174,7 +174,7 @@ public class LzmaStreamTests
             0xF1,
             0x76,
             0x03,
-            0x90
+            0x90,
         ];
 
     /// <summary>
@@ -509,7 +509,7 @@ public class LzmaStreamTests
             0x0A,
             0x00,
             0x00,
-            0x00
+            0x00,
         ];
 
     [Fact]

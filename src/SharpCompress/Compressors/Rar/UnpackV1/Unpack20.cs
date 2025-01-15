@@ -64,7 +64,7 @@ internal partial class Unpack
         128,
         160,
         192,
-        224
+        224,
     };
 
     private static ReadOnlySpan<byte> LBits =>
@@ -97,7 +97,7 @@ internal partial class Unpack
             5,
             5,
             5,
-            5
+            5,
         };
 
     private static readonly int[] DDecode =
@@ -149,7 +149,7 @@ internal partial class Unpack
         786432,
         851968,
         917504,
-        983040
+        983040,
     };
 
     private static readonly int[] DBits =
@@ -201,7 +201,7 @@ internal partial class Unpack
         16,
         16,
         16,
-        16
+        16,
     };
 
     private static readonly int[] SDDecode = { 0, 4, 8, 16, 32, 64, 128, 192 };

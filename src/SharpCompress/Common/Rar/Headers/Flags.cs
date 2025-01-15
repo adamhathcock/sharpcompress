@@ -13,7 +13,7 @@ public enum HeaderType : byte
     Sign,
     NewSub,
     EndArchive,
-    Crypt
+    Crypt,
 }
 
 internal static class HeaderCodeV

@@ -119,7 +119,7 @@ internal sealed partial class Unpack : BitInput, IRarUnpack, IDisposable
         2,
         14,
         0,
-        12
+        12,
     };
 
     private FileHeader fileHeader;

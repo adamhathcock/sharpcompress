@@ -111,7 +111,7 @@ internal static class FastEncoderStatics
             0x7e,
             0x7c,
             0x1f,
-            0x3f
+            0x3f,
         };
 
     internal static ReadOnlySpan<byte> B_FINAL_FAST_ENCODER_TREE_STRUCTURE_DATA =>
@@ -214,7 +214,7 @@ internal static class FastEncoderStatics
             0x7e,
             0x7c,
             0x1f,
-            0x3f
+            0x3f,
         };
 
     // Output a currentMatch with length matchLen (>= MIN_MATCH) and displacement matchPos
@@ -762,7 +762,7 @@ internal static class FastEncoderStatics
         0x0039e7f1,
         0x003be7f1,
         0x003de7f1,
-        0x000047eb
+        0x000047eb,
     };
 
     internal static readonly uint[] FAST_ENCODER_DISTANCE_CODE_INFO =
@@ -798,7 +798,7 @@ internal static class FastEncoderStatics
         0x000007d5,
         0x000017d5,
         0x00000000,
-        0x00000100
+        0x00000100,
     };
 
     internal static readonly uint[] BIT_MASK =
@@ -818,7 +818,7 @@ internal static class FastEncoderStatics
         4095,
         8191,
         16383,
-        32767
+        32767,
     };
     internal static readonly byte[] EXTRA_LENGTH_BITS =
     {
@@ -850,7 +850,7 @@ internal static class FastEncoderStatics
         5,
         5,
         5,
-        0
+        0,
     };
     internal static readonly byte[] EXTRA_DISTANCE_BITS =
     {
@@ -885,7 +885,7 @@ internal static class FastEncoderStatics
         13,
         13,
         0,
-        0
+        0,
     };
     internal const int NUM_CHARS = 256;
     internal const int NUM_LENGTH_BASE_CODES = 29;

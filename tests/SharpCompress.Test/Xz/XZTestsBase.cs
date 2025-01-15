@@ -61,7 +61,7 @@ public abstract class XzTestsBase : IDisposable
             0x00,
             0x01,
             0x59,
-            0x5a
+            0x5a,
         ];
 
     protected static byte[] OriginalEmptyBytes => Encoding.ASCII.GetBytes(OriginalEmpty);
@@ -451,7 +451,7 @@ public abstract class XzTestsBase : IDisposable
             0x00,
             0x04,
             0x59,
-            0x5a
+            0x5a,
         ];
     protected static byte[] OriginalBytes => Encoding.ASCII.GetBytes(Original);
 
@@ -1119,7 +1119,7 @@ public abstract class XzTestsBase : IDisposable
             0x00,
             0x01,
             0x59,
-            0x5a
+            0x5a,
         ];
 
     protected static byte[] OriginalIndexedBytes => Encoding.ASCII.GetBytes(OriginalIndexed);

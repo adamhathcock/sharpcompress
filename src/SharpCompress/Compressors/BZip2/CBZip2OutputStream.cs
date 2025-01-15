@@ -1829,7 +1829,7 @@ internal sealed class CBZip2OutputStream : Stream
         88573,
         265720,
         797161,
-        2391484
+        2391484,
     };
 
     private void AllocateCompressStructures()

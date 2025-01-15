@@ -387,7 +387,7 @@ namespace SharpCompress.Compressors.Shrink
         {
             Ok,
             Full,
-            Error
+            Error,
         }
 
         private struct CodeQueue
