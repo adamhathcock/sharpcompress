@@ -6,7 +6,7 @@ using System.Runtime.CompilerServices;
 
 namespace SharpCompress.Helpers;
 
-public static class NotNullExtensions
+internal static class NotNullExtensions
 {
     public static IEnumerable<T> Empty<T>(this IEnumerable<T>? source) =>
         source ?? Enumerable.Empty<T>();
