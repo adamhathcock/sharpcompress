@@ -9,8 +9,7 @@ using SharpCompress.Readers;
 
 namespace SharpCompress.Helpers;
 
-[CLSCompliant(false)]
-public static class Utility
+internal static class Utility
 {
     public static ReadOnlyCollection<T> ToReadOnly<T>(this IList<T> items) => new(items);
 
