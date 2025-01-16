@@ -102,7 +102,7 @@ public class ExplodeStream : Stream
         0x1fff,
         0x3fff,
         0x7fff,
-        0xffff
+        0xffff,
     };
 
     /* Tables for length and distance */
@@ -171,7 +171,7 @@ public class ExplodeStream : Stream
         62,
         63,
         64,
-        65
+        65,
     };
 
     static int[] cplen3 = new int[]
@@ -239,7 +239,7 @@ public class ExplodeStream : Stream
         63,
         64,
         65,
-        66
+        66,
     };
 
     static int[] extra = new int[]
@@ -307,7 +307,7 @@ public class ExplodeStream : Stream
         0,
         0,
         0,
-        8
+        8,
     };
 
     static int[] cpdist4 = new int[]
@@ -375,7 +375,7 @@ public class ExplodeStream : Stream
         3841,
         3905,
         3969,
-        4033
+        4033,
     };
 
     static int[] cpdist8 = new int[]
@@ -443,7 +443,7 @@ public class ExplodeStream : Stream
         7681,
         7809,
         7937,
-        8065
+        8065,
     };
 
     private int get_tree(int[] arrBitLengths, int numberExpected)

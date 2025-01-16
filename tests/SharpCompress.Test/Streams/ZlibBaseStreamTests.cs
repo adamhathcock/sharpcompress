@@ -34,7 +34,7 @@ public class ZLibBaseStreamTests
             0x8b,
             0xce,
             0x49,
-            0xd2
+            0xd2,
         };
         var buf = new byte[plainData.Length * 2];
 

@@ -1615,7 +1615,7 @@ internal sealed class InfTree
         79,
         0,
         9,
-        255
+        255,
     };
 
     //UPGRADE_NOTE: Final was removed from the declaration of 'fixed_td'. "ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?index='!DefaultContextWindowIndex'&keyword='jlca1003'"
@@ -1716,7 +1716,7 @@ internal sealed class InfTree
         193,
         192,
         5,
-        24577
+        24577,
     };
 
     // Tables for deflate from PKZIP's appnote.txt.
@@ -1753,7 +1753,7 @@ internal sealed class InfTree
         227,
         258,
         0,
-        0
+        0,
     };
 
     // see note #13 above about 258
@@ -1790,7 +1790,7 @@ internal sealed class InfTree
         5,
         0,
         112,
-        112
+        112,
     };
 
     //UPGRADE_NOTE: Final was removed from the declaration of 'cpdist'. "ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?index='!DefaultContextWindowIndex'&keyword='jlca1003'"
@@ -1825,7 +1825,7 @@ internal sealed class InfTree
         8193,
         12289,
         16385,
-        24577
+        24577,
     };
 
     //UPGRADE_NOTE: Final was removed from the declaration of 'cpdext'. "ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?index='!DefaultContextWindowIndex'&keyword='jlca1003'"
@@ -1860,7 +1860,7 @@ internal sealed class InfTree
         12,
         12,
         13,
-        13
+        13,
     };
 
     // If BMAX needs to be larger than 16, then h and x[] should be uLong.

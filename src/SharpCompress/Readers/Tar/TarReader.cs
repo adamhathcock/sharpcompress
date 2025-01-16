@@ -39,7 +39,7 @@ public class TarReader : AbstractReader<TarEntry, TarVolume>
             CompressionType.Xz => new XZStream(stream),
             CompressionType.Lzw => new LzwStream(stream),
             CompressionType.None => stream,
-            _ => throw new NotSupportedException("Invalid compression type: " + compressionType)
+            _ => throw new NotSupportedException("Invalid compression type: " + compressionType),
         };
     }
 

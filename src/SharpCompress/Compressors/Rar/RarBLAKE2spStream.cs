@@ -28,7 +28,7 @@ internal class RarBLAKE2spStream : RarStream
         0x510E527FU,
         0x9B05688CU,
         0x1F83D9ABU,
-        0x5BE0CD19U
+        0x5BE0CD19U,
     };
 
     static readonly byte[][] k_BLAKE2S_Sigma =

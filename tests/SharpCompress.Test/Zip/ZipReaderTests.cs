@@ -248,7 +248,7 @@ public class ZipReaderTests : ReaderTests
         var expected = new[]
         {
             new Tuple<string, byte[]>("foo.txt", Array.Empty<byte>()),
-            new Tuple<string, byte[]>("foo2.txt", new byte[10])
+            new Tuple<string, byte[]>("foo2.txt", new byte[10]),
         };
 
         using var memory = new MemoryStream();

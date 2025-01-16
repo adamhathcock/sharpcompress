@@ -232,7 +232,7 @@ public class TarReaderTests : ReaderTests
                             }
                             link.CreateSymbolicLinkTo(targetPath);
                         }
-                    }
+                    },
                 }
             );
             if (!isWindows)

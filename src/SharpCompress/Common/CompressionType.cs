@@ -21,5 +21,5 @@ public enum CompressionType
     Reduce2,
     Reduce3,
     Reduce4,
-    Explode
+    Explode,
 }

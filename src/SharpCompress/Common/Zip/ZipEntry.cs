@@ -46,7 +46,7 @@ public class ZipEntry : Entry
             ZipCompressionMethod.Reduce3 => CompressionType.Reduce3,
             ZipCompressionMethod.Reduce4 => CompressionType.Reduce4,
             ZipCompressionMethod.Explode => CompressionType.Explode,
-            _ => CompressionType.Unknown
+            _ => CompressionType.Unknown,
         };
 
     public override long Crc => _filePart?.Header.Crc ?? 0;

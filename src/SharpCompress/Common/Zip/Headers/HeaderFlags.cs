@@ -13,5 +13,5 @@ internal enum HeaderFlags : ushort
     EnhancedDeflate = 16,
 
     //Bit 11: Language encoding flag
-    Efs = 2048
+    Efs = 2048,
 }

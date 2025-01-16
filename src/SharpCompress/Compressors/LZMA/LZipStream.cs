@@ -205,7 +205,7 @@ public sealed class LZipStream : Stream
         (byte)'I',
         (byte)'P',
         1,
-        113
+        113,
     };
 
     public static void WriteHeaderSize(Stream stream)
@@ -235,6 +235,6 @@ public sealed class LZipStream : Stream
             (byte)(dictionarySize & 0xff),
             (byte)((dictionarySize >> 8) & 0xff),
             (byte)((dictionarySize >> 16) & 0xff),
-            (byte)((dictionarySize >> 24) & 0xff)
+            (byte)((dictionarySize >> 24) & 0xff),
         };
 }
