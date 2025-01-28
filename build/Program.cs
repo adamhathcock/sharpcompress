@@ -69,7 +69,7 @@ Target(
             return Glob.Files(".", d);
         }
 
-        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && framework == "net462")
+        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && framework == "net48")
         {
             return;
         }
