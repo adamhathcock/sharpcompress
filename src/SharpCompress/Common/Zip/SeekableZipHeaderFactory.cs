@@ -149,6 +149,12 @@ internal sealed class SeekableZipHeaderFactory : ZipHeaderFactory
         {
             throw new InvalidOperationException();
         }
+        if (FlagUtility.HasFlag(localEntryHeader.Flags, HeaderFlags.UsePostDataDescriptor))
+        {
+            localEntryHeader.Crc = directoryEntryHeader.Crc;
+            localEntryHeader.CompressedSize = directoryEntryHeader.CompressedSize;
+            localEntryHeader.UncompressedSize = directoryEntryHeader.UncompressedSize;
+        }
         return localEntryHeader;
     }
 }
