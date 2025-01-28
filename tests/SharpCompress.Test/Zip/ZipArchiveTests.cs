@@ -808,4 +808,14 @@ public class ZipArchiveTests : ArchiveTests
             Assert.Equal("きょきゅんきゃんきゅ_wav.frq", reader.Entry.Key);
         }
     }
+
+    [Fact]
+    public void TestDataDescriptorRead()
+    {
+        using var archive = ArchiveFactory.Open(Path.Combine(TEST_ARCHIVES_PATH, "Zip.none.datadescriptors.zip"));
+        var firstEntry = archive.Entries.First();
+        Assert.Equal(199, firstEntry.Size);
+        using var _ = firstEntry.OpenEntryStream();
+        Assert.Equal(199, firstEntry.Size);
+    }
 }
