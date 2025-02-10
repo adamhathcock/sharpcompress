@@ -369,7 +369,7 @@ internal partial class Unpack
         destUnpSize -= Length;
 
         var DestPtr = unpPtr - Distance;
-        if (DestPtr < PackDef.MAXWINSIZE - 300 && unpPtr < PackDef.MAXWINSIZE - 300)
+        if (DestPtr >= 0 && DestPtr < PackDef.MAXWINSIZE - 300 && unpPtr < PackDef.MAXWINSIZE - 300)
         {
             window[unpPtr++] = window[DestPtr++];
             window[unpPtr++] = window[DestPtr++];
