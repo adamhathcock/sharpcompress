@@ -713,6 +713,8 @@ internal sealed partial class Unpack : BitInput, IRarUnpack, IDisposable
 
     private void UnpWriteData(byte[] data, int offset, int size)
     {
+        // allow destUnpSize == 0 here to ensure that 0 size writes
+        // go through RarStream's Write so that Suspended is set correctly
         if (destUnpSize < 0)
         {
             return;
