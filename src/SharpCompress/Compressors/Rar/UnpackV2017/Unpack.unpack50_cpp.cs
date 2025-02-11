@@ -655,9 +655,7 @@ internal partial class Unpack
 
     private void UnpWriteData(byte[] Data, size_t offset, size_t Size)
     {
-        // allow WrittenFileSize == DestUnpSize here to ensure that 0 size writes
-        // go through RarStream's Write so that Suspended is set correctly
-        if (WrittenFileSize > DestUnpSize)
+        if (WrittenFileSize >= DestUnpSize)
         {
             return;
         }
