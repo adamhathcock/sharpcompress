@@ -568,7 +568,7 @@ public class ZipArchiveTests : ArchiveTests
     {
         var zipFile = Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.pkware.zip");
 
-        using var fileStream = File.Open(zipFile, FileMode.Open);
+        using var fileStream = File.OpenRead(zipFile);
         using var archive = ArchiveFactory.Open(
             fileStream,
             new ReaderOptions { Password = "12345678" }
@@ -729,7 +729,7 @@ public class ZipArchiveTests : ArchiveTests
     public void Zip_Uncompressed_Read_All()
     {
         var zipPath = Path.Combine(TEST_ARCHIVES_PATH, "Zip.uncompressed.zip");
-        using var stream = File.Open(zipPath, FileMode.Open, FileAccess.Read);
+        using var stream = File.OpenRead(zipPath);
         var archive = ArchiveFactory.Open(stream);
         var reader = archive.ExtractAllEntries();
         var entries = 0;
@@ -758,7 +758,7 @@ public class ZipArchiveTests : ArchiveTests
             "DEADBEEF",
         };
         var zipPath = Path.Combine(TEST_ARCHIVES_PATH, "Zip.uncompressed.zip");
-        using var stream = File.Open(zipPath, FileMode.Open, FileAccess.Read);
+        using var stream = File.OpenRead(zipPath);
         var archive = ArchiveFactory.Open(stream);
         var reader = archive.ExtractAllEntries();
         var x = 0;
@@ -775,7 +775,7 @@ public class ZipArchiveTests : ArchiveTests
     public void Zip_Forced_Ignores_UnicodePathExtra()
     {
         var zipPath = Path.Combine(TEST_ARCHIVES_PATH, "Zip.UnicodePathExtra.zip");
-        using (var stream = File.Open(zipPath, FileMode.Open, FileAccess.Read))
+        using (var stream = File.OpenRead(zipPath))
         {
             var archive = ArchiveFactory.Open(
                 stream,
@@ -791,7 +791,7 @@ public class ZipArchiveTests : ArchiveTests
             reader.MoveToNextEntry();
             Assert.Equal("궖귛궖귙귪궖귗귪궖귙_wav.frq", reader.Entry.Key);
         }
-        using (var stream = File.Open(zipPath, FileMode.Open, FileAccess.Read))
+        using (var stream = File.OpenRead(zipPath))
         {
             var archive = ArchiveFactory.Open(
                 stream,
