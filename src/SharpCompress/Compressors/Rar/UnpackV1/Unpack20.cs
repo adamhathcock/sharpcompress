@@ -19,7 +19,7 @@ internal partial class Unpack
         new MultDecode(),
         new MultDecode(),
         new MultDecode(),
-        new MultDecode()
+        new MultDecode(),
     };
 
     private readonly byte[] UnpOldTable20 = new byte[PackDef.MC20 * 4];
