@@ -188,6 +188,25 @@ internal class OutWindow
         return size;
     }
 
+    public int ReadByte()
+    {
+        if (_streamPos >= _pos)
+        {
+            return -1;
+        }
+
+        int value = _buffer[_streamPos];
+
+        _streamPos++;
+        if (_streamPos >= _windowSize)
+        {
+            _pos = 0;
+            _streamPos = 0;
+        }
+
+        return value;
+    }
+
     public void CopyPending()
     {
         if (_pendingLen > 0)
