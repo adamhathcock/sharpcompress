@@ -59,6 +59,30 @@ internal class BufferedSubStream(Stream stream, long origin, long bytesToRead)
         return count;
     }
 
+    public override int ReadByte()
+    {
+        if (BytesLeftToRead == 0)
+        {
+            return -1;
+        }
+
+        if (_cacheLength == 0)
+        {
+            _cacheOffset = 0;
+            Stream.Position = origin;
+            _cacheLength = Stream.Read(_cache, 0, _cache.Length);
+            origin += _cacheLength;
+        }
+
+        int value = _cache[_cacheOffset];
+
+        _cacheOffset++;
+        _cacheLength--;
+        BytesLeftToRead--;
+
+        return value;
+    }
+
     public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
 
     public override void SetLength(long value) => throw new NotSupportedException();
