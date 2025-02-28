@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using SharpCompress.Common;
+using SharpCompress.Readers;
 
 namespace SharpCompress.Archives;
 
@@ -18,10 +19,8 @@ public static class IArchiveExtensions
         ExtractionOptions? options = null
     )
     {
-        foreach (var entry in archive.Entries.Where(x => !x.IsDirectory))
-        {
-            entry.WriteToDirectory(destinationDirectory, options);
-        }
+        using var reader = archive.ExtractAllEntries();
+        reader.WriteAllToDirectory(destinationDirectory, options);
     }
 
     /// <summary>

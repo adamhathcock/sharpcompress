@@ -122,10 +122,7 @@ public static class ArchiveFactory
     )
     {
         using var archive = Open(sourceArchive);
-        foreach (var entry in archive.Entries)
-        {
-            entry.WriteToDirectory(destinationDirectory, options);
-        }
+        archive.WriteToDirectory(destinationDirectory, options);
     }
 
     private static T FindFactory<T>(FileInfo finfo)
