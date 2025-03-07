@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -11,7 +12,11 @@ public class XZHeader
     private readonly byte[] MagicHeader = { 0xFD, 0x37, 0x7A, 0x58, 0x5a, 0x00 };
 
     public CheckType BlockCheckType { get; private set; }
-    public int BlockCheckSize => ((((int)BlockCheckType) + 2) / 3) * 4;
+    public int BlockCheckSize =>
+        BlockCheckType == CheckType.NONE ? 0 :
+        BlockCheckType == CheckType.CRC32 ? 4 :
+        BlockCheckType == CheckType.CRC64 ? 8 :
+        BlockCheckType == CheckType.SHA256 ? 32 : throw new ArgumentOutOfRangeException();
 
     public XZHeader(BinaryReader reader) => _reader = reader;
 
