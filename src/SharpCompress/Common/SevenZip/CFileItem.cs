@@ -8,6 +8,7 @@ internal class CFileItem
 {
     public long Size { get; internal set; }
     public uint? Attrib { get; internal set; }
+    public uint? ExtendedAttrib { get; internal set; }
     public uint? Crc { get; internal set; }
     public string Name { get; internal set; }
 

@@ -996,6 +996,11 @@ internal class ArchiveReader
                             numFiles,
                             delegate(int i, uint? attr)
                             {
+                                // Keep the original attribute value because it could potentially get
+                                // modified in the logic that follows. Some callers of the library may
+                                // find the original value useful.
+                                db._files[i].ExtendedAttrib = attr;
+
                                 // Some third party implementations established an unofficial extension
                                 // of the 7z archive format by placing posix file attributes in the high
                                 // bits of the windows file attributes. This makes use of the fact that
