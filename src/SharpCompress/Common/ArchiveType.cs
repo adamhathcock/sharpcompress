@@ -7,4 +7,5 @@ public enum ArchiveType
     Tar,
     SevenZip,
     GZip,
+    Arc,
 }
