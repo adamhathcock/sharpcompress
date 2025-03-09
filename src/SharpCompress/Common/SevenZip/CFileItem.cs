@@ -14,12 +14,6 @@ internal class CFileItem
     public bool HasStream { get; internal set; }
     public bool IsDir { get; internal set; }
 
-    public bool CrcDefined => Crc != null;
-
-    public bool AttribDefined => Attrib != null;
-
-    public void SetAttrib(uint attrib) => Attrib = attrib;
-
     public DateTime? CTime { get; internal set; }
     public DateTime? ATime { get; internal set; }
     public DateTime? MTime { get; internal set; }

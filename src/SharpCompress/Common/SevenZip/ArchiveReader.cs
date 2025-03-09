@@ -1458,7 +1458,7 @@ internal class ArchiveReader
 #if DEBUG
             Log.WriteLine(_db._files[index].Name);
 #endif
-            if (_db._files[index].CrcDefined)
+            if (_db._files[index].Crc.HasValue)
             {
                 _stream = new CrcCheckStream(_db._files[index].Crc.Value);
             }
