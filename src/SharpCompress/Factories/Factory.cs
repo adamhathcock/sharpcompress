@@ -17,6 +17,7 @@ public abstract class Factory : IFactory
         RegisterFactory(new SevenZipFactory());
         RegisterFactory(new GZipFactory());
         RegisterFactory(new TarFactory());
+        RegisterFactory(new ArcFactory());
     }
 
     private static readonly HashSet<Factory> _factories = new();
