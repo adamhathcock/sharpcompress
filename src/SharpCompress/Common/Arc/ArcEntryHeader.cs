@@ -69,16 +69,8 @@ namespace SharpCompress.Common.Arc
 
         public static DateTime ConvertToDateTime(long rawDateTime)
         {
-            // Extract components using bit manipulation
-            int year = (int)((rawDateTime >> 25) & 0x7F) + 1980;
-            int month = (int)((rawDateTime >> 21) & 0xF);
-            int day = (int)((rawDateTime >> 16) & 0x1F);
-            int hour = (int)((rawDateTime >> 11) & 0x1F);
-            int minute = (int)((rawDateTime >> 5) & 0x3F);
-            int second = (int)((rawDateTime & 0x1F) * 2); // Multiply by 2 since DOS seconds are stored as halves
-
-            // Return as a DateTime object
-            return new DateTime(year, month, day, hour, minute, second);
+            // Convert Unix timestamp to DateTime (UTC)
+            return DateTimeOffset.FromUnixTimeSeconds(rawDateTime).UtcDateTime;
         }
     }
 }
