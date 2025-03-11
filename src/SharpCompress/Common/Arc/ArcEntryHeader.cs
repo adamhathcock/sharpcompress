@@ -28,6 +28,7 @@ namespace SharpCompress.Common.Arc
             {
                 return null;
             }
+            DataStartPosition = stream.Position;
             return LoadFrom(headerBytes);
         }
 
@@ -56,8 +57,8 @@ namespace SharpCompress.Common.Arc
             return value switch
             {
                 1 or 2 => CompressionType.None,
-                //3 => CompressionType.RLE90,
-                //4 => CompressionType.Squeezed,
+                3 => CompressionType.RLE90,
+                4 => CompressionType.Squeezed,
                 //5 or 6 or 7 or 8 => CompressionType.Crunched,
                 //9 => CompressionType.Squashed,
                 //10 => CompressionType.Crushed,

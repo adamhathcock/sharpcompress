@@ -8,6 +8,8 @@ using SharpCompress.Common.GZip;
 using SharpCompress.Common.Tar;
 using SharpCompress.Common.Tar.Headers;
 using SharpCompress.Common.Zip.Headers;
+using SharpCompress.Compressors.RLE90;
+using SharpCompress.Compressors.Squeezed;
 using SharpCompress.IO;
 
 namespace SharpCompress.Common.Arc
@@ -31,7 +33,31 @@ namespace SharpCompress.Common.Arc
         {
             if (_stream != null)
             {
-                return new ReadOnlySubStream(_stream, Header.CompressedSize);
+                Stream compressedStream;
+                switch (Header.CompressionMethod)
+                {
+                    case CompressionType.None:
+                        compressedStream = new ReadOnlySubStream(
+                            _stream,
+                            Header.DataStartPosition,
+                            Header.CompressedSize
+                        );
+                        break;
+                    case CompressionType.RLE90:
+                        compressedStream = new RunLength90Stream(
+                            _stream,
+                            (int)Header.CompressedSize
+                        );
+                        break;
+                    case CompressionType.Squeezed:
+                        compressedStream = new SqueezeStream(_stream, (int)Header.CompressedSize);
+                        break;
+                    default:
+                        throw new NotSupportedException(
+                            "CompressionMethod: " + Header.CompressionMethod
+                        );
+                }
+                return compressedStream;
             }
             return _stream.NotNull();
         }
