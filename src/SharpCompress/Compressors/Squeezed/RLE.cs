@@ -46,8 +46,7 @@ namespace SharpCompress.Compressors.Squeezed
                     }
                 }
             }
-
             return result;
-        }        
+        }
     }
 }
