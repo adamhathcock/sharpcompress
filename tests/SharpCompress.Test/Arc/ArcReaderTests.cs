@@ -27,7 +27,13 @@ namespace SharpCompress.Test.Arc
         {
             ProcessArchive("Arc.squeezed.arc");
         }
-       
+
+        [Fact]
+        public void Arc_Crunched_Read()
+        {
+            ProcessArchive("Arc.crunched.arc");
+        }
+
         private void ProcessArchive(string archiveName)
         {
             // Process a given archive by its name
