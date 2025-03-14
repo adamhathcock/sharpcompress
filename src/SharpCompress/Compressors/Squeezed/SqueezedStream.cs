@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using SharpCompress.Compressors.RLE90;
 using ZstdSharp.Unsafe;
 
 namespace SharpCompress.Compressors.Squeezed
