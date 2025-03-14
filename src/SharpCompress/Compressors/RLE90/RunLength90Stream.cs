@@ -47,46 +47,10 @@ namespace SharpCompress.Compressors.RLE90
             using var binaryReader = new BinaryReader(_stream);
             byte[] compressedBuffer = binaryReader.ReadBytes(_compressedSize);
 
-            int bufferIndex = offset;
-            bool inCountState = false;
-            byte last = 0;
+            var unpacked = RLE.UnpackRLE(compressedBuffer);
+            unpacked.CopyTo(buffer);
 
-            foreach (byte c in compressedBuffer)
-            {
-                if (inCountState)
-                {
-                    if (c == 0)
-                    {
-                        if (bufferIndex < buffer.Length)
-                            buffer[bufferIndex++] = DLE;
-                    }
-                    else
-                    {
-                        int repeatCount = Math.Min(c - 1, buffer.Length - bufferIndex);
-                        for (int i = 0; i < repeatCount; i++)
-                            buffer[bufferIndex++] = last;
-                    }
-                    inCountState = false;
-                }
-                else
-                {
-                    if (c == DLE)
-                    {
-                        inCountState = true;
-                    }
-                    else
-                    {
-                        if (bufferIndex < buffer.Length)
-                            buffer[bufferIndex++] = c;
-                        last = c;
-                    }
-                }
-
-                if (bufferIndex >= offset + count)
-                    break; // Stop when we fill the requested buffer size
-            }
-
-            return bufferIndex - offset;
+            return unpacked.Count;
         }
 
         public override long Seek(long offset, SeekOrigin origin) =>

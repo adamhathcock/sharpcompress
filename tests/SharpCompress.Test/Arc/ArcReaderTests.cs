@@ -23,12 +23,21 @@ namespace SharpCompress.Test.Arc
         public void Arc_Uncompressed_Read() => Read("Arc.uncompressed.arc", CompressionType.None);
 
         [Fact]
-        public void Arc_SqueezedAndPacked_Read()
+        public void Arc_Squeezed_Read()
         {
-            //archive contains two different compression methods, hence the need for a specific test function
-            using (
-                Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Arc.squeezed.arc"))
-            )
+            ProcessArchive("Arc.squeezed.arc");
+        }
+
+        [Fact]
+        public void Arc_Crunched_Read()
+        {
+            ProcessArchive("Arc.crunched.arc");
+        }
+
+        private void ProcessArchive(string archiveName)
+        {
+            // Process a given archive by its name
+            using (Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, archiveName)))
             using (IReader reader = ArcReader.Open(stream))
             {
                 while (reader.MoveToNextEntry())
@@ -42,6 +51,7 @@ namespace SharpCompress.Test.Arc
                     }
                 }
             }
+
             VerifyFilesByExtension();
         }
     }

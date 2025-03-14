@@ -8,6 +8,7 @@ using SharpCompress.Common.GZip;
 using SharpCompress.Common.Tar;
 using SharpCompress.Common.Tar.Headers;
 using SharpCompress.Common.Zip.Headers;
+using SharpCompress.Compressors.Lzw;
 using SharpCompress.Compressors.RLE90;
 using SharpCompress.Compressors.Squeezed;
 using SharpCompress.IO;
@@ -51,6 +52,13 @@ namespace SharpCompress.Common.Arc
                         break;
                     case CompressionType.Squeezed:
                         compressedStream = new SqueezeStream(_stream, (int)Header.CompressedSize);
+                        break;
+                    case CompressionType.Crunched:
+                        compressedStream = new ArcLzwStream(
+                            _stream,
+                            (int)Header.CompressedSize,
+                            true
+                        );
                         break;
                     default:
                         throw new NotSupportedException(
