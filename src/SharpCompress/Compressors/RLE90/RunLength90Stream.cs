@@ -19,6 +19,7 @@ namespace SharpCompress.Compressors.RLE90
             _stream = stream;
             _compressedSize = compressedSize;
         }
+
         public override bool CanRead => true;
 
         public override bool CanSeek => false;
