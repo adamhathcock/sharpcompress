@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace SharpCompress.Compressors.Squeezed
+namespace SharpCompress.Compressors.RLE90
 {
     public static class RLE
     {
@@ -16,7 +16,7 @@ namespace SharpCompress.Compressors.Squeezed
         public static List<byte> UnpackRLE(byte[] compressedBuffer)
         {
             var result = new List<byte>(compressedBuffer.Length * 2); // Optimized initial capacity
-            bool countMode = false;
+            var countMode = false;
             byte last = 0;
 
             foreach (var c in compressedBuffer)

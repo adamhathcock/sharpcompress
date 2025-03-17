@@ -24,4 +24,8 @@ public enum CompressionType
     Explode,
     Squeezed,
     RLE90,
+    Crunched,
+    Squashed,
+    Crushed,
+    Distilled,
 }
