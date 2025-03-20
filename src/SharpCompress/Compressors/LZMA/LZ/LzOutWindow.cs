@@ -85,28 +85,56 @@ internal class OutWindow
         _streamPos = _pos;
     }
 
-    public void CopyBlock(int distance, int len)
+    public void CopyPending()
     {
-        var size = len;
-        var pos = _pos - distance - 1;
-        if (pos < 0)
+        if (_pendingLen < 1)
         {
-            pos += _windowSize;
+            return;
         }
-        for (; size > 0 && _pos < _windowSize && _total < _limit; size--)
+        var rem = _pendingLen;
+        var pos = (_pendingDist < _pos ? _pos : _pos + _windowSize) - _pendingDist - 1;
+        while (rem > 0 && HasSpace)
         {
             if (pos >= _windowSize)
             {
                 pos = 0;
             }
-            _buffer[_pos++] = _buffer[pos++];
-            _total++;
+            PutByte(_buffer[pos++]);
+            rem--;
+        }
+        _pendingLen = rem;
+    }
+
+    public void CopyBlock(int distance, int len)
+    {
+        var rem = len;
+        var pos = (distance < _pos ? _pos : _pos + _windowSize) - distance - 1;
+        var targetSize = HasSpace ? (int)Math.Min(rem, _limit - _total) : 0;
+        var sizeUntilWindowEnd = Math.Min(_windowSize - _pos, _windowSize - pos);
+        var sizeUntilOverlap = Math.Abs(pos - _pos);
+        var fastSize = Math.Min(Math.Min(sizeUntilWindowEnd, sizeUntilOverlap), targetSize);
+        if (fastSize >= 2)
+        {
+            _buffer.AsSpan(pos, fastSize).CopyTo(_buffer.AsSpan(_pos, fastSize));
+            _pos += fastSize;
+            pos += fastSize;
+            _total += fastSize;
             if (_pos >= _windowSize)
             {
                 Flush();
             }
+            rem -= fastSize;
         }
-        _pendingLen = size;
+        while (rem > 0 && HasSpace)
+        {
+            if (pos >= _windowSize)
+            {
+                pos = 0;
+            }
+            PutByte(_buffer[pos++]);
+            rem--;
+        }
+        _pendingLen = rem;
         _pendingDist = distance;
     }
 
@@ -205,14 +233,6 @@ internal class OutWindow
         }
 
         return value;
-    }
-
-    public void CopyPending()
-    {
-        if (_pendingLen > 0)
-        {
-            CopyBlock(_pendingDist, _pendingLen);
-        }
     }
 
     public int AvailableBytes => _pos - _streamPos;
