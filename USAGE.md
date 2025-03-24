@@ -71,18 +71,34 @@ using (var archive = ZipArchive.Create())
 memoryStream.Position = 0;
 ```
 
-### Extract all files from a Rar file to a directory using RarArchive
+### Extract all files from a rar file to a directory using RarArchive
+
+Note: Extracting a solid rar or 7z file needs to be done in sequential order to get acceptable decompression speed.
+It is explicitly recommended to use `ExtractAllEntries` when extracting an entire `IArchive` instead of iterating over all its `Entries`.
+Alternatively, use `IArchive.WriteToDirectory`.
+
+```C#
+using (var archive = RarArchive.Open("Test.rar"))
+{
+    using (var reader = archive.ExtractAllEntries())
+    {
+        reader.WriteAllToDirectory(@"D:\temp", new ExtractionOptions()
+        {
+            ExtractFullPath = true,
+            Overwrite = true
+        });
+    }
+}
+```
+
+### Iterate over all files from a Rar file using RarArchive
 
 ```C#
 using (var archive = RarArchive.Open("Test.rar"))
 {
     foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
     {
-        entry.WriteToDirectory("D:\\temp", new ExtractionOptions()
-        {
-            ExtractFullPath = true,
-            Overwrite = true
-        });
+        Console.WriteLine($"{entry.Key}: {entry.Size} bytes");
     }
 }
 ```
