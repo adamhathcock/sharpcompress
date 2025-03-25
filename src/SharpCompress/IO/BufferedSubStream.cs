@@ -20,7 +20,7 @@ internal class BufferedSubStream(Stream stream, long origin, long bytesToRead)
 
     public override void Flush() { }
 
-    public override long Length => BytesLeftToRead;
+    public override long Length => BytesLeftToRead + _cacheLength - _cacheOffset;
 
     public override long Position
     {
@@ -28,21 +28,33 @@ internal class BufferedSubStream(Stream stream, long origin, long bytesToRead)
         set => throw new NotSupportedException();
     }
 
+    private void RefillCache()
+    {
+        var count = (int)Math.Min(BytesLeftToRead, _cache.Length);
+        _cacheOffset = 0;
+        if (count == 0)
+        {
+            _cacheLength = 0;
+            return;
+        }
+        Stream.Position = origin;
+        _cacheLength = Stream.Read(_cache, 0, count);
+        origin += _cacheLength;
+        BytesLeftToRead -= _cacheLength;
+    }
+
     public override int Read(byte[] buffer, int offset, int count)
     {
-        if (count > BytesLeftToRead)
+        if (count > Length)
         {
-            count = (int)BytesLeftToRead;
+            count = (int)Length;
         }
 
         if (count > 0)
         {
-            if (_cacheLength == 0)
+            if (_cacheOffset == _cacheLength)
             {
-                _cacheOffset = 0;
-                Stream.Position = origin;
-                _cacheLength = Stream.Read(_cache, 0, _cache.Length);
-                origin += _cacheLength;
+                RefillCache();
             }
 
             if (count > _cacheLength)
@@ -52,8 +64,6 @@ internal class BufferedSubStream(Stream stream, long origin, long bytesToRead)
 
             Buffer.BlockCopy(_cache, _cacheOffset, buffer, offset, count);
             _cacheOffset += count;
-            _cacheLength -= count;
-            BytesLeftToRead -= count;
         }
 
         return count;
@@ -61,26 +71,16 @@ internal class BufferedSubStream(Stream stream, long origin, long bytesToRead)
 
     public override int ReadByte()
     {
-        if (BytesLeftToRead == 0)
+        if (_cacheOffset == _cacheLength)
         {
-            return -1;
+            RefillCache();
+            if (_cacheLength == 0)
+            {
+                return -1;
+            }
         }
 
-        if (_cacheLength == 0)
-        {
-            _cacheOffset = 0;
-            Stream.Position = origin;
-            _cacheLength = Stream.Read(_cache, 0, _cache.Length);
-            origin += _cacheLength;
-        }
-
-        int value = _cache[_cacheOffset];
-
-        _cacheOffset++;
-        _cacheLength--;
-        BytesLeftToRead--;
-
-        return value;
+        return _cache[_cacheOffset++];
     }
 
     public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
