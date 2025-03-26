@@ -57,11 +57,7 @@ internal class BufferedSubStream(Stream stream, long origin, long bytesToRead)
                 RefillCache();
             }
 
-            if (count > _cacheLength)
-            {
-                count = _cacheLength;
-            }
-
+            count = Math.Min(count, _cacheLength - _cacheOffset);
             Buffer.BlockCopy(_cache, _cacheOffset, buffer, offset, count);
             _cacheOffset += count;
         }
