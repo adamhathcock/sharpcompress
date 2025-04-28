@@ -140,7 +140,6 @@ internal sealed partial class Unpack : BitInput
             // sharpcompress: don't need this, freshly allocated above
             //memset(NewWindow,0,WinSize);
 
-
             // If Window is not NULL, it means that window size has grown.
             // In solid streams we need to copy data to a new window in such case.
             // RAR archiving code does not allow it in solid streams now,

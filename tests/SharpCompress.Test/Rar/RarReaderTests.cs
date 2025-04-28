@@ -410,12 +410,11 @@ public class RarReaderTests : ReaderTests
 
     [Fact]
     public void Rar5_Encrypted_Iterate_Archive() =>
-        Assert.Throws<CryptographicException>(
-            () =>
-                Iterate(
-                    "Rar5.encrypted_filesOnly.rar",
-                    "Failure jpg exe Empty тест.txt jpg\\test.jpg exe\\test.exe",
-                    CompressionType.Rar
-                )
+        Assert.Throws<CryptographicException>(() =>
+            Iterate(
+                "Rar5.encrypted_filesOnly.rar",
+                "Failure jpg exe Empty тест.txt jpg\\test.jpg exe\\test.exe",
+                CompressionType.Rar
+            )
         );
 }

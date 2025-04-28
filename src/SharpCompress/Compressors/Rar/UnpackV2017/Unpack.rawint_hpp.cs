@@ -7,7 +7,6 @@ using nuint = System.UInt64;
 using size_t = System.UInt64;
 #endif*/
 
-
 namespace SharpCompress.Compressors.Rar.UnpackV2017;
 
 internal partial class Unpack
@@ -69,7 +68,6 @@ internal partial class Unpack
     //#endif
     //}
 
-
     //#if defined(LITTLE_ENDIAN) && defined(ALLOW_MISALIGNED)
     //#define USE_MEM_BYTESWAP
     //#endif
@@ -86,7 +84,6 @@ internal partial class Unpack
     //#endif
     //}
 
-
     // Save integer to memory as big endian.
     //inline void RawPutBE4(uint32 i,byte *mem)
     //{
@@ -101,7 +98,6 @@ internal partial class Unpack
     //  mem[3]=byte(i);
     //#endif
     //}
-
 
     //inline uint32 ByteSwap32(uint32 i)
     //{
