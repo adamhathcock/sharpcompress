@@ -5,6 +5,7 @@
  */
 
 using System.IO;
+using SharpCompress.Common;
 using SharpCompress.Compressors.Filters;
 
 namespace SharpCompress.Compressors.Xz.Filters;
@@ -25,19 +26,19 @@ public class SparcFilter : BlockFilter
     {
         if (properties.Length != 0 && properties.Length != 4)
         {
-            throw new InvalidDataException("SPARC properties unexpected length");
+            throw new InvalidFormatException("SPARC properties unexpected length");
         }
 
         if (properties.Length == 4)
         {
             // Even XZ doesn't support it.
-            throw new InvalidDataException("SPARC properties offset is not supported");
+            throw new InvalidFormatException("SPARC properties offset is not supported");
 
             //_offset = BitConverter.ToUInt32(properties, 0);
             //
             //if (_offset % (UInt32)BranchExec.Alignment.ARCH_SPARC_ALIGNMENT != 0)
             //{
-            //    throw new InvalidDataException("Filter offset does not match alignment");
+            //    throw new InvalidFormatException("Filter offset does not match alignment");
             //}
         }
     }

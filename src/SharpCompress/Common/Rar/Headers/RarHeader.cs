@@ -1,5 +1,4 @@
 using System;
-using System.IO;
 using SharpCompress.IO;
 
 namespace SharpCompress.Common.Rar.Headers;
@@ -21,7 +20,7 @@ internal class RarHeader : IRarHeader
         {
             return new RarHeader(reader, isRar5, archiveEncoding);
         }
-        catch (EndOfStreamException)
+        catch (InvalidFormatException)
         {
             return null;
         }

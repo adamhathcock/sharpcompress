@@ -1,9 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
 namespace SharpCompress.Compressors.Shrink
 {
     internal class BitStream
@@ -32,7 +26,7 @@ namespace SharpCompress.Compressors.Shrink
             8191U,
             16383U,
             (uint)short.MaxValue,
-            (uint)ushort.MaxValue
+            (uint)ushort.MaxValue,
         };
 
         public BitStream(byte[] src, int srcLen)

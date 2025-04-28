@@ -4,6 +4,7 @@ using System.Linq;
 using SharpCompress.Archives;
 using SharpCompress.Archives.SevenZip;
 using SharpCompress.Common;
+using SharpCompress.Factories;
 using SharpCompress.Readers;
 using Xunit;
 
@@ -53,6 +54,14 @@ public class SevenZipArchiveTests : ArchiveTests
 
     [Fact]
     public void SevenZipArchive_LZMA2_PathRead() => ArchiveFileRead("7Zip.LZMA2.7z");
+
+    [Fact]
+    public void SevenZipArchive_LZMA2_EXE_StreamRead() =>
+        ArchiveStreamRead(new SevenZipFactory(), "7Zip.LZMA2.exe", new() { LookForHeader = true });
+
+    [Fact]
+    public void SevenZipArchive_LZMA2_EXE_PathRead() =>
+        ArchiveFileRead(new SevenZipFactory(), "7Zip.LZMA2.exe", new() { LookForHeader = true });
 
     [Fact]
     public void SevenZipArchive_LZMA2AES_StreamRead() =>

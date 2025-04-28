@@ -22,7 +22,7 @@ public class WriterTests : TestBase
     {
         using (Stream stream = File.OpenWrite(Path.Combine(SCRATCH2_FILES_PATH, archive)))
         {
-            var writerOptions = new WriterOptions(compressionType) { LeaveStreamOpen = true, };
+            var writerOptions = new WriterOptions(compressionType) { LeaveStreamOpen = true };
 
             writerOptions.ArchiveEncoding.Default = encoding ?? Encoding.Default;
 

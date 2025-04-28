@@ -17,14 +17,6 @@ public class ZipArchiveTests : ArchiveTests
     public ZipArchiveTests() => UseExtensionInsteadOfNameToVerify = true;
 
     [Fact]
-    public void Zip_Shrink_ArchiveStreamRead()
-    {
-        UseExtensionInsteadOfNameToVerify = true;
-        UseCaseInsensitiveToVerify = true;
-        ArchiveStreamRead("Zip.shrink.zip");
-    }
-
-    [Fact]
     public void Zip_ZipX_ArchiveStreamRead() => ArchiveStreamRead("Zip.zipx");
 
     [Fact]
@@ -129,7 +121,7 @@ public class ZipArchiveTests : ArchiveTests
                 "Zip.deflate.split.003",
                 "Zip.deflate.split.004",
                 "Zip.deflate.split.005",
-                "Zip.deflate.split.006"
+                "Zip.deflate.split.006",
             }
         );
 
@@ -182,6 +174,54 @@ public class ZipArchiveTests : ArchiveTests
 
     [Fact]
     public void Zip_Zip64_ArchiveFileRead() => ArchiveFileRead("Zip.zip64.zip");
+
+    [Fact]
+    public void Zip_Shrink_ArchiveStreamRead()
+    {
+        UseExtensionInsteadOfNameToVerify = true;
+        UseCaseInsensitiveToVerify = true;
+        ArchiveStreamRead("Zip.shrink.zip");
+    }
+
+    [Fact]
+    public void Zip_Implode_ArchiveStreamRead()
+    {
+        UseExtensionInsteadOfNameToVerify = true;
+        UseCaseInsensitiveToVerify = true;
+        ArchiveStreamRead("Zip.implode.zip");
+    }
+
+    [Fact]
+    public void Zip_Reduce1_ArchiveStreamRead()
+    {
+        UseExtensionInsteadOfNameToVerify = true;
+        UseCaseInsensitiveToVerify = true;
+        ArchiveStreamRead("Zip.reduce1.zip");
+    }
+
+    [Fact]
+    public void Zip_Reduce2_ArchiveStreamRead()
+    {
+        UseExtensionInsteadOfNameToVerify = true;
+        UseCaseInsensitiveToVerify = true;
+        ArchiveStreamRead("Zip.reduce2.zip");
+    }
+
+    [Fact]
+    public void Zip_Reduce3_ArchiveStreamRead()
+    {
+        UseExtensionInsteadOfNameToVerify = true;
+        UseCaseInsensitiveToVerify = true;
+        ArchiveStreamRead("Zip.reduce3.zip");
+    }
+
+    [Fact]
+    public void Zip_Reduce4_ArchiveStreamRead()
+    {
+        UseExtensionInsteadOfNameToVerify = true;
+        UseCaseInsensitiveToVerify = true;
+        ArchiveStreamRead("Zip.reduce4.zip");
+    }
 
     [Fact]
     public void Zip_Random_Write_Remove()
@@ -528,7 +568,7 @@ public class ZipArchiveTests : ArchiveTests
     {
         var zipFile = Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.pkware.zip");
 
-        using var fileStream = File.Open(zipFile, FileMode.Open);
+        using var fileStream = File.OpenRead(zipFile);
         using var archive = ArchiveFactory.Open(
             fileStream,
             new ReaderOptions { Password = "12345678" }
@@ -689,7 +729,7 @@ public class ZipArchiveTests : ArchiveTests
     public void Zip_Uncompressed_Read_All()
     {
         var zipPath = Path.Combine(TEST_ARCHIVES_PATH, "Zip.uncompressed.zip");
-        using var stream = File.Open(zipPath, FileMode.Open, FileAccess.Read);
+        using var stream = File.OpenRead(zipPath);
         var archive = ArchiveFactory.Open(stream);
         var reader = archive.ExtractAllEntries();
         var entries = 0;
@@ -715,10 +755,10 @@ public class ZipArchiveTests : ArchiveTests
             "Folder/File2.rtf",
             "Folder2/File1.txt",
             "Folder2/File2.txt",
-            "DEADBEEF"
+            "DEADBEEF",
         };
         var zipPath = Path.Combine(TEST_ARCHIVES_PATH, "Zip.uncompressed.zip");
-        using var stream = File.Open(zipPath, FileMode.Open, FileAccess.Read);
+        using var stream = File.OpenRead(zipPath);
         var archive = ArchiveFactory.Open(stream);
         var reader = archive.ExtractAllEntries();
         var x = 0;
@@ -735,7 +775,7 @@ public class ZipArchiveTests : ArchiveTests
     public void Zip_Forced_Ignores_UnicodePathExtra()
     {
         var zipPath = Path.Combine(TEST_ARCHIVES_PATH, "Zip.UnicodePathExtra.zip");
-        using (var stream = File.Open(zipPath, FileMode.Open, FileAccess.Read))
+        using (var stream = File.OpenRead(zipPath))
         {
             var archive = ArchiveFactory.Open(
                 stream,
@@ -744,14 +784,14 @@ public class ZipArchiveTests : ArchiveTests
                     ArchiveEncoding = new ArchiveEncoding
                     {
                         Default = Encoding.GetEncoding("shift_jis"),
-                    }
+                    },
                 }
             );
             var reader = archive.ExtractAllEntries();
             reader.MoveToNextEntry();
             Assert.Equal("궖귛궖귙귪궖귗귪궖귙_wav.frq", reader.Entry.Key);
         }
-        using (var stream = File.Open(zipPath, FileMode.Open, FileAccess.Read))
+        using (var stream = File.OpenRead(zipPath))
         {
             var archive = ArchiveFactory.Open(
                 stream,
@@ -760,12 +800,24 @@ public class ZipArchiveTests : ArchiveTests
                     ArchiveEncoding = new ArchiveEncoding
                     {
                         Forced = Encoding.GetEncoding("shift_jis"),
-                    }
+                    },
                 }
             );
             var reader = archive.ExtractAllEntries();
             reader.MoveToNextEntry();
             Assert.Equal("きょきゅんきゃんきゅ_wav.frq", reader.Entry.Key);
         }
+    }
+
+    [Fact]
+    public void TestDataDescriptorRead()
+    {
+        using var archive = ArchiveFactory.Open(
+            Path.Combine(TEST_ARCHIVES_PATH, "Zip.none.datadescriptors.zip")
+        );
+        var firstEntry = archive.Entries.First();
+        Assert.Equal(199, firstEntry.Size);
+        using var _ = firstEntry.OpenEntryStream();
+        Assert.Equal(199, firstEntry.Size);
     }
 }

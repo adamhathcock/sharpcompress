@@ -1,5 +1,6 @@
 using System.IO;
 using System.Text;
+using SharpCompress.Common;
 using SharpCompress.Compressors.Xz;
 using Xunit;
 
@@ -43,7 +44,7 @@ public class XzBlockTests : XzTestsBase
         using Stream badCrcStream = new MemoryStream(bytes);
         Rewind(badCrcStream);
         var xzBlock = new XZBlock(badCrcStream, CheckType.CRC64, 8);
-        var ex = Assert.Throws<InvalidDataException>(() =>
+        var ex = Assert.Throws<InvalidFormatException>(() =>
         {
             ReadBytes(xzBlock, 1);
         });
@@ -92,5 +93,20 @@ public class XzBlockTests : XzTestsBase
         var sr = new StreamReader(xzBlock);
         sr.ReadToEnd();
         Assert.Equal(0L, CompressedIndexedStream.Position % 4L);
+    }
+
+    [Fact]
+    public void HandlesPaddingInUnalignedBlock()
+    {
+        var compressedUnaligned = new byte[Compressed.Length + 1];
+        Compressed.CopyTo(compressedUnaligned, 1);
+        var compressedUnalignedStream = new MemoryStream(compressedUnaligned);
+        compressedUnalignedStream.Position = 13;
+
+        // Compressed's only block has no padding.
+        var xzBlock = new XZBlock(compressedUnalignedStream, CheckType.CRC64, 8);
+        var sr = new StreamReader(xzBlock);
+        sr.ReadToEnd();
+        Assert.Equal(1L, compressedUnalignedStream.Position % 4L);
     }
 }

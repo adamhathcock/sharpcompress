@@ -38,7 +38,7 @@ public class LzmaEncoderProperties
             CoderPropId.Algorithm,
             CoderPropId.NumFastBytes,
             CoderPropId.MatchFinder,
-            CoderPropId.EndMarker
+            CoderPropId.EndMarker,
         };
         _properties = new object[]
         {
@@ -49,7 +49,7 @@ public class LzmaEncoderProperties
             algorithm,
             numFastBytes,
             mf,
-            eos
+            eos,
         };
     }
 }

@@ -107,24 +107,13 @@ internal struct BitDecoder
         {
             rangeDecoder._range = newBound;
             _prob += (K_BIT_MODEL_TOTAL - _prob) >> K_NUM_MOVE_BITS;
-            if (rangeDecoder._range < Decoder.K_TOP_VALUE)
-            {
-                rangeDecoder._code =
-                    (rangeDecoder._code << 8) | (byte)rangeDecoder._stream.ReadByte();
-                rangeDecoder._range <<= 8;
-                rangeDecoder._total++;
-            }
+            rangeDecoder.Normalize2();
             return 0;
         }
         rangeDecoder._range -= newBound;
         rangeDecoder._code -= newBound;
         _prob -= (_prob) >> K_NUM_MOVE_BITS;
-        if (rangeDecoder._range < Decoder.K_TOP_VALUE)
-        {
-            rangeDecoder._code = (rangeDecoder._code << 8) | (byte)rangeDecoder._stream.ReadByte();
-            rangeDecoder._range <<= 8;
-            rangeDecoder._total++;
-        }
+        rangeDecoder.Normalize2();
         return 1;
     }
 }

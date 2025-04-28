@@ -39,7 +39,7 @@ internal class BCJFilterIA64 : Filter
         4,
         4,
         0,
-        0
+        0,
     };
 
     public BCJFilterIA64(bool isEncoder, Stream baseStream)

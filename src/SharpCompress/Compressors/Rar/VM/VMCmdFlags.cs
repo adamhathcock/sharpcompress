@@ -53,6 +53,6 @@ internal class VMCmdFlags
         VMCF_OP2 | VMCF_BYTEMODE,
         VMCF_OP2 | VMCF_BYTEMODE | VMCF_USEFLAGS | VMCF_CHFLAGS,
         VMCF_OP2 | VMCF_BYTEMODE | VMCF_USEFLAGS | VMCF_CHFLAGS,
-        VMCF_OP0
+        VMCF_OP0,
     };
 }

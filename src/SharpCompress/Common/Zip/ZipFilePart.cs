@@ -7,8 +7,10 @@ using SharpCompress.Compressors;
 using SharpCompress.Compressors.BZip2;
 using SharpCompress.Compressors.Deflate;
 using SharpCompress.Compressors.Deflate64;
+using SharpCompress.Compressors.Explode;
 using SharpCompress.Compressors.LZMA;
 using SharpCompress.Compressors.PPMd;
+using SharpCompress.Compressors.Reduce;
 using SharpCompress.Compressors.Shrink;
 using SharpCompress.Compressors.Xz;
 using SharpCompress.IO;
@@ -89,6 +91,32 @@ internal abstract class ZipFilePart : FilePart
                     Header.UncompressedSize
                 );
             }
+            case ZipCompressionMethod.Reduce1:
+            {
+                return new ReduceStream(stream, Header.CompressedSize, Header.UncompressedSize, 1);
+            }
+            case ZipCompressionMethod.Reduce2:
+            {
+                return new ReduceStream(stream, Header.CompressedSize, Header.UncompressedSize, 2);
+            }
+            case ZipCompressionMethod.Reduce3:
+            {
+                return new ReduceStream(stream, Header.CompressedSize, Header.UncompressedSize, 3);
+            }
+            case ZipCompressionMethod.Reduce4:
+            {
+                return new ReduceStream(stream, Header.CompressedSize, Header.UncompressedSize, 4);
+            }
+            case ZipCompressionMethod.Explode:
+            {
+                return new ExplodeStream(
+                    stream,
+                    Header.CompressedSize,
+                    Header.UncompressedSize,
+                    Header.Flags
+                );
+            }
+
             case ZipCompressionMethod.Deflate:
             {
                 return new DeflateStream(stream, CompressionMode.Decompress);
@@ -203,6 +231,10 @@ internal abstract class ZipFilePart : FilePart
             {
                 case ZipCompressionMethod.None:
                 case ZipCompressionMethod.Shrink:
+                case ZipCompressionMethod.Reduce1:
+                case ZipCompressionMethod.Reduce2:
+                case ZipCompressionMethod.Reduce3:
+                case ZipCompressionMethod.Reduce4:
                 case ZipCompressionMethod.Deflate:
                 case ZipCompressionMethod.Deflate64:
                 case ZipCompressionMethod.BZip2:

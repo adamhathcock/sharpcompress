@@ -9,7 +9,7 @@ public class ZipArchiveEntry : ZipEntry, IArchiveEntry
     internal ZipArchiveEntry(ZipArchive archive, SeekableZipFilePart? part)
         : base(part) => Archive = archive;
 
-    public virtual Stream OpenEntryStream() => Parts.Single().GetCompressedStream();
+    public virtual Stream OpenEntryStream() => Parts.Single().GetCompressedStream().NotNull();
 
     #region IArchiveEntry Members
 

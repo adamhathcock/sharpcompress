@@ -151,7 +151,7 @@ public abstract class AbstractWritableArchive<TEntry, TVolume>
     {
         if (!source.CanRead || !source.CanSeek)
         {
-            throw new ArgumentException(
+            throw new ArchiveException(
                 "Streams must be readable and seekable to use the Writing Archive API"
             );
         }

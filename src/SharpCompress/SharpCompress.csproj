@@ -2,11 +2,11 @@
 	<PropertyGroup>
 		<AssemblyTitle>SharpCompress - Pure C# Decompression/Compression</AssemblyTitle>
 		<NeutralLanguage>en-US</NeutralLanguage>
-		<VersionPrefix>0.37.2</VersionPrefix>
-		<AssemblyVersion>0.37.2</AssemblyVersion>
-		<FileVersion>0.37.2</FileVersion>
+		<VersionPrefix>0.39.0</VersionPrefix>
+		<AssemblyVersion>0.39.0</AssemblyVersion>
+		<FileVersion>0.39.0</FileVersion>
 		<Authors>Adam Hathcock</Authors>
-		<TargetFrameworks>net462;netstandard2.0;netstandard2.1;net6.0;net8.0</TargetFrameworks>
+		<TargetFrameworks>net48;net481;netstandard2.0;net6.0;net8.0</TargetFrameworks>
 		<AssemblyName>SharpCompress</AssemblyName>
 		<AssemblyOriginatorKeyFile>../../SharpCompress.snk</AssemblyOriginatorKeyFile>
 		<SignAssembly>true</SignAssembly>
@@ -14,41 +14,32 @@
 		<PackageTags>rar;unrar;zip;unzip;bzip2;gzip;tar;7zip;lzip;xz</PackageTags>
 		<PackageProjectUrl>https://github.com/adamhathcock/sharpcompress</PackageProjectUrl>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
-		<Copyright>Copyright (c) 2014  Adam Hathcock</Copyright>
+		<Copyright>Copyright (c) 2025  Adam Hathcock</Copyright>
 		<GenerateAssemblyTitleAttribute>false</GenerateAssemblyTitleAttribute>
 		<GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>
-		<Description>SharpCompress is a compression library for NET Standard 2.0/NET Standard 2.1/NET 6.0/NET 8.0 that can unrar, decompress 7zip, decompress xz, zip/unzip, tar/untar lzip/unlzip, bzip2/unbzip2 and gzip/ungzip with forward-only reading and file random access APIs. Write support for zip/tar/bzip2/gzip is implemented.</Description>
+		<Description>SharpCompress is a compression library for NET Standard 2.0/NET 4.8/NET 4.8.1/NET 6.0/NET 8.0 that can unrar, decompress 7zip, decompress xz, zip/unzip, tar/untar lzip/unlzip, bzip2/unbzip2 and gzip/ungzip with forward-only reading and file random access APIs. Write support for zip/tar/bzip2/gzip is implemented.</Description>
 		<PublishRepositoryUrl>true</PublishRepositoryUrl>
 		<IncludeSymbols>true</IncludeSymbols>
 		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
 		<LangVersion>latest</LangVersion>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <PackageReadmeFile>README.md</PackageReadmeFile>
+    <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+    <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
 	</PropertyGroup>
-
   <PropertyGroup Condition=" '$(TargetFramework)' == 'net8.0' ">
     <IsTrimmable>true</IsTrimmable>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Microsoft.SourceLink.GitHub">
-      <PrivateAssets>all</PrivateAssets>
-    </PackageReference>
+		<PackageReference Include="System.Buffers" />
 		<PackageReference Include="ZstdSharp.Port" />
   </ItemGroup>
-	<ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.1' ">
-    <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" />
-		<PackageReference Include="System.Text.Encoding.CodePages"  />
-	</ItemGroup>
   <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' ">
     <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" />
     <PackageReference Include="System.Text.Encoding.CodePages" />
     <PackageReference Include="System.Memory" />
   </ItemGroup>
-	<ItemGroup Condition=" '$(VersionlessImplicitFrameworkDefine)' == 'NETFRAMEWORK' ">
-    <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" />
-		<PackageReference Include="System.Text.Encoding.CodePages"  />
-		<PackageReference Include="System.Memory"  />
-	</ItemGroup>
   <ItemGroup>
     <None Include="..\..\README.md" Pack="true" PackagePath="\" />
   </ItemGroup>

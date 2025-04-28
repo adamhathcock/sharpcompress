@@ -1,6 +1,7 @@
 #nullable disable
 
 using System;
+using System.Buffers;
 using System.IO;
 using SharpCompress.Common.Rar.Headers;
 
@@ -14,7 +15,7 @@ internal class RarStream : Stream
 
     private bool fetch;
 
-    private byte[] tmpBuffer = BufferPool.Rent(65536);
+    private byte[] tmpBuffer = ArrayPool<byte>.Shared.Rent(65536);
     private int tmpOffset;
     private int tmpCount;
 
@@ -42,7 +43,7 @@ internal class RarStream : Stream
         {
             if (disposing)
             {
-                BufferPool.Return(this.tmpBuffer);
+                ArrayPool<byte>.Shared.Return(this.tmpBuffer);
                 this.tmpBuffer = null;
             }
             isDisposed = true;
@@ -143,11 +144,11 @@ internal class RarStream : Stream
                 this.tmpBuffer.Length * 2 > this.tmpCount + count
                     ? this.tmpBuffer.Length * 2
                     : this.tmpCount + count;
-            var newBuffer = BufferPool.Rent(newLength);
+            var newBuffer = ArrayPool<byte>.Shared.Rent(newLength);
             Buffer.BlockCopy(this.tmpBuffer, 0, newBuffer, 0, this.tmpCount);
             var oldBuffer = this.tmpBuffer;
             this.tmpBuffer = newBuffer;
-            BufferPool.Return(oldBuffer);
+            ArrayPool<byte>.Shared.Return(oldBuffer);
         }
     }
 }

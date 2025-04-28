@@ -30,7 +30,7 @@
 
 using System;
 using System.Diagnostics;
-using System.IO;
+using SharpCompress.Compressors.Deflate;
 
 namespace SharpCompress.Compressors.Deflate64;
 
@@ -70,7 +70,7 @@ internal sealed class InflaterManaged
             5,
             5,
             5,
-            16
+            16,
         };
 
     // The base length for length code 257 - 285.
@@ -105,7 +105,7 @@ internal sealed class InflaterManaged
         163,
         195,
         227,
-        3
+        3,
     };
 
     // The base distance for distance code 0 - 31
@@ -143,7 +143,7 @@ internal sealed class InflaterManaged
         16385,
         24577,
         32769,
-        49153
+        49153,
     };
 
     // code lengths for code length alphabet is stored in following order
@@ -184,7 +184,7 @@ internal sealed class InflaterManaged
             0x07,
             0x17,
             0x0f,
-            0x1f
+            0x1f,
         };
 
     private readonly OutputWindow _output;
@@ -385,7 +385,7 @@ internal sealed class InflaterManaged
             }
             else
             {
-                throw new InvalidDataException("Deflate64: unknown block type");
+                throw new ZlibException("Deflate64: unknown block type");
             }
         }
 
@@ -411,7 +411,7 @@ internal sealed class InflaterManaged
         }
         else
         {
-            throw new InvalidDataException("Deflate64: unknown block type");
+            throw new ZlibException("Deflate64: unknown block type");
         }
 
         //
@@ -473,7 +473,7 @@ internal sealed class InflaterManaged
                         // make sure complement matches
                         if ((ushort)_blockLength != (ushort)(~blockLengthComplement))
                         {
-                            throw new InvalidDataException("Deflate64: invalid block length");
+                            throw new ZlibException("Deflate64: invalid block length");
                         }
                     }
 
@@ -507,7 +507,7 @@ internal sealed class InflaterManaged
                 default:
                     Debug. /*Fail*/
                     Assert(false, "check why we are here!");
-                    throw new InvalidDataException("Deflate64: unknown state");
+                    throw new ZlibException("Deflate64: unknown state");
             }
         }
     }
@@ -569,7 +569,7 @@ internal sealed class InflaterManaged
                         {
                             if (symbol < 0 || symbol >= S_EXTRA_LENGTH_BITS.Length)
                             {
-                                throw new InvalidDataException("Deflate64: invalid data");
+                                throw new ZlibException("Deflate64: invalid data");
                             }
                             _extraBits = S_EXTRA_LENGTH_BITS[symbol];
                             Debug.Assert(_extraBits != 0, "We handle other cases separately!");
@@ -591,7 +591,7 @@ internal sealed class InflaterManaged
 
                         if (_length < 0 || _length >= S_LENGTH_BASE.Length)
                         {
-                            throw new InvalidDataException("Deflate64: invalid data");
+                            throw new ZlibException("Deflate64: invalid data");
                         }
                         _length = S_LENGTH_BASE[_length] + bits;
                     }
@@ -649,7 +649,7 @@ internal sealed class InflaterManaged
                 default:
                     Debug. /*Fail*/
                     Assert(false, "check why we are here!");
-                    throw new InvalidDataException("Deflate64: unknown state");
+                    throw new ZlibException("Deflate64: unknown state");
             }
         }
 
@@ -781,7 +781,7 @@ internal sealed class InflaterManaged
                             if (_loopCounter == 0)
                             {
                                 // can't have "prev code" on first code
-                                throw new InvalidDataException();
+                                throw new ZlibException();
                             }
 
                             var previousCode = _codeList[_loopCounter - 1];
@@ -789,7 +789,7 @@ internal sealed class InflaterManaged
 
                             if (_loopCounter + repeatCount > _codeArraySize)
                             {
-                                throw new InvalidDataException();
+                                throw new ZlibException();
                             }
 
                             for (var j = 0; j < repeatCount; j++)
@@ -809,7 +809,7 @@ internal sealed class InflaterManaged
 
                             if (_loopCounter + repeatCount > _codeArraySize)
                             {
-                                throw new InvalidDataException();
+                                throw new ZlibException();
                             }
 
                             for (var j = 0; j < repeatCount; j++)
@@ -830,7 +830,7 @@ internal sealed class InflaterManaged
 
                             if (_loopCounter + repeatCount > _codeArraySize)
                             {
-                                throw new InvalidDataException();
+                                throw new ZlibException();
                             }
 
                             for (var j = 0; j < repeatCount; j++)
@@ -846,7 +846,7 @@ internal sealed class InflaterManaged
             default:
                 Debug. /*Fail*/
                 Assert(false, "check why we are here!");
-                throw new InvalidDataException("Deflate64: unknown state");
+                throw new ZlibException("Deflate64: unknown state");
         }
 
         var literalTreeCodeLength = new byte[HuffmanTree.MAX_LITERAL_TREE_ELEMENTS];
@@ -865,7 +865,7 @@ internal sealed class InflaterManaged
         // Make sure there is an end-of-block code, otherwise how could we ever end?
         if (literalTreeCodeLength[HuffmanTree.END_OF_BLOCK_CODE] == 0)
         {
-            throw new InvalidDataException();
+            throw new ZlibException();
         }
 
         _literalLengthTree = new HuffmanTree(literalTreeCodeLength);

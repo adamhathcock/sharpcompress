@@ -14,7 +14,13 @@ namespace SharpCompress.Compressors.Rar.UnpackV1;
 
 internal partial class Unpack
 {
-    private readonly MultDecode[] MD = new MultDecode[4];
+    private readonly MultDecode[] MD = new[]
+    {
+        new MultDecode(),
+        new MultDecode(),
+        new MultDecode(),
+        new MultDecode(),
+    };
 
     private readonly byte[] UnpOldTable20 = new byte[PackDef.MC20 * 4];
 
@@ -64,7 +70,7 @@ internal partial class Unpack
         128,
         160,
         192,
-        224
+        224,
     };
 
     private static ReadOnlySpan<byte> LBits =>
@@ -97,7 +103,7 @@ internal partial class Unpack
             5,
             5,
             5,
-            5
+            5,
         };
 
     private static readonly int[] DDecode =
@@ -149,7 +155,7 @@ internal partial class Unpack
         786432,
         851968,
         917504,
-        983040
+        983040,
     };
 
     private static readonly int[] DBits =
@@ -201,7 +207,7 @@ internal partial class Unpack
         16,
         16,
         16,
-        16
+        16,
     };
 
     private static readonly int[] SDDecode = { 0, 4, 8, 16, 32, 64, 128, 192 };
@@ -369,7 +375,7 @@ internal partial class Unpack
         destUnpSize -= Length;
 
         var DestPtr = unpPtr - Distance;
-        if (DestPtr < PackDef.MAXWINSIZE - 300 && unpPtr < PackDef.MAXWINSIZE - 300)
+        if (DestPtr >= 0 && DestPtr < PackDef.MAXWINSIZE - 300 && unpPtr < PackDef.MAXWINSIZE - 300)
         {
             window[unpPtr++] = window[DestPtr++];
             window[unpPtr++] = window[DestPtr++];
@@ -391,8 +397,8 @@ internal partial class Unpack
 
     private bool ReadTables20()
     {
-        var BitLength = new byte[PackDef.BC20];
-        var Table = new byte[PackDef.MC20 * 4];
+        Span<byte> BitLength = stackalloc byte[PackDef.BC20];
+        Span<byte> Table = stackalloc byte[PackDef.MC20 * 4];
         int TableSize,
             N,
             I;
@@ -475,6 +481,31 @@ internal partial class Unpack
                 {
                     Table[I++] = 0;
                 }
+                // Nanook. Working port from Rar C code. Added when working on Audio Decode Fix. Seems equal to above, so commented it
+                //byte v;
+                //if (Number == 16)
+                //{
+                //    N = (Utility.URShift(GetBits(), 14)) + 3;
+                //    AddBits(2);
+                //    v = Table[I - 1];
+                //}
+                //else
+                //{
+                //    N = (Number - 17) * 4;
+                //    int bits = 3 + N;
+                //    N += N + 3 + (Utility.URShift(GetBits(), 16 - bits));
+                //    AddBits(bits);
+                //    v = 0;
+                //}
+                //N += I;
+                //if (N > TableSize)
+                //{
+                //    N = TableSize; // original unRAR
+                //}
+                //do
+                //{
+                //    Table[I++] = v;
+                //} while (I < N);
             }
         }
         if (inAddr > readTop)
@@ -559,8 +590,7 @@ internal partial class Unpack
         PCh = (Utility.URShift(PCh, 3)) & 0xFF;
 
         var Ch = PCh - Delta;
-
-        var D = ((byte)Delta) << 3;
+        var D = ((sbyte)Delta) << 3;
 
         v.Dif[0] += Math.Abs(D); // V->Dif[0]+=abs(D);
         v.Dif[1] += Math.Abs(D - v.D1); // V->Dif[1]+=abs(D-V->D1);
@@ -574,7 +604,7 @@ internal partial class Unpack
         v.Dif[9] += Math.Abs(D - UnpChannelDelta); // V->Dif[9]+=abs(D-UnpChannelDelta);
         v.Dif[10] += Math.Abs(D + UnpChannelDelta); // V->Dif[10]+=abs(D+UnpChannelDelta);
 
-        v.LastDelta = (byte)(Ch - v.LastChar);
+        v.LastDelta = (sbyte)(Ch - v.LastChar);
         UnpChannelDelta = v.LastDelta;
         v.LastChar = Ch; // V->LastChar=Ch;
 

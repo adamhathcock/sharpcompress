@@ -776,14 +776,14 @@ internal sealed class RarVM : BitInput
         }
     }
 
-    public void prepare(byte[] code, int codeSize, VMPreparedProgram prg)
+    public void prepare(ReadOnlySpan<byte> code, int codeSize, VMPreparedProgram prg)
     {
         InitBitInput();
         var cpLength = Math.Min(MAX_SIZE, codeSize);
 
         // memcpy(inBuf,Code,Min(CodeSize,BitInput::MAX_SIZE));
 
-        Buffer.BlockCopy(code, 0, InBuf, 0, cpLength);
+        code.Slice(0, cpLength).CopyTo(InBuf);
         byte xorSum = 0;
         for (var i = 1; i < codeSize; i++)
         {
@@ -1105,7 +1105,7 @@ internal sealed class RarVM : BitInput
         }
     }
 
-    private VMStandardFilters IsStandardFilter(byte[] code, int codeSize)
+    private VMStandardFilters IsStandardFilter(ReadOnlySpan<byte> code, int codeSize)
     {
         VMStandardFilterSignature[] stdList =
         {
@@ -1115,7 +1115,7 @@ internal sealed class RarVM : BitInput
             new(29, 0x0e06077d, VMStandardFilters.VMSF_DELTA),
             new(149, 0x1c2c5dc8, VMStandardFilters.VMSF_RGB),
             new(216, 0xbc85e701, VMStandardFilters.VMSF_AUDIO),
-            new(40, 0x46b9c560, VMStandardFilters.VMSF_UPCASE)
+            new(40, 0x46b9c560, VMStandardFilters.VMSF_UPCASE),
         };
         var CodeCRC = RarCRC.CheckCrc(0xffffffff, code, 0, code.Length) ^ 0xffffffff;
         for (var i = 0; i < stdList.Length; i++)

@@ -37,6 +37,7 @@ internal static class ExtractionMethods
         options ??= new ExtractionOptions() { Overwrite = true };
 
         var file = Path.GetFileName(entry.Key.NotNull("Entry Key is null")).NotNull("File is null");
+        file = Utility.ReplaceInvalidFileNameChars(file);
         if (options.ExtractFullPath)
         {
             var folder = Path.GetDirectoryName(entry.Key.NotNull("Entry Key is null"))

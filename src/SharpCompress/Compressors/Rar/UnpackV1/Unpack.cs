@@ -1,6 +1,7 @@
 #nullable disable
 
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.IO;
 using SharpCompress.Common;
@@ -12,13 +13,27 @@ using SharpCompress.Compressors.Rar.VM;
 
 namespace SharpCompress.Compressors.Rar.UnpackV1;
 
-internal sealed partial class Unpack : BitInput, IRarUnpack
+internal sealed partial class Unpack : BitInput, IRarUnpack, IDisposable
 {
     private readonly BitInput Inp;
+    private bool disposed;
 
     public Unpack() =>
         // to ease in porting Unpack50.cs
         Inp = this;
+
+    public void Dispose()
+    {
+        if (!disposed)
+        {
+            if (!externalWindow)
+            {
+                ArrayPool<byte>.Shared.Return(window);
+                window = null;
+            }
+            disposed = true;
+        }
+    }
 
     public bool FileExtracted { get; private set; }
 
@@ -74,7 +89,7 @@ internal sealed partial class Unpack : BitInput, IRarUnpack
 
     private BlockTypes unpBlockType;
 
-    //private bool externalWindow;
+    private bool externalWindow;
 
     private long writtenFileSize;
 
@@ -104,22 +119,21 @@ internal sealed partial class Unpack : BitInput, IRarUnpack
         2,
         14,
         0,
-        12
+        12,
     };
 
     private FileHeader fileHeader;
 
     private void Init(byte[] window)
     {
-        if (window is null)
+        if (this.window is null && window is null)
         {
-            this.window = new byte[PackDef.MAXWINSIZE];
+            this.window = ArrayPool<byte>.Shared.Rent(PackDef.MAXWINSIZE);
         }
-        else
+        else if (window is not null)
         {
             this.window = window;
-
-            //externalWindow = true;
+            externalWindow = true;
         }
         inAddr = 0;
         UnpInitData(false);
@@ -175,31 +189,24 @@ internal sealed partial class Unpack : BitInput, IRarUnpack
 
     private void UnstoreFile()
     {
-        var buffer = new byte[0x10000];
-        while (true)
+        Span<byte> buffer = stackalloc byte[(int)Math.Min(0x10000, destUnpSize)];
+        do
         {
-            var code = readStream.Read(buffer, 0, (int)Math.Min(buffer.Length, destUnpSize));
+            var code = readStream.Read(buffer);
             if (code == 0 || code == -1)
             {
                 break;
             }
             code = code < destUnpSize ? code : (int)destUnpSize;
-            writeStream.Write(buffer, 0, code);
-            if (destUnpSize >= 0)
-            {
-                destUnpSize -= code;
-            }
-            if (suspended)
-            {
-                return;
-            }
-        }
+            writeStream.Write(buffer.Slice(0, code));
+            destUnpSize -= code;
+        } while (!suspended && destUnpSize > 0);
     }
 
     private void Unpack29(bool solid)
     {
-        var DDecode = new int[PackDef.DC];
-        var DBits = new byte[PackDef.DC];
+        Span<int> DDecode = stackalloc int[PackDef.DC];
+        Span<byte> DBits = stackalloc byte[PackDef.DC];
 
         int Bits;
 
@@ -256,7 +263,7 @@ internal sealed partial class Unpack : BitInput, IRarUnpack
             if (((wrPtr - unpPtr) & PackDef.MAXWINMASK) < 260 && wrPtr != unpPtr)
             {
                 UnpWriteBuf();
-                if (destUnpSize <= 0)
+                if (destUnpSize < 0)
                 {
                     return;
                 }
@@ -706,7 +713,9 @@ internal sealed partial class Unpack : BitInput, IRarUnpack
 
     private void UnpWriteData(byte[] data, int offset, int size)
     {
-        if (destUnpSize <= 0)
+        // allow destUnpSize == 0 here to ensure that 0 size writes
+        // go through RarStream's Write so that Suspended is set correctly
+        if (destUnpSize < 0)
         {
             return;
         }
@@ -859,9 +868,9 @@ internal sealed partial class Unpack : BitInput, IRarUnpack
 
     private bool ReadTables()
     {
-        var bitLength = new byte[PackDef.BC];
+        Span<byte> bitLength = stackalloc byte[PackDef.BC];
+        Span<byte> table = stackalloc byte[PackDef.HUFF_TABLE_SIZE];
 
-        var table = new byte[PackDef.HUFF_TABLE_SIZE];
         if (inAddr > readTop - 25)
         {
             if (!unpReadBuf())
@@ -989,7 +998,7 @@ internal sealed partial class Unpack : BitInput, IRarUnpack
 
         // memcpy(unpOldTable,table,sizeof(unpOldTable));
 
-        Buffer.BlockCopy(table, 0, unpOldTable, 0, unpOldTable.Length);
+        table.CopyTo(unpOldTable);
         return (true);
     }
 
@@ -1190,7 +1199,7 @@ internal sealed partial class Unpack : BitInput, IRarUnpack
             {
                 return (false);
             }
-            var VMCode = new byte[VMCodeSize];
+            Span<byte> VMCode = stackalloc byte[VMCodeSize];
             for (var I = 0; I < VMCodeSize; I++)
             {
                 if (Inp.Overflow(3))

@@ -17,7 +17,7 @@ public class GZipArchiveEntry : GZipEntry, IArchiveEntry
         {
             part.GetRawStream().Position = part.EntryStartPosition;
         }
-        return Parts.Single().GetCompressedStream();
+        return Parts.Single().GetCompressedStream().NotNull();
     }
 
     #region IArchiveEntry Members

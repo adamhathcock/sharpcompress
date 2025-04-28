@@ -784,7 +784,7 @@ internal class ArchiveReader
                         );
                         break;
                     default:
-                        throw new InvalidOperationException();
+                        throw new InvalidFormatException();
                 }
             }
         }
@@ -843,7 +843,7 @@ internal class ArchiveReader
                 outStream.ReadExact(data, 0, data.Length);
                 if (outStream.ReadByte() >= 0)
                 {
-                    throw new InvalidOperationException("Decoded stream is longer than expected.");
+                    throw new InvalidFormatException("Decoded stream is longer than expected.");
                 }
                 dataVector.Add(data);
 
@@ -854,7 +854,7 @@ internal class ArchiveReader
                         != folder._unpackCrc
                     )
                     {
-                        throw new InvalidOperationException(
+                        throw new InvalidFormatException(
                             "Decoded stream does not match expected CRC."
                         );
                     }
@@ -996,6 +996,11 @@ internal class ArchiveReader
                             numFiles,
                             delegate(int i, uint? attr)
                             {
+                                // Keep the original attribute value because it could potentially get
+                                // modified in the logic that follows. Some callers of the library may
+                                // find the original value useful.
+                                db._files[i].ExtendedAttrib = attr;
+
                                 // Some third party implementations established an unofficial extension
                                 // of the 7z archive format by placing posix file attributes in the high
                                 // bits of the windows file attributes. This makes use of the fact that
@@ -1220,23 +1225,46 @@ internal class ArchiveReader
 
     #region Public Methods
 
-    public void Open(Stream stream)
+    public void Open(Stream stream, bool lookForHeader)
     {
         Close();
 
         _streamOrigin = stream.Position;
         _streamEnding = stream.Length;
 
-        // TODO: Check Signature!
-        _header = new byte[0x20];
-        for (var offset = 0; offset < 0x20; )
+        var canScan = lookForHeader ? 0x80000 - 20 : 0;
+        while (true)
         {
-            var delta = stream.Read(_header, offset, 0x20 - offset);
-            if (delta == 0)
+            // TODO: Check Signature!
+            _header = new byte[0x20];
+            for (var offset = 0; offset < 0x20; )
             {
-                throw new EndOfStreamException();
+                var delta = stream.Read(_header, offset, 0x20 - offset);
+                if (delta == 0)
+                {
+                    throw new EndOfStreamException();
+                }
+
+                offset += delta;
             }
-            offset += delta;
+
+            if (
+                !lookForHeader
+                || _header
+                    .AsSpan(0, length: 6)
+                    .SequenceEqual<byte>([0x37, 0x7A, 0xBC, 0xAF, 0x27, 0x1C])
+            )
+            {
+                break;
+            }
+
+            if (canScan == 0)
+            {
+                throw new InvalidFormatException("Unable to find 7z signature");
+            }
+
+            canScan--;
+            stream.Position = ++_streamOrigin;
         }
 
         _stream = stream;
@@ -1435,7 +1463,7 @@ internal class ArchiveReader
 #if DEBUG
             Log.WriteLine(_db._files[index].Name);
 #endif
-            if (_db._files[index].CrcDefined)
+            if (_db._files[index].Crc.HasValue)
             {
                 _stream = new CrcCheckStream(_db._files[index].Crc.Value);
             }

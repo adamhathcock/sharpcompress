@@ -1,4 +1,3 @@
-using System;
 using System.IO;
 using System.Linq;
 using SharpCompress.IO;
@@ -86,7 +85,7 @@ internal class SevenZipFilePart : FilePart
             K_LZMA or K_LZMA2 => CompressionType.LZMA,
             K_PPMD => CompressionType.PPMd,
             K_B_ZIP2 => CompressionType.BZip2,
-            _ => throw new NotImplementedException()
+            _ => throw new InvalidFormatException(),
         };
     }
 

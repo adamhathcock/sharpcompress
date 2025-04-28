@@ -1,6 +1,7 @@
 using System;
 using System.Buffers.Binary;
 using System.IO;
+using SharpCompress.Common;
 using SharpCompress.Crypto;
 using SharpCompress.IO;
 
@@ -32,7 +33,7 @@ public sealed class LZipStream : Stream
             var dSize = ValidateAndReadSize(stream);
             if (dSize == 0)
             {
-                throw new IOException("Not an LZip stream");
+                throw new InvalidFormatException("Not an LZip stream");
             }
             var properties = GetProperties(dSize);
             _stream = new LzmaStream(properties, stream);
@@ -167,11 +168,6 @@ public sealed class LZipStream : Stream
     /// </summary>
     public static int ValidateAndReadSize(Stream stream)
     {
-        if (stream is null)
-        {
-            throw new ArgumentNullException(nameof(stream));
-        }
-
         // Read the header
         Span<byte> header = stackalloc byte[6];
         var n = stream.Read(header);
@@ -198,33 +194,25 @@ public sealed class LZipStream : Stream
         return (1 << basePower) - (subtractionNumerator * (1 << (basePower - 4)));
     }
 
-    private static readonly byte[] headerBytes = new byte[6]
-    {
+    private static readonly byte[] headerBytes =
+    [
         (byte)'L',
         (byte)'Z',
         (byte)'I',
         (byte)'P',
         1,
-        113
-    };
+        113,
+    ];
 
-    public static void WriteHeaderSize(Stream stream)
-    {
-        if (stream is null)
-        {
-            throw new ArgumentNullException(nameof(stream));
-        }
-
+    public static void WriteHeaderSize(Stream stream) =>
         // hard coding the dictionary size encoding
         stream.Write(headerBytes, 0, 6);
-    }
 
     /// <summary>
     /// Creates a byte array to communicate the parameters and dictionary size to LzmaStream.
     /// </summary>
     private static byte[] GetProperties(int dictionarySize) =>
-        new byte[]
-        {
+        [
             // Parameters as per http://www.nongnu.org/lzip/manual/lzip_manual.html#Stream-format
             // but encoded as a single byte in the format LzmaStream expects.
             // literal_context_bits = 3
@@ -235,6 +223,6 @@ public sealed class LZipStream : Stream
             (byte)(dictionarySize & 0xff),
             (byte)((dictionarySize >> 8) & 0xff),
             (byte)((dictionarySize >> 16) & 0xff),
-            (byte)((dictionarySize >> 24) & 0xff)
-        };
+            (byte)((dictionarySize >> 24) & 0xff),
+        ];
 }

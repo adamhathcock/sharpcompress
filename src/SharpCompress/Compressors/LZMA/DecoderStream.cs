@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using SharpCompress.Common;
 using SharpCompress.Common.SevenZip;
 using SharpCompress.Compressors.LZMA.Utilites;
 using SharpCompress.IO;
@@ -46,7 +47,7 @@ internal static class DecoderStreamHelper
             }
         }
 
-        throw new InvalidOperationException("Could not link output stream to coder.");
+        throw new InvalidFormatException("Could not link output stream to coder.");
     }
 
     private static void FindPrimaryOutStreamIndex(
@@ -75,7 +76,7 @@ internal static class DecoderStreamHelper
                 {
                     if (foundPrimaryOutStream)
                     {
-                        throw new NotSupportedException("Multiple output streams.");
+                        throw new InvalidFormatException("Multiple output streams.");
                     }
 
                     foundPrimaryOutStream = true;
@@ -87,7 +88,7 @@ internal static class DecoderStreamHelper
 
         if (!foundPrimaryOutStream)
         {
-            throw new NotSupportedException("No output stream.");
+            throw new InvalidFormatException("No output stream.");
         }
     }
 

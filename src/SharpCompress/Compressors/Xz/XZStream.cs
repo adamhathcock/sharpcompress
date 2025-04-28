@@ -2,6 +2,7 @@
 
 using System;
 using System.IO;
+using SharpCompress.Common;
 
 namespace SharpCompress.Compressors.Xz;
 
@@ -25,15 +26,12 @@ public sealed class XZStream : XZReadOnlyStream
         switch (Header.BlockCheckType)
         {
             case CheckType.NONE:
-                break;
             case CheckType.CRC32:
-                break;
             case CheckType.CRC64:
-                break;
             case CheckType.SHA256:
-                throw new NotImplementedException();
+                break;
             default:
-                throw new NotSupportedException("Check Type unknown to this version of decoder.");
+                throw new InvalidFormatException("Check Type unknown to this version of decoder.");
         }
     }
 

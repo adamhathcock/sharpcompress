@@ -14,7 +14,7 @@ internal enum ExtraDataType : ushort
     // -Info-ZIP Unicode Path Extra Field
     UnicodePathExtraField = 0x7075,
     Zip64ExtendedInformationExtraField = 0x0001,
-    UnixTimeExtraField = 0x5455
+    UnixTimeExtraField = 0x5455,
 }
 
 internal class ExtraData
@@ -166,10 +166,10 @@ internal sealed class UnixTimeExtraField : ExtraData
                 return Tuple.Create<DateTime?, DateTime?, DateTime?>(null, null, null);
             }
 
-            var flags = DataBytes[0];
-            var isModifiedTimeSpecified = (flags & 0x01) == 1;
-            var isLastAccessTimeSpecified = (flags & 0x02) == 1;
-            var isCreationTimeSpecified = (flags & 0x04) == 1;
+            var flags = (RecordedTimeFlag)DataBytes[0];
+            var isModifiedTimeSpecified = flags.HasFlag(RecordedTimeFlag.LastModified);
+            var isLastAccessTimeSpecified = flags.HasFlag(RecordedTimeFlag.LastAccessed);
+            var isCreationTimeSpecified = flags.HasFlag(RecordedTimeFlag.Created);
             var currentIndex = 1;
             DateTime? modifiedTime = null;
             DateTime? lastAccessTime = null;
@@ -189,7 +189,7 @@ internal sealed class UnixTimeExtraField : ExtraData
             {
                 if (currentIndex + 4 > DataBytes.Length)
                 {
-                    throw new ArchiveException("Invalid UnicodeExtraTime field");
+                    return Tuple.Create<DateTime?, DateTime?, DateTime?>(null, null, null);
                 }
 
                 var lastAccessEpochTime = BinaryPrimitives.ReadInt32LittleEndian(
@@ -206,7 +206,7 @@ internal sealed class UnixTimeExtraField : ExtraData
             {
                 if (currentIndex + 4 > DataBytes.Length)
                 {
-                    throw new ArchiveException("Invalid UnicodeExtraTime field");
+                    return Tuple.Create<DateTime?, DateTime?, DateTime?>(null, null, null);
                 }
 
                 var creationTimeEpochTime = BinaryPrimitives.ReadInt32LittleEndian(
@@ -222,6 +222,15 @@ internal sealed class UnixTimeExtraField : ExtraData
             return Tuple.Create(modifiedTime, lastAccessTime, creationTime);
         }
     }
+
+    [Flags]
+    private enum RecordedTimeFlag
+    {
+        None = 0,
+        LastModified = 1,
+        LastAccessed = 2,
+        Created = 4,
+    }
 }
 
 internal static class LocalEntryHeaderExtraFactory
@@ -229,11 +238,14 @@ internal static class LocalEntryHeaderExtraFactory
     internal static ExtraData Create(ExtraDataType type, ushort length, byte[] extraData) =>
         type switch
         {
-            ExtraDataType.UnicodePathExtraField
-                => new ExtraUnicodePathExtraField(type, length, extraData),
-            ExtraDataType.Zip64ExtendedInformationExtraField
-                => new Zip64ExtendedInformationExtraField(type, length, extraData),
+            ExtraDataType.UnicodePathExtraField => new ExtraUnicodePathExtraField(
+                type,
+                length,
+                extraData
+            ),
+            ExtraDataType.Zip64ExtendedInformationExtraField =>
+                new Zip64ExtendedInformationExtraField(type, length, extraData),
             ExtraDataType.UnixTimeExtraField => new UnixTimeExtraField(type, length, extraData),
-            _ => new ExtraData(type, length, extraData)
+            _ => new ExtraData(type, length, extraData),
         };
 }

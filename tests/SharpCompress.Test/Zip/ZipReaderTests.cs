@@ -248,7 +248,7 @@ public class ZipReaderTests : ReaderTests
         var expected = new[]
         {
             new Tuple<string, byte[]>("foo.txt", Array.Empty<byte>()),
-            new Tuple<string, byte[]>("foo2.txt", new byte[10])
+            new Tuple<string, byte[]>("foo2.txt", new byte[10]),
         };
 
         using var memory = new MemoryStream();
@@ -342,7 +342,7 @@ public class ZipReaderTests : ReaderTests
     public void Zip_ReaderFactory_Uncompressed_Read_All()
     {
         var zipPath = Path.Combine(TEST_ARCHIVES_PATH, "Zip.uncompressed.zip");
-        using var stream = File.Open(zipPath, FileMode.Open, FileAccess.Read);
+        using var stream = File.OpenRead(zipPath);
         using var reader = ReaderFactory.Open(stream);
         while (reader.MoveToNextEntry())
         {
@@ -355,7 +355,7 @@ public class ZipReaderTests : ReaderTests
     public void Zip_ReaderFactory_Uncompressed_Skip_All()
     {
         var zipPath = Path.Combine(TEST_ARCHIVES_PATH, "Zip.uncompressed.zip");
-        using var stream = File.Open(zipPath, FileMode.Open, FileAccess.Read);
+        using var stream = File.OpenRead(zipPath);
         using var reader = ReaderFactory.Open(stream);
         while (reader.MoveToNextEntry()) { }
     }
@@ -364,7 +364,7 @@ public class ZipReaderTests : ReaderTests
     public void Zip_Uncompressed_64bit()
     {
         var zipPath = Path.Combine(TEST_ARCHIVES_PATH, "64bitstream.zip.7z");
-        using var stream = File.Open(zipPath, FileMode.Open, FileAccess.Read);
+        using var stream = File.OpenRead(zipPath);
         var archive = ArchiveFactory.Open(stream);
         var reader = archive.ExtractAllEntries();
         reader.MoveToNextEntry();

@@ -122,10 +122,7 @@ public static class ArchiveFactory
     )
     {
         using var archive = Open(sourceArchive);
-        foreach (var entry in archive.Entries)
-        {
-            entry.WriteToDirectory(destinationDirectory, options);
-        }
+        archive.WriteToDirectory(destinationDirectory, options);
     }
 
     private static T FindFactory<T>(FileInfo finfo)
@@ -189,9 +186,10 @@ public static class ArchiveFactory
 
         foreach (var factory in Factory.Factories)
         {
+            var isArchive = factory.IsArchive(stream);
             stream.Position = startPosition;
 
-            if (factory.IsArchive(stream, null))
+            if (isArchive)
             {
                 type = factory.KnownArchiveType;
                 return true;
@@ -239,4 +237,6 @@ public static class ArchiveFactory
             }
         }
     }
+
+    public static IArchiveFactory AutoFactory { get; } = new AutoArchiveFactory();
 }
