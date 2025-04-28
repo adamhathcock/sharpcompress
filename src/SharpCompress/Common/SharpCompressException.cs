@@ -2,7 +2,7 @@ using System;
 
 namespace SharpCompress.Common;
 
-public class SharpCompressException : ApplicationException
+public class SharpCompressException : Exception
 {
     public SharpCompressException() { }
 

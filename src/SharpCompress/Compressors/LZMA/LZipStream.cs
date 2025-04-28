@@ -202,7 +202,7 @@ public sealed class LZipStream : Stream
         (byte)'P',
         1,
         113,
-    };
+    ];
 
     public static void WriteHeaderSize(Stream stream) =>
         // hard coding the dictionary size encoding
@@ -224,5 +224,5 @@ public sealed class LZipStream : Stream
             (byte)((dictionarySize >> 8) & 0xff),
             (byte)((dictionarySize >> 16) & 0xff),
             (byte)((dictionarySize >> 24) & 0xff)
-        };
+        ];
 }
