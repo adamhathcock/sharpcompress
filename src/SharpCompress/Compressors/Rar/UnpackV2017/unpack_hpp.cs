@@ -159,7 +159,6 @@ if (Decoded!=NULL)
 };
 #endif*/
 
-
 //struct UnpackFilter
 internal class UnpackFilter
 {
