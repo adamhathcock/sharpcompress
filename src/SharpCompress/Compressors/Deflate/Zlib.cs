@@ -62,8 +62,8 @@
 //
 // -----------------------------------------------------------------------
 
-using System;
 using System.IO;
+using SharpCompress.Common;
 
 namespace SharpCompress.Compressors.Deflate;
 
@@ -177,7 +177,7 @@ public enum CompressionStrategy
 /// <summary>
 /// A general purpose exception class for exceptions in the Zlib library.
 /// </summary>
-public class ZlibException : Exception
+public class ZlibException : SharpCompressException
 {
     /// <summary>
     /// The ZlibException class captures exception information generated

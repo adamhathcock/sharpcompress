@@ -8,6 +8,7 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Runtime.CompilerServices;
+using SharpCompress.Common;
 using SharpCompress.Common.Zip;
 
 namespace SharpCompress.Compressors.Deflate64;
@@ -151,7 +152,7 @@ public sealed class Deflate64Stream : Stream
             {
                 // The stream is either malicious or poorly implemented and returned a number of
                 // bytes larger than the buffer supplied to it.
-                throw new InvalidDataException("Deflate64: invalid data");
+                throw new InvalidFormatException("Deflate64: invalid data");
             }
 
             _inflater.SetInput(_buffer, 0, bytes);

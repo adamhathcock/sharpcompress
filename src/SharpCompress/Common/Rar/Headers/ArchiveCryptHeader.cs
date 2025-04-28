@@ -1,8 +1,5 @@
 #nullable disable
 
-using System;
-using System.Security.Cryptography;
-using SharpCompress.Common.Rar.Headers;
 using SharpCompress.IO;
 
 namespace SharpCompress.Common.Rar.Headers;

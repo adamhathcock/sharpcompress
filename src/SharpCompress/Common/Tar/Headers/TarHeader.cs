@@ -216,7 +216,7 @@ internal sealed class TarHeader
 
         if (buffer.Length != 0 && buffer.Length < BLOCK_SIZE)
         {
-            throw new InvalidOperationException("Buffer is invalid size");
+            throw new InvalidFormatException("Buffer is invalid size");
         }
         return buffer;
     }

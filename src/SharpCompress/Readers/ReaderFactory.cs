@@ -1,6 +1,6 @@
-using System;
 using System.IO;
 using System.Linq;
+using SharpCompress.Common;
 using SharpCompress.IO;
 
 namespace SharpCompress.Readers;
@@ -29,7 +29,7 @@ public static class ReaderFactory
             }
         }
 
-        throw new InvalidOperationException(
+        throw new InvalidFormatException(
             "Cannot determine compressed stream type.  Supported Reader Formats: Arc, Zip, GZip, BZip2, Tar, Rar, LZip, XZ"
         );
     }

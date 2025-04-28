@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Buffers.Binary;
 using System.IO;
+using SharpCompress.Common;
 
 namespace SharpCompress.IO;
 
@@ -44,7 +45,7 @@ internal class MarkingBinaryReader : BinaryReader
         var bytes = base.ReadBytes(count);
         if (bytes.Length != count)
         {
-            throw new EndOfStreamException(
+            throw new InvalidFormatException(
                 string.Format(
                     "Could not read the requested amount of bytes.  End of stream reached. Requested: {0} Read: {1}",
                     count,

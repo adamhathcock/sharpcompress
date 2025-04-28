@@ -1,5 +1,6 @@
 using System.IO;
 using System.Text;
+using SharpCompress.Common;
 using SharpCompress.Compressors.Xz;
 using Xunit;
 
@@ -43,7 +44,7 @@ public class XzBlockTests : XzTestsBase
         using Stream badCrcStream = new MemoryStream(bytes);
         Rewind(badCrcStream);
         var xzBlock = new XZBlock(badCrcStream, CheckType.CRC64, 8);
-        var ex = Assert.Throws<InvalidDataException>(() =>
+        var ex = Assert.Throws<InvalidFormatException>(() =>
         {
             ReadBytes(xzBlock, 1);
         });
