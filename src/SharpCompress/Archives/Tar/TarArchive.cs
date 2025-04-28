@@ -190,6 +190,10 @@ public class TarArchive : AbstractWritableArchive<TarArchiveEntry, TarVolume>
                     );
                 }
             }
+            else
+            {
+                throw new IncompleteArchiveException("Failed to read TAR header");
+            }
         }
     }
 

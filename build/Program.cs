@@ -61,7 +61,7 @@ Target(
 Target(
     Test,
     DependsOn(Build),
-    ForEach("net8.0", "net462"),
+    ForEach("net8.0", "net48"),
     framework =>
     {
         IEnumerable<string> GetFiles(string d)
@@ -69,7 +69,7 @@ Target(
             return Glob.Files(".", d);
         }
 
-        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && framework == "net462")
+        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && framework == "net48")
         {
             return;
         }

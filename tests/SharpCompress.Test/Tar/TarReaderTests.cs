@@ -183,6 +183,21 @@ public class TarReaderTests : ReaderTests
         Assert.Throws<IncompleteArchiveException>(() => reader.MoveToNextEntry());
     }
 
+    [Fact]
+    public void Tar_Corrupted()
+    {
+        var archiveFullPath = Path.Combine(TEST_ARCHIVES_PATH, "TarCorrupted.tar");
+        using Stream stream = File.OpenRead(archiveFullPath);
+        using var reader = ReaderFactory.Open(stream);
+        var memoryStream = new MemoryStream();
+
+        Assert.True(reader.MoveToNextEntry());
+        Assert.True(reader.MoveToNextEntry());
+        reader.WriteEntryTo(memoryStream);
+        stream.Close();
+        Assert.Throws<IncompleteArchiveException>(() => reader.MoveToNextEntry());
+    }
+
 #if !NETFRAMEWORK
     [Fact]
     public void Tar_GZip_With_Symlink_Entries()
@@ -217,7 +232,7 @@ public class TarReaderTests : ReaderTests
                             }
                             link.CreateSymbolicLinkTo(targetPath);
                         }
-                    }
+                    },
                 }
             );
             if (!isWindows)

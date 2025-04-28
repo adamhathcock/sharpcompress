@@ -56,11 +56,11 @@ internal class ZipHeaderFactory
             case POST_DATA_DESCRIPTOR:
             {
                 if (
-                    FlagUtility.HasFlag(
+                    _lastEntryHeader != null
+                    && FlagUtility.HasFlag(
                         _lastEntryHeader.NotNull().Flags,
                         HeaderFlags.UsePostDataDescriptor
                     )
-                    && _lastEntryHeader != null
                 )
                 {
                     _lastEntryHeader.Crc = reader.ReadUInt32();

@@ -31,7 +31,7 @@ public class ForwardOnlyStream(Stream stream) : Stream
 
     public override long Position
     {
-        get => throw new NotSupportedException();
+        get => stream.Position;
         set => throw new NotSupportedException();
     }
 

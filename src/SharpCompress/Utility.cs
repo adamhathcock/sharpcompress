@@ -1,15 +1,17 @@
+global using SharpCompress.Helpers;
 using System;
 using System.Buffers;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.IO;
+using System.Text;
 using SharpCompress.Readers;
 
-namespace SharpCompress;
+namespace SharpCompress.Helpers;
 
-[CLSCompliant(false)]
-public static class Utility
+internal static class Utility
 {
-    public static ReadOnlyCollection<T> ToReadOnly<T>(this ICollection<T> items) => new(items);
+    public static ReadOnlyCollection<T> ToReadOnly<T>(this IList<T> items) => new(items);
 
     /// <summary>
     /// Performs an unsigned bitwise right shift with the specified number
@@ -433,5 +435,18 @@ public static class Utility
         buffer[offset + 1] = (byte)(number >> 16);
         buffer[offset + 2] = (byte)(number >> 8);
         buffer[offset + 3] = (byte)number;
+    }
+
+    public static string ReplaceInvalidFileNameChars(string fileName)
+    {
+        var invalidChars = new HashSet<char>(Path.GetInvalidFileNameChars());
+        var sb = new StringBuilder(fileName.Length);
+        foreach (var c in fileName)
+        {
+            var newChar = invalidChars.Contains(c) ? '_' : c;
+            sb.Append(newChar);
+        }
+
+        return sb.ToString();
     }
 }

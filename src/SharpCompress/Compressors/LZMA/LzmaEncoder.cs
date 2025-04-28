@@ -13,7 +13,7 @@ internal class Encoder : ICoder, ISetCoderProperties, IWriteCoderProperties
     private enum EMatchFinderType
     {
         Bt2,
-        Bt4
+        Bt4,
     }
 
     private const uint K_IFINITY_PRICE = 0xFFFFFFF;

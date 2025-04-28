@@ -252,7 +252,7 @@ public class TarArchiveTests : ArchiveTests
     [Fact]
     public void Tar_Read_One_At_A_Time()
     {
-        var archiveEncoding = new ArchiveEncoding { Default = Encoding.UTF8, };
+        var archiveEncoding = new ArchiveEncoding { Default = Encoding.UTF8 };
         var tarWriterOptions = new TarWriterOptions(CompressionType.None, true)
         {
             ArchiveEncoding = archiveEncoding,
@@ -286,5 +286,13 @@ public class TarArchiveTests : ArchiveTests
         }
 
         Assert.Equal(2, numberOfEntries);
+    }
+
+    [Fact]
+    public void Tar_Detect_Test()
+    {
+        var isTar = TarArchive.IsTarFile(Path.Combine(TEST_ARCHIVES_PATH, "false.positive.tar"));
+
+        Assert.False(isTar);
     }
 }

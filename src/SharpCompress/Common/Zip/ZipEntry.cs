@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using SharpCompress.Common.Zip.Headers;
 
 namespace SharpCompress.Common.Zip;
@@ -15,10 +16,19 @@ public class ZipEntry : Entry
             return;
         }
         _filePart = filePart;
+
         LastModifiedTime = Utility.DosDateToDateTime(
             filePart.Header.LastModifiedDate,
             filePart.Header.LastModifiedTime
         );
+
+        var times =
+            filePart.Header.Extra.FirstOrDefault(header =>
+                header.GetType() == typeof(UnixTimeExtraField)
+            ) as UnixTimeExtraField;
+
+        LastAccessedTime = times?.UnicodeTimes.Item2;
+        CreatedTime = times?.UnicodeTimes.Item3;
     }
 
     public override CompressionType CompressionType =>
@@ -31,7 +41,12 @@ public class ZipEntry : Entry
             ZipCompressionMethod.PPMd => CompressionType.PPMd,
             ZipCompressionMethod.None => CompressionType.None,
             ZipCompressionMethod.Shrink => CompressionType.Shrink,
-            _ => CompressionType.Unknown
+            ZipCompressionMethod.Reduce1 => CompressionType.Reduce1,
+            ZipCompressionMethod.Reduce2 => CompressionType.Reduce2,
+            ZipCompressionMethod.Reduce3 => CompressionType.Reduce3,
+            ZipCompressionMethod.Reduce4 => CompressionType.Reduce4,
+            ZipCompressionMethod.Explode => CompressionType.Explode,
+            _ => CompressionType.Unknown,
         };
 
     public override long Crc => _filePart?.Header.Crc ?? 0;
@@ -46,9 +61,17 @@ public class ZipEntry : Entry
 
     public override DateTime? LastModifiedTime { get; }
 
-    public override DateTime? CreatedTime => null;
+    /// <inheritdoc/>
+    /// <remarks>
+    /// The returned time is UTC, not local.
+    /// </remarks>
+    public override DateTime? CreatedTime { get; }
 
-    public override DateTime? LastAccessedTime => null;
+    /// <inheritdoc/>
+    /// <remarks>
+    /// The returned time is UTC, not local.
+    /// </remarks>
+    public override DateTime? LastAccessedTime { get; }
 
     public override DateTime? ArchivedTime => null;
 

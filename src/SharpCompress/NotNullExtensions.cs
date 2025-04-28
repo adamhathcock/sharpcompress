@@ -4,9 +4,9 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.CompilerServices;
 
-namespace SharpCompress;
+namespace SharpCompress.Helpers;
 
-public static class NotNullExtensions
+internal static class NotNullExtensions
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static IEnumerable<T> Empty<T>(this IEnumerable<T>? source) =>

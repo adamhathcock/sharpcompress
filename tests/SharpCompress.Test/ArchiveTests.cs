@@ -73,27 +73,45 @@ public class ArchiveTests : ReaderTests
         }
     }
 
-    protected void ArchiveStreamRead(string testArchive, ReaderOptions? readerOptions = null)
+    protected void ArchiveStreamRead(string testArchive, ReaderOptions? readerOptions = null) =>
+        ArchiveStreamRead(ArchiveFactory.AutoFactory, testArchive, readerOptions);
+
+    protected void ArchiveStreamRead(
+        IArchiveFactory archiveFactory,
+        string testArchive,
+        ReaderOptions? readerOptions = null
+    )
     {
         testArchive = Path.Combine(TEST_ARCHIVES_PATH, testArchive);
-        ArchiveStreamRead(readerOptions, testArchive);
+        ArchiveStreamRead(archiveFactory, readerOptions, testArchive);
     }
 
     protected void ArchiveStreamRead(
         ReaderOptions? readerOptions = null,
         params string[] testArchives
+    ) => ArchiveStreamRead(ArchiveFactory.AutoFactory, readerOptions, testArchives);
+
+    protected void ArchiveStreamRead(
+        IArchiveFactory archiveFactory,
+        ReaderOptions? readerOptions = null,
+        params string[] testArchives
     ) =>
         ArchiveStreamRead(
+            archiveFactory,
             readerOptions,
             testArchives.Select(x => Path.Combine(TEST_ARCHIVES_PATH, x))
         );
 
-    protected void ArchiveStreamRead(ReaderOptions? readerOptions, IEnumerable<string> testArchives)
+    protected void ArchiveStreamRead(
+        IArchiveFactory archiveFactory,
+        ReaderOptions? readerOptions,
+        IEnumerable<string> testArchives
+    )
     {
         foreach (var path in testArchives)
         {
             using (var stream = NonDisposingStream.Create(File.OpenRead(path), true))
-            using (var archive = ArchiveFactory.Open(stream, readerOptions))
+            using (var archive = archiveFactory.Open(stream, readerOptions))
             {
                 try
                 {
@@ -218,10 +236,14 @@ public class ArchiveTests : ReaderTests
         }
     }
 
-    protected void ArchiveFileRead(string testArchive, ReaderOptions? readerOptions = null)
+    protected void ArchiveFileRead(
+        IArchiveFactory archiveFactory,
+        string testArchive,
+        ReaderOptions? readerOptions = null
+    )
     {
         testArchive = Path.Combine(TEST_ARCHIVES_PATH, testArchive);
-        using (var archive = ArchiveFactory.Open(testArchive, readerOptions))
+        using (var archive = archiveFactory.Open(new FileInfo(testArchive), readerOptions))
         {
             foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
             {
@@ -233,6 +255,9 @@ public class ArchiveTests : ReaderTests
         }
         VerifyFiles();
     }
+
+    protected void ArchiveFileRead(string testArchive, ReaderOptions? readerOptions = null) =>
+        ArchiveFileRead(ArchiveFactory.AutoFactory, testArchive, readerOptions);
 
     protected void ArchiveFileSkip(
         string testArchive,
@@ -270,7 +295,7 @@ public class ArchiveTests : ReaderTests
                         ExtractFullPath = true,
                         Overwrite = true,
                         PreserveAttributes = true,
-                        PreserveFileTime = true
+                        PreserveFileTime = true,
                     }
                 );
             }

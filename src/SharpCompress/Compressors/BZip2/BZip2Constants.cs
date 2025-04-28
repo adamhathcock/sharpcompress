@@ -555,6 +555,6 @@ internal class BZip2Constants
         858,
         364,
         936,
-        638
+        638,
     };
 }

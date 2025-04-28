@@ -44,7 +44,7 @@ public abstract class AbstractReader<TEntry, TVolume> : IReader, IReaderExtracti
 
     #region IDisposable Members
 
-    public void Dispose()
+    public virtual void Dispose()
     {
         _entriesForCurrentReadStream?.Dispose();
         Volume?.Dispose();

@@ -106,7 +106,7 @@ public class GZipArchiveTests : ArchiveTests
     }
 
     [Fact]
-    public void TestGzCrcWithMostSignificaltBitNotNegative()
+    public void TestGzCrcWithMostSignificantBitNotNegative()
     {
         using var stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.gz"));
         using var archive = GZipArchive.Open(stream);
@@ -115,5 +115,13 @@ public class GZipArchiveTests : ArchiveTests
         {
             Assert.InRange(entry.Crc, 0L, 0xFFFFFFFFL);
         }
+    }
+
+    [Fact]
+    public void TestGzArchiveTypeGzip()
+    {
+        using var stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.gz"));
+        using var archive = GZipArchive.Open(stream);
+        Assert.Equal(archive.Type, ArchiveType.GZip);
     }
 }

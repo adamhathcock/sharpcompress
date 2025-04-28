@@ -59,7 +59,7 @@ internal partial class Model
         0x64A1,
         0x5ABC,
         0x6632,
-        0x6051
+        0x6051,
     };
 
     private static ReadOnlySpan<byte> EXPONENTIAL_ESCAPES =>
