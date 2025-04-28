@@ -22,4 +22,10 @@ public enum CompressionType
     Reduce3,
     Reduce4,
     Explode,
+    Squeezed,
+    RLE90,
+    Crunched,
+    Squashed,
+    Crushed,
+    Distilled,
 }

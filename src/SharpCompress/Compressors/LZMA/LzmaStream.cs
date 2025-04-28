@@ -247,6 +247,82 @@ public class LzmaStream : Stream
         return total;
     }
 
+    public override int ReadByte()
+    {
+        if (_endReached)
+        {
+            return -1;
+        }
+
+        if (_availableBytes == 0)
+        {
+            if (_isLzma2)
+            {
+                DecodeChunkHeader();
+            }
+            else
+            {
+                _endReached = true;
+            }
+        }
+
+        if (_endReached)
+        {
+            if (_inputSize >= 0 && _inputPosition != _inputSize)
+            {
+                throw new DataErrorException();
+            }
+            if (_outputSize >= 0 && _position != _outputSize)
+            {
+                throw new DataErrorException();
+            }
+
+            return -1;
+        }
+
+        _outWindow.SetLimit(1);
+        if (_uncompressedChunk)
+        {
+            _inputPosition += _outWindow.CopyStream(_inputStream, 1);
+        }
+        else if (_decoder.Code(_dictionarySize, _outWindow, _rangeDecoder) && _outputSize < 0)
+        {
+            _availableBytes = _outWindow.AvailableBytes;
+        }
+
+        var value = _outWindow.ReadByte();
+        _position++;
+        _availableBytes--;
+
+        if (_availableBytes == 0 && !_uncompressedChunk)
+        {
+            // Check range corruption scenario
+            if (
+                !_rangeDecoder.IsFinished
+                || (_rangeDecoderLimit >= 0 && _rangeDecoder._total != _rangeDecoderLimit)
+            )
+            {
+                // Stream might have End Of Stream marker
+                _outWindow.SetLimit(2);
+                if (!_decoder.Code(_dictionarySize, _outWindow, _rangeDecoder))
+                {
+                    _rangeDecoder.ReleaseStream();
+                    throw new DataErrorException();
+                }
+            }
+
+            _rangeDecoder.ReleaseStream();
+
+            _inputPosition += _rangeDecoder._total;
+            if (_outWindow.HasPending)
+            {
+                throw new DataErrorException();
+            }
+        }
+
+        return value;
+    }
+
     private void DecodeChunkHeader()
     {
         var control = _inputStream.ReadByte();

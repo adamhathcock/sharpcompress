@@ -13,7 +13,7 @@ internal class ReadOnlySubStream : NonDisposingStream
     public ReadOnlySubStream(Stream stream, long? origin, long bytesToRead)
         : base(stream, throwOnDispose: false)
     {
-        if (origin != null)
+        if (origin != null && stream.Position != origin.Value)
         {
             stream.Position = origin.Value;
         }
@@ -31,7 +31,7 @@ internal class ReadOnlySubStream : NonDisposingStream
 
     public override void Flush() { }
 
-    public override long Length => throw new NotSupportedException();
+    public override long Length => base.Length;
 
     public override long Position
     {

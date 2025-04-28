@@ -26,13 +26,10 @@ public sealed class XZStream : XZReadOnlyStream
         switch (Header.BlockCheckType)
         {
             case CheckType.NONE:
-                break;
             case CheckType.CRC32:
-                break;
             case CheckType.CRC64:
-                break;
             case CheckType.SHA256:
-                throw new NotImplementedException();
+                break;
             default:
                 throw new InvalidFormatException("Check Type unknown to this version of decoder.");
         }

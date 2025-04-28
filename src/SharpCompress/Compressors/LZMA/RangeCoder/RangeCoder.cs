@@ -1,6 +1,7 @@
 #nullable disable
 
 using System.IO;
+using System.Runtime.CompilerServices;
 
 namespace SharpCompress.Compressors.LZMA.RangeCoder;
 
@@ -152,6 +153,7 @@ internal class Decoder
         }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Normalize2()
     {
         if (_range < K_TOP_VALUE)
