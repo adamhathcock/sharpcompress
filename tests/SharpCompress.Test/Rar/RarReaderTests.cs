@@ -1,6 +1,8 @@
 using System;
+using System.Collections;
 using System.IO;
 using System.Linq;
+using SharpCompress.Archives.Rar;
 using SharpCompress.Common;
 using SharpCompress.Readers;
 using SharpCompress.Readers.Rar;
@@ -418,4 +420,16 @@ public class RarReaderTests : ReaderTests
                     CompressionType.Rar
                 )
         );
+
+    [Fact]
+    public void Rar_Iterate_Multipart()
+    {
+        var expectedOrder = new Stack(new[] {"Failure", "jpg", "exe", "Empty", "тест.txt", Path.Combine("jpg", "test.jpg"), Path.Combine("exe", "test.exe")});
+        using var archive = RarArchive.Open(Path.Combine(TEST_ARCHIVES_PATH, "Rar.multi.part01.rar"));
+        using var reader = archive.ExtractAllEntries();
+        while (reader.MoveToNextEntry())
+        {
+            Assert.Equal(expectedOrder.Pop(), reader.Entry.Key);
+        }
+    }
 }
