@@ -67,6 +67,16 @@ public class RarArchive : AbstractArchive<RarArchiveEntry, RarVolume>
 
     protected override IReader CreateReaderForSolidExtraction()
     {
+        if (this.IsMultipartVolume())
+        {
+            var streams = Volumes.Select(volume =>
+            {
+                volume.Stream.Position = 0;
+                return volume.Stream;
+            });
+            return RarReader.Open(streams, ReaderOptions);
+        }
+
         var stream = Volumes.First().Stream;
         stream.Position = 0;
         return RarReader.Open(stream, ReaderOptions);
