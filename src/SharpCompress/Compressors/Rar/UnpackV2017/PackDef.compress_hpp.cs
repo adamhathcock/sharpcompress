@@ -36,7 +36,6 @@ internal static class PackDef
     //      CODE_ENDFILE, CODE_FILTER, CODE_FILTERDATA
     //    };
 
-
     //enum FilterType {
     // These values must not be changed, because we use them directly
     // in RAR5 compression and decompression code.

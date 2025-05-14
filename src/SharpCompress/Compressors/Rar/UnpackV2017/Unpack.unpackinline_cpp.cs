@@ -7,7 +7,6 @@ using nuint = System.UInt64;
 using size_t = System.UInt64;
 #endif*/
 
-
 namespace SharpCompress.Compressors.Rar.UnpackV2017;
 
 internal partial class Unpack

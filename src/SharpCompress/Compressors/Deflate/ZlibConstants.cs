@@ -60,7 +60,6 @@
 //
 // -----------------------------------------------------------------------
 
-
 namespace SharpCompress.Compressors.Deflate;
 
 /// <summary>
