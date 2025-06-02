@@ -542,8 +542,13 @@ internal class CBZip2InputStream : Stream
             {
                 j++;
             }
-            selectorMtf[i] = (char)j;
+            if (i < BZip2Constants.MAX_SELECTORS)
+            {
+                selectorMtf[i] = (char)j;
+            }
         }
+
+        nSelectors = Math.Min(nSelectors, BZip2Constants.MAX_SELECTORS);
 
         /* Undo the MTF values for the selectors. */
         {
