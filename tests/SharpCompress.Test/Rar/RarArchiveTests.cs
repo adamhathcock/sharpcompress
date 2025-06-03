@@ -89,8 +89,8 @@ public class RarArchiveTests : ArchiveTests
 
     [Fact]
     public void Rar_Multi_Archive_Encrypted() =>
-        Assert.Throws<InvalidFormatException>(
-            () => ArchiveFileReadPassword("Rar.EncryptedParts.part01.rar", "test")
+        Assert.Throws<InvalidFormatException>(() =>
+            ArchiveFileReadPassword("Rar.EncryptedParts.part01.rar", "test")
         );
 
     protected void ArchiveFileReadPassword(string archiveName, string password)

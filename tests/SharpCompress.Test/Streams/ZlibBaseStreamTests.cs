@@ -1,6 +1,6 @@
 using System.IO;
 using System.Text;
-using FluentAssertions;
+using AwesomeAssertions;
 using SharpCompress.Compressors;
 using SharpCompress.Compressors.Deflate;
 using SharpCompress.IO;

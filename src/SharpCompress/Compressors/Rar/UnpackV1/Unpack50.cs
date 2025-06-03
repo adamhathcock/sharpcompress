@@ -622,7 +622,6 @@ internal partial class Unpack
     //            WriteBorder=WrPtr;
     //        }
 
-
     // unused
     //x byte* ApplyFilter(byte *Data,uint DataSize,UnpackFilter *Flt)
     //        byte[] ApplyFilter(byte []Data, uint DataSize, UnpackFilter Flt)

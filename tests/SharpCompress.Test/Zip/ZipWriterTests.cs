@@ -56,7 +56,7 @@ public class ZipWriterTests : WriterTests
 
     [Fact]
     public void Zip_Rar_Write() =>
-        Assert.Throws<InvalidFormatException>(
-            () => Write(CompressionType.Rar, "Zip.ppmd.noEmptyDirs.zip", "Zip.ppmd.noEmptyDirs.zip")
+        Assert.Throws<InvalidFormatException>(() =>
+            Write(CompressionType.Rar, "Zip.ppmd.noEmptyDirs.zip", "Zip.ppmd.noEmptyDirs.zip")
         );
 }

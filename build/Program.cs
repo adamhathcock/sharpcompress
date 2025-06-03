@@ -15,7 +15,7 @@ const string Publish = "publish";
 
 Target(
     Clean,
-    ForEach("**/bin", "**/obj"),
+    ["**/bin", "**/obj"],
     dir =>
     {
         IEnumerable<string> GetDirectories(string d)
@@ -44,14 +44,14 @@ Target(
     () =>
     {
         Run("dotnet", "tool restore");
-        Run("dotnet", "csharpier --check .");
+        Run("dotnet", "csharpier check .");
     }
 );
-Target(Restore, DependsOn(Format), () => Run("dotnet", "restore"));
+Target(Restore, [Format], () => Run("dotnet", "restore"));
 
 Target(
     Build,
-    DependsOn(Restore),
+    [Restore],
     () =>
     {
         Run("dotnet", "build src/SharpCompress/SharpCompress.csproj -c Release --no-restore");
@@ -60,8 +60,8 @@ Target(
 
 Target(
     Test,
-    DependsOn(Build),
-    ForEach("net8.0", "net48"),
+    [Build],
+    ["net8.0", "net48"],
     framework =>
     {
         IEnumerable<string> GetFiles(string d)
@@ -83,13 +83,13 @@ Target(
 
 Target(
     Publish,
-    DependsOn(Test),
+    [Test],
     () =>
     {
         Run("dotnet", "pack src/SharpCompress/SharpCompress.csproj -c Release -o artifacts/");
     }
 );
 
-Target("default", DependsOn(Publish), () => Console.WriteLine("Done!"));
+Target("default", [Publish], () => Console.WriteLine("Done!"));
 
 await RunTargetsAndExitAsync(args);
