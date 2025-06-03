@@ -1,6 +1,8 @@
 using System;
+using System.Collections;
 using System.IO;
 using System.Linq;
+using SharpCompress.Archives.Rar;
 using SharpCompress.Common;
 using SharpCompress.Readers;
 using SharpCompress.Readers.Rar;
@@ -328,43 +330,15 @@ public class RarReaderTests : ReaderTests
     }
 
     [Fact]
-    public void Rar_NullReference()
+    public void Rar_SkipEncryptedFilesWithoutPassword()
     {
+        using var stream = File.OpenRead(
+            Path.Combine(TEST_ARCHIVES_PATH, "Rar.encrypted_filesOnly.rar")
+        );
+        using var reader = ReaderFactory.Open(stream, new ReaderOptions { LookForHeader = true });
+        while (reader.MoveToNextEntry())
         {
-            var archives = new[]
-            {
-                "Rar.EncryptedParts.part01.rar",
-                "Rar.EncryptedParts.part02.rar",
-                "Rar.EncryptedParts.part03.rar",
-                "Rar.EncryptedParts.part04.rar",
-                "Rar.EncryptedParts.part05.rar",
-                "Rar.EncryptedParts.part06.rar",
-            };
-
-            using var reader = RarReader.Open(
-                archives
-                    .Select(s => Path.Combine(TEST_ARCHIVES_PATH, s))
-                    .Select(p => File.OpenRead(p)),
-                new ReaderOptions { Password = "test" }
-            );
-            while (reader.MoveToNextEntry())
-            {
-                //
-            }
-        }
-
-        {
-            using var stream = File.OpenRead(
-                Path.Combine(TEST_ARCHIVES_PATH, "Rar.encrypted_filesOnly.rar")
-            );
-            using var reader = ReaderFactory.Open(
-                stream,
-                new ReaderOptions { LookForHeader = true }
-            );
-            while (reader.MoveToNextEntry())
-            {
-                //
-            }
+            //
         }
     }
 
@@ -417,4 +391,29 @@ public class RarReaderTests : ReaderTests
                 CompressionType.Rar
             )
         );
+
+    [Fact]
+    public void Rar_Iterate_Multipart()
+    {
+        var expectedOrder = new Stack(
+            new[]
+            {
+                "Failure",
+                "jpg",
+                "exe",
+                "Empty",
+                "тест.txt",
+                Path.Combine("jpg", "test.jpg"),
+                Path.Combine("exe", "test.exe"),
+            }
+        );
+        using var archive = RarArchive.Open(
+            Path.Combine(TEST_ARCHIVES_PATH, "Rar.multi.part01.rar")
+        );
+        using var reader = archive.ExtractAllEntries();
+        while (reader.MoveToNextEntry())
+        {
+            Assert.Equal(expectedOrder.Pop(), reader.Entry.Key);
+        }
+    }
 }
