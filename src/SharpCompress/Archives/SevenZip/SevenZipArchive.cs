@@ -194,7 +194,10 @@ public class SevenZipArchive : AbstractArchive<SevenZipArchiveEntry, SevenZipVol
         new SevenZipReader(ReaderOptions, this);
 
     public override bool IsSolid =>
-        Entries.Where(x => !x.IsDirectory).GroupBy(x => x.FilePart.Folder).Count() > 1;
+        Entries
+            .Where(x => !x.IsDirectory)
+            .GroupBy(x => x.FilePart.Folder)
+            .Any(folder => folder.Count() > 1);
 
     public override long TotalSize =>
         _database?._packSizes.Aggregate(0L, (total, packSize) => total + packSize) ?? 0;
