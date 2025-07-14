@@ -204,4 +204,23 @@ public class SevenZipArchiveTests : ArchiveTests
             Path.Combine(TEST_ARCHIVES_PATH, "7Zip.Tar.tar")
         );
     }
+
+    [Fact]
+    public void SevenZipArchive_TestSolidDetection()
+    {
+        using var oneBlockSolidArchive = SevenZipArchive.Open(
+            Path.Combine(TEST_ARCHIVES_PATH, "7Zip.solid.1block.7z")
+        );
+        Assert.True(oneBlockSolidArchive.IsSolid);
+
+        using var solidArchive = SevenZipArchive.Open(
+            Path.Combine(TEST_ARCHIVES_PATH, "7Zip.solid.7z")
+        );
+        Assert.True(solidArchive.IsSolid);
+
+        using var nonSolidArchive = SevenZipArchive.Open(
+            Path.Combine(TEST_ARCHIVES_PATH, "7Zip.nonsolid.7z")
+        );
+        Assert.False(nonSolidArchive.IsSolid);
+    }
 }
