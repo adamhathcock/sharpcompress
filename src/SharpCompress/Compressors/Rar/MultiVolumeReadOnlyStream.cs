@@ -5,11 +5,21 @@ using System.Collections.Generic;
 using System.IO;
 using SharpCompress.Common;
 using SharpCompress.Common.Rar;
+using SharpCompress.IO;
 
 namespace SharpCompress.Compressors.Rar;
 
-internal sealed class MultiVolumeReadOnlyStream : Stream
+internal sealed class MultiVolumeReadOnlyStream : Stream, IStreamStack
 {
+#if DEBUG_STREAMS
+    long IStreamStack.InstanceId { get; set; }
+#endif
+    int IStreamStack.DefaultBufferSize { get; set; }
+    Stream IStreamStack.BaseStream() => currentStream;
+    int IStreamStack.BufferSize { get => 0; set { } }
+    int IStreamStack.BufferPosition { get => 0; set { } }
+    void IStreamStack.SetPostion(long position) { }
+
     private long currentPosition;
     private long maxPosition;
 
@@ -31,6 +41,9 @@ internal sealed class MultiVolumeReadOnlyStream : Stream
         filePartEnumerator = parts.GetEnumerator();
         filePartEnumerator.MoveNext();
         InitializeNextFilePart();
+#if DEBUG_STREAMS
+        this.DebugConstruct(typeof(MultiVolumeReadOnlyStream));
+#endif
     }
 
     protected override void Dispose(bool disposing)
@@ -38,6 +51,10 @@ internal sealed class MultiVolumeReadOnlyStream : Stream
         base.Dispose(disposing);
         if (disposing)
         {
+#if DEBUG_STREAMS
+            this.DebugDispose(typeof(MultiVolumeReadOnlyStream));
+#endif
+
             if (filePartEnumerator != null)
             {
                 filePartEnumerator.Dispose();

@@ -40,7 +40,7 @@ public class ZipWriter : AbstractWriter
 
         if (WriterOptions.LeaveStreamOpen)
         {
-            destination = NonDisposingStream.Create(destination);
+            destination = SharpCompressStream.Create(destination, leaveOpen: true);
         }
         InitializeStream(destination);
     }
@@ -313,7 +313,7 @@ public class ZipWriter : AbstractWriter
         private readonly ZipWriter writer;
         private readonly ZipCompressionMethod zipCompressionMethod;
         private readonly CompressionLevel compressionLevel;
-        private CountingWritableSubStream? counting;
+        private SharpCompressStream? counting;
         private ulong decompressed;
 
         // Flag to prevent throwing exceptions on Dispose
@@ -353,7 +353,7 @@ public class ZipWriter : AbstractWriter
 
         private Stream GetWriteStream(Stream writeStream)
         {
-            counting = new CountingWritableSubStream(writeStream);
+            counting = new SharpCompressStream(writeStream, leaveOpen: true);
             Stream output = counting;
             switch (zipCompressionMethod)
             {
@@ -419,9 +419,9 @@ public class ZipWriter : AbstractWriter
                     return;
                 }
 
-                var countingCount = counting?.Count ?? 0;
+                var countingCount = counting?.InternalPosition ?? 0;
                 entry.Crc = (uint)crc.Crc32Result;
-                entry.Compressed = countingCount;
+                entry.Compressed = (ulong)countingCount;
                 entry.Decompressed = decompressed;
 
                 var zip64 =
@@ -521,7 +521,7 @@ public class ZipWriter : AbstractWriter
             // if we can prevent the writes from happening
             if (entry.Zip64HeaderOffset == 0)
             {
-                var countingCount = counting?.Count ?? 0;
+                var countingCount = counting?.InternalPosition ?? 0;
                 // Pre-check, the counting.Count is not exact, as we do not know the size before having actually compressed it
                 if (
                     limitsExceeded
@@ -541,7 +541,7 @@ public class ZipWriter : AbstractWriter
 
             if (entry.Zip64HeaderOffset == 0)
             {
-                var countingCount = counting?.Count ?? 0;
+                var countingCount = counting?.InternalPosition ?? 0;
                 // Post-check, this is accurate
                 if ((decompressed > uint.MaxValue) || countingCount > uint.MaxValue)
                 {

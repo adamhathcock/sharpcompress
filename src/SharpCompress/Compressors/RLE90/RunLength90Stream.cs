@@ -4,11 +4,21 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using SharpCompress.IO;
 
 namespace SharpCompress.Compressors.RLE90
 {
-    public class RunLength90Stream : Stream
+    public class RunLength90Stream : Stream, IStreamStack
     {
+#if DEBUG_STREAMS
+        long IStreamStack.InstanceId { get; set; }
+#endif
+        int IStreamStack.DefaultBufferSize { get; set; }
+        Stream IStreamStack.BaseStream() => _stream;
+        int IStreamStack.BufferSize { get => 0; set { } }
+        int IStreamStack.BufferPosition { get => 0; set { } }
+        void IStreamStack.SetPostion(long position) { }
+
         private readonly Stream _stream;
         private const byte DLE = 0x90;
         private int _compressedSize;
@@ -18,6 +28,17 @@ namespace SharpCompress.Compressors.RLE90
         {
             _stream = stream;
             _compressedSize = compressedSize;
+#if DEBUG_STREAMS
+            this.DebugConstruct(typeof(RunLength90Stream));
+#endif
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+#if DEBUG_STREAMS
+            this.DebugDispose(typeof(RunLength90Stream));
+#endif
+            base.Dispose(disposing);
         }
 
         public override bool CanRead => true;

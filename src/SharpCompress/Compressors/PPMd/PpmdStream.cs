@@ -1,15 +1,25 @@
-﻿#nullable disable
+#nullable disable
 
 using System;
 using System.IO;
 using SharpCompress.Compressors.LZMA.RangeCoder;
 using SharpCompress.Compressors.PPMd.H;
 using SharpCompress.Compressors.PPMd.I1;
+using SharpCompress.IO;
 
 namespace SharpCompress.Compressors.PPMd;
 
-public class PpmdStream : Stream
+public class PpmdStream : Stream, IStreamStack
 {
+#if DEBUG_STREAMS
+    long IStreamStack.InstanceId { get; set; }
+#endif
+    int IStreamStack.DefaultBufferSize { get; set; }
+    Stream IStreamStack.BaseStream() => _stream;
+    int IStreamStack.BufferSize { get => 0; set { } }
+    int IStreamStack.BufferPosition { get => 0; set { } }
+    void IStreamStack.SetPostion(long position) { }
+
     private readonly PpmdProperties _properties;
     private readonly Stream _stream;
     private readonly bool _compress;
@@ -24,6 +34,10 @@ public class PpmdStream : Stream
         _properties = properties;
         _stream = stream;
         _compress = compress;
+
+#if DEBUG_STREAMS
+        this.DebugConstruct(typeof(PpmdStream));
+#endif
 
         if (properties.Version == PpmdVersion.I1)
         {
@@ -74,6 +88,9 @@ public class PpmdStream : Stream
             return;
         }
         _isDisposed = true;
+#if DEBUG_STREAMS
+        this.DebugDispose(typeof(PpmdStream));
+#endif
         if (isDisposing)
         {
             if (_compress)

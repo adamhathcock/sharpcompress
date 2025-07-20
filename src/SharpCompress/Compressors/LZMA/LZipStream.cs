@@ -15,10 +15,19 @@ namespace SharpCompress.Compressors.LZMA;
 /// <summary>
 /// Stream supporting the LZIP format, as documented at http://www.nongnu.org/lzip/manual/lzip_manual.html
 /// </summary>
-public sealed class LZipStream : Stream
+public sealed class LZipStream : Stream, IStreamStack
 {
+#if DEBUG_STREAMS
+    long IStreamStack.InstanceId { get; set; }
+#endif
+    int IStreamStack.DefaultBufferSize { get; set; }
+    Stream IStreamStack.BaseStream() => _stream;
+    int IStreamStack.BufferSize { get => 0; set { } }
+    int IStreamStack.BufferPosition { get => 0; set { } }
+    void IStreamStack.SetPostion(long position) { }
+
     private readonly Stream _stream;
-    private readonly CountingWritableSubStream? _countingWritableSubStream;
+    private readonly SharpCompressStream? _countingWritableSubStream;
     private bool _disposed;
     private bool _finished;
 
@@ -44,7 +53,7 @@ public sealed class LZipStream : Stream
             var dSize = 104 * 1024;
             WriteHeaderSize(stream);
 
-            _countingWritableSubStream = new CountingWritableSubStream(stream);
+            _countingWritableSubStream = new SharpCompressStream(stream, leaveOpen: true);
             _stream = new Crc32Stream(
                 new LzmaStream(
                     new LzmaEncoderProperties(true, dSize),
@@ -52,6 +61,9 @@ public sealed class LZipStream : Stream
                     _countingWritableSubStream
                 )
             );
+#if DEBUG_STREAMS
+            this.DebugConstruct(typeof(LZipStream));
+#endif
         }
     }
 
@@ -64,7 +76,7 @@ public sealed class LZipStream : Stream
                 var crc32Stream = (Crc32Stream)_stream;
                 crc32Stream.WrappedStream.Dispose();
                 crc32Stream.Dispose();
-                var compressedCount = _countingWritableSubStream.NotNull().Count;
+                var compressedCount = _countingWritableSubStream.NotNull().InternalPosition;
 
                 Span<byte> intBuf = stackalloc byte[8];
                 BinaryPrimitives.WriteUInt32LittleEndian(intBuf, crc32Stream.Crc);
@@ -74,7 +86,7 @@ public sealed class LZipStream : Stream
                 _countingWritableSubStream?.Write(intBuf);
 
                 //total with headers
-                BinaryPrimitives.WriteUInt64LittleEndian(intBuf, compressedCount + 6 + 20);
+                BinaryPrimitives.WriteUInt64LittleEndian(intBuf, (ulong)compressedCount + (ulong)(6 + 20));
                 _countingWritableSubStream?.Write(intBuf);
             }
             _finished = true;
@@ -90,6 +102,9 @@ public sealed class LZipStream : Stream
             return;
         }
         _disposed = true;
+#if DEBUG_STREAMS
+        this.DebugDispose(typeof(LZipStream));
+#endif
         if (disposing)
         {
             Finish();

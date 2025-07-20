@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using SharpCompress.IO;
 
 /*
  * Copyright 2001,2004-2005 The Apache Software Foundation
@@ -38,8 +39,17 @@ namespace SharpCompress.Compressors.BZip2;
   * start of the BZIP2 stream to make it compatible with other PGP programs.
   */
 
-internal sealed class CBZip2OutputStream : Stream
+internal sealed class CBZip2OutputStream : Stream, IStreamStack
 {
+#if DEBUG_STREAMS
+    long IStreamStack.InstanceId { get; set; }
+#endif
+    int IStreamStack.DefaultBufferSize { get; set; }
+    Stream IStreamStack.BaseStream() => bsStream;
+    int IStreamStack.BufferSize { get => 0; set { } }
+    int IStreamStack.BufferPosition { get => 0; set { } }
+    void IStreamStack.SetPostion(long position) { }
+
     private const int SETMASK = (1 << 21);
     private const int CLEARMASK = (~SETMASK);
     private const int GREATER_ICOST = 15;
@@ -334,6 +344,10 @@ internal sealed class CBZip2OutputStream : Stream
 
         BsSetStream(inStream);
 
+#if DEBUG_STREAMS
+        this.DebugConstruct(typeof(CBZip2OutputStream));
+#endif
+
         workFactor = 50;
         if (inBlockSize > 9)
         {
@@ -450,6 +464,9 @@ internal sealed class CBZip2OutputStream : Stream
             Finish();
 
             disposed = true;
+#if DEBUG_STREAMS
+            this.DebugDispose(typeof(CBZip2OutputStream));
+#endif
             Dispose();
             bsStream?.Dispose();
             bsStream = null;

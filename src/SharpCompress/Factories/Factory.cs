@@ -49,23 +49,23 @@ public abstract class Factory : IFactory
     public abstract IEnumerable<string> GetSupportedExtensions();
 
     /// <inheritdoc/>
-    public abstract bool IsArchive(Stream stream, string? password = null);
+    public abstract bool IsArchive(Stream stream, string? password = null, int bufferSize = ReaderOptions.DefaultBufferSize);
 
     /// <inheritdoc/>
     public virtual FileInfo? GetFilePart(int index, FileInfo part1) => null;
 
     /// <summary>
-    /// Tries to open an <see cref="IReader"/> from a <see cref="RewindableStream"/>.
+    /// Tries to open an <see cref="IReader"/> from a <see cref="SharpCompressStream"/>.
     /// </summary>
     /// <remarks>
     /// This method provides extra insight to support loading compressed TAR files.
     /// </remarks>
-    /// <param name="rewindableStream"></param>
+    /// <param name="stream"></param>
     /// <param name="options"></param>
     /// <param name="reader"></param>
     /// <returns></returns>
     internal virtual bool TryOpenReader(
-        RewindableStream rewindableStream,
+        SharpCompressStream stream,
         ReaderOptions options,
         out IReader? reader
     )
@@ -74,11 +74,13 @@ public abstract class Factory : IFactory
 
         if (this is IReaderFactory readerFactory)
         {
-            rewindableStream.Rewind(false);
-            if (IsArchive(rewindableStream, options.Password))
+            //rewindableStream.Rewind(false);
+            ((IStreamStack)stream).StackSeek(0);
+            if (IsArchive(stream, options.Password, options.BufferSize))
             {
-                rewindableStream.Rewind(true);
-                reader = readerFactory.OpenReader(rewindableStream, options);
+                //rewindableStream.Rewind(true);
+                ((IStreamStack)stream).StackSeek(0);
+                reader = readerFactory.OpenReader(stream, options);
                 return true;
             }
         }

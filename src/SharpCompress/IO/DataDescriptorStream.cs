@@ -3,8 +3,17 @@ using System.IO;
 
 namespace SharpCompress.IO;
 
-public class DataDescriptorStream : Stream
+public class DataDescriptorStream : Stream, IStreamStack
 {
+#if DEBUG_STREAMS
+    long IStreamStack.InstanceId { get; set; }
+#endif
+    int IStreamStack.DefaultBufferSize { get; set; }
+    Stream IStreamStack.BaseStream() => _stream;
+    int IStreamStack.BufferSize { get => 0; set { return; } }
+    int IStreamStack.BufferPosition { get => 0; set { return; } }
+    void IStreamStack.SetPostion(long position) { }
+
     private readonly Stream _stream;
     private long _start;
     private int _searchPosition;
@@ -20,6 +29,10 @@ public class DataDescriptorStream : Stream
         _start = _stream.Position;
         _searchPosition = 0;
         _done = false;
+
+#if DEBUG_STREAMS
+        this.DebugConstruct(typeof(DataDescriptorStream));
+#endif
     }
 
     internal bool IsRecording { get; private set; }
@@ -31,6 +44,9 @@ public class DataDescriptorStream : Stream
             return;
         }
         _isDisposed = true;
+#if DEBUG_STREAMS
+        this.DebugDispose(typeof(DataDescriptorStream));
+#endif
         base.Dispose(disposing);
         if (disposing)
         {

@@ -45,7 +45,7 @@ internal abstract class ZipFilePart : FilePart
         );
         if (LeaveStreamOpen)
         {
-            return NonDisposingStream.Create(decompressionStream);
+            return SharpCompressStream.Create(decompressionStream, leaveOpen: true);
         }
         return decompressionStream;
     }
@@ -218,7 +218,7 @@ internal abstract class ZipFilePart : FilePart
             ) || Header.IsZip64
         )
         {
-            plainStream = NonDisposingStream.Create(plainStream); //make sure AES doesn't close
+            plainStream = SharpCompressStream.Create(plainStream, leaveOpen: true); //make sure AES doesn't close
         }
         else
         {

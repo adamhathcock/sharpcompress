@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using SharpCompress.Common;
+using SharpCompress.IO;
 
 namespace SharpCompress.Compressors.Lzw
 {
@@ -42,8 +43,17 @@ namespace SharpCompress.Compressors.Lzw
     /// }
     /// </code>
     /// </example>
-    public class LzwStream : Stream
+    public class LzwStream : Stream, IStreamStack
     {
+#if DEBUG_STREAMS
+        long IStreamStack.InstanceId { get; set; }
+#endif
+        int IStreamStack.DefaultBufferSize { get; set; }
+        Stream IStreamStack.BaseStream() => baseInputStream;
+        int IStreamStack.BufferSize { get => 0; set { } }
+        int IStreamStack.BufferPosition { get => 0; set { } }
+        void IStreamStack.SetPostion(long position) { }
+
         public static bool IsLzwStream(Stream stream)
         {
             try
@@ -90,12 +100,15 @@ namespace SharpCompress.Compressors.Lzw
         public LzwStream(Stream baseInputStream)
         {
             this.baseInputStream = baseInputStream;
+#if DEBUG_STREAMS
+            this.DebugConstruct(typeof(LzwStream));
+#endif
         }
 
-        /// <summary>
-        /// See <see cref="System.IO.Stream.ReadByte"/>
-        /// </summary>
-        /// <returns></returns>
+            /// <summary>
+            /// See <see cref="System.IO.Stream.ReadByte"/>
+            /// </summary>
+            /// <returns></returns>
         public override int ReadByte()
         {
             int b = Read(one, 0, 1);
@@ -539,6 +552,9 @@ namespace SharpCompress.Compressors.Lzw
             if (!isClosed)
             {
                 isClosed = true;
+#if DEBUG_STREAMS
+                this.DebugDispose(typeof(LzwStream));
+#endif
                 if (IsStreamOwner)
                 {
                     baseInputStream.Dispose();

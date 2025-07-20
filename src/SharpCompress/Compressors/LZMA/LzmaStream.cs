@@ -4,11 +4,21 @@ using System;
 using System.Buffers.Binary;
 using System.IO;
 using SharpCompress.Compressors.LZMA.LZ;
+using SharpCompress.IO;
 
 namespace SharpCompress.Compressors.LZMA;
 
-public class LzmaStream : Stream
+public class LzmaStream : Stream, IStreamStack
 {
+#if DEBUG_STREAMS
+    long IStreamStack.InstanceId { get; set; }
+#endif
+    int IStreamStack.DefaultBufferSize { get; set; }
+    Stream IStreamStack.BaseStream() => _inputStream;
+    int IStreamStack.BufferSize { get => 0; set { } }
+    int IStreamStack.BufferPosition { get => 0; set { } }
+    void IStreamStack.SetPostion(long position) { }
+
     private readonly Stream _inputStream;
     private readonly long _inputSize;
     private readonly long _outputSize;
@@ -55,6 +65,10 @@ public class LzmaStream : Stream
         _inputSize = inputSize;
         _outputSize = outputSize;
         _isLzma2 = isLzma2;
+
+#if DEBUG_STREAMS
+        this.DebugConstruct(typeof(LZipStream));
+#endif
 
         if (!isLzma2)
         {
@@ -117,6 +131,11 @@ public class LzmaStream : Stream
         Properties = prop;
 
         _encoder.SetStreams(null, outputStream, -1, -1);
+
+#if DEBUG_STREAMS
+        this.DebugConstruct(typeof(LZipStream));
+#endif
+
         if (presetDictionary != null)
         {
             _encoder.Train(presetDictionary);
@@ -138,6 +157,9 @@ public class LzmaStream : Stream
             return;
         }
         _isDisposed = true;
+#if DEBUG_STREAMS
+        this.DebugDispose(typeof(LZipStream));
+#endif
         if (disposing)
         {
             if (_encoder != null)

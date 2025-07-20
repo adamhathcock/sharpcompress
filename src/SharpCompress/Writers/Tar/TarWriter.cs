@@ -25,7 +25,7 @@ public class TarWriter : AbstractWriter
         }
         if (WriterOptions.LeaveStreamOpen)
         {
-            destination = NonDisposingStream.Create(destination);
+            destination = SharpCompressStream.Create(destination, leaveOpen: true);
         }
         switch (options.CompressionType)
         {

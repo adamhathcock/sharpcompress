@@ -30,11 +30,21 @@ using System;
 using System.Buffers.Binary;
 using System.IO;
 using System.Text;
+using SharpCompress.IO;
 
 namespace SharpCompress.Compressors.Deflate;
 
-public class GZipStream : Stream
+public class GZipStream : Stream, IStreamStack
 {
+#if DEBUG_STREAMS
+    long IStreamStack.InstanceId { get; set; }
+#endif
+    int IStreamStack.DefaultBufferSize { get; set; }
+    Stream IStreamStack.BaseStream() => BaseStream;
+    int IStreamStack.BufferSize { get => 0; set { } }
+    int IStreamStack.BufferPosition { get => 0; set { } }
+    void IStreamStack.SetPostion(long position) { }
+
     internal static readonly DateTime UNIX_EPOCH = new(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 
     private string? _comment;
@@ -62,6 +72,9 @@ public class GZipStream : Stream
     )
     {
         BaseStream = new ZlibBaseStream(stream, mode, level, ZlibStreamFlavor.GZIP, encoding);
+#if DEBUG_STREAMS
+        this.DebugConstruct(typeof(GZipStream));
+#endif
         _encoding = encoding;
     }
 
@@ -210,6 +223,9 @@ public class GZipStream : Stream
                     Crc32 = BaseStream.Crc32;
                 }
                 _disposed = true;
+#if DEBUG_STREAMS
+                this.DebugDispose(typeof(GZipStream));
+#endif
             }
         }
         finally

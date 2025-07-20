@@ -2,11 +2,21 @@ using System;
 using System.Buffers.Binary;
 using System.IO;
 using System.Security.Cryptography;
+using SharpCompress.IO;
 
 namespace SharpCompress.Common.Zip;
 
-internal class WinzipAesCryptoStream : Stream
+internal class WinzipAesCryptoStream : Stream, IStreamStack
 {
+#if DEBUG_STREAMS
+    long IStreamStack.InstanceId { get; set; }
+#endif
+    int IStreamStack.DefaultBufferSize { get; set; }
+    Stream IStreamStack.BaseStream() => _stream;
+    int IStreamStack.BufferSize { get => 0; set { } }
+    int IStreamStack.BufferPosition { get => 0; set { } }
+    void IStreamStack.SetPostion(long position) { }
+
     private const int BLOCK_SIZE_IN_BYTES = 16;
     private readonly SymmetricAlgorithm _cipher;
     private readonly byte[] _counter = new byte[BLOCK_SIZE_IN_BYTES];
@@ -26,6 +36,10 @@ internal class WinzipAesCryptoStream : Stream
     {
         _stream = stream;
         _totalBytesLeftToRead = length;
+
+#if DEBUG_STREAMS
+        this.DebugConstruct(typeof(WinzipAesCryptoStream));
+#endif
 
         _cipher = CreateCipher(winzipAesEncryptionData);
 
@@ -64,6 +78,9 @@ internal class WinzipAesCryptoStream : Stream
             return;
         }
         _isDisposed = true;
+#if DEBUG_STREAMS
+        this.DebugDispose(typeof(WinzipAesCryptoStream));
+#endif
         if (disposing)
         {
             //read out last 10 auth bytes

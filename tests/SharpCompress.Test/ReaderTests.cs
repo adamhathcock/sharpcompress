@@ -19,7 +19,7 @@ public abstract class ReaderTests : TestBase
     {
         testArchive = Path.Combine(TEST_ARCHIVES_PATH, testArchive);
 
-        options ??= new ReaderOptions();
+        options ??= new ReaderOptions() { BufferSize = 0x20000 }; //test larger buffer size (need test rather than eyeballing debug logs :P)
 
         options.LeaveStreamOpen = true;
         ReadImpl(testArchive, expectedCompression, options);
@@ -36,9 +36,11 @@ public abstract class ReaderTests : TestBase
     )
     {
         using var file = File.OpenRead(testArchive);
-        using var protectedStream = NonDisposingStream.Create(
-            new ForwardOnlyStream(file),
-            throwOnDispose: true
+        using var protectedStream = SharpCompressStream.Create(
+            new ForwardOnlyStream(file, options.BufferSize),
+            leaveOpen: true,
+            throwOnDispose: true,
+            bufferSize: options.BufferSize
         );
         using var testStream = new TestStream(protectedStream);
         using (var reader = ReaderFactory.Open(testStream, options))

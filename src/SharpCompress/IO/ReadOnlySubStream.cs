@@ -1,17 +1,23 @@
 using System;
+using System.Diagnostics;
 using System.IO;
 
 namespace SharpCompress.IO;
 
-internal class ReadOnlySubStream : NonDisposingStream
+internal class ReadOnlySubStream : SharpCompressStream, IStreamStack
 {
+#if DEBUG_STREAMS
+    long IStreamStack.InstanceId { get; set; }
+#endif
+    Stream IStreamStack.BaseStream() => base.Stream;
+
     private long _position;
 
     public ReadOnlySubStream(Stream stream, long bytesToRead)
         : this(stream, null, bytesToRead) { }
 
     public ReadOnlySubStream(Stream stream, long? origin, long bytesToRead)
-        : base(stream, throwOnDispose: false)
+        : base(stream, leaveOpen: true, throwOnDispose: false)
     {
         if (origin != null && stream.Position != origin.Value)
         {
@@ -19,6 +25,9 @@ internal class ReadOnlySubStream : NonDisposingStream
         }
         BytesLeftToRead = bytesToRead;
         _position = 0;
+#if DEBUG_STREAMS
+        this.DebugConstruct(typeof(ReadOnlySubStream));
+#endif
     }
 
     private long BytesLeftToRead { get; set; }
@@ -89,4 +98,12 @@ internal class ReadOnlySubStream : NonDisposingStream
 
     public override void Write(byte[] buffer, int offset, int count) =>
         throw new NotSupportedException();
+
+    protected override void Dispose(bool disposing)
+    {
+#if DEBUG_STREAMS
+        this.DebugDispose(typeof(ReadOnlySubStream));
+#endif
+        base.Dispose(disposing);
+    }
 }

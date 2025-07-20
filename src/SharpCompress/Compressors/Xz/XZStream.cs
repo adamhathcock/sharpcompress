@@ -3,12 +3,38 @@
 using System;
 using System.IO;
 using SharpCompress.Common;
+using SharpCompress.IO;
 
 namespace SharpCompress.Compressors.Xz;
 
 [CLSCompliant(false)]
-public sealed class XZStream : XZReadOnlyStream
+public sealed class XZStream : XZReadOnlyStream, IStreamStack
 {
+#if DEBUG_STREAMS
+    long IStreamStack.InstanceId { get; set; }
+#endif
+    Stream IStreamStack.BaseStream() => _baseStream;
+    int IStreamStack.BufferSize { get => 0; set { } }
+    int IStreamStack.BufferPosition { get => 0; set { } }
+    void IStreamStack.SetPostion(long position) { }
+
+    public XZStream(Stream baseStream)
+        : base(baseStream)
+    {
+        _baseStream = baseStream;
+#if DEBUG_STREAMS
+        this.DebugConstruct(typeof(XZStream));
+#endif
+    }
+
+    protected override void Dispose(bool disposing)
+    {
+#if DEBUG_STREAMS
+        this.DebugDispose(typeof(XZStream));
+#endif
+        base.Dispose(disposing);
+    }
+
     public static bool IsXZStream(Stream stream)
     {
         try
@@ -35,6 +61,7 @@ public sealed class XZStream : XZReadOnlyStream
         }
     }
 
+    private readonly Stream _baseStream;
     public XZHeader Header { get; private set; }
     public XZIndex Index { get; private set; }
     public XZFooter Footer { get; private set; }
@@ -43,8 +70,6 @@ public sealed class XZStream : XZReadOnlyStream
 
     private bool _endOfStream;
 
-    public XZStream(Stream stream)
-        : base(stream) { }
 
     public override int Read(byte[] buffer, int offset, int count)
     {
@@ -68,7 +93,6 @@ public sealed class XZStream : XZReadOnlyStream
         }
         return bytesRead;
     }
-
     private void ReadHeader()
     {
         Header = XZHeader.FromStream(BaseStream);

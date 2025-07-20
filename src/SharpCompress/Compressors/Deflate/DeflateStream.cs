@@ -27,11 +27,22 @@
 using System;
 using System.IO;
 using System.Text;
+using System.Threading;
+using SharpCompress.IO;
 
 namespace SharpCompress.Compressors.Deflate;
 
-public class DeflateStream : Stream
+public class DeflateStream : Stream, IStreamStack
 {
+#if DEBUG_STREAMS
+    long IStreamStack.InstanceId { get; set; }
+#endif
+    int IStreamStack.DefaultBufferSize { get; set; }
+    Stream IStreamStack.BaseStream() => _baseStream;
+    int IStreamStack.BufferSize { get => 0; set { } }
+    int IStreamStack.BufferPosition { get => 0; set { } }
+    void IStreamStack.SetPostion(long position) { }
+
     private readonly ZlibBaseStream _baseStream;
     private bool _disposed;
 
@@ -40,7 +51,8 @@ public class DeflateStream : Stream
         CompressionMode mode,
         CompressionLevel level = CompressionLevel.Default,
         Encoding? forceEncoding = null
-    ) =>
+    )
+    {
         _baseStream = new ZlibBaseStream(
             stream,
             mode,
@@ -49,6 +61,10 @@ public class DeflateStream : Stream
             forceEncoding
         );
 
+#if DEBUG_STREAMS
+        this.DebugConstruct(typeof(DeflateStream));
+#endif
+    }
     #region Zlib properties
 
     /// <summary>
@@ -233,6 +249,9 @@ public class DeflateStream : Stream
         {
             if (!_disposed)
             {
+#if DEBUG_STREAMS
+                this.DebugDispose(typeof(DeflateStream));
+#endif
                 if (disposing)
                 {
                     _baseStream?.Dispose();
@@ -290,6 +309,7 @@ public class DeflateStream : Stream
         {
             throw new ObjectDisposedException("DeflateStream");
         }
+
         return _baseStream.Read(buffer, offset, count);
     }
 

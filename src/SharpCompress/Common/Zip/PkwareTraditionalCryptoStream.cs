@@ -1,6 +1,8 @@
 using System;
 using System.IO;
 
+using SharpCompress.IO;
+
 namespace SharpCompress.Common.Zip;
 
 internal enum CryptoMode
@@ -9,8 +11,17 @@ internal enum CryptoMode
     Decrypt,
 }
 
-internal class PkwareTraditionalCryptoStream : Stream
+internal class PkwareTraditionalCryptoStream : Stream, IStreamStack
 {
+#if DEBUG_STREAMS
+    long IStreamStack.InstanceId { get; set; }
+#endif
+    int IStreamStack.DefaultBufferSize { get; set; }
+    Stream IStreamStack.BaseStream() => _stream;
+    int IStreamStack.BufferSize { get => 0; set { return; } }
+    int IStreamStack.BufferPosition { get => 0; set { return; } }
+    void IStreamStack.SetPostion(long position) { }
+
     private readonly PkwareTraditionalEncryptionData _encryptor;
     private readonly CryptoMode _mode;
     private readonly Stream _stream;
@@ -25,6 +36,10 @@ internal class PkwareTraditionalCryptoStream : Stream
         _encryptor = encryptor;
         _stream = stream;
         _mode = mode;
+
+#if DEBUG_STREAMS
+        this.DebugConstruct(typeof(PkwareTraditionalCryptoStream));
+#endif
     }
 
     public override bool CanRead => (_mode == CryptoMode.Decrypt);
@@ -100,6 +115,9 @@ internal class PkwareTraditionalCryptoStream : Stream
             return;
         }
         _isDisposed = true;
+#if DEBUG_STREAMS
+        this.DebugDispose(typeof(PkwareTraditionalCryptoStream));
+#endif
         base.Dispose(disposing);
         _stream.Dispose();
     }

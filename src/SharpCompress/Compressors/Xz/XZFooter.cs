@@ -23,7 +23,7 @@ public class XZFooter
     public static XZFooter FromStream(Stream stream)
     {
         var footer = new XZFooter(
-            new BinaryReader(NonDisposingStream.Create(stream), Encoding.UTF8)
+            new BinaryReader(SharpCompressStream.Create(stream, leaveOpen: true), Encoding.UTF8)
         );
         footer.Process();
         return footer;

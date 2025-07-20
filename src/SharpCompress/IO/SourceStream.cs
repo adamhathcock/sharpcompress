@@ -6,8 +6,17 @@ using SharpCompress.Readers;
 
 namespace SharpCompress.IO;
 
-public class SourceStream : Stream
+public class SourceStream : Stream, IStreamStack
 {
+#if DEBUG_STREAMS
+    long IStreamStack.InstanceId { get; set; }
+#endif
+    int IStreamStack.DefaultBufferSize { get; set; }
+    Stream IStreamStack.BaseStream() => _streams[_stream];
+    int IStreamStack.BufferSize { get => 0; set { return; } }
+    int IStreamStack.BufferPosition { get => 0; set { return; } }
+    void IStreamStack.SetPostion(long position) { }
+
     private long _prevSize;
     private readonly List<FileInfo> _files;
     private readonly List<Stream> _streams;
@@ -54,6 +63,10 @@ public class SourceStream : Stream
         }
         _stream = 0;
         _prevSize = 0;
+
+#if DEBUG_STREAMS
+        this.DebugConstruct(typeof(SourceStream));
+#endif
     }
 
     public void LoadAllParts()
@@ -236,6 +249,9 @@ public class SourceStream : Stream
 
     protected override void Dispose(bool disposing)
     {
+#if DEBUG_STREAMS
+        this.DebugDispose(typeof(SourceStream));
+#endif
         Close();
         base.Dispose(disposing);
     }

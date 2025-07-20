@@ -3,14 +3,40 @@ using System.IO;
 
 namespace SharpCompress.IO;
 
-internal class BufferedSubStream(Stream stream, long origin, long bytesToRead)
-    : NonDisposingStream(stream, throwOnDispose: false)
+internal class BufferedSubStream : SharpCompressStream, IStreamStack
 {
+#if DEBUG_STREAMS
+    long IStreamStack.InstanceId { get; set; }
+#endif
+    Stream IStreamStack.BaseStream() => base.Stream;
+
+    public BufferedSubStream(Stream stream, long origin, long bytesToRead)
+        : base(stream, leaveOpen: true, throwOnDispose: false)
+    {
+#if DEBUG_STREAMS
+        this.DebugConstruct(typeof(BufferedSubStream));
+#endif
+        this.origin = origin;
+        this.BytesLeftToRead = bytesToRead;
+    }
+
+    protected override void Dispose(bool disposing)
+    {
+#if DEBUG_STREAMS
+        this.DebugDispose(typeof(BufferedSubStream));
+#endif
+        if (disposing)
+        {
+        }
+        base.Dispose(disposing);
+    }
+
     private int _cacheOffset;
     private int _cacheLength;
     private readonly byte[] _cache = new byte[32 << 10];
+    private long origin;
 
-    private long BytesLeftToRead { get; set; } = bytesToRead;
+    private long BytesLeftToRead { get; set; }
 
     public override bool CanRead => true;
 
