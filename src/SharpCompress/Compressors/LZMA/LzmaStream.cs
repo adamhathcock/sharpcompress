@@ -78,7 +78,7 @@ public class LzmaStream : Stream, IStreamStack
         _isLzma2 = isLzma2;
 
 #if DEBUG_STREAMS
-        this.DebugConstruct(typeof(LZipStream));
+        this.DebugConstruct(typeof(LzmaStream));
 #endif
 
         if (!isLzma2)
@@ -144,7 +144,7 @@ public class LzmaStream : Stream, IStreamStack
         _encoder.SetStreams(null, outputStream, -1, -1);
 
 #if DEBUG_STREAMS
-        this.DebugConstruct(typeof(LZipStream));
+        this.DebugConstruct(typeof(LzmaStream));
 #endif
 
         if (presetDictionary != null)
@@ -169,7 +169,7 @@ public class LzmaStream : Stream, IStreamStack
         }
         _isDisposed = true;
 #if DEBUG_STREAMS
-        this.DebugDispose(typeof(LZipStream));
+        this.DebugDispose(typeof(LzmaStream));
 #endif
         if (disposing)
         {

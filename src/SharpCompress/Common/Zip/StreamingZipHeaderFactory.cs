@@ -175,19 +175,11 @@ internal class StreamingZipHeaderFactory : ZipHeaderFactory
                 } // Check if zip is streaming ( Length is 0 and is declared in PostDataDescriptor )
                 else if (local_header.Flags.HasFlag(HeaderFlags.UsePostDataDescriptor))
                 {
-                    //var isRecording = rewindableStream.IsRecording;
-                    //long pos = rewindableStream.Position;
-                    //if (!isRecording)
-                    //{
-                    //    rewindableStream.StartRecording();
-                    //}
                     var nextHeaderBytes = reader.ReadUInt32();
-                    ((IStreamStack)rewindableStream).Rewind(4);
+                    ((IStreamStack)rewindableStream).Rewind(sizeof(uint));
 
                     // Check if next data is PostDataDescriptor, streamed file with 0 length
                     header.HasData = !IsHeader(nextHeaderBytes);
-                    //((IStreamStack)rewindableStream).StackSeek(pos);
-                    //rewindableStream.Rewind(!isRecording);
                 }
                 else // We are not streaming and compressed size is 0, we have no data
                 {

@@ -64,7 +64,7 @@ namespace SharpCompress.IO
                 if (current.BufferSize != 0)
                 {
                     buffStream = current;
-                    buffStream.BufferPosition -= count;
+                    buffStream.BufferPosition -= Math.Min(buffStream.BufferPosition, count);
                 }
                 current = current?.BaseStream() as IStreamStack;
             }

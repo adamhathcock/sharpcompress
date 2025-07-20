@@ -23,6 +23,14 @@ public class SharpCompressStream : Stream, IStreamStack
     private bool _bufferingEnabled;
     private long _baseInitialPos;
 
+    private void ValidateBufferState()
+    {
+        if (_bufferPosition < 0 || _bufferPosition > _bufferedLength)
+        {
+            throw new InvalidOperationException("Buffer state is inconsistent: _bufferPosition is out of range.");
+        }
+    }
+
     int IStreamStack.BufferSize
     {
         get => _bufferingEnabled ? _bufferSize : 0;
@@ -37,6 +45,10 @@ public class SharpCompressStream : Stream, IStreamStack
                     _buffer = new byte[_bufferSize];
                     _bufferPosition = 0;
                     _bufferedLength = 0;
+                    if (_bufferingEnabled)
+                    {
+                        ValidateBufferState(); // Add here
+                    }
                     try
                     {
                         _internalPosition = Stream.Position;
@@ -61,6 +73,7 @@ public class SharpCompressStream : Stream, IStreamStack
                     throw new ArgumentOutOfRangeException(nameof(value));
                 _internalPosition = value;
                 _bufferPosition = value;
+                ValidateBufferState(); // Add here
             }
         }
     }
@@ -194,6 +207,8 @@ public class SharpCompressStream : Stream, IStreamStack
 
         if (_bufferingEnabled)
         {
+            ValidateBufferState();
+
             // Fill buffer if needed
             if (_bufferedLength == 0)
             {
@@ -240,6 +255,11 @@ public class SharpCompressStream : Stream, IStreamStack
 
     public override long Seek(long offset, SeekOrigin origin)
     {
+        if (_bufferingEnabled)
+        {
+            ValidateBufferState();
+        }
+
         long orig = _internalPosition;
         long targetPos;
         // Calculate the absolute target position based on origin

@@ -20,7 +20,6 @@ public class SharpCompressStreamTests
             for (int i = 0; i < ms.Length; i += 4)
             {
                 bw.Write(i);
-                var buffer = ArrayPool<byte>.Shared.Rent(1024);
             }
         }
         ms.Position = 0;
