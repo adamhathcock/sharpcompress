@@ -27,7 +27,9 @@ public class SharpCompressStream : Stream, IStreamStack
     {
         if (_bufferPosition < 0 || _bufferPosition > _bufferedLength)
         {
-            throw new InvalidOperationException("Buffer state is inconsistent: _bufferPosition is out of range.");
+            throw new InvalidOperationException(
+                "Buffer state is inconsistent: _bufferPosition is out of range."
+            );
         }
     }
 
