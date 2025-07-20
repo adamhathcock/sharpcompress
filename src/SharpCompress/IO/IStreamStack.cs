@@ -69,6 +69,7 @@ namespace SharpCompress.IO
                 current = current?.BaseStream() as IStreamStack;
             }
         }
+
         internal static void SetBuffer(this IStreamStack stream, int bufferSize, bool force)
         {
             if (bufferSize == 0 || stream == null)
@@ -156,7 +157,9 @@ namespace SharpCompress.IO
                 return firstSeekableStream.Position;
             }
 
-            throw new NotSupportedException("Cannot set position on this stream stack (no seekable or buffering stream supports the requested position).");
+            throw new NotSupportedException(
+                "Cannot set position on this stream stack (no seekable or buffering stream supports the requested position)."
+            );
         }
 
         /// <summary>
@@ -168,7 +171,14 @@ namespace SharpCompress.IO
         /// <param name="offset"></param>
         /// <param name="count"></param>
         /// <returns></returns>
-        internal static int Read(this IStreamStack stream, byte[] buffer, int offset, int count, out IStreamStack? buffStream, out int baseReadCount)
+        internal static int Read(
+            this IStreamStack stream,
+            byte[] buffer,
+            int offset,
+            int count,
+            out IStreamStack? buffStream,
+            out int baseReadCount
+        )
         {
             Stream baseStream = stream.BaseStream();
             Stream thisStream = (Stream)stream;
@@ -205,7 +215,11 @@ namespace SharpCompress.IO
             return "Px" + pos.ToString("x");
         }
 
-        public static long GetInstanceId(this IStreamStack stream, ref long instanceId, bool construct)
+        public static long GetInstanceId(
+            this IStreamStack stream,
+            ref long instanceId,
+            bool construct
+        )
         {
             if (instanceId == 0) //will not be equal to 0 when inherited IStackStream types are being used
                 instanceId = System.Threading.Interlocked.Increment(ref _instanceCounter);
@@ -217,22 +231,32 @@ namespace SharpCompress.IO
             long id = stream.InstanceId;
             stream.InstanceId = GetInstanceId(stream, ref id, true);
             var frame = (new StackTrace()).GetFrame(3);
-            string parentInfo = frame != null ? $"{frame.GetMethod()?.DeclaringType?.Name}.{frame.GetMethod()?.Name}()" : "Unknown";
+            string parentInfo =
+                frame != null
+                    ? $"{frame.GetMethod()?.DeclaringType?.Name}.{frame.GetMethod()?.Name}()"
+                    : "Unknown";
             if (constructing.FullName == stream.GetType().FullName) //don't debug base IStackStream types
-                Debug.WriteLine($"{GetStreamStackString(stream, true)} : Constructed by [{parentInfo}]");
+                Debug.WriteLine(
+                    $"{GetStreamStackString(stream, true)} : Constructed by [{parentInfo}]"
+                );
         }
 
         public static void DebugDispose(this IStreamStack stream, Type constructing)
         {
             var frame = (new StackTrace()).GetFrame(3);
-            string parentInfo = frame != null ? $"{frame.GetMethod()?.DeclaringType?.Name}.{frame.GetMethod()?.Name}()" : "Unknown";
+            string parentInfo =
+                frame != null
+                    ? $"{frame.GetMethod()?.DeclaringType?.Name}.{frame.GetMethod()?.Name}()"
+                    : "Unknown";
             if (constructing.FullName == stream.GetType().FullName) //don't debug base IStackStream types
                 Debug.WriteLine($"{GetStreamStackString(stream, false)} : Disposed by [{parentInfo}]");
         }
 
         public static void DebugTrace(this IStreamStack stream, string message)
         {
-            Debug.WriteLine($"{GetStreamStackString(stream, false)} : [{stream.GetType().Name}]{message}");
+            Debug.WriteLine(
+                $"{GetStreamStackString(stream, false)} : [{stream.GetType().Name}]{message}"
+            );
         }
 
         /// <summary>
@@ -247,18 +271,25 @@ namespace SharpCompress.IO
                 IStreamStack? sStack = current as IStreamStack;
                 string id = sStack != null ? "#" + sStack.InstanceId.ToString() : "";
                 string buffSize = sStack != null ? "Bx" + sStack.BufferSize.ToString("x") : "";
-                string defBuffSize = sStack != null ? "Dx" + sStack.DefaultBufferSize.ToString("x") : "";
+                string defBuffSize =
+                    sStack != null ? "Dx" + sStack.DefaultBufferSize.ToString("x") : "";
 
                 if (sb.Length > 0)
                     sb.Insert(0, "/");
                 try
                 {
-                    sb.Insert(0, $"{current.GetType().Name}{id}[{cleansePos(current.Position)}:{buffSize}:{defBuffSize}]");
+                    sb.Insert(
+                        0,
+                        $"{current.GetType().Name}{id}[{cleansePos(current.Position)}:{buffSize}:{defBuffSize}]"
+                    );
                 }
                 catch
                 {
                     if (current is SharpCompressStream scs)
-                        sb.Insert(0, $"{current.GetType().Name}{id}[{cleansePos(scs.InternalPosition)}:{buffSize}:{defBuffSize}]");
+                        sb.Insert(
+                            0,
+                            $"{current.GetType().Name}{id}[{cleansePos(scs.InternalPosition)}:{buffSize}:{defBuffSize}]"
+                        );
                     else
                         sb.Insert(0, $"{current.GetType().Name}{id}[:{buffSize}]");
                 }
@@ -270,7 +301,5 @@ namespace SharpCompress.IO
             return sb.ToString();
         }
 #endif
-
     }
-
 }

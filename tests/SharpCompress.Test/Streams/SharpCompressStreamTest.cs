@@ -1,12 +1,12 @@
 using System;
 using System.Buffers;
 using System.IO;
+using System.Linq;
 using System.Text;
 using SharpCompress.Compressors.LZMA;
 using SharpCompress.IO;
 using Xunit;
 using ZstdSharp.Unsafe;
-using System.Linq;
 
 namespace SharpCompress.Test.Streams;
 
@@ -91,12 +91,10 @@ public class SharpCompressStreamTests
                 Assert.Equal(0x2000, scs.Position); //stream has correct position
                 Assert.True(data.Skip(test.Length).Take(test.Length).SequenceEqual(test)); //is the data correct
                 Assert.Equal(0x10000, ms.Position); //the base stream has not moved
-
             }
         }
 
         ArrayPool<byte>.Shared.Return(data);
         ArrayPool<byte>.Shared.Return(test);
     }
-
 }

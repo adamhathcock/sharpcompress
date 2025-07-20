@@ -11,13 +11,26 @@ public class ForwardOnlyStream : SharpCompressStream, IStreamStack
 #if DEBUG_STREAMS
     long IStreamStack.InstanceId { get; set; }
 #endif
+
     Stream IStreamStack.BaseStream() => stream;
-    int IStreamStack.BufferSize { get => 0; set { } }
-    int IStreamStack.BufferPosition { get => 0; set { } }
+
+    int IStreamStack.BufferSize
+    {
+        get => 0;
+        set { }
+    }
+    int IStreamStack.BufferPosition
+    {
+        get => 0;
+        set { }
+    }
+
     void IStreamStack.SetPostion(long position) { }
+
     public bool IsDisposed { get; private set; }
 
-    public ForwardOnlyStream(Stream stream, int bufferSize = ReaderOptions.DefaultBufferSize) : base(stream, bufferSize: bufferSize)
+    public ForwardOnlyStream(Stream stream, int bufferSize = ReaderOptions.DefaultBufferSize)
+        : base(stream, bufferSize: bufferSize)
     {
         this.stream = stream;
 #if DEBUG_STREAMS

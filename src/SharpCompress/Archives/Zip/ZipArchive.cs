@@ -116,10 +116,17 @@ public class ZipArchive : AbstractWritableArchive<ZipArchiveEntry, ZipVolume>
         );
     }
 
-    public static bool IsZipFile(string filePath, string? password = null, int bufferSize = ReaderOptions.DefaultBufferSize) =>
-        IsZipFile(new FileInfo(filePath), password, bufferSize);
+    public static bool IsZipFile(
+        string filePath,
+        string? password = null,
+        int bufferSize = ReaderOptions.DefaultBufferSize
+    ) => IsZipFile(new FileInfo(filePath), password, bufferSize);
 
-    public static bool IsZipFile(FileInfo fileInfo, string? password = null, int bufferSize = ReaderOptions.DefaultBufferSize)
+    public static bool IsZipFile(
+        FileInfo fileInfo,
+        string? password = null,
+        int bufferSize = ReaderOptions.DefaultBufferSize
+    )
     {
         if (!fileInfo.Exists)
         {
@@ -129,7 +136,11 @@ public class ZipArchive : AbstractWritableArchive<ZipArchiveEntry, ZipVolume>
         return IsZipFile(stream, password, bufferSize);
     }
 
-    public static bool IsZipFile(Stream stream, string? password = null, int bufferSize = ReaderOptions.DefaultBufferSize)
+    public static bool IsZipFile(
+        Stream stream,
+        string? password = null,
+        int bufferSize = ReaderOptions.DefaultBufferSize
+    )
     {
         var headerFactory = new StreamingZipHeaderFactory(password, new ArchiveEncoding(), null);
         try
@@ -158,7 +169,11 @@ public class ZipArchive : AbstractWritableArchive<ZipArchiveEntry, ZipVolume>
         }
     }
 
-    public static bool IsZipMulti(Stream stream, string? password = null, int bufferSize = ReaderOptions.DefaultBufferSize)
+    public static bool IsZipMulti(
+        Stream stream,
+        string? password = null,
+        int bufferSize = ReaderOptions.DefaultBufferSize
+    )
     {
         var headerFactory = new StreamingZipHeaderFactory(password, new ArchiveEncoding(), null);
         try

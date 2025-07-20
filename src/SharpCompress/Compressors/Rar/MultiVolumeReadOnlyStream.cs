@@ -15,9 +15,20 @@ internal sealed class MultiVolumeReadOnlyStream : Stream, IStreamStack
     long IStreamStack.InstanceId { get; set; }
 #endif
     int IStreamStack.DefaultBufferSize { get; set; }
+
     Stream IStreamStack.BaseStream() => currentStream;
-    int IStreamStack.BufferSize { get => 0; set { } }
-    int IStreamStack.BufferPosition { get => 0; set { } }
+
+    int IStreamStack.BufferSize
+    {
+        get => 0;
+        set { }
+    }
+    int IStreamStack.BufferPosition
+    {
+        get => 0;
+        set { }
+    }
+
     void IStreamStack.SetPostion(long position) { }
 
     private long currentPosition;

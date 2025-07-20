@@ -12,6 +12,7 @@ public class SharpCompressStream : Stream, IStreamStack
     long IStreamStack.InstanceId { get; set; }
 #endif
     int IStreamStack.DefaultBufferSize { get; set; }
+
     Stream IStreamStack.BaseStream() => Stream;
 
     // Buffering fields
@@ -64,14 +65,14 @@ public class SharpCompressStream : Stream, IStreamStack
         }
     }
 
-    void IStreamStack.SetPostion(long position)
-    {
-    }
+    void IStreamStack.SetPostion(long position) { }
 
     public Stream Stream { get; }
+
     //private MemoryStream _bufferStream = new();
 
     private bool _readOnly; //some archive detection requires seek to be disabled to cause it to exception to try the next arc type
+
     //private bool _isRewound;
     private bool _isDisposed;
     private long _internalPosition = 0;
@@ -81,7 +82,13 @@ public class SharpCompressStream : Stream, IStreamStack
 
     public long InternalPosition => _internalPosition;
 
-    public static SharpCompressStream Create(Stream stream, bool leaveOpen = false, bool throwOnDispose = false, int bufferSize = 0, bool forceBuffer = false)
+    public static SharpCompressStream Create(
+        Stream stream,
+        bool leaveOpen = false,
+        bool throwOnDispose = false,
+        int bufferSize = 0,
+        bool forceBuffer = false
+    )
     {
         if (
             stream is SharpCompressStream sc
@@ -96,7 +103,13 @@ public class SharpCompressStream : Stream, IStreamStack
         return new SharpCompressStream(stream, leaveOpen, throwOnDispose, bufferSize, forceBuffer);
     }
 
-    public SharpCompressStream(Stream stream, bool leaveOpen = false, bool throwOnDispose = false, int bufferSize = 0, bool forceBuffer = false)
+    public SharpCompressStream(
+        Stream stream,
+        bool leaveOpen = false,
+        bool throwOnDispose = false,
+        int bufferSize = 0,
+        bool forceBuffer = false
+    )
     {
         Stream = stream;
         this.LeaveOpen = leaveOpen;
@@ -147,6 +160,7 @@ public class SharpCompressStream : Stream, IStreamStack
             Stream.Dispose();
         }
     }
+
     public override bool CanRead => Stream.CanRead;
 
     public override bool CanSeek => !_readOnly && Stream.CanSeek;
@@ -160,10 +174,7 @@ public class SharpCompressStream : Stream, IStreamStack
 
     public override long Length
     {
-        get
-        {
-            return Stream.Length;
-        }
+        get { return Stream.Length; }
     }
 
     public override long Position
@@ -173,10 +184,7 @@ public class SharpCompressStream : Stream, IStreamStack
             long pos = _internalPosition; // Stream.Position + _bufferStream.Position - _bufferStream.Length;
             return pos;
         }
-        set
-        {
-            Seek(value, SeekOrigin.Begin);
-        }
+        set { Seek(value, SeekOrigin.Begin); }
     }
 
     public override int Read(byte[] buffer, int offset, int count)
@@ -224,7 +232,7 @@ public class SharpCompressStream : Stream, IStreamStack
                 return 0;
             }
             int read;
-           read = Stream.Read(buffer, offset, count);
+            read = Stream.Read(buffer, offset, count);
             _internalPosition += read;
             return read;
         }
@@ -259,7 +267,8 @@ public class SharpCompressStream : Stream, IStreamStack
         }
         else
         {
-            long newStreamPos = Stream.Seek(targetPos + _baseInitialPos, SeekOrigin.Begin) - _baseInitialPos;
+            long newStreamPos =
+                Stream.Seek(targetPos + _baseInitialPos, SeekOrigin.Begin) - _baseInitialPos;
             _internalPosition = newStreamPos;
             _bufferPosition = 0;
             _bufferedLength = 0;
@@ -301,5 +310,4 @@ public class SharpCompressStream : Stream, IStreamStack
     //    }
 
 #endif
-
 }

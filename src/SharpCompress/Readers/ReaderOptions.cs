@@ -5,6 +5,7 @@ namespace SharpCompress.Readers;
 public class ReaderOptions : OptionsBase
 {
     public const int DefaultBufferSize = 0x10000;
+
     /// <summary>
     /// Look for RarArchive (Check for self-extracting archives or cases where RarArchive isn't at the start of the file)
     /// </summary>

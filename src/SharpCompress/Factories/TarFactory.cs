@@ -67,8 +67,11 @@ public class TarFactory
     }
 
     /// <inheritdoc/>
-    public override bool IsArchive(Stream stream, string? password = null, int bufferSize = ReaderOptions.DefaultBufferSize) =>
-        TarArchive.IsTarFile(stream);
+    public override bool IsArchive(
+        Stream stream,
+        string? password = null,
+        int bufferSize = ReaderOptions.DefaultBufferSize
+    ) => TarArchive.IsTarFile(stream);
 
     #endregion
 

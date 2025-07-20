@@ -36,7 +36,13 @@ public class ArchiveTests : ReaderTests
     {
         foreach (var path in testArchives)
         {
-            using (var stream = SharpCompressStream.Create(File.OpenRead(path), leaveOpen: true, throwOnDispose: true))
+            using (
+                var stream = SharpCompressStream.Create(
+                    File.OpenRead(path),
+                    leaveOpen: true,
+                    throwOnDispose: true
+                )
+            )
             {
                 try
                 {
@@ -110,7 +116,13 @@ public class ArchiveTests : ReaderTests
     {
         foreach (var path in testArchives)
         {
-            using (var stream = SharpCompressStream.Create(File.OpenRead(path), leaveOpen: true, throwOnDispose: true))
+            using (
+                var stream = SharpCompressStream.Create(
+                    File.OpenRead(path),
+                    leaveOpen: true,
+                    throwOnDispose: true
+                )
+            )
             using (var archive = archiveFactory.Open(stream, readerOptions))
             {
                 try

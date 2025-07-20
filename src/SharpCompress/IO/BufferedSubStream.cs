@@ -8,6 +8,7 @@ internal class BufferedSubStream : SharpCompressStream, IStreamStack
 #if DEBUG_STREAMS
     long IStreamStack.InstanceId { get; set; }
 #endif
+
     Stream IStreamStack.BaseStream() => base.Stream;
 
     public BufferedSubStream(Stream stream, long origin, long bytesToRead)
@@ -25,9 +26,7 @@ internal class BufferedSubStream : SharpCompressStream, IStreamStack
 #if DEBUG_STREAMS
         this.DebugDispose(typeof(BufferedSubStream));
 #endif
-        if (disposing)
-        {
-        }
+        if (disposing) { }
         base.Dispose(disposing);
     }
 

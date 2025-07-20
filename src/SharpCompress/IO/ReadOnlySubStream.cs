@@ -9,6 +9,7 @@ internal class ReadOnlySubStream : SharpCompressStream, IStreamStack
 #if DEBUG_STREAMS
     long IStreamStack.InstanceId { get; set; }
 #endif
+
     Stream IStreamStack.BaseStream() => base.Stream;
 
     private long _position;

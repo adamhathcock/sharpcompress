@@ -40,8 +40,11 @@ public class GZipFactory
     }
 
     /// <inheritdoc/>
-    public override bool IsArchive(Stream stream, string? password = null, int bufferSize = ReaderOptions.DefaultBufferSize) =>
-        GZipArchive.IsGZipFile(stream);
+    public override bool IsArchive(
+        Stream stream,
+        string? password = null,
+        int bufferSize = ReaderOptions.DefaultBufferSize
+    ) => GZipArchive.IsGZipFile(stream);
 
     #endregion
 

@@ -49,9 +49,20 @@ namespace SharpCompress.Compressors.Lzw
         long IStreamStack.InstanceId { get; set; }
 #endif
         int IStreamStack.DefaultBufferSize { get; set; }
+
         Stream IStreamStack.BaseStream() => baseInputStream;
-        int IStreamStack.BufferSize { get => 0; set { } }
-        int IStreamStack.BufferPosition { get => 0; set { } }
+
+        int IStreamStack.BufferSize
+        {
+            get => 0;
+            set { }
+        }
+        int IStreamStack.BufferPosition
+        {
+            get => 0;
+            set { }
+        }
+
         void IStreamStack.SetPostion(long position) { }
 
         public static bool IsLzwStream(Stream stream)
@@ -105,10 +116,10 @@ namespace SharpCompress.Compressors.Lzw
 #endif
         }
 
-            /// <summary>
-            /// See <see cref="System.IO.Stream.ReadByte"/>
-            /// </summary>
-            /// <returns></returns>
+        /// <summary>
+        /// See <see cref="System.IO.Stream.ReadByte"/>
+        /// </summary>
+        /// <returns></returns>
         public override int ReadByte()
         {
             int b = Read(one, 0, 1);

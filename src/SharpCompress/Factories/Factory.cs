@@ -49,7 +49,11 @@ public abstract class Factory : IFactory
     public abstract IEnumerable<string> GetSupportedExtensions();
 
     /// <inheritdoc/>
-    public abstract bool IsArchive(Stream stream, string? password = null, int bufferSize = ReaderOptions.DefaultBufferSize);
+    public abstract bool IsArchive(
+        Stream stream,
+        string? password = null,
+        int bufferSize = ReaderOptions.DefaultBufferSize
+    );
 
     /// <inheritdoc/>
     public virtual FileInfo? GetFilePart(int index, FileInfo part1) => null;

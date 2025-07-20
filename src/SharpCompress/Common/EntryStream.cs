@@ -1,8 +1,8 @@
 using System;
 using System.IO;
-using SharpCompress.Readers;
-using SharpCompress.IO;
 using System.IO.Compression;
+using SharpCompress.IO;
+using SharpCompress.Readers;
 
 namespace SharpCompress.Common;
 
@@ -12,9 +12,20 @@ public class EntryStream : Stream, IStreamStack
     long IStreamStack.InstanceId { get; set; }
 #endif
     int IStreamStack.DefaultBufferSize { get; set; }
+
     Stream IStreamStack.BaseStream() => _stream;
-    int IStreamStack.BufferSize { get => 0; set { } }
-    int IStreamStack.BufferPosition { get => 0; set { } }
+
+    int IStreamStack.BufferSize
+    {
+        get => 0;
+        set { }
+    }
+    int IStreamStack.BufferPosition
+    {
+        get => 0;
+        set { }
+    }
+
     void IStreamStack.SetPostion(long position) { }
 
     private readonly IReader _reader;

@@ -28,8 +28,11 @@ public class SevenZipFactory : Factory, IArchiveFactory, IMultiArchiveFactory
     }
 
     /// <inheritdoc/>
-    public override bool IsArchive(Stream stream, string? password = null, int bufferSize = ReaderOptions.DefaultBufferSize) =>
-        SevenZipArchive.IsSevenZipFile(stream);
+    public override bool IsArchive(
+        Stream stream,
+        string? password = null,
+        int bufferSize = ReaderOptions.DefaultBufferSize
+    ) => SevenZipArchive.IsSevenZipFile(stream);
 
     #endregion
 

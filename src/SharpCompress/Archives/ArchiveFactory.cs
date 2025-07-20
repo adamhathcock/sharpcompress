@@ -166,14 +166,22 @@ public static class ArchiveFactory
         );
     }
 
-    public static bool IsArchive(string filePath, out ArchiveType? type, int bufferSize = ReaderOptions.DefaultBufferSize)
+    public static bool IsArchive(
+        string filePath,
+        out ArchiveType? type,
+        int bufferSize = ReaderOptions.DefaultBufferSize
+    )
     {
         filePath.CheckNotNullOrEmpty(nameof(filePath));
         using Stream s = File.OpenRead(filePath);
         return IsArchive(s, out type, bufferSize);
     }
 
-    public static bool IsArchive(Stream stream, out ArchiveType? type, int bufferSize = ReaderOptions.DefaultBufferSize)
+    public static bool IsArchive(
+        Stream stream,
+        out ArchiveType? type,
+        int bufferSize = ReaderOptions.DefaultBufferSize
+    )
     {
         type = null;
         stream.CheckNotNull(nameof(stream));

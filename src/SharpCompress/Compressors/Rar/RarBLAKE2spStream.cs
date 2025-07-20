@@ -12,9 +12,20 @@ internal class RarBLAKE2spStream : RarStream, IStreamStack
 #if DEBUG_STREAMS
     long IStreamStack.InstanceId { get; set; }
 #endif
+
     Stream IStreamStack.BaseStream() => readStream;
-    int IStreamStack.BufferSize { get => 0; set { } }
-    int IStreamStack.BufferPosition { get => 0; set { } }
+
+    int IStreamStack.BufferSize
+    {
+        get => 0;
+        set { }
+    }
+    int IStreamStack.BufferPosition
+    {
+        get => 0;
+        set { }
+    }
+
     void IStreamStack.SetPostion(long position) { }
 
     private readonly MultiVolumeReadOnlyStream readStream;

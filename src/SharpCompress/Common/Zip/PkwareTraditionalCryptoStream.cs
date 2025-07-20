@@ -1,6 +1,5 @@
 using System;
 using System.IO;
-
 using SharpCompress.IO;
 
 namespace SharpCompress.Common.Zip;
@@ -17,9 +16,20 @@ internal class PkwareTraditionalCryptoStream : Stream, IStreamStack
     long IStreamStack.InstanceId { get; set; }
 #endif
     int IStreamStack.DefaultBufferSize { get; set; }
+
     Stream IStreamStack.BaseStream() => _stream;
-    int IStreamStack.BufferSize { get => 0; set { return; } }
-    int IStreamStack.BufferPosition { get => 0; set { return; } }
+
+    int IStreamStack.BufferSize
+    {
+        get => 0;
+        set { return; }
+    }
+    int IStreamStack.BufferPosition
+    {
+        get => 0;
+        set { return; }
+    }
+
     void IStreamStack.SetPostion(long position) { }
 
     private readonly PkwareTraditionalEncryptionData _encryptor;

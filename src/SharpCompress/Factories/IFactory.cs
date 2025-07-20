@@ -36,7 +36,11 @@ public interface IFactory
     /// </summary>
     /// <param name="stream">A stream, pointing to the beginning of the archive.</param>
     /// <param name="password">optional password</param>
-    bool IsArchive(Stream stream, string? password = null, int bufferSize = ReaderOptions.DefaultBufferSize);
+    bool IsArchive(
+        Stream stream,
+        string? password = null,
+        int bufferSize = ReaderOptions.DefaultBufferSize
+    );
 
     /// <summary>
     /// From a passed in archive (zip, rar, 7z, 001), return all parts.
