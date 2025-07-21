@@ -6,7 +6,6 @@ using System.Text;
 using SharpCompress.Compressors.LZMA;
 using SharpCompress.IO;
 using Xunit;
-using ZstdSharp.Unsafe;
 
 namespace SharpCompress.Test.Streams;
 

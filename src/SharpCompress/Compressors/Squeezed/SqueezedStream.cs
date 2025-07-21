@@ -6,7 +6,6 @@ using System.Text;
 using System.Threading.Tasks;
 using SharpCompress.Compressors.RLE90;
 using SharpCompress.IO;
-using ZstdSharp.Unsafe;
 
 namespace SharpCompress.Compressors.Squeezed
 {
