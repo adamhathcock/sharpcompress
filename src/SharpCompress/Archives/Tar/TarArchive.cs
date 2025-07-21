@@ -90,6 +90,12 @@ public class TarArchive : AbstractWritableArchive<TarArchiveEntry, TarVolume>
     public static TarArchive Open(Stream stream, ReaderOptions? readerOptions = null)
     {
         stream.CheckNotNull(nameof(stream));
+
+        if (stream is not { CanSeek: true })
+        {
+            throw new ArgumentException("Stream must be seekable", nameof(stream));
+        }
+
         return new TarArchive(
             new SourceStream(stream, i => null, readerOptions ?? new ReaderOptions())
         );

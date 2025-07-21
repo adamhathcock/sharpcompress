@@ -89,6 +89,12 @@ public class GZipArchive : AbstractWritableArchive<GZipArchiveEntry, GZipVolume>
     public static GZipArchive Open(Stream stream, ReaderOptions? readerOptions = null)
     {
         stream.CheckNotNull(nameof(stream));
+
+        if (stream is not { CanSeek: true })
+        {
+            throw new ArgumentException("Stream must be seekable", nameof(stream));
+        }
+
         return new GZipArchive(
             new SourceStream(stream, _ => null, readerOptions ?? new ReaderOptions())
         );
