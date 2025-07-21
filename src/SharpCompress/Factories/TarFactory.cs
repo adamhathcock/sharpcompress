@@ -109,19 +109,19 @@ public class TarFactory
     )
     {
         reader = null;
+        long pos = ((IStreamStack)rewindableStream).GetPosition();
 
-        ((IStreamStack)rewindableStream).StackSeek(0);
         if (TarArchive.IsTarFile(rewindableStream))
         {
-            ((IStreamStack)rewindableStream).StackSeek(0);
+            ((IStreamStack)rewindableStream).StackSeek(pos);
             reader = OpenReader(rewindableStream, options);
             return true;
         }
 
-        ((IStreamStack)rewindableStream).StackSeek(0);
+        ((IStreamStack)rewindableStream).StackSeek(pos);
         if (BZip2Stream.IsBZip2(rewindableStream))
         {
-            ((IStreamStack)rewindableStream).StackSeek(0);
+            ((IStreamStack)rewindableStream).StackSeek(pos);
             var testStream = new BZip2Stream(
                 SharpCompressStream.Create(rewindableStream, leaveOpen: true),
                 CompressionMode.Decompress,
@@ -129,49 +129,49 @@ public class TarFactory
             );
             if (TarArchive.IsTarFile(testStream))
             {
-                ((IStreamStack)rewindableStream).StackSeek(0);
+                ((IStreamStack)rewindableStream).StackSeek(pos);
                 reader = new TarReader(rewindableStream, options, CompressionType.BZip2);
                 return true;
             }
         }
 
-        ((IStreamStack)rewindableStream).StackSeek(0);
+        ((IStreamStack)rewindableStream).StackSeek(pos);
         if (LZipStream.IsLZipFile(rewindableStream))
         {
-            ((IStreamStack)rewindableStream).StackSeek(0);
+            ((IStreamStack)rewindableStream).StackSeek(pos);
             var testStream = new LZipStream(
                 SharpCompressStream.Create(rewindableStream, leaveOpen: true),
                 CompressionMode.Decompress
             );
             if (TarArchive.IsTarFile(testStream))
             {
-                ((IStreamStack)rewindableStream).StackSeek(0);
+                ((IStreamStack)rewindableStream).StackSeek(pos);
                 reader = new TarReader(rewindableStream, options, CompressionType.LZip);
                 return true;
             }
         }
 
-        ((IStreamStack)rewindableStream).StackSeek(0);
+        ((IStreamStack)rewindableStream).StackSeek(pos);
         if (XZStream.IsXZStream(rewindableStream))
         {
-            ((IStreamStack)rewindableStream).StackSeek(0);
+            ((IStreamStack)rewindableStream).StackSeek(pos);
             var testStream = new XZStream(rewindableStream);
             if (TarArchive.IsTarFile(testStream))
             {
-                ((IStreamStack)rewindableStream).StackSeek(0);
+                ((IStreamStack)rewindableStream).StackSeek(pos);
                 reader = new TarReader(rewindableStream, options, CompressionType.Xz);
                 return true;
             }
         }
 
-        ((IStreamStack)rewindableStream).StackSeek(0);
+        ((IStreamStack)rewindableStream).StackSeek(pos);
         if (LzwStream.IsLzwStream(rewindableStream))
         {
             var testStream = new LzwStream(rewindableStream);
-            ((IStreamStack)rewindableStream).StackSeek(0);
+            ((IStreamStack)rewindableStream).StackSeek(pos);
             if (TarArchive.IsTarFile(testStream))
             {
-                ((IStreamStack)rewindableStream).StackSeek(0);
+                ((IStreamStack)rewindableStream).StackSeek(pos);
                 reader = new TarReader(rewindableStream, options, CompressionType.Lzw);
                 return true;
             }

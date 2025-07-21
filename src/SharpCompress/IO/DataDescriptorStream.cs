@@ -23,7 +23,7 @@ public class DataDescriptorStream : Stream, IStreamStack
         set { return; }
     }
 
-    void IStreamStack.SetPostion(long position) { }
+    void IStreamStack.SetPosition(long position) { }
 
     private readonly Stream _stream;
     private long _start;

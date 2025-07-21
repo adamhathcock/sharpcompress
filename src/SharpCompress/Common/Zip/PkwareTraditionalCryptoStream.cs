@@ -30,7 +30,7 @@ internal class PkwareTraditionalCryptoStream : Stream, IStreamStack
         set { return; }
     }
 
-    void IStreamStack.SetPostion(long position) { }
+    void IStreamStack.SetPosition(long position) { }
 
     private readonly PkwareTraditionalEncryptionData _encryptor;
     private readonly CryptoMode _mode;

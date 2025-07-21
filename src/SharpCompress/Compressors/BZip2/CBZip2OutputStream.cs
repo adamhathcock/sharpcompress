@@ -59,7 +59,7 @@ internal sealed class CBZip2OutputStream : Stream, IStreamStack
         set { }
     }
 
-    void IStreamStack.SetPostion(long position) { }
+    void IStreamStack.SetPosition(long position) { }
 
     private const int SETMASK = (1 << 21);
     private const int CLEARMASK = (~SETMASK);

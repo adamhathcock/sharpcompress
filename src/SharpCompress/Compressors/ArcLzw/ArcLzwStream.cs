@@ -26,7 +26,7 @@ public partial class ArcLzwStream : Stream, IStreamStack
         set { }
     }
 
-    void IStreamStack.SetPostion(long position) { }
+    void IStreamStack.SetPosition(long position) { }
 
     private Stream _stream;
     private bool _processed;

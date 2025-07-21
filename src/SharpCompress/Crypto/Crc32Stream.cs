@@ -27,7 +27,7 @@ public sealed class Crc32Stream : Stream, IStreamStack
         set { }
     }
 
-    void IStreamStack.SetPostion(long position) { }
+    void IStreamStack.SetPosition(long position) { }
 
     private readonly Stream stream;
     private readonly uint[] _table;

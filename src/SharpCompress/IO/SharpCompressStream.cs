@@ -80,7 +80,7 @@ public class SharpCompressStream : Stream, IStreamStack
         }
     }
 
-    void IStreamStack.SetPostion(long position) { }
+    void IStreamStack.SetPosition(long position) { }
 
     public Stream Stream { get; }
 

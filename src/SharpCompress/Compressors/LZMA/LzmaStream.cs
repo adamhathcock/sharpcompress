@@ -28,7 +28,7 @@ public class LzmaStream : Stream, IStreamStack
         set { }
     }
 
-    void IStreamStack.SetPostion(long position) { }
+    void IStreamStack.SetPosition(long position) { }
 
     private readonly Stream _inputStream;
     private readonly long _inputSize;

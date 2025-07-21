@@ -52,7 +52,7 @@ public class DeflateStream : Stream, IStreamStack
         set { }
     }
 
-    void IStreamStack.SetPostion(long position) { }
+    void IStreamStack.SetPosition(long position) { }
 
     private readonly ZlibBaseStream _baseStream;
     private bool _disposed;

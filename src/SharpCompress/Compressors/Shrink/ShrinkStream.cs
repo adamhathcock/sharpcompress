@@ -24,7 +24,7 @@ internal class ShrinkStream : Stream, IStreamStack
         set { }
     }
 
-    void IStreamStack.SetPostion(long position) { }
+    void IStreamStack.SetPosition(long position) { }
 
     private Stream inStream;
     private CompressionMode _compressionMode;

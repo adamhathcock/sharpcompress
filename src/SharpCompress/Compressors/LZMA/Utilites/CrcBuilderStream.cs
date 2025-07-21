@@ -24,7 +24,7 @@ internal class CrcBuilderStream : Stream, IStreamStack
         set { }
     }
 
-    void IStreamStack.SetPostion(long position) { }
+    void IStreamStack.SetPosition(long position) { }
 
     private readonly Stream _mTarget;
     private uint _mCrc;

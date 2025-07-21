@@ -23,7 +23,7 @@ internal class TarReadOnlySubStream : SharpCompressStream, IStreamStack
         set { }
     }
 
-    void IStreamStack.SetPostion(long position) { }
+    void IStreamStack.SetPosition(long position) { }
 
     private bool _isDisposed;
     private long _amountRead;

@@ -27,7 +27,7 @@ internal sealed class AesDecoderStream : DecoderStream2, IStreamStack
         set { }
     }
 
-    void IStreamStack.SetPostion(long position) { }
+    void IStreamStack.SetPosition(long position) { }
 
     private readonly Stream mStream;
     private readonly ICryptoTransform mDecoder;

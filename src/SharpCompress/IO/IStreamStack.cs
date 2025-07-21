@@ -39,8 +39,7 @@ namespace SharpCompress.IO
         /// but should update any internal position or buffer state as appropriate for the stream implementation.
         /// </summary>
         /// <param name="position">The absolute position to set within the stream stack.</param>
-        /// <returns>The position that was set, which must match the requested value if successful.</returns>
-        void SetPostion(long position);
+        void SetPosition(long position);
 
 #if DEBUG_STREAMS
         /// <summary>
@@ -52,6 +51,32 @@ namespace SharpCompress.IO
 
     internal static class StackStreamExtensions
     {
+        /// <summary>
+        /// Gets the logical position of the first buffering stream in the stack, or 0 if none exist.
+        /// </summary>
+        /// <param name="stream">The most derived (outermost) stream in the stack.</param>
+        /// <returns>The position of the first buffering stream, or 0 if not found.</returns>
+        internal static long GetPosition(this IStreamStack stream)
+        {
+            IStreamStack? current = stream;
+
+            while (current != null)
+            {
+                if (current.BufferSize != 0 && current is Stream st)
+                {
+                    return st.Position;
+                }
+                current = current?.BaseStream() as IStreamStack;
+            }
+            return 0;
+        }
+
+        /// <summary>
+        /// Rewinds the buffer of the outermost buffering stream in the stack by the specified count, if supported.
+        /// Only the most derived buffering stream is affected.
+        /// </summary>
+        /// <param name="stream">The most derived (outermost) stream in the stack.</param>
+        /// <param name="count">The number of bytes to rewind within the buffer.</param>
         internal static void Rewind(this IStreamStack stream, int count)
         {
             Stream baseStream = stream.BaseStream();
@@ -70,6 +95,13 @@ namespace SharpCompress.IO
             }
         }
 
+        /// <summary>
+        /// Sets the buffer size on the first buffering stream in the stack, or on the outermost stream if none exist.
+        /// If <paramref name="force"/> is true, sets the buffer size regardless of current value.
+        /// </summary>
+        /// <param name="stream">The most derived (outermost) stream in the stack.</param>
+        /// <param name="bufferSize">The buffer size to set.</param>
+        /// <param name="force">If true, forces the buffer size to be set even if already set.</param>
         internal static void SetBuffer(this IStreamStack stream, int bufferSize, bool force)
         {
             if (bufferSize == 0 || stream == null)
@@ -96,13 +128,13 @@ namespace SharpCompress.IO
 
         /// <summary>
         /// Attempts to set the position in the stream stack. If a buffering stream is present and the position is within its buffer,
-        /// BufferPosition is set on the outermost buffering stream and all intermediate streams update their internal state via SetPostion.
-        /// If no buffering stream is present, seeks as close to the root stream as possible and updates all intermediate streams' state via SetPostion.
+        /// BufferPosition is set on the outermost buffering stream and all intermediate streams update their internal state via SetPosition.
+        /// If no buffering stream is present, seeks as close to the root stream as possible and updates all intermediate streams' state via SetPosition.
         /// Seeking is never performed if any intermediate stream in the stack is buffering.
         /// Throws if the position cannot be set.
         /// </summary>
         /// <param name="stream">
-        /// The most derived (outermost) stream in the stack. The method traverses up the stack via Stream() until a stream can satisfy the buffer or seek request.
+        /// The most derived (outermost) stream in the stack. The method traverses up the stack via BaseStream() until a stream can satisfy the buffer or seek request.
         /// </param>
         /// <param name="position">The absolute position to set.</param>
         /// <returns>The position that was set.</returns>
@@ -163,14 +195,16 @@ namespace SharpCompress.IO
         }
 
         /// <summary>
-        /// Read bytes from the stream, use the position to observe how much was actually consumed and rewind the buffer to ensure further reads are correct.
-        /// This is required to prevent buffered reads skipping data, while also benefitting from buffering and reduced stream IO reads
+        /// Reads bytes from the stream, using the position to observe how much was actually consumed and rewind the buffer to ensure further reads are correct.
+        /// This is required to prevent buffered reads from skipping data, while also benefiting from buffering and reduced stream IO reads.
         /// </summary>
-        /// <param name="stream"></param>
-        /// <param name="buffer"></param>
-        /// <param name="offset"></param>
-        /// <param name="count"></param>
-        /// <returns></returns>
+        /// <param name="stream">The stream to read from.</param>
+        /// <param name="buffer">The buffer to read data into.</param>
+        /// <param name="offset">The offset in the buffer to start writing data.</param>
+        /// <param name="count">The maximum number of bytes to read.</param>
+        /// <param name="buffStream">Returns the buffering stream found in the stack, or null if none exists.</param>
+        /// <param name="baseReadCount">Returns the number of bytes actually read from the base stream, or -1 if no buffering stream was found.</param>
+        /// <returns>The number of bytes read into the buffer.</returns>
         internal static int Read(
             this IStreamStack stream,
             byte[] buffer,
@@ -215,6 +249,13 @@ namespace SharpCompress.IO
             return "Px" + pos.ToString("x");
         }
 
+        /// <summary>
+        /// Gets or creates a unique instance ID for the stream stack for debugging purposes.
+        /// </summary>
+        /// <param name="stream">The stream stack.</param>
+        /// <param name="instanceId">Reference to the instance ID field.</param>
+        /// <param name="construct">Whether this is being called during construction.</param>
+        /// <returns>The instance ID.</returns>
         public static long GetInstanceId(
             this IStreamStack stream,
             ref long instanceId,
@@ -226,6 +267,11 @@ namespace SharpCompress.IO
             return instanceId;
         }
 
+        /// <summary>
+        /// Writes a debug message for stream construction.
+        /// </summary>
+        /// <param name="stream">The stream stack.</param>
+        /// <param name="constructing">The type being constructed.</param>
         public static void DebugConstruct(this IStreamStack stream, Type constructing)
         {
             long id = stream.InstanceId;
@@ -241,6 +287,11 @@ namespace SharpCompress.IO
                 );
         }
 
+        /// <summary>
+        /// Writes a debug message for stream disposal.
+        /// </summary>
+        /// <param name="stream">The stream stack.</param>
+        /// <param name="constructing">The type being disposed.</param>
         public static void DebugDispose(this IStreamStack stream, Type constructing)
         {
             var frame = (new StackTrace()).GetFrame(3);
@@ -252,6 +303,11 @@ namespace SharpCompress.IO
                 Debug.WriteLine($"{GetStreamStackString(stream, false)} : Disposed by [{parentInfo}]");
         }
 
+        /// <summary>
+        /// Writes a debug trace message for the stream.
+        /// </summary>
+        /// <param name="stream">The stream stack.</param>
+        /// <param name="message">The debug message to write.</param>
         public static void DebugTrace(this IStreamStack stream, string message)
         {
             Debug.WriteLine(
@@ -262,6 +318,9 @@ namespace SharpCompress.IO
         /// <summary>
         /// Returns the full stream chain as a string, including instance IDs and positions.
         /// </summary>
+        /// <param name="stream">The stream stack to represent.</param>
+        /// <param name="construct">Whether this is being called during construction.</param>
+        /// <returns>A string representation of the entire stream stack.</returns>
         public static string GetStreamStackString(this IStreamStack stream, bool construct)
         {
             var sb = new StringBuilder();
@@ -294,7 +353,7 @@ namespace SharpCompress.IO
                         sb.Insert(0, $"{current.GetType().Name}{id}[:{buffSize}]");
                 }
                 if (sStack != null)
-                    current = sStack.BaseStream(); //current may not be IStreamStack, allow one more loop
+                    current = sStack.BaseStream(); //current may not be a IStreamStack, allow one more loop
                 else
                     break;
             }

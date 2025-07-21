@@ -24,7 +24,7 @@ public sealed class BZip2Stream : Stream, IStreamStack
         set { }
     }
 
-    void IStreamStack.SetPostion(long position) { }
+    void IStreamStack.SetPosition(long position) { }
 
     private readonly Stream stream;
     private bool isDisposed;

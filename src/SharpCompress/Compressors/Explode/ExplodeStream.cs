@@ -25,7 +25,7 @@ public class ExplodeStream : Stream, IStreamStack
         set { }
     }
 
-    void IStreamStack.SetPostion(long position) { }
+    void IStreamStack.SetPosition(long position) { }
 
     private const int INVALID_CODE = 99;
     private const int WSIZE = 64 * 1024;

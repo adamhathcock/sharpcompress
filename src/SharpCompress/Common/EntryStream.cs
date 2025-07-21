@@ -26,7 +26,7 @@ public class EntryStream : Stream, IStreamStack
         set { }
     }
 
-    void IStreamStack.SetPostion(long position) { }
+    void IStreamStack.SetPosition(long position) { }
 
     private readonly IReader _reader;
     private readonly Stream _stream;
@@ -65,7 +65,7 @@ public class EntryStream : Stream, IStreamStack
             {
                 deflateStream.Flush(); //Deflate over reads. Knock it back
             }
-            else if (ss.BaseStream() is SharpCompress.Compressors.Deflate.DeflateStream lzmaStream)
+            else if (ss.BaseStream() is SharpCompress.Compressors.LZMA.LzmaStream lzmaStream)
             {
                 lzmaStream.Flush(); //Lzma over reads. Knock it back
             }

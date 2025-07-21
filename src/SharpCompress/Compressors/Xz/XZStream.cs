@@ -27,7 +27,7 @@ public sealed class XZStream : XZReadOnlyStream, IStreamStack
         set { }
     }
 
-    void IStreamStack.SetPostion(long position) { }
+    void IStreamStack.SetPosition(long position) { }
 
     public XZStream(Stream baseStream)
         : base(baseStream)

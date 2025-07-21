@@ -25,7 +25,7 @@ internal class RarCrcStream : RarStream, IStreamStack
         set { }
     }
 
-    void IStreamStack.SetPostion(long position) { }
+    void IStreamStack.SetPosition(long position) { }
 
     private readonly MultiVolumeReadOnlyStream readStream;
     private uint currentCrc;

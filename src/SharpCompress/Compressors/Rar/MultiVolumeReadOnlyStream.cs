@@ -29,7 +29,7 @@ internal sealed class MultiVolumeReadOnlyStream : Stream, IStreamStack
         set { }
     }
 
-    void IStreamStack.SetPostion(long position) { }
+    void IStreamStack.SetPosition(long position) { }
 
     private long currentPosition;
     private long maxPosition;

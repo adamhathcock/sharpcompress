@@ -63,7 +63,7 @@ namespace SharpCompress.Compressors.Lzw
             set { }
         }
 
-        void IStreamStack.SetPostion(long position) { }
+        void IStreamStack.SetPosition(long position) { }
 
         public static bool IsLzwStream(Stream stream)
         {

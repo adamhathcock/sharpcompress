@@ -23,7 +23,7 @@ internal class ListeningStream : Stream, IStreamStack
         set { return; }
     }
 
-    void IStreamStack.SetPostion(long position) { }
+    void IStreamStack.SetPosition(long position) { }
 
     private long _currentEntryTotalReadBytes;
     private readonly IExtractionListener _listener;

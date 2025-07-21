@@ -35,7 +35,7 @@ public sealed class LZipStream : Stream, IStreamStack
         set { }
     }
 
-    void IStreamStack.SetPostion(long position) { }
+    void IStreamStack.SetPosition(long position) { }
 
     private readonly Stream _stream;
     private readonly SharpCompressStream? _countingWritableSubStream;

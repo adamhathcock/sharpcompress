@@ -34,7 +34,7 @@ public sealed class Deflate64Stream : Stream, IStreamStack
         set { }
     }
 
-    void IStreamStack.SetPostion(long position) { }
+    void IStreamStack.SetPosition(long position) { }
 
     private const int DEFAULT_BUFFER_SIZE = 8192;
 

@@ -26,7 +26,7 @@ public class SourceStream : Stream, IStreamStack
         set { return; }
     }
 
-    void IStreamStack.SetPostion(long position) { }
+    void IStreamStack.SetPosition(long position) { }
 
     private long _prevSize;
     private readonly List<FileInfo> _files;

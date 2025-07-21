@@ -25,7 +25,7 @@ public class ForwardOnlyStream : SharpCompressStream, IStreamStack
         set { }
     }
 
-    void IStreamStack.SetPostion(long position) { }
+    void IStreamStack.SetPosition(long position) { }
 
     public bool IsDisposed { get; private set; }
 

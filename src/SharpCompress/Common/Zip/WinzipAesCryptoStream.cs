@@ -26,7 +26,7 @@ internal class WinzipAesCryptoStream : Stream, IStreamStack
         set { }
     }
 
-    void IStreamStack.SetPostion(long position) { }
+    void IStreamStack.SetPosition(long position) { }
 
     private const int BLOCK_SIZE_IN_BYTES = 16;
     private readonly SymmetricAlgorithm _cipher;

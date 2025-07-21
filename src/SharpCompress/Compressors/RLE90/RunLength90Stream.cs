@@ -28,7 +28,7 @@ namespace SharpCompress.Compressors.RLE90
             set { }
         }
 
-        void IStreamStack.SetPostion(long position) { }
+        void IStreamStack.SetPosition(long position) { }
 
         private readonly Stream _stream;
         private const byte DLE = 0x90;

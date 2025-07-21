@@ -20,9 +20,11 @@ public static class ReaderFactory
 
         var bStream = new SharpCompressStream(stream, bufferSize: options.BufferSize);
 
+        long pos = ((IStreamStack)bStream).GetPosition();
+
         foreach (var factory in Factories.Factory.Factories.OfType<Factories.Factory>())
         {
-            ((IStreamStack)bStream).StackSeek(0);
+            ((IStreamStack)bStream).StackSeek(pos);
             if (factory.TryOpenReader(bStream, options, out var reader) && reader != null)
             {
                 return reader;

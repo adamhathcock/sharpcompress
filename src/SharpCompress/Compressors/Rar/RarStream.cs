@@ -28,7 +28,7 @@ internal class RarStream : Stream, IStreamStack
         set { }
     }
 
-    void IStreamStack.SetPostion(long position) { }
+    void IStreamStack.SetPosition(long position) { }
 
     private readonly IRarUnpack unpack;
     private readonly FileHeader fileHeader;

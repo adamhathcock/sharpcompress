@@ -29,7 +29,7 @@ public class PpmdStream : Stream, IStreamStack
         set { }
     }
 
-    void IStreamStack.SetPostion(long position) { }
+    void IStreamStack.SetPosition(long position) { }
 
     private readonly PpmdProperties _properties;
     private readonly Stream _stream;

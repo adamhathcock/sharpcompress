@@ -25,7 +25,7 @@ internal class Bcj2DecoderStream : DecoderStream2, IStreamStack
         set { }
     }
 
-    void IStreamStack.SetPostion(long position) { }
+    void IStreamStack.SetPosition(long position) { }
 
     private const int K_NUM_TOP_BITS = 24;
     private const uint K_TOP_VALUE = (1 << K_NUM_TOP_BITS);
