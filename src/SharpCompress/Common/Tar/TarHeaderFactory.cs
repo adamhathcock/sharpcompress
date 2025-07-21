@@ -46,9 +46,8 @@ internal static class TarHeaderFactory
                     }
                 }
             }
-            catch (System.Exception ex)
+            catch
             {
-                System.Diagnostics.Debug.WriteLine(ex);
                 header = null;
             }
             yield return header;
