@@ -131,6 +131,12 @@ public class RarArchive : AbstractArchive<RarArchiveEntry, RarVolume>
     public static RarArchive Open(Stream stream, ReaderOptions? options = null)
     {
         stream.CheckNotNull(nameof(stream));
+
+        if (stream is not { CanSeek: true })
+        {
+            throw new ArgumentException("Stream must be seekable", nameof(stream));
+        }
+
         return new RarArchive(new SourceStream(stream, _ => null, options ?? new ReaderOptions()));
     }
 
