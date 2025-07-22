@@ -128,6 +128,4 @@ internal class DirectoryEntryHeader : ZipFileEntry
     public ushort InternalFileAttributes { get; set; }
 
     public ushort DiskNumberStart { get; set; }
-
-    public string? Comment { get; private set; }
 }
