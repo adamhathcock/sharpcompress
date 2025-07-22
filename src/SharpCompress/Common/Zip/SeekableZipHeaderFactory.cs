@@ -149,6 +149,11 @@ internal sealed class SeekableZipHeaderFactory : ZipHeaderFactory
         {
             throw new InvalidOperationException();
         }
+
+        // populate fields only known from the DirectoryEntryHeader
+        localEntryHeader.HasData = directoryEntryHeader.HasData;
+        localEntryHeader.Comment = directoryEntryHeader.Comment;
+
         if (FlagUtility.HasFlag(localEntryHeader.Flags, HeaderFlags.UsePostDataDescriptor))
         {
             localEntryHeader.Crc = directoryEntryHeader.Crc;

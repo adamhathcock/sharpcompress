@@ -83,4 +83,6 @@ public class ZipEntry : Entry
     public override bool IsSplitAfter => false;
 
     internal override IEnumerable<FilePart> Parts => _filePart.Empty();
+
+    public string? Comment => _filePart?.Header.Comment;
 }

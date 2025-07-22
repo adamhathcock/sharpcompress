@@ -820,4 +820,16 @@ public class ZipArchiveTests : ArchiveTests
         using var _ = firstEntry.OpenEntryStream();
         Assert.Equal(199, firstEntry.Size);
     }
+
+    [Fact]
+    public void Zip_EntryCommentAfterEntryRead()
+    {
+        using var archive = ZipArchive.Open(
+            Path.Combine(TEST_ARCHIVES_PATH, "Zip.EntryComment.zip")
+        );
+        var firstEntry = archive.Entries.First();
+        Assert.Equal(29, firstEntry.Comment!.Length);
+        using var _ = firstEntry.OpenEntryStream();
+        Assert.Equal(29, firstEntry.Comment.Length);
+    }
 }
