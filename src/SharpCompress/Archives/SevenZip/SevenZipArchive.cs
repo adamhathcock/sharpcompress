@@ -92,6 +92,12 @@ public class SevenZipArchive : AbstractArchive<SevenZipArchiveEntry, SevenZipVol
     public static SevenZipArchive Open(Stream stream, ReaderOptions? readerOptions = null)
     {
         stream.CheckNotNull("stream");
+
+        if (stream is not { CanSeek: true })
+        {
+            throw new ArgumentException("Stream must be seekable", nameof(stream));
+        }
+
         return new SevenZipArchive(
             new SourceStream(stream, _ => null, readerOptions ?? new ReaderOptions())
         );

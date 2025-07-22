@@ -25,14 +25,8 @@ internal class SeekableZipFilePart : ZipFilePart
         return base.GetCompressedStream();
     }
 
-    internal string? Comment => ((DirectoryEntryHeader)Header).Comment;
-
-    private void LoadLocalHeader()
-    {
-        var hasData = Header.HasData;
-        Header = _headerFactory.GetLocalHeader(BaseStream, ((DirectoryEntryHeader)Header));
-        Header.HasData = hasData;
-    }
+    private void LoadLocalHeader() =>
+        Header = _headerFactory.GetLocalHeader(BaseStream, (DirectoryEntryHeader)Header);
 
     protected override Stream CreateBaseStream()
     {

@@ -111,6 +111,12 @@ public class ZipArchive : AbstractWritableArchive<ZipArchiveEntry, ZipVolume>
     public static ZipArchive Open(Stream stream, ReaderOptions? readerOptions = null)
     {
         stream.CheckNotNull(nameof(stream));
+
+        if (stream is not { CanSeek: true })
+        {
+            throw new ArgumentException("Stream must be seekable", nameof(stream));
+        }
+
         return new ZipArchive(
             new SourceStream(stream, i => null, readerOptions ?? new ReaderOptions())
         );

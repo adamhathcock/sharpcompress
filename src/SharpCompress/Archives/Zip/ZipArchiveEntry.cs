@@ -18,6 +18,4 @@ public class ZipArchiveEntry : ZipEntry, IArchiveEntry
     public bool IsComplete => true;
 
     #endregion
-
-    public string? Comment => ((SeekableZipFilePart)Parts.Single()).Comment;
 }
