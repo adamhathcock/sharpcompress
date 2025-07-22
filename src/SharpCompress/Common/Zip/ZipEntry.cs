@@ -84,5 +84,7 @@ public class ZipEntry : Entry
 
     internal override IEnumerable<FilePart> Parts => _filePart.Empty();
 
+    public override int? Attrib => (int?)_filePart?.Header.ExternalFileAttributes;
+
     public string? Comment => _filePart?.Header.Comment;
 }
