@@ -7,7 +7,10 @@ namespace SharpCompress.Writers.Zip;
 
 public class ZipWriterOptions : WriterOptions
 {
-    public ZipWriterOptions(CompressionType compressionType, CompressionLevel compressionLevel = D.CompressionLevel.Default)
+    public ZipWriterOptions(
+        CompressionType compressionType,
+        CompressionLevel compressionLevel = D.CompressionLevel.Default
+    )
         : base(compressionType, (int)compressionLevel) { }
 
     internal ZipWriterOptions(WriterOptions options)
@@ -43,7 +46,10 @@ public class ZipWriterOptions : WriterOptions
     public void SetZStandardCompressionLevel(int level)
     {
         if (level < 1 || level > 22)
-            throw new ArgumentOutOfRangeException(nameof(level), "ZStandard compression level must be between 1 and 22");
+            throw new ArgumentOutOfRangeException(
+                nameof(level),
+                "ZStandard compression level must be between 1 and 22"
+            );
 
         CompressionLevel = level;
     }
@@ -55,7 +61,9 @@ public class ZipWriterOptions : WriterOptions
     /// <remarks>
     /// This property is deprecated. Use <see cref="WriterOptions.CompressionLevel"/> or <see cref="SetDeflateCompressionLevel"/> instead.
     /// </remarks>
-    [Obsolete("Use CompressionLevel property or SetDeflateCompressionLevel method instead. This property will be removed in a future version.")]
+    [Obsolete(
+        "Use CompressionLevel property or SetDeflateCompressionLevel method instead. This property will be removed in a future version."
+    )]
     public CompressionLevel DeflateCompressionLevel
     {
         get => (CompressionLevel)Math.Min(CompressionLevel, 9);

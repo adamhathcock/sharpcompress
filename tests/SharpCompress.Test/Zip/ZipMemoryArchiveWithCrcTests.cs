@@ -19,23 +19,28 @@ public class ZipTypesLevelsWithCrcRatioTests : ArchiveTests
     public ZipTypesLevelsWithCrcRatioTests() => UseExtensionInsteadOfNameToVerify = true;
 
     [Theory]
-    [InlineData(CompressionType.Deflate, 1, 1, 0.11f)]     // was 0.8f, actual 0.104
-    [InlineData(CompressionType.Deflate, 3, 1, 0.08f)]     // was 0.8f, actual 0.078
-    [InlineData(CompressionType.Deflate, 6, 1, 0.05f)]     // was 0.8f, actual ~0.042
-    [InlineData(CompressionType.Deflate, 9, 1, 0.04f)]     // was 0.7f, actual 0.038
-    [InlineData(CompressionType.ZStandard, 1, 1, 0.025f)]  // was 0.8f, actual 0.023
-    [InlineData(CompressionType.ZStandard, 3, 1, 0.015f)]  // was 0.7f, actual 0.013
-    [InlineData(CompressionType.ZStandard, 9, 1, 0.006f)]  // was 0.7f, actual 0.005
+    [InlineData(CompressionType.Deflate, 1, 1, 0.11f)] // was 0.8f, actual 0.104
+    [InlineData(CompressionType.Deflate, 3, 1, 0.08f)] // was 0.8f, actual 0.078
+    [InlineData(CompressionType.Deflate, 6, 1, 0.05f)] // was 0.8f, actual ~0.042
+    [InlineData(CompressionType.Deflate, 9, 1, 0.04f)] // was 0.7f, actual 0.038
+    [InlineData(CompressionType.ZStandard, 1, 1, 0.025f)] // was 0.8f, actual 0.023
+    [InlineData(CompressionType.ZStandard, 3, 1, 0.015f)] // was 0.7f, actual 0.013
+    [InlineData(CompressionType.ZStandard, 9, 1, 0.006f)] // was 0.7f, actual 0.005
     [InlineData(CompressionType.ZStandard, 22, 1, 0.005f)] // was 0.7f, actual 0.004
-    [InlineData(CompressionType.BZip2, 0, 1, 0.035f)]      // was 0.8f, actual 0.033
-    [InlineData(CompressionType.LZMA, 0, 1, 0.005f)]       // was 0.8f, actual 0.004
-    [InlineData(CompressionType.None, 0, 1, 1.001f)]       // was 1.1f, actual 1.000
-    [InlineData(CompressionType.Deflate, 6, 2, 0.045f)]    // was 0.8f, actual 0.042
-    [InlineData(CompressionType.ZStandard, 3, 2, 0.012f)]  // was 0.7f, actual 0.010
-    [InlineData(CompressionType.BZip2, 0, 2, 0.035f)]      // was 0.8f, actual 0.032
-    [InlineData(CompressionType.Deflate, 9, 3, 0.04f)]     // was 0.7f, actual 0.038
-    [InlineData(CompressionType.ZStandard, 9, 3, 0.003f)]  // was 0.7f, actual 0.002
-    public void Zip_Create_Archive_With_3_Files_Crc32_Test(CompressionType compressionType, int compressionLevel, int sizeMb, float expectedRatio)
+    [InlineData(CompressionType.BZip2, 0, 1, 0.035f)] // was 0.8f, actual 0.033
+    [InlineData(CompressionType.LZMA, 0, 1, 0.005f)] // was 0.8f, actual 0.004
+    [InlineData(CompressionType.None, 0, 1, 1.001f)] // was 1.1f, actual 1.000
+    [InlineData(CompressionType.Deflate, 6, 2, 0.045f)] // was 0.8f, actual 0.042
+    [InlineData(CompressionType.ZStandard, 3, 2, 0.012f)] // was 0.7f, actual 0.010
+    [InlineData(CompressionType.BZip2, 0, 2, 0.035f)] // was 0.8f, actual 0.032
+    [InlineData(CompressionType.Deflate, 9, 3, 0.04f)] // was 0.7f, actual 0.038
+    [InlineData(CompressionType.ZStandard, 9, 3, 0.003f)] // was 0.7f, actual 0.002
+    public void Zip_Create_Archive_With_3_Files_Crc32_Test(
+        CompressionType compressionType,
+        int compressionLevel,
+        int sizeMb,
+        float expectedRatio
+    )
     {
         const int OneMiB = 1024 * 1024;
         var baseSize = sizeMb * OneMiB;
@@ -49,7 +54,7 @@ public class ZipTypesLevelsWithCrcRatioTests : ArchiveTests
         {
             [$"file1_{sizeMb}MiB.txt"] = (file1Data, CalculateCrc32(file1Data)),
             [$"data/file2_{sizeMb * 2}MiB.txt"] = (file2Data, CalculateCrc32(file2Data)),
-            [$"deep/nested/file3_{sizeMb * 3}MiB.txt"] = (file3Data, CalculateCrc32(file3Data))
+            [$"deep/nested/file3_{sizeMb * 3}MiB.txt"] = (file3Data, CalculateCrc32(file3Data)),
         };
 
         // Create zip archive in memory
@@ -69,11 +74,19 @@ public class ZipTypesLevelsWithCrcRatioTests : ArchiveTests
         // Verify compression occurred (except for None compression type)
         if (compressionType != CompressionType.None)
         {
-            Assert.True(zipStream.Length < originalSize, $"Compression failed: compressed={zipStream.Length}, original={originalSize}");
+            Assert.True(
+                zipStream.Length < originalSize,
+                $"Compression failed: compressed={zipStream.Length}, original={originalSize}"
+            );
         }
 
         // Verify compression ratio
-        VerifyCompressionRatio(originalSize, zipStream.Length, expectedRatio, $"{compressionType} level {compressionLevel}");
+        VerifyCompressionRatio(
+            originalSize,
+            zipStream.Length,
+            expectedRatio,
+            $"{compressionType} level {compressionLevel}"
+        );
 
         // Verify archive content and CRC32
         VerifyArchiveContent(zipStream, expectedFiles);
@@ -83,17 +96,22 @@ public class ZipTypesLevelsWithCrcRatioTests : ArchiveTests
     }
 
     [Theory]
-    [InlineData(CompressionType.Deflate, 1, 4, 0.11f)]     // was 0.8, actual 0.105
-    [InlineData(CompressionType.Deflate, 3, 4, 0.08f)]     // was 0.8, actual 0.077
-    [InlineData(CompressionType.Deflate, 6, 4, 0.045f)]    // was 0.8, actual 0.042
-    [InlineData(CompressionType.Deflate, 9, 4, 0.04f)]     // was 0.8, actual 0.037
-    [InlineData(CompressionType.ZStandard, 1, 4, 0.025f)]  // was 0.8, actual 0.022
-    [InlineData(CompressionType.ZStandard, 3, 4, 0.012f)]  // was 0.8, actual 0.010
-    [InlineData(CompressionType.ZStandard, 9, 4, 0.003f)]  // was 0.8, actual 0.002
+    [InlineData(CompressionType.Deflate, 1, 4, 0.11f)] // was 0.8, actual 0.105
+    [InlineData(CompressionType.Deflate, 3, 4, 0.08f)] // was 0.8, actual 0.077
+    [InlineData(CompressionType.Deflate, 6, 4, 0.045f)] // was 0.8, actual 0.042
+    [InlineData(CompressionType.Deflate, 9, 4, 0.04f)] // was 0.8, actual 0.037
+    [InlineData(CompressionType.ZStandard, 1, 4, 0.025f)] // was 0.8, actual 0.022
+    [InlineData(CompressionType.ZStandard, 3, 4, 0.012f)] // was 0.8, actual 0.010
+    [InlineData(CompressionType.ZStandard, 9, 4, 0.003f)] // was 0.8, actual 0.002
     [InlineData(CompressionType.ZStandard, 22, 4, 0.003f)] // was 0.8, actual 0.002
-    [InlineData(CompressionType.BZip2, 0, 4, 0.035f)]      // was 0.8, actual 0.032
-    [InlineData(CompressionType.LZMA, 0, 4, 0.003f)]       // was 0.8, actual 0.002
-    public void Zip_WriterFactory_Crc32_Test(CompressionType compressionType, int compressionLevel, int sizeMb, float expectedRatio)
+    [InlineData(CompressionType.BZip2, 0, 4, 0.035f)] // was 0.8, actual 0.032
+    [InlineData(CompressionType.LZMA, 0, 4, 0.003f)] // was 0.8, actual 0.002
+    public void Zip_WriterFactory_Crc32_Test(
+        CompressionType compressionType,
+        int compressionLevel,
+        int sizeMb,
+        float expectedRatio
+    )
     {
         var fileSize = sizeMb * 1024 * 1024;
 
@@ -102,18 +120,29 @@ public class ZipTypesLevelsWithCrcRatioTests : ArchiveTests
 
         // Create archive with specified compression level
         using var zipStream = new MemoryStream();
-        var writerOptions = new ZipWriterOptions(compressionType) { CompressionLevel = compressionLevel };
+        var writerOptions = new ZipWriterOptions(compressionType)
+        {
+            CompressionLevel = compressionLevel,
+        };
 
         using (var writer = WriterFactory.Open(zipStream, ArchiveType.Zip, writerOptions))
         {
-            writer.Write($"{compressionType}_level_{compressionLevel}_{sizeMb}MiB.txt", new MemoryStream(testData));
+            writer.Write(
+                $"{compressionType}_level_{compressionLevel}_{sizeMb}MiB.txt",
+                new MemoryStream(testData)
+            );
         }
 
         // Calculate and output actual compression ratio
         var actualRatio = (double)zipStream.Length / testData.Length;
         //Debug.WriteLine($"Zip_WriterFactory_Crc32_Test: {compressionType} Level={compressionLevel} Size={sizeMb}MB Expected={expectedRatio:F3} Actual={actualRatio:F3}");
 
-        VerifyCompressionRatio(testData.Length, zipStream.Length, expectedRatio, $"{compressionType} level {compressionLevel}");
+        VerifyCompressionRatio(
+            testData.Length,
+            zipStream.Length,
+            expectedRatio,
+            $"{compressionType} level {compressionLevel}"
+        );
 
         // Verify the archive
         zipStream.Position = 0;
@@ -134,17 +163,22 @@ public class ZipTypesLevelsWithCrcRatioTests : ArchiveTests
     }
 
     [Theory]
-    [InlineData(CompressionType.Deflate, 1, 2, 0.11f)]     // was 0.8, actual 0.104
-    [InlineData(CompressionType.Deflate, 3, 2, 0.08f)]     // was 0.8, actual 0.077
-    [InlineData(CompressionType.Deflate, 6, 2, 0.045f)]    // was 0.8, actual 0.042
-    [InlineData(CompressionType.Deflate, 9, 2, 0.04f)]     // was 0.7, actual 0.038
-    [InlineData(CompressionType.ZStandard, 1, 2, 0.025f)]  // was 0.8, actual 0.023
-    [InlineData(CompressionType.ZStandard, 3, 2, 0.015f)]  // was 0.7, actual 0.012
-    [InlineData(CompressionType.ZStandard, 9, 2, 0.006f)]  // was 0.7, actual 0.005
+    [InlineData(CompressionType.Deflate, 1, 2, 0.11f)] // was 0.8, actual 0.104
+    [InlineData(CompressionType.Deflate, 3, 2, 0.08f)] // was 0.8, actual 0.077
+    [InlineData(CompressionType.Deflate, 6, 2, 0.045f)] // was 0.8, actual 0.042
+    [InlineData(CompressionType.Deflate, 9, 2, 0.04f)] // was 0.7, actual 0.038
+    [InlineData(CompressionType.ZStandard, 1, 2, 0.025f)] // was 0.8, actual 0.023
+    [InlineData(CompressionType.ZStandard, 3, 2, 0.015f)] // was 0.7, actual 0.012
+    [InlineData(CompressionType.ZStandard, 9, 2, 0.006f)] // was 0.7, actual 0.005
     [InlineData(CompressionType.ZStandard, 22, 2, 0.005f)] // was 0.7, actual 0.004
-    [InlineData(CompressionType.BZip2, 0, 2, 0.035f)]      // was 0.8, actual 0.032
-    [InlineData(CompressionType.LZMA, 0, 2, 0.005f)]       // was 0.8, actual 0.004
-    public void Zip_ZipArchiveOpen_Crc32_Test(CompressionType compressionType, int compressionLevel, int sizeMb, float expectedRatio)
+    [InlineData(CompressionType.BZip2, 0, 2, 0.035f)] // was 0.8, actual 0.032
+    [InlineData(CompressionType.LZMA, 0, 2, 0.005f)] // was 0.8, actual 0.004
+    public void Zip_ZipArchiveOpen_Crc32_Test(
+        CompressionType compressionType,
+        int compressionLevel,
+        int sizeMb,
+        float expectedRatio
+    )
     {
         var fileSize = sizeMb * 1024 * 1024;
 
@@ -155,7 +189,10 @@ public class ZipTypesLevelsWithCrcRatioTests : ArchiveTests
         using var zipStream = new MemoryStream();
         using (var writer = CreateWriterWithLevel(zipStream, compressionType, compressionLevel))
         {
-            writer.Write($"{compressionType}_{compressionLevel}_{sizeMb}MiB.txt", new MemoryStream(testData));
+            writer.Write(
+                $"{compressionType}_{compressionLevel}_{sizeMb}MiB.txt",
+                new MemoryStream(testData)
+            );
         }
 
         // Calculate and output actual compression ratio
@@ -188,7 +225,11 @@ public class ZipTypesLevelsWithCrcRatioTests : ArchiveTests
             VerifyDataSpotCheck(testData, extractedData);
         }
 
-        VerifyCompressionRatio(testData.Length, zipStream.Length, expectedRatio, $"{compressionType} Level {compressionLevel}");
+        VerifyCompressionRatio(
+            testData.Length,
+            zipStream.Length,
+            expectedRatio,
+            $"{compressionType} Level {compressionLevel}"
+        );
     }
-
 }

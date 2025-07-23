@@ -14,7 +14,7 @@ public class WriterOptions : OptionsBase
             CompressionType.Deflate => (int)D.CompressionLevel.Default,
             CompressionType.Deflate64 => (int)D.CompressionLevel.Default,
             CompressionType.GZip => (int)D.CompressionLevel.Default,
-            _ => 0
+            _ => 0,
         };
     }
 

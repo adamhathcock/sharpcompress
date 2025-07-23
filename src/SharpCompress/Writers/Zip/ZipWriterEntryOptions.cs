@@ -26,10 +26,15 @@ public class ZipWriterEntryOptions
     /// <remarks>
     /// This property is deprecated. Use <see cref="CompressionLevel"/> instead.
     /// </remarks>
-    [Obsolete("Use CompressionLevel property instead. This property will be removed in a future version.")]
-    public CompressionLevel? DeflateCompressionLevel 
-    { 
-        get => CompressionLevel.HasValue ? (CompressionLevel)Math.Min(CompressionLevel.Value, 9) : null;
+    [Obsolete(
+        "Use CompressionLevel property instead. This property will be removed in a future version."
+    )]
+    public CompressionLevel? DeflateCompressionLevel
+    {
+        get =>
+            CompressionLevel.HasValue
+                ? (CompressionLevel)Math.Min(CompressionLevel.Value, 9)
+                : null;
         set => CompressionLevel = value.HasValue ? (int)value.Value : null;
     }
 

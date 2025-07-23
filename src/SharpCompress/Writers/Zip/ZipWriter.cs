@@ -364,7 +364,11 @@ public class ZipWriter : AbstractWriter
                 }
                 case ZipCompressionMethod.Deflate:
                 {
-                    return new DeflateStream(counting, CompressionMode.Compress, (CompressionLevel)compressionLevel);
+                    return new DeflateStream(
+                        counting,
+                        CompressionMode.Compress,
+                        (CompressionLevel)compressionLevel
+                    );
                 }
                 case ZipCompressionMethod.BZip2:
                 {
@@ -392,7 +396,10 @@ public class ZipWriter : AbstractWriter
                 }
                 case ZipCompressionMethod.ZStandard:
                 {
-                    return new ZstdSharp.CompressionStream(counting, (int)writer.WriterOptions.CompressionLevel);
+                    return new ZstdSharp.CompressionStream(
+                        counting,
+                        (int)writer.WriterOptions.CompressionLevel
+                    );
                 }
                 default:
                 {
