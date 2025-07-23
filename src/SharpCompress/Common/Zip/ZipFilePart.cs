@@ -152,7 +152,7 @@ internal abstract class ZipFilePart : FilePart
             {
                 return new XZStream(stream);
             }
-            case ZipCompressionMethod.ZStd:
+            case ZipCompressionMethod.ZStandard:
             {
                 return new DecompressionStream(stream);
             }
