@@ -152,6 +152,7 @@ internal sealed class SeekableZipHeaderFactory : ZipHeaderFactory
 
         // populate fields only known from the DirectoryEntryHeader
         localEntryHeader.HasData = directoryEntryHeader.HasData;
+        localEntryHeader.ExternalFileAttributes = directoryEntryHeader.ExternalFileAttributes;
         localEntryHeader.Comment = directoryEntryHeader.Comment;
 
         if (FlagUtility.HasFlag(localEntryHeader.Flags, HeaderFlags.UsePostDataDescriptor))
