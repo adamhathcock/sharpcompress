@@ -17,8 +17,12 @@ public abstract class Volume : IVolume
         _baseStream = stream;
         if (ReaderOptions.LeaveStreamOpen)
         {
-            stream = NonDisposingStream.Create(stream);
+            stream = SharpCompressStream.Create(stream, leaveOpen: true);
         }
+
+        if (stream is IStreamStack ss)
+            ss.SetBuffer(ReaderOptions.BufferSize, true);
+
         _actualStream = stream;
     }
 

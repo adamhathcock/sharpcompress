@@ -5,12 +5,32 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using SharpCompress.Compressors.RLE90;
-using ZstdSharp.Unsafe;
+using SharpCompress.IO;
 
 namespace SharpCompress.Compressors.Squeezed
 {
-    public class SqueezeStream : Stream
+    public class SqueezeStream : Stream, IStreamStack
     {
+#if DEBUG_STREAMS
+        long IStreamStack.InstanceId { get; set; }
+#endif
+        int IStreamStack.DefaultBufferSize { get; set; }
+
+        Stream IStreamStack.BaseStream() => _stream;
+
+        int IStreamStack.BufferSize
+        {
+            get => 0;
+            set { }
+        }
+        int IStreamStack.BufferPosition
+        {
+            get => 0;
+            set { }
+        }
+
+        void IStreamStack.SetPosition(long position) { }
+
         private readonly Stream _stream;
         private readonly int _compressedSize;
         private const int NUMVALS = 257;
@@ -21,6 +41,17 @@ namespace SharpCompress.Compressors.Squeezed
         {
             _stream = stream;
             _compressedSize = compressedSize;
+#if DEBUG_STREAMS
+            this.DebugConstruct(typeof(SqueezeStream));
+#endif
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+#if DEBUG_STREAMS
+            this.DebugDispose(typeof(SqueezeStream));
+#endif
+            base.Dispose(disposing);
         }
 
         public override bool CanRead => true;

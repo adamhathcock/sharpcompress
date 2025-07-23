@@ -1,11 +1,32 @@
 using System;
 using System.IO;
 using SharpCompress.Common.Zip.Headers;
+using SharpCompress.IO;
 
 namespace SharpCompress.Compressors.Explode;
 
-public class ExplodeStream : Stream
+public class ExplodeStream : Stream, IStreamStack
 {
+#if DEBUG_STREAMS
+    long IStreamStack.InstanceId { get; set; }
+#endif
+    int IStreamStack.DefaultBufferSize { get; set; }
+
+    Stream IStreamStack.BaseStream() => inStream;
+
+    int IStreamStack.BufferSize
+    {
+        get => 0;
+        set { }
+    }
+    int IStreamStack.BufferPosition
+    {
+        get => 0;
+        set { }
+    }
+
+    void IStreamStack.SetPosition(long position) { }
+
     private const int INVALID_CODE = 99;
     private const int WSIZE = 64 * 1024;
 
@@ -45,6 +66,9 @@ public class ExplodeStream : Stream
     )
     {
         inStream = inStr;
+#if DEBUG_STREAMS
+        this.DebugConstruct(typeof(ExplodeStream));
+#endif
         this.compressedSize = (int)compressedSize;
         unCompressedSize = (long)uncompressedSize;
         this.generalPurposeBitFlag = generalPurposeBitFlag;
@@ -52,6 +76,14 @@ public class ExplodeStream : Stream
 
         windowsBuffer = new byte[WSIZE];
         explode_var_init();
+    }
+
+    protected override void Dispose(bool disposing)
+    {
+#if DEBUG_STREAMS
+        this.DebugDispose(typeof(ExplodeStream));
+#endif
+        base.Dispose(disposing);
     }
 
     public override void Flush()

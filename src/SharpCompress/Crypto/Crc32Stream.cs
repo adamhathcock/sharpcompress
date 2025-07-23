@@ -2,21 +2,62 @@
 
 using System;
 using System.IO;
+using SharpCompress.IO;
 
 namespace SharpCompress.Crypto;
 
 [CLSCompliant(false)]
-public sealed class Crc32Stream(Stream stream, uint polynomial, uint seed) : Stream
+public sealed class Crc32Stream : Stream, IStreamStack
 {
+#if DEBUG_STREAMS
+    long IStreamStack.InstanceId { get; set; }
+#endif
+    int IStreamStack.DefaultBufferSize { get; set; }
+
+    Stream IStreamStack.BaseStream() => stream;
+
+    int IStreamStack.BufferSize
+    {
+        get => 0;
+        set { }
+    }
+    int IStreamStack.BufferPosition
+    {
+        get => 0;
+        set { }
+    }
+
+    void IStreamStack.SetPosition(long position) { }
+
+    private readonly Stream stream;
+    private readonly uint[] _table;
+    private uint seed;
+
     public const uint DEFAULT_POLYNOMIAL = 0xedb88320u;
     public const uint DEFAULT_SEED = 0xffffffffu;
 
     private static uint[] _defaultTable;
 
-    private readonly uint[] _table = InitializeTable(polynomial);
-
     public Crc32Stream(Stream stream)
         : this(stream, DEFAULT_POLYNOMIAL, DEFAULT_SEED) { }
+
+    public Crc32Stream(Stream stream, uint polynomial, uint seed)
+    {
+        this.stream = stream;
+        _table = InitializeTable(polynomial);
+        this.seed = seed;
+#if DEBUG_STREAMS
+        this.DebugConstruct(typeof(Crc32Stream));
+#endif
+    }
+
+    protected override void Dispose(bool disposing)
+    {
+#if DEBUG_STREAMS
+        this.DebugDispose(typeof(Crc32Stream));
+#endif
+        base.Dispose(disposing);
+    }
 
     public Stream WrappedStream => stream;
 

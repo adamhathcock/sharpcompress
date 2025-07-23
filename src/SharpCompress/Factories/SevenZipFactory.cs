@@ -28,8 +28,11 @@ public class SevenZipFactory : Factory, IArchiveFactory, IMultiArchiveFactory
     }
 
     /// <inheritdoc/>
-    public override bool IsArchive(Stream stream, string? password = null) =>
-        SevenZipArchive.IsSevenZipFile(stream);
+    public override bool IsArchive(
+        Stream stream,
+        string? password = null,
+        int bufferSize = ReaderOptions.DefaultBufferSize
+    ) => SevenZipArchive.IsSevenZipFile(stream);
 
     #endregion
 
@@ -60,7 +63,7 @@ public class SevenZipFactory : Factory, IArchiveFactory, IMultiArchiveFactory
     #region reader
 
     internal override bool TryOpenReader(
-        RewindableStream rewindableStream,
+        SharpCompressStream rewindableStream,
         ReaderOptions options,
         out IReader? reader
     )

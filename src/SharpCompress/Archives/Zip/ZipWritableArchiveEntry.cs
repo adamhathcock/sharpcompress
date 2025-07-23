@@ -59,7 +59,7 @@ internal class ZipWritableArchiveEntry : ZipArchiveEntry, IWritableArchiveEntry
     {
         //ensure new stream is at the start, this could be reset
         stream.Seek(0, SeekOrigin.Begin);
-        return NonDisposingStream.Create(stream);
+        return SharpCompressStream.Create(stream, leaveOpen: true);
     }
 
     internal override void Close()

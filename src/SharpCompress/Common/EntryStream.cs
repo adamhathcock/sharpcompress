@@ -1,11 +1,33 @@
 using System;
 using System.IO;
+using System.IO.Compression;
+using SharpCompress.IO;
 using SharpCompress.Readers;
 
 namespace SharpCompress.Common;
 
-public class EntryStream : Stream
+public class EntryStream : Stream, IStreamStack
 {
+#if DEBUG_STREAMS
+    long IStreamStack.InstanceId { get; set; }
+#endif
+    int IStreamStack.DefaultBufferSize { get; set; }
+
+    Stream IStreamStack.BaseStream() => _stream;
+
+    int IStreamStack.BufferSize
+    {
+        get => 0;
+        set { }
+    }
+    int IStreamStack.BufferPosition
+    {
+        get => 0;
+        set { }
+    }
+
+    void IStreamStack.SetPosition(long position) { }
+
     private readonly IReader _reader;
     private readonly Stream _stream;
     private bool _completed;
@@ -15,6 +37,9 @@ public class EntryStream : Stream
     {
         _reader = reader;
         _stream = stream;
+#if DEBUG_STREAMS
+        this.DebugConstruct(typeof(EntryStream));
+#endif
     }
 
     /// <summary>
@@ -32,11 +57,28 @@ public class EntryStream : Stream
         {
             SkipEntry();
         }
+
+        //Need a safe standard approach to this - it's okay for compression to overreads. Handling needs to be standardised
+        if (_stream is IStreamStack ss)
+        {
+            if (ss.BaseStream() is SharpCompress.Compressors.Deflate.DeflateStream deflateStream)
+            {
+                deflateStream.Flush(); //Deflate over reads. Knock it back
+            }
+            else if (ss.BaseStream() is SharpCompress.Compressors.LZMA.LzmaStream lzmaStream)
+            {
+                lzmaStream.Flush(); //Lzma over reads. Knock it back
+            }
+        }
+
         if (_isDisposed)
         {
             return;
         }
         _isDisposed = true;
+#if DEBUG_STREAMS
+        this.DebugDispose(typeof(EntryStream));
+#endif
         base.Dispose(disposing);
         _stream.Dispose();
     }
@@ -53,7 +95,7 @@ public class EntryStream : Stream
 
     public override long Position
     {
-        get => throw new NotSupportedException();
+        get => _stream.Position; //throw new NotSupportedException();
         set => throw new NotSupportedException();
     }
 

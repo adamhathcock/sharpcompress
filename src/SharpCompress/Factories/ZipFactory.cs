@@ -3,6 +3,7 @@ using System.IO;
 using SharpCompress.Archives;
 using SharpCompress.Archives.Zip;
 using SharpCompress.Common;
+using SharpCompress.IO;
 using SharpCompress.Readers;
 using SharpCompress.Readers.Zip;
 using SharpCompress.Writers;
@@ -38,13 +39,22 @@ public class ZipFactory
     }
 
     /// <inheritdoc/>
-    public override bool IsArchive(Stream stream, string? password = null)
+    public override bool IsArchive(
+        Stream stream,
+        string? password = null,
+        int bufferSize = ReaderOptions.DefaultBufferSize
+    )
     {
         var startPosition = stream.CanSeek ? stream.Position : -1;
 
         // probe for single volume zip
 
-        if (ZipArchive.IsZipFile(stream, password))
+        if (stream is not SharpCompressStream) // wrap to provide buffer bef
+        {
+            stream = new SharpCompressStream(stream, bufferSize: bufferSize);
+        }
+
+        if (ZipArchive.IsZipFile(stream, password, bufferSize))
         {
             return true;
         }
@@ -59,10 +69,12 @@ public class ZipFactory
         stream.Position = startPosition;
 
         //test the zip (last) file of a multipart zip
-        if (ZipArchive.IsZipMulti(stream))
+        if (ZipArchive.IsZipMulti(stream, password, bufferSize))
         {
             return true;
         }
+
+        stream.Position = startPosition;
 
         return false;
     }

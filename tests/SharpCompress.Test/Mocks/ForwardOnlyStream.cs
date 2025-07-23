@@ -1,11 +1,42 @@
 using System;
 using System.IO;
+using SharpCompress.IO;
+using SharpCompress.Readers;
 
 namespace SharpCompress.Test.Mocks;
 
-public class ForwardOnlyStream(Stream stream) : Stream
+public class ForwardOnlyStream : SharpCompressStream, IStreamStack
 {
+    private readonly Stream stream;
+#if DEBUG_STREAMS
+    long IStreamStack.InstanceId { get; set; }
+#endif
+
+    Stream IStreamStack.BaseStream() => stream;
+
+    int IStreamStack.BufferSize
+    {
+        get => 0;
+        set { }
+    }
+    int IStreamStack.BufferPosition
+    {
+        get => 0;
+        set { }
+    }
+
+    void IStreamStack.SetPosition(long position) { }
+
     public bool IsDisposed { get; private set; }
+
+    public ForwardOnlyStream(Stream stream, int bufferSize = ReaderOptions.DefaultBufferSize)
+        : base(stream, bufferSize: bufferSize)
+    {
+        this.stream = stream;
+#if DEBUG_STREAMS
+        this.DebugConstruct(typeof(ForwardOnlyStream));
+#endif
+    }
 
     protected override void Dispose(bool disposing)
     {
@@ -13,6 +44,9 @@ public class ForwardOnlyStream(Stream stream) : Stream
         {
             if (disposing)
             {
+#if DEBUG_STREAMS
+                this.DebugDispose(typeof(ForwardOnlyStream));
+#endif
                 stream.Dispose();
                 IsDisposed = true;
                 base.Dispose(disposing);

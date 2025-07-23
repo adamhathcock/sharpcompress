@@ -4,11 +4,32 @@ using System;
 using System.Buffers;
 using System.IO;
 using SharpCompress.Common.Rar.Headers;
+using SharpCompress.IO;
 
 namespace SharpCompress.Compressors.Rar;
 
-internal class RarStream : Stream
+internal class RarStream : Stream, IStreamStack
 {
+#if DEBUG_STREAMS
+    long IStreamStack.InstanceId { get; set; }
+#endif
+    int IStreamStack.DefaultBufferSize { get; set; }
+
+    Stream IStreamStack.BaseStream() => readStream;
+
+    int IStreamStack.BufferSize
+    {
+        get => 0;
+        set { }
+    }
+    int IStreamStack.BufferPosition
+    {
+        get => 0;
+        set { }
+    }
+
+    void IStreamStack.SetPosition(long position) { }
+
     private readonly IRarUnpack unpack;
     private readonly FileHeader fileHeader;
     private readonly Stream readStream;
@@ -31,6 +52,11 @@ internal class RarStream : Stream
         this.unpack = unpack;
         this.fileHeader = fileHeader;
         this.readStream = readStream;
+
+#if DEBUG_STREAMS
+        this.DebugConstruct(typeof(RarStream));
+#endif
+
         fetch = true;
         unpack.DoUnpack(fileHeader, readStream, this);
         fetch = false;
@@ -43,6 +69,9 @@ internal class RarStream : Stream
         {
             if (disposing)
             {
+#if DEBUG_STREAMS
+                this.DebugDispose(typeof(RarStream));
+#endif
                 ArrayPool<byte>.Shared.Return(this.tmpBuffer);
                 this.tmpBuffer = null;
             }

@@ -1,10 +1,31 @@
 using System;
 using System.IO;
+using SharpCompress.IO;
 
 namespace SharpCompress.Compressors.Shrink;
 
-internal class ShrinkStream : Stream
+internal class ShrinkStream : Stream, IStreamStack
 {
+#if DEBUG_STREAMS
+    long IStreamStack.InstanceId { get; set; }
+#endif
+    int IStreamStack.DefaultBufferSize { get; set; }
+
+    Stream IStreamStack.BaseStream() => inStream;
+
+    int IStreamStack.BufferSize
+    {
+        get => 0;
+        set { }
+    }
+    int IStreamStack.BufferPosition
+    {
+        get => 0;
+        set { }
+    }
+
+    void IStreamStack.SetPosition(long position) { }
+
     private Stream inStream;
     private CompressionMode _compressionMode;
 
@@ -23,10 +44,22 @@ internal class ShrinkStream : Stream
         inStream = stream;
         _compressionMode = compressionMode;
 
+#if DEBUG_STREAMS
+        this.DebugConstruct(typeof(ShrinkStream));
+#endif
+
         _compressedSize = (ulong)compressedSize;
         _uncompressedSize = uncompressedSize;
         _byteOut = new byte[_uncompressedSize];
         _outBytesCount = 0L;
+    }
+
+    protected override void Dispose(bool disposing)
+    {
+#if DEBUG_STREAMS
+        this.DebugDispose(typeof(ShrinkStream));
+#endif
+        base.Dispose(disposing);
     }
 
     public override bool CanRead => true;

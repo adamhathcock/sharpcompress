@@ -23,7 +23,11 @@ namespace SharpCompress.Factories
             yield return "arc";
         }
 
-        public override bool IsArchive(Stream stream, string? password = null)
+        public override bool IsArchive(
+            Stream stream,
+            string? password = null,
+            int bufferSize = ReaderOptions.DefaultBufferSize
+        )
         {
             //You may have to use some(paranoid) checks to ensure that you actually are
             //processing an ARC file, since other archivers also adopted the idea of putting

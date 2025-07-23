@@ -1,4 +1,4 @@
-﻿//
+//
 // ADC.cs
 //
 // Author:
@@ -28,14 +28,35 @@
 
 using System;
 using System.IO;
+using SharpCompress.IO;
 
 namespace SharpCompress.Compressors.ADC;
 
 /// <summary>
 /// Provides a forward readable only stream that decompresses ADC data
 /// </summary>
-public sealed class ADCStream : Stream
+public sealed class ADCStream : Stream, IStreamStack
 {
+#if DEBUG_STREAMS
+    long IStreamStack.InstanceId { get; set; }
+#endif
+    int IStreamStack.DefaultBufferSize { get; set; }
+
+    Stream IStreamStack.BaseStream() => _stream;
+
+    int IStreamStack.BufferSize
+    {
+        get => 0;
+        set { }
+    }
+    int IStreamStack.BufferPosition
+    {
+        get => 0;
+        set { }
+    }
+
+    void IStreamStack.SetPosition(long position) { }
+
     /// <summary>
     /// This stream holds the compressed data
     /// </summary>
@@ -74,6 +95,9 @@ public sealed class ADCStream : Stream
         }
 
         _stream = stream;
+#if DEBUG_STREAMS
+        this.DebugConstruct(typeof(ADCStream));
+#endif
     }
 
     public override bool CanRead => _stream.CanRead;
@@ -99,6 +123,9 @@ public sealed class ADCStream : Stream
             return;
         }
         _isDisposed = true;
+#if DEBUG_STREAMS
+        this.DebugDispose(typeof(ADCStream));
+#endif
         base.Dispose(disposing);
     }
 

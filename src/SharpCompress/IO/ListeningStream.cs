@@ -1,10 +1,30 @@
-﻿using System.IO;
+using System.IO;
 using SharpCompress.Common;
 
 namespace SharpCompress.IO;
 
-internal class ListeningStream : Stream
+internal class ListeningStream : Stream, IStreamStack
 {
+#if DEBUG_STREAMS
+    long IStreamStack.InstanceId { get; set; }
+#endif
+    int IStreamStack.DefaultBufferSize { get; set; }
+
+    Stream IStreamStack.BaseStream() => Stream;
+
+    int IStreamStack.BufferSize
+    {
+        get => 0;
+        set { return; }
+    }
+    int IStreamStack.BufferPosition
+    {
+        get => 0;
+        set { return; }
+    }
+
+    void IStreamStack.SetPosition(long position) { }
+
     private long _currentEntryTotalReadBytes;
     private readonly IExtractionListener _listener;
 
@@ -12,10 +32,16 @@ internal class ListeningStream : Stream
     {
         Stream = stream;
         this._listener = listener;
+#if DEBUG_STREAMS
+        this.DebugConstruct(typeof(ListeningStream));
+#endif
     }
 
     protected override void Dispose(bool disposing)
     {
+#if DEBUG_STREAMS
+        this.DebugDispose(typeof(ListeningStream));
+#endif
         if (disposing)
         {
             Stream.Dispose();

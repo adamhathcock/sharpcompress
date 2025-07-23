@@ -1,10 +1,31 @@
-﻿using System;
+using System;
 using System.IO;
+using SharpCompress.IO;
 
 namespace SharpCompress.Compressors.BZip2;
 
-public sealed class BZip2Stream : Stream
+public sealed class BZip2Stream : Stream, IStreamStack
 {
+#if DEBUG_STREAMS
+    long IStreamStack.InstanceId { get; set; }
+#endif
+    int IStreamStack.DefaultBufferSize { get; set; }
+
+    Stream IStreamStack.BaseStream() => stream;
+
+    int IStreamStack.BufferSize
+    {
+        get => 0;
+        set { }
+    }
+    int IStreamStack.BufferPosition
+    {
+        get => 0;
+        set { }
+    }
+
+    void IStreamStack.SetPosition(long position) { }
+
     private readonly Stream stream;
     private bool isDisposed;
 
@@ -16,6 +37,9 @@ public sealed class BZip2Stream : Stream
     /// <param name="decompressConcatenated">Decompress Concatenated</param>
     public BZip2Stream(Stream stream, CompressionMode compressionMode, bool decompressConcatenated)
     {
+#if DEBUG_STREAMS
+        this.DebugConstruct(typeof(BZip2Stream));
+#endif
         Mode = compressionMode;
         if (Mode == CompressionMode.Compress)
         {
@@ -36,6 +60,9 @@ public sealed class BZip2Stream : Stream
             return;
         }
         isDisposed = true;
+#if DEBUG_STREAMS
+        this.DebugDispose(typeof(BZip2Stream));
+#endif
         if (disposing)
         {
             stream.Dispose();

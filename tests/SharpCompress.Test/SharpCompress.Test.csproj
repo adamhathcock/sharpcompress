@@ -6,6 +6,9 @@
     <AssemblyOriginatorKeyFile>SharpCompress.Test.snk</AssemblyOriginatorKeyFile>
     <SignAssembly>true</SignAssembly>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net8.0|AnyCPU'">
+    <DefineConstants>$(DefineConstants);DEBUG_STREAMS</DefineConstants>
+  </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\SharpCompress\SharpCompress.csproj" />
   </ItemGroup>

@@ -3,11 +3,32 @@ using System.IO;
 using System.Security.Cryptography;
 using System.Text;
 using SharpCompress.Compressors.LZMA.Utilites;
+using SharpCompress.IO;
 
 namespace SharpCompress.Compressors.LZMA;
 
-internal sealed class AesDecoderStream : DecoderStream2
+internal sealed class AesDecoderStream : DecoderStream2, IStreamStack
 {
+#if DEBUG_STREAMS
+    long IStreamStack.InstanceId { get; set; }
+#endif
+    int IStreamStack.DefaultBufferSize { get; set; }
+
+    Stream IStreamStack.BaseStream() => mStream;
+
+    int IStreamStack.BufferSize
+    {
+        get => 0;
+        set { }
+    }
+    int IStreamStack.BufferPosition
+    {
+        get => 0;
+        set { }
+    }
+
+    void IStreamStack.SetPosition(long position) { }
+
     private readonly Stream mStream;
     private readonly ICryptoTransform mDecoder;
     private readonly byte[] mBuffer;
@@ -30,6 +51,10 @@ internal sealed class AesDecoderStream : DecoderStream2
 
         mStream = input;
         mLimit = limit;
+
+#if DEBUG_STREAMS
+        this.DebugConstruct(typeof(AesDecoderStream));
+#endif
 
         if (((uint)input.Length & 15) != 0)
         {
@@ -64,6 +89,9 @@ internal sealed class AesDecoderStream : DecoderStream2
                 return;
             }
             isDisposed = true;
+#if DEBUG_STREAMS
+            this.DebugDispose(typeof(AesDecoderStream));
+#endif
             if (disposing)
             {
                 mStream.Dispose();

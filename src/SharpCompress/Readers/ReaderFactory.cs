@@ -18,12 +18,14 @@ public static class ReaderFactory
         stream.CheckNotNull(nameof(stream));
         options ??= new ReaderOptions() { LeaveStreamOpen = false };
 
-        var rewindableStream = new RewindableStream(stream);
-        rewindableStream.StartRecording();
+        var bStream = new SharpCompressStream(stream, bufferSize: options.BufferSize);
+
+        long pos = ((IStreamStack)bStream).GetPosition();
 
         foreach (var factory in Factories.Factory.Factories.OfType<Factories.Factory>())
         {
-            if (factory.TryOpenReader(rewindableStream, options, out var reader) && reader != null)
+            ((IStreamStack)bStream).StackSeek(pos);
+            if (factory.TryOpenReader(bStream, options, out var reader) && reader != null)
             {
                 return reader;
             }

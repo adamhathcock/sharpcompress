@@ -3,11 +3,31 @@ using System.IO;
 using System.Linq;
 using SharpCompress.Common;
 using SharpCompress.Common.Rar.Headers;
+using SharpCompress.IO;
 
 namespace SharpCompress.Compressors.Rar;
 
-internal class RarBLAKE2spStream : RarStream
+internal class RarBLAKE2spStream : RarStream, IStreamStack
 {
+#if DEBUG_STREAMS
+    long IStreamStack.InstanceId { get; set; }
+#endif
+
+    Stream IStreamStack.BaseStream() => readStream;
+
+    int IStreamStack.BufferSize
+    {
+        get => 0;
+        set { }
+    }
+    int IStreamStack.BufferPosition
+    {
+        get => 0;
+        set { }
+    }
+
+    void IStreamStack.SetPosition(long position) { }
+
     private readonly MultiVolumeReadOnlyStream readStream;
     private readonly bool disableCRCCheck;
 
@@ -91,10 +111,22 @@ internal class RarBLAKE2spStream : RarStream
         : base(unpack, fileHeader, readStream)
     {
         this.readStream = readStream;
+
+#if DEBUG_STREAMS
+        this.DebugConstruct(typeof(RarBLAKE2spStream));
+#endif
         disableCRCCheck = fileHeader.IsEncrypted;
         _hash = fileHeader.FileCrc.NotNull();
         _blake2sp = new BLAKE2SP();
         ResetCrc();
+    }
+
+    protected override void Dispose(bool disposing)
+    {
+#if DEBUG_STREAMS
+        this.DebugDispose(typeof(RarBLAKE2spStream));
+#endif
+        base.Dispose(disposing);
     }
 
     public byte[] GetCrc() => _hash;

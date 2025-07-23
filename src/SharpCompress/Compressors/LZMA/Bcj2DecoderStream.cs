@@ -1,11 +1,32 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
+using SharpCompress.IO;
 
 namespace SharpCompress.Compressors.LZMA;
 
-internal class Bcj2DecoderStream : DecoderStream2
+internal class Bcj2DecoderStream : DecoderStream2, IStreamStack
 {
+#if DEBUG_STREAMS
+    long IStreamStack.InstanceId { get; set; }
+#endif
+    int IStreamStack.DefaultBufferSize { get; set; }
+
+    Stream IStreamStack.BaseStream() => _mMainStream;
+
+    int IStreamStack.BufferSize
+    {
+        get => 0;
+        set { }
+    }
+    int IStreamStack.BufferPosition
+    {
+        get => 0;
+        set { }
+    }
+
+    void IStreamStack.SetPosition(long position) { }
+
     private const int K_NUM_TOP_BITS = 24;
     private const uint K_TOP_VALUE = (1 << K_NUM_TOP_BITS);
 
@@ -109,6 +130,10 @@ internal class Bcj2DecoderStream : DecoderStream2
             _mStatusDecoder[i] = new StatusDecoder();
         }
 
+#if DEBUG_STREAMS
+        this.DebugConstruct(typeof(Bcj2DecoderStream));
+#endif
+
         _mIter = Run().GetEnumerator();
     }
 
@@ -119,6 +144,9 @@ internal class Bcj2DecoderStream : DecoderStream2
             return;
         }
         _isDisposed = true;
+#if DEBUG_STREAMS
+        this.DebugDispose(typeof(Bcj2DecoderStream));
+#endif
         base.Dispose(disposing);
         _mMainStream.Dispose();
         _mCallStream.Dispose();

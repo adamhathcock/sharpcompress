@@ -55,46 +55,49 @@ public class TarReader : AbstractReader<TarEntry, TarVolume>
     {
         stream.CheckNotNull(nameof(stream));
         options = options ?? new ReaderOptions();
-        var rewindableStream = new RewindableStream(stream);
-        rewindableStream.StartRecording();
+        var rewindableStream = new SharpCompressStream(stream);
+
+        long pos = ((IStreamStack)rewindableStream).GetPosition();
+
         if (GZipArchive.IsGZipFile(rewindableStream))
         {
-            rewindableStream.Rewind(false);
+            ((IStreamStack)rewindableStream).StackSeek(pos);
             var testStream = new GZipStream(rewindableStream, CompressionMode.Decompress);
             if (TarArchive.IsTarFile(testStream))
             {
-                rewindableStream.Rewind(true);
+                ((IStreamStack)rewindableStream).StackSeek(pos);
                 return new TarReader(rewindableStream, options, CompressionType.GZip);
             }
             throw new InvalidFormatException("Not a tar file.");
         }
 
-        rewindableStream.Rewind(false);
+        ((IStreamStack)rewindableStream).StackSeek(pos);
         if (BZip2Stream.IsBZip2(rewindableStream))
         {
-            rewindableStream.Rewind(false);
+            ((IStreamStack)rewindableStream).StackSeek(pos);
             var testStream = new BZip2Stream(rewindableStream, CompressionMode.Decompress, false);
             if (TarArchive.IsTarFile(testStream))
             {
-                rewindableStream.Rewind(true);
+                ((IStreamStack)rewindableStream).StackSeek(pos);
                 return new TarReader(rewindableStream, options, CompressionType.BZip2);
             }
             throw new InvalidFormatException("Not a tar file.");
         }
 
-        rewindableStream.Rewind(false);
+        ((IStreamStack)rewindableStream).StackSeek(pos);
         if (LZipStream.IsLZipFile(rewindableStream))
         {
-            rewindableStream.Rewind(false);
+            ((IStreamStack)rewindableStream).StackSeek(pos);
             var testStream = new LZipStream(rewindableStream, CompressionMode.Decompress);
             if (TarArchive.IsTarFile(testStream))
             {
-                rewindableStream.Rewind(true);
+                ((IStreamStack)rewindableStream).StackSeek(pos);
                 return new TarReader(rewindableStream, options, CompressionType.LZip);
             }
             throw new InvalidFormatException("Not a tar file.");
         }
-        rewindableStream.Rewind(true);
+
+        ((IStreamStack)rewindableStream).StackSeek(pos);
         return new TarReader(rewindableStream, options, CompressionType.None);
     }
 

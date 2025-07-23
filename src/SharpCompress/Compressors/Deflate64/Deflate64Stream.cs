@@ -10,11 +10,32 @@ using System.IO;
 using System.Runtime.CompilerServices;
 using SharpCompress.Common;
 using SharpCompress.Common.Zip;
+using SharpCompress.IO;
 
 namespace SharpCompress.Compressors.Deflate64;
 
-public sealed class Deflate64Stream : Stream
+public sealed class Deflate64Stream : Stream, IStreamStack
 {
+#if DEBUG_STREAMS
+    long IStreamStack.InstanceId { get; set; }
+#endif
+    int IStreamStack.DefaultBufferSize { get; set; }
+
+    Stream IStreamStack.BaseStream() => _stream;
+
+    int IStreamStack.BufferSize
+    {
+        get => 0;
+        set { }
+    }
+    int IStreamStack.BufferPosition
+    {
+        get => 0;
+        set { }
+    }
+
+    void IStreamStack.SetPosition(long position) { }
+
     private const int DEFAULT_BUFFER_SIZE = 8192;
 
     private Stream _stream;
@@ -42,6 +63,9 @@ public sealed class Deflate64Stream : Stream
         }
 
         InitializeInflater(stream, ZipCompressionMethod.Deflate64);
+#if DEBUG_STREAMS
+        this.DebugConstruct(typeof(Deflate64Stream));
+#endif
     }
 
     /// <summary>
@@ -252,6 +276,9 @@ public sealed class Deflate64Stream : Stream
             // In this case, we still need to clean up internal resources, hence the inner finally blocks.
             try
             {
+#if DEBUG_STREAMS
+                this.DebugDispose(typeof(Deflate64Stream));
+#endif
                 if (disposing)
                 {
                     _stream?.Dispose();

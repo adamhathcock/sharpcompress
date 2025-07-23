@@ -32,7 +32,7 @@ public class XZIndex
     public static XZIndex FromStream(Stream stream, bool indexMarkerAlreadyVerified)
     {
         var index = new XZIndex(
-            new BinaryReader(NonDisposingStream.Create(stream), Encoding.UTF8),
+            new BinaryReader(SharpCompressStream.Create(stream, leaveOpen: true), Encoding.UTF8),
             indexMarkerAlreadyVerified
         );
         index.Process();

@@ -4,13 +4,38 @@ using SharpCompress.IO;
 
 namespace SharpCompress.Common.Tar;
 
-internal class TarReadOnlySubStream : NonDisposingStream
+internal class TarReadOnlySubStream : SharpCompressStream, IStreamStack
 {
+#if DEBUG_STREAMS
+    long IStreamStack.InstanceId { get; set; }
+#endif
+
+    Stream IStreamStack.BaseStream() => base.Stream;
+
+    int IStreamStack.BufferSize
+    {
+        get => 0;
+        set { }
+    }
+    int IStreamStack.BufferPosition
+    {
+        get => 0;
+        set { }
+    }
+
+    void IStreamStack.SetPosition(long position) { }
+
     private bool _isDisposed;
     private long _amountRead;
 
     public TarReadOnlySubStream(Stream stream, long bytesToRead)
-        : base(stream, throwOnDispose: false) => BytesLeftToRead = bytesToRead;
+        : base(stream, leaveOpen: true, throwOnDispose: false)
+    {
+        BytesLeftToRead = bytesToRead;
+#if DEBUG_STREAMS
+        this.DebugConstruct(typeof(TarReadOnlySubStream));
+#endif
+    }
 
     protected override void Dispose(bool disposing)
     {
@@ -20,7 +45,9 @@ internal class TarReadOnlySubStream : NonDisposingStream
         }
 
         _isDisposed = true;
-
+#if DEBUG_STREAMS
+        this.DebugDispose(typeof(TarReadOnlySubStream));
+#endif
         if (disposing)
         {
             // Ensure we read all remaining blocks for this entry.

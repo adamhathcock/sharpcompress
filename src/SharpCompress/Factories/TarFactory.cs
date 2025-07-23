@@ -67,8 +67,11 @@ public class TarFactory
     }
 
     /// <inheritdoc/>
-    public override bool IsArchive(Stream stream, string? password = null) =>
-        TarArchive.IsTarFile(stream);
+    public override bool IsArchive(
+        Stream stream,
+        string? password = null,
+        int bufferSize = ReaderOptions.DefaultBufferSize
+    ) => TarArchive.IsTarFile(stream);
 
     #endregion
 
@@ -100,75 +103,75 @@ public class TarFactory
 
     /// <inheritdoc/>
     internal override bool TryOpenReader(
-        RewindableStream rewindableStream,
+        SharpCompressStream rewindableStream,
         ReaderOptions options,
         out IReader? reader
     )
     {
         reader = null;
+        long pos = ((IStreamStack)rewindableStream).GetPosition();
 
-        rewindableStream.Rewind(false);
         if (TarArchive.IsTarFile(rewindableStream))
         {
-            rewindableStream.Rewind(true);
+            ((IStreamStack)rewindableStream).StackSeek(pos);
             reader = OpenReader(rewindableStream, options);
             return true;
         }
 
-        rewindableStream.Rewind(false);
+        ((IStreamStack)rewindableStream).StackSeek(pos);
         if (BZip2Stream.IsBZip2(rewindableStream))
         {
-            rewindableStream.Rewind(false);
+            ((IStreamStack)rewindableStream).StackSeek(pos);
             var testStream = new BZip2Stream(
-                NonDisposingStream.Create(rewindableStream),
+                SharpCompressStream.Create(rewindableStream, leaveOpen: true),
                 CompressionMode.Decompress,
                 false
             );
             if (TarArchive.IsTarFile(testStream))
             {
-                rewindableStream.Rewind(true);
+                ((IStreamStack)rewindableStream).StackSeek(pos);
                 reader = new TarReader(rewindableStream, options, CompressionType.BZip2);
                 return true;
             }
         }
 
-        rewindableStream.Rewind(false);
+        ((IStreamStack)rewindableStream).StackSeek(pos);
         if (LZipStream.IsLZipFile(rewindableStream))
         {
-            rewindableStream.Rewind(false);
+            ((IStreamStack)rewindableStream).StackSeek(pos);
             var testStream = new LZipStream(
-                NonDisposingStream.Create(rewindableStream),
+                SharpCompressStream.Create(rewindableStream, leaveOpen: true),
                 CompressionMode.Decompress
             );
             if (TarArchive.IsTarFile(testStream))
             {
-                rewindableStream.Rewind(true);
+                ((IStreamStack)rewindableStream).StackSeek(pos);
                 reader = new TarReader(rewindableStream, options, CompressionType.LZip);
                 return true;
             }
         }
 
-        rewindableStream.Rewind(false);
+        ((IStreamStack)rewindableStream).StackSeek(pos);
         if (XZStream.IsXZStream(rewindableStream))
         {
-            rewindableStream.Rewind(true);
+            ((IStreamStack)rewindableStream).StackSeek(pos);
             var testStream = new XZStream(rewindableStream);
             if (TarArchive.IsTarFile(testStream))
             {
-                rewindableStream.Rewind(true);
+                ((IStreamStack)rewindableStream).StackSeek(pos);
                 reader = new TarReader(rewindableStream, options, CompressionType.Xz);
                 return true;
             }
         }
 
-        rewindableStream.Rewind(false);
+        ((IStreamStack)rewindableStream).StackSeek(pos);
         if (LzwStream.IsLzwStream(rewindableStream))
         {
-            rewindableStream.Rewind(false);
             var testStream = new LzwStream(rewindableStream);
+            ((IStreamStack)rewindableStream).StackSeek(pos);
             if (TarArchive.IsTarFile(testStream))
             {
-                rewindableStream.Rewind(true);
+                ((IStreamStack)rewindableStream).StackSeek(pos);
                 reader = new TarReader(rewindableStream, options, CompressionType.Lzw);
                 return true;
             }
