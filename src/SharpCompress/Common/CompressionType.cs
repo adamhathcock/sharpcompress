@@ -28,4 +28,5 @@ public enum CompressionType
     Squashed,
     Crushed,
     Distilled,
+    ZStandard,
 }

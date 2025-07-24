@@ -1,24 +1,18 @@
 using SharpCompress.Common;
-using SharpCompress.Compressors.Deflate;
+using D = SharpCompress.Compressors.Deflate;
 
 namespace SharpCompress.Writers.GZip;
 
 public class GZipWriterOptions : WriterOptions
 {
     public GZipWriterOptions()
-        : base(CompressionType.GZip) { }
+        : base(CompressionType.GZip, (int)(D.CompressionLevel.Default)) { }
 
     internal GZipWriterOptions(WriterOptions options)
-        : base(options.CompressionType)
+        : base(options.CompressionType, (int)(D.CompressionLevel.Default))
     {
         LeaveStreamOpen = options.LeaveStreamOpen;
         ArchiveEncoding = options.ArchiveEncoding;
-
-        if (options is GZipWriterOptions writerOptions)
-        {
-            CompressionLevel = writerOptions.CompressionLevel;
-        }
+        CompressionLevel = options.CompressionLevel;
     }
-
-    public CompressionLevel CompressionLevel { get; set; } = CompressionLevel.Default;
 }

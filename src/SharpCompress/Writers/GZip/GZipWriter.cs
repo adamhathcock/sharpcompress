@@ -22,7 +22,7 @@ public sealed class GZipWriter : AbstractWriter
             new GZipStream(
                 destination,
                 CompressionMode.Compress,
-                options?.CompressionLevel ?? CompressionLevel.Default,
+                (CompressionLevel)(options?.CompressionLevel ?? (int)CompressionLevel.Default),
                 WriterOptions.ArchiveEncoding.GetEncoding()
             )
         );

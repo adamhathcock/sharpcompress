@@ -4,8 +4,12 @@ using System.IO;
 using System.Linq;
 using SharpCompress.Archives;
 using SharpCompress.Common;
+using SharpCompress.Compressors.Xz;
+using SharpCompress.Crypto;
 using SharpCompress.IO;
 using SharpCompress.Readers;
+using SharpCompress.Writers;
+using SharpCompress.Writers.Zip;
 using Xunit;
 
 namespace SharpCompress.Test;
@@ -338,5 +342,219 @@ public class ArchiveTests : ReaderTests
                 Assert.Equal(-1, memory.ReadByte());
             }
         }
+    }
+
+    /// <summary>
+    /// Calculates CRC32 for the given data using SharpCompress implementation
+    /// </summary>
+    protected static uint CalculateCrc32(byte[] data) => Crc32.Compute(data);
+
+    /// <summary>
+    /// Creates a writer with the specified compression type and level
+    /// </summary>
+    protected static IWriter CreateWriterWithLevel(
+        Stream stream,
+        CompressionType compressionType,
+        int? compressionLevel = null
+    )
+    {
+        var writerOptions = new ZipWriterOptions(compressionType);
+        if (compressionLevel.HasValue)
+        {
+            writerOptions.CompressionLevel = compressionLevel.Value;
+        }
+        return WriterFactory.Open(stream, ArchiveType.Zip, writerOptions);
+    }
+
+    /// <summary>
+    /// Verifies archive content against expected files with CRC32 validation
+    /// </summary>
+    protected void VerifyArchiveContent(
+        MemoryStream zipStream,
+        Dictionary<string, (byte[] data, uint crc)> expectedFiles
+    )
+    {
+        zipStream.Position = 0;
+        using var archive = ArchiveFactory.Open(zipStream);
+        Assert.Equal(expectedFiles.Count, archive.Entries.Count());
+
+        foreach (var entry in archive.Entries.Where(e => !e.IsDirectory))
+        {
+            using var entryStream = entry.OpenEntryStream();
+            using var extractedStream = new MemoryStream();
+            entryStream.CopyTo(extractedStream);
+            var extractedData = extractedStream.ToArray();
+
+            Assert.True(
+                expectedFiles.ContainsKey(entry.Key.NotNull()),
+                $"Unexpected entry: {entry.Key}"
+            );
+
+            var (expectedData, expectedCrc) = expectedFiles[entry.Key.NotNull()];
+            var actualCrc = CalculateCrc32(extractedData);
+
+            Assert.Equal(expectedCrc, actualCrc);
+            Assert.Equal(expectedData.Length, extractedData.Length);
+
+            // For large files, spot check rather than full comparison for performance
+            if (expectedData.Length > 1024 * 1024)
+            {
+                VerifyDataSpotCheck(expectedData, extractedData);
+            }
+            else
+            {
+                Assert.Equal(expectedData, extractedData);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Performs efficient spot checks on large data arrays
+    /// </summary>
+    protected static void VerifyDataSpotCheck(byte[] expected, byte[] actual)
+    {
+        // Check first, middle, and last 1KB
+        Assert.Equal(expected.Take(1024), actual.Take(1024));
+        var mid = expected.Length / 2;
+        Assert.Equal(expected.Skip(mid).Take(1024), actual.Skip(mid).Take(1024));
+        Assert.Equal(
+            expected.Skip(Math.Max(0, expected.Length - 1024)),
+            actual.Skip(Math.Max(0, actual.Length - 1024))
+        );
+    }
+
+    /// <summary>
+    /// Verifies compression ratio meets expectations
+    /// </summary>
+    protected void VerifyCompressionRatio(
+        long originalSize,
+        long compressedSize,
+        double maxRatio,
+        string context
+    )
+    {
+        var compressionRatio = (double)compressedSize / originalSize;
+        Assert.True(
+            compressionRatio < maxRatio,
+            $"Expected better compression for {context}. Original: {originalSize}, Compressed: {compressedSize}, Ratio: {compressionRatio:P}"
+        );
+    }
+
+    /// <summary>
+    /// Creates a memory-based archive with specified files and compression
+    /// </summary>
+    protected MemoryStream CreateMemoryArchive(
+        Dictionary<string, byte[]> files,
+        CompressionType compressionType,
+        int? compressionLevel = null
+    )
+    {
+        var zipStream = new MemoryStream();
+        using (var writer = CreateWriterWithLevel(zipStream, compressionType, compressionLevel))
+        {
+            foreach (var kvp in files)
+            {
+                writer.Write(kvp.Key, new MemoryStream(kvp.Value));
+            }
+        }
+        return zipStream;
+    }
+
+    /// <summary>
+    /// Verifies streaming CRC calculation for large data
+    /// </summary>
+    protected void VerifyStreamingCrc(Stream entryStream, uint expectedCrc, long expectedLength)
+    {
+        using var crcStream = new Crc32Stream(Stream.Null);
+        const int bufferSize = 64 * 1024;
+        var buffer = new byte[bufferSize];
+        int totalBytesRead = 0;
+        int bytesRead;
+
+        while ((bytesRead = entryStream.Read(buffer, 0, bufferSize)) > 0)
+        {
+            crcStream.Write(buffer, 0, bytesRead);
+            totalBytesRead += bytesRead;
+        }
+
+        var actualCrc = crcStream.Crc;
+        Assert.Equal(expectedCrc, actualCrc);
+        Assert.Equal(expectedLength, totalBytesRead);
+    }
+
+    /// <summary>
+    /// Creates and verifies a basic archive with compression testing
+    /// </summary>
+    protected void CreateAndVerifyBasicArchive(
+        Dictionary<string, byte[]> testFiles,
+        CompressionType compressionType,
+        int? compressionLevel = null,
+        double maxCompressionRatio = 0.8
+    )
+    {
+        // Calculate expected CRCs
+        var expectedFiles = testFiles.ToDictionary(
+            kvp => kvp.Key,
+            kvp => (data: kvp.Value, crc: CalculateCrc32(kvp.Value))
+        );
+
+        // Create archive
+        using var zipStream = CreateMemoryArchive(testFiles, compressionType, compressionLevel);
+
+        // Verify compression occurred if expected
+        if (compressionType != CompressionType.None)
+        {
+            var originalSize = testFiles.Values.Sum(data => (long)data.Length);
+            VerifyCompressionRatio(
+                originalSize,
+                zipStream.Length,
+                maxCompressionRatio,
+                compressionType.ToString()
+            );
+        }
+
+        // Verify content
+        VerifyArchiveContent(zipStream, expectedFiles);
+    }
+
+    /// <summary>
+    /// Verifies archive entries have correct compression type
+    /// </summary>
+    protected void VerifyCompressionType(
+        MemoryStream zipStream,
+        CompressionType expectedCompressionType
+    )
+    {
+        zipStream.Position = 0;
+        using var archive = ArchiveFactory.Open(zipStream);
+
+        foreach (var entry in archive.Entries.Where(e => !e.IsDirectory))
+        {
+            Assert.Equal(expectedCompressionType, entry.CompressionType);
+        }
+    }
+
+    /// <summary>
+    /// Extracts and verifies a single entry from archive
+    /// </summary>
+    protected (byte[] data, uint crc) ExtractAndVerifyEntry(
+        MemoryStream zipStream,
+        string entryName
+    )
+    {
+        zipStream.Position = 0;
+        using var archive = ArchiveFactory.Open(zipStream);
+
+        var entry = archive.Entries.FirstOrDefault(e => e.Key == entryName && !e.IsDirectory);
+        Assert.NotNull(entry);
+
+        using var entryStream = entry.OpenEntryStream();
+        using var extractedStream = new MemoryStream();
+        entryStream.CopyTo(extractedStream);
+
+        var extractedData = extractedStream.ToArray();
+        var crc = CalculateCrc32(extractedData);
+
+        return (extractedData, crc);
     }
 }

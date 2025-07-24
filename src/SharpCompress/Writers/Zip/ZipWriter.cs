@@ -18,7 +18,7 @@ namespace SharpCompress.Writers.Zip;
 public class ZipWriter : AbstractWriter
 {
     private readonly CompressionType compressionType;
-    private readonly CompressionLevel compressionLevel;
+    private readonly int compressionLevel;
     private readonly List<ZipCentralDirectoryEntry> entries = new();
     private readonly string zipComment;
     private long streamPosition;
@@ -36,7 +36,7 @@ public class ZipWriter : AbstractWriter
         }
 
         compressionType = zipWriterOptions.CompressionType;
-        compressionLevel = zipWriterOptions.DeflateCompressionLevel;
+        compressionLevel = zipWriterOptions.CompressionLevel;
 
         if (WriterOptions.LeaveStreamOpen)
         {
@@ -69,6 +69,7 @@ public class ZipWriter : AbstractWriter
             CompressionType.BZip2 => ZipCompressionMethod.BZip2,
             CompressionType.LZMA => ZipCompressionMethod.LZMA,
             CompressionType.PPMd => ZipCompressionMethod.PPMd,
+            CompressionType.ZStandard => ZipCompressionMethod.ZStandard,
             _ => throw new InvalidFormatException("Invalid compression method: " + compressionType),
         };
 
@@ -117,7 +118,7 @@ public class ZipWriter : AbstractWriter
             OutputStream.NotNull(),
             entry,
             compression,
-            options.DeflateCompressionLevel ?? compressionLevel
+            options.CompressionLevel ?? compressionLevel
         );
     }
 
@@ -312,7 +313,7 @@ public class ZipWriter : AbstractWriter
         private readonly Stream writeStream;
         private readonly ZipWriter writer;
         private readonly ZipCompressionMethod zipCompressionMethod;
-        private readonly CompressionLevel compressionLevel;
+        private readonly int compressionLevel;
         private SharpCompressStream? counting;
         private ulong decompressed;
 
@@ -325,7 +326,7 @@ public class ZipWriter : AbstractWriter
             Stream originalStream,
             ZipCentralDirectoryEntry entry,
             ZipCompressionMethod zipCompressionMethod,
-            CompressionLevel compressionLevel
+            int compressionLevel
         )
         {
             this.writer = writer;
@@ -363,7 +364,11 @@ public class ZipWriter : AbstractWriter
                 }
                 case ZipCompressionMethod.Deflate:
                 {
-                    return new DeflateStream(counting, CompressionMode.Compress, compressionLevel);
+                    return new DeflateStream(
+                        counting,
+                        CompressionMode.Compress,
+                        (CompressionLevel)compressionLevel
+                    );
                 }
                 case ZipCompressionMethod.BZip2:
                 {
@@ -388,6 +393,10 @@ public class ZipWriter : AbstractWriter
                 {
                     counting.Write(writer.PpmdProperties.Properties, 0, 2);
                     return new PpmdStream(writer.PpmdProperties, counting, true);
+                }
+                case ZipCompressionMethod.ZStandard:
+                {
+                    return new ZstdSharp.CompressionStream(counting, compressionLevel);
                 }
                 default:
                 {
