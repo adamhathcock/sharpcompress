@@ -398,7 +398,7 @@ public class ZipWriter : AbstractWriter
                 {
                     return new ZstdSharp.CompressionStream(
                         counting,
-                        (int)writer.WriterOptions.CompressionLevel
+                        compressionLevel
                     );
                 }
                 default:
