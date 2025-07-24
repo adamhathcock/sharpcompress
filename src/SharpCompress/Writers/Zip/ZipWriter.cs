@@ -396,10 +396,7 @@ public class ZipWriter : AbstractWriter
                 }
                 case ZipCompressionMethod.ZStandard:
                 {
-                    return new ZstdSharp.CompressionStream(
-                        counting,
-                        compressionLevel
-                    );
+                    return new ZstdSharp.CompressionStream(counting, compressionLevel);
                 }
                 default:
                 {
