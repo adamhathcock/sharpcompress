@@ -22,7 +22,18 @@ internal class StreamingZipHeaderFactory : ZipHeaderFactory
     {
         if (stream is not SharpCompressStream) //ensure the stream is already a SharpCompressStream. So the buffer/size will already be set
         {
-            throw new ArgumentException("Stream must be a SharpCompressStream", nameof(stream));
+            if (stream is SourceStream src) //the original code wrapped this with RewindableStream. Wrap with SharpCOmpressStream as we can get the boffer size
+            {
+                stream = new SharpCompressStream(
+                    stream,
+                    src.ReaderOptions.LeaveStreamOpen,
+                    bufferSize: src.ReaderOptions.BufferSize
+                );
+            }
+            else
+            {
+                throw new ArgumentException("Stream must be a SharpCompressStream", nameof(stream));
+            }
         }
         SharpCompressStream rewindableStream = (SharpCompressStream)stream;
 

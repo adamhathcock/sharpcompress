@@ -50,7 +50,6 @@ internal sealed class StreamingZipFilePart : ZipFilePart
             if (_decompressionStream is DeflateStream deflateStream)
             {
                 ((IStreamStack)rewindableStream).StackSeek(0);
-                //rewindableStream.Rewind(deflateStream.InputBuffer);
             }
 
             Skipped = true;
