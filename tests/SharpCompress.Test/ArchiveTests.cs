@@ -252,6 +252,25 @@ public class ArchiveTests : ReaderTests
         }
     }
 
+    protected void ArchiveExtractToDirectory(
+        string testArchive,
+        ReaderOptions? readerOptions = null
+    ) => ArchiveExtractToDirectory(ArchiveFactory.AutoFactory, testArchive, readerOptions);
+
+    protected void ArchiveExtractToDirectory(
+        IArchiveFactory archiveFactory,
+        string testArchive,
+        ReaderOptions? readerOptions = null
+    )
+    {
+        testArchive = Path.Combine(TEST_ARCHIVES_PATH, testArchive);
+        using (var archive = archiveFactory.Open(new FileInfo(testArchive), readerOptions))
+        {
+            archive.ExtractToDirectory(SCRATCH_FILES_PATH);
+        }
+        VerifyFiles();
+    }
+
     protected void ArchiveFileRead(
         IArchiveFactory archiveFactory,
         string testArchive,

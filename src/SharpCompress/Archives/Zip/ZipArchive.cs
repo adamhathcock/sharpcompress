@@ -330,7 +330,7 @@ public class ZipArchive : AbstractWritableArchive<ZipArchiveEntry, ZipVolume>
     protected override IReader CreateReaderForSolidExtraction()
     {
         var stream = Volumes.Single().Stream;
-        stream.Position = 0;
+        ((IStreamStack)stream).StackSeek(0);
         return ZipReader.Open(stream, ReaderOptions, Entries);
     }
 }

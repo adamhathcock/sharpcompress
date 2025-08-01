@@ -88,6 +88,10 @@ public class ZipArchiveTests : ArchiveTests
     [Fact]
     public void Zip_Deflate_ArchiveFileRead() => ArchiveFileRead("Zip.deflate.zip");
 
+    [Fact]
+    public void Zip_Deflate_ArchiveExtractToDirectory() =>
+        ArchiveExtractToDirectory("Zip.deflate.zip");
+
     //will detect and load other files
     [Fact]
     public void Zip_Deflate_Multi_ArchiveFirstFileRead() =>
