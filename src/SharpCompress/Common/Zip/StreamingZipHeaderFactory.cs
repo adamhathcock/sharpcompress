@@ -22,7 +22,8 @@ internal class StreamingZipHeaderFactory : ZipHeaderFactory
     {
         if (stream is not SharpCompressStream) //ensure the stream is already a SharpCompressStream. So the buffer/size will already be set
         {
-            if (stream is SourceStream src) //the original code wrapped this with RewindableStream. Wrap with SharpCOmpressStream as we can get the boffer size
+            //the original code wrapped this with RewindableStream. Wrap with SharpCompressStream as we can get the buffer size
+            if (stream is SourceStream src)
             {
                 stream = new SharpCompressStream(
                     stream,
