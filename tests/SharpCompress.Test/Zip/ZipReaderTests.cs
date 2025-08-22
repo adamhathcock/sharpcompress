@@ -379,4 +379,21 @@ public class ZipReaderTests : ReaderTests
 
         Assert.Equal(4, x);
     }
+
+    [Fact]
+    public void Zip_Uncompressed_Encrypted_Read()
+    {
+        using var archive = ArchiveFactory.Open(
+            Path.Combine(TEST_ARCHIVES_PATH, "Zip.none.encrypted.zip"),
+            new ReaderOptions { Password = "test" }
+        );
+        using var reader = archive.ExtractAllEntries();
+        reader.MoveToNextEntry();
+        Assert.Equal("first.txt", reader.Entry.Key);
+        Assert.Equal(199, reader.Entry.Size);
+        reader.OpenEntryStream().Dispose();
+        reader.MoveToNextEntry();
+        Assert.Equal("second.txt", reader.Entry.Key);
+        Assert.Equal(197, reader.Entry.Size);
+    }
 }
