@@ -1,6 +1,6 @@
 # SharpCompress
 
-SharpCompress is a compression library in pure C# for .NET Framework 4.62, .NET Standard 2.1, .NET 6.0 and NET 8.0 that can unrar, un7zip, unzip, untar unbzip2, ungzip, unlzip with forward-only reading and file random access APIs. Write support for zip/tar/bzip2/gzip/lzip are implemented.
+SharpCompress is a compression library in pure C# for .NET Framework 4.62, .NET Standard 2.1, .NET 6.0 and NET 8.0 that can unrar, un7zip, unzip, untar unbzip2, ungzip, unlzip, unzstd with forward-only reading and file random access APIs. Write support for zip/tar/bzip2/gzip/lzip are implemented.
 
 The major feature is support for non-seekable streams so large files can be processed on the fly (i.e. download stream).
 
@@ -20,9 +20,11 @@ In general, I recommend GZip (Deflate)/BZip2 (BZip)/LZip (LZMA) as the simplicit
 
 Zip is okay, but it's a very hap-hazard format and the variation in headers and implementations makes it hard to get correct. Uses Deflate by default but supports a lot of compression methods.
 
-RAR is not recommended as it's a propriatory format and the compression is closed source. Use Tar/LZip for LZMA
+RAR is not recommended as it's a proprietary format and the compression is closed source. Use Tar/LZip for LZMA
 
 7Zip and XZ both are overly complicated. 7Zip does not support streamable formats. XZ has known holes explained here: (http://www.nongnu.org/lzip/xz_inadequate.html) Use Tar/LZip for LZMA compression instead.
+
+ZStandard is an efficient format that works well for streaming with a flexible compression level to tweak the speed/performance trade off you are looking for.  We currently only implement decompression for ZStandard but as we leverage the [ZstdSharp](https://github.com/oleg-st/ZstdSharp) library one could likely add compression support without much trouble (PRs are welcome!).
 
 ## A Simple Request
 
@@ -40,6 +42,7 @@ I'm always looking for help or ideas. Please submit code or email with ideas. Un
 * 7Zip writing
 * Zip64 (Need writing and extend Reading)
 * Multi-volume Zip support.
+* ZStandard writing
 
 ## Version Log
 

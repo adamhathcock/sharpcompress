@@ -11,6 +11,7 @@ using SharpCompress.Compressors.Deflate;
 using SharpCompress.Compressors.LZMA;
 using SharpCompress.Compressors.Lzw;
 using SharpCompress.Compressors.Xz;
+using SharpCompress.Compressors.ZStandard;
 using SharpCompress.IO;
 
 namespace SharpCompress.Readers.Tar;
@@ -35,6 +36,7 @@ public class TarReader : AbstractReader<TarEntry, TarVolume>
         {
             CompressionType.BZip2 => new BZip2Stream(stream, CompressionMode.Decompress, false),
             CompressionType.GZip => new GZipStream(stream, CompressionMode.Decompress),
+            CompressionType.ZStandard => new ZStandardStream(stream),
             CompressionType.LZip => new LZipStream(stream, CompressionMode.Decompress),
             CompressionType.Xz => new XZStream(stream),
             CompressionType.Lzw => new LzwStream(stream),
@@ -84,6 +86,18 @@ public class TarReader : AbstractReader<TarEntry, TarVolume>
             throw new InvalidFormatException("Not a tar file.");
         }
 
+        ((IStreamStack)rewindableStream).StackSeek(pos);
+        if (ZStandardStream.IsZStandard(rewindableStream))
+        {
+            ((IStreamStack)rewindableStream).StackSeek(pos);
+            var testStream = new ZStandardStream(rewindableStream);
+            if (TarArchive.IsTarFile(testStream))
+            {
+                ((IStreamStack)rewindableStream).StackSeek(pos);
+                return new TarReader(rewindableStream, options, CompressionType.ZStandard);
+            }
+            throw new InvalidFormatException("Not a tar file.");
+        }
         ((IStreamStack)rewindableStream).StackSeek(pos);
         if (LZipStream.IsLZipFile(rewindableStream))
         {

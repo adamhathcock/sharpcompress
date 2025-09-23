@@ -50,6 +50,9 @@ public class TarReaderTests : ReaderTests
     public void Tar_GZip_Reader() => Read("Tar.tar.gz", CompressionType.GZip);
 
     [Fact]
+    public void Tar_ZStandard_Reader() => Read("Tar.tar.zst", CompressionType.ZStandard);
+
+    [Fact]
     public void Tar_LZip_Reader() => Read("Tar.tar.lz", CompressionType.LZip);
 
     [Fact]
