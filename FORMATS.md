@@ -15,6 +15,7 @@
 | Tar                    | None                                              | Both                | TarArchive      | TarReader  | TarWriter (3) |
 | Tar.GZip               | DEFLATE                                           | Both                | TarArchive      | TarReader  | TarWriter (3) |
 | Tar.BZip2              | BZip2                                             | Both                | TarArchive      | TarReader  | TarWriter (3) |
+| Tar.Zstandard          | ZStandard                                         | Decompress          | TarArchive      | TarReader  | N/A |
 | Tar.LZip               | LZMA                                              | Both                | TarArchive      | TarReader  | TarWriter (3) |
 | Tar.XZ                 | LZMA2                                             | Decompress          | TarArchive      | TarReader  | TarWriter (3) |
 | GZip (single file)     | DEFLATE                                           | Both                | GZipArchive     | GZipReader | GZipWriter    |
@@ -41,6 +42,7 @@ For those who want to directly compress/decompress bits. The single file formats
 | ADCStream       | Decompress          |
 | LZipStream      | Both                |
 | XZStream        | Decompress          |
+| ZStandardStream | Decompress          |
 
 ## Archive Formats vs Compression
 

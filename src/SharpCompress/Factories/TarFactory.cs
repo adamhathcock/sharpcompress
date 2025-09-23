@@ -8,6 +8,7 @@ using SharpCompress.Compressors.BZip2;
 using SharpCompress.Compressors.LZMA;
 using SharpCompress.Compressors.Lzw;
 using SharpCompress.Compressors.Xz;
+using SharpCompress.Compressors.ZStandard;
 using SharpCompress.IO;
 using SharpCompress.Readers;
 using SharpCompress.Readers.Tar;
@@ -63,7 +64,7 @@ public class TarFactory
         yield return "taZ";
 
         // zstd
-        // yield return "tzst"; // unsupported
+        yield return "tzst";
     }
 
     /// <inheritdoc/>
@@ -131,6 +132,21 @@ public class TarFactory
             {
                 ((IStreamStack)rewindableStream).StackSeek(pos);
                 reader = new TarReader(rewindableStream, options, CompressionType.BZip2);
+                return true;
+            }
+        }
+
+        ((IStreamStack)rewindableStream).StackSeek(pos);
+        if (ZStandardStream.IsZStandard(rewindableStream))
+        {
+            ((IStreamStack)rewindableStream).StackSeek(pos);
+            var testStream = new ZStandardStream(
+                SharpCompressStream.Create(rewindableStream, leaveOpen: true)
+            );
+            if (TarArchive.IsTarFile(testStream))
+            {
+                ((IStreamStack)rewindableStream).StackSeek(pos);
+                reader = new TarReader(rewindableStream, options, CompressionType.ZStandard);
                 return true;
             }
         }
