@@ -1,6 +1,8 @@
+using System;
 using System.IO;
 using System.Linq;
 using SharpCompress.Common;
+using SharpCompress.Factories;
 using SharpCompress.IO;
 
 namespace SharpCompress.Readers;
@@ -22,8 +24,32 @@ public static class ReaderFactory
 
         long pos = ((IStreamStack)bStream).GetPosition();
 
-        foreach (var factory in Factories.Factory.Factories.OfType<Factories.Factory>())
+        var factories = Factories.Factory.Factories.OfType<Factories.Factory>();
+
+        Factory? testedFactory = null;
+
+        if (!string.IsNullOrWhiteSpace(options.ExtensionHint))
         {
+            testedFactory = factories.FirstOrDefault(a =>
+                a.GetSupportedExtensions()
+                    .Contains(options.ExtensionHint, StringComparer.CurrentCultureIgnoreCase)
+            );
+            if (
+                testedFactory?.TryOpenReader(bStream, options, out var reader) == true
+                && reader != null
+            )
+            {
+                return reader;
+            }
+            ((IStreamStack)bStream).StackSeek(pos);
+        }
+
+        foreach (var factory in factories)
+        {
+            if (testedFactory == factory)
+            {
+                continue; // Already tested above
+            }
             ((IStreamStack)bStream).StackSeek(pos);
             if (factory.TryOpenReader(bStream, options, out var reader) && reader != null)
             {
