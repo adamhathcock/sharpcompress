@@ -16,4 +16,9 @@ public class ReaderOptions : OptionsBase
     public bool DisableCheckIncomplete { get; set; }
 
     public int BufferSize { get; set; } = DefaultBufferSize;
+
+    /// <summary>
+    /// Provide a hint for the extension of the archive being read, can speed up finding the correct decoder.  Should be without the leading period in the form like: tar.gz or zip
+    /// </summary>
+    public string? ExtensionHint { get; set; }
 }
