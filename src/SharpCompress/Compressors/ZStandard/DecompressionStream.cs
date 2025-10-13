@@ -146,14 +146,18 @@ namespace ZstdSharp
             }
         }
 
+
+#if !NETSTANDARD2_0 && !NETFRAMEWORK
         public override Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
             => ReadAsync(new Memory<byte>(buffer, offset, count), cancellationToken).AsTask();
 
-#if !NETSTANDARD2_0 && !NETFRAMEWORK
         public override async ValueTask<int> ReadAsync(Memory<byte> buffer,
             CancellationToken cancellationToken = default)
 #else
-        public async ValueTask<int> ReadAsync(Memory<byte> buffer,
+
+        public override Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+            => ReadAsync(new Memory<byte>(buffer, offset, count), cancellationToken);
+        public async Task<int> ReadAsync(Memory<byte> buffer,
             CancellationToken cancellationToken = default)
 #endif
         {
@@ -241,16 +245,16 @@ namespace ZstdSharp
         }
 
 #if NETSTANDARD2_0 || NETFRAMEWORK
-        public virtual ValueTask DisposeAsync()
+        public virtual Task DisposeAsync()
         {
             try
             {
                 Dispose();
-                return default;
+                return Task.CompletedTask;
             }
             catch (Exception exc)
             {
-                return new ValueTask(Task.FromException(exc));
+                return Task.FromException(exc);
             }
         }
 #endif

@@ -3335,7 +3335,7 @@ namespace ZstdSharp.Unsafe
                 uint curr = (uint)(istart - @base);
 #if DEBUG
                 if (sizeof(nint) == 8)
-                    assert(istart - @base < (nint)unchecked((uint)-1));
+                    assert(istart - @base < unchecked((nint)(uint)-1));
 #endif
                 if (curr > ms->nextToUpdate + 384)
                     ms->nextToUpdate = curr - (192 < curr - ms->nextToUpdate - 384 ? 192 : curr - ms->nextToUpdate - 384);

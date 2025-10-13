@@ -576,7 +576,7 @@ namespace ZstdSharp.Unsafe
                 int chunkNb;
 #if DEBUG
                 if (sizeof(nuint) > sizeof(int))
-                    assert(job->src.size < 2147483647 * chunkSize);
+                    assert(job->src.size < unchecked(2147483647 * chunkSize));
 #endif
                 assert(job->cSize == 0);
                 for (chunkNb = 1; chunkNb < nbChunks; chunkNb++)

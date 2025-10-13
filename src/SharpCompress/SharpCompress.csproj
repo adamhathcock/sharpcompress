@@ -35,12 +35,11 @@
     <DefineConstants>$(DefineConstants);DEBUG_STREAMS</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="System.Buffers" />
     <PackageReference Include="Microsoft.SourceLink.GitHub" PrivateAssets="All" />
     <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" PrivateAssets="All" />
   </ItemGroup>
-  <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' ">
-    <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" />
+  <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' or '$(TargetFramework)' == 'net48' or '$(TargetFramework)' == 'net481' ">
+    <PackageReference Include="System.Buffers" />
     <PackageReference Include="System.Text.Encoding.CodePages" />
     <PackageReference Include="System.Memory" />
   </ItemGroup>

@@ -68,7 +68,7 @@ namespace ZstdSharp
 #if !NETSTANDARD2_0 && !NETFRAMEWORK
         public override async ValueTask DisposeAsync()
 #else
-        public async ValueTask DisposeAsync()
+        public async Task DisposeAsync()
 #endif
         {
             if (compressor == null)
@@ -160,8 +160,14 @@ namespace ZstdSharp
             } while (directive == ZSTD_EndDirective.ZSTD_e_continue ? input.pos < input.size : remaining > 0);
         }
 
-        private async ValueTask WriteInternalAsync(ReadOnlyMemory<byte>? buffer, ZSTD_EndDirective directive,
+#if !NETSTANDARD2_0 && !NETFRAMEWORK
+         private async ValueTask WriteInternalAsync(ReadOnlyMemory<byte>? buffer, ZSTD_EndDirective directive,
             CancellationToken cancellationToken = default)
+#else
+        private async Task WriteInternalAsync(ReadOnlyMemory<byte>? buffer, ZSTD_EndDirective directive,
+                                                   CancellationToken cancellationToken = default)
+#endif
+
         {
             EnsureNotDisposed();
 
@@ -178,15 +184,20 @@ namespace ZstdSharp
             } while (directive == ZSTD_EndDirective.ZSTD_e_continue ? input.pos < input.size : remaining > 0);
         }
 
+#if !NETSTANDARD2_0 && !NETFRAMEWORK
+
         public override Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
             => WriteAsync(new ReadOnlyMemory<byte>(buffer, offset, count), cancellationToken).AsTask();
 
-#if !NETSTANDARD2_0 && !NETFRAMEWORK
         public override async ValueTask WriteAsync(ReadOnlyMemory<byte> buffer,
             CancellationToken cancellationToken = default)
             => await WriteInternalAsync(buffer, ZSTD_EndDirective.ZSTD_e_continue, cancellationToken).ConfigureAwait(false);
 #else
-        public async ValueTask WriteAsync(ReadOnlyMemory<byte> buffer,
+
+        public override Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+            => WriteAsync(new ReadOnlyMemory<byte>(buffer, offset, count), cancellationToken);
+
+        public async Task WriteAsync(ReadOnlyMemory<byte> buffer,
             CancellationToken cancellationToken = default)
             => await WriteInternalAsync(buffer, ZSTD_EndDirective.ZSTD_e_continue, cancellationToken).ConfigureAwait(false);
 #endif
