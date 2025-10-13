@@ -1,6 +1,13 @@
 version: 2
 updates:
-  - package-ecosystem: "github-actions" # search for actions - there are other options available
-    directory: "/" # search in .github/workflows under root `/`
+  - package-ecosystem: "github-actions"
+    directory: "/" 
     schedule:
-      interval: "weekly" # check for action update every week
+      interval: "weekly"
+
+  - package-ecosystem: "nuget"
+    directory: "/"    # change to "/src/YourProject" if .csproj files are in subfolders
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    # optional: target-branch: "master"
