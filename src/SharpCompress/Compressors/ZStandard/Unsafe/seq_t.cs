@@ -1,9 +1,8 @@
-namespace ZstdSharp.Unsafe
+namespace SharpCompress.Compressors.ZStandard.Unsafe;
+
+public struct seq_t
 {
-    public struct seq_t
-    {
-        public nuint litLength;
-        public nuint matchLength;
-        public nuint offset;
-    }
+    public nuint litLength;
+    public nuint matchLength;
+    public nuint offset;
 }

@@ -1,8 +1,7 @@
-namespace ZstdSharp.Unsafe
+namespace SharpCompress.Compressors.ZStandard.Unsafe;
+
+public struct offsetCount_t
 {
-    public struct offsetCount_t
-    {
-        public uint offset;
-        public uint count;
-    }
+    public uint offset;
+    public uint count;
 }

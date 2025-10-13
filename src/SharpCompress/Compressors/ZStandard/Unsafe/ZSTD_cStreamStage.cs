@@ -1,9 +1,8 @@
-namespace ZstdSharp.Unsafe
+namespace SharpCompress.Compressors.ZStandard.Unsafe;
+
+public enum ZSTD_cStreamStage
 {
-    public enum ZSTD_cStreamStage
-    {
-        zcss_init = 0,
-        zcss_load,
-        zcss_flush,
-    }
+    zcss_init = 0,
+    zcss_load,
+    zcss_flush,
 }

@@ -1,8 +1,7 @@
-namespace ZstdSharp.Unsafe
+namespace SharpCompress.Compressors.ZStandard.Unsafe;
+
+public struct ZSTD_OffsetInfo
 {
-    public struct ZSTD_OffsetInfo
-    {
-        public uint longOffsetShare;
-        public uint maxNbAdditionalBits;
-    }
+    public uint longOffsetShare;
+    public uint maxNbAdditionalBits;
 }

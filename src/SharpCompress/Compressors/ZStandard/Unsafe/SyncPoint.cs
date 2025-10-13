@@ -1,11 +1,10 @@
-namespace ZstdSharp.Unsafe
-{
-    public struct SyncPoint
-    {
-        /* The number of bytes to load from the input. */
-        public nuint toLoad;
+namespace SharpCompress.Compressors.ZStandard.Unsafe;
 
-        /* Boolean declaring if we must flush because we found a synchronization point. */
-        public int flush;
-    }
+public struct SyncPoint
+{
+    /* The number of bytes to load from the input. */
+    public nuint toLoad;
+
+    /* Boolean declaring if we must flush because we found a synchronization point. */
+    public int flush;
 }

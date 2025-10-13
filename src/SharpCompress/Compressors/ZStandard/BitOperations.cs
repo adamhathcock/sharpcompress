@@ -4,7 +4,7 @@
 #if !NETCOREAPP3_0_OR_GREATER
 
 using System.Runtime.CompilerServices;
-using static ZstdSharp.UnsafeHelper;
+using static SharpCompress.Compressors.ZStandard.UnsafeHelper;
 
 // Some routines inspired by the Stanford Bit Twiddling Hacks by Sean Eron Anderson:
 // http://graphics.stanford.edu/~seander/bithacks.html

@@ -1,19 +1,18 @@
 using System;
 using System.Runtime.InteropServices;
 
-namespace ZstdSharp
+namespace SharpCompress.Compressors.ZStandard;
+
+/*
+ * Wrap object to void* to make it unmanaged
+ */
+internal static unsafe class UnmanagedObject
 {
-    /*
-     * Wrap object to void* to make it unmanaged
-     */
-    internal static unsafe class UnmanagedObject
-    {
-        public static void* Wrap(object obj) => (void*)GCHandle.ToIntPtr(GCHandle.Alloc(obj));
+    public static void* Wrap(object obj) => (void*)GCHandle.ToIntPtr(GCHandle.Alloc(obj));
 
-        private static GCHandle UnwrapGcHandle(void* value) => GCHandle.FromIntPtr((IntPtr)value);
+    private static GCHandle UnwrapGcHandle(void* value) => GCHandle.FromIntPtr((IntPtr)value);
 
-        public static T Unwrap<T>(void* value) => (T)UnwrapGcHandle(value).Target!;
+    public static T Unwrap<T>(void* value) => (T)UnwrapGcHandle(value).Target!;
 
-        public static void Free(void* value) => UnwrapGcHandle(value).Free();
-    }
+    public static void Free(void* value) => UnwrapGcHandle(value).Free();
 }

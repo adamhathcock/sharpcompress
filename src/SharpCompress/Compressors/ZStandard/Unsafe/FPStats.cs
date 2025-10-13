@@ -1,8 +1,7 @@
-namespace ZstdSharp.Unsafe
+namespace SharpCompress.Compressors.ZStandard.Unsafe;
+
+public struct FPStats
 {
-    public struct FPStats
-    {
-        public Fingerprint pastEvents;
-        public Fingerprint newEvents;
-    }
+    public Fingerprint pastEvents;
+    public Fingerprint newEvents;
 }

@@ -1,8 +1,7 @@
-namespace ZstdSharp.Unsafe
+namespace SharpCompress.Compressors.ZStandard.Unsafe;
+
+public struct ZSTD_SequenceLength
 {
-    public struct ZSTD_SequenceLength
-    {
-        public uint litLength;
-        public uint matchLength;
-    }
+    public uint litLength;
+    public uint matchLength;
 }

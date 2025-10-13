@@ -1,8 +1,7 @@
-namespace ZstdSharp.Unsafe
+namespace SharpCompress.Compressors.ZStandard.Unsafe;
+
+public struct EstimatedBlockSize
 {
-    public struct EstimatedBlockSize
-    {
-        public nuint estLitSize;
-        public nuint estBlockSize;
-    }
+    public nuint estLitSize;
+    public nuint estBlockSize;
 }

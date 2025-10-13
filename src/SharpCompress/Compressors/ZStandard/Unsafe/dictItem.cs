@@ -1,9 +1,8 @@
-namespace ZstdSharp.Unsafe
+namespace SharpCompress.Compressors.ZStandard.Unsafe;
+
+public struct dictItem
 {
-    public struct dictItem
-    {
-        public uint pos;
-        public uint length;
-        public uint savings;
-    }
+    public uint pos;
+    public uint length;
+    public uint savings;
 }

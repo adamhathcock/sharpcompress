@@ -1,7 +1,6 @@
-namespace ZstdSharp.Unsafe
+namespace SharpCompress.Compressors.ZStandard.Unsafe;
+
+public unsafe struct repcodes_s
 {
-    public unsafe struct repcodes_s
-    {
-        public fixed uint rep[3];
-    }
+    public fixed uint rep[3];
 }

@@ -1,14 +1,12 @@
-﻿using System;
-using SharpCompress.Common;
-using ZstdSharp.Unsafe;
+﻿using SharpCompress.Common;
+using SharpCompress.Compressors.ZStandard.Unsafe;
 
-namespace ZstdSharp
+namespace SharpCompress.Compressors.ZStandard;
+
+public class ZstdException : SharpCompressException
 {
-    public class ZstdException : SharpCompressException
-    {
-        public ZstdException(ZSTD_ErrorCode code, string message)
-            : base(message) => Code = code;
+    public ZstdException(ZSTD_ErrorCode code, string message)
+        : base(message) => Code = code;
 
-        public ZSTD_ErrorCode Code { get; }
-    }
+    public ZSTD_ErrorCode Code { get; }
 }

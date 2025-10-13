@@ -1,7 +1,6 @@
-namespace ZstdSharp.Unsafe
+namespace SharpCompress.Compressors.ZStandard.Unsafe;
+
+public unsafe struct rankValCol_t
 {
-    public unsafe struct rankValCol_t
-    {
-        public fixed uint Body[13];
-    }
+    public fixed uint Body[13];
 }

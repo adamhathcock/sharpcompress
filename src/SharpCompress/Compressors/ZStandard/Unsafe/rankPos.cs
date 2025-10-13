@@ -1,8 +1,7 @@
-namespace ZstdSharp.Unsafe
+namespace SharpCompress.Compressors.ZStandard.Unsafe;
+
+public struct rankPos
 {
-    public struct rankPos
-    {
-        public ushort @base;
-        public ushort curr;
-    }
+    public ushort @base;
+    public ushort curr;
 }

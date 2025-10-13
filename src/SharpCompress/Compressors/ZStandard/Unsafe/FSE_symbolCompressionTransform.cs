@@ -1,11 +1,10 @@
-namespace ZstdSharp.Unsafe
+namespace SharpCompress.Compressors.ZStandard.Unsafe;
+
+/* *****************************************
+ *  Implementation of inlined functions
+ *******************************************/
+public struct FSE_symbolCompressionTransform
 {
-    /* *****************************************
-     *  Implementation of inlined functions
-     *******************************************/
-    public struct FSE_symbolCompressionTransform
-    {
-        public int deltaFindState;
-        public uint deltaNbBits;
-    }
+    public int deltaFindState;
+    public uint deltaNbBits;
 }

@@ -1,17 +1,16 @@
-namespace ZstdSharp.Unsafe
+namespace SharpCompress.Compressors.ZStandard.Unsafe;
+
+/****************************
+ *  Streaming
+ ****************************/
+public unsafe struct ZSTD_inBuffer_s
 {
-    /****************************
-     *  Streaming
-     ****************************/
-    public unsafe struct ZSTD_inBuffer_s
-    {
-        /**< start of input buffer */
-        public void* src;
+    /**< start of input buffer */
+    public void* src;
 
-        /**< size of input buffer */
-        public nuint size;
+    /**< size of input buffer */
+    public nuint size;
 
-        /**< position where reading stopped. Will be updated. Necessarily 0 <= pos <= size */
-        public nuint pos;
-    }
+    /**< position where reading stopped. Will be updated. Necessarily 0 <= pos <= size */
+    public nuint pos;
 }

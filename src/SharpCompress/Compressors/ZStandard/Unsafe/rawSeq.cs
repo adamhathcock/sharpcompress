@@ -1,14 +1,13 @@
-namespace ZstdSharp.Unsafe
+namespace SharpCompress.Compressors.ZStandard.Unsafe;
+
+public struct rawSeq
 {
-    public struct rawSeq
-    {
-        /* Offset of sequence */
-        public uint offset;
+    /* Offset of sequence */
+    public uint offset;
 
-        /* Length of literals prior to match */
-        public uint litLength;
+    /* Length of literals prior to match */
+    public uint litLength;
 
-        /* Raw length of match */
-        public uint matchLength;
-    }
+    /* Raw length of match */
+    public uint matchLength;
 }

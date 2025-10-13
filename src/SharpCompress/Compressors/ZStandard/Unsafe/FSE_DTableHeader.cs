@@ -1,9 +1,8 @@
-namespace ZstdSharp.Unsafe
+namespace SharpCompress.Compressors.ZStandard.Unsafe;
+
+/* ======    Decompression    ====== */
+public struct FSE_DTableHeader
 {
-    /* ======    Decompression    ====== */
-    public struct FSE_DTableHeader
-    {
-        public ushort tableLog;
-        public ushort fastMode;
-    }
+    public ushort tableLog;
+    public ushort fastMode;
 }
