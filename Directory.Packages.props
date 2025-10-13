@@ -9,7 +9,7 @@
     <PackageVersion Include="SimpleExec" Version="12.0.0" />
     <PackageVersion Include="System.Buffers" Version="4.6.0" />
     <PackageVersion Include="System.Memory" Version="4.6.0" />
-    <PackageVersion Include="System.Text.Encoding.CodePages" Version="8.0.0" />
+    <PackageVersion Include="System.Text.Encoding.CodePages" Version="9.0.9" />
     <PackageVersion Include="xunit" Version="2.9.3" />
     <PackageVersion Include="xunit.runner.visualstudio" Version="3.1.5" />
     <PackageVersion Include="xunit.SkippableFact" Version="1.5.23" />
