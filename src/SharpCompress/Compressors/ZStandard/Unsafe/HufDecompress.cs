@@ -503,7 +503,6 @@ namespace ZstdSharp.Unsafe
             for (; ; )
             {
                 byte* olimit;
-                int stream;
                 {
                     assert(op0 <= op1);
                     assert(ip0 >= ilowest);
@@ -1444,7 +1443,6 @@ namespace ZstdSharp.Unsafe
             for (; ; )
             {
                 byte* olimit;
-                int stream;
                 {
                     assert(op0 <= oend0);
                     assert(ip0 >= ilowest);

@@ -3122,7 +3122,7 @@ namespace ZstdSharp.Unsafe
             return ZSTD_entropyCompressSeqStore_wExtLitBuffer(dst, dstCapacity, seqStorePtr->litStart, (nuint)(seqStorePtr->lit - seqStorePtr->litStart), srcSize, seqStorePtr, prevEntropy, nextEntropy, cctxParams, entropyWorkspace, entropyWkspSize, bmi2);
         }
 
-        private static readonly ZSTD_BlockCompressor_f[][] blockCompressor = new ZSTD_BlockCompressor_f[4][]
+        private static readonly ZSTD_BlockCompressor_f?[][] blockCompressor = new ZSTD_BlockCompressor_f?[4][]
         {
             new ZSTD_BlockCompressor_f[10]
             {
@@ -3163,7 +3163,7 @@ namespace ZstdSharp.Unsafe
                 ZSTD_compressBlock_btultra_dictMatchState,
                 ZSTD_compressBlock_btultra_dictMatchState
             },
-            new ZSTD_BlockCompressor_f[10]
+            new ZSTD_BlockCompressor_f?[10]
             {
                 null,
                 null,
@@ -3209,7 +3209,7 @@ namespace ZstdSharp.Unsafe
          * assumption : strat is a valid strategy */
         private static ZSTD_BlockCompressor_f ZSTD_selectBlockCompressor(ZSTD_strategy strat, ZSTD_paramSwitch_e useRowMatchFinder, ZSTD_dictMode_e dictMode)
         {
-            ZSTD_BlockCompressor_f selectedCompressor;
+            ZSTD_BlockCompressor_f? selectedCompressor;
             assert(ZSTD_cParam_withinBounds(ZSTD_cParameter.ZSTD_c_strategy, (int)strat) != 0);
             if (ZSTD_rowMatchFinderUsed(strat, useRowMatchFinder) != 0)
             {
@@ -3222,7 +3222,7 @@ namespace ZstdSharp.Unsafe
             }
 
             assert(selectedCompressor != null);
-            return selectedCompressor;
+            return selectedCompressor.NotNull();
         }
 
         private static void ZSTD_storeLastLiterals(SeqStore_t* seqStorePtr, byte* anchor, nuint lastLLSize)
