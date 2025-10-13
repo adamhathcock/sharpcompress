@@ -19,11 +19,11 @@ public unsafe struct ZSTD_entropyDTables_t
     public fixed uint workspace[157];
 
 #if NET8_0_OR_GREATER
-        [InlineArray(513)]
-        public unsafe struct _LLTable_e__FixedBuffer
-        {
-            public ZSTD_seqSymbol e0;
-        }
+    [InlineArray(513)]
+    public unsafe struct _LLTable_e__FixedBuffer
+    {
+        public ZSTD_seqSymbol e0;
+    }
 
 #else
     public unsafe struct _LLTable_e__FixedBuffer
@@ -545,11 +545,11 @@ public unsafe struct ZSTD_entropyDTables_t
 #endif
 
 #if NET8_0_OR_GREATER
-        [InlineArray(257)]
-        public unsafe struct _OFTable_e__FixedBuffer
-        {
-            public ZSTD_seqSymbol e0;
-        }
+    [InlineArray(257)]
+    public unsafe struct _OFTable_e__FixedBuffer
+    {
+        public ZSTD_seqSymbol e0;
+    }
 
 #else
     public unsafe struct _OFTable_e__FixedBuffer
@@ -815,11 +815,11 @@ public unsafe struct ZSTD_entropyDTables_t
 #endif
 
 #if NET8_0_OR_GREATER
-        [InlineArray(513)]
-        public unsafe struct _MLTable_e__FixedBuffer
-        {
-            public ZSTD_seqSymbol e0;
-        }
+    [InlineArray(513)]
+    public unsafe struct _MLTable_e__FixedBuffer
+    {
+        public ZSTD_seqSymbol e0;
+    }
 
 #else
     public unsafe struct _MLTable_e__FixedBuffer

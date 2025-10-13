@@ -172,13 +172,13 @@ public static unsafe partial class Methods
         };
         ZSTD_parameters @params;
         uint u,
-             huffLog = 11,
-             Offlog = 8,
-             mlLog = 9,
-             llLog = 9,
-             total;
+            huffLog = 11,
+            Offlog = 8,
+            mlLog = 9,
+            llLog = 9,
+            total;
         nuint pos = 0,
-              errorCode;
+            errorCode;
         nuint eSize = 0;
         nuint totalSrcSize = ZDICT_totalSampleSize(fileSizes, nbFiles);
         nuint averageSampleSize = totalSrcSize / (nbFiles + (uint)(nbFiles == 0 ? 1 : 0));
@@ -186,9 +186,7 @@ public static unsafe partial class Methods
         uint* wksp = stackalloc uint[1216];
         if (offcodeMax > 30)
         {
-            eSize = unchecked(
-                (nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dictionaryCreation_failed)
-            );
+            eSize = unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dictionaryCreation_failed));
             goto _cleanup;
         }
 
@@ -285,14 +283,7 @@ public static unsafe partial class Methods
         total = 0;
         for (u = 0; u <= offcodeMax; u++)
             total += offcodeCount[u];
-        errorCode = FSE_normalizeCount(
-            offcodeNCount,
-            Offlog,
-            offcodeCount,
-            total,
-            offcodeMax,
-            1
-        );
+        errorCode = FSE_normalizeCount(offcodeNCount, Offlog, offcodeCount, total, offcodeMax, 1);
         if (ERR_isError(errorCode))
         {
             eSize = errorCode;
@@ -303,14 +294,7 @@ public static unsafe partial class Methods
         total = 0;
         for (u = 0; u <= 52; u++)
             total += matchLengthCount[u];
-        errorCode = FSE_normalizeCount(
-            matchLengthNCount,
-            mlLog,
-            matchLengthCount,
-            total,
-            52,
-            1
-        );
+        errorCode = FSE_normalizeCount(matchLengthNCount, mlLog, matchLengthCount, total, 52, 1);
         if (ERR_isError(errorCode))
         {
             eSize = errorCode;

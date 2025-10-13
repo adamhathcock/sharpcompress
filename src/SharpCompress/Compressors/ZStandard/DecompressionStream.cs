@@ -53,13 +53,11 @@ public class DecompressionStream : Stream
         this.checkEndOfStream = checkEndOfStream;
 
         inputBufferSize =
-            bufferSize > 0 ? bufferSize : (int)Unsafe.Methods.ZSTD_DStreamInSize().EnsureZstdSuccess();
+            bufferSize > 0
+                ? bufferSize
+                : (int)Unsafe.Methods.ZSTD_DStreamInSize().EnsureZstdSuccess();
         inputBuffer = ArrayPool<byte>.Shared.Rent(inputBufferSize);
-        input = new ZSTD_inBuffer_s
-        {
-            pos = (nuint)inputBufferSize,
-            size = (nuint)inputBufferSize,
-        };
+        input = new ZSTD_inBuffer_s { pos = (nuint)inputBufferSize, size = (nuint)inputBufferSize };
     }
 
     public void SetParameter(ZSTD_dParameter parameter, int value)
@@ -110,7 +108,7 @@ public class DecompressionStream : Stream
 #if !NETSTANDARD2_0 && !NETFRAMEWORK
     public override int Read(Span<byte> buffer)
 #else
-        public int Read(Span<byte> buffer)
+    public int Read(Span<byte> buffer)
 #endif
     {
         EnsureNotDisposed();
@@ -174,17 +172,17 @@ public class DecompressionStream : Stream
     )
 #else
 
-        public override Task<int> ReadAsync(
-            byte[] buffer,
-            int offset,
-            int count,
-            CancellationToken cancellationToken
-        ) => ReadAsync(new Memory<byte>(buffer, offset, count), cancellationToken);
+    public override Task<int> ReadAsync(
+        byte[] buffer,
+        int offset,
+        int count,
+        CancellationToken cancellationToken
+    ) => ReadAsync(new Memory<byte>(buffer, offset, count), cancellationToken);
 
-        public async Task<int> ReadAsync(
-            Memory<byte> buffer,
-            CancellationToken cancellationToken = default
-        )
+    public async Task<int> ReadAsync(
+        Memory<byte> buffer,
+        CancellationToken cancellationToken = default
+    )
 #endif
     {
         EnsureNotDisposed();
@@ -222,8 +220,8 @@ public class DecompressionStream : Stream
             if (
                 (
                     bytesRead = await innerStream
-                                      .ReadAsync(inputBuffer, 0, inputBufferSize, cancellationToken)
-                                      .ConfigureAwait(false)
+                        .ReadAsync(inputBuffer, 0, inputBufferSize, cancellationToken)
+                        .ConfigureAwait(false)
                 ) == 0
             )
             {
@@ -265,8 +263,7 @@ public class DecompressionStream : Stream
 
     public override void Flush() => throw new NotSupportedException();
 
-    public override long Seek(long offset, SeekOrigin origin) =>
-        throw new NotSupportedException();
+    public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
 
     public override void SetLength(long value) => throw new NotSupportedException();
 
@@ -280,17 +277,17 @@ public class DecompressionStream : Stream
     }
 
 #if NETSTANDARD2_0 || NETFRAMEWORK
-        public virtual Task DisposeAsync()
+    public virtual Task DisposeAsync()
+    {
+        try
         {
-            try
-            {
-                Dispose();
-                return Task.CompletedTask;
-            }
-            catch (Exception exc)
-            {
-                return Task.FromException(exc);
-            }
+            Dispose();
+            return Task.CompletedTask;
         }
+        catch (Exception exc)
+        {
+            return Task.FromException(exc);
+        }
+    }
 #endif
 }

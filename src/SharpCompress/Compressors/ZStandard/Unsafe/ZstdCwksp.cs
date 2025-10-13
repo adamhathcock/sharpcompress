@@ -448,7 +448,7 @@ public static unsafe partial class Methods
     private static nuint ZSTD_cwksp_used(ZSTD_cwksp* ws)
     {
         return (nuint)((byte*)ws->tableEnd - (byte*)ws->workspace)
-               + (nuint)((byte*)ws->workspaceEnd - (byte*)ws->allocStart);
+            + (nuint)((byte*)ws->workspaceEnd - (byte*)ws->allocStart);
     }
 
     /**
@@ -486,12 +486,7 @@ public static unsafe partial class Methods
             return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_memory_allocation));
         }
 
-        ZSTD_cwksp_init(
-            ws,
-            workspace,
-            size,
-            ZSTD_cwksp_static_alloc_e.ZSTD_cwksp_dynamic_alloc
-        );
+        ZSTD_cwksp_init(ws, workspace, size, ZSTD_cwksp_static_alloc_e.ZSTD_cwksp_dynamic_alloc);
         return 0;
     }
 
@@ -533,8 +528,8 @@ public static unsafe partial class Methods
         return
             estimatedSpace - ZSTD_cwksp_slack_space_required() <= ZSTD_cwksp_used(ws)
             && ZSTD_cwksp_used(ws) <= estimatedSpace
-                ? 1
-                : 0;
+            ? 1
+            : 0;
     }
 
     /*-*************************************
@@ -564,8 +559,8 @@ public static unsafe partial class Methods
         return
             ZSTD_cwksp_check_too_large(ws, additionalNeededSpace) != 0
             && ws->workspaceOversizedDuration > 128
-                ? 1
-                : 0;
+            ? 1
+            : 0;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -8,11 +8,11 @@ public struct HUF_buildCTable_wksp_tables
     public _rankPosition_e__FixedBuffer rankPosition;
 
 #if NET8_0_OR_GREATER
-        [InlineArray(512)]
-        public unsafe struct _huffNodeTbl_e__FixedBuffer
-        {
-            public nodeElt_s e0;
-        }
+    [InlineArray(512)]
+    public unsafe struct _huffNodeTbl_e__FixedBuffer
+    {
+        public nodeElt_s e0;
+    }
 
 #else
     public unsafe struct _huffNodeTbl_e__FixedBuffer
@@ -533,11 +533,11 @@ public struct HUF_buildCTable_wksp_tables
 #endif
 
 #if NET8_0_OR_GREATER
-        [InlineArray(192)]
-        public unsafe struct _rankPosition_e__FixedBuffer
-        {
-            public rankPos e0;
-        }
+    [InlineArray(192)]
+    public unsafe struct _rankPosition_e__FixedBuffer
+    {
+        public rankPos e0;
+    }
 
 #else
     public unsafe struct _rankPosition_e__FixedBuffer

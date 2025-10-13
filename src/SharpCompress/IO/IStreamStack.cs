@@ -42,10 +42,10 @@ public interface IStreamStack
     void SetPosition(long position);
 
 #if DEBUG_STREAMS
-        /// <summary>
-        /// Gets or sets the unique instance identifier for debugging purposes.
-        /// </summary>
-        long InstanceId { get; set; }
+    /// <summary>
+    /// Gets or sets the unique instance identifier for debugging purposes.
+    /// </summary>
+    long InstanceId { get; set; }
 #endif
 }
 
@@ -240,124 +240,118 @@ internal static class StackStreamExtensions
     }
 
 #if DEBUG_STREAMS
-        private static long _instanceCounter = 0;
+    private static long _instanceCounter = 0;
 
-        private static string cleansePos(long pos)
-        {
-            if (pos < 0)
-                return "";
-            return "Px" + pos.ToString("x");
-        }
+    private static string cleansePos(long pos)
+    {
+        if (pos < 0)
+            return "";
+        return "Px" + pos.ToString("x");
+    }
 
-        /// <summary>
-        /// Gets or creates a unique instance ID for the stream stack for debugging purposes.
-        /// </summary>
-        /// <param name="stream">The stream stack.</param>
-        /// <param name="instanceId">Reference to the instance ID field.</param>
-        /// <param name="construct">Whether this is being called during construction.</param>
-        /// <returns>The instance ID.</returns>
-        public static long GetInstanceId(
-            this IStreamStack stream,
-            ref long instanceId,
-            bool construct
-        )
-        {
-            if (instanceId == 0) //will not be equal to 0 when inherited IStackStream types are being used
-                instanceId = System.Threading.Interlocked.Increment(ref _instanceCounter);
-            return instanceId;
-        }
+    /// <summary>
+    /// Gets or creates a unique instance ID for the stream stack for debugging purposes.
+    /// </summary>
+    /// <param name="stream">The stream stack.</param>
+    /// <param name="instanceId">Reference to the instance ID field.</param>
+    /// <param name="construct">Whether this is being called during construction.</param>
+    /// <returns>The instance ID.</returns>
+    public static long GetInstanceId(this IStreamStack stream, ref long instanceId, bool construct)
+    {
+        if (instanceId == 0) //will not be equal to 0 when inherited IStackStream types are being used
+            instanceId = System.Threading.Interlocked.Increment(ref _instanceCounter);
+        return instanceId;
+    }
 
-        /// <summary>
-        /// Writes a debug message for stream construction.
-        /// </summary>
-        /// <param name="stream">The stream stack.</param>
-        /// <param name="constructing">The type being constructed.</param>
-        public static void DebugConstruct(this IStreamStack stream, Type constructing)
-        {
-            long id = stream.InstanceId;
-            stream.InstanceId = GetInstanceId(stream, ref id, true);
-            var frame = (new StackTrace()).GetFrame(3);
-            string parentInfo =
-                frame != null
-                    ? $"{frame.GetMethod()?.DeclaringType?.Name}.{frame.GetMethod()?.Name}()"
-                    : "Unknown";
-            if (constructing.FullName == stream.GetType().FullName) //don't debug base IStackStream types
-                Debug.WriteLine(
-                    $"{GetStreamStackString(stream, true)} : Constructed by [{parentInfo}]"
-                );
-        }
+    /// <summary>
+    /// Writes a debug message for stream construction.
+    /// </summary>
+    /// <param name="stream">The stream stack.</param>
+    /// <param name="constructing">The type being constructed.</param>
+    public static void DebugConstruct(this IStreamStack stream, Type constructing)
+    {
+        long id = stream.InstanceId;
+        stream.InstanceId = GetInstanceId(stream, ref id, true);
+        var frame = (new StackTrace()).GetFrame(3);
+        string parentInfo =
+            frame != null
+                ? $"{frame.GetMethod()?.DeclaringType?.Name}.{frame.GetMethod()?.Name}()"
+                : "Unknown";
+        if (constructing.FullName == stream.GetType().FullName) //don't debug base IStackStream types
+            Debug.WriteLine($"{GetStreamStackString(stream, true)} : Constructed by [{parentInfo}]");
+    }
 
-        /// <summary>
-        /// Writes a debug message for stream disposal.
-        /// </summary>
-        /// <param name="stream">The stream stack.</param>
-        /// <param name="constructing">The type being disposed.</param>
-        public static void DebugDispose(this IStreamStack stream, Type constructing)
-        {
-            var frame = (new StackTrace()).GetFrame(3);
-            string parentInfo =
-                frame != null
-                    ? $"{frame.GetMethod()?.DeclaringType?.Name}.{frame.GetMethod()?.Name}()"
-                    : "Unknown";
-            if (constructing.FullName == stream.GetType().FullName) //don't debug base IStackStream types
-                Debug.WriteLine($"{GetStreamStackString(stream, false)} : Disposed by [{parentInfo}]");
-        }
+    /// <summary>
+    /// Writes a debug message for stream disposal.
+    /// </summary>
+    /// <param name="stream">The stream stack.</param>
+    /// <param name="constructing">The type being disposed.</param>
+    public static void DebugDispose(this IStreamStack stream, Type constructing)
+    {
+        var frame = (new StackTrace()).GetFrame(3);
+        string parentInfo =
+            frame != null
+                ? $"{frame.GetMethod()?.DeclaringType?.Name}.{frame.GetMethod()?.Name}()"
+                : "Unknown";
+        if (constructing.FullName == stream.GetType().FullName) //don't debug base IStackStream types
+            Debug.WriteLine($"{GetStreamStackString(stream, false)} : Disposed by [{parentInfo}]");
+    }
 
-        /// <summary>
-        /// Writes a debug trace message for the stream.
-        /// </summary>
-        /// <param name="stream">The stream stack.</param>
-        /// <param name="message">The debug message to write.</param>
-        public static void DebugTrace(this IStreamStack stream, string message)
-        {
-            Debug.WriteLine(
-                $"{GetStreamStackString(stream, false)} : [{stream.GetType().Name}]{message}"
-            );
-        }
+    /// <summary>
+    /// Writes a debug trace message for the stream.
+    /// </summary>
+    /// <param name="stream">The stream stack.</param>
+    /// <param name="message">The debug message to write.</param>
+    public static void DebugTrace(this IStreamStack stream, string message)
+    {
+        Debug.WriteLine(
+            $"{GetStreamStackString(stream, false)} : [{stream.GetType().Name}]{message}"
+        );
+    }
 
-        /// <summary>
-        /// Returns the full stream chain as a string, including instance IDs and positions.
-        /// </summary>
-        /// <param name="stream">The stream stack to represent.</param>
-        /// <param name="construct">Whether this is being called during construction.</param>
-        /// <returns>A string representation of the entire stream stack.</returns>
-        public static string GetStreamStackString(this IStreamStack stream, bool construct)
+    /// <summary>
+    /// Returns the full stream chain as a string, including instance IDs and positions.
+    /// </summary>
+    /// <param name="stream">The stream stack to represent.</param>
+    /// <param name="construct">Whether this is being called during construction.</param>
+    /// <returns>A string representation of the entire stream stack.</returns>
+    public static string GetStreamStackString(this IStreamStack stream, bool construct)
+    {
+        var sb = new StringBuilder();
+        Stream? current = stream as Stream;
+        while (current != null)
         {
-            var sb = new StringBuilder();
-            Stream? current = stream as Stream;
-            while (current != null)
+            IStreamStack? sStack = current as IStreamStack;
+            string id = sStack != null ? "#" + sStack.InstanceId.ToString() : "";
+            string buffSize = sStack != null ? "Bx" + sStack.BufferSize.ToString("x") : "";
+            string defBuffSize =
+                sStack != null ? "Dx" + sStack.DefaultBufferSize.ToString("x") : "";
+
+            if (sb.Length > 0)
+                sb.Insert(0, "/");
+            try
             {
-                IStreamStack? sStack = current as IStreamStack;
-                string id = sStack != null ? "#" + sStack.InstanceId.ToString() : "";
-                string buffSize = sStack != null ? "Bx" + sStack.BufferSize.ToString("x") : "";
-                string defBuffSize =
-                    sStack != null ? "Dx" + sStack.DefaultBufferSize.ToString("x") : "";
-
-                if (sb.Length > 0)
-                    sb.Insert(0, "/");
-                try
-                {
+                sb.Insert(
+                    0,
+                    $"{current.GetType().Name}{id}[{cleansePos(current.Position)}:{buffSize}:{defBuffSize}]"
+                );
+            }
+            catch
+            {
+                if (current is SharpCompressStream scs)
                     sb.Insert(
                         0,
-                        $"{current.GetType().Name}{id}[{cleansePos(current.Position)}:{buffSize}:{defBuffSize}]"
+                        $"{current.GetType().Name}{id}[{cleansePos(scs.InternalPosition)}:{buffSize}:{defBuffSize}]"
                     );
-                }
-                catch
-                {
-                    if (current is SharpCompressStream scs)
-                        sb.Insert(
-                            0,
-                            $"{current.GetType().Name}{id}[{cleansePos(scs.InternalPosition)}:{buffSize}:{defBuffSize}]"
-                        );
-                    else
-                        sb.Insert(0, $"{current.GetType().Name}{id}[:{buffSize}]");
-                }
-                if (sStack != null)
-                    current = sStack.BaseStream(); //current may not be a IStreamStack, allow one more loop
                 else
-                    break;
+                    sb.Insert(0, $"{current.GetType().Name}{id}[:{buffSize}]");
             }
-            return sb.ToString();
+            if (sStack != null)
+                current = sStack.BaseStream(); //current may not be a IStreamStack, allow one more loop
+            else
+                break;
         }
+        return sb.ToString();
+    }
 #endif
 }

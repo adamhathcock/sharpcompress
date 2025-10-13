@@ -11,7 +11,7 @@ namespace SharpCompress.Compressors.RLE90;
 public class RunLength90Stream : Stream, IStreamStack
 {
 #if DEBUG_STREAMS
-        long IStreamStack.InstanceId { get; set; }
+    long IStreamStack.InstanceId { get; set; }
 #endif
     int IStreamStack.DefaultBufferSize { get; set; }
 
@@ -40,14 +40,14 @@ public class RunLength90Stream : Stream, IStreamStack
         _stream = stream;
         _compressedSize = compressedSize;
 #if DEBUG_STREAMS
-            this.DebugConstruct(typeof(RunLength90Stream));
+        this.DebugConstruct(typeof(RunLength90Stream));
 #endif
     }
 
     protected override void Dispose(bool disposing)
     {
 #if DEBUG_STREAMS
-            this.DebugDispose(typeof(RunLength90Stream));
+        this.DebugDispose(typeof(RunLength90Stream));
 #endif
         base.Dispose(disposing);
     }

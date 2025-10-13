@@ -163,12 +163,12 @@ public static unsafe partial class Methods
         (delegate* managed<Fingerprint*, void*, nuint, void>)(&ZSTD_recordFingerprint_1),
     };
 #if NET7_0_OR_GREATER
-        private static ReadOnlySpan<uint> Span_hashParams => new uint[4] { 8, 9, 10, 10 };
-        private static uint* hashParams =>
-            (uint*)
-                System.Runtime.CompilerServices.Unsafe.AsPointer(
-                    ref MemoryMarshal.GetReference(Span_hashParams)
-                );
+    private static ReadOnlySpan<uint> Span_hashParams => new uint[4] { 8, 9, 10, 10 };
+    private static uint* hashParams =>
+        (uint*)
+            System.Runtime.CompilerServices.Unsafe.AsPointer(
+                ref MemoryMarshal.GetReference(Span_hashParams)
+            );
 #else
 
     private static readonly uint* hashParams = GetArrayPointer(new uint[4] { 8, 9, 10, 10 });
@@ -245,8 +245,7 @@ public static unsafe partial class Methods
     )
     {
         FPStats* fpstats = (FPStats*)workspace;
-        Fingerprint* middleEvents = (Fingerprint*)
-            (void*)((sbyte*)workspace + 512 * sizeof(uint));
+        Fingerprint* middleEvents = (Fingerprint*)(void*)((sbyte*)workspace + 512 * sizeof(uint));
         assert(blockSize == 128 << 10);
         assert(workspace != null);
         assert((nuint)workspace % (nuint)Math.Max(sizeof(uint), sizeof(ulong)) == 0);

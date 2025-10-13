@@ -19,12 +19,12 @@ public static unsafe class UnsafeHelper
 #if NET6_0_OR_GREATER
         var ptr = NativeMemory.Alloc((nuint)size);
 #else
-            var ptr = (void*)Marshal.AllocHGlobal((nint)size);
+        var ptr = (void*)Marshal.AllocHGlobal((nint)size);
 #endif
 #if DEBUG
         return PoisonMemory(ptr, size);
 #else
-            return ptr;
+        return ptr;
 #endif
     }
 
@@ -34,11 +34,11 @@ public static unsafe class UnsafeHelper
 #if NET6_0_OR_GREATER
         return NativeMemory.AllocZeroed((nuint)num, (nuint)size);
 #else
-            var total = num * size;
-            assert(total <= uint.MaxValue);
-            var destination = (void*)Marshal.AllocHGlobal((nint)total);
-            memset(destination, 0, (uint)total);
-            return destination;
+        var total = num * size;
+        assert(total <= uint.MaxValue);
+        var destination = (void*)Marshal.AllocHGlobal((nint)total);
+        memset(destination, 0, (uint)total);
+        return destination;
 #endif
     }
 
@@ -56,7 +56,7 @@ public static unsafe class UnsafeHelper
 #if NET6_0_OR_GREATER
         NativeMemory.Free(ptr);
 #else
-            Marshal.FreeHGlobal((IntPtr)ptr);
+        Marshal.FreeHGlobal((IntPtr)ptr);
 #endif
     }
 
@@ -66,23 +66,19 @@ public static unsafe class UnsafeHelper
     {
         var size = (uint)(sizeof(T) * array.Length);
 #if NET9_0_OR_GREATER
-            // This function is used to allocate memory for static data blocks.
-            // We have to use AllocateTypeAssociatedMemory and link the memory's
-            // lifetime to this assembly, in order to prevent memory leaks when
-            // loading the assembly in an unloadable AssemblyLoadContext.
-            // While introduced in .NET 5, we call this only in .NET 9+, because
-            // it's not implemented in the Mono runtime until then.
-            var destination = (T*)
-                RuntimeHelpers.AllocateTypeAssociatedMemory(typeof(UnsafeHelper), (int)size);
+        // This function is used to allocate memory for static data blocks.
+        // We have to use AllocateTypeAssociatedMemory and link the memory's
+        // lifetime to this assembly, in order to prevent memory leaks when
+        // loading the assembly in an unloadable AssemblyLoadContext.
+        // While introduced in .NET 5, we call this only in .NET 9+, because
+        // it's not implemented in the Mono runtime until then.
+        var destination = (T*)
+            RuntimeHelpers.AllocateTypeAssociatedMemory(typeof(UnsafeHelper), (int)size);
 #else
         var destination = (T*)malloc(size);
 #endif
         fixed (void* source = &array[0])
-            System.Runtime.CompilerServices.Unsafe.CopyBlockUnaligned(
-                destination,
-                source,
-                size
-            );
+            System.Runtime.CompilerServices.Unsafe.CopyBlockUnaligned(destination, source, size);
 
         return destination;
     }

@@ -37,10 +37,7 @@ public static unsafe partial class Methods
         assert(((nuint)workSpace & 1) == 0);
         if (
             sizeof(uint)
-            * (
-                (maxSymbolValue + 2 + (1UL << (int)tableLog)) / 2
-                + sizeof(ulong) / sizeof(uint)
-            )
+                * ((maxSymbolValue + 2 + (1UL << (int)tableLog)) / 2 + sizeof(ulong) / sizeof(uint))
             > wkspSize
         )
             return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_tableLog_tooLarge));
@@ -151,8 +148,7 @@ public static unsafe partial class Methods
                 switch (normalizedCounter[s])
                 {
                     case 0:
-                        symbolTT[s].deltaNbBits =
-                            (tableLog + 1 << 16) - (uint)(1 << (int)tableLog);
+                        symbolTT[s].deltaNbBits = (tableLog + 1 << 16) - (uint)(1 << (int)tableLog);
                         break;
                     case -1:
                     case 1:
@@ -164,16 +160,14 @@ public static unsafe partial class Methods
                     default:
                         assert(normalizedCounter[s] > 1);
 
-                    {
-                        uint maxBitsOut =
-                            tableLog - ZSTD_highbit32((uint)normalizedCounter[s] - 1);
-                        uint minStatePlus = (uint)normalizedCounter[s] << (int)maxBitsOut;
-                        symbolTT[s].deltaNbBits = (maxBitsOut << 16) - minStatePlus;
-                        symbolTT[s].deltaFindState = (int)(
-                            total - (uint)normalizedCounter[s]
-                        );
-                        total += (uint)normalizedCounter[s];
-                    }
+                        {
+                            uint maxBitsOut =
+                                tableLog - ZSTD_highbit32((uint)normalizedCounter[s] - 1);
+                            uint minStatePlus = (uint)normalizedCounter[s] << (int)maxBitsOut;
+                            symbolTT[s].deltaNbBits = (maxBitsOut << 16) - minStatePlus;
+                            symbolTT[s].deltaFindState = (int)(total - (uint)normalizedCounter[s]);
+                            total += (uint)normalizedCounter[s];
+                        }
 
                         break;
                 }
@@ -232,9 +226,7 @@ public static unsafe partial class Methods
                     start += 24;
                     bitStream += 0xFFFFU << bitCount;
                     if (writeIsSafe == 0 && @out > oend - 2)
-                        return unchecked(
-                            (nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dstSize_tooSmall)
-                        );
+                        return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dstSize_tooSmall));
                     @out[0] = (byte)bitStream;
                     @out[1] = (byte)(bitStream >> 8);
                     @out += 2;
@@ -253,9 +245,7 @@ public static unsafe partial class Methods
                 if (bitCount > 16)
                 {
                     if (writeIsSafe == 0 && @out > oend - 2)
-                        return unchecked(
-                            (nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dstSize_tooSmall)
-                        );
+                        return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dstSize_tooSmall));
                     @out[0] = (byte)bitStream;
                     @out[1] = (byte)(bitStream >> 8);
                     @out += 2;
@@ -384,11 +374,7 @@ public static unsafe partial class Methods
     dynamically downsize 'tableLog' when conditions are met.
     It saves CPU time, by using smaller tables, while preserving or even improving compression ratio.
     @return : recommended tableLog (necessarily <= 'maxTableLog') */
-    private static uint FSE_optimalTableLog(
-        uint maxTableLog,
-        nuint srcSize,
-        uint maxSymbolValue
-    )
+    private static uint FSE_optimalTableLog(uint maxTableLog, nuint srcSize, uint maxSymbolValue)
     {
         return FSE_optimalTableLog_internal(maxTableLog, srcSize, maxSymbolValue, 2);
     }
@@ -464,7 +450,7 @@ public static unsafe partial class Methods
             probably incompressible data (should have already been detected);
             find max, then give all remaining points to max */
             uint maxV = 0,
-                 maxC = 0;
+                maxC = 0;
             for (s = 0; s <= maxSymbolValue; s++)
                 if (count[s] > maxC)
                 {
@@ -514,13 +500,13 @@ public static unsafe partial class Methods
     }
 
 #if NET7_0_OR_GREATER
-        private static ReadOnlySpan<uint> Span_rtbTable =>
-            new uint[8] { 0, 473195, 504333, 520860, 550000, 700000, 750000, 830000 };
-        private static uint* rtbTable =>
-            (uint*)
-                System.Runtime.CompilerServices.Unsafe.AsPointer(
-                    ref MemoryMarshal.GetReference(Span_rtbTable)
-                );
+    private static ReadOnlySpan<uint> Span_rtbTable =>
+        new uint[8] { 0, 473195, 504333, 520860, 550000, 700000, 750000, 830000 };
+    private static uint* rtbTable =>
+        (uint*)
+            System.Runtime.CompilerServices.Unsafe.AsPointer(
+                ref MemoryMarshal.GetReference(Span_rtbTable)
+            );
 #else
 
     private static readonly uint* rtbTable = GetArrayPointer(
@@ -655,7 +641,7 @@ public static unsafe partial class Methods
         BIT_CStream_t bitC;
         System.Runtime.CompilerServices.Unsafe.SkipInit(out bitC);
         FSE_CState_t CState1,
-                     CState2;
+            CState2;
         System.Runtime.CompilerServices.Unsafe.SkipInit(out CState1);
         System.Runtime.CompilerServices.Unsafe.SkipInit(out CState2);
         if (srcSize <= 2)
@@ -683,12 +669,7 @@ public static unsafe partial class Methods
                     bitC_endPtr
                 );
             else
-                BIT_flushBits(
-                    ref bitC_bitContainer,
-                    ref bitC_bitPos,
-                    ref bitC_ptr,
-                    bitC_endPtr
-                );
+                BIT_flushBits(ref bitC_bitContainer, ref bitC_bitPos, ref bitC_ptr, bitC_endPtr);
         }
         else
         {
@@ -709,12 +690,7 @@ public static unsafe partial class Methods
                     bitC_endPtr
                 );
             else
-                BIT_flushBits(
-                    ref bitC_bitContainer,
-                    ref bitC_bitPos,
-                    ref bitC_ptr,
-                    bitC_endPtr
-                );
+                BIT_flushBits(ref bitC_bitContainer, ref bitC_bitPos, ref bitC_ptr, bitC_endPtr);
         }
 
         while (ip > istart)
@@ -750,12 +726,7 @@ public static unsafe partial class Methods
                     bitC_endPtr
                 );
             else
-                BIT_flushBits(
-                    ref bitC_bitContainer,
-                    ref bitC_bitPos,
-                    ref bitC_ptr,
-                    bitC_endPtr
-                );
+                BIT_flushBits(ref bitC_bitContainer, ref bitC_bitPos, ref bitC_ptr, bitC_endPtr);
         }
 
         FSE_flushCState(

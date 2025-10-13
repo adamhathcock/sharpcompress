@@ -102,7 +102,7 @@ public static unsafe partial class Methods
             uint tableMask = tableSize - 1;
             uint step = (tableSize >> 1) + (tableSize >> 3) + 3;
             uint s,
-                 position = 0;
+                position = 0;
             for (s = 0; s < maxSV1; s++)
             {
                 int i;
@@ -213,7 +213,7 @@ public static unsafe partial class Methods
                 bitD_start,
                 bitD_limitPtr
             ) == BIT_DStream_status.BIT_DStream_unfinished
-            && op < olimit;
+                && op < olimit;
             op += 4
         )
         {
@@ -288,16 +288,8 @@ public static unsafe partial class Methods
             {
                 *op++ =
                     fast != 0
-                        ? FSE_decodeSymbolFast(
-                            ref state2,
-                            bitD_bitContainer,
-                            ref bitD_bitsConsumed
-                        )
-                        : FSE_decodeSymbol(
-                            ref state2,
-                            bitD_bitContainer,
-                            ref bitD_bitsConsumed
-                        );
+                        ? FSE_decodeSymbolFast(ref state2, bitD_bitContainer, ref bitD_bitsConsumed)
+                        : FSE_decodeSymbol(ref state2, bitD_bitContainer, ref bitD_bitsConsumed);
                 break;
             }
 
@@ -319,16 +311,8 @@ public static unsafe partial class Methods
             {
                 *op++ =
                     fast != 0
-                        ? FSE_decodeSymbolFast(
-                            ref state1,
-                            bitD_bitContainer,
-                            ref bitD_bitsConsumed
-                        )
-                        : FSE_decodeSymbol(
-                            ref state1,
-                            bitD_bitContainer,
-                            ref bitD_bitsConsumed
-                        );
+                        ? FSE_decodeSymbolFast(ref state1, bitD_bitContainer, ref bitD_bitsConsumed)
+                        : FSE_decodeSymbol(ref state1, bitD_bitContainer, ref bitD_bitsConsumed);
                 break;
             }
         }
@@ -394,15 +378,13 @@ public static unsafe partial class Methods
             return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_tableLog_tooLarge));
         assert(
             (nuint)(sizeof(FSE_DecompressWksp) + (1 + (1 << (int)tableLog)) * sizeof(uint))
-            <= wkspSize
+                <= wkspSize
         );
         workSpace =
             (byte*)workSpace
             + sizeof(FSE_DecompressWksp)
             + (1 + (1 << (int)tableLog)) * sizeof(uint);
-        wkspSize -= (nuint)(
-            sizeof(FSE_DecompressWksp) + (1 + (1 << (int)tableLog)) * sizeof(uint)
-        );
+        wkspSize -= (nuint)(sizeof(FSE_DecompressWksp) + (1 + (1 << (int)tableLog)) * sizeof(uint));
         {
             nuint _var_err__ = FSE_buildDTable_internal(
                 dtable,
@@ -429,14 +411,7 @@ public static unsafe partial class Methods
                     dtable,
                     1
                 );
-            return FSE_decompress_usingDTable_generic(
-                dst,
-                dstCapacity,
-                ip,
-                cSrcSize,
-                dtable,
-                0
-            );
+            return FSE_decompress_usingDTable_generic(dst, dstCapacity, ip, cSrcSize, dtable, 0);
         }
     }
 

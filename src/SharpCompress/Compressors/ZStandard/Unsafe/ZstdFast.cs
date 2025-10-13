@@ -216,7 +216,7 @@ public static unsafe partial class Methods
         uint rep_offset1 = rep[0];
         uint rep_offset2 = rep[1];
         uint offsetSaved1 = 0,
-             offsetSaved2 = 0;
+            offsetSaved2 = 0;
         /* hash for ip0 */
         nuint hash0;
         /* hash for ip1 */
@@ -564,7 +564,7 @@ public static unsafe partial class Methods
         byte* iend = istart + srcSize;
         byte* ilimit = iend - 8;
         uint offset_1 = rep[0],
-             offset_2 = rep[1];
+            offset_2 = rep[1];
         ZSTD_MatchState_t* dms = ms->dictMatchState;
         ZSTD_compressionParameters* dictCParams = &dms->cParams;
         uint* dictHashTable = dms->hashTable;
@@ -653,10 +653,7 @@ public static unsafe partial class Methods
                     /* Found a possible dict match */
                     uint dictMatchIndex = dictMatchIndexAndTag >> 8;
                     byte* dictMatch = dictBase + dictMatchIndex;
-                    if (
-                        dictMatchIndex > dictStartIndex
-                        && MEM_read32(dictMatch) == MEM_read32(ip0)
-                    )
+                    if (dictMatchIndex > dictStartIndex && MEM_read32(dictMatch) == MEM_read32(ip0))
                     {
                         if (matchIndex <= prefixStartIndex)
                         {
@@ -670,9 +667,7 @@ public static unsafe partial class Methods
                                     prefixStart
                                 ) + 4;
                             while (
-                                ip0 > anchor
-                                && dictMatch > dictStart
-                                && ip0[-1] == dictMatch[-1]
+                                ip0 > anchor && dictMatch > dictStart && ip0[-1] == dictMatch[-1]
                             )
                             {
                                 ip0--;
@@ -762,13 +757,8 @@ public static unsafe partial class Methods
                     {
                         byte* repEnd2 = repIndex2 < prefixStartIndex ? dictEnd : iend;
                         nuint repLength2 =
-                            ZSTD_count_2segments(
-                                ip0 + 4,
-                                repMatch2 + 4,
-                                iend,
-                                repEnd2,
-                                prefixStart
-                            ) + 4;
+                            ZSTD_count_2segments(ip0 + 4, repMatch2 + 4, iend, repEnd2, prefixStart)
+                            + 4;
                         /* swap offset_2 <=> offset_1 */
                         uint tmpOffset = offset_2;
                         offset_2 = offset_1;
@@ -886,37 +876,13 @@ public static unsafe partial class Methods
         {
             default:
             case 4:
-                return ZSTD_compressBlock_fast_dictMatchState_4_0(
-                    ms,
-                    seqStore,
-                    rep,
-                    src,
-                    srcSize
-                );
+                return ZSTD_compressBlock_fast_dictMatchState_4_0(ms, seqStore, rep, src, srcSize);
             case 5:
-                return ZSTD_compressBlock_fast_dictMatchState_5_0(
-                    ms,
-                    seqStore,
-                    rep,
-                    src,
-                    srcSize
-                );
+                return ZSTD_compressBlock_fast_dictMatchState_5_0(ms, seqStore, rep, src, srcSize);
             case 6:
-                return ZSTD_compressBlock_fast_dictMatchState_6_0(
-                    ms,
-                    seqStore,
-                    rep,
-                    src,
-                    srcSize
-                );
+                return ZSTD_compressBlock_fast_dictMatchState_6_0(ms, seqStore, rep, src, srcSize);
             case 7:
-                return ZSTD_compressBlock_fast_dictMatchState_7_0(
-                    ms,
-                    seqStore,
-                    rep,
-                    src,
-                    srcSize
-                );
+                return ZSTD_compressBlock_fast_dictMatchState_7_0(ms, seqStore, rep, src, srcSize);
         }
     }
 
@@ -950,9 +916,9 @@ public static unsafe partial class Methods
         byte* iend = istart + srcSize;
         byte* ilimit = iend - 8;
         uint offset_1 = rep[0],
-             offset_2 = rep[1];
+            offset_2 = rep[1];
         uint offsetSaved1 = 0,
-             offsetSaved2 = 0;
+            offsetSaved2 = 0;
         byte* ip0 = istart;
         byte* ip1;
         byte* ip2;
@@ -1043,8 +1009,7 @@ public static unsafe partial class Methods
             }
 
             {
-                uint mval =
-                    idx >= dictStartIndex ? MEM_read32(idxBase + idx) : MEM_read32(ip0) ^ 1;
+                uint mval = idx >= dictStartIndex ? MEM_read32(idxBase + idx) : MEM_read32(ip0) ^ 1;
                 if (MEM_read32(ip0) == mval)
                 {
                     goto _offset;
@@ -1061,8 +1026,7 @@ public static unsafe partial class Methods
             current0 = (uint)(ip0 - @base);
             hashTable[hash0] = current0;
             {
-                uint mval =
-                    idx >= dictStartIndex ? MEM_read32(idxBase + idx) : MEM_read32(ip0) ^ 1;
+                uint mval = idx >= dictStartIndex ? MEM_read32(idxBase + idx) : MEM_read32(ip0) ^ 1;
                 if (MEM_read32(ip0) == mval)
                 {
                     goto _offset;
@@ -1143,10 +1107,8 @@ public static unsafe partial class Methods
                 byte* repMatch2 =
                     repIndex2 < prefixStartIndex ? dictBase + repIndex2 : @base + repIndex2;
                 if (
-                    (
-                        ZSTD_index_overlap_check(prefixStartIndex, repIndex2)
-                        & (offset_2 > 0 ? 1 : 0)
-                    ) != 0
+                    (ZSTD_index_overlap_check(prefixStartIndex, repIndex2) & (offset_2 > 0 ? 1 : 0))
+                        != 0
                     && MEM_read32(repMatch2) == MEM_read32(ip0)
                 )
                 {

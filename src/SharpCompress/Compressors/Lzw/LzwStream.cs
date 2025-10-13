@@ -46,7 +46,7 @@ namespace SharpCompress.Compressors.Lzw;
 public class LzwStream : Stream, IStreamStack
 {
 #if DEBUG_STREAMS
-        long IStreamStack.InstanceId { get; set; }
+    long IStreamStack.InstanceId { get; set; }
 #endif
     int IStreamStack.DefaultBufferSize { get; set; }
 
@@ -112,7 +112,7 @@ public class LzwStream : Stream, IStreamStack
     {
         this.baseInputStream = baseInputStream;
 #if DEBUG_STREAMS
-            this.DebugConstruct(typeof(LzwStream));
+        this.DebugConstruct(typeof(LzwStream));
 #endif
     }
 
@@ -237,13 +237,13 @@ public class LzwStream : Stream, IStreamStack
                 // read next code
                 int pos = lBitPos >> 3;
                 int code =
-                (
                     (
-                        (lData[pos] & 0xFF)
-                        | ((lData[pos + 1] & 0xFF) << 8)
-                        | ((lData[pos + 2] & 0xFF) << 16)
-                    ) >> (lBitPos & 0x7)
-                ) & lBitMask;
+                        (
+                            (lData[pos] & 0xFF)
+                            | ((lData[pos + 1] & 0xFF) << 8)
+                            | ((lData[pos + 2] & 0xFF) << 16)
+                        ) >> (lBitPos & 0x7)
+                    ) & lBitMask;
 
                 lBitPos += lNBits;
 
@@ -251,9 +251,7 @@ public class LzwStream : Stream, IStreamStack
                 if (lOldCode == -1)
                 {
                     if (code >= 256)
-                        throw new IncompleteArchiveException(
-                            "corrupt input: " + code + " > 255"
-                        );
+                        throw new IncompleteArchiveException("corrupt input: " + code + " > 255");
 
                     lFinChar = (byte)(lOldCode = code);
                     buffer[offset++] = lFinChar;
@@ -423,10 +421,10 @@ public class LzwStream : Stream, IStreamStack
         {
             throw new ArchiveException(
                 "Stream compressed with "
-                + maxBits
-                + " bits, but decompression can only handle "
-                + LzwConstants.MAX_BITS
-                + " bits."
+                    + maxBits
+                    + " bits, but decompression can only handle "
+                    + LzwConstants.MAX_BITS
+                    + " bits."
             );
         }
 
@@ -564,7 +562,7 @@ public class LzwStream : Stream, IStreamStack
         {
             isClosed = true;
 #if DEBUG_STREAMS
-                this.DebugDispose(typeof(LzwStream));
+            this.DebugDispose(typeof(LzwStream));
 #endif
             if (IsStreamOwner)
             {

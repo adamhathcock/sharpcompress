@@ -138,7 +138,7 @@ public static unsafe partial class Methods
         if (!BitConverter.IsLittleEndian)
         {
 #if NET8_0_OR_GREATER
-                val = BinaryPrimitives.ReverseEndianness(val);
+            val = BinaryPrimitives.ReverseEndianness(val);
 #else
             val = ReverseEndiannessNative(val);
 #endif
@@ -152,7 +152,7 @@ public static unsafe partial class Methods
         if (!BitConverter.IsLittleEndian)
         {
 #if NET8_0_OR_GREATER
-                val = BinaryPrimitives.ReverseEndianness(val);
+            val = BinaryPrimitives.ReverseEndianness(val);
 #else
             val = ReverseEndiannessNative(val);
 #endif

@@ -51,9 +51,7 @@ public static unsafe partial class Methods
         ushort* stateTable = (ushort*)statePtr.stateTable;
         uint nbBitsOut = (uint)statePtr.value + symbolTT.deltaNbBits >> 16;
         BIT_addBits(ref bitC_bitContainer, ref bitC_bitPos, (nuint)statePtr.value, nbBitsOut);
-        statePtr.value = stateTable[
-            (statePtr.value >> (int)nbBitsOut) + symbolTT.deltaFindState
-        ];
+        statePtr.value = stateTable[(statePtr.value >> (int)nbBitsOut) + symbolTT.deltaFindState];
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -105,8 +103,7 @@ public static unsafe partial class Methods
         assert(accuracyLog < 31 - tableLog);
         {
             uint tableSize = (uint)(1 << (int)tableLog);
-            uint deltaFromThreshold =
-                threshold - (symbolTT[symbolValue].deltaNbBits + tableSize);
+            uint deltaFromThreshold = threshold - (symbolTT[symbolValue].deltaNbBits + tableSize);
             /* linear interpolation (very approximate) */
             uint normalizedDeltaFromThreshold =
                 deltaFromThreshold << (int)accuracyLog >> (int)tableLog;
@@ -118,19 +115,11 @@ public static unsafe partial class Methods
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static void FSE_initDState(
-        ref FSE_DState_t DStatePtr,
-        ref BIT_DStream_t bitD,
-        uint* dt
-    )
+    private static void FSE_initDState(ref FSE_DState_t DStatePtr, ref BIT_DStream_t bitD, uint* dt)
     {
         void* ptr = dt;
         FSE_DTableHeader* DTableH = (FSE_DTableHeader*)ptr;
-        DStatePtr.state = BIT_readBits(
-            bitD.bitContainer,
-            ref bitD.bitsConsumed,
-            DTableH->tableLog
-        );
+        DStatePtr.state = BIT_readBits(bitD.bitContainer, ref bitD.bitsConsumed, DTableH->tableLog);
         BIT_reloadDStream(
             ref bitD.bitContainer,
             ref bitD.bitsConsumed,

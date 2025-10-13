@@ -15,11 +15,11 @@ public unsafe struct ldmState_t
     public _matchCandidates_e__FixedBuffer matchCandidates;
 
 #if NET8_0_OR_GREATER
-        [InlineArray(64)]
-        public unsafe struct _splitIndices_e__FixedBuffer
-        {
-            public nuint e0;
-        }
+    [InlineArray(64)]
+    public unsafe struct _splitIndices_e__FixedBuffer
+    {
+        public nuint e0;
+    }
 
 #else
     public unsafe struct _splitIndices_e__FixedBuffer
@@ -92,11 +92,11 @@ public unsafe struct ldmState_t
 #endif
 
 #if NET8_0_OR_GREATER
-        [InlineArray(64)]
-        public unsafe struct _matchCandidates_e__FixedBuffer
-        {
-            public ldmMatchCandidate_t e0;
-        }
+    [InlineArray(64)]
+    public unsafe struct _matchCandidates_e__FixedBuffer
+    {
+        public ldmMatchCandidate_t e0;
+    }
 
 #else
     public unsafe struct _matchCandidates_e__FixedBuffer

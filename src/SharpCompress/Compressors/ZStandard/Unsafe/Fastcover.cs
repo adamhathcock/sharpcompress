@@ -20,23 +20,22 @@ public static unsafe partial class Methods
         return ZSTD_hash8Ptr(p, f);
     }
 
-    private static readonly FASTCOVER_accel_t* FASTCOVER_defaultAccelParameters =
-        GetArrayPointer(
-            new FASTCOVER_accel_t[11]
-            {
-                new FASTCOVER_accel_t(finalize: 100, skip: 0),
-                new FASTCOVER_accel_t(finalize: 100, skip: 0),
-                new FASTCOVER_accel_t(finalize: 50, skip: 1),
-                new FASTCOVER_accel_t(finalize: 34, skip: 2),
-                new FASTCOVER_accel_t(finalize: 25, skip: 3),
-                new FASTCOVER_accel_t(finalize: 20, skip: 4),
-                new FASTCOVER_accel_t(finalize: 17, skip: 5),
-                new FASTCOVER_accel_t(finalize: 14, skip: 6),
-                new FASTCOVER_accel_t(finalize: 13, skip: 7),
-                new FASTCOVER_accel_t(finalize: 11, skip: 8),
-                new FASTCOVER_accel_t(finalize: 10, skip: 9),
-            }
-        );
+    private static readonly FASTCOVER_accel_t* FASTCOVER_defaultAccelParameters = GetArrayPointer(
+        new FASTCOVER_accel_t[11]
+        {
+            new FASTCOVER_accel_t(finalize: 100, skip: 0),
+            new FASTCOVER_accel_t(finalize: 100, skip: 0),
+            new FASTCOVER_accel_t(finalize: 50, skip: 1),
+            new FASTCOVER_accel_t(finalize: 34, skip: 2),
+            new FASTCOVER_accel_t(finalize: 25, skip: 3),
+            new FASTCOVER_accel_t(finalize: 20, skip: 4),
+            new FASTCOVER_accel_t(finalize: 17, skip: 5),
+            new FASTCOVER_accel_t(finalize: 14, skip: 6),
+            new FASTCOVER_accel_t(finalize: 13, skip: 7),
+            new FASTCOVER_accel_t(finalize: 11, skip: 8),
+            new FASTCOVER_accel_t(finalize: 10, skip: 9),
+        }
+    );
 
     /*-*************************************
      *  Helper functions
@@ -91,11 +90,7 @@ public static unsafe partial class Methods
             if (activeSegment.end - activeSegment.begin == dmersInK + 1)
             {
                 /* Get hash value of the dmer to be eliminated from active segment */
-                nuint delIndex = FASTCOVER_hashPtrToIndex(
-                    ctx->samples + activeSegment.begin,
-                    f,
-                    d
-                );
+                nuint delIndex = FASTCOVER_hashPtrToIndex(ctx->samples + activeSegment.begin, f, d);
                 segmentFreqs[delIndex] -= 1;
                 if (segmentFreqs[delIndex] == 0)
                 {
@@ -403,9 +398,7 @@ public static unsafe partial class Methods
                 parameters,
                 segmentFreqs
             );
-            uint nbFinalizeSamples = (uint)(
-                ctx->nbTrainSamples * ctx->accelParams.finalize / 100
-            );
+            uint nbFinalizeSamples = (uint)(ctx->nbTrainSamples * ctx->accelParams.finalize / 100);
             selection = COVER_selectDict(
                 dict + tail,
                 dictBufferCapacity,
@@ -544,10 +537,7 @@ public static unsafe partial class Methods
         COVER_warnOnSmallCorpus(dictBufferCapacity, ctx.nbDmers, g_displayLevel);
         {
             /* Initialize array to keep track of frequency of dmer within activeSegment */
-            ushort* segmentFreqs = (ushort*)calloc(
-                (ulong)1 << (int)parameters.f,
-                sizeof(ushort)
-            );
+            ushort* segmentFreqs = (ushort*)calloc((ulong)1 << (int)parameters.f, sizeof(ushort));
             nuint tail = FASTCOVER_buildDictionary(
                 &ctx,
                 ctx.freqs,
@@ -556,9 +546,7 @@ public static unsafe partial class Methods
                 coverParams,
                 segmentFreqs
             );
-            uint nbFinalizeSamples = (uint)(
-                ctx.nbTrainSamples * ctx.accelParams.finalize / 100
-            );
+            uint nbFinalizeSamples = (uint)(ctx.nbTrainSamples * ctx.accelParams.finalize / 100);
             nuint dictionarySize = ZDICT_finalizeDictionary(
                 dict,
                 dictBufferCapacity,
@@ -706,9 +694,7 @@ public static unsafe partial class Methods
                     COVER_best_destroy(&best);
                     FASTCOVER_ctx_destroy(&ctx);
                     POOL_free(pool);
-                    return unchecked(
-                        (nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_memory_allocation)
-                    );
+                    return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_memory_allocation));
                 }
 
                 data->ctx = &ctx;

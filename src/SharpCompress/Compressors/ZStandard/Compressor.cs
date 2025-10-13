@@ -62,9 +62,9 @@ public unsafe class Compressor : IDisposable
     {
         using var cctx = handle.Acquire();
         fixed (byte* dictPtr = dict)
-            Unsafe.Methods
-                  .ZSTD_CCtx_loadDictionary(cctx, dictPtr, (nuint)dict.Length)
-                  .EnsureZstdSuccess();
+            Unsafe
+                .Methods.ZSTD_CCtx_loadDictionary(cctx, dictPtr, (nuint)dict.Length)
+                .EnsureZstdSuccess();
     }
 
     public Compressor(int level = DefaultCompressionLevel)
@@ -96,15 +96,15 @@ public unsafe class Compressor : IDisposable
         {
             using var cctx = handle.Acquire();
             return (int)
-                Unsafe.Methods
-                      .ZSTD_compress2(
-                          cctx,
-                          destPtr,
-                          (nuint)dest.Length,
-                          srcPtr,
-                          (nuint)src.Length
-                      )
-                      .EnsureZstdSuccess();
+                Unsafe
+                    .Methods.ZSTD_compress2(
+                        cctx,
+                        destPtr,
+                        (nuint)dest.Length,
+                        srcPtr,
+                        (nuint)src.Length
+                    )
+                    .EnsureZstdSuccess();
         }
     }
 
@@ -190,9 +190,9 @@ public unsafe class Compressor : IDisposable
         fixed (ZSTD_outBuffer_s* outputPtr = &output)
         {
             using var cctx = handle.Acquire();
-            return Unsafe.Methods
-                         .ZSTD_compressStream2(cctx, outputPtr, inputPtr, directive)
-                         .EnsureZstdSuccess();
+            return Unsafe
+                .Methods.ZSTD_compressStream2(cctx, outputPtr, inputPtr, directive)
+                .EnsureZstdSuccess();
         }
     }
 

@@ -1,6 +1,7 @@
 using System;
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using static SharpCompress.Compressors.ZStandard.UnsafeHelper;
 #if NETCOREAPP3_0_OR_GREATER
 using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
@@ -8,7 +9,6 @@ using System.Runtime.Intrinsics.X86;
 #if NET5_0_OR_GREATER
 using System.Runtime.Intrinsics.Arm;
 #endif
-using static SharpCompress.Compressors.ZStandard.UnsafeHelper;
 
 namespace SharpCompress.Compressors.ZStandard.Unsafe;
 
@@ -63,7 +63,7 @@ public static unsafe partial class Methods
         uint btLog = cParams->chainLog - 1;
         uint btMask = (uint)((1 << (int)btLog) - 1);
         nuint commonLengthSmaller = 0,
-              commonLengthLarger = 0;
+            commonLengthLarger = 0;
         byte* @base = ms->window.@base;
         byte* dictBase = ms->window.dictBase;
         uint dictLimit = ms->window.dictLimit;
@@ -88,9 +88,7 @@ public static unsafe partial class Methods
             uint* nextPtr = bt + 2 * (matchIndex & btMask);
             /* guaranteed minimum nb of common bytes */
             nuint matchLength =
-                commonLengthSmaller < commonLengthLarger
-                    ? commonLengthSmaller
-                    : commonLengthLarger;
+                commonLengthSmaller < commonLengthLarger ? commonLengthSmaller : commonLengthLarger;
             assert(matchIndex < curr);
             if (
                 dictMode != ZSTD_dictMode_e.ZSTD_extDict
@@ -185,19 +183,16 @@ public static unsafe partial class Methods
         uint* dictBt = dms->chainTable;
         uint btLog = dmsCParams->chainLog - 1;
         uint btMask = (uint)((1 << (int)btLog) - 1);
-        uint btLow =
-            btMask >= dictHighLimit - dictLowLimit ? dictLowLimit : dictHighLimit - btMask;
+        uint btLow = btMask >= dictHighLimit - dictLowLimit ? dictLowLimit : dictHighLimit - btMask;
         nuint commonLengthSmaller = 0,
-              commonLengthLarger = 0;
+            commonLengthLarger = 0;
         assert(dictMode == ZSTD_dictMode_e.ZSTD_dictMatchState);
         for (; nbCompares != 0 && dictMatchIndex > dictLowLimit; --nbCompares)
         {
             uint* nextPtr = dictBt + 2 * (dictMatchIndex & btMask);
             /* guaranteed minimum nb of common bytes */
             nuint matchLength =
-                commonLengthSmaller < commonLengthLarger
-                    ? commonLengthSmaller
-                    : commonLengthLarger;
+                commonLengthSmaller < commonLengthLarger ? commonLengthSmaller : commonLengthLarger;
             byte* match = dictBase + dictMatchIndex;
             matchLength += ZSTD_count_2segments(
                 ip + matchLength,
@@ -317,7 +312,7 @@ public static unsafe partial class Methods
 
         {
             nuint commonLengthSmaller = 0,
-                  commonLengthLarger = 0;
+                commonLengthLarger = 0;
             byte* dictBase = ms->window.dictBase;
             uint dictLimit = ms->window.dictLimit;
             byte* dictEnd = dictBase + dictLimit;
@@ -618,10 +613,10 @@ public static unsafe partial class Methods
         for (ddsAttempt = 0; ddsAttempt < bucketSize - 1; ddsAttempt++)
         {
 #if NETCOREAPP3_0_OR_GREATER
-                if (Sse.IsSupported)
-                {
-                    Sse.Prefetch0(ddsBase + dms->hashTable[ddsIdx + ddsAttempt]);
-                }
+            if (Sse.IsSupported)
+            {
+                Sse.Prefetch0(ddsBase + dms->hashTable[ddsIdx + ddsAttempt]);
+            }
 #endif
         }
 
@@ -629,10 +624,10 @@ public static unsafe partial class Methods
             uint chainPackedPointer = dms->hashTable[ddsIdx + bucketSize - 1];
             uint chainIndex = chainPackedPointer >> 8;
 #if NETCOREAPP3_0_OR_GREATER
-                if (Sse.IsSupported)
-                {
-                    Sse.Prefetch0(&dms->chainTable[chainIndex]);
-                }
+            if (Sse.IsSupported)
+            {
+                Sse.Prefetch0(&dms->chainTable[chainIndex]);
+            }
 #endif
         }
 
@@ -677,10 +672,10 @@ public static unsafe partial class Methods
             for (chainAttempt = 0; chainAttempt < chainLimit; chainAttempt++)
             {
 #if NETCOREAPP3_0_OR_GREATER
-                    if (Sse.IsSupported)
-                    {
-                        Sse.Prefetch0(ddsBase + dms->chainTable[chainIndex + chainAttempt]);
-                    }
+                if (Sse.IsSupported)
+                {
+                    Sse.Prefetch0(ddsBase + dms->chainTable[chainIndex + chainAttempt]);
+                }
 #endif
             }
 
@@ -695,8 +690,7 @@ public static unsafe partial class Methods
                 if (MEM_read32(match) == MEM_read32(ip))
                 {
                     currentMl =
-                        ZSTD_count_2segments(ip + 4, match + 4, iLimit, ddsEnd, prefixStart)
-                        + 4;
+                        ZSTD_count_2segments(ip + 4, match + 4, iLimit, ddsEnd, prefixStart) + 4;
                 }
 
                 if (currentMl > ml)
@@ -793,10 +787,10 @@ public static unsafe partial class Methods
         {
             uint* entry = &dms->hashTable[ddsIdx];
 #if NETCOREAPP3_0_OR_GREATER
-                if (Sse.IsSupported)
-                {
-                    Sse.Prefetch0(entry);
-                }
+            if (Sse.IsSupported)
+            {
+                Sse.Prefetch0(entry);
+            }
 #endif
         }
 
@@ -823,8 +817,7 @@ public static unsafe partial class Methods
                 assert(match + 4 <= dictEnd);
                 if (MEM_read32(match) == MEM_read32(ip))
                     currentMl =
-                        ZSTD_count_2segments(ip + 4, match + 4, iLimit, dictEnd, prefixStart)
-                        + 4;
+                        ZSTD_count_2segments(ip + 4, match + 4, iLimit, dictEnd, prefixStart) + 4;
             }
 
             if (currentMl > ml)
@@ -876,8 +869,7 @@ public static unsafe partial class Methods
                 assert(match + 4 <= dmsEnd);
                 if (MEM_read32(match) == MEM_read32(ip))
                     currentMl =
-                        ZSTD_count_2segments(ip + 4, match + 4, iLimit, dmsEnd, prefixStart)
-                        + 4;
+                        ZSTD_count_2segments(ip + 4, match + 4, iLimit, dmsEnd, prefixStart) + 4;
                 if (currentMl > ml)
                 {
                     ml = currentMl;
@@ -935,44 +927,39 @@ public static unsafe partial class Methods
      * Performs prefetching for the hashTable and tagTable at a given row.
      */
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static void ZSTD_row_prefetch(
-        uint* hashTable,
-        byte* tagTable,
-        uint relRow,
-        uint rowLog
-    )
+    private static void ZSTD_row_prefetch(uint* hashTable, byte* tagTable, uint relRow, uint rowLog)
     {
 #if NETCOREAPP3_0_OR_GREATER
-            if (Sse.IsSupported)
-            {
-                Sse.Prefetch0(hashTable + relRow);
-            }
+        if (Sse.IsSupported)
+        {
+            Sse.Prefetch0(hashTable + relRow);
+        }
 #endif
 
         if (rowLog >= 5)
         {
 #if NETCOREAPP3_0_OR_GREATER
-                if (Sse.IsSupported)
-                {
-                    Sse.Prefetch0(hashTable + relRow + 16);
-                }
+            if (Sse.IsSupported)
+            {
+                Sse.Prefetch0(hashTable + relRow + 16);
+            }
 #endif
         }
 
 #if NETCOREAPP3_0_OR_GREATER
-            if (Sse.IsSupported)
-            {
-                Sse.Prefetch0(tagTable + relRow);
-            }
+        if (Sse.IsSupported)
+        {
+            Sse.Prefetch0(tagTable + relRow);
+        }
 #endif
 
         if (rowLog == 6)
         {
 #if NETCOREAPP3_0_OR_GREATER
-                if (Sse.IsSupported)
-                {
-                    Sse.Prefetch0(tagTable + relRow + 32);
-                }
+            if (Sse.IsSupported)
+            {
+                Sse.Prefetch0(tagTable + relRow + 32);
+            }
 #endif
         }
 
@@ -1080,13 +1067,7 @@ public static unsafe partial class Methods
             byte* tagRow = tagTable + relRow;
             uint pos = ZSTD_row_nextIndex(tagRow, rowMask);
             assert(
-                hash
-                == ZSTD_hashPtrSalted(
-                    @base + updateStartIdx,
-                    hashLog + 8,
-                    mls,
-                    ms->hashSalt
-                )
+                hash == ZSTD_hashPtrSalted(@base + updateStartIdx, hashLog + 8, mls, ms->hashSalt)
             );
             tagRow[pos] = (byte)(hash & (1U << 8) - 1);
             row[pos] = updateStartIdx;
@@ -1155,71 +1136,71 @@ public static unsafe partial class Methods
         assert(rowEntries == 16 || rowEntries == 32 || rowEntries == 64);
         assert(rowEntries <= 64);
 #if NET5_0_OR_GREATER
-            if (AdvSimd.IsSupported && BitConverter.IsLittleEndian)
-            {
-                if (rowEntries == 16)
-                    return 4;
+        if (AdvSimd.IsSupported && BitConverter.IsLittleEndian)
+        {
+            if (rowEntries == 16)
+                return 4;
 #if NET9_0_OR_GREATER
-                if (AdvSimd.Arm64.IsSupported)
-                {
-                    if (rowEntries == 32)
-                        return 2;
-                    if (rowEntries == 64)
-                        return 1;
-                }
-#endif
+            if (AdvSimd.Arm64.IsSupported)
+            {
+                if (rowEntries == 32)
+                    return 2;
+                if (rowEntries == 64)
+                    return 1;
             }
+#endif
+        }
 #endif
         return 1;
     }
 
 #if NETCOREAPP3_0_OR_GREATER
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static ulong ZSTD_row_getSSEMask(int nbChunks, byte* src, byte tag, uint head)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static ulong ZSTD_row_getSSEMask(int nbChunks, byte* src, byte tag, uint head)
+    {
+        Vector128<byte> comparisonMask = Vector128.Create(tag);
+        assert(nbChunks is 1 or 2 or 4);
+        if (nbChunks == 1)
         {
-            Vector128<byte> comparisonMask = Vector128.Create(tag);
-            assert(nbChunks is 1 or 2 or 4);
-            if (nbChunks == 1)
-            {
-                Vector128<byte> chunk0 = Sse2.LoadVector128(src);
-                Vector128<byte> equalMask0 = Sse2.CompareEqual(chunk0, comparisonMask);
-                int matches0 = Sse2.MoveMask(equalMask0);
-                return BitOperations.RotateRight((ushort)matches0, (int)head);
-            }
-
-            if (nbChunks == 2)
-            {
-                Vector128<byte> chunk0 = Sse2.LoadVector128(src);
-                Vector128<byte> equalMask0 = Sse2.CompareEqual(chunk0, comparisonMask);
-                int matches0 = Sse2.MoveMask(equalMask0);
-                Vector128<byte> chunk1 = Sse2.LoadVector128(src + 16);
-                Vector128<byte> equalMask1 = Sse2.CompareEqual(chunk1, comparisonMask);
-                int matches1 = Sse2.MoveMask(equalMask1);
-                return BitOperations.RotateRight((uint)matches1 << 16 | (uint)matches0, (int)head);
-            }
-
-            {
-                Vector128<byte> chunk0 = Sse2.LoadVector128(src);
-                Vector128<byte> equalMask0 = Sse2.CompareEqual(chunk0, comparisonMask);
-                int matches0 = Sse2.MoveMask(equalMask0);
-                Vector128<byte> chunk1 = Sse2.LoadVector128(src + 16 * 1);
-                Vector128<byte> equalMask1 = Sse2.CompareEqual(chunk1, comparisonMask);
-                int matches1 = Sse2.MoveMask(equalMask1);
-                Vector128<byte> chunk2 = Sse2.LoadVector128(src + 16 * 2);
-                Vector128<byte> equalMask2 = Sse2.CompareEqual(chunk2, comparisonMask);
-                int matches2 = Sse2.MoveMask(equalMask2);
-                Vector128<byte> chunk3 = Sse2.LoadVector128(src + 16 * 3);
-                Vector128<byte> equalMask3 = Sse2.CompareEqual(chunk3, comparisonMask);
-                int matches3 = Sse2.MoveMask(equalMask3);
-                return BitOperations.RotateRight(
-                    (ulong)matches3 << 48
-                        | (ulong)matches2 << 32
-                        | (ulong)matches1 << 16
-                        | (uint)matches0,
-                    (int)head
-                );
-            }
+            Vector128<byte> chunk0 = Sse2.LoadVector128(src);
+            Vector128<byte> equalMask0 = Sse2.CompareEqual(chunk0, comparisonMask);
+            int matches0 = Sse2.MoveMask(equalMask0);
+            return BitOperations.RotateRight((ushort)matches0, (int)head);
         }
+
+        if (nbChunks == 2)
+        {
+            Vector128<byte> chunk0 = Sse2.LoadVector128(src);
+            Vector128<byte> equalMask0 = Sse2.CompareEqual(chunk0, comparisonMask);
+            int matches0 = Sse2.MoveMask(equalMask0);
+            Vector128<byte> chunk1 = Sse2.LoadVector128(src + 16);
+            Vector128<byte> equalMask1 = Sse2.CompareEqual(chunk1, comparisonMask);
+            int matches1 = Sse2.MoveMask(equalMask1);
+            return BitOperations.RotateRight((uint)matches1 << 16 | (uint)matches0, (int)head);
+        }
+
+        {
+            Vector128<byte> chunk0 = Sse2.LoadVector128(src);
+            Vector128<byte> equalMask0 = Sse2.CompareEqual(chunk0, comparisonMask);
+            int matches0 = Sse2.MoveMask(equalMask0);
+            Vector128<byte> chunk1 = Sse2.LoadVector128(src + 16 * 1);
+            Vector128<byte> equalMask1 = Sse2.CompareEqual(chunk1, comparisonMask);
+            int matches1 = Sse2.MoveMask(equalMask1);
+            Vector128<byte> chunk2 = Sse2.LoadVector128(src + 16 * 2);
+            Vector128<byte> equalMask2 = Sse2.CompareEqual(chunk2, comparisonMask);
+            int matches2 = Sse2.MoveMask(equalMask2);
+            Vector128<byte> chunk3 = Sse2.LoadVector128(src + 16 * 3);
+            Vector128<byte> equalMask3 = Sse2.CompareEqual(chunk3, comparisonMask);
+            int matches3 = Sse2.MoveMask(equalMask3);
+            return BitOperations.RotateRight(
+                (ulong)matches3 << 48
+                    | (ulong)matches2 << 32
+                    | (ulong)matches1 << 16
+                    | (uint)matches0,
+                (int)head
+            );
+        }
+    }
 #endif
 
     /* Returns a ZSTD_VecMask (U64) that has the nth group (determined by
@@ -1241,88 +1222,87 @@ public static unsafe partial class Methods
         assert(rowEntries <= 64);
         assert(ZSTD_row_matchMaskGroupWidth(rowEntries) * rowEntries <= sizeof(ulong) * 8);
 #if NETCOREAPP3_0_OR_GREATER
-            if (Sse2.IsSupported)
-            {
-                return ZSTD_row_getSSEMask((int)(rowEntries / 16), src, tag, headGrouped);
-            }
+        if (Sse2.IsSupported)
+        {
+            return ZSTD_row_getSSEMask((int)(rowEntries / 16), src, tag, headGrouped);
+        }
 #endif
 
 #if NET5_0_OR_GREATER
-            if (AdvSimd.IsSupported && BitConverter.IsLittleEndian)
+        if (AdvSimd.IsSupported && BitConverter.IsLittleEndian)
+        {
+            if (rowEntries == 16)
             {
-                if (rowEntries == 16)
+                /* vshrn_n_u16 shifts by 4 every u16 and narrows to 8 lower bits.
+                 * After that groups of 4 bits represent the equalMask. We lower
+                 * all bits except the highest in these groups by doing AND with
+                 * 0x88 = 0b10001000.
+                 */
+                Vector128<byte> chunk = AdvSimd.LoadVector128(src);
+                Vector128<ushort> equalMask = AdvSimd
+                    .CompareEqual(chunk, AdvSimd.DuplicateToVector128(tag))
+                    .As<byte, ushort>();
+                Vector64<byte> res = AdvSimd.ShiftRightLogicalNarrowingLower(equalMask, 4);
+                ulong matches = res.As<byte, ulong>().GetElement(0);
+                return BitOperations.RotateRight(matches, (int)headGrouped) & 0x8888888888888888;
+            }
+            else if (rowEntries == 32)
+            {
+#if NET9_0_OR_GREATER
+                if (AdvSimd.Arm64.IsSupported)
                 {
-                    /* vshrn_n_u16 shifts by 4 every u16 and narrows to 8 lower bits.
-                     * After that groups of 4 bits represent the equalMask. We lower
-                     * all bits except the highest in these groups by doing AND with
-                     * 0x88 = 0b10001000.
+                    /* Same idea as with rowEntries == 16 but doing AND with
+                     * 0x55 = 0b01010101.
                      */
-                    Vector128<byte> chunk = AdvSimd.LoadVector128(src);
-                    Vector128<ushort> equalMask = AdvSimd
-                        .CompareEqual(chunk, AdvSimd.DuplicateToVector128(tag))
-                        .As<byte, ushort>();
-                    Vector64<byte> res = AdvSimd.ShiftRightLogicalNarrowingLower(equalMask, 4);
+                    (Vector128<ushort> chunk0, Vector128<ushort> chunk1) =
+                        AdvSimd.Arm64.Load2xVector128AndUnzip((ushort*)src);
+                    Vector128<byte> dup = AdvSimd.DuplicateToVector128(tag);
+                    Vector64<byte> t0 = AdvSimd.ShiftRightLogicalNarrowingLower(
+                        AdvSimd.CompareEqual(chunk0.As<ushort, byte>(), dup).As<byte, ushort>(),
+                        6
+                    );
+                    Vector64<byte> t1 = AdvSimd.ShiftRightLogicalNarrowingLower(
+                        AdvSimd.CompareEqual(chunk1.As<ushort, byte>(), dup).As<byte, ushort>(),
+                        6
+                    );
+                    Vector64<byte> res = AdvSimd.ShiftLeftAndInsert(t0, t1, 4);
                     ulong matches = res.As<byte, ulong>().GetElement(0);
                     return BitOperations.RotateRight(matches, (int)headGrouped)
-                        & 0x8888888888888888;
+                        & 0x5555555555555555;
                 }
-                else if (rowEntries == 32)
-                {
-#if NET9_0_OR_GREATER
-                    if (AdvSimd.Arm64.IsSupported)
-                    {
-                        /* Same idea as with rowEntries == 16 but doing AND with
-                         * 0x55 = 0b01010101.
-                         */
-                        (Vector128<ushort> chunk0, Vector128<ushort> chunk1) =
-                            AdvSimd.Arm64.Load2xVector128AndUnzip((ushort*)src);
-                        Vector128<byte> dup = AdvSimd.DuplicateToVector128(tag);
-                        Vector64<byte> t0 = AdvSimd.ShiftRightLogicalNarrowingLower(
-                            AdvSimd.CompareEqual(chunk0.As<ushort, byte>(), dup).As<byte, ushort>(),
-                            6
-                        );
-                        Vector64<byte> t1 = AdvSimd.ShiftRightLogicalNarrowingLower(
-                            AdvSimd.CompareEqual(chunk1.As<ushort, byte>(), dup).As<byte, ushort>(),
-                            6
-                        );
-                        Vector64<byte> res = AdvSimd.ShiftLeftAndInsert(t0, t1, 4);
-                        ulong matches = res.As<byte, ulong>().GetElement(0);
-                        return BitOperations.RotateRight(matches, (int)headGrouped)
-                            & 0x5555555555555555;
-                    }
 #endif
-                }
-                else
-                { /* rowEntries == 64 */
-#if NET9_0_OR_GREATER
-                    if (AdvSimd.Arm64.IsSupported)
-                    {
-                        (
-                            Vector128<byte> chunk0,
-                            Vector128<byte> chunk1,
-                            Vector128<byte> chunk2,
-                            Vector128<byte> chunk3
-                        ) = AdvSimd.Arm64.Load4xVector128AndUnzip(src);
-                        Vector128<byte> dup = AdvSimd.DuplicateToVector128(tag);
-                        Vector128<byte> cmp0 = AdvSimd.CompareEqual(chunk0, dup);
-                        Vector128<byte> cmp1 = AdvSimd.CompareEqual(chunk1, dup);
-                        Vector128<byte> cmp2 = AdvSimd.CompareEqual(chunk2, dup);
-                        Vector128<byte> cmp3 = AdvSimd.CompareEqual(chunk3, dup);
-
-                        Vector128<byte> t0 = AdvSimd.ShiftRightAndInsert(cmp1, cmp0, 1);
-                        Vector128<byte> t1 = AdvSimd.ShiftRightAndInsert(cmp3, cmp2, 1);
-                        Vector128<byte> t2 = AdvSimd.ShiftRightAndInsert(t1, t0, 2);
-                        Vector128<byte> t3 = AdvSimd.ShiftRightAndInsert(t2, t2, 4);
-                        Vector64<byte> t4 = AdvSimd.ShiftRightLogicalNarrowingLower(
-                            t3.As<byte, ushort>(),
-                            4
-                        );
-                        ulong matches = t4.As<byte, ulong>().GetElement(0);
-                        return BitOperations.RotateRight(matches, (int)headGrouped);
-                    }
-#endif
-                }
             }
+            else
+            { /* rowEntries == 64 */
+#if NET9_0_OR_GREATER
+                if (AdvSimd.Arm64.IsSupported)
+                {
+                    (
+                        Vector128<byte> chunk0,
+                        Vector128<byte> chunk1,
+                        Vector128<byte> chunk2,
+                        Vector128<byte> chunk3
+                    ) = AdvSimd.Arm64.Load4xVector128AndUnzip(src);
+                    Vector128<byte> dup = AdvSimd.DuplicateToVector128(tag);
+                    Vector128<byte> cmp0 = AdvSimd.CompareEqual(chunk0, dup);
+                    Vector128<byte> cmp1 = AdvSimd.CompareEqual(chunk1, dup);
+                    Vector128<byte> cmp2 = AdvSimd.CompareEqual(chunk2, dup);
+                    Vector128<byte> cmp3 = AdvSimd.CompareEqual(chunk3, dup);
+
+                    Vector128<byte> t0 = AdvSimd.ShiftRightAndInsert(cmp1, cmp0, 1);
+                    Vector128<byte> t1 = AdvSimd.ShiftRightAndInsert(cmp3, cmp2, 1);
+                    Vector128<byte> t2 = AdvSimd.ShiftRightAndInsert(t1, t0, 2);
+                    Vector128<byte> t3 = AdvSimd.ShiftRightAndInsert(t2, t2, 4);
+                    Vector64<byte> t4 = AdvSimd.ShiftRightLogicalNarrowingLower(
+                        t3.As<byte, ushort>(),
+                        4
+                    );
+                    ulong matches = t4.As<byte, ulong>().GetElement(0);
+                    return BitOperations.RotateRight(matches, (int)headGrouped);
+                }
+#endif
+            }
+        }
 #endif
 
         {
@@ -1446,10 +1426,10 @@ public static unsafe partial class Methods
             {
                 ddsIdx = ZSTD_hashPtr(ip, ddsHashLog, mls) << 2;
 #if NETCOREAPP3_0_OR_GREATER
-                    if (Sse.IsSupported)
-                    {
-                        Sse.Prefetch0(&dms->hashTable[ddsIdx]);
-                    }
+                if (Sse.IsSupported)
+                {
+                    Sse.Prefetch0(&dms->hashTable[ddsIdx]);
+                }
 #endif
             }
 
@@ -1504,8 +1484,7 @@ public static unsafe partial class Methods
             ulong matches = ZSTD_row_getMatchMask(tagRow, (byte)tag, headGrouped, rowEntries);
             for (; matches > 0 && nbAttempts > 0; matches &= matches - 1)
             {
-                uint matchPos =
-                    (headGrouped + ZSTD_VecMask_next(matches)) / groupWidth & rowMask;
+                uint matchPos = (headGrouped + ZSTD_VecMask_next(matches)) / groupWidth & rowMask;
                 uint matchIndex = row[matchPos];
                 if (matchPos == 0)
                     continue;
@@ -1515,19 +1494,19 @@ public static unsafe partial class Methods
                 if (dictMode != ZSTD_dictMode_e.ZSTD_extDict || matchIndex >= dictLimit)
                 {
 #if NETCOREAPP3_0_OR_GREATER
-                        if (Sse.IsSupported)
-                        {
-                            Sse.Prefetch0(@base + matchIndex);
-                        }
+                    if (Sse.IsSupported)
+                    {
+                        Sse.Prefetch0(@base + matchIndex);
+                    }
 #endif
                 }
                 else
                 {
 #if NETCOREAPP3_0_OR_GREATER
-                        if (Sse.IsSupported)
-                        {
-                            Sse.Prefetch0(dictBase + matchIndex);
-                        }
+                    if (Sse.IsSupported)
+                    {
+                        Sse.Prefetch0(dictBase + matchIndex);
+                    }
 #endif
                 }
 
@@ -1560,13 +1539,8 @@ public static unsafe partial class Methods
                     assert(match + 4 <= dictEnd);
                     if (MEM_read32(match) == MEM_read32(ip))
                         currentMl =
-                            ZSTD_count_2segments(
-                                ip + 4,
-                                match + 4,
-                                iLimit,
-                                dictEnd,
-                                prefixStart
-                            ) + 4;
+                            ZSTD_count_2segments(ip + 4, match + 4, iLimit, dictEnd, prefixStart)
+                            + 4;
                 }
 
                 if (currentMl > ml)
@@ -1625,10 +1599,10 @@ public static unsafe partial class Methods
                     if (matchIndex < dmsLowestIndex)
                         break;
 #if NETCOREAPP3_0_OR_GREATER
-                        if (Sse.IsSupported)
-                        {
-                            Sse.Prefetch0(dmsBase + matchIndex);
-                        }
+                    if (Sse.IsSupported)
+                    {
+                        Sse.Prefetch0(dmsBase + matchIndex);
+                    }
 #endif
 
                     matchBuffer[numMatches++] = matchIndex;
@@ -1646,13 +1620,8 @@ public static unsafe partial class Methods
                         assert(match + 4 <= dmsEnd);
                         if (MEM_read32(match) == MEM_read32(ip))
                             currentMl =
-                                ZSTD_count_2segments(
-                                    ip + 4,
-                                    match + 4,
-                                    iLimit,
-                                    dmsEnd,
-                                    prefixStart
-                                ) + 4;
+                                ZSTD_count_2segments(ip + 4, match + 4, iLimit, dmsEnd, prefixStart)
+                                + 4;
                     }
 
                     if (currentMl > ml)
@@ -1693,15 +1662,7 @@ public static unsafe partial class Methods
                 : ms->cParams.searchLog
             ) == 4
         );
-        return ZSTD_RowFindBestMatch(
-            ms,
-            ip,
-            iLimit,
-            offsetPtr,
-            4,
-            ZSTD_dictMode_e.ZSTD_noDict,
-            4
-        );
+        return ZSTD_RowFindBestMatch(ms, ip, iLimit, offsetPtr, 4, ZSTD_dictMode_e.ZSTD_noDict, 4);
     }
 
     private static nuint ZSTD_RowFindBestMatch_noDict_4_5(
@@ -1725,15 +1686,7 @@ public static unsafe partial class Methods
                 : ms->cParams.searchLog
             ) == 5
         );
-        return ZSTD_RowFindBestMatch(
-            ms,
-            ip,
-            iLimit,
-            offsetPtr,
-            4,
-            ZSTD_dictMode_e.ZSTD_noDict,
-            5
-        );
+        return ZSTD_RowFindBestMatch(ms, ip, iLimit, offsetPtr, 4, ZSTD_dictMode_e.ZSTD_noDict, 5);
     }
 
     private static nuint ZSTD_RowFindBestMatch_noDict_4_6(
@@ -1757,15 +1710,7 @@ public static unsafe partial class Methods
                 : ms->cParams.searchLog
             ) == 6
         );
-        return ZSTD_RowFindBestMatch(
-            ms,
-            ip,
-            iLimit,
-            offsetPtr,
-            4,
-            ZSTD_dictMode_e.ZSTD_noDict,
-            6
-        );
+        return ZSTD_RowFindBestMatch(ms, ip, iLimit, offsetPtr, 4, ZSTD_dictMode_e.ZSTD_noDict, 6);
     }
 
     private static nuint ZSTD_RowFindBestMatch_noDict_5_4(
@@ -1789,15 +1734,7 @@ public static unsafe partial class Methods
                 : ms->cParams.searchLog
             ) == 4
         );
-        return ZSTD_RowFindBestMatch(
-            ms,
-            ip,
-            iLimit,
-            offsetPtr,
-            5,
-            ZSTD_dictMode_e.ZSTD_noDict,
-            4
-        );
+        return ZSTD_RowFindBestMatch(ms, ip, iLimit, offsetPtr, 5, ZSTD_dictMode_e.ZSTD_noDict, 4);
     }
 
     private static nuint ZSTD_RowFindBestMatch_noDict_5_5(
@@ -1821,15 +1758,7 @@ public static unsafe partial class Methods
                 : ms->cParams.searchLog
             ) == 5
         );
-        return ZSTD_RowFindBestMatch(
-            ms,
-            ip,
-            iLimit,
-            offsetPtr,
-            5,
-            ZSTD_dictMode_e.ZSTD_noDict,
-            5
-        );
+        return ZSTD_RowFindBestMatch(ms, ip, iLimit, offsetPtr, 5, ZSTD_dictMode_e.ZSTD_noDict, 5);
     }
 
     private static nuint ZSTD_RowFindBestMatch_noDict_5_6(
@@ -1853,15 +1782,7 @@ public static unsafe partial class Methods
                 : ms->cParams.searchLog
             ) == 6
         );
-        return ZSTD_RowFindBestMatch(
-            ms,
-            ip,
-            iLimit,
-            offsetPtr,
-            5,
-            ZSTD_dictMode_e.ZSTD_noDict,
-            6
-        );
+        return ZSTD_RowFindBestMatch(ms, ip, iLimit, offsetPtr, 5, ZSTD_dictMode_e.ZSTD_noDict, 6);
     }
 
     private static nuint ZSTD_RowFindBestMatch_noDict_6_4(
@@ -1885,15 +1806,7 @@ public static unsafe partial class Methods
                 : ms->cParams.searchLog
             ) == 4
         );
-        return ZSTD_RowFindBestMatch(
-            ms,
-            ip,
-            iLimit,
-            offsetPtr,
-            6,
-            ZSTD_dictMode_e.ZSTD_noDict,
-            4
-        );
+        return ZSTD_RowFindBestMatch(ms, ip, iLimit, offsetPtr, 6, ZSTD_dictMode_e.ZSTD_noDict, 4);
     }
 
     private static nuint ZSTD_RowFindBestMatch_noDict_6_5(
@@ -1917,15 +1830,7 @@ public static unsafe partial class Methods
                 : ms->cParams.searchLog
             ) == 5
         );
-        return ZSTD_RowFindBestMatch(
-            ms,
-            ip,
-            iLimit,
-            offsetPtr,
-            6,
-            ZSTD_dictMode_e.ZSTD_noDict,
-            5
-        );
+        return ZSTD_RowFindBestMatch(ms, ip, iLimit, offsetPtr, 6, ZSTD_dictMode_e.ZSTD_noDict, 5);
     }
 
     private static nuint ZSTD_RowFindBestMatch_noDict_6_6(
@@ -1949,15 +1854,7 @@ public static unsafe partial class Methods
                 : ms->cParams.searchLog
             ) == 6
         );
-        return ZSTD_RowFindBestMatch(
-            ms,
-            ip,
-            iLimit,
-            offsetPtr,
-            6,
-            ZSTD_dictMode_e.ZSTD_noDict,
-            6
-        );
+        return ZSTD_RowFindBestMatch(ms, ip, iLimit, offsetPtr, 6, ZSTD_dictMode_e.ZSTD_noDict, 6);
     }
 
     private static nuint ZSTD_RowFindBestMatch_extDict_4_4(
@@ -1981,15 +1878,7 @@ public static unsafe partial class Methods
                 : ms->cParams.searchLog
             ) == 4
         );
-        return ZSTD_RowFindBestMatch(
-            ms,
-            ip,
-            iLimit,
-            offsetPtr,
-            4,
-            ZSTD_dictMode_e.ZSTD_extDict,
-            4
-        );
+        return ZSTD_RowFindBestMatch(ms, ip, iLimit, offsetPtr, 4, ZSTD_dictMode_e.ZSTD_extDict, 4);
     }
 
     private static nuint ZSTD_RowFindBestMatch_extDict_4_5(
@@ -2013,15 +1902,7 @@ public static unsafe partial class Methods
                 : ms->cParams.searchLog
             ) == 5
         );
-        return ZSTD_RowFindBestMatch(
-            ms,
-            ip,
-            iLimit,
-            offsetPtr,
-            4,
-            ZSTD_dictMode_e.ZSTD_extDict,
-            5
-        );
+        return ZSTD_RowFindBestMatch(ms, ip, iLimit, offsetPtr, 4, ZSTD_dictMode_e.ZSTD_extDict, 5);
     }
 
     private static nuint ZSTD_RowFindBestMatch_extDict_4_6(
@@ -2045,15 +1926,7 @@ public static unsafe partial class Methods
                 : ms->cParams.searchLog
             ) == 6
         );
-        return ZSTD_RowFindBestMatch(
-            ms,
-            ip,
-            iLimit,
-            offsetPtr,
-            4,
-            ZSTD_dictMode_e.ZSTD_extDict,
-            6
-        );
+        return ZSTD_RowFindBestMatch(ms, ip, iLimit, offsetPtr, 4, ZSTD_dictMode_e.ZSTD_extDict, 6);
     }
 
     private static nuint ZSTD_RowFindBestMatch_extDict_5_4(
@@ -2077,15 +1950,7 @@ public static unsafe partial class Methods
                 : ms->cParams.searchLog
             ) == 4
         );
-        return ZSTD_RowFindBestMatch(
-            ms,
-            ip,
-            iLimit,
-            offsetPtr,
-            5,
-            ZSTD_dictMode_e.ZSTD_extDict,
-            4
-        );
+        return ZSTD_RowFindBestMatch(ms, ip, iLimit, offsetPtr, 5, ZSTD_dictMode_e.ZSTD_extDict, 4);
     }
 
     private static nuint ZSTD_RowFindBestMatch_extDict_5_5(
@@ -2109,15 +1974,7 @@ public static unsafe partial class Methods
                 : ms->cParams.searchLog
             ) == 5
         );
-        return ZSTD_RowFindBestMatch(
-            ms,
-            ip,
-            iLimit,
-            offsetPtr,
-            5,
-            ZSTD_dictMode_e.ZSTD_extDict,
-            5
-        );
+        return ZSTD_RowFindBestMatch(ms, ip, iLimit, offsetPtr, 5, ZSTD_dictMode_e.ZSTD_extDict, 5);
     }
 
     private static nuint ZSTD_RowFindBestMatch_extDict_5_6(
@@ -2141,15 +1998,7 @@ public static unsafe partial class Methods
                 : ms->cParams.searchLog
             ) == 6
         );
-        return ZSTD_RowFindBestMatch(
-            ms,
-            ip,
-            iLimit,
-            offsetPtr,
-            5,
-            ZSTD_dictMode_e.ZSTD_extDict,
-            6
-        );
+        return ZSTD_RowFindBestMatch(ms, ip, iLimit, offsetPtr, 5, ZSTD_dictMode_e.ZSTD_extDict, 6);
     }
 
     private static nuint ZSTD_RowFindBestMatch_extDict_6_4(
@@ -2173,15 +2022,7 @@ public static unsafe partial class Methods
                 : ms->cParams.searchLog
             ) == 4
         );
-        return ZSTD_RowFindBestMatch(
-            ms,
-            ip,
-            iLimit,
-            offsetPtr,
-            6,
-            ZSTD_dictMode_e.ZSTD_extDict,
-            4
-        );
+        return ZSTD_RowFindBestMatch(ms, ip, iLimit, offsetPtr, 6, ZSTD_dictMode_e.ZSTD_extDict, 4);
     }
 
     private static nuint ZSTD_RowFindBestMatch_extDict_6_5(
@@ -2205,15 +2046,7 @@ public static unsafe partial class Methods
                 : ms->cParams.searchLog
             ) == 5
         );
-        return ZSTD_RowFindBestMatch(
-            ms,
-            ip,
-            iLimit,
-            offsetPtr,
-            6,
-            ZSTD_dictMode_e.ZSTD_extDict,
-            5
-        );
+        return ZSTD_RowFindBestMatch(ms, ip, iLimit, offsetPtr, 6, ZSTD_dictMode_e.ZSTD_extDict, 5);
     }
 
     private static nuint ZSTD_RowFindBestMatch_extDict_6_6(
@@ -2237,15 +2070,7 @@ public static unsafe partial class Methods
                 : ms->cParams.searchLog
             ) == 6
         );
-        return ZSTD_RowFindBestMatch(
-            ms,
-            ip,
-            iLimit,
-            offsetPtr,
-            6,
-            ZSTD_dictMode_e.ZSTD_extDict,
-            6
-        );
+        return ZSTD_RowFindBestMatch(ms, ip, iLimit, offsetPtr, 6, ZSTD_dictMode_e.ZSTD_extDict, 6);
     }
 
     private static nuint ZSTD_RowFindBestMatch_dictMatchState_4_4(
@@ -2890,14 +2715,7 @@ public static unsafe partial class Methods
                 : ms->cParams.minMatch
             ) == 4
         );
-        return ZSTD_BtFindBestMatch(
-            ms,
-            ip,
-            iLimit,
-            offBasePtr,
-            4,
-            ZSTD_dictMode_e.ZSTD_extDict
-        );
+        return ZSTD_BtFindBestMatch(ms, ip, iLimit, offBasePtr, 4, ZSTD_dictMode_e.ZSTD_extDict);
     }
 
     private static nuint ZSTD_BtFindBestMatch_extDict_5(
@@ -2914,14 +2732,7 @@ public static unsafe partial class Methods
                 : ms->cParams.minMatch
             ) == 5
         );
-        return ZSTD_BtFindBestMatch(
-            ms,
-            ip,
-            iLimit,
-            offBasePtr,
-            5,
-            ZSTD_dictMode_e.ZSTD_extDict
-        );
+        return ZSTD_BtFindBestMatch(ms, ip, iLimit, offBasePtr, 5, ZSTD_dictMode_e.ZSTD_extDict);
     }
 
     private static nuint ZSTD_BtFindBestMatch_extDict_6(
@@ -2938,14 +2749,7 @@ public static unsafe partial class Methods
                 : ms->cParams.minMatch
             ) == 6
         );
-        return ZSTD_BtFindBestMatch(
-            ms,
-            ip,
-            iLimit,
-            offBasePtr,
-            6,
-            ZSTD_dictMode_e.ZSTD_extDict
-        );
+        return ZSTD_BtFindBestMatch(ms, ip, iLimit, offBasePtr, 6, ZSTD_dictMode_e.ZSTD_extDict);
     }
 
     private static nuint ZSTD_BtFindBestMatch_dictMatchState_4(
@@ -3477,57 +3281,27 @@ public static unsafe partial class Methods
                 if (mls == 4)
                 {
                     if (rowLog == 4)
-                        return ZSTD_RowFindBestMatch_dictMatchState_4_4(
-                            ms,
-                            ip,
-                            iend,
-                            offsetPtr
-                        );
+                        return ZSTD_RowFindBestMatch_dictMatchState_4_4(ms, ip, iend, offsetPtr);
                     if (rowLog == 5)
-                        return ZSTD_RowFindBestMatch_dictMatchState_4_5(
-                            ms,
-                            ip,
-                            iend,
-                            offsetPtr
-                        );
+                        return ZSTD_RowFindBestMatch_dictMatchState_4_5(ms, ip, iend, offsetPtr);
                     return ZSTD_RowFindBestMatch_dictMatchState_4_6(ms, ip, iend, offsetPtr);
                 }
 
                 if (mls == 5)
                 {
                     if (rowLog == 4)
-                        return ZSTD_RowFindBestMatch_dictMatchState_5_4(
-                            ms,
-                            ip,
-                            iend,
-                            offsetPtr
-                        );
+                        return ZSTD_RowFindBestMatch_dictMatchState_5_4(ms, ip, iend, offsetPtr);
                     if (rowLog == 5)
-                        return ZSTD_RowFindBestMatch_dictMatchState_5_5(
-                            ms,
-                            ip,
-                            iend,
-                            offsetPtr
-                        );
+                        return ZSTD_RowFindBestMatch_dictMatchState_5_5(ms, ip, iend, offsetPtr);
                     return ZSTD_RowFindBestMatch_dictMatchState_5_6(ms, ip, iend, offsetPtr);
                 }
 
                 if (mls == 6)
                 {
                     if (rowLog == 4)
-                        return ZSTD_RowFindBestMatch_dictMatchState_6_4(
-                            ms,
-                            ip,
-                            iend,
-                            offsetPtr
-                        );
+                        return ZSTD_RowFindBestMatch_dictMatchState_6_4(ms, ip, iend, offsetPtr);
                     if (rowLog == 5)
-                        return ZSTD_RowFindBestMatch_dictMatchState_6_5(
-                            ms,
-                            ip,
-                            iend,
-                            offsetPtr
-                        );
+                        return ZSTD_RowFindBestMatch_dictMatchState_6_5(ms, ip, iend, offsetPtr);
                     return ZSTD_RowFindBestMatch_dictMatchState_6_6(ms, ip, iend, offsetPtr);
                 }
             }
@@ -3554,57 +3328,27 @@ public static unsafe partial class Methods
             if (mls == 4)
             {
                 if (rowLog == 4)
-                    return ZSTD_RowFindBestMatch_dedicatedDictSearch_4_4(
-                        ms,
-                        ip,
-                        iend,
-                        offsetPtr
-                    );
+                    return ZSTD_RowFindBestMatch_dedicatedDictSearch_4_4(ms, ip, iend, offsetPtr);
                 if (rowLog == 5)
-                    return ZSTD_RowFindBestMatch_dedicatedDictSearch_4_5(
-                        ms,
-                        ip,
-                        iend,
-                        offsetPtr
-                    );
+                    return ZSTD_RowFindBestMatch_dedicatedDictSearch_4_5(ms, ip, iend, offsetPtr);
                 return ZSTD_RowFindBestMatch_dedicatedDictSearch_4_6(ms, ip, iend, offsetPtr);
             }
 
             if (mls == 5)
             {
                 if (rowLog == 4)
-                    return ZSTD_RowFindBestMatch_dedicatedDictSearch_5_4(
-                        ms,
-                        ip,
-                        iend,
-                        offsetPtr
-                    );
+                    return ZSTD_RowFindBestMatch_dedicatedDictSearch_5_4(ms, ip, iend, offsetPtr);
                 if (rowLog == 5)
-                    return ZSTD_RowFindBestMatch_dedicatedDictSearch_5_5(
-                        ms,
-                        ip,
-                        iend,
-                        offsetPtr
-                    );
+                    return ZSTD_RowFindBestMatch_dedicatedDictSearch_5_5(ms, ip, iend, offsetPtr);
                 return ZSTD_RowFindBestMatch_dedicatedDictSearch_5_6(ms, ip, iend, offsetPtr);
             }
 
             if (mls == 6)
             {
                 if (rowLog == 4)
-                    return ZSTD_RowFindBestMatch_dedicatedDictSearch_6_4(
-                        ms,
-                        ip,
-                        iend,
-                        offsetPtr
-                    );
+                    return ZSTD_RowFindBestMatch_dedicatedDictSearch_6_4(ms, ip, iend, offsetPtr);
                 if (rowLog == 5)
-                    return ZSTD_RowFindBestMatch_dedicatedDictSearch_6_5(
-                        ms,
-                        ip,
-                        iend,
-                        offsetPtr
-                    );
+                    return ZSTD_RowFindBestMatch_dedicatedDictSearch_6_5(ms, ip, iend, offsetPtr);
                 return ZSTD_RowFindBestMatch_dedicatedDictSearch_6_6(ms, ip, iend, offsetPtr);
             }
         }
@@ -3658,9 +3402,9 @@ public static unsafe partial class Methods
             : ms->cParams.searchLog <= 6 ? ms->cParams.searchLog
             : 6;
         uint offset_1 = rep[0],
-             offset_2 = rep[1];
+            offset_2 = rep[1];
         uint offsetSaved1 = 0,
-             offsetSaved2 = 0;
+            offsetSaved2 = 0;
         int isDMS = dictMode == ZSTD_dictMode_e.ZSTD_dictMatchState ? 1 : 0;
         int isDDS = dictMode == ZSTD_dictMode_e.ZSTD_dedicatedDictSearch ? 1 : 0;
         int isDxS = isDMS != 0 || isDDS != 0 ? 1 : 0;
@@ -3827,9 +3571,7 @@ public static unsafe partial class Methods
                                     prefixLowest
                                 ) + 4;
                             int gain2 = (int)(mlRep * 3);
-                            int gain1 = (int)(
-                                matchLength * 3 - ZSTD_highbit32((uint)offBase) + 1
-                            );
+                            int gain1 = (int)(matchLength * 3 - ZSTD_highbit32((uint)offBase) + 1);
                             if (mlRep >= 4 && gain2 > gain1)
                             {
                                 matchLength = mlRep;
@@ -3877,9 +3619,7 @@ public static unsafe partial class Methods
                         {
                             nuint mlRep = ZSTD_count(ip + 4, ip + 4 - offset_1, iend) + 4;
                             int gain2 = (int)(mlRep * 4);
-                            int gain1 = (int)(
-                                matchLength * 4 - ZSTD_highbit32((uint)offBase) + 1
-                            );
+                            int gain1 = (int)(matchLength * 4 - ZSTD_highbit32((uint)offBase) + 1);
                             if (mlRep >= 4 && gain2 > gain1)
                             {
                                 matchLength = mlRep;
@@ -3902,8 +3642,7 @@ public static unsafe partial class Methods
                                 && MEM_read32(repMatch) == MEM_read32(ip)
                             )
                             {
-                                byte* repMatchEnd =
-                                    repIndex < prefixLowestIndex ? dictEnd : iend;
+                                byte* repMatchEnd = repIndex < prefixLowestIndex ? dictEnd : iend;
                                 nuint mlRep =
                                     ZSTD_count_2segments(
                                         ip + 4,
@@ -3941,9 +3680,7 @@ public static unsafe partial class Methods
                             );
                             /* raw approx */
                             int gain2 = (int)(ml2 * 4 - ZSTD_highbit32((uint)ofbCandidate));
-                            int gain1 = (int)(
-                                matchLength * 4 - ZSTD_highbit32((uint)offBase) + 7
-                            );
+                            int gain1 = (int)(matchLength * 4 - ZSTD_highbit32((uint)offBase) + 7);
                             if (ml2 >= 4 && gain2 > gain1)
                             {
                                 matchLength = ml2;
@@ -4030,13 +3767,8 @@ public static unsafe partial class Methods
                     {
                         byte* repEnd2 = repIndex < prefixLowestIndex ? dictEnd : iend;
                         matchLength =
-                            ZSTD_count_2segments(
-                                ip + 4,
-                                repMatch + 4,
-                                iend,
-                                repEnd2,
-                                prefixLowest
-                            ) + 4;
+                            ZSTD_count_2segments(ip + 4, repMatch + 4, iend, repEnd2, prefixLowest)
+                            + 4;
                         offBase = offset_2;
                         offset_2 = offset_1;
                         offset_1 = (uint)offBase;
@@ -4054,9 +3786,7 @@ public static unsafe partial class Methods
 
             if (dictMode == ZSTD_dictMode_e.ZSTD_noDict)
             {
-                while (
-                    ip <= ilimit && offset_2 > 0 && MEM_read32(ip) == MEM_read32(ip - offset_2)
-                )
+                while (ip <= ilimit && offset_2 > 0 && MEM_read32(ip) == MEM_read32(ip - offset_2))
                 {
                     matchLength = ZSTD_count(ip + 4, ip + 4 - offset_2, iend) + 4;
                     offBase = offset_2;
@@ -4510,7 +4240,7 @@ public static unsafe partial class Methods
             : ms->cParams.searchLog <= 6 ? ms->cParams.searchLog
             : 6;
         uint offset_1 = rep[0],
-             offset_2 = rep[1];
+            offset_2 = rep[1];
         ms->lazySkipping = 0;
         ip += ip == prefixStart ? 1 : 0;
         if (searchMethod == searchMethod_e.search_rowHash)
@@ -4707,9 +4437,7 @@ public static unsafe partial class Methods
                             );
                             /* raw approx */
                             int gain2 = (int)(ml2 * 4 - ZSTD_highbit32((uint)ofbCandidate));
-                            int gain1 = (int)(
-                                matchLength * 4 - ZSTD_highbit32((uint)offBase) + 7
-                            );
+                            int gain1 = (int)(matchLength * 4 - ZSTD_highbit32((uint)offBase) + 7);
                             if (ml2 >= 4 && gain2 > gain1)
                             {
                                 matchLength = ml2;
@@ -4727,8 +4455,7 @@ public static unsafe partial class Methods
             {
                 assert(offBase > 3);
                 uint matchIndex = (uint)((nuint)(start - @base) - (offBase - 3));
-                byte* match =
-                    matchIndex < dictLimit ? dictBase + matchIndex : @base + matchIndex;
+                byte* match = matchIndex < dictLimit ? dictBase + matchIndex : @base + matchIndex;
                 byte* mStart = matchIndex < dictLimit ? dictStart : prefixStart;
                 while (start > anchor && match > mStart && start[-1] == match[-1])
                 {
@@ -4777,13 +4504,8 @@ public static unsafe partial class Methods
                         /* repcode detected we should take it */
                         byte* repEnd = repIndex < dictLimit ? dictEnd : iend;
                         matchLength =
-                            ZSTD_count_2segments(
-                                ip + 4,
-                                repMatch + 4,
-                                iend,
-                                repEnd,
-                                prefixStart
-                            ) + 4;
+                            ZSTD_count_2segments(ip + 4, repMatch + 4, iend, repEnd, prefixStart)
+                            + 4;
                         offBase = offset_2;
                         offset_2 = offset_1;
                         offset_1 = (uint)offBase;

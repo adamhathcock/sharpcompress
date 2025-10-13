@@ -157,9 +157,7 @@ public static unsafe partial class Methods
             while (Counting1[maxSymbolValue] == 0)
                 maxSymbolValue--;
             if (check != default && maxSymbolValue > *maxSymbolValuePtr)
-                return unchecked(
-                    (nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_maxSymbolValue_tooSmall)
-                );
+                return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_maxSymbolValue_tooSmall));
             *maxSymbolValuePtr = maxSymbolValue;
             memmove(count, Counting1, countSize);
         }
@@ -260,12 +258,7 @@ public static unsafe partial class Methods
      *           or an error code, which can be tested using HIST_isError().
      *           note : if return == srcSize, there is only one symbol.
      */
-    private static nuint HIST_count(
-        uint* count,
-        uint* maxSymbolValuePtr,
-        void* src,
-        nuint srcSize
-    )
+    private static nuint HIST_count(uint* count, uint* maxSymbolValuePtr, void* src, nuint srcSize)
     {
         uint* tmpCounters = stackalloc uint[1024];
         return HIST_count_wksp(

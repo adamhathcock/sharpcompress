@@ -99,13 +99,13 @@ public static unsafe partial class Methods
     }
 
 #if NET7_0_OR_GREATER
-        private static ReadOnlySpan<byte> Span_dummy =>
-            new byte[10] { 0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc, 0xde, 0xf0, 0xe2, 0xb4 };
-        private static byte* dummy =>
-            (byte*)
-                System.Runtime.CompilerServices.Unsafe.AsPointer(
-                    ref MemoryMarshal.GetReference(Span_dummy)
-                );
+    private static ReadOnlySpan<byte> Span_dummy =>
+        new byte[10] { 0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc, 0xde, 0xf0, 0xe2, 0xb4 };
+    private static byte* dummy =>
+        (byte*)
+            System.Runtime.CompilerServices.Unsafe.AsPointer(
+                ref MemoryMarshal.GetReference(Span_dummy)
+            );
 #else
 
     private static readonly byte* dummy = GetArrayPointer(
@@ -138,9 +138,9 @@ public static unsafe partial class Methods
         byte* iend = istart + srcSize;
         byte* ilimit = iend - 8;
         uint offset_1 = rep[0],
-             offset_2 = rep[1];
+            offset_2 = rep[1];
         uint offsetSaved1 = 0,
-             offsetSaved2 = 0;
+            offsetSaved2 = 0;
         nuint mLength;
         uint offset;
         uint curr;
@@ -252,11 +252,11 @@ public static unsafe partial class Methods
                 if (ip1 >= nextStep)
                 {
 #if NETCOREAPP3_0_OR_GREATER
-                        if (System.Runtime.Intrinsics.X86.Sse.IsSupported)
-                        {
-                            System.Runtime.Intrinsics.X86.Sse.Prefetch0(ip1 + 64);
-                            System.Runtime.Intrinsics.X86.Sse.Prefetch0(ip1 + 128);
-                        }
+                    if (System.Runtime.Intrinsics.X86.Sse.IsSupported)
+                    {
+                        System.Runtime.Intrinsics.X86.Sse.Prefetch0(ip1 + 64);
+                        System.Runtime.Intrinsics.X86.Sse.Prefetch0(ip1 + 128);
+                    }
 #endif
 
                     step++;
@@ -319,9 +319,7 @@ public static unsafe partial class Methods
                     hashSmall[ZSTD_hashPtr(ip - 1, hBitsS, mls)] = (uint)(ip - 1 - @base);
                 }
 
-                while (
-                    ip <= ilimit && offset_2 > 0 && MEM_read32(ip) == MEM_read32(ip - offset_2)
-                )
+                while (ip <= ilimit && offset_2 > 0 && MEM_read32(ip) == MEM_read32(ip - offset_2))
                 {
                     /* store sequence */
                     nuint rLength = ZSTD_count(ip + 4, ip + 4 - offset_2, iend) + 4;
@@ -368,7 +366,7 @@ public static unsafe partial class Methods
         byte* iend = istart + srcSize;
         byte* ilimit = iend - 8;
         uint offset_1 = rep[0],
-             offset_2 = rep[1];
+            offset_2 = rep[1];
         ZSTD_MatchState_t* dms = ms->dictMatchState;
         ZSTD_compressionParameters* dictCParams = &dms->cParams;
         uint* dictHashLong = dms->hashTable;
@@ -393,10 +391,10 @@ public static unsafe partial class Methods
                 for (_pos = 0; _pos < _size; _pos += 64)
                 {
 #if NETCOREAPP3_0_OR_GREATER
-                        if (System.Runtime.Intrinsics.X86.Sse.IsSupported)
-                        {
-                            System.Runtime.Intrinsics.X86.Sse.Prefetch1(_ptr + _pos);
-                        }
+                    if (System.Runtime.Intrinsics.X86.Sse.IsSupported)
+                    {
+                        System.Runtime.Intrinsics.X86.Sse.Prefetch1(_ptr + _pos);
+                    }
 #endif
                 }
             }
@@ -408,10 +406,10 @@ public static unsafe partial class Methods
                 for (_pos = 0; _pos < _size; _pos += 64)
                 {
 #if NETCOREAPP3_0_OR_GREATER
-                        if (System.Runtime.Intrinsics.X86.Sse.IsSupported)
-                        {
-                            System.Runtime.Intrinsics.X86.Sse.Prefetch1(_ptr + _pos);
-                        }
+                    if (System.Runtime.Intrinsics.X86.Sse.IsSupported)
+                    {
+                        System.Runtime.Intrinsics.X86.Sse.Prefetch1(_ptr + _pos);
+                    }
 #endif
                 }
             }
@@ -450,13 +448,8 @@ public static unsafe partial class Methods
             {
                 byte* repMatchEnd = repIndex < prefixLowestIndex ? dictEnd : iend;
                 mLength =
-                    ZSTD_count_2segments(
-                        ip + 1 + 4,
-                        repMatch + 4,
-                        iend,
-                        repMatchEnd,
-                        prefixLowest
-                    ) + 4;
+                    ZSTD_count_2segments(ip + 1 + 4, repMatch + 4, iend, repMatchEnd, prefixLowest)
+                    + 4;
                 ip++;
                 assert(1 >= 1);
                 assert(1 <= 3);
@@ -486,13 +479,8 @@ public static unsafe partial class Methods
                 if (dictMatchL > dictStart && MEM_read64(dictMatchL) == MEM_read64(ip))
                 {
                     mLength =
-                        ZSTD_count_2segments(
-                            ip + 8,
-                            dictMatchL + 8,
-                            iend,
-                            dictEnd,
-                            prefixLowest
-                        ) + 8;
+                        ZSTD_count_2segments(ip + 8, dictMatchL + 8, iend, dictEnd, prefixLowest)
+                        + 8;
                     offset = curr - dictMatchIndexL - dictIndexDelta;
                     while (ip > anchor && dictMatchL > dictStart && ip[-1] == dictMatchL[-1])
                     {
@@ -538,10 +526,7 @@ public static unsafe partial class Methods
                 );
                 byte* matchL3 = @base + matchIndexL3;
                 hashLong[hl3] = curr + 1;
-                if (
-                    matchIndexL3 >= prefixLowestIndex
-                    && MEM_read64(matchL3) == MEM_read64(ip + 1)
-                )
+                if (matchIndexL3 >= prefixLowestIndex && MEM_read64(matchL3) == MEM_read64(ip + 1))
                 {
                     mLength = ZSTD_count(ip + 9, matchL3 + 8, iend) + 8;
                     ip++;
@@ -561,10 +546,7 @@ public static unsafe partial class Methods
                     uint dictMatchIndexL3 = dictMatchIndexAndTagL3 >> 8;
                     byte* dictMatchL3 = dictBase + dictMatchIndexL3;
                     assert(dictMatchL3 < dictEnd);
-                    if (
-                        dictMatchL3 > dictStart
-                        && MEM_read64(dictMatchL3) == MEM_read64(ip + 1)
-                    )
+                    if (dictMatchL3 > dictStart && MEM_read64(dictMatchL3) == MEM_read64(ip + 1))
                     {
                         mLength =
                             ZSTD_count_2segments(
@@ -576,9 +558,7 @@ public static unsafe partial class Methods
                             ) + 8;
                         ip++;
                         offset = curr + 1 - dictMatchIndexL3 - dictIndexDelta;
-                        while (
-                            ip > anchor && dictMatchL3 > dictStart && ip[-1] == dictMatchL3[-1]
-                        )
+                        while (ip > anchor && dictMatchL3 > dictStart && ip[-1] == dictMatchL3[-1])
                         {
                             ip--;
                             dictMatchL3--;
@@ -592,8 +572,7 @@ public static unsafe partial class Methods
 
             if (matchIndexS < prefixLowestIndex)
             {
-                mLength =
-                    ZSTD_count_2segments(ip + 4, match + 4, iend, dictEnd, prefixLowest) + 4;
+                mLength = ZSTD_count_2segments(ip + 4, match + 4, iend, dictEnd, prefixLowest) + 4;
                 offset = curr - matchIndexS;
                 while (ip > anchor && match > dictStart && ip[-1] == match[-1])
                 {
@@ -647,13 +626,8 @@ public static unsafe partial class Methods
                     {
                         byte* repEnd2 = repIndex2 < prefixLowestIndex ? dictEnd : iend;
                         nuint repLength2 =
-                            ZSTD_count_2segments(
-                                ip + 4,
-                                repMatch2 + 4,
-                                iend,
-                                repEnd2,
-                                prefixLowest
-                            ) + 4;
+                            ZSTD_count_2segments(ip + 4, repMatch2 + 4, iend, repEnd2, prefixLowest)
+                            + 4;
                         /* swap offset_2 <=> offset_1 */
                         uint tmpOffset = offset_2;
                         offset_2 = offset_1;
@@ -894,7 +868,7 @@ public static unsafe partial class Methods
         byte* dictStart = dictBase + dictStartIndex;
         byte* dictEnd = dictBase + prefixStartIndex;
         uint offset_1 = rep[0],
-             offset_2 = rep[1];
+            offset_2 = rep[1];
         if (prefixStartIndex == dictStartIndex)
             return ZSTD_compressBlock_doubleFast(ms, seqStore, rep, src, srcSize);
         while (ip < ilimit)
@@ -924,13 +898,8 @@ public static unsafe partial class Methods
             {
                 byte* repMatchEnd = repIndex < prefixStartIndex ? dictEnd : iend;
                 mLength =
-                    ZSTD_count_2segments(
-                        ip + 1 + 4,
-                        repMatch + 4,
-                        iend,
-                        repMatchEnd,
-                        prefixStart
-                    ) + 4;
+                    ZSTD_count_2segments(ip + 1 + 4, repMatch + 4, iend, repMatchEnd, prefixStart)
+                    + 4;
                 ip++;
                 assert(1 >= 1);
                 assert(1 <= 3);
@@ -941,8 +910,7 @@ public static unsafe partial class Methods
                 if (matchLongIndex > dictStartIndex && MEM_read64(matchLong) == MEM_read64(ip))
                 {
                     byte* matchEnd = matchLongIndex < prefixStartIndex ? dictEnd : iend;
-                    byte* lowMatchPtr =
-                        matchLongIndex < prefixStartIndex ? dictStart : prefixStart;
+                    byte* lowMatchPtr = matchLongIndex < prefixStartIndex ? dictStart : prefixStart;
                     uint offset;
                     mLength =
                         ZSTD_count_2segments(ip + 8, matchLong + 8, iend, matchEnd, prefixStart)
@@ -975,22 +943,14 @@ public static unsafe partial class Methods
                     byte* match3 = match3Base + matchIndex3;
                     uint offset;
                     hashLong[h3] = curr + 1;
-                    if (
-                        matchIndex3 > dictStartIndex
-                        && MEM_read64(match3) == MEM_read64(ip + 1)
-                    )
+                    if (matchIndex3 > dictStartIndex && MEM_read64(match3) == MEM_read64(ip + 1))
                     {
                         byte* matchEnd = matchIndex3 < prefixStartIndex ? dictEnd : iend;
                         byte* lowMatchPtr =
                             matchIndex3 < prefixStartIndex ? dictStart : prefixStart;
                         mLength =
-                            ZSTD_count_2segments(
-                                ip + 9,
-                                match3 + 8,
-                                iend,
-                                matchEnd,
-                                prefixStart
-                            ) + 8;
+                            ZSTD_count_2segments(ip + 9, match3 + 8, iend, matchEnd, prefixStart)
+                            + 8;
                         ip++;
                         offset = curr + 1 - matchIndex3;
                         while (ip > anchor && match3 > lowMatchPtr && ip[-1] == match3[-1])
@@ -1003,8 +963,7 @@ public static unsafe partial class Methods
                     else
                     {
                         byte* matchEnd = matchIndex < prefixStartIndex ? dictEnd : iend;
-                        byte* lowMatchPtr =
-                            matchIndex < prefixStartIndex ? dictStart : prefixStart;
+                        byte* lowMatchPtr = matchIndex < prefixStartIndex ? dictStart : prefixStart;
                         mLength =
                             ZSTD_count_2segments(ip + 4, match + 4, iend, matchEnd, prefixStart)
                             + 4;
@@ -1064,13 +1023,8 @@ public static unsafe partial class Methods
                     {
                         byte* repEnd2 = repIndex2 < prefixStartIndex ? dictEnd : iend;
                         nuint repLength2 =
-                            ZSTD_count_2segments(
-                                ip + 4,
-                                repMatch2 + 4,
-                                iend,
-                                repEnd2,
-                                prefixStart
-                            ) + 4;
+                            ZSTD_count_2segments(ip + 4, repMatch2 + 4, iend, repEnd2, prefixStart)
+                            + 4;
                         /* swap offset_2 <=> offset_1 */
                         uint tmpOffset = offset_2;
                         offset_2 = offset_1;
@@ -1103,14 +1057,7 @@ public static unsafe partial class Methods
         nuint srcSize
     )
     {
-        return ZSTD_compressBlock_doubleFast_extDict_generic(
-            ms,
-            seqStore,
-            rep,
-            src,
-            srcSize,
-            4
-        );
+        return ZSTD_compressBlock_doubleFast_extDict_generic(ms, seqStore, rep, src, srcSize, 4);
     }
 
     private static nuint ZSTD_compressBlock_doubleFast_extDict_5(
@@ -1121,14 +1068,7 @@ public static unsafe partial class Methods
         nuint srcSize
     )
     {
-        return ZSTD_compressBlock_doubleFast_extDict_generic(
-            ms,
-            seqStore,
-            rep,
-            src,
-            srcSize,
-            5
-        );
+        return ZSTD_compressBlock_doubleFast_extDict_generic(ms, seqStore, rep, src, srcSize, 5);
     }
 
     private static nuint ZSTD_compressBlock_doubleFast_extDict_6(
@@ -1139,14 +1079,7 @@ public static unsafe partial class Methods
         nuint srcSize
     )
     {
-        return ZSTD_compressBlock_doubleFast_extDict_generic(
-            ms,
-            seqStore,
-            rep,
-            src,
-            srcSize,
-            6
-        );
+        return ZSTD_compressBlock_doubleFast_extDict_generic(ms, seqStore, rep, src, srcSize, 6);
     }
 
     private static nuint ZSTD_compressBlock_doubleFast_extDict_7(
@@ -1157,14 +1090,7 @@ public static unsafe partial class Methods
         nuint srcSize
     )
     {
-        return ZSTD_compressBlock_doubleFast_extDict_generic(
-            ms,
-            seqStore,
-            rep,
-            src,
-            srcSize,
-            7
-        );
+        return ZSTD_compressBlock_doubleFast_extDict_generic(ms, seqStore, rep, src, srcSize, 7);
     }
 
     private static nuint ZSTD_compressBlock_doubleFast_extDict(

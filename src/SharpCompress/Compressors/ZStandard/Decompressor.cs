@@ -36,17 +36,17 @@ public unsafe class Decompressor : IDisposable
     {
         using var dctx = handle.Acquire();
         fixed (byte* dictPtr = dict)
-            Unsafe.Methods
-                  .ZSTD_DCtx_loadDictionary(dctx, dictPtr, (nuint)dict.Length)
-                  .EnsureZstdSuccess();
+            Unsafe
+                .Methods.ZSTD_DCtx_loadDictionary(dctx, dictPtr, (nuint)dict.Length)
+                .EnsureZstdSuccess();
     }
 
     public static ulong GetDecompressedSize(ReadOnlySpan<byte> src)
     {
         fixed (byte* srcPtr = src)
-            return Unsafe.Methods
-                         .ZSTD_decompressBound(srcPtr, (nuint)src.Length)
-                         .EnsureContentSizeOk();
+            return Unsafe
+                .Methods.ZSTD_decompressBound(srcPtr, (nuint)src.Length)
+                .EnsureContentSizeOk();
     }
 
     public static ulong GetDecompressedSize(ArraySegment<byte> src) =>
@@ -84,15 +84,15 @@ public unsafe class Decompressor : IDisposable
         {
             using var dctx = handle.Acquire();
             return (int)
-                Unsafe.Methods
-                      .ZSTD_decompressDCtx(
-                          dctx,
-                          destPtr,
-                          (nuint)dest.Length,
-                          srcPtr,
-                          (nuint)src.Length
-                      )
-                      .EnsureZstdSuccess();
+                Unsafe
+                    .Methods.ZSTD_decompressDCtx(
+                        dctx,
+                        destPtr,
+                        (nuint)dest.Length,
+                        srcPtr,
+                        (nuint)src.Length
+                    )
+                    .EnsureZstdSuccess();
         }
     }
 
@@ -168,7 +168,9 @@ public unsafe class Decompressor : IDisposable
         fixed (ZSTD_outBuffer_s* outputPtr = &output)
         {
             using var dctx = handle.Acquire();
-            return Unsafe.Methods.ZSTD_decompressStream(dctx, outputPtr, inputPtr).EnsureZstdSuccess();
+            return Unsafe
+                .Methods.ZSTD_decompressStream(dctx, outputPtr, inputPtr)
+                .EnsureZstdSuccess();
         }
     }
 }

@@ -77,7 +77,7 @@ public class CompressionStream : Stream
 #if !NETSTANDARD2_0 && !NETFRAMEWORK
     public override async ValueTask DisposeAsync()
 #else
-        public async Task DisposeAsync()
+    public async Task DisposeAsync()
 #endif
     {
         if (compressor == null)
@@ -149,8 +149,8 @@ public class CompressionStream : Stream
     public override void Write(ReadOnlySpan<byte> buffer) =>
         WriteInternal(buffer, ZSTD_EndDirective.ZSTD_e_continue);
 #else
-        public void Write(ReadOnlySpan<byte> buffer) =>
-            WriteInternal(buffer, ZSTD_EndDirective.ZSTD_e_continue);
+    public void Write(ReadOnlySpan<byte> buffer) =>
+        WriteInternal(buffer, ZSTD_EndDirective.ZSTD_e_continue);
 #endif
 
     private void WriteInternal(ReadOnlySpan<byte> buffer, ZSTD_EndDirective directive)
@@ -172,9 +172,7 @@ public class CompressionStream : Stream
             if (written > 0)
                 innerStream.Write(outputBuffer, 0, written);
         } while (
-            directive == ZSTD_EndDirective.ZSTD_e_continue
-                ? input.pos < input.size
-                : remaining > 0
+            directive == ZSTD_EndDirective.ZSTD_e_continue ? input.pos < input.size : remaining > 0
         );
     }
 
@@ -185,11 +183,11 @@ public class CompressionStream : Stream
         CancellationToken cancellationToken = default
     )
 #else
-        private async Task WriteInternalAsync(
-            ReadOnlyMemory<byte>? buffer,
-            ZSTD_EndDirective directive,
-            CancellationToken cancellationToken = default
-        )
+    private async Task WriteInternalAsync(
+        ReadOnlyMemory<byte>? buffer,
+        ZSTD_EndDirective directive,
+        CancellationToken cancellationToken = default
+    )
 #endif
 
     {
@@ -213,12 +211,10 @@ public class CompressionStream : Stream
             var written = (int)output.pos;
             if (written > 0)
                 await innerStream
-                      .WriteAsync(outputBuffer, 0, written, cancellationToken)
-                      .ConfigureAwait(false);
+                    .WriteAsync(outputBuffer, 0, written, cancellationToken)
+                    .ConfigureAwait(false);
         } while (
-            directive == ZSTD_EndDirective.ZSTD_e_continue
-                ? input.pos < input.size
-                : remaining > 0
+            directive == ZSTD_EndDirective.ZSTD_e_continue ? input.pos < input.size : remaining > 0
         );
     }
 
@@ -229,8 +225,7 @@ public class CompressionStream : Stream
         int offset,
         int count,
         CancellationToken cancellationToken
-    ) =>
-        WriteAsync(new ReadOnlyMemory<byte>(buffer, offset, count), cancellationToken).AsTask();
+    ) => WriteAsync(new ReadOnlyMemory<byte>(buffer, offset, count), cancellationToken).AsTask();
 
     public override async ValueTask WriteAsync(
         ReadOnlyMemory<byte> buffer,
@@ -240,19 +235,19 @@ public class CompressionStream : Stream
             .ConfigureAwait(false);
 #else
 
-        public override Task WriteAsync(
-            byte[] buffer,
-            int offset,
-            int count,
-            CancellationToken cancellationToken
-        ) => WriteAsync(new ReadOnlyMemory<byte>(buffer, offset, count), cancellationToken);
+    public override Task WriteAsync(
+        byte[] buffer,
+        int offset,
+        int count,
+        CancellationToken cancellationToken
+    ) => WriteAsync(new ReadOnlyMemory<byte>(buffer, offset, count), cancellationToken);
 
-        public async Task WriteAsync(
-            ReadOnlyMemory<byte> buffer,
-            CancellationToken cancellationToken = default
-        ) =>
-            await WriteInternalAsync(buffer, ZSTD_EndDirective.ZSTD_e_continue, cancellationToken)
-                .ConfigureAwait(false);
+    public async Task WriteAsync(
+        ReadOnlyMemory<byte> buffer,
+        CancellationToken cancellationToken = default
+    ) =>
+        await WriteInternalAsync(buffer, ZSTD_EndDirective.ZSTD_e_continue, cancellationToken)
+            .ConfigureAwait(false);
 #endif
 
     internal unsafe nuint CompressStream(
@@ -267,9 +262,9 @@ public class CompressionStream : Stream
             input.src = inputBufferPtr;
             output.dst = outputBufferPtr;
             return compressor
-                   .NotNull()
-                   .CompressStream(ref input, ref output, directive)
-                   .EnsureZstdSuccess();
+                .NotNull()
+                .CompressStream(ref input, ref output, directive)
+                .EnsureZstdSuccess();
         }
     }
 
@@ -285,8 +280,7 @@ public class CompressionStream : Stream
         set => throw new NotSupportedException();
     }
 
-    public override long Seek(long offset, SeekOrigin origin) =>
-        throw new NotSupportedException();
+    public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
 
     public override void SetLength(long value) => throw new NotSupportedException();
 

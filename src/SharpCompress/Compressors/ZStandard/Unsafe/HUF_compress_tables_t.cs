@@ -9,11 +9,11 @@ public unsafe struct HUF_compress_tables_t
     public _wksps_e__Union wksps;
 
 #if NET8_0_OR_GREATER
-        [InlineArray(257)]
-        public unsafe struct _CTable_e__FixedBuffer
-        {
-            public nuint e0;
-        }
+    [InlineArray(257)]
+    public unsafe struct _CTable_e__FixedBuffer
+    {
+        public nuint e0;
+    }
 
 #else
     public unsafe struct _CTable_e__FixedBuffer

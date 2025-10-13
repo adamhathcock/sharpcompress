@@ -164,12 +164,7 @@ public static unsafe partial class Methods
      * @param align Whether @p input is aligned.
      * @return The calculated hash.
      */
-    private static uint XXH32_endian_align(
-        byte* input,
-        nuint len,
-        uint seed,
-        XXH_alignment align
-    )
+    private static uint XXH32_endian_align(byte* input, nuint len, uint seed, XXH_alignment align)
     {
         uint h32;
         if (len >= 16)
@@ -324,12 +319,7 @@ public static unsafe partial class Methods
         }
 
         h32 += state->total_len_32;
-        return XXH32_finalize(
-            h32,
-            (byte*)state->mem32,
-            state->memsize,
-            XXH_alignment.XXH_aligned
-        );
+        return XXH32_finalize(h32, (byte*)state->mem32, state->memsize, XXH_alignment.XXH_aligned);
     }
 
     /*! @ingroup XXH32_family */
@@ -426,9 +416,7 @@ public static unsafe partial class Methods
             ulong k1 = XXH64_round(0, XXH_readLE64_align(ptr, align));
             ptr += 8;
             hash ^= k1;
-            hash =
-                BitOperations.RotateLeft(hash, 27) * 0x9E3779B185EBCA87UL
-                + 0x85EBCA77C2B2AE63UL;
+            hash = BitOperations.RotateLeft(hash, 27) * 0x9E3779B185EBCA87UL + 0x85EBCA77C2B2AE63UL;
             len -= 8;
         }
 
@@ -436,9 +424,7 @@ public static unsafe partial class Methods
         {
             hash ^= XXH_readLE32_align(ptr, align) * 0x9E3779B185EBCA87UL;
             ptr += 4;
-            hash =
-                BitOperations.RotateLeft(hash, 23) * 0xC2B2AE3D27D4EB4FUL
-                + 0x165667B19E3779F9UL;
+            hash = BitOperations.RotateLeft(hash, 23) * 0xC2B2AE3D27D4EB4FUL + 0x165667B19E3779F9UL;
             len -= 4;
         }
 
@@ -460,12 +446,7 @@ public static unsafe partial class Methods
      * @param align Whether @p input is aligned.
      * @return The calculated hash.
      */
-    private static ulong XXH64_endian_align(
-        byte* input,
-        nuint len,
-        ulong seed,
-        XXH_alignment align
-    )
+    private static ulong XXH64_endian_align(byte* input, nuint len, ulong seed, XXH_alignment align)
     {
         ulong h64;
         if (len >= 32)

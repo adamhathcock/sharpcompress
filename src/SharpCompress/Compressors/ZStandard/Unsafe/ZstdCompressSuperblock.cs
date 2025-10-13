@@ -61,7 +61,7 @@ public static unsafe partial class Methods
         assert(litSize > 0);
         assert(
             hufMetadata->hType == SymbolEncodingType_e.set_compressed
-            || hufMetadata->hType == SymbolEncodingType_e.set_repeat
+                || hufMetadata->hType == SymbolEncodingType_e.set_repeat
         );
         if (writeEntropy != 0 && hufMetadata->hType == SymbolEncodingType_e.set_compressed)
         {
@@ -105,9 +105,7 @@ public static unsafe partial class Methods
             if (
                 lhSize
                 < (nuint)(
-                    3
-                    + (cLitSize >= 1 * (1 << 10) ? 1 : 0)
-                    + (cLitSize >= 16 * (1 << 10) ? 1 : 0)
+                    3 + (cLitSize >= 1 * (1 << 10) ? 1 : 0) + (cLitSize >= 16 * (1 << 10) ? 1 : 0)
                 )
             )
             {
@@ -131,16 +129,14 @@ public static unsafe partial class Methods
 
             case 4:
             {
-                uint lhc =
-                    (uint)(hType + (2 << 2)) + ((uint)litSize << 4) + ((uint)cLitSize << 18);
+                uint lhc = (uint)(hType + (2 << 2)) + ((uint)litSize << 4) + ((uint)cLitSize << 18);
                 MEM_writeLE32(ostart, lhc);
                 break;
             }
 
             case 5:
             {
-                uint lhc =
-                    (uint)(hType + (3 << 2)) + ((uint)litSize << 4) + ((uint)cLitSize << 22);
+                uint lhc = (uint)(hType + (3 << 2)) + ((uint)litSize << 4) + ((uint)cLitSize << 22);
                 MEM_writeLE32(ostart, lhc);
                 ostart[4] = (byte)(cLitSize >> 10);
                 break;
@@ -617,7 +613,7 @@ public static unsafe partial class Methods
     private static nuint countLiterals(SeqStore_t* seqStore, SeqDef_s* sp, nuint seqCount)
     {
         nuint n,
-              total = 0;
+            total = 0;
         assert(sp != null);
         for (n = 0; n < seqCount; n++)
         {
@@ -637,8 +633,8 @@ public static unsafe partial class Methods
     )
     {
         nuint n,
-              budget = 0,
-              inSize = 0;
+            budget = 0,
+            inSize = 0;
         /* generous estimate */
         nuint headerSize = (nuint)firstSubBlock * 120 * 256;
         assert(firstSubBlock == 0 || firstSubBlock == 1);
@@ -730,8 +726,8 @@ public static unsafe partial class Methods
                     ? (ebs.estBlockSize + targetCBlockSize / 2) / targetCBlockSize
                     : 1;
             nuint n,
-                  avgBlockBudget,
-                  blockBudgetSupp = 0;
+                avgBlockBudget,
+                blockBudgetSupp = 0;
             avgBlockBudget = ebs.estBlockSize * 256 / nbSubBlocks;
             if (ebs.estBlockSize > srcSize)
                 return 0;

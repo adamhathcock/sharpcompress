@@ -86,7 +86,7 @@ public static unsafe partial class Methods
     {
         nuint n;
         ulong hash,
-              mask;
+            mask;
         hash = state->rolling;
         mask = state->stopMask;
         n = 0;
@@ -180,13 +180,13 @@ public static unsafe partial class Methods
             {
                 assert(
                     @params->hashLog
-                    <= (uint)(
-                        (sizeof(nuint) == 4 ? 30 : 31) < 30
-                            ? sizeof(nuint) == 4
-                                ? 30
-                                : 31
-                            : 30
-                    )
+                        <= (uint)(
+                            (sizeof(nuint) == 4 ? 30 : 31) < 30
+                                ? sizeof(nuint) == 4
+                                    ? 30
+                                    : 31
+                                : 30
+                        )
                 );
                 if (@params->windowLog > @params->hashLog)
                 {
@@ -204,22 +204,22 @@ public static unsafe partial class Methods
         {
             @params->hashLog =
                 @params->windowLog - @params->hashRateLog <= 6 ? 6
-                    : @params->windowLog - @params->hashRateLog
-                      <= (uint)(
-                          (sizeof(nuint) == 4 ? 30 : 31) < 30
-                              ? sizeof(nuint) == 4
-                                  ? 30
-                                  : 31
-                              : 30
-                      )
-                        ? @params->windowLog - @params->hashRateLog
-                        : (uint)(
-                            (sizeof(nuint) == 4 ? 30 : 31) < 30
-                                ? sizeof(nuint) == 4
-                                    ? 30
-                                    : 31
-                                : 30
-                        );
+                : @params->windowLog - @params->hashRateLog
+                <= (uint)(
+                    (sizeof(nuint) == 4 ? 30 : 31) < 30
+                        ? sizeof(nuint) == 4
+                            ? 30
+                            : 31
+                        : 30
+                )
+                    ? @params->windowLog - @params->hashRateLog
+                : (uint)(
+                    (sizeof(nuint) == 4 ? 30 : 31) < 30
+                        ? sizeof(nuint) == 4
+                            ? 30
+                            : 31
+                        : 30
+                );
         }
 
         if (@params->minMatchLength == 0)
@@ -239,9 +239,7 @@ public static unsafe partial class Methods
         }
 
         @params->bucketSizeLog =
-            @params->bucketSizeLog < @params->hashLog
-                ? @params->bucketSizeLog
-                : @params->hashLog;
+            @params->bucketSizeLog < @params->hashLog ? @params->bucketSizeLog : @params->hashLog;
     }
 
     /** ZSTD_ldm_getTableSize() :
@@ -492,13 +490,7 @@ public static unsafe partial class Methods
             nuint hashed;
             uint n;
             numSplits = 0;
-            hashed = ZSTD_ldm_gear_feed(
-                &hashState,
-                ip,
-                (nuint)(ilimit - ip),
-                splits,
-                &numSplits
-            );
+            hashed = ZSTD_ldm_gear_feed(&hashState, ip, (nuint)(ilimit - ip), splits, &numSplits);
             for (n = 0; n < numSplits; n++)
             {
                 byte* split = ip + splits[n] - minMatchLength;
@@ -507,11 +499,7 @@ public static unsafe partial class Methods
                 candidates[n].split = split;
                 candidates[n].hash = hash;
                 candidates[n].checksum = (uint)(xxhash >> 32);
-                candidates[n].bucket = ZSTD_ldm_getBucket(
-                    ldmState,
-                    hash,
-                    @params->bucketSizeLog
-                );
+                candidates[n].bucket = ZSTD_ldm_getBucket(ldmState, hash, @params->bucketSizeLog);
 #if NETCOREAPP3_0_OR_GREATER
                 if (System.Runtime.Intrinsics.X86.Sse.IsSupported)
                 {
@@ -523,9 +511,9 @@ public static unsafe partial class Methods
             for (n = 0; n < numSplits; n++)
             {
                 nuint forwardMatchLength = 0,
-                      backwardMatchLength = 0,
-                      bestMatchLength = 0,
-                      mLength;
+                    backwardMatchLength = 0,
+                    bestMatchLength = 0,
+                    mLength;
                 uint offset;
                 byte* split = candidates[n].split;
                 uint checksum = candidates[n].checksum;
@@ -545,8 +533,8 @@ public static unsafe partial class Methods
                 for (cur = bucket; cur < bucket + entsPerBucket; cur++)
                 {
                     nuint curForwardMatchLength,
-                          curBackwardMatchLength,
-                          curTotalMatchLength;
+                        curBackwardMatchLength,
+                        curTotalMatchLength;
                     if (cur->checksum != checksum || cur->offset <= lowestIndex)
                     {
                         continue;
@@ -617,9 +605,7 @@ public static unsafe partial class Methods
                 {
                     rawSeq* seq = rawSeqStore->seq + rawSeqStore->size;
                     if (rawSeqStore->size == rawSeqStore->capacity)
-                        return unchecked(
-                            (nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dstSize_tooSmall)
-                        );
+                        return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dstSize_tooSmall));
                     seq->litLength = (uint)(split - backwardMatchLength - anchor);
                     seq->matchLength = (uint)mLength;
                     seq->offset = offset;
@@ -682,13 +668,12 @@ public static unsafe partial class Methods
         byte* istart = (byte*)src;
         byte* iend = istart + srcSize;
         const nuint kMaxChunkSize = 1 << 20;
-        nuint nbChunks =
-            srcSize / kMaxChunkSize + (nuint)(srcSize % kMaxChunkSize != 0 ? 1 : 0);
+        nuint nbChunks = srcSize / kMaxChunkSize + (nuint)(srcSize % kMaxChunkSize != 0 ? 1 : 0);
         nuint chunk;
         nuint leftoverSize = 0;
         assert(
             unchecked((uint)-1) - (MEM_64bits ? 3500U * (1 << 20) : 2000U * (1 << 20))
-            >= kMaxChunkSize
+                >= kMaxChunkSize
         );
         assert(ldmState->window.nextSrc >= (byte*)src + srcSize);
         assert(sequences->pos <= sequences->size);

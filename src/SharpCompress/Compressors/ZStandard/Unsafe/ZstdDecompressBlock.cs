@@ -20,8 +20,7 @@ public static unsafe partial class Methods
      ***************************************************************/
     private static nuint ZSTD_blockSizeMax(ZSTD_DCtx_s* dctx)
     {
-        nuint blockSizeMax =
-            dctx->isFrameDecompression != 0 ? dctx->fParams.blockSizeMax : 1 << 17;
+        nuint blockSizeMax = dctx->isFrameDecompression != 0 ? dctx->fParams.blockSizeMax : 1 << 17;
         assert(blockSizeMax <= 1 << 17);
         return blockSizeMax;
     }
@@ -65,9 +64,7 @@ public static unsafe partial class Methods
     {
         nuint blockSizeMax = ZSTD_blockSizeMax(dctx);
         assert(litSize <= blockSizeMax);
-        assert(
-            dctx->isFrameDecompression != 0 || streaming == streaming_operation.not_streaming
-        );
+        assert(dctx->isFrameDecompression != 0 || streaming == streaming_operation.not_streaming);
         assert(expectedWriteSize <= blockSizeMax);
         if (
             streaming == streaming_operation.not_streaming
@@ -148,206 +145,194 @@ public static unsafe partial class Methods
                         );
                     }
 
-                {
-                    nuint lhSize,
-                          litSize,
-                          litCSize;
-                    uint singleStream = 0;
-                    uint lhlCode = (uint)(istart[0] >> 2 & 3);
-                    uint lhc = MEM_readLE32(istart);
-                    nuint hufSuccess;
-                    nuint expectedWriteSize =
-                        blockSizeMax < dstCapacity ? blockSizeMax : dstCapacity;
-                    int flags =
-                        0
-                        | (
-                            ZSTD_DCtx_get_bmi2(dctx) != 0
-                                ? (int)HUF_flags_e.HUF_flags_bmi2
-                                : 0
-                        )
-                        | (
-                            dctx->disableHufAsm != 0
-                                ? (int)HUF_flags_e.HUF_flags_disableAsm
-                                : 0
-                        );
-                    switch (lhlCode)
                     {
-                        case 0:
-                        case 1:
-                        default:
-                            singleStream = lhlCode == 0 ? 1U : 0U;
-                            lhSize = 3;
-                            litSize = lhc >> 4 & 0x3FF;
-                            litCSize = lhc >> 14 & 0x3FF;
-                            break;
-                        case 2:
-                            lhSize = 4;
-                            litSize = lhc >> 4 & 0x3FFF;
-                            litCSize = lhc >> 18;
-                            break;
-                        case 3:
-                            lhSize = 5;
-                            litSize = lhc >> 4 & 0x3FFFF;
-                            litCSize = (lhc >> 22) + ((nuint)istart[4] << 10);
-                            break;
-                    }
+                        nuint lhSize,
+                            litSize,
+                            litCSize;
+                        uint singleStream = 0;
+                        uint lhlCode = (uint)(istart[0] >> 2 & 3);
+                        uint lhc = MEM_readLE32(istart);
+                        nuint hufSuccess;
+                        nuint expectedWriteSize =
+                            blockSizeMax < dstCapacity ? blockSizeMax : dstCapacity;
+                        int flags =
+                            0
+                            | (ZSTD_DCtx_get_bmi2(dctx) != 0 ? (int)HUF_flags_e.HUF_flags_bmi2 : 0)
+                            | (
+                                dctx->disableHufAsm != 0 ? (int)HUF_flags_e.HUF_flags_disableAsm : 0
+                            );
+                        switch (lhlCode)
+                        {
+                            case 0:
+                            case 1:
+                            default:
+                                singleStream = lhlCode == 0 ? 1U : 0U;
+                                lhSize = 3;
+                                litSize = lhc >> 4 & 0x3FF;
+                                litCSize = lhc >> 14 & 0x3FF;
+                                break;
+                            case 2:
+                                lhSize = 4;
+                                litSize = lhc >> 4 & 0x3FFF;
+                                litCSize = lhc >> 18;
+                                break;
+                            case 3:
+                                lhSize = 5;
+                                litSize = lhc >> 4 & 0x3FFFF;
+                                litCSize = (lhc >> 22) + ((nuint)istart[4] << 10);
+                                break;
+                        }
 
-                    if (litSize > 0 && dst == null)
-                    {
-                        return unchecked(
-                            (nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dstSize_tooSmall)
-                        );
-                    }
-
-                    if (litSize > blockSizeMax)
-                    {
-                        return unchecked(
-                            (nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected)
-                        );
-                    }
-
-                    if (singleStream == 0)
-                        if (litSize < 6)
+                        if (litSize > 0 && dst == null)
                         {
                             return unchecked(
-                                (nuint)(
-                                    -(int)ZSTD_ErrorCode.ZSTD_error_literals_headerWrong
-                                )
+                                (nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dstSize_tooSmall)
                             );
                         }
 
-                    if (litCSize + lhSize > srcSize)
-                    {
-                        return unchecked(
-                            (nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected)
-                        );
-                    }
-
-                    if (expectedWriteSize < litSize)
-                    {
-                        return unchecked(
-                            (nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dstSize_tooSmall)
-                        );
-                    }
-
-                    ZSTD_allocateLiteralsBuffer(
-                        dctx,
-                        dst,
-                        dstCapacity,
-                        litSize,
-                        streaming,
-                        expectedWriteSize,
-                        0
-                    );
-                    if (dctx->ddictIsCold != 0 && litSize > 768)
-                    {
-                        sbyte* _ptr = (sbyte*)dctx->HUFptr;
-                        const nuint _size = sizeof(uint) * 4097;
-                        nuint _pos;
-                        for (_pos = 0; _pos < _size; _pos += 64)
+                        if (litSize > blockSizeMax)
                         {
+                            return unchecked(
+                                (nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected)
+                            );
+                        }
+
+                        if (singleStream == 0)
+                            if (litSize < 6)
+                            {
+                                return unchecked(
+                                    (nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_literals_headerWrong)
+                                );
+                            }
+
+                        if (litCSize + lhSize > srcSize)
+                        {
+                            return unchecked(
+                                (nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected)
+                            );
+                        }
+
+                        if (expectedWriteSize < litSize)
+                        {
+                            return unchecked(
+                                (nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dstSize_tooSmall)
+                            );
+                        }
+
+                        ZSTD_allocateLiteralsBuffer(
+                            dctx,
+                            dst,
+                            dstCapacity,
+                            litSize,
+                            streaming,
+                            expectedWriteSize,
+                            0
+                        );
+                        if (dctx->ddictIsCold != 0 && litSize > 768)
+                        {
+                            sbyte* _ptr = (sbyte*)dctx->HUFptr;
+                            const nuint _size = sizeof(uint) * 4097;
+                            nuint _pos;
+                            for (_pos = 0; _pos < _size; _pos += 64)
+                            {
 #if NETCOREAPP3_0_OR_GREATER
-                                    if (System.Runtime.Intrinsics.X86.Sse.IsSupported)
-                                    {
-                                        System.Runtime.Intrinsics.X86.Sse.Prefetch1(_ptr + _pos);
-                                    }
+                                if (System.Runtime.Intrinsics.X86.Sse.IsSupported)
+                                {
+                                    System.Runtime.Intrinsics.X86.Sse.Prefetch1(_ptr + _pos);
+                                }
 #endif
+                            }
                         }
-                    }
 
-                    if (litEncType == SymbolEncodingType_e.set_repeat)
-                    {
-                        if (singleStream != 0)
+                        if (litEncType == SymbolEncodingType_e.set_repeat)
                         {
-                            hufSuccess = HUF_decompress1X_usingDTable(
-                                dctx->litBuffer,
-                                litSize,
-                                istart + lhSize,
-                                litCSize,
-                                dctx->HUFptr,
-                                flags
-                            );
+                            if (singleStream != 0)
+                            {
+                                hufSuccess = HUF_decompress1X_usingDTable(
+                                    dctx->litBuffer,
+                                    litSize,
+                                    istart + lhSize,
+                                    litCSize,
+                                    dctx->HUFptr,
+                                    flags
+                                );
+                            }
+                            else
+                            {
+                                assert(litSize >= 6);
+                                hufSuccess = HUF_decompress4X_usingDTable(
+                                    dctx->litBuffer,
+                                    litSize,
+                                    istart + lhSize,
+                                    litCSize,
+                                    dctx->HUFptr,
+                                    flags
+                                );
+                            }
                         }
                         else
                         {
-                            assert(litSize >= 6);
-                            hufSuccess = HUF_decompress4X_usingDTable(
-                                dctx->litBuffer,
-                                litSize,
-                                istart + lhSize,
-                                litCSize,
-                                dctx->HUFptr,
-                                flags
-                            );
+                            if (singleStream != 0)
+                            {
+                                hufSuccess = HUF_decompress1X1_DCtx_wksp(
+                                    dctx->entropy.hufTable,
+                                    dctx->litBuffer,
+                                    litSize,
+                                    istart + lhSize,
+                                    litCSize,
+                                    dctx->workspace,
+                                    sizeof(uint) * 640,
+                                    flags
+                                );
+                            }
+                            else
+                            {
+                                hufSuccess = HUF_decompress4X_hufOnly_wksp(
+                                    dctx->entropy.hufTable,
+                                    dctx->litBuffer,
+                                    litSize,
+                                    istart + lhSize,
+                                    litCSize,
+                                    dctx->workspace,
+                                    sizeof(uint) * 640,
+                                    flags
+                                );
+                            }
                         }
-                    }
-                    else
-                    {
-                        if (singleStream != 0)
+
+                        if (dctx->litBufferLocation == ZSTD_litLocation_e.ZSTD_split)
                         {
-                            hufSuccess = HUF_decompress1X1_DCtx_wksp(
-                                dctx->entropy.hufTable,
+                            assert(litSize > 1 << 16);
+                            memcpy(dctx->litExtraBuffer, dctx->litBufferEnd - (1 << 16), 1 << 16);
+                            memmove(
+                                dctx->litBuffer + (1 << 16) - 32,
                                 dctx->litBuffer,
-                                litSize,
-                                istart + lhSize,
-                                litCSize,
-                                dctx->workspace,
-                                sizeof(uint) * 640,
-                                flags
+                                litSize - (1 << 16)
                             );
+                            dctx->litBuffer += (1 << 16) - 32;
+                            dctx->litBufferEnd -= 32;
+                            assert(dctx->litBufferEnd <= (byte*)dst + blockSizeMax);
                         }
-                        else
+
+                        if (ERR_isError(hufSuccess))
                         {
-                            hufSuccess = HUF_decompress4X_hufOnly_wksp(
-                                dctx->entropy.hufTable,
-                                dctx->litBuffer,
-                                litSize,
-                                istart + lhSize,
-                                litCSize,
-                                dctx->workspace,
-                                sizeof(uint) * 640,
-                                flags
+                            return unchecked(
+                                (nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected)
                             );
                         }
-                    }
 
-                    if (dctx->litBufferLocation == ZSTD_litLocation_e.ZSTD_split)
-                    {
-                        assert(litSize > 1 << 16);
-                        memcpy(
-                            dctx->litExtraBuffer,
-                            dctx->litBufferEnd - (1 << 16),
-                            1 << 16
-                        );
-                        memmove(
-                            dctx->litBuffer + (1 << 16) - 32,
-                            dctx->litBuffer,
-                            litSize - (1 << 16)
-                        );
-                        dctx->litBuffer += (1 << 16) - 32;
-                        dctx->litBufferEnd -= 32;
-                        assert(dctx->litBufferEnd <= (byte*)dst + blockSizeMax);
+                        dctx->litPtr = dctx->litBuffer;
+                        dctx->litSize = litSize;
+                        dctx->litEntropy = 1;
+                        if (litEncType == SymbolEncodingType_e.set_compressed)
+                            dctx->HUFptr = dctx->entropy.hufTable;
+                        return litCSize + lhSize;
                     }
-
-                    if (ERR_isError(hufSuccess))
-                    {
-                        return unchecked(
-                            (nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected)
-                        );
-                    }
-
-                    dctx->litPtr = dctx->litBuffer;
-                    dctx->litSize = litSize;
-                    dctx->litEntropy = 1;
-                    if (litEncType == SymbolEncodingType_e.set_compressed)
-                        dctx->HUFptr = dctx->entropy.hufTable;
-                    return litCSize + lhSize;
-                }
 
                 case SymbolEncodingType_e.set_basic:
                 {
                     nuint litSize,
-                          lhSize;
+                        lhSize;
                     uint lhlCode = (uint)(istart[0] >> 2 & 3);
                     nuint expectedWriteSize =
                         blockSizeMax < dstCapacity ? blockSizeMax : dstCapacity;
@@ -378,9 +363,7 @@ public static unsafe partial class Methods
 
                     if (litSize > 0 && dst == null)
                     {
-                        return unchecked(
-                            (nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dstSize_tooSmall)
-                        );
+                        return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dstSize_tooSmall));
                     }
 
                     if (litSize > blockSizeMax)
@@ -392,9 +375,7 @@ public static unsafe partial class Methods
 
                     if (expectedWriteSize < litSize)
                     {
-                        return unchecked(
-                            (nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dstSize_tooSmall)
-                        );
+                        return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dstSize_tooSmall));
                     }
 
                     ZSTD_allocateLiteralsBuffer(
@@ -417,11 +398,7 @@ public static unsafe partial class Methods
 
                         if (dctx->litBufferLocation == ZSTD_litLocation_e.ZSTD_split)
                         {
-                            memcpy(
-                                dctx->litBuffer,
-                                istart + lhSize,
-                                (uint)(litSize - (1 << 16))
-                            );
+                            memcpy(dctx->litBuffer, istart + lhSize, (uint)(litSize - (1 << 16)));
                             memcpy(
                                 dctx->litExtraBuffer,
                                 istart + lhSize + litSize - (1 << 16),
@@ -449,7 +426,7 @@ public static unsafe partial class Methods
                 {
                     uint lhlCode = (uint)(istart[0] >> 2 & 3);
                     nuint litSize,
-                          lhSize;
+                        lhSize;
                     nuint expectedWriteSize =
                         blockSizeMax < dstCapacity ? blockSizeMax : dstCapacity;
                     switch (lhlCode)
@@ -486,9 +463,7 @@ public static unsafe partial class Methods
 
                     if (litSize > 0 && dst == null)
                     {
-                        return unchecked(
-                            (nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dstSize_tooSmall)
-                        );
+                        return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dstSize_tooSmall));
                     }
 
                     if (litSize > blockSizeMax)
@@ -500,9 +475,7 @@ public static unsafe partial class Methods
 
                     if (expectedWriteSize < litSize)
                     {
-                        return unchecked(
-                            (nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dstSize_tooSmall)
-                        );
+                        return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dstSize_tooSmall));
                     }
 
                     ZSTD_allocateLiteralsBuffer(
@@ -530,9 +503,7 @@ public static unsafe partial class Methods
                 }
 
                 default:
-                    return unchecked(
-                        (nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected)
-                    );
+                    return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected));
             }
         }
     }
@@ -635,94 +606,34 @@ public static unsafe partial class Methods
             new ZSTD_seqSymbol(nextState: 0, nbAdditionalBits: 6, nbBits: 4, baseValue: 61),
             new ZSTD_seqSymbol(nextState: 0, nbAdditionalBits: 9, nbBits: 5, baseValue: 509),
             new ZSTD_seqSymbol(nextState: 0, nbAdditionalBits: 15, nbBits: 5, baseValue: 32765),
-            new ZSTD_seqSymbol(
-                nextState: 0,
-                nbAdditionalBits: 21,
-                nbBits: 5,
-                baseValue: 2097149
-            ),
+            new ZSTD_seqSymbol(nextState: 0, nbAdditionalBits: 21, nbBits: 5, baseValue: 2097149),
             new ZSTD_seqSymbol(nextState: 0, nbAdditionalBits: 3, nbBits: 5, baseValue: 5),
             new ZSTD_seqSymbol(nextState: 0, nbAdditionalBits: 7, nbBits: 4, baseValue: 125),
             new ZSTD_seqSymbol(nextState: 0, nbAdditionalBits: 12, nbBits: 5, baseValue: 4093),
-            new ZSTD_seqSymbol(
-                nextState: 0,
-                nbAdditionalBits: 18,
-                nbBits: 5,
-                baseValue: 262141
-            ),
-            new ZSTD_seqSymbol(
-                nextState: 0,
-                nbAdditionalBits: 23,
-                nbBits: 5,
-                baseValue: 8388605
-            ),
+            new ZSTD_seqSymbol(nextState: 0, nbAdditionalBits: 18, nbBits: 5, baseValue: 262141),
+            new ZSTD_seqSymbol(nextState: 0, nbAdditionalBits: 23, nbBits: 5, baseValue: 8388605),
             new ZSTD_seqSymbol(nextState: 0, nbAdditionalBits: 5, nbBits: 5, baseValue: 29),
             new ZSTD_seqSymbol(nextState: 0, nbAdditionalBits: 8, nbBits: 4, baseValue: 253),
             new ZSTD_seqSymbol(nextState: 0, nbAdditionalBits: 14, nbBits: 5, baseValue: 16381),
-            new ZSTD_seqSymbol(
-                nextState: 0,
-                nbAdditionalBits: 20,
-                nbBits: 5,
-                baseValue: 1048573
-            ),
+            new ZSTD_seqSymbol(nextState: 0, nbAdditionalBits: 20, nbBits: 5, baseValue: 1048573),
             new ZSTD_seqSymbol(nextState: 0, nbAdditionalBits: 2, nbBits: 5, baseValue: 1),
             new ZSTD_seqSymbol(nextState: 16, nbAdditionalBits: 7, nbBits: 4, baseValue: 125),
             new ZSTD_seqSymbol(nextState: 0, nbAdditionalBits: 11, nbBits: 5, baseValue: 2045),
-            new ZSTD_seqSymbol(
-                nextState: 0,
-                nbAdditionalBits: 17,
-                nbBits: 5,
-                baseValue: 131069
-            ),
-            new ZSTD_seqSymbol(
-                nextState: 0,
-                nbAdditionalBits: 22,
-                nbBits: 5,
-                baseValue: 4194301
-            ),
+            new ZSTD_seqSymbol(nextState: 0, nbAdditionalBits: 17, nbBits: 5, baseValue: 131069),
+            new ZSTD_seqSymbol(nextState: 0, nbAdditionalBits: 22, nbBits: 5, baseValue: 4194301),
             new ZSTD_seqSymbol(nextState: 0, nbAdditionalBits: 4, nbBits: 5, baseValue: 13),
             new ZSTD_seqSymbol(nextState: 16, nbAdditionalBits: 8, nbBits: 4, baseValue: 253),
             new ZSTD_seqSymbol(nextState: 0, nbAdditionalBits: 13, nbBits: 5, baseValue: 8189),
-            new ZSTD_seqSymbol(
-                nextState: 0,
-                nbAdditionalBits: 19,
-                nbBits: 5,
-                baseValue: 524285
-            ),
+            new ZSTD_seqSymbol(nextState: 0, nbAdditionalBits: 19, nbBits: 5, baseValue: 524285),
             new ZSTD_seqSymbol(nextState: 0, nbAdditionalBits: 1, nbBits: 5, baseValue: 1),
             new ZSTD_seqSymbol(nextState: 16, nbAdditionalBits: 6, nbBits: 4, baseValue: 61),
             new ZSTD_seqSymbol(nextState: 0, nbAdditionalBits: 10, nbBits: 5, baseValue: 1021),
             new ZSTD_seqSymbol(nextState: 0, nbAdditionalBits: 16, nbBits: 5, baseValue: 65533),
-            new ZSTD_seqSymbol(
-                nextState: 0,
-                nbAdditionalBits: 28,
-                nbBits: 5,
-                baseValue: 268435453
-            ),
-            new ZSTD_seqSymbol(
-                nextState: 0,
-                nbAdditionalBits: 27,
-                nbBits: 5,
-                baseValue: 134217725
-            ),
-            new ZSTD_seqSymbol(
-                nextState: 0,
-                nbAdditionalBits: 26,
-                nbBits: 5,
-                baseValue: 67108861
-            ),
-            new ZSTD_seqSymbol(
-                nextState: 0,
-                nbAdditionalBits: 25,
-                nbBits: 5,
-                baseValue: 33554429
-            ),
-            new ZSTD_seqSymbol(
-                nextState: 0,
-                nbAdditionalBits: 24,
-                nbBits: 5,
-                baseValue: 16777213
-            ),
+            new ZSTD_seqSymbol(nextState: 0, nbAdditionalBits: 28, nbBits: 5, baseValue: 268435453),
+            new ZSTD_seqSymbol(nextState: 0, nbAdditionalBits: 27, nbBits: 5, baseValue: 134217725),
+            new ZSTD_seqSymbol(nextState: 0, nbAdditionalBits: 26, nbBits: 5, baseValue: 67108861),
+            new ZSTD_seqSymbol(nextState: 0, nbAdditionalBits: 25, nbBits: 5, baseValue: 33554429),
+            new ZSTD_seqSymbol(nextState: 0, nbAdditionalBits: 24, nbBits: 5, baseValue: 16777213),
         }
     );
     private static readonly ZSTD_seqSymbol* ML_defaultDTable = GetArrayPointer(
@@ -796,11 +707,7 @@ public static unsafe partial class Methods
         }
     );
 
-    private static void ZSTD_buildSeqTable_rle(
-        ZSTD_seqSymbol* dt,
-        uint baseValue,
-        byte nbAddBits
-    )
+    private static void ZSTD_buildSeqTable_rle(ZSTD_seqSymbol* dt, uint baseValue, byte nbAddBits)
     {
         void* ptr = dt;
         ZSTD_seqSymbol_header* DTableH = (ZSTD_seqSymbol_header*)ptr;
@@ -916,7 +823,7 @@ public static unsafe partial class Methods
             uint tableMask = tableSize - 1;
             uint step = (tableSize >> 1) + (tableSize >> 3) + 3;
             uint s,
-                 position = 0;
+                position = 0;
             for (s = 0; s < maxSV1; s++)
             {
                 int i;
@@ -1039,17 +946,15 @@ public static unsafe partial class Methods
 
                 if (*(byte*)src > max)
                 {
-                    return unchecked(
-                        (nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected)
-                    );
+                    return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected));
                 }
 
-            {
-                uint symbol = *(byte*)src;
-                uint baseline = baseValue[symbol];
-                byte nbBits = nbAdditionalBits[symbol];
-                ZSTD_buildSeqTable_rle(DTableSpace, baseline, nbBits);
-            }
+                {
+                    uint symbol = *(byte*)src;
+                    uint baseline = baseValue[symbol];
+                    byte nbBits = nbAdditionalBits[symbol];
+                    ZSTD_buildSeqTable_rle(DTableSpace, baseline, nbBits);
+                }
 
                 *DTablePtr = DTableSpace;
                 return 1;
@@ -1059,9 +964,7 @@ public static unsafe partial class Methods
             case SymbolEncodingType_e.set_repeat:
                 if (flagRepeatTable == 0)
                 {
-                    return unchecked(
-                        (nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected)
-                    );
+                    return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected));
                 }
 
                 if (ddictIsCold != 0 && nbSeq > 24)
@@ -1075,10 +978,10 @@ public static unsafe partial class Methods
                         for (_pos = 0; _pos < _size; _pos += 64)
                         {
 #if NETCOREAPP3_0_OR_GREATER
-                                if (System.Runtime.Intrinsics.X86.Sse.IsSupported)
-                                {
-                                    System.Runtime.Intrinsics.X86.Sse.Prefetch1(_ptr + _pos);
-                                }
+                            if (System.Runtime.Intrinsics.X86.Sse.IsSupported)
+                            {
+                                System.Runtime.Intrinsics.X86.Sse.Prefetch1(_ptr + _pos);
+                            }
 #endif
                         }
                     }
@@ -1092,16 +995,12 @@ public static unsafe partial class Methods
                 nuint headerSize = FSE_readNCount(norm, &max, &tableLog, src, srcSize);
                 if (ERR_isError(headerSize))
                 {
-                    return unchecked(
-                        (nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected)
-                    );
+                    return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected));
                 }
 
                 if (tableLog > maxLog)
                 {
-                    return unchecked(
-                        (nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected)
-                    );
+                    return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected));
                 }
 
                 ZSTD_buildFSETable(
@@ -1215,9 +1114,7 @@ public static unsafe partial class Methods
                 );
                 if (ERR_isError(llhSize))
                 {
-                    return unchecked(
-                        (nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected)
-                    );
+                    return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected));
                 }
 
                 ip += llhSize;
@@ -1244,9 +1141,7 @@ public static unsafe partial class Methods
                 );
                 if (ERR_isError(ofhSize))
                 {
-                    return unchecked(
-                        (nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected)
-                    );
+                    return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected));
                 }
 
                 ip += ofhSize;
@@ -1273,9 +1168,7 @@ public static unsafe partial class Methods
                 );
                 if (ERR_isError(mlhSize))
                 {
-                    return unchecked(
-                        (nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected)
-                    );
+                    return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected));
                 }
 
                 ip += mlhSize;
@@ -1286,12 +1179,12 @@ public static unsafe partial class Methods
     }
 
 #if NET7_0_OR_GREATER
-        private static ReadOnlySpan<uint> Span_dec32table => new uint[8] { 0, 1, 2, 1, 4, 4, 4, 4 };
-        private static uint* dec32table =>
-            (uint*)
-                System.Runtime.CompilerServices.Unsafe.AsPointer(
-                    ref MemoryMarshal.GetReference(Span_dec32table)
-                );
+    private static ReadOnlySpan<uint> Span_dec32table => new uint[8] { 0, 1, 2, 1, 4, 4, 4, 4 };
+    private static uint* dec32table =>
+        (uint*)
+            System.Runtime.CompilerServices.Unsafe.AsPointer(
+                ref MemoryMarshal.GetReference(Span_dec32table)
+            );
 #else
 
     private static readonly uint* dec32table = GetArrayPointer(
@@ -1299,12 +1192,12 @@ public static unsafe partial class Methods
     );
 #endif
 #if NET7_0_OR_GREATER
-        private static ReadOnlySpan<int> Span_dec64table => new int[8] { 8, 8, 8, 7, 8, 9, 10, 11 };
-        private static int* dec64table =>
-            (int*)
-                System.Runtime.CompilerServices.Unsafe.AsPointer(
-                    ref MemoryMarshal.GetReference(Span_dec64table)
-                );
+    private static ReadOnlySpan<int> Span_dec64table => new int[8] { 8, 8, 8, 7, 8, 9, 10, 11 };
+    private static int* dec64table =>
+        (int*)
+            System.Runtime.CompilerServices.Unsafe.AsPointer(
+                ref MemoryMarshal.GetReference(Span_dec64table)
+            );
 #else
 
     private static readonly int* dec64table = GetArrayPointer(
@@ -1365,9 +1258,8 @@ public static unsafe partial class Methods
         nint diff = (nint)(op - ip);
         byte* oend = op + length;
         assert(
-            ovtype == ZSTD_overlap_e.ZSTD_no_overlap
-            && (diff <= -8 || diff >= 8 || op >= oend_w)
-            || ovtype == ZSTD_overlap_e.ZSTD_overlap_src_before_dst && diff >= 0
+            ovtype == ZSTD_overlap_e.ZSTD_no_overlap && (diff <= -8 || diff >= 8 || op >= oend_w)
+                || ovtype == ZSTD_overlap_e.ZSTD_overlap_src_before_dst && diff >= 0
         );
         if (length < 8)
         {
@@ -1672,12 +1564,7 @@ public static unsafe partial class Methods
         assert(sequence_matchLength >= 1);
         if (sequence_offset >= 16)
         {
-            ZSTD_wildcopy(
-                op,
-                match,
-                (nint)sequence_matchLength,
-                ZSTD_overlap_e.ZSTD_no_overlap
-            );
+            ZSTD_wildcopy(op, match, (nint)sequence_matchLength, ZSTD_overlap_e.ZSTD_no_overlap);
             return sequenceLength;
         }
 
@@ -1783,12 +1670,7 @@ public static unsafe partial class Methods
         assert(sequence.matchLength >= 1);
         if (sequence.offset >= 16)
         {
-            ZSTD_wildcopy(
-                op,
-                match,
-                (nint)sequence.matchLength,
-                ZSTD_overlap_e.ZSTD_no_overlap
-            );
+            ZSTD_wildcopy(op, match, (nint)sequence.matchLength, ZSTD_overlap_e.ZSTD_no_overlap);
             return sequenceLength;
         }
 
@@ -2189,10 +2071,8 @@ public static unsafe partial class Methods
             {
                 uint i;
                 for (i = 0; i < 3; i++)
-                    System.Runtime.CompilerServices.Unsafe.Add(
-                        ref seqState.prevOffset.e0,
-                        (int)i
-                    ) = dctx->entropy.rep[i];
+                    System.Runtime.CompilerServices.Unsafe.Add(ref seqState.prevOffset.e0, (int)i) =
+                        dctx->entropy.rep[i];
             }
 
             if (ERR_isError(BIT_initDStream(ref seqState.DStream, ip, (nuint)(iend - ip))))
@@ -2298,11 +2178,10 @@ public static unsafe partial class Methods
                                     ref seqState.prevOffset.e0,
                                     (int)ll0
                                 );
-                                seqState.prevOffset.e1 =
-                                    System.Runtime.CompilerServices.Unsafe.Add(
-                                        ref seqState.prevOffset.e0,
-                                        ll0 == 0 ? 1 : 0
-                                    );
+                                seqState.prevOffset.e1 = System.Runtime.CompilerServices.Unsafe.Add(
+                                    ref seqState.prevOffset.e0,
+                                    ll0 == 0 ? 1 : 0
+                                );
                                 seqState.prevOffset.e0 = offset;
                             }
                             else
@@ -2631,11 +2510,11 @@ public static unsafe partial class Methods
                 (nint)sequence.offset
             );
 #if NETCOREAPP3_0_OR_GREATER
-                if (System.Runtime.Intrinsics.X86.Sse.IsSupported)
-                {
-                    System.Runtime.Intrinsics.X86.Sse.Prefetch0(match);
-                    System.Runtime.Intrinsics.X86.Sse.Prefetch0(match + 64);
-                }
+            if (System.Runtime.Intrinsics.X86.Sse.IsSupported)
+            {
+                System.Runtime.Intrinsics.X86.Sse.Prefetch0(match);
+                System.Runtime.Intrinsics.X86.Sse.Prefetch0(match + 64);
+            }
 #endif
         }
 
@@ -2788,12 +2667,7 @@ public static unsafe partial class Methods
                             );
                     if (ERR_isError(oneSeqSize))
                         return oneSeqSize;
-                    prefetchPos = ZSTD_prefetchMatch(
-                        prefetchPos,
-                        sequence,
-                        prefixStart,
-                        dictEnd
-                    );
+                    prefetchPos = ZSTD_prefetchMatch(prefetchPos, sequence, prefixStart, dictEnd);
                     sequences[seqNb & 8 - 1] = sequence;
                     op += oneSeqSize;
                 }
@@ -3027,11 +2901,7 @@ public static unsafe partial class Methods
      */
     private static ZSTD_OffsetInfo ZSTD_getOffsetInfo(ZSTD_seqSymbol* offTable, int nbSeq)
     {
-        ZSTD_OffsetInfo info = new ZSTD_OffsetInfo
-        {
-            longOffsetShare = 0,
-            maxNbAdditionalBits = 0,
-        };
+        ZSTD_OffsetInfo info = new ZSTD_OffsetInfo { longOffsetShare = 0, maxNbAdditionalBits = 0 };
         if (nbSeq != 0)
         {
             void* ptr = offTable;
@@ -3290,11 +3160,7 @@ public static unsafe partial class Methods
     {
         void* ptr = dt;
         ZSTD_seqSymbol_header* DTableH = (ZSTD_seqSymbol_header*)ptr;
-        DStatePtr.state = BIT_readBits(
-            bitD.bitContainer,
-            ref bitD.bitsConsumed,
-            DTableH->tableLog
-        );
+        DStatePtr.state = BIT_readBits(bitD.bitContainer, ref bitD.bitsConsumed, DTableH->tableLog);
         BIT_reloadDStream(
             ref bitD.bitContainer,
             ref bitD.bitsConsumed,

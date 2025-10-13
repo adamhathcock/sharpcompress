@@ -12,11 +12,11 @@ public unsafe struct HUF_ReadDTableX2_Workspace
     public fixed uint calleeWksp[219];
 
 #if NET8_0_OR_GREATER
-        [InlineArray(12)]
-        public unsafe struct _rankVal_e__FixedBuffer
-        {
-            public rankValCol_t e0;
-        }
+    [InlineArray(12)]
+    public unsafe struct _rankVal_e__FixedBuffer
+    {
+        public rankValCol_t e0;
+    }
 
 #else
     public unsafe struct _rankVal_e__FixedBuffer
@@ -37,11 +37,11 @@ public unsafe struct HUF_ReadDTableX2_Workspace
 #endif
 
 #if NET8_0_OR_GREATER
-        [InlineArray(256)]
-        public unsafe struct _sortedSymbol_e__FixedBuffer
-        {
-            public sortedSymbol_t e0;
-        }
+    [InlineArray(256)]
+    public unsafe struct _sortedSymbol_e__FixedBuffer
+    {
+        public sortedSymbol_t e0;
+    }
 
 #else
     public unsafe struct _sortedSymbol_e__FixedBuffer

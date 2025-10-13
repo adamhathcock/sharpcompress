@@ -8,11 +8,11 @@ public unsafe struct ZSTD_hufCTables_t
     public HUF_repeat repeatMode;
 
 #if NET8_0_OR_GREATER
-        [InlineArray(257)]
-        public unsafe struct _CTable_e__FixedBuffer
-        {
-            public nuint e0;
-        }
+    [InlineArray(257)]
+    public unsafe struct _CTable_e__FixedBuffer
+    {
+        public nuint e0;
+    }
 
 #else
     public unsafe struct _CTable_e__FixedBuffer

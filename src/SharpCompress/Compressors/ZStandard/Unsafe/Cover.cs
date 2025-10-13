@@ -24,11 +24,7 @@ public static unsafe partial class Methods
     /**
      * Warns the user when their corpus is too small.
      */
-    private static void COVER_warnOnSmallCorpus(
-        nuint maxDictSize,
-        nuint nbDmers,
-        int displayLevel
-    )
+    private static void COVER_warnOnSmallCorpus(nuint maxDictSize, nuint nbDmers, int displayLevel)
     {
         double ratio = nbDmers / (double)maxDictSize;
         if (ratio >= 10)
@@ -100,8 +96,7 @@ public static unsafe partial class Methods
             i = parameters.splitPoint < 1 ? nbTrainSamples : 0;
             for (; i < nbSamples; ++i)
             {
-                maxSampleSize =
-                    samplesSizes[i] > maxSampleSize ? samplesSizes[i] : maxSampleSize;
+                maxSampleSize = samplesSizes[i] > maxSampleSize ? samplesSizes[i] : maxSampleSize;
             }
 
             dstCapacity = ZSTD_compressBound(maxSampleSize);
@@ -435,11 +430,7 @@ public static unsafe partial class Methods
             if (totalCompressedSize <= largestCompressed * regressionTolerance)
             {
                 free(largestDictbuffer);
-                return setDictSelection(
-                    candidateDictBuffer,
-                    dictContentSize,
-                    totalCompressedSize
-                );
+                return setDictSelection(candidateDictBuffer, dictContentSize, totalCompressedSize);
             }
 
             dictContentSize *= 2;

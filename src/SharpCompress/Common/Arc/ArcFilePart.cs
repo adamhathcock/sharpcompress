@@ -45,20 +45,13 @@ public class ArcFilePart : FilePart
                     );
                     break;
                 case CompressionType.RLE90:
-                    compressedStream = new RunLength90Stream(
-                        _stream,
-                        (int)Header.CompressedSize
-                    );
+                    compressedStream = new RunLength90Stream(_stream, (int)Header.CompressedSize);
                     break;
                 case CompressionType.Squeezed:
                     compressedStream = new SqueezeStream(_stream, (int)Header.CompressedSize);
                     break;
                 case CompressionType.Crunched:
-                    compressedStream = new ArcLzwStream(
-                        _stream,
-                        (int)Header.CompressedSize,
-                        true
-                    );
+                    compressedStream = new ArcLzwStream(_stream, (int)Header.CompressedSize, true);
                     break;
                 default:
                     throw new NotSupportedException(

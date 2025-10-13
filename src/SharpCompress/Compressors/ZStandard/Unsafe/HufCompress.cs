@@ -5,11 +5,7 @@ namespace SharpCompress.Compressors.ZStandard.Unsafe;
 
 public static unsafe partial class Methods
 {
-    private static void* HUF_alignUpWorkspace(
-        void* workspace,
-        nuint* workspaceSizePtr,
-        nuint align
-    )
+    private static void* HUF_alignUpWorkspace(void* workspace, nuint* workspaceSizePtr, nuint align)
     {
         nuint mask = align - 1;
         nuint rem = (nuint)workspace & mask;
@@ -56,12 +52,7 @@ public static unsafe partial class Methods
             return 0;
         {
             /* never fails */
-            uint maxCount = HIST_count_simple(
-                wksp->count,
-                &maxSymbolValue,
-                weightTable,
-                wtSize
-            );
+            uint maxCount = HIST_count_simple(wksp->count, &maxSymbolValue, weightTable, wtSize);
             if (maxCount == wtSize)
                 return 1;
             if (maxCount == 1)
@@ -289,7 +280,7 @@ public static unsafe partial class Methods
         HUF_writeCTableHeader(CTable, tableLog, *maxSymbolValuePtr);
         {
             uint n,
-                 nextRankStart = 0;
+                nextRankStart = 0;
             for (n = 1; n <= tableLog; n++)
             {
                 uint curr = nextRankStart;
@@ -377,11 +368,7 @@ public static unsafe partial class Methods
      *                    respect targetNbBits.
      * @return            The maximum number of bits of the Huffman tree after adjustment.
      */
-    private static uint HUF_setMaxHeight(
-        nodeElt_s* huffNode,
-        uint lastNonNull,
-        uint targetNbBits
-    )
+    private static uint HUF_setMaxHeight(nodeElt_s* huffNode, uint lastNonNull, uint targetNbBits)
     {
         uint largestBits = huffNode[lastNonNull].nbBits;
         if (largestBits <= targetNbBits)
@@ -392,9 +379,7 @@ public static unsafe partial class Methods
             int n = (int)lastNonNull;
             while (huffNode[n].nbBits > targetNbBits)
             {
-                totalCost += (int)(
-                    baseCost - (uint)(1 << (int)(largestBits - huffNode[n].nbBits))
-                );
+                totalCost += (int)(baseCost - (uint)(1 << (int)(largestBits - huffNode[n].nbBits)));
                 huffNode[n].nbBits = (byte)targetNbBits;
                 n--;
             }
@@ -753,11 +738,7 @@ public static unsafe partial class Methods
     )
     {
         HUF_buildCTable_wksp_tables* wksp_tables =
-            (HUF_buildCTable_wksp_tables*)HUF_alignUpWorkspace(
-                workSpace,
-                &wkspSize,
-                sizeof(uint)
-            );
+            (HUF_buildCTable_wksp_tables*)HUF_alignUpWorkspace(workSpace, &wkspSize, sizeof(uint));
         nodeElt_s* huffNode0 = &wksp_tables->huffNodeTbl.e0;
         nodeElt_s* huffNode = huffNode0 + 1;
         int nonNullRank;
@@ -777,11 +758,7 @@ public static unsafe partial class Methods
         return maxNbBits;
     }
 
-    private static nuint HUF_estimateCompressedSize(
-        nuint* CTable,
-        uint* count,
-        uint maxSymbolValue
-    )
+    private static nuint HUF_estimateCompressedSize(nuint* CTable, uint* count, uint maxSymbolValue)
     {
         nuint* ct = CTable + 1;
         nuint nbBits = 0;
@@ -820,11 +797,7 @@ public static unsafe partial class Methods
      * Initializes the bitstream.
      * @returns 0 or an error code.
      */
-    private static nuint HUF_initCStream(
-        ref HUF_CStream_t bitC,
-        void* startPtr,
-        nuint dstCapacity
-    )
+    private static nuint HUF_initCStream(ref HUF_CStream_t bitC, void* startPtr, nuint dstCapacity)
     {
         bitC = new HUF_CStream_t
         {
@@ -937,13 +910,7 @@ public static unsafe partial class Methods
     private static nuint HUF_closeCStream(ref HUF_CStream_t bitC)
     {
         HUF_addBits(ref bitC.bitContainer.e0, ref bitC.bitPos.e0, HUF_endMark(), 0);
-        HUF_flushBits(
-            ref bitC.bitContainer.e0,
-            ref bitC.bitPos.e0,
-            ref bitC.ptr,
-            bitC.endPtr,
-            0
-        );
+        HUF_flushBits(ref bitC.bitContainer.e0, ref bitC.bitPos.e0, ref bitC.ptr, bitC.endPtr, 0);
         {
             nuint nbBits = bitC.bitPos.e0 & 0xFF;
             if (bitC.ptr >= bitC.endPtr)
@@ -1006,13 +973,7 @@ public static unsafe partial class Methods
             int u;
             for (u = 1; u < kUnroll; ++u)
             {
-                HUF_encodeSymbol(
-                    ref bitC_bitContainer_e0,
-                    ref bitC_bitPos_e0,
-                    ip[n - u],
-                    ct,
-                    1
-                );
+                HUF_encodeSymbol(ref bitC_bitContainer_e0, ref bitC_bitPos_e0, ip[n - u], ct, 1);
             }
 
             HUF_encodeSymbol(
@@ -1039,13 +1000,7 @@ public static unsafe partial class Methods
             int u;
             for (u = 1; u < kUnroll; ++u)
             {
-                HUF_encodeSymbol(
-                    ref bitC_bitContainer_e0,
-                    ref bitC_bitPos_e0,
-                    ip[n - u],
-                    ct,
-                    1
-                );
+                HUF_encodeSymbol(ref bitC_bitContainer_e0, ref bitC_bitPos_e0, ip[n - u], ct, 1);
             }
 
             HUF_encodeSymbol(
@@ -1511,12 +1466,12 @@ public static unsafe partial class Methods
             byte* dst = (byte*)workSpace + sizeof(HUF_WriteCTableWksp);
             nuint dstSize = wkspSize - (nuint)sizeof(HUF_WriteCTableWksp);
             nuint hSize,
-                  newSize;
+                newSize;
             uint symbolCardinality = HUF_cardinality(count, maxSymbolValue);
             uint minTableLog = HUF_minTableLog(symbolCardinality);
             nuint optSize = unchecked((nuint)~0) - 1;
             uint optLog = maxTableLog,
-                 optLogGuess;
+                optLogGuess;
             for (optLogGuess = minTableLog; optLogGuess <= maxTableLog; optLogGuess++)
             {
                 {
@@ -1623,10 +1578,7 @@ public static unsafe partial class Methods
             );
         }
 
-        if (
-            (flags & (int)HUF_flags_e.HUF_flags_suspectUncompressible) != 0
-            && srcSize >= 4096 * 10
-        )
+        if ((flags & (int)HUF_flags_e.HUF_flags_suspectUncompressible) != 0 && srcSize >= 4096 * 10)
         {
             nuint largestTotal = 0;
             {
