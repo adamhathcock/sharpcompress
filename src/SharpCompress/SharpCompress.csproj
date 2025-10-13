@@ -36,7 +36,6 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="System.Buffers" />
-    <PackageReference Include="ZstdSharp.Port" />
     <PackageReference Include="Microsoft.SourceLink.GitHub" PrivateAssets="All" />
     <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" PrivateAssets="All" />
   </ItemGroup>
