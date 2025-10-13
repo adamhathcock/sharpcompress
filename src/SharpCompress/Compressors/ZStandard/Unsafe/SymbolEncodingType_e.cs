@@ -5,6 +5,6 @@ namespace ZstdSharp.Unsafe
         set_basic,
         set_rle,
         set_compressed,
-        set_repeat
+        set_repeat,
     }
 }

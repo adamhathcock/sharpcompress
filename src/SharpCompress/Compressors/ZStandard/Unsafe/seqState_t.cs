@@ -7,6 +7,7 @@ namespace ZstdSharp.Unsafe
         public ZSTD_fseState stateOffb;
         public ZSTD_fseState stateML;
         public _prevOffset_e__FixedBuffer prevOffset;
+
         public unsafe struct _prevOffset_e__FixedBuffer
         {
             public nuint e0;

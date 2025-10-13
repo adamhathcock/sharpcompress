@@ -6,6 +6,7 @@ namespace ZstdSharp.Unsafe
     {
         public void* start;
         public nuint capacity;
+
         public buffer_s(void* start, nuint capacity)
         {
             this.start = start;

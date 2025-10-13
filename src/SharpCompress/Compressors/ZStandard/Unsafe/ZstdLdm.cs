@@ -15,7 +15,8 @@ namespace ZstdSharp.Unsafe
             state->rolling = ~(uint)0;
             if (hashRateLog > 0 && hashRateLog <= maxBitsInMask)
             {
-                state->stopMask = ((ulong)1 << (int)hashRateLog) - 1 << (int)(maxBitsInMask - hashRateLog);
+                state->stopMask =
+                    ((ulong)1 << (int)hashRateLog) - 1 << (int)(maxBitsInMask - hashRateLog);
             }
             else
             {
@@ -28,7 +29,11 @@ namespace ZstdSharp.Unsafe
          * splits. This effectively resets the hash state. This is used when skipping
          * over data, either at the beginning of a block, or skipping sections.
          */
-        private static void ZSTD_ldm_gear_reset(ldmRollingHashState_t* state, byte* data, nuint minMatchLength)
+        private static void ZSTD_ldm_gear_reset(
+            ldmRollingHashState_t* state,
+            byte* data,
+            nuint minMatchLength
+        )
         {
             ulong hash = state->rolling;
             nuint n = 0;
@@ -71,10 +76,17 @@ namespace ZstdSharp.Unsafe
          *
          * Precondition: The splits array must not be full.
          * Returns: The number of bytes processed. */
-        private static nuint ZSTD_ldm_gear_feed(ldmRollingHashState_t* state, byte* data, nuint size, nuint* splits, uint* numSplits)
+        private static nuint ZSTD_ldm_gear_feed(
+            ldmRollingHashState_t* state,
+            byte* data,
+            nuint size,
+            nuint* splits,
+            uint* numSplits
+        )
         {
             nuint n;
-            ulong hash, mask;
+            ulong hash,
+                mask;
             hash = state->rolling;
             mask = state->stopMask;
             n = 0;
@@ -142,7 +154,7 @@ namespace ZstdSharp.Unsafe
                 }
             }
 
-        done:
+            done:
             state->rolling = hash;
             return n;
         }
@@ -156,14 +168,26 @@ namespace ZstdSharp.Unsafe
          *
          *  Ensures that the minMatchLength >= targetLength during optimal parsing.
          */
-        private static void ZSTD_ldm_adjustParameters(ldmParams_t* @params, ZSTD_compressionParameters* cParams)
+        private static void ZSTD_ldm_adjustParameters(
+            ldmParams_t* @params,
+            ZSTD_compressionParameters* cParams
+        )
         {
             @params->windowLog = cParams->windowLog;
             if (@params->hashRateLog == 0)
             {
                 if (@params->hashLog > 0)
                 {
-                    assert(@params->hashLog <= (uint)((sizeof(nuint) == 4 ? 30 : 31) < 30 ? sizeof(nuint) == 4 ? 30 : 31 : 30));
+                    assert(
+                        @params->hashLog
+                            <= (uint)(
+                                (sizeof(nuint) == 4 ? 30 : 31) < 30
+                                    ? sizeof(nuint) == 4
+                                        ? 30
+                                        : 31
+                                    : 30
+                            )
+                    );
                     if (@params->windowLog > @params->hashLog)
                     {
                         @params->hashRateLog = @params->windowLog - @params->hashLog;
@@ -178,7 +202,24 @@ namespace ZstdSharp.Unsafe
 
             if (@params->hashLog == 0)
             {
-                @params->hashLog = @params->windowLog - @params->hashRateLog <= 6 ? 6 : @params->windowLog - @params->hashRateLog <= (uint)((sizeof(nuint) == 4 ? 30 : 31) < 30 ? sizeof(nuint) == 4 ? 30 : 31 : 30) ? @params->windowLog - @params->hashRateLog : (uint)((sizeof(nuint) == 4 ? 30 : 31) < 30 ? sizeof(nuint) == 4 ? 30 : 31 : 30);
+                @params->hashLog =
+                    @params->windowLog - @params->hashRateLog <= 6 ? 6
+                    : @params->windowLog - @params->hashRateLog
+                    <= (uint)(
+                        (sizeof(nuint) == 4 ? 30 : 31) < 30
+                            ? sizeof(nuint) == 4
+                                ? 30
+                                : 31
+                            : 30
+                    )
+                        ? @params->windowLog - @params->hashRateLog
+                    : (uint)(
+                        (sizeof(nuint) == 4 ? 30 : 31) < 30
+                            ? sizeof(nuint) == 4
+                                ? 30
+                                : 31
+                            : 30
+                    );
             }
 
             if (@params->minMatchLength == 0)
@@ -191,10 +232,16 @@ namespace ZstdSharp.Unsafe
             if (@params->bucketSizeLog == 0)
             {
                 assert(1 <= (int)cParams->strategy && (int)cParams->strategy <= 9);
-                @params->bucketSizeLog = (uint)cParams->strategy <= 4 ? 4 : (uint)cParams->strategy <= 8 ? (uint)cParams->strategy : 8;
+                @params->bucketSizeLog =
+                    (uint)cParams->strategy <= 4 ? 4
+                    : (uint)cParams->strategy <= 8 ? (uint)cParams->strategy
+                    : 8;
             }
 
-            @params->bucketSizeLog = @params->bucketSizeLog < @params->hashLog ? @params->bucketSizeLog : @params->hashLog;
+            @params->bucketSizeLog =
+                @params->bucketSizeLog < @params->hashLog
+                    ? @params->bucketSizeLog
+                    : @params->hashLog;
         }
 
         /** ZSTD_ldm_getTableSize() :
@@ -204,9 +251,12 @@ namespace ZstdSharp.Unsafe
         private static nuint ZSTD_ldm_getTableSize(ldmParams_t @params)
         {
             nuint ldmHSize = (nuint)1 << (int)@params.hashLog;
-            nuint ldmBucketSizeLog = @params.bucketSizeLog < @params.hashLog ? @params.bucketSizeLog : @params.hashLog;
+            nuint ldmBucketSizeLog =
+                @params.bucketSizeLog < @params.hashLog ? @params.bucketSizeLog : @params.hashLog;
             nuint ldmBucketSize = (nuint)1 << (int)(@params.hashLog - ldmBucketSizeLog);
-            nuint totalSize = ZSTD_cwksp_alloc_size(ldmBucketSize) + ZSTD_cwksp_alloc_size(ldmHSize * (nuint)sizeof(ldmEntry_t));
+            nuint totalSize =
+                ZSTD_cwksp_alloc_size(ldmBucketSize)
+                + ZSTD_cwksp_alloc_size(ldmHSize * (nuint)sizeof(ldmEntry_t));
             return @params.enableLdm == ZSTD_paramSwitch_e.ZSTD_ps_enable ? totalSize : 0;
         }
 
@@ -216,19 +266,30 @@ namespace ZstdSharp.Unsafe
          */
         private static nuint ZSTD_ldm_getMaxNbSeq(ldmParams_t @params, nuint maxChunkSize)
         {
-            return @params.enableLdm == ZSTD_paramSwitch_e.ZSTD_ps_enable ? maxChunkSize / @params.minMatchLength : 0;
+            return @params.enableLdm == ZSTD_paramSwitch_e.ZSTD_ps_enable
+                ? maxChunkSize / @params.minMatchLength
+                : 0;
         }
 
         /** ZSTD_ldm_getBucket() :
          *  Returns a pointer to the start of the bucket associated with hash. */
-        private static ldmEntry_t* ZSTD_ldm_getBucket(ldmState_t* ldmState, nuint hash, uint bucketSizeLog)
+        private static ldmEntry_t* ZSTD_ldm_getBucket(
+            ldmState_t* ldmState,
+            nuint hash,
+            uint bucketSizeLog
+        )
         {
             return ldmState->hashTable + (hash << (int)bucketSizeLog);
         }
 
         /** ZSTD_ldm_insertEntry() :
          *  Insert the entry with corresponding hash into the hash table */
-        private static void ZSTD_ldm_insertEntry(ldmState_t* ldmState, nuint hash, ldmEntry_t entry, uint bucketSizeLog)
+        private static void ZSTD_ldm_insertEntry(
+            ldmState_t* ldmState,
+            nuint hash,
+            ldmEntry_t entry,
+            uint bucketSizeLog
+        )
         {
             byte* pOffset = ldmState->bucketOffsets + hash;
             uint offset = *pOffset;
@@ -240,7 +301,12 @@ namespace ZstdSharp.Unsafe
          *  Returns the number of bytes that match backwards before pIn and pMatch.
          *
          *  We count only bytes where pMatch >= pBase and pIn >= pAnchor. */
-        private static nuint ZSTD_ldm_countBackwardsMatch(byte* pIn, byte* pAnchor, byte* pMatch, byte* pMatchBase)
+        private static nuint ZSTD_ldm_countBackwardsMatch(
+            byte* pIn,
+            byte* pAnchor,
+            byte* pMatch,
+            byte* pMatchBase
+        )
         {
             nuint matchLength = 0;
             while (pIn > pAnchor && pMatch > pMatchBase && pIn[-1] == pMatch[-1])
@@ -258,7 +324,14 @@ namespace ZstdSharp.Unsafe
          *  even with the backwards match spanning 2 different segments.
          *
          *  On reaching `pMatchBase`, start counting from mEnd */
-        private static nuint ZSTD_ldm_countBackwardsMatch_2segments(byte* pIn, byte* pAnchor, byte* pMatch, byte* pMatchBase, byte* pExtDictStart, byte* pExtDictEnd)
+        private static nuint ZSTD_ldm_countBackwardsMatch_2segments(
+            byte* pIn,
+            byte* pAnchor,
+            byte* pMatch,
+            byte* pMatchBase,
+            byte* pExtDictStart,
+            byte* pExtDictEnd
+        )
         {
             nuint matchLength = ZSTD_ldm_countBackwardsMatch(pIn, pAnchor, pMatch, pMatchBase);
             if (pMatch - matchLength != pMatchBase || pMatchBase == pExtDictStart)
@@ -266,7 +339,12 @@ namespace ZstdSharp.Unsafe
                 return matchLength;
             }
 
-            matchLength += ZSTD_ldm_countBackwardsMatch(pIn - matchLength, pAnchor, pExtDictEnd, pExtDictStart);
+            matchLength += ZSTD_ldm_countBackwardsMatch(
+                pIn - matchLength,
+                pAnchor,
+                pExtDictEnd,
+                pExtDictStart
+            );
             return matchLength;
         }
 
@@ -283,10 +361,20 @@ namespace ZstdSharp.Unsafe
             switch (ms->cParams.strategy)
             {
                 case ZSTD_strategy.ZSTD_fast:
-                    ZSTD_fillHashTable(ms, iend, ZSTD_dictTableLoadMethod_e.ZSTD_dtlm_fast, ZSTD_tableFillPurpose_e.ZSTD_tfp_forCCtx);
+                    ZSTD_fillHashTable(
+                        ms,
+                        iend,
+                        ZSTD_dictTableLoadMethod_e.ZSTD_dtlm_fast,
+                        ZSTD_tableFillPurpose_e.ZSTD_tfp_forCCtx
+                    );
                     break;
                 case ZSTD_strategy.ZSTD_dfast:
-                    ZSTD_fillDoubleHashTable(ms, iend, ZSTD_dictTableLoadMethod_e.ZSTD_dtlm_fast, ZSTD_tableFillPurpose_e.ZSTD_tfp_forCCtx);
+                    ZSTD_fillDoubleHashTable(
+                        ms,
+                        iend,
+                        ZSTD_dictTableLoadMethod_e.ZSTD_dtlm_fast,
+                        ZSTD_tableFillPurpose_e.ZSTD_tfp_forCCtx
+                    );
                     break;
                 case ZSTD_strategy.ZSTD_greedy:
                 case ZSTD_strategy.ZSTD_lazy:
@@ -304,7 +392,12 @@ namespace ZstdSharp.Unsafe
             return 0;
         }
 
-        private static void ZSTD_ldm_fillHashTable(ldmState_t* ldmState, byte* ip, byte* iend, ldmParams_t* @params)
+        private static void ZSTD_ldm_fillHashTable(
+            ldmState_t* ldmState,
+            byte* ip,
+            byte* iend,
+            ldmParams_t* @params
+        )
         {
             uint minMatchLength = @params->minMatchLength;
             uint bucketSizeLog = @params->bucketSizeLog;
@@ -349,11 +442,19 @@ namespace ZstdSharp.Unsafe
             uint curr = (uint)(anchor - ms->window.@base);
             if (curr > ms->nextToUpdate + 1024)
             {
-                ms->nextToUpdate = curr - (512 < curr - ms->nextToUpdate - 1024 ? 512 : curr - ms->nextToUpdate - 1024);
+                ms->nextToUpdate =
+                    curr
+                    - (512 < curr - ms->nextToUpdate - 1024 ? 512 : curr - ms->nextToUpdate - 1024);
             }
         }
 
-        private static nuint ZSTD_ldm_generateSequences_internal(ldmState_t* ldmState, RawSeqStore_t* rawSeqStore, ldmParams_t* @params, void* src, nuint srcSize)
+        private static nuint ZSTD_ldm_generateSequences_internal(
+            ldmState_t* ldmState,
+            RawSeqStore_t* rawSeqStore,
+            ldmParams_t* @params,
+            void* src,
+            nuint srcSize
+        )
         {
             /* LDM parameters */
             int extDict = (int)ZSTD_window_hasExtDict(ldmState->window);
@@ -391,7 +492,13 @@ namespace ZstdSharp.Unsafe
                 nuint hashed;
                 uint n;
                 numSplits = 0;
-                hashed = ZSTD_ldm_gear_feed(&hashState, ip, (nuint)(ilimit - ip), splits, &numSplits);
+                hashed = ZSTD_ldm_gear_feed(
+                    &hashState,
+                    ip,
+                    (nuint)(ilimit - ip),
+                    splits,
+                    &numSplits
+                );
                 for (n = 0; n < numSplits; n++)
                 {
                     byte* split = ip + splits[n] - minMatchLength;
@@ -400,7 +507,11 @@ namespace ZstdSharp.Unsafe
                     candidates[n].split = split;
                     candidates[n].hash = hash;
                     candidates[n].checksum = (uint)(xxhash >> 32);
-                    candidates[n].bucket = ZSTD_ldm_getBucket(ldmState, hash, @params->bucketSizeLog);
+                    candidates[n].bucket = ZSTD_ldm_getBucket(
+                        ldmState,
+                        hash,
+                        @params->bucketSizeLog
+                    );
 #if NETCOREAPP3_0_OR_GREATER
                     if (System.Runtime.Intrinsics.X86.Sse.IsSupported)
                     {
@@ -411,7 +522,10 @@ namespace ZstdSharp.Unsafe
 
                 for (n = 0; n < numSplits; n++)
                 {
-                    nuint forwardMatchLength = 0, backwardMatchLength = 0, bestMatchLength = 0, mLength;
+                    nuint forwardMatchLength = 0,
+                        backwardMatchLength = 0,
+                        bestMatchLength = 0,
+                        mLength;
                     uint offset;
                     byte* split = candidates[n].split;
                     uint checksum = candidates[n].checksum;
@@ -430,7 +544,9 @@ namespace ZstdSharp.Unsafe
 
                     for (cur = bucket; cur < bucket + entsPerBucket; cur++)
                     {
-                        nuint curForwardMatchLength, curBackwardMatchLength, curTotalMatchLength;
+                        nuint curForwardMatchLength,
+                            curBackwardMatchLength,
+                            curTotalMatchLength;
                         if (cur->checksum != checksum || cur->offset <= lowestIndex)
                         {
                             continue;
@@ -442,13 +558,26 @@ namespace ZstdSharp.Unsafe
                             byte* pMatch = curMatchBase + cur->offset;
                             byte* matchEnd = cur->offset < dictLimit ? dictEnd : iend;
                             byte* lowMatchPtr = cur->offset < dictLimit ? dictStart : lowPrefixPtr;
-                            curForwardMatchLength = ZSTD_count_2segments(split, pMatch, iend, matchEnd, lowPrefixPtr);
+                            curForwardMatchLength = ZSTD_count_2segments(
+                                split,
+                                pMatch,
+                                iend,
+                                matchEnd,
+                                lowPrefixPtr
+                            );
                             if (curForwardMatchLength < minMatchLength)
                             {
                                 continue;
                             }
 
-                            curBackwardMatchLength = ZSTD_ldm_countBackwardsMatch_2segments(split, anchor, pMatch, lowMatchPtr, dictStart, dictEnd);
+                            curBackwardMatchLength = ZSTD_ldm_countBackwardsMatch_2segments(
+                                split,
+                                anchor,
+                                pMatch,
+                                lowMatchPtr,
+                                dictStart,
+                                dictEnd
+                            );
                         }
                         else
                         {
@@ -459,7 +588,12 @@ namespace ZstdSharp.Unsafe
                                 continue;
                             }
 
-                            curBackwardMatchLength = ZSTD_ldm_countBackwardsMatch(split, anchor, pMatch, lowPrefixPtr);
+                            curBackwardMatchLength = ZSTD_ldm_countBackwardsMatch(
+                                split,
+                                anchor,
+                                pMatch,
+                                lowPrefixPtr
+                            );
                         }
 
                         curTotalMatchLength = curForwardMatchLength + curBackwardMatchLength;
@@ -483,7 +617,9 @@ namespace ZstdSharp.Unsafe
                     {
                         rawSeq* seq = rawSeqStore->seq + rawSeqStore->size;
                         if (rawSeqStore->size == rawSeqStore->capacity)
-                            return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dstSize_tooSmall));
+                            return unchecked(
+                                (nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dstSize_tooSmall)
+                            );
                         seq->litLength = (uint)(split - backwardMatchLength - anchor);
                         seq->matchLength = (uint)mLength;
                         seq->offset = offset;
@@ -534,16 +670,26 @@ namespace ZstdSharp.Unsafe
          * NOTE: This function returns an error if it runs out of space to store
          *       sequences.
          */
-        private static nuint ZSTD_ldm_generateSequences(ldmState_t* ldmState, RawSeqStore_t* sequences, ldmParams_t* @params, void* src, nuint srcSize)
+        private static nuint ZSTD_ldm_generateSequences(
+            ldmState_t* ldmState,
+            RawSeqStore_t* sequences,
+            ldmParams_t* @params,
+            void* src,
+            nuint srcSize
+        )
         {
             uint maxDist = 1U << (int)@params->windowLog;
             byte* istart = (byte*)src;
             byte* iend = istart + srcSize;
             const nuint kMaxChunkSize = 1 << 20;
-            nuint nbChunks = srcSize / kMaxChunkSize + (nuint)(srcSize % kMaxChunkSize != 0 ? 1 : 0);
+            nuint nbChunks =
+                srcSize / kMaxChunkSize + (nuint)(srcSize % kMaxChunkSize != 0 ? 1 : 0);
             nuint chunk;
             nuint leftoverSize = 0;
-            assert(unchecked((uint)-1) - (MEM_64bits ? 3500U * (1 << 20) : 2000U * (1 << 20)) >= kMaxChunkSize);
+            assert(
+                unchecked((uint)-1) - (MEM_64bits ? 3500U * (1 << 20) : 2000U * (1 << 20))
+                    >= kMaxChunkSize
+            );
             assert(ldmState->window.nextSrc >= (byte*)src + srcSize);
             assert(sequences->pos <= sequences->size);
             assert(sequences->size <= sequences->capacity);
@@ -556,16 +702,42 @@ namespace ZstdSharp.Unsafe
                 nuint newLeftoverSize;
                 nuint prevSize = sequences->size;
                 assert(chunkStart < iend);
-                if (ZSTD_window_needOverflowCorrection(ldmState->window, 0, maxDist, ldmState->loadedDictEnd, chunkStart, chunkEnd) != 0)
+                if (
+                    ZSTD_window_needOverflowCorrection(
+                        ldmState->window,
+                        0,
+                        maxDist,
+                        ldmState->loadedDictEnd,
+                        chunkStart,
+                        chunkEnd
+                    ) != 0
+                )
                 {
                     uint ldmHSize = 1U << (int)@params->hashLog;
-                    uint correction = ZSTD_window_correctOverflow(&ldmState->window, 0, maxDist, chunkStart);
+                    uint correction = ZSTD_window_correctOverflow(
+                        &ldmState->window,
+                        0,
+                        maxDist,
+                        chunkStart
+                    );
                     ZSTD_ldm_reduceTable(ldmState->hashTable, ldmHSize, correction);
                     ldmState->loadedDictEnd = 0;
                 }
 
-                ZSTD_window_enforceMaxDist(&ldmState->window, chunkEnd, maxDist, &ldmState->loadedDictEnd, null);
-                newLeftoverSize = ZSTD_ldm_generateSequences_internal(ldmState, sequences, @params, chunkStart, chunkSize);
+                ZSTD_window_enforceMaxDist(
+                    &ldmState->window,
+                    chunkEnd,
+                    maxDist,
+                    &ldmState->loadedDictEnd,
+                    null
+                );
+                newLeftoverSize = ZSTD_ldm_generateSequences_internal(
+                    ldmState,
+                    sequences,
+                    @params,
+                    chunkStart,
+                    chunkSize
+                );
                 if (ERR_isError(newLeftoverSize))
                     return newLeftoverSize;
                 if (prevSize < sequences->size)
@@ -590,7 +762,11 @@ namespace ZstdSharp.Unsafe
          * Avoids emitting matches less than `minMatch` bytes.
          * Must be called for data that is not passed to ZSTD_ldm_blockCompress().
          */
-        private static void ZSTD_ldm_skipSequences(RawSeqStore_t* rawSeqStore, nuint srcSize, uint minMatch)
+        private static void ZSTD_ldm_skipSequences(
+            RawSeqStore_t* rawSeqStore,
+            nuint srcSize,
+            uint minMatch
+        )
         {
             while (srcSize > 0 && rawSeqStore->pos < rawSeqStore->size)
             {
@@ -632,7 +808,11 @@ namespace ZstdSharp.Unsafe
          * Returns the current sequence to handle, or if the rest of the block should
          * be literals, it returns a sequence with offset == 0.
          */
-        private static rawSeq maybeSplitSequence(RawSeqStore_t* rawSeqStore, uint remaining, uint minMatch)
+        private static rawSeq maybeSplitSequence(
+            RawSeqStore_t* rawSeqStore,
+            uint remaining,
+            uint minMatch
+        )
         {
             rawSeq sequence = rawSeqStore->seq[rawSeqStore->pos];
             assert(sequence.offset > 0);
@@ -706,11 +886,23 @@ namespace ZstdSharp.Unsafe
          * two. We handle that case correctly, and update `rawSeqStore` appropriately.
          * NOTE: This function does not return any errors.
          */
-        private static nuint ZSTD_ldm_blockCompress(RawSeqStore_t* rawSeqStore, ZSTD_MatchState_t* ms, SeqStore_t* seqStore, uint* rep, ZSTD_paramSwitch_e useRowMatchFinder, void* src, nuint srcSize)
+        private static nuint ZSTD_ldm_blockCompress(
+            RawSeqStore_t* rawSeqStore,
+            ZSTD_MatchState_t* ms,
+            SeqStore_t* seqStore,
+            uint* rep,
+            ZSTD_paramSwitch_e useRowMatchFinder,
+            void* src,
+            nuint srcSize
+        )
         {
             ZSTD_compressionParameters* cParams = &ms->cParams;
             uint minMatch = cParams->minMatch;
-            ZSTD_BlockCompressor_f blockCompressor = ZSTD_selectBlockCompressor(cParams->strategy, useRowMatchFinder, ZSTD_matchState_dictMode(ms));
+            ZSTD_BlockCompressor_f blockCompressor = ZSTD_selectBlockCompressor(
+                cParams->strategy,
+                useRowMatchFinder,
+                ZSTD_matchState_dictMode(ms)
+            );
             /* Input bounds */
             byte* istart = (byte*)src;
             byte* iend = istart + srcSize;
@@ -744,7 +936,14 @@ namespace ZstdSharp.Unsafe
                         rep[i] = rep[i - 1];
                     rep[0] = sequence.offset;
                     assert(sequence.offset > 0);
-                    ZSTD_storeSeq(seqStore, newLitLength, ip - newLitLength, iend, sequence.offset + 3, sequence.matchLength);
+                    ZSTD_storeSeq(
+                        seqStore,
+                        newLitLength,
+                        ip - newLitLength,
+                        iend,
+                        sequence.offset + 3,
+                        sequence.matchLength
+                    );
                     ip += sequence.matchLength;
                 }
             }

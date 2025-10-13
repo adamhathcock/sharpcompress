@@ -7,8 +7,10 @@ namespace ZstdSharp.Unsafe
     {
         [FieldOffset(0)]
         public HUF_buildCTable_wksp_tables buildCTable_wksp;
+
         [FieldOffset(0)]
         public HUF_WriteCTableWksp writeCTable_wksp;
+
         [FieldOffset(0)]
         public fixed uint hist_wksp[1024];
     }

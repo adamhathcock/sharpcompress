@@ -8,10 +8,12 @@ namespace ZstdSharp.Unsafe
         public ZSTD_window_t window;
         public ldmEntry_t* hashTable;
         public uint loadedDictEnd;
+
         /* Next position in bucket to insert entry */
         public byte* bucketOffsets;
         public _splitIndices_e__FixedBuffer splitIndices;
         public _matchCandidates_e__FixedBuffer matchCandidates;
+
 #if NET8_0_OR_GREATER
         [InlineArray(64)]
         public unsafe struct _splitIndices_e__FixedBuffer

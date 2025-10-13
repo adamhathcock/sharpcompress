@@ -5,6 +5,7 @@ namespace ZstdSharp.Unsafe
     {
         /* Array of split indices */
         public uint* splitLocations;
+
         /* The current index within splitLocations being worked on */
         public nuint idx;
     }

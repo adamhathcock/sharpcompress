@@ -3,7 +3,6 @@ using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
-
 namespace ZstdSharp
 {
     public static unsafe class UnsafeHelper
@@ -18,9 +17,9 @@ namespace ZstdSharp
         public static void* malloc(ulong size)
         {
 #if NET6_0_OR_GREATER
-            var ptr = NativeMemory.Alloc((nuint) size);
+            var ptr = NativeMemory.Alloc((nuint)size);
 #else
-            var ptr = (void*) Marshal.AllocHGlobal((nint) size);
+            var ptr = (void*)Marshal.AllocHGlobal((nint)size);
 #endif
 #if DEBUG
             return PoisonMemory(ptr, size);
@@ -33,7 +32,7 @@ namespace ZstdSharp
         public static void* calloc(ulong num, ulong size)
         {
 #if NET6_0_OR_GREATER
-            return NativeMemory.AllocZeroed((nuint) num, (nuint) size);
+            return NativeMemory.AllocZeroed((nuint)num, (nuint)size);
 #else
             var total = num * size;
             assert(total <= uint.MaxValue);
@@ -44,12 +43,12 @@ namespace ZstdSharp
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void memcpy(void* destination, void* source, uint size)
-            => System.Runtime.CompilerServices.Unsafe.CopyBlockUnaligned(destination, source, size);
+        public static void memcpy(void* destination, void* source, uint size) =>
+            System.Runtime.CompilerServices.Unsafe.CopyBlockUnaligned(destination, source, size);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void memset(void* memPtr, byte val, uint size)
-            => System.Runtime.CompilerServices.Unsafe.InitBlockUnaligned(memPtr, val, size);
+        public static void memset(void* memPtr, byte val, uint size) =>
+            System.Runtime.CompilerServices.Unsafe.InitBlockUnaligned(memPtr, val, size);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void free(void* ptr)
@@ -57,12 +56,13 @@ namespace ZstdSharp
 #if NET6_0_OR_GREATER
             NativeMemory.Free(ptr);
 #else
-            Marshal.FreeHGlobal((IntPtr) ptr);
+            Marshal.FreeHGlobal((IntPtr)ptr);
 #endif
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static T* GetArrayPointer<T>(T[] array) where T : unmanaged
+        public static T* GetArrayPointer<T>(T[] array)
+            where T : unmanaged
         {
             var size = (uint)(sizeof(T) * array.Length);
 #if NET9_0_OR_GREATER
@@ -72,12 +72,17 @@ namespace ZstdSharp
             // loading the assembly in an unloadable AssemblyLoadContext.
             // While introduced in .NET 5, we call this only in .NET 9+, because
             // it's not implemented in the Mono runtime until then.
-            var destination = (T*)RuntimeHelpers.AllocateTypeAssociatedMemory(typeof(UnsafeHelper), (int)size);
+            var destination = (T*)
+                RuntimeHelpers.AllocateTypeAssociatedMemory(typeof(UnsafeHelper), (int)size);
 #else
             var destination = (T*)malloc(size);
 #endif
             fixed (void* source = &array[0])
-                System.Runtime.CompilerServices.Unsafe.CopyBlockUnaligned(destination, source, size);
+                System.Runtime.CompilerServices.Unsafe.CopyBlockUnaligned(
+                    destination,
+                    source,
+                    size
+                );
 
             return destination;
         }
@@ -91,16 +96,17 @@ namespace ZstdSharp
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void memmove(void* destination, void* source, ulong size)
-            => Buffer.MemoryCopy(source, destination, size, size);
+        public static void memmove(void* destination, void* source, ulong size) =>
+            Buffer.MemoryCopy(source, destination, size, size);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int memcmp(void* buf1, void* buf2, ulong size)
         {
             assert(size <= int.MaxValue);
             var intSize = (int)size;
-            return new ReadOnlySpan<byte>(buf1, intSize)
-                .SequenceCompareTo(new ReadOnlySpan<byte>(buf2, intSize));
+            return new ReadOnlySpan<byte>(buf1, intSize).SequenceCompareTo(
+                new ReadOnlySpan<byte>(buf2, intSize)
+            );
         }
     }
 }

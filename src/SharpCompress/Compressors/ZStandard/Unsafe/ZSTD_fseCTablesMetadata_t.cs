@@ -12,6 +12,7 @@ namespace ZstdSharp.Unsafe
         public SymbolEncodingType_e mlType;
         public fixed byte fseTablesBuffer[133];
         public nuint fseTablesSize;
+
         /* This is to account for bug in 1.3.4. More detail in ZSTD_entropyCompressSeqStore_internal() */
         public nuint lastCountSize;
     }

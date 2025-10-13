@@ -1,7 +1,7 @@
-using static ZstdSharp.UnsafeHelper;
-using System.Runtime.CompilerServices;
-using System.Numerics;
 using System;
+using System.Numerics;
+using System.Runtime.CompilerServices;
+using static ZstdSharp.UnsafeHelper;
 #if NETCOREAPP3_0_OR_GREATER
 using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
@@ -49,13 +49,21 @@ namespace ZstdSharp.Unsafe
          *  sort one already inserted but unsorted position
          *  assumption : curr >= btlow == (curr - btmask)
          *  doesn't fail */
-        private static void ZSTD_insertDUBT1(ZSTD_MatchState_t* ms, uint curr, byte* inputEnd, uint nbCompares, uint btLow, ZSTD_dictMode_e dictMode)
+        private static void ZSTD_insertDUBT1(
+            ZSTD_MatchState_t* ms,
+            uint curr,
+            byte* inputEnd,
+            uint nbCompares,
+            uint btLow,
+            ZSTD_dictMode_e dictMode
+        )
         {
             ZSTD_compressionParameters* cParams = &ms->cParams;
             uint* bt = ms->chainTable;
             uint btLog = cParams->chainLog - 1;
             uint btMask = (uint)((1 << (int)btLog) - 1);
-            nuint commonLengthSmaller = 0, commonLengthLarger = 0;
+            nuint commonLengthSmaller = 0,
+                commonLengthLarger = 0;
             byte* @base = ms->window.@base;
             byte* dictBase = ms->window.dictBase;
             uint dictLimit = ms->window.dictLimit;
@@ -79,11 +87,22 @@ namespace ZstdSharp.Unsafe
             {
                 uint* nextPtr = bt + 2 * (matchIndex & btMask);
                 /* guaranteed minimum nb of common bytes */
-                nuint matchLength = commonLengthSmaller < commonLengthLarger ? commonLengthSmaller : commonLengthLarger;
+                nuint matchLength =
+                    commonLengthSmaller < commonLengthLarger
+                        ? commonLengthSmaller
+                        : commonLengthLarger;
                 assert(matchIndex < curr);
-                if (dictMode != ZSTD_dictMode_e.ZSTD_extDict || matchIndex + matchLength >= dictLimit || curr < dictLimit)
+                if (
+                    dictMode != ZSTD_dictMode_e.ZSTD_extDict
+                    || matchIndex + matchLength >= dictLimit
+                    || curr < dictLimit
+                )
                 {
-                    byte* mBase = dictMode != ZSTD_dictMode_e.ZSTD_extDict || matchIndex + matchLength >= dictLimit ? @base : dictBase;
+                    byte* mBase =
+                        dictMode != ZSTD_dictMode_e.ZSTD_extDict
+                        || matchIndex + matchLength >= dictLimit
+                            ? @base
+                            : dictBase;
                     assert(matchIndex + matchLength >= dictLimit || curr < dictLimit);
                     match = mBase + matchIndex;
                     matchLength += ZSTD_count(ip + matchLength, match + matchLength, iend);
@@ -91,7 +110,13 @@ namespace ZstdSharp.Unsafe
                 else
                 {
                     match = dictBase + matchIndex;
-                    matchLength += ZSTD_count_2segments(ip + matchLength, match + matchLength, iend, dictEnd, prefixStart);
+                    matchLength += ZSTD_count_2segments(
+                        ip + matchLength,
+                        match + matchLength,
+                        iend,
+                        dictEnd,
+                        prefixStart
+                    );
                     if (matchIndex + matchLength >= dictLimit)
                         match = @base + matchIndex;
                 }
@@ -132,7 +157,16 @@ namespace ZstdSharp.Unsafe
             *smallerPtr = *largerPtr = 0;
         }
 
-        private static nuint ZSTD_DUBT_findBetterDictMatch(ZSTD_MatchState_t* ms, byte* ip, byte* iend, nuint* offsetPtr, nuint bestLength, uint nbCompares, uint mls, ZSTD_dictMode_e dictMode)
+        private static nuint ZSTD_DUBT_findBetterDictMatch(
+            ZSTD_MatchState_t* ms,
+            byte* ip,
+            byte* iend,
+            nuint* offsetPtr,
+            nuint bestLength,
+            uint nbCompares,
+            uint mls,
+            ZSTD_dictMode_e dictMode
+        )
         {
             ZSTD_MatchState_t* dms = ms->dictMatchState;
             ZSTD_compressionParameters* dmsCParams = &dms->cParams;
@@ -151,22 +185,39 @@ namespace ZstdSharp.Unsafe
             uint* dictBt = dms->chainTable;
             uint btLog = dmsCParams->chainLog - 1;
             uint btMask = (uint)((1 << (int)btLog) - 1);
-            uint btLow = btMask >= dictHighLimit - dictLowLimit ? dictLowLimit : dictHighLimit - btMask;
-            nuint commonLengthSmaller = 0, commonLengthLarger = 0;
+            uint btLow =
+                btMask >= dictHighLimit - dictLowLimit ? dictLowLimit : dictHighLimit - btMask;
+            nuint commonLengthSmaller = 0,
+                commonLengthLarger = 0;
             assert(dictMode == ZSTD_dictMode_e.ZSTD_dictMatchState);
             for (; nbCompares != 0 && dictMatchIndex > dictLowLimit; --nbCompares)
             {
                 uint* nextPtr = dictBt + 2 * (dictMatchIndex & btMask);
                 /* guaranteed minimum nb of common bytes */
-                nuint matchLength = commonLengthSmaller < commonLengthLarger ? commonLengthSmaller : commonLengthLarger;
+                nuint matchLength =
+                    commonLengthSmaller < commonLengthLarger
+                        ? commonLengthSmaller
+                        : commonLengthLarger;
                 byte* match = dictBase + dictMatchIndex;
-                matchLength += ZSTD_count_2segments(ip + matchLength, match + matchLength, iend, dictEnd, prefixStart);
+                matchLength += ZSTD_count_2segments(
+                    ip + matchLength,
+                    match + matchLength,
+                    iend,
+                    dictEnd,
+                    prefixStart
+                );
                 if (dictMatchIndex + matchLength >= dictHighLimit)
                     match = @base + dictMatchIndex + dictIndexDelta;
                 if (matchLength > bestLength)
                 {
                     uint matchIndex = dictMatchIndex + dictIndexDelta;
-                    if (4 * (int)(matchLength - bestLength) > (int)(ZSTD_highbit32(curr - matchIndex + 1) - ZSTD_highbit32((uint)offsetPtr[0] + 1)))
+                    if (
+                        4 * (int)(matchLength - bestLength)
+                        > (int)(
+                            ZSTD_highbit32(curr - matchIndex + 1)
+                            - ZSTD_highbit32((uint)offsetPtr[0] + 1)
+                        )
+                    )
                     {
                         bestLength = matchLength;
                         assert(curr - matchIndex > 0);
@@ -210,7 +261,14 @@ namespace ZstdSharp.Unsafe
             return bestLength;
         }
 
-        private static nuint ZSTD_DUBT_findBestMatch(ZSTD_MatchState_t* ms, byte* ip, byte* iend, nuint* offBasePtr, uint mls, ZSTD_dictMode_e dictMode)
+        private static nuint ZSTD_DUBT_findBestMatch(
+            ZSTD_MatchState_t* ms,
+            byte* ip,
+            byte* iend,
+            nuint* offBasePtr,
+            uint mls,
+            ZSTD_dictMode_e dictMode
+        )
         {
             ZSTD_compressionParameters* cParams = &ms->cParams;
             uint* hashTable = ms->hashTable;
@@ -258,7 +316,8 @@ namespace ZstdSharp.Unsafe
             }
 
             {
-                nuint commonLengthSmaller = 0, commonLengthLarger = 0;
+                nuint commonLengthSmaller = 0,
+                    commonLengthLarger = 0;
                 byte* dictBase = ms->window.dictBase;
                 uint dictLimit = ms->window.dictLimit;
                 byte* dictEnd = dictBase + dictLimit;
@@ -275,9 +334,15 @@ namespace ZstdSharp.Unsafe
                 {
                     uint* nextPtr = bt + 2 * (matchIndex & btMask);
                     /* guaranteed minimum nb of common bytes */
-                    nuint matchLength = commonLengthSmaller < commonLengthLarger ? commonLengthSmaller : commonLengthLarger;
+                    nuint matchLength =
+                        commonLengthSmaller < commonLengthLarger
+                            ? commonLengthSmaller
+                            : commonLengthLarger;
                     byte* match;
-                    if (dictMode != ZSTD_dictMode_e.ZSTD_extDict || matchIndex + matchLength >= dictLimit)
+                    if (
+                        dictMode != ZSTD_dictMode_e.ZSTD_extDict
+                        || matchIndex + matchLength >= dictLimit
+                    )
                     {
                         match = @base + matchIndex;
                         matchLength += ZSTD_count(ip + matchLength, match + matchLength, iend);
@@ -285,7 +350,13 @@ namespace ZstdSharp.Unsafe
                     else
                     {
                         match = dictBase + matchIndex;
-                        matchLength += ZSTD_count_2segments(ip + matchLength, match + matchLength, iend, dictEnd, prefixStart);
+                        matchLength += ZSTD_count_2segments(
+                            ip + matchLength,
+                            match + matchLength,
+                            iend,
+                            dictEnd,
+                            prefixStart
+                        );
                         if (matchIndex + matchLength >= dictLimit)
                             match = @base + matchIndex;
                     }
@@ -294,7 +365,13 @@ namespace ZstdSharp.Unsafe
                     {
                         if (matchLength > matchEndIdx - matchIndex)
                             matchEndIdx = matchIndex + (uint)matchLength;
-                        if (4 * (int)(matchLength - bestLength) > (int)(ZSTD_highbit32(curr - matchIndex + 1) - ZSTD_highbit32((uint)*offBasePtr)))
+                        if (
+                            4 * (int)(matchLength - bestLength)
+                            > (int)(
+                                ZSTD_highbit32(curr - matchIndex + 1)
+                                - ZSTD_highbit32((uint)*offBasePtr)
+                            )
+                        )
                         {
                             bestLength = matchLength;
                             assert(curr - matchIndex > 0);
@@ -344,7 +421,16 @@ namespace ZstdSharp.Unsafe
                 assert(nbCompares <= 1U << (sizeof(nuint) == 4 ? 30 : 31) - 1);
                 if (dictMode == ZSTD_dictMode_e.ZSTD_dictMatchState && nbCompares != 0)
                 {
-                    bestLength = ZSTD_DUBT_findBetterDictMatch(ms, ip, iend, offBasePtr, bestLength, nbCompares, mls, dictMode);
+                    bestLength = ZSTD_DUBT_findBetterDictMatch(
+                        ms,
+                        ip,
+                        iend,
+                        offBasePtr,
+                        bestLength,
+                        nbCompares,
+                        mls,
+                        dictMode
+                    );
                 }
 
                 assert(matchEndIdx > curr + 8);
@@ -361,7 +447,14 @@ namespace ZstdSharp.Unsafe
 
         /** ZSTD_BtFindBestMatch() : Tree updater, providing best match */
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static nuint ZSTD_BtFindBestMatch(ZSTD_MatchState_t* ms, byte* ip, byte* iLimit, nuint* offBasePtr, uint mls, ZSTD_dictMode_e dictMode)
+        private static nuint ZSTD_BtFindBestMatch(
+            ZSTD_MatchState_t* ms,
+            byte* ip,
+            byte* iLimit,
+            nuint* offBasePtr,
+            uint mls,
+            ZSTD_dictMode_e dictMode
+        )
         {
             if (ip < ms->window.@base + ms->nextToUpdate)
                 return 0;
@@ -372,7 +465,10 @@ namespace ZstdSharp.Unsafe
         /***********************************
          * Dedicated dict search
          ***********************************/
-        private static void ZSTD_dedicatedDictSearch_lazy_loadDictionary(ZSTD_MatchState_t* ms, byte* ip)
+        private static void ZSTD_dedicatedDictSearch_lazy_loadDictionary(
+            ZSTD_MatchState_t* ms,
+            byte* ip
+        )
         {
             byte* @base = ms->window.@base;
             uint target = (uint)(ip - @base);
@@ -430,7 +526,7 @@ namespace ZstdSharp.Unsafe
 
                     if (count == cacheSize)
                     {
-                        for (count = 0; count < chainLimit;)
+                        for (count = 0; count < chainLimit; )
                         {
                             if (i < minChain)
                             {
@@ -468,7 +564,7 @@ namespace ZstdSharp.Unsafe
                 assert(chainPos <= chainSize);
             }
 
-            for (hashIdx = (uint)(1 << (int)hashLog); hashIdx != 0;)
+            for (hashIdx = (uint)(1 << (int)hashLog); hashIdx != 0; )
             {
                 uint bucketIdx = --hashIdx << 2;
                 uint chainPackedPointer = tmpHashTable[hashIdx];
@@ -497,7 +593,18 @@ namespace ZstdSharp.Unsafe
          * If none are longer than the argument ml, then ml will be returned.
          */
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static nuint ZSTD_dedicatedDictSearch_lazy_search(nuint* offsetPtr, nuint ml, uint nbAttempts, ZSTD_MatchState_t* dms, byte* ip, byte* iLimit, byte* prefixStart, uint curr, uint dictLimit, nuint ddsIdx)
+        private static nuint ZSTD_dedicatedDictSearch_lazy_search(
+            nuint* offsetPtr,
+            nuint ml,
+            uint nbAttempts,
+            ZSTD_MatchState_t* dms,
+            byte* ip,
+            byte* iLimit,
+            byte* prefixStart,
+            uint curr,
+            uint dictLimit,
+            nuint ddsIdx
+        )
         {
             uint ddsLowestIndex = dms->window.dictLimit;
             byte* ddsBase = dms->window.@base;
@@ -544,7 +651,8 @@ namespace ZstdSharp.Unsafe
                 assert(match + 4 <= ddsEnd);
                 if (MEM_read32(match) == MEM_read32(ip))
                 {
-                    currentMl = ZSTD_count_2segments(ip + 4, match + 4, iLimit, ddsEnd, prefixStart) + 4;
+                    currentMl =
+                        ZSTD_count_2segments(ip + 4, match + 4, iLimit, ddsEnd, prefixStart) + 4;
                 }
 
                 if (currentMl > ml)
@@ -586,7 +694,9 @@ namespace ZstdSharp.Unsafe
                     assert(match + 4 <= ddsEnd);
                     if (MEM_read32(match) == MEM_read32(ip))
                     {
-                        currentMl = ZSTD_count_2segments(ip + 4, match + 4, iLimit, ddsEnd, prefixStart) + 4;
+                        currentMl =
+                            ZSTD_count_2segments(ip + 4, match + 4, iLimit, ddsEnd, prefixStart)
+                            + 4;
                     }
 
                     if (currentMl > ml)
@@ -606,7 +716,13 @@ namespace ZstdSharp.Unsafe
         /* Update chains up to ip (excluded)
         Assumption : always within prefix (i.e. not within extDict) */
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static uint ZSTD_insertAndFindFirstIndex_internal(ZSTD_MatchState_t* ms, ZSTD_compressionParameters* cParams, byte* ip, uint mls, uint lazySkipping)
+        private static uint ZSTD_insertAndFindFirstIndex_internal(
+            ZSTD_MatchState_t* ms,
+            ZSTD_compressionParameters* cParams,
+            byte* ip,
+            uint mls,
+            uint lazySkipping
+        )
         {
             uint* hashTable = ms->hashTable;
             uint hashLog = cParams->hashLog;
@@ -637,7 +753,14 @@ namespace ZstdSharp.Unsafe
 
         /* inlining is important to hardwire a hot branch (template emulation) */
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static nuint ZSTD_HcFindBestMatch(ZSTD_MatchState_t* ms, byte* ip, byte* iLimit, nuint* offsetPtr, uint mls, ZSTD_dictMode_e dictMode)
+        private static nuint ZSTD_HcFindBestMatch(
+            ZSTD_MatchState_t* ms,
+            byte* ip,
+            byte* iLimit,
+            nuint* offsetPtr,
+            uint mls,
+            ZSTD_dictMode_e dictMode
+        )
         {
             ZSTD_compressionParameters* cParams = &ms->cParams;
             uint* chainTable = ms->chainTable;
@@ -651,15 +774,20 @@ namespace ZstdSharp.Unsafe
             uint curr = (uint)(ip - @base);
             uint maxDistance = 1U << (int)cParams->windowLog;
             uint lowestValid = ms->window.lowLimit;
-            uint withinMaxDistance = curr - lowestValid > maxDistance ? curr - maxDistance : lowestValid;
+            uint withinMaxDistance =
+                curr - lowestValid > maxDistance ? curr - maxDistance : lowestValid;
             uint isDictionary = ms->loadedDictEnd != 0 ? 1U : 0U;
             uint lowLimit = isDictionary != 0 ? lowestValid : withinMaxDistance;
             uint minChain = curr > chainSize ? curr - chainSize : 0;
             uint nbAttempts = 1U << (int)cParams->searchLog;
             nuint ml = 4 - 1;
             ZSTD_MatchState_t* dms = ms->dictMatchState;
-            uint ddsHashLog = dictMode == ZSTD_dictMode_e.ZSTD_dedicatedDictSearch ? dms->cParams.hashLog - 2 : 0;
-            nuint ddsIdx = dictMode == ZSTD_dictMode_e.ZSTD_dedicatedDictSearch ? ZSTD_hashPtr(ip, ddsHashLog, mls) << 2 : 0;
+            uint ddsHashLog =
+                dictMode == ZSTD_dictMode_e.ZSTD_dedicatedDictSearch ? dms->cParams.hashLog - 2 : 0;
+            nuint ddsIdx =
+                dictMode == ZSTD_dictMode_e.ZSTD_dedicatedDictSearch
+                    ? ZSTD_hashPtr(ip, ddsHashLog, mls) << 2
+                    : 0;
             uint matchIndex;
             if (dictMode == ZSTD_dictMode_e.ZSTD_dedicatedDictSearch)
             {
@@ -672,7 +800,13 @@ namespace ZstdSharp.Unsafe
 #endif
             }
 
-            matchIndex = ZSTD_insertAndFindFirstIndex_internal(ms, cParams, ip, mls, (uint)ms->lazySkipping);
+            matchIndex = ZSTD_insertAndFindFirstIndex_internal(
+                ms,
+                cParams,
+                ip,
+                mls,
+                (uint)ms->lazySkipping
+            );
             for (; matchIndex >= lowLimit && nbAttempts > 0; nbAttempts--)
             {
                 nuint currentMl = 0;
@@ -688,7 +822,9 @@ namespace ZstdSharp.Unsafe
                     byte* match = dictBase + matchIndex;
                     assert(match + 4 <= dictEnd);
                     if (MEM_read32(match) == MEM_read32(ip))
-                        currentMl = ZSTD_count_2segments(ip + 4, match + 4, iLimit, dictEnd, prefixStart) + 4;
+                        currentMl =
+                            ZSTD_count_2segments(ip + 4, match + 4, iLimit, dictEnd, prefixStart)
+                            + 4;
                 }
 
                 if (currentMl > ml)
@@ -708,7 +844,18 @@ namespace ZstdSharp.Unsafe
             assert(nbAttempts <= 1U << (sizeof(nuint) == 4 ? 30 : 31) - 1);
             if (dictMode == ZSTD_dictMode_e.ZSTD_dedicatedDictSearch)
             {
-                ml = ZSTD_dedicatedDictSearch_lazy_search(offsetPtr, ml, nbAttempts, dms, ip, iLimit, prefixStart, curr, dictLimit, ddsIdx);
+                ml = ZSTD_dedicatedDictSearch_lazy_search(
+                    offsetPtr,
+                    ml,
+                    nbAttempts,
+                    dms,
+                    ip,
+                    iLimit,
+                    prefixStart,
+                    curr,
+                    dictLimit,
+                    ddsIdx
+                );
             }
             else if (dictMode == ZSTD_dictMode_e.ZSTD_dictMatchState)
             {
@@ -728,7 +875,9 @@ namespace ZstdSharp.Unsafe
                     byte* match = dmsBase + matchIndex;
                     assert(match + 4 <= dmsEnd);
                     if (MEM_read32(match) == MEM_read32(ip))
-                        currentMl = ZSTD_count_2segments(ip + 4, match + 4, iLimit, dmsEnd, prefixStart) + 4;
+                        currentMl =
+                            ZSTD_count_2segments(ip + 4, match + 4, iLimit, dmsEnd, prefixStart)
+                            + 4;
                     if (currentMl > ml)
                     {
                         ml = currentMl;
@@ -786,7 +935,12 @@ namespace ZstdSharp.Unsafe
          * Performs prefetching for the hashTable and tagTable at a given row.
          */
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void ZSTD_row_prefetch(uint* hashTable, byte* tagTable, uint relRow, uint rowLog)
+        private static void ZSTD_row_prefetch(
+            uint* hashTable,
+            byte* tagTable,
+            uint relRow,
+            uint rowLog
+        )
         {
 #if NETCOREAPP3_0_OR_GREATER
             if (Sse.IsSupported)
@@ -832,7 +986,14 @@ namespace ZstdSharp.Unsafe
          * but not beyond iLimit.
          */
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void ZSTD_row_fillHashCache(ZSTD_MatchState_t* ms, byte* @base, uint rowLog, uint mls, uint idx, byte* iLimit)
+        private static void ZSTD_row_fillHashCache(
+            ZSTD_MatchState_t* ms,
+            byte* @base,
+            uint rowLog,
+            uint mls,
+            uint idx,
+            byte* iLimit
+        )
         {
             uint* hashTable = ms->hashTable;
             byte* tagTable = ms->tagTable;
@@ -853,7 +1014,17 @@ namespace ZstdSharp.Unsafe
          * base + idx + ZSTD_ROW_HASH_CACHE_SIZE. Also prefetches the appropriate rows from hashTable and tagTable.
          */
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static uint ZSTD_row_nextCachedHash(uint* cache, uint* hashTable, byte* tagTable, byte* @base, uint idx, uint hashLog, uint rowLog, uint mls, ulong hashSalt)
+        private static uint ZSTD_row_nextCachedHash(
+            uint* cache,
+            uint* hashTable,
+            byte* tagTable,
+            byte* @base,
+            uint idx,
+            uint hashLog,
+            uint rowLog,
+            uint mls,
+            ulong hashSalt
+        )
         {
             uint newHash = (uint)ZSTD_hashPtrSalted(@base + idx + 8, hashLog + 8, mls, hashSalt);
             uint row = newHash >> 8 << (int)rowLog;
@@ -869,7 +1040,15 @@ namespace ZstdSharp.Unsafe
          * Updates the hash table with positions starting from updateStartIdx until updateEndIdx.
          */
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void ZSTD_row_update_internalImpl(ZSTD_MatchState_t* ms, uint updateStartIdx, uint updateEndIdx, uint mls, uint rowLog, uint rowMask, uint useCache)
+        private static void ZSTD_row_update_internalImpl(
+            ZSTD_MatchState_t* ms,
+            uint updateStartIdx,
+            uint updateEndIdx,
+            uint mls,
+            uint rowLog,
+            uint rowMask,
+            uint useCache
+        )
         {
             uint* hashTable = ms->hashTable;
             byte* tagTable = ms->tagTable;
@@ -877,12 +1056,38 @@ namespace ZstdSharp.Unsafe
             byte* @base = ms->window.@base;
             for (; updateStartIdx < updateEndIdx; ++updateStartIdx)
             {
-                uint hash = useCache != 0 ? ZSTD_row_nextCachedHash(ms->hashCache, hashTable, tagTable, @base, updateStartIdx, hashLog, rowLog, mls, ms->hashSalt) : (uint)ZSTD_hashPtrSalted(@base + updateStartIdx, hashLog + 8, mls, ms->hashSalt);
+                uint hash =
+                    useCache != 0
+                        ? ZSTD_row_nextCachedHash(
+                            ms->hashCache,
+                            hashTable,
+                            tagTable,
+                            @base,
+                            updateStartIdx,
+                            hashLog,
+                            rowLog,
+                            mls,
+                            ms->hashSalt
+                        )
+                        : (uint)ZSTD_hashPtrSalted(
+                            @base + updateStartIdx,
+                            hashLog + 8,
+                            mls,
+                            ms->hashSalt
+                        );
                 uint relRow = hash >> 8 << (int)rowLog;
                 uint* row = hashTable + relRow;
                 byte* tagRow = tagTable + relRow;
                 uint pos = ZSTD_row_nextIndex(tagRow, rowMask);
-                assert(hash == ZSTD_hashPtrSalted(@base + updateStartIdx, hashLog + 8, mls, ms->hashSalt));
+                assert(
+                    hash
+                        == ZSTD_hashPtrSalted(
+                            @base + updateStartIdx,
+                            hashLog + 8,
+                            mls,
+                            ms->hashSalt
+                        )
+                );
                 tagRow[pos] = (byte)(hash & (1U << 8) - 1);
                 row[pos] = updateStartIdx;
             }
@@ -893,7 +1098,14 @@ namespace ZstdSharp.Unsafe
          * Skips sections of long matches as is necessary.
          */
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void ZSTD_row_update_internal(ZSTD_MatchState_t* ms, byte* ip, uint mls, uint rowLog, uint rowMask, uint useCache)
+        private static void ZSTD_row_update_internal(
+            ZSTD_MatchState_t* ms,
+            byte* ip,
+            uint mls,
+            uint rowLog,
+            uint rowMask,
+            uint useCache
+        )
         {
             uint idx = ms->nextToUpdate;
             byte* @base = ms->window.@base;
@@ -923,7 +1135,10 @@ namespace ZstdSharp.Unsafe
          */
         private static void ZSTD_row_update(ZSTD_MatchState_t* ms, byte* ip)
         {
-            uint rowLog = ms->cParams.searchLog <= 4 ? 4 : ms->cParams.searchLog <= 6 ? ms->cParams.searchLog : 6;
+            uint rowLog =
+                ms->cParams.searchLog <= 4 ? 4
+                : ms->cParams.searchLog <= 6 ? ms->cParams.searchLog
+                : 6;
             uint rowMask = (1U << (int)rowLog) - 1;
             /* mls caps out at 6 */
             uint mls = ms->cParams.minMatch < 6 ? ms->cParams.minMatch : 6;
@@ -996,7 +1211,13 @@ namespace ZstdSharp.Unsafe
                 Vector128<byte> chunk3 = Sse2.LoadVector128(src + 16 * 3);
                 Vector128<byte> equalMask3 = Sse2.CompareEqual(chunk3, comparisonMask);
                 int matches3 = Sse2.MoveMask(equalMask3);
-                return BitOperations.RotateRight((ulong)matches3 << 48 | (ulong)matches2 << 32 | (ulong)matches1 << 16 | (uint)matches0, (int)head);
+                return BitOperations.RotateRight(
+                    (ulong)matches3 << 48
+                        | (ulong)matches2 << 32
+                        | (ulong)matches1 << 16
+                        | (uint)matches0,
+                    (int)head
+                );
             }
         }
 #endif
@@ -1008,7 +1229,12 @@ namespace ZstdSharp.Unsafe
          * must rotate the "matches" bitfield to match up with the actual layout of the
          * entries within the hashTable */
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static ulong ZSTD_row_getMatchMask(byte* tagRow, byte tag, uint headGrouped, uint rowEntries)
+        private static ulong ZSTD_row_getMatchMask(
+            byte* tagRow,
+            byte tag,
+            uint headGrouped,
+            uint rowEntries
+        )
         {
             byte* src = tagRow;
             assert(rowEntries == 16 || rowEntries == 32 || rowEntries == 64);
@@ -1032,10 +1258,13 @@ namespace ZstdSharp.Unsafe
                      * 0x88 = 0b10001000.
                      */
                     Vector128<byte> chunk = AdvSimd.LoadVector128(src);
-                    Vector128<ushort> equalMask = AdvSimd.CompareEqual(chunk, AdvSimd.DuplicateToVector128(tag)).As<byte, ushort>();
+                    Vector128<ushort> equalMask = AdvSimd
+                        .CompareEqual(chunk, AdvSimd.DuplicateToVector128(tag))
+                        .As<byte, ushort>();
                     Vector64<byte> res = AdvSimd.ShiftRightLogicalNarrowingLower(equalMask, 4);
                     ulong matches = res.As<byte, ulong>().GetElement(0);
-                    return BitOperations.RotateRight(matches, (int)headGrouped) & 0x8888888888888888;
+                    return BitOperations.RotateRight(matches, (int)headGrouped)
+                        & 0x8888888888888888;
                 }
                 else if (rowEntries == 32)
                 {
@@ -1045,13 +1274,21 @@ namespace ZstdSharp.Unsafe
                         /* Same idea as with rowEntries == 16 but doing AND with
                          * 0x55 = 0b01010101.
                          */
-                        (Vector128<ushort> chunk0, Vector128<ushort> chunk1) = AdvSimd.Arm64.Load2xVector128AndUnzip((ushort*)src);
+                        (Vector128<ushort> chunk0, Vector128<ushort> chunk1) =
+                            AdvSimd.Arm64.Load2xVector128AndUnzip((ushort*)src);
                         Vector128<byte> dup = AdvSimd.DuplicateToVector128(tag);
-                        Vector64<byte> t0 = AdvSimd.ShiftRightLogicalNarrowingLower(AdvSimd.CompareEqual(chunk0.As<ushort, byte>(), dup).As<byte, ushort>(), 6);
-                        Vector64<byte> t1 = AdvSimd.ShiftRightLogicalNarrowingLower(AdvSimd.CompareEqual(chunk1.As<ushort, byte>(), dup).As<byte, ushort>(), 6);
+                        Vector64<byte> t0 = AdvSimd.ShiftRightLogicalNarrowingLower(
+                            AdvSimd.CompareEqual(chunk0.As<ushort, byte>(), dup).As<byte, ushort>(),
+                            6
+                        );
+                        Vector64<byte> t1 = AdvSimd.ShiftRightLogicalNarrowingLower(
+                            AdvSimd.CompareEqual(chunk1.As<ushort, byte>(), dup).As<byte, ushort>(),
+                            6
+                        );
                         Vector64<byte> res = AdvSimd.ShiftLeftAndInsert(t0, t1, 4);
                         ulong matches = res.As<byte, ulong>().GetElement(0);
-                        return BitOperations.RotateRight(matches, (int)headGrouped) & 0x5555555555555555;
+                        return BitOperations.RotateRight(matches, (int)headGrouped)
+                            & 0x5555555555555555;
                     }
 #endif
                 }
@@ -1060,7 +1297,12 @@ namespace ZstdSharp.Unsafe
 #if NET9_0_OR_GREATER
                     if (AdvSimd.Arm64.IsSupported)
                     {
-                        (Vector128<byte> chunk0, Vector128<byte> chunk1, Vector128<byte> chunk2, Vector128<byte> chunk3) = AdvSimd.Arm64.Load4xVector128AndUnzip(src);
+                        (
+                            Vector128<byte> chunk0,
+                            Vector128<byte> chunk1,
+                            Vector128<byte> chunk2,
+                            Vector128<byte> chunk3
+                        ) = AdvSimd.Arm64.Load4xVector128AndUnzip(src);
                         Vector128<byte> dup = AdvSimd.DuplicateToVector128(tag);
                         Vector128<byte> cmp0 = AdvSimd.CompareEqual(chunk0, dup);
                         Vector128<byte> cmp1 = AdvSimd.CompareEqual(chunk1, dup);
@@ -1071,9 +1313,12 @@ namespace ZstdSharp.Unsafe
                         Vector128<byte> t1 = AdvSimd.ShiftRightAndInsert(cmp3, cmp2, 1);
                         Vector128<byte> t2 = AdvSimd.ShiftRightAndInsert(t1, t0, 2);
                         Vector128<byte> t3 = AdvSimd.ShiftRightAndInsert(t2, t2, 4);
-                        Vector64<byte> t4 = AdvSimd.ShiftRightLogicalNarrowingLower(t3.As<byte, ushort>(), 4);
+                        Vector64<byte> t4 = AdvSimd.ShiftRightLogicalNarrowingLower(
+                            t3.As<byte, ushort>(),
+                            4
+                        );
                         ulong matches = t4.As<byte, ulong>().GetElement(0);
-                        return BitOperations.RotateRight(matches, (int) headGrouped);
+                        return BitOperations.RotateRight(matches, (int)headGrouped);
                     }
 #endif
                 }
@@ -1101,8 +1346,7 @@ namespace ZstdSharp.Unsafe
                         matches <<= (int)chunkSize;
                         matches |= chunk * extractMagic >> (int)shiftAmount;
                         i -= (int)chunkSize;
-                    }
-                    while (i >= 0);
+                    } while (i >= 0);
                 }
                 else
                 {
@@ -1116,8 +1360,7 @@ namespace ZstdSharp.Unsafe
                         matches <<= (int)chunkSize;
                         matches |= (chunk >> 7) * extractMagic >> (int)shiftAmount;
                         i -= (int)chunkSize;
-                    }
-                    while (i >= 0);
+                    } while (i >= 0);
                 }
 
                 matches = ~matches;
@@ -1152,7 +1395,15 @@ namespace ZstdSharp.Unsafe
          * - Insert the tag into the equivalent row and position in the tagTable.
          */
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static nuint ZSTD_RowFindBestMatch(ZSTD_MatchState_t* ms, byte* ip, byte* iLimit, nuint* offsetPtr, uint mls, ZSTD_dictMode_e dictMode, uint rowLog)
+        private static nuint ZSTD_RowFindBestMatch(
+            ZSTD_MatchState_t* ms,
+            byte* ip,
+            byte* iLimit,
+            nuint* offsetPtr,
+            uint mls,
+            ZSTD_dictMode_e dictMode,
+            uint rowLog
+        )
         {
             uint* hashTable = ms->hashTable;
             byte* tagTable = ms->tagTable;
@@ -1167,7 +1418,8 @@ namespace ZstdSharp.Unsafe
             uint curr = (uint)(ip - @base);
             uint maxDistance = 1U << (int)cParams->windowLog;
             uint lowestValid = ms->window.lowLimit;
-            uint withinMaxDistance = curr - lowestValid > maxDistance ? curr - maxDistance : lowestValid;
+            uint withinMaxDistance =
+                curr - lowestValid > maxDistance ? curr - maxDistance : lowestValid;
             uint isDictionary = ms->loadedDictEnd != 0 ? 1U : 0U;
             uint lowLimit = isDictionary != 0 ? lowestValid : withinMaxDistance;
             uint rowEntries = 1U << (int)rowLog;
@@ -1201,7 +1453,8 @@ namespace ZstdSharp.Unsafe
 #endif
                 }
 
-                ddsExtraAttempts = cParams->searchLog > rowLog ? 1U << (int)(cParams->searchLog - rowLog) : 0;
+                ddsExtraAttempts =
+                    cParams->searchLog > rowLog ? 1U << (int)(cParams->searchLog - rowLog) : 0;
             }
 
             if (dictMode == ZSTD_dictMode_e.ZSTD_dictMatchState)
@@ -1220,7 +1473,17 @@ namespace ZstdSharp.Unsafe
             if (ms->lazySkipping == 0)
             {
                 ZSTD_row_update_internal(ms, ip, mls, rowLog, rowMask, 1);
-                hash = ZSTD_row_nextCachedHash(hashCache, hashTable, tagTable, @base, curr, hashLog, rowLog, mls, hashSalt);
+                hash = ZSTD_row_nextCachedHash(
+                    hashCache,
+                    hashTable,
+                    tagTable,
+                    @base,
+                    curr,
+                    hashLog,
+                    rowLog,
+                    mls,
+                    hashSalt
+                );
             }
             else
             {
@@ -1241,7 +1504,8 @@ namespace ZstdSharp.Unsafe
                 ulong matches = ZSTD_row_getMatchMask(tagRow, (byte)tag, headGrouped, rowEntries);
                 for (; matches > 0 && nbAttempts > 0; matches &= matches - 1)
                 {
-                    uint matchPos = (headGrouped + ZSTD_VecMask_next(matches)) / groupWidth & rowMask;
+                    uint matchPos =
+                        (headGrouped + ZSTD_VecMask_next(matches)) / groupWidth & rowMask;
                     uint matchIndex = row[matchPos];
                     if (matchPos == 0)
                         continue;
@@ -1295,7 +1559,14 @@ namespace ZstdSharp.Unsafe
                         byte* match = dictBase + matchIndex;
                         assert(match + 4 <= dictEnd);
                         if (MEM_read32(match) == MEM_read32(ip))
-                            currentMl = ZSTD_count_2segments(ip + 4, match + 4, iLimit, dictEnd, prefixStart) + 4;
+                            currentMl =
+                                ZSTD_count_2segments(
+                                    ip + 4,
+                                    match + 4,
+                                    iLimit,
+                                    dictEnd,
+                                    prefixStart
+                                ) + 4;
                     }
 
                     if (currentMl > ml)
@@ -1312,7 +1583,18 @@ namespace ZstdSharp.Unsafe
             assert(nbAttempts <= 1U << (sizeof(nuint) == 4 ? 30 : 31) - 1);
             if (dictMode == ZSTD_dictMode_e.ZSTD_dedicatedDictSearch)
             {
-                ml = ZSTD_dedicatedDictSearch_lazy_search(offsetPtr, ml, nbAttempts + ddsExtraAttempts, dms, ip, iLimit, prefixStart, curr, dictLimit, ddsIdx);
+                ml = ZSTD_dedicatedDictSearch_lazy_search(
+                    offsetPtr,
+                    ml,
+                    nbAttempts + ddsExtraAttempts,
+                    dms,
+                    ip,
+                    iLimit,
+                    prefixStart,
+                    curr,
+                    dictLimit,
+                    ddsIdx
+                );
             }
             else if (dictMode == ZSTD_dictMode_e.ZSTD_dictMatchState)
             {
@@ -1327,10 +1609,16 @@ namespace ZstdSharp.Unsafe
                     uint* matchBuffer = stackalloc uint[64];
                     nuint numMatches = 0;
                     nuint currMatch = 0;
-                    ulong matches = ZSTD_row_getMatchMask(dmsTagRow, (byte)dmsTag, headGrouped, rowEntries);
+                    ulong matches = ZSTD_row_getMatchMask(
+                        dmsTagRow,
+                        (byte)dmsTag,
+                        headGrouped,
+                        rowEntries
+                    );
                     for (; matches > 0 && nbAttempts > 0; matches &= matches - 1)
                     {
-                        uint matchPos = (headGrouped + ZSTD_VecMask_next(matches)) / groupWidth & rowMask;
+                        uint matchPos =
+                            (headGrouped + ZSTD_VecMask_next(matches)) / groupWidth & rowMask;
                         uint matchIndex = dmsRow[matchPos];
                         if (matchPos == 0)
                             continue;
@@ -1357,7 +1645,14 @@ namespace ZstdSharp.Unsafe
                             byte* match = dmsBase + matchIndex;
                             assert(match + 4 <= dmsEnd);
                             if (MEM_read32(match) == MEM_read32(ip))
-                                currentMl = ZSTD_count_2segments(ip + 4, match + 4, iLimit, dmsEnd, prefixStart) + 4;
+                                currentMl =
+                                    ZSTD_count_2segments(
+                                        ip + 4,
+                                        match + 4,
+                                        iLimit,
+                                        dmsEnd,
+                                        prefixStart
+                                    ) + 4;
                         }
 
                         if (currentMl > ml)
@@ -1377,402 +1672,1671 @@ namespace ZstdSharp.Unsafe
         }
 
         /* Generate row search fns for each combination of (dictMode, mls, rowLog) */
-        private static nuint ZSTD_RowFindBestMatch_noDict_4_4(ZSTD_MatchState_t* ms, byte* ip, byte* iLimit, nuint* offsetPtr)
+        private static nuint ZSTD_RowFindBestMatch_noDict_4_4(
+            ZSTD_MatchState_t* ms,
+            byte* ip,
+            byte* iLimit,
+            nuint* offsetPtr
+        )
         {
-            assert((4 > (6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) ? 4 : 6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) == 4);
-            assert((4 > (6 < ms->cParams.searchLog ? 6 : ms->cParams.searchLog) ? 4 : 6 < ms->cParams.searchLog ? 6 : ms->cParams.searchLog) == 4);
-            return ZSTD_RowFindBestMatch(ms, ip, iLimit, offsetPtr, 4, ZSTD_dictMode_e.ZSTD_noDict, 4);
+            assert(
+                (
+                    4 > (6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) ? 4
+                    : 6 < ms->cParams.minMatch ? 6
+                    : ms->cParams.minMatch
+                ) == 4
+            );
+            assert(
+                (
+                    4 > (6 < ms->cParams.searchLog ? 6 : ms->cParams.searchLog) ? 4
+                    : 6 < ms->cParams.searchLog ? 6
+                    : ms->cParams.searchLog
+                ) == 4
+            );
+            return ZSTD_RowFindBestMatch(
+                ms,
+                ip,
+                iLimit,
+                offsetPtr,
+                4,
+                ZSTD_dictMode_e.ZSTD_noDict,
+                4
+            );
         }
 
-        private static nuint ZSTD_RowFindBestMatch_noDict_4_5(ZSTD_MatchState_t* ms, byte* ip, byte* iLimit, nuint* offsetPtr)
+        private static nuint ZSTD_RowFindBestMatch_noDict_4_5(
+            ZSTD_MatchState_t* ms,
+            byte* ip,
+            byte* iLimit,
+            nuint* offsetPtr
+        )
         {
-            assert((4 > (6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) ? 4 : 6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) == 4);
-            assert((4 > (6 < ms->cParams.searchLog ? 6 : ms->cParams.searchLog) ? 4 : 6 < ms->cParams.searchLog ? 6 : ms->cParams.searchLog) == 5);
-            return ZSTD_RowFindBestMatch(ms, ip, iLimit, offsetPtr, 4, ZSTD_dictMode_e.ZSTD_noDict, 5);
+            assert(
+                (
+                    4 > (6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) ? 4
+                    : 6 < ms->cParams.minMatch ? 6
+                    : ms->cParams.minMatch
+                ) == 4
+            );
+            assert(
+                (
+                    4 > (6 < ms->cParams.searchLog ? 6 : ms->cParams.searchLog) ? 4
+                    : 6 < ms->cParams.searchLog ? 6
+                    : ms->cParams.searchLog
+                ) == 5
+            );
+            return ZSTD_RowFindBestMatch(
+                ms,
+                ip,
+                iLimit,
+                offsetPtr,
+                4,
+                ZSTD_dictMode_e.ZSTD_noDict,
+                5
+            );
         }
 
-        private static nuint ZSTD_RowFindBestMatch_noDict_4_6(ZSTD_MatchState_t* ms, byte* ip, byte* iLimit, nuint* offsetPtr)
+        private static nuint ZSTD_RowFindBestMatch_noDict_4_6(
+            ZSTD_MatchState_t* ms,
+            byte* ip,
+            byte* iLimit,
+            nuint* offsetPtr
+        )
         {
-            assert((4 > (6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) ? 4 : 6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) == 4);
-            assert((4 > (6 < ms->cParams.searchLog ? 6 : ms->cParams.searchLog) ? 4 : 6 < ms->cParams.searchLog ? 6 : ms->cParams.searchLog) == 6);
-            return ZSTD_RowFindBestMatch(ms, ip, iLimit, offsetPtr, 4, ZSTD_dictMode_e.ZSTD_noDict, 6);
+            assert(
+                (
+                    4 > (6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) ? 4
+                    : 6 < ms->cParams.minMatch ? 6
+                    : ms->cParams.minMatch
+                ) == 4
+            );
+            assert(
+                (
+                    4 > (6 < ms->cParams.searchLog ? 6 : ms->cParams.searchLog) ? 4
+                    : 6 < ms->cParams.searchLog ? 6
+                    : ms->cParams.searchLog
+                ) == 6
+            );
+            return ZSTD_RowFindBestMatch(
+                ms,
+                ip,
+                iLimit,
+                offsetPtr,
+                4,
+                ZSTD_dictMode_e.ZSTD_noDict,
+                6
+            );
         }
 
-        private static nuint ZSTD_RowFindBestMatch_noDict_5_4(ZSTD_MatchState_t* ms, byte* ip, byte* iLimit, nuint* offsetPtr)
+        private static nuint ZSTD_RowFindBestMatch_noDict_5_4(
+            ZSTD_MatchState_t* ms,
+            byte* ip,
+            byte* iLimit,
+            nuint* offsetPtr
+        )
         {
-            assert((4 > (6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) ? 4 : 6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) == 5);
-            assert((4 > (6 < ms->cParams.searchLog ? 6 : ms->cParams.searchLog) ? 4 : 6 < ms->cParams.searchLog ? 6 : ms->cParams.searchLog) == 4);
-            return ZSTD_RowFindBestMatch(ms, ip, iLimit, offsetPtr, 5, ZSTD_dictMode_e.ZSTD_noDict, 4);
+            assert(
+                (
+                    4 > (6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) ? 4
+                    : 6 < ms->cParams.minMatch ? 6
+                    : ms->cParams.minMatch
+                ) == 5
+            );
+            assert(
+                (
+                    4 > (6 < ms->cParams.searchLog ? 6 : ms->cParams.searchLog) ? 4
+                    : 6 < ms->cParams.searchLog ? 6
+                    : ms->cParams.searchLog
+                ) == 4
+            );
+            return ZSTD_RowFindBestMatch(
+                ms,
+                ip,
+                iLimit,
+                offsetPtr,
+                5,
+                ZSTD_dictMode_e.ZSTD_noDict,
+                4
+            );
         }
 
-        private static nuint ZSTD_RowFindBestMatch_noDict_5_5(ZSTD_MatchState_t* ms, byte* ip, byte* iLimit, nuint* offsetPtr)
+        private static nuint ZSTD_RowFindBestMatch_noDict_5_5(
+            ZSTD_MatchState_t* ms,
+            byte* ip,
+            byte* iLimit,
+            nuint* offsetPtr
+        )
         {
-            assert((4 > (6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) ? 4 : 6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) == 5);
-            assert((4 > (6 < ms->cParams.searchLog ? 6 : ms->cParams.searchLog) ? 4 : 6 < ms->cParams.searchLog ? 6 : ms->cParams.searchLog) == 5);
-            return ZSTD_RowFindBestMatch(ms, ip, iLimit, offsetPtr, 5, ZSTD_dictMode_e.ZSTD_noDict, 5);
+            assert(
+                (
+                    4 > (6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) ? 4
+                    : 6 < ms->cParams.minMatch ? 6
+                    : ms->cParams.minMatch
+                ) == 5
+            );
+            assert(
+                (
+                    4 > (6 < ms->cParams.searchLog ? 6 : ms->cParams.searchLog) ? 4
+                    : 6 < ms->cParams.searchLog ? 6
+                    : ms->cParams.searchLog
+                ) == 5
+            );
+            return ZSTD_RowFindBestMatch(
+                ms,
+                ip,
+                iLimit,
+                offsetPtr,
+                5,
+                ZSTD_dictMode_e.ZSTD_noDict,
+                5
+            );
         }
 
-        private static nuint ZSTD_RowFindBestMatch_noDict_5_6(ZSTD_MatchState_t* ms, byte* ip, byte* iLimit, nuint* offsetPtr)
+        private static nuint ZSTD_RowFindBestMatch_noDict_5_6(
+            ZSTD_MatchState_t* ms,
+            byte* ip,
+            byte* iLimit,
+            nuint* offsetPtr
+        )
         {
-            assert((4 > (6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) ? 4 : 6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) == 5);
-            assert((4 > (6 < ms->cParams.searchLog ? 6 : ms->cParams.searchLog) ? 4 : 6 < ms->cParams.searchLog ? 6 : ms->cParams.searchLog) == 6);
-            return ZSTD_RowFindBestMatch(ms, ip, iLimit, offsetPtr, 5, ZSTD_dictMode_e.ZSTD_noDict, 6);
+            assert(
+                (
+                    4 > (6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) ? 4
+                    : 6 < ms->cParams.minMatch ? 6
+                    : ms->cParams.minMatch
+                ) == 5
+            );
+            assert(
+                (
+                    4 > (6 < ms->cParams.searchLog ? 6 : ms->cParams.searchLog) ? 4
+                    : 6 < ms->cParams.searchLog ? 6
+                    : ms->cParams.searchLog
+                ) == 6
+            );
+            return ZSTD_RowFindBestMatch(
+                ms,
+                ip,
+                iLimit,
+                offsetPtr,
+                5,
+                ZSTD_dictMode_e.ZSTD_noDict,
+                6
+            );
         }
 
-        private static nuint ZSTD_RowFindBestMatch_noDict_6_4(ZSTD_MatchState_t* ms, byte* ip, byte* iLimit, nuint* offsetPtr)
+        private static nuint ZSTD_RowFindBestMatch_noDict_6_4(
+            ZSTD_MatchState_t* ms,
+            byte* ip,
+            byte* iLimit,
+            nuint* offsetPtr
+        )
         {
-            assert((4 > (6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) ? 4 : 6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) == 6);
-            assert((4 > (6 < ms->cParams.searchLog ? 6 : ms->cParams.searchLog) ? 4 : 6 < ms->cParams.searchLog ? 6 : ms->cParams.searchLog) == 4);
-            return ZSTD_RowFindBestMatch(ms, ip, iLimit, offsetPtr, 6, ZSTD_dictMode_e.ZSTD_noDict, 4);
+            assert(
+                (
+                    4 > (6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) ? 4
+                    : 6 < ms->cParams.minMatch ? 6
+                    : ms->cParams.minMatch
+                ) == 6
+            );
+            assert(
+                (
+                    4 > (6 < ms->cParams.searchLog ? 6 : ms->cParams.searchLog) ? 4
+                    : 6 < ms->cParams.searchLog ? 6
+                    : ms->cParams.searchLog
+                ) == 4
+            );
+            return ZSTD_RowFindBestMatch(
+                ms,
+                ip,
+                iLimit,
+                offsetPtr,
+                6,
+                ZSTD_dictMode_e.ZSTD_noDict,
+                4
+            );
         }
 
-        private static nuint ZSTD_RowFindBestMatch_noDict_6_5(ZSTD_MatchState_t* ms, byte* ip, byte* iLimit, nuint* offsetPtr)
+        private static nuint ZSTD_RowFindBestMatch_noDict_6_5(
+            ZSTD_MatchState_t* ms,
+            byte* ip,
+            byte* iLimit,
+            nuint* offsetPtr
+        )
         {
-            assert((4 > (6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) ? 4 : 6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) == 6);
-            assert((4 > (6 < ms->cParams.searchLog ? 6 : ms->cParams.searchLog) ? 4 : 6 < ms->cParams.searchLog ? 6 : ms->cParams.searchLog) == 5);
-            return ZSTD_RowFindBestMatch(ms, ip, iLimit, offsetPtr, 6, ZSTD_dictMode_e.ZSTD_noDict, 5);
+            assert(
+                (
+                    4 > (6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) ? 4
+                    : 6 < ms->cParams.minMatch ? 6
+                    : ms->cParams.minMatch
+                ) == 6
+            );
+            assert(
+                (
+                    4 > (6 < ms->cParams.searchLog ? 6 : ms->cParams.searchLog) ? 4
+                    : 6 < ms->cParams.searchLog ? 6
+                    : ms->cParams.searchLog
+                ) == 5
+            );
+            return ZSTD_RowFindBestMatch(
+                ms,
+                ip,
+                iLimit,
+                offsetPtr,
+                6,
+                ZSTD_dictMode_e.ZSTD_noDict,
+                5
+            );
         }
 
-        private static nuint ZSTD_RowFindBestMatch_noDict_6_6(ZSTD_MatchState_t* ms, byte* ip, byte* iLimit, nuint* offsetPtr)
+        private static nuint ZSTD_RowFindBestMatch_noDict_6_6(
+            ZSTD_MatchState_t* ms,
+            byte* ip,
+            byte* iLimit,
+            nuint* offsetPtr
+        )
         {
-            assert((4 > (6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) ? 4 : 6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) == 6);
-            assert((4 > (6 < ms->cParams.searchLog ? 6 : ms->cParams.searchLog) ? 4 : 6 < ms->cParams.searchLog ? 6 : ms->cParams.searchLog) == 6);
-            return ZSTD_RowFindBestMatch(ms, ip, iLimit, offsetPtr, 6, ZSTD_dictMode_e.ZSTD_noDict, 6);
+            assert(
+                (
+                    4 > (6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) ? 4
+                    : 6 < ms->cParams.minMatch ? 6
+                    : ms->cParams.minMatch
+                ) == 6
+            );
+            assert(
+                (
+                    4 > (6 < ms->cParams.searchLog ? 6 : ms->cParams.searchLog) ? 4
+                    : 6 < ms->cParams.searchLog ? 6
+                    : ms->cParams.searchLog
+                ) == 6
+            );
+            return ZSTD_RowFindBestMatch(
+                ms,
+                ip,
+                iLimit,
+                offsetPtr,
+                6,
+                ZSTD_dictMode_e.ZSTD_noDict,
+                6
+            );
         }
 
-        private static nuint ZSTD_RowFindBestMatch_extDict_4_4(ZSTD_MatchState_t* ms, byte* ip, byte* iLimit, nuint* offsetPtr)
+        private static nuint ZSTD_RowFindBestMatch_extDict_4_4(
+            ZSTD_MatchState_t* ms,
+            byte* ip,
+            byte* iLimit,
+            nuint* offsetPtr
+        )
         {
-            assert((4 > (6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) ? 4 : 6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) == 4);
-            assert((4 > (6 < ms->cParams.searchLog ? 6 : ms->cParams.searchLog) ? 4 : 6 < ms->cParams.searchLog ? 6 : ms->cParams.searchLog) == 4);
-            return ZSTD_RowFindBestMatch(ms, ip, iLimit, offsetPtr, 4, ZSTD_dictMode_e.ZSTD_extDict, 4);
+            assert(
+                (
+                    4 > (6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) ? 4
+                    : 6 < ms->cParams.minMatch ? 6
+                    : ms->cParams.minMatch
+                ) == 4
+            );
+            assert(
+                (
+                    4 > (6 < ms->cParams.searchLog ? 6 : ms->cParams.searchLog) ? 4
+                    : 6 < ms->cParams.searchLog ? 6
+                    : ms->cParams.searchLog
+                ) == 4
+            );
+            return ZSTD_RowFindBestMatch(
+                ms,
+                ip,
+                iLimit,
+                offsetPtr,
+                4,
+                ZSTD_dictMode_e.ZSTD_extDict,
+                4
+            );
         }
 
-        private static nuint ZSTD_RowFindBestMatch_extDict_4_5(ZSTD_MatchState_t* ms, byte* ip, byte* iLimit, nuint* offsetPtr)
+        private static nuint ZSTD_RowFindBestMatch_extDict_4_5(
+            ZSTD_MatchState_t* ms,
+            byte* ip,
+            byte* iLimit,
+            nuint* offsetPtr
+        )
         {
-            assert((4 > (6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) ? 4 : 6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) == 4);
-            assert((4 > (6 < ms->cParams.searchLog ? 6 : ms->cParams.searchLog) ? 4 : 6 < ms->cParams.searchLog ? 6 : ms->cParams.searchLog) == 5);
-            return ZSTD_RowFindBestMatch(ms, ip, iLimit, offsetPtr, 4, ZSTD_dictMode_e.ZSTD_extDict, 5);
+            assert(
+                (
+                    4 > (6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) ? 4
+                    : 6 < ms->cParams.minMatch ? 6
+                    : ms->cParams.minMatch
+                ) == 4
+            );
+            assert(
+                (
+                    4 > (6 < ms->cParams.searchLog ? 6 : ms->cParams.searchLog) ? 4
+                    : 6 < ms->cParams.searchLog ? 6
+                    : ms->cParams.searchLog
+                ) == 5
+            );
+            return ZSTD_RowFindBestMatch(
+                ms,
+                ip,
+                iLimit,
+                offsetPtr,
+                4,
+                ZSTD_dictMode_e.ZSTD_extDict,
+                5
+            );
         }
 
-        private static nuint ZSTD_RowFindBestMatch_extDict_4_6(ZSTD_MatchState_t* ms, byte* ip, byte* iLimit, nuint* offsetPtr)
+        private static nuint ZSTD_RowFindBestMatch_extDict_4_6(
+            ZSTD_MatchState_t* ms,
+            byte* ip,
+            byte* iLimit,
+            nuint* offsetPtr
+        )
         {
-            assert((4 > (6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) ? 4 : 6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) == 4);
-            assert((4 > (6 < ms->cParams.searchLog ? 6 : ms->cParams.searchLog) ? 4 : 6 < ms->cParams.searchLog ? 6 : ms->cParams.searchLog) == 6);
-            return ZSTD_RowFindBestMatch(ms, ip, iLimit, offsetPtr, 4, ZSTD_dictMode_e.ZSTD_extDict, 6);
+            assert(
+                (
+                    4 > (6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) ? 4
+                    : 6 < ms->cParams.minMatch ? 6
+                    : ms->cParams.minMatch
+                ) == 4
+            );
+            assert(
+                (
+                    4 > (6 < ms->cParams.searchLog ? 6 : ms->cParams.searchLog) ? 4
+                    : 6 < ms->cParams.searchLog ? 6
+                    : ms->cParams.searchLog
+                ) == 6
+            );
+            return ZSTD_RowFindBestMatch(
+                ms,
+                ip,
+                iLimit,
+                offsetPtr,
+                4,
+                ZSTD_dictMode_e.ZSTD_extDict,
+                6
+            );
         }
 
-        private static nuint ZSTD_RowFindBestMatch_extDict_5_4(ZSTD_MatchState_t* ms, byte* ip, byte* iLimit, nuint* offsetPtr)
+        private static nuint ZSTD_RowFindBestMatch_extDict_5_4(
+            ZSTD_MatchState_t* ms,
+            byte* ip,
+            byte* iLimit,
+            nuint* offsetPtr
+        )
         {
-            assert((4 > (6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) ? 4 : 6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) == 5);
-            assert((4 > (6 < ms->cParams.searchLog ? 6 : ms->cParams.searchLog) ? 4 : 6 < ms->cParams.searchLog ? 6 : ms->cParams.searchLog) == 4);
-            return ZSTD_RowFindBestMatch(ms, ip, iLimit, offsetPtr, 5, ZSTD_dictMode_e.ZSTD_extDict, 4);
+            assert(
+                (
+                    4 > (6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) ? 4
+                    : 6 < ms->cParams.minMatch ? 6
+                    : ms->cParams.minMatch
+                ) == 5
+            );
+            assert(
+                (
+                    4 > (6 < ms->cParams.searchLog ? 6 : ms->cParams.searchLog) ? 4
+                    : 6 < ms->cParams.searchLog ? 6
+                    : ms->cParams.searchLog
+                ) == 4
+            );
+            return ZSTD_RowFindBestMatch(
+                ms,
+                ip,
+                iLimit,
+                offsetPtr,
+                5,
+                ZSTD_dictMode_e.ZSTD_extDict,
+                4
+            );
         }
 
-        private static nuint ZSTD_RowFindBestMatch_extDict_5_5(ZSTD_MatchState_t* ms, byte* ip, byte* iLimit, nuint* offsetPtr)
+        private static nuint ZSTD_RowFindBestMatch_extDict_5_5(
+            ZSTD_MatchState_t* ms,
+            byte* ip,
+            byte* iLimit,
+            nuint* offsetPtr
+        )
         {
-            assert((4 > (6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) ? 4 : 6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) == 5);
-            assert((4 > (6 < ms->cParams.searchLog ? 6 : ms->cParams.searchLog) ? 4 : 6 < ms->cParams.searchLog ? 6 : ms->cParams.searchLog) == 5);
-            return ZSTD_RowFindBestMatch(ms, ip, iLimit, offsetPtr, 5, ZSTD_dictMode_e.ZSTD_extDict, 5);
+            assert(
+                (
+                    4 > (6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) ? 4
+                    : 6 < ms->cParams.minMatch ? 6
+                    : ms->cParams.minMatch
+                ) == 5
+            );
+            assert(
+                (
+                    4 > (6 < ms->cParams.searchLog ? 6 : ms->cParams.searchLog) ? 4
+                    : 6 < ms->cParams.searchLog ? 6
+                    : ms->cParams.searchLog
+                ) == 5
+            );
+            return ZSTD_RowFindBestMatch(
+                ms,
+                ip,
+                iLimit,
+                offsetPtr,
+                5,
+                ZSTD_dictMode_e.ZSTD_extDict,
+                5
+            );
         }
 
-        private static nuint ZSTD_RowFindBestMatch_extDict_5_6(ZSTD_MatchState_t* ms, byte* ip, byte* iLimit, nuint* offsetPtr)
+        private static nuint ZSTD_RowFindBestMatch_extDict_5_6(
+            ZSTD_MatchState_t* ms,
+            byte* ip,
+            byte* iLimit,
+            nuint* offsetPtr
+        )
         {
-            assert((4 > (6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) ? 4 : 6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) == 5);
-            assert((4 > (6 < ms->cParams.searchLog ? 6 : ms->cParams.searchLog) ? 4 : 6 < ms->cParams.searchLog ? 6 : ms->cParams.searchLog) == 6);
-            return ZSTD_RowFindBestMatch(ms, ip, iLimit, offsetPtr, 5, ZSTD_dictMode_e.ZSTD_extDict, 6);
+            assert(
+                (
+                    4 > (6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) ? 4
+                    : 6 < ms->cParams.minMatch ? 6
+                    : ms->cParams.minMatch
+                ) == 5
+            );
+            assert(
+                (
+                    4 > (6 < ms->cParams.searchLog ? 6 : ms->cParams.searchLog) ? 4
+                    : 6 < ms->cParams.searchLog ? 6
+                    : ms->cParams.searchLog
+                ) == 6
+            );
+            return ZSTD_RowFindBestMatch(
+                ms,
+                ip,
+                iLimit,
+                offsetPtr,
+                5,
+                ZSTD_dictMode_e.ZSTD_extDict,
+                6
+            );
         }
 
-        private static nuint ZSTD_RowFindBestMatch_extDict_6_4(ZSTD_MatchState_t* ms, byte* ip, byte* iLimit, nuint* offsetPtr)
+        private static nuint ZSTD_RowFindBestMatch_extDict_6_4(
+            ZSTD_MatchState_t* ms,
+            byte* ip,
+            byte* iLimit,
+            nuint* offsetPtr
+        )
         {
-            assert((4 > (6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) ? 4 : 6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) == 6);
-            assert((4 > (6 < ms->cParams.searchLog ? 6 : ms->cParams.searchLog) ? 4 : 6 < ms->cParams.searchLog ? 6 : ms->cParams.searchLog) == 4);
-            return ZSTD_RowFindBestMatch(ms, ip, iLimit, offsetPtr, 6, ZSTD_dictMode_e.ZSTD_extDict, 4);
+            assert(
+                (
+                    4 > (6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) ? 4
+                    : 6 < ms->cParams.minMatch ? 6
+                    : ms->cParams.minMatch
+                ) == 6
+            );
+            assert(
+                (
+                    4 > (6 < ms->cParams.searchLog ? 6 : ms->cParams.searchLog) ? 4
+                    : 6 < ms->cParams.searchLog ? 6
+                    : ms->cParams.searchLog
+                ) == 4
+            );
+            return ZSTD_RowFindBestMatch(
+                ms,
+                ip,
+                iLimit,
+                offsetPtr,
+                6,
+                ZSTD_dictMode_e.ZSTD_extDict,
+                4
+            );
         }
 
-        private static nuint ZSTD_RowFindBestMatch_extDict_6_5(ZSTD_MatchState_t* ms, byte* ip, byte* iLimit, nuint* offsetPtr)
+        private static nuint ZSTD_RowFindBestMatch_extDict_6_5(
+            ZSTD_MatchState_t* ms,
+            byte* ip,
+            byte* iLimit,
+            nuint* offsetPtr
+        )
         {
-            assert((4 > (6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) ? 4 : 6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) == 6);
-            assert((4 > (6 < ms->cParams.searchLog ? 6 : ms->cParams.searchLog) ? 4 : 6 < ms->cParams.searchLog ? 6 : ms->cParams.searchLog) == 5);
-            return ZSTD_RowFindBestMatch(ms, ip, iLimit, offsetPtr, 6, ZSTD_dictMode_e.ZSTD_extDict, 5);
+            assert(
+                (
+                    4 > (6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) ? 4
+                    : 6 < ms->cParams.minMatch ? 6
+                    : ms->cParams.minMatch
+                ) == 6
+            );
+            assert(
+                (
+                    4 > (6 < ms->cParams.searchLog ? 6 : ms->cParams.searchLog) ? 4
+                    : 6 < ms->cParams.searchLog ? 6
+                    : ms->cParams.searchLog
+                ) == 5
+            );
+            return ZSTD_RowFindBestMatch(
+                ms,
+                ip,
+                iLimit,
+                offsetPtr,
+                6,
+                ZSTD_dictMode_e.ZSTD_extDict,
+                5
+            );
         }
 
-        private static nuint ZSTD_RowFindBestMatch_extDict_6_6(ZSTD_MatchState_t* ms, byte* ip, byte* iLimit, nuint* offsetPtr)
+        private static nuint ZSTD_RowFindBestMatch_extDict_6_6(
+            ZSTD_MatchState_t* ms,
+            byte* ip,
+            byte* iLimit,
+            nuint* offsetPtr
+        )
         {
-            assert((4 > (6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) ? 4 : 6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) == 6);
-            assert((4 > (6 < ms->cParams.searchLog ? 6 : ms->cParams.searchLog) ? 4 : 6 < ms->cParams.searchLog ? 6 : ms->cParams.searchLog) == 6);
-            return ZSTD_RowFindBestMatch(ms, ip, iLimit, offsetPtr, 6, ZSTD_dictMode_e.ZSTD_extDict, 6);
+            assert(
+                (
+                    4 > (6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) ? 4
+                    : 6 < ms->cParams.minMatch ? 6
+                    : ms->cParams.minMatch
+                ) == 6
+            );
+            assert(
+                (
+                    4 > (6 < ms->cParams.searchLog ? 6 : ms->cParams.searchLog) ? 4
+                    : 6 < ms->cParams.searchLog ? 6
+                    : ms->cParams.searchLog
+                ) == 6
+            );
+            return ZSTD_RowFindBestMatch(
+                ms,
+                ip,
+                iLimit,
+                offsetPtr,
+                6,
+                ZSTD_dictMode_e.ZSTD_extDict,
+                6
+            );
         }
 
-        private static nuint ZSTD_RowFindBestMatch_dictMatchState_4_4(ZSTD_MatchState_t* ms, byte* ip, byte* iLimit, nuint* offsetPtr)
+        private static nuint ZSTD_RowFindBestMatch_dictMatchState_4_4(
+            ZSTD_MatchState_t* ms,
+            byte* ip,
+            byte* iLimit,
+            nuint* offsetPtr
+        )
         {
-            assert((4 > (6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) ? 4 : 6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) == 4);
-            assert((4 > (6 < ms->cParams.searchLog ? 6 : ms->cParams.searchLog) ? 4 : 6 < ms->cParams.searchLog ? 6 : ms->cParams.searchLog) == 4);
-            return ZSTD_RowFindBestMatch(ms, ip, iLimit, offsetPtr, 4, ZSTD_dictMode_e.ZSTD_dictMatchState, 4);
+            assert(
+                (
+                    4 > (6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) ? 4
+                    : 6 < ms->cParams.minMatch ? 6
+                    : ms->cParams.minMatch
+                ) == 4
+            );
+            assert(
+                (
+                    4 > (6 < ms->cParams.searchLog ? 6 : ms->cParams.searchLog) ? 4
+                    : 6 < ms->cParams.searchLog ? 6
+                    : ms->cParams.searchLog
+                ) == 4
+            );
+            return ZSTD_RowFindBestMatch(
+                ms,
+                ip,
+                iLimit,
+                offsetPtr,
+                4,
+                ZSTD_dictMode_e.ZSTD_dictMatchState,
+                4
+            );
         }
 
-        private static nuint ZSTD_RowFindBestMatch_dictMatchState_4_5(ZSTD_MatchState_t* ms, byte* ip, byte* iLimit, nuint* offsetPtr)
+        private static nuint ZSTD_RowFindBestMatch_dictMatchState_4_5(
+            ZSTD_MatchState_t* ms,
+            byte* ip,
+            byte* iLimit,
+            nuint* offsetPtr
+        )
         {
-            assert((4 > (6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) ? 4 : 6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) == 4);
-            assert((4 > (6 < ms->cParams.searchLog ? 6 : ms->cParams.searchLog) ? 4 : 6 < ms->cParams.searchLog ? 6 : ms->cParams.searchLog) == 5);
-            return ZSTD_RowFindBestMatch(ms, ip, iLimit, offsetPtr, 4, ZSTD_dictMode_e.ZSTD_dictMatchState, 5);
+            assert(
+                (
+                    4 > (6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) ? 4
+                    : 6 < ms->cParams.minMatch ? 6
+                    : ms->cParams.minMatch
+                ) == 4
+            );
+            assert(
+                (
+                    4 > (6 < ms->cParams.searchLog ? 6 : ms->cParams.searchLog) ? 4
+                    : 6 < ms->cParams.searchLog ? 6
+                    : ms->cParams.searchLog
+                ) == 5
+            );
+            return ZSTD_RowFindBestMatch(
+                ms,
+                ip,
+                iLimit,
+                offsetPtr,
+                4,
+                ZSTD_dictMode_e.ZSTD_dictMatchState,
+                5
+            );
         }
 
-        private static nuint ZSTD_RowFindBestMatch_dictMatchState_4_6(ZSTD_MatchState_t* ms, byte* ip, byte* iLimit, nuint* offsetPtr)
+        private static nuint ZSTD_RowFindBestMatch_dictMatchState_4_6(
+            ZSTD_MatchState_t* ms,
+            byte* ip,
+            byte* iLimit,
+            nuint* offsetPtr
+        )
         {
-            assert((4 > (6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) ? 4 : 6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) == 4);
-            assert((4 > (6 < ms->cParams.searchLog ? 6 : ms->cParams.searchLog) ? 4 : 6 < ms->cParams.searchLog ? 6 : ms->cParams.searchLog) == 6);
-            return ZSTD_RowFindBestMatch(ms, ip, iLimit, offsetPtr, 4, ZSTD_dictMode_e.ZSTD_dictMatchState, 6);
+            assert(
+                (
+                    4 > (6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) ? 4
+                    : 6 < ms->cParams.minMatch ? 6
+                    : ms->cParams.minMatch
+                ) == 4
+            );
+            assert(
+                (
+                    4 > (6 < ms->cParams.searchLog ? 6 : ms->cParams.searchLog) ? 4
+                    : 6 < ms->cParams.searchLog ? 6
+                    : ms->cParams.searchLog
+                ) == 6
+            );
+            return ZSTD_RowFindBestMatch(
+                ms,
+                ip,
+                iLimit,
+                offsetPtr,
+                4,
+                ZSTD_dictMode_e.ZSTD_dictMatchState,
+                6
+            );
         }
 
-        private static nuint ZSTD_RowFindBestMatch_dictMatchState_5_4(ZSTD_MatchState_t* ms, byte* ip, byte* iLimit, nuint* offsetPtr)
+        private static nuint ZSTD_RowFindBestMatch_dictMatchState_5_4(
+            ZSTD_MatchState_t* ms,
+            byte* ip,
+            byte* iLimit,
+            nuint* offsetPtr
+        )
         {
-            assert((4 > (6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) ? 4 : 6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) == 5);
-            assert((4 > (6 < ms->cParams.searchLog ? 6 : ms->cParams.searchLog) ? 4 : 6 < ms->cParams.searchLog ? 6 : ms->cParams.searchLog) == 4);
-            return ZSTD_RowFindBestMatch(ms, ip, iLimit, offsetPtr, 5, ZSTD_dictMode_e.ZSTD_dictMatchState, 4);
+            assert(
+                (
+                    4 > (6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) ? 4
+                    : 6 < ms->cParams.minMatch ? 6
+                    : ms->cParams.minMatch
+                ) == 5
+            );
+            assert(
+                (
+                    4 > (6 < ms->cParams.searchLog ? 6 : ms->cParams.searchLog) ? 4
+                    : 6 < ms->cParams.searchLog ? 6
+                    : ms->cParams.searchLog
+                ) == 4
+            );
+            return ZSTD_RowFindBestMatch(
+                ms,
+                ip,
+                iLimit,
+                offsetPtr,
+                5,
+                ZSTD_dictMode_e.ZSTD_dictMatchState,
+                4
+            );
         }
 
-        private static nuint ZSTD_RowFindBestMatch_dictMatchState_5_5(ZSTD_MatchState_t* ms, byte* ip, byte* iLimit, nuint* offsetPtr)
+        private static nuint ZSTD_RowFindBestMatch_dictMatchState_5_5(
+            ZSTD_MatchState_t* ms,
+            byte* ip,
+            byte* iLimit,
+            nuint* offsetPtr
+        )
         {
-            assert((4 > (6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) ? 4 : 6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) == 5);
-            assert((4 > (6 < ms->cParams.searchLog ? 6 : ms->cParams.searchLog) ? 4 : 6 < ms->cParams.searchLog ? 6 : ms->cParams.searchLog) == 5);
-            return ZSTD_RowFindBestMatch(ms, ip, iLimit, offsetPtr, 5, ZSTD_dictMode_e.ZSTD_dictMatchState, 5);
+            assert(
+                (
+                    4 > (6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) ? 4
+                    : 6 < ms->cParams.minMatch ? 6
+                    : ms->cParams.minMatch
+                ) == 5
+            );
+            assert(
+                (
+                    4 > (6 < ms->cParams.searchLog ? 6 : ms->cParams.searchLog) ? 4
+                    : 6 < ms->cParams.searchLog ? 6
+                    : ms->cParams.searchLog
+                ) == 5
+            );
+            return ZSTD_RowFindBestMatch(
+                ms,
+                ip,
+                iLimit,
+                offsetPtr,
+                5,
+                ZSTD_dictMode_e.ZSTD_dictMatchState,
+                5
+            );
         }
 
-        private static nuint ZSTD_RowFindBestMatch_dictMatchState_5_6(ZSTD_MatchState_t* ms, byte* ip, byte* iLimit, nuint* offsetPtr)
+        private static nuint ZSTD_RowFindBestMatch_dictMatchState_5_6(
+            ZSTD_MatchState_t* ms,
+            byte* ip,
+            byte* iLimit,
+            nuint* offsetPtr
+        )
         {
-            assert((4 > (6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) ? 4 : 6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) == 5);
-            assert((4 > (6 < ms->cParams.searchLog ? 6 : ms->cParams.searchLog) ? 4 : 6 < ms->cParams.searchLog ? 6 : ms->cParams.searchLog) == 6);
-            return ZSTD_RowFindBestMatch(ms, ip, iLimit, offsetPtr, 5, ZSTD_dictMode_e.ZSTD_dictMatchState, 6);
+            assert(
+                (
+                    4 > (6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) ? 4
+                    : 6 < ms->cParams.minMatch ? 6
+                    : ms->cParams.minMatch
+                ) == 5
+            );
+            assert(
+                (
+                    4 > (6 < ms->cParams.searchLog ? 6 : ms->cParams.searchLog) ? 4
+                    : 6 < ms->cParams.searchLog ? 6
+                    : ms->cParams.searchLog
+                ) == 6
+            );
+            return ZSTD_RowFindBestMatch(
+                ms,
+                ip,
+                iLimit,
+                offsetPtr,
+                5,
+                ZSTD_dictMode_e.ZSTD_dictMatchState,
+                6
+            );
         }
 
-        private static nuint ZSTD_RowFindBestMatch_dictMatchState_6_4(ZSTD_MatchState_t* ms, byte* ip, byte* iLimit, nuint* offsetPtr)
+        private static nuint ZSTD_RowFindBestMatch_dictMatchState_6_4(
+            ZSTD_MatchState_t* ms,
+            byte* ip,
+            byte* iLimit,
+            nuint* offsetPtr
+        )
         {
-            assert((4 > (6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) ? 4 : 6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) == 6);
-            assert((4 > (6 < ms->cParams.searchLog ? 6 : ms->cParams.searchLog) ? 4 : 6 < ms->cParams.searchLog ? 6 : ms->cParams.searchLog) == 4);
-            return ZSTD_RowFindBestMatch(ms, ip, iLimit, offsetPtr, 6, ZSTD_dictMode_e.ZSTD_dictMatchState, 4);
+            assert(
+                (
+                    4 > (6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) ? 4
+                    : 6 < ms->cParams.minMatch ? 6
+                    : ms->cParams.minMatch
+                ) == 6
+            );
+            assert(
+                (
+                    4 > (6 < ms->cParams.searchLog ? 6 : ms->cParams.searchLog) ? 4
+                    : 6 < ms->cParams.searchLog ? 6
+                    : ms->cParams.searchLog
+                ) == 4
+            );
+            return ZSTD_RowFindBestMatch(
+                ms,
+                ip,
+                iLimit,
+                offsetPtr,
+                6,
+                ZSTD_dictMode_e.ZSTD_dictMatchState,
+                4
+            );
         }
 
-        private static nuint ZSTD_RowFindBestMatch_dictMatchState_6_5(ZSTD_MatchState_t* ms, byte* ip, byte* iLimit, nuint* offsetPtr)
+        private static nuint ZSTD_RowFindBestMatch_dictMatchState_6_5(
+            ZSTD_MatchState_t* ms,
+            byte* ip,
+            byte* iLimit,
+            nuint* offsetPtr
+        )
         {
-            assert((4 > (6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) ? 4 : 6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) == 6);
-            assert((4 > (6 < ms->cParams.searchLog ? 6 : ms->cParams.searchLog) ? 4 : 6 < ms->cParams.searchLog ? 6 : ms->cParams.searchLog) == 5);
-            return ZSTD_RowFindBestMatch(ms, ip, iLimit, offsetPtr, 6, ZSTD_dictMode_e.ZSTD_dictMatchState, 5);
+            assert(
+                (
+                    4 > (6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) ? 4
+                    : 6 < ms->cParams.minMatch ? 6
+                    : ms->cParams.minMatch
+                ) == 6
+            );
+            assert(
+                (
+                    4 > (6 < ms->cParams.searchLog ? 6 : ms->cParams.searchLog) ? 4
+                    : 6 < ms->cParams.searchLog ? 6
+                    : ms->cParams.searchLog
+                ) == 5
+            );
+            return ZSTD_RowFindBestMatch(
+                ms,
+                ip,
+                iLimit,
+                offsetPtr,
+                6,
+                ZSTD_dictMode_e.ZSTD_dictMatchState,
+                5
+            );
         }
 
-        private static nuint ZSTD_RowFindBestMatch_dictMatchState_6_6(ZSTD_MatchState_t* ms, byte* ip, byte* iLimit, nuint* offsetPtr)
+        private static nuint ZSTD_RowFindBestMatch_dictMatchState_6_6(
+            ZSTD_MatchState_t* ms,
+            byte* ip,
+            byte* iLimit,
+            nuint* offsetPtr
+        )
         {
-            assert((4 > (6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) ? 4 : 6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) == 6);
-            assert((4 > (6 < ms->cParams.searchLog ? 6 : ms->cParams.searchLog) ? 4 : 6 < ms->cParams.searchLog ? 6 : ms->cParams.searchLog) == 6);
-            return ZSTD_RowFindBestMatch(ms, ip, iLimit, offsetPtr, 6, ZSTD_dictMode_e.ZSTD_dictMatchState, 6);
+            assert(
+                (
+                    4 > (6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) ? 4
+                    : 6 < ms->cParams.minMatch ? 6
+                    : ms->cParams.minMatch
+                ) == 6
+            );
+            assert(
+                (
+                    4 > (6 < ms->cParams.searchLog ? 6 : ms->cParams.searchLog) ? 4
+                    : 6 < ms->cParams.searchLog ? 6
+                    : ms->cParams.searchLog
+                ) == 6
+            );
+            return ZSTD_RowFindBestMatch(
+                ms,
+                ip,
+                iLimit,
+                offsetPtr,
+                6,
+                ZSTD_dictMode_e.ZSTD_dictMatchState,
+                6
+            );
         }
 
-        private static nuint ZSTD_RowFindBestMatch_dedicatedDictSearch_4_4(ZSTD_MatchState_t* ms, byte* ip, byte* iLimit, nuint* offsetPtr)
+        private static nuint ZSTD_RowFindBestMatch_dedicatedDictSearch_4_4(
+            ZSTD_MatchState_t* ms,
+            byte* ip,
+            byte* iLimit,
+            nuint* offsetPtr
+        )
         {
-            assert((4 > (6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) ? 4 : 6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) == 4);
-            assert((4 > (6 < ms->cParams.searchLog ? 6 : ms->cParams.searchLog) ? 4 : 6 < ms->cParams.searchLog ? 6 : ms->cParams.searchLog) == 4);
-            return ZSTD_RowFindBestMatch(ms, ip, iLimit, offsetPtr, 4, ZSTD_dictMode_e.ZSTD_dedicatedDictSearch, 4);
+            assert(
+                (
+                    4 > (6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) ? 4
+                    : 6 < ms->cParams.minMatch ? 6
+                    : ms->cParams.minMatch
+                ) == 4
+            );
+            assert(
+                (
+                    4 > (6 < ms->cParams.searchLog ? 6 : ms->cParams.searchLog) ? 4
+                    : 6 < ms->cParams.searchLog ? 6
+                    : ms->cParams.searchLog
+                ) == 4
+            );
+            return ZSTD_RowFindBestMatch(
+                ms,
+                ip,
+                iLimit,
+                offsetPtr,
+                4,
+                ZSTD_dictMode_e.ZSTD_dedicatedDictSearch,
+                4
+            );
         }
 
-        private static nuint ZSTD_RowFindBestMatch_dedicatedDictSearch_4_5(ZSTD_MatchState_t* ms, byte* ip, byte* iLimit, nuint* offsetPtr)
+        private static nuint ZSTD_RowFindBestMatch_dedicatedDictSearch_4_5(
+            ZSTD_MatchState_t* ms,
+            byte* ip,
+            byte* iLimit,
+            nuint* offsetPtr
+        )
         {
-            assert((4 > (6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) ? 4 : 6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) == 4);
-            assert((4 > (6 < ms->cParams.searchLog ? 6 : ms->cParams.searchLog) ? 4 : 6 < ms->cParams.searchLog ? 6 : ms->cParams.searchLog) == 5);
-            return ZSTD_RowFindBestMatch(ms, ip, iLimit, offsetPtr, 4, ZSTD_dictMode_e.ZSTD_dedicatedDictSearch, 5);
+            assert(
+                (
+                    4 > (6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) ? 4
+                    : 6 < ms->cParams.minMatch ? 6
+                    : ms->cParams.minMatch
+                ) == 4
+            );
+            assert(
+                (
+                    4 > (6 < ms->cParams.searchLog ? 6 : ms->cParams.searchLog) ? 4
+                    : 6 < ms->cParams.searchLog ? 6
+                    : ms->cParams.searchLog
+                ) == 5
+            );
+            return ZSTD_RowFindBestMatch(
+                ms,
+                ip,
+                iLimit,
+                offsetPtr,
+                4,
+                ZSTD_dictMode_e.ZSTD_dedicatedDictSearch,
+                5
+            );
         }
 
-        private static nuint ZSTD_RowFindBestMatch_dedicatedDictSearch_4_6(ZSTD_MatchState_t* ms, byte* ip, byte* iLimit, nuint* offsetPtr)
+        private static nuint ZSTD_RowFindBestMatch_dedicatedDictSearch_4_6(
+            ZSTD_MatchState_t* ms,
+            byte* ip,
+            byte* iLimit,
+            nuint* offsetPtr
+        )
         {
-            assert((4 > (6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) ? 4 : 6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) == 4);
-            assert((4 > (6 < ms->cParams.searchLog ? 6 : ms->cParams.searchLog) ? 4 : 6 < ms->cParams.searchLog ? 6 : ms->cParams.searchLog) == 6);
-            return ZSTD_RowFindBestMatch(ms, ip, iLimit, offsetPtr, 4, ZSTD_dictMode_e.ZSTD_dedicatedDictSearch, 6);
+            assert(
+                (
+                    4 > (6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) ? 4
+                    : 6 < ms->cParams.minMatch ? 6
+                    : ms->cParams.minMatch
+                ) == 4
+            );
+            assert(
+                (
+                    4 > (6 < ms->cParams.searchLog ? 6 : ms->cParams.searchLog) ? 4
+                    : 6 < ms->cParams.searchLog ? 6
+                    : ms->cParams.searchLog
+                ) == 6
+            );
+            return ZSTD_RowFindBestMatch(
+                ms,
+                ip,
+                iLimit,
+                offsetPtr,
+                4,
+                ZSTD_dictMode_e.ZSTD_dedicatedDictSearch,
+                6
+            );
         }
 
-        private static nuint ZSTD_RowFindBestMatch_dedicatedDictSearch_5_4(ZSTD_MatchState_t* ms, byte* ip, byte* iLimit, nuint* offsetPtr)
+        private static nuint ZSTD_RowFindBestMatch_dedicatedDictSearch_5_4(
+            ZSTD_MatchState_t* ms,
+            byte* ip,
+            byte* iLimit,
+            nuint* offsetPtr
+        )
         {
-            assert((4 > (6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) ? 4 : 6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) == 5);
-            assert((4 > (6 < ms->cParams.searchLog ? 6 : ms->cParams.searchLog) ? 4 : 6 < ms->cParams.searchLog ? 6 : ms->cParams.searchLog) == 4);
-            return ZSTD_RowFindBestMatch(ms, ip, iLimit, offsetPtr, 5, ZSTD_dictMode_e.ZSTD_dedicatedDictSearch, 4);
+            assert(
+                (
+                    4 > (6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) ? 4
+                    : 6 < ms->cParams.minMatch ? 6
+                    : ms->cParams.minMatch
+                ) == 5
+            );
+            assert(
+                (
+                    4 > (6 < ms->cParams.searchLog ? 6 : ms->cParams.searchLog) ? 4
+                    : 6 < ms->cParams.searchLog ? 6
+                    : ms->cParams.searchLog
+                ) == 4
+            );
+            return ZSTD_RowFindBestMatch(
+                ms,
+                ip,
+                iLimit,
+                offsetPtr,
+                5,
+                ZSTD_dictMode_e.ZSTD_dedicatedDictSearch,
+                4
+            );
         }
 
-        private static nuint ZSTD_RowFindBestMatch_dedicatedDictSearch_5_5(ZSTD_MatchState_t* ms, byte* ip, byte* iLimit, nuint* offsetPtr)
+        private static nuint ZSTD_RowFindBestMatch_dedicatedDictSearch_5_5(
+            ZSTD_MatchState_t* ms,
+            byte* ip,
+            byte* iLimit,
+            nuint* offsetPtr
+        )
         {
-            assert((4 > (6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) ? 4 : 6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) == 5);
-            assert((4 > (6 < ms->cParams.searchLog ? 6 : ms->cParams.searchLog) ? 4 : 6 < ms->cParams.searchLog ? 6 : ms->cParams.searchLog) == 5);
-            return ZSTD_RowFindBestMatch(ms, ip, iLimit, offsetPtr, 5, ZSTD_dictMode_e.ZSTD_dedicatedDictSearch, 5);
+            assert(
+                (
+                    4 > (6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) ? 4
+                    : 6 < ms->cParams.minMatch ? 6
+                    : ms->cParams.minMatch
+                ) == 5
+            );
+            assert(
+                (
+                    4 > (6 < ms->cParams.searchLog ? 6 : ms->cParams.searchLog) ? 4
+                    : 6 < ms->cParams.searchLog ? 6
+                    : ms->cParams.searchLog
+                ) == 5
+            );
+            return ZSTD_RowFindBestMatch(
+                ms,
+                ip,
+                iLimit,
+                offsetPtr,
+                5,
+                ZSTD_dictMode_e.ZSTD_dedicatedDictSearch,
+                5
+            );
         }
 
-        private static nuint ZSTD_RowFindBestMatch_dedicatedDictSearch_5_6(ZSTD_MatchState_t* ms, byte* ip, byte* iLimit, nuint* offsetPtr)
+        private static nuint ZSTD_RowFindBestMatch_dedicatedDictSearch_5_6(
+            ZSTD_MatchState_t* ms,
+            byte* ip,
+            byte* iLimit,
+            nuint* offsetPtr
+        )
         {
-            assert((4 > (6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) ? 4 : 6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) == 5);
-            assert((4 > (6 < ms->cParams.searchLog ? 6 : ms->cParams.searchLog) ? 4 : 6 < ms->cParams.searchLog ? 6 : ms->cParams.searchLog) == 6);
-            return ZSTD_RowFindBestMatch(ms, ip, iLimit, offsetPtr, 5, ZSTD_dictMode_e.ZSTD_dedicatedDictSearch, 6);
+            assert(
+                (
+                    4 > (6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) ? 4
+                    : 6 < ms->cParams.minMatch ? 6
+                    : ms->cParams.minMatch
+                ) == 5
+            );
+            assert(
+                (
+                    4 > (6 < ms->cParams.searchLog ? 6 : ms->cParams.searchLog) ? 4
+                    : 6 < ms->cParams.searchLog ? 6
+                    : ms->cParams.searchLog
+                ) == 6
+            );
+            return ZSTD_RowFindBestMatch(
+                ms,
+                ip,
+                iLimit,
+                offsetPtr,
+                5,
+                ZSTD_dictMode_e.ZSTD_dedicatedDictSearch,
+                6
+            );
         }
 
-        private static nuint ZSTD_RowFindBestMatch_dedicatedDictSearch_6_4(ZSTD_MatchState_t* ms, byte* ip, byte* iLimit, nuint* offsetPtr)
+        private static nuint ZSTD_RowFindBestMatch_dedicatedDictSearch_6_4(
+            ZSTD_MatchState_t* ms,
+            byte* ip,
+            byte* iLimit,
+            nuint* offsetPtr
+        )
         {
-            assert((4 > (6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) ? 4 : 6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) == 6);
-            assert((4 > (6 < ms->cParams.searchLog ? 6 : ms->cParams.searchLog) ? 4 : 6 < ms->cParams.searchLog ? 6 : ms->cParams.searchLog) == 4);
-            return ZSTD_RowFindBestMatch(ms, ip, iLimit, offsetPtr, 6, ZSTD_dictMode_e.ZSTD_dedicatedDictSearch, 4);
+            assert(
+                (
+                    4 > (6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) ? 4
+                    : 6 < ms->cParams.minMatch ? 6
+                    : ms->cParams.minMatch
+                ) == 6
+            );
+            assert(
+                (
+                    4 > (6 < ms->cParams.searchLog ? 6 : ms->cParams.searchLog) ? 4
+                    : 6 < ms->cParams.searchLog ? 6
+                    : ms->cParams.searchLog
+                ) == 4
+            );
+            return ZSTD_RowFindBestMatch(
+                ms,
+                ip,
+                iLimit,
+                offsetPtr,
+                6,
+                ZSTD_dictMode_e.ZSTD_dedicatedDictSearch,
+                4
+            );
         }
 
-        private static nuint ZSTD_RowFindBestMatch_dedicatedDictSearch_6_5(ZSTD_MatchState_t* ms, byte* ip, byte* iLimit, nuint* offsetPtr)
+        private static nuint ZSTD_RowFindBestMatch_dedicatedDictSearch_6_5(
+            ZSTD_MatchState_t* ms,
+            byte* ip,
+            byte* iLimit,
+            nuint* offsetPtr
+        )
         {
-            assert((4 > (6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) ? 4 : 6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) == 6);
-            assert((4 > (6 < ms->cParams.searchLog ? 6 : ms->cParams.searchLog) ? 4 : 6 < ms->cParams.searchLog ? 6 : ms->cParams.searchLog) == 5);
-            return ZSTD_RowFindBestMatch(ms, ip, iLimit, offsetPtr, 6, ZSTD_dictMode_e.ZSTD_dedicatedDictSearch, 5);
+            assert(
+                (
+                    4 > (6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) ? 4
+                    : 6 < ms->cParams.minMatch ? 6
+                    : ms->cParams.minMatch
+                ) == 6
+            );
+            assert(
+                (
+                    4 > (6 < ms->cParams.searchLog ? 6 : ms->cParams.searchLog) ? 4
+                    : 6 < ms->cParams.searchLog ? 6
+                    : ms->cParams.searchLog
+                ) == 5
+            );
+            return ZSTD_RowFindBestMatch(
+                ms,
+                ip,
+                iLimit,
+                offsetPtr,
+                6,
+                ZSTD_dictMode_e.ZSTD_dedicatedDictSearch,
+                5
+            );
         }
 
-        private static nuint ZSTD_RowFindBestMatch_dedicatedDictSearch_6_6(ZSTD_MatchState_t* ms, byte* ip, byte* iLimit, nuint* offsetPtr)
+        private static nuint ZSTD_RowFindBestMatch_dedicatedDictSearch_6_6(
+            ZSTD_MatchState_t* ms,
+            byte* ip,
+            byte* iLimit,
+            nuint* offsetPtr
+        )
         {
-            assert((4 > (6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) ? 4 : 6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) == 6);
-            assert((4 > (6 < ms->cParams.searchLog ? 6 : ms->cParams.searchLog) ? 4 : 6 < ms->cParams.searchLog ? 6 : ms->cParams.searchLog) == 6);
-            return ZSTD_RowFindBestMatch(ms, ip, iLimit, offsetPtr, 6, ZSTD_dictMode_e.ZSTD_dedicatedDictSearch, 6);
+            assert(
+                (
+                    4 > (6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) ? 4
+                    : 6 < ms->cParams.minMatch ? 6
+                    : ms->cParams.minMatch
+                ) == 6
+            );
+            assert(
+                (
+                    4 > (6 < ms->cParams.searchLog ? 6 : ms->cParams.searchLog) ? 4
+                    : 6 < ms->cParams.searchLog ? 6
+                    : ms->cParams.searchLog
+                ) == 6
+            );
+            return ZSTD_RowFindBestMatch(
+                ms,
+                ip,
+                iLimit,
+                offsetPtr,
+                6,
+                ZSTD_dictMode_e.ZSTD_dedicatedDictSearch,
+                6
+            );
         }
 
         /* Generate binary Tree search fns for each combination of (dictMode, mls) */
-        private static nuint ZSTD_BtFindBestMatch_noDict_4(ZSTD_MatchState_t* ms, byte* ip, byte* iLimit, nuint* offBasePtr)
+        private static nuint ZSTD_BtFindBestMatch_noDict_4(
+            ZSTD_MatchState_t* ms,
+            byte* ip,
+            byte* iLimit,
+            nuint* offBasePtr
+        )
         {
-            assert((4 > (6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) ? 4 : 6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) == 4);
+            assert(
+                (
+                    4 > (6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) ? 4
+                    : 6 < ms->cParams.minMatch ? 6
+                    : ms->cParams.minMatch
+                ) == 4
+            );
             return ZSTD_BtFindBestMatch(ms, ip, iLimit, offBasePtr, 4, ZSTD_dictMode_e.ZSTD_noDict);
         }
 
-        private static nuint ZSTD_BtFindBestMatch_noDict_5(ZSTD_MatchState_t* ms, byte* ip, byte* iLimit, nuint* offBasePtr)
+        private static nuint ZSTD_BtFindBestMatch_noDict_5(
+            ZSTD_MatchState_t* ms,
+            byte* ip,
+            byte* iLimit,
+            nuint* offBasePtr
+        )
         {
-            assert((4 > (6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) ? 4 : 6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) == 5);
+            assert(
+                (
+                    4 > (6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) ? 4
+                    : 6 < ms->cParams.minMatch ? 6
+                    : ms->cParams.minMatch
+                ) == 5
+            );
             return ZSTD_BtFindBestMatch(ms, ip, iLimit, offBasePtr, 5, ZSTD_dictMode_e.ZSTD_noDict);
         }
 
-        private static nuint ZSTD_BtFindBestMatch_noDict_6(ZSTD_MatchState_t* ms, byte* ip, byte* iLimit, nuint* offBasePtr)
+        private static nuint ZSTD_BtFindBestMatch_noDict_6(
+            ZSTD_MatchState_t* ms,
+            byte* ip,
+            byte* iLimit,
+            nuint* offBasePtr
+        )
         {
-            assert((4 > (6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) ? 4 : 6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) == 6);
+            assert(
+                (
+                    4 > (6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) ? 4
+                    : 6 < ms->cParams.minMatch ? 6
+                    : ms->cParams.minMatch
+                ) == 6
+            );
             return ZSTD_BtFindBestMatch(ms, ip, iLimit, offBasePtr, 6, ZSTD_dictMode_e.ZSTD_noDict);
         }
 
-        private static nuint ZSTD_BtFindBestMatch_extDict_4(ZSTD_MatchState_t* ms, byte* ip, byte* iLimit, nuint* offBasePtr)
+        private static nuint ZSTD_BtFindBestMatch_extDict_4(
+            ZSTD_MatchState_t* ms,
+            byte* ip,
+            byte* iLimit,
+            nuint* offBasePtr
+        )
         {
-            assert((4 > (6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) ? 4 : 6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) == 4);
-            return ZSTD_BtFindBestMatch(ms, ip, iLimit, offBasePtr, 4, ZSTD_dictMode_e.ZSTD_extDict);
+            assert(
+                (
+                    4 > (6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) ? 4
+                    : 6 < ms->cParams.minMatch ? 6
+                    : ms->cParams.minMatch
+                ) == 4
+            );
+            return ZSTD_BtFindBestMatch(
+                ms,
+                ip,
+                iLimit,
+                offBasePtr,
+                4,
+                ZSTD_dictMode_e.ZSTD_extDict
+            );
         }
 
-        private static nuint ZSTD_BtFindBestMatch_extDict_5(ZSTD_MatchState_t* ms, byte* ip, byte* iLimit, nuint* offBasePtr)
+        private static nuint ZSTD_BtFindBestMatch_extDict_5(
+            ZSTD_MatchState_t* ms,
+            byte* ip,
+            byte* iLimit,
+            nuint* offBasePtr
+        )
         {
-            assert((4 > (6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) ? 4 : 6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) == 5);
-            return ZSTD_BtFindBestMatch(ms, ip, iLimit, offBasePtr, 5, ZSTD_dictMode_e.ZSTD_extDict);
+            assert(
+                (
+                    4 > (6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) ? 4
+                    : 6 < ms->cParams.minMatch ? 6
+                    : ms->cParams.minMatch
+                ) == 5
+            );
+            return ZSTD_BtFindBestMatch(
+                ms,
+                ip,
+                iLimit,
+                offBasePtr,
+                5,
+                ZSTD_dictMode_e.ZSTD_extDict
+            );
         }
 
-        private static nuint ZSTD_BtFindBestMatch_extDict_6(ZSTD_MatchState_t* ms, byte* ip, byte* iLimit, nuint* offBasePtr)
+        private static nuint ZSTD_BtFindBestMatch_extDict_6(
+            ZSTD_MatchState_t* ms,
+            byte* ip,
+            byte* iLimit,
+            nuint* offBasePtr
+        )
         {
-            assert((4 > (6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) ? 4 : 6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) == 6);
-            return ZSTD_BtFindBestMatch(ms, ip, iLimit, offBasePtr, 6, ZSTD_dictMode_e.ZSTD_extDict);
+            assert(
+                (
+                    4 > (6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) ? 4
+                    : 6 < ms->cParams.minMatch ? 6
+                    : ms->cParams.minMatch
+                ) == 6
+            );
+            return ZSTD_BtFindBestMatch(
+                ms,
+                ip,
+                iLimit,
+                offBasePtr,
+                6,
+                ZSTD_dictMode_e.ZSTD_extDict
+            );
         }
 
-        private static nuint ZSTD_BtFindBestMatch_dictMatchState_4(ZSTD_MatchState_t* ms, byte* ip, byte* iLimit, nuint* offBasePtr)
+        private static nuint ZSTD_BtFindBestMatch_dictMatchState_4(
+            ZSTD_MatchState_t* ms,
+            byte* ip,
+            byte* iLimit,
+            nuint* offBasePtr
+        )
         {
-            assert((4 > (6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) ? 4 : 6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) == 4);
-            return ZSTD_BtFindBestMatch(ms, ip, iLimit, offBasePtr, 4, ZSTD_dictMode_e.ZSTD_dictMatchState);
+            assert(
+                (
+                    4 > (6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) ? 4
+                    : 6 < ms->cParams.minMatch ? 6
+                    : ms->cParams.minMatch
+                ) == 4
+            );
+            return ZSTD_BtFindBestMatch(
+                ms,
+                ip,
+                iLimit,
+                offBasePtr,
+                4,
+                ZSTD_dictMode_e.ZSTD_dictMatchState
+            );
         }
 
-        private static nuint ZSTD_BtFindBestMatch_dictMatchState_5(ZSTD_MatchState_t* ms, byte* ip, byte* iLimit, nuint* offBasePtr)
+        private static nuint ZSTD_BtFindBestMatch_dictMatchState_5(
+            ZSTD_MatchState_t* ms,
+            byte* ip,
+            byte* iLimit,
+            nuint* offBasePtr
+        )
         {
-            assert((4 > (6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) ? 4 : 6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) == 5);
-            return ZSTD_BtFindBestMatch(ms, ip, iLimit, offBasePtr, 5, ZSTD_dictMode_e.ZSTD_dictMatchState);
+            assert(
+                (
+                    4 > (6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) ? 4
+                    : 6 < ms->cParams.minMatch ? 6
+                    : ms->cParams.minMatch
+                ) == 5
+            );
+            return ZSTD_BtFindBestMatch(
+                ms,
+                ip,
+                iLimit,
+                offBasePtr,
+                5,
+                ZSTD_dictMode_e.ZSTD_dictMatchState
+            );
         }
 
-        private static nuint ZSTD_BtFindBestMatch_dictMatchState_6(ZSTD_MatchState_t* ms, byte* ip, byte* iLimit, nuint* offBasePtr)
+        private static nuint ZSTD_BtFindBestMatch_dictMatchState_6(
+            ZSTD_MatchState_t* ms,
+            byte* ip,
+            byte* iLimit,
+            nuint* offBasePtr
+        )
         {
-            assert((4 > (6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) ? 4 : 6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) == 6);
-            return ZSTD_BtFindBestMatch(ms, ip, iLimit, offBasePtr, 6, ZSTD_dictMode_e.ZSTD_dictMatchState);
+            assert(
+                (
+                    4 > (6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) ? 4
+                    : 6 < ms->cParams.minMatch ? 6
+                    : ms->cParams.minMatch
+                ) == 6
+            );
+            return ZSTD_BtFindBestMatch(
+                ms,
+                ip,
+                iLimit,
+                offBasePtr,
+                6,
+                ZSTD_dictMode_e.ZSTD_dictMatchState
+            );
         }
 
-        private static nuint ZSTD_BtFindBestMatch_dedicatedDictSearch_4(ZSTD_MatchState_t* ms, byte* ip, byte* iLimit, nuint* offBasePtr)
+        private static nuint ZSTD_BtFindBestMatch_dedicatedDictSearch_4(
+            ZSTD_MatchState_t* ms,
+            byte* ip,
+            byte* iLimit,
+            nuint* offBasePtr
+        )
         {
-            assert((4 > (6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) ? 4 : 6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) == 4);
-            return ZSTD_BtFindBestMatch(ms, ip, iLimit, offBasePtr, 4, ZSTD_dictMode_e.ZSTD_dedicatedDictSearch);
+            assert(
+                (
+                    4 > (6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) ? 4
+                    : 6 < ms->cParams.minMatch ? 6
+                    : ms->cParams.minMatch
+                ) == 4
+            );
+            return ZSTD_BtFindBestMatch(
+                ms,
+                ip,
+                iLimit,
+                offBasePtr,
+                4,
+                ZSTD_dictMode_e.ZSTD_dedicatedDictSearch
+            );
         }
 
-        private static nuint ZSTD_BtFindBestMatch_dedicatedDictSearch_5(ZSTD_MatchState_t* ms, byte* ip, byte* iLimit, nuint* offBasePtr)
+        private static nuint ZSTD_BtFindBestMatch_dedicatedDictSearch_5(
+            ZSTD_MatchState_t* ms,
+            byte* ip,
+            byte* iLimit,
+            nuint* offBasePtr
+        )
         {
-            assert((4 > (6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) ? 4 : 6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) == 5);
-            return ZSTD_BtFindBestMatch(ms, ip, iLimit, offBasePtr, 5, ZSTD_dictMode_e.ZSTD_dedicatedDictSearch);
+            assert(
+                (
+                    4 > (6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) ? 4
+                    : 6 < ms->cParams.minMatch ? 6
+                    : ms->cParams.minMatch
+                ) == 5
+            );
+            return ZSTD_BtFindBestMatch(
+                ms,
+                ip,
+                iLimit,
+                offBasePtr,
+                5,
+                ZSTD_dictMode_e.ZSTD_dedicatedDictSearch
+            );
         }
 
-        private static nuint ZSTD_BtFindBestMatch_dedicatedDictSearch_6(ZSTD_MatchState_t* ms, byte* ip, byte* iLimit, nuint* offBasePtr)
+        private static nuint ZSTD_BtFindBestMatch_dedicatedDictSearch_6(
+            ZSTD_MatchState_t* ms,
+            byte* ip,
+            byte* iLimit,
+            nuint* offBasePtr
+        )
         {
-            assert((4 > (6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) ? 4 : 6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) == 6);
-            return ZSTD_BtFindBestMatch(ms, ip, iLimit, offBasePtr, 6, ZSTD_dictMode_e.ZSTD_dedicatedDictSearch);
+            assert(
+                (
+                    4 > (6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) ? 4
+                    : 6 < ms->cParams.minMatch ? 6
+                    : ms->cParams.minMatch
+                ) == 6
+            );
+            return ZSTD_BtFindBestMatch(
+                ms,
+                ip,
+                iLimit,
+                offBasePtr,
+                6,
+                ZSTD_dictMode_e.ZSTD_dedicatedDictSearch
+            );
         }
 
         /* Generate hash chain search fns for each combination of (dictMode, mls) */
-        private static nuint ZSTD_HcFindBestMatch_noDict_4(ZSTD_MatchState_t* ms, byte* ip, byte* iLimit, nuint* offsetPtr)
+        private static nuint ZSTD_HcFindBestMatch_noDict_4(
+            ZSTD_MatchState_t* ms,
+            byte* ip,
+            byte* iLimit,
+            nuint* offsetPtr
+        )
         {
-            assert((4 > (6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) ? 4 : 6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) == 4);
+            assert(
+                (
+                    4 > (6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) ? 4
+                    : 6 < ms->cParams.minMatch ? 6
+                    : ms->cParams.minMatch
+                ) == 4
+            );
             return ZSTD_HcFindBestMatch(ms, ip, iLimit, offsetPtr, 4, ZSTD_dictMode_e.ZSTD_noDict);
         }
 
-        private static nuint ZSTD_HcFindBestMatch_noDict_5(ZSTD_MatchState_t* ms, byte* ip, byte* iLimit, nuint* offsetPtr)
+        private static nuint ZSTD_HcFindBestMatch_noDict_5(
+            ZSTD_MatchState_t* ms,
+            byte* ip,
+            byte* iLimit,
+            nuint* offsetPtr
+        )
         {
-            assert((4 > (6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) ? 4 : 6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) == 5);
+            assert(
+                (
+                    4 > (6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) ? 4
+                    : 6 < ms->cParams.minMatch ? 6
+                    : ms->cParams.minMatch
+                ) == 5
+            );
             return ZSTD_HcFindBestMatch(ms, ip, iLimit, offsetPtr, 5, ZSTD_dictMode_e.ZSTD_noDict);
         }
 
-        private static nuint ZSTD_HcFindBestMatch_noDict_6(ZSTD_MatchState_t* ms, byte* ip, byte* iLimit, nuint* offsetPtr)
+        private static nuint ZSTD_HcFindBestMatch_noDict_6(
+            ZSTD_MatchState_t* ms,
+            byte* ip,
+            byte* iLimit,
+            nuint* offsetPtr
+        )
         {
-            assert((4 > (6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) ? 4 : 6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) == 6);
+            assert(
+                (
+                    4 > (6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) ? 4
+                    : 6 < ms->cParams.minMatch ? 6
+                    : ms->cParams.minMatch
+                ) == 6
+            );
             return ZSTD_HcFindBestMatch(ms, ip, iLimit, offsetPtr, 6, ZSTD_dictMode_e.ZSTD_noDict);
         }
 
-        private static nuint ZSTD_HcFindBestMatch_extDict_4(ZSTD_MatchState_t* ms, byte* ip, byte* iLimit, nuint* offsetPtr)
+        private static nuint ZSTD_HcFindBestMatch_extDict_4(
+            ZSTD_MatchState_t* ms,
+            byte* ip,
+            byte* iLimit,
+            nuint* offsetPtr
+        )
         {
-            assert((4 > (6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) ? 4 : 6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) == 4);
+            assert(
+                (
+                    4 > (6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) ? 4
+                    : 6 < ms->cParams.minMatch ? 6
+                    : ms->cParams.minMatch
+                ) == 4
+            );
             return ZSTD_HcFindBestMatch(ms, ip, iLimit, offsetPtr, 4, ZSTD_dictMode_e.ZSTD_extDict);
         }
 
-        private static nuint ZSTD_HcFindBestMatch_extDict_5(ZSTD_MatchState_t* ms, byte* ip, byte* iLimit, nuint* offsetPtr)
+        private static nuint ZSTD_HcFindBestMatch_extDict_5(
+            ZSTD_MatchState_t* ms,
+            byte* ip,
+            byte* iLimit,
+            nuint* offsetPtr
+        )
         {
-            assert((4 > (6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) ? 4 : 6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) == 5);
+            assert(
+                (
+                    4 > (6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) ? 4
+                    : 6 < ms->cParams.minMatch ? 6
+                    : ms->cParams.minMatch
+                ) == 5
+            );
             return ZSTD_HcFindBestMatch(ms, ip, iLimit, offsetPtr, 5, ZSTD_dictMode_e.ZSTD_extDict);
         }
 
-        private static nuint ZSTD_HcFindBestMatch_extDict_6(ZSTD_MatchState_t* ms, byte* ip, byte* iLimit, nuint* offsetPtr)
+        private static nuint ZSTD_HcFindBestMatch_extDict_6(
+            ZSTD_MatchState_t* ms,
+            byte* ip,
+            byte* iLimit,
+            nuint* offsetPtr
+        )
         {
-            assert((4 > (6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) ? 4 : 6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) == 6);
+            assert(
+                (
+                    4 > (6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) ? 4
+                    : 6 < ms->cParams.minMatch ? 6
+                    : ms->cParams.minMatch
+                ) == 6
+            );
             return ZSTD_HcFindBestMatch(ms, ip, iLimit, offsetPtr, 6, ZSTD_dictMode_e.ZSTD_extDict);
         }
 
-        private static nuint ZSTD_HcFindBestMatch_dictMatchState_4(ZSTD_MatchState_t* ms, byte* ip, byte* iLimit, nuint* offsetPtr)
+        private static nuint ZSTD_HcFindBestMatch_dictMatchState_4(
+            ZSTD_MatchState_t* ms,
+            byte* ip,
+            byte* iLimit,
+            nuint* offsetPtr
+        )
         {
-            assert((4 > (6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) ? 4 : 6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) == 4);
-            return ZSTD_HcFindBestMatch(ms, ip, iLimit, offsetPtr, 4, ZSTD_dictMode_e.ZSTD_dictMatchState);
+            assert(
+                (
+                    4 > (6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) ? 4
+                    : 6 < ms->cParams.minMatch ? 6
+                    : ms->cParams.minMatch
+                ) == 4
+            );
+            return ZSTD_HcFindBestMatch(
+                ms,
+                ip,
+                iLimit,
+                offsetPtr,
+                4,
+                ZSTD_dictMode_e.ZSTD_dictMatchState
+            );
         }
 
-        private static nuint ZSTD_HcFindBestMatch_dictMatchState_5(ZSTD_MatchState_t* ms, byte* ip, byte* iLimit, nuint* offsetPtr)
+        private static nuint ZSTD_HcFindBestMatch_dictMatchState_5(
+            ZSTD_MatchState_t* ms,
+            byte* ip,
+            byte* iLimit,
+            nuint* offsetPtr
+        )
         {
-            assert((4 > (6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) ? 4 : 6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) == 5);
-            return ZSTD_HcFindBestMatch(ms, ip, iLimit, offsetPtr, 5, ZSTD_dictMode_e.ZSTD_dictMatchState);
+            assert(
+                (
+                    4 > (6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) ? 4
+                    : 6 < ms->cParams.minMatch ? 6
+                    : ms->cParams.minMatch
+                ) == 5
+            );
+            return ZSTD_HcFindBestMatch(
+                ms,
+                ip,
+                iLimit,
+                offsetPtr,
+                5,
+                ZSTD_dictMode_e.ZSTD_dictMatchState
+            );
         }
 
-        private static nuint ZSTD_HcFindBestMatch_dictMatchState_6(ZSTD_MatchState_t* ms, byte* ip, byte* iLimit, nuint* offsetPtr)
+        private static nuint ZSTD_HcFindBestMatch_dictMatchState_6(
+            ZSTD_MatchState_t* ms,
+            byte* ip,
+            byte* iLimit,
+            nuint* offsetPtr
+        )
         {
-            assert((4 > (6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) ? 4 : 6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) == 6);
-            return ZSTD_HcFindBestMatch(ms, ip, iLimit, offsetPtr, 6, ZSTD_dictMode_e.ZSTD_dictMatchState);
+            assert(
+                (
+                    4 > (6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) ? 4
+                    : 6 < ms->cParams.minMatch ? 6
+                    : ms->cParams.minMatch
+                ) == 6
+            );
+            return ZSTD_HcFindBestMatch(
+                ms,
+                ip,
+                iLimit,
+                offsetPtr,
+                6,
+                ZSTD_dictMode_e.ZSTD_dictMatchState
+            );
         }
 
-        private static nuint ZSTD_HcFindBestMatch_dedicatedDictSearch_4(ZSTD_MatchState_t* ms, byte* ip, byte* iLimit, nuint* offsetPtr)
+        private static nuint ZSTD_HcFindBestMatch_dedicatedDictSearch_4(
+            ZSTD_MatchState_t* ms,
+            byte* ip,
+            byte* iLimit,
+            nuint* offsetPtr
+        )
         {
-            assert((4 > (6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) ? 4 : 6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) == 4);
-            return ZSTD_HcFindBestMatch(ms, ip, iLimit, offsetPtr, 4, ZSTD_dictMode_e.ZSTD_dedicatedDictSearch);
+            assert(
+                (
+                    4 > (6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) ? 4
+                    : 6 < ms->cParams.minMatch ? 6
+                    : ms->cParams.minMatch
+                ) == 4
+            );
+            return ZSTD_HcFindBestMatch(
+                ms,
+                ip,
+                iLimit,
+                offsetPtr,
+                4,
+                ZSTD_dictMode_e.ZSTD_dedicatedDictSearch
+            );
         }
 
-        private static nuint ZSTD_HcFindBestMatch_dedicatedDictSearch_5(ZSTD_MatchState_t* ms, byte* ip, byte* iLimit, nuint* offsetPtr)
+        private static nuint ZSTD_HcFindBestMatch_dedicatedDictSearch_5(
+            ZSTD_MatchState_t* ms,
+            byte* ip,
+            byte* iLimit,
+            nuint* offsetPtr
+        )
         {
-            assert((4 > (6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) ? 4 : 6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) == 5);
-            return ZSTD_HcFindBestMatch(ms, ip, iLimit, offsetPtr, 5, ZSTD_dictMode_e.ZSTD_dedicatedDictSearch);
+            assert(
+                (
+                    4 > (6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) ? 4
+                    : 6 < ms->cParams.minMatch ? 6
+                    : ms->cParams.minMatch
+                ) == 5
+            );
+            return ZSTD_HcFindBestMatch(
+                ms,
+                ip,
+                iLimit,
+                offsetPtr,
+                5,
+                ZSTD_dictMode_e.ZSTD_dedicatedDictSearch
+            );
         }
 
-        private static nuint ZSTD_HcFindBestMatch_dedicatedDictSearch_6(ZSTD_MatchState_t* ms, byte* ip, byte* iLimit, nuint* offsetPtr)
+        private static nuint ZSTD_HcFindBestMatch_dedicatedDictSearch_6(
+            ZSTD_MatchState_t* ms,
+            byte* ip,
+            byte* iLimit,
+            nuint* offsetPtr
+        )
         {
-            assert((4 > (6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) ? 4 : 6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) == 6);
-            return ZSTD_HcFindBestMatch(ms, ip, iLimit, offsetPtr, 6, ZSTD_dictMode_e.ZSTD_dedicatedDictSearch);
+            assert(
+                (
+                    4 > (6 < ms->cParams.minMatch ? 6 : ms->cParams.minMatch) ? 4
+                    : 6 < ms->cParams.minMatch ? 6
+                    : ms->cParams.minMatch
+                ) == 6
+            );
+            return ZSTD_HcFindBestMatch(
+                ms,
+                ip,
+                iLimit,
+                offsetPtr,
+                6,
+                ZSTD_dictMode_e.ZSTD_dedicatedDictSearch
+            );
         }
 
         /**
@@ -1800,7 +3364,16 @@ namespace ZstdSharp.Unsafe
          * If a match is found its offset is stored in @p offsetPtr.
          */
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static nuint ZSTD_searchMax(ZSTD_MatchState_t* ms, byte* ip, byte* iend, nuint* offsetPtr, uint mls, uint rowLog, searchMethod_e searchMethod, ZSTD_dictMode_e dictMode)
+        private static nuint ZSTD_searchMax(
+            ZSTD_MatchState_t* ms,
+            byte* ip,
+            byte* iend,
+            nuint* offsetPtr,
+            uint mls,
+            uint rowLog,
+            searchMethod_e searchMethod,
+            ZSTD_dictMode_e dictMode
+        )
         {
             if (dictMode == ZSTD_dictMode_e.ZSTD_noDict)
             {
@@ -1810,32 +3383,42 @@ namespace ZstdSharp.Unsafe
                     {
                         if (rowLog == 4)
                             return ZSTD_RowFindBestMatch_noDict_4_4(ms, ip, iend, offsetPtr);
-                        return rowLog == 5 ? ZSTD_RowFindBestMatch_noDict_4_5(ms, ip, iend, offsetPtr) : ZSTD_RowFindBestMatch_noDict_4_6(ms, ip, iend, offsetPtr);
+                        return rowLog == 5
+                            ? ZSTD_RowFindBestMatch_noDict_4_5(ms, ip, iend, offsetPtr)
+                            : ZSTD_RowFindBestMatch_noDict_4_6(ms, ip, iend, offsetPtr);
                     }
 
                     if (mls == 5)
                     {
                         if (rowLog == 4)
                             return ZSTD_RowFindBestMatch_noDict_5_4(ms, ip, iend, offsetPtr);
-                        return rowLog == 5 ? ZSTD_RowFindBestMatch_noDict_5_5(ms, ip, iend, offsetPtr) : ZSTD_RowFindBestMatch_noDict_5_6(ms, ip, iend, offsetPtr);
+                        return rowLog == 5
+                            ? ZSTD_RowFindBestMatch_noDict_5_5(ms, ip, iend, offsetPtr)
+                            : ZSTD_RowFindBestMatch_noDict_5_6(ms, ip, iend, offsetPtr);
                     }
 
                     if (rowLog == 4)
                         return ZSTD_RowFindBestMatch_noDict_6_4(ms, ip, iend, offsetPtr);
-                    return rowLog == 5 ? ZSTD_RowFindBestMatch_noDict_6_5(ms, ip, iend, offsetPtr) : ZSTD_RowFindBestMatch_noDict_6_6(ms, ip, iend, offsetPtr);
+                    return rowLog == 5
+                        ? ZSTD_RowFindBestMatch_noDict_6_5(ms, ip, iend, offsetPtr)
+                        : ZSTD_RowFindBestMatch_noDict_6_6(ms, ip, iend, offsetPtr);
                 }
 
                 if (searchMethod == searchMethod_e.search_hashChain)
                 {
                     if (mls == 4)
                         return ZSTD_HcFindBestMatch_noDict_4(ms, ip, iend, offsetPtr);
-                    return mls == 5 ? ZSTD_HcFindBestMatch_noDict_5(ms, ip, iend, offsetPtr) : ZSTD_HcFindBestMatch_noDict_6(ms, ip, iend, offsetPtr);
+                    return mls == 5
+                        ? ZSTD_HcFindBestMatch_noDict_5(ms, ip, iend, offsetPtr)
+                        : ZSTD_HcFindBestMatch_noDict_6(ms, ip, iend, offsetPtr);
                 }
 
                 // searchMethod_e.search_binaryTree
                 if (mls == 4)
                     return ZSTD_BtFindBestMatch_noDict_4(ms, ip, iend, offsetPtr);
-                return mls == 5 ? ZSTD_BtFindBestMatch_noDict_5(ms, ip, iend, offsetPtr) : ZSTD_BtFindBestMatch_noDict_6(ms, ip, iend, offsetPtr);
+                return mls == 5
+                    ? ZSTD_BtFindBestMatch_noDict_5(ms, ip, iend, offsetPtr)
+                    : ZSTD_BtFindBestMatch_noDict_6(ms, ip, iend, offsetPtr);
             }
 
             if (dictMode == ZSTD_dictMode_e.ZSTD_extDict)
@@ -1894,27 +3477,57 @@ namespace ZstdSharp.Unsafe
                     if (mls == 4)
                     {
                         if (rowLog == 4)
-                            return ZSTD_RowFindBestMatch_dictMatchState_4_4(ms, ip, iend, offsetPtr);
+                            return ZSTD_RowFindBestMatch_dictMatchState_4_4(
+                                ms,
+                                ip,
+                                iend,
+                                offsetPtr
+                            );
                         if (rowLog == 5)
-                            return ZSTD_RowFindBestMatch_dictMatchState_4_5(ms, ip, iend, offsetPtr);
+                            return ZSTD_RowFindBestMatch_dictMatchState_4_5(
+                                ms,
+                                ip,
+                                iend,
+                                offsetPtr
+                            );
                         return ZSTD_RowFindBestMatch_dictMatchState_4_6(ms, ip, iend, offsetPtr);
                     }
 
                     if (mls == 5)
                     {
                         if (rowLog == 4)
-                            return ZSTD_RowFindBestMatch_dictMatchState_5_4(ms, ip, iend, offsetPtr);
+                            return ZSTD_RowFindBestMatch_dictMatchState_5_4(
+                                ms,
+                                ip,
+                                iend,
+                                offsetPtr
+                            );
                         if (rowLog == 5)
-                            return ZSTD_RowFindBestMatch_dictMatchState_5_5(ms, ip, iend, offsetPtr);
+                            return ZSTD_RowFindBestMatch_dictMatchState_5_5(
+                                ms,
+                                ip,
+                                iend,
+                                offsetPtr
+                            );
                         return ZSTD_RowFindBestMatch_dictMatchState_5_6(ms, ip, iend, offsetPtr);
                     }
 
                     if (mls == 6)
                     {
                         if (rowLog == 4)
-                            return ZSTD_RowFindBestMatch_dictMatchState_6_4(ms, ip, iend, offsetPtr);
+                            return ZSTD_RowFindBestMatch_dictMatchState_6_4(
+                                ms,
+                                ip,
+                                iend,
+                                offsetPtr
+                            );
                         if (rowLog == 5)
-                            return ZSTD_RowFindBestMatch_dictMatchState_6_5(ms, ip, iend, offsetPtr);
+                            return ZSTD_RowFindBestMatch_dictMatchState_6_5(
+                                ms,
+                                ip,
+                                iend,
+                                offsetPtr
+                            );
                         return ZSTD_RowFindBestMatch_dictMatchState_6_6(ms, ip, iend, offsetPtr);
                     }
                 }
@@ -1941,27 +3554,57 @@ namespace ZstdSharp.Unsafe
                 if (mls == 4)
                 {
                     if (rowLog == 4)
-                        return ZSTD_RowFindBestMatch_dedicatedDictSearch_4_4(ms, ip, iend, offsetPtr);
+                        return ZSTD_RowFindBestMatch_dedicatedDictSearch_4_4(
+                            ms,
+                            ip,
+                            iend,
+                            offsetPtr
+                        );
                     if (rowLog == 5)
-                        return ZSTD_RowFindBestMatch_dedicatedDictSearch_4_5(ms, ip, iend, offsetPtr);
+                        return ZSTD_RowFindBestMatch_dedicatedDictSearch_4_5(
+                            ms,
+                            ip,
+                            iend,
+                            offsetPtr
+                        );
                     return ZSTD_RowFindBestMatch_dedicatedDictSearch_4_6(ms, ip, iend, offsetPtr);
                 }
 
                 if (mls == 5)
                 {
                     if (rowLog == 4)
-                        return ZSTD_RowFindBestMatch_dedicatedDictSearch_5_4(ms, ip, iend, offsetPtr);
+                        return ZSTD_RowFindBestMatch_dedicatedDictSearch_5_4(
+                            ms,
+                            ip,
+                            iend,
+                            offsetPtr
+                        );
                     if (rowLog == 5)
-                        return ZSTD_RowFindBestMatch_dedicatedDictSearch_5_5(ms, ip, iend, offsetPtr);
+                        return ZSTD_RowFindBestMatch_dedicatedDictSearch_5_5(
+                            ms,
+                            ip,
+                            iend,
+                            offsetPtr
+                        );
                     return ZSTD_RowFindBestMatch_dedicatedDictSearch_5_6(ms, ip, iend, offsetPtr);
                 }
 
                 if (mls == 6)
                 {
                     if (rowLog == 4)
-                        return ZSTD_RowFindBestMatch_dedicatedDictSearch_6_4(ms, ip, iend, offsetPtr);
+                        return ZSTD_RowFindBestMatch_dedicatedDictSearch_6_4(
+                            ms,
+                            ip,
+                            iend,
+                            offsetPtr
+                        );
                     if (rowLog == 5)
-                        return ZSTD_RowFindBestMatch_dedicatedDictSearch_6_5(ms, ip, iend, offsetPtr);
+                        return ZSTD_RowFindBestMatch_dedicatedDictSearch_6_5(
+                            ms,
+                            ip,
+                            iend,
+                            offsetPtr
+                        );
                     return ZSTD_RowFindBestMatch_dedicatedDictSearch_6_6(ms, ip, iend, offsetPtr);
                 }
             }
@@ -1987,7 +3630,16 @@ namespace ZstdSharp.Unsafe
          *  Common parser - lazy strategy
          *********************************/
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static nuint ZSTD_compressBlock_lazy_generic(ZSTD_MatchState_t* ms, SeqStore_t* seqStore, uint* rep, void* src, nuint srcSize, searchMethod_e searchMethod, uint depth, ZSTD_dictMode_e dictMode)
+        private static nuint ZSTD_compressBlock_lazy_generic(
+            ZSTD_MatchState_t* ms,
+            SeqStore_t* seqStore,
+            uint* rep,
+            void* src,
+            nuint srcSize,
+            searchMethod_e searchMethod,
+            uint depth,
+            ZSTD_dictMode_e dictMode
+        )
         {
             byte* istart = (byte*)src;
             byte* ip = istart;
@@ -1997,10 +3649,18 @@ namespace ZstdSharp.Unsafe
             byte* @base = ms->window.@base;
             uint prefixLowestIndex = ms->window.dictLimit;
             byte* prefixLowest = @base + prefixLowestIndex;
-            uint mls = ms->cParams.minMatch <= 4 ? 4 : ms->cParams.minMatch <= 6 ? ms->cParams.minMatch : 6;
-            uint rowLog = ms->cParams.searchLog <= 4 ? 4 : ms->cParams.searchLog <= 6 ? ms->cParams.searchLog : 6;
-            uint offset_1 = rep[0], offset_2 = rep[1];
-            uint offsetSaved1 = 0, offsetSaved2 = 0;
+            uint mls =
+                ms->cParams.minMatch <= 4 ? 4
+                : ms->cParams.minMatch <= 6 ? ms->cParams.minMatch
+                : 6;
+            uint rowLog =
+                ms->cParams.searchLog <= 4 ? 4
+                : ms->cParams.searchLog <= 6 ? ms->cParams.searchLog
+                : 6;
+            uint offset_1 = rep[0],
+                offset_2 = rep[1];
+            uint offsetSaved1 = 0,
+                offsetSaved2 = 0;
             int isDMS = dictMode == ZSTD_dictMode_e.ZSTD_dictMatchState ? 1 : 0;
             int isDDS = dictMode == ZSTD_dictMode_e.ZSTD_dedicatedDictSearch ? 1 : 0;
             int isDxS = isDMS != 0 || isDDS != 0 ? 1 : 0;
@@ -2054,17 +3714,38 @@ namespace ZstdSharp.Unsafe
                 if (isDxS != 0)
                 {
                     uint repIndex = (uint)(ip - @base) + 1 - offset_1;
-                    byte* repMatch = (dictMode == ZSTD_dictMode_e.ZSTD_dictMatchState || dictMode == ZSTD_dictMode_e.ZSTD_dedicatedDictSearch) && repIndex < prefixLowestIndex ? dictBase + (repIndex - dictIndexDelta) : @base + repIndex;
-                    if (ZSTD_index_overlap_check(prefixLowestIndex, repIndex) != 0 && MEM_read32(repMatch) == MEM_read32(ip + 1))
+                    byte* repMatch =
+                        (
+                            dictMode == ZSTD_dictMode_e.ZSTD_dictMatchState
+                            || dictMode == ZSTD_dictMode_e.ZSTD_dedicatedDictSearch
+                        )
+                        && repIndex < prefixLowestIndex
+                            ? dictBase + (repIndex - dictIndexDelta)
+                            : @base + repIndex;
+                    if (
+                        ZSTD_index_overlap_check(prefixLowestIndex, repIndex) != 0
+                        && MEM_read32(repMatch) == MEM_read32(ip + 1)
+                    )
                     {
                         byte* repMatchEnd = repIndex < prefixLowestIndex ? dictEnd : iend;
-                        matchLength = ZSTD_count_2segments(ip + 1 + 4, repMatch + 4, iend, repMatchEnd, prefixLowest) + 4;
+                        matchLength =
+                            ZSTD_count_2segments(
+                                ip + 1 + 4,
+                                repMatch + 4,
+                                iend,
+                                repMatchEnd,
+                                prefixLowest
+                            ) + 4;
                         if (depth == 0)
                             goto _storeSequence;
                     }
                 }
 
-                if (dictMode == ZSTD_dictMode_e.ZSTD_noDict && offset_1 > 0 && MEM_read32(ip + 1 - offset_1) == MEM_read32(ip + 1))
+                if (
+                    dictMode == ZSTD_dictMode_e.ZSTD_noDict
+                    && offset_1 > 0
+                    && MEM_read32(ip + 1 - offset_1) == MEM_read32(ip + 1)
+                )
                 {
                     matchLength = ZSTD_count(ip + 1 + 4, ip + 1 + 4 - offset_1, iend) + 4;
                     if (depth == 0)
@@ -2073,7 +3754,16 @@ namespace ZstdSharp.Unsafe
 
                 {
                     nuint offbaseFound = 999999999;
-                    nuint ml2 = ZSTD_searchMax(ms, ip, iend, &offbaseFound, mls, rowLog, searchMethod, dictMode);
+                    nuint ml2 = ZSTD_searchMax(
+                        ms,
+                        ip,
+                        iend,
+                        &offbaseFound,
+                        mls,
+                        rowLog,
+                        searchMethod,
+                        dictMode
+                    );
                     if (ml2 > matchLength)
                     {
                         matchLength = ml2;
@@ -2095,7 +3785,12 @@ namespace ZstdSharp.Unsafe
                     while (ip < ilimit)
                     {
                         ip++;
-                        if (dictMode == ZSTD_dictMode_e.ZSTD_noDict && offBase != 0 && offset_1 > 0 && MEM_read32(ip) == MEM_read32(ip - offset_1))
+                        if (
+                            dictMode == ZSTD_dictMode_e.ZSTD_noDict
+                            && offBase != 0
+                            && offset_1 > 0
+                            && MEM_read32(ip) == MEM_read32(ip - offset_1)
+                        )
                         {
                             nuint mlRep = ZSTD_count(ip + 4, ip + 4 - offset_1, iend) + 4;
                             int gain2 = (int)(mlRep * 3);
@@ -2113,13 +3808,28 @@ namespace ZstdSharp.Unsafe
                         if (isDxS != 0)
                         {
                             uint repIndex = (uint)(ip - @base) - offset_1;
-                            byte* repMatch = repIndex < prefixLowestIndex ? dictBase + (repIndex - dictIndexDelta) : @base + repIndex;
-                            if (ZSTD_index_overlap_check(prefixLowestIndex, repIndex) != 0 && MEM_read32(repMatch) == MEM_read32(ip))
+                            byte* repMatch =
+                                repIndex < prefixLowestIndex
+                                    ? dictBase + (repIndex - dictIndexDelta)
+                                    : @base + repIndex;
+                            if (
+                                ZSTD_index_overlap_check(prefixLowestIndex, repIndex) != 0
+                                && MEM_read32(repMatch) == MEM_read32(ip)
+                            )
                             {
                                 byte* repMatchEnd = repIndex < prefixLowestIndex ? dictEnd : iend;
-                                nuint mlRep = ZSTD_count_2segments(ip + 4, repMatch + 4, iend, repMatchEnd, prefixLowest) + 4;
+                                nuint mlRep =
+                                    ZSTD_count_2segments(
+                                        ip + 4,
+                                        repMatch + 4,
+                                        iend,
+                                        repMatchEnd,
+                                        prefixLowest
+                                    ) + 4;
                                 int gain2 = (int)(mlRep * 3);
-                                int gain1 = (int)(matchLength * 3 - ZSTD_highbit32((uint)offBase) + 1);
+                                int gain1 = (int)(
+                                    matchLength * 3 - ZSTD_highbit32((uint)offBase) + 1
+                                );
                                 if (mlRep >= 4 && gain2 > gain1)
                                 {
                                     matchLength = mlRep;
@@ -2133,7 +3843,16 @@ namespace ZstdSharp.Unsafe
 
                         {
                             nuint ofbCandidate = 999999999;
-                            nuint ml2 = ZSTD_searchMax(ms, ip, iend, &ofbCandidate, mls, rowLog, searchMethod, dictMode);
+                            nuint ml2 = ZSTD_searchMax(
+                                ms,
+                                ip,
+                                iend,
+                                &ofbCandidate,
+                                mls,
+                                rowLog,
+                                searchMethod,
+                                dictMode
+                            );
                             /* raw approx */
                             int gain2 = (int)(ml2 * 4 - ZSTD_highbit32((uint)ofbCandidate));
                             int gain1 = (int)(matchLength * 4 - ZSTD_highbit32((uint)offBase) + 4);
@@ -2149,11 +3868,18 @@ namespace ZstdSharp.Unsafe
                         if (depth == 2 && ip < ilimit)
                         {
                             ip++;
-                            if (dictMode == ZSTD_dictMode_e.ZSTD_noDict && offBase != 0 && offset_1 > 0 && MEM_read32(ip) == MEM_read32(ip - offset_1))
+                            if (
+                                dictMode == ZSTD_dictMode_e.ZSTD_noDict
+                                && offBase != 0
+                                && offset_1 > 0
+                                && MEM_read32(ip) == MEM_read32(ip - offset_1)
+                            )
                             {
                                 nuint mlRep = ZSTD_count(ip + 4, ip + 4 - offset_1, iend) + 4;
                                 int gain2 = (int)(mlRep * 4);
-                                int gain1 = (int)(matchLength * 4 - ZSTD_highbit32((uint)offBase) + 1);
+                                int gain1 = (int)(
+                                    matchLength * 4 - ZSTD_highbit32((uint)offBase) + 1
+                                );
                                 if (mlRep >= 4 && gain2 > gain1)
                                 {
                                     matchLength = mlRep;
@@ -2167,13 +3893,29 @@ namespace ZstdSharp.Unsafe
                             if (isDxS != 0)
                             {
                                 uint repIndex = (uint)(ip - @base) - offset_1;
-                                byte* repMatch = repIndex < prefixLowestIndex ? dictBase + (repIndex - dictIndexDelta) : @base + repIndex;
-                                if (ZSTD_index_overlap_check(prefixLowestIndex, repIndex) != 0 && MEM_read32(repMatch) == MEM_read32(ip))
+                                byte* repMatch =
+                                    repIndex < prefixLowestIndex
+                                        ? dictBase + (repIndex - dictIndexDelta)
+                                        : @base + repIndex;
+                                if (
+                                    ZSTD_index_overlap_check(prefixLowestIndex, repIndex) != 0
+                                    && MEM_read32(repMatch) == MEM_read32(ip)
+                                )
                                 {
-                                    byte* repMatchEnd = repIndex < prefixLowestIndex ? dictEnd : iend;
-                                    nuint mlRep = ZSTD_count_2segments(ip + 4, repMatch + 4, iend, repMatchEnd, prefixLowest) + 4;
+                                    byte* repMatchEnd =
+                                        repIndex < prefixLowestIndex ? dictEnd : iend;
+                                    nuint mlRep =
+                                        ZSTD_count_2segments(
+                                            ip + 4,
+                                            repMatch + 4,
+                                            iend,
+                                            repMatchEnd,
+                                            prefixLowest
+                                        ) + 4;
                                     int gain2 = (int)(mlRep * 4);
-                                    int gain1 = (int)(matchLength * 4 - ZSTD_highbit32((uint)offBase) + 1);
+                                    int gain1 = (int)(
+                                        matchLength * 4 - ZSTD_highbit32((uint)offBase) + 1
+                                    );
                                     if (mlRep >= 4 && gain2 > gain1)
                                     {
                                         matchLength = mlRep;
@@ -2187,10 +3929,21 @@ namespace ZstdSharp.Unsafe
 
                             {
                                 nuint ofbCandidate = 999999999;
-                                nuint ml2 = ZSTD_searchMax(ms, ip, iend, &ofbCandidate, mls, rowLog, searchMethod, dictMode);
+                                nuint ml2 = ZSTD_searchMax(
+                                    ms,
+                                    ip,
+                                    iend,
+                                    &ofbCandidate,
+                                    mls,
+                                    rowLog,
+                                    searchMethod,
+                                    dictMode
+                                );
                                 /* raw approx */
                                 int gain2 = (int)(ml2 * 4 - ZSTD_highbit32((uint)ofbCandidate));
-                                int gain1 = (int)(matchLength * 4 - ZSTD_highbit32((uint)offBase) + 7);
+                                int gain1 = (int)(
+                                    matchLength * 4 - ZSTD_highbit32((uint)offBase) + 7
+                                );
                                 if (ml2 >= 4 && gain2 > gain1)
                                 {
                                     matchLength = ml2;
@@ -2210,7 +3963,11 @@ namespace ZstdSharp.Unsafe
                     {
                         assert(offBase > 3);
                         assert(offBase > 3);
-                        while (start > anchor && start - (offBase - 3) > prefixLowest && start[-1] == (start - (offBase - 3))[-1])
+                        while (
+                            start > anchor
+                            && start - (offBase - 3) > prefixLowest
+                            && start[-1] == (start - (offBase - 3))[-1]
+                        )
                         {
                             start--;
                             matchLength++;
@@ -2221,7 +3978,10 @@ namespace ZstdSharp.Unsafe
                     {
                         assert(offBase > 3);
                         uint matchIndex = (uint)((nuint)(start - @base) - (offBase - 3));
-                        byte* match = matchIndex < prefixLowestIndex ? dictBase + matchIndex - dictIndexDelta : @base + matchIndex;
+                        byte* match =
+                            matchIndex < prefixLowestIndex
+                                ? dictBase + matchIndex - dictIndexDelta
+                                : @base + matchIndex;
                         byte* mStart = matchIndex < prefixLowestIndex ? dictLowest : prefixLowest;
                         while (start > anchor && match > mStart && start[-1] == match[-1])
                         {
@@ -2236,7 +3996,7 @@ namespace ZstdSharp.Unsafe
                     offset_1 = (uint)(offBase - 3);
                 }
 
-            _storeSequence:
+                _storeSequence:
                 {
                     nuint litLength = (nuint)(start - anchor);
                     ZSTD_storeSeq(seqStore, litLength, anchor, iend, (uint)offBase, matchLength);
@@ -2259,11 +4019,24 @@ namespace ZstdSharp.Unsafe
                     {
                         uint current2 = (uint)(ip - @base);
                         uint repIndex = current2 - offset_2;
-                        byte* repMatch = repIndex < prefixLowestIndex ? dictBase - dictIndexDelta + repIndex : @base + repIndex;
-                        if (ZSTD_index_overlap_check(prefixLowestIndex, repIndex) != 0 && MEM_read32(repMatch) == MEM_read32(ip))
+                        byte* repMatch =
+                            repIndex < prefixLowestIndex
+                                ? dictBase - dictIndexDelta + repIndex
+                                : @base + repIndex;
+                        if (
+                            ZSTD_index_overlap_check(prefixLowestIndex, repIndex) != 0
+                            && MEM_read32(repMatch) == MEM_read32(ip)
+                        )
                         {
                             byte* repEnd2 = repIndex < prefixLowestIndex ? dictEnd : iend;
-                            matchLength = ZSTD_count_2segments(ip + 4, repMatch + 4, iend, repEnd2, prefixLowest) + 4;
+                            matchLength =
+                                ZSTD_count_2segments(
+                                    ip + 4,
+                                    repMatch + 4,
+                                    iend,
+                                    repEnd2,
+                                    prefixLowest
+                                ) + 4;
                             offBase = offset_2;
                             offset_2 = offset_1;
                             offset_1 = (uint)offBase;
@@ -2281,7 +4054,9 @@ namespace ZstdSharp.Unsafe
 
                 if (dictMode == ZSTD_dictMode_e.ZSTD_noDict)
                 {
-                    while (ip <= ilimit && offset_2 > 0 && MEM_read32(ip) == MEM_read32(ip - offset_2))
+                    while (
+                        ip <= ilimit && offset_2 > 0 && MEM_read32(ip) == MEM_read32(ip - offset_2)
+                    )
                     {
                         matchLength = ZSTD_count(ip + 4, ip + 4 - offset_2, iend) + 4;
                         offBase = offset_2;
@@ -2303,108 +4078,416 @@ namespace ZstdSharp.Unsafe
             return (nuint)(iend - anchor);
         }
 
-        private static nuint ZSTD_compressBlock_greedy(ZSTD_MatchState_t* ms, SeqStore_t* seqStore, uint* rep, void* src, nuint srcSize)
+        private static nuint ZSTD_compressBlock_greedy(
+            ZSTD_MatchState_t* ms,
+            SeqStore_t* seqStore,
+            uint* rep,
+            void* src,
+            nuint srcSize
+        )
         {
-            return ZSTD_compressBlock_lazy_generic(ms, seqStore, rep, src, srcSize, searchMethod_e.search_hashChain, 0, ZSTD_dictMode_e.ZSTD_noDict);
+            return ZSTD_compressBlock_lazy_generic(
+                ms,
+                seqStore,
+                rep,
+                src,
+                srcSize,
+                searchMethod_e.search_hashChain,
+                0,
+                ZSTD_dictMode_e.ZSTD_noDict
+            );
         }
 
-        private static nuint ZSTD_compressBlock_greedy_dictMatchState(ZSTD_MatchState_t* ms, SeqStore_t* seqStore, uint* rep, void* src, nuint srcSize)
+        private static nuint ZSTD_compressBlock_greedy_dictMatchState(
+            ZSTD_MatchState_t* ms,
+            SeqStore_t* seqStore,
+            uint* rep,
+            void* src,
+            nuint srcSize
+        )
         {
-            return ZSTD_compressBlock_lazy_generic(ms, seqStore, rep, src, srcSize, searchMethod_e.search_hashChain, 0, ZSTD_dictMode_e.ZSTD_dictMatchState);
+            return ZSTD_compressBlock_lazy_generic(
+                ms,
+                seqStore,
+                rep,
+                src,
+                srcSize,
+                searchMethod_e.search_hashChain,
+                0,
+                ZSTD_dictMode_e.ZSTD_dictMatchState
+            );
         }
 
-        private static nuint ZSTD_compressBlock_greedy_dedicatedDictSearch(ZSTD_MatchState_t* ms, SeqStore_t* seqStore, uint* rep, void* src, nuint srcSize)
+        private static nuint ZSTD_compressBlock_greedy_dedicatedDictSearch(
+            ZSTD_MatchState_t* ms,
+            SeqStore_t* seqStore,
+            uint* rep,
+            void* src,
+            nuint srcSize
+        )
         {
-            return ZSTD_compressBlock_lazy_generic(ms, seqStore, rep, src, srcSize, searchMethod_e.search_hashChain, 0, ZSTD_dictMode_e.ZSTD_dedicatedDictSearch);
+            return ZSTD_compressBlock_lazy_generic(
+                ms,
+                seqStore,
+                rep,
+                src,
+                srcSize,
+                searchMethod_e.search_hashChain,
+                0,
+                ZSTD_dictMode_e.ZSTD_dedicatedDictSearch
+            );
         }
 
-        private static nuint ZSTD_compressBlock_greedy_row(ZSTD_MatchState_t* ms, SeqStore_t* seqStore, uint* rep, void* src, nuint srcSize)
+        private static nuint ZSTD_compressBlock_greedy_row(
+            ZSTD_MatchState_t* ms,
+            SeqStore_t* seqStore,
+            uint* rep,
+            void* src,
+            nuint srcSize
+        )
         {
-            return ZSTD_compressBlock_lazy_generic(ms, seqStore, rep, src, srcSize, searchMethod_e.search_rowHash, 0, ZSTD_dictMode_e.ZSTD_noDict);
+            return ZSTD_compressBlock_lazy_generic(
+                ms,
+                seqStore,
+                rep,
+                src,
+                srcSize,
+                searchMethod_e.search_rowHash,
+                0,
+                ZSTD_dictMode_e.ZSTD_noDict
+            );
         }
 
-        private static nuint ZSTD_compressBlock_greedy_dictMatchState_row(ZSTD_MatchState_t* ms, SeqStore_t* seqStore, uint* rep, void* src, nuint srcSize)
+        private static nuint ZSTD_compressBlock_greedy_dictMatchState_row(
+            ZSTD_MatchState_t* ms,
+            SeqStore_t* seqStore,
+            uint* rep,
+            void* src,
+            nuint srcSize
+        )
         {
-            return ZSTD_compressBlock_lazy_generic(ms, seqStore, rep, src, srcSize, searchMethod_e.search_rowHash, 0, ZSTD_dictMode_e.ZSTD_dictMatchState);
+            return ZSTD_compressBlock_lazy_generic(
+                ms,
+                seqStore,
+                rep,
+                src,
+                srcSize,
+                searchMethod_e.search_rowHash,
+                0,
+                ZSTD_dictMode_e.ZSTD_dictMatchState
+            );
         }
 
-        private static nuint ZSTD_compressBlock_greedy_dedicatedDictSearch_row(ZSTD_MatchState_t* ms, SeqStore_t* seqStore, uint* rep, void* src, nuint srcSize)
+        private static nuint ZSTD_compressBlock_greedy_dedicatedDictSearch_row(
+            ZSTD_MatchState_t* ms,
+            SeqStore_t* seqStore,
+            uint* rep,
+            void* src,
+            nuint srcSize
+        )
         {
-            return ZSTD_compressBlock_lazy_generic(ms, seqStore, rep, src, srcSize, searchMethod_e.search_rowHash, 0, ZSTD_dictMode_e.ZSTD_dedicatedDictSearch);
+            return ZSTD_compressBlock_lazy_generic(
+                ms,
+                seqStore,
+                rep,
+                src,
+                srcSize,
+                searchMethod_e.search_rowHash,
+                0,
+                ZSTD_dictMode_e.ZSTD_dedicatedDictSearch
+            );
         }
 
-        private static nuint ZSTD_compressBlock_lazy(ZSTD_MatchState_t* ms, SeqStore_t* seqStore, uint* rep, void* src, nuint srcSize)
+        private static nuint ZSTD_compressBlock_lazy(
+            ZSTD_MatchState_t* ms,
+            SeqStore_t* seqStore,
+            uint* rep,
+            void* src,
+            nuint srcSize
+        )
         {
-            return ZSTD_compressBlock_lazy_generic(ms, seqStore, rep, src, srcSize, searchMethod_e.search_hashChain, 1, ZSTD_dictMode_e.ZSTD_noDict);
+            return ZSTD_compressBlock_lazy_generic(
+                ms,
+                seqStore,
+                rep,
+                src,
+                srcSize,
+                searchMethod_e.search_hashChain,
+                1,
+                ZSTD_dictMode_e.ZSTD_noDict
+            );
         }
 
-        private static nuint ZSTD_compressBlock_lazy_dictMatchState(ZSTD_MatchState_t* ms, SeqStore_t* seqStore, uint* rep, void* src, nuint srcSize)
+        private static nuint ZSTD_compressBlock_lazy_dictMatchState(
+            ZSTD_MatchState_t* ms,
+            SeqStore_t* seqStore,
+            uint* rep,
+            void* src,
+            nuint srcSize
+        )
         {
-            return ZSTD_compressBlock_lazy_generic(ms, seqStore, rep, src, srcSize, searchMethod_e.search_hashChain, 1, ZSTD_dictMode_e.ZSTD_dictMatchState);
+            return ZSTD_compressBlock_lazy_generic(
+                ms,
+                seqStore,
+                rep,
+                src,
+                srcSize,
+                searchMethod_e.search_hashChain,
+                1,
+                ZSTD_dictMode_e.ZSTD_dictMatchState
+            );
         }
 
-        private static nuint ZSTD_compressBlock_lazy_dedicatedDictSearch(ZSTD_MatchState_t* ms, SeqStore_t* seqStore, uint* rep, void* src, nuint srcSize)
+        private static nuint ZSTD_compressBlock_lazy_dedicatedDictSearch(
+            ZSTD_MatchState_t* ms,
+            SeqStore_t* seqStore,
+            uint* rep,
+            void* src,
+            nuint srcSize
+        )
         {
-            return ZSTD_compressBlock_lazy_generic(ms, seqStore, rep, src, srcSize, searchMethod_e.search_hashChain, 1, ZSTD_dictMode_e.ZSTD_dedicatedDictSearch);
+            return ZSTD_compressBlock_lazy_generic(
+                ms,
+                seqStore,
+                rep,
+                src,
+                srcSize,
+                searchMethod_e.search_hashChain,
+                1,
+                ZSTD_dictMode_e.ZSTD_dedicatedDictSearch
+            );
         }
 
-        private static nuint ZSTD_compressBlock_lazy_row(ZSTD_MatchState_t* ms, SeqStore_t* seqStore, uint* rep, void* src, nuint srcSize)
+        private static nuint ZSTD_compressBlock_lazy_row(
+            ZSTD_MatchState_t* ms,
+            SeqStore_t* seqStore,
+            uint* rep,
+            void* src,
+            nuint srcSize
+        )
         {
-            return ZSTD_compressBlock_lazy_generic(ms, seqStore, rep, src, srcSize, searchMethod_e.search_rowHash, 1, ZSTD_dictMode_e.ZSTD_noDict);
+            return ZSTD_compressBlock_lazy_generic(
+                ms,
+                seqStore,
+                rep,
+                src,
+                srcSize,
+                searchMethod_e.search_rowHash,
+                1,
+                ZSTD_dictMode_e.ZSTD_noDict
+            );
         }
 
-        private static nuint ZSTD_compressBlock_lazy_dictMatchState_row(ZSTD_MatchState_t* ms, SeqStore_t* seqStore, uint* rep, void* src, nuint srcSize)
+        private static nuint ZSTD_compressBlock_lazy_dictMatchState_row(
+            ZSTD_MatchState_t* ms,
+            SeqStore_t* seqStore,
+            uint* rep,
+            void* src,
+            nuint srcSize
+        )
         {
-            return ZSTD_compressBlock_lazy_generic(ms, seqStore, rep, src, srcSize, searchMethod_e.search_rowHash, 1, ZSTD_dictMode_e.ZSTD_dictMatchState);
+            return ZSTD_compressBlock_lazy_generic(
+                ms,
+                seqStore,
+                rep,
+                src,
+                srcSize,
+                searchMethod_e.search_rowHash,
+                1,
+                ZSTD_dictMode_e.ZSTD_dictMatchState
+            );
         }
 
-        private static nuint ZSTD_compressBlock_lazy_dedicatedDictSearch_row(ZSTD_MatchState_t* ms, SeqStore_t* seqStore, uint* rep, void* src, nuint srcSize)
+        private static nuint ZSTD_compressBlock_lazy_dedicatedDictSearch_row(
+            ZSTD_MatchState_t* ms,
+            SeqStore_t* seqStore,
+            uint* rep,
+            void* src,
+            nuint srcSize
+        )
         {
-            return ZSTD_compressBlock_lazy_generic(ms, seqStore, rep, src, srcSize, searchMethod_e.search_rowHash, 1, ZSTD_dictMode_e.ZSTD_dedicatedDictSearch);
+            return ZSTD_compressBlock_lazy_generic(
+                ms,
+                seqStore,
+                rep,
+                src,
+                srcSize,
+                searchMethod_e.search_rowHash,
+                1,
+                ZSTD_dictMode_e.ZSTD_dedicatedDictSearch
+            );
         }
 
-        private static nuint ZSTD_compressBlock_lazy2(ZSTD_MatchState_t* ms, SeqStore_t* seqStore, uint* rep, void* src, nuint srcSize)
+        private static nuint ZSTD_compressBlock_lazy2(
+            ZSTD_MatchState_t* ms,
+            SeqStore_t* seqStore,
+            uint* rep,
+            void* src,
+            nuint srcSize
+        )
         {
-            return ZSTD_compressBlock_lazy_generic(ms, seqStore, rep, src, srcSize, searchMethod_e.search_hashChain, 2, ZSTD_dictMode_e.ZSTD_noDict);
+            return ZSTD_compressBlock_lazy_generic(
+                ms,
+                seqStore,
+                rep,
+                src,
+                srcSize,
+                searchMethod_e.search_hashChain,
+                2,
+                ZSTD_dictMode_e.ZSTD_noDict
+            );
         }
 
-        private static nuint ZSTD_compressBlock_lazy2_dictMatchState(ZSTD_MatchState_t* ms, SeqStore_t* seqStore, uint* rep, void* src, nuint srcSize)
+        private static nuint ZSTD_compressBlock_lazy2_dictMatchState(
+            ZSTD_MatchState_t* ms,
+            SeqStore_t* seqStore,
+            uint* rep,
+            void* src,
+            nuint srcSize
+        )
         {
-            return ZSTD_compressBlock_lazy_generic(ms, seqStore, rep, src, srcSize, searchMethod_e.search_hashChain, 2, ZSTD_dictMode_e.ZSTD_dictMatchState);
+            return ZSTD_compressBlock_lazy_generic(
+                ms,
+                seqStore,
+                rep,
+                src,
+                srcSize,
+                searchMethod_e.search_hashChain,
+                2,
+                ZSTD_dictMode_e.ZSTD_dictMatchState
+            );
         }
 
-        private static nuint ZSTD_compressBlock_lazy2_dedicatedDictSearch(ZSTD_MatchState_t* ms, SeqStore_t* seqStore, uint* rep, void* src, nuint srcSize)
+        private static nuint ZSTD_compressBlock_lazy2_dedicatedDictSearch(
+            ZSTD_MatchState_t* ms,
+            SeqStore_t* seqStore,
+            uint* rep,
+            void* src,
+            nuint srcSize
+        )
         {
-            return ZSTD_compressBlock_lazy_generic(ms, seqStore, rep, src, srcSize, searchMethod_e.search_hashChain, 2, ZSTD_dictMode_e.ZSTD_dedicatedDictSearch);
+            return ZSTD_compressBlock_lazy_generic(
+                ms,
+                seqStore,
+                rep,
+                src,
+                srcSize,
+                searchMethod_e.search_hashChain,
+                2,
+                ZSTD_dictMode_e.ZSTD_dedicatedDictSearch
+            );
         }
 
-        private static nuint ZSTD_compressBlock_lazy2_row(ZSTD_MatchState_t* ms, SeqStore_t* seqStore, uint* rep, void* src, nuint srcSize)
+        private static nuint ZSTD_compressBlock_lazy2_row(
+            ZSTD_MatchState_t* ms,
+            SeqStore_t* seqStore,
+            uint* rep,
+            void* src,
+            nuint srcSize
+        )
         {
-            return ZSTD_compressBlock_lazy_generic(ms, seqStore, rep, src, srcSize, searchMethod_e.search_rowHash, 2, ZSTD_dictMode_e.ZSTD_noDict);
+            return ZSTD_compressBlock_lazy_generic(
+                ms,
+                seqStore,
+                rep,
+                src,
+                srcSize,
+                searchMethod_e.search_rowHash,
+                2,
+                ZSTD_dictMode_e.ZSTD_noDict
+            );
         }
 
-        private static nuint ZSTD_compressBlock_lazy2_dictMatchState_row(ZSTD_MatchState_t* ms, SeqStore_t* seqStore, uint* rep, void* src, nuint srcSize)
+        private static nuint ZSTD_compressBlock_lazy2_dictMatchState_row(
+            ZSTD_MatchState_t* ms,
+            SeqStore_t* seqStore,
+            uint* rep,
+            void* src,
+            nuint srcSize
+        )
         {
-            return ZSTD_compressBlock_lazy_generic(ms, seqStore, rep, src, srcSize, searchMethod_e.search_rowHash, 2, ZSTD_dictMode_e.ZSTD_dictMatchState);
+            return ZSTD_compressBlock_lazy_generic(
+                ms,
+                seqStore,
+                rep,
+                src,
+                srcSize,
+                searchMethod_e.search_rowHash,
+                2,
+                ZSTD_dictMode_e.ZSTD_dictMatchState
+            );
         }
 
-        private static nuint ZSTD_compressBlock_lazy2_dedicatedDictSearch_row(ZSTD_MatchState_t* ms, SeqStore_t* seqStore, uint* rep, void* src, nuint srcSize)
+        private static nuint ZSTD_compressBlock_lazy2_dedicatedDictSearch_row(
+            ZSTD_MatchState_t* ms,
+            SeqStore_t* seqStore,
+            uint* rep,
+            void* src,
+            nuint srcSize
+        )
         {
-            return ZSTD_compressBlock_lazy_generic(ms, seqStore, rep, src, srcSize, searchMethod_e.search_rowHash, 2, ZSTD_dictMode_e.ZSTD_dedicatedDictSearch);
+            return ZSTD_compressBlock_lazy_generic(
+                ms,
+                seqStore,
+                rep,
+                src,
+                srcSize,
+                searchMethod_e.search_rowHash,
+                2,
+                ZSTD_dictMode_e.ZSTD_dedicatedDictSearch
+            );
         }
 
-        private static nuint ZSTD_compressBlock_btlazy2(ZSTD_MatchState_t* ms, SeqStore_t* seqStore, uint* rep, void* src, nuint srcSize)
+        private static nuint ZSTD_compressBlock_btlazy2(
+            ZSTD_MatchState_t* ms,
+            SeqStore_t* seqStore,
+            uint* rep,
+            void* src,
+            nuint srcSize
+        )
         {
-            return ZSTD_compressBlock_lazy_generic(ms, seqStore, rep, src, srcSize, searchMethod_e.search_binaryTree, 2, ZSTD_dictMode_e.ZSTD_noDict);
+            return ZSTD_compressBlock_lazy_generic(
+                ms,
+                seqStore,
+                rep,
+                src,
+                srcSize,
+                searchMethod_e.search_binaryTree,
+                2,
+                ZSTD_dictMode_e.ZSTD_noDict
+            );
         }
 
-        private static nuint ZSTD_compressBlock_btlazy2_dictMatchState(ZSTD_MatchState_t* ms, SeqStore_t* seqStore, uint* rep, void* src, nuint srcSize)
+        private static nuint ZSTD_compressBlock_btlazy2_dictMatchState(
+            ZSTD_MatchState_t* ms,
+            SeqStore_t* seqStore,
+            uint* rep,
+            void* src,
+            nuint srcSize
+        )
         {
-            return ZSTD_compressBlock_lazy_generic(ms, seqStore, rep, src, srcSize, searchMethod_e.search_binaryTree, 2, ZSTD_dictMode_e.ZSTD_dictMatchState);
+            return ZSTD_compressBlock_lazy_generic(
+                ms,
+                seqStore,
+                rep,
+                src,
+                srcSize,
+                searchMethod_e.search_binaryTree,
+                2,
+                ZSTD_dictMode_e.ZSTD_dictMatchState
+            );
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static nuint ZSTD_compressBlock_lazy_extDict_generic(ZSTD_MatchState_t* ms, SeqStore_t* seqStore, uint* rep, void* src, nuint srcSize, searchMethod_e searchMethod, uint depth)
+        private static nuint ZSTD_compressBlock_lazy_extDict_generic(
+            ZSTD_MatchState_t* ms,
+            SeqStore_t* seqStore,
+            uint* rep,
+            void* src,
+            nuint srcSize,
+            searchMethod_e searchMethod,
+            uint depth
+        )
         {
             byte* istart = (byte*)src;
             byte* ip = istart;
@@ -2418,9 +4501,16 @@ namespace ZstdSharp.Unsafe
             byte* dictEnd = dictBase + dictLimit;
             byte* dictStart = dictBase + ms->window.lowLimit;
             uint windowLog = ms->cParams.windowLog;
-            uint mls = ms->cParams.minMatch <= 4 ? 4 : ms->cParams.minMatch <= 6 ? ms->cParams.minMatch : 6;
-            uint rowLog = ms->cParams.searchLog <= 4 ? 4 : ms->cParams.searchLog <= 6 ? ms->cParams.searchLog : 6;
-            uint offset_1 = rep[0], offset_2 = rep[1];
+            uint mls =
+                ms->cParams.minMatch <= 4 ? 4
+                : ms->cParams.minMatch <= 6 ? ms->cParams.minMatch
+                : 6;
+            uint rowLog =
+                ms->cParams.searchLog <= 4 ? 4
+                : ms->cParams.searchLog <= 6 ? ms->cParams.searchLog
+                : 6;
+            uint offset_1 = rep[0],
+                offset_2 = rep[1];
             ms->lazySkipping = 0;
             ip += ip == prefixStart ? 1 : 0;
             if (searchMethod == searchMethod_e.search_rowHash)
@@ -2441,12 +4531,24 @@ namespace ZstdSharp.Unsafe
                     uint repIndex = curr + 1 - offset_1;
                     byte* repBase = repIndex < dictLimit ? dictBase : @base;
                     byte* repMatch = repBase + repIndex;
-                    if ((ZSTD_index_overlap_check(dictLimit, repIndex) & (offset_1 <= curr + 1 - windowLow ? 1 : 0)) != 0)
+                    if (
+                        (
+                            ZSTD_index_overlap_check(dictLimit, repIndex)
+                            & (offset_1 <= curr + 1 - windowLow ? 1 : 0)
+                        ) != 0
+                    )
                         if (MEM_read32(ip + 1) == MEM_read32(repMatch))
                         {
                             /* repcode detected we should take it */
                             byte* repEnd = repIndex < dictLimit ? dictEnd : iend;
-                            matchLength = ZSTD_count_2segments(ip + 1 + 4, repMatch + 4, iend, repEnd, prefixStart) + 4;
+                            matchLength =
+                                ZSTD_count_2segments(
+                                    ip + 1 + 4,
+                                    repMatch + 4,
+                                    iend,
+                                    repEnd,
+                                    prefixStart
+                                ) + 4;
                             if (depth == 0)
                                 goto _storeSequence;
                         }
@@ -2454,7 +4556,16 @@ namespace ZstdSharp.Unsafe
 
                 {
                     nuint ofbCandidate = 999999999;
-                    nuint ml2 = ZSTD_searchMax(ms, ip, iend, &ofbCandidate, mls, rowLog, searchMethod, ZSTD_dictMode_e.ZSTD_extDict);
+                    nuint ml2 = ZSTD_searchMax(
+                        ms,
+                        ip,
+                        iend,
+                        &ofbCandidate,
+                        mls,
+                        rowLog,
+                        searchMethod,
+                        ZSTD_dictMode_e.ZSTD_extDict
+                    );
                     if (ml2 > matchLength)
                     {
                         matchLength = ml2;
@@ -2482,14 +4593,28 @@ namespace ZstdSharp.Unsafe
                             uint repIndex = curr - offset_1;
                             byte* repBase = repIndex < dictLimit ? dictBase : @base;
                             byte* repMatch = repBase + repIndex;
-                            if ((ZSTD_index_overlap_check(dictLimit, repIndex) & (offset_1 <= curr - windowLow ? 1 : 0)) != 0)
+                            if (
+                                (
+                                    ZSTD_index_overlap_check(dictLimit, repIndex)
+                                    & (offset_1 <= curr - windowLow ? 1 : 0)
+                                ) != 0
+                            )
                                 if (MEM_read32(ip) == MEM_read32(repMatch))
                                 {
                                     /* repcode detected */
                                     byte* repEnd = repIndex < dictLimit ? dictEnd : iend;
-                                    nuint repLength = ZSTD_count_2segments(ip + 4, repMatch + 4, iend, repEnd, prefixStart) + 4;
+                                    nuint repLength =
+                                        ZSTD_count_2segments(
+                                            ip + 4,
+                                            repMatch + 4,
+                                            iend,
+                                            repEnd,
+                                            prefixStart
+                                        ) + 4;
                                     int gain2 = (int)(repLength * 3);
-                                    int gain1 = (int)(matchLength * 3 - ZSTD_highbit32((uint)offBase) + 1);
+                                    int gain1 = (int)(
+                                        matchLength * 3 - ZSTD_highbit32((uint)offBase) + 1
+                                    );
                                     if (repLength >= 4 && gain2 > gain1)
                                     {
                                         matchLength = repLength;
@@ -2503,7 +4628,16 @@ namespace ZstdSharp.Unsafe
 
                         {
                             nuint ofbCandidate = 999999999;
-                            nuint ml2 = ZSTD_searchMax(ms, ip, iend, &ofbCandidate, mls, rowLog, searchMethod, ZSTD_dictMode_e.ZSTD_extDict);
+                            nuint ml2 = ZSTD_searchMax(
+                                ms,
+                                ip,
+                                iend,
+                                &ofbCandidate,
+                                mls,
+                                rowLog,
+                                searchMethod,
+                                ZSTD_dictMode_e.ZSTD_extDict
+                            );
                             /* raw approx */
                             int gain2 = (int)(ml2 * 4 - ZSTD_highbit32((uint)ofbCandidate));
                             int gain1 = (int)(matchLength * 4 - ZSTD_highbit32((uint)offBase) + 4);
@@ -2526,14 +4660,28 @@ namespace ZstdSharp.Unsafe
                                 uint repIndex = curr - offset_1;
                                 byte* repBase = repIndex < dictLimit ? dictBase : @base;
                                 byte* repMatch = repBase + repIndex;
-                                if ((ZSTD_index_overlap_check(dictLimit, repIndex) & (offset_1 <= curr - windowLow ? 1 : 0)) != 0)
+                                if (
+                                    (
+                                        ZSTD_index_overlap_check(dictLimit, repIndex)
+                                        & (offset_1 <= curr - windowLow ? 1 : 0)
+                                    ) != 0
+                                )
                                     if (MEM_read32(ip) == MEM_read32(repMatch))
                                     {
                                         /* repcode detected */
                                         byte* repEnd = repIndex < dictLimit ? dictEnd : iend;
-                                        nuint repLength = ZSTD_count_2segments(ip + 4, repMatch + 4, iend, repEnd, prefixStart) + 4;
+                                        nuint repLength =
+                                            ZSTD_count_2segments(
+                                                ip + 4,
+                                                repMatch + 4,
+                                                iend,
+                                                repEnd,
+                                                prefixStart
+                                            ) + 4;
                                         int gain2 = (int)(repLength * 4);
-                                        int gain1 = (int)(matchLength * 4 - ZSTD_highbit32((uint)offBase) + 1);
+                                        int gain1 = (int)(
+                                            matchLength * 4 - ZSTD_highbit32((uint)offBase) + 1
+                                        );
                                         if (repLength >= 4 && gain2 > gain1)
                                         {
                                             matchLength = repLength;
@@ -2547,10 +4695,21 @@ namespace ZstdSharp.Unsafe
 
                             {
                                 nuint ofbCandidate = 999999999;
-                                nuint ml2 = ZSTD_searchMax(ms, ip, iend, &ofbCandidate, mls, rowLog, searchMethod, ZSTD_dictMode_e.ZSTD_extDict);
+                                nuint ml2 = ZSTD_searchMax(
+                                    ms,
+                                    ip,
+                                    iend,
+                                    &ofbCandidate,
+                                    mls,
+                                    rowLog,
+                                    searchMethod,
+                                    ZSTD_dictMode_e.ZSTD_extDict
+                                );
                                 /* raw approx */
                                 int gain2 = (int)(ml2 * 4 - ZSTD_highbit32((uint)ofbCandidate));
-                                int gain1 = (int)(matchLength * 4 - ZSTD_highbit32((uint)offBase) + 7);
+                                int gain1 = (int)(
+                                    matchLength * 4 - ZSTD_highbit32((uint)offBase) + 7
+                                );
                                 if (ml2 >= 4 && gain2 > gain1)
                                 {
                                     matchLength = ml2;
@@ -2568,7 +4727,8 @@ namespace ZstdSharp.Unsafe
                 {
                     assert(offBase > 3);
                     uint matchIndex = (uint)((nuint)(start - @base) - (offBase - 3));
-                    byte* match = matchIndex < dictLimit ? dictBase + matchIndex : @base + matchIndex;
+                    byte* match =
+                        matchIndex < dictLimit ? dictBase + matchIndex : @base + matchIndex;
                     byte* mStart = matchIndex < dictLimit ? dictStart : prefixStart;
                     while (start > anchor && match > mStart && start[-1] == match[-1])
                     {
@@ -2582,7 +4742,7 @@ namespace ZstdSharp.Unsafe
                     offset_1 = (uint)(offBase - 3);
                 }
 
-            _storeSequence:
+                _storeSequence:
                 {
                     nuint litLength = (nuint)(start - anchor);
                     ZSTD_storeSeq(seqStore, litLength, anchor, iend, (uint)offBase, matchLength);
@@ -2606,12 +4766,24 @@ namespace ZstdSharp.Unsafe
                     uint repIndex = repCurrent - offset_2;
                     byte* repBase = repIndex < dictLimit ? dictBase : @base;
                     byte* repMatch = repBase + repIndex;
-                    if ((ZSTD_index_overlap_check(dictLimit, repIndex) & (offset_2 <= repCurrent - windowLow ? 1 : 0)) != 0)
+                    if (
+                        (
+                            ZSTD_index_overlap_check(dictLimit, repIndex)
+                            & (offset_2 <= repCurrent - windowLow ? 1 : 0)
+                        ) != 0
+                    )
                         if (MEM_read32(ip) == MEM_read32(repMatch))
                         {
                             /* repcode detected we should take it */
                             byte* repEnd = repIndex < dictLimit ? dictEnd : iend;
-                            matchLength = ZSTD_count_2segments(ip + 4, repMatch + 4, iend, repEnd, prefixStart) + 4;
+                            matchLength =
+                                ZSTD_count_2segments(
+                                    ip + 4,
+                                    repMatch + 4,
+                                    iend,
+                                    repEnd,
+                                    prefixStart
+                                ) + 4;
                             offBase = offset_2;
                             offset_2 = offset_1;
                             offset_1 = (uint)offBase;
@@ -2632,39 +4804,137 @@ namespace ZstdSharp.Unsafe
             return (nuint)(iend - anchor);
         }
 
-        private static nuint ZSTD_compressBlock_greedy_extDict(ZSTD_MatchState_t* ms, SeqStore_t* seqStore, uint* rep, void* src, nuint srcSize)
+        private static nuint ZSTD_compressBlock_greedy_extDict(
+            ZSTD_MatchState_t* ms,
+            SeqStore_t* seqStore,
+            uint* rep,
+            void* src,
+            nuint srcSize
+        )
         {
-            return ZSTD_compressBlock_lazy_extDict_generic(ms, seqStore, rep, src, srcSize, searchMethod_e.search_hashChain, 0);
+            return ZSTD_compressBlock_lazy_extDict_generic(
+                ms,
+                seqStore,
+                rep,
+                src,
+                srcSize,
+                searchMethod_e.search_hashChain,
+                0
+            );
         }
 
-        private static nuint ZSTD_compressBlock_greedy_extDict_row(ZSTD_MatchState_t* ms, SeqStore_t* seqStore, uint* rep, void* src, nuint srcSize)
+        private static nuint ZSTD_compressBlock_greedy_extDict_row(
+            ZSTD_MatchState_t* ms,
+            SeqStore_t* seqStore,
+            uint* rep,
+            void* src,
+            nuint srcSize
+        )
         {
-            return ZSTD_compressBlock_lazy_extDict_generic(ms, seqStore, rep, src, srcSize, searchMethod_e.search_rowHash, 0);
+            return ZSTD_compressBlock_lazy_extDict_generic(
+                ms,
+                seqStore,
+                rep,
+                src,
+                srcSize,
+                searchMethod_e.search_rowHash,
+                0
+            );
         }
 
-        private static nuint ZSTD_compressBlock_lazy_extDict(ZSTD_MatchState_t* ms, SeqStore_t* seqStore, uint* rep, void* src, nuint srcSize)
+        private static nuint ZSTD_compressBlock_lazy_extDict(
+            ZSTD_MatchState_t* ms,
+            SeqStore_t* seqStore,
+            uint* rep,
+            void* src,
+            nuint srcSize
+        )
         {
-            return ZSTD_compressBlock_lazy_extDict_generic(ms, seqStore, rep, src, srcSize, searchMethod_e.search_hashChain, 1);
+            return ZSTD_compressBlock_lazy_extDict_generic(
+                ms,
+                seqStore,
+                rep,
+                src,
+                srcSize,
+                searchMethod_e.search_hashChain,
+                1
+            );
         }
 
-        private static nuint ZSTD_compressBlock_lazy_extDict_row(ZSTD_MatchState_t* ms, SeqStore_t* seqStore, uint* rep, void* src, nuint srcSize)
+        private static nuint ZSTD_compressBlock_lazy_extDict_row(
+            ZSTD_MatchState_t* ms,
+            SeqStore_t* seqStore,
+            uint* rep,
+            void* src,
+            nuint srcSize
+        )
         {
-            return ZSTD_compressBlock_lazy_extDict_generic(ms, seqStore, rep, src, srcSize, searchMethod_e.search_rowHash, 1);
+            return ZSTD_compressBlock_lazy_extDict_generic(
+                ms,
+                seqStore,
+                rep,
+                src,
+                srcSize,
+                searchMethod_e.search_rowHash,
+                1
+            );
         }
 
-        private static nuint ZSTD_compressBlock_lazy2_extDict(ZSTD_MatchState_t* ms, SeqStore_t* seqStore, uint* rep, void* src, nuint srcSize)
+        private static nuint ZSTD_compressBlock_lazy2_extDict(
+            ZSTD_MatchState_t* ms,
+            SeqStore_t* seqStore,
+            uint* rep,
+            void* src,
+            nuint srcSize
+        )
         {
-            return ZSTD_compressBlock_lazy_extDict_generic(ms, seqStore, rep, src, srcSize, searchMethod_e.search_hashChain, 2);
+            return ZSTD_compressBlock_lazy_extDict_generic(
+                ms,
+                seqStore,
+                rep,
+                src,
+                srcSize,
+                searchMethod_e.search_hashChain,
+                2
+            );
         }
 
-        private static nuint ZSTD_compressBlock_lazy2_extDict_row(ZSTD_MatchState_t* ms, SeqStore_t* seqStore, uint* rep, void* src, nuint srcSize)
+        private static nuint ZSTD_compressBlock_lazy2_extDict_row(
+            ZSTD_MatchState_t* ms,
+            SeqStore_t* seqStore,
+            uint* rep,
+            void* src,
+            nuint srcSize
+        )
         {
-            return ZSTD_compressBlock_lazy_extDict_generic(ms, seqStore, rep, src, srcSize, searchMethod_e.search_rowHash, 2);
+            return ZSTD_compressBlock_lazy_extDict_generic(
+                ms,
+                seqStore,
+                rep,
+                src,
+                srcSize,
+                searchMethod_e.search_rowHash,
+                2
+            );
         }
 
-        private static nuint ZSTD_compressBlock_btlazy2_extDict(ZSTD_MatchState_t* ms, SeqStore_t* seqStore, uint* rep, void* src, nuint srcSize)
+        private static nuint ZSTD_compressBlock_btlazy2_extDict(
+            ZSTD_MatchState_t* ms,
+            SeqStore_t* seqStore,
+            uint* rep,
+            void* src,
+            nuint srcSize
+        )
         {
-            return ZSTD_compressBlock_lazy_extDict_generic(ms, seqStore, rep, src, srcSize, searchMethod_e.search_binaryTree, 2);
+            return ZSTD_compressBlock_lazy_extDict_generic(
+                ms,
+                seqStore,
+                rep,
+                src,
+                srcSize,
+                searchMethod_e.search_binaryTree,
+                2
+            );
         }
     }
 }

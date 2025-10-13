@@ -62,7 +62,9 @@ namespace ZstdSharp
         {
             using var cctx = handle.Acquire();
             fixed (byte* dictPtr = dict)
-                Methods.ZSTD_CCtx_loadDictionary(cctx, dictPtr, (nuint)dict.Length).EnsureZstdSuccess();
+                Methods
+                    .ZSTD_CCtx_loadDictionary(cctx, dictPtr, (nuint)dict.Length)
+                    .EnsureZstdSuccess();
         }
 
         public Compressor(int level = DefaultCompressionLevel)
@@ -71,11 +73,11 @@ namespace ZstdSharp
             Level = level;
         }
 
-        public static int GetCompressBound(int length)
-            => (int)Methods.ZSTD_compressBound((nuint)length);
+        public static int GetCompressBound(int length) =>
+            (int)Methods.ZSTD_compressBound((nuint)length);
 
-        public static ulong GetCompressBoundLong(ulong length)
-            => Methods.ZSTD_compressBound((nuint)length);
+        public static ulong GetCompressBoundLong(ulong length) =>
+            Methods.ZSTD_compressBound((nuint)length);
 
         public Span<byte> Wrap(ReadOnlySpan<byte> src)
         {
@@ -84,8 +86,8 @@ namespace ZstdSharp
             return new Span<byte>(dest, 0, length);
         }
 
-        public int Wrap(byte[] src, byte[] dest, int offset)
-            => Wrap(src, new Span<byte>(dest, offset, dest.Length - offset));
+        public int Wrap(byte[] src, byte[] dest, int offset) =>
+            Wrap(src, new Span<byte>(dest, offset, dest.Length - offset));
 
         public int Wrap(ReadOnlySpan<byte> src, Span<byte> dest)
         {
@@ -93,19 +95,37 @@ namespace ZstdSharp
             fixed (byte* destPtr = dest)
             {
                 using var cctx = handle.Acquire();
-                return (int)Methods.ZSTD_compress2(cctx, destPtr, (nuint)dest.Length, srcPtr, (nuint)src.Length)
-                    .EnsureZstdSuccess();
+                return (int)
+                    Methods
+                        .ZSTD_compress2(
+                            cctx,
+                            destPtr,
+                            (nuint)dest.Length,
+                            srcPtr,
+                            (nuint)src.Length
+                        )
+                        .EnsureZstdSuccess();
             }
         }
 
-        public int Wrap(ArraySegment<byte> src, ArraySegment<byte> dest)
-            => Wrap((ReadOnlySpan<byte>)src, dest);
+        public int Wrap(ArraySegment<byte> src, ArraySegment<byte> dest) =>
+            Wrap((ReadOnlySpan<byte>)src, dest);
 
-        public int Wrap(byte[] src, int srcOffset, int srcLength, byte[] dst, int dstOffset, int dstLength)
-            => Wrap(new ReadOnlySpan<byte>(src, srcOffset, srcLength), new Span<byte>(dst, dstOffset, dstLength));
+        public int Wrap(
+            byte[] src,
+            int srcOffset,
+            int srcLength,
+            byte[] dst,
+            int dstOffset,
+            int dstLength
+        ) =>
+            Wrap(
+                new ReadOnlySpan<byte>(src, srcOffset, srcLength),
+                new Span<byte>(dst, dstOffset, dstLength)
+            );
 
-        public bool TryWrap(byte[] src, byte[] dest, int offset, out int written)
-            => TryWrap(src, new Span<byte>(dest, offset, dest.Length - offset), out written);
+        public bool TryWrap(byte[] src, byte[] dest, int offset, out int written) =>
+            TryWrap(src, new Span<byte>(dest, offset, dest.Length - offset), out written);
 
         public bool TryWrap(ReadOnlySpan<byte> src, Span<byte> dest, out int written)
         {
@@ -115,8 +135,13 @@ namespace ZstdSharp
                 nuint returnValue;
                 using (var cctx = handle.Acquire())
                 {
-                    returnValue =
-                        Methods.ZSTD_compress2(cctx, destPtr, (nuint)dest.Length, srcPtr, (nuint)src.Length);
+                    returnValue = Methods.ZSTD_compress2(
+                        cctx,
+                        destPtr,
+                        (nuint)dest.Length,
+                        srcPtr,
+                        (nuint)src.Length
+                    );
                 }
 
                 if (returnValue == unchecked(0 - (nuint)ZSTD_ErrorCode.ZSTD_error_dstSize_tooSmall))
@@ -131,11 +156,23 @@ namespace ZstdSharp
             }
         }
 
-        public bool TryWrap(ArraySegment<byte> src, ArraySegment<byte> dest, out int written)
-            => TryWrap((ReadOnlySpan<byte>)src, dest, out written);
+        public bool TryWrap(ArraySegment<byte> src, ArraySegment<byte> dest, out int written) =>
+            TryWrap((ReadOnlySpan<byte>)src, dest, out written);
 
-        public bool TryWrap(byte[] src, int srcOffset, int srcLength, byte[] dst, int dstOffset, int dstLength, out int written)
-            => TryWrap(new ReadOnlySpan<byte>(src, srcOffset, srcLength), new Span<byte>(dst, dstOffset, dstLength), out written);
+        public bool TryWrap(
+            byte[] src,
+            int srcOffset,
+            int srcLength,
+            byte[] dst,
+            int dstOffset,
+            int dstLength,
+            out int written
+        ) =>
+            TryWrap(
+                new ReadOnlySpan<byte>(src, srcOffset, srcLength),
+                new Span<byte>(dst, dstOffset, dstLength),
+                out written
+            );
 
         public void Dispose()
         {
@@ -143,13 +180,19 @@ namespace ZstdSharp
             GC.SuppressFinalize(this);
         }
 
-        internal nuint CompressStream(ref ZSTD_inBuffer_s input, ref ZSTD_outBuffer_s output, ZSTD_EndDirective directive)
+        internal nuint CompressStream(
+            ref ZSTD_inBuffer_s input,
+            ref ZSTD_outBuffer_s output,
+            ZSTD_EndDirective directive
+        )
         {
             fixed (ZSTD_inBuffer_s* inputPtr = &input)
             fixed (ZSTD_outBuffer_s* outputPtr = &output)
             {
                 using var cctx = handle.Acquire();
-                return Methods.ZSTD_compressStream2(cctx, outputPtr, inputPtr, directive).EnsureZstdSuccess();
+                return Methods
+                    .ZSTD_compressStream2(cctx, outputPtr, inputPtr, directive)
+                    .EnsureZstdSuccess();
             }
         }
 

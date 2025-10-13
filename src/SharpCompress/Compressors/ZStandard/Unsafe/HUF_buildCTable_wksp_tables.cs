@@ -6,6 +6,7 @@ namespace ZstdSharp.Unsafe
     {
         public _huffNodeTbl_e__FixedBuffer huffNodeTbl;
         public _rankPosition_e__FixedBuffer rankPosition;
+
 #if NET8_0_OR_GREATER
         [InlineArray(512)]
         public unsafe struct _huffNodeTbl_e__FixedBuffer

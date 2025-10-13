@@ -25,28 +25,52 @@ namespace ZstdSharp.Unsafe
         {
             FSE_initCState(ref statePtr, ct);
             {
-                FSE_symbolCompressionTransform symbolTT = ((FSE_symbolCompressionTransform*)statePtr.symbolTT)[symbol];
+                FSE_symbolCompressionTransform symbolTT = (
+                    (FSE_symbolCompressionTransform*)statePtr.symbolTT
+                )[symbol];
                 ushort* stateTable = (ushort*)statePtr.stateTable;
                 uint nbBitsOut = symbolTT.deltaNbBits + (1 << 15) >> 16;
                 statePtr.value = (nint)((nbBitsOut << 16) - symbolTT.deltaNbBits);
-                statePtr.value = stateTable[(statePtr.value >> (int)nbBitsOut) + symbolTT.deltaFindState];
+                statePtr.value = stateTable[
+                    (statePtr.value >> (int)nbBitsOut) + symbolTT.deltaFindState
+                ];
             }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void FSE_encodeSymbol(ref nuint bitC_bitContainer, ref uint bitC_bitPos, ref FSE_CState_t statePtr, uint symbol)
+        private static void FSE_encodeSymbol(
+            ref nuint bitC_bitContainer,
+            ref uint bitC_bitPos,
+            ref FSE_CState_t statePtr,
+            uint symbol
+        )
         {
-            FSE_symbolCompressionTransform symbolTT = ((FSE_symbolCompressionTransform*)statePtr.symbolTT)[symbol];
+            FSE_symbolCompressionTransform symbolTT = (
+                (FSE_symbolCompressionTransform*)statePtr.symbolTT
+            )[symbol];
             ushort* stateTable = (ushort*)statePtr.stateTable;
             uint nbBitsOut = (uint)statePtr.value + symbolTT.deltaNbBits >> 16;
             BIT_addBits(ref bitC_bitContainer, ref bitC_bitPos, (nuint)statePtr.value, nbBitsOut);
-            statePtr.value = stateTable[(statePtr.value >> (int)nbBitsOut) + symbolTT.deltaFindState];
+            statePtr.value = stateTable[
+                (statePtr.value >> (int)nbBitsOut) + symbolTT.deltaFindState
+            ];
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void FSE_flushCState(ref nuint bitC_bitContainer, ref uint bitC_bitPos, ref sbyte* bitC_ptr, sbyte* bitC_endPtr, ref FSE_CState_t statePtr)
+        private static void FSE_flushCState(
+            ref nuint bitC_bitContainer,
+            ref uint bitC_bitPos,
+            ref sbyte* bitC_ptr,
+            sbyte* bitC_endPtr,
+            ref FSE_CState_t statePtr
+        )
         {
-            BIT_addBits(ref bitC_bitContainer, ref bitC_bitPos, (nuint)statePtr.value, statePtr.stateLog);
+            BIT_addBits(
+                ref bitC_bitContainer,
+                ref bitC_bitPos,
+                (nuint)statePtr.value,
+                statePtr.stateLog
+            );
             BIT_flushBits(ref bitC_bitContainer, ref bitC_bitPos, ref bitC_ptr, bitC_endPtr);
         }
 
@@ -67,7 +91,12 @@ namespace ZstdSharp.Unsafe
          * note 1 : assume symbolValue is valid (<= maxSymbolValue)
          * note 2 : if freq[symbolValue]==0, @return a fake cost of tableLog+1 bits */
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static uint FSE_bitCost(void* symbolTTPtr, uint tableLog, uint symbolValue, uint accuracyLog)
+        private static uint FSE_bitCost(
+            void* symbolTTPtr,
+            uint tableLog,
+            uint symbolValue,
+            uint accuracyLog
+        )
         {
             FSE_symbolCompressionTransform* symbolTT = (FSE_symbolCompressionTransform*)symbolTTPtr;
             uint minNbBits = symbolTT[symbolValue].deltaNbBits >> 16;
@@ -76,9 +105,11 @@ namespace ZstdSharp.Unsafe
             assert(accuracyLog < 31 - tableLog);
             {
                 uint tableSize = (uint)(1 << (int)tableLog);
-                uint deltaFromThreshold = threshold - (symbolTT[symbolValue].deltaNbBits + tableSize);
+                uint deltaFromThreshold =
+                    threshold - (symbolTT[symbolValue].deltaNbBits + tableSize);
                 /* linear interpolation (very approximate) */
-                uint normalizedDeltaFromThreshold = deltaFromThreshold << (int)accuracyLog >> (int)tableLog;
+                uint normalizedDeltaFromThreshold =
+                    deltaFromThreshold << (int)accuracyLog >> (int)tableLog;
                 uint bitMultiplier = (uint)(1 << (int)accuracyLog);
                 assert(symbolTT[symbolValue].deltaNbBits + tableSize <= threshold);
                 assert(normalizedDeltaFromThreshold <= bitMultiplier);
@@ -87,12 +118,26 @@ namespace ZstdSharp.Unsafe
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void FSE_initDState(ref FSE_DState_t DStatePtr, ref BIT_DStream_t bitD, uint* dt)
+        private static void FSE_initDState(
+            ref FSE_DState_t DStatePtr,
+            ref BIT_DStream_t bitD,
+            uint* dt
+        )
         {
             void* ptr = dt;
             FSE_DTableHeader* DTableH = (FSE_DTableHeader*)ptr;
-            DStatePtr.state = BIT_readBits(bitD.bitContainer, ref bitD.bitsConsumed, DTableH->tableLog);
-            BIT_reloadDStream(ref bitD.bitContainer, ref bitD.bitsConsumed, ref bitD.ptr, bitD.start, bitD.limitPtr);
+            DStatePtr.state = BIT_readBits(
+                bitD.bitContainer,
+                ref bitD.bitsConsumed,
+                DTableH->tableLog
+            );
+            BIT_reloadDStream(
+                ref bitD.bitContainer,
+                ref bitD.bitsConsumed,
+                ref bitD.ptr,
+                bitD.start,
+                bitD.limitPtr
+            );
             DStatePtr.table = dt + 1;
         }
 
@@ -113,7 +158,11 @@ namespace ZstdSharp.Unsafe
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static byte FSE_decodeSymbol(ref FSE_DState_t DStatePtr, nuint bitD_bitContainer, ref uint bitD_bitsConsumed)
+        private static byte FSE_decodeSymbol(
+            ref FSE_DState_t DStatePtr,
+            nuint bitD_bitContainer,
+            ref uint bitD_bitsConsumed
+        )
         {
             FSE_decode_t DInfo = ((FSE_decode_t*)DStatePtr.table)[DStatePtr.state];
             uint nbBits = DInfo.nbBits;
@@ -126,7 +175,11 @@ namespace ZstdSharp.Unsafe
         /*! FSE_decodeSymbolFast() :
         unsafe, only works if no symbol has a probability > 50% */
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static byte FSE_decodeSymbolFast(ref FSE_DState_t DStatePtr, nuint bitD_bitContainer, ref uint bitD_bitsConsumed)
+        private static byte FSE_decodeSymbolFast(
+            ref FSE_DState_t DStatePtr,
+            nuint bitD_bitContainer,
+            ref uint bitD_bitsConsumed
+        )
         {
             FSE_decode_t DInfo = ((FSE_decode_t*)DStatePtr.table)[DStatePtr.state];
             uint nbBits = DInfo.nbBits;

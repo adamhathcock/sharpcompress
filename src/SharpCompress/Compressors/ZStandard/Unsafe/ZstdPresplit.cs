@@ -1,7 +1,7 @@
-using System.Runtime.CompilerServices;
-using static ZstdSharp.UnsafeHelper;
 using System;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using static ZstdSharp.UnsafeHelper;
 
 namespace ZstdSharp.Unsafe
 {
@@ -26,7 +26,13 @@ namespace ZstdSharp.Unsafe
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void addEvents_generic(Fingerprint* fp, void* src, nuint srcSize, nuint samplingRate, uint hashLog)
+        private static void addEvents_generic(
+            Fingerprint* fp,
+            void* src,
+            nuint srcSize,
+            nuint samplingRate,
+            uint hashLog
+        )
         {
             sbyte* p = (sbyte*)src;
             nuint limit = srcSize - 2 + 1;
@@ -41,7 +47,13 @@ namespace ZstdSharp.Unsafe
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void recordFingerprint_generic(Fingerprint* fp, void* src, nuint srcSize, nuint samplingRate, uint hashLog)
+        private static void recordFingerprint_generic(
+            Fingerprint* fp,
+            void* src,
+            nuint srcSize,
+            nuint samplingRate,
+            uint hashLog
+        )
         {
             memset(fp, 0, (uint)(sizeof(uint) * ((nuint)1 << (int)hashLog)));
             fp->nbEvents = 0;
@@ -80,7 +92,9 @@ namespace ZstdSharp.Unsafe
             assert(hashLog <= 10);
             for (n = 0; n < (nuint)1 << (int)hashLog; n++)
             {
-                distance += abs64(fp1->events[n] * (long)fp2->nbEvents - fp2->events[n] * (long)fp1->nbEvents);
+                distance += abs64(
+                    fp1->events[n] * (long)fp2->nbEvents - fp2->events[n] * (long)fp1->nbEvents
+                );
             }
 
             return distance;
@@ -89,7 +103,12 @@ namespace ZstdSharp.Unsafe
         /* Compare newEvents with pastEvents
          * return 1 when considered "too different"
          */
-        private static int compareFingerprints(Fingerprint* @ref, Fingerprint* newfp, int penalty, uint hashLog)
+        private static int compareFingerprints(
+            Fingerprint* @ref,
+            Fingerprint* newfp,
+            int penalty,
+            uint hashLog
+        )
         {
             assert(@ref->nbEvents > 0);
             assert(newfp->nbEvents > 0);
@@ -138,25 +157,30 @@ namespace ZstdSharp.Unsafe
 
         private static readonly void*[] records_fs = new void*[4]
         {
-            (delegate* managed<Fingerprint*, void*, nuint, void> )(&ZSTD_recordFingerprint_43),
-            (delegate* managed<Fingerprint*, void*, nuint, void> )(&ZSTD_recordFingerprint_11),
-            (delegate* managed<Fingerprint*, void*, nuint, void> )(&ZSTD_recordFingerprint_5),
-            (delegate* managed<Fingerprint*, void*, nuint, void> )(&ZSTD_recordFingerprint_1)
+            (delegate* managed<Fingerprint*, void*, nuint, void>)(&ZSTD_recordFingerprint_43),
+            (delegate* managed<Fingerprint*, void*, nuint, void>)(&ZSTD_recordFingerprint_11),
+            (delegate* managed<Fingerprint*, void*, nuint, void>)(&ZSTD_recordFingerprint_5),
+            (delegate* managed<Fingerprint*, void*, nuint, void>)(&ZSTD_recordFingerprint_1),
         };
 #if NET7_0_OR_GREATER
-        private static ReadOnlySpan<uint> Span_hashParams => new uint[4]
-        {
-            8,
-            9,
-            10,
-            10
-        };
-        private static uint* hashParams => (uint*)System.Runtime.CompilerServices.Unsafe.AsPointer(ref MemoryMarshal.GetReference(Span_hashParams));
+        private static ReadOnlySpan<uint> Span_hashParams => new uint[4] { 8, 9, 10, 10 };
+        private static uint* hashParams =>
+            (uint*)
+                System.Runtime.CompilerServices.Unsafe.AsPointer(
+                    ref MemoryMarshal.GetReference(Span_hashParams)
+                );
 #else
 
         private static readonly uint* hashParams = GetArrayPointer(new uint[4] { 8, 9, 10, 10 });
 #endif
-        private static nuint ZSTD_splitBlock_byChunks(void* blockStart, nuint blockSize, int level, void* workspace, nuint wkspSize)
+
+        private static nuint ZSTD_splitBlock_byChunks(
+            void* blockStart,
+            nuint blockSize,
+            int level,
+            void* workspace,
+            nuint wkspSize
+        )
         {
             assert(0 <= level && level <= 3);
             void* record_f = records_fs[level];
@@ -169,11 +193,26 @@ namespace ZstdSharp.Unsafe
             assert((nuint)workspace % (nuint)Math.Max(sizeof(uint), sizeof(ulong)) == 0);
             assert(wkspSize >= (nuint)sizeof(FPStats));
             initStats(fpstats);
-            ((delegate* managed<Fingerprint*, void*, nuint, void>)record_f)(&fpstats->pastEvents, p, 8 << 10);
+            ((delegate* managed<Fingerprint*, void*, nuint, void>)record_f)(
+                &fpstats->pastEvents,
+                p,
+                8 << 10
+            );
             for (pos = 8 << 10; pos <= blockSize - (8 << 10); pos += 8 << 10)
             {
-                ((delegate* managed<Fingerprint*, void*, nuint, void>)record_f)(&fpstats->newEvents, p + pos, 8 << 10);
-                if (compareFingerprints(&fpstats->pastEvents, &fpstats->newEvents, penalty, hashParams[level]) != 0)
+                ((delegate* managed<Fingerprint*, void*, nuint, void>)record_f)(
+                    &fpstats->newEvents,
+                    p + pos,
+                    8 << 10
+                );
+                if (
+                    compareFingerprints(
+                        &fpstats->pastEvents,
+                        &fpstats->newEvents,
+                        penalty,
+                        hashParams[level]
+                    ) != 0
+                )
                 {
                     return pos;
                 }
@@ -198,10 +237,16 @@ namespace ZstdSharp.Unsafe
          * More accurate splitting saves more, but speed impact is also more perceptible.
          * For better accuracy, use more elaborate variant *_byChunks.
          */
-        private static nuint ZSTD_splitBlock_fromBorders(void* blockStart, nuint blockSize, void* workspace, nuint wkspSize)
+        private static nuint ZSTD_splitBlock_fromBorders(
+            void* blockStart,
+            nuint blockSize,
+            void* workspace,
+            nuint wkspSize
+        )
         {
             FPStats* fpstats = (FPStats*)workspace;
-            Fingerprint* middleEvents = (Fingerprint*)(void*)((sbyte*)workspace + 512 * sizeof(uint));
+            Fingerprint* middleEvents = (Fingerprint*)
+                (void*)((sbyte*)workspace + 512 * sizeof(uint));
             assert(blockSize == 128 << 10);
             assert(workspace != null);
             assert((nuint)workspace % (nuint)Math.Max(sizeof(uint), sizeof(ulong)) == 0);
@@ -235,7 +280,13 @@ namespace ZstdSharp.Unsafe
          * While this could be extended to smaller sizes in the future,
          * it is not yet clear if this would be useful. TBD.
          */
-        private static nuint ZSTD_splitBlock(void* blockStart, nuint blockSize, int level, void* workspace, nuint wkspSize)
+        private static nuint ZSTD_splitBlock(
+            void* blockStart,
+            nuint blockSize,
+            int level,
+            void* workspace,
+            nuint wkspSize
+        )
         {
             assert(0 <= level && level <= 4);
             if (level == 0)

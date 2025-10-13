@@ -1,7 +1,7 @@
-using System.Runtime.CompilerServices;
-using static ZstdSharp.UnsafeHelper;
 using System;
 using System.Numerics;
+using System.Runtime.CompilerServices;
+using static ZstdSharp.UnsafeHelper;
 
 namespace ZstdSharp.Unsafe
 {
@@ -41,10 +41,14 @@ namespace ZstdSharp.Unsafe
             assert(val != 0);
             if (BitConverter.IsLittleEndian)
             {
-                return MEM_64bits ? (uint)BitOperations.TrailingZeroCount(val) >> 3 : (uint)BitOperations.TrailingZeroCount((uint)val) >> 3;
+                return MEM_64bits
+                    ? (uint)BitOperations.TrailingZeroCount(val) >> 3
+                    : (uint)BitOperations.TrailingZeroCount((uint)val) >> 3;
             }
 
-            return MEM_64bits ? (uint)BitOperations.LeadingZeroCount(val) >> 3 : (uint)BitOperations.LeadingZeroCount((uint)val) >> 3;
+            return MEM_64bits
+                ? (uint)BitOperations.LeadingZeroCount(val) >> 3
+                : (uint)BitOperations.LeadingZeroCount((uint)val) >> 3;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

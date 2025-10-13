@@ -8,6 +8,6 @@ namespace ZstdSharp.Unsafe
         ZSTDcs_created = 0,
         ZSTDcs_init,
         ZSTDcs_ongoing,
-        ZSTDcs_ending
+        ZSTDcs_ending,
     }
 }

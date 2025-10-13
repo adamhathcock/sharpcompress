@@ -22,6 +22,7 @@ namespace ZstdSharp.Unsafe
         public byte* ilowest;
         public byte* oend;
         public _iend_e__FixedBuffer iend;
+
         public unsafe struct _ip_e__FixedBuffer
         {
             public byte* e0;

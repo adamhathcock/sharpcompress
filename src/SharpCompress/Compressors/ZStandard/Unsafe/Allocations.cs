@@ -10,7 +10,10 @@ namespace ZstdSharp.Unsafe
         private static void* ZSTD_customMalloc(nuint size, ZSTD_customMem customMem)
         {
             if (customMem.customAlloc != null)
-                return ((delegate* managed<void*, nuint, void*>)customMem.customAlloc)(customMem.opaque, size);
+                return ((delegate* managed<void*, nuint, void*>)customMem.customAlloc)(
+                    customMem.opaque,
+                    size
+                );
             return malloc(size);
         }
 
@@ -21,7 +24,10 @@ namespace ZstdSharp.Unsafe
             {
                 /* calloc implemented as malloc+memset;
                  * not as efficient as calloc, but next best guess for custom malloc */
-                void* ptr = ((delegate* managed<void*, nuint, void*>)customMem.customAlloc)(customMem.opaque, size);
+                void* ptr = ((delegate* managed<void*, nuint, void*>)customMem.customAlloc)(
+                    customMem.opaque,
+                    size
+                );
                 memset(ptr, 0, (uint)size);
                 return ptr;
             }
@@ -35,7 +41,10 @@ namespace ZstdSharp.Unsafe
             if (ptr != null)
             {
                 if (customMem.customFree != null)
-                    ((delegate* managed<void*, void*, void>)customMem.customFree)(customMem.opaque, ptr);
+                    ((delegate* managed<void*, void*, void>)customMem.customFree)(
+                        customMem.opaque,
+                        ptr
+                    );
                 else
                     free(ptr);
             }

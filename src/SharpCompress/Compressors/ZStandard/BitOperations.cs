@@ -19,22 +19,82 @@ namespace System.Numerics
     public static unsafe class BitOperations
     {
         // hack: should be public because of inline
-        public static readonly byte* TrailingZeroCountDeBruijn = GetArrayPointer(new byte[]
-        {
-            00, 01, 28, 02, 29, 14, 24, 03,
-            30, 22, 20, 15, 25, 17, 04, 08,
-            31, 27, 13, 23, 21, 19, 16, 07,
-            26, 12, 18, 06, 11, 05, 10, 09
-        });
+        public static readonly byte* TrailingZeroCountDeBruijn = GetArrayPointer(
+            new byte[]
+            {
+                00,
+                01,
+                28,
+                02,
+                29,
+                14,
+                24,
+                03,
+                30,
+                22,
+                20,
+                15,
+                25,
+                17,
+                04,
+                08,
+                31,
+                27,
+                13,
+                23,
+                21,
+                19,
+                16,
+                07,
+                26,
+                12,
+                18,
+                06,
+                11,
+                05,
+                10,
+                09,
+            }
+        );
 
         // hack: should be public because of inline
-        public static readonly byte* Log2DeBruijn = GetArrayPointer(new byte[]
-        {
-            00, 09, 01, 10, 13, 21, 02, 29,
-            11, 14, 16, 18, 22, 25, 03, 30,
-            08, 12, 20, 28, 15, 17, 24, 07,
-            19, 27, 23, 06, 26, 05, 04, 31
-        });
+        public static readonly byte* Log2DeBruijn = GetArrayPointer(
+            new byte[]
+            {
+                00,
+                09,
+                01,
+                10,
+                13,
+                21,
+                02,
+                29,
+                11,
+                14,
+                16,
+                18,
+                22,
+                25,
+                03,
+                30,
+                08,
+                12,
+                20,
+                28,
+                15,
+                17,
+                24,
+                07,
+                19,
+                27,
+                23,
+                06,
+                26,
+                05,
+                04,
+                31,
+            }
+        );
 
         /// <summary>
         /// Returns the integer (floor) log of the specified value, base 2.
@@ -69,7 +129,8 @@ namespace System.Numerics
             // uint.MaxValue >> 27 is always in range [0 - 31] so we use Unsafe.AddByteOffset to avoid bounds check
             return Log2DeBruijn[
                 // Using deBruijn sequence, k=2, n=5 (2^5=32) : 0b_0000_0111_1100_0100_1010_1100_1101_1101u
-                (int)((value * 0x07C4ACDDu) >> 27)];
+                (int)((value * 0x07C4ACDDu) >> 27)
+            ];
         }
 
         /// <summary>
@@ -98,8 +159,7 @@ namespace System.Numerics
         /// </summary>
         /// <param name="value">The value.</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static int TrailingZeroCount(int value)
-            => TrailingZeroCount((uint)value);
+        public static int TrailingZeroCount(int value) => TrailingZeroCount((uint)value);
 
         /// <summary>
         /// Count the number of trailing zero bits in an integer value.
@@ -118,7 +178,8 @@ namespace System.Numerics
             // uint.MaxValue >> 27 is always in range [0 - 31] so we use Unsafe.AddByteOffset to avoid bounds check
             return TrailingZeroCountDeBruijn[
                 // Using deBruijn sequence, k=2, n=5 (2^5=32) : 0b_0000_0111_0111_1100_1011_0101_0011_0001u
-                (int)(((value & (uint)-(int)value) * 0x077CB531u) >> 27)]; // Multi-cast mitigates redundant conv.u8
+                (int)(((value & (uint)-(int)value) * 0x077CB531u) >> 27)
+            ]; // Multi-cast mitigates redundant conv.u8
         }
 
         /// <summary>
@@ -127,8 +188,7 @@ namespace System.Numerics
         /// </summary>
         /// <param name="value">The value.</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static int TrailingZeroCount(long value)
-            => TrailingZeroCount((ulong)value);
+        public static int TrailingZeroCount(long value) => TrailingZeroCount((ulong)value);
 
         /// <summary>
         /// Count the number of trailing zero bits in a mask.
@@ -157,8 +217,8 @@ namespace System.Numerics
         /// Any value outside the range [0..31] is treated as congruent mod 32.</param>
         /// <returns>The rotated value.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static uint RotateLeft(uint value, int offset)
-            => (value << offset) | (value >> (32 - offset));
+        public static uint RotateLeft(uint value, int offset) =>
+            (value << offset) | (value >> (32 - offset));
 
         /// <summary>
         /// Rotates the specified value left by the specified number of bits.
@@ -169,8 +229,8 @@ namespace System.Numerics
         /// Any value outside the range [0..63] is treated as congruent mod 64.</param>
         /// <returns>The rotated value.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static ulong RotateLeft(ulong value, int offset)
-            => (value << offset) | (value >> (64 - offset));
+        public static ulong RotateLeft(ulong value, int offset) =>
+            (value << offset) | (value >> (64 - offset));
 
         /// <summary>
         /// Rotates the specified value right by the specified number of bits.
@@ -181,8 +241,8 @@ namespace System.Numerics
         /// Any value outside the range [0..31] is treated as congruent mod 32.</param>
         /// <returns>The rotated value.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static uint RotateRight(uint value, int offset)
-            => (value >> offset) | (value << (32 - offset));
+        public static uint RotateRight(uint value, int offset) =>
+            (value >> offset) | (value << (32 - offset));
 
         /// <summary>
         /// Rotates the specified value right by the specified number of bits.
@@ -193,8 +253,8 @@ namespace System.Numerics
         /// Any value outside the range [0..63] is treated as congruent mod 64.</param>
         /// <returns>The rotated value.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static ulong RotateRight(ulong value, int offset)
-            => (value >> offset) | (value << (64 - offset));
+        public static ulong RotateRight(ulong value, int offset) =>
+            (value >> offset) | (value << (64 - offset));
 
         /// <summary>
         /// Count the number of leading zero bits in a mask.
@@ -221,9 +281,11 @@ namespace System.Numerics
             value |= value >> 16;
 
             // uint.MaxValue >> 27 is always in range [0 - 31] so we use Unsafe.AddByteOffset to avoid bounds check
-            return 31 ^ Log2DeBruijn[
-                // uint|long -> IntPtr cast on 32-bit platforms does expensive overflow checks not needed here
-                (int)((value * 0x07C4ACDDu) >> 27)];
+            return 31
+                ^ Log2DeBruijn[
+                    // uint|long -> IntPtr cast on 32-bit platforms does expensive overflow checks not needed here
+                    (int)((value * 0x07C4ACDDu) >> 27)
+                ];
         }
 
         /// <summary>

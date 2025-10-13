@@ -20,9 +20,8 @@ namespace ZstdSharp
         /// Parameterless constructor is hidden. Use the static <c>Create</c> factory
         /// method to create a new safe handle instance.
         /// </summary>
-        protected SafeZstdHandle() : base(IntPtr.Zero, true)
-        {
-        }
+        protected SafeZstdHandle()
+            : base(IntPtr.Zero, true) { }
 
         public sealed override bool IsInvalid => handle == IntPtr.Zero;
     }
@@ -33,9 +32,7 @@ namespace ZstdSharp
     internal sealed unsafe class SafeCctxHandle : SafeZstdHandle
     {
         /// <inheritdoc/>
-        private SafeCctxHandle()
-        {
-        }
+        private SafeCctxHandle() { }
 
         /// <summary>
         /// Creates a new instance of <see cref="SafeCctxHandle"/>.
@@ -50,7 +47,10 @@ namespace ZstdSharp
             {
                 var cctx = Methods.ZSTD_createCCtx();
                 if (cctx == null)
-                    throw new ZstdException(ZSTD_ErrorCode.ZSTD_error_GENERIC, "Failed to create cctx");
+                    throw new ZstdException(
+                        ZSTD_ErrorCode.ZSTD_error_GENERIC,
+                        "Failed to create cctx"
+                    );
                 safeHandle.SetHandle((IntPtr)cctx);
                 success = true;
             }
@@ -85,9 +85,7 @@ namespace ZstdSharp
     internal sealed unsafe class SafeDctxHandle : SafeZstdHandle
     {
         /// <inheritdoc/>
-        private SafeDctxHandle()
-        {
-        }
+        private SafeDctxHandle() { }
 
         /// <summary>
         /// Creates a new instance of <see cref="SafeDctxHandle"/>.
@@ -102,7 +100,10 @@ namespace ZstdSharp
             {
                 var dctx = Methods.ZSTD_createDCtx();
                 if (dctx == null)
-                    throw new ZstdException(ZSTD_ErrorCode.ZSTD_error_GENERIC, "Failed to create dctx");
+                    throw new ZstdException(
+                        ZSTD_ErrorCode.ZSTD_error_GENERIC,
+                        "Failed to create dctx"
+                    );
                 safeHandle.SetHandle((IntPtr)dctx);
                 success = true;
             }
@@ -140,7 +141,8 @@ namespace ZstdSharp
     /// Safe handle holders can be <see cref="Dispose"/>d to decrement the safe handle's
     /// reference count, and can be implicitly converted to pointers to <see cref="T"/>.
     /// </remarks>
-    internal unsafe ref struct SafeHandleHolder<T> where T : unmanaged
+    internal unsafe ref struct SafeHandleHolder<T>
+        where T : unmanaged
     {
         private readonly SafeHandle _handle;
 

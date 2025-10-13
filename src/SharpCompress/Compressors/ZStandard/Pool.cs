@@ -4,7 +4,8 @@ namespace ZstdSharp.Unsafe
 {
     public static unsafe partial class Methods
     {
-        private static JobThreadPool GetThreadPool(void* ctx) => UnmanagedObject.Unwrap<JobThreadPool>(ctx);
+        private static JobThreadPool GetThreadPool(void* ctx) =>
+            UnmanagedObject.Unwrap<JobThreadPool>(ctx);
 
         /* ZSTD_createThreadPool() : public access point */
         public static void* ZSTD_createThreadPool(nuint numThreads)
@@ -23,7 +24,11 @@ namespace ZstdSharp.Unsafe
             return POOL_create_advanced(numThreads, queueSize, ZSTD_defaultCMem);
         }
 
-        private static void* POOL_create_advanced(nuint numThreads, nuint queueSize, ZSTD_customMem customMem)
+        private static void* POOL_create_advanced(
+            nuint numThreads,
+            nuint queueSize,
+            ZSTD_customMem customMem
+        )
         {
             var jobThreadPool = new JobThreadPool((int)numThreads, (int)queueSize);
             return UnmanagedObject.Wrap(jobThreadPool);

@@ -6,6 +6,7 @@ namespace ZstdSharp.Unsafe
     {
         public _CTable_e__FixedBuffer CTable;
         public HUF_repeat repeatMode;
+
 #if NET8_0_OR_GREATER
         [InlineArray(257)]
         public unsafe struct _CTable_e__FixedBuffer

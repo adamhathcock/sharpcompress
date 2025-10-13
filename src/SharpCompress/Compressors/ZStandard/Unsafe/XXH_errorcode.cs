@@ -7,7 +7,8 @@ namespace ZstdSharp.Unsafe
     {
         /*!< OK */
         XXH_OK = 0,
+
         /*!< Error */
-        XXH_ERROR
+        XXH_ERROR,
     }
 }

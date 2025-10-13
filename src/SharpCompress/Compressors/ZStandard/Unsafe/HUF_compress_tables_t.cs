@@ -7,6 +7,7 @@ namespace ZstdSharp.Unsafe
         public fixed uint count[256];
         public _CTable_e__FixedBuffer CTable;
         public _wksps_e__Union wksps;
+
 #if NET8_0_OR_GREATER
         [InlineArray(257)]
         public unsafe struct _CTable_e__FixedBuffer

@@ -5,6 +5,6 @@ namespace ZstdSharp.Unsafe
         ZSTD_noDict = 0,
         ZSTD_extDict = 1,
         ZSTD_dictMatchState = 2,
-        ZSTD_dedicatedDictSearch = 3
+        ZSTD_dedicatedDictSearch = 3,
     }
 }

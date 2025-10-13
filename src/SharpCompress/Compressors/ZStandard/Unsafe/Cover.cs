@@ -5,6 +5,7 @@ namespace ZstdSharp.Unsafe
     public static unsafe partial class Methods
     {
         private static int g_displayLevel = 0;
+
         /**
          * Returns the sum of the sample sizes.
          */
@@ -23,7 +24,11 @@ namespace ZstdSharp.Unsafe
         /**
          * Warns the user when their corpus is too small.
          */
-        private static void COVER_warnOnSmallCorpus(nuint maxDictSize, nuint nbDmers, int displayLevel)
+        private static void COVER_warnOnSmallCorpus(
+            nuint maxDictSize,
+            nuint nbDmers,
+            int displayLevel
+        )
         {
             double ratio = nbDmers / (double)maxDictSize;
             if (ratio >= 10)
@@ -45,7 +50,12 @@ namespace ZstdSharp.Unsafe
          * @param passes      The target number of passes over the dmer corpus.
          *                    More passes means a better dictionary.
          */
-        private static COVER_epoch_info_t COVER_computeEpochs(uint maxDictSize, uint nbDmers, uint k, uint passes)
+        private static COVER_epoch_info_t COVER_computeEpochs(
+            uint maxDictSize,
+            uint nbDmers,
+            uint k,
+            uint passes
+        )
         {
             uint minEpochSize = k * 10;
             COVER_epoch_info_t epochs;
@@ -66,7 +76,16 @@ namespace ZstdSharp.Unsafe
         /**
          *  Checks total compressed size of a dictionary
          */
-        private static nuint COVER_checkTotalCompressedSize(ZDICT_cover_params_t parameters, nuint* samplesSizes, byte* samples, nuint* offsets, nuint nbTrainSamples, nuint nbSamples, byte* dict, nuint dictBufferCapacity)
+        private static nuint COVER_checkTotalCompressedSize(
+            ZDICT_cover_params_t parameters,
+            nuint* samplesSizes,
+            byte* samples,
+            nuint* offsets,
+            nuint nbTrainSamples,
+            nuint nbSamples,
+            byte* dict,
+            nuint dictBufferCapacity
+        )
         {
             nuint totalCompressedSize = unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_GENERIC));
             /* Pointers */
@@ -81,7 +100,8 @@ namespace ZstdSharp.Unsafe
                 i = parameters.splitPoint < 1 ? nbTrainSamples : 0;
                 for (; i < nbSamples; ++i)
                 {
-                    maxSampleSize = samplesSizes[i] > maxSampleSize ? samplesSizes[i] : maxSampleSize;
+                    maxSampleSize =
+                        samplesSizes[i] > maxSampleSize ? samplesSizes[i] : maxSampleSize;
                 }
 
                 dstCapacity = ZSTD_compressBound(maxSampleSize);
@@ -99,7 +119,14 @@ namespace ZstdSharp.Unsafe
             i = parameters.splitPoint < 1 ? nbTrainSamples : 0;
             for (; i < nbSamples; ++i)
             {
-                nuint size = ZSTD_compress_usingCDict(cctx, dst, dstCapacity, samples + offsets[i], samplesSizes[i], cdict);
+                nuint size = ZSTD_compress_usingCDict(
+                    cctx,
+                    dst,
+                    dstCapacity,
+                    samples + offsets[i],
+                    samplesSizes[i],
+                    cdict
+                );
                 if (ERR_isError(size))
                 {
                     totalCompressedSize = size;
@@ -109,7 +136,7 @@ namespace ZstdSharp.Unsafe
                 totalCompressedSize += size;
             }
 
-        _compressCleanup:
+            _compressCleanup:
             ZSTD_freeCCtx(cctx);
             ZSTD_freeCDict(cdict);
             if (dst != null)
@@ -194,7 +221,11 @@ namespace ZstdSharp.Unsafe
          * Decrements liveJobs and signals any waiting threads if liveJobs == 0.
          * If this dictionary is the best so far save it and its parameters.
          */
-        private static void COVER_best_finish(COVER_best_s* best, ZDICT_cover_params_t parameters, COVER_dictSelection selection)
+        private static void COVER_best_finish(
+            COVER_best_s* best,
+            ZDICT_cover_params_t parameters,
+            COVER_dictSelection selection
+        )
         {
             void* dict = selection.dictContent;
             nuint compressedSize = selection.totalCompressedSize;
@@ -221,7 +252,9 @@ namespace ZstdSharp.Unsafe
                         best->dict = malloc(dictSize);
                         if (best->dict == null)
                         {
-                            best->compressedSize = unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_GENERIC));
+                            best->compressedSize = unchecked(
+                                (nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_GENERIC)
+                            );
                             best->dictSize = 0;
                             SynchronizationWrapper.Pulse(&best->mutex);
                             SynchronizationWrapper.Exit(&best->mutex);
@@ -271,7 +304,9 @@ namespace ZstdSharp.Unsafe
          */
         private static uint COVER_dictSelectionIsError(COVER_dictSelection selection)
         {
-            return ERR_isError(selection.totalCompressedSize) || selection.dictContent == null ? 1U : 0U;
+            return ERR_isError(selection.totalCompressedSize) || selection.dictContent == null
+                ? 1U
+                : 0U;
         }
 
         /**
@@ -289,7 +324,19 @@ namespace ZstdSharp.Unsafe
          * smallest dictionary within a specified regression of the compressed size
          * from the largest dictionary.
          */
-        private static COVER_dictSelection COVER_selectDict(byte* customDictContent, nuint dictBufferCapacity, nuint dictContentSize, byte* samplesBuffer, nuint* samplesSizes, uint nbFinalizeSamples, nuint nbCheckSamples, nuint nbSamples, ZDICT_cover_params_t @params, nuint* offsets, nuint totalCompressedSize)
+        private static COVER_dictSelection COVER_selectDict(
+            byte* customDictContent,
+            nuint dictBufferCapacity,
+            nuint dictContentSize,
+            byte* samplesBuffer,
+            nuint* samplesSizes,
+            uint nbFinalizeSamples,
+            nuint nbCheckSamples,
+            nuint nbSamples,
+            ZDICT_cover_params_t @params,
+            nuint* offsets,
+            nuint totalCompressedSize
+        )
         {
             nuint largestDict = 0;
             nuint largestCompressed = 0;
@@ -305,7 +352,16 @@ namespace ZstdSharp.Unsafe
             }
 
             memcpy(largestDictbuffer, customDictContent, (uint)dictContentSize);
-            dictContentSize = ZDICT_finalizeDictionary(largestDictbuffer, dictBufferCapacity, customDictContent, dictContentSize, samplesBuffer, samplesSizes, nbFinalizeSamples, @params.zParams);
+            dictContentSize = ZDICT_finalizeDictionary(
+                largestDictbuffer,
+                dictBufferCapacity,
+                customDictContent,
+                dictContentSize,
+                samplesBuffer,
+                samplesSizes,
+                nbFinalizeSamples,
+                @params.zParams
+            );
             if (ZDICT_isError(dictContentSize))
             {
                 free(largestDictbuffer);
@@ -313,7 +369,16 @@ namespace ZstdSharp.Unsafe
                 return COVER_dictSelectionError(dictContentSize);
             }
 
-            totalCompressedSize = COVER_checkTotalCompressedSize(@params, samplesSizes, samplesBuffer, offsets, nbCheckSamples, nbSamples, largestDictbuffer, dictContentSize);
+            totalCompressedSize = COVER_checkTotalCompressedSize(
+                @params,
+                samplesSizes,
+                samplesBuffer,
+                offsets,
+                nbCheckSamples,
+                nbSamples,
+                largestDictbuffer,
+                dictContentSize
+            );
             if (ERR_isError(totalCompressedSize))
             {
                 free(largestDictbuffer);
@@ -333,7 +398,16 @@ namespace ZstdSharp.Unsafe
             while (dictContentSize < largestDict)
             {
                 memcpy(candidateDictBuffer, largestDictbuffer, (uint)largestDict);
-                dictContentSize = ZDICT_finalizeDictionary(candidateDictBuffer, dictBufferCapacity, customDictContentEnd - dictContentSize, dictContentSize, samplesBuffer, samplesSizes, nbFinalizeSamples, @params.zParams);
+                dictContentSize = ZDICT_finalizeDictionary(
+                    candidateDictBuffer,
+                    dictBufferCapacity,
+                    customDictContentEnd - dictContentSize,
+                    dictContentSize,
+                    samplesBuffer,
+                    samplesSizes,
+                    nbFinalizeSamples,
+                    @params.zParams
+                );
                 if (ZDICT_isError(dictContentSize))
                 {
                     free(largestDictbuffer);
@@ -341,7 +415,16 @@ namespace ZstdSharp.Unsafe
                     return COVER_dictSelectionError(dictContentSize);
                 }
 
-                totalCompressedSize = COVER_checkTotalCompressedSize(@params, samplesSizes, samplesBuffer, offsets, nbCheckSamples, nbSamples, candidateDictBuffer, dictContentSize);
+                totalCompressedSize = COVER_checkTotalCompressedSize(
+                    @params,
+                    samplesSizes,
+                    samplesBuffer,
+                    offsets,
+                    nbCheckSamples,
+                    nbSamples,
+                    candidateDictBuffer,
+                    dictContentSize
+                );
                 if (ERR_isError(totalCompressedSize))
                 {
                     free(largestDictbuffer);
@@ -352,7 +435,11 @@ namespace ZstdSharp.Unsafe
                 if (totalCompressedSize <= largestCompressed * regressionTolerance)
                 {
                     free(largestDictbuffer);
-                    return setDictSelection(candidateDictBuffer, dictContentSize, totalCompressedSize);
+                    return setDictSelection(
+                        candidateDictBuffer,
+                        dictContentSize,
+                        totalCompressedSize
+                    );
                 }
 
                 dictContentSize *= 2;

@@ -5,9 +5,11 @@ namespace ZstdSharp.Unsafe
     {
         /* no longLengthType */
         ZSTD_llt_none = 0,
+
         /* represents a long literal */
         ZSTD_llt_literalLength = 1,
+
         /* represents a long match */
-        ZSTD_llt_matchLength = 2
+        ZSTD_llt_matchLength = 2,
     }
 }

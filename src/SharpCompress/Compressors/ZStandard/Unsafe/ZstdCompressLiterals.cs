@@ -7,7 +7,12 @@ namespace ZstdSharp.Unsafe
         /* **************************************************************
          *  Literals compression - special cases
          ****************************************************************/
-        private static nuint ZSTD_noCompressLiterals(void* dst, nuint dstCapacity, void* src, nuint srcSize)
+        private static nuint ZSTD_noCompressLiterals(
+            void* dst,
+            nuint dstCapacity,
+            void* src,
+            nuint srcSize
+        )
         {
             byte* ostart = (byte*)dst;
             uint flSize = (uint)(1 + (srcSize > 31 ? 1 : 0) + (srcSize > 4095 ? 1 : 0));
@@ -22,10 +27,16 @@ namespace ZstdSharp.Unsafe
                     ostart[0] = (byte)((uint)SymbolEncodingType_e.set_basic + (srcSize << 3));
                     break;
                 case 2:
-                    MEM_writeLE16(ostart, (ushort)((uint)SymbolEncodingType_e.set_basic + (1 << 2) + (srcSize << 4)));
+                    MEM_writeLE16(
+                        ostart,
+                        (ushort)((uint)SymbolEncodingType_e.set_basic + (1 << 2) + (srcSize << 4))
+                    );
                     break;
                 case 3:
-                    MEM_writeLE32(ostart, (uint)((uint)SymbolEncodingType_e.set_basic + (3 << 2) + (srcSize << 4)));
+                    MEM_writeLE32(
+                        ostart,
+                        (uint)((uint)SymbolEncodingType_e.set_basic + (3 << 2) + (srcSize << 4))
+                    );
                     break;
                 default:
                     assert(0 != 0);
@@ -57,7 +68,12 @@ namespace ZstdSharp.Unsafe
          * Conditions :
          * - All bytes in @src are identical
          * - dstCapacity >= 4 */
-        private static nuint ZSTD_compressRleLiteralsBlock(void* dst, nuint dstCapacity, void* src, nuint srcSize)
+        private static nuint ZSTD_compressRleLiteralsBlock(
+            void* dst,
+            nuint dstCapacity,
+            void* src,
+            nuint srcSize
+        )
         {
             byte* ostart = (byte*)dst;
             uint flSize = (uint)(1 + (srcSize > 31 ? 1 : 0) + (srcSize > 4095 ? 1 : 0));
@@ -69,10 +85,16 @@ namespace ZstdSharp.Unsafe
                     ostart[0] = (byte)((uint)SymbolEncodingType_e.set_rle + (srcSize << 3));
                     break;
                 case 2:
-                    MEM_writeLE16(ostart, (ushort)((uint)SymbolEncodingType_e.set_rle + (1 << 2) + (srcSize << 4)));
+                    MEM_writeLE16(
+                        ostart,
+                        (ushort)((uint)SymbolEncodingType_e.set_rle + (1 << 2) + (srcSize << 4))
+                    );
                     break;
                 case 3:
-                    MEM_writeLE32(ostart, (uint)((uint)SymbolEncodingType_e.set_rle + (3 << 2) + (srcSize << 4)));
+                    MEM_writeLE32(
+                        ostart,
+                        (uint)((uint)SymbolEncodingType_e.set_rle + (3 << 2) + (srcSize << 4))
+                    );
                     break;
                 default:
                     assert(0 != 0);
@@ -88,7 +110,10 @@ namespace ZstdSharp.Unsafe
          * for literal compression to even be attempted.
          * Minimum is made tighter as compression strategy increases.
          */
-        private static nuint ZSTD_minLiteralsToCompress(ZSTD_strategy strategy, HUF_repeat huf_repeat)
+        private static nuint ZSTD_minLiteralsToCompress(
+            ZSTD_strategy strategy,
+            HUF_repeat huf_repeat
+        )
         {
             assert((int)strategy >= 0);
             assert((int)strategy <= 9);
@@ -104,9 +129,24 @@ namespace ZstdSharp.Unsafe
          * @entropyWorkspaceSize : must be >= HUF_WORKSPACE_SIZE
          * @suspectUncompressible: sampling checks, to potentially skip huffman coding
          */
-        private static nuint ZSTD_compressLiterals(void* dst, nuint dstCapacity, void* src, nuint srcSize, void* entropyWorkspace, nuint entropyWorkspaceSize, ZSTD_hufCTables_t* prevHuf, ZSTD_hufCTables_t* nextHuf, ZSTD_strategy strategy, int disableLiteralCompression, int suspectUncompressible, int bmi2)
+        private static nuint ZSTD_compressLiterals(
+            void* dst,
+            nuint dstCapacity,
+            void* src,
+            nuint srcSize,
+            void* entropyWorkspace,
+            nuint entropyWorkspaceSize,
+            ZSTD_hufCTables_t* prevHuf,
+            ZSTD_hufCTables_t* nextHuf,
+            ZSTD_strategy strategy,
+            int disableLiteralCompression,
+            int suspectUncompressible,
+            int bmi2
+        )
         {
-            nuint lhSize = (nuint)(3 + (srcSize >= 1 * (1 << 10) ? 1 : 0) + (srcSize >= 16 * (1 << 10) ? 1 : 0));
+            nuint lhSize = (nuint)(
+                3 + (srcSize >= 1 * (1 << 10) ? 1 : 0) + (srcSize >= 16 * (1 << 10) ? 1 : 0)
+            );
             byte* ostart = (byte*)dst;
             uint singleStream = srcSize < 256 ? 1U : 0U;
             SymbolEncodingType_e hType = SymbolEncodingType_e.set_compressed;
@@ -123,12 +163,82 @@ namespace ZstdSharp.Unsafe
 
             {
                 HUF_repeat repeat = prevHuf->repeatMode;
-                int flags = 0 | (bmi2 != 0 ? (int)HUF_flags_e.HUF_flags_bmi2 : 0) | (strategy < ZSTD_strategy.ZSTD_lazy && srcSize <= 1024 ? (int)HUF_flags_e.HUF_flags_preferRepeat : 0) | (strategy >= ZSTD_strategy.ZSTD_btultra ? (int)HUF_flags_e.HUF_flags_optimalDepth : 0) | (suspectUncompressible != 0 ? (int)HUF_flags_e.HUF_flags_suspectUncompressible : 0);
+                int flags =
+                    0
+                    | (bmi2 != 0 ? (int)HUF_flags_e.HUF_flags_bmi2 : 0)
+                    | (
+                        strategy < ZSTD_strategy.ZSTD_lazy && srcSize <= 1024
+                            ? (int)HUF_flags_e.HUF_flags_preferRepeat
+                            : 0
+                    )
+                    | (
+                        strategy >= ZSTD_strategy.ZSTD_btultra
+                            ? (int)HUF_flags_e.HUF_flags_optimalDepth
+                            : 0
+                    )
+                    | (
+                        suspectUncompressible != 0
+                            ? (int)HUF_flags_e.HUF_flags_suspectUncompressible
+                            : 0
+                    );
                 void* huf_compress;
                 if (repeat == HUF_repeat.HUF_repeat_valid && lhSize == 3)
                     singleStream = 1;
-                huf_compress = singleStream != 0 ? (delegate* managed<void*, nuint, void*, nuint, uint, uint, void*, nuint, nuint*, HUF_repeat*, int, nuint>)(&HUF_compress1X_repeat) : (delegate* managed<void*, nuint, void*, nuint, uint, uint, void*, nuint, nuint*, HUF_repeat*, int, nuint>)(&HUF_compress4X_repeat);
-                cLitSize = ((delegate* managed<void*, nuint, void*, nuint, uint, uint, void*, nuint, nuint*, HUF_repeat*, int, nuint>)huf_compress)(ostart + lhSize, dstCapacity - lhSize, src, srcSize, 255, 11, entropyWorkspace, entropyWorkspaceSize, &nextHuf->CTable.e0, &repeat, flags);
+                huf_compress =
+                    singleStream != 0
+                        ? (delegate* managed<
+                            void*,
+                            nuint,
+                            void*,
+                            nuint,
+                            uint,
+                            uint,
+                            void*,
+                            nuint,
+                            nuint*,
+                            HUF_repeat*,
+                            int,
+                            nuint>)(&HUF_compress1X_repeat)
+                        : (delegate* managed<
+                            void*,
+                            nuint,
+                            void*,
+                            nuint,
+                            uint,
+                            uint,
+                            void*,
+                            nuint,
+                            nuint*,
+                            HUF_repeat*,
+                            int,
+                            nuint>)(&HUF_compress4X_repeat);
+                cLitSize = (
+                    (delegate* managed<
+                        void*,
+                        nuint,
+                        void*,
+                        nuint,
+                        uint,
+                        uint,
+                        void*,
+                        nuint,
+                        nuint*,
+                        HUF_repeat*,
+                        int,
+                        nuint>)huf_compress
+                )(
+                    ostart + lhSize,
+                    dstCapacity - lhSize,
+                    src,
+                    srcSize,
+                    255,
+                    11,
+                    entropyWorkspace,
+                    entropyWorkspaceSize,
+                    &nextHuf->CTable.e0,
+                    &repeat,
+                    flags
+                );
                 if (repeat != HUF_repeat.HUF_repeat_none)
                 {
                     hType = SymbolEncodingType_e.set_repeat;
@@ -164,25 +274,38 @@ namespace ZstdSharp.Unsafe
 #if DEBUG
                     if (singleStream == 0)
                         assert(srcSize >= 6);
+
 #endif
                     {
-                        uint lhc = (uint)hType + ((singleStream == 0 ? 1U : 0U) << 2) + ((uint)srcSize << 4) + ((uint)cLitSize << 14);
+                        uint lhc =
+                            (uint)hType
+                            + ((singleStream == 0 ? 1U : 0U) << 2)
+                            + ((uint)srcSize << 4)
+                            + ((uint)cLitSize << 14);
                         MEM_writeLE24(ostart, lhc);
                         break;
                     }
 
                 case 4:
                     assert(srcSize >= 6);
+
                     {
-                        uint lhc = (uint)(hType + (2 << 2)) + ((uint)srcSize << 4) + ((uint)cLitSize << 18);
+                        uint lhc =
+                            (uint)(hType + (2 << 2))
+                            + ((uint)srcSize << 4)
+                            + ((uint)cLitSize << 18);
                         MEM_writeLE32(ostart, lhc);
                         break;
                     }
 
                 case 5:
                     assert(srcSize >= 6);
+
                     {
-                        uint lhc = (uint)(hType + (3 << 2)) + ((uint)srcSize << 4) + ((uint)cLitSize << 22);
+                        uint lhc =
+                            (uint)(hType + (3 << 2))
+                            + ((uint)srcSize << 4)
+                            + ((uint)cLitSize << 22);
                         MEM_writeLE32(ostart, lhc);
                         ostart[4] = (byte)(cLitSize >> 10);
                         break;

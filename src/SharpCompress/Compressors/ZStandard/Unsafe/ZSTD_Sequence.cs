@@ -7,10 +7,13 @@ namespace ZstdSharp.Unsafe
          * literals in the block of litLength size.
          */
         public uint offset;
+
         /* Literal length of the sequence. */
         public uint litLength;
+
         /* Match length of the sequence. */
         public uint matchLength;
+
         /* Represents which repeat offset is represented by the field 'offset'.
          * Ranges from [0, 3].
          *

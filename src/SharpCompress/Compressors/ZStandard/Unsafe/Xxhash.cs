@@ -1,8 +1,8 @@
-using static ZstdSharp.UnsafeHelper;
 using System;
 using System.Buffers.Binary;
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using static ZstdSharp.UnsafeHelper;
 
 namespace ZstdSharp.Unsafe
 {
@@ -39,13 +39,17 @@ namespace ZstdSharp.Unsafe
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static uint XXH_readLE32(void* ptr)
         {
-            return BitConverter.IsLittleEndian ? MEM_read32(ptr) : BinaryPrimitives.ReverseEndianness(MEM_read32(ptr));
+            return BitConverter.IsLittleEndian
+                ? MEM_read32(ptr)
+                : BinaryPrimitives.ReverseEndianness(MEM_read32(ptr));
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static uint XXH_readBE32(void* ptr)
         {
-            return BitConverter.IsLittleEndian ? BinaryPrimitives.ReverseEndianness(MEM_read32(ptr)) : MEM_read32(ptr);
+            return BitConverter.IsLittleEndian
+                ? BinaryPrimitives.ReverseEndianness(MEM_read32(ptr))
+                : MEM_read32(ptr);
         }
 
         private static uint XXH_readLE32_align(void* ptr, XXH_alignment align)
@@ -56,7 +60,9 @@ namespace ZstdSharp.Unsafe
             }
             else
             {
-                return BitConverter.IsLittleEndian ? *(uint*)ptr : BinaryPrimitives.ReverseEndianness(*(uint*)ptr);
+                return BitConverter.IsLittleEndian
+                    ? *(uint*)ptr
+                    : BinaryPrimitives.ReverseEndianness(*(uint*)ptr);
             }
         }
 
@@ -158,7 +164,12 @@ namespace ZstdSharp.Unsafe
          * @param align Whether @p input is aligned.
          * @return The calculated hash.
          */
-        private static uint XXH32_endian_align(byte* input, nuint len, uint seed, XXH_alignment align)
+        private static uint XXH32_endian_align(
+            byte* input,
+            nuint len,
+            uint seed,
+            XXH_alignment align
+        )
         {
             uint h32;
             if (len >= 16)
@@ -179,9 +190,12 @@ namespace ZstdSharp.Unsafe
                     input += 4;
                     v4 = XXH32_round(v4, XXH_readLE32_align(input, align));
                     input += 4;
-                }
-                while (input < limit);
-                h32 = BitOperations.RotateLeft(v1, 1) + BitOperations.RotateLeft(v2, 7) + BitOperations.RotateLeft(v3, 12) + BitOperations.RotateLeft(v4, 18);
+                } while (input < limit);
+                h32 =
+                    BitOperations.RotateLeft(v1, 1)
+                    + BitOperations.RotateLeft(v2, 7)
+                    + BitOperations.RotateLeft(v3, 12)
+                    + BitOperations.RotateLeft(v4, 18);
             }
             else
             {
@@ -279,8 +293,7 @@ namespace ZstdSharp.Unsafe
                         p += 4;
                         state->v[3] = XXH32_round(state->v[3], XXH_readLE32(p));
                         p += 4;
-                    }
-                    while (p <= limit);
+                    } while (p <= limit);
                 }
 
                 if (p < bEnd)
@@ -299,7 +312,11 @@ namespace ZstdSharp.Unsafe
             uint h32;
             if (state->large_len != 0)
             {
-                h32 = BitOperations.RotateLeft(state->v[0], 1) + BitOperations.RotateLeft(state->v[1], 7) + BitOperations.RotateLeft(state->v[2], 12) + BitOperations.RotateLeft(state->v[3], 18);
+                h32 =
+                    BitOperations.RotateLeft(state->v[0], 1)
+                    + BitOperations.RotateLeft(state->v[1], 7)
+                    + BitOperations.RotateLeft(state->v[2], 12)
+                    + BitOperations.RotateLeft(state->v[3], 18);
             }
             else
             {
@@ -307,7 +324,12 @@ namespace ZstdSharp.Unsafe
             }
 
             h32 += state->total_len_32;
-            return XXH32_finalize(h32, (byte*)state->mem32, state->memsize, XXH_alignment.XXH_aligned);
+            return XXH32_finalize(
+                h32,
+                (byte*)state->mem32,
+                state->memsize,
+                XXH_alignment.XXH_aligned
+            );
         }
 
         /*! @ingroup XXH32_family */
@@ -328,13 +350,17 @@ namespace ZstdSharp.Unsafe
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static ulong XXH_readLE64(void* ptr)
         {
-            return BitConverter.IsLittleEndian ? MEM_read64(ptr) : BinaryPrimitives.ReverseEndianness(MEM_read64(ptr));
+            return BitConverter.IsLittleEndian
+                ? MEM_read64(ptr)
+                : BinaryPrimitives.ReverseEndianness(MEM_read64(ptr));
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static ulong XXH_readBE64(void* ptr)
         {
-            return BitConverter.IsLittleEndian ? BinaryPrimitives.ReverseEndianness(MEM_read64(ptr)) : MEM_read64(ptr);
+            return BitConverter.IsLittleEndian
+                ? BinaryPrimitives.ReverseEndianness(MEM_read64(ptr))
+                : MEM_read64(ptr);
         }
 
         private static ulong XXH_readLE64_align(void* ptr, XXH_alignment align)
@@ -342,7 +368,9 @@ namespace ZstdSharp.Unsafe
             if (align == XXH_alignment.XXH_unaligned)
                 return XXH_readLE64(ptr);
             else
-                return BitConverter.IsLittleEndian ? *(ulong*)ptr : BinaryPrimitives.ReverseEndianness(*(ulong*)ptr);
+                return BitConverter.IsLittleEndian
+                    ? *(ulong*)ptr
+                    : BinaryPrimitives.ReverseEndianness(*(ulong*)ptr);
         }
 
         /*! @copydoc XXH32_round */
@@ -398,7 +426,9 @@ namespace ZstdSharp.Unsafe
                 ulong k1 = XXH64_round(0, XXH_readLE64_align(ptr, align));
                 ptr += 8;
                 hash ^= k1;
-                hash = BitOperations.RotateLeft(hash, 27) * 0x9E3779B185EBCA87UL + 0x85EBCA77C2B2AE63UL;
+                hash =
+                    BitOperations.RotateLeft(hash, 27) * 0x9E3779B185EBCA87UL
+                    + 0x85EBCA77C2B2AE63UL;
                 len -= 8;
             }
 
@@ -406,7 +436,9 @@ namespace ZstdSharp.Unsafe
             {
                 hash ^= XXH_readLE32_align(ptr, align) * 0x9E3779B185EBCA87UL;
                 ptr += 4;
-                hash = BitOperations.RotateLeft(hash, 23) * 0xC2B2AE3D27D4EB4FUL + 0x165667B19E3779F9UL;
+                hash =
+                    BitOperations.RotateLeft(hash, 23) * 0xC2B2AE3D27D4EB4FUL
+                    + 0x165667B19E3779F9UL;
                 len -= 4;
             }
 
@@ -428,7 +460,12 @@ namespace ZstdSharp.Unsafe
          * @param align Whether @p input is aligned.
          * @return The calculated hash.
          */
-        private static ulong XXH64_endian_align(byte* input, nuint len, ulong seed, XXH_alignment align)
+        private static ulong XXH64_endian_align(
+            byte* input,
+            nuint len,
+            ulong seed,
+            XXH_alignment align
+        )
         {
             ulong h64;
             if (len >= 32)
@@ -449,9 +486,12 @@ namespace ZstdSharp.Unsafe
                     input += 8;
                     v4 = XXH64_round(v4, XXH_readLE64_align(input, align));
                     input += 8;
-                }
-                while (input < limit);
-                h64 = BitOperations.RotateLeft(v1, 1) + BitOperations.RotateLeft(v2, 7) + BitOperations.RotateLeft(v3, 12) + BitOperations.RotateLeft(v4, 18);
+                } while (input < limit);
+                h64 =
+                    BitOperations.RotateLeft(v1, 1)
+                    + BitOperations.RotateLeft(v2, 7)
+                    + BitOperations.RotateLeft(v3, 12)
+                    + BitOperations.RotateLeft(v4, 18);
                 h64 = XXH64_mergeRound(h64, v1);
                 h64 = XXH64_mergeRound(h64, v2);
                 h64 = XXH64_mergeRound(h64, v3);
@@ -545,8 +585,7 @@ namespace ZstdSharp.Unsafe
                         p += 8;
                         state->v[3] = XXH64_round(state->v[3], XXH_readLE64(p));
                         p += 8;
-                    }
-                    while (p <= limit);
+                    } while (p <= limit);
                 }
 
                 if (p < bEnd)
@@ -565,7 +604,11 @@ namespace ZstdSharp.Unsafe
             ulong h64;
             if (state->total_len >= 32)
             {
-                h64 = BitOperations.RotateLeft(state->v[0], 1) + BitOperations.RotateLeft(state->v[1], 7) + BitOperations.RotateLeft(state->v[2], 12) + BitOperations.RotateLeft(state->v[3], 18);
+                h64 =
+                    BitOperations.RotateLeft(state->v[0], 1)
+                    + BitOperations.RotateLeft(state->v[1], 7)
+                    + BitOperations.RotateLeft(state->v[2], 12)
+                    + BitOperations.RotateLeft(state->v[3], 18);
                 h64 = XXH64_mergeRound(h64, state->v[0]);
                 h64 = XXH64_mergeRound(h64, state->v[1]);
                 h64 = XXH64_mergeRound(h64, state->v[2]);
@@ -577,7 +620,12 @@ namespace ZstdSharp.Unsafe
             }
 
             h64 += state->total_len;
-            return XXH64_finalize(h64, (byte*)state->mem64, (nuint)state->total_len, XXH_alignment.XXH_aligned);
+            return XXH64_finalize(
+                h64,
+                (byte*)state->mem64,
+                (nuint)state->total_len,
+                XXH_alignment.XXH_aligned
+            );
         }
 
         /*! @ingroup XXH64_family */

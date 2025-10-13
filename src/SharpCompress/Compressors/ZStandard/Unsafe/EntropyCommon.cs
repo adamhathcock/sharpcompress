@@ -37,7 +37,13 @@ namespace ZstdSharp.Unsafe
          *  FSE NCount encoding-decoding
          ****************************************************************/
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static nuint FSE_readNCount_body(short* normalizedCounter, uint* maxSVPtr, uint* tableLogPtr, void* headerBuffer, nuint hbSize)
+        private static nuint FSE_readNCount_body(
+            short* normalizedCounter,
+            uint* maxSVPtr,
+            uint* tableLogPtr,
+            void* headerBuffer,
+            nuint hbSize
+        )
         {
             byte* istart = (byte*)headerBuffer;
             byte* iend = istart + hbSize;
@@ -57,11 +63,19 @@ namespace ZstdSharp.Unsafe
                 memset(buffer, 0, sizeof(sbyte) * 8);
                 memcpy(buffer, headerBuffer, (uint)hbSize);
                 {
-                    nuint countSize = FSE_readNCount(normalizedCounter, maxSVPtr, tableLogPtr, buffer, sizeof(sbyte) * 8);
+                    nuint countSize = FSE_readNCount(
+                        normalizedCounter,
+                        maxSVPtr,
+                        tableLogPtr,
+                        buffer,
+                        sizeof(sbyte) * 8
+                    );
                     if (FSE_isError(countSize))
                         return countSize;
                     if (countSize > hbSize)
-                        return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected));
+                        return unchecked(
+                            (nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected)
+                        );
                     return countSize;
                 }
             }
@@ -198,17 +212,42 @@ namespace ZstdSharp.Unsafe
         }
 
         /* Avoids the FORCE_INLINE of the _body() function. */
-        private static nuint FSE_readNCount_body_default(short* normalizedCounter, uint* maxSVPtr, uint* tableLogPtr, void* headerBuffer, nuint hbSize)
+        private static nuint FSE_readNCount_body_default(
+            short* normalizedCounter,
+            uint* maxSVPtr,
+            uint* tableLogPtr,
+            void* headerBuffer,
+            nuint hbSize
+        )
         {
-            return FSE_readNCount_body(normalizedCounter, maxSVPtr, tableLogPtr, headerBuffer, hbSize);
+            return FSE_readNCount_body(
+                normalizedCounter,
+                maxSVPtr,
+                tableLogPtr,
+                headerBuffer,
+                hbSize
+            );
         }
 
         /*! FSE_readNCount_bmi2():
          * Same as FSE_readNCount() but pass bmi2=1 when your CPU supports BMI2 and 0 otherwise.
          */
-        private static nuint FSE_readNCount_bmi2(short* normalizedCounter, uint* maxSVPtr, uint* tableLogPtr, void* headerBuffer, nuint hbSize, int bmi2)
+        private static nuint FSE_readNCount_bmi2(
+            short* normalizedCounter,
+            uint* maxSVPtr,
+            uint* tableLogPtr,
+            void* headerBuffer,
+            nuint hbSize,
+            int bmi2
+        )
         {
-            return FSE_readNCount_body_default(normalizedCounter, maxSVPtr, tableLogPtr, headerBuffer, hbSize);
+            return FSE_readNCount_body_default(
+                normalizedCounter,
+                maxSVPtr,
+                tableLogPtr,
+                headerBuffer,
+                hbSize
+            );
         }
 
         /*! FSE_readNCount():
@@ -216,9 +255,22 @@ namespace ZstdSharp.Unsafe
         @return : size read from 'rBuffer',
         or an errorCode, which can be tested using FSE_isError().
         maxSymbolValuePtr[0] and tableLogPtr[0] will also be updated with their respective values */
-        private static nuint FSE_readNCount(short* normalizedCounter, uint* maxSVPtr, uint* tableLogPtr, void* headerBuffer, nuint hbSize)
+        private static nuint FSE_readNCount(
+            short* normalizedCounter,
+            uint* maxSVPtr,
+            uint* tableLogPtr,
+            void* headerBuffer,
+            nuint hbSize
+        )
         {
-            return FSE_readNCount_bmi2(normalizedCounter, maxSVPtr, tableLogPtr, headerBuffer, hbSize, 0);
+            return FSE_readNCount_bmi2(
+                normalizedCounter,
+                maxSVPtr,
+                tableLogPtr,
+                headerBuffer,
+                hbSize,
+                0
+            );
         }
 
         /*! HUF_readStats() :
@@ -228,14 +280,44 @@ namespace ZstdSharp.Unsafe
         @return : size read from `src` , or an error Code .
         Note : Needed by HUF_readCTable() and HUF_readDTableX?() .
          */
-        private static nuint HUF_readStats(byte* huffWeight, nuint hwSize, uint* rankStats, uint* nbSymbolsPtr, uint* tableLogPtr, void* src, nuint srcSize)
+        private static nuint HUF_readStats(
+            byte* huffWeight,
+            nuint hwSize,
+            uint* rankStats,
+            uint* nbSymbolsPtr,
+            uint* tableLogPtr,
+            void* src,
+            nuint srcSize
+        )
         {
             uint* wksp = stackalloc uint[219];
-            return HUF_readStats_wksp(huffWeight, hwSize, rankStats, nbSymbolsPtr, tableLogPtr, src, srcSize, wksp, sizeof(uint) * 219, 0);
+            return HUF_readStats_wksp(
+                huffWeight,
+                hwSize,
+                rankStats,
+                nbSymbolsPtr,
+                tableLogPtr,
+                src,
+                srcSize,
+                wksp,
+                sizeof(uint) * 219,
+                0
+            );
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static nuint HUF_readStats_body(byte* huffWeight, nuint hwSize, uint* rankStats, uint* nbSymbolsPtr, uint* tableLogPtr, void* src, nuint srcSize, void* workSpace, nuint wkspSize, int bmi2)
+        private static nuint HUF_readStats_body(
+            byte* huffWeight,
+            nuint hwSize,
+            uint* rankStats,
+            uint* nbSymbolsPtr,
+            uint* tableLogPtr,
+            void* src,
+            nuint srcSize,
+            void* workSpace,
+            nuint wkspSize,
+            int bmi2
+        )
         {
             uint weightTotal;
             byte* ip = (byte*)src;
@@ -266,7 +348,16 @@ namespace ZstdSharp.Unsafe
             {
                 if (iSize + 1 > srcSize)
                     return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_srcSize_wrong));
-                oSize = FSE_decompress_wksp_bmi2(huffWeight, hwSize - 1, ip + 1, iSize, 6, workSpace, wkspSize, bmi2);
+                oSize = FSE_decompress_wksp_bmi2(
+                    huffWeight,
+                    hwSize - 1,
+                    ip + 1,
+                    iSize,
+                    6,
+                    workSpace,
+                    wkspSize,
+                    bmi2
+                );
                 if (FSE_isError(oSize))
                     return oSize;
             }
@@ -278,7 +369,9 @@ namespace ZstdSharp.Unsafe
                 for (n = 0; n < oSize; n++)
                 {
                     if (huffWeight[n] > 12)
-                        return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected));
+                        return unchecked(
+                            (nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected)
+                        );
                     rankStats[huffWeight[n]]++;
                     weightTotal += (uint)(1 << huffWeight[n] >> 1);
                 }
@@ -297,7 +390,9 @@ namespace ZstdSharp.Unsafe
                     uint verif = (uint)(1 << (int)ZSTD_highbit32(rest));
                     uint lastWeight = ZSTD_highbit32(rest) + 1;
                     if (verif != rest)
-                        return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected));
+                        return unchecked(
+                            (nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected)
+                        );
                     huffWeight[oSize] = (byte)lastWeight;
                     rankStats[lastWeight]++;
                 }
@@ -310,14 +405,56 @@ namespace ZstdSharp.Unsafe
         }
 
         /* Avoids the FORCE_INLINE of the _body() function. */
-        private static nuint HUF_readStats_body_default(byte* huffWeight, nuint hwSize, uint* rankStats, uint* nbSymbolsPtr, uint* tableLogPtr, void* src, nuint srcSize, void* workSpace, nuint wkspSize)
+        private static nuint HUF_readStats_body_default(
+            byte* huffWeight,
+            nuint hwSize,
+            uint* rankStats,
+            uint* nbSymbolsPtr,
+            uint* tableLogPtr,
+            void* src,
+            nuint srcSize,
+            void* workSpace,
+            nuint wkspSize
+        )
         {
-            return HUF_readStats_body(huffWeight, hwSize, rankStats, nbSymbolsPtr, tableLogPtr, src, srcSize, workSpace, wkspSize, 0);
+            return HUF_readStats_body(
+                huffWeight,
+                hwSize,
+                rankStats,
+                nbSymbolsPtr,
+                tableLogPtr,
+                src,
+                srcSize,
+                workSpace,
+                wkspSize,
+                0
+            );
         }
 
-        private static nuint HUF_readStats_wksp(byte* huffWeight, nuint hwSize, uint* rankStats, uint* nbSymbolsPtr, uint* tableLogPtr, void* src, nuint srcSize, void* workSpace, nuint wkspSize, int flags)
+        private static nuint HUF_readStats_wksp(
+            byte* huffWeight,
+            nuint hwSize,
+            uint* rankStats,
+            uint* nbSymbolsPtr,
+            uint* tableLogPtr,
+            void* src,
+            nuint srcSize,
+            void* workSpace,
+            nuint wkspSize,
+            int flags
+        )
         {
-            return HUF_readStats_body_default(huffWeight, hwSize, rankStats, nbSymbolsPtr, tableLogPtr, src, srcSize, workSpace, wkspSize);
+            return HUF_readStats_body_default(
+                huffWeight,
+                hwSize,
+                rankStats,
+                nbSymbolsPtr,
+                tableLogPtr,
+                src,
+                srcSize,
+                workSpace,
+                wkspSize
+            );
         }
     }
 }

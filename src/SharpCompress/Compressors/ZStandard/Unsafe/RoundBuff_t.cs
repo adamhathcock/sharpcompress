@@ -8,14 +8,17 @@ namespace ZstdSharp.Unsafe
          * sure it doesn't overlap with any pieces still in use.
          */
         public byte* buffer;
+
         /* The capacity of buffer. */
         public nuint capacity;
+
         /* The position of the current inBuff in the round
          * buffer. Updated past the end if the inBuff once
          * the inBuff is sent to the worker thread.
          * pos <= capacity.
          */
         public nuint pos;
+
         public RoundBuff_t(byte* buffer, nuint capacity, nuint pos)
         {
             this.buffer = buffer;

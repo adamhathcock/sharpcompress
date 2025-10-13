@@ -7,6 +7,6 @@ namespace ZstdSharp.Unsafe
         ZSTDnit_block,
         ZSTDnit_lastBlock,
         ZSTDnit_checksum,
-        ZSTDnit_skippableFrame
+        ZSTDnit_skippableFrame,
     }
 }

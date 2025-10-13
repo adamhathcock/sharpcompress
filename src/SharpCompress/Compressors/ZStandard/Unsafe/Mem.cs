@@ -41,10 +41,12 @@ namespace ZstdSharp.Unsafe
         private static nuint MEM_readST(void* memPtr) => BclUnsafe.ReadUnaligned<nuint>(memPtr);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void MEM_write16(void* memPtr, ushort value) => BclUnsafe.WriteUnaligned(memPtr, value);
+        private static void MEM_write16(void* memPtr, ushort value) =>
+            BclUnsafe.WriteUnaligned(memPtr, value);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void MEM_write64(void* memPtr, ulong value) => BclUnsafe.WriteUnaligned(memPtr, value);
+        private static void MEM_write64(void* memPtr, ulong value) =>
+            BclUnsafe.WriteUnaligned(memPtr, value);
 
         /*=== Little endian r/w ===*/
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -125,8 +127,8 @@ namespace ZstdSharp.Unsafe
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static nuint ReverseEndiannessNative(nuint val) =>
             MEM_32bits
-                ? BinaryPrimitives.ReverseEndianness((uint) val)
-                : (nuint) BinaryPrimitives.ReverseEndianness(val);
+                ? BinaryPrimitives.ReverseEndianness((uint)val)
+                : (nuint)BinaryPrimitives.ReverseEndianness(val);
 #endif
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -7,6 +7,7 @@ namespace ZstdSharp.Unsafe
         public byte* startPtr;
         public byte* ptr;
         public byte* endPtr;
+
         public unsafe struct _bitContainer_e__FixedBuffer
         {
             public nuint e0;

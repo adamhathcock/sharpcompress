@@ -4,6 +4,7 @@ namespace ZstdSharp.Unsafe
     {
         public uint tableTime;
         public uint decode256Time;
+
         public algo_time_t(uint tableTime, uint decode256Time)
         {
             this.tableTime = tableTime;

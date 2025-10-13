@@ -17,9 +17,24 @@ namespace ZstdSharp.Unsafe
             return ERR_getErrorName(errorCode);
         }
 
-        private static void ZDICT_countEStats(EStats_ress_t esr, ZSTD_parameters* @params, uint* countLit, uint* offsetcodeCount, uint* matchlengthCount, uint* litlengthCount, uint* repOffsets, void* src, nuint srcSize, uint notificationLevel)
+        private static void ZDICT_countEStats(
+            EStats_ress_t esr,
+            ZSTD_parameters* @params,
+            uint* countLit,
+            uint* offsetcodeCount,
+            uint* matchlengthCount,
+            uint* litlengthCount,
+            uint* repOffsets,
+            void* src,
+            nuint srcSize,
+            uint notificationLevel
+        )
         {
-            nuint blockSizeMax = (nuint)(1 << 17 < 1 << (int)@params->cParams.windowLog ? 1 << 17 : 1 << (int)@params->cParams.windowLog);
+            nuint blockSizeMax = (nuint)(
+                1 << 17 < 1 << (int)@params->cParams.windowLog
+                    ? 1 << 17
+                    : 1 << (int)@params->cParams.windowLog
+            );
             nuint cSize;
             if (srcSize > blockSizeMax)
                 srcSize = blockSizeMax;
@@ -125,7 +140,17 @@ namespace ZstdSharp.Unsafe
             countLit[254] = 1;
         }
 
-        private static nuint ZDICT_analyzeEntropy(void* dstBuffer, nuint maxDstSize, int compressionLevel, void* srcBuffer, nuint* fileSizes, uint nbFiles, void* dictBuffer, nuint dictBufferSize, uint notificationLevel)
+        private static nuint ZDICT_analyzeEntropy(
+            void* dstBuffer,
+            nuint maxDstSize,
+            int compressionLevel,
+            void* srcBuffer,
+            nuint* fileSizes,
+            uint nbFiles,
+            void* dictBuffer,
+            nuint dictBufferSize,
+            uint notificationLevel
+        )
         {
             uint* countLit = stackalloc uint[256];
             /* no final ; */
@@ -143,11 +168,17 @@ namespace ZstdSharp.Unsafe
             {
                 dict = null,
                 zc = null,
-                workPlace = null
+                workPlace = null,
             };
             ZSTD_parameters @params;
-            uint u, huffLog = 11, Offlog = 8, mlLog = 9, llLog = 9, total;
-            nuint pos = 0, errorCode;
+            uint u,
+                huffLog = 11,
+                Offlog = 8,
+                mlLog = 9,
+                llLog = 9,
+                total;
+            nuint pos = 0,
+                errorCode;
             nuint eSize = 0;
             nuint totalSrcSize = ZDICT_totalSampleSize(fileSizes, nbFiles);
             nuint averageSampleSize = totalSrcSize / (nbFiles + (uint)(nbFiles == 0 ? 1 : 0));
@@ -155,7 +186,9 @@ namespace ZstdSharp.Unsafe
             uint* wksp = stackalloc uint[1216];
             if (offcodeMax > 30)
             {
-                eSize = unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dictionaryCreation_failed));
+                eSize = unchecked(
+                    (nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dictionaryCreation_failed)
+                );
                 goto _cleanup;
             }
 
@@ -173,7 +206,14 @@ namespace ZstdSharp.Unsafe
             if (compressionLevel == 0)
                 compressionLevel = 3;
             @params = ZSTD_getParams(compressionLevel, averageSampleSize, dictBufferSize);
-            esr.dict = ZSTD_createCDict_advanced(dictBuffer, dictBufferSize, ZSTD_dictLoadMethod_e.ZSTD_dlm_byRef, ZSTD_dictContentType_e.ZSTD_dct_rawContent, @params.cParams, ZSTD_defaultCMem);
+            esr.dict = ZSTD_createCDict_advanced(
+                dictBuffer,
+                dictBufferSize,
+                ZSTD_dictLoadMethod_e.ZSTD_dlm_byRef,
+                ZSTD_dictContentType_e.ZSTD_dct_rawContent,
+                @params.cParams,
+                ZSTD_defaultCMem
+            );
             esr.zc = ZSTD_createCCtx();
             esr.workPlace = malloc(1 << 17);
             if (esr.dict == null || esr.zc == null || esr.workPlace == null)
@@ -184,19 +224,35 @@ namespace ZstdSharp.Unsafe
 
             for (u = 0; u < nbFiles; u++)
             {
-                ZDICT_countEStats(esr, &@params, countLit, offcodeCount, matchLengthCount, litLengthCount, repOffset, (sbyte*)srcBuffer + pos, fileSizes[u], notificationLevel);
+                ZDICT_countEStats(
+                    esr,
+                    &@params,
+                    countLit,
+                    offcodeCount,
+                    matchLengthCount,
+                    litLengthCount,
+                    repOffset,
+                    (sbyte*)srcBuffer + pos,
+                    fileSizes[u],
+                    notificationLevel
+                );
                 pos += fileSizes[u];
             }
 
             if (notificationLevel >= 4)
             {
-                for (u = 0; u <= offcodeMax; u++)
-                {
-                }
+                for (u = 0; u <= offcodeMax; u++) { }
             }
 
             {
-                nuint maxNbBits = HUF_buildCTable_wksp(hufTable, countLit, 255, huffLog, wksp, sizeof(uint) * 1216);
+                nuint maxNbBits = HUF_buildCTable_wksp(
+                    hufTable,
+                    countLit,
+                    255,
+                    huffLog,
+                    wksp,
+                    sizeof(uint) * 1216
+                );
                 if (ERR_isError(maxNbBits))
                 {
                     eSize = maxNbBits;
@@ -206,7 +262,14 @@ namespace ZstdSharp.Unsafe
                 if (maxNbBits == 8)
                 {
                     ZDICT_flatLit(countLit);
-                    maxNbBits = HUF_buildCTable_wksp(hufTable, countLit, 255, huffLog, wksp, sizeof(uint) * 1216);
+                    maxNbBits = HUF_buildCTable_wksp(
+                        hufTable,
+                        countLit,
+                        255,
+                        huffLog,
+                        wksp,
+                        sizeof(uint) * 1216
+                    );
                     assert(maxNbBits == 9);
                 }
 
@@ -222,7 +285,14 @@ namespace ZstdSharp.Unsafe
             total = 0;
             for (u = 0; u <= offcodeMax; u++)
                 total += offcodeCount[u];
-            errorCode = FSE_normalizeCount(offcodeNCount, Offlog, offcodeCount, total, offcodeMax, 1);
+            errorCode = FSE_normalizeCount(
+                offcodeNCount,
+                Offlog,
+                offcodeCount,
+                total,
+                offcodeMax,
+                1
+            );
             if (ERR_isError(errorCode))
             {
                 eSize = errorCode;
@@ -233,7 +303,14 @@ namespace ZstdSharp.Unsafe
             total = 0;
             for (u = 0; u <= 52; u++)
                 total += matchLengthCount[u];
-            errorCode = FSE_normalizeCount(matchLengthNCount, mlLog, matchLengthCount, total, 52, 1);
+            errorCode = FSE_normalizeCount(
+                matchLengthNCount,
+                mlLog,
+                matchLengthCount,
+                total,
+                52,
+                1
+            );
             if (ERR_isError(errorCode))
             {
                 eSize = errorCode;
@@ -253,7 +330,15 @@ namespace ZstdSharp.Unsafe
 
             llLog = (uint)errorCode;
             {
-                nuint hhSize = HUF_writeCTable_wksp(dstPtr, maxDstSize, hufTable, 255, huffLog, wksp, sizeof(uint) * 1216);
+                nuint hhSize = HUF_writeCTable_wksp(
+                    dstPtr,
+                    maxDstSize,
+                    hufTable,
+                    255,
+                    huffLog,
+                    wksp,
+                    sizeof(uint) * 1216
+                );
                 if (ERR_isError(hhSize))
                 {
                     eSize = hhSize;
@@ -314,7 +399,7 @@ namespace ZstdSharp.Unsafe
             MEM_writeLE32(dstPtr + 4, repStartValue[1]);
             MEM_writeLE32(dstPtr + 8, repStartValue[2]);
             eSize += 12;
-        _cleanup:
+            _cleanup:
             ZSTD_freeCDict(esr.dict);
             ZSTD_freeCCtx(esr.zc);
             free(esr.workPlace);
@@ -368,7 +453,16 @@ namespace ZstdSharp.Unsafe
          *         * Samples are uncompressible
          *         * Samples are all exactly the same
          */
-        public static nuint ZDICT_finalizeDictionary(void* dictBuffer, nuint dictBufferCapacity, void* customDictContent, nuint dictContentSize, void* samplesBuffer, nuint* samplesSizes, uint nbSamples, ZDICT_params_t @params)
+        public static nuint ZDICT_finalizeDictionary(
+            void* dictBuffer,
+            nuint dictBufferCapacity,
+            void* customDictContent,
+            nuint dictContentSize,
+            void* samplesBuffer,
+            nuint* samplesSizes,
+            uint nbSamples,
+            ZDICT_params_t @params
+        )
         {
             nuint hSize;
             byte* header = stackalloc byte[256];
@@ -391,7 +485,17 @@ namespace ZstdSharp.Unsafe
 
             hSize = 8;
             {
-                nuint eSize = ZDICT_analyzeEntropy(header + hSize, 256 - hSize, compressionLevel, samplesBuffer, samplesSizes, nbSamples, customDictContent, dictContentSize, notificationLevel);
+                nuint eSize = ZDICT_analyzeEntropy(
+                    header + hSize,
+                    256 - hSize,
+                    compressionLevel,
+                    samplesBuffer,
+                    samplesSizes,
+                    nbSamples,
+                    customDictContent,
+                    dictContentSize,
+                    notificationLevel
+                );
                 if (ZDICT_isError(eSize))
                     return eSize;
                 hSize += eSize;
@@ -434,13 +538,31 @@ namespace ZstdSharp.Unsafe
             }
         }
 
-        private static nuint ZDICT_addEntropyTablesFromBuffer_advanced(void* dictBuffer, nuint dictContentSize, nuint dictBufferCapacity, void* samplesBuffer, nuint* samplesSizes, uint nbSamples, ZDICT_params_t @params)
+        private static nuint ZDICT_addEntropyTablesFromBuffer_advanced(
+            void* dictBuffer,
+            nuint dictContentSize,
+            nuint dictBufferCapacity,
+            void* samplesBuffer,
+            nuint* samplesSizes,
+            uint nbSamples,
+            ZDICT_params_t @params
+        )
         {
             int compressionLevel = @params.compressionLevel == 0 ? 3 : @params.compressionLevel;
             uint notificationLevel = @params.notificationLevel;
             nuint hSize = 8;
             {
-                nuint eSize = ZDICT_analyzeEntropy((sbyte*)dictBuffer + hSize, dictBufferCapacity - hSize, compressionLevel, samplesBuffer, samplesSizes, nbSamples, (sbyte*)dictBuffer + dictBufferCapacity - dictContentSize, dictContentSize, notificationLevel);
+                nuint eSize = ZDICT_analyzeEntropy(
+                    (sbyte*)dictBuffer + hSize,
+                    dictBufferCapacity - hSize,
+                    compressionLevel,
+                    samplesBuffer,
+                    samplesSizes,
+                    nbSamples,
+                    (sbyte*)dictBuffer + dictBufferCapacity - dictContentSize,
+                    dictContentSize,
+                    notificationLevel
+                );
                 if (ZDICT_isError(eSize))
                     return eSize;
                 hSize += eSize;
@@ -448,15 +570,25 @@ namespace ZstdSharp.Unsafe
 
             MEM_writeLE32(dictBuffer, 0xEC30A437);
             {
-                ulong randomID = ZSTD_XXH64((sbyte*)dictBuffer + dictBufferCapacity - dictContentSize, dictContentSize, 0);
+                ulong randomID = ZSTD_XXH64(
+                    (sbyte*)dictBuffer + dictBufferCapacity - dictContentSize,
+                    dictContentSize,
+                    0
+                );
                 uint compliantID = (uint)(randomID % ((1U << 31) - 32768) + 32768);
                 uint dictID = @params.dictID != 0 ? @params.dictID : compliantID;
                 MEM_writeLE32((sbyte*)dictBuffer + 4, dictID);
             }
 
             if (hSize + dictContentSize < dictBufferCapacity)
-                memmove((sbyte*)dictBuffer + hSize, (sbyte*)dictBuffer + dictBufferCapacity - dictContentSize, dictContentSize);
-            return dictBufferCapacity < hSize + dictContentSize ? dictBufferCapacity : hSize + dictContentSize;
+                memmove(
+                    (sbyte*)dictBuffer + hSize,
+                    (sbyte*)dictBuffer + dictBufferCapacity - dictContentSize,
+                    dictContentSize
+                );
+            return dictBufferCapacity < hSize + dictContentSize
+                ? dictBufferCapacity
+                : hSize + dictContentSize;
         }
 
         /*! ZDICT_trainFromBuffer():
@@ -479,23 +611,47 @@ namespace ZstdSharp.Unsafe
          *        In general, it's recommended to provide a few thousands samples, though this can vary a lot.
          *        It's recommended that total size of all samples be about ~x100 times the target size of dictionary.
          */
-        public static nuint ZDICT_trainFromBuffer(void* dictBuffer, nuint dictBufferCapacity, void* samplesBuffer, nuint* samplesSizes, uint nbSamples)
+        public static nuint ZDICT_trainFromBuffer(
+            void* dictBuffer,
+            nuint dictBufferCapacity,
+            void* samplesBuffer,
+            nuint* samplesSizes,
+            uint nbSamples
+        )
         {
             ZDICT_fastCover_params_t @params;
-            @params = new ZDICT_fastCover_params_t
-            {
-                d = 8,
-                steps = 4
-            };
+            @params = new ZDICT_fastCover_params_t { d = 8, steps = 4 };
             @params.zParams.compressionLevel = 3;
-            return ZDICT_optimizeTrainFromBuffer_fastCover(dictBuffer, dictBufferCapacity, samplesBuffer, samplesSizes, nbSamples, &@params);
+            return ZDICT_optimizeTrainFromBuffer_fastCover(
+                dictBuffer,
+                dictBufferCapacity,
+                samplesBuffer,
+                samplesSizes,
+                nbSamples,
+                &@params
+            );
         }
 
-        public static nuint ZDICT_addEntropyTablesFromBuffer(void* dictBuffer, nuint dictContentSize, nuint dictBufferCapacity, void* samplesBuffer, nuint* samplesSizes, uint nbSamples)
+        public static nuint ZDICT_addEntropyTablesFromBuffer(
+            void* dictBuffer,
+            nuint dictContentSize,
+            nuint dictBufferCapacity,
+            void* samplesBuffer,
+            nuint* samplesSizes,
+            uint nbSamples
+        )
         {
             ZDICT_params_t @params;
             @params = new ZDICT_params_t();
-            return ZDICT_addEntropyTablesFromBuffer_advanced(dictBuffer, dictContentSize, dictBufferCapacity, samplesBuffer, samplesSizes, nbSamples, @params);
+            return ZDICT_addEntropyTablesFromBuffer_advanced(
+                dictBuffer,
+                dictContentSize,
+                dictBufferCapacity,
+                samplesBuffer,
+                samplesSizes,
+                nbSamples,
+                @params
+            );
         }
     }
 }

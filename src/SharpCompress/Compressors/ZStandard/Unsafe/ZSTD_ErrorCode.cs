@@ -45,6 +45,7 @@ namespace ZstdSharp.Unsafe
         ZSTD_error_dstBuffer_null = 74,
         ZSTD_error_noForwardProgress_destFull = 80,
         ZSTD_error_noForwardProgress_inputEmpty = 82,
+
         /* following error codes are __NOT STABLE__, they can be removed or changed in future versions */
         ZSTD_error_frameIndex_tooLarge = 100,
         ZSTD_error_seekableIO = 102,
@@ -52,7 +53,8 @@ namespace ZstdSharp.Unsafe
         ZSTD_error_srcBuffer_wrong = 105,
         ZSTD_error_sequenceProducer_failed = 106,
         ZSTD_error_externalSequences_invalid = 107,
+
         /* never EVER use this value directly, it can change in future versions! Use ZSTD_isError() instead */
-        ZSTD_error_maxCode = 120
+        ZSTD_error_maxCode = 120,
     }
 }
