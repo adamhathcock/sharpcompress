@@ -140,7 +140,10 @@ public class ReduceStream : Stream, IStreamStack
     private int NEXTBYTE()
     {
         if (inByteCount == compressedSize)
+        {
             return EOF;
+        }
+
         inByteCount++;
         return inStream.ReadByte();
     }
@@ -229,7 +232,9 @@ public class ReduceStream : Stream, IStreamStack
                     windowsBuffer[windowIndex++] = nextByte;
                     outBytesCount++;
                     if (windowIndex == WSIZE)
+                    {
                         windowIndex = 0;
+                    }
 
                     continue;
                 }
@@ -241,7 +246,9 @@ public class ReduceStream : Stream, IStreamStack
                     windowsBuffer[windowIndex++] = RunLengthCode;
                     outBytesCount++;
                     if (windowIndex == WSIZE)
+                    {
                         windowIndex = 0;
+                    }
 
                     continue;
                 }
@@ -268,10 +275,14 @@ public class ReduceStream : Stream, IStreamStack
                 outBytesCount++;
 
                 if (distance == WSIZE)
+                {
                     distance = 0;
+                }
 
                 if (windowIndex == WSIZE)
+                {
                     windowIndex = 0;
+                }
 
                 length--;
             }

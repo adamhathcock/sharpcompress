@@ -75,7 +75,9 @@ public class LzwStream : Stream, IStreamStack
 
             // Check the magic marker
             if (result < 0)
+            {
                 throw new IncompleteArchiveException("Failed to read LZW header");
+            }
 
             if (hdr[0] != (LzwConstants.MAGIC >> 8) || hdr[1] != (LzwConstants.MAGIC & 0xff))
             {
@@ -124,7 +126,10 @@ public class LzwStream : Stream, IStreamStack
     {
         int b = Read(one, 0, 1);
         if (b == 1)
+        {
             return (one[0] & 0xff);
+        }
+
         return -1;
     }
 
@@ -144,10 +149,14 @@ public class LzwStream : Stream, IStreamStack
     public override int Read(byte[] buffer, int offset, int count)
     {
         if (!headerParsed)
+        {
             ParseHeader();
+        }
 
         if (eof)
+        {
             return 0;
+        }
 
         int start = offset;
 
@@ -251,7 +260,9 @@ public class LzwStream : Stream, IStreamStack
                 if (lOldCode == -1)
                 {
                     if (code >= 256)
+                    {
                         throw new IncompleteArchiveException("corrupt input: " + code + " > 255");
+                    }
 
                     lFinChar = (byte)(lOldCode = code);
                     buffer[offset++] = lFinChar;
@@ -400,7 +411,9 @@ public class LzwStream : Stream, IStreamStack
 
         // Check the magic marker
         if (result < 0)
+        {
             throw new IncompleteArchiveException("Failed to read LZW header");
+        }
 
         if (hdr[0] != (LzwConstants.MAGIC >> 8) || hdr[1] != (LzwConstants.MAGIC & 0xff))
         {
@@ -448,7 +461,9 @@ public class LzwStream : Stream, IStreamStack
         stackP = stack.Length;
 
         for (int idx = 255; idx >= 0; idx--)
+        {
             tabSuffix[idx] = (byte)idx;
+        }
     }
 
     #region Stream Overrides

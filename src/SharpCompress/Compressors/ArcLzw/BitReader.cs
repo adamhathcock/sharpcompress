@@ -18,13 +18,17 @@ public partial class ArcLzwStream
         public int? ReadBits(int bitCount)
         {
             if (bitCount <= 0 || bitCount > 16)
+            {
                 throw new ArgumentOutOfRangeException(
                     nameof(bitCount),
                     "Bit count must be between 1 and 16"
                 );
+            }
 
             if (bytePosition >= data.Length)
+            {
                 return null;
+            }
 
             int result = 0;
             int bitsRead = 0;
@@ -32,7 +36,9 @@ public partial class ArcLzwStream
             while (bitsRead < bitCount)
             {
                 if (bytePosition >= data.Length)
+                {
                     return null;
+                }
 
                 int bitsAvailable = 8 - bitPosition;
                 int bitsToRead = Math.Min(bitCount - bitsRead, bitsAvailable);

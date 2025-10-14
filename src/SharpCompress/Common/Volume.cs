@@ -21,7 +21,9 @@ public abstract class Volume : IVolume
         }
 
         if (stream is IStreamStack ss)
+        {
             ss.SetBuffer(ReaderOptions.BufferSize, true);
+        }
 
         _actualStream = stream;
     }

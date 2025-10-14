@@ -72,7 +72,10 @@ public class SharpCompressStream : Stream, IStreamStack
             if (_bufferingEnabled)
             {
                 if (value < 0 || value > _bufferedLength)
+                {
                     throw new ArgumentOutOfRangeException(nameof(value));
+                }
+
                 _internalPosition = value;
                 _bufferPosition = value;
                 ValidateBufferState(); // Add here
@@ -112,7 +115,10 @@ public class SharpCompressStream : Stream, IStreamStack
         )
         {
             if (bufferSize != 0)
+            {
                 ((IStreamStack)stream).SetBuffer(bufferSize, forceBuffer);
+            }
+
             return sc;
         }
         return new SharpCompressStream(stream, leaveOpen, throwOnDispose, bufferSize, forceBuffer);
@@ -205,7 +211,9 @@ public class SharpCompressStream : Stream, IStreamStack
     public override int Read(byte[] buffer, int offset, int count)
     {
         if (count == 0)
+        {
             return 0;
+        }
 
         if (_bufferingEnabled)
         {
@@ -229,7 +237,10 @@ public class SharpCompressStream : Stream, IStreamStack
             // If buffer exhausted, refill
             int r = Stream.Read(_buffer!, 0, _bufferSize);
             if (r == 0)
+            {
                 return 0;
+            }
+
             _bufferedLength = r;
             _bufferPosition = 0;
             if (_bufferedLength == 0)

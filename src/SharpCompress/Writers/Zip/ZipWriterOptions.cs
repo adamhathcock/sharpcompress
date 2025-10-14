@@ -46,10 +46,12 @@ public class ZipWriterOptions : WriterOptions
     public void SetZStandardCompressionLevel(int level)
     {
         if (level < 1 || level > 22)
+        {
             throw new ArgumentOutOfRangeException(
                 nameof(level),
                 "ZStandard compression level must be between 1 and 22"
             );
+        }
 
         CompressionLevel = level;
     }

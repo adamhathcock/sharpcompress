@@ -15,7 +15,7 @@ internal static class StackStreamExtensions
     /// <returns>The position of the first buffering stream, or 0 if not found.</returns>
     internal static long GetPosition(this IStreamStack stream)
     {
-        IStreamStack? current = stream;
+        var current = stream;
 
         while (current != null)
         {
@@ -23,7 +23,7 @@ internal static class StackStreamExtensions
             {
                 return st.Position;
             }
-            current = current?.BaseStream() as IStreamStack;
+            current = current.BaseStream() as IStreamStack;
         }
         return 0;
     }
@@ -36,10 +36,8 @@ internal static class StackStreamExtensions
     /// <param name="count">The number of bytes to rewind within the buffer.</param>
     internal static void Rewind(this IStreamStack stream, int count)
     {
-        Stream baseStream = stream.BaseStream();
-        Stream thisStream = (Stream)stream;
         IStreamStack? buffStream = null;
-        IStreamStack? current = stream;
+        var current = stream;
 
         while (buffStream == null && current != null)
         {
@@ -62,10 +60,12 @@ internal static class StackStreamExtensions
     internal static void SetBuffer(this IStreamStack stream, int bufferSize, bool force)
     {
         if (bufferSize == 0 || stream == null)
+        {
             return;
+        }
 
-        IStreamStack? current = stream;
-        IStreamStack defaultBuffer = stream;
+        var current = stream;
+        var defaultBuffer = stream;
         IStreamStack? buffer = null;
 
         // First pass: find the deepest IStreamStack
@@ -73,13 +73,22 @@ internal static class StackStreamExtensions
         {
             defaultBuffer = current;
             if (buffer == null && ((current.BufferSize != 0 && bufferSize != 0) || force))
+            {
                 buffer = current;
+            }
+
             if (defaultBuffer.DefaultBufferSize != 0)
+            {
                 break;
+            }
+
             current = current.BaseStream() as IStreamStack;
         }
         if (defaultBuffer.DefaultBufferSize == 0)
+        {
             defaultBuffer.DefaultBufferSize = bufferSize;
+        }
+
         (buffer ?? stream).BufferSize = bufferSize;
     }
 
@@ -98,9 +107,8 @@ internal static class StackStreamExtensions
     internal static long StackSeek(this IStreamStack stream, long position)
     {
         var stack = new List<IStreamStack>();
-        Stream? current = stream as Stream;
-        int lastBufferingIndex = -1;
-        int firstSeekableIndex = -1;
+        var current = stream as Stream;
+        var lastBufferingIndex = -1;
         Stream? firstSeekableStream = null;
 
         // Traverse the stack, collecting info
@@ -118,7 +126,6 @@ internal static class StackStreamExtensions
         // Find the first seekable stream (closest to the root)
         if (current != null && current.CanSeek)
         {
-            firstSeekableIndex = stack.Count;
             firstSeekableStream = current;
         }
 
@@ -171,9 +178,9 @@ internal static class StackStreamExtensions
         out int baseReadCount
     )
     {
-        Stream baseStream = stream.BaseStream();
-        Stream thisStream = (Stream)stream;
-        IStreamStack? current = stream;
+        var baseStream = stream.BaseStream();
+        var thisStream = (Stream)stream;
+        var current = stream;
         buffStream = null;
         baseReadCount = -1;
 
@@ -185,9 +192,9 @@ internal static class StackStreamExtensions
             }
         }
 
-        long buffPos = buffStream == null ? -1 : ((Stream)buffStream).Position;
+        var buffPos = buffStream == null ? -1 : ((Stream)buffStream).Position;
 
-        int read = baseStream.Read(buffer, offset, count); //amount read in to buffer
+        var read = baseStream.Read(buffer, offset, count); //amount read in to buffer
 
         if (buffPos != -1)
         {
@@ -202,7 +209,10 @@ internal static class StackStreamExtensions
     private static string cleansePos(long pos)
     {
         if (pos < 0)
+        {
             return "";
+        }
+
         return "Px" + pos.ToString("x");
     }
 
@@ -216,7 +226,10 @@ internal static class StackStreamExtensions
     public static long GetInstanceId(this IStreamStack stream, ref long instanceId, bool construct)
     {
         if (instanceId == 0) //will not be equal to 0 when inherited IStackStream types are being used
+        {
             instanceId = System.Threading.Interlocked.Increment(ref _instanceCounter);
+        }
+
         return instanceId;
     }
 
@@ -227,15 +240,17 @@ internal static class StackStreamExtensions
     /// <param name="constructing">The type being constructed.</param>
     public static void DebugConstruct(this IStreamStack stream, Type constructing)
     {
-        long id = stream.InstanceId;
+        var id = stream.InstanceId;
         stream.InstanceId = GetInstanceId(stream, ref id, true);
         var frame = (new StackTrace()).GetFrame(3);
-        string parentInfo =
+        var parentInfo =
             frame != null
                 ? $"{frame.GetMethod()?.DeclaringType?.Name}.{frame.GetMethod()?.Name}()"
                 : "Unknown";
         if (constructing.FullName == stream.GetType().FullName) //don't debug base IStackStream types
+        {
             Debug.WriteLine($"{GetStreamStackString(stream, true)} : Constructed by [{parentInfo}]");
+        }
     }
 
     /// <summary>
@@ -246,12 +261,14 @@ internal static class StackStreamExtensions
     public static void DebugDispose(this IStreamStack stream, Type constructing)
     {
         var frame = (new StackTrace()).GetFrame(3);
-        string parentInfo =
+        var parentInfo =
             frame != null
                 ? $"{frame.GetMethod()?.DeclaringType?.Name}.{frame.GetMethod()?.Name}()"
                 : "Unknown";
         if (constructing.FullName == stream.GetType().FullName) //don't debug base IStackStream types
+        {
             Debug.WriteLine($"{GetStreamStackString(stream, false)} : Disposed by [{parentInfo}]");
+        }
     }
 
     /// <summary>
@@ -275,17 +292,20 @@ internal static class StackStreamExtensions
     public static string GetStreamStackString(this IStreamStack stream, bool construct)
     {
         var sb = new StringBuilder();
-        Stream? current = stream as Stream;
+        var current = stream as Stream;
         while (current != null)
         {
-            IStreamStack? sStack = current as IStreamStack;
-            string id = sStack != null ? "#" + sStack.InstanceId.ToString() : "";
-            string buffSize = sStack != null ? "Bx" + sStack.BufferSize.ToString("x") : "";
-            string defBuffSize =
+            var sStack = current as IStreamStack;
+            var id = sStack != null ? "#" + sStack.InstanceId.ToString() : "";
+            var buffSize = sStack != null ? "Bx" + sStack.BufferSize.ToString("x") : "";
+            var defBuffSize =
                 sStack != null ? "Dx" + sStack.DefaultBufferSize.ToString("x") : "";
 
             if (sb.Length > 0)
+            {
                 sb.Insert(0, "/");
+            }
+
             try
             {
                 sb.Insert(
@@ -296,17 +316,25 @@ internal static class StackStreamExtensions
             catch
             {
                 if (current is SharpCompressStream scs)
+                {
                     sb.Insert(
                         0,
                         $"{current.GetType().Name}{id}[{cleansePos(scs.InternalPosition)}:{buffSize}:{defBuffSize}]"
                     );
+                }
                 else
+                {
                     sb.Insert(0, $"{current.GetType().Name}{id}[:{buffSize}]");
+                }
             }
             if (sStack != null)
+            {
                 current = sStack.BaseStream(); //current may not be a IStreamStack, allow one more loop
+            }
             else
+            {
                 break;
+            }
         }
         return sb.ToString();
     }
