@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Text;
 using SharpCompress.IO;
 
 namespace SharpCompress.Compressors.ZStandard;
@@ -30,7 +31,7 @@ internal class ZStandardStream : ZstdSharp.DecompressionStream, IStreamStack
 
     internal static bool IsZStandard(Stream stream)
     {
-        var br = new BinaryReader(stream);
+        using var br = new BinaryReader(stream,  Encoding.UTF8, true);
         var magic = br.ReadUInt32();
         if (ZstandardConstants.MAGIC != magic)
         {

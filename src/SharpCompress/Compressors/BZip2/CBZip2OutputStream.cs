@@ -1306,8 +1306,7 @@ internal sealed class CBZip2OutputStream : Stream, IStreamStack
                     n = block[zptr[unLo] + d + 1] - med;
                     if (n == 0)
                     {
-                        var temp = 0;
-                        temp = zptr[unLo];
+                        var temp = zptr[unLo];
                         zptr[unLo] = zptr[ltLo];
                         zptr[ltLo] = temp;
                         ltLo++;
@@ -1330,8 +1329,7 @@ internal sealed class CBZip2OutputStream : Stream, IStreamStack
                     n = block[zptr[unHi] + d + 1] - med;
                     if (n == 0)
                     {
-                        var temp = 0;
-                        temp = zptr[unHi];
+                        var temp = zptr[unHi];
                         zptr[unHi] = zptr[gtHi];
                         zptr[gtHi] = temp;
                         gtHi--;

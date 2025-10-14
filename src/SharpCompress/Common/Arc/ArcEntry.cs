@@ -33,7 +33,9 @@ public class ArcEntry : Entry
     public override CompressionType CompressionType =>
         _filePart?.Header.CompressionMethod ?? CompressionType.Unknown;
 
+#pragma warning disable CA1065
     public override long Size => throw new NotImplementedException();
+#pragma warning restore CA1065
 
     public override DateTime? LastModifiedTime => null;
 

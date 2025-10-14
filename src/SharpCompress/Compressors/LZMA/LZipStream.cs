@@ -99,7 +99,7 @@ public sealed class LZipStream : Stream, IStreamStack
                 //total with headers
                 BinaryPrimitives.WriteUInt64LittleEndian(
                     intBuf,
-                    (ulong)compressedCount + (ulong)(6 + 20)
+                    (ulong)compressedCount + (6 + 20)
                 );
                 _countingWritableSubStream?.Write(intBuf);
             }

@@ -79,7 +79,7 @@ public class XZIndex
 
     private void VerifyCrc32()
     {
-        var crc = _reader.ReadLittleEndianUInt32();
+        //var crc = _reader.ReadLittleEndianUInt32();
         // TODO verify this matches
     }
 }

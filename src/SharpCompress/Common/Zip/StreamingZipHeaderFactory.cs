@@ -175,7 +175,7 @@ internal class StreamingZipHeaderFactory : ZipHeaderFactory
                     && local_header.CompressedSize == 0
                     && local_header.UncompressedSize == 0
                     && local_header.Crc == 0
-                    && local_header.IsDirectory == false
+                    && !local_header.IsDirectory
                 );
 
                 if (dir_header != null)
@@ -193,7 +193,7 @@ internal class StreamingZipHeaderFactory : ZipHeaderFactory
                 else if (local_header.Flags.HasFlag(HeaderFlags.UsePostDataDescriptor))
                 {
                     var nextHeaderBytes = reader.ReadUInt32();
-                    ((IStreamStack)rewindableStream).Rewind(sizeof(uint));
+                    rewindableStream.Rewind(sizeof(uint));
 
                     // Check if next data is PostDataDescriptor, streamed file with 0 length
                     header.HasData = !IsHeader(nextHeaderBytes);

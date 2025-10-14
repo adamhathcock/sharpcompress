@@ -78,11 +78,11 @@ public abstract class Factory : IFactory
 
         if (this is IReaderFactory readerFactory)
         {
-            long pos = ((IStreamStack)stream).GetPosition();
+            long pos = stream.GetPosition();
 
             if (IsArchive(stream, options.Password, options.BufferSize))
             {
-                ((IStreamStack)stream).StackSeek(pos);
+                stream.StackSeek(pos);
                 reader = readerFactory.OpenReader(stream, options);
                 return true;
             }

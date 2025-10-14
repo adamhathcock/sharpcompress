@@ -22,17 +22,15 @@ public static class ReaderFactory
 
         var bStream = new SharpCompressStream(stream, bufferSize: options.BufferSize);
 
-        long pos = ((IStreamStack)bStream).GetPosition();
-
-        var factories = Factories.Factory.Factories.OfType<Factories.Factory>();
+        long pos = bStream.GetPosition();
 
         Factory? testedFactory = null;
 
         if (!string.IsNullOrWhiteSpace(options.ExtensionHint))
         {
-            testedFactory = factories.FirstOrDefault(a =>
-                a.GetSupportedExtensions()
-                    .Contains(options.ExtensionHint, StringComparer.CurrentCultureIgnoreCase)
+            testedFactory = Factory.Factories.OfType<Factories.Factory>().FirstOrDefault(a =>
+                                                                                           a.GetSupportedExtensions()
+                                                                                            .Contains(options.ExtensionHint, StringComparer.CurrentCultureIgnoreCase)
             );
             if (
                 testedFactory?.TryOpenReader(bStream, options, out var reader) == true
@@ -41,16 +39,16 @@ public static class ReaderFactory
             {
                 return reader;
             }
-            ((IStreamStack)bStream).StackSeek(pos);
+            bStream.StackSeek(pos);
         }
 
-        foreach (var factory in factories)
+        foreach (var factory in Factory.Factories.OfType<Factories.Factory>())
         {
             if (testedFactory == factory)
             {
                 continue; // Already tested above
             }
-            ((IStreamStack)bStream).StackSeek(pos);
+            bStream.StackSeek(pos);
             if (factory.TryOpenReader(bStream, options, out var reader) && reader != null)
             {
                 return reader;

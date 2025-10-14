@@ -129,7 +129,7 @@ public class SqueezeStream : Stream, IStreamStack
         // Unpack the decoded buffer using the RLE class
         var unpacked = RLE.UnpackRLE(decoded.ToArray());
         unpacked.CopyTo(buffer, 0);
-        return unpacked.Count();
+        return unpacked.Count;
     }
 
     public override long Seek(long offset, SeekOrigin origin) =>

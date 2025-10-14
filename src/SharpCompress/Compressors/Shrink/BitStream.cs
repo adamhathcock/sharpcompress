@@ -61,7 +61,7 @@ internal class BitStream
                 _bitsLeft += 8;
             }
         }
-        result = (int)((long)_bitBuffer & (long)_maskBits[nbits]);
+        result = (int)((long)_bitBuffer & _maskBits[nbits]);
         _bitBuffer >>= nbits;
         _bitsLeft -= nbits;
         return result;

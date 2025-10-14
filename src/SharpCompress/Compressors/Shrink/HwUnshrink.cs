@@ -80,7 +80,7 @@ public static class HwUnshrink
         int code,
             controlCode;
 
-        code = (int)stream.NextBits(codeSize);
+        code = stream.NextBits(codeSize);
         if (!stream.Advance(codeSize))
         {
             nextCode = INVALID_CODE;

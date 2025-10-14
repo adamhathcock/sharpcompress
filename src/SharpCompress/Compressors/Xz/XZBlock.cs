@@ -99,7 +99,7 @@ public sealed class XZBlock : XZReadOnlyStream
     private void ConnectStream()
     {
         _decomStream = BaseStream;
-        while (Filters.Any())
+        while (Filters.Count > 0)
         {
             var filter = Filters.Pop();
             filter.SetBaseStream(_decomStream);

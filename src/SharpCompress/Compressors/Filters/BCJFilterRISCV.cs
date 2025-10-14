@@ -78,7 +78,7 @@ internal class BCJFilterRISCV : Filter
                 else
                 {
                     uint inst2_rs1 = inst >> 27;
-                    if ((uint)(((inst) - 0x3117) << 18) >= ((inst2_rs1) & 0x1D))
+                    if (((inst) - 0x3117) << 18 >= ((inst2_rs1) & 0x1D))
                     {
                         i += 4 - 2;
                         continue;
@@ -175,7 +175,7 @@ internal class BCJFilterRISCV : Filter
                 else
                 {
                     uint fake_rs1 = inst >> 27;
-                    if ((uint)(((inst) - 0x3117) << 18) >= ((fake_rs1) & 0x1D))
+                    if (((inst) - 0x3117) << 18 >= ((fake_rs1) & 0x1D))
                     {
                         i += 4 - 2;
                         continue;

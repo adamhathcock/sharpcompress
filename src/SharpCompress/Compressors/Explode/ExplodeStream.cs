@@ -70,7 +70,7 @@ public class ExplodeStream : Stream, IStreamStack
         this.DebugConstruct(typeof(ExplodeStream));
 #endif
         this.compressedSize = (int)compressedSize;
-        unCompressedSize = (long)uncompressedSize;
+        unCompressedSize = uncompressedSize;
         this.generalPurposeBitFlag = generalPurposeBitFlag;
         explode_SetTables();
 
@@ -580,7 +580,7 @@ public class ExplodeStream : Stream, IStreamStack
 
         if ((returnCode = get_tree(arrBitLengthsForCodes, 64)) != 0)
         {
-            return (int)returnCode;
+            return returnCode;
         }
 
         if ((generalPurposeBitFlag & HeaderFlags.Bit1) != 0) /* true if 8K */

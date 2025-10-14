@@ -225,7 +225,7 @@ public class ZipArchive : AbstractWritableArchive<ZipArchiveEntry, ZipVolume>
 
         var streams = stream.Streams.ToList();
         var idx = 0;
-        if (streams.Count() > 1) //test part 2 - true = multipart not split
+        if (streams.Count > 1) //test part 2 - true = multipart not split
         {
             streams[1].Position += 4; //skip the POST_DATA_DESCRIPTOR to prevent an exception
             var isZip = IsZipFile(streams[1], ReaderOptions.Password, ReaderOptions.BufferSize);

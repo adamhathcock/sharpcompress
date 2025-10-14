@@ -47,9 +47,9 @@ internal sealed class StreamingZipFilePart : ZipFilePart
             // If we had TotalIn / TotalOut we could have used them
             Header.CompressedSize = _decompressionStream.Position;
 
-            if (_decompressionStream is DeflateStream deflateStream)
+            if (_decompressionStream is DeflateStream)
             {
-                ((IStreamStack)rewindableStream).StackSeek(0);
+                rewindableStream.StackSeek(0);
             }
 
             Skipped = true;

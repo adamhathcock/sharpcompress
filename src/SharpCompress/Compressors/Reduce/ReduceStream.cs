@@ -141,13 +141,13 @@ public class ReduceStream : Stream, IStreamStack
         if (nbits > bitBufferCount)
         {
             int temp;
-            while (bitBufferCount <= 8 * (int)(4 - 1) && (temp = NEXTBYTE()) != EOF)
+            while (bitBufferCount <= 8 * (4 - 1) && (temp = NEXTBYTE()) != EOF)
             {
                 bitBuffer |= (ulong)temp << bitBufferCount;
                 bitBufferCount += 8;
             }
         }
-        zdest = (byte)(bitBuffer & (ulong)mask_bits[nbits]);
+        zdest = (byte)(bitBuffer & mask_bits[nbits]);
         bitBuffer >>= nbits;
         bitBufferCount -= nbits;
     }

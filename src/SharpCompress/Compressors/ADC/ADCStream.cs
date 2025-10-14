@@ -152,11 +152,9 @@ public sealed class ADCStream : Stream, IStreamStack
             throw new ArgumentOutOfRangeException(nameof(count));
         }
 
-        var size = -1;
-
         if (_outBuffer is null)
         {
-            size = ADCBase.Decompress(_stream, out _outBuffer);
+            var _ = ADCBase.Decompress(_stream, out _outBuffer);
             _outPosition = 0;
         }
 
@@ -172,7 +170,7 @@ public sealed class ADCStream : Stream, IStreamStack
             copied += piece;
             _position += piece;
             toCopy -= piece;
-            size = ADCBase.Decompress(_stream, out _outBuffer);
+            int size = ADCBase.Decompress(_stream, out _outBuffer);
             _outPosition = 0;
             if (size == 0 || _outBuffer is null || _outBuffer.Length == 0)
             {

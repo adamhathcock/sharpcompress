@@ -166,7 +166,7 @@ public class TarFactory
     )
     {
         reader = null;
-        long pos = ((IStreamStack)rewindableStream).GetPosition();
+        long pos = rewindableStream.GetPosition();
         TestOption? testedOption = null;
         if (!string.IsNullOrWhiteSpace(options.ExtensionHint))
         {
@@ -192,7 +192,7 @@ public class TarFactory
             {
                 continue; // Already tested above
             }
-            ((IStreamStack)rewindableStream).StackSeek(pos);
+            rewindableStream.StackSeek(pos);
             reader = TryOption(rewindableStream, options, pos, testOption);
             if (reader != null)
             {
@@ -212,17 +212,16 @@ public class TarFactory
     {
         if (testOption.CanHandle(rewindableStream))
         {
-            ((IStreamStack)rewindableStream).StackSeek(pos);
-            var inStream = rewindableStream;
+            rewindableStream.StackSeek(pos);
             if (testOption.WrapInSharpCompressStream)
             {
-                inStream = SharpCompressStream.Create(rewindableStream, leaveOpen: true);
+              rewindableStream = SharpCompressStream.Create(rewindableStream, leaveOpen: true);
             }
             var testStream = testOption.CreateStream(rewindableStream);
 
             if (TarArchive.IsTarFile(testStream))
             {
-                ((IStreamStack)rewindableStream).StackSeek(pos);
+                rewindableStream.StackSeek(pos);
                 return new TarReader(rewindableStream, options, testOption.Type);
             }
         }
