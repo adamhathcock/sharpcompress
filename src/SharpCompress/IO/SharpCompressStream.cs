@@ -88,8 +88,6 @@ public class SharpCompressStream : Stream, IStreamStack
 
     private bool _readOnly; //some archive detection requires seek to be disabled to cause it to exception to try the next arc type
 
-    //private bool _isRewound;
-    private bool _isDisposed;
     private long _internalPosition = 0;
 
     public bool ThrowOnDispose { get; set; }
@@ -149,18 +147,18 @@ public class SharpCompressStream : Stream, IStreamStack
 #endif
     }
 
-    internal bool IsRecording { get; private set; }
+    public bool IsDisposed { get; private set; }
 
     protected override void Dispose(bool disposing)
     {
 #if DEBUG_STREAMS
         this.DebugDispose(typeof(SharpCompressStream));
 #endif
-        if (_isDisposed)
+        if (IsDisposed)
         {
             return;
         }
-        _isDisposed = true;
+        IsDisposed = true;
         base.Dispose(disposing);
 
         if (this.LeaveOpen)

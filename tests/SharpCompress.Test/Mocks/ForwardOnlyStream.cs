@@ -27,8 +27,6 @@ public class ForwardOnlyStream : SharpCompressStream, IStreamStack
 
     void IStreamStack.SetPosition(long position) { }
 
-    public bool IsDisposed { get; private set; }
-
     public ForwardOnlyStream(Stream stream, int bufferSize = ReaderOptions.DefaultBufferSize)
         : base(stream, bufferSize: bufferSize)
     {
@@ -48,7 +46,6 @@ public class ForwardOnlyStream : SharpCompressStream, IStreamStack
                 this.DebugDispose(typeof(ForwardOnlyStream));
 #endif
                 stream.Dispose();
-                IsDisposed = true;
                 base.Dispose(disposing);
             }
         }
