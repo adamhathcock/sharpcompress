@@ -12,7 +12,7 @@ namespace SharpCompress.Compressors.Squeezed;
 public class SqueezeStream : Stream, IStreamStack
 {
 #if DEBUG_STREAMS
-        long IStreamStack.InstanceId { get; set; }
+    long IStreamStack.InstanceId { get; set; }
 #endif
     int IStreamStack.DefaultBufferSize { get; set; }
 
@@ -42,14 +42,14 @@ public class SqueezeStream : Stream, IStreamStack
         _stream = stream;
         _compressedSize = compressedSize;
 #if DEBUG_STREAMS
-            this.DebugConstruct(typeof(SqueezeStream));
+        this.DebugConstruct(typeof(SqueezeStream));
 #endif
     }
 
     protected override void Dispose(bool disposing)
     {
 #if DEBUG_STREAMS
-            this.DebugDispose(typeof(SqueezeStream));
+        this.DebugDispose(typeof(SqueezeStream));
 #endif
         base.Dispose(disposing);
     }

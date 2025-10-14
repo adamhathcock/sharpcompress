@@ -36,9 +36,9 @@ public interface IStreamStack
     void SetPosition(long position);
 
 #if DEBUG_STREAMS
-        /// <summary>
-        /// Gets or sets the unique instance identifier for debugging purposes.
-        /// </summary>
-        long InstanceId { get; set; }
+    /// <summary>
+    /// Gets or sets the unique instance identifier for debugging purposes.
+    /// </summary>
+    long InstanceId { get; set; }
 #endif
 }
