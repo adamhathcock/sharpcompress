@@ -6,182 +6,182 @@ namespace SharpCompress.Common.SevenZip;
 
 internal class CFolder
 {
-  internal List<CCoderInfo> _coders = [];
-  internal List<CBindPair> _bindPairs = [];
-  internal List<int> _packStreams = [];
-  internal int _firstPackStreamId;
-  internal List<long> _unpackSizes = [];
-  internal uint? _unpackCrc;
+    internal List<CCoderInfo> _coders = [];
+    internal List<CBindPair> _bindPairs = [];
+    internal List<int> _packStreams = [];
+    internal int _firstPackStreamId;
+    internal List<long> _unpackSizes = [];
+    internal uint? _unpackCrc;
 
-  internal bool UnpackCrcDefined => _unpackCrc != null;
+    internal bool UnpackCrcDefined => _unpackCrc != null;
 
-  public long GetUnpackSize()
-  {
-    if (_unpackSizes.Count == 0)
+    public long GetUnpackSize()
     {
-      return 0;
-    }
-
-    for (var i = _unpackSizes.Count - 1; i >= 0; i--)
-    {
-      if (FindBindPairForOutStream(i) < 0)
-      {
-        return _unpackSizes[i];
-      }
-    }
-
-    throw new InvalidOperationException();
-  }
-
-  public int GetNumOutStreams()
-  {
-    var count = 0;
-    for (var i = 0; i < _coders.Count; i++)
-    {
-      count += _coders[i]._numOutStreams;
-    }
-
-    return count;
-  }
-
-  public int FindBindPairForInStream(int inStreamIndex)
-  {
-    for (var i = 0; i < _bindPairs.Count; i++)
-    {
-      if (_bindPairs[i]._inIndex == inStreamIndex)
-      {
-        return i;
-      }
-    }
-
-    return -1;
-  }
-
-  public int FindBindPairForOutStream(int outStreamIndex)
-  {
-    for (var i = 0; i < _bindPairs.Count; i++)
-    {
-      if (_bindPairs[i]._outIndex == outStreamIndex)
-      {
-        return i;
-      }
-    }
-
-    return -1;
-  }
-
-  public int FindPackStreamArrayIndex(int inStreamIndex)
-  {
-    for (var i = 0; i < _packStreams.Count; i++)
-    {
-      if (_packStreams[i] == inStreamIndex)
-      {
-        return i;
-      }
-    }
-
-    return -1;
-  }
-
-  public bool IsEncrypted()
-  {
-    for (var i = _coders.Count - 1; i >= 0; i--)
-    {
-      if (_coders[i]._methodId == CMethodId.K_AES)
-      {
-        return true;
-      }
-    }
-
-    return false;
-  }
-
-  public bool CheckStructure()
-  {
-    const int kNumCodersMax = 32; // don't change it
-    const int kMaskSize = 32; // it must be >= kNumCodersMax
-    const int kNumBindsMax = 32;
-
-    if (_coders.Count > kNumCodersMax || _bindPairs.Count > kNumBindsMax)
-    {
-      return false;
-    }
-
-    {
-      var v = new BitVector(_bindPairs.Count + _packStreams.Count);
-
-      for (var i = 0; i < _bindPairs.Count; i++)
-      {
-        if (v.GetAndSet(_bindPairs[i]._inIndex))
+        if (_unpackSizes.Count == 0)
         {
-          return false;
+            return 0;
         }
-      }
 
-      for (var i = 0; i < _packStreams.Count; i++)
-      {
-        if (v.GetAndSet(_packStreams[i]))
+        for (var i = _unpackSizes.Count - 1; i >= 0; i--)
         {
-          return false;
+            if (FindBindPairForOutStream(i) < 0)
+            {
+                return _unpackSizes[i];
+            }
         }
-      }
+
+        throw new InvalidOperationException();
     }
 
+    public int GetNumOutStreams()
     {
-      var v = new BitVector(_unpackSizes.Count);
-      for (var i = 0; i < _bindPairs.Count; i++)
-      {
-        if (v.GetAndSet(_bindPairs[i]._outIndex))
+        var count = 0;
+        for (var i = 0; i < _coders.Count; i++)
         {
-          return false;
+            count += _coders[i]._numOutStreams;
         }
-      }
+
+        return count;
     }
 
-    var mask = new uint[kMaskSize];
-
+    public int FindBindPairForInStream(int inStreamIndex)
     {
-      var inStreamToCoder = new List<int>();
-      var outStreamToCoder = new List<int>();
-      for (var i = 0; i < _coders.Count; i++)
-      {
-        var coder = _coders[i];
-        for (var j = 0; j < coder._numInStreams; j++)
+        for (var i = 0; i < _bindPairs.Count; i++)
         {
-          inStreamToCoder.Add(i);
+            if (_bindPairs[i]._inIndex == inStreamIndex)
+            {
+                return i;
+            }
         }
-        for (var j = 0; j < coder._numOutStreams; j++)
-        {
-          outStreamToCoder.Add(i);
-        }
-      }
 
-      for (var i = 0; i < _bindPairs.Count; i++)
-      {
-        var bp = _bindPairs[i];
-        mask[inStreamToCoder[bp._inIndex]] |= (1u << outStreamToCoder[bp._outIndex]);
-      }
+        return -1;
     }
 
-    for (var i = 0; i < kMaskSize; i++)
+    public int FindBindPairForOutStream(int outStreamIndex)
     {
-      for (var j = 0; j < kMaskSize; j++)
-      {
-        if (((1u << j) & mask[i]) != 0)
+        for (var i = 0; i < _bindPairs.Count; i++)
         {
-          mask[i] |= mask[j];
+            if (_bindPairs[i]._outIndex == outStreamIndex)
+            {
+                return i;
+            }
         }
-      }
+
+        return -1;
     }
 
-    for (var i = 0; i < kMaskSize; i++)
+    public int FindPackStreamArrayIndex(int inStreamIndex)
     {
-      if (((1u << i) & mask[i]) != 0)
-      {
+        for (var i = 0; i < _packStreams.Count; i++)
+        {
+            if (_packStreams[i] == inStreamIndex)
+            {
+                return i;
+            }
+        }
+
+        return -1;
+    }
+
+    public bool IsEncrypted()
+    {
+        for (var i = _coders.Count - 1; i >= 0; i--)
+        {
+            if (_coders[i]._methodId == CMethodId.K_AES)
+            {
+                return true;
+            }
+        }
+
         return false;
-      }
     }
 
-    return true;
-  }
+    public bool CheckStructure()
+    {
+        const int kNumCodersMax = 32; // don't change it
+        const int kMaskSize = 32; // it must be >= kNumCodersMax
+        const int kNumBindsMax = 32;
+
+        if (_coders.Count > kNumCodersMax || _bindPairs.Count > kNumBindsMax)
+        {
+            return false;
+        }
+
+        {
+            var v = new BitVector(_bindPairs.Count + _packStreams.Count);
+
+            for (var i = 0; i < _bindPairs.Count; i++)
+            {
+                if (v.GetAndSet(_bindPairs[i]._inIndex))
+                {
+                    return false;
+                }
+            }
+
+            for (var i = 0; i < _packStreams.Count; i++)
+            {
+                if (v.GetAndSet(_packStreams[i]))
+                {
+                    return false;
+                }
+            }
+        }
+
+        {
+            var v = new BitVector(_unpackSizes.Count);
+            for (var i = 0; i < _bindPairs.Count; i++)
+            {
+                if (v.GetAndSet(_bindPairs[i]._outIndex))
+                {
+                    return false;
+                }
+            }
+        }
+
+        var mask = new uint[kMaskSize];
+
+        {
+            var inStreamToCoder = new List<int>();
+            var outStreamToCoder = new List<int>();
+            for (var i = 0; i < _coders.Count; i++)
+            {
+                var coder = _coders[i];
+                for (var j = 0; j < coder._numInStreams; j++)
+                {
+                    inStreamToCoder.Add(i);
+                }
+                for (var j = 0; j < coder._numOutStreams; j++)
+                {
+                    outStreamToCoder.Add(i);
+                }
+            }
+
+            for (var i = 0; i < _bindPairs.Count; i++)
+            {
+                var bp = _bindPairs[i];
+                mask[inStreamToCoder[bp._inIndex]] |= (1u << outStreamToCoder[bp._outIndex]);
+            }
+        }
+
+        for (var i = 0; i < kMaskSize; i++)
+        {
+            for (var j = 0; j < kMaskSize; j++)
+            {
+                if (((1u << j) & mask[i]) != 0)
+                {
+                    mask[i] |= mask[j];
+                }
+            }
+        }
+
+        for (var i = 0; i < kMaskSize; i++)
+        {
+            if (((1u << i) & mask[i]) != 0)
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
 }

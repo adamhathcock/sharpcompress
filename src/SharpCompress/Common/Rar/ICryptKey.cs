@@ -4,5 +4,5 @@ namespace SharpCompress.Common.Rar;
 
 internal interface ICryptKey
 {
-  ICryptoTransform Transformer(byte[] salt);
+    ICryptoTransform Transformer(byte[] salt);
 }

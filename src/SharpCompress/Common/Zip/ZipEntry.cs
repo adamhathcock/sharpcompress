@@ -7,84 +7,85 @@ namespace SharpCompress.Common.Zip;
 
 public class ZipEntry : Entry
 {
-  private readonly ZipFilePart? _filePart;
+    private readonly ZipFilePart? _filePart;
 
-  internal ZipEntry(ZipFilePart? filePart)
-  {
-    if (filePart == null)
+    internal ZipEntry(ZipFilePart? filePart)
     {
-      return;
+        if (filePart == null)
+        {
+            return;
+        }
+        _filePart = filePart;
+
+        LastModifiedTime = Utility.DosDateToDateTime(
+            filePart.Header.LastModifiedDate,
+            filePart.Header.LastModifiedTime
+        );
+
+        var times =
+            filePart.Header.Extra.FirstOrDefault(header =>
+                header.GetType() == typeof(UnixTimeExtraField)
+            ) as UnixTimeExtraField;
+
+        LastAccessedTime = times?.UnicodeTimes.Item2;
+        CreatedTime = times?.UnicodeTimes.Item3;
     }
-    _filePart = filePart;
 
-    LastModifiedTime = Utility.DosDateToDateTime(
-      filePart.Header.LastModifiedDate,
-      filePart.Header.LastModifiedTime
-    );
+    public override CompressionType CompressionType =>
+        _filePart?.Header.CompressionMethod switch
+        {
+            ZipCompressionMethod.BZip2 => CompressionType.BZip2,
+            ZipCompressionMethod.Deflate => CompressionType.Deflate,
+            ZipCompressionMethod.Deflate64 => CompressionType.Deflate64,
+            ZipCompressionMethod.LZMA => CompressionType.LZMA,
+            ZipCompressionMethod.PPMd => CompressionType.PPMd,
+            ZipCompressionMethod.None => CompressionType.None,
+            ZipCompressionMethod.Shrink => CompressionType.Shrink,
+            ZipCompressionMethod.Reduce1 => CompressionType.Reduce1,
+            ZipCompressionMethod.Reduce2 => CompressionType.Reduce2,
+            ZipCompressionMethod.Reduce3 => CompressionType.Reduce3,
+            ZipCompressionMethod.Reduce4 => CompressionType.Reduce4,
+            ZipCompressionMethod.Explode => CompressionType.Explode,
+            ZipCompressionMethod.ZStandard => CompressionType.ZStandard,
+            _ => CompressionType.Unknown,
+        };
 
-    var times =
-      filePart.Header.Extra.FirstOrDefault(header => header.GetType() == typeof(UnixTimeExtraField))
-      as UnixTimeExtraField;
+    public override long Crc => _filePart?.Header.Crc ?? 0;
 
-    LastAccessedTime = times?.UnicodeTimes.Item2;
-    CreatedTime = times?.UnicodeTimes.Item3;
-  }
+    public override string? Key => _filePart?.Header.Name;
 
-  public override CompressionType CompressionType =>
-    _filePart?.Header.CompressionMethod switch
-    {
-      ZipCompressionMethod.BZip2 => CompressionType.BZip2,
-      ZipCompressionMethod.Deflate => CompressionType.Deflate,
-      ZipCompressionMethod.Deflate64 => CompressionType.Deflate64,
-      ZipCompressionMethod.LZMA => CompressionType.LZMA,
-      ZipCompressionMethod.PPMd => CompressionType.PPMd,
-      ZipCompressionMethod.None => CompressionType.None,
-      ZipCompressionMethod.Shrink => CompressionType.Shrink,
-      ZipCompressionMethod.Reduce1 => CompressionType.Reduce1,
-      ZipCompressionMethod.Reduce2 => CompressionType.Reduce2,
-      ZipCompressionMethod.Reduce3 => CompressionType.Reduce3,
-      ZipCompressionMethod.Reduce4 => CompressionType.Reduce4,
-      ZipCompressionMethod.Explode => CompressionType.Explode,
-      ZipCompressionMethod.ZStandard => CompressionType.ZStandard,
-      _ => CompressionType.Unknown,
-    };
+    public override string? LinkTarget => null;
 
-  public override long Crc => _filePart?.Header.Crc ?? 0;
+    public override long CompressedSize => _filePart?.Header.CompressedSize ?? 0;
 
-  public override string? Key => _filePart?.Header.Name;
+    public override long Size => _filePart?.Header.UncompressedSize ?? 0;
 
-  public override string? LinkTarget => null;
+    public override DateTime? LastModifiedTime { get; }
 
-  public override long CompressedSize => _filePart?.Header.CompressedSize ?? 0;
+    /// <inheritdoc/>
+    /// <remarks>
+    /// The returned time is UTC, not local.
+    /// </remarks>
+    public override DateTime? CreatedTime { get; }
 
-  public override long Size => _filePart?.Header.UncompressedSize ?? 0;
+    /// <inheritdoc/>
+    /// <remarks>
+    /// The returned time is UTC, not local.
+    /// </remarks>
+    public override DateTime? LastAccessedTime { get; }
 
-  public override DateTime? LastModifiedTime { get; }
+    public override DateTime? ArchivedTime => null;
 
-  /// <inheritdoc/>
-  /// <remarks>
-  /// The returned time is UTC, not local.
-  /// </remarks>
-  public override DateTime? CreatedTime { get; }
+    public override bool IsEncrypted =>
+        FlagUtility.HasFlag(_filePart?.Header.Flags ?? HeaderFlags.None, HeaderFlags.Encrypted);
 
-  /// <inheritdoc/>
-  /// <remarks>
-  /// The returned time is UTC, not local.
-  /// </remarks>
-  public override DateTime? LastAccessedTime { get; }
+    public override bool IsDirectory => _filePart?.Header.IsDirectory ?? false;
 
-  public override DateTime? ArchivedTime => null;
+    public override bool IsSplitAfter => false;
 
-  public override bool IsEncrypted =>
-    FlagUtility.HasFlag(_filePart?.Header.Flags ?? HeaderFlags.None, HeaderFlags.Encrypted);
+    internal override IEnumerable<FilePart> Parts => _filePart.Empty();
 
-  public override bool IsDirectory => _filePart?.Header.IsDirectory ?? false;
+    public override int? Attrib => (int?)_filePart?.Header.ExternalFileAttributes;
 
-  public override bool IsSplitAfter => false;
-
-  internal override IEnumerable<FilePart> Parts => _filePart.Empty();
-
-  public override int? Attrib => (int?)_filePart?.Header.ExternalFileAttributes;
-
-  public string? Comment => _filePart?.Header.Comment;
+    public string? Comment => _filePart?.Header.Comment;
 }

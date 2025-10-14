@@ -33,171 +33,171 @@ namespace SharpCompress.Compressors.ADC;
 /// </summary>
 public static class ADCBase
 {
-  private const int PLAIN = 1;
-  private const int TWO_BYTE = 2;
-  private const int THREE_BYTE = 3;
+    private const int PLAIN = 1;
+    private const int TWO_BYTE = 2;
+    private const int THREE_BYTE = 3;
 
-  private static int GetChunkType(byte byt)
-  {
-    if ((byt & 0x80) == 0x80)
+    private static int GetChunkType(byte byt)
     {
-      return PLAIN;
-    }
-    if ((byt & 0x40) == 0x40)
-    {
-      return THREE_BYTE;
-    }
-    return TWO_BYTE;
-  }
-
-  private static int GetChunkSize(byte byt) =>
-    GetChunkType(byt) switch
-    {
-      PLAIN => (byt & 0x7F) + 1,
-      TWO_BYTE => ((byt & 0x3F) >> 2) + 3,
-      THREE_BYTE => (byt & 0x3F) + 4,
-      _ => -1,
-    };
-
-  private static int GetOffset(ReadOnlySpan<byte> chunk) =>
-    GetChunkType(chunk[0]) switch
-    {
-      PLAIN => 0,
-      TWO_BYTE => ((chunk[0] & 0x03) << 8) + chunk[1],
-      THREE_BYTE => (chunk[1] << 8) + chunk[2],
-      _ => -1,
-    };
-
-  /// <summary>
-  /// Decompresses a byte buffer that's compressed with ADC
-  /// </summary>
-  /// <param name="input">Compressed buffer</param>
-  /// <param name="output">Buffer to hold decompressed data</param>
-  /// <param name="bufferSize">Max size for decompressed data</param>
-  /// <returns>How many bytes are stored on <paramref name="output"/></returns>
-  public static int Decompress(byte[] input, out byte[]? output, int bufferSize = 262144) =>
-    Decompress(new MemoryStream(input), out output, bufferSize);
-
-  /// <summary>
-  /// Decompresses a stream that's compressed with ADC
-  /// </summary>
-  /// <param name="input">Stream containing compressed data</param>
-  /// <param name="output">Buffer to hold decompressed data</param>
-  /// <param name="bufferSize">Max size for decompressed data</param>
-  /// <returns>How many bytes are stored on <paramref name="output"/></returns>
-  public static int Decompress(Stream input, out byte[]? output, int bufferSize = 262144)
-  {
-    output = null;
-
-    if (input is null || input.Length == 0)
-    {
-      return 0;
+        if ((byt & 0x80) == 0x80)
+        {
+            return PLAIN;
+        }
+        if ((byt & 0x40) == 0x40)
+        {
+            return THREE_BYTE;
+        }
+        return TWO_BYTE;
     }
 
-    var start = (int)input.Position;
-    var position = (int)input.Position;
-    int chunkSize;
-    int offset;
-    int chunkType;
-    var buffer = new byte[bufferSize];
-    var outPosition = 0;
-    var full = false;
-    Span<byte> temp = stackalloc byte[3];
+    private static int GetChunkSize(byte byt) =>
+        GetChunkType(byt) switch
+        {
+            PLAIN => (byt & 0x7F) + 1,
+            TWO_BYTE => ((byt & 0x3F) >> 2) + 3,
+            THREE_BYTE => (byt & 0x3F) + 4,
+            _ => -1,
+        };
 
-    while (position < input.Length)
+    private static int GetOffset(ReadOnlySpan<byte> chunk) =>
+        GetChunkType(chunk[0]) switch
+        {
+            PLAIN => 0,
+            TWO_BYTE => ((chunk[0] & 0x03) << 8) + chunk[1],
+            THREE_BYTE => (chunk[1] << 8) + chunk[2],
+            _ => -1,
+        };
+
+    /// <summary>
+    /// Decompresses a byte buffer that's compressed with ADC
+    /// </summary>
+    /// <param name="input">Compressed buffer</param>
+    /// <param name="output">Buffer to hold decompressed data</param>
+    /// <param name="bufferSize">Max size for decompressed data</param>
+    /// <returns>How many bytes are stored on <paramref name="output"/></returns>
+    public static int Decompress(byte[] input, out byte[]? output, int bufferSize = 262144) =>
+        Decompress(new MemoryStream(input), out output, bufferSize);
+
+    /// <summary>
+    /// Decompresses a stream that's compressed with ADC
+    /// </summary>
+    /// <param name="input">Stream containing compressed data</param>
+    /// <param name="output">Buffer to hold decompressed data</param>
+    /// <param name="bufferSize">Max size for decompressed data</param>
+    /// <returns>How many bytes are stored on <paramref name="output"/></returns>
+    public static int Decompress(Stream input, out byte[]? output, int bufferSize = 262144)
     {
-      var readByte = input.ReadByte();
-      if (readByte == -1)
-      {
-        break;
-      }
+        output = null;
 
-      chunkType = GetChunkType((byte)readByte);
+        if (input is null || input.Length == 0)
+        {
+            return 0;
+        }
 
-      switch (chunkType)
-      {
-        case PLAIN:
-          chunkSize = GetChunkSize((byte)readByte);
-          if (outPosition + chunkSize > bufferSize)
-          {
-            full = true;
-            break;
-          }
-          input.Read(buffer, outPosition, chunkSize);
-          outPosition += chunkSize;
-          position += chunkSize + 1;
-          break;
-        case TWO_BYTE:
-          chunkSize = GetChunkSize((byte)readByte);
-          temp[0] = (byte)readByte;
-          temp[1] = (byte)input.ReadByte();
-          offset = GetOffset(temp);
-          if (outPosition + chunkSize > bufferSize)
-          {
-            full = true;
-            break;
-          }
-          if (offset == 0)
-          {
-            var lastByte = buffer[outPosition - 1];
-            for (var i = 0; i < chunkSize; i++)
-            {
-              buffer[outPosition] = lastByte;
-              outPosition++;
-            }
-            position += 2;
-          }
-          else
-          {
-            for (var i = 0; i < chunkSize; i++)
-            {
-              buffer[outPosition] = buffer[outPosition - offset - 1];
-              outPosition++;
-            }
-            position += 2;
-          }
-          break;
-        case THREE_BYTE:
-          chunkSize = GetChunkSize((byte)readByte);
-          temp[0] = (byte)readByte;
-          temp[1] = (byte)input.ReadByte();
-          temp[2] = (byte)input.ReadByte();
-          offset = GetOffset(temp);
-          if (outPosition + chunkSize > bufferSize)
-          {
-            full = true;
-            break;
-          }
-          if (offset == 0)
-          {
-            var lastByte = buffer[outPosition - 1];
-            for (var i = 0; i < chunkSize; i++)
-            {
-              buffer[outPosition] = lastByte;
-              outPosition++;
-            }
-            position += 3;
-          }
-          else
-          {
-            for (var i = 0; i < chunkSize; i++)
-            {
-              buffer[outPosition] = buffer[outPosition - offset - 1];
-              outPosition++;
-            }
-            position += 3;
-          }
-          break;
-      }
+        var start = (int)input.Position;
+        var position = (int)input.Position;
+        int chunkSize;
+        int offset;
+        int chunkType;
+        var buffer = new byte[bufferSize];
+        var outPosition = 0;
+        var full = false;
+        Span<byte> temp = stackalloc byte[3];
 
-      if (full)
-      {
-        break;
-      }
+        while (position < input.Length)
+        {
+            var readByte = input.ReadByte();
+            if (readByte == -1)
+            {
+                break;
+            }
+
+            chunkType = GetChunkType((byte)readByte);
+
+            switch (chunkType)
+            {
+                case PLAIN:
+                    chunkSize = GetChunkSize((byte)readByte);
+                    if (outPosition + chunkSize > bufferSize)
+                    {
+                        full = true;
+                        break;
+                    }
+                    input.Read(buffer, outPosition, chunkSize);
+                    outPosition += chunkSize;
+                    position += chunkSize + 1;
+                    break;
+                case TWO_BYTE:
+                    chunkSize = GetChunkSize((byte)readByte);
+                    temp[0] = (byte)readByte;
+                    temp[1] = (byte)input.ReadByte();
+                    offset = GetOffset(temp);
+                    if (outPosition + chunkSize > bufferSize)
+                    {
+                        full = true;
+                        break;
+                    }
+                    if (offset == 0)
+                    {
+                        var lastByte = buffer[outPosition - 1];
+                        for (var i = 0; i < chunkSize; i++)
+                        {
+                            buffer[outPosition] = lastByte;
+                            outPosition++;
+                        }
+                        position += 2;
+                    }
+                    else
+                    {
+                        for (var i = 0; i < chunkSize; i++)
+                        {
+                            buffer[outPosition] = buffer[outPosition - offset - 1];
+                            outPosition++;
+                        }
+                        position += 2;
+                    }
+                    break;
+                case THREE_BYTE:
+                    chunkSize = GetChunkSize((byte)readByte);
+                    temp[0] = (byte)readByte;
+                    temp[1] = (byte)input.ReadByte();
+                    temp[2] = (byte)input.ReadByte();
+                    offset = GetOffset(temp);
+                    if (outPosition + chunkSize > bufferSize)
+                    {
+                        full = true;
+                        break;
+                    }
+                    if (offset == 0)
+                    {
+                        var lastByte = buffer[outPosition - 1];
+                        for (var i = 0; i < chunkSize; i++)
+                        {
+                            buffer[outPosition] = lastByte;
+                            outPosition++;
+                        }
+                        position += 3;
+                    }
+                    else
+                    {
+                        for (var i = 0; i < chunkSize; i++)
+                        {
+                            buffer[outPosition] = buffer[outPosition - offset - 1];
+                            outPosition++;
+                        }
+                        position += 3;
+                    }
+                    break;
+            }
+
+            if (full)
+            {
+                break;
+            }
+        }
+
+        output = new byte[outPosition];
+        Array.Copy(buffer, output, outPosition);
+        return position - start;
     }
-
-    output = new byte[outPosition];
-    Array.Copy(buffer, output, outPosition);
-    return position - start;
-  }
 }

@@ -8,39 +8,39 @@ namespace SharpCompress;
 
 internal static class StreamExtensions
 {
-  internal static int Read(this Stream stream, Span<byte> buffer)
-  {
-    var temp = ArrayPool<byte>.Shared.Rent(buffer.Length);
-
-    try
+    internal static int Read(this Stream stream, Span<byte> buffer)
     {
-      var read = stream.Read(temp, 0, buffer.Length);
+        var temp = ArrayPool<byte>.Shared.Rent(buffer.Length);
 
-      temp.AsSpan(0, read).CopyTo(buffer);
+        try
+        {
+            var read = stream.Read(temp, 0, buffer.Length);
 
-      return read;
+            temp.AsSpan(0, read).CopyTo(buffer);
+
+            return read;
+        }
+        finally
+        {
+            ArrayPool<byte>.Shared.Return(temp);
+        }
     }
-    finally
+
+    internal static void Write(this Stream stream, ReadOnlySpan<byte> buffer)
     {
-      ArrayPool<byte>.Shared.Return(temp);
-    }
-  }
+        var temp = ArrayPool<byte>.Shared.Rent(buffer.Length);
 
-  internal static void Write(this Stream stream, ReadOnlySpan<byte> buffer)
-  {
-    var temp = ArrayPool<byte>.Shared.Rent(buffer.Length);
+        buffer.CopyTo(temp);
 
-    buffer.CopyTo(temp);
-
-    try
-    {
-      stream.Write(temp, 0, buffer.Length);
+        try
+        {
+            stream.Write(temp, 0, buffer.Length);
+        }
+        finally
+        {
+            ArrayPool<byte>.Shared.Return(temp);
+        }
     }
-    finally
-    {
-      ArrayPool<byte>.Shared.Return(temp);
-    }
-  }
 }
 
 #endif

@@ -4,7 +4,7 @@ namespace SharpCompress.Common;
 
 public interface IVolume : IDisposable
 {
-  int Index { get; }
+    int Index { get; }
 
-  string? FileName { get; }
+    string? FileName { get; }
 }

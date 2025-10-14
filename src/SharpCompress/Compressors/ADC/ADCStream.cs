@@ -38,157 +38,157 @@ namespace SharpCompress.Compressors.ADC;
 public sealed class ADCStream : Stream, IStreamStack
 {
 #if DEBUG_STREAMS
-  long IStreamStack.InstanceId { get; set; }
+    long IStreamStack.InstanceId { get; set; }
 #endif
-  int IStreamStack.DefaultBufferSize { get; set; }
+    int IStreamStack.DefaultBufferSize { get; set; }
 
-  Stream IStreamStack.BaseStream() => _stream;
+    Stream IStreamStack.BaseStream() => _stream;
 
-  int IStreamStack.BufferSize
-  {
-    get => 0;
-    set { }
-  }
-  int IStreamStack.BufferPosition
-  {
-    get => 0;
-    set { }
-  }
-
-  void IStreamStack.SetPosition(long position) { }
-
-  /// <summary>
-  /// This stream holds the compressed data
-  /// </summary>
-  private readonly Stream _stream;
-
-  /// <summary>
-  /// Is this instance disposed?
-  /// </summary>
-  private bool _isDisposed;
-
-  /// <summary>
-  /// Position in decompressed data
-  /// </summary>
-  private long _position;
-
-  /// <summary>
-  /// Buffer with currently used chunk of decompressed data
-  /// </summary>
-  private byte[] _outBuffer;
-
-  /// <summary>
-  /// Position in buffer of decompressed data
-  /// </summary>
-  private int _outPosition;
-
-  /// <summary>
-  /// Initializates a stream that decompresses ADC data on the fly
-  /// </summary>
-  /// <param name="stream">Stream that contains the compressed data</param>
-  /// <param name="compressionMode">Must be set to <see cref="CompressionMode.Decompress"/> because compression is not implemented</param>
-  public ADCStream(Stream stream, CompressionMode compressionMode = CompressionMode.Decompress)
-  {
-    if (compressionMode == CompressionMode.Compress)
+    int IStreamStack.BufferSize
     {
-      throw new NotSupportedException();
+        get => 0;
+        set { }
+    }
+    int IStreamStack.BufferPosition
+    {
+        get => 0;
+        set { }
     }
 
-    _stream = stream;
+    void IStreamStack.SetPosition(long position) { }
+
+    /// <summary>
+    /// This stream holds the compressed data
+    /// </summary>
+    private readonly Stream _stream;
+
+    /// <summary>
+    /// Is this instance disposed?
+    /// </summary>
+    private bool _isDisposed;
+
+    /// <summary>
+    /// Position in decompressed data
+    /// </summary>
+    private long _position;
+
+    /// <summary>
+    /// Buffer with currently used chunk of decompressed data
+    /// </summary>
+    private byte[] _outBuffer;
+
+    /// <summary>
+    /// Position in buffer of decompressed data
+    /// </summary>
+    private int _outPosition;
+
+    /// <summary>
+    /// Initializates a stream that decompresses ADC data on the fly
+    /// </summary>
+    /// <param name="stream">Stream that contains the compressed data</param>
+    /// <param name="compressionMode">Must be set to <see cref="CompressionMode.Decompress"/> because compression is not implemented</param>
+    public ADCStream(Stream stream, CompressionMode compressionMode = CompressionMode.Decompress)
+    {
+        if (compressionMode == CompressionMode.Compress)
+        {
+            throw new NotSupportedException();
+        }
+
+        _stream = stream;
 #if DEBUG_STREAMS
-    this.DebugConstruct(typeof(ADCStream));
+        this.DebugConstruct(typeof(ADCStream));
 #endif
-  }
-
-  public override bool CanRead => _stream.CanRead;
-
-  public override bool CanSeek => false;
-
-  public override bool CanWrite => false;
-
-  public override long Length => throw new NotSupportedException();
-
-  public override long Position
-  {
-    get => _position;
-    set => throw new NotSupportedException();
-  }
-
-  public override void Flush() { }
-
-  protected override void Dispose(bool disposing)
-  {
-    if (_isDisposed)
-    {
-      return;
     }
-    _isDisposed = true;
+
+    public override bool CanRead => _stream.CanRead;
+
+    public override bool CanSeek => false;
+
+    public override bool CanWrite => false;
+
+    public override long Length => throw new NotSupportedException();
+
+    public override long Position
+    {
+        get => _position;
+        set => throw new NotSupportedException();
+    }
+
+    public override void Flush() { }
+
+    protected override void Dispose(bool disposing)
+    {
+        if (_isDisposed)
+        {
+            return;
+        }
+        _isDisposed = true;
 #if DEBUG_STREAMS
-    this.DebugDispose(typeof(ADCStream));
+        this.DebugDispose(typeof(ADCStream));
 #endif
-    base.Dispose(disposing);
-  }
-
-  public override int Read(byte[] buffer, int offset, int count)
-  {
-    if (count == 0)
-    {
-      return 0;
-    }
-    if (buffer is null)
-    {
-      throw new ArgumentNullException(nameof(buffer));
-    }
-    if (count < 0)
-    {
-      throw new ArgumentOutOfRangeException(nameof(count));
-    }
-    if (offset < buffer.GetLowerBound(0))
-    {
-      throw new ArgumentOutOfRangeException(nameof(offset));
-    }
-    if ((offset + count) > buffer.GetLength(0))
-    {
-      throw new ArgumentOutOfRangeException(nameof(count));
+        base.Dispose(disposing);
     }
 
-    if (_outBuffer is null)
+    public override int Read(byte[] buffer, int offset, int count)
     {
-      var _ = ADCBase.Decompress(_stream, out _outBuffer);
-      _outPosition = 0;
-    }
+        if (count == 0)
+        {
+            return 0;
+        }
+        if (buffer is null)
+        {
+            throw new ArgumentNullException(nameof(buffer));
+        }
+        if (count < 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(count));
+        }
+        if (offset < buffer.GetLowerBound(0))
+        {
+            throw new ArgumentOutOfRangeException(nameof(offset));
+        }
+        if ((offset + count) > buffer.GetLength(0))
+        {
+            throw new ArgumentOutOfRangeException(nameof(count));
+        }
 
-    var inPosition = offset;
-    var toCopy = count;
-    var copied = 0;
+        if (_outBuffer is null)
+        {
+            var _ = ADCBase.Decompress(_stream, out _outBuffer);
+            _outPosition = 0;
+        }
 
-    while (_outPosition + toCopy >= _outBuffer.Length)
-    {
-      var piece = _outBuffer.Length - _outPosition;
-      Array.Copy(_outBuffer, _outPosition, buffer, inPosition, piece);
-      inPosition += piece;
-      copied += piece;
-      _position += piece;
-      toCopy -= piece;
-      int size = ADCBase.Decompress(_stream, out _outBuffer);
-      _outPosition = 0;
-      if (size == 0 || _outBuffer is null || _outBuffer.Length == 0)
-      {
+        var inPosition = offset;
+        var toCopy = count;
+        var copied = 0;
+
+        while (_outPosition + toCopy >= _outBuffer.Length)
+        {
+            var piece = _outBuffer.Length - _outPosition;
+            Array.Copy(_outBuffer, _outPosition, buffer, inPosition, piece);
+            inPosition += piece;
+            copied += piece;
+            _position += piece;
+            toCopy -= piece;
+            int size = ADCBase.Decompress(_stream, out _outBuffer);
+            _outPosition = 0;
+            if (size == 0 || _outBuffer is null || _outBuffer.Length == 0)
+            {
+                return copied;
+            }
+        }
+
+        Array.Copy(_outBuffer, _outPosition, buffer, inPosition, toCopy);
+        _outPosition += toCopy;
+        _position += toCopy;
+        copied += toCopy;
         return copied;
-      }
     }
 
-    Array.Copy(_outBuffer, _outPosition, buffer, inPosition, toCopy);
-    _outPosition += toCopy;
-    _position += toCopy;
-    copied += toCopy;
-    return copied;
-  }
+    public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
 
-  public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
+    public override void SetLength(long value) => throw new NotSupportedException();
 
-  public override void SetLength(long value) => throw new NotSupportedException();
-
-  public override void Write(byte[] buffer, int offset, int count) =>
-    throw new NotSupportedException();
+    public override void Write(byte[] buffer, int offset, int count) =>
+        throw new NotSupportedException();
 }

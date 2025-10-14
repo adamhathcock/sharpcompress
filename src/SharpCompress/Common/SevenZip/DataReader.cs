@@ -7,172 +7,172 @@ namespace SharpCompress.Common.SevenZip;
 
 internal class DataReader
 {
-  #region Static Methods
+    #region Static Methods
 
-  public static uint Get32(byte[] buffer, int offset) =>
-    buffer[offset]
-    + ((uint)buffer[offset + 1] << 8)
-    + ((uint)buffer[offset + 2] << 16)
-    + ((uint)buffer[offset + 3] << 24);
+    public static uint Get32(byte[] buffer, int offset) =>
+        buffer[offset]
+        + ((uint)buffer[offset + 1] << 8)
+        + ((uint)buffer[offset + 2] << 16)
+        + ((uint)buffer[offset + 3] << 24);
 
-  public static ulong Get64(byte[] buffer, int offset) =>
-    buffer[offset]
-    + ((ulong)buffer[offset + 1] << 8)
-    + ((ulong)buffer[offset + 2] << 16)
-    + ((ulong)buffer[offset + 3] << 24)
-    + ((ulong)buffer[offset + 4] << 32)
-    + ((ulong)buffer[offset + 5] << 40)
-    + ((ulong)buffer[offset + 6] << 48)
-    + ((ulong)buffer[offset + 7] << 56);
+    public static ulong Get64(byte[] buffer, int offset) =>
+        buffer[offset]
+        + ((ulong)buffer[offset + 1] << 8)
+        + ((ulong)buffer[offset + 2] << 16)
+        + ((ulong)buffer[offset + 3] << 24)
+        + ((ulong)buffer[offset + 4] << 32)
+        + ((ulong)buffer[offset + 5] << 40)
+        + ((ulong)buffer[offset + 6] << 48)
+        + ((ulong)buffer[offset + 7] << 56);
 
-  #endregion
+    #endregion
 
-  #region Variables
+    #region Variables
 
-  private readonly byte[] _buffer;
-  private readonly int _ending;
+    private readonly byte[] _buffer;
+    private readonly int _ending;
 
-  #endregion
+    #endregion
 
-  #region Public Methods
+    #region Public Methods
 
-  public DataReader(byte[] buffer, int offset, int length)
-  {
-    _buffer = buffer;
-    Offset = offset;
-    _ending = offset + length;
-  }
-
-  public int Offset { get; private set; }
-
-  public byte ReadByte()
-  {
-    if (Offset >= _ending)
+    public DataReader(byte[] buffer, int offset, int length)
     {
-      throw new EndOfStreamException();
+        _buffer = buffer;
+        Offset = offset;
+        _ending = offset + length;
     }
 
-    return _buffer[Offset++];
-  }
+    public int Offset { get; private set; }
 
-  public void ReadBytes(byte[] buffer, int offset, int length)
-  {
-    if (length > _ending - Offset)
+    public byte ReadByte()
     {
-      throw new EndOfStreamException();
+        if (Offset >= _ending)
+        {
+            throw new EndOfStreamException();
+        }
+
+        return _buffer[Offset++];
     }
 
-    while (length-- > 0)
+    public void ReadBytes(byte[] buffer, int offset, int length)
     {
-      buffer[offset++] = _buffer[Offset++];
-    }
-  }
+        if (length > _ending - Offset)
+        {
+            throw new EndOfStreamException();
+        }
 
-  public void SkipData(long size)
-  {
-    if (size > _ending - Offset)
+        while (length-- > 0)
+        {
+            buffer[offset++] = _buffer[Offset++];
+        }
+    }
+
+    public void SkipData(long size)
     {
-      throw new EndOfStreamException();
-    }
+        if (size > _ending - Offset)
+        {
+            throw new EndOfStreamException();
+        }
 
-    Offset += (int)size;
+        Offset += (int)size;
 #if DEBUG
-    Log.WriteLine("SkipData {0}", size);
+        Log.WriteLine("SkipData {0}", size);
 #endif
-  }
-
-  public void SkipData() => SkipData(checked((long)ReadNumber()));
-
-  public ulong ReadNumber()
-  {
-    if (Offset >= _ending)
-    {
-      throw new EndOfStreamException();
     }
 
-    var firstByte = _buffer[Offset++];
-    byte mask = 0x80;
-    ulong value = 0;
+    public void SkipData() => SkipData(checked((long)ReadNumber()));
 
-    for (var i = 0; i < 8; i++)
+    public ulong ReadNumber()
     {
-      if ((firstByte & mask) == 0)
-      {
-        ulong highPart = firstByte & (mask - 1u);
-        value += highPart << (i * 8);
+        if (Offset >= _ending)
+        {
+            throw new EndOfStreamException();
+        }
+
+        var firstByte = _buffer[Offset++];
+        byte mask = 0x80;
+        ulong value = 0;
+
+        for (var i = 0; i < 8; i++)
+        {
+            if ((firstByte & mask) == 0)
+            {
+                ulong highPart = firstByte & (mask - 1u);
+                value += highPart << (i * 8);
+                return value;
+            }
+
+            if (Offset >= _ending)
+            {
+                throw new EndOfStreamException();
+            }
+
+            value |= (ulong)_buffer[Offset++] << (8 * i);
+            mask >>= 1;
+        }
+
         return value;
-      }
-
-      if (Offset >= _ending)
-      {
-        throw new EndOfStreamException();
-      }
-
-      value |= (ulong)_buffer[Offset++] << (8 * i);
-      mask >>= 1;
     }
 
-    return value;
-  }
-
-  public int ReadNum()
-  {
-    var value = ReadNumber();
-    if (value > int.MaxValue)
+    public int ReadNum()
     {
-      throw new NotSupportedException();
+        var value = ReadNumber();
+        if (value > int.MaxValue)
+        {
+            throw new NotSupportedException();
+        }
+
+        return (int)value;
     }
 
-    return (int)value;
-  }
-
-  public uint ReadUInt32()
-  {
-    if (Offset + 4 > _ending)
+    public uint ReadUInt32()
     {
-      throw new EndOfStreamException();
+        if (Offset + 4 > _ending)
+        {
+            throw new EndOfStreamException();
+        }
+
+        var res = Get32(_buffer, Offset);
+        Offset += 4;
+        return res;
     }
 
-    var res = Get32(_buffer, Offset);
-    Offset += 4;
-    return res;
-  }
-
-  public ulong ReadUInt64()
-  {
-    if (Offset + 8 > _ending)
+    public ulong ReadUInt64()
     {
-      throw new EndOfStreamException();
+        if (Offset + 8 > _ending)
+        {
+            throw new EndOfStreamException();
+        }
+
+        var res = Get64(_buffer, Offset);
+        Offset += 8;
+        return res;
     }
 
-    var res = Get64(_buffer, Offset);
-    Offset += 8;
-    return res;
-  }
-
-  public string ReadString()
-  {
-    var ending = Offset;
-
-    for (; ; )
+    public string ReadString()
     {
-      if (ending + 2 > _ending)
-      {
-        throw new EndOfStreamException();
-      }
+        var ending = Offset;
 
-      if (_buffer[ending] == 0 && _buffer[ending + 1] == 0)
-      {
-        break;
-      }
+        for (; ; )
+        {
+            if (ending + 2 > _ending)
+            {
+                throw new EndOfStreamException();
+            }
 
-      ending += 2;
+            if (_buffer[ending] == 0 && _buffer[ending + 1] == 0)
+            {
+                break;
+            }
+
+            ending += 2;
+        }
+
+        var str = Encoding.Unicode.GetString(_buffer, Offset, ending - Offset);
+        Offset = ending + 2;
+        return str;
     }
 
-    var str = Encoding.Unicode.GetString(_buffer, Offset, ending - Offset);
-    Offset = ending + 2;
-    return str;
-  }
-
-  #endregion
+    #endregion
 }

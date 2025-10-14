@@ -6,63 +6,63 @@ namespace SharpCompress.Common.SevenZip;
 
 internal struct CStreamSwitch : IDisposable
 {
-  private ArchiveReader _archive;
-  private bool _needRemove;
-  private bool _active;
+    private ArchiveReader _archive;
+    private bool _needRemove;
+    private bool _active;
 
-  public void Dispose()
-  {
-    if (_active)
+    public void Dispose()
     {
-      _active = false;
+        if (_active)
+        {
+            _active = false;
 #if DEBUG
-      Log.WriteLine("[end of switch]");
+            Log.WriteLine("[end of switch]");
 #endif
+        }
+
+        if (_needRemove)
+        {
+            _needRemove = false;
+            _archive.DeleteByteStream();
+        }
     }
 
-    if (_needRemove)
+    public void Set(ArchiveReader archive, byte[] dataVector)
     {
-      _needRemove = false;
-      _archive.DeleteByteStream();
+        Dispose();
+        _archive = archive;
+        _archive.AddByteStream(dataVector, 0, dataVector.Length);
+        _needRemove = true;
+        _active = true;
     }
-  }
 
-  public void Set(ArchiveReader archive, byte[] dataVector)
-  {
-    Dispose();
-    _archive = archive;
-    _archive.AddByteStream(dataVector, 0, dataVector.Length);
-    _needRemove = true;
-    _active = true;
-  }
-
-  public void Set(ArchiveReader archive, List<byte[]> dataVector)
-  {
-    Dispose();
-    _active = true;
-
-    var external = archive.ReadByte();
-    if (external != 0)
+    public void Set(ArchiveReader archive, List<byte[]> dataVector)
     {
-      var dataIndex = archive.ReadNum();
-      if (dataIndex < 0 || dataIndex >= dataVector.Count)
-      {
-        throw new InvalidOperationException();
-      }
+        Dispose();
+        _active = true;
+
+        var external = archive.ReadByte();
+        if (external != 0)
+        {
+            var dataIndex = archive.ReadNum();
+            if (dataIndex < 0 || dataIndex >= dataVector.Count)
+            {
+                throw new InvalidOperationException();
+            }
 
 #if DEBUG
-      Log.WriteLine("[switch to stream {0}]", dataIndex);
+            Log.WriteLine("[switch to stream {0}]", dataIndex);
 #endif
-      _archive = archive;
-      _archive.AddByteStream(dataVector[dataIndex], 0, dataVector[dataIndex].Length);
-      _needRemove = true;
-      _active = true;
-    }
-    else
-    {
+            _archive = archive;
+            _archive.AddByteStream(dataVector[dataIndex], 0, dataVector[dataIndex].Length);
+            _needRemove = true;
+            _active = true;
+        }
+        else
+        {
 #if DEBUG
-      Log.WriteLine("[inline data]");
+            Log.WriteLine("[inline data]");
 #endif
+        }
     }
-  }
 }

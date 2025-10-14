@@ -12,206 +12,208 @@ namespace SharpCompress.Compressors.Xz;
 [CLSCompliant(false)]
 public sealed class XZBlock : XZReadOnlyStream
 {
-  public int BlockHeaderSize => (_blockHeaderSizeByte + 1) * 4;
-  public ulong? CompressedSize { get; private set; }
-  public ulong? UncompressedSize { get; private set; }
-  public Stack<BlockFilter> Filters { get; private set; } = new();
-  public bool HeaderIsLoaded { get; private set; }
-  private CheckType _checkType;
-  private readonly int _checkSize;
-  private bool _streamConnected;
-  private int _numFilters;
-  private byte _blockHeaderSizeByte;
-  private Stream _decomStream;
-  private bool _endOfStream;
-  private bool _paddingSkipped;
-  private bool _crcChecked;
-  private readonly long _startPosition;
+    public int BlockHeaderSize => (_blockHeaderSizeByte + 1) * 4;
+    public ulong? CompressedSize { get; private set; }
+    public ulong? UncompressedSize { get; private set; }
+    public Stack<BlockFilter> Filters { get; private set; } = new();
+    public bool HeaderIsLoaded { get; private set; }
+    private CheckType _checkType;
+    private readonly int _checkSize;
+    private bool _streamConnected;
+    private int _numFilters;
+    private byte _blockHeaderSizeByte;
+    private Stream _decomStream;
+    private bool _endOfStream;
+    private bool _paddingSkipped;
+    private bool _crcChecked;
+    private readonly long _startPosition;
 
-  public XZBlock(Stream stream, CheckType checkType, int checkSize)
-    : base(stream)
-  {
-    _checkType = checkType;
-    _checkSize = checkSize;
-    _startPosition = stream.Position;
-  }
-
-  public override int Read(byte[] buffer, int offset, int count)
-  {
-    var bytesRead = 0;
-    if (!HeaderIsLoaded)
+    public XZBlock(Stream stream, CheckType checkType, int checkSize)
+        : base(stream)
     {
-      LoadHeader();
+        _checkType = checkType;
+        _checkSize = checkSize;
+        _startPosition = stream.Position;
     }
 
-    if (!_streamConnected)
+    public override int Read(byte[] buffer, int offset, int count)
     {
-      ConnectStream();
+        var bytesRead = 0;
+        if (!HeaderIsLoaded)
+        {
+            LoadHeader();
+        }
+
+        if (!_streamConnected)
+        {
+            ConnectStream();
+        }
+
+        if (!_endOfStream)
+        {
+            bytesRead = _decomStream.Read(buffer, offset, count);
+        }
+
+        if (bytesRead != count)
+        {
+            _endOfStream = true;
+        }
+
+        if (_endOfStream && !_paddingSkipped)
+        {
+            SkipPadding();
+        }
+
+        if (_endOfStream && !_crcChecked)
+        {
+            CheckCrc();
+        }
+
+        return bytesRead;
     }
 
-    if (!_endOfStream)
+    private void SkipPadding()
     {
-      bytesRead = _decomStream.Read(buffer, offset, count);
+        var bytes = (BaseStream.Position - _startPosition) % 4;
+        if (bytes > 0)
+        {
+            var paddingBytes = new byte[4 - bytes];
+            BaseStream.Read(paddingBytes, 0, paddingBytes.Length);
+            if (paddingBytes.Any(b => b != 0))
+            {
+                throw new InvalidFormatException("Padding bytes were non-null");
+            }
+        }
+        _paddingSkipped = true;
     }
 
-    if (bytesRead != count)
+    private void CheckCrc()
     {
-      _endOfStream = true;
+        var crc = new byte[_checkSize];
+        BaseStream.Read(crc, 0, _checkSize);
+        // Actually do a check (and read in the bytes
+        //   into the function throughout the stream read).
+        _crcChecked = true;
     }
 
-    if (_endOfStream && !_paddingSkipped)
+    private void ConnectStream()
     {
-      SkipPadding();
+        _decomStream = BaseStream;
+        while (Filters.Count > 0)
+        {
+            var filter = Filters.Pop();
+            filter.SetBaseStream(_decomStream);
+            _decomStream = filter;
+        }
+        _streamConnected = true;
     }
 
-    if (_endOfStream && !_crcChecked)
+    private void LoadHeader()
     {
-      CheckCrc();
+        ReadHeaderSize();
+        var headerCache = CacheHeader();
+
+        using (var cache = new MemoryStream(headerCache))
+        using (var cachedReader = new BinaryReader(cache))
+        {
+            cachedReader.BaseStream.Position = 1; // skip the header size byte
+            ReadBlockFlags(cachedReader);
+            ReadFilters(cachedReader);
+        }
+        HeaderIsLoaded = true;
     }
 
-    return bytesRead;
-  }
-
-  private void SkipPadding()
-  {
-    var bytes = (BaseStream.Position - _startPosition) % 4;
-    if (bytes > 0)
+    private void ReadHeaderSize()
     {
-      var paddingBytes = new byte[4 - bytes];
-      BaseStream.Read(paddingBytes, 0, paddingBytes.Length);
-      if (paddingBytes.Any(b => b != 0))
-      {
-        throw new InvalidFormatException("Padding bytes were non-null");
-      }
-    }
-    _paddingSkipped = true;
-  }
-
-  private void CheckCrc()
-  {
-    var crc = new byte[_checkSize];
-    BaseStream.Read(crc, 0, _checkSize);
-    // Actually do a check (and read in the bytes
-    //   into the function throughout the stream read).
-    _crcChecked = true;
-  }
-
-  private void ConnectStream()
-  {
-    _decomStream = BaseStream;
-    while (Filters.Count > 0)
-    {
-      var filter = Filters.Pop();
-      filter.SetBaseStream(_decomStream);
-      _decomStream = filter;
-    }
-    _streamConnected = true;
-  }
-
-  private void LoadHeader()
-  {
-    ReadHeaderSize();
-    var headerCache = CacheHeader();
-
-    using (var cache = new MemoryStream(headerCache))
-    using (var cachedReader = new BinaryReader(cache))
-    {
-      cachedReader.BaseStream.Position = 1; // skip the header size byte
-      ReadBlockFlags(cachedReader);
-      ReadFilters(cachedReader);
-    }
-    HeaderIsLoaded = true;
-  }
-
-  private void ReadHeaderSize()
-  {
-    _blockHeaderSizeByte = (byte)BaseStream.ReadByte();
-    if (_blockHeaderSizeByte == 0)
-    {
-      throw new XZIndexMarkerReachedException();
-    }
-  }
-
-  private byte[] CacheHeader()
-  {
-    var blockHeaderWithoutCrc = new byte[BlockHeaderSize - 4];
-    blockHeaderWithoutCrc[0] = _blockHeaderSizeByte;
-    var read = BaseStream.Read(blockHeaderWithoutCrc, 1, BlockHeaderSize - 5);
-    if (read != BlockHeaderSize - 5)
-    {
-      throw new EndOfStreamException("Reached end of stream unexectedly");
+        _blockHeaderSizeByte = (byte)BaseStream.ReadByte();
+        if (_blockHeaderSizeByte == 0)
+        {
+            throw new XZIndexMarkerReachedException();
+        }
     }
 
-    var crc = BaseStream.ReadLittleEndianUInt32();
-    var calcCrc = Crc32.Compute(blockHeaderWithoutCrc);
-    if (crc != calcCrc)
+    private byte[] CacheHeader()
     {
-      throw new InvalidFormatException("Block header corrupt");
+        var blockHeaderWithoutCrc = new byte[BlockHeaderSize - 4];
+        blockHeaderWithoutCrc[0] = _blockHeaderSizeByte;
+        var read = BaseStream.Read(blockHeaderWithoutCrc, 1, BlockHeaderSize - 5);
+        if (read != BlockHeaderSize - 5)
+        {
+            throw new EndOfStreamException("Reached end of stream unexectedly");
+        }
+
+        var crc = BaseStream.ReadLittleEndianUInt32();
+        var calcCrc = Crc32.Compute(blockHeaderWithoutCrc);
+        if (crc != calcCrc)
+        {
+            throw new InvalidFormatException("Block header corrupt");
+        }
+
+        return blockHeaderWithoutCrc;
     }
 
-    return blockHeaderWithoutCrc;
-  }
-
-  private void ReadBlockFlags(BinaryReader reader)
-  {
-    var blockFlags = reader.ReadByte();
-    _numFilters = (blockFlags & 0x03) + 1;
-    var reserved = (byte)(blockFlags & 0x3C);
-
-    if (reserved != 0)
+    private void ReadBlockFlags(BinaryReader reader)
     {
-      throw new InvalidFormatException("Reserved bytes used, perhaps an unknown XZ implementation");
+        var blockFlags = reader.ReadByte();
+        _numFilters = (blockFlags & 0x03) + 1;
+        var reserved = (byte)(blockFlags & 0x3C);
+
+        if (reserved != 0)
+        {
+            throw new InvalidFormatException(
+                "Reserved bytes used, perhaps an unknown XZ implementation"
+            );
+        }
+
+        var compressedSizePresent = (blockFlags & 0x40) != 0;
+        var uncompressedSizePresent = (blockFlags & 0x80) != 0;
+
+        if (compressedSizePresent)
+        {
+            CompressedSize = reader.ReadXZInteger();
+        }
+
+        if (uncompressedSizePresent)
+        {
+            UncompressedSize = reader.ReadXZInteger();
+        }
     }
 
-    var compressedSizePresent = (blockFlags & 0x40) != 0;
-    var uncompressedSizePresent = (blockFlags & 0x80) != 0;
-
-    if (compressedSizePresent)
+    private void ReadFilters(BinaryReader reader, long baseStreamOffset = 0)
     {
-      CompressedSize = reader.ReadXZInteger();
-    }
+        var nonLastSizeChangers = 0;
+        for (var i = 0; i < _numFilters; i++)
+        {
+            var filter = BlockFilter.Read(reader);
+            if (
+                (i + 1 == _numFilters && !filter.AllowAsLast)
+                || (i + 1 < _numFilters && !filter.AllowAsNonLast)
+            )
+            {
+                throw new InvalidFormatException("Block Filters in bad order");
+            }
 
-    if (uncompressedSizePresent)
-    {
-      UncompressedSize = reader.ReadXZInteger();
-    }
-  }
+            if (filter.ChangesDataSize && i + 1 < _numFilters)
+            {
+                nonLastSizeChangers++;
+            }
 
-  private void ReadFilters(BinaryReader reader, long baseStreamOffset = 0)
-  {
-    var nonLastSizeChangers = 0;
-    for (var i = 0; i < _numFilters; i++)
-    {
-      var filter = BlockFilter.Read(reader);
-      if (
-        (i + 1 == _numFilters && !filter.AllowAsLast)
-        || (i + 1 < _numFilters && !filter.AllowAsNonLast)
-      )
-      {
-        throw new InvalidFormatException("Block Filters in bad order");
-      }
+            filter.ValidateFilter();
+            Filters.Push(filter);
+        }
+        if (nonLastSizeChangers > 2)
+        {
+            throw new InvalidFormatException(
+                "More than two non-last block filters cannot change stream size"
+            );
+        }
 
-      if (filter.ChangesDataSize && i + 1 < _numFilters)
-      {
-        nonLastSizeChangers++;
-      }
-
-      filter.ValidateFilter();
-      Filters.Push(filter);
+        var blockHeaderPaddingSize =
+            BlockHeaderSize - (4 + (int)(reader.BaseStream.Position - baseStreamOffset));
+        var blockHeaderPadding = reader.ReadBytes(blockHeaderPaddingSize);
+        if (!blockHeaderPadding.All(b => b == 0))
+        {
+            throw new InvalidFormatException("Block header contains unknown fields");
+        }
     }
-    if (nonLastSizeChangers > 2)
-    {
-      throw new InvalidFormatException(
-        "More than two non-last block filters cannot change stream size"
-      );
-    }
-
-    var blockHeaderPaddingSize =
-      BlockHeaderSize - (4 + (int)(reader.BaseStream.Position - baseStreamOffset));
-    var blockHeaderPadding = reader.ReadBytes(blockHeaderPaddingSize);
-    if (!blockHeaderPadding.All(b => b == 0))
-    {
-      throw new InvalidFormatException("Block header contains unknown fields");
-    }
-  }
 }

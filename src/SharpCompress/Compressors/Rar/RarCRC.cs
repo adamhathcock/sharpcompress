@@ -4,43 +4,43 @@ namespace SharpCompress.Compressors.Rar;
 
 internal static class RarCRC
 {
-  private static readonly uint[] crcTab;
+    private static readonly uint[] crcTab;
 
-  public static uint CheckCrc(uint startCrc, byte b) =>
-    (crcTab[((int)startCrc ^ b) & 0xff] ^ (startCrc >> 8));
+    public static uint CheckCrc(uint startCrc, byte b) =>
+        (crcTab[((int)startCrc ^ b) & 0xff] ^ (startCrc >> 8));
 
-  public static uint CheckCrc(uint startCrc, ReadOnlySpan<byte> data, int offset, int count)
-  {
-    var size = Math.Min(data.Length - offset, count);
-
-    for (var i = 0; i < size; i++)
+    public static uint CheckCrc(uint startCrc, ReadOnlySpan<byte> data, int offset, int count)
     {
-      startCrc = (crcTab[((int)startCrc ^ data[offset + i]) & 0xff] ^ (startCrc >> 8));
-    }
-    return (startCrc);
-  }
+        var size = Math.Min(data.Length - offset, count);
 
-  static RarCRC()
-  {
-    {
-      crcTab = new uint[256];
-      for (uint i = 0; i < 256; i++)
-      {
-        var c = i;
-        for (var j = 0; j < 8; j++)
+        for (var i = 0; i < size; i++)
         {
-          if ((c & 1) != 0)
-          {
-            c >>= 1;
-            c ^= 0xEDB88320;
-          }
-          else
-          {
-            c >>= 1;
-          }
+            startCrc = (crcTab[((int)startCrc ^ data[offset + i]) & 0xff] ^ (startCrc >> 8));
         }
-        crcTab[i] = c;
-      }
+        return (startCrc);
     }
-  }
+
+    static RarCRC()
+    {
+        {
+            crcTab = new uint[256];
+            for (uint i = 0; i < 256; i++)
+            {
+                var c = i;
+                for (var j = 0; j < 8; j++)
+                {
+                    if ((c & 1) != 0)
+                    {
+                        c >>= 1;
+                        c ^= 0xEDB88320;
+                    }
+                    else
+                    {
+                        c >>= 1;
+                    }
+                }
+                crcTab[i] = c;
+            }
+        }
+    }
 }

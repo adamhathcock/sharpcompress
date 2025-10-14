@@ -12,96 +12,96 @@ namespace SharpCompress.Archives.Rar;
 
 public class RarArchiveEntry : RarEntry, IArchiveEntry
 {
-  private readonly ICollection<RarFilePart> parts;
-  private readonly RarArchive archive;
-  private readonly ReaderOptions readerOptions;
+    private readonly ICollection<RarFilePart> parts;
+    private readonly RarArchive archive;
+    private readonly ReaderOptions readerOptions;
 
-  internal RarArchiveEntry(
-    RarArchive archive,
-    IEnumerable<RarFilePart> parts,
-    ReaderOptions readerOptions
-  )
-  {
-    this.parts = parts.ToList();
-    this.archive = archive;
-    this.readerOptions = readerOptions;
-    IsSolid = FileHeader.IsSolid;
-  }
-
-  public override CompressionType CompressionType => CompressionType.Rar;
-
-  public IArchive Archive => archive;
-
-  internal override IEnumerable<FilePart> Parts => parts;
-
-  internal override FileHeader FileHeader => parts.First().FileHeader;
-
-  public override long Crc
-  {
-    get
+    internal RarArchiveEntry(
+        RarArchive archive,
+        IEnumerable<RarFilePart> parts,
+        ReaderOptions readerOptions
+    )
     {
-      CheckIncomplete();
-      return BitConverter.ToUInt32(
-        parts.Select(fp => fp.FileHeader).Single(fh => !fh.IsSplitAfter).FileCrc.NotNull(),
-        0
-      );
-    }
-  }
-
-  public override long Size
-  {
-    get
-    {
-      CheckIncomplete();
-      return parts.First().FileHeader.UncompressedSize;
-    }
-  }
-
-  public override long CompressedSize
-  {
-    get
-    {
-      CheckIncomplete();
-      return parts.Aggregate(0L, (total, fp) => total + fp.FileHeader.CompressedSize);
-    }
-  }
-
-  public Stream OpenEntryStream()
-  {
-    if (IsRarV3)
-    {
-      return new RarStream(
-        archive.UnpackV1.Value,
-        FileHeader,
-        new MultiVolumeReadOnlyStream(Parts.Cast<RarFilePart>(), archive)
-      );
+        this.parts = parts.ToList();
+        this.archive = archive;
+        this.readerOptions = readerOptions;
+        IsSolid = FileHeader.IsSolid;
     }
 
-    return new RarStream(
-      archive.UnpackV2017.Value,
-      FileHeader,
-      new MultiVolumeReadOnlyStream(Parts.Cast<RarFilePart>(), archive)
-    );
-  }
+    public override CompressionType CompressionType => CompressionType.Rar;
 
-  public bool IsComplete
-  {
-    get
+    public IArchive Archive => archive;
+
+    internal override IEnumerable<FilePart> Parts => parts;
+
+    internal override FileHeader FileHeader => parts.First().FileHeader;
+
+    public override long Crc
     {
+        get
+        {
+            CheckIncomplete();
+            return BitConverter.ToUInt32(
+                parts.Select(fp => fp.FileHeader).Single(fh => !fh.IsSplitAfter).FileCrc.NotNull(),
+                0
+            );
+        }
+    }
+
+    public override long Size
+    {
+        get
+        {
+            CheckIncomplete();
+            return parts.First().FileHeader.UncompressedSize;
+        }
+    }
+
+    public override long CompressedSize
+    {
+        get
+        {
+            CheckIncomplete();
+            return parts.Aggregate(0L, (total, fp) => total + fp.FileHeader.CompressedSize);
+        }
+    }
+
+    public Stream OpenEntryStream()
+    {
+        if (IsRarV3)
+        {
+            return new RarStream(
+                archive.UnpackV1.Value,
+                FileHeader,
+                new MultiVolumeReadOnlyStream(Parts.Cast<RarFilePart>(), archive)
+            );
+        }
+
+        return new RarStream(
+            archive.UnpackV2017.Value,
+            FileHeader,
+            new MultiVolumeReadOnlyStream(Parts.Cast<RarFilePart>(), archive)
+        );
+    }
+
+    public bool IsComplete
+    {
+        get
+        {
 #pragma warning disable CA1851
-      var headers = parts.Select(x => x.FileHeader);
-      return !headers.First().IsSplitBefore && !headers.Last().IsSplitAfter;
+            var headers = parts.Select(x => x.FileHeader);
+            return !headers.First().IsSplitBefore && !headers.Last().IsSplitAfter;
 #pragma warning restore CA1851
+        }
     }
-  }
 
-  private void CheckIncomplete()
-  {
-    if (!readerOptions.DisableCheckIncomplete && !IsComplete)
+    private void CheckIncomplete()
     {
-      throw new IncompleteArchiveException(
-        "ArchiveEntry is incomplete and cannot perform this operation."
-      );
+        if (!readerOptions.DisableCheckIncomplete && !IsComplete)
+        {
+            throw new IncompleteArchiveException(
+                "ArchiveEntry is incomplete and cannot perform this operation."
+            );
+        }
     }
-  }
 }

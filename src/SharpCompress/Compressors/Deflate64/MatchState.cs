@@ -6,7 +6,7 @@ namespace SharpCompress.Compressors.Deflate64;
 
 internal enum MatchState
 {
-  HasSymbol = 1,
-  HasMatch = 2,
-  HasSymbolAndMatch = 3,
+    HasSymbol = 1,
+    HasMatch = 2,
+    HasSymbolAndMatch = 3,
 }

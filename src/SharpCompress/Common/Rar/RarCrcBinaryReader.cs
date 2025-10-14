@@ -6,30 +6,30 @@ namespace SharpCompress.Common.Rar;
 
 internal class RarCrcBinaryReader : MarkingBinaryReader
 {
-  private uint _currentCrc;
+    private uint _currentCrc;
 
-  public RarCrcBinaryReader(Stream stream)
-    : base(stream) { }
+    public RarCrcBinaryReader(Stream stream)
+        : base(stream) { }
 
-  public uint GetCrc32() => ~_currentCrc;
+    public uint GetCrc32() => ~_currentCrc;
 
-  public void ResetCrc() => _currentCrc = 0xffffffff;
+    public void ResetCrc() => _currentCrc = 0xffffffff;
 
-  protected void UpdateCrc(byte b) => _currentCrc = RarCRC.CheckCrc(_currentCrc, b);
+    protected void UpdateCrc(byte b) => _currentCrc = RarCRC.CheckCrc(_currentCrc, b);
 
-  protected byte[] ReadBytesNoCrc(int count) => base.ReadBytes(count);
+    protected byte[] ReadBytesNoCrc(int count) => base.ReadBytes(count);
 
-  public override byte ReadByte()
-  {
-    var b = base.ReadByte();
-    _currentCrc = RarCRC.CheckCrc(_currentCrc, b);
-    return b;
-  }
+    public override byte ReadByte()
+    {
+        var b = base.ReadByte();
+        _currentCrc = RarCRC.CheckCrc(_currentCrc, b);
+        return b;
+    }
 
-  public override byte[] ReadBytes(int count)
-  {
-    var result = base.ReadBytes(count);
-    _currentCrc = RarCRC.CheckCrc(_currentCrc, result, 0, result.Length);
-    return result;
-  }
+    public override byte[] ReadBytes(int count)
+    {
+        var result = base.ReadBytes(count);
+        _currentCrc = RarCRC.CheckCrc(_currentCrc, result, 0, result.Length);
+        return result;
+    }
 }

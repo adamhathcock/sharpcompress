@@ -5,36 +5,36 @@ namespace SharpCompress.Common.Zip;
 
 internal class SeekableZipFilePart : ZipFilePart
 {
-  private bool _isLocalHeaderLoaded;
-  private readonly SeekableZipHeaderFactory _headerFactory;
+    private bool _isLocalHeaderLoaded;
+    private readonly SeekableZipHeaderFactory _headerFactory;
 
-  internal SeekableZipFilePart(
-    SeekableZipHeaderFactory headerFactory,
-    DirectoryEntryHeader header,
-    Stream stream
-  )
-    : base(header, stream)
-  {
-    _headerFactory = headerFactory;
-  }
-
-  internal override Stream GetCompressedStream()
-  {
-    if (!_isLocalHeaderLoaded)
+    internal SeekableZipFilePart(
+        SeekableZipHeaderFactory headerFactory,
+        DirectoryEntryHeader header,
+        Stream stream
+    )
+        : base(header, stream)
     {
-      LoadLocalHeader();
-      _isLocalHeaderLoaded = true;
+        _headerFactory = headerFactory;
     }
-    return base.GetCompressedStream();
-  }
 
-  private void LoadLocalHeader() =>
-    Header = _headerFactory.GetLocalHeader(BaseStream, (DirectoryEntryHeader)Header);
+    internal override Stream GetCompressedStream()
+    {
+        if (!_isLocalHeaderLoaded)
+        {
+            LoadLocalHeader();
+            _isLocalHeaderLoaded = true;
+        }
+        return base.GetCompressedStream();
+    }
 
-  protected override Stream CreateBaseStream()
-  {
-    BaseStream.Position = Header.DataStartPosition.NotNull();
+    private void LoadLocalHeader() =>
+        Header = _headerFactory.GetLocalHeader(BaseStream, (DirectoryEntryHeader)Header);
 
-    return BaseStream;
-  }
+    protected override Stream CreateBaseStream()
+    {
+        BaseStream.Position = Header.DataStartPosition.NotNull();
+
+        return BaseStream;
+    }
 }

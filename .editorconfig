@@ -95,6 +95,8 @@ indent_size = 2
 
 # Code files
 [*.{cs,csx,vb,vbx}]
+indent_size = 4
+indent_style = space
 # Sort using and Import directives with System.* appearing first
 dotnet_sort_system_directives_first = true
 dotnet_separate_import_directive_groups = false
@@ -369,11 +371,6 @@ dotnet_diagnostic.NUnit2036.severity = warning # Consider using Assert.That(coll
 dotnet_diagnostic.NUnit2037.severity = warning # Consider using Assert.That(collection, Does.Contain(instance)) instead of Assert.Contains(instance, collection)
 dotnet_diagnostic.NUnit2038.severity = warning # Consider using Assert.That(actual, Is.InstanceOf(expected)) instead of Assert.IsInstanceOf(expected, actual)
 dotnet_diagnostic.NUnit2039.severity = warning # Consider using Assert.That(actual, Is.Not.InstanceOf(expected)) instead of Assert.IsNotInstanceOf(expected, actual)
-
-[*.{appxmanifest,asax,ascx,aspx,axaml,build,c,c++,cc,cginc,compute,cp,cpp,cs,cshtml,cu,cuh,cxx,dtd,fs,fsi,fsscript,fsx,fx,fxh,h,hh,hlsl,hlsli,hlslinc,hpp,hxx,inc,inl,ino,ipp,ixx,master,ml,mli,mpp,mq4,mq5,mqh,nuspec,paml,razor,resw,resx,shader,skin,tpp,usf,ush,vb,xaml,xamlx,xoml,xsd}]
-indent_style = space
-indent_size = 2
-tab_width = 2
 
 # Verify
 [*.{received,verified}.{json}]

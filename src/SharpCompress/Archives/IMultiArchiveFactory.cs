@@ -20,17 +20,17 @@ namespace SharpCompress.Archives;
 /// </remarks>
 public interface IMultiArchiveFactory : IFactory
 {
-  /// <summary>
-  /// Constructor with IEnumerable FileInfo objects, multi and split support.
-  /// </summary>
-  /// <param name="streams"></param>
-  /// <param name="readerOptions">reading options.</param>
-  IArchive Open(IReadOnlyList<Stream> streams, ReaderOptions? readerOptions = null);
+    /// <summary>
+    /// Constructor with IEnumerable FileInfo objects, multi and split support.
+    /// </summary>
+    /// <param name="streams"></param>
+    /// <param name="readerOptions">reading options.</param>
+    IArchive Open(IReadOnlyList<Stream> streams, ReaderOptions? readerOptions = null);
 
-  /// <summary>
-  /// Constructor with IEnumerable Stream objects, multi and split support.
-  /// </summary>
-  /// <param name="fileInfos"></param>
-  /// <param name="readerOptions">reading options.</param>
-  IArchive Open(IReadOnlyList<FileInfo> fileInfos, ReaderOptions? readerOptions = null);
+    /// <summary>
+    /// Constructor with IEnumerable Stream objects, multi and split support.
+    /// </summary>
+    /// <param name="fileInfos"></param>
+    /// <param name="readerOptions">reading options.</param>
+    IArchive Open(IReadOnlyList<FileInfo> fileInfos, ReaderOptions? readerOptions = null);
 }

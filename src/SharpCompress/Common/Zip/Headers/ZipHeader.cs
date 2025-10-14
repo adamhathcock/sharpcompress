@@ -4,15 +4,15 @@ namespace SharpCompress.Common.Zip.Headers;
 
 internal abstract class ZipHeader
 {
-  protected ZipHeader(ZipHeaderType type)
-  {
-    ZipHeaderType = type;
-    HasData = true;
-  }
+    protected ZipHeader(ZipHeaderType type)
+    {
+        ZipHeaderType = type;
+        HasData = true;
+    }
 
-  internal ZipHeaderType ZipHeaderType { get; }
+    internal ZipHeaderType ZipHeaderType { get; }
 
-  internal abstract void Read(BinaryReader reader);
+    internal abstract void Read(BinaryReader reader);
 
-  internal bool HasData { get; set; }
+    internal bool HasData { get; set; }
 }

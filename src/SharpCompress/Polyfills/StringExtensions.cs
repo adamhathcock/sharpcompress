@@ -4,10 +4,10 @@ namespace SharpCompress;
 
 internal static class StringExtensions
 {
-  internal static bool EndsWith(this string text, char value) =>
-    text.Length > 0 && text[text.Length - 1] == value;
+    internal static bool EndsWith(this string text, char value) =>
+        text.Length > 0 && text[text.Length - 1] == value;
 
-  internal static bool Contains(this string text, char value) => text.IndexOf(value) > -1;
+    internal static bool Contains(this string text, char value) => text.IndexOf(value) > -1;
 }
 
 #endif

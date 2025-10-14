@@ -12,161 +12,166 @@ namespace SharpCompress.Compressors.Rar;
 internal sealed class MultiVolumeReadOnlyStream : Stream, IStreamStack
 {
 #if DEBUG_STREAMS
-  long IStreamStack.InstanceId { get; set; }
+    long IStreamStack.InstanceId { get; set; }
 #endif
-  int IStreamStack.DefaultBufferSize { get; set; }
+    int IStreamStack.DefaultBufferSize { get; set; }
 
-  Stream IStreamStack.BaseStream() => currentStream;
+    Stream IStreamStack.BaseStream() => currentStream;
 
-  int IStreamStack.BufferSize
-  {
-    get => 0;
-    set { }
-  }
-  int IStreamStack.BufferPosition
-  {
-    get => 0;
-    set { }
-  }
-
-  void IStreamStack.SetPosition(long position) { }
-
-  private long currentPosition;
-  private long maxPosition;
-
-  private IEnumerator<RarFilePart> filePartEnumerator;
-  private Stream currentStream;
-
-  private readonly IExtractionListener streamListener;
-
-  private long currentPartTotalReadBytes;
-  private long currentEntryTotalReadBytes;
-
-  internal MultiVolumeReadOnlyStream(
-    IEnumerable<RarFilePart> parts,
-    IExtractionListener streamListener
-  )
-  {
-    this.streamListener = streamListener;
-
-    filePartEnumerator = parts.GetEnumerator();
-    filePartEnumerator.MoveNext();
-    InitializeNextFilePart();
-#if DEBUG_STREAMS
-    this.DebugConstruct(typeof(MultiVolumeReadOnlyStream));
-#endif
-  }
-
-  protected override void Dispose(bool disposing)
-  {
-    base.Dispose(disposing);
-    if (disposing)
+    int IStreamStack.BufferSize
     {
-#if DEBUG_STREAMS
-      this.DebugDispose(typeof(MultiVolumeReadOnlyStream));
-#endif
-
-      if (filePartEnumerator != null)
-      {
-        filePartEnumerator.Dispose();
-        filePartEnumerator = null;
-      }
-      currentStream = null;
+        get => 0;
+        set { }
     }
-  }
-
-  private void InitializeNextFilePart()
-  {
-    maxPosition = filePartEnumerator.Current.FileHeader.CompressedSize;
-    currentPosition = 0;
-    currentStream = filePartEnumerator.Current.GetCompressedStream();
-
-    currentPartTotalReadBytes = 0;
-
-    CurrentCrc = filePartEnumerator.Current.FileHeader.FileCrc;
-
-    streamListener.FireFilePartExtractionBegin(
-      filePartEnumerator.Current.FilePartName,
-      filePartEnumerator.Current.FileHeader.CompressedSize,
-      filePartEnumerator.Current.FileHeader.UncompressedSize
-    );
-  }
-
-  public override int Read(byte[] buffer, int offset, int count)
-  {
-    var totalRead = 0;
-    var currentOffset = offset;
-    var currentCount = count;
-    while (currentCount > 0)
+    int IStreamStack.BufferPosition
     {
-      var readSize = currentCount;
-      if (currentCount > maxPosition - currentPosition)
-      {
-        readSize = (int)(maxPosition - currentPosition);
-      }
+        get => 0;
+        set { }
+    }
 
-      var read = currentStream.Read(buffer, currentOffset, readSize);
-      if (read < 0)
-      {
-        throw new EndOfStreamException();
-      }
+    void IStreamStack.SetPosition(long position) { }
 
-      currentPosition += read;
-      currentOffset += read;
-      currentCount -= read;
-      totalRead += read;
-      if (
-        ((maxPosition - currentPosition) == 0) && filePartEnumerator.Current.FileHeader.IsSplitAfter
-      )
-      {
-        if (filePartEnumerator.Current.FileHeader.R4Salt != null)
-        {
-          throw new InvalidFormatException(
-            "Sharpcompress currently does not support multi-volume decryption."
-          );
-        }
-        var fileName = filePartEnumerator.Current.FileHeader.FileName;
-        if (!filePartEnumerator.MoveNext())
-        {
-          throw new InvalidFormatException(
-            "Multi-part rar file is incomplete.  Entry expects a new volume: " + fileName
-          );
-        }
+    private long currentPosition;
+    private long maxPosition;
+
+    private IEnumerator<RarFilePart> filePartEnumerator;
+    private Stream currentStream;
+
+    private readonly IExtractionListener streamListener;
+
+    private long currentPartTotalReadBytes;
+    private long currentEntryTotalReadBytes;
+
+    internal MultiVolumeReadOnlyStream(
+        IEnumerable<RarFilePart> parts,
+        IExtractionListener streamListener
+    )
+    {
+        this.streamListener = streamListener;
+
+        filePartEnumerator = parts.GetEnumerator();
+        filePartEnumerator.MoveNext();
         InitializeNextFilePart();
-      }
-      else
-      {
-        break;
-      }
+#if DEBUG_STREAMS
+        this.DebugConstruct(typeof(MultiVolumeReadOnlyStream));
+#endif
     }
-    currentPartTotalReadBytes += totalRead;
-    currentEntryTotalReadBytes += totalRead;
-    streamListener.FireCompressedBytesRead(currentPartTotalReadBytes, currentEntryTotalReadBytes);
-    return totalRead;
-  }
 
-  public override bool CanRead => true;
+    protected override void Dispose(bool disposing)
+    {
+        base.Dispose(disposing);
+        if (disposing)
+        {
+#if DEBUG_STREAMS
+            this.DebugDispose(typeof(MultiVolumeReadOnlyStream));
+#endif
 
-  public override bool CanSeek => false;
+            if (filePartEnumerator != null)
+            {
+                filePartEnumerator.Dispose();
+                filePartEnumerator = null;
+            }
+            currentStream = null;
+        }
+    }
 
-  public override bool CanWrite => false;
+    private void InitializeNextFilePart()
+    {
+        maxPosition = filePartEnumerator.Current.FileHeader.CompressedSize;
+        currentPosition = 0;
+        currentStream = filePartEnumerator.Current.GetCompressedStream();
 
-  public byte[] CurrentCrc { get; private set; }
+        currentPartTotalReadBytes = 0;
 
-  public override void Flush() { }
+        CurrentCrc = filePartEnumerator.Current.FileHeader.FileCrc;
 
-  public override long Length => throw new NotSupportedException();
+        streamListener.FireFilePartExtractionBegin(
+            filePartEnumerator.Current.FilePartName,
+            filePartEnumerator.Current.FileHeader.CompressedSize,
+            filePartEnumerator.Current.FileHeader.UncompressedSize
+        );
+    }
 
-  public override long Position
-  {
-    get => throw new NotSupportedException();
-    set => throw new NotSupportedException();
-  }
+    public override int Read(byte[] buffer, int offset, int count)
+    {
+        var totalRead = 0;
+        var currentOffset = offset;
+        var currentCount = count;
+        while (currentCount > 0)
+        {
+            var readSize = currentCount;
+            if (currentCount > maxPosition - currentPosition)
+            {
+                readSize = (int)(maxPosition - currentPosition);
+            }
 
-  public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
+            var read = currentStream.Read(buffer, currentOffset, readSize);
+            if (read < 0)
+            {
+                throw new EndOfStreamException();
+            }
 
-  public override void SetLength(long value) => throw new NotSupportedException();
+            currentPosition += read;
+            currentOffset += read;
+            currentCount -= read;
+            totalRead += read;
+            if (
+                ((maxPosition - currentPosition) == 0)
+                && filePartEnumerator.Current.FileHeader.IsSplitAfter
+            )
+            {
+                if (filePartEnumerator.Current.FileHeader.R4Salt != null)
+                {
+                    throw new InvalidFormatException(
+                        "Sharpcompress currently does not support multi-volume decryption."
+                    );
+                }
+                var fileName = filePartEnumerator.Current.FileHeader.FileName;
+                if (!filePartEnumerator.MoveNext())
+                {
+                    throw new InvalidFormatException(
+                        "Multi-part rar file is incomplete.  Entry expects a new volume: "
+                            + fileName
+                    );
+                }
+                InitializeNextFilePart();
+            }
+            else
+            {
+                break;
+            }
+        }
+        currentPartTotalReadBytes += totalRead;
+        currentEntryTotalReadBytes += totalRead;
+        streamListener.FireCompressedBytesRead(
+            currentPartTotalReadBytes,
+            currentEntryTotalReadBytes
+        );
+        return totalRead;
+    }
 
-  public override void Write(byte[] buffer, int offset, int count) =>
-    throw new NotSupportedException();
+    public override bool CanRead => true;
+
+    public override bool CanSeek => false;
+
+    public override bool CanWrite => false;
+
+    public byte[] CurrentCrc { get; private set; }
+
+    public override void Flush() { }
+
+    public override long Length => throw new NotSupportedException();
+
+    public override long Position
+    {
+        get => throw new NotSupportedException();
+        set => throw new NotSupportedException();
+    }
+
+    public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
+
+    public override void SetLength(long value) => throw new NotSupportedException();
+
+    public override void Write(byte[] buffer, int offset, int count) =>
+        throw new NotSupportedException();
 }

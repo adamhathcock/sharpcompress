@@ -6,28 +6,28 @@ namespace SharpCompress.Archives.GZip;
 
 public class GZipArchiveEntry : GZipEntry, IArchiveEntry
 {
-  internal GZipArchiveEntry(GZipArchive archive, GZipFilePart? part)
-    : base(part)
-  {
-    Archive = archive;
-  }
-
-  public virtual Stream OpenEntryStream()
-  {
-    //this is to reset the stream to be read multiple times
-    var part = (GZipFilePart)Parts.Single();
-    if (part.GetRawStream().Position != part.EntryStartPosition)
+    internal GZipArchiveEntry(GZipArchive archive, GZipFilePart? part)
+        : base(part)
     {
-      part.GetRawStream().Position = part.EntryStartPosition;
+        Archive = archive;
     }
-    return Parts.Single().GetCompressedStream().NotNull();
-  }
 
-  #region IArchiveEntry Members
+    public virtual Stream OpenEntryStream()
+    {
+        //this is to reset the stream to be read multiple times
+        var part = (GZipFilePart)Parts.Single();
+        if (part.GetRawStream().Position != part.EntryStartPosition)
+        {
+            part.GetRawStream().Position = part.EntryStartPosition;
+        }
+        return Parts.Single().GetCompressedStream().NotNull();
+    }
 
-  public IArchive Archive { get; }
+    #region IArchiveEntry Members
 
-  public bool IsComplete => true;
+    public IArchive Archive { get; }
 
-  #endregion
+    public bool IsComplete => true;
+
+    #endregion
 }

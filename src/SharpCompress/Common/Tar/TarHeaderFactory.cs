@@ -7,60 +7,60 @@ namespace SharpCompress.Common.Tar;
 
 internal static class TarHeaderFactory
 {
-  internal static IEnumerable<TarHeader?> ReadHeader(
-    StreamingMode mode,
-    Stream stream,
-    ArchiveEncoding archiveEncoding
-  )
-  {
-    while (true)
+    internal static IEnumerable<TarHeader?> ReadHeader(
+        StreamingMode mode,
+        Stream stream,
+        ArchiveEncoding archiveEncoding
+    )
     {
-      TarHeader? header = null;
-      try
-      {
-        var reader = new BinaryReader(stream);
-        header = new TarHeader(archiveEncoding);
-
-        if (!header.Read(reader))
+        while (true)
         {
-          yield break;
-        }
-        switch (mode)
-        {
-          case StreamingMode.Seekable:
+            TarHeader? header = null;
+            try
             {
-              header.DataStartPosition = reader.BaseStream.Position;
+                var reader = new BinaryReader(stream);
+                header = new TarHeader(archiveEncoding);
 
-              //skip to nearest 512
-              reader.BaseStream.Position += PadTo512(header.Size);
+                if (!header.Read(reader))
+                {
+                    yield break;
+                }
+                switch (mode)
+                {
+                    case StreamingMode.Seekable:
+                        {
+                            header.DataStartPosition = reader.BaseStream.Position;
+
+                            //skip to nearest 512
+                            reader.BaseStream.Position += PadTo512(header.Size);
+                        }
+                        break;
+                    case StreamingMode.Streaming:
+                        {
+                            header.PackedStream = new TarReadOnlySubStream(stream, header.Size);
+                        }
+                        break;
+                    default:
+                    {
+                        throw new InvalidFormatException("Invalid StreamingMode");
+                    }
+                }
             }
-            break;
-          case StreamingMode.Streaming:
+            catch
             {
-              header.PackedStream = new TarReadOnlySubStream(stream, header.Size);
+                header = null;
             }
-            break;
-          default:
-          {
-            throw new InvalidFormatException("Invalid StreamingMode");
-          }
+            yield return header;
         }
-      }
-      catch
-      {
-        header = null;
-      }
-      yield return header;
     }
-  }
 
-  private static long PadTo512(long size)
-  {
-    var zeros = (int)(size % 512);
-    if (zeros == 0)
+    private static long PadTo512(long size)
     {
-      return size;
+        var zeros = (int)(size % 512);
+        if (zeros == 0)
+        {
+            return size;
+        }
+        return 512 - zeros + size;
     }
-    return 512 - zeros + size;
-  }
 }

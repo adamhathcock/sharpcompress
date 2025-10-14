@@ -7,17 +7,17 @@ namespace SharpCompress.Writers;
 
 public static class WriterFactory
 {
-  public static IWriter Open(Stream stream, ArchiveType archiveType, WriterOptions writerOptions)
-  {
-    var factory = Factories
-      .Factory.Factories.OfType<IWriterFactory>()
-      .FirstOrDefault(item => item.KnownArchiveType == archiveType);
-
-    if (factory != null)
+    public static IWriter Open(Stream stream, ArchiveType archiveType, WriterOptions writerOptions)
     {
-      return factory.Open(stream, writerOptions);
-    }
+        var factory = Factories
+            .Factory.Factories.OfType<IWriterFactory>()
+            .FirstOrDefault(item => item.KnownArchiveType == archiveType);
 
-    throw new NotSupportedException("Archive Type does not have a Writer: " + archiveType);
-  }
+        if (factory != null)
+        {
+            return factory.Open(stream, writerOptions);
+        }
+
+        throw new NotSupportedException("Archive Type does not have a Writer: " + archiveType);
+    }
 }
