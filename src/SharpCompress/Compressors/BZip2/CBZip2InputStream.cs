@@ -60,20 +60,16 @@ internal class CBZip2InputStream : Stream, IStreamStack
 
     void IStreamStack.SetPosition(long position) { }
 
-    private static void Cadvise()
-    {
-        //System.out.Println("CRC Error");
-        throw new InvalidOperationException("BZip2 error");
-    }
+    private static void Cadvise() => throw
+
+      //System.out.Println("CRC Error");
+      new InvalidOperationException("BZip2 error");
 
     private static void BadBGLengths() => Cadvise();
 
     private static void BitStreamEOF() => Cadvise();
 
-    private static void CompressedStreamEOF()
-    {
-        throw new InvalidOperationException("BZip2 compressed file ends unexpectedly");
-    }
+    private static void CompressedStreamEOF() => throw new InvalidOperationException("BZip2 compressed file ends unexpectedly");
 
     private void MakeMaps()
     {

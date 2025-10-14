@@ -291,7 +291,10 @@ internal class CRC
         unchecked((int)0xb1f740b4)
     ];
 
-    public CRC() => InitialiseCRC();
+    public CRC()
+    {
+      InitialiseCRC();
+    }
 
     internal void InitialiseCRC() => globalCrc = unchecked((int)0xffffffff);
 

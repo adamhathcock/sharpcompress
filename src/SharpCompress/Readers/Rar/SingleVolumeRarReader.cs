@@ -9,7 +9,10 @@ internal class SingleVolumeRarReader : RarReader
     private readonly Stream stream;
 
     internal SingleVolumeRarReader(Stream stream, ReaderOptions options)
-        : base(options) => this.stream = stream;
+        : base(options)
+    {
+      this.stream = stream;
+    }
 
     protected override void ValidateArchive(RarVolume archive)
     {

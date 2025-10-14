@@ -1651,8 +1651,10 @@ internal sealed class InflateManager
 
     public InflateManager() { }
 
-    public InflateManager(bool expectRfc1950HeaderBytes) =>
-        HandleRfc1950HeaderBytes = expectRfc1950HeaderBytes;
+    public InflateManager(bool expectRfc1950HeaderBytes)
+    {
+      HandleRfc1950HeaderBytes = expectRfc1950HeaderBytes;
+    }
 
     internal bool HandleRfc1950HeaderBytes { get; set; } = true;
 

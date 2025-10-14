@@ -22,5 +22,8 @@ internal class CFileItem
     public long? StartPos { get; internal set; }
     public bool IsAnti { get; internal set; }
 
-    internal CFileItem() => HasStream = true;
+    internal CFileItem()
+    {
+      HasStream = true;
+    }
 }

@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 
 namespace SharpCompress.Compressors.LZMA;
 
@@ -9,7 +8,10 @@ internal static class Log
     private static readonly Stack<string> INDENT = new();
     private static bool NEEDS_INDENT = true;
 
-    static Log() => INDENT.Push("");
+    static Log()
+    {
+      INDENT.Push("");
+    }
 
     public static void PushIndent(string indent = "  ") => INDENT.Push(INDENT.Peek() + indent);
 

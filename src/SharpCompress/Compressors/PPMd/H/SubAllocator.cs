@@ -77,7 +77,10 @@ internal class SubAllocator
     private RarMemBlock _tempRarMemBlock2;
     private RarMemBlock _tempRarMemBlock3;
 
-    public SubAllocator() => Clean();
+    public SubAllocator()
+    {
+      Clean();
+    }
 
     public virtual void Clean() => _subAllocatorSize = 0;
 
@@ -438,5 +441,8 @@ internal class SubAllocator
         return buffer.ToString();
     }
 
-    static SubAllocator() => UNIT_SIZE = Math.Max(PpmContext.SIZE, RarMemBlock.SIZE);
+    static SubAllocator()
+    {
+      UNIT_SIZE = Math.Max(PpmContext.SIZE, RarMemBlock.SIZE);
+    }
 }

@@ -15,7 +15,10 @@ internal class MultiVolumeRarReader : RarReader
     private Stream tempStream;
 
     internal MultiVolumeRarReader(IEnumerable<Stream> streams, ReaderOptions options)
-        : base(options) => this.streams = streams.GetEnumerator();
+        : base(options)
+    {
+      this.streams = streams.GetEnumerator();
+    }
 
     protected override void ValidateArchive(RarVolume archive) { }
 

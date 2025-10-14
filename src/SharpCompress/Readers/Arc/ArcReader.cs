@@ -1,9 +1,5 @@
-using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using SharpCompress.Common;
 using SharpCompress.Common.Arc;
 
@@ -12,7 +8,10 @@ namespace SharpCompress.Readers.Arc;
 public class ArcReader : AbstractReader<ArcEntry, ArcVolume>
 {
     private ArcReader(Stream stream, ReaderOptions options)
-        : base(options, ArchiveType.Arc) => Volume = new ArcVolume(stream, options, 0);
+        : base(options, ArchiveType.Arc)
+    {
+      Volume = new ArcVolume(stream, options, 0);
+    }
 
     public override ArcVolume Volume { get; }
 

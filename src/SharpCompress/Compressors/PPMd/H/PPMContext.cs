@@ -548,5 +548,8 @@ internal class PpmContext : Pointer
         return buffer.ToString();
     }
 
-    static PpmContext() => UNION_SIZE = Math.Max(FreqData.SIZE, State.SIZE);
+    static PpmContext()
+    {
+      UNION_SIZE = Math.Max(FreqData.SIZE, State.SIZE);
+    }
 }

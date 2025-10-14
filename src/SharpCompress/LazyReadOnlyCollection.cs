@@ -12,7 +12,10 @@ internal sealed class LazyReadOnlyCollection<T> : ICollection<T>
     private readonly IEnumerator<T> source;
     private bool fullyLoaded;
 
-    public LazyReadOnlyCollection(IEnumerable<T> source) => this.source = source.GetEnumerator();
+    public LazyReadOnlyCollection(IEnumerable<T> source)
+    {
+      this.source = source.GetEnumerator();
+    }
 
     private class LazyLoader : IEnumerator<T>
     {
@@ -20,8 +23,10 @@ internal sealed class LazyReadOnlyCollection<T> : ICollection<T>
         private bool disposed;
         private int index = -1;
 
-        internal LazyLoader(LazyReadOnlyCollection<T> lazyReadOnlyCollection) =>
-            this.lazyReadOnlyCollection = lazyReadOnlyCollection;
+        internal LazyLoader(LazyReadOnlyCollection<T> lazyReadOnlyCollection)
+        {
+          this.lazyReadOnlyCollection = lazyReadOnlyCollection;
+        }
 
         #region IEnumerator<T> Members
 

@@ -9,7 +9,10 @@ internal class BCJFilterARM64 : Filter
     private int _pos;
 
     public BCJFilterARM64(bool isEncoder, Stream baseStream)
-        : base(isEncoder, baseStream, 8) => _pos = 0;
+        : base(isEncoder, baseStream, 8)
+    {
+      _pos = 0;
+    }
 
     protected override int Transform(byte[] buffer, int offset, int count)
     {

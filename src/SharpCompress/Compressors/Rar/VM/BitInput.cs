@@ -22,7 +22,10 @@ internal class BitInput
     public bool ExternalBuffer;
 
     /// <summary>  </summary>
-    internal BitInput() => InBuf = new byte[MAX_SIZE];
+    internal BitInput()
+    {
+      InBuf = new byte[MAX_SIZE];
+    }
 
     internal byte[] InBuf { get; }
 

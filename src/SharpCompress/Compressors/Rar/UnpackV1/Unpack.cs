@@ -18,9 +18,11 @@ internal sealed partial class Unpack : BitInput, IRarUnpack, IDisposable
     private readonly BitInput Inp;
     private bool disposed;
 
-    public Unpack() =>
-        // to ease in porting Unpack50.cs
-        Inp = this;
+    public Unpack()
+    {
+      // to ease in porting Unpack50.cs
+      Inp = this;
+    }
 
     public void Dispose()
     {

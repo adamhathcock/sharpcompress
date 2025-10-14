@@ -11,7 +11,10 @@ internal class MarkHeader : IRarHeader
 
     public bool IsRar5 { get; }
 
-    private MarkHeader(bool isRar5) => IsRar5 = isRar5;
+    private MarkHeader(bool isRar5)
+    {
+      IsRar5 = isRar5;
+    }
 
     public HeaderType HeaderType => HeaderType.Mark;
 

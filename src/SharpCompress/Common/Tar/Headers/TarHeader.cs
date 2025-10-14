@@ -9,7 +9,10 @@ internal sealed class TarHeader
 {
     internal static readonly DateTime EPOCH = new(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 
-    public TarHeader(ArchiveEncoding archiveEncoding) => ArchiveEncoding = archiveEncoding;
+    public TarHeader(ArchiveEncoding archiveEncoding)
+    {
+      ArchiveEncoding = archiveEncoding;
+    }
 
     internal string? Name { get; set; }
     internal string? LinkName { get; set; }

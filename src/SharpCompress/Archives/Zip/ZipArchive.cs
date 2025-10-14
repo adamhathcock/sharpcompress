@@ -29,11 +29,13 @@ public class ZipArchive : AbstractWritableArchive<ZipArchiveEntry, ZipVolume>
     /// </summary>
     /// <param name="sourceStream"></param>
     internal ZipArchive(SourceStream sourceStream)
-        : base(ArchiveType.Zip, sourceStream) =>
-        headerFactory = new SeekableZipHeaderFactory(
-            sourceStream.ReaderOptions.Password,
-            sourceStream.ReaderOptions.ArchiveEncoding
-        );
+        : base(ArchiveType.Zip, sourceStream)
+    {
+      headerFactory = new SeekableZipHeaderFactory(
+        sourceStream.ReaderOptions.Password,
+        sourceStream.ReaderOptions.ArchiveEncoding
+      );
+    }
 
     /// <summary>
     /// Constructor expects a filepath to an existing file.

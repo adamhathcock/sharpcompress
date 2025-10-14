@@ -22,7 +22,10 @@ internal class BCJFilter : Filter
     private int _prevMask;
 
     public BCJFilter(bool isEncoder, Stream baseStream)
-        : base(isEncoder, baseStream, 5) => _pos = 5;
+        : base(isEncoder, baseStream, 5)
+    {
+      _pos = 5;
+    }
 
     private static bool Test86MsByte(byte b) => b == 0x00 || b == 0xFF;
 

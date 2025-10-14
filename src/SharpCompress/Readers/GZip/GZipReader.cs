@@ -8,7 +8,10 @@ namespace SharpCompress.Readers.GZip;
 public class GZipReader : AbstractReader<GZipEntry, GZipVolume>
 {
     private GZipReader(Stream stream, ReaderOptions options)
-        : base(options, ArchiveType.GZip) => Volume = new GZipVolume(stream, options, 0);
+        : base(options, ArchiveType.GZip)
+    {
+      Volume = new GZipVolume(stream, options, 0);
+    }
 
     public override GZipVolume Volume { get; }
 

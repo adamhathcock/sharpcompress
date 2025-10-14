@@ -216,7 +216,10 @@ public class SevenZipArchive : AbstractArchive<SevenZipArchiveEntry, SevenZipVol
         private CFileItem? _currentItem;
 
         internal SevenZipReader(ReaderOptions readerOptions, SevenZipArchive archive)
-            : base(readerOptions, ArchiveType.SevenZip) => _archive = archive;
+            : base(readerOptions, ArchiveType.SevenZip)
+        {
+          _archive = archive;
+        }
 
         public override SevenZipVolume Volume => _archive.Volumes.Single();
 
@@ -266,7 +269,10 @@ public class SevenZipArchive : AbstractArchive<SevenZipArchiveEntry, SevenZipVol
     {
         private readonly string? _password;
 
-        public PasswordProvider(string? password) => _password = password;
+        public PasswordProvider(string? password)
+        {
+          _password = password;
+        }
 
         public string? CryptoGetTextPassword() => _password;
     }

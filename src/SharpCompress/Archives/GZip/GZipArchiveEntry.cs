@@ -7,7 +7,10 @@ namespace SharpCompress.Archives.GZip;
 public class GZipArchiveEntry : GZipEntry, IArchiveEntry
 {
     internal GZipArchiveEntry(GZipArchive archive, GZipFilePart? part)
-        : base(part) => Archive = archive;
+        : base(part)
+    {
+      Archive = archive;
+    }
 
     public virtual Stream OpenEntryStream()
     {

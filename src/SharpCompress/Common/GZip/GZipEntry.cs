@@ -8,7 +8,10 @@ public class GZipEntry : Entry
 {
     private readonly GZipFilePart? _filePart;
 
-    internal GZipEntry(GZipFilePart? filePart) => _filePart = filePart;
+    internal GZipEntry(GZipFilePart? filePart)
+    {
+      _filePart = filePart;
+    }
 
     public override CompressionType CompressionType => CompressionType.GZip;
 

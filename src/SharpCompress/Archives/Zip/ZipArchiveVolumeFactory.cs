@@ -8,7 +8,7 @@ internal static class ZipArchiveVolumeFactory
 {
     internal static FileInfo? GetFilePart(int index, FileInfo part1) //base the name on the first part
     {
-        FileInfo? item = null;
+        FileInfo item;
 
         //load files with zip/zipx first. Swapped to end once loaded in ZipArchive
         //new style .zip, z01.. | .zipx, zx01 - if the numbers go beyond 99 then they use 100 ...1000 etc
@@ -31,7 +31,7 @@ internal static class ZipArchiveVolumeFactory
             return ArchiveVolumeFactory.GetFilePart(index, part1);
         }
 
-        if (item != null && item.Exists)
+        if (item.Exists)
         {
             return item;
         }

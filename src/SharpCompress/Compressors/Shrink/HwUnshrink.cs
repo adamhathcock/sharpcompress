@@ -2,7 +2,7 @@ using System;
 
 namespace SharpCompress.Compressors.Shrink;
 
-public class HwUnshrink
+public static class HwUnshrink
 {
     private const int MIN_CODE_SIZE = 9;
     private const int MAX_CODE_SIZE = 13;

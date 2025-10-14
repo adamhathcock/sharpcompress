@@ -1,5 +1,7 @@
 #nullable disable
 
+using System;
+
 namespace SharpCompress.Compressors.PPMd.I1;
 
 /// <summary>
@@ -17,7 +19,7 @@ internal partial class Model
     /// <summary>
     /// The structure which represents the current PPM context.  This is 12 bytes in size.
     /// </summary>
-    internal struct PpmContext
+    internal struct PpmContext : IEquatable<PpmContext>
     {
         public uint _address;
         public byte[] _memory;
@@ -261,6 +263,8 @@ internal partial class Model
             }
             return base.Equals(obj);
         }
+
+        public bool Equals(PpmContext other) => other._address == _address;
 
         /// <summary>
         /// Returns the hash code for this instance.
@@ -577,7 +581,6 @@ internal partial class Model
 
     private See2Context MakeEscapeFrequency(PpmContext context)
     {
-        var numberStatistics = (uint)2 * context.NumberStatistics;
         See2Context see2Context;
 
         if (context.NumberStatistics != 0xff)
@@ -585,7 +588,7 @@ internal partial class Model
             // Note that context.Flags is always in the range 0 .. 28 (this ensures that the index used for the second
             // dimension of the see2Contexts array is always in the range 0 .. 31).
 
-            numberStatistics = context.Suffix.NumberStatistics;
+            var numberStatistics = context.Suffix.NumberStatistics;
             var index1 = _probabilities[context.NumberStatistics + 2] - 3;
             var index2 =
                 ((context.SummaryFrequency > 11 * (context.NumberStatistics + 1)) ? 1 : 0)

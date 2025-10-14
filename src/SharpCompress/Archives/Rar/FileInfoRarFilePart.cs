@@ -12,7 +12,10 @@ internal sealed class FileInfoRarFilePart : SeekableFilePart
         FileHeader fh,
         FileInfo fi
     )
-        : base(mh, fh, volume.Index, volume.Stream, password) => FileInfo = fi;
+        : base(mh, fh, volume.Index, volume.Stream, password)
+    {
+      FileInfo = fi;
+    }
 
     internal FileInfo FileInfo { get; }
 

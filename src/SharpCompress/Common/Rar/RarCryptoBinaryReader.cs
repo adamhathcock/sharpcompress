@@ -22,7 +22,10 @@ internal sealed class RarCryptoBinaryReader : RarCrcBinaryReader
     }
 
     public RarCryptoBinaryReader(Stream stream, ICryptKey cryptKey, byte[] salt)
-        : base(stream) => _rijndael = new BlockTransformer(cryptKey.Transformer(salt));
+        : base(stream)
+    {
+      _rijndael = new BlockTransformer(cryptKey.Transformer(salt));
+    }
 
     // track read count ourselves rather than using the underlying stream since we buffer
     public override long CurrentReadByteCount

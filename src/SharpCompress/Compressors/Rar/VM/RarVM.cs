@@ -40,9 +40,11 @@ internal sealed class RarVM : BitInput
 
     private int IP;
 
-    internal RarVM() =>
-        //InitBlock();
-        Mem = null;
+    internal RarVM()
+    {
+      //InitBlock();
+      Mem = null;
+    }
 
     internal void init() => Mem ??= new byte[VM_MEMSIZE + 4];
 

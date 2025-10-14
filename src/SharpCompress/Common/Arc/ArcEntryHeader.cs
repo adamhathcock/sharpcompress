@@ -51,24 +51,21 @@ public class ArcEntryHeader
         return this;
     }
 
-    private CompressionType GetCompressionType(byte value)
-    {
-        return value switch
-        {
-            1 or 2 => CompressionType.None,
-            3 => CompressionType.RLE90,
-            4 => CompressionType.Squeezed,
-            5 or 6 or 7 or 8 => CompressionType.Crunched,
-            9 => CompressionType.Squashed,
-            10 => CompressionType.Crushed,
-            11 => CompressionType.Distilled,
-            _ => CompressionType.Unknown,
-        };
-    }
+    private CompressionType GetCompressionType(byte value) =>
+      value switch
+      {
+        1 or 2 => CompressionType.None,
+        3 => CompressionType.RLE90,
+        4 => CompressionType.Squeezed,
+        5 or 6 or 7 or 8 => CompressionType.Crunched,
+        9 => CompressionType.Squashed,
+        10 => CompressionType.Crushed,
+        11 => CompressionType.Distilled,
+        _ => CompressionType.Unknown,
+      };
 
-    public static DateTime ConvertToDateTime(long rawDateTime)
-    {
-        // Convert Unix timestamp to DateTime (UTC)
-        return DateTimeOffset.FromUnixTimeSeconds(rawDateTime).UtcDateTime;
-    }
+    public static DateTime ConvertToDateTime(long rawDateTime) =>
+
+      // Convert Unix timestamp to DateTime (UTC)
+      DateTimeOffset.FromUnixTimeSeconds(rawDateTime).UtcDateTime;
 }

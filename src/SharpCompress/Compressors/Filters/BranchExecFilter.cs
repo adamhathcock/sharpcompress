@@ -13,8 +13,9 @@ namespace SharpCompress.Compressors.Filters;
 [CLSCompliant(false)]
 public sealed class BranchExecFilter
 {
-    public enum Alignment : int
+    public enum Alignment
     {
+      None = 0,
         ARCH_x86_ALIGNMENT = 1,
         ARCH_PowerPC_ALIGNMENT = 4,
         ARCH_IA64_ALIGNMENT = 16,

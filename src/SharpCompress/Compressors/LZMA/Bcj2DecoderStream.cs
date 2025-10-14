@@ -69,7 +69,10 @@ internal class Bcj2DecoderStream : DecoderStream2, IStreamStack
 
         private uint _prob;
 
-        public StatusDecoder() => _prob = K_BIT_MODEL_TOTAL / 2;
+        public StatusDecoder()
+        {
+          _prob = K_BIT_MODEL_TOTAL / 2;
+        }
 
         public uint Decode(RangeDecoder decoder)
         {

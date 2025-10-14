@@ -1,6 +1,9 @@
-﻿namespace SharpCompress.Common.SevenZip;
+﻿using System;
 
-internal readonly struct CMethodId
+namespace SharpCompress.Common.SevenZip;
+
+
+internal readonly struct CMethodId : IEquatable<CMethodId>
 {
     public const ulong K_COPY_ID = 0;
     public const ulong K_LZMA_ID = 0x030101;
@@ -14,7 +17,10 @@ internal readonly struct CMethodId
 
     public readonly ulong _id;
 
-    public CMethodId(ulong id) => _id = id;
+    public CMethodId(ulong id)
+    {
+      _id = id;
+    }
 
     public override int GetHashCode() => _id.GetHashCode();
 

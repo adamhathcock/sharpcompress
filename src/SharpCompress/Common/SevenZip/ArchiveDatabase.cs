@@ -27,8 +27,10 @@ internal class ArchiveDatabase
 
     internal IPasswordProvider PasswordProvider { get; }
 
-    public ArchiveDatabase(IPasswordProvider passwordProvider) =>
-        PasswordProvider = passwordProvider;
+    public ArchiveDatabase(IPasswordProvider passwordProvider)
+    {
+      PasswordProvider = passwordProvider;
+    }
 
     internal void Clear()
     {

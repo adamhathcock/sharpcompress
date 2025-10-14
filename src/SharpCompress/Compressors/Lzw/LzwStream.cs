@@ -471,34 +471,22 @@ public class LzwStream : Stream, IStreamStack
     /// <summary>
     /// Gets a value indicating whether the current stream supports reading
     /// </summary>
-    public override bool CanRead
-    {
-        get { return baseInputStream.CanRead; }
-    }
+    public override bool CanRead => baseInputStream.CanRead;
 
     /// <summary>
     /// Gets a value of false indicating seeking is not supported for this stream.
     /// </summary>
-    public override bool CanSeek
-    {
-        get { return false; }
-    }
+    public override bool CanSeek => false;
 
     /// <summary>
     /// Gets a value of false indicating that this stream is not writeable.
     /// </summary>
-    public override bool CanWrite
-    {
-        get { return false; }
-    }
+    public override bool CanWrite => false;
 
     /// <summary>
     /// A value representing the length of the stream in bytes.
     /// </summary>
-    public override long Length
-    {
-        get { return got; }
-    }
+    public override long Length => got;
 
     /// <summary>
     /// The current position within the stream.
@@ -507,17 +495,14 @@ public class LzwStream : Stream, IStreamStack
     /// <exception cref="NotSupportedException">Attempting to set the position</exception>
     public override long Position
     {
-        get { return baseInputStream.Position; }
-        set { throw new NotSupportedException("InflaterInputStream Position not supported"); }
+        get => baseInputStream.Position;
+        set => throw new NotSupportedException("InflaterInputStream Position not supported");
     }
 
     /// <summary>
     /// Flushes the baseInputStream
     /// </summary>
-    public override void Flush()
-    {
-        baseInputStream.Flush();
-    }
+    public override void Flush() => baseInputStream.Flush();
 
     /// <summary>
     /// Sets the position within the current stream
@@ -527,10 +512,7 @@ public class LzwStream : Stream, IStreamStack
     /// <param name="origin">The <see cref="SeekOrigin"/> defining where to seek from.</param>
     /// <returns>The new position in the stream.</returns>
     /// <exception cref="NotSupportedException">Any access</exception>
-    public override long Seek(long offset, SeekOrigin origin)
-    {
-        throw new NotSupportedException("Seek not supported");
-    }
+    public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException("Seek not supported");
 
     /// <summary>
     /// Set the length of the current stream
@@ -538,10 +520,7 @@ public class LzwStream : Stream, IStreamStack
     /// </summary>
     /// <param name="value">The new length value for the stream.</param>
     /// <exception cref="NotSupportedException">Any access</exception>
-    public override void SetLength(long value)
-    {
-        throw new NotSupportedException("InflaterInputStream SetLength not supported");
-    }
+    public override void SetLength(long value) => throw new NotSupportedException("InflaterInputStream SetLength not supported");
 
     /// <summary>
     /// Writes a sequence of bytes to stream and advances the current position
@@ -551,10 +530,7 @@ public class LzwStream : Stream, IStreamStack
     /// <param name="offset">The offset of the first byte to write.</param>
     /// <param name="count">The number of bytes to write.</param>
     /// <exception cref="NotSupportedException">Any access</exception>
-    public override void Write(byte[] buffer, int offset, int count)
-    {
-        throw new NotSupportedException("InflaterInputStream Write not supported");
-    }
+    public override void Write(byte[] buffer, int offset, int count) => throw new NotSupportedException("InflaterInputStream Write not supported");
 
     /// <summary>
     /// Writes one byte to the current stream and advances the current position
@@ -562,10 +538,7 @@ public class LzwStream : Stream, IStreamStack
     /// </summary>
     /// <param name="value">The byte to write.</param>
     /// <exception cref="NotSupportedException">Any access</exception>
-    public override void WriteByte(byte value)
-    {
-        throw new NotSupportedException("InflaterInputStream WriteByte not supported");
-    }
+    public override void WriteByte(byte value) => throw new NotSupportedException("InflaterInputStream WriteByte not supported");
 
     /// <summary>
     /// Closes the input stream.  When <see cref="IsStreamOwner"></see>

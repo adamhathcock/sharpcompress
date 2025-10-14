@@ -56,11 +56,6 @@ internal partial class FragmentedWindow
             while (Size >= MinSize)
             {
                 NewMem = new byte[Size];
-                if (NewMem != null)
-                {
-                    break;
-                }
-
                 Size -= Size / 32;
             }
 

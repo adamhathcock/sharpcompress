@@ -1,14 +1,8 @@
-using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Security.Cryptography;
-using System.Text;
-using System.Threading.Tasks;
 using SharpCompress.Common;
 using SharpCompress.Readers;
 using SharpCompress.Readers.Arc;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace SharpCompress.Factories;
 

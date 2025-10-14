@@ -14,7 +14,10 @@ public class XZHeader
     public CheckType BlockCheckType { get; private set; }
     public int BlockCheckSize => 4 << ((((int)BlockCheckType + 2) / 3) - 1);
 
-    public XZHeader(BinaryReader reader) => _reader = reader;
+    public XZHeader(BinaryReader reader)
+    {
+      _reader = reader;
+    }
 
     public static XZHeader FromStream(Stream stream)
     {

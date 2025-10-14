@@ -13,7 +13,10 @@ internal class SeekableZipFilePart : ZipFilePart
         DirectoryEntryHeader header,
         Stream stream
     )
-        : base(header, stream) => _headerFactory = headerFactory;
+        : base(header, stream)
+    {
+      _headerFactory = headerFactory;
+    }
 
     internal override Stream GetCompressedStream()
     {

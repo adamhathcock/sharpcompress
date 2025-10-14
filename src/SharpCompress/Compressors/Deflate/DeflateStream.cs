@@ -27,7 +27,6 @@
 using System;
 using System.IO;
 using System.Text;
-using System.Threading;
 using SharpCompress.IO;
 
 namespace SharpCompress.Compressors.Deflate;

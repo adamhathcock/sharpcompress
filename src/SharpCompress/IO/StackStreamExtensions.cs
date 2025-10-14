@@ -273,12 +273,10 @@ internal static class StackStreamExtensions
     /// </summary>
     /// <param name="stream">The stream stack.</param>
     /// <param name="message">The debug message to write.</param>
-    public static void DebugTrace(this IStreamStack stream, string message)
-    {
-        Debug.WriteLine(
-            $"{GetStreamStackString(stream, false)} : [{stream.GetType().Name}]{message}"
-        );
-    }
+    public static void DebugTrace(this IStreamStack stream, string message) =>
+      Debug.WriteLine(
+        $"{GetStreamStackString(stream, false)} : [{stream.GetType().Name}]{message}"
+      );
 
     /// <summary>
     /// Returns the full stream chain as a string, including instance IDs and positions.

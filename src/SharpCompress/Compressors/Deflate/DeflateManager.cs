@@ -202,20 +202,22 @@ internal sealed partial class DeflateManager
 
         public static Config Lookup(CompressionLevel level) => Table[(int)level];
 
-        static Config() =>
-            Table =
-            [
-              new Config(0, 0, 0, 0, DeflateFlavor.Store),
-                new Config(4, 4, 8, 4, DeflateFlavor.Fast),
-                new Config(4, 5, 16, 8, DeflateFlavor.Fast),
-                new Config(4, 6, 32, 32, DeflateFlavor.Fast),
-                new Config(4, 4, 16, 16, DeflateFlavor.Slow),
-                new Config(8, 16, 32, 32, DeflateFlavor.Slow),
-                new Config(8, 16, 128, 128, DeflateFlavor.Slow),
-                new Config(8, 32, 128, 256, DeflateFlavor.Slow),
-                new Config(32, 128, 258, 1024, DeflateFlavor.Slow),
-                new Config(32, 258, 258, 4096, DeflateFlavor.Slow)
-            ];
+        static Config()
+        {
+          Table =
+          [
+            new Config(0, 0, 0, 0, DeflateFlavor.Store),
+            new Config(4, 4, 8, 4, DeflateFlavor.Fast),
+            new Config(4, 5, 16, 8, DeflateFlavor.Fast),
+            new Config(4, 6, 32, 32, DeflateFlavor.Fast),
+            new Config(4, 4, 16, 16, DeflateFlavor.Slow),
+            new Config(8, 16, 32, 32, DeflateFlavor.Slow),
+            new Config(8, 16, 128, 128, DeflateFlavor.Slow),
+            new Config(8, 32, 128, 256, DeflateFlavor.Slow),
+            new Config(32, 128, 258, 1024, DeflateFlavor.Slow),
+            new Config(32, 258, 258, 4096, DeflateFlavor.Slow)
+          ];
+        }
 
         private static readonly Config[] Table;
     }

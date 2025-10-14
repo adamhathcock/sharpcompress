@@ -89,7 +89,10 @@ internal class Allocator
 
     #region Public Methods
 
-    public Allocator() => _memoryNodes = new MemoryNode[INDEX_COUNT];
+    public Allocator()
+    {
+      _memoryNodes = new MemoryNode[INDEX_COUNT];
+    }
 
     /// <summary>
     /// Initialize or reset the memory allocator (so that the single, large array can be re-used without destroying

@@ -9,7 +9,10 @@ internal class BCJFilterRISCV : Filter
     private int _pos;
 
     public BCJFilterRISCV(bool isEncoder, Stream baseStream)
-        : base(isEncoder, baseStream, 8) => _pos = 0;
+        : base(isEncoder, baseStream, 8)
+    {
+      _pos = 0;
+    }
 
     private int Decode(byte[] buffer, int offset, int count)
     {

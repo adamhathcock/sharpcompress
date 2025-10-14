@@ -1,8 +1,5 @@
 using System;
-using System.Diagnostics;
 using System.IO;
-using System.Text;
-using System.Threading;
 
 namespace SharpCompress.IO;
 
@@ -137,7 +134,7 @@ public class SharpCompressStream : Stream, IStreamStack
         this.ThrowOnDispose = throwOnDispose;
         _readOnly = !Stream.CanSeek;
 
-        ((IStreamStack)this).SetBuffer(bufferSize, forceBuffer);
+        this.SetBuffer(bufferSize, forceBuffer);
         try
         {
             _baseInitialPos = stream.Position;
@@ -188,15 +185,9 @@ public class SharpCompressStream : Stream, IStreamStack
 
     public override bool CanWrite => !_readOnly && Stream.CanWrite;
 
-    public override void Flush()
-    {
-        Stream.Flush();
-    }
+    public override void Flush() => Stream.Flush();
 
-    public override long Length
-    {
-        get { return Stream.Length; }
-    }
+    public override long Length => Stream.Length;
 
     public override long Position
     {
@@ -205,7 +196,7 @@ public class SharpCompressStream : Stream, IStreamStack
             long pos = _internalPosition; // Stream.Position + _bufferStream.Position - _bufferStream.Length;
             return pos;
         }
-        set { Seek(value, SeekOrigin.Begin); }
+        set => Seek(value, SeekOrigin.Begin);
     }
 
     public override int Read(byte[] buffer, int offset, int count)
@@ -310,10 +301,7 @@ public class SharpCompressStream : Stream, IStreamStack
         return _internalPosition;
     }
 
-    public override void SetLength(long value)
-    {
-        throw new NotSupportedException();
-    }
+    public override void SetLength(long value) => throw new NotSupportedException();
 
     public override void WriteByte(byte value)
     {

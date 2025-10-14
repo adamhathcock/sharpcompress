@@ -7,7 +7,10 @@ internal class BCJFilterPPC : Filter
     private int _pos;
 
     public BCJFilterPPC(bool isEncoder, Stream baseStream)
-        : base(isEncoder, baseStream, 4) => _pos = 0;
+        : base(isEncoder, baseStream, 4)
+    {
+      _pos = 0;
+    }
 
     protected override int Transform(byte[] buffer, int offset, int count)
     {

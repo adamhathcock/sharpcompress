@@ -43,7 +43,10 @@ internal class BCJFilterIA64 : Filter
     ];
 
     public BCJFilterIA64(bool isEncoder, Stream baseStream)
-        : base(isEncoder, baseStream, 16) => _pos = 0;
+        : base(isEncoder, baseStream, 16)
+    {
+      _pos = 0;
+    }
 
     protected override int Transform(byte[] buffer, int offset, int count)
     {

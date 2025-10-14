@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using static SharpCompress.Compressors.Rar.UnpackV2017.PackDef;
 using static SharpCompress.Compressors.Rar.UnpackV2017.UnpackGlobal;

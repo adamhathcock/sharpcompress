@@ -16,7 +16,10 @@ internal class StreamingZipHeaderFactory : ZipHeaderFactory
         ArchiveEncoding archiveEncoding,
         IEnumerable<ZipEntry>? entries
     )
-        : base(StreamingMode.Streaming, password, archiveEncoding) => _entries = entries;
+        : base(StreamingMode.Streaming, password, archiveEncoding)
+    {
+      _entries = entries;
+    }
 
     internal IEnumerable<ZipHeader> ReadStreamHeader(Stream stream)
     {
