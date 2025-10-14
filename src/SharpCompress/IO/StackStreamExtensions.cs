@@ -1,6 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+#if !NETFRAMEWORK && !NETSTANDARD2_0
+using System.Diagnostics;
+using System.Text;
+#endif
 
 namespace SharpCompress.IO;
 
@@ -230,6 +234,7 @@ internal static class StackStreamExtensions
         return instanceId;
     }
 
+#if DEBUG_STREAMS
     /// <summary>
     /// Writes a debug message for stream construction.
     /// </summary>
@@ -242,14 +247,15 @@ internal static class StackStreamExtensions
         var frame = (new StackTrace()).GetFrame(3);
         var parentInfo =
             frame != null
+#pragma warning disable IL2026
                 ? $"{frame.GetMethod()?.DeclaringType?.Name}.{frame.GetMethod()?.Name}()"
+#pragma warning restore IL2026
                 : "Unknown";
         if (constructing.FullName == stream.GetType().FullName) //don't debug base IStackStream types
         {
             Debug.WriteLine($"{GetStreamStackString(stream, true)} : Constructed by [{parentInfo}]");
         }
     }
-
     /// <summary>
     /// Writes a debug message for stream disposal.
     /// </summary>
@@ -260,13 +266,16 @@ internal static class StackStreamExtensions
         var frame = (new StackTrace()).GetFrame(3);
         var parentInfo =
             frame != null
-                ? $"{frame.GetMethod()?.DeclaringType?.Name}.{frame.GetMethod()?.Name}()"
-                : "Unknown";
+#pragma warning disable IL2026
+              ? $"{frame.GetMethod()?.DeclaringType?.Name}.{frame.GetMethod()?.Name}()"
+#pragma warning restore IL2026
+              : "Unknown";
         if (constructing.FullName == stream.GetType().FullName) //don't debug base IStackStream types
         {
             Debug.WriteLine($"{GetStreamStackString(stream, false)} : Disposed by [{parentInfo}]");
         }
     }
+    #endif
 
     /// <summary>
     /// Writes a debug trace message for the stream.

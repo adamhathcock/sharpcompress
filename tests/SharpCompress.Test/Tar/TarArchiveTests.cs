@@ -49,7 +49,7 @@ public class TarArchiveTests : ArchiveTests
         var unmodified = Path.Combine(SCRATCH2_FILES_PATH, archive);
         using (var archive2 = TarArchive.Open(unmodified))
         {
-            Assert.Equal(1, archive2.Entries.Count);
+            Assert.Single(archive2.Entries);
             Assert.Contains(filename, archive2.Entries.Select(entry => entry.Key));
 
             foreach (var entry in archive2.Entries)
@@ -109,7 +109,7 @@ public class TarArchiveTests : ArchiveTests
         var unmodified = Path.Combine(SCRATCH2_FILES_PATH, archive);
         using (var archive2 = TarArchive.Open(unmodified))
         {
-            Assert.Equal(1, archive2.Entries.Count);
+            Assert.Single(archive2.Entries);
             Assert.Contains(longFilename, archive2.Entries.Select(entry => entry.Key));
 
             foreach (var entry in archive2.Entries)

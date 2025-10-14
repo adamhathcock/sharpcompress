@@ -9,6 +9,7 @@
 using System;
 using System.Runtime.CompilerServices;
 #if SUPPORTS_RUNTIME_INTRINSICS
+using System.Runtime.InteropServices;
 using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
 #endif
