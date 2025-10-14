@@ -8,17 +8,17 @@ namespace SharpCompress.Common.Rar;
 /// </summary>
 internal abstract class RarFilePart : FilePart
 {
-    internal RarFilePart(MarkHeader mh, FileHeader fh, int index)
-        : base(fh.ArchiveEncoding)
-    {
-        MarkHeader = mh;
-        FileHeader = fh;
-        Index = index;
-    }
+  internal RarFilePart(MarkHeader mh, FileHeader fh, int index)
+    : base(fh.ArchiveEncoding)
+  {
+    MarkHeader = mh;
+    FileHeader = fh;
+    Index = index;
+  }
 
-    internal MarkHeader MarkHeader { get; }
+  internal MarkHeader MarkHeader { get; }
 
-    internal FileHeader FileHeader { get; }
+  internal FileHeader FileHeader { get; }
 
-    internal override Stream? GetRawStream() => null;
+  internal override Stream? GetRawStream() => null;
 }

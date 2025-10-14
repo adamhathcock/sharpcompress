@@ -6,7 +6,7 @@ namespace SharpCompress.Compressors.Deflate64;
 
 internal enum BlockType
 {
-    Uncompressed = 0,
-    Static = 1,
-    Dynamic = 2,
+  Uncompressed = 0,
+  Static = 1,
+  Dynamic = 2,
 }

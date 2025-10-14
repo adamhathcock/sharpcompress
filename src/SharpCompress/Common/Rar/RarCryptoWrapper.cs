@@ -7,74 +7,74 @@ namespace SharpCompress.Common.Rar;
 
 internal sealed class RarCryptoWrapper : Stream
 {
-    private readonly Stream _actualStream;
-    private BlockTransformer _rijndael;
-    private readonly Queue<byte> _data = new();
+  private readonly Stream _actualStream;
+  private BlockTransformer _rijndael;
+  private readonly Queue<byte> _data = new();
 
-    public RarCryptoWrapper(Stream actualStream, byte[] salt, ICryptKey key)
+  public RarCryptoWrapper(Stream actualStream, byte[] salt, ICryptKey key)
+  {
+    _actualStream = actualStream;
+    _rijndael = new BlockTransformer(key.Transformer(salt));
+  }
+
+  public override void Flush() { }
+
+  public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
+
+  public override void SetLength(long value) => throw new NotSupportedException();
+
+  public override int Read(byte[] buffer, int offset, int count) =>
+    ReadAndDecrypt(buffer, offset, count);
+
+  public int ReadAndDecrypt(byte[] buffer, int offset, int count)
+  {
+    var queueSize = _data.Count;
+    var sizeToRead = count - queueSize;
+
+    if (sizeToRead > 0)
     {
-        _actualStream = actualStream;
-        _rijndael = new BlockTransformer(key.Transformer(salt));
-    }
+      var alignedSize = sizeToRead + ((~sizeToRead + 1) & 0xf);
+      Span<byte> cipherText = stackalloc byte[16];
+      for (var i = 0; i < alignedSize / 16; i++)
+      {
+        //long ax = System.currentTimeMillis();
+        _actualStream.Read(cipherText);
 
-    public override void Flush() { }
-
-    public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
-
-    public override void SetLength(long value) => throw new NotSupportedException();
-
-    public override int Read(byte[] buffer, int offset, int count) =>
-        ReadAndDecrypt(buffer, offset, count);
-
-    public int ReadAndDecrypt(byte[] buffer, int offset, int count)
-    {
-        var queueSize = _data.Count;
-        var sizeToRead = count - queueSize;
-
-        if (sizeToRead > 0)
+        var readBytes = _rijndael.ProcessBlock(cipherText);
+        foreach (var readByte in readBytes)
         {
-            var alignedSize = sizeToRead + ((~sizeToRead + 1) & 0xf);
-            Span<byte> cipherText = stackalloc byte[16];
-            for (var i = 0; i < alignedSize / 16; i++)
-            {
-                //long ax = System.currentTimeMillis();
-                _actualStream.Read(cipherText);
-
-                var readBytes = _rijndael.ProcessBlock(cipherText);
-                foreach (var readByte in readBytes)
-                {
-                    _data.Enqueue(readByte);
-                }
-            }
-
-            for (var i = 0; i < count; i++)
-            {
-                buffer[offset + i] = _data.Dequeue();
-            }
+          _data.Enqueue(readByte);
         }
-        return count;
+      }
+
+      for (var i = 0; i < count; i++)
+      {
+        buffer[offset + i] = _data.Dequeue();
+      }
     }
+    return count;
+  }
 
-    public override void Write(byte[] buffer, int offset, int count) =>
-        throw new NotSupportedException();
+  public override void Write(byte[] buffer, int offset, int count) =>
+    throw new NotSupportedException();
 
-    public override bool CanRead => true;
+  public override bool CanRead => true;
 
-    public override bool CanSeek => false;
+  public override bool CanSeek => false;
 
-    public override bool CanWrite => false;
+  public override bool CanWrite => false;
 
-    public override long Length => throw new NotSupportedException();
+  public override long Length => throw new NotSupportedException();
 
-    public override long Position { get; set; }
+  public override long Position { get; set; }
 
-    protected override void Dispose(bool disposing)
+  protected override void Dispose(bool disposing)
+  {
+    if (disposing)
     {
-        if (disposing)
-        {
-            _rijndael.Dispose();
-        }
-
-        base.Dispose(disposing);
+      _rijndael.Dispose();
     }
+
+    base.Dispose(disposing);
+  }
 }

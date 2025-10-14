@@ -10,7 +10,7 @@ namespace SharpCompress.Compressors.ArcLzw;
 public partial class ArcLzwStream : Stream, IStreamStack
 {
 #if DEBUG_STREAMS
-    long IStreamStack.InstanceId { get; set; }
+  long IStreamStack.InstanceId { get; set; }
 #endif
   int IStreamStack.DefaultBufferSize { get; set; }
 
@@ -56,7 +56,7 @@ public partial class ArcLzwStream : Stream, IStreamStack
   {
     _stream = stream;
 #if DEBUG_STREAMS
-        this.DebugConstruct(typeof(ArcLzwStream));
+    this.DebugConstruct(typeof(ArcLzwStream));
 #endif
     _useCrunched = useCrunched;
     _compressedSize = compressedSize;
@@ -216,8 +216,7 @@ public partial class ArcLzwStream : Stream, IStreamStack
     return result;
   }
 
-  public override long Seek(long offset, SeekOrigin origin) =>
-    throw new NotImplementedException();
+  public override long Seek(long offset, SeekOrigin origin) => throw new NotImplementedException();
 
   public override void SetLength(long value) => throw new NotImplementedException();
 
@@ -227,7 +226,7 @@ public partial class ArcLzwStream : Stream, IStreamStack
   protected override void Dispose(bool disposing)
   {
 #if DEBUG_STREAMS
-        this.DebugDispose(typeof(ArcLzwStream));
+    this.DebugDispose(typeof(ArcLzwStream));
 #endif
     base.Dispose(disposing);
   }

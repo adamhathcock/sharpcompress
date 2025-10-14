@@ -9,45 +9,45 @@ namespace SharpCompress.Writers.GZip;
 
 public sealed class GZipWriter : AbstractWriter
 {
-    private bool _wroteToStream;
+  private bool _wroteToStream;
 
-    public GZipWriter(Stream destination, GZipWriterOptions? options = null)
-        : base(ArchiveType.GZip, options ?? new GZipWriterOptions())
+  public GZipWriter(Stream destination, GZipWriterOptions? options = null)
+    : base(ArchiveType.GZip, options ?? new GZipWriterOptions())
+  {
+    if (WriterOptions.LeaveStreamOpen)
     {
-        if (WriterOptions.LeaveStreamOpen)
-        {
-            destination = SharpCompressStream.Create(destination, leaveOpen: true);
-        }
-        InitializeStream(
-            new GZipStream(
-                destination,
-                CompressionMode.Compress,
-                (CompressionLevel)(options?.CompressionLevel ?? (int)CompressionLevel.Default),
-                WriterOptions.ArchiveEncoding.GetEncoding()
-            )
-        );
+      destination = SharpCompressStream.Create(destination, leaveOpen: true);
     }
+    InitializeStream(
+      new GZipStream(
+        destination,
+        CompressionMode.Compress,
+        (CompressionLevel)(options?.CompressionLevel ?? (int)CompressionLevel.Default),
+        WriterOptions.ArchiveEncoding.GetEncoding()
+      )
+    );
+  }
 
-    protected override void Dispose(bool isDisposing)
+  protected override void Dispose(bool isDisposing)
+  {
+    if (isDisposing)
     {
-        if (isDisposing)
-        {
-            //dispose here to finish the GZip, GZip won't close the underlying stream
-            OutputStream.Dispose();
-        }
-        base.Dispose(isDisposing);
+      //dispose here to finish the GZip, GZip won't close the underlying stream
+      OutputStream.Dispose();
     }
+    base.Dispose(isDisposing);
+  }
 
-    public override void Write(string filename, Stream source, DateTime? modificationTime)
+  public override void Write(string filename, Stream source, DateTime? modificationTime)
+  {
+    if (_wroteToStream)
     {
-        if (_wroteToStream)
-        {
-            throw new ArgumentException("Can only write a single stream to a GZip file.");
-        }
-        var stream = (GZipStream)OutputStream;
-        stream.FileName = filename;
-        stream.LastModified = modificationTime;
-        source.TransferTo(stream);
-        _wroteToStream = true;
+      throw new ArgumentException("Can only write a single stream to a GZip file.");
     }
+    var stream = (GZipStream)OutputStream;
+    stream.FileName = filename;
+    stream.LastModified = modificationTime;
+    source.TransferTo(stream);
+    _wroteToStream = true;
+  }
 }

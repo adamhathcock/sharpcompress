@@ -5,20 +5,20 @@ namespace SharpCompress.Archives.SevenZip;
 
 public class SevenZipArchiveEntry : SevenZipEntry, IArchiveEntry
 {
-    internal SevenZipArchiveEntry(SevenZipArchive archive, SevenZipFilePart part)
-        : base(part)
-    {
-      Archive = archive;
-    }
+  internal SevenZipArchiveEntry(SevenZipArchive archive, SevenZipFilePart part)
+    : base(part)
+  {
+    Archive = archive;
+  }
 
-    public Stream OpenEntryStream() => FilePart.GetCompressedStream();
+  public Stream OpenEntryStream() => FilePart.GetCompressedStream();
 
-    public IArchive Archive { get; }
+  public IArchive Archive { get; }
 
-    public bool IsComplete => true;
+  public bool IsComplete => true;
 
-    /// <summary>
-    /// This is a 7Zip Anti item
-    /// </summary>
-    public bool IsAnti => FilePart.Header.IsAnti;
+  /// <summary>
+  /// This is a 7Zip Anti item
+  /// </summary>
+  public bool IsAnti => FilePart.Header.IsAnti;
 }

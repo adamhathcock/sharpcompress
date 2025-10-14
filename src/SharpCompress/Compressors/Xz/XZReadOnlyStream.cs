@@ -7,42 +7,42 @@ namespace SharpCompress.Compressors.Xz;
 public abstract class XZReadOnlyStream : ReadOnlyStream, IStreamStack
 {
 #if DEBUG_STREAMS
-    long IStreamStack.InstanceId { get; set; }
+  long IStreamStack.InstanceId { get; set; }
 #endif
-    int IStreamStack.DefaultBufferSize { get; set; }
+  int IStreamStack.DefaultBufferSize { get; set; }
 
-    Stream IStreamStack.BaseStream() => base.BaseStream;
+  Stream IStreamStack.BaseStream() => base.BaseStream;
 
-    int IStreamStack.BufferSize
+  int IStreamStack.BufferSize
+  {
+    get => 0;
+    set { }
+  }
+  int IStreamStack.BufferPosition
+  {
+    get => 0;
+    set { }
+  }
+
+  void IStreamStack.SetPosition(long position) { }
+
+  protected XZReadOnlyStream(Stream stream)
+  {
+    BaseStream = stream;
+    if (!BaseStream.CanRead)
     {
-        get => 0;
-        set { }
+      throw new InvalidFormatException("Must be able to read from stream");
     }
-    int IStreamStack.BufferPosition
-    {
-        get => 0;
-        set { }
-    }
-
-    void IStreamStack.SetPosition(long position) { }
-
-    protected XZReadOnlyStream(Stream stream)
-    {
-        BaseStream = stream;
-        if (!BaseStream.CanRead)
-        {
-            throw new InvalidFormatException("Must be able to read from stream");
-        }
 #if DEBUG_STREAMS
-        this.DebugConstruct(typeof(XZReadOnlyStream));
+    this.DebugConstruct(typeof(XZReadOnlyStream));
 #endif
-    }
+  }
 
-    protected override void Dispose(bool disposing)
-    {
+  protected override void Dispose(bool disposing)
+  {
 #if DEBUG_STREAMS
-        this.DebugDispose(typeof(XZReadOnlyStream));
+    this.DebugDispose(typeof(XZReadOnlyStream));
 #endif
-        base.Dispose(disposing);
-    }
+    base.Dispose(disposing);
+  }
 }

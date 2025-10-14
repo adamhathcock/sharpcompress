@@ -13,64 +13,64 @@ namespace SharpCompress.Factories;
 /// </summary>
 public class SevenZipFactory : Factory, IArchiveFactory, IMultiArchiveFactory
 {
-    #region IFactory
+  #region IFactory
 
-    /// <inheritdoc/>
-    public override string Name => "7Zip";
+  /// <inheritdoc/>
+  public override string Name => "7Zip";
 
-    /// <inheritdoc/>
-    public override ArchiveType? KnownArchiveType => ArchiveType.SevenZip;
+  /// <inheritdoc/>
+  public override ArchiveType? KnownArchiveType => ArchiveType.SevenZip;
 
-    /// <inheritdoc/>
-    public override IEnumerable<string> GetSupportedExtensions()
-    {
-        yield return "7z";
-    }
+  /// <inheritdoc/>
+  public override IEnumerable<string> GetSupportedExtensions()
+  {
+    yield return "7z";
+  }
 
-    /// <inheritdoc/>
-    public override bool IsArchive(
-        Stream stream,
-        string? password = null,
-        int bufferSize = ReaderOptions.DefaultBufferSize
-    ) => SevenZipArchive.IsSevenZipFile(stream);
+  /// <inheritdoc/>
+  public override bool IsArchive(
+    Stream stream,
+    string? password = null,
+    int bufferSize = ReaderOptions.DefaultBufferSize
+  ) => SevenZipArchive.IsSevenZipFile(stream);
 
-    #endregion
+  #endregion
 
-    #region IArchiveFactory
+  #region IArchiveFactory
 
-    /// <inheritdoc/>
-    public IArchive Open(Stream stream, ReaderOptions? readerOptions = null) =>
-        SevenZipArchive.Open(stream, readerOptions);
+  /// <inheritdoc/>
+  public IArchive Open(Stream stream, ReaderOptions? readerOptions = null) =>
+    SevenZipArchive.Open(stream, readerOptions);
 
-    /// <inheritdoc/>
-    public IArchive Open(FileInfo fileInfo, ReaderOptions? readerOptions = null) =>
-        SevenZipArchive.Open(fileInfo, readerOptions);
+  /// <inheritdoc/>
+  public IArchive Open(FileInfo fileInfo, ReaderOptions? readerOptions = null) =>
+    SevenZipArchive.Open(fileInfo, readerOptions);
 
-    #endregion
+  #endregion
 
-    #region IMultiArchiveFactory
+  #region IMultiArchiveFactory
 
-    /// <inheritdoc/>
-    public IArchive Open(IReadOnlyList<Stream> streams, ReaderOptions? readerOptions = null) =>
-        SevenZipArchive.Open(streams, readerOptions);
+  /// <inheritdoc/>
+  public IArchive Open(IReadOnlyList<Stream> streams, ReaderOptions? readerOptions = null) =>
+    SevenZipArchive.Open(streams, readerOptions);
 
-    /// <inheritdoc/>
-    public IArchive Open(IReadOnlyList<FileInfo> fileInfos, ReaderOptions? readerOptions = null) =>
-        SevenZipArchive.Open(fileInfos, readerOptions);
+  /// <inheritdoc/>
+  public IArchive Open(IReadOnlyList<FileInfo> fileInfos, ReaderOptions? readerOptions = null) =>
+    SevenZipArchive.Open(fileInfos, readerOptions);
 
-    #endregion
+  #endregion
 
-    #region reader
+  #region reader
 
-    internal override bool TryOpenReader(
-        SharpCompressStream rewindableStream,
-        ReaderOptions options,
-        out IReader? reader
-    )
-    {
-        reader = null;
-        return false;
-    }
+  internal override bool TryOpenReader(
+    SharpCompressStream rewindableStream,
+    ReaderOptions options,
+    out IReader? reader
+  )
+  {
+    reader = null;
+    return false;
+  }
 
-    #endregion
+  #endregion
 }

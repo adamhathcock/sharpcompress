@@ -12,46 +12,46 @@ namespace SharpCompress.Compressors.Xz.Filters;
 
 public class ArmThumbFilter : BlockFilter
 {
-    public override bool AllowAsLast => false;
+  public override bool AllowAsLast => false;
 
-    public override bool AllowAsNonLast => true;
+  public override bool AllowAsNonLast => true;
 
-    public override bool ChangesDataSize => false;
+  public override bool ChangesDataSize => false;
 
-    private uint _ip = 0;
+  private uint _ip = 0;
 
-    //private UInt32 _offset = 0;
+  //private UInt32 _offset = 0;
 
-    public override void Init(byte[] properties)
+  public override void Init(byte[] properties)
+  {
+    if (properties.Length != 0 && properties.Length != 4)
     {
-        if (properties.Length != 0 && properties.Length != 4)
-        {
-            throw new InvalidFormatException("ARM Thumb properties unexpected length");
-        }
-
-        if (properties.Length == 4)
-        {
-            // Even XZ doesn't support it.
-            throw new InvalidFormatException("ARM Thumb properties offset is not supported");
-
-            //_offset = BitConverter.ToUInt32(properties, 0);
-            //
-            //if (_offset % (UInt32)BranchExec.Alignment.ARCH_ARMTHUMB_ALIGNMENT != 0)
-            //{
-            //    throw new InvalidFormatException("Filter offset does not match alignment");
-            //}
-        }
+      throw new InvalidFormatException("ARM Thumb properties unexpected length");
     }
 
-    public override void ValidateFilter() { }
-
-    public override int Read(byte[] buffer, int offset, int count)
+    if (properties.Length == 4)
     {
-        var bytesRead = BaseStream.Read(buffer, offset, count);
-        BranchExecFilter.ARMTConverter(buffer, _ip);
-        _ip += (uint)bytesRead;
-        return bytesRead;
-    }
+      // Even XZ doesn't support it.
+      throw new InvalidFormatException("ARM Thumb properties offset is not supported");
 
-    public override void SetBaseStream(Stream stream) => BaseStream = stream;
+      //_offset = BitConverter.ToUInt32(properties, 0);
+      //
+      //if (_offset % (UInt32)BranchExec.Alignment.ARCH_ARMTHUMB_ALIGNMENT != 0)
+      //{
+      //    throw new InvalidFormatException("Filter offset does not match alignment");
+      //}
+    }
+  }
+
+  public override void ValidateFilter() { }
+
+  public override int Read(byte[] buffer, int offset, int count)
+  {
+    var bytesRead = BaseStream.Read(buffer, offset, count);
+    BranchExecFilter.ARMTConverter(buffer, _ip);
+    _ip += (uint)bytesRead;
+    return bytesRead;
+  }
+
+  public override void SetBaseStream(Stream stream) => BaseStream = stream;
 }

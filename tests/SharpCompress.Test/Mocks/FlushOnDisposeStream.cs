@@ -9,41 +9,40 @@ namespace SharpCompress.Test.Mocks;
 
 public class FlushOnDisposeStream(Stream innerStream) : Stream
 {
-    public override bool CanRead => innerStream.CanRead;
+  public override bool CanRead => innerStream.CanRead;
 
-    public override bool CanSeek => false;
+  public override bool CanSeek => false;
 
-    public override bool CanWrite => false;
+  public override bool CanWrite => false;
 
-    public override long Length => innerStream.Length;
+  public override long Length => innerStream.Length;
 
-    public override long Position
+  public override long Position
+  {
+    get => innerStream.Position;
+    set => innerStream.Position = value;
+  }
+
+  public override void Flush() { }
+
+  public override int Read(byte[] buffer, int offset, int count) =>
+    innerStream.Read(buffer, offset, count);
+
+  public override long Seek(long offset, SeekOrigin origin) => throw new NotImplementedException();
+
+  public override void SetLength(long value) => throw new NotImplementedException();
+
+  public override void Write(byte[] buffer, int offset, int count) =>
+    throw new NotImplementedException();
+
+  protected override void Dispose(bool disposing)
+  {
+    if (disposing)
     {
-        get => innerStream.Position;
-        set => innerStream.Position = value;
+      innerStream.Flush();
+      innerStream.Close();
     }
 
-    public override void Flush() { }
-
-    public override int Read(byte[] buffer, int offset, int count) =>
-        innerStream.Read(buffer, offset, count);
-
-    public override long Seek(long offset, SeekOrigin origin) =>
-        throw new NotImplementedException();
-
-    public override void SetLength(long value) => throw new NotImplementedException();
-
-    public override void Write(byte[] buffer, int offset, int count) =>
-        throw new NotImplementedException();
-
-    protected override void Dispose(bool disposing)
-    {
-        if (disposing)
-        {
-            innerStream.Flush();
-            innerStream.Close();
-        }
-
-        base.Dispose(disposing);
-    }
+    base.Dispose(disposing);
+  }
 }

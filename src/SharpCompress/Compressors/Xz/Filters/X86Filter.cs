@@ -12,48 +12,48 @@ namespace SharpCompress.Compressors.Xz.Filters;
 
 public class X86Filter : BlockFilter
 {
-    public override bool AllowAsLast => false;
+  public override bool AllowAsLast => false;
 
-    public override bool AllowAsNonLast => true;
+  public override bool AllowAsNonLast => true;
 
-    public override bool ChangesDataSize => false;
+  public override bool ChangesDataSize => false;
 
-    private uint _ip = 0;
+  private uint _ip = 0;
 
-    private uint _state = 0;
+  private uint _state = 0;
 
-    //private UInt32 _offset = 0;
+  //private UInt32 _offset = 0;
 
-    public override void Init(byte[] properties)
+  public override void Init(byte[] properties)
+  {
+    if (properties.Length != 0 && properties.Length != 4)
     {
-        if (properties.Length != 0 && properties.Length != 4)
-        {
-            throw new InvalidFormatException("X86 properties unexpected length");
-        }
-
-        if (properties.Length == 4)
-        {
-            // Even XZ doesn't support it.
-            throw new InvalidFormatException("X86 properties offset is not supported");
-
-            //_offset = BitConverter.ToUInt32(properties, 0);
-            //
-            //if (_offset % (UInt32)BranchExec.Alignment.ARCH_x86_ALIGNMENT != 0)
-            //{
-            //    throw new InvalidFormatException("Filter offset does not match alignment");
-            //}
-        }
+      throw new InvalidFormatException("X86 properties unexpected length");
     }
 
-    public override void ValidateFilter() { }
-
-    public override int Read(byte[] buffer, int offset, int count)
+    if (properties.Length == 4)
     {
-        var bytesRead = BaseStream.Read(buffer, offset, count);
-        BranchExecFilter.X86Converter(buffer, _ip, ref _state);
-        _ip += (uint)bytesRead;
-        return bytesRead;
-    }
+      // Even XZ doesn't support it.
+      throw new InvalidFormatException("X86 properties offset is not supported");
 
-    public override void SetBaseStream(Stream stream) => BaseStream = stream;
+      //_offset = BitConverter.ToUInt32(properties, 0);
+      //
+      //if (_offset % (UInt32)BranchExec.Alignment.ARCH_x86_ALIGNMENT != 0)
+      //{
+      //    throw new InvalidFormatException("Filter offset does not match alignment");
+      //}
+    }
+  }
+
+  public override void ValidateFilter() { }
+
+  public override int Read(byte[] buffer, int offset, int count)
+  {
+    var bytesRead = BaseStream.Read(buffer, offset, count);
+    BranchExecFilter.X86Converter(buffer, _ip, ref _state);
+    _ip += (uint)bytesRead;
+    return bytesRead;
+  }
+
+  public override void SetBaseStream(Stream stream) => BaseStream = stream;
 }

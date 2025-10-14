@@ -7,19 +7,19 @@ namespace SharpCompress.Archives.Tar;
 
 public class TarArchiveEntry : TarEntry, IArchiveEntry
 {
-    internal TarArchiveEntry(TarArchive archive, TarFilePart? part, CompressionType compressionType)
-        : base(part, compressionType)
-    {
-      Archive = archive;
-    }
+  internal TarArchiveEntry(TarArchive archive, TarFilePart? part, CompressionType compressionType)
+    : base(part, compressionType)
+  {
+    Archive = archive;
+  }
 
-    public virtual Stream OpenEntryStream() => Parts.Single().GetCompressedStream().NotNull();
+  public virtual Stream OpenEntryStream() => Parts.Single().GetCompressedStream().NotNull();
 
-    #region IArchiveEntry Members
+  #region IArchiveEntry Members
 
-    public IArchive Archive { get; }
+  public IArchive Archive { get; }
 
-    public bool IsComplete => true;
+  public bool IsComplete => true;
 
-    #endregion
+  #endregion
 }

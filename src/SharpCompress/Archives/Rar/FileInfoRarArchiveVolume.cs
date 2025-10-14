@@ -14,26 +14,26 @@ namespace SharpCompress.Archives.Rar;
 /// </summary>
 internal class FileInfoRarArchiveVolume : RarVolume
 {
-    internal FileInfoRarArchiveVolume(FileInfo fileInfo, ReaderOptions options, int index)
-        : base(StreamingMode.Seekable, fileInfo.OpenRead(), FixOptions(options), index)
-    {
-        FileInfo = fileInfo;
-        FileParts = GetVolumeFileParts().ToArray().ToReadOnly();
-    }
+  internal FileInfoRarArchiveVolume(FileInfo fileInfo, ReaderOptions options, int index)
+    : base(StreamingMode.Seekable, fileInfo.OpenRead(), FixOptions(options), index)
+  {
+    FileInfo = fileInfo;
+    FileParts = GetVolumeFileParts().ToArray().ToReadOnly();
+  }
 
-    private static ReaderOptions FixOptions(ReaderOptions options)
-    {
-        //make sure we're closing streams with fileinfo
-        options.LeaveStreamOpen = false;
-        return options;
-    }
+  private static ReaderOptions FixOptions(ReaderOptions options)
+  {
+    //make sure we're closing streams with fileinfo
+    options.LeaveStreamOpen = false;
+    return options;
+  }
 
-    internal ReadOnlyCollection<RarFilePart> FileParts { get; }
+  internal ReadOnlyCollection<RarFilePart> FileParts { get; }
 
-    internal FileInfo FileInfo { get; }
+  internal FileInfo FileInfo { get; }
 
-    internal override RarFilePart CreateFilePart(MarkHeader markHeader, FileHeader fileHeader) =>
-        new FileInfoRarFilePart(this, ReaderOptions.Password, markHeader, fileHeader, FileInfo);
+  internal override RarFilePart CreateFilePart(MarkHeader markHeader, FileHeader fileHeader) =>
+    new FileInfoRarFilePart(this, ReaderOptions.Password, markHeader, fileHeader, FileInfo);
 
-    internal override IEnumerable<RarFilePart> ReadFileParts() => FileParts;
+  internal override IEnumerable<RarFilePart> ReadFileParts() => FileParts;
 }

@@ -22,32 +22,32 @@ namespace SharpCompress.Compressors.PPMd.I1;
 /// </remarks>
 internal class See2Context
 {
-    private const byte PERIOD_BIT_COUNT = 7;
+  private const byte PERIOD_BIT_COUNT = 7;
 
-    public ushort _summary;
-    public byte _shift;
-    public byte _count;
+  public ushort _summary;
+  public byte _shift;
+  public byte _count;
 
-    public void Initialize(uint initialValue)
+  public void Initialize(uint initialValue)
+  {
+    _shift = PERIOD_BIT_COUNT - 4;
+    _summary = (ushort)(initialValue << _shift);
+    _count = 7;
+  }
+
+  public uint Mean()
+  {
+    var value = (uint)(_summary >> _shift);
+    _summary = (ushort)(_summary - value);
+    return (uint)(value + ((value == 0) ? 1 : 0));
+  }
+
+  public void Update()
+  {
+    if (_shift < PERIOD_BIT_COUNT && --_count == 0)
     {
-        _shift = PERIOD_BIT_COUNT - 4;
-        _summary = (ushort)(initialValue << _shift);
-        _count = 7;
+      _summary += _summary;
+      _count = (byte)(3 << _shift++);
     }
-
-    public uint Mean()
-    {
-        var value = (uint)(_summary >> _shift);
-        _summary = (ushort)(_summary - value);
-        return (uint)(value + ((value == 0) ? 1 : 0));
-    }
-
-    public void Update()
-    {
-        if (_shift < PERIOD_BIT_COUNT && --_count == 0)
-        {
-            _summary += _summary;
-            _count = (byte)(3 << _shift++);
-        }
-    }
+  }
 }

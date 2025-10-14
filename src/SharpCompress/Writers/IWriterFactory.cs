@@ -5,5 +5,5 @@ namespace SharpCompress.Writers;
 
 public interface IWriterFactory : IFactory
 {
-    IWriter Open(Stream stream, WriterOptions writerOptions);
+  IWriter Open(Stream stream, WriterOptions writerOptions);
 }

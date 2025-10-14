@@ -7,13 +7,13 @@ namespace SharpCompress.Crypto;
 
 internal class BlockTransformer(ICryptoTransform transformer) : IDisposable
 {
-    public byte[] ProcessBlock(ReadOnlySpan<byte> cipherText)
-    {
-        var decryptedBytes = new byte[cipherText.Length];
-        transformer.TransformBlock(cipherText.ToArray(), 0, cipherText.Length, decryptedBytes, 0);
+  public byte[] ProcessBlock(ReadOnlySpan<byte> cipherText)
+  {
+    var decryptedBytes = new byte[cipherText.Length];
+    transformer.TransformBlock(cipherText.ToArray(), 0, cipherText.Length, decryptedBytes, 0);
 
-        return decryptedBytes;
-    }
+    return decryptedBytes;
+  }
 
-    public void Dispose() { }
+  public void Dispose() { }
 }
