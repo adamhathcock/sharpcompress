@@ -37,8 +37,8 @@ public abstract class AbstractArchive<TEntry, TVolume> : IArchive, IArchiveExtra
     {
         Type = type;
         ReaderOptions = new();
-        _lazyVolumes = new LazyReadOnlyCollection<TVolume>(Enumerable.Empty<TVolume>());
-        _lazyEntries = new LazyReadOnlyCollection<TEntry>(Enumerable.Empty<TEntry>());
+        _lazyVolumes = new LazyReadOnlyCollection<TVolume>([]);
+        _lazyEntries = new LazyReadOnlyCollection<TEntry>([]);
     }
 
     public ArchiveType Type { get; }

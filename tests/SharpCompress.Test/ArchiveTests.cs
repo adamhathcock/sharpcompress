@@ -30,7 +30,7 @@ public class ArchiveTests : ReaderTests
     protected void ArchiveStreamReadExtractAll(string testArchive, CompressionType compression)
     {
         testArchive = Path.Combine(TEST_ARCHIVES_PATH, testArchive);
-        ArchiveStreamReadExtractAll(new[] { testArchive }, compression);
+        ArchiveStreamReadExtractAll([testArchive], compression);
     }
 
     protected void ArchiveStreamReadExtractAll(

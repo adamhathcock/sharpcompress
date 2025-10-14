@@ -150,7 +150,9 @@ public class Zip64Tests : WriterTests
         var opts = new ZipWriterOptions(CompressionType.Deflate) { UseZip64 = setZip64 };
 
         // Use no compression to ensure we hit the limits (actually inflates a bit, but seems better than using method==Store)
+#pragma warning disable CS0618 // Type or member is obsolete
         var eo = new ZipWriterEntryOptions { DeflateCompressionLevel = CompressionLevel.None };
+#pragma warning restore CS0618 // Type or member is obsolete
 
         using var zip = File.OpenWrite(filename);
         using var st = forwardOnly ? (Stream)new ForwardOnlyStream(zip) : zip;

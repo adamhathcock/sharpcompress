@@ -32,8 +32,8 @@ namespace SharpCompress.Compressors.BZip2;
 internal class CRC
 {
     public static int[] crc32Table =
-    {
-        0x00000000,
+    [
+      0x00000000,
         0x04c11db7,
         0x09823b6e,
         0x0d4326d9,
@@ -288,8 +288,8 @@ internal class CRC
         unchecked((int)0xbcb4666d),
         unchecked((int)0xb8757bda),
         unchecked((int)0xb5365d03),
-        unchecked((int)0xb1f740b4),
-    };
+        unchecked((int)0xb1f740b4)
+    ];
 
     public CRC() => InitialiseCRC();
 

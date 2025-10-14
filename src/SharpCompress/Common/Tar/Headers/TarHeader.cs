@@ -306,16 +306,16 @@ internal sealed class TarHeader
     }
 
     private static readonly byte[] eightSpaces =
-    {
+    [
+      (byte)' ',
         (byte)' ',
         (byte)' ',
         (byte)' ',
         (byte)' ',
         (byte)' ',
         (byte)' ',
-        (byte)' ',
-        (byte)' ',
-    };
+        (byte)' '
+    ];
 
     internal static bool checkChecksum(byte[] buf)
     {

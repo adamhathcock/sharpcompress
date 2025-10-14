@@ -72,14 +72,14 @@ internal sealed partial class Unpack : BitInput, IRarUnpack, IDisposable
     private readonly RarVM rarVM = new();
 
     // Filters code, one entry per filter
-    private readonly List<UnpackFilter> filters = new();
+    private readonly List<UnpackFilter> filters = [];
 
     // Filters stack, several entrances of same filter are possible
-    private readonly List<UnpackFilter> prgStack = new();
+    private readonly List<UnpackFilter> prgStack = [];
 
     // lengths of preceding blocks, one length per filter. Used to reduce size
     // required to write block length if lengths are repeating
-    private readonly List<int> oldFilterLengths = new();
+    private readonly List<int> oldFilterLengths = [];
 
     private int lastFilter;
 
@@ -100,8 +100,8 @@ internal sealed partial class Unpack : BitInput, IRarUnpack, IDisposable
     private int lowDistRepCount;
 
     private static readonly int[] DBitLengthCounts =
-    {
-        4,
+    [
+      4,
         2,
         2,
         2,
@@ -119,8 +119,8 @@ internal sealed partial class Unpack : BitInput, IRarUnpack, IDisposable
         2,
         14,
         0,
-        12,
-    };
+        12
+    ];
 
     private FileHeader fileHeader;
 

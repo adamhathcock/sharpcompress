@@ -6,6 +6,7 @@ using SharpCompress.Common;
 using SharpCompress.Common.Rar;
 using SharpCompress.Common.Rar.Headers;
 using SharpCompress.Compressors.Rar;
+using SharpCompress.Compressors.Rar.UnpackV2017;
 using SharpCompress.IO;
 using SharpCompress.Readers;
 using SharpCompress.Readers.Rar;
@@ -16,7 +17,7 @@ public class RarArchive : AbstractArchive<RarArchiveEntry, RarVolume>
 {
     private bool _disposed;
     internal Lazy<IRarUnpack> UnpackV2017 { get; } =
-        new(() => new Compressors.Rar.UnpackV2017.Unpack());
+        new(() => new Unpack());
     internal Lazy<IRarUnpack> UnpackV1 { get; } = new(() => new Compressors.Rar.UnpackV1.Unpack());
 
     /// <summary>

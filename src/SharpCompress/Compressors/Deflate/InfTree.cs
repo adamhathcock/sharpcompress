@@ -79,8 +79,8 @@ internal sealed class InfTree
 
     //UPGRADE_NOTE: Final was removed from the declaration of 'fixed_tl'. "ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?index='!DefaultContextWindowIndex'&keyword='jlca1003'"
     internal static readonly int[] fixed_tl =
-    {
-        96,
+    [
+      96,
         7,
         256,
         0,
@@ -1615,13 +1615,13 @@ internal sealed class InfTree
         79,
         0,
         9,
-        255,
-    };
+        255
+    ];
 
     //UPGRADE_NOTE: Final was removed from the declaration of 'fixed_td'. "ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?index='!DefaultContextWindowIndex'&keyword='jlca1003'"
     internal static readonly int[] fixed_td =
-    {
-        80,
+    [
+      80,
         5,
         1,
         87,
@@ -1716,14 +1716,14 @@ internal sealed class InfTree
         193,
         192,
         5,
-        24577,
-    };
+        24577
+    ];
 
     // Tables for deflate from PKZIP's appnote.txt.
     //UPGRADE_NOTE: Final was removed from the declaration of 'cplens'. "ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?index='!DefaultContextWindowIndex'&keyword='jlca1003'"
     internal static readonly int[] cplens =
-    {
-        3,
+    [
+      3,
         4,
         5,
         6,
@@ -1753,14 +1753,14 @@ internal sealed class InfTree
         227,
         258,
         0,
-        0,
-    };
+        0
+    ];
 
     // see note #13 above about 258
     //UPGRADE_NOTE: Final was removed from the declaration of 'cplext'. "ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?index='!DefaultContextWindowIndex'&keyword='jlca1003'"
     internal static readonly int[] cplext =
-    {
-        0,
+    [
+      0,
         0,
         0,
         0,
@@ -1790,13 +1790,13 @@ internal sealed class InfTree
         5,
         0,
         112,
-        112,
-    };
+        112
+    ];
 
     //UPGRADE_NOTE: Final was removed from the declaration of 'cpdist'. "ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?index='!DefaultContextWindowIndex'&keyword='jlca1003'"
     internal static readonly int[] cpdist =
-    {
-        1,
+    [
+      1,
         2,
         3,
         4,
@@ -1825,13 +1825,13 @@ internal sealed class InfTree
         8193,
         12289,
         16385,
-        24577,
-    };
+        24577
+    ];
 
     //UPGRADE_NOTE: Final was removed from the declaration of 'cpdext'. "ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?index='!DefaultContextWindowIndex'&keyword='jlca1003'"
     internal static readonly int[] cpdext =
-    {
-        0,
+    [
+      0,
         0,
         0,
         0,
@@ -1860,8 +1860,8 @@ internal sealed class InfTree
         12,
         12,
         13,
-        13,
-    };
+        13
+    ];
 
     // If BMAX needs to be larger than 16, then h and x[] should be uLong.
     internal int[] c; // bit length count table

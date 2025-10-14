@@ -74,8 +74,8 @@ internal sealed class InflateBlocks
 
     // Table for deflate from PKZIP's appnote.txt.
     internal static readonly int[] border =
-    {
-        16,
+    [
+      16,
         17,
         18,
         0,
@@ -93,8 +93,8 @@ internal sealed class InflateBlocks
         2,
         14,
         1,
-        15,
-    };
+        15
+    ];
 
     internal ZlibCodec _codec; // pointer back to this zlib stream
     internal int[] bb = new int[1]; // bit length tree depth
@@ -825,8 +825,8 @@ internal static class InternalInflateConstants
 {
     // And'ing with mask[n] masks the lower n bits
     internal static readonly int[] InflateMask =
-    {
-        0x00000000,
+    [
+      0x00000000,
         0x00000001,
         0x00000003,
         0x00000007,
@@ -842,8 +842,8 @@ internal static class InternalInflateConstants
         0x00001fff,
         0x00003fff,
         0x00007fff,
-        0x0000ffff,
-    };
+        0x0000ffff
+    ];
 }
 
 internal sealed class InflateCodes
@@ -1628,7 +1628,7 @@ internal sealed class InflateManager
     private const int PRESET_DICT = 0x20;
 
     private const int Z_DEFLATED = 8;
-    private static readonly byte[] mark = { 0, 0, 0xff, 0xff };
+    private static readonly byte[] mark = [0, 0, 0xff, 0xff];
 
     internal ZlibCodec _codec; // pointer back to this zlib stream
     internal InflateBlocks blocks; // current inflate_blocks state

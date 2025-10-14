@@ -113,9 +113,9 @@ public class ReduceStream : Stream, IStreamStack
     private const int RunLengthCode = 144;
     private const int WSIZE = 0x4000;
 
-    private readonly uint[] mask_bits = new uint[]
-    {
-        0x0000,
+    private readonly uint[] mask_bits =
+    [
+      0x0000,
         0x0001,
         0x0003,
         0x0007,
@@ -131,8 +131,8 @@ public class ReduceStream : Stream, IStreamStack
         0x1fff,
         0x3fff,
         0x7fff,
-        0xffff,
-    };
+        0xffff
+    ];
 
     private int bitBufferCount;
     private ulong bitBuffer;
@@ -168,7 +168,7 @@ public class ReduceStream : Stream, IStreamStack
 
     private void LoadBitLengthTable()
     {
-        byte[] bitPos = { 0, 2, 4, 8, 16, 32, 64, 128, 255 };
+        byte[] bitPos = [0, 2, 4, 8, 16, 32, 64, 128, 255];
         bitCountTable = new byte[256];
 
         for (byte i = 1; i <= 8; i++)

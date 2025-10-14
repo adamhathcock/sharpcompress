@@ -116,9 +116,9 @@ public class ExplodeStream : Stream, IStreamStack
         set { }
     }
 
-    static uint[] mask_bits = new uint[]
-    {
-        0x0000,
+    static uint[] mask_bits =
+    [
+      0x0000,
         0x0001,
         0x0003,
         0x0007,
@@ -134,13 +134,13 @@ public class ExplodeStream : Stream, IStreamStack
         0x1fff,
         0x3fff,
         0x7fff,
-        0xffff,
-    };
+        0xffff
+    ];
 
     /* Tables for length and distance */
-    static int[] cplen2 = new int[]
-    {
-        2,
+    static int[] cplen2 =
+    [
+      2,
         3,
         4,
         5,
@@ -203,12 +203,12 @@ public class ExplodeStream : Stream, IStreamStack
         62,
         63,
         64,
-        65,
-    };
+        65
+    ];
 
-    static int[] cplen3 = new int[]
-    {
-        3,
+    static int[] cplen3 =
+    [
+      3,
         4,
         5,
         6,
@@ -271,11 +271,12 @@ public class ExplodeStream : Stream, IStreamStack
         63,
         64,
         65,
-        66,
-    };
+        66
+    ];
 
-    static int[] extra = new int[]
-    {
+    static int[] extra =
+    [
+      0,
         0,
         0,
         0,
@@ -338,13 +339,12 @@ public class ExplodeStream : Stream, IStreamStack
         0,
         0,
         0,
-        0,
-        8,
-    };
+        8
+    ];
 
-    static int[] cpdist4 = new int[]
-    {
-        1,
+    static int[] cpdist4 =
+    [
+      1,
         65,
         129,
         193,
@@ -407,12 +407,12 @@ public class ExplodeStream : Stream, IStreamStack
         3841,
         3905,
         3969,
-        4033,
-    };
+        4033
+    ];
 
-    static int[] cpdist8 = new int[]
-    {
-        1,
+    static int[] cpdist8 =
+    [
+      1,
         129,
         257,
         385,
@@ -475,8 +475,8 @@ public class ExplodeStream : Stream, IStreamStack
         7681,
         7809,
         7937,
-        8065,
-    };
+        8065
+    ];
 
     private int get_tree(int[] arrBitLengths, int numberExpected)
     /* Get the bit lengths for a code representation from the compressed

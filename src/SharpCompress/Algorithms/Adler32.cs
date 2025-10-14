@@ -8,7 +8,6 @@
 
 using System;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 #if SUPPORTS_RUNTIME_INTRINSICS
 using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
@@ -108,9 +107,8 @@ internal static class Adler32 // From https://github.com/SixLabors/ImageSharp/bl
 
     // The C# compiler emits this as a compile-time constant embedded in the PE file.
     private static ReadOnlySpan<byte> Tap1Tap2 =>
-        new byte[]
-        {
-            32,
+    [
+      32,
             31,
             30,
             29,
@@ -141,8 +139,8 @@ internal static class Adler32 // From https://github.com/SixLabors/ImageSharp/bl
             4,
             3,
             2,
-            1, // tap2
-        };
+            1 // tap2
+    ];
 #endif
 
     /// <summary>

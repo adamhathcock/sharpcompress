@@ -3,14 +3,37 @@
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
     <AnalysisMode>Recommended</AnalysisMode>
-    <WarningsAsErrors>true</WarningsAsErrors>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+  </PropertyGroup>
+  <PropertyGroup Label="Analyers">
+    <EnableNetAnalyzers>true</EnableNetAnalyzers>
+    <AnalysisLevel>latest-AllEnabledByDefault</AnalysisLevel>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <WarningsAsErrors>true</WarningsAsErrors>
     <CodeAnalysisTreatWarningsAsErrors>true</CodeAnalysisTreatWarningsAsErrors>
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <RunAnalyzersDuringLiveAnalysis>False</RunAnalyzersDuringLiveAnalysis>
-    <RunAnalyzersDuringBuild>False</RunAnalyzersDuringBuild>
-    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
-    <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+    <NoWarn>
+      <!--Disabled by design-->
+      CA5399;CA1812;
+      <!--XML comment-->
+      CS1591;CS1573;
+      <!-- Globalization rules -->
+      CA1303;CA1304;CA1305;CA1307;CA1308;CA1309;CA1310;CA1311;
+      <!-- Logging -->
+      CA1848;CA1727;
+      <!-- Others we don't want -->
+      CA1815;CA1725;
+      <!-- Naming things is hard enough -->
+      CA1710;CA1711;CA1720;CA1724;
+      <!-- Aspirational, slowly add -->
+      CA1502;CA1716;NETSDK1206;IDE0017;IDE0040;IDE0044;IDE0051;IDE0052;IDE0060;IDE1006;IDE1007;IDE1033;IDE1036;IDE1040;IDE1041;IDE1045;IDE1050;IDE1051;IDE1055;IDE1060;IDE1063;IDE1070;IDE1071;IDE1075;IDE1080;IDE1090;CA1034;CA1051;CA1063;
+      $(NoWarn)
+    </NoWarn
+    >
   </PropertyGroup>
 </Project>

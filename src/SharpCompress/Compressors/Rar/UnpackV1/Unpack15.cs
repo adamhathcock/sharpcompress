@@ -77,8 +77,8 @@ internal partial class Unpack
     private const int STARTL1 = 2;
 
     private static readonly int[] DecL1 =
-    {
-        0x8000,
+    [
+      0x8000,
         0xa000,
         0xc000,
         0xd000,
@@ -88,16 +88,16 @@ internal partial class Unpack
         0xf000,
         0xf200,
         0xf200,
-        0xffff,
-    };
+        0xffff
+    ];
 
-    private static readonly int[] PosL1 = { 0, 0, 0, 2, 3, 5, 7, 11, 16, 20, 24, 32, 32 };
+    private static readonly int[] PosL1 = [0, 0, 0, 2, 3, 5, 7, 11, 16, 20, 24, 32, 32];
 
     private const int STARTL2 = 3;
 
     private static readonly int[] DecL2 =
-    {
-        0xa000,
+    [
+      0xa000,
         0xc000,
         0xd000,
         0xe000,
@@ -106,16 +106,16 @@ internal partial class Unpack
         0xf000,
         0xf200,
         0xf240,
-        0xffff,
-    };
+        0xffff
+    ];
 
-    private static readonly int[] PosL2 = { 0, 0, 0, 0, 5, 7, 9, 13, 18, 22, 26, 34, 36 };
+    private static readonly int[] PosL2 = [0, 0, 0, 0, 5, 7, 9, 13, 18, 22, 26, 34, 36];
 
     private const int STARTHF0 = 4;
 
     private static readonly int[] DecHf0 =
-    {
-        0x8000,
+    [
+      0x8000,
         0xc000,
         0xe000,
         0xf200,
@@ -123,69 +123,69 @@ internal partial class Unpack
         0xf200,
         0xf200,
         0xf200,
-        0xffff,
-    };
+        0xffff
+    ];
 
-    private static readonly int[] PosHf0 = { 0, 0, 0, 0, 0, 8, 16, 24, 33, 33, 33, 33, 33 };
+    private static readonly int[] PosHf0 = [0, 0, 0, 0, 0, 8, 16, 24, 33, 33, 33, 33, 33];
 
     private const int STARTHF1 = 5;
 
     private static readonly int[] DecHf1 =
-    {
-        0x2000,
+    [
+      0x2000,
         0xc000,
         0xe000,
         0xf000,
         0xf200,
         0xf200,
         0xf7e0,
-        0xffff,
-    };
+        0xffff
+    ];
 
-    private static readonly int[] PosHf1 = { 0, 0, 0, 0, 0, 0, 4, 44, 60, 76, 80, 80, 127 };
+    private static readonly int[] PosHf1 = [0, 0, 0, 0, 0, 0, 4, 44, 60, 76, 80, 80, 127];
 
     private const int STARTHF2 = 5;
 
     private static readonly int[] DecHf2 =
-    {
-        0x1000,
+    [
+      0x1000,
         0x2400,
         0x8000,
         0xc000,
         0xfa00,
         0xffff,
         0xffff,
-        0xffff,
-    };
+        0xffff
+    ];
 
-    private static readonly int[] PosHf2 = { 0, 0, 0, 0, 0, 0, 2, 7, 53, 117, 233, 0, 0 };
+    private static readonly int[] PosHf2 = [0, 0, 0, 0, 0, 0, 2, 7, 53, 117, 233, 0, 0];
 
     private const int STARTHF3 = 6;
 
     private static readonly int[] DecHf3 =
-    {
-        0x800,
+    [
+      0x800,
         0x2400,
         0xee00,
         0xfe80,
         0xffff,
         0xffff,
-        0xffff,
-    };
+        0xffff
+    ];
 
-    private static readonly int[] PosHf3 = { 0, 0, 0, 0, 0, 0, 0, 2, 16, 218, 251, 0, 0 };
+    private static readonly int[] PosHf3 = [0, 0, 0, 0, 0, 0, 0, 2, 16, 218, 251, 0, 0];
 
     private const int STARTHF4 = 8;
 
-    private static readonly int[] DecHf4 = { 0xff00, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff };
+    private static readonly int[] DecHf4 = [0xff00, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff];
 
-    private static readonly int[] PosHf4 = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 255, 0, 0, 0 };
+    private static readonly int[] PosHf4 = [0, 0, 0, 0, 0, 0, 0, 0, 0, 255, 0, 0, 0];
 
-    private static readonly int[] ShortLen1 = { 1, 3, 4, 4, 5, 6, 7, 8, 8, 4, 4, 5, 6, 6, 4, 0 };
+    private static readonly int[] ShortLen1 = [1, 3, 4, 4, 5, 6, 7, 8, 8, 4, 4, 5, 6, 6, 4, 0];
 
     private static readonly int[] ShortXor1 =
-    {
-        0,
+    [
+      0,
         0xa0,
         0xd0,
         0xe0,
@@ -199,14 +199,14 @@ internal partial class Unpack
         0x90,
         0x98,
         0x9c,
-        0xb0,
-    };
+        0xb0
+    ];
 
-    private static readonly int[] ShortLen2 = { 2, 3, 3, 3, 4, 4, 5, 6, 6, 4, 4, 5, 6, 6, 4, 0 };
+    private static readonly int[] ShortLen2 = [2, 3, 3, 3, 4, 4, 5, 6, 6, 4, 4, 5, 6, 6, 4, 0];
 
     private static readonly int[] ShortXor2 =
-    {
-        0,
+    [
+      0,
         0x40,
         0x60,
         0xa0,
@@ -220,8 +220,8 @@ internal partial class Unpack
         0x90,
         0x98,
         0x9c,
-        0xb0,
-    };
+        0xb0
+    ];
 
     private void unpack15(bool solid)
     {

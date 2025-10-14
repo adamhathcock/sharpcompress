@@ -12,9 +12,8 @@ internal static class FastEncoderStatics
     // static information for encoding, DO NOT MODIFY
 
     internal static ReadOnlySpan<byte> FAST_ENCODER_TREE_STRUCTURE_DATA =>
-        new byte[]
-        {
-            0xec,
+    [
+      0xec,
             0xbd,
             0x07,
             0x60,
@@ -111,13 +110,12 @@ internal static class FastEncoderStatics
             0x7e,
             0x7c,
             0x1f,
-            0x3f,
-        };
+            0x3f
+    ];
 
     internal static ReadOnlySpan<byte> B_FINAL_FAST_ENCODER_TREE_STRUCTURE_DATA =>
-        new byte[]
-        {
-            0xed,
+    [
+      0xed,
             0xbd,
             0x07,
             0x60,
@@ -214,8 +212,8 @@ internal static class FastEncoderStatics
             0x7e,
             0x7c,
             0x1f,
-            0x3f,
-        };
+            0x3f
+    ];
 
     // Output a currentMatch with length matchLen (>= MIN_MATCH) and displacement matchPos
     //
@@ -248,8 +246,8 @@ internal static class FastEncoderStatics
     // and the rest is the code bits.
 
     internal static readonly uint[] FAST_ENCODER_LITERAL_CODE_INFO =
-    {
-        0x0000d7ee,
+    [
+      0x0000d7ee,
         0x0004d7ee,
         0x0002d7ee,
         0x0006d7ee,
@@ -761,12 +759,12 @@ internal static class FastEncoderStatics
         0x0039e7f1,
         0x003be7f1,
         0x003de7f1,
-        0x000047eb,
-    };
+        0x000047eb
+    ];
 
     internal static readonly uint[] FAST_ENCODER_DISTANCE_CODE_INFO =
-    {
-        0x00000f06,
+    [
+      0x00000f06,
         0x0001ff0a,
         0x0003ff0b,
         0x0007ff0b,
@@ -797,12 +795,12 @@ internal static class FastEncoderStatics
         0x000007d5,
         0x000017d5,
         0x00000000,
-        0x00000100,
-    };
+        0x00000100
+    ];
 
     internal static readonly uint[] BIT_MASK =
-    {
-        0,
+    [
+      0,
         1,
         3,
         7,
@@ -817,11 +815,11 @@ internal static class FastEncoderStatics
         4095,
         8191,
         16383,
-        32767,
-    };
+        32767
+    ];
     internal static readonly byte[] EXTRA_LENGTH_BITS =
-    {
-        0,
+    [
+      0,
         0,
         0,
         0,
@@ -849,11 +847,11 @@ internal static class FastEncoderStatics
         5,
         5,
         5,
-        0,
-    };
+        0
+    ];
     internal static readonly byte[] EXTRA_DISTANCE_BITS =
-    {
-        0,
+    [
+      0,
         0,
         0,
         0,
@@ -884,8 +882,8 @@ internal static class FastEncoderStatics
         13,
         13,
         0,
-        0,
-    };
+        0
+    ];
     internal const int NUM_CHARS = 256;
     internal const int NUM_LENGTH_BASE_CODES = 29;
     internal const int NUM_DIST_BASE_CODES = 30;

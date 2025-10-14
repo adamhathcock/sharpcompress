@@ -7,8 +7,8 @@ internal class BCJFilterIA64 : Filter
     private int _pos;
 
     private static readonly int[] BRANCH_TABLE =
-    {
-        0,
+    [
+      0,
         0,
         0,
         0,
@@ -39,8 +39,8 @@ internal class BCJFilterIA64 : Filter
         4,
         4,
         0,
-        0,
-    };
+        0
+    ];
 
     public BCJFilterIA64(bool isEncoder, Stream baseStream)
         : base(isEncoder, baseStream, 16) => _pos = 0;

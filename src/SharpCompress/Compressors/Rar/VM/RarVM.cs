@@ -1108,15 +1108,15 @@ internal sealed class RarVM : BitInput
     private VMStandardFilters IsStandardFilter(ReadOnlySpan<byte> code, int codeSize)
     {
         VMStandardFilterSignature[] stdList =
-        {
-            new(53, 0xad576887, VMStandardFilters.VMSF_E8),
+        [
+          new(53, 0xad576887, VMStandardFilters.VMSF_E8),
             new(57, 0x3cd7e57e, VMStandardFilters.VMSF_E8E9),
             new(120, 0x3769893f, VMStandardFilters.VMSF_ITANIUM),
             new(29, 0x0e06077d, VMStandardFilters.VMSF_DELTA),
             new(149, 0x1c2c5dc8, VMStandardFilters.VMSF_RGB),
             new(216, 0xbc85e701, VMStandardFilters.VMSF_AUDIO),
-            new(40, 0x46b9c560, VMStandardFilters.VMSF_UPCASE),
-        };
+            new(40, 0x46b9c560, VMStandardFilters.VMSF_UPCASE)
+        ];
         var CodeCRC = RarCRC.CheckCrc(0xffffffff, code, 0, code.Length) ^ 0xffffffff;
         for (var i = 0; i < stdList.Length; i++)
         {
@@ -1199,7 +1199,7 @@ internal sealed class RarVM : BitInput
                     var curPos = 0;
 
                     //UPGRADE_NOTE: Final was removed from the declaration of 'Masks '. "ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?index='!DefaultContextWindowIndex'&keyword='jlca1003'"
-                    byte[] Masks = { 4, 4, 6, 6, 0, 0, 7, 7, 4, 4, 0, 0, 4, 4, 0, 0 };
+                    byte[] Masks = [4, 4, 6, 6, 0, 0, 7, 7, 4, 4, 0, 0, 4, 4, 0, 0];
                     fileOffset = Utility.URShift(fileOffset, 4);
 
                     while (curPos < dataSize - 21)

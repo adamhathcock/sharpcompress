@@ -1,6 +1,5 @@
 using System;
 using System.IO;
-using System.Linq;
 using System.Text;
 
 namespace SharpCompress.Common.Arc;
@@ -18,7 +17,7 @@ public class ArcEntryHeader
 
     public ArcEntryHeader(ArchiveEncoding archiveEncoding)
     {
-        this.ArchiveEncoding = archiveEncoding;
+        ArchiveEncoding = archiveEncoding;
     }
 
     public ArcEntryHeader? ReadHeader(Stream stream)

@@ -9,10 +9,8 @@ public static class RLE
 
     /// <summary>
     /// Unpacks an RLE compressed buffer.
-    /// Format: <char> DLE <count>, where count == 0 -> DLE
+    /// Format: char DLE count, where count == 0 -> DLE
     /// </summary>
-    /// <param name="compressedBuffer">The compressed buffer to unpack.</param>
-    /// <returns>A list of unpacked bytes.</returns>
     public static List<byte> UnpackRLE(byte[] compressedBuffer)
     {
         var result = new List<byte>(compressedBuffer.Length * 2); // Optimized initial capacity

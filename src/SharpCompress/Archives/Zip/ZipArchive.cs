@@ -28,7 +28,6 @@ public class ZipArchive : AbstractWritableArchive<ZipArchiveEntry, ZipVolume>
     /// Constructor with a SourceStream able to handle FileInfo and Streams.
     /// </summary>
     /// <param name="sourceStream"></param>
-    /// <param name="options"></param>
     internal ZipArchive(SourceStream sourceStream)
         : base(ArchiveType.Zip, sourceStream) =>
         headerFactory = new SeekableZipHeaderFactory(
@@ -287,7 +286,7 @@ public class ZipArchive : AbstractWritableArchive<ZipArchiveEntry, ZipVolume>
                         break;
                     case ZipHeaderType.DirectoryEnd:
                     {
-                        var bytes = ((DirectoryEndHeader)h).Comment ?? Array.Empty<byte>();
+                        var bytes = ((DirectoryEndHeader)h).Comment ?? [];
                         vols.Last().Comment = ReaderOptions.ArchiveEncoding.Decode(bytes);
                         yield break;
                     }

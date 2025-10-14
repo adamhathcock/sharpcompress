@@ -1843,8 +1843,8 @@ internal sealed class CBZip2OutputStream : Stream, IStreamStack
     */
 
     private readonly int[] incs =
-    {
-        1,
+    [
+      1,
         4,
         13,
         40,
@@ -1857,8 +1857,8 @@ internal sealed class CBZip2OutputStream : Stream, IStreamStack
         88573,
         265720,
         797161,
-        2391484,
-    };
+        2391484
+    ];
 
     private void AllocateCompressStructures()
     {

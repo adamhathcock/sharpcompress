@@ -13,8 +13,8 @@ internal class VMCmdFlags
     public const byte VMCF_CHFLAGS = 64;
 
     public static byte[] VM_CmdFlags =
-    {
-        VMCF_OP2 | VMCF_BYTEMODE,
+    [
+      VMCF_OP2 | VMCF_BYTEMODE,
         VMCF_OP2 | VMCF_BYTEMODE | VMCF_CHFLAGS,
         VMCF_OP2 | VMCF_BYTEMODE | VMCF_CHFLAGS,
         VMCF_OP2 | VMCF_BYTEMODE | VMCF_CHFLAGS,
@@ -53,6 +53,6 @@ internal class VMCmdFlags
         VMCF_OP2 | VMCF_BYTEMODE,
         VMCF_OP2 | VMCF_BYTEMODE | VMCF_USEFLAGS | VMCF_CHFLAGS,
         VMCF_OP2 | VMCF_BYTEMODE | VMCF_USEFLAGS | VMCF_CHFLAGS,
-        VMCF_OP0,
-    };
+        VMCF_OP0
+    ];
 }

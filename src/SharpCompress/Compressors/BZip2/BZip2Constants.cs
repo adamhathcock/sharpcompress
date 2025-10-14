@@ -43,8 +43,8 @@ internal class BZip2Constants
     public const int NUM_OVERSHOOT_BYTES = 20;
 
     public static int[] rNums =
-    {
-        619,
+    [
+      619,
         720,
         127,
         481,
@@ -555,6 +555,6 @@ internal class BZip2Constants
         858,
         364,
         936,
-        638,
-    };
+        638
+    ];
 }

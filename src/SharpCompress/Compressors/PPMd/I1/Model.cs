@@ -51,19 +51,19 @@ internal partial class Model
     private readonly PpmState[] _decodeStates = new PpmState[256];
 
     private static readonly ushort[] INITIAL_BINARY_ESCAPES =
-    {
-        0x3CDD,
+    [
+      0x3CDD,
         0x1F3F,
         0x59BF,
         0x48F3,
         0x64A1,
         0x5ABC,
         0x6632,
-        0x6051,
-    };
+        0x6051
+    ];
 
     private static ReadOnlySpan<byte> EXPONENTIAL_ESCAPES =>
-        new byte[] { 25, 14, 9, 7, 5, 5, 4, 4, 4, 3, 3, 3, 2, 2, 2, 2 };
+      [25, 14, 9, 7, 5, 5, 4, 4, 4, 3, 3, 3, 2, 2, 2, 2];
 
     #region Public Methods
 

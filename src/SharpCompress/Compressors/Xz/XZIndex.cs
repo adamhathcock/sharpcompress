@@ -14,7 +14,7 @@ public class XZIndex
     private readonly BinaryReader _reader;
     public long StreamStartPosition { get; private set; }
     public ulong NumberOfRecords { get; private set; }
-    public List<XZIndexRecord> Records { get; } = new();
+    public List<XZIndexRecord> Records { get; } = [];
 
     private readonly bool _indexMarkerAlreadyVerified;
 

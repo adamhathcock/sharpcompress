@@ -10,14 +10,14 @@ internal static class NotNullExtensions
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static IEnumerable<T> Empty<T>(this IEnumerable<T>? source) =>
-        source ?? Enumerable.Empty<T>();
+        source ?? [];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static IEnumerable<T> Empty<T>(this T? source)
     {
         if (source is null)
         {
-            return Enumerable.Empty<T>();
+            return [];
         }
         return source.AsEnumerable();
     }

@@ -31,7 +31,7 @@ public class DataDescriptorStream : Stream, IStreamStack
     private bool _isDisposed;
     private bool _done;
 
-    private static byte[] _dataDescriptorMarker = new byte[] { 0x50, 0x4b, 0x07, 0x08 };
+    private static byte[] _dataDescriptorMarker = [0x50, 0x4b, 0x07, 0x08];
     private static long _dataDescriptorSize = 24;
 
     public DataDescriptorStream(Stream stream)

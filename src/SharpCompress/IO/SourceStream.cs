@@ -50,8 +50,8 @@ public class SourceStream : Stream, IStreamStack
     )
     {
         ReaderOptions = options;
-        _files = new List<FileInfo>();
-        _streams = new List<Stream>();
+        _files = [];
+        _streams = [];
         IsFileMode = file != null;
         IsVolumes = false;
 

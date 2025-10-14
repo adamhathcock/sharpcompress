@@ -20,7 +20,7 @@ public abstract class Factory : IFactory
         RegisterFactory(new ArcFactory());
     }
 
-    private static readonly HashSet<Factory> _factories = new();
+    private static readonly HashSet<Factory> _factories = [];
 
     /// <summary>
     /// Gets the collection of registered <see cref="IFactory"/>.

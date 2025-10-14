@@ -1,8 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
-using System.Text;
 
 namespace SharpCompress.IO;
 
@@ -46,7 +44,7 @@ internal static class StackStreamExtensions
                 buffStream = current;
                 buffStream.BufferPosition -= Math.Min(buffStream.BufferPosition, count);
             }
-            current = current?.BaseStream() as IStreamStack;
+            current = current.BaseStream() as IStreamStack;
         }
     }
 
@@ -179,7 +177,6 @@ internal static class StackStreamExtensions
     )
     {
         var baseStream = stream.BaseStream();
-        var thisStream = (Stream)stream;
         var current = stream;
         buffStream = null;
         baseReadCount = -1;

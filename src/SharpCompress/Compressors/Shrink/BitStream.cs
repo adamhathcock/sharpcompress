@@ -8,9 +8,9 @@ internal class BitStream
     private int _bitIdx;
     private int _bitsLeft;
     private ulong _bitBuffer;
-    private static uint[] _maskBits = new uint[17]
-    {
-        0U,
+    private static uint[] _maskBits =
+    [
+      0U,
         1U,
         3U,
         7U,
@@ -26,8 +26,8 @@ internal class BitStream
         8191U,
         16383U,
         (uint)short.MaxValue,
-        (uint)ushort.MaxValue,
-    };
+        (uint)ushort.MaxValue
+    ];
 
     public BitStream(byte[] src, int srcLen)
     {

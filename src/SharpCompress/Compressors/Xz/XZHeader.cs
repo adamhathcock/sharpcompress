@@ -9,7 +9,7 @@ namespace SharpCompress.Compressors.Xz;
 public class XZHeader
 {
     private readonly BinaryReader _reader;
-    private readonly byte[] MagicHeader = { 0xFD, 0x37, 0x7A, 0x58, 0x5a, 0x00 };
+    private readonly byte[] MagicHeader = [0xFD, 0x37, 0x7A, 0x58, 0x5a, 0x00];
 
     public CheckType BlockCheckType { get; private set; }
     public int BlockCheckSize => 4 << ((((int)BlockCheckType + 2) / 3) - 1);

@@ -8,14 +8,14 @@ namespace SharpCompress.Common.Rar;
 
 internal class CryptKey5 : ICryptKey
 {
-    const int AES_256 = 256;
-    const int DERIVED_KEY_LENGTH = 0x10;
-    const int SHA256_DIGEST_SIZE = 32;
+  private  const int AES_256 = 256;
+  private const int DERIVED_KEY_LENGTH = 0x10;
+  private  const int SHA256_DIGEST_SIZE = 32;
 
     private string _password;
     private Rar5CryptoInfo _cryptoInfo;
-    private byte[] _pswCheck = { };
-    private byte[] _hashKey = { };
+    private byte[] _pswCheck = [];
+    private byte[] _hashKey = [];
 
     public CryptKey5(string? password, Rar5CryptoInfo rar5CryptoInfo)
     {

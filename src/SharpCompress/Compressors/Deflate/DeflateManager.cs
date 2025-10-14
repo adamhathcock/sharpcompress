@@ -77,8 +77,8 @@ internal sealed partial class DeflateManager
 {
     // extra bits for each length code
     internal static readonly int[] ExtraLengthBits =
-    {
-        0,
+    [
+      0,
         0,
         0,
         0,
@@ -106,13 +106,13 @@ internal sealed partial class DeflateManager
         5,
         5,
         5,
-        0,
-    };
+        0
+    ];
 
     // extra bits for each distance code
     internal static readonly int[] ExtraDistanceBits =
-    {
-        0,
+    [
+      0,
         0,
         0,
         0,
@@ -141,8 +141,8 @@ internal sealed partial class DeflateManager
         12,
         12,
         13,
-        13,
-    };
+        13
+    ];
 
     internal enum BlockState
     {
@@ -203,9 +203,9 @@ internal sealed partial class DeflateManager
         public static Config Lookup(CompressionLevel level) => Table[(int)level];
 
         static Config() =>
-            Table = new[]
-            {
-                new Config(0, 0, 0, 0, DeflateFlavor.Store),
+            Table =
+            [
+              new Config(0, 0, 0, 0, DeflateFlavor.Store),
                 new Config(4, 4, 8, 4, DeflateFlavor.Fast),
                 new Config(4, 5, 16, 8, DeflateFlavor.Fast),
                 new Config(4, 6, 32, 32, DeflateFlavor.Fast),
@@ -214,8 +214,8 @@ internal sealed partial class DeflateManager
                 new Config(8, 16, 128, 128, DeflateFlavor.Slow),
                 new Config(8, 32, 128, 256, DeflateFlavor.Slow),
                 new Config(32, 128, 258, 1024, DeflateFlavor.Slow),
-                new Config(32, 258, 258, 4096, DeflateFlavor.Slow),
-            };
+                new Config(32, 258, 258, 4096, DeflateFlavor.Slow)
+            ];
 
         private static readonly Config[] Table;
     }
@@ -223,8 +223,8 @@ internal sealed partial class DeflateManager
     private CompressFunc DeflateFunction;
 
     private static readonly string[] _ErrorMessage =
-    {
-        "need dictionary",
+    [
+      "need dictionary",
         "stream end",
         "",
         "file error",
@@ -233,8 +233,8 @@ internal sealed partial class DeflateManager
         "insufficient memory",
         "buffer error",
         "incompatible version",
-        "",
-    };
+        ""
+    ];
 
     // preset dictionary flag in zlib header
     private const int PRESET_DICT = 0x20;

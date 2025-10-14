@@ -1,14 +1,6 @@
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using SharpCompress.Common.GZip;
-using SharpCompress.Common.Tar;
-using SharpCompress.Common.Tar.Headers;
-using SharpCompress.Common.Zip.Headers;
-using SharpCompress.Compressors.Lzw;
+using SharpCompress.Compressors.ArcLzw;
 using SharpCompress.Compressors.RLE90;
 using SharpCompress.Compressors.Squeezed;
 using SharpCompress.IO;
@@ -51,7 +43,7 @@ public class ArcFilePart : FilePart
                     compressedStream = new SqueezeStream(_stream, (int)Header.CompressedSize);
                     break;
                 case CompressionType.Crunched:
-                    compressedStream = new ArcLzwStream(_stream, (int)Header.CompressedSize, true);
+                    compressedStream = new ArcLzwStream(_stream, (int)Header.CompressedSize);
                     break;
                 default:
                     throw new NotSupportedException(

@@ -264,11 +264,11 @@ internal partial class Unpack
     byte *ReadBufMT;
     #endif*/
 
-    private byte[] FilterSrcMemory = Array.Empty<byte>();
-    private byte[] FilterDstMemory = Array.Empty<byte>();
+    private byte[] FilterSrcMemory = [];
+    private byte[] FilterDstMemory = [];
 
     // Filters code, one entry per filter.
-    private readonly List<UnpackFilter> Filters = new();
+    private readonly List<UnpackFilter> Filters = [];
 
     private readonly uint[] OldDist = new uint[4];
     private uint OldDistPtr;
@@ -395,15 +395,15 @@ internal partial class Unpack
     private readonly BitInput VMCodeInp = new(true);
 
     // Filters code, one entry per filter.
-    private readonly List<UnpackFilter30> Filters30 = new();
+    private readonly List<UnpackFilter30> Filters30 = [];
 
     // Filters stack, several entrances of same filter are possible.
-    private readonly List<UnpackFilter30> PrgStack = new();
+    private readonly List<UnpackFilter30> PrgStack = [];
 
     // Lengths of preceding data blocks, one length of one last block
     // for every filter. Used to reduce the size required to write
     // the data block length if lengths are repeating.
-    private readonly List<int> OldFilterLengths = new();
+    private readonly List<int> OldFilterLengths = [];
 
     /*#if RarV2017_RAR_SMP
     // More than 8 threads are unlikely to provide a noticeable gain

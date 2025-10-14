@@ -177,8 +177,8 @@ internal sealed class AesDecoderStream : DecoderStream2, IStreamStack
 
         if ((bt & 0xC0) == 0)
         {
-            salt = Array.Empty<byte>();
-            iv = Array.Empty<byte>();
+            salt = [];
+            iv = [];
             return;
         }
 

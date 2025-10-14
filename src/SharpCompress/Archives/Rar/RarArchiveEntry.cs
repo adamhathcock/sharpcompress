@@ -32,7 +32,7 @@ public class RarArchiveEntry : RarEntry, IArchiveEntry
 
     public IArchive Archive => archive;
 
-    internal override IEnumerable<FilePart> Parts => parts.Cast<FilePart>();
+    internal override IEnumerable<FilePart> Parts => parts;
 
     internal override FileHeader FileHeader => parts.First().FileHeader;
 
