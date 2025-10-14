@@ -22,7 +22,7 @@ public class XZHeader
     public static XZHeader FromStream(Stream stream)
     {
         var header = new XZHeader(
-            new BinaryReader(SharpCompressStream.Create(stream, leaveOpen: true), Encoding.UTF8)
+            new BinaryReader(stream, Encoding.UTF8, true)
         );
         header.Process();
         return header;

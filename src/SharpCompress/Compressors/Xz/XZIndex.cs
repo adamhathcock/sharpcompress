@@ -32,7 +32,7 @@ public class XZIndex
     public static XZIndex FromStream(Stream stream, bool indexMarkerAlreadyVerified)
     {
         var index = new XZIndex(
-            new BinaryReader(SharpCompressStream.Create(stream, leaveOpen: true), Encoding.UTF8),
+            new BinaryReader(stream, Encoding.UTF8, true),
             indexMarkerAlreadyVerified
         );
         index.Process();
@@ -79,7 +79,7 @@ public class XZIndex
 
     private void VerifyCrc32()
     {
-        //var crc = _reader.ReadLittleEndianUInt32();
+        var _ = _reader.ReadLittleEndianUInt32();
         // TODO verify this matches
     }
 }
