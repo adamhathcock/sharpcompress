@@ -304,6 +304,26 @@ internal static class Utility
         }
     }
 
+    public static async Task<long> TransferToAsync(this Stream source, Stream destination)
+    {
+        var array = GetTransferByteArray();
+        try
+        {
+            long total = 0;
+            int count;
+            while ((count = await source.ReadAsync(array, 0, array.Length)) != 0)
+            {
+                await destination.WriteAsync(array, 0, count);
+                total += count;
+            }
+            return total;
+        }
+        finally
+        {
+            ArrayPool<byte>.Shared.Return(array);
+        }
+    }
+
     public static long TransferTo(this Stream source, Stream destination, long maxLength)
     {
         var array = GetTransferByteArray();
@@ -364,6 +384,7 @@ internal static class Utility
             ArrayPool<byte>.Shared.Return(array);
         }
     }
+
 
     private static bool ReadTransferBlock(Stream source, byte[] array, out int count) =>
         (count = source.Read(array, 0, array.Length)) != 0;

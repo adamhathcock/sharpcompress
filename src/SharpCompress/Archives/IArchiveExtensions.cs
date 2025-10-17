@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using SharpCompress.Common;
 using SharpCompress.Readers;
 
@@ -13,14 +14,14 @@ public static class IArchiveExtensions
     /// <summary>
     /// Extract to specific directory, retaining filename
     /// </summary>
-    public static void WriteToDirectory(
+    public static async Task WriteToDirectoryAsync(
         this IArchive archive,
         string destinationDirectory,
         ExtractionOptions? options = null
     )
     {
         using var reader = archive.ExtractAllEntries();
-        reader.WriteAllToDirectory(destinationDirectory, options);
+        await reader.WriteAllToDirectoryAsync(destinationDirectory, options);
     }
 
     /// <summary>
@@ -30,7 +31,7 @@ public static class IArchiveExtensions
     /// <param name="destination">The folder to extract into.</param>
     /// <param name="progressReport">Optional progress report callback.</param>
     /// <param name="cancellationToken">Optional cancellation token.</param>
-    public static void ExtractToDirectory(
+    public static async Task ExtractToDirectory(
         this IArchive archive,
         string destination,
         Action<double>? progressReport = null,
@@ -46,7 +47,7 @@ public static class IArchiveExtensions
 
         // Extract
         var entries = archive.ExtractAllEntries();
-        while (entries.MoveToNextEntry())
+        while (await entries.MoveToNextEntryAsync())
         {
             cancellationToken.ThrowIfCancellationRequested();
 
@@ -77,7 +78,7 @@ public static class IArchiveExtensions
 
             // Write file
             using var fs = File.OpenWrite(path);
-            entries.WriteEntryTo(fs);
+            await entries.WriteEntryToAsync(fs);
 
             // Update progress
             bytesRead += entry.Size;

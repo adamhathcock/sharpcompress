@@ -1,68 +1,69 @@
 ﻿using System.IO;
+using System.Threading.Tasks;
 using SharpCompress.Common;
 
 namespace SharpCompress.Readers;
 
 public static class IReaderExtensions
 {
-    public static void WriteEntryTo(this IReader reader, string filePath)
+    public static async Task  WriteEntryToAsync(this IReader reader, string filePath)
     {
         using Stream stream = File.Open(filePath, FileMode.Create, FileAccess.Write);
-        reader.WriteEntryTo(stream);
+        await reader.WriteEntryToAsync(stream);
     }
 
-    public static void WriteEntryTo(this IReader reader, FileInfo filePath)
+    public static async Task WriteEntryToAsync(this IReader reader, FileInfo filePath)
     {
         using Stream stream = filePath.Open(FileMode.Create);
-        reader.WriteEntryTo(stream);
+        await reader.WriteEntryToAsync(stream);
     }
 
     /// <summary>
     /// Extract all remaining unread entries to specific directory, retaining filename
     /// </summary>
-    public static void WriteAllToDirectory(
+    public static async Task WriteAllToDirectoryAsync(
         this IReader reader,
         string destinationDirectory,
         ExtractionOptions? options = null
     )
     {
-        while (reader.MoveToNextEntry())
+        while (await reader.MoveToNextEntryAsync())
         {
-            reader.WriteEntryToDirectory(destinationDirectory, options);
+            await reader.WriteEntryToDirectoryAsync(destinationDirectory, options);
         }
     }
 
     /// <summary>
     /// Extract to specific directory, retaining filename
     /// </summary>
-    public static void WriteEntryToDirectory(
+    public static async Task WriteEntryToDirectoryAsync(
         this IReader reader,
         string destinationDirectory,
         ExtractionOptions? options = null
     ) =>
-        ExtractionMethods.WriteEntryToDirectory(
+        await ExtractionMethods.WriteEntryToDirectoryAsync(
             reader.Entry,
             destinationDirectory,
             options,
-            reader.WriteEntryToFile
+            reader.WriteEntryToFileAsync
         );
 
     /// <summary>
     /// Extract to specific file
     /// </summary>
-    public static void WriteEntryToFile(
+    public static async Task  WriteEntryToFileAsync(
         this IReader reader,
         string destinationFileName,
         ExtractionOptions? options = null
     ) =>
-        ExtractionMethods.WriteEntryToFile(
+        await ExtractionMethods.WriteEntryToFileAsync(
             reader.Entry,
             destinationFileName,
             options,
-            (x, fm) =>
+            async (x, fm) =>
             {
                 using var fs = File.Open(destinationFileName, fm);
-                reader.WriteEntryTo(fs);
+                await reader.WriteEntryToAsync(fs);
             }
         );
 }

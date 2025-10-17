@@ -1,4 +1,5 @@
 #if !NETSTANDARD2_0 && !NETFRAMEWORK
+#nullable disable
 
 using System;
 using SharpCompress.Common;
