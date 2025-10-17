@@ -4,6 +4,7 @@ using System;
 using System.Buffers;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading.Tasks;
 using SharpCompress.Common;
 using SharpCompress.Common.Rar.Headers;
 using SharpCompress.Compressors.PPMd.H;
@@ -152,6 +153,20 @@ internal sealed partial class Unpack : BitInput, IRarUnpack, IDisposable
         suspended = false;
         DoUnpack();
     }
+
+#if !NETSTANDARD2_0 && !NETFRAMEWORK
+    public ValueTask DoUnpackAsync()
+    {
+        DoUnpack();
+        return  ValueTask.CompletedTask;
+    }
+
+    public ValueTask DoUnpackAsync(FileHeader fileHeader, Stream readStream, Stream writeStream)
+    {
+        DoUnpack(fileHeader, readStream, writeStream);
+        return ValueTask.CompletedTask;
+    }
+#endif
 
     public void DoUnpack()
     {

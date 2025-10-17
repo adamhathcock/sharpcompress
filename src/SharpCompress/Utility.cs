@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Text;
+using System.Threading.Tasks;
 using SharpCompress.Readers;
 
 namespace SharpCompress.Helpers;
@@ -166,6 +167,19 @@ internal static class Utility
         try
         {
             do { } while (source.Read(buffer, 0, buffer.Length) == buffer.Length);
+        }
+        finally
+        {
+            ArrayPool<byte>.Shared.Return(buffer);
+        }
+    }
+
+    public static async Task SkipAsync(this Stream source)
+    {
+        var buffer = GetTransferByteArray();
+        try
+        {
+            do { } while (await source.ReadAsync(buffer, 0, buffer.Length) == buffer.Length);
         }
         finally
         {

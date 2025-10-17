@@ -1,6 +1,8 @@
-#if NETSTANDARD2_0 || NETFRAMEWORK
+#if !NETSTANDARD2_0 && !NETFRAMEWORK
 using System;
+using System.Buffers;
 using System.IO;
+using System.Threading.Tasks;
 using SharpCompress.Common.Rar.Headers;
 #if !Rar2017_64bit
 using size_t = System.UInt32;
@@ -33,7 +35,8 @@ internal partial class Unpack : IRarUnpack
     private void UnpIO_UnpWrite(byte[] buf, size_t offset, uint count) =>
         writeStream.Write(buf, checked((int)offset), checked((int)count));
 
-    public void DoUnpack(FileHeader fileHeader, Stream readStream, Stream writeStream)
+
+    public ValueTask DoUnpackAsync(FileHeader fileHeader, Stream readStream, Stream writeStream)
     {
         // as of 12/2017 .NET limits array indexing to using a signed integer
         // MaxWinSize causes unpack to use a fragmented window when the file
@@ -51,35 +54,37 @@ internal partial class Unpack : IRarUnpack
             Init(fileHeader.WindowSize, fileHeader.IsSolid);
         }
         Suspended = false;
-        DoUnpack();
+        return DoUnpackAsync();
     }
 
-    public void DoUnpack()
+    public ValueTask  DoUnpackAsync()
     {
         if (fileHeader.IsStored)
         {
-            UnstoreFile();
+            return UnstoreFileAsync();
         }
         else
         {
             DoUnpack(fileHeader.CompressionAlgorithm, fileHeader.IsSolid);
+            return new ValueTask();
         }
     }
-    private void UnstoreFile()
+    private async ValueTask UnstoreFileAsync()
     {
-        Span<byte> b = stackalloc byte[(int)Math.Min(0x10000, DestUnpSize)];
+        var length = (int)Math.Min(0x10000, DestUnpSize);
+        var buffer = ArrayPool<byte>.Shared.Rent(length);
         do
         {
-            var n = readStream.Read(b);
+            var memory = new Memory<byte>(buffer, 0, length);
+            var n = await readStream.ReadAsync(memory);
             if (n == 0)
             {
                 break;
             }
-            writeStream.Write(b.Slice(0, n));
+            await writeStream.WriteAsync(memory.Slice(0, n));
             DestUnpSize -= n;
         } while (!Suspended);
     }
-
     public bool Suspended { get; set; }
 
     public long DestSize => DestUnpSize;

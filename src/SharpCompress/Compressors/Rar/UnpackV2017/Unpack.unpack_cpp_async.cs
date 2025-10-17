@@ -1,5 +1,4 @@
-#if NETSTANDARD2_0 || NETFRAMEWORK
-#nullable disable
+#if !NETSTANDARD2_0 && !NETFRAMEWORK
 
 using System;
 using SharpCompress.Common;

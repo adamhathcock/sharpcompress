@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using SharpCompress.Common;
 using SharpCompress.Common.Rar;
 using SharpCompress.Common.Rar.Headers;
@@ -66,18 +67,21 @@ public class RarArchiveEntry : RarEntry, IArchiveEntry
         }
     }
 
-    public Stream OpenEntryStream()
+    public Stream OpenEntryStream() => throw new NotSupportedException("Synchronous extraction is not supported. Use OpenEntryStreamAsync instead.");
+
+
+    public async Task<Stream> OpenEntryStreamAsync()
     {
         if (IsRarV3)
         {
-            return new RarStream(
+            return await RarStream.Create(
                 archive.UnpackV1.Value,
                 FileHeader,
                 new MultiVolumeReadOnlyStream(Parts.Cast<RarFilePart>(), archive)
             );
         }
 
-        return new RarStream(
+        return await RarStream.Create(
             archive.UnpackV2017.Value,
             FileHeader,
             new MultiVolumeReadOnlyStream(Parts.Cast<RarFilePart>(), archive)

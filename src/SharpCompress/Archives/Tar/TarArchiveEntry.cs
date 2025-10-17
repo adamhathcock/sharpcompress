@@ -1,5 +1,6 @@
 ﻿using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using SharpCompress.Common;
 using SharpCompress.Common.Tar;
 
@@ -11,6 +12,7 @@ public class TarArchiveEntry : TarEntry, IArchiveEntry
         : base(part, compressionType) => Archive = archive;
 
     public virtual Stream OpenEntryStream() => Parts.Single().GetCompressedStream().NotNull();
+    public virtual async Task<Stream> OpenEntryStreamAsync() => await Task.FromResult(OpenEntryStream());
 
     #region IArchiveEntry Members
 

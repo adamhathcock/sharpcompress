@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using SharpCompress.Common;
 
 namespace SharpCompress.Readers;
@@ -67,7 +68,7 @@ public abstract class AbstractReader<TEntry, TVolume> : IReader, IReaderExtracti
         }
     }
 
-    public bool MoveToNextEntry()
+    public async Task<bool> MoveToNextEntryAsync()
     {
         if (_completed)
         {
@@ -83,7 +84,7 @@ public abstract class AbstractReader<TEntry, TVolume> : IReader, IReaderExtracti
         }
         if (!_wroteCurrentEntry)
         {
-            SkipEntry();
+            await SkipEntryAsync();
         }
         _wroteCurrentEntry = false;
         if (NextEntryForCurrentStream())
@@ -119,15 +120,15 @@ public abstract class AbstractReader<TEntry, TVolume> : IReader, IReaderExtracti
 
     #region Entry Skip/Write
 
-    private void SkipEntry()
+    private async Task SkipEntryAsync()
     {
         if (!Entry.IsDirectory)
         {
-            Skip();
+            await SkipAsync();
         }
     }
 
-    private void Skip()
+    private async Task SkipAsync()
     {
         var part = Entry.Parts.First();
 
@@ -145,11 +146,11 @@ public abstract class AbstractReader<TEntry, TVolume> : IReader, IReaderExtracti
             }
         }
         //don't know the size so we have to try to decompress to skip
-        using var s = OpenEntryStream();
-        s.SkipEntry();
+        using var s = await OpenEntryStreamAsync();
+        await s.SkipEntryAsync();
     }
 
-    public void WriteEntryTo(Stream writableStream)
+    public async Task WriteEntryToAsync(Stream writableStream)
     {
         if (_wroteCurrentEntry)
         {
@@ -167,24 +168,24 @@ public abstract class AbstractReader<TEntry, TVolume> : IReader, IReaderExtracti
             );
         }
 
-        Write(writableStream);
+        await WriteAsync(writableStream);
         _wroteCurrentEntry = true;
     }
 
-    internal void Write(Stream writeStream)
+    internal async Task WriteAsync(Stream writeStream)
     {
         var streamListener = this as IReaderExtractionListener;
-        using Stream s = OpenEntryStream();
+        using Stream s = await OpenEntryStreamAsync();
         s.TransferTo(writeStream, Entry, streamListener);
     }
 
-    public EntryStream OpenEntryStream()
+    public async Task<EntryStream>  OpenEntryStreamAsync()
     {
         if (_wroteCurrentEntry)
         {
             throw new ArgumentException("WriteEntryTo or OpenEntryStream can only be called once.");
         }
-        var stream = GetEntryStream();
+        var stream = await GetEntryStreamAsync();
         _wroteCurrentEntry = true;
         return stream;
     }
@@ -192,11 +193,11 @@ public abstract class AbstractReader<TEntry, TVolume> : IReader, IReaderExtracti
     /// <summary>
     /// Retains a reference to the entry stream, so we can check whether it completed later.
     /// </summary>
-    protected EntryStream CreateEntryStream(Stream? decompressed) =>
-        new(this, decompressed.NotNull());
+    protected Task<EntryStream> CreateEntryStreamAsync(Stream? decompressed) =>
+        Task.FromResult(new EntryStream(this, decompressed.NotNull()));
 
-    protected virtual EntryStream GetEntryStream() =>
-        CreateEntryStream(Entry.Parts.First().GetCompressedStream());
+    protected virtual Task<EntryStream> GetEntryStreamAsync() =>
+        CreateEntryStreamAsync(Entry.Parts.First().GetCompressedStream());
 
     #endregion
 

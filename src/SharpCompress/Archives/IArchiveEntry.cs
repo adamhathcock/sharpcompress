@@ -1,4 +1,5 @@
 using System.IO;
+using System.Threading.Tasks;
 using SharpCompress.Common;
 
 namespace SharpCompress.Archives;
@@ -11,6 +12,11 @@ public interface IArchiveEntry : IEntry
     /// </summary>
     Stream OpenEntryStream();
 
+    /// <summary>
+    /// Opens the current entry as a stream that will decompress as it is read.
+    /// Read the entire stream or use SkipEntry on EntryStream.
+    /// </summary>
+    Task<Stream> OpenEntryStreamAsync();
     /// <summary>
     /// The archive can find all the parts of the archive needed to extract this entry.
     /// </summary>

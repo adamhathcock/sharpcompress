@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using SharpCompress.Common;
 using SharpCompress.Common.Rar;
 using SharpCompress.Compressors.Rar;
@@ -77,7 +78,7 @@ public abstract class RarReader : AbstractReader<RarReaderEntry, RarVolume>
     protected virtual IEnumerable<FilePart> CreateFilePartEnumerableForCurrentEntry() =>
         Entry.Parts;
 
-    protected override EntryStream GetEntryStream()
+    protected override async Task<EntryStream> GetEntryStreamAsync()
     {
         if (Entry.IsRedir)
         {
@@ -90,16 +91,17 @@ public abstract class RarReader : AbstractReader<RarReaderEntry, RarVolume>
         );
         if (Entry.IsRarV3)
         {
-            return CreateEntryStream(new RarCrcStream(UnpackV1.Value, Entry.FileHeader, stream));
+            return await CreateEntryStreamAsync(new RarCrcStream(UnpackV1.Value, Entry.FileHeader, stream));
         }
 
         if (Entry.FileHeader.FileCrc?.Length > 5)
         {
-            return CreateEntryStream(
-                new RarBLAKE2spStream(UnpackV2017.Value, Entry.FileHeader, stream)
+            var s = await RarBLAKE2spStream.Create(UnpackV2017.Value, Entry.FileHeader, stream);
+            return await CreateEntryStreamAsync(
+                s
             );
         }
 
-        return CreateEntryStream(new RarCrcStream(UnpackV2017.Value, Entry.FileHeader, stream));
+        return await CreateEntryStreamAsync(new RarCrcStream(UnpackV2017.Value, Entry.FileHeader, stream));
     }
 }
