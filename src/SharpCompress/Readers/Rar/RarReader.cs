@@ -40,6 +40,29 @@ public abstract class RarReader : AbstractReader<RarReaderEntry, RarVolume>
 
     public override RarVolume? Volume => volume;
 
+    public static RarReader Open(string filePath, ReaderOptions? options = null)
+    {
+        filePath.CheckNotNullOrEmpty(nameof(filePath));
+        return Open(new FileInfo(filePath), options);
+    }
+
+    public static RarReader Open(FileInfo fileInfo, ReaderOptions? options = null)
+    {
+        options ??= new ReaderOptions { LeaveStreamOpen = false };
+        return Open(fileInfo.OpenRead(), options);
+    }
+
+    public static RarReader Open(IEnumerable<string> filePaths, ReaderOptions? options = null)
+    {
+        return Open(filePaths.Select(x => new FileInfo(x)), options);
+    }
+
+    public static RarReader Open(IEnumerable<FileInfo> fileInfos, ReaderOptions? options = null)
+    {
+        options ??= new ReaderOptions { LeaveStreamOpen = false };
+        return Open(fileInfos.Select(x => x.OpenRead()), options);
+    }
+
     /// <summary>
     /// Opens a RarReader for Non-seeking usage with a single volume
     /// </summary>
