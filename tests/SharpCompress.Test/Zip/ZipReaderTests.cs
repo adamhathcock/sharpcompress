@@ -362,6 +362,8 @@ public class ZipReaderTests : ReaderTests
         while (reader.MoveToNextEntry()) { }
     }
 
+    //this test uses a large 7zip file containing a zip file inside it to test zip64 support
+    // we probably shouldn't be allowing ExtractAllEntries here but it works for now.
     [Fact]
     public void Zip_Uncompressed_64bit()
     {
