@@ -146,7 +146,9 @@ public abstract class AbstractArchive<TEntry, TVolume> : IArchive, IArchiveExtra
     {
         if (IsSolid == false)
         {
-            throw new InvalidOperationException("ExtractAllEntries can only be used on solid archives.");
+            throw new InvalidOperationException(
+                "ExtractAllEntries can only be used on solid archives."
+            );
         }
         ((IArchiveExtractionListener)this).EnsureEntriesLoaded();
         return CreateReaderForSolidExtraction();
