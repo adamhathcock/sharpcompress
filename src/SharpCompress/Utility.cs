@@ -98,9 +98,7 @@ internal static class Utility
     public static void Skip(this Stream source)
     {
         using var buffer = MemoryPool<byte>.Shared.Rent(TEMP_BUFFER_SIZE);
-        while (source.Read(buffer.Memory.Span) > 0)
-        {
-        }
+        while (source.Read(buffer.Memory.Span) > 0) { }
     }
 
     public static DateTime DosDateToDateTime(ushort iDate, ushort iTime)
