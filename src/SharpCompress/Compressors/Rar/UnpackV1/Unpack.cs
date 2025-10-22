@@ -1028,7 +1028,7 @@ internal sealed partial class Unpack : BitInput, IRarUnpack, IDisposable
             vmCode.Add((byte)(GetBits() >> 8));
             AddBits(8);
         }
-        return (AddVMCode(FirstByte, vmCode, Length));
+        return AddVMCode(FirstByte, vmCode);
     }
 
     private bool ReadVMCodePPM()
@@ -1073,10 +1073,10 @@ internal sealed partial class Unpack : BitInput, IRarUnpack, IDisposable
             }
             vmCode.Add((byte)Ch); // VMCode[I]=Ch;
         }
-        return (AddVMCode(FirstByte, vmCode, Length));
+        return AddVMCode(FirstByte, vmCode);
     }
 
-    private bool AddVMCode(int firstByte, List<byte> vmCode, int length)
+    private bool AddVMCode(int firstByte, List<byte> vmCode)
     {
         var Inp = new BitInput();
         Inp.InitBitInput();
@@ -1199,19 +1199,28 @@ internal sealed partial class Unpack : BitInput, IRarUnpack, IDisposable
             {
                 return (false);
             }
-            Span<byte> VMCode = stackalloc byte[VMCodeSize];
-            for (var I = 0; I < VMCodeSize; I++)
-            {
-                if (Inp.Overflow(3))
-                {
-                    return (false);
-                }
-                VMCode[I] = (byte)(Inp.GetBits() >> 8);
-                Inp.AddBits(8);
-            }
 
-            // VM.Prepare(&VMCode[0],VMCodeSize,&Filter->Prg);
-            rarVM.prepare(VMCode, VMCodeSize, Filter.Program);
+            var VMCode = ArrayPool<byte>.Shared.Rent(VMCodeSize);
+            try
+            {
+                for (var I = 0; I < VMCodeSize; I++)
+                {
+                    if (Inp.Overflow(3))
+                    {
+                        return (false);
+                    }
+
+                    VMCode[I] = (byte)(Inp.GetBits() >> 8);
+                    Inp.AddBits(8);
+                }
+
+                // VM.Prepare(&VMCode[0],VMCodeSize,&Filter->Prg);
+                rarVM.prepare(VMCode.AsSpan(0, VMCodeSize), Filter.Program);
+            }
+            finally
+            {
+                ArrayPool<byte>.Shared.Return(VMCode);
+            }
         }
         StackFilter.Program.AltCommands = Filter.Program.Commands; // StackFilter->Prg.AltCmd=&Filter->Prg.Cmd[0];
         StackFilter.Program.CommandCount = Filter.Program.CommandCount;
