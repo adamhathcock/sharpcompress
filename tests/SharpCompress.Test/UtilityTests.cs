@@ -619,19 +619,30 @@ public class UtilityTests
 
     #region ReplaceInvalidFileNameChars Tests
 
+#if WINDOWS
     [Theory]
     [InlineData("valid_filename.txt", "valid_filename.txt")]
-    [InlineData("file<name>test.txt", "file<name>test.txt")]
-    [InlineData("<>:\"|?*", "<>:\"|?*")]
-    public void ReplaceInvalidFileNameChars_ValidFileName_UnchangedReturned(
-        string fileName,
-        string expected
-    )
+    [InlineData("file<name>test.txt", "file_name_test.txt")]
+    [InlineData("<>:\"|?*", "_______")]
+    public void ReplaceInvalidFileNameChars_Windows(string fileName, string expected)
     {
         var result = Utility.ReplaceInvalidFileNameChars(fileName);
 
         Assert.Equal(expected, result);
     }
+
+#else
+    [Theory]
+    [InlineData("valid_filename.txt", "valid_filename.txt")]
+    [InlineData("file<name>test.txt", "file<name>test.txt")]
+    [InlineData("<>:\"|?*", "<>:\"|?*")]
+    public void ReplaceInvalidFileNameChars_NonWindows(string fileName, string expected)
+    {
+        var result = Utility.ReplaceInvalidFileNameChars(fileName);
+
+        Assert.Equal(expected, result);
+    }
+#endif
 
     #endregion
 
