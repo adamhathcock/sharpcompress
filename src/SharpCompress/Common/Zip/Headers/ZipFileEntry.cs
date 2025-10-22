@@ -10,7 +10,7 @@ internal abstract class ZipFileEntry : ZipHeader
     protected ZipFileEntry(ZipHeaderType type, ArchiveEncoding archiveEncoding)
         : base(type)
     {
-        Extra = new List<ExtraData>();
+        Extra = [];
         ArchiveEncoding = archiveEncoding;
     }
 

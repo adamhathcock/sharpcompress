@@ -6,7 +6,7 @@ using SharpCompress.Readers;
 
 namespace SharpCompress.Archives;
 
-class AutoArchiveFactory : IArchiveFactory
+internal class AutoArchiveFactory : IArchiveFactory
 {
     public string Name => nameof(AutoArchiveFactory);
 

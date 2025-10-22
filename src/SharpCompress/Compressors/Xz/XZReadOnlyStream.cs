@@ -26,7 +26,7 @@ public abstract class XZReadOnlyStream : ReadOnlyStream, IStreamStack
 
     void IStreamStack.SetPosition(long position) { }
 
-    public XZReadOnlyStream(Stream stream)
+    protected XZReadOnlyStream(Stream stream)
     {
         BaseStream = stream;
         if (!BaseStream.CanRead)

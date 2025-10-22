@@ -1,9 +1,6 @@
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using SharpCompress.IO;
 
 namespace SharpCompress.Compressors.ZStandard;
@@ -34,7 +31,7 @@ internal class ZStandardStream : ZstdSharp.DecompressionStream, IStreamStack
 
     internal static bool IsZStandard(Stream stream)
     {
-        var br = new BinaryReader(stream);
+        using var br = new BinaryReader(stream, Encoding.UTF8, true);
         var magic = br.ReadUInt32();
         if (ZstandardConstants.MAGIC != magic)
         {
@@ -59,7 +56,7 @@ internal class ZStandardStream : ZstdSharp.DecompressionStream, IStreamStack
     /// <exception cref="NotSupportedException">Attempting to set the position</exception>
     public override long Position
     {
-        get { return stream.Position; }
-        set { throw new NotSupportedException("InflaterInputStream Position not supported"); }
+        get => stream.Position;
+        set => throw new NotSupportedException("InflaterInputStream Position not supported");
     }
 }

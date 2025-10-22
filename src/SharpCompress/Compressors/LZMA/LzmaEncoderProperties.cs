@@ -29,8 +29,8 @@ public class LzmaEncoderProperties
         var algorithm = 2;
         var mf = "bt4";
 
-        _propIDs = new[]
-        {
+        _propIDs =
+        [
             CoderPropId.DictionarySize,
             CoderPropId.PosStateBits,
             CoderPropId.LitContextBits,
@@ -39,9 +39,9 @@ public class LzmaEncoderProperties
             CoderPropId.NumFastBytes,
             CoderPropId.MatchFinder,
             CoderPropId.EndMarker,
-        };
-        _properties = new object[]
-        {
+        ];
+        _properties =
+        [
             dictionary,
             posStateBits,
             litContextBits,
@@ -50,6 +50,6 @@ public class LzmaEncoderProperties
             numFastBytes,
             mf,
             eos,
-        };
+        ];
     }
 }

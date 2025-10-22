@@ -107,26 +107,25 @@ public class ZipArchiveTests : ArchiveTests
     [Fact]
     public void Zip_GetParts() =>
         //uses first part to search for all parts and compares against this array
-        ArchiveGetParts(new[] { "Infozip.nocomp.multi.zip", "Infozip.nocomp.multi.z01" });
+        ArchiveGetParts(["Infozip.nocomp.multi.zip", "Infozip.nocomp.multi.z01"]);
 
     [Fact]
     public void ZipX_GetParts() =>
         //uses first part to search for all parts and compares against this array
-        ArchiveGetParts(new[] { "WinZip26.nocomp.multi.zipx", "WinZip26.nocomp.multi.zx01" });
+        ArchiveGetParts(["WinZip26.nocomp.multi.zipx", "WinZip26.nocomp.multi.zx01"]);
 
     [Fact]
     public void Zip_GetPartsSplit() =>
         //uses first part to search for all parts and compares against this array
         ArchiveGetParts(
-            new[]
-            {
+            [
                 "Zip.deflate.split.001",
                 "Zip.deflate.split.002",
                 "Zip.deflate.split.003",
                 "Zip.deflate.split.004",
                 "Zip.deflate.split.005",
                 "Zip.deflate.split.006",
-            }
+            ]
         );
 
     //will detect and load other files
@@ -497,7 +496,7 @@ public class ZipArchiveTests : ArchiveTests
             new ReaderOptions { Password = "test" }
         );
         var isComplete = reader.IsComplete;
-        Assert.Equal(1, reader.Volumes.Count);
+        Assert.Single(reader.Volumes);
 
         var expectedComment =
             "Encoding:utf-8 || Compression:Deflate levelDefault || Encrypt:None || ZIP64:Always\r\nCreated at 2017-Jan-23 14:10:43 || DotNetZip Tool v1.9.1.8\r\nTest zip64 archive";
@@ -622,7 +621,7 @@ public class ZipArchiveTests : ArchiveTests
 
         using (var zipWriter = WriterFactory.Open(stream, ArchiveType.Zip, CompressionType.Deflate))
         {
-            zipWriter.Write("foo.txt", new MemoryStream(Array.Empty<byte>()));
+            zipWriter.Write("foo.txt", new MemoryStream([]));
             zipWriter.Write("foo2.txt", new MemoryStream(new byte[10]));
         }
 

@@ -1,8 +1,5 @@
 using System;
-using System.Diagnostics;
 using System.IO;
-using System.Text;
-using System.Threading;
 
 namespace SharpCompress.IO;
 
@@ -72,7 +69,10 @@ public class SharpCompressStream : Stream, IStreamStack
             if (_bufferingEnabled)
             {
                 if (value < 0 || value > _bufferedLength)
+                {
                     throw new ArgumentOutOfRangeException(nameof(value));
+                }
+
                 _internalPosition = value;
                 _bufferPosition = value;
                 ValidateBufferState(); // Add here
@@ -88,8 +88,6 @@ public class SharpCompressStream : Stream, IStreamStack
 
     private bool _readOnly; //some archive detection requires seek to be disabled to cause it to exception to try the next arc type
 
-    //private bool _isRewound;
-    private bool _isDisposed;
     private long _internalPosition = 0;
 
     public bool ThrowOnDispose { get; set; }
@@ -112,7 +110,10 @@ public class SharpCompressStream : Stream, IStreamStack
         )
         {
             if (bufferSize != 0)
+            {
                 ((IStreamStack)stream).SetBuffer(bufferSize, forceBuffer);
+            }
+
             return sc;
         }
         return new SharpCompressStream(stream, leaveOpen, throwOnDispose, bufferSize, forceBuffer);
@@ -131,7 +132,7 @@ public class SharpCompressStream : Stream, IStreamStack
         this.ThrowOnDispose = throwOnDispose;
         _readOnly = !Stream.CanSeek;
 
-        ((IStreamStack)this).SetBuffer(bufferSize, forceBuffer);
+        this.SetBuffer(bufferSize, forceBuffer);
         try
         {
             _baseInitialPos = stream.Position;
@@ -146,18 +147,18 @@ public class SharpCompressStream : Stream, IStreamStack
 #endif
     }
 
-    internal bool IsRecording { get; private set; }
+    public bool IsDisposed { get; private set; }
 
     protected override void Dispose(bool disposing)
     {
 #if DEBUG_STREAMS
         this.DebugDispose(typeof(SharpCompressStream));
 #endif
-        if (_isDisposed)
+        if (IsDisposed)
         {
             return;
         }
-        _isDisposed = true;
+        IsDisposed = true;
         base.Dispose(disposing);
 
         if (this.LeaveOpen)
@@ -182,15 +183,9 @@ public class SharpCompressStream : Stream, IStreamStack
 
     public override bool CanWrite => !_readOnly && Stream.CanWrite;
 
-    public override void Flush()
-    {
-        Stream.Flush();
-    }
+    public override void Flush() => Stream.Flush();
 
-    public override long Length
-    {
-        get { return Stream.Length; }
-    }
+    public override long Length => Stream.Length;
 
     public override long Position
     {
@@ -199,13 +194,15 @@ public class SharpCompressStream : Stream, IStreamStack
             long pos = _internalPosition; // Stream.Position + _bufferStream.Position - _bufferStream.Length;
             return pos;
         }
-        set { Seek(value, SeekOrigin.Begin); }
+        set => Seek(value, SeekOrigin.Begin);
     }
 
     public override int Read(byte[] buffer, int offset, int count)
     {
         if (count == 0)
+        {
             return 0;
+        }
 
         if (_bufferingEnabled)
         {
@@ -229,7 +226,10 @@ public class SharpCompressStream : Stream, IStreamStack
             // If buffer exhausted, refill
             int r = Stream.Read(_buffer!, 0, _bufferSize);
             if (r == 0)
+            {
                 return 0;
+            }
+
             _bufferedLength = r;
             _bufferPosition = 0;
             if (_bufferedLength == 0)
@@ -262,7 +262,6 @@ public class SharpCompressStream : Stream, IStreamStack
             ValidateBufferState();
         }
 
-        long orig = _internalPosition;
         long targetPos;
         // Calculate the absolute target position based on origin
         switch (origin)
@@ -299,10 +298,7 @@ public class SharpCompressStream : Stream, IStreamStack
         return _internalPosition;
     }
 
-    public override void SetLength(long value)
-    {
-        throw new NotSupportedException();
-    }
+    public override void SetLength(long value) => throw new NotSupportedException();
 
     public override void WriteByte(byte value)
     {

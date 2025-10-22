@@ -6,7 +6,7 @@ namespace SharpCompress.Compressors.LZMA;
 /// <summary>
 /// The exception that is thrown when an error in input stream occurs during decoding.
 /// </summary>
-internal class DataErrorException : Exception
+public class DataErrorException : Exception
 {
     public DataErrorException()
         : base("Data Error") { }
@@ -15,7 +15,7 @@ internal class DataErrorException : Exception
 /// <summary>
 /// The exception that is thrown when the value of an argument is outside the allowable range.
 /// </summary>
-internal class InvalidParamException : Exception
+public class InvalidParamException : Exception
 {
     public InvalidParamException()
         : base("Invalid Parameter") { }

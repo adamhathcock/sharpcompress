@@ -80,25 +80,15 @@ public class ReduceStream : Stream, IStreamStack
         base.Dispose(disposing);
     }
 
-    public override void Flush()
-    {
-        throw new NotImplementedException();
-    }
+    public override void Flush() => throw new NotImplementedException();
 
-    public override long Seek(long offset, SeekOrigin origin)
-    {
+    public override long Seek(long offset, SeekOrigin origin) =>
         throw new NotImplementedException();
-    }
 
-    public override void SetLength(long value)
-    {
-        throw new NotImplementedException();
-    }
+    public override void SetLength(long value) => throw new NotImplementedException();
 
-    public override void Write(byte[] buffer, int offset, int count)
-    {
+    public override void Write(byte[] buffer, int offset, int count) =>
         throw new NotImplementedException();
-    }
 
     public override bool CanRead => true;
     public override bool CanSeek => false;
@@ -113,8 +103,8 @@ public class ReduceStream : Stream, IStreamStack
     private const int RunLengthCode = 144;
     private const int WSIZE = 0x4000;
 
-    private readonly uint[] mask_bits = new uint[]
-    {
+    private readonly uint[] mask_bits =
+    [
         0x0000,
         0x0001,
         0x0003,
@@ -132,7 +122,7 @@ public class ReduceStream : Stream, IStreamStack
         0x3fff,
         0x7fff,
         0xffff,
-    };
+    ];
 
     private int bitBufferCount;
     private ulong bitBuffer;
@@ -140,7 +130,10 @@ public class ReduceStream : Stream, IStreamStack
     private int NEXTBYTE()
     {
         if (inByteCount == compressedSize)
+        {
             return EOF;
+        }
+
         inByteCount++;
         return inStream.ReadByte();
     }
@@ -150,13 +143,13 @@ public class ReduceStream : Stream, IStreamStack
         if (nbits > bitBufferCount)
         {
             int temp;
-            while (bitBufferCount <= 8 * (int)(4 - 1) && (temp = NEXTBYTE()) != EOF)
+            while (bitBufferCount <= 8 * (4 - 1) && (temp = NEXTBYTE()) != EOF)
             {
                 bitBuffer |= (ulong)temp << bitBufferCount;
                 bitBufferCount += 8;
             }
         }
-        zdest = (byte)(bitBuffer & (ulong)mask_bits[nbits]);
+        zdest = (byte)(bitBuffer & mask_bits[nbits]);
         bitBuffer >>= nbits;
         bitBufferCount -= nbits;
     }
@@ -165,7 +158,7 @@ public class ReduceStream : Stream, IStreamStack
 
     private void LoadBitLengthTable()
     {
-        byte[] bitPos = { 0, 2, 4, 8, 16, 32, 64, 128, 255 };
+        byte[] bitPos = [0, 2, 4, 8, 16, 32, 64, 128, 255];
         bitCountTable = new byte[256];
 
         for (byte i = 1; i <= 8; i++)
@@ -229,7 +222,9 @@ public class ReduceStream : Stream, IStreamStack
                     windowsBuffer[windowIndex++] = nextByte;
                     outBytesCount++;
                     if (windowIndex == WSIZE)
+                    {
                         windowIndex = 0;
+                    }
 
                     continue;
                 }
@@ -241,7 +236,9 @@ public class ReduceStream : Stream, IStreamStack
                     windowsBuffer[windowIndex++] = RunLengthCode;
                     outBytesCount++;
                     if (windowIndex == WSIZE)
+                    {
                         windowIndex = 0;
+                    }
 
                     continue;
                 }
@@ -268,10 +265,14 @@ public class ReduceStream : Stream, IStreamStack
                 outBytesCount++;
 
                 if (distance == WSIZE)
+                {
                     distance = 0;
+                }
 
                 if (windowIndex == WSIZE)
+                {
                     windowIndex = 0;
+                }
 
                 length--;
             }

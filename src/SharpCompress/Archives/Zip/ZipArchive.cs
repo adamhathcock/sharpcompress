@@ -28,13 +28,14 @@ public class ZipArchive : AbstractWritableArchive<ZipArchiveEntry, ZipVolume>
     /// Constructor with a SourceStream able to handle FileInfo and Streams.
     /// </summary>
     /// <param name="sourceStream"></param>
-    /// <param name="options"></param>
     internal ZipArchive(SourceStream sourceStream)
-        : base(ArchiveType.Zip, sourceStream) =>
+        : base(ArchiveType.Zip, sourceStream)
+    {
         headerFactory = new SeekableZipHeaderFactory(
             sourceStream.ReaderOptions.Password,
             sourceStream.ReaderOptions.ArchiveEncoding
         );
+    }
 
     /// <summary>
     /// Constructor expects a filepath to an existing file.
@@ -224,7 +225,7 @@ public class ZipArchive : AbstractWritableArchive<ZipArchiveEntry, ZipVolume>
 
         var streams = stream.Streams.ToList();
         var idx = 0;
-        if (streams.Count() > 1) //test part 2 - true = multipart not split
+        if (streams.Count > 1) //test part 2 - true = multipart not split
         {
             streams[1].Position += 4; //skip the POST_DATA_DESCRIPTOR to prevent an exception
             var isZip = IsZipFile(streams[1], ReaderOptions.Password, ReaderOptions.BufferSize);
@@ -287,7 +288,7 @@ public class ZipArchive : AbstractWritableArchive<ZipArchiveEntry, ZipVolume>
                         break;
                     case ZipHeaderType.DirectoryEnd:
                     {
-                        var bytes = ((DirectoryEndHeader)h).Comment ?? Array.Empty<byte>();
+                        var bytes = ((DirectoryEndHeader)h).Comment ?? [];
                         vols.Last().Comment = ReaderOptions.ArchiveEncoding.Decode(bytes);
                         yield break;
                     }

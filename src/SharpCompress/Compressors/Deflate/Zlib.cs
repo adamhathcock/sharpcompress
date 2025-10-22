@@ -283,7 +283,7 @@ internal static class InternalConstants
 internal sealed class StaticTree
 {
     internal static readonly short[] lengthAndLiteralsTreeCodes =
-    {
+    [
         12,
         8,
         140,
@@ -860,10 +860,10 @@ internal sealed class StaticTree
         8,
         227,
         8,
-    };
+    ];
 
     internal static readonly short[] distTreeCodes =
-    {
+    [
         0,
         5,
         16,
@@ -924,11 +924,11 @@ internal sealed class StaticTree
         5,
         23,
         5,
-    };
+    ];
 
     // extra bits for each bit length code
     internal static readonly int[] extra_blbits =
-    {
+    [
         0,
         0,
         0,
@@ -948,7 +948,7 @@ internal sealed class StaticTree
         2,
         3,
         7,
-    };
+    ];
 
     internal static readonly StaticTree Literals;
     internal static readonly StaticTree Distances;

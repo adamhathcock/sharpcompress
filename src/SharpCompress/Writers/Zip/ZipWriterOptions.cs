@@ -32,10 +32,7 @@ public class ZipWriterOptions : WriterOptions
     /// This is a convenience method that sets the CompressionLevel property for Deflate compression.
     /// </summary>
     /// <param name="level">Deflate compression level (0=no compression, 6=default, 9=best compression)</param>
-    public void SetDeflateCompressionLevel(CompressionLevel level)
-    {
-        CompressionLevel = (int)level;
-    }
+    public void SetDeflateCompressionLevel(CompressionLevel level) => CompressionLevel = (int)level;
 
     /// <summary>
     /// Sets the compression level for ZStandard compression (1-22).
@@ -46,10 +43,12 @@ public class ZipWriterOptions : WriterOptions
     public void SetZStandardCompressionLevel(int level)
     {
         if (level < 1 || level > 22)
+        {
             throw new ArgumentOutOfRangeException(
                 nameof(level),
                 "ZStandard compression level must be between 1 and 22"
             );
+        }
 
         CompressionLevel = level;
     }

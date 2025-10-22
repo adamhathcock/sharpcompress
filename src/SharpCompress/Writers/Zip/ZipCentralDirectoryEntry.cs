@@ -78,7 +78,7 @@ internal class ZipCentralDirectoryEntry
             usedCompression = ZipCompressionMethod.None;
         }
 
-        Span<byte> intBuf = stackalloc byte[] { 80, 75, 1, 2, version, 0, version, 0 };
+        Span<byte> intBuf = [80, 75, 1, 2, version, 0, version, 0];
         //constant sig, then version made by, then version to extract
         outputStream.Write(intBuf);
 

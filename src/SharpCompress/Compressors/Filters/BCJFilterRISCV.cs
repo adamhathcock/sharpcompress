@@ -9,7 +9,10 @@ internal class BCJFilterRISCV : Filter
     private int _pos;
 
     public BCJFilterRISCV(bool isEncoder, Stream baseStream)
-        : base(isEncoder, baseStream, 8) => _pos = 0;
+        : base(isEncoder, baseStream, 8)
+    {
+        _pos = 0;
+    }
 
     private int Decode(byte[] buffer, int offset, int count)
     {
@@ -27,7 +30,9 @@ internal class BCJFilterRISCV : Filter
             {
                 uint b1 = buffer[i + 1];
                 if ((b1 & 0x0D) != 0)
+                {
                     continue;
+                }
 
                 uint b2 = buffer[i + 2];
                 uint b3 = buffer[i + 3];
@@ -73,7 +78,7 @@ internal class BCJFilterRISCV : Filter
                 else
                 {
                     uint inst2_rs1 = inst >> 27;
-                    if ((uint)(((inst) - 0x3117) << 18) >= ((inst2_rs1) & 0x1D))
+                    if (((inst) - 0x3117) << 18 >= ((inst2_rs1) & 0x1D))
                     {
                         i += 4 - 2;
                         continue;
@@ -116,7 +121,9 @@ internal class BCJFilterRISCV : Filter
             {
                 uint b1 = buffer[i + 1];
                 if ((b1 & 0x0D) != 0)
+                {
                     continue;
+                }
 
                 uint b2 = buffer[i + 2];
                 uint b3 = buffer[i + 3];
@@ -168,7 +175,7 @@ internal class BCJFilterRISCV : Filter
                 else
                 {
                     uint fake_rs1 = inst >> 27;
-                    if ((uint)(((inst) - 0x3117) << 18) >= ((fake_rs1) & 0x1D))
+                    if (((inst) - 0x3117) << 18 >= ((fake_rs1) & 0x1D))
                     {
                         i += 4 - 2;
                         continue;

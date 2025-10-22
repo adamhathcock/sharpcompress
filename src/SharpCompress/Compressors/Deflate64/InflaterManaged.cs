@@ -40,43 +40,12 @@ internal sealed class InflaterManaged
 
     // Extra bits for length code 257 - 285.
     private static ReadOnlySpan<byte> S_EXTRA_LENGTH_BITS =>
-        new byte[]
-        {
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            1,
-            1,
-            1,
-            1,
-            2,
-            2,
-            2,
-            2,
-            3,
-            3,
-            3,
-            3,
-            4,
-            4,
-            4,
-            4,
-            5,
-            5,
-            5,
-            5,
-            16,
-        };
+        [0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5, 16];
 
     // The base length for length code 257 - 285.
     // The formula to get the real length for a length code is lengthBase[code - 257] + (value stored in extraBits)
     private static readonly int[] S_LENGTH_BASE =
-    {
+    [
         3,
         4,
         5,
@@ -106,12 +75,12 @@ internal sealed class InflaterManaged
         195,
         227,
         3,
-    };
+    ];
 
     // The base distance for distance code 0 - 31
     // The real distance for a distance code is  distanceBasePosition[code] + (value stored in extraBits)
     private static readonly int[] S_DISTANCE_BASE_POSITION =
-    {
+    [
         1,
         2,
         3,
@@ -144,15 +113,14 @@ internal sealed class InflaterManaged
         24577,
         32769,
         49153,
-    };
+    ];
 
     // code lengths for code length alphabet is stored in following order
     private static ReadOnlySpan<byte> S_CODE_ORDER =>
-        new byte[] { 16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1, 15 };
+        [16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1, 15];
 
     private static ReadOnlySpan<byte> S_STATIC_DISTANCE_TREE_TABLE =>
-        new byte[]
-        {
+        [
             0x00,
             0x10,
             0x08,
@@ -185,7 +153,7 @@ internal sealed class InflaterManaged
             0x17,
             0x0f,
             0x1f,
-        };
+        ];
 
     private readonly OutputWindow _output;
     private readonly InputBuffer _input;

@@ -1709,7 +1709,7 @@ internal class Encoder : ICoder, ISetCoderProperties, IWriteCoderProperties
         _alignPriceCount = 0;
     }
 
-    private static readonly string[] K_MATCH_FINDER_I_DS = { "BT2", "BT4" };
+    private static readonly string[] K_MATCH_FINDER_I_DS = ["BT2", "BT4"];
 
     private static int FindMatchFinder(string s)
     {

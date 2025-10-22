@@ -386,7 +386,7 @@ internal class ZlibBaseStream : Stream, IStreamStack
     {
         _stream.Flush();
         //rewind the buffer
-        ((IStreamStack)this).Rewind(z.AvailableBytesIn); //unused
+        this.Rewind(z.AvailableBytesIn); //unused
         z.AvailableBytesIn = 0;
     }
 
@@ -671,7 +671,7 @@ internal class ZlibBaseStream : Stream, IStreamStack
         if (rc == ZlibConstants.Z_STREAM_END && z.AvailableBytesIn != 0 && !_wantCompress)
         {
             //rewind the buffer
-            ((IStreamStack)this).Rewind(z.AvailableBytesIn); //unused
+            this.Rewind(z.AvailableBytesIn); //unused
             z.AvailableBytesIn = 0;
         }
 

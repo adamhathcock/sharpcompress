@@ -3,8 +3,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using SharpCompress.Compressors.RLE90;
-using SharpCompress.Compressors.Squeezed;
 using SharpCompress.IO;
+
+namespace SharpCompress.Compressors.ArcLzw;
 
 public partial class ArcLzwStream : Stream, IStreamStack
 {
@@ -69,7 +70,7 @@ public partial class ArcLzwStream : Stream, IStreamStack
         maxcodemax = 0;
     }
 
-    private ushort? GetCode(BitReader reader)
+    private ushort? GetCode(ArcLzwStream.BitReader reader)
     {
         if (clearFlag || freeEnt > maxcode)
         {
@@ -113,7 +114,7 @@ public partial class ArcLzwStream : Stream, IStreamStack
             suffix[i] = (byte)i;
         }
 
-        var reader = new BitReader(input);
+        var reader = new ArcLzwStream.BitReader(input);
         freeEnt = FIRST;
 
         if (GetCode(reader) is ushort old)
@@ -129,7 +130,7 @@ public partial class ArcLzwStream : Stream, IStreamStack
             {
                 Array.Clear(prefix, 0, prefix.Length);
                 clearFlag = true;
-                freeEnt = (ushort)(FIRST - 1);
+                freeEnt = FIRST - 1;
 
                 if (GetCode(reader) is ushort c)
                 {
@@ -180,7 +181,9 @@ public partial class ArcLzwStream : Stream, IStreamStack
     public override bool CanRead => true;
     public override bool CanSeek => false;
     public override bool CanWrite => false;
+#pragma warning disable CA1065
     public override long Length => throw new NotImplementedException();
+#pragma warning restore CA1065
     public override long Position
     {
         get => _stream.Position;

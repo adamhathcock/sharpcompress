@@ -13,8 +13,9 @@ namespace SharpCompress.Compressors.Filters;
 [CLSCompliant(false)]
 public sealed class BranchExecFilter
 {
-    public enum Alignment : int
+    public enum Alignment
     {
+        None = 0,
         ARCH_x86_ALIGNMENT = 1,
         ARCH_PowerPC_ALIGNMENT = 4,
         ARCH_IA64_ALIGNMENT = 16,
@@ -47,13 +48,17 @@ public sealed class BranchExecFilter
         var size = (uint)buf.Length;
 
         if (size <= 4)
+        {
             return;
+        }
 
         size -= 4;
         for (i = 0; i < size; ++i)
         {
             if ((buf[i] & 0xFE) != 0xE8)
+            {
                 continue;
+            }
 
             prev_pos = i - prev_pos;
             if (prev_pos > 3)
@@ -89,12 +94,16 @@ public sealed class BranchExecFilter
                 {
                     dest = src - (pos + (uint)i + 5);
                     if (prev_mask == 0)
+                    {
                         break;
+                    }
 
                     j = mask_to_bit_num[prev_mask] * 8u;
                     b = (byte)(dest >> (24 - (int)j));
                     if (!X86TestByte(b))
+                    {
                         break;
+                    }
 
                     src = dest ^ ((1u << (32 - (int)j)) - 1u);
                 }

@@ -7,7 +7,7 @@ internal class BCJFilterIA64 : Filter
     private int _pos;
 
     private static readonly int[] BRANCH_TABLE =
-    {
+    [
         0,
         0,
         0,
@@ -40,10 +40,13 @@ internal class BCJFilterIA64 : Filter
         4,
         0,
         0,
-    };
+    ];
 
     public BCJFilterIA64(bool isEncoder, Stream baseStream)
-        : base(isEncoder, baseStream, 16) => _pos = 0;
+        : base(isEncoder, baseStream, 16)
+    {
+        _pos = 0;
+    }
 
     protected override int Transform(byte[] buffer, int offset, int count)
     {
@@ -58,7 +61,9 @@ internal class BCJFilterIA64 : Filter
             for (int slot = 0, bitPos = 5; slot < 3; ++slot, bitPos += 41)
             {
                 if (((mask >>> slot) & 1) == 0)
+                {
                     continue;
+                }
 
                 var bytePos = bitPos >>> 3;
                 var bitRes = bitPos & 7;
@@ -72,7 +77,9 @@ internal class BCJFilterIA64 : Filter
                 var instrNorm = instr >>> bitRes;
 
                 if (((instrNorm >>> 37) & 0x0F) != 0x05 || ((instrNorm >>> 9) & 0x07) != 0x00)
+                {
                     continue;
+                }
 
                 var src = (int)((instrNorm >>> 13) & 0x0FFFFF);
                 src |= ((int)(instrNorm >>> 36) & 1) << 20;
@@ -80,9 +87,13 @@ internal class BCJFilterIA64 : Filter
 
                 int dest;
                 if (_isEncoder)
+                {
                     dest = src + (_pos + i - offset);
+                }
                 else
+                {
                     dest = src - (_pos + i - offset);
+                }
 
                 dest >>>= 4;
 

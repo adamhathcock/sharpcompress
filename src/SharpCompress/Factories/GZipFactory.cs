@@ -83,20 +83,20 @@ public class GZipFactory
     {
         reader = null;
 
-        long pos = ((IStreamStack)rewindableStream).GetPosition();
+        long pos = rewindableStream.GetPosition();
 
         if (GZipArchive.IsGZipFile(rewindableStream))
         {
-            ((IStreamStack)rewindableStream).StackSeek(pos);
+            rewindableStream.StackSeek(pos);
             var testStream = new GZipStream(rewindableStream, CompressionMode.Decompress);
             if (TarArchive.IsTarFile(testStream))
             {
-                ((IStreamStack)rewindableStream).StackSeek(pos);
+                rewindableStream.StackSeek(pos);
                 reader = new TarReader(rewindableStream, options, CompressionType.GZip);
                 return true;
             }
 
-            ((IStreamStack)rewindableStream).StackSeek(pos);
+            rewindableStream.StackSeek(pos);
             reader = OpenReader(rewindableStream, options);
             return true;
         }

@@ -1,5 +1,7 @@
 #nullable disable
 
+using System;
+
 namespace SharpCompress.Compressors.PPMd.I1;
 
 /// <summary>
@@ -15,7 +17,7 @@ namespace SharpCompress.Compressors.PPMd.I1;
 /// Note that <see cref="_address"/> is a field rather than a property for performance reasons.
 /// </para>
 /// </remarks>
-internal struct PpmState
+internal struct PpmState : IEquatable<PpmState>
 {
     public uint _address;
     public byte[] _memory;
@@ -182,6 +184,8 @@ internal struct PpmState
         }
         return base.Equals(obj);
     }
+
+    public bool Equals(PpmState other) => other._address == _address;
 
     /// <summary>
     /// Returns the hash code for this instance.

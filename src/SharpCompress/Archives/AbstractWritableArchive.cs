@@ -31,10 +31,10 @@ public abstract class AbstractWritableArchive<TEntry, TVolume>
         }
     }
 
-    private readonly List<TEntry> newEntries = new();
-    private readonly List<TEntry> removedEntries = new();
+    private readonly List<TEntry> newEntries = [];
+    private readonly List<TEntry> removedEntries = [];
 
-    private readonly List<TEntry> modifiedEntries = new();
+    private readonly List<TEntry> modifiedEntries = [];
     private bool hasModifications;
     private bool pauseRebuilding;
 

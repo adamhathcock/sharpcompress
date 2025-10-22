@@ -113,7 +113,7 @@ internal sealed class SeekableZipHeaderFactory : ZipHeaderFactory
                 ? (int)stream.Length
                 : MAX_SEARCH_LENGTH_FOR_EOCD;
         // We search for marker in reverse to find the first occurance
-        byte[] needle = { 0x06, 0x05, 0x4b, 0x50 };
+        byte[] needle = [0x06, 0x05, 0x4b, 0x50];
 
         stream.Seek(-len, SeekOrigin.End);
 

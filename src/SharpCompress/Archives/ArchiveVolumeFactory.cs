@@ -13,6 +13,7 @@ internal abstract class ArchiveVolumeFactory
         //split 001, 002 ...
         var m = Regex.Match(part1.Name, @"^(.*\.)([0-9]+)$", RegexOptions.IgnoreCase);
         if (m.Success)
+        {
             item = new FileInfo(
                 Path.Combine(
                     part1.DirectoryName!,
@@ -22,9 +23,13 @@ internal abstract class ArchiveVolumeFactory
                     )
                 )
             );
+        }
 
         if (item != null && item.Exists)
+        {
             return item;
+        }
+
         return null;
     }
 }

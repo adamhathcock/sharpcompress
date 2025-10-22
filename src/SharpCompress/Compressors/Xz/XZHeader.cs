@@ -9,18 +9,19 @@ namespace SharpCompress.Compressors.Xz;
 public class XZHeader
 {
     private readonly BinaryReader _reader;
-    private readonly byte[] MagicHeader = { 0xFD, 0x37, 0x7A, 0x58, 0x5a, 0x00 };
+    private readonly byte[] MagicHeader = [0xFD, 0x37, 0x7A, 0x58, 0x5a, 0x00];
 
     public CheckType BlockCheckType { get; private set; }
     public int BlockCheckSize => 4 << ((((int)BlockCheckType + 2) / 3) - 1);
 
-    public XZHeader(BinaryReader reader) => _reader = reader;
+    public XZHeader(BinaryReader reader)
+    {
+        _reader = reader;
+    }
 
     public static XZHeader FromStream(Stream stream)
     {
-        var header = new XZHeader(
-            new BinaryReader(SharpCompressStream.Create(stream, leaveOpen: true), Encoding.UTF8)
-        );
+        var header = new XZHeader(new BinaryReader(stream, Encoding.UTF8, true));
         header.Process();
         return header;
     }

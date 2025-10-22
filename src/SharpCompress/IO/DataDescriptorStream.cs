@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Text;
 
 namespace SharpCompress.IO;
 
@@ -31,7 +32,7 @@ public class DataDescriptorStream : Stream, IStreamStack
     private bool _isDisposed;
     private bool _done;
 
-    private static byte[] _dataDescriptorMarker = new byte[] { 0x50, 0x4b, 0x07, 0x08 };
+    private static byte[] _dataDescriptorMarker = [0x50, 0x4b, 0x07, 0x08];
     private static long _dataDescriptorSize = 24;
 
     public DataDescriptorStream(Stream stream)
@@ -83,7 +84,7 @@ public class DataDescriptorStream : Stream, IStreamStack
 
     private bool validate_data_descriptor(Stream stream, long size)
     {
-        var br = new BinaryReader(stream);
+        using var br = new BinaryReader(stream, Encoding.UTF8, true);
         br.ReadUInt32();
         br.ReadUInt32(); // CRC32 can be checked if we calculate it
         var compressedSize = br.ReadUInt32();

@@ -1387,7 +1387,7 @@ internal class ArchiveReader
     {
         internal int _fileIndex;
         internal int _folderIndex;
-        internal List<bool> _extractStatuses = new();
+        internal List<bool> _extractStatuses = [];
 
         internal CExtractFolderInfo(int fileIndex, int folderIndex)
         {

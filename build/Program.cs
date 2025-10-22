@@ -92,4 +92,4 @@ Target(
 
 Target("default", [Publish], () => Console.WriteLine("Done!"));
 
-await RunTargetsAndExitAsync(args);
+await RunTargetsAndExitAsync(args).ConfigureAwait(false);

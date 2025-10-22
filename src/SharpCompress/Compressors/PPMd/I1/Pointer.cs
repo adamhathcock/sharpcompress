@@ -18,7 +18,7 @@ namespace SharpCompress.Compressors.PPMd.I1;
 /// Note that <see cref="_address"/> is a field rather than a property for performance reasons.
 /// </para>
 /// </remarks>
-internal struct Pointer
+internal struct Pointer : IEquatable<Pointer>
 {
     public uint _address;
     public byte[] _memory;
@@ -348,6 +348,8 @@ internal struct Pointer
         }
         return base.Equals(obj);
     }
+
+    public bool Equals(Pointer other) => other._address == _address;
 
     /// <summary>
     /// Returns the hash code for this instance.

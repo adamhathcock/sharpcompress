@@ -9,7 +9,10 @@ internal sealed class TarHeader
 {
     internal static readonly DateTime EPOCH = new(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 
-    public TarHeader(ArchiveEncoding archiveEncoding) => ArchiveEncoding = archiveEncoding;
+    public TarHeader(ArchiveEncoding archiveEncoding)
+    {
+        ArchiveEncoding = archiveEncoding;
+    }
 
     internal string? Name { get; set; }
     internal string? LinkName { get; set; }
@@ -306,7 +309,7 @@ internal sealed class TarHeader
     }
 
     private static readonly byte[] eightSpaces =
-    {
+    [
         (byte)' ',
         (byte)' ',
         (byte)' ',
@@ -315,7 +318,7 @@ internal sealed class TarHeader
         (byte)' ',
         (byte)' ',
         (byte)' ',
-    };
+    ];
 
     internal static bool checkChecksum(byte[] buf)
     {

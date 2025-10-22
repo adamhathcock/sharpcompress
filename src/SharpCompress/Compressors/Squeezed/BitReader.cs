@@ -1,6 +1,8 @@
 using System;
 using System.IO;
 
+namespace SharpCompress.Compressors.Squeezed;
+
 public class BitReader
 {
     private readonly Stream _stream;
@@ -20,7 +22,10 @@ public class BitReader
         {
             int nextByte = _stream.ReadByte();
             if (nextByte == -1)
+            {
                 throw new EndOfStreamException();
+            }
+
             _bitBuffer = nextByte;
             _bitCount = 8;
         }

@@ -113,7 +113,7 @@ public class SevenZipArchive : AbstractArchive<SevenZipArchiveEntry, SevenZipVol
     protected override IEnumerable<SevenZipVolume> LoadVolumes(SourceStream sourceStream)
     {
         sourceStream.NotNull("SourceStream is null").LoadAllParts(); //request all streams
-        return new SevenZipVolume(sourceStream, ReaderOptions, 0).AsEnumerable(); //simple single volume or split, multivolume not supported
+        return new SevenZipVolume(sourceStream, ReaderOptions).AsEnumerable(); //simple single volume or split, multivolume not supported
     }
 
     public static bool IsSevenZipFile(string filePath) => IsSevenZipFile(new FileInfo(filePath));
@@ -139,7 +139,7 @@ public class SevenZipArchive : AbstractArchive<SevenZipArchiveEntry, SevenZipVol
         LoadFactory(stream);
         if (_database is null)
         {
-            return Enumerable.Empty<SevenZipArchiveEntry>();
+            return [];
         }
         var entries = new SevenZipArchiveEntry[_database._files.Count];
         for (var i = 0; i < _database._files.Count; i++)
@@ -186,8 +186,7 @@ public class SevenZipArchive : AbstractArchive<SevenZipArchiveEntry, SevenZipVol
         }
     }
 
-    private static ReadOnlySpan<byte> Signature =>
-        new byte[] { (byte)'7', (byte)'z', 0xBC, 0xAF, 0x27, 0x1C };
+    private static ReadOnlySpan<byte> Signature => [(byte)'7', (byte)'z', 0xBC, 0xAF, 0x27, 0x1C];
 
     private static bool SignatureMatch(Stream stream)
     {
@@ -216,7 +215,10 @@ public class SevenZipArchive : AbstractArchive<SevenZipArchiveEntry, SevenZipVol
         private CFileItem? _currentItem;
 
         internal SevenZipReader(ReaderOptions readerOptions, SevenZipArchive archive)
-            : base(readerOptions, ArchiveType.SevenZip) => this._archive = archive;
+            : base(readerOptions, ArchiveType.SevenZip)
+        {
+            _archive = archive;
+        }
 
         public override SevenZipVolume Volume => _archive.Volumes.Single();
 
@@ -266,7 +268,10 @@ public class SevenZipArchive : AbstractArchive<SevenZipArchiveEntry, SevenZipVol
     {
         private readonly string? _password;
 
-        public PasswordProvider(string? password) => _password = password;
+        public PasswordProvider(string? password)
+        {
+            _password = password;
+        }
 
         public string? CryptoGetTextPassword() => _password;
     }

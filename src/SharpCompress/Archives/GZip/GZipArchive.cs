@@ -166,7 +166,7 @@ public class GZipArchive : AbstractWritableArchive<GZipArchiveEntry, GZipVolume>
         bool closeStream
     )
     {
-        if (Entries.Any())
+        if (Entries.Count != 0)
         {
             throw new InvalidFormatException("Only one entry is allowed in a GZip Archive");
         }

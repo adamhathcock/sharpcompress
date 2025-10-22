@@ -256,7 +256,7 @@ public class TarReaderTests : ReaderTests
                     }
                     else
                     {
-                        Assert.True(false, "Symlink has no target");
+                        Assert.Fail("Symlink has no target");
                     }
                 }
             }

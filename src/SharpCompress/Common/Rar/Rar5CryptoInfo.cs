@@ -49,9 +49,9 @@ internal class Rar5CryptoInfo
 
     public int LG2Count = 0;
 
-    public byte[] InitV = { };
+    public byte[] InitV = [];
 
-    public byte[] Salt = { };
+    public byte[] Salt = [];
 
-    public byte[] PswCheck = { };
+    public byte[] PswCheck = [];
 }

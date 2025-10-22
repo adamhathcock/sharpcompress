@@ -7,7 +7,10 @@ internal class BCJFilterARMT : Filter
     private int _pos;
 
     public BCJFilterARMT(bool isEncoder, Stream baseStream)
-        : base(isEncoder, baseStream, 4) => _pos = 4;
+        : base(isEncoder, baseStream, 4)
+    {
+        _pos = 4;
+    }
 
     protected override int Transform(byte[] buffer, int offset, int count)
     {
@@ -27,9 +30,13 @@ internal class BCJFilterARMT : Filter
 
                 int dest;
                 if (_isEncoder)
+                {
                     dest = src + (_pos + i - offset);
+                }
                 else
+                {
                     dest = src - (_pos + i - offset);
+                }
 
                 dest >>>= 1;
                 buffer[i + 1] = (byte)(0xF0 | ((dest >>> 19) & 0x07));

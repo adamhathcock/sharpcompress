@@ -14,13 +14,13 @@ namespace SharpCompress.Compressors.Rar.UnpackV1;
 
 internal partial class Unpack
 {
-    private readonly MultDecode[] MD = new[]
-    {
+    private readonly MultDecode[] MD =
+    [
         new MultDecode(),
         new MultDecode(),
         new MultDecode(),
         new MultDecode(),
-    };
+    ];
 
     private readonly byte[] UnpOldTable20 = new byte[PackDef.MC20 * 4];
 
@@ -42,7 +42,7 @@ internal partial class Unpack
     private readonly BitDecode BD = new();
 
     private static readonly int[] LDecode =
-    {
+    [
         0,
         1,
         2,
@@ -71,43 +71,13 @@ internal partial class Unpack
         160,
         192,
         224,
-    };
+    ];
 
     private static ReadOnlySpan<byte> LBits =>
-        new byte[]
-        {
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            1,
-            1,
-            1,
-            1,
-            2,
-            2,
-            2,
-            2,
-            3,
-            3,
-            3,
-            3,
-            4,
-            4,
-            4,
-            4,
-            5,
-            5,
-            5,
-            5,
-        };
+        [0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5];
 
     private static readonly int[] DDecode =
-    {
+    [
         0,
         1,
         2,
@@ -156,10 +126,10 @@ internal partial class Unpack
         851968,
         917504,
         983040,
-    };
+    ];
 
     private static readonly int[] DBits =
-    {
+    [
         0,
         0,
         0,
@@ -208,11 +178,11 @@ internal partial class Unpack
         16,
         16,
         16,
-    };
+    ];
 
-    private static readonly int[] SDDecode = { 0, 4, 8, 16, 32, 64, 128, 192 };
+    private static readonly int[] SDDecode = [0, 4, 8, 16, 32, 64, 128, 192];
 
-    private static readonly int[] SDBits = { 2, 2, 3, 4, 5, 6, 6, 6 };
+    private static readonly int[] SDBits = [2, 2, 3, 4, 5, 6, 6, 6];
 
     private void unpack20(bool solid)
     {

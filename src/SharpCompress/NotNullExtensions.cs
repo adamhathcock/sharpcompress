@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 using System.Runtime.CompilerServices;
 
 namespace SharpCompress.Helpers;
@@ -9,15 +8,14 @@ namespace SharpCompress.Helpers;
 internal static class NotNullExtensions
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static IEnumerable<T> Empty<T>(this IEnumerable<T>? source) =>
-        source ?? Enumerable.Empty<T>();
+    public static IEnumerable<T> Empty<T>(this IEnumerable<T>? source) => source ?? [];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static IEnumerable<T> Empty<T>(this T? source)
     {
         if (source is null)
         {
-            return Enumerable.Empty<T>();
+            return [];
         }
         return source.AsEnumerable();
     }

@@ -32,7 +32,7 @@ public class RarArchiveEntry : RarEntry, IArchiveEntry
 
     public IArchive Archive => archive;
 
-    internal override IEnumerable<FilePart> Parts => parts.Cast<FilePart>();
+    internal override IEnumerable<FilePart> Parts => parts;
 
     internal override FileHeader FileHeader => parts.First().FileHeader;
 
@@ -88,8 +88,10 @@ public class RarArchiveEntry : RarEntry, IArchiveEntry
     {
         get
         {
+#pragma warning disable CA1851
             var headers = parts.Select(x => x.FileHeader);
             return !headers.First().IsSplitBefore && !headers.Last().IsSplitAfter;
+#pragma warning restore CA1851
         }
     }
 

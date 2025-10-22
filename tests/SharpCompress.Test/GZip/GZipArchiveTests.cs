@@ -122,6 +122,6 @@ public class GZipArchiveTests : ArchiveTests
     {
         using var stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.gz"));
         using var archive = GZipArchive.Open(stream);
-        Assert.Equal(archive.Type, ArchiveType.GZip);
+        Assert.Equal(ArchiveType.GZip, archive.Type);
     }
 }

@@ -5,7 +5,7 @@ namespace SharpCompress.Compressors.Filters;
 internal class BCJFilter : Filter
 {
     private static readonly bool[] MASK_TO_ALLOWED_STATUS =
-    {
+    [
         true,
         true,
         true,
@@ -14,15 +14,18 @@ internal class BCJFilter : Filter
         false,
         false,
         false,
-    };
+    ];
 
-    private static readonly int[] MASK_TO_BIT_NUMBER = { 0, 1, 2, 2, 3, 3, 3, 3 };
+    private static readonly int[] MASK_TO_BIT_NUMBER = [0, 1, 2, 2, 3, 3, 3, 3];
 
     private int _pos;
     private int _prevMask;
 
     public BCJFilter(bool isEncoder, Stream baseStream)
-        : base(isEncoder, baseStream, 5) => _pos = 5;
+        : base(isEncoder, baseStream, 5)
+    {
+        _pos = 5;
+    }
 
     private static bool Test86MsByte(byte b) => b == 0x00 || b == 0xFF;
 

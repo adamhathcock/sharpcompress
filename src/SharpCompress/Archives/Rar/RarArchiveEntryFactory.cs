@@ -29,7 +29,7 @@ internal static class RarArchiveEntryFactory
             if (!fp.FileHeader.IsSplitAfter)
             {
                 yield return groupedParts;
-                groupedParts = new List<RarFilePart>();
+                groupedParts = [];
             }
         }
         if (groupedParts.Count > 0)

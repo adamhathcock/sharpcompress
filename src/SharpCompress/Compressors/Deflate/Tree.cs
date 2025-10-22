@@ -76,7 +76,7 @@ internal sealed partial class DeflateManager
         private static readonly int HEAP_SIZE = ((2 * InternalConstants.L_CODES) + 1);
 
         internal static readonly sbyte[] bl_order =
-        {
+        [
             16,
             17,
             18,
@@ -96,7 +96,7 @@ internal sealed partial class DeflateManager
             14,
             1,
             15,
-        };
+        ];
 
         // The lengths of the bit length codes are sent in order of decreasing
         // probability, to avoid transmitting the lengths for unused bit
@@ -106,7 +106,7 @@ internal sealed partial class DeflateManager
         //internal const int DIST_CODE_LEN = 512;
 
         private static readonly sbyte[] _dist_code =
-        {
+        [
             0,
             1,
             2,
@@ -619,10 +619,10 @@ internal sealed partial class DeflateManager
             29,
             29,
             29,
-        };
+        ];
 
         internal static readonly sbyte[] LengthCode =
-        {
+        [
             0,
             1,
             2,
@@ -879,10 +879,10 @@ internal sealed partial class DeflateManager
             27,
             27,
             28,
-        };
+        ];
 
         internal static readonly int[] LengthBase =
-        {
+        [
             0,
             1,
             2,
@@ -912,10 +912,10 @@ internal sealed partial class DeflateManager
             192,
             224,
             0,
-        };
+        ];
 
         internal static readonly int[] DistanceBase =
-        {
+        [
             0,
             1,
             2,
@@ -946,7 +946,7 @@ internal sealed partial class DeflateManager
             12288,
             16384,
             24576,
-        };
+        ];
 
         internal short[] dyn_tree; // the dynamic tree
         internal int max_code; // largest code with non zero frequency

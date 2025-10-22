@@ -10,7 +10,7 @@ namespace SharpCompress.Test.Zip;
 /// </summary>
 internal class TestPseudoTextStream : Stream
 {
-    private static readonly char[] _vowels = { 'a', 'e', 'i', 'o', 'u' };
+    private static readonly char[] _vowels = ['a', 'e', 'i', 'o', 'u'];
     private static readonly char[] _consonants = "bcdfghjklmnpqrstvwxyz".ToCharArray();
 
     private long _position = 0;

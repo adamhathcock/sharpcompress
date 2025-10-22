@@ -17,9 +17,8 @@ public class RarArchiveTests : ArchiveTests
 
     [Fact]
     public void Rar_EncryptedFileAndHeader_NoPasswordExceptionTest() =>
-        Assert.Throws(
-            typeof(CryptographicException),
-            () => ReadRarPassword("Rar.encrypted_filesAndHeader.rar", null)
+        Assert.Throws<CryptographicException>(() =>
+            ReadRarPassword("Rar.encrypted_filesAndHeader.rar", null)
         );
 
     [Fact]
@@ -28,16 +27,14 @@ public class RarArchiveTests : ArchiveTests
 
     [Fact]
     public void Rar5_EncryptedFileAndHeader_Archive_Err() =>
-        Assert.Throws(
-            typeof(CryptographicException),
-            () => ReadRarPassword("Rar5.encrypted_filesAndHeader.rar", "failed")
+        Assert.Throws<CryptographicException>(() =>
+            ReadRarPassword("Rar5.encrypted_filesAndHeader.rar", "failed")
         );
 
     [Fact]
     public void Rar5_EncryptedFileAndHeader_NoPasswordExceptionTest() =>
-        Assert.Throws(
-            typeof(CryptographicException),
-            () => ReadRarPassword("Rar5.encrypted_filesAndHeader.rar", null)
+        Assert.Throws<CryptographicException>(() =>
+            ReadRarPassword("Rar5.encrypted_filesAndHeader.rar", null)
         );
 
     [Fact]
@@ -46,9 +43,8 @@ public class RarArchiveTests : ArchiveTests
 
     [Fact]
     public void Rar_EncryptedFileOnly_Archive_Err() =>
-        Assert.Throws(
-            typeof(CryptographicException),
-            () => ReadRarPassword("Rar5.encrypted_filesOnly.rar", "failed")
+        Assert.Throws<CryptographicException>(() =>
+            ReadRarPassword("Rar5.encrypted_filesOnly.rar", "failed")
         );
 
     [Fact]
@@ -417,23 +413,21 @@ public class RarArchiveTests : ArchiveTests
     public void Rar_GetPartsSplit() =>
         //uses first part to search for all parts and compares against this array
         ArchiveGetParts(
-            new[]
-            {
+            [
                 "Rar4.split.001",
                 "Rar4.split.002",
                 "Rar4.split.003",
                 "Rar4.split.004",
                 "Rar4.split.005",
                 "Rar4.split.006",
-            }
+            ]
         );
 
     [Fact]
     public void Rar_GetPartsOld() =>
         //uses first part to search for all parts and compares against this array
         ArchiveGetParts(
-            new[]
-            {
+            [
                 "Rar2.multi.rar",
                 "Rar2.multi.r00",
                 "Rar2.multi.r01",
@@ -441,15 +435,14 @@ public class RarArchiveTests : ArchiveTests
                 "Rar2.multi.r03",
                 "Rar2.multi.r04",
                 "Rar2.multi.r05",
-            }
+            ]
         );
 
     [Fact]
     public void Rar_GetPartsNew() =>
         //uses first part to search for all parts and compares against this array
         ArchiveGetParts(
-            new[]
-            {
+            [
                 "Rar4.multi.part01.rar",
                 "Rar4.multi.part02.rar",
                 "Rar4.multi.part03.rar",
@@ -457,7 +450,7 @@ public class RarArchiveTests : ArchiveTests
                 "Rar4.multi.part05.rar",
                 "Rar4.multi.part06.rar",
                 "Rar4.multi.part07.rar",
-            }
+            ]
         );
 
     [Fact]

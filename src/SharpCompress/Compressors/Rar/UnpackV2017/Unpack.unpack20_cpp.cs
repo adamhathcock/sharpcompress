@@ -24,7 +24,7 @@ internal partial class Unpack
     internal static class Unpack20Local
     {
         public static readonly byte[] LDecode =
-        {
+        [
             0,
             1,
             2,
@@ -53,9 +53,9 @@ internal partial class Unpack
             160,
             192,
             224,
-        };
+        ];
         public static readonly byte[] LBits =
-        {
+        [
             0,
             0,
             0,
@@ -84,9 +84,9 @@ internal partial class Unpack
             5,
             5,
             5,
-        };
+        ];
         public static readonly uint[] DDecode =
-        {
+        [
             0,
             1,
             2,
@@ -135,9 +135,9 @@ internal partial class Unpack
             851968,
             917504,
             983040,
-        };
+        ];
         public static readonly byte[] DBits =
-        {
+        [
             0,
             0,
             0,
@@ -186,9 +186,9 @@ internal partial class Unpack
             16,
             16,
             16,
-        };
-        public static readonly byte[] SDDecode = { 0, 4, 8, 16, 32, 64, 128, 192 };
-        public static readonly byte[] SDBits = { 2, 2, 3, 4, 5, 6, 6, 6 };
+        ];
+        public static readonly byte[] SDDecode = [0, 4, 8, 16, 32, 64, 128, 192];
+        public static readonly byte[] SDBits = [2, 2, 3, 4, 5, 6, 6, 6];
     }
 
     private void Unpack20(bool Solid)
