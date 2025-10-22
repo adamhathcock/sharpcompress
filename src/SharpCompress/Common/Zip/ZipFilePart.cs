@@ -13,8 +13,8 @@ using SharpCompress.Compressors.PPMd;
 using SharpCompress.Compressors.Reduce;
 using SharpCompress.Compressors.Shrink;
 using SharpCompress.Compressors.Xz;
+using SharpCompress.Compressors.ZStandard;
 using SharpCompress.IO;
-using ZstdSharp;
 
 namespace SharpCompress.Common.Zip;
 

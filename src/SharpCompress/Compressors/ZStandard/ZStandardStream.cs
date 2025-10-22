@@ -8,7 +8,7 @@ using SharpCompress.IO;
 
 namespace SharpCompress.Compressors.ZStandard;
 
-internal class ZStandardStream : ZstdSharp.DecompressionStream, IStreamStack
+internal class ZStandardStream : DecompressionStream, IStreamStack
 {
 #if DEBUG_STREAMS
     long IStreamStack.InstanceId { get; set; }

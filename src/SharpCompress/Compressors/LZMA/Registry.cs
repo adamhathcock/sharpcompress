@@ -7,7 +7,7 @@ using SharpCompress.Compressors.Deflate;
 using SharpCompress.Compressors.Filters;
 using SharpCompress.Compressors.LZMA.Utilites;
 using SharpCompress.Compressors.PPMd;
-using ZstdSharp;
+using SharpCompress.Compressors.ZStandard;
 
 namespace SharpCompress.Compressors.LZMA;
 
