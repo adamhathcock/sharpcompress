@@ -413,7 +413,7 @@ internal partial class Unpack
                             else
                             //x memcpy(Mem,Window+BlockStart,BlockLength);
                             {
-                                Utility.Copy(Window, BlockStart, Mem, 0, BlockLength);
+                                Buffer.BlockCopy(Window, (int)BlockStart, Mem, 0, (int)BlockLength);
                             }
                         }
                         else
@@ -427,9 +427,9 @@ internal partial class Unpack
                             else
                             {
                                 //x memcpy(Mem,Window+BlockStart,FirstPartLength);
-                                Utility.Copy(Window, BlockStart, Mem, 0, FirstPartLength);
+                                Buffer.BlockCopy(Window, (int)BlockStart, Mem, 0, (int)FirstPartLength);
                                 //x memcpy(Mem+FirstPartLength,Window,BlockEnd);
-                                Utility.Copy(Window, 0, Mem, FirstPartLength, BlockEnd);
+                                Buffer.BlockCopy(Window, 0, Mem, (int)FirstPartLength, (int)BlockEnd);
                             }
                         }
 

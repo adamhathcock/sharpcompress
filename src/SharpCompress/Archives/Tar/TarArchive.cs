@@ -178,7 +178,7 @@ public class TarArchive : AbstractWritableArchive<TarArchiveEntry, TarVolume>
                         using (var entryStream = entry.OpenEntryStream())
                         {
                             using var memoryStream = new MemoryStream();
-                            entryStream.TransferTo(memoryStream);
+                            entryStream.CopyTo(memoryStream);
                             memoryStream.Position = 0;
                             var bytes = memoryStream.ToArray();
 

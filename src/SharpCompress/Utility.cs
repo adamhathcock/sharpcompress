@@ -11,6 +11,7 @@ namespace SharpCompress.Helpers;
 
 internal static class Utility
 {
+    private const int TEMP_BUFFER_SIZE = 81920;
     public static ReadOnlyCollection<T> ToReadOnly<T>(this IList<T> items) => new(items);
 
     /// <summary>
@@ -68,38 +69,6 @@ internal static class Utility
         }
     }
 
-    public static void Copy(
-        Array sourceArray,
-        long sourceIndex,
-        Array destinationArray,
-        long destinationIndex,
-        long length
-    )
-    {
-        if (sourceIndex > int.MaxValue || sourceIndex < int.MinValue)
-        {
-            throw new ArgumentOutOfRangeException(nameof(sourceIndex));
-        }
-
-        if (destinationIndex > int.MaxValue || destinationIndex < int.MinValue)
-        {
-            throw new ArgumentOutOfRangeException(nameof(destinationIndex));
-        }
-
-        if (length > int.MaxValue || length < int.MinValue)
-        {
-            throw new ArgumentOutOfRangeException(nameof(length));
-        }
-
-        Array.Copy(
-            sourceArray,
-            (int)sourceIndex,
-            destinationArray,
-            (int)destinationIndex,
-            (int)length
-        );
-    }
-
     public static IEnumerable<T> AsEnumerable<T>(this T item)
     {
         yield return item;
@@ -130,79 +99,27 @@ internal static class Utility
             return;
         }
 
-        var buffer = GetTransferByteArray();
-        try
+        using var buffer = MemoryPool<byte>.Shared.Rent(TEMP_BUFFER_SIZE);
+        do
         {
             var read = 0;
-            var readCount = 0;
-            do
+            read = source.Read(buffer.Memory.Span);
+            if (read <= 0)
             {
-                readCount = buffer.Length;
-                if (readCount > advanceAmount)
-                {
-                    readCount = (int)advanceAmount;
-                }
-                read = source.Read(buffer, 0, readCount);
-                if (read <= 0)
-                {
-                    break;
-                }
-                advanceAmount -= read;
-                if (advanceAmount == 0)
-                {
-                    break;
-                }
-            } while (true);
-        }
-        finally
-        {
-            ArrayPool<byte>.Shared.Return(buffer);
-        }
+                break;
+            }
+            advanceAmount -= read;
+            if (advanceAmount == 0)
+            {
+                break;
+            }
+        } while (true);
     }
 
     public static void Skip(this Stream source)
     {
-        var buffer = GetTransferByteArray();
-        try
-        {
-            do { } while (source.Read(buffer, 0, buffer.Length) == buffer.Length);
-        }
-        finally
-        {
-            ArrayPool<byte>.Shared.Return(buffer);
-        }
-    }
-
-    public static bool Find(this Stream source, byte[] array)
-    {
-        var buffer = GetTransferByteArray();
-        try
-        {
-            var count = 0;
-            var len = source.Read(buffer, 0, buffer.Length);
-
-            do
-            {
-                for (var i = 0; i < len; i++)
-                {
-                    if (array[count] == buffer[i])
-                    {
-                        count++;
-                        if (count == array.Length)
-                        {
-                            source.Position = source.Position - len + i - array.Length + 1;
-                            return true;
-                        }
-                    }
-                }
-            } while ((len = source.Read(buffer, 0, buffer.Length)) > 0);
-        }
-        finally
-        {
-            ArrayPool<byte>.Shared.Return(buffer);
-        }
-
-        return false;
+        using var buffer = MemoryPool<byte>.Shared.Rent(TEMP_BUFFER_SIZE);
+        do { } while (source.Read(buffer.Memory.Span) > 0);
     }
 
     public static DateTime DosDateToDateTime(ushort iDate, ushort iTime)
@@ -271,31 +188,12 @@ internal static class Utility
         return sTime.AddSeconds(unixtime);
     }
 
-    public static long TransferTo(this Stream source, Stream destination)
-    {
-        var array = GetTransferByteArray();
-        try
-        {
-            long total = 0;
-            while (ReadTransferBlock(source, array, out var count))
-            {
-                destination.Write(array, 0, count);
-                total += count;
-            }
-            return total;
-        }
-        finally
-        {
-            ArrayPool<byte>.Shared.Return(array);
-        }
-    }
-
     public static long TransferTo(this Stream source, Stream destination, long maxLength)
     {
-        var array = GetTransferByteArray();
-        var maxReadSize = array.Length;
+        var array = ArrayPool<byte>.Shared.Rent(TEMP_BUFFER_SIZE);
         try
         {
+            var maxReadSize = array.Length;
             long total = 0;
             var remaining = maxLength;
             if (remaining < maxReadSize)
@@ -331,7 +229,7 @@ internal static class Utility
         IReaderExtractionListener readerExtractionListener
     )
     {
-        var array = GetTransferByteArray();
+        var array = ArrayPool<byte>.Shared.Rent(TEMP_BUFFER_SIZE);
         try
         {
             var iterations = 0;
@@ -363,8 +261,6 @@ internal static class Utility
         count = source.Read(array, 0, size);
         return count != 0;
     }
-
-    private static byte[] GetTransferByteArray() => ArrayPool<byte>.Shared.Rent(81920);
 
     public static bool ReadFully(this Stream stream, byte[] buffer)
     {

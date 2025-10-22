@@ -83,7 +83,7 @@ public class ZipWriter : AbstractWriter
     public void Write(string entryPath, Stream source, ZipWriterEntryOptions zipWriterEntryOptions)
     {
         using var output = WriteToStream(entryPath, zipWriterEntryOptions);
-        source.TransferTo(output);
+        source.CopyTo(output);
     }
 
     public Stream WriteToStream(string entryPath, ZipWriterEntryOptions options)
