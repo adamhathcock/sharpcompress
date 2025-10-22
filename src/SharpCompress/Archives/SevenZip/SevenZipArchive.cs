@@ -21,7 +21,7 @@ public class SevenZipArchive : AbstractArchive<SevenZipArchiveEntry, SevenZipVol
     /// <param name="readerOptions"></param>
     public static SevenZipArchive Open(string filePath, ReaderOptions? readerOptions = null)
     {
-        filePath.CheckNotNullOrEmpty("filePath");
+        filePath.NotNullOrEmpty("filePath");
         return Open(new FileInfo(filePath), readerOptions ?? new ReaderOptions());
     }
 
@@ -32,7 +32,7 @@ public class SevenZipArchive : AbstractArchive<SevenZipArchiveEntry, SevenZipVol
     /// <param name="readerOptions"></param>
     public static SevenZipArchive Open(FileInfo fileInfo, ReaderOptions? readerOptions = null)
     {
-        fileInfo.CheckNotNull("fileInfo");
+        fileInfo.NotNull("fileInfo");
         return new SevenZipArchive(
             new SourceStream(
                 fileInfo,
@@ -52,7 +52,7 @@ public class SevenZipArchive : AbstractArchive<SevenZipArchiveEntry, SevenZipVol
         ReaderOptions? readerOptions = null
     )
     {
-        fileInfos.CheckNotNull(nameof(fileInfos));
+        fileInfos.NotNull(nameof(fileInfos));
         var files = fileInfos.ToArray();
         return new SevenZipArchive(
             new SourceStream(
@@ -73,7 +73,7 @@ public class SevenZipArchive : AbstractArchive<SevenZipArchiveEntry, SevenZipVol
         ReaderOptions? readerOptions = null
     )
     {
-        streams.CheckNotNull(nameof(streams));
+        streams.NotNull(nameof(streams));
         var strms = streams.ToArray();
         return new SevenZipArchive(
             new SourceStream(
@@ -91,7 +91,7 @@ public class SevenZipArchive : AbstractArchive<SevenZipArchiveEntry, SevenZipVol
     /// <param name="readerOptions"></param>
     public static SevenZipArchive Open(Stream stream, ReaderOptions? readerOptions = null)
     {
-        stream.CheckNotNull("stream");
+        stream.NotNull("stream");
 
         if (stream is not { CanSeek: true })
         {

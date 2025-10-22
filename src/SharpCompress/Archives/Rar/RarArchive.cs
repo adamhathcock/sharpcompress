@@ -95,7 +95,7 @@ public class RarArchive : AbstractArchive<RarArchiveEntry, RarVolume>
     /// <param name="options"></param>
     public static RarArchive Open(string filePath, ReaderOptions? options = null)
     {
-        filePath.CheckNotNullOrEmpty(nameof(filePath));
+        filePath.NotNullOrEmpty(nameof(filePath));
         var fileInfo = new FileInfo(filePath);
         return new RarArchive(
             new SourceStream(
@@ -113,7 +113,7 @@ public class RarArchive : AbstractArchive<RarArchiveEntry, RarVolume>
     /// <param name="options"></param>
     public static RarArchive Open(FileInfo fileInfo, ReaderOptions? options = null)
     {
-        fileInfo.CheckNotNull(nameof(fileInfo));
+        fileInfo.NotNull(nameof(fileInfo));
         return new RarArchive(
             new SourceStream(
                 fileInfo,
@@ -130,7 +130,7 @@ public class RarArchive : AbstractArchive<RarArchiveEntry, RarVolume>
     /// <param name="options"></param>
     public static RarArchive Open(Stream stream, ReaderOptions? options = null)
     {
-        stream.CheckNotNull(nameof(stream));
+        stream.NotNull(nameof(stream));
 
         if (stream is not { CanSeek: true })
         {
@@ -150,7 +150,7 @@ public class RarArchive : AbstractArchive<RarArchiveEntry, RarVolume>
         ReaderOptions? readerOptions = null
     )
     {
-        fileInfos.CheckNotNull(nameof(fileInfos));
+        fileInfos.NotNull(nameof(fileInfos));
         var files = fileInfos.ToArray();
         return new RarArchive(
             new SourceStream(
@@ -168,7 +168,7 @@ public class RarArchive : AbstractArchive<RarArchiveEntry, RarVolume>
     /// <param name="readerOptions"></param>
     public static RarArchive Open(IEnumerable<Stream> streams, ReaderOptions? readerOptions = null)
     {
-        streams.CheckNotNull(nameof(streams));
+        streams.NotNull(nameof(streams));
         var strms = streams.ToArray();
         return new RarArchive(
             new SourceStream(

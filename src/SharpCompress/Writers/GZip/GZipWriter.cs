@@ -47,7 +47,7 @@ public sealed class GZipWriter : AbstractWriter
         var stream = (GZipStream)OutputStream;
         stream.FileName = filename;
         stream.LastModified = modificationTime;
-        source.TransferTo(stream);
+        source.CopyTo(stream);
         _wroteToStream = true;
     }
 }

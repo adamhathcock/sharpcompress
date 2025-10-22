@@ -44,7 +44,7 @@ public class ZipReader : AbstractReader<ZipEntry, ZipVolume>
     /// <returns></returns>
     public static ZipReader Open(Stream stream, ReaderOptions? options = null)
     {
-        stream.CheckNotNull(nameof(stream));
+        stream.NotNull(nameof(stream));
         return new ZipReader(stream, options ?? new ReaderOptions());
     }
 
@@ -54,7 +54,7 @@ public class ZipReader : AbstractReader<ZipEntry, ZipVolume>
         IEnumerable<ZipEntry> entries
     )
     {
-        stream.CheckNotNull(nameof(stream));
+        stream.NotNull(nameof(stream));
         return new ZipReader(stream, options ?? new ReaderOptions(), entries);
     }
 
