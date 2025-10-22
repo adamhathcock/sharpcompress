@@ -43,7 +43,7 @@ public class ZipArchive : AbstractWritableArchive<ZipArchiveEntry, ZipVolume>
     /// <param name="readerOptions"></param>
     public static ZipArchive Open(string filePath, ReaderOptions? readerOptions = null)
     {
-        filePath.NotNull(nameof(filePath));
+        filePath.NotNullOrEmpty(nameof(filePath));
         return Open(new FileInfo(filePath), readerOptions ?? new ReaderOptions());
     }
 
