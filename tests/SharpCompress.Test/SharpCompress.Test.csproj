@@ -9,6 +9,9 @@
   <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net8.0|AnyCPU'">
     <DefineConstants>$(DefineConstants);DEBUG_STREAMS</DefineConstants>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(RuntimeIdentifier)' == '' Or $([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Windows)))">
+    <DefineConstants>$(DefineConstants);WINDOWS</DefineConstants>
+  </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\SharpCompress\SharpCompress.csproj" />
   </ItemGroup>
