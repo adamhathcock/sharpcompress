@@ -49,16 +49,6 @@
           "Microsoft.TestPlatform.ObjectModel": "17.13.0"
         }
       },
-      "Xunit.SkippableFact": {
-        "type": "Direct",
-        "requested": "[1.5.23, )",
-        "resolved": "1.5.23",
-        "contentHash": "JlKobLTlsGcuJ8OtoodxL63bUagHSVBnF+oQ2GgnkwNqK+XYjeYyhQasULi5Ebx1MNDGNbOMplQYr89mR+nItQ==",
-        "dependencies": {
-          "Validation": "2.5.51",
-          "xunit.extensibility.execution": "2.4.0"
-        }
-      },
       "Microsoft.CodeCoverage": {
         "type": "Transitive",
         "resolved": "17.13.0",
@@ -107,11 +97,6 @@
         "dependencies": {
           "System.Runtime.CompilerServices.Unsafe": "4.5.3"
         }
-      },
-      "Validation": {
-        "type": "Transitive",
-        "resolved": "2.5.51",
-        "contentHash": "g/Aug7PVWaenlJ0QUyt/mEetngkQNsMCuNeRVXbcJED1nZS7JcK+GTU4kz3jcQ7bFuKfi8PF4ExXH7XSFNuSLQ=="
       },
       "xunit.abstractions": {
         "type": "Transitive",
@@ -247,16 +232,6 @@
         "resolved": "3.1.5",
         "contentHash": "tKi7dSTwP4m5m9eXPM2Ime4Kn7xNf4x4zT9sdLO/G4hZVnQCRiMTWoSZqI/pYTVeI27oPPqHBKYI/DjJ9GsYgA=="
       },
-      "Xunit.SkippableFact": {
-        "type": "Direct",
-        "requested": "[1.5.23, )",
-        "resolved": "1.5.23",
-        "contentHash": "JlKobLTlsGcuJ8OtoodxL63bUagHSVBnF+oQ2GgnkwNqK+XYjeYyhQasULi5Ebx1MNDGNbOMplQYr89mR+nItQ==",
-        "dependencies": {
-          "Validation": "2.5.51",
-          "xunit.extensibility.execution": "2.4.0"
-        }
-      },
       "Microsoft.CodeCoverage": {
         "type": "Transitive",
         "resolved": "17.13.0",
@@ -293,11 +268,6 @@
         "type": "Transitive",
         "resolved": "1.6.0",
         "contentHash": "COC1aiAJjCoA5GBF+QKL2uLqEBew4JsCkQmoHKbN3TlOZKa2fKLz5CpiRQKDz0RsAOEGsVKqOD5bomsXq/4STQ=="
-      },
-      "Validation": {
-        "type": "Transitive",
-        "resolved": "2.5.51",
-        "contentHash": "g/Aug7PVWaenlJ0QUyt/mEetngkQNsMCuNeRVXbcJED1nZS7JcK+GTU4kz3jcQ7bFuKfi8PF4ExXH7XSFNuSLQ=="
       },
       "xunit.abstractions": {
         "type": "Transitive",
