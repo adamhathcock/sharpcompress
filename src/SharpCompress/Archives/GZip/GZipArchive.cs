@@ -21,7 +21,7 @@ public class GZipArchive : AbstractWritableArchive<GZipArchiveEntry, GZipVolume>
     /// <param name="readerOptions"></param>
     public static GZipArchive Open(string filePath, ReaderOptions? readerOptions = null)
     {
-        filePath.CheckNotNullOrEmpty(nameof(filePath));
+        filePath.NotNullOrEmpty(nameof(filePath));
         return Open(new FileInfo(filePath), readerOptions ?? new ReaderOptions());
     }
 
@@ -32,7 +32,7 @@ public class GZipArchive : AbstractWritableArchive<GZipArchiveEntry, GZipVolume>
     /// <param name="readerOptions"></param>
     public static GZipArchive Open(FileInfo fileInfo, ReaderOptions? readerOptions = null)
     {
-        fileInfo.CheckNotNull(nameof(fileInfo));
+        fileInfo.NotNull(nameof(fileInfo));
         return new GZipArchive(
             new SourceStream(
                 fileInfo,
@@ -52,7 +52,7 @@ public class GZipArchive : AbstractWritableArchive<GZipArchiveEntry, GZipVolume>
         ReaderOptions? readerOptions = null
     )
     {
-        fileInfos.CheckNotNull(nameof(fileInfos));
+        fileInfos.NotNull(nameof(fileInfos));
         var files = fileInfos.ToArray();
         return new GZipArchive(
             new SourceStream(
@@ -70,7 +70,7 @@ public class GZipArchive : AbstractWritableArchive<GZipArchiveEntry, GZipVolume>
     /// <param name="readerOptions"></param>
     public static GZipArchive Open(IEnumerable<Stream> streams, ReaderOptions? readerOptions = null)
     {
-        streams.CheckNotNull(nameof(streams));
+        streams.NotNull(nameof(streams));
         var strms = streams.ToArray();
         return new GZipArchive(
             new SourceStream(
@@ -88,7 +88,7 @@ public class GZipArchive : AbstractWritableArchive<GZipArchiveEntry, GZipVolume>
     /// <param name="readerOptions"></param>
     public static GZipArchive Open(Stream stream, ReaderOptions? readerOptions = null)
     {
-        stream.CheckNotNull(nameof(stream));
+        stream.NotNull(nameof(stream));
 
         if (stream is not { CanSeek: true })
         {

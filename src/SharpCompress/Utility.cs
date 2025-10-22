@@ -1,4 +1,3 @@
-global using SharpCompress.Helpers;
 using System;
 using System.Buffers;
 using System.Collections.Generic;
@@ -7,10 +6,14 @@ using System.IO;
 using System.Text;
 using SharpCompress.Readers;
 
-namespace SharpCompress.Helpers;
+namespace SharpCompress;
 
 internal static class Utility
 {
+    //80kb is a good industry standard temporary buffer size
+    private const int TEMP_BUFFER_SIZE = 81920;
+    private static readonly HashSet<char> invalidChars = new(Path.GetInvalidFileNameChars());
+
     public static ReadOnlyCollection<T> ToReadOnly<T>(this IList<T> items) => new(items);
 
     /// <summary>
@@ -68,58 +71,9 @@ internal static class Utility
         }
     }
 
-    public static void Copy(
-        Array sourceArray,
-        long sourceIndex,
-        Array destinationArray,
-        long destinationIndex,
-        long length
-    )
-    {
-        if (sourceIndex > int.MaxValue || sourceIndex < int.MinValue)
-        {
-            throw new ArgumentOutOfRangeException(nameof(sourceIndex));
-        }
-
-        if (destinationIndex > int.MaxValue || destinationIndex < int.MinValue)
-        {
-            throw new ArgumentOutOfRangeException(nameof(destinationIndex));
-        }
-
-        if (length > int.MaxValue || length < int.MinValue)
-        {
-            throw new ArgumentOutOfRangeException(nameof(length));
-        }
-
-        Array.Copy(
-            sourceArray,
-            (int)sourceIndex,
-            destinationArray,
-            (int)destinationIndex,
-            (int)length
-        );
-    }
-
     public static IEnumerable<T> AsEnumerable<T>(this T item)
     {
         yield return item;
-    }
-
-    public static void CheckNotNull(this object obj, string name)
-    {
-        if (obj is null)
-        {
-            throw new ArgumentNullException(name);
-        }
-    }
-
-    public static void CheckNotNullOrEmpty(this string obj, string name)
-    {
-        obj.CheckNotNull(name);
-        if (obj.Length == 0)
-        {
-            throw new ArgumentException("String is empty.", name);
-        }
     }
 
     public static void Skip(this Stream source, long advanceAmount)
@@ -130,79 +84,23 @@ internal static class Utility
             return;
         }
 
-        var buffer = GetTransferByteArray();
-        try
+        using var buffer = MemoryPool<byte>.Shared.Rent(TEMP_BUFFER_SIZE);
+        while (advanceAmount > 0)
         {
-            var read = 0;
-            var readCount = 0;
-            do
+            var toRead = (int)Math.Min(buffer.Memory.Length, advanceAmount);
+            var read = source.Read(buffer.Memory.Slice(0, toRead).Span);
+            if (read <= 0)
             {
-                readCount = buffer.Length;
-                if (readCount > advanceAmount)
-                {
-                    readCount = (int)advanceAmount;
-                }
-                read = source.Read(buffer, 0, readCount);
-                if (read <= 0)
-                {
-                    break;
-                }
-                advanceAmount -= read;
-                if (advanceAmount == 0)
-                {
-                    break;
-                }
-            } while (true);
-        }
-        finally
-        {
-            ArrayPool<byte>.Shared.Return(buffer);
+                break;
+            }
+            advanceAmount -= read;
         }
     }
 
     public static void Skip(this Stream source)
     {
-        var buffer = GetTransferByteArray();
-        try
-        {
-            do { } while (source.Read(buffer, 0, buffer.Length) == buffer.Length);
-        }
-        finally
-        {
-            ArrayPool<byte>.Shared.Return(buffer);
-        }
-    }
-
-    public static bool Find(this Stream source, byte[] array)
-    {
-        var buffer = GetTransferByteArray();
-        try
-        {
-            var count = 0;
-            var len = source.Read(buffer, 0, buffer.Length);
-
-            do
-            {
-                for (var i = 0; i < len; i++)
-                {
-                    if (array[count] == buffer[i])
-                    {
-                        count++;
-                        if (count == array.Length)
-                        {
-                            source.Position = source.Position - len + i - array.Length + 1;
-                            return true;
-                        }
-                    }
-                }
-            } while ((len = source.Read(buffer, 0, buffer.Length)) > 0);
-        }
-        finally
-        {
-            ArrayPool<byte>.Shared.Return(buffer);
-        }
-
-        return false;
+        using var buffer = MemoryPool<byte>.Shared.Rent(TEMP_BUFFER_SIZE);
+        while (source.Read(buffer.Memory.Span) > 0) { }
     }
 
     public static DateTime DosDateToDateTime(ushort iDate, ushort iTime)
@@ -271,31 +169,12 @@ internal static class Utility
         return sTime.AddSeconds(unixtime);
     }
 
-    public static long TransferTo(this Stream source, Stream destination)
-    {
-        var array = GetTransferByteArray();
-        try
-        {
-            long total = 0;
-            while (ReadTransferBlock(source, array, out var count))
-            {
-                destination.Write(array, 0, count);
-                total += count;
-            }
-            return total;
-        }
-        finally
-        {
-            ArrayPool<byte>.Shared.Return(array);
-        }
-    }
-
     public static long TransferTo(this Stream source, Stream destination, long maxLength)
     {
-        var array = GetTransferByteArray();
-        var maxReadSize = array.Length;
+        var array = ArrayPool<byte>.Shared.Rent(TEMP_BUFFER_SIZE);
         try
         {
+            var maxReadSize = array.Length;
             long total = 0;
             var remaining = maxLength;
             if (remaining < maxReadSize)
@@ -331,12 +210,13 @@ internal static class Utility
         IReaderExtractionListener readerExtractionListener
     )
     {
-        var array = GetTransferByteArray();
+        var array = ArrayPool<byte>.Shared.Rent(TEMP_BUFFER_SIZE);
         try
         {
             var iterations = 0;
             long total = 0;
-            while (ReadTransferBlock(source, array, out var count))
+            int count;
+            while ((count = source.Read(array, 0, array.Length)) != 0)
             {
                 total += count;
                 destination.Write(array, 0, count);
@@ -351,12 +231,10 @@ internal static class Utility
         }
     }
 
-    private static bool ReadTransferBlock(Stream source, byte[] array, out int count) =>
-        (count = source.Read(array, 0, array.Length)) != 0;
-
-    private static bool ReadTransferBlock(Stream source, byte[] array, int size, out int count)
+    private static bool ReadTransferBlock(Stream source, byte[] array, int maxSize, out int count)
     {
-        if (size > array.Length)
+        var size = maxSize;
+        if (maxSize > array.Length)
         {
             size = array.Length;
         }
@@ -364,8 +242,34 @@ internal static class Utility
         return count != 0;
     }
 
-    private static byte[] GetTransferByteArray() => ArrayPool<byte>.Shared.Rent(81920);
+#if NET60_OR_GREATER
 
+    public static bool ReadFully(this Stream stream, byte[] buffer)
+    {
+        try
+        {
+            stream.ReadExactly(buffer);
+            return true;
+        }
+        catch (EndOfStreamException)
+        {
+            return false;
+        }
+    }
+
+    public static bool ReadFully(this Stream stream, Span<byte> buffer)
+    {
+        try
+        {
+            stream.ReadExactly(buffer);
+            return true;
+        }
+        catch (EndOfStreamException)
+        {
+            return false;
+        }
+    }
+#else
     public static bool ReadFully(this Stream stream, byte[] buffer)
     {
         var total = 0;
@@ -395,6 +299,7 @@ internal static class Utility
         }
         return (total >= buffer.Length);
     }
+#endif
 
     public static string TrimNulls(this string source) => source.Replace('\0', ' ').Trim();
 
@@ -439,7 +344,6 @@ internal static class Utility
 
     public static string ReplaceInvalidFileNameChars(string fileName)
     {
-        var invalidChars = new HashSet<char>(Path.GetInvalidFileNameChars());
         var sb = new StringBuilder(fileName.Length);
         foreach (var c in fileName)
         {

@@ -223,7 +223,7 @@ public class RarReaderTests : ReaderTests
                     var destinationFileName = Path.Combine(destdir, file);
 
                     using var fs = File.OpenWrite(destinationFileName);
-                    entryStream.TransferTo(fs);
+                    entryStream.CopyTo(fs);
                 }
             }
         }

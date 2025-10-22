@@ -22,7 +22,7 @@ public class GZipReader : AbstractReader<GZipEntry, GZipVolume>
     /// <returns></returns>
     public static GZipReader Open(Stream stream, ReaderOptions? options = null)
     {
-        stream.CheckNotNull(nameof(stream));
+        stream.NotNull(nameof(stream));
         return new GZipReader(stream, options ?? new ReaderOptions());
     }
 

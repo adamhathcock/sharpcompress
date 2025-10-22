@@ -85,7 +85,7 @@ public class TarReaderTests : ReaderTests
                     var destinationFileName = Path.Combine(destdir, file.NotNull());
 
                     using var fs = File.OpenWrite(destinationFileName);
-                    entryStream.TransferTo(fs);
+                    entryStream.CopyTo(fs);
                 }
             }
         }
