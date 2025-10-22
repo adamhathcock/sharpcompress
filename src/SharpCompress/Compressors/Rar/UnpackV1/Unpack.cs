@@ -205,6 +205,9 @@ internal sealed partial class Unpack : BitInput, IRarUnpack, IDisposable
 
     private void Unpack29(bool solid)
     {
+        Span<int> DDecode = stackalloc int[PackDef.DC];
+        Span<byte> DBits = stackalloc byte[PackDef.DC];
+
         int Bits;
 
         if (DDecode[1] == 0)
