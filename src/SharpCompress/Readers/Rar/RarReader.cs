@@ -42,7 +42,7 @@ public abstract class RarReader : AbstractReader<RarReaderEntry, RarVolume>
 
     public static RarReader Open(string filePath, ReaderOptions? options = null)
     {
-        filePath.CheckNotNullOrEmpty(nameof(filePath));
+        filePath.NotNullOrEmpty(nameof(filePath));
         return Open(new FileInfo(filePath), options);
     }
 
@@ -71,7 +71,7 @@ public abstract class RarReader : AbstractReader<RarReaderEntry, RarVolume>
     /// <returns></returns>
     public static RarReader Open(Stream stream, ReaderOptions? options = null)
     {
-        stream.CheckNotNull(nameof(stream));
+        stream.NotNull(nameof(stream));
         return new SingleVolumeRarReader(stream, options ?? new ReaderOptions());
     }
 
@@ -83,7 +83,7 @@ public abstract class RarReader : AbstractReader<RarReaderEntry, RarVolume>
     /// <returns></returns>
     public static RarReader Open(IEnumerable<Stream> streams, ReaderOptions? options = null)
     {
-        streams.CheckNotNull(nameof(streams));
+        streams.NotNull(nameof(streams));
         return new MultiVolumeRarReader(streams, options ?? new ReaderOptions());
     }
 

@@ -589,12 +589,10 @@ public class ZipArchiveTests : ArchiveTests
         }
     }
 
-    [SkippableFact]
-    public void Zip_Evil_Throws_Exception()
+#if WINDOWS
+    [Fact]
+    public void Zip_Evil_Throws_Exception_Windows()
     {
-        //windows only because of the paths
-        Skip.IfNot(Environment.OSVersion.Platform == PlatformID.Win32NT);
-
         var zipFile = Path.Combine(TEST_ARCHIVES_PATH, "Zip.Evil.zip");
 
         Assert.ThrowsAny<Exception>(() =>
@@ -609,6 +607,7 @@ public class ZipArchiveTests : ArchiveTests
             }
         });
     }
+#endif
 
     private class NonSeekableMemoryStream : MemoryStream
     {

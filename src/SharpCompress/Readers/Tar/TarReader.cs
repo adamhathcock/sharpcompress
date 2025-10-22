@@ -55,7 +55,7 @@ public class TarReader : AbstractReader<TarEntry, TarVolume>
     /// <returns></returns>
     public static TarReader Open(Stream stream, ReaderOptions? options = null)
     {
-        stream.CheckNotNull(nameof(stream));
+        stream.NotNull(nameof(stream));
         options = options ?? new ReaderOptions();
         var rewindableStream = new SharpCompressStream(stream);
 
