@@ -12,6 +12,7 @@ namespace SharpCompress.Helpers;
 internal static class Utility
 {
     private const int TEMP_BUFFER_SIZE = 81920;
+
     public static ReadOnlyCollection<T> ToReadOnly<T>(this IList<T> items) => new(items);
 
     /// <summary>
@@ -100,20 +101,16 @@ internal static class Utility
         }
 
         using var buffer = MemoryPool<byte>.Shared.Rent(TEMP_BUFFER_SIZE);
-        do
+        while (advanceAmount > 0)
         {
-            var read = 0;
-            read = source.Read(buffer.Memory.Span);
+            var toRead = (int)Math.Min(buffer.Memory.Length, advanceAmount);
+            var read = source.Read(buffer.Memory.Slice(0, toRead).Span);
             if (read <= 0)
             {
                 break;
             }
             advanceAmount -= read;
-            if (advanceAmount == 0)
-            {
-                break;
-            }
-        } while (true);
+        }
     }
 
     public static void Skip(this Stream source)
@@ -262,6 +259,34 @@ internal static class Utility
         return count != 0;
     }
 
+#if NET60_OR_GREATER
+
+    public static bool ReadFully(this Stream stream, byte[] buffer)
+    {
+        try
+        {
+            stream.ReadExactly(buffer);
+            return true;
+        }
+        catch (EndOfStreamException)
+        {
+            return false;
+        }
+    }
+
+    public static bool ReadFully(this Stream stream, Span<byte> buffer)
+    {
+        try
+        {
+            stream.ReadExactly(buffer);
+            return true;
+        }
+        catch (EndOfStreamException)
+        {
+            return false;
+        }
+    }
+#else
     public static bool ReadFully(this Stream stream, byte[] buffer)
     {
         var total = 0;
@@ -291,6 +316,7 @@ internal static class Utility
         }
         return (total >= buffer.Length);
     }
+#endif
 
     public static string TrimNulls(this string source) => source.Replace('\0', ' ').Trim();
 
