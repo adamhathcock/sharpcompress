@@ -11,6 +11,7 @@ namespace SharpCompress;
 internal static class Utility
 {
     private const int TEMP_BUFFER_SIZE = 81920;
+    private static readonly HashSet<char> invalidChars = new(Path.GetInvalidFileNameChars());
 
     public static ReadOnlyCollection<T> ToReadOnly<T>(this IList<T> items) => new(items);
 
@@ -343,7 +344,6 @@ internal static class Utility
 
     public static string ReplaceInvalidFileNameChars(string fileName)
     {
-        var invalidChars = new HashSet<char>(Path.GetInvalidFileNameChars());
         var sb = new StringBuilder(fileName.Length);
         foreach (var c in fileName)
         {
