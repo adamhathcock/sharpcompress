@@ -1215,7 +1215,7 @@ internal sealed partial class Unpack : BitInput, IRarUnpack, IDisposable
                 }
 
                 // VM.Prepare(&VMCode[0],VMCodeSize,&Filter->Prg);
-                rarVM.prepare(VMCode, VMCodeSize, Filter.Program);
+                rarVM.prepare(VMCode.AsSpan(0, VMCodeSize), Filter.Program);
             }
             finally
             {
