@@ -1,4 +1,3 @@
-global using SharpCompress.Helpers;
 using System;
 using System.Buffers;
 using System.Collections.Generic;
@@ -7,7 +6,7 @@ using System.IO;
 using System.Text;
 using SharpCompress.Readers;
 
-namespace SharpCompress.Helpers;
+namespace SharpCompress;
 
 internal static class Utility
 {
@@ -73,23 +72,6 @@ internal static class Utility
     public static IEnumerable<T> AsEnumerable<T>(this T item)
     {
         yield return item;
-    }
-
-    public static void CheckNotNull(this object obj, string name)
-    {
-        if (obj is null)
-        {
-            throw new ArgumentNullException(name);
-        }
-    }
-
-    public static void CheckNotNullOrEmpty(this string obj, string name)
-    {
-        obj.CheckNotNull(name);
-        if (obj.Length == 0)
-        {
-            throw new ArgumentException("String is empty.", name);
-        }
     }
 
     public static void Skip(this Stream source, long advanceAmount)

@@ -22,7 +22,7 @@ public class TarArchive : AbstractWritableArchive<TarArchiveEntry, TarVolume>
     /// <param name="readerOptions"></param>
     public static TarArchive Open(string filePath, ReaderOptions? readerOptions = null)
     {
-        filePath.CheckNotNullOrEmpty(nameof(filePath));
+        filePath.NotNullOrEmpty(nameof(filePath));
         return Open(new FileInfo(filePath), readerOptions ?? new ReaderOptions());
     }
 
@@ -33,7 +33,7 @@ public class TarArchive : AbstractWritableArchive<TarArchiveEntry, TarVolume>
     /// <param name="readerOptions"></param>
     public static TarArchive Open(FileInfo fileInfo, ReaderOptions? readerOptions = null)
     {
-        fileInfo.CheckNotNull(nameof(fileInfo));
+        fileInfo.NotNull(nameof(fileInfo));
         return new TarArchive(
             new SourceStream(
                 fileInfo,
@@ -53,7 +53,7 @@ public class TarArchive : AbstractWritableArchive<TarArchiveEntry, TarVolume>
         ReaderOptions? readerOptions = null
     )
     {
-        fileInfos.CheckNotNull(nameof(fileInfos));
+        fileInfos.NotNull(nameof(fileInfos));
         var files = fileInfos.ToArray();
         return new TarArchive(
             new SourceStream(
@@ -71,7 +71,7 @@ public class TarArchive : AbstractWritableArchive<TarArchiveEntry, TarVolume>
     /// <param name="readerOptions"></param>
     public static TarArchive Open(IEnumerable<Stream> streams, ReaderOptions? readerOptions = null)
     {
-        streams.CheckNotNull(nameof(streams));
+        streams.NotNull(nameof(streams));
         var strms = streams.ToArray();
         return new TarArchive(
             new SourceStream(
@@ -89,7 +89,7 @@ public class TarArchive : AbstractWritableArchive<TarArchiveEntry, TarVolume>
     /// <param name="readerOptions"></param>
     public static TarArchive Open(Stream stream, ReaderOptions? readerOptions = null)
     {
-        stream.CheckNotNull(nameof(stream));
+        stream.NotNull(nameof(stream));
 
         if (stream is not { CanSeek: true })
         {
