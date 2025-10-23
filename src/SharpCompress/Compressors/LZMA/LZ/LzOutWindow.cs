@@ -16,8 +16,10 @@ internal class OutWindow : IDisposable
     private int _pendingDist;
     private Stream _stream;
 
-    public long _total;
-    public long _limit;
+    private long _total;
+    private long _limit;
+
+    public long Total => _total;
 
     public void Create(int windowSize)
     {
@@ -83,7 +85,7 @@ internal class OutWindow : IDisposable
         _stream = null;
     }
 
-    public void Flush()
+    private void Flush()
     {
         if (_stream is null)
         {

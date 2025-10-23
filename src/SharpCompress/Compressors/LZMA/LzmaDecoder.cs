@@ -294,7 +294,7 @@ public class Decoder : ICoder, ISetDecoderProperties // ,System.IO.Stream
         }
         else
         {
-            _outWindow.SetLimit(long.MaxValue - _outWindow._total);
+            _outWindow.SetLimit(long.MaxValue - _outWindow.Total);
         }
 
         var rangeDecoder = new RangeCoder.Decoder();
@@ -317,7 +317,7 @@ public class Decoder : ICoder, ISetDecoderProperties // ,System.IO.Stream
 
         while (outWindow.HasSpace)
         {
-            var posState = (uint)outWindow._total & _posStateMask;
+            var posState = (uint)outWindow.Total & _posStateMask;
             if (
                 _isMatchDecoders[(_state._index << Base.K_NUM_POS_STATES_BITS_MAX) + posState]
                     .Decode(rangeDecoder) == 0
@@ -329,18 +329,14 @@ public class Decoder : ICoder, ISetDecoderProperties // ,System.IO.Stream
                 {
                     b = _literalDecoder.DecodeWithMatchByte(
                         rangeDecoder,
-                        (uint)outWindow._total,
+                        (uint)outWindow.Total,
                         prevByte,
                         outWindow.GetByte((int)_rep0)
                     );
                 }
                 else
                 {
-                    b = _literalDecoder.DecodeNormal(
-                        rangeDecoder,
-                        (uint)outWindow._total,
-                        prevByte
-                    );
+                    b = _literalDecoder.DecodeNormal(rangeDecoder, (uint)outWindow.Total, prevByte);
                 }
                 outWindow.PutByte(b);
                 _state.UpdateChar();
@@ -425,7 +421,7 @@ public class Decoder : ICoder, ISetDecoderProperties // ,System.IO.Stream
                         _rep0 = posSlot;
                     }
                 }
-                if (_rep0 >= outWindow._total || _rep0 >= dictionarySizeCheck)
+                if (_rep0 >= outWindow.Total || _rep0 >= dictionarySizeCheck)
                 {
                     if (_rep0 == 0xFFFFFFFF)
                     {
