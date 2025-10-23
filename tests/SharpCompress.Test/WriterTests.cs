@@ -1,5 +1,6 @@
 using System.IO;
 using System.Text;
+using System.Threading.Tasks;
 using SharpCompress.Common;
 using SharpCompress.IO;
 using SharpCompress.Readers;
@@ -13,7 +14,7 @@ public class WriterTests : TestBase
 
     protected WriterTests(ArchiveType type) => _type = type;
 
-    protected void Write(
+    protected async Task WriteAsync(
         CompressionType compressionType,
         string archive,
         string archiveToVerifyAgainst,
@@ -29,10 +30,11 @@ public class WriterTests : TestBase
             using var writer = WriterFactory.Open(stream, _type, writerOptions);
             writer.WriteAll(ORIGINAL_FILES_PATH, "*", SearchOption.AllDirectories);
         }
-        CompareArchivesByPath(
-            Path.Combine(SCRATCH2_FILES_PATH, archive),
-            Path.Combine(TEST_ARCHIVES_PATH, archiveToVerifyAgainst)
-        );
+
+        await CompareArchivesByPathAsync(
+                                             Path.Combine(SCRATCH2_FILES_PATH, archive),
+                                             Path.Combine(TEST_ARCHIVES_PATH, archiveToVerifyAgainst)
+                                         );
 
         using (Stream stream = File.OpenRead(Path.Combine(SCRATCH2_FILES_PATH, archive)))
         {
@@ -44,7 +46,7 @@ public class WriterTests : TestBase
                 SharpCompressStream.Create(stream, leaveOpen: true),
                 readerOptions
             );
-            reader.WriteAllToDirectory(
+            await reader.WriteAllToDirectoryAsync(
                 SCRATCH_FILES_PATH,
                 new ExtractionOptions { ExtractFullPath = true }
             );

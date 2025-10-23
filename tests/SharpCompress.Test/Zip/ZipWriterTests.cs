@@ -1,4 +1,5 @@
 using System.Text;
+using System.Threading.Tasks;
 using SharpCompress.Common;
 using Xunit;
 
@@ -10,8 +11,8 @@ public class ZipWriterTests : WriterTests
         : base(ArchiveType.Zip) { }
 
     [Fact]
-    public void Zip_Deflate_Write() =>
-        Write(
+    public  Task Zip_Deflate_Write() =>
+        WriteAsync(
             CompressionType.Deflate,
             "Zip.deflate.noEmptyDirs.zip",
             "Zip.deflate.noEmptyDirs.zip",
@@ -19,8 +20,8 @@ public class ZipWriterTests : WriterTests
         );
 
     [Fact]
-    public void Zip_BZip2_Write() =>
-        Write(
+    public Task Zip_BZip2_Write() =>
+        WriteAsync(
             CompressionType.BZip2,
             "Zip.bzip2.noEmptyDirs.zip",
             "Zip.bzip2.noEmptyDirs.zip",
@@ -28,8 +29,8 @@ public class ZipWriterTests : WriterTests
         );
 
     [Fact]
-    public void Zip_None_Write() =>
-        Write(
+    public Task Zip_None_Write() =>
+        WriteAsync(
             CompressionType.None,
             "Zip.none.noEmptyDirs.zip",
             "Zip.none.noEmptyDirs.zip",
@@ -37,8 +38,8 @@ public class ZipWriterTests : WriterTests
         );
 
     [Fact]
-    public void Zip_LZMA_Write() =>
-        Write(
+    public Task Zip_LZMA_Write() =>
+        WriteAsync(
             CompressionType.LZMA,
             "Zip.lzma.noEmptyDirs.zip",
             "Zip.lzma.noEmptyDirs.zip",
@@ -46,8 +47,8 @@ public class ZipWriterTests : WriterTests
         );
 
     [Fact]
-    public void Zip_PPMd_Write() =>
-        Write(
+    public Task Zip_PPMd_Write() =>
+        WriteAsync(
             CompressionType.PPMd,
             "Zip.ppmd.noEmptyDirs.zip",
             "Zip.ppmd.noEmptyDirs.zip",
@@ -55,8 +56,8 @@ public class ZipWriterTests : WriterTests
         );
 
     [Fact]
-    public void Zip_Rar_Write() =>
-        Assert.Throws<InvalidFormatException>(() =>
-            Write(CompressionType.Rar, "Zip.ppmd.noEmptyDirs.zip", "Zip.ppmd.noEmptyDirs.zip")
+    public Task Zip_Rar_Write() =>
+        Assert.ThrowsAsync<InvalidFormatException>(async () =>
+                                                  await WriteAsync(CompressionType.Rar, "Zip.ppmd.noEmptyDirs.zip", "Zip.ppmd.noEmptyDirs.zip")
         );
 }

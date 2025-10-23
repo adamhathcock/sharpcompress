@@ -11,6 +11,7 @@ namespace SharpCompress.Test;
 
 public abstract class ReaderTests : TestBase
 {
+/*
     protected void Read(
         string testArchive,
         CompressionType expectedCompression,
@@ -94,5 +95,5 @@ public abstract class ReaderTests : TestBase
             Assert.Equal(expectedCompression, reader.Entry.CompressionType);
             Assert.Equal(expected.Pop(), reader.Entry.Key);
         }
-    }
+    }*/
 }

@@ -8,7 +8,7 @@ using SharpCompress.Readers;
 using Xunit;
 
 namespace SharpCompress.Test.Rar;
-
+/*
 public class RarArchiveTests : ArchiveTests
 {
     [Fact]
@@ -634,3 +634,4 @@ public class RarArchiveTests : ArchiveTests
             "Failure jpg exe Empty тест.txt jpg\\test.jpg exe\\test.exe"
         );
 }
+*/

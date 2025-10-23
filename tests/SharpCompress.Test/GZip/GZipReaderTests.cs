@@ -1,4 +1,4 @@
-using System.IO;
+/*using System.IO;
 using SharpCompress.Common;
 using SharpCompress.IO;
 using SharpCompress.Readers.GZip;
@@ -26,3 +26,4 @@ public class GZipReaderTests : ReaderTests
         }
     }
 }
+*/

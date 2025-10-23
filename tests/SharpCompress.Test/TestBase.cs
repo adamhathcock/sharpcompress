@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using SharpCompress.Readers;
 using Xunit;
 
@@ -202,7 +203,7 @@ public class TestBase : IDisposable
         Assert.Equal(fi1.Attributes, fi2.Attributes);
     }
 
-    protected void CompareArchivesByPath(string file1, string file2, Encoding? encoding = null)
+    protected async Task CompareArchivesByPathAsync(string file1, string file2, Encoding? encoding = null)
     {
         var readerOptions = new ReaderOptions { LeaveStreamOpen = false };
         readerOptions.ArchiveEncoding.Default = encoding ?? Encoding.Default;
@@ -213,13 +214,13 @@ public class TestBase : IDisposable
         using (var archive1 = ReaderFactory.Open(File.OpenRead(file1), readerOptions))
         using (var archive2 = ReaderFactory.Open(File.OpenRead(file2), readerOptions))
         {
-            while (archive1.MoveToNextEntry())
+            while (await archive1.MoveToNextEntryAsync())
             {
-                Assert.True(archive2.MoveToNextEntry());
+                Assert.True(await archive2.MoveToNextEntryAsync());
                 archive1Entries.Add(archive1.Entry.Key.NotNull());
                 archive2Entries.Add(archive2.Entry.Key.NotNull());
             }
-            Assert.False(archive2.MoveToNextEntry());
+            Assert.False(await archive2.MoveToNextEntryAsync());
         }
         archive1Entries.Sort();
         archive2Entries.Sort();

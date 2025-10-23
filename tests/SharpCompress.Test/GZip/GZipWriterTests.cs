@@ -1,4 +1,5 @@
 ﻿using System.IO;
+using System.Threading.Tasks;
 using SharpCompress.Common;
 using SharpCompress.Writers;
 using SharpCompress.Writers.GZip;
@@ -12,7 +13,7 @@ public class GZipWriterTests : WriterTests
         : base(ArchiveType.GZip) => UseExtensionInsteadOfNameToVerify = true;
 
     [Fact]
-    public void GZip_Writer_Generic()
+    public async Task GZip_Writer_Generic()
     {
         using (
             Stream stream = File.Open(
@@ -25,14 +26,14 @@ public class GZipWriterTests : WriterTests
         {
             writer.Write("Tar.tar", Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar"));
         }
-        CompareArchivesByPath(
+        await CompareArchivesByPathAsync(
             Path.Combine(SCRATCH_FILES_PATH, "Tar.tar.gz"),
             Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.gz")
         );
     }
 
     [Fact]
-    public void GZip_Writer()
+    public async Task GZip_Writer()
     {
         using (
             Stream stream = File.Open(
@@ -45,7 +46,7 @@ public class GZipWriterTests : WriterTests
         {
             writer.Write("Tar.tar", Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar"));
         }
-        CompareArchivesByPath(
+        await CompareArchivesByPathAsync(
             Path.Combine(SCRATCH_FILES_PATH, "Tar.tar.gz"),
             Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.gz")
         );
@@ -60,7 +61,7 @@ public class GZipWriterTests : WriterTests
         });
 
     [Fact]
-    public void GZip_Writer_Entry_Path_With_Dir()
+    public async Task GZip_Writer_Entry_Path_With_Dir()
     {
         using (
             Stream stream = File.Open(
@@ -74,7 +75,7 @@ public class GZipWriterTests : WriterTests
             var path = Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar");
             writer.Write(path, path); //covers issue #532
         }
-        CompareArchivesByPath(
+        await CompareArchivesByPathAsync(
             Path.Combine(SCRATCH_FILES_PATH, "Tar.tar.gz"),
             Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.gz")
         );

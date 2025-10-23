@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using SharpCompress.Archives;
 using SharpCompress.Common;
 using SharpCompress.Common.Zip;
@@ -23,67 +24,67 @@ public class Zip64Tests : WriterTests
     private const long FOUR_GB_LIMIT = ((long)uint.MaxValue) + 1;
 
     [Trait("format", "zip64")]
-    public void Zip64_Single_Large_File() =>
+    public Task Zip64_Single_Large_File() =>
         // One single file, requires zip64
-        RunSingleTest(1, FOUR_GB_LIMIT, setZip64: true, forwardOnly: false);
+        RunSingleTestAsync(1, FOUR_GB_LIMIT, setZip64: true, forwardOnly: false);
 
     [Trait("format", "zip64")]
-    public void Zip64_Two_Large_Files() =>
+    public Task Zip64_Two_Large_Files() =>
         // One single file, requires zip64
-        RunSingleTest(2, FOUR_GB_LIMIT, setZip64: true, forwardOnly: false);
+        RunSingleTestAsync(2, FOUR_GB_LIMIT, setZip64: true, forwardOnly: false);
 
     [Trait("format", "zip64")]
-    public void Zip64_Two_Small_files() =>
+    public Task Zip64_Two_Small_files() =>
         // Multiple files, does not require zip64
-        RunSingleTest(2, FOUR_GB_LIMIT / 2, setZip64: false, forwardOnly: false);
+        RunSingleTestAsync(2, FOUR_GB_LIMIT / 2, setZip64: false, forwardOnly: false);
 
     [Trait("format", "zip64")]
-    public void Zip64_Two_Small_files_stream() =>
+    public Task Zip64_Two_Small_files_stream() =>
         // Multiple files, does not require zip64, and works with streams
-        RunSingleTest(2, FOUR_GB_LIMIT / 2, setZip64: false, forwardOnly: true);
+        RunSingleTestAsync(2, FOUR_GB_LIMIT / 2, setZip64: false, forwardOnly: true);
 
     [Trait("format", "zip64")]
-    public void Zip64_Two_Small_Files_Zip64() =>
+    public Task Zip64_Two_Small_Files_Zip64() =>
         // Multiple files, use zip64 even though it is not required
-        RunSingleTest(2, FOUR_GB_LIMIT / 2, setZip64: true, forwardOnly: false);
+        RunSingleTestAsync(2, FOUR_GB_LIMIT / 2, setZip64: true, forwardOnly: false);
 
     [Trait("format", "zip64")]
-    public void Zip64_Single_Large_File_Fail()
+    public async Task Zip64_Single_Large_File_Fail()
     {
         try
         {
             // One single file, should fail
-            RunSingleTest(1, FOUR_GB_LIMIT, setZip64: false, forwardOnly: false);
+            await RunSingleTestAsync(1, FOUR_GB_LIMIT, setZip64: false, forwardOnly: false);
             throw new InvalidOperationException("Test did not fail?");
         }
         catch (NotSupportedException) { }
     }
 
     [Trait("zip64", "true")]
-    public void Zip64_Single_Large_File_Zip64_Streaming_Fail()
+    public async Task Zip64_Single_Large_File_Zip64_Streaming_Fail()
     {
         try
         {
             // One single file, should fail (fast) with zip64
-            RunSingleTest(1, FOUR_GB_LIMIT, setZip64: true, forwardOnly: true);
+            await RunSingleTestAsync(1, FOUR_GB_LIMIT, setZip64: true, forwardOnly: true);
             throw new InvalidOperationException("Test did not fail?");
         }
         catch (NotSupportedException) { }
     }
 
     [Trait("zip64", "true")]
-    public void Zip64_Single_Large_File_Streaming_Fail()
+    public async Task Zip64_Single_Large_File_Streaming_Fail()
     {
         try
         {
             // One single file, should fail once the write discovers the problem
-            RunSingleTest(1, FOUR_GB_LIMIT, setZip64: false, forwardOnly: true);
+            await RunSingleTestAsync(1, FOUR_GB_LIMIT, setZip64: false, forwardOnly: true);
             throw new InvalidOperationException("Test did not fail?");
         }
         catch (NotSupportedException) { }
     }
 
-    public void RunSingleTest(
+    public async Task RunSingleTestAsync(
         long files,
         long filesize,
         bool setZip64,
@@ -104,7 +105,7 @@ public class Zip64Tests : WriterTests
             CreateZipArchive(filename, files, filesize, writeChunkSize, setZip64, forwardOnly);
         }
 
-        var resForward = ReadForwardOnly(filename);
+        var resForward = await ReadForwardOnlyAsync(filename);
         if (resForward.Item1 != files)
         {
             throw new InvalidOperationException(
@@ -168,7 +169,7 @@ public class Zip64Tests : WriterTests
         }
     }
 
-    public Tuple<long, long> ReadForwardOnly(string filename)
+    public async Task<Tuple<long, long>> ReadForwardOnlyAsync(string filename)
     {
         long count = 0;
         long size = 0;
@@ -176,9 +177,9 @@ public class Zip64Tests : WriterTests
         using (var fs = File.OpenRead(filename))
         using (var rd = ZipReader.Open(fs, new ReaderOptions { LookForHeader = false }))
         {
-            while (rd.MoveToNextEntry())
+            while (await rd.MoveToNextEntryAsync())
             {
-                using (rd.OpenEntryStream()) { }
+                using (await rd.OpenEntryStreamAsync()) { }
 
                 count++;
                 if (prev != null)

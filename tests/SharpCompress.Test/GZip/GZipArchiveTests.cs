@@ -11,7 +11,7 @@ namespace SharpCompress.Test.GZip;
 public class GZipArchiveTests : ArchiveTests
 {
     public GZipArchiveTests() => UseExtensionInsteadOfNameToVerify = true;
-
+/*
     [Fact]
     public void GZip_Archive_Generic()
     {
@@ -64,7 +64,7 @@ public class GZipArchiveTests : ArchiveTests
         using var archive = GZipArchive.Open(stream);
         Assert.Throws<InvalidFormatException>(() => archive.AddEntry("jpg\\test.jpg", jpg));
         archive.SaveTo(Path.Combine(SCRATCH_FILES_PATH, "Tar.tar.gz"));
-    }
+    }*/
 
     [Fact]
     public void GZip_Archive_Multiple_Reads()

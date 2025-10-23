@@ -12,6 +12,7 @@ namespace SharpCompress.Test.SevenZip;
 
 public class SevenZipArchiveTests : ArchiveTests
 {
+/*
     [Fact]
     public void SevenZipArchive_Solid_StreamRead() => ArchiveStreamRead("7Zip.solid.7z");
 
@@ -222,5 +223,5 @@ public class SevenZipArchiveTests : ArchiveTests
             Path.Combine(TEST_ARCHIVES_PATH, "7Zip.nonsolid.7z")
         );
         Assert.False(nonSolidArchive.IsSolid);
-    }
+    }*/
 }

@@ -1,5 +1,6 @@
 using System.IO;
 using System.Text;
+using System.Threading.Tasks;
 using SharpCompress.Common;
 using SharpCompress.Writers.Tar;
 using Xunit;
@@ -20,8 +21,8 @@ public class TarWriterTests : WriterTests
         : base(ArchiveType.Tar) => UseExtensionInsteadOfNameToVerify = true;
 
     [Fact]
-    public void Tar_Writer() =>
-        Write(
+    public Task Tar_Writer() =>
+        WriteAsync(
             CompressionType.None,
             "Tar.noEmptyDirs.tar",
             "Tar.noEmptyDirs.tar",
@@ -29,8 +30,8 @@ public class TarWriterTests : WriterTests
         );
 
     [Fact]
-    public void Tar_BZip2_Writer() =>
-        Write(
+    public Task Tar_BZip2_Writer() =>
+        WriteAsync(
             CompressionType.BZip2,
             "Tar.noEmptyDirs.tar.bz2",
             "Tar.noEmptyDirs.tar.bz2",
@@ -38,8 +39,8 @@ public class TarWriterTests : WriterTests
         );
 
     [Fact]
-    public void Tar_LZip_Writer() =>
-        Write(
+    public Task Tar_LZip_Writer() =>
+        WriteAsync(
             CompressionType.LZip,
             "Tar.noEmptyDirs.tar.lz",
             "Tar.noEmptyDirs.tar.lz",
@@ -47,9 +48,9 @@ public class TarWriterTests : WriterTests
         );
 
     [Fact]
-    public void Tar_Rar_Write() =>
-        Assert.Throws<InvalidFormatException>(() =>
-            Write(CompressionType.Rar, "Zip.ppmd.noEmptyDirs.zip", "Zip.ppmd.noEmptyDirs.zip")
+    public Task Tar_Rar_Write() =>
+        Assert.ThrowsAsync<InvalidFormatException>(async () =>
+                                                  await WriteAsync(CompressionType.Rar, "Zip.ppmd.noEmptyDirs.zip", "Zip.ppmd.noEmptyDirs.zip")
         );
 
     [Theory]
