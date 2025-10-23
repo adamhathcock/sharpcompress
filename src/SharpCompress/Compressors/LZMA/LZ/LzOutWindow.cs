@@ -1,11 +1,12 @@
 #nullable disable
 
 using System;
+using System.Buffers;
 using System.IO;
 
 namespace SharpCompress.Compressors.LZMA.LZ;
 
-internal class OutWindow
+internal class OutWindow : IDisposable
 {
     private byte[] _buffer;
     private int _windowSize;
@@ -22,7 +23,7 @@ internal class OutWindow
     {
         if (_windowSize != windowSize)
         {
-            _buffer = new byte[windowSize];
+            _buffer = ArrayPool<byte>.Shared.Rent(windowSize);
         }
         else
         {
@@ -36,7 +37,18 @@ internal class OutWindow
         _limit = 0;
     }
 
-    public void Reset() => Create(_windowSize);
+    public void Dispose()
+    {
+        ReleaseStream();
+        ArrayPool<byte>.Shared.Return(_buffer);
+        _buffer = null;
+    }
+
+    public void Reset()
+    {
+        ReleaseStream();
+        Create(_windowSize);
+    }
 
     public void Init(Stream stream)
     {

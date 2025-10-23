@@ -305,6 +305,7 @@ public class Decoder : ICoder, ISetDecoderProperties // ,System.IO.Stream
         _outWindow.ReleaseStream();
         rangeDecoder.ReleaseStream();
 
+        _outWindow.Dispose();
         _outWindow = null;
     }
 
