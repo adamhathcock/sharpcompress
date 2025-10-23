@@ -68,6 +68,7 @@ internal static class NotNullExtensions
     }
 #endif
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static string NotNullOrEmpty(this string obj, string name)
     {
         obj.NotNull(name);

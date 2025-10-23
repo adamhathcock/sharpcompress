@@ -91,8 +91,7 @@ internal static class UnpackUtility
         long M,
             N;
 
-        new Span<int>(dec.DecodeNum).Clear(); // memset(Dec->DecodeNum,0,Size*sizeof(*Dec->DecodeNum));
-
+        Array.Clear(dec.DecodeNum,0, dec.DecodeNum.Length);
         for (i = 0; i < size; i++)
         {
             lenCount[lenTab[offset + i] & 0xF]++;

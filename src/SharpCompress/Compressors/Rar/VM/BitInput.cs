@@ -24,6 +24,7 @@ internal class BitInput : IDisposable
     }
     public bool ExternalBuffer;
     private byte[] _privateBuffer = ArrayPool<byte>.Shared.Rent(MAX_SIZE);
+    private bool _disposed;
 
     /// <summary>  </summary>
     internal BitInput() => InBuf = _privateBuffer;
@@ -92,5 +93,13 @@ internal class BitInput : IDisposable
     /// </returns>
     internal bool Overflow(int IncPtr) => (inAddr + IncPtr >= MAX_SIZE);
 
-    public virtual void Dispose() => ArrayPool<byte>.Shared.Return(_privateBuffer);
+    public virtual void Dispose()
+    {
+        if (_disposed)
+        {
+            return;
+        }
+        ArrayPool<byte>.Shared.Return(_privateBuffer);
+        _disposed = true;
+    }
 }

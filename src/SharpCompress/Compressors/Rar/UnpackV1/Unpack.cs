@@ -13,7 +13,7 @@ using SharpCompress.Compressors.Rar.VM;
 
 namespace SharpCompress.Compressors.Rar.UnpackV1;
 
-internal sealed partial class Unpack : BitInput, IRarUnpack, IDisposable
+internal sealed partial class Unpack : BitInput, IRarUnpack
 {
     private readonly BitInput Inp;
     private bool disposed;
@@ -32,6 +32,7 @@ internal sealed partial class Unpack : BitInput, IRarUnpack, IDisposable
                 ArrayPool<byte>.Shared.Return(window);
                 window = null;
             }
+            rarVM.Dispose();
             disposed = true;
         }
     }
@@ -752,19 +753,27 @@ internal sealed partial class Unpack : BitInput, IRarUnpack, IDisposable
         // System.out.println("copyString(" + length + ", " + distance + ")");
 
         var destPtr = unpPtr - distance;
+        var safeZone = PackDef.MAXWINSIZE - 260;
 
-        // System.out.println(unpPtr+":"+distance);
-        if (destPtr >= 0 && destPtr < PackDef.MAXWINSIZE - 260 && unpPtr < PackDef.MAXWINSIZE - 260)
+        // Fast path: use Array.Copy for bulk operations when in safe zone
+        if (destPtr >= 0 && destPtr < safeZone && unpPtr < safeZone && distance >= length)
         {
-            window[unpPtr++] = window[destPtr++];
-
-            while (--length > 0)
+            // Non-overlapping copy: can use Array.Copy directly
+            Array.Copy(window, destPtr, window, unpPtr, length);
+            unpPtr += length;
+        }
+        else if (destPtr >= 0 && destPtr < safeZone && unpPtr < safeZone)
+        {
+            // Overlapping copy in safe zone: use byte-by-byte to handle self-referential copies
+            for (int i = 0; i < length; i++)
             {
-                window[unpPtr++] = window[destPtr++];
+                window[unpPtr + i] = window[destPtr + i];
             }
+            unpPtr += length;
         }
         else
         {
+            // Slow path with wraparound mask
             while (length-- != 0)
             {
                 window[unpPtr] = window[destPtr++ & PackDef.MAXWINMASK];
@@ -1081,7 +1090,6 @@ internal sealed partial class Unpack : BitInput, IRarUnpack, IDisposable
         {
             Inp.InBuf[i] = vmCode[i];
         }
-        rarVM.init();
 
         int FiltPos;
         if ((firstByte & 0x80) != 0)
