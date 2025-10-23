@@ -24,6 +24,7 @@ internal class OutWindow : IDisposable
         if (_windowSize != windowSize)
         {
             _buffer = ArrayPool<byte>.Shared.Rent(windowSize);
+            Array.Clear(_buffer, 0, windowSize);
         }
         else
         {
@@ -40,6 +41,10 @@ internal class OutWindow : IDisposable
     public void Dispose()
     {
         ReleaseStream();
+        if (_buffer is null)
+        {
+            return;
+        }
         ArrayPool<byte>.Shared.Return(_buffer);
         _buffer = null;
     }
