@@ -46,7 +46,7 @@ public static class ArchiveFactory
     /// <param name="options"></param>
     public static IArchive Open(string filePath, ReaderOptions? options = null)
     {
-        filePath.CheckNotNullOrEmpty(nameof(filePath));
+        filePath.NotNullOrEmpty(nameof(filePath));
         return Open(new FileInfo(filePath), options);
     }
 
@@ -69,7 +69,7 @@ public static class ArchiveFactory
     /// <param name="options"></param>
     public static IArchive Open(IEnumerable<FileInfo> fileInfos, ReaderOptions? options = null)
     {
-        fileInfos.CheckNotNull(nameof(fileInfos));
+        fileInfos.NotNull(nameof(fileInfos));
         var filesArray = fileInfos.ToArray();
         if (filesArray.Length == 0)
         {
@@ -82,7 +82,7 @@ public static class ArchiveFactory
             return Open(fileInfo, options);
         }
 
-        fileInfo.CheckNotNull(nameof(fileInfo));
+        fileInfo.NotNull(nameof(fileInfo));
         options ??= new ReaderOptions { LeaveStreamOpen = false };
 
         return FindFactory<IMultiArchiveFactory>(fileInfo).Open(filesArray, options);
@@ -95,7 +95,7 @@ public static class ArchiveFactory
     /// <param name="options"></param>
     public static IArchive Open(IEnumerable<Stream> streams, ReaderOptions? options = null)
     {
-        streams.CheckNotNull(nameof(streams));
+        streams.NotNull(nameof(streams));
         var streamsArray = streams.ToArray();
         if (streamsArray.Length == 0)
         {
@@ -108,7 +108,7 @@ public static class ArchiveFactory
             return Open(firstStream, options);
         }
 
-        firstStream.CheckNotNull(nameof(firstStream));
+        firstStream.NotNull(nameof(firstStream));
         options ??= new ReaderOptions();
 
         return FindFactory<IMultiArchiveFactory>(firstStream).Open(streamsArray, options);
@@ -130,7 +130,7 @@ public static class ArchiveFactory
     private static T FindFactory<T>(FileInfo finfo)
         where T : IFactory
     {
-        finfo.CheckNotNull(nameof(finfo));
+        finfo.NotNull(nameof(finfo));
         using Stream stream = finfo.OpenRead();
         return FindFactory<T>(stream);
     }
@@ -138,7 +138,7 @@ public static class ArchiveFactory
     private static T FindFactory<T>(Stream stream)
         where T : IFactory
     {
-        stream.CheckNotNull(nameof(stream));
+        stream.NotNull(nameof(stream));
         if (!stream.CanRead || !stream.CanSeek)
         {
             throw new ArgumentException("Stream should be readable and seekable");
@@ -173,7 +173,7 @@ public static class ArchiveFactory
         int bufferSize = ReaderOptions.DefaultBufferSize
     )
     {
-        filePath.CheckNotNullOrEmpty(nameof(filePath));
+        filePath.NotNullOrEmpty(nameof(filePath));
         using Stream s = File.OpenRead(filePath);
         return IsArchive(s, out type, bufferSize);
     }
@@ -185,7 +185,7 @@ public static class ArchiveFactory
     )
     {
         type = null;
-        stream.CheckNotNull(nameof(stream));
+        stream.NotNull(nameof(stream));
 
         if (!stream.CanRead || !stream.CanSeek)
         {
@@ -216,7 +216,7 @@ public static class ArchiveFactory
     /// <returns></returns>
     public static IEnumerable<string> GetFileParts(string part1)
     {
-        part1.CheckNotNullOrEmpty(nameof(part1));
+        part1.NotNullOrEmpty(nameof(part1));
         return GetFileParts(new FileInfo(part1)).Select(a => a.FullName);
     }
 
@@ -227,7 +227,7 @@ public static class ArchiveFactory
     /// <returns></returns>
     public static IEnumerable<FileInfo> GetFileParts(FileInfo part1)
     {
-        part1.CheckNotNull(nameof(part1));
+        part1.NotNull(nameof(part1));
         yield return part1;
 
         foreach (var factory in Factory.Factories.OfType<IFactory>())

@@ -1,6 +1,5 @@
-#nullable disable
-
 using System;
+using System.Buffers;
 using System.Buffers.Binary;
 using System.Collections.Generic;
 
@@ -16,7 +15,9 @@ internal sealed class RarVM : BitInput
     //    Mem.set_Renamed(offset + 3, Byte.valueOf((sbyte) ((Utility.URShift(value_Renamed, 24)) & 0xff)));
 
     //}
-    internal byte[] Mem { get; private set; }
+    internal byte[] Mem => _memory.NotNull();
+
+    private byte[]? _memory = ArrayPool<byte>.Shared.Rent(VM_MEMSIZE + 4);
 
     public const int VM_MEMSIZE = 0x40000;
 
@@ -40,11 +41,18 @@ internal sealed class RarVM : BitInput
 
     private int IP;
 
-    internal RarVM() =>
-        //InitBlock();
-        Mem = null;
+    internal RarVM() { }
 
-    internal void init() => Mem ??= new byte[VM_MEMSIZE + 4];
+    public override void Dispose()
+    {
+        base.Dispose();
+        if (_memory is null)
+        {
+            return;
+        }
+        ArrayPool<byte>.Shared.Return(_memory);
+        _memory = null;
+    }
 
     private bool IsVMMem(byte[] mem) => Mem == mem;
 
@@ -776,9 +784,10 @@ internal sealed class RarVM : BitInput
         }
     }
 
-    public void prepare(ReadOnlySpan<byte> code, int codeSize, VMPreparedProgram prg)
+    public void prepare(ReadOnlySpan<byte> code, VMPreparedProgram prg)
     {
         InitBitInput();
+        var codeSize = code.Length;
         var cpLength = Math.Min(MAX_SIZE, codeSize);
 
         // memcpy(inBuf,Code,Min(CodeSize,BitInput::MAX_SIZE));
@@ -795,7 +804,7 @@ internal sealed class RarVM : BitInput
         prg.CommandCount = 0;
         if (xorSum == code[0])
         {
-            var filterType = IsStandardFilter(code, codeSize);
+            var filterType = IsStandardFilter(code);
             if (filterType != VMStandardFilters.VMSF_NONE)
             {
                 var curCmd = new VMPreparedCommand();
@@ -1105,7 +1114,7 @@ internal sealed class RarVM : BitInput
         }
     }
 
-    private VMStandardFilters IsStandardFilter(ReadOnlySpan<byte> code, int codeSize)
+    private VMStandardFilters IsStandardFilter(ReadOnlySpan<byte> code)
     {
         VMStandardFilterSignature[] stdList =
         {
@@ -1130,6 +1139,7 @@ internal sealed class RarVM : BitInput
 
     private void ExecuteStandardFilter(VMStandardFilters filterType)
     {
+        var mem = Mem;
         switch (filterType)
         {
             case VMStandardFilters.VMSF_E8:
@@ -1148,7 +1158,7 @@ internal sealed class RarVM : BitInput
                     );
                     for (var curPos = 0; curPos < dataSize - 4; )
                     {
-                        var curByte = Mem[curPos++];
+                        var curByte = mem[curPos++];
                         if (curByte == 0xe8 || curByte == cmpByte2)
                         {
                             //		#ifdef PRESENT_INT32
@@ -1164,19 +1174,19 @@ internal sealed class RarVM : BitInput
                             //		                SET_VALUE(false,Data,Addr-Offset);
                             //		#else
                             var offset = curPos + fileOffset;
-                            long Addr = GetValue(false, Mem, curPos);
+                            long Addr = GetValue(false, mem, curPos);
                             if ((Addr & unchecked((int)0x80000000)) != 0)
                             {
                                 if (((Addr + offset) & unchecked((int)0x80000000)) == 0)
                                 {
-                                    SetValue(false, Mem, curPos, (int)Addr + fileSize);
+                                    SetValue(false, mem, curPos, (int)Addr + fileSize);
                                 }
                             }
                             else
                             {
                                 if (((Addr - fileSize) & unchecked((int)0x80000000)) != 0)
                                 {
-                                    SetValue(false, Mem, curPos, (int)(Addr - offset));
+                                    SetValue(false, mem, curPos, (int)(Addr - offset));
                                 }
                             }
 
@@ -1204,7 +1214,7 @@ internal sealed class RarVM : BitInput
 
                     while (curPos < dataSize - 21)
                     {
-                        var Byte = (Mem[curPos] & 0x1f) - 0x10;
+                        var Byte = (mem[curPos] & 0x1f) - 0x10;
                         if (Byte >= 0)
                         {
                             var cmdMask = Masks[Byte];
@@ -1250,7 +1260,7 @@ internal sealed class RarVM : BitInput
                     var channels = R[0] & unchecked((int)0xFFffFFff);
                     var srcPos = 0;
                     var border = (dataSize * 2) & unchecked((int)0xFFffFFff);
-                    SetValue(false, Mem, VM_GLOBALMEMADDR + 0x20, dataSize);
+                    SetValue(false, mem, VM_GLOBALMEMADDR + 0x20, dataSize);
                     if (dataSize >= VM_GLOBALMEMADDR / 2)
                     {
                         break;
@@ -1268,7 +1278,7 @@ internal sealed class RarVM : BitInput
                             destPos += channels
                         )
                         {
-                            Mem[destPos] = (PrevByte = (byte)(PrevByte - Mem[srcPos++]));
+                            mem[destPos] = (PrevByte = (byte)(PrevByte - mem[srcPos++]));
                         }
                     }
                 }
@@ -1283,7 +1293,7 @@ internal sealed class RarVM : BitInput
                     var channels = 3;
                     var srcPos = 0;
                     var destDataPos = dataSize;
-                    SetValue(false, Mem, VM_GLOBALMEMADDR + 0x20, dataSize);
+                    SetValue(false, mem, VM_GLOBALMEMADDR + 0x20, dataSize);
                     if (dataSize >= VM_GLOBALMEMADDR / 2 || posR < 0)
                     {
                         break;
@@ -1299,8 +1309,8 @@ internal sealed class RarVM : BitInput
                             if (upperPos >= 3)
                             {
                                 var upperDataPos = destDataPos + upperPos;
-                                var upperByte = Mem[upperDataPos] & 0xff;
-                                var upperLeftByte = Mem[upperDataPos - 3] & 0xff;
+                                var upperByte = mem[upperDataPos] & 0xff;
+                                var upperLeftByte = mem[upperDataPos - 3] & 0xff;
                                 predicted = prevByte + upperByte - upperLeftByte;
                                 var pa = Math.Abs((int)(predicted - prevByte));
                                 var pb = Math.Abs((int)(predicted - upperByte));
@@ -1326,15 +1336,15 @@ internal sealed class RarVM : BitInput
                                 predicted = prevByte;
                             }
 
-                            prevByte = ((predicted - Mem[srcPos++]) & 0xff) & 0xff;
-                            Mem[destDataPos + i] = (byte)(prevByte & 0xff);
+                            prevByte = ((predicted - mem[srcPos++]) & 0xff) & 0xff;
+                            mem[destDataPos + i] = (byte)(prevByte & 0xff);
                         }
                     }
                     for (int i = posR, border = dataSize - 2; i < border; i += 3)
                     {
-                        var G = Mem[destDataPos + i + 1];
-                        Mem[destDataPos + i] = (byte)(Mem[destDataPos + i] + G);
-                        Mem[destDataPos + i + 2] = (byte)(Mem[destDataPos + i + 2] + G);
+                        var G = mem[destDataPos + i + 1];
+                        mem[destDataPos + i] = (byte)(mem[destDataPos + i] + G);
+                        mem[destDataPos + i + 2] = (byte)(mem[destDataPos + i + 2] + G);
                     }
                 }
                 break;
@@ -1347,7 +1357,7 @@ internal sealed class RarVM : BitInput
                     var destDataPos = dataSize;
 
                     //byte *SrcData=Mem,*DestData=SrcData+DataSize;
-                    SetValue(false, Mem, VM_GLOBALMEMADDR + 0x20, dataSize);
+                    SetValue(false, mem, VM_GLOBALMEMADDR + 0x20, dataSize);
                     if (dataSize >= VM_GLOBALMEMADDR / 2)
                     {
                         break;
@@ -1377,10 +1387,10 @@ internal sealed class RarVM : BitInput
                             var predicted = (8 * prevByte) + (K1 * D1) + (K2 * D2) + (K3 * D3);
                             predicted = Utility.URShift(predicted, 3) & 0xff;
 
-                            long curByte = Mem[srcPos++];
+                            long curByte = mem[srcPos++];
 
                             predicted -= curByte;
-                            Mem[destDataPos + i] = (byte)predicted;
+                            mem[destDataPos + i] = (byte)predicted;
                             prevDelta = (byte)(predicted - prevByte);
 
                             //fix java byte
@@ -1480,15 +1490,15 @@ internal sealed class RarVM : BitInput
                     }
                     while (srcPos < dataSize)
                     {
-                        var curByte = Mem[srcPos++];
-                        if (curByte == 2 && (curByte = Mem[srcPos++]) != 2)
+                        var curByte = mem[srcPos++];
+                        if (curByte == 2 && (curByte = mem[srcPos++]) != 2)
                         {
                             curByte = (byte)(curByte - 32);
                         }
-                        Mem[destPos++] = curByte;
+                        mem[destPos++] = curByte;
                     }
-                    SetValue(false, Mem, VM_GLOBALMEMADDR + 0x1c, destPos - dataSize);
-                    SetValue(false, Mem, VM_GLOBALMEMADDR + 0x20, dataSize);
+                    SetValue(false, mem, VM_GLOBALMEMADDR + 0x1c, destPos - dataSize);
+                    SetValue(false, mem, VM_GLOBALMEMADDR + 0x20, dataSize);
                 }
                 break;
         }
@@ -1528,15 +1538,14 @@ internal sealed class RarVM : BitInput
     {
         if (pos < VM_MEMSIZE)
         {
-            //&& data!=Mem+Pos)
-            //memmove(Mem+Pos,Data,Min(DataSize,VM_MEMSIZE-Pos));
-            for (var i = 0; i < Math.Min(data.Length - offset, dataSize); i++)
+            // Use Array.Copy for fast bulk memory operations instead of byte-by-byte loop
+            // Calculate how much data can actually fit in VM memory
+            int copyLength = Math.Min(dataSize, VM_MEMSIZE - pos);
+            copyLength = Math.Min(copyLength, data.Length - offset);
+
+            if (copyLength > 0)
             {
-                if ((VM_MEMSIZE - pos) < i)
-                {
-                    break;
-                }
-                Mem[pos + i] = data[offset + i];
+                Array.Copy(data, offset, Mem, pos, copyLength);
             }
         }
     }

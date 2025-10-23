@@ -46,12 +46,10 @@ public static class IArchiveExtensions
         var seenDirectories = new HashSet<string>();
 
         // Extract
-        var entries = archive.ExtractAllEntries();
-        while (await entries.MoveToNextEntryAsync())
+        foreach (var entry in archive.Entries)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            var entry = entries.Entry;
             if (entry.IsDirectory)
             {
                 var dirPath = Path.Combine(destination, entry.Key.NotNull("Entry Key is null"));
@@ -78,7 +76,7 @@ public static class IArchiveExtensions
 
             // Write file
             using var fs = File.OpenWrite(path);
-            await entries.WriteEntryToAsync(fs);
+            entry.WriteTo(fs);
 
             // Update progress
             bytesRead += entry.Size;

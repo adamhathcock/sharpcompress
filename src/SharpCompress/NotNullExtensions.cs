@@ -4,20 +4,19 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.CompilerServices;
 
-namespace SharpCompress.Helpers;
+namespace SharpCompress;
 
 internal static class NotNullExtensions
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static IEnumerable<T> Empty<T>(this IEnumerable<T>? source) =>
-        source ?? Enumerable.Empty<T>();
+    public static IEnumerable<T> Empty<T>(this IEnumerable<T>? source) => source ?? [];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static IEnumerable<T> Empty<T>(this T? source)
     {
         if (source is null)
         {
-            return Enumerable.Empty<T>();
+            return [];
         }
         return source.AsEnumerable();
     }
@@ -68,4 +67,15 @@ internal static class NotNullExtensions
         return obj.Value;
     }
 #endif
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static string NotNullOrEmpty(this string obj, string name)
+    {
+        obj.NotNull(name);
+        if (obj.Length == 0)
+        {
+            throw new ArgumentException("String is empty.", name);
+        }
+        return obj;
+    }
 }

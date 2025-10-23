@@ -589,12 +589,10 @@ public class ZipArchiveTests : ArchiveTests
         }
     }
 
-    [SkippableFact]
-    public void Zip_Evil_Throws_Exception()
+#if WINDOWS
+    [Fact]
+    public void Zip_Evil_Throws_Exception_Windows()
     {
-        //windows only because of the paths
-        Skip.IfNot(Environment.OSVersion.Platform == PlatformID.Win32NT);
-
         var zipFile = Path.Combine(TEST_ARCHIVES_PATH, "Zip.Evil.zip");
 
         Assert.ThrowsAny<Exception>(() =>
@@ -609,6 +607,7 @@ public class ZipArchiveTests : ArchiveTests
             }
         });
     }
+#endif
 
     private class NonSeekableMemoryStream : MemoryStream
     {
@@ -734,8 +733,7 @@ public class ZipArchiveTests : ArchiveTests
     {
         var zipPath = Path.Combine(TEST_ARCHIVES_PATH, "Zip.uncompressed.zip");
         using var stream = File.OpenRead(zipPath);
-        var archive = ArchiveFactory.Open(stream);
-        var reader = archive.ExtractAllEntries();
+        var reader = ReaderFactory.Open(stream);
         var entries = 0;
         while (reader.MoveToNextEntry())
         {
@@ -763,8 +761,7 @@ public class ZipArchiveTests : ArchiveTests
         };
         var zipPath = Path.Combine(TEST_ARCHIVES_PATH, "Zip.uncompressed.zip");
         using var stream = File.OpenRead(zipPath);
-        var archive = ArchiveFactory.Open(stream);
-        var reader = archive.ExtractAllEntries();
+        var reader = ReaderFactory.Open(stream);
         var x = 0;
         while (reader.MoveToNextEntry())
         {
@@ -781,7 +778,7 @@ public class ZipArchiveTests : ArchiveTests
         var zipPath = Path.Combine(TEST_ARCHIVES_PATH, "Zip.UnicodePathExtra.zip");
         using (var stream = File.OpenRead(zipPath))
         {
-            var archive = ArchiveFactory.Open(
+            var reader = ReaderFactory.Open(
                 stream,
                 new ReaderOptions
                 {
@@ -791,13 +788,12 @@ public class ZipArchiveTests : ArchiveTests
                     },
                 }
             );
-            var reader = archive.ExtractAllEntries();
             reader.MoveToNextEntry();
             Assert.Equal("궖귛궖귙귪궖귗귪궖귙_wav.frq", reader.Entry.Key);
         }
         using (var stream = File.OpenRead(zipPath))
         {
-            var archive = ArchiveFactory.Open(
+            var reader = ReaderFactory.Open(
                 stream,
                 new ReaderOptions
                 {
@@ -807,7 +803,6 @@ public class ZipArchiveTests : ArchiveTests
                     },
                 }
             );
-            var reader = archive.ExtractAllEntries();
             reader.MoveToNextEntry();
             Assert.Equal("きょきゅんきゃんきゅ_wav.frq", reader.Entry.Key);
         }

@@ -9,6 +9,18 @@ namespace SharpCompress.Readers;
 
 public static class ReaderFactory
 {
+    public static IReader Open(string filePath, ReaderOptions? options = null)
+    {
+        filePath.NotNullOrEmpty(nameof(filePath));
+        return Open(new FileInfo(filePath), options);
+    }
+
+    public static IReader Open(FileInfo fileInfo, ReaderOptions? options = null)
+    {
+        options ??= new ReaderOptions { LeaveStreamOpen = false };
+        return Open(fileInfo.OpenRead(), options);
+    }
+
     /// <summary>
     /// Opens a Reader for Non-seeking usage
     /// </summary>
@@ -17,7 +29,7 @@ public static class ReaderFactory
     /// <returns></returns>
     public static IReader Open(Stream stream, ReaderOptions? options = null)
     {
-        stream.CheckNotNull(nameof(stream));
+        stream.NotNull(nameof(stream));
         options ??= new ReaderOptions() { LeaveStreamOpen = false };
 
         var bStream = new SharpCompressStream(stream, bufferSize: options.BufferSize);

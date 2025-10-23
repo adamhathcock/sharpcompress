@@ -223,7 +223,7 @@ public class RarReaderTests : ReaderTests
                     var destinationFileName = Path.Combine(destdir, file);
 
                     using var fs = File.OpenWrite(destinationFileName);
-                    entryStream.TransferTo(fs);
+                    entryStream.CopyTo(fs);
                 }
             }
         }
@@ -407,10 +407,16 @@ public class RarReaderTests : ReaderTests
                 Path.Combine("exe", "test.exe"),
             }
         );
-        using var archive = RarArchive.Open(
-            Path.Combine(TEST_ARCHIVES_PATH, "Rar.multi.part01.rar")
+        using var reader = RarReader.Open(
+            [
+                Path.Combine(TEST_ARCHIVES_PATH, "Rar.multi.part01.rar"),
+                Path.Combine(TEST_ARCHIVES_PATH, "Rar.multi.part02.rar"),
+                Path.Combine(TEST_ARCHIVES_PATH, "Rar.multi.part03.rar"),
+                Path.Combine(TEST_ARCHIVES_PATH, "Rar.multi.part04.rar"),
+                Path.Combine(TEST_ARCHIVES_PATH, "Rar.multi.part05.rar"),
+                Path.Combine(TEST_ARCHIVES_PATH, "Rar.multi.part06.rar"),
+            ]
         );
-        using var reader = archive.ExtractAllEntries();
         while (reader.MoveToNextEntry())
         {
             Assert.Equal(expectedOrder.Pop(), reader.Entry.Key);

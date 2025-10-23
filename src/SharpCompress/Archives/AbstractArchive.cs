@@ -144,6 +144,12 @@ public abstract class AbstractArchive<TEntry, TVolume> : IArchive, IArchiveExtra
     /// <returns></returns>
     public IReader ExtractAllEntries()
     {
+        if (!IsSolid && Type != ArchiveType.SevenZip)
+        {
+            throw new InvalidOperationException(
+                "ExtractAllEntries can only be used on solid archives or 7Zip archives (which require random access)."
+            );
+        }
         ((IArchiveExtractionListener)this).EnsureEntriesLoaded();
         return CreateReaderForSolidExtraction();
     }

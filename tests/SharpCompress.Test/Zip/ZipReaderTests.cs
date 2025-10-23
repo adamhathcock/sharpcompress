@@ -362,6 +362,8 @@ public class ZipReaderTests : ReaderTests
         while (reader.MoveToNextEntry()) { }
     }
 
+    //this test uses a large 7zip file containing a zip file inside it to test zip64 support
+    // we probably shouldn't be allowing ExtractAllEntries here but it works for now.
     [Fact]
     public void Zip_Uncompressed_64bit()
     {
@@ -383,11 +385,10 @@ public class ZipReaderTests : ReaderTests
     [Fact]
     public void Zip_Uncompressed_Encrypted_Read()
     {
-        using var archive = ArchiveFactory.Open(
+        using var reader = ReaderFactory.Open(
             Path.Combine(TEST_ARCHIVES_PATH, "Zip.none.encrypted.zip"),
             new ReaderOptions { Password = "test" }
         );
-        using var reader = archive.ExtractAllEntries();
         reader.MoveToNextEntry();
         Assert.Equal("first.txt", reader.Entry.Key);
         Assert.Equal(199, reader.Entry.Size);

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.CompilerServices;
 using SharpCompress.Compressors.Rar.VM;
 
 namespace SharpCompress.Compressors.Rar.UnpackV1;
@@ -9,167 +10,15 @@ internal static class UnpackUtility
     internal static uint DecodeNumber(this BitInput input, Decode.Decode dec) =>
         (uint)input.decodeNumber(dec);
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static int decodeNumber(this BitInput input, Decode.Decode dec)
     {
-        int bits;
         long bitField = input.GetBits() & 0xfffe;
-
-        //        if (bitField < dec.getDecodeLen()[8]) {
-        //			if (bitField < dec.getDecodeLen()[4]) {
-        //				if (bitField < dec.getDecodeLen()[2]) {
-        //					if (bitField < dec.getDecodeLen()[1]) {
-        //						bits = 1;
-        //					} else {
-        //						bits = 2;
-        //					}
-        //				} else {
-        //					if (bitField < dec.getDecodeLen()[3]) {
-        //						bits = 3;
-        //					} else {
-        //						bits = 4;
-        //					}
-        //				}
-        //			} else {
-        //				if (bitField < dec.getDecodeLen()[6]) {
-        //					if (bitField < dec.getDecodeLen()[5])
-        //						bits = 5;
-        //					else
-        //						bits = 6;
-        //				} else {
-        //					if (bitField < dec.getDecodeLen()[7]) {
-        //						bits = 7;
-        //					} else {
-        //						bits = 8;
-        //					}
-        //				}
-        //			}
-        //		} else {
-        //			if (bitField < dec.getDecodeLen()[12]) {
-        //				if (bitField < dec.getDecodeLen()[10])
-        //					if (bitField < dec.getDecodeLen()[9])
-        //						bits = 9;
-        //					else
-        //						bits = 10;
-        //				else if (bitField < dec.getDecodeLen()[11])
-        //					bits = 11;
-        //				else
-        //					bits = 12;
-        //			} else {
-        //				if (bitField < dec.getDecodeLen()[14]) {
-        //					if (bitField < dec.getDecodeLen()[13]) {
-        //						bits = 13;
-        //					} else {
-        //						bits = 14;
-        //					}
-        //				} else {
-        //					bits = 15;
-        //				}
-        //			}
-        //		}
-        //		addbits(bits);
-        //		int N = dec.getDecodePos()[bits]
-        //				+ (((int) bitField - dec.getDecodeLen()[bits - 1]) >>> (16 - bits));
-        //		if (N >= dec.getMaxNum()) {
-        //			N = 0;
-        //		}
-        //		return (dec.getDecodeNum()[N]);
         var decodeLen = dec.DecodeLen;
-        if (bitField < decodeLen[8])
-        {
-            if (bitField < decodeLen[4])
-            {
-                if (bitField < decodeLen[2])
-                {
-                    if (bitField < decodeLen[1])
-                    {
-                        bits = 1;
-                    }
-                    else
-                    {
-                        bits = 2;
-                    }
-                }
-                else
-                {
-                    if (bitField < decodeLen[3])
-                    {
-                        bits = 3;
-                    }
-                    else
-                    {
-                        bits = 4;
-                    }
-                }
-            }
-            else
-            {
-                if (bitField < decodeLen[6])
-                {
-                    if (bitField < decodeLen[5])
-                    {
-                        bits = 5;
-                    }
-                    else
-                    {
-                        bits = 6;
-                    }
-                }
-                else
-                {
-                    if (bitField < decodeLen[7])
-                    {
-                        bits = 7;
-                    }
-                    else
-                    {
-                        bits = 8;
-                    }
-                }
-            }
-        }
-        else
-        {
-            if (bitField < decodeLen[12])
-            {
-                if (bitField < decodeLen[10])
-                {
-                    if (bitField < decodeLen[9])
-                    {
-                        bits = 9;
-                    }
-                    else
-                    {
-                        bits = 10;
-                    }
-                }
-                else if (bitField < decodeLen[11])
-                {
-                    bits = 11;
-                }
-                else
-                {
-                    bits = 12;
-                }
-            }
-            else
-            {
-                if (bitField < decodeLen[14])
-                {
-                    if (bitField < decodeLen[13])
-                    {
-                        bits = 13;
-                    }
-                    else
-                    {
-                        bits = 14;
-                    }
-                }
-                else
-                {
-                    bits = 15;
-                }
-            }
-        }
+
+        // Binary search to find the bit length - faster than nested ifs
+        int bits = FindDecodeBits(bitField, decodeLen);
+
         input.AddBits(bits);
         var N =
             dec.DecodePos[bits]
@@ -179,6 +28,52 @@ internal static class UnpackUtility
             N = 0;
         }
         return (dec.DecodeNum[N]);
+    }
+
+    /// <summary>
+    /// Fast binary search to find which bit length matches the bitField.
+    /// Optimized with cached array access to minimize memory lookups.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static int FindDecodeBits(long bitField, int[] decodeLen)
+    {
+        // Cache critical values to reduce array access overhead
+        long len4 = decodeLen[4];
+        long len8 = decodeLen[8];
+        long len12 = decodeLen[12];
+
+        if (bitField < len8)
+        {
+            if (bitField < len4)
+            {
+                long len2 = decodeLen[2];
+                if (bitField < len2)
+                {
+                    return bitField < decodeLen[1] ? 1 : 2;
+                }
+                return bitField < decodeLen[3] ? 3 : 4;
+            }
+
+            long len6 = decodeLen[6];
+            if (bitField < len6)
+            {
+                return bitField < decodeLen[5] ? 5 : 6;
+            }
+            return bitField < decodeLen[7] ? 7 : 8;
+        }
+
+        if (bitField < len12)
+        {
+            long len10 = decodeLen[10];
+            if (bitField < len10)
+            {
+                return bitField < decodeLen[9] ? 9 : 10;
+            }
+            return bitField < decodeLen[11] ? 11 : 12;
+        }
+
+        long len14 = decodeLen[14];
+        return bitField < len14 ? (bitField < decodeLen[13] ? 13 : 14) : 15;
     }
 
     internal static void makeDecodeTables(
@@ -194,8 +89,7 @@ internal static class UnpackUtility
         long M,
             N;
 
-        new Span<int>(dec.DecodeNum).Clear(); // memset(Dec->DecodeNum,0,Size*sizeof(*Dec->DecodeNum));
-
+        new Span<int>(dec.DecodeNum).Clear();
         for (i = 0; i < size; i++)
         {
             lenCount[lenTab[offset + i] & 0xF]++;

@@ -178,6 +178,7 @@ public class LzmaStream : Stream, IStreamStack
                 _position = _encoder.Code(null, true);
             }
             _inputStream?.Dispose();
+            _outWindow.Dispose();
         }
         base.Dispose(disposing);
     }
