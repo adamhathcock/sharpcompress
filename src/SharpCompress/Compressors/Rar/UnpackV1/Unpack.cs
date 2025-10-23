@@ -576,103 +576,104 @@ internal sealed partial class Unpack : BitInput, IRarUnpack
 
                     var FilteredDataOffset = Prg.FilteredDataOffset;
                     var FilteredDataSize = Prg.FilteredDataSize;
-                    var FilteredData = new byte[FilteredDataSize];
-
-                    for (var i = 0; i < FilteredDataSize; i++)
+                    var FilteredData = ArrayPool<byte>.Shared.Rent(FilteredDataSize);
+                    try
                     {
-                        FilteredData[i] = rarVM.Mem[FilteredDataOffset + i];
 
-                        // Prg.GlobalData.get(FilteredDataOffset
-                        // +
-                        // i);
-                    }
+                        Array.Copy(rarVM.Mem, FilteredDataOffset, FilteredData, 0, FilteredDataSize);
 
-                    prgStack[I] = null;
-                    while (I + 1 < prgStack.Count)
-                    {
-                        var NextFilter = prgStack[I + 1];
-                        if (
-                            NextFilter is null
-                            || NextFilter.BlockStart != BlockStart
-                            || NextFilter.BlockLength != FilteredDataSize
-                            || NextFilter.NextWindow
-                        )
-                        {
-                            break;
-                        }
-
-                        // apply several filters to same data block
-
-                        rarVM.setMemory(0, FilteredData, 0, FilteredDataSize);
-
-                        // .SetMemory(0,FilteredData,FilteredDataSize);
-
-                        var pPrg = filters[NextFilter.ParentFilter].Program;
-                        var NextPrg = NextFilter.Program;
-
-                        if (pPrg.GlobalData.Count > RarVM.VM_FIXEDGLOBALSIZE)
-                        {
-                            // copy global data from previous script execution
-                            // if any
-                            // NextPrg->GlobalData.Alloc(ParentPrg->GlobalData.Size());
-                            NextPrg.GlobalData.SetSize(pPrg.GlobalData.Count);
-
-                            // memcpy(&NextPrg->GlobalData[VM_FIXEDGLOBALSIZE],&ParentPrg->GlobalData[VM_FIXEDGLOBALSIZE],ParentPrg->GlobalData.Size()-VM_FIXEDGLOBALSIZE);
-                            for (
-                                var i = 0;
-                                i < pPrg.GlobalData.Count - RarVM.VM_FIXEDGLOBALSIZE;
-                                i++
-                            )
-                            {
-                                NextPrg.GlobalData[RarVM.VM_FIXEDGLOBALSIZE + i] = pPrg.GlobalData[
-                                    RarVM.VM_FIXEDGLOBALSIZE + i
-                                ];
-                            }
-                        }
-
-                        ExecuteCode(NextPrg);
-
-                        if (NextPrg.GlobalData.Count > RarVM.VM_FIXEDGLOBALSIZE)
-                        {
-                            // save global data for next script execution
-                            if (pPrg.GlobalData.Count < NextPrg.GlobalData.Count)
-                            {
-                                pPrg.GlobalData.SetSize(NextPrg.GlobalData.Count);
-                            }
-
-                            // memcpy(&ParentPrg->GlobalData[VM_FIXEDGLOBALSIZE],&NextPrg->GlobalData[VM_FIXEDGLOBALSIZE],NextPrg->GlobalData.Size()-VM_FIXEDGLOBALSIZE);
-                            for (
-                                var i = 0;
-                                i < NextPrg.GlobalData.Count - RarVM.VM_FIXEDGLOBALSIZE;
-                                i++
-                            )
-                            {
-                                pPrg.GlobalData[RarVM.VM_FIXEDGLOBALSIZE + i] = NextPrg.GlobalData[
-                                    RarVM.VM_FIXEDGLOBALSIZE + i
-                                ];
-                            }
-                        }
-                        else
-                        {
-                            pPrg.GlobalData.Clear();
-                        }
-                        FilteredDataOffset = NextPrg.FilteredDataOffset;
-                        FilteredDataSize = NextPrg.FilteredDataSize;
-
-                        FilteredData = new byte[FilteredDataSize];
-                        for (var i = 0; i < FilteredDataSize; i++)
-                        {
-                            FilteredData[i] = NextPrg.GlobalData[FilteredDataOffset + i];
-                        }
-
-                        I++;
                         prgStack[I] = null;
+                        while (I + 1 < prgStack.Count)
+                        {
+                            var NextFilter = prgStack[I + 1];
+                            if (
+                                NextFilter is null
+                                || NextFilter.BlockStart != BlockStart
+                                || NextFilter.BlockLength != FilteredDataSize
+                                || NextFilter.NextWindow
+                            )
+                            {
+                                break;
+                            }
+
+                            // apply several filters to same data block
+
+                            rarVM.setMemory(0, FilteredData, 0, FilteredDataSize);
+
+                            // .SetMemory(0,FilteredData,FilteredDataSize);
+
+                            var pPrg = filters[NextFilter.ParentFilter].Program;
+                            var NextPrg = NextFilter.Program;
+
+                            if (pPrg.GlobalData.Count > RarVM.VM_FIXEDGLOBALSIZE)
+                            {
+                                // copy global data from previous script execution
+                                // if any
+                                // NextPrg->GlobalData.Alloc(ParentPrg->GlobalData.Size());
+                                NextPrg.GlobalData.SetSize(pPrg.GlobalData.Count);
+
+                                // memcpy(&NextPrg->GlobalData[VM_FIXEDGLOBALSIZE],&ParentPrg->GlobalData[VM_FIXEDGLOBALSIZE],ParentPrg->GlobalData.Size()-VM_FIXEDGLOBALSIZE);
+                                for (
+                                    var i = 0;
+                                    i < pPrg.GlobalData.Count - RarVM.VM_FIXEDGLOBALSIZE;
+                                    i++
+                                )
+                                {
+                                    NextPrg.GlobalData[RarVM.VM_FIXEDGLOBALSIZE + i] = pPrg.GlobalData[
+                                        RarVM.VM_FIXEDGLOBALSIZE + i
+                                    ];
+                                }
+                            }
+
+                            ExecuteCode(NextPrg);
+
+                            if (NextPrg.GlobalData.Count > RarVM.VM_FIXEDGLOBALSIZE)
+                            {
+                                // save global data for next script execution
+                                if (pPrg.GlobalData.Count < NextPrg.GlobalData.Count)
+                                {
+                                    pPrg.GlobalData.SetSize(NextPrg.GlobalData.Count);
+                                }
+
+                                // memcpy(&ParentPrg->GlobalData[VM_FIXEDGLOBALSIZE],&NextPrg->GlobalData[VM_FIXEDGLOBALSIZE],NextPrg->GlobalData.Size()-VM_FIXEDGLOBALSIZE);
+                                for (
+                                    var i = 0;
+                                    i < NextPrg.GlobalData.Count - RarVM.VM_FIXEDGLOBALSIZE;
+                                    i++
+                                )
+                                {
+                                    pPrg.GlobalData[RarVM.VM_FIXEDGLOBALSIZE + i] = NextPrg.GlobalData[
+                                        RarVM.VM_FIXEDGLOBALSIZE + i
+                                    ];
+                                }
+                            }
+                            else
+                            {
+                                pPrg.GlobalData.Clear();
+                            }
+
+                            FilteredDataOffset = NextPrg.FilteredDataOffset;
+                            FilteredDataSize = NextPrg.FilteredDataSize;
+                            ArrayPool<byte>.Shared.Return(FilteredData);
+                            FilteredData = ArrayPool<byte>.Shared.Rent(FilteredDataSize);
+                            for (var i = 0; i < FilteredDataSize; i++)
+                            {
+                                FilteredData[i] = NextPrg.GlobalData[FilteredDataOffset + i];
+                            }
+
+                            I++;
+                            prgStack[I] = null;
+                        }
+
+                        writeStream.Write(FilteredData, 0, FilteredDataSize);
+                        writtenFileSize += FilteredDataSize;
+                        destUnpSize -= FilteredDataSize;
+                        WrittenBorder = BlockEnd;
+                        WriteSize = (unpPtr - WrittenBorder) & PackDef.MAXWINMASK;
+                    } finally
+                    {
+                        ArrayPool<byte>.Shared.Return(FilteredData);
                     }
-                    writeStream.Write(FilteredData, 0, FilteredDataSize);
-                    writtenFileSize += FilteredDataSize;
-                    destUnpSize -= FilteredDataSize;
-                    WrittenBorder = BlockEnd;
-                    WriteSize = (unpPtr - WrittenBorder) & PackDef.MAXWINMASK;
                 }
                 else
                 {

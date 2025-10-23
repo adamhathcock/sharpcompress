@@ -1,4 +1,5 @@
 using System;
+using System.Buffers;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
@@ -44,7 +45,11 @@ public class SharpCompressStream : Stream, IStreamStack
                 _bufferingEnabled = _bufferSize > 0;
                 if (_bufferingEnabled)
                 {
-                    _buffer = new byte[_bufferSize];
+                    if (_buffer is not null)
+                    {
+                        ArrayPool<byte>.Shared.Return(_buffer);
+                    }
+                    _buffer = ArrayPool<byte>.Shared.Rent(_bufferSize);
                     _bufferPosition = 0;
                     _bufferedLength = 0;
                     if (_bufferingEnabled)
@@ -173,6 +178,10 @@ public class SharpCompressStream : Stream, IStreamStack
         if (disposing)
         {
             Stream.Dispose();
+            if (_buffer != null) {
+                ArrayPool<byte>.Shared.Return(_buffer);
+                _buffer = null;
+            }
         }
     }
 
