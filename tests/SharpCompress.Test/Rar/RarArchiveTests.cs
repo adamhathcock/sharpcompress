@@ -1,5 +1,6 @@
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using SharpCompress.Archives;
 using SharpCompress.Archives.Rar;
 using SharpCompress.Common;
@@ -9,61 +10,61 @@ using Xunit;
 
 namespace SharpCompress.Test.Rar;
 
-/*
+
 public class RarArchiveTests : ArchiveTests
 {
     [Fact]
-    public void Rar_EncryptedFileAndHeader_Archive() =>
-        ReadRarPassword("Rar.encrypted_filesAndHeader.rar", "test");
+    public Task Rar_EncryptedFileAndHeader_Archive() =>
+        ReadRarPasswordAsync("Rar.encrypted_filesAndHeader.rar", "test");
 
     [Fact]
-    public void Rar_EncryptedFileAndHeader_NoPasswordExceptionTest() =>
-        Assert.Throws(
+    public Task Rar_EncryptedFileAndHeader_NoPasswordExceptionTest() =>
+        Assert.ThrowsAsync(
             typeof(CryptographicException),
-            () => ReadRarPassword("Rar.encrypted_filesAndHeader.rar", null)
+            async () => await ReadRarPasswordAsync("Rar.encrypted_filesAndHeader.rar", null)
         );
 
     [Fact]
-    public void Rar5_EncryptedFileAndHeader_Archive() =>
-        ReadRarPassword("Rar5.encrypted_filesAndHeader.rar", "test");
+    public Task Rar5_EncryptedFileAndHeader_Archive() =>
+       ReadRarPasswordAsync("Rar5.encrypted_filesAndHeader.rar", "test");
 
     [Fact]
-    public void Rar5_EncryptedFileAndHeader_Archive_Err() =>
-        Assert.Throws(
+    public Task Rar5_EncryptedFileAndHeader_Archive_Err() =>
+        Assert.ThrowsAsync(
             typeof(CryptographicException),
-            () => ReadRarPassword("Rar5.encrypted_filesAndHeader.rar", "failed")
+            async () => await ReadRarPasswordAsync("Rar5.encrypted_filesAndHeader.rar", "failed")
         );
 
     [Fact]
-    public void Rar5_EncryptedFileAndHeader_NoPasswordExceptionTest() =>
-        Assert.Throws(
+    public Task Rar5_EncryptedFileAndHeader_NoPasswordExceptionTest() =>
+        Assert.ThrowsAsync(
             typeof(CryptographicException),
-            () => ReadRarPassword("Rar5.encrypted_filesAndHeader.rar", null)
+            async () => await ReadRarPasswordAsync("Rar5.encrypted_filesAndHeader.rar", null)
         );
 
     [Fact]
-    public void Rar_EncryptedFileOnly_Archive() =>
-        ReadRarPassword("Rar.encrypted_filesOnly.rar", "test");
+    public Task Rar_EncryptedFileOnly_Archive() =>
+        ReadRarPasswordAsync("Rar.encrypted_filesOnly.rar", "test");
 
     [Fact]
-    public void Rar_EncryptedFileOnly_Archive_Err() =>
-        Assert.Throws(
+    public Task Rar_EncryptedFileOnly_Archive_Err() =>
+        Assert.ThrowsAsync(
             typeof(CryptographicException),
-            () => ReadRarPassword("Rar5.encrypted_filesOnly.rar", "failed")
+            async () => await ReadRarPasswordAsync("Rar5.encrypted_filesOnly.rar", "failed")
         );
 
     [Fact]
-    public void Rar5_EncryptedFileOnly_Archive() =>
-        ReadRarPassword("Rar5.encrypted_filesOnly.rar", "test");
+    public Task Rar5_EncryptedFileOnly_Archive() =>
+        ReadRarPasswordAsync("Rar5.encrypted_filesOnly.rar", "test");
 
     [Fact]
-    public void Rar_Encrypted_Archive() => ReadRarPassword("Rar.Encrypted.rar", "test");
+    public Task Rar_Encrypted_Archive() => ReadRarPasswordAsync("Rar.Encrypted.rar", "test");
 
     [Fact]
-    public void Rar5_Encrypted_Archive() =>
-        ReadRarPassword("Rar5.encrypted_filesAndHeader.rar", "test");
+    public Task Rar5_Encrypted_Archive() =>
+        ReadRarPasswordAsync("Rar5.encrypted_filesAndHeader.rar", "test");
 
-    private void ReadRarPassword(string testArchive, string? password)
+    private async Task ReadRarPasswordAsync(string testArchive, string? password)
     {
         using (Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, testArchive)))
         using (
@@ -78,7 +79,7 @@ public class RarArchiveTests : ArchiveTests
                 if (!entry.IsDirectory)
                 {
                     Assert.Equal(CompressionType.Rar, entry.CompressionType);
-                    entry.WriteToDirectory(
+                    await entry.WriteEntryToDirectoryAsync(
                         SCRATCH_FILES_PATH,
                         new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
                     );
@@ -89,12 +90,12 @@ public class RarArchiveTests : ArchiveTests
     }
 
     [Fact]
-    public void Rar_Multi_Archive_Encrypted() =>
-        Assert.Throws<InvalidFormatException>(() =>
-            ArchiveFileReadPassword("Rar.EncryptedParts.part01.rar", "test")
+    public Task Rar_Multi_Archive_Encrypted() =>
+        Assert.ThrowsAsync<InvalidFormatException>(async () =>
+                                                  await ArchiveFileReadPasswordAsync("Rar.EncryptedParts.part01.rar", "test")
         );
 
-    protected void ArchiveFileReadPassword(string archiveName, string password)
+    protected async Task ArchiveFileReadPasswordAsync(string archiveName, string password)
     {
         using (
             var archive = RarArchive.Open(
@@ -105,7 +106,7 @@ public class RarArchiveTests : ArchiveTests
         {
             foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
             {
-                entry.WriteToDirectory(
+                await entry.WriteEntryToDirectoryAsync(
                     SCRATCH_FILES_PATH,
                     new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
                 );
@@ -115,28 +116,28 @@ public class RarArchiveTests : ArchiveTests
     }
 
     [Fact]
-    public void Rar_None_ArchiveStreamRead() => ArchiveStreamRead("Rar.none.rar");
+    public Task Rar_None_ArchiveStreamRead() => ArchiveStreamReadAsync("Rar.none.rar");
 
     [Fact]
-    public void Rar5_None_ArchiveStreamRead() => ArchiveStreamRead("Rar5.none.rar");
+    public Task Rar5_None_ArchiveStreamRead() => ArchiveStreamReadAsync("Rar5.none.rar");
 
     [Fact]
-    public void Rar_ArchiveStreamRead() => ArchiveStreamRead("Rar.rar");
+    public Task Rar_ArchiveStreamRead() => ArchiveStreamReadAsync("Rar.rar");
 
     [Fact]
-    public void Rar5_ArchiveStreamRead() => ArchiveStreamRead("Rar5.rar");
+    public Task Rar5_ArchiveStreamRead() => ArchiveStreamReadAsync("Rar5.rar");
 
     [Fact]
-    public void Rar_test_invalid_exttime_ArchiveStreamRead() =>
+    public Task Rar_test_invalid_exttime_ArchiveStreamRead() =>
         DoRar_test_invalid_exttime_ArchiveStreamRead("Rar.test_invalid_exttime.rar");
 
-    private void DoRar_test_invalid_exttime_ArchiveStreamRead(string filename)
+    private async Task DoRar_test_invalid_exttime_ArchiveStreamRead(string filename)
     {
         using var stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, filename));
         using var archive = ArchiveFactory.Open(stream);
         foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
         {
-            entry.WriteToDirectory(
+            await entry.WriteEntryToDirectoryAsync(
                 SCRATCH_FILES_PATH,
                 new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
             );
@@ -144,14 +145,14 @@ public class RarArchiveTests : ArchiveTests
     }
 
     [Fact]
-    public void Rar_Jpg_ArchiveStreamRead()
+    public async Task Rar_Jpg_ArchiveStreamRead()
     {
         using var stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Rar.jpeg.jpg"));
         using (var archive = RarArchive.Open(stream, new ReaderOptions { LookForHeader = true }))
         {
             foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
             {
-                entry.WriteToDirectory(
+                await entry.WriteEntryToDirectoryAsync(
                     SCRATCH_FILES_PATH,
                     new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
                 );
@@ -161,12 +162,12 @@ public class RarArchiveTests : ArchiveTests
     }
 
     [Fact]
-    public void Rar_IsSolidArchiveCheck() => DoRar_IsSolidArchiveCheck("Rar.rar");
+    public Task Rar_IsSolidArchiveCheck() => DoRar_IsSolidArchiveCheck("Rar.rar");
 
     [Fact]
-    public void Rar5_IsSolidArchiveCheck() => DoRar_IsSolidArchiveCheck("Rar5.rar");
+    public Task Rar5_IsSolidArchiveCheck() => DoRar_IsSolidArchiveCheck("Rar5.rar");
 
-    private void DoRar_IsSolidArchiveCheck(string filename)
+    private async Task DoRar_IsSolidArchiveCheck(string filename)
     {
         using (var stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, filename)))
         {
@@ -174,7 +175,7 @@ public class RarArchiveTests : ArchiveTests
             Assert.False(archive.IsSolid);
             foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
             {
-                entry.WriteToDirectory(
+                await entry.WriteEntryToDirectoryAsync(
                     SCRATCH_FILES_PATH,
                     new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
                 );
@@ -214,22 +215,22 @@ public class RarArchiveTests : ArchiveTests
     }
 
     [Fact]
-    public void Rar_Solid_ArchiveStreamRead() => ArchiveStreamRead("Rar.solid.rar");
+    public Task Rar_Solid_ArchiveStreamRead() => ArchiveStreamReadAsync("Rar.solid.rar");
 
     [Fact]
-    public void Rar5_Solid_ArchiveStreamRead() => ArchiveStreamRead("Rar5.solid.rar");
+    public Task Rar5_Solid_ArchiveStreamRead() => ArchiveStreamReadAsync("Rar5.solid.rar");
 
     [Fact]
-    public void Rar_Solid_StreamRead_Extract_All() =>
-        ArchiveStreamReadExtractAll("Rar.solid.rar", CompressionType.Rar);
+    public Task Rar_Solid_StreamRead_Extract_All() =>
+        ArchiveStreamReadExtractAllAsync("Rar.solid.rar", CompressionType.Rar);
 
     [Fact]
-    public void Rar5_Solid_StreamRead_Extract_All() =>
-        ArchiveStreamReadExtractAll("Rar5.solid.rar", CompressionType.Rar);
+    public Task Rar5_Solid_StreamRead_Extract_All() =>
+        ArchiveStreamReadExtractAllAsync("Rar5.solid.rar", CompressionType.Rar);
 
     [Fact]
-    public void Rar_Multi_ArchiveStreamRead() =>
-        DoRar_Multi_ArchiveStreamRead(
+    public Task Rar_Multi_ArchiveStreamRead() =>
+        DoRar_Multi_ArchiveStreamReadAsync(
             [
                 "Rar.multi.part01.rar",
                 "Rar.multi.part02.rar",
@@ -242,8 +243,8 @@ public class RarArchiveTests : ArchiveTests
         );
 
     [Fact]
-    public void Rar5_Multi_ArchiveStreamRead() =>
-        DoRar_Multi_ArchiveStreamRead(
+    public Task Rar5_Multi_ArchiveStreamRead() =>
+        DoRar_Multi_ArchiveStreamReadAsync(
             [
                 "Rar5.multi.part01.rar",
                 "Rar5.multi.part02.rar",
@@ -255,7 +256,7 @@ public class RarArchiveTests : ArchiveTests
             false
         );
 
-    private void DoRar_Multi_ArchiveStreamRead(string[] archives, bool isSolid)
+    private async Task DoRar_Multi_ArchiveStreamReadAsync(string[] archives, bool isSolid)
     {
         using var archive = RarArchive.Open(
             archives.Select(s => Path.Combine(TEST_ARCHIVES_PATH, s)).Select(File.OpenRead)
@@ -263,7 +264,7 @@ public class RarArchiveTests : ArchiveTests
         Assert.Equal(archive.IsSolid, isSolid);
         foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
         {
-            entry.WriteToDirectory(
+            await entry.WriteEntryToDirectoryAsync(
                 SCRATCH_FILES_PATH,
                 new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
             );
@@ -271,8 +272,8 @@ public class RarArchiveTests : ArchiveTests
     }
 
     [Fact]
-    public void Rar5_MultiSolid_ArchiveStreamRead() =>
-        DoRar_Multi_ArchiveStreamRead(
+    public Task Rar5_MultiSolid_ArchiveStreamRead() =>
+        DoRar_Multi_ArchiveStreamReadAsync(
             [
                 "Rar.multi.solid.part01.rar",
                 "Rar.multi.solid.part02.rar",
@@ -285,16 +286,16 @@ public class RarArchiveTests : ArchiveTests
         );
 
     [Fact]
-    public void RarNoneArchiveFileRead() => ArchiveFileRead("Rar.none.rar");
+    public Task RarNoneArchiveFileRead() => ArchiveFileReadAsync("Rar.none.rar");
 
     [Fact]
-    public void Rar5NoneArchiveFileRead() => ArchiveFileRead("Rar5.none.rar");
+    public Task Rar5NoneArchiveFileRead() => ArchiveFileReadAsync("Rar5.none.rar");
 
     [Fact]
-    public void Rar_ArchiveFileRead() => ArchiveFileRead("Rar.rar");
+    public Task Rar_ArchiveFileRead() => ArchiveFileReadAsync("Rar.rar");
 
     [Fact]
-    public void Rar5_ArchiveFileRead() => ArchiveFileRead("Rar5.rar");
+    public Task Rar5_ArchiveFileRead() => ArchiveFileReadAsync("Rar5.rar");
 
     [Fact]
     public void Rar_ArchiveFileRead_HasDirectories() =>
@@ -313,7 +314,7 @@ public class RarArchiveTests : ArchiveTests
     }
 
     [Fact]
-    public void Rar_Jpg_ArchiveFileRead()
+    public async Task Rar_Jpg_ArchiveFileRead()
     {
         using (
             var archive = RarArchive.Open(
@@ -324,7 +325,7 @@ public class RarArchiveTests : ArchiveTests
         {
             foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
             {
-                entry.WriteToDirectory(
+                await entry.WriteEntryToDirectoryAsync(
                     SCRATCH_FILES_PATH,
                     new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
                 );
@@ -334,14 +335,14 @@ public class RarArchiveTests : ArchiveTests
     }
 
     [Fact]
-    public void Rar_Solid_ArchiveFileRead() => ArchiveFileRead("Rar.solid.rar");
+    public Task Rar_Solid_ArchiveFileRead() => ArchiveFileReadAsync("Rar.solid.rar");
 
     [Fact]
-    public void Rar5_Solid_ArchiveFileRead() => ArchiveFileRead("Rar5.solid.rar");
+    public Task Rar5_Solid_ArchiveFileRead() => ArchiveFileReadAsync("Rar5.solid.rar");
 
     [Fact]
-    public void Rar2_Multi_ArchiveStreamRead() =>
-        DoRar_Multi_ArchiveStreamRead(
+    public Task Rar2_Multi_ArchiveStreamRead() =>
+        DoRar_Multi_ArchiveStreamReadAsync(
             [
                 "Rar2.multi.rar",
                 "Rar2.multi.r00",
@@ -355,17 +356,17 @@ public class RarArchiveTests : ArchiveTests
         );
 
     [Fact]
-    public void Rar2_Multi_ArchiveFileRead() => ArchiveFileRead("Rar2.multi.rar"); //r00, r01...
+    public Task Rar2_Multi_ArchiveFileRead() => ArchiveFileReadAsync("Rar2.multi.rar"); //r00, r01...
 
     [Fact]
-    public void Rar2_ArchiveFileRead() => ArchiveFileRead("Rar2.rar");
+    public Task Rar2_ArchiveFileRead() => ArchiveFileReadAsync("Rar2.rar");
 
     [Fact]
-    public void Rar15_ArchiveFileRead()
+    public async Task Rar15_ArchiveFileRead()
     {
         UseExtensionInsteadOfNameToVerify = true;
         UseCaseInsensitiveToVerify = true;
-        ArchiveFileRead("Rar15.rar");
+        await ArchiveFileReadAsync("Rar15.rar");
     }
 
     [Fact]
@@ -409,10 +410,10 @@ public class RarArchiveTests : ArchiveTests
     }
 
     [Fact]
-    public void Rar4_Multi_ArchiveFileRead() => ArchiveFileRead("Rar4.multi.part01.rar");
+    public Task Rar4_Multi_ArchiveFileRead() => ArchiveFileReadAsync("Rar4.multi.part01.rar");
 
     [Fact]
-    public void Rar4_ArchiveFileRead() => ArchiveFileRead("Rar4.rar");
+    public Task Rar4_ArchiveFileRead() => ArchiveFileReadAsync("Rar4.rar");
 
     [Fact]
     public void Rar_GetPartsSplit() =>
@@ -462,8 +463,8 @@ public class RarArchiveTests : ArchiveTests
         );
 
     [Fact]
-    public void Rar4_Multi_ArchiveStreamRead() =>
-        DoRar_Multi_ArchiveStreamRead(
+    public Task Rar4_Multi_ArchiveStreamRead() =>
+        DoRar_Multi_ArchiveStreamReadAsync(
             [
                 "Rar4.multi.part01.rar",
                 "Rar4.multi.part02.rar",
@@ -478,8 +479,8 @@ public class RarArchiveTests : ArchiveTests
 
     //no extension to test the lib identifies the archive by content not ext
     [Fact]
-    public void Rar4_Split_ArchiveStreamRead() =>
-        ArchiveStreamMultiRead(
+    public Task Rar4_Split_ArchiveStreamRead() =>
+        ArchiveStreamMultiReadAsync(
             null,
             [
                 "Rar4.split.001",
@@ -493,7 +494,7 @@ public class RarArchiveTests : ArchiveTests
 
     //will detect and load other files
     [Fact]
-    public void Rar4_Multi_ArchiveFirstFileRead() => ArchiveFileRead("Rar4.multi.part01.rar");
+    public Task Rar4_Multi_ArchiveFirstFileRead() => ArchiveFileReadAsync("Rar4.multi.part01.rar");
 
     //"Rar4.multi.part02.rar",
     //"Rar4.multi.part03.rar",
@@ -503,7 +504,7 @@ public class RarArchiveTests : ArchiveTests
     //"Rar4.multi.part07.rar"
     //will detect and load other files
     [Fact]
-    public void Rar4_Split_ArchiveFirstFileRead() => ArchiveFileRead("Rar4.split.001");
+    public Task Rar4_Split_ArchiveFirstFileRead() => ArchiveFileReadAsync("Rar4.split.001");
 
     //"Rar4.split.002",
     //"Rar4.split.003",
@@ -512,8 +513,8 @@ public class RarArchiveTests : ArchiveTests
     //"Rar4.split.006"
     //will detect and load other files
     [Fact]
-    public void Rar4_Split_ArchiveStreamFirstFileRead() =>
-        ArchiveStreamMultiRead(
+    public Task Rar4_Split_ArchiveStreamFirstFileRead() =>
+        ArchiveStreamMultiReadAsync(
             null,
             [
                 "Rar4.split.001",
@@ -527,8 +528,8 @@ public class RarArchiveTests : ArchiveTests
 
     //open with ArchiveFactory.Open and stream
     [Fact]
-    public void Rar4_Split_ArchiveOpen() =>
-        ArchiveOpenStreamRead(
+    public Task Rar4_Split_ArchiveOpen() =>
+        ArchiveOpenStreamReadAsync(
             null,
             "Rar4.split.001",
             "Rar4.split.002",
@@ -540,8 +541,8 @@ public class RarArchiveTests : ArchiveTests
 
     //open with ArchiveFactory.Open and stream
     [Fact]
-    public void Rar4_Multi_ArchiveOpen() =>
-        ArchiveOpenStreamRead(
+    public Task Rar4_Multi_ArchiveOpen() =>
+        ArchiveOpenStreamReadAsync(
             null,
             "Rar4.multi.part01.rar",
             "Rar4.multi.part02.rar",
@@ -571,10 +572,10 @@ public class RarArchiveTests : ArchiveTests
         );
 
     [Fact]
-    public void Rar_Multi_ArchiveFileRead() => ArchiveFileRead("Rar.multi.part01.rar");
+    public Task Rar_Multi_ArchiveFileRead() => ArchiveFileReadAsync("Rar.multi.part01.rar");
 
     [Fact]
-    public void Rar5_Multi_ArchiveFileRead() => ArchiveFileRead("Rar5.multi.part01.rar");
+    public Task Rar5_Multi_ArchiveFileRead() => ArchiveFileReadAsync("Rar5.multi.part01.rar");
 
     [Fact]
     public void Rar_IsFirstVolume_True() => DoRar_IsFirstVolume_True("Rar.multi.part01.rar");
@@ -603,7 +604,7 @@ public class RarArchiveTests : ArchiveTests
     }
 
     [Fact]
-    public void Rar5_CRC_Blake2_Archive() => ArchiveFileRead("Rar5.crc_blake2.rar");
+    public Task Rar5_CRC_Blake2_Archive() => ArchiveFileReadAsync("Rar5.crc_blake2.rar");
 
     [Fact]
     void Rar_Iterate_Archive() =>
@@ -635,4 +636,4 @@ public class RarArchiveTests : ArchiveTests
             "Failure jpg exe Empty тест.txt jpg\\test.jpg exe\\test.exe"
         );
 }
-*/
+

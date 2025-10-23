@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using SharpCompress.Archives;
 using SharpCompress.Common;
 using SharpCompress.Compressors.Xz;
@@ -16,7 +17,7 @@ namespace SharpCompress.Test;
 
 public class ArchiveTests : ReaderTests
 {
-    /*
+
         protected void ArchiveGetParts(IEnumerable<string> testArchives)
         {
             var arcs = testArchives.Select(a => Path.Combine(TEST_ARCHIVES_PATH, a)).ToArray();
@@ -28,13 +29,13 @@ public class ArchiveTests : ReaderTests
             }
         }
 
-        protected void ArchiveStreamReadExtractAll(string testArchive, CompressionType compression)
+        protected async Task ArchiveStreamReadExtractAllAsync(string testArchive, CompressionType compression)
         {
             testArchive = Path.Combine(TEST_ARCHIVES_PATH, testArchive);
-            ArchiveStreamReadExtractAll(new[] { testArchive }, compression);
+            await ArchiveStreamReadExtractAllAsync(new[] { testArchive }, compression);
         }
 
-        protected void ArchiveStreamReadExtractAll(
+        protected async Task ArchiveStreamReadExtractAllAsync(
             IEnumerable<string> testArchives,
             CompressionType compression
         )
@@ -55,7 +56,7 @@ public class ArchiveTests : ReaderTests
                         Assert.True(archive.IsSolid);
                         using (var reader = archive.ExtractAllEntries())
                         {
-                            UseReader(reader, compression);
+                            await UseReaderAsync(reader, compression);
                         }
                         VerifyFiles();
 
@@ -66,7 +67,7 @@ public class ArchiveTests : ReaderTests
                         }
                         foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
                         {
-                            entry.WriteToDirectory(
+                            await entry.WriteEntryToDirectoryAsync(
                                 SCRATCH_FILES_PATH,
                                 new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
                             );
@@ -84,36 +85,36 @@ public class ArchiveTests : ReaderTests
             }
         }
 
-        protected void ArchiveStreamRead(string testArchive, ReaderOptions? readerOptions = null) =>
-            ArchiveStreamRead(ArchiveFactory.AutoFactory, testArchive, readerOptions);
+        protected Task ArchiveStreamReadAsync(string testArchive, ReaderOptions? readerOptions = null) =>
+            ArchiveStreamReadAsync(ArchiveFactory.AutoFactory, testArchive, readerOptions);
 
-        protected void ArchiveStreamRead(
+        protected Task ArchiveStreamReadAsync(
             IArchiveFactory archiveFactory,
             string testArchive,
             ReaderOptions? readerOptions = null
         )
         {
             testArchive = Path.Combine(TEST_ARCHIVES_PATH, testArchive);
-            ArchiveStreamRead(archiveFactory, readerOptions, testArchive);
+            return ArchiveStreamReadAsync(archiveFactory, readerOptions, testArchive);
         }
 
-        protected void ArchiveStreamRead(
+        protected Task ArchiveStreamReadAsync(
             ReaderOptions? readerOptions = null,
             params string[] testArchives
-        ) => ArchiveStreamRead(ArchiveFactory.AutoFactory, readerOptions, testArchives);
+        ) => ArchiveStreamReadAsync(ArchiveFactory.AutoFactory, readerOptions, testArchives);
 
-        protected void ArchiveStreamRead(
+        protected Task ArchiveStreamReadAsync(
             IArchiveFactory archiveFactory,
             ReaderOptions? readerOptions = null,
             params string[] testArchives
         ) =>
-            ArchiveStreamRead(
+            ArchiveStreamReadAsync(
                 archiveFactory,
                 readerOptions,
                 testArchives.Select(x => Path.Combine(TEST_ARCHIVES_PATH, x))
             );
 
-        protected void ArchiveStreamRead(
+        protected async Task ArchiveStreamReadAsync(
             IArchiveFactory archiveFactory,
             ReaderOptions? readerOptions,
             IEnumerable<string> testArchives
@@ -134,7 +135,7 @@ public class ArchiveTests : ReaderTests
                     {
                         foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
                         {
-                            entry.WriteToDirectory(
+                            await entry.WriteEntryToDirectoryAsync(
                                 SCRATCH_FILES_PATH,
                                 new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
                             );
@@ -152,16 +153,16 @@ public class ArchiveTests : ReaderTests
             }
         }
 
-        protected void ArchiveStreamMultiRead(
+        protected Task ArchiveStreamMultiReadAsync(
             ReaderOptions? readerOptions = null,
             params string[] testArchives
         ) =>
-            ArchiveStreamMultiRead(
+            ArchiveStreamMultiReadAsync(
                 readerOptions,
                 testArchives.Select(x => Path.Combine(TEST_ARCHIVES_PATH, x))
             );
 
-        protected void ArchiveStreamMultiRead(
+        protected async Task ArchiveStreamMultiReadAsync(
             ReaderOptions? readerOptions,
             IEnumerable<string> testArchives
         )
@@ -175,7 +176,7 @@ public class ArchiveTests : ReaderTests
             {
                 foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
                 {
-                    entry.WriteToDirectory(
+                    await entry.WriteEntryToDirectoryAsync(
                         SCRATCH_FILES_PATH,
                         new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
                     );
@@ -184,16 +185,16 @@ public class ArchiveTests : ReaderTests
             VerifyFiles();
         }
 
-        protected void ArchiveOpenStreamRead(
+        protected Task ArchiveOpenStreamReadAsync(
             ReaderOptions? readerOptions = null,
             params string[] testArchives
         ) =>
-            ArchiveOpenStreamRead(
+            ArchiveOpenStreamReadAsync(
                 readerOptions,
                 testArchives.Select(x => Path.Combine(TEST_ARCHIVES_PATH, x))
             );
 
-        protected void ArchiveOpenStreamRead(
+        protected async Task ArchiveOpenStreamReadAsync(
             ReaderOptions? readerOptions,
             IEnumerable<string> testArchives
         )
@@ -207,7 +208,7 @@ public class ArchiveTests : ReaderTests
             {
                 foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
                 {
-                    entry.WriteToDirectory(
+                    await entry.WriteEntryToDirectoryAsync(
                         SCRATCH_FILES_PATH,
                         new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
                     );
@@ -253,7 +254,7 @@ public class ArchiveTests : ReaderTests
             }
         }
 
-        protected void ArchiveExtractToDirectory(
+        protected async Task ArchiveExtractToDirectoryAsync(
             string testArchive,
             ReaderOptions? readerOptions = null
         )
@@ -261,12 +262,12 @@ public class ArchiveTests : ReaderTests
             testArchive = Path.Combine(TEST_ARCHIVES_PATH, testArchive);
             using (var archive = ArchiveFactory.Open(new FileInfo(testArchive), readerOptions))
             {
-                archive.ExtractToDirectory(SCRATCH_FILES_PATH);
+                await archive.ExtractToDirectoryAsync(SCRATCH_FILES_PATH);
             }
             VerifyFiles();
         }
 
-        protected void ArchiveFileRead(
+        protected async Task ArchiveFileReadAsync(
             IArchiveFactory archiveFactory,
             string testArchive,
             ReaderOptions? readerOptions = null
@@ -277,7 +278,7 @@ public class ArchiveTests : ReaderTests
             {
                 foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
                 {
-                    entry.WriteToDirectory(
+                    await entry.WriteEntryToDirectoryAsync(
                         SCRATCH_FILES_PATH,
                         new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
                     );
@@ -286,8 +287,8 @@ public class ArchiveTests : ReaderTests
             VerifyFiles();
         }
 
-        protected void ArchiveFileRead(string testArchive, ReaderOptions? readerOptions = null) =>
-            ArchiveFileRead(ArchiveFactory.AutoFactory, testArchive, readerOptions);
+        protected Task ArchiveFileReadAsync(string testArchive, ReaderOptions? readerOptions = null) =>
+            ArchiveFileReadAsync(ArchiveFactory.AutoFactory, testArchive, readerOptions);
 
         protected void ArchiveFileSkip(
             string testArchive,
@@ -311,14 +312,14 @@ public class ArchiveTests : ReaderTests
         /// <summary>
         /// Demonstrate the ExtractionOptions.PreserveFileTime and ExtractionOptions.PreserveAttributes extract options
         /// </summary>
-        protected void ArchiveFileReadEx(string testArchive)
+        protected async Task ArchiveFileReadExAsync(string testArchive)
         {
             testArchive = Path.Combine(TEST_ARCHIVES_PATH, testArchive);
             using (var archive = ArchiveFactory.Open(testArchive))
             {
                 foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
                 {
-                    entry.WriteToDirectory(
+                    await entry.WriteEntryToDirectoryAsync(
                         SCRATCH_FILES_PATH,
                         new ExtractionOptions
                         {
@@ -333,7 +334,7 @@ public class ArchiveTests : ReaderTests
             VerifyFilesEx();
         }
 
-        protected void ArchiveDeltaDistanceRead(string testArchive)
+        protected async Task ArchiveDeltaDistanceReadAsync(string testArchive)
         {
             testArchive = Path.Combine(TEST_ARCHIVES_PATH, testArchive);
             using var archive = ArchiveFactory.Open(testArchive);
@@ -342,7 +343,7 @@ public class ArchiveTests : ReaderTests
                 if (!entry.IsDirectory)
                 {
                     var memory = new MemoryStream();
-                    entry.WriteTo(memory);
+                    await entry.WriteToAsync(memory);
 
                     memory.Position = 0;
 
@@ -570,5 +571,5 @@ public class ArchiveTests : ReaderTests
 
             return (extractedData, crc);
         }
-    */
+
 }

@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using SharpCompress.Common;
@@ -31,7 +30,7 @@ public static class IArchiveExtensions
     /// <param name="destination">The folder to extract into.</param>
     /// <param name="progressReport">Optional progress report callback.</param>
     /// <param name="cancellationToken">Optional cancellation token.</param>
-    public static async Task ExtractToDirectory(
+    public static async Task ExtractToDirectoryAsync(
         this IArchive archive,
         string destination,
         Action<double>? progressReport = null,

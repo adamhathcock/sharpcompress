@@ -8,7 +8,7 @@ using Xunit;
 namespace SharpCompress.Test.Arc
 {
     public class ArcReaderTests
-        : ReaderTests { /*
+        : ReaderTests {
         public ArcReaderTests()
         {
             UseExtensionInsteadOfNameToVerify = true;
@@ -16,7 +16,7 @@ namespace SharpCompress.Test.Arc
         }
 
         [Fact]
-        public void Arc_Uncompressed_Read() => Read("Arc.uncompressed.arc", CompressionType.None);
+        public Task Arc_Uncompressed_Read() => ReadAsync("Arc.uncompressed.arc", CompressionType.None);
 
         [Fact]
         public async Task Arc_Squeezed_Read()
@@ -40,7 +40,7 @@ namespace SharpCompress.Test.Arc
                 {
                     if (!reader.Entry.IsDirectory)
                     {
-                        await reader.WriteAllToDirectoryAsync(
+                        await reader.WriteEntryToDirectoryAsync(
                             SCRATCH_FILES_PATH,
                             new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
                         );
@@ -49,6 +49,6 @@ namespace SharpCompress.Test.Arc
             }
 
             VerifyFilesByExtension();
-        }*/
+        }
     }
 }
