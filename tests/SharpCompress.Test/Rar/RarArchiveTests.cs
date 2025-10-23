@@ -184,10 +184,10 @@ public class RarArchiveTests : ArchiveTests
     }
 
     [Fact]
-    public void Rar_IsSolidEntryStreamCheck() => DoRar_IsSolidEntryStreamCheck("Rar.solid.rar");
+    public Task Rar_IsSolidEntryStreamCheck() => DoRar_IsSolidEntryStreamCheck("Rar.solid.rar");
 
     //Extract the 2nd file in a solid archive to check that the first file is skipped properly
-    private void DoRar_IsSolidEntryStreamCheck(string filename)
+    private async Task DoRar_IsSolidEntryStreamCheck(string filename)
     {
         using var stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, filename));
         using var archive = RarArchive.Open(stream);
@@ -203,8 +203,8 @@ public class RarArchiveTests : ArchiveTests
         {
             using (var crcStream = new CrcCheckStream((uint)entry.Crc)) //use the 7zip CRC stream for convenience (required a bug fix)
             {
-                using var eStream = entry.OpenEntryStream(); //bug fix in RarStream to report the correct Position
-                eStream.CopyTo(crcStream);
+                 using var eStream = await entry.OpenEntryStreamAsync(); //bug fix in RarStream to report the correct Position
+                await eStream.CopyToAsync(crcStream);
             } //throws if not valid
             if (entry == testEntry)
             {

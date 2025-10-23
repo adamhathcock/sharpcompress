@@ -72,16 +72,15 @@ internal partial class Unpack : IRarUnpack
     private async ValueTask UnstoreFileAsync()
     {
         var length = (int)Math.Min(0x10000, DestUnpSize);
-        var buffer = ArrayPool<byte>.Shared.Rent(length);
+        using var buffer = MemoryPool<byte>.Shared.Rent(length);
         do
         {
-            var memory = new Memory<byte>(buffer, 0, length);
-            var n = await readStream.ReadAsync(memory);
+            var n = await readStream.ReadAsync(buffer.Memory);
             if (n == 0)
             {
                 break;
             }
-            await writeStream.WriteAsync(memory.Slice(0, n));
+            await writeStream.WriteAsync(buffer.Memory.Slice(0, n));
             DestUnpSize -= n;
         } while (!Suspended);
     }

@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.IO.Compression;
+using System.Threading;
 using System.Threading.Tasks;
 using SharpCompress.IO;
 using SharpCompress.Readers;
@@ -61,6 +62,40 @@ public class EntryStream : Stream, IStreamStack
         _completed = true;
     }
 
+#if !NETSTANDARD2_0 && !NETFRAMEWORK
+    public override async ValueTask DisposeAsync()
+    {
+        if (!(_completed || _reader.Cancelled))
+        {
+            await SkipEntryAsync();
+        }
+
+        //Need a safe standard approach to this - it's okay for compression to overreads. Handling needs to be standardised
+        if (_stream is IStreamStack ss)
+        {
+            if (ss.BaseStream() is SharpCompress.Compressors.Deflate.DeflateStream deflateStream)
+            {
+                deflateStream.Flush(); //Deflate over reads. Knock it back
+            }
+            else if (ss.BaseStream() is SharpCompress.Compressors.LZMA.LzmaStream lzmaStream)
+            {
+                lzmaStream.Flush(); //Lzma over reads. Knock it back
+            }
+        }
+
+        if (_isDisposed)
+        {
+            return;
+        }
+        _isDisposed = true;
+#if DEBUG_STREAMS
+        this.DebugDispose(typeof(EntryStream));
+#endif
+        await base.DisposeAsync();
+        await _stream.DisposeAsync();
+    }
+#endif
+
     protected override void Dispose(bool disposing)
     {
         if (!(_completed || _reader.Cancelled))
@@ -107,6 +142,16 @@ public class EntryStream : Stream, IStreamStack
     {
         get => _stream.Position; //throw new NotSupportedException();
         set => throw new NotSupportedException();
+    }
+
+    public override async Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+    {
+        var read = await _stream.ReadAsync(buffer, offset, count, cancellationToken);
+        if (read <= 0)
+        {
+            _completed = true;
+        }
+        return read;
     }
 
     public override int Read(byte[] buffer, int offset, int count)

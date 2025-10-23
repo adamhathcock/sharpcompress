@@ -30,8 +30,11 @@ internal sealed partial class Unpack : BitInput, IRarUnpack
             base.Dispose();
             if (!externalWindow)
             {
-                ArrayPool<byte>.Shared.Return(window);
-                window = null;
+                if (window != null)
+                {
+                    ArrayPool<byte>.Shared.Return(window);
+                    window = null;
+                }
             }
             rarVM.Dispose();
             disposed = true;

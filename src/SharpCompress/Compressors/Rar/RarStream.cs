@@ -47,6 +47,7 @@ internal class RarStream : Stream, IStreamStack
     private bool isDisposed;
     private long _position;
 
+
     public static async ValueTask<RarStream> Create(
         IRarUnpack unpack,
         FileHeader fileHeader,
@@ -149,7 +150,7 @@ internal class RarStream : Stream, IStreamStack
 
 #if !NETSTANDARD2_0 && !NETFRAMEWORK
 
-    public override Task<int> ReadAsync(
+    public override async Task<int> ReadAsync(
         byte[] buffer,
         int offset,
         int count,
@@ -158,15 +159,39 @@ internal class RarStream : Stream, IStreamStack
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-        try
+        if (tmpBuffer == null)
         {
-            var bytesRead = Read(buffer, offset, count);
-            return Task.FromResult(bytesRead);
+            throw new ObjectDisposedException(nameof(RarStream));
         }
-        catch (Exception ex)
+        outTotal = 0;
+        if (tmpCount > 0)
         {
-            return Task.FromException<int>(ex);
+            var toCopy = tmpCount < count ? tmpCount : count;
+            Buffer.BlockCopy(tmpBuffer, tmpOffset, buffer, offset, toCopy);
+            tmpOffset += toCopy;
+            tmpCount -= toCopy;
+            offset += toCopy;
+            count -= toCopy;
+            outTotal += toCopy;
         }
+        if (count > 0 && unpack.DestSize > 0)
+        {
+            outBuffer = buffer;
+            outOffset = offset;
+            outCount = count;
+            fetch = true;
+            await unpack.DoUnpackAsync();
+            fetch = false;
+        }
+        _position += outTotal;
+        if (count > 0 && outTotal == 0 && _position != Length)
+        {
+            // sanity check, eg if we try to decompress a redir entry
+            throw new InvalidOperationException(
+                $"unpacked file size does not match header: expected {Length} found {_position}"
+            );
+        }
+        return outTotal;
     }
 
     public override async ValueTask<int> ReadAsync(

@@ -172,11 +172,16 @@ public abstract class AbstractReader<TEntry, TVolume> : IReader, IReaderExtracti
         _wroteCurrentEntry = true;
     }
 
-    internal async Task WriteAsync(Stream writeStream)
+    private async Task WriteAsync(Stream writeStream)
     {
         var streamListener = this as IReaderExtractionListener;
-        using Stream s = await OpenEntryStreamAsync();
-        s.TransferTo(writeStream, Entry, streamListener);
+
+#if !NETSTANDARD2_0 && !NETFRAMEWORK
+        await using Stream s = await OpenEntryStreamAsync();
+        #else
+         using Stream s = await OpenEntryStreamAsync();
+#endif
+        await s.TransferToAsync(writeStream, Entry, streamListener);
     }
 
     public async Task<EntryStream> OpenEntryStreamAsync()

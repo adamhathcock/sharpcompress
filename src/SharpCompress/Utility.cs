@@ -210,7 +210,7 @@ internal static class Utility
         }
     }
 
-    public static long TransferTo(
+    public static async Task<long> TransferToAsync(
         this Stream source,
         Stream destination,
         Common.Entry entry,
@@ -223,10 +223,10 @@ internal static class Utility
             var iterations = 0;
             long total = 0;
             int count;
-            while ((count = source.Read(array, 0, array.Length)) != 0)
+            while ((count = await source.ReadAsync(array, 0, array.Length)) != 0)
             {
                 total += count;
-                destination.Write(array, 0, count);
+                await destination.WriteAsync(array, 0, count);
                 iterations++;
                 readerExtractionListener.FireEntryExtractionProgress(entry, total, iterations);
             }
