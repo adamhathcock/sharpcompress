@@ -22,14 +22,8 @@ internal static class Utility
     /// <param name="number">Number to operate on</param>
     /// <param name="bits">Amount of bits to shift</param>
     /// <returns>The resulting number from the shift operation</returns>
-    public static int URShift(int number, int bits)
-    {
-        if (number >= 0)
-        {
-            return number >> bits;
-        }
-        return (number >> bits) + (2 << ~bits);
-    }
+    public static int URShift(int number, int bits) =>
+        (int)((uint)number >> bits);
 
     /// <summary>
     /// Performs an unsigned bitwise right shift with the specified number
@@ -37,14 +31,8 @@ internal static class Utility
     /// <param name="number">Number to operate on</param>
     /// <param name="bits">Amount of bits to shift</param>
     /// <returns>The resulting number from the shift operation</returns>
-    public static long URShift(long number, int bits)
-    {
-        if (number >= 0)
-        {
-            return number >> bits;
-        }
-        return (number >> bits) + (2L << ~bits);
-    }
+    public static long URShift(long number, int bits) =>
+        (long)((ulong)number >> bits);
 
     public static void SetSize(this List<byte> list, int count)
     {

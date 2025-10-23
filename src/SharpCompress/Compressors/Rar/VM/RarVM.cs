@@ -1529,15 +1529,14 @@ internal sealed class RarVM : BitInput
     {
         if (pos < VM_MEMSIZE)
         {
-            //&& data!=Mem+Pos)
-            //memmove(Mem+Pos,Data,Min(DataSize,VM_MEMSIZE-Pos));
-            for (var i = 0; i < Math.Min(data.Length - offset, dataSize); i++)
+            // Use Array.Copy for fast bulk memory operations instead of byte-by-byte loop
+            // Calculate how much data can actually fit in VM memory
+            int copyLength = Math.Min(dataSize, VM_MEMSIZE - pos);
+            copyLength = Math.Min(copyLength, data.Length - offset);
+
+            if (copyLength > 0)
             {
-                if ((VM_MEMSIZE - pos) < i)
-                {
-                    break;
-                }
-                Mem[pos + i] = data[offset + i];
+                Array.Copy(data, offset, Mem, pos, copyLength);
             }
         }
     }
