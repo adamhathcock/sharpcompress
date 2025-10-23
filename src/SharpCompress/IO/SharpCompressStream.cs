@@ -178,7 +178,8 @@ public class SharpCompressStream : Stream, IStreamStack
         if (disposing)
         {
             Stream.Dispose();
-            if (_buffer != null) {
+            if (_buffer != null)
+            {
                 ArrayPool<byte>.Shared.Return(_buffer);
                 _buffer = null;
             }

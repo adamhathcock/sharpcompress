@@ -579,8 +579,13 @@ internal sealed partial class Unpack : BitInput, IRarUnpack
                     var FilteredData = ArrayPool<byte>.Shared.Rent(FilteredDataSize);
                     try
                     {
-
-                        Array.Copy(rarVM.Mem, FilteredDataOffset, FilteredData, 0, FilteredDataSize);
+                        Array.Copy(
+                            rarVM.Mem,
+                            FilteredDataOffset,
+                            FilteredData,
+                            0,
+                            FilteredDataSize
+                        );
 
                         prgStack[I] = null;
                         while (I + 1 < prgStack.Count)
@@ -619,9 +624,8 @@ internal sealed partial class Unpack : BitInput, IRarUnpack
                                     i++
                                 )
                                 {
-                                    NextPrg.GlobalData[RarVM.VM_FIXEDGLOBALSIZE + i] = pPrg.GlobalData[
-                                        RarVM.VM_FIXEDGLOBALSIZE + i
-                                    ];
+                                    NextPrg.GlobalData[RarVM.VM_FIXEDGLOBALSIZE + i] =
+                                        pPrg.GlobalData[RarVM.VM_FIXEDGLOBALSIZE + i];
                                 }
                             }
 
@@ -642,9 +646,8 @@ internal sealed partial class Unpack : BitInput, IRarUnpack
                                     i++
                                 )
                                 {
-                                    pPrg.GlobalData[RarVM.VM_FIXEDGLOBALSIZE + i] = NextPrg.GlobalData[
-                                        RarVM.VM_FIXEDGLOBALSIZE + i
-                                    ];
+                                    pPrg.GlobalData[RarVM.VM_FIXEDGLOBALSIZE + i] =
+                                        NextPrg.GlobalData[RarVM.VM_FIXEDGLOBALSIZE + i];
                                 }
                             }
                             else
@@ -670,7 +673,8 @@ internal sealed partial class Unpack : BitInput, IRarUnpack
                         destUnpSize -= FilteredDataSize;
                         WrittenBorder = BlockEnd;
                         WriteSize = (unpPtr - WrittenBorder) & PackDef.MAXWINMASK;
-                    } finally
+                    }
+                    finally
                     {
                         ArrayPool<byte>.Shared.Return(FilteredData);
                     }
