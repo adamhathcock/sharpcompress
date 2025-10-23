@@ -13,7 +13,7 @@ using SharpCompress.Compressors.Rar.VM;
 
 namespace SharpCompress.Compressors.Rar.UnpackV1;
 
-internal sealed partial class Unpack : BitInput, IRarUnpack, IDisposable
+internal sealed partial class Unpack : BitInput, IRarUnpack
 {
     private readonly BitInput Inp;
     private bool disposed;
@@ -22,15 +22,17 @@ internal sealed partial class Unpack : BitInput, IRarUnpack, IDisposable
         // to ease in porting Unpack50.cs
         Inp = this;
 
-    public void Dispose()
+    public override void Dispose()
     {
         if (!disposed)
         {
+            base.Dispose();
             if (!externalWindow)
             {
                 ArrayPool<byte>.Shared.Return(window);
                 window = null;
             }
+            rarVM.Dispose();
             disposed = true;
         }
     }
@@ -574,104 +576,111 @@ internal sealed partial class Unpack : BitInput, IRarUnpack, IDisposable
 
                     var FilteredDataOffset = Prg.FilteredDataOffset;
                     var FilteredDataSize = Prg.FilteredDataSize;
-                    var FilteredData = new byte[FilteredDataSize];
-
-                    for (var i = 0; i < FilteredDataSize; i++)
+                    var FilteredData = ArrayPool<byte>.Shared.Rent(FilteredDataSize);
+                    try
                     {
-                        FilteredData[i] = rarVM.Mem[FilteredDataOffset + i];
+                        Array.Copy(
+                            rarVM.Mem,
+                            FilteredDataOffset,
+                            FilteredData,
+                            0,
+                            FilteredDataSize
+                        );
 
-                        // Prg.GlobalData.get(FilteredDataOffset
-                        // +
-                        // i);
-                    }
-
-                    prgStack[I] = null;
-                    while (I + 1 < prgStack.Count)
-                    {
-                        var NextFilter = prgStack[I + 1];
-                        if (
-                            NextFilter is null
-                            || NextFilter.BlockStart != BlockStart
-                            || NextFilter.BlockLength != FilteredDataSize
-                            || NextFilter.NextWindow
-                        )
-                        {
-                            break;
-                        }
-
-                        // apply several filters to same data block
-
-                        rarVM.setMemory(0, FilteredData, 0, FilteredDataSize);
-
-                        // .SetMemory(0,FilteredData,FilteredDataSize);
-
-                        var pPrg = filters[NextFilter.ParentFilter].Program;
-                        var NextPrg = NextFilter.Program;
-
-                        if (pPrg.GlobalData.Count > RarVM.VM_FIXEDGLOBALSIZE)
-                        {
-                            // copy global data from previous script execution
-                            // if any
-                            // NextPrg->GlobalData.Alloc(ParentPrg->GlobalData.Size());
-                            NextPrg.GlobalData.SetSize(pPrg.GlobalData.Count);
-
-                            // memcpy(&NextPrg->GlobalData[VM_FIXEDGLOBALSIZE],&ParentPrg->GlobalData[VM_FIXEDGLOBALSIZE],ParentPrg->GlobalData.Size()-VM_FIXEDGLOBALSIZE);
-                            for (
-                                var i = 0;
-                                i < pPrg.GlobalData.Count - RarVM.VM_FIXEDGLOBALSIZE;
-                                i++
-                            )
-                            {
-                                NextPrg.GlobalData[RarVM.VM_FIXEDGLOBALSIZE + i] = pPrg.GlobalData[
-                                    RarVM.VM_FIXEDGLOBALSIZE + i
-                                ];
-                            }
-                        }
-
-                        ExecuteCode(NextPrg);
-
-                        if (NextPrg.GlobalData.Count > RarVM.VM_FIXEDGLOBALSIZE)
-                        {
-                            // save global data for next script execution
-                            if (pPrg.GlobalData.Count < NextPrg.GlobalData.Count)
-                            {
-                                pPrg.GlobalData.SetSize(NextPrg.GlobalData.Count);
-                            }
-
-                            // memcpy(&ParentPrg->GlobalData[VM_FIXEDGLOBALSIZE],&NextPrg->GlobalData[VM_FIXEDGLOBALSIZE],NextPrg->GlobalData.Size()-VM_FIXEDGLOBALSIZE);
-                            for (
-                                var i = 0;
-                                i < NextPrg.GlobalData.Count - RarVM.VM_FIXEDGLOBALSIZE;
-                                i++
-                            )
-                            {
-                                pPrg.GlobalData[RarVM.VM_FIXEDGLOBALSIZE + i] = NextPrg.GlobalData[
-                                    RarVM.VM_FIXEDGLOBALSIZE + i
-                                ];
-                            }
-                        }
-                        else
-                        {
-                            pPrg.GlobalData.Clear();
-                        }
-                        FilteredDataOffset = NextPrg.FilteredDataOffset;
-                        FilteredDataSize = NextPrg.FilteredDataSize;
-
-                        FilteredData = new byte[FilteredDataSize];
-                        for (var i = 0; i < FilteredDataSize; i++)
-                        {
-                            FilteredData[i] = NextPrg.GlobalData[FilteredDataOffset + i];
-                        }
-
-                        I++;
                         prgStack[I] = null;
+                        while (I + 1 < prgStack.Count)
+                        {
+                            var NextFilter = prgStack[I + 1];
+                            if (
+                                NextFilter is null
+                                || NextFilter.BlockStart != BlockStart
+                                || NextFilter.BlockLength != FilteredDataSize
+                                || NextFilter.NextWindow
+                            )
+                            {
+                                break;
+                            }
+
+                            // apply several filters to same data block
+
+                            rarVM.setMemory(0, FilteredData, 0, FilteredDataSize);
+
+                            // .SetMemory(0,FilteredData,FilteredDataSize);
+
+                            var pPrg = filters[NextFilter.ParentFilter].Program;
+                            var NextPrg = NextFilter.Program;
+
+                            if (pPrg.GlobalData.Count > RarVM.VM_FIXEDGLOBALSIZE)
+                            {
+                                // copy global data from previous script execution
+                                // if any
+                                // NextPrg->GlobalData.Alloc(ParentPrg->GlobalData.Size());
+                                NextPrg.GlobalData.SetSize(pPrg.GlobalData.Count);
+
+                                // memcpy(&NextPrg->GlobalData[VM_FIXEDGLOBALSIZE],&ParentPrg->GlobalData[VM_FIXEDGLOBALSIZE],ParentPrg->GlobalData.Size()-VM_FIXEDGLOBALSIZE);
+                                for (
+                                    var i = 0;
+                                    i < pPrg.GlobalData.Count - RarVM.VM_FIXEDGLOBALSIZE;
+                                    i++
+                                )
+                                {
+                                    NextPrg.GlobalData[RarVM.VM_FIXEDGLOBALSIZE + i] =
+                                        pPrg.GlobalData[RarVM.VM_FIXEDGLOBALSIZE + i];
+                                }
+                            }
+
+                            ExecuteCode(NextPrg);
+
+                            if (NextPrg.GlobalData.Count > RarVM.VM_FIXEDGLOBALSIZE)
+                            {
+                                // save global data for next script execution
+                                if (pPrg.GlobalData.Count < NextPrg.GlobalData.Count)
+                                {
+                                    pPrg.GlobalData.SetSize(NextPrg.GlobalData.Count);
+                                }
+
+                                // memcpy(&ParentPrg->GlobalData[VM_FIXEDGLOBALSIZE],&NextPrg->GlobalData[VM_FIXEDGLOBALSIZE],NextPrg->GlobalData.Size()-VM_FIXEDGLOBALSIZE);
+                                for (
+                                    var i = 0;
+                                    i < NextPrg.GlobalData.Count - RarVM.VM_FIXEDGLOBALSIZE;
+                                    i++
+                                )
+                                {
+                                    pPrg.GlobalData[RarVM.VM_FIXEDGLOBALSIZE + i] =
+                                        NextPrg.GlobalData[RarVM.VM_FIXEDGLOBALSIZE + i];
+                                }
+                            }
+                            else
+                            {
+                                pPrg.GlobalData.Clear();
+                            }
+
+                            FilteredDataOffset = NextPrg.FilteredDataOffset;
+                            FilteredDataSize = NextPrg.FilteredDataSize;
+                            if (FilteredData.Length < FilteredDataSize)
+                            {
+                                ArrayPool<byte>.Shared.Return(FilteredData);
+                                FilteredData = ArrayPool<byte>.Shared.Rent(FilteredDataSize);
+                            }
+                            for (var i = 0; i < FilteredDataSize; i++)
+                            {
+                                FilteredData[i] = NextPrg.GlobalData[FilteredDataOffset + i];
+                            }
+
+                            I++;
+                            prgStack[I] = null;
+                        }
+
+                        writeStream.Write(FilteredData, 0, FilteredDataSize);
+                        writtenFileSize += FilteredDataSize;
+                        destUnpSize -= FilteredDataSize;
+                        WrittenBorder = BlockEnd;
+                        WriteSize = (unpPtr - WrittenBorder) & PackDef.MAXWINMASK;
                     }
-                    writeStream.Write(FilteredData, 0, FilteredDataSize);
-                    unpSomeRead = true;
-                    writtenFileSize += FilteredDataSize;
-                    destUnpSize -= FilteredDataSize;
-                    WrittenBorder = BlockEnd;
-                    WriteSize = (unpPtr - WrittenBorder) & PackDef.MAXWINMASK;
+                    finally
+                    {
+                        ArrayPool<byte>.Shared.Return(FilteredData);
+                    }
                 }
                 else
                 {
@@ -695,15 +704,10 @@ internal sealed partial class Unpack : BitInput, IRarUnpack, IDisposable
 
     private void UnpWriteArea(int startPtr, int endPtr)
     {
-        if (endPtr != startPtr)
-        {
-            unpSomeRead = true;
-        }
         if (endPtr < startPtr)
         {
             UnpWriteData(window, startPtr, -startPtr & PackDef.MAXWINMASK);
             UnpWriteData(window, 0, endPtr);
-            unpAllBuf = true;
         }
         else
         {
@@ -757,19 +761,27 @@ internal sealed partial class Unpack : BitInput, IRarUnpack, IDisposable
         // System.out.println("copyString(" + length + ", " + distance + ")");
 
         var destPtr = unpPtr - distance;
+        var safeZone = PackDef.MAXWINSIZE - 260;
 
-        // System.out.println(unpPtr+":"+distance);
-        if (destPtr >= 0 && destPtr < PackDef.MAXWINSIZE - 260 && unpPtr < PackDef.MAXWINSIZE - 260)
+        // Fast path: use Array.Copy for bulk operations when in safe zone
+        if (destPtr >= 0 && destPtr < safeZone && unpPtr < safeZone && distance >= length)
         {
-            window[unpPtr++] = window[destPtr++];
-
-            while (--length > 0)
+            // Non-overlapping copy: can use Array.Copy directly
+            Array.Copy(window, destPtr, window, unpPtr, length);
+            unpPtr += length;
+        }
+        else if (destPtr >= 0 && destPtr < safeZone && unpPtr < safeZone)
+        {
+            // Overlapping copy in safe zone: use byte-by-byte to handle self-referential copies
+            for (int i = 0; i < length; i++)
             {
-                window[unpPtr++] = window[destPtr++];
+                window[unpPtr + i] = window[destPtr + i];
             }
+            unpPtr += length;
         }
         else
         {
+            // Slow path with wraparound mask
             while (length-- != 0)
             {
                 window[unpPtr] = window[destPtr++ & PackDef.MAXWINMASK];
@@ -1078,7 +1090,7 @@ internal sealed partial class Unpack : BitInput, IRarUnpack, IDisposable
 
     private bool AddVMCode(int firstByte, List<byte> vmCode)
     {
-        var Inp = new BitInput();
+        using var Inp = new BitInput();
         Inp.InitBitInput();
 
         // memcpy(Inp.InBuf,Code,Min(BitInput::MAX_SIZE,CodeSize));
@@ -1086,7 +1098,6 @@ internal sealed partial class Unpack : BitInput, IRarUnpack, IDisposable
         {
             Inp.InBuf[i] = vmCode[i];
         }
-        rarVM.init();
 
         int FiltPos;
         if ((firstByte & 0x80) != 0)

@@ -19,14 +19,9 @@ internal partial class Unpack
 
     private bool suspended;
 
-    internal bool unpAllBuf;
-
     //private ComprDataIO unpIO;
     private Stream readStream;
     private Stream writeStream;
-
-    internal bool unpSomeRead;
-
     private int readTop;
 
     private long destUnpSize;
@@ -808,15 +803,10 @@ internal partial class Unpack
 
     private void oldUnpWriteBuf()
     {
-        if (unpPtr != wrPtr)
-        {
-            unpSomeRead = true;
-        }
         if (unpPtr < wrPtr)
         {
             writeStream.Write(window, wrPtr, -wrPtr & PackDef.MAXWINMASK);
             writeStream.Write(window, 0, unpPtr);
-            unpAllBuf = true;
         }
         else
         {
