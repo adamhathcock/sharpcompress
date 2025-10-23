@@ -178,43 +178,25 @@ internal class RarStream : Stream, IStreamStack
 
         outTotal = 0;
         var count = buffer.Length;
-        var offset = 0;
 
         if (tmpCount > 0)
         {
+            outOffset = 0;
             var toCopy = tmpCount < count ? tmpCount : count;
-            tmpBuffer.AsSpan(tmpOffset, toCopy).CopyTo(buffer.Span.Slice(offset, toCopy));
+            tmpBuffer.AsSpan(tmpOffset, toCopy).CopyTo(buffer.Span.Slice(outOffset, toCopy));
             tmpOffset += toCopy;
             tmpCount -= toCopy;
-            offset += toCopy;
             count -= toCopy;
             outTotal += toCopy;
         }
         if (count > 0 && unpack.DestSize > 0)
         {
-            // Create a temporary array for the unpack operation
-            var tempArray = ArrayPool<byte>.Shared.Rent(count);
-            try
-            {
-                outBuffer = tempArray;
-                outOffset = 0;
-                outCount = count;
-                fetch = true;
-                await unpack.DoUnpackAsync();
-                fetch = false;
-
-                // Copy the unpacked data to the memory buffer
-                var unpacked = outTotal - (tmpCount > 0 ? offset : 0);
-                if (unpacked > 0)
-                {
-                    tempArray.AsSpan(0, unpacked).CopyTo(buffer.Span.Slice(offset, unpacked));
-                }
-            }
-            finally
-            {
-                ArrayPool<byte>.Shared.Return(tempArray);
-                outBuffer = null;
-            }
+            outBuffer = buffer.ToArray();
+            outOffset = 0;
+            outCount = count;
+            fetch = true;
+            await unpack.DoUnpackAsync();
+            fetch = false;
         }
         _position += outTotal;
         if (count > 0 && outTotal == 0 && _position != Length)
@@ -275,20 +257,16 @@ internal class RarStream : Stream, IStreamStack
 
     public override void Write(byte[] buffer, int offset, int count)
     {
-        if (tmpBuffer == null)
-        {
-            throw new ObjectDisposedException(nameof(RarStream));
-        }
-        if (outBuffer == null)
-        {
-            throw new ObjectDisposedException(nameof(RarStream));
-        }
         if (!fetch)
         {
             throw new NotSupportedException();
         }
         if (outCount > 0)
         {
+            if (outBuffer == null)
+            {
+                throw new ObjectDisposedException(nameof(RarStream));
+            }
             var toCopy = outCount < count ? outCount : count;
             Buffer.BlockCopy(buffer, offset, outBuffer, outOffset, toCopy);
             outOffset += toCopy;
@@ -299,6 +277,10 @@ internal class RarStream : Stream, IStreamStack
         }
         if (count > 0)
         {
+            if (tmpBuffer == null)
+            {
+                throw new ObjectDisposedException(nameof(RarStream));
+            }
             EnsureBufferCapacity(count);
             Buffer.BlockCopy(buffer, offset, tmpBuffer, tmpCount, count);
             tmpCount += count;
