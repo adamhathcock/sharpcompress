@@ -10,7 +10,6 @@ using Xunit;
 
 namespace SharpCompress.Test.Rar;
 
-
 public class RarArchiveTests : ArchiveTests
 {
     [Fact]
@@ -26,7 +25,7 @@ public class RarArchiveTests : ArchiveTests
 
     [Fact]
     public Task Rar5_EncryptedFileAndHeader_Archive() =>
-       ReadRarPasswordAsync("Rar5.encrypted_filesAndHeader.rar", "test");
+        ReadRarPasswordAsync("Rar5.encrypted_filesAndHeader.rar", "test");
 
     [Fact]
     public Task Rar5_EncryptedFileAndHeader_Archive_Err() =>
@@ -92,7 +91,7 @@ public class RarArchiveTests : ArchiveTests
     [Fact]
     public Task Rar_Multi_Archive_Encrypted() =>
         Assert.ThrowsAsync<InvalidFormatException>(async () =>
-                                                  await ArchiveFileReadPasswordAsync("Rar.EncryptedParts.part01.rar", "test")
+            await ArchiveFileReadPasswordAsync("Rar.EncryptedParts.part01.rar", "test")
         );
 
     protected async Task ArchiveFileReadPasswordAsync(string archiveName, string password)
@@ -636,4 +635,3 @@ public class RarArchiveTests : ArchiveTests
             "Failure jpg exe Empty тест.txt jpg\\test.jpg exe\\test.exe"
         );
 }
-

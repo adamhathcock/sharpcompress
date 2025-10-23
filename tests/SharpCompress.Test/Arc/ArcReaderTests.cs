@@ -7,8 +7,8 @@ using Xunit;
 
 namespace SharpCompress.Test.Arc
 {
-    public class ArcReaderTests
-        : ReaderTests {
+    public class ArcReaderTests : ReaderTests
+    {
         public ArcReaderTests()
         {
             UseExtensionInsteadOfNameToVerify = true;
@@ -16,7 +16,8 @@ namespace SharpCompress.Test.Arc
         }
 
         [Fact]
-        public Task Arc_Uncompressed_Read() => ReadAsync("Arc.uncompressed.arc", CompressionType.None);
+        public Task Arc_Uncompressed_Read() =>
+            ReadAsync("Arc.uncompressed.arc", CompressionType.None);
 
         [Fact]
         public async Task Arc_Squeezed_Read()

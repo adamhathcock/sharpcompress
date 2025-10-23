@@ -17,559 +17,562 @@ namespace SharpCompress.Test;
 
 public class ArchiveTests : ReaderTests
 {
-
-        protected void ArchiveGetParts(IEnumerable<string> testArchives)
+    protected void ArchiveGetParts(IEnumerable<string> testArchives)
+    {
+        var arcs = testArchives.Select(a => Path.Combine(TEST_ARCHIVES_PATH, a)).ToArray();
+        var found = ArchiveFactory.GetFileParts(arcs[0]).ToArray();
+        Assert.Equal(arcs.Length, found.Length);
+        for (var i = 0; i < arcs.Length; i++)
         {
-            var arcs = testArchives.Select(a => Path.Combine(TEST_ARCHIVES_PATH, a)).ToArray();
-            var found = ArchiveFactory.GetFileParts(arcs[0]).ToArray();
-            Assert.Equal(arcs.Length, found.Length);
-            for (var i = 0; i < arcs.Length; i++)
-            {
-                Assert.Equal(arcs[i], found[i]);
-            }
+            Assert.Equal(arcs[i], found[i]);
         }
+    }
 
-        protected async Task ArchiveStreamReadExtractAllAsync(string testArchive, CompressionType compression)
-        {
-            testArchive = Path.Combine(TEST_ARCHIVES_PATH, testArchive);
-            await ArchiveStreamReadExtractAllAsync(new[] { testArchive }, compression);
-        }
+    protected async Task ArchiveStreamReadExtractAllAsync(
+        string testArchive,
+        CompressionType compression
+    )
+    {
+        testArchive = Path.Combine(TEST_ARCHIVES_PATH, testArchive);
+        await ArchiveStreamReadExtractAllAsync(new[] { testArchive }, compression);
+    }
 
-        protected async Task ArchiveStreamReadExtractAllAsync(
-            IEnumerable<string> testArchives,
-            CompressionType compression
-        )
+    protected async Task ArchiveStreamReadExtractAllAsync(
+        IEnumerable<string> testArchives,
+        CompressionType compression
+    )
+    {
+        foreach (var path in testArchives)
         {
-            foreach (var path in testArchives)
-            {
-                using (
-                    var stream = SharpCompressStream.Create(
-                        File.OpenRead(path),
-                        leaveOpen: true,
-                        throwOnDispose: true
-                    )
+            using (
+                var stream = SharpCompressStream.Create(
+                    File.OpenRead(path),
+                    leaveOpen: true,
+                    throwOnDispose: true
                 )
-                {
-                    try
-                    {
-                        using var archive = ArchiveFactory.Open(stream);
-                        Assert.True(archive.IsSolid);
-                        using (var reader = archive.ExtractAllEntries())
-                        {
-                            await UseReaderAsync(reader, compression);
-                        }
-                        VerifyFiles();
-
-                        if (archive.Entries.First().CompressionType == CompressionType.Rar)
-                        {
-                            stream.ThrowOnDispose = false;
-                            return;
-                        }
-                        foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
-                        {
-                            await entry.WriteEntryToDirectoryAsync(
-                                SCRATCH_FILES_PATH,
-                                new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
-                            );
-                        }
-                        stream.ThrowOnDispose = false;
-                    }
-                    catch (Exception)
-                    {
-                        // Otherwise this will hide the original exception.
-                        stream.ThrowOnDispose = false;
-                        throw;
-                    }
-                }
-                VerifyFiles();
-            }
-        }
-
-        protected Task ArchiveStreamReadAsync(string testArchive, ReaderOptions? readerOptions = null) =>
-            ArchiveStreamReadAsync(ArchiveFactory.AutoFactory, testArchive, readerOptions);
-
-        protected Task ArchiveStreamReadAsync(
-            IArchiveFactory archiveFactory,
-            string testArchive,
-            ReaderOptions? readerOptions = null
-        )
-        {
-            testArchive = Path.Combine(TEST_ARCHIVES_PATH, testArchive);
-            return ArchiveStreamReadAsync(archiveFactory, readerOptions, testArchive);
-        }
-
-        protected Task ArchiveStreamReadAsync(
-            ReaderOptions? readerOptions = null,
-            params string[] testArchives
-        ) => ArchiveStreamReadAsync(ArchiveFactory.AutoFactory, readerOptions, testArchives);
-
-        protected Task ArchiveStreamReadAsync(
-            IArchiveFactory archiveFactory,
-            ReaderOptions? readerOptions = null,
-            params string[] testArchives
-        ) =>
-            ArchiveStreamReadAsync(
-                archiveFactory,
-                readerOptions,
-                testArchives.Select(x => Path.Combine(TEST_ARCHIVES_PATH, x))
-            );
-
-        protected async Task ArchiveStreamReadAsync(
-            IArchiveFactory archiveFactory,
-            ReaderOptions? readerOptions,
-            IEnumerable<string> testArchives
-        )
-        {
-            foreach (var path in testArchives)
+            )
             {
-                using (
-                    var stream = SharpCompressStream.Create(
-                        File.OpenRead(path),
-                        leaveOpen: true,
-                        throwOnDispose: true
-                    )
-                )
-                using (var archive = archiveFactory.Open(stream, readerOptions))
+                try
                 {
-                    try
+                    using var archive = ArchiveFactory.Open(stream);
+                    Assert.True(archive.IsSolid);
+                    using (var reader = archive.ExtractAllEntries())
                     {
-                        foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
-                        {
-                            await entry.WriteEntryToDirectoryAsync(
-                                SCRATCH_FILES_PATH,
-                                new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
-                            );
-                        }
+                        await UseReaderAsync(reader, compression);
                     }
-                    catch (IndexOutOfRangeException)
+                    VerifyFiles();
+
+                    if (archive.Entries.First().CompressionType == CompressionType.Rar)
                     {
-                        //SevenZipArchive_BZip2_Split test needs this
                         stream.ThrowOnDispose = false;
-                        throw;
+                        return;
+                    }
+                    foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
+                    {
+                        await entry.WriteEntryToDirectoryAsync(
+                            SCRATCH_FILES_PATH,
+                            new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
+                        );
                     }
                     stream.ThrowOnDispose = false;
                 }
-                VerifyFiles();
-            }
-        }
-
-        protected Task ArchiveStreamMultiReadAsync(
-            ReaderOptions? readerOptions = null,
-            params string[] testArchives
-        ) =>
-            ArchiveStreamMultiReadAsync(
-                readerOptions,
-                testArchives.Select(x => Path.Combine(TEST_ARCHIVES_PATH, x))
-            );
-
-        protected async Task ArchiveStreamMultiReadAsync(
-            ReaderOptions? readerOptions,
-            IEnumerable<string> testArchives
-        )
-        {
-            using (
-                var archive = ArchiveFactory.Open(
-                    testArchives.Select(a => new FileInfo(a)),
-                    readerOptions
-                )
-            )
-            {
-                foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
+                catch (Exception)
                 {
-                    await entry.WriteEntryToDirectoryAsync(
-                        SCRATCH_FILES_PATH,
-                        new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
-                    );
+                    // Otherwise this will hide the original exception.
+                    stream.ThrowOnDispose = false;
+                    throw;
                 }
             }
             VerifyFiles();
         }
+    }
 
-        protected Task ArchiveOpenStreamReadAsync(
-            ReaderOptions? readerOptions = null,
-            params string[] testArchives
-        ) =>
-            ArchiveOpenStreamReadAsync(
-                readerOptions,
-                testArchives.Select(x => Path.Combine(TEST_ARCHIVES_PATH, x))
-            );
+    protected Task ArchiveStreamReadAsync(
+        string testArchive,
+        ReaderOptions? readerOptions = null
+    ) => ArchiveStreamReadAsync(ArchiveFactory.AutoFactory, testArchive, readerOptions);
 
-        protected async Task ArchiveOpenStreamReadAsync(
-            ReaderOptions? readerOptions,
-            IEnumerable<string> testArchives
-        )
+    protected Task ArchiveStreamReadAsync(
+        IArchiveFactory archiveFactory,
+        string testArchive,
+        ReaderOptions? readerOptions = null
+    )
+    {
+        testArchive = Path.Combine(TEST_ARCHIVES_PATH, testArchive);
+        return ArchiveStreamReadAsync(archiveFactory, readerOptions, testArchive);
+    }
+
+    protected Task ArchiveStreamReadAsync(
+        ReaderOptions? readerOptions = null,
+        params string[] testArchives
+    ) => ArchiveStreamReadAsync(ArchiveFactory.AutoFactory, readerOptions, testArchives);
+
+    protected Task ArchiveStreamReadAsync(
+        IArchiveFactory archiveFactory,
+        ReaderOptions? readerOptions = null,
+        params string[] testArchives
+    ) =>
+        ArchiveStreamReadAsync(
+            archiveFactory,
+            readerOptions,
+            testArchives.Select(x => Path.Combine(TEST_ARCHIVES_PATH, x))
+        );
+
+    protected async Task ArchiveStreamReadAsync(
+        IArchiveFactory archiveFactory,
+        ReaderOptions? readerOptions,
+        IEnumerable<string> testArchives
+    )
+    {
+        foreach (var path in testArchives)
         {
             using (
-                var archive = ArchiveFactory.Open(
-                    testArchives.Select(f => new FileInfo(f)),
-                    readerOptions
+                var stream = SharpCompressStream.Create(
+                    File.OpenRead(path),
+                    leaveOpen: true,
+                    throwOnDispose: true
                 )
             )
+            using (var archive = archiveFactory.Open(stream, readerOptions))
             {
-                foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
+                try
                 {
-                    await entry.WriteEntryToDirectoryAsync(
-                        SCRATCH_FILES_PATH,
-                        new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
-                    );
+                    foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
+                    {
+                        await entry.WriteEntryToDirectoryAsync(
+                            SCRATCH_FILES_PATH,
+                            new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
+                        );
+                    }
                 }
+                catch (IndexOutOfRangeException)
+                {
+                    //SevenZipArchive_BZip2_Split test needs this
+                    stream.ThrowOnDispose = false;
+                    throw;
+                }
+                stream.ThrowOnDispose = false;
             }
             VerifyFiles();
         }
+    }
 
-        protected void ArchiveOpenEntryVolumeIndexTest(
-            int[][] results,
-            ReaderOptions? readerOptions = null,
-            params string[] testArchives
-        ) =>
-            ArchiveOpenEntryVolumeIndexTest(
-                results,
-                readerOptions,
-                testArchives.Select(x => Path.Combine(TEST_ARCHIVES_PATH, x))
-            );
+    protected Task ArchiveStreamMultiReadAsync(
+        ReaderOptions? readerOptions = null,
+        params string[] testArchives
+    ) =>
+        ArchiveStreamMultiReadAsync(
+            readerOptions,
+            testArchives.Select(x => Path.Combine(TEST_ARCHIVES_PATH, x))
+        );
 
-        private void ArchiveOpenEntryVolumeIndexTest(
-            int[][] results,
-            ReaderOptions? readerOptions,
-            IEnumerable<string> testArchives
+    protected async Task ArchiveStreamMultiReadAsync(
+        ReaderOptions? readerOptions,
+        IEnumerable<string> testArchives
+    )
+    {
+        using (
+            var archive = ArchiveFactory.Open(
+                testArchives.Select(a => new FileInfo(a)),
+                readerOptions
+            )
         )
         {
-            var src = testArchives.ToArray();
-            using var archive = ArchiveFactory.Open(src.Select(f => new FileInfo(f)), readerOptions);
-            var idx = 0;
             foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
             {
-                Assert.Equal(entry.VolumeIndexFirst, results[idx][0]);
-                Assert.Equal(entry.VolumeIndexLast, results[idx][1]);
-                Assert.Equal(
-                    src[entry.VolumeIndexFirst],
-                    archive.Volumes.First(a => a.Index == entry.VolumeIndexFirst).FileName
+                await entry.WriteEntryToDirectoryAsync(
+                    SCRATCH_FILES_PATH,
+                    new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
                 );
-                Assert.Equal(
-                    src[entry.VolumeIndexLast],
-                    archive.Volumes.First(a => a.Index == entry.VolumeIndexLast).FileName
+            }
+        }
+        VerifyFiles();
+    }
+
+    protected Task ArchiveOpenStreamReadAsync(
+        ReaderOptions? readerOptions = null,
+        params string[] testArchives
+    ) =>
+        ArchiveOpenStreamReadAsync(
+            readerOptions,
+            testArchives.Select(x => Path.Combine(TEST_ARCHIVES_PATH, x))
+        );
+
+    protected async Task ArchiveOpenStreamReadAsync(
+        ReaderOptions? readerOptions,
+        IEnumerable<string> testArchives
+    )
+    {
+        using (
+            var archive = ArchiveFactory.Open(
+                testArchives.Select(f => new FileInfo(f)),
+                readerOptions
+            )
+        )
+        {
+            foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
+            {
+                await entry.WriteEntryToDirectoryAsync(
+                    SCRATCH_FILES_PATH,
+                    new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
                 );
-
-                idx++;
             }
         }
+        VerifyFiles();
+    }
 
-        protected async Task ArchiveExtractToDirectoryAsync(
-            string testArchive,
-            ReaderOptions? readerOptions = null
-        )
+    protected void ArchiveOpenEntryVolumeIndexTest(
+        int[][] results,
+        ReaderOptions? readerOptions = null,
+        params string[] testArchives
+    ) =>
+        ArchiveOpenEntryVolumeIndexTest(
+            results,
+            readerOptions,
+            testArchives.Select(x => Path.Combine(TEST_ARCHIVES_PATH, x))
+        );
+
+    private void ArchiveOpenEntryVolumeIndexTest(
+        int[][] results,
+        ReaderOptions? readerOptions,
+        IEnumerable<string> testArchives
+    )
+    {
+        var src = testArchives.ToArray();
+        using var archive = ArchiveFactory.Open(src.Select(f => new FileInfo(f)), readerOptions);
+        var idx = 0;
+        foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
         {
-            testArchive = Path.Combine(TEST_ARCHIVES_PATH, testArchive);
-            using (var archive = ArchiveFactory.Open(new FileInfo(testArchive), readerOptions))
-            {
-                await archive.ExtractToDirectoryAsync(SCRATCH_FILES_PATH);
-            }
-            VerifyFiles();
-        }
-
-        protected async Task ArchiveFileReadAsync(
-            IArchiveFactory archiveFactory,
-            string testArchive,
-            ReaderOptions? readerOptions = null
-        )
-        {
-            testArchive = Path.Combine(TEST_ARCHIVES_PATH, testArchive);
-            using (var archive = archiveFactory.Open(new FileInfo(testArchive), readerOptions))
-            {
-                foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
-                {
-                    await entry.WriteEntryToDirectoryAsync(
-                        SCRATCH_FILES_PATH,
-                        new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
-                    );
-                }
-            }
-            VerifyFiles();
-        }
-
-        protected Task ArchiveFileReadAsync(string testArchive, ReaderOptions? readerOptions = null) =>
-            ArchiveFileReadAsync(ArchiveFactory.AutoFactory, testArchive, readerOptions);
-
-        protected void ArchiveFileSkip(
-            string testArchive,
-            string fileOrder,
-            ReaderOptions? readerOptions = null
-        )
-        {
-            if (!Environment.OSVersion.IsWindows())
-            {
-                fileOrder = fileOrder.Replace('\\', '/');
-            }
-            var expected = new Stack<string>(fileOrder.Split(' '));
-            testArchive = Path.Combine(TEST_ARCHIVES_PATH, testArchive);
-            using var archive = ArchiveFactory.Open(testArchive, readerOptions);
-            foreach (var entry in archive.Entries)
-            {
-                Assert.Equal(expected.Pop(), entry.Key);
-            }
-        }
-
-        /// <summary>
-        /// Demonstrate the ExtractionOptions.PreserveFileTime and ExtractionOptions.PreserveAttributes extract options
-        /// </summary>
-        protected async Task ArchiveFileReadExAsync(string testArchive)
-        {
-            testArchive = Path.Combine(TEST_ARCHIVES_PATH, testArchive);
-            using (var archive = ArchiveFactory.Open(testArchive))
-            {
-                foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
-                {
-                    await entry.WriteEntryToDirectoryAsync(
-                        SCRATCH_FILES_PATH,
-                        new ExtractionOptions
-                        {
-                            ExtractFullPath = true,
-                            Overwrite = true,
-                            PreserveAttributes = true,
-                            PreserveFileTime = true,
-                        }
-                    );
-                }
-            }
-            VerifyFilesEx();
-        }
-
-        protected async Task ArchiveDeltaDistanceReadAsync(string testArchive)
-        {
-            testArchive = Path.Combine(TEST_ARCHIVES_PATH, testArchive);
-            using var archive = ArchiveFactory.Open(testArchive);
-            foreach (var entry in archive.Entries)
-            {
-                if (!entry.IsDirectory)
-                {
-                    var memory = new MemoryStream();
-                    await entry.WriteToAsync(memory);
-
-                    memory.Position = 0;
-
-                    for (var y = 0; y < 9; y++)
-                    for (var x = 0; x < 256; x++)
-                    {
-                        Assert.Equal(x, memory.ReadByte());
-                    }
-
-                    Assert.Equal(-1, memory.ReadByte());
-                }
-            }
-        }
-
-        /// <summary>
-        /// Calculates CRC32 for the given data using SharpCompress implementation
-        /// </summary>
-        protected static uint CalculateCrc32(byte[] data) => Crc32.Compute(data);
-
-        /// <summary>
-        /// Creates a writer with the specified compression type and level
-        /// </summary>
-        protected static IWriter CreateWriterWithLevel(
-            Stream stream,
-            CompressionType compressionType,
-            int? compressionLevel = null
-        )
-        {
-            var writerOptions = new ZipWriterOptions(compressionType);
-            if (compressionLevel.HasValue)
-            {
-                writerOptions.CompressionLevel = compressionLevel.Value;
-            }
-            return WriterFactory.Open(stream, ArchiveType.Zip, writerOptions);
-        }
-
-        /// <summary>
-        /// Verifies archive content against expected files with CRC32 validation
-        /// </summary>
-        protected void VerifyArchiveContent(
-            MemoryStream zipStream,
-            Dictionary<string, (byte[] data, uint crc)> expectedFiles
-        )
-        {
-            zipStream.Position = 0;
-            using var archive = ArchiveFactory.Open(zipStream);
-            Assert.Equal(expectedFiles.Count, archive.Entries.Count());
-
-            foreach (var entry in archive.Entries.Where(e => !e.IsDirectory))
-            {
-                using var entryStream = entry.OpenEntryStream();
-                using var extractedStream = new MemoryStream();
-                entryStream.CopyTo(extractedStream);
-                var extractedData = extractedStream.ToArray();
-
-                Assert.True(
-                    expectedFiles.ContainsKey(entry.Key.NotNull()),
-                    $"Unexpected entry: {entry.Key}"
-                );
-
-                var (expectedData, expectedCrc) = expectedFiles[entry.Key.NotNull()];
-                var actualCrc = CalculateCrc32(extractedData);
-
-                Assert.Equal(expectedCrc, actualCrc);
-                Assert.Equal(expectedData.Length, extractedData.Length);
-
-                // For large files, spot check rather than full comparison for performance
-                if (expectedData.Length > 1024 * 1024)
-                {
-                    VerifyDataSpotCheck(expectedData, extractedData);
-                }
-                else
-                {
-                    Assert.Equal(expectedData, extractedData);
-                }
-            }
-        }
-
-        /// <summary>
-        /// Performs efficient spot checks on large data arrays
-        /// </summary>
-        protected static void VerifyDataSpotCheck(byte[] expected, byte[] actual)
-        {
-            // Check first, middle, and last 1KB
-            Assert.Equal(expected.Take(1024), actual.Take(1024));
-            var mid = expected.Length / 2;
-            Assert.Equal(expected.Skip(mid).Take(1024), actual.Skip(mid).Take(1024));
+            Assert.Equal(entry.VolumeIndexFirst, results[idx][0]);
+            Assert.Equal(entry.VolumeIndexLast, results[idx][1]);
             Assert.Equal(
-                expected.Skip(Math.Max(0, expected.Length - 1024)),
-                actual.Skip(Math.Max(0, actual.Length - 1024))
+                src[entry.VolumeIndexFirst],
+                archive.Volumes.First(a => a.Index == entry.VolumeIndexFirst).FileName
             );
-        }
-
-        /// <summary>
-        /// Verifies compression ratio meets expectations
-        /// </summary>
-        protected void VerifyCompressionRatio(
-            long originalSize,
-            long compressedSize,
-            double maxRatio,
-            string context
-        )
-        {
-            var compressionRatio = (double)compressedSize / originalSize;
-            Assert.True(
-                compressionRatio < maxRatio,
-                $"Expected better compression for {context}. Original: {originalSize}, Compressed: {compressedSize}, Ratio: {compressionRatio:P}"
-            );
-        }
-
-        /// <summary>
-        /// Creates a memory-based archive with specified files and compression
-        /// </summary>
-        protected MemoryStream CreateMemoryArchive(
-            Dictionary<string, byte[]> files,
-            CompressionType compressionType,
-            int? compressionLevel = null
-        )
-        {
-            var zipStream = new MemoryStream();
-            using (var writer = CreateWriterWithLevel(zipStream, compressionType, compressionLevel))
-            {
-                foreach (var kvp in files)
-                {
-                    writer.Write(kvp.Key, new MemoryStream(kvp.Value));
-                }
-            }
-            return zipStream;
-        }
-
-        /// <summary>
-        /// Verifies streaming CRC calculation for large data
-        /// </summary>
-        protected void VerifyStreamingCrc(Stream entryStream, uint expectedCrc, long expectedLength)
-        {
-            using var crcStream = new Crc32Stream(Stream.Null);
-            const int bufferSize = 64 * 1024;
-            var buffer = new byte[bufferSize];
-            int totalBytesRead = 0;
-            int bytesRead;
-
-            while ((bytesRead = entryStream.Read(buffer, 0, bufferSize)) > 0)
-            {
-                crcStream.Write(buffer, 0, bytesRead);
-                totalBytesRead += bytesRead;
-            }
-
-            var actualCrc = crcStream.Crc;
-            Assert.Equal(expectedCrc, actualCrc);
-            Assert.Equal(expectedLength, totalBytesRead);
-        }
-
-        /// <summary>
-        /// Creates and verifies a basic archive with compression testing
-        /// </summary>
-        protected void CreateAndVerifyBasicArchive(
-            Dictionary<string, byte[]> testFiles,
-            CompressionType compressionType,
-            int? compressionLevel = null,
-            double maxCompressionRatio = 0.8
-        )
-        {
-            // Calculate expected CRCs
-            var expectedFiles = testFiles.ToDictionary(
-                kvp => kvp.Key,
-                kvp => (data: kvp.Value, crc: CalculateCrc32(kvp.Value))
+            Assert.Equal(
+                src[entry.VolumeIndexLast],
+                archive.Volumes.First(a => a.Index == entry.VolumeIndexLast).FileName
             );
 
-            // Create archive
-            using var zipStream = CreateMemoryArchive(testFiles, compressionType, compressionLevel);
+            idx++;
+        }
+    }
 
-            // Verify compression occurred if expected
-            if (compressionType != CompressionType.None)
+    protected async Task ArchiveExtractToDirectoryAsync(
+        string testArchive,
+        ReaderOptions? readerOptions = null
+    )
+    {
+        testArchive = Path.Combine(TEST_ARCHIVES_PATH, testArchive);
+        using (var archive = ArchiveFactory.Open(new FileInfo(testArchive), readerOptions))
+        {
+            await archive.ExtractToDirectoryAsync(SCRATCH_FILES_PATH);
+        }
+        VerifyFiles();
+    }
+
+    protected async Task ArchiveFileReadAsync(
+        IArchiveFactory archiveFactory,
+        string testArchive,
+        ReaderOptions? readerOptions = null
+    )
+    {
+        testArchive = Path.Combine(TEST_ARCHIVES_PATH, testArchive);
+        using (var archive = archiveFactory.Open(new FileInfo(testArchive), readerOptions))
+        {
+            foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
             {
-                var originalSize = testFiles.Values.Sum(data => (long)data.Length);
-                VerifyCompressionRatio(
-                    originalSize,
-                    zipStream.Length,
-                    maxCompressionRatio,
-                    compressionType.ToString()
+                await entry.WriteEntryToDirectoryAsync(
+                    SCRATCH_FILES_PATH,
+                    new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
                 );
             }
-
-            // Verify content
-            VerifyArchiveContent(zipStream, expectedFiles);
         }
+        VerifyFiles();
+    }
 
-        /// <summary>
-        /// Verifies archive entries have correct compression type
-        /// </summary>
-        protected void VerifyCompressionType(
-            MemoryStream zipStream,
-            CompressionType expectedCompressionType
-        )
+    protected Task ArchiveFileReadAsync(string testArchive, ReaderOptions? readerOptions = null) =>
+        ArchiveFileReadAsync(ArchiveFactory.AutoFactory, testArchive, readerOptions);
+
+    protected void ArchiveFileSkip(
+        string testArchive,
+        string fileOrder,
+        ReaderOptions? readerOptions = null
+    )
+    {
+        if (!Environment.OSVersion.IsWindows())
         {
-            zipStream.Position = 0;
-            using var archive = ArchiveFactory.Open(zipStream);
+            fileOrder = fileOrder.Replace('\\', '/');
+        }
+        var expected = new Stack<string>(fileOrder.Split(' '));
+        testArchive = Path.Combine(TEST_ARCHIVES_PATH, testArchive);
+        using var archive = ArchiveFactory.Open(testArchive, readerOptions);
+        foreach (var entry in archive.Entries)
+        {
+            Assert.Equal(expected.Pop(), entry.Key);
+        }
+    }
 
-            foreach (var entry in archive.Entries.Where(e => !e.IsDirectory))
+    /// <summary>
+    /// Demonstrate the ExtractionOptions.PreserveFileTime and ExtractionOptions.PreserveAttributes extract options
+    /// </summary>
+    protected async Task ArchiveFileReadExAsync(string testArchive)
+    {
+        testArchive = Path.Combine(TEST_ARCHIVES_PATH, testArchive);
+        using (var archive = ArchiveFactory.Open(testArchive))
+        {
+            foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
             {
-                Assert.Equal(expectedCompressionType, entry.CompressionType);
+                await entry.WriteEntryToDirectoryAsync(
+                    SCRATCH_FILES_PATH,
+                    new ExtractionOptions
+                    {
+                        ExtractFullPath = true,
+                        Overwrite = true,
+                        PreserveAttributes = true,
+                        PreserveFileTime = true,
+                    }
+                );
             }
         }
+        VerifyFilesEx();
+    }
 
-        /// <summary>
-        /// Extracts and verifies a single entry from archive
-        /// </summary>
-        protected (byte[] data, uint crc) ExtractAndVerifyEntry(
-            MemoryStream zipStream,
-            string entryName
-        )
+    protected async Task ArchiveDeltaDistanceReadAsync(string testArchive)
+    {
+        testArchive = Path.Combine(TEST_ARCHIVES_PATH, testArchive);
+        using var archive = ArchiveFactory.Open(testArchive);
+        foreach (var entry in archive.Entries)
         {
-            zipStream.Position = 0;
-            using var archive = ArchiveFactory.Open(zipStream);
+            if (!entry.IsDirectory)
+            {
+                var memory = new MemoryStream();
+                await entry.WriteToAsync(memory);
 
-            var entry = archive.Entries.FirstOrDefault(e => e.Key == entryName && !e.IsDirectory);
-            Assert.NotNull(entry);
+                memory.Position = 0;
 
+                for (var y = 0; y < 9; y++)
+                for (var x = 0; x < 256; x++)
+                {
+                    Assert.Equal(x, memory.ReadByte());
+                }
+
+                Assert.Equal(-1, memory.ReadByte());
+            }
+        }
+    }
+
+    /// <summary>
+    /// Calculates CRC32 for the given data using SharpCompress implementation
+    /// </summary>
+    protected static uint CalculateCrc32(byte[] data) => Crc32.Compute(data);
+
+    /// <summary>
+    /// Creates a writer with the specified compression type and level
+    /// </summary>
+    protected static IWriter CreateWriterWithLevel(
+        Stream stream,
+        CompressionType compressionType,
+        int? compressionLevel = null
+    )
+    {
+        var writerOptions = new ZipWriterOptions(compressionType);
+        if (compressionLevel.HasValue)
+        {
+            writerOptions.CompressionLevel = compressionLevel.Value;
+        }
+        return WriterFactory.Open(stream, ArchiveType.Zip, writerOptions);
+    }
+
+    /// <summary>
+    /// Verifies archive content against expected files with CRC32 validation
+    /// </summary>
+    protected void VerifyArchiveContent(
+        MemoryStream zipStream,
+        Dictionary<string, (byte[] data, uint crc)> expectedFiles
+    )
+    {
+        zipStream.Position = 0;
+        using var archive = ArchiveFactory.Open(zipStream);
+        Assert.Equal(expectedFiles.Count, archive.Entries.Count());
+
+        foreach (var entry in archive.Entries.Where(e => !e.IsDirectory))
+        {
             using var entryStream = entry.OpenEntryStream();
             using var extractedStream = new MemoryStream();
             entryStream.CopyTo(extractedStream);
-
             var extractedData = extractedStream.ToArray();
-            var crc = CalculateCrc32(extractedData);
 
-            return (extractedData, crc);
+            Assert.True(
+                expectedFiles.ContainsKey(entry.Key.NotNull()),
+                $"Unexpected entry: {entry.Key}"
+            );
+
+            var (expectedData, expectedCrc) = expectedFiles[entry.Key.NotNull()];
+            var actualCrc = CalculateCrc32(extractedData);
+
+            Assert.Equal(expectedCrc, actualCrc);
+            Assert.Equal(expectedData.Length, extractedData.Length);
+
+            // For large files, spot check rather than full comparison for performance
+            if (expectedData.Length > 1024 * 1024)
+            {
+                VerifyDataSpotCheck(expectedData, extractedData);
+            }
+            else
+            {
+                Assert.Equal(expectedData, extractedData);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Performs efficient spot checks on large data arrays
+    /// </summary>
+    protected static void VerifyDataSpotCheck(byte[] expected, byte[] actual)
+    {
+        // Check first, middle, and last 1KB
+        Assert.Equal(expected.Take(1024), actual.Take(1024));
+        var mid = expected.Length / 2;
+        Assert.Equal(expected.Skip(mid).Take(1024), actual.Skip(mid).Take(1024));
+        Assert.Equal(
+            expected.Skip(Math.Max(0, expected.Length - 1024)),
+            actual.Skip(Math.Max(0, actual.Length - 1024))
+        );
+    }
+
+    /// <summary>
+    /// Verifies compression ratio meets expectations
+    /// </summary>
+    protected void VerifyCompressionRatio(
+        long originalSize,
+        long compressedSize,
+        double maxRatio,
+        string context
+    )
+    {
+        var compressionRatio = (double)compressedSize / originalSize;
+        Assert.True(
+            compressionRatio < maxRatio,
+            $"Expected better compression for {context}. Original: {originalSize}, Compressed: {compressedSize}, Ratio: {compressionRatio:P}"
+        );
+    }
+
+    /// <summary>
+    /// Creates a memory-based archive with specified files and compression
+    /// </summary>
+    protected MemoryStream CreateMemoryArchive(
+        Dictionary<string, byte[]> files,
+        CompressionType compressionType,
+        int? compressionLevel = null
+    )
+    {
+        var zipStream = new MemoryStream();
+        using (var writer = CreateWriterWithLevel(zipStream, compressionType, compressionLevel))
+        {
+            foreach (var kvp in files)
+            {
+                writer.Write(kvp.Key, new MemoryStream(kvp.Value));
+            }
+        }
+        return zipStream;
+    }
+
+    /// <summary>
+    /// Verifies streaming CRC calculation for large data
+    /// </summary>
+    protected void VerifyStreamingCrc(Stream entryStream, uint expectedCrc, long expectedLength)
+    {
+        using var crcStream = new Crc32Stream(Stream.Null);
+        const int bufferSize = 64 * 1024;
+        var buffer = new byte[bufferSize];
+        int totalBytesRead = 0;
+        int bytesRead;
+
+        while ((bytesRead = entryStream.Read(buffer, 0, bufferSize)) > 0)
+        {
+            crcStream.Write(buffer, 0, bytesRead);
+            totalBytesRead += bytesRead;
         }
 
+        var actualCrc = crcStream.Crc;
+        Assert.Equal(expectedCrc, actualCrc);
+        Assert.Equal(expectedLength, totalBytesRead);
+    }
+
+    /// <summary>
+    /// Creates and verifies a basic archive with compression testing
+    /// </summary>
+    protected void CreateAndVerifyBasicArchive(
+        Dictionary<string, byte[]> testFiles,
+        CompressionType compressionType,
+        int? compressionLevel = null,
+        double maxCompressionRatio = 0.8
+    )
+    {
+        // Calculate expected CRCs
+        var expectedFiles = testFiles.ToDictionary(
+            kvp => kvp.Key,
+            kvp => (data: kvp.Value, crc: CalculateCrc32(kvp.Value))
+        );
+
+        // Create archive
+        using var zipStream = CreateMemoryArchive(testFiles, compressionType, compressionLevel);
+
+        // Verify compression occurred if expected
+        if (compressionType != CompressionType.None)
+        {
+            var originalSize = testFiles.Values.Sum(data => (long)data.Length);
+            VerifyCompressionRatio(
+                originalSize,
+                zipStream.Length,
+                maxCompressionRatio,
+                compressionType.ToString()
+            );
+        }
+
+        // Verify content
+        VerifyArchiveContent(zipStream, expectedFiles);
+    }
+
+    /// <summary>
+    /// Verifies archive entries have correct compression type
+    /// </summary>
+    protected void VerifyCompressionType(
+        MemoryStream zipStream,
+        CompressionType expectedCompressionType
+    )
+    {
+        zipStream.Position = 0;
+        using var archive = ArchiveFactory.Open(zipStream);
+
+        foreach (var entry in archive.Entries.Where(e => !e.IsDirectory))
+        {
+            Assert.Equal(expectedCompressionType, entry.CompressionType);
+        }
+    }
+
+    /// <summary>
+    /// Extracts and verifies a single entry from archive
+    /// </summary>
+    protected (byte[] data, uint crc) ExtractAndVerifyEntry(
+        MemoryStream zipStream,
+        string entryName
+    )
+    {
+        zipStream.Position = 0;
+        using var archive = ArchiveFactory.Open(zipStream);
+
+        var entry = archive.Entries.FirstOrDefault(e => e.Key == entryName && !e.IsDirectory);
+        Assert.NotNull(entry);
+
+        using var entryStream = entry.OpenEntryStream();
+        using var extractedStream = new MemoryStream();
+        entryStream.CopyTo(extractedStream);
+
+        var extractedData = extractedStream.ToArray();
+        var crc = CalculateCrc32(extractedData);
+
+        return (extractedData, crc);
+    }
 }
