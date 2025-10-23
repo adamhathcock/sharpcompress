@@ -26,7 +26,7 @@ public static class IArchiveEntryExtensions
         using (entryStream)
         {
             using Stream s = new ListeningStream(streamListener, entryStream);
-            await s.TransferToAsync(streamToWriteTo);
+            await s.CopyToAsync(streamToWriteTo);
         }
         streamListener.FireEntryExtractionEnd(archiveEntry);
     }

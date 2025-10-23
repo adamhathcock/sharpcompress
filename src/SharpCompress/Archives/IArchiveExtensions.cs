@@ -76,7 +76,7 @@ public static class IArchiveExtensions
 
             // Write file
             using var fs = File.OpenWrite(path);
-            entry.WriteTo(fs);
+            await entry.WriteToAsync(fs);
 
             // Update progress
             bytesRead += entry.Size;

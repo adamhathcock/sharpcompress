@@ -86,7 +86,7 @@ internal static class Utility
 
     public static void Skip(this Stream source)
     {
-        var buffer = GetTransferByteArray();
+        var buffer = ArrayPool<byte>.Shared.Rent(TEMP_BUFFER_SIZE);
         try
         {
             do { } while (source.Read(buffer, 0, buffer.Length) == buffer.Length);
@@ -99,7 +99,7 @@ internal static class Utility
 
     public static async Task SkipAsync(this Stream source)
     {
-        var buffer = GetTransferByteArray();
+        var buffer = ArrayPool<byte>.Shared.Rent(TEMP_BUFFER_SIZE);
         try
         {
             do { } while (await source.ReadAsync(buffer, 0, buffer.Length) == buffer.Length);
@@ -108,38 +108,6 @@ internal static class Utility
         {
             ArrayPool<byte>.Shared.Return(buffer);
         }
-    }
-
-    public static bool Find(this Stream source, byte[] array)
-    {
-        var buffer = GetTransferByteArray();
-        try
-        {
-            var count = 0;
-            var len = source.Read(buffer, 0, buffer.Length);
-
-            do
-            {
-                for (var i = 0; i < len; i++)
-                {
-                    if (array[count] == buffer[i])
-                    {
-                        count++;
-                        if (count == array.Length)
-                        {
-                            source.Position = source.Position - len + i - array.Length + 1;
-                            return true;
-                        }
-                    }
-                }
-            } while ((len = source.Read(buffer, 0, buffer.Length)) > 0);
-        }
-        finally
-        {
-            ArrayPool<byte>.Shared.Return(buffer);
-        }
-
-        return false;
     }
 
     public static DateTime DosDateToDateTime(ushort iDate, ushort iTime)
