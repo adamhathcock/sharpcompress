@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.IO.Compression;
+using System.Threading.Tasks;
 using SharpCompress.IO;
 using SharpCompress.Readers;
 
@@ -48,6 +49,15 @@ public class EntryStream : Stream, IStreamStack
     public void SkipEntry()
     {
         this.Skip();
+        _completed = true;
+    }
+
+    /// <summary>
+    /// When reading a stream from OpenEntryStream, the stream must be completed so use this to finish reading the entire entry.
+    /// </summary>
+    public async Task SkipEntryAsync()
+    {
+        await this.SkipAsync();
         _completed = true;
     }
 

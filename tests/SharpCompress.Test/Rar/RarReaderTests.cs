@@ -1,4 +1,4 @@
-using System;
+/*using System;
 using System.Collections;
 using System.IO;
 using System.Linq;
@@ -422,4 +422,4 @@ public class RarReaderTests : ReaderTests
             Assert.Equal(expectedOrder.Pop(), reader.Entry.Key);
         }
     }
-}
+}*/

@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Text;
+using System.Threading.Tasks;
 using SharpCompress.Readers;
 
 namespace SharpCompress;
@@ -85,8 +86,28 @@ internal static class Utility
 
     public static void Skip(this Stream source)
     {
-        using var buffer = MemoryPool<byte>.Shared.Rent(TEMP_BUFFER_SIZE);
-        while (source.Read(buffer.Memory.Span) > 0) { }
+        var buffer = ArrayPool<byte>.Shared.Rent(TEMP_BUFFER_SIZE);
+        try
+        {
+            do { } while (source.Read(buffer, 0, buffer.Length) == buffer.Length);
+        }
+        finally
+        {
+            ArrayPool<byte>.Shared.Return(buffer);
+        }
+    }
+
+    public static async Task SkipAsync(this Stream source)
+    {
+        var buffer = ArrayPool<byte>.Shared.Rent(TEMP_BUFFER_SIZE);
+        try
+        {
+            do { } while (await source.ReadAsync(buffer, 0, buffer.Length) == buffer.Length);
+        }
+        finally
+        {
+            ArrayPool<byte>.Shared.Return(buffer);
+        }
     }
 
     public static DateTime DosDateToDateTime(ushort iDate, ushort iTime)

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using SharpCompress.Common;
 using SharpCompress.Common.SevenZip;
 using SharpCompress.Compressors.LZMA.Utilites;
@@ -253,8 +254,8 @@ public class SevenZipArchive : AbstractArchive<SevenZipArchiveEntry, SevenZipVol
             }
         }
 
-        protected override EntryStream GetEntryStream() =>
-            CreateEntryStream(
+        protected override Task<EntryStream> GetEntryStreamAsync() =>
+            CreateEntryStreamAsync(
                 new ReadOnlySubStream(
                     _currentStream.NotNull("currentStream is not null"),
                     _currentItem?.Size ?? 0
