@@ -73,9 +73,7 @@ internal static class UnpackUtility
         }
 
         long len14 = decodeLen[14];
-        return bitField < len14
-            ? (bitField < decodeLen[13] ? 13 : 14)
-            : 15;
+        return bitField < len14 ? (bitField < decodeLen[13] ? 13 : 14) : 15;
     }
 
     internal static void makeDecodeTables(
@@ -91,7 +89,7 @@ internal static class UnpackUtility
         long M,
             N;
 
-        Array.Clear(dec.DecodeNum,0, dec.DecodeNum.Length);
+        Array.Clear(dec.DecodeNum, 0, dec.DecodeNum.Length);
         for (i = 0; i < size; i++)
         {
             lenCount[lenTab[offset + i] & 0xF]++;

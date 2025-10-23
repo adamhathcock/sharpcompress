@@ -1,5 +1,3 @@
-
-
 using System;
 using System.Buffers;
 using System.Buffers.Binary;
@@ -43,11 +41,7 @@ internal sealed class RarVM : BitInput
 
     private int IP;
 
-    internal RarVM()
-    {
-
-    }
-
+    internal RarVM() { }
 
     public override void Dispose()
     {

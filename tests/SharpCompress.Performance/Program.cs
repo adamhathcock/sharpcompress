@@ -22,7 +22,7 @@ using (var __ = JetbrainsProfiler.Cpu($"/Users/adam/temp/"))
 {
     var testArchives = new[]
     {
-        "Rar.Audio_program.rar"
+        "Rar.Audio_program.rar",
 
         //"64bitstream.zip.7z",
         //"TarWithSymlink.tar.gz"
