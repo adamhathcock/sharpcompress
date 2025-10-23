@@ -22,10 +22,11 @@ internal sealed partial class Unpack : BitInput, IRarUnpack, IDisposable
         // to ease in porting Unpack50.cs
         Inp = this;
 
-    public void Dispose()
+    public override void Dispose()
     {
         if (!disposed)
         {
+            base.Dispose();
             if (!externalWindow)
             {
                 ArrayPool<byte>.Shared.Return(window);
@@ -667,7 +668,6 @@ internal sealed partial class Unpack : BitInput, IRarUnpack, IDisposable
                         prgStack[I] = null;
                     }
                     writeStream.Write(FilteredData, 0, FilteredDataSize);
-                    unpSomeRead = true;
                     writtenFileSize += FilteredDataSize;
                     destUnpSize -= FilteredDataSize;
                     WrittenBorder = BlockEnd;
@@ -695,15 +695,10 @@ internal sealed partial class Unpack : BitInput, IRarUnpack, IDisposable
 
     private void UnpWriteArea(int startPtr, int endPtr)
     {
-        if (endPtr != startPtr)
-        {
-            unpSomeRead = true;
-        }
         if (endPtr < startPtr)
         {
             UnpWriteData(window, startPtr, -startPtr & PackDef.MAXWINMASK);
             UnpWriteData(window, 0, endPtr);
-            unpAllBuf = true;
         }
         else
         {
@@ -1078,7 +1073,7 @@ internal sealed partial class Unpack : BitInput, IRarUnpack, IDisposable
 
     private bool AddVMCode(int firstByte, List<byte> vmCode)
     {
-        var Inp = new BitInput();
+        using var Inp = new BitInput();
         Inp.InitBitInput();
 
         // memcpy(Inp.InBuf,Code,Min(BitInput::MAX_SIZE,CodeSize));

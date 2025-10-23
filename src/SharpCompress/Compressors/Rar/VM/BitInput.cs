@@ -1,6 +1,9 @@
+using System;
+using System.Buffers;
+
 namespace SharpCompress.Compressors.Rar.VM;
 
-internal class BitInput
+internal class BitInput : IDisposable
 {
     /// <summary> the max size of the input</summary>
     internal const int MAX_SIZE = 0x8000;
@@ -20,9 +23,10 @@ internal class BitInput
         set => inBit = value;
     }
     public bool ExternalBuffer;
+    private byte[] _privateBuffer = ArrayPool<byte>.Shared.Rent(MAX_SIZE);
 
     /// <summary>  </summary>
-    internal BitInput() => InBuf = new byte[MAX_SIZE];
+    internal BitInput() => InBuf = _privateBuffer;
 
     internal byte[] InBuf { get; }
 
@@ -87,4 +91,6 @@ internal class BitInput
     /// <returns> true if an Oververflow would occur
     /// </returns>
     internal bool Overflow(int IncPtr) => (inAddr + IncPtr >= MAX_SIZE);
+
+    public virtual void Dispose() => ArrayPool<byte>.Shared.Return(_privateBuffer);
 }
