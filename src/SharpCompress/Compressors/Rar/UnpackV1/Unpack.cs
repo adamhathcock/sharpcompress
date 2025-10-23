@@ -160,7 +160,7 @@ internal sealed partial class Unpack : BitInput, IRarUnpack
     public ValueTask DoUnpackAsync()
     {
         DoUnpack();
-        return  ValueTask.CompletedTask;
+        return ValueTask.CompletedTask;
     }
 
     public ValueTask DoUnpackAsync(FileHeader fileHeader, Stream readStream, Stream writeStream)

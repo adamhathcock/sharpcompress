@@ -35,7 +35,6 @@ internal partial class Unpack : IRarUnpack
     private void UnpIO_UnpWrite(byte[] buf, size_t offset, uint count) =>
         writeStream.Write(buf, checked((int)offset), checked((int)count));
 
-
     public ValueTask DoUnpackAsync(FileHeader fileHeader, Stream readStream, Stream writeStream)
     {
         // as of 12/2017 .NET limits array indexing to using a signed integer
@@ -57,7 +56,7 @@ internal partial class Unpack : IRarUnpack
         return DoUnpackAsync();
     }
 
-    public ValueTask  DoUnpackAsync()
+    public ValueTask DoUnpackAsync()
     {
         if (fileHeader.IsStored)
         {
@@ -69,6 +68,7 @@ internal partial class Unpack : IRarUnpack
             return new ValueTask();
         }
     }
+
     private async ValueTask UnstoreFileAsync()
     {
         var length = (int)Math.Min(0x10000, DestUnpSize);
@@ -85,6 +85,7 @@ internal partial class Unpack : IRarUnpack
             DestUnpSize -= n;
         } while (!Suspended);
     }
+
     public bool Suspended { get; set; }
 
     public long DestSize => DestUnpSize;

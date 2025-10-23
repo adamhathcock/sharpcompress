@@ -114,17 +114,19 @@ public abstract class RarReader : AbstractReader<RarReaderEntry, RarVolume>
         );
         if (Entry.IsRarV3)
         {
-            return await CreateEntryStreamAsync(new RarCrcStream(UnpackV1.Value, Entry.FileHeader, stream));
+            return await CreateEntryStreamAsync(
+                new RarCrcStream(UnpackV1.Value, Entry.FileHeader, stream)
+            );
         }
 
         if (Entry.FileHeader.FileCrc?.Length > 5)
         {
             var s = await RarBLAKE2spStream.Create(UnpackV2017.Value, Entry.FileHeader, stream);
-            return await CreateEntryStreamAsync(
-                s
-            );
+            return await CreateEntryStreamAsync(s);
         }
 
-        return await CreateEntryStreamAsync(new RarCrcStream(UnpackV2017.Value, Entry.FileHeader, stream));
+        return await CreateEntryStreamAsync(
+            new RarCrcStream(UnpackV2017.Value, Entry.FileHeader, stream)
+        );
     }
 }

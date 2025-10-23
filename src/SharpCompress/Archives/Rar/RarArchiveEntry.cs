@@ -67,8 +67,10 @@ public class RarArchiveEntry : RarEntry, IArchiveEntry
         }
     }
 
-    public Stream OpenEntryStream() => throw new NotSupportedException("Synchronous extraction is not supported. Use OpenEntryStreamAsync instead.");
-
+    public Stream OpenEntryStream() =>
+        throw new NotSupportedException(
+            "Synchronous extraction is not supported. Use OpenEntryStreamAsync instead."
+        );
 
     public async Task<Stream> OpenEntryStreamAsync()
     {

@@ -48,7 +48,7 @@ public class EntryStream : Stream, IStreamStack
     /// </summary>
     public void SkipEntry()
     {
-         this.Skip();
+        this.Skip();
         _completed = true;
     }
 
@@ -60,6 +60,7 @@ public class EntryStream : Stream, IStreamStack
         await this.SkipAsync();
         _completed = true;
     }
+
     protected override void Dispose(bool disposing)
     {
         if (!(_completed || _reader.Cancelled))

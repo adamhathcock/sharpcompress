@@ -32,9 +32,9 @@ public class WriterTests : TestBase
         }
 
         await CompareArchivesByPathAsync(
-                                             Path.Combine(SCRATCH2_FILES_PATH, archive),
-                                             Path.Combine(TEST_ARCHIVES_PATH, archiveToVerifyAgainst)
-                                         );
+            Path.Combine(SCRATCH2_FILES_PATH, archive),
+            Path.Combine(TEST_ARCHIVES_PATH, archiveToVerifyAgainst)
+        );
 
         using (Stream stream = File.OpenRead(Path.Combine(SCRATCH2_FILES_PATH, archive)))
         {

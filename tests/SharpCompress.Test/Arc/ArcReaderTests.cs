@@ -7,8 +7,8 @@ using Xunit;
 
 namespace SharpCompress.Test.Arc
 {
-    public class ArcReaderTests : ReaderTests
-    {/*
+    public class ArcReaderTests
+        : ReaderTests { /*
         public ArcReaderTests()
         {
             UseExtensionInsteadOfNameToVerify = true;

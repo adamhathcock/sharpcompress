@@ -65,6 +65,7 @@ internal partial class Unpack : IRarUnpack
             DoUnpack(fileHeader.CompressionAlgorithm, fileHeader.IsSolid);
         }
     }
+
     private void UnstoreFile()
     {
         Span<byte> b = stackalloc byte[(int)Math.Min(0x10000, DestUnpSize)];

@@ -179,7 +179,7 @@ public abstract class AbstractReader<TEntry, TVolume> : IReader, IReaderExtracti
         s.TransferTo(writeStream, Entry, streamListener);
     }
 
-    public async Task<EntryStream>  OpenEntryStreamAsync()
+    public async Task<EntryStream> OpenEntryStreamAsync()
     {
         if (_wroteCurrentEntry)
         {

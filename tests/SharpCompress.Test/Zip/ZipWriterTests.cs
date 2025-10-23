@@ -11,7 +11,7 @@ public class ZipWriterTests : WriterTests
         : base(ArchiveType.Zip) { }
 
     [Fact]
-    public  Task Zip_Deflate_Write() =>
+    public Task Zip_Deflate_Write() =>
         WriteAsync(
             CompressionType.Deflate,
             "Zip.deflate.noEmptyDirs.zip",
@@ -58,6 +58,10 @@ public class ZipWriterTests : WriterTests
     [Fact]
     public Task Zip_Rar_Write() =>
         Assert.ThrowsAsync<InvalidFormatException>(async () =>
-                                                  await WriteAsync(CompressionType.Rar, "Zip.ppmd.noEmptyDirs.zip", "Zip.ppmd.noEmptyDirs.zip")
+            await WriteAsync(
+                CompressionType.Rar,
+                "Zip.ppmd.noEmptyDirs.zip",
+                "Zip.ppmd.noEmptyDirs.zip"
+            )
         );
 }

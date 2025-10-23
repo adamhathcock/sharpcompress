@@ -21,7 +21,8 @@ public class GZipArchiveEntry : GZipEntry, IArchiveEntry
         return Parts.Single().GetCompressedStream().NotNull();
     }
 
-    public virtual async Task<Stream> OpenEntryStreamAsync() => await Task.FromResult(OpenEntryStream());
+    public virtual async Task<Stream> OpenEntryStreamAsync() =>
+        await Task.FromResult(OpenEntryStream());
 
     #region IArchiveEntry Members
 

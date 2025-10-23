@@ -6,7 +6,7 @@ namespace SharpCompress.Readers;
 
 public static class IReaderExtensions
 {
-    public static async Task  WriteEntryToAsync(this IReader reader, string filePath)
+    public static async Task WriteEntryToAsync(this IReader reader, string filePath)
     {
         using Stream stream = File.Open(filePath, FileMode.Create, FileAccess.Write);
         await reader.WriteEntryToAsync(stream);
@@ -51,7 +51,7 @@ public static class IReaderExtensions
     /// <summary>
     /// Extract to specific file
     /// </summary>
-    public static async Task  WriteEntryToFileAsync(
+    public static async Task WriteEntryToFileAsync(
         this IReader reader,
         string destinationFileName,
         ExtractionOptions? options = null

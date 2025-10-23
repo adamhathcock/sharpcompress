@@ -13,6 +13,7 @@ using SharpCompress.Writers.Zip;
 using Xunit;
 
 namespace SharpCompress.Test;
+
 public class ArchiveTests : ReaderTests
 {
     /*

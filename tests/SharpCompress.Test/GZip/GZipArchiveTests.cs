@@ -11,60 +11,61 @@ namespace SharpCompress.Test.GZip;
 public class GZipArchiveTests : ArchiveTests
 {
     public GZipArchiveTests() => UseExtensionInsteadOfNameToVerify = true;
-/*
-    [Fact]
-    public void GZip_Archive_Generic()
-    {
-        using (Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.gz")))
-        using (var archive = ArchiveFactory.Open(stream))
+
+    /*
+        [Fact]
+        public void GZip_Archive_Generic()
         {
-            var entry = archive.Entries.First();
-            entry.WriteToFile(Path.Combine(SCRATCH_FILES_PATH, entry.Key.NotNull()));
-
-            var size = entry.Size;
-            var scratch = new FileInfo(Path.Combine(SCRATCH_FILES_PATH, "Tar.tar"));
-            var test = new FileInfo(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar"));
-
-            Assert.Equal(size, scratch.Length);
-            Assert.Equal(size, test.Length);
+            using (Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.gz")))
+            using (var archive = ArchiveFactory.Open(stream))
+            {
+                var entry = archive.Entries.First();
+                entry.WriteToFile(Path.Combine(SCRATCH_FILES_PATH, entry.Key.NotNull()));
+    
+                var size = entry.Size;
+                var scratch = new FileInfo(Path.Combine(SCRATCH_FILES_PATH, "Tar.tar"));
+                var test = new FileInfo(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar"));
+    
+                Assert.Equal(size, scratch.Length);
+                Assert.Equal(size, test.Length);
+            }
+            CompareArchivesByPath(
+                Path.Combine(SCRATCH_FILES_PATH, "Tar.tar"),
+                Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar")
+            );
         }
-        CompareArchivesByPath(
-            Path.Combine(SCRATCH_FILES_PATH, "Tar.tar"),
-            Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar")
-        );
-    }
-
-    [Fact]
-    public void GZip_Archive()
-    {
-        using (Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.gz")))
-        using (var archive = GZipArchive.Open(stream))
+    
+        [Fact]
+        public void GZip_Archive()
         {
-            var entry = archive.Entries.First();
-            entry.WriteToFile(Path.Combine(SCRATCH_FILES_PATH, entry.Key.NotNull()));
-
-            var size = entry.Size;
-            var scratch = new FileInfo(Path.Combine(SCRATCH_FILES_PATH, "Tar.tar"));
-            var test = new FileInfo(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar"));
-
-            Assert.Equal(size, scratch.Length);
-            Assert.Equal(size, test.Length);
+            using (Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.gz")))
+            using (var archive = GZipArchive.Open(stream))
+            {
+                var entry = archive.Entries.First();
+                entry.WriteToFile(Path.Combine(SCRATCH_FILES_PATH, entry.Key.NotNull()));
+    
+                var size = entry.Size;
+                var scratch = new FileInfo(Path.Combine(SCRATCH_FILES_PATH, "Tar.tar"));
+                var test = new FileInfo(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar"));
+    
+                Assert.Equal(size, scratch.Length);
+                Assert.Equal(size, test.Length);
+            }
+            CompareArchivesByPath(
+                Path.Combine(SCRATCH_FILES_PATH, "Tar.tar"),
+                Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar")
+            );
         }
-        CompareArchivesByPath(
-            Path.Combine(SCRATCH_FILES_PATH, "Tar.tar"),
-            Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar")
-        );
-    }
-
-    [Fact]
-    public void GZip_Archive_NoAdd()
-    {
-        var jpg = Path.Combine(ORIGINAL_FILES_PATH, "jpg", "test.jpg");
-        using Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.gz"));
-        using var archive = GZipArchive.Open(stream);
-        Assert.Throws<InvalidFormatException>(() => archive.AddEntry("jpg\\test.jpg", jpg));
-        archive.SaveTo(Path.Combine(SCRATCH_FILES_PATH, "Tar.tar.gz"));
-    }*/
+    
+        [Fact]
+        public void GZip_Archive_NoAdd()
+        {
+            var jpg = Path.Combine(ORIGINAL_FILES_PATH, "jpg", "test.jpg");
+            using Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.gz"));
+            using var archive = GZipArchive.Open(stream);
+            Assert.Throws<InvalidFormatException>(() => archive.AddEntry("jpg\\test.jpg", jpg));
+            archive.SaveTo(Path.Combine(SCRATCH_FILES_PATH, "Tar.tar.gz"));
+        }*/
 
     [Fact]
     public void GZip_Archive_Multiple_Reads()

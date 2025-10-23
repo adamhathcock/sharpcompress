@@ -203,7 +203,11 @@ public class TestBase : IDisposable
         Assert.Equal(fi1.Attributes, fi2.Attributes);
     }
 
-    protected async Task CompareArchivesByPathAsync(string file1, string file2, Encoding? encoding = null)
+    protected async Task CompareArchivesByPathAsync(
+        string file1,
+        string file2,
+        Encoding? encoding = null
+    )
     {
         var readerOptions = new ReaderOptions { LeaveStreamOpen = false };
         readerOptions.ArchiveEncoding.Default = encoding ?? Encoding.Default;

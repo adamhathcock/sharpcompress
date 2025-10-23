@@ -8,6 +8,7 @@ using SharpCompress.Readers;
 using Xunit;
 
 namespace SharpCompress.Test.Rar;
+
 /*
 public class RarArchiveTests : ArchiveTests
 {

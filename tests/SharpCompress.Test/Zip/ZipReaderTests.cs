@@ -11,6 +11,7 @@ using SharpCompress.Writers;
 using Xunit;
 
 namespace SharpCompress.Test.Zip;
+
 /*
 public class ZipReaderTests : ReaderTests
 {

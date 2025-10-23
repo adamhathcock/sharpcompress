@@ -11,7 +11,9 @@ public class ZipArchiveEntry : ZipEntry, IArchiveEntry
         : base(part) => Archive = archive;
 
     public virtual Stream OpenEntryStream() => Parts.Single().GetCompressedStream().NotNull();
-    public virtual async Task<Stream> OpenEntryStreamAsync() => await Task.FromResult(OpenEntryStream());
+
+    public virtual async Task<Stream> OpenEntryStreamAsync() =>
+        await Task.FromResult(OpenEntryStream());
 
     #region IArchiveEntry Members
 

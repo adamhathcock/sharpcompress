@@ -61,7 +61,7 @@ public static class IArchiveEntryExtensions
             async (x, fm) =>
             {
                 using var fs = File.Open(destinationFileName, fm);
-              await  entry.WriteToAsync(fs);
+                await entry.WriteToAsync(fs);
             }
         );
 }

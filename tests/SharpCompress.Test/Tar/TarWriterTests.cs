@@ -50,7 +50,11 @@ public class TarWriterTests : WriterTests
     [Fact]
     public Task Tar_Rar_Write() =>
         Assert.ThrowsAsync<InvalidFormatException>(async () =>
-                                                  await WriteAsync(CompressionType.Rar, "Zip.ppmd.noEmptyDirs.zip", "Zip.ppmd.noEmptyDirs.zip")
+            await WriteAsync(
+                CompressionType.Rar,
+                "Zip.ppmd.noEmptyDirs.zip",
+                "Zip.ppmd.noEmptyDirs.zip"
+            )
         );
 
     [Theory]
