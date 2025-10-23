@@ -23,13 +23,13 @@ internal class OutWindow : IDisposable
     {
         if (_windowSize != windowSize)
         {
+            if (_buffer is not null)
+            {
+                ArrayPool<byte>.Shared.Return(_buffer);
+            }
             _buffer = ArrayPool<byte>.Shared.Rent(windowSize);
-            Array.Clear(_buffer, 0, windowSize);
         }
-        else
-        {
-            _buffer[windowSize - 1] = 0;
-        }
+        _buffer[windowSize - 1] = 0;
         _windowSize = windowSize;
         _pos = 0;
         _streamPos = 0;
