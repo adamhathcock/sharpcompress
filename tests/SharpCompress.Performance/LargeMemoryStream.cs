@@ -17,7 +17,7 @@ public class LargeMemoryStream : Stream
     private bool _isDisposed;
 
     /// <summary>
-    /// Initializes a new instance of the LargePositionStream class.
+    /// Initializes a new instance of the LargeMemoryStream class.
     /// </summary>
     /// <param name="chunkSize">The size of each chunk in the backing byte array list. Defaults to 1MB.</param>
     public LargeMemoryStream(int chunkSize = 1024 * 1024)
