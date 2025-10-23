@@ -657,8 +657,11 @@ internal sealed partial class Unpack : BitInput, IRarUnpack
 
                             FilteredDataOffset = NextPrg.FilteredDataOffset;
                             FilteredDataSize = NextPrg.FilteredDataSize;
-                            ArrayPool<byte>.Shared.Return(FilteredData);
-                            FilteredData = ArrayPool<byte>.Shared.Rent(FilteredDataSize);
+                            if (FilteredData.Length < FilteredDataSize)
+                            {
+                                ArrayPool<byte>.Shared.Return(FilteredData);
+                                FilteredData = ArrayPool<byte>.Shared.Rent(FilteredDataSize);
+                            }
                             for (var i = 0; i < FilteredDataSize; i++)
                             {
                                 FilteredData[i] = NextPrg.GlobalData[FilteredDataOffset + i];
