@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -80,7 +81,7 @@ public class AsyncTests : TestBase
         {
             var testFile = Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.gz");
             using var fileStream = File.OpenRead(testFile);
-            await writer.WriteAsync("test_entry.bin", fileStream, System.DateTime.Now);
+            await writer.WriteAsync("test_entry.bin", fileStream, new DateTime(2023, 1, 1));
         }
 
         // Verify the archive was created and contains the entry
