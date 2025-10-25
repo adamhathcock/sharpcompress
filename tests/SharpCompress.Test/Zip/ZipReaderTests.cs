@@ -12,7 +12,7 @@ using Xunit;
 
 namespace SharpCompress.Test.Zip;
 
-/*
+
 public class ZipReaderTests : ReaderTests
 {
     public ZipReaderTests() => UseExtensionInsteadOfNameToVerify = true;
@@ -38,23 +38,23 @@ public class ZipReaderTests : ReaderTests
     }
 
     [Fact]
-    public void Zip_Zip64_Streamed_Read() => Read("Zip.zip64.zip", CompressionType.Deflate);
+    public Task Zip_Zip64_Streamed_Read() => ReadAsync("Zip.zip64.zip", CompressionType.Deflate);
 
     [Fact]
-    public void Zip_ZipX_Streamed_Read() => Read("Zip.zipx", CompressionType.LZMA);
+    public Task Zip_ZipX_Streamed_Read() => ReadAsync("Zip.zipx", CompressionType.LZMA);
 
     [Fact]
-    public void Zip_BZip2_Streamed_Read() => Read("Zip.bzip2.dd.zip", CompressionType.BZip2);
+    public Task Zip_BZip2_Streamed_Read() => ReadAsync("Zip.bzip2.dd.zip", CompressionType.BZip2);
 
     [Fact]
-    public void Zip_BZip2_Read() => Read("Zip.bzip2.zip", CompressionType.BZip2);
+    public Task Zip_BZip2_Read() => ReadAsync("Zip.bzip2.zip", CompressionType.BZip2);
 
     [Fact]
-    public void Zip_Deflate_Streamed2_Read() =>
-        Read("Zip.deflate.dd-.zip", CompressionType.Deflate);
+    public Task Zip_Deflate_Streamed2_Read() =>
+        ReadAsync("Zip.deflate.dd-.zip", CompressionType.Deflate);
 
     [Fact]
-    public void Zip_Deflate_Streamed_Read() => Read("Zip.deflate.dd.zip", CompressionType.Deflate);
+    public Task Zip_Deflate_Streamed_Read() => ReadAsync("Zip.deflate.dd.zip", CompressionType.Deflate);
 
     [Fact]
     public async Task Zip_Deflate_Streamed_Skip()
@@ -81,29 +81,29 @@ public class ZipReaderTests : ReaderTests
     }
 
     [Fact]
-    public void Zip_Deflate_Read() => Read("Zip.deflate.zip", CompressionType.Deflate);
+    public Task Zip_Deflate_Read() => ReadAsync("Zip.deflate.zip", CompressionType.Deflate);
 
     [Fact]
-    public void Zip_Deflate64_Read() => Read("Zip.deflate64.zip", CompressionType.Deflate64);
+    public Task Zip_Deflate64_Read() => ReadAsync("Zip.deflate64.zip", CompressionType.Deflate64);
 
     [Fact]
-    public void Zip_LZMA_Streamed_Read() => Read("Zip.lzma.dd.zip", CompressionType.LZMA);
+    public Task Zip_LZMA_Streamed_Read() => ReadAsync("Zip.lzma.dd.zip", CompressionType.LZMA);
 
     [Fact]
-    public void Zip_LZMA_Read() => Read("Zip.lzma.zip", CompressionType.LZMA);
+    public Task Zip_LZMA_Read() => ReadAsync("Zip.lzma.zip", CompressionType.LZMA);
 
     [Fact]
-    public void Zip_PPMd_Streamed_Read() => Read("Zip.ppmd.dd.zip", CompressionType.PPMd);
+    public Task Zip_PPMd_Streamed_Read() => ReadAsync("Zip.ppmd.dd.zip", CompressionType.PPMd);
 
     [Fact]
-    public void Zip_PPMd_Read() => Read("Zip.ppmd.zip", CompressionType.PPMd);
+    public Task Zip_PPMd_Read() => ReadAsync("Zip.ppmd.zip", CompressionType.PPMd);
 
     [Fact]
-    public void Zip_None_Read() => Read("Zip.none.zip", CompressionType.None);
+    public Task Zip_None_Read() => ReadAsync("Zip.none.zip", CompressionType.None);
 
     [Fact]
-    public void Zip_Deflate_NoEmptyDirs_Read() =>
-        Read("Zip.deflate.noEmptyDirs.zip", CompressionType.Deflate);
+    public Task Zip_Deflate_NoEmptyDirs_Read() =>
+        ReadAsync("Zip.deflate.noEmptyDirs.zip", CompressionType.Deflate);
 
     [Fact]
     public async Task Zip_BZip2_PkwareEncryption_Read()
@@ -337,7 +337,13 @@ public class ZipReaderTests : ReaderTests
         while (await reader.MoveToNextEntryAsync())
         {
             count++;
-            reader.OpenEntryStreamAsync().Dispose(); // Uncomment for workaround
+            var stream = await reader.OpenEntryStreamAsync();
+
+#if !NETSTANDARD2_0 && !NETFRAMEWORK
+                await stream.DisposeAsync(); // Uncomment for workaround
+                #else
+                stream.Dispose();
+#endif
         }
         Assert.Equal(4, count);
     }
@@ -400,4 +406,4 @@ public class ZipReaderTests : ReaderTests
         Assert.Equal(197, reader.Entry.Size);
     }
 }
-*/
+

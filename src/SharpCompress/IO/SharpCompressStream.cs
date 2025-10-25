@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace SharpCompress.IO;
 
@@ -210,6 +211,59 @@ public class SharpCompressStream : Stream, IStreamStack
             return pos;
         }
         set { Seek(value, SeekOrigin.Begin); }
+    }
+
+    public override async Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+    {
+        if (count == 0)
+            return 0;
+
+        if (_bufferingEnabled)
+        {
+            ValidateBufferState();
+
+            // Fill buffer if needed
+            if (_bufferedLength == 0)
+            {
+                _bufferedLength = await Stream.ReadAsync(_buffer!, 0, _bufferSize, cancellationToken);
+                _bufferPosition = 0;
+            }
+            int available = _bufferedLength - _bufferPosition;
+            int toRead = Math.Min(count, available);
+            if (toRead > 0)
+            {
+                Array.Copy(_buffer!, _bufferPosition, buffer, offset, toRead);
+                _bufferPosition += toRead;
+                _internalPosition += toRead;
+                return toRead;
+            }
+            // If buffer exhausted, refill
+            int r = Stream.Read(_buffer!, 0, _bufferSize);
+            if (r == 0)
+                return 0;
+            _bufferedLength = r;
+            _bufferPosition = 0;
+            if (_bufferedLength == 0)
+            {
+                return 0;
+            }
+            toRead = Math.Min(count, _bufferedLength);
+            Array.Copy(_buffer!, 0, buffer, offset, toRead);
+            _bufferPosition = toRead;
+            _internalPosition += toRead;
+            return toRead;
+        }
+        else
+        {
+            if (count == 0)
+            {
+                return 0;
+            }
+            int read;
+            read = await Stream.ReadAsync(buffer, offset, count, cancellationToken);
+            _internalPosition += read;
+            return read;
+        }
     }
 
     public override int Read(byte[] buffer, int offset, int count)
