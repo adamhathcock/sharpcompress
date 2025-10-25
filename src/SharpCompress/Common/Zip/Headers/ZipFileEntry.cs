@@ -91,8 +91,15 @@ internal abstract class ZipFileEntry : ZipHeader
 
     protected void LoadExtra(byte[] extra)
     {
-        for (var i = 0; i < extra.Length - 4; )
+        for (var i = 0; i < extra.Length; )
         {
+            // Ensure we have at least a header (2-byte ID + 2-byte length)
+            if (i + 4 > extra.Length)
+            {
+                // Incomplete header — stop parsing extras
+                break;
+            }
+
             var type = (ExtraDataType)BinaryPrimitives.ReadUInt16LittleEndian(extra.AsSpan(i));
             if (!Enum.IsDefined(typeof(ExtraDataType), type))
             {
@@ -106,7 +113,17 @@ internal abstract class ZipFileEntry : ZipHeader
             if (length > extra.Length)
             {
                 // bad extras block
-                return;
+                break; // allow processing optional other blocks
+            }
+            // Some ZIP files contain vendor-specific or malformed extra fields where the declared
+            // data length extends beyond the remaining buffer. This adjustment ensures that
+            // we only read data within bounds (i + 4 + length <= extra.Length)
+            // The example here is: 41 43 18 00 41 52 43 30 46 EB FF FF 51 29 03 C6 03 00 00 00 00 00 00 00 00
+            // No existing zip utility uses 0x4341 ('AC')
+            if (i + 4 + length > extra.Length)
+            {
+                // incomplete or corrupt field
+                break; // allow processing optional other blocks
             }
 
             var data = new byte[length];
