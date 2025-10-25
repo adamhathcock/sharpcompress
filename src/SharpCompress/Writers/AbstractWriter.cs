@@ -1,5 +1,7 @@
 ﻿using System;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 using SharpCompress.Common;
 
 namespace SharpCompress.Writers;
@@ -21,6 +23,19 @@ public abstract class AbstractWriter(ArchiveType type, WriterOptions writerOptio
     protected WriterOptions WriterOptions { get; } = writerOptions;
 
     public abstract void Write(string filename, Stream source, DateTime? modificationTime);
+
+    public virtual async Task WriteAsync(
+        string filename,
+        Stream source,
+        DateTime? modificationTime,
+        CancellationToken cancellationToken = default
+    )
+    {
+        // Default implementation calls synchronous version
+        // Derived classes should override for true async behavior
+        Write(filename, source, modificationTime);
+        await Task.CompletedTask.ConfigureAwait(false);
+    }
 
     protected virtual void Dispose(bool isDisposing)
     {
