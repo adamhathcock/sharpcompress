@@ -1,5 +1,7 @@
 using System;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 using SharpCompress.Common;
 
 namespace SharpCompress.Readers;
@@ -20,6 +22,13 @@ public interface IReader : IDisposable
     /// </summary>
     /// <param name="writableStream"></param>
     void WriteEntryTo(Stream writableStream);
+
+    /// <summary>
+    /// Decompresses the current entry to the stream asynchronously.  This cannot be called twice for the current entry.
+    /// </summary>
+    /// <param name="writableStream"></param>
+    /// <param name="cancellationToken"></param>
+    Task WriteEntryToAsync(Stream writableStream, CancellationToken cancellationToken = default);
 
     bool Cancelled { get; }
     void Cancel();

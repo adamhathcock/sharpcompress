@@ -1,5 +1,7 @@
 ﻿using System.IO;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using SharpCompress.Common.GZip;
 
 namespace SharpCompress.Archives.GZip;
@@ -18,6 +20,12 @@ public class GZipArchiveEntry : GZipEntry, IArchiveEntry
             part.GetRawStream().Position = part.EntryStartPosition;
         }
         return Parts.Single().GetCompressedStream().NotNull();
+    }
+
+    public virtual Task<Stream> OpenEntryStreamAsync(CancellationToken cancellationToken = default)
+    {
+        // GZip synchronous implementation is fast enough, just wrap it
+        return Task.FromResult(OpenEntryStream());
     }
 
     #region IArchiveEntry Members
