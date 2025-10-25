@@ -1,64 +1,45 @@
----
-description: 'Guidelines for building C# applications'
-applyTo: '**/*.cs'
----
+# Agent usage and commands
 
-# C# Development
+This document explains how maintainers and contributors can instruct the GitHub Copilot coding agent in this repository.
 
-## C# Instructions
-- Always use the latest version C#, currently C# 13 features.
-- Write clear and concise comments for each function.
+Supported instruction channels
+- PR front-matter (YAML at top of PR body) — preferred for reproducibility.
+- PR comment using slash-style commands (e.g. `/copilot run apply-fixes`).
+- Add a label that triggers a run (e.g. `copilot: run`).
 
-## General Instructions
-- Make only high confidence suggestions when reviewing code changes.
-- Write code with good maintainability practices, including comments on why certain design decisions were made.
-- Handle edge cases and write clear exception handling.
-- For libraries or external dependencies, mention their usage and purpose in comments.
+Example PR front-matter (place at the top of the PR body):
 
-## Naming Conventions
+```yaml
+copilot:
+  run: "apply-fixes"
+  target_branch: "master"
+  auto_merge: false
+  run_tests: true
+  required_approvals: 1
+```
 
-- Follow PascalCase for component names, method names, and public members.
-- Use camelCase for private fields and local variables.
-- Prefix interface names with "I" (e.g., IUserService).
+Example slash command via PR comment:
+- `/copilot run apply-fixes --target=master --run-tests`
 
-## Code Formatting
+Recommended labels
+- `copilot: run`       -> instructs agent to run its default task on the PR
+- `copilot: approve`   -> if allowed by policy, agent may merge once checks pass
 
-- Use CSharpier for all code formatting to ensure consistent style across the project.
-- Install CSharpier globally: `dotnet tool install -g csharpier`
-- Format files with: `dotnet csharpier format .`
-- Configure your IDE to format on save using CSharpier.
-- CSharpier configuration can be customized via `.csharpierrc` file in the project root.
-- Trust CSharpier's opinionated formatting decisions to maintain consistency.
+How to enable and grant permissions
+1. Merge `.github/agents/copilot-agent.yml` into master.
+2. As a repository administrator, install/authorize the GitHub Copilot coding agent app and grant it repository permissions that match the manifest (Contents: write, Pull requests: write, Checks: write, Actions: write/read, Issues: write).
+3. Ensure Actions is enabled for the repository and branch protection rules are compatible with the manifest (or allow the agent to have the bypass when appropriate).
 
-## Project Setup and Structure
+Safety & governance
+- Keep allow paths narrow — only grant the agent write access where it needs it.
+- Prefer `require_review_before_merge: true` during initial rollout.
+- Use audit logs to review agent activity and require a human reviewer until you trust the automation.
 
-- Guide users through creating a new .NET project with the appropriate templates.
-- Explain the purpose of each generated file and folder to build understanding of the project structure.
-- Demonstrate how to organize code using feature folders or domain-driven design principles.
-- Show proper separation of concerns with models, services, and data access layers.
-- Explain the Program.cs and configuration system in ASP.NET Core 9 including environment-specific settings.
+PR details
+- Branch name: copilot-agent-config-and-docs
+- Changes: add/modify .github/agents/copilot-agent.yml and add AGENTS.md at repo root
+- This PR is intentionally limited to configuration and documentation; it does not add any workflows that push changes or perform merges.
 
-## Nullable Reference Types
+If the repository settings or installed apps block the agent from running, include a clear note in the PR description describing actions an admin must take: enable Actions, install Copilot coding agent app, grant repo write permissions to agent, or run onboarding steps.
 
-- Declare variables non-nullable, and check for `null` at entry points.
-- Always use `is null` or `is not null` instead of `== null` or `!= null`.
-- Trust the C# null annotations and don't add null checks when the type system says a value cannot be null.
-
-## Testing
-
-- Always include test cases for critical paths of the application.
-- Guide users through creating unit tests.
-- Do not emit "Act", "Arrange" or "Assert" comments.
-- Copy existing style in nearby files for test method names and capitalization.
-- Explain integration testing approaches for API endpoints.
-- Demonstrate how to mock dependencies for effective testing.
-- Show how to test authentication and authorization logic.
-- Explain test-driven development principles as applied to API development.
-
-## Performance Optimization
-
-- Guide users on implementing caching strategies (in-memory, distributed, response caching).
-- Explain asynchronous programming patterns and why they matter for API performance.
-- Demonstrate pagination, filtering, and sorting for large data sets.
-- Show how to implement compression and other performance optimizations.
-- Explain how to measure and benchmark API performance.
+Author: GitHub Copilot (@copilot) acting on behalf of adamhathcock.
