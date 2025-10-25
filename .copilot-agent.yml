@@ -1,0 +1,7 @@
+enabled: true
+agent:
+  name: copilot-coding-agent
+  allow:
+    - paths: ["src/**/*", "tests/**/*", "README.md", "AGENTS.md"]
+      actions: ["create", "modify"]
+  require_review_before_merge: true
