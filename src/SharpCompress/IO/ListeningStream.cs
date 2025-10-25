@@ -1,4 +1,7 @@
+using System;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 using SharpCompress.Common;
 
 namespace SharpCompress.IO;
@@ -66,6 +69,15 @@ internal class ListeningStream : Stream, IStreamStack
         get => Stream.Position;
         set => Stream.Position = value;
     }
+#if !NETSTANDARD2_0 && !NETFRAMEWORK
+    public override async ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default)
+    {
+        var read = await Stream.ReadAsync(buffer, cancellationToken);
+        _currentEntryTotalReadBytes += read;
+        _listener.FireCompressedBytesRead(_currentEntryTotalReadBytes, _currentEntryTotalReadBytes);
+        return read;
+    }
+#endif
 
     public override int Read(byte[] buffer, int offset, int count)
     {

@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Threading.Tasks;
 using SharpCompress.Common;
 using SharpCompress.Common.Rar.Headers;
 using SharpCompress.IO;
@@ -31,7 +32,18 @@ internal class RarCrcStream : RarStream, IStreamStack
     private uint currentCrc;
     private readonly bool disableCRC;
 
-    public RarCrcStream(
+    public static async ValueTask<RarCrcStream> Create(
+        IRarUnpack unpack,
+        FileHeader fileHeader,
+        MultiVolumeReadOnlyStream readStream
+    )
+    {
+        var rs = new RarCrcStream(unpack, fileHeader, readStream);
+        await Initialize(rs, unpack, fileHeader, readStream);
+        return rs;
+    }
+
+    private RarCrcStream(
         IRarUnpack unpack,
         FileHeader fileHeader,
         MultiVolumeReadOnlyStream readStream

@@ -1,5 +1,6 @@
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using SharpCompress.Archives;
 using SharpCompress.Archives.GZip;
 using SharpCompress.Archives.Tar;
@@ -13,13 +14,13 @@ public class GZipArchiveTests : ArchiveTests
     public GZipArchiveTests() => UseExtensionInsteadOfNameToVerify = true;
 
     [Fact]
-    public void GZip_Archive_Generic()
+    public async Task GZip_Archive_Generic()
     {
         using (Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.gz")))
         using (var archive = ArchiveFactory.Open(stream))
         {
             var entry = archive.Entries.First();
-            entry.WriteToFile(Path.Combine(SCRATCH_FILES_PATH, entry.Key.NotNull()));
+            await entry.WriteToFileAsync(Path.Combine(SCRATCH_FILES_PATH, entry.Key.NotNull()));
 
             var size = entry.Size;
             var scratch = new FileInfo(Path.Combine(SCRATCH_FILES_PATH, "Tar.tar"));
@@ -28,20 +29,20 @@ public class GZipArchiveTests : ArchiveTests
             Assert.Equal(size, scratch.Length);
             Assert.Equal(size, test.Length);
         }
-        CompareArchivesByPath(
+        await CompareArchivesByPathAsync(
             Path.Combine(SCRATCH_FILES_PATH, "Tar.tar"),
             Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar")
         );
     }
 
     [Fact]
-    public void GZip_Archive()
+    public async Task GZip_Archive()
     {
         using (Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.gz")))
         using (var archive = GZipArchive.Open(stream))
         {
             var entry = archive.Entries.First();
-            entry.WriteToFile(Path.Combine(SCRATCH_FILES_PATH, entry.Key.NotNull()));
+            await entry.WriteToFileAsync(Path.Combine(SCRATCH_FILES_PATH, entry.Key.NotNull()));
 
             var size = entry.Size;
             var scratch = new FileInfo(Path.Combine(SCRATCH_FILES_PATH, "Tar.tar"));
@@ -50,7 +51,7 @@ public class GZipArchiveTests : ArchiveTests
             Assert.Equal(size, scratch.Length);
             Assert.Equal(size, test.Length);
         }
-        CompareArchivesByPath(
+        await CompareArchivesByPathAsync(
             Path.Combine(SCRATCH_FILES_PATH, "Tar.tar"),
             Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar")
         );

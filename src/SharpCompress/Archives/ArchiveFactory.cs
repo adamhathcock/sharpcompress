@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using SharpCompress.Common;
 using SharpCompress.Factories;
 using SharpCompress.IO;
@@ -116,14 +117,14 @@ public static class ArchiveFactory
     /// <summary>
     /// Extract to specific directory, retaining filename
     /// </summary>
-    public static void WriteToDirectory(
+    public static async Task WriteToDirectoryAsync(
         string sourceArchive,
         string destinationDirectory,
         ExtractionOptions? options = null
     )
     {
         using var archive = Open(sourceArchive);
-        archive.WriteToDirectory(destinationDirectory, options);
+        await archive.WriteToDirectoryAsync(destinationDirectory, options);
     }
 
     private static T FindFactory<T>(FileInfo finfo)

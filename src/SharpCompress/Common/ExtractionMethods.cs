@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Threading.Tasks;
 
 namespace SharpCompress.Common;
 
@@ -8,11 +9,11 @@ internal static class ExtractionMethods
     /// <summary>
     /// Extract to specific directory, retaining filename
     /// </summary>
-    public static void WriteEntryToDirectory(
+    public static async Task WriteEntryToDirectoryAsync(
         IEntry entry,
         string destinationDirectory,
         ExtractionOptions? options,
-        Action<string, ExtractionOptions?> write
+        Func<string, ExtractionOptions?, Task> write
     )
     {
         string destinationFileName;
@@ -77,7 +78,7 @@ internal static class ExtractionMethods
                     "Entry is trying to write a file outside of the destination directory."
                 );
             }
-            write(destinationFileName, options);
+            await write(destinationFileName, options);
         }
         else if (options.ExtractFullPath && !Directory.Exists(destinationFileName))
         {
@@ -85,11 +86,11 @@ internal static class ExtractionMethods
         }
     }
 
-    public static void WriteEntryToFile(
+    public static async Task WriteEntryToFileAsync(
         IEntry entry,
         string destinationFileName,
         ExtractionOptions? options,
-        Action<string, FileMode> openAndWrite
+        Func<string, FileMode, Task> openAndWrite
     )
     {
         if (entry.LinkTarget != null)
@@ -112,7 +113,7 @@ internal static class ExtractionMethods
                 fm = FileMode.CreateNew;
             }
 
-            openAndWrite(destinationFileName, fm);
+            await openAndWrite(destinationFileName, fm);
             entry.PreserveExtractionOptions(destinationFileName, options);
         }
     }

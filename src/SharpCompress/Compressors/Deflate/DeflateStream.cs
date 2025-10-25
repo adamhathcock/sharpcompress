@@ -28,6 +28,7 @@ using System;
 using System.IO;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using SharpCompress.IO;
 
 namespace SharpCompress.Compressors.Deflate;
@@ -323,6 +324,16 @@ public class DeflateStream : Stream, IStreamStack
         }
 
         return _baseStream.Read(buffer, offset, count);
+    }
+
+    public override Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+    {
+        if (_disposed)
+        {
+            throw new ObjectDisposedException("DeflateStream");
+        }
+
+        return _baseStream.ReadAsync(buffer, offset, count, cancellationToken);
     }
 
     public override int ReadByte()

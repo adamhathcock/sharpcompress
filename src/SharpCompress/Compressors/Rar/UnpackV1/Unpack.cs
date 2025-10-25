@@ -4,6 +4,7 @@ using System;
 using System.Buffers;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading.Tasks;
 using SharpCompress.Common;
 using SharpCompress.Common.Rar.Headers;
 using SharpCompress.Compressors.PPMd.H;
@@ -29,8 +30,11 @@ internal sealed partial class Unpack : BitInput, IRarUnpack
             base.Dispose();
             if (!externalWindow)
             {
-                ArrayPool<byte>.Shared.Return(window);
-                window = null;
+                if (window != null)
+                {
+                    ArrayPool<byte>.Shared.Return(window);
+                    window = null;
+                }
             }
             rarVM.Dispose();
             disposed = true;
@@ -154,6 +158,20 @@ internal sealed partial class Unpack : BitInput, IRarUnpack
         suspended = false;
         DoUnpack();
     }
+
+#if !NETSTANDARD2_0 && !NETFRAMEWORK
+    public ValueTask DoUnpackAsync()
+    {
+        DoUnpack();
+        return ValueTask.CompletedTask;
+    }
+
+    public ValueTask DoUnpackAsync(FileHeader fileHeader, Stream readStream, Stream writeStream)
+    {
+        DoUnpack(fileHeader, readStream, writeStream);
+        return ValueTask.CompletedTask;
+    }
+#endif
 
     public void DoUnpack()
     {
