@@ -76,6 +76,23 @@ public static class IArchiveEntryExtensions
         );
 
     /// <summary>
+    /// Extract to specific directory asynchronously, retaining filename
+    /// </summary>
+    public static Task WriteToDirectoryAsync(
+        this IArchiveEntry entry,
+        string destinationDirectory,
+        ExtractionOptions? options = null,
+        CancellationToken cancellationToken = default
+    ) =>
+        ExtractionMethods.WriteEntryToDirectoryAsync(
+            entry,
+            destinationDirectory,
+            options,
+            (x, opt) => entry.WriteToFileAsync(x, opt, cancellationToken),
+            cancellationToken
+        );
+
+    /// <summary>
     /// Extract to specific file
     /// </summary>
     public static void WriteToFile(

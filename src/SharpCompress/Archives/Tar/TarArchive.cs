@@ -257,7 +257,13 @@ public class TarArchive : AbstractWritableArchive<TarArchiveEntry, TarVolume>
         {
             using var entryStream = entry.OpenEntryStream();
             await writer
-                .WriteAsync(entry.Key.NotNull("Entry Key is null"), entryStream, cancellationToken)
+                .WriteAsync(
+                    entry.Key.NotNull("Entry Key is null"),
+                    entryStream,
+                    entry.LastModifiedTime,
+                    entry.Size,
+                    cancellationToken
+                )
                 .ConfigureAwait(false);
         }
     }
