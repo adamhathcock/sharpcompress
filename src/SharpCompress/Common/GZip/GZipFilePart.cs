@@ -28,6 +28,8 @@ internal sealed class GZipFilePart : FilePart
         }
         else
         {
+            // For non-seekable streams, we can't read the trailer or track position.
+            // Set to 0 since the stream will be read sequentially from its current position.
             EntryStartPosition = 0;
         }
     }
