@@ -6,12 +6,11 @@ using System.Threading.Tasks;
 using SharpCompress.Archives;
 using SharpCompress.Archives.Zip;
 using SharpCompress.Common;
-using SharpCompress.IO;
 using SharpCompress.Readers;
 using SharpCompress.Writers;
 using Xunit;
 
-namespace SharpCompress.Test;
+namespace SharpCompress.Test.GZip;
 
 public class AsyncTests : TestBase
 {
@@ -19,7 +18,11 @@ public class AsyncTests : TestBase
     public async Task Reader_Async_Extract_All()
     {
         var testArchive = Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.gz");
+        #if NETFRAMEWORK
         using var stream = File.OpenRead(testArchive);
+        #else
+        await using var stream = File.OpenRead(testArchive);
+#endif
         using var reader = ReaderFactory.Open(stream);
 
         await reader.WriteAllToDirectoryAsync(
@@ -40,7 +43,11 @@ public class AsyncTests : TestBase
     public async Task Reader_Async_Extract_Single_Entry()
     {
         var testArchive = Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.gz");
+#if NETFRAMEWORK
         using var stream = File.OpenRead(testArchive);
+#else
+        await using var stream = File.OpenRead(testArchive);
+#endif
         using var reader = ReaderFactory.Open(stream);
 
         while (reader.MoveToNextEntry())
@@ -49,8 +56,11 @@ public class AsyncTests : TestBase
             {
                 var outputPath = Path.Combine(SCRATCH_FILES_PATH, reader.Entry.Key!);
                 Directory.CreateDirectory(Path.GetDirectoryName(outputPath)!);
-
+#if NETFRAMEWORK
                 using var outputStream = File.Create(outputPath);
+#else
+                await using var outputStream = File.Create(outputPath);
+#endif
                 await reader.WriteEntryToAsync(outputStream);
                 break; // Just test one entry
             }
@@ -65,7 +75,11 @@ public class AsyncTests : TestBase
 
         foreach (var entry in archive.Entries.Where(e => !e.IsDirectory).Take(1))
         {
+#if NETFRAMEWORK
             using var entryStream = await entry.OpenEntryStreamAsync();
+#else
+            await using var entryStream = await entry.OpenEntryStreamAsync();
+#endif
             Assert.NotNull(entryStream);
             Assert.True(entryStream.CanRead);
 
