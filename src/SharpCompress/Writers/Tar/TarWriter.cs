@@ -1,5 +1,7 @@
 using System;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 using SharpCompress.Common;
 using SharpCompress.Common.Tar.Headers;
 using SharpCompress.Compressors;
@@ -89,6 +91,40 @@ public class TarWriter : AbstractWriter
         header.Write(OutputStream);
         size = source.TransferTo(OutputStream, realSize);
         PadTo512(size.Value);
+    }
+
+    public override async Task WriteAsync(
+        string filename,
+        Stream source,
+        DateTime? modificationTime,
+        CancellationToken cancellationToken = default
+    ) => await WriteAsync(filename, source, modificationTime, null, cancellationToken);
+
+    public async Task WriteAsync(
+        string filename,
+        Stream source,
+        DateTime? modificationTime,
+        long? size,
+        CancellationToken cancellationToken = default
+    )
+    {
+        if (!source.CanSeek && size is null)
+        {
+            throw new ArgumentException("Seekable stream is required if no size is given.");
+        }
+
+        var realSize = size ?? source.Length;
+
+        var header = new TarHeader(WriterOptions.ArchiveEncoding);
+
+        header.LastModifiedTime = modificationTime ?? TarHeader.EPOCH;
+        header.Name = NormalizeFilename(filename);
+        header.Size = realSize;
+        header.Write(OutputStream);
+        var written = await source
+            .TransferToAsync(OutputStream, realSize, cancellationToken)
+            .ConfigureAwait(false);
+        PadTo512(written);
     }
 
     private void PadTo512(long size)
