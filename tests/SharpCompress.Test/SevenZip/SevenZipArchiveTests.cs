@@ -123,6 +123,25 @@ public class SevenZipArchiveTests : ArchiveTests
     //"7Zip.BZip2.split.007"
 
     [Fact]
+    public void SevenZipArchive_Copy_StreamRead() => ArchiveStreamRead("7Zip.Copy.7z");
+
+    [Fact]
+    public void SevenZipArchive_Copy_PathRead() => ArchiveFileRead("7Zip.Copy.7z");
+
+    [Fact]
+    public void SevenZipArchive_Copy_CompressionType()
+    {
+        using (Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "7Zip.Copy.7z")))
+        using (var archive = SevenZipArchive.Open(stream))
+        {
+            foreach (var entry in archive.Entries.Where(e => !e.IsDirectory))
+            {
+                Assert.Equal(CompressionType.None, entry.CompressionType);
+            }
+        }
+    }
+
+    [Fact]
     public void SevenZipArchive_ZSTD_StreamRead() => ArchiveStreamRead("7Zip.ZSTD.7z");
 
     [Fact]
