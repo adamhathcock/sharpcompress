@@ -126,7 +126,7 @@ public abstract class ReaderTests : TestBase
         CancellationToken cancellationToken = default
     )
     {
-        while (reader.MoveToNextEntry())
+        while (await reader.MoveToNextEntryAsync(cancellationToken))
         {
             if (!reader.Entry.IsDirectory)
             {
