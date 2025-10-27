@@ -24,8 +24,12 @@ internal sealed class GZipFilePart : FilePart
             stream.Position = stream.Length - 8;
             ReadTrailer();
             stream.Position = position;
+            EntryStartPosition = position;
         }
-        EntryStartPosition = stream.Position;
+        else
+        {
+            EntryStartPosition = 0;
+        }
     }
 
     internal long EntryStartPosition { get; }

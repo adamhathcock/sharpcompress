@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 using System.Linq;
 using SharpCompress.Archives;
@@ -123,5 +124,61 @@ public class GZipArchiveTests : ArchiveTests
         using var stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.gz"));
         using var archive = GZipArchive.Open(stream);
         Assert.Equal(archive.Type, ArchiveType.GZip);
+    }
+
+    [Fact]
+    public void GZip_Archive_NonSeekableStream()
+    {
+        // Test that GZip extraction works with non-seekable streams (like HttpBaseStream)
+        using var fileStream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.gz"));
+        var buffer = new MemoryStream();
+        fileStream.CopyTo(buffer);
+        buffer.Position = 0;
+
+        // Create a non-seekable wrapper around the MemoryStream
+        using var nonSeekableStream = new NonSeekableStream(buffer);
+        using var reader = SharpCompress.Readers.GZip.GZipReader.Open(nonSeekableStream);
+
+        // Verify we can move to the first entry and read it without exceptions
+        Assert.True(reader.MoveToNextEntry());
+        Assert.NotNull(reader.Entry);
+
+        // Extract and verify the entry can be read
+        using var outputStream = new MemoryStream();
+        reader.WriteEntryTo(outputStream);
+
+        Assert.True(outputStream.Length > 0);
+    }
+
+    // Helper class to simulate a non-seekable stream like HttpBaseStream
+    private class NonSeekableStream : Stream
+    {
+        private readonly Stream _baseStream;
+
+        public NonSeekableStream(Stream baseStream) => _baseStream = baseStream;
+
+        public override bool CanRead => _baseStream.CanRead;
+        public override bool CanSeek => false; // Simulate non-seekable stream
+        public override bool CanWrite => false;
+        public override long Length => throw new NotSupportedException();
+
+        public override long Position
+        {
+            get => throw new NotSupportedException();
+            set => throw new NotSupportedException();
+        }
+
+        public override void Flush() => _baseStream.Flush();
+
+        public override int Read(byte[] buffer, int offset, int count) =>
+            _baseStream.Read(buffer, offset, count);
+
+        public override long Seek(long offset, SeekOrigin origin) =>
+            throw new NotSupportedException();
+
+        public override void SetLength(long value) => throw new NotSupportedException();
+
+        public override void Write(byte[] buffer, int offset, int count) =>
+            throw new NotSupportedException();
     }
 }
