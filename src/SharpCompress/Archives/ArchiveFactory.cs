@@ -20,8 +20,9 @@ public static class ArchiveFactory
     public static IArchive Open(Stream stream, ReaderOptions? readerOptions = null)
     {
         readerOptions ??= new ReaderOptions();
+        var factory = FindFactory<IArchiveFactory>(stream);
         stream = new SharpCompressStream(stream, bufferSize: readerOptions.BufferSize);
-        return FindFactory<IArchiveFactory>(stream).Open(stream, readerOptions);
+        return factory.Open(stream, readerOptions);
     }
 
     public static IWritableArchive Create(ArchiveType type)
