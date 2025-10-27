@@ -67,6 +67,7 @@ internal class SevenZipFilePart : FilePart
         }
     }
 
+    private const uint K_COPY = 0x0;
     private const uint K_LZMA2 = 0x21;
     private const uint K_LZMA = 0x030101;
     private const uint K_PPMD = 0x030401;
@@ -82,6 +83,7 @@ internal class SevenZipFilePart : FilePart
         var coder = Folder.NotNull()._coders.First();
         return coder._methodId._id switch
         {
+            K_COPY => CompressionType.None,
             K_LZMA or K_LZMA2 => CompressionType.LZMA,
             K_PPMD => CompressionType.PPMd,
             K_B_ZIP2 => CompressionType.BZip2,
