@@ -28,13 +28,13 @@ SharpCompress is a pure C# compression library supporting multiple archive forma
 
 ## Code Formatting
 
-- Use CSharpier for all code formatting to ensure consistent style across the project.
-- Install CSharpier globally: `dotnet tool install -g csharpier`
-- Format files with: `dotnet csharpier format .`
-- **ALWAYS run `dotnet csharpier format .` after making code changes before committing.**
-- Configure your IDE to format on save using CSharpier.
-- CSharpier configuration can be customized via `.csharpierrc` file in the project root.
-- Trust CSharpier's opinionated formatting decisions to maintain consistency.
+- Follow the formatting rules defined in `.editorconfig`
+- Use 4 spaces for indentation
+- Use UTF-8 encoding
+- Insert final newline in files
+- Trim trailing whitespace
+- Configure your IDE to respect `.editorconfig` settings (most modern IDEs do this automatically)
+- Consistent code formatting is enforced through `.editorconfig` to maintain code quality across the project
 
 ## Project Setup and Structure
 
