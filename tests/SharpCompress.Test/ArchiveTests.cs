@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using SharpCompress.Archives;
 using SharpCompress.Common;
 using SharpCompress.Compressors.Xz;
@@ -568,5 +569,57 @@ public class ArchiveTests : ReaderTests
         var crc = CalculateCrc32(extractedData);
 
         return (extractedData, crc);
+    }
+
+    protected async Task ArchiveStreamReadAsync(
+        string testArchive,
+        ReaderOptions? readerOptions = null
+    )
+    {
+        testArchive = Path.Combine(TEST_ARCHIVES_PATH, testArchive);
+        await ArchiveStreamReadAsync(
+            ArchiveFactory.AutoFactory,
+            readerOptions,
+            new[] { testArchive }
+        );
+    }
+
+    protected async Task ArchiveStreamReadAsync(
+        IArchiveFactory archiveFactory,
+        ReaderOptions? readerOptions,
+        IEnumerable<string> testArchives
+    )
+    {
+        foreach (var path in testArchives)
+        {
+            using (
+                var stream = SharpCompressStream.Create(
+                    File.OpenRead(path),
+                    leaveOpen: true,
+                    throwOnDispose: true
+                )
+            )
+            using (var archive = archiveFactory.Open(stream, readerOptions))
+            {
+                try
+                {
+                    foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
+                    {
+                        await entry.WriteToDirectoryAsync(
+                            SCRATCH_FILES_PATH,
+                            new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
+                        );
+                    }
+                }
+                catch (IndexOutOfRangeException)
+                {
+                    //SevenZipArchive_BZip2_Split test needs this
+                    stream.ThrowOnDispose = false;
+                    throw;
+                }
+                stream.ThrowOnDispose = false;
+            }
+            VerifyFiles();
+        }
     }
 }

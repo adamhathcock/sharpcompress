@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using SharpCompress.Common;
 using SharpCompress.Common.Zip;
 using SharpCompress.Common.Zip.Headers;
@@ -314,6 +316,24 @@ public class ZipArchive : AbstractWritableArchive<ZipArchiveEntry, ZipVolume>
                 entryStream,
                 entry.LastModifiedTime
             );
+        }
+    }
+
+    protected override async Task SaveToAsync(
+        Stream stream,
+        WriterOptions options,
+        IEnumerable<ZipArchiveEntry> oldEntries,
+        IEnumerable<ZipArchiveEntry> newEntries,
+        CancellationToken cancellationToken = default
+    )
+    {
+        using var writer = new ZipWriter(stream, new ZipWriterOptions(options));
+        foreach (var entry in oldEntries.Concat(newEntries).Where(x => !x.IsDirectory))
+        {
+            using var entryStream = entry.OpenEntryStream();
+            await writer
+                .WriteAsync(entry.Key.NotNull("Entry Key is null"), entryStream, cancellationToken)
+                .ConfigureAwait(false);
         }
     }
 

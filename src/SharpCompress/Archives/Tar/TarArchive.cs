@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using SharpCompress.Common;
 using SharpCompress.Common.Tar;
 using SharpCompress.Common.Tar.Headers;
@@ -239,6 +241,30 @@ public class TarArchive : AbstractWritableArchive<TarArchiveEntry, TarVolume>
                 entry.LastModifiedTime,
                 entry.Size
             );
+        }
+    }
+
+    protected override async Task SaveToAsync(
+        Stream stream,
+        WriterOptions options,
+        IEnumerable<TarArchiveEntry> oldEntries,
+        IEnumerable<TarArchiveEntry> newEntries,
+        CancellationToken cancellationToken = default
+    )
+    {
+        using var writer = new TarWriter(stream, new TarWriterOptions(options));
+        foreach (var entry in oldEntries.Concat(newEntries).Where(x => !x.IsDirectory))
+        {
+            using var entryStream = entry.OpenEntryStream();
+            await writer
+                .WriteAsync(
+                    entry.Key.NotNull("Entry Key is null"),
+                    entryStream,
+                    entry.LastModifiedTime,
+                    entry.Size,
+                    cancellationToken
+                )
+                .ConfigureAwait(false);
         }
     }
 
