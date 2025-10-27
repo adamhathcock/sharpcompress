@@ -91,6 +91,28 @@ internal static class Utility
         while (source.Read(buffer.Memory.Span) > 0) { }
     }
 
+    public static async Task SkipAsync(this Stream source, CancellationToken cancellationToken = default)
+    {
+        var array = ArrayPool<byte>.Shared.Rent(TEMP_BUFFER_SIZE);
+        try
+        {
+            while (true)
+            {
+                var read = await source
+                    .ReadAsync(array, 0, array.Length, cancellationToken)
+                    .ConfigureAwait(false);
+                if (read <= 0)
+                {
+                    break;
+                }
+            }
+        }
+        finally
+        {
+            ArrayPool<byte>.Shared.Return(array);
+        }
+    }
+
     public static DateTime DosDateToDateTime(ushort iDate, ushort iTime)
     {
         var year = (iDate / 512) + 1980;
