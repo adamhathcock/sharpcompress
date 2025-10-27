@@ -106,6 +106,10 @@ internal class TarReadOnlySubStream : SharpCompressStream, IStreamStack
 
     public override void Flush() { }
 
+    public override System.Threading.Tasks.Task FlushAsync(
+        System.Threading.CancellationToken cancellationToken
+    ) => System.Threading.Tasks.Task.CompletedTask;
+
     public override long Length => throw new NotSupportedException();
 
     public override long Position
@@ -155,7 +159,9 @@ internal class TarReadOnlySubStream : SharpCompressStream, IStreamStack
         {
             count = (int)BytesLeftToRead;
         }
-        var read = await Stream.ReadAsync(buffer, offset, count, cancellationToken).ConfigureAwait(false);
+        var read = await Stream
+            .ReadAsync(buffer, offset, count, cancellationToken)
+            .ConfigureAwait(false);
         if (read > 0)
         {
             BytesLeftToRead -= read;

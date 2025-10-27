@@ -18,9 +18,9 @@ public class AsyncTests : TestBase
     public async Task Reader_Async_Extract_All()
     {
         var testArchive = Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.gz");
-        #if NETFRAMEWORK
+#if NETFRAMEWORK
         using var stream = File.OpenRead(testArchive);
-        #else
+#else
         await using var stream = File.OpenRead(testArchive);
 #endif
         using var reader = ReaderFactory.Open(stream);

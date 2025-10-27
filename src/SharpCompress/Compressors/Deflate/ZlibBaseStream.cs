@@ -764,7 +764,9 @@ internal class ZlibBaseStream : Stream, IStreamStack
 
             var extraLength = (short)(header[0] + header[1] * 256);
             var extra = new byte[extraLength];
-            n = await _stream.ReadAsync(extra, 0, extra.Length, cancellationToken).ConfigureAwait(false);
+            n = await _stream
+                .ReadAsync(extra, 0, extra.Length, cancellationToken)
+                .ConfigureAwait(false);
             if (n != extraLength)
             {
                 throw new ZlibException("Unexpected end-of-file reading GZIP header.");
@@ -773,11 +775,13 @@ internal class ZlibBaseStream : Stream, IStreamStack
         }
         if ((header[3] & 0x08) == 0x08)
         {
-            _GzipFileName = await ReadZeroTerminatedStringAsync(cancellationToken).ConfigureAwait(false);
+            _GzipFileName = await ReadZeroTerminatedStringAsync(cancellationToken)
+                .ConfigureAwait(false);
         }
         if ((header[3] & 0x10) == 0x010)
         {
-            _GzipComment = await ReadZeroTerminatedStringAsync(cancellationToken).ConfigureAwait(false);
+            _GzipComment = await ReadZeroTerminatedStringAsync(cancellationToken)
+                .ConfigureAwait(false);
         }
         if ((header[3] & 0x02) == 0x02)
         {
@@ -999,7 +1003,8 @@ internal class ZlibBaseStream : Stream, IStreamStack
             z.AvailableBytesIn = 0;
             if (_flavor == ZlibStreamFlavor.GZIP)
             {
-                _gzipHeaderByteCount = await _ReadAndValidateGzipHeaderAsync(cancellationToken).ConfigureAwait(false);
+                _gzipHeaderByteCount = await _ReadAndValidateGzipHeaderAsync(cancellationToken)
+                    .ConfigureAwait(false);
 
                 // workitem 8501: handle edge case (decompress empty stream)
                 if (_gzipHeaderByteCount == 0)
@@ -1077,7 +1082,9 @@ internal class ZlibBaseStream : Stream, IStreamStack
             {
                 // No data available, so try to Read data from the captive stream.
                 _z.NextIn = 0;
-                _z.AvailableBytesIn = await _stream.ReadAsync(_workingBuffer, 0, _workingBuffer.Length, cancellationToken).ConfigureAwait(false);
+                _z.AvailableBytesIn = await _stream
+                    .ReadAsync(_workingBuffer, 0, _workingBuffer.Length, cancellationToken)
+                    .ConfigureAwait(false);
                 if (_z.AvailableBytesIn == 0)
                 {
                     nomoreinput = true;
@@ -1170,7 +1177,8 @@ internal class ZlibBaseStream : Stream, IStreamStack
         byte[] array = System.Buffers.ArrayPool<byte>.Shared.Rent(buffer.Length);
         try
         {
-            int read = await ReadAsync(array, 0, buffer.Length, cancellationToken).ConfigureAwait(false);
+            int read = await ReadAsync(array, 0, buffer.Length, cancellationToken)
+                .ConfigureAwait(false);
             array.AsSpan(0, read).CopyTo(buffer.Span);
             return read;
         }
