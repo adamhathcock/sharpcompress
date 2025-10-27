@@ -40,8 +40,22 @@ public interface IReader : IDisposable
     bool MoveToNextEntry();
 
     /// <summary>
+    /// Moves to the next entry asynchronously by reading more data from the underlying stream.  This skips if data has not been read.
+    /// </summary>
+    /// <param name="cancellationToken"></param>
+    /// <returns></returns>
+    Task<bool> MoveToNextEntryAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Opens the current entry as a stream that will decompress as it is read.
     /// Read the entire stream or use SkipEntry on EntryStream.
     /// </summary>
     EntryStream OpenEntryStream();
+
+    /// <summary>
+    /// Opens the current entry asynchronously as a stream that will decompress as it is read.
+    /// Read the entire stream or use SkipEntry on EntryStream.
+    /// </summary>
+    /// <param name="cancellationToken"></param>
+    Task<EntryStream> OpenEntryStreamAsync(CancellationToken cancellationToken = default);
 }

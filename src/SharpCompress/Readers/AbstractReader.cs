@@ -96,6 +96,33 @@ public abstract class AbstractReader<TEntry, TVolume> : IReader, IReaderExtracti
         return false;
     }
 
+    public async Task<bool> MoveToNextEntryAsync(CancellationToken cancellationToken = default)
+    {
+        if (_completed)
+        {
+            return false;
+        }
+        if (Cancelled)
+        {
+            throw new ReaderCancelledException("Reader has been cancelled.");
+        }
+        if (_entriesForCurrentReadStream is null)
+        {
+            return LoadStreamForReading(RequestInitialStream());
+        }
+        if (!_wroteCurrentEntry)
+        {
+            await SkipEntryAsync(cancellationToken).ConfigureAwait(false);
+        }
+        _wroteCurrentEntry = false;
+        if (NextEntryForCurrentStream())
+        {
+            return true;
+        }
+        _completed = true;
+        return false;
+    }
+
     protected bool LoadStreamForReading(Stream stream)
     {
         _entriesForCurrentReadStream?.Dispose();
@@ -129,6 +156,14 @@ public abstract class AbstractReader<TEntry, TVolume> : IReader, IReaderExtracti
         }
     }
 
+    private async Task SkipEntryAsync(CancellationToken cancellationToken)
+    {
+        if (!Entry.IsDirectory)
+        {
+            await SkipAsync(cancellationToken).ConfigureAwait(false);
+        }
+    }
+
     private void Skip()
     {
         var part = Entry.Parts.First();
@@ -149,6 +184,33 @@ public abstract class AbstractReader<TEntry, TVolume> : IReader, IReaderExtracti
         //don't know the size so we have to try to decompress to skip
         using var s = OpenEntryStream();
         s.SkipEntry();
+    }
+
+    private async Task SkipAsync(CancellationToken cancellationToken)
+    {
+        var part = Entry.Parts.First();
+
+        if (!Entry.IsSplitAfter && !Entry.IsSolid && Entry.CompressedSize > 0)
+        {
+            //not solid and has a known compressed size then we can skip raw bytes.
+            var rawStream = part.GetRawStream();
+
+            if (rawStream != null)
+            {
+                var bytesToAdvance = Entry.CompressedSize;
+                await rawStream.SkipAsync(bytesToAdvance, cancellationToken).ConfigureAwait(false);
+                part.Skipped = true;
+                return;
+            }
+        }
+        //don't know the size so we have to try to decompress to skip
+#if NETFRAMEWORK || NETSTANDARD2_0
+        using var s = await OpenEntryStreamAsync(cancellationToken).ConfigureAwait(false);
+        await s.SkipEntryAsync(cancellationToken).ConfigureAwait(false);
+#else
+        await using var s = await OpenEntryStreamAsync(cancellationToken).ConfigureAwait(false);
+        await s.SkipEntryAsync(cancellationToken).ConfigureAwait(false);
+#endif
     }
 
     public void WriteEntryTo(Stream writableStream)
@@ -230,6 +292,19 @@ public abstract class AbstractReader<TEntry, TVolume> : IReader, IReaderExtracti
         var stream = GetEntryStream();
         _wroteCurrentEntry = true;
         return stream;
+    }
+
+    public Task<EntryStream> OpenEntryStreamAsync(CancellationToken cancellationToken = default)
+    {
+        if (_wroteCurrentEntry)
+        {
+            throw new ArgumentException(
+                "WriteEntryToAsync or OpenEntryStreamAsync can only be called once."
+            );
+        }
+        var stream = GetEntryStream();
+        _wroteCurrentEntry = true;
+        return Task.FromResult(stream);
     }
 
     /// <summary>
