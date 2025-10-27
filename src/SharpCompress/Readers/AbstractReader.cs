@@ -210,9 +210,15 @@ public abstract class AbstractReader<TEntry, TVolume> : IReader, IReaderExtracti
     internal async Task WriteAsync(Stream writeStream, CancellationToken cancellationToken)
     {
         var streamListener = this as IReaderExtractionListener;
+#if NETFRAMEWORK || NETSTANDARD2_0
         using Stream s = OpenEntryStream();
         await s.TransferToAsync(writeStream, Entry, streamListener, cancellationToken)
             .ConfigureAwait(false);
+#else
+        await using Stream s = OpenEntryStream();
+        await s.TransferToAsync(writeStream, Entry, streamListener, cancellationToken)
+            .ConfigureAwait(false);
+#endif
     }
 
     public EntryStream OpenEntryStream()
