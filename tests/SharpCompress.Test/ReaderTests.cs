@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 using SharpCompress.Common;
 using SharpCompress.IO;
 using SharpCompress.Readers;
@@ -67,6 +69,72 @@ public abstract class ReaderTests : TestBase
                 reader.WriteEntryToDirectory(
                     SCRATCH_FILES_PATH,
                     new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
+                );
+            }
+        }
+    }
+
+    protected async Task ReadAsync(
+        string testArchive,
+        CompressionType expectedCompression,
+        ReaderOptions? options = null,
+        CancellationToken cancellationToken = default
+    )
+    {
+        testArchive = Path.Combine(TEST_ARCHIVES_PATH, testArchive);
+
+        options ??= new ReaderOptions() { BufferSize = 0x20000 };
+
+        options.LeaveStreamOpen = true;
+        await ReadImplAsync(testArchive, expectedCompression, options, cancellationToken);
+
+        options.LeaveStreamOpen = false;
+        await ReadImplAsync(testArchive, expectedCompression, options, cancellationToken);
+        VerifyFiles();
+    }
+
+    private async Task ReadImplAsync(
+        string testArchive,
+        CompressionType expectedCompression,
+        ReaderOptions options,
+        CancellationToken cancellationToken = default
+    )
+    {
+        using var file = File.OpenRead(testArchive);
+        using var protectedStream = SharpCompressStream.Create(
+            new ForwardOnlyStream(file, options.BufferSize),
+            leaveOpen: true,
+            throwOnDispose: true,
+            bufferSize: options.BufferSize
+        );
+        using var testStream = new TestStream(protectedStream);
+        using (var reader = ReaderFactory.Open(testStream, options))
+        {
+            await UseReaderAsync(reader, expectedCompression, cancellationToken);
+            protectedStream.ThrowOnDispose = false;
+            Assert.False(testStream.IsDisposed, $"{nameof(testStream)} prematurely closed");
+        }
+
+        var message =
+            $"{nameof(options.LeaveStreamOpen)} is set to '{options.LeaveStreamOpen}', so {nameof(testStream.IsDisposed)} should be set to '{!testStream.IsDisposed}', but is set to {testStream.IsDisposed}";
+        Assert.True(options.LeaveStreamOpen != testStream.IsDisposed, message);
+    }
+
+    public async Task UseReaderAsync(
+        IReader reader,
+        CompressionType expectedCompression,
+        CancellationToken cancellationToken = default
+    )
+    {
+        while (reader.MoveToNextEntry())
+        {
+            if (!reader.Entry.IsDirectory)
+            {
+                Assert.Equal(expectedCompression, reader.Entry.CompressionType);
+                await reader.WriteEntryToDirectoryAsync(
+                    SCRATCH_FILES_PATH,
+                    new ExtractionOptions { ExtractFullPath = true, Overwrite = true },
+                    cancellationToken
                 );
             }
         }
