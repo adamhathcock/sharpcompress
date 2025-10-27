@@ -21,6 +21,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Config", "Config", "{CDB425
 		Directory.Packages.props = Directory.Packages.props
 		NuGet.config = NuGet.config
 		.github\workflows\dotnetcore.yml = .github\workflows\dotnetcore.yml
+		USAGE.md = USAGE.md
+		README.md = README.md
+		FORMATS.md = FORMATS.md
+		AGENTS.md = AGENTS.md
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharpCompress.Performance", "tests\SharpCompress.Performance\SharpCompress.Performance.csproj", "{5BDE6DBC-9E5F-4E21-AB71-F138A3E72B17}"

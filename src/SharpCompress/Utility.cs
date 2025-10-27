@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 using SharpCompress.Readers;
 
 namespace SharpCompress;
@@ -87,6 +89,31 @@ internal static class Utility
     {
         using var buffer = MemoryPool<byte>.Shared.Rent(TEMP_BUFFER_SIZE);
         while (source.Read(buffer.Memory.Span) > 0) { }
+    }
+
+    public static async Task SkipAsync(
+        this Stream source,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var array = ArrayPool<byte>.Shared.Rent(TEMP_BUFFER_SIZE);
+        try
+        {
+            while (true)
+            {
+                var read = await source
+                    .ReadAsync(array, 0, array.Length, cancellationToken)
+                    .ConfigureAwait(false);
+                if (read <= 0)
+                {
+                    break;
+                }
+            }
+        }
+        finally
+        {
+            ArrayPool<byte>.Shared.Return(array);
+        }
     }
 
     public static DateTime DosDateToDateTime(ushort iDate, ushort iTime)
@@ -217,6 +244,89 @@ internal static class Utility
         }
     }
 
+    public static async Task<long> TransferToAsync(
+        this Stream source,
+        Stream destination,
+        long maxLength,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var array = ArrayPool<byte>.Shared.Rent(TEMP_BUFFER_SIZE);
+        try
+        {
+            var maxReadSize = array.Length;
+            long total = 0;
+            var remaining = maxLength;
+            if (remaining < maxReadSize)
+            {
+                maxReadSize = (int)remaining;
+            }
+            while (
+                await ReadTransferBlockAsync(source, array, maxReadSize, cancellationToken)
+                    .ConfigureAwait(false)
+                    is var (success, count)
+                && success
+            )
+            {
+                await destination
+                    .WriteAsync(array, 0, count, cancellationToken)
+                    .ConfigureAwait(false);
+                total += count;
+                if (remaining - count < 0)
+                {
+                    break;
+                }
+                remaining -= count;
+                if (remaining < maxReadSize)
+                {
+                    maxReadSize = (int)remaining;
+                }
+            }
+            return total;
+        }
+        finally
+        {
+            ArrayPool<byte>.Shared.Return(array);
+        }
+    }
+
+    public static async Task<long> TransferToAsync(
+        this Stream source,
+        Stream destination,
+        Common.Entry entry,
+        IReaderExtractionListener readerExtractionListener,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var array = ArrayPool<byte>.Shared.Rent(TEMP_BUFFER_SIZE);
+        try
+        {
+            var iterations = 0;
+            long total = 0;
+            int count;
+            while (
+                (
+                    count = await source
+                        .ReadAsync(array, 0, array.Length, cancellationToken)
+                        .ConfigureAwait(false)
+                ) != 0
+            )
+            {
+                total += count;
+                await destination
+                    .WriteAsync(array, 0, count, cancellationToken)
+                    .ConfigureAwait(false);
+                iterations++;
+                readerExtractionListener.FireEntryExtractionProgress(entry, total, iterations);
+            }
+            return total;
+        }
+        finally
+        {
+            ArrayPool<byte>.Shared.Return(array);
+        }
+    }
+
     private static bool ReadTransferBlock(Stream source, byte[] array, int maxSize, out int count)
     {
         var size = maxSize;
@@ -226,6 +336,56 @@ internal static class Utility
         }
         count = source.Read(array, 0, size);
         return count != 0;
+    }
+
+    private static async Task<(bool success, int count)> ReadTransferBlockAsync(
+        Stream source,
+        byte[] array,
+        int maxSize,
+        CancellationToken cancellationToken
+    )
+    {
+        var size = maxSize;
+        if (maxSize > array.Length)
+        {
+            size = array.Length;
+        }
+        var count = await source.ReadAsync(array, 0, size, cancellationToken).ConfigureAwait(false);
+        return (count != 0, count);
+    }
+
+    public static async Task SkipAsync(
+        this Stream source,
+        long advanceAmount,
+        CancellationToken cancellationToken = default
+    )
+    {
+        if (source.CanSeek)
+        {
+            source.Position += advanceAmount;
+            return;
+        }
+
+        var array = ArrayPool<byte>.Shared.Rent(TEMP_BUFFER_SIZE);
+        try
+        {
+            while (advanceAmount > 0)
+            {
+                var toRead = (int)Math.Min(array.Length, advanceAmount);
+                var read = await source
+                    .ReadAsync(array, 0, toRead, cancellationToken)
+                    .ConfigureAwait(false);
+                if (read <= 0)
+                {
+                    break;
+                }
+                advanceAmount -= read;
+            }
+        }
+        finally
+        {
+            ArrayPool<byte>.Shared.Return(array);
+        }
     }
 
 #if NET60_OR_GREATER

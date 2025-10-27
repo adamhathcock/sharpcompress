@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using SharpCompress.Common;
 
 namespace SharpCompress.Readers;
@@ -171,11 +173,52 @@ public abstract class AbstractReader<TEntry, TVolume> : IReader, IReaderExtracti
         _wroteCurrentEntry = true;
     }
 
+    public async Task WriteEntryToAsync(
+        Stream writableStream,
+        CancellationToken cancellationToken = default
+    )
+    {
+        if (_wroteCurrentEntry)
+        {
+            throw new ArgumentException(
+                "WriteEntryToAsync or OpenEntryStream can only be called once."
+            );
+        }
+
+        if (writableStream is null)
+        {
+            throw new ArgumentNullException(nameof(writableStream));
+        }
+        if (!writableStream.CanWrite)
+        {
+            throw new ArgumentException(
+                "A writable Stream was required.  Use Cancel if that was intended."
+            );
+        }
+
+        await WriteAsync(writableStream, cancellationToken).ConfigureAwait(false);
+        _wroteCurrentEntry = true;
+    }
+
     internal void Write(Stream writeStream)
     {
         var streamListener = this as IReaderExtractionListener;
         using Stream s = OpenEntryStream();
         s.TransferTo(writeStream, Entry, streamListener);
+    }
+
+    internal async Task WriteAsync(Stream writeStream, CancellationToken cancellationToken)
+    {
+        var streamListener = this as IReaderExtractionListener;
+#if NETFRAMEWORK || NETSTANDARD2_0
+        using Stream s = OpenEntryStream();
+        await s.TransferToAsync(writeStream, Entry, streamListener, cancellationToken)
+            .ConfigureAwait(false);
+#else
+        await using Stream s = OpenEntryStream();
+        await s.TransferToAsync(writeStream, Entry, streamListener, cancellationToken)
+            .ConfigureAwait(false);
+#endif
     }
 
     public EntryStream OpenEntryStream()

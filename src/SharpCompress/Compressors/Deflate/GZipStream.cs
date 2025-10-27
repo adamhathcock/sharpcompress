@@ -30,6 +30,8 @@ using System;
 using System.Buffers.Binary;
 using System.IO;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 using SharpCompress.IO;
 
 namespace SharpCompress.Compressors.Deflate;
@@ -257,6 +259,15 @@ public class GZipStream : Stream, IStreamStack
         BaseStream.Flush();
     }
 
+    public override async Task FlushAsync(CancellationToken cancellationToken)
+    {
+        if (_disposed)
+        {
+            throw new ObjectDisposedException("GZipStream");
+        }
+        await BaseStream.FlushAsync(cancellationToken).ConfigureAwait(false);
+    }
+
     /// <summary>
     ///   Read and decompress data from the source stream.
     /// </summary>
@@ -308,6 +319,54 @@ public class GZipStream : Stream, IStreamStack
         }
         return n;
     }
+
+    public override async Task<int> ReadAsync(
+        byte[] buffer,
+        int offset,
+        int count,
+        CancellationToken cancellationToken
+    )
+    {
+        if (_disposed)
+        {
+            throw new ObjectDisposedException("GZipStream");
+        }
+        var n = await BaseStream
+            .ReadAsync(buffer, offset, count, cancellationToken)
+            .ConfigureAwait(false);
+
+        if (!_firstReadDone)
+        {
+            _firstReadDone = true;
+            FileName = BaseStream._GzipFileName;
+            Comment = BaseStream._GzipComment;
+            LastModified = BaseStream._GzipMtime;
+        }
+        return n;
+    }
+
+#if !NETFRAMEWORK && !NETSTANDARD2_0
+    public override async ValueTask<int> ReadAsync(
+        Memory<byte> buffer,
+        CancellationToken cancellationToken = default
+    )
+    {
+        if (_disposed)
+        {
+            throw new ObjectDisposedException("GZipStream");
+        }
+        var n = await BaseStream.ReadAsync(buffer, cancellationToken).ConfigureAwait(false);
+
+        if (!_firstReadDone)
+        {
+            _firstReadDone = true;
+            FileName = BaseStream._GzipFileName;
+            Comment = BaseStream._GzipComment;
+            LastModified = BaseStream._GzipMtime;
+        }
+        return n;
+    }
+#endif
 
     /// <summary>
     ///   Calling this method always throws a <see cref="NotImplementedException"/>.
@@ -367,6 +426,77 @@ public class GZipStream : Stream, IStreamStack
 
         BaseStream.Write(buffer, offset, count);
     }
+
+    public override async Task WriteAsync(
+        byte[] buffer,
+        int offset,
+        int count,
+        CancellationToken cancellationToken
+    )
+    {
+        if (_disposed)
+        {
+            throw new ObjectDisposedException("GZipStream");
+        }
+        if (BaseStream._streamMode == ZlibBaseStream.StreamMode.Undefined)
+        {
+            if (BaseStream._wantCompress)
+            {
+                // first write in compression, therefore, emit the GZIP header
+                _headerByteCount = EmitHeader();
+            }
+            else
+            {
+                throw new InvalidOperationException();
+            }
+        }
+
+        await BaseStream.WriteAsync(buffer, offset, count, cancellationToken).ConfigureAwait(false);
+    }
+
+#if !NETFRAMEWORK && !NETSTANDARD2_0
+    public override async ValueTask WriteAsync(
+        ReadOnlyMemory<byte> buffer,
+        CancellationToken cancellationToken = default
+    )
+    {
+        if (_disposed)
+        {
+            throw new ObjectDisposedException("GZipStream");
+        }
+        if (BaseStream._streamMode == ZlibBaseStream.StreamMode.Undefined)
+        {
+            if (BaseStream._wantCompress)
+            {
+                // first write in compression, therefore, emit the GZIP header
+                _headerByteCount = EmitHeader();
+            }
+            else
+            {
+                throw new InvalidOperationException();
+            }
+        }
+
+        await BaseStream.WriteAsync(buffer, cancellationToken).ConfigureAwait(false);
+    }
+
+    public override async ValueTask DisposeAsync()
+    {
+        if (_disposed)
+        {
+            return;
+        }
+        _disposed = true;
+        if (BaseStream != null)
+        {
+            await BaseStream.DisposeAsync().ConfigureAwait(false);
+        }
+#if DEBUG_STREAMS
+        this.DebugDispose(typeof(GZipStream));
+#endif
+        await base.DisposeAsync().ConfigureAwait(false);
+    }
+#endif
 
     #endregion Stream methods
 
