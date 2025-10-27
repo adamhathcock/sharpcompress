@@ -15,9 +15,10 @@ public class GZipArchiveEntry : GZipEntry, IArchiveEntry
     {
         //this is to reset the stream to be read multiple times
         var part = (GZipFilePart)Parts.Single();
-        if (part.GetRawStream().Position != part.EntryStartPosition)
+        var rawStream = part.GetRawStream();
+        if (rawStream.CanSeek && rawStream.Position != part.EntryStartPosition)
         {
-            part.GetRawStream().Position = part.EntryStartPosition;
+            rawStream.Position = part.EntryStartPosition;
         }
         return Parts.Single().GetCompressedStream().NotNull();
     }
