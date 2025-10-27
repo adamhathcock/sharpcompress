@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using SharpCompress.Common;
 using SharpCompress.Common.GZip;
 using SharpCompress.IO;
@@ -136,6 +138,16 @@ public class GZipArchive : AbstractWritableArchive<GZipArchiveEntry, GZipVolume>
         SaveTo(stream, new WriterOptions(CompressionType.GZip));
     }
 
+    public Task SaveToAsync(string filePath, CancellationToken cancellationToken = default) =>
+        SaveToAsync(new FileInfo(filePath), cancellationToken);
+
+    public async Task SaveToAsync(FileInfo fileInfo, CancellationToken cancellationToken = default)
+    {
+        using var stream = fileInfo.Open(FileMode.Create, FileAccess.Write);
+        await SaveToAsync(stream, new WriterOptions(CompressionType.GZip), cancellationToken)
+            .ConfigureAwait(false);
+    }
+
     public static bool IsGZipFile(Stream stream)
     {
         // read the header on the first read
@@ -193,6 +205,28 @@ public class GZipArchive : AbstractWritableArchive<GZipArchiveEntry, GZipVolume>
                 entryStream,
                 entry.LastModifiedTime
             );
+        }
+    }
+
+    protected override async Task SaveToAsync(
+        Stream stream,
+        WriterOptions options,
+        IEnumerable<GZipArchiveEntry> oldEntries,
+        IEnumerable<GZipArchiveEntry> newEntries,
+        CancellationToken cancellationToken = default
+    )
+    {
+        if (Entries.Count > 1)
+        {
+            throw new InvalidFormatException("Only one entry is allowed in a GZip Archive");
+        }
+        using var writer = new GZipWriter(stream, new GZipWriterOptions(options));
+        foreach (var entry in oldEntries.Concat(newEntries).Where(x => !x.IsDirectory))
+        {
+            using var entryStream = entry.OpenEntryStream();
+            await writer
+                .WriteAsync(entry.Key.NotNull("Entry Key is null"), entryStream, cancellationToken)
+                .ConfigureAwait(false);
         }
     }
 
