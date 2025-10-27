@@ -26,6 +26,7 @@ applyTo: '**/*.cs'
 - Use CSharpier for all code formatting to ensure consistent style across the project.
 - Install CSharpier globally: `dotnet tool install -g csharpier`
 - Format files with: `dotnet csharpier format .`
+- **ALWAYS run `dotnet csharpier format .` after making code changes before committing.**
 - Configure your IDE to format on save using CSharpier.
 - CSharpier configuration can be customized via `.csharpierrc` file in the project root.
 - Trust CSharpier's opinionated formatting decisions to maintain consistency.
