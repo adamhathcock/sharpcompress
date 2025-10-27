@@ -1,4 +1,6 @@
 ﻿using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 using SharpCompress.Common;
 
 namespace SharpCompress.Readers;
@@ -65,4 +67,64 @@ public static class IReaderExtensions
                 reader.WriteEntryTo(fs);
             }
         );
+
+    /// <summary>
+    /// Extract to specific directory asynchronously, retaining filename
+    /// </summary>
+    public static async Task WriteEntryToDirectoryAsync(
+        this IReader reader,
+        string destinationDirectory,
+        ExtractionOptions? options = null,
+        CancellationToken cancellationToken = default
+    ) =>
+        await ExtractionMethods
+            .WriteEntryToDirectoryAsync(
+                reader.Entry,
+                destinationDirectory,
+                options,
+                (fileName, opts) => reader.WriteEntryToFileAsync(fileName, opts, cancellationToken),
+                cancellationToken
+            )
+            .ConfigureAwait(false);
+
+    /// <summary>
+    /// Extract to specific file asynchronously
+    /// </summary>
+    public static async Task WriteEntryToFileAsync(
+        this IReader reader,
+        string destinationFileName,
+        ExtractionOptions? options = null,
+        CancellationToken cancellationToken = default
+    ) =>
+        await ExtractionMethods
+            .WriteEntryToFileAsync(
+                reader.Entry,
+                destinationFileName,
+                options,
+                async (x, fm) =>
+                {
+                    using var fs = File.Open(destinationFileName, fm);
+                    await reader.WriteEntryToAsync(fs, cancellationToken).ConfigureAwait(false);
+                },
+                cancellationToken
+            )
+            .ConfigureAwait(false);
+
+    /// <summary>
+    /// Extract all remaining unread entries to specific directory asynchronously, retaining filename
+    /// </summary>
+    public static async Task WriteAllToDirectoryAsync(
+        this IReader reader,
+        string destinationDirectory,
+        ExtractionOptions? options = null,
+        CancellationToken cancellationToken = default
+    )
+    {
+        while (reader.MoveToNextEntry())
+        {
+            await reader
+                .WriteEntryToDirectoryAsync(destinationDirectory, options, cancellationToken)
+                .ConfigureAwait(false);
+        }
+    }
 }

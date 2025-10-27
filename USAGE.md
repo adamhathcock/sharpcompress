@@ -1,5 +1,18 @@
 # SharpCompress Usage
 
+## Async/Await Support
+
+SharpCompress now provides full async/await support for all I/O operations. All `Read`, `Write`, and extraction operations have async equivalents ending in `Async` that accept an optional `CancellationToken`. This enables better performance and scalability for I/O-bound operations.
+
+**Key Async Methods:**
+- `reader.WriteEntryToAsync(stream, cancellationToken)` - Extract entry asynchronously  
+- `reader.WriteAllToDirectoryAsync(path, options, cancellationToken)` - Extract all asynchronously
+- `writer.WriteAsync(filename, stream, modTime, cancellationToken)` - Write entry asynchronously
+- `writer.WriteAllAsync(directory, pattern, searchOption, cancellationToken)` - Write directory asynchronously
+- `entry.OpenEntryStreamAsync(cancellationToken)` - Open entry stream asynchronously
+
+See [Async Examples](#async-examples) section below for usage patterns.
+
 ## Stream Rules (changed with 0.21)
 
 When dealing with Streams, the rule should be that you don't close a stream you didn't create. This, in effect, should mean you should always put a Stream in a using block to dispose it. 
@@ -172,3 +185,133 @@ foreach(var entry in tr.Entries)
     Console.WriteLine($"{entry.Key}");
 }
 ```
+
+## Async Examples
+
+### Async Reader Examples
+
+**Extract single entry asynchronously:**
+```C#
+using (Stream stream = File.OpenRead("archive.zip"))
+using (var reader = ReaderFactory.Open(stream))
+{
+    while (reader.MoveToNextEntry())
+    {
+        if (!reader.Entry.IsDirectory)
+        {
+            using (var entryStream = reader.OpenEntryStream())
+            {
+                using (var outputStream = File.Create("output.bin"))
+                {
+                    await reader.WriteEntryToAsync(outputStream, cancellationToken);
+                }
+            }
+        }
+    }
+}
+```
+
+**Extract all entries asynchronously:**
+```C#
+using (Stream stream = File.OpenRead("archive.tar.gz"))
+using (var reader = ReaderFactory.Open(stream))
+{
+    await reader.WriteAllToDirectoryAsync(
+        @"D:\temp",
+        new ExtractionOptions()
+        {
+            ExtractFullPath = true,
+            Overwrite = true
+        },
+        cancellationToken
+    );
+}
+```
+
+**Open and process entry stream asynchronously:**
+```C#
+using (var archive = ZipArchive.Open("archive.zip"))
+{
+    foreach (var entry in archive.Entries.Where(e => !e.IsDirectory))
+    {
+        using (var entryStream = await entry.OpenEntryStreamAsync(cancellationToken))
+        {
+            // Process the decompressed stream asynchronously
+            await ProcessStreamAsync(entryStream, cancellationToken);
+        }
+    }
+}
+```
+
+### Async Writer Examples
+
+**Write single file asynchronously:**
+```C#
+using (Stream archiveStream = File.OpenWrite("output.zip"))
+using (var writer = WriterFactory.Open(archiveStream, ArchiveType.Zip, CompressionType.Deflate))
+{
+    using (Stream fileStream = File.OpenRead("input.txt"))
+    {
+        await writer.WriteAsync("entry.txt", fileStream, DateTime.Now, cancellationToken);
+    }
+}
+```
+
+**Write entire directory asynchronously:**
+```C#
+using (Stream stream = File.OpenWrite("backup.tar.gz"))
+using (var writer = WriterFactory.Open(stream, ArchiveType.Tar, new WriterOptions(CompressionType.GZip)))
+{
+    await writer.WriteAllAsync(
+        @"D:\files",
+        "*",
+        SearchOption.AllDirectories,
+        cancellationToken
+    );
+}
+```
+
+**Write with progress tracking and cancellation:**
+```C#
+var cts = new CancellationTokenSource();
+
+// Set timeout or cancel from UI
+cts.CancelAfter(TimeSpan.FromMinutes(5));
+
+using (Stream stream = File.OpenWrite("archive.zip"))
+using (var writer = WriterFactory.Open(stream, ArchiveType.Zip, CompressionType.Deflate))
+{
+    try
+    {
+        await writer.WriteAllAsync(@"D:\data", "*", SearchOption.AllDirectories, cts.Token);
+    }
+    catch (OperationCanceledException)
+    {
+        Console.WriteLine("Operation was cancelled");
+    }
+}
+```
+
+### Archive Async Examples
+
+**Extract from archive asynchronously:**
+```C#
+using (var archive = ZipArchive.Open("archive.zip"))
+{
+    using (var reader = archive.ExtractAllEntries())
+    {
+        await reader.WriteAllToDirectoryAsync(
+            @"C:\output",
+            new ExtractionOptions() { ExtractFullPath = true, Overwrite = true },
+            cancellationToken
+        );
+    }
+}
+```
+
+**Benefits of Async Operations:**
+- Non-blocking I/O for better application responsiveness
+- Improved scalability for server applications
+- Support for cancellation via CancellationToken
+- Better resource utilization in async/await contexts
+- Compatible with modern .NET async patterns

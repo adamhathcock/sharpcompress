@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using SharpCompress.Common;
 using SharpCompress.Common.Rar;
 using SharpCompress.Common.Rar.Headers;
@@ -83,6 +85,9 @@ public class RarArchiveEntry : RarEntry, IArchiveEntry
             new MultiVolumeReadOnlyStream(Parts.Cast<RarFilePart>(), archive)
         );
     }
+
+    public Task<Stream> OpenEntryStreamAsync(CancellationToken cancellationToken = default) =>
+        Task.FromResult(OpenEntryStream());
 
     public bool IsComplete
     {
