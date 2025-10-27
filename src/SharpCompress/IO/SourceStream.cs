@@ -337,7 +337,6 @@ public class SourceStream : Stream, IStreamStack
 
         return total - count;
     }
-
 #endif
 
     public override void Close()

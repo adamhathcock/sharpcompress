@@ -365,7 +365,9 @@ public class DeflateStream : Stream, IStreamStack
         {
             throw new ObjectDisposedException("DeflateStream");
         }
-        return await _baseStream.ReadAsync(buffer, offset, count, cancellationToken).ConfigureAwait(false);
+        return await _baseStream
+            .ReadAsync(buffer, offset, count, cancellationToken)
+            .ConfigureAwait(false);
     }
 
 #if !NETFRAMEWORK && !NETSTANDARD2_0
@@ -454,7 +456,9 @@ public class DeflateStream : Stream, IStreamStack
         {
             throw new ObjectDisposedException("DeflateStream");
         }
-        await _baseStream.WriteAsync(buffer, offset, count, cancellationToken).ConfigureAwait(false);
+        await _baseStream
+            .WriteAsync(buffer, offset, count, cancellationToken)
+            .ConfigureAwait(false);
     }
 
 #if !NETFRAMEWORK && !NETSTANDARD2_0

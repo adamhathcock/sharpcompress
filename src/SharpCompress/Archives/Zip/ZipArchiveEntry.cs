@@ -13,8 +13,9 @@ public class ZipArchiveEntry : ZipEntry, IArchiveEntry
 
     public virtual Stream OpenEntryStream() => Parts.Single().GetCompressedStream().NotNull();
 
-    public virtual Task<Stream> OpenEntryStreamAsync(CancellationToken cancellationToken = default) =>
-        Task.FromResult(OpenEntryStream());
+    public virtual Task<Stream> OpenEntryStreamAsync(
+        CancellationToken cancellationToken = default
+    ) => Task.FromResult(OpenEntryStream());
 
     #region IArchiveEntry Members
 

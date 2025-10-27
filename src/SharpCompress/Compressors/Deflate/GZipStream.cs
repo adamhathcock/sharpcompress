@@ -331,7 +331,9 @@ public class GZipStream : Stream, IStreamStack
         {
             throw new ObjectDisposedException("GZipStream");
         }
-        var n = await BaseStream.ReadAsync(buffer, offset, count, cancellationToken).ConfigureAwait(false);
+        var n = await BaseStream
+            .ReadAsync(buffer, offset, count, cancellationToken)
+            .ConfigureAwait(false);
 
         if (!_firstReadDone)
         {

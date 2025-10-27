@@ -211,8 +211,7 @@ public abstract class AbstractReader<TEntry, TVolume> : IReader, IReaderExtracti
     {
         var streamListener = this as IReaderExtractionListener;
         using Stream s = OpenEntryStream();
-        await s
-            .TransferToAsync(writeStream, Entry, streamListener, cancellationToken)
+        await s.TransferToAsync(writeStream, Entry, streamListener, cancellationToken)
             .ConfigureAwait(false);
     }
 

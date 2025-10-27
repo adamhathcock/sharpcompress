@@ -163,7 +163,9 @@ public class EntryStream : Stream, IStreamStack
         CancellationToken cancellationToken
     )
     {
-        var read = await _stream.ReadAsync(buffer, offset, count, cancellationToken).ConfigureAwait(false);
+        var read = await _stream
+            .ReadAsync(buffer, offset, count, cancellationToken)
+            .ConfigureAwait(false);
         if (read <= 0)
         {
             _completed = true;

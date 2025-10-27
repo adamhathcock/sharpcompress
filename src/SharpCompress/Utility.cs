@@ -91,7 +91,10 @@ internal static class Utility
         while (source.Read(buffer.Memory.Span) > 0) { }
     }
 
-    public static async Task SkipAsync(this Stream source, CancellationToken cancellationToken = default)
+    public static async Task SkipAsync(
+        this Stream source,
+        CancellationToken cancellationToken = default
+    )
     {
         var array = ArrayPool<byte>.Shared.Rent(TEMP_BUFFER_SIZE);
         try
@@ -261,7 +264,7 @@ internal static class Utility
             while (
                 await ReadTransferBlockAsync(source, array, maxReadSize, cancellationToken)
                     .ConfigureAwait(false)
-                is var (success, count)
+                    is var (success, count)
                 && success
             )
             {

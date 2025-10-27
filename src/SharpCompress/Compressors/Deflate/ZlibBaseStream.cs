@@ -199,7 +199,12 @@ internal class ZlibBaseStream : Stream, IStreamStack
         } while (!done);
     }
 
-    public override async Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+    public override async Task WriteAsync(
+        byte[] buffer,
+        int offset,
+        int count,
+        CancellationToken cancellationToken
+    )
     {
         // workitem 7159
         // calculate the CRC on the unccompressed data  (before writing)
@@ -238,7 +243,14 @@ internal class ZlibBaseStream : Stream, IStreamStack
                 throw new ZlibException((_wantCompress ? "de" : "in") + "flating: " + _z.Message);
             }
 
-            await _stream.WriteAsync(_workingBuffer, 0, _workingBuffer.Length - _z.AvailableBytesOut, cancellationToken).ConfigureAwait(false);
+            await _stream
+                .WriteAsync(
+                    _workingBuffer,
+                    0,
+                    _workingBuffer.Length - _z.AvailableBytesOut,
+                    cancellationToken
+                )
+                .ConfigureAwait(false);
 
             done = _z.AvailableBytesIn == 0 && _z.AvailableBytesOut != 0;
 
@@ -418,7 +430,14 @@ internal class ZlibBaseStream : Stream, IStreamStack
 
                 if (_workingBuffer.Length - _z.AvailableBytesOut > 0)
                 {
-                    await _stream.WriteAsync(_workingBuffer, 0, _workingBuffer.Length - _z.AvailableBytesOut, cancellationToken).ConfigureAwait(false);
+                    await _stream
+                        .WriteAsync(
+                            _workingBuffer,
+                            0,
+                            _workingBuffer.Length - _z.AvailableBytesOut,
+                            cancellationToken
+                        )
+                        .ConfigureAwait(false);
                 }
 
                 done = _z.AvailableBytesIn == 0 && _z.AvailableBytesOut != 0;
@@ -473,9 +492,9 @@ internal class ZlibBaseStream : Stream, IStreamStack
                         // Make sure we have read to the end of the stream
                         _z.InputBuffer.AsSpan(_z.NextIn, _z.AvailableBytesIn).CopyTo(trailer);
                         var bytesNeeded = 8 - _z.AvailableBytesIn;
-                        var bytesRead = await _stream.ReadAsync(
-                            trailer, _z.AvailableBytesIn, bytesNeeded, cancellationToken
-                        ).ConfigureAwait(false);
+                        var bytesRead = await _stream
+                            .ReadAsync(trailer, _z.AvailableBytesIn, bytesNeeded, cancellationToken)
+                            .ConfigureAwait(false);
                     }
                 }
                 else
@@ -888,20 +907,25 @@ internal class ZlibBaseStream : Stream, IStreamStack
     )
     {
         // For now, delegate to synchronous Read wrapped in ValueTask
-        return new ValueTask<int>(Task.Run(() =>
-        {
-            byte[] array = System.Buffers.ArrayPool<byte>.Shared.Rent(buffer.Length);
-            try
-            {
-                int read = Read(array, 0, buffer.Length);
-                array.AsSpan(0, read).CopyTo(buffer.Span);
-                return read;
-            }
-            finally
-            {
-                System.Buffers.ArrayPool<byte>.Shared.Return(array);
-            }
-        }, cancellationToken));
+        return new ValueTask<int>(
+            Task.Run(
+                () =>
+                {
+                    byte[] array = System.Buffers.ArrayPool<byte>.Shared.Rent(buffer.Length);
+                    try
+                    {
+                        int read = Read(array, 0, buffer.Length);
+                        array.AsSpan(0, read).CopyTo(buffer.Span);
+                        return read;
+                    }
+                    finally
+                    {
+                        System.Buffers.ArrayPool<byte>.Shared.Return(array);
+                    }
+                },
+                cancellationToken
+            )
+        );
     }
 #endif
 

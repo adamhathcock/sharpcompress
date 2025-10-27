@@ -28,7 +28,11 @@ public class AsyncTests : TestBase
         );
 
         // Just verify some files were extracted
-        var extractedFiles = Directory.GetFiles(SCRATCH_FILES_PATH, "*", SearchOption.AllDirectories);
+        var extractedFiles = Directory.GetFiles(
+            SCRATCH_FILES_PATH,
+            "*",
+            SearchOption.AllDirectories
+        );
         Assert.True(extractedFiles.Length > 0, "No files were extracted");
     }
 
@@ -107,7 +111,11 @@ public class AsyncTests : TestBase
         );
 
         // Just verify some files were extracted
-        var extractedFiles = Directory.GetFiles(SCRATCH_FILES_PATH, "*", SearchOption.AllDirectories);
+        var extractedFiles = Directory.GetFiles(
+            SCRATCH_FILES_PATH,
+            "*",
+            SearchOption.AllDirectories
+        );
         Assert.True(extractedFiles.Length > 0, "No files were extracted");
     }
 
@@ -146,7 +154,7 @@ public class AsyncTests : TestBase
                 var buffer = new byte[4096];
                 var totalRead = 0;
                 int bytesRead;
-                
+
                 // Test ReadAsync on EntryStream
                 while ((bytesRead = await entryStream.ReadAsync(buffer, 0, buffer.Length)) > 0)
                 {
@@ -166,12 +174,15 @@ public class AsyncTests : TestBase
         new Random(42).NextBytes(testData);
 
         var compressedPath = Path.Combine(SCRATCH_FILES_PATH, "async_compressed.gz");
-        
+
         // Test async write with GZipStream
         using (var fileStream = File.Create(compressedPath))
-        using (var gzipStream = new Compressors.Deflate.GZipStream(
-            fileStream, 
-            Compressors.CompressionMode.Compress))
+        using (
+            var gzipStream = new Compressors.Deflate.GZipStream(
+                fileStream,
+                Compressors.CompressionMode.Compress
+            )
+        )
         {
             await gzipStream.WriteAsync(testData, 0, testData.Length);
             await gzipStream.FlushAsync();
@@ -182,15 +193,26 @@ public class AsyncTests : TestBase
 
         // Test async read with GZipStream
         using (var fileStream = File.OpenRead(compressedPath))
-        using (var gzipStream = new Compressors.Deflate.GZipStream(
-            fileStream, 
-            Compressors.CompressionMode.Decompress))
+        using (
+            var gzipStream = new Compressors.Deflate.GZipStream(
+                fileStream,
+                Compressors.CompressionMode.Decompress
+            )
+        )
         {
             var decompressed = new byte[testData.Length];
             var totalRead = 0;
             int bytesRead;
-            while (totalRead < decompressed.Length && 
-                   (bytesRead = await gzipStream.ReadAsync(decompressed, totalRead, decompressed.Length - totalRead)) > 0)
+            while (
+                totalRead < decompressed.Length
+                && (
+                    bytesRead = await gzipStream.ReadAsync(
+                        decompressed,
+                        totalRead,
+                        decompressed.Length - totalRead
+                    )
+                ) > 0
+            )
             {
                 totalRead += bytesRead;
             }

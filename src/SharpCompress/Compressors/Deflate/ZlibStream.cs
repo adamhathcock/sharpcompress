@@ -342,7 +342,9 @@ public class ZlibStream : Stream, IStreamStack
         {
             throw new ObjectDisposedException("ZlibStream");
         }
-        return await _baseStream.ReadAsync(buffer, offset, count, cancellationToken).ConfigureAwait(false);
+        return await _baseStream
+            .ReadAsync(buffer, offset, count, cancellationToken)
+            .ConfigureAwait(false);
     }
 
 #if !NETFRAMEWORK && !NETSTANDARD2_0
@@ -424,7 +426,9 @@ public class ZlibStream : Stream, IStreamStack
         {
             throw new ObjectDisposedException("ZlibStream");
         }
-        await _baseStream.WriteAsync(buffer, offset, count, cancellationToken).ConfigureAwait(false);
+        await _baseStream
+            .WriteAsync(buffer, offset, count, cancellationToken)
+            .ConfigureAwait(false);
     }
 
 #if !NETFRAMEWORK && !NETSTANDARD2_0
