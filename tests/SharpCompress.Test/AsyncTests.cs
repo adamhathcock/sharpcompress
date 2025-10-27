@@ -130,4 +130,73 @@ public class AsyncTests : TestBase
         Assert.True(File.Exists(outputPath));
         Assert.True(new FileInfo(outputPath).Length > 0);
     }
+
+    [Fact]
+    public async Task EntryStream_ReadAsync_Works()
+    {
+        var testArchive = Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.gz");
+        using var stream = File.OpenRead(testArchive);
+        using var reader = ReaderFactory.Open(stream);
+
+        while (reader.MoveToNextEntry())
+        {
+            if (!reader.Entry.IsDirectory)
+            {
+                using var entryStream = reader.OpenEntryStream();
+                var buffer = new byte[4096];
+                var totalRead = 0;
+                int bytesRead;
+                
+                // Test ReadAsync on EntryStream
+                while ((bytesRead = await entryStream.ReadAsync(buffer, 0, buffer.Length)) > 0)
+                {
+                    totalRead += bytesRead;
+                }
+
+                Assert.True(totalRead > 0, "Should have read some data from entry stream");
+                break; // Test just one entry
+            }
+        }
+    }
+
+    [Fact]
+    public async Task CompressionStream_Async_ReadWrite()
+    {
+        var testData = new byte[1024];
+        new Random(42).NextBytes(testData);
+
+        var compressedPath = Path.Combine(SCRATCH_FILES_PATH, "async_compressed.gz");
+        
+        // Test async write with GZipStream
+        using (var fileStream = File.Create(compressedPath))
+        using (var gzipStream = new Compressors.Deflate.GZipStream(
+            fileStream, 
+            Compressors.CompressionMode.Compress))
+        {
+            await gzipStream.WriteAsync(testData, 0, testData.Length);
+            await gzipStream.FlushAsync();
+        }
+
+        Assert.True(File.Exists(compressedPath));
+        Assert.True(new FileInfo(compressedPath).Length > 0);
+
+        // Test async read with GZipStream
+        using (var fileStream = File.OpenRead(compressedPath))
+        using (var gzipStream = new Compressors.Deflate.GZipStream(
+            fileStream, 
+            Compressors.CompressionMode.Decompress))
+        {
+            var decompressed = new byte[testData.Length];
+            var totalRead = 0;
+            int bytesRead;
+            while (totalRead < decompressed.Length && 
+                   (bytesRead = await gzipStream.ReadAsync(decompressed, totalRead, decompressed.Length - totalRead)) > 0)
+            {
+                totalRead += bytesRead;
+            }
+
+            Assert.Equal(testData.Length, totalRead);
+            Assert.Equal(testData, decompressed);
+        }
+    }
 }
