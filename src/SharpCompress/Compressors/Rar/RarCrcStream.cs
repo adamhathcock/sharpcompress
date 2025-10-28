@@ -77,4 +77,55 @@ internal class RarCrcStream : RarStream, IStreamStack
 
         return result;
     }
+
+    public override async System.Threading.Tasks.Task<int> ReadAsync(
+        byte[] buffer,
+        int offset,
+        int count,
+        System.Threading.CancellationToken cancellationToken
+    )
+    {
+        var result = await base.ReadAsync(buffer, offset, count, cancellationToken)
+            .ConfigureAwait(false);
+        if (result != 0)
+        {
+            currentCrc = RarCRC.CheckCrc(currentCrc, buffer, offset, result);
+        }
+        else if (
+            !disableCRC
+            && GetCrc() != BitConverter.ToUInt32(readStream.CurrentCrc, 0)
+            && count != 0
+        )
+        {
+            // NOTE: we use the last FileHeader in a multipart volume to check CRC
+            throw new InvalidFormatException("file crc mismatch");
+        }
+
+        return result;
+    }
+
+#if NETCOREAPP2_1_OR_GREATER || NETSTANDARD2_1_OR_GREATER
+    public override async System.Threading.Tasks.ValueTask<int> ReadAsync(
+        Memory<byte> buffer,
+        System.Threading.CancellationToken cancellationToken = default
+    )
+    {
+        var result = await base.ReadAsync(buffer, cancellationToken).ConfigureAwait(false);
+        if (result != 0)
+        {
+            currentCrc = RarCRC.CheckCrc(currentCrc, buffer.Span.ToArray(), 0, result);
+        }
+        else if (
+            !disableCRC
+            && GetCrc() != BitConverter.ToUInt32(readStream.CurrentCrc, 0)
+            && buffer.Length != 0
+        )
+        {
+            // NOTE: we use the last FileHeader in a multipart volume to check CRC
+            throw new InvalidFormatException("file crc mismatch");
+        }
+
+        return result;
+    }
+#endif
 }

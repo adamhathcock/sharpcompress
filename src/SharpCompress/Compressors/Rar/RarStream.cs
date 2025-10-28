@@ -131,6 +131,38 @@ internal class RarStream : Stream, IStreamStack
         return outTotal;
     }
 
+    public override System.Threading.Tasks.Task<int> ReadAsync(
+        byte[] buffer,
+        int offset,
+        int count,
+        System.Threading.CancellationToken cancellationToken
+    )
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        return System.Threading.Tasks.Task.FromResult(Read(buffer, offset, count));
+    }
+
+#if NETCOREAPP2_1_OR_GREATER || NETSTANDARD2_1_OR_GREATER
+    public override System.Threading.Tasks.ValueTask<int> ReadAsync(
+        Memory<byte> buffer,
+        System.Threading.CancellationToken cancellationToken = default
+    )
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        var array = System.Buffers.ArrayPool<byte>.Shared.Rent(buffer.Length);
+        try
+        {
+            var bytesRead = Read(array, 0, buffer.Length);
+            new ReadOnlySpan<byte>(array, 0, bytesRead).CopyTo(buffer.Span);
+            return new System.Threading.Tasks.ValueTask<int>(bytesRead);
+        }
+        finally
+        {
+            System.Buffers.ArrayPool<byte>.Shared.Return(array);
+        }
+    }
+#endif
+
     public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
 
     public override void SetLength(long value) => throw new NotSupportedException();

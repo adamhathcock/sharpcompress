@@ -86,8 +86,11 @@ public class RarArchiveEntry : RarEntry, IArchiveEntry
         );
     }
 
-    public Task<Stream> OpenEntryStreamAsync(CancellationToken cancellationToken = default) =>
-        Task.FromResult(OpenEntryStream());
+    public Task<Stream> OpenEntryStreamAsync(CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        return Task.FromResult(OpenEntryStream());
+    }
 
     public bool IsComplete
     {
