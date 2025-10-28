@@ -70,26 +70,44 @@ public class RarArchiveEntry : RarEntry, IArchiveEntry
 
     public Stream OpenEntryStream()
     {
+        RarStream stream;
         if (IsRarV3)
         {
-            return new RarStream(
+            stream = new RarStream(
                 archive.UnpackV1.Value,
                 FileHeader,
                 new MultiVolumeReadOnlyStream(Parts.Cast<RarFilePart>(), archive)
             );
         }
 
-        return new RarStream(
+        stream = new RarStream(
             archive.UnpackV2017.Value,
             FileHeader,
             new MultiVolumeReadOnlyStream(Parts.Cast<RarFilePart>(), archive)
         );
+        stream.Initialize();
+        return stream;
     }
 
-    public Task<Stream> OpenEntryStreamAsync(CancellationToken cancellationToken = default)
+    public async Task<Stream> OpenEntryStreamAsync(CancellationToken cancellationToken = default)
     {
-        cancellationToken.ThrowIfCancellationRequested();
-        return Task.FromResult(OpenEntryStream());
+        RarStream stream;
+        if (IsRarV3)
+        {
+            stream = new RarStream(
+                archive.UnpackV1.Value,
+                FileHeader,
+                new MultiVolumeReadOnlyStream(Parts.Cast<RarFilePart>(), archive)
+            );
+        }
+
+        stream = new RarStream(
+            archive.UnpackV2017.Value,
+            FileHeader,
+            new MultiVolumeReadOnlyStream(Parts.Cast<RarFilePart>(), archive)
+        );
+        await stream.InitializeAsync(cancellationToken);
+        return stream;
     }
 
     public bool IsComplete

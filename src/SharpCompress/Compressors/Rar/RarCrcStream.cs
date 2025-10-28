@@ -1,5 +1,7 @@
 using System;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 using SharpCompress.Common;
 using SharpCompress.Common.Rar.Headers;
 using SharpCompress.IO;
@@ -31,7 +33,7 @@ internal class RarCrcStream : RarStream, IStreamStack
     private uint currentCrc;
     private readonly bool disableCRC;
 
-    public RarCrcStream(
+    private RarCrcStream(
         IRarUnpack unpack,
         FileHeader fileHeader,
         MultiVolumeReadOnlyStream readStream
@@ -44,6 +46,26 @@ internal class RarCrcStream : RarStream, IStreamStack
 #endif
         disableCRC = fileHeader.IsEncrypted;
         ResetCrc();
+    }
+
+    public static RarCrcStream Create(
+        IRarUnpack unpack,
+        FileHeader fileHeader,
+        MultiVolumeReadOnlyStream readStream)
+    {
+        var stream = new RarCrcStream(unpack, fileHeader, readStream);
+        stream.Initialize();
+        return stream;
+    }
+
+    public static async Task<RarCrcStream> CreateAsync(
+        IRarUnpack unpack,
+        FileHeader fileHeader,
+        MultiVolumeReadOnlyStream readStream, CancellationToken cancellationToken = default)
+    {
+        var stream = new RarCrcStream(unpack, fileHeader, readStream);
+        await stream.InitializeAsync(cancellationToken);
+        return stream;
     }
 
     protected override void Dispose(bool disposing)

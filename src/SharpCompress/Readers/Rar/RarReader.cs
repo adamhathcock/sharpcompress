@@ -113,7 +113,7 @@ public abstract class RarReader : AbstractReader<RarReaderEntry, RarVolume>
         );
         if (Entry.IsRarV3)
         {
-            return CreateEntryStream(new RarCrcStream(UnpackV1.Value, Entry.FileHeader, stream));
+            return CreateEntryStream( RarCrcStream.Create(UnpackV1.Value, Entry.FileHeader, stream));
         }
 
         if (Entry.FileHeader.FileCrc?.Length > 5)
@@ -123,6 +123,6 @@ public abstract class RarReader : AbstractReader<RarReaderEntry, RarVolume>
             );
         }
 
-        return CreateEntryStream(new RarCrcStream(UnpackV2017.Value, Entry.FileHeader, stream));
+        return CreateEntryStream(RarCrcStream.Create(UnpackV2017.Value, Entry.FileHeader, stream));
     }
 }

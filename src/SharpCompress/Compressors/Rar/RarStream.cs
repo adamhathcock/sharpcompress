@@ -3,6 +3,8 @@
 using System;
 using System.Buffers;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 using SharpCompress.Common.Rar.Headers;
 using SharpCompress.IO;
 
@@ -56,9 +58,20 @@ internal class RarStream : Stream, IStreamStack
 #if DEBUG_STREAMS
         this.DebugConstruct(typeof(RarStream));
 #endif
+    }
 
+    public void Initialize()
+    {
         fetch = true;
         unpack.DoUnpack(fileHeader, readStream, this);
+        fetch = false;
+        _position = 0;
+    }
+
+    public async Task InitializeAsync(CancellationToken cancellationToken = default)
+    {
+        fetch = true;
+        await unpack.DoUnpackAsync(fileHeader, readStream, this, cancellationToken);
         fetch = false;
         _position = 0;
     }
