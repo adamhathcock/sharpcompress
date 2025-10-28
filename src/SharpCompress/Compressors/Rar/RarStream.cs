@@ -131,15 +131,42 @@ internal class RarStream : Stream, IStreamStack
         return outTotal;
     }
 
-    public override System.Threading.Tasks.Task<int> ReadAsync(
+    public override async System.Threading.Tasks.Task<int> ReadAsync(
         byte[] buffer,
         int offset,
         int count,
         System.Threading.CancellationToken cancellationToken
     )
     {
-        cancellationToken.ThrowIfCancellationRequested();
-        return System.Threading.Tasks.Task.FromResult(Read(buffer, offset, count));
+        outTotal = 0;
+        if (tmpCount > 0)
+        {
+            var toCopy = tmpCount < count ? tmpCount : count;
+            Buffer.BlockCopy(tmpBuffer, tmpOffset, buffer, offset, toCopy);
+            tmpOffset += toCopy;
+            tmpCount -= toCopy;
+            offset += toCopy;
+            count -= toCopy;
+            outTotal += toCopy;
+        }
+        if (count > 0 && unpack.DestSize > 0)
+        {
+            outBuffer = buffer;
+            outOffset = offset;
+            outCount = count;
+            fetch = true;
+            await unpack.DoUnpackAsync(cancellationToken).ConfigureAwait(false);
+            fetch = false;
+        }
+        _position += outTotal;
+        if (count > 0 && outTotal == 0 && _position != Length)
+        {
+            // sanity check, eg if we try to decompress a redir entry
+            throw new InvalidOperationException(
+                $"unpacked file size does not match header: expected {Length} found {_position}"
+            );
+        }
+        return outTotal;
     }
 
 #if NETCOREAPP2_1_OR_GREATER || NETSTANDARD2_1_OR_GREATER

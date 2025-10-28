@@ -29,6 +29,15 @@ internal partial class Unpack : IRarUnpack
         // NOTE: caller has logic to check for -1 for error we throw instead.
         readStream.Read(buf, offset, count);
 
+    private async System.Threading.Tasks.Task<int> UnpIO_UnpReadAsync(
+        byte[] buf,
+        int offset,
+        int count,
+        System.Threading.CancellationToken cancellationToken = default
+    ) =>
+        // NOTE: caller has logic to check for -1 for error we throw instead.
+        await readStream.ReadAsync(buf, offset, count, cancellationToken).ConfigureAwait(false);
+
     private void UnpIO_UnpWrite(byte[] buf, size_t offset, uint count) =>
         writeStream.Write(buf, checked((int)offset), checked((int)count));
 
@@ -53,6 +62,25 @@ internal partial class Unpack : IRarUnpack
         DoUnpack();
     }
 
+    public async System.Threading.Tasks.Task DoUnpackAsync(
+        FileHeader fileHeader,
+        Stream readStream,
+        Stream writeStream,
+        System.Threading.CancellationToken cancellationToken = default
+    )
+    {
+        DestUnpSize = fileHeader.UncompressedSize;
+        this.fileHeader = fileHeader;
+        this.readStream = readStream;
+        this.writeStream = writeStream;
+        if (!fileHeader.IsStored)
+        {
+            Init(fileHeader.WindowSize, fileHeader.IsSolid);
+        }
+        Suspended = false;
+        await DoUnpackAsync(cancellationToken).ConfigureAwait(false);
+    }
+
     public void DoUnpack()
     {
         if (fileHeader.IsStored)
@@ -61,6 +89,22 @@ internal partial class Unpack : IRarUnpack
         }
         else
         {
+            DoUnpack(fileHeader.CompressionAlgorithm, fileHeader.IsSolid);
+        }
+    }
+
+    public async System.Threading.Tasks.Task DoUnpackAsync(
+        System.Threading.CancellationToken cancellationToken = default
+    )
+    {
+        if (fileHeader.IsStored)
+        {
+            await UnstoreFileAsync(cancellationToken).ConfigureAwait(false);
+        }
+        else
+        {
+            // TODO: When compression methods are converted to async, call them here
+            // For now, fall back to synchronous version
             DoUnpack(fileHeader.CompressionAlgorithm, fileHeader.IsSolid);
         }
     }
@@ -76,6 +120,25 @@ internal partial class Unpack : IRarUnpack
                 break;
             }
             writeStream.Write(b.Slice(0, n));
+            DestUnpSize -= n;
+        } while (!Suspended);
+    }
+
+    private async System.Threading.Tasks.Task UnstoreFileAsync(
+        System.Threading.CancellationToken cancellationToken = default
+    )
+    {
+        var buffer = new byte[(int)Math.Min(0x10000, DestUnpSize)];
+        do
+        {
+            var n = await readStream
+                .ReadAsync(buffer, 0, buffer.Length, cancellationToken)
+                .ConfigureAwait(false);
+            if (n == 0)
+            {
+                break;
+            }
+            await writeStream.WriteAsync(buffer, 0, n, cancellationToken).ConfigureAwait(false);
             DestUnpSize -= n;
         } while (!Suspended);
     }

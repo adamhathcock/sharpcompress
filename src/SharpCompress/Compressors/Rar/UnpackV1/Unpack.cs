@@ -155,6 +155,25 @@ internal sealed partial class Unpack : BitInput, IRarUnpack
         DoUnpack();
     }
 
+    public async System.Threading.Tasks.Task DoUnpackAsync(
+        FileHeader fileHeader,
+        Stream readStream,
+        Stream writeStream,
+        System.Threading.CancellationToken cancellationToken = default
+    )
+    {
+        destUnpSize = fileHeader.UncompressedSize;
+        this.fileHeader = fileHeader;
+        this.readStream = readStream;
+        this.writeStream = writeStream;
+        if (!fileHeader.IsSolid)
+        {
+            Init(null);
+        }
+        suspended = false;
+        await DoUnpackAsync(cancellationToken).ConfigureAwait(false);
+    }
+
     public void DoUnpack()
     {
         if (fileHeader.CompressionMethod == 0)
@@ -189,6 +208,44 @@ internal sealed partial class Unpack : BitInput, IRarUnpack
         }
     }
 
+    public async System.Threading.Tasks.Task DoUnpackAsync(
+        System.Threading.CancellationToken cancellationToken = default
+    )
+    {
+        if (fileHeader.CompressionMethod == 0)
+        {
+            await UnstoreFileAsync(cancellationToken).ConfigureAwait(false);
+            return;
+        }
+        // TODO: When compression methods are converted to async, call them here
+        // For now, fall back to synchronous version
+        switch (fileHeader.CompressionAlgorithm)
+        {
+            case 15: // rar 1.5 compression
+                unpack15(fileHeader.IsSolid);
+                break;
+
+            case 20: // rar 2.x compression
+            case 26: // files larger than 2GB
+                unpack20(fileHeader.IsSolid);
+                break;
+
+            case 29: // rar 3.x compression
+            case 36: // alternative hash
+                Unpack29(fileHeader.IsSolid);
+                break;
+
+            case 50: // rar 5.x compression
+                await Unpack5Async(fileHeader.IsSolid,cancellationToken).ConfigureAwait(false);
+                break;
+
+            default:
+                throw new InvalidFormatException(
+                    "unknown rar compression version " + fileHeader.CompressionAlgorithm
+                );
+        }
+    }
+
     private void UnstoreFile()
     {
         Span<byte> buffer = stackalloc byte[(int)Math.Min(0x10000, destUnpSize)];
@@ -201,6 +258,26 @@ internal sealed partial class Unpack : BitInput, IRarUnpack
             }
             code = code < destUnpSize ? code : (int)destUnpSize;
             writeStream.Write(buffer.Slice(0, code));
+            destUnpSize -= code;
+        } while (!suspended && destUnpSize > 0);
+    }
+
+    private async System.Threading.Tasks.Task UnstoreFileAsync(
+        System.Threading.CancellationToken cancellationToken = default
+    )
+    {
+        var buffer = new byte[(int)Math.Min(0x10000, destUnpSize)];
+        do
+        {
+            var code = await readStream
+                .ReadAsync(buffer, 0, buffer.Length, cancellationToken)
+                .ConfigureAwait(false);
+            if (code == 0 || code == -1)
+            {
+                break;
+            }
+            code = code < destUnpSize ? code : (int)destUnpSize;
+            await writeStream.WriteAsync(buffer, 0, code, cancellationToken).ConfigureAwait(false);
             destUnpSize -= code;
         } while (!suspended && destUnpSize > 0);
     }

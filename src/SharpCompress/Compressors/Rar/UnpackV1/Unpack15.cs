@@ -351,6 +351,40 @@ internal partial class Unpack
         return (readCode != -1);
     }
 
+    private async System.Threading.Tasks.Task<bool> unpReadBufAsync(
+        System.Threading.CancellationToken cancellationToken = default
+    )
+    {
+        var dataSize = readTop - inAddr;
+        if (dataSize < 0)
+        {
+            return (false);
+        }
+        if (inAddr > MAX_SIZE / 2)
+        {
+            if (dataSize > 0)
+            {
+                Array.Copy(InBuf, inAddr, InBuf, 0, dataSize);
+            }
+            inAddr = 0;
+            readTop = dataSize;
+        }
+        else
+        {
+            dataSize = readTop;
+        }
+
+        var readCode = await readStream
+            .ReadAsync(InBuf, dataSize, (MAX_SIZE - dataSize) & ~0xf, cancellationToken)
+            .ConfigureAwait(false);
+        if (readCode > 0)
+        {
+            readTop += readCode;
+        }
+        readBorder = readTop - 30;
+        return (readCode != -1);
+    }
+
     private int getShortLen1(int pos) => pos == 1 ? Buf60 + 3 : ShortLen1[pos];
 
     private int getShortLen2(int pos) => pos == 3 ? Buf60 + 3 : ShortLen2[pos];
