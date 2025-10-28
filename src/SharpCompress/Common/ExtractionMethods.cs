@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -7,6 +8,15 @@ namespace SharpCompress.Common;
 
 internal static class ExtractionMethods
 {
+    /// <summary>
+    /// Gets the appropriate StringComparison for path checks based on the file system.
+    /// Windows uses case-insensitive file systems, while Unix-like systems use case-sensitive file systems.
+    /// </summary>
+    private static StringComparison PathComparison =>
+        RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+            ? StringComparison.OrdinalIgnoreCase
+            : StringComparison.Ordinal;
+
     /// <summary>
     /// Extract to specific directory, retaining filename
     /// </summary>
@@ -48,7 +58,7 @@ internal static class ExtractionMethods
 
             if (!Directory.Exists(destdir))
             {
-                if (!destdir.StartsWith(fullDestinationDirectoryPath, StringComparison.Ordinal))
+                if (!destdir.StartsWith(fullDestinationDirectoryPath, PathComparison))
                 {
                     throw new ExtractionException(
                         "Entry is trying to create a directory outside of the destination directory."
@@ -68,12 +78,7 @@ internal static class ExtractionMethods
         {
             destinationFileName = Path.GetFullPath(destinationFileName);
 
-            if (
-                !destinationFileName.StartsWith(
-                    fullDestinationDirectoryPath,
-                    StringComparison.Ordinal
-                )
-            )
+            if (!destinationFileName.StartsWith(fullDestinationDirectoryPath, PathComparison))
             {
                 throw new ExtractionException(
                     "Entry is trying to write a file outside of the destination directory."
@@ -158,7 +163,7 @@ internal static class ExtractionMethods
 
             if (!Directory.Exists(destdir))
             {
-                if (!destdir.StartsWith(fullDestinationDirectoryPath, StringComparison.Ordinal))
+                if (!destdir.StartsWith(fullDestinationDirectoryPath, PathComparison))
                 {
                     throw new ExtractionException(
                         "Entry is trying to create a directory outside of the destination directory."
@@ -178,12 +183,7 @@ internal static class ExtractionMethods
         {
             destinationFileName = Path.GetFullPath(destinationFileName);
 
-            if (
-                !destinationFileName.StartsWith(
-                    fullDestinationDirectoryPath,
-                    StringComparison.Ordinal
-                )
-            )
+            if (!destinationFileName.StartsWith(fullDestinationDirectoryPath, PathComparison))
             {
                 throw new ExtractionException(
                     "Entry is trying to write a file outside of the destination directory."

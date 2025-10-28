@@ -37,6 +37,20 @@ public abstract class AbstractWriter(ArchiveType type, WriterOptions writerOptio
         await Task.CompletedTask.ConfigureAwait(false);
     }
 
+    public abstract void WriteDirectory(string directoryName, DateTime? modificationTime);
+
+    public virtual async Task WriteDirectoryAsync(
+        string directoryName,
+        DateTime? modificationTime,
+        CancellationToken cancellationToken = default
+    )
+    {
+        // Default implementation calls synchronous version
+        // Derived classes should override for true async behavior
+        WriteDirectory(directoryName, modificationTime);
+        await Task.CompletedTask.ConfigureAwait(false);
+    }
+
     protected virtual void Dispose(bool isDisposing)
     {
         if (isDisposing)

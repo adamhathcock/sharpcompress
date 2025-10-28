@@ -74,6 +74,44 @@ public class TarWriter : AbstractWriter
         return filename.Trim('/');
     }
 
+    private string NormalizeDirectoryName(string directoryName)
+    {
+        directoryName = NormalizeFilename(directoryName);
+        // Ensure directory name ends with '/' for tar format
+        if (!string.IsNullOrEmpty(directoryName) && !directoryName.EndsWith('/'))
+        {
+            directoryName += '/';
+        }
+        return directoryName;
+    }
+
+    public override void WriteDirectory(string directoryName, DateTime? modificationTime)
+    {
+        var normalizedName = NormalizeDirectoryName(directoryName);
+        if (string.IsNullOrEmpty(normalizedName))
+        {
+            return; // Skip empty or root directory
+        }
+
+        var header = new TarHeader(WriterOptions.ArchiveEncoding);
+        header.LastModifiedTime = modificationTime ?? TarHeader.EPOCH;
+        header.Name = normalizedName;
+        header.Size = 0;
+        header.EntryType = EntryType.Directory;
+        header.Write(OutputStream);
+    }
+
+    public override async Task WriteDirectoryAsync(
+        string directoryName,
+        DateTime? modificationTime,
+        CancellationToken cancellationToken = default
+    )
+    {
+        // Synchronous implementation is sufficient for header-only write
+        WriteDirectory(directoryName, modificationTime);
+        await Task.CompletedTask.ConfigureAwait(false);
+    }
+
     public void Write(string filename, Stream source, DateTime? modificationTime, long? size)
     {
         if (!source.CanSeek && size is null)

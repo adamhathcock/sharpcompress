@@ -185,6 +185,11 @@ public class GZipArchive : AbstractWritableArchive<GZipArchiveEntry, GZipVolume>
         return new GZipWritableArchiveEntry(this, source, filePath, size, modified, closeStream);
     }
 
+    protected override GZipArchiveEntry CreateDirectoryEntry(
+        string directoryPath,
+        DateTime? modified
+    ) => throw new NotSupportedException("GZip archives do not support directory entries.");
+
     protected override void SaveTo(
         Stream stream,
         WriterOptions options,
