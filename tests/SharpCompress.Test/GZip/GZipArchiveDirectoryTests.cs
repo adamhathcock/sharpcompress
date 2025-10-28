@@ -11,8 +11,9 @@ public class GZipArchiveDirectoryTests : TestBase
     public void GZipArchive_AddDirectoryEntry_ThrowsNotSupportedException()
     {
         using var archive = GZipArchive.Create();
-        
-        Assert.Throws<NotSupportedException>(() => 
-            archive.AddDirectoryEntry("test-dir", DateTime.Now));
+
+        Assert.Throws<NotSupportedException>(() =>
+            archive.AddDirectoryEntry("test-dir", DateTime.Now)
+        );
     }
 }

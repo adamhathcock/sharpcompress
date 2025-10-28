@@ -13,8 +13,7 @@ public class GZipWriterDirectoryTests : TestBase
     {
         using var memoryStream = new MemoryStream();
         using var writer = new GZipWriter(memoryStream, new GZipWriterOptions());
-        
-        Assert.Throws<NotSupportedException>(() => 
-            writer.WriteDirectory("test-dir", DateTime.Now));
+
+        Assert.Throws<NotSupportedException>(() => writer.WriteDirectory("test-dir", DateTime.Now));
     }
 }

@@ -14,7 +14,12 @@ public class TarWriterDirectoryTests : TestBase
     public void TarWriter_WriteDirectory_CreatesDirectoryEntry()
     {
         using var memoryStream = new MemoryStream();
-        using (var writer = new TarWriter(memoryStream, new TarWriterOptions(CompressionType.None, true)))
+        using (
+            var writer = new TarWriter(
+                memoryStream,
+                new TarWriterOptions(CompressionType.None, true)
+            )
+        )
         {
             writer.WriteDirectory("test-dir", DateTime.Now);
         }
@@ -32,7 +37,12 @@ public class TarWriterDirectoryTests : TestBase
     public void TarWriter_WriteDirectory_WithTrailingSlash()
     {
         using var memoryStream = new MemoryStream();
-        using (var writer = new TarWriter(memoryStream, new TarWriterOptions(CompressionType.None, true)))
+        using (
+            var writer = new TarWriter(
+                memoryStream,
+                new TarWriterOptions(CompressionType.None, true)
+            )
+        )
         {
             writer.WriteDirectory("test-dir/", DateTime.Now);
         }
@@ -50,7 +60,12 @@ public class TarWriterDirectoryTests : TestBase
     public void TarWriter_WriteDirectory_WithBackslash()
     {
         using var memoryStream = new MemoryStream();
-        using (var writer = new TarWriter(memoryStream, new TarWriterOptions(CompressionType.None, true)))
+        using (
+            var writer = new TarWriter(
+                memoryStream,
+                new TarWriterOptions(CompressionType.None, true)
+            )
+        )
         {
             writer.WriteDirectory("test-dir\\subdir", DateTime.Now);
         }
@@ -68,14 +83,19 @@ public class TarWriterDirectoryTests : TestBase
     public void TarWriter_WriteDirectory_EmptyString_IsSkipped()
     {
         using var memoryStream = new MemoryStream();
-        using (var writer = new TarWriter(memoryStream, new TarWriterOptions(CompressionType.None, true)))
+        using (
+            var writer = new TarWriter(
+                memoryStream,
+                new TarWriterOptions(CompressionType.None, true)
+            )
+        )
         {
             writer.WriteDirectory("", DateTime.Now);
         }
 
         memoryStream.Position = 0;
         using var archive = TarArchive.Open(memoryStream);
-        
+
         Assert.Empty(archive.Entries);
     }
 
@@ -83,7 +103,12 @@ public class TarWriterDirectoryTests : TestBase
     public void TarWriter_WriteDirectory_MultipleDirectories()
     {
         using var memoryStream = new MemoryStream();
-        using (var writer = new TarWriter(memoryStream, new TarWriterOptions(CompressionType.None, true)))
+        using (
+            var writer = new TarWriter(
+                memoryStream,
+                new TarWriterOptions(CompressionType.None, true)
+            )
+        )
         {
             writer.WriteDirectory("dir1", DateTime.Now);
             writer.WriteDirectory("dir2", DateTime.Now);
@@ -107,13 +132,20 @@ public class TarWriterDirectoryTests : TestBase
     public void TarWriter_WriteDirectory_MixedWithFiles()
     {
         using var memoryStream = new MemoryStream();
-        using (var writer = new TarWriter(memoryStream, new TarWriterOptions(CompressionType.None, true)))
+        using (
+            var writer = new TarWriter(
+                memoryStream,
+                new TarWriterOptions(CompressionType.None, true)
+            )
+        )
         {
             writer.WriteDirectory("dir1", DateTime.Now);
-            
-            using var contentStream = new MemoryStream(System.Text.Encoding.UTF8.GetBytes("test content"));
+
+            using var contentStream = new MemoryStream(
+                System.Text.Encoding.UTF8.GetBytes("test content")
+            );
             writer.Write("dir1/file.txt", contentStream, DateTime.Now);
-            
+
             writer.WriteDirectory("dir2", DateTime.Now);
         }
 

@@ -14,7 +14,9 @@ public class ZipWriterDirectoryTests : TestBase
     public void ZipWriter_WriteDirectory_CreatesDirectoryEntry()
     {
         using var memoryStream = new MemoryStream();
-        using (var writer = new ZipWriter(memoryStream, new ZipWriterOptions(CompressionType.Deflate)))
+        using (
+            var writer = new ZipWriter(memoryStream, new ZipWriterOptions(CompressionType.Deflate))
+        )
         {
             writer.WriteDirectory("test-dir", DateTime.Now);
         }
@@ -32,7 +34,9 @@ public class ZipWriterDirectoryTests : TestBase
     public void ZipWriter_WriteDirectory_WithTrailingSlash()
     {
         using var memoryStream = new MemoryStream();
-        using (var writer = new ZipWriter(memoryStream, new ZipWriterOptions(CompressionType.Deflate)))
+        using (
+            var writer = new ZipWriter(memoryStream, new ZipWriterOptions(CompressionType.Deflate))
+        )
         {
             writer.WriteDirectory("test-dir/", DateTime.Now);
         }
@@ -50,7 +54,9 @@ public class ZipWriterDirectoryTests : TestBase
     public void ZipWriter_WriteDirectory_WithBackslash()
     {
         using var memoryStream = new MemoryStream();
-        using (var writer = new ZipWriter(memoryStream, new ZipWriterOptions(CompressionType.Deflate)))
+        using (
+            var writer = new ZipWriter(memoryStream, new ZipWriterOptions(CompressionType.Deflate))
+        )
         {
             writer.WriteDirectory("test-dir\\subdir", DateTime.Now);
         }
@@ -68,14 +74,16 @@ public class ZipWriterDirectoryTests : TestBase
     public void ZipWriter_WriteDirectory_EmptyString_IsSkipped()
     {
         using var memoryStream = new MemoryStream();
-        using (var writer = new ZipWriter(memoryStream, new ZipWriterOptions(CompressionType.Deflate)))
+        using (
+            var writer = new ZipWriter(memoryStream, new ZipWriterOptions(CompressionType.Deflate))
+        )
         {
             writer.WriteDirectory("", DateTime.Now);
         }
 
         memoryStream.Position = 0;
         using var archive = ZipArchive.Open(memoryStream);
-        
+
         Assert.Empty(archive.Entries);
     }
 
@@ -83,7 +91,9 @@ public class ZipWriterDirectoryTests : TestBase
     public void ZipWriter_WriteDirectory_MultipleDirectories()
     {
         using var memoryStream = new MemoryStream();
-        using (var writer = new ZipWriter(memoryStream, new ZipWriterOptions(CompressionType.Deflate)))
+        using (
+            var writer = new ZipWriter(memoryStream, new ZipWriterOptions(CompressionType.Deflate))
+        )
         {
             writer.WriteDirectory("dir1", DateTime.Now);
             writer.WriteDirectory("dir2", DateTime.Now);
@@ -107,13 +117,17 @@ public class ZipWriterDirectoryTests : TestBase
     public void ZipWriter_WriteDirectory_MixedWithFiles()
     {
         using var memoryStream = new MemoryStream();
-        using (var writer = new ZipWriter(memoryStream, new ZipWriterOptions(CompressionType.Deflate)))
+        using (
+            var writer = new ZipWriter(memoryStream, new ZipWriterOptions(CompressionType.Deflate))
+        )
         {
             writer.WriteDirectory("dir1", DateTime.Now);
-            
-            using var contentStream = new MemoryStream(System.Text.Encoding.UTF8.GetBytes("test content"));
+
+            using var contentStream = new MemoryStream(
+                System.Text.Encoding.UTF8.GetBytes("test content")
+            );
             writer.Write("dir1/file.txt", contentStream, DateTime.Now);
-            
+
             writer.WriteDirectory("dir2", DateTime.Now);
         }
 

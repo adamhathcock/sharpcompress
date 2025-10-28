@@ -372,8 +372,10 @@ public class ZipArchive : AbstractWritableArchive<ZipArchiveEntry, ZipVolume>
         bool closeStream
     ) => new ZipWritableArchiveEntry(this, source, filePath, size, modified, closeStream);
 
-    protected override ZipArchiveEntry CreateDirectoryEntry(string directoryPath, DateTime? modified) =>
-        new ZipWritableArchiveEntry(this, directoryPath, modified);
+    protected override ZipArchiveEntry CreateDirectoryEntry(
+        string directoryPath,
+        DateTime? modified
+    ) => new ZipWritableArchiveEntry(this, directoryPath, modified);
 
     public static ZipArchive Create() => new();
 

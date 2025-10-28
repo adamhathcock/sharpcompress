@@ -224,8 +224,10 @@ public class TarArchive : AbstractWritableArchive<TarArchiveEntry, TarVolume>
             closeStream
         );
 
-    protected override TarArchiveEntry CreateDirectoryEntry(string directoryPath, DateTime? modified) =>
-        new TarWritableArchiveEntry(this, directoryPath, modified);
+    protected override TarArchiveEntry CreateDirectoryEntry(
+        string directoryPath,
+        DateTime? modified
+    ) => new TarWritableArchiveEntry(this, directoryPath, modified);
 
     protected override void SaveTo(
         Stream stream,
