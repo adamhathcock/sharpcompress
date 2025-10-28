@@ -6,6 +6,8 @@ using System.Threading.Tasks;
 using SharpCompress.Archives;
 using SharpCompress.Archives.Zip;
 using SharpCompress.Common;
+using SharpCompress.Compressors;
+using SharpCompress.Compressors.Deflate;
 using SharpCompress.Readers;
 using SharpCompress.Writers;
 using Xunit;
@@ -192,9 +194,9 @@ public class AsyncTests : TestBase
         // Test async write with GZipStream
         using (var fileStream = File.Create(compressedPath))
         using (
-            var gzipStream = new Compressors.Deflate.GZipStream(
+            var gzipStream = new GZipStream(
                 fileStream,
-                Compressors.CompressionMode.Compress
+                CompressionMode.Compress
             )
         )
         {
@@ -208,9 +210,9 @@ public class AsyncTests : TestBase
         // Test async read with GZipStream
         using (var fileStream = File.OpenRead(compressedPath))
         using (
-            var gzipStream = new Compressors.Deflate.GZipStream(
+            var gzipStream = new GZipStream(
                 fileStream,
-                Compressors.CompressionMode.Decompress
+                CompressionMode.Decompress
             )
         )
         {
