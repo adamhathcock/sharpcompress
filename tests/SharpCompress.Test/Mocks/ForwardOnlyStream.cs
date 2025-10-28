@@ -77,5 +77,5 @@ public class ForwardOnlyStream : SharpCompressStream, IStreamStack
     public override void SetLength(long value) => throw new NotSupportedException();
 
     public override void Write(byte[] buffer, int offset, int count) =>
-        throw new NotSupportedException();
+        stream.Write(buffer, offset, count);
 }
