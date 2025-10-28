@@ -36,11 +36,10 @@ internal class StreamingZipHeaderFactory : ZipHeaderFactory
                 throw new ArgumentException("Stream must be a SharpCompressStream", nameof(stream));
             }
         }
-        SharpCompressStream rewindableStream = (SharpCompressStream)stream;
+        var rewindableStream = (SharpCompressStream)stream;
 
         while (true)
         {
-            ZipHeader? header;
             var reader = new BinaryReader(rewindableStream);
             uint headerBytes = 0;
             if (
@@ -155,7 +154,7 @@ internal class StreamingZipHeaderFactory : ZipHeaderFactory
             }
 
             _lastEntryHeader = null;
-            header = ReadHeader(headerBytes, reader);
+            var header = ReadHeader(headerBytes, reader);
             if (header is null)
             {
                 yield break;
