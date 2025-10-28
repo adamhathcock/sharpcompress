@@ -1,6 +1,8 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using SharpCompress.Common;
 using SharpCompress.Common.Rar.Headers;
 using SharpCompress.IO;
@@ -103,7 +105,7 @@ internal class RarBLAKE2spStream : RarStream, IStreamStack
 
     byte[] _hash = { };
 
-    public RarBLAKE2spStream(
+    private RarBLAKE2spStream(
         IRarUnpack unpack,
         FileHeader fileHeader,
         MultiVolumeReadOnlyStream readStream
@@ -119,6 +121,26 @@ internal class RarBLAKE2spStream : RarStream, IStreamStack
         _hash = fileHeader.FileCrc.NotNull();
         _blake2sp = new BLAKE2SP();
         ResetCrc();
+    }
+
+    public static RarBLAKE2spStream Create(
+        IRarUnpack unpack,
+        FileHeader fileHeader,
+        MultiVolumeReadOnlyStream readStream)
+    {
+        var stream = new RarBLAKE2spStream(unpack, fileHeader, readStream);
+        stream.Initialize();
+        return stream;
+    }
+
+    public static async Task<RarBLAKE2spStream> CreateAsync(
+        IRarUnpack unpack,
+        FileHeader fileHeader,
+        MultiVolumeReadOnlyStream readStream, CancellationToken cancellationToken = default)
+    {
+        var stream = new RarBLAKE2spStream(unpack, fileHeader, readStream);
+        await stream.InitializeAsync(cancellationToken);
+        return stream;
     }
 
     protected override void Dispose(bool disposing)

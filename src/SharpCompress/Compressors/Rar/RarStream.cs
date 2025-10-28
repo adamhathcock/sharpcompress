@@ -237,6 +237,18 @@ internal class RarStream : Stream, IStreamStack
         }
     }
 
+    public override System.Threading.Tasks.Task WriteAsync(
+        byte[] buffer,
+        int offset,
+        int count,
+        System.Threading.CancellationToken cancellationToken
+    )
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        Write(buffer, offset, count);
+        return System.Threading.Tasks.Task.CompletedTask;
+    }
+
     private void EnsureBufferCapacity(int count)
     {
         if (this.tmpBuffer.Length < this.tmpCount + count)
