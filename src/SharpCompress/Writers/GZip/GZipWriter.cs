@@ -50,4 +50,7 @@ public sealed class GZipWriter : AbstractWriter
         source.CopyTo(stream);
         _wroteToStream = true;
     }
+
+    public override void WriteDirectory(string directoryName, DateTime? modificationTime) =>
+        throw new NotSupportedException("GZip archives do not support directory entries.");
 }

@@ -9,7 +9,8 @@ namespace SharpCompress.Archives.Zip;
 internal class ZipWritableArchiveEntry : ZipArchiveEntry, IWritableArchiveEntry
 {
     private readonly bool closeStream;
-    private readonly Stream stream;
+    private readonly Stream? stream;
+    private readonly bool isDirectory;
     private bool isDisposed;
 
     internal ZipWritableArchiveEntry(
@@ -27,6 +28,22 @@ internal class ZipWritableArchiveEntry : ZipArchiveEntry, IWritableArchiveEntry
         Size = size;
         LastModifiedTime = lastModified;
         this.closeStream = closeStream;
+        isDirectory = false;
+    }
+
+    internal ZipWritableArchiveEntry(
+        ZipArchive archive,
+        string directoryPath,
+        DateTime? lastModified
+    )
+        : base(archive, null)
+    {
+        stream = null;
+        Key = directoryPath;
+        Size = 0;
+        LastModifiedTime = lastModified;
+        closeStream = false;
+        isDirectory = true;
     }
 
     public override long Crc => 0;
@@ -47,16 +64,20 @@ internal class ZipWritableArchiveEntry : ZipArchiveEntry, IWritableArchiveEntry
 
     public override bool IsEncrypted => false;
 
-    public override bool IsDirectory => false;
+    public override bool IsDirectory => isDirectory;
 
     public override bool IsSplitAfter => false;
 
     internal override IEnumerable<FilePart> Parts => throw new NotImplementedException();
 
-    Stream IWritableArchiveEntry.Stream => stream;
+    Stream IWritableArchiveEntry.Stream => stream ?? Stream.Null;
 
     public override Stream OpenEntryStream()
     {
+        if (stream is null)
+        {
+            return Stream.Null;
+        }
         //ensure new stream is at the start, this could be reset
         stream.Seek(0, SeekOrigin.Begin);
         return SharpCompressStream.Create(stream, leaveOpen: true);
@@ -64,7 +85,7 @@ internal class ZipWritableArchiveEntry : ZipArchiveEntry, IWritableArchiveEntry
 
     internal override void Close()
     {
-        if (closeStream && !isDisposed)
+        if (closeStream && !isDisposed && stream is not null)
         {
             stream.Dispose();
             isDisposed = true;

@@ -308,14 +308,24 @@ public class ZipArchive : AbstractWritableArchive<ZipArchiveEntry, ZipVolume>
     )
     {
         using var writer = new ZipWriter(stream, new ZipWriterOptions(options));
-        foreach (var entry in oldEntries.Concat(newEntries).Where(x => !x.IsDirectory))
+        foreach (var entry in oldEntries.Concat(newEntries))
         {
-            using var entryStream = entry.OpenEntryStream();
-            writer.Write(
-                entry.Key.NotNull("Entry Key is null"),
-                entryStream,
-                entry.LastModifiedTime
-            );
+            if (entry.IsDirectory)
+            {
+                writer.WriteDirectory(
+                    entry.Key.NotNull("Entry Key is null"),
+                    entry.LastModifiedTime
+                );
+            }
+            else
+            {
+                using var entryStream = entry.OpenEntryStream();
+                writer.Write(
+                    entry.Key.NotNull("Entry Key is null"),
+                    entryStream,
+                    entry.LastModifiedTime
+                );
+            }
         }
     }
 
@@ -328,12 +338,29 @@ public class ZipArchive : AbstractWritableArchive<ZipArchiveEntry, ZipVolume>
     )
     {
         using var writer = new ZipWriter(stream, new ZipWriterOptions(options));
-        foreach (var entry in oldEntries.Concat(newEntries).Where(x => !x.IsDirectory))
+        foreach (var entry in oldEntries.Concat(newEntries))
         {
-            using var entryStream = entry.OpenEntryStream();
-            await writer
-                .WriteAsync(entry.Key.NotNull("Entry Key is null"), entryStream, cancellationToken)
-                .ConfigureAwait(false);
+            if (entry.IsDirectory)
+            {
+                await writer
+                    .WriteDirectoryAsync(
+                        entry.Key.NotNull("Entry Key is null"),
+                        entry.LastModifiedTime,
+                        cancellationToken
+                    )
+                    .ConfigureAwait(false);
+            }
+            else
+            {
+                using var entryStream = entry.OpenEntryStream();
+                await writer
+                    .WriteAsync(
+                        entry.Key.NotNull("Entry Key is null"),
+                        entryStream,
+                        cancellationToken
+                    )
+                    .ConfigureAwait(false);
+            }
         }
     }
 
@@ -344,6 +371,9 @@ public class ZipArchive : AbstractWritableArchive<ZipArchiveEntry, ZipVolume>
         DateTime? modified,
         bool closeStream
     ) => new ZipWritableArchiveEntry(this, source, filePath, size, modified, closeStream);
+
+    protected override ZipArchiveEntry CreateDirectoryEntry(string directoryPath, DateTime? modified) =>
+        new ZipWritableArchiveEntry(this, directoryPath, modified);
 
     public static ZipArchive Create() => new();
 

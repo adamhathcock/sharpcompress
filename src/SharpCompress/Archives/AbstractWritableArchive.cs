@@ -96,6 +96,9 @@ public abstract class AbstractWritableArchive<TEntry, TVolume>
         DateTime? modified
     ) => AddEntry(key, source, closeStream, size, modified);
 
+    IArchiveEntry IWritableArchive.AddDirectoryEntry(string key, DateTime? modified) =>
+        AddDirectoryEntry(key, modified);
+
     public TEntry AddEntry(
         string key,
         Stream source,
@@ -134,6 +137,22 @@ public abstract class AbstractWritableArchive<TEntry, TVolume>
             return string.Equals(p, key, StringComparison.OrdinalIgnoreCase);
         }
         return false;
+    }
+
+    public TEntry AddDirectoryEntry(string key, DateTime? modified = null)
+    {
+        if (key.Length > 0 && key[0] is '/' or '\\')
+        {
+            key = key.Substring(1);
+        }
+        if (DoesKeyMatchExisting(key))
+        {
+            throw new ArchiveException("Cannot add entry with duplicate key: " + key);
+        }
+        var entry = CreateDirectoryEntry(key, modified);
+        newEntries.Add(entry);
+        RebuildModifiedCollection();
+        return entry;
     }
 
     public void SaveTo(Stream stream, WriterOptions options)
@@ -179,6 +198,8 @@ public abstract class AbstractWritableArchive<TEntry, TVolume>
         DateTime? modified,
         bool closeStream
     );
+
+    protected abstract TEntry CreateDirectoryEntry(string key, DateTime? modified);
 
     protected abstract void SaveTo(
         Stream stream,

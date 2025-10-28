@@ -3,6 +3,8 @@ using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 using SharpCompress.Common;
 using SharpCompress.Common.Zip;
 using SharpCompress.Common.Zip.Headers;
@@ -133,6 +135,73 @@ public class ZipWriter : AbstractWriter
         }
 
         return filename.Trim('/');
+    }
+
+    private string NormalizeDirectoryName(string directoryName)
+    {
+        directoryName = NormalizeFilename(directoryName);
+        // Ensure directory name ends with '/' for zip format
+        if (!string.IsNullOrEmpty(directoryName) && !directoryName.EndsWith('/'))
+        {
+            directoryName += '/';
+        }
+        return directoryName;
+    }
+
+    public override void WriteDirectory(string directoryName, DateTime? modificationTime)
+    {
+        var normalizedName = NormalizeDirectoryName(directoryName);
+        if (string.IsNullOrEmpty(normalizedName))
+        {
+            return; // Skip empty or root directory
+        }
+
+        var options = new ZipWriterEntryOptions { ModificationDateTime = modificationTime };
+        WriteDirectoryEntry(normalizedName, options);
+    }
+
+    public override async Task WriteDirectoryAsync(
+        string directoryName,
+        DateTime? modificationTime,
+        CancellationToken cancellationToken = default
+    )
+    {
+        // Synchronous implementation is sufficient for directory entries
+        WriteDirectory(directoryName, modificationTime);
+        await Task.CompletedTask.ConfigureAwait(false);
+    }
+
+    private void WriteDirectoryEntry(string directoryPath, ZipWriterEntryOptions options)
+    {
+        var compression = ZipCompressionMethod.None;
+
+        options.ModificationDateTime ??= DateTime.Now;
+        options.EntryComment ??= string.Empty;
+
+        var entry = new ZipCentralDirectoryEntry(
+            compression,
+            directoryPath,
+            (ulong)streamPosition,
+            WriterOptions.ArchiveEncoding
+        )
+        {
+            Comment = options.EntryComment,
+            ModificationTime = options.ModificationDateTime,
+            Crc = 0,
+            Compressed = 0,
+            Decompressed = 0,
+        };
+
+        // Use the archive default setting for zip64 and allow overrides
+        var useZip64 = isZip64;
+        if (options.EnableZip64.HasValue)
+        {
+            useZip64 = options.EnableZip64.Value;
+        }
+
+        var headersize = (uint)WriteHeader(directoryPath, options, entry, useZip64);
+        streamPosition += headersize;
+        entries.Add(entry);
     }
 
     private int WriteHeader(

@@ -18,6 +18,8 @@ public interface IWritableArchive : IArchive
         DateTime? modified = null
     );
 
+    IArchiveEntry AddDirectoryEntry(string key, DateTime? modified = null);
+
     void SaveTo(Stream stream, WriterOptions options);
 
     Task SaveToAsync(

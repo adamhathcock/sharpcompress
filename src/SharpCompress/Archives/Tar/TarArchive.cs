@@ -224,6 +224,9 @@ public class TarArchive : AbstractWritableArchive<TarArchiveEntry, TarVolume>
             closeStream
         );
 
+    protected override TarArchiveEntry CreateDirectoryEntry(string directoryPath, DateTime? modified) =>
+        new TarWritableArchiveEntry(this, directoryPath, modified);
+
     protected override void SaveTo(
         Stream stream,
         WriterOptions options,
@@ -232,15 +235,25 @@ public class TarArchive : AbstractWritableArchive<TarArchiveEntry, TarVolume>
     )
     {
         using var writer = new TarWriter(stream, new TarWriterOptions(options));
-        foreach (var entry in oldEntries.Concat(newEntries).Where(x => !x.IsDirectory))
+        foreach (var entry in oldEntries.Concat(newEntries))
         {
-            using var entryStream = entry.OpenEntryStream();
-            writer.Write(
-                entry.Key.NotNull("Entry Key is null"),
-                entryStream,
-                entry.LastModifiedTime,
-                entry.Size
-            );
+            if (entry.IsDirectory)
+            {
+                writer.WriteDirectory(
+                    entry.Key.NotNull("Entry Key is null"),
+                    entry.LastModifiedTime
+                );
+            }
+            else
+            {
+                using var entryStream = entry.OpenEntryStream();
+                writer.Write(
+                    entry.Key.NotNull("Entry Key is null"),
+                    entryStream,
+                    entry.LastModifiedTime,
+                    entry.Size
+                );
+            }
         }
     }
 
@@ -253,18 +266,31 @@ public class TarArchive : AbstractWritableArchive<TarArchiveEntry, TarVolume>
     )
     {
         using var writer = new TarWriter(stream, new TarWriterOptions(options));
-        foreach (var entry in oldEntries.Concat(newEntries).Where(x => !x.IsDirectory))
+        foreach (var entry in oldEntries.Concat(newEntries))
         {
-            using var entryStream = entry.OpenEntryStream();
-            await writer
-                .WriteAsync(
-                    entry.Key.NotNull("Entry Key is null"),
-                    entryStream,
-                    entry.LastModifiedTime,
-                    entry.Size,
-                    cancellationToken
-                )
-                .ConfigureAwait(false);
+            if (entry.IsDirectory)
+            {
+                await writer
+                    .WriteDirectoryAsync(
+                        entry.Key.NotNull("Entry Key is null"),
+                        entry.LastModifiedTime,
+                        cancellationToken
+                    )
+                    .ConfigureAwait(false);
+            }
+            else
+            {
+                using var entryStream = entry.OpenEntryStream();
+                await writer
+                    .WriteAsync(
+                        entry.Key.NotNull("Entry Key is null"),
+                        entryStream,
+                        entry.LastModifiedTime,
+                        entry.Size,
+                        cancellationToken
+                    )
+                    .ConfigureAwait(false);
+            }
         }
     }
 

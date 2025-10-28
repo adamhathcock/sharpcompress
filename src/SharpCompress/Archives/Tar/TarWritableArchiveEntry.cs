@@ -9,7 +9,8 @@ namespace SharpCompress.Archives.Tar;
 internal sealed class TarWritableArchiveEntry : TarArchiveEntry, IWritableArchiveEntry
 {
     private readonly bool closeStream;
-    private readonly Stream stream;
+    private readonly Stream? stream;
+    private readonly bool isDirectory;
 
     internal TarWritableArchiveEntry(
         TarArchive archive,
@@ -27,6 +28,22 @@ internal sealed class TarWritableArchiveEntry : TarArchiveEntry, IWritableArchiv
         Size = size;
         LastModifiedTime = lastModified;
         this.closeStream = closeStream;
+        isDirectory = false;
+    }
+
+    internal TarWritableArchiveEntry(
+        TarArchive archive,
+        string directoryPath,
+        DateTime? lastModified
+    )
+        : base(archive, null, CompressionType.None)
+    {
+        stream = null;
+        Key = directoryPath;
+        Size = 0;
+        LastModifiedTime = lastModified;
+        closeStream = false;
+        isDirectory = true;
     }
 
     public override long Crc => 0;
@@ -47,15 +64,19 @@ internal sealed class TarWritableArchiveEntry : TarArchiveEntry, IWritableArchiv
 
     public override bool IsEncrypted => false;
 
-    public override bool IsDirectory => false;
+    public override bool IsDirectory => isDirectory;
 
     public override bool IsSplitAfter => false;
 
     internal override IEnumerable<FilePart> Parts => throw new NotImplementedException();
-    Stream IWritableArchiveEntry.Stream => stream;
+    Stream IWritableArchiveEntry.Stream => stream ?? Stream.Null;
 
     public override Stream OpenEntryStream()
     {
+        if (stream is null)
+        {
+            return Stream.Null;
+        }
         //ensure new stream is at the start, this could be reset
         stream.Seek(0, SeekOrigin.Begin);
         return SharpCompressStream.Create(stream, leaveOpen: true);
@@ -63,7 +84,7 @@ internal sealed class TarWritableArchiveEntry : TarArchiveEntry, IWritableArchiv
 
     internal override void Close()
     {
-        if (closeStream)
+        if (closeStream && stream is not null)
         {
             stream.Dispose();
         }

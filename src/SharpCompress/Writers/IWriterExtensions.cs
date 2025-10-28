@@ -55,6 +55,9 @@ public static class IWriterExtensions
         }
     }
 
+    public static void WriteDirectory(this IWriter writer, string directoryName) =>
+        writer.WriteDirectory(directoryName, null);
+
     // Async extensions
     public static Task WriteAsync(
         this IWriter writer,
@@ -121,4 +124,10 @@ public static class IWriterExtensions
                 .ConfigureAwait(false);
         }
     }
+
+    public static Task WriteDirectoryAsync(
+        this IWriter writer,
+        string directoryName,
+        CancellationToken cancellationToken = default
+    ) => writer.WriteDirectoryAsync(directoryName, null, cancellationToken);
 }

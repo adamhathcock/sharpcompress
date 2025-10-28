@@ -16,4 +16,10 @@ public interface IWriter : IDisposable
         DateTime? modificationTime,
         CancellationToken cancellationToken = default
     );
+    void WriteDirectory(string directoryName, DateTime? modificationTime);
+    Task WriteDirectoryAsync(
+        string directoryName,
+        DateTime? modificationTime,
+        CancellationToken cancellationToken = default
+    );
 }
