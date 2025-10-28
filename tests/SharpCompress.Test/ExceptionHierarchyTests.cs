@@ -19,7 +19,9 @@ public class ExceptionHierarchyTests
         Assert.True(typeof(SharpCompressException).IsAssignableFrom(typeof(ExtractionException)));
 
         // Verify that InvalidFormatException inherits from SharpCompressException (through ExtractionException)
-        Assert.True(typeof(SharpCompressException).IsAssignableFrom(typeof(InvalidFormatException)));
+        Assert.True(
+            typeof(SharpCompressException).IsAssignableFrom(typeof(InvalidFormatException))
+        );
 
         // Verify that CryptographicException inherits from SharpCompressException
         Assert.True(
@@ -45,9 +47,7 @@ public class ExceptionHierarchyTests
 
         // Verify that MultiVolumeExtractionException inherits from SharpCompressException (through ExtractionException)
         Assert.True(
-            typeof(SharpCompressException).IsAssignableFrom(
-                typeof(MultiVolumeExtractionException)
-            )
+            typeof(SharpCompressException).IsAssignableFrom(typeof(MultiVolumeExtractionException))
         );
 
         // Verify that ZlibException inherits from SharpCompressException
@@ -55,9 +55,7 @@ public class ExceptionHierarchyTests
 
         // Verify that XZIndexMarkerReachedException inherits from SharpCompressException
         Assert.True(
-            typeof(SharpCompressException).IsAssignableFrom(
-                typeof(XZIndexMarkerReachedException)
-            )
+            typeof(SharpCompressException).IsAssignableFrom(typeof(XZIndexMarkerReachedException))
         );
     }
 
