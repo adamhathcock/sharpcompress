@@ -2,7 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-#nullable disable
 
 using System;
 using System.Diagnostics;
@@ -39,7 +38,6 @@ public sealed class Deflate64Stream : Stream, IStreamStack
     private const int DEFAULT_BUFFER_SIZE = 8192;
 
     private Stream _stream;
-    private CompressionMode _mode;
     private InflaterManaged _inflater;
     private byte[] _buffer;
 
@@ -62,61 +60,24 @@ public sealed class Deflate64Stream : Stream, IStreamStack
             throw new ArgumentException("Deflate64: input stream is not readable", nameof(stream));
         }
 
-        InitializeInflater(stream, ZipCompressionMethod.Deflate64);
-#if DEBUG_STREAMS
-        this.DebugConstruct(typeof(Deflate64Stream));
-#endif
-    }
-
-    /// <summary>
-    /// Sets up this DeflateManagedStream to be used for Inflation/Decompression
-    /// </summary>
-    private void InitializeInflater(
-        Stream stream,
-        ZipCompressionMethod method = ZipCompressionMethod.Deflate
-    )
-    {
-        Debug.Assert(stream != null);
-        Debug.Assert(
-            method == ZipCompressionMethod.Deflate || method == ZipCompressionMethod.Deflate64
-        );
         if (!stream.CanRead)
         {
             throw new ArgumentException("Deflate64: input stream is not readable", nameof(stream));
         }
 
-        _inflater = new InflaterManaged(method == ZipCompressionMethod.Deflate64);
+        _inflater = new InflaterManaged( true);
 
         _stream = stream;
-        _mode = CompressionMode.Decompress;
         _buffer = new byte[DEFAULT_BUFFER_SIZE];
+#if DEBUG_STREAMS
+        this.DebugConstruct(typeof(Deflate64Stream));
+#endif
     }
 
-    public override bool CanRead
-    {
-        get
-        {
-            if (_stream is null)
-            {
-                return false;
-            }
 
-            return (_mode == CompressionMode.Decompress && _stream.CanRead);
-        }
-    }
+    public override bool CanRead => _stream.CanRead;
 
-    public override bool CanWrite
-    {
-        get
-        {
-            if (_stream is null)
-            {
-                return false;
-            }
-
-            return (_mode == CompressionMode.Compress && _stream.CanWrite);
-        }
-    }
+    public override bool CanWrite => false;
 
     public override bool CanSeek => false;
 
@@ -138,7 +99,6 @@ public sealed class Deflate64Stream : Stream, IStreamStack
 
     public override int Read(byte[] array, int offset, int count)
     {
-        EnsureDecompressionMode();
         ValidateParameters(array, offset, count);
         EnsureNotDisposed();
 
@@ -220,25 +180,8 @@ public sealed class Deflate64Stream : Stream, IStreamStack
     private static void ThrowStreamClosedException() =>
         throw new ObjectDisposedException(null, "Deflate64: stream has been disposed");
 
-    private void EnsureDecompressionMode()
-    {
-        if (_mode != CompressionMode.Decompress)
-        {
-            ThrowCannotReadFromDeflateManagedStreamException();
-        }
-    }
 
-    [MethodImpl(MethodImplOptions.NoInlining)]
-    private static void ThrowCannotReadFromDeflateManagedStreamException() =>
-        throw new InvalidOperationException("Deflate64: cannot read from this stream");
 
-    private void EnsureCompressionMode()
-    {
-        if (_mode != CompressionMode.Compress)
-        {
-            ThrowCannotWriteToDeflateManagedStreamException();
-        }
-    }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
     private static void ThrowCannotWriteToDeflateManagedStreamException() =>
@@ -281,20 +224,18 @@ public sealed class Deflate64Stream : Stream, IStreamStack
 #endif
                 if (disposing)
                 {
-                    _stream?.Dispose();
+                    _stream.Dispose();
                 }
             }
             finally
             {
-                _stream = null;
 
                 try
                 {
-                    _inflater?.Dispose();
+                    _inflater.Dispose();
                 }
                 finally
                 {
-                    _inflater = null;
                     base.Dispose(disposing);
                 }
             }
