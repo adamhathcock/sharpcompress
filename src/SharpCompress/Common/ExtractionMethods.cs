@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -12,7 +13,7 @@ internal static class ExtractionMethods
     /// Windows uses case-insensitive file systems, while Unix-like systems use case-sensitive file systems.
     /// </summary>
     private static StringComparison PathComparison =>
-        Environment.OSVersion.Platform == PlatformID.Win32NT
+        RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
             ? StringComparison.OrdinalIgnoreCase
             : StringComparison.Ordinal;
 

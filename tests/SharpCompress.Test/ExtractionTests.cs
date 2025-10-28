@@ -13,11 +13,12 @@ public class ExtractionTests : TestBase
     [Fact]
     public void Extraction_ShouldHandleCaseInsensitivePathsOnWindows()
     {
-        // This test simulates the issue where Path.GetFullPath returns paths with different casing
-        // than the actual directory on disk (e.g., "system32" vs "System32" on Windows).
-        // On Windows, file paths are case-insensitive, so the extraction should succeed.
-        // On Unix-like systems, file paths are case-sensitive, so this test validates the
-        // platform-specific behavior.
+        // This test validates that extraction succeeds when Path.GetFullPath returns paths
+        // with casing that matches the platform's file system behavior. On Windows,
+        // Path.GetFullPath can return different casing than the actual directory on disk
+        // (e.g., "system32" vs "System32"), and the extraction should succeed because
+        // Windows file systems are case-insensitive. On Unix-like systems, this test
+        // verifies that the case-sensitive comparison is used correctly.
 
         var testArchive = Path.Combine(SCRATCH2_FILES_PATH, "test-extraction.zip");
         var extractPath = SCRATCH_FILES_PATH;
