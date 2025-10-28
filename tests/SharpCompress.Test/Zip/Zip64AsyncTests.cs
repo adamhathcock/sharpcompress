@@ -100,51 +100,61 @@ public class Zip64AsyncTests : WriterTests
     {
         filename = Path.Combine(SCRATCH2_FILES_PATH, filename);
 
-        if (File.Exists(filename))
+        try
         {
-            File.Delete(filename);
-        }
+            if (File.Exists(filename))
+            {
+                File.Delete(filename);
+            }
 
-        if (!File.Exists(filename))
-        {
-            await CreateZipArchiveAsync(
-                filename,
-                files,
-                filesize,
-                writeChunkSize,
-                setZip64,
-                forwardOnly
-            );
-        }
+            if (!File.Exists(filename))
+            {
+                await CreateZipArchiveAsync(
+                    filename,
+                    files,
+                    filesize,
+                    writeChunkSize,
+                    setZip64,
+                    forwardOnly
+                );
+            }
 
-        var resForward = await ReadForwardOnlyAsync(filename);
-        if (resForward.Item1 != files)
-        {
-            throw new InvalidOperationException(
-                $"Incorrect number of items reported: {resForward.Item1}, should have been {files}"
-            );
-        }
+            var resForward = await ReadForwardOnlyAsync(filename);
+            if (resForward.Item1 != files)
+            {
+                throw new InvalidOperationException(
+                    $"Incorrect number of items reported: {resForward.Item1}, should have been {files}"
+                );
+            }
 
-        if (resForward.Item2 != files * filesize)
-        {
-            throw new InvalidOperationException(
-                $"Incorrect combined size reported: {resForward.Item2}, should have been {files * filesize}"
-            );
-        }
+            if (resForward.Item2 != files * filesize)
+            {
+                throw new InvalidOperationException(
+                    $"Incorrect combined size reported: {resForward.Item2}, should have been {files * filesize}"
+                );
+            }
 
-        var resArchive = ReadArchive(filename);
-        if (resArchive.Item1 != files)
-        {
-            throw new InvalidOperationException(
-                $"Incorrect number of items reported: {resArchive.Item1}, should have been {files}"
-            );
-        }
+            var resArchive = ReadArchive(filename);
+            if (resArchive.Item1 != files)
+            {
+                throw new InvalidOperationException(
+                    $"Incorrect number of items reported: {resArchive.Item1}, should have been {files}"
+                );
+            }
 
-        if (resArchive.Item2 != files * filesize)
+            if (resArchive.Item2 != files * filesize)
+            {
+                throw new InvalidOperationException(
+                    $"Incorrect number of items reported: {resArchive.Item2}, should have been {files * filesize}"
+                );
+            }
+        }
+        finally
         {
-            throw new InvalidOperationException(
-                $"Incorrect number of items reported: {resArchive.Item2}, should have been {files * filesize}"
-            );
+            if (File.Exists(filename))
+            {
+                File.Delete(filename);
+            }
         }
     }
 
