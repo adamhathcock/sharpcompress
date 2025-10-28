@@ -57,7 +57,7 @@ public class ForwardOnlyStream : SharpCompressStream, IStreamStack
     public override bool CanRead => true;
 
     public override bool CanSeek => false;
-    public override bool CanWrite => false;
+    public override bool CanWrite => true;
 
     public override void Flush() { }
 

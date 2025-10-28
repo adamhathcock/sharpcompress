@@ -22,31 +22,37 @@ public class Zip64Tests : WriterTests
     // 4GiB + 1
     private const long FOUR_GB_LIMIT = ((long)uint.MaxValue) + 1;
 
+    //[Fact]
     [Trait("format", "zip64")]
     public void Zip64_Single_Large_File() =>
         // One single file, requires zip64
         RunSingleTest(1, FOUR_GB_LIMIT, setZip64: true, forwardOnly: false);
 
+    //[Fact]
     [Trait("format", "zip64")]
     public void Zip64_Two_Large_Files() =>
         // One single file, requires zip64
         RunSingleTest(2, FOUR_GB_LIMIT, setZip64: true, forwardOnly: false);
 
+    [Fact]
     [Trait("format", "zip64")]
     public void Zip64_Two_Small_files() =>
         // Multiple files, does not require zip64
         RunSingleTest(2, FOUR_GB_LIMIT / 2, setZip64: false, forwardOnly: false);
 
+    [Fact]
     [Trait("format", "zip64")]
     public void Zip64_Two_Small_files_stream() =>
         // Multiple files, does not require zip64, and works with streams
         RunSingleTest(2, FOUR_GB_LIMIT / 2, setZip64: false, forwardOnly: true);
 
+    [Fact]
     [Trait("format", "zip64")]
     public void Zip64_Two_Small_Files_Zip64() =>
         // Multiple files, use zip64 even though it is not required
         RunSingleTest(2, FOUR_GB_LIMIT / 2, setZip64: true, forwardOnly: false);
 
+    [Fact]
     [Trait("format", "zip64")]
     public void Zip64_Single_Large_File_Fail()
     {
@@ -59,6 +65,7 @@ public class Zip64Tests : WriterTests
         catch (NotSupportedException) { }
     }
 
+    [Fact]
     [Trait("zip64", "true")]
     public void Zip64_Single_Large_File_Zip64_Streaming_Fail()
     {
@@ -71,6 +78,7 @@ public class Zip64Tests : WriterTests
         catch (NotSupportedException) { }
     }
 
+    [Fact]
     [Trait("zip64", "true")]
     public void Zip64_Single_Large_File_Streaming_Fail()
     {

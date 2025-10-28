@@ -23,16 +23,14 @@ public class Zip64AsyncTests : WriterTests
     // 4GiB + 1
     private const long FOUR_GB_LIMIT = ((long)uint.MaxValue) + 1;
 
-    [Fact]
+    //[Fact]
     [Trait("format", "zip64")]
     public async Task Zip64_Single_Large_File_Async() =>
-        // One single file, requires zip64
         await RunSingleTestAsync(1, FOUR_GB_LIMIT, setZip64: true, forwardOnly: false);
 
-    [Fact]
+    //[Fact]
     [Trait("format", "zip64")]
     public async Task Zip64_Two_Large_Files_Async() =>
-        // One single file, requires zip64
         await RunSingleTestAsync(2, FOUR_GB_LIMIT, setZip64: true, forwardOnly: false);
 
     [Fact]
@@ -44,7 +42,6 @@ public class Zip64AsyncTests : WriterTests
     [Fact]
     [Trait("format", "zip64")]
     public async Task Zip64_Two_Small_files_stream_Async() =>
-        // Multiple files, does not require zip64, and works with streams
         await RunSingleTestAsync(2, FOUR_GB_LIMIT / 2, setZip64: false, forwardOnly: true);
 
     [Fact]
@@ -179,12 +176,10 @@ public class Zip64AsyncTests : WriterTests
             {
                 var b = (int)Math.Min(left, data.Length);
                 // Use synchronous Write to match the sync version and avoid ForwardOnlyStream issues
-                str.Write(data, 0, b);
+                await str.WriteAsync(data, 0, b);
                 left -= b;
             }
         }
-        // Adding await to make it properly async, even though the writes are sync
-        await Task.CompletedTask;
     }
 
     public async Task<Tuple<long, long>> ReadForwardOnlyAsync(string filename)

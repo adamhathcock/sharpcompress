@@ -2,7 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-
 using System;
 using System.Diagnostics;
 using System.IO;
@@ -65,7 +64,7 @@ public sealed class Deflate64Stream : Stream, IStreamStack
             throw new ArgumentException("Deflate64: input stream is not readable", nameof(stream));
         }
 
-        _inflater = new InflaterManaged( true);
+        _inflater = new InflaterManaged(true);
 
         _stream = stream;
         _buffer = new byte[DEFAULT_BUFFER_SIZE];
@@ -73,7 +72,6 @@ public sealed class Deflate64Stream : Stream, IStreamStack
         this.DebugConstruct(typeof(Deflate64Stream));
 #endif
     }
-
 
     public override bool CanRead => _stream.CanRead;
 
@@ -180,9 +178,6 @@ public sealed class Deflate64Stream : Stream, IStreamStack
     private static void ThrowStreamClosedException() =>
         throw new ObjectDisposedException(null, "Deflate64: stream has been disposed");
 
-
-
-
     [MethodImpl(MethodImplOptions.NoInlining)]
     private static void ThrowCannotWriteToDeflateManagedStreamException() =>
         throw new InvalidOperationException("Deflate64: cannot write to this stream");
@@ -229,7 +224,6 @@ public sealed class Deflate64Stream : Stream, IStreamStack
             }
             finally
             {
-
                 try
                 {
                     _inflater.Dispose();
