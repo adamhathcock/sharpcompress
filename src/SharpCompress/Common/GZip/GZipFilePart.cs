@@ -24,8 +24,14 @@ internal sealed class GZipFilePart : FilePart
             stream.Position = stream.Length - 8;
             ReadTrailer();
             stream.Position = position;
+            EntryStartPosition = position;
         }
-        EntryStartPosition = stream.Position;
+        else
+        {
+            // For non-seekable streams, we can't read the trailer or track position.
+            // Set to 0 since the stream will be read sequentially from its current position.
+            EntryStartPosition = 0;
+        }
     }
 
     internal long EntryStartPosition { get; }
