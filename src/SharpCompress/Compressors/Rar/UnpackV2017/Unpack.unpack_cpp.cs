@@ -236,8 +236,7 @@ internal sealed partial class Unpack : BitInput
             case 15: // rar 1.5 compression
                 if (!Fragmented)
                 {
-                    // TODO: Create async version when UnpackV2017 unpack15 is converted
-                    Unpack15(Solid);
+                    await Unpack15Async(Solid, cancellationToken).ConfigureAwait(false);
                 }
 
                 break;

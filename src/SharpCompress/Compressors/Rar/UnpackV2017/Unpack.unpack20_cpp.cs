@@ -370,6 +370,36 @@ internal partial class Unpack
         WrPtr = UnpPtr;
     }
 
+    private async System.Threading.Tasks.Task UnpWriteBuf20Async(
+        System.Threading.CancellationToken cancellationToken = default
+    )
+    {
+        if (UnpPtr != WrPtr)
+        {
+            UnpSomeRead = true;
+        }
+
+        if (UnpPtr < WrPtr)
+        {
+            await UnpIO_UnpWriteAsync(
+                    Window,
+                    WrPtr,
+                    (uint)(-(int)WrPtr & MaxWinMask),
+                    cancellationToken
+                )
+                .ConfigureAwait(false);
+            await UnpIO_UnpWriteAsync(Window, 0, UnpPtr, cancellationToken).ConfigureAwait(false);
+            UnpAllBuf = true;
+        }
+        else
+        {
+            await UnpIO_UnpWriteAsync(Window, WrPtr, UnpPtr - WrPtr, cancellationToken)
+                .ConfigureAwait(false);
+        }
+
+        WrPtr = UnpPtr;
+    }
+
     private bool ReadTables20()
     {
         Span<byte> BitLength = stackalloc byte[checked((int)BC20)];
