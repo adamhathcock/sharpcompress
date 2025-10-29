@@ -664,6 +664,48 @@ internal partial class Unpack
         }
     }
 
+    private async System.Threading.Tasks.Task UnpWriteAreaAsync(
+        size_t StartPtr,
+        size_t EndPtr,
+        System.Threading.CancellationToken cancellationToken = default
+    )
+    {
+        if (EndPtr != StartPtr)
+        {
+            UnpSomeRead = true;
+        }
+
+        if (EndPtr < StartPtr)
+        {
+            UnpAllBuf = true;
+        }
+
+        if (Fragmented)
+        {
+            var SizeToWrite = (EndPtr - StartPtr) & MaxWinMask;
+            while (SizeToWrite > 0)
+            {
+                var BlockSize = FragWindow.GetBlockSize(StartPtr, SizeToWrite);
+                FragWindow.GetBuffer(StartPtr, out var __buffer, out var __offset);
+                await UnpWriteDataAsync(__buffer, __offset, BlockSize, cancellationToken)
+                    .ConfigureAwait(false);
+                SizeToWrite -= BlockSize;
+                StartPtr = (StartPtr + BlockSize) & MaxWinMask;
+            }
+        }
+        else if (EndPtr < StartPtr)
+        {
+            await UnpWriteDataAsync(Window, StartPtr, MaxWinSize - StartPtr, cancellationToken)
+                .ConfigureAwait(false);
+            await UnpWriteDataAsync(Window, 0, EndPtr, cancellationToken).ConfigureAwait(false);
+        }
+        else
+        {
+            await UnpWriteDataAsync(Window, StartPtr, EndPtr - StartPtr, cancellationToken)
+                .ConfigureAwait(false);
+        }
+    }
+
     private void UnpWriteData(byte[] Data, size_t offset, size_t Size)
     {
         if (WrittenFileSize >= DestUnpSize)
@@ -679,6 +721,29 @@ internal partial class Unpack
         }
 
         UnpIO_UnpWrite(Data, offset, WriteSize);
+        WrittenFileSize += Size;
+    }
+
+    private async System.Threading.Tasks.Task UnpWriteDataAsync(
+        byte[] Data,
+        size_t offset,
+        size_t Size,
+        System.Threading.CancellationToken cancellationToken = default
+    )
+    {
+        if (WrittenFileSize >= DestUnpSize)
+        {
+            return;
+        }
+
+        var WriteSize = Size;
+        var LeftToWrite = DestUnpSize - WrittenFileSize;
+        if (WriteSize > LeftToWrite)
+        {
+            WriteSize = (size_t)LeftToWrite;
+        }
+
+        await UnpIO_UnpWriteAsync(Data, offset, WriteSize, cancellationToken).ConfigureAwait(false);
         WrittenFileSize += Size;
     }
 

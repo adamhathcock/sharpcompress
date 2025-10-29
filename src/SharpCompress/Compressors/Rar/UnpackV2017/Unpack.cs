@@ -41,6 +41,16 @@ internal partial class Unpack : IRarUnpack
     private void UnpIO_UnpWrite(byte[] buf, size_t offset, uint count) =>
         writeStream.Write(buf, checked((int)offset), checked((int)count));
 
+    private async System.Threading.Tasks.Task UnpIO_UnpWriteAsync(
+        byte[] buf,
+        size_t offset,
+        uint count,
+        System.Threading.CancellationToken cancellationToken = default
+    ) =>
+        await writeStream
+            .WriteAsync(buf, checked((int)offset), checked((int)count), cancellationToken)
+            .ConfigureAwait(false);
+
     public void DoUnpack(FileHeader fileHeader, Stream readStream, Stream writeStream)
     {
         // as of 12/2017 .NET limits array indexing to using a signed integer

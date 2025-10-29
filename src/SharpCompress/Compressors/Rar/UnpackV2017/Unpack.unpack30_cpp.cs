@@ -533,6 +533,27 @@ bool UnpReadBuf30()
   return ReadCode!=-1;
 }
 
+async System.Threading.Tasks.Task<bool> UnpReadBuf30Async(System.Threading.CancellationToken cancellationToken = default)
+{
+  int DataSize=ReadTop-Inp.InAddr; // Data left to process.
+  if (DataSize<0)
+    return false;
+  if (Inp.InAddr>BitInput.MAX_SIZE/2)
+  {
+    if (DataSize>0)
+      Array.Copy(Inp.InBuf,Inp.InAddr,Inp.InBuf,0,DataSize);
+    Inp.InAddr=0;
+    ReadTop=DataSize;
+  }
+  else
+    DataSize=ReadTop;
+  int ReadCode=await UnpIO_UnpReadAsync(Inp.InBuf,DataSize,BitInput.MAX_SIZE-DataSize,cancellationToken).ConfigureAwait(false);
+  if (ReadCode>0)
+    ReadTop+=ReadCode;
+  ReadBorder=ReadTop-30;
+  return ReadCode!=-1;
+}
+
 
 void UnpWriteBuf30()
 {
