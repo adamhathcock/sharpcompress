@@ -217,17 +217,15 @@ internal sealed partial class Unpack : BitInput, IRarUnpack
             await UnstoreFileAsync(cancellationToken).ConfigureAwait(false);
             return;
         }
-        // TODO: When compression methods are converted to async, call them here
-        // For now, fall back to synchronous version
         switch (fileHeader.CompressionAlgorithm)
         {
             case 15: // rar 1.5 compression
-                unpack15(fileHeader.IsSolid);
+                await unpack15Async(fileHeader.IsSolid, cancellationToken).ConfigureAwait(false);
                 break;
 
             case 20: // rar 2.x compression
             case 26: // files larger than 2GB
-                unpack20(fileHeader.IsSolid);
+                await unpack20Async(fileHeader.IsSolid, cancellationToken).ConfigureAwait(false);
                 break;
 
             case 29: // rar 3.x compression
