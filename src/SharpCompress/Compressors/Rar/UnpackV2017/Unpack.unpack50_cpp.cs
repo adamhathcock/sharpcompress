@@ -339,6 +339,58 @@ internal partial class Unpack
         return ReadCode != -1;
     }
 
+    private async System.Threading.Tasks.Task<bool> UnpReadBufAsync(
+        System.Threading.CancellationToken cancellationToken = default
+    )
+    {
+        var DataSize = ReadTop - Inp.InAddr; // Data left to process.
+        if (DataSize < 0)
+        {
+            return false;
+        }
+
+        BlockHeader.BlockSize -= Inp.InAddr - BlockHeader.BlockStart;
+        if (Inp.InAddr > MAX_SIZE / 2)
+        {
+            if (DataSize > 0)
+            {
+                Buffer.BlockCopy(Inp.InBuf, Inp.InAddr, Inp.InBuf, 0, DataSize);
+            }
+
+            Inp.InAddr = 0;
+            ReadTop = DataSize;
+        }
+        else
+        {
+            DataSize = ReadTop;
+        }
+
+        var ReadCode = 0;
+        if (MAX_SIZE != DataSize)
+        {
+            ReadCode = await UnpIO_UnpReadAsync(
+                    Inp.InBuf,
+                    DataSize,
+                    MAX_SIZE - DataSize,
+                    cancellationToken
+                )
+                .ConfigureAwait(false);
+        }
+
+        if (ReadCode > 0) // Can be also -1.
+        {
+            ReadTop += ReadCode;
+        }
+
+        ReadBorder = ReadTop - 30;
+        BlockHeader.BlockStart = Inp.InAddr;
+        if (BlockHeader.BlockSize != -1) // '-1' means not defined yet.
+        {
+            ReadBorder = Math.Min(ReadBorder, BlockHeader.BlockStart + BlockHeader.BlockSize - 1);
+        }
+        return ReadCode != -1;
+    }
+
     private void UnpWriteBuf()
     {
         var WrittenBorder = WrPtr;
