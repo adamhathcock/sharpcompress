@@ -1,6 +1,7 @@
 #nullable disable
 
 using System;
+using System.Buffers;
 using SharpCompress.Common;
 using static SharpCompress.Compressors.Rar.UnpackV2017.PackDef;
 using static SharpCompress.Compressors.Rar.UnpackV2017.UnpackGlobal;
@@ -110,7 +111,7 @@ internal sealed partial class Unpack : BitInput
             throw new InvalidFormatException("Grow && Fragmented");
         }
 
-        var NewWindow = Fragmented ? null : new byte[WinSize];
+        var NewWindow = Fragmented ? null : ArrayPool<byte>.Shared.Rent((int)WinSize);
 
         if (NewWindow == null)
         {
@@ -126,6 +127,7 @@ internal sealed partial class Unpack : BitInput
                 if (Window != null) // If allocated by preceding files.
                 {
                     //free(Window);
+                    ArrayPool<byte>.Shared.Return(Window);
                     Window = null;
                 }
                 FragWindow.Init(WinSize);
