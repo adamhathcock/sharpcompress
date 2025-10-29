@@ -79,12 +79,15 @@ public class RarArchiveEntry : RarEntry, IArchiveEntry
                 new MultiVolumeReadOnlyStream(Parts.Cast<RarFilePart>(), archive)
             );
         }
+        else
+        {
+            stream = new RarStream(
+                archive.UnpackV2017.Value,
+                FileHeader,
+                new MultiVolumeReadOnlyStream(Parts.Cast<RarFilePart>(), archive)
+            );
+        }
 
-        stream = new RarStream(
-            archive.UnpackV2017.Value,
-            FileHeader,
-            new MultiVolumeReadOnlyStream(Parts.Cast<RarFilePart>(), archive)
-        );
         stream.Initialize();
         return stream;
     }
@@ -100,12 +103,16 @@ public class RarArchiveEntry : RarEntry, IArchiveEntry
                 new MultiVolumeReadOnlyStream(Parts.Cast<RarFilePart>(), archive)
             );
         }
+        else
+        {
 
-        stream = new RarStream(
-            archive.UnpackV2017.Value,
-            FileHeader,
-            new MultiVolumeReadOnlyStream(Parts.Cast<RarFilePart>(), archive)
-        );
+            stream = new RarStream(
+                archive.UnpackV2017.Value,
+                FileHeader,
+                new MultiVolumeReadOnlyStream(Parts.Cast<RarFilePart>(), archive)
+            );
+        }
+
         await stream.InitializeAsync(cancellationToken);
         return stream;
     }
