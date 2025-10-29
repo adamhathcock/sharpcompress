@@ -150,6 +150,136 @@ internal sealed class MultiVolumeReadOnlyStream : Stream, IStreamStack
         return totalRead;
     }
 
+    public override async System.Threading.Tasks.Task<int> ReadAsync(
+        byte[] buffer,
+        int offset,
+        int count,
+        System.Threading.CancellationToken cancellationToken
+    )
+    {
+        var totalRead = 0;
+        var currentOffset = offset;
+        var currentCount = count;
+        while (currentCount > 0)
+        {
+            var readSize = currentCount;
+            if (currentCount > maxPosition - currentPosition)
+            {
+                readSize = (int)(maxPosition - currentPosition);
+            }
+
+            var read = await currentStream
+                .ReadAsync(buffer, currentOffset, readSize, cancellationToken)
+                .ConfigureAwait(false);
+            if (read < 0)
+            {
+                throw new EndOfStreamException();
+            }
+
+            currentPosition += read;
+            currentOffset += read;
+            currentCount -= read;
+            totalRead += read;
+            if (
+                ((maxPosition - currentPosition) == 0)
+                && filePartEnumerator.Current.FileHeader.IsSplitAfter
+            )
+            {
+                if (filePartEnumerator.Current.FileHeader.R4Salt != null)
+                {
+                    throw new InvalidFormatException(
+                        "Sharpcompress currently does not support multi-volume decryption."
+                    );
+                }
+                var fileName = filePartEnumerator.Current.FileHeader.FileName;
+                if (!filePartEnumerator.MoveNext())
+                {
+                    throw new InvalidFormatException(
+                        "Multi-part rar file is incomplete.  Entry expects a new volume: "
+                            + fileName
+                    );
+                }
+                InitializeNextFilePart();
+            }
+            else
+            {
+                break;
+            }
+        }
+        currentPartTotalReadBytes += totalRead;
+        currentEntryTotalReadBytes += totalRead;
+        streamListener.FireCompressedBytesRead(
+            currentPartTotalReadBytes,
+            currentEntryTotalReadBytes
+        );
+        return totalRead;
+    }
+
+#if NETCOREAPP2_1_OR_GREATER || NETSTANDARD2_1_OR_GREATER
+    public override async System.Threading.Tasks.ValueTask<int> ReadAsync(
+        Memory<byte> buffer,
+        System.Threading.CancellationToken cancellationToken = default
+    )
+    {
+        var totalRead = 0;
+        var currentOffset = 0;
+        var currentCount = buffer.Length;
+        while (currentCount > 0)
+        {
+            var readSize = currentCount;
+            if (currentCount > maxPosition - currentPosition)
+            {
+                readSize = (int)(maxPosition - currentPosition);
+            }
+
+            var read = await currentStream
+                .ReadAsync(buffer.Slice(currentOffset, readSize), cancellationToken)
+                .ConfigureAwait(false);
+            if (read < 0)
+            {
+                throw new EndOfStreamException();
+            }
+
+            currentPosition += read;
+            currentOffset += read;
+            currentCount -= read;
+            totalRead += read;
+            if (
+                ((maxPosition - currentPosition) == 0)
+                && filePartEnumerator.Current.FileHeader.IsSplitAfter
+            )
+            {
+                if (filePartEnumerator.Current.FileHeader.R4Salt != null)
+                {
+                    throw new InvalidFormatException(
+                        "Sharpcompress currently does not support multi-volume decryption."
+                    );
+                }
+                var fileName = filePartEnumerator.Current.FileHeader.FileName;
+                if (!filePartEnumerator.MoveNext())
+                {
+                    throw new InvalidFormatException(
+                        "Multi-part rar file is incomplete.  Entry expects a new volume: "
+                            + fileName
+                    );
+                }
+                InitializeNextFilePart();
+            }
+            else
+            {
+                break;
+            }
+        }
+        currentPartTotalReadBytes += totalRead;
+        currentEntryTotalReadBytes += totalRead;
+        streamListener.FireCompressedBytesRead(
+            currentPartTotalReadBytes,
+            currentEntryTotalReadBytes
+        );
+        return totalRead;
+    }
+#endif
+
     public override bool CanRead => true;
 
     public override bool CanSeek => false;

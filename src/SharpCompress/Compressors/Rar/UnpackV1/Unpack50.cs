@@ -479,6 +479,354 @@ internal partial class Unpack
         return ReadCode != -1;
     }
 
+    private async System.Threading.Tasks.Task<bool> UnpReadBufAsync(
+        System.Threading.CancellationToken cancellationToken = default
+    )
+    {
+        var DataSize = ReadTop - Inp.InAddr; // Data left to process.
+        if (DataSize < 0)
+        {
+            return false;
+        }
+
+        BlockHeader.BlockSize -= Inp.InAddr - BlockHeader.BlockStart;
+        if (Inp.InAddr > MAX_SIZE / 2)
+        {
+            if (DataSize > 0)
+            {
+                Array.Copy(InBuf, inAddr, InBuf, 0, DataSize);
+            }
+
+            Inp.InAddr = 0;
+            ReadTop = DataSize;
+        }
+        else
+        {
+            DataSize = ReadTop;
+        }
+
+        var ReadCode = 0;
+        if (MAX_SIZE != DataSize)
+        {
+            ReadCode = await readStream
+                .ReadAsync(InBuf, DataSize, MAX_SIZE - DataSize, cancellationToken)
+                .ConfigureAwait(false);
+        }
+
+        if (ReadCode > 0) // Can be also -1.
+        {
+            ReadTop += ReadCode;
+        }
+
+        ReadBorder = ReadTop - 30;
+        BlockHeader.BlockStart = Inp.InAddr;
+        if (BlockHeader.BlockSize != -1) // '-1' means not defined yet.
+        {
+            ReadBorder = Math.Min(ReadBorder, BlockHeader.BlockStart + BlockHeader.BlockSize - 1);
+        }
+        return ReadCode != -1;
+    }
+
+    public async System.Threading.Tasks.Task Unpack5Async(
+        bool Solid,
+        System.Threading.CancellationToken cancellationToken = default
+    )
+    {
+        FileExtracted = true;
+
+        if (!Suspended)
+        {
+            UnpInitData(Solid);
+            if (!await UnpReadBufAsync(cancellationToken).ConfigureAwait(false))
+            {
+                return;
+            }
+
+            // Check TablesRead5 to be sure that we read tables at least once
+            // regardless of current block header TablePresent flag.
+            // So we can safefly use these tables below.
+            if (
+                !await ReadBlockHeaderAsync(cancellationToken).ConfigureAwait(false)
+                || !ReadTables()
+                || !TablesRead5
+            )
+            {
+                return;
+            }
+        }
+
+        while (true)
+        {
+            UnpPtr &= MaxWinMask;
+
+            if (Inp.InAddr >= ReadBorder)
+            {
+                var FileDone = false;
+
+                // We use 'while', because for empty block containing only Huffman table,
+                // we'll be on the block border once again just after reading the table.
+                while (
+                    Inp.InAddr > BlockHeader.BlockStart + BlockHeader.BlockSize - 1
+                    || Inp.InAddr == BlockHeader.BlockStart + BlockHeader.BlockSize - 1
+                        && Inp.InBit >= BlockHeader.BlockBitSize
+                )
+                {
+                    if (BlockHeader.LastBlockInFile)
+                    {
+                        FileDone = true;
+                        break;
+                    }
+                    if (
+                        !await ReadBlockHeaderAsync(cancellationToken).ConfigureAwait(false)
+                        || !ReadTables()
+                    )
+                    {
+                        return;
+                    }
+                }
+                if (FileDone || !await UnpReadBufAsync(cancellationToken).ConfigureAwait(false))
+                {
+                    break;
+                }
+            }
+
+            if (
+                ((WriteBorder - UnpPtr) & MaxWinMask) < PackDef.MAX_LZ_MATCH + 3
+                && WriteBorder != UnpPtr
+            )
+            {
+                UnpWriteBuf();
+                if (WrittenFileSize > DestUnpSize)
+                {
+                    return;
+                }
+
+                if (Suspended)
+                {
+                    FileExtracted = false;
+                    return;
+                }
+            }
+
+            //uint MainSlot=DecodeNumber(Inp,LD);
+            var MainSlot = this.DecodeNumber(LD);
+            if (MainSlot < 256)
+            {
+                //              if (Fragmented)
+                //                FragWindow[UnpPtr++]=(byte)MainSlot;
+                //              else
+                Window[UnpPtr++] = (byte)MainSlot;
+                continue;
+            }
+            if (MainSlot >= 262)
+            {
+                var Length = SlotToLength(MainSlot - 262);
+
+                //uint DBits,Distance=1,DistSlot=DecodeNumber(Inp,&BlockTables.DD);
+                int DBits;
+                uint Distance = 1,
+                    DistSlot = this.DecodeNumber(DD);
+                if (DistSlot < 4)
+                {
+                    DBits = 0;
+                    Distance += DistSlot;
+                }
+                else
+                {
+                    //DBits=DistSlot/2 - 1;
+                    DBits = (int)((DistSlot / 2) - 1);
+                    Distance += (2 | (DistSlot & 1)) << DBits;
+                }
+
+                if (DBits > 0)
+                {
+                    if (DBits >= 4)
+                    {
+                        if (DBits > 4)
+                        {
+                            Distance += ((Inp.getbits() >> (36 - DBits)) << 4);
+                            Inp.AddBits(DBits - 4);
+                        }
+                        //uint LowDist=DecodeNumber(Inp,&BlockTables.LDD);
+                        var LowDist = this.DecodeNumber(LDD);
+                        Distance += LowDist;
+                    }
+                    else
+                    {
+                        Distance += Inp.getbits() >> (32 - DBits);
+                        Inp.AddBits(DBits);
+                    }
+                }
+
+                if (Distance > 0x100)
+                {
+                    Length++;
+                    if (Distance > 0x2000)
+                    {
+                        Length++;
+                        if (Distance > 0x40000)
+                        {
+                            Length++;
+                        }
+                    }
+                }
+
+                InsertOldDist(Distance);
+                LastLength = Length;
+                //              if (Fragmented)
+                //                FragWindow.CopyString(Length,Distance,UnpPtr,MaxWinMask);
+                //              else
+                CopyString(Length, Distance);
+                continue;
+            }
+            if (MainSlot == 256)
+            {
+                var Filter = new UnpackFilter();
+                if (
+                    !await ReadFilterAsync(Filter, cancellationToken).ConfigureAwait(false)
+                    || !AddFilter(Filter)
+                )
+                {
+                    break;
+                }
+
+                continue;
+            }
+            if (MainSlot == 257)
+            {
+                if (LastLength != 0)
+                //                if (Fragmented)
+                //                  FragWindow.CopyString(LastLength,OldDist[0],UnpPtr,MaxWinMask);
+                //                else
+                //CopyString(LastLength,OldDist[0]);
+                {
+                    CopyString(LastLength, OldDistN(0));
+                }
+
+                continue;
+            }
+            if (MainSlot < 262)
+            {
+                //uint DistNum=MainSlot-258;
+                var DistNum = (int)(MainSlot - 258);
+                //uint Distance=OldDist[DistNum];
+                var Distance = OldDistN(DistNum);
+                //for (uint I=DistNum;I>0;I--)
+                for (var I = DistNum; I > 0; I--)
+                //OldDistN[I]=OldDistN(I-1);
+                {
+                    SetOldDistN(I, OldDistN(I - 1));
+                }
+
+                //OldDistN[0]=Distance;
+                SetOldDistN(0, Distance);
+
+                var LengthSlot = this.DecodeNumber(RD);
+                var Length = SlotToLength(LengthSlot);
+                LastLength = Length;
+                //              if (Fragmented)
+                //                FragWindow.CopyString(Length,Distance,UnpPtr,MaxWinMask);
+                //              else
+                CopyString(Length, Distance);
+                continue;
+            }
+        }
+        UnpWriteBuf();
+    }
+
+    private async System.Threading.Tasks.Task<bool> ReadBlockHeaderAsync(
+        System.Threading.CancellationToken cancellationToken = default
+    )
+    {
+        Header.HeaderSize = 0;
+
+        if (!Inp.ExternalBuffer && Inp.InAddr > ReadTop - 7)
+        {
+            if (!await UnpReadBufAsync(cancellationToken).ConfigureAwait(false))
+            {
+                return false;
+            }
+        }
+
+        //Inp.faddbits((8-Inp.InBit)&7);
+        Inp.faddbits((uint)((8 - Inp.InBit) & 7));
+
+        var BlockFlags = (byte)(Inp.fgetbits() >> 8);
+        Inp.faddbits(8);
+        //uint ByteCount=((BlockFlags>>3)&3)+1; // Block size byte count.
+        var ByteCount = (uint)(((BlockFlags >> 3) & 3) + 1); // Block size byte count.
+
+        if (ByteCount == 4)
+        {
+            return false;
+        }
+
+        //Header.HeaderSize=2+ByteCount;
+        Header.HeaderSize = (int)(2 + ByteCount);
+
+        Header.BlockBitSize = (BlockFlags & 7) + 1;
+
+        var SavedCheckSum = (byte)(Inp.fgetbits() >> 8);
+        Inp.faddbits(8);
+
+        var BlockSize = 0;
+        //for (uint I=0;I<ByteCount;I++)
+        for (var I = 0; I < ByteCount; I++)
+        {
+            //BlockSize+=(Inp.fgetbits()>>8)<<(I*8);
+            BlockSize += (int)(Inp.fgetbits() >> 8) << (I * 8);
+            Inp.AddBits(8);
+        }
+
+        Header.BlockSize = BlockSize;
+        var CheckSum = (byte)(0x5a ^ BlockFlags ^ BlockSize ^ (BlockSize >> 8) ^ (BlockSize >> 16));
+        if (CheckSum != SavedCheckSum)
+        {
+            return false;
+        }
+
+        Header.BlockStart = Inp.InAddr;
+        ReadBorder = Math.Min(ReadBorder, Header.BlockStart + Header.BlockSize - 1);
+
+        Header.LastBlockInFile = (BlockFlags & 0x40) != 0;
+        Header.TablePresent = (BlockFlags & 0x80) != 0;
+        return true;
+    }
+
+    private async System.Threading.Tasks.Task<bool> ReadFilterAsync(
+        UnpackFilter Filter,
+        System.Threading.CancellationToken cancellationToken = default
+    )
+    {
+        if (!Inp.ExternalBuffer && Inp.InAddr > ReadTop - 16)
+        {
+            if (!await UnpReadBufAsync(cancellationToken).ConfigureAwait(false))
+            {
+                return false;
+            }
+        }
+
+        Filter.uBlockStart = ReadFilterData();
+        Filter.uBlockLength = ReadFilterData();
+        if (Filter.BlockLength > MAX_FILTER_BLOCK_SIZE)
+        {
+            Filter.BlockLength = 0;
+        }
+
+        //Filter.Type=Inp.fgetbits()>>13;
+        Filter.Type = (byte)(Inp.fgetbits() >> 13);
+        Inp.faddbits(3);
+
+        if (Filter.Type == (byte)FilterType.FILTER_DELTA)
+        {
+            //Filter.Channels=(Inp.fgetbits()>>11)+1;
+            Filter.Channels = (byte)((Inp.fgetbits() >> 11) + 1);
+            Inp.faddbits(5);
+        }
+
+        return true;
+    }
+
     //?
     //        void UnpWriteBuf()
     //        {
@@ -814,116 +1162,5 @@ internal partial class Unpack
         Header.TablePresent = (BlockFlags & 0x80) != 0;
         return true;
     }
-
-    //?
-    //        bool ReadTables(BitInput Inp, ref UnpackBlockHeader Header, ref UnpackBlockTables Tables)
-    //        {
-    //          if (!Header.TablePresent)
-    //            return true;
-    //
-    //          if (!Inp.ExternalBuffer && Inp.InAddr>ReadTop-25)
-    //            if (!UnpReadBuf())
-    //              return false;
-    //
-    //          byte BitLength[BC];
-    //          for (uint I=0;I<BC;I++)
-    //          {
-    //            uint Length=(byte)(Inp.fgetbits() >> 12);
-    //            Inp.faddbits(4);
-    //            if (Length==15)
-    //            {
-    //              uint ZeroCount=(byte)(Inp.fgetbits() >> 12);
-    //              Inp.faddbits(4);
-    //              if (ZeroCount==0)
-    //                BitLength[I]=15;
-    //              else
-    //              {
-    //                ZeroCount+=2;
-    //                while (ZeroCount-- > 0 && I<ASIZE(BitLength))
-    //                  BitLength[I++]=0;
-    //                I--;
-    //              }
-    //            }
-    //            else
-    //              BitLength[I]=Length;
-    //          }
-    //
-    //          MakeDecodeTables(BitLength,&Tables.BD,BC);
-    //
-    //          byte Table[HUFF_TABLE_SIZE];
-    //          const uint TableSize=HUFF_TABLE_SIZE;
-    //          for (uint I=0;I<TableSize;)
-    //          {
-    //            if (!Inp.ExternalBuffer && Inp.InAddr>ReadTop-5)
-    //              if (!UnpReadBuf())
-    //                return false;
-    //            uint Number=DecodeNumber(Inp,&Tables.BD);
-    //            if (Number<16)
-    //            {
-    //              Table[I]=Number;
-    //              I++;
-    //            }
-    //            else
-    //              if (Number<18)
-    //              {
-    //                uint N;
-    //                if (Number==16)
-    //                {
-    //                  N=(Inp.fgetbits() >> 13)+3;
-    //                  Inp.faddbits(3);
-    //                }
-    //                else
-    //                {
-    //                  N=(Inp.fgetbits() >> 9)+11;
-    //                  Inp.faddbits(7);
-    //                }
-    //                if (I==0)
-    //                {
-    //                  // We cannot have "repeat previous" code at the first position.
-    //                  // Multiple such codes would shift Inp position without changing I,
-    //                  // which can lead to reading beyond of Inp boundary in mutithreading
-    //                  // mode, where Inp.ExternalBuffer disables bounds check and we just
-    //                  // reserve a lot of buffer space to not need such check normally.
-    //                  return false;
-    //                }
-    //                else
-    //                  while (N-- > 0 && I<TableSize)
-    //                  {
-    //                    Table[I]=Table[I-1];
-    //                    I++;
-    //                  }
-    //              }
-    //              else
-    //              {
-    //                uint N;
-    //                if (Number==18)
-    //                {
-    //                  N=(Inp.fgetbits() >> 13)+3;
-    //                  Inp.faddbits(3);
-    //                }
-    //                else
-    //                {
-    //                  N=(Inp.fgetbits() >> 9)+11;
-    //                  Inp.faddbits(7);
-    //                }
-    //                while (N-- > 0 && I<TableSize)
-    //                  Table[I++]=0;
-    //              }
-    //          }
-    //          TablesRead5=true;
-    //          if (!Inp.ExternalBuffer && Inp.InAddr>ReadTop)
-    //            return false;
-    //          MakeDecodeTables(&Table[0],&Tables.LD,NC);
-    //          MakeDecodeTables(&Table[NC],&Tables.DD,DC);
-    //          MakeDecodeTables(&Table[NC+DC],&Tables.LDD,LDC);
-    //          MakeDecodeTables(&Table[NC+DC+LDC],&Tables.RD,RC);
-    //          return true;
-    //        }
-
-    //?
-    //        void InitFilters()
-    //        {
-    //          Filters.SoftReset();
-    //        }
 }
 #endif

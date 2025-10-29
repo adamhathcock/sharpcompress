@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using SharpCompress.Archives;
 using SharpCompress.Archives.Zip;
 using SharpCompress.Common;
+using SharpCompress.Compressors.Deflate;
 using SharpCompress.Writers;
 using SharpCompress.Writers.Zip;
 using Xunit;
@@ -166,7 +167,7 @@ public class ZipArchiveAsyncTests : ArchiveTests
 
         using (var archive = ZipArchive.Create())
         {
-            archive.DeflateCompressionLevel = Compressors.Deflate.CompressionLevel.BestSpeed;
+            archive.DeflateCompressionLevel = CompressionLevel.BestSpeed;
             archive.AddAllFromDirectory(ORIGINAL_FILES_PATH);
 
             WriterOptions writerOptions = new ZipWriterOptions(CompressionType.Deflate);
