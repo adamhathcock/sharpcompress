@@ -193,12 +193,7 @@ public class AsyncTests : TestBase
 
         // Test async write with GZipStream
         using (var fileStream = File.Create(compressedPath))
-        using (
-            var gzipStream = new GZipStream(
-                fileStream,
-                CompressionMode.Compress
-            )
-        )
+        using (var gzipStream = new GZipStream(fileStream, CompressionMode.Compress))
         {
             await gzipStream.WriteAsync(testData, 0, testData.Length);
             await gzipStream.FlushAsync();
@@ -209,12 +204,7 @@ public class AsyncTests : TestBase
 
         // Test async read with GZipStream
         using (var fileStream = File.OpenRead(compressedPath))
-        using (
-            var gzipStream = new GZipStream(
-                fileStream,
-                CompressionMode.Decompress
-            )
-        )
+        using (var gzipStream = new GZipStream(fileStream, CompressionMode.Decompress))
         {
             var decompressed = new byte[testData.Length];
             var totalRead = 0;

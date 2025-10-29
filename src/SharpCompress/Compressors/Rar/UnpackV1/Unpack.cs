@@ -236,7 +236,7 @@ internal sealed partial class Unpack : BitInput, IRarUnpack
                 break;
 
             case 50: // rar 5.x compression
-                await Unpack5Async(fileHeader.IsSolid,cancellationToken).ConfigureAwait(false);
+                await Unpack5Async(fileHeader.IsSolid, cancellationToken).ConfigureAwait(false);
                 break;
 
             default:

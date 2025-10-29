@@ -126,7 +126,8 @@ internal class RarBLAKE2spStream : RarStream, IStreamStack
     public static RarBLAKE2spStream Create(
         IRarUnpack unpack,
         FileHeader fileHeader,
-        MultiVolumeReadOnlyStream readStream)
+        MultiVolumeReadOnlyStream readStream
+    )
     {
         var stream = new RarBLAKE2spStream(unpack, fileHeader, readStream);
         stream.Initialize();
@@ -136,7 +137,9 @@ internal class RarBLAKE2spStream : RarStream, IStreamStack
     public static async Task<RarBLAKE2spStream> CreateAsync(
         IRarUnpack unpack,
         FileHeader fileHeader,
-        MultiVolumeReadOnlyStream readStream, CancellationToken cancellationToken = default)
+        MultiVolumeReadOnlyStream readStream,
+        CancellationToken cancellationToken = default
+    )
     {
         var stream = new RarBLAKE2spStream(unpack, fileHeader, readStream);
         await stream.InitializeAsync(cancellationToken);

@@ -359,4 +359,3 @@ public class RarCRCTest
         Assert.Equal(startCrc, result);
     }
 }
-

@@ -51,7 +51,8 @@ internal class RarCrcStream : RarStream, IStreamStack
     public static RarCrcStream Create(
         IRarUnpack unpack,
         FileHeader fileHeader,
-        MultiVolumeReadOnlyStream readStream)
+        MultiVolumeReadOnlyStream readStream
+    )
     {
         var stream = new RarCrcStream(unpack, fileHeader, readStream);
         stream.Initialize();
@@ -61,7 +62,9 @@ internal class RarCrcStream : RarStream, IStreamStack
     public static async Task<RarCrcStream> CreateAsync(
         IRarUnpack unpack,
         FileHeader fileHeader,
-        MultiVolumeReadOnlyStream readStream, CancellationToken cancellationToken = default)
+        MultiVolumeReadOnlyStream readStream,
+        CancellationToken cancellationToken = default
+    )
     {
         var stream = new RarCrcStream(unpack, fileHeader, readStream);
         await stream.InitializeAsync(cancellationToken);
@@ -132,22 +135,31 @@ internal class RarCrcStream : RarStream, IStreamStack
         System.Threading.CancellationToken cancellationToken = default
     )
     {
-        var result = await base.ReadAsync(buffer, cancellationToken).ConfigureAwait(false);
-        if (result != 0)
+        cancellationToken.ThrowIfCancellationRequested();
+        var array = System.Buffers.ArrayPool<byte>.Shared.Rent(buffer.Length);
+        try
         {
-            currentCrc = RarCRC.CheckCrc(currentCrc, buffer.Span.ToArray(), 0, result);
-        }
-        else if (
-            !disableCRC
-            && GetCrc() != BitConverter.ToUInt32(readStream.CurrentCrc, 0)
-            && buffer.Length != 0
-        )
-        {
-            // NOTE: we use the last FileHeader in a multipart volume to check CRC
-            throw new InvalidFormatException("file crc mismatch");
-        }
+            var result = await base.ReadAsync(buffer, cancellationToken).ConfigureAwait(false);
+            if (result != 0)
+            {
+                currentCrc = RarCRC.CheckCrc(currentCrc, buffer.Span, 0, result);
+            }
+            else if (
+                !disableCRC
+                && GetCrc() != BitConverter.ToUInt32(readStream.CurrentCrc, 0)
+                && buffer.Length != 0
+            )
+            {
+                // NOTE: we use the last FileHeader in a multipart volume to check CRC
+                throw new InvalidFormatException("file crc mismatch");
+            }
 
-        return result;
+            return result;
+        }
+        finally
+        {
+            System.Buffers.ArrayPool<byte>.Shared.Return(array);
+        }
     }
 #endif
 }

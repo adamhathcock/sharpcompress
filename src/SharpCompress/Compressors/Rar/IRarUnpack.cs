@@ -10,7 +10,12 @@ internal interface IRarUnpack
     void DoUnpack(FileHeader fileHeader, Stream readStream, Stream writeStream);
     void DoUnpack();
 
-    Task DoUnpackAsync(FileHeader fileHeader, Stream readStream, Stream writeStream, CancellationToken cancellationToken);
+    Task DoUnpackAsync(
+        FileHeader fileHeader,
+        Stream readStream,
+        Stream writeStream,
+        CancellationToken cancellationToken
+    );
     Task DoUnpackAsync(CancellationToken cancellationToken);
 
     // eg u/i pause/resume button

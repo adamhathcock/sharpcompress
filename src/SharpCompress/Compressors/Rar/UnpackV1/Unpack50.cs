@@ -1162,7 +1162,5 @@ internal partial class Unpack
         Header.TablePresent = (BlockFlags & 0x80) != 0;
         return true;
     }
-
-
 }
 #endif
