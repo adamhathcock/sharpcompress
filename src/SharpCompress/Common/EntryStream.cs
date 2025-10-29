@@ -118,8 +118,6 @@ public class EntryStream : Stream, IStreamStack
                 await lzmaStream.FlushAsync().ConfigureAwait(false);
             }
         }
-
-        _isDisposed = true;
 #if DEBUG_STREAMS
         this.DebugDispose(typeof(EntryStream));
 #endif
