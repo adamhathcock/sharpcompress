@@ -221,6 +221,57 @@ internal sealed partial class Unpack : BitInput
         }
     }
 
+    private async System.Threading.Tasks.Task DoUnpackAsync(
+        uint Method,
+        bool Solid,
+        System.Threading.CancellationToken cancellationToken = default
+    )
+    {
+        // Methods <50 will crash in Fragmented mode when accessing NULL Window.
+        // They cannot be called in such mode now, but we check it below anyway
+        // just for extra safety.
+        switch (Method)
+        {
+#if !RarV2017_SFX_MODULE
+            case 15: // rar 1.5 compression
+                if (!Fragmented)
+                {
+                    // TODO: Create async version when UnpackV2017 unpack15 is converted
+                    Unpack15(Solid);
+                }
+
+                break;
+            case 20: // rar 2.x compression
+            case 26: // files larger than 2GB
+                if (!Fragmented)
+                {
+                    // TODO: Create async version when UnpackV2017 unpack20 is converted
+                    Unpack20(Solid);
+                }
+
+                break;
+#endif
+#if !RarV2017_RAR5ONLY
+            case 29: // rar 3.x compression
+                if (!Fragmented)
+                {
+                    // TODO: Create Unpack29Async when ready
+                    throw new NotImplementedException();
+                }
+
+                break;
+#endif
+            case 50: // RAR 5.0 compression algorithm.
+                // RAR 5.0 has full async support via UnpReadBufAsync and UnpWriteBuf
+                await Unpack5Async(Solid, cancellationToken).ConfigureAwait(false);
+                break;
+#if !Rar2017_NOSTRICT
+            default:
+                throw new InvalidFormatException("unknown compression method " + Method);
+#endif
+        }
+    }
+
     private void UnpInitData(bool Solid)
     {
         if (!Solid)
