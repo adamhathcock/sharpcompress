@@ -115,7 +115,7 @@ internal partial class Unpack : IRarUnpack
         {
             // TODO: When compression methods are converted to async, call them here
             // For now, fall back to synchronous version
-            DoUnpack(fileHeader.CompressionAlgorithm, fileHeader.IsSolid);
+            await DoUnpackAsync(fileHeader.CompressionAlgorithm, fileHeader.IsSolid, cancellationToken).ConfigureAwait(false);
         }
     }
 
