@@ -3,6 +3,18 @@ using SharpCompress.Common.Zip.Headers;
 
 namespace SharpCompress.Common.Zip;
 
+internal class FileInfoZipFilePart : FilePart
+{
+    internal FileInfoZipFilePart(
+        DirectoryEntryHeader header,
+        FileInfo file
+    )
+        : base(header.ArchiveEncoding)
+    {
+    }
+    
+}
+
 internal class SeekableZipFilePart : ZipFilePart
 {
     private bool _isLocalHeaderLoaded;
