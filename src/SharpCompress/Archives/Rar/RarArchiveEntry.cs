@@ -105,7 +105,6 @@ public class RarArchiveEntry : RarEntry, IArchiveEntry
         }
         else
         {
-
             stream = new RarStream(
                 archive.UnpackV2017.Value,
                 FileHeader,

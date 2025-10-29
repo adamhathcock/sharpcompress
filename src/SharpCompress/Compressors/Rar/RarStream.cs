@@ -149,8 +149,7 @@ internal class RarStream : Stream, IStreamStack
         int offset,
         int count,
         System.Threading.CancellationToken cancellationToken
-    ) =>
-        await ReadImplAsync(buffer, offset, count, cancellationToken).ConfigureAwait(false);
+    ) => await ReadImplAsync(buffer, offset, count, cancellationToken).ConfigureAwait(false);
 
     private async System.Threading.Tasks.Task<int> ReadImplAsync(
         byte[] buffer,
@@ -200,7 +199,8 @@ internal class RarStream : Stream, IStreamStack
         var array = System.Buffers.ArrayPool<byte>.Shared.Rent(buffer.Length);
         try
         {
-            var bytesRead =await ReadImplAsync(array, 0, buffer.Length, cancellationToken).ConfigureAwait(false);
+            var bytesRead = await ReadImplAsync(array, 0, buffer.Length, cancellationToken)
+                .ConfigureAwait(false);
             new ReadOnlySpan<byte>(array, 0, bytesRead).CopyTo(buffer.Span);
             return bytesRead;
         }

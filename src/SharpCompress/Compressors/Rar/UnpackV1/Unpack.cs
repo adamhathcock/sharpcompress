@@ -593,10 +593,7 @@ internal sealed partial class Unpack : BitInput, IRarUnpack
             {
                 return;
             }
-            if (
-                (!solid || !tablesRead)
-                && ! ReadTables()
-            )
+            if ((!solid || !tablesRead) && !ReadTables())
             {
                 return;
             }
@@ -645,7 +642,7 @@ internal sealed partial class Unpack : BitInput, IRarUnpack
                     var nextCh = ppm.DecodeChar();
                     if (nextCh == 0)
                     {
-                        if (! ReadTables())
+                        if (!ReadTables())
                         {
                             break;
                         }
@@ -776,7 +773,7 @@ internal sealed partial class Unpack : BitInput, IRarUnpack
             }
             if (Number == 256)
             {
-                if (! ReadEndOfBlock())
+                if (!ReadEndOfBlock())
                 {
                     break;
                 }
@@ -784,7 +781,7 @@ internal sealed partial class Unpack : BitInput, IRarUnpack
             }
             if (Number == 257)
             {
-                if (! ReadVMCode())
+                if (!ReadVMCode())
                 {
                     break;
                 }
@@ -1691,7 +1688,6 @@ internal sealed partial class Unpack : BitInput, IRarUnpack
             rarVM.execute(Prg);
         }
     }
-
 
     private async System.Threading.Tasks.Task UnpWriteBufAsync(
         System.Threading.CancellationToken cancellationToken = default
