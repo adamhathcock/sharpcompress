@@ -1693,11 +1693,250 @@ internal sealed partial class Unpack : BitInput, IRarUnpack
         System.Threading.CancellationToken cancellationToken = default
     )
     {
-        // UnpWriteBuf writes to the output stream
-        // For full async, this needs to use writeStream.WriteAsync
-        // For now, call synchronous version
-        UnpWriteBuf();
-        await System.Threading.Tasks.Task.CompletedTask;
+        var WrittenBorder = wrPtr;
+        var WriteSize = (unpPtr - WrittenBorder) & PackDef.MAXWINMASK;
+        for (var I = 0; I < prgStack.Count; I++)
+        {
+            var flt = prgStack[I];
+            if (flt is null)
+            {
+                continue;
+            }
+            if (flt.NextWindow)
+            {
+                flt.NextWindow = false;
+                continue;
+            }
+            var BlockStart = flt.BlockStart;
+            var BlockLength = flt.BlockLength;
+            if (((BlockStart - WrittenBorder) & PackDef.MAXWINMASK) < WriteSize)
+            {
+                if (WrittenBorder != BlockStart)
+                {
+                    await UnpWriteAreaAsync(WrittenBorder, BlockStart, cancellationToken)
+                        .ConfigureAwait(false);
+                    WrittenBorder = BlockStart;
+                    WriteSize = (unpPtr - WrittenBorder) & PackDef.MAXWINMASK;
+                }
+                if (BlockLength <= WriteSize)
+                {
+                    var BlockEnd = (BlockStart + BlockLength) & PackDef.MAXWINMASK;
+                    if (BlockStart < BlockEnd || BlockEnd == 0)
+                    {
+                        rarVM.setMemory(0, window, BlockStart, BlockLength);
+                    }
+                    else
+                    {
+                        var FirstPartLength = PackDef.MAXWINSIZE - BlockStart;
+                        rarVM.setMemory(0, window, BlockStart, FirstPartLength);
+                        rarVM.setMemory(FirstPartLength, window, 0, BlockEnd);
+                    }
+
+                    var ParentPrg = filters[flt.ParentFilter].Program;
+                    var Prg = flt.Program;
+
+                    if (ParentPrg.GlobalData.Count > RarVM.VM_FIXEDGLOBALSIZE)
+                    {
+                        Prg.GlobalData.Clear();
+                        for (
+                            var i = 0;
+                            i < ParentPrg.GlobalData.Count - RarVM.VM_FIXEDGLOBALSIZE;
+                            i++
+                        )
+                        {
+                            Prg.GlobalData[RarVM.VM_FIXEDGLOBALSIZE + i] = ParentPrg.GlobalData[
+                                RarVM.VM_FIXEDGLOBALSIZE + i
+                            ];
+                        }
+                    }
+
+                    ExecuteCode(Prg);
+
+                    if (Prg.GlobalData.Count > RarVM.VM_FIXEDGLOBALSIZE)
+                    {
+                        if (ParentPrg.GlobalData.Count < Prg.GlobalData.Count)
+                        {
+                            ParentPrg.GlobalData.SetSize(Prg.GlobalData.Count);
+                        }
+
+                        for (var i = 0; i < Prg.GlobalData.Count - RarVM.VM_FIXEDGLOBALSIZE; i++)
+                        {
+                            ParentPrg.GlobalData[RarVM.VM_FIXEDGLOBALSIZE + i] = Prg.GlobalData[
+                                RarVM.VM_FIXEDGLOBALSIZE + i
+                            ];
+                        }
+                    }
+                    else
+                    {
+                        ParentPrg.GlobalData.Clear();
+                    }
+
+                    var FilteredDataOffset = Prg.FilteredDataOffset;
+                    var FilteredDataSize = Prg.FilteredDataSize;
+                    var FilteredData = ArrayPool<byte>.Shared.Rent(FilteredDataSize);
+                    try
+                    {
+                        Array.Copy(
+                            rarVM.Mem,
+                            FilteredDataOffset,
+                            FilteredData,
+                            0,
+                            FilteredDataSize
+                        );
+
+                        prgStack[I] = null;
+                        while (I + 1 < prgStack.Count)
+                        {
+                            var NextFilter = prgStack[I + 1];
+                            if (
+                                NextFilter is null
+                                || NextFilter.BlockStart != BlockStart
+                                || NextFilter.BlockLength != FilteredDataSize
+                                || NextFilter.NextWindow
+                            )
+                            {
+                                break;
+                            }
+
+                            rarVM.setMemory(0, FilteredData, 0, FilteredDataSize);
+
+                            var pPrg = filters[NextFilter.ParentFilter].Program;
+                            var NextPrg = NextFilter.Program;
+
+                            if (pPrg.GlobalData.Count > RarVM.VM_FIXEDGLOBALSIZE)
+                            {
+                                NextPrg.GlobalData.SetSize(pPrg.GlobalData.Count);
+
+                                for (
+                                    var i = 0;
+                                    i < pPrg.GlobalData.Count - RarVM.VM_FIXEDGLOBALSIZE;
+                                    i++
+                                )
+                                {
+                                    NextPrg.GlobalData[RarVM.VM_FIXEDGLOBALSIZE + i] =
+                                        pPrg.GlobalData[RarVM.VM_FIXEDGLOBALSIZE + i];
+                                }
+                            }
+
+                            ExecuteCode(NextPrg);
+
+                            if (NextPrg.GlobalData.Count > RarVM.VM_FIXEDGLOBALSIZE)
+                            {
+                                if (pPrg.GlobalData.Count < NextPrg.GlobalData.Count)
+                                {
+                                    pPrg.GlobalData.SetSize(NextPrg.GlobalData.Count);
+                                }
+
+                                for (
+                                    var i = 0;
+                                    i < NextPrg.GlobalData.Count - RarVM.VM_FIXEDGLOBALSIZE;
+                                    i++
+                                )
+                                {
+                                    pPrg.GlobalData[RarVM.VM_FIXEDGLOBALSIZE + i] =
+                                        NextPrg.GlobalData[RarVM.VM_FIXEDGLOBALSIZE + i];
+                                }
+                            }
+                            else
+                            {
+                                pPrg.GlobalData.Clear();
+                            }
+
+                            FilteredDataOffset = NextPrg.FilteredDataOffset;
+                            FilteredDataSize = NextPrg.FilteredDataSize;
+                            if (FilteredData.Length < FilteredDataSize)
+                            {
+                                ArrayPool<byte>.Shared.Return(FilteredData);
+                                FilteredData = ArrayPool<byte>.Shared.Rent(FilteredDataSize);
+                            }
+                            for (var i = 0; i < FilteredDataSize; i++)
+                            {
+                                FilteredData[i] = NextPrg.GlobalData[FilteredDataOffset + i];
+                            }
+
+                            I++;
+                            prgStack[I] = null;
+                        }
+
+                        await writeStream
+                            .WriteAsync(FilteredData, 0, FilteredDataSize, cancellationToken)
+                            .ConfigureAwait(false);
+                        writtenFileSize += FilteredDataSize;
+                        destUnpSize -= FilteredDataSize;
+                        WrittenBorder = BlockEnd;
+                        WriteSize = (unpPtr - WrittenBorder) & PackDef.MAXWINMASK;
+                    }
+                    finally
+                    {
+                        ArrayPool<byte>.Shared.Return(FilteredData);
+                    }
+                }
+                else
+                {
+                    for (var J = I; J < prgStack.Count; J++)
+                    {
+                        var filt = prgStack[J];
+                        if (filt != null && filt.NextWindow)
+                        {
+                            filt.NextWindow = false;
+                        }
+                    }
+                    wrPtr = WrittenBorder;
+                    return;
+                }
+            }
+        }
+
+        await UnpWriteAreaAsync(WrittenBorder, unpPtr, cancellationToken).ConfigureAwait(false);
+        wrPtr = unpPtr;
+    }
+
+    private async System.Threading.Tasks.Task UnpWriteAreaAsync(
+        int startPtr,
+        int endPtr,
+        System.Threading.CancellationToken cancellationToken = default
+    )
+    {
+        if (endPtr < startPtr)
+        {
+            await UnpWriteDataAsync(
+                    window,
+                    startPtr,
+                    -startPtr & PackDef.MAXWINMASK,
+                    cancellationToken
+                )
+                .ConfigureAwait(false);
+            await UnpWriteDataAsync(window, 0, endPtr, cancellationToken).ConfigureAwait(false);
+        }
+        else
+        {
+            await UnpWriteDataAsync(window, startPtr, endPtr - startPtr, cancellationToken)
+                .ConfigureAwait(false);
+        }
+    }
+
+    private async System.Threading.Tasks.Task UnpWriteDataAsync(
+        byte[] data,
+        int offset,
+        int size,
+        System.Threading.CancellationToken cancellationToken = default
+    )
+    {
+        if (destUnpSize < 0)
+        {
+            return;
+        }
+        var writeSize = size;
+        if (writeSize > destUnpSize)
+        {
+            writeSize = (int)destUnpSize;
+        }
+        await writeStream
+            .WriteAsync(data, offset, writeSize, cancellationToken)
+            .ConfigureAwait(false);
+
+        writtenFileSize += size;
+        destUnpSize -= size;
     }
 
     private void CleanUp()

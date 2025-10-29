@@ -5,13 +5,7 @@ using System.Buffers;
 using SharpCompress.Common;
 using static SharpCompress.Compressors.Rar.UnpackV2017.PackDef;
 using static SharpCompress.Compressors.Rar.UnpackV2017.UnpackGlobal;
-#if !Rar2017_64bit
 using size_t = System.UInt32;
-#else
-using nint = System.Int64;
-using nuint = System.UInt64;
-using size_t = System.UInt64;
-#endif
 
 namespace SharpCompress.Compressors.Rar.UnpackV2017;
 
@@ -43,11 +37,9 @@ internal sealed partial class Unpack : BitInput
         // It prevents crash if first DoUnpack call is later made with wrong
         // (true) 'Solid' value.
         UnpInitData(false);
-#if !RarV2017_SFX_MODULE
         // RAR 1.5 decompression initialization
         UnpInitData15(false);
         InitHuff();
-#endif
     }
 
     // later: may need Dispose() if we support thread pool
@@ -172,7 +164,6 @@ internal sealed partial class Unpack : BitInput
         // just for extra safety.
         switch (Method)
         {
-#if !RarV2017_SFX_MODULE
             case 15: // rar 1.5 compression
                 if (!Fragmented)
                 {
@@ -188,8 +179,6 @@ internal sealed partial class Unpack : BitInput
                 }
 
                 break;
-#endif
-#if !RarV2017_RAR5ONLY
             case 29: // rar 3.x compression
                 if (!Fragmented)
                 {
@@ -197,23 +186,7 @@ internal sealed partial class Unpack : BitInput
                 }
 
                 break;
-#endif
             case 50: // RAR 5.0 compression algorithm.
-                /*#if RarV2017_RAR_SMP
-                                if (MaxUserThreads > 1)
-                                {
-                                    //      We do not use the multithreaded unpack routine to repack RAR archives
-                                    //      in 'suspended' mode, because unlike the single threaded code it can
-                                    //      write more than one dictionary for same loop pass. So we would need
-                                    //      larger buffers of unknown size. Also we do not support multithreading
-                                    //      in fragmented window mode.
-                                    if (!Fragmented)
-                                    {
-                                        Unpack5MT(Solid);
-                                        break;
-                                    }
-                                }
-                #endif*/
                 Unpack5(Solid);
                 break;
 #if !Rar2017_NOSTRICT
