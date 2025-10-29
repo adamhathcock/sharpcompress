@@ -230,7 +230,7 @@ internal sealed partial class Unpack : BitInput, IRarUnpack
 
             case 29: // rar 3.x compression
             case 36: // alternative hash
-                Unpack29(fileHeader.IsSolid);
+                await Unpack29Async(fileHeader.IsSolid, cancellationToken).ConfigureAwait(false);
                 break;
 
             case 50: // rar 5.x compression
@@ -556,6 +556,284 @@ internal sealed partial class Unpack : BitInput, IRarUnpack
             }
         }
         UnpWriteBuf();
+    }
+
+    private async System.Threading.Tasks.Task Unpack29Async(
+        bool solid,
+        System.Threading.CancellationToken cancellationToken = default
+    )
+    {
+        int[] DDecode = new int[PackDef.DC];
+        byte[] DBits = new byte[PackDef.DC];
+
+        int Bits;
+
+        if (DDecode[1] == 0)
+        {
+            int Dist = 0,
+                BitLength = 0,
+                Slot = 0;
+            for (var I = 0; I < DBitLengthCounts.Length; I++, BitLength++)
+            {
+                var count = DBitLengthCounts[I];
+                for (var J = 0; J < count; J++, Slot++, Dist += (1 << BitLength))
+                {
+                    DDecode[Slot] = Dist;
+                    DBits[Slot] = (byte)BitLength;
+                }
+            }
+        }
+
+        FileExtracted = true;
+
+        if (!suspended)
+        {
+            UnpInitData(solid);
+            if (!await unpReadBufAsync(cancellationToken).ConfigureAwait(false))
+            {
+                return;
+            }
+            if (
+                (!solid || !tablesRead)
+                && ! ReadTables()
+            )
+            {
+                return;
+            }
+        }
+
+        if (ppmError)
+        {
+            return;
+        }
+
+        while (true)
+        {
+            unpPtr &= PackDef.MAXWINMASK;
+
+            if (inAddr > readBorder)
+            {
+                if (!await unpReadBufAsync(cancellationToken).ConfigureAwait(false))
+                {
+                    break;
+                }
+            }
+
+            if (((wrPtr - unpPtr) & PackDef.MAXWINMASK) < 260 && wrPtr != unpPtr)
+            {
+                await UnpWriteBufAsync(cancellationToken).ConfigureAwait(false);
+                if (destUnpSize < 0)
+                {
+                    return;
+                }
+                if (suspended)
+                {
+                    FileExtracted = false;
+                    return;
+                }
+            }
+            if (unpBlockType == BlockTypes.BLOCK_PPM)
+            {
+                var ch = ppm.DecodeChar();
+                if (ch == -1)
+                {
+                    ppmError = true;
+                    break;
+                }
+                if (ch == PpmEscChar)
+                {
+                    var nextCh = ppm.DecodeChar();
+                    if (nextCh == 0)
+                    {
+                        if (! ReadTables())
+                        {
+                            break;
+                        }
+                        continue;
+                    }
+                    if (nextCh == 2 || nextCh == -1)
+                    {
+                        break;
+                    }
+                    if (nextCh == 3)
+                    {
+                        if (!ReadVMCode())
+                        {
+                            break;
+                        }
+                        continue;
+                    }
+                    if (nextCh == 4)
+                    {
+                        uint Distance = 0,
+                            Length = 0;
+                        var failed = false;
+                        for (var I = 0; I < 4 && !failed; I++)
+                        {
+                            var ch2 = ppm.DecodeChar();
+                            if (ch2 == -1)
+                            {
+                                failed = true;
+                            }
+                            else if (I == 3)
+                            {
+                                Length = (uint)ch2;
+                            }
+                            else
+                            {
+                                Distance = (Distance << 8) + (uint)ch2;
+                            }
+                        }
+                        if (failed)
+                        {
+                            break;
+                        }
+
+                        CopyString(Length + 32, Distance + 2);
+                        continue;
+                    }
+                    if (nextCh == 5)
+                    {
+                        var length = ppm.DecodeChar();
+                        if (length == -1)
+                        {
+                            break;
+                        }
+                        CopyString((uint)(length + 4), 1);
+                        continue;
+                    }
+                }
+                window[unpPtr++] = (byte)ch;
+                continue;
+            }
+
+            var Number = this.decodeNumber(LD);
+            if (Number < 256)
+            {
+                window[unpPtr++] = (byte)Number;
+                continue;
+            }
+            if (Number >= 271)
+            {
+                var Length = LDecode[Number -= 271] + 3;
+                if ((Bits = LBits[Number]) > 0)
+                {
+                    Length += GetBits() >> (16 - Bits);
+                    AddBits(Bits);
+                }
+
+                var DistNumber = this.decodeNumber(DD);
+                var Distance = DDecode[DistNumber] + 1;
+                if ((Bits = DBits[DistNumber]) > 0)
+                {
+                    if (DistNumber > 9)
+                    {
+                        if (Bits > 4)
+                        {
+                            Distance += (GetBits() >> (20 - Bits)) << 4;
+                            AddBits(Bits - 4);
+                        }
+                        if (lowDistRepCount > 0)
+                        {
+                            lowDistRepCount--;
+                            Distance += prevLowDist;
+                        }
+                        else
+                        {
+                            var LowDist = this.decodeNumber(LDD);
+                            if (LowDist == 16)
+                            {
+                                lowDistRepCount = PackDef.LOW_DIST_REP_COUNT - 1;
+                                Distance += prevLowDist;
+                            }
+                            else
+                            {
+                                Distance += LowDist;
+                                prevLowDist = (int)LowDist;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        Distance += GetBits() >> (16 - Bits);
+                        AddBits(Bits);
+                    }
+                }
+
+                if (Distance >= 0x2000)
+                {
+                    Length++;
+                    if (Distance >= 0x40000)
+                    {
+                        Length++;
+                    }
+                }
+
+                InsertOldDist(Distance);
+                lastLength = Length;
+                CopyString(Length, Distance);
+                continue;
+            }
+            if (Number == 256)
+            {
+                if (! ReadEndOfBlock())
+                {
+                    break;
+                }
+                continue;
+            }
+            if (Number == 257)
+            {
+                if (! ReadVMCode())
+                {
+                    break;
+                }
+                continue;
+            }
+            if (Number == 258)
+            {
+                if (lastLength != 0)
+                {
+                    CopyString(lastLength, oldDist[0]);
+                }
+
+                continue;
+            }
+            if (Number < 263)
+            {
+                var DistNum = Number - 259;
+                var Distance = (uint)oldDist[DistNum];
+                for (var I = DistNum; I > 0; I--)
+                {
+                    oldDist[I] = oldDist[I - 1];
+                }
+                oldDist[0] = (int)Distance;
+
+                var LengthNumber = this.decodeNumber(RD);
+                var Length = LDecode[LengthNumber] + 2;
+                if ((Bits = LBits[LengthNumber]) > 0)
+                {
+                    Length += GetBits() >> (16 - Bits);
+                    AddBits(Bits);
+                }
+                lastLength = Length;
+                CopyString((uint)Length, Distance);
+                continue;
+            }
+            if (Number < 272)
+            {
+                var Distance = SDDecode[Number -= 263] + 1;
+                if ((Bits = SDBits[Number]) > 0)
+                {
+                    Distance += GetBits() >> (16 - Bits);
+                    AddBits(Bits);
+                }
+                InsertOldDist((uint)Distance);
+                lastLength = 2;
+                CopyString(2, (uint)Distance);
+            }
+        }
+        await UnpWriteBufAsync(cancellationToken).ConfigureAwait(false);
     }
 
     private void UnpWriteBuf()
@@ -1412,6 +1690,18 @@ internal sealed partial class Unpack : BitInput, IRarUnpack
             );
             rarVM.execute(Prg);
         }
+    }
+
+
+    private async System.Threading.Tasks.Task UnpWriteBufAsync(
+        System.Threading.CancellationToken cancellationToken = default
+    )
+    {
+        // UnpWriteBuf writes to the output stream
+        // For full async, this needs to use writeStream.WriteAsync
+        // For now, call synchronous version
+        UnpWriteBuf();
+        await System.Threading.Tasks.Task.CompletedTask;
     }
 
     private void CleanUp()
