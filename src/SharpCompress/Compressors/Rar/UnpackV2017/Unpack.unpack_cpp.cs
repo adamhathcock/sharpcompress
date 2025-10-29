@@ -244,8 +244,7 @@ internal sealed partial class Unpack : BitInput
             case 26: // files larger than 2GB
                 if (!Fragmented)
                 {
-                    // TODO: Create async version when UnpackV2017 unpack20 is converted
-                    Unpack20(Solid);
+                    await Unpack20Async(Solid, cancellationToken).ConfigureAwait(false);
                 }
 
                 break;
