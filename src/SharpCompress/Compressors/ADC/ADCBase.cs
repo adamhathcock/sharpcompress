@@ -165,7 +165,12 @@ public static class ADCBase
                             break;
                         }
 
-                        var readCount = await input.ReadAsync(buffer, outPosition, chunkSize, cancellationToken);
+                        var readCount = await input.ReadAsync(
+                            buffer,
+                            outPosition,
+                            chunkSize,
+                            cancellationToken
+                        );
                         outPosition += readCount;
                         position += readCount + 1;
                         break;
@@ -251,7 +256,8 @@ public static class ADCBase
             result.BytesRead = position - start;
             result.Output = output;
             return result;
-        } finally
+        }
+        finally
         {
             ArrayPool<byte>.Shared.Return(buffer);
             ArrayPool<byte>.Shared.Return(temp);
