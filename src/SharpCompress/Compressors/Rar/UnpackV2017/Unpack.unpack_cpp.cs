@@ -1,16 +1,11 @@
 #nullable disable
 
 using System;
+using System.Buffers;
 using SharpCompress.Common;
 using static SharpCompress.Compressors.Rar.UnpackV2017.PackDef;
 using static SharpCompress.Compressors.Rar.UnpackV2017.UnpackGlobal;
-#if !Rar2017_64bit
 using size_t = System.UInt32;
-#else
-using nint = System.Int64;
-using nuint = System.UInt64;
-using size_t = System.UInt64;
-#endif
 
 namespace SharpCompress.Compressors.Rar.UnpackV2017;
 
@@ -42,11 +37,9 @@ internal sealed partial class Unpack : BitInput
         // It prevents crash if first DoUnpack call is later made with wrong
         // (true) 'Solid' value.
         UnpInitData(false);
-#if !RarV2017_SFX_MODULE
         // RAR 1.5 decompression initialization
         UnpInitData15(false);
         InitHuff();
-#endif
     }
 
     // later: may need Dispose() if we support thread pool
@@ -110,7 +103,7 @@ internal sealed partial class Unpack : BitInput
             throw new InvalidFormatException("Grow && Fragmented");
         }
 
-        var NewWindow = Fragmented ? null : new byte[WinSize];
+        var NewWindow = Fragmented ? null : ArrayPool<byte>.Shared.Rent((int)WinSize);
 
         if (NewWindow == null)
         {
@@ -126,6 +119,7 @@ internal sealed partial class Unpack : BitInput
                 if (Window != null) // If allocated by preceding files.
                 {
                     //free(Window);
+                    ArrayPool<byte>.Shared.Return(Window);
                     Window = null;
                 }
                 FragWindow.Init(WinSize);
@@ -170,7 +164,6 @@ internal sealed partial class Unpack : BitInput
         // just for extra safety.
         switch (Method)
         {
-#if !RarV2017_SFX_MODULE
             case 15: // rar 1.5 compression
                 if (!Fragmented)
                 {
@@ -186,8 +179,6 @@ internal sealed partial class Unpack : BitInput
                 }
 
                 break;
-#endif
-#if !RarV2017_RAR5ONLY
             case 29: // rar 3.x compression
                 if (!Fragmented)
                 {
@@ -195,24 +186,57 @@ internal sealed partial class Unpack : BitInput
                 }
 
                 break;
+            case 50: // RAR 5.0 compression algorithm.
+                Unpack5(Solid);
+                break;
+#if !Rar2017_NOSTRICT
+            default:
+                throw new InvalidFormatException("unknown compression method " + Method);
+#endif
+        }
+    }
+
+    private async System.Threading.Tasks.Task DoUnpackAsync(
+        uint Method,
+        bool Solid,
+        System.Threading.CancellationToken cancellationToken = default
+    )
+    {
+        // Methods <50 will crash in Fragmented mode when accessing NULL Window.
+        // They cannot be called in such mode now, but we check it below anyway
+        // just for extra safety.
+        switch (Method)
+        {
+#if !RarV2017_SFX_MODULE
+            case 15: // rar 1.5 compression
+                if (!Fragmented)
+                {
+                    await Unpack15Async(Solid, cancellationToken).ConfigureAwait(false);
+                }
+
+                break;
+            case 20: // rar 2.x compression
+            case 26: // files larger than 2GB
+                if (!Fragmented)
+                {
+                    await Unpack20Async(Solid, cancellationToken).ConfigureAwait(false);
+                }
+
+                break;
+#endif
+#if !RarV2017_RAR5ONLY
+            case 29: // rar 3.x compression
+                if (!Fragmented)
+                {
+                    // TODO: Create Unpack29Async when ready
+                    throw new NotImplementedException();
+                }
+
+                break;
 #endif
             case 50: // RAR 5.0 compression algorithm.
-                /*#if RarV2017_RAR_SMP
-                                if (MaxUserThreads > 1)
-                                {
-                                    //      We do not use the multithreaded unpack routine to repack RAR archives
-                                    //      in 'suspended' mode, because unlike the single threaded code it can
-                                    //      write more than one dictionary for same loop pass. So we would need
-                                    //      larger buffers of unknown size. Also we do not support multithreading
-                                    //      in fragmented window mode.
-                                    if (!Fragmented)
-                                    {
-                                        Unpack5MT(Solid);
-                                        break;
-                                    }
-                                }
-                #endif*/
-                Unpack5(Solid);
+                // RAR 5.0 has full async support via UnpReadBufAsync and UnpWriteBuf
+                await Unpack5Async(Solid, cancellationToken).ConfigureAwait(false);
                 break;
 #if !Rar2017_NOSTRICT
             default:

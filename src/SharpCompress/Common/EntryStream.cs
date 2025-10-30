@@ -64,6 +64,11 @@ public class EntryStream : Stream, IStreamStack
 
     protected override void Dispose(bool disposing)
     {
+        if (_isDisposed)
+        {
+            return;
+        }
+        _isDisposed = true;
         if (!(_completed || _reader.Cancelled))
         {
             SkipEntry();
@@ -81,12 +86,6 @@ public class EntryStream : Stream, IStreamStack
                 lzmaStream.Flush(); //Lzma over reads. Knock it back
             }
         }
-
-        if (_isDisposed)
-        {
-            return;
-        }
-        _isDisposed = true;
 #if DEBUG_STREAMS
         this.DebugDispose(typeof(EntryStream));
 #endif
@@ -97,6 +96,11 @@ public class EntryStream : Stream, IStreamStack
 #if !NETFRAMEWORK && !NETSTANDARD2_0
     public override async ValueTask DisposeAsync()
     {
+        if (_isDisposed)
+        {
+            return;
+        }
+        _isDisposed = true;
         if (!(_completed || _reader.Cancelled))
         {
             await SkipEntryAsync().ConfigureAwait(false);
@@ -114,12 +118,6 @@ public class EntryStream : Stream, IStreamStack
                 await lzmaStream.FlushAsync().ConfigureAwait(false);
             }
         }
-
-        if (_isDisposed)
-        {
-            return;
-        }
-        _isDisposed = true;
 #if DEBUG_STREAMS
         this.DebugDispose(typeof(EntryStream));
 #endif
@@ -204,4 +202,11 @@ public class EntryStream : Stream, IStreamStack
 
     public override void Write(byte[] buffer, int offset, int count) =>
         throw new NotSupportedException();
+
+    public override Task WriteAsync(
+        byte[] buffer,
+        int offset,
+        int count,
+        CancellationToken cancellationToken
+    ) => throw new NotSupportedException();
 }

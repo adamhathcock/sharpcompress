@@ -41,15 +41,15 @@ public class SharpCompressStreamTests
                 Assert.Equal(0x1000, scs.Position); //position in the SharpCompressionStream (with 0xf000 remaining in the buffer)
                 Assert.Equal(0x1000, ms.Position); //initial seek + full buffer read
 
-                scs.Read(test, 0, test.Length); //read bytes 0x1000 to 0x2000
+                scs.Read(test, 0, 0x1000); //read bytes 0x1000 to 0x2000
                 Assert.Equal(0x2000, scs.Position); //stream has correct position
-                Assert.True(data.Skip(test.Length).Take(test.Length).SequenceEqual(test)); //is the data correct
+                Assert.True(data.Skip(0x1000).Take(0x1000).SequenceEqual(test.Take(0x1000))); //is the data correct
                 Assert.Equal(0x11000, ms.Position); //seek plus read bytes
 
                 scs.Seek(0x500, SeekOrigin.Begin); //seek before the buffer start
-                scs.Read(test, 0, test.Length); //read bytes 0x500 to 0x1500
+                scs.Read(test, 0, 0x1000); //read bytes 0x500 to 0x1500
                 Assert.Equal(0x1500, scs.Position); //stream has correct position
-                Assert.True(data.Skip(0x500).Take(test.Length).SequenceEqual(test)); //is the data correct
+                Assert.True(data.Skip(0x500).Take(0x1000).SequenceEqual(test.Take(0x1000))); //is the data correct
                 Assert.Equal(0x10500, ms.Position); //seek plus read bytes
             }
         }
@@ -71,23 +71,23 @@ public class SharpCompressStreamTests
             {
                 IStreamStack stack = (IStreamStack)scs;
 
-                scs.Read(test, 0, test.Length); //read bytes 0 to 0x1000
-                Assert.True(data.Take(test.Length).SequenceEqual(test)); //is the data correct
+                scs.Read(test, 0, 0x1000); //read bytes 0 to 0x1000
+                Assert.True(data.Take(0x1000).SequenceEqual(test.Take(0x1000))); //is the data correct
                 Assert.Equal(0x1000, scs.Position); //stream has correct position
                 Assert.Equal(0x10000, ms.Position); //moved the base stream on by the size of the buffer not what was requested
 
-                scs.Read(test, 0, test.Length); //read bytes 0x1000 to 0x2000
+                scs.Read(test, 0, 0x1000); //read bytes 0x1000 to 0x2000
                 Assert.Equal(0x2000, scs.Position); //stream has correct position
-                Assert.True(data.Skip(test.Length).Take(test.Length).SequenceEqual(test)); //is the data correct
+                Assert.True(data.Skip(0x1000).Take(0x1000).SequenceEqual(test.Take(0x1000))); //is the data correct
                 Assert.Equal(0x10000, ms.Position); //the base stream has not moved
 
                 //rewind the buffer
                 stack.Rewind(0x1000); //rewind buffer back by 0x1000 bytes
 
                 //repeat the previous test
-                scs.Read(test, 0, test.Length); //read bytes 0x1000 to 0x2000
+                scs.Read(test, 0, 0x1000); //read bytes 0x1000 to 0x2000
                 Assert.Equal(0x2000, scs.Position); //stream has correct position
-                Assert.True(data.Skip(test.Length).Take(test.Length).SequenceEqual(test)); //is the data correct
+                Assert.True(data.Skip(0x1000).Take(0x1000).SequenceEqual(test.Take(0x1000))); //is the data correct
                 Assert.Equal(0x10000, ms.Position); //the base stream has not moved
             }
         }
