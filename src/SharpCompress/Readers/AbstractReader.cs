@@ -294,7 +294,9 @@ public abstract class AbstractReader<TEntry, TVolume> : IReader, IReaderExtracti
         return stream;
     }
 
-    public Task<EntryStream> OpenEntryStreamAsync(CancellationToken cancellationToken = default)
+    public async Task<EntryStream> OpenEntryStreamAsync(
+        CancellationToken cancellationToken = default
+    )
     {
         if (_wroteCurrentEntry)
         {
@@ -302,9 +304,9 @@ public abstract class AbstractReader<TEntry, TVolume> : IReader, IReaderExtracti
                 "WriteEntryToAsync or OpenEntryStreamAsync can only be called once."
             );
         }
-        var stream = GetEntryStream();
+        var stream = await GetEntryStreamAsync(cancellationToken).ConfigureAwait(false);
         _wroteCurrentEntry = true;
-        return Task.FromResult(stream);
+        return stream;
     }
 
     /// <summary>
@@ -315,6 +317,10 @@ public abstract class AbstractReader<TEntry, TVolume> : IReader, IReaderExtracti
 
     protected virtual EntryStream GetEntryStream() =>
         CreateEntryStream(Entry.Parts.First().GetCompressedStream());
+
+    protected virtual Task<EntryStream> GetEntryStreamAsync(
+        CancellationToken cancellationToken = default
+    ) => Task.FromResult(GetEntryStream());
 
     #endregion
 

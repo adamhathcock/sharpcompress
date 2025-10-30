@@ -90,8 +90,6 @@ public class SharpCompressStream : Stream, IStreamStack
 
     public Stream Stream { get; }
 
-    //private MemoryStream _bufferStream = new();
-
     private bool _readOnly; //some archive detection requires seek to be disabled to cause it to exception to try the next arc type
 
     //private bool _isRewound;

@@ -3,6 +3,8 @@
 using System;
 using System.Buffers;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 using SharpCompress.Common.Rar.Headers;
 using SharpCompress.IO;
 
@@ -56,9 +58,20 @@ internal class RarStream : Stream, IStreamStack
 #if DEBUG_STREAMS
         this.DebugConstruct(typeof(RarStream));
 #endif
+    }
 
+    public void Initialize()
+    {
         fetch = true;
         unpack.DoUnpack(fileHeader, readStream, this);
+        fetch = false;
+        _position = 0;
+    }
+
+    public async Task InitializeAsync(CancellationToken cancellationToken = default)
+    {
+        fetch = true;
+        await unpack.DoUnpackAsync(fileHeader, readStream, this, cancellationToken);
         fetch = false;
         _position = 0;
     }
@@ -131,6 +144,73 @@ internal class RarStream : Stream, IStreamStack
         return outTotal;
     }
 
+    public override async System.Threading.Tasks.Task<int> ReadAsync(
+        byte[] buffer,
+        int offset,
+        int count,
+        System.Threading.CancellationToken cancellationToken
+    ) => await ReadImplAsync(buffer, offset, count, cancellationToken).ConfigureAwait(false);
+
+    private async System.Threading.Tasks.Task<int> ReadImplAsync(
+        byte[] buffer,
+        int offset,
+        int count,
+        System.Threading.CancellationToken cancellationToken
+    )
+    {
+        outTotal = 0;
+        if (tmpCount > 0)
+        {
+            var toCopy = tmpCount < count ? tmpCount : count;
+            Buffer.BlockCopy(tmpBuffer, tmpOffset, buffer, offset, toCopy);
+            tmpOffset += toCopy;
+            tmpCount -= toCopy;
+            offset += toCopy;
+            count -= toCopy;
+            outTotal += toCopy;
+        }
+        if (count > 0 && unpack.DestSize > 0)
+        {
+            outBuffer = buffer;
+            outOffset = offset;
+            outCount = count;
+            fetch = true;
+            await unpack.DoUnpackAsync(cancellationToken).ConfigureAwait(false);
+            fetch = false;
+        }
+        _position += outTotal;
+        if (count > 0 && outTotal == 0 && _position != Length)
+        {
+            // sanity check, eg if we try to decompress a redir entry
+            throw new InvalidOperationException(
+                $"unpacked file size does not match header: expected {Length} found {_position}"
+            );
+        }
+        return outTotal;
+    }
+
+#if NETCOREAPP2_1_OR_GREATER || NETSTANDARD2_1_OR_GREATER
+    public override async System.Threading.Tasks.ValueTask<int> ReadAsync(
+        Memory<byte> buffer,
+        System.Threading.CancellationToken cancellationToken = default
+    )
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        var array = System.Buffers.ArrayPool<byte>.Shared.Rent(buffer.Length);
+        try
+        {
+            var bytesRead = await ReadImplAsync(array, 0, buffer.Length, cancellationToken)
+                .ConfigureAwait(false);
+            new ReadOnlySpan<byte>(array, 0, bytesRead).CopyTo(buffer.Span);
+            return bytesRead;
+        }
+        finally
+        {
+            System.Buffers.ArrayPool<byte>.Shared.Return(array);
+        }
+    }
+#endif
+
     public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
 
     public override void SetLength(long value) => throw new NotSupportedException();
@@ -163,6 +243,18 @@ internal class RarStream : Stream, IStreamStack
         {
             unpack.Suspended = false;
         }
+    }
+
+    public override System.Threading.Tasks.Task WriteAsync(
+        byte[] buffer,
+        int offset,
+        int count,
+        System.Threading.CancellationToken cancellationToken
+    )
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        Write(buffer, offset, count);
+        return System.Threading.Tasks.Task.CompletedTask;
     }
 
     private void EnsureBufferCapacity(int count)
