@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 using SharpCompress.IO;
 
 namespace SharpCompress.Compressors.LZMA;
@@ -189,6 +191,18 @@ internal class Bcj2DecoderStream : DecoderStream2, IStreamStack
         }
 
         return count;
+    }
+
+    public override Task<int> ReadAsync(
+        byte[] buffer,
+        int offset,
+        int count,
+        CancellationToken cancellationToken = default
+    )
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        // Bcj2DecoderStream uses complex state machine with multiple streams
+        return Task.FromResult(Read(buffer, offset, count));
     }
 
     public override int ReadByte()

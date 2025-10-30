@@ -1,6 +1,8 @@
 using System;
 using System.Buffers.Binary;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 using SharpCompress.Common;
 using SharpCompress.Crypto;
 using SharpCompress.IO;
@@ -149,6 +151,7 @@ public sealed class LZipStream : Stream, IStreamStack
     public override int Read(byte[] buffer, int offset, int count) =>
         _stream.Read(buffer, offset, count);
 
+
     public override int ReadByte() => _stream.ReadByte();
 
     public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
@@ -157,6 +160,7 @@ public sealed class LZipStream : Stream, IStreamStack
 
 #if !NETFRAMEWORK && !NETSTANDARD2_0
 
+    public override ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = new CancellationToken()) => _stream.ReadAsync(buffer, cancellationToken);
     public override int Read(Span<byte> buffer) => _stream.Read(buffer);
 
     public override void Write(ReadOnlySpan<byte> buffer)
@@ -177,6 +181,29 @@ public sealed class LZipStream : Stream, IStreamStack
     {
         _stream.WriteByte(value);
         ++_writeCount;
+    }
+
+    public override  Task<int> ReadAsync(
+        byte[] buffer,
+        int offset,
+        int count,
+        CancellationToken cancellationToken = default
+    )
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        return _stream.ReadAsync(buffer, offset, count, cancellationToken);
+    }
+
+    public override async Task WriteAsync(
+        byte[] buffer,
+        int offset,
+        int count,
+        CancellationToken cancellationToken = default
+    )
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        await _stream.WriteAsync(buffer, offset, count, cancellationToken);
+        _writeCount += count;
     }
 
     #endregion

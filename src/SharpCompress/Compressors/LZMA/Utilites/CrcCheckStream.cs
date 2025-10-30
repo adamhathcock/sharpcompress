@@ -1,6 +1,8 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace SharpCompress.Compressors.LZMA.Utilites;
 
@@ -100,5 +102,17 @@ public class CrcCheckStream : Stream
         }
 
         _mCurrentCrc = Crc.Update(_mCurrentCrc, buffer, offset, count);
+    }
+
+    public override async Task WriteAsync(
+        byte[] buffer,
+        int offset,
+        int count,
+        CancellationToken cancellationToken = default
+    )
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        Write(buffer, offset, count);
+        await Task.CompletedTask;
     }
 }
