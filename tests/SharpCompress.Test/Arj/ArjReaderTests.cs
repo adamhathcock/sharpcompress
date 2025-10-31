@@ -20,6 +20,7 @@ namespace SharpCompress.Test.Arj
 
         [Fact]
         public void Arj_Uncompressed_Read() => Read("Arj.store.arj", CompressionType.None);
+
         [Fact]
         public void Arj_Method4_Read() => Read("Arj.method4.arj");
     }
