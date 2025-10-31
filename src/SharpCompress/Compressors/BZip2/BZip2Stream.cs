@@ -1,5 +1,7 @@
 using System;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 using SharpCompress.IO;
 
 namespace SharpCompress.Compressors.BZip2;
@@ -96,12 +98,36 @@ public sealed class BZip2Stream : Stream, IStreamStack
 
     public override void SetLength(long value) => stream.SetLength(value);
 
-#if !NETFRAMEWORK&& !NETSTANDARD2_0
+#if !NETFRAMEWORK && !NETSTANDARD2_0
 
     public override int Read(Span<byte> buffer) => stream.Read(buffer);
 
     public override void Write(ReadOnlySpan<byte> buffer) => stream.Write(buffer);
+
+    public override async ValueTask<int> ReadAsync(
+        Memory<byte> buffer,
+        CancellationToken cancellationToken = default
+    ) => await stream.ReadAsync(buffer, cancellationToken).ConfigureAwait(false);
+
+    public override async ValueTask WriteAsync(
+        ReadOnlyMemory<byte> buffer,
+        CancellationToken cancellationToken = default
+    ) => await stream.WriteAsync(buffer, cancellationToken).ConfigureAwait(false);
 #endif
+
+    public override async Task<int> ReadAsync(
+        byte[] buffer,
+        int offset,
+        int count,
+        CancellationToken cancellationToken = default
+    ) => await stream.ReadAsync(buffer, offset, count, cancellationToken).ConfigureAwait(false);
+
+    public override async Task WriteAsync(
+        byte[] buffer,
+        int offset,
+        int count,
+        CancellationToken cancellationToken = default
+    ) => await stream.WriteAsync(buffer, offset, count, cancellationToken).ConfigureAwait(false);
 
     public override void Write(byte[] buffer, int offset, int count) =>
         stream.Write(buffer, offset, count);
