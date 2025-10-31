@@ -36,8 +36,6 @@ public class SharpCompressStreamAsyncTests
 
             using (SharpCompressStream scs = new SharpCompressStream(ms, true, false, 0x10000))
             {
-                IStreamStack stack = (IStreamStack)scs;
-
                 scs.Seek(0x1000, SeekOrigin.Begin);
                 Assert.Equal(0x1000, scs.Position); // position in the SharpCompressionStream
                 Assert.Equal(0x1000, ms.Position); // initial seek + full buffer read
