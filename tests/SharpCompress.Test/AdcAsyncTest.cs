@@ -51,7 +51,7 @@ public class AdcAsyncTest : TestBase
         using var cmpFs = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "adc_compressed.bin"));
         using var decStream = new ADCStream(cmpFs);
         var test = new byte[512];
-        var cts = new System.Threading.CancellationTokenSource();
+        using var cts = new System.Threading.CancellationTokenSource();
 
         // Read should complete without cancellation
         var bytesRead = await decStream.ReadAsync(test, 0, test.Length, cts.Token);

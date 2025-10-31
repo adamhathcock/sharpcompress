@@ -1129,7 +1129,7 @@ internal class CBZip2InputStream : Stream, IStreamStack
         return k;
     }
 
-    public override async Task<int> ReadAsync(
+    public override Task<int> ReadAsync(
         byte[] buffer,
         int offset,
         int count,
@@ -1148,7 +1148,7 @@ internal class CBZip2InputStream : Stream, IStreamStack
             }
             buffer[k + offset] = (byte)c;
         }
-        return await Task.FromResult(k);
+        return Task.FromResult(k);
     }
 
     public override long Seek(long offset, SeekOrigin origin) => 0;

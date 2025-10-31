@@ -256,7 +256,7 @@ public sealed class ADCStream : Stream, IStreamStack
         _outPosition += toCopy;
         _position += toCopy;
         copied += toCopy;
-        return await Task.FromResult(copied);
+        return copied;
     }
 
     public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();

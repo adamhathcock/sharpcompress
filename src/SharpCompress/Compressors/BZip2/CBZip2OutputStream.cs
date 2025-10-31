@@ -2024,7 +2024,7 @@ internal sealed class CBZip2OutputStream : Stream, IStreamStack
         }
     }
 
-    public override async Task WriteAsync(
+    public override Task WriteAsync(
         byte[] buffer,
         int offset,
         int count,
@@ -2036,7 +2036,7 @@ internal sealed class CBZip2OutputStream : Stream, IStreamStack
             cancellationToken.ThrowIfCancellationRequested();
             WriteByte(buffer[k + offset]);
         }
-        await Task.CompletedTask;
+        return Task.CompletedTask;
     }
 
     public override bool CanRead => false;

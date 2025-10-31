@@ -117,7 +117,7 @@ public class BZip2StreamAsyncTests
             )
             {
                 var buffer = new byte[1024];
-                var cts = new System.Threading.CancellationTokenSource();
+                using var cts = new System.Threading.CancellationTokenSource();
 
                 // Read should complete without cancellation
                 var bytesRead = await bzip2Stream.ReadAsync(buffer, 0, buffer.Length, cts.Token);

@@ -129,7 +129,7 @@ public static class ADCBase
         {
             result.BytesRead = 0;
             result.Output = null;
-            return await Task.FromResult(result);
+            return result;
         }
 
         var start = (int)input.Position;
