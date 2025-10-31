@@ -517,7 +517,7 @@ public class LzmaStream : Stream, IStreamStack
         byte[] buffer,
         int offset,
         int count,
-        CancellationToken cancellationToken = default
+        CancellationToken cancellationToken
     )
     {
         if (_endReached)
@@ -555,7 +555,9 @@ public class LzmaStream : Stream, IStreamStack
             _outWindow.SetLimit(toProcess);
             if (_uncompressedChunk)
             {
-                _inputPosition += await _outWindow.CopyStreamAsync(_inputStream, toProcess, cancellationToken).ConfigureAwait(false);
+                _inputPosition += await _outWindow
+                    .CopyStreamAsync(_inputStream, toProcess, cancellationToken)
+                    .ConfigureAwait(false);
             }
             else if (_decoder.Code(_dictionarySize, _outWindow, _rangeDecoder) && _outputSize < 0)
             {

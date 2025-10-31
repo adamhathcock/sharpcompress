@@ -3,6 +3,8 @@
 using System;
 using System.Buffers;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace SharpCompress.Compressors.LZMA.LZ;
 
@@ -97,6 +99,27 @@ internal class OutWindow : IDisposable
             return;
         }
         _stream.Write(_buffer, _streamPos, size);
+        if (_pos >= _windowSize)
+        {
+            _pos = 0;
+        }
+        _streamPos = _pos;
+    }
+
+    private async Task FlushAsync(CancellationToken cancellationToken = default)
+    {
+        if (_stream is null)
+        {
+            return;
+        }
+        var size = _pos - _streamPos;
+        if (size == 0)
+        {
+            return;
+        }
+        await _stream
+            .WriteAsync(_buffer, _streamPos, size, cancellationToken)
+            .ConfigureAwait(false);
         if (_pos >= _windowSize)
         {
             _pos = 0;
@@ -202,6 +225,44 @@ internal class OutWindow : IDisposable
             if (_pos >= _windowSize)
             {
                 Flush();
+            }
+        }
+        return len - size;
+    }
+
+    public async Task<int> CopyStreamAsync(
+        Stream stream,
+        int len,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var size = len;
+        while (size > 0 && _pos < _windowSize && _total < _limit)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            var curSize = _windowSize - _pos;
+            if (curSize > _limit - _total)
+            {
+                curSize = (int)(_limit - _total);
+            }
+            if (curSize > size)
+            {
+                curSize = size;
+            }
+            var numReadBytes = await stream
+                .ReadAsync(_buffer, _pos, curSize, cancellationToken)
+                .ConfigureAwait(false);
+            if (numReadBytes == 0)
+            {
+                throw new DataErrorException();
+            }
+            size -= numReadBytes;
+            _pos += numReadBytes;
+            _total += numReadBytes;
+            if (_pos >= _windowSize)
+            {
+                await FlushAsync(cancellationToken).ConfigureAwait(false);
             }
         }
         return len - size;
