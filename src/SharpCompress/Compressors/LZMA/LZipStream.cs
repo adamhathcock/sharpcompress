@@ -161,7 +161,7 @@ public sealed class LZipStream : Stream, IStreamStack
 
     public override ValueTask<int> ReadAsync(
         Memory<byte> buffer,
-        CancellationToken cancellationToken = new CancellationToken()
+        CancellationToken cancellationToken = default
     ) => _stream.ReadAsync(buffer, cancellationToken);
 
     public override int Read(Span<byte> buffer) => _stream.Read(buffer);
@@ -191,11 +191,8 @@ public sealed class LZipStream : Stream, IStreamStack
         int offset,
         int count,
         CancellationToken cancellationToken = default
-    )
-    {
-        cancellationToken.ThrowIfCancellationRequested();
-        return _stream.ReadAsync(buffer, offset, count, cancellationToken);
-    }
+    ) =>
+        _stream.ReadAsync(buffer, offset, count, cancellationToken);
 
     public override async Task WriteAsync(
         byte[] buffer,

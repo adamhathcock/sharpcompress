@@ -555,7 +555,7 @@ public class LzmaStream : Stream, IStreamStack
             _outWindow.SetLimit(toProcess);
             if (_uncompressedChunk)
             {
-                _inputPosition += _outWindow.CopyStream(_inputStream, toProcess);
+                _inputPosition += await _outWindow.CopyStreamAsync(_inputStream, toProcess, cancellationToken).ConfigureAwait(false);
             }
             else if (_decoder.Code(_dictionarySize, _outWindow, _rangeDecoder) && _outputSize < 0)
             {
@@ -608,7 +608,7 @@ public class LzmaStream : Stream, IStreamStack
         return total;
     }
 
-    public override async Task WriteAsync(
+    public override Task WriteAsync(
         byte[] buffer,
         int offset,
         int count,
@@ -617,7 +617,7 @@ public class LzmaStream : Stream, IStreamStack
     {
         cancellationToken.ThrowIfCancellationRequested();
         Write(buffer, offset, count);
-        await Task.CompletedTask;
+        return Task.CompletedTask;
     }
 
     public byte[] Properties { get; } = new byte[5];
