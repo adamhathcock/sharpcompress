@@ -1,6 +1,7 @@
 #nullable disable
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using SharpCompress.Compressors.LZMA.LZ;
 using SharpCompress.Compressors.LZMA.RangeCoder;
@@ -199,6 +200,9 @@ public class Decoder : ICoder, ISetDecoderProperties // ,System.IO.Stream
         }
     }
 
+#if !NETFRAMEWORK && !NETSTANDARD2_0
+    [MemberNotNull(nameof(_outWindow))]
+#endif
     private void CreateDictionary()
     {
         if (_dictionarySize < 0)
@@ -470,29 +474,4 @@ public class Decoder : ICoder, ISetDecoderProperties // ,System.IO.Stream
         }
         _outWindow.Train(stream);
     }
-
-    /*
-    public override bool CanRead { get { return true; }}
-    public override bool CanWrite { get { return true; }}
-    public override bool CanSeek { get { return true; }}
-    public override long Length { get { return 0; }}
-    public override long Position
-    {
-        get { return 0;	}
-        set { }
-    }
-    public override void Flush() { }
-    public override int Read(byte[] buffer, int offset, int count)
-    {
-        return 0;
-    }
-    public override void Write(byte[] buffer, int offset, int count)
-    {
-    }
-    public override long Seek(long offset, System.IO.SeekOrigin origin)
-    {
-        return 0;
-    }
-    public override void SetLength(long value) {}
-    */
 }

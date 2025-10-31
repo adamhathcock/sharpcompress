@@ -197,7 +197,7 @@ public sealed class LZipStream : Stream, IStreamStack
         byte[] buffer,
         int offset,
         int count,
-        CancellationToken cancellationToken = default
+        CancellationToken cancellationToken
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
