@@ -20,7 +20,7 @@ public static class ArchiveFactory
     public static IArchive Open(Stream stream, ReaderOptions? readerOptions = null)
     {
         readerOptions ??= new ReaderOptions();
-        stream = new SharpCompressStream(stream, bufferSize: readerOptions.BufferSize);
+        stream = SharpCompressStream.Create(stream, bufferSize: readerOptions.BufferSize);
         return FindFactory<IArchiveFactory>(stream).Open(stream, readerOptions);
     }
 
