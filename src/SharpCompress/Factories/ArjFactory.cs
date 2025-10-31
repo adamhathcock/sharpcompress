@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using SharpCompress.Common;
 using SharpCompress.Common.Arj.Headers;
 using SharpCompress.Readers;
-using SharpCompress.Readers.Arc;
+using SharpCompress.Readers.Arj;
 
 namespace SharpCompress.Factories
 {

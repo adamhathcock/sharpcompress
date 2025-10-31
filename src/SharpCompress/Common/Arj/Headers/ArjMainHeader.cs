@@ -16,9 +16,7 @@ namespace SharpCompress.Common.Arj.Headers
         public int ArchiverVersionNumber { get; private set; }
         public int MinVersionToExtract { get; private set; }
         public HostOS HostOs { get; private set; }
-        public int Flags { get; private set; }
         public int SecurityVersion { get; private set; }
-        public int FileType { get; private set; }
         public DosDateTime CreationDateTime { get; private set; } = new DosDateTime(0);
         public long CompressedSize { get; private set; }
         public long ArchiveSize { get; private set; }
@@ -51,13 +49,13 @@ namespace SharpCompress.Common.Arj.Headers
         {
             var offset = 1;
 
-            int ReadByte()
+            byte ReadByte()
             {
                 if (offset >= headerBytes.Length)
                 {
                     throw new EndOfStreamException();
                 }
-                return headerBytes[offset++] & 0xFF;
+                return (byte)(headerBytes[offset++] & 0xFF);
             }
 
             int ReadInt16()
@@ -116,7 +114,7 @@ namespace SharpCompress.Common.Arj.Headers
 
             Flags = ReadByte();
             SecurityVersion = ReadByte();
-            FileType = ReadByte();
+            FileType = FileTypeFromByte(ReadByte());
 
             offset++; // skip reserved
 
@@ -136,15 +134,5 @@ namespace SharpCompress.Common.Arj.Headers
 
             return this;
         }
-
-        // Flag helpers
-        public bool IsGabled => (Flags & 0x01) != 0;
-        public bool IsAnsiPage => (Flags & 0x02) != 0;
-        public bool IsVolume => (Flags & 0x04) != 0;
-        public bool IsArjProtected => (Flags & 0x08) != 0;
-        public bool IsPathSym => (Flags & 0x10) != 0;
-        public bool IsBackup => (Flags & 0x20) != 0;
-        public bool IsSecured => (Flags & 0x40) != 0;
-        public bool IsAltName => (Flags & 0x80) != 0;
     }
 }

@@ -16,9 +16,7 @@ namespace SharpCompress.Common.Arj.Headers
         public byte ArchiverVersionNumber { get; set; }
         public byte MinVersionToExtract { get; set; }
         public HostOS HostOS { get; set; }
-        public byte ArjFlags { get; set; }
         public CompressionMethod CompressionMethod { get; set; }
-        public int FileType { get; set; }
         public DosDateTime DateTimeModified { get; set; } = new DosDateTime(0);
         public long CompressedSize { get; set; }
         public long OriginalSize { get; set; }
@@ -36,11 +34,6 @@ namespace SharpCompress.Common.Arj.Headers
 
         private const byte StdHdrSize = 30;
         private const byte R9HdrSize = 46;
-        public bool IsGarbled => (ArjFlags & 0x01) != 0;
-        public bool IsVolume => (ArjFlags & 0x04) != 0;
-        public bool IsExtFile => (ArjFlags & 0x08) != 0;
-        public bool IsPathSym => (ArjFlags & 0x10) != 0;
-        public bool IsBackup => (ArjFlags & 0x20) != 0;
 
         public ArjLocalHeader(ArchiveEncoding archiveEncoding)
             : base(ArjHeaderType.LocalHeader)
@@ -92,12 +85,12 @@ namespace SharpCompress.Common.Arj.Headers
             }
 
             byte headerSize = headerBytes[offset++];
-            byte archiverVersionNumber = headerBytes[offset++];
-            byte minVersionToExtract = headerBytes[offset++];
+            ArchiverVersionNumber = headerBytes[offset++];
+            MinVersionToExtract = headerBytes[offset++];
             HostOS hostOS = (HostOS)headerBytes[offset++];
-            byte arjFlags = headerBytes[offset++];
-            CompressionMethod compressionMethod = CompressionMethodFromByte(headerBytes[offset++]);
-            FileType fileType = FileTypeFromByte(headerBytes[offset++]);
+            Flags = headerBytes[offset++];
+            CompressionMethod = CompressionMethodFromByte(headerBytes[offset++]);
+            FileType = FileTypeFromByte(headerBytes[offset++]);
 
             offset++; // Skip 1 byte
 
@@ -163,13 +156,6 @@ namespace SharpCompress.Common.Arj.Headers
                 9 => CompressionMethod.NoData,
                 _ => CompressionMethod.Unknown,
             };
-        }
-
-        public static FileType FileTypeFromByte(byte value)
-        {
-            return Enum.IsDefined(typeof(FileType), value)
-                ? (FileType)value
-                : Headers.FileType.Unknown;
         }
     }
 }

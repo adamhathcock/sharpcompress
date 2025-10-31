@@ -10,7 +10,7 @@ using SharpCompress.Common.Arj.Headers;
 using SharpCompress.Common.Zip;
 using SharpCompress.Common.Zip.Headers;
 
-namespace SharpCompress.Readers.Arc
+namespace SharpCompress.Readers.Arj
 {
     public class ArjReader : AbstractReader<ArjEntry, ArjVolume>
     {
@@ -33,13 +33,14 @@ namespace SharpCompress.Readers.Arc
 
         protected override IEnumerable<ArjEntry> GetEntries(Stream stream)
         {
-            var headerReader = new ArjMainHeader(new ArchiveEncoding());
-            var mainHeader = headerReader.Read(stream);
+            ArchiveEncoding encoding = new ArchiveEncoding();
+            var mainHeaderReader = new ArjMainHeader(encoding);
+            var localHeaderReader = new ArjLocalHeader(encoding);
+            var mainHeader = mainHeaderReader.Read(stream);
 
             while (true)
             {
-                var localReader = new ArjLocalHeader(new ArchiveEncoding());
-                var localHeader = localReader.Read(stream);
+                var localHeader = localHeaderReader.Read(stream);
                 if (localHeader == null)
                     break;
 

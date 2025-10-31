@@ -25,7 +25,17 @@ namespace SharpCompress.Common.Arj
 
         public override long CompressedSize => _filePart?.Header.CompressedSize ?? 0;
 
-        public override CompressionType CompressionType => CompressionType.None;
+        public override CompressionType CompressionType
+        {
+            get
+            {
+                if (_filePart.Header.CompressionMethod == CompressionMethod.Stored)
+                {
+                    return CompressionType.None;
+                }
+                return CompressionType.ArjLZ77;
+            }
+        }
 
         public override long Size => _filePart?.Header.OriginalSize ?? 0;
 
@@ -39,7 +49,7 @@ namespace SharpCompress.Common.Arj
 
         public override bool IsEncrypted => false;
 
-        public override bool IsDirectory => _filePart.Header.FileType == (int)FileType.Directory;
+        public override bool IsDirectory => _filePart.Header.FileType == FileType.Directory;
 
         public override bool IsSplitAfter => false;
 
