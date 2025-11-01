@@ -1,6 +1,9 @@
 using System;
+using System.Buffers;
 using System.Diagnostics;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace SharpCompress.Compressors.LZMA.Utilites;
 
@@ -11,7 +14,7 @@ public class CrcCheckStream : Stream
     private uint _mCurrentCrc;
     private bool _mClosed;
 
-    private readonly long[] _mBytes = new long[256];
+    private readonly long[] _mBytes = ArrayPool<long>.Shared.Rent(256);
     private long _mLength;
 
     public CrcCheckStream(uint crc)
@@ -65,6 +68,7 @@ public class CrcCheckStream : Stream
         finally
         {
             base.Dispose(disposing);
+            ArrayPool<long>.Shared.Return(_mBytes);
         }
     }
 
@@ -100,5 +104,17 @@ public class CrcCheckStream : Stream
         }
 
         _mCurrentCrc = Crc.Update(_mCurrentCrc, buffer, offset, count);
+    }
+
+    public override Task WriteAsync(
+        byte[] buffer,
+        int offset,
+        int count,
+        CancellationToken cancellationToken
+    )
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        Write(buffer, offset, count);
+        return Task.CompletedTask;
     }
 }
