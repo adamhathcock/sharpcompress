@@ -559,7 +559,12 @@ public class LzmaStream : Stream, IStreamStack
                     .CopyStreamAsync(_inputStream, toProcess, cancellationToken)
                     .ConfigureAwait(false);
             }
-            else if (await _decoder.CodeAsync(_dictionarySize, _outWindow, _rangeDecoder, cancellationToken).ConfigureAwait(false) && _outputSize < 0)
+            else if (
+                await _decoder
+                    .CodeAsync(_dictionarySize, _outWindow, _rangeDecoder, cancellationToken)
+                    .ConfigureAwait(false)
+                && _outputSize < 0
+            )
             {
                 _availableBytes = _outWindow.AvailableBytes;
             }
@@ -578,7 +583,16 @@ public class LzmaStream : Stream, IStreamStack
                 )
                 {
                     _outWindow.SetLimit(toProcess + 1);
-                    if (!await _decoder.CodeAsync(_dictionarySize, _outWindow, _rangeDecoder, cancellationToken).ConfigureAwait(false))
+                    if (
+                        !await _decoder
+                            .CodeAsync(
+                                _dictionarySize,
+                                _outWindow,
+                                _rangeDecoder,
+                                cancellationToken
+                            )
+                            .ConfigureAwait(false)
+                    )
                     {
                         _rangeDecoder.ReleaseStream();
                         throw new DataErrorException();

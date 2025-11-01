@@ -206,7 +206,11 @@ internal class OutWindow : IDisposable
         _pendingDist = distance;
     }
 
-    public async Task CopyBlockAsync(int distance, int len, CancellationToken cancellationToken = default)
+    public async Task CopyBlockAsync(
+        int distance,
+        int len,
+        CancellationToken cancellationToken = default
+    )
     {
         var rem = len;
         var pos = (distance < _pos ? _pos : _pos + _windowSize) - distance - 1;

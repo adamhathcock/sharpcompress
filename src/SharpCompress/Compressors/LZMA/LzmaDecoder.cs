@@ -604,7 +604,9 @@ public class Decoder : ICoder, ISetDecoderProperties // ,System.IO.Stream
                     }
                     throw new DataErrorException();
                 }
-                await outWindow.CopyBlockAsync((int)_rep0, (int)len, cancellationToken).ConfigureAwait(false);
+                await outWindow
+                    .CopyBlockAsync((int)_rep0, (int)len, cancellationToken)
+                    .ConfigureAwait(false);
             }
         }
         return false;
