@@ -27,8 +27,8 @@ public class SharpCompressStreamTests
     [Fact]
     public void BufferReadTest()
     {
-        byte[] data = ArrayPool<byte>.Shared.Rent(0x100000);
-        byte[] test = ArrayPool<byte>.Shared.Rent(0x1000);
+        byte[] data = new byte[0x100000];
+        byte[] test = new byte[0x1000];
         using (MemoryStream ms = new MemoryStream(data))
         {
             createData(ms);
@@ -53,16 +53,13 @@ public class SharpCompressStreamTests
                 Assert.Equal(0x10500, ms.Position); //seek plus read bytes
             }
         }
-
-        ArrayPool<byte>.Shared.Return(data);
-        ArrayPool<byte>.Shared.Return(test);
     }
 
     [Fact]
     public void BufferReadAndSeekTest()
     {
-        byte[] data = ArrayPool<byte>.Shared.Rent(0x100000);
-        byte[] test = ArrayPool<byte>.Shared.Rent(0x1000);
+        byte[] data = new byte[0x100000];
+        byte[] test = new byte[0x1000];
         using (MemoryStream ms = new MemoryStream(data))
         {
             createData(ms);
@@ -91,8 +88,5 @@ public class SharpCompressStreamTests
                 Assert.Equal(0x10000, ms.Position); //the base stream has not moved
             }
         }
-
-        ArrayPool<byte>.Shared.Return(data);
-        ArrayPool<byte>.Shared.Return(test);
     }
 }

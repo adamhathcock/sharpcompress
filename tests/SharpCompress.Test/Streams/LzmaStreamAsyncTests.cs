@@ -1,22 +1,26 @@
 using System;
 using System.Buffers;
 using System.IO;
+using System.Threading.Tasks;
 using SharpCompress.Compressors.LZMA;
 using Xunit;
 
 namespace SharpCompress.Test.Streams;
 
-public class LzmaStreamTests
+public class LzmaStreamAsyncTests
 {
     [Fact]
-    public void TestLzma2Decompress1Byte()
+    public async Task TestLzma2Decompress1ByteAsync()
     {
         var properties = new byte[] { 0x01 };
         var compressedData = new byte[] { 0x01, 0x00, 0x00, 0x58, 0x00 };
         var lzma2Stream = new MemoryStream(compressedData);
 
         var decompressor = new LzmaStream(properties, lzma2Stream, 5, 1);
-        Assert.Equal('X', decompressor.ReadByte());
+        var buffer = new byte[1];
+        var bytesRead = await decompressor.ReadAsync(buffer, 0, 1).ConfigureAwait(false);
+        Assert.Equal(1, bytesRead);
+        Assert.Equal((byte)'X', buffer[0]);
     }
 
     private static byte[] LzmaData { get; } =
@@ -513,15 +517,15 @@ public class LzmaStreamTests
     ];
 
     [Fact]
-    public void TestLzmaBuffer()
+    public async Task TestLzmaBufferAsync()
     {
         var input = new MemoryStream(LzmaData);
         using var output = new MemoryStream();
         var properties = new byte[5];
-        input.Read(properties, 0, 5);
+        await input.ReadAsync(properties, 0, 5).ConfigureAwait(false);
 
         var fileLengthBytes = new byte[8];
-        input.Read(fileLengthBytes, 0, 8);
+        await input.ReadAsync(fileLengthBytes, 0, 8).ConfigureAwait(false);
         var fileLength = BitConverter.ToInt64(fileLengthBytes, 0);
 
         var coder = new Decoder();
@@ -532,39 +536,40 @@ public class LzmaStreamTests
     }
 
     [Fact]
-    public void TestLzmaStreamEncodingWritesData()
+    public async Task TestLzmaStreamEncodingWritesDataAsync()
     {
         using var inputStream = new MemoryStream(LzmaResultData);
         using MemoryStream outputStream = new();
         using var lzmaStream = new LzmaStream(LzmaEncoderProperties.Default, false, outputStream);
-        inputStream.CopyTo(lzmaStream);
+        await inputStream.CopyToAsync(lzmaStream).ConfigureAwait(false);
         lzmaStream.Close();
         Assert.NotEqual(0, outputStream.Length);
     }
 
     [Fact]
-    public void TestLzmaEncodingAccuracy()
+    public async Task TestLzmaEncodingAccuracyAsync()
     {
         var input = new MemoryStream(LzmaResultData);
         var compressed = new MemoryStream();
         var lzmaEncodingStream = new LzmaStream(LzmaEncoderProperties.Default, false, compressed);
-        input.CopyTo(lzmaEncodingStream);
+        await input.CopyToAsync(lzmaEncodingStream).ConfigureAwait(false);
         lzmaEncodingStream.Close();
         compressed.Position = 0;
 
         var output = new MemoryStream();
-        DecompressLzmaStream(
-            lzmaEncodingStream.Properties,
-            compressed,
-            compressed.Length,
-            output,
-            LzmaResultData.LongLength
-        );
+        await DecompressLzmaStreamAsync(
+                lzmaEncodingStream.Properties,
+                compressed,
+                compressed.Length,
+                output,
+                LzmaResultData.LongLength
+            )
+            .ConfigureAwait(false);
 
         Assert.Equal(output.ToArray(), LzmaResultData);
     }
 
-    private static void DecompressLzmaStream(
+    private static async Task DecompressLzmaStreamAsync(
         byte[] properties,
         Stream compressedStream,
         long compressedSize,
@@ -586,10 +591,10 @@ public class LzmaStreamTests
         while (totalRead < decompressedSize)
         {
             var toRead = (int)Math.Min(buffer.Length, decompressedSize - totalRead);
-            var read = lzmaStream.Read(buffer, 0, toRead);
+            var read = await lzmaStream.ReadAsync(buffer, 0, toRead).ConfigureAwait(false);
             if (read > 0)
             {
-                decompressedStream.Write(buffer, 0, read);
+                await decompressedStream.WriteAsync(buffer, 0, read).ConfigureAwait(false);
                 totalRead += read;
             }
             else
