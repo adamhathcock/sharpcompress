@@ -14,9 +14,20 @@ namespace SharpCompress.Compressors.RLE90
         long IStreamStack.InstanceId { get; set; }
 #endif
         int IStreamStack.DefaultBufferSize { get; set; }
+
         Stream IStreamStack.BaseStream() => _stream;
-        int IStreamStack.BufferSize { get => 0; set { } }
-        int IStreamStack.BufferPosition { get => 0; set { } }
+
+        int IStreamStack.BufferSize
+        {
+            get => 0;
+            set { }
+        }
+        int IStreamStack.BufferPosition
+        {
+            get => 0;
+            set { }
+        }
+
         void IStreamStack.SetPosition(long position) { }
 
         private readonly Stream _stream;
@@ -59,9 +70,14 @@ namespace SharpCompress.Compressors.RLE90
         }
 
         public override void Flush() => throw new NotSupportedException();
-        public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
+
+        public override long Seek(long offset, SeekOrigin origin) =>
+            throw new NotSupportedException();
+
         public override void SetLength(long value) => throw new NotSupportedException();
-        public override void Write(byte[] buffer, int offset, int count) => throw new NotSupportedException();
+
+        public override void Write(byte[] buffer, int offset, int count) =>
+            throw new NotSupportedException();
 
         public override int Read(byte[] buffer, int offset, int count)
         {
