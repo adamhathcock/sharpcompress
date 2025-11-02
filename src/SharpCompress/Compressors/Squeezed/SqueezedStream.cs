@@ -1,13 +1,14 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using SharpCompress.Compressors.RLE90;
 using SharpCompress.IO;
 
 namespace SharpCompress.Compressors.Squeezed
 {
-    [CLSCompliant(true)]
     public class SqueezeStream : Stream, IStreamStack
     {
 #if DEBUG_STREAMS
@@ -34,15 +35,12 @@ namespace SharpCompress.Compressors.Squeezed
         private readonly int _compressedSize;
         private const int NUMVALS = 257;
         private const int SPEOF = 256;
-
-        private Stream _decodedStream;
+        private bool _processed = false;
 
         public SqueezeStream(Stream stream, int compressedSize)
         {
-            _stream = stream ?? throw new ArgumentNullException(nameof(stream));
+            _stream = stream;
             _compressedSize = compressedSize;
-            _decodedStream = BuildDecodedStream();
-
 #if DEBUG_STREAMS
             this.DebugConstruct(typeof(SqueezeStream));
 #endif
@@ -53,46 +51,52 @@ namespace SharpCompress.Compressors.Squeezed
 #if DEBUG_STREAMS
             this.DebugDispose(typeof(SqueezeStream));
 #endif
-            _decodedStream?.Dispose();
             base.Dispose(disposing);
         }
 
         public override bool CanRead => true;
+
         public override bool CanSeek => false;
+
         public override bool CanWrite => false;
 
-        public override long Length => throw new NotSupportedException();
+        public override long Length => throw new NotImplementedException();
+
         public override long Position
         {
-            get => throw new NotSupportedException();
-            set => throw new NotSupportedException();
+            get => _stream.Position;
+            set => throw new NotImplementedException();
         }
 
-        public override void Flush() => throw new NotSupportedException();
-
-        public override long Seek(long offset, SeekOrigin origin) =>
-            throw new NotSupportedException();
-
-        public override void SetLength(long value) => throw new NotSupportedException();
-
-        public override void Write(byte[] buffer, int offset, int count) =>
-            throw new NotSupportedException();
+        public override void Flush() => throw new NotImplementedException();
 
         public override int Read(byte[] buffer, int offset, int count)
         {
-            return _decodedStream.Read(buffer, offset, count);
-        }
-
-        private Stream BuildDecodedStream()
-        {
-            var binaryReader = new BinaryReader(_stream, Encoding.Default, leaveOpen: true);
-            int numnodes = binaryReader.ReadUInt16();
-
-            if (numnodes >= NUMVALS || numnodes == 0)
+            if (_processed)
             {
-                return new MemoryStream(Array.Empty<byte>());
+                return 0;
+            }
+            _processed = true;
+            using var binaryReader = new BinaryReader(_stream);
+
+            // Read numnodes (equivalent to convert_u16!(numnodes, buf))
+            var numnodes = binaryReader.ReadUInt16();
+
+            // Validation: numnodes should be within bounds
+            if (numnodes >= NUMVALS)
+            {
+                throw new InvalidDataException(
+                    $"Invalid number of nodes {numnodes} (max {NUMVALS - 1})"
+                );
             }
 
+            // Handle the case where no nodes exist
+            if (numnodes == 0)
+            {
+                return 0;
+            }
+
+            // Build dnode (tree of nodes)
             var dnode = new int[numnodes, 2];
             for (int j = 0; j < numnodes; j++)
             {
@@ -100,27 +104,42 @@ namespace SharpCompress.Compressors.Squeezed
                 dnode[j, 1] = binaryReader.ReadInt16();
             }
 
+            // Initialize BitReader for reading bits
             var bitReader = new BitReader(_stream);
-            var huffmanDecoded = new MemoryStream();
-            int i = 0;
+            var decoded = new List<byte>();
 
+            int i = 0;
+            // Decode the buffer using the dnode tree
             while (true)
             {
                 i = dnode[i, bitReader.ReadBit() ? 1 : 0];
                 if (i < 0)
                 {
-                    i = -(i + 1);
+                    i = (short)-(i + 1);
                     if (i == SPEOF)
                     {
                         break;
                     }
-                    huffmanDecoded.WriteByte((byte)i);
-                    i = 0;
+                    else
+                    {
+                        decoded.Add((byte)i);
+                        i = 0;
+                    }
                 }
             }
 
-            huffmanDecoded.Position = 0;
-            return new RunLength90Stream(huffmanDecoded, (int)huffmanDecoded.Length);
+            // Unpack the decoded buffer using the RLE class
+            var unpacked = RLE.UnpackRLE(decoded.ToArray());
+            unpacked.CopyTo(buffer, 0);
+            return unpacked.Count();
         }
+
+        public override long Seek(long offset, SeekOrigin origin) =>
+            throw new NotImplementedException();
+
+        public override void SetLength(long value) => throw new NotImplementedException();
+
+        public override void Write(byte[] buffer, int offset, int count) =>
+            throw new NotImplementedException();
     }
 }

@@ -30,7 +30,7 @@ namespace SharpCompress.Readers.Arc
 
         protected override IEnumerable<ArcEntry> GetEntries(Stream stream)
         {
-            ArcEntryHeader headerReader = new ArcEntryHeader(Options.ArchiveEncoding);
+            ArcEntryHeader headerReader = new ArcEntryHeader(new ArchiveEncoding());
             ArcEntryHeader? header;
             while ((header = headerReader.ReadHeader(stream)) != null)
             {
