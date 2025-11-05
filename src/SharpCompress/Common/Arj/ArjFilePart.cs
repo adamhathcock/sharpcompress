@@ -39,16 +39,10 @@ namespace SharpCompress.Common.Arj
                         );
                         break;
                     case CompressionMethod.CompressedFastest:
-                        byte[] compressedData = new byte[Header.CompressedSize];
-                        _stream.Position = Header.DataStartPosition;
-                        _stream.Read(compressedData, 0, compressedData.Length);
-
-                        byte[] decompressedData = LHDecoder.DecodeFastest(
-                            compressedData,
-                            (int)Header.OriginalSize // ARJ can only handle files up to 2GB, so casting to int should not be an issue.
+                        compressedStream = new LHDecoderStream(
+                            _stream,
+                            (int)Header.OriginalSize
                         );
-
-                        compressedStream = new MemoryStream(decompressedData);
                         break;
                     default:
                         throw new NotSupportedException(
