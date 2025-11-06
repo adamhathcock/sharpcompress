@@ -26,6 +26,12 @@ namespace SharpCompress.Test.Arj
         public void Arj_Method4_Read() => Read("Arj.method4.arj");
 
         [Fact]
+        public void Arj_Encrypted_Read()
+        {
+            var exception = Assert.Throws<CryptographicException>(() => Read("Arj.encrypted.arj"));
+        }
+
+        [Fact]
         public void Arj_Multi_Reader()
         {
             var exception = Assert.Throws<MultiVolumeExtractionException>(() =>
