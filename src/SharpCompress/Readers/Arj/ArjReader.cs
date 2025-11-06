@@ -60,6 +60,12 @@ namespace SharpCompress.Readers.Arj
                     "Multi volumes are currently not supported"
                 );
             }
+            if (mainHeader?.IsGabled == true)
+            {
+                throw new CryptographicException(
+                    "Password protected archives are currently not supported"
+                );
+            }
 
             if (_volume == null)
             {
