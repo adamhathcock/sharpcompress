@@ -112,6 +112,32 @@ public class TarReader : AbstractReader<TarEntry, TarVolume>
         }
 
         ((IStreamStack)rewindableStream).StackSeek(pos);
+        if (XZStream.IsXZStream(rewindableStream))
+        {
+            ((IStreamStack)rewindableStream).StackSeek(pos);
+            var testStream = new XZStream(rewindableStream);
+            if (TarArchive.IsTarFile(testStream))
+            {
+                ((IStreamStack)rewindableStream).StackSeek(pos);
+                return new TarReader(rewindableStream, options, CompressionType.Xz);
+            }
+            throw new InvalidFormatException("Not a tar file.");
+        }
+
+        ((IStreamStack)rewindableStream).StackSeek(pos);
+        if (LzwStream.IsLzwStream(rewindableStream))
+        {
+            ((IStreamStack)rewindableStream).StackSeek(pos);
+            var testStream = new LzwStream(rewindableStream);
+            if (TarArchive.IsTarFile(testStream))
+            {
+                ((IStreamStack)rewindableStream).StackSeek(pos);
+                return new TarReader(rewindableStream, options, CompressionType.Lzw);
+            }
+            throw new InvalidFormatException("Not a tar file.");
+        }
+
+        ((IStreamStack)rewindableStream).StackSeek(pos);
         return new TarReader(rewindableStream, options, CompressionType.None);
     }
 
