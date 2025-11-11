@@ -54,7 +54,7 @@ public class TarArchive : AbstractWritableArchive<TarArchiveEntry, TarVolume>
         {
             // Open the file to check for compression
             using var testStream = fileInfo.OpenRead();
-            var rewindableStream = SharpCompressStream.Create(testStream, leaveOpen: false);
+            using var rewindableStream = SharpCompressStream.Create(testStream, leaveOpen: false);
             var streamStack = (IStreamStack)rewindableStream;
             var startPos = streamStack.GetPosition();
 

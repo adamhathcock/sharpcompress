@@ -295,4 +295,47 @@ public class TarArchiveTests : ArchiveTests
 
         Assert.False(isTar);
     }
+
+    [Fact]
+    public void TarArchive_Open_Compressed_XZ_Throws()
+    {
+        var exception = Assert.Throws<InvalidFormatException>(() =>
+            TarArchive.Open(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.xz"))
+        );
+
+        Assert.Contains("XZ", exception.Message);
+        Assert.Contains("TarReader.Open", exception.Message);
+    }
+
+    [Fact]
+    public void TarArchive_Open_Compressed_GZip_Throws()
+    {
+        var exception = Assert.Throws<InvalidFormatException>(() =>
+            TarArchive.Open(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.gz"))
+        );
+
+        Assert.Contains("GZip", exception.Message);
+        Assert.Contains("TarReader.Open", exception.Message);
+    }
+
+    [Fact]
+    public void TarArchive_Open_Compressed_BZip2_Throws()
+    {
+        var exception = Assert.Throws<InvalidFormatException>(() =>
+            TarArchive.Open(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.bz2"))
+        );
+
+        Assert.Contains("BZip2", exception.Message);
+        Assert.Contains("TarReader.Open", exception.Message);
+    }
+
+    [Fact]
+    public void TarArchive_Open_Compressed_Stream_XZ_Throws()
+    {
+        using var stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.xz"));
+        var exception = Assert.Throws<InvalidFormatException>(() => TarArchive.Open(stream));
+
+        Assert.Contains("XZ", exception.Message);
+        Assert.Contains("TarReader.Open", exception.Message);
+    }
 }
