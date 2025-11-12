@@ -295,4 +295,42 @@ public class TarArchiveTests : ArchiveTests
 
         Assert.False(isTar);
     }
+
+    [Fact]
+    public void TarArchive_Open_SmallStream_DoesNotCrash()
+    {
+        // Create a small stream with less than 4 bytes (which would crash when checking ZStandard magic bytes)
+        var ms = new MemoryStream(new byte[] { 0x00, 0x01, 0x02 });
+        var options = new ReaderOptions();
+        options.ArchiveEncoding.Default = Encoding.Default;
+
+        // Open the archive (this won't fail immediately as TarArchive.Open doesn't validate)
+        var archive = TarArchive.Open(ms, options);
+
+        // Before the fix, accessing Entries.Count would crash with EndOfFileException when
+        // TarReader.Open tries to check ZStandard format with insufficient bytes
+        // After the fix, this should throw IncompleteArchiveException instead (graceful handling)
+        Assert.Throws<IncompleteArchiveException>(() =>
+        {
+            var count = archive.Entries.Count;
+        });
+    }
+
+    [Fact]
+    public void TarArchive_Open_EmptyStream_DoesNotCrash()
+    {
+        // Create an empty stream
+        var ms = new MemoryStream();
+        var options = new ReaderOptions();
+        options.ArchiveEncoding.Default = Encoding.Default;
+
+        // Open the archive (this won't fail immediately as TarArchive.Open doesn't validate)
+        var archive = TarArchive.Open(ms, options);
+
+        // Before the fix, accessing Entries would crash with EndOfFileException when
+        // TarReader.Open tries to check ZStandard format with insufficient bytes
+        // After the fix, this should handle the empty stream gracefully
+        var entries = archive.Entries;
+        Assert.Empty(entries);
+    }
 }
