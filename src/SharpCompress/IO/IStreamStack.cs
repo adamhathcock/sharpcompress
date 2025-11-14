@@ -167,7 +167,8 @@ namespace SharpCompress.IO
             if (lastBufferingIndex != -1)
             {
                 var bufferingStream = stack[lastBufferingIndex];
-                var targetBufferPosition = position - bufferingStream.GetPosition() + bufferingStream.BufferPosition;
+                var targetBufferPosition =
+                    position - bufferingStream.GetPosition() + bufferingStream.BufferPosition;
 
                 if (targetBufferPosition >= 0 && targetBufferPosition <= bufferingStream.BufferSize)
                 {
