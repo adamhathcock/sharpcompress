@@ -74,7 +74,7 @@ public static class IArchiveExtensions
             }
 
             // Write file
-            using var fs = File.OpenWrite(path);
+            using var fs = File.Create(path);
             entry.WriteTo(fs);
 
             // Update progress

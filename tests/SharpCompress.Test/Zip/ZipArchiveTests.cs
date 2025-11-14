@@ -92,6 +92,28 @@ public class ZipArchiveTests : ArchiveTests
     public void Zip_Deflate_ArchiveExtractToDirectory() =>
         ArchiveExtractToDirectory("Zip.deflate.zip");
 
+    [Fact]
+    public void Zip_Deflate_ArchiveExtractToDirectory_Overwrite()
+    {
+        // First extraction
+        ArchiveExtractToDirectory("Zip.deflate.zip");
+
+        // Corrupt one of the extracted files by making it longer
+        var testFile = Path.Combine(SCRATCH_FILES_PATH, "Tar.tar");
+        if (File.Exists(testFile))
+        {
+            var originalSize = new FileInfo(testFile).Length;
+            File.WriteAllText(testFile, new string('X', (int)originalSize + 1000));
+            Assert.True(new FileInfo(testFile).Length > originalSize);
+        }
+
+        // Second extraction should overwrite and produce correct file sizes
+        ArchiveExtractToDirectory("Zip.deflate.zip");
+
+        // Verify files are correct size (not corrupted with leftover data)
+        VerifyFiles();
+    }
+
     //will detect and load other files
     [Fact]
     public void Zip_Deflate_Multi_ArchiveFirstFileRead() =>
