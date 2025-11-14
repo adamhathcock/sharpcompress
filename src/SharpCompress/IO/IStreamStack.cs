@@ -143,7 +143,6 @@ namespace SharpCompress.IO
             var stack = new List<IStreamStack>();
             Stream? current = stream as Stream;
             int lastBufferingIndex = -1;
-            int firstSeekableIndex = -1;
             Stream? firstSeekableStream = null;
 
             // Traverse the stack, collecting info
@@ -161,7 +160,6 @@ namespace SharpCompress.IO
             // Find the first seekable stream (closest to the root)
             if (current != null && current.CanSeek)
             {
-                firstSeekableIndex = stack.Count;
                 firstSeekableStream = current;
             }
 
@@ -169,16 +167,17 @@ namespace SharpCompress.IO
             if (lastBufferingIndex != -1)
             {
                 var bufferingStream = stack[lastBufferingIndex];
-                if (position >= 0 && position < bufferingStream.BufferSize)
+                var targetBufferPosition =
+                    position - bufferingStream.GetPosition() + bufferingStream.BufferPosition;
+
+                if (targetBufferPosition >= 0 && targetBufferPosition <= bufferingStream.BufferSize)
                 {
-                    bufferingStream.BufferPosition = (int)position;
+                    bufferingStream.BufferPosition = (int)targetBufferPosition;
                     return position;
                 }
-                else
-                {
-                    // If position is not in buffer, reset buffer and proceed as non-buffering
-                    bufferingStream.BufferPosition = 0;
-                }
+
+                // If position is not in buffer, reset buffer and proceed as non-buffering
+                bufferingStream.BufferPosition = 0;
                 // Continue to seek as if no buffer is present
             }
 
