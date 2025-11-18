@@ -38,6 +38,22 @@ namespace SharpCompress.Common.Arj
                             Header.CompressedSize
                         );
                         break;
+                    case CompressionMethod.CompressedMost:
+                    case CompressionMethod.Compressed:
+                    case CompressionMethod.CompressedFaster:
+                        if (Header.CompressedSize > 128 * 1024)
+                        {
+                            throw new NotSupportedException(
+                                "CompressionMethod: "
+                                    + Header.CompressionMethod
+                                    + " with size > 128KB"
+                            );
+                        }
+                        compressedStream = new LhaStream<Lh7DecoderCfg>(
+                            _stream,
+                            (int)Header.OriginalSize
+                        );
+                        break;
                     case CompressionMethod.CompressedFastest:
                         compressedStream = new LHDecoderStream(_stream, (int)Header.OriginalSize);
                         break;
