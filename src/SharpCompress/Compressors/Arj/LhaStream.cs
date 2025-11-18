@@ -98,11 +98,8 @@ namespace SharpCompress.Compressors.Arj
                 return 0;
             }
 
-            byte[] temp = new byte[count];
-            FillBuffer(temp);
-
-            Array.Copy(temp, 0, buffer, offset, temp.Length);
-            return _producedBytes;
+            int bytesRead = FillBuffer(buffer);
+            return bytesRead;
         }
 
         private byte ReadCodeLength()
@@ -261,7 +258,6 @@ namespace SharpCompress.Compressors.Arj
 
         private void BeginNewBlock()
         {
-            _remainingCommands = _bitReader.ReadBits(16);
             ReadTempTree();
             ReadCommandTree();
             ReadOffsetTree();
@@ -302,14 +298,16 @@ namespace SharpCompress.Compressors.Arj
             return copied;
         }
 
-        public void FillBuffer(byte[] buffer)
+        public int FillBuffer(byte[] buffer)
         {
             int bufLen = buffer.Length;
             int bufIndex = 0;
 
             // stop when we reached original size
             if (_producedBytes >= _originalSize)
-                return;
+            {
+                return 0;
+            }
 
             // calculate limit, so that we don't go over the original size
             int remaining = (int)Math.Min(bufLen, _originalSize - _producedBytes);
@@ -331,6 +329,11 @@ namespace SharpCompress.Compressors.Arj
 
                 if (_remainingCommands == 0)
                 {
+                    _remainingCommands = _bitReader.ReadBits(16);
+                    if (bufIndex + _remainingCommands > remaining)
+                    {
+                        break;
+                    }
                     BeginNewBlock();
                 }
 
@@ -354,6 +357,7 @@ namespace SharpCompress.Compressors.Arj
             }
 
             _producedBytes += bufIndex;
+            return bufIndex;
         }
     }
 }

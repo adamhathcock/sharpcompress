@@ -8,6 +8,7 @@ using SharpCompress.Common;
 using SharpCompress.Readers;
 using SharpCompress.Readers.Arj;
 using Xunit;
+using Xunit.Sdk;
 
 namespace SharpCompress.Test.Arj
 {
@@ -54,6 +55,42 @@ namespace SharpCompress.Test.Arj
                         "Arj.store.split.a05",
                     ]
                 )
+            );
+        }
+
+        [Theory]
+        [InlineData("Arj.method1.largefile.arj", CompressionType.ArjLZ77)]
+        [InlineData("Arj.method2.largefile.arj", CompressionType.ArjLZ77)]
+        [InlineData("Arj.method3.largefile.arj", CompressionType.ArjLZ77)]
+        public void Arj_LargeFile_ShouldThrow(string fileName, CompressionType compressionType)
+        {
+            var exception = Assert.Throws<NotSupportedException>(() =>
+                Arj_LargeFileTest_Read(fileName, compressionType)
+            );
+        }
+
+        [Theory]
+        [InlineData("Arj.store.largefile.arj", CompressionType.None)]
+        [InlineData("Arj.method4.largefile.arj", CompressionType.ArjLZ77)]
+        public void Arj_LargeFileTest_Read(string fileName, CompressionType compressionType)
+        {
+            using (var stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, fileName)))
+            using (
+                var reader = ReaderFactory.Open(stream, new ReaderOptions { LookForHeader = true })
+            )
+            {
+                while (reader.MoveToNextEntry())
+                {
+                    Assert.Equal(compressionType, reader.Entry.CompressionType);
+                    reader.WriteEntryToDirectory(
+                        SCRATCH_FILES_PATH,
+                        new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
+                    );
+                }
+            }
+            CompareFilesByPath(
+                Path.Combine(SCRATCH_FILES_PATH, "news.txt"),
+                Path.Combine(MISC_TEST_FILES_PATH, "news.txt")
             );
         }
 
