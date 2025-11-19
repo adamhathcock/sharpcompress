@@ -27,7 +27,7 @@ internal sealed partial class Unpack : BitInput, IRarUnpack
         if (!disposed)
         {
             base.Dispose();
-            if (!externalWindow)
+            if (!externalWindow && window is not null)
             {
                 ArrayPool<byte>.Shared.Return(window);
                 window = null;
