@@ -334,7 +334,6 @@ public class Zip64VersionConsistencyTests : WriterTests
 
                 // Skip compressed data by reading compressed size from extra field if zip64
                 // For simplicity in this test, we'll just find the next signature
-                var currentPos = fs.Position;
                 var searchBuffer = new byte[8192];
                 var found = false;
 
