@@ -176,6 +176,112 @@ public class Zip64VersionConsistencyTests : WriterTests
     }
 
     [Fact]
+    public void LZMA_Compression_Should_Use_Version_63()
+    {
+        // Create a zip with LZMA compression
+        var filename = Path.Combine(SCRATCH2_FILES_PATH, "lzma_version_test.zip");
+
+        if (File.Exists(filename))
+        {
+            File.Delete(filename);
+        }
+
+        WriterOptions writerOptions = new ZipWriterOptions(CompressionType.LZMA)
+        {
+            LeaveStreamOpen = false,
+            UseZip64 = false,
+        };
+
+        ZipArchive zipArchive = ZipArchive.Create();
+        var data = new byte[100];
+        new Random(42).NextBytes(data);
+        zipArchive.AddEntry("test.bin", new MemoryStream(data));
+        zipArchive.SaveTo(filename, writerOptions);
+
+        // Read the raw bytes
+        using var fs = File.OpenRead(filename);
+        using var br = new BinaryReader(fs);
+
+        // Read Local File Header version
+        var lfhSignature = br.ReadUInt32();
+        Assert.Equal(0x04034b50u, lfhSignature);
+        var lfhVersion = br.ReadUInt16();
+
+        // Read Central Directory Header version
+        fs.Seek(-22, SeekOrigin.End);
+        br.ReadUInt32(); // EOCD signature
+        br.ReadUInt16(); // disk number
+        br.ReadUInt16(); // disk with central dir
+        br.ReadUInt16(); // entries on this disk
+        br.ReadUInt16(); // total entries
+        br.ReadUInt32(); // CD size
+        var cdOffset = br.ReadUInt32();
+
+        fs.Seek(cdOffset, SeekOrigin.Begin);
+        var cdhSignature = br.ReadUInt32();
+        Assert.Equal(0x02014b50u, cdhSignature);
+        br.ReadUInt16(); // version made by
+        var cdhVersionNeeded = br.ReadUInt16();
+
+        // Both should be version 63 for LZMA
+        Assert.Equal(63, lfhVersion);
+        Assert.Equal(lfhVersion, cdhVersionNeeded);
+    }
+
+    [Fact]
+    public void PPMd_Compression_Should_Use_Version_63()
+    {
+        // Create a zip with PPMd compression
+        var filename = Path.Combine(SCRATCH2_FILES_PATH, "ppmd_version_test.zip");
+
+        if (File.Exists(filename))
+        {
+            File.Delete(filename);
+        }
+
+        WriterOptions writerOptions = new ZipWriterOptions(CompressionType.PPMd)
+        {
+            LeaveStreamOpen = false,
+            UseZip64 = false,
+        };
+
+        ZipArchive zipArchive = ZipArchive.Create();
+        var data = new byte[100];
+        new Random(42).NextBytes(data);
+        zipArchive.AddEntry("test.bin", new MemoryStream(data));
+        zipArchive.SaveTo(filename, writerOptions);
+
+        // Read the raw bytes
+        using var fs = File.OpenRead(filename);
+        using var br = new BinaryReader(fs);
+
+        // Read Local File Header version
+        var lfhSignature = br.ReadUInt32();
+        Assert.Equal(0x04034b50u, lfhSignature);
+        var lfhVersion = br.ReadUInt16();
+
+        // Read Central Directory Header version
+        fs.Seek(-22, SeekOrigin.End);
+        br.ReadUInt32(); // EOCD signature
+        br.ReadUInt16(); // disk number
+        br.ReadUInt16(); // disk with central dir
+        br.ReadUInt16(); // entries on this disk
+        br.ReadUInt16(); // total entries
+        br.ReadUInt32(); // CD size
+        var cdOffset = br.ReadUInt32();
+
+        fs.Seek(cdOffset, SeekOrigin.Begin);
+        var cdhSignature = br.ReadUInt32();
+        Assert.Equal(0x02014b50u, cdhSignature);
+        br.ReadUInt16(); // version made by
+        var cdhVersionNeeded = br.ReadUInt16();
+
+        // Both should be version 63 for PPMd
+        Assert.Equal(63, lfhVersion);
+        Assert.Equal(lfhVersion, cdhVersionNeeded);
+    }
+
+    [Fact]
     public void Zip64_Multiple_Small_Files_With_UseZip64_Should_Have_Matching_Versions()
     {
         // Create a zip with UseZip64=true but with multiple small files
