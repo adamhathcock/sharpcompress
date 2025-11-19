@@ -81,7 +81,7 @@ public class Zip64VersionConsistencyTests : WriterTests
         br.ReadUInt16(); // disk with central dir
         br.ReadUInt16(); // entries on this disk
         br.ReadUInt16(); // total entries
-        var cdSize = br.ReadUInt32();
+        br.ReadUInt32(); // central directory size (unused)
         var cdOffset = br.ReadUInt32();
 
         // If Zip64, need to read from Zip64 EOCD
