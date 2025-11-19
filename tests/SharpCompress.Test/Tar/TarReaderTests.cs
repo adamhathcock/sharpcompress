@@ -254,4 +254,58 @@ public class TarReaderTests : ReaderTests
         }
     }
 #endif
+
+    [Fact]
+    public void Tar_Malformed_LongName_Excessive_Size()
+    {
+        // Create a malformed TAR header with an excessively large LongName size
+        // This simulates what happens during auto-detection of compressed files
+        var buffer = new byte[512];
+
+        // Set up a basic TAR header structure
+        // Name field (offset 0, 100 bytes) - set to "././@LongLink" which is typical for LongName
+        var nameBytes = System.Text.Encoding.ASCII.GetBytes("././@LongLink");
+        Array.Copy(nameBytes, 0, buffer, 0, nameBytes.Length);
+
+        // Set entry type to LongName (offset 156)
+        buffer[156] = (byte)'L'; // EntryType.LongName
+
+        // Set an excessively large size (offset 124, 12 bytes, octal format)
+        // This simulates a corrupted/misinterpreted size field
+        // Using "77777777777" (octal) = 8589934591 bytes (~8GB)
+        var sizeBytes = System.Text.Encoding.ASCII.GetBytes("77777777777 ");
+        Array.Copy(sizeBytes, 0, buffer, 124, sizeBytes.Length);
+
+        // Calculate and set checksum (offset 148, 8 bytes)
+        // Set checksum field to spaces first
+        for (var i = 148; i < 156; i++)
+        {
+            buffer[i] = (byte)' ';
+        }
+
+        // Calculate checksum
+        var checksum = 0;
+        foreach (var b in buffer)
+        {
+            checksum += b;
+        }
+
+        var checksumStr = Convert.ToString(checksum, 8).PadLeft(6, '0') + "\0 ";
+        var checksumBytes = System.Text.Encoding.ASCII.GetBytes(checksumStr);
+        Array.Copy(checksumBytes, 0, buffer, 148, checksumBytes.Length);
+
+        // Create a stream with this malformed header
+        using var stream = new MemoryStream();
+        stream.Write(buffer, 0, buffer.Length);
+        stream.Position = 0;
+
+        // Attempt to read this malformed archive
+        // The InvalidFormatException from the validation gets caught and converted to IncompleteArchiveException
+        // The important thing is it doesn't cause OutOfMemoryException
+        Assert.Throws<IncompleteArchiveException>(() =>
+        {
+            using var reader = TarReader.Open(stream);
+            reader.MoveToNextEntry();
+        });
+    }
 }
