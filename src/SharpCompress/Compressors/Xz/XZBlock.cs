@@ -236,7 +236,7 @@ public sealed class XZBlock : XZReadOnlyStream
         var read = BaseStream.Read(blockHeaderWithoutCrc, 1, BlockHeaderSize - 5);
         if (read != BlockHeaderSize - 5)
         {
-            throw new EndOfStreamException("Reached end of stream unexectedly");
+            throw new EndOfStreamException("Reached end of stream unexpectedly");
         }
 
         var crc = BaseStream.ReadLittleEndianUInt32();
@@ -258,7 +258,7 @@ public sealed class XZBlock : XZReadOnlyStream
             .ConfigureAwait(false);
         if (read != BlockHeaderSize - 5)
         {
-            throw new EndOfStreamException("Reached end of stream unexectedly");
+            throw new EndOfStreamException("Reached end of stream unexpectedly");
         }
 
         var crc = await BaseStream

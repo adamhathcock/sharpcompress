@@ -158,7 +158,7 @@ public sealed class XZStream : XZReadOnlyStream, IStreamStack
             .FromStreamAsync(BaseStream, true, cancellationToken)
             .ConfigureAwait(false);
 
-    // TODO veryfy Index
+    // TODO verify Index
     private void ReadFooter() => Footer = XZFooter.FromStream(BaseStream);
 
     // TODO verify footer
