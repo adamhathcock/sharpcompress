@@ -48,7 +48,9 @@ internal class ZipCentralDirectoryEntry
         var decompressedvalue = zip64 ? uint.MaxValue : (uint)Decompressed;
         var headeroffsetvalue = zip64 ? uint.MaxValue : (uint)HeaderOffset;
         var extralength = zip64 ? (2 + 2 + 8 + 8 + 8 + 4) : 0;
-        var version = (byte)(zip64 ? 45 : 20); // Version 20 required for deflate/encryption
+        // Version 45 required if zip64 extension was used in Local File Header (indicated by Zip64HeaderOffset != 0)
+        // or if actual sizes require zip64. Version 20 required for deflate/encryption.
+        var version = (byte)(zip64 || Zip64HeaderOffset != 0 ? 45 : 20);
 
         var flags = Equals(archiveEncoding.GetEncoding(), Encoding.UTF8)
             ? HeaderFlags.Efs
