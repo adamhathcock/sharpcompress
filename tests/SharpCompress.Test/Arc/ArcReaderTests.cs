@@ -30,6 +30,7 @@ namespace SharpCompress.Test.Arc
 
         [Theory]
         [InlineData("Arc.uncompressed.largefile.arc", CompressionType.None)]
+        [InlineData("Arc.squeezed.largefile.arc", CompressionType.Squeezed)]
         public void Arc_LargeFileTest_Read(string fileName, CompressionType compressionType)
         {
             ReadForBufferBoundaryCheck(fileName, compressionType);
