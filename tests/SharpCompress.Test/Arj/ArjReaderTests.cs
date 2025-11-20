@@ -65,7 +65,7 @@ namespace SharpCompress.Test.Arj
         public void Arj_LargeFile_ShouldThrow(string fileName, CompressionType compressionType)
         {
             var exception = Assert.Throws<NotSupportedException>(() =>
-                Arj_LargeFileTest_Read(fileName, compressionType)
+                ReadForBufferBoundaryCheck(fileName, compressionType)
             );
         }
 
@@ -74,24 +74,7 @@ namespace SharpCompress.Test.Arj
         [InlineData("Arj.method4.largefile.arj", CompressionType.ArjLZ77)]
         public void Arj_LargeFileTest_Read(string fileName, CompressionType compressionType)
         {
-            using (var stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, fileName)))
-            using (
-                var reader = ReaderFactory.Open(stream, new ReaderOptions { LookForHeader = true })
-            )
-            {
-                while (reader.MoveToNextEntry())
-                {
-                    Assert.Equal(compressionType, reader.Entry.CompressionType);
-                    reader.WriteEntryToDirectory(
-                        SCRATCH_FILES_PATH,
-                        new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
-                    );
-                }
-            }
-            CompareFilesByPath(
-                Path.Combine(SCRATCH_FILES_PATH, "news.txt"),
-                Path.Combine(MISC_TEST_FILES_PATH, "news.txt")
-            );
+            ReadForBufferBoundaryCheck(fileName, compressionType);
         }
 
         private void DoArj_Multi_Reader(string[] archives)
