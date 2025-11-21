@@ -176,6 +176,27 @@ public abstract class ReaderTests : TestBase
         }
     }
 
+    protected void ReadForBufferBoundaryCheck(string fileName, CompressionType compressionType)
+    {
+        using var stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, fileName));
+        using var reader = ReaderFactory.Open(stream, new ReaderOptions { LookForHeader = true });
+
+        while (reader.MoveToNextEntry())
+        {
+            Assert.Equal(compressionType, reader.Entry.CompressionType);
+
+            reader.WriteEntryToDirectory(
+                SCRATCH_FILES_PATH,
+                new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
+            );
+        }
+
+        CompareFilesByPath(
+            Path.Combine(SCRATCH_FILES_PATH, "news.txt"),
+            Path.Combine(MISC_TEST_FILES_PATH, "news.txt")
+        );
+    }
+
     protected void Iterate(
         string testArchive,
         string fileOrder,

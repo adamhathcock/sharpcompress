@@ -27,5 +27,13 @@ namespace SharpCompress.Test.Arc
 
         [Fact]
         public void Arc_Crunched_Read() => Read("Arc.crunched.arc");
+
+        [Theory]
+        [InlineData("Arc.uncompressed.largefile.arc", CompressionType.None)]
+        [InlineData("Arc.squeezed.largefile.arc", CompressionType.Squeezed)]
+        public void Arc_LargeFileTest_Read(string fileName, CompressionType compressionType)
+        {
+            ReadForBufferBoundaryCheck(fileName, compressionType);
+        }
     }
 }
