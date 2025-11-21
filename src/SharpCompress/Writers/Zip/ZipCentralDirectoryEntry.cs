@@ -48,7 +48,20 @@ internal class ZipCentralDirectoryEntry
         var decompressedvalue = zip64 ? uint.MaxValue : (uint)Decompressed;
         var headeroffsetvalue = zip64 ? uint.MaxValue : (uint)HeaderOffset;
         var extralength = zip64 ? (2 + 2 + 8 + 8 + 8 + 4) : 0;
-        var version = (byte)(zip64 ? 45 : 20); // Version 20 required for deflate/encryption
+
+        // Determine version needed to extract:
+        // - Version 63 for LZMA, PPMd, BZip2, ZStandard (advanced compression methods)
+        // - Version 45 for Zip64 extensions (when Zip64HeaderOffset != 0 or actual sizes require it)
+        // - Version 20 for standard Deflate/None compression
+        var version = (byte)(
+            compression == ZipCompressionMethod.LZMA
+            || compression == ZipCompressionMethod.PPMd
+            || compression == ZipCompressionMethod.BZip2
+            || compression == ZipCompressionMethod.ZStandard
+                ? 63
+            : zip64 || Zip64HeaderOffset != 0 ? 45
+            : 20
+        );
 
         var flags = Equals(archiveEncoding.GetEncoding(), Encoding.UTF8)
             ? HeaderFlags.Efs
