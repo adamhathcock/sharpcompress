@@ -44,7 +44,7 @@ namespace SharpCompress.Common.Arc
                             Header.CompressedSize
                         );
                         break;
-                    case CompressionType.RLE90:
+                    case CompressionType.Packed:
                         compressedStream = new RunLength90Stream(
                             _stream,
                             (int)Header.CompressedSize
@@ -54,6 +54,14 @@ namespace SharpCompress.Common.Arc
                         compressedStream = new SqueezeStream(_stream, (int)Header.CompressedSize);
                         break;
                     case CompressionType.Crunched:
+                        if (Header.OriginalSize > 128 * 1024)
+                        {
+                            throw new NotSupportedException(
+                                "CompressionMethod: "
+                                    + Header.CompressionMethod
+                                    + " with size > 128KB"
+                            );
+                        }
                         compressedStream = new ArcLzwStream(
                             _stream,
                             (int)Header.CompressedSize,

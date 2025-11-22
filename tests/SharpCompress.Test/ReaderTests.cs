@@ -192,8 +192,8 @@ public abstract class ReaderTests : TestBase
         }
 
         CompareFilesByPath(
-            Path.Combine(SCRATCH_FILES_PATH, "news.txt"),
-            Path.Combine(MISC_TEST_FILES_PATH, "news.txt")
+            Path.Combine(SCRATCH_FILES_PATH, "alice29.txt"),
+            Path.Combine(MISC_TEST_FILES_PATH, "alice29.txt")
         );
     }
 
