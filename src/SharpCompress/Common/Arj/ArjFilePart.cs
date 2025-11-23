@@ -41,7 +41,7 @@ namespace SharpCompress.Common.Arj
                     case CompressionMethod.CompressedMost:
                     case CompressionMethod.Compressed:
                     case CompressionMethod.CompressedFaster:
-                        if (Header.CompressedSize > 128 * 1024)
+                        if (Header.OriginalSize > 128 * 1024)
                         {
                             throw new NotSupportedException(
                                 "CompressionMethod: "
