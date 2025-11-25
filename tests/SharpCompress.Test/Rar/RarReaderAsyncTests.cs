@@ -15,29 +15,25 @@ public class RarReaderAsyncTests : ReaderTests
 {
     [Fact]
     public async Task Rar_Multi_Reader_Async() =>
-        await DoRar_Multi_Reader_Async(
-            [
-                "Rar.multi.part01.rar",
-                "Rar.multi.part02.rar",
-                "Rar.multi.part03.rar",
-                "Rar.multi.part04.rar",
-                "Rar.multi.part05.rar",
-                "Rar.multi.part06.rar",
-            ]
-        );
+        await DoRar_Multi_Reader_Async([
+            "Rar.multi.part01.rar",
+            "Rar.multi.part02.rar",
+            "Rar.multi.part03.rar",
+            "Rar.multi.part04.rar",
+            "Rar.multi.part05.rar",
+            "Rar.multi.part06.rar",
+        ]);
 
     [Fact]
     public async Task Rar5_Multi_Reader_Async() =>
-        await DoRar_Multi_Reader_Async(
-            [
-                "Rar5.multi.part01.rar",
-                "Rar5.multi.part02.rar",
-                "Rar5.multi.part03.rar",
-                "Rar5.multi.part04.rar",
-                "Rar5.multi.part05.rar",
-                "Rar5.multi.part06.rar",
-            ]
-        );
+        await DoRar_Multi_Reader_Async([
+            "Rar5.multi.part01.rar",
+            "Rar5.multi.part02.rar",
+            "Rar5.multi.part03.rar",
+            "Rar5.multi.part04.rar",
+            "Rar5.multi.part05.rar",
+            "Rar5.multi.part06.rar",
+        ]);
 
     private async Task DoRar_Multi_Reader_Async(string[] archives)
     {
@@ -95,29 +91,25 @@ public class RarReaderAsyncTests : ReaderTests
 
     [Fact]
     public async Task Rar_Multi_Reader_Delete_Files_Async() =>
-        await DoRar_Multi_Reader_Delete_Files_Async(
-            [
-                "Rar.multi.part01.rar",
-                "Rar.multi.part02.rar",
-                "Rar.multi.part03.rar",
-                "Rar.multi.part04.rar",
-                "Rar.multi.part05.rar",
-                "Rar.multi.part06.rar",
-            ]
-        );
+        await DoRar_Multi_Reader_Delete_Files_Async([
+            "Rar.multi.part01.rar",
+            "Rar.multi.part02.rar",
+            "Rar.multi.part03.rar",
+            "Rar.multi.part04.rar",
+            "Rar.multi.part05.rar",
+            "Rar.multi.part06.rar",
+        ]);
 
     [Fact]
     public async Task Rar5_Multi_Reader_Delete_Files_Async() =>
-        await DoRar_Multi_Reader_Delete_Files_Async(
-            [
-                "Rar5.multi.part01.rar",
-                "Rar5.multi.part02.rar",
-                "Rar5.multi.part03.rar",
-                "Rar5.multi.part04.rar",
-                "Rar5.multi.part05.rar",
-                "Rar5.multi.part06.rar",
-            ]
-        );
+        await DoRar_Multi_Reader_Delete_Files_Async([
+            "Rar5.multi.part01.rar",
+            "Rar5.multi.part02.rar",
+            "Rar5.multi.part03.rar",
+            "Rar5.multi.part04.rar",
+            "Rar5.multi.part05.rar",
+            "Rar5.multi.part06.rar",
+        ]);
 
     private async Task DoRar_Multi_Reader_Delete_Files_Async(string[] archives)
     {
