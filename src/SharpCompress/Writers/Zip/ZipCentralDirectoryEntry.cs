@@ -58,10 +58,10 @@ internal class ZipCentralDirectoryEntry
             || compression == ZipCompressionMethod.PPMd
             || compression == ZipCompressionMethod.BZip2
             || compression == ZipCompressionMethod.ZStandard
+            || compression == ZipCompressionMethod.None
                 ? 63
             : zip64 || Zip64HeaderOffset != 0 ? 45
             : 20
-        );
 
         var flags = Equals(archiveEncoding.GetEncoding(), Encoding.UTF8)
             ? HeaderFlags.Efs
