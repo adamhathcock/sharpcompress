@@ -45,16 +45,14 @@ namespace SharpCompress.Test.Arj
         public void Arj_Multi_Reader()
         {
             var exception = Assert.Throws<MultiVolumeExtractionException>(() =>
-                DoArj_Multi_Reader(
-                    [
-                        "Arj.store.split.arj",
-                        "Arj.store.split.a01",
-                        "Arj.store.split.a02",
-                        "Arj.store.split.a03",
-                        "Arj.store.split.a04",
-                        "Arj.store.split.a05",
-                    ]
-                )
+                DoArj_Multi_Reader([
+                    "Arj.store.split.arj",
+                    "Arj.store.split.a01",
+                    "Arj.store.split.a02",
+                    "Arj.store.split.a03",
+                    "Arj.store.split.a04",
+                    "Arj.store.split.a05",
+                ])
             );
         }
 

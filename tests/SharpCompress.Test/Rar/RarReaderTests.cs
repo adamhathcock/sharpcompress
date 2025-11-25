@@ -14,29 +14,25 @@ public class RarReaderTests : ReaderTests
 {
     [Fact]
     public void Rar_Multi_Reader() =>
-        DoRar_Multi_Reader(
-            [
-                "Rar.multi.part01.rar",
-                "Rar.multi.part02.rar",
-                "Rar.multi.part03.rar",
-                "Rar.multi.part04.rar",
-                "Rar.multi.part05.rar",
-                "Rar.multi.part06.rar",
-            ]
-        );
+        DoRar_Multi_Reader([
+            "Rar.multi.part01.rar",
+            "Rar.multi.part02.rar",
+            "Rar.multi.part03.rar",
+            "Rar.multi.part04.rar",
+            "Rar.multi.part05.rar",
+            "Rar.multi.part06.rar",
+        ]);
 
     [Fact]
     public void Rar5_Multi_Reader() =>
-        DoRar_Multi_Reader(
-            [
-                "Rar5.multi.part01.rar",
-                "Rar5.multi.part02.rar",
-                "Rar5.multi.part03.rar",
-                "Rar5.multi.part04.rar",
-                "Rar5.multi.part05.rar",
-                "Rar5.multi.part06.rar",
-            ]
-        );
+        DoRar_Multi_Reader([
+            "Rar5.multi.part01.rar",
+            "Rar5.multi.part02.rar",
+            "Rar5.multi.part03.rar",
+            "Rar5.multi.part04.rar",
+            "Rar5.multi.part05.rar",
+            "Rar5.multi.part06.rar",
+        ]);
 
     private void DoRar_Multi_Reader(string[] archives)
     {
@@ -61,16 +57,14 @@ public class RarReaderTests : ReaderTests
 
     [Fact]
     public void Rar_Multi_Reader_Encrypted() =>
-        DoRar_Multi_Reader_Encrypted(
-            [
-                "Rar.EncryptedParts.part01.rar",
-                "Rar.EncryptedParts.part02.rar",
-                "Rar.EncryptedParts.part03.rar",
-                "Rar.EncryptedParts.part04.rar",
-                "Rar.EncryptedParts.part05.rar",
-                "Rar.EncryptedParts.part06.rar",
-            ]
-        );
+        DoRar_Multi_Reader_Encrypted([
+            "Rar.EncryptedParts.part01.rar",
+            "Rar.EncryptedParts.part02.rar",
+            "Rar.EncryptedParts.part03.rar",
+            "Rar.EncryptedParts.part04.rar",
+            "Rar.EncryptedParts.part05.rar",
+            "Rar.EncryptedParts.part06.rar",
+        ]);
 
     private void DoRar_Multi_Reader_Encrypted(string[] archives) =>
         Assert.Throws<InvalidFormatException>(() =>
@@ -97,29 +91,25 @@ public class RarReaderTests : ReaderTests
 
     [Fact]
     public void Rar_Multi_Reader_Delete_Files() =>
-        DoRar_Multi_Reader_Delete_Files(
-            [
-                "Rar.multi.part01.rar",
-                "Rar.multi.part02.rar",
-                "Rar.multi.part03.rar",
-                "Rar.multi.part04.rar",
-                "Rar.multi.part05.rar",
-                "Rar.multi.part06.rar",
-            ]
-        );
+        DoRar_Multi_Reader_Delete_Files([
+            "Rar.multi.part01.rar",
+            "Rar.multi.part02.rar",
+            "Rar.multi.part03.rar",
+            "Rar.multi.part04.rar",
+            "Rar.multi.part05.rar",
+            "Rar.multi.part06.rar",
+        ]);
 
     [Fact]
     public void Rar5_Multi_Reader_Delete_Files() =>
-        DoRar_Multi_Reader_Delete_Files(
-            [
-                "Rar5.multi.part01.rar",
-                "Rar5.multi.part02.rar",
-                "Rar5.multi.part03.rar",
-                "Rar5.multi.part04.rar",
-                "Rar5.multi.part05.rar",
-                "Rar5.multi.part06.rar",
-            ]
-        );
+        DoRar_Multi_Reader_Delete_Files([
+            "Rar5.multi.part01.rar",
+            "Rar5.multi.part02.rar",
+            "Rar5.multi.part03.rar",
+            "Rar5.multi.part04.rar",
+            "Rar5.multi.part05.rar",
+            "Rar5.multi.part06.rar",
+        ]);
 
     private void DoRar_Multi_Reader_Delete_Files(string[] archives)
     {
@@ -407,16 +397,14 @@ public class RarReaderTests : ReaderTests
                 Path.Combine("exe", "test.exe"),
             }
         );
-        using var reader = RarReader.Open(
-            [
-                Path.Combine(TEST_ARCHIVES_PATH, "Rar.multi.part01.rar"),
-                Path.Combine(TEST_ARCHIVES_PATH, "Rar.multi.part02.rar"),
-                Path.Combine(TEST_ARCHIVES_PATH, "Rar.multi.part03.rar"),
-                Path.Combine(TEST_ARCHIVES_PATH, "Rar.multi.part04.rar"),
-                Path.Combine(TEST_ARCHIVES_PATH, "Rar.multi.part05.rar"),
-                Path.Combine(TEST_ARCHIVES_PATH, "Rar.multi.part06.rar"),
-            ]
-        );
+        using var reader = RarReader.Open([
+            Path.Combine(TEST_ARCHIVES_PATH, "Rar.multi.part01.rar"),
+            Path.Combine(TEST_ARCHIVES_PATH, "Rar.multi.part02.rar"),
+            Path.Combine(TEST_ARCHIVES_PATH, "Rar.multi.part03.rar"),
+            Path.Combine(TEST_ARCHIVES_PATH, "Rar.multi.part04.rar"),
+            Path.Combine(TEST_ARCHIVES_PATH, "Rar.multi.part05.rar"),
+            Path.Combine(TEST_ARCHIVES_PATH, "Rar.multi.part06.rar"),
+        ]);
         while (reader.MoveToNextEntry())
         {
             Assert.Equal(expectedOrder.Pop(), reader.Entry.Key);
