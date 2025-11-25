@@ -53,15 +53,25 @@ internal class ZipCentralDirectoryEntry
         // - Version 63 for LZMA, PPMd, BZip2, ZStandard (advanced compression methods)
         // - Version 45 for Zip64 extensions (when Zip64HeaderOffset != 0 or actual sizes require it)
         // - Version 20 for standard Deflate/None compression
-        var version = (byte)(
+        byte version;
+        if (
             compression == ZipCompressionMethod.LZMA
             || compression == ZipCompressionMethod.PPMd
             || compression == ZipCompressionMethod.BZip2
             || compression == ZipCompressionMethod.ZStandard
             || compression == ZipCompressionMethod.None
-                ? 63
-            : zip64 || Zip64HeaderOffset != 0 ? 45
-            : 20
+        )
+        {
+            version = 63;
+        }
+        else if (zip64 || Zip64HeaderOffset != 0)
+        {
+            version = 45;
+        }
+        else
+        {
+            version = 20;
+        }
 
         var flags = Equals(archiveEncoding.GetEncoding(), Encoding.UTF8)
             ? HeaderFlags.Efs

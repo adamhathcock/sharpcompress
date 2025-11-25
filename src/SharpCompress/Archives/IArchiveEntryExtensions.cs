@@ -128,6 +128,7 @@ public static class IArchiveEntryExtensions
             {
                 using var fs = File.Open(destinationFileName, fm);
                 await entry.WriteToAsync(fs, cancellationToken).ConfigureAwait(false);
-            }
+            },
+            cancellationToken
         );
 }
