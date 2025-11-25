@@ -59,7 +59,6 @@ internal class ZipCentralDirectoryEntry
             || compression == ZipCompressionMethod.PPMd
             || compression == ZipCompressionMethod.BZip2
             || compression == ZipCompressionMethod.ZStandard
-            || compression == ZipCompressionMethod.None
         )
         {
             version = 63;
