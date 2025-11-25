@@ -91,10 +91,10 @@ public class WriterTests : TestBase
                 SharpCompressStream.Create(stream, leaveOpen: true),
                 readerOptions
             );
-            reader.WriteAllToDirectory(
+            await reader.WriteAllToDirectoryAsync(
                 SCRATCH_FILES_PATH,
-                new ExtractionOptions { ExtractFullPath = true }
-            );
+                new ExtractionOptions { ExtractFullPath = true },
+                cancellationToken);
         }
         VerifyFiles();
     }
