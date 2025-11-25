@@ -94,7 +94,8 @@ public class WriterTests : TestBase
             await reader.WriteAllToDirectoryAsync(
                 SCRATCH_FILES_PATH,
                 new ExtractionOptions { ExtractFullPath = true },
-                cancellationToken);
+                cancellationToken
+            );
         }
         VerifyFiles();
     }
