@@ -11,7 +11,7 @@ using Xunit;
 
 namespace SharpCompress.Test.Zip;
 
-public class SOZipTests : TestBase
+public class SoZipWriterTests : TestBase
 {
     [Fact]
     public void SOZipIndex_RoundTrip()
