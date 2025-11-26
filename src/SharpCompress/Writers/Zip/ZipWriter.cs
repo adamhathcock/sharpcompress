@@ -26,12 +26,19 @@ public class ZipWriter : AbstractWriter
     private long streamPosition;
     private PpmdProperties? ppmdProps;
     private readonly bool isZip64;
+    private readonly bool enableSOZip;
+    private readonly int sozipChunkSize;
+    private readonly long sozipMinFileSize;
 
     public ZipWriter(Stream destination, ZipWriterOptions zipWriterOptions)
         : base(ArchiveType.Zip, zipWriterOptions)
     {
         zipComment = zipWriterOptions.ArchiveComment ?? string.Empty;
         isZip64 = zipWriterOptions.UseZip64;
+        enableSOZip = zipWriterOptions.EnableSOZip;
+        sozipChunkSize = zipWriterOptions.SOZipChunkSize;
+        sozipMinFileSize = zipWriterOptions.SOZipMinFileSize;
+
         if (destination.CanSeek)
         {
             streamPosition = destination.Position;

@@ -150,9 +150,7 @@ public sealed class SOZipIndex
         Span<byte> buf8 = stackalloc byte[8];
         if (stream.Read(buf8) != 8)
         {
-            throw new InvalidDataException(
-                "Invalid SOZip index: unable to read uncompressed size"
-            );
+            throw new InvalidDataException("Invalid SOZip index: unable to read uncompressed size");
         }
         index.UncompressedSize = BinaryPrimitives.ReadUInt64LittleEndian(buf8);
 

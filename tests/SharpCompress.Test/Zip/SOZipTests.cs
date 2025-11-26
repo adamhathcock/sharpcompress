@@ -1,6 +1,12 @@
 using System;
 using System.IO;
+using System.Linq;
+using System.Text;
+using SharpCompress.Archives.Zip;
+using SharpCompress.Common;
 using SharpCompress.Common.Zip.SOZip;
+using SharpCompress.Writers;
+using SharpCompress.Writers.Zip;
 using Xunit;
 
 namespace SharpCompress.Test.Zip;
@@ -39,9 +45,7 @@ public class SOZipTests : TestBase
     {
         var invalidData = new byte[] { 0x00, 0x00, 0x00, 0x00 };
 
-        var exception = Assert.Throws<InvalidDataException>(
-            () => SOZipIndex.Read(invalidData)
-        );
+        var exception = Assert.Throws<InvalidDataException>(() => SOZipIndex.Read(invalidData));
 
         Assert.Contains("magic number mismatch", exception.Message);
     }
@@ -131,5 +135,65 @@ public class SOZipTests : TestBase
 
         Assert.Null(SOZipIndex.GetMainFileName("file.txt"));
         Assert.Null(SOZipIndex.GetMainFileName(""));
+    }
+
+    [Fact]
+    public void ZipEntry_IsSozipIndexFile_Detection()
+    {
+        // Create a zip with a file that has a SOZip index file name pattern
+        using var memoryStream = new MemoryStream();
+
+        using (
+            var writer = WriterFactory.Open(
+                memoryStream,
+                ArchiveType.Zip,
+                new ZipWriterOptions(CompressionType.Deflate) { LeaveStreamOpen = true }
+            )
+        )
+        {
+            // Write a regular file
+            writer.Write("test.txt", new MemoryStream(Encoding.UTF8.GetBytes("Hello World")));
+
+            // Write a file with SOZip index name pattern
+            var indexData = new SOZipIndex(
+                chunkSize: 32768,
+                uncompressedSize: 100,
+                compressedSize: 50,
+                compressedOffsets: new ulong[] { 0 }
+            );
+            writer.Write(".test.txt.sozip.idx", new MemoryStream(indexData.ToByteArray()));
+        }
+
+        memoryStream.Position = 0;
+
+        using var archive = ZipArchive.Open(memoryStream);
+        var entries = archive.Entries.ToList();
+
+        Assert.Equal(2, entries.Count);
+
+        var regularEntry = entries.First(e => e.Key == "test.txt");
+        Assert.False(regularEntry.IsSozipIndexFile);
+        Assert.False(regularEntry.IsSozip); // No SOZip extra field
+
+        var indexEntry = entries.First(e => e.Key == ".test.txt.sozip.idx");
+        Assert.True(indexEntry.IsSozipIndexFile);
+    }
+
+    [Fact]
+    public void ZipWriterOptions_SOZipDefaults()
+    {
+        var options = new ZipWriterOptions(CompressionType.Deflate);
+
+        Assert.False(options.EnableSOZip);
+        Assert.Equal((int)SOZipIndex.DEFAULT_CHUNK_SIZE, options.SOZipChunkSize);
+        Assert.Equal(1048576L, options.SOZipMinFileSize); // 1MB
+    }
+
+    [Fact]
+    public void ZipWriterEntryOptions_SOZipDefaults()
+    {
+        var options = new ZipWriterEntryOptions();
+
+        Assert.Null(options.EnableSOZip);
     }
 }

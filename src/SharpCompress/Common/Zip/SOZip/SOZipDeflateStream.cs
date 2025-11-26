@@ -37,11 +37,7 @@ internal sealed class SOZipDeflateStream : Stream
         // Record the first offset (start of compressed data)
         _compressedOffsets.Add(0);
 
-        _deflateStream = new DeflateStream(
-            baseStream,
-            CompressionMode.Compress,
-            compressionLevel
-        );
+        _deflateStream = new DeflateStream(baseStream, CompressionMode.Compress, compressionLevel);
     }
 
     /// <summary>
