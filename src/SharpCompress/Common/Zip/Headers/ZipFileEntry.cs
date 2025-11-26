@@ -5,15 +5,8 @@ using System.IO;
 
 namespace SharpCompress.Common.Zip.Headers;
 
-internal abstract class ZipFileEntry : ZipHeader
+internal abstract class ZipFileEntry(ZipHeaderType type, ArchiveEncoding archiveEncoding) : ZipHeader(type)
 {
-    protected ZipFileEntry(ZipHeaderType type, ArchiveEncoding archiveEncoding)
-        : base(type)
-    {
-        Extra = new List<ExtraData>();
-        ArchiveEncoding = archiveEncoding;
-    }
-
     internal bool IsDirectory
     {
         get
@@ -30,7 +23,7 @@ internal abstract class ZipFileEntry : ZipHeader
 
     internal Stream? PackedStream { get; set; }
 
-    internal ArchiveEncoding ArchiveEncoding { get; }
+    internal ArchiveEncoding ArchiveEncoding { get; } = archiveEncoding;
 
     internal string? Name { get; set; }
 
@@ -44,7 +37,7 @@ internal abstract class ZipFileEntry : ZipHeader
 
     internal long UncompressedSize { get; set; }
 
-    internal List<ExtraData> Extra { get; set; }
+    internal List<ExtraData> Extra { get; set; } = new();
 
     public string? Password { get; set; }
 

@@ -1,3 +1,4 @@
+using System;
 using SharpCompress.Common;
 using Xunit;
 

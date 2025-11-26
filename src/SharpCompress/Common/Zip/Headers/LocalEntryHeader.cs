@@ -1,27 +1,25 @@
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace SharpCompress.Common.Zip.Headers;
 
-internal class LocalEntryHeader : ZipFileEntry
+internal class LocalEntryHeader(ArchiveEncoding archiveEncoding) : ZipFileEntry(ZipHeaderType.LocalEntry, archiveEncoding)
 {
-    public LocalEntryHeader(ArchiveEncoding archiveEncoding)
-        : base(ZipHeaderType.LocalEntry, archiveEncoding) { }
-
-    internal override void Read(BinaryReader reader)
+    internal override async ValueTask Read(AsyncBinaryReader reader)
     {
-        Version = reader.ReadUInt16();
-        Flags = (HeaderFlags)reader.ReadUInt16();
-        CompressionMethod = (ZipCompressionMethod)reader.ReadUInt16();
-        OriginalLastModifiedTime = LastModifiedTime = reader.ReadUInt16();
-        OriginalLastModifiedDate = LastModifiedDate = reader.ReadUInt16();
-        Crc = reader.ReadUInt32();
-        CompressedSize = reader.ReadUInt32();
-        UncompressedSize = reader.ReadUInt32();
-        var nameLength = reader.ReadUInt16();
-        var extraLength = reader.ReadUInt16();
-        var name = reader.ReadBytes(nameLength);
-        var extra = reader.ReadBytes(extraLength);
+        Version = await reader.ReadUInt16Async();
+        Flags = (HeaderFlags)await reader.ReadUInt16Async();
+        CompressionMethod = (ZipCompressionMethod)await reader.ReadUInt16Async();
+        OriginalLastModifiedTime = LastModifiedTime = await reader.ReadUInt16Async();
+        OriginalLastModifiedDate = LastModifiedDate = await reader.ReadUInt16Async();
+        Crc = await reader.ReadUInt32Async();
+        CompressedSize = await reader.ReadUInt32Async();
+        UncompressedSize = await reader.ReadUInt32Async();
+        var nameLength = await reader.ReadUInt16Async();
+        var extraLength = await reader.ReadUInt16Async();
+        var name = await reader.ReadBytesAsync(nameLength);
+        var extra = await reader.ReadBytesAsync(extraLength);
 
         // According to .ZIP File Format Specification
         //
