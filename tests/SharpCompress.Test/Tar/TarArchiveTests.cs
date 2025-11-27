@@ -295,4 +295,28 @@ public class TarArchiveTests : ArchiveTests
 
         Assert.False(isTar);
     }
+
+    [Fact]
+    public void Tar_ExtractAllEntries_ReadsAllEntries()
+    {
+        // Tests that ExtractAllEntries correctly iterates through all entries
+        // This is a regression test for issue #1029
+        var archiveFullPath = Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar");
+        using var archive = TarArchive.Open(archiveFullPath);
+        using var reader = archive.ExtractAllEntries();
+
+        var readEntries = 0;
+        while (reader.MoveToNextEntry())
+        {
+            readEntries++;
+
+            if (reader.Entry.IsDirectory)
+                continue;
+
+            using var ms = new MemoryStream();
+            reader.WriteEntryTo(ms);
+        }
+
+        Assert.Equal(archive.Entries.Count, readEntries);
+    }
 }
