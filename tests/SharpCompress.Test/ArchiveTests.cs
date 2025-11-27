@@ -279,7 +279,7 @@ public class ArchiveTests : ReaderTests
         {
             foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
             {
-                if (archiveFactory.KnownArchiveType == ArchiveType.Zip)
+                if (archive.SupportsMultiThreading)
                 {
                     Assert.True(entry.SupportsMultiThreading);
                 }
@@ -306,7 +306,7 @@ public class ArchiveTests : ReaderTests
         {
             foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
             {
-                if (archiveFactory.KnownArchiveType == ArchiveType.Zip)
+                if (archive.SupportsMultiThreading)
                 {
                     Assert.True(entry.SupportsMultiThreading);
                 }
