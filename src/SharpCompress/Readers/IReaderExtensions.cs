@@ -101,10 +101,10 @@ public static class IReaderExtensions
                 reader.Entry,
                 destinationFileName,
                 options,
-                async (x, fm) =>
+                async (x, fm, ct) =>
                 {
                     using var fs = File.Open(destinationFileName, fm);
-                    await reader.WriteEntryToAsync(fs, cancellationToken).ConfigureAwait(false);
+                    await reader.WriteEntryToAsync(fs, ct).ConfigureAwait(false);
                 },
                 cancellationToken
             )

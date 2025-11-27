@@ -47,9 +47,9 @@ public class RarArchive : AbstractArchive<RarArchiveEntry, RarVolume>
     {
         sourceStream.LoadAllParts(); //request all streams
         var streams = sourceStream.Streams.ToArray();
-        var i = 0;
         if (streams.Length > 1 && IsRarFile(streams[1], ReaderOptions)) //test part 2 - true = multipart not split
         {
+            var i = 0;
             sourceStream.IsVolumes = true;
             streams[1].Position = 0;
             sourceStream.Position = 0;
@@ -57,12 +57,12 @@ public class RarArchive : AbstractArchive<RarArchiveEntry, RarVolume>
             return sourceStream.Streams.Select(a => new StreamRarArchiveVolume(
                 a,
                 ReaderOptions,
-                i++
+                i++, IsMultiVolume
             ));
         }
 
         //split mode or single file
-        return new StreamRarArchiveVolume(sourceStream, ReaderOptions, i++).AsEnumerable();
+        return new StreamRarArchiveVolume(sourceStream, ReaderOptions, 0, IsMultiVolume).AsEnumerable();
     }
 
     protected override IReader CreateReaderForSolidExtraction()
@@ -83,6 +83,7 @@ public class RarArchive : AbstractArchive<RarArchiveEntry, RarVolume>
     }
 
     public override bool IsSolid => Volumes.First().IsSolidArchive;
+    public override bool SupportsMultiThreading => !IsMultiVolume && !IsSolid;
 
     public virtual int MinVersion => Volumes.First().MinVersion;
     public virtual int MaxVersion => Volumes.First().MaxVersion;

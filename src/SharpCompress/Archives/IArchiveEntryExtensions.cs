@@ -124,10 +124,10 @@ public static class IArchiveEntryExtensions
             entry,
             destinationFileName,
             options,
-            async (x, fm) =>
+            async (x, fm, ct) =>
             {
                 using var fs = File.Open(destinationFileName, fm);
-                await entry.WriteToAsync(fs, cancellationToken).ConfigureAwait(false);
+                await entry.WriteToAsync(fs, ct).ConfigureAwait(false);
             },
             cancellationToken
         );

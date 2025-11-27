@@ -201,7 +201,7 @@ internal static class ExtractionMethods
         IEntry entry,
         string destinationFileName,
         ExtractionOptions? options,
-        Func<string, FileMode, Task> openAndWriteAsync,
+        Func<string, FileMode, CancellationToken, Task> openAndWriteAsync,
         CancellationToken cancellationToken = default
     )
     {
@@ -225,7 +225,7 @@ internal static class ExtractionMethods
                 fm = FileMode.CreateNew;
             }
 
-            await openAndWriteAsync(destinationFileName, fm).ConfigureAwait(false);
+            await openAndWriteAsync(destinationFileName, fm, cancellationToken).ConfigureAwait(false);
             entry.PreserveExtractionOptions(destinationFileName, options);
         }
     }

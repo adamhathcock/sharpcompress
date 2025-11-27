@@ -62,10 +62,6 @@ internal sealed class MultiVolumeReadOnlyStream : Stream, IStreamStack
         base.Dispose(disposing);
         if (disposing)
         {
-#if DEBUG_STREAMS
-            this.DebugDispose(typeof(MultiVolumeReadOnlyStream));
-#endif
-
             if (filePartEnumerator != null)
             {
                 filePartEnumerator.Dispose();

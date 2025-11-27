@@ -1,25 +1,28 @@
 using System.IO;
 using SharpCompress.Common.Rar;
 using SharpCompress.Common.Rar.Headers;
+using SharpCompress.IO;
 
 namespace SharpCompress.Archives.Rar;
 
-internal class SeekableFilePart : RarFilePart
+internal class SeekableRarFilePart : RarFilePart
 {
     private readonly Stream _stream;
     private readonly string? _password;
+    private readonly bool _isMultiVolume;
 
-    internal SeekableFilePart(
+    internal SeekableRarFilePart(
         MarkHeader mh,
         FileHeader fh,
         int index,
         Stream stream,
-        string? password
-    )
+        string? password,
+        bool isMultiVolume)
         : base(mh, fh, index)
     {
         _stream = stream;
         _password = password;
+        _isMultiVolume = isMultiVolume;
     }
 
     internal override Stream GetCompressedStream()
@@ -42,4 +45,7 @@ internal class SeekableFilePart : RarFilePart
     }
 
     internal override string FilePartName => "Unknown Stream - File Entry: " + FileHeader.FileName;
+
+    public override bool SupportsMultiThreading =>
+        !_isMultiVolume && _stream is SourceStream ss && ss.IsFileMode && ss.Files.Count == 1;
 }

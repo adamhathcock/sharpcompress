@@ -277,13 +277,10 @@ public class ArchiveTests : ReaderTests
         var tasks = new List<Task>();
         using (var archive = archiveFactory.Open(new FileInfo(testArchive), readerOptions))
         {
+            Assert.True(archive.SupportsMultiThreading);
             foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
             {
-                if (archive.SupportsMultiThreading)
-                {
                     Assert.True(entry.SupportsMultiThreading);
-                }
-
                 var t = entry.WriteToDirectoryAsync(
                     SCRATCH_FILES_PATH,
                     new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
@@ -306,11 +303,6 @@ public class ArchiveTests : ReaderTests
         {
             foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
             {
-                if (archive.SupportsMultiThreading)
-                {
-                    Assert.True(entry.SupportsMultiThreading);
-                }
-
                 entry.WriteToDirectory(
                     SCRATCH_FILES_PATH,
                     new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
