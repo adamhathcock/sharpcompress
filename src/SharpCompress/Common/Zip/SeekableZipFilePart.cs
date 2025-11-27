@@ -32,19 +32,17 @@ internal class SeekableZipFilePart : ZipFilePart
 
     protected override Stream CreateBaseStream()
     {
-        if (BaseStream is SourceStream ss)
+        if (BaseStream is SourceStream ss && ss.IsFileMode && ss.Files.Count == 1)
         {
-            if (ss.IsFileMode)
-            {
-                var fileStream = ss.CurrentFile.OpenRead();
-                fileStream.Position = Header.DataStartPosition.NotNull();
-                return fileStream;
-            }
+            var fileStream = ss.CurrentFile.OpenRead();
+            fileStream.Position = Header.DataStartPosition.NotNull();
+            return fileStream;
         }
         BaseStream.Position = Header.DataStartPosition.NotNull();
 
         return BaseStream;
     }
 
-    public override bool SupportsMultiThreading => BaseStream is SourceStream ss && ss.IsFileMode;
+    public override bool SupportsMultiThreading =>
+        BaseStream is SourceStream ss && ss.IsFileMode && ss.Files.Count == 1;
 }

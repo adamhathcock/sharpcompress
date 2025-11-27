@@ -207,7 +207,7 @@ public class TarReaderAsyncTests : ReaderTests
         Assert.Throws<IncompleteArchiveException>(() => reader.MoveToNextEntry());
     }
 
-#if LINUX
+#if LINUX && !NETFRAMEWORK
     [Fact]
     public async Task Tar_GZip_With_Symlink_Entries_Async()
     {
