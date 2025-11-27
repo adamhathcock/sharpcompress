@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using SharpCompress.Archives;
 using SharpCompress.Archives.Zip;
 using SharpCompress.Common;
@@ -87,6 +88,10 @@ public class ZipArchiveTests : ArchiveTests
 
     [Fact]
     public void Zip_Deflate_ArchiveFileRead() => ArchiveFileRead("Zip.deflate.zip");
+
+    [Fact]
+    public Task Zip_Deflate_ArchiveFileRead_Multithreaded() =>
+        ArchiveFileRead_Multithreaded("Zip.deflate.zip");
 
     [Fact]
     public void Zip_Deflate_ArchiveExtractToDirectory() =>

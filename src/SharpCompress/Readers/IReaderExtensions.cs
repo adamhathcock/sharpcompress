@@ -82,7 +82,7 @@ public static class IReaderExtensions
                 reader.Entry,
                 destinationDirectory,
                 options,
-                (fileName, opts) => reader.WriteEntryToFileAsync(fileName, opts, cancellationToken),
+                reader.WriteEntryToFileAsync,
                 cancellationToken
             )
             .ConfigureAwait(false);

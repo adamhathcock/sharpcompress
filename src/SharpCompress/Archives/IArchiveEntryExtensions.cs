@@ -88,7 +88,7 @@ public static class IArchiveEntryExtensions
             entry,
             destinationDirectory,
             options,
-            (x, opt) => entry.WriteToFileAsync(x, opt, cancellationToken),
+            entry.WriteToFileAsync,
             cancellationToken
         );
 
