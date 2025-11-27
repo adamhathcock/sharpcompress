@@ -23,36 +23,26 @@ namespace SharpCompress.Test.Arc
         public void Arc_Uncompressed_Read() => Read("Arc.uncompressed.arc", CompressionType.None);
 
         [Fact]
-        public void Arc_Squeezed_Read()
-        {
-            ProcessArchive("Arc.squeezed.arc");
-        }
+        public void Arc_Squeezed_Read() => Read("Arc.squeezed.arc");
 
         [Fact]
-        public void Arc_Crunched_Read()
+        public void Arc_Crunched_Read() => Read("Arc.crunched.arc");
+
+        [Theory]
+        [InlineData("Arc.crunched.largefile.arc", CompressionType.Crunched)]
+        public void Arc_LargeFile_ShouldThrow(string fileName, CompressionType compressionType)
         {
-            ProcessArchive("Arc.crunched.arc");
+            var exception = Assert.Throws<NotSupportedException>(() =>
+                ReadForBufferBoundaryCheck(fileName, compressionType)
+            );
         }
 
-        private void ProcessArchive(string archiveName)
+        [Theory]
+        [InlineData("Arc.uncompressed.largefile.arc", CompressionType.None)]
+        [InlineData("Arc.squeezed.largefile.arc", CompressionType.Squeezed)]
+        public void Arc_LargeFileTest_Read(string fileName, CompressionType compressionType)
         {
-            // Process a given archive by its name
-            using (Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, archiveName)))
-            using (IReader reader = ArcReader.Open(stream))
-            {
-                while (reader.MoveToNextEntry())
-                {
-                    if (!reader.Entry.IsDirectory)
-                    {
-                        reader.WriteEntryToDirectory(
-                            SCRATCH_FILES_PATH,
-                            new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
-                        );
-                    }
-                }
-            }
-
-            VerifyFilesByExtension();
+            ReadForBufferBoundaryCheck(fileName, compressionType);
         }
     }
 }

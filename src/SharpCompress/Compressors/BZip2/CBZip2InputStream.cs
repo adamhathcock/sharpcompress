@@ -2,6 +2,8 @@
 
 using System;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 using SharpCompress.IO;
 
 /*
@@ -1125,6 +1127,28 @@ internal class CBZip2InputStream : Stream, IStreamStack
             buffer[k + offset] = (byte)c;
         }
         return k;
+    }
+
+    public override Task<int> ReadAsync(
+        byte[] buffer,
+        int offset,
+        int count,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var c = -1;
+        int k;
+        for (k = 0; k < count; ++k)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            c = ReadByte();
+            if (c == -1)
+            {
+                break;
+            }
+            buffer[k + offset] = (byte)c;
+        }
+        return Task.FromResult(k);
     }
 
     public override long Seek(long offset, SeekOrigin origin) => 0;

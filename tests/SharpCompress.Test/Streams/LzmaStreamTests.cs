@@ -581,7 +581,7 @@ public class LzmaStreamTests
             false
         );
 
-        var buffer = ArrayPool<byte>.Shared.Rent(1024);
+        var buffer = new byte[1024];
         long totalRead = 0;
         while (totalRead < decompressedSize)
         {
@@ -597,6 +597,5 @@ public class LzmaStreamTests
                 break;
             }
         }
-        ArrayPool<byte>.Shared.Return(buffer);
     }
 }

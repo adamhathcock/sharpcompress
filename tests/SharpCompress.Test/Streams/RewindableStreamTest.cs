@@ -85,4 +85,22 @@ public class RewindableStreamTest
         Assert.Equal(6, br.ReadInt32());
         Assert.Equal(7, br.ReadInt32());
     }
+
+    [Fact]
+    public void TestSmallBuffer()
+    {
+        var ms = new MemoryStream();
+        var testData = new byte[100];
+        for (byte i = 0; i < 100; i++)
+        {
+            testData[i] = i;
+        }
+        ms.Write(testData);
+        ms.Position = 0;
+        using var stream = new SharpCompressStream(ms, bufferSize: 64);
+        var br = new BinaryReader(stream);
+        stream.StackSeek(100);
+        stream.StackSeek(10);
+        Assert.Equal(10, br.ReadByte());
+    }
 }

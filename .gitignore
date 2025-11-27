@@ -11,6 +11,8 @@ TestResults/
 packages/*/
 project.lock.json
 tests/TestArchives/Scratch
+tests/TestArchives/*/Scratch
+tests/TestArchives/*/Scratch2
 .vs
 tools
 .vscode
@@ -18,4 +20,3 @@ tools
 
 .DS_Store
 *.snupkg
-/tests/TestArchives/6d23a38c-f064-4ef1-ad89-b942396f53b9/Scratch

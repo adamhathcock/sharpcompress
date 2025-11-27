@@ -79,7 +79,7 @@ public class SharpCompressStream : Stream, IStreamStack
             {
                 if (value < 0 || value > _bufferedLength)
                     throw new ArgumentOutOfRangeException(nameof(value));
-                _internalPosition = value;
+                _internalPosition = _internalPosition - _bufferPosition + value;
                 _bufferPosition = value;
                 ValidateBufferState(); // Add here
             }
@@ -89,8 +89,6 @@ public class SharpCompressStream : Stream, IStreamStack
     void IStreamStack.SetPosition(long position) { }
 
     public Stream Stream { get; }
-
-    //private MemoryStream _bufferStream = new();
 
     private bool _readOnly; //some archive detection requires seek to be disabled to cause it to exception to try the next arc type
 
@@ -293,7 +291,7 @@ public class SharpCompressStream : Stream, IStreamStack
 
         long bufferPos = _internalPosition - _bufferPosition;
 
-        if (targetPos >= bufferPos && targetPos < bufferPos + _bufferedLength)
+        if (targetPos >= bufferPos && targetPos <= bufferPos + _bufferedLength)
         {
             _bufferPosition = (int)(targetPos - bufferPos); //repoint within the buffer
             _internalPosition = targetPos;

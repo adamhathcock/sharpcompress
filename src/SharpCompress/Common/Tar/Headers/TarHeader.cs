@@ -25,6 +25,10 @@ internal sealed class TarHeader
 
     internal const int BLOCK_SIZE = 512;
 
+    // Maximum size for long name/link headers to prevent memory exhaustion attacks
+    // This is generous enough for most real-world scenarios (32KB)
+    private const int MAX_LONG_NAME_SIZE = 32768;
+
     internal void Write(Stream output)
     {
         var buffer = new byte[BLOCK_SIZE];
@@ -186,6 +190,15 @@ internal sealed class TarHeader
     private string ReadLongName(BinaryReader reader, byte[] buffer)
     {
         var size = ReadSize(buffer);
+
+        // Validate size to prevent memory exhaustion from malformed headers
+        if (size < 0 || size > MAX_LONG_NAME_SIZE)
+        {
+            throw new InvalidFormatException(
+                $"Long name size {size} is invalid or exceeds maximum allowed size of {MAX_LONG_NAME_SIZE} bytes"
+            );
+        }
+
         var nameLength = (int)size;
         var nameBytes = reader.ReadBytes(nameLength);
         var remainingBytesToRead = BLOCK_SIZE - (nameLength % BLOCK_SIZE);

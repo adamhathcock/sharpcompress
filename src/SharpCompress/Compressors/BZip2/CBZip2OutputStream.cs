@@ -1,5 +1,7 @@
 using System;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 using SharpCompress.IO;
 
 /*
@@ -2020,6 +2022,21 @@ internal sealed class CBZip2OutputStream : Stream, IStreamStack
         {
             WriteByte(buffer[k + offset]);
         }
+    }
+
+    public override Task WriteAsync(
+        byte[] buffer,
+        int offset,
+        int count,
+        CancellationToken cancellationToken = default
+    )
+    {
+        for (var k = 0; k < count; ++k)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            WriteByte(buffer[k + offset]);
+        }
+        return Task.CompletedTask;
     }
 
     public override bool CanRead => false;
