@@ -10,7 +10,13 @@ namespace SharpCompress.Archives.Rar;
 internal class StreamRarArchiveVolume : RarVolume
 {
     private readonly bool _isMultiVolume;
-    internal StreamRarArchiveVolume(Stream stream, ReaderOptions options, int index, bool isMultiVolume)
+
+    internal StreamRarArchiveVolume(
+        Stream stream,
+        ReaderOptions options,
+        int index,
+        bool isMultiVolume
+    )
         : base(StreamingMode.Seekable, stream, options, index)
     {
         _isMultiVolume = isMultiVolume;
@@ -19,5 +25,12 @@ internal class StreamRarArchiveVolume : RarVolume
     internal override IEnumerable<RarFilePart> ReadFileParts() => GetVolumeFileParts();
 
     internal override RarFilePart CreateFilePart(MarkHeader markHeader, FileHeader fileHeader) =>
-        new SeekableRarFilePart(markHeader, fileHeader, Index, Stream, ReaderOptions.Password, _isMultiVolume);
+        new SeekableRarFilePart(
+            markHeader,
+            fileHeader,
+            Index,
+            Stream,
+            ReaderOptions.Password,
+            _isMultiVolume
+        );
 }

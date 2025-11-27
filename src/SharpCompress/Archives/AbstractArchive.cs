@@ -173,7 +173,8 @@ public abstract class AbstractArchive<TEntry, TVolume> : IArchive, IArchiveExtra
         }
     }
 
-    public virtual bool IsMultiVolume =>_sourceStream?.Files.Count > 1 || _sourceStream?.Streams.Count > 1;
+    public virtual bool IsMultiVolume =>
+        _sourceStream?.Files.Count > 1 || _sourceStream?.Streams.Count > 1;
 
     public virtual bool SupportsMultiThreading => false;
 }

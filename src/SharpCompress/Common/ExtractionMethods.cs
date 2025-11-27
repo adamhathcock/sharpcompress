@@ -225,7 +225,8 @@ internal static class ExtractionMethods
                 fm = FileMode.CreateNew;
             }
 
-            await openAndWriteAsync(destinationFileName, fm, cancellationToken).ConfigureAwait(false);
+            await openAndWriteAsync(destinationFileName, fm, cancellationToken)
+                .ConfigureAwait(false);
             entry.PreserveExtractionOptions(destinationFileName, options);
         }
     }

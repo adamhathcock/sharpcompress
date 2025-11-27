@@ -17,7 +17,8 @@ internal class SeekableRarFilePart : RarFilePart
         int index,
         Stream stream,
         string? password,
-        bool isMultiVolume)
+        bool isMultiVolume
+    )
         : base(mh, fh, index)
     {
         _stream = stream;

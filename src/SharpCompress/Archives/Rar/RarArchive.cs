@@ -57,12 +57,18 @@ public class RarArchive : AbstractArchive<RarArchiveEntry, RarVolume>
             return sourceStream.Streams.Select(a => new StreamRarArchiveVolume(
                 a,
                 ReaderOptions,
-                i++, IsMultiVolume
+                i++,
+                IsMultiVolume
             ));
         }
 
         //split mode or single file
-        return new StreamRarArchiveVolume(sourceStream, ReaderOptions, 0, IsMultiVolume).AsEnumerable();
+        return new StreamRarArchiveVolume(
+            sourceStream,
+            ReaderOptions,
+            0,
+            IsMultiVolume
+        ).AsEnumerable();
     }
 
     protected override IReader CreateReaderForSolidExtraction()

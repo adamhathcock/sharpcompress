@@ -280,7 +280,7 @@ public class ArchiveTests : ReaderTests
             Assert.True(archive.SupportsMultiThreading);
             foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
             {
-                    Assert.True(entry.SupportsMultiThreading);
+                Assert.True(entry.SupportsMultiThreading);
                 var t = entry.WriteToDirectoryAsync(
                     SCRATCH_FILES_PATH,
                     new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
