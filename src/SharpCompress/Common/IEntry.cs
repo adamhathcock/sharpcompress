@@ -21,4 +21,5 @@ public interface IEntry
     DateTime? LastModifiedTime { get; }
     long Size { get; }
     int? Attrib { get; }
+    public bool SupportsMultiThreading { get; }
 }

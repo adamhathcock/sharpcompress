@@ -134,6 +134,7 @@ public class ArchiveTests : ReaderTests
                 {
                     foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
                     {
+                        Assert.False(entry.SupportsMultiThreading);
                         entry.WriteToDirectory(
                             SCRATCH_FILES_PATH,
                             new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
@@ -277,6 +278,7 @@ public class ArchiveTests : ReaderTests
         {
             foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
             {
+                Assert.True(entry.SupportsMultiThreading);
                 entry.WriteToDirectory(
                     SCRATCH_FILES_PATH,
                     new ExtractionOptions { ExtractFullPath = true, Overwrite = true }

@@ -1,19 +1,9 @@
+using System;
 using System.IO;
 using SharpCompress.Common.Zip.Headers;
+using SharpCompress.IO;
 
 namespace SharpCompress.Common.Zip;
-
-internal class FileInfoZipFilePart : FilePart
-{
-    internal FileInfoZipFilePart(
-        DirectoryEntryHeader header,
-        FileInfo file
-    )
-        : base(header.ArchiveEncoding)
-    {
-    }
-    
-}
 
 internal class SeekableZipFilePart : ZipFilePart
 {
@@ -42,8 +32,20 @@ internal class SeekableZipFilePart : ZipFilePart
 
     protected override Stream CreateBaseStream()
     {
+        if (BaseStream is SourceStream ss)
+        {
+            if (ss.IsFileMode)
+            {
+                var fileStream = ss.CurrentFile.OpenRead();
+                fileStream.Position = Header.DataStartPosition.NotNull();
+                return fileStream;
+            }
+        }
         BaseStream.Position = Header.DataStartPosition.NotNull();
 
         return BaseStream;
     }
+
+    public override bool SupportsMultiThreading => BaseStream is SourceStream ss && ss.IsFileMode;
+
 }

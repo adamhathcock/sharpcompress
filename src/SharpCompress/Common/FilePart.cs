@@ -14,4 +14,7 @@ public abstract class FilePart
     internal abstract Stream? GetCompressedStream();
     internal abstract Stream? GetRawStream();
     internal bool Skipped { get; set; }
+
+    public virtual bool SupportsMultiThreading => false;
 }
+

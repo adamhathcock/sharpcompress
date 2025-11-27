@@ -87,4 +87,5 @@ public abstract class Entry : IEntry
     /// Entry file attribute.
     /// </summary>
     public virtual int? Attrib => throw new NotImplementedException();
+    public virtual bool SupportsMultiThreading => false;
 }
