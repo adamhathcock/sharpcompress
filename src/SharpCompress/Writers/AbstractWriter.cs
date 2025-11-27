@@ -3,6 +3,7 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using SharpCompress.Common;
+using SharpCompress.IO;
 
 namespace SharpCompress.Writers;
 
@@ -21,6 +22,23 @@ public abstract class AbstractWriter(ArchiveType type, WriterOptions writerOptio
     public ArchiveType WriterType { get; } = type;
 
     protected WriterOptions WriterOptions { get; } = writerOptions;
+
+    /// <summary>
+    /// Wraps the source stream with a progress-reporting stream if progress reporting is enabled.
+    /// </summary>
+    /// <param name="source">The source stream to wrap.</param>
+    /// <param name="entryPath">The path of the entry being written.</param>
+    /// <returns>A stream that reports progress, or the original stream if progress is not enabled.</returns>
+    protected Stream WrapWithProgress(Stream source, string entryPath)
+    {
+        if (WriterOptions.Progress is null)
+        {
+            return source;
+        }
+
+        long? totalBytes = source.CanSeek ? source.Length : null;
+        return new ProgressReportingStream(source, WriterOptions.Progress, entryPath, totalBytes);
+    }
 
     public abstract void Write(string filename, Stream source, DateTime? modificationTime);
 
