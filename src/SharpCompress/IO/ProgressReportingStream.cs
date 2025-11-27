@@ -7,7 +7,8 @@ using SharpCompress.Common;
 namespace SharpCompress.IO;
 
 /// <summary>
-/// A stream wrapper that reports progress as data is written.
+/// A stream wrapper that reports progress as data is read from the source.
+/// Used to track compression progress by wrapping the source stream.
 /// </summary>
 internal sealed class ProgressReportingStream : Stream
 {
@@ -15,19 +16,22 @@ internal sealed class ProgressReportingStream : Stream
     private readonly IProgress<CompressionProgress> _progress;
     private readonly string _entryPath;
     private readonly long? _totalBytes;
-    private long _bytesWritten;
+    private long _bytesRead;
+    private readonly bool _leaveOpen;
 
     public ProgressReportingStream(
         Stream baseStream,
         IProgress<CompressionProgress> progress,
         string entryPath,
-        long? totalBytes
+        long? totalBytes,
+        bool leaveOpen = false
     )
     {
         _baseStream = baseStream;
         _progress = progress;
         _entryPath = entryPath;
         _totalBytes = totalBytes;
+        _leaveOpen = leaveOpen;
     }
 
     public override bool CanRead => _baseStream.CanRead;
@@ -46,65 +50,88 @@ internal sealed class ProgressReportingStream : Stream
 
     public override void Flush() => _baseStream.Flush();
 
-    public override int Read(byte[] buffer, int offset, int count) =>
-        _baseStream.Read(buffer, offset, count);
-
-    public override long Seek(long offset, SeekOrigin origin) =>
-        _baseStream.Seek(offset, origin);
-
-    public override void SetLength(long value) => _baseStream.SetLength(value);
-
-    public override void Write(byte[] buffer, int offset, int count)
+    public override int Read(byte[] buffer, int offset, int count)
     {
-        _baseStream.Write(buffer, offset, count);
-        _bytesWritten += count;
-        ReportProgress();
+        var bytesRead = _baseStream.Read(buffer, offset, count);
+        if (bytesRead > 0)
+        {
+            _bytesRead += bytesRead;
+            ReportProgress();
+        }
+        return bytesRead;
     }
 
-    public override void Write(ReadOnlySpan<byte> buffer)
+    public override int Read(Span<byte> buffer)
     {
-        _baseStream.Write(buffer);
-        _bytesWritten += buffer.Length;
-        ReportProgress();
+        var bytesRead = _baseStream.Read(buffer);
+        if (bytesRead > 0)
+        {
+            _bytesRead += bytesRead;
+            ReportProgress();
+        }
+        return bytesRead;
     }
 
-    public override async Task WriteAsync(
+    public override async Task<int> ReadAsync(
         byte[] buffer,
         int offset,
         int count,
         CancellationToken cancellationToken
     )
     {
-        await _baseStream.WriteAsync(buffer, offset, count, cancellationToken).ConfigureAwait(false);
-        _bytesWritten += count;
-        ReportProgress();
+        var bytesRead = await _baseStream
+            .ReadAsync(buffer, offset, count, cancellationToken)
+            .ConfigureAwait(false);
+        if (bytesRead > 0)
+        {
+            _bytesRead += bytesRead;
+            ReportProgress();
+        }
+        return bytesRead;
     }
 
-    public override async ValueTask WriteAsync(
-        ReadOnlyMemory<byte> buffer,
+    public override async ValueTask<int> ReadAsync(
+        Memory<byte> buffer,
         CancellationToken cancellationToken = default
     )
     {
-        await _baseStream.WriteAsync(buffer, cancellationToken).ConfigureAwait(false);
-        _bytesWritten += buffer.Length;
-        ReportProgress();
+        var bytesRead = await _baseStream
+            .ReadAsync(buffer, cancellationToken)
+            .ConfigureAwait(false);
+        if (bytesRead > 0)
+        {
+            _bytesRead += bytesRead;
+            ReportProgress();
+        }
+        return bytesRead;
     }
 
-    public override void WriteByte(byte value)
+    public override int ReadByte()
     {
-        _baseStream.WriteByte(value);
-        _bytesWritten++;
-        ReportProgress();
+        var value = _baseStream.ReadByte();
+        if (value != -1)
+        {
+            _bytesRead++;
+            ReportProgress();
+        }
+        return value;
     }
+
+    public override long Seek(long offset, SeekOrigin origin) => _baseStream.Seek(offset, origin);
+
+    public override void SetLength(long value) => _baseStream.SetLength(value);
+
+    public override void Write(byte[] buffer, int offset, int count) =>
+        _baseStream.Write(buffer, offset, count);
 
     private void ReportProgress()
     {
-        _progress.Report(new CompressionProgress(_entryPath, _bytesWritten, _totalBytes));
+        _progress.Report(new CompressionProgress(_entryPath, _bytesRead, _totalBytes));
     }
 
     protected override void Dispose(bool disposing)
     {
-        if (disposing)
+        if (disposing && !_leaveOpen)
         {
             _baseStream.Dispose();
         }
@@ -113,7 +140,10 @@ internal sealed class ProgressReportingStream : Stream
 
     public override async ValueTask DisposeAsync()
     {
-        await _baseStream.DisposeAsync().ConfigureAwait(false);
+        if (!_leaveOpen)
+        {
+            await _baseStream.DisposeAsync().ConfigureAwait(false);
+        }
         await base.DisposeAsync().ConfigureAwait(false);
     }
 }

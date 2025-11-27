@@ -37,7 +37,13 @@ public abstract class AbstractWriter(ArchiveType type, WriterOptions writerOptio
         }
 
         long? totalBytes = source.CanSeek ? source.Length : null;
-        return new ProgressReportingStream(source, WriterOptions.Progress, entryPath, totalBytes);
+        return new ProgressReportingStream(
+            source,
+            WriterOptions.Progress,
+            entryPath,
+            totalBytes,
+            leaveOpen: true
+        );
     }
 
     public abstract void Write(string filename, Stream source, DateTime? modificationTime);
