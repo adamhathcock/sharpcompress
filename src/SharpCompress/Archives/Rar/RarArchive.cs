@@ -89,7 +89,6 @@ public class RarArchive : AbstractArchive<RarArchiveEntry, RarVolume>
     }
 
     public override bool IsSolid => Volumes.First().IsSolidArchive;
-    public override bool SupportsMultiThreading => !IsMultiVolume && !IsSolid;
 
     public virtual int MinVersion => Volumes.First().MinVersion;
     public virtual int MaxVersion => Volumes.First().MaxVersion;
