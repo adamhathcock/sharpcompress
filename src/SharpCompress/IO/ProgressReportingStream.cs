@@ -38,7 +38,7 @@ internal sealed class ProgressReportingStream : Stream
 
     public override bool CanSeek => _baseStream.CanSeek;
 
-    public override bool CanWrite => _baseStream.CanWrite;
+    public override bool CanWrite => false;
 
     public override long Length => _baseStream.Length;
 
@@ -122,7 +122,9 @@ internal sealed class ProgressReportingStream : Stream
     public override void SetLength(long value) => _baseStream.SetLength(value);
 
     public override void Write(byte[] buffer, int offset, int count) =>
-        _baseStream.Write(buffer, offset, count);
+        throw new NotSupportedException(
+            "ProgressReportingStream is designed for read operations to track compression progress."
+        );
 
     private void ReportProgress()
     {
