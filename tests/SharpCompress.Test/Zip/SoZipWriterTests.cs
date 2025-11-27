@@ -5,6 +5,7 @@ using System.Text;
 using SharpCompress.Archives.Zip;
 using SharpCompress.Common;
 using SharpCompress.Common.Zip.SOZip;
+using SharpCompress.Readers;
 using SharpCompress.Writers;
 using SharpCompress.Writers.Zip;
 using Xunit;
@@ -195,5 +196,97 @@ public class SoZipWriterTests : TestBase
         var options = new ZipWriterEntryOptions();
 
         Assert.Null(options.EnableSOZip);
+    }
+
+    [Fact]
+    public void SOZip_RoundTrip_CompressAndDecompress()
+    {
+        // Create a SOZip archive from Original files
+        var archivePath = Path.Combine(SCRATCH2_FILES_PATH, "test.sozip.zip");
+
+        using (var stream = File.Create(archivePath))
+        {
+            var options = new ZipWriterOptions(CompressionType.Deflate)
+            {
+                EnableSOZip = true,
+                SOZipMinFileSize = 1024, // 1KB to ensure test files qualify
+                LeaveStreamOpen = false,
+            };
+
+            using var writer = new ZipWriter(stream, options);
+
+            // Write all files from Original directory
+            var files = Directory.GetFiles(ORIGINAL_FILES_PATH, "*", SearchOption.AllDirectories);
+            foreach (var filePath in files)
+            {
+                var relativePath = filePath
+                    .Substring(ORIGINAL_FILES_PATH.Length + 1)
+                    .Replace('\\', '/');
+                using var fileStream = File.OpenRead(filePath);
+                writer.Write(relativePath, fileStream, new ZipWriterEntryOptions());
+            }
+        }
+
+        // Validate the archive was created and has files
+        Assert.True(File.Exists(archivePath));
+
+        // Validate the archive has SOZip entries
+        using (var stream = File.OpenRead(archivePath))
+        {
+            using var archive = ZipArchive.Open(stream);
+
+            var allEntries = archive.Entries.ToList();
+
+            // Archive should have files
+            Assert.NotEmpty(allEntries);
+
+            var sozipIndexEntries = allEntries.Where(e => e.IsSozipIndexFile).ToList();
+
+            // Should have at least one SOZip index file
+            Assert.NotEmpty(sozipIndexEntries);
+
+            // Verify index files have valid SOZip index data
+            foreach (var indexEntry in sozipIndexEntries)
+            {
+                // Check that the entry is stored (not compressed)
+                Assert.Equal(CompressionType.None, indexEntry.CompressionType);
+
+                using var indexStream = indexEntry.OpenEntryStream();
+                using var memStream = new MemoryStream();
+                indexStream.CopyTo(memStream);
+                var indexBytes = memStream.ToArray();
+
+                // Debug: Check first 4 bytes
+                Assert.True(
+                    indexBytes.Length >= 4,
+                    $"Index file too small: {indexBytes.Length} bytes"
+                );
+
+                // Should be able to parse the index without exception
+                var index = SOZipIndex.Read(indexBytes);
+                Assert.Equal(SOZipIndex.SOZIP_VERSION, index.Version);
+                Assert.True(index.ChunkSize > 0);
+                Assert.True(index.UncompressedSize > 0);
+                Assert.True(index.OffsetCount > 0);
+
+                // Verify there's a corresponding data file
+                var mainFileName = SOZipIndex.GetMainFileName(indexEntry.Key!);
+                Assert.NotNull(mainFileName);
+                Assert.Contains(allEntries, e => e.Key == mainFileName);
+            }
+        }
+
+        // Read and decompress the archive
+        using (var stream = File.OpenRead(archivePath))
+        {
+            using var reader = ReaderFactory.Open(stream);
+            reader.WriteAllToDirectory(
+                SCRATCH_FILES_PATH,
+                new ExtractionOptions { ExtractFullPath = true }
+            );
+        }
+
+        // Verify extracted files match originals
+        VerifyFiles(true);
     }
 }
