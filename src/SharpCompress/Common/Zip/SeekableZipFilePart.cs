@@ -47,5 +47,4 @@ internal class SeekableZipFilePart : ZipFilePart
     }
 
     public override bool SupportsMultiThreading => BaseStream is SourceStream ss && ss.IsFileMode;
-
 }

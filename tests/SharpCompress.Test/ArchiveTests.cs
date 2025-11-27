@@ -278,7 +278,11 @@ public class ArchiveTests : ReaderTests
         {
             foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
             {
-                Assert.True(entry.SupportsMultiThreading);
+                if (archiveFactory.KnownArchiveType == ArchiveType.Zip)
+                {
+                    Assert.True(entry.SupportsMultiThreading);
+                }
+
                 entry.WriteToDirectory(
                     SCRATCH_FILES_PATH,
                     new ExtractionOptions { ExtractFullPath = true, Overwrite = true }

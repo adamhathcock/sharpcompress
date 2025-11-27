@@ -17,4 +17,3 @@ public abstract class FilePart
 
     public virtual bool SupportsMultiThreading => false;
 }
-
