@@ -13,12 +13,21 @@ public class ZipReaderAsyncTests : ReaderTests
 {
     public ZipReaderAsyncTests() => UseExtensionInsteadOfNameToVerify = true;
 
+    /// <summary>
+    /// Opens a file with an AsyncOnlyStream wrapper.
+    /// ThrowOnSyncMethods starts as false to allow synchronous reads during Open/format detection,
+    /// then should be set to true after opening to ensure async code paths are used.
+    /// </summary>
+    private static AsyncOnlyStream OpenAsyncOnlyFile(string path) =>
+        new(new ForwardOnlyStream(File.OpenRead(path)), throwOnSyncMethods: false);
+
     [Fact]
     public async Task Issue_269_Double_Skip_Async()
     {
         var path = Path.Combine(TEST_ARCHIVES_PATH, "PrePostHeaders.zip");
-        using Stream stream = new ForwardOnlyStream(File.OpenRead(path));
+        using var stream = OpenAsyncOnlyFile(path);
         using var reader = ReaderFactory.Open(stream);
+        stream.ThrowOnSyncMethods = true;
         var count = 0;
         while (await reader.MoveToNextEntryAsync())
         {
@@ -60,10 +69,11 @@ public class ZipReaderAsyncTests : ReaderTests
     [Fact]
     public async Task Zip_Deflate_Streamed_Skip_Async()
     {
-        using Stream stream = new ForwardOnlyStream(
-            File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.dd.zip"))
+        using var stream = OpenAsyncOnlyFile(
+            Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.dd.zip")
         );
         using var reader = ReaderFactory.Open(stream);
+        stream.ThrowOnSyncMethods = true;
         var x = 0;
         while (await reader.MoveToNextEntryAsync())
         {
@@ -116,21 +126,20 @@ public class ZipReaderAsyncTests : ReaderTests
     [Fact]
     public async Task Zip_BZip2_PkwareEncryption_Read_Async()
     {
-        using (
-            Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Zip.bzip2.pkware.zip"))
-        )
-        using (var reader = ZipReader.Open(stream, new ReaderOptions { Password = "test" }))
+        using var stream = OpenAsyncOnlyFile(
+            Path.Combine(TEST_ARCHIVES_PATH, "Zip.bzip2.pkware.zip")
+        );
+        using var reader = ZipReader.Open(stream, new ReaderOptions { Password = "test" });
+        stream.ThrowOnSyncMethods = true;
+        while (await reader.MoveToNextEntryAsync())
         {
-            while (await reader.MoveToNextEntryAsync())
+            if (!reader.Entry.IsDirectory)
             {
-                if (!reader.Entry.IsDirectory)
-                {
-                    Assert.Equal(CompressionType.BZip2, reader.Entry.CompressionType);
-                    await reader.WriteEntryToDirectoryAsync(
-                        SCRATCH_FILES_PATH,
-                        new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
-                    );
-                }
+                Assert.Equal(CompressionType.BZip2, reader.Entry.CompressionType);
+                await reader.WriteEntryToDirectoryAsync(
+                    SCRATCH_FILES_PATH,
+                    new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
+                );
             }
         }
         VerifyFiles();
@@ -139,11 +148,13 @@ public class ZipReaderAsyncTests : ReaderTests
     [Fact]
     public async Task Zip_Reader_Disposal_Test_Async()
     {
-        using var stream = new TestStream(
-            File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.dd.zip"))
+        using var innerStream = OpenAsyncOnlyFile(
+            Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.dd.zip")
         );
+        using var stream = new TestStream(innerStream);
         using (var reader = ReaderFactory.Open(stream))
         {
+            innerStream.ThrowOnSyncMethods = true;
             while (await reader.MoveToNextEntryAsync())
             {
                 if (!reader.Entry.IsDirectory)
@@ -161,10 +172,12 @@ public class ZipReaderAsyncTests : ReaderTests
     [Fact]
     public async Task Zip_Reader_Disposal_Test2_Async()
     {
-        using var stream = new TestStream(
-            File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.dd.zip"))
+        using var innerStream = OpenAsyncOnlyFile(
+            Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.dd.zip")
         );
+        using var stream = new TestStream(innerStream);
         var reader = ReaderFactory.Open(stream);
+        innerStream.ThrowOnSyncMethods = true;
         while (await reader.MoveToNextEntryAsync())
         {
             if (!reader.Entry.IsDirectory)
@@ -182,38 +195,11 @@ public class ZipReaderAsyncTests : ReaderTests
     public async Task Zip_LZMA_WinzipAES_Read_Async() =>
         await Assert.ThrowsAsync<NotSupportedException>(async () =>
         {
-            using (
-                Stream stream = File.OpenRead(
-                    Path.Combine(TEST_ARCHIVES_PATH, "Zip.lzma.WinzipAES.zip")
-                )
-            )
-            using (var reader = ZipReader.Open(stream, new ReaderOptions { Password = "test" }))
-            {
-                while (await reader.MoveToNextEntryAsync())
-                {
-                    if (!reader.Entry.IsDirectory)
-                    {
-                        Assert.Equal(CompressionType.Unknown, reader.Entry.CompressionType);
-                        await reader.WriteEntryToDirectoryAsync(
-                            SCRATCH_FILES_PATH,
-                            new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
-                        );
-                    }
-                }
-            }
-            VerifyFiles();
-        });
-
-    [Fact]
-    public async Task Zip_Deflate_WinzipAES_Read_Async()
-    {
-        using (
-            Stream stream = File.OpenRead(
-                Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.WinzipAES.zip")
-            )
-        )
-        using (var reader = ZipReader.Open(stream, new ReaderOptions { Password = "test" }))
-        {
+            using var stream = OpenAsyncOnlyFile(
+                Path.Combine(TEST_ARCHIVES_PATH, "Zip.lzma.WinzipAES.zip")
+            );
+            using var reader = ZipReader.Open(stream, new ReaderOptions { Password = "test" });
+            stream.ThrowOnSyncMethods = true;
             while (await reader.MoveToNextEntryAsync())
             {
                 if (!reader.Entry.IsDirectory)
@@ -225,6 +211,27 @@ public class ZipReaderAsyncTests : ReaderTests
                     );
                 }
             }
+            VerifyFiles();
+        });
+
+    [Fact]
+    public async Task Zip_Deflate_WinzipAES_Read_Async()
+    {
+        using var stream = OpenAsyncOnlyFile(
+            Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.WinzipAES.zip")
+        );
+        using var reader = ZipReader.Open(stream, new ReaderOptions { Password = "test" });
+        stream.ThrowOnSyncMethods = true;
+        while (await reader.MoveToNextEntryAsync())
+        {
+            if (!reader.Entry.IsDirectory)
+            {
+                Assert.Equal(CompressionType.Unknown, reader.Entry.CompressionType);
+                await reader.WriteEntryToDirectoryAsync(
+                    SCRATCH_FILES_PATH,
+                    new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
+                );
+            }
         }
         VerifyFiles();
     }
@@ -233,20 +240,21 @@ public class ZipReaderAsyncTests : ReaderTests
     public async Task Zip_Deflate_ZipCrypto_Read_Async()
     {
         var count = 0;
-        using (Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "zipcrypto.zip")))
-        using (var reader = ZipReader.Open(stream, new ReaderOptions { Password = "test" }))
+        using var stream = OpenAsyncOnlyFile(
+            Path.Combine(TEST_ARCHIVES_PATH, "zipcrypto.zip")
+        );
+        using var reader = ZipReader.Open(stream, new ReaderOptions { Password = "test" });
+        stream.ThrowOnSyncMethods = true;
+        while (await reader.MoveToNextEntryAsync())
         {
-            while (await reader.MoveToNextEntryAsync())
+            if (!reader.Entry.IsDirectory)
             {
-                if (!reader.Entry.IsDirectory)
-                {
-                    Assert.Equal(CompressionType.None, reader.Entry.CompressionType);
-                    await reader.WriteEntryToDirectoryAsync(
-                        SCRATCH_FILES_PATH,
-                        new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
-                    );
-                    count++;
-                }
+                Assert.Equal(CompressionType.None, reader.Entry.CompressionType);
+                await reader.WriteEntryToDirectoryAsync(
+                    SCRATCH_FILES_PATH,
+                    new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
+                );
+                count++;
             }
         }
         Assert.Equal(8, count);

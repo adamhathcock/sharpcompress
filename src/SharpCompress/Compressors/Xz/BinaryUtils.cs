@@ -38,7 +38,7 @@ public static class BinaryUtils
     )
     {
         var bytes = new byte[4];
-        var read = await stream.ReadFullyAsync(bytes, cancellationToken).ConfigureAwait(false);
+        var read = await stream.ReadFullyAsync(bytes, 0, 4, cancellationToken).ConfigureAwait(false);
         if (!read)
         {
             throw new EndOfStreamException();
