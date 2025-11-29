@@ -5,6 +5,37 @@ using SharpCompress.Readers;
 
 namespace SharpCompress.Common;
 
+/// <summary>
+/// Base class for archive volumes. A volume represents a single physical
+/// archive file or stream that may contain entries or parts of entries.
+///
+/// <para>
+/// The relationship between <see cref="Volume"/>, <see cref="SourceStream"/>,
+/// and <see cref="IByteSource"/> is:
+/// </para>
+/// <list type="bullet">
+/// <item>
+/// <description>
+/// <b>IByteSource</b> is the lowest level - it provides access to raw bytes
+/// from a file or stream, with no archive-specific logic.
+/// </description>
+/// </item>
+/// <item>
+/// <description>
+/// <b>SourceStream</b> combines multiple byte sources into a unified stream,
+/// handling the distinction between split archives (contiguous bytes) and
+/// multi-volume archives (independent units).
+/// </description>
+/// </item>
+/// <item>
+/// <description>
+/// <b>Volume</b> wraps a stream with archive-specific metadata and behavior.
+/// Format-specific subclasses (ZipVolume, RarVolume, etc.) add format-specific
+/// properties and methods.
+/// </description>
+/// </item>
+/// </list>
+/// </summary>
 public abstract class Volume : IVolume
 {
     private readonly Stream _baseStream;

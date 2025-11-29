@@ -8,6 +8,61 @@ using SharpCompress.Readers;
 
 namespace SharpCompress.IO;
 
+/// <summary>
+/// A stream that unifies multiple byte sources (files or streams) into a single readable stream.
+///
+/// <para>
+/// SourceStream handles two distinct modes controlled by <see cref="IsVolumes"/>:
+/// </para>
+/// <list type="bullet">
+/// <item>
+/// <description>
+/// <b>Split Mode (IsVolumes=false)</b>: Multiple files/streams are treated as one
+/// contiguous byte sequence. Reading seamlessly transitions from one source to the
+/// next. Position and Length span all sources combined. This is used for split
+/// archives where file data is simply split across multiple physical files.
+/// </description>
+/// </item>
+/// <item>
+/// <description>
+/// <b>Volume Mode (IsVolumes=true)</b>: Each file/stream is treated as an independent
+/// unit. Position and Length refer only to the current source. This is used for
+/// multi-volume archives where each volume has its own headers and structure.
+/// </description>
+/// </item>
+/// </list>
+///
+/// <para>
+/// This abstraction works with <see cref="IByteSource"/> to provide raw byte access
+/// and with <see cref="Common.Volume"/> to add archive-specific semantics.
+/// </para>
+///
+/// <para>
+/// Format-specific behaviors:
+/// </para>
+/// <list type="bullet">
+/// <item>
+/// <description>
+/// <b>7Zip</b>: Uses split mode. The SourceStream presents the entire archive
+/// as one stream, and 7Zip handles internal "folders" (compression units)
+/// that may contain contiguous compressed data for multiple files.
+/// </description>
+/// </item>
+/// <item>
+/// <description>
+/// <b>RAR</b>: Can use either mode. Multi-volume RAR uses volume mode where
+/// each .rar/.r00/.r01 file is a separate volume. SOLID RAR archives have
+/// internal contiguous byte streams for decompression.
+/// </description>
+/// </item>
+/// <item>
+/// <description>
+/// <b>ZIP</b>: Can use either mode. Split ZIP (.z01, .z02, .zip) uses split mode.
+/// Multi-volume ZIP uses volume mode.
+/// </description>
+/// </item>
+/// </list>
+/// </summary>
 public class SourceStream : Stream, IStreamStack
 {
 #if DEBUG_STREAMS
@@ -82,22 +137,53 @@ public class SourceStream : Stream, IStreamStack
 #endif
     }
 
+    /// <summary>
+    /// Loads all available parts/volumes by calling the getPart function
+    /// until it returns null. Resets to the first stream after loading.
+    /// </summary>
     public void LoadAllParts()
     {
         for (var i = 1; SetStream(i); i++) { }
         SetStream(0);
     }
 
+    /// <summary>
+    /// Gets or sets whether this SourceStream operates in volume mode.
+    /// When true, each stream is treated as an independent volume with its own
+    /// position and length. When false (default), all streams are treated as
+    /// one contiguous byte sequence.
+    /// </summary>
     public bool IsVolumes { get; set; }
 
+    /// <summary>
+    /// Gets the reader options associated with this source stream.
+    /// </summary>
     public ReaderOptions ReaderOptions { get; }
+
+    /// <summary>
+    /// Gets whether this SourceStream was created from a FileInfo (true)
+    /// or from a Stream (false).
+    /// </summary>
     public bool IsFileMode { get; }
 
+    /// <summary>
+    /// Gets the collection of FileInfo objects for each loaded source.
+    /// May be empty if sources are streams without file associations.
+    /// </summary>
     public IEnumerable<FileInfo> Files => _files;
+
+    /// <summary>
+    /// Gets the collection of underlying streams for each loaded source.
+    /// </summary>
     public IEnumerable<Stream> Streams => _streams;
 
     private Stream Current => _streams[_stream];
 
+    /// <summary>
+    /// Ensures that streams up to and including the specified index are loaded.
+    /// </summary>
+    /// <param name="index">The stream index to load.</param>
+    /// <returns>True if the stream at the index was successfully loaded; false otherwise.</returns>
     public bool LoadStream(int index) //ensure all parts to id are loaded
     {
         while (_streams.Count <= index)
