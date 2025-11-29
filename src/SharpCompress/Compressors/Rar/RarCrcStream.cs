@@ -34,11 +34,27 @@ internal class RarCrcStream : RarStream, IStreamStack
     private readonly bool disableCRC;
 
     private RarCrcStream(
-        IRarUnpack unpack,
+        IRarUnpackFactory unpackFactory,
         FileHeader fileHeader,
         MultiVolumeReadOnlyStream readStream
     )
-        : base(unpack, fileHeader, readStream)
+        : base(unpackFactory, fileHeader, readStream)
+    {
+        this.readStream = readStream;
+#if DEBUG_STREAMS
+        this.DebugConstruct(typeof(RarCrcStream));
+#endif
+        disableCRC = fileHeader.IsEncrypted;
+        ResetCrc();
+    }
+
+    private RarCrcStream(
+        IRarUnpack unpack,
+        FileHeader fileHeader,
+        MultiVolumeReadOnlyStream readStream,
+        bool ownsUnpack
+    )
+        : base(unpack, fileHeader, readStream, ownsUnpack)
     {
         this.readStream = readStream;
 #if DEBUG_STREAMS
@@ -49,13 +65,37 @@ internal class RarCrcStream : RarStream, IStreamStack
     }
 
     public static RarCrcStream Create(
-        IRarUnpack unpack,
+        IRarUnpackFactory unpackFactory,
         FileHeader fileHeader,
         MultiVolumeReadOnlyStream readStream
     )
     {
-        var stream = new RarCrcStream(unpack, fileHeader, readStream);
+        var stream = new RarCrcStream(unpackFactory, fileHeader, readStream);
         stream.Initialize();
+        return stream;
+    }
+
+    public static RarCrcStream Create(
+        IRarUnpack unpack,
+        FileHeader fileHeader,
+        MultiVolumeReadOnlyStream readStream,
+        bool ownsUnpack
+    )
+    {
+        var stream = new RarCrcStream(unpack, fileHeader, readStream, ownsUnpack);
+        stream.Initialize();
+        return stream;
+    }
+
+    public static async Task<RarCrcStream> CreateAsync(
+        IRarUnpackFactory unpackFactory,
+        FileHeader fileHeader,
+        MultiVolumeReadOnlyStream readStream,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var stream = new RarCrcStream(unpackFactory, fileHeader, readStream);
+        await stream.InitializeAsync(cancellationToken);
         return stream;
     }
 
@@ -63,10 +103,11 @@ internal class RarCrcStream : RarStream, IStreamStack
         IRarUnpack unpack,
         FileHeader fileHeader,
         MultiVolumeReadOnlyStream readStream,
+        bool ownsUnpack,
         CancellationToken cancellationToken = default
     )
     {
-        var stream = new RarCrcStream(unpack, fileHeader, readStream);
+        var stream = new RarCrcStream(unpack, fileHeader, readStream, ownsUnpack);
         await stream.InitializeAsync(cancellationToken);
         return stream;
     }

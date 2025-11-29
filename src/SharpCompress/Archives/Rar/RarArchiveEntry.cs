@@ -70,50 +70,50 @@ public class RarArchiveEntry : RarEntry, IArchiveEntry
 
     public Stream OpenEntryStream()
     {
-        RarStream stream;
-        if (IsRarV3)
+        var readStream = new MultiVolumeReadOnlyStream(Parts.Cast<RarFilePart>(), archive);
+
+        // For solid archives, use shared Unpack instance (must be processed sequentially)
+        // For non-solid archives, use factory to create owned instance (supports multi-threading)
+        if (archive.IsSolid)
         {
-            stream = new RarStream(
-                archive.UnpackV1.Value,
-                FileHeader,
-                new MultiVolumeReadOnlyStream(Parts.Cast<RarFilePart>(), archive)
-            );
+            var unpack = IsRarV3 ? archive.UnpackV1.Value : archive.UnpackV2017.Value;
+            var stream = new RarStream(unpack, FileHeader, readStream, ownsUnpack: false);
+            stream.Initialize();
+            return stream;
         }
         else
         {
-            stream = new RarStream(
-                archive.UnpackV2017.Value,
-                FileHeader,
-                new MultiVolumeReadOnlyStream(Parts.Cast<RarFilePart>(), archive)
-            );
+            var factory = IsRarV3
+                ? (IRarUnpackFactory)UnpackV1Factory.Instance
+                : UnpackV2017Factory.Instance;
+            var stream = new RarStream(factory, FileHeader, readStream);
+            stream.Initialize();
+            return stream;
         }
-
-        stream.Initialize();
-        return stream;
     }
 
     public async Task<Stream> OpenEntryStreamAsync(CancellationToken cancellationToken = default)
     {
-        RarStream stream;
-        if (IsRarV3)
+        var readStream = new MultiVolumeReadOnlyStream(Parts.Cast<RarFilePart>(), archive);
+
+        // For solid archives, use shared Unpack instance (must be processed sequentially)
+        // For non-solid archives, use factory to create owned instance (supports multi-threading)
+        if (archive.IsSolid)
         {
-            stream = new RarStream(
-                archive.UnpackV1.Value,
-                FileHeader,
-                new MultiVolumeReadOnlyStream(Parts.Cast<RarFilePart>(), archive)
-            );
+            var unpack = IsRarV3 ? archive.UnpackV1.Value : archive.UnpackV2017.Value;
+            var stream = new RarStream(unpack, FileHeader, readStream, ownsUnpack: false);
+            await stream.InitializeAsync(cancellationToken);
+            return stream;
         }
         else
         {
-            stream = new RarStream(
-                archive.UnpackV2017.Value,
-                FileHeader,
-                new MultiVolumeReadOnlyStream(Parts.Cast<RarFilePart>(), archive)
-            );
+            var factory = IsRarV3
+                ? (IRarUnpackFactory)UnpackV1Factory.Instance
+                : UnpackV2017Factory.Instance;
+            var stream = new RarStream(factory, FileHeader, readStream);
+            await stream.InitializeAsync(cancellationToken);
+            return stream;
         }
-
-        await stream.InitializeAsync(cancellationToken);
-        return stream;
     }
 
     public bool IsComplete
@@ -135,5 +135,6 @@ public class RarArchiveEntry : RarEntry, IArchiveEntry
         }
     }
 
-    public override bool SupportsMultiThreading => Parts.Single().SupportsMultiThreading;
+    public override bool SupportsMultiThreading =>
+        !archive.IsSolid && Parts.Single().SupportsMultiThreading;
 }

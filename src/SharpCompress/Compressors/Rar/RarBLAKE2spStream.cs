@@ -106,11 +106,30 @@ internal class RarBLAKE2spStream : RarStream, IStreamStack
     byte[] _hash = { };
 
     private RarBLAKE2spStream(
-        IRarUnpack unpack,
+        IRarUnpackFactory unpackFactory,
         FileHeader fileHeader,
         MultiVolumeReadOnlyStream readStream
     )
-        : base(unpack, fileHeader, readStream)
+        : base(unpackFactory, fileHeader, readStream)
+    {
+        this.readStream = readStream;
+
+#if DEBUG_STREAMS
+        this.DebugConstruct(typeof(RarBLAKE2spStream));
+#endif
+        disableCRCCheck = fileHeader.IsEncrypted;
+        _hash = fileHeader.FileCrc.NotNull();
+        _blake2sp = new BLAKE2SP();
+        ResetCrc();
+    }
+
+    private RarBLAKE2spStream(
+        IRarUnpack unpack,
+        FileHeader fileHeader,
+        MultiVolumeReadOnlyStream readStream,
+        bool ownsUnpack
+    )
+        : base(unpack, fileHeader, readStream, ownsUnpack)
     {
         this.readStream = readStream;
 
@@ -124,13 +143,37 @@ internal class RarBLAKE2spStream : RarStream, IStreamStack
     }
 
     public static RarBLAKE2spStream Create(
-        IRarUnpack unpack,
+        IRarUnpackFactory unpackFactory,
         FileHeader fileHeader,
         MultiVolumeReadOnlyStream readStream
     )
     {
-        var stream = new RarBLAKE2spStream(unpack, fileHeader, readStream);
+        var stream = new RarBLAKE2spStream(unpackFactory, fileHeader, readStream);
         stream.Initialize();
+        return stream;
+    }
+
+    public static RarBLAKE2spStream Create(
+        IRarUnpack unpack,
+        FileHeader fileHeader,
+        MultiVolumeReadOnlyStream readStream,
+        bool ownsUnpack
+    )
+    {
+        var stream = new RarBLAKE2spStream(unpack, fileHeader, readStream, ownsUnpack);
+        stream.Initialize();
+        return stream;
+    }
+
+    public static async Task<RarBLAKE2spStream> CreateAsync(
+        IRarUnpackFactory unpackFactory,
+        FileHeader fileHeader,
+        MultiVolumeReadOnlyStream readStream,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var stream = new RarBLAKE2spStream(unpackFactory, fileHeader, readStream);
+        await stream.InitializeAsync(cancellationToken);
         return stream;
     }
 
@@ -138,10 +181,11 @@ internal class RarBLAKE2spStream : RarStream, IStreamStack
         IRarUnpack unpack,
         FileHeader fileHeader,
         MultiVolumeReadOnlyStream readStream,
+        bool ownsUnpack,
         CancellationToken cancellationToken = default
     )
     {
-        var stream = new RarBLAKE2spStream(unpack, fileHeader, readStream);
+        var stream = new RarBLAKE2spStream(unpack, fileHeader, readStream, ownsUnpack);
         await stream.InitializeAsync(cancellationToken);
         return stream;
     }
