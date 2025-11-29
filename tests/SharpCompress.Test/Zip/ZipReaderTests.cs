@@ -404,9 +404,9 @@ public class ZipReaderTests : ReaderTests
     public void ZipReader_Returns_Same_Entries_As_ZipArchive()
     {
         // Verifies that ZipReader and ZipArchive return the same entries
-        // for standard single-volume ZIP files. Both process entries from
-        // LocalEntry headers, while ZipArchive also reads DirectoryEntry
-        // headers from the central directory.
+        // for standard single-volume ZIP files. ZipReader processes LocalEntry
+        // headers sequentially, while ZipArchive uses DirectoryEntry headers
+        // from the central directory and seeks to LocalEntry headers for data.
         var testFiles = new[] { "Zip.none.zip", "Zip.deflate.zip", "Zip.none.issue86.zip" };
 
         foreach (var testFile in testFiles)
