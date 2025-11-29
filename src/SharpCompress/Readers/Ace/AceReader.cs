@@ -13,14 +13,14 @@ namespace SharpCompress.Readers.Ace;
 /// </summary>
 public class AceReader : AbstractReader<AceEntry, AceVolume>
 {
-    private readonly AceEntryHeader _headerReader;
+    private readonly AceEntryHeader _mainHeaderReader;
     private bool _mainHeaderRead;
 
     private AceReader(Stream stream, ReaderOptions options)
         : base(options, ArchiveType.Ace)
     {
         Volume = new AceVolume(stream, options, 0);
-        _headerReader = new AceEntryHeader(Options.ArchiveEncoding);
+        _mainHeaderReader = new AceEntryHeader(Options.ArchiveEncoding);
     }
 
     public override AceVolume Volume { get; }
@@ -42,17 +42,18 @@ public class AceReader : AbstractReader<AceEntry, AceVolume>
         // First, skip past the main header if we haven't already
         if (!_mainHeaderRead)
         {
-            if (!_headerReader.ReadMainHeader(stream))
+            if (!_mainHeaderReader.ReadMainHeader(stream))
             {
                 yield break;
             }
             _mainHeaderRead = true;
         }
 
-        // Read file entries
-        AceEntryHeader headerReader = new AceEntryHeader(Options.ArchiveEncoding);
+        // Read file entries - create new header reader for each entry
+        // since ReadHeader modifies the object state
+        AceEntryHeader entryHeaderReader = new AceEntryHeader(Options.ArchiveEncoding);
         AceEntryHeader? header;
-        while ((header = headerReader.ReadHeader(stream)) != null)
+        while ((header = entryHeaderReader.ReadHeader(stream)) != null)
         {
             yield return new AceEntry(new AceFilePart(header, stream));
         }

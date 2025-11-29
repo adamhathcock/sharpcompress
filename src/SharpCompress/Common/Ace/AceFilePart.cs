@@ -24,29 +24,27 @@ public class AceFilePart : FilePart
 
     internal override Stream GetCompressedStream()
     {
-        if (_stream != null)
+        if (_stream is null)
         {
-            Stream compressedStream;
-            switch (Header.CompressionMethod)
-            {
-                case CompressionType.None:
-                    // Stored - no compression
-                    compressedStream = new ReadOnlySubStream(
-                        _stream,
-                        Header.DataStartPosition,
-                        Header.CompressedSize
-                    );
-                    break;
-                default:
-                    // ACE uses proprietary compression methods that are not publicly documented
-                    // For now, we throw an exception for compressed entries
-                    throw new NotSupportedException(
-                        $"ACE compression method '{Header.CompressionMethod}' is not supported. Only stored (uncompressed) entries can be extracted."
-                    );
-            }
-            return compressedStream;
+            throw new InvalidOperationException("Stream is not available.");
         }
-        return _stream.NotNull();
+
+        switch (Header.CompressionMethod)
+        {
+            case CompressionType.None:
+                // Stored - no compression
+                return new ReadOnlySubStream(
+                    _stream,
+                    Header.DataStartPosition,
+                    Header.CompressedSize
+                );
+            default:
+                // ACE uses proprietary compression methods that are not publicly documented
+                // For now, we throw an exception for compressed entries
+                throw new NotSupportedException(
+                    $"ACE compression method '{Header.CompressionMethod}' is not supported. Only stored (uncompressed) entries can be extracted."
+                );
+        }
     }
 
     internal override Stream? GetRawStream() => _stream;
