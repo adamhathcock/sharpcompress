@@ -2,7 +2,6 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using SharpCompress.Common;
-using SharpCompress.IO;
 
 namespace SharpCompress.Archives;
 
@@ -18,17 +17,8 @@ public static class IArchiveEntryExtensions
         var streamListener = (IArchiveExtractionListener)archiveEntry.Archive;
         streamListener.EnsureEntriesLoaded();
         streamListener.FireEntryExtractionBegin(archiveEntry);
-        streamListener.FireFilePartExtractionBegin(
-            archiveEntry.Key ?? "Key",
-            archiveEntry.Size,
-            archiveEntry.CompressedSize
-        );
-        var entryStream = archiveEntry.OpenEntryStream();
-        using (entryStream)
-        {
-            using Stream s = new ListeningStream(streamListener, entryStream);
-            s.CopyTo(streamToWriteTo);
-        }
+        using var entryStream = archiveEntry.OpenEntryStream();
+        entryStream.CopyTo(streamToWriteTo);
         streamListener.FireEntryExtractionEnd(archiveEntry);
     }
 
@@ -46,17 +36,10 @@ public static class IArchiveEntryExtensions
         var streamListener = (IArchiveExtractionListener)archiveEntry.Archive;
         streamListener.EnsureEntriesLoaded();
         streamListener.FireEntryExtractionBegin(archiveEntry);
-        streamListener.FireFilePartExtractionBegin(
-            archiveEntry.Key ?? "Key",
-            archiveEntry.Size,
-            archiveEntry.CompressedSize
-        );
-        var entryStream = archiveEntry.OpenEntryStream();
-        using (entryStream)
-        {
-            using Stream s = new ListeningStream(streamListener, entryStream);
-            await s.CopyToAsync(streamToWriteTo, 81920, cancellationToken).ConfigureAwait(false);
-        }
+        using var entryStream = archiveEntry.OpenEntryStream();
+        await entryStream
+            .CopyToAsync(streamToWriteTo, 81920, cancellationToken)
+            .ConfigureAwait(false);
         streamListener.FireEntryExtractionEnd(archiveEntry);
     }
 

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using SharpCompress.Common;
+using SharpCompress.Readers;
 using SharpCompress.Writers;
 using SharpCompress.Writers.Tar;
 using SharpCompress.Writers.Zip;
@@ -23,12 +24,12 @@ internal sealed class TestProgress<T> : IProgress<T>
     public void Report(T value) => _reports.Add(value);
 }
 
-public class CompressionProgressTests : TestBase
+public class ProgressReportTests : TestBase
 {
     [Fact]
     public void Zip_Write_ReportsProgress()
     {
-        var progress = new TestProgress<CompressionProgress>();
+        var progress = new TestProgress<ProgressReport>();
 
         using var archiveStream = new MemoryStream();
         var options = new ZipWriterOptions(CompressionType.Deflate) { Progress = progress };
@@ -46,14 +47,14 @@ public class CompressionProgressTests : TestBase
         Assert.All(progress.Reports, p => Assert.Equal(10000, p.TotalBytes));
 
         var lastReport = progress.Reports[^1];
-        Assert.Equal(10000, lastReport.BytesRead);
+        Assert.Equal(10000, lastReport.BytesTransferred);
         Assert.Equal(100.0, lastReport.PercentComplete);
     }
 
     [Fact]
     public void Tar_Write_ReportsProgress()
     {
-        var progress = new TestProgress<CompressionProgress>();
+        var progress = new TestProgress<ProgressReport>();
 
         using var archiveStream = new MemoryStream();
         var options = new TarWriterOptions(CompressionType.None, true) { Progress = progress };
@@ -71,8 +72,48 @@ public class CompressionProgressTests : TestBase
         Assert.All(progress.Reports, p => Assert.Equal(10000, p.TotalBytes));
 
         var lastReport = progress.Reports[^1];
-        Assert.Equal(10000, lastReport.BytesRead);
+        Assert.Equal(10000, lastReport.BytesTransferred);
         Assert.Equal(100.0, lastReport.PercentComplete);
+    }
+
+    [Fact]
+    public void Zip_Read_ReportsProgress()
+    {
+        var progress = new TestProgress<ProgressReport>();
+
+        // First create a zip archive
+        using var archiveStream = new MemoryStream();
+        using (
+            var writer = new ZipWriter(archiveStream, new ZipWriterOptions(CompressionType.Deflate))
+        )
+        {
+            var testData = new byte[10000];
+            Array.Fill(testData, (byte)'A');
+            using var sourceStream = new MemoryStream(testData);
+            writer.Write("test.txt", sourceStream, DateTime.Now);
+        }
+
+        // Now read it with progress reporting
+        archiveStream.Position = 0;
+        var readerOptions = new ReaderOptions { Progress = progress };
+
+        using (var reader = ReaderFactory.Open(archiveStream, readerOptions))
+        {
+            while (reader.MoveToNextEntry())
+            {
+                if (!reader.Entry.IsDirectory)
+                {
+                    using var extractedStream = new MemoryStream();
+                    reader.WriteEntryTo(extractedStream);
+                }
+            }
+        }
+
+        Assert.NotEmpty(progress.Reports);
+        Assert.All(progress.Reports, p => Assert.Equal("test.txt", p.EntryPath));
+
+        var lastReport = progress.Reports[^1];
+        Assert.Equal(10000, lastReport.BytesTransferred);
     }
 
     [Fact]
@@ -94,26 +135,59 @@ public class CompressionProgressTests : TestBase
     }
 
     [Fact]
-    public void CompressionProgress_PercentComplete_WithUnknownTotalBytes_ReturnsNull()
+    public void ReaderOptions_WithoutProgress_DoesNotThrow()
     {
-        var progress = new CompressionProgress("test.txt", 100, null);
+        // First create a zip archive
+        using var archiveStream = new MemoryStream();
+        using (
+            var writer = new ZipWriter(archiveStream, new ZipWriterOptions(CompressionType.Deflate))
+        )
+        {
+            var testData = new byte[100];
+            Array.Fill(testData, (byte)'A');
+            using var sourceStream = new MemoryStream(testData);
+            writer.Write("test.txt", sourceStream, DateTime.Now);
+        }
+
+        // Read without progress
+        archiveStream.Position = 0;
+        var readerOptions = new ReaderOptions();
+        Assert.Null(readerOptions.Progress);
+
+        using (var reader = ReaderFactory.Open(archiveStream, readerOptions))
+        {
+            while (reader.MoveToNextEntry())
+            {
+                if (!reader.Entry.IsDirectory)
+                {
+                    using var extractedStream = new MemoryStream();
+                    reader.WriteEntryTo(extractedStream);
+                }
+            }
+        }
+    }
+
+    [Fact]
+    public void ProgressReport_PercentComplete_WithUnknownTotalBytes_ReturnsNull()
+    {
+        var progress = new ProgressReport("test.txt", 100, null);
         Assert.Null(progress.PercentComplete);
     }
 
     [Fact]
-    public void CompressionProgress_PercentComplete_WithZeroTotalBytes_ReturnsNull()
+    public void ProgressReport_PercentComplete_WithZeroTotalBytes_ReturnsNull()
     {
-        var progress = new CompressionProgress("test.txt", 0, 0);
+        var progress = new ProgressReport("test.txt", 0, 0);
         Assert.Null(progress.PercentComplete);
     }
 
     [Fact]
-    public void CompressionProgress_Properties_AreSetCorrectly()
+    public void ProgressReport_Properties_AreSetCorrectly()
     {
-        var progress = new CompressionProgress("path/to/file.txt", 500, 1000);
+        var progress = new ProgressReport("path/to/file.txt", 500, 1000);
 
         Assert.Equal("path/to/file.txt", progress.EntryPath);
-        Assert.Equal(500, progress.BytesRead);
+        Assert.Equal(500, progress.BytesTransferred);
         Assert.Equal(1000, progress.TotalBytes);
         Assert.Equal(50.0, progress.PercentComplete);
     }
@@ -121,7 +195,7 @@ public class CompressionProgressTests : TestBase
     [Fact]
     public async Task Tar_WriteAsync_ReportsProgress()
     {
-        var progress = new TestProgress<CompressionProgress>();
+        var progress = new TestProgress<ProgressReport>();
 
         using var archiveStream = new MemoryStream();
         var options = new TarWriterOptions(CompressionType.None, true) { Progress = progress };
@@ -138,6 +212,6 @@ public class CompressionProgressTests : TestBase
         Assert.All(progress.Reports, p => Assert.Equal("test.txt", p.EntryPath));
 
         var lastReport = progress.Reports[^1];
-        Assert.Equal(10000, lastReport.BytesRead);
+        Assert.Equal(10000, lastReport.BytesTransferred);
     }
 }

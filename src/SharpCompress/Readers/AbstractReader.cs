@@ -277,11 +277,24 @@ public abstract class AbstractReader<TEntry, TVolume> : IReader
 #endif
     }
 
+    private static long? GetEntrySizeSafe(Entry entry)
+    {
+        try
+        {
+            var size = entry.Size;
+            return size > 0 ? size : null;
+        }
+        catch (NotImplementedException)
+        {
+            return null;
+        }
+    }
+
     private void TransferWithProgress(Stream source, Stream destination, Entry entry)
     {
         var progress = Options.Progress;
         var entryPath = entry.Key ?? string.Empty;
-        long? totalBytes = entry.Size > 0 ? entry.Size : null;
+        long? totalBytes = GetEntrySizeSafe(entry);
         long transferred = 0;
 
         var buffer = new byte[81920];
@@ -303,17 +316,21 @@ public abstract class AbstractReader<TEntry, TVolume> : IReader
     {
         var progress = Options.Progress;
         var entryPath = entry.Key ?? string.Empty;
-        long? totalBytes = entry.Size > 0 ? entry.Size : null;
+        long? totalBytes = GetEntrySizeSafe(entry);
         long transferred = 0;
 
         var buffer = new byte[81920];
         int bytesRead;
         while (
-            (bytesRead = await source.ReadAsync(buffer, 0, buffer.Length, cancellationToken)
-                .ConfigureAwait(false)) > 0
+            (
+                bytesRead = await source
+                    .ReadAsync(buffer, 0, buffer.Length, cancellationToken)
+                    .ConfigureAwait(false)
+            ) > 0
         )
         {
-            await destination.WriteAsync(buffer, 0, bytesRead, cancellationToken)
+            await destination
+                .WriteAsync(buffer, 0, bytesRead, cancellationToken)
                 .ConfigureAwait(false);
             transferred += bytesRead;
             progress?.Report(new ProgressReport(entryPath, transferred, totalBytes));

@@ -95,7 +95,9 @@ internal sealed class ProgressReportingStream : Stream
         CancellationToken cancellationToken = default
     )
     {
-        var bytesRead = await _baseStream.ReadAsync(buffer, cancellationToken).ConfigureAwait(false);
+        var bytesRead = await _baseStream
+            .ReadAsync(buffer, cancellationToken)
+            .ConfigureAwait(false);
         if (bytesRead > 0)
         {
             _bytesTransferred += bytesRead;
