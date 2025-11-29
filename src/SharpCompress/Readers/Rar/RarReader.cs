@@ -15,6 +15,8 @@ public abstract class RarReader : AbstractReader<RarReaderEntry, RarVolume>
 {
     private bool _disposed;
     private RarVolume? volume;
+
+    // Shared Unpack instances for solid archives (must be used sequentially)
     private Lazy<IRarUnpack> UnpackV2017 { get; } =
         new(() => new Compressors.Rar.UnpackV2017.Unpack());
     private Lazy<IRarUnpack> UnpackV1 { get; } = new(() => new Compressors.Rar.UnpackV1.Unpack());
@@ -111,19 +113,50 @@ public abstract class RarReader : AbstractReader<RarReaderEntry, RarVolume>
             CreateFilePartEnumerableForCurrentEntry().Cast<RarFilePart>(),
             this
         );
-        if (Entry.IsRarV3)
-        {
-            return CreateEntryStream(RarCrcStream.Create(UnpackV1.Value, Entry.FileHeader, stream));
-        }
 
-        if (Entry.FileHeader.FileCrc?.Length > 5)
+        // For solid archives, use shared Unpack instance (must be processed sequentially)
+        // For non-solid archives, use factory to create owned instance
+        if (Entry.IsSolid || Entry.FileHeader.IsSolid)
         {
+            var unpack = Entry.IsRarV3 ? UnpackV1.Value : UnpackV2017.Value;
+            if (Entry.IsRarV3)
+            {
+                return CreateEntryStream(
+                    RarCrcStream.Create(unpack, Entry.FileHeader, stream, ownsUnpack: false)
+                );
+            }
+
+            if (Entry.FileHeader.FileCrc?.Length > 5)
+            {
+                return CreateEntryStream(
+                    RarBLAKE2spStream.Create(unpack, Entry.FileHeader, stream, ownsUnpack: false)
+                );
+            }
+
             return CreateEntryStream(
-                RarBLAKE2spStream.Create(UnpackV2017.Value, Entry.FileHeader, stream)
+                RarCrcStream.Create(unpack, Entry.FileHeader, stream, ownsUnpack: false)
             );
         }
+        else
+        {
+            var factory = Entry.IsRarV3
+                ? (IRarUnpackFactory)UnpackV1Factory.Instance
+                : UnpackV2017Factory.Instance;
 
-        return CreateEntryStream(RarCrcStream.Create(UnpackV2017.Value, Entry.FileHeader, stream));
+            if (Entry.IsRarV3)
+            {
+                return CreateEntryStream(RarCrcStream.Create(factory, Entry.FileHeader, stream));
+            }
+
+            if (Entry.FileHeader.FileCrc?.Length > 5)
+            {
+                return CreateEntryStream(
+                    RarBLAKE2spStream.Create(factory, Entry.FileHeader, stream)
+                );
+            }
+
+            return CreateEntryStream(RarCrcStream.Create(factory, Entry.FileHeader, stream));
+        }
     }
 
     protected override async System.Threading.Tasks.Task<EntryStream> GetEntryStreamAsync(
@@ -139,28 +172,83 @@ public abstract class RarReader : AbstractReader<RarReaderEntry, RarVolume>
             CreateFilePartEnumerableForCurrentEntry().Cast<RarFilePart>(),
             this
         );
-        if (Entry.IsRarV3)
+
+        // For solid archives, use shared Unpack instance (must be processed sequentially)
+        // For non-solid archives, use factory to create owned instance
+        if (Entry.IsSolid || Entry.FileHeader.IsSolid)
         {
+            var unpack = Entry.IsRarV3 ? UnpackV1.Value : UnpackV2017.Value;
+            if (Entry.IsRarV3)
+            {
+                return CreateEntryStream(
+                    await RarCrcStream
+                        .CreateAsync(
+                            unpack,
+                            Entry.FileHeader,
+                            stream,
+                            ownsUnpack: false,
+                            cancellationToken
+                        )
+                        .ConfigureAwait(false)
+                );
+            }
+
+            if (Entry.FileHeader.FileCrc?.Length > 5)
+            {
+                return CreateEntryStream(
+                    await RarBLAKE2spStream
+                        .CreateAsync(
+                            unpack,
+                            Entry.FileHeader,
+                            stream,
+                            ownsUnpack: false,
+                            cancellationToken
+                        )
+                        .ConfigureAwait(false)
+                );
+            }
+
             return CreateEntryStream(
                 await RarCrcStream
-                    .CreateAsync(UnpackV1.Value, Entry.FileHeader, stream, cancellationToken)
+                    .CreateAsync(
+                        unpack,
+                        Entry.FileHeader,
+                        stream,
+                        ownsUnpack: false,
+                        cancellationToken
+                    )
                     .ConfigureAwait(false)
             );
         }
-
-        if (Entry.FileHeader.FileCrc?.Length > 5)
+        else
         {
+            var factory = Entry.IsRarV3
+                ? (IRarUnpackFactory)UnpackV1Factory.Instance
+                : UnpackV2017Factory.Instance;
+
+            if (Entry.IsRarV3)
+            {
+                return CreateEntryStream(
+                    await RarCrcStream
+                        .CreateAsync(factory, Entry.FileHeader, stream, cancellationToken)
+                        .ConfigureAwait(false)
+                );
+            }
+
+            if (Entry.FileHeader.FileCrc?.Length > 5)
+            {
+                return CreateEntryStream(
+                    await RarBLAKE2spStream
+                        .CreateAsync(factory, Entry.FileHeader, stream, cancellationToken)
+                        .ConfigureAwait(false)
+                );
+            }
+
             return CreateEntryStream(
-                await RarBLAKE2spStream
-                    .CreateAsync(UnpackV2017.Value, Entry.FileHeader, stream, cancellationToken)
+                await RarCrcStream
+                    .CreateAsync(factory, Entry.FileHeader, stream, cancellationToken)
                     .ConfigureAwait(false)
             );
         }
-
-        return CreateEntryStream(
-            await RarCrcStream
-                .CreateAsync(UnpackV2017.Value, Entry.FileHeader, stream, cancellationToken)
-                .ConfigureAwait(false)
-        );
     }
 }

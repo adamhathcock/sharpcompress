@@ -50,12 +50,23 @@ internal class RarStream : Stream, IStreamStack
     private bool isDisposed;
     private long _position;
 
-    public RarStream(
-        IRarUnpack unpack,
-        FileHeader fileHeader,
-        Stream readStream,
-        bool ownsUnpack = false
-    )
+    /// <summary>
+    /// Creates a new RarStream that owns and will dispose its IRarUnpack instance.
+    /// </summary>
+    /// <param name="unpackFactory">Factory to create the IRarUnpack instance</param>
+    /// <param name="fileHeader">File header for the entry</param>
+    /// <param name="readStream">Stream to read compressed data from</param>
+    public RarStream(IRarUnpackFactory unpackFactory, FileHeader fileHeader, Stream readStream)
+        : this(unpackFactory.Create(), fileHeader, readStream, ownsUnpack: true) { }
+
+    /// <summary>
+    /// Creates a new RarStream with the specified unpack instance.
+    /// </summary>
+    /// <param name="unpack">The IRarUnpack instance to use</param>
+    /// <param name="fileHeader">File header for the entry</param>
+    /// <param name="readStream">Stream to read compressed data from</param>
+    /// <param name="ownsUnpack">Whether this stream should dispose the unpack instance</param>
+    internal RarStream(IRarUnpack unpack, FileHeader fileHeader, Stream readStream, bool ownsUnpack)
     {
         this.unpack = unpack;
         this.fileHeader = fileHeader;
@@ -92,7 +103,7 @@ internal class RarStream : Stream, IStreamStack
                 ArrayPool<byte>.Shared.Return(this.tmpBuffer);
                 this.tmpBuffer = null;
 
-                // Only dispose the unpack instance if we own it
+                // Dispose the unpack instance if we own it
                 if (ownsUnpack && unpack is IDisposable disposableUnpack)
                 {
                     disposableUnpack.Dispose();
