@@ -1,5 +1,6 @@
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using SharpCompress.Archives;
 using SharpCompress.Archives.Rar;
 using SharpCompress.Common;
@@ -293,7 +294,13 @@ public class RarArchiveTests : ArchiveTests
     public void Rar_ArchiveFileRead() => ArchiveFileRead("Rar.rar");
 
     [Fact]
+    public Task Rar_ArchiveFileRead_Multithreaded() => ArchiveFileRead_Multithreaded("Rar.rar");
+
+    [Fact]
     public void Rar5_ArchiveFileRead() => ArchiveFileRead("Rar5.rar");
+
+    [Fact]
+    public Task Rar5_ArchiveFileRead_Multithreaded() => ArchiveFileRead_Multithreaded("Rar5.rar");
 
     [Fact]
     public void Rar_ArchiveFileRead_HasDirectories() =>
@@ -358,6 +365,9 @@ public class RarArchiveTests : ArchiveTests
 
     [Fact]
     public void Rar2_ArchiveFileRead() => ArchiveFileRead("Rar2.rar");
+
+    [Fact]
+    public Task Rar2_ArchiveFileRead_Multithreaded() => ArchiveFileRead_Multithreaded("Rar2.rar");
 
     [Fact]
     public void Rar15_ArchiveFileRead()

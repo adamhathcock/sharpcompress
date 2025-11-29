@@ -134,4 +134,6 @@ public class RarArchiveEntry : RarEntry, IArchiveEntry
             );
         }
     }
+
+    public override bool SupportsMultiThreading => Parts.Single().SupportsMultiThreading;
 }

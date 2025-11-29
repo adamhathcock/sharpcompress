@@ -82,9 +82,6 @@ internal class RarStream : Stream, IStreamStack
         {
             if (disposing)
             {
-#if DEBUG_STREAMS
-                this.DebugDispose(typeof(RarStream));
-#endif
                 ArrayPool<byte>.Shared.Return(this.tmpBuffer);
                 this.tmpBuffer = null;
             }
