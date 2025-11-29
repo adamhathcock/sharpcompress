@@ -15,6 +15,10 @@ internal enum ExtraDataType : ushort
     UnicodePathExtraField = 0x7075,
     Zip64ExtendedInformationExtraField = 0x0001,
     UnixTimeExtraField = 0x5455,
+
+    // SOZip (Seek-Optimized ZIP) extra field
+    // Used to link a main file to its SOZip index file
+    SOZip = 0x564B,
 }
 
 internal class ExtraData
@@ -233,6 +237,44 @@ internal sealed class UnixTimeExtraField : ExtraData
     }
 }
 
+/// <summary>
+/// SOZip (Seek-Optimized ZIP) extra field that links a main file to its index file.
+/// The extra field contains the offset within the ZIP file where the index entry's
+/// local header is located.
+/// </summary>
+internal sealed class SOZipExtraField : ExtraData
+{
+    public SOZipExtraField(ExtraDataType type, ushort length, byte[] dataBytes)
+        : base(type, length, dataBytes) { }
+
+    /// <summary>
+    /// Gets the offset to the SOZip index file's local entry header within the ZIP archive.
+    /// </summary>
+    internal ulong IndexOffset
+    {
+        get
+        {
+            if (DataBytes is null || DataBytes.Length < 8)
+            {
+                return 0;
+            }
+            return BinaryPrimitives.ReadUInt64LittleEndian(DataBytes);
+        }
+    }
+
+    /// <summary>
+    /// Creates a SOZip extra field with the specified index offset
+    /// </summary>
+    /// <param name="indexOffset">The offset to the index file's local entry header</param>
+    /// <returns>A new SOZipExtraField instance</returns>
+    public static SOZipExtraField Create(ulong indexOffset)
+    {
+        var data = new byte[8];
+        BinaryPrimitives.WriteUInt64LittleEndian(data, indexOffset);
+        return new SOZipExtraField(ExtraDataType.SOZip, 8, data);
+    }
+}
+
 internal static class LocalEntryHeaderExtraFactory
 {
     internal static ExtraData Create(ExtraDataType type, ushort length, byte[] extraData) =>
@@ -246,6 +288,7 @@ internal static class LocalEntryHeaderExtraFactory
             ExtraDataType.Zip64ExtendedInformationExtraField =>
                 new Zip64ExtendedInformationExtraField(type, length, extraData),
             ExtraDataType.UnixTimeExtraField => new UnixTimeExtraField(type, length, extraData),
+            ExtraDataType.SOZip => new SOZipExtraField(type, length, extraData),
             _ => new ExtraData(type, length, extraData),
         };
 }

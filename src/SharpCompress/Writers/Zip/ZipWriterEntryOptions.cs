@@ -49,4 +49,11 @@ public class ZipWriterEntryOptions
     /// This option is not supported with non-seekable streams.
     /// </summary>
     public bool? EnableZip64 { get; set; }
+
+    /// <summary>
+    /// Enable or disable SOZip (Seek-Optimized ZIP) for this entry.
+    /// When null, uses the archive's default setting.
+    /// SOZip is only applicable to Deflate-compressed files on seekable streams.
+    /// </summary>
+    public bool? EnableSOZip { get; set; }
 }
