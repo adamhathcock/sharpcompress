@@ -7,17 +7,29 @@ namespace SharpCompress.Common.Ace;
 /// <summary>
 /// Represents header information for an ACE archive entry.
 /// ACE format uses little-endian byte ordering.
+/// Supports both ACE 1.0 and ACE 2.0 formats.
 /// </summary>
 public class AceEntryHeader
 {
     // Header type constants
     private const byte HeaderTypeMain = 0;
     private const byte HeaderTypeFile = 1;
+    private const byte HeaderTypeRecovery = 2;
 
-    // Header flags
-    private const ushort FlagAddSize = 0x0001;
-    private const ushort FlagComment = 0x0002;
-    private const ushort FlagSolid = 0x8000;
+    // Header flags for main header
+    private const ushort MainFlagComment = 0x0002;
+    private const ushort MainFlagSfx = 0x0200;
+    private const ushort MainFlagLocked = 0x0400;
+    private const ushort MainFlagSolid = 0x0800;
+    private const ushort MainFlagMultiVolume = 0x1000;
+    private const ushort MainFlagAv = 0x2000;
+    private const ushort MainFlagRecovery = 0x4000;
+
+    // Header flags for file header
+    private const ushort FileFlagAddSize = 0x0001;
+    private const ushort FileFlagComment = 0x0002;
+    private const ushort FileFlagContinued = 0x4000;
+    private const ushort FileFlagContinuing = 0x8000;
 
     public ArchiveEncoding ArchiveEncoding { get; }
     public CompressionType CompressionMethod { get; private set; }
@@ -30,6 +42,31 @@ public class AceEntryHeader
     public long DataStartPosition { get; private set; }
     public bool IsDirectory { get; private set; }
 
+    /// <summary>
+    /// Gets the ACE archive version (10 for ACE 1.0, 20 for ACE 2.0).
+    /// </summary>
+    public byte AceVersion { get; private set; }
+
+    /// <summary>
+    /// Gets whether this is an ACE 2.0 archive.
+    /// </summary>
+    public bool IsAce20 => AceVersion >= 20;
+
+    /// <summary>
+    /// Gets the host operating system that created the archive.
+    /// </summary>
+    public byte HostOs { get; private set; }
+
+    /// <summary>
+    /// Gets whether the archive is solid.
+    /// </summary>
+    public bool IsSolid { get; private set; }
+
+    /// <summary>
+    /// Gets whether the archive is part of a multi-volume set.
+    /// </summary>
+    public bool IsMultiVolume { get; private set; }
+
     public AceEntryHeader(ArchiveEncoding archiveEncoding)
     {
         ArchiveEncoding = archiveEncoding;
@@ -38,6 +75,7 @@ public class AceEntryHeader
     /// <summary>
     /// Reads the main archive header from the stream.
     /// Returns true if this is a valid ACE archive.
+    /// Supports both ACE 1.0 and ACE 2.0 formats.
     /// </summary>
     public bool ReadMainHeader(Stream stream)
     {
@@ -61,10 +99,69 @@ public class AceEntryHeader
             return false;
         }
 
+        int offset = 0;
+
         // Header type should be 0 for main header
-        if (headerData[0] != HeaderTypeMain)
+        if (headerData[offset++] != HeaderTypeMain)
         {
             return false;
+        }
+
+        // Header flags (2 bytes)
+        ushort headerFlags = BitConverter.ToUInt16(headerData, offset);
+        offset += 2;
+
+        IsSolid = (headerFlags & MainFlagSolid) != 0;
+        IsMultiVolume = (headerFlags & MainFlagMultiVolume) != 0;
+
+        // Skip signature "**ACE**" (7 bytes)
+        offset += 7;
+
+        // ACE version (1 byte) - 10 for ACE 1.0, 20 for ACE 2.0
+        if (offset < headerData.Length)
+        {
+            AceVersion = headerData[offset++];
+        }
+
+        // Extract version needed (1 byte)
+        if (offset < headerData.Length)
+        {
+            offset++; // Skip version needed
+        }
+
+        // Host OS (1 byte)
+        if (offset < headerData.Length)
+        {
+            HostOs = headerData[offset++];
+        }
+
+        // Volume number (1 byte)
+        if (offset < headerData.Length)
+        {
+            offset++; // Skip volume number
+        }
+
+        // Creation date/time (4 bytes)
+        if (offset + 4 <= headerData.Length)
+        {
+            offset += 4; // Skip datetime
+        }
+
+        // Reserved fields (8 bytes)
+        if (offset + 8 <= headerData.Length)
+        {
+            offset += 8;
+        }
+
+        // Skip additional fields based on flags
+        // Handle comment if present
+        if ((headerFlags & MainFlagComment) != 0)
+        {
+            if (offset + 2 <= headerData.Length)
+            {
+                ushort commentLength = BitConverter.ToUInt16(headerData, offset);
+                offset += 2 + commentLength;
+            }
         }
 
         return true;
@@ -73,6 +170,7 @@ public class AceEntryHeader
     /// <summary>
     /// Reads the next file entry header from the stream.
     /// Returns null if no more entries or end of archive.
+    /// Supports both ACE 1.0 and ACE 2.0 formats.
     /// </summary>
     public AceEntryHeader? ReadHeader(Stream stream)
     {
@@ -108,6 +206,13 @@ public class AceEntryHeader
         if (headerType == HeaderTypeMain)
         {
             // Skip main header if encountered
+            return ReadHeader(stream);
+        }
+
+        // Skip recovery record headers (ACE 2.0 feature)
+        if (headerType == HeaderTypeRecovery)
+        {
+            // Skip to next header
             return ReadHeader(stream);
         }
 
@@ -170,7 +275,7 @@ public class AceEntryHeader
         IsDirectory = (FileAttributes & 0x10) != 0 || (Name?.EndsWith('/') ?? false);
 
         // Handle comment if present
-        if ((headerFlags & FlagComment) != 0)
+        if ((headerFlags & FileFlagComment) != 0)
         {
             // Comment length (2 bytes)
             if (offset + 2 <= headerData.Length)
@@ -191,8 +296,8 @@ public class AceEntryHeader
         return value switch
         {
             0 => CompressionType.None, // Stored
-            1 => CompressionType.Lzw, // LZ77 - closest equivalent
-            2 => CompressionType.Lzw, // ACE v2.0 compression
+            1 => CompressionType.Ace, // ACE 1.0 LZ77 compression
+            2 => CompressionType.Ace2, // ACE 2.0 compression (improved LZ77)
             _ => CompressionType.Unknown,
         };
     }

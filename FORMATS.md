@@ -26,7 +26,7 @@
 2. Zip format supports pkware and WinzipAES encryption. However, encrypted LZMA is not supported. Zip64 reading/writing is supported but only with seekable streams as the Zip spec doesn't support Zip64 data in post data descriptors. Deflate64 is only supported for reading.
 3. The Tar format requires a file size in the header. If no size is specified to the TarWriter and the stream is not seekable, then an exception will be thrown.
 4. The 7Zip format doesn't allow for reading as a forward-only stream so 7Zip is only supported through the Archive API
-5. ACE is a proprietary archive format. Only reading of stored (uncompressed) entries is supported due to the proprietary nature of the compression algorithms. ACE version 1 format is supported.
+5. ACE is a proprietary archive format. Both ACE 1.0 and ACE 2.0 formats are supported for reading. Only stored (uncompressed) entries can be extracted due to the proprietary nature of the compression algorithms (ACE LZ77 and ACE 2.0 improved LZ77).
 6. LZip has no support for extra data like the file name or timestamp. There is a default filename used when looking at the entry Key on the archive.
 
 ## Compression Streams

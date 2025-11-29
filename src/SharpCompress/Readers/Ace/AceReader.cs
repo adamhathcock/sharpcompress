@@ -7,10 +7,16 @@ namespace SharpCompress.Readers.Ace;
 
 /// <summary>
 /// Reader for ACE archives.
-/// ACE is a proprietary archive format. This implementation supports version 1 archives
-/// and can extract uncompressed (stored) entries. Compressed entries require proprietary
-/// decompression algorithms that are not publicly documented.
+/// ACE is a proprietary archive format. This implementation supports both ACE 1.0 and ACE 2.0 formats
+/// and can read archive metadata and extract uncompressed (stored) entries.
+/// Compressed entries require proprietary decompression algorithms that are not publicly documented.
 /// </summary>
+/// <remarks>
+/// ACE 2.0 additions over ACE 1.0:
+/// - Improved LZ77 compression (compression type 2)
+/// - Recovery record support
+/// - Additional header flags
+/// </remarks>
 public class AceReader : AbstractReader<AceEntry, AceVolume>
 {
     private readonly AceEntryHeader _mainHeaderReader;

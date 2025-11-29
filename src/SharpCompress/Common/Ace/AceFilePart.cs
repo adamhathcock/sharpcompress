@@ -6,6 +6,7 @@ namespace SharpCompress.Common.Ace;
 
 /// <summary>
 /// Represents a file part within an ACE archive.
+/// Supports both ACE 1.0 and ACE 2.0 formats.
 /// </summary>
 public class AceFilePart : FilePart
 {
@@ -38,9 +39,16 @@ public class AceFilePart : FilePart
                     Header.DataStartPosition,
                     Header.CompressedSize
                 );
+            case CompressionType.Ace:
+            case CompressionType.Ace2:
+                // ACE 1.0 and 2.0 use proprietary compression methods
+                // The algorithms are not publicly documented
+                throw new NotSupportedException(
+                    $"ACE compression method '{Header.CompressionMethod}' is not supported. "
+                        + "Only stored (uncompressed) entries can be extracted. "
+                        + "ACE uses proprietary compression algorithms that are not publicly documented."
+                );
             default:
-                // ACE uses proprietary compression methods that are not publicly documented
-                // For now, we throw an exception for compressed entries
                 throw new NotSupportedException(
                     $"ACE compression method '{Header.CompressionMethod}' is not supported. Only stored (uncompressed) entries can be extracted."
                 );
