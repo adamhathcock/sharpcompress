@@ -35,6 +35,7 @@ internal class RarStream : Stream, IStreamStack
     private readonly IRarUnpack unpack;
     private readonly FileHeader fileHeader;
     private readonly Stream readStream;
+    private readonly bool ownsUnpack;
 
     private bool fetch;
 
@@ -49,11 +50,17 @@ internal class RarStream : Stream, IStreamStack
     private bool isDisposed;
     private long _position;
 
-    public RarStream(IRarUnpack unpack, FileHeader fileHeader, Stream readStream)
+    public RarStream(
+        IRarUnpack unpack,
+        FileHeader fileHeader,
+        Stream readStream,
+        bool ownsUnpack = false
+    )
     {
         this.unpack = unpack;
         this.fileHeader = fileHeader;
         this.readStream = readStream;
+        this.ownsUnpack = ownsUnpack;
 
 #if DEBUG_STREAMS
         this.DebugConstruct(typeof(RarStream));
@@ -84,6 +91,12 @@ internal class RarStream : Stream, IStreamStack
             {
                 ArrayPool<byte>.Shared.Return(this.tmpBuffer);
                 this.tmpBuffer = null;
+
+                // Only dispose the unpack instance if we own it
+                if (ownsUnpack && unpack is IDisposable disposableUnpack)
+                {
+                    disposableUnpack.Dispose();
+                }
             }
             isDisposed = true;
             base.Dispose(disposing);

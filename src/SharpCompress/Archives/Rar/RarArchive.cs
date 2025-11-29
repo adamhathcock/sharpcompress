@@ -15,6 +15,8 @@ namespace SharpCompress.Archives.Rar;
 public class RarArchive : AbstractArchive<RarArchiveEntry, RarVolume>
 {
     private bool _disposed;
+
+    // Shared Unpack instances for solid archives (must be used sequentially)
     internal Lazy<IRarUnpack> UnpackV2017 { get; } =
         new(() => new Compressors.Rar.UnpackV2017.Unpack());
     internal Lazy<IRarUnpack> UnpackV1 { get; } = new(() => new Compressors.Rar.UnpackV1.Unpack());
@@ -89,6 +91,7 @@ public class RarArchive : AbstractArchive<RarArchiveEntry, RarVolume>
     }
 
     public override bool IsSolid => Volumes.First().IsSolidArchive;
+    public override bool SupportsMultiThreading => !IsMultiVolume && !IsSolid;
 
     public virtual int MinVersion => Volumes.First().MinVersion;
     public virtual int MaxVersion => Volumes.First().MaxVersion;
