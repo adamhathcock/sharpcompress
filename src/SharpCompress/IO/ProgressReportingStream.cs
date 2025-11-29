@@ -8,20 +8,20 @@ namespace SharpCompress.IO;
 
 /// <summary>
 /// A stream wrapper that reports progress as data is read from the source.
-/// Used to track compression progress by wrapping the source stream.
+/// Used to track compression or extraction progress by wrapping the source stream.
 /// </summary>
 internal sealed class ProgressReportingStream : Stream
 {
     private readonly Stream _baseStream;
-    private readonly IProgress<CompressionProgress> _progress;
+    private readonly IProgress<ProgressReport> _progress;
     private readonly string _entryPath;
     private readonly long? _totalBytes;
-    private long _bytesRead;
+    private long _bytesTransferred;
     private readonly bool _leaveOpen;
 
     public ProgressReportingStream(
         Stream baseStream,
-        IProgress<CompressionProgress> progress,
+        IProgress<ProgressReport> progress,
         string entryPath,
         long? totalBytes,
         bool leaveOpen = false
@@ -55,7 +55,7 @@ internal sealed class ProgressReportingStream : Stream
         var bytesRead = _baseStream.Read(buffer, offset, count);
         if (bytesRead > 0)
         {
-            _bytesRead += bytesRead;
+            _bytesTransferred += bytesRead;
             ReportProgress();
         }
         return bytesRead;
@@ -66,7 +66,7 @@ internal sealed class ProgressReportingStream : Stream
         var bytesRead = _baseStream.Read(buffer);
         if (bytesRead > 0)
         {
-            _bytesRead += bytesRead;
+            _bytesTransferred += bytesRead;
             ReportProgress();
         }
         return bytesRead;
@@ -84,7 +84,7 @@ internal sealed class ProgressReportingStream : Stream
             .ConfigureAwait(false);
         if (bytesRead > 0)
         {
-            _bytesRead += bytesRead;
+            _bytesTransferred += bytesRead;
             ReportProgress();
         }
         return bytesRead;
@@ -95,12 +95,10 @@ internal sealed class ProgressReportingStream : Stream
         CancellationToken cancellationToken = default
     )
     {
-        var bytesRead = await _baseStream
-            .ReadAsync(buffer, cancellationToken)
-            .ConfigureAwait(false);
+        var bytesRead = await _baseStream.ReadAsync(buffer, cancellationToken).ConfigureAwait(false);
         if (bytesRead > 0)
         {
-            _bytesRead += bytesRead;
+            _bytesTransferred += bytesRead;
             ReportProgress();
         }
         return bytesRead;
@@ -111,7 +109,7 @@ internal sealed class ProgressReportingStream : Stream
         var value = _baseStream.ReadByte();
         if (value != -1)
         {
-            _bytesRead++;
+            _bytesTransferred++;
             ReportProgress();
         }
         return value;
@@ -123,12 +121,12 @@ internal sealed class ProgressReportingStream : Stream
 
     public override void Write(byte[] buffer, int offset, int count) =>
         throw new NotSupportedException(
-            "ProgressReportingStream is designed for read operations to track compression progress."
+            "ProgressReportingStream is designed for read operations to track progress."
         );
 
     private void ReportProgress()
     {
-        _progress.Report(new CompressionProgress(_entryPath, _bytesRead, _totalBytes));
+        _progress.Report(new ProgressReport(_entryPath, _bytesTransferred, _totalBytes));
     }
 
     protected override void Dispose(bool disposing)

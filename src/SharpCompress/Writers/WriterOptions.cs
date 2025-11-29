@@ -41,7 +41,7 @@ public class WriterOptions : OptionsBase
     /// An optional progress reporter for tracking compression operations.
     /// When set, progress updates will be reported as entries are written.
     /// </summary>
-    public IProgress<CompressionProgress>? Progress { get; set; }
+    public IProgress<ProgressReport>? Progress { get; set; }
 
     public static implicit operator WriterOptions(CompressionType compressionType) =>
         new(compressionType);

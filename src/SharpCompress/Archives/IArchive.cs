@@ -10,9 +10,6 @@ public interface IArchive : IDisposable
     event EventHandler<ArchiveExtractionEventArgs<IArchiveEntry>> EntryExtractionBegin;
     event EventHandler<ArchiveExtractionEventArgs<IArchiveEntry>> EntryExtractionEnd;
 
-    event EventHandler<CompressedBytesReadEventArgs> CompressedBytesRead;
-    event EventHandler<FilePartExtractionBeginEventArgs> FilePartExtractionBegin;
-
     IEnumerable<IArchiveEntry> Entries { get; }
     IEnumerable<IVolume> Volumes { get; }
 

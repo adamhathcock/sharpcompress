@@ -20,8 +20,6 @@ public abstract class AbstractArchive<TEntry, TVolume> : IArchive, IArchiveExtra
     public event EventHandler<ArchiveExtractionEventArgs<IArchiveEntry>>? EntryExtractionBegin;
     public event EventHandler<ArchiveExtractionEventArgs<IArchiveEntry>>? EntryExtractionEnd;
 
-    public event EventHandler<CompressedBytesReadEventArgs>? CompressedBytesRead;
-    public event EventHandler<FilePartExtractionBeginEventArgs>? FilePartExtractionBegin;
     protected ReaderOptions ReaderOptions { get; }
 
     internal AbstractArchive(ArchiveType type, SourceStream sourceStream)
@@ -104,32 +102,6 @@ public abstract class AbstractArchive<TEntry, TVolume> : IArchive, IArchiveExtra
         _lazyEntries.EnsureFullyLoaded();
         _lazyVolumes.EnsureFullyLoaded();
     }
-
-    void IExtractionListener.FireCompressedBytesRead(
-        long currentPartCompressedBytes,
-        long compressedReadBytes
-    ) =>
-        CompressedBytesRead?.Invoke(
-            this,
-            new CompressedBytesReadEventArgs(
-                currentFilePartCompressedBytesRead: currentPartCompressedBytes,
-                compressedBytesRead: compressedReadBytes
-            )
-        );
-
-    void IExtractionListener.FireFilePartExtractionBegin(
-        string name,
-        long size,
-        long compressedSize
-    ) =>
-        FilePartExtractionBegin?.Invoke(
-            this,
-            new FilePartExtractionBeginEventArgs(
-                compressedSize: compressedSize,
-                size: size,
-                name: name
-            )
-        );
 
     /// <summary>
     /// Use this method to extract all entries in an archive in order.
