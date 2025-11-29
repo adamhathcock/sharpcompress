@@ -8,6 +8,6 @@ public unsafe struct ZSTD_outBuffer_s
     /// <summary>size of output buffer</summary>
     public nuint size;
 
-    /// <summary>position where writing stopped. Will be updated. Necessarily 0 &lt;= pos &lt;= size</summary>
+    /// <summary>position where writing stopped. Will be updated. Necessarily 0 to size inclusive.</summary>
     public nuint pos;
 }

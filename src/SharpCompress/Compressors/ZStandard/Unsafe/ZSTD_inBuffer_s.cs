@@ -11,6 +11,6 @@ public unsafe struct ZSTD_inBuffer_s
     /// <summary>size of input buffer</summary>
     public nuint size;
 
-    /// <summary>position where reading stopped. Will be updated. Necessarily 0 &lt;= pos &lt;= size</summary>
+    /// <summary>position where reading stopped. Will be updated. Necessarily 0 to size inclusive.</summary>
     public nuint pos;
 }
