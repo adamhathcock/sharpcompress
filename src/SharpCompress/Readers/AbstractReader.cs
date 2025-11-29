@@ -282,7 +282,9 @@ public abstract class AbstractReader<TEntry, TVolume> : IReader
         try
         {
             var size = entry.Size;
-            return size > 0 ? size : null;
+            // Return the actual size (including 0 for empty entries)
+            // Negative values indicate unknown size
+            return size >= 0 ? size : null;
         }
         catch (NotImplementedException)
         {
