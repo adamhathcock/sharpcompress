@@ -10,6 +10,7 @@
 
 | Archive Format         | Compression Format(s)                             | Compress/Decompress | Archive API     | Reader API | Writer API    |
 | ---------------------- | ------------------------------------------------- | ------------------- | --------------- | ---------- | ------------- |
+| Ace (5)                | None (stored only)                                | Decompress          | N/A             | AceReader  | N/A           |
 | Rar                    | Rar                                               | Decompress (1)      | RarArchive      | RarReader  | N/A           |
 | Zip (2)                | None, Shrink, Reduce, Implode, DEFLATE, Deflate64, BZip2, LZMA/LZMA2, PPMd                           | Both                | ZipArchive      | ZipReader  | ZipWriter     | 
 | Tar                    | None                                              | Both                | TarArchive      | TarReader  | TarWriter (3) |
@@ -25,7 +26,8 @@
 2. Zip format supports pkware and WinzipAES encryption. However, encrypted LZMA is not supported. Zip64 reading/writing is supported but only with seekable streams as the Zip spec doesn't support Zip64 data in post data descriptors. Deflate64 is only supported for reading.
 3. The Tar format requires a file size in the header. If no size is specified to the TarWriter and the stream is not seekable, then an exception will be thrown.
 4. The 7Zip format doesn't allow for reading as a forward-only stream so 7Zip is only supported through the Archive API
-5. LZip has no support for extra data like the file name or timestamp. There is a default filename used when looking at the entry Key on the archive.
+5. ACE is a proprietary archive format. Only reading of stored (uncompressed) entries is supported due to the proprietary nature of the compression algorithms. ACE version 1 format is supported.
+6. LZip has no support for extra data like the file name or timestamp. There is a default filename used when looking at the entry Key on the archive.
 
 ## Compression Streams
 

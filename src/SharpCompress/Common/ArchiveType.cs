@@ -9,4 +9,5 @@ public enum ArchiveType
     GZip,
     Arc,
     Arj,
+    Ace,
 }

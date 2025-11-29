@@ -19,6 +19,7 @@ public abstract class Factory : IFactory
         RegisterFactory(new TarFactory());
         RegisterFactory(new ArcFactory());
         RegisterFactory(new ArjFactory());
+        RegisterFactory(new AceFactory());
     }
 
     private static readonly HashSet<Factory> _factories = new();
