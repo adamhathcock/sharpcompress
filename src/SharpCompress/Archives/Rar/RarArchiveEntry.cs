@@ -149,5 +149,6 @@ public class RarArchiveEntry : RarEntry, IArchiveEntry
         }
     }
 
-    public override bool SupportsMultiThreading => Parts.Single().SupportsMultiThreading;
+    public override bool SupportsMultiThreading =>
+        !archive.IsSolid && Parts.Single().SupportsMultiThreading;
 }
