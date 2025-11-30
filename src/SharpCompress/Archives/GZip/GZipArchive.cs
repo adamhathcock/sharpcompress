@@ -2,11 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using SharpCompress.Common;
 using SharpCompress.Common.GZip;
 using SharpCompress.IO;
+using SharpCompress.Polyfills;
 using SharpCompress.Readers;
 using SharpCompress.Readers.GZip;
 using SharpCompress.Writers;
@@ -28,6 +30,22 @@ public class GZipArchive : AbstractWritableArchive<GZipArchiveEntry, GZipVolume>
     }
 
     /// <summary>
+    /// Constructor expects a filepath to an existing file.
+    /// </summary>
+    /// <param name="filePath"></param>
+    /// <param name="readerOptions"></param>
+    /// <param name="cancellationToken"></param>
+    public static async Task<GZipArchive> OpenAsync(
+        string filePath,
+        ReaderOptions? readerOptions = null,
+        CancellationToken cancellationToken = default
+    )
+    {
+        filePath.NotNullOrEmpty(nameof(filePath));
+        return await OpenAsync(new FileInfo(filePath), readerOptions ?? new ReaderOptions(), cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>
     /// Constructor with a FileInfo object to an existing file.
     /// </summary>
     /// <param name="fileInfo"></param>
@@ -42,6 +60,32 @@ public class GZipArchive : AbstractWritableArchive<GZipArchiveEntry, GZipVolume>
                 readerOptions ?? new ReaderOptions()
             )
         );
+    }
+
+    /// <summary>
+    /// Constructor with a FileInfo object to an existing file.
+    /// </summary>
+    /// <param name="fileInfo"></param>
+    /// <param name="readerOptions"></param>
+    /// <param name="cancellationToken"></param>
+    public static async Task<GZipArchive> OpenAsync(
+        FileInfo fileInfo,
+        ReaderOptions? readerOptions = null,
+        CancellationToken cancellationToken = default
+    )
+    {
+        fileInfo.NotNull(nameof(fileInfo));
+        var archive = new GZipArchive();
+        archive.SourceStream = new SourceStream(
+            fileInfo,
+            i => ArchiveVolumeFactory.GetFilePart(i, fileInfo),
+            readerOptions ?? new ReaderOptions()
+        );
+        archive.LazyVolumes = new Lazy<IReadOnlyCollection<GZipVolume>>(() => archive.LoadVolumes(archive.SourceStream).ToList());
+        archive.LazyEntries = new Lazy<IReadOnlyCollection<GZipArchiveEntry>>(
+            () => archive.LoadEntriesAsync(archive.Volumes, cancellationToken).GetAwaiter().GetResult().ToList()
+        );
+        return archive;
     }
 
     /// <summary>
@@ -66,6 +110,33 @@ public class GZipArchive : AbstractWritableArchive<GZipArchiveEntry, GZipVolume>
     }
 
     /// <summary>
+    /// Constructor with all file parts passed in
+    /// </summary>
+    /// <param name="fileInfos"></param>
+    /// <param name="readerOptions"></param>
+    /// <param name="cancellationToken"></param>
+    public static async Task<GZipArchive> OpenAsync(
+        IEnumerable<FileInfo> fileInfos,
+        ReaderOptions? readerOptions = null,
+        CancellationToken cancellationToken = default
+    )
+    {
+        fileInfos.NotNull(nameof(fileInfos));
+        var files = fileInfos.ToArray();
+        var archive = new GZipArchive();
+        archive.SourceStream = new SourceStream(
+            files[0],
+            i => i < files.Length ? files[i] : null,
+            readerOptions ?? new ReaderOptions()
+        );
+        archive.LazyVolumes = new Lazy<IReadOnlyCollection<GZipVolume>>(() => archive.LoadVolumes(archive.SourceStream).ToList());
+        archive.LazyEntries = new Lazy<IReadOnlyCollection<GZipArchiveEntry>>(
+            () => archive.LoadEntriesAsync(archive.Volumes, cancellationToken).GetAwaiter().GetResult().ToList()
+        );
+        return archive;
+    }
+
+    /// <summary>
     /// Constructor with all stream parts passed in
     /// </summary>
     /// <param name="streams"></param>
@@ -81,6 +152,33 @@ public class GZipArchive : AbstractWritableArchive<GZipArchiveEntry, GZipVolume>
                 readerOptions ?? new ReaderOptions()
             )
         );
+    }
+
+    /// <summary>
+    /// Constructor with all stream parts passed in
+    /// </summary>
+    /// <param name="streams"></param>
+    /// <param name="readerOptions"></param>
+    /// <param name="cancellationToken"></param>
+    public static async Task<GZipArchive> OpenAsync(
+        IEnumerable<Stream> streams,
+        ReaderOptions? readerOptions = null,
+        CancellationToken cancellationToken = default
+    )
+    {
+        streams.NotNull(nameof(streams));
+        var strms = streams.ToArray();
+        var archive = new GZipArchive();
+        archive.SourceStream = new SourceStream(
+            strms[0],
+            i => i < strms.Length ? strms[i] : null,
+            readerOptions ?? new ReaderOptions()
+        );
+        archive.LazyVolumes = new Lazy<IReadOnlyCollection<GZipVolume>>(() => archive.LoadVolumes(archive.SourceStream).ToList());
+        archive.LazyEntries = new Lazy<IReadOnlyCollection<GZipArchiveEntry>>(
+            () => archive.LoadEntriesAsync(archive.Volumes, cancellationToken).GetAwaiter().GetResult().ToList()
+        );
+        return archive;
     }
 
     /// <summary>
@@ -102,19 +200,60 @@ public class GZipArchive : AbstractWritableArchive<GZipArchiveEntry, GZipVolume>
         );
     }
 
+    /// <summary>
+    /// Takes a seekable Stream as a source
+    /// </summary>
+    /// <param name="stream"></param>
+    /// <param name="readerOptions"></param>
+    /// <param name="cancellationToken"></param>
+    public static async Task<GZipArchive> OpenAsync(
+        Stream stream,
+        ReaderOptions? readerOptions = null,
+        CancellationToken cancellationToken = default
+    )
+    {
+        stream.NotNull(nameof(stream));
+
+        if (stream is not { CanSeek: true })
+        {
+            throw new ArgumentException("Stream must be seekable", nameof(stream));
+        }
+
+        var archive = new GZipArchive();
+        archive.SourceStream = new SourceStream(stream, _ => null, readerOptions ?? new ReaderOptions());
+        archive.LazyVolumes = new Lazy<IReadOnlyCollection<GZipVolume>>(() => archive.LoadVolumes(archive.SourceStream).ToList());
+        archive.LazyEntries = new Lazy<IReadOnlyCollection<GZipArchiveEntry>>(
+            () => archive.LoadEntriesAsync(archive.Volumes, cancellationToken).GetAwaiter().GetResult().ToList()
+        );
+        return archive;
+    }
+
     public static GZipArchive Create() => new();
 
     /// <summary>
-    /// Constructor with a SourceStream able to handle FileInfo and Streams.
+    * Constructor with a SourceStream able to handle FileInfo and Streams.
     /// </summary>
     /// <param name="sourceStream"></param>
     private GZipArchive(SourceStream sourceStream)
         : base(ArchiveType.GZip, sourceStream) { }
 
+    private GZipArchive()
+        : base(ArchiveType.GZip)
+    {
+        LazyVolumes = new Lazy<IReadOnlyCollection<GZipVolume>>(() => LoadVolumes(SourceStream!).ToList());
+        LazyEntries = new Lazy<IReadOnlyCollection<GZipArchiveEntry>>(() => LoadEntries(Volumes).ToList());
+    }
+
     protected override IEnumerable<GZipVolume> LoadVolumes(SourceStream sourceStream)
     {
         sourceStream.LoadAllParts();
         return sourceStream.Streams.Select(a => new GZipVolume(a, ReaderOptions, 0));
+    }
+
+    protected override async Task<IReadOnlyCollection<GZipVolume>> LoadVolumesAsync(SourceStream sourceStream, CancellationToken cancellationToken)
+    {
+        await sourceStream.LoadAllPartsAsync(cancellationToken).ConfigureAwait(false);
+        return sourceStream.Streams.Select(a => new GZipVolume(a, ReaderOptions, 0)).ToList();
     }
 
     public static bool IsGZipFile(string filePath) => IsGZipFile(new FileInfo(filePath));
@@ -128,6 +267,25 @@ public class GZipArchive : AbstractWritableArchive<GZipArchiveEntry, GZipVolume>
 
         using Stream stream = fileInfo.OpenRead();
         return IsGZipFile(stream);
+    }
+
+    public static Task<bool> IsGZipFileAsync(
+        string filePath,
+        CancellationToken cancellationToken = default
+    ) => IsGZipFileAsync(new FileInfo(filePath), cancellationToken);
+
+    public static async Task<bool> IsGZipFileAsync(
+        FileInfo fileInfo,
+        CancellationToken cancellationToken = default
+    )
+    {
+        if (!fileInfo.Exists)
+        {
+            return false;
+        }
+
+        using Stream stream = fileInfo.OpenRead();
+        return await IsGZipFileAsync(stream, cancellationToken).ConfigureAwait(false);
     }
 
     public void SaveTo(string filePath) => SaveTo(new FileInfo(filePath));
@@ -155,6 +313,28 @@ public class GZipArchive : AbstractWritableArchive<GZipArchiveEntry, GZipVolume>
 
         // workitem 8501: handle edge case (decompress empty stream)
         if (!stream.ReadFully(header))
+        {
+            return false;
+        }
+
+        if (header[0] != 0x1F || header[1] != 0x8B || header[2] != 8)
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    public static async Task<bool> IsGZipFileAsync(
+        Stream stream,
+        CancellationToken cancellationToken = default
+    )
+    {
+        // read the header on the first read
+        byte[] header = new byte[10];
+
+        // workitem 8501: handle edge case (decompress empty stream)
+        if (!await stream.ReadFullyAsync(header, cancellationToken).ConfigureAwait(false))
         {
             return false;
         }
@@ -244,6 +424,17 @@ public class GZipArchive : AbstractWritableArchive<GZipArchiveEntry, GZipVolume>
         );
     }
 
+    protected override async Task<IReadOnlyCollection<GZipArchiveEntry>> LoadEntriesAsync(IEnumerable<GZipVolume> volumes, CancellationToken cancellationToken)
+    {
+        var list = new List<GZipArchiveEntry>();
+        var stream = volumes.Single().Stream;
+        list.Add(new GZipArchiveEntry(
+            this,
+            new GZipFilePart(stream, ReaderOptions.ArchiveEncoding)
+        ));
+        return list.AsReadOnly();
+    }
+
     protected override IReader CreateReaderForSolidExtraction()
     {
         var stream = Volumes.Single().Stream;
@@ -251,3 +442,4 @@ public class GZipArchive : AbstractWritableArchive<GZipArchiveEntry, GZipVolume>
         return GZipReader.Open(stream);
     }
 }
+

@@ -2,12 +2,14 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using SharpCompress.Common;
 using SharpCompress.Common.Tar;
 using SharpCompress.Common.Tar.Headers;
 using SharpCompress.IO;
+using SharpCompress.Polyfills;
 using SharpCompress.Readers;
 using SharpCompress.Readers.Tar;
 using SharpCompress.Writers;
@@ -29,6 +31,22 @@ public class TarArchive : AbstractWritableArchive<TarArchiveEntry, TarVolume>
     }
 
     /// <summary>
+    /// Constructor expects a filepath to an existing file.
+    /// </summary>
+    /// <param name="filePath"></param>
+    /// <param name="readerOptions"></param>
+    /// <param name="cancellationToken"></param>
+    public static async Task<TarArchive> OpenAsync(
+        string filePath,
+        ReaderOptions? readerOptions = null,
+        CancellationToken cancellationToken = default
+    )
+    {
+        filePath.NotNullOrEmpty(nameof(filePath));
+        return await OpenAsync(new FileInfo(filePath), readerOptions ?? new ReaderOptions(), cancellationToken);
+    }
+
+    /// <summary>
     /// Constructor with a FileInfo object to an existing file.
     /// </summary>
     /// <param name="fileInfo"></param>
@@ -43,6 +61,32 @@ public class TarArchive : AbstractWritableArchive<TarArchiveEntry, TarVolume>
                 readerOptions ?? new ReaderOptions()
             )
         );
+    }
+
+    /// <summary>
+    /// Constructor with a FileInfo object to an existing file.
+    /// </summary>
+    /// <param name="fileInfo"></param>
+    /// <param name="readerOptions"></param>
+    /// <param name="cancellationToken"></param>
+    public static async Task<TarArchive> OpenAsync(
+        FileInfo fileInfo,
+        ReaderOptions? readerOptions = null,
+        CancellationToken cancellationToken = default
+    )
+    {
+        fileInfo.NotNull(nameof(fileInfo));
+        var archive = new TarArchive();
+        archive.SourceStream = new SourceStream(
+            fileInfo,
+            i => ArchiveVolumeFactory.GetFilePart(i, fileInfo),
+            readerOptions ?? new ReaderOptions()
+        );
+        archive.LazyVolumes = new Lazy<IReadOnlyCollection<TarVolume>>(() => archive.LoadVolumes(archive.SourceStream).ToList());
+        archive.LazyEntries = new Lazy<IReadOnlyCollection<TarArchiveEntry>>(
+            () => archive.LoadEntriesAsync(archive.Volumes, cancellationToken).GetAwaiter().GetResult().ToList()
+        );
+        return archive;
     }
 
     /// <summary>
@@ -67,6 +111,33 @@ public class TarArchive : AbstractWritableArchive<TarArchiveEntry, TarVolume>
     }
 
     /// <summary>
+    /// Constructor with all file parts passed in
+    /// </summary>
+    /// <param name="fileInfos"></param>
+    /// <param name="readerOptions"></param>
+    /// <param name="cancellationToken"></param>
+    public static async Task<TarArchive> OpenAsync(
+        IEnumerable<FileInfo> fileInfos,
+        ReaderOptions? readerOptions = null,
+        CancellationToken cancellationToken = default
+    )
+    {
+        fileInfos.NotNull(nameof(fileInfos));
+        var files = fileInfos.ToArray();
+        var archive = new TarArchive();
+        archive.SourceStream = new SourceStream(
+            files[0],
+            i => i < files.Length ? files[i] : null,
+            readerOptions ?? new ReaderOptions()
+        );
+        archive.LazyVolumes = new Lazy<IReadOnlyCollection<TarVolume>>(() => archive.LoadVolumes(archive.SourceStream).ToList());
+        archive.LazyEntries = new Lazy<IReadOnlyCollection<TarArchiveEntry>>(
+            () => archive.LoadEntriesAsync(archive.Volumes, cancellationToken).GetAwaiter().GetResult().ToList()
+        );
+        return archive;
+    }
+
+    /// <summary>
     /// Constructor with all stream parts passed in
     /// </summary>
     /// <param name="streams"></param>
@@ -82,6 +153,33 @@ public class TarArchive : AbstractWritableArchive<TarArchiveEntry, TarVolume>
                 readerOptions ?? new ReaderOptions()
             )
         );
+    }
+
+    /// <summary>
+    /// Constructor with all stream parts passed in
+    /// </summary>
+    /// <param name="streams"></param>
+    /// <param name="readerOptions"></param>
+    /// <param name="cancellationToken"></param>
+    public static async Task<TarArchive> OpenAsync(
+        IEnumerable<Stream> streams,
+        ReaderOptions? readerOptions = null,
+        CancellationToken cancellationToken = default
+    )
+    {
+        streams.NotNull(nameof(streams));
+        var strms = streams.ToArray();
+        var archive = new TarArchive();
+        archive.SourceStream = new SourceStream(
+            strms[0],
+            i => i < strms.Length ? strms[i] : null,
+            readerOptions ?? new ReaderOptions()
+        );
+        archive.LazyVolumes = new Lazy<IReadOnlyCollection<TarVolume>>(() => archive.LoadVolumes(archive.SourceStream).ToList());
+        archive.LazyEntries = new Lazy<IReadOnlyCollection<TarArchiveEntry>>(
+            () => archive.LoadEntriesAsync(archive.Volumes, cancellationToken).GetAwaiter().GetResult().ToList()
+        );
+        return archive;
     }
 
     /// <summary>
@@ -103,6 +201,34 @@ public class TarArchive : AbstractWritableArchive<TarArchiveEntry, TarVolume>
         );
     }
 
+    /// <summary>
+    /// Takes a seekable Stream as a source
+    /// </summary>
+    /// <param name="stream"></param>
+    /// <param name="readerOptions"></param>
+    /// <param name="cancellationToken"></param>
+    public static async Task<TarArchive> OpenAsync(
+        Stream stream,
+        ReaderOptions? readerOptions = null,
+        CancellationToken cancellationToken = default
+    )
+    {
+        stream.NotNull(nameof(stream));
+
+        if (stream is not { CanSeek: true })
+        {
+            throw new ArgumentException("Stream must be seekable", nameof(stream));
+        }
+
+        var archive = new TarArchive();
+        archive.SourceStream = new SourceStream(stream, i => null, readerOptions ?? new ReaderOptions());
+        archive.LazyVolumes = new Lazy<IReadOnlyCollection<TarVolume>>(() => archive.LoadVolumes(archive.SourceStream).ToList());
+        archive.LazyEntries = new Lazy<IReadOnlyCollection<TarArchiveEntry>>(
+            () => archive.LoadEntriesAsync(archive.Volumes, cancellationToken).GetAwaiter().GetResult().ToList()
+        );
+        return archive;
+    }
+
     public static bool IsTarFile(string filePath) => IsTarFile(new FileInfo(filePath));
 
     public static bool IsTarFile(FileInfo fileInfo)
@@ -115,12 +241,50 @@ public class TarArchive : AbstractWritableArchive<TarArchiveEntry, TarVolume>
         return IsTarFile(stream);
     }
 
+    public static async Task<bool> IsTarFileAsync(
+        string filePath,
+        CancellationToken cancellationToken = default
+    ) => await IsTarFileAsync(new FileInfo(filePath), cancellationToken);
+
+    public static async Task<bool> IsTarFileAsync(
+        FileInfo fileInfo,
+        CancellationToken cancellationToken = default
+    )
+    {
+        if (!fileInfo.Exists)
+        {
+            return false;
+        }
+        using Stream stream = fileInfo.OpenRead();
+        return await IsTarFileAsync(stream, cancellationToken);
+    }
+
     public static bool IsTarFile(Stream stream)
     {
         try
         {
             var tarHeader = new TarHeader(new ArchiveEncoding());
             var readSucceeded = tarHeader.Read(new BinaryReader(stream));
+            var isEmptyArchive =
+                tarHeader.Name?.Length == 0
+                && tarHeader.Size == 0
+                && Enum.IsDefined(typeof(EntryType), tarHeader.EntryType);
+            return readSucceeded || isEmptyArchive;
+        }
+        catch { }
+        return false;
+    }
+
+    public static async Task<bool> IsTarFileAsync(
+        Stream stream,
+        CancellationToken cancellationToken = default
+    )
+    {
+        try
+        {
+            var tarHeader = new TarHeader(new ArchiveEncoding());
+            var readSucceeded = await tarHeader.ReadAsync(stream, cancellationToken)
+                .ConfigureAwait(false);
             var isEmptyArchive =
                 tarHeader.Name?.Length == 0
                 && tarHeader.Size == 0
@@ -145,7 +309,11 @@ public class TarArchive : AbstractWritableArchive<TarArchiveEntry, TarVolume>
         : base(ArchiveType.Tar, sourceStream) { }
 
     private TarArchive()
-        : base(ArchiveType.Tar) { }
+        : base(ArchiveType.Tar)
+    {
+        LazyVolumes = new Lazy<IReadOnlyCollection<TarVolume>>(() => LoadVolumes(SourceStream!).ToList());
+        LazyEntries = new Lazy<IReadOnlyCollection<TarArchiveEntry>>(() => LoadEntries(Volumes).ToList());
+    }
 
     protected override IEnumerable<TarArchiveEntry> LoadEntries(IEnumerable<TarVolume> volumes)
     {
@@ -203,6 +371,67 @@ public class TarArchive : AbstractWritableArchive<TarArchiveEntry, TarVolume>
                 throw new IncompleteArchiveException("Failed to read TAR header");
             }
         }
+    }
+
+    private async Task<IReadOnlyCollection<TarArchiveEntry>> LoadEntriesAsync(IEnumerable<TarVolume> volumes, CancellationToken cancellationToken)
+    {
+        var list = new List<TarArchiveEntry>();
+        var stream = volumes.Single().Stream;
+        TarHeader? previousHeader = null;
+        await foreach (
+            var header in TarHeaderFactory.ReadHeaderAsync(
+                StreamingMode.Seekable,
+                stream,
+                ReaderOptions.ArchiveEncoding,
+                cancellationToken
+            ).WithCancellation(cancellationToken)
+        )
+        {
+            if (header != null)
+            {
+                if (header.EntryType == EntryType.LongName)
+                {
+                    previousHeader = header;
+                }
+                else
+                {
+                    if (previousHeader != null)
+                    {
+                        var entry = new TarArchiveEntry(
+                            this,
+                            new TarFilePart(previousHeader, stream),
+                            CompressionType.None
+                        );
+
+                        var oldStreamPos = stream.Position;
+
+                        using (var entryStream = entry.OpenEntryStream())
+                        {
+                            using var memoryStream = new MemoryStream();
+                            await entryStream.CopyToAsync(memoryStream, cancellationToken).ConfigureAwait(false);
+                            memoryStream.Position = 0;
+                            var bytes = memoryStream.ToArray();
+
+                            header.Name = ReaderOptions.ArchiveEncoding.Decode(bytes).TrimNulls();
+                        }
+
+                        stream.Position = oldStreamPos;
+
+                        previousHeader = null;
+                    }
+                    list.Add(new TarArchiveEntry(
+                        this,
+                        new TarFilePart(header, stream),
+                        CompressionType.None
+                    ));
+                }
+            }
+            else
+            {
+                throw new IncompleteArchiveException("Failed to read TAR header");
+            }
+        }
+        return list.AsReadOnly();
     }
 
     public static TarArchive Create() => new();

@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using SharpCompress.Common;
 using SharpCompress.Common.Rar;
 using SharpCompress.Common.Rar.Headers;
@@ -191,11 +193,47 @@ public class RarArchive : AbstractArchive<RarArchiveEntry, RarVolume>
         return IsRarFile(stream);
     }
 
+    public static Task<bool> IsRarFileAsync(
+        string filePath,
+        CancellationToken cancellationToken = default
+    ) => IsRarFileAsync(new FileInfo(filePath), cancellationToken);
+
+    public static async Task<bool> IsRarFileAsync(
+        FileInfo fileInfo,
+        CancellationToken cancellationToken = default
+    )
+    {
+        if (!fileInfo.Exists)
+        {
+            return false;
+        }
+        using Stream stream = fileInfo.OpenRead();
+        return await IsRarFileAsync(stream, cancellationToken).ConfigureAwait(false);
+    }
+
     public static bool IsRarFile(Stream stream, ReaderOptions? options = null)
     {
         try
         {
             MarkHeader.Read(stream, true, false);
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    public static async Task<bool> IsRarFileAsync(
+        Stream stream,
+        CancellationToken cancellationToken = default,
+        ReaderOptions? options = null
+    )
+    {
+        try
+        {
+            await MarkHeader.ReadAsync(stream, true, false, cancellationToken)
+                .ConfigureAwait(false);
             return true;
         }
         catch

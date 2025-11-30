@@ -1,6 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Runtime.CompilerServices;
+using System.Threading;
+using System.Threading.Tasks;
 using SharpCompress.Common.Zip.Headers;
 using SharpCompress.IO;
 
@@ -75,6 +78,90 @@ internal sealed class SeekableZipHeaderFactory : ZipHeaderFactory
             if (nextHeader is DirectoryEntryHeader entryHeader)
             {
                 //entry could be zero bytes so we need to know that.
+                entryHeader.HasData = entryHeader.CompressedSize != 0;
+                yield return entryHeader;
+            }
+            else if (nextHeader is DirectoryEndHeader endHeader)
+            {
+                yield return endHeader;
+            }
+        }
+    }
+
+    internal async IAsyncEnumerable<ZipHeader> ReadSeekableHeaderAsync(
+        Stream stream,
+        [EnumeratorCancellation] CancellationToken cancellationToken
+    )
+    {
+        // Still need BinaryReader for synchronous SeekBackToHeader, until SeekBackToHeaderAsync is implemented
+        var reader = new BinaryReader(stream);
+
+        SeekBackToHeader(stream, reader); // Synchronous due to stream.Seek and BinaryReader
+
+        var eocd_location = stream.Position;
+        var entry = new DirectoryEndHeader();
+        await entry.ReadAsync(stream, cancellationToken).ConfigureAwait(false);
+
+        if (entry.IsZip64)
+        {
+            _zip64 = true;
+
+            stream.Seek(eocd_location - ZIP64_EOCD_LENGTH - 4, SeekOrigin.Begin); // Synchronous seek
+            var zip64_locator = await ReadUInt32Async(stream, cancellationToken)
+                .ConfigureAwait(false);
+            if (zip64_locator != ZIP64_END_OF_CENTRAL_DIRECTORY_LOCATOR)
+            {
+                throw new ArchiveException("Failed to locate the Zip64 Directory Locator");
+            }
+
+            var zip64Locator = new Zip64DirectoryEndLocatorHeader();
+            await zip64Locator.ReadAsync(stream, cancellationToken).ConfigureAwait(false);
+
+            stream.Seek(
+                zip64Locator.RelativeOffsetOfTheEndOfDirectoryRecord,
+                SeekOrigin.Begin
+            ); // Synchronous seek
+            var zip64Signature = await ReadUInt32Async(stream, cancellationToken)
+                .ConfigureAwait(false);
+            if (zip64Signature != ZIP64_END_OF_CENTRAL_DIRECTORY)
+            {
+                throw new ArchiveException("Failed to locate the Zip64 Header");
+            }
+
+            var zip64Entry = new Zip64DirectoryEndHeader();
+            await zip64Entry.ReadAsync(stream, cancellationToken).ConfigureAwait(false);
+            stream.Seek(
+                zip64Entry.DirectoryStartOffsetRelativeToDisk,
+                SeekOrigin.Begin
+            ); // Synchronous seek
+        }
+        else
+        {
+            stream.Seek(entry.DirectoryStartOffsetRelativeToDisk, SeekOrigin.Begin); // Synchronous seek
+        }
+
+        var position = stream.Position;
+        while (true)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            stream.Position = position; // Synchronous seek
+            var signature = await ReadUInt32Async(stream, cancellationToken)
+                .ConfigureAwait(false);
+            var nextHeader = await ReadHeaderAsync(
+                signature,
+                stream,
+                _zip64,
+                cancellationToken
+            ).ConfigureAwait(false);
+            position = stream.Position;
+
+            if (nextHeader is null)
+            {
+                yield break;
+            }
+
+            if (nextHeader is DirectoryEntryHeader entryHeader)
+            {
                 entryHeader.HasData = entryHeader.CompressedSize != 0;
                 yield return entryHeader;
             }

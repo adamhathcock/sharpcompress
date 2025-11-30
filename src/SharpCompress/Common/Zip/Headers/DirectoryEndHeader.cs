@@ -1,4 +1,7 @@
+using System.Buffers.Binary;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace SharpCompress.Common.Zip.Headers;
 
@@ -17,6 +20,22 @@ internal class DirectoryEndHeader : ZipHeader
         DirectoryStartOffsetRelativeToDisk = reader.ReadUInt32();
         CommentLength = reader.ReadUInt16();
         Comment = reader.ReadBytes(CommentLength);
+    }
+
+    internal async Task ReadAsync(Stream stream, CancellationToken cancellationToken)
+    {
+        VolumeNumber = await ZipHeaderFactory.ReadUInt16Async(stream, cancellationToken).ConfigureAwait(false);
+        FirstVolumeWithDirectory = await ZipHeaderFactory.ReadUInt16Async(stream, cancellationToken)
+            .ConfigureAwait(false);
+        TotalNumberOfEntriesInDisk = await ZipHeaderFactory.ReadUInt16Async(stream, cancellationToken)
+            .ConfigureAwait(false);
+        TotalNumberOfEntries = await ZipHeaderFactory.ReadUInt16Async(stream, cancellationToken)
+            .ConfigureAwait(false);
+        DirectorySize = await ZipHeaderFactory.ReadUInt32Async(stream, cancellationToken).ConfigureAwait(false);
+        DirectoryStartOffsetRelativeToDisk = await ZipHeaderFactory.ReadUInt32Async(stream, cancellationToken)
+            .ConfigureAwait(false);
+        CommentLength = await ZipHeaderFactory.ReadUInt16Async(stream, cancellationToken).ConfigureAwait(false);
+        Comment = await ZipHeaderFactory.ReadBytesAsync(stream, CommentLength, cancellationToken).ConfigureAwait(false);
     }
 
     public ushort VolumeNumber { get; private set; }

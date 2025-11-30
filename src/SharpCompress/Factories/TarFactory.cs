@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using SharpCompress.Archives;
 using SharpCompress.Archives.Tar;
 using SharpCompress.Common;
@@ -59,6 +61,12 @@ public class TarFactory
         int bufferSize = ReaderOptions.DefaultBufferSize
     ) => TarArchive.IsTarFile(stream);
 
+    public override Task<bool> IsArchiveAsync(
+        Stream stream,
+        CancellationToken cancellationToken,
+        string? password = null
+    ) => TarArchive.IsTarFileAsync(stream, cancellationToken);
+
     #endregion
 
     #region IArchiveFactory
@@ -68,8 +76,22 @@ public class TarFactory
         TarArchive.Open(stream, readerOptions);
 
     /// <inheritdoc/>
+    public async Task<IArchive> OpenAsync(
+        Stream stream,
+        ReaderOptions? readerOptions = null,
+        CancellationToken cancellationToken = default
+    ) => await TarArchive.OpenAsync(stream, readerOptions, cancellationToken).ConfigureAwait(false);
+
+    /// <inheritdoc/>
     public IArchive Open(FileInfo fileInfo, ReaderOptions? readerOptions = null) =>
         TarArchive.Open(fileInfo, readerOptions);
+
+    /// <inheritdoc/>
+    public async Task<IArchive> OpenAsync(
+        FileInfo fileInfo,
+        ReaderOptions? readerOptions = null,
+        CancellationToken cancellationToken = default
+    ) => await TarArchive.OpenAsync(fileInfo, readerOptions, cancellationToken).ConfigureAwait(false);
 
     #endregion
 
@@ -80,8 +102,22 @@ public class TarFactory
         TarArchive.Open(streams, readerOptions);
 
     /// <inheritdoc/>
+    public async Task<IArchive> OpenAsync(
+        IReadOnlyList<Stream> streams,
+        ReaderOptions? readerOptions = null,
+        CancellationToken cancellationToken = default
+    ) => await TarArchive.OpenAsync(streams, readerOptions, cancellationToken).ConfigureAwait(false);
+
+    /// <inheritdoc/>
     public IArchive Open(IReadOnlyList<FileInfo> fileInfos, ReaderOptions? readerOptions = null) =>
         TarArchive.Open(fileInfos, readerOptions);
+
+    /// <inheritdoc/>
+    public async Task<IArchive> OpenAsync(
+        IReadOnlyList<FileInfo> fileInfos,
+        ReaderOptions? readerOptions = null,
+        CancellationToken cancellationToken = default
+    ) => await TarArchive.OpenAsync(fileInfos, readerOptions, cancellationToken).ConfigureAwait(false);
 
     #endregion
 
@@ -243,6 +279,7 @@ public class TarFactory
         new TarWriter(stream, new TarWriterOptions(writerOptions));
 
     #endregion
+
 
     #region IWriteableArchiveFactory
 

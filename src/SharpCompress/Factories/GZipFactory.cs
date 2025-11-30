@@ -1,6 +1,9 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
+using System.Threading;
+using System.Threading.Tasks;
 using SharpCompress.Archives;
 using SharpCompress.Archives.GZip;
 using SharpCompress.Archives.Tar;
@@ -46,6 +49,12 @@ public class GZipFactory
         int bufferSize = ReaderOptions.DefaultBufferSize
     ) => GZipArchive.IsGZipFile(stream);
 
+    public override Task<bool> IsArchiveAsync(
+        Stream stream,
+        CancellationToken cancellationToken,
+        string? password = null
+    ) => GZipArchive.IsGZipFileAsync(stream, cancellationToken);
+
     #endregion
 
     #region IArchiveFactory
@@ -55,8 +64,22 @@ public class GZipFactory
         GZipArchive.Open(stream, readerOptions);
 
     /// <inheritdoc/>
+    public async Task<IArchive> OpenAsync(
+        Stream stream,
+        ReaderOptions? readerOptions = null,
+        CancellationToken cancellationToken = default
+    ) => await GZipArchive.OpenAsync(stream, readerOptions, cancellationToken).ConfigureAwait(false);
+
+    /// <inheritdoc/>
     public IArchive Open(FileInfo fileInfo, ReaderOptions? readerOptions = null) =>
         GZipArchive.Open(fileInfo, readerOptions);
+
+    /// <inheritdoc/>
+    public async Task<IArchive> OpenAsync(
+        FileInfo fileInfo,
+        ReaderOptions? readerOptions = null,
+        CancellationToken cancellationToken = default
+    ) => await GZipArchive.OpenAsync(fileInfo, readerOptions, cancellationToken).ConfigureAwait(false);
 
     #endregion
 
@@ -67,8 +90,22 @@ public class GZipFactory
         GZipArchive.Open(streams, readerOptions);
 
     /// <inheritdoc/>
+    public async Task<IArchive> OpenAsync(
+        IReadOnlyList<Stream> streams,
+        ReaderOptions? readerOptions = null,
+        CancellationToken cancellationToken = default
+    ) => await GZipArchive.OpenAsync(streams, readerOptions, cancellationToken).ConfigureAwait(false);
+
+    /// <inheritdoc/>
     public IArchive Open(IReadOnlyList<FileInfo> fileInfos, ReaderOptions? readerOptions = null) =>
         GZipArchive.Open(fileInfos, readerOptions);
+
+    /// <inheritdoc/>
+    public async Task<IArchive> OpenAsync(
+        IReadOnlyList<FileInfo> fileInfos,
+        ReaderOptions? readerOptions = null,
+        CancellationToken cancellationToken = default
+    ) => await GZipArchive.OpenAsync(fileInfos, readerOptions, cancellationToken).ConfigureAwait(false);
 
     #endregion
 

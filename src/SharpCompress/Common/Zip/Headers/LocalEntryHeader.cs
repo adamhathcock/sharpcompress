@@ -1,5 +1,8 @@
+using System.Buffers.Binary;
 using System.IO;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace SharpCompress.Common.Zip.Headers;
 
@@ -70,6 +73,88 @@ internal class LocalEntryHeader : ZipFileEntry
         if (unixTimeExtra is not null)
         {
             // Tuple order is last modified time, last access time, and creation time.
+            var unixTimeTuple = ((UnixTimeExtraField)unixTimeExtra).UnicodeTimes;
+
+            if (unixTimeTuple.Item1.HasValue)
+            {
+                var dosTime = Utility.DateTimeToDosTime(unixTimeTuple.Item1.Value);
+
+                LastModifiedDate = (ushort)(dosTime >> 16);
+                LastModifiedTime = (ushort)(dosTime & 0x0FFFF);
+            }
+            else if (unixTimeTuple.Item2.HasValue)
+            {
+                var dosTime = Utility.DateTimeToDosTime(unixTimeTuple.Item2.Value);
+
+                LastModifiedDate = (ushort)(dosTime >> 16);
+                LastModifiedTime = (ushort)(dosTime & 0x0FFFF);
+            }
+            else if (unixTimeTuple.Item3.HasValue)
+            {
+                var dosTime = Utility.DateTimeToDosTime(unixTimeTuple.Item3.Value);
+
+                LastModifiedDate = (ushort)(dosTime >> 16);
+                LastModifiedTime = (ushort)(dosTime & 0x0FFFF);
+            }
+        }
+    }
+
+    internal async Task ReadAsync(Stream stream, CancellationToken cancellationToken)
+    {
+        Version = await ZipHeaderFactory.ReadUInt16Async(stream, cancellationToken).ConfigureAwait(false);
+        Flags = (HeaderFlags)await ZipHeaderFactory.ReadUInt16Async(stream, cancellationToken).ConfigureAwait(false);
+        CompressionMethod = (ZipCompressionMethod)
+            await ZipHeaderFactory.ReadUInt16Async(stream, cancellationToken).ConfigureAwait(false);
+        OriginalLastModifiedTime =
+            LastModifiedTime = await ZipHeaderFactory.ReadUInt16Async(stream, cancellationToken).ConfigureAwait(false);
+        OriginalLastModifiedDate =
+            LastModifiedDate = await ZipHeaderFactory.ReadUInt16Async(stream, cancellationToken).ConfigureAwait(false);
+        Crc = await ZipHeaderFactory.ReadUInt32Async(stream, cancellationToken).ConfigureAwait(false);
+        CompressedSize = await ZipHeaderFactory.ReadUInt32Async(stream, cancellationToken).ConfigureAwait(false);
+        UncompressedSize = await ZipHeaderFactory.ReadUInt32Async(stream, cancellationToken).ConfigureAwait(false);
+        var nameLength = await ZipHeaderFactory.ReadUInt16Async(stream, cancellationToken).ConfigureAwait(false);
+        var extraLength = await ZipHeaderFactory.ReadUInt16Async(stream, cancellationToken).ConfigureAwait(false);
+        var name = await ZipHeaderFactory.ReadBytesAsync(stream, nameLength, cancellationToken).ConfigureAwait(false);
+        var extra = await ZipHeaderFactory.ReadBytesAsync(stream, extraLength, cancellationToken).ConfigureAwait(false);
+
+        if (Flags.HasFlag(HeaderFlags.Efs))
+        {
+            Name = ArchiveEncoding.DecodeUTF8(name);
+        }
+        else
+        {
+            Name = ArchiveEncoding.Decode(name);
+        }
+
+        LoadExtra(extra);
+
+        var unicodePathExtra = Extra.FirstOrDefault(u =>
+            u.Type == ExtraDataType.UnicodePathExtraField
+        );
+        if (unicodePathExtra != null && ArchiveEncoding.Forced == null)
+        {
+            Name = ((ExtraUnicodePathExtraField)unicodePathExtra).UnicodeName;
+        }
+
+        var zip64ExtraData = Extra.OfType<Zip64ExtendedInformationExtraField>().FirstOrDefault();
+        if (zip64ExtraData != null)
+        {
+            zip64ExtraData.Process(UncompressedSize, CompressedSize, 0, 0);
+
+            if (CompressedSize == uint.MaxValue)
+            {
+                CompressedSize = zip64ExtraData.CompressedSize;
+            }
+            if (UncompressedSize == uint.MaxValue)
+            {
+                UncompressedSize = zip64ExtraData.UncompressedSize;
+            }
+        }
+
+        var unixTimeExtra = Extra.FirstOrDefault(u => u.Type == ExtraDataType.UnixTimeExtraField);
+
+        if (unixTimeExtra is not null)
+        {
             var unixTimeTuple = ((UnixTimeExtraField)unixTimeExtra).UnicodeTimes;
 
             if (unixTimeTuple.Item1.HasValue)

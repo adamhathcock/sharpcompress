@@ -1,5 +1,8 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 using SharpCompress.Archives;
 using SharpCompress.Archives.SevenZip;
 using SharpCompress.Common;
@@ -34,6 +37,12 @@ public class SevenZipFactory : Factory, IArchiveFactory, IMultiArchiveFactory
         int bufferSize = ReaderOptions.DefaultBufferSize
     ) => SevenZipArchive.IsSevenZipFile(stream);
 
+    public override Task<bool> IsArchiveAsync(
+        Stream stream,
+        CancellationToken cancellationToken,
+        string? password = null
+    ) => SevenZipArchive.IsSevenZipFileAsync(stream, cancellationToken);
+
     #endregion
 
     #region IArchiveFactory
@@ -43,8 +52,22 @@ public class SevenZipFactory : Factory, IArchiveFactory, IMultiArchiveFactory
         SevenZipArchive.Open(stream, readerOptions);
 
     /// <inheritdoc/>
+    public Task<IArchive> OpenAsync(
+        Stream stream,
+        ReaderOptions? readerOptions = null,
+        CancellationToken cancellationToken = default
+    ) => throw new NotImplementedException();
+
+    /// <inheritdoc/>
     public IArchive Open(FileInfo fileInfo, ReaderOptions? readerOptions = null) =>
         SevenZipArchive.Open(fileInfo, readerOptions);
+
+    /// <inheritdoc/>
+    public Task<IArchive> OpenAsync(
+        FileInfo fileInfo,
+        ReaderOptions? readerOptions = null,
+        CancellationToken cancellationToken = default
+    ) => throw new NotImplementedException();
 
     #endregion
 
@@ -55,8 +78,22 @@ public class SevenZipFactory : Factory, IArchiveFactory, IMultiArchiveFactory
         SevenZipArchive.Open(streams, readerOptions);
 
     /// <inheritdoc/>
+    public Task<IArchive> OpenAsync(
+        IReadOnlyList<Stream> streams,
+        ReaderOptions? readerOptions = null,
+        CancellationToken cancellationToken = default
+    ) => throw new NotImplementedException();
+
+    /// <inheritdoc/>
     public IArchive Open(IReadOnlyList<FileInfo> fileInfos, ReaderOptions? readerOptions = null) =>
         SevenZipArchive.Open(fileInfos, readerOptions);
+
+    /// <inheritdoc/>
+    public Task<IArchive> OpenAsync(
+        IReadOnlyList<FileInfo> fileInfos,
+        ReaderOptions? readerOptions = null,
+        CancellationToken cancellationToken = default
+    ) => throw new NotImplementedException();
 
     #endregion
 

@@ -2,10 +2,14 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
+using System.Threading;
+using System.Threading.Tasks;
 using SharpCompress.Common;
 using SharpCompress.Common.SevenZip;
 using SharpCompress.Compressors.LZMA.Utilites;
 using SharpCompress.IO;
+using SharpCompress.Polyfills;
 using SharpCompress.Readers;
 
 namespace SharpCompress.Archives.SevenZip;
@@ -26,6 +30,18 @@ public class SevenZipArchive : AbstractArchive<SevenZipArchiveEntry, SevenZipVol
     }
 
     /// <summary>
+    /// Constructor expects a filepath to an existing file.
+    /// </summary>
+    /// <param name="filePath"></param>
+    /// <param name="readerOptions"></param>
+    /// <param name="cancellationToken"></param>
+    public static Task<SevenZipArchive> OpenAsync(
+        string filePath,
+        ReaderOptions? readerOptions = null,
+        CancellationToken cancellationToken = default
+    ) => throw new NotImplementedException();
+
+    /// <summary>
     /// Constructor with a FileInfo object to an existing file.
     /// </summary>
     /// <param name="fileInfo"></param>
@@ -41,6 +57,18 @@ public class SevenZipArchive : AbstractArchive<SevenZipArchiveEntry, SevenZipVol
             )
         );
     }
+
+    /// <summary>
+    /// Constructor with a FileInfo object to an existing file.
+    /// </summary>
+    /// <param name="fileInfo"></param>
+    /// <param name="readerOptions"></param>
+    /// <param name="cancellationToken"></param>
+    public static Task<SevenZipArchive> OpenAsync(
+        FileInfo fileInfo,
+        ReaderOptions? readerOptions = null,
+        CancellationToken cancellationToken = default
+    ) => throw new NotImplementedException();
 
     /// <summary>
     /// Constructor with all file parts passed in
@@ -64,6 +92,18 @@ public class SevenZipArchive : AbstractArchive<SevenZipArchiveEntry, SevenZipVol
     }
 
     /// <summary>
+    /// Constructor with all file parts passed in
+    /// </summary>
+    /// <param name="fileInfos"></param>
+    /// <param name="readerOptions"></param>
+    /// <param name="cancellationToken"></param>
+    public static Task<SevenZipArchive> OpenAsync(
+        IEnumerable<FileInfo> fileInfos,
+        ReaderOptions? readerOptions = null,
+        CancellationToken cancellationToken = default
+    ) => throw new NotImplementedException();
+
+    /// <summary>
     /// Constructor with all stream parts passed in
     /// </summary>
     /// <param name="streams"></param>
@@ -85,6 +125,18 @@ public class SevenZipArchive : AbstractArchive<SevenZipArchiveEntry, SevenZipVol
     }
 
     /// <summary>
+    /// Constructor with all stream parts passed in
+    /// </summary>
+    /// <param name="streams"></param>
+    /// <param name="readerOptions"></param>
+    /// <param name="cancellationToken"></param>
+    public static Task<SevenZipArchive> OpenAsync(
+        IEnumerable<Stream> streams,
+        ReaderOptions? readerOptions = null,
+        CancellationToken cancellationToken = default
+    ) => throw new NotImplementedException();
+
+    /// <summary>
     /// Takes a seekable Stream as a source
     /// </summary>
     /// <param name="stream"></param>
@@ -104,6 +156,18 @@ public class SevenZipArchive : AbstractArchive<SevenZipArchiveEntry, SevenZipVol
     }
 
     /// <summary>
+    /// Takes a seekable Stream as a source
+    /// </summary>
+    /// <param name="stream"></param>
+    /// <param name="readerOptions"></param>
+    /// <param name="cancellationToken"></param>
+    public static Task<SevenZipArchive> OpenAsync(
+        Stream stream,
+        ReaderOptions? readerOptions = null,
+        CancellationToken cancellationToken = default
+    ) => throw new NotImplementedException();
+
+    /// <summary>
     /// Constructor with a SourceStream able to handle FileInfo and Streams.
     /// </summary>
     /// <param name="sourceStream"></param>
@@ -118,6 +182,11 @@ public class SevenZipArchive : AbstractArchive<SevenZipArchiveEntry, SevenZipVol
 
     public static bool IsSevenZipFile(string filePath) => IsSevenZipFile(new FileInfo(filePath));
 
+    public static Task<bool> IsSevenZipFileAsync(
+        string filePath,
+        CancellationToken cancellationToken = default
+    ) => IsSevenZipFileAsync(new FileInfo(filePath), cancellationToken);
+
     public static bool IsSevenZipFile(FileInfo fileInfo)
     {
         if (!fileInfo.Exists)
@@ -126,6 +195,19 @@ public class SevenZipArchive : AbstractArchive<SevenZipArchiveEntry, SevenZipVol
         }
         using Stream stream = fileInfo.OpenRead();
         return IsSevenZipFile(stream);
+    }
+
+    public static async Task<bool> IsSevenZipFileAsync(
+        FileInfo fileInfo,
+        CancellationToken cancellationToken = default
+    )
+    {
+        if (!fileInfo.Exists)
+        {
+            return false;
+        }
+        using Stream stream = fileInfo.OpenRead();
+        return await IsSevenZipFileAsync(stream, cancellationToken).ConfigureAwait(false);
     }
 
     internal SevenZipArchive()
@@ -163,6 +245,8 @@ public class SevenZipArchive : AbstractArchive<SevenZipArchiveEntry, SevenZipVol
         return entries;
     }
 
+    protected override Task<IReadOnlyCollection<SevenZipArchiveEntry>> LoadEntriesAsync(IEnumerable<SevenZipVolume> volumes, CancellationToken cancellationToken) => throw new NotImplementedException();
+
     private void LoadFactory(Stream stream)
     {
         if (_database is null)
@@ -174,11 +258,28 @@ public class SevenZipArchive : AbstractArchive<SevenZipArchiveEntry, SevenZipVol
         }
     }
 
+    protected override Task<IReadOnlyCollection<SevenZipVolume>> LoadVolumesAsync(SourceStream sourceStream, CancellationToken cancellationToken) => throw new NotImplementedException();
+
     public static bool IsSevenZipFile(Stream stream)
     {
         try
         {
             return SignatureMatch(stream);
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    public static async Task<bool> IsSevenZipFileAsync(
+        Stream stream,
+        CancellationToken cancellationToken = default
+    )
+    {
+        try
+        {
+            return await SignatureMatchAsync(stream, cancellationToken).ConfigureAwait(false);
         }
         catch
         {
@@ -194,6 +295,16 @@ public class SevenZipArchive : AbstractArchive<SevenZipArchiveEntry, SevenZipVol
         var reader = new BinaryReader(stream);
         ReadOnlySpan<byte> signatureBytes = reader.ReadBytes(6);
         return signatureBytes.SequenceEqual(Signature);
+    }
+
+    private static async Task<bool> SignatureMatchAsync(
+        Stream stream,
+        CancellationToken cancellationToken
+    )
+    {
+        var signatureBytes = new byte[6];
+        await stream.ReadFullyAsync(signatureBytes, cancellationToken).ConfigureAwait(false);
+        return signatureBytes.SequenceEqual(Signature.ToArray());
     }
 
     protected override IReader CreateReaderForSolidExtraction() =>

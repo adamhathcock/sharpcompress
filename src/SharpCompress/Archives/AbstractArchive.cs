@@ -1,7 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using SharpCompress.Common;
 using SharpCompress.IO;
 using SharpCompress.Readers;
@@ -12,10 +15,8 @@ public abstract class AbstractArchive<TEntry, TVolume> : IArchive, IArchiveExtra
     where TEntry : IArchiveEntry
     where TVolume : IVolume
 {
-    private readonly LazyReadOnlyCollection<TVolume> _lazyVolumes;
-    private readonly LazyReadOnlyCollection<TEntry> _lazyEntries;
     private bool _disposed;
-    private readonly SourceStream? _sourceStream;
+    protected SourceStream? SourceStream { get; internal set; }
 
     public event EventHandler<ArchiveExtractionEventArgs<IArchiveEntry>>? EntryExtractionBegin;
     public event EventHandler<ArchiveExtractionEventArgs<IArchiveEntry>>? EntryExtractionEnd;
@@ -24,21 +25,24 @@ public abstract class AbstractArchive<TEntry, TVolume> : IArchive, IArchiveExtra
     public event EventHandler<FilePartExtractionBeginEventArgs>? FilePartExtractionBegin;
     protected ReaderOptions ReaderOptions { get; }
 
+    protected Lazy<IReadOnlyCollection<TVolume>> LazyVolumes { get; internal set; }
+    protected Lazy<IReadOnlyCollection<TEntry>> LazyEntries { get; internal set; }
+
     internal AbstractArchive(ArchiveType type, SourceStream sourceStream)
     {
         Type = type;
         ReaderOptions = sourceStream.ReaderOptions;
-        _sourceStream = sourceStream;
-        _lazyVolumes = new LazyReadOnlyCollection<TVolume>(LoadVolumes(_sourceStream));
-        _lazyEntries = new LazyReadOnlyCollection<TEntry>(LoadEntries(Volumes));
+        SourceStream = sourceStream;
+        LazyVolumes = new Lazy<IReadOnlyCollection<TVolume>>(() => LoadVolumes(SourceStream).ToList());
+        LazyEntries = new Lazy<IReadOnlyCollection<TEntry>>(() => LoadEntries(Volumes).ToList());
     }
 
     internal AbstractArchive(ArchiveType type)
     {
         Type = type;
         ReaderOptions = new();
-        _lazyVolumes = new LazyReadOnlyCollection<TVolume>(Enumerable.Empty<TVolume>());
-        _lazyEntries = new LazyReadOnlyCollection<TEntry>(Enumerable.Empty<TEntry>());
+        LazyVolumes = new Lazy<IReadOnlyCollection<TVolume>>(() => Enumerable.Empty<TVolume>().ToList());
+        LazyEntries = new Lazy<IReadOnlyCollection<TEntry>>(() => Enumerable.Empty<TEntry>().ToList());
     }
 
     public ArchiveType Type { get; }
@@ -61,12 +65,12 @@ public abstract class AbstractArchive<TEntry, TVolume> : IArchive, IArchiveExtra
     /// <summary>
     /// Returns an ReadOnlyCollection of all the RarArchiveEntries across the one or many parts of the RarArchive.
     /// </summary>
-    public virtual ICollection<TEntry> Entries => _lazyEntries;
+    public virtual ICollection<TEntry> Entries => LazyEntries.Value;
 
     /// <summary>
     /// Returns an ReadOnlyCollection of all the RarArchiveVolumes across the one or many parts of the RarArchive.
     /// </summary>
-    public ICollection<TVolume> Volumes => _lazyVolumes;
+    public ICollection<TVolume> Volumes => LazyVolumes.Value;
 
     /// <summary>
     /// The total size of the files compressed in the archive.
@@ -82,18 +86,26 @@ public abstract class AbstractArchive<TEntry, TVolume> : IArchive, IArchiveExtra
 
     protected abstract IEnumerable<TVolume> LoadVolumes(SourceStream sourceStream);
     protected abstract IEnumerable<TEntry> LoadEntries(IEnumerable<TVolume> volumes);
+    protected virtual Task<IReadOnlyCollection<TEntry>> LoadEntriesAsync(IEnumerable<TVolume> volumes, CancellationToken cancellationToken)
+    {
+        return Task.FromResult<IReadOnlyCollection<TEntry>>(LoadEntries(volumes).ToList());
+    }
+    protected virtual Task<IReadOnlyCollection<TVolume>> LoadVolumesAsync(SourceStream sourceStream, CancellationToken cancellationToken)
+    {
+        return Task.FromResult<IReadOnlyCollection<TVolume>>(LoadVolumes(sourceStream).ToList());
+    }
 
     IEnumerable<IArchiveEntry> IArchive.Entries => Entries.Cast<IArchiveEntry>();
 
-    IEnumerable<IVolume> IArchive.Volumes => _lazyVolumes.Cast<IVolume>();
+    IEnumerable<IVolume> IArchive.Volumes => LazyVolumes.Value.Cast<IVolume>();
 
     public virtual void Dispose()
     {
         if (!_disposed)
         {
-            _lazyVolumes.ForEach(v => v.Dispose());
-            _lazyEntries.GetLoaded().Cast<Entry>().ForEach(x => x.Close());
-            _sourceStream?.Dispose();
+            LazyVolumes.Value.ForEach(v => v.Dispose());
+            LazyEntries.Value.Cast<Entry>().ForEach(x => x.Close());
+            SourceStream?.Dispose();
 
             _disposed = true;
         }
@@ -101,8 +113,8 @@ public abstract class AbstractArchive<TEntry, TVolume> : IArchive, IArchiveExtra
 
     void IArchiveExtractionListener.EnsureEntriesLoaded()
     {
-        _lazyEntries.EnsureFullyLoaded();
-        _lazyVolumes.EnsureFullyLoaded();
+        LazyEntries.Value.EnsureFullyLoaded();
+        LazyVolumes.Value.EnsureFullyLoaded();
     }
 
     void IExtractionListener.FireCompressedBytesRead(

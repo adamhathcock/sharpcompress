@@ -1,7 +1,10 @@
 using System;
+using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using SharpCompress.Common.Zip.Headers;
 using SharpCompress.IO;
 
@@ -200,4 +203,230 @@ internal class StreamingZipHeaderFactory : ZipHeaderFactory
             yield return header;
         }
     }
+
+    internal async IAsyncEnumerable<ZipHeader> ReadStreamHeaderAsync(
+        Stream stream,
+        [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken cancellationToken
+    )
+    {
+        if (stream is not SharpCompressStream)
+        {
+            if (stream is SourceStream src)
+            {
+                stream = new SharpCompressStream(
+                    stream,
+                    src.ReaderOptions.LeaveStreamOpen,
+                    bufferSize: src.ReaderOptions.BufferSize
+                );
+            }
+            else
+            {
+                throw new ArgumentException("Stream must be a SharpCompressStream", nameof(stream));
+            }
+        }
+        var rewindableStream = (SharpCompressStream)stream;
+
+        while (true)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            uint headerBytes = 0;
+            if (
+                _lastEntryHeader != null
+                && FlagUtility.HasFlag(_lastEntryHeader.Flags, HeaderFlags.UsePostDataDescriptor)
+            )
+            {
+                if (_lastEntryHeader.Part is null)
+                {
+                    continue;
+                }
+
+                var pos = rewindableStream.CanSeek ? (long?)rewindableStream.Position : null;
+
+                var crc = await ReadUInt32Async(rewindableStream, cancellationToken)
+                    .ConfigureAwait(false);
+                if (crc == POST_DATA_DESCRIPTOR)
+                {
+                    crc = await ReadUInt32Async(rewindableStream, cancellationToken)
+                        .ConfigureAwait(false);
+                }
+                _lastEntryHeader.Crc = crc;
+
+                ulong compSize = await ReadUInt32Async(rewindableStream, cancellationToken)
+                    .ConfigureAwait(false);
+                ulong uncompSize = await ReadUInt32Async(rewindableStream, cancellationToken)
+                    .ConfigureAwait(false);
+                headerBytes = await ReadUInt32Async(rewindableStream, cancellationToken)
+                    .ConfigureAwait(false);
+
+                bool isSentinel = compSize == 0xFFFFFFFF || uncompSize == 0xFFFFFFFF;
+                bool isHeader = headerBytes == 0x04034b50 || headerBytes == 0x02014b50;
+
+                if (!isHeader && !isSentinel)
+                {
+                    compSize = (uncompSize << 32) | compSize;
+                    uncompSize =
+                        ((ulong)headerBytes << 32)
+                        | await ReadUInt32Async(rewindableStream, cancellationToken)
+                            .ConfigureAwait(false);
+                    headerBytes = await ReadUInt32Async(rewindableStream, cancellationToken)
+                        .ConfigureAwait(false);
+                }
+                else if (isSentinel)
+                {
+                    compSize = await ReadUInt64Async(rewindableStream, cancellationToken)
+                        .ConfigureAwait(false);
+                    uncompSize = await ReadUInt64Async(rewindableStream, cancellationToken)
+                        .ConfigureAwait(false);
+                }
+
+                _lastEntryHeader.CompressedSize = (long)compSize;
+                _lastEntryHeader.UncompressedSize = (long)uncompSize;
+
+                if (pos.HasValue)
+                {
+                    _lastEntryHeader.DataStartPosition = pos - _lastEntryHeader.CompressedSize;
+                }
+            }
+            else if (_lastEntryHeader != null && _lastEntryHeader.IsZip64)
+            {
+                if (_lastEntryHeader.Part is null)
+                    continue;
+
+                var pos = rewindableStream.CanSeek ? (long?)rewindableStream.Position : null;
+
+                headerBytes = await ReadUInt32Async(rewindableStream, cancellationToken)
+                    .ConfigureAwait(false);
+
+                await ReadBytesAsync(rewindableStream, 12, cancellationToken).ConfigureAwait(false); //skip a bunch of fields we don't care about
+
+                var crc = await ReadUInt32Async(rewindableStream, cancellationToken)
+                    .ConfigureAwait(false);
+
+                if (crc == POST_DATA_DESCRIPTOR)
+                {
+                    crc = await ReadUInt32Async(rewindableStream, cancellationToken)
+                        .ConfigureAwait(false);
+                }
+                _lastEntryHeader.Crc = crc;
+
+                var compressed_size = await ReadUInt32Async(rewindableStream, cancellationToken)
+                    .ConfigureAwait(false);
+                var uncompressed_size = await ReadUInt32Async(rewindableStream, cancellationToken)
+                    .ConfigureAwait(false);
+
+                var test_header = !(headerBytes == 0x04034b50 || headerBytes == 0x02014b50);
+
+                var test_64bit = ((long)uncompressed_size << 32) | compressed_size;
+                if (test_64bit == _lastEntryHeader.CompressedSize && test_header)
+                {
+                    _lastEntryHeader.UncompressedSize =
+                        ((long)await ReadUInt32Async(rewindableStream, cancellationToken)
+                            .ConfigureAwait(false) << 32) | headerBytes;
+                    headerBytes = await ReadUInt32Async(rewindableStream, cancellationToken)
+                        .ConfigureAwait(false);
+                }
+                else
+                {
+                    _lastEntryHeader.UncompressedSize = uncompressed_size;
+                }
+
+                if (pos.HasValue)
+                {
+                    _lastEntryHeader.DataStartPosition = pos - _lastEntryHeader.CompressedSize;
+
+                    rewindableStream.Position = pos.Value + 4;
+                }
+            }
+            else
+            {
+                headerBytes = await ReadUInt32Async(rewindableStream, cancellationToken)
+                    .ConfigureAwait(false);
+            }
+
+            _lastEntryHeader = null;
+            var header = await ReadHeaderAsync(
+                headerBytes,
+                rewindableStream,
+                cancellationToken: cancellationToken
+            );
+            if (header is null)
+            {
+                yield break;
+            }
+
+            if (header.ZipHeaderType == ZipHeaderType.LocalEntry)
+            {
+                var local_header = ((LocalEntryHeader)header);
+                var dir_header = _entries?.FirstOrDefault(entry =>
+                    entry.Key == local_header.Name
+                    && local_header.CompressedSize == 0
+                    && local_header.UncompressedSize == 0
+                    && local_header.Crc == 0
+                    && local_header.IsDirectory == false
+                );
+
+                if (dir_header != null)
+                {
+                    local_header.UncompressedSize = dir_header.Size;
+                    local_header.CompressedSize = dir_header.CompressedSize;
+                    local_header.Crc = (uint)dir_header.Crc;
+                }
+
+                if (local_header.CompressedSize > 0)
+                {
+                    header.HasData = true;
+                }
+                else if (local_header.Flags.HasFlag(HeaderFlags.UsePostDataDescriptor))
+                {
+                    var nextHeaderBytes = await ReadUInt32Async(
+                        rewindableStream,
+                        cancellationToken
+                    );
+                    ((IStreamStack)rewindableStream).Rewind(sizeof(uint));
+
+                    header.HasData = !IsHeader(nextHeaderBytes);
+                }
+                else
+                {
+                    header.HasData = false;
+                }
+            }
+            yield return header;
+        }
+    }
+
+    private static async Task<byte[]> ReadBytesAsync(
+        Stream stream,
+        int count,
+        CancellationToken cancellationToken
+    )
+    {
+        var buffer = new byte[count];
+        var read = await stream.ReadAsync(buffer, 0, count, cancellationToken);
+        if (read < count)
+        {
+            throw new EndOfStreamException();
+        }
+        return buffer;
+    }
+
+    private static async Task<uint> ReadUInt32Async(
+        Stream stream,
+        CancellationToken cancellationToken
+    )
+    {
+        var buffer = await ReadBytesAsync(stream, 4, cancellationToken);
+        return BinaryPrimitives.ReadUInt32LittleEndian(buffer);
+    }
+
+    private static async Task<ushort> ReadUInt16Async(
+        Stream stream,
+        CancellationToken cancellationToken
+    )
+    {
+        var buffer = await ReadBytesAsync(stream, 2, cancellationToken);
+        return BinaryPrimitives.ReadUInt16LittleEndian(buffer);
+    }
+
 }

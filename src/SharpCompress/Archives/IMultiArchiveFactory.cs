@@ -1,5 +1,7 @@
 using System.Collections.Generic;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 using SharpCompress.Factories;
 using SharpCompress.Readers;
 
@@ -28,9 +30,33 @@ public interface IMultiArchiveFactory : IFactory
     IArchive Open(IReadOnlyList<Stream> streams, ReaderOptions? readerOptions = null);
 
     /// <summary>
+    /// Constructor with IEnumerable FileInfo objects, multi and split support.
+    /// </summary>
+    /// <param name="streams"></param>
+    /// <param name="readerOptions">reading options.</param>
+    /// <param name="cancellationToken">the cancellation token.</param>
+    Task<IArchive> OpenAsync(
+        IReadOnlyList<Stream> streams,
+        ReaderOptions? readerOptions = null,
+        CancellationToken cancellationToken = default
+    );
+
+    /// <summary>
     /// Constructor with IEnumerable Stream objects, multi and split support.
     /// </summary>
     /// <param name="fileInfos"></param>
     /// <param name="readerOptions">reading options.</param>
     IArchive Open(IReadOnlyList<FileInfo> fileInfos, ReaderOptions? readerOptions = null);
+
+    /// <summary>
+    /// Constructor with IEnumerable Stream objects, multi and split support.
+    /// </summary>
+    /// <param name="fileInfos"></param>
+    /// <param name="readerOptions">reading options.</param>
+    /// <param name="cancellationToken">the cancellation token.</param>
+    Task<IArchive> OpenAsync(
+        IReadOnlyList<FileInfo> fileInfos,
+        ReaderOptions? readerOptions = null,
+        CancellationToken cancellationToken = default
+    );
 }

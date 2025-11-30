@@ -18,7 +18,7 @@ namespace SharpCompress.Archives.Zip;
 
 public class ZipArchive : AbstractWritableArchive<ZipArchiveEntry, ZipVolume>
 {
-    private readonly SeekableZipHeaderFactory? headerFactory;
+    protected internal SeekableZipHeaderFactory? headerFactory;
 
     /// <summary>
     /// Gets or sets the compression level applied to files added to the archive,
@@ -144,6 +144,14 @@ public class ZipArchive : AbstractWritableArchive<ZipArchiveEntry, ZipVolume>
         return IsZipFile(stream, password, bufferSize);
     }
 
+
+
+// ... other using statements
+
+namespace SharpCompress.Archives.Zip;
+
+//... existing class
+
     public static bool IsZipFile(
         Stream stream,
         string? password = null,
@@ -177,6 +185,41 @@ public class ZipArchive : AbstractWritableArchive<ZipArchiveEntry, ZipVolume>
         }
     }
 
+    public static async Task<bool> IsZipFileAsync(
+        Stream stream,
+        string? password = null,
+        CancellationToken cancellationToken = default,
+        int bufferSize = ReaderOptions.DefaultBufferSize
+    )
+    {
+        var headerFactory = new StreamingZipHeaderFactory(password, new ArchiveEncoding(), null);
+        try
+        {
+            if (stream is not SharpCompressStream)
+            {
+                stream = new SharpCompressStream(stream, bufferSize: bufferSize);
+            }
+
+            var header = await headerFactory
+                .ReadStreamHeaderAsync(stream, cancellationToken)
+                .FirstOrDefaultAsync(x => x.ZipHeaderType != ZipHeaderType.Split, cancellationToken)
+                .ConfigureAwait(false);
+            if (header is null)
+            {
+                return false;
+            }
+            return Enum.IsDefined(typeof(ZipHeaderType), header.ZipHeaderType);
+        }
+        catch (CryptographicException)
+        {
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
     public static bool IsZipMulti(
         Stream stream,
         string? password = null,
@@ -194,6 +237,50 @@ public class ZipArchive : AbstractWritableArchive<ZipArchiveEntry, ZipVolume>
             var header = headerFactory
                 .ReadStreamHeader(stream)
                 .FirstOrDefault(x => x.ZipHeaderType != ZipHeaderType.Split);
+            if (header is null)
+            {
+                if (stream.CanSeek) //could be multipart. Test for central directory - might not be z64 safe
+                {
+                    var z = new SeekableZipHeaderFactory(password, new ArchiveEncoding());
+                    var x = z.ReadSeekableHeader(stream).FirstOrDefault();
+                    return x?.ZipHeaderType == ZipHeaderType.DirectoryEntry;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+            return Enum.IsDefined(typeof(ZipHeaderType), header.ZipHeaderType);
+        }
+        catch (CryptographicException)
+        {
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    public static async Task<bool> IsZipMultiAsync(
+        Stream stream,
+        string? password = null,
+        CancellationToken cancellationToken = default,
+        int bufferSize = ReaderOptions.DefaultBufferSize
+    )
+    {
+        var headerFactory = new StreamingZipHeaderFactory(password, new ArchiveEncoding(), null);
+        try
+        {
+            if (stream is not SharpCompressStream)
+            {
+                stream = new SharpCompressStream(stream, bufferSize: bufferSize);
+            }
+
+            var header = await headerFactory
+                .ReadStreamHeaderAsync(stream, cancellationToken)
+                .FirstOrDefaultAsync(x => x.ZipHeaderType != ZipHeaderType.Split, cancellationToken)
+                .ConfigureAwait(false);
             if (header is null)
             {
                 if (stream.CanSeek) //could be multipart. Test for central directory - might not be z64 safe

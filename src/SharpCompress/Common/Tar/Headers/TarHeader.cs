@@ -2,6 +2,8 @@ using System;
 using System.Buffers.Binary;
 using System.IO;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace SharpCompress.Common.Tar.Headers;
 
@@ -187,6 +189,92 @@ internal sealed class TarHeader
         return true;
     }
 
+    internal async Task<bool> ReadAsync(Stream stream, CancellationToken cancellationToken)
+    {
+        string? longName = null;
+        string? longLinkName = null;
+        var hasLongValue = true;
+        byte[] buffer;
+        EntryType entryType;
+
+        do
+        {
+            buffer = await ReadBlockAsync(stream, cancellationToken).ConfigureAwait(false);
+
+            if (buffer.Length == 0)
+            {
+                return false;
+            }
+
+            entryType = ReadEntryType(buffer);
+
+            // LongName and LongLink headers can follow each other and need
+            // to apply to the header that follows them.
+            if (entryType == EntryType.LongName)
+            {
+                longName = await ReadLongNameAsync(stream, buffer, cancellationToken)
+                    .ConfigureAwait(false);
+                continue;
+            }
+            else if (entryType == EntryType.LongLink)
+            {
+                longLinkName = await ReadLongNameAsync(stream, buffer, cancellationToken)
+                    .ConfigureAwait(false);
+                continue;
+            }
+
+            hasLongValue = false;
+        } while (hasLongValue);
+
+        // Check header checksum
+        if (!checkChecksum(buffer))
+        {
+            return false;
+        }
+
+        Name = longName ?? ArchiveEncoding.Decode(buffer, 0, 100).TrimNulls();
+        EntryType = entryType;
+        Size = ReadSize(buffer);
+
+        // for symlinks, additionally read the linkname
+        if (entryType == EntryType.SymLink || entryType == EntryType.HardLink)
+        {
+            LinkName = longLinkName ?? ArchiveEncoding.Decode(buffer, 157, 100).TrimNulls();
+        }
+
+        Mode = ReadAsciiInt64Base8(buffer, 100, 7);
+
+        if (entryType == EntryType.Directory)
+        {
+            Mode |= 0b1_000_000_000;
+        }
+
+        UserId = ReadAsciiInt64Base8oldGnu(buffer, 108, 7);
+        GroupId = ReadAsciiInt64Base8oldGnu(buffer, 116, 7);
+
+        var unixTimeStamp = ReadAsciiInt64Base8(buffer, 136, 11);
+
+        LastModifiedTime = EPOCH.AddSeconds(unixTimeStamp).ToLocalTime();
+        Magic = ArchiveEncoding.Decode(buffer, 257, 6).TrimNulls();
+
+        if (!string.IsNullOrEmpty(Magic) && "ustar".Equals(Magic))
+        {
+            var namePrefix = ArchiveEncoding.Decode(buffer, 345, 157).TrimNulls();
+
+            if (!string.IsNullOrEmpty(namePrefix))
+            {
+                Name = namePrefix + "/" + Name;
+            }
+        }
+
+        if (entryType != EntryType.LongName && Name.Length == 0)
+        {
+            return false;
+        }
+
+        return true;
+    }
+
     private string ReadLongName(BinaryReader reader, byte[] buffer)
     {
         var size = ReadSize(buffer);
@@ -207,6 +295,39 @@ internal sealed class TarHeader
         if (remainingBytesToRead < BLOCK_SIZE)
         {
             reader.ReadBytes(remainingBytesToRead);
+        }
+        return ArchiveEncoding.Decode(nameBytes, 0, nameBytes.Length).TrimNulls();
+    }
+
+    private async Task<string> ReadLongNameAsync(
+        Stream stream,
+        byte[] buffer,
+        CancellationToken cancellationToken
+    )
+    {
+        var size = ReadSize(buffer);
+
+        // Validate size to prevent memory exhaustion from malformed headers
+        if (size < 0 || size > MAX_LONG_NAME_SIZE)
+        {
+            throw new InvalidFormatException(
+                $"Long name size {size} is invalid or exceeds maximum allowed size of {MAX_LONG_NAME_SIZE} bytes"
+            );
+        }
+
+        var nameLength = (int)size;
+        var nameBytes = new byte[nameLength];
+        await ReadFullyAsync(stream, nameBytes, 0, nameLength, cancellationToken)
+            .ConfigureAwait(false);
+
+        var remainingBytesToRead = BLOCK_SIZE - (nameLength % BLOCK_SIZE);
+
+        // Read the rest of the block and discard the data
+        if (remainingBytesToRead > 0 && remainingBytesToRead < BLOCK_SIZE)
+        {
+            var discardBuffer = new byte[remainingBytesToRead];
+            await ReadFullyAsync(stream, discardBuffer, 0, remainingBytesToRead, cancellationToken)
+                .ConfigureAwait(false);
         }
         return ArchiveEncoding.Decode(nameBytes, 0, nameBytes.Length).TrimNulls();
     }
@@ -232,6 +353,60 @@ internal sealed class TarHeader
             throw new InvalidFormatException("Buffer is invalid size");
         }
         return buffer;
+    }
+
+    private static async Task<byte[]> ReadBlockAsync(
+        Stream stream,
+        CancellationToken cancellationToken
+    )
+    {
+        var buffer = new byte[BLOCK_SIZE];
+        var bytesRead = 0;
+        while (bytesRead < BLOCK_SIZE)
+        {
+            var read = await stream.ReadAsync(
+                buffer,
+                bytesRead,
+                BLOCK_SIZE - bytesRead,
+                cancellationToken
+            );
+            if (read == 0)
+            {
+                // end of stream. If we read nothing, return empty array.
+                // if we read some, but not a full block, it's an error.
+                if (bytesRead == 0)
+                {
+                    return Array.Empty<byte>();
+                }
+                throw new InvalidFormatException("Buffer is invalid size");
+            }
+            bytesRead += read;
+        }
+
+        return buffer;
+    }
+
+    private static async Task ReadFullyAsync(
+        Stream stream,
+        byte[] buffer,
+        int offset,
+        int count,
+        CancellationToken cancellationToken
+    )
+    {
+        var totalRead = 0;
+        while (totalRead < count)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            var read = await stream
+                .ReadAsync(buffer, offset + totalRead, count - totalRead, cancellationToken)
+                .ConfigureAwait(false);
+            if (read == 0)
+            {
+                throw new EndOfStreamException("End of stream reached, but more bytes were expected.");
+            }
+            totalRead += read;
+        }
     }
 
     private static void WriteStringBytes(ReadOnlySpan<byte> name, Span<byte> buffer, int length)

@@ -1,4 +1,7 @@
+using System.Buffers.Binary;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace SharpCompress.Common.Zip.Headers;
 
@@ -24,6 +27,35 @@ internal class Zip64DirectoryEndHeader : ZipHeader
                 - SIZE_OF_FIXED_HEADER_DATA_EXCEPT_SIGNATURE_AND_SIZE_FIELDS
             )
         );
+    }
+
+    internal async Task ReadAsync(Stream stream, CancellationToken cancellationToken)
+    {
+        SizeOfDirectoryEndRecord = (long)
+            await ZipHeaderFactory.ReadUInt64Async(stream, cancellationToken).ConfigureAwait(false);
+        VersionMadeBy = await ZipHeaderFactory.ReadUInt16Async(stream, cancellationToken).ConfigureAwait(false);
+        VersionNeededToExtract = await ZipHeaderFactory.ReadUInt16Async(stream, cancellationToken)
+            .ConfigureAwait(false);
+        VolumeNumber = await ZipHeaderFactory.ReadUInt32Async(stream, cancellationToken).ConfigureAwait(false);
+        FirstVolumeWithDirectory = await ZipHeaderFactory.ReadUInt32Async(stream, cancellationToken)
+            .ConfigureAwait(false);
+        TotalNumberOfEntriesInDisk = (long)
+            await ZipHeaderFactory.ReadUInt64Async(stream, cancellationToken).ConfigureAwait(false);
+        TotalNumberOfEntries = (long)
+            await ZipHeaderFactory.ReadUInt64Async(stream, cancellationToken).ConfigureAwait(false);
+        DirectorySize = (long)
+            await ZipHeaderFactory.ReadUInt64Async(stream, cancellationToken).ConfigureAwait(false);
+        DirectoryStartOffsetRelativeToDisk = (long)
+            await ZipHeaderFactory.ReadUInt64Async(stream, cancellationToken).ConfigureAwait(false);
+        DataSector = await ZipHeaderFactory.ReadBytesAsync(
+                stream,
+                (int)(
+                    SizeOfDirectoryEndRecord
+                    - SIZE_OF_FIXED_HEADER_DATA_EXCEPT_SIGNATURE_AND_SIZE_FIELDS
+                ),
+                cancellationToken
+            )
+            .ConfigureAwait(false);
     }
 
     private const int SIZE_OF_FIXED_HEADER_DATA_EXCEPT_SIGNATURE_AND_SIZE_FIELDS = 44;
