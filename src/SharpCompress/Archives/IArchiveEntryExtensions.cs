@@ -10,17 +10,23 @@ public static class IArchiveEntryExtensions
 {
     private const int BufferSize = 81920;
 
-    public static void WriteTo(this IArchiveEntry archiveEntry, Stream streamToWriteTo)
+    /// <summary>
+    /// Extract entry to the specified stream.
+    /// </summary>
+    /// <param name="archiveEntry">The archive entry to extract.</param>
+    /// <param name="streamToWriteTo">The stream to write the entry content to.</param>
+    /// <param name="progress">Optional progress reporter for tracking extraction progress.</param>
+    public static void WriteTo(
+        this IArchiveEntry archiveEntry,
+        Stream streamToWriteTo,
+        IProgress<ProgressReport>? progress = null
+    )
     {
         if (archiveEntry.IsDirectory)
         {
             throw new ExtractionException("Entry is a file directory and cannot be extracted.");
         }
 
-        var progressInfo = archiveEntry.Archive as IArchiveProgressInfo;
-        progressInfo?.EnsureEntriesLoaded();
-
-        IProgress<ProgressReport>? progress = progressInfo?.Progress;
         using var entryStream = archiveEntry.OpenEntryStream();
 
         if (progress is null)
@@ -44,9 +50,17 @@ public static class IArchiveEntryExtensions
         }
     }
 
+    /// <summary>
+    /// Extract entry to the specified stream asynchronously.
+    /// </summary>
+    /// <param name="archiveEntry">The archive entry to extract.</param>
+    /// <param name="streamToWriteTo">The stream to write the entry content to.</param>
+    /// <param name="progress">Optional progress reporter for tracking extraction progress.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
     public static async Task WriteToAsync(
         this IArchiveEntry archiveEntry,
         Stream streamToWriteTo,
+        IProgress<ProgressReport>? progress = null,
         CancellationToken cancellationToken = default
     )
     {
@@ -55,10 +69,6 @@ public static class IArchiveEntryExtensions
             throw new ExtractionException("Entry is a file directory and cannot be extracted.");
         }
 
-        var progressInfo = archiveEntry.Archive as IArchiveProgressInfo;
-        progressInfo?.EnsureEntriesLoaded();
-
-        IProgress<ProgressReport>? progress = progressInfo?.Progress;
         using var entryStream = archiveEntry.OpenEntryStream();
 
         if (progress is null)
@@ -172,7 +182,9 @@ public static class IArchiveEntryExtensions
             async (x, fm) =>
             {
                 using var fs = File.Open(destinationFileName, fm);
-                await entry.WriteToAsync(fs, cancellationToken).ConfigureAwait(false);
+                await entry
+                    .WriteToAsync(fs, progress: null, cancellationToken: cancellationToken)
+                    .ConfigureAwait(false);
             },
             cancellationToken
         );

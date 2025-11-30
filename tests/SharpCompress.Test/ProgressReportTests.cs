@@ -135,17 +135,16 @@ public class ProgressReportTests : TestBase
             writer.Write("test.txt", sourceStream, DateTime.Now);
         }
 
-        // Now open as archive and extract entry with progress
+        // Now open as archive and extract entry with progress as parameter
         archiveStream.Position = 0;
-        var readerOptions = new ReaderOptions { Progress = progress };
 
-        using var archive = ZipArchive.Open(archiveStream, readerOptions);
+        using var archive = ZipArchive.Open(archiveStream);
         foreach (var entry in archive.Entries)
         {
             if (!entry.IsDirectory)
             {
                 using var extractedStream = new MemoryStream();
-                entry.WriteTo(extractedStream);
+                entry.WriteTo(extractedStream, progress);
             }
         }
 
@@ -173,17 +172,16 @@ public class ProgressReportTests : TestBase
             writer.Write("test.txt", sourceStream, DateTime.Now);
         }
 
-        // Now open as archive and extract entry async with progress
+        // Now open as archive and extract entry async with progress as parameter
         archiveStream.Position = 0;
-        var readerOptions = new ReaderOptions { Progress = progress };
 
-        using var archive = ZipArchive.Open(archiveStream, readerOptions);
+        using var archive = ZipArchive.Open(archiveStream);
         foreach (var entry in archive.Entries)
         {
             if (!entry.IsDirectory)
             {
                 using var extractedStream = new MemoryStream();
-                await entry.WriteToAsync(extractedStream);
+                await entry.WriteToAsync(extractedStream, progress);
             }
         }
 
