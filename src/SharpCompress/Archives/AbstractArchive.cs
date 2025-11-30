@@ -8,7 +8,7 @@ using SharpCompress.Readers;
 
 namespace SharpCompress.Archives;
 
-public abstract class AbstractArchive<TEntry, TVolume> : IArchive
+public abstract class AbstractArchive<TEntry, TVolume> : IArchive, IArchiveProgressInfo
     where TEntry : IArchiveEntry
     where TVolume : IVolume
 {
@@ -41,7 +41,7 @@ public abstract class AbstractArchive<TEntry, TVolume> : IArchive
     /// <summary>
     /// Gets the progress reporter for this archive, if one was set via ReaderOptions.
     /// </summary>
-    internal IProgress<ProgressReport>? Progress => ReaderOptions.Progress;
+    IProgress<ProgressReport>? IArchiveProgressInfo.Progress => ReaderOptions.Progress;
 
     private static Stream CheckStreams(Stream stream)
     {
@@ -93,7 +93,7 @@ public abstract class AbstractArchive<TEntry, TVolume> : IArchive
         }
     }
 
-    internal void EnsureEntriesLoaded()
+    void IArchiveProgressInfo.EnsureEntriesLoaded()
     {
         _lazyEntries.EnsureFullyLoaded();
         _lazyVolumes.EnsureFullyLoaded();
@@ -118,7 +118,7 @@ public abstract class AbstractArchive<TEntry, TVolume> : IArchive
                 "ExtractAllEntries can only be used on solid archives or 7Zip archives (which require random access)."
             );
         }
-        EnsureEntriesLoaded();
+        ((IArchiveProgressInfo)this).EnsureEntriesLoaded();
         return CreateReaderForSolidExtraction();
     }
 
@@ -136,7 +136,7 @@ public abstract class AbstractArchive<TEntry, TVolume> : IArchive
     {
         get
         {
-            EnsureEntriesLoaded();
+            ((IArchiveProgressInfo)this).EnsureEntriesLoaded();
             return Entries.All(x => x.IsComplete);
         }
     }

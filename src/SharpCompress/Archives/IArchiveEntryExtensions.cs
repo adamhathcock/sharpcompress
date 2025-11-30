@@ -17,10 +17,10 @@ public static class IArchiveEntryExtensions
             throw new ExtractionException("Entry is a file directory and cannot be extracted.");
         }
 
-        var archive = archiveEntry.Archive as dynamic;
-        archive.EnsureEntriesLoaded();
+        var progressInfo = archiveEntry.Archive as IArchiveProgressInfo;
+        progressInfo?.EnsureEntriesLoaded();
 
-        IProgress<ProgressReport>? progress = GetProgress(archiveEntry.Archive);
+        IProgress<ProgressReport>? progress = progressInfo?.Progress;
         using var entryStream = archiveEntry.OpenEntryStream();
 
         if (progress is null)
@@ -55,10 +55,10 @@ public static class IArchiveEntryExtensions
             throw new ExtractionException("Entry is a file directory and cannot be extracted.");
         }
 
-        var archive = archiveEntry.Archive as dynamic;
-        archive.EnsureEntriesLoaded();
+        var progressInfo = archiveEntry.Archive as IArchiveProgressInfo;
+        progressInfo?.EnsureEntriesLoaded();
 
-        IProgress<ProgressReport>? progress = GetProgress(archiveEntry.Archive);
+        IProgress<ProgressReport>? progress = progressInfo?.Progress;
         using var entryStream = archiveEntry.OpenEntryStream();
 
         if (progress is null)
@@ -90,12 +90,6 @@ public static class IArchiveEntryExtensions
                 progress.Report(new ProgressReport(entryPath, transferred, totalBytes));
             }
         }
-    }
-
-    private static IProgress<ProgressReport>? GetProgress(IArchive archive)
-    {
-        // Try to get progress from the concrete archive type
-        return (archive as dynamic)?.Progress as IProgress<ProgressReport>;
     }
 
     private static long? GetEntrySizeSafe(IArchiveEntry entry)
