@@ -33,8 +33,9 @@ namespace SharpCompress.IO;
 /// </list>
 ///
 /// <para>
-/// This abstraction works with <see cref="IByteSource"/> to provide raw byte access
-/// and with <see cref="Common.Volume"/> to add archive-specific semantics.
+/// Internally, SourceStream uses <see cref="IByteSource"/> to manage its underlying
+/// sources. This allows consistent handling of both file-based and stream-based sources,
+/// while the <see cref="Common.Volume"/> abstraction adds archive-specific semantics.
 /// </para>
 ///
 /// <para>
@@ -70,7 +71,7 @@ public class SourceStream : Stream, IStreamStack
 #endif
     int IStreamStack.DefaultBufferSize { get; set; }
 
-    Stream IStreamStack.BaseStream() => _streams[_stream];
+    Stream IStreamStack.BaseStream() => _openStreams[_currentSourceIndex];
 
     int IStreamStack.BufferSize
     {
@@ -86,51 +87,65 @@ public class SourceStream : Stream, IStreamStack
     void IStreamStack.SetPosition(long position) { }
 
     private long _prevSize;
-    private readonly List<FileInfo> _files;
-    private readonly List<Stream> _streams;
-    private readonly Func<int, FileInfo?>? _getFilePart;
-    private readonly Func<int, Stream?>? _getStreamPart;
-    private int _stream;
+    private readonly List<IByteSource> _sources;
+    private readonly List<Stream> _openStreams;
+    private readonly Func<int, IByteSource?>? _getNextSource;
+    private int _currentSourceIndex;
 
+    /// <summary>
+    /// Creates a SourceStream from a file, with a function to get additional file parts.
+    /// </summary>
+    /// <param name="file">The initial file to read from.</param>
+    /// <param name="getPart">Function that returns additional file parts by index, or null when no more parts.</param>
+    /// <param name="options">Reader options.</param>
     public SourceStream(FileInfo file, Func<int, FileInfo?> getPart, ReaderOptions options)
-        : this(null, null, file, getPart, options) { }
+        : this(
+            new FileByteSource(file, 0),
+            index =>
+            {
+                var f = getPart(index);
+                return f != null ? new FileByteSource(f, index) : null;
+            },
+            options
+        ) { }
 
+    /// <summary>
+    /// Creates a SourceStream from a stream, with a function to get additional stream parts.
+    /// </summary>
+    /// <param name="stream">The initial stream to read from.</param>
+    /// <param name="getPart">Function that returns additional stream parts by index, or null when no more parts.</param>
+    /// <param name="options">Reader options.</param>
     public SourceStream(Stream stream, Func<int, Stream?> getPart, ReaderOptions options)
-        : this(stream, getPart, null, null, options) { }
+        : this(
+            new StreamByteSource(stream, 0),
+            index =>
+            {
+                var s = getPart(index);
+                return s != null ? new StreamByteSource(s, index) : null;
+            },
+            options
+        ) { }
 
-    private SourceStream(
-        Stream? stream,
-        Func<int, Stream?>? getStreamPart,
-        FileInfo? file,
-        Func<int, FileInfo?>? getFilePart,
+    /// <summary>
+    /// Creates a SourceStream from an initial byte source with a function to get additional sources.
+    /// </summary>
+    /// <param name="initialSource">The initial byte source.</param>
+    /// <param name="getNextSource">Function that returns additional byte sources by index, or null when no more sources.</param>
+    /// <param name="options">Reader options.</param>
+    public SourceStream(
+        IByteSource initialSource,
+        Func<int, IByteSource?>? getNextSource,
         ReaderOptions options
     )
     {
         ReaderOptions = options;
-        _files = new List<FileInfo>();
-        _streams = new List<Stream>();
-        IsFileMode = file != null;
-        IsVolumes = false;
-
-        if (!IsFileMode)
-        {
-            _streams.Add(stream!);
-            _getStreamPart = getStreamPart;
-            _getFilePart = _ => null;
-            if (stream is FileStream fileStream)
-            {
-                _files.Add(new FileInfo(fileStream.Name));
-            }
-        }
-        else
-        {
-            _files.Add(file!);
-            _streams.Add(_files[0].OpenRead());
-            _getFilePart = getFilePart;
-            _getStreamPart = _ => null;
-        }
-        _stream = 0;
+        _sources = new List<IByteSource> { initialSource };
+        _openStreams = new List<Stream> { initialSource.OpenRead() };
+        _getNextSource = getNextSource;
+        _currentSourceIndex = 0;
         _prevSize = 0;
+        IsVolumes = false;
+        IsFileMode = initialSource is FileByteSource;
 
 #if DEBUG_STREAMS
         this.DebugConstruct(typeof(SourceStream));
@@ -138,7 +153,7 @@ public class SourceStream : Stream, IStreamStack
     }
 
     /// <summary>
-    /// Loads all available parts/volumes by calling the getPart function
+    /// Loads all available parts/volumes by calling the getNextSource function
     /// until it returns null. Resets to the first stream after loading.
     /// </summary>
     public void LoadAllParts()
@@ -167,66 +182,58 @@ public class SourceStream : Stream, IStreamStack
     public bool IsFileMode { get; }
 
     /// <summary>
+    /// Gets the collection of loaded byte sources.
+    /// </summary>
+    internal IEnumerable<IByteSource> Sources => _sources;
+
+    /// <summary>
     /// Gets the collection of FileInfo objects for each loaded source.
     /// May be empty if sources are streams without file associations.
     /// </summary>
-    public IEnumerable<FileInfo> Files => _files;
+    public IEnumerable<FileInfo> Files =>
+        _sources.Where(s => s.FileName != null).Select(s => new FileInfo(s.FileName!));
 
     /// <summary>
     /// Gets the collection of underlying streams for each loaded source.
     /// </summary>
-    public IEnumerable<Stream> Streams => _streams;
+    public IEnumerable<Stream> Streams => _openStreams;
 
-    private Stream Current => _streams[_stream];
+    private Stream Current => _openStreams[_currentSourceIndex];
 
     /// <summary>
-    /// Ensures that streams up to and including the specified index are loaded.
+    /// Ensures that sources up to and including the specified index are loaded.
     /// </summary>
-    /// <param name="index">The stream index to load.</param>
-    /// <returns>True if the stream at the index was successfully loaded; false otherwise.</returns>
-    public bool LoadStream(int index) //ensure all parts to id are loaded
+    /// <param name="index">The source index to load.</param>
+    /// <returns>True if the source at the index was successfully loaded; false otherwise.</returns>
+    public bool LoadStream(int index)
     {
-        while (_streams.Count <= index)
+        while (_sources.Count <= index)
         {
-            if (IsFileMode)
+            var nextSource = _getNextSource?.Invoke(_sources.Count);
+            if (nextSource is null)
             {
-                var f = _getFilePart.NotNull("GetFilePart is null")(_streams.Count);
-                if (f == null)
-                {
-                    _stream = _streams.Count - 1;
-                    return false;
-                }
-                //throw new Exception($"File part {idx} not available.");
-                _files.Add(f);
-                _streams.Add(_files.Last().OpenRead());
+                _currentSourceIndex = _sources.Count - 1;
+                return false;
             }
-            else
-            {
-                var s = _getStreamPart.NotNull("GetStreamPart is null")(_streams.Count);
-                if (s == null)
-                {
-                    _stream = _streams.Count - 1;
-                    return false;
-                }
-                //throw new Exception($"Stream part {idx} not available.");
-                _streams.Add(s);
-                if (s is FileStream stream)
-                {
-                    _files.Add(new FileInfo(stream.Name));
-                }
-            }
+            _sources.Add(nextSource);
+            _openStreams.Add(nextSource.OpenRead());
         }
         return true;
     }
 
-    public bool SetStream(int idx) //allow caller to switch part in multipart
+    /// <summary>
+    /// Switches to the specified source index.
+    /// </summary>
+    /// <param name="idx">The source index to switch to.</param>
+    /// <returns>True if the switch was successful; false otherwise.</returns>
+    public bool SetStream(int idx)
     {
         if (LoadStream(idx))
         {
-            _stream = idx;
+            _currentSourceIndex = idx;
         }
 
-        return _stream == idx;
+        return _currentSourceIndex == idx;
     }
 
     public override bool CanRead => true;
@@ -235,7 +242,7 @@ public class SourceStream : Stream, IStreamStack
 
     public override bool CanWrite => false;
 
-    public override long Length => !IsVolumes ? _streams.Sum(a => a.Length) : Current.Length;
+    public override long Length => !IsVolumes ? _openStreams.Sum(a => a.Length) : Current.Length;
 
     public override long Position
     {
@@ -269,8 +276,8 @@ public class SourceStream : Stream, IStreamStack
             {
                 var length = Current.Length;
 
-                // Load next file if present
-                if (!SetStream(_stream + 1))
+                // Load next source if present
+                if (!SetStream(_currentSourceIndex + 1))
                 {
                     break;
                 }
@@ -309,7 +316,7 @@ public class SourceStream : Stream, IStreamStack
             while (_prevSize + Current.Length < pos)
             {
                 _prevSize += Current.Length;
-                SetStream(_stream + 1);
+                SetStream(_currentSourceIndex + 1);
             }
         }
 
@@ -358,8 +365,8 @@ public class SourceStream : Stream, IStreamStack
             {
                 var length = Current.Length;
 
-                // Load next file if present
-                if (!SetStream(_stream + 1))
+                // Load next source if present
+                if (!SetStream(_currentSourceIndex + 1))
                 {
                     break;
                 }
@@ -407,8 +414,8 @@ public class SourceStream : Stream, IStreamStack
             {
                 var length = Current.Length;
 
-                // Load next file if present
-                if (!SetStream(_stream + 1))
+                // Load next source if present
+                if (!SetStream(_currentSourceIndex + 1))
                 {
                     break;
                 }
@@ -429,7 +436,7 @@ public class SourceStream : Stream, IStreamStack
     {
         if (IsFileMode || !ReaderOptions.LeaveStreamOpen) //close if file mode or options specify it
         {
-            foreach (var stream in _streams)
+            foreach (var stream in _openStreams)
             {
                 try
                 {
@@ -440,8 +447,8 @@ public class SourceStream : Stream, IStreamStack
                     // ignored
                 }
             }
-            _streams.Clear();
-            _files.Clear();
+            _openStreams.Clear();
+            _sources.Clear();
         }
     }
 
