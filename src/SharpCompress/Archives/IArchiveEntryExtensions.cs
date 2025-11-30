@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -7,6 +8,8 @@ namespace SharpCompress.Archives;
 
 public static class IArchiveEntryExtensions
 {
+    private const int BufferSize = 81920;
+
     public static void WriteTo(this IArchiveEntry archiveEntry, Stream streamToWriteTo)
     {
         if (archiveEntry.IsDirectory)
@@ -14,12 +17,31 @@ public static class IArchiveEntryExtensions
             throw new ExtractionException("Entry is a file directory and cannot be extracted.");
         }
 
-        var streamListener = (IArchiveExtractionListener)archiveEntry.Archive;
-        streamListener.EnsureEntriesLoaded();
-        streamListener.FireEntryExtractionBegin(archiveEntry);
+        var archive = archiveEntry.Archive as dynamic;
+        archive.EnsureEntriesLoaded();
+
+        IProgress<ProgressReport>? progress = GetProgress(archiveEntry.Archive);
         using var entryStream = archiveEntry.OpenEntryStream();
-        entryStream.CopyTo(streamToWriteTo);
-        streamListener.FireEntryExtractionEnd(archiveEntry);
+
+        if (progress is null)
+        {
+            entryStream.CopyTo(streamToWriteTo);
+        }
+        else
+        {
+            var entryPath = archiveEntry.Key ?? string.Empty;
+            long? totalBytes = GetEntrySizeSafe(archiveEntry);
+            long transferred = 0;
+
+            var buffer = new byte[BufferSize];
+            int bytesRead;
+            while ((bytesRead = entryStream.Read(buffer, 0, buffer.Length)) > 0)
+            {
+                streamToWriteTo.Write(buffer, 0, bytesRead);
+                transferred += bytesRead;
+                progress.Report(new ProgressReport(entryPath, transferred, totalBytes));
+            }
+        }
     }
 
     public static async Task WriteToAsync(
@@ -33,14 +55,60 @@ public static class IArchiveEntryExtensions
             throw new ExtractionException("Entry is a file directory and cannot be extracted.");
         }
 
-        var streamListener = (IArchiveExtractionListener)archiveEntry.Archive;
-        streamListener.EnsureEntriesLoaded();
-        streamListener.FireEntryExtractionBegin(archiveEntry);
+        var archive = archiveEntry.Archive as dynamic;
+        archive.EnsureEntriesLoaded();
+
+        IProgress<ProgressReport>? progress = GetProgress(archiveEntry.Archive);
         using var entryStream = archiveEntry.OpenEntryStream();
-        await entryStream
-            .CopyToAsync(streamToWriteTo, 81920, cancellationToken)
-            .ConfigureAwait(false);
-        streamListener.FireEntryExtractionEnd(archiveEntry);
+
+        if (progress is null)
+        {
+            await entryStream
+                .CopyToAsync(streamToWriteTo, BufferSize, cancellationToken)
+                .ConfigureAwait(false);
+        }
+        else
+        {
+            var entryPath = archiveEntry.Key ?? string.Empty;
+            long? totalBytes = GetEntrySizeSafe(archiveEntry);
+            long transferred = 0;
+
+            var buffer = new byte[BufferSize];
+            int bytesRead;
+            while (
+                (
+                    bytesRead = await entryStream
+                        .ReadAsync(buffer, 0, buffer.Length, cancellationToken)
+                        .ConfigureAwait(false)
+                ) > 0
+            )
+            {
+                await streamToWriteTo
+                    .WriteAsync(buffer, 0, bytesRead, cancellationToken)
+                    .ConfigureAwait(false);
+                transferred += bytesRead;
+                progress.Report(new ProgressReport(entryPath, transferred, totalBytes));
+            }
+        }
+    }
+
+    private static IProgress<ProgressReport>? GetProgress(IArchive archive)
+    {
+        // Try to get progress from the concrete archive type
+        return (archive as dynamic)?.Progress as IProgress<ProgressReport>;
+    }
+
+    private static long? GetEntrySizeSafe(IArchiveEntry entry)
+    {
+        try
+        {
+            var size = entry.Size;
+            return size >= 0 ? size : null;
+        }
+        catch (NotImplementedException)
+        {
+            return null;
+        }
     }
 
     /// <summary>

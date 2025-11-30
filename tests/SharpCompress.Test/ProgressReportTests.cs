@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
+using SharpCompress.Archives;
+using SharpCompress.Archives.Zip;
 using SharpCompress.Common;
 using SharpCompress.Readers;
 using SharpCompress.Writers;
@@ -117,6 +119,82 @@ public class ProgressReportTests : TestBase
     }
 
     [Fact]
+    public void ZipArchive_Entry_WriteTo_ReportsProgress()
+    {
+        var progress = new TestProgress<ProgressReport>();
+
+        // First create a zip archive
+        using var archiveStream = new MemoryStream();
+        using (
+            var writer = new ZipWriter(archiveStream, new ZipWriterOptions(CompressionType.Deflate))
+        )
+        {
+            var testData = new byte[10000];
+            Array.Fill(testData, (byte)'A');
+            using var sourceStream = new MemoryStream(testData);
+            writer.Write("test.txt", sourceStream, DateTime.Now);
+        }
+
+        // Now open as archive and extract entry with progress
+        archiveStream.Position = 0;
+        var readerOptions = new ReaderOptions { Progress = progress };
+
+        using var archive = ZipArchive.Open(archiveStream, readerOptions);
+        foreach (var entry in archive.Entries)
+        {
+            if (!entry.IsDirectory)
+            {
+                using var extractedStream = new MemoryStream();
+                entry.WriteTo(extractedStream);
+            }
+        }
+
+        Assert.NotEmpty(progress.Reports);
+        Assert.All(progress.Reports, p => Assert.Equal("test.txt", p.EntryPath));
+
+        var lastReport = progress.Reports[^1];
+        Assert.Equal(10000, lastReport.BytesTransferred);
+    }
+
+    [Fact]
+    public async Task ZipArchive_Entry_WriteToAsync_ReportsProgress()
+    {
+        var progress = new TestProgress<ProgressReport>();
+
+        // First create a zip archive
+        using var archiveStream = new MemoryStream();
+        using (
+            var writer = new ZipWriter(archiveStream, new ZipWriterOptions(CompressionType.Deflate))
+        )
+        {
+            var testData = new byte[10000];
+            Array.Fill(testData, (byte)'A');
+            using var sourceStream = new MemoryStream(testData);
+            writer.Write("test.txt", sourceStream, DateTime.Now);
+        }
+
+        // Now open as archive and extract entry async with progress
+        archiveStream.Position = 0;
+        var readerOptions = new ReaderOptions { Progress = progress };
+
+        using var archive = ZipArchive.Open(archiveStream, readerOptions);
+        foreach (var entry in archive.Entries)
+        {
+            if (!entry.IsDirectory)
+            {
+                using var extractedStream = new MemoryStream();
+                await entry.WriteToAsync(extractedStream);
+            }
+        }
+
+        Assert.NotEmpty(progress.Reports);
+        Assert.All(progress.Reports, p => Assert.Equal("test.txt", p.EntryPath));
+
+        var lastReport = progress.Reports[^1];
+        Assert.Equal(10000, lastReport.BytesTransferred);
+    }
+
+    [Fact]
     public void WriterOptions_WithoutProgress_DoesNotThrow()
     {
         using var archiveStream = new MemoryStream();
@@ -163,6 +241,35 @@ public class ProgressReportTests : TestBase
                     using var extractedStream = new MemoryStream();
                     reader.WriteEntryTo(extractedStream);
                 }
+            }
+        }
+    }
+
+    [Fact]
+    public void ZipArchive_WithoutProgress_DoesNotThrow()
+    {
+        // First create a zip archive
+        using var archiveStream = new MemoryStream();
+        using (
+            var writer = new ZipWriter(archiveStream, new ZipWriterOptions(CompressionType.Deflate))
+        )
+        {
+            var testData = new byte[100];
+            Array.Fill(testData, (byte)'A');
+            using var sourceStream = new MemoryStream(testData);
+            writer.Write("test.txt", sourceStream, DateTime.Now);
+        }
+
+        // Open archive and extract without progress
+        archiveStream.Position = 0;
+
+        using var archive = ZipArchive.Open(archiveStream);
+        foreach (var entry in archive.Entries)
+        {
+            if (!entry.IsDirectory)
+            {
+                using var extractedStream = new MemoryStream();
+                entry.WriteTo(extractedStream);
             }
         }
     }

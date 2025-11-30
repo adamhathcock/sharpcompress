@@ -8,7 +8,7 @@ using SharpCompress.Readers;
 
 namespace SharpCompress.Archives;
 
-public abstract class AbstractArchive<TEntry, TVolume> : IArchive, IArchiveExtractionListener
+public abstract class AbstractArchive<TEntry, TVolume> : IArchive
     where TEntry : IArchiveEntry
     where TVolume : IVolume
 {
@@ -16,9 +16,6 @@ public abstract class AbstractArchive<TEntry, TVolume> : IArchive, IArchiveExtra
     private readonly LazyReadOnlyCollection<TEntry> _lazyEntries;
     private bool _disposed;
     private readonly SourceStream? _sourceStream;
-
-    public event EventHandler<ArchiveExtractionEventArgs<IArchiveEntry>>? EntryExtractionBegin;
-    public event EventHandler<ArchiveExtractionEventArgs<IArchiveEntry>>? EntryExtractionEnd;
 
     protected ReaderOptions ReaderOptions { get; }
 
@@ -41,11 +38,10 @@ public abstract class AbstractArchive<TEntry, TVolume> : IArchive, IArchiveExtra
 
     public ArchiveType Type { get; }
 
-    void IArchiveExtractionListener.FireEntryExtractionBegin(IArchiveEntry entry) =>
-        EntryExtractionBegin?.Invoke(this, new ArchiveExtractionEventArgs<IArchiveEntry>(entry));
-
-    void IArchiveExtractionListener.FireEntryExtractionEnd(IArchiveEntry entry) =>
-        EntryExtractionEnd?.Invoke(this, new ArchiveExtractionEventArgs<IArchiveEntry>(entry));
+    /// <summary>
+    /// Gets the progress reporter for this archive, if one was set via ReaderOptions.
+    /// </summary>
+    internal IProgress<ProgressReport>? Progress => ReaderOptions.Progress;
 
     private static Stream CheckStreams(Stream stream)
     {
@@ -97,7 +93,7 @@ public abstract class AbstractArchive<TEntry, TVolume> : IArchive, IArchiveExtra
         }
     }
 
-    void IArchiveExtractionListener.EnsureEntriesLoaded()
+    internal void EnsureEntriesLoaded()
     {
         _lazyEntries.EnsureFullyLoaded();
         _lazyVolumes.EnsureFullyLoaded();
@@ -122,7 +118,7 @@ public abstract class AbstractArchive<TEntry, TVolume> : IArchive, IArchiveExtra
                 "ExtractAllEntries can only be used on solid archives or 7Zip archives (which require random access)."
             );
         }
-        ((IArchiveExtractionListener)this).EnsureEntriesLoaded();
+        EnsureEntriesLoaded();
         return CreateReaderForSolidExtraction();
     }
 
@@ -140,7 +136,7 @@ public abstract class AbstractArchive<TEntry, TVolume> : IArchive, IArchiveExtra
     {
         get
         {
-            ((IArchiveExtractionListener)this).EnsureEntriesLoaded();
+            EnsureEntriesLoaded();
             return Entries.All(x => x.IsComplete);
         }
     }

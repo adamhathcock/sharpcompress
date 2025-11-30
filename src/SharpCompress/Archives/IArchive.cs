@@ -7,9 +7,6 @@ namespace SharpCompress.Archives;
 
 public interface IArchive : IDisposable
 {
-    event EventHandler<ArchiveExtractionEventArgs<IArchiveEntry>> EntryExtractionBegin;
-    event EventHandler<ArchiveExtractionEventArgs<IArchiveEntry>> EntryExtractionEnd;
-
     IEnumerable<IArchiveEntry> Entries { get; }
     IEnumerable<IVolume> Volumes { get; }
 
