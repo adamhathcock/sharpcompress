@@ -1,40 +1,66 @@
+using System;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using SharpCompress.Common;
-using SharpCompress.IO;
 
 namespace SharpCompress.Archives;
 
 public static class IArchiveEntryExtensions
 {
-    public static void WriteTo(this IArchiveEntry archiveEntry, Stream streamToWriteTo)
+    private const int BufferSize = 81920;
+
+    /// <summary>
+    /// Extract entry to the specified stream.
+    /// </summary>
+    /// <param name="archiveEntry">The archive entry to extract.</param>
+    /// <param name="streamToWriteTo">The stream to write the entry content to.</param>
+    /// <param name="progress">Optional progress reporter for tracking extraction progress.</param>
+    public static void WriteTo(
+        this IArchiveEntry archiveEntry,
+        Stream streamToWriteTo,
+        IProgress<ProgressReport>? progress = null
+    )
     {
         if (archiveEntry.IsDirectory)
         {
             throw new ExtractionException("Entry is a file directory and cannot be extracted.");
         }
 
-        var streamListener = (IArchiveExtractionListener)archiveEntry.Archive;
-        streamListener.EnsureEntriesLoaded();
-        streamListener.FireEntryExtractionBegin(archiveEntry);
-        streamListener.FireFilePartExtractionBegin(
-            archiveEntry.Key ?? "Key",
-            archiveEntry.Size,
-            archiveEntry.CompressedSize
-        );
-        var entryStream = archiveEntry.OpenEntryStream();
-        using (entryStream)
+        using var entryStream = archiveEntry.OpenEntryStream();
+
+        if (progress is null)
         {
-            using Stream s = new ListeningStream(streamListener, entryStream);
-            s.CopyTo(streamToWriteTo);
+            entryStream.CopyTo(streamToWriteTo);
         }
-        streamListener.FireEntryExtractionEnd(archiveEntry);
+        else
+        {
+            var entryPath = archiveEntry.Key ?? string.Empty;
+            long? totalBytes = GetEntrySizeSafe(archiveEntry);
+            long transferred = 0;
+
+            var buffer = new byte[BufferSize];
+            int bytesRead;
+            while ((bytesRead = entryStream.Read(buffer, 0, buffer.Length)) > 0)
+            {
+                streamToWriteTo.Write(buffer, 0, bytesRead);
+                transferred += bytesRead;
+                progress.Report(new ProgressReport(entryPath, transferred, totalBytes));
+            }
+        }
     }
 
+    /// <summary>
+    /// Extract entry to the specified stream asynchronously.
+    /// </summary>
+    /// <param name="archiveEntry">The archive entry to extract.</param>
+    /// <param name="streamToWriteTo">The stream to write the entry content to.</param>
+    /// <param name="progress">Optional progress reporter for tracking extraction progress.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
     public static async Task WriteToAsync(
         this IArchiveEntry archiveEntry,
         Stream streamToWriteTo,
+        IProgress<ProgressReport>? progress = null,
         CancellationToken cancellationToken = default
     )
     {
@@ -43,21 +69,50 @@ public static class IArchiveEntryExtensions
             throw new ExtractionException("Entry is a file directory and cannot be extracted.");
         }
 
-        var streamListener = (IArchiveExtractionListener)archiveEntry.Archive;
-        streamListener.EnsureEntriesLoaded();
-        streamListener.FireEntryExtractionBegin(archiveEntry);
-        streamListener.FireFilePartExtractionBegin(
-            archiveEntry.Key ?? "Key",
-            archiveEntry.Size,
-            archiveEntry.CompressedSize
-        );
-        var entryStream = archiveEntry.OpenEntryStream();
-        using (entryStream)
+        using var entryStream = archiveEntry.OpenEntryStream();
+
+        if (progress is null)
         {
-            using Stream s = new ListeningStream(streamListener, entryStream);
-            await s.CopyToAsync(streamToWriteTo, 81920, cancellationToken).ConfigureAwait(false);
+            await entryStream
+                .CopyToAsync(streamToWriteTo, BufferSize, cancellationToken)
+                .ConfigureAwait(false);
         }
-        streamListener.FireEntryExtractionEnd(archiveEntry);
+        else
+        {
+            var entryPath = archiveEntry.Key ?? string.Empty;
+            long? totalBytes = GetEntrySizeSafe(archiveEntry);
+            long transferred = 0;
+
+            var buffer = new byte[BufferSize];
+            int bytesRead;
+            while (
+                (
+                    bytesRead = await entryStream
+                        .ReadAsync(buffer, 0, buffer.Length, cancellationToken)
+                        .ConfigureAwait(false)
+                ) > 0
+            )
+            {
+                await streamToWriteTo
+                    .WriteAsync(buffer, 0, bytesRead, cancellationToken)
+                    .ConfigureAwait(false);
+                transferred += bytesRead;
+                progress.Report(new ProgressReport(entryPath, transferred, totalBytes));
+            }
+        }
+    }
+
+    private static long? GetEntrySizeSafe(IArchiveEntry entry)
+    {
+        try
+        {
+            var size = entry.Size;
+            return size >= 0 ? size : null;
+        }
+        catch (NotImplementedException)
+        {
+            return null;
+        }
     }
 
     /// <summary>
@@ -127,7 +182,9 @@ public static class IArchiveEntryExtensions
             async (x, fm) =>
             {
                 using var fs = File.Open(destinationFileName, fm);
-                await entry.WriteToAsync(fs, cancellationToken).ConfigureAwait(false);
+                await entry
+                    .WriteToAsync(fs, progress: null, cancellationToken: cancellationToken)
+                    .ConfigureAwait(false);
             },
             cancellationToken
         );
