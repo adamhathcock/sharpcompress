@@ -6,6 +6,38 @@
 * Reader classes allow forward-only reading on a stream.
 * Writer classes allow forward-only Writing on a stream.
 
+## Stream and Volume Architecture
+
+SharpCompress uses a layered architecture to handle the complexity of multi-part and multi-volume archives:
+
+### Concepts
+
+1. **ByteSource** (`IByteSource`): The lowest-level abstraction representing a source of raw bytes. This could be a file, a stream, or part of a multi-part archive. ByteSources don't have any archive-specific logic.
+
+2. **SourceStream**: Combines multiple byte sources into a unified stream. It operates in two modes:
+   - **Split Mode** (`IsVolumes=false`): Multiple files/streams are treated as one contiguous byte sequence. Used for split archives (e.g., `.z01`, `.z02`, `.zip`).
+   - **Volume Mode** (`IsVolumes=true`): Each file/stream is treated as an independent unit. Used for multi-volume archives (e.g., `.rar`, `.r00`, `.r01`).
+
+3. **Volume** (`IVolume`): Represents a physical archive container with its own headers and metadata. Each format has its own Volume implementation (ZipVolume, RarVolume, SevenZipVolume, TarVolume).
+
+### Format-Specific Behaviors
+
+| Format | Split Archives | Multi-Volume | SOLID Support | Notes |
+| ------ | -------------- | ------------ | ------------- | ----- |
+| Zip    | Yes            | Yes          | No            | Split: `.z01`, `.z02`, `.zip`. Multi-volume uses separate headers per volume. |
+| Rar    | Yes            | Yes          | Yes           | Multi-volume: `.rar`, `.r00`, `.r01`. SOLID archives share decompression context. |
+| 7Zip   | Yes            | No           | Yes (Folders) | Uses internal "folders" as compression units. Files in same folder share context. |
+| Tar    | Yes            | No           | No            | Split tar files are concatenated. |
+
+### SOLID Archives
+
+Some formats support "SOLID" archives where multiple files share a contiguous stream of compressed bytes:
+
+- **RAR SOLID**: Files are compressed together, and decompressing a file requires decompressing all files before it.
+- **7Zip Folders**: Files grouped in the same folder share a decompression context.
+
+This is why `ExtractAllEntries()` exists for SOLID archives - it allows sequential extraction which is much more efficient than random access.
+
 ## Supported Format Table
 
 | Archive Format         | Compression Format(s)                             | Compress/Decompress | Archive API     | Reader API | Writer API    |
