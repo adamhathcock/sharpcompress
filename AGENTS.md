@@ -49,6 +49,30 @@ SharpCompress is a pure C# compression library supporting multiple archive forma
 - Use `dotnet test` to run tests
 - Solution file: `SharpCompress.sln`
 
+### Directory Structure
+```
+src/SharpCompress/
+  ├── Archives/        # IArchive implementations (Zip, Tar, Rar, 7Zip, GZip)
+  ├── Readers/         # IReader implementations (forward-only)
+  ├── Writers/         # IWriter implementations (forward-only)
+  ├── Compressors/     # Low-level compression streams (BZip2, Deflate, LZMA, etc.)
+  ├── Factories/       # Format detection and factory pattern
+  ├── Common/          # Shared types (ArchiveType, Entry, Options)
+  ├── Crypto/          # Encryption implementations
+  └── IO/              # Stream utilities and wrappers
+
+tests/SharpCompress.Test/
+  ├── Zip/, Tar/, Rar/, SevenZip/, GZip/, BZip2/  # Format-specific tests
+  ├── TestBase.cs      # Base test class with helper methods
+  └── TestArchives/    # Test data (not checked into main test project)
+```
+
+### Factory Pattern
+All format types implement factory interfaces (`IArchiveFactory`, `IReaderFactory`, `IWriterFactory`) for auto-detection:
+- `ReaderFactory.Open()` - Auto-detects format by probing stream
+- `WriterFactory.Open()` - Creates writer for specified `ArchiveType`
+- Factories located in: `src/SharpCompress/Factories/`
+
 ## Nullable Reference Types
 
 - Declare variables non-nullable, and check for `null` at entry points.
@@ -116,3 +140,18 @@ SharpCompress supports multiple archive and compression formats:
 - Use test archives from `tests/TestArchives` directory for consistency.
 - Test stream disposal and `LeaveStreamOpen` behavior.
 - Test edge cases: empty archives, large files, corrupted archives, encrypted archives.
+
+### Test Organization
+- Base class: `TestBase` - Provides `TEST_ARCHIVES_PATH`, `SCRATCH_FILES_PATH`, temp directory management
+- Framework: xUnit with AwesomeAssertions
+- Test archives: `tests/TestArchives/` - Use existing archives, don't create new ones unnecessarily
+- Match naming style of nearby test files
+
+## Common Pitfalls
+
+1. **Don't mix Archive and Reader APIs** - Archive needs seekable stream, Reader doesn't
+2. **Solid archives (Rar, 7Zip)** - Use `ExtractAllEntries()` for best performance, not individual entry extraction
+3. **Stream disposal** - Always set `LeaveStreamOpen` explicitly when needed (default is to close)
+4. **Tar + non-seekable stream** - Must provide file size or it will throw
+5. **Multi-framework differences** - Some features differ between .NET Framework and modern .NET (e.g., Mono.Posix)
+6. **Format detection** - Use `ReaderFactory.Open()` for auto-detection, test with actual archive files
