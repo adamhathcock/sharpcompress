@@ -1,0 +1,178 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "build",
+      "command": "dotnet",
+      "type": "process",
+      "args": [
+        "build",
+        "${workspaceFolder}/SharpCompress.sln",
+        "/property:GenerateFullPaths=true",
+        "/consoleloggerparameters:NoSummary;ForceNoAlign"
+      ],
+      "problemMatcher": "$msCompile",
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      }
+    },
+    {
+      "label": "build-release",
+      "command": "dotnet",
+      "type": "process",
+      "args": [
+        "build",
+        "${workspaceFolder}/SharpCompress.sln",
+        "-c",
+        "Release",
+        "/property:GenerateFullPaths=true",
+        "/consoleloggerparameters:NoSummary;ForceNoAlign"
+      ],
+      "problemMatcher": "$msCompile",
+      "group": "build"
+    },
+    {
+      "label": "build-library",
+      "command": "dotnet",
+      "type": "process",
+      "args": [
+        "build",
+        "${workspaceFolder}/src/SharpCompress/SharpCompress.csproj",
+        "/property:GenerateFullPaths=true",
+        "/consoleloggerparameters:NoSummary;ForceNoAlign"
+      ],
+      "problemMatcher": "$msCompile",
+      "group": "build"
+    },
+    {
+      "label": "restore",
+      "command": "dotnet",
+      "type": "process",
+      "args": [
+        "restore",
+        "${workspaceFolder}/SharpCompress.sln"
+      ],
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": "clean",
+      "command": "dotnet",
+      "type": "process",
+      "args": [
+        "clean",
+        "${workspaceFolder}/SharpCompress.sln"
+      ],
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": "test",
+      "command": "dotnet",
+      "type": "process",
+      "args": [
+        "test",
+        "${workspaceFolder}/tests/SharpCompress.Test/SharpCompress.Test.csproj",
+        "--no-build",
+        "--verbosity=normal"
+      ],
+      "problemMatcher": "$msCompile",
+      "group": {
+        "kind": "test",
+        "isDefault": true
+      },
+      "dependsOn": "build"
+    },
+    {
+      "label": "test-net10",
+      "command": "dotnet",
+      "type": "process",
+      "args": [
+        "test",
+        "${workspaceFolder}/tests/SharpCompress.Test/SharpCompress.Test.csproj",
+        "-f",
+        "net10.0",
+        "--no-build",
+        "--verbosity=normal"
+      ],
+      "problemMatcher": "$msCompile",
+      "group": "test",
+      "dependsOn": "build"
+    },
+    {
+      "label": "test-net48",
+      "command": "dotnet",
+      "type": "process",
+      "args": [
+        "test",
+        "${workspaceFolder}/tests/SharpCompress.Test/SharpCompress.Test.csproj",
+        "-f",
+        "net48",
+        "--no-build",
+        "--verbosity=normal"
+      ],
+      "problemMatcher": "$msCompile",
+      "group": "test",
+      "dependsOn": "build"
+    },
+    {
+      "label": "format",
+      "command": "dotnet",
+      "type": "process",
+      "args": [
+        "csharpier",
+        "."
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "format-check",
+      "command": "dotnet",
+      "type": "process",
+      "args": [
+        "csharpier",
+        "check",
+        "."
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "run-build-script",
+      "command": "dotnet",
+      "type": "process",
+      "args": [
+        "run",
+        "--project",
+        "${workspaceFolder}/build/build.csproj"
+      ],
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": "pack",
+      "command": "dotnet",
+      "type": "process",
+      "args": [
+        "pack",
+        "${workspaceFolder}/src/SharpCompress/SharpCompress.csproj",
+        "-c",
+        "Release",
+        "-o",
+        "${workspaceFolder}/artifacts/"
+      ],
+      "problemMatcher": "$msCompile",
+      "dependsOn": "build-release"
+    },
+    {
+      "label": "performance-tests",
+      "command": "dotnet",
+      "type": "process",
+      "args": [
+        "run",
+        "--project",
+        "${workspaceFolder}/tests/SharpCompress.Performance/SharpCompress.Performance.csproj",
+        "-c",
+        "Release"
+      ],
+      "problemMatcher": "$msCompile"
+    }
+  ]
+}
