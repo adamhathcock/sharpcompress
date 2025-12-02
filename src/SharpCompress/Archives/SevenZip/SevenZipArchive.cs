@@ -205,6 +205,11 @@ public class SevenZipArchive : AbstractArchive<SevenZipArchiveEntry, SevenZipVol
             .GroupBy(x => x.FilePart.Folder)
             .Any(folder => folder.Count() > 1);
 
+    public override bool IsEncrypted =>
+        Entries
+            .Where(x => !x.IsDirectory)
+            .Any(file => file.IsEncrypted);
+
     public override long TotalSize =>
         _database?._packSizes.Aggregate(0L, (total, packSize) => total + packSize) ?? 0;
 
