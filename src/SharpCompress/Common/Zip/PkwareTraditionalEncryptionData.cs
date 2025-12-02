@@ -1,4 +1,5 @@
 using System;
+using System.Security.Cryptography;
 using SharpCompress.Common.Zip.Headers;
 using SharpCompress.Compressors.Deflate;
 
@@ -45,6 +46,44 @@ internal class PkwareTraditionalEncryptionData
             }
         }
         return encryptor;
+    }
+
+    /// <summary>
+    /// Creates a new PkwareTraditionalEncryptionData instance for writing encrypted data.
+    /// </summary>
+    /// <param name="password">The password to use for encryption.</param>
+    /// <param name="archiveEncoding">The archive encoding.</param>
+    /// <returns>A new encryption data instance.</returns>
+    public static PkwareTraditionalEncryptionData ForWrite(
+        string password,
+        ArchiveEncoding archiveEncoding
+    )
+    {
+        return new PkwareTraditionalEncryptionData(password, archiveEncoding);
+    }
+
+    /// <summary>
+    /// Generates the 12-byte encryption header required for PKWARE traditional encryption.
+    /// </summary>
+    /// <param name="crc">The CRC32 of the uncompressed file data, or the last modified time high byte if using data descriptors.</param>
+    /// <param name="lastModifiedTime">The last modified time (used as verification byte when CRC is unknown).</param>
+    /// <returns>The encrypted 12-byte header.</returns>
+    public byte[] GenerateEncryptionHeader(uint crc, ushort lastModifiedTime)
+    {
+        var header = new byte[12];
+
+        // Fill first 11 bytes with random data
+        using (var rng = RandomNumberGenerator.Create())
+        {
+            rng.GetBytes(header, 0, 11);
+        }
+
+        // The last byte is the verification byte - high byte of CRC, or high byte of lastModifiedTime
+        // When streaming (UsePostDataDescriptor), we use the time as verification
+        header[11] = (byte)((crc >> 24) & 0xff);
+
+        // Encrypt the header
+        return Encrypt(header, header.Length);
     }
 
     public byte[] Decrypt(byte[] cipherText, int length)

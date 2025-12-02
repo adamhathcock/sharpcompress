@@ -26,6 +26,8 @@ public class ZipWriter : AbstractWriter
     private long streamPosition;
     private PpmdProperties? ppmdProps;
     private readonly bool isZip64;
+    private readonly string? password;
+    private readonly ZipEncryptionType encryptionType;
 
     public ZipWriter(Stream destination, ZipWriterOptions zipWriterOptions)
         : base(ArchiveType.Zip, zipWriterOptions)
@@ -39,6 +41,21 @@ public class ZipWriter : AbstractWriter
 
         compressionType = zipWriterOptions.CompressionType;
         compressionLevel = zipWriterOptions.CompressionLevel;
+
+        // Initialize encryption settings
+        password = zipWriterOptions.Password;
+        if (!string.IsNullOrEmpty(password))
+        {
+            // If password is set but encryption type is None, default to AES-256
+            encryptionType =
+                zipWriterOptions.EncryptionType == ZipEncryptionType.None
+                    ? ZipEncryptionType.Aes256
+                    : zipWriterOptions.EncryptionType;
+        }
+        else
+        {
+            encryptionType = ZipEncryptionType.None;
+        }
 
         if (WriterOptions.LeaveStreamOpen)
         {
@@ -95,8 +112,20 @@ public class ZipWriter : AbstractWriter
         entryPath = NormalizeFilename(entryPath);
         options.ModificationDateTime ??= DateTime.Now;
         options.EntryComment ??= string.Empty;
+
+        // Determine the effective encryption type for this entry
+        var effectiveEncryption = encryptionType;
+
+        // For WinZip AES, the compression method in the header is set to WinzipAes,
+        // and the actual compression method is stored in the extra field
+        var headerCompression =
+            effectiveEncryption == ZipEncryptionType.Aes128
+            || effectiveEncryption == ZipEncryptionType.Aes256
+                ? ZipCompressionMethod.WinzipAes
+                : compression;
+
         var entry = new ZipCentralDirectoryEntry(
-            compression,
+            headerCompression,
             entryPath,
             (ulong)streamPosition,
             WriterOptions.ArchiveEncoding
@@ -104,6 +133,8 @@ public class ZipWriter : AbstractWriter
         {
             Comment = options.EntryComment,
             ModificationTime = options.ModificationDateTime,
+            EncryptionType = effectiveEncryption,
+            ActualCompression = compression,
         };
 
         // Use the archive default setting for zip64 and allow overrides
@@ -113,14 +144,23 @@ public class ZipWriter : AbstractWriter
             useZip64 = options.EnableZip64.Value;
         }
 
-        var headersize = (uint)WriteHeader(entryPath, options, entry, useZip64);
+        var headersize = (uint)WriteHeader(
+            entryPath,
+            options,
+            entry,
+            useZip64,
+            effectiveEncryption,
+            compression
+        );
         streamPosition += headersize;
         return new ZipWritingStream(
             this,
             OutputStream.NotNull(),
             entry,
             compression,
-            options.CompressionLevel ?? compressionLevel
+            options.CompressionLevel ?? compressionLevel,
+            effectiveEncryption,
+            password
         );
     }
 
@@ -199,7 +239,15 @@ public class ZipWriter : AbstractWriter
             useZip64 = options.EnableZip64.Value;
         }
 
-        var headersize = (uint)WriteHeader(directoryPath, options, entry, useZip64);
+        // Directory entries are never encrypted
+        var headersize = (uint)WriteHeader(
+            directoryPath,
+            options,
+            entry,
+            useZip64,
+            ZipEncryptionType.None,
+            compression
+        );
         streamPosition += headersize;
         entries.Add(entry);
     }
@@ -208,7 +256,9 @@ public class ZipWriter : AbstractWriter
         string filename,
         ZipWriterEntryOptions zipWriterEntryOptions,
         ZipCentralDirectoryEntry entry,
-        bool useZip64
+        bool useZip64,
+        ZipEncryptionType encryption,
+        ZipCompressionMethod actualCompression
     )
     {
         // We err on the side of caution until the zip specification clarifies how to support this
@@ -219,15 +269,30 @@ public class ZipWriter : AbstractWriter
             );
         }
 
-        var explicitZipCompressionInfo = ToZipCompressionMethod(
-            zipWriterEntryOptions.CompressionType ?? compressionType
-        );
+        // Encryption is only supported with seekable streams for now
+        if (!OutputStream.CanSeek && encryption != ZipEncryptionType.None)
+        {
+            throw new NotSupportedException("Encryption is not supported on non-seekable streams");
+        }
+
+        // Determine the compression method to write in the header
+        var headerCompression =
+            encryption == ZipEncryptionType.Aes128 || encryption == ZipEncryptionType.Aes256
+                ? ZipCompressionMethod.WinzipAes
+                : actualCompression;
+
         var encodedFilename = WriterOptions.ArchiveEncoding.Encode(filename);
 
         Span<byte> intBuf = stackalloc byte[4];
         BinaryPrimitives.WriteUInt32LittleEndian(intBuf, ZipHeaderFactory.ENTRY_HEADER_BYTES);
         OutputStream.Write(intBuf);
-        if (explicitZipCompressionInfo == ZipCompressionMethod.Deflate)
+
+        // Determine version needed
+        if (encryption == ZipEncryptionType.Aes128 || encryption == ZipEncryptionType.Aes256)
+        {
+            OutputStream.Write(stackalloc byte[] { 51, 0 }); // WinZip AES requires version 5.1
+        }
+        else if (actualCompression == ZipCompressionMethod.Deflate)
         {
             if (OutputStream.CanSeek && useZip64)
             {
@@ -242,14 +307,22 @@ public class ZipWriter : AbstractWriter
         {
             OutputStream.Write(stackalloc byte[] { 63, 0 }); //version says we used PPMd or LZMA
         }
+
         var flags = Equals(WriterOptions.ArchiveEncoding.GetEncoding(), Encoding.UTF8)
             ? HeaderFlags.Efs
-            : 0;
+            : HeaderFlags.None;
+
+        // Add encryption flag
+        if (encryption != ZipEncryptionType.None)
+        {
+            flags |= HeaderFlags.Encrypted;
+        }
+
         if (!OutputStream.CanSeek)
         {
             flags |= HeaderFlags.UsePostDataDescriptor;
 
-            if (explicitZipCompressionInfo == ZipCompressionMethod.LZMA)
+            if (actualCompression == ZipCompressionMethod.LZMA)
             {
                 flags |= HeaderFlags.Bit1; // eos marker
             }
@@ -257,7 +330,7 @@ public class ZipWriter : AbstractWriter
 
         BinaryPrimitives.WriteUInt16LittleEndian(intBuf, (ushort)flags);
         OutputStream.Write(intBuf.Slice(0, 2));
-        BinaryPrimitives.WriteUInt16LittleEndian(intBuf, (ushort)explicitZipCompressionInfo);
+        BinaryPrimitives.WriteUInt16LittleEndian(intBuf, (ushort)headerCompression);
         OutputStream.Write(intBuf.Slice(0, 2)); // zipping method
         BinaryPrimitives.WriteUInt32LittleEndian(
             intBuf,
@@ -272,20 +345,47 @@ public class ZipWriter : AbstractWriter
         BinaryPrimitives.WriteUInt16LittleEndian(intBuf, (ushort)encodedFilename.Length);
         OutputStream.Write(intBuf.Slice(0, 2)); // filename length
 
+        // Calculate extra field length
         var extralength = 0;
         if (OutputStream.CanSeek && useZip64)
         {
-            extralength = 2 + 2 + 8 + 8;
+            extralength += 2 + 2 + 8 + 8; // Zip64 extra field
+        }
+
+        // WinZip AES extra field: 2 (id) + 2 (size) + 2 (version) + 2 (vendor) + 1 (strength) + 2 (actual compression)
+        if (encryption == ZipEncryptionType.Aes128 || encryption == ZipEncryptionType.Aes256)
+        {
+            extralength += 2 + 2 + 7;
         }
 
         BinaryPrimitives.WriteUInt16LittleEndian(intBuf, (ushort)extralength);
         OutputStream.Write(intBuf.Slice(0, 2)); // extra length
         OutputStream.Write(encodedFilename, 0, encodedFilename.Length);
 
-        if (extralength != 0)
+        // Write Zip64 extra field
+        if (OutputStream.CanSeek && useZip64)
         {
-            OutputStream.Write(new byte[extralength], 0, extralength); // reserve space for zip64 data
+            OutputStream.Write(new byte[2 + 2 + 8 + 8], 0, 2 + 2 + 8 + 8); // reserve space for zip64 data
             entry.Zip64HeaderOffset = (ushort)(6 + 2 + 2 + 4 + 12 + 2 + 2 + encodedFilename.Length);
+        }
+
+        // Write WinZip AES extra field
+        if (encryption == ZipEncryptionType.Aes128 || encryption == ZipEncryptionType.Aes256)
+        {
+            Span<byte> aesExtra = stackalloc byte[11];
+            // Extra field ID: 0x9901 (WinZip AES)
+            BinaryPrimitives.WriteUInt16LittleEndian(aesExtra, 0x9901);
+            // Extra field data size: 7 bytes
+            BinaryPrimitives.WriteUInt16LittleEndian(aesExtra.Slice(2), 7);
+            // AES encryption version: 2 (AE-2)
+            BinaryPrimitives.WriteUInt16LittleEndian(aesExtra.Slice(4), 0x0002);
+            // Vendor ID: "AE" = 0x4541
+            BinaryPrimitives.WriteUInt16LittleEndian(aesExtra.Slice(6), 0x4541);
+            // AES encryption strength: 1=128-bit, 3=256-bit
+            aesExtra[8] = encryption == ZipEncryptionType.Aes128 ? (byte)1 : (byte)3;
+            // Actual compression method
+            BinaryPrimitives.WriteUInt16LittleEndian(aesExtra.Slice(9), (ushort)actualCompression);
+            OutputStream.Write(aesExtra);
         }
 
         return 6 + 2 + 2 + 4 + 12 + 2 + 2 + encodedFilename.Length + extralength;
@@ -383,7 +483,10 @@ public class ZipWriter : AbstractWriter
         private readonly ZipWriter writer;
         private readonly ZipCompressionMethod zipCompressionMethod;
         private readonly int compressionLevel;
+        private readonly ZipEncryptionType encryptionType;
+        private readonly string? password;
         private SharpCompressStream? counting;
+        private Stream? encryptionStream;
         private ulong decompressed;
 
         // Flag to prevent throwing exceptions on Dispose
@@ -395,15 +498,18 @@ public class ZipWriter : AbstractWriter
             Stream originalStream,
             ZipCentralDirectoryEntry entry,
             ZipCompressionMethod zipCompressionMethod,
-            int compressionLevel
+            int compressionLevel,
+            ZipEncryptionType encryptionType,
+            string? password
         )
         {
             this.writer = writer;
             this.originalStream = originalStream;
-            this.writer = writer;
             this.entry = entry;
             this.zipCompressionMethod = zipCompressionMethod;
             this.compressionLevel = compressionLevel;
+            this.encryptionType = encryptionType;
+            this.password = password;
             writeStream = GetWriteStream(originalStream);
         }
 
@@ -425,6 +531,47 @@ public class ZipWriter : AbstractWriter
         {
             counting = new SharpCompressStream(writeStream, leaveOpen: true);
             Stream output = counting;
+
+            // Wrap with encryption stream if needed
+            if (encryptionType == ZipEncryptionType.Aes128)
+            {
+                encryptionStream = new WinzipAesEncryptionStream(
+                    counting,
+                    password!,
+                    WinzipAesKeySize.KeySize128
+                );
+                output = encryptionStream;
+            }
+            else if (encryptionType == ZipEncryptionType.Aes256)
+            {
+                encryptionStream = new WinzipAesEncryptionStream(
+                    counting,
+                    password!,
+                    WinzipAesKeySize.KeySize256
+                );
+                output = encryptionStream;
+            }
+            else if (encryptionType == ZipEncryptionType.PkwareTraditional)
+            {
+                // For PKWARE traditional encryption, we need to write the encryption header
+                // and wrap the stream in the crypto stream
+                var encryptor = PkwareTraditionalEncryptionData.ForWrite(
+                    password!,
+                    writer.WriterOptions.ArchiveEncoding
+                );
+                // Write the encryption header (12 bytes)
+                // CRC is not known yet, so we use 0 for now (it gets verified with time for streaming)
+                var header = encryptor.GenerateEncryptionHeader(0, 0);
+                counting.Write(header, 0, header.Length);
+
+                encryptionStream = new PkwareTraditionalCryptoStream(
+                    new NonDisposingStream(counting),
+                    encryptor,
+                    CryptoMode.Encrypt
+                );
+                output = encryptionStream;
+            }
+
             switch (zipCompressionMethod)
             {
                 case ZipCompressionMethod.None:
@@ -434,17 +581,24 @@ public class ZipWriter : AbstractWriter
                 case ZipCompressionMethod.Deflate:
                 {
                     return new DeflateStream(
-                        counting,
+                        output,
                         CompressionMode.Compress,
                         (CompressionLevel)compressionLevel
                     );
                 }
                 case ZipCompressionMethod.BZip2:
                 {
-                    return new BZip2Stream(counting, CompressionMode.Compress, false);
+                    return new BZip2Stream(output, CompressionMode.Compress, false);
                 }
                 case ZipCompressionMethod.LZMA:
                 {
+                    // LZMA with encryption is not supported per ZIP spec
+                    if (encryptionType != ZipEncryptionType.None)
+                    {
+                        throw new NotSupportedException(
+                            "LZMA compression with encryption is not supported"
+                        );
+                    }
                     counting.WriteByte(9);
                     counting.WriteByte(20);
                     counting.WriteByte(5);
@@ -453,7 +607,7 @@ public class ZipWriter : AbstractWriter
                     var lzmaStream = new LzmaStream(
                         new LzmaEncoderProperties(!originalStream.CanSeek),
                         false,
-                        counting
+                        output
                     );
                     counting.Write(lzmaStream.Properties, 0, lzmaStream.Properties.Length);
                     return lzmaStream;
@@ -461,11 +615,11 @@ public class ZipWriter : AbstractWriter
                 case ZipCompressionMethod.PPMd:
                 {
                     counting.Write(writer.PpmdProperties.Properties, 0, 2);
-                    return new PpmdStream(writer.PpmdProperties, counting, true);
+                    return new PpmdStream(writer.PpmdProperties, output, true);
                 }
                 case ZipCompressionMethod.ZStandard:
                 {
-                    return new ZstdSharp.CompressionStream(counting, compressionLevel);
+                    return new ZstdSharp.CompressionStream(output, compressionLevel);
                 }
                 default:
                 {
@@ -488,6 +642,9 @@ public class ZipWriter : AbstractWriter
             {
                 writeStream.Dispose();
 
+                // Dispose encryption stream to finalize encryption (e.g., write auth code for AES)
+                encryptionStream?.Dispose();
+
                 if (limitsExceeded)
                 {
                     // We have written invalid data into the archive,
@@ -509,12 +666,24 @@ public class ZipWriter : AbstractWriter
 
                 if (originalStream.CanSeek)
                 {
+                    // Clear UsePostDataDescriptor flag (bit 3) since we're updating sizes in place
+                    // But preserve the Encrypted flag (bit 0) if encryption is enabled
                     originalStream.Position = (long)(entry.HeaderOffset + 6);
-                    originalStream.WriteByte(0);
+                    // Only the Encrypted flag should be in the low byte for seekable streams
+                    originalStream.WriteByte(
+                        encryptionType != ZipEncryptionType.None
+                            ? (byte)HeaderFlags.Encrypted
+                            : (byte)0
+                    );
 
-                    if (countingCount == 0 && entry.Decompressed == 0)
+                    if (
+                        countingCount == 0
+                        && entry.Decompressed == 0
+                        && encryptionType == ZipEncryptionType.None
+                    )
                     {
                         // set compression to STORED for zero byte files (no compression data)
+                        // But not if encrypted, as encrypted files always have some data
                         originalStream.Position = (long)(entry.HeaderOffset + 8);
                         originalStream.WriteByte(0);
                         originalStream.WriteByte(0);
@@ -633,6 +802,45 @@ public class ZipWriter : AbstractWriter
                     );
                 }
             }
+        }
+    }
+
+    /// <summary>
+    /// A stream wrapper that doesn't dispose the underlying stream when disposed.
+    /// </summary>
+    private class NonDisposingStream : Stream
+    {
+        private readonly Stream _stream;
+
+        public NonDisposingStream(Stream stream) => _stream = stream;
+
+        public override bool CanRead => _stream.CanRead;
+        public override bool CanSeek => _stream.CanSeek;
+        public override bool CanWrite => _stream.CanWrite;
+        public override long Length => _stream.Length;
+
+        public override long Position
+        {
+            get => _stream.Position;
+            set => _stream.Position = value;
+        }
+
+        public override void Flush() => _stream.Flush();
+
+        public override int Read(byte[] buffer, int offset, int count) =>
+            _stream.Read(buffer, offset, count);
+
+        public override long Seek(long offset, SeekOrigin origin) => _stream.Seek(offset, origin);
+
+        public override void SetLength(long value) => _stream.SetLength(value);
+
+        public override void Write(byte[] buffer, int offset, int count) =>
+            _stream.Write(buffer, offset, count);
+
+        protected override void Dispose(bool disposing)
+        {
+            // Don't dispose the underlying stream
+            base.Dispose(disposing);
         }
     }
 

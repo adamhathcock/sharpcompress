@@ -35,6 +35,16 @@ internal class ZipCentralDirectoryEntry
     internal ushort Zip64HeaderOffset { get; set; }
     internal ulong HeaderOffset { get; }
 
+    /// <summary>
+    /// The encryption type used for this entry.
+    /// </summary>
+    internal ZipEncryptionType EncryptionType { get; set; } = ZipEncryptionType.None;
+
+    /// <summary>
+    /// The actual compression method (used when compression is WinzipAes).
+    /// </summary>
+    internal ZipCompressionMethod ActualCompression { get; set; }
+
     internal uint Write(Stream outputStream)
     {
         var encodedFilename = archiveEncoding.Encode(fileName);
@@ -49,12 +59,29 @@ internal class ZipCentralDirectoryEntry
         var headeroffsetvalue = zip64 ? uint.MaxValue : (uint)HeaderOffset;
         var extralength = zip64 ? (2 + 2 + 8 + 8 + 8 + 4) : 0;
 
+        // Add AES extra field length if encrypted with AES
+        if (
+            EncryptionType == ZipEncryptionType.Aes128
+            || EncryptionType == ZipEncryptionType.Aes256
+        )
+        {
+            extralength += 2 + 2 + 7; // ID + size + data
+        }
+
         // Determine version needed to extract:
         // - Version 63 for LZMA, PPMd, BZip2, ZStandard (advanced compression methods)
+        // - Version 51 for WinZip AES encryption
         // - Version 45 for Zip64 extensions (when Zip64HeaderOffset != 0 or actual sizes require it)
         // - Version 20 for standard Deflate/None compression
         byte version;
         if (
+            EncryptionType == ZipEncryptionType.Aes128
+            || EncryptionType == ZipEncryptionType.Aes256
+        )
+        {
+            version = 51;
+        }
+        else if (
             compression == ZipCompressionMethod.LZMA
             || compression == ZipCompressionMethod.PPMd
             || compression == ZipCompressionMethod.BZip2
@@ -75,6 +102,13 @@ internal class ZipCentralDirectoryEntry
         var flags = Equals(archiveEncoding.GetEncoding(), Encoding.UTF8)
             ? HeaderFlags.Efs
             : HeaderFlags.None;
+
+        // Add encryption flag
+        if (EncryptionType != ZipEncryptionType.None)
+        {
+            flags |= HeaderFlags.Encrypted;
+        }
+
         if (!outputStream.CanSeek)
         {
             // Cannot use data descriptors with zip64:
@@ -94,8 +128,8 @@ internal class ZipCentralDirectoryEntry
             }
         }
 
-        // Support for zero byte files
-        if (Decompressed == 0 && Compressed == 0)
+        // Support for zero byte files (but not for encrypted files which always have encryption overhead)
+        if (Decompressed == 0 && Compressed == 0 && EncryptionType == ZipEncryptionType.None)
         {
             usedCompression = ZipCompressionMethod.None;
         }
@@ -153,11 +187,13 @@ internal class ZipCentralDirectoryEntry
         outputStream.Write(intBuf.Slice(0, 4)); // Offset of header
 
         outputStream.Write(encodedFilename, 0, encodedFilename.Length);
+
+        // Write Zip64 extra field
         if (zip64)
         {
             BinaryPrimitives.WriteUInt16LittleEndian(intBuf, 0x0001);
             outputStream.Write(intBuf.Slice(0, 2));
-            BinaryPrimitives.WriteUInt16LittleEndian(intBuf, (ushort)(extralength - 4));
+            BinaryPrimitives.WriteUInt16LittleEndian(intBuf, (ushort)(2 + 2 + 8 + 8 + 8 + 4 - 4));
             outputStream.Write(intBuf.Slice(0, 2));
 
             BinaryPrimitives.WriteUInt64LittleEndian(intBuf, Decompressed);
@@ -168,6 +204,28 @@ internal class ZipCentralDirectoryEntry
             outputStream.Write(intBuf);
             BinaryPrimitives.WriteUInt32LittleEndian(intBuf, 0);
             outputStream.Write(intBuf.Slice(0, 4)); // VolumeNumber = 0
+        }
+
+        // Write WinZip AES extra field
+        if (
+            EncryptionType == ZipEncryptionType.Aes128
+            || EncryptionType == ZipEncryptionType.Aes256
+        )
+        {
+            Span<byte> aesExtra = stackalloc byte[11];
+            // Extra field ID: 0x9901 (WinZip AES)
+            BinaryPrimitives.WriteUInt16LittleEndian(aesExtra, 0x9901);
+            // Extra field data size: 7 bytes
+            BinaryPrimitives.WriteUInt16LittleEndian(aesExtra.Slice(2), 7);
+            // AES encryption version: 2 (AE-2)
+            BinaryPrimitives.WriteUInt16LittleEndian(aesExtra.Slice(4), 0x0002);
+            // Vendor ID: "AE" = 0x4541
+            BinaryPrimitives.WriteUInt16LittleEndian(aesExtra.Slice(6), 0x4541);
+            // AES encryption strength: 1=128-bit, 3=256-bit
+            aesExtra[8] = EncryptionType == ZipEncryptionType.Aes128 ? (byte)1 : (byte)3;
+            // Actual compression method
+            BinaryPrimitives.WriteUInt16LittleEndian(aesExtra.Slice(9), (ushort)ActualCompression);
+            outputStream.Write(aesExtra);
         }
 
         outputStream.Write(encodedComment, 0, encodedComment.Length);

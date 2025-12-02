@@ -1,5 +1,6 @@
 using System;
 using SharpCompress.Common;
+using SharpCompress.Common.Zip;
 using SharpCompress.Compressors.Deflate;
 using D = SharpCompress.Compressors.Deflate;
 
@@ -24,6 +25,8 @@ public class ZipWriterOptions : WriterOptions
         {
             UseZip64 = writerOptions.UseZip64;
             ArchiveComment = writerOptions.ArchiveComment;
+            Password = writerOptions.Password;
+            EncryptionType = writerOptions.EncryptionType;
         }
     }
 
@@ -80,4 +83,19 @@ public class ZipWriterOptions : WriterOptions
     /// are less than 4GiB in length.
     /// </summary>
     public bool UseZip64 { get; set; }
+
+    /// <summary>
+    /// The password to use for encrypting the ZIP archive entries.
+    /// When set, entries will be encrypted using the specified <see cref="EncryptionType"/>.
+    /// If null or empty, no encryption is applied.
+    /// </summary>
+    public string? Password { get; set; }
+
+    /// <summary>
+    /// The encryption type to use when a password is set.
+    /// Defaults to <see cref="ZipEncryptionType.None"/>.
+    /// When <see cref="Password"/> is set and this is <see cref="ZipEncryptionType.None"/>,
+    /// <see cref="ZipEncryptionType.Aes256"/> will be used automatically.
+    /// </summary>
+    public ZipEncryptionType EncryptionType { get; set; } = ZipEncryptionType.None;
 }
