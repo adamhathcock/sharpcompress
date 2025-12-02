@@ -207,8 +207,8 @@ public class SevenZipArchive : AbstractArchive<SevenZipArchiveEntry, SevenZipVol
 
     public override bool IsEncrypted =>
         Entries
-            .Where(x => !x.IsDirectory)
-            .Any(file => file.IsEncrypted);
+            .First(x => !x.IsDirectory)
+            .IsEncrypted;
 
     public override long TotalSize =>
         _database?._packSizes.Aggregate(0L, (total, packSize) => total + packSize) ?? 0;
