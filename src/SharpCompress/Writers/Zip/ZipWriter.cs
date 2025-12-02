@@ -807,6 +807,8 @@ public class ZipWriter : AbstractWriter
 
     /// <summary>
     /// A stream wrapper that doesn't dispose the underlying stream when disposed.
+    /// This is used in encryption scenarios where the crypto stream would otherwise
+    /// dispose the counting stream prematurely, before we can read the final count.
     /// </summary>
     private class NonDisposingStream : Stream
     {
