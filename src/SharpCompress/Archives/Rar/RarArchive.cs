@@ -86,8 +86,8 @@ public class RarArchive : AbstractArchive<RarArchiveEntry, RarVolume>
 
     public override bool IsEncrypted =>
         Entries
-            .Where(x => !x.IsDirectory)
-            .Any(file => file.IsEncrypted);
+            .First(x => !x.IsDirectory)
+            .IsEncrypted;
 
     public virtual int MinVersion => Volumes.First().MinVersion;
     public virtual int MaxVersion => Volumes.First().MaxVersion;
