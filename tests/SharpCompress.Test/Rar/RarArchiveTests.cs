@@ -633,4 +633,13 @@ public class RarArchiveTests : ArchiveTests
             "Rar5.encrypted_filesOnly.rar",
             "Failure jpg exe Empty тест.txt jpg\\test.jpg exe\\test.exe"
         );
+
+    [Fact]
+    public void Rar_TestEncryptedDetection()
+    {
+        using var passwordProtectedFilesArchive = RarArchive.Open(
+            Path.Combine(TEST_ARCHIVES_PATH, "Rar.encrypted_filesOnly.rar")
+        );
+        Assert.True(passwordProtectedFilesArchive.IsEncrypted);
+    }
 }

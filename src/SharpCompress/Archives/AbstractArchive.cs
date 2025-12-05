@@ -125,6 +125,11 @@ public abstract class AbstractArchive<TEntry, TVolume> : IArchive
     public virtual bool IsSolid => false;
 
     /// <summary>
+    /// Archive is ENCRYPTED (this means the Archive has password-protected files).
+    /// </summary>
+    public virtual bool IsEncrypted => false;
+
+    /// <summary>
     /// The archive can find all the parts of the archive needed to fully extract the archive.  This forces the parsing of the entire archive.
     /// </summary>
     public bool IsComplete

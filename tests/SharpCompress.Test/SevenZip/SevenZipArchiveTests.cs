@@ -225,6 +225,15 @@ public class SevenZipArchiveTests : ArchiveTests
     }
 
     [Fact]
+    public void SevenZipArchive_TestEncryptedDetection()
+    {
+        using var passwordProtectedFilesArchive = SevenZipArchive.Open(
+            Path.Combine(TEST_ARCHIVES_PATH, "7Zip.encryptedFiles.7z")
+        );
+        Assert.True(passwordProtectedFilesArchive.IsEncrypted);
+    }
+
+    [Fact]
     public void SevenZipArchive_TestSolidDetection()
     {
         using var oneBlockSolidArchive = SevenZipArchive.Open(
