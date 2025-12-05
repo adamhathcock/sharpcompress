@@ -1,3 +1,4 @@
+using System;
 using SharpCompress.Common;
 
 namespace SharpCompress.Readers;
@@ -21,4 +22,10 @@ public class ReaderOptions : OptionsBase
     /// Provide a hint for the extension of the archive being read, can speed up finding the correct decoder.  Should be without the leading period in the form like: tar.gz or zip
     /// </summary>
     public string? ExtensionHint { get; set; }
+
+    /// <summary>
+    /// An optional progress reporter for tracking extraction operations.
+    /// When set, progress updates will be reported as entries are extracted.
+    /// </summary>
+    public IProgress<ProgressReport>? Progress { get; set; }
 }

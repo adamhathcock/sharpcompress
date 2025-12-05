@@ -85,7 +85,8 @@ public class ZipWriter : AbstractWriter
     public void Write(string entryPath, Stream source, ZipWriterEntryOptions zipWriterEntryOptions)
     {
         using var output = WriteToStream(entryPath, zipWriterEntryOptions);
-        source.CopyTo(output);
+        var progressStream = WrapWithProgress(source, entryPath);
+        progressStream.CopyTo(output);
     }
 
     public Stream WriteToStream(string entryPath, ZipWriterEntryOptions options)
