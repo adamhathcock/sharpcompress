@@ -45,4 +45,14 @@ public interface IArchive : IDisposable
     /// The total size of the files as uncompressed in the archive.
     /// </summary>
     long TotalUncompressSize { get; }
+
+    /// <summary>
+    /// Is the archive part of a multi-volume set.
+    /// </summary>
+    bool IsMultiVolume { get; }
+
+    /// <summary>
+    /// Does the archive support multi-threaded extraction.
+    /// </summary>
+    bool SupportsMultiThreading { get; }
 }

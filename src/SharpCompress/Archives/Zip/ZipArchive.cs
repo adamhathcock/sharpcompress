@@ -283,7 +283,12 @@ public class ZipArchive : AbstractWritableArchive<ZipArchiveEntry, ZipVolume>
 
                             yield return new ZipArchiveEntry(
                                 this,
-                                new SeekableZipFilePart(headerFactory.NotNull(), deh, s)
+                                new SeekableZipFilePart(
+                                    headerFactory.NotNull(),
+                                    deh,
+                                    s,
+                                    IsMultiVolume
+                                )
                             );
                         }
                         break;
@@ -385,4 +390,6 @@ public class ZipArchive : AbstractWritableArchive<ZipArchiveEntry, ZipVolume>
         ((IStreamStack)stream).StackSeek(0);
         return ZipReader.Open(stream, ReaderOptions, Entries);
     }
+
+    public override bool SupportsMultiThreading => !IsMultiVolume;
 }
