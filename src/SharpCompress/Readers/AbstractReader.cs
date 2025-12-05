@@ -261,20 +261,34 @@ public abstract class AbstractReader<TEntry, TVolume> : IReader
     internal void Write(Stream writeStream)
     {
         using Stream s = OpenEntryStream();
-        TransferWithProgress(s, writeStream, Entry);
+        var sourceStream = WrapWithProgress(s, Entry);
+        sourceStream.CopyTo(writeStream, 81920);
     }
 
     internal async Task WriteAsync(Stream writeStream, CancellationToken cancellationToken)
     {
 #if NETFRAMEWORK || NETSTANDARD2_0
         using Stream s = OpenEntryStream();
-        await TransferWithProgressAsync(s, writeStream, Entry, cancellationToken)
-            .ConfigureAwait(false);
+        var sourceStream = WrapWithProgress(s, Entry);
+        await sourceStream.CopyToAsync(writeStream, 81920, cancellationToken).ConfigureAwait(false);
 #else
         await using Stream s = OpenEntryStream();
-        await TransferWithProgressAsync(s, writeStream, Entry, cancellationToken)
-            .ConfigureAwait(false);
+        var sourceStream = WrapWithProgress(s, Entry);
+        await sourceStream.CopyToAsync(writeStream, 81920, cancellationToken).ConfigureAwait(false);
 #endif
+    }
+
+    private Stream WrapWithProgress(Stream source, Entry entry)
+    {
+        var progress = Options.Progress;
+        if (progress is null)
+        {
+            return source;
+        }
+
+        var entryPath = entry.Key ?? string.Empty;
+        long? totalBytes = GetEntrySizeSafe(entry);
+        return new ProgressReportingStream(source, progress, entryPath, totalBytes, leaveOpen: true);
     }
 
     private static long? GetEntrySizeSafe(Entry entry)
@@ -289,53 +303,6 @@ public abstract class AbstractReader<TEntry, TVolume> : IReader
         catch (NotImplementedException)
         {
             return null;
-        }
-    }
-
-    private void TransferWithProgress(Stream source, Stream destination, Entry entry)
-    {
-        var progress = Options.Progress;
-        var entryPath = entry.Key ?? string.Empty;
-        long? totalBytes = GetEntrySizeSafe(entry);
-        long transferred = 0;
-
-        var buffer = new byte[81920];
-        int bytesRead;
-        while ((bytesRead = source.Read(buffer, 0, buffer.Length)) > 0)
-        {
-            destination.Write(buffer, 0, bytesRead);
-            transferred += bytesRead;
-            progress?.Report(new ProgressReport(entryPath, transferred, totalBytes));
-        }
-    }
-
-    private async Task TransferWithProgressAsync(
-        Stream source,
-        Stream destination,
-        Entry entry,
-        CancellationToken cancellationToken
-    )
-    {
-        var progress = Options.Progress;
-        var entryPath = entry.Key ?? string.Empty;
-        long? totalBytes = GetEntrySizeSafe(entry);
-        long transferred = 0;
-
-        var buffer = new byte[81920];
-        int bytesRead;
-        while (
-            (
-                bytesRead = await source
-                    .ReadAsync(buffer, 0, buffer.Length, cancellationToken)
-                    .ConfigureAwait(false)
-            ) > 0
-        )
-        {
-            await destination
-                .WriteAsync(buffer, 0, bytesRead, cancellationToken)
-                .ConfigureAwait(false);
-            transferred += bytesRead;
-            progress?.Report(new ProgressReport(entryPath, transferred, totalBytes));
         }
     }
 

@@ -3,6 +3,7 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using SharpCompress.Common;
+using SharpCompress.IO;
 
 namespace SharpCompress.Archives;
 
@@ -28,26 +29,8 @@ public static class IArchiveEntryExtensions
         }
 
         using var entryStream = archiveEntry.OpenEntryStream();
-
-        if (progress is null)
-        {
-            entryStream.CopyTo(streamToWriteTo);
-        }
-        else
-        {
-            var entryPath = archiveEntry.Key ?? string.Empty;
-            long? totalBytes = GetEntrySizeSafe(archiveEntry);
-            long transferred = 0;
-
-            var buffer = new byte[BufferSize];
-            int bytesRead;
-            while ((bytesRead = entryStream.Read(buffer, 0, buffer.Length)) > 0)
-            {
-                streamToWriteTo.Write(buffer, 0, bytesRead);
-                transferred += bytesRead;
-                progress.Report(new ProgressReport(entryPath, transferred, totalBytes));
-            }
-        }
+        var sourceStream = WrapWithProgress(entryStream, archiveEntry, progress);
+        sourceStream.CopyTo(streamToWriteTo, BufferSize);
     }
 
     /// <summary>
@@ -70,36 +53,26 @@ public static class IArchiveEntryExtensions
         }
 
         using var entryStream = archiveEntry.OpenEntryStream();
+        var sourceStream = WrapWithProgress(entryStream, archiveEntry, progress);
+        await sourceStream
+            .CopyToAsync(streamToWriteTo, BufferSize, cancellationToken)
+            .ConfigureAwait(false);
+    }
 
+    private static Stream WrapWithProgress(
+        Stream source,
+        IArchiveEntry entry,
+        IProgress<ProgressReport>? progress
+    )
+    {
         if (progress is null)
         {
-            await entryStream
-                .CopyToAsync(streamToWriteTo, BufferSize, cancellationToken)
-                .ConfigureAwait(false);
+            return source;
         }
-        else
-        {
-            var entryPath = archiveEntry.Key ?? string.Empty;
-            long? totalBytes = GetEntrySizeSafe(archiveEntry);
-            long transferred = 0;
 
-            var buffer = new byte[BufferSize];
-            int bytesRead;
-            while (
-                (
-                    bytesRead = await entryStream
-                        .ReadAsync(buffer, 0, buffer.Length, cancellationToken)
-                        .ConfigureAwait(false)
-                ) > 0
-            )
-            {
-                await streamToWriteTo
-                    .WriteAsync(buffer, 0, bytesRead, cancellationToken)
-                    .ConfigureAwait(false);
-                transferred += bytesRead;
-                progress.Report(new ProgressReport(entryPath, transferred, totalBytes));
-            }
-        }
+        var entryPath = entry.Key ?? string.Empty;
+        long? totalBytes = GetEntrySizeSafe(entry);
+        return new ProgressReportingStream(source, progress, entryPath, totalBytes, leaveOpen: true);
     }
 
     private static long? GetEntrySizeSafe(IArchiveEntry entry)
