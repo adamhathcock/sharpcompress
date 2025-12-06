@@ -9,7 +9,7 @@ using SharpCompress.Common;
 using SharpCompress.Common.Zip;
 using SharpCompress.Common.Zip.Headers;
 using SharpCompress.Compressors;
-using SharpCompress.Compressors.BZip2;
+using SharpCompress.Compressors.BZip2MT.OutputStream;
 using SharpCompress.Compressors.Deflate;
 using SharpCompress.Compressors.LZMA;
 using SharpCompress.Compressors.PPMd;
@@ -441,7 +441,7 @@ public class ZipWriter : AbstractWriter
                 }
                 case ZipCompressionMethod.BZip2:
                 {
-                    return new BZip2Stream(counting, CompressionMode.Compress, false);
+                    return new BZip2ParallelOutputStream(counting);
                 }
                 case ZipCompressionMethod.LZMA:
                 {
