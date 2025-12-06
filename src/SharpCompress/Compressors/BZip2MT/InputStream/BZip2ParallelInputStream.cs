@@ -251,14 +251,16 @@ namespace SharpCompress.Compressors.BZip2MT.InputStream
                 }
 
                 // queue up the next block
-                while (this.TryToQueueUpAnotherBlock())
-                { }
+                bool queueSuccessful = this.TryToQueueUpAnotherBlock();
 
                 // check if we are completely done
                 if (this.CheckIfCompletelyDone())
                     return -1;
 
-                Thread.Sleep(1);
+                if (!queueSuccessful)
+                {
+                    Thread.Sleep(1);
+                }
             }
         }
 
@@ -313,14 +315,16 @@ namespace SharpCompress.Compressors.BZip2MT.InputStream
                 }
 
                 // queue up the next block
-                while (this.TryToQueueUpAnotherBlock())
-                { }
+                bool queueSuccessful = this.TryToQueueUpAnotherBlock();
 
                 // check if we are completely done
                 if (this.CheckIfCompletelyDone())
                     return totalRead;
 
-                Thread.Sleep(1);
+                if (!queueSuccessful)
+                {
+                    Thread.Sleep(1);
+                }
             }
         }
 
