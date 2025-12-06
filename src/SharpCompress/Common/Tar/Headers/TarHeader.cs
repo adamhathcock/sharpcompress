@@ -1,5 +1,6 @@
 using System;
 using System.Buffers.Binary;
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
 
@@ -9,8 +10,13 @@ internal sealed class TarHeader
 {
     internal static readonly DateTime EPOCH = new(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 
-    public TarHeader(ArchiveEncoding archiveEncoding) => ArchiveEncoding = archiveEncoding;
+    public TarHeader(ArchiveEncoding archiveEncoding, TarHeaderWriteFormat writeFormat = TarHeaderWriteFormat.GNU_TAR_LONG_LINK)
+    {
+        ArchiveEncoding = archiveEncoding;
+        WriteFormat = writeFormat;
+    }
 
+    internal TarHeaderWriteFormat WriteFormat { get; set; }
     internal string? Name { get; set; }
     internal string? LinkName { get; set; }
 
@@ -30,6 +36,108 @@ internal sealed class TarHeader
     private const int MAX_LONG_NAME_SIZE = 32768;
 
     internal void Write(Stream output)
+    {
+        switch (WriteFormat)
+        {
+            case TarHeaderWriteFormat.GNU_TAR_LONG_LINK:
+                WriteGnuTarLongLink(output);
+                break;
+            case TarHeaderWriteFormat.USTAR:
+                WriteUstar(output);
+                break;
+            default:
+                throw new Exception("This should be impossible...");
+        }
+    }
+
+    internal void WriteUstar(Stream output)
+    {
+        var buffer = new byte[BLOCK_SIZE];
+
+        WriteOctalBytes(511, buffer, 100, 8); // file mode
+        WriteOctalBytes(0, buffer, 108, 8); // owner ID
+        WriteOctalBytes(0, buffer, 116, 8); // group ID
+
+        //ArchiveEncoding.UTF8.GetBytes("magic").CopyTo(buffer, 257);
+        var nameByteCount = ArchiveEncoding
+            .GetEncoding()
+            .GetByteCount(Name.NotNull("Name is null"));
+
+        if (nameByteCount > 100)
+        {
+            // if name is longer, try to split it into name and namePrefix
+
+            string fullName = Name.NotNull("Name is null");
+
+            // find all directory separators
+            List<int> dirSeps = new List<int>();
+            for (int i = 0; i < fullName.Length; i++)
+            {
+                if (fullName[i] == Path.DirectorySeparatorChar)
+                {
+                    dirSeps.Add(i);
+                }
+            }
+
+            // find the right place to split the name
+            int splitIndex = -1;
+            for (int i = 0; i < dirSeps.Count; i++)
+            {
+                int count = ArchiveEncoding.GetEncoding().GetByteCount(fullName.Substring(0, dirSeps[i]));
+                if (count < 155)
+                {
+                    splitIndex = dirSeps[i];
+                }
+                else
+                {
+                    break;
+                }
+            }
+
+            if (splitIndex == -1)
+            {
+                throw new Exception($"Tar header USTAR format can not fit file name \"{fullName}\" of length {nameByteCount}! Directory separator not found! Try using GNU Tar format instead!");
+            }
+
+            string namePrefix = fullName.Substring(0, splitIndex);
+            string name = fullName.Substring(splitIndex + 1);
+
+            if (this.ArchiveEncoding.GetEncoding().GetByteCount(namePrefix) >= 155)
+                throw new Exception($"Tar header USTAR format can not fit file name \"{fullName}\" of length {nameByteCount}! Try using GNU Tar format instead!");
+
+            if (this.ArchiveEncoding.GetEncoding().GetByteCount(name) >= 100)
+                throw new Exception($"Tar header USTAR format can not fit file name \"{fullName}\" of length {nameByteCount}! Try using GNU Tar format instead!");
+
+
+            // write name prefix
+            WriteStringBytes(ArchiveEncoding.Encode(namePrefix), buffer, 345, 100);
+            // write partial name
+            WriteStringBytes(ArchiveEncoding.Encode(name), buffer, 100);
+        }
+        else
+        {
+            WriteStringBytes(ArchiveEncoding.Encode(Name.NotNull("Name is null")), buffer, 100);
+        }
+
+        WriteOctalBytes(Size, buffer, 124, 12);
+        var time = (long)(LastModifiedTime.ToUniversalTime() - EPOCH).TotalSeconds;
+        WriteOctalBytes(time, buffer, 136, 12);
+        buffer[156] = (byte)EntryType;
+
+        // write ustar magic field
+        WriteStringBytes(Encoding.ASCII.GetBytes("ustar"), buffer, 257, 6 );
+        // write ustar version "00"
+        buffer[263] = 0x30;
+        buffer[264] = 0x30;
+
+
+        var crc = RecalculateChecksum(buffer);
+        WriteOctalBytes(crc, buffer, 148, 8);
+
+        output.Write(buffer, 0, buffer.Length);
+    }
+
+    internal void WriteGnuTarLongLink(Stream output)
     {
         var buffer = new byte[BLOCK_SIZE];
 
@@ -85,7 +193,7 @@ internal sealed class TarHeader
                 0,
                 100 - ArchiveEncoding.GetEncoding().GetMaxByteCount(1)
             );
-            Write(output);
+            WriteGnuTarLongLink(output);
         }
     }
 
@@ -239,6 +347,13 @@ internal sealed class TarHeader
         name.CopyTo(buffer);
         var i = Math.Min(length, name.Length);
         buffer.Slice(i, length - i).Clear();
+    }
+
+    private static void WriteStringBytes(ReadOnlySpan<byte> name, Span<byte> buffer, int offset, int length)
+    {
+        name.CopyTo(buffer.Slice(offset));
+        var i = Math.Min(length, name.Length);
+        buffer.Slice(offset+i, length - i).Clear();
     }
 
     private static void WriteStringBytes(string name, byte[] buffer, int offset, int length)

@@ -1,4 +1,5 @@
 using SharpCompress.Common;
+using SharpCompress.Common.Tar.Headers;
 
 namespace SharpCompress.Writers.Tar;
 
@@ -9,8 +10,14 @@ public class TarWriterOptions : WriterOptions
     /// </summary>
     public bool FinalizeArchiveOnClose { get; }
 
-    public TarWriterOptions(CompressionType compressionType, bool finalizeArchiveOnClose)
-        : base(compressionType) => FinalizeArchiveOnClose = finalizeArchiveOnClose;
+    public TarHeaderWriteFormat HeaderFormat { get; }
+
+    public TarWriterOptions(CompressionType compressionType, bool finalizeArchiveOnClose, TarHeaderWriteFormat headerFormat = TarHeaderWriteFormat.GNU_TAR_LONG_LINK)
+        : base(compressionType)
+    {
+        FinalizeArchiveOnClose = finalizeArchiveOnClose;
+        HeaderFormat = headerFormat;
+    }
 
     internal TarWriterOptions(WriterOptions options)
         : this(options.CompressionType, true) => ArchiveEncoding = options.ArchiveEncoding;
