@@ -660,8 +660,6 @@ public class ArchiveTests : ReaderTests
     {
         // Test that ArchiveFactory.IsArchive returns false instead of throwing
         // when called on a non-archive file (regression test for issue #1060)
-        var testFile = Path.Combine(TEST_ARCHIVES_PATH, "Zip.bzip2.noEmptyDirs.zip");
-
         using (var stream = new MemoryStream(new byte[] { 0x00, 0x01, 0x02, 0x03, 0x04 }))
         {
             var result = ArchiveFactory.IsArchive(stream, out var type);
