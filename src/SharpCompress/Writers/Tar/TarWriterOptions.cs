@@ -12,7 +12,11 @@ public class TarWriterOptions : WriterOptions
 
     public TarHeaderWriteFormat HeaderFormat { get; }
 
-    public TarWriterOptions(CompressionType compressionType, bool finalizeArchiveOnClose, TarHeaderWriteFormat headerFormat = TarHeaderWriteFormat.GNU_TAR_LONG_LINK)
+    public TarWriterOptions(
+        CompressionType compressionType,
+        bool finalizeArchiveOnClose,
+        TarHeaderWriteFormat headerFormat = TarHeaderWriteFormat.GNU_TAR_LONG_LINK
+    )
         : base(compressionType)
     {
         FinalizeArchiveOnClose = finalizeArchiveOnClose;
