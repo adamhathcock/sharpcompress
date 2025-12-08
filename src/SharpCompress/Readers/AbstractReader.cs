@@ -288,7 +288,13 @@ public abstract class AbstractReader<TEntry, TVolume> : IReader
 
         var entryPath = entry.Key ?? string.Empty;
         long? totalBytes = GetEntrySizeSafe(entry);
-        return new ProgressReportingStream(source, progress, entryPath, totalBytes, leaveOpen: true);
+        return new ProgressReportingStream(
+            source,
+            progress,
+            entryPath,
+            totalBytes,
+            leaveOpen: true
+        );
     }
 
     private static long? GetEntrySizeSafe(Entry entry)
