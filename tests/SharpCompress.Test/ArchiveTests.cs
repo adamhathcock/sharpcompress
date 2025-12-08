@@ -654,4 +654,31 @@ public class ArchiveTests : ReaderTests
             Assert.Equal(3, archive.Entries.Count());
         }
     }
+
+    [Fact]
+    public void ArchiveFactory_IsArchive_NonArchiveFile_ShouldReturnFalse()
+    {
+        // Test that ArchiveFactory.IsArchive returns false instead of throwing
+        // when called on a non-archive file (regression test for issue #1064)
+        using (var stream = new MemoryStream(new byte[] { 0x00, 0x01, 0x02, 0x03, 0x04 }))
+        {
+            var result = ArchiveFactory.IsArchive(stream, out var type);
+            Assert.False(result);
+            Assert.Null(type);
+        }
+    }
+
+    [Fact]
+    public void ArchiveFactory_IsArchive_ValidArchive_ShouldReturnTrue()
+    {
+        // Test that ArchiveFactory.IsArchive correctly identifies valid archives
+        var testArchive = Path.Combine(TEST_ARCHIVES_PATH, "Zip.bzip2.noEmptyDirs.zip");
+
+        using (var stream = File.OpenRead(testArchive))
+        {
+            var result = ArchiveFactory.IsArchive(stream, out var type);
+            Assert.True(result);
+            Assert.Equal(ArchiveType.Zip, type);
+        }
+    }
 }
