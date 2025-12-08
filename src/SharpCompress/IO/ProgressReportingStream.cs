@@ -45,7 +45,10 @@ internal sealed class ProgressReportingStream : Stream
     public override long Position
     {
         get => _baseStream.Position;
-        set => throw new NotSupportedException("Directly setting Position is not supported in ProgressReportingStream to maintain progress tracking integrity.");
+        set =>
+            throw new NotSupportedException(
+                "Directly setting Position is not supported in ProgressReportingStream to maintain progress tracking integrity."
+            );
     }
 
     public override void Flush() => _baseStream.Flush();
