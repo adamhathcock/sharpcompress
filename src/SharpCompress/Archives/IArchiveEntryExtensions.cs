@@ -38,13 +38,13 @@ public static class IArchiveEntryExtensions
     /// </summary>
     /// <param name="archiveEntry">The archive entry to extract.</param>
     /// <param name="streamToWriteTo">The stream to write the entry content to.</param>
-    /// <param name="progress">Optional progress reporter for tracking extraction progress.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
+    /// <param name="progress">Optional progress reporter for tracking extraction progress.</param>
     public static async Task WriteToAsync(
         this IArchiveEntry archiveEntry,
         Stream streamToWriteTo,
-        IProgress<ProgressReport>? progress = null,
-        CancellationToken cancellationToken = default
+        CancellationToken cancellationToken = default,
+        IProgress<ProgressReport>? progress = null
     )
     {
         if (archiveEntry.IsDirectory)
