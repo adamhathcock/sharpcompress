@@ -10,7 +10,10 @@ internal sealed class TarHeader
 {
     internal static readonly DateTime EPOCH = new(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 
-    public TarHeader(ArchiveEncoding archiveEncoding, TarHeaderWriteFormat writeFormat = TarHeaderWriteFormat.GNU_TAR_LONG_LINK)
+    public TarHeader(
+        ArchiveEncoding archiveEncoding,
+        TarHeaderWriteFormat writeFormat = TarHeaderWriteFormat.GNU_TAR_LONG_LINK
+    )
     {
         ArchiveEncoding = archiveEncoding;
         WriteFormat = writeFormat;
@@ -83,7 +86,9 @@ internal sealed class TarHeader
             int splitIndex = -1;
             for (int i = 0; i < dirSeps.Count; i++)
             {
-                int count = ArchiveEncoding.GetEncoding().GetByteCount(fullName.Substring(0, dirSeps[i]));
+                int count = ArchiveEncoding
+                    .GetEncoding()
+                    .GetByteCount(fullName.Substring(0, dirSeps[i]));
                 if (count < 155)
                 {
                     splitIndex = dirSeps[i];
@@ -96,18 +101,23 @@ internal sealed class TarHeader
 
             if (splitIndex == -1)
             {
-                throw new Exception($"Tar header USTAR format can not fit file name \"{fullName}\" of length {nameByteCount}! Directory separator not found! Try using GNU Tar format instead!");
+                throw new Exception(
+                    $"Tar header USTAR format can not fit file name \"{fullName}\" of length {nameByteCount}! Directory separator not found! Try using GNU Tar format instead!"
+                );
             }
 
             string namePrefix = fullName.Substring(0, splitIndex);
             string name = fullName.Substring(splitIndex + 1);
 
             if (this.ArchiveEncoding.GetEncoding().GetByteCount(namePrefix) >= 155)
-                throw new Exception($"Tar header USTAR format can not fit file name \"{fullName}\" of length {nameByteCount}! Try using GNU Tar format instead!");
+                throw new Exception(
+                    $"Tar header USTAR format can not fit file name \"{fullName}\" of length {nameByteCount}! Try using GNU Tar format instead!"
+                );
 
             if (this.ArchiveEncoding.GetEncoding().GetByteCount(name) >= 100)
-                throw new Exception($"Tar header USTAR format can not fit file name \"{fullName}\" of length {nameByteCount}! Try using GNU Tar format instead!");
-
+                throw new Exception(
+                    $"Tar header USTAR format can not fit file name \"{fullName}\" of length {nameByteCount}! Try using GNU Tar format instead!"
+                );
 
             // write name prefix
             WriteStringBytes(ArchiveEncoding.Encode(namePrefix), buffer, 345, 100);
@@ -125,11 +135,10 @@ internal sealed class TarHeader
         buffer[156] = (byte)EntryType;
 
         // write ustar magic field
-        WriteStringBytes(Encoding.ASCII.GetBytes("ustar"), buffer, 257, 6 );
+        WriteStringBytes(Encoding.ASCII.GetBytes("ustar"), buffer, 257, 6);
         // write ustar version "00"
         buffer[263] = 0x30;
         buffer[264] = 0x30;
-
 
         var crc = RecalculateChecksum(buffer);
         WriteOctalBytes(crc, buffer, 148, 8);
@@ -349,11 +358,16 @@ internal sealed class TarHeader
         buffer.Slice(i, length - i).Clear();
     }
 
-    private static void WriteStringBytes(ReadOnlySpan<byte> name, Span<byte> buffer, int offset, int length)
+    private static void WriteStringBytes(
+        ReadOnlySpan<byte> name,
+        Span<byte> buffer,
+        int offset,
+        int length
+    )
     {
         name.CopyTo(buffer.Slice(offset));
         var i = Math.Min(length, name.Length);
-        buffer.Slice(offset+i, length - i).Clear();
+        buffer.Slice(offset + i, length - i).Clear();
     }
 
     private static void WriteStringBytes(string name, byte[] buffer, int offset, int length)
