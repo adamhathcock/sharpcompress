@@ -6,6 +6,7 @@
 
 using System.IO;
 using SharpCompress.Compressors.BZip2MT.Interface;
+
 namespace SharpCompress.Compressors.BZip2MT.OutputStream
 {
     /// <summary>Implements a bit-wise output stream</summary>
@@ -38,7 +39,7 @@ namespace SharpCompress.Compressors.BZip2MT.OutputStream
 
         #region IBZip2BitOutputStream implementation
 
-        public void WriteBoolean (bool value)
+        public void WriteBoolean(bool value)
         {
             this._bitCount++;
             this._bitBuffer |= ((value ? 1u : 0u) << (32 - this._bitCount));
@@ -51,16 +52,16 @@ namespace SharpCompress.Compressors.BZip2MT.OutputStream
             }
         }
 
-        public void WriteUnary (int value)
+        public void WriteUnary(int value)
         {
             while (value-- > 0)
             {
-                this.WriteBoolean (true);
+                this.WriteBoolean(true);
             }
-            this.WriteBoolean (false);
+            this.WriteBoolean(false);
         }
 
-        public void WriteBits (int count,  uint value)
+        public void WriteBits(int count, uint value)
         {
             this._bitBuffer |= ((value << (32 - count)) >> this._bitCount);
             this._bitCount += count;
@@ -73,17 +74,17 @@ namespace SharpCompress.Compressors.BZip2MT.OutputStream
             }
         }
 
-        public void WriteInteger (uint value)
+        public void WriteInteger(uint value)
         {
-            this.WriteBits (16, (value >> 16) & 0xffff);
-            this.WriteBits (16, value & 0xffff);
+            this.WriteBits(16, (value >> 16) & 0xffff);
+            this.WriteBits(16, value & 0xffff);
         }
 
         public void Flush()
         {
             if (this._bitCount > 0)
             {
-                this.WriteBits (8 - this._bitCount, 0);
+                this.WriteBits(8 - this._bitCount, 0);
             }
         }
 

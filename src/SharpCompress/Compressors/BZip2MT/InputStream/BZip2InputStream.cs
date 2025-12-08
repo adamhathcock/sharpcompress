@@ -8,6 +8,7 @@ using System;
 using System.IO;
 using SharpCompress.Compressors.BZip2MT.Algorithm;
 using SharpCompress.Compressors.BZip2MT.Interface;
+
 namespace SharpCompress.Compressors.BZip2MT.InputStream
 {
     /// <summary>An InputStream wrapper that decompresses BZip2 data</summary>
@@ -41,13 +42,18 @@ namespace SharpCompress.Compressors.BZip2MT.InputStream
         // The decompressor for the current block
         private BZip2BlockDecompressor? _blockDecompressor;
 
-
         /// <summary>Public constructor</summary>
         /// <param name="inputStream">The InputStream to wrap</param>
         /// <param name="isOwner">if true, will close the stream when done</param>
         /// <param name="inputStreamHeaderCheck"><see cref="InputStreamHeaderCheckType"/></param>
         /// <param name="manualBlockLevel">Used when <see cref="inputStreamHeaderCheck"/> is NoHeader</param>
-        public BZip2InputStream(Stream inputStream, bool isOwner = true, InputStreamHeaderCheckType inputStreamHeaderCheck = InputStreamHeaderCheckType.FULL_HEADER, int manualBlockLevel = 9)
+        public BZip2InputStream(
+            Stream inputStream,
+            bool isOwner = true,
+            InputStreamHeaderCheckType inputStreamHeaderCheck =
+                InputStreamHeaderCheckType.FULL_HEADER,
+            int manualBlockLevel = 9
+        )
         {
             this._inputStream = inputStream;
             this._bitInputStream = new BZip2BitInputStream(inputStream);
@@ -61,11 +67,27 @@ namespace SharpCompress.Compressors.BZip2MT.InputStream
 
         #region Implementation of abstract members of Stream
 
-        #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
-        public override void Flush() => throw new NotSupportedException($"{nameof(BZip2InputStream)} does not support 'Flush()' method.");
-        public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException($"{nameof(BZip2InputStream)} does not support 'Seek(long offset, SeekOrigin origin)' method.");
-        public override void SetLength(long value) => throw new NotSupportedException($"{nameof(BZip2InputStream)} does not support 'SetLength(long value)' method.");
-        public override void Write(byte[] buffer, int offset, int count) => throw new NotSupportedException($"{nameof(BZip2InputStream)} does not support 'Write(byte[] buffer, int offset, int count)' method.");
+#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
+        public override void Flush() =>
+            throw new NotSupportedException(
+                $"{nameof(BZip2InputStream)} does not support 'Flush()' method."
+            );
+
+        public override long Seek(long offset, SeekOrigin origin) =>
+            throw new NotSupportedException(
+                $"{nameof(BZip2InputStream)} does not support 'Seek(long offset, SeekOrigin origin)' method."
+            );
+
+        public override void SetLength(long value) =>
+            throw new NotSupportedException(
+                $"{nameof(BZip2InputStream)} does not support 'SetLength(long value)' method."
+            );
+
+        public override void Write(byte[] buffer, int offset, int count) =>
+            throw new NotSupportedException(
+                $"{nameof(BZip2InputStream)} does not support 'Write(byte[] buffer, int offset, int count)' method."
+            );
+
         public override bool CanRead => this._inputStream.CanRead;
         public override bool CanSeek => false;
         public override bool CanWrite => false;
@@ -73,7 +95,10 @@ namespace SharpCompress.Compressors.BZip2MT.InputStream
         public override long Position
         {
             get => this._inputStream.Position;
-            set =>throw new NotSupportedException($"{nameof(BZip2InputStream)} does not support Set operation for property 'Position'.");
+            set =>
+                throw new NotSupportedException(
+                    $"{nameof(BZip2InputStream)} does not support Set operation for property 'Position'."
+                );
         }
 
         public override int ReadByte()
@@ -92,7 +117,7 @@ namespace SharpCompress.Compressors.BZip2MT.InputStream
             return nextByte;
         }
 
-        public override int Read(byte[] destination,  int offset,  int length)
+        public override int Read(byte[] destination, int offset, int length)
         {
             int bytesRead = this._blockDecompressor?.Read(destination, offset, length) ?? 0;
 
@@ -105,7 +130,8 @@ namespace SharpCompress.Compressors.BZip2MT.InputStream
                 }
             }
 
-            if (bytesRead == -1) bytesRead = 0;
+            if (bytesRead == -1)
+                bytesRead = 0;
 
             return bytesRead;
         }
@@ -125,13 +151,16 @@ namespace SharpCompress.Compressors.BZip2MT.InputStream
             }
         }
 
-        #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
+#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
 
         #endregion
 
         /// <summary>Reads the stream header and checks that the data appears to be a valid BZip2 stream</summary>
         /// <exception cref="IOException">if the stream header is not valid</exception>
-        private void InitializeStream(InputStreamHeaderCheckType inputStreamHeaderCheck, int blockLevel)
+        private void InitializeStream(
+            InputStreamHeaderCheckType inputStreamHeaderCheck,
+            int blockLevel
+        )
         {
             /* If the stream has been explicitly closed, throw an exception */
             if (this._bitInputStream is null)
@@ -151,9 +180,12 @@ namespace SharpCompress.Compressors.BZip2MT.InputStream
                         uint marker1 = this._bitInputStream.ReadBits(16);
                         uint marker2 = this._bitInputStream.ReadBits(8);
                         blockLevel = ((int)this._bitInputStream.ReadBits(8) - '0');
-                        if (marker1 != BZip2Constants.STREAM_START_MARKER_1 ||
-                            marker2 !=  BZip2Constants.STREAM_START_MARKER_2 ||
-                            blockLevel < 1 ||  blockLevel > 9)
+                        if (
+                            marker1 != BZip2Constants.STREAM_START_MARKER_1
+                            || marker2 != BZip2Constants.STREAM_START_MARKER_2
+                            || blockLevel < 1
+                            || blockLevel > 9
+                        )
                         {
                             throw new IOException("Invalid BZip2 header");
                         }
@@ -163,8 +195,11 @@ namespace SharpCompress.Compressors.BZip2MT.InputStream
                     {
                         uint marker2 = this._bitInputStream.ReadBits(8);
                         blockLevel = ((int)this._bitInputStream.ReadBits(8) - '0');
-                        if (marker2 !=  BZip2Constants.STREAM_START_MARKER_2 ||
-                            blockLevel < 1 ||  blockLevel > 9)
+                        if (
+                            marker2 != BZip2Constants.STREAM_START_MARKER_2
+                            || blockLevel < 1
+                            || blockLevel > 9
+                        )
                         {
                             throw new IOException("Invalid BZip2 header");
                         }
@@ -173,7 +208,7 @@ namespace SharpCompress.Compressors.BZip2MT.InputStream
                     case InputStreamHeaderCheckType.NO_BZH:
                     {
                         blockLevel = ((int)this._bitInputStream.ReadBits(8) - '0');
-                        if (blockLevel < 1 ||  blockLevel > 9)
+                        if (blockLevel < 1 || blockLevel > 9)
                         {
                             throw new IOException("Invalid BZip2 header");
                         }
@@ -182,7 +217,8 @@ namespace SharpCompress.Compressors.BZip2MT.InputStream
                 }
 
                 this._streamBlockSize = (uint)(blockLevel * 100000);
-            } catch (IOException)
+            }
+            catch (IOException)
             {
                 // If the stream header was not valid, stop trying to read more data
                 this._streamComplete = true;
@@ -198,7 +234,6 @@ namespace SharpCompress.Compressors.BZip2MT.InputStream
         /// not a valid block-header or end-of-file marker, or if the following block could not be decoded</exception>
         private bool InitializeNextBlock()
         {
-
             // If we're already at the end of the stream, do nothing
             if (this._streamComplete)
                 return false;
@@ -214,13 +249,20 @@ namespace SharpCompress.Compressors.BZip2MT.InputStream
             uint marker1 = this._bitInputStream.ReadBits(24);
             uint marker2 = this._bitInputStream.ReadBits(24);
 
-            if (marker1 == BZip2Constants.BLOCK_HEADER_MARKER_1 && marker2 == BZip2Constants.BLOCK_HEADER_MARKER_2)
+            if (
+                marker1 == BZip2Constants.BLOCK_HEADER_MARKER_1
+                && marker2 == BZip2Constants.BLOCK_HEADER_MARKER_2
+            )
             {
                 // Initialise a new block
                 try
                 {
-                    this._blockDecompressor = new BZip2BlockDecompressor(this._bitInputStream, this._streamBlockSize);
-                } catch (IOException)
+                    this._blockDecompressor = new BZip2BlockDecompressor(
+                        this._bitInputStream,
+                        this._streamBlockSize
+                    );
+                }
+                catch (IOException)
                 {
                     // If the block could not be decoded, stop trying to read more data
                     this._streamComplete = true;
@@ -228,7 +270,10 @@ namespace SharpCompress.Compressors.BZip2MT.InputStream
                 }
                 return true;
             }
-            if (marker1 == BZip2Constants.STREAM_END_MARKER_1 && marker2 == BZip2Constants.STREAM_END_MARKER_2)
+            if (
+                marker1 == BZip2Constants.STREAM_END_MARKER_1
+                && marker2 == BZip2Constants.STREAM_END_MARKER_2
+            )
             {
                 // Read and verify the end-of-stream CRC
                 this._streamComplete = true;

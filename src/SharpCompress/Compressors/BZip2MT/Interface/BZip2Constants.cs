@@ -1,8 +1,10 @@
 // Added by drone1400, December 2025
 // Location: https://github.com/drone1400/bzip2
 
-namespace SharpCompress.Compressors.BZip2MT.Interface {
-    internal static class BZip2Constants {
+namespace SharpCompress.Compressors.BZip2MT.Interface
+{
+    internal static class BZip2Constants
+    {
         public const uint STREAM_START_MARKER = 0x425A68;
         public const ulong STREAM_END_MARKER = 0x177245385090;
         public const ulong BLOCK_HEADER_MARKER = 0x314159265359;

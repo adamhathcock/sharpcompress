@@ -5,9 +5,9 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading;
+
 namespace SharpCompress.Compressors.BZip2MT.OutputStream
 {
-
     /// <summary>An OutputStream wrapper that compresses BZip2 data using multiple threads</summary>
     /// <remarks>Instances of this class are not threadsafe</remarks>
     public class BZip2ParallelOutputStream : Stream
@@ -29,7 +29,8 @@ namespace SharpCompress.Compressors.BZip2MT.OutputStream
         private Exception? _lastWorkerException = null;
 
         // dictionary of processed blocks
-        private readonly Dictionary<int, BZip2ParallelOutputDataBlock> _mtProcessedBlocks = new Dictionary<int, BZip2ParallelOutputDataBlock>();
+        private readonly Dictionary<int, BZip2ParallelOutputDataBlock> _mtProcessedBlocks =
+            new Dictionary<int, BZip2ParallelOutputDataBlock>();
 
         private int _mtPendingBlocks = 0;
 
@@ -66,8 +67,10 @@ namespace SharpCompress.Compressors.BZip2MT.OutputStream
             this._outputStream = output;
             this._bitStream = new BZip2BitOutputStream(output);
 
-            if (blockLevel < 1 ) blockLevel = 1;
-            if (blockLevel > 9 ) blockLevel = 9;
+            if (blockLevel < 1)
+                blockLevel = 1;
+            if (blockLevel > 9)
+                blockLevel = 9;
             this._blockLevel = blockLevel;
 
             // evaluate thread count
@@ -79,7 +82,10 @@ namespace SharpCompress.Compressors.BZip2MT.OutputStream
             this._compressBlockSize = 100000 * this._blockLevel;
 
             // initialize initial meta buffer
-            this._currentBlockBuffer = new BZip2ParallelOutputDataBlock(this._compressBlockSize, this._mtNextInputBlockId++);
+            this._currentBlockBuffer = new BZip2ParallelOutputDataBlock(
+                this._compressBlockSize,
+                this._mtNextInputBlockId++
+            );
 
             this._isOwner = isOwner;
 
@@ -96,9 +102,11 @@ namespace SharpCompress.Compressors.BZip2MT.OutputStream
         {
             if (this._unsafeFatalException)
             {
-                throw new IOException("One of the compression threads somehow failed... This should never happen.", this._lastWorkerException);
+                throw new IOException(
+                    "One of the compression threads somehow failed... This should never happen.",
+                    this._lastWorkerException
+                );
             }
-
 
             try
             {
@@ -123,18 +131,23 @@ namespace SharpCompress.Compressors.BZip2MT.OutputStream
                 lock (this._syncRootOutputStream)
                 {
                     // update file CRC
-                    this._streamCrc = ((this._streamCrc << 1) | (this._streamCrc >> 31)) ^ currentOutput.BlockCrc;
+                    this._streamCrc =
+                        ((this._streamCrc << 1) | (this._streamCrc >> 31)) ^ currentOutput.BlockCrc;
                     currentOutput.WriteToRealOutputStream(this._bitStream);
                 }
                 return true;
-            } catch (Exception ex)
+            }
+            catch (Exception ex)
             {
                 // set this without any locks...
                 this._lastWorkerException = ex;
                 this._unsafeFatalException = true;
 
                 // rethrow exception, hopefully something catches it?...
-                throw new IOException("BZip2 error writing output data! See inner exception for details!", ex);
+                throw new IOException(
+                    "BZip2 error writing output data! See inner exception for details!",
+                    ex
+                );
             }
         }
 
@@ -158,18 +171,23 @@ namespace SharpCompress.Compressors.BZip2MT.OutputStream
                         this._mtProcessedBlocks.Add(buffer.BlockId, buffer);
                     }
                 }
-            } catch (Exception ex)
+            }
+            catch (Exception ex)
             {
                 // set this without any locks...
                 this._lastWorkerException = ex;
                 this._unsafeFatalException = true;
 
-                throw new IOException("BZip2 Processing thread somehow crashed... See inner exception for details!", ex);
-            } finally
+                throw new IOException(
+                    "BZip2 Processing thread somehow crashed... See inner exception for details!",
+                    ex
+                );
+            }
+            finally
             {
                 lock (this._syncRootProcesing)
                 {
-                    this._mtPendingBlocks --;
+                    this._mtPendingBlocks--;
                 }
             }
         }
@@ -182,9 +200,9 @@ namespace SharpCompress.Compressors.BZip2MT.OutputStream
             lock (this._syncRootOutputStream)
             {
                 // write BZIP file header
-                this._bitStream.WriteBits(8, 0x42);                            // B
-                this._bitStream.WriteBits(8, 0x5A);                            // Z
-                this._bitStream.WriteBits(8, 0x68);                            // h
+                this._bitStream.WriteBits(8, 0x42); // B
+                this._bitStream.WriteBits(8, 0x5A); // Z
+                this._bitStream.WriteBits(8, 0x68); // h
                 this._bitStream.WriteBits(8, (uint)(0x30 + this._blockLevel)); // block level digit
             }
         }
@@ -223,7 +241,10 @@ namespace SharpCompress.Compressors.BZip2MT.OutputStream
         {
             if (this._unsafeFatalException)
             {
-                throw new IOException("One of the compression threads somehow failed... This should never happen.", this._lastWorkerException);
+                throw new IOException(
+                    "One of the compression threads somehow failed... This should never happen.",
+                    this._lastWorkerException
+                );
             }
 
             // make sure current block has data
@@ -232,14 +253,19 @@ namespace SharpCompress.Compressors.BZip2MT.OutputStream
 
             lock (this._syncRootProcesing)
             {
-                this._mtPendingBlocks ++;
-                ThreadPool.QueueUserWorkItem(this.MultiThreadWorkerAction, this._currentBlockBuffer);
-                this._currentBlockBuffer = new BZip2ParallelOutputDataBlock(this._compressBlockSize, this._mtNextInputBlockId++);
+                this._mtPendingBlocks++;
+                ThreadPool.QueueUserWorkItem(
+                    this.MultiThreadWorkerAction,
+                    this._currentBlockBuffer
+                );
+                this._currentBlockBuffer = new BZip2ParallelOutputDataBlock(
+                    this._compressBlockSize,
+                    this._mtNextInputBlockId++
+                );
             }
 
             return true;
         }
-
 
         /// <summary>
         /// Waits for any pending data blocks to be written to the bit stream and writes the BZ2 footer
@@ -249,7 +275,10 @@ namespace SharpCompress.Compressors.BZip2MT.OutputStream
         {
             if (this._unsafeFatalException)
             {
-                throw new IOException("One of the compression threads somehow failed... This should never happen.", this._lastWorkerException);
+                throw new IOException(
+                    "One of the compression threads somehow failed... This should never happen.",
+                    this._lastWorkerException
+                );
             }
 
             lock (this._syncRootProcesing)
@@ -269,7 +298,10 @@ namespace SharpCompress.Compressors.BZip2MT.OutputStream
             {
                 if (this._unsafeFatalException)
                 {
-                    throw new IOException("One of the compression threads somehow failed... This should never happen.", this._lastWorkerException);
+                    throw new IOException(
+                        "One of the compression threads somehow failed... This should never happen.",
+                        this._lastWorkerException
+                    );
                 }
 
                 lock (this._syncRootProcesing)
@@ -282,16 +314,14 @@ namespace SharpCompress.Compressors.BZip2MT.OutputStream
                 }
 
                 // try writing output block and keep doing so while successful
-                while (this.TryWriteOutputBlockAndIncrementId())
-                { }
+                while (this.TryWriteOutputBlockAndIncrementId()) { }
                 Thread.Sleep(1);
             }
 
             // sanity check, this should be impossible and should be caught by some test right?...
             lock (this._syncRootProcesing)
             {
-                if (this._mtPendingBlocks != 0 ||
-                    this._mtProcessedBlocks.Count > 0)
+                if (this._mtPendingBlocks != 0 || this._mtProcessedBlocks.Count > 0)
                 {
                     throw new IOException("BZip2 dispose operation sanity check failed!...");
                 }
@@ -305,7 +335,7 @@ namespace SharpCompress.Compressors.BZip2MT.OutputStream
 
         #region Implementation of abstract members of Stream
 
-        #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
+#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
 
         // overriding Dispose instead of Close as recommended in https://docs.microsoft.com/en-us/dotnet/api/system.io.stream.close?view=net-6.0
         protected override void Dispose(bool disposing)
@@ -321,12 +351,23 @@ namespace SharpCompress.Compressors.BZip2MT.OutputStream
         public override void Flush()
         {
             // try writing output block and keep doing so while successful
-            while (this.TryWriteOutputBlockAndIncrementId())
-            { }
+            while (this.TryWriteOutputBlockAndIncrementId()) { }
         }
-        public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException($"{nameof(BZip2ParallelOutputStream)} does not support 'Seek(long offset, SeekOrigin origin)' method.");
-        public override void SetLength(long value) => throw new NotSupportedException($"{nameof(BZip2ParallelOutputStream)} does not support 'SetLength(long value)' method.");
-        public override int Read(byte[] buffer, int offset, int count) => throw new NotSupportedException($"{nameof(BZip2ParallelOutputStream)} does not support 'Read(byte[] buffer, int offset, int count)' method.");
+
+        public override long Seek(long offset, SeekOrigin origin) =>
+            throw new NotSupportedException(
+                $"{nameof(BZip2ParallelOutputStream)} does not support 'Seek(long offset, SeekOrigin origin)' method."
+            );
+
+        public override void SetLength(long value) =>
+            throw new NotSupportedException(
+                $"{nameof(BZip2ParallelOutputStream)} does not support 'SetLength(long value)' method."
+            );
+
+        public override int Read(byte[] buffer, int offset, int count) =>
+            throw new NotSupportedException(
+                $"{nameof(BZip2ParallelOutputStream)} does not support 'Read(byte[] buffer, int offset, int count)' method."
+            );
 
         public override void WriteByte(byte value)
         {
@@ -371,11 +412,13 @@ namespace SharpCompress.Compressors.BZip2MT.OutputStream
         public override long Position
         {
             get => this._outputStream.Position;
-            set => throw new NotSupportedException($"{nameof(BZip2ParallelOutputStream)} does not support Set operation for property 'Position'.");
+            set =>
+                throw new NotSupportedException(
+                    $"{nameof(BZip2ParallelOutputStream)} does not support Set operation for property 'Position'."
+                );
         }
 
-
-        #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
+#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
 
         #endregion
     }

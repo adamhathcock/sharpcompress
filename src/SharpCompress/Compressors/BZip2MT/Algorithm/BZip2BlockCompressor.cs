@@ -6,6 +6,7 @@
 
 using System;
 using SharpCompress.Compressors.BZip2MT.Interface;
+
 namespace SharpCompress.Compressors.BZip2MT.Algorithm
 {
     /// <summary>Compresses and writes a single BZip2 block</summary>
@@ -96,19 +97,22 @@ namespace SharpCompress.Compressors.BZip2MT.Algorithm
             {
                 this.rleCurrentValue = value;
                 this.rleLength = 1;
-            } else if (this.rleCurrentValue != value)
+            }
+            else if (this.rleCurrentValue != value)
             {
                 // This path commits us to write 6 bytes - one RLE run (5 bytes) plus one extra
                 this.WriteRun(this.rleCurrentValue & 0xff, this.rleLength);
                 this.rleCurrentValue = value;
                 this.rleLength = 1;
-            } else
+            }
+            else
             {
                 if (this.rleLength == 254)
                 {
                     this.WriteRun(this.rleCurrentValue & 0xff, 255);
                     this.rleLength = 0;
-                } else
+                }
+                else
                 {
                     this.rleLength++;
                 }
@@ -165,11 +169,21 @@ namespace SharpCompress.Compressors.BZip2MT.Algorithm
             this.WriteSymbolMap();
 
             // Perform the Move To Front Transform and Run-Length Encoding[2] stages
-            var mtfEncoder = new BZip2MTFAndRLE2StageEncoder(this.bwtBlock, this.blockLength, this.blockValuesPresent);
+            var mtfEncoder = new BZip2MTFAndRLE2StageEncoder(
+                this.bwtBlock,
+                this.blockLength,
+                this.blockValuesPresent
+            );
             mtfEncoder.Encode();
 
             // Perform the Huffman Encoding stage and write out the encoded data
-            var huffmanEncoder = new BZip2HuffmanStageEncoder(this.bitOutputStream, mtfEncoder.MtfBlock, mtfEncoder.MtfLength, mtfEncoder.MtfAlphabetSize, mtfEncoder.MtfSymbolFrequencies);
+            var huffmanEncoder = new BZip2HuffmanStageEncoder(
+                this.bitOutputStream,
+                mtfEncoder.MtfBlock,
+                mtfEncoder.MtfLength,
+                mtfEncoder.MtfAlphabetSize,
+                mtfEncoder.MtfSymbolFrequencies
+            );
             huffmanEncoder.Encode();
         }
 
@@ -214,10 +228,10 @@ namespace SharpCompress.Compressors.BZip2MT.Algorithm
         /// </summary>
         /// <param name="value">The value to write</param>
         /// <param name="runLength">The run length of the value to write</param>
-        private void WriteRun ( int value, int runLength)
+        private void WriteRun(int value, int runLength)
         {
             this.blockValuesPresent[value] = true;
-            this.crc.UpdateCrc (value, runLength);
+            this.crc.UpdateCrc(value, runLength);
 
             var byteValue = (byte)value;
             switch (runLength)

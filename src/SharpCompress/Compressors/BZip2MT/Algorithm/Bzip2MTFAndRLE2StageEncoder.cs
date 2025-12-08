@@ -18,15 +18,17 @@ namespace SharpCompress.Compressors.BZip2MT.Algorithm
         // Actual length of the data in the bwtBlock array
         private readonly int bwtLength;
 
-        // At each position, true if the byte value with that index is present within the block, otherwise false 
+        // At each position, true if the byte value with that index is present within the block, otherwise false
         private readonly bool[] bwtValuesInUse;
 
         // The output of the Move To Front Transform and Run-Length Encoding[2] stages
         private readonly ushort[] mtfBlock;
 
         // The global frequencies of values within the mtfBlock array
-        private readonly int[] mtfSymbolFrequencies = new int[BZip2MTFAndRLE2StageEncoder.HUFFMAN_MAXIMUM_ALPHABET_SIZE];
-        
+        private readonly int[] mtfSymbolFrequencies = new int[
+            BZip2MTFAndRLE2StageEncoder.HUFFMAN_MAXIMUM_ALPHABET_SIZE
+        ];
+
         // Maximum possible Huffman alphabet size
         public const int HUFFMAN_MAXIMUM_ALPHABET_SIZE = 258;
 
@@ -35,14 +37,11 @@ namespace SharpCompress.Compressors.BZip2MT.Algorithm
 
         // Huffman symbol used for run-length encoding
         public const ushort RLE_SYMBOL_RUNB = 1;
-        
+
         // Gets the encoded MTF block
         public ushort[] MtfBlock
         {
-            get
-            {
-                return this.mtfBlock;
-            }
+            get { return this.mtfBlock; }
         }
 
         // Gets The actual length of the MTF block
@@ -54,10 +53,7 @@ namespace SharpCompress.Compressors.BZip2MT.Algorithm
         // Gets the frequencies of the MTF block's symbols
         public int[] MtfSymbolFrequencies
         {
-            get
-            {
-                return this.mtfSymbolFrequencies;
-            }
+            get { return this.mtfSymbolFrequencies; }
         }
 
         /// <summary>
@@ -85,7 +81,7 @@ namespace SharpCompress.Compressors.BZip2MT.Algorithm
             for (var i = 0; i < 256; i++)
             {
                 if (this.bwtValuesInUse[i])
-                    huffmanSymbolMap[i] = (byte) totalUniqueValues++;
+                    huffmanSymbolMap[i] = (byte)totalUniqueValues++;
             }
 
             int endOfBlockSymbol = totalUniqueValues + 1;
@@ -103,7 +99,8 @@ namespace SharpCompress.Compressors.BZip2MT.Algorithm
                 if (mtfPosition == 0)
                 {
                     repeatCount++;
-                } else
+                }
+                else
                 {
                     if (repeatCount > 0)
                     {
@@ -112,11 +109,14 @@ namespace SharpCompress.Compressors.BZip2MT.Algorithm
                         {
                             if ((repeatCount & 1) == 0)
                             {
-                                this.mtfBlock[mtfIndex++] = BZip2MTFAndRLE2StageEncoder.RLE_SYMBOL_RUNA;
+                                this.mtfBlock[mtfIndex++] =
+                                    BZip2MTFAndRLE2StageEncoder.RLE_SYMBOL_RUNA;
                                 totalRunAs++;
-                            } else
+                            }
+                            else
                             {
-                                this.mtfBlock[mtfIndex++] = BZip2MTFAndRLE2StageEncoder.RLE_SYMBOL_RUNB;
+                                this.mtfBlock[mtfIndex++] =
+                                    BZip2MTFAndRLE2StageEncoder.RLE_SYMBOL_RUNB;
                                 totalRunBs++;
                             }
 
@@ -128,7 +128,7 @@ namespace SharpCompress.Compressors.BZip2MT.Algorithm
                         repeatCount = 0;
                     }
 
-                    this.mtfBlock[mtfIndex++] = (char) (mtfPosition + 1);
+                    this.mtfBlock[mtfIndex++] = (char)(mtfPosition + 1);
                     this.mtfSymbolFrequencies[mtfPosition + 1]++;
                 }
             }
@@ -142,7 +142,8 @@ namespace SharpCompress.Compressors.BZip2MT.Algorithm
                     {
                         this.mtfBlock[mtfIndex++] = BZip2MTFAndRLE2StageEncoder.RLE_SYMBOL_RUNA;
                         totalRunAs++;
-                    } else
+                    }
+                    else
                     {
                         this.mtfBlock[mtfIndex++] = BZip2MTFAndRLE2StageEncoder.RLE_SYMBOL_RUNB;
                         totalRunBs++;
@@ -162,7 +163,6 @@ namespace SharpCompress.Compressors.BZip2MT.Algorithm
 
             this.MtfLength = mtfIndex + 1;
             this.MtfAlphabetSize = endOfBlockSymbol + 1;
-
         }
     }
 }

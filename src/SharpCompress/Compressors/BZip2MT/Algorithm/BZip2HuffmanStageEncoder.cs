@@ -6,11 +6,12 @@
 
 using System;
 using SharpCompress.Compressors.BZip2MT.Interface;
+
 namespace SharpCompress.Compressors.BZip2MT.Algorithm
 {
     /// <summary>
     /// An encoder for the BZip2 Huffman encoding stage
-    /// </summary>	 
+    /// </summary>
     internal class BZip2HuffmanStageEncoder
     {
         // Used in initial Huffman table generation
@@ -45,7 +46,7 @@ namespace SharpCompress.Compressors.BZip2MT.Algorithm
 
         // The selectors for each segment
         private readonly byte[] selectors;
-        
+
         /// <summary>
         /// Public constructor
         /// </summary>
@@ -54,7 +55,13 @@ namespace SharpCompress.Compressors.BZip2MT.Algorithm
         /// <param name="mtfLength">The actual length of the MTF block</param>
         /// <param name="mtfAlphabetSize">The size of the MTF block's alphabet</param>
         /// <param name="mtfSymbolFrequencies">The frequencies the MTF block's symbols</param>
-        public BZip2HuffmanStageEncoder(IBZip2BitOutputStream bitOutputStream, ushort[] mtfBlock, int mtfLength, int mtfAlphabetSize, int[] mtfSymbolFrequencies)
+        public BZip2HuffmanStageEncoder(
+            IBZip2BitOutputStream bitOutputStream,
+            ushort[] mtfBlock,
+            int mtfLength,
+            int mtfAlphabetSize,
+            int[] mtfSymbolFrequencies
+        )
         {
             this.bitOutputStream = bitOutputStream;
             this.mtfBlock = mtfBlock;
@@ -66,7 +73,10 @@ namespace SharpCompress.Compressors.BZip2MT.Algorithm
 
             this.huffmanCodeLengths = new int[totalTables, mtfAlphabetSize];
             this.huffmanMergedCodeSymbols = new int[totalTables, mtfAlphabetSize];
-            this.selectors = new byte[(mtfLength + BZip2HuffmanStageEncoder.HUFFMAN_GROUP_RUN_LENGTH - 1) / BZip2HuffmanStageEncoder.HUFFMAN_GROUP_RUN_LENGTH];
+            this.selectors = new byte[
+                (mtfLength + BZip2HuffmanStageEncoder.HUFFMAN_GROUP_RUN_LENGTH - 1)
+                    / BZip2HuffmanStageEncoder.HUFFMAN_GROUP_RUN_LENGTH
+            ];
         }
 
         /// <summary>
@@ -93,7 +103,7 @@ namespace SharpCompress.Compressors.BZip2MT.Algorithm
         /// </summary>
         /// <param name="mtfLength">The length to select a table count for</param>
         /// <returns>The selected table count</returns>
-        private static int selectTableCount (int mtfLength)
+        private static int selectTableCount(int mtfLength)
         {
             if (mtfLength >= 2400)
                 return 6;
@@ -111,7 +121,12 @@ namespace SharpCompress.Compressors.BZip2MT.Algorithm
         /// <param name="symbolFrequencies">The frequencies of the symbols</param>
         /// <param name="codeLengths">The array to which the generated code lengths should be written</param>
         /// <param name="index"></param>
-        private static void generateHuffmanCodeLengths (int alphabetSize,  int[,] symbolFrequencies, int[,] codeLengths, int index)
+        private static void generateHuffmanCodeLengths(
+            int alphabetSize,
+            int[,] symbolFrequencies,
+            int[,] codeLengths,
+            int index
+        )
         {
             var mergedFrequenciesAndIndices = new int[alphabetSize];
             var sortedFrequencies = new int[alphabetSize];
@@ -131,7 +146,10 @@ namespace SharpCompress.Compressors.BZip2MT.Algorithm
                 sortedFrequencies[i] = mergedFrequenciesAndIndices[i] >> 9;
 
             // Allocate code lengths - the allocation is in place, so the code lengths will be in the sortedFrequencies array afterwards
-            HuffmanAllocator.AllocateHuffmanCodeLengths (sortedFrequencies, BZip2HuffmanStageEncoder.HUFFMAN_ENCODE_MAXIMUM_CODE_LENGTH);
+            HuffmanAllocator.AllocateHuffmanCodeLengths(
+                sortedFrequencies,
+                BZip2HuffmanStageEncoder.HUFFMAN_ENCODE_MAXIMUM_CODE_LENGTH
+            );
 
             // Reverse the sort to place the code lengths in the same order as the symbols whose frequencies were passed in
             for (int i = 0; i < alphabetSize; i++)
@@ -144,7 +162,7 @@ namespace SharpCompress.Compressors.BZip2MT.Algorithm
         /// tables are invalid for actual Huffman code generation, and only serve as the seed for later
         /// iterative optimisation in optimiseSelectorsAndHuffmanTables(int)
         /// </summary>
-        private void generateHuffmanOptimisationSeeds ()
+        private void generateHuffmanOptimisationSeeds()
         {
             int totalTables = this.huffmanCodeLengths.GetLength(0);
             int remainingLength = this.mtfLength;
@@ -156,18 +174,27 @@ namespace SharpCompress.Compressors.BZip2MT.Algorithm
                 int lowCostStart = lowCostEnd + 1;
                 int actualCumulativeFrequency = 0;
 
-                while ((actualCumulativeFrequency < targetCumulativeFrequency) && (lowCostEnd < (this.mtfAlphabetSize - 1)))
+                while (
+                    (actualCumulativeFrequency < targetCumulativeFrequency)
+                    && (lowCostEnd < (this.mtfAlphabetSize - 1))
+                )
                 {
                     actualCumulativeFrequency += this.mtfSymbolFrequencies[++lowCostEnd];
                 }
 
-                if ((lowCostEnd > lowCostStart) && (i != 0) && (i != (totalTables - 1)) && (((totalTables - i) & 1) == 0))
+                if (
+                    (lowCostEnd > lowCostStart)
+                    && (i != 0)
+                    && (i != (totalTables - 1))
+                    && (((totalTables - i) & 1) == 0)
+                )
                     actualCumulativeFrequency -= this.mtfSymbolFrequencies[lowCostEnd--];
 
                 for (var j = 0; j < this.mtfAlphabetSize; j++)
                 {
                     if ((j < lowCostStart) || (j > lowCostEnd))
-                        this.huffmanCodeLengths[i, j] = BZip2HuffmanStageEncoder.HUFFMAN_HIGH_SYMBOL_COST;
+                        this.huffmanCodeLengths[i, j] =
+                            BZip2HuffmanStageEncoder.HUFFMAN_HIGH_SYMBOL_COST;
                 }
 
                 remainingLength -= actualCumulativeFrequency;
@@ -182,7 +209,7 @@ namespace SharpCompress.Compressors.BZip2MT.Algorithm
         /// instead diverge (increase) slightly. <br/>
         /// </summary>
         /// <param name="storeSelectors">If true, write out the (final) chosen selectors</param>
-        private void optimiseSelectorsAndHuffmanTables (bool storeSelectors)
+        private void optimiseSelectorsAndHuffmanTables(bool storeSelectors)
         {
             int totalTables = this.huffmanCodeLengths.GetLength(0);
             var tableFrequencies = new int[totalTables, this.mtfAlphabetSize];
@@ -190,9 +217,13 @@ namespace SharpCompress.Compressors.BZip2MT.Algorithm
             int selectorIndex = 0;
 
             // Find the best table for each group of 50 block bytes based on the current Huffman code lengths
-            for (int groupStart = 0; groupStart < this.mtfLength;)
+            for (int groupStart = 0; groupStart < this.mtfLength; )
             {
-                int groupEnd = Math.Min(groupStart + BZip2HuffmanStageEncoder.HUFFMAN_GROUP_RUN_LENGTH, this.mtfLength) - 1;
+                int groupEnd =
+                    Math.Min(
+                        groupStart + BZip2HuffmanStageEncoder.HUFFMAN_GROUP_RUN_LENGTH,
+                        this.mtfLength
+                    ) - 1;
 
                 // Calculate the cost of this group when encoded by each table
                 var cost = new int[totalTables];
@@ -208,7 +239,7 @@ namespace SharpCompress.Compressors.BZip2MT.Algorithm
                 // Find the table with the least cost for this group
                 byte bestTable = 0;
                 var bestCost = cost[0];
-                for (byte i = 1 ; i < totalTables; i++)
+                for (byte i = 1; i < totalTables; i++)
                 {
                     var tableCost = cost[i];
                     if (tableCost < bestCost)
@@ -236,7 +267,12 @@ namespace SharpCompress.Compressors.BZip2MT.Algorithm
             // Generate new Huffman code lengths based on the frequencies for each table accumulated in this iteration
             for (int i = 0; i < totalTables; i++)
             {
-                generateHuffmanCodeLengths (this.mtfAlphabetSize, tableFrequencies, this.huffmanCodeLengths, i);
+                generateHuffmanCodeLengths(
+                    this.mtfAlphabetSize,
+                    tableFrequencies,
+                    this.huffmanCodeLengths,
+                    i
+                );
             }
         }
 
@@ -287,14 +323,14 @@ namespace SharpCompress.Compressors.BZip2MT.Algorithm
             int totalSelectors = this.selectors.Length;
             int totalTables = this.huffmanCodeLengths.GetLength(0);
 
-            this.bitOutputStream.WriteBits (3, (uint)totalTables);
-            this.bitOutputStream.WriteBits (15, (uint)totalSelectors);
+            this.bitOutputStream.WriteBits(3, (uint)totalTables);
+            this.bitOutputStream.WriteBits(15, (uint)totalSelectors);
 
             // Write the selectors
             var selectorMTF = new MoveToFront();
             for (int i = 0; i < totalSelectors; i++)
             {
-                this.bitOutputStream.WriteUnary (selectorMTF.ValueToFront (this.selectors[i]));
+                this.bitOutputStream.WriteUnary(selectorMTF.ValueToFront(this.selectors[i]));
             }
 
             // Write the Huffman tables
@@ -302,18 +338,18 @@ namespace SharpCompress.Compressors.BZip2MT.Algorithm
             {
                 var currentLength = this.huffmanCodeLengths[i, 0];
 
-                this.bitOutputStream.WriteBits (5, (uint)currentLength);
+                this.bitOutputStream.WriteBits(5, (uint)currentLength);
 
                 for (var j = 0; j < this.mtfAlphabetSize; j++)
                 {
                     var codeLength = this.huffmanCodeLengths[i, j];
                     var value = (currentLength < codeLength) ? 2u : 3u;
-                    var delta = Math.Abs (codeLength - currentLength);
+                    var delta = Math.Abs(codeLength - currentLength);
                     while (delta-- > 0)
                     {
-                        this.bitOutputStream.WriteBits (2, value);
+                        this.bitOutputStream.WriteBits(2, value);
                     }
-                    this.bitOutputStream.WriteBoolean (false);
+                    this.bitOutputStream.WriteBoolean(false);
                     currentLength = codeLength;
                 }
             }
@@ -327,15 +363,22 @@ namespace SharpCompress.Compressors.BZip2MT.Algorithm
         {
             int selectorIndex = 0;
 
-            for (int mtfIndex = 0; mtfIndex < this.mtfLength;)
+            for (int mtfIndex = 0; mtfIndex < this.mtfLength; )
             {
-                int groupEnd = Math.Min (mtfIndex + BZip2HuffmanStageEncoder.HUFFMAN_GROUP_RUN_LENGTH, this.mtfLength) - 1;
+                int groupEnd =
+                    Math.Min(
+                        mtfIndex + BZip2HuffmanStageEncoder.HUFFMAN_GROUP_RUN_LENGTH,
+                        this.mtfLength
+                    ) - 1;
 
-                int index = this.selectors [selectorIndex++];
+                int index = this.selectors[selectorIndex++];
 
                 while (mtfIndex <= groupEnd)
                 {
-                    var mergedCodeSymbol = this.huffmanMergedCodeSymbols[index, this.mtfBlock[mtfIndex++]];
+                    var mergedCodeSymbol = this.huffmanMergedCodeSymbols[
+                        index,
+                        this.mtfBlock[mtfIndex++]
+                    ];
                     this.bitOutputStream.WriteBits(mergedCodeSymbol >> 24, (uint)mergedCodeSymbol);
                 }
             }

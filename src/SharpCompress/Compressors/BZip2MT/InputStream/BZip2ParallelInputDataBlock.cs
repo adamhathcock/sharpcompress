@@ -1,11 +1,11 @@
 using System;
 using System.IO;
 using SharpCompress.Compressors.BZip2MT.Algorithm;
+
 namespace SharpCompress.Compressors.BZip2MT.InputStream
 {
     internal class BZip2ParallelInputDataBlock : IDisposable
     {
-
         private int _blockId = 0;
         private MemoryStream? _inputBlockBuffer;
         private MemoryStream? _outputBuffer;
@@ -21,7 +21,12 @@ namespace SharpCompress.Compressors.BZip2MT.InputStream
         public bool IsCrcOk => this._isCrcOk;
         public uint CrcValue => this._crcValue;
 
-        public BZip2ParallelInputDataBlock(int blockId, MemoryStream inputBlockBuffer, int blockSizeBytes, int outputBufferSize)
+        public BZip2ParallelInputDataBlock(
+            int blockId,
+            MemoryStream inputBlockBuffer,
+            int blockSizeBytes,
+            int outputBufferSize
+        )
         {
             this._blockId = blockId;
             this._inputBlockBuffer = inputBlockBuffer;
@@ -34,7 +39,6 @@ namespace SharpCompress.Compressors.BZip2MT.InputStream
             this._inputBlockBuffer?.Dispose();
             this._outputBuffer?.Dispose();
         }
-
 
         /// <summary>
         /// Decompresses the full block
@@ -49,7 +53,10 @@ namespace SharpCompress.Compressors.BZip2MT.InputStream
             // note: we need to skip the first 6 magic bytes...
             this._inputBlockBuffer.Position = 6;
             using BZip2BitInputStream inputStream = new BZip2BitInputStream(this._inputBlockBuffer);
-            BZip2BlockDecompressor blockDecompressor = new BZip2BlockDecompressor(inputStream, (uint)this._blockSizeBytes);
+            BZip2BlockDecompressor blockDecompressor = new BZip2BlockDecompressor(
+                inputStream,
+                (uint)this._blockSizeBytes
+            );
 
             int readCount = blockDecompressor.ReadAll(this._outputBuffer);
 
@@ -60,7 +67,8 @@ namespace SharpCompress.Compressors.BZip2MT.InputStream
             {
                 this._crcValue = blockDecompressor.CheckCrc();
                 this._isCrcOk = true;
-            } catch (Exception)
+            }
+            catch (Exception)
             {
                 this._crcValue = 0;
                 this._isCrcOk = false;
@@ -77,7 +85,9 @@ namespace SharpCompress.Compressors.BZip2MT.InputStream
         public int Read()
         {
             if (this._outputBuffer is null)
-                throw new IOException("Attempted to read decompressed data before decompressing block");
+                throw new IOException(
+                    "Attempted to read decompressed data before decompressing block"
+                );
 
             if (this._isCrcOk == false)
                 return -1;
@@ -96,13 +106,14 @@ namespace SharpCompress.Compressors.BZip2MT.InputStream
         public int Read(byte[] destination, int offset, int length)
         {
             if (this._outputBuffer is null)
-                throw new IOException("Attempted to read decompressed data before decompressing block");
+                throw new IOException(
+                    "Attempted to read decompressed data before decompressing block"
+                );
 
             if (this._isCrcOk == false)
                 return 0;
 
             return this._outputBuffer.Read(destination, offset, length);
         }
-
     }
 }

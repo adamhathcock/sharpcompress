@@ -4,6 +4,7 @@
 // Ported from the Java implementation by Matthew Francis: https://github.com/MateuszBartosiewicz/bzip2
 
 using System;
+
 namespace SharpCompress.Compressors.BZip2MT.Algorithm
 {
     /// <summary>
@@ -11,7 +12,7 @@ namespace SharpCompress.Compressors.BZip2MT.Algorithm
     /// </summary>
     internal class MoveToFront
     {
-        /// <summary>The Move To Front list</summary> 
+        /// <summary>The Move To Front list</summary>
         private readonly byte[] mtf;
 
         /// <summary>Public constructor</summary>

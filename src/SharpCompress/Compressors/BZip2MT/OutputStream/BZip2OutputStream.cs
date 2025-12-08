@@ -8,6 +8,7 @@ using System;
 using System.IO;
 using SharpCompress.Compressors.BZip2MT.Algorithm;
 using SharpCompress.Compressors.BZip2MT.Interface;
+
 namespace SharpCompress.Compressors.BZip2MT.OutputStream
 {
     /// <summary>An OutputStream wrapper that compresses BZip2 data</summary>
@@ -42,7 +43,11 @@ namespace SharpCompress.Compressors.BZip2MT.OutputStream
         /// <exception>On any I/O error writing to the output stream</exception>
         /// <remarks>Larger block sizes require more memory for both compression and decompression,
         /// but give better compression ratios. 9 will usually be the best value to use</remarks>
-        public BZip2OutputStream(Stream outputStream, bool isOwner = true, int blockSizeMultiplier = 9)
+        public BZip2OutputStream(
+            Stream outputStream,
+            bool isOwner = true,
+            int blockSizeMultiplier = 9
+        )
         {
             if (outputStream is null)
                 throw new ArgumentException("Null output stream");
@@ -64,14 +69,26 @@ namespace SharpCompress.Compressors.BZip2MT.OutputStream
 
         #region Implementation of abstract members of Stream
 
-        #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
-        public override void Flush () => throw new NotSupportedException($"{nameof(BZip2OutputStream)} does not support 'Flush()' method.");
+#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
+        public override void Flush() =>
+            throw new NotSupportedException(
+                $"{nameof(BZip2OutputStream)} does not support 'Flush()' method."
+            );
 
-        public override int Read (byte[] buffer, int offset, int count) => throw new NotSupportedException($"{nameof(BZip2OutputStream)} does not support 'Read(byte[] buffer, int offset, int count)' method.");
+        public override int Read(byte[] buffer, int offset, int count) =>
+            throw new NotSupportedException(
+                $"{nameof(BZip2OutputStream)} does not support 'Read(byte[] buffer, int offset, int count)' method."
+            );
 
-        public override long Seek (long offset, SeekOrigin origin) => throw new NotSupportedException($"{nameof(BZip2OutputStream)} does not support 'Seek(long offset, SeekOrigin origin)' method.");
+        public override long Seek(long offset, SeekOrigin origin) =>
+            throw new NotSupportedException(
+                $"{nameof(BZip2OutputStream)} does not support 'Seek(long offset, SeekOrigin origin)' method."
+            );
 
-        public override void SetLength (long value) => throw new NotSupportedException($"{nameof(BZip2OutputStream)} does not support 'SetLength(long value)' method.");
+        public override void SetLength(long value) =>
+            throw new NotSupportedException(
+                $"{nameof(BZip2OutputStream)} does not support 'SetLength(long value)' method."
+            );
 
         public override bool CanRead => false;
 
@@ -84,7 +101,10 @@ namespace SharpCompress.Compressors.BZip2MT.OutputStream
         public override long Position
         {
             get => this._outputStream.Position;
-            set =>throw new NotSupportedException($"{nameof(BZip2OutputStream)} does not support Set operation for property 'Position'.");
+            set =>
+                throw new NotSupportedException(
+                    $"{nameof(BZip2OutputStream)} does not support Set operation for property 'Position'."
+                );
         }
 
         public override void WriteByte(byte value)
@@ -134,12 +154,16 @@ namespace SharpCompress.Compressors.BZip2MT.OutputStream
             }
         }
 
-        #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
+#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
 
         #endregion
 
         /// <summary>Initialises a new block for compression</summary>
-        private void InitialiseNextBlock() => this._blockCompressor = new BZip2BlockCompressor (this._bitOutputStream, this._streamBlockSize);
+        private void InitialiseNextBlock() =>
+            this._blockCompressor = new BZip2BlockCompressor(
+                this._bitOutputStream,
+                this._streamBlockSize
+            );
 
         /// <summary>Compress and write out the block currently in progress</summary>
         /// <remarks>If no bytes have been written to the block, it is discarded</remarks>
@@ -150,7 +174,8 @@ namespace SharpCompress.Compressors.BZip2MT.OutputStream
                 return;
 
             this._blockCompressor.CloseBlock();
-            this._streamCrc = ((this._streamCrc << 1) | (this._streamCrc >> 31)) ^ this._blockCompressor.CRC;
+            this._streamCrc =
+                ((this._streamCrc << 1) | (this._streamCrc >> 31)) ^ this._blockCompressor.CRC;
         }
 
         /// <summary>Compresses and writes out any as yet unwritten data, then writes the end of the BZip2 stream</summary>
@@ -169,7 +194,8 @@ namespace SharpCompress.Compressors.BZip2MT.OutputStream
                     this._bitOutputStream.WriteInteger(this._streamCrc);
                     this._bitOutputStream.Flush();
                     this._outputStream.Flush();
-                } finally
+                }
+                finally
                 {
                     this._blockCompressor = null;
                 }

@@ -4,11 +4,12 @@
 // Ported from the Java implementation by Matthew Francis: https://github.com/MateuszBartosiewicz/bzip2
 
 using System;
+
 namespace SharpCompress.Compressors.BZip2MT.Algorithm
 {
     /// <summary>An in-place, length restricted Canonical Huffman code length allocator</summary>
     /// <remarks>
-    /// Based on the algorithm proposed by R.L.Milidiú, A.A.Pessoa and E.S.Laber 
+    /// Based on the algorithm proposed by R.L.Milidiú, A.A.Pessoa and E.S.Laber
     /// in "In-place Length-Restricted Prefix Coding" (see: http://www-di.inf.puc-rio.br/~laber/public/spire98.ps)
     /// and incorporating additional ideas from the implementation of "shcodec" by Simakov Alexander
     /// (see: http://webcenter.ru/~xander/)
@@ -40,7 +41,8 @@ namespace SharpCompress.Compressors.BZip2MT.Algorithm
             if ((array[0] % array.Length) >= nodesToRelocate)
             {
                 AllocateNodeLengths(array);
-            } else
+            }
+            else
             {
                 var insertDepth = maximumLength - SignificantBits(nodesToRelocate - 1);
                 AllocateNodeLengthsWithRelocation(array, nodesToRelocate, insertDepth);
@@ -48,13 +50,13 @@ namespace SharpCompress.Compressors.BZip2MT.Algorithm
         }
 
         /// <summary>
-        /// 
+        ///
         /// </summary>
         /// <param name="array">The code length array</param>
         /// <param name="i">The input position</param>
         /// <param name="nodesToMove">The number of internal nodes to be relocated</param>
         /// <returns>The smallest k such that nodesToMove &lt;= k &lt;= i and i &lt;= (array[k] % array.length)</returns>
-        private static int First (int[] array, int i,  int nodesToMove)
+        private static int First(int[] array, int i, int nodesToMove)
         {
             int length = array.Length;
             int limit = i;
@@ -65,7 +67,7 @@ namespace SharpCompress.Compressors.BZip2MT.Algorithm
                 k = i;
                 i -= (limit - i + 1);
             }
-            i = Math.Max (nodesToMove - 1, i);
+            i = Math.Max(nodesToMove - 1, i);
 
             while (k > (i + 1))
             {
@@ -96,16 +98,21 @@ namespace SharpCompress.Compressors.BZip2MT.Algorithm
                 {
                     temp = array[headNode];
                     array[headNode++] = tailNode;
-                } else
+                }
+                else
                 {
                     temp = array[topNode++];
                 }
 
-                if ((topNode >= length) || ((headNode < tailNode) && (array[headNode] < array[topNode])))
+                if (
+                    (topNode >= length)
+                    || ((headNode < tailNode) && (array[headNode] < array[topNode]))
+                )
                 {
                     temp += array[headNode];
                     array[headNode++] = tailNode + length;
-                } else
+                }
+                else
                 {
                     temp += array[topNode++];
                 }
@@ -120,12 +127,16 @@ namespace SharpCompress.Compressors.BZip2MT.Algorithm
         /// <param name="array">The code length array</param>
         /// <param name="maximumLength">The maximum bit length for the generated codes</param>
         /// <returns>The number of nodes to relocate</returns>
-        private static int FindNodesToRelocate (int[] array,  int maximumLength)
+        private static int FindNodesToRelocate(int[] array, int maximumLength)
         {
             int currentNode = array.Length - 2;
 
-            for (var currentDepth = 1; (currentDepth < (maximumLength - 1)) && (currentNode > 1); currentDepth++)
-                currentNode =  First (array, currentNode - 1, 0);
+            for (
+                var currentDepth = 1;
+                (currentDepth < (maximumLength - 1)) && (currentNode > 1);
+                currentDepth++
+            )
+                currentNode = First(array, currentNode - 1, 0);
 
             return currentNode;
         }
@@ -134,7 +145,7 @@ namespace SharpCompress.Compressors.BZip2MT.Algorithm
         /// A final allocation pass with no code length limit
         /// </summary>
         /// <param name="array">The code length array</param>
-        private static void AllocateNodeLengths (int[] array)
+        private static void AllocateNodeLengths(int[] array)
         {
             int firstNode = array.Length - 2;
             int nextNode = array.Length - 1;
@@ -142,7 +153,7 @@ namespace SharpCompress.Compressors.BZip2MT.Algorithm
             for (int currentDepth = 1, availableNodes = 2; availableNodes > 0; currentDepth++)
             {
                 int lastNode = firstNode;
-                firstNode = First (array, lastNode - 1, 0);
+                firstNode = First(array, lastNode - 1, 0);
 
                 for (var i = availableNodes - (lastNode - firstNode); i > 0; i--)
                     array[nextNode--] = currentDepth;
@@ -157,7 +168,11 @@ namespace SharpCompress.Compressors.BZip2MT.Algorithm
         /// <param name="array">The code length array</param>
         /// <param name="nodesToMove">The number of internal nodes to be relocated</param>
         /// <param name="insertDepth">The depth at which to insert relocated nodes</param>
-        private static void AllocateNodeLengthsWithRelocation (int[] array,  int nodesToMove,  int insertDepth)
+        private static void AllocateNodeLengthsWithRelocation(
+            int[] array,
+            int nodesToMove,
+            int insertDepth
+        )
         {
             int firstNode = array.Length - 2;
             int nextNode = array.Length - 1;
@@ -167,13 +182,17 @@ namespace SharpCompress.Compressors.BZip2MT.Algorithm
             for (int availableNodes = currentDepth << 1; availableNodes > 0; currentDepth++)
             {
                 int lastNode = firstNode;
-                firstNode = (firstNode <= nodesToMove) ? firstNode : First (array, lastNode - 1, nodesToMove);
+                firstNode =
+                    (firstNode <= nodesToMove)
+                        ? firstNode
+                        : First(array, lastNode - 1, nodesToMove);
 
                 int offset = 0;
                 if (currentDepth >= insertDepth)
                 {
-                    offset = Math.Min (nodesLeftToMove, 1 << (currentDepth - insertDepth));
-                } else if (currentDepth == (insertDepth - 1))
+                    offset = Math.Min(nodesLeftToMove, 1 << (currentDepth - insertDepth));
+                }
+                else if (currentDepth == (insertDepth - 1))
                 {
                     offset = 1;
                     if ((array[firstNode]) == lastNode)

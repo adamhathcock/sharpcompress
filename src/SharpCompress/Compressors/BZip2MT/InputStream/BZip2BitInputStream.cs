@@ -5,6 +5,7 @@
 
 using System.IO;
 using SharpCompress.Compressors.BZip2MT.Interface;
+
 namespace SharpCompress.Compressors.BZip2MT.InputStream
 {
     /// <summary>
@@ -38,7 +39,8 @@ namespace SharpCompress.Compressors.BZip2MT.InputStream
             if (this._bitCount > 0)
             {
                 this._bitCount--;
-            } else
+            }
+            else
             {
                 int byteRead = this._inputStream.ReadByte();
 
@@ -62,7 +64,8 @@ namespace SharpCompress.Compressors.BZip2MT.InputStream
                 if (this._bitCount > 0)
                 {
                     this._bitCount--;
-                } else
+                }
+                else
                 {
                     var byteRead = this._inputStream.ReadByte();
 

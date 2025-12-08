@@ -5,6 +5,7 @@ using System;
 using System.IO;
 using SharpCompress.Compressors.BZip2MT.Algorithm;
 using SharpCompress.Compressors.BZip2MT.Interface;
+
 namespace SharpCompress.Compressors.BZip2MT.OutputStream
 {
     /// <summary>A collection of bit output data</summary>
@@ -144,26 +145,30 @@ namespace SharpCompress.Compressors.BZip2MT.OutputStream
             this._bitCount++;
             this._internalBitStream.WriteBoolean(value);
         }
+
         public void WriteUnary(int value)
         {
             while (value-- > 0)
             {
                 this._bitCount++;
-                this._internalBitStream.WriteBoolean (true);
+                this._internalBitStream.WriteBoolean(true);
             }
             this._bitCount++;
-            this._internalBitStream.WriteBoolean (false);
+            this._internalBitStream.WriteBoolean(false);
         }
+
         public void WriteBits(int count, uint value)
         {
             this._bitCount += count;
             this._internalBitStream.WriteBits(count, value);
         }
+
         public void WriteInteger(uint value)
         {
             this._bitCount += 32;
             this._internalBitStream.WriteInteger(value);
         }
+
         public void Flush() => this._internalBitStream.Flush();
 
         #endregion

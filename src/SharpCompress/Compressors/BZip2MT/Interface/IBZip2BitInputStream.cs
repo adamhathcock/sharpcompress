@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+
 namespace SharpCompress.Compressors.BZip2MT.Interface
 {
     internal interface IBZip2BitInputStream : IDisposable

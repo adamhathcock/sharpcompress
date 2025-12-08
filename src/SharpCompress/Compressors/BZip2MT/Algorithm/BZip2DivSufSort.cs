@@ -4,6 +4,7 @@
 // Ported from the Java implementation by Matthew Francis: https://github.com/MateuszBartosiewicz/bzip2
 
 using System;
+
 namespace SharpCompress.Compressors.BZip2MT.Algorithm
 {
     /// <summary>
@@ -18,10 +19,10 @@ namespace SharpCompress.Compressors.BZip2MT.Algorithm
     {
         private class StackEntry
         {
-            readonly public int a;
-            readonly public int b;
-            readonly public int c;
-            readonly public int d;
+            public readonly int a;
+            public readonly int b;
+            public readonly int c;
+            public readonly int d;
 
             public StackEntry(int a, int b, int c, int d)
             {
@@ -34,8 +35,8 @@ namespace SharpCompress.Compressors.BZip2MT.Algorithm
 
         private class PartitionResult
         {
-            readonly public int first;
-            readonly public int last;
+            public readonly int first;
+            public readonly int last;
 
             public PartitionResult(int first, int last)
             {
@@ -51,7 +52,6 @@ namespace SharpCompress.Compressors.BZip2MT.Algorithm
 
             public bool update(int size, int n)
             {
-
                 this.budget -= n;
                 if (this.budget <= 0)
                 {
@@ -80,14 +80,262 @@ namespace SharpCompress.Compressors.BZip2MT.Algorithm
 
         private static readonly int[] log2table =
         {
-            -1, 0, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
-            5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5,
-            6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
-            6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
-            7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
-            7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
-            7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
-            7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7
+            -1,
+            0,
+            1,
+            1,
+            2,
+            2,
+            2,
+            2,
+            3,
+            3,
+            3,
+            3,
+            3,
+            3,
+            3,
+            3,
+            4,
+            4,
+            4,
+            4,
+            4,
+            4,
+            4,
+            4,
+            4,
+            4,
+            4,
+            4,
+            4,
+            4,
+            4,
+            4,
+            5,
+            5,
+            5,
+            5,
+            5,
+            5,
+            5,
+            5,
+            5,
+            5,
+            5,
+            5,
+            5,
+            5,
+            5,
+            5,
+            5,
+            5,
+            5,
+            5,
+            5,
+            5,
+            5,
+            5,
+            5,
+            5,
+            5,
+            5,
+            5,
+            5,
+            5,
+            5,
+            6,
+            6,
+            6,
+            6,
+            6,
+            6,
+            6,
+            6,
+            6,
+            6,
+            6,
+            6,
+            6,
+            6,
+            6,
+            6,
+            6,
+            6,
+            6,
+            6,
+            6,
+            6,
+            6,
+            6,
+            6,
+            6,
+            6,
+            6,
+            6,
+            6,
+            6,
+            6,
+            6,
+            6,
+            6,
+            6,
+            6,
+            6,
+            6,
+            6,
+            6,
+            6,
+            6,
+            6,
+            6,
+            6,
+            6,
+            6,
+            6,
+            6,
+            6,
+            6,
+            6,
+            6,
+            6,
+            6,
+            6,
+            6,
+            6,
+            6,
+            6,
+            6,
+            6,
+            6,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
         };
 
         private readonly int[] SA;
@@ -130,33 +378,42 @@ namespace SharpCompress.Compressors.BZip2MT.Algorithm
         }
 
         // ReSharper disable LoopVariableIsNeverChangedInsideLoop
-        private static void swapElements (int[] array1,  int index1,  int[] array2,  int index2)
+        private static void swapElements(int[] array1, int index1, int[] array2, int index2)
         {
             var temp = array1[index1];
             array1[index1] = array2[index2];
             array2[index2] = temp;
         }
 
-        private int ssCompare (int p1,  int p2,  int depth)
+        private int ssCompare(int p1, int p2, int depth)
         {
-            int U1n, U2n; // pointers within T
-            int U1, U2;
+            int U1n,
+                U2n; // pointers within T
+            int U1,
+                U2;
 
             for (
-                U1 = depth + this.SA[p1], U2 = depth + this.SA[p2], U1n = this.SA[p1 + 1] + 2, U2n = this.SA[p2 + 1] + 2;
+                U1 = depth + this.SA[p1], U2 = depth + this.SA[p2], U1n = this.SA[p1 + 1] + 2, U2n =
+                    this.SA[p2 + 1] + 2;
                 (U1 < U1n) && (U2 < U2n) && (this.T[U1] == this.T[U2]);
                 ++U1, ++U2
             ) { }
 
-            return U1 < U1n ? (U2 < U2n ? (this.T[U1] & 0xff) - (this.T[U2] & 0xff) : 1) : (U2 < U2n ? -1 : 0);
+            return U1 < U1n
+                ? (U2 < U2n ? (this.T[U1] & 0xff) - (this.T[U2] & 0xff) : 1)
+                : (U2 < U2n ? -1 : 0);
         }
 
-        private int ssCompareLast (int PA, int p1, int p2, int depth, int size)
+        private int ssCompareLast(int PA, int p1, int p2, int depth, int size)
         {
-            int U1, U2, U1n, U2n;
+            int U1,
+                U2,
+                U1n,
+                U2n;
 
             for (
-                U1 = depth + this.SA[p1], U2 = depth + this.SA[p2], U1n = size, U2n = this.SA[(p2 + 1)] + 2;
+                U1 = depth + this.SA[p1], U2 = depth + this.SA[p2], U1n = size, U2n =
+                    this.SA[(p2 + 1)] + 2;
                 (U1 < U1n) && (U2 < U2n) && (this.T[U1] == this.T[U2]);
                 ++U1, ++U2
             ) { }
@@ -173,12 +430,12 @@ namespace SharpCompress.Compressors.BZip2MT.Algorithm
                 ++U1, ++U2
             ) { }
 
-            return U1 < U1n ?
-                (U2 < U2n ? (this.T[U1] & 0xff) - (this.T[U2] & 0xff) : 1)
+            return U1 < U1n
+                ? (U2 < U2n ? (this.T[U1] & 0xff) - (this.T[U2] & 0xff) : 1)
                 : (U2 < U2n ? -1 : 0);
         }
 
-        private void ssInsertionSort (int PA, int first, int last, int depth)
+        private void ssInsertionSort(int PA, int first, int last, int depth)
         {
             int i; // pointer within SA
 
@@ -187,7 +444,11 @@ namespace SharpCompress.Compressors.BZip2MT.Algorithm
                 int j; // pointer within SA
                 int t;
                 int r;
-                for (t = this.SA[i], j = i + 1; 0 < (r = this.ssCompare (PA + t, PA + this.SA[j], depth));)
+                for (
+                    t = this.SA[i], j = i + 1;
+                    0 < (r = this.ssCompare(PA + t, PA + this.SA[j], depth));
+
+                )
                 {
                     do
                     {
@@ -206,13 +467,18 @@ namespace SharpCompress.Compressors.BZip2MT.Algorithm
             }
         }
 
-        private void ssFixdown (int Td, int PA, int sa, int i, int size)
+        private void ssFixdown(int Td, int PA, int sa, int i, int size)
         {
-            int j, k;
+            int j,
+                k;
             int v;
             int c;
 
-            for (v = this.SA[sa + i], c = (this.T[Td + this.SA[PA + v]]) & 0xff; (j = 2 * i + 1) < size; this.SA[sa + i] = this.SA[sa + k], i = k)
+            for (
+                v = this.SA[sa + i], c = (this.T[Td + this.SA[PA + v]]) & 0xff;
+                (j = 2 * i + 1) < size;
+                this.SA[sa + i] = this.SA[sa + k], i = k
+            )
             {
                 int d = this.T[Td + this.SA[PA + this.SA[sa + (k = j++)]]] & 0xff;
                 int e;
@@ -221,12 +487,13 @@ namespace SharpCompress.Compressors.BZip2MT.Algorithm
                     k = j;
                     d = e;
                 }
-                if (d <= c) break;
+                if (d <= c)
+                    break;
             }
             this.SA[sa + i] = v;
         }
 
-        private void ssHeapSort (int Td, int PA, int sa, int size)
+        private void ssHeapSort(int Td, int PA, int sa, int size)
         {
             int i;
 
@@ -234,33 +501,36 @@ namespace SharpCompress.Compressors.BZip2MT.Algorithm
             if ((size % 2) == 0)
             {
                 m--;
-                if ((this.T[Td + this.SA[PA + this.SA[sa + (m / 2)]]] & 0xff) < (this.T[Td + this.SA[PA + this.SA[sa + m]]] & 0xff))
+                if (
+                    (this.T[Td + this.SA[PA + this.SA[sa + (m / 2)]]] & 0xff)
+                    < (this.T[Td + this.SA[PA + this.SA[sa + m]]] & 0xff)
+                )
                 {
-                    swapElements (this.SA, sa + m, this.SA, sa + (m / 2));
+                    swapElements(this.SA, sa + m, this.SA, sa + (m / 2));
                 }
             }
 
             for (i = m / 2 - 1; 0 <= i; --i)
             {
-                this.ssFixdown (Td, PA, sa, i, m);
+                this.ssFixdown(Td, PA, sa, i, m);
             }
 
             if ((size % 2) == 0)
             {
-                swapElements (this.SA, sa, this.SA, sa + m);
-                this.ssFixdown (Td, PA, sa, 0, m);
+                swapElements(this.SA, sa, this.SA, sa + m);
+                this.ssFixdown(Td, PA, sa, 0, m);
             }
 
             for (i = m - 1; 0 < i; --i)
             {
                 int t = this.SA[sa];
                 this.SA[sa] = this.SA[sa + i];
-                this.ssFixdown (Td, PA, sa, 0, i);
+                this.ssFixdown(Td, PA, sa, 0, i);
                 this.SA[sa + i] = t;
             }
         }
 
-        private int ssMedian3 (int Td,  int PA, int v1, int v2, int v3)
+        private int ssMedian3(int Td, int PA, int v1, int v2, int v3)
         {
             var T_v1 = this.T[Td + this.SA[PA + this.SA[v1]]] & 0xff;
             var T_v2 = this.T[Td + this.SA[PA + this.SA[v2]]] & 0xff;
@@ -282,7 +552,7 @@ namespace SharpCompress.Compressors.BZip2MT.Algorithm
             return v2;
         }
 
-        private int ssMedian5 (int Td,  int PA, int v1, int v2, int v3, int v4, int v5)
+        private int ssMedian5(int Td, int PA, int v1, int v2, int v3, int v4, int v5)
         {
             var T_v1 = this.T[Td + this.SA[PA + this.SA[v1]]] & 0xff;
             var T_v2 = this.T[Td + this.SA[PA + this.SA[v2]]] & 0xff;
@@ -355,7 +625,7 @@ namespace SharpCompress.Compressors.BZip2MT.Algorithm
             return T_v3 > T_v4 ? v4 : v3;
         }
 
-        private int ssPivot (int Td,  int PA,  int first,  int last)
+        private int ssPivot(int Td, int PA, int first, int last)
         {
             int t = last - first;
             int middle = first + t / 2;
@@ -364,36 +634,54 @@ namespace SharpCompress.Compressors.BZip2MT.Algorithm
             {
                 if (t <= 32)
                 {
-                    return this.ssMedian3 (Td, PA, first, middle, last - 1);
+                    return this.ssMedian3(Td, PA, first, middle, last - 1);
                 }
                 t >>= 2;
-                return this.ssMedian5 (Td, PA, first, first + t, middle, last - 1 - t, last - 1);
+                return this.ssMedian5(Td, PA, first, first + t, middle, last - 1 - t, last - 1);
             }
             t >>= 3;
-            return this.ssMedian3 (
-                Td, PA,
-                this.ssMedian3 (Td, PA, first, first + t, first + (t << 1)),
-                this.ssMedian3 (Td, PA, middle - t, middle, middle + t),
-                this.ssMedian3 (Td, PA, last - 1 - (t << 1), last - 1 - t, last - 1)
-                );
+            return this.ssMedian3(
+                Td,
+                PA,
+                this.ssMedian3(Td, PA, first, first + t, first + (t << 1)),
+                this.ssMedian3(Td, PA, middle - t, middle, middle + t),
+                this.ssMedian3(Td, PA, last - 1 - (t << 1), last - 1 - t, last - 1)
+            );
         }
 
-        private static int ssLog (int x)
+        private static int ssLog(int x)
         {
-            return ((x & 0xff00) != 0) ? 8 + BZip2DivSufSort.log2table[(x >> 8) & 0xff] : BZip2DivSufSort.log2table[x & 0xff];
+            return ((x & 0xff00) != 0)
+                ? 8 + BZip2DivSufSort.log2table[(x >> 8) & 0xff]
+                : BZip2DivSufSort.log2table[x & 0xff];
         }
 
-        private int ssSubstringPartition (int PA,  int first,  int last,  int depth)
+        private int ssSubstringPartition(int PA, int first, int last, int depth)
         {
-            int a, b;
+            int a,
+                b;
 
-            for (a = first - 1, b = last;;)
+            for (a = first - 1, b = last; ; )
             {
-                for (; (++a < b) && ((this.SA[PA + this.SA[a]] + depth) >= (this.SA[PA + this.SA[a] + 1] + 1));)
+                for (
+                    ;
+                    (++a < b)
+                        && (
+                            (this.SA[PA + this.SA[a]] + depth) >= (this.SA[PA + this.SA[a] + 1] + 1)
+                        );
+
+                )
                 {
                     this.SA[a] = ~this.SA[a];
                 }
-                for (; (a < --b) && ((this.SA[PA + this.SA[b]] + depth) <  (this.SA[PA + this.SA[b] + 1] + 1));) { }
+                for (
+                    ;
+                    (a < --b)
+                        && (
+                            (this.SA[PA + this.SA[b]] + depth) < (this.SA[PA + this.SA[b] + 1] + 1)
+                        );
+
+                ) { }
                 if (b <= a)
                 {
                     break;
@@ -408,7 +696,7 @@ namespace SharpCompress.Compressors.BZip2MT.Algorithm
             return a;
         }
 
-        private void ssMultiKeyIntroSort (int PA, int first, int last, int depth)
+        private void ssMultiKeyIntroSort(int PA, int first, int last, int depth)
         {
             var stack = new StackEntry[BZip2DivSufSort.STACK_SIZE];
 
@@ -416,15 +704,16 @@ namespace SharpCompress.Compressors.BZip2MT.Algorithm
             int limit;
             int x = 0;
 
-            for (ssize = 0, limit = ssLog (last - first);;)
+            for (ssize = 0, limit = ssLog(last - first); ; )
             {
                 if ((last - first) <= BZip2DivSufSort.INSERTIONSORT_THRESHOLD)
                 {
                     if (1 < (last - first))
                     {
-                        this.ssInsertionSort (PA, first, last, depth);
+                        this.ssInsertionSort(PA, first, last, depth);
                     }
-                    if (ssize == 0) return;
+                    if (ssize == 0)
+                        return;
                     var entry = stack[--ssize];
                     first = entry.a;
                     last = entry.b;
@@ -436,102 +725,136 @@ namespace SharpCompress.Compressors.BZip2MT.Algorithm
                 int Td = depth;
                 if (limit-- == 0)
                 {
-                    this.ssHeapSort (Td, PA, first, last - first);
+                    this.ssHeapSort(Td, PA, first, last - first);
                 }
                 int a;
                 int v;
                 if (limit < 0)
                 {
-                    for (a = first + 1, v = this.T[Td + this.SA[PA + this.SA[first]]] & 0xff; a < last; ++a)
+                    for (
+                        a = first + 1, v = this.T[Td + this.SA[PA + this.SA[first]]] & 0xff;
+                        a < last;
+                        ++a
+                    )
                     {
                         if ((x = (this.T[Td + this.SA[PA + this.SA[a]]] & 0xff)) != v)
                         {
-                            if (1 < (a - first)) { break; }
+                            if (1 < (a - first))
+                            {
+                                break;
+                            }
                             v = x;
                             first = a;
                         }
                     }
                     if ((this.T[Td + this.SA[PA + this.SA[first]] - 1] & 0xff) < v)
                     {
-                        first = this.ssSubstringPartition (PA, first, a, depth);
+                        first = this.ssSubstringPartition(PA, first, a, depth);
                     }
                     if ((a - first) <= (last - a))
                     {
                         if (1 < (a - first))
                         {
-                            stack[ssize++] = new StackEntry (a, last, depth, -1);
+                            stack[ssize++] = new StackEntry(a, last, depth, -1);
                             last = a;
                             depth += 1;
-                            limit = ssLog (a - first);
-                        } else
+                            limit = ssLog(a - first);
+                        }
+                        else
                         {
                             first = a;
                             limit = -1;
                         }
-                    } else
+                    }
+                    else
                     {
                         if (1 < (last - a))
                         {
-                            stack[ssize++] = new StackEntry (first, a, depth + 1, ssLog (a - first));
+                            stack[ssize++] = new StackEntry(first, a, depth + 1, ssLog(a - first));
                             first = a;
                             limit = -1;
-                        } else
+                        }
+                        else
                         {
                             last = a;
                             depth += 1;
-                            limit = ssLog (a - first);
+                            limit = ssLog(a - first);
                         }
                     }
                     continue;
                 }
 
-                a = this.ssPivot (Td, PA, first, last);
+                a = this.ssPivot(Td, PA, first, last);
                 v = this.T[Td + this.SA[PA + this.SA[a]]] & 0xff;
-                swapElements (this.SA, first, this.SA, a);
+                swapElements(this.SA, first, this.SA, a);
 
                 int b;
-                for (b = first; (++b < last) && ((x = (this.T[Td + this.SA[PA + this.SA[b]]] & 0xff)) == v); ) { }
+                for (
+                    b = first;
+                    (++b < last) && ((x = (this.T[Td + this.SA[PA + this.SA[b]]] & 0xff)) == v);
+
+                ) { }
                 if (((a = b) < last) && (x < v))
                 {
-                    for (; (++b < last) && ((x = (this.T[Td + this.SA[PA + this.SA[b]]] & 0xff)) <= v);)
+                    for (
+                        ;
+                        (++b < last) && ((x = (this.T[Td + this.SA[PA + this.SA[b]]] & 0xff)) <= v);
+
+                    )
                     {
                         if (x == v)
                         {
-                            swapElements (this.SA, b, this.SA, a);
+                            swapElements(this.SA, b, this.SA, a);
                             ++a;
                         }
                     }
                 }
                 int c;
-                for (c = last; (b < --c) && ((x = (this.T[Td + this.SA[PA + this.SA[c]]] & 0xff)) == v);) { }
+                for (
+                    c = last;
+                    (b < --c) && ((x = (this.T[Td + this.SA[PA + this.SA[c]]] & 0xff)) == v);
+
+                ) { }
                 int d;
                 if ((b < (d = c)) && (x > v))
                 {
-                    for (; (b < --c) && ((x = (this.T[Td + this.SA[PA + this.SA[c]]] & 0xff)) >= v);)
+                    for (
+                        ;
+                        (b < --c) && ((x = (this.T[Td + this.SA[PA + this.SA[c]]] & 0xff)) >= v);
+
+                    )
                     {
                         if (x == v)
                         {
-                            swapElements (this.SA, c, this.SA, d);
+                            swapElements(this.SA, c, this.SA, d);
                             --d;
                         }
                     }
                 }
-                for (; b < c;)
+                for (; b < c; )
                 {
-                    swapElements (this.SA, b, this.SA, c);
-                    for (; (++b < c) && ((x = (this.T[Td + this.SA[PA + this.SA[b]]] & 0xff)) <= v);)
+                    swapElements(this.SA, b, this.SA, c);
+                    for (
+                        ;
+                        (++b < c) && ((x = (this.T[Td + this.SA[PA + this.SA[b]]] & 0xff)) <= v);
+
+                    )
                     {
                         if (x == v)
                         {
-                            swapElements (this.SA, b, this.SA, a);
+                            swapElements(this.SA, b, this.SA, a);
                             ++a;
                         }
                     }
-                    for (; (b < --c) && ((x = (this.T[Td + this.SA[PA + this.SA[c]]] & 0xff)) >= v);)
+                    for (
+                        ;
+                        (b < --c) && ((x = (this.T[Td + this.SA[PA + this.SA[c]]] & 0xff)) >= v);
+
+                    )
                     {
                         if (x == v)
                         {
-                            swapElements (this.SA, c, this.SA, d);
+                            swapElements(this.SA, c, this.SA, d);
                             --d;
                         }
                     }
@@ -551,7 +874,7 @@ namespace SharpCompress.Compressors.BZip2MT.Algorithm
                     int f;
                     for (e = first, f = b - s; 0 < s; --s, ++e, ++f)
                     {
-                        swapElements (this.SA, e, this.SA, f);
+                        swapElements(this.SA, e, this.SA, f);
                     }
                     if ((s = d - c) > (t = last - d - 1))
                     {
@@ -559,90 +882,116 @@ namespace SharpCompress.Compressors.BZip2MT.Algorithm
                     }
                     for (e = b, f = last - s; 0 < s; --s, ++e, ++f)
                     {
-                        swapElements (this.SA, e, this.SA, f);
+                        swapElements(this.SA, e, this.SA, f);
                     }
 
                     a = first + (b - a);
                     c = last - (d - c);
-                    b = (v <= (this.T[Td + this.SA[PA + this.SA[a]] - 1] & 0xff)) ? a : this.ssSubstringPartition (PA, a, c, depth);
+                    b =
+                        (v <= (this.T[Td + this.SA[PA + this.SA[a]] - 1] & 0xff))
+                            ? a
+                            : this.ssSubstringPartition(PA, a, c, depth);
 
                     if ((a - first) <= (last - c))
                     {
                         if ((last - c) <= (c - b))
                         {
-                            stack[ssize++] = new StackEntry (b, c, depth + 1, ssLog (c - b));
-                            stack[ssize++] = new StackEntry (c, last, depth, limit);
+                            stack[ssize++] = new StackEntry(b, c, depth + 1, ssLog(c - b));
+                            stack[ssize++] = new StackEntry(c, last, depth, limit);
                             last = a;
-                        } else if ((a - first) <= (c - b))
+                        }
+                        else if ((a - first) <= (c - b))
                         {
-                            stack[ssize++] = new StackEntry (c, last, depth, limit);
-                            stack[ssize++] = new StackEntry (b, c, depth + 1, ssLog (c - b));
+                            stack[ssize++] = new StackEntry(c, last, depth, limit);
+                            stack[ssize++] = new StackEntry(b, c, depth + 1, ssLog(c - b));
                             last = a;
-                        } else
+                        }
+                        else
                         {
-                            stack[ssize++] = new StackEntry (c, last, depth, limit);
-                            stack[ssize++] = new StackEntry (first, a, depth, limit);
+                            stack[ssize++] = new StackEntry(c, last, depth, limit);
+                            stack[ssize++] = new StackEntry(first, a, depth, limit);
                             first = b;
                             last = c;
                             depth += 1;
-                            limit = ssLog (c - b);
+                            limit = ssLog(c - b);
                         }
-                    } else
+                    }
+                    else
                     {
                         if ((a - first) <= (c - b))
                         {
-                            stack[ssize++] = new StackEntry (b, c, depth + 1, ssLog (c - b));
-                            stack[ssize++] = new StackEntry (first, a, depth, limit);
+                            stack[ssize++] = new StackEntry(b, c, depth + 1, ssLog(c - b));
+                            stack[ssize++] = new StackEntry(first, a, depth, limit);
                             first = c;
-                        } else if ((last - c) <= (c - b))
+                        }
+                        else if ((last - c) <= (c - b))
                         {
-                            stack[ssize++] = new StackEntry (first, a, depth, limit);
-                            stack[ssize++] = new StackEntry (b, c, depth + 1, ssLog (c - b));
+                            stack[ssize++] = new StackEntry(first, a, depth, limit);
+                            stack[ssize++] = new StackEntry(b, c, depth + 1, ssLog(c - b));
                             first = c;
-                        } else
+                        }
+                        else
                         {
-                            stack[ssize++] = new StackEntry (first, a, depth, limit);
-                            stack[ssize++] = new StackEntry (c, last, depth, limit);
+                            stack[ssize++] = new StackEntry(first, a, depth, limit);
+                            stack[ssize++] = new StackEntry(c, last, depth, limit);
                             first = b;
                             last = c;
                             depth += 1;
-                            limit = ssLog (c - b);
+                            limit = ssLog(c - b);
                         }
                     }
-                } else
+                }
+                else
                 {
                     limit += 1;
                     if ((this.T[Td + this.SA[PA + this.SA[first]] - 1] & 0xff) < v)
                     {
-                        first = this.ssSubstringPartition (PA, first, last, depth);
-                        limit = ssLog (last - first);
+                        first = this.ssSubstringPartition(PA, first, last, depth);
+                        limit = ssLog(last - first);
                     }
                     depth += 1;
                 }
             }
         }
 
-        private static void ssBlockSwap (int[] array1,  int first1,  int[] array2,  int first2,  int size)
+        private static void ssBlockSwap(
+            int[] array1,
+            int first1,
+            int[] array2,
+            int first2,
+            int size
+        )
         {
-            int a, b;
+            int a,
+                b;
             int i;
             for (i = size, a = first1, b = first2; 0 < i; --i, ++a, ++b)
             {
-                swapElements (array1, a, array2, b);
+                swapElements(array1, a, array2, b);
             }
         }
 
-        private void ssMergeForward (int PA, int[] buf,  int bufoffset,  int first,  int middle,  int last,  int depth)
+        private void ssMergeForward(
+            int PA,
+            int[] buf,
+            int bufoffset,
+            int first,
+            int middle,
+            int last,
+            int depth
+        )
         {
-            int i, j, k;
+            int i,
+                j,
+                k;
             int t;
 
             int bufend = bufoffset + (middle - first) - 1;
-            ssBlockSwap (buf, bufoffset, this.SA, first, middle - first);
+            ssBlockSwap(buf, bufoffset, this.SA, first, middle - first);
 
-            for (t = this.SA[first], i = first, j = bufoffset, k = middle;;)
+            for (t = this.SA[first], i = first, j = bufoffset, k = middle; ; )
             {
-                int r = this.ssCompare (PA + buf[j], PA + this.SA[k], depth);
+                int r = this.ssCompare(PA + buf[j], PA + this.SA[k], depth);
                 if (r < 0)
                 {
                     do
@@ -655,7 +1004,8 @@ namespace SharpCompress.Compressors.BZip2MT.Algorithm
                         }
                         buf[j++] = this.SA[i];
                     } while (buf[j] < 0);
-                } else if (r > 0)
+                }
+                else if (r > 0)
                 {
                     do
                     {
@@ -673,7 +1023,8 @@ namespace SharpCompress.Compressors.BZip2MT.Algorithm
                             return;
                         }
                     } while (this.SA[k] < 0);
-                } else
+                }
+                else
                 {
                     this.SA[k] = ~this.SA[k];
                     do
@@ -707,35 +1058,48 @@ namespace SharpCompress.Compressors.BZip2MT.Algorithm
             }
         }
 
-        private void ssMergeBackward (int PA, int[] buf,  int bufoffset,  int first,  int middle,  int last,  int depth)
+        private void ssMergeBackward(
+            int PA,
+            int[] buf,
+            int bufoffset,
+            int first,
+            int middle,
+            int last,
+            int depth
+        )
         {
-            int p1, p2;
-            int i, j, k;
+            int p1,
+                p2;
+            int i,
+                j,
+                k;
             int t;
 
             int bufend = bufoffset + (last - middle);
-            ssBlockSwap (buf, bufoffset, this.SA, middle, last - middle);
+            ssBlockSwap(buf, bufoffset, this.SA, middle, last - middle);
 
             int x = 0;
             if (buf[bufend - 1] < 0)
             {
-                x |=  1;
+                x |= 1;
                 p1 = PA + ~buf[bufend - 1];
-            } else
+            }
+            else
             {
-                p1 = PA +  buf[bufend - 1];
+                p1 = PA + buf[bufend - 1];
             }
             if (this.SA[middle - 1] < 0)
             {
-                x |=  2;
+                x |= 2;
                 p2 = PA + ~this.SA[middle - 1];
-            } else
-            {
-                p2 = PA +  this.SA[middle - 1];
             }
-            for (t = this.SA[last - 1], i = last - 1, j = bufend - 1, k = middle - 1;;)
+            else
             {
-                int r = this.ssCompare (p1, p2, depth);
+                p2 = PA + this.SA[middle - 1];
+            }
+            for (t = this.SA[last - 1], i = last - 1, j = bufend - 1, k = middle - 1; ; )
+            {
+                int r = this.ssCompare(p1, p2, depth);
                 if (r > 0)
                 {
                     if ((x & 1) != 0)
@@ -757,13 +1121,15 @@ namespace SharpCompress.Compressors.BZip2MT.Algorithm
 
                     if (buf[j] < 0)
                     {
-                        x |=  1;
+                        x |= 1;
                         p1 = PA + ~buf[j];
-                    } else
-                    {
-                        p1 = PA +  buf[j];
                     }
-                } else if (r < 0)
+                    else
+                    {
+                        p1 = PA + buf[j];
+                    }
+                }
+                else if (r < 0)
                 {
                     if ((x & 2) != 0)
                     {
@@ -790,13 +1156,15 @@ namespace SharpCompress.Compressors.BZip2MT.Algorithm
 
                     if (this.SA[k] < 0)
                     {
-                        x |=  2;
+                        x |= 2;
                         p2 = PA + ~this.SA[k];
-                    } else
-                    {
-                        p2 = PA +  this.SA[k];
                     }
-                } else
+                    else
+                    {
+                        p2 = PA + this.SA[k];
+                    }
+                }
+                else
                 {
                     if ((x & 1) != 0)
                     {
@@ -840,62 +1208,77 @@ namespace SharpCompress.Compressors.BZip2MT.Algorithm
 
                     if (buf[j] < 0)
                     {
-                        x |=  1;
+                        x |= 1;
                         p1 = PA + ~buf[j];
-                    } else
+                    }
+                    else
                     {
-                        p1 = PA +  buf[j];
+                        p1 = PA + buf[j];
                     }
                     if (this.SA[k] < 0)
                     {
-                        x |=  2;
+                        x |= 2;
                         p2 = PA + ~this.SA[k];
-                    } else
+                    }
+                    else
                     {
-                        p2 = PA +  this.SA[k];
+                        p2 = PA + this.SA[k];
                     }
                 }
             }
         }
 
-        private  static int getIDX (int a)
+        private static int getIDX(int a)
         {
             return (0 <= a) ? a : ~a;
         }
 
-        private void ssMergeCheckEqual (int PA,  int depth,  int a)
+        private void ssMergeCheckEqual(int PA, int depth, int a)
         {
-            if ((0 <= this.SA[a]) && (this.ssCompare (PA + getIDX (this.SA[a - 1]), PA + this.SA[a], depth) == 0))
+            if (
+                (0 <= this.SA[a])
+                && (this.ssCompare(PA + getIDX(this.SA[a - 1]), PA + this.SA[a], depth) == 0)
+            )
             {
                 this.SA[a] = ~this.SA[a];
             }
         }
 
-        private void ssMerge (int PA, int first, int middle, int last, int[] buf,  int bufoffset,  int bufsize,  int depth)
+        private void ssMerge(
+            int PA,
+            int first,
+            int middle,
+            int last,
+            int[] buf,
+            int bufoffset,
+            int bufsize,
+            int depth
+        )
         {
             var stack = new StackEntry[BZip2DivSufSort.STACK_SIZE];
 
             int ssize;
             int check;
 
-            for (check = 0, ssize = 0;;)
+            for (check = 0, ssize = 0; ; )
             {
                 if ((last - middle) <= bufsize)
                 {
                     if ((first < middle) && (middle < last))
                     {
-                        this.ssMergeBackward (PA, buf, bufoffset, first, middle, last, depth);
+                        this.ssMergeBackward(PA, buf, bufoffset, first, middle, last, depth);
                     }
 
                     if ((check & 1) != 0)
                     {
-                        this.ssMergeCheckEqual (PA, depth, first);
+                        this.ssMergeCheckEqual(PA, depth, first);
                     }
                     if ((check & 2) != 0)
                     {
-                        this.ssMergeCheckEqual (PA, depth, last);
+                        this.ssMergeCheckEqual(PA, depth, last);
                     }
-                    if (ssize == 0) return;
+                    if (ssize == 0)
+                        return;
                     var entry = stack[--ssize];
                     first = entry.a;
                     middle = entry.b;
@@ -908,17 +1291,18 @@ namespace SharpCompress.Compressors.BZip2MT.Algorithm
                 {
                     if (first < middle)
                     {
-                        this.ssMergeForward ( PA, buf, bufoffset, first, middle, last, depth);
+                        this.ssMergeForward(PA, buf, bufoffset, first, middle, last, depth);
                     }
                     if ((check & 1) != 0)
                     {
-                        this.ssMergeCheckEqual (PA, depth, first);
+                        this.ssMergeCheckEqual(PA, depth, first);
                     }
                     if ((check & 2) != 0)
                     {
-                        this.ssMergeCheckEqual (PA, depth, last);
+                        this.ssMergeCheckEqual(PA, depth, last);
                     }
-                    if (ssize == 0) return;
+                    if (ssize == 0)
+                        return;
                     var entry = stack[--ssize];
                     first = entry.a;
                     middle = entry.b;
@@ -931,13 +1315,18 @@ namespace SharpCompress.Compressors.BZip2MT.Algorithm
                 int len;
                 int half;
                 for (
-                    m = 0, len = Math.Min (middle - first, last - middle), half = len >> 1;
+                    m = 0, len = Math.Min(middle - first, last - middle), half = len >> 1;
                     0 < len;
                     len = half, half >>= 1
                 )
                 {
-                    if (this.ssCompare (PA + getIDX (this.SA[middle + m + half]),
-                            PA + getIDX (this.SA[middle - m - half - 1]), depth) < 0)
+                    if (
+                        this.ssCompare(
+                            PA + getIDX(this.SA[middle + m + half]),
+                            PA + getIDX(this.SA[middle - m - half - 1]),
+                            depth
+                        ) < 0
+                    )
                     {
                         m += half + 1;
                         half -= (len & 1) ^ 1;
@@ -946,7 +1335,7 @@ namespace SharpCompress.Compressors.BZip2MT.Algorithm
 
                 if (0 < m)
                 {
-                    ssBlockSwap (this.SA, middle - m, this.SA, middle, m);
+                    ssBlockSwap(this.SA, middle - m, this.SA, middle, m);
                     int j;
                     int i = j = middle;
                     int next = 0;
@@ -954,43 +1343,54 @@ namespace SharpCompress.Compressors.BZip2MT.Algorithm
                     {
                         if (this.SA[middle + m] < 0)
                         {
-                            for (; this.SA[i - 1] < 0; --i)
-                            { }
+                            for (; this.SA[i - 1] < 0; --i) { }
                             this.SA[middle + m] = ~this.SA[middle + m];
                         }
-                        for (j = middle; this.SA[j] < 0; ++j)
-                        { }
+                        for (j = middle; this.SA[j] < 0; ++j) { }
                         next = 1;
                     }
                     if ((i - first) <= (last - j))
                     {
-                        stack[ssize++] = new StackEntry (j, middle + m, last, (check &  2) | (next & 1));
+                        stack[ssize++] = new StackEntry(
+                            j,
+                            middle + m,
+                            last,
+                            (check & 2) | (next & 1)
+                        );
                         middle -= m;
                         last = i;
                         check = (check & 1);
-                    } else
+                    }
+                    else
                     {
                         if ((i == middle) && (middle == j))
                         {
                             next <<= 1;
                         }
-                        stack[ssize++] = new StackEntry (first, middle - m, i, (check & 1) | (next & 2));
+                        stack[ssize++] = new StackEntry(
+                            first,
+                            middle - m,
+                            i,
+                            (check & 1) | (next & 2)
+                        );
                         first = j;
                         middle += m;
                         check = (check & 2) | (next & 1);
                     }
-                } else
+                }
+                else
                 {
                     if ((check & 1) != 0)
                     {
-                        this.ssMergeCheckEqual (PA, depth, first);
+                        this.ssMergeCheckEqual(PA, depth, first);
                     }
-                    this.ssMergeCheckEqual (PA, depth, middle);
+                    this.ssMergeCheckEqual(PA, depth, middle);
                     if ((check & 2) != 0)
                     {
-                        this.ssMergeCheckEqual (PA, depth, last);
+                        this.ssMergeCheckEqual(PA, depth, last);
                     }
-                    if (ssize == 0) return;
+                    if (ssize == 0)
+                        return;
                     var entry = stack[--ssize];
                     first = entry.a;
                     middle = entry.b;
@@ -1000,7 +1400,17 @@ namespace SharpCompress.Compressors.BZip2MT.Algorithm
             }
         }
 
-        private void subStringSort (int PA, int first,  int last,  int[] buf,  int bufoffset,  int bufsize,  int depth,  bool lastsuffix,  int size)
+        private void subStringSort(
+            int PA,
+            int first,
+            int last,
+            int[] buf,
+            int bufoffset,
+            int bufsize,
+            int depth,
+            bool lastsuffix,
+            int size
+        )
         {
             int a;
             int i;
@@ -1009,9 +1419,13 @@ namespace SharpCompress.Compressors.BZip2MT.Algorithm
             if (lastsuffix)
                 ++first;
 
-            for (a = first, i = 0; (a + BZip2DivSufSort.SS_BLOCKSIZE) < last; a += BZip2DivSufSort.SS_BLOCKSIZE, ++i)
+            for (
+                a = first, i = 0;
+                (a + BZip2DivSufSort.SS_BLOCKSIZE) < last;
+                a += BZip2DivSufSort.SS_BLOCKSIZE, ++i
+            )
             {
-                this.ssMultiKeyIntroSort (PA, a, a + BZip2DivSufSort.SS_BLOCKSIZE, depth);
+                this.ssMultiKeyIntroSort(PA, a, a + BZip2DivSufSort.SS_BLOCKSIZE, depth);
                 int[] curbuf = this.SA;
                 int curbufoffset = a + BZip2DivSufSort.SS_BLOCKSIZE;
                 int curbufsize = last - (a + BZip2DivSufSort.SS_BLOCKSIZE);
@@ -1023,17 +1437,21 @@ namespace SharpCompress.Compressors.BZip2MT.Algorithm
                 }
                 int b;
                 int j;
-                for (b = a, k = BZip2DivSufSort.SS_BLOCKSIZE, j = i; (j & 1) != 0; b -= k, k <<= 1, j >>= 1)
-                    this.ssMerge (PA, b - k, b, b + k, curbuf, curbufoffset, curbufsize, depth);
+                for (
+                    b = a, k = BZip2DivSufSort.SS_BLOCKSIZE, j = i;
+                    (j & 1) != 0;
+                    b -= k, k <<= 1, j >>= 1
+                )
+                    this.ssMerge(PA, b - k, b, b + k, curbuf, curbufoffset, curbufsize, depth);
             }
 
-            this.ssMultiKeyIntroSort (PA, a, last, depth);
+            this.ssMultiKeyIntroSort(PA, a, last, depth);
 
             for (k = BZip2DivSufSort.SS_BLOCKSIZE; i != 0; k <<= 1, i >>= 1)
             {
                 if ((i & 1) != 0)
                 {
-                    this.ssMerge (PA, a - k, a, last, buf, bufoffset, bufsize, depth);
+                    this.ssMerge(PA, a - k, a, last, buf, bufoffset, bufsize, depth);
                     a -= k;
                 }
             }
@@ -1043,7 +1461,14 @@ namespace SharpCompress.Compressors.BZip2MT.Algorithm
                 int r;
                 for (
                     a = first, i = this.SA[first - 1], r = 1;
-                    (a < last) && ((this.SA[a] < 0) || (0 < (r = this.ssCompareLast (PA, PA + i, PA + this.SA[a], depth, size))));
+                    (a < last)
+                        && (
+                            (this.SA[a] < 0)
+                            || (
+                                0
+                                < (r = this.ssCompareLast(PA, PA + i, PA + this.SA[a], depth, size))
+                            )
+                        );
                     ++a
                 )
                 {
@@ -1057,23 +1482,32 @@ namespace SharpCompress.Compressors.BZip2MT.Algorithm
             }
         }
 
-        private int trGetC (int ISA,  int ISAd,  int ISAn,  int p)
+        private int trGetC(int ISA, int ISAd, int ISAn, int p)
         {
-            return (((ISAd + p) < ISAn) ? this.SA[ISAd + p] : this.SA[ISA + ((ISAd - ISA + p) % (ISAn - ISA))]);
+            return (
+                ((ISAd + p) < ISAn)
+                    ? this.SA[ISAd + p]
+                    : this.SA[ISA + ((ISAd - ISA + p) % (ISAn - ISA))]
+            );
         }
 
-        private void trFixdown (int ISA,  int ISAd,  int ISAn,  int sa, int i,  int size)
+        private void trFixdown(int ISA, int ISAd, int ISAn, int sa, int i, int size)
         {
-            int j, k;
+            int j,
+                k;
             int v;
             int c;
 
-            for (v = this.SA[sa + i], c = this.trGetC (ISA, ISAd, ISAn, v); (j = 2 * i + 1) < size; this.SA[sa + i] = this.SA[sa + k], i = k)
+            for (
+                v = this.SA[sa + i], c = this.trGetC(ISA, ISAd, ISAn, v);
+                (j = 2 * i + 1) < size;
+                this.SA[sa + i] = this.SA[sa + k], i = k
+            )
             {
                 k = j++;
-                int d = this.trGetC (ISA, ISAd, ISAn, this.SA[sa + k]);
+                int d = this.trGetC(ISA, ISAd, ISAn, this.SA[sa + k]);
                 int e;
-                if (d < (e = this.trGetC (ISA, ISAd, ISAn, this.SA[sa + j])))
+                if (d < (e = this.trGetC(ISA, ISAd, ISAn, this.SA[sa + j])))
                 {
                     k = j;
                     d = e;
@@ -1086,7 +1520,7 @@ namespace SharpCompress.Compressors.BZip2MT.Algorithm
             this.SA[sa + i] = v;
         }
 
-        private void trHeapSort (int ISA,  int ISAd,  int ISAn,  int sa,  int size)
+        private void trHeapSort(int ISA, int ISAd, int ISAn, int sa, int size)
         {
             int i;
 
@@ -1094,33 +1528,36 @@ namespace SharpCompress.Compressors.BZip2MT.Algorithm
             if ((size % 2) == 0)
             {
                 m--;
-                if (this.trGetC (ISA, ISAd, ISAn, this.SA[sa + (m / 2)]) < this.trGetC (ISA, ISAd, ISAn, this.SA[sa + m]))
+                if (
+                    this.trGetC(ISA, ISAd, ISAn, this.SA[sa + (m / 2)])
+                    < this.trGetC(ISA, ISAd, ISAn, this.SA[sa + m])
+                )
                 {
-                    swapElements (this.SA, sa + m, this.SA, sa + (m / 2));
+                    swapElements(this.SA, sa + m, this.SA, sa + (m / 2));
                 }
             }
 
             for (i = m / 2 - 1; 0 <= i; --i)
             {
-                this.trFixdown (ISA, ISAd, ISAn, sa, i, m);
+                this.trFixdown(ISA, ISAd, ISAn, sa, i, m);
             }
 
             if ((size % 2) == 0)
             {
-                swapElements (this.SA, sa + 0, this.SA, sa + m);
-                this.trFixdown (ISA, ISAd, ISAn, sa, 0, m);
+                swapElements(this.SA, sa + 0, this.SA, sa + m);
+                this.trFixdown(ISA, ISAd, ISAn, sa, 0, m);
             }
 
             for (i = m - 1; 0 < i; --i)
             {
                 int t = this.SA[sa + 0];
                 this.SA[sa + 0] = this.SA[sa + i];
-                this.trFixdown (ISA, ISAd, ISAn, sa, 0, i);
+                this.trFixdown(ISA, ISAd, ISAn, sa, 0, i);
                 this.SA[sa + i] = t;
             }
         }
 
-        private void trInsertionSort (int ISA,  int ISAd,  int ISAn, int first, int last)
+        private void trInsertionSort(int ISA, int ISAd, int ISAn, int first, int last)
         {
             int a;
 
@@ -1129,7 +1566,16 @@ namespace SharpCompress.Compressors.BZip2MT.Algorithm
                 int b;
                 int t;
                 int r;
-                for (t = this.SA[a], b = a - 1; 0 > (r = this.trGetC (ISA, ISAd, ISAn, t) - this.trGetC (ISA, ISAd, ISAn, this.SA[b]));)
+                for (
+                    t = this.SA[a], b = a - 1;
+                    0
+                        > (
+                            r =
+                                this.trGetC(ISA, ISAd, ISAn, t)
+                                - this.trGetC(ISA, ISAd, ISAn, this.SA[b])
+                        );
+
+                )
                 {
                     do
                     {
@@ -1148,18 +1594,26 @@ namespace SharpCompress.Compressors.BZip2MT.Algorithm
             }
         }
 
-        private static int trLog (int x)
+        private static int trLog(int x)
         {
-            return ((x & 0xffff0000) != 0) ?
-                (((x & 0xff000000) != 0) ? 24 + BZip2DivSufSort.log2table[(x >> 24) & 0xff] : 16 + BZip2DivSufSort.log2table[(x >> 16) & 0xff])
-                : (((x & 0x0000ff00) != 0) ? 8 + BZip2DivSufSort.log2table[(x >>  8) & 0xff] : 0 + BZip2DivSufSort.log2table[(x >>  0) & 0xff]);
+            return ((x & 0xffff0000) != 0)
+                ? (
+                    ((x & 0xff000000) != 0)
+                        ? 24 + BZip2DivSufSort.log2table[(x >> 24) & 0xff]
+                        : 16 + BZip2DivSufSort.log2table[(x >> 16) & 0xff]
+                )
+                : (
+                    ((x & 0x0000ff00) != 0)
+                        ? 8 + BZip2DivSufSort.log2table[(x >> 8) & 0xff]
+                        : 0 + BZip2DivSufSort.log2table[(x >> 0) & 0xff]
+                );
         }
 
-        private int trMedian3 (int ISA,  int ISAd,  int ISAn, int v1, int v2, int v3)
+        private int trMedian3(int ISA, int ISAd, int ISAn, int v1, int v2, int v3)
         {
-            var SA_v1 = this.trGetC (ISA, ISAd, ISAn, this.SA[v1]);
-            var SA_v2 = this.trGetC (ISA, ISAd, ISAn, this.SA[v2]);
-            var SA_v3 = this.trGetC (ISA, ISAd, ISAn, this.SA[v3]);
+            var SA_v1 = this.trGetC(ISA, ISAd, ISAn, this.SA[v1]);
+            var SA_v2 = this.trGetC(ISA, ISAd, ISAn, this.SA[v2]);
+            var SA_v3 = this.trGetC(ISA, ISAd, ISAn, this.SA[v3]);
 
             if (SA_v1 > SA_v2)
             {
@@ -1178,13 +1632,13 @@ namespace SharpCompress.Compressors.BZip2MT.Algorithm
             return v2;
         }
 
-        private int trMedian5 (int ISA,  int ISAd,  int ISAn, int v1, int v2, int v3, int v4, int v5)
+        private int trMedian5(int ISA, int ISAd, int ISAn, int v1, int v2, int v3, int v4, int v5)
         {
-            var SA_v1 = this.trGetC (ISA, ISAd, ISAn, this.SA[v1]);
-            var SA_v2 = this.trGetC (ISA, ISAd, ISAn, this.SA[v2]);
-            var SA_v3 = this.trGetC (ISA, ISAd, ISAn, this.SA[v3]);
-            var SA_v4 = this.trGetC (ISA, ISAd, ISAn, this.SA[v4]);
-            var SA_v5 = this.trGetC (ISA, ISAd, ISAn, this.SA[v5]);
+            var SA_v1 = this.trGetC(ISA, ISAd, ISAn, this.SA[v1]);
+            var SA_v2 = this.trGetC(ISA, ISAd, ISAn, this.SA[v2]);
+            var SA_v3 = this.trGetC(ISA, ISAd, ISAn, this.SA[v3]);
+            var SA_v4 = this.trGetC(ISA, ISAd, ISAn, this.SA[v4]);
+            var SA_v5 = this.trGetC(ISA, ISAd, ISAn, this.SA[v5]);
             int temp;
             int SA_vtemp;
 
@@ -1251,7 +1705,7 @@ namespace SharpCompress.Compressors.BZip2MT.Algorithm
             return SA_v3 > SA_v4 ? v4 : v3;
         }
 
-        private int trPivot (int ISA,  int ISAd,  int ISAn,  int first,  int last)
+        private int trPivot(int ISA, int ISAd, int ISAn, int first, int last)
         {
             int t = last - first;
             int middle = first + t / 2;
@@ -1260,26 +1714,32 @@ namespace SharpCompress.Compressors.BZip2MT.Algorithm
             {
                 if (t <= 32)
                 {
-                    return this.trMedian3 (ISA, ISAd, ISAn, first, middle, last - 1);
+                    return this.trMedian3(ISA, ISAd, ISAn, first, middle, last - 1);
                 }
                 t >>= 2;
-                return this.trMedian5 (
-                    ISA, ISAd, ISAn,
-                    first, first + t,
+                return this.trMedian5(
+                    ISA,
+                    ISAd,
+                    ISAn,
+                    first,
+                    first + t,
                     middle,
-                    last - 1 - t, last - 1
-                    );
+                    last - 1 - t,
+                    last - 1
+                );
             }
             t >>= 3;
-            return this.trMedian3 (
-                ISA, ISAd, ISAn,
-                this.trMedian3 (ISA, ISAd, ISAn, first, first + t, first + (t << 1)),
-                this.trMedian3 (ISA, ISAd, ISAn, middle - t, middle, middle + t),
-                this.trMedian3 (ISA, ISAd, ISAn, last - 1 - (t << 1), last - 1 - t, last - 1)
-                );
+            return this.trMedian3(
+                ISA,
+                ISAd,
+                ISAn,
+                this.trMedian3(ISA, ISAd, ISAn, first, first + t, first + (t << 1)),
+                this.trMedian3(ISA, ISAd, ISAn, middle - t, middle, middle + t),
+                this.trMedian3(ISA, ISAd, ISAn, last - 1 - (t << 1), last - 1 - t, last - 1)
+            );
         }
 
-        private void lsUpdateGroup (int ISA,  int first,  int last)
+        private void lsUpdateGroup(int ISA, int first, int last)
         {
             int a;
 
@@ -1312,7 +1772,7 @@ namespace SharpCompress.Compressors.BZip2MT.Algorithm
             }
         }
 
-        private void lsIntroSort (int ISA,  int ISAd,  int ISAn, int first, int last)
+        private void lsIntroSort(int ISA, int ISAd, int ISAn, int first, int last)
         {
             var stack = new StackEntry[BZip2DivSufSort.STACK_SIZE];
 
@@ -1320,20 +1780,21 @@ namespace SharpCompress.Compressors.BZip2MT.Algorithm
             int x = 0;
             int ssize;
 
-            for (ssize = 0, limit = trLog (last - first);;)
+            for (ssize = 0, limit = trLog(last - first); ; )
             {
-
                 if ((last - first) <= BZip2DivSufSort.INSERTIONSORT_THRESHOLD)
                 {
                     if (1 < (last - first))
                     {
-                        this.trInsertionSort (ISA, ISAd, ISAn, first, last);
-                        this.lsUpdateGroup (ISA, first, last);
-                    } else if ((last - first) == 1)
+                        this.trInsertionSort(ISA, ISAd, ISAn, first, last);
+                        this.lsUpdateGroup(ISA, first, last);
+                    }
+                    else if ((last - first) == 1)
                     {
                         this.SA[first] = -1;
                     }
-                    if (ssize == 0) return;
+                    if (ssize == 0)
+                        return;
                     var entry = stack[--ssize];
                     first = entry.a;
                     last = entry.b;
@@ -1345,20 +1806,21 @@ namespace SharpCompress.Compressors.BZip2MT.Algorithm
                 int b;
                 if (limit-- == 0)
                 {
-                    this.trHeapSort (ISA, ISAd, ISAn, first, last - first);
+                    this.trHeapSort(ISA, ISAd, ISAn, first, last - first);
                     for (a = last - 1; first < a; a = b)
                     {
                         for (
-                            x = this.trGetC (ISA, ISAd, ISAn, this.SA[a]), b = a - 1;
-                            (first <= b) && (this.trGetC (ISA, ISAd, ISAn, this.SA[b]) == x);
+                            x = this.trGetC(ISA, ISAd, ISAn, this.SA[a]), b = a - 1;
+                            (first <= b) && (this.trGetC(ISA, ISAd, ISAn, this.SA[b]) == x);
                             --b
                         )
                         {
                             this.SA[b] = ~this.SA[b];
                         }
                     }
-                    this.lsUpdateGroup (ISA, first, last);
-                    if (ssize == 0) return;
+                    this.lsUpdateGroup(ISA, first, last);
+                    if (ssize == 0)
+                        return;
                     var entry = stack[--ssize];
                     first = entry.a;
                     last = entry.b;
@@ -1366,54 +1828,57 @@ namespace SharpCompress.Compressors.BZip2MT.Algorithm
                     continue;
                 }
 
-                a = this.trPivot (ISA, ISAd, ISAn, first, last);
-                swapElements (this.SA, first, this.SA, a);
-                int v = this.trGetC (ISA, ISAd, ISAn, this.SA[first]);
+                a = this.trPivot(ISA, ISAd, ISAn, first, last);
+                swapElements(this.SA, first, this.SA, a);
+                int v = this.trGetC(ISA, ISAd, ISAn, this.SA[first]);
 
-                for (b = first; (++b < last) && ((x = this.trGetC (ISA, ISAd, ISAn, this.SA[b])) == v);)
-                { }
+                for (
+                    b = first;
+                    (++b < last) && ((x = this.trGetC(ISA, ISAd, ISAn, this.SA[b])) == v);
+
+                ) { }
                 if (((a = b) < last) && (x < v))
                 {
-                    for (; (++b < last) && ((x = this.trGetC (ISA, ISAd, ISAn, this.SA[b])) <= v);)
+                    for (; (++b < last) && ((x = this.trGetC(ISA, ISAd, ISAn, this.SA[b])) <= v); )
                     {
                         if (x == v)
                         {
-                            swapElements (this.SA, b, this.SA, a);
+                            swapElements(this.SA, b, this.SA, a);
                             ++a;
                         }
                     }
                 }
                 int c;
-                for (c = last; (b < --c) && ((x = this.trGetC (ISA, ISAd, ISAn, this.SA[c])) == v);)
+                for (c = last; (b < --c) && ((x = this.trGetC(ISA, ISAd, ISAn, this.SA[c])) == v); )
                 { }
                 int d;
                 if ((b < (d = c)) && (x > v))
                 {
-                    for (; (b < --c) && ((x = this.trGetC (ISA, ISAd, ISAn, this.SA[c])) >= v);)
+                    for (; (b < --c) && ((x = this.trGetC(ISA, ISAd, ISAn, this.SA[c])) >= v); )
                     {
                         if (x == v)
                         {
-                            swapElements (this.SA, c, this.SA, d);
+                            swapElements(this.SA, c, this.SA, d);
                             --d;
                         }
                     }
                 }
-                for (; b < c;)
+                for (; b < c; )
                 {
-                    swapElements (this.SA, b, this.SA, c);
-                    for (; (++b < c) && ((x = this.trGetC (ISA, ISAd, ISAn, this.SA[b])) <= v);)
+                    swapElements(this.SA, b, this.SA, c);
+                    for (; (++b < c) && ((x = this.trGetC(ISA, ISAd, ISAn, this.SA[b])) <= v); )
                     {
                         if (x == v)
                         {
-                            swapElements (this.SA, b, this.SA, a);
+                            swapElements(this.SA, b, this.SA, a);
                             ++a;
                         }
                     }
-                    for (; (b < --c) && ((x = this.trGetC (ISA, ISAd, ISAn, this.SA[c])) >= v);)
+                    for (; (b < --c) && ((x = this.trGetC(ISA, ISAd, ISAn, this.SA[c])) >= v); )
                     {
                         if (x == v)
                         {
-                            swapElements (this.SA, c, this.SA, d);
+                            swapElements(this.SA, c, this.SA, d);
                             --d;
                         }
                     }
@@ -1433,7 +1898,7 @@ namespace SharpCompress.Compressors.BZip2MT.Algorithm
                     int f;
                     for (e = first, f = b - s; 0 < s; --s, ++e, ++f)
                     {
-                        swapElements (this.SA, e, this.SA, f);
+                        swapElements(this.SA, e, this.SA, f);
                     }
                     if ((s = d - c) > (t = last - d - 1))
                     {
@@ -1441,7 +1906,7 @@ namespace SharpCompress.Compressors.BZip2MT.Algorithm
                     }
                     for (e = b, f = last - s; 0 < s; --s, ++e, ++f)
                     {
-                        swapElements (this.SA, e, this.SA, f);
+                        swapElements(this.SA, e, this.SA, f);
                     }
 
                     a = first + (b - a);
@@ -1460,33 +1925,38 @@ namespace SharpCompress.Compressors.BZip2MT.Algorithm
                     }
                     if ((b - a) == 1)
                     {
-                        this.SA[a] = - 1;
+                        this.SA[a] = -1;
                     }
 
                     if ((a - first) <= (last - b))
                     {
                         if (first < a)
                         {
-                            stack[ssize++] = new StackEntry (b, last, limit, 0);
+                            stack[ssize++] = new StackEntry(b, last, limit, 0);
                             last = a;
-                        } else
+                        }
+                        else
                         {
                             first = b;
                         }
-                    } else
+                    }
+                    else
                     {
                         if (b < last)
                         {
-                            stack[ssize++] = new StackEntry (first, a, limit, 0);
+                            stack[ssize++] = new StackEntry(first, a, limit, 0);
                             first = b;
-                        } else
+                        }
+                        else
                         {
                             last = a;
                         }
                     }
-                } else
+                }
+                else
                 {
-                    if (ssize == 0) return;
+                    if (ssize == 0)
+                        return;
                     var entry = stack[--ssize];
                     first = entry.a;
                     last = entry.b;
@@ -1495,7 +1965,7 @@ namespace SharpCompress.Compressors.BZip2MT.Algorithm
             }
         }
 
-        private void lsSort (int ISA,  int x, int depth)
+        private void lsSort(int ISA, int x, int depth)
         {
             int ISAd;
 
@@ -1511,7 +1981,8 @@ namespace SharpCompress.Compressors.BZip2MT.Algorithm
                     {
                         first -= t;
                         skip += t;
-                    } else
+                    }
+                    else
                     {
                         if (skip != 0)
                         {
@@ -1519,7 +1990,7 @@ namespace SharpCompress.Compressors.BZip2MT.Algorithm
                             skip = 0;
                         }
                         last = this.SA[ISA + t] + 1;
-                        this.lsIntroSort (ISA, ISAd, ISA + x, first, last);
+                        this.lsIntroSort(ISA, ISAd, ISA + x, first, last);
                         first = last;
                     }
                 } while (first < x);
@@ -1548,53 +2019,58 @@ namespace SharpCompress.Compressors.BZip2MT.Algorithm
             }
         }
 
-        private PartitionResult trPartition (int ISA,  int ISAd,  int ISAn, int first, int last,  int v)
+        private PartitionResult trPartition(int ISA, int ISAd, int ISAn, int first, int last, int v)
         {
-            int a, b, c, d;
+            int a,
+                b,
+                c,
+                d;
             var x = 0;
 
-            for (b = first - 1; (++b < last) && ((x = this.trGetC (ISA, ISAd, ISAn, this.SA[b])) == v);)
-            { }
+            for (
+                b = first - 1;
+                (++b < last) && ((x = this.trGetC(ISA, ISAd, ISAn, this.SA[b])) == v);
+
+            ) { }
             if (((a = b) < last) && (x < v))
             {
-                for (; (++b < last) && ((x = this.trGetC (ISA, ISAd, ISAn, this.SA[b])) <= v);)
+                for (; (++b < last) && ((x = this.trGetC(ISA, ISAd, ISAn, this.SA[b])) <= v); )
                 {
                     if (x == v)
                     {
-                        swapElements (this.SA, b, this.SA, a);
+                        swapElements(this.SA, b, this.SA, a);
                         ++a;
                     }
                 }
             }
-            for (c = last; (b < --c) && ((x = this.trGetC (ISA, ISAd, ISAn, this.SA[c])) == v);)
-            { }
+            for (c = last; (b < --c) && ((x = this.trGetC(ISA, ISAd, ISAn, this.SA[c])) == v); ) { }
             if ((b < (d = c)) && (x > v))
             {
-                for (; (b < --c) && ((x = this.trGetC (ISA, ISAd, ISAn, this.SA[c])) >= v);)
+                for (; (b < --c) && ((x = this.trGetC(ISA, ISAd, ISAn, this.SA[c])) >= v); )
                 {
                     if (x == v)
                     {
-                        swapElements (this.SA, c, this.SA, d);
+                        swapElements(this.SA, c, this.SA, d);
                         --d;
                     }
                 }
             }
-            for (; b < c;)
+            for (; b < c; )
             {
-                swapElements (this.SA, b, this.SA, c);
-                for (; (++b < c) && ((x = this.trGetC (ISA, ISAd, ISAn, this.SA[b])) <= v);)
+                swapElements(this.SA, b, this.SA, c);
+                for (; (++b < c) && ((x = this.trGetC(ISA, ISAd, ISAn, this.SA[b])) <= v); )
                 {
                     if (x == v)
                     {
-                        swapElements (this.SA, b, this.SA, a);
+                        swapElements(this.SA, b, this.SA, a);
                         ++a;
                     }
                 }
-                for (; (b < --c) && ((x = this.trGetC (ISA, ISAd, ISAn, this.SA[c])) >= v);)
+                for (; (b < --c) && ((x = this.trGetC(ISA, ISAd, ISAn, this.SA[c])) >= v); )
                 {
                     if (x == v)
                     {
-                        swapElements (this.SA, c, this.SA, d);
+                        swapElements(this.SA, c, this.SA, d);
                         --d;
                     }
                 }
@@ -1612,7 +2088,7 @@ namespace SharpCompress.Compressors.BZip2MT.Algorithm
                 int f;
                 for (e = first, f = b - s; 0 < s; --s, ++e, ++f)
                 {
-                    swapElements (this.SA, e, this.SA, f);
+                    swapElements(this.SA, e, this.SA, f);
                 }
                 if ((s = d - c) > (t = last - d - 1))
                 {
@@ -1620,18 +2096,20 @@ namespace SharpCompress.Compressors.BZip2MT.Algorithm
                 }
                 for (e = b, f = last - s; 0 < s; --s, ++e, ++f)
                 {
-                    swapElements (this.SA, e, this.SA, f);
+                    swapElements(this.SA, e, this.SA, f);
                 }
                 first += (b - a);
                 last -= (d - c);
             }
 
-            return new PartitionResult (first, last);
+            return new PartitionResult(first, last);
         }
 
-        private void trCopy (int ISA,  int ISAn,  int first,  int a,  int b,  int last,  int depth)
+        private void trCopy(int ISA, int ISAn, int first, int a, int b, int last, int depth)
         {
-            int c, d, e;
+            int c,
+                d,
+                e;
             int s;
             int v = b - 1;
 
@@ -1661,7 +2139,15 @@ namespace SharpCompress.Compressors.BZip2MT.Algorithm
             }
         }
 
-        private void trIntroSort (int ISA, int ISAd, int ISAn, int first, int last,  TRBudget budget,  int size)
+        private void trIntroSort(
+            int ISA,
+            int ISAd,
+            int ISAn,
+            int first,
+            int last,
+            TRBudget budget,
+            int size
+        )
         {
             var stack = new StackEntry[BZip2DivSufSort.STACK_SIZE];
 
@@ -1670,7 +2156,7 @@ namespace SharpCompress.Compressors.BZip2MT.Algorithm
             int limit;
             int ssize;
 
-            for (ssize = 0, limit = trLog (last - first);;)
+            for (ssize = 0, limit = trLog(last - first); ; )
             {
                 int a;
                 int b;
@@ -1681,8 +2167,9 @@ namespace SharpCompress.Compressors.BZip2MT.Algorithm
                 {
                     if (limit == -1)
                     {
-                        if (!budget.update (size, last - first)) break;
-                        var result = this.trPartition (ISA, ISAd - 1, ISAn, first, last, last - 1);
+                        if (!budget.update(size, last - first))
+                            break;
+                        var result = this.trPartition(ISA, ISAd - 1, ISAn, first, last, last - 1);
                         a = result.first;
                         b = result.last;
                         if ((first < a) || (b < last))
@@ -1702,42 +2189,25 @@ namespace SharpCompress.Compressors.BZip2MT.Algorithm
                                 }
                             }
 
-                            stack[ssize++] = new StackEntry (0, a, b, 0);
-                            stack[ssize++] = new StackEntry (ISAd - 1, first, last, -2);
+                            stack[ssize++] = new StackEntry(0, a, b, 0);
+                            stack[ssize++] = new StackEntry(ISAd - 1, first, last, -2);
                             if ((a - first) <= (last - b))
                             {
                                 if (1 < (a - first))
                                 {
-                                    stack[ssize++] = new StackEntry (ISAd, b, last, trLog (last - b));
+                                    stack[ssize++] = new StackEntry(ISAd, b, last, trLog(last - b));
                                     last = a;
-                                    limit = trLog (a - first);
-                                } else if (1 < (last - b))
-                                {
-                                    first = b;
-                                    limit = trLog (last - b);
-                                } else
-                                {
-                                    if (ssize == 0) return;
-                                    var entry = stack[--ssize];
-                                    ISAd = entry.a;
-                                    first = entry.b;
-                                    last = entry.c;
-                                    limit = entry.d;
+                                    limit = trLog(a - first);
                                 }
-                            } else
-                            {
-                                if (1 < (last - b))
+                                else if (1 < (last - b))
                                 {
-                                    stack[ssize++] = new StackEntry (ISAd, first, a, trLog (a - first));
                                     first = b;
-                                    limit = trLog (last - b);
-                                } else if (1 < (a - first))
+                                    limit = trLog(last - b);
+                                }
+                                else
                                 {
-                                    last = a;
-                                    limit = trLog (a - first);
-                                } else
-                                {
-                                    if (ssize == 0) return;
+                                    if (ssize == 0)
+                                        return;
                                     var entry = stack[--ssize];
                                     ISAd = entry.a;
                                     first = entry.b;
@@ -1745,31 +2215,65 @@ namespace SharpCompress.Compressors.BZip2MT.Algorithm
                                     limit = entry.d;
                                 }
                             }
-                        } else
+                            else
+                            {
+                                if (1 < (last - b))
+                                {
+                                    stack[ssize++] = new StackEntry(
+                                        ISAd,
+                                        first,
+                                        a,
+                                        trLog(a - first)
+                                    );
+                                    first = b;
+                                    limit = trLog(last - b);
+                                }
+                                else if (1 < (a - first))
+                                {
+                                    last = a;
+                                    limit = trLog(a - first);
+                                }
+                                else
+                                {
+                                    if (ssize == 0)
+                                        return;
+                                    var entry = stack[--ssize];
+                                    ISAd = entry.a;
+                                    first = entry.b;
+                                    last = entry.c;
+                                    limit = entry.d;
+                                }
+                            }
+                        }
+                        else
                         {
                             for (c = first; c < last; ++c)
                             {
                                 this.SA[ISA + this.SA[c]] = c;
                             }
-                            if (ssize == 0) return;
+                            if (ssize == 0)
+                                return;
                             var entry = stack[--ssize];
                             ISAd = entry.a;
                             first = entry.b;
                             last = entry.c;
                             limit = entry.d;
                         }
-                    } else if (limit == -2)
+                    }
+                    else if (limit == -2)
                     {
                         a = stack[--ssize].b;
                         b = stack[ssize].c;
-                        this.trCopy (ISA, ISAn, first, a, b, last, ISAd - ISA);
-                        if (ssize == 0) return;
+                        this.trCopy(ISA, ISAn, first, a, b, last, ISAd - ISA);
+                        if (ssize == 0)
+                            return;
                         var entry = stack[--ssize];
                         ISAd = entry.a;
                         first = entry.b;
                         last = entry.c;
                         limit = entry.d;
-                    } else
+                    }
+                    else
                     {
                         if (0 <= this.SA[first])
                         {
@@ -1787,7 +2291,10 @@ namespace SharpCompress.Compressors.BZip2MT.Algorithm
                             {
                                 this.SA[a] = ~this.SA[a];
                             } while (this.SA[++a] < 0);
-                            next = (this.SA[ISA + this.SA[a]] != this.SA[ISAd + this.SA[a]]) ? trLog (a - first + 1) : -1;
+                            next =
+                                (this.SA[ISA + this.SA[a]] != this.SA[ISAd + this.SA[a]])
+                                    ? trLog(a - first + 1)
+                                    : -1;
                             if (++a < last)
                             {
                                 for (b = first, v = a - 1; b < a; ++b)
@@ -1798,27 +2305,31 @@ namespace SharpCompress.Compressors.BZip2MT.Algorithm
 
                             if ((a - first) <= (last - a))
                             {
-                                stack[ssize++] = new StackEntry (ISAd, a, last, -3);
+                                stack[ssize++] = new StackEntry(ISAd, a, last, -3);
                                 ISAd += 1;
                                 last = a;
                                 limit = next;
-                            } else
+                            }
+                            else
                             {
                                 if (1 < (last - a))
                                 {
-                                    stack[ssize++] = new StackEntry (ISAd + 1, first, a, next);
+                                    stack[ssize++] = new StackEntry(ISAd + 1, first, a, next);
                                     first = a;
                                     limit = -3;
-                                } else
+                                }
+                                else
                                 {
                                     ISAd += 1;
                                     last = a;
                                     limit = next;
                                 }
                             }
-                        } else
+                        }
+                        else
                         {
-                            if (ssize == 0) return;
+                            if (ssize == 0)
+                                return;
                             var entry = stack[--ssize];
                             ISAd = entry.a;
                             first = entry.b;
@@ -1831,21 +2342,23 @@ namespace SharpCompress.Compressors.BZip2MT.Algorithm
 
                 if ((last - first) <= BZip2DivSufSort.INSERTIONSORT_THRESHOLD)
                 {
-                    if (!budget.update (size, last - first)) break;
-                    this.trInsertionSort (ISA, ISAd, ISAn, first, last);
+                    if (!budget.update(size, last - first))
+                        break;
+                    this.trInsertionSort(ISA, ISAd, ISAn, first, last);
                     limit = -3;
                     continue;
                 }
 
                 if (limit-- == 0)
                 {
-                    if (!budget.update (size, last - first)) break;
-                    this.trHeapSort (ISA, ISAd, ISAn, first, last - first);
+                    if (!budget.update(size, last - first))
+                        break;
+                    this.trHeapSort(ISA, ISAd, ISAn, first, last - first);
                     for (a = last - 1; first < a; a = b)
                     {
                         for (
-                            x = this.trGetC (ISA, ISAd, ISAn, this.SA[a]), b = a - 1;
-                            (first <= b) && (this.trGetC (ISA, ISAd, ISAn, this.SA[b]) == x);
+                            x = this.trGetC(ISA, ISAd, ISAn, this.SA[a]), b = a - 1;
+                            (first <= b) && (this.trGetC(ISA, ISAd, ISAn, this.SA[b]) == x);
                             --b
                         )
                         {
@@ -1856,53 +2369,56 @@ namespace SharpCompress.Compressors.BZip2MT.Algorithm
                     continue;
                 }
 
-                a = this.trPivot (ISA, ISAd, ISAn, first, last);
+                a = this.trPivot(ISA, ISAd, ISAn, first, last);
 
-                swapElements (this.SA, first, this.SA, a);
-                v = this.trGetC (ISA, ISAd, ISAn, this.SA[first]);
-                for (b = first; (++b < last) && ((x = this.trGetC (ISA, ISAd, ISAn, this.SA[b])) == v);)
-                { }
+                swapElements(this.SA, first, this.SA, a);
+                v = this.trGetC(ISA, ISAd, ISAn, this.SA[first]);
+                for (
+                    b = first;
+                    (++b < last) && ((x = this.trGetC(ISA, ISAd, ISAn, this.SA[b])) == v);
+
+                ) { }
                 if (((a = b) < last) && (x < v))
                 {
-                    for (; (++b < last) && ((x = this.trGetC (ISA, ISAd, ISAn, this.SA[b])) <= v);)
+                    for (; (++b < last) && ((x = this.trGetC(ISA, ISAd, ISAn, this.SA[b])) <= v); )
                     {
                         if (x == v)
                         {
-                            swapElements (this.SA, b, this.SA, a);
+                            swapElements(this.SA, b, this.SA, a);
                             ++a;
                         }
                     }
                 }
-                for (c = last; (b < --c) && ((x = this.trGetC (ISA, ISAd, ISAn, this.SA[c])) == v);)
+                for (c = last; (b < --c) && ((x = this.trGetC(ISA, ISAd, ISAn, this.SA[c])) == v); )
                 { }
                 int d;
                 if ((b < (d = c)) && (x > v))
                 {
-                    for (; (b < --c) && ((x = this.trGetC (ISA, ISAd, ISAn, this.SA[c])) >= v);)
+                    for (; (b < --c) && ((x = this.trGetC(ISA, ISAd, ISAn, this.SA[c])) >= v); )
                     {
                         if (x == v)
                         {
-                            swapElements (this.SA, c, this.SA, d);
+                            swapElements(this.SA, c, this.SA, d);
                             --d;
                         }
                     }
                 }
-                for (; b < c;)
+                for (; b < c; )
                 {
-                    swapElements (this.SA, b, this.SA, c);
-                    for (; (++b < c) && ((x = this.trGetC (ISA, ISAd, ISAn, this.SA[b])) <= v);)
+                    swapElements(this.SA, b, this.SA, c);
+                    for (; (++b < c) && ((x = this.trGetC(ISA, ISAd, ISAn, this.SA[b])) <= v); )
                     {
                         if (x == v)
                         {
-                            swapElements (this.SA, b, this.SA, a);
+                            swapElements(this.SA, b, this.SA, a);
                             ++a;
                         }
                     }
-                    for (; (b < --c) && ((x = this.trGetC (ISA, ISAd, ISAn, this.SA[c])) >= v);)
+                    for (; (b < --c) && ((x = this.trGetC(ISA, ISAd, ISAn, this.SA[c])) >= v); )
                     {
                         if (x == v)
                         {
-                            swapElements (this.SA, c, this.SA, d);
+                            swapElements(this.SA, c, this.SA, d);
                             --d;
                         }
                     }
@@ -1921,7 +2437,7 @@ namespace SharpCompress.Compressors.BZip2MT.Algorithm
                     int f;
                     for (e = first, f = b - s; 0 < s; --s, ++e, ++f)
                     {
-                        swapElements (this.SA, e, this.SA, f);
+                        swapElements(this.SA, e, this.SA, f);
                     }
                     if ((s = d - c) > (t = last - d - 1))
                     {
@@ -1929,12 +2445,12 @@ namespace SharpCompress.Compressors.BZip2MT.Algorithm
                     }
                     for (e = b, f = last - s; 0 < s; --s, ++e, ++f)
                     {
-                        swapElements (this.SA, e, this.SA, f);
+                        swapElements(this.SA, e, this.SA, f);
                     }
 
                     a = first + (b - a);
                     b = last - (d - c);
-                    next = (this.SA[ISA + this.SA[a]] != v) ? trLog (b - a) : -1;
+                    next = (this.SA[ISA + this.SA[a]] != v) ? trLog(b - a) : -1;
 
                     for (c = first, v = a - 1; c < a; ++c)
                     {
@@ -1954,123 +2470,143 @@ namespace SharpCompress.Compressors.BZip2MT.Algorithm
                         {
                             if (1 < (a - first))
                             {
-                                stack[ssize++] = new StackEntry (ISAd + 1, a, b, next);
-                                stack[ssize++] = new StackEntry (ISAd, b, last, limit);
+                                stack[ssize++] = new StackEntry(ISAd + 1, a, b, next);
+                                stack[ssize++] = new StackEntry(ISAd, b, last, limit);
                                 last = a;
-                            } else if (1 < (last - b))
+                            }
+                            else if (1 < (last - b))
                             {
-                                stack[ssize++] = new StackEntry (ISAd + 1, a, b, next);
+                                stack[ssize++] = new StackEntry(ISAd + 1, a, b, next);
                                 first = b;
-                            } else if (1 < (b - a))
+                            }
+                            else if (1 < (b - a))
                             {
                                 ISAd += 1;
                                 first = a;
                                 last = b;
                                 limit = next;
-                            } else
+                            }
+                            else
                             {
-                                if (ssize == 0) return;
+                                if (ssize == 0)
+                                    return;
                                 var entry = stack[--ssize];
                                 ISAd = entry.a;
                                 first = entry.b;
                                 last = entry.c;
                                 limit = entry.d;
                             }
-                        } else if ((a - first) <= (b - a))
+                        }
+                        else if ((a - first) <= (b - a))
                         {
                             if (1 < (a - first))
                             {
-                                stack[ssize++] = new StackEntry (ISAd, b, last, limit);
-                                stack[ssize++] = new StackEntry (ISAd + 1, a, b, next);
+                                stack[ssize++] = new StackEntry(ISAd, b, last, limit);
+                                stack[ssize++] = new StackEntry(ISAd + 1, a, b, next);
                                 last = a;
-                            } else if (1 < (b - a))
+                            }
+                            else if (1 < (b - a))
                             {
-                                stack[ssize++] = new StackEntry (ISAd, b, last, limit);
+                                stack[ssize++] = new StackEntry(ISAd, b, last, limit);
                                 ISAd += 1;
                                 first = a;
                                 last = b;
                                 limit = next;
-                            } else
+                            }
+                            else
                             {
                                 first = b;
                             }
-                        } else
+                        }
+                        else
                         {
                             if (1 < (b - a))
                             {
-                                stack[ssize++] = new StackEntry (ISAd, b, last, limit);
-                                stack[ssize++] = new StackEntry (ISAd, first, a, limit);
+                                stack[ssize++] = new StackEntry(ISAd, b, last, limit);
+                                stack[ssize++] = new StackEntry(ISAd, first, a, limit);
                                 ISAd += 1;
                                 first = a;
                                 last = b;
                                 limit = next;
-                            } else
+                            }
+                            else
                             {
-                                stack[ssize++] = new StackEntry (ISAd, b, last, limit);
+                                stack[ssize++] = new StackEntry(ISAd, b, last, limit);
                                 last = a;
                             }
                         }
-                    } else
+                    }
+                    else
                     {
                         if ((a - first) <= (b - a))
                         {
                             if (1 < (last - b))
                             {
-                                stack[ssize++] = new StackEntry (ISAd + 1, a, b, next);
-                                stack[ssize++] = new StackEntry (ISAd, first, a, limit);
+                                stack[ssize++] = new StackEntry(ISAd + 1, a, b, next);
+                                stack[ssize++] = new StackEntry(ISAd, first, a, limit);
                                 first = b;
-                            } else if (1 < (a - first))
+                            }
+                            else if (1 < (a - first))
                             {
-                                stack[ssize++] = new StackEntry (ISAd + 1, a, b, next);
+                                stack[ssize++] = new StackEntry(ISAd + 1, a, b, next);
                                 last = a;
-                            } else if (1 < (b - a))
+                            }
+                            else if (1 < (b - a))
                             {
                                 ISAd += 1;
                                 first = a;
                                 last = b;
                                 limit = next;
-                            } else
-                            {
-                                stack[ssize++] = new StackEntry (ISAd, first, last, limit);
                             }
-                        } else if ((last - b) <= (b - a))
+                            else
+                            {
+                                stack[ssize++] = new StackEntry(ISAd, first, last, limit);
+                            }
+                        }
+                        else if ((last - b) <= (b - a))
                         {
                             if (1 < (last - b))
                             {
-                                stack[ssize++] = new StackEntry (ISAd, first, a, limit);
-                                stack[ssize++] = new StackEntry (ISAd + 1, a, b, next);
+                                stack[ssize++] = new StackEntry(ISAd, first, a, limit);
+                                stack[ssize++] = new StackEntry(ISAd + 1, a, b, next);
                                 first = b;
-                            } else if (1 < (b - a))
+                            }
+                            else if (1 < (b - a))
                             {
-                                stack[ssize++] = new StackEntry (ISAd, first, a, limit);
+                                stack[ssize++] = new StackEntry(ISAd, first, a, limit);
                                 ISAd += 1;
                                 first = a;
                                 last = b;
                                 limit = next;
-                            } else
+                            }
+                            else
                             {
                                 last = a;
                             }
-                        } else
+                        }
+                        else
                         {
                             if (1 < (b - a))
                             {
-                                stack[ssize++] = new StackEntry (ISAd, first, a, limit);
-                                stack[ssize++] = new StackEntry (ISAd, b, last, limit);
+                                stack[ssize++] = new StackEntry(ISAd, first, a, limit);
+                                stack[ssize++] = new StackEntry(ISAd, b, last, limit);
                                 ISAd += 1;
                                 first = a;
                                 last = b;
                                 limit = next;
-                            } else
+                            }
+                            else
                             {
-                                stack[ssize++] = new StackEntry (ISAd, first, a, limit);
+                                stack[ssize++] = new StackEntry(ISAd, first, a, limit);
                                 first = b;
                             }
                         }
                     }
-                } else
+                }
+                else
                 {
-                    if (!budget.update (size, last - first)) break; // BUGFIX : Added to prevent an infinite loop in the original code
+                    if (!budget.update(size, last - first))
+                        break; // BUGFIX : Added to prevent an infinite loop in the original code
                     limit += 1;
                     ISAd += 1;
                 }
@@ -2080,30 +2616,31 @@ namespace SharpCompress.Compressors.BZip2MT.Algorithm
             {
                 if (stack[s].d == -3)
                 {
-                    this.lsUpdateGroup (ISA, stack[s].b, stack[s].c);
+                    this.lsUpdateGroup(ISA, stack[s].b, stack[s].c);
                 }
             }
         }
 
-        private void trSort (int ISA,  int x,  int depth)
+        private void trSort(int ISA, int x, int depth)
         {
             int first = 0;
 
             if (-x < this.SA[0])
             {
-                var budget = new TRBudget (x, trLog (x) * 2 / 3 + 1);
+                var budget = new TRBudget(x, trLog(x) * 2 / 3 + 1);
                 do
                 {
                     int t;
                     if ((t = this.SA[first]) < 0)
                     {
                         first -= t;
-                    } else
+                    }
+                    else
                     {
                         int last = this.SA[ISA + t] + 1;
                         if (1 < (last - first))
                         {
-                            this.trIntroSort (ISA, ISA + depth, ISA + x, first, last, budget, x);
+                            this.trIntroSort(ISA, ISA + depth, ISA + x, first, last, budget, x);
                             if (budget.chance == 0)
                             {
                                 // Switch to Larsson-Sadakane sorting algorithm.
@@ -2111,33 +2648,36 @@ namespace SharpCompress.Compressors.BZip2MT.Algorithm
                                 {
                                     this.SA[0] = -first;
                                 }
-                                this.lsSort (ISA, x, depth);
+                                this.lsSort(ISA, x, depth);
                                 break;
                             }
                         }
                         first = last;
-
                     }
                 } while (first < x);
             }
         }
 
-        private static  int BUCKET_B (int c0,  int c1)
+        private static int BUCKET_B(int c0, int c1)
         {
             return (c1 << 8) | c0;
         }
 
-        private static  int BUCKET_BSTAR (int c0,  int c1)
+        private static int BUCKET_BSTAR(int c0, int c1)
         {
             return (c0 << 8) | c1;
         }
 
-        private int sortTypeBstar (int[] bucketA,  int[] bucketB)
+        private int sortTypeBstar(int[] bucketA, int[] bucketB)
         {
             var tempbuf = new int[256];
 
-            int i, j, k, t;
-            int c0, c1;
+            int i,
+                j,
+                k,
+                t;
+            int c0,
+                c1;
             int flag;
 
             for (i = 1, flag = 1; i < this.n; ++i)
@@ -2154,24 +2694,34 @@ namespace SharpCompress.Compressors.BZip2MT.Algorithm
             i = this.n - 1;
             int m = this.n;
 
-            int ti, ti1, t0;
-            if (((ti = (this.T[i] & 0xff)) < (t0 = (this.T[0] & 0xff))) || ((this.T[i] == this.T[0]) && (flag != 0)))
+            int ti,
+                ti1,
+                t0;
+            if (
+                ((ti = (this.T[i] & 0xff)) < (t0 = (this.T[0] & 0xff)))
+                || ((this.T[i] == this.T[0]) && (flag != 0))
+            )
             {
                 if (flag == 0)
                 {
-                    ++bucketB[BUCKET_BSTAR (ti, t0)];
+                    ++bucketB[BUCKET_BSTAR(ti, t0)];
                     this.SA[--m] = i;
-                } else
-                {
-                    ++bucketB[BUCKET_B (ti, t0)];
                 }
-                for (--i; (0 <= i) && ((ti = (this.T[i] & 0xff)) <= (ti1 = (this.T[i + 1] & 0xff))); --i)
+                else
                 {
-                    ++bucketB[BUCKET_B (ti, ti1)];
+                    ++bucketB[BUCKET_B(ti, t0)];
+                }
+                for (
+                    --i;
+                    (0 <= i) && ((ti = (this.T[i] & 0xff)) <= (ti1 = (this.T[i + 1] & 0xff)));
+                    --i
+                )
+                {
+                    ++bucketB[BUCKET_B(ti, ti1)];
                 }
             }
 
-            for (; 0 <= i;)
+            for (; 0 <= i; )
             {
                 do
                 {
@@ -2180,11 +2730,15 @@ namespace SharpCompress.Compressors.BZip2MT.Algorithm
 
                 if (0 <= i)
                 {
-                    ++bucketB[BUCKET_BSTAR (this.T[i] & 0xff, this.T[i + 1] & 0xff)];
+                    ++bucketB[BUCKET_BSTAR(this.T[i] & 0xff, this.T[i + 1] & 0xff)];
                     this.SA[--m] = i;
-                    for (--i; (0 <= i) && ((ti = (this.T[i] & 0xff)) <= (ti1 = (this.T[i + 1] & 0xff))); --i)
+                    for (
+                        --i;
+                        (0 <= i) && ((ti = (this.T[i] & 0xff)) <= (ti1 = (this.T[i + 1] & 0xff)));
+                        --i
+                    )
                     {
-                        ++bucketB[BUCKET_B (ti, ti1)];
+                        ++bucketB[BUCKET_B(ti, ti1)];
                     }
                 }
             }
@@ -2202,12 +2756,12 @@ namespace SharpCompress.Compressors.BZip2MT.Algorithm
             {
                 t = i + bucketA[c0];
                 bucketA[c0] = i + j;
-                i = t + bucketB[BUCKET_B (c0, c0)];
+                i = t + bucketB[BUCKET_B(c0, c0)];
                 for (c1 = c0 + 1; c1 < 256; ++c1)
                 {
-                    j += bucketB[BUCKET_BSTAR (c0, c1)];
+                    j += bucketB[BUCKET_BSTAR(c0, c1)];
                     bucketB[(c0 << 8) | c1] = j;
-                    i += bucketB[BUCKET_B (c0, c1)];
+                    i += bucketB[BUCKET_B(c0, c1)];
                 }
             }
 
@@ -2218,12 +2772,12 @@ namespace SharpCompress.Compressors.BZip2MT.Algorithm
                 t = this.SA[PAb + i];
                 c0 = this.T[t] & 0xff;
                 c1 = this.T[t + 1] & 0xff;
-                this.SA[--bucketB[BUCKET_BSTAR (c0, c1)]] = i;
+                this.SA[--bucketB[BUCKET_BSTAR(c0, c1)]] = i;
             }
             t = this.SA[PAb + m - 1];
             c0 = this.T[t] & 0xff;
             c1 = this.T[t + 1] & 0xff;
-            this.SA[--bucketB[BUCKET_BSTAR (c0, c1)]] = m - 1;
+            this.SA[--bucketB[BUCKET_BSTAR(c0, c1)]] = m - 1;
 
             int[] buf = this.SA;
             int bufoffset = m;
@@ -2239,10 +2793,20 @@ namespace SharpCompress.Compressors.BZip2MT.Algorithm
             {
                 for (c1 = 255; c0 < c1; j = i, --c1)
                 {
-                    i = bucketB[BUCKET_BSTAR (c0, c1)];
+                    i = bucketB[BUCKET_BSTAR(c0, c1)];
                     if (1 < (j - i))
                     {
-                        this.subStringSort (PAb, i, j, buf, bufoffset, bufsize, 2, this.SA[i] == (m - 1), this.n);
+                        this.subStringSort(
+                            PAb,
+                            i,
+                            j,
+                            buf,
+                            bufoffset,
+                            bufsize,
+                            2,
+                            this.SA[i] == (m - 1),
+                            this.n
+                        );
                     }
                 }
             }
@@ -2270,28 +2834,28 @@ namespace SharpCompress.Compressors.BZip2MT.Algorithm
                 this.SA[ISAb + this.SA[i]] = j;
             }
 
-            this.trSort (ISAb, m, 1);
+            this.trSort(ISAb, m, 1);
 
             i = this.n - 1;
             j = m;
-            if (((this.T[i] & 0xff) < (this.T[0] & 0xff)) || ((this.T[i] == this.T[0]) && (flag != 0)))
+            if (
+                ((this.T[i] & 0xff) < (this.T[0] & 0xff))
+                || ((this.T[i] == this.T[0]) && (flag != 0))
+            )
             {
                 if (flag == 0)
                 {
                     this.SA[this.SA[ISAb + --j]] = i;
                 }
-                for (--i; (0 <= i) && ((this.T[i] & 0xff) <= (this.T[i + 1] & 0xff)); --i)
-                { }
+                for (--i; (0 <= i) && ((this.T[i] & 0xff) <= (this.T[i + 1] & 0xff)); --i) { }
             }
-            for (; 0 <= i;)
+            for (; 0 <= i; )
             {
-                for (--i; (0 <= i) && ((this.T[i] & 0xff) >= (this.T[i + 1] & 0xff)); --i)
-                { }
+                for (--i; (0 <= i) && ((this.T[i] & 0xff) >= (this.T[i + 1] & 0xff)); --i) { }
                 if (0 <= i)
                 {
                     this.SA[this.SA[ISAb + --j]] = i;
-                    for (--i; (0 <= i) && ((this.T[i] & 0xff) <= (this.T[i + 1] & 0xff)); --i)
-                    { }
+                    for (--i; (0 <= i) && ((this.T[i] & 0xff) <= (this.T[i + 1] & 0xff)); --i) { }
                 }
             }
 
@@ -2299,19 +2863,19 @@ namespace SharpCompress.Compressors.BZip2MT.Algorithm
             {
                 for (c1 = 255; c0 < c1; --c1)
                 {
-                    t = i - bucketB[BUCKET_B (c0, c1)];
-                    bucketB[BUCKET_B (c0, c1)] = i + 1;
+                    t = i - bucketB[BUCKET_B(c0, c1)];
+                    bucketB[BUCKET_B(c0, c1)] = i + 1;
 
-                    for (i = t, j = bucketB[BUCKET_BSTAR (c0, c1)]; j <= k; --i, --k)
+                    for (i = t, j = bucketB[BUCKET_BSTAR(c0, c1)]; j <= k; --i, --k)
                     {
                         this.SA[i] = this.SA[k];
                     }
                 }
-                t = i - bucketB[BUCKET_B (c0, c0)];
-                bucketB[BUCKET_B (c0, c0)] = i + 1;
+                t = i - bucketB[BUCKET_B(c0, c0)];
+                bucketB[BUCKET_B(c0, c0)] = i + 1;
                 if (c0 < 255)
                 {
-                    bucketB[BUCKET_BSTAR (c0, c0 + 1)] = t + 1;
+                    bucketB[BUCKET_BSTAR(c0, c0 + 1)] = t + 1;
                 }
                 i = bucketA[c0];
             }
@@ -2319,18 +2883,25 @@ namespace SharpCompress.Compressors.BZip2MT.Algorithm
             return m;
         }
 
-        private int constructBWT (int[] bucketA,  int[] bucketB)
+        private int constructBWT(int[] bucketA, int[] bucketB)
         {
             int i;
             int t = 0;
-            int s, s1;
-            int c0, c1, c2 = 0;
+            int s,
+                s1;
+            int c0,
+                c1,
+                c2 = 0;
             var orig = -1;
 
             for (c1 = 254; 0 <= c1; --c1)
             {
                 int j;
-                for (i = bucketB[BUCKET_BSTAR (c1, c1 + 1)], j = bucketA[c1 + 1], t = 0, c2 = -1; i <= j; --j)
+                for (
+                    i = bucketB[BUCKET_BSTAR(c1, c1 + 1)], j = bucketA[c1 + 1], t = 0, c2 = -1;
+                    i <= j;
+                    --j
+                )
                 {
                     if (0 <= (s1 = s = this.SA[j]))
                     {
@@ -2347,15 +2918,17 @@ namespace SharpCompress.Compressors.BZip2MT.Algorithm
                             if (c2 == c0)
                             {
                                 this.SA[--t] = s;
-                            } else
+                            }
+                            else
                             {
                                 if (0 <= c2)
-                                    bucketB[BUCKET_B (c2, c1)] = t;
+                                    bucketB[BUCKET_B(c2, c1)] = t;
 
-                                this.SA[t = bucketB[BUCKET_B (c2 = c0, c1)] - 1] = s;
+                                this.SA[t = bucketB[BUCKET_B(c2 = c0, c1)] - 1] = s;
                             }
                         }
-                    } else
+                    }
+                    else
                     {
                         this.SA[j] = ~s;
                     }
@@ -2377,15 +2950,16 @@ namespace SharpCompress.Compressors.BZip2MT.Algorithm
                         if (c0 == c2)
                         {
                             this.SA[++t] = s;
-                        } else
+                        }
+                        else
                         {
                             if (c2 != -1) // BUGFIX: Original code can write to bucketA[-1]
                                 bucketA[c2] = t;
                             this.SA[t = bucketA[c2 = c0] + 1] = s;
                         }
                     }
-
-                } else
+                }
+                else
                 {
                     s1 = ~s1;
                 }
@@ -2394,7 +2968,8 @@ namespace SharpCompress.Compressors.BZip2MT.Algorithm
                 {
                     this.SA[i] = this.T[this.n - 1];
                     orig = i;
-                } else
+                }
+                else
                 {
                     this.SA[i] = this.T[s1 - 1];
                 }

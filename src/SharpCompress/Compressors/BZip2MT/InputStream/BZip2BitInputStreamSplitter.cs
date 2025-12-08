@@ -4,9 +4,9 @@
 using System;
 using System.IO;
 using SharpCompress.Compressors.BZip2MT.Interface;
+
 namespace SharpCompress.Compressors.BZip2MT.InputStream
 {
-
     /// <summary>
     /// Helper class for splitting a BZip2 stream into multiple Memory Streams made up of individual BZip2 blocks.
     /// The spitting is done by looking for the magic block header 6 byte sequence.
@@ -14,7 +14,6 @@ namespace SharpCompress.Compressors.BZip2MT.InputStream
     /// </summary>
     internal class BZip2BitInputStreamSplitter : IDisposable
     {
-
         // The stream from which bits are read
         private BZip2BitInputStream? _bitInputStream;
 
@@ -32,9 +31,14 @@ namespace SharpCompress.Compressors.BZip2MT.InputStream
         public int BlockSizeBytes => this._blockSizeBytes;
         public uint FinalCrc => this._finalCrc;
 
-        public BZip2BitInputStreamSplitter(Stream inputStream, InputStreamHeaderCheckType inputStreamHeaderCheck = InputStreamHeaderCheckType.FULL_HEADER, int manualBlockLevel = 9)
+        public BZip2BitInputStreamSplitter(
+            Stream inputStream,
+            InputStreamHeaderCheckType inputStreamHeaderCheck =
+                InputStreamHeaderCheckType.FULL_HEADER,
+            int manualBlockLevel = 9
+        )
         {
-            this._bitInputStream = new  BZip2BitInputStream(inputStream);
+            this._bitInputStream = new BZip2BitInputStream(inputStream);
             this.Initialize(inputStreamHeaderCheck, manualBlockLevel);
         }
 
@@ -53,9 +57,12 @@ namespace SharpCompress.Compressors.BZip2MT.InputStream
                         uint marker1 = this._bitInputStream.ReadBits(16);
                         uint marker2 = this._bitInputStream.ReadBits(8);
                         blockLevel = ((int)this._bitInputStream.ReadBits(8) - '0');
-                        if (marker1 != BZip2Constants.STREAM_START_MARKER_1 ||
-                            marker2 !=  BZip2Constants.STREAM_START_MARKER_2 ||
-                            blockLevel < 1 ||  blockLevel > 9)
+                        if (
+                            marker1 != BZip2Constants.STREAM_START_MARKER_1
+                            || marker2 != BZip2Constants.STREAM_START_MARKER_2
+                            || blockLevel < 1
+                            || blockLevel > 9
+                        )
                         {
                             throw new IOException("Invalid BZip2 header");
                         }
@@ -65,8 +72,11 @@ namespace SharpCompress.Compressors.BZip2MT.InputStream
                     {
                         uint marker2 = this._bitInputStream.ReadBits(8);
                         blockLevel = ((int)this._bitInputStream.ReadBits(8) - '0');
-                        if (marker2 !=  BZip2Constants.STREAM_START_MARKER_2 ||
-                            blockLevel < 1 ||  blockLevel > 9)
+                        if (
+                            marker2 != BZip2Constants.STREAM_START_MARKER_2
+                            || blockLevel < 1
+                            || blockLevel > 9
+                        )
                         {
                             throw new IOException("Invalid BZip2 header");
                         }
@@ -75,7 +85,7 @@ namespace SharpCompress.Compressors.BZip2MT.InputStream
                     case InputStreamHeaderCheckType.NO_BZH:
                     {
                         blockLevel = ((int)this._bitInputStream.ReadBits(8) - '0');
-                        if (blockLevel < 1 ||  blockLevel > 9)
+                        if (blockLevel < 1 || blockLevel > 9)
                         {
                             throw new IOException("Invalid BZip2 header");
                         }
@@ -97,7 +107,8 @@ namespace SharpCompress.Compressors.BZip2MT.InputStream
                 }
 
                 this._buffer = new MemoryStream(this._blockSizeBytes + 100000);
-            } catch (IOException)
+            }
+            catch (IOException)
             {
                 // If the stream header was not valid, stop trying to read more data
                 this._bitInputStream = null;
@@ -175,6 +186,7 @@ namespace SharpCompress.Compressors.BZip2MT.InputStream
                 }
             }
         }
+
         public void Dispose()
         {
             this._bitInputStream?.Dispose();
