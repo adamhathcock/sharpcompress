@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using SharpCompress.Archives;
 using SharpCompress.Archives.Zip;
@@ -187,7 +188,7 @@ public class ProgressReportTests : TestBase
             if (!entry.IsDirectory)
             {
                 using var extractedStream = new MemoryStream();
-                await entry.WriteToAsync(extractedStream, progress);
+                await entry.WriteToAsync(extractedStream, CancellationToken.None, progress);
             }
         }
 
@@ -409,7 +410,7 @@ public class ProgressReportTests : TestBase
             if (!entry.IsDirectory)
             {
                 using var extractedStream = new MemoryStream();
-                await entry.WriteToAsync(extractedStream, progress);
+                await entry.WriteToAsync(extractedStream, CancellationToken.None, progress);
             }
         }
 
