@@ -3,6 +3,10 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using SharpCompress.Common;
+using SharpCompress.Common.Tar.Headers;
+using SharpCompress.Compressors;
+using SharpCompress.Compressors.BZip2;
+using SharpCompress.Compressors.LZMA;
 using SharpCompress.Factories;
 using SharpCompress.IO;
 using SharpCompress.Readers;
@@ -131,10 +135,10 @@ public static class ArchiveFactory
     {
         finfo.NotNull(nameof(finfo));
         using Stream stream = finfo.OpenRead();
-        return FindFactory<T>(stream);
+        return FindFactory<T>(stream, finfo.Name);
     }
 
-    private static T FindFactory<T>(Stream stream)
+    private static T FindFactory<T>(Stream stream, string? fileName = null)
         where T : IFactory
     {
         stream.NotNull(nameof(stream));
@@ -157,6 +161,16 @@ public static class ArchiveFactory
 
                 return factory;
             }
+        }
+
+        stream.Seek(startPosition, SeekOrigin.Begin);
+
+        // Check if this is a compressed tar file (tar.bz2, tar.lz, etc.)
+        // These formats are supported by ReaderFactory but not by ArchiveFactory
+        var compressedTarMessage = TryGetCompressedTarMessage(stream, fileName);
+        if (compressedTarMessage != null)
+        {
+            throw new InvalidOperationException(compressedTarMessage);
         }
 
         var extensions = string.Join(", ", factories.Select(item => item.Name));
@@ -248,4 +262,111 @@ public static class ArchiveFactory
     }
 
     public static IArchiveFactory AutoFactory { get; } = new AutoArchiveFactory();
+
+    /// <summary>
+    /// Checks if the stream is a compressed tar file (tar.bz2, tar.lz, etc.) that should use ReaderFactory instead.
+    /// Returns an error message if detected, null otherwise.
+    /// </summary>
+    private static string? TryGetCompressedTarMessage(Stream stream, string? fileName)
+    {
+        var startPosition = stream.Position;
+        try
+        {
+            // Check if it's a BZip2 file
+            if (BZip2Stream.IsBZip2(stream))
+            {
+                stream.Seek(startPosition, SeekOrigin.Begin);
+
+                // Try to decompress and check if it contains a tar archive
+                using var decompressed = new BZip2Stream(stream, CompressionMode.Decompress, true);
+                if (IsTarStream(decompressed))
+                {
+                    return "This appears to be a tar.bz2 archive. Compressed tar formats (tar.bz2, tar.lz, etc.) require random access to be decompressed, "
+                        + "which is not supported by the Archive API. Please use ReaderFactory.Open() instead for forward-only extraction, "
+                        + "or decompress the file first and then open the resulting tar file with ArchiveFactory.Open().";
+                }
+                return null;
+            }
+
+            stream.Seek(startPosition, SeekOrigin.Begin);
+
+            // Check if it's an LZip file
+            if (LZipStream.IsLZipFile(stream))
+            {
+                stream.Seek(startPosition, SeekOrigin.Begin);
+
+                // Try to decompress and check if it contains a tar archive
+                using var decompressed = new LZipStream(stream, CompressionMode.Decompress);
+                if (IsTarStream(decompressed))
+                {
+                    return "This appears to be a tar.lz archive. Compressed tar formats (tar.bz2, tar.lz, etc.) require random access to be decompressed, "
+                        + "which is not supported by the Archive API. Please use ReaderFactory.Open() instead for forward-only extraction, "
+                        + "or decompress the file first and then open the resulting tar file with ArchiveFactory.Open().";
+                }
+                return null;
+            }
+
+            // Check file extension as a fallback for other compressed tar formats
+            if (fileName != null)
+            {
+                var lowerFileName = fileName.ToLowerInvariant();
+                if (
+                    lowerFileName.EndsWith(".tar.bz2")
+                    || lowerFileName.EndsWith(".tbz")
+                    || lowerFileName.EndsWith(".tbz2")
+                    || lowerFileName.EndsWith(".tb2")
+                    || lowerFileName.EndsWith(".tz2")
+                    || lowerFileName.EndsWith(".tar.lz")
+                    || lowerFileName.EndsWith(".tar.xz")
+                    || lowerFileName.EndsWith(".txz")
+                    || lowerFileName.EndsWith(".tar.zst")
+                    || lowerFileName.EndsWith(".tar.zstd")
+                    || lowerFileName.EndsWith(".tzst")
+                    || lowerFileName.EndsWith(".tzstd")
+                    || lowerFileName.EndsWith(".tar.z")
+                    || lowerFileName.EndsWith(".tz")
+                    || lowerFileName.EndsWith(".taz")
+                )
+                {
+                    return $"The file '{fileName}' appears to be a compressed tar archive. Compressed tar formats require random access to be decompressed, "
+                        + "which is not supported by the Archive API. Please use ReaderFactory.Open() instead for forward-only extraction, "
+                        + "or decompress the file first and then open the resulting tar file with ArchiveFactory.Open().";
+                }
+            }
+
+            return null;
+        }
+        catch
+        {
+            // If we can't determine, just return null and let the normal error handling proceed
+            return null;
+        }
+        finally
+        {
+            try
+            {
+                stream.Seek(startPosition, SeekOrigin.Begin);
+            }
+            catch
+            {
+                // Ignore seek failures
+            }
+        }
+    }
+
+    /// <summary>
+    /// Checks if a stream contains a tar archive by trying to read a tar header.
+    /// </summary>
+    private static bool IsTarStream(Stream stream)
+    {
+        try
+        {
+            var tarHeader = new TarHeader(new ArchiveEncoding());
+            return tarHeader.Read(new BinaryReader(stream));
+        }
+        catch
+        {
+            return false;
+        }
+    }
 }
