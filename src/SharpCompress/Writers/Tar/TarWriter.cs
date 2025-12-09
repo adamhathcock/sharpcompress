@@ -15,11 +15,13 @@ namespace SharpCompress.Writers.Tar;
 public class TarWriter : AbstractWriter
 {
     private readonly bool finalizeArchiveOnClose;
+    private TarHeaderWriteFormat headerFormat;
 
     public TarWriter(Stream destination, TarWriterOptions options)
         : base(ArchiveType.Tar, options)
     {
         finalizeArchiveOnClose = options.FinalizeArchiveOnClose;
+        headerFormat = options.HeaderFormat;
 
         if (!destination.CanWrite)
         {
@@ -121,7 +123,7 @@ public class TarWriter : AbstractWriter
 
         var realSize = size ?? source.Length;
 
-        var header = new TarHeader(WriterOptions.ArchiveEncoding);
+        var header = new TarHeader(WriterOptions.ArchiveEncoding, headerFormat);
 
         header.LastModifiedTime = modificationTime ?? TarHeader.EPOCH;
         header.Name = NormalizeFilename(filename);
