@@ -57,19 +57,238 @@ public class TarFactory
         Stream stream,
         string? password = null,
         int bufferSize = ReaderOptions.DefaultBufferSize
-    ) => TarArchive.IsTarFile(stream);
+    )
+    {
+        if (!stream.CanSeek)
+        {
+            return TarArchive.IsTarFile(stream); // For non-seekable streams, just check if it's a tar file
+        }
+
+        var startPosition = stream.Position;
+
+        // First check if it's a regular tar file
+        if (TarArchive.IsTarFile(stream))
+        {
+            stream.Seek(startPosition, SeekOrigin.Begin); // Seek back for consistency
+            return true;
+        }
+
+        // Seek back after the tar file check
+        stream.Seek(startPosition, SeekOrigin.Begin);
+
+        if (compressionOptions == null)
+        {
+            return false;
+        }
+
+        try
+        {
+            // Try each compression option to see if it contains a tar file
+            foreach (var testOption in compressionOptions)
+            {
+                if (testOption.Type == CompressionType.None)
+                {
+                    continue; // Skip uncompressed
+                }
+
+                stream.Seek(startPosition, SeekOrigin.Begin);
+
+                try
+                {
+                    if (testOption.CanHandle(stream))
+                    {
+                        stream.Seek(startPosition, SeekOrigin.Begin);
+
+                        // Try to decompress and check if it contains a tar archive
+                        // For compression formats that don't support leaveOpen, we need to save/restore position
+                        var positionBeforeDecompress = stream.Position;
+                        Stream? decompressedStream = null;
+                        bool streamWasClosed = false;
+                        
+                        try
+                        {
+                            decompressedStream = testOption.Type switch
+                            {
+                                CompressionType.BZip2 => new BZip2Stream(stream, CompressionMode.Decompress, true),
+                                _ => testOption.CreateStream(stream) // For other types, may close the stream
+                            };
+
+                            if (TarArchive.IsTarFile(decompressedStream))
+                            {
+                                return true;
+                            }
+                        }
+                        catch (ObjectDisposedException)
+                        {
+                            streamWasClosed = true;
+                            throw; // Stream was closed, can't continue
+                        }
+                        finally
+                        {
+                            decompressedStream?.Dispose();
+                            
+                            if (!streamWasClosed && stream.CanSeek)
+                            {
+                                try
+                                {
+                                    stream.Seek(positionBeforeDecompress, SeekOrigin.Begin);
+                                }
+                                catch
+                                {
+                                    // If seek fails, the stream might have been closed
+                                }
+                            }
+                        }
+
+                        // Seek back to start after decompression attempt
+                        stream.Seek(startPosition, SeekOrigin.Begin);
+                    }
+                }
+                catch
+                {
+                    // If decompression fails, it's not this format - continue to next option
+                    try
+                    {
+                        stream.Seek(startPosition, SeekOrigin.Begin);
+                    }
+                    catch
+                    {
+                        // Ignore seek failures
+                    }
+                }
+            }
+
+            return false;
+        }
+        finally
+        {
+            try
+            {
+                stream.Seek(startPosition, SeekOrigin.Begin);
+            }
+            catch
+            {
+                // Ignore seek failures
+            }
+        }
+    }
 
     #endregion
 
     #region IArchiveFactory
 
     /// <inheritdoc/>
-    public IArchive Open(Stream stream, ReaderOptions? readerOptions = null) =>
-        TarArchive.Open(stream, readerOptions);
+    public IArchive Open(Stream stream, ReaderOptions? readerOptions = null)
+    {
+        readerOptions ??= new ReaderOptions();
+
+        // Try to detect and handle compressed tar formats
+        if (stream.CanSeek)
+        {
+            var startPosition = stream.Position;
+
+            // Try each compression option to see if we can decompress it
+            foreach (var testOption in compressionOptions)
+            {
+                if (testOption.Type == CompressionType.None)
+                {
+                    continue; // Skip uncompressed
+                }
+
+                stream.Seek(startPosition, SeekOrigin.Begin);
+
+                if (testOption.CanHandle(stream))
+                {
+                    stream.Seek(startPosition, SeekOrigin.Begin);
+
+                    // Decompress the entire stream into a seekable MemoryStream
+                    using var decompressedStream = testOption.CreateStream(stream);
+                    var memoryStream = new MemoryStream();
+                    decompressedStream.CopyTo(memoryStream);
+                    memoryStream.Position = 0;
+
+                    // Verify it's actually a tar file
+                    if (TarArchive.IsTarFile(memoryStream))
+                    {
+                        memoryStream.Position = 0;
+                        // Return a TarArchive from the decompressed memory stream
+                        // The TarArchive will own the MemoryStream and dispose it when disposed
+                        var options = new ReaderOptions
+                        {
+                            LeaveStreamOpen = false, // Ensure the MemoryStream is disposed with the archive
+                            ArchiveEncoding = readerOptions?.ArchiveEncoding ?? new ArchiveEncoding()
+                        };
+                        return TarArchive.Open(memoryStream, options);
+                    }
+
+                    memoryStream.Dispose();
+                }
+            }
+
+            stream.Seek(startPosition, SeekOrigin.Begin);
+        }
+
+        // Fall back to normal tar archive opening
+        return TarArchive.Open(stream, readerOptions);
+    }
 
     /// <inheritdoc/>
-    public IArchive Open(FileInfo fileInfo, ReaderOptions? readerOptions = null) =>
-        TarArchive.Open(fileInfo, readerOptions);
+    public IArchive Open(FileInfo fileInfo, ReaderOptions? readerOptions = null)
+    {
+        readerOptions ??= new ReaderOptions();
+
+        // Try to detect and handle compressed tar formats by file extension and content
+        using var fileStream = fileInfo.OpenRead();
+
+        // Try each compression option
+        foreach (var testOption in compressionOptions)
+        {
+            if (testOption.Type == CompressionType.None)
+            {
+                continue; // Skip uncompressed
+            }
+
+            // Check if file extension matches
+            var fileName = fileInfo.Name.ToLowerInvariant();
+            if (testOption.KnownExtensions.Any(ext => fileName.EndsWith(ext)))
+            {
+                fileStream.Position = 0;
+
+                // Verify it's the right compression format
+                if (testOption.CanHandle(fileStream))
+                {
+                    fileStream.Position = 0;
+
+                    // Decompress the entire file into a seekable MemoryStream
+                    using var decompressedStream = testOption.CreateStream(fileStream);
+                    var memoryStream = new MemoryStream();
+                    decompressedStream.CopyTo(memoryStream);
+                    memoryStream.Position = 0;
+
+                    // Verify it's actually a tar file
+                    if (TarArchive.IsTarFile(memoryStream))
+                    {
+                        memoryStream.Position = 0;
+                        // Return a TarArchive from the decompressed memory stream
+                        // The TarArchive will own the MemoryStream and dispose it when disposed
+                        var options = new ReaderOptions
+                        {
+                            LeaveStreamOpen = false, // Ensure the MemoryStream is disposed with the archive
+                            ArchiveEncoding = readerOptions?.ArchiveEncoding ?? new ArchiveEncoding()
+                        };
+                        return TarArchive.Open(memoryStream, options);
+                    }
+
+                    memoryStream.Dispose();
+                }
+            }
+        }
+
+        // fileStream will be closed by the using statement
+
+        // Fall back to normal tar archive opening
+        return TarArchive.Open(fileInfo, readerOptions);
+    }
 
     #endregion
 
