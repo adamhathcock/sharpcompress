@@ -281,8 +281,8 @@ public static class ArchiveFactory
                 using var decompressed = new BZip2Stream(stream, CompressionMode.Decompress, true);
                 if (IsTarStream(decompressed))
                 {
-                    return "This appears to be a tar.bz2 archive. Compressed tar formats (tar.bz2, tar.lz, etc.) require random access to be decompressed, "
-                        + "which is not supported by the Archive API. Please use ReaderFactory.Open() instead for forward-only extraction, "
+                    return "This appears to be a tar.bz2 archive. The Archive API requires seekable streams, but decompression streams are not seekable. "
+                        + "Please use ReaderFactory.Open() instead for forward-only extraction, "
                         + "or decompress the file first and then open the resulting tar file with ArchiveFactory.Open().";
                 }
                 return null;
@@ -299,8 +299,8 @@ public static class ArchiveFactory
                 using var decompressed = new LZipStream(stream, CompressionMode.Decompress);
                 if (IsTarStream(decompressed))
                 {
-                    return "This appears to be a tar.lz archive. Compressed tar formats (tar.bz2, tar.lz, etc.) require random access to be decompressed, "
-                        + "which is not supported by the Archive API. Please use ReaderFactory.Open() instead for forward-only extraction, "
+                    return "This appears to be a tar.lz archive. The Archive API requires seekable streams, but decompression streams are not seekable. "
+                        + "Please use ReaderFactory.Open() instead for forward-only extraction, "
                         + "or decompress the file first and then open the resulting tar file with ArchiveFactory.Open().";
                 }
                 return null;
@@ -328,8 +328,8 @@ public static class ArchiveFactory
                     || lowerFileName.EndsWith(".taz")
                 )
                 {
-                    return $"The file '{fileName}' appears to be a compressed tar archive. Compressed tar formats require random access to be decompressed, "
-                        + "which is not supported by the Archive API. Please use ReaderFactory.Open() instead for forward-only extraction, "
+                    return $"The file '{fileName}' appears to be a compressed tar archive. The Archive API requires seekable streams, but decompression streams are not seekable. "
+                        + "Please use ReaderFactory.Open() instead for forward-only extraction, "
                         + "or decompress the file first and then open the resulting tar file with ArchiveFactory.Open().";
                 }
             }
