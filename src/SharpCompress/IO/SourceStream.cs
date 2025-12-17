@@ -15,7 +15,7 @@ public class SourceStream : Stream, IStreamStack
 #endif
     int IStreamStack.DefaultBufferSize { get; set; }
 
-    Stream IStreamStack.BaseStream() => _streams[_stream];
+    Stream IStreamStack.BaseStream() => _streams[_streamIndex];
 
     int IStreamStack.BufferSize
     {
@@ -35,7 +35,7 @@ public class SourceStream : Stream, IStreamStack
     private readonly List<Stream> _streams;
     private readonly Func<int, FileInfo?>? _getFilePart;
     private readonly Func<int, Stream?>? _getStreamPart;
-    private int _stream;
+    private int _streamIndex;
 
     public SourceStream(FileInfo file, Func<int, FileInfo?> getPart, ReaderOptions options)
         : this(null, null, file, getPart, options) { }
@@ -59,7 +59,7 @@ public class SourceStream : Stream, IStreamStack
 
         if (!IsFileMode)
         {
-            _streams.Add(stream!);
+            _streams.Add(stream.NotNull("stream is null"));
             _getStreamPart = getStreamPart;
             _getFilePart = _ => null;
             if (stream is FileStream fileStream)
@@ -69,12 +69,12 @@ public class SourceStream : Stream, IStreamStack
         }
         else
         {
-            _files.Add(file!);
+            _files.Add(file.NotNull("file is null"));
             _streams.Add(_files[0].OpenRead());
             _getFilePart = getFilePart;
             _getStreamPart = _ => null;
         }
-        _stream = 0;
+        _streamIndex = 0;
         _prevSize = 0;
 
 #if DEBUG_STREAMS
@@ -93,10 +93,12 @@ public class SourceStream : Stream, IStreamStack
     public ReaderOptions ReaderOptions { get; }
     public bool IsFileMode { get; }
 
-    public IEnumerable<FileInfo> Files => _files;
-    public IEnumerable<Stream> Streams => _streams;
+    public IReadOnlyList<FileInfo> Files => _files;
+    public IReadOnlyList<Stream> Streams => _streams;
 
-    private Stream Current => _streams[_stream];
+    private Stream Current => _streams[_streamIndex];
+
+    public FileInfo CurrentFile => _files[_streamIndex];
 
     public bool LoadStream(int index) //ensure all parts to id are loaded
     {
@@ -107,7 +109,7 @@ public class SourceStream : Stream, IStreamStack
                 var f = _getFilePart.NotNull("GetFilePart is null")(_streams.Count);
                 if (f == null)
                 {
-                    _stream = _streams.Count - 1;
+                    _streamIndex = _streams.Count - 1;
                     return false;
                 }
                 //throw new Exception($"File part {idx} not available.");
@@ -119,7 +121,7 @@ public class SourceStream : Stream, IStreamStack
                 var s = _getStreamPart.NotNull("GetStreamPart is null")(_streams.Count);
                 if (s == null)
                 {
-                    _stream = _streams.Count - 1;
+                    _streamIndex = _streams.Count - 1;
                     return false;
                 }
                 //throw new Exception($"Stream part {idx} not available.");
@@ -137,10 +139,10 @@ public class SourceStream : Stream, IStreamStack
     {
         if (LoadStream(idx))
         {
-            _stream = idx;
+            _streamIndex = idx;
         }
 
-        return _stream == idx;
+        return _streamIndex == idx;
     }
 
     public override bool CanRead => true;
@@ -184,7 +186,7 @@ public class SourceStream : Stream, IStreamStack
                 var length = Current.Length;
 
                 // Load next file if present
-                if (!SetStream(_stream + 1))
+                if (!SetStream(_streamIndex + 1))
                 {
                     break;
                 }
@@ -223,7 +225,7 @@ public class SourceStream : Stream, IStreamStack
             while (_prevSize + Current.Length < pos)
             {
                 _prevSize += Current.Length;
-                SetStream(_stream + 1);
+                SetStream(_streamIndex + 1);
             }
         }
 
@@ -273,7 +275,7 @@ public class SourceStream : Stream, IStreamStack
                 var length = Current.Length;
 
                 // Load next file if present
-                if (!SetStream(_stream + 1))
+                if (!SetStream(_streamIndex + 1))
                 {
                     break;
                 }
@@ -322,7 +324,7 @@ public class SourceStream : Stream, IStreamStack
                 var length = Current.Length;
 
                 // Load next file if present
-                if (!SetStream(_stream + 1))
+                if (!SetStream(_streamIndex + 1))
                 {
                     break;
                 }

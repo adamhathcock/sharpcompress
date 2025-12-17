@@ -23,5 +23,7 @@ public class ZipArchiveEntry : ZipEntry, IArchiveEntry
 
     public bool IsComplete => true;
 
+    public override bool SupportsMultiThreading => Parts.Single().SupportsMultiThreading;
+
     #endregion
 }

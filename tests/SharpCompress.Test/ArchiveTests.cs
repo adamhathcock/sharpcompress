@@ -134,6 +134,7 @@ public class ArchiveTests : ReaderTests
                 {
                     foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
                     {
+                        Assert.False(entry.SupportsMultiThreading);
                         entry.WriteToDirectory(
                             SCRATCH_FILES_PATH,
                             new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
@@ -266,6 +267,31 @@ public class ArchiveTests : ReaderTests
         VerifyFiles();
     }
 
+    protected async Task ArchiveFileRead_Multithreaded(
+        IArchiveFactory archiveFactory,
+        string testArchive,
+        ReaderOptions? readerOptions = null
+    )
+    {
+        testArchive = Path.Combine(TEST_ARCHIVES_PATH, testArchive);
+        var tasks = new List<Task>();
+        using (var archive = archiveFactory.Open(new FileInfo(testArchive), readerOptions))
+        {
+            Assert.True(archive.SupportsMultiThreading);
+            foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
+            {
+                Assert.True(entry.SupportsMultiThreading);
+                var t = entry.WriteToDirectoryAsync(
+                    SCRATCH_FILES_PATH,
+                    new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
+                );
+                tasks.Add(t);
+            }
+        }
+        await Task.WhenAll(tasks);
+        VerifyFiles();
+    }
+
     protected void ArchiveFileRead(
         IArchiveFactory archiveFactory,
         string testArchive,
@@ -288,6 +314,11 @@ public class ArchiveTests : ReaderTests
 
     protected void ArchiveFileRead(string testArchive, ReaderOptions? readerOptions = null) =>
         ArchiveFileRead(ArchiveFactory.AutoFactory, testArchive, readerOptions);
+
+    protected Task ArchiveFileRead_Multithreaded(
+        string testArchive,
+        ReaderOptions? readerOptions = null
+    ) => ArchiveFileRead_Multithreaded(ArchiveFactory.AutoFactory, testArchive, readerOptions);
 
     protected void ArchiveFileSkip(
         string testArchive,
