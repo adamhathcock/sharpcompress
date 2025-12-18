@@ -5,12 +5,12 @@ namespace SharpCompress.Compressors.ZStandard.Unsafe;
  ****************************/
 public unsafe struct ZSTD_inBuffer_s
 {
-    /// <summary>start of input buffer</summary>
+    /**< start of input buffer */
     public void* src;
 
-    /// <summary>size of input buffer</summary>
+    /**< size of input buffer */
     public nuint size;
 
-    /// <summary>position where reading stopped. Will be updated. Necessarily 0 to size inclusive.</summary>
+    /**< position where reading stopped. Will be updated. Necessarily 0 <= pos <= size */
     public nuint pos;
 }

@@ -2,25 +2,25 @@ namespace SharpCompress.Compressors.ZStandard.Unsafe;
 
 public struct ZSTD_compressionParameters
 {
-    /// <summary>largest match distance : larger == more compression, more memory needed during decompression</summary>
+    /**< largest match distance : larger == more compression, more memory needed during decompression */
     public uint windowLog;
 
-    /// <summary>fully searched segment : larger == more compression, slower, more memory (useless for fast)</summary>
+    /**< fully searched segment : larger == more compression, slower, more memory (useless for fast) */
     public uint chainLog;
 
-    /// <summary>dispatch table : larger == faster, more memory</summary>
+    /**< dispatch table : larger == faster, more memory */
     public uint hashLog;
 
-    /// <summary>nb of searches : larger == more compression, slower</summary>
+    /**< nb of searches : larger == more compression, slower */
     public uint searchLog;
 
-    /// <summary>match length searched : larger == faster decompression, sometimes less compression</summary>
+    /**< match length searched : larger == faster decompression, sometimes less compression */
     public uint minMatch;
 
-    /// <summary>acceptable match size for optimal parser (only) : larger == more compression, slower</summary>
+    /**< acceptable match size for optimal parser (only) : larger == more compression, slower */
     public uint targetLength;
 
-    /// <summary>see ZSTD_strategy definition above</summary>
+    /**< see ZSTD_strategy definition above */
     public ZSTD_strategy strategy;
 
     public ZSTD_compressionParameters(

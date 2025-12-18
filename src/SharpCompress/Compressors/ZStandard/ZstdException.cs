@@ -1,4 +1,4 @@
-using SharpCompress.Common;
+﻿using SharpCompress.Common;
 using SharpCompress.Compressors.ZStandard.Unsafe;
 
 namespace SharpCompress.Compressors.ZStandard;

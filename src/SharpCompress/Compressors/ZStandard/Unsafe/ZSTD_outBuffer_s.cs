@@ -2,12 +2,12 @@ namespace SharpCompress.Compressors.ZStandard.Unsafe;
 
 public unsafe struct ZSTD_outBuffer_s
 {
-    /// <summary>start of output buffer</summary>
+    /**< start of output buffer */
     public void* dst;
 
-    /// <summary>size of output buffer</summary>
+    /**< size of output buffer */
     public nuint size;
 
-    /// <summary>position where writing stopped. Will be updated. Necessarily 0 to size inclusive.</summary>
+    /**< position where writing stopped. Will be updated. Necessarily 0 <= pos <= size */
     public nuint pos;
 }

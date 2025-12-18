@@ -2,12 +2,12 @@ namespace SharpCompress.Compressors.ZStandard.Unsafe;
 
 public struct ZSTD_frameParameters
 {
-    /// <summary>1: content size will be in frame header (when known)</summary>
+    /**< 1: content size will be in frame header (when known) */
     public int contentSizeFlag;
 
-    /// <summary>1: generate a 32-bits checksum using XXH64 algorithm at end of frame, for error detection</summary>
+    /**< 1: generate a 32-bits checksum using XXH64 algorithm at end of frame, for error detection */
     public int checksumFlag;
 
-    /// <summary>1: no dictID will be saved into frame header (dictID is only useful for dictionary compression)</summary>
+    /**< 1: no dictID will be saved into frame header (dictID is only useful for dictionary compression) */
     public int noDictIDFlag;
 }

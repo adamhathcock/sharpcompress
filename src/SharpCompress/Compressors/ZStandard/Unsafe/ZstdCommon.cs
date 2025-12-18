@@ -45,17 +45,4 @@ public static unsafe partial class Methods
     {
         return ERR_getErrorString(code);
     }
-
-    /*-********************************************************
-     *  Helper functions for ZDICT
-     **********************************************************/
-    public static bool ZDICT_isError(nuint errorCode)
-    {
-        return ERR_isError(errorCode);
-    }
-
-    public static string ZDICT_getErrorName(nuint errorCode)
-    {
-        return ERR_getErrorName(errorCode);
-    }
 }
