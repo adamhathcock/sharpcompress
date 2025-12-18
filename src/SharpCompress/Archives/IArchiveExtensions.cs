@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Threading;
 using SharpCompress.Common;
 using SharpCompress.Readers;
@@ -22,17 +21,10 @@ public static class IArchiveExtensions
         using var reader = archive.ExtractAllEntries();
         reader.WriteAllToDirectory(destinationDirectory, options);
     }
-
-    /// <summary>
-    /// Extracts the archive to the destination directory. Directories will be created as needed.
-    /// </summary>
-    /// <param name="archive">The archive to extract.</param>
-    /// <param name="destination">The folder to extract into.</param>
-    /// <param name="progressReport">Optional progress report callback.</param>
-    /// <param name="cancellationToken">Optional cancellation token.</param>
     public static void ExtractToDirectory(
         this IArchive archive,
         string destination,
+        ExtractionOptions? options = null,
         Action<double>? progressReport = null,
         CancellationToken cancellationToken = default
     )
@@ -74,8 +66,7 @@ public static class IArchiveExtensions
             }
 
             // Write file
-            using var fs = File.OpenWrite(path);
-            entry.WriteTo(fs);
+            entry.WriteToFile(path, options);
 
             // Update progress
             bytesRead += entry.Size;
