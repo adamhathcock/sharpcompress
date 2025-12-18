@@ -21,6 +21,7 @@ public static class IArchiveExtensions
         using var reader = archive.ExtractAllEntries();
         reader.WriteAllToDirectory(destinationDirectory, options);
     }
+
     public static void ExtractToDirectory(
         this IArchive archive,
         string destination,

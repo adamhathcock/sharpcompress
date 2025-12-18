@@ -15,19 +15,15 @@ public class ExtractAll : TestBase
     [InlineData("Rar5.rar")]
     [InlineData("Rar.rar")]
     [InlineData("Rar.solid.rar")]
-    [InlineData(  "7Zip.solid.7z")]
-    [InlineData(  "7Zip.nonsolid.7z")]
-    [InlineData(  "7Zip.LZMA.7z")]
+    [InlineData("7Zip.solid.7z")]
+    [InlineData("7Zip.nonsolid.7z")]
+    [InlineData("7Zip.LZMA.7z")]
     public async Task ExtractAllEntries(string archivePath)
     {
-
         var testArchive = Path.Combine(TEST_ARCHIVES_PATH, archivePath);
-        var options = new ExtractionOptions() {
-            ExtractFullPath = true,
-            Overwrite = true
-        };
+        var options = new ExtractionOptions() { ExtractFullPath = true, Overwrite = true };
 
-        using var archive = ArchiveFactory.Open( testArchive );
+        using var archive = ArchiveFactory.Open(testArchive);
 
         if (archive.IsSolid && archive.Type != ArchiveType.SevenZip)
         {
