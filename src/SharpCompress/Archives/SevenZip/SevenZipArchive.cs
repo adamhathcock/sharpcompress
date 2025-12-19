@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using SharpCompress.Common;
 using SharpCompress.Common.SevenZip;
 using SharpCompress.Compressors.LZMA.Utilites;
@@ -213,9 +215,7 @@ public class SevenZipArchive : AbstractArchive<SevenZipArchiveEntry, SevenZipVol
     private sealed class SevenZipReader : AbstractReader<SevenZipEntry, SevenZipVolume>
     {
         private readonly SevenZipArchive _archive;
-        private CFolder? _currentFolder;
-        private Stream? _currentStream;
-        private CFileItem? _currentItem;
+        private SevenZipEntry? _currentEntry;
 
         internal SevenZipReader(ReaderOptions readerOptions, SevenZipArchive archive)
             : base(readerOptions, ArchiveType.SevenZip) => this._archive = archive;
@@ -228,40 +228,129 @@ public class SevenZipArchive : AbstractArchive<SevenZipArchiveEntry, SevenZipVol
             stream.Position = 0;
             foreach (var dir in entries.Where(x => x.IsDirectory))
             {
+                _currentEntry = dir;
                 yield return dir;
             }
-            foreach (
-                var group in entries.Where(x => !x.IsDirectory).GroupBy(x => x.FilePart.Folder)
-            )
+            // For non-directory entries, yield them without creating shared streams
+            // Each call to GetEntryStream() will create a fresh decompression stream
+            // to avoid state corruption issues with async operations
+            foreach (var entry in entries.Where(x => !x.IsDirectory))
             {
-                _currentFolder = group.Key;
-                if (group.Key is null)
-                {
-                    _currentStream = Stream.Null;
-                }
-                else
-                {
-                    _currentStream = _archive._database?.GetFolderStream(
-                        stream,
-                        _currentFolder,
-                        new PasswordProvider(Options.Password)
-                    );
-                }
-                foreach (var entry in group)
-                {
-                    _currentItem = entry.FilePart.Header;
-                    yield return entry;
-                }
+                _currentEntry = entry;
+                yield return entry;
             }
         }
 
-        protected override EntryStream GetEntryStream() =>
-            CreateEntryStream(
-                new ReadOnlySubStream(
-                    _currentStream.NotNull("currentStream is not null"),
-                    _currentItem?.Size ?? 0
-                )
-            );
+        protected override EntryStream GetEntryStream()
+        {
+            // Create a fresh decompression stream for each file to avoid
+            // state corruption when multiple files share the same LZMA stream
+            // in async operations. This is less efficient but ensures correctness.
+            //
+            // Wrap in SyncOnlyStream to force all async operations to use
+            // synchronous equivalents, avoiding bugs in LZMA's async implementation
+            var entry = _currentEntry.NotNull("currentEntry is not null");
+            if (entry.IsDirectory)
+            {
+                return CreateEntryStream(Stream.Null);
+            }
+            return CreateEntryStream(new SyncOnlyStream(entry.FilePart.GetCompressedStream()));
+        }
+    }
+
+    /// <summary>
+    /// A stream wrapper that forces all async operations to use synchronous equivalents.
+    /// This is used for 7Zip LZMA streams to avoid state corruption bugs in the async implementation.
+    /// </summary>
+    private sealed class SyncOnlyStream : Stream
+    {
+        private readonly Stream _baseStream;
+
+        public SyncOnlyStream(Stream baseStream) => _baseStream = baseStream;
+
+        public override bool CanRead => _baseStream.CanRead;
+        public override bool CanSeek => _baseStream.CanSeek;
+        public override bool CanWrite => _baseStream.CanWrite;
+        public override long Length => _baseStream.Length;
+        public override long Position
+        {
+            get => _baseStream.Position;
+            set => _baseStream.Position = value;
+        }
+
+        public override void Flush() => _baseStream.Flush();
+
+        public override int Read(byte[] buffer, int offset, int count) =>
+            _baseStream.Read(buffer, offset, count);
+
+        public override long Seek(long offset, SeekOrigin origin) =>
+            _baseStream.Seek(offset, origin);
+
+        public override void SetLength(long value) => _baseStream.SetLength(value);
+
+        public override void Write(byte[] buffer, int offset, int count) =>
+            _baseStream.Write(buffer, offset, count);
+
+        // Force async operations to use sync equivalents
+        public override Task<int> ReadAsync(
+            byte[] buffer,
+            int offset,
+            int count,
+            CancellationToken cancellationToken
+        )
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            return Task.FromResult(_baseStream.Read(buffer, offset, count));
+        }
+
+        public override Task WriteAsync(
+            byte[] buffer,
+            int offset,
+            int count,
+            CancellationToken cancellationToken
+        )
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            _baseStream.Write(buffer, offset, count);
+            return Task.CompletedTask;
+        }
+
+        public override Task FlushAsync(CancellationToken cancellationToken)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            _baseStream.Flush();
+            return Task.CompletedTask;
+        }
+
+#if !NETFRAMEWORK && !NETSTANDARD2_0
+        public override ValueTask<int> ReadAsync(
+            Memory<byte> buffer,
+            CancellationToken cancellationToken = default
+        )
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            return new ValueTask<int>(_baseStream.Read(buffer.Span));
+        }
+
+        public override ValueTask WriteAsync(
+            ReadOnlyMemory<byte> buffer,
+            CancellationToken cancellationToken = default
+        )
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            _baseStream.Write(buffer.Span);
+            return ValueTask.CompletedTask;
+        }
+#endif
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                _baseStream.Dispose();
+            }
+            base.Dispose(disposing);
+        }
     }
 
     private class PasswordProvider : IPasswordProvider
