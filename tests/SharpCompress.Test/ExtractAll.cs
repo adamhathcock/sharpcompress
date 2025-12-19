@@ -8,7 +8,7 @@ using Xunit;
 
 namespace SharpCompress.Test;
 
-public class ExtractAllTests: TestBase
+public class ExtractAllTests : TestBase
 {
     [Theory]
     [InlineData("Zip.deflate.zip")]

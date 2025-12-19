@@ -466,8 +466,9 @@ public class LzmaStream : Stream, IStreamStack
             if (control >= 0xC0)
             {
                 _needProps = false;
-                await this.ReadExactlyAsync(controlBuffer, 0, 1, cancellationToken).ConfigureAwait(false);
-                Properties[0] =  controlBuffer[0];
+                await this.ReadExactlyAsync(controlBuffer, 0, 1, cancellationToken)
+                    .ConfigureAwait(false);
+                Properties[0] = controlBuffer[0];
                 _inputPosition++;
 
                 _decoder = new Decoder();

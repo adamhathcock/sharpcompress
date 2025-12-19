@@ -44,19 +44,20 @@ internal static class StreamExtensions
         }
     }
 
-    internal static async Task ReadExactlyAsync(this Stream stream,
-                                                byte[] buffer,
-                                                int offset,
-                                                int count,
-                                                CancellationToken cancellationToken
+    internal static async Task ReadExactlyAsync(
+        this Stream stream,
+        byte[] buffer,
+        int offset,
+        int count,
+        CancellationToken cancellationToken
     )
     {
         var totalRead = 0;
         while (totalRead < count)
         {
             var read = await stream
-                             .ReadAsync(buffer, offset + totalRead, count - totalRead, cancellationToken)
-                             .ConfigureAwait(false);
+                .ReadAsync(buffer, offset + totalRead, count - totalRead, cancellationToken)
+                .ConfigureAwait(false);
             if (read == 0)
             {
                 throw new EndOfStreamException();
