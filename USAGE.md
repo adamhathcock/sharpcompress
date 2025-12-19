@@ -87,8 +87,8 @@ memoryStream.Position = 0;
 ### Extract all files from a rar file to a directory using RarArchive
 
 Note: Extracting a solid rar or 7z file needs to be done in sequential order to get acceptable decompression speed.
-It is explicitly recommended to use `ExtractAllEntries` when extracting an entire `IArchive` instead of iterating over all its `Entries`.
-Alternatively, use `IArchive.WriteToDirectory`.
+`ExtractAllEntries` provides a universal interface that works for all archive types (SOLID and non-SOLID) and is recommended when extracting an entire `IArchive` with progress reporting or when you don't know the archive type in advance.
+Alternatively, use `IArchive.WriteToDirectory` for simple extraction without progress reporting.
 
 ```C#
 using (var archive = RarArchive.Open("Test.rar"))
@@ -112,6 +112,38 @@ using (var archive = RarArchive.Open("Test.rar"))
     foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
     {
         Console.WriteLine($"{entry.Key}: {entry.Size} bytes");
+    }
+}
+```
+
+### Extract any archive type with progress reporting
+
+`ExtractAllEntries` works for all archive types, making it ideal when you don't know the archive type in advance:
+
+```C#
+using (var archive = ArchiveFactory.Open("archive.rar")) // or .zip, .7z, .tar, etc.
+{
+    // Calculate total size for progress reporting
+    double totalSize = archive.Entries.Where(e => !e.IsDirectory).Sum(e => e.Size);
+    long completed = 0;
+
+    using (var reader = archive.ExtractAllEntries())
+    {
+        while (reader.MoveToNextEntry())
+        {
+            if (!reader.Entry.IsDirectory)
+            {
+                reader.WriteEntryToDirectory(@"D:\output", new ExtractionOptions()
+                {
+                    ExtractFullPath = true,
+                    Overwrite = true
+                });
+
+                completed += reader.Entry.Size;
+                double progress = completed / totalSize;
+                Console.WriteLine($"Progress: {progress:P}");
+            }
+        }
     }
 }
 ```
