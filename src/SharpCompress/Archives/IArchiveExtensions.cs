@@ -45,13 +45,13 @@ public static class IArchiveExtensions
     /// <param name="archive">The archive to extract.</param>
     /// <param name="destinationDirectory">The folder to extract into.</param>
     /// <param name="options">Extraction options.</param>
-    /// <param name="progressReport">Optional progress report callback.</param>
+    /// <param name="progress">Optional progress reporter for tracking extraction progress.</param>
     /// <param name="cancellationToken">Optional cancellation token.</param>
     public static void WriteToDirectory(
         this IArchive archive,
         string destinationDirectory,
         ExtractionOptions? options,
-        Action<double>? progressReport,
+        IProgress<ProgressReport>? progress,
         CancellationToken cancellationToken = default
     )
     {
@@ -88,7 +88,13 @@ public static class IArchiveExtensions
 
             // Update progress
             bytesRead += entry.Size;
-            progressReport?.Invoke(bytesRead / (double)totalBytes);
+            progress?.Report(
+                new ProgressReport(
+                    entry.Key ?? string.Empty,
+                    bytesRead,
+                    totalBytes
+                )
+            );
         }
     }
 
@@ -98,13 +104,13 @@ public static class IArchiveExtensions
     /// <param name="archive">The archive to extract.</param>
     /// <param name="destinationDirectory">The folder to extract into.</param>
     /// <param name="options">Extraction options.</param>
-    /// <param name="progressReport">Optional progress report callback.</param>
+    /// <param name="progress">Optional progress reporter for tracking extraction progress.</param>
     /// <param name="cancellationToken">Optional cancellation token.</param>
     public static async Task WriteToDirectoryAsync(
         this IArchive archive,
         string destinationDirectory,
         ExtractionOptions? options = null,
-        Action<double>? progressReport = null,
+        IProgress<ProgressReport>? progress = null,
         CancellationToken cancellationToken = default
     )
     {
@@ -143,7 +149,13 @@ public static class IArchiveExtensions
 
             // Update progress
             bytesRead += entry.Size;
-            progressReport?.Invoke(bytesRead / (double)totalBytes);
+            progress?.Report(
+                new ProgressReport(
+                    entry.Key ?? string.Empty,
+                    bytesRead,
+                    totalBytes
+                )
+            );
         }
     }
 }
