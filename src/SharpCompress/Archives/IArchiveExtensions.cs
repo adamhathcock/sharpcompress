@@ -40,19 +40,17 @@ public static class IArchiveExtensions
     }
 
     /// <summary>
-    /// Extract to specific directory with progress reporting and cancellation support
+    /// Extract to specific directory with progress reporting
     /// </summary>
     /// <param name="archive">The archive to extract.</param>
     /// <param name="destinationDirectory">The folder to extract into.</param>
     /// <param name="options">Extraction options.</param>
     /// <param name="progress">Optional progress reporter for tracking extraction progress.</param>
-    /// <param name="cancellationToken">Optional cancellation token.</param>
     public static void WriteToDirectory(
         this IArchive archive,
         string destinationDirectory,
         ExtractionOptions? options,
-        IProgress<ProgressReport>? progress,
-        CancellationToken cancellationToken = default
+        IProgress<ProgressReport>? progress
     )
     {
         // Prepare for progress reporting
@@ -65,8 +63,6 @@ public static class IArchiveExtensions
         // Extract
         foreach (var entry in archive.Entries)
         {
-            cancellationToken.ThrowIfCancellationRequested();
-
             if (entry.IsDirectory)
             {
                 var dirPath = Path.Combine(
