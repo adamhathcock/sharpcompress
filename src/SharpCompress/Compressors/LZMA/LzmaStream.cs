@@ -448,9 +448,7 @@ public class LzmaStream : Stream, IStreamStack
 
     private async Task DecodeChunkHeaderAsync(CancellationToken cancellationToken = default)
     {
-        var controlBuffer = new byte[1];
-        await ReadFullyAsync(controlBuffer, 0, 1, cancellationToken).ConfigureAwait(false);
-        var control = controlBuffer[0];
+        var control = _inputStream.ReadByte();
         _inputPosition++;
 
         if (control == 0x00)
@@ -487,8 +485,7 @@ public class LzmaStream : Stream, IStreamStack
             if (control >= 0xC0)
             {
                 _needProps = false;
-                await ReadFullyAsync(controlBuffer, 0, 1, cancellationToken).ConfigureAwait(false);
-                Properties[0] = controlBuffer[0];
+                Properties[0] = (byte)_inputStream.ReadByte();
                 _inputPosition++;
 
                 _decoder = new Decoder();
