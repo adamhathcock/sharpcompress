@@ -74,11 +74,11 @@ public static class IArchiveExtensions
                     entry.Key.NotNull("Entry Key is null")
                 );
                 if (
-                    Path.GetDirectoryName(dirPath + "/") is { } emptyDirectory
+                    Path.GetDirectoryName(dirPath + "/") is { } parentDirectory
                     && seenDirectories.Add(dirPath)
                 )
                 {
-                    Directory.CreateDirectory(emptyDirectory);
+                    Directory.CreateDirectory(parentDirectory);
                 }
                 continue;
             }
@@ -127,11 +127,11 @@ public static class IArchiveExtensions
                     entry.Key.NotNull("Entry Key is null")
                 );
                 if (
-                    Path.GetDirectoryName(dirPath + "/") is { } emptyDirectory
+                    Path.GetDirectoryName(dirPath + "/") is { } parentDirectory
                     && seenDirectories.Add(dirPath)
                 )
                 {
-                    Directory.CreateDirectory(emptyDirectory);
+                    Directory.CreateDirectory(parentDirectory);
                 }
                 continue;
             }
