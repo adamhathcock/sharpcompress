@@ -88,13 +88,7 @@ public static class IArchiveExtensions
 
             // Update progress
             bytesRead += entry.Size;
-            progress?.Report(
-                new ProgressReport(
-                    entry.Key ?? string.Empty,
-                    bytesRead,
-                    totalBytes
-                )
-            );
+            progress?.Report(new ProgressReport(entry.Key ?? string.Empty, bytesRead, totalBytes));
         }
     }
 
@@ -149,13 +143,7 @@ public static class IArchiveExtensions
 
             // Update progress
             bytesRead += entry.Size;
-            progress?.Report(
-                new ProgressReport(
-                    entry.Key ?? string.Empty,
-                    bytesRead,
-                    totalBytes
-                )
-            );
+            progress?.Report(new ProgressReport(entry.Key ?? string.Empty, bytesRead, totalBytes));
         }
     }
 }
