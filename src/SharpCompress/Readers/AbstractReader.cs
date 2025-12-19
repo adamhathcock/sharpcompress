@@ -5,24 +5,20 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using SharpCompress.Common;
+using SharpCompress.IO;
 
 namespace SharpCompress.Readers;
 
 /// <summary>
 /// A generic push reader that reads unseekable comrpessed streams.
 /// </summary>
-public abstract class AbstractReader<TEntry, TVolume> : IReader, IReaderExtractionListener
+public abstract class AbstractReader<TEntry, TVolume> : IReader
     where TEntry : Entry
     where TVolume : Volume
 {
     private bool _completed;
     private IEnumerator<TEntry>? _entriesForCurrentReadStream;
     private bool _wroteCurrentEntry;
-
-    public event EventHandler<ReaderExtractionEventArgs<IEntry>>? EntryExtractionProgress;
-
-    public event EventHandler<CompressedBytesReadEventArgs>? CompressedBytesRead;
-    public event EventHandler<FilePartExtractionBeginEventArgs>? FilePartExtractionBegin;
 
     internal AbstractReader(ReaderOptions options, ArchiveType archiveType)
     {
@@ -264,23 +260,56 @@ public abstract class AbstractReader<TEntry, TVolume> : IReader, IReaderExtracti
 
     internal void Write(Stream writeStream)
     {
-        var streamListener = this as IReaderExtractionListener;
         using Stream s = OpenEntryStream();
-        s.TransferTo(writeStream, Entry, streamListener);
+        var sourceStream = WrapWithProgress(s, Entry);
+        sourceStream.CopyTo(writeStream, 81920);
     }
 
     internal async Task WriteAsync(Stream writeStream, CancellationToken cancellationToken)
     {
-        var streamListener = this as IReaderExtractionListener;
 #if NETFRAMEWORK || NETSTANDARD2_0
         using Stream s = OpenEntryStream();
-        await s.TransferToAsync(writeStream, Entry, streamListener, cancellationToken)
-            .ConfigureAwait(false);
+        var sourceStream = WrapWithProgress(s, Entry);
+        await sourceStream.CopyToAsync(writeStream, 81920, cancellationToken).ConfigureAwait(false);
 #else
         await using Stream s = OpenEntryStream();
-        await s.TransferToAsync(writeStream, Entry, streamListener, cancellationToken)
-            .ConfigureAwait(false);
+        var sourceStream = WrapWithProgress(s, Entry);
+        await sourceStream.CopyToAsync(writeStream, 81920, cancellationToken).ConfigureAwait(false);
 #endif
+    }
+
+    private Stream WrapWithProgress(Stream source, Entry entry)
+    {
+        var progress = Options.Progress;
+        if (progress is null)
+        {
+            return source;
+        }
+
+        var entryPath = entry.Key ?? string.Empty;
+        long? totalBytes = GetEntrySizeSafe(entry);
+        return new ProgressReportingStream(
+            source,
+            progress,
+            entryPath,
+            totalBytes,
+            leaveOpen: true
+        );
+    }
+
+    private static long? GetEntrySizeSafe(Entry entry)
+    {
+        try
+        {
+            var size = entry.Size;
+            // Return the actual size (including 0 for empty entries)
+            // Negative values indicate unknown size
+            return size >= 0 ? size : null;
+        }
+        catch (NotImplementedException)
+        {
+            return null;
+        }
     }
 
     public EntryStream OpenEntryStream()
@@ -325,43 +354,4 @@ public abstract class AbstractReader<TEntry, TVolume> : IReader, IReaderExtracti
     #endregion
 
     IEntry IReader.Entry => Entry;
-
-    void IExtractionListener.FireCompressedBytesRead(
-        long currentPartCompressedBytes,
-        long compressedReadBytes
-    ) =>
-        CompressedBytesRead?.Invoke(
-            this,
-            new CompressedBytesReadEventArgs(
-                currentFilePartCompressedBytesRead: currentPartCompressedBytes,
-                compressedBytesRead: compressedReadBytes
-            )
-        );
-
-    void IExtractionListener.FireFilePartExtractionBegin(
-        string name,
-        long size,
-        long compressedSize
-    ) =>
-        FilePartExtractionBegin?.Invoke(
-            this,
-            new FilePartExtractionBeginEventArgs(
-                compressedSize: compressedSize,
-                size: size,
-                name: name
-            )
-        );
-
-    void IReaderExtractionListener.FireEntryExtractionProgress(
-        Entry entry,
-        long bytesTransferred,
-        int iterations
-    ) =>
-        EntryExtractionProgress?.Invoke(
-            this,
-            new ReaderExtractionEventArgs<IEntry>(
-                entry,
-                new ReaderProgress(entry, bytesTransferred, iterations)
-            )
-        );
 }

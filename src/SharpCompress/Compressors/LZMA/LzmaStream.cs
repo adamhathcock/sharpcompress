@@ -425,11 +425,30 @@ public class LzmaStream : Stream, IStreamStack
         }
     }
 
+    private async Task ReadFullyAsync(
+        byte[] buffer,
+        int offset,
+        int count,
+        CancellationToken cancellationToken
+    )
+    {
+        var totalRead = 0;
+        while (totalRead < count)
+        {
+            var read = await _inputStream
+                .ReadAsync(buffer, offset + totalRead, count - totalRead, cancellationToken)
+                .ConfigureAwait(false);
+            if (read == 0)
+            {
+                throw new EndOfStreamException();
+            }
+            totalRead += read;
+        }
+    }
+
     private async Task DecodeChunkHeaderAsync(CancellationToken cancellationToken = default)
     {
-        var controlBuffer = new byte[1];
-        await _inputStream.ReadAsync(controlBuffer, 0, 1, cancellationToken).ConfigureAwait(false);
-        var control = controlBuffer[0];
+        var control = _inputStream.ReadByte();
         _inputPosition++;
 
         if (control == 0x00)
@@ -455,21 +474,18 @@ public class LzmaStream : Stream, IStreamStack
 
             _availableBytes = (control & 0x1F) << 16;
             var buffer = new byte[2];
-            await _inputStream.ReadAsync(buffer, 0, 2, cancellationToken).ConfigureAwait(false);
+            await ReadFullyAsync(buffer, 0, 2, cancellationToken).ConfigureAwait(false);
             _availableBytes += (buffer[0] << 8) + buffer[1] + 1;
             _inputPosition += 2;
 
-            await _inputStream.ReadAsync(buffer, 0, 2, cancellationToken).ConfigureAwait(false);
+            await ReadFullyAsync(buffer, 0, 2, cancellationToken).ConfigureAwait(false);
             _rangeDecoderLimit = (buffer[0] << 8) + buffer[1] + 1;
             _inputPosition += 2;
 
             if (control >= 0xC0)
             {
                 _needProps = false;
-                await _inputStream
-                    .ReadAsync(controlBuffer, 0, 1, cancellationToken)
-                    .ConfigureAwait(false);
-                Properties[0] = controlBuffer[0];
+                Properties[0] = (byte)_inputStream.ReadByte();
                 _inputPosition++;
 
                 _decoder = new Decoder();
@@ -495,7 +511,7 @@ public class LzmaStream : Stream, IStreamStack
         {
             _uncompressedChunk = true;
             var buffer = new byte[2];
-            await _inputStream.ReadAsync(buffer, 0, 2, cancellationToken).ConfigureAwait(false);
+            await ReadFullyAsync(buffer, 0, 2, cancellationToken).ConfigureAwait(false);
             _availableBytes = (buffer[0] << 8) + buffer[1] + 1;
             _inputPosition += 2;
         }
