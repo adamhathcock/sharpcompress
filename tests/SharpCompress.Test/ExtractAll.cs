@@ -25,7 +25,7 @@ public class ExtractAll : TestBase
 
         using var archive = ArchiveFactory.Open(testArchive);
 
-        if (archive.IsSolid && archive.Type != ArchiveType.SevenZip)
+        if (archive.IsSolid || archive.Type == ArchiveType.SevenZip)
         {
             var reader = archive.ExtractAllEntries();
             while (await reader.MoveToNextEntryAsync())
