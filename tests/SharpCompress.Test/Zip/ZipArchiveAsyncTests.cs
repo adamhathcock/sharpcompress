@@ -194,4 +194,18 @@ public class ZipArchiveAsyncTests : ArchiveTests
         }
         VerifyFiles();
     }
+
+    [Fact]
+    public async Task Zip_Deflate_Archive_WriteToDirectoryAsync()
+    {
+        using (Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.zip")))
+        using (var archive = ZipArchive.Open(stream))
+        {
+            await archive.WriteToDirectoryAsync(
+                SCRATCH_FILES_PATH,
+                new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
+            );
+        }
+        VerifyFiles();
+    }
 }
