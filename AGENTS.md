@@ -28,11 +28,13 @@ SharpCompress is a pure C# compression library supporting multiple archive forma
 
 ## Code Formatting
 
+**Copilot agents: You MUST run the `format` task after making code changes to ensure consistency.**
+
 - Use CSharpier for code formatting to ensure consistent style across the project
 - CSharpier is configured as a local tool in `.config/dotnet-tools.json`
+- **To format code, run the task: `format` task (which runs `dotnet csharpier .` from project root)**
 - Restore tools with: `dotnet tool restore`
 - Format files from the project root with: `dotnet csharpier .`
-- **Run `dotnet csharpier .` from the project root after making code changes before committing**
 - Configure your IDE to format on save using CSharpier for the best experience
 - The project also uses `.editorconfig` for editor settings (indentation, encoding, etc.)
 - Let CSharpier handle code style while `.editorconfig` handles editor behavior
