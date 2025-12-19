@@ -61,7 +61,7 @@ Target(
 Target(
     Test,
     [Build],
-    ["net8.0", "net48"],
+    ["net10.0", "net48"],
     framework =>
     {
         IEnumerable<string> GetFiles(string d)
