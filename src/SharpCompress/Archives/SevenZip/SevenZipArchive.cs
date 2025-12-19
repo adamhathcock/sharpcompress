@@ -243,12 +243,13 @@ public class SevenZipArchive : AbstractArchive<SevenZipArchiveEntry, SevenZipVol
 
         protected override EntryStream GetEntryStream()
         {
-            // Create a fresh decompression stream for each file to avoid
-            // state corruption when multiple files share the same LZMA stream
-            // in async operations. This is less efficient but ensures correctness.
+            // Create a fresh decompression stream for each file (no state sharing).
+            // However, the LZMA decoder has bugs in its async implementation that cause
+            // state corruption even on fresh streams. The SyncOnlyStream wrapper
+            // works around these bugs by forcing async operations to use sync equivalents.
             //
-            // Wrap in SyncOnlyStream to force all async operations to use
-            // synchronous equivalents, avoiding bugs in LZMA's async implementation
+            // TODO: Fix the LZMA decoder async bugs (in LzmaStream, Decoder, OutWindow)
+            // so this wrapper is no longer necessary.
             var entry = _currentEntry.NotNull("currentEntry is not null");
             if (entry.IsDirectory)
             {
@@ -259,8 +260,13 @@ public class SevenZipArchive : AbstractArchive<SevenZipArchiveEntry, SevenZipVol
     }
 
     /// <summary>
-    /// A stream wrapper that forces all async operations to use synchronous equivalents.
-    /// This is used for 7Zip LZMA streams to avoid state corruption bugs in the async implementation.
+    /// WORKAROUND: Forces async operations to use synchronous equivalents.
+    /// This is necessary because the LZMA decoder has bugs in its async implementation
+    /// that cause state corruption (IndexOutOfRangeException, DataErrorException).
+    ///
+    /// The proper fix would be to repair the LZMA decoder's async methods
+    /// (LzmaStream.ReadAsync, Decoder.CodeAsync, OutWindow async operations),
+    /// but that requires deep changes to the decoder state machine.
     /// </summary>
     private sealed class SyncOnlyStream : Stream
     {
@@ -291,7 +297,7 @@ public class SevenZipArchive : AbstractArchive<SevenZipArchiveEntry, SevenZipVol
         public override void Write(byte[] buffer, int offset, int count) =>
             _baseStream.Write(buffer, offset, count);
 
-        // Force async operations to use sync equivalents
+        // Force async operations to use sync equivalents to avoid LZMA decoder bugs
         public override Task<int> ReadAsync(
             byte[] buffer,
             int offset,
