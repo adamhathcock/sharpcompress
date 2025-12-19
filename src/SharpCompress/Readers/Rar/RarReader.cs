@@ -108,8 +108,7 @@ public abstract class RarReader : AbstractReader<RarReaderEntry, RarVolume>
         }
 
         var stream = new MultiVolumeReadOnlyStream(
-            CreateFilePartEnumerableForCurrentEntry().Cast<RarFilePart>(),
-            this
+            CreateFilePartEnumerableForCurrentEntry().Cast<RarFilePart>()
         );
         if (Entry.IsRarV3)
         {
@@ -136,8 +135,7 @@ public abstract class RarReader : AbstractReader<RarReaderEntry, RarVolume>
         }
 
         var stream = new MultiVolumeReadOnlyStream(
-            CreateFilePartEnumerableForCurrentEntry().Cast<RarFilePart>(),
-            this
+            CreateFilePartEnumerableForCurrentEntry().Cast<RarFilePart>()
         );
         if (Entry.IsRarV3)
         {

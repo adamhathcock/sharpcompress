@@ -11,6 +11,7 @@ const string Restore = "restore";
 const string Build = "build";
 const string Test = "test";
 const string Format = "format";
+const string CheckFormat = "check-format";
 const string Publish = "publish";
 
 Target(
@@ -44,10 +45,18 @@ Target(
     () =>
     {
         Run("dotnet", "tool restore");
+        Run("dotnet", "csharpier format .");
+    }
+);
+Target(
+    CheckFormat,
+    () =>
+    {
+        Run("dotnet", "tool restore");
         Run("dotnet", "csharpier check .");
     }
 );
-Target(Restore, [Format], () => Run("dotnet", "restore"));
+Target(Restore, [CheckFormat], () => Run("dotnet", "restore"));
 
 Target(
     Build,
