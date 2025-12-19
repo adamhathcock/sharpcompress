@@ -19,7 +19,7 @@ jobs:
       with:
         dotnet-version: 10.0.x
     - run: dotnet run --project build/build.csproj
-    - uses: actions/upload-artifact@v5
+    - uses: actions/upload-artifact@v6
       with:
         name: ${{ matrix.os }}-sharpcompress.nupkg
         path: artifacts/*
