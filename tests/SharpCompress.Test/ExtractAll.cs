@@ -1,6 +1,4 @@
 using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
 using SharpCompress.Archives;
 using SharpCompress.Common;
 using SharpCompress.Readers;
@@ -18,7 +16,7 @@ public class ExtractAll : TestBase
     [InlineData("7Zip.solid.7z")]
     [InlineData("7Zip.nonsolid.7z")]
     [InlineData("7Zip.LZMA.7z")]
-    public async Task ExtractAllEntries(string archivePath)
+    public void ExtractAllEntries(string archivePath)
     {
         var testArchive = Path.Combine(TEST_ARCHIVES_PATH, archivePath);
         var options = new ExtractionOptions() { ExtractFullPath = true, Overwrite = true };
@@ -27,12 +25,12 @@ public class ExtractAll : TestBase
 
         if (archive.IsSolid || archive.Type == ArchiveType.SevenZip)
         {
-            var reader = archive.ExtractAllEntries();
-            while (await reader.MoveToNextEntryAsync())
+            using var reader = archive.ExtractAllEntries();
+            while (reader.MoveToNextEntry())
             {
                 if (!reader.Entry.IsDirectory)
                 {
-                    await reader.WriteEntryToDirectoryAsync(SCRATCH_FILES_PATH, options);
+                    reader.WriteEntryToDirectory(SCRATCH_FILES_PATH, options);
                 }
             }
         }
