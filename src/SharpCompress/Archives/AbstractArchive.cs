@@ -8,7 +8,7 @@ using SharpCompress.Readers;
 
 namespace SharpCompress.Archives;
 
-public abstract class AbstractArchive<TEntry, TVolume> : IArchive, IArchiveExtractionListener
+public abstract class AbstractArchive<TEntry, TVolume> : IArchive
     where TEntry : IArchiveEntry
     where TVolume : IVolume
 {
@@ -17,11 +17,6 @@ public abstract class AbstractArchive<TEntry, TVolume> : IArchive, IArchiveExtra
     private bool _disposed;
     private readonly SourceStream? _sourceStream;
 
-    public event EventHandler<ArchiveExtractionEventArgs<IArchiveEntry>>? EntryExtractionBegin;
-    public event EventHandler<ArchiveExtractionEventArgs<IArchiveEntry>>? EntryExtractionEnd;
-
-    public event EventHandler<CompressedBytesReadEventArgs>? CompressedBytesRead;
-    public event EventHandler<FilePartExtractionBeginEventArgs>? FilePartExtractionBegin;
     protected ReaderOptions ReaderOptions { get; }
 
     internal AbstractArchive(ArchiveType type, SourceStream sourceStream)
@@ -42,12 +37,6 @@ public abstract class AbstractArchive<TEntry, TVolume> : IArchive, IArchiveExtra
     }
 
     public ArchiveType Type { get; }
-
-    void IArchiveExtractionListener.FireEntryExtractionBegin(IArchiveEntry entry) =>
-        EntryExtractionBegin?.Invoke(this, new ArchiveExtractionEventArgs<IArchiveEntry>(entry));
-
-    void IArchiveExtractionListener.FireEntryExtractionEnd(IArchiveEntry entry) =>
-        EntryExtractionEnd?.Invoke(this, new ArchiveExtractionEventArgs<IArchiveEntry>(entry));
 
     private static Stream CheckStreams(Stream stream)
     {
@@ -99,37 +88,11 @@ public abstract class AbstractArchive<TEntry, TVolume> : IArchive, IArchiveExtra
         }
     }
 
-    void IArchiveExtractionListener.EnsureEntriesLoaded()
+    private void EnsureEntriesLoaded()
     {
         _lazyEntries.EnsureFullyLoaded();
         _lazyVolumes.EnsureFullyLoaded();
     }
-
-    void IExtractionListener.FireCompressedBytesRead(
-        long currentPartCompressedBytes,
-        long compressedReadBytes
-    ) =>
-        CompressedBytesRead?.Invoke(
-            this,
-            new CompressedBytesReadEventArgs(
-                currentFilePartCompressedBytesRead: currentPartCompressedBytes,
-                compressedBytesRead: compressedReadBytes
-            )
-        );
-
-    void IExtractionListener.FireFilePartExtractionBegin(
-        string name,
-        long size,
-        long compressedSize
-    ) =>
-        FilePartExtractionBegin?.Invoke(
-            this,
-            new FilePartExtractionBeginEventArgs(
-                compressedSize: compressedSize,
-                size: size,
-                name: name
-            )
-        );
 
     /// <summary>
     /// Use this method to extract all entries in an archive in order.
@@ -167,7 +130,7 @@ public abstract class AbstractArchive<TEntry, TVolume> : IArchive, IArchiveExtra
     {
         get
         {
-            ((IArchiveExtractionListener)this).EnsureEntriesLoaded();
+            EnsureEntriesLoaded();
             return Entries.All(x => x.IsComplete);
         }
     }
