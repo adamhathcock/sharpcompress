@@ -57,7 +57,9 @@ public class SharpCompressStream : Stream, IStreamStack
                     {
                         ValidateBufferState(); // Add here
                     }
-                    // Check CanSeek before accessing Position to avoid exception overhead
+                    // Check CanSeek before accessing Position to avoid exception overhead on non-seekable streams.
+                    // Keep try-catch as defensive programming since some streams may report CanSeek=true
+                    // but still throw on Position access in certain edge cases.
                     if (Stream.CanSeek)
                     {
                         try
@@ -144,7 +146,9 @@ public class SharpCompressStream : Stream, IStreamStack
         _readOnly = !Stream.CanSeek;
 
         ((IStreamStack)this).SetBuffer(bufferSize, forceBuffer);
-        // Check CanSeek before accessing Position to avoid exception overhead
+        // Check CanSeek before accessing Position to avoid exception overhead on non-seekable streams.
+        // Keep try-catch as defensive programming since some streams may report CanSeek=true
+        // but still throw on Position access in certain edge cases.
         if (stream.CanSeek)
         {
             try
