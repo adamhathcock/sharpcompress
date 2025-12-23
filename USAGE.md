@@ -87,7 +87,7 @@ memoryStream.Position = 0;
 ### Extract all files from a rar file to a directory using RarArchive
 
 Note: Extracting a solid rar or 7z file needs to be done in sequential order to get acceptable decompression speed.
-`ExtractAllEntries` is only available for solid archives (like solid Rar) or 7Zip archives. For simple extraction, use `archive.WriteToDirectory()` instead.
+`ExtractAllEntries` is primarily intended for solid archives (like solid Rar) or 7Zip archives, where sequential extraction provides the best performance. For general/simple extraction with any supported archive type, use `archive.WriteToDirectory()` instead.
 
 ```C#
 using (var archive = RarArchive.Open("Test.rar"))
