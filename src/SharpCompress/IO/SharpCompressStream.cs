@@ -58,23 +58,7 @@ public class SharpCompressStream : Stream, IStreamStack
                         ValidateBufferState(); // Add here
                     }
                     // Check CanSeek before accessing Position to avoid exception overhead on non-seekable streams.
-                    // Keep try-catch as defensive programming since some streams may report CanSeek=true
-                    // but still throw on Position access in certain edge cases.
-                    if (Stream.CanSeek)
-                    {
-                        try
-                        {
-                            _internalPosition = Stream.Position;
-                        }
-                        catch
-                        {
-                            _internalPosition = 0;
-                        }
-                    }
-                    else
-                    {
-                        _internalPosition = 0;
-                    }
+                    _internalPosition = Stream.CanSeek ? Stream.Position : 0;
                 }
             }
         }
@@ -147,23 +131,7 @@ public class SharpCompressStream : Stream, IStreamStack
 
         ((IStreamStack)this).SetBuffer(bufferSize, forceBuffer);
         // Check CanSeek before accessing Position to avoid exception overhead on non-seekable streams.
-        // Keep try-catch as defensive programming since some streams may report CanSeek=true
-        // but still throw on Position access in certain edge cases.
-        if (stream.CanSeek)
-        {
-            try
-            {
-                _baseInitialPos = stream.Position;
-            }
-            catch
-            {
-                _baseInitialPos = 0;
-            }
-        }
-        else
-        {
-            _baseInitialPos = 0;
-        }
+        _baseInitialPos = stream.CanSeek ? stream.Position : 0;
 
 #if DEBUG_STREAMS
         this.DebugConstruct(typeof(SharpCompressStream));
