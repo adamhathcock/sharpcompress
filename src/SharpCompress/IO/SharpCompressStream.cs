@@ -57,11 +57,19 @@ public class SharpCompressStream : Stream, IStreamStack
                     {
                         ValidateBufferState(); // Add here
                     }
-                    try
+                    // Check CanSeek before accessing Position to avoid exception overhead
+                    if (Stream.CanSeek)
                     {
-                        _internalPosition = Stream.Position;
+                        try
+                        {
+                            _internalPosition = Stream.Position;
+                        }
+                        catch
+                        {
+                            _internalPosition = 0;
+                        }
                     }
-                    catch
+                    else
                     {
                         _internalPosition = 0;
                     }
@@ -136,11 +144,19 @@ public class SharpCompressStream : Stream, IStreamStack
         _readOnly = !Stream.CanSeek;
 
         ((IStreamStack)this).SetBuffer(bufferSize, forceBuffer);
-        try
+        // Check CanSeek before accessing Position to avoid exception overhead
+        if (stream.CanSeek)
         {
-            _baseInitialPos = stream.Position;
+            try
+            {
+                _baseInitialPos = stream.Position;
+            }
+            catch
+            {
+                _baseInitialPos = 0;
+            }
         }
-        catch
+        else
         {
             _baseInitialPos = 0;
         }
