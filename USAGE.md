@@ -87,20 +87,17 @@ memoryStream.Position = 0;
 ### Extract all files from a rar file to a directory using RarArchive
 
 Note: Extracting a solid rar or 7z file needs to be done in sequential order to get acceptable decompression speed.
-`ExtractAllEntries` provides a universal interface that works for all archive types (SOLID and non-SOLID) and is recommended when extracting an entire `IArchive` with progress reporting or when you don't know the archive type in advance.
-Alternatively, use `IArchive.WriteToDirectory` for simple extraction without progress reporting.
+`ExtractAllEntries` is only available for solid archives (like solid Rar) or 7Zip archives. For simple extraction, use `archive.WriteToDirectory()` instead.
 
 ```C#
 using (var archive = RarArchive.Open("Test.rar"))
 {
-    using (var reader = archive.ExtractAllEntries())
+    // Simple extraction - works for all archive types
+    archive.WriteToDirectory(@"D:\temp", new ExtractionOptions()
     {
-        reader.WriteAllToDirectory(@"D:\temp", new ExtractionOptions()
-        {
-            ExtractFullPath = true,
-            Overwrite = true
-        });
-    }
+        ExtractFullPath = true,
+        Overwrite = true
+    });
 }
 ```
 
@@ -116,32 +113,35 @@ using (var archive = RarArchive.Open("Test.rar"))
 }
 ```
 
-### Extract any archive type with progress reporting
+### Extract solid Rar or 7Zip archives with manual progress reporting
 
-`ExtractAllEntries` works for all archive types, making it ideal when you don't know the archive type in advance:
+`ExtractAllEntries` only works for solid archives (Rar) or 7Zip archives. For optimal performance with these archive types, use this method:
 
 ```C#
-using (var archive = ArchiveFactory.Open("archive.rar")) // or .zip, .7z, .tar, etc.
+using (var archive = RarArchive.Open("archive.rar")) // Must be solid Rar or 7Zip
 {
-    // Calculate total size for progress reporting
-    double totalSize = archive.Entries.Where(e => !e.IsDirectory).Sum(e => e.Size);
-    long completed = 0;
-
-    using (var reader = archive.ExtractAllEntries())
+    if (archive.IsSolid || archive.Type == ArchiveType.SevenZip)
     {
-        while (reader.MoveToNextEntry())
-        {
-            if (!reader.Entry.IsDirectory)
-            {
-                reader.WriteEntryToDirectory(@"D:\output", new ExtractionOptions()
-                {
-                    ExtractFullPath = true,
-                    Overwrite = true
-                });
+        // Calculate total size for progress reporting
+        double totalSize = archive.Entries.Where(e => !e.IsDirectory).Sum(e => e.Size);
+        long completed = 0;
 
-                completed += reader.Entry.Size;
-                double progress = completed / totalSize;
-                Console.WriteLine($"Progress: {progress:P}");
+        using (var reader = archive.ExtractAllEntries())
+        {
+            while (reader.MoveToNextEntry())
+            {
+                if (!reader.Entry.IsDirectory)
+                {
+                    reader.WriteEntryToDirectory(@"D:\output", new ExtractionOptions()
+                    {
+                        ExtractFullPath = true,
+                        Overwrite = true
+                    });
+
+                    completed += reader.Entry.Size;
+                    double progress = completed / totalSize;
+                    Console.WriteLine($"Progress: {progress:P}");
+                }
             }
         }
     }
@@ -330,14 +330,12 @@ using (var writer = WriterFactory.Open(stream, ArchiveType.Zip, CompressionType.
 ```C#
 using (var archive = ZipArchive.Open("archive.zip"))
 {
-    using (var reader = archive.ExtractAllEntries())
-    {
-        await reader.WriteAllToDirectoryAsync(
-            @"C:\output",
-            new ExtractionOptions() { ExtractFullPath = true, Overwrite = true },
-            cancellationToken
-        );
-    }
+    // Simple async extraction - works for all archive types
+    await archive.WriteToDirectoryAsync(
+        @"C:\output",
+        new ExtractionOptions() { ExtractFullPath = true, Overwrite = true },
+        cancellationToken
+    );
 }
 ```
 
