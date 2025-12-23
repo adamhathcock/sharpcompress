@@ -107,7 +107,7 @@ public abstract class AbstractArchive<TEntry, TVolume> : IArchive
     /// <returns></returns>
     public IReader ExtractAllEntries()
     {
-        ((IArchiveExtractionListener)this).EnsureEntriesLoaded();
+        EnsureEntriesLoaded();
         return CreateReaderForSolidExtraction();
     }
 
