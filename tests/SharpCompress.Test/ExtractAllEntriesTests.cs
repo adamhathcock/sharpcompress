@@ -8,8 +8,8 @@ using Xunit;
 namespace SharpCompress.Test;
 
 /// <summary>
-/// Tests for ExtractAllEntries method which should work for all archive types
-/// regardless of whether they are SOLID or not.
+/// Tests for the ExtractAllEntries method behavior on both solid and non-solid
+/// archives, including progress reporting and current usage restrictions.
 /// </summary>
 public class ExtractAllEntriesTests : TestBase
 {
