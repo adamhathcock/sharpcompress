@@ -131,7 +131,7 @@ public class SharpCompressStream : Stream, IStreamStack
 
         ((IStreamStack)this).SetBuffer(bufferSize, forceBuffer);
         // Check CanSeek before accessing Position to avoid exception overhead on non-seekable streams.
-        _baseInitialPos = stream.CanSeek ? stream.Position : 0;
+        _baseInitialPos = Stream.CanSeek ? Stream.Position : 0;
 
 #if DEBUG_STREAMS
         this.DebugConstruct(typeof(SharpCompressStream));
