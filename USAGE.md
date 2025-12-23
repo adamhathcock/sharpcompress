@@ -92,7 +92,7 @@ Note: Extracting a solid rar or 7z file needs to be done in sequential order to 
 ```C#
 using (var archive = RarArchive.Open("Test.rar"))
 {
-    // Simple extraction - works for all archive types
+    // Simple extraction with RarArchive; this WriteToDirectory pattern works for all archive types
     archive.WriteToDirectory(@"D:\temp", new ExtractionOptions()
     {
         ExtractFullPath = true,
