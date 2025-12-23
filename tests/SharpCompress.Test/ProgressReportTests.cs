@@ -188,7 +188,7 @@ public class ProgressReportTests : TestBase
             if (!entry.IsDirectory)
             {
                 using var extractedStream = new MemoryStream();
-                await entry.WriteToAsync(extractedStream, CancellationToken.None, progress);
+                await entry.WriteToAsync(extractedStream, progress, CancellationToken.None);
             }
         }
 
@@ -410,7 +410,7 @@ public class ProgressReportTests : TestBase
             if (!entry.IsDirectory)
             {
                 using var extractedStream = new MemoryStream();
-                await entry.WriteToAsync(extractedStream, CancellationToken.None, progress);
+                await entry.WriteToAsync(extractedStream, progress, CancellationToken.None);
             }
         }
 

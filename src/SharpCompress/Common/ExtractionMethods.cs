@@ -128,7 +128,7 @@ internal static class ExtractionMethods
         IEntry entry,
         string destinationDirectory,
         ExtractionOptions? options,
-        Func<string, ExtractionOptions?, Task> writeAsync,
+        Func<string, ExtractionOptions?, CancellationToken, Task> writeAsync,
         CancellationToken cancellationToken = default
     )
     {
@@ -189,7 +189,7 @@ internal static class ExtractionMethods
                     "Entry is trying to write a file outside of the destination directory."
                 );
             }
-            await writeAsync(destinationFileName, options).ConfigureAwait(false);
+            await writeAsync(destinationFileName, options, cancellationToken).ConfigureAwait(false);
         }
         else if (options.ExtractFullPath && !Directory.Exists(destinationFileName))
         {
@@ -201,7 +201,7 @@ internal static class ExtractionMethods
         IEntry entry,
         string destinationFileName,
         ExtractionOptions? options,
-        Func<string, FileMode, Task> openAndWriteAsync,
+        Func<string, FileMode, CancellationToken, Task> openAndWriteAsync,
         CancellationToken cancellationToken = default
     )
     {
@@ -225,7 +225,8 @@ internal static class ExtractionMethods
                 fm = FileMode.CreateNew;
             }
 
-            await openAndWriteAsync(destinationFileName, fm).ConfigureAwait(false);
+            await openAndWriteAsync(destinationFileName, fm, cancellationToken)
+                .ConfigureAwait(false);
             entry.PreserveExtractionOptions(destinationFileName, options);
         }
     }
