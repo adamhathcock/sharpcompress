@@ -8,6 +8,70 @@ using System.Text;
 
 namespace SharpCompress.IO
 {
+    /// <summary>
+    /// Provides a common interface for streams that wrap other streams, forming a hierarchical "stack"
+    /// of stream processing layers. This interface enables coordinated buffering, position tracking,
+    /// and seeking across multiple stream layers.
+    ///
+    /// <para>
+    /// <b>Purpose in SharpCompress Architecture:</b>
+    /// </para>
+    /// <para>
+    /// SharpCompress uses stacked streams extensively: a raw file/network stream may be wrapped by
+    /// a buffering stream, then by a decompression stream, then by a CRC validation stream, etc.
+    /// <c>IStreamStack</c> provides a uniform way to:
+    /// </para>
+    /// <list type="bullet">
+    /// <item><description>Navigate the stream hierarchy via <see cref="BaseStream()"/></description></item>
+    /// <item><description>Coordinate buffering across layers via <see cref="BufferSize"/> and <see cref="BufferPosition"/></description></item>
+    /// <item><description>Synchronize position state when seeking via <see cref="SetPosition"/></description></item>
+    /// <item><description>Debug stream lifecycle with instance tracking (in DEBUG builds)</description></item>
+    /// </list>
+    ///
+    /// <para>
+    /// <b>Relationship to Other Abstractions:</b>
+    /// </para>
+    /// <list type="bullet">
+    /// <item>
+    /// <description>
+    /// <b>IByteSource</b>: Represents where bytes originate (file, stream). An <c>IByteSource.OpenRead()</c>
+    /// returns a raw stream that may then be wrapped in <c>IStreamStack</c>-implementing streams.
+    /// </description>
+    /// </item>
+    /// <item>
+    /// <description>
+    /// <b>SourceStream</b>: Combines multiple <c>IByteSource</c> instances into a unified stream.
+    /// <c>SourceStream</c> itself implements <c>IStreamStack</c>.
+    /// </description>
+    /// </item>
+    /// <item>
+    /// <description>
+    /// <b>SharpCompressStream</b>: A buffering wrapper that implements <c>IStreamStack</c> with actual
+    /// buffering support (BufferSize greater than 0).
+    /// </description>
+    /// </item>
+    /// <item>
+    /// <description>
+    /// <b>Compression Streams</b>: All decompression streams (DeflateStream, LzmaStream, etc.) implement
+    /// <c>IStreamStack</c> to participate in the stack hierarchy, even if they don't buffer themselves.
+    /// </description>
+    /// </item>
+    /// </list>
+    ///
+    /// <para>
+    /// <b>Extension Methods:</b>
+    /// </para>
+    /// <para>
+    /// The <see cref="StackStreamExtensions"/> class provides extension methods that operate on the
+    /// entire stack:
+    /// </para>
+    /// <list type="bullet">
+    /// <item><description><c>SetBuffer()</c>: Configures buffering at the appropriate level</description></item>
+    /// <item><description><c>Rewind()</c>: Rewinds buffered data when over-read occurs</description></item>
+    /// <item><description><c>StackSeek()</c>: Seeks efficiently, preferring buffer adjustment</description></item>
+    /// <item><description><c>GetPosition()</c>: Gets position accounting for buffered reads</description></item>
+    /// </list>
+    /// </summary>
     public interface IStreamStack
     {
         /// <summary>
