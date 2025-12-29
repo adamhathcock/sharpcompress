@@ -16,9 +16,9 @@
       },
       "SimpleExec": {
         "type": "Direct",
-        "requested": "[12.0.0, )",
-        "resolved": "12.0.0",
-        "contentHash": "ptxlWtxC8vM6Y6e3h9ZTxBBkOWnWrm/Sa1HT+2i1xcXY3Hx2hmKDZP5RShPf8Xr9D+ivlrXNy57ktzyH8kyt+Q=="
+        "requested": "[12.1.0, )",
+        "resolved": "12.1.0",
+        "contentHash": "PcCSAlMcKr5yTd571MgEMoGmoSr+omwziq2crB47lKP740lrmjuBocAUXHj+Q6LR6aUDFyhszot2wbtFJTClkA=="
       }
     }
   }
