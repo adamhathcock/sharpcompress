@@ -35,7 +35,7 @@ internal sealed class SeekableZipHeaderFactory : ZipHeaderFactory
 
             // ZIP64_END_OF_CENTRAL_DIRECTORY_LOCATOR should be before the EOCD
             stream.Seek(eocd_location - ZIP64_EOCD_LENGTH - 4, SeekOrigin.Begin);
-            int zip64_locator = await reader.ReadUInt16Async();
+            uint zip64_locator = await reader.ReadUInt32Async();
             if (zip64_locator != ZIP64_END_OF_CENTRAL_DIRECTORY_LOCATOR)
             {
                 throw new ArchiveException("Failed to locate the Zip64 Directory Locator");
