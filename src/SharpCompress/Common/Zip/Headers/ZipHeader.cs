@@ -1,18 +1,12 @@
-using System.IO;
+using System.Threading.Tasks;
 
 namespace SharpCompress.Common.Zip.Headers;
 
-internal abstract class ZipHeader
+internal abstract class ZipHeader(ZipHeaderType type)
 {
-    protected ZipHeader(ZipHeaderType type)
-    {
-        ZipHeaderType = type;
-        HasData = true;
-    }
+    internal ZipHeaderType ZipHeaderType { get; } = type;
 
-    internal ZipHeaderType ZipHeaderType { get; }
+    internal abstract ValueTask Read(AsyncBinaryReader reader);
 
-    internal abstract void Read(BinaryReader reader);
-
-    internal bool HasData { get; set; }
+    internal bool HasData { get; set; } = true;
 }

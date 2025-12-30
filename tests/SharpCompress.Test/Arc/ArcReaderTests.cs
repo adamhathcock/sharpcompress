@@ -1,12 +1,5 @@
 using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using SharpCompress.Common;
-using SharpCompress.Readers;
-using SharpCompress.Readers.Arc;
 using Xunit;
 
 namespace SharpCompress.Test.Arc

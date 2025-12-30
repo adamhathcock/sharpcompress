@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading.Tasks;
 using SharpCompress.Common.Zip.Headers;
 using SharpCompress.IO;
 
@@ -18,11 +19,11 @@ internal sealed class SeekableZipHeaderFactory : ZipHeaderFactory
     internal SeekableZipHeaderFactory(string? password, ArchiveEncoding archiveEncoding)
         : base(StreamingMode.Seekable, password, archiveEncoding) { }
 
-    internal IEnumerable<ZipHeader> ReadSeekableHeader(Stream stream)
+    internal async IAsyncEnumerable<ZipHeader> ReadSeekableHeader(Stream stream)
     {
-        var reader = new BinaryReader(stream);
+        var reader = new AsyncBinaryReader(stream);
 
-        SeekBackToHeader(stream, reader);
+        await SeekBackToHeader(stream, reader);
 
         var eocd_location = stream.Position;
         var entry = new DirectoryEndHeader();
@@ -34,24 +35,24 @@ internal sealed class SeekableZipHeaderFactory : ZipHeaderFactory
 
             // ZIP64_END_OF_CENTRAL_DIRECTORY_LOCATOR should be before the EOCD
             stream.Seek(eocd_location - ZIP64_EOCD_LENGTH - 4, SeekOrigin.Begin);
-            var zip64_locator = reader.ReadUInt32();
+            int zip64_locator = await reader.ReadUInt16Async();
             if (zip64_locator != ZIP64_END_OF_CENTRAL_DIRECTORY_LOCATOR)
             {
                 throw new ArchiveException("Failed to locate the Zip64 Directory Locator");
             }
 
             var zip64Locator = new Zip64DirectoryEndLocatorHeader();
-            zip64Locator.Read(reader);
+            await zip64Locator.Read(reader);
 
             stream.Seek(zip64Locator.RelativeOffsetOfTheEndOfDirectoryRecord, SeekOrigin.Begin);
-            var zip64Signature = reader.ReadUInt32();
+            var zip64Signature = await reader.ReadUInt32Async();
             if (zip64Signature != ZIP64_END_OF_CENTRAL_DIRECTORY)
             {
                 throw new ArchiveException("Failed to locate the Zip64 Header");
             }
 
             var zip64Entry = new Zip64DirectoryEndHeader();
-            zip64Entry.Read(reader);
+            await zip64Entry.Read(reader);
             stream.Seek(zip64Entry.DirectoryStartOffsetRelativeToDisk, SeekOrigin.Begin);
         }
         else
@@ -63,8 +64,8 @@ internal sealed class SeekableZipHeaderFactory : ZipHeaderFactory
         while (true)
         {
             stream.Position = position;
-            var signature = reader.ReadUInt32();
-            var nextHeader = ReadHeader(signature, reader, _zip64);
+            var signature = await reader.ReadUInt32Async();
+            var nextHeader = await ReadHeader(signature, reader, _zip64);
             position = stream.Position;
 
             if (nextHeader is null)
@@ -98,7 +99,7 @@ internal sealed class SeekableZipHeaderFactory : ZipHeaderFactory
         return true;
     }
 
-    private static void SeekBackToHeader(Stream stream, BinaryReader reader)
+    private static async ValueTask SeekBackToHeader(Stream stream, AsyncBinaryReader reader)
     {
         // Minimum EOCD length
         if (stream.Length < MINIMUM_EOCD_LENGTH)
@@ -117,7 +118,7 @@ internal sealed class SeekableZipHeaderFactory : ZipHeaderFactory
 
         stream.Seek(-len, SeekOrigin.End);
 
-        var seek = reader.ReadBytes(len);
+        var seek = await reader.ReadBytesAsync(len);
 
         // Search in reverse
         Array.Reverse(seek);

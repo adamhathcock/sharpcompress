@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using SharpCompress.Common.Zip.Headers;
 using SharpCompress.IO;
 
@@ -34,14 +35,14 @@ internal class ZipHeaderFactory
         _archiveEncoding = archiveEncoding;
     }
 
-    protected ZipHeader? ReadHeader(uint headerBytes, BinaryReader reader, bool zip64 = false)
+    protected async ValueTask<ZipHeader?> ReadHeader(uint headerBytes, AsyncBinaryReader reader, bool zip64 = false)
     {
         switch (headerBytes)
         {
             case ENTRY_HEADER_BYTES:
             {
                 var entryHeader = new LocalEntryHeader(_archiveEncoding);
-                entryHeader.Read(reader);
+                await entryHeader.Read(reader);
                 LoadHeader(entryHeader, reader.BaseStream);
 
                 _lastEntryHeader = entryHeader;

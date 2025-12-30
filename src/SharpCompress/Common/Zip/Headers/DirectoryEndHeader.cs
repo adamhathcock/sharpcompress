@@ -7,7 +7,7 @@ internal class DirectoryEndHeader : ZipHeader
     public DirectoryEndHeader()
         : base(ZipHeaderType.DirectoryEnd) { }
 
-    internal override void Read(BinaryReader reader)
+    internal override void Read(AsyncBinaryReader reader)
     {
         VolumeNumber = reader.ReadUInt16();
         FirstVolumeWithDirectory = reader.ReadUInt16();
