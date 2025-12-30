@@ -5,7 +5,8 @@ using System.IO;
 
 namespace SharpCompress.Common.Zip.Headers;
 
-internal abstract class ZipFileEntry(ZipHeaderType type, ArchiveEncoding archiveEncoding) : ZipHeader(type)
+internal abstract class ZipFileEntry(ZipHeaderType type, ArchiveEncoding archiveEncoding)
+    : ZipHeader(type)
 {
     internal bool IsDirectory
     {

@@ -35,7 +35,11 @@ internal class ZipHeaderFactory
         _archiveEncoding = archiveEncoding;
     }
 
-    protected async ValueTask<ZipHeader?> ReadHeader(uint headerBytes, AsyncBinaryReader reader, bool zip64 = false)
+    protected async ValueTask<ZipHeader?> ReadHeader(
+        uint headerBytes,
+        AsyncBinaryReader reader,
+        bool zip64 = false
+    )
     {
         switch (headerBytes)
         {
@@ -43,6 +47,78 @@ internal class ZipHeaderFactory
             {
                 var entryHeader = new LocalEntryHeader(_archiveEncoding);
                 await entryHeader.Read(reader);
+                LoadHeader(entryHeader, reader.BaseStream);
+
+                _lastEntryHeader = entryHeader;
+                return entryHeader;
+            }
+            case DIRECTORY_START_HEADER_BYTES:
+            {
+                var entry = new DirectoryEntryHeader(_archiveEncoding);
+                await entry.Read(reader);
+                return entry;
+            }
+            case POST_DATA_DESCRIPTOR:
+            {
+                if (
+                    _lastEntryHeader != null
+                    && FlagUtility.HasFlag(
+                        _lastEntryHeader.NotNull().Flags,
+                        HeaderFlags.UsePostDataDescriptor
+                    )
+                )
+                {
+                    _lastEntryHeader.Crc = await reader.ReadUInt32Async();
+                    _lastEntryHeader.CompressedSize = zip64
+                        ? (long)await reader.ReadUInt64Async()
+                        : await reader.ReadUInt32Async();
+                    _lastEntryHeader.UncompressedSize = zip64
+                        ? (long)await reader.ReadUInt64Async()
+                        : await reader.ReadUInt32Async();
+                }
+                else
+                {
+                    await reader.ReadBytesAsync(zip64 ? 20 : 12);
+                }
+                return null;
+            }
+            case DIGITAL_SIGNATURE:
+                return null;
+            case DIRECTORY_END_HEADER_BYTES:
+            {
+                var entry = new DirectoryEndHeader();
+                await entry.Read(reader);
+                return entry;
+            }
+            case SPLIT_ARCHIVE_HEADER_BYTES:
+            {
+                return new SplitHeader();
+            }
+            case ZIP64_END_OF_CENTRAL_DIRECTORY:
+            {
+                var entry = new Zip64DirectoryEndHeader();
+                await entry.Read(reader);
+                return entry;
+            }
+            case ZIP64_END_OF_CENTRAL_DIRECTORY_LOCATOR:
+            {
+                var entry = new Zip64DirectoryEndLocatorHeader();
+                await entry.Read(reader);
+                return entry;
+            }
+            default:
+                return null;
+        }
+    }
+
+    protected ZipHeader? ReadHeader(uint headerBytes, BinaryReader reader, bool zip64 = false)
+    {
+        switch (headerBytes)
+        {
+            case ENTRY_HEADER_BYTES:
+            {
+                var entryHeader = new LocalEntryHeader(_archiveEncoding);
+                entryHeader.Read(reader);
                 LoadHeader(entryHeader, reader.BaseStream);
 
                 _lastEntryHeader = entryHeader;

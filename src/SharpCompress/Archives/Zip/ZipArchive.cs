@@ -199,7 +199,7 @@ public class ZipArchive : AbstractWritableArchive<ZipArchiveEntry, ZipVolume>
                 if (stream.CanSeek) //could be multipart. Test for central directory - might not be z64 safe
                 {
                     var z = new SeekableZipHeaderFactory(password, new ArchiveEncoding());
-                    var x = z.ReadSeekableHeader(stream).FirstOrDefault();
+                    var x = z.ReadSeekableHeader(stream, useSync: true).FirstOrDefault();
                     return x?.ZipHeaderType == ZipHeaderType.DirectoryEntry;
                 }
                 else
@@ -254,7 +254,9 @@ public class ZipArchive : AbstractWritableArchive<ZipArchiveEntry, ZipVolume>
     protected override IEnumerable<ZipArchiveEntry> LoadEntries(IEnumerable<ZipVolume> volumes)
     {
         var vols = volumes.ToArray();
-        foreach (var h in headerFactory.NotNull().ReadSeekableHeader(vols.Last().Stream))
+        foreach (
+            var h in headerFactory.NotNull().ReadSeekableHeader(vols.Last().Stream, useSync: true)
+        )
         {
             if (h != null)
             {

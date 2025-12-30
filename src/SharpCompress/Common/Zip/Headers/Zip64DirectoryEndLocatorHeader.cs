@@ -5,7 +5,14 @@ namespace SharpCompress.Common.Zip.Headers;
 
 internal class Zip64DirectoryEndLocatorHeader() : ZipHeader(ZipHeaderType.Zip64DirectoryEndLocator)
 {
-    internal override async ValueTask  Read(AsyncBinaryReader reader)
+    internal override void Read(BinaryReader reader)
+    {
+        FirstVolumeWithDirectory = reader.ReadUInt32();
+        RelativeOffsetOfTheEndOfDirectoryRecord = (long)reader.ReadUInt64();
+        TotalNumberOfVolumes = reader.ReadUInt32();
+    }
+
+    internal override async ValueTask Read(AsyncBinaryReader reader)
     {
         FirstVolumeWithDirectory = await reader.ReadUInt32Async();
         RelativeOffsetOfTheEndOfDirectoryRecord = (long)await reader.ReadUInt64Async();

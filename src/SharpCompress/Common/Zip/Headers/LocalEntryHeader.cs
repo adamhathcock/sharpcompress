@@ -4,8 +4,27 @@ using System.Threading.Tasks;
 
 namespace SharpCompress.Common.Zip.Headers;
 
-internal class LocalEntryHeader(ArchiveEncoding archiveEncoding) : ZipFileEntry(ZipHeaderType.LocalEntry, archiveEncoding)
+internal class LocalEntryHeader(ArchiveEncoding archiveEncoding)
+    : ZipFileEntry(ZipHeaderType.LocalEntry, archiveEncoding)
 {
+    internal override void Read(BinaryReader reader)
+    {
+        Version = reader.ReadUInt16();
+        Flags = (HeaderFlags)reader.ReadUInt16();
+        CompressionMethod = (ZipCompressionMethod)reader.ReadUInt16();
+        OriginalLastModifiedTime = LastModifiedTime = reader.ReadUInt16();
+        OriginalLastModifiedDate = LastModifiedDate = reader.ReadUInt16();
+        Crc = reader.ReadUInt32();
+        CompressedSize = reader.ReadUInt32();
+        UncompressedSize = reader.ReadUInt32();
+        var nameLength = reader.ReadUInt16();
+        var extraLength = reader.ReadUInt16();
+        var name = reader.ReadBytes(nameLength);
+        var extra = reader.ReadBytes(extraLength);
+
+        ProcessReadData(name, extra);
+    }
+
     internal override async ValueTask Read(AsyncBinaryReader reader)
     {
         Version = await reader.ReadUInt16Async();
@@ -21,7 +40,11 @@ internal class LocalEntryHeader(ArchiveEncoding archiveEncoding) : ZipFileEntry(
         var name = await reader.ReadBytesAsync(nameLength);
         var extra = await reader.ReadBytesAsync(extraLength);
 
-        // According to .ZIP File Format Specification
+        ProcessReadData(name, extra);
+    }
+
+    private void ProcessReadData(byte[] name, byte[] extra)
+    {
         //
         // For example: https://pkware.cachefly.net/webdocs/casestudies/APPNOTE.TXT
         //
