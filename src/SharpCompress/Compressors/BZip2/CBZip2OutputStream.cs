@@ -544,6 +544,12 @@ internal sealed class CBZip2OutputStream : Stream, IStreamStack
 
     private void EndBlock()
     {
+        // Skip block processing for empty input (no data written)
+        if (last < 0)
+        {
+            return;
+        }
+
         blockCRC = mCrc.GetFinalCRC();
         combinedCRC = (combinedCRC << 1) | (int)(((uint)combinedCRC) >> 31);
         combinedCRC ^= blockCRC;

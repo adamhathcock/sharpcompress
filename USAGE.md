@@ -87,20 +87,17 @@ memoryStream.Position = 0;
 ### Extract all files from a rar file to a directory using RarArchive
 
 Note: Extracting a solid rar or 7z file needs to be done in sequential order to get acceptable decompression speed.
-It is explicitly recommended to use `ExtractAllEntries` when extracting an entire `IArchive` instead of iterating over all its `Entries`.
-Alternatively, use `IArchive.WriteToDirectory`.
+`ExtractAllEntries` is primarily intended for solid archives (like solid Rar) or 7Zip archives, where sequential extraction provides the best performance. For general/simple extraction with any supported archive type, use `archive.WriteToDirectory()` instead.
 
 ```C#
 using (var archive = RarArchive.Open("Test.rar"))
 {
-    using (var reader = archive.ExtractAllEntries())
+    // Simple extraction with RarArchive; this WriteToDirectory pattern works for all archive types
+    archive.WriteToDirectory(@"D:\temp", new ExtractionOptions()
     {
-        reader.WriteAllToDirectory(@"D:\temp", new ExtractionOptions()
-        {
-            ExtractFullPath = true,
-            Overwrite = true
-        });
-    }
+        ExtractFullPath = true,
+        Overwrite = true
+    });
 }
 ```
 
@@ -112,6 +109,41 @@ using (var archive = RarArchive.Open("Test.rar"))
     foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
     {
         Console.WriteLine($"{entry.Key}: {entry.Size} bytes");
+    }
+}
+```
+
+### Extract solid Rar or 7Zip archives with manual progress reporting
+
+`ExtractAllEntries` only works for solid archives (Rar) or 7Zip archives. For optimal performance with these archive types, use this method:
+
+```C#
+using (var archive = RarArchive.Open("archive.rar")) // Must be solid Rar or 7Zip
+{
+    if (archive.IsSolid || archive.Type == ArchiveType.SevenZip)
+    {
+        // Calculate total size for progress reporting
+        double totalSize = archive.Entries.Where(e => !e.IsDirectory).Sum(e => e.Size);
+        long completed = 0;
+
+        using (var reader = archive.ExtractAllEntries())
+        {
+            while (reader.MoveToNextEntry())
+            {
+                if (!reader.Entry.IsDirectory)
+                {
+                    reader.WriteEntryToDirectory(@"D:\output", new ExtractionOptions()
+                    {
+                        ExtractFullPath = true,
+                        Overwrite = true
+                    });
+
+                    completed += reader.Entry.Size;
+                    double progress = completed / totalSize;
+                    Console.WriteLine($"Progress: {progress:P}");
+                }
+            }
+        }
     }
 }
 ```
@@ -298,14 +330,12 @@ using (var writer = WriterFactory.Open(stream, ArchiveType.Zip, CompressionType.
 ```C#
 using (var archive = ZipArchive.Open("archive.zip"))
 {
-    using (var reader = archive.ExtractAllEntries())
-    {
-        await reader.WriteAllToDirectoryAsync(
-            @"C:\output",
-            new ExtractionOptions() { ExtractFullPath = true, Overwrite = true },
-            cancellationToken
-        );
-    }
+    // Simple async extraction - works for all archive types
+    await archive.WriteToDirectoryAsync(
+        @"C:\output",
+        new ExtractionOptions() { ExtractFullPath = true, Overwrite = true },
+        cancellationToken
+    );
 }
 ```
 

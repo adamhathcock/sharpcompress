@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using SharpCompress.Common;
 using SharpCompress.Readers;
 
@@ -10,76 +10,159 @@ namespace SharpCompress.Archives;
 
 public static class IArchiveExtensions
 {
-    /// <summary>
-    /// Extract to specific directory, retaining filename
-    /// </summary>
-    public static void WriteToDirectory(
-        this IArchive archive,
-        string destinationDirectory,
-        ExtractionOptions? options = null
-    )
-    {
-        using var reader = archive.ExtractAllEntries();
-        reader.WriteAllToDirectory(destinationDirectory, options);
-    }
-
-    /// <summary>
-    /// Extracts the archive to the destination directory. Directories will be created as needed.
-    /// </summary>
     /// <param name="archive">The archive to extract.</param>
-    /// <param name="destination">The folder to extract into.</param>
-    /// <param name="progressReport">Optional progress report callback.</param>
-    /// <param name="cancellationToken">Optional cancellation token.</param>
-    public static void ExtractToDirectory(
-        this IArchive archive,
-        string destination,
-        Action<double>? progressReport = null,
-        CancellationToken cancellationToken = default
-    )
+    extension(IArchive archive)
     {
-        // Prepare for progress reporting
-        var totalBytes = archive.TotalUncompressSize;
-        var bytesRead = 0L;
-
-        // Tracking for created directories.
-        var seenDirectories = new HashSet<string>();
-
-        // Extract
-        foreach (var entry in archive.Entries)
+        /// <summary>
+        /// Extract to specific directory with progress reporting
+        /// </summary>
+        /// <param name="destinationDirectory">The folder to extract into.</param>
+        /// <param name="options">Extraction options.</param>
+        /// <param name="progress">Optional progress reporter for tracking extraction progress.</param>
+        public void WriteToDirectory(
+            string destinationDirectory,
+            ExtractionOptions? options = null,
+            IProgress<ProgressReport>? progress = null
+        )
         {
-            cancellationToken.ThrowIfCancellationRequested();
-
-            if (entry.IsDirectory)
+            // For solid archives (Rar, 7Zip), use the optimized reader-based approach
+            if (archive.IsSolid || archive.Type == ArchiveType.SevenZip)
             {
-                var dirPath = Path.Combine(destination, entry.Key.NotNull("Entry Key is null"));
-                if (
-                    Path.GetDirectoryName(dirPath + "/") is { } emptyDirectory
-                    && seenDirectories.Add(dirPath)
-                )
-                {
-                    Directory.CreateDirectory(emptyDirectory);
-                }
-                continue;
+                using var reader = archive.ExtractAllEntries();
+                reader.WriteAllToDirectory(destinationDirectory, options);
             }
-
-            // Create each directory if not already created
-            var path = Path.Combine(destination, entry.Key.NotNull("Entry Key is null"));
-            if (Path.GetDirectoryName(path) is { } directory)
+            else
             {
-                if (!Directory.Exists(directory) && !seenDirectories.Contains(directory))
-                {
-                    Directory.CreateDirectory(directory);
-                    seenDirectories.Add(directory);
-                }
+                // For non-solid archives, extract entries directly
+                archive.WriteToDirectoryInternal(destinationDirectory, options, progress);
             }
+        }
 
-            // Write file
-            using var fs = File.OpenWrite(path);
-            entry.WriteTo(fs);
+        private void WriteToDirectoryInternal(
+            string destinationDirectory,
+            ExtractionOptions? options,
+            IProgress<ProgressReport>? progress
+        )
+        {
+            // Prepare for progress reporting
+            var totalBytes = archive.TotalUncompressSize;
+            var bytesRead = 0L;
 
-            // Update progress
-            bytesRead += entry.Size;
-            progressReport?.Invoke(bytesRead / (double)totalBytes);
+            // Tracking for created directories.
+            var seenDirectories = new HashSet<string>();
+
+            // Extract
+            foreach (var entry in archive.Entries)
+            {
+                if (entry.IsDirectory)
+                {
+                    var dirPath = Path.Combine(
+                        destinationDirectory,
+                        entry.Key.NotNull("Entry Key is null")
+                    );
+                    if (
+                        Path.GetDirectoryName(dirPath + "/") is { } parentDirectory
+                        && seenDirectories.Add(dirPath)
+                    )
+                    {
+                        Directory.CreateDirectory(parentDirectory);
+                    }
+                    continue;
+                }
+
+                // Use the entry's WriteToDirectory method which respects ExtractionOptions
+                entry.WriteToDirectory(destinationDirectory, options);
+
+                // Update progress
+                bytesRead += entry.Size;
+                progress?.Report(
+                    new ProgressReport(entry.Key ?? string.Empty, bytesRead, totalBytes)
+                );
+            }
+        }
+
+        /// <summary>
+        /// Extract to specific directory asynchronously with progress reporting and cancellation support
+        /// </summary>
+        /// <param name="destinationDirectory">The folder to extract into.</param>
+        /// <param name="options">Extraction options.</param>
+        /// <param name="progress">Optional progress reporter for tracking extraction progress.</param>
+        /// <param name="cancellationToken">Optional cancellation token.</param>
+        public async Task WriteToDirectoryAsync(
+            string destinationDirectory,
+            ExtractionOptions? options = null,
+            IProgress<ProgressReport>? progress = null,
+            CancellationToken cancellationToken = default
+        )
+        {
+            // For solid archives (Rar, 7Zip), use the optimized reader-based approach
+            if (archive.IsSolid || archive.Type == ArchiveType.SevenZip)
+            {
+                using var reader = archive.ExtractAllEntries();
+                await reader.WriteAllToDirectoryAsync(
+                    destinationDirectory,
+                    options,
+                    cancellationToken
+                );
+            }
+            else
+            {
+                // For non-solid archives, extract entries directly
+                await archive.WriteToDirectoryAsyncInternal(
+                    destinationDirectory,
+                    options,
+                    progress,
+                    cancellationToken
+                );
+            }
+        }
+
+        private async Task WriteToDirectoryAsyncInternal(
+            string destinationDirectory,
+            ExtractionOptions? options,
+            IProgress<ProgressReport>? progress,
+            CancellationToken cancellationToken
+        )
+        {
+            // Prepare for progress reporting
+            var totalBytes = archive.TotalUncompressSize;
+            var bytesRead = 0L;
+
+            // Tracking for created directories.
+            var seenDirectories = new HashSet<string>();
+
+            // Extract
+            foreach (var entry in archive.Entries)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                if (entry.IsDirectory)
+                {
+                    var dirPath = Path.Combine(
+                        destinationDirectory,
+                        entry.Key.NotNull("Entry Key is null")
+                    );
+                    if (
+                        Path.GetDirectoryName(dirPath + "/") is { } parentDirectory
+                        && seenDirectories.Add(dirPath)
+                    )
+                    {
+                        Directory.CreateDirectory(parentDirectory);
+                    }
+                    continue;
+                }
+
+                // Use the entry's WriteToDirectoryAsync method which respects ExtractionOptions
+                await entry
+                    .WriteToDirectoryAsync(destinationDirectory, options, cancellationToken)
+                    .ConfigureAwait(false);
+
+                // Update progress
+                bytesRead += entry.Size;
+                progress?.Report(
+                    new ProgressReport(entry.Key ?? string.Empty, bytesRead, totalBytes)
+                );
+            }
         }
     }
 }

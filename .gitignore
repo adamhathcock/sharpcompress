@@ -15,7 +15,6 @@ tests/TestArchives/*/Scratch
 tests/TestArchives/*/Scratch2
 .vs
 tools
-.vscode
 .idea/
 
 .DS_Store

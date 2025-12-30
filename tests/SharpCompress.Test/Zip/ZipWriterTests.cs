@@ -1,5 +1,7 @@
+using System.IO;
 using System.Text;
 using SharpCompress.Common;
+using SharpCompress.Writers;
 using Xunit;
 
 namespace SharpCompress.Test.Zip;
@@ -8,6 +10,42 @@ public class ZipWriterTests : WriterTests
 {
     public ZipWriterTests()
         : base(ArchiveType.Zip) { }
+
+    [Fact]
+    public void Zip_BZip2_Write_EmptyFile()
+    {
+        // Test that writing an empty file with BZip2 compression doesn't throw DivideByZeroException
+        using var memoryStream = new MemoryStream();
+        var options = new WriterOptions(CompressionType.BZip2)
+        {
+            ArchiveEncoding = new ArchiveEncoding { Default = new UTF8Encoding(false) },
+        };
+
+        using (var writer = WriterFactory.Open(memoryStream, ArchiveType.Zip, options))
+        {
+            writer.Write("test-folder/zero-byte-file.txt", Stream.Null);
+        }
+
+        Assert.True(memoryStream.Length > 0);
+    }
+
+    [Fact]
+    public void Zip_BZip2_Write_EmptyFolder()
+    {
+        // Test that writing an empty folder entry with BZip2 compression doesn't throw DivideByZeroException
+        using var memoryStream = new MemoryStream();
+        var options = new WriterOptions(CompressionType.BZip2)
+        {
+            ArchiveEncoding = new ArchiveEncoding { Default = new UTF8Encoding(false) },
+        };
+
+        using (var writer = WriterFactory.Open(memoryStream, ArchiveType.Zip, options))
+        {
+            writer.Write("test-empty-folder/", Stream.Null);
+        }
+
+        Assert.True(memoryStream.Length > 0);
+    }
 
     [Fact]
     public void Zip_Deflate_Write() =>

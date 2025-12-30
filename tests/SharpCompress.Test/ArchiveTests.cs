@@ -261,7 +261,7 @@ public class ArchiveTests : ReaderTests
         testArchive = Path.Combine(TEST_ARCHIVES_PATH, testArchive);
         using (var archive = ArchiveFactory.Open(new FileInfo(testArchive), readerOptions))
         {
-            archive.ExtractToDirectory(SCRATCH_FILES_PATH);
+            archive.WriteToDirectory(SCRATCH_FILES_PATH);
         }
         VerifyFiles();
     }

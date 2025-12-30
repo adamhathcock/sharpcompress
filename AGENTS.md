@@ -28,14 +28,38 @@ SharpCompress is a pure C# compression library supporting multiple archive forma
 
 ## Code Formatting
 
+**Copilot agents: You MUST run the `format` task after making code changes to ensure consistency.**
+
 - Use CSharpier for code formatting to ensure consistent style across the project
 - CSharpier is configured as a local tool in `.config/dotnet-tools.json`
-- Restore tools with: `dotnet tool restore`
-- Format files from the project root with: `dotnet csharpier .`
-- **Run `dotnet csharpier .` from the project root after making code changes before committing**
-- Configure your IDE to format on save using CSharpier for the best experience
+
+### Commands
+
+1. **Restore tools** (first time only):
+   ```bash
+   dotnet tool restore
+   ```
+
+2. **Check if files are formatted correctly** (doesn't modify files):
+   ```bash
+   dotnet csharpier check .
+   ```
+   - Exit code 0: All files are properly formatted
+   - Exit code 1: Some files need formatting (will show which files and differences)
+
+3. **Format files** (modifies files):
+   ```bash
+   dotnet csharpier format .
+   ```
+   - Formats all files in the project to match CSharpier style
+   - Run from project root directory
+
+4. **Configure your IDE** to format on save using CSharpier for the best experience
+
+### Additional Notes
 - The project also uses `.editorconfig` for editor settings (indentation, encoding, etc.)
 - Let CSharpier handle code style while `.editorconfig` handles editor behavior
+- Always run `dotnet csharpier check .` before committing to verify formatting
 
 ## Project Setup and Structure
 
@@ -48,6 +72,30 @@ SharpCompress is a pure C# compression library supporting multiple archive forma
 - Use `dotnet build` to build the solution
 - Use `dotnet test` to run tests
 - Solution file: `SharpCompress.sln`
+
+### Directory Structure
+```
+src/SharpCompress/
+  ├── Archives/        # IArchive implementations (Zip, Tar, Rar, 7Zip, GZip)
+  ├── Readers/         # IReader implementations (forward-only)
+  ├── Writers/         # IWriter implementations (forward-only)
+  ├── Compressors/     # Low-level compression streams (BZip2, Deflate, LZMA, etc.)
+  ├── Factories/       # Format detection and factory pattern
+  ├── Common/          # Shared types (ArchiveType, Entry, Options)
+  ├── Crypto/          # Encryption implementations
+  └── IO/              # Stream utilities and wrappers
+
+tests/SharpCompress.Test/
+  ├── Zip/, Tar/, Rar/, SevenZip/, GZip/, BZip2/  # Format-specific tests
+  ├── TestBase.cs      # Base test class with helper methods
+  └── TestArchives/    # Test data (not checked into main test project)
+```
+
+### Factory Pattern
+All format types implement factory interfaces (`IArchiveFactory`, `IReaderFactory`, `IWriterFactory`) for auto-detection:
+- `ReaderFactory.Open()` - Auto-detects format by probing stream
+- `WriterFactory.Open()` - Creates writer for specified `ArchiveType`
+- Factories located in: `src/SharpCompress/Factories/`
 
 ## Nullable Reference Types
 
@@ -116,3 +164,18 @@ SharpCompress supports multiple archive and compression formats:
 - Use test archives from `tests/TestArchives` directory for consistency.
 - Test stream disposal and `LeaveStreamOpen` behavior.
 - Test edge cases: empty archives, large files, corrupted archives, encrypted archives.
+
+### Test Organization
+- Base class: `TestBase` - Provides `TEST_ARCHIVES_PATH`, `SCRATCH_FILES_PATH`, temp directory management
+- Framework: xUnit with AwesomeAssertions
+- Test archives: `tests/TestArchives/` - Use existing archives, don't create new ones unnecessarily
+- Match naming style of nearby test files
+
+## Common Pitfalls
+
+1. **Don't mix Archive and Reader APIs** - Archive needs seekable stream, Reader doesn't
+2. **Solid archives (Rar, 7Zip)** - Use `ExtractAllEntries()` for best performance, not individual entry extraction
+3. **Stream disposal** - Always set `LeaveStreamOpen` explicitly when needed (default is to close)
+4. **Tar + non-seekable stream** - Must provide file size or it will throw
+5. **Multi-framework differences** - Some features differ between .NET Framework and modern .NET (e.g., Mono.Posix)
+6. **Format detection** - Use `ReaderFactory.Open()` for auto-detection, test with actual archive files

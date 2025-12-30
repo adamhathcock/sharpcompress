@@ -1,0 +1,97 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Debug Tests (net10.0)",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build",
+      "program": "dotnet",
+      "args": [
+        "test",
+        "${workspaceFolder}/tests/SharpCompress.Test/SharpCompress.Test.csproj",
+        "-f",
+        "net10.0",
+        "--no-build",
+        "--verbosity=normal"
+      ],
+      "cwd": "${workspaceFolder}",
+      "console": "internalConsole",
+      "stopAtEntry": false
+    },
+    {
+      "name": "Debug Specific Test (net10.0)",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build",
+      "program": "dotnet",
+      "args": [
+        "test",
+        "${workspaceFolder}/tests/SharpCompress.Test/SharpCompress.Test.csproj",
+        "-f",
+        "net10.0",
+        "--no-build",
+        "--filter",
+        "FullyQualifiedName~${input:testName}"
+      ],
+      "cwd": "${workspaceFolder}",
+      "console": "internalConsole",
+      "stopAtEntry": false
+    },
+    {
+      "name": "Debug Performance Tests",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build",
+      "program": "dotnet",
+      "args": [
+        "run",
+        "--project",
+        "${workspaceFolder}/tests/SharpCompress.Performance/SharpCompress.Performance.csproj",
+        "--no-build"
+      ],
+      "cwd": "${workspaceFolder}",
+      "console": "internalConsole",
+      "stopAtEntry": false
+    },
+    {
+      "name": "Debug Build Script",
+      "type": "coreclr",
+      "request": "launch",
+      "program": "dotnet",
+      "args": [
+        "run",
+        "--project",
+        "${workspaceFolder}/build/build.csproj",
+        "--",
+        "${input:buildTarget}"
+      ],
+      "cwd": "${workspaceFolder}",
+      "console": "internalConsole",
+      "stopAtEntry": false
+    }
+  ],
+  "inputs": [
+    {
+      "id": "testName",
+      "type": "promptString",
+      "description": "Enter test name or pattern (e.g., TestMethodName or ClassName)",
+      "default": ""
+    },
+    {
+      "id": "buildTarget",
+      "type": "pickString",
+      "description": "Select build target",
+      "options": [
+        "clean",
+        "restore",
+        "build",
+        "test",
+        "format",
+        "publish",
+        "default"
+      ],
+      "default": "build"
+    }
+  ]
+}

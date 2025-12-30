@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using SharpCompress.Archives;
 using SharpCompress.Common;
 using SharpCompress.IO;
@@ -396,5 +398,42 @@ public class ZipReaderTests : ReaderTests
         reader.MoveToNextEntry();
         Assert.Equal("second.txt", reader.Entry.Key);
         Assert.Equal(197, reader.Entry.Size);
+    }
+
+    [Fact]
+    public void ZipReader_Returns_Same_Entries_As_ZipArchive()
+    {
+        // Verifies that ZipReader and ZipArchive return the same entries
+        // for standard single-volume ZIP files. ZipReader processes LocalEntry
+        // headers sequentially, while ZipArchive uses DirectoryEntry headers
+        // from the central directory and seeks to LocalEntry headers for data.
+        var testFiles = new[] { "Zip.none.zip", "Zip.deflate.zip", "Zip.none.issue86.zip" };
+
+        foreach (var testFile in testFiles)
+        {
+            var path = Path.Combine(TEST_ARCHIVES_PATH, testFile);
+
+            var readerKeys = new List<string>();
+            using (var stream = File.OpenRead(path))
+            using (var reader = ZipReader.Open(stream))
+            {
+                while (reader.MoveToNextEntry())
+                {
+                    readerKeys.Add(reader.Entry.Key!);
+                }
+            }
+
+            var archiveKeys = new List<string>();
+            using (var archive = Archives.Zip.ZipArchive.Open(path))
+            {
+                foreach (var entry in archive.Entries)
+                {
+                    archiveKeys.Add(entry.Key!);
+                }
+            }
+
+            Assert.Equal(archiveKeys.Count, readerKeys.Count);
+            Assert.Equal(archiveKeys.OrderBy(k => k), readerKeys.OrderBy(k => k));
+        }
     }
 }

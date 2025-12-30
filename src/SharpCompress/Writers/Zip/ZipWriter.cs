@@ -13,6 +13,7 @@ using SharpCompress.Compressors.BZip2;
 using SharpCompress.Compressors.Deflate;
 using SharpCompress.Compressors.LZMA;
 using SharpCompress.Compressors.PPMd;
+using SharpCompress.Compressors.ZStandard;
 using SharpCompress.IO;
 
 namespace SharpCompress.Writers.Zip;
@@ -85,7 +86,8 @@ public class ZipWriter : AbstractWriter
     public void Write(string entryPath, Stream source, ZipWriterEntryOptions zipWriterEntryOptions)
     {
         using var output = WriteToStream(entryPath, zipWriterEntryOptions);
-        source.CopyTo(output);
+        var progressStream = WrapWithProgress(source, entryPath);
+        progressStream.CopyTo(output);
     }
 
     public Stream WriteToStream(string entryPath, ZipWriterEntryOptions options)
@@ -465,7 +467,7 @@ public class ZipWriter : AbstractWriter
                 }
                 case ZipCompressionMethod.ZStandard:
                 {
-                    return new ZstdSharp.CompressionStream(counting, compressionLevel);
+                    return new CompressionStream(counting, compressionLevel);
                 }
                 default:
                 {
