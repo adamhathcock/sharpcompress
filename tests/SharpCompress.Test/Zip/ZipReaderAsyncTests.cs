@@ -1,7 +1,9 @@
 using System;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 using SharpCompress.Common;
+using SharpCompress.IO;
 using SharpCompress.Readers;
 using SharpCompress.Readers.Zip;
 using SharpCompress.Test.Mocks;
@@ -162,7 +164,7 @@ public class ZipReaderAsyncTests : ReaderTests
     public async Task Zip_Reader_Disposal_Test2_Async()
     {
         using var stream = new TestStream(
-            File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.dd.zip"))
+            new AsyncOnlyStream(File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.dd.zip")))
         );
         var reader = ReaderFactory.Open(stream);
         while (await reader.MoveToNextEntryAsync())
@@ -183,9 +185,9 @@ public class ZipReaderAsyncTests : ReaderTests
         await Assert.ThrowsAsync<NotSupportedException>(async () =>
         {
             using (
-                Stream stream = File.OpenRead(
+                Stream stream = new AsyncOnlyStream(File.OpenRead(
                     Path.Combine(TEST_ARCHIVES_PATH, "Zip.lzma.WinzipAES.zip")
-                )
+                ))
             )
             using (var reader = ZipReader.Open(stream, new ReaderOptions { Password = "test" }))
             {
@@ -208,9 +210,9 @@ public class ZipReaderAsyncTests : ReaderTests
     public async Task Zip_Deflate_WinzipAES_Read_Async()
     {
         using (
-            Stream stream = File.OpenRead(
+            Stream stream = new AsyncOnlyStream(File.OpenRead(
                 Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.WinzipAES.zip")
-            )
+            ))
         )
         using (var reader = ZipReader.Open(stream, new ReaderOptions { Password = "test" }))
         {
@@ -233,7 +235,7 @@ public class ZipReaderAsyncTests : ReaderTests
     public async Task Zip_Deflate_ZipCrypto_Read_Async()
     {
         var count = 0;
-        using (Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "zipcrypto.zip")))
+        using (Stream stream = new AsyncOnlyStream(File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "zipcrypto.zip"))))
         using (var reader = ZipReader.Open(stream, new ReaderOptions { Password = "test" }))
         {
             while (await reader.MoveToNextEntryAsync())
