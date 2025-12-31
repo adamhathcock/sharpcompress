@@ -406,6 +406,33 @@ internal static class Utility
         return (total >= buffer.Length);
     }
 
+    public static async Task<bool> ReadFullyAsync(
+        this Stream stream,
+        byte[] buffer,
+        int offset,
+        int count,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var total = 0;
+        int read;
+        while (
+            (
+                read = await stream
+                    .ReadAsync(buffer, offset + total, count - total, cancellationToken)
+                    .ConfigureAwait(false)
+            ) > 0
+        )
+        {
+            total += read;
+            if (total >= count)
+            {
+                return true;
+            }
+        }
+        return (total >= count);
+    }
+
     public static string TrimNulls(this string source) => source.Replace('\0', ' ').Trim();
 
     /// <summary>

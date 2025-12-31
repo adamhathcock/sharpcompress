@@ -1,4 +1,6 @@
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace SharpCompress.Common;
 
@@ -14,4 +16,8 @@ public abstract class FilePart
     internal abstract Stream? GetCompressedStream();
     internal abstract Stream? GetRawStream();
     internal bool Skipped { get; set; }
+
+    internal virtual Task<Stream?> GetCompressedStreamAsync(
+        CancellationToken cancellationToken = default
+    ) => Task.FromResult(GetCompressedStream());
 }

@@ -268,11 +268,11 @@ public abstract class AbstractReader<TEntry, TVolume> : IReader
     internal async Task WriteAsync(Stream writeStream, CancellationToken cancellationToken)
     {
 #if NETFRAMEWORK || NETSTANDARD2_0
-        using Stream s = OpenEntryStream();
+        using Stream s = await OpenEntryStreamAsync(cancellationToken).ConfigureAwait(false);
         var sourceStream = WrapWithProgress(s, Entry);
         await sourceStream.CopyToAsync(writeStream, 81920, cancellationToken).ConfigureAwait(false);
 #else
-        await using Stream s = OpenEntryStream();
+        await using Stream s = await OpenEntryStreamAsync(cancellationToken).ConfigureAwait(false);
         var sourceStream = WrapWithProgress(s, Entry);
         await sourceStream.CopyToAsync(writeStream, 81920, cancellationToken).ConfigureAwait(false);
 #endif
@@ -347,9 +347,16 @@ public abstract class AbstractReader<TEntry, TVolume> : IReader
     protected virtual EntryStream GetEntryStream() =>
         CreateEntryStream(Entry.Parts.First().GetCompressedStream());
 
-    protected virtual Task<EntryStream> GetEntryStreamAsync(
+    protected virtual async Task<EntryStream> GetEntryStreamAsync(
         CancellationToken cancellationToken = default
-    ) => Task.FromResult(GetEntryStream());
+    )
+    {
+        var stream = await Entry
+            .Parts.First()
+            .GetCompressedStreamAsync(cancellationToken)
+            .ConfigureAwait(false);
+        return CreateEntryStream(stream);
+    }
 
     #endregion
 

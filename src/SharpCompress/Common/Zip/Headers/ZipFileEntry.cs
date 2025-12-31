@@ -2,6 +2,8 @@ using System;
 using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace SharpCompress.Common.Zip.Headers;
 
@@ -51,6 +53,24 @@ internal abstract class ZipFileEntry(ZipHeaderType type, ArchiveEncoding archive
 
         var buffer = new byte[12];
         archiveStream.ReadFully(buffer);
+
+        var encryptionData = PkwareTraditionalEncryptionData.ForRead(Password!, this, buffer);
+
+        return encryptionData;
+    }
+
+    internal async Task<PkwareTraditionalEncryptionData> ComposeEncryptionDataAsync(
+        Stream archiveStream,
+        CancellationToken cancellationToken = default
+    )
+    {
+        if (archiveStream is null)
+        {
+            throw new ArgumentNullException(nameof(archiveStream));
+        }
+
+        var buffer = new byte[12];
+        await archiveStream.ReadFullyAsync(buffer, 0, 12, cancellationToken).ConfigureAwait(false);
 
         var encryptionData = PkwareTraditionalEncryptionData.ForRead(Password!, this, buffer);
 

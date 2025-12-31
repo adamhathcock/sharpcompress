@@ -1,4 +1,6 @@
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 using SharpCompress.Common.Zip.Headers;
 using SharpCompress.Compressors.Deflate;
 using SharpCompress.IO;
@@ -24,6 +26,28 @@ internal sealed class StreamingZipFilePart : ZipFilePart
             GetCryptoStream(CreateBaseStream()),
             Header.CompressionMethod
         );
+        if (LeaveStreamOpen)
+        {
+            return SharpCompressStream.Create(_decompressionStream, leaveOpen: true);
+        }
+        return _decompressionStream;
+    }
+
+    internal override async Task<Stream?> GetCompressedStreamAsync(
+        CancellationToken cancellationToken = default
+    )
+    {
+        if (!Header.HasData)
+        {
+            return Stream.Null;
+        }
+        _decompressionStream = await CreateDecompressionStreamAsync(
+                await GetCryptoStreamAsync(CreateBaseStream(), cancellationToken)
+                    .ConfigureAwait(false),
+                Header.CompressionMethod,
+                cancellationToken
+            )
+            .ConfigureAwait(false);
         if (LeaveStreamOpen)
         {
             return SharpCompressStream.Create(_decompressionStream, leaveOpen: true);

@@ -32,21 +32,32 @@ public class AsyncOnlyStream : Stream
         throw new NotSupportedException("Synchronous Read is not supported");
     }
 
-    public override Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+    public override Task<int> ReadAsync(
+        byte[] buffer,
+        int offset,
+        int count,
+        CancellationToken cancellationToken
+    )
     {
         return _stream.ReadAsync(buffer, offset, count, cancellationToken);
     }
 
 #if !NETFRAMEWORK && !NETSTANDARD2_0
-    public override ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default)
+    public override ValueTask<int> ReadAsync(
+        Memory<byte> buffer,
+        CancellationToken cancellationToken = default
+    )
     {
         return _stream.ReadAsync(buffer, cancellationToken);
     }
 #endif
 
     public override long Seek(long offset, SeekOrigin origin) => _stream.Seek(offset, origin);
+
     public override void SetLength(long value) => _stream.SetLength(value);
-    public override void Write(byte[] buffer, int offset, int count) => _stream.Write(buffer, offset, count);
+
+    public override void Write(byte[] buffer, int offset, int count) =>
+        _stream.Write(buffer, offset, count);
 
     protected override void Dispose(bool disposing)
     {
@@ -57,4 +68,3 @@ public class AsyncOnlyStream : Stream
         base.Dispose(disposing);
     }
 }
-
