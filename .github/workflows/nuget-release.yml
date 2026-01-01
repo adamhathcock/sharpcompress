@@ -78,8 +78,6 @@ jobs:
             --source https://api.nuget.org/v3/index.json \
             --skip-duplicate
         done
-      env:
-        NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
     
     # Create GitHub release for tagged versions
     - name: Create GitHub Release
