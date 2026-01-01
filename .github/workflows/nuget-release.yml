@@ -18,44 +18,16 @@ jobs:
       with:
         dotnet-version: 10.0.x
     
-    # Determine version based on whether the current commit is tagged
+    # Determine version using C# build target
     - name: Determine Version
       id: version
-      run: |
-        # Check if current commit has a version tag
-        CURRENT_TAG=$(git tag --points-at HEAD | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' || echo "")
-        
-        if [[ -n "$CURRENT_TAG" ]]; then
-          # Tagged release - use the tag as version
-          VERSION="$CURRENT_TAG"
-          PRERELEASE=false
-          echo "Building tagged release version: $VERSION"
-        else
-          # Not tagged - create prerelease version based on last tag
-          # Note: sort -V (version sort) is available in GNU coreutils on ubuntu-latest
-          LAST_TAG=$(git tag --list '[0-9]*.[0-9]*.[0-9]*' | sort -V | tail -1)
-          if [[ -z "$LAST_TAG" ]]; then
-            LAST_TAG="0.0.0"
-          fi
-          COMMIT_COUNT=$(git rev-list --count HEAD)
-          COMMIT_SHA=$(git rev-parse --short HEAD)
-          VERSION="${LAST_TAG}-preview.${COMMIT_COUNT}+${COMMIT_SHA}"
-          PRERELEASE=true
-          echo "Building prerelease version: $VERSION"
-        fi
-        echo "version=$VERSION" >> $GITHUB_OUTPUT
-        echo "prerelease=$PRERELEASE" >> $GITHUB_OUTPUT
+      run: dotnet run --project build/build.csproj -- determine-version
     
-    # Update version in project file
+    # Update version in project file using C# build target
     - name: Update Version in Project
-      run: |
-        VERSION="${{ steps.version.outputs.version }}"
-        # Update VersionPrefix and remove VersionSuffix if present
-        sed -i "s|<VersionPrefix>.*</VersionPrefix>|<VersionPrefix>$VERSION</VersionPrefix>|g" src/SharpCompress/SharpCompress.csproj
-        sed -i "s|<AssemblyVersion>.*</AssemblyVersion>|<AssemblyVersion>${VERSION%%-*}</AssemblyVersion>|g" src/SharpCompress/SharpCompress.csproj
-        sed -i "s|<FileVersion>.*</FileVersion>|<FileVersion>${VERSION%%-*}</FileVersion>|g" src/SharpCompress/SharpCompress.csproj
-        echo "Updated project file with version $VERSION"
-        cat src/SharpCompress/SharpCompress.csproj | grep -E "(Version|FileVersion)"
+      run: dotnet run --project build/build.csproj -- update-version
+      env:
+        VERSION: ${{ steps.version.outputs.version }}
     
     # Build and test
     - name: Build and Test
@@ -68,27 +40,19 @@ jobs:
         name: nuget-package
         path: artifacts/*.nupkg
     
-    # Push to NuGet.org
+    # Push to NuGet.org using C# build target
     - name: Push to NuGet
       if: success()
-      run: |
-        for package in artifacts/*.nupkg; do
-          echo "Pushing $package to NuGet.org"
-          dotnet nuget push "$package" \
-            --api-key ${{ secrets.NUGET_API_KEY }} \
-            --source https://api.nuget.org/v3/index.json \
-            --skip-duplicate
-        done
+      run: dotnet run --project build/build.csproj -- push-to-nuget
+      env:
+        NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
     
-    # Create GitHub release for tagged versions
+    # Create GitHub release for tagged versions using C# build target
     - name: Create GitHub Release
       if: steps.version.outputs.prerelease == 'false' && success()
+      run: dotnet run --project build/build.csproj -- create-release
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: |
-        VERSION="${{ steps.version.outputs.version }}"
-        gh release create "$VERSION" \
-          artifacts/*.nupkg \
-          --title "Release $VERSION" \
-          --notes "Release $VERSION of SharpCompress" \
-          --repo ${{ github.repository }}
+        VERSION: ${{ steps.version.outputs.version }}
+        PRERELEASE: ${{ steps.version.outputs.prerelease }}
+        GITHUB_REPOSITORY: ${{ github.repository }}

@@ -1,7 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
+using System.Text.RegularExpressions;
 using GlobExpressions;
 using static Bullseye.Targets;
 using static SimpleExec.Command;
@@ -13,6 +16,10 @@ const string Test = "test";
 const string Format = "format";
 const string CheckFormat = "check-format";
 const string Publish = "publish";
+const string DetermineVersion = "determine-version";
+const string UpdateVersion = "update-version";
+const string PushToNuGet = "push-to-nuget";
+const string CreateRelease = "create-release";
 
 Target(
     Clean,
@@ -99,6 +106,221 @@ Target(
     }
 );
 
+Target(
+    DetermineVersion,
+    () =>
+    {
+        var (version, isPrerelease) = GetVersion();
+        Console.WriteLine($"VERSION={version}");
+        Console.WriteLine($"PRERELEASE={isPrerelease.ToString().ToLower()}");
+
+        // Write to environment file for GitHub Actions
+        var githubOutput = Environment.GetEnvironmentVariable("GITHUB_OUTPUT");
+        if (!string.IsNullOrEmpty(githubOutput))
+        {
+            File.AppendAllText(githubOutput, $"version={version}\n");
+            File.AppendAllText(githubOutput, $"prerelease={isPrerelease.ToString().ToLower()}\n");
+        }
+    }
+);
+
+Target(
+    UpdateVersion,
+    () =>
+    {
+        var version = Environment.GetEnvironmentVariable("VERSION");
+        if (string.IsNullOrEmpty(version))
+        {
+            var (detectedVersion, _) = GetVersion();
+            version = detectedVersion;
+        }
+
+        Console.WriteLine($"Updating project file with version: {version}");
+
+        var projectPath = "src/SharpCompress/SharpCompress.csproj";
+        var content = File.ReadAllText(projectPath);
+
+        // Get base version (without prerelease suffix)
+        var baseVersion = version.Split('-')[0];
+
+        // Update VersionPrefix
+        content = Regex.Replace(
+            content,
+            @"<VersionPrefix>[^<]*</VersionPrefix>",
+            $"<VersionPrefix>{version}</VersionPrefix>"
+        );
+
+        // Update AssemblyVersion
+        content = Regex.Replace(
+            content,
+            @"<AssemblyVersion>[^<]*</AssemblyVersion>",
+            $"<AssemblyVersion>{baseVersion}</AssemblyVersion>"
+        );
+
+        // Update FileVersion
+        content = Regex.Replace(
+            content,
+            @"<FileVersion>[^<]*</FileVersion>",
+            $"<FileVersion>{baseVersion}</FileVersion>"
+        );
+
+        File.WriteAllText(projectPath, content);
+        Console.WriteLine($"Updated VersionPrefix to: {version}");
+        Console.WriteLine($"Updated AssemblyVersion and FileVersion to: {baseVersion}");
+    }
+);
+
+Target(
+    PushToNuGet,
+    () =>
+    {
+        var apiKey = Environment.GetEnvironmentVariable("NUGET_API_KEY");
+        if (string.IsNullOrEmpty(apiKey))
+        {
+            Console.WriteLine(
+                "NUGET_API_KEY environment variable is not set. Skipping NuGet push."
+            );
+            return;
+        }
+
+        var packages = Directory.GetFiles("artifacts", "*.nupkg");
+        if (packages.Length == 0)
+        {
+            Console.WriteLine("No packages found in artifacts directory.");
+            return;
+        }
+
+        foreach (var package in packages)
+        {
+            Console.WriteLine($"Pushing {package} to NuGet.org");
+            try
+            {
+                Run(
+                    "dotnet",
+                    $"nuget push \"{package}\" --api-key {apiKey} --source https://api.nuget.org/v3/index.json --skip-duplicate"
+                );
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Failed to push {package}: {ex.Message}");
+                throw;
+            }
+        }
+    }
+);
+
+Target(
+    CreateRelease,
+    () =>
+    {
+        var version = Environment.GetEnvironmentVariable("VERSION");
+        var isPrerelease = Environment.GetEnvironmentVariable("PRERELEASE");
+        var githubToken = Environment.GetEnvironmentVariable("GITHUB_TOKEN");
+        var githubRepository = Environment.GetEnvironmentVariable("GITHUB_REPOSITORY");
+
+        if (string.IsNullOrEmpty(version))
+        {
+            var (detectedVersion, _) = GetVersion();
+            version = detectedVersion;
+        }
+
+        if (isPrerelease == "true")
+        {
+            Console.WriteLine("Skipping GitHub release creation for prerelease version.");
+            return;
+        }
+
+        if (string.IsNullOrEmpty(githubToken))
+        {
+            Console.WriteLine(
+                "GITHUB_TOKEN environment variable is not set. Skipping GitHub release creation."
+            );
+            return;
+        }
+
+        var packages = Directory.GetFiles("artifacts", "*.nupkg");
+        var packageArgs = string.Join(" ", packages.Select(p => $"\"{p}\""));
+
+        var repo = string.IsNullOrEmpty(githubRepository) ? "" : $"--repo {githubRepository}";
+
+        Console.WriteLine($"Creating GitHub release for version {version}");
+        try
+        {
+            Run(
+                "gh",
+                $"release create \"{version}\" {packageArgs} --title \"Release {version}\" --notes \"Release {version} of SharpCompress\" {repo}"
+            );
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Failed to create GitHub release: {ex.Message}");
+            throw;
+        }
+    }
+);
+
 Target("default", [Publish], () => Console.WriteLine("Done!"));
 
 await RunTargetsAndExitAsync(args);
+
+static (string version, bool isPrerelease) GetVersion()
+{
+    // Check if current commit has a version tag
+    var currentTag = GetGitOutput("git tag --points-at HEAD")
+        .Split('\n', StringSplitOptions.RemoveEmptyEntries)
+        .FirstOrDefault(tag => Regex.IsMatch(tag.Trim(), @"^\d+\.\d+\.\d+$"));
+
+    if (!string.IsNullOrEmpty(currentTag))
+    {
+        // Tagged release - use the tag as version
+        var version = currentTag.Trim();
+        Console.WriteLine($"Building tagged release version: {version}");
+        return (version, false);
+    }
+    else
+    {
+        // Not tagged - create prerelease version based on last tag
+        var allTags = GetGitOutput("git tag --list")
+            .Split('\n', StringSplitOptions.RemoveEmptyEntries)
+            .Where(tag => Regex.IsMatch(tag.Trim(), @"^\d+\.\d+\.\d+$"))
+            .Select(tag => tag.Trim())
+            .ToList();
+
+        var lastTag = allTags.OrderBy(tag => Version.Parse(tag)).LastOrDefault() ?? "0.0.0";
+
+        var commitCount = GetGitOutput("git rev-list --count HEAD").Trim();
+        var commitSha = GetGitOutput("git rev-parse --short HEAD").Trim();
+
+        var version = $"{lastTag}-preview.{commitCount}+{commitSha}";
+        Console.WriteLine($"Building prerelease version: {version}");
+        return (version, true);
+    }
+}
+
+static string GetGitOutput(string command)
+{
+    var process = new Process
+    {
+        StartInfo = new ProcessStartInfo
+        {
+            FileName = "bash",
+            Arguments = $"-c \"{command}\"",
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false,
+            CreateNoWindow = true,
+        },
+    };
+
+    process.Start();
+    var output = process.StandardOutput.ReadToEnd();
+    process.WaitForExit();
+
+    if (process.ExitCode != 0)
+    {
+        var error = process.StandardError.ReadToEnd();
+        throw new Exception($"Git command failed: {command}\n{error}");
+    }
+
+    return output;
+}

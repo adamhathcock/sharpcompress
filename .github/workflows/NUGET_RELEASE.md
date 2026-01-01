@@ -10,7 +10,7 @@ The `nuget-release.yml` workflow automatically builds, tests, and publishes Shar
 
 ### Version Determination
 
-The workflow automatically determines the version based on whether the commit is tagged:
+The workflow automatically determines the version based on whether the commit is tagged using C# code in the build project:
 
 1. **Tagged Release (Stable)**:
    - If the current commit on the `release` branch has a version tag (e.g., `0.42.1`)
@@ -29,12 +29,14 @@ The workflow automatically determines the version based on whether the commit is
 
 1. **Checkout**: Fetches the repository with full history for version detection
 2. **Setup .NET**: Installs .NET 10.0
-3. **Determine Version**: Checks for tags and determines version
-4. **Update Version**: Updates the version in the project file
+3. **Determine Version**: Runs `determine-version` build target to check for tags and determine version
+4. **Update Version**: Runs `update-version` build target to update the version in the project file
 5. **Build and Test**: Runs the full build and test suite
 6. **Upload Artifacts**: Uploads the generated `.nupkg` files as workflow artifacts
-7. **Push to NuGet**: Publishes the package to NuGet.org using the API key
-8. **Create GitHub Release**: (Only for tagged releases) Creates a GitHub release with the package
+7. **Push to NuGet**: Runs `push-to-nuget` build target to publish the package to NuGet.org using the API key
+8. **Create GitHub Release**: (Only for tagged releases) Runs `create-release` build target to create a GitHub release with the package
+
+All version detection, file updates, and publishing logic is implemented in C# in the `build/Program.cs` file using build targets.
 
 ## Setup Requirements
 
@@ -111,8 +113,34 @@ dotnet run --project build/build.csproj -- publish
 
 The package will be created in the `artifacts/` directory.
 
+## Build Targets
+
+The workflow uses the following C# build targets defined in `build/Program.cs`:
+
+- **determine-version**: Detects version from git tags and outputs VERSION and PRERELEASE variables
+- **update-version**: Updates VersionPrefix, AssemblyVersion, and FileVersion in the project file
+- **push-to-nuget**: Pushes the generated NuGet packages to NuGet.org (requires NUGET_API_KEY)
+- **create-release**: Creates a GitHub release with the packages attached (requires GITHUB_TOKEN)
+
+These targets can be run manually for testing:
+
+```bash
+# Determine the version
+dotnet run --project build/build.csproj -- determine-version
+
+# Update version in project file
+VERSION=0.43.0 dotnet run --project build/build.csproj -- update-version
+
+# Push to NuGet (requires NUGET_API_KEY environment variable)
+NUGET_API_KEY=your-key dotnet run --project build/build.csproj -- push-to-nuget
+
+# Create GitHub release (requires GITHUB_TOKEN and VERSION environment variables)
+GITHUB_TOKEN=your-token VERSION=0.43.0 PRERELEASE=false dotnet run --project build/build.csproj -- create-release
+```
+
 ## Related Files
 
 - `.github/workflows/nuget-release.yml` - The workflow definition
+- `build/Program.cs` - Build script with version detection and publishing logic
 - `src/SharpCompress/SharpCompress.csproj` - Project file with version information
 - `build/Program.cs` - Build script that creates the NuGet package
