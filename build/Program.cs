@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -195,6 +194,8 @@ Target(
             Console.WriteLine($"Pushing {package} to NuGet.org");
             try
             {
+                // Note: API key is passed via command line argument which is standard practice for dotnet nuget push
+                // The key is already in an environment variable and not displayed in normal output
                 Run(
                     "dotnet",
                     $"nuget push \"{package}\" --api-key {apiKey} --source https://api.nuget.org/v3/index.json --skip-duplicate"
@@ -266,7 +267,7 @@ await RunTargetsAndExitAsync(args);
 static (string version, bool isPrerelease) GetVersion()
 {
     // Check if current commit has a version tag
-    var currentTag = GetGitOutput("git tag --points-at HEAD")
+    var currentTag = GetGitOutput("tag", "--points-at HEAD")
         .Split('\n', StringSplitOptions.RemoveEmptyEntries)
         .FirstOrDefault(tag => Regex.IsMatch(tag.Trim(), @"^\d+\.\d+\.\d+$"));
 
@@ -280,7 +281,7 @@ static (string version, bool isPrerelease) GetVersion()
     else
     {
         // Not tagged - create prerelease version based on last tag
-        var allTags = GetGitOutput("git tag --list")
+        var allTags = GetGitOutput("tag", "--list")
             .Split('\n', StringSplitOptions.RemoveEmptyEntries)
             .Where(tag => Regex.IsMatch(tag.Trim(), @"^\d+\.\d+\.\d+$"))
             .Select(tag => tag.Trim())
@@ -288,8 +289,8 @@ static (string version, bool isPrerelease) GetVersion()
 
         var lastTag = allTags.OrderBy(tag => Version.Parse(tag)).LastOrDefault() ?? "0.0.0";
 
-        var commitCount = GetGitOutput("git rev-list --count HEAD").Trim();
-        var commitSha = GetGitOutput("git rev-parse --short HEAD").Trim();
+        var commitCount = GetGitOutput("rev-list", "--count HEAD").Trim();
+        var commitSha = GetGitOutput("rev-parse", "--short HEAD").Trim();
 
         var version = $"{lastTag}-preview.{commitCount}+{commitSha}";
         Console.WriteLine($"Building prerelease version: {version}");
@@ -297,30 +298,16 @@ static (string version, bool isPrerelease) GetVersion()
     }
 }
 
-static string GetGitOutput(string command)
+static string GetGitOutput(string command, string args)
 {
-    var process = new Process
+    try
     {
-        StartInfo = new ProcessStartInfo
-        {
-            FileName = "bash",
-            Arguments = $"-c \"{command}\"",
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            UseShellExecute = false,
-            CreateNoWindow = true,
-        },
-    };
-
-    process.Start();
-    var output = process.StandardOutput.ReadToEnd();
-    process.WaitForExit();
-
-    if (process.ExitCode != 0)
-    {
-        var error = process.StandardError.ReadToEnd();
-        throw new Exception($"Git command failed: {command}\n{error}");
+        // Use SimpleExec's Read to execute git commands in a cross-platform way
+        var (output, _) = ReadAsync("git", $"{command} {args}").GetAwaiter().GetResult();
+        return output;
     }
-
-    return output;
+    catch (Exception ex)
+    {
+        throw new Exception($"Git command failed: git {command} {args}\n{ex.Message}");
+    }
 }
