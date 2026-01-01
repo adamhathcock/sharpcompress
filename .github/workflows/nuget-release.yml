@@ -32,6 +32,7 @@ jobs:
           echo "Building tagged release version: $VERSION"
         else
           # Not tagged - create prerelease version based on last tag
+          # Note: sort -V (version sort) is available in GNU coreutils on ubuntu-latest
           LAST_TAG=$(git tag --list '[0-9]*.[0-9]*.[0-9]*' | sort -V | tail -1)
           if [[ -z "$LAST_TAG" ]]; then
             LAST_TAG="0.0.0"
