@@ -143,4 +143,3 @@ GITHUB_TOKEN=your-token VERSION=0.43.0 PRERELEASE=false dotnet run --project bui
 - `.github/workflows/nuget-release.yml` - The workflow definition
 - `build/Program.cs` - Build script with version detection and publishing logic
 - `src/SharpCompress/SharpCompress.csproj` - Project file with version information
-- `build/Program.cs` - Build script that creates the NuGet package
