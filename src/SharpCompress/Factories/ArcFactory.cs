@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using SharpCompress.Common;
 using SharpCompress.Readers;
@@ -42,5 +43,15 @@ namespace SharpCompress.Factories
 
         public IReader OpenReader(Stream stream, ReaderOptions? options) =>
             ArcReader.Open(stream, options);
+
+        public async Task<IReader> OpenReaderAsync(
+            Stream stream,
+            ReaderOptions? options,
+            CancellationToken cancellationToken = default
+        )
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            return await Task.FromResult(OpenReader(stream, options)).ConfigureAwait(false);
+        }
     }
 }

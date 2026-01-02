@@ -103,6 +103,70 @@ public class TarArchive : AbstractWritableArchive<TarArchiveEntry, TarVolume>
         );
     }
 
+    /// <summary>
+    /// Opens a TarArchive asynchronously from a stream.
+    /// </summary>
+    /// <param name="stream"></param>
+    /// <param name="readerOptions"></param>
+    /// <param name="cancellationToken"></param>
+    public static async Task<IArchive> OpenAsync(
+        Stream stream,
+        ReaderOptions? readerOptions = null,
+        CancellationToken cancellationToken = default
+    )
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        return await Task.FromResult(Open(stream, readerOptions)).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Opens a TarArchive asynchronously from a FileInfo.
+    /// </summary>
+    /// <param name="fileInfo"></param>
+    /// <param name="readerOptions"></param>
+    /// <param name="cancellationToken"></param>
+    public static async Task<IArchive> OpenAsync(
+        FileInfo fileInfo,
+        ReaderOptions? readerOptions = null,
+        CancellationToken cancellationToken = default
+    )
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        return await Task.FromResult(Open(fileInfo, readerOptions)).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Opens a TarArchive asynchronously from multiple streams.
+    /// </summary>
+    /// <param name="streams"></param>
+    /// <param name="readerOptions"></param>
+    /// <param name="cancellationToken"></param>
+    public static async Task<IArchive> OpenAsync(
+        IReadOnlyList<Stream> streams,
+        ReaderOptions? readerOptions = null,
+        CancellationToken cancellationToken = default
+    )
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        return await Task.FromResult(Open(streams, readerOptions)).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Opens a TarArchive asynchronously from multiple FileInfo objects.
+    /// </summary>
+    /// <param name="fileInfos"></param>
+    /// <param name="readerOptions"></param>
+    /// <param name="cancellationToken"></param>
+    public static async Task<IArchive> OpenAsync(
+        IReadOnlyList<FileInfo> fileInfos,
+        ReaderOptions? readerOptions = null,
+        CancellationToken cancellationToken = default
+    )
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        return await Task.FromResult(Open(fileInfos, readerOptions)).ConfigureAwait(false);
+    }
+
     public static bool IsTarFile(string filePath) => IsTarFile(new FileInfo(filePath));
 
     public static bool IsTarFile(FileInfo fileInfo)

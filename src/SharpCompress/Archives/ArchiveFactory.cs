@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using SharpCompress.Common;
 using SharpCompress.Factories;
 using SharpCompress.IO;
@@ -22,6 +24,27 @@ public static class ArchiveFactory
         readerOptions ??= new ReaderOptions();
         stream = SharpCompressStream.Create(stream, bufferSize: readerOptions.BufferSize);
         return FindFactory<IArchiveFactory>(stream).Open(stream, readerOptions);
+    }
+
+    /// <summary>
+    /// Opens an Archive for random access asynchronously
+    /// </summary>
+    /// <param name="stream"></param>
+    /// <param name="readerOptions"></param>
+    /// <param name="cancellationToken"></param>
+    /// <returns></returns>
+    public static async Task<IArchive> OpenAsync(
+        Stream stream,
+        ReaderOptions? readerOptions = null,
+        CancellationToken cancellationToken = default
+    )
+    {
+        readerOptions ??= new ReaderOptions();
+        stream = SharpCompressStream.Create(stream, bufferSize: readerOptions.BufferSize);
+        var factory = FindFactory<IArchiveFactory>(stream);
+        return await factory
+            .OpenAsync(stream, readerOptions, cancellationToken)
+            .ConfigureAwait(false);
     }
 
     public static IWritableArchive Create(ArchiveType type)
@@ -50,6 +73,22 @@ public static class ArchiveFactory
     }
 
     /// <summary>
+    /// Opens an Archive from a filepath asynchronously.
+    /// </summary>
+    /// <param name="filePath"></param>
+    /// <param name="options"></param>
+    /// <param name="cancellationToken"></param>
+    public static Task<IArchive> OpenAsync(
+        string filePath,
+        ReaderOptions? options = null,
+        CancellationToken cancellationToken = default
+    )
+    {
+        filePath.NotNullOrEmpty(nameof(filePath));
+        return OpenAsync(new FileInfo(filePath), options, cancellationToken);
+    }
+
+    /// <summary>
     /// Constructor with a FileInfo object to an existing file.
     /// </summary>
     /// <param name="fileInfo"></param>
@@ -59,6 +98,24 @@ public static class ArchiveFactory
         options ??= new ReaderOptions { LeaveStreamOpen = false };
 
         return FindFactory<IArchiveFactory>(fileInfo).Open(fileInfo, options);
+    }
+
+    /// <summary>
+    /// Opens an Archive from a FileInfo object asynchronously.
+    /// </summary>
+    /// <param name="fileInfo"></param>
+    /// <param name="options"></param>
+    /// <param name="cancellationToken"></param>
+    public static async Task<IArchive> OpenAsync(
+        FileInfo fileInfo,
+        ReaderOptions? options = null,
+        CancellationToken cancellationToken = default
+    )
+    {
+        options ??= new ReaderOptions { LeaveStreamOpen = false };
+
+        var factory = FindFactory<IArchiveFactory>(fileInfo);
+        return await factory.OpenAsync(fileInfo, options, cancellationToken).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -88,6 +145,40 @@ public static class ArchiveFactory
     }
 
     /// <summary>
+    /// Opens a multi-part archive from files asynchronously.
+    /// </summary>
+    /// <param name="fileInfos"></param>
+    /// <param name="options"></param>
+    /// <param name="cancellationToken"></param>
+    public static async Task<IArchive> OpenAsync(
+        IEnumerable<FileInfo> fileInfos,
+        ReaderOptions? options = null,
+        CancellationToken cancellationToken = default
+    )
+    {
+        fileInfos.NotNull(nameof(fileInfos));
+        var filesArray = fileInfos.ToArray();
+        if (filesArray.Length == 0)
+        {
+            throw new InvalidOperationException("No files to open");
+        }
+
+        var fileInfo = filesArray[0];
+        if (filesArray.Length == 1)
+        {
+            return await OpenAsync(fileInfo, options, cancellationToken).ConfigureAwait(false);
+        }
+
+        fileInfo.NotNull(nameof(fileInfo));
+        options ??= new ReaderOptions { LeaveStreamOpen = false };
+
+        var factory = FindFactory<IMultiArchiveFactory>(fileInfo);
+        return await factory
+            .OpenAsync(filesArray, options, cancellationToken)
+            .ConfigureAwait(false);
+    }
+
+    /// <summary>
     /// Constructor with IEnumerable FileInfo objects, multi and split support.
     /// </summary>
     /// <param name="streams"></param>
@@ -111,6 +202,41 @@ public static class ArchiveFactory
         options ??= new ReaderOptions();
 
         return FindFactory<IMultiArchiveFactory>(firstStream).Open(streamsArray, options);
+    }
+
+    /// <summary>
+    /// Opens a multi-part archive from streams asynchronously.
+    /// </summary>
+    /// <param name="streams"></param>
+    /// <param name="options"></param>
+    /// <param name="cancellationToken"></param>
+    public static async Task<IArchive> OpenAsync(
+        IEnumerable<Stream> streams,
+        ReaderOptions? options = null,
+        CancellationToken cancellationToken = default
+    )
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        streams.NotNull(nameof(streams));
+        var streamsArray = streams.ToArray();
+        if (streamsArray.Length == 0)
+        {
+            throw new InvalidOperationException("No streams");
+        }
+
+        var firstStream = streamsArray[0];
+        if (streamsArray.Length == 1)
+        {
+            return await OpenAsync(firstStream, options, cancellationToken).ConfigureAwait(false);
+        }
+
+        firstStream.NotNull(nameof(firstStream));
+        options ??= new ReaderOptions();
+
+        var factory = FindFactory<IMultiArchiveFactory>(firstStream);
+        return await factory
+            .OpenAsync(streamsArray, options, cancellationToken)
+            .ConfigureAwait(false);
     }
 
     /// <summary>

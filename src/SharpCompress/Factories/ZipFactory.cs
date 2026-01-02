@@ -1,5 +1,7 @@
 using System.Collections.Generic;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 using SharpCompress.Archives;
 using SharpCompress.Archives.Zip;
 using SharpCompress.Common;
@@ -92,8 +94,22 @@ public class ZipFactory
         ZipArchive.Open(stream, readerOptions);
 
     /// <inheritdoc/>
+    public Task<IArchive> OpenAsync(
+        Stream stream,
+        ReaderOptions? readerOptions = null,
+        CancellationToken cancellationToken = default
+    ) => ZipArchive.OpenAsync(stream, readerOptions, cancellationToken);
+
+    /// <inheritdoc/>
     public IArchive Open(FileInfo fileInfo, ReaderOptions? readerOptions = null) =>
         ZipArchive.Open(fileInfo, readerOptions);
+
+    /// <inheritdoc/>
+    public Task<IArchive> OpenAsync(
+        FileInfo fileInfo,
+        ReaderOptions? readerOptions = null,
+        CancellationToken cancellationToken = default
+    ) => ZipArchive.OpenAsync(fileInfo, readerOptions, cancellationToken);
 
     #endregion
 
@@ -104,8 +120,22 @@ public class ZipFactory
         ZipArchive.Open(streams, readerOptions);
 
     /// <inheritdoc/>
+    public Task<IArchive> OpenAsync(
+        IReadOnlyList<Stream> streams,
+        ReaderOptions? readerOptions = null,
+        CancellationToken cancellationToken = default
+    ) => ZipArchive.OpenAsync(streams, readerOptions, cancellationToken);
+
+    /// <inheritdoc/>
     public IArchive Open(IReadOnlyList<FileInfo> fileInfos, ReaderOptions? readerOptions = null) =>
         ZipArchive.Open(fileInfos, readerOptions);
+
+    /// <inheritdoc/>
+    public Task<IArchive> OpenAsync(
+        IReadOnlyList<FileInfo> fileInfos,
+        ReaderOptions? readerOptions = null,
+        CancellationToken cancellationToken = default
+    ) => ZipArchive.OpenAsync(fileInfos, readerOptions, cancellationToken);
 
     #endregion
 
@@ -115,6 +145,17 @@ public class ZipFactory
     public IReader OpenReader(Stream stream, ReaderOptions? options) =>
         ZipReader.Open(stream, options);
 
+    /// <inheritdoc/>
+    public async Task<IReader> OpenReaderAsync(
+        Stream stream,
+        ReaderOptions? options,
+        CancellationToken cancellationToken = default
+    )
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        return await Task.FromResult(OpenReader(stream, options)).ConfigureAwait(false);
+    }
+
     #endregion
 
     #region IWriterFactory
@@ -122,6 +163,17 @@ public class ZipFactory
     /// <inheritdoc/>
     public IWriter Open(Stream stream, WriterOptions writerOptions) =>
         new ZipWriter(stream, new ZipWriterOptions(writerOptions));
+
+    /// <inheritdoc/>
+    public async Task<IWriter> OpenAsync(
+        Stream stream,
+        WriterOptions writerOptions,
+        CancellationToken cancellationToken = default
+    )
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        return await Task.FromResult(Open(stream, writerOptions)).ConfigureAwait(false);
+    }
 
     #endregion
 

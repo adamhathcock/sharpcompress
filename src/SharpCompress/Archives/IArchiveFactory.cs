@@ -1,4 +1,6 @@
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 using SharpCompress.Factories;
 using SharpCompress.Readers;
 
@@ -27,9 +29,33 @@ public interface IArchiveFactory : IFactory
     IArchive Open(Stream stream, ReaderOptions? readerOptions = null);
 
     /// <summary>
+    /// Opens an Archive for random access asynchronously.
+    /// </summary>
+    /// <param name="stream">An open, readable and seekable stream.</param>
+    /// <param name="readerOptions">reading options.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    Task<IArchive> OpenAsync(
+        Stream stream,
+        ReaderOptions? readerOptions = null,
+        CancellationToken cancellationToken = default
+    );
+
+    /// <summary>
     /// Constructor with a FileInfo object to an existing file.
     /// </summary>
     /// <param name="fileInfo">the file to open.</param>
     /// <param name="readerOptions">reading options.</param>
     IArchive Open(FileInfo fileInfo, ReaderOptions? readerOptions = null);
+
+    /// <summary>
+    /// Opens an Archive from a FileInfo object asynchronously.
+    /// </summary>
+    /// <param name="fileInfo">the file to open.</param>
+    /// <param name="readerOptions">reading options.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    Task<IArchive> OpenAsync(
+        FileInfo fileInfo,
+        ReaderOptions? readerOptions = null,
+        CancellationToken cancellationToken = default
+    );
 }
