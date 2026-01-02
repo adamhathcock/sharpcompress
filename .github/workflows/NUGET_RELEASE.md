@@ -21,8 +21,8 @@ The workflow automatically determines the version based on whether the commit is
 2. **Untagged Release (Prerelease)**:
    - If the current commit is NOT tagged
    - Creates a prerelease version based on the last tag
-   - Format: `{LAST_TAG}-preview.{COMMIT_COUNT}+{SHORT_SHA}`
-   - Example: `0.42.1-preview.123+abc1234`
+   - Format: `{LAST_TAG}-preview.{COMMIT_COUNT}`
+   - Example: `0.42.1-preview.123`
    - Published as a prerelease to NuGet.org
 
 ### Workflow Steps
@@ -81,7 +81,7 @@ Consider enabling branch protection rules for the `release` branch to ensure:
    ```
 2. The workflow will automatically:
    - Build and test the project
-   - Publish a prerelease version like `0.42.1-preview.456+abc1234` to NuGet.org
+   - Publish a prerelease version like `0.42.1-preview.456` to NuGet.org
 
 ## Troubleshooting
 

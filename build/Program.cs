@@ -290,9 +290,8 @@ static (string version, bool isPrerelease) GetVersion()
         var lastTag = allTags.OrderBy(tag => Version.Parse(tag)).LastOrDefault() ?? "0.0.0";
 
         var commitCount = GetGitOutput("rev-list", "--count HEAD").Trim();
-        var commitSha = GetGitOutput("rev-parse", "--short HEAD").Trim();
 
-        var version = $"{lastTag}-preview.{commitCount}+{commitSha}";
+        var version = $"{lastTag}-preview.{commitCount}";
         Console.WriteLine($"Building prerelease version: {version}");
         return (version, true);
     }

@@ -26,7 +26,7 @@ This tests the workflow on untagged commits to the release branch.
 4. Monitor the GitHub Actions workflow at: https://github.com/adamhathcock/sharpcompress/actions
 5. Verify:
    - Workflow triggers and runs successfully
-   - Version is determined correctly (e.g., `0.42.1-preview.XXX+XXXXXXX`)
+   - Version is determined correctly (e.g., `0.42.1-preview.XXX`)
    - Build and tests pass
    - Package is uploaded as artifact
    - Package is pushed to NuGet.org as prerelease
@@ -34,7 +34,7 @@ This tests the workflow on untagged commits to the release branch.
 
 **Expected Outcome:**
 - A new prerelease package appears on NuGet.org: https://www.nuget.org/packages/SharpCompress/
-- Package version follows pattern: `{LAST_TAG}-preview.{COMMIT_COUNT}+{SHA}`
+- Package version follows pattern: `{LAST_TAG}-preview.{COMMIT_COUNT}`
 
 ### 2. Test Tagged Release Publishing
 
