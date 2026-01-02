@@ -42,16 +42,16 @@ This tests the workflow when a version tag is pushed.
 
 **Steps:**
 1. Prepare the `release` branch with all desired changes
-2. Create a version tag (use a test version if possible, e.g., `0.42.2-test`):
+2. Create a version tag (must be a pure semantic version like `MAJOR.MINOR.PATCH`):
    ```bash
    git checkout release
-   git tag 0.42.2-test
-   git push origin 0.42.2-test
+   git tag 0.42.2
+   git push origin 0.42.2
    ```
 3. Monitor the GitHub Actions workflow
 4. Verify:
    - Workflow triggers and runs successfully
-   - Version is determined as the tag (e.g., `0.42.2-test`)
+   - Version is determined as the tag (e.g., `0.42.2`)
    - Build and tests pass
    - Package is uploaded as artifact
    - Package is pushed to NuGet.org as stable release
