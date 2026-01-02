@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 using SharpCompress.Common;
 using SharpCompress.IO;
 using SharpCompress.Readers;
@@ -55,6 +57,18 @@ public abstract class Factory : IFactory
         string? password = null,
         int bufferSize = ReaderOptions.DefaultBufferSize
     );
+
+    /// <inheritdoc/>
+    public virtual Task<bool> IsArchiveAsync(
+        Stream stream,
+        string? password = null,
+        int bufferSize = ReaderOptions.DefaultBufferSize,
+        CancellationToken cancellationToken = default
+    )
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        return Task.FromResult(IsArchive(stream, password, bufferSize));
+    }
 
     /// <inheritdoc/>
     public virtual FileInfo? GetFilePart(int index, FileInfo part1) => null;

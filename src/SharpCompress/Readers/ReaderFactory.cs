@@ -143,7 +143,14 @@ public static class ReaderFactory
             if (testedFactory is IReaderFactory readerFactory)
             {
                 ((IStreamStack)bStream).StackSeek(pos);
-                if (testedFactory.IsArchive(bStream, options.Password, options.BufferSize))
+                if (
+                    await testedFactory.IsArchiveAsync(
+                        bStream,
+                        options.Password,
+                        options.BufferSize,
+                        cancellationToken
+                    )
+                )
                 {
                     ((IStreamStack)bStream).StackSeek(pos);
                     return await readerFactory
@@ -163,7 +170,12 @@ public static class ReaderFactory
             ((IStreamStack)bStream).StackSeek(pos);
             if (
                 factory is IReaderFactory readerFactory
-                && factory.IsArchive(bStream, options.Password, options.BufferSize)
+                && await factory.IsArchiveAsync(
+                    bStream,
+                    options.Password,
+                    options.BufferSize,
+                    cancellationToken
+                )
             )
             {
                 ((IStreamStack)bStream).StackSeek(pos);

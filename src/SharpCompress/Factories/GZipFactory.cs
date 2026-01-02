@@ -48,6 +48,14 @@ public class GZipFactory
         int bufferSize = ReaderOptions.DefaultBufferSize
     ) => GZipArchive.IsGZipFile(stream);
 
+    /// <inheritdoc/>
+    public override Task<bool> IsArchiveAsync(
+        Stream stream,
+        string? password = null,
+        int bufferSize = ReaderOptions.DefaultBufferSize,
+        CancellationToken cancellationToken = default
+    ) => GZipArchive.IsGZipFileAsync(stream, cancellationToken);
+
     #endregion
 
     #region IArchiveFactory

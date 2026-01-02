@@ -19,16 +19,10 @@ namespace SharpCompress.Common
             _originalStream = stream ?? throw new ArgumentNullException(nameof(stream));
             _leaveOpen = leaveOpen;
 
-            // Wrap the stream with BufferedStream if it's not already a buffered stream
-            // This enables efficient async reading with internal buffering
-            if (stream is BufferedStream || stream is IO.SharpCompressStream)
-            {
-                _stream = stream;
-            }
-            else
-            {
-                _stream = new BufferedStream(stream, bufferSize);
-            }
+            // Use the stream directly without wrapping in BufferedStream
+            // BufferedStream uses synchronous Read internally which doesn't work with async-only streams
+            // SharpCompress uses SharpCompressStream for buffering which supports true async reads
+            _stream = stream;
         }
 
         public Stream BaseStream => _stream;
@@ -95,12 +89,6 @@ namespace SharpCompress.Common
 
             _disposed = true;
 
-            // Dispose the buffered stream if we created it
-            if (_stream != _originalStream)
-            {
-                _stream.Dispose();
-            }
-
             // Dispose the original stream if we own it
             if (!_leaveOpen)
             {
@@ -117,12 +105,6 @@ namespace SharpCompress.Common
             }
 
             _disposed = true;
-
-            // Dispose the buffered stream if we created it
-            if (_stream != _originalStream)
-            {
-                await _stream.DisposeAsync().ConfigureAwait(false);
-            }
 
             // Dispose the original stream if we own it
             if (!_leaveOpen)

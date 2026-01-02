@@ -283,6 +283,92 @@ public class ZipArchive : AbstractWritableArchive<ZipArchiveEntry, ZipVolume>
         }
     }
 
+    public static async Task<bool> IsZipFileAsync(
+        Stream stream,
+        string? password = null,
+        int bufferSize = ReaderOptions.DefaultBufferSize,
+        CancellationToken cancellationToken = default
+    )
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        var headerFactory = new StreamingZipHeaderFactory(password, new ArchiveEncoding(), null);
+        try
+        {
+            if (stream is not SharpCompressStream)
+            {
+                stream = new SharpCompressStream(stream, bufferSize: bufferSize);
+            }
+
+            var header = headerFactory
+                .ReadStreamHeader(stream)
+                .FirstOrDefault(x => x.ZipHeaderType != ZipHeaderType.Split);
+            if (header is null)
+            {
+                return false;
+            }
+            return Enum.IsDefined(typeof(ZipHeaderType), header.ZipHeaderType);
+        }
+        catch (CryptographicException)
+        {
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    public static async Task<bool> IsZipMultiAsync(
+        Stream stream,
+        string? password = null,
+        int bufferSize = ReaderOptions.DefaultBufferSize,
+        CancellationToken cancellationToken = default
+    )
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        var headerFactory = new StreamingZipHeaderFactory(password, new ArchiveEncoding(), null);
+        try
+        {
+            if (stream is not SharpCompressStream)
+            {
+                stream = new SharpCompressStream(stream, bufferSize: bufferSize);
+            }
+
+            var header = headerFactory
+                .ReadStreamHeader(stream)
+                .FirstOrDefault(x => x.ZipHeaderType != ZipHeaderType.Split);
+            if (header is null)
+            {
+                if (stream.CanSeek) //could be multipart. Test for central directory - might not be z64 safe
+                {
+                    var z = new SeekableZipHeaderFactory(password, new ArchiveEncoding());
+                    ZipHeader? x = null;
+                    await foreach (
+                        var h in z.ReadSeekableHeader(stream).WithCancellation(cancellationToken)
+                    )
+                    {
+                        x = h;
+                        break;
+                    }
+                    return x?.ZipHeaderType == ZipHeaderType.DirectoryEntry;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+            return Enum.IsDefined(typeof(ZipHeaderType), header.ZipHeaderType);
+        }
+        catch (CryptographicException)
+        {
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
     protected override IEnumerable<ZipVolume> LoadVolumes(SourceStream stream)
     {
         stream.LoadAllParts(); //request all streams

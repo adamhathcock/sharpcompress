@@ -22,6 +22,13 @@ class AutoArchiveFactory : IArchiveFactory
         int bufferSize = ReaderOptions.DefaultBufferSize
     ) => throw new NotSupportedException();
 
+    public Task<bool> IsArchiveAsync(
+        Stream stream,
+        string? password = null,
+        int bufferSize = ReaderOptions.DefaultBufferSize,
+        CancellationToken cancellationToken = default
+    ) => throw new NotSupportedException();
+
     public FileInfo? GetFilePart(int index, FileInfo part1) => throw new NotSupportedException();
 
     public IArchive Open(Stream stream, ReaderOptions? readerOptions = null) =>

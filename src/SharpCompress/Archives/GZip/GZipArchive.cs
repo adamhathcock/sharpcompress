@@ -231,6 +231,28 @@ public class GZipArchive : AbstractWritableArchive<GZipArchiveEntry, GZipVolume>
         return true;
     }
 
+    public static async Task<bool> IsGZipFileAsync(
+        Stream stream,
+        CancellationToken cancellationToken = default
+    )
+    {
+        // read the header on the first read
+        byte[] header = new byte[10];
+
+        // workitem 8501: handle edge case (decompress empty stream)
+        if (!await stream.ReadFullyAsync(header, cancellationToken).ConfigureAwait(false))
+        {
+            return false;
+        }
+
+        if (header[0] != 0x1F || header[1] != 0x8B || header[2] != 8)
+        {
+            return false;
+        }
+
+        return true;
+    }
+
     internal GZipArchive()
         : base(ArchiveType.GZip) { }
 
