@@ -26,7 +26,7 @@ This tests the workflow on untagged commits to the release branch.
 4. Monitor the GitHub Actions workflow at: https://github.com/adamhathcock/sharpcompress/actions
 5. Verify:
    - Workflow triggers and runs successfully
-   - Version is determined correctly (e.g., `0.42.1-preview.XXX`)
+   - Version is determined correctly (e.g., `0.43.0-beta.XXX` if last tag is 0.42.x)
    - Build and tests pass
    - Package is uploaded as artifact
    - Package is pushed to NuGet.org as prerelease
@@ -34,7 +34,7 @@ This tests the workflow on untagged commits to the release branch.
 
 **Expected Outcome:**
 - A new prerelease package appears on NuGet.org: https://www.nuget.org/packages/SharpCompress/
-- Package version follows pattern: `{LAST_TAG}-preview.{COMMIT_COUNT}`
+- Package version follows pattern: `{NEXT_MINOR_VERSION}-beta.{COMMIT_COUNT}`
 
 ### 2. Test Tagged Release Publishing
 
@@ -118,7 +118,7 @@ If testing produces unwanted packages:
 
 The workflow is considered successful if:
 
-- ✅ Prerelease versions are published correctly with preview suffix
+- ✅ Prerelease versions are published correctly with beta suffix
 - ✅ Tagged versions are published as stable releases
 - ✅ GitHub releases are created for tagged versions
 - ✅ Build and test failures prevent publishing

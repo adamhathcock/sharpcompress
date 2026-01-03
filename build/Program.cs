@@ -280,7 +280,7 @@ static (string version, bool isPrerelease) GetVersion()
     }
     else
     {
-        // Not tagged - create prerelease version based on last tag
+        // Not tagged - create prerelease version based on next minor version
         var allTags = GetGitOutput("tag", "--list")
             .Split('\n', StringSplitOptions.RemoveEmptyEntries)
             .Where(tag => Regex.IsMatch(tag.Trim(), @"^\d+\.\d+\.\d+$"))
@@ -288,10 +288,14 @@ static (string version, bool isPrerelease) GetVersion()
             .ToList();
 
         var lastTag = allTags.OrderBy(tag => Version.Parse(tag)).LastOrDefault() ?? "0.0.0";
+        var lastVersion = Version.Parse(lastTag);
+
+        // Increment minor version for next release
+        var nextVersion = new Version(lastVersion.Major, lastVersion.Minor + 1, 0);
 
         var commitCount = GetGitOutput("rev-list", "--count HEAD").Trim();
 
-        var version = $"{lastTag}-preview.{commitCount}";
+        var version = $"{nextVersion}-beta.{commitCount}";
         Console.WriteLine($"Building prerelease version: {version}");
         return (version, true);
     }
