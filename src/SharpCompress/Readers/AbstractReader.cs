@@ -17,7 +17,8 @@ public abstract class AbstractReader<TEntry, TVolume> : IReader
     where TVolume : Volume
 {
     private bool _completed;
-    protected IEnumerator<TEntry>? _entriesForCurrentReadStream;
+    private IEnumerator<TEntry>? _entriesForCurrentReadStream;
+    private IAsyncEnumerator<TEntry>? _entriesForCurrentReadStreamAsync;
     private bool _wroteCurrentEntry;
 
     internal AbstractReader(ReaderOptions options, ArchiveType archiveType)
@@ -104,7 +105,8 @@ public abstract class AbstractReader<TEntry, TVolume> : IReader
         }
         if (_entriesForCurrentReadStream is null)
         {
-            var loaded = await LoadStreamForReadingAsync(RequestInitialStream(), cancellationToken).ConfigureAwait(false);
+            var loaded = await LoadStreamForReadingAsync(RequestInitialStream(), cancellationToken)
+                .ConfigureAwait(false);
             return loaded;
         }
         if (!_wroteCurrentEntry)
@@ -122,7 +124,10 @@ public abstract class AbstractReader<TEntry, TVolume> : IReader
 
     protected bool LoadStreamForReading(Stream stream)
     {
-        _entriesForCurrentReadStream?.Dispose();
+        if (_entriesForCurrentReadStream is not null)
+        {
+            _entriesForCurrentReadStream.Dispose();
+        }
         if (stream is null || !stream.CanRead)
         {
             throw new MultipartStreamRequiredException(
@@ -140,7 +145,11 @@ public abstract class AbstractReader<TEntry, TVolume> : IReader
         CancellationToken cancellationToken = default
     )
     {
-        _entriesForCurrentReadStream?.Dispose();
+        if (_entriesForCurrentReadStreamAsync is null)
+        {
+            throw new InvalidOperationException("Entries async enumerator is not initialized.");
+        }
+        _entriesForCurrentReadStreamAsync?.DisposeAsync();
         if (stream is null || !stream.CanRead)
         {
             throw new MultipartStreamRequiredException(
@@ -150,8 +159,9 @@ public abstract class AbstractReader<TEntry, TVolume> : IReader
             );
         }
         // Default implementation uses sync version
-        _entriesForCurrentReadStream = GetEntries(stream).GetEnumerator();
-        return _entriesForCurrentReadStream.MoveNext();
+        _entriesForCurrentReadStreamAsync = GetEntriesAsync(stream, cancellationToken)
+            .GetAsyncEnumerator(cancellationToken);
+        return await _entriesForCurrentReadStreamAsync.MoveNextAsync();
     }
 
     protected virtual Stream RequestInitialStream() =>
@@ -161,6 +171,11 @@ public abstract class AbstractReader<TEntry, TVolume> : IReader
         _entriesForCurrentReadStream.NotNull().MoveNext();
 
     protected abstract IEnumerable<TEntry> GetEntries(Stream stream);
+
+    protected abstract IAsyncEnumerable<TEntry> GetEntriesAsync(
+        Stream stream,
+        CancellationToken cancellationToken = default
+    );
 
     #region Entry Skip/Write
 

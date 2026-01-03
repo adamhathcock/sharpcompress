@@ -43,13 +43,18 @@ internal class RarCrcBinaryReader : MarkingBinaryReader
         return b;
     }
 
-    public override async Task<byte[]> ReadBytesAsync(int count, CancellationToken cancellationToken = default)
+    public override async Task<byte[]> ReadBytesAsync(
+        int count,
+        CancellationToken cancellationToken = default
+    )
     {
         var result = await base.ReadBytesAsync(count, cancellationToken).ConfigureAwait(false);
         _currentCrc = RarCRC.CheckCrc(_currentCrc, result, 0, result.Length);
         return result;
     }
 
-    public async Task<byte[]> ReadBytesNoCrcAsync(int count, CancellationToken cancellationToken = default) =>
-        await base.ReadBytesAsync(count, cancellationToken).ConfigureAwait(false);
+    public async Task<byte[]> ReadBytesNoCrcAsync(
+        int count,
+        CancellationToken cancellationToken = default
+    ) => await base.ReadBytesAsync(count, cancellationToken).ConfigureAwait(false);
 }

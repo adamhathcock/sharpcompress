@@ -280,7 +280,9 @@ public class RarArchive : AbstractArchive<RarArchiveEntry, RarVolume>
     {
         try
         {
-            await MarkHeader.ReadAsync(stream, true, false, cancellationToken).ConfigureAwait(false);
+            await MarkHeader
+                .ReadAsync(stream, true, false, cancellationToken)
+                .ConfigureAwait(false);
             return true;
         }
         catch

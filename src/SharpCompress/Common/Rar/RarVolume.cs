@@ -82,12 +82,15 @@ public abstract class RarVolume : Volume
     }
 
     internal async IAsyncEnumerable<RarFilePart> GetVolumeFilePartsAsync(
-        [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken cancellationToken = default
+        [System.Runtime.CompilerServices.EnumeratorCancellation]
+            CancellationToken cancellationToken = default
     )
     {
         MarkHeader? lastMarkHeader = null;
         await foreach (
-            var header in _headerFactory.ReadHeadersAsync(Stream, cancellationToken).ConfigureAwait(false)
+            var header in _headerFactory
+                .ReadHeadersAsync(Stream, cancellationToken)
+                .ConfigureAwait(false)
         )
         {
             switch (header.HeaderType)

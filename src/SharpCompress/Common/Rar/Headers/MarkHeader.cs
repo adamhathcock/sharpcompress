@@ -138,7 +138,9 @@ internal class MarkHeader : IRarHeader
     )
     {
         var buffer = new byte[1];
-        var bytesRead = await stream.ReadAsync(buffer, 0, 1, cancellationToken).ConfigureAwait(false);
+        var bytesRead = await stream
+            .ReadAsync(buffer, 0, 1, cancellationToken)
+            .ConfigureAwait(false);
         if (bytesRead == 1)
         {
             return buffer[0];

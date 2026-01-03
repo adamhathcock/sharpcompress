@@ -88,10 +88,15 @@ internal sealed class RarCryptoBinaryReader : RarCrcBinaryReader
     public override async Task<byte> ReadByteAsync(CancellationToken cancellationToken = default) =>
         (await ReadAndDecryptBytesAsync(1, cancellationToken).ConfigureAwait(false))[0];
 
-    public override async Task<byte[]> ReadBytesAsync(int count, CancellationToken cancellationToken = default) =>
-        await ReadAndDecryptBytesAsync(count, cancellationToken).ConfigureAwait(false);
+    public override async Task<byte[]> ReadBytesAsync(
+        int count,
+        CancellationToken cancellationToken = default
+    ) => await ReadAndDecryptBytesAsync(count, cancellationToken).ConfigureAwait(false);
 
-    private async Task<byte[]> ReadAndDecryptBytesAsync(int count, CancellationToken cancellationToken)
+    private async Task<byte[]> ReadAndDecryptBytesAsync(
+        int count,
+        CancellationToken cancellationToken
+    )
     {
         var queueSize = _data.Count;
         var sizeToRead = count - queueSize;
@@ -101,7 +106,8 @@ internal sealed class RarCryptoBinaryReader : RarCrcBinaryReader
             var alignedSize = sizeToRead + ((~sizeToRead + 1) & 0xf);
             for (var i = 0; i < alignedSize / 16; i++)
             {
-                var cipherText = await ReadBytesNoCrcAsync(16, cancellationToken).ConfigureAwait(false);
+                var cipherText = await ReadBytesNoCrcAsync(16, cancellationToken)
+                    .ConfigureAwait(false);
                 var readBytes = _rijndael.ProcessBlock(cipherText);
                 foreach (var readByte in readBytes)
                 {

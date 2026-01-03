@@ -44,7 +44,8 @@ public class RarHeaderFactory
 
     public async IAsyncEnumerable<IRarHeader> ReadHeadersAsync(
         Stream stream,
-        [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken cancellationToken = default
+        [System.Runtime.CompilerServices.EnumeratorCancellation]
+            CancellationToken cancellationToken = default
     )
     {
         var markHeader = await MarkHeader
@@ -54,7 +55,10 @@ public class RarHeaderFactory
         yield return markHeader;
 
         RarHeader? header;
-        while ((header = await TryReadNextHeaderAsync(stream, cancellationToken).ConfigureAwait(false)) != null)
+        while (
+            (header = await TryReadNextHeaderAsync(stream, cancellationToken).ConfigureAwait(false))
+            != null
+        )
         {
             yield return header;
             if (header.HeaderType == HeaderType.EndArchive)
@@ -224,7 +228,10 @@ public class RarHeaderFactory
         }
     }
 
-    private async Task<RarHeader?> TryReadNextHeaderAsync(Stream stream, CancellationToken cancellationToken = default)
+    private async Task<RarHeader?> TryReadNextHeaderAsync(
+        Stream stream,
+        CancellationToken cancellationToken = default
+    )
     {
         RarCrcBinaryReader reader;
         if (!IsEncrypted)
@@ -254,7 +261,9 @@ public class RarHeaderFactory
             }
         }
 
-        var header = await RarHeader.TryReadBaseAsync(reader, _isRar5, Options.ArchiveEncoding, cancellationToken).ConfigureAwait(false);
+        var header = await RarHeader
+            .TryReadBaseAsync(reader, _isRar5, Options.ArchiveEncoding, cancellationToken)
+            .ConfigureAwait(false);
         if (header is null)
         {
             return null;

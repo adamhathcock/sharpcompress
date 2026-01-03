@@ -305,6 +305,31 @@ public class SevenZipArchive : AbstractArchive<SevenZipArchiveEntry, SevenZipVol
             }
         }
 
+        protected override async IAsyncEnumerable<SevenZipEntry> GetEntriesAsync(
+            Stream stream,
+            [System.Runtime.CompilerServices.EnumeratorCancellation]
+                CancellationToken cancellationToken = default
+        )
+        {
+            var entries = _archive.Entries.ToList();
+            stream.Position = 0;
+            foreach (var dir in entries.Where(x => x.IsDirectory))
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                _currentEntry = dir;
+                yield return dir;
+            }
+            // For non-directory entries, yield them without creating shared streams
+            // Each call to GetEntryStream() will create a fresh decompression stream
+            // to avoid state corruption issues with async operations
+            foreach (var entry in entries.Where(x => !x.IsDirectory))
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                _currentEntry = entry;
+                yield return entry;
+            }
+        }
+
         protected override EntryStream GetEntryStream()
         {
             // Create a fresh decompression stream for each file (no state sharing).

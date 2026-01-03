@@ -99,44 +99,18 @@ public abstract class RarReader : AbstractReader<RarReaderEntry, RarVolume>
         }
     }
 
-    protected async IAsyncEnumerable<RarReaderEntry> GetEntriesAsync(
+    protected override async IAsyncEnumerable<RarReaderEntry> GetEntriesAsync(
         Stream stream,
-        [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken cancellationToken = default
+        [System.Runtime.CompilerServices.EnumeratorCancellation]
+            CancellationToken cancellationToken = default
     )
     {
         volume = new RarReaderVolume(stream, Options, 0);
-        await foreach (
-            var fp in volume.ReadFilePartsAsync(cancellationToken).ConfigureAwait(false)
-        )
+        await foreach (var fp in volume.ReadFilePartsAsync(cancellationToken).ConfigureAwait(false))
         {
             ValidateArchive(volume);
             yield return new RarReaderEntry(volume.IsSolidArchive, fp);
         }
-    }
-
-    protected override async Task<bool> LoadStreamForReadingAsync(
-        Stream stream,
-        CancellationToken cancellationToken = default
-    )
-    {
-        _entriesForCurrentReadStream?.Dispose();
-        if (stream is null || !stream.CanRead)
-        {
-            throw new MultipartStreamRequiredException(
-                "File is split into multiple archives: '"
-                    + Entry.Key
-                    + "'. A new readable stream is required.  Use Cancel if it was intended."
-            );
-        }
-
-        // Materialize the async enumerable into a list to convert to sync enumerator
-        var entries = new List<RarReaderEntry>();
-        await foreach (var entry in GetEntriesAsync(stream, cancellationToken).ConfigureAwait(false))
-        {
-            entries.Add(entry);
-        }
-        _entriesForCurrentReadStream = entries.GetEnumerator();
-        return _entriesForCurrentReadStream.MoveNext();
     }
 
     protected virtual IEnumerable<FilePart> CreateFilePartEnumerableForCurrentEntry() =>
