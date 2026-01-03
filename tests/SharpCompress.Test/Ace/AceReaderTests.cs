@@ -6,6 +6,8 @@ using System.Text;
 using System.Threading.Tasks;
 using SharpCompress.Common;
 using SharpCompress.Readers;
+using SharpCompress.Readers.Ace;
+using SharpCompress.Readers.Arj;
 using Xunit;
 
 namespace SharpCompress.Test.Ace
@@ -32,11 +34,23 @@ namespace SharpCompress.Test.Ace
                 Read(fileName, compressionType)
             );
         }
+
         [Theory]
         [InlineData("Ace.store.largefile.ace", CompressionType.None)]
         public void Ace_LargeFileTest_Read(string fileName, CompressionType compressionType)
         {
             ReadForBufferBoundaryCheck(fileName, compressionType);
+        }
+
+        [Fact]
+        public void Arj_Multi_Reader()
+        {
+            var exception = Assert.Throws<MultiVolumeExtractionException>(() =>
+                DoMultiReader(
+                    ["Ace.store.split.ace", "Ace.store.split.c01"],
+                    streams => AceReader.Open(streams)
+                )
+            );
         }
     }
 }

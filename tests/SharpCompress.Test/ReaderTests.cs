@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using SharpCompress.Common;
@@ -219,5 +220,27 @@ public abstract class ReaderTests : TestBase
             Assert.Equal(expectedCompression, reader.Entry.CompressionType);
             Assert.Equal(expected.Pop(), reader.Entry.Key);
         }
+    }
+
+    protected void DoMultiReader(
+        string[] archives,
+        Func<IEnumerable<Stream>, IDisposable> readerFactory
+    )
+    {
+        using var reader = readerFactory(
+            archives.Select(s => Path.Combine(TEST_ARCHIVES_PATH, s)).Select(File.OpenRead)
+        );
+
+        dynamic dynReader = reader;
+
+        while (dynReader.MoveToNextEntry())
+        {
+            dynReader.WriteEntryToDirectory(
+                SCRATCH_FILES_PATH,
+                new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
+            );
+        }
+
+        VerifyFiles();
     }
 }

@@ -11,6 +11,7 @@ using SharpCompress.Common.Arc;
 using SharpCompress.Common.Arj;
 using SharpCompress.Common.Arj.Headers;
 using SharpCompress.Common.Rar.Headers;
+using SharpCompress.Readers.Arj;
 
 namespace SharpCompress.Readers.Ace
 {
@@ -26,18 +27,23 @@ namespace SharpCompress.Readers.Ace
     /// - Recovery record support
     /// - Additional header flags
     /// </remarks>
-    public class AceReader : AbstractReader<AceEntry, AceVolume>
+    public abstract class AceReader : AbstractReader<AceEntry, AceVolume>
     {
-        private readonly AceMainHeader _mainHeaderReader;
+        private readonly ArchiveEncoding _archiveEncoding;
 
-        private AceReader(Stream stream, ReaderOptions options)
+        internal AceReader(ReaderOptions options)
             : base(options, ArchiveType.Ace)
         {
-            Volume = new AceVolume(stream, options, 0);
-            _mainHeaderReader = new AceMainHeader(Options.ArchiveEncoding);
+            _archiveEncoding = Options.ArchiveEncoding;
         }
 
-        public override AceVolume Volume { get; }
+        private AceReader(Stream stream, ReaderOptions options)
+            : this(options)
+        {
+            Volume = new AceVolume(stream, options, 0);
+        }
+
+        public override AceVolume? Volume { get; }
 
         /// <summary>
         /// Opens an AceReader for non-seeking usage with a single volume.
@@ -48,12 +54,27 @@ namespace SharpCompress.Readers.Ace
         public static AceReader Open(Stream stream, ReaderOptions? options = null)
         {
             stream.NotNull(nameof(stream));
-            return new AceReader(stream, options ?? new ReaderOptions());
+            return new SingleVolumeAceReader(stream, options ?? new ReaderOptions());
         }
+
+        /// <summary>
+        /// Opens an AceReader for Non-seeking usage with multiple volumes
+        /// </summary>
+        /// <param name="streams"></param>
+        /// <param name="options"></param>
+        /// <returns></returns>
+        public static AceReader Open(IEnumerable<Stream> streams, ReaderOptions? options = null)
+        {
+            streams.NotNull(nameof(streams));
+            return new MultiVolumeAceReader(streams, options ?? new ReaderOptions());
+        }
+
+        protected abstract void ValidateArchive(AceVolume archive);
 
         protected override IEnumerable<AceEntry> GetEntries(Stream stream)
         {
-            var mainHeader = _mainHeaderReader.Read(stream);
+            var mainHeaderReader = new AceMainHeader(_archiveEncoding);
+            var mainHeader = mainHeaderReader.Read(stream);
             if (mainHeader == null)
             {
                 yield break;
@@ -82,5 +103,8 @@ namespace SharpCompress.Readers.Ace
                 yield return new AceEntry(new AceFilePart((AceFileHeader)localHeader, stream));
             }
         }
+
+        protected virtual IEnumerable<FilePart> CreateFilePartEnumerableForCurrentEntry() =>
+            Entry.Parts;
     }
 }
