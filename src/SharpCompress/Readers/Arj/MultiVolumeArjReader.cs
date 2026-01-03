@@ -65,6 +65,20 @@ internal class MultiVolumeArjReader : ArjReader
         return enumerator;
     }
 
+    protected override IAsyncEnumerable<FilePart> CreateFilePartAsyncEnumerableForCurrentEntry(
+        CancellationToken cancellationToken = default
+    )
+    {
+        var enumerator = new MultiVolumeStreamAsyncEnumerable(
+            this,
+            streams,
+            tempStream,
+            cancellationToken
+        );
+        tempStream = null;
+        return enumerator;
+    }
+
     private class MultiVolumeStreamEnumerator : IEnumerable<FilePart>, IEnumerator<FilePart>
     {
         private readonly MultiVolumeArjReader reader;
@@ -127,5 +141,74 @@ internal class MultiVolumeArjReader : ArjReader
         }
 
         public void Reset() { }
+    }
+
+    private class MultiVolumeStreamAsyncEnumerable
+        : IAsyncEnumerable<FilePart>,
+            IAsyncEnumerator<FilePart>
+    {
+        private readonly MultiVolumeArjReader reader;
+        private readonly IEnumerator<Stream> nextReadableStreams;
+        private Stream tempStream;
+        private bool isFirst = true;
+        private readonly CancellationToken cancellationToken;
+
+        internal MultiVolumeStreamAsyncEnumerable(
+            MultiVolumeArjReader r,
+            IEnumerator<Stream> nextReadableStreams,
+            Stream tempStream,
+            CancellationToken cancellationToken
+        )
+        {
+            reader = r;
+            this.nextReadableStreams = nextReadableStreams;
+            this.tempStream = tempStream;
+            this.cancellationToken = cancellationToken;
+        }
+
+        public IAsyncEnumerator<FilePart> GetAsyncEnumerator(
+            CancellationToken cancellationToken = default
+        ) => this;
+
+        public FilePart Current { get; private set; }
+
+        public async ValueTask<bool> MoveNextAsync()
+        {
+            if (isFirst)
+            {
+                Current = reader.Entry.Parts.First();
+                isFirst = false; //first stream already to go
+                return true;
+            }
+
+            if (!reader.Entry.IsSplitAfter)
+            {
+                return false;
+            }
+            if (tempStream != null)
+            {
+                var result = await reader.LoadStreamForReadingAsync(tempStream, cancellationToken);
+                tempStream = null;
+                Current = reader.Entry.Parts.First();
+                return result;
+            }
+            else if (!nextReadableStreams.MoveNext())
+            {
+                throw new MultiVolumeExtractionException(
+                    "No stream provided when requested by MultiVolumeArjReader"
+                );
+            }
+            else
+            {
+                var result = await reader.LoadStreamForReadingAsync(
+                    nextReadableStreams.Current,
+                    cancellationToken
+                );
+                Current = reader.Entry.Parts.First();
+                return result;
+            }
+        }
+
+        public ValueTask DisposeAsync() => ValueTask.CompletedTask;
     }
 }

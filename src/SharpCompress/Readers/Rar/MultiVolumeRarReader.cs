@@ -55,25 +55,23 @@ internal class MultiVolumeRarReader : RarReader
         return true;
     }
 
-    // Helper method for async file part loading
-    internal bool LoadStreamForFilePartSync(Stream stream)
-    {
-        // For sync context, just use the regular sync method
-        return LoadStreamForReading(stream);
-    }
-
-    internal async Task<bool> LoadStreamForFilePartAsync(
-        Stream stream,
-        CancellationToken cancellationToken = default
-    )
-    {
-        // For async context, use the async method
-        return await LoadStreamForReadingAsync(stream, cancellationToken);
-    }
-
     protected override IEnumerable<FilePart> CreateFilePartEnumerableForCurrentEntry()
     {
         var enumerator = new MultiVolumeStreamEnumerator(this, streams, tempStream);
+        tempStream = null;
+        return enumerator;
+    }
+
+    protected override IAsyncEnumerable<FilePart> CreateFilePartAsyncEnumerableForCurrentEntry(
+        CancellationToken cancellationToken = default
+    )
+    {
+        var enumerator = new MultiVolumeStreamAsyncEnumerable(
+            this,
+            streams,
+            tempStream,
+            cancellationToken
+        );
         tempStream = null;
         return enumerator;
     }
@@ -121,18 +119,10 @@ internal class MultiVolumeRarReader : RarReader
             }
             if (tempStream != null)
             {
-                // Try async loading first for async-only streams
-                try
-                {
-                    return reader
-                        .LoadStreamForFilePartAsync(tempStream, CancellationToken.None)
-                        .GetAwaiter()
-                        .GetResult();
-                }
-                finally
-                {
-                    tempStream = null;
-                }
+                var result = reader.LoadStreamForReading(tempStream);
+                tempStream = null;
+                Current = reader.Entry.Parts.First();
+                return result;
             }
             else if (!nextReadableStreams.MoveNext())
             {
@@ -142,16 +132,81 @@ internal class MultiVolumeRarReader : RarReader
             }
             else
             {
-                // Try async loading first for async-only streams
-                var result = reader
-                    .LoadStreamForFilePartAsync(nextReadableStreams.Current, CancellationToken.None)
-                    .GetAwaiter()
-                    .GetResult();
+                var result = reader.LoadStreamForReading(nextReadableStreams.Current);
                 Current = reader.Entry.Parts.First();
                 return result;
             }
         }
 
         public void Reset() { }
+    }
+
+    private class MultiVolumeStreamAsyncEnumerable
+        : IAsyncEnumerable<FilePart>,
+            IAsyncEnumerator<FilePart>
+    {
+        private readonly MultiVolumeRarReader reader;
+        private readonly IEnumerator<Stream> nextReadableStreams;
+        private Stream tempStream;
+        private bool isFirst = true;
+        private readonly CancellationToken cancellationToken;
+
+        internal MultiVolumeStreamAsyncEnumerable(
+            MultiVolumeRarReader r,
+            IEnumerator<Stream> nextReadableStreams,
+            Stream tempStream,
+            CancellationToken cancellationToken
+        )
+        {
+            reader = r;
+            this.nextReadableStreams = nextReadableStreams;
+            this.tempStream = tempStream;
+            this.cancellationToken = cancellationToken;
+        }
+
+        public IAsyncEnumerator<FilePart> GetAsyncEnumerator(
+            CancellationToken cancellationToken = default
+        ) => this;
+
+        public FilePart Current { get; private set; }
+
+        public async ValueTask<bool> MoveNextAsync()
+        {
+            if (isFirst)
+            {
+                Current = reader.Entry.Parts.First();
+                isFirst = false; //first stream already to go
+                return true;
+            }
+
+            if (!reader.Entry.IsSplitAfter)
+            {
+                return false;
+            }
+            if (tempStream != null)
+            {
+                var result = await reader.LoadStreamForReadingAsync(tempStream, cancellationToken);
+                tempStream = null;
+                Current = reader.Entry.Parts.First();
+                return result;
+            }
+            else if (!nextReadableStreams.MoveNext())
+            {
+                throw new MultiVolumeExtractionException(
+                    "No stream provided when requested by MultiVolumeRarReader"
+                );
+            }
+            else
+            {
+                var result = await reader.LoadStreamForReadingAsync(
+                    nextReadableStreams.Current,
+                    cancellationToken
+                );
+                Current = reader.Entry.Parts.First();
+                return result;
+            }
+        }
+
+        public ValueTask DisposeAsync() => ValueTask.CompletedTask;
     }
 }

@@ -116,6 +116,10 @@ public abstract class RarReader : AbstractReader<RarReaderEntry, RarVolume>
     protected virtual IEnumerable<FilePart> CreateFilePartEnumerableForCurrentEntry() =>
         Entry.Parts;
 
+    protected virtual IAsyncEnumerable<FilePart> CreateFilePartAsyncEnumerableForCurrentEntry(
+        CancellationToken cancellationToken = default
+    ) => Entry.Parts.ToAsyncEnumerable();
+
     protected override EntryStream GetEntryStream()
     {
         if (Entry.IsRedir)
@@ -151,7 +155,8 @@ public abstract class RarReader : AbstractReader<RarReaderEntry, RarVolume>
         }
 
         var stream = new MultiVolumeReadOnlyStream(
-            CreateFilePartEnumerableForCurrentEntry().Cast<RarFilePart>()
+            CreateFilePartAsyncEnumerableForCurrentEntry(cancellationToken).Cast<RarFilePart>(),
+            cancellationToken
         );
         if (Entry.IsRarV3)
         {

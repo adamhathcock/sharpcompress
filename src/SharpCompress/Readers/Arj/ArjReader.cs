@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using SharpCompress.Common;
 using SharpCompress.Common.Arj;
@@ -86,6 +87,10 @@ namespace SharpCompress.Readers.Arj
 
         protected virtual IEnumerable<FilePart> CreateFilePartEnumerableForCurrentEntry() =>
             Entry.Parts;
+
+        protected virtual IAsyncEnumerable<FilePart> CreateFilePartAsyncEnumerableForCurrentEntry(
+            CancellationToken cancellationToken = default
+        ) => Entry.Parts.ToAsyncEnumerable();
 
         protected override async IAsyncEnumerable<ArjEntry> GetEntriesAsync(
             Stream stream,
