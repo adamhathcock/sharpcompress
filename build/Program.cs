@@ -244,9 +244,7 @@ static async Task<(string version, bool isPrerelease)> GetVersion()
         var nextVersion = new Version(lastVersion.Major, lastVersion.Minor + 1, 0);
 
         // Use commit count since the last version tag if available; otherwise, fall back to total count
-        var revListArgs = allTags.Any()
-            ? $"--count {lastTag}..HEAD"
-            : "--count HEAD";
+        var revListArgs = allTags.Any() ? $"--count {lastTag}..HEAD" : "--count HEAD";
         var commitCount = (await GetGitOutput("rev-list", revListArgs)).Trim();
 
         var version = $"{nextVersion}-beta.{commitCount}";
