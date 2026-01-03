@@ -32,5 +32,11 @@ namespace SharpCompress.Test.Ace
                 Read(fileName, compressionType)
             );
         }
+        [Theory]
+        [InlineData("Ace.store.largefile.ace", CompressionType.None)]
+        public void Ace_LargeFileTest_Read(string fileName, CompressionType compressionType)
+        {
+            ReadForBufferBoundaryCheck(fileName, compressionType);
+        }
     }
 }
