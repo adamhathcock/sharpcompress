@@ -4,7 +4,11 @@ This document describes the automated NuGet release workflow for SharpCompress.
 
 ## Overview
 
-The `nuget-release.yml` workflow automatically builds, tests, and publishes SharpCompress packages to NuGet.org when changes are pushed to the `master` or `release` branch. The workflow runs on both Windows and Ubuntu, but only the Windows build publishes to NuGet.
+The `nuget-release.yml` workflow automatically builds, tests, and publishes SharpCompress packages to NuGet.org when:
+- Changes are pushed to the `master` or `release` branch
+- A version tag (format: `MAJOR.MINOR.PATCH`) is pushed
+
+The workflow runs on both Windows and Ubuntu, but only the Windows build publishes to NuGet.
 
 ## How It Works
 
@@ -60,16 +64,27 @@ Consider enabling branch protection rules for the `release` branch to ensure:
 
 ### Creating a Stable Release
 
-1. Ensure all changes are merged and tested on the `master` or `release` branch
+There are two ways to trigger a stable release:
+
+**Method 1: Push tag to trigger workflow**
+1. Ensure all changes are committed on the `master` or `release` branch
 2. Create and push a version tag:
    ```bash
    git checkout master  # or release
    git tag 0.43.0
    git push origin 0.43.0
    ```
-3. The workflow will automatically:
-   - Build and test the project on both Windows and Ubuntu
-   - Publish `SharpCompress 0.43.0` to NuGet.org (Windows build)
+3. The workflow will automatically trigger, build, test, and publish `SharpCompress 0.43.0` to NuGet.org (Windows build)
+
+**Method 2: Tag after pushing to branch**
+1. Ensure all changes are merged and pushed to the `master` or `release` branch
+2. Create and push a version tag on the already-pushed commit:
+   ```bash
+   git checkout master  # or release
+   git tag 0.43.0
+   git push origin 0.43.0
+   ```
+3. The workflow will automatically trigger, build, test, and publish `SharpCompress 0.43.0` to NuGet.org (Windows build)
 
 ### Creating a Prerelease
 
