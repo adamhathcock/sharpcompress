@@ -133,36 +133,10 @@ internal static class Utility
     {
         public long TransferTo(Stream destination, long maxLength)
         {
-            var array = ArrayPool<byte>.Shared.Rent(TEMP_BUFFER_SIZE);
-            try
-            {
-                var maxReadSize = array.Length;
-                long total = 0;
-                var remaining = maxLength;
-                if (remaining < maxReadSize)
-                {
-                    maxReadSize = (int)remaining;
-                }
-                while (ReadTransferBlock(source, array, maxReadSize, out var count))
-                {
-                    destination.Write(array, 0, count);
-                    total += count;
-                    if (remaining - count < 0)
-                    {
-                        break;
-                    }
-                    remaining -= count;
-                    if (remaining < maxReadSize)
-                    {
-                        maxReadSize = (int)remaining;
-                    }
-                }
-                return total;
-            }
-            finally
-            {
-                ArrayPool<byte>.Shared.Return(array);
-            }
+            // Use ReadOnlySubStream to limit reading and leverage framework's CopyTo
+            using var limitedStream = new IO.ReadOnlySubStream(source, maxLength);
+            limitedStream.CopyTo(destination, TEMP_BUFFER_SIZE);
+            return limitedStream.Position;
         }
 
         public async Task<long> TransferToAsync(
@@ -171,71 +145,13 @@ internal static class Utility
             CancellationToken cancellationToken = default
         )
         {
-            var array = ArrayPool<byte>.Shared.Rent(TEMP_BUFFER_SIZE);
-            try
-            {
-                var maxReadSize = array.Length;
-                long total = 0;
-                var remaining = maxLength;
-                if (remaining < maxReadSize)
-                {
-                    maxReadSize = (int)remaining;
-                }
-                while (
-                    await ReadTransferBlockAsync(source, array, maxReadSize, cancellationToken)
-                        .ConfigureAwait(false)
-                        is var (success, count)
-                    && success
-                )
-                {
-                    await destination
-                        .WriteAsync(array, 0, count, cancellationToken)
-                        .ConfigureAwait(false);
-                    total += count;
-                    if (remaining - count < 0)
-                    {
-                        break;
-                    }
-                    remaining -= count;
-                    if (remaining < maxReadSize)
-                    {
-                        maxReadSize = (int)remaining;
-                    }
-                }
-                return total;
-            }
-            finally
-            {
-                ArrayPool<byte>.Shared.Return(array);
-            }
+            // Use ReadOnlySubStream to limit reading and leverage framework's CopyToAsync
+            using var limitedStream = new IO.ReadOnlySubStream(source, maxLength);
+            await limitedStream
+                .CopyToAsync(destination, TEMP_BUFFER_SIZE, cancellationToken)
+                .ConfigureAwait(false);
+            return limitedStream.Position;
         }
-    }
-
-    private static bool ReadTransferBlock(Stream source, byte[] array, int maxSize, out int count)
-    {
-        var size = maxSize;
-        if (maxSize > array.Length)
-        {
-            size = array.Length;
-        }
-        count = source.Read(array, 0, size);
-        return count != 0;
-    }
-
-    private static async Task<(bool success, int count)> ReadTransferBlockAsync(
-        Stream source,
-        byte[] array,
-        int maxSize,
-        CancellationToken cancellationToken
-    )
-    {
-        var size = maxSize;
-        if (maxSize > array.Length)
-        {
-            size = array.Length;
-        }
-        var count = await source.ReadAsync(array, 0, size, cancellationToken).ConfigureAwait(false);
-        return (count != 0, count);
     }
 
     extension(Stream source)
