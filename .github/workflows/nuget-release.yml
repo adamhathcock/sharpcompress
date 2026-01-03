@@ -7,6 +7,10 @@ on:
       - 'release'
     tags:
       - '[0-9]+.[0-9]+.[0-9]+'
+  pull_request:
+    branches:
+      - 'master'
+      - 'release'
 
 permissions:
   contents: read
@@ -49,9 +53,9 @@ jobs:
         name: ${{ matrix.os }}-nuget-package
         path: artifacts/*.nupkg
     
-    # Push to NuGet.org using C# build target (Windows only)
+    # Push to NuGet.org using C# build target (Windows only, not on PRs)
     - name: Push to NuGet
-      if: success() && matrix.os == 'windows-latest'
+      if: success() && matrix.os == 'windows-latest' && github.event_name != 'pull_request'
       run: dotnet run --project build/build.csproj -- push-to-nuget
       env:
         NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
