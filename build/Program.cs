@@ -265,6 +265,6 @@ static async Task<string> GetGitOutput(string command, string args)
     }
     catch (Exception ex)
     {
-        throw new Exception($"Git command failed: git {command} {args}\n{ex.Message}");
+        throw new Exception($"Git command failed: git {command} {args}\n{ex.Message}", ex);
     }
 }
