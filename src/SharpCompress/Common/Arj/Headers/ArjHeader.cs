@@ -34,14 +34,13 @@ namespace SharpCompress.Common.Arj.Headers
         public byte[] ReadHeader(Stream stream)
         {
             // check for magic bytes
-            Span<byte> magic = stackalloc byte[2];
+            var magic = new byte[2];
             if (stream.Read(magic) != 2)
             {
                 return Array.Empty<byte>();
             }
 
-            var magicValue = (ushort)(magic[0] | magic[1] << 8);
-            if (magicValue != ARJ_MAGIC)
+            if (!CheckMagicBytes(magic))
             {
                 throw new InvalidDataException("Not an ARJ file (wrong magic bytes)");
             }
@@ -137,6 +136,22 @@ namespace SharpCompress.Common.Arj.Headers
             return Enum.IsDefined(typeof(FileType), value)
                 ? (FileType)value
                 : Headers.FileType.Unknown;
+        }
+        public static bool IsArchive(Stream stream)
+        {
+            var bytes = new byte[2];
+            if (stream.Read(bytes, 0, 2) != 2)
+            {
+                return false;
+            }
+
+            return CheckMagicBytes(bytes);
+        }
+
+        protected static bool CheckMagicBytes(byte[] headerBytes)
+        {
+            var magicValue = (ushort)(headerBytes[0] | headerBytes[1] << 8);
+            return magicValue == ARJ_MAGIC;
         }
     }
 }
