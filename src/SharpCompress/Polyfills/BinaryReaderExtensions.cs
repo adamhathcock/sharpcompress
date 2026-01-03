@@ -11,11 +11,18 @@ public static class BinaryReaderExtensions
     {
         public async Task<byte> ReadByteAsync(CancellationToken cancellationToken = default)
         {
-            var buffer = new byte[1];
-            await reader
-                .BaseStream.ReadExactAsync(buffer, 0, 1, cancellationToken)
-                .ConfigureAwait(false);
-            return buffer[0];
+            var buffer = ArrayPool<byte>.Shared.Rent(1);
+            try
+            {
+                await reader
+                    .BaseStream.ReadExactAsync(buffer, 0, 1, cancellationToken)
+                    .ConfigureAwait(false);
+                return buffer[0];
+            }
+            finally
+            {
+                ArrayPool<byte>.Shared.Return(buffer);
+            }
         }
 
         public async Task<byte[]> ReadBytesAsync(
@@ -23,11 +30,20 @@ public static class BinaryReaderExtensions
             CancellationToken cancellationToken = default
         )
         {
-            var bytes = new byte[count];
-            await reader
-                .BaseStream.ReadExactAsync(bytes, 0, count, cancellationToken)
-                .ConfigureAwait(false);
-            return bytes;
+            var buffer = ArrayPool<byte>.Shared.Rent(count);
+            try
+            {
+                await reader
+                    .BaseStream.ReadExactAsync(buffer, 0, count, cancellationToken)
+                    .ConfigureAwait(false);
+                var bytes = new byte[count];
+                System.Array.Copy(buffer, 0, bytes, 0, count);
+                return bytes;
+            }
+            finally
+            {
+                ArrayPool<byte>.Shared.Return(buffer);
+            }
         }
     }
 }
