@@ -1,5 +1,7 @@
 using System.Collections.Generic;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 using SharpCompress.IO;
 using SharpCompress.Readers;
 
@@ -24,6 +26,30 @@ public class RarHeaderFactory
     public IEnumerable<IRarHeader> ReadHeaders(Stream stream)
     {
         var markHeader = MarkHeader.Read(stream, Options.LeaveStreamOpen, Options.LookForHeader);
+        _isRar5 = markHeader.IsRar5;
+        yield return markHeader;
+
+        RarHeader? header;
+        while ((header = TryReadNextHeader(stream)) != null)
+        {
+            yield return header;
+            if (header.HeaderType == HeaderType.EndArchive)
+            {
+                // End of archive marker. RAR does not read anything after this header letting to use third
+                // party tools to add extra information such as a digital signature to archive.
+                yield break;
+            }
+        }
+    }
+
+    public async IAsyncEnumerable<IRarHeader> ReadHeadersAsync(
+        Stream stream,
+        [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken cancellationToken = default
+    )
+    {
+        var markHeader = await MarkHeader
+            .ReadAsync(stream, Options.LeaveStreamOpen, Options.LookForHeader, cancellationToken)
+            .ConfigureAwait(false);
         _isRar5 = markHeader.IsRar5;
         yield return markHeader;
 
