@@ -6,6 +6,9 @@ on:
       - 'master'
       - 'release'
 
+permissions:
+  contents: read
+
 jobs:
   build-and-publish:
     runs-on: ${{ matrix.os }}
