@@ -1,0 +1,36 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using SharpCompress.Common;
+using SharpCompress.Readers;
+using Xunit;
+
+namespace SharpCompress.Test.Ace
+{
+    public class AceReaderTests : ReaderTests
+    {
+        public AceReaderTests()
+        {
+            UseExtensionInsteadOfNameToVerify = true;
+            UseCaseInsensitiveToVerify = true;
+        }
+
+        [Fact]
+        public void Ace_Uncompressed_Read() => Read("Ace.store.ace", CompressionType.None);
+
+        [Theory]
+        [InlineData("Ace.method1.ace", CompressionType.AceLZ77)]
+        [InlineData("Ace.method1-solid.ace", CompressionType.AceLZ77)]
+        [InlineData("Ace.method2.ace", CompressionType.AceLZ77)]
+        [InlineData("Ace.method2-solid.ace", CompressionType.AceLZ77)]
+        public void Ace_Unsupported_ShouldThrow(string fileName, CompressionType compressionType)
+        {
+            var exception = Assert.Throws<NotSupportedException>(() =>
+                Read(fileName, compressionType)
+            );
+        }
+    }
+}

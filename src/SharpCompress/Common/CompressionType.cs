@@ -30,4 +30,5 @@ public enum CompressionType
     Distilled,
     ZStandard,
     ArjLZ77,
+    AceLZ77
 }
