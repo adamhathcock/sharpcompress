@@ -3,13 +3,17 @@ name: NuGet Release
 on:
   push:
     branches:
+      - 'master'
       - 'release'
 
 jobs:
   build-and-publish:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     permissions:
       contents: write
+    strategy:
+      matrix:
+        os: [windows-latest, ubuntu-latest]
     
     steps:
     - uses: actions/checkout@v6
@@ -39,19 +43,19 @@ jobs:
     - name: Upload NuGet Package
       uses: actions/upload-artifact@v6
       with:
-        name: nuget-package
+        name: ${{ matrix.os }}-nuget-package
         path: artifacts/*.nupkg
     
-    # Push to NuGet.org using C# build target
+    # Push to NuGet.org using C# build target (Windows only)
     - name: Push to NuGet
-      if: success()
+      if: success() && matrix.os == 'windows-latest'
       run: dotnet run --project build/build.csproj -- push-to-nuget
       env:
         NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
     
-    # Create GitHub release for tagged versions using C# build target
+    # Create GitHub release for tagged versions using C# build target (Windows only)
     - name: Create GitHub Release
-      if: steps.version.outputs.prerelease == 'false' && success()
+      if: steps.version.outputs.prerelease == 'false' && success() && matrix.os == 'windows-latest'
       run: dotnet run --project build/build.csproj -- create-release
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

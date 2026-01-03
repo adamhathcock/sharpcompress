@@ -4,7 +4,7 @@ This document describes how to test the NuGet release workflow.
 
 ## Testing Strategy
 
-Since this workflow publishes to NuGet.org and requires repository secrets, testing should be done carefully.
+Since this workflow publishes to NuGet.org and requires repository secrets, testing should be done carefully. The workflow runs on both Windows and Ubuntu, but only the Windows build publishes to NuGet.
 
 ## Pre-Testing Checklist
 
@@ -17,19 +17,19 @@ Since this workflow publishes to NuGet.org and requires repository secrets, test
 
 ### 1. Test Prerelease Publishing (Recommended First Test)
 
-This tests the workflow on untagged commits to the release branch.
+This tests the workflow on untagged commits to the master or release branch.
 
 **Steps:**
 1. Ensure `NUGET_API_KEY` secret is configured in repository settings
-2. Create a test commit on the `release` branch (e.g., update a comment or README)
-3. Push to the `release` branch
+2. Create a test commit on the `master` or `release` branch (e.g., update a comment or README)
+3. Push to the `master` or `release` branch
 4. Monitor the GitHub Actions workflow at: https://github.com/adamhathcock/sharpcompress/actions
 5. Verify:
-   - Workflow triggers and runs successfully
+   - Workflow triggers and runs successfully on both Windows and Ubuntu
    - Version is determined correctly (e.g., `0.43.0-beta.XXX` if last tag is 0.42.x)
-   - Build and tests pass
-   - Package is uploaded as artifact
-   - Package is pushed to NuGet.org as prerelease
+   - Build and tests pass on both platforms
+   - Package artifacts are uploaded for both platforms
+   - Package is pushed to NuGet.org as prerelease (Windows build only)
    - No GitHub release is created (only for tagged releases)
 
 **Expected Outcome:**
@@ -41,21 +41,21 @@ This tests the workflow on untagged commits to the release branch.
 This tests the workflow when a version tag is pushed.
 
 **Steps:**
-1. Prepare the `release` branch with all desired changes
+1. Prepare the `master` or `release` branch with all desired changes
 2. Create a version tag (must be a pure semantic version like `MAJOR.MINOR.PATCH`):
    ```bash
-   git checkout release
+   git checkout master  # or release
    git tag 0.42.2
    git push origin 0.42.2
    ```
 3. Monitor the GitHub Actions workflow
 4. Verify:
-   - Workflow triggers and runs successfully
+   - Workflow triggers and runs successfully on both Windows and Ubuntu
    - Version is determined as the tag (e.g., `0.42.2`)
-   - Build and tests pass
-   - Package is uploaded as artifact
-   - Package is pushed to NuGet.org as stable release
-   - GitHub release is created with the package attached
+   - Build and tests pass on both platforms
+   - Package artifacts are uploaded for both platforms
+   - Package is pushed to NuGet.org as stable release (Windows build only)
+   - GitHub release is created with the package attached (Windows build only)
 
 **Expected Outcome:**
 - A new stable release package appears on NuGet.org

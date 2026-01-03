@@ -4,7 +4,7 @@ This document describes the automated NuGet release workflow for SharpCompress.
 
 ## Overview
 
-The `nuget-release.yml` workflow automatically builds, tests, and publishes SharpCompress packages to NuGet.org when changes are pushed to the `release` branch.
+The `nuget-release.yml` workflow automatically builds, tests, and publishes SharpCompress packages to NuGet.org when changes are pushed to the `master` or `release` branch. The workflow runs on both Windows and Ubuntu, but only the Windows build publishes to NuGet.
 
 ## How It Works
 
@@ -13,28 +13,30 @@ The `nuget-release.yml` workflow automatically builds, tests, and publishes Shar
 The workflow automatically determines the version based on whether the commit is tagged using C# code in the build project:
 
 1. **Tagged Release (Stable)**:
-   - If the current commit on the `release` branch has a version tag (e.g., `0.42.1`)
+   - If the current commit has a version tag (e.g., `0.42.1`)
    - Uses the tag as the version number
    - Published as a stable release
-   - Creates a GitHub Release with the package attached
+   - Creates a GitHub Release with the package attached (Windows build only)
 
 2. **Untagged Release (Prerelease)**:
    - If the current commit is NOT tagged
    - Creates a prerelease version based on the next minor version
    - Format: `{NEXT_MINOR_VERSION}-beta.{COMMIT_COUNT}`
    - Example: `0.43.0-beta.123` (if last tag is 0.42.x)
-   - Published as a prerelease to NuGet.org
+   - Published as a prerelease to NuGet.org (Windows build only)
 
 ### Workflow Steps
+
+The workflow runs on a matrix of operating systems (Windows and Ubuntu):
 
 1. **Checkout**: Fetches the repository with full history for version detection
 2. **Setup .NET**: Installs .NET 10.0
 3. **Determine Version**: Runs `determine-version` build target to check for tags and determine version
 4. **Update Version**: Runs `update-version` build target to update the version in the project file
-5. **Build and Test**: Runs the full build and test suite
-6. **Upload Artifacts**: Uploads the generated `.nupkg` files as workflow artifacts
-7. **Push to NuGet**: Runs `push-to-nuget` build target to publish the package to NuGet.org using the API key
-8. **Create GitHub Release**: (Only for tagged releases) Runs `create-release` build target to create a GitHub release with the package
+5. **Build and Test**: Runs the full build and test suite on both platforms
+6. **Upload Artifacts**: Uploads the generated `.nupkg` files as workflow artifacts (separate for each OS)
+7. **Push to NuGet**: (Windows only) Runs `push-to-nuget` build target to publish the package to NuGet.org using the API key
+8. **Create GitHub Release**: (Windows only, tagged releases only) Runs `create-release` build target to create a GitHub release with the package
 
 All version detection, file updates, and publishing logic is implemented in C# in the `build/Program.cs` file using build targets.
 
@@ -60,28 +62,28 @@ Consider enabling branch protection rules for the `release` branch to ensure:
 
 ### Creating a Stable Release
 
-1. Ensure all changes are merged and tested on the `release` branch
+1. Ensure all changes are merged and tested on the `master` or `release` branch
 2. Create and push a version tag:
    ```bash
-   git checkout release
+   git checkout master  # or release
    git tag 0.43.0
    git push origin 0.43.0
    ```
 3. The workflow will automatically:
-   - Build and test the project
-   - Publish `SharpCompress 0.43.0` to NuGet.org
-   - Create a GitHub Release
+   - Build and test the project on both Windows and Ubuntu
+   - Publish `SharpCompress 0.43.0` to NuGet.org (Windows build)
+   - Create a GitHub Release (Windows build)
 
 ### Creating a Prerelease
 
-1. Push changes to the `release` branch without tagging:
+1. Push changes to the `master` or `release` branch without tagging:
    ```bash
-   git checkout release
-   git push origin release
+   git checkout master  # or release
+   git push origin master  # or release
    ```
 2. The workflow will automatically:
-   - Build and test the project
-   - Publish a prerelease version like `0.43.0-beta.456` to NuGet.org
+   - Build and test the project on both Windows and Ubuntu
+   - Publish a prerelease version like `0.43.0-beta.456` to NuGet.org (Windows build)
 
 ## Troubleshooting
 
