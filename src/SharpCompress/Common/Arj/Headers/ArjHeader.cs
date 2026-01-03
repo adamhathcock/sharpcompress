@@ -137,6 +137,7 @@ namespace SharpCompress.Common.Arj.Headers
                 ? (FileType)value
                 : Headers.FileType.Unknown;
         }
+
         public static bool IsArchive(Stream stream)
         {
             var bytes = new byte[2];

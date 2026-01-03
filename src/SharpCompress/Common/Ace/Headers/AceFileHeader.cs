@@ -157,6 +157,7 @@ namespace SharpCompress.Common.Ace.Headers
                 2 => CompressionType.Blocked,
                 _ => CompressionType.Unknown,
             };
+
         public CompressionQuality GetCompressionQuality(byte value) =>
             value switch
             {
