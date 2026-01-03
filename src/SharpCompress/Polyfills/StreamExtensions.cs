@@ -98,20 +98,9 @@ public static class StreamExtensions
             int offset,
             int count,
             CancellationToken cancellationToken
-        )
-        {
-            var totalRead = 0;
-            while (totalRead < count)
-            {
-                var read = await stream
-                    .ReadAsync(buffer, offset + totalRead, count - totalRead, cancellationToken)
-                    .ConfigureAwait(false);
-                if (read == 0)
-                {
-                    throw new EndOfStreamException();
-                }
-                totalRead += read;
-            }
-        }
+        ) =>
+            await stream
+                .ReadExactAsync(buffer, offset, count, cancellationToken)
+                .ConfigureAwait(false);
     }
 }

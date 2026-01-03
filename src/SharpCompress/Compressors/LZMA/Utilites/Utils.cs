@@ -53,39 +53,4 @@ internal static class Utils
             throw new InvalidOperationException("Assertion failed.");
         }
     }
-
-    public static void ReadExact(this Stream stream, byte[] buffer, int offset, int length)
-    {
-        if (stream is null)
-        {
-            throw new ArgumentNullException(nameof(stream));
-        }
-
-        if (buffer is null)
-        {
-            throw new ArgumentNullException(nameof(buffer));
-        }
-
-        if (offset < 0 || offset > buffer.Length)
-        {
-            throw new ArgumentOutOfRangeException(nameof(offset));
-        }
-
-        if (length < 0 || length > buffer.Length - offset)
-        {
-            throw new ArgumentOutOfRangeException(nameof(length));
-        }
-
-        while (length > 0)
-        {
-            var fetched = stream.Read(buffer, offset, length);
-            if (fetched <= 0)
-            {
-                throw new EndOfStreamException();
-            }
-
-            offset += fetched;
-            length -= fetched;
-        }
-    }
 }

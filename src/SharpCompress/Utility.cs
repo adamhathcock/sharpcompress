@@ -273,6 +273,33 @@ internal static class Utility
             }
         }
 
+#if NET60_OR_GREATER
+        public bool ReadFully(byte[] buffer)
+        {
+            try
+            {
+                source.ReadExactly(buffer);
+                return true;
+            }
+            catch (EndOfStreamException)
+            {
+                return false;
+            }
+        }
+
+        public bool ReadFully(Span<byte> buffer)
+        {
+            try
+            {
+                source.ReadExactly(buffer);
+                return true;
+            }
+            catch (EndOfStreamException)
+            {
+                return false;
+            }
+        }
+#else
         public bool ReadFully(byte[] buffer)
         {
             var total = 0;
@@ -302,6 +329,7 @@ internal static class Utility
             }
             return (total >= buffer.Length);
         }
+#endif
 
         public async Task<bool> ReadFullyAsync(
             byte[] buffer,
@@ -354,36 +382,89 @@ internal static class Utility
         }
     }
 
-#if NET60_OR_GREATER
-
-    public static bool ReadFully(this Stream stream, byte[] buffer)
+    /// <summary>
+    /// Read exactly the requested number of bytes from a stream. Throws EndOfStreamException if not enough data is available.
+    /// </summary>
+    public static void ReadExact(this Stream stream, byte[] buffer, int offset, int length)
     {
-        try
+        if (stream is null)
         {
-            stream.ReadExactly(buffer);
-            return true;
+            throw new ArgumentNullException(nameof(stream));
         }
-        catch (EndOfStreamException)
+
+        if (buffer is null)
         {
-            return false;
+            throw new ArgumentNullException(nameof(buffer));
+        }
+
+        if (offset < 0 || offset > buffer.Length)
+        {
+            throw new ArgumentOutOfRangeException(nameof(offset));
+        }
+
+        if (length < 0 || length > buffer.Length - offset)
+        {
+            throw new ArgumentOutOfRangeException(nameof(length));
+        }
+
+        while (length > 0)
+        {
+            var fetched = stream.Read(buffer, offset, length);
+            if (fetched <= 0)
+            {
+                throw new EndOfStreamException();
+            }
+
+            offset += fetched;
+            length -= fetched;
         }
     }
 
-    public static bool ReadFully(this Stream stream, Span<byte> buffer)
+    /// <summary>
+    /// Read exactly the requested number of bytes from a stream asynchronously. Throws EndOfStreamException if not enough data is available.
+    /// </summary>
+    public static async Task ReadExactAsync(
+        this Stream stream,
+        byte[] buffer,
+        int offset,
+        int length,
+        CancellationToken cancellationToken = default
+    )
     {
-        try
+        if (stream is null)
         {
-            stream.ReadExactly(buffer);
-            return true;
+            throw new ArgumentNullException(nameof(stream));
         }
-        catch (EndOfStreamException)
+
+        if (buffer is null)
         {
-            return false;
+            throw new ArgumentNullException(nameof(buffer));
+        }
+
+        if (offset < 0 || offset > buffer.Length)
+        {
+            throw new ArgumentOutOfRangeException(nameof(offset));
+        }
+
+        if (length < 0 || length > buffer.Length - offset)
+        {
+            throw new ArgumentOutOfRangeException(nameof(length));
+        }
+
+        while (length > 0)
+        {
+            var fetched = await stream
+                .ReadAsync(buffer, offset, length, cancellationToken)
+                .ConfigureAwait(false);
+            if (fetched <= 0)
+            {
+                throw new EndOfStreamException();
+            }
+
+            offset += fetched;
+            length -= fetched;
         }
     }
-#else
-
-#endif
 
     public static string TrimNulls(this string source) => source.Replace('\0', ' ').Trim();
 
