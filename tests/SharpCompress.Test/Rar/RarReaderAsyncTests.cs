@@ -7,6 +7,7 @@ using SharpCompress.Archives.Rar;
 using SharpCompress.Common;
 using SharpCompress.Readers;
 using SharpCompress.Readers.Rar;
+using SharpCompress.Test.Mocks;
 using Xunit;
 
 namespace SharpCompress.Test.Rar;
@@ -45,7 +46,7 @@ public class RarReaderAsyncTests : ReaderTests
             )
         )
         {
-            while (reader.MoveToNextEntry())
+            while (await reader.MoveToNextEntryAsync())
             {
                 await reader.WriteEntryToDirectoryAsync(
                     SCRATCH_FILES_PATH,
@@ -73,12 +74,13 @@ public class RarReaderAsyncTests : ReaderTests
                 var reader = RarReader.Open(
                     archives
                         .Select(s => Path.Combine(TEST_ARCHIVES_PATH, s))
-                        .Select(p => File.OpenRead(p)),
+                        .Select(p => File.OpenRead(p))
+                        .Select(x=> new AsyncOnlyStream(x)),
                     new ReaderOptions { Password = "test" }
                 )
             )
             {
-                while (reader.MoveToNextEntry())
+                while (await reader.MoveToNextEntryAsync())
                 {
                     await reader.WriteEntryToDirectoryAsync(
                         SCRATCH_FILES_PATH,
@@ -123,10 +125,11 @@ public class RarReaderAsyncTests : ReaderTests
         var streams = archives
             .Select(s => Path.Combine(SCRATCH2_FILES_PATH, s))
             .Select(File.OpenRead)
+            .Select(x=> new AsyncOnlyStream(x))
             .ToList();
         using (var reader = RarReader.Open(streams))
         {
-            while (reader.MoveToNextEntry())
+            while (await reader.MoveToNextEntryAsync())
             {
                 await reader.WriteEntryToDirectoryAsync(
                     SCRATCH_FILES_PATH,
@@ -204,7 +207,7 @@ public class RarReaderAsyncTests : ReaderTests
     private async Task DoRar_Entry_Stream_Async(string filename)
     {
         using (Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, filename)))
-        using (var reader = ReaderFactory.Open(stream))
+        using (var reader = await ReaderFactory.OpenAsync(stream))
         {
             while (await reader.MoveToNextEntryAsync())
             {
@@ -248,9 +251,9 @@ public class RarReaderAsyncTests : ReaderTests
         using (
             var stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Rar.Audio_program.rar"))
         )
-        using (var reader = ReaderFactory.Open(stream, new ReaderOptions { LookForHeader = true }))
+        using (var reader = await ReaderFactory.OpenAsync(stream, new ReaderOptions { LookForHeader = true }))
         {
-            while (reader.MoveToNextEntry())
+            while (await reader.MoveToNextEntryAsync())
             {
                 Assert.Equal(CompressionType.Rar, reader.Entry.CompressionType);
                 await reader.WriteEntryToDirectoryAsync(
@@ -271,7 +274,7 @@ public class RarReaderAsyncTests : ReaderTests
         using (var stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Rar.jpeg.jpg")))
         using (var reader = RarReader.Open(stream, new ReaderOptions { LookForHeader = true }))
         {
-            while (reader.MoveToNextEntry())
+            while (await reader.MoveToNextEntryAsync())
             {
                 Assert.Equal(CompressionType.Rar, reader.Entry.CompressionType);
                 await reader.WriteEntryToDirectoryAsync(
@@ -310,8 +313,8 @@ public class RarReaderAsyncTests : ReaderTests
     private async Task DoRar_Solid_Skip_Reader_Async(string filename)
     {
         using var stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, filename));
-        using var reader = ReaderFactory.Open(stream, new ReaderOptions { LookForHeader = true });
-        while (reader.MoveToNextEntry())
+        using var reader = await ReaderFactory.OpenAsync(stream, new ReaderOptions { LookForHeader = true });
+        while (await reader.MoveToNextEntryAsync())
         {
             if (reader.Entry.Key.NotNull().Contains("jpg"))
             {
@@ -332,9 +335,9 @@ public class RarReaderAsyncTests : ReaderTests
 
     private async Task DoRar_Reader_Skip_Async(string filename)
     {
-        using var stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, filename));
-        using var reader = ReaderFactory.Open(stream, new ReaderOptions { LookForHeader = true });
-        while (reader.MoveToNextEntry())
+        using var stream = new AsyncOnlyStream(File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, filename)));
+        using var reader = await ReaderFactory.OpenAsync(stream, new ReaderOptions { LookForHeader = true });
+        while (await reader.MoveToNextEntryAsync())
         {
             if (reader.Entry.Key.NotNull().Contains("jpg"))
             {
@@ -354,8 +357,8 @@ public class RarReaderAsyncTests : ReaderTests
     )
     {
         testArchive = Path.Combine(TEST_ARCHIVES_PATH, testArchive);
-        using Stream stream = File.OpenRead(testArchive);
-        using var reader = ReaderFactory.Open(stream, readerOptions ?? new ReaderOptions());
+        using Stream stream = new AsyncOnlyStream(File.OpenRead(testArchive));
+        using var reader = await ReaderFactory.OpenAsync(stream, readerOptions ?? new ReaderOptions());
         while (await reader.MoveToNextEntryAsync())
         {
             if (!reader.Entry.IsDirectory)
