@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using GlobExpressions;
 using static Bullseye.Targets;
 using static SimpleExec.Command;
@@ -107,9 +108,9 @@ Target(
 
 Target(
     DetermineVersion,
-    () =>
+    async () =>
     {
-        var (version, isPrerelease) = GetVersion();
+        var (version, isPrerelease) = await GetVersion();
         Console.WriteLine($"VERSION={version}");
         Console.WriteLine($"PRERELEASE={isPrerelease.ToString().ToLower()}");
 
@@ -125,12 +126,12 @@ Target(
 
 Target(
     UpdateVersion,
-    () =>
+    async () =>
     {
         var version = Environment.GetEnvironmentVariable("VERSION");
         if (string.IsNullOrEmpty(version))
         {
-            var (detectedVersion, _) = GetVersion();
+            var (detectedVersion, _) = await GetVersion();
             version = detectedVersion;
         }
 
@@ -212,7 +213,7 @@ Target(
 
 Target(
     CreateRelease,
-    () =>
+    async () =>
     {
         var version = Environment.GetEnvironmentVariable("VERSION");
         var isPrerelease = Environment.GetEnvironmentVariable("PRERELEASE");
@@ -221,7 +222,7 @@ Target(
 
         if (string.IsNullOrEmpty(version))
         {
-            var (detectedVersion, _) = GetVersion();
+            var (detectedVersion, _) = await GetVersion();
             version = detectedVersion;
         }
 
@@ -264,10 +265,10 @@ Target("default", [Publish], () => Console.WriteLine("Done!"));
 
 await RunTargetsAndExitAsync(args);
 
-static (string version, bool isPrerelease) GetVersion()
+static async Task<(string version, bool isPrerelease)> GetVersion()
 {
     // Check if current commit has a version tag
-    var currentTag = GetGitOutput("tag", "--points-at HEAD")
+    var currentTag = (await GetGitOutput("tag", "--points-at HEAD"))
         .Split('\n', StringSplitOptions.RemoveEmptyEntries)
         .FirstOrDefault(tag => Regex.IsMatch(tag.Trim(), @"^\d+\.\d+\.\d+$"));
 
@@ -281,7 +282,7 @@ static (string version, bool isPrerelease) GetVersion()
     else
     {
         // Not tagged - create prerelease version based on next minor version
-        var allTags = GetGitOutput("tag", "--list")
+        var allTags = (await GetGitOutput("tag", "--list"))
             .Split('\n', StringSplitOptions.RemoveEmptyEntries)
             .Where(tag => Regex.IsMatch(tag.Trim(), @"^\d+\.\d+\.\d+$"))
             .Select(tag => tag.Trim())
@@ -293,7 +294,7 @@ static (string version, bool isPrerelease) GetVersion()
         // Increment minor version for next release
         var nextVersion = new Version(lastVersion.Major, lastVersion.Minor + 1, 0);
 
-        var commitCount = GetGitOutput("rev-list", "--count HEAD").Trim();
+        var commitCount = (await GetGitOutput("rev-list", "--count HEAD")).Trim();
 
         var version = $"{nextVersion}-beta.{commitCount}";
         Console.WriteLine($"Building prerelease version: {version}");
@@ -301,12 +302,12 @@ static (string version, bool isPrerelease) GetVersion()
     }
 }
 
-static string GetGitOutput(string command, string args)
+static async Task<string> GetGitOutput(string command, string args)
 {
     try
     {
         // Use SimpleExec's Read to execute git commands in a cross-platform way
-        var (output, _) = ReadAsync("git", $"{command} {args}").GetAwaiter().GetResult();
+        var (output, _) = await ReadAsync("git", $"{command} {args}");
         return output;
     }
     catch (Exception ex)
