@@ -8,6 +8,55 @@ using System.Threading.Tasks;
 
 namespace SharpCompress.IO;
 
+/// <summary>
+/// A stream wrapper that provides buffering and position tracking for an underlying stream.
+///
+/// <para>
+/// SharpCompressStream is part of the stream handling architecture alongside:
+/// </para>
+/// <list type="bullet">
+/// <item>
+/// <description>
+/// <b>IByteSource</b>: Represents where bytes come from (file or stream).
+/// An IByteSource.OpenRead() returns a raw stream that may be wrapped by SharpCompressStream.
+/// </description>
+/// </item>
+/// <item>
+/// <description>
+/// <b>SourceStream</b>: Combines multiple IByteSource instances into a unified stream,
+/// handling split archives and multi-volume scenarios.
+/// </description>
+/// </item>
+/// <item>
+/// <description>
+/// <b>SharpCompressStream</b>: Wraps a single stream to provide buffering, position tracking,
+/// and implements IStreamStack for hierarchical stream operations.
+/// </description>
+/// </item>
+/// </list>
+///
+/// <para>
+/// Key features:
+/// </para>
+/// <list type="bullet">
+/// <item><description>Optional buffering with configurable buffer size</description></item>
+/// <item><description>Position tracking independent of underlying stream</description></item>
+/// <item><description>Stream lifecycle management (LeaveOpen, ThrowOnDispose)</description></item>
+/// <item><description>IStreamStack implementation for stream stack operations</description></item>
+/// </list>
+///
+/// <para>
+/// Usage example:
+/// </para>
+/// <code>
+/// // Wrap a stream with buffering
+/// var bufferedStream = SharpCompressStream.Create(
+///     stream: rawStream,
+///     leaveOpen: true,
+///     throwOnDispose: false,
+///     bufferSize: 4096);
+/// </code>
+/// </summary>
 public class SharpCompressStream : Stream, IStreamStack
 {
 #if DEBUG_STREAMS
