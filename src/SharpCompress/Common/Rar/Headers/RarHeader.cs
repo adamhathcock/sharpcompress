@@ -1,4 +1,6 @@
 using System;
+using System.Threading;
+using System.Threading.Tasks;
 using SharpCompress.IO;
 
 namespace SharpCompress.Common.Rar.Headers;
@@ -8,7 +10,7 @@ namespace SharpCompress.Common.Rar.Headers;
 internal class RarHeader : IRarHeader
 {
     private readonly HeaderType _headerType;
-    private readonly bool _isRar5;
+    private bool _isRar5;
 
     internal static RarHeader? TryReadBase(
         RarCrcBinaryReader reader,
@@ -23,6 +25,84 @@ internal class RarHeader : IRarHeader
         catch (InvalidFormatException)
         {
             return null;
+        }
+    }
+
+    internal static async Task<RarHeader?> TryReadBaseAsync(
+        RarCrcBinaryReader reader,
+        bool isRar5,
+        ArchiveEncoding archiveEncoding,
+        CancellationToken cancellationToken = default
+    )
+    {
+        try
+        {
+            return await CreateAsync(reader, isRar5, archiveEncoding, cancellationToken).ConfigureAwait(false);
+        }
+        catch (InvalidFormatException)
+        {
+            return null;
+        }
+    }
+
+    private static async Task<RarHeader> CreateAsync(
+        RarCrcBinaryReader reader,
+        bool isRar5,
+        ArchiveEncoding archiveEncoding,
+        CancellationToken cancellationToken
+    )
+    {
+        var header = new RarHeader();
+        await header.InitializeAsync(reader, isRar5, archiveEncoding, cancellationToken).ConfigureAwait(false);
+        return header;
+    }
+
+    private RarHeader()
+    {
+        _headerType = HeaderType.Null;
+        ArchiveEncoding = new ArchiveEncoding();
+    }
+
+    private async Task InitializeAsync(
+        RarCrcBinaryReader reader,
+        bool isRar5,
+        ArchiveEncoding archiveEncoding,
+        CancellationToken cancellationToken
+    )
+    {
+        _isRar5 = isRar5;
+        ArchiveEncoding = archiveEncoding;
+        
+        if (IsRar5)
+        {
+            HeaderCrc = await reader.ReadUInt32Async(cancellationToken).ConfigureAwait(false);
+            reader.ResetCrc();
+            HeaderSize = (int)await reader.ReadRarVIntUInt32Async(3, cancellationToken).ConfigureAwait(false);
+            reader.Mark();
+            HeaderCode = await reader.ReadRarVIntByteAsync(2, cancellationToken).ConfigureAwait(false);
+            HeaderFlags = await reader.ReadRarVIntUInt16Async(2, cancellationToken).ConfigureAwait(false);
+
+            if (HasHeaderFlag(HeaderFlagsV5.HAS_EXTRA))
+            {
+                ExtraSize = await reader.ReadRarVIntUInt32Async(5, cancellationToken).ConfigureAwait(false);
+            }
+            if (HasHeaderFlag(HeaderFlagsV5.HAS_DATA))
+            {
+                AdditionalDataSize = (long)await reader.ReadRarVIntAsync(10, cancellationToken).ConfigureAwait(false);
+            }
+        }
+        else
+        {
+            reader.Mark();
+            HeaderCrc = await reader.ReadUInt16Async(cancellationToken).ConfigureAwait(false);
+            reader.ResetCrc();
+            HeaderCode = await reader.ReadByteAsync(cancellationToken).ConfigureAwait(false);
+            HeaderFlags = await reader.ReadUInt16Async(cancellationToken).ConfigureAwait(false);
+            HeaderSize = await reader.ReadInt16Async(cancellationToken).ConfigureAwait(false);
+            if (HasHeaderFlag(HeaderFlagsV4.HAS_DATA))
+            {
+                AdditionalDataSize = await reader.ReadUInt32Async(cancellationToken).ConfigureAwait(false);
+            }
         }
     }
 
@@ -105,25 +185,25 @@ internal class RarHeader : IRarHeader
 
     protected bool IsRar5 => _isRar5;
 
-    protected uint HeaderCrc { get; }
+    protected uint HeaderCrc { get; private set; }
 
-    internal byte HeaderCode { get; }
+    internal byte HeaderCode { get; private set; }
 
-    protected ushort HeaderFlags { get; }
+    protected ushort HeaderFlags { get; private set; }
 
     protected bool HasHeaderFlag(ushort flag) => (HeaderFlags & flag) == flag;
 
-    protected int HeaderSize { get; }
+    protected int HeaderSize { get; private set; }
 
-    internal ArchiveEncoding ArchiveEncoding { get; }
+    internal ArchiveEncoding ArchiveEncoding { get; private set; }
 
     /// <summary>
     /// Extra header size.
     /// </summary>
-    protected uint ExtraSize { get; }
+    protected uint ExtraSize { get; private set; }
 
     /// <summary>
     /// Size of additional data (eg file contents)
     /// </summary>
-    protected long AdditionalDataSize { get; }
+    protected long AdditionalDataSize { get; private set; }
 }
