@@ -45,6 +45,19 @@ internal class MultiVolumeArjReader : ArjReader
         return true;
     }
 
+    internal override async Task<bool> NextEntryForCurrentStreamAsync(
+        CancellationToken cancellationToken = default
+    )
+    {
+        if (!await base.NextEntryForCurrentStreamAsync(cancellationToken))
+        {
+            // if we're got another stream to try to process then do so
+            return streams.MoveNext()
+                && await LoadStreamForReadingAsync(streams.Current, cancellationToken);
+        }
+        return true;
+    }
+
     protected override IEnumerable<FilePart> CreateFilePartEnumerableForCurrentEntry()
     {
         var enumerator = new MultiVolumeStreamEnumerator(this, streams, tempStream);

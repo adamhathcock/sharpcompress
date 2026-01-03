@@ -114,7 +114,7 @@ public abstract class AbstractReader<TEntry, TVolume> : IReader
             await SkipEntryAsync(cancellationToken).ConfigureAwait(false);
         }
         _wroteCurrentEntry = false;
-        if (NextEntryForCurrentStream())
+        if (await NextEntryForCurrentStreamAsync(cancellationToken).ConfigureAwait(false))
         {
             return true;
         }
@@ -145,11 +145,10 @@ public abstract class AbstractReader<TEntry, TVolume> : IReader
         CancellationToken cancellationToken = default
     )
     {
-        if (_entriesForCurrentReadStreamAsync is null)
+        if (_entriesForCurrentReadStreamAsync is not null)
         {
-            throw new InvalidOperationException("Entries async enumerator is not initialized.");
+            await _entriesForCurrentReadStreamAsync.DisposeAsync();
         }
-        _entriesForCurrentReadStreamAsync?.DisposeAsync();
         if (stream is null || !stream.CanRead)
         {
             throw new MultipartStreamRequiredException(
@@ -158,10 +157,20 @@ public abstract class AbstractReader<TEntry, TVolume> : IReader
                     + "'. A new readable stream is required.  Use Cancel if it was intended."
             );
         }
-        // Default implementation uses sync version
         _entriesForCurrentReadStreamAsync = GetEntriesAsync(stream, cancellationToken)
             .GetAsyncEnumerator(cancellationToken);
-        return await _entriesForCurrentReadStreamAsync.MoveNextAsync();
+        var result = await _entriesForCurrentReadStreamAsync.MoveNextAsync();
+
+        // Also populate the sync enumerator field so Entry property and NextEntryForCurrentStream work
+        if (_entriesForCurrentReadStream is not null)
+        {
+            _entriesForCurrentReadStream.Dispose();
+        }
+        _entriesForCurrentReadStream = new AsyncEnumeratorWrapper<TEntry>(
+            _entriesForCurrentReadStreamAsync
+        );
+
+        return result;
     }
 
     protected virtual Stream RequestInitialStream() =>
@@ -169,6 +178,13 @@ public abstract class AbstractReader<TEntry, TVolume> : IReader
 
     internal virtual bool NextEntryForCurrentStream() =>
         _entriesForCurrentReadStream.NotNull().MoveNext();
+
+    internal virtual async Task<bool> NextEntryForCurrentStreamAsync(
+        CancellationToken cancellationToken = default
+    ) =>
+        _entriesForCurrentReadStreamAsync is not null
+            ? await _entriesForCurrentReadStreamAsync.MoveNextAsync()
+            : _entriesForCurrentReadStream.NotNull().MoveNext();
 
     protected abstract IEnumerable<TEntry> GetEntries(Stream stream);
 
@@ -396,4 +412,37 @@ public abstract class AbstractReader<TEntry, TVolume> : IReader
     #endregion
 
     IEntry IReader.Entry => Entry;
+}
+
+/// <summary>
+/// Wrapper that allows an IAsyncEnumerator to be used as an IEnumerator synchronously.
+/// This is needed because the Entry property and NextEntryForCurrentStream() method
+/// require synchronous access to the enumerator.
+/// </summary>
+internal class AsyncEnumeratorWrapper<T> : IEnumerator<T>
+{
+    private readonly IAsyncEnumerator<T> _asyncEnumerator;
+
+    public AsyncEnumeratorWrapper(IAsyncEnumerator<T> asyncEnumerator)
+    {
+        _asyncEnumerator = asyncEnumerator;
+    }
+
+    public T Current => _asyncEnumerator.Current;
+
+    object? System.Collections.IEnumerator.Current => Current;
+
+    public bool MoveNext()
+    {
+        // For sync MoveNext called from NextEntryForCurrentStream, we need to use the async version
+        // This should only be called after LoadStreamForReadingAsync has been called
+        return _asyncEnumerator.MoveNextAsync().AsTask().GetAwaiter().GetResult();
+    }
+
+    public void Reset() => throw new NotSupportedException();
+
+    public void Dispose()
+    {
+        _asyncEnumerator.DisposeAsync().AsTask().GetAwaiter().GetResult();
+    }
 }
