@@ -24,6 +24,16 @@ public static class BinaryReaderExtensions
             CancellationToken cancellationToken = default
         )
         {
+            if (count < 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(count), "Count must be non-negative.");
+            }
+
+            if (count == 0)
+            {
+                return Array.Empty<byte>();
+            }
+
             // For small allocations, direct allocation is more efficient than pooling
             // due to ArrayPool overhead and the need to copy data to return array
             if (count <= 256)
