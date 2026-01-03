@@ -16,7 +16,6 @@ The workflow automatically determines the version based on whether the commit is
    - If the current commit has a version tag (e.g., `0.42.1`)
    - Uses the tag as the version number
    - Published as a stable release
-   - Creates a GitHub Release with the package attached (Windows build only)
 
 2. **Untagged Release (Prerelease)**:
    - If the current commit is NOT tagged
@@ -36,7 +35,6 @@ The workflow runs on a matrix of operating systems (Windows and Ubuntu):
 5. **Build and Test**: Runs the full build and test suite on both platforms
 6. **Upload Artifacts**: Uploads the generated `.nupkg` files as workflow artifacts (separate for each OS)
 7. **Push to NuGet**: (Windows only) Runs `push-to-nuget` build target to publish the package to NuGet.org using the API key
-8. **Create GitHub Release**: (Windows only, tagged releases only) Runs `create-release` build target to create a GitHub release with the package
 
 All version detection, file updates, and publishing logic is implemented in C# in the `build/Program.cs` file using build targets.
 
@@ -72,7 +70,6 @@ Consider enabling branch protection rules for the `release` branch to ensure:
 3. The workflow will automatically:
    - Build and test the project on both Windows and Ubuntu
    - Publish `SharpCompress 0.43.0` to NuGet.org (Windows build)
-   - Create a GitHub Release (Windows build)
 
 ### Creating a Prerelease
 
@@ -122,7 +119,6 @@ The workflow uses the following C# build targets defined in `build/Program.cs`:
 - **determine-version**: Detects version from git tags and outputs VERSION and PRERELEASE variables
 - **update-version**: Updates VersionPrefix, AssemblyVersion, and FileVersion in the project file
 - **push-to-nuget**: Pushes the generated NuGet packages to NuGet.org (requires NUGET_API_KEY)
-- **create-release**: Creates a GitHub release with the packages attached (requires GITHUB_TOKEN)
 
 These targets can be run manually for testing:
 
@@ -135,9 +131,6 @@ VERSION=0.43.0 dotnet run --project build/build.csproj -- update-version
 
 # Push to NuGet (requires NUGET_API_KEY environment variable)
 NUGET_API_KEY=your-key dotnet run --project build/build.csproj -- push-to-nuget
-
-# Create GitHub release (requires GITHUB_TOKEN and VERSION environment variables)
-GITHUB_TOKEN=your-token VERSION=0.43.0 PRERELEASE=false dotnet run --project build/build.csproj -- create-release
 ```
 
 ## Related Files

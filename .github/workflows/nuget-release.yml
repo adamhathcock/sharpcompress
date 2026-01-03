@@ -9,8 +9,6 @@ on:
 jobs:
   build-and-publish:
     runs-on: ${{ matrix.os }}
-    permissions:
-      contents: write
     strategy:
       matrix:
         os: [windows-latest, ubuntu-latest]
@@ -52,13 +50,3 @@ jobs:
       run: dotnet run --project build/build.csproj -- push-to-nuget
       env:
         NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
-    
-    # Create GitHub release for tagged versions using C# build target (Windows only)
-    - name: Create GitHub Release
-      if: steps.version.outputs.prerelease == 'false' && success() && matrix.os == 'windows-latest'
-      run: dotnet run --project build/build.csproj -- create-release
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        VERSION: ${{ steps.version.outputs.version }}
-        PRERELEASE: ${{ steps.version.outputs.prerelease }}
-        GITHUB_REPOSITORY: ${{ github.repository }}

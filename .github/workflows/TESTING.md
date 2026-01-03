@@ -30,7 +30,6 @@ This tests the workflow on untagged commits to the master or release branch.
    - Build and tests pass on both platforms
    - Package artifacts are uploaded for both platforms
    - Package is pushed to NuGet.org as prerelease (Windows build only)
-   - No GitHub release is created (only for tagged releases)
 
 **Expected Outcome:**
 - A new prerelease package appears on NuGet.org: https://www.nuget.org/packages/SharpCompress/
@@ -55,12 +54,10 @@ This tests the workflow when a version tag is pushed.
    - Build and tests pass on both platforms
    - Package artifacts are uploaded for both platforms
    - Package is pushed to NuGet.org as stable release (Windows build only)
-   - GitHub release is created with the package attached (Windows build only)
 
 **Expected Outcome:**
 - A new stable release package appears on NuGet.org
 - Package version matches the tag
-- A GitHub release is created: https://github.com/adamhathcock/sharpcompress/releases
 
 ### 3. Test Duplicate Package Handling
 
@@ -92,8 +89,7 @@ After each test, verify:
 
 1. **GitHub Actions Logs**: Check the workflow logs for any errors or warnings
 2. **NuGet.org**: Verify the package appears with correct version and metadata
-3. **GitHub Releases**: (For tagged releases) Verify the release is created with package attached
-4. **Artifacts**: Download and inspect the uploaded artifacts
+3. **Artifacts**: Download and inspect the uploaded artifacts
 
 ## Rollback/Cleanup
 
@@ -101,11 +97,10 @@ If testing produces unwanted packages:
 
 1. **Prerelease packages**: Can be unlisted on NuGet.org (Settings → Unlist)
 2. **Stable packages**: Cannot be deleted, only unlisted (use test versions)
-3. **GitHub Releases**: Can be deleted from GitHub releases page
-4. **Tags**: Can be deleted with:
+3. **Tags**: Can be deleted with:
    ```bash
-   git tag -d 0.42.2-test
-   git push origin :refs/tags/0.42.2-test
+   git tag -d 0.42.2
+   git push origin :refs/tags/0.42.2
    ```
 
 ## Known Limitations
@@ -120,7 +115,6 @@ The workflow is considered successful if:
 
 - ✅ Prerelease versions are published correctly with beta suffix
 - ✅ Tagged versions are published as stable releases
-- ✅ GitHub releases are created for tagged versions
 - ✅ Build and test failures prevent publishing
 - ✅ Duplicate packages are handled gracefully
 - ✅ Workflow logs are clear and informative

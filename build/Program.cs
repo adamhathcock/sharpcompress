@@ -19,7 +19,6 @@ const string Publish = "publish";
 const string DetermineVersion = "determine-version";
 const string UpdateVersion = "update-version";
 const string PushToNuGet = "push-to-nuget";
-const string CreateRelease = "create-release";
 
 Target(
     Clean,
@@ -207,56 +206,6 @@ Target(
                 Console.WriteLine($"Failed to push {package}: {ex.Message}");
                 throw;
             }
-        }
-    }
-);
-
-Target(
-    CreateRelease,
-    async () =>
-    {
-        var version = Environment.GetEnvironmentVariable("VERSION");
-        var isPrerelease = Environment.GetEnvironmentVariable("PRERELEASE");
-        var githubToken = Environment.GetEnvironmentVariable("GITHUB_TOKEN");
-        var githubRepository = Environment.GetEnvironmentVariable("GITHUB_REPOSITORY");
-
-        if (string.IsNullOrEmpty(version))
-        {
-            var (detectedVersion, _) = await GetVersion();
-            version = detectedVersion;
-        }
-
-        if (isPrerelease == "true")
-        {
-            Console.WriteLine("Skipping GitHub release creation for prerelease version.");
-            return;
-        }
-
-        if (string.IsNullOrEmpty(githubToken))
-        {
-            Console.WriteLine(
-                "GITHUB_TOKEN environment variable is not set. Skipping GitHub release creation."
-            );
-            return;
-        }
-
-        var packages = Directory.GetFiles("artifacts", "*.nupkg");
-        var packageArgs = string.Join(" ", packages.Select(p => $"\"{p}\""));
-
-        var repo = string.IsNullOrEmpty(githubRepository) ? "" : $"--repo {githubRepository}";
-
-        Console.WriteLine($"Creating GitHub release for version {version}");
-        try
-        {
-            Run(
-                "gh",
-                $"release create \"{version}\" {packageArgs} --title \"Release {version}\" --notes \"Release {version} of SharpCompress\" {repo}"
-            );
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Failed to create GitHub release: {ex.Message}");
-            throw;
         }
     }
 );
