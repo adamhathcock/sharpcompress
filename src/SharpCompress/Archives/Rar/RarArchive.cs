@@ -272,5 +272,22 @@ public class RarArchive : AbstractArchive<RarArchiveEntry, RarVolume>
         }
     }
 
+    public static async Task<bool> IsRarFileAsync(
+        Stream stream,
+        ReaderOptions? options = null,
+        CancellationToken cancellationToken = default
+    )
+    {
+        try
+        {
+            await MarkHeader.ReadAsync(stream, true, false, cancellationToken).ConfigureAwait(false);
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
     #endregion
 }

@@ -2,6 +2,8 @@
 
 using System.Collections.Generic;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 using SharpCompress.Common.Rar.Headers;
 using SharpCompress.Crypto;
 
@@ -80,5 +82,44 @@ internal sealed class RarCryptoBinaryReader : RarCrcBinaryReader
         var position = BaseStream.Position;
         BaseStream.Position = position + _data.Count;
         ClearQueue();
+    }
+
+    // Async versions
+    public override async Task<byte> ReadByteAsync(CancellationToken cancellationToken = default) =>
+        (await ReadAndDecryptBytesAsync(1, cancellationToken).ConfigureAwait(false))[0];
+
+    public override async Task<byte[]> ReadBytesAsync(int count, CancellationToken cancellationToken = default) =>
+        await ReadAndDecryptBytesAsync(count, cancellationToken).ConfigureAwait(false);
+
+    private async Task<byte[]> ReadAndDecryptBytesAsync(int count, CancellationToken cancellationToken)
+    {
+        var queueSize = _data.Count;
+        var sizeToRead = count - queueSize;
+
+        if (sizeToRead > 0)
+        {
+            var alignedSize = sizeToRead + ((~sizeToRead + 1) & 0xf);
+            for (var i = 0; i < alignedSize / 16; i++)
+            {
+                var cipherText = await ReadBytesNoCrcAsync(16, cancellationToken).ConfigureAwait(false);
+                var readBytes = _rijndael.ProcessBlock(cipherText);
+                foreach (var readByte in readBytes)
+                {
+                    _data.Enqueue(readByte);
+                }
+            }
+        }
+
+        var decryptedBytes = new byte[count];
+
+        for (var i = 0; i < count; i++)
+        {
+            var b = _data.Dequeue();
+            decryptedBytes[i] = b;
+            UpdateCrc(b);
+        }
+
+        _readCount += count;
+        return decryptedBytes;
     }
 }

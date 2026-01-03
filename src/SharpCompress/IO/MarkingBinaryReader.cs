@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Buffers.Binary;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 using SharpCompress.Common;
 
 namespace SharpCompress.IO;
@@ -137,6 +139,130 @@ internal class MarkingBinaryReader : BinaryReader
         do
         {
             var b0 = ReadByte();
+            var b1 = ((uint)b0) & 0x7f;
+            var n = b1;
+            var shifted = n << shift;
+            if (n != shifted >> shift)
+            {
+                // overflow
+                break;
+            }
+            result |= shifted;
+            if (b0 == b1)
+            {
+                return result;
+            }
+            shift += 7;
+        } while (shift <= maxShift);
+
+        throw new FormatException("malformed vint");
+    }
+
+    // Async versions of read methods
+    public virtual async Task<byte> ReadByteAsync(CancellationToken cancellationToken = default)
+    {
+        CurrentReadByteCount++;
+        var buffer = new byte[1];
+        var bytesRead = await BaseStream.ReadAsync(buffer, 0, 1, cancellationToken).ConfigureAwait(false);
+        if (bytesRead != 1)
+        {
+            throw new EndOfStreamException();
+        }
+        return buffer[0];
+    }
+
+    public virtual async Task<byte[]> ReadBytesAsync(int count, CancellationToken cancellationToken = default)
+    {
+        CurrentReadByteCount += count;
+        var bytes = new byte[count];
+        var totalRead = 0;
+        while (totalRead < count)
+        {
+            var bytesRead = await BaseStream.ReadAsync(bytes, totalRead, count - totalRead, cancellationToken).ConfigureAwait(false);
+            if (bytesRead == 0)
+            {
+                throw new InvalidFormatException(
+                    string.Format(
+                        "Could not read the requested amount of bytes.  End of stream reached. Requested: {0} Read: {1}",
+                        count,
+                        totalRead
+                    )
+                );
+            }
+            totalRead += bytesRead;
+        }
+        return bytes;
+    }
+
+    public async Task<bool> ReadBooleanAsync(CancellationToken cancellationToken = default) =>
+        await ReadByteAsync(cancellationToken).ConfigureAwait(false) != 0;
+
+    public async Task<short> ReadInt16Async(CancellationToken cancellationToken = default) =>
+        BinaryPrimitives.ReadInt16LittleEndian(await ReadBytesAsync(2, cancellationToken).ConfigureAwait(false));
+
+    public async Task<int> ReadInt32Async(CancellationToken cancellationToken = default) =>
+        BinaryPrimitives.ReadInt32LittleEndian(await ReadBytesAsync(4, cancellationToken).ConfigureAwait(false));
+
+    public async Task<long> ReadInt64Async(CancellationToken cancellationToken = default) =>
+        BinaryPrimitives.ReadInt64LittleEndian(await ReadBytesAsync(8, cancellationToken).ConfigureAwait(false));
+
+    public async Task<sbyte> ReadSByteAsync(CancellationToken cancellationToken = default) =>
+        (sbyte)await ReadByteAsync(cancellationToken).ConfigureAwait(false);
+
+    public async Task<ushort> ReadUInt16Async(CancellationToken cancellationToken = default) =>
+        BinaryPrimitives.ReadUInt16LittleEndian(await ReadBytesAsync(2, cancellationToken).ConfigureAwait(false));
+
+    public async Task<uint> ReadUInt32Async(CancellationToken cancellationToken = default) =>
+        BinaryPrimitives.ReadUInt32LittleEndian(await ReadBytesAsync(4, cancellationToken).ConfigureAwait(false));
+
+    public async Task<ulong> ReadUInt64Async(CancellationToken cancellationToken = default) =>
+        BinaryPrimitives.ReadUInt64LittleEndian(await ReadBytesAsync(8, cancellationToken).ConfigureAwait(false));
+
+    public Task<ulong> ReadRarVIntAsync(int maxBytes = 10, CancellationToken cancellationToken = default) =>
+        DoReadRarVIntAsync((maxBytes - 1) * 7, cancellationToken);
+
+    private async Task<ulong> DoReadRarVIntAsync(int maxShift, CancellationToken cancellationToken)
+    {
+        var shift = 0;
+        ulong result = 0;
+        do
+        {
+            var b0 = await ReadByteAsync(cancellationToken).ConfigureAwait(false);
+            var b1 = ((uint)b0) & 0x7f;
+            ulong n = b1;
+            var shifted = n << shift;
+            if (n != shifted >> shift)
+            {
+                // overflow
+                break;
+            }
+            result |= shifted;
+            if (b0 == b1)
+            {
+                return result;
+            }
+            shift += 7;
+        } while (shift <= maxShift);
+
+        throw new FormatException("malformed vint");
+    }
+
+    public Task<uint> ReadRarVIntUInt32Async(int maxBytes = 5, CancellationToken cancellationToken = default) =>
+        DoReadRarVIntUInt32Async((maxBytes - 1) * 7, cancellationToken);
+
+    public async Task<ushort> ReadRarVIntUInt16Async(int maxBytes = 3, CancellationToken cancellationToken = default) =>
+        checked((ushort)await DoReadRarVIntUInt32Async((maxBytes - 1) * 7, cancellationToken).ConfigureAwait(false));
+
+    public async Task<byte> ReadRarVIntByteAsync(int maxBytes = 2, CancellationToken cancellationToken = default) =>
+        checked((byte)await DoReadRarVIntUInt32Async((maxBytes - 1) * 7, cancellationToken).ConfigureAwait(false));
+
+    private async Task<uint> DoReadRarVIntUInt32Async(int maxShift, CancellationToken cancellationToken)
+    {
+        var shift = 0;
+        uint result = 0;
+        do
+        {
+            var b0 = await ReadByteAsync(cancellationToken).ConfigureAwait(false);
             var b1 = ((uint)b0) & 0x7f;
             var n = b1;
             var shifted = n << shift;

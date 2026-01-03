@@ -17,7 +17,7 @@ public abstract class AbstractReader<TEntry, TVolume> : IReader
     where TVolume : Volume
 {
     private bool _completed;
-    private IEnumerator<TEntry>? _entriesForCurrentReadStream;
+    protected IEnumerator<TEntry>? _entriesForCurrentReadStream;
     private bool _wroteCurrentEntry;
 
     internal AbstractReader(ReaderOptions options, ArchiveType archiveType)
@@ -104,7 +104,8 @@ public abstract class AbstractReader<TEntry, TVolume> : IReader
         }
         if (_entriesForCurrentReadStream is null)
         {
-            return LoadStreamForReading(RequestInitialStream());
+            var loaded = await LoadStreamForReadingAsync(RequestInitialStream(), cancellationToken).ConfigureAwait(false);
+            return loaded;
         }
         if (!_wroteCurrentEntry)
         {
@@ -130,6 +131,25 @@ public abstract class AbstractReader<TEntry, TVolume> : IReader
                     + "'. A new readable stream is required.  Use Cancel if it was intended."
             );
         }
+        _entriesForCurrentReadStream = GetEntries(stream).GetEnumerator();
+        return _entriesForCurrentReadStream.MoveNext();
+    }
+
+    protected virtual async Task<bool> LoadStreamForReadingAsync(
+        Stream stream,
+        CancellationToken cancellationToken = default
+    )
+    {
+        _entriesForCurrentReadStream?.Dispose();
+        if (stream is null || !stream.CanRead)
+        {
+            throw new MultipartStreamRequiredException(
+                "File is split into multiple archives: '"
+                    + Entry.Key
+                    + "'. A new readable stream is required.  Use Cancel if it was intended."
+            );
+        }
+        // Default implementation uses sync version
         _entriesForCurrentReadStream = GetEntries(stream).GetEnumerator();
         return _entriesForCurrentReadStream.MoveNext();
     }

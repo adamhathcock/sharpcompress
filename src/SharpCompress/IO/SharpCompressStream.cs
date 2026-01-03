@@ -211,7 +211,16 @@ public class SharpCompressStream : Stream, IStreamStack
             // Fill buffer if needed
             if (_bufferedLength == 0)
             {
-                _bufferedLength = Stream.Read(_buffer!, 0, _bufferSize);
+                // Try async read first if underlying stream only supports async
+                try
+                {
+                    _bufferedLength = Stream.Read(_buffer!, 0, _bufferSize);
+                }
+                catch (NotSupportedException)
+                {
+                    // If synchronous read is not supported, try async
+                    _bufferedLength = Stream.ReadAsync(_buffer!, 0, _bufferSize).GetAwaiter().GetResult();
+                }
                 _bufferPosition = 0;
             }
             int available = _bufferedLength - _bufferPosition;
@@ -224,7 +233,16 @@ public class SharpCompressStream : Stream, IStreamStack
                 return toRead;
             }
             // If buffer exhausted, refill
-            int r = Stream.Read(_buffer!, 0, _bufferSize);
+            int r;
+            try
+            {
+                r = Stream.Read(_buffer!, 0, _bufferSize);
+            }
+            catch (NotSupportedException)
+            {
+                // If synchronous read is not supported, try async
+                r = Stream.ReadAsync(_buffer!, 0, _bufferSize).GetAwaiter().GetResult();
+            }
             if (r == 0)
                 return 0;
             _bufferedLength = r;
@@ -246,7 +264,15 @@ public class SharpCompressStream : Stream, IStreamStack
                 return 0;
             }
             int read;
-            read = Stream.Read(buffer, offset, count);
+            try
+            {
+                read = Stream.Read(buffer, offset, count);
+            }
+            catch (NotSupportedException)
+            {
+                // If synchronous read is not supported, try async
+                read = Stream.ReadAsync(buffer, offset, count).GetAwaiter().GetResult();
+            }
             _internalPosition += read;
             return read;
         }

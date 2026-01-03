@@ -38,6 +38,14 @@ public class RarFactory : Factory, IArchiveFactory, IMultiArchiveFactory, IReade
     ) => RarArchive.IsRarFile(stream);
 
     /// <inheritdoc/>
+    public override async Task<bool> IsArchiveAsync(
+        Stream stream,
+        string? password = null,
+        int bufferSize = ReaderOptions.DefaultBufferSize,
+        CancellationToken cancellationToken = default
+    ) => await RarArchive.IsRarFileAsync(stream, null, cancellationToken).ConfigureAwait(false);
+
+    /// <inheritdoc/>
     public override FileInfo? GetFilePart(int index, FileInfo part1) =>
         RarArchiveVolumeFactory.GetFilePart(index, part1);
 
