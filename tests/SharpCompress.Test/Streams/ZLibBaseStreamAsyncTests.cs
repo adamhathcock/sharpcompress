@@ -5,6 +5,7 @@ using AwesomeAssertions;
 using SharpCompress.Compressors;
 using SharpCompress.Compressors.Deflate;
 using SharpCompress.IO;
+using SharpCompress.Test.Mocks;
 using Xunit;
 
 namespace SharpCompress.Test.Streams;
@@ -40,7 +41,8 @@ public class ZLibBaseStreamAsyncTests
         var buf = new byte[plainData.Length * 2];
 
         var plainStream1 = new MemoryStream(plainData);
-        var compressor1 = new DeflateStream(plainStream1, CompressionMode.Compress);
+        using var aos = new AsyncOnlyStream(plainStream1);
+        var compressor1 = new DeflateStream(aos, CompressionMode.Compress);
         // This is enough to read the entire data
         var realCompressedSize = await compressor1
             .ReadAsync(buf, 0, plainData.Length * 2)
@@ -67,14 +69,16 @@ public class ZLibBaseStreamAsyncTests
         var bytes = Encoding.ASCII.GetBytes(message);
 
         using var inputStream = new MemoryStream(bytes);
+        using var aos = new AsyncOnlyStream(inputStream);
         using var compressedStream = new MemoryStream();
-        using var byteBufferStream = new BufferedStream(inputStream); // System.IO
+        using var byteBufferStream = new BufferedStream(aos); // System.IO
         await CompressAsync(byteBufferStream, compressedStream, compressionLevel: 1)
             .ConfigureAwait(false);
         compressedStream.Position = 0;
 
         using var decompressedStream = new MemoryStream();
-        await DecompressAsync(compressedStream, decompressedStream).ConfigureAwait(false);
+        using var aos2 = new AsyncOnlyStream(decompressedStream);
+        await DecompressAsync(compressedStream, aos2).ConfigureAwait(false);
 
         byteBufferStream.Position = 0;
         var result = Encoding.ASCII.GetString(
