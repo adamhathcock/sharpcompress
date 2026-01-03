@@ -1,0 +1,120 @@
+# Testing Guide for NuGet Release Workflow
+
+This document describes how to test the NuGet release workflow.
+
+## Testing Strategy
+
+Since this workflow publishes to NuGet.org and requires repository secrets, testing should be done carefully. The workflow runs on both Windows and Ubuntu, but only the Windows build publishes to NuGet.
+
+## Pre-Testing Checklist
+
+- [x] Workflow YAML syntax validated
+- [x] Version determination logic tested locally
+- [x] Version update logic tested locally
+- [x] Build script works (`dotnet run --project build/build.csproj`)
+
+## Manual Testing Steps
+
+### 1. Test Prerelease Publishing (Recommended First Test)
+
+This tests the workflow on untagged commits to the master or release branch.
+
+**Steps:**
+1. Ensure `NUGET_API_KEY` secret is configured in repository settings
+2. Create a test commit on the `master` or `release` branch (e.g., update a comment or README)
+3. Push to the `master` or `release` branch
+4. Monitor the GitHub Actions workflow at: https://github.com/adamhathcock/sharpcompress/actions
+5. Verify:
+   - Workflow triggers and runs successfully on both Windows and Ubuntu
+   - Version is determined correctly (e.g., `0.43.0-beta.XXX` if last tag is 0.42.x)
+   - Build and tests pass on both platforms
+   - Package artifacts are uploaded for both platforms
+   - Package is pushed to NuGet.org as prerelease (Windows build only)
+
+**Expected Outcome:**
+- A new prerelease package appears on NuGet.org: https://www.nuget.org/packages/SharpCompress/
+- Package version follows pattern: `{NEXT_MINOR_VERSION}-beta.{COMMIT_COUNT}`
+
+### 2. Test Tagged Release Publishing
+
+This tests the workflow when a version tag is pushed.
+
+**Steps:**
+1. Prepare the `master` or `release` branch with all desired changes
+2. Create a version tag (must be a pure semantic version like `MAJOR.MINOR.PATCH`):
+   ```bash
+   git checkout master  # or release
+   git tag 0.42.2
+   git push origin 0.42.2
+   ```
+3. Monitor the GitHub Actions workflow
+4. Verify:
+   - Workflow triggers and runs successfully on both Windows and Ubuntu
+   - Version is determined as the tag (e.g., `0.42.2`)
+   - Build and tests pass on both platforms
+   - Package artifacts are uploaded for both platforms
+   - Package is pushed to NuGet.org as stable release (Windows build only)
+
+**Expected Outcome:**
+- A new stable release package appears on NuGet.org
+- Package version matches the tag
+
+### 3. Test Duplicate Package Handling
+
+This tests the `--skip-duplicate` flag behavior.
+
+**Steps:**
+1. Push to the `release` branch without making changes
+2. Monitor the workflow
+3. Verify:
+   - Workflow runs but NuGet push is skipped with "duplicate" message
+   - No errors occur
+
+### 4. Test Build Failure Handling
+
+This tests that failed builds don't publish packages.
+
+**Steps:**
+1. Introduce a breaking change in a test or code
+2. Push to the `release` branch
+3. Verify:
+   - Workflow runs and detects the failure
+   - Build or test step fails
+   - NuGet push step is skipped
+   - No package is published
+
+## Verification
+
+After each test, verify:
+
+1. **GitHub Actions Logs**: Check the workflow logs for any errors or warnings
+2. **NuGet.org**: Verify the package appears with correct version and metadata
+3. **Artifacts**: Download and inspect the uploaded artifacts
+
+## Rollback/Cleanup
+
+If testing produces unwanted packages:
+
+1. **Prerelease packages**: Can be unlisted on NuGet.org (Settings → Unlist)
+2. **Stable packages**: Cannot be deleted, only unlisted (use test versions)
+3. **Tags**: Can be deleted with:
+   ```bash
+   git tag -d 0.42.2
+   git push origin :refs/tags/0.42.2
+   ```
+
+## Known Limitations
+
+- NuGet.org does not allow re-uploading the same version
+- Deleted packages on NuGet.org reserve the version number
+- The workflow requires the `NUGET_API_KEY` secret to be set
+
+## Success Criteria
+
+The workflow is considered successful if:
+
+- ✅ Prerelease versions are published correctly with beta suffix
+- ✅ Tagged versions are published as stable releases
+- ✅ Build and test failures prevent publishing
+- ✅ Duplicate packages are handled gracefully
+- ✅ Workflow logs are clear and informative

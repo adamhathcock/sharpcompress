@@ -1,0 +1,61 @@
+name: NuGet Release
+
+on:
+  push:
+    branches:
+      - 'master'
+      - 'release'
+    tags:
+      - '[0-9]+.[0-9]+.[0-9]+'
+  pull_request:
+    branches:
+      - 'master'
+      - 'release'
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-publish:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [windows-latest, ubuntu-latest]
+    
+    steps:
+    - uses: actions/checkout@v6
+      with:
+        fetch-depth: 0  # Fetch all history for versioning
+    
+    - uses: actions/setup-dotnet@v5
+      with:
+        dotnet-version: 10.0.x
+    
+    # Determine version using C# build target
+    - name: Determine Version
+      id: version
+      run: dotnet run --project build/build.csproj -- determine-version
+    
+    # Update version in project file using C# build target
+    - name: Update Version in Project
+      run: dotnet run --project build/build.csproj -- update-version
+      env:
+        VERSION: ${{ steps.version.outputs.version }}
+    
+    # Build and test
+    - name: Build and Test
+      run: dotnet run --project build/build.csproj
+    
+    # Upload artifacts for verification
+    - name: Upload NuGet Package
+      uses: actions/upload-artifact@v6
+      with:
+        name: ${{ matrix.os }}-nuget-package
+        path: artifacts/*.nupkg
+    
+    # Push to NuGet.org using C# build target (Windows only, not on PRs)
+    - name: Push to NuGet
+      if: success() && matrix.os == 'windows-latest' && github.event_name != 'pull_request'
+      run: dotnet run --project build/build.csproj -- push-to-nuget
+      env:
+        NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
