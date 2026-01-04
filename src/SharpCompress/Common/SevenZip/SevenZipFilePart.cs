@@ -42,7 +42,6 @@ internal class SevenZipFilePart : FilePart
         {
             return Stream.Null;
         }
-        var folderStream = _database.GetFolderStream(_stream, Folder!, _database.PasswordProvider);
 
         var firstFileIndex = _database._folderStartFileIndex[_database._folders.IndexOf(Folder!)];
         var skipCount = Index - firstFileIndex;
@@ -51,10 +50,15 @@ internal class SevenZipFilePart : FilePart
         {
             skipSize += _database._files[firstFileIndex + i].Size;
         }
-        if (skipSize > 0)
-        {
-            folderStream.Skip(skipSize);
-        }
+
+        var folderStream = _database.GetFolderStream(
+            _stream,
+            Folder!,
+            _database.PasswordProvider,
+            skipSize,
+            Header.Size
+        );
+
         return new ReadOnlySubStream(folderStream, Header.Size);
     }
 

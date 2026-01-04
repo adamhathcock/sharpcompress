@@ -25,6 +25,9 @@ internal class ArchiveDatabase
     internal List<int> _folderStartFileIndex = new();
     internal List<int> _fileIndexToFolderIndexMap = new();
 
+    private readonly Dictionary<CFolder, (Stream stream, long position)> _cachedFolderStreams =
+        new();
+
     internal IPasswordProvider PasswordProvider { get; }
 
     public ArchiveDatabase(IPasswordProvider passwordProvider) =>
@@ -41,6 +44,12 @@ internal class ArchiveDatabase
         _packStreamStartPositions.Clear();
         _folderStartFileIndex.Clear();
         _fileIndexToFolderIndexMap.Clear();
+
+        foreach (var cached in _cachedFolderStreams.Values)
+        {
+            cached.stream?.Dispose();
+        }
+        _cachedFolderStreams.Clear();
     }
 
     internal bool IsEmpty() =>
@@ -146,8 +155,47 @@ internal class ArchiveDatabase
         return size;
     }
 
-    internal Stream GetFolderStream(Stream stream, CFolder folder, IPasswordProvider pw)
+    internal Stream GetFolderStream(
+        Stream stream,
+        CFolder folder,
+        IPasswordProvider pw,
+        long skipSize,
+        long fileSize
+    )
     {
+        // Check if we already have a cached decoder stream for this folder
+        if (_cachedFolderStreams.TryGetValue(folder, out var cached))
+        {
+            // Calculate how much more we need to skip from the current position
+            var additionalSkip = skipSize - cached.position;
+            if (additionalSkip > 0)
+            {
+                cached.stream.Skip(additionalSkip);
+            }
+            else if (additionalSkip < 0)
+            {
+                // Stream position is ahead of where we need to be - can't seek backward
+                // This shouldn't happen with sequential reading, but just in case,
+                // dispose the old stream and create a new one
+                cached.stream.Dispose();
+                _cachedFolderStreams.Remove(folder);
+            }
+            else
+            {
+                // Position is exactly right, no skip needed
+                // Update the cached position to account for the file that will be read
+                _cachedFolderStreams[folder] = (cached.stream, skipSize + fileSize);
+                return cached.stream;
+            }
+
+            if (additionalSkip >= 0)
+            {
+                // Update the cached position to account for the file that will be read
+                _cachedFolderStreams[folder] = (cached.stream, skipSize + fileSize);
+                return cached.stream;
+            }
+        }
+
         var packStreamIndex = folder._firstPackStreamId;
         var folderStartPackPos = GetFolderStreamPos(folder, 0);
         var count = folder._packStreams.Count;
@@ -157,12 +205,23 @@ internal class ArchiveDatabase
             packSizes[j] = _packSizes[packStreamIndex + j];
         }
 
-        return DecoderStreamHelper.CreateDecoderStream(
+        var decoderStream = DecoderStreamHelper.CreateDecoderStream(
             stream,
             folderStartPackPos,
             packSizes,
             folder,
             pw
         );
+
+        // Skip to the requested position
+        if (skipSize > 0)
+        {
+            decoderStream.Skip(skipSize);
+        }
+
+        // Cache the decoder stream for reuse, tracking position after this file is read
+        _cachedFolderStreams[folder] = (decoderStream, skipSize + fileSize);
+
+        return decoderStream;
     }
 }
