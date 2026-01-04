@@ -642,4 +642,42 @@ public class RarArchiveTests : ArchiveTests
         );
         Assert.True(passwordProtectedFilesArchive.IsEncrypted);
     }
+
+    /// <summary>
+    /// Test for issue: InvalidOperationException when extracting RAR files.
+    /// This test verifies that RAR extraction completes successfully without throwing
+    /// InvalidOperationException when the actual decompressed size may differ from
+    /// the header-specified size. The fix changed the validation from (_position != Length)
+    /// to (_position &lt; Length) to only catch premature stream termination, not oversized decompression.
+    /// </summary>
+    [Fact]
+    public void Rar_ExtractionCompletesWithoutInvalidOperationException()
+    {
+        // Test multiple RAR formats to ensure the fix works across all versions
+        var testFiles = new[] { "Rar.rar", "Rar5.rar", "Rar4.rar", "Rar2.rar" };
+
+        foreach (var testFile in testFiles)
+        {
+            using var stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, testFile));
+            using var archive = RarArchive.Open(stream);
+
+            // Extract all entries and read them completely
+            // This ensures we read to the end of each entry stream without throwing
+            foreach (var entry in archive.Entries.Where(e => !e.IsDirectory))
+            {
+                using var entryStream = entry.OpenEntryStream();
+                using var ms = new MemoryStream();
+
+                // Read the entire stream - this is where the exception would occur
+                // if the validation was too strict (_position != Length instead of _position &lt; Length)
+                entryStream.CopyTo(ms);
+
+                // Verify we read some data
+                Assert.True(
+                    ms.Length > 0,
+                    $"Failed to extract data from {entry.Key} in {testFile}"
+                );
+            }
+        }
+    }
 }
