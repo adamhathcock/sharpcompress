@@ -57,7 +57,7 @@ namespace SharpCompress.Common.Ace
 
         public override DateTime? ArchivedTime => null;
 
-        public override bool IsEncrypted => _filePart.Header.IsEncrypted;
+        public override bool IsEncrypted => _filePart.Header.IsFileEncrypted;
 
         public override bool IsDirectory => _filePart.Header.IsDirectory;
 

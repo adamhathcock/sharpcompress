@@ -1,7 +1,9 @@
 using System;
+using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.IO;
 using SharpCompress.Common.Ace.Headers;
+using SharpCompress.Common.Zip.Headers;
 using SharpCompress.Crypto;
 
 namespace SharpCompress.Common.Ace.Headers
@@ -11,9 +13,6 @@ namespace SharpCompress.Common.Ace.Headers
     /// </summary>
     public sealed class AceMainHeader : AceHeader
     {
-        public ushort HeaderCrc { get; set; }
-        public ushort HeaderSize { get; set; }
-        public byte HeaderType { get; set; }
         public byte ExtractVersion { get; set; }
         public byte CreatorVersion { get; set; }
         public HostOS HostOS { get; set; }

@@ -7,7 +7,6 @@ using System.Threading.Tasks;
 using SharpCompress.Common;
 using SharpCompress.Readers;
 using SharpCompress.Readers.Ace;
-using SharpCompress.Readers.Arj;
 using Xunit;
 
 namespace SharpCompress.Test.Ace
@@ -22,6 +21,12 @@ namespace SharpCompress.Test.Ace
 
         [Fact]
         public void Ace_Uncompressed_Read() => Read("Ace.store.ace", CompressionType.None);
+
+        [Fact]
+        public void Ace_Encrypted_Read()
+        {
+            var exception = Assert.Throws<CryptographicException>(() => Read("Ace.encrypted.ace"));
+        }
 
         [Theory]
         [InlineData("Ace.method1.ace", CompressionType.AceLZ77)]
@@ -43,7 +48,7 @@ namespace SharpCompress.Test.Ace
         }
 
         [Fact]
-        public void Arj_Multi_Reader()
+        public void Ace_Multi_Reader()
         {
             var exception = Assert.Throws<MultiVolumeExtractionException>(() =>
                 DoMultiReader(

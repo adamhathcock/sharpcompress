@@ -1,4 +1,5 @@
 using System;
+using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.IO;
 using System.Xml.Linq;
@@ -12,9 +13,6 @@ namespace SharpCompress.Common.Ace.Headers
     public sealed class AceFileHeader : AceHeader
     {
         public long DataStartPosition { get; private set; }
-        public ushort HeaderCrc { get; set; }
-        public ushort HeaderSize { get; set; }
-        public byte HeaderType { get; set; }
         public long PackedSize { get; set; }
         public long OriginalSize { get; set; }
         public DateTime DateTime { get; set; }
@@ -66,16 +64,16 @@ namespace SharpCompress.Common.Ace.Headers
             int offset = 0;
 
             // Header type (1 byte)
-            byte headerType = headerData[offset++];
+            HeaderType = headerData[offset++];
 
             // Skip recovery record headers (ACE 2.0 feature)
-            if (headerType == (byte)SharpCompress.Common.Ace.Headers.AceHeaderType.RECOVERY32)
+            if (HeaderType == (byte)SharpCompress.Common.Ace.Headers.AceHeaderType.RECOVERY32)
             {
                 // Skip to next header
                 return null;
             }
 
-            if (headerType != (byte)SharpCompress.Common.Ace.Headers.AceHeaderType.FILE)
+            if (HeaderType != (byte)SharpCompress.Common.Ace.Headers.AceHeaderType.FILE)
             {
                 // Unknown header type - skip
                 return null;

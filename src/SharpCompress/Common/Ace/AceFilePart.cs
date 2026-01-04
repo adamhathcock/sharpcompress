@@ -11,16 +11,15 @@ namespace SharpCompress.Common.Ace
 {
     public class AceFilePart : FilePart
     {
-        private readonly Stream? _stream;
+        private readonly Stream _stream;
+        internal AceFileHeader Header { get; set; }
 
-        internal AceFilePart(AceFileHeader localAceHeader, Stream? seekableStream)
+        internal AceFilePart(AceFileHeader localAceHeader, Stream seekableStream)
             : base(localAceHeader.ArchiveEncoding)
         {
             _stream = seekableStream;
             Header = localAceHeader;
         }
-
-        internal AceFileHeader Header { get; set; }
 
         internal override string? FilePartName => Header.Filename;
 

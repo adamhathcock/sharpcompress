@@ -7,11 +7,7 @@ using System.Threading.Tasks;
 using SharpCompress.Common;
 using SharpCompress.Common.Ace;
 using SharpCompress.Common.Ace.Headers;
-using SharpCompress.Common.Arc;
 using SharpCompress.Common.Arj;
-using SharpCompress.Common.Arj.Headers;
-using SharpCompress.Common.Rar.Headers;
-using SharpCompress.Readers.Arj;
 
 namespace SharpCompress.Readers.Ace
 {
@@ -38,12 +34,15 @@ namespace SharpCompress.Readers.Ace
         }
 
         private AceReader(Stream stream, ReaderOptions options)
-            : this(options)
-        {
-            Volume = new AceVolume(stream, options, 0);
-        }
+            : this(options) { }
 
-        public override AceVolume? Volume { get; }
+        /// <summary>
+        /// Derived class must create or manage the Volume itself.
+        /// AbstractReader.Volume is get-only, so it cannot be set here.
+        /// </summary>
+        public override AceVolume? Volume => _volume;
+
+        private AceVolume? _volume;
 
         /// <summary>
         /// Opens an AceReader for non-seeking usage with a single volume.
@@ -86,17 +85,23 @@ namespace SharpCompress.Readers.Ace
                     "Multi volumes are currently not supported"
                 );
             }
-            if (mainHeader?.IsEncrypted == true)
+
+            if (_volume == null)
             {
-                throw new CryptographicException(
-                    "Password protected archives are currently not supported"
-                );
+                _volume = new AceVolume(stream, Options, 0);
+                ValidateArchive(_volume);
             }
 
-            var localHeaderReader = new AceFileHeader(base.Options.ArchiveEncoding);
+            var localHeaderReader = new AceFileHeader(_archiveEncoding);
             while (true)
             {
                 var localHeader = localHeaderReader.Read(stream);
+                if (localHeader?.IsFileEncrypted == true)
+                {
+                    throw new CryptographicException(
+                        "Password protected archives are currently not supported"
+                    );
+                }
                 if (localHeader == null)
                     break;
 

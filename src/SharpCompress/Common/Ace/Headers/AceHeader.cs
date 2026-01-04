@@ -39,15 +39,19 @@ namespace SharpCompress.Common.Ace.Headers
 
         public ArchiveEncoding ArchiveEncoding { get; }
         public AceHeaderType AceHeaderType { get; }
-        public ushort HeaderFlags { get; set; }
 
-        public bool IsEncrypted =>
-            (HeaderFlags & SharpCompress.Common.Ace.Headers.HeaderFlags.PASSWORD) != 0;
+        public ushort HeaderFlags { get; set; }
+        public ushort HeaderCrc { get; set; }
+        public ushort HeaderSize { get; set; }
+        public byte HeaderType { get; set; }
+
+        public bool IsFileEncrypted =>
+            (HeaderFlags & SharpCompress.Common.Ace.Headers.HeaderFlags.FILE_ENCRYPTED) != 0;
         public bool Is64Bit =>
             (HeaderFlags & SharpCompress.Common.Ace.Headers.HeaderFlags.MEMORY_64BIT) != 0;
 
         public bool IsSolid =>
-            (HeaderFlags & SharpCompress.Common.Ace.Headers.HeaderFlags.SOLID) != 0;
+            (HeaderFlags & SharpCompress.Common.Ace.Headers.HeaderFlags.SOLID_MAIN) != 0;
 
         public bool IsMultiVolume =>
             (HeaderFlags & SharpCompress.Common.Ace.Headers.HeaderFlags.MULTIVOLUME) != 0;
@@ -63,23 +67,23 @@ namespace SharpCompress.Common.Ace.Headers
                 return Array.Empty<byte>();
             }
 
-            var headerCrc = BitConverter.ToUInt16(headerBytes, 0); // CRC for validation
-            var headerSize = BitConverter.ToUInt16(headerBytes, 2);
-            if (headerSize == 0)
+            HeaderCrc = BitConverter.ToUInt16(headerBytes, 0); // CRC for validation
+            HeaderSize = BitConverter.ToUInt16(headerBytes, 2);
+            if (HeaderSize == 0)
             {
                 return Array.Empty<byte>();
             }
 
             // Read the header data
-            var body = new byte[headerSize];
-            if (stream.Read(body, 0, headerSize) != headerSize)
+            var body = new byte[HeaderSize];
+            if (stream.Read(body, 0, HeaderSize) != HeaderSize)
             {
                 return Array.Empty<byte>();
             }
 
             // Verify crc
             var checksum = AceCrc.AceCrc16(body);
-            if (checksum != headerCrc)
+            if (checksum != HeaderCrc)
             {
                 throw new InvalidDataException("Header checksum is invalid");
             }
