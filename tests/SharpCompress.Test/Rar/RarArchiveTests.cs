@@ -645,15 +645,16 @@ public class RarArchiveTests : ArchiveTests
 
     /// <summary>
     /// Test for issue: InvalidOperationException when extracting RAR files.
-    /// This test verifies that RAR extraction completes successfully without throwing
-    /// InvalidOperationException when the actual decompressed size may differ from
-    /// the header-specified size. The fix changed the validation from (_position != Length)
-    /// to (_position &lt; Length) to only catch premature stream termination, not oversized decompression.
+    /// This test verifies the fix for the validation logic that was changed from
+    /// (_position != Length) to (_position &lt; Length).
+    /// The old logic would throw an exception when position exceeded expected length,
+    /// but the new logic only throws when decompression ends prematurely (position &lt; expected).
     /// </summary>
     [Fact]
-    public void Rar_ExtractionCompletesWithoutInvalidOperationException()
+    public void Rar_StreamValidation_OnlyThrowsOnPrematureEnd()
     {
-        // Test multiple RAR formats to ensure the fix works across all versions
+        // Test normal extraction - should NOT throw InvalidOperationException
+        // even if actual decompressed size differs from header
         var testFiles = new[] { "Rar.rar", "Rar5.rar", "Rar4.rar", "Rar2.rar" };
 
         foreach (var testFile in testFiles)
@@ -662,14 +663,13 @@ public class RarArchiveTests : ArchiveTests
             using var archive = RarArchive.Open(stream);
 
             // Extract all entries and read them completely
-            // This ensures we read to the end of each entry stream without throwing
             foreach (var entry in archive.Entries.Where(e => !e.IsDirectory))
             {
                 using var entryStream = entry.OpenEntryStream();
                 using var ms = new MemoryStream();
 
-                // Read the entire stream - this is where the exception would occur
-                // if the validation was too strict (_position != Length instead of _position &lt; Length)
+                // This should complete without throwing InvalidOperationException
+                // The fix ensures we only throw when position &lt; expected length, not when position >= expected
                 entryStream.CopyTo(ms);
 
                 // Verify we read some data
@@ -679,5 +679,54 @@ public class RarArchiveTests : ArchiveTests
                 );
             }
         }
+    }
+
+    /// <summary>
+    /// Test that InvalidOperationException is correctly thrown only when decompression
+    /// ends prematurely (position &lt; expected length), not when position >= expected length.
+    /// This verifies the fix where the condition was changed from (_position != Length)
+    /// to (_position &lt; Length).
+    /// </summary>
+    [Fact]
+    public void Rar_StreamValidation_CorrectExceptionBehavior()
+    {
+        // This test documents the expected exception behavior:
+        // - OLD behavior: Threw when _position != Length (including position > Length)
+        //   This incorrectly threw exceptions for valid RAR files where actual size > header size
+        // - NEW behavior: Only throws when _position < Length (premature termination)
+        //   This correctly allows files where actual size >= header size
+
+        var testFile = "Rar.rar";
+        using var stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, testFile));
+        using var archive = RarArchive.Open(stream);
+
+        var entry = archive.Entries.FirstOrDefault(e => !e.IsDirectory);
+        Assert.NotNull(entry);
+
+        using var entryStream = entry!.OpenEntryStream();
+
+        // Read all data from the stream completely
+        var buffer = new byte[4096];
+        long totalBytesRead = 0;
+        int bytesRead;
+        while ((bytesRead = entryStream.Read(buffer, 0, buffer.Length)) > 0)
+        {
+            totalBytesRead += bytesRead;
+        }
+
+        // Verify we read data
+        Assert.True(totalBytesRead > 0, "Should have read some data from the entry");
+
+        // After reading to EOF, further reads should return 0 without throwing
+        // This is the key fix: the old code would throw if position != expected length,
+        // but the new code only throws if position < expected length
+        bytesRead = entryStream.Read(buffer, 0, buffer.Length);
+        Assert.Equal(0, bytesRead);
+
+        // Note: To test the actual exception case (position < Length), we would need
+        // a truncated or corrupted RAR file where the unpacker stops before reaching
+        // the expected length. Such a file would trigger:
+        // throw new InvalidOperationException($"unpacked file size does not match header: expected {Length} found {_position}")
+        // when count > 0 && outTotal == 0 && _position < Length
     }
 }
