@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 using System.Linq;
 using SharpCompress.Archives;
@@ -5,6 +6,7 @@ using SharpCompress.Archives.Rar;
 using SharpCompress.Common;
 using SharpCompress.Compressors.LZMA.Utilites;
 using SharpCompress.Readers;
+using SharpCompress.Test.Mocks;
 using Xunit;
 
 namespace SharpCompress.Test.Rar;
@@ -679,5 +681,40 @@ public class RarArchiveTests : ArchiveTests
                 );
             }
         }
+    }
+
+    /// <summary>
+    /// Negative test case: Verifies that InvalidOperationException IS thrown when
+    /// a RAR stream ends prematurely (position &lt; expected length).
+    /// This tests the validation condition (_position &lt; Length) works correctly.
+    /// </summary>
+    [Fact]
+    public void Rar_StreamValidation_ThrowsOnTruncatedStream()
+    {
+        // This test verifies the exception is thrown when decompression ends prematurely
+        // by using a truncated stream that stops reading after a small number of bytes
+        var testFile = "Rar.rar";
+        using var fileStream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, testFile));
+
+        // Wrap the file stream with a truncated stream that will stop reading early
+        // This simulates a corrupted or truncated RAR file
+        using var truncatedStream = new TruncatedStream(fileStream, 1000);
+
+        // Opening the archive should work, but extracting should throw
+        // when we try to read beyond the truncated data
+        var exception = Assert.Throws<InvalidOperationException>(() =>
+        {
+            using var archive = RarArchive.Open(truncatedStream);
+            foreach (var entry in archive.Entries.Where(e => !e.IsDirectory))
+            {
+                using var entryStream = entry.OpenEntryStream();
+                using var ms = new MemoryStream();
+                // This should throw InvalidOperationException when it can't read all expected bytes
+                entryStream.CopyTo(ms);
+            }
+        });
+
+        // Verify the exception message matches our expectation
+        Assert.Contains("unpacked file size does not match header", exception.Message);
     }
 }
