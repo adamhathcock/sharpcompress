@@ -47,7 +47,7 @@ internal class ArchiveDatabase
 
         foreach (var cached in _cachedFolderStreams.Values)
         {
-            cached.stream?.Dispose();
+            cached.stream.Dispose();
         }
         _cachedFolderStreams.Clear();
     }
