@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 using System.Linq;
 using SharpCompress.Archives;
@@ -5,6 +6,7 @@ using SharpCompress.Archives.Rar;
 using SharpCompress.Common;
 using SharpCompress.Compressors.LZMA.Utilites;
 using SharpCompress.Readers;
+using SharpCompress.Test.Mocks;
 using Xunit;
 
 namespace SharpCompress.Test.Rar;
@@ -641,5 +643,78 @@ public class RarArchiveTests : ArchiveTests
             Path.Combine(TEST_ARCHIVES_PATH, "Rar.encrypted_filesOnly.rar")
         );
         Assert.True(passwordProtectedFilesArchive.IsEncrypted);
+    }
+
+    /// <summary>
+    /// Test for issue: InvalidOperationException when extracting RAR files.
+    /// This test verifies the fix for the validation logic that was changed from
+    /// (_position != Length) to (_position &lt; Length).
+    /// The old logic would throw an exception when position exceeded expected length,
+    /// but the new logic only throws when decompression ends prematurely (position &lt; expected).
+    /// </summary>
+    [Fact]
+    public void Rar_StreamValidation_OnlyThrowsOnPrematureEnd()
+    {
+        // Test normal extraction - should NOT throw InvalidOperationException
+        // even if actual decompressed size differs from header
+        var testFiles = new[] { "Rar.rar", "Rar5.rar", "Rar4.rar", "Rar2.rar" };
+
+        foreach (var testFile in testFiles)
+        {
+            using var stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, testFile));
+            using var archive = RarArchive.Open(stream);
+
+            // Extract all entries and read them completely
+            foreach (var entry in archive.Entries.Where(e => !e.IsDirectory))
+            {
+                using var entryStream = entry.OpenEntryStream();
+                using var ms = new MemoryStream();
+
+                // This should complete without throwing InvalidOperationException
+                // The fix ensures we only throw when position &lt; expected length, not when position >= expected
+                entryStream.CopyTo(ms);
+
+                // Verify we read some data
+                Assert.True(
+                    ms.Length > 0,
+                    $"Failed to extract data from {entry.Key} in {testFile}"
+                );
+            }
+        }
+    }
+
+    /// <summary>
+    /// Negative test case: Verifies that InvalidOperationException IS thrown when
+    /// a RAR stream ends prematurely (position &lt; expected length).
+    /// This tests the validation condition (_position &lt; Length) works correctly.
+    /// </summary>
+    [Fact]
+    public void Rar_StreamValidation_ThrowsOnTruncatedStream()
+    {
+        // This test verifies the exception is thrown when decompression ends prematurely
+        // by using a truncated stream that stops reading after a small number of bytes
+        var testFile = "Rar.rar";
+        using var fileStream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, testFile));
+
+        // Wrap the file stream with a truncated stream that will stop reading early
+        // This simulates a corrupted or truncated RAR file
+        using var truncatedStream = new TruncatedStream(fileStream, 1000);
+
+        // Opening the archive should work, but extracting should throw
+        // when we try to read beyond the truncated data
+        var exception = Assert.Throws<InvalidOperationException>(() =>
+        {
+            using var archive = RarArchive.Open(truncatedStream);
+            foreach (var entry in archive.Entries.Where(e => !e.IsDirectory))
+            {
+                using var entryStream = entry.OpenEntryStream();
+                using var ms = new MemoryStream();
+                // This should throw InvalidOperationException when it can't read all expected bytes
+                entryStream.CopyTo(ms);
+            }
+        });
+
+        // Verify the exception message matches our expectation
+        Assert.Contains("unpacked file size does not match header", exception.Message);
     }
 }
