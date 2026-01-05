@@ -24,9 +24,7 @@ public class SevenZipStreamCachingTests : TestBase
         // for sequential reads from the same folder, reducing allocations
         using var stream = new MemoryStream();
         using (
-            var archive = SevenZipArchive.Open(
-                Path.Combine(TEST_ARCHIVES_PATH, "7Zip.LZMA2.7z")
-            )
+            var archive = SevenZipArchive.Open(Path.Combine(TEST_ARCHIVES_PATH, "7Zip.LZMA2.7z"))
         )
         {
             using var reader = archive.ExtractAllEntries();
@@ -56,9 +54,7 @@ public class SevenZipStreamCachingTests : TestBase
         // This test verifies that if a user partially reads an entry,
         // the next entry extraction still works correctly
         using (
-            var archive = SevenZipArchive.Open(
-                Path.Combine(TEST_ARCHIVES_PATH, "7Zip.LZMA2.7z")
-            )
+            var archive = SevenZipArchive.Open(Path.Combine(TEST_ARCHIVES_PATH, "7Zip.LZMA2.7z"))
         )
         {
             using var reader = archive.ExtractAllEntries();
@@ -131,9 +127,7 @@ public class SevenZipStreamCachingTests : TestBase
         // Test that non-sequential access via Archive API (not Reader) still works
         // This doesn't benefit from caching but shouldn't be broken
         using (
-            var archive = SevenZipArchive.Open(
-                Path.Combine(TEST_ARCHIVES_PATH, "7Zip.LZMA2.7z")
-            )
+            var archive = SevenZipArchive.Open(Path.Combine(TEST_ARCHIVES_PATH, "7Zip.LZMA2.7z"))
         )
         {
             var entries = archive.Entries.Where(e => !e.IsDirectory).ToList();
@@ -160,9 +154,7 @@ public class SevenZipStreamCachingTests : TestBase
         // Verify that multiple entries from the same compression folder
         // reuse the decoder stream (this is the core optimization)
         using (
-            var archive = SevenZipArchive.Open(
-                Path.Combine(TEST_ARCHIVES_PATH, "7Zip.solid.7z")
-            )
+            var archive = SevenZipArchive.Open(Path.Combine(TEST_ARCHIVES_PATH, "7Zip.solid.7z"))
         )
         {
             var entries = archive.Entries.Where(e => !e.IsDirectory).ToList();
@@ -201,9 +193,7 @@ public class SevenZipStreamCachingTests : TestBase
     {
         // Test that zero-byte files don't break the caching logic
         using (
-            var archive = SevenZipArchive.Open(
-                Path.Combine(TEST_ARCHIVES_PATH, "7Zip.LZMA2.7z")
-            )
+            var archive = SevenZipArchive.Open(Path.Combine(TEST_ARCHIVES_PATH, "7Zip.LZMA2.7z"))
         )
         {
             using var reader = archive.ExtractAllEntries();
