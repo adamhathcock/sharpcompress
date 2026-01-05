@@ -19,10 +19,7 @@ public class WriteBenchmarks : BenchmarkBase
     public WriteBenchmarks()
     {
         // Get some test files to compress
-        var originalPath = Path.Combine(
-            Path.GetDirectoryName(TEST_ARCHIVES_PATH)!,
-            "Original"
-        );
+        var originalPath = Path.Combine(Path.GetDirectoryName(TEST_ARCHIVES_PATH)!, "Original");
         if (Directory.Exists(originalPath))
         {
             _testFiles = Directory.GetFiles(originalPath).Take(5).ToArray();
@@ -102,4 +99,3 @@ public class WriteBenchmarks : BenchmarkBase
         }
     }
 }
-
