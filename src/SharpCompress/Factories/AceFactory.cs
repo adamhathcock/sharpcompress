@@ -5,21 +5,21 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using SharpCompress.Common;
-using SharpCompress.Common.Arj.Headers;
+using SharpCompress.Common.Ace.Headers;
 using SharpCompress.Readers;
-using SharpCompress.Readers.Arj;
+using SharpCompress.Readers.Ace;
 
 namespace SharpCompress.Factories
 {
-    public class ArjFactory : Factory, IReaderFactory
+    public class AceFactory : Factory, IReaderFactory
     {
-        public override string Name => "Arj";
+        public override string Name => "Ace";
 
-        public override ArchiveType? KnownArchiveType => ArchiveType.Arj;
+        public override ArchiveType? KnownArchiveType => ArchiveType.Ace;
 
         public override IEnumerable<string> GetSupportedExtensions()
         {
-            yield return "arj";
+            yield return "ace";
         }
 
         public override bool IsArchive(
@@ -28,10 +28,10 @@ namespace SharpCompress.Factories
             int bufferSize = ReaderOptions.DefaultBufferSize
         )
         {
-            return ArjHeader.IsArchive(stream);
+            return AceHeader.IsArchive(stream);
         }
 
         public IReader OpenReader(Stream stream, ReaderOptions? options) =>
-            ArjReader.Open(stream, options);
+            AceReader.Open(stream, options);
     }
 }
