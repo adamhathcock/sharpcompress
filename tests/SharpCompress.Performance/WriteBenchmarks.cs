@@ -14,23 +14,24 @@ namespace SharpCompress.Performance;
 public class WriteBenchmarks : BenchmarkBase
 {
     private string _tempOutputPath = null!;
-    private readonly string[] _testFiles = null!;
-
-    public WriteBenchmarks()
-    {
-        // Get some test files to compress
-        var originalPath = Path.Combine(Path.GetDirectoryName(TEST_ARCHIVES_PATH)!, "Original");
-        if (Directory.Exists(originalPath))
-        {
-            _testFiles = Directory.GetFiles(originalPath).Take(5).ToArray();
-        }
-    }
+    private string[] _testFiles = null!;
 
     [GlobalSetup]
     public void Setup()
     {
         _tempOutputPath = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
         Directory.CreateDirectory(_tempOutputPath);
+
+        // Get some test files to compress
+        var originalPath = Path.Combine(Path.GetDirectoryName(TEST_ARCHIVES_PATH)!, "Original");
+        if (Directory.Exists(originalPath))
+        {
+            _testFiles = Directory.GetFiles(originalPath).Take(5).ToArray();
+        }
+        else
+        {
+            _testFiles = [];
+        }
     }
 
     [GlobalCleanup]
@@ -45,9 +46,6 @@ public class WriteBenchmarks : BenchmarkBase
     [Benchmark]
     public void ZipWriterWrite()
     {
-        if (_testFiles == null || _testFiles.Length == 0)
-            return;
-
         var outputFile = Path.Combine(_tempOutputPath, "test.zip");
         using var stream = File.Create(outputFile);
         using var writer = WriterFactory.Open(
@@ -64,9 +62,6 @@ public class WriteBenchmarks : BenchmarkBase
     [Benchmark]
     public void TarWriterWrite()
     {
-        if (_testFiles == null || _testFiles.Length == 0)
-            return;
-
         var outputFile = Path.Combine(_tempOutputPath, "test.tar");
         using var stream = File.Create(outputFile);
         using var writer = WriterFactory.Open(
@@ -83,9 +78,6 @@ public class WriteBenchmarks : BenchmarkBase
     [Benchmark]
     public void TarGzWriterWrite()
     {
-        if (_testFiles == null || _testFiles.Length == 0)
-            return;
-
         var outputFile = Path.Combine(_tempOutputPath, "test.tar.gz");
         using var stream = File.Create(outputFile);
         using var writer = WriterFactory.Open(

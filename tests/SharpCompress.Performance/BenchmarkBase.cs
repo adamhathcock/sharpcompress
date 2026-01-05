@@ -17,9 +17,11 @@ public class BenchmarkBase
             StringComparison.OrdinalIgnoreCase
         );
         var path = AppDomain.CurrentDomain.BaseDirectory.Substring(0, index);
-        var SOLUTION_BASE_PATH = Path.GetDirectoryName(path) ?? throw new ArgumentNullException();
+        var solutionBasePath =
+            Path.GetDirectoryName(path)
+            ?? throw new InvalidOperationException("Could not determine solution base path");
 
-        TEST_ARCHIVES_PATH = Path.Combine(SOLUTION_BASE_PATH, "TestArchives", "Archives");
+        TEST_ARCHIVES_PATH = Path.Combine(solutionBasePath, "TestArchives", "Archives");
     }
 
     protected string GetTestArchivePath(string filename) =>
