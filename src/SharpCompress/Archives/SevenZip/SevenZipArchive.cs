@@ -216,6 +216,9 @@ public class SevenZipArchive : AbstractArchive<SevenZipArchiveEntry, SevenZipVol
     {
         private readonly SevenZipArchive _archive;
         private SevenZipEntry? _currentEntry;
+        private CFolder? _cachedFolder;
+        private Stream? _cachedFolderStream;
+        private long _cachedPosition;
 
         internal SevenZipReader(ReaderOptions readerOptions, SevenZipArchive archive)
             : base(readerOptions, ArchiveType.SevenZip) => this._archive = archive;
@@ -224,20 +227,30 @@ public class SevenZipArchive : AbstractArchive<SevenZipArchiveEntry, SevenZipVol
 
         protected override IEnumerable<SevenZipEntry> GetEntries(Stream stream)
         {
-            var entries = _archive.Entries.ToList();
-            stream.Position = 0;
-            foreach (var dir in entries.Where(x => x.IsDirectory))
+            try
             {
-                _currentEntry = dir;
-                yield return dir;
+                var entries = _archive.Entries.ToList();
+                stream.Position = 0;
+                foreach (var dir in entries.Where(x => x.IsDirectory))
+                {
+                    _currentEntry = dir;
+                    yield return dir;
+                }
+                // For non-directory entries, yield them without creating shared streams
+                // For sequential reads from the same folder, reuse the cached decoder stream
+                // to eliminate redundant BufferedSubStream allocations
+                foreach (var entry in entries.Where(x => !x.IsDirectory))
+                {
+                    _currentEntry = entry;
+                    yield return entry;
+                }
             }
-            // For non-directory entries, yield them without creating shared streams
-            // Each call to GetEntryStream() will create a fresh decompression stream
-            // to avoid state corruption issues with async operations
-            foreach (var entry in entries.Where(x => !x.IsDirectory))
+            finally
             {
-                _currentEntry = entry;
-                yield return entry;
+                // Clean up cached stream when done
+                _cachedFolderStream?.Dispose();
+                _cachedFolderStream = null;
+                _cachedFolder = null;
             }
         }
 
@@ -255,7 +268,79 @@ public class SevenZipArchive : AbstractArchive<SevenZipArchiveEntry, SevenZipVol
             {
                 return CreateEntryStream(Stream.Null);
             }
-            return CreateEntryStream(new SyncOnlyStream(entry.FilePart.GetCompressedStream()));
+
+            // Optimization: Cache decoder stream for sequential reads from the same folder
+            // This eliminates redundant decoder stream creation for solid archives
+            var folder = entry.FilePart.Folder;
+            var fileIndex = entry.FilePart.Index;
+            var database = _archive._database.NotNull();
+
+            // Calculate skip size (bytes to skip from start of folder to this file)
+            var firstFileIndex = database._folderStartFileIndex[database._folders.IndexOf(folder!)];
+            long skipSize = 0;
+            for (var i = firstFileIndex; i < fileIndex; i++)
+            {
+                skipSize += database._files[i].Size;
+            }
+
+            Stream folderStream;
+
+            // Check if we can reuse the cached decoder stream
+            if (_cachedFolder == folder && _cachedFolderStream != null)
+            {
+                // Same folder - check if we're at the right position
+                var additionalSkip = skipSize - _cachedPosition;
+                if (additionalSkip == 0)
+                {
+                    // Perfect - already at the right position for sequential read
+                    folderStream = _cachedFolderStream;
+                }
+                else if (additionalSkip > 0)
+                {
+                    // Need to skip forward (e.g., previous entry was only partially read)
+                    _cachedFolderStream.Skip(additionalSkip);
+                    folderStream = _cachedFolderStream;
+                }
+                else
+                {
+                    // Need to go backward - can't seek, so dispose and create fresh stream
+                    _cachedFolderStream.Dispose();
+                    folderStream = database.GetFolderStream(
+                        Volume.Stream,
+                        folder!,
+                        database.PasswordProvider
+                    );
+                    if (skipSize > 0)
+                    {
+                        folderStream.Skip(skipSize);
+                    }
+                    _cachedFolderStream = folderStream;
+                    _cachedFolder = folder;
+                }
+            }
+            else
+            {
+                // Different folder or first access - dispose old and create new
+                _cachedFolderStream?.Dispose();
+                folderStream = database.GetFolderStream(
+                    Volume.Stream,
+                    folder!,
+                    database.PasswordProvider
+                );
+                if (skipSize > 0)
+                {
+                    folderStream.Skip(skipSize);
+                }
+                _cachedFolderStream = folderStream;
+                _cachedFolder = folder;
+            }
+
+            // Update cached position to where we expect to be after this file is read
+            _cachedPosition = skipSize + entry.FilePart.Header.Size;
+
+            return CreateEntryStream(
+                new SyncOnlyStream(new ReadOnlySubStream(folderStream, entry.FilePart.Header.Size))
+            );
         }
     }
 
