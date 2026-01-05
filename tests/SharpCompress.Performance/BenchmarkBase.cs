@@ -16,6 +16,14 @@ public class BenchmarkBase
             "SharpCompress.Performance",
             StringComparison.OrdinalIgnoreCase
         );
+
+        if (index == -1)
+        {
+            throw new InvalidOperationException(
+                "Could not locate SharpCompress.Performance in the base directory path"
+            );
+        }
+
         var path = AppDomain.CurrentDomain.BaseDirectory.Substring(0, index);
         var solutionBasePath =
             Path.GetDirectoryName(path)

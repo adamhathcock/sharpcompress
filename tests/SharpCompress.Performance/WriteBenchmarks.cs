@@ -34,6 +34,19 @@ public class WriteBenchmarks : BenchmarkBase
         }
     }
 
+    [IterationCleanup]
+    public void IterationCleanup()
+    {
+        // Clean up created archives after each iteration to avoid file reuse affecting measurements
+        if (Directory.Exists(_tempOutputPath))
+        {
+            foreach (var file in Directory.GetFiles(_tempOutputPath))
+            {
+                File.Delete(file);
+            }
+        }
+    }
+
     [GlobalCleanup]
     public void Cleanup()
     {
