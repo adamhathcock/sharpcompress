@@ -1,54 +1,17 @@
-using System;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
-using SharpCompress.Archives;
-using SharpCompress.Performance;
-using SharpCompress.Readers;
-using SharpCompress.Test;
+using BenchmarkDotNet.Configs;
+using BenchmarkDotNet.Running;
 
-var index = AppDomain.CurrentDomain.BaseDirectory.IndexOf(
-    "SharpCompress.Performance",
-    StringComparison.OrdinalIgnoreCase
-);
-var path = AppDomain.CurrentDomain.BaseDirectory.Substring(0, index);
-var SOLUTION_BASE_PATH = Path.GetDirectoryName(path) ?? throw new ArgumentNullException();
+namespace SharpCompress.Performance;
 
-var TEST_ARCHIVES_PATH = Path.Combine(SOLUTION_BASE_PATH, "TestArchives", "Archives");
-
-//using var _ = JetbrainsProfiler.Memory($"/Users/adam/temp/");
-using (var __ = JetbrainsProfiler.Cpu($"/Users/adam/temp/"))
+internal class Program
 {
-    var testArchives = new[]
+    static void Main(string[] args)
     {
-        "Rar.Audio_program.rar",
+        // Run all benchmarks in the assembly
+        var config = DefaultConfig.Instance;
 
-        //"64bitstream.zip.7z",
-        //"TarWithSymlink.tar.gz"
-    };
-    var arcs = testArchives.Select(a => Path.Combine(TEST_ARCHIVES_PATH, a)).ToArray();
-
-    for (int i = 0; i < 50; i++)
-    {
-        using var found = ArchiveFactory.Open(arcs[0]);
-        foreach (var entry in found.Entries.Where(entry => !entry.IsDirectory))
-        {
-            Console.WriteLine($"Extracting {entry.Key}");
-            using var entryStream = entry.OpenEntryStream();
-            entryStream.CopyTo(Stream.Null);
-        }
-        /*using var found = ReaderFactory.Open(arcs[0]);
-        while (found.MoveToNextEntry())
-        {
-            var entry = found.Entry;
-            if (entry.IsDirectory)
-                continue;
-
-            Console.WriteLine($"Extracting {entry.Key}");
-            found.WriteEntryTo(Stream.Null);
-        }*/
+        // BenchmarkRunner will find all classes with [Benchmark] attributes
+        BenchmarkSwitcher.FromAssembly(typeof(Program).Assembly).Run(args, config);
     }
-
-    Console.WriteLine("Still running...");
 }
-await Task.Delay(500);
+
