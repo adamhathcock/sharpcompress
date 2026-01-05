@@ -28,12 +28,7 @@ namespace SharpCompress.Factories
             int bufferSize = ReaderOptions.DefaultBufferSize
         )
         {
-            var arjHeader = new ArjMainHeader(new ArchiveEncoding());
-            if (arjHeader.Read(stream) == null)
-            {
-                return false;
-            }
-            return true;
+            return ArjHeader.IsArchive(stream);
         }
 
         public IReader OpenReader(Stream stream, ReaderOptions? options) =>

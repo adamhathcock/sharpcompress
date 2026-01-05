@@ -15,8 +15,8 @@ tests/TestArchives/*/Scratch
 tests/TestArchives/*/Scratch2
 .vs
 tools
-.vscode
 .idea/
+artifacts/
 
 .DS_Store
 *.snupkg

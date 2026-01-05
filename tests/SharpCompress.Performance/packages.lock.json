@@ -1,12 +1,12 @@
 {
   "version": 2,
   "dependencies": {
-    "net8.0": {
+    "net10.0": {
       "JetBrains.Profiler.SelfApi": {
         "type": "Direct",
-        "requested": "[2.5.14, )",
-        "resolved": "2.5.14",
-        "contentHash": "9+NcTe49B2M8/MOledSxKZkQKqavFf5xXZw4JL4bVu/KYiw6OOaD6cDQmNGSO18yUP/WoBXsXGKmZ9VOpmyadw==",
+        "requested": "[2.5.15, )",
+        "resolved": "2.5.15",
+        "contentHash": "Uc+GU4Mqwzw6i6C6wPWe2g9UwReUJzrWghCSN9818tSmNI7SJtqKQ1mgfuRylpJam+ED4Cbg2BNJE/LSVpokkg==",
         "dependencies": {
           "JetBrains.HabitatDetector": "1.4.5",
           "JetBrains.Profiler.Api": "1.4.10"
@@ -34,16 +34,7 @@
         }
       },
       "sharpcompress": {
-        "type": "Project",
-        "dependencies": {
-          "ZstdSharp.Port": "[0.8.6, )"
-        }
-      },
-      "ZstdSharp.Port": {
-        "type": "CentralTransitive",
-        "requested": "[0.8.6, )",
-        "resolved": "0.8.6",
-        "contentHash": "iP4jVLQoQmUjMU88g1WObiNr6YKZGvh4aOXn3yOJsHqZsflwRsxZPcIBvNXgjXO3vQKSLctXGLTpcBPLnWPS8A=="
+        "type": "Project"
       }
     }
   }

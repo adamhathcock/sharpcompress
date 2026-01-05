@@ -75,6 +75,14 @@ public class ZipReader : AbstractReader<ZipEntry, ZipVolume>
                             );
                         }
                         break;
+                    case ZipHeaderType.DirectoryEntry:
+                        // DirectoryEntry headers in the central directory are intentionally skipped.
+                        // In streaming mode, we can only read forward, and DirectoryEntry headers
+                        // reference LocalEntry headers that have already been processed. The file
+                        // data comes from LocalEntry headers, not DirectoryEntry headers.
+                        // For multi-volume ZIPs where file data spans multiple files, use ZipArchive
+                        // instead, which requires seekable streams.
+                        break;
                     case ZipHeaderType.DirectoryEnd:
                     {
                         yield break;

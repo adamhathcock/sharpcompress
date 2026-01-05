@@ -84,6 +84,8 @@ public class RarArchive : AbstractArchive<RarArchiveEntry, RarVolume>
 
     public override bool IsSolid => Volumes.First().IsSolidArchive;
 
+    public override bool IsEncrypted => Entries.First(x => !x.IsDirectory).IsEncrypted;
+
     public virtual int MinVersion => Volumes.First().MinVersion;
     public virtual int MaxVersion => Volumes.First().MaxVersion;
 

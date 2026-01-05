@@ -45,14 +45,17 @@ namespace SharpCompress.Test.Arj
         public void Arj_Multi_Reader()
         {
             var exception = Assert.Throws<MultiVolumeExtractionException>(() =>
-                DoArj_Multi_Reader([
-                    "Arj.store.split.arj",
-                    "Arj.store.split.a01",
-                    "Arj.store.split.a02",
-                    "Arj.store.split.a03",
-                    "Arj.store.split.a04",
-                    "Arj.store.split.a05",
-                ])
+                DoMultiReader(
+                    [
+                        "Arj.store.split.arj",
+                        "Arj.store.split.a01",
+                        "Arj.store.split.a02",
+                        "Arj.store.split.a03",
+                        "Arj.store.split.a04",
+                        "Arj.store.split.a05",
+                    ],
+                    streams => ArjReader.Open(streams)
+                )
             );
         }
 
@@ -73,27 +76,6 @@ namespace SharpCompress.Test.Arj
         public void Arj_LargeFileTest_Read(string fileName, CompressionType compressionType)
         {
             ReadForBufferBoundaryCheck(fileName, compressionType);
-        }
-
-        private void DoArj_Multi_Reader(string[] archives)
-        {
-            using (
-                var reader = ArjReader.Open(
-                    archives
-                        .Select(s => Path.Combine(TEST_ARCHIVES_PATH, s))
-                        .Select(p => File.OpenRead(p))
-                )
-            )
-            {
-                while (reader.MoveToNextEntry())
-                {
-                    reader.WriteEntryToDirectory(
-                        SCRATCH_FILES_PATH,
-                        new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
-                    );
-                }
-            }
-            VerifyFiles();
         }
     }
 }

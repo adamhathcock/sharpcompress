@@ -15,11 +15,13 @@ namespace SharpCompress.Writers.Tar;
 public class TarWriter : AbstractWriter
 {
     private readonly bool finalizeArchiveOnClose;
+    private TarHeaderWriteFormat headerFormat;
 
     public TarWriter(Stream destination, TarWriterOptions options)
         : base(ArchiveType.Tar, options)
     {
         finalizeArchiveOnClose = options.FinalizeArchiveOnClose;
+        headerFormat = options.HeaderFormat;
 
         if (!destination.CanWrite)
         {
@@ -121,13 +123,14 @@ public class TarWriter : AbstractWriter
 
         var realSize = size ?? source.Length;
 
-        var header = new TarHeader(WriterOptions.ArchiveEncoding);
+        var header = new TarHeader(WriterOptions.ArchiveEncoding, headerFormat);
 
         header.LastModifiedTime = modificationTime ?? TarHeader.EPOCH;
         header.Name = NormalizeFilename(filename);
         header.Size = realSize;
         header.Write(OutputStream);
-        size = source.TransferTo(OutputStream, realSize);
+        var progressStream = WrapWithProgress(source, filename);
+        size = progressStream.TransferTo(OutputStream, realSize);
         PadTo512(size.Value);
     }
 
@@ -159,7 +162,8 @@ public class TarWriter : AbstractWriter
         header.Name = NormalizeFilename(filename);
         header.Size = realSize;
         header.Write(OutputStream);
-        var written = await source
+        var progressStream = WrapWithProgress(source, filename);
+        var written = await progressStream
             .TransferToAsync(OutputStream, realSize, cancellationToken)
             .ConfigureAwait(false);
         PadTo512(written);
