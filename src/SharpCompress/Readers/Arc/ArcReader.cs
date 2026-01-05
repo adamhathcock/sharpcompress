@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using SharpCompress.Common;
 using SharpCompress.Common.Arc;
@@ -34,6 +35,21 @@ namespace SharpCompress.Readers.Arc
             ArcEntryHeader? header;
             while ((header = headerReader.ReadHeader(stream)) != null)
             {
+                yield return new ArcEntry(new ArcFilePart(header, stream));
+            }
+        }
+
+        protected override async IAsyncEnumerable<ArcEntry> GetEntriesAsync(
+            Stream stream,
+            [System.Runtime.CompilerServices.EnumeratorCancellation]
+                CancellationToken cancellationToken = default
+        )
+        {
+            ArcEntryHeader headerReader = new ArcEntryHeader(Options.ArchiveEncoding);
+            ArcEntryHeader? header;
+            while ((header = headerReader.ReadHeader(stream)) != null)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
                 yield return new ArcEntry(new ArcFilePart(header, stream));
             }
         }

@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using SharpCompress.Compressors.LZMA;
 using SharpCompress.IO;
+using SharpCompress.Test.Mocks;
 using Xunit;
 
 namespace SharpCompress.Test.Streams;
@@ -22,6 +23,7 @@ public class SharpCompressStreamAsyncTests
                 bw.Write(i);
             }
         }
+        ms.Flush();
         ms.Position = 0;
     }
 
@@ -30,11 +32,12 @@ public class SharpCompressStreamAsyncTests
     {
         byte[] data = new byte[0x100000];
         byte[] test = new byte[0x1000];
-        using (MemoryStream ms = new MemoryStream(data))
+        using (var ms = new MemoryStream(data))
         {
             CreateData(ms);
 
-            using (SharpCompressStream scs = new SharpCompressStream(ms, true, false, 0x10000))
+            using var aos = new AsyncOnlyStream(ms);
+            using (SharpCompressStream scs = new SharpCompressStream(aos, true, false, 0x10000))
             {
                 scs.Seek(0x1000, SeekOrigin.Begin);
                 Assert.Equal(0x1000, scs.Position); // position in the SharpCompressionStream
@@ -63,7 +66,8 @@ public class SharpCompressStreamAsyncTests
         {
             CreateData(ms);
 
-            using (SharpCompressStream scs = new SharpCompressStream(ms, true, false, 0x10000))
+            using var aos = new AsyncOnlyStream(ms);
+            using (SharpCompressStream scs = new SharpCompressStream(aos, true, false, 0x10000))
             {
                 IStreamStack stack = (IStreamStack)scs;
 
@@ -99,7 +103,8 @@ public class SharpCompressStreamAsyncTests
         {
             CreateData(ms);
 
-            using (SharpCompressStream scs = new SharpCompressStream(ms, true, false, 0x10000))
+            using var aos = new AsyncOnlyStream(ms);
+            using (SharpCompressStream scs = new SharpCompressStream(aos, true, false, 0x10000))
             {
                 // Read first chunk
                 await scs.ReadAsync(test1, 0, test1.Length);
@@ -123,7 +128,8 @@ public class SharpCompressStreamAsyncTests
         {
             CreateData(ms);
 
-            using (SharpCompressStream scs = new SharpCompressStream(ms, true, false, 0x10000))
+            using var aos = new AsyncOnlyStream(ms);
+            using (SharpCompressStream scs = new SharpCompressStream(aos, true, false, 0x10000))
             {
                 for (int i = 0; i < 10; i++)
                 {

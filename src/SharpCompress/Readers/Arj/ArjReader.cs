@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading;
 using SharpCompress.Common;
 using SharpCompress.Common.Arj;
 using SharpCompress.Common.Arj.Headers;
@@ -85,5 +86,46 @@ namespace SharpCompress.Readers.Arj
 
         protected virtual IEnumerable<FilePart> CreateFilePartEnumerableForCurrentEntry() =>
             Entry.Parts;
+
+        protected override async IAsyncEnumerable<ArjEntry> GetEntriesAsync(
+            Stream stream,
+            [System.Runtime.CompilerServices.EnumeratorCancellation]
+                CancellationToken cancellationToken = default
+        )
+        {
+            var encoding = new ArchiveEncoding();
+            var mainHeaderReader = new ArjMainHeader(encoding);
+            var localHeaderReader = new ArjLocalHeader(encoding);
+
+            var mainHeader = mainHeaderReader.Read(stream);
+            if (mainHeader?.IsVolume == true)
+            {
+                throw new MultiVolumeExtractionException(
+                    "Multi volumes are currently not supported"
+                );
+            }
+            if (mainHeader?.IsGabled == true)
+            {
+                throw new CryptographicException(
+                    "Password protected archives are currently not supported"
+                );
+            }
+
+            if (_volume == null)
+            {
+                _volume = new ArjVolume(stream, Options, 0);
+                ValidateArchive(_volume);
+            }
+
+            while (true)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                var localHeader = localHeaderReader.Read(stream);
+                if (localHeader == null)
+                    break;
+
+                yield return new ArjEntry(new ArjFilePart((ArjLocalHeader)localHeader, stream));
+            }
+        }
     }
 }

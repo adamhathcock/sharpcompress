@@ -3,6 +3,7 @@ using System.Buffers;
 using System.IO;
 using System.Threading.Tasks;
 using SharpCompress.Compressors.LZMA;
+using SharpCompress.Test.Mocks;
 using Xunit;
 
 namespace SharpCompress.Test.Streams;
@@ -14,7 +15,7 @@ public class LzmaStreamAsyncTests
     {
         var properties = new byte[] { 0x01 };
         var compressedData = new byte[] { 0x01, 0x00, 0x00, 0x58, 0x00 };
-        var lzma2Stream = new MemoryStream(compressedData);
+        var lzma2Stream = new AsyncOnlyStream(new MemoryStream(compressedData));
 
         var decompressor = new LzmaStream(properties, lzma2Stream, 5, 1);
         var buffer = new byte[1];

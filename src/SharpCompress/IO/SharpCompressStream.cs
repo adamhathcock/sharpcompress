@@ -245,8 +245,7 @@ public class SharpCompressStream : Stream, IStreamStack
             {
                 return 0;
             }
-            int read;
-            read = Stream.Read(buffer, offset, count);
+            int read = Stream.Read(buffer, offset, count);
             _internalPosition += read;
             return read;
         }

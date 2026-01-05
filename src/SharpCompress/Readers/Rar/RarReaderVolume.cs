@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.IO;
+using System.Threading;
 using SharpCompress.Common.Rar;
 using SharpCompress.Common.Rar.Headers;
 using SharpCompress.IO;
@@ -15,4 +16,8 @@ public class RarReaderVolume : RarVolume
         new NonSeekableStreamFilePart(markHeader, fileHeader, Index);
 
     internal override IEnumerable<RarFilePart> ReadFileParts() => GetVolumeFileParts();
+
+    internal override IAsyncEnumerable<RarFilePart> ReadFilePartsAsync(
+        CancellationToken cancellationToken = default
+    ) => GetVolumeFilePartsAsync(cancellationToken);
 }

@@ -1,6 +1,7 @@
 using System.IO;
 using System.Threading.Tasks;
 using SharpCompress.IO;
+using SharpCompress.Test.Mocks;
 using Xunit;
 
 namespace SharpCompress.Test.Streams;
@@ -10,7 +11,7 @@ public class RewindableStreamAsyncTest
     [Fact]
     public async Task TestRewindAsync()
     {
-        var ms = new MemoryStream();
+        var ms = new AsyncOnlyStream(new MemoryStream());
         var bw = new BinaryWriter(ms);
         bw.Write(1);
         bw.Write(2);
@@ -48,7 +49,7 @@ public class RewindableStreamAsyncTest
     [Fact]
     public async Task TestIncompleteRewindAsync()
     {
-        var ms = new MemoryStream();
+        var ms = new AsyncOnlyStream(new MemoryStream());
         var bw = new BinaryWriter(ms);
         bw.Write(1);
         bw.Write(2);

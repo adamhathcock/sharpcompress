@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading;
 using SharpCompress.Archives.GZip;
 using SharpCompress.Archives.Tar;
 using SharpCompress.Common;
@@ -124,4 +125,24 @@ public class TarReader : AbstractReader<TarEntry, TarVolume>
             compressionType,
             Options.ArchiveEncoding
         );
+
+    protected override async IAsyncEnumerable<TarEntry> GetEntriesAsync(
+        Stream stream,
+        [System.Runtime.CompilerServices.EnumeratorCancellation]
+            CancellationToken cancellationToken = default
+    )
+    {
+        foreach (
+            var entry in TarEntry.GetEntries(
+                StreamingMode.Streaming,
+                stream,
+                compressionType,
+                Options.ArchiveEncoding
+            )
+        )
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            yield return entry;
+        }
+    }
 }

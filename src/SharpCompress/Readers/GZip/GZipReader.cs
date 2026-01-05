@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.IO;
+using System.Threading;
 using SharpCompress.Common;
 using SharpCompress.Common.GZip;
 
@@ -30,4 +31,17 @@ public class GZipReader : AbstractReader<GZipEntry, GZipVolume>
 
     protected override IEnumerable<GZipEntry> GetEntries(Stream stream) =>
         GZipEntry.GetEntries(stream, Options);
+
+    protected override async IAsyncEnumerable<GZipEntry> GetEntriesAsync(
+        Stream stream,
+        [System.Runtime.CompilerServices.EnumeratorCancellation]
+            CancellationToken cancellationToken = default
+    )
+    {
+        foreach (var entry in GZipEntry.GetEntries(stream, Options))
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            yield return entry;
+        }
+    }
 }
