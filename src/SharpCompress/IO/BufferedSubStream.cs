@@ -150,6 +150,34 @@ internal class BufferedSubStream : SharpCompressStream, IStreamStack
         return count;
     }
 
+#if !NETFRAMEWORK && !NETSTANDARD2_0
+    public override async ValueTask<int> ReadAsync(
+        Memory<byte> buffer,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var count = buffer.Length;
+        if (count > Length)
+        {
+            count = (int)Length;
+        }
+
+        if (count > 0)
+        {
+            if (_cacheOffset == _cacheLength)
+            {
+                await RefillCacheAsync(cancellationToken).ConfigureAwait(false);
+            }
+
+            count = Math.Min(count, _cacheLength - _cacheOffset);
+            _cache.AsSpan(_cacheOffset, count).CopyTo(buffer.Span);
+            _cacheOffset += count;
+        }
+
+        return count;
+    }
+#endif
+
     public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
 
     public override void SetLength(long value) => throw new NotSupportedException();
