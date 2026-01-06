@@ -45,10 +45,12 @@ public sealed class LZipStream : Stream, IStreamStack
     private bool _finished;
 
     private long _writeCount;
+    private readonly Stream? _originalStream;
 
     public LZipStream(Stream stream, CompressionMode mode)
     {
         Mode = mode;
+        _originalStream = stream;
 
         if (mode == CompressionMode.Decompress)
         {
@@ -125,6 +127,10 @@ public sealed class LZipStream : Stream, IStreamStack
         {
             Finish();
             _stream.Dispose();
+            if (Mode == CompressionMode.Compress)
+            {
+                _originalStream?.Dispose();
+            }
         }
     }
 
