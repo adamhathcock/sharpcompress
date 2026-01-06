@@ -369,7 +369,7 @@ internal class OutWindow : IDisposable
         return size;
     }
 
-    public int Read(Memory<byte> buffer,  int offset, int count)
+    public int Read(Memory<byte> buffer, int offset, int count)
     {
         if (_streamPos >= _pos)
         {

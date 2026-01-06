@@ -129,9 +129,7 @@ internal class ReadOnlySubStream : SharpCompressStream, IStreamStack
         {
             mem = buffer.Slice(0, (int)sliceLen);
         }
-        var read = await Stream
-            .ReadAsync(mem, cancellationToken)
-            .ConfigureAwait(false);
+        var read = await Stream.ReadAsync(mem, cancellationToken).ConfigureAwait(false);
         if (read > 0)
         {
             BytesLeftToRead -= read;

@@ -8,6 +8,7 @@ using Xunit;
 
 namespace SharpCompress.Test.SevenZip;
 
+#if !NETFRAMEWORK
 public class SevenZipArchiveAsyncTests : ArchiveTests
 {
     [Fact]
@@ -135,3 +136,4 @@ public class SevenZipArchiveAsyncTests : ArchiveTests
         VerifyFiles();
     }
 }
+#endif

@@ -632,14 +632,13 @@ public class LzmaStream : Stream, IStreamStack
         return total;
     }
 
-
 #if !NETFRAMEWORK && !NETSTANDARD2_0
     public override async ValueTask<int> ReadAsync(
         Memory<byte> buffer,
         CancellationToken cancellationToken = default
     )
     {
-         if (_endReached)
+        if (_endReached)
         {
             return 0;
         }
