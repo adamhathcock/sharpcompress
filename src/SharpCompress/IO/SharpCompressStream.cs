@@ -138,8 +138,6 @@ public class SharpCompressStream : Stream, IStreamStack
 #endif
     }
 
-    internal bool IsRecording { get; private set; }
-
     protected override void Dispose(bool disposing)
     {
 #if DEBUG_STREAMS
