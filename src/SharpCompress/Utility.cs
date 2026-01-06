@@ -77,10 +77,7 @@ internal static class Utility
 
     public static void Skip(this Stream source) => source.CopyTo(Stream.Null);
 
-    public static Task SkipAsync(
-        this Stream source,
-        CancellationToken cancellationToken = default
-    )
+    public static Task SkipAsync(this Stream source, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
         return source.CopyToAsync(Stream.Null);
