@@ -425,7 +425,7 @@ public class LzmaStream : Stream, IStreamStack
         }
     }
 
-    private async Task DecodeChunkHeaderAsync(CancellationToken cancellationToken = default)
+    private async ValueTask DecodeChunkHeaderAsync(CancellationToken cancellationToken = default)
     {
         var controlBuffer = new byte[1];
         await _inputStream
@@ -631,6 +631,120 @@ public class LzmaStream : Stream, IStreamStack
 
         return total;
     }
+
+
+#if !NETFRAMEWORK && !NETSTANDARD2_0
+    public override async ValueTask<int> ReadAsync(
+        Memory<byte> buffer,
+        CancellationToken cancellationToken = default
+    )
+    {
+         if (_endReached)
+        {
+            return 0;
+        }
+
+        var total = 0;
+        var offset = 0;
+        var count = buffer.Length;
+        while (total < count)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            if (_availableBytes == 0)
+            {
+                if (_isLzma2)
+                {
+                    await DecodeChunkHeaderAsync(cancellationToken).ConfigureAwait(false);
+                }
+                else
+                {
+                    _endReached = true;
+                }
+                if (_endReached)
+                {
+                    break;
+                }
+            }
+
+            var toProcess = count - total;
+            if (toProcess > _availableBytes)
+            {
+                toProcess = (int)_availableBytes;
+            }
+
+            _outWindow.SetLimit(toProcess);
+            if (_uncompressedChunk)
+            {
+                _inputPosition += await _outWindow
+                    .CopyStreamAsync(_inputStream, toProcess, cancellationToken)
+                    .ConfigureAwait(false);
+            }
+            else if (
+                await _decoder
+                    .CodeAsync(_dictionarySize, _outWindow, _rangeDecoder, cancellationToken)
+                    .ConfigureAwait(false)
+                && _outputSize < 0
+            )
+            {
+                _availableBytes = _outWindow.AvailableBytes;
+            }
+
+            var read = _outWindow.Read(buffer, offset, toProcess);
+            total += read;
+            offset += read;
+            _position += read;
+            _availableBytes -= read;
+
+            if (_availableBytes == 0 && !_uncompressedChunk)
+            {
+                if (
+                    !_rangeDecoder.IsFinished
+                    || (_rangeDecoderLimit >= 0 && _rangeDecoder._total != _rangeDecoderLimit)
+                )
+                {
+                    _outWindow.SetLimit(toProcess + 1);
+                    if (
+                        !await _decoder
+                            .CodeAsync(
+                                _dictionarySize,
+                                _outWindow,
+                                _rangeDecoder,
+                                cancellationToken
+                            )
+                            .ConfigureAwait(false)
+                    )
+                    {
+                        _rangeDecoder.ReleaseStream();
+                        throw new DataErrorException();
+                    }
+                }
+
+                _rangeDecoder.ReleaseStream();
+
+                _inputPosition += _rangeDecoder._total;
+                if (_outWindow.HasPending)
+                {
+                    throw new DataErrorException();
+                }
+            }
+        }
+
+        if (_endReached)
+        {
+            if (_inputSize >= 0 && _inputPosition != _inputSize)
+            {
+                throw new DataErrorException();
+            }
+            if (_outputSize >= 0 && _position != _outputSize)
+            {
+                throw new DataErrorException();
+            }
+        }
+
+        return total;
+    }
+#endif
 
     public override Task WriteAsync(
         byte[] buffer,

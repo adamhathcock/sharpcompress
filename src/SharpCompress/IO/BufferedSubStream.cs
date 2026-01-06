@@ -70,7 +70,7 @@ internal class BufferedSubStream : SharpCompressStream, IStreamStack
         BytesLeftToRead -= _cacheLength;
     }
 
-    private async Task RefillCacheAsync(CancellationToken cancellationToken)
+    private async ValueTask RefillCacheAsync(CancellationToken cancellationToken)
     {
         var count = (int)Math.Min(BytesLeftToRead, _cache.Length);
         _cacheOffset = 0;
