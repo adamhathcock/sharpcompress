@@ -289,4 +289,70 @@ public class SoZipWriterTests : TestBase
         // Verify extracted files match originals
         VerifyFiles(true);
     }
+
+    [Fact]
+    public void CreateSOZipTestArchive()
+    {
+        // Create a SOZip test archive that can be committed to the repository
+        var archivePath = Path.Combine(TEST_ARCHIVES_PATH, "Zip.sozip.zip");
+
+        using (var stream = File.Create(archivePath))
+        {
+            var options = new ZipWriterOptions(CompressionType.Deflate)
+            {
+                EnableSOZip = true,
+                SOZipMinFileSize = 100, // Low threshold to ensure test content is optimized
+                SOZipChunkSize = 1024, // Small chunks for testing
+                LeaveStreamOpen = false,
+            };
+
+            using var writer = new ZipWriter(stream, options);
+
+            // Create test content that's large enough to create multiple chunks
+            var largeContent = new string('A', 5000); // 5KB of 'A's
+
+            // Write a file with enough data to be SOZip-optimized
+            writer.Write(
+                "data.txt",
+                new MemoryStream(Encoding.UTF8.GetBytes(largeContent)),
+                new ZipWriterEntryOptions()
+            );
+
+            // Write a smaller file that won't be SOZip-optimized
+            writer.Write(
+                "small.txt",
+                new MemoryStream(Encoding.UTF8.GetBytes("Small content")),
+                new ZipWriterEntryOptions()
+            );
+        }
+
+        // Validate the archive was created
+        Assert.True(File.Exists(archivePath));
+
+        // Validate it's a valid SOZip archive
+        using (var stream = File.OpenRead(archivePath))
+        {
+            using var archive = ZipArchive.Open(stream);
+            var entries = archive.Entries.ToList();
+
+            // Should have data file, small file, and index file
+            Assert.Equal(3, entries.Count);
+
+            // Verify we have one SOZip index file
+            var indexFiles = entries.Where(e => e.IsSozipIndexFile).ToList();
+            Assert.Single(indexFiles);
+
+            // Verify the index file
+            var indexEntry = indexFiles.First();
+            Assert.Equal(".data.txt.sozip.idx", indexEntry.Key);
+
+            // Verify the data file can be read
+            var dataEntry = entries.First(e => e.Key == "data.txt");
+            using var dataStream = dataEntry.OpenEntryStream();
+            using var reader = new StreamReader(dataStream);
+            var content = reader.ReadToEnd();
+            Assert.Equal(5000, content.Length);
+            Assert.True(content.All(c => c == 'A'));
+        }
+    }
 }

@@ -52,6 +52,112 @@ public class SoZipReaderTests : TestBase
     }
 
     [Fact]
+    public void SOZip_Archive_ReadSOZipFile()
+    {
+        // Read the SOZip test archive
+        var path = Path.Combine(TEST_ARCHIVES_PATH, "Zip.sozip.zip");
+        using Stream stream = File.OpenRead(path);
+        using var archive = ZipArchive.Open(stream);
+
+        var entries = archive.Entries.ToList();
+
+        // Should have 3 entries: data.txt, .data.txt.sozip.idx, and small.txt
+        Assert.Equal(3, entries.Count);
+
+        // Verify we have one SOZip index file
+        var indexFiles = entries.Where(e => e.IsSozipIndexFile).ToList();
+        Assert.Single(indexFiles);
+        Assert.Equal(".data.txt.sozip.idx", indexFiles[0].Key);
+
+        // Verify the index file is not compressed
+        Assert.Equal(CompressionType.None, indexFiles[0].CompressionType);
+
+        // Read and validate the index
+        using (var indexStream = indexFiles[0].OpenEntryStream())
+        {
+            using var memStream = new MemoryStream();
+            indexStream.CopyTo(memStream);
+            var indexBytes = memStream.ToArray();
+
+            var index = SOZipIndex.Read(indexBytes);
+            Assert.Equal(SOZipIndex.SOZIP_VERSION, index.Version);
+            Assert.Equal(1024u, index.ChunkSize); // As set in CreateSOZipTestArchive
+            Assert.True(index.UncompressedSize > 0);
+            Assert.True(index.OffsetCount > 0);
+        }
+
+        // Verify the data file can be read correctly
+        var dataEntry = entries.First(e => e.Key == "data.txt");
+        using (var dataStream = dataEntry.OpenEntryStream())
+        {
+            using var reader = new StreamReader(dataStream);
+            var content = reader.ReadToEnd();
+            Assert.Equal(5000, content.Length);
+            Assert.True(content.All(c => c == 'A'));
+        }
+
+        // Verify the small file
+        var smallEntry = entries.First(e => e.Key == "small.txt");
+        Assert.False(smallEntry.IsSozipIndexFile);
+        using (var smallStream = smallEntry.OpenEntryStream())
+        {
+            using var reader = new StreamReader(smallStream);
+            var content = reader.ReadToEnd();
+            Assert.Equal("Small content", content);
+        }
+    }
+
+    [Fact]
+    public async Task SOZip_Reader_ReadSOZipFile()
+    {
+        // Read the SOZip test archive with ZipReader
+        var path = Path.Combine(TEST_ARCHIVES_PATH, "Zip.sozip.zip");
+        using Stream stream = new ForwardOnlyStream(File.OpenRead(path));
+        using var reader = ZipReader.Open(stream);
+
+        var foundData = false;
+        var foundIndex = false;
+        var foundSmall = false;
+
+        while (await reader.MoveToNextEntryAsync())
+        {
+            if (reader.Entry.Key == "data.txt")
+            {
+                foundData = true;
+                Assert.False(reader.Entry.IsSozipIndexFile);
+
+                using var entryStream = reader.OpenEntryStream();
+                using var streamReader = new StreamReader(entryStream);
+                var content = streamReader.ReadToEnd();
+                Assert.Equal(5000, content.Length);
+                Assert.True(content.All(c => c == 'A'));
+            }
+            else if (reader.Entry.Key == ".data.txt.sozip.idx")
+            {
+                foundIndex = true;
+                Assert.True(reader.Entry.IsSozipIndexFile);
+
+                using var indexStream = reader.OpenEntryStream();
+                using var memStream = new MemoryStream();
+                await indexStream.CopyToAsync(memStream);
+                var indexBytes = memStream.ToArray();
+
+                var index = SOZipIndex.Read(indexBytes);
+                Assert.Equal(SOZipIndex.SOZIP_VERSION, index.Version);
+            }
+            else if (reader.Entry.Key == "small.txt")
+            {
+                foundSmall = true;
+                Assert.False(reader.Entry.IsSozipIndexFile);
+            }
+        }
+
+        Assert.True(foundData, "data.txt entry not found");
+        Assert.True(foundIndex, ".data.txt.sozip.idx entry not found");
+        Assert.True(foundSmall, "small.txt entry not found");
+    }
+
+    [Fact]
     public void SOZip_Archive_DetectsIndexFileByName()
     {
         // Create a zip with a SOZip index file (by name pattern)
