@@ -128,14 +128,11 @@ var progress = new Progress<ProgressReport>(report =>
 
 using (var archive = RarArchive.Open("archive.rar", new ReaderOptions { Progress = progress })) // Must be solid Rar or 7Zip
 {
-    if (archive.IsSolid || archive.Type == ArchiveType.SevenZip)
+    archive.WriteToDirectory(@"D:\output", new ExtractionOptions()
     {
-        archive.WriteToDirectory(@"D:\output", new ExtractionOptions()
-        {
-            ExtractFullPath = true,
-            Overwrite = true
-        });
-    }
+        ExtractFullPath = true,
+        Overwrite = true
+    });
 }
 ```
 
