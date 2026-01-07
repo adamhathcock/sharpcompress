@@ -4,7 +4,7 @@ SharpCompress is a compression library in pure C# for .NET Framework 4.8, .NET 8
 
 The major feature is support for non-seekable streams so large files can be processed on the fly (i.e. download stream).
 
-**NEW:** All I/O operations now support async/await for improved performance and scalability. See the [Async Usage](#async-usage) section below.
+**NEW:** All I/O operations now support async/await for improved performance and scalability. See the [USAGE.md](USAGE.md#async-examples) for examples.
 
 GitHub Actions Build -
 [![SharpCompress](https://github.com/adamhathcock/sharpcompress/actions/workflows/dotnetcore.yml/badge.svg)](https://github.com/adamhathcock/sharpcompress/actions/workflows/dotnetcore.yml)
@@ -33,82 +33,6 @@ ZStandard is an efficient format that works well for streaming with a flexible c
 Hi everyone. I hope you're using SharpCompress and finding it useful. Please give me feedback on what you'd like to see changed especially as far as usability goes. New feature suggestions are always welcome as well. I would also like to know what projects SharpCompress is being used in. I like seeing how it is used to give me ideas for future versions. Thanks!
 
 Please do not email me directly to ask for help. If you think there is a real issue, please report it here.
-
-## Async Usage
-
-SharpCompress now provides full async/await support for all I/O operations, allowing for better performance and scalability in modern applications.
-
-### Async Reading Examples
-
-Extract entries asynchronously:
-```csharp
-using (Stream stream = File.OpenRead("archive.zip"))
-using (var reader = ReaderFactory.Open(stream))
-{
-    while (reader.MoveToNextEntry())
-    {
-        if (!reader.Entry.IsDirectory)
-        {
-            // Async extraction
-            await reader.WriteEntryToDirectoryAsync(
-                @"C:\temp",
-                new ExtractionOptions() { ExtractFullPath = true, Overwrite = true },
-                cancellationToken
-            );
-        }
-    }
-}
-```
-
-Extract all entries to directory asynchronously:
-```csharp
-using (Stream stream = File.OpenRead("archive.tar.gz"))
-using (var reader = ReaderFactory.Open(stream))
-{
-    await reader.WriteAllToDirectoryAsync(
-        @"C:\temp",
-        new ExtractionOptions() { ExtractFullPath = true, Overwrite = true },
-        cancellationToken
-    );
-}
-```
-
-Open entry stream asynchronously:
-```csharp
-using (var archive = ZipArchive.Open("archive.zip"))
-{
-    foreach (var entry in archive.Entries.Where(e => !e.IsDirectory))
-    {
-        using (var entryStream = await entry.OpenEntryStreamAsync(cancellationToken))
-        {
-            // Process stream asynchronously
-            await entryStream.CopyToAsync(outputStream, cancellationToken);
-        }
-    }
-}
-```
-
-### Async Writing Examples
-
-Write files asynchronously:
-```csharp
-using (Stream stream = File.OpenWrite("output.zip"))
-using (var writer = WriterFactory.Open(stream, ArchiveType.Zip, CompressionType.Deflate))
-{
-    await writer.WriteAsync("file1.txt", fileStream, DateTime.Now, cancellationToken);
-}
-```
-
-Write all files from directory asynchronously:
-```csharp
-using (Stream stream = File.OpenWrite("output.tar.gz"))
-using (var writer = WriterFactory.Open(stream, ArchiveType.Tar, new WriterOptions(CompressionType.GZip)))
-{
-    await writer.WriteAllAsync(@"D:\files", "*", SearchOption.AllDirectories, cancellationToken);
-}
-```
-
-All async methods support `CancellationToken` for graceful cancellation of long-running operations.
 
 ## Want to contribute?
 
