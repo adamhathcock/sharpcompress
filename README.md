@@ -34,7 +34,7 @@ Hi everyone. I hope you're using SharpCompress and finding it useful. Please giv
 
 Please do not email me directly to ask for help. If you think there is a real issue, please report it here.
 
-zt#z# Want to contribute?
+## Want to contribute?
 
 I'm always looking for help or ideas. Please submit code or email with ideas. Unfortunately, just letting me know you'd like to help is not enough because I really have no overall plan of what needs to be done. I'll definitely accept code submissions and add you as a member of the project!
 
