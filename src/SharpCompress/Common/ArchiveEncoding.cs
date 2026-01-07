@@ -44,7 +44,7 @@ public class ArchiveEncoding
     public string Decode(byte[] bytes, int start, int length) =>
         GetDecoder().Invoke(bytes, start, length);
 
-    public string DecodeUTF8(byte[] bytes) => Encoding.UTF8.GetString(bytes, 0, bytes.Length);
+    public virtual string DecodeUTF8(byte[] bytes) => Encoding.UTF8.GetString(bytes, 0, bytes.Length);
 
     public byte[] Encode(string str) => GetEncoding().GetBytes(str);
 
