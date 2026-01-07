@@ -12,6 +12,7 @@ public enum EncodingType
     /// Uses the default encoding.
     /// </summary>
     Default,
+
     /// <summary>
     /// Uses UTF-8 encoding.
     /// </summary>
