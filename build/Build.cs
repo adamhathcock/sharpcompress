@@ -1,3 +1,7 @@
+#:package Bullseye
+#:package Glob
+#:package SimpleExec
+
 using System;
 using System.Collections.Generic;
 using System.IO;
