@@ -153,7 +153,7 @@ internal class OutWindow : IDisposable
         _pendingLen = rem;
     }
 
-    public async Task CopyPendingAsync(CancellationToken cancellationToken = default)
+    public async ValueTask CopyPendingAsync(CancellationToken cancellationToken = default)
     {
         if (_pendingLen < 1)
         {
@@ -206,7 +206,7 @@ internal class OutWindow : IDisposable
         _pendingDist = distance;
     }
 
-    public async Task CopyBlockAsync(
+    public async ValueTask CopyBlockAsync(
         int distance,
         int len,
         CancellationToken cancellationToken = default
@@ -253,7 +253,7 @@ internal class OutWindow : IDisposable
         }
     }
 
-    public async Task PutByteAsync(byte b, CancellationToken cancellationToken = default)
+    public async ValueTask PutByteAsync(byte b, CancellationToken cancellationToken = default)
     {
         _buffer[_pos++] = b;
         _total++;
@@ -360,6 +360,28 @@ internal class OutWindow : IDisposable
             size = count;
         }
         Buffer.BlockCopy(_buffer, _streamPos, buffer, offset, size);
+        _streamPos += size;
+        if (_streamPos >= _windowSize)
+        {
+            _pos = 0;
+            _streamPos = 0;
+        }
+        return size;
+    }
+
+    public int Read(Memory<byte> buffer, int offset, int count)
+    {
+        if (_streamPos >= _pos)
+        {
+            return 0;
+        }
+
+        var size = _pos - _streamPos;
+        if (size > count)
+        {
+            size = count;
+        }
+        _buffer.AsMemory(_streamPos, size).CopyTo(buffer.Slice(offset, size));
         _streamPos += size;
         if (_streamPos >= _windowSize)
         {

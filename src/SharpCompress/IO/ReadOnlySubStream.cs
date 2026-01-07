@@ -16,11 +16,11 @@ internal class ReadOnlySubStream : SharpCompressStream, IStreamStack
 
     private long _position;
 
-    public ReadOnlySubStream(Stream stream, long bytesToRead)
-        : this(stream, null, bytesToRead) { }
+    public ReadOnlySubStream(Stream stream, long bytesToRead, bool leaveOpen = true)
+        : this(stream, null, bytesToRead, leaveOpen) { }
 
-    public ReadOnlySubStream(Stream stream, long? origin, long bytesToRead)
-        : base(stream, leaveOpen: true, throwOnDispose: false)
+    public ReadOnlySubStream(Stream stream, long? origin, long bytesToRead, bool leaveOpen = true)
+        : base(stream, leaveOpen, throwOnDispose: false)
     {
         if (origin != null && stream.Position != origin.Value)
         {

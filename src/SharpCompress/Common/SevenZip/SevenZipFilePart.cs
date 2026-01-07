@@ -55,7 +55,7 @@ internal class SevenZipFilePart : FilePart
         {
             folderStream.Skip(skipSize);
         }
-        return new ReadOnlySubStream(folderStream, Header.Size);
+        return new ReadOnlySubStream(folderStream, Header.Size, leaveOpen: false);
     }
 
     public CompressionType CompressionType
