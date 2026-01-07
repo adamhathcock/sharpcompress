@@ -32,14 +32,13 @@ public static class ArchiveEncodingExtensions
         Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 #endif
 
-    /// <summary>
-    /// Gets the encoding based on the archive encoding settings.
-    /// </summary>
-    /// <param name="useUtf8">Whether to use UTF-8.</param>
-    /// <returns>The encoding.</returns>
-    /// <param name="encoding">The archive encoding instance.</param>
     extension(IArchiveEncoding encoding)
     {
+        /// <summary>
+        /// Gets the encoding based on the archive encoding settings.
+        /// </summary>
+        /// <param name="useUtf8">Whether to use UTF-8.</param>
+        /// <returns>The encoding.</returns>
         public Encoding GetEncoding(bool useUtf8 = false) =>
             encoding.Forced ?? (useUtf8 ? encoding.UTF8 : encoding.Default);
 
