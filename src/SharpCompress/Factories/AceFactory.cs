@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using SharpCompress.Common;
 using SharpCompress.Common.Ace.Headers;
@@ -33,5 +34,11 @@ namespace SharpCompress.Factories
 
         public IReader OpenReader(Stream stream, ReaderOptions? options) =>
             AceReader.Open(stream, options);
+
+        public Task<IReader> OpenReaderAsync(
+            Stream stream,
+            ReaderOptions? options,
+            CancellationToken cancellationToken = default
+        ) => Task.FromResult(OpenReader(stream, options));
     }
 }
