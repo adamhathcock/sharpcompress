@@ -72,7 +72,7 @@ internal class ZipCentralDirectoryEntry
             version = 20;
         }
 
-        var flags = Equals(archiveEncoding.Default, Encoding.UTF8)
+        var flags = Equals(archiveEncoding.GetEncoding(), Encoding.UTF8)
             ? HeaderFlags.Efs
             : HeaderFlags.None;
         if (!outputStream.CanSeek)

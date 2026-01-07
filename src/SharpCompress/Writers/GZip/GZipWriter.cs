@@ -23,7 +23,7 @@ public sealed class GZipWriter : AbstractWriter
                 destination,
                 CompressionMode.Compress,
                 (CompressionLevel)(options?.CompressionLevel ?? (int)CompressionLevel.Default),
-                WriterOptions.ArchiveEncoding.Default
+                WriterOptions.ArchiveEncoding.GetEncoding()
             )
         );
     }

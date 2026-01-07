@@ -41,8 +41,8 @@ internal class DirectoryEntryHeader : ZipFileEntry
 
         if (Flags.HasFlag(HeaderFlags.Efs))
         {
-            Name = ArchiveEncoding.UTF8.GetString(name);
-            Comment = ArchiveEncoding.UTF8.GetString(comment);
+            Name = ArchiveEncoding.DecodeUTF8(name);
+            Comment = ArchiveEncoding.DecodeUTF8(comment);
         }
         else
         {

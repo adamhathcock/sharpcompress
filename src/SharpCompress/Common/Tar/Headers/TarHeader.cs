@@ -63,7 +63,7 @@ internal sealed class TarHeader
 
         //ArchiveEncoding.UTF8.GetBytes("magic").CopyTo(buffer, 257);
         var nameByteCount = ArchiveEncoding
-            .Default
+            .GetEncoding()
             .GetByteCount(Name.NotNull("Name is null"));
 
         if (nameByteCount > 100)
@@ -87,7 +87,7 @@ internal sealed class TarHeader
             for (int i = 0; i < dirSeps.Count; i++)
             {
                 int count = ArchiveEncoding
-                    .Default
+                    .GetEncoding()
                     .GetByteCount(fullName.Substring(0, dirSeps[i]));
                 if (count < 155)
                 {
@@ -109,12 +109,12 @@ internal sealed class TarHeader
             string namePrefix = fullName.Substring(0, splitIndex);
             string name = fullName.Substring(splitIndex + 1);
 
-            if (this.ArchiveEncoding.Default.GetByteCount(namePrefix) >= 155)
+            if (this.ArchiveEncoding.GetEncoding().GetByteCount(namePrefix) >= 155)
                 throw new Exception(
                     $"Tar header USTAR format can not fit file name \"{fullName}\" of length {nameByteCount}! Try using GNU Tar format instead!"
                 );
 
-            if (this.ArchiveEncoding.Default.GetByteCount(name) >= 100)
+            if (this.ArchiveEncoding.GetEncoding().GetByteCount(name) >= 100)
                 throw new Exception(
                     $"Tar header USTAR format can not fit file name \"{fullName}\" of length {nameByteCount}! Try using GNU Tar format instead!"
                 );
@@ -156,7 +156,7 @@ internal sealed class TarHeader
 
         //ArchiveEncoding.UTF8.GetBytes("magic").CopyTo(buffer, 257);
         var nameByteCount = ArchiveEncoding
-            .Default
+            .GetEncoding()
             .GetByteCount(Name.NotNull("Name is null"));
         if (nameByteCount > 100)
         {
@@ -200,7 +200,7 @@ internal sealed class TarHeader
             Name = ArchiveEncoding.Decode(
                 ArchiveEncoding.Encode(Name.NotNull("Name is null")),
                 0,
-                100 - ArchiveEncoding.Default.GetMaxByteCount(1)
+                100 - ArchiveEncoding.GetEncoding().GetMaxByteCount(1)
             );
             WriteGnuTarLongLink(output);
         }

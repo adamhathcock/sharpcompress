@@ -33,7 +33,7 @@ internal class LocalEntryHeader : ZipFileEntry
 
         if (Flags.HasFlag(HeaderFlags.Efs))
         {
-            Name = ArchiveEncoding.UTF8.GetString(name);
+            Name = ArchiveEncoding.DecodeUTF8(name);
         }
         else
         {

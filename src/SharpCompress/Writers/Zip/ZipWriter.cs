@@ -244,7 +244,7 @@ public class ZipWriter : AbstractWriter
         {
             OutputStream.Write(stackalloc byte[] { 63, 0 }); //version says we used PPMd or LZMA
         }
-        var flags = Equals(WriterOptions.ArchiveEncoding.Default, Encoding.UTF8)
+        var flags = Equals(WriterOptions.ArchiveEncoding.GetEncoding(), Encoding.UTF8)
             ? HeaderFlags.Efs
             : 0;
         if (!OutputStream.CanSeek)
