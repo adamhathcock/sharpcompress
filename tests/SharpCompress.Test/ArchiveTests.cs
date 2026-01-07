@@ -9,6 +9,7 @@ using SharpCompress.Compressors.Xz;
 using SharpCompress.Crypto;
 using SharpCompress.IO;
 using SharpCompress.Readers;
+using SharpCompress.Test.Mocks;
 using SharpCompress.Writers;
 using SharpCompress.Writers.Zip;
 using Xunit;
@@ -599,7 +600,7 @@ public class ArchiveTests : ReaderTests
                     throwOnDispose: true
                 )
             )
-            using (var archive = archiveFactory.Open(stream, readerOptions))
+            using (var archive = await archiveFactory.OpenAsync(new AsyncOnlyStream(stream), readerOptions))
             {
                 try
                 {

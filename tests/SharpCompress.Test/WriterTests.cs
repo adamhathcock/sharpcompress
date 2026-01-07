@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using SharpCompress.Common;
 using SharpCompress.IO;
 using SharpCompress.Readers;
+using SharpCompress.Test.Mocks;
 using SharpCompress.Writers;
 
 namespace SharpCompress.Test;
@@ -62,7 +63,7 @@ public class WriterTests : TestBase
         CancellationToken cancellationToken = default
     )
     {
-        using (Stream stream = File.OpenWrite(Path.Combine(SCRATCH2_FILES_PATH, archive)))
+        using (Stream stream = new AsyncOnlyStream(File.OpenWrite(Path.Combine(SCRATCH2_FILES_PATH, archive))))
         {
             var writerOptions = new WriterOptions(compressionType) { LeaveStreamOpen = true };
 
