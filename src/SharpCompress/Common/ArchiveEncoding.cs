@@ -9,5 +9,5 @@ public class ArchiveEncoding : IArchiveEncoding
     public Encoding Password { get; set; } = Encoding.Default;
     public Encoding UTF8 { get; set; } = Encoding.UTF8;
     public Encoding? Forced { get; set; }
-    public Func<byte[], int, int, string>? CustomDecoder { get; set; }
+    public Func<byte[], int, int, EncodingType, string>? CustomDecoder { get; set; }
 }
