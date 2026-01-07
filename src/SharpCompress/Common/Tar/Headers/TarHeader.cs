@@ -11,7 +11,7 @@ internal sealed class TarHeader
     internal static readonly DateTime EPOCH = new(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 
     public TarHeader(
-        ArchiveEncoding archiveEncoding,
+        IArchiveEncoding archiveEncoding,
         TarHeaderWriteFormat writeFormat = TarHeaderWriteFormat.GNU_TAR_LONG_LINK
     )
     {
@@ -30,7 +30,7 @@ internal sealed class TarHeader
     internal DateTime LastModifiedTime { get; set; }
     internal EntryType EntryType { get; set; }
     internal Stream? PackedStream { get; set; }
-    internal ArchiveEncoding ArchiveEncoding { get; }
+    internal IArchiveEncoding ArchiveEncoding { get; }
 
     internal const int BLOCK_SIZE = 512;
 
@@ -63,7 +63,7 @@ internal sealed class TarHeader
 
         //ArchiveEncoding.UTF8.GetBytes("magic").CopyTo(buffer, 257);
         var nameByteCount = ArchiveEncoding
-            .GetEncoding()
+            .Default
             .GetByteCount(Name.NotNull("Name is null"));
 
         if (nameByteCount > 100)
@@ -87,7 +87,7 @@ internal sealed class TarHeader
             for (int i = 0; i < dirSeps.Count; i++)
             {
                 int count = ArchiveEncoding
-                    .GetEncoding()
+                    .Default
                     .GetByteCount(fullName.Substring(0, dirSeps[i]));
                 if (count < 155)
                 {
@@ -109,12 +109,12 @@ internal sealed class TarHeader
             string namePrefix = fullName.Substring(0, splitIndex);
             string name = fullName.Substring(splitIndex + 1);
 
-            if (this.ArchiveEncoding.GetEncoding().GetByteCount(namePrefix) >= 155)
+            if (this.ArchiveEncoding.Default.GetByteCount(namePrefix) >= 155)
                 throw new Exception(
                     $"Tar header USTAR format can not fit file name \"{fullName}\" of length {nameByteCount}! Try using GNU Tar format instead!"
                 );
 
-            if (this.ArchiveEncoding.GetEncoding().GetByteCount(name) >= 100)
+            if (this.ArchiveEncoding.Default.GetByteCount(name) >= 100)
                 throw new Exception(
                     $"Tar header USTAR format can not fit file name \"{fullName}\" of length {nameByteCount}! Try using GNU Tar format instead!"
                 );
@@ -156,7 +156,7 @@ internal sealed class TarHeader
 
         //ArchiveEncoding.UTF8.GetBytes("magic").CopyTo(buffer, 257);
         var nameByteCount = ArchiveEncoding
-            .GetEncoding()
+            .Default
             .GetByteCount(Name.NotNull("Name is null"));
         if (nameByteCount > 100)
         {
@@ -200,7 +200,7 @@ internal sealed class TarHeader
             Name = ArchiveEncoding.Decode(
                 ArchiveEncoding.Encode(Name.NotNull("Name is null")),
                 0,
-                100 - ArchiveEncoding.GetEncoding().GetMaxByteCount(1)
+                100 - ArchiveEncoding.Default.GetMaxByteCount(1)
             );
             WriteGnuTarLongLink(output);
         }

@@ -7,7 +7,7 @@ namespace SharpCompress.Common.Arc
 {
     public class ArcEntryHeader
     {
-        public ArchiveEncoding ArchiveEncoding { get; }
+        public IArchiveEncoding ArchiveEncoding { get; }
         public CompressionType CompressionMethod { get; private set; }
         public string? Name { get; private set; }
         public long CompressedSize { get; private set; }
@@ -16,7 +16,7 @@ namespace SharpCompress.Common.Arc
         public long OriginalSize { get; private set; }
         public long DataStartPosition { get; private set; }
 
-        public ArcEntryHeader(ArchiveEncoding archiveEncoding)
+        public ArcEntryHeader(IArchiveEncoding archiveEncoding)
         {
             this.ArchiveEncoding = archiveEncoding;
         }

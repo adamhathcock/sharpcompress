@@ -25,7 +25,7 @@ namespace SharpCompress.Readers.Ace
     /// </remarks>
     public abstract class AceReader : AbstractReader<AceEntry, AceVolume>
     {
-        private readonly ArchiveEncoding _archiveEncoding;
+        private readonly IArchiveEncoding _archiveEncoding;
 
         internal AceReader(ReaderOptions options)
             : base(options, ArchiveType.Ace)

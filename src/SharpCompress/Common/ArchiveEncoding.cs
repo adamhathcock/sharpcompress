@@ -3,55 +3,54 @@ using System.Text;
 
 namespace SharpCompress.Common;
 
-public class ArchiveEncoding
+public class ArchiveEncoding : IArchiveEncoding
 {
+    public ArchiveEncoding()
+    {
+        Default = Encoding.Default;
+        Password = Encoding.Default;
+        UTF8 = Encoding.UTF8;
+    }
+
     /// <summary>
     /// Default encoding to use when archive format doesn't specify one.
     /// </summary>
-    public Encoding? Default { get; set; }
+    public Encoding Default { get; set; }
 
     /// <summary>
     /// ArchiveEncoding used by encryption schemes which don't comply with RFC 2898.
     /// </summary>
-    public Encoding? Password { get; set; }
+    public Encoding Password { get; set; }
 
     /// <summary>
-    /// Set this encoding when you want to force it for all encoding operations.
+    /// Default encoding to use when archive format specifies UTF-8 encoding.
     /// </summary>
-    public Encoding? Forced { get; set; }
+    public Encoding UTF8 { get; set; }
+}
+
+public interface IArchiveEncoding
+{
+    /// <summary>
+    /// Default encoding to use when archive format doesn't specify one.
+    /// </summary>
+    public Encoding Default { get; set; }
 
     /// <summary>
-    /// Set this when you want to use a custom method for all decoding operations.
+    /// ArchiveEncoding used by encryption schemes which don't comply with RFC 2898.
     /// </summary>
-    /// <returns>string Func(bytes, index, length)</returns>
-    public Func<byte[], int, int, string>? CustomDecoder { get; set; }
+    public Encoding Password { get; set; }
 
-    public ArchiveEncoding()
-        : this(Encoding.Default, Encoding.Default) { }
+    /// <summary>
+    /// Default encoding to use when archive format specifies UTF-8 encoding.
+    /// </summary>
+    public Encoding UTF8 { get; set; }
+}
 
-    public ArchiveEncoding(Encoding def, Encoding password)
-    {
-        Default = def;
-        Password = password;
-    }
+public static class ArchiveEncodingExtensions
+{
+    public static byte[] Encode(this IArchiveEncoding encoding, string str) => encoding.Default.GetBytes(str);
+    public static string Decode(this IArchiveEncoding encoding, byte[] bytes) => encoding.Default.GetString(bytes);
 
-#if !NETFRAMEWORK
-    static ArchiveEncoding() => Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-#endif
-
-    public string Decode(byte[] bytes) => Decode(bytes, 0, bytes.Length);
-
-    public string Decode(byte[] bytes, int start, int length) =>
-        GetDecoder().Invoke(bytes, start, length);
-
-    public string DecodeUTF8(byte[] bytes) => Encoding.UTF8.GetString(bytes, 0, bytes.Length);
-
-    public byte[] Encode(string str) => GetEncoding().GetBytes(str);
-
-    public Encoding GetEncoding() => Forced ?? Default ?? Encoding.UTF8;
-
-    public Encoding GetPasswordEncoding() => Password ?? Encoding.UTF8;
-
-    public Func<byte[], int, int, string> GetDecoder() =>
-        CustomDecoder ?? ((bytes, index, count) => GetEncoding().GetString(bytes, index, count));
+    public static string Decode(this IArchiveEncoding encoding, byte[] bytes, int start, int length) =>
+        encoding.Default.GetString(bytes, start, length);
 }

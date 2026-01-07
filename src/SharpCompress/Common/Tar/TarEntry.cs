@@ -54,7 +54,7 @@ public class TarEntry : Entry
         StreamingMode mode,
         Stream stream,
         CompressionType compressionType,
-        ArchiveEncoding archiveEncoding
+        IArchiveEncoding archiveEncoding
     )
     {
         foreach (var header in TarHeaderFactory.ReadHeader(mode, stream, archiveEncoding))

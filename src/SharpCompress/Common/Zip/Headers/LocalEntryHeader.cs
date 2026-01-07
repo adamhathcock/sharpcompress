@@ -5,7 +5,7 @@ namespace SharpCompress.Common.Zip.Headers;
 
 internal class LocalEntryHeader : ZipFileEntry
 {
-    public LocalEntryHeader(ArchiveEncoding archiveEncoding)
+    public LocalEntryHeader(IArchiveEncoding archiveEncoding)
         : base(ZipHeaderType.LocalEntry, archiveEncoding) { }
 
     internal override void Read(BinaryReader reader)
@@ -33,7 +33,7 @@ internal class LocalEntryHeader : ZipFileEntry
 
         if (Flags.HasFlag(HeaderFlags.Efs))
         {
-            Name = ArchiveEncoding.DecodeUTF8(name);
+            Name = ArchiveEncoding.UTF8.GetString(name);
         }
         else
         {
