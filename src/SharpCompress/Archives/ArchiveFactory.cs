@@ -41,7 +41,8 @@ public static class ArchiveFactory
     {
         readerOptions ??= new ReaderOptions();
         stream = SharpCompressStream.Create(stream, bufferSize: readerOptions.BufferSize);
-        var factory = await FindFactoryAsync<IArchiveFactory>(stream, cancellationToken).ConfigureAwait(false);
+        var factory = await FindFactoryAsync<IArchiveFactory>(stream, cancellationToken)
+            .ConfigureAwait(false);
         return await factory
             .OpenAsync(stream, readerOptions, cancellationToken)
             .ConfigureAwait(false);
@@ -114,7 +115,8 @@ public static class ArchiveFactory
     {
         options ??= new ReaderOptions { LeaveStreamOpen = false };
 
-        var factory = await FindFactoryAsync<IArchiveFactory>(fileInfo, cancellationToken).ConfigureAwait(false);
+        var factory = await FindFactoryAsync<IArchiveFactory>(fileInfo, cancellationToken)
+            .ConfigureAwait(false);
         return await factory.OpenAsync(fileInfo, options, cancellationToken).ConfigureAwait(false);
     }
 
@@ -292,7 +294,10 @@ public static class ArchiveFactory
         );
     }
 
-    private static ValueTask<T> FindFactoryAsync<T>(FileInfo finfo, CancellationToken cancellationToken )
+    private static ValueTask<T> FindFactoryAsync<T>(
+        FileInfo finfo,
+        CancellationToken cancellationToken
+    )
         where T : IFactory
     {
         finfo.NotNull(nameof(finfo));
@@ -300,7 +305,10 @@ public static class ArchiveFactory
         return FindFactoryAsync<T>(stream, cancellationToken);
     }
 
-    private static async ValueTask<T> FindFactoryAsync<T>(Stream stream, CancellationToken cancellationToken )
+    private static async ValueTask<T> FindFactoryAsync<T>(
+        Stream stream,
+        CancellationToken cancellationToken
+    )
         where T : IFactory
     {
         stream.NotNull(nameof(stream));

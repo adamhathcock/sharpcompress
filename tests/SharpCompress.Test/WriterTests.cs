@@ -63,7 +63,11 @@ public class WriterTests : TestBase
         CancellationToken cancellationToken = default
     )
     {
-        using (Stream stream = new AsyncOnlyStream(File.OpenWrite(Path.Combine(SCRATCH2_FILES_PATH, archive))))
+        using (
+            Stream stream = new AsyncOnlyStream(
+                File.OpenWrite(Path.Combine(SCRATCH2_FILES_PATH, archive))
+            )
+        )
         {
             var writerOptions = new WriterOptions(compressionType) { LeaveStreamOpen = true };
 
