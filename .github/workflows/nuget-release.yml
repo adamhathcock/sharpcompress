@@ -34,17 +34,17 @@ jobs:
     # Determine version using C# build target
     - name: Determine Version
       id: version
-      run: dotnet run build/build.cs -- determine-version
+      run: dotnet build/build.cs -- determine-version
 
     # Update version in project file using C# build target
     - name: Update Version in Project
-      run: dotnet run build/build.cs -- update-version
+      run: dotnet build/build.cs -- update-version
       env:
         VERSION: ${{ steps.version.outputs.version }}
 
     # Build and test
     - name: Build and Test
-      run: dotnet run build/build.cs
+      run: dotnet build/build.cs
 
     # Upload artifacts for verification
     - name: Upload NuGet Package
@@ -56,6 +56,6 @@ jobs:
     # Push to NuGet.org using C# build target (Windows only, not on PRs)
     - name: Push to NuGet
       if: success() && matrix.os == 'windows-latest' && github.event_name != 'pull_request'
-      run: dotnet run build/build.cs -- push-to-nuget
+      run: dotnet build/build.cs -- push-to-nuget
       env:
         NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
