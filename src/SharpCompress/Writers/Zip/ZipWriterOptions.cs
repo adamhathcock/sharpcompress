@@ -1,5 +1,6 @@
 using System;
 using SharpCompress.Common;
+using SharpCompress.Common.Zip.SOZip;
 using SharpCompress.Compressors.Deflate;
 using D = SharpCompress.Compressors.Deflate;
 
@@ -24,6 +25,9 @@ public class ZipWriterOptions : WriterOptions
         {
             UseZip64 = writerOptions.UseZip64;
             ArchiveComment = writerOptions.ArchiveComment;
+            EnableSOZip = writerOptions.EnableSOZip;
+            SOZipChunkSize = writerOptions.SOZipChunkSize;
+            SOZipMinFileSize = writerOptions.SOZipMinFileSize;
         }
     }
 
@@ -80,4 +84,27 @@ public class ZipWriterOptions : WriterOptions
     /// are less than 4GiB in length.
     /// </summary>
     public bool UseZip64 { get; set; }
+
+    /// <summary>
+    /// Enables SOZip (Seek-Optimized ZIP) for Deflate-compressed files.
+    /// When enabled, files that meet the minimum size requirement will have
+    /// an accompanying index file that allows random access within the
+    /// compressed data. Requires a seekable output stream.
+    /// </summary>
+    public bool EnableSOZip { get; set; }
+
+    /// <summary>
+    /// The chunk size for SOZip index creation in bytes.
+    /// Must be a multiple of 1024 bytes. Default is 32KB (32768 bytes).
+    /// Smaller chunks allow for finer-grained random access but result
+    /// in larger index files and slightly less efficient compression.
+    /// </summary>
+    public int SOZipChunkSize { get; set; } = (int)SOZipIndex.DEFAULT_CHUNK_SIZE;
+
+    /// <summary>
+    /// Minimum file size (uncompressed) in bytes for SOZip optimization.
+    /// Files smaller than this size will not have SOZip index files created.
+    /// Default is 1MB (1048576 bytes).
+    /// </summary>
+    public long SOZipMinFileSize { get; set; } = 1048576;
 }

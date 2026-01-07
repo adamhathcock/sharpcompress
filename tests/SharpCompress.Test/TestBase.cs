@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using SharpCompress.Common.Zip.SOZip;
 using SharpCompress.Readers;
 using Xunit;
 
@@ -45,7 +46,7 @@ public class TestBase : IDisposable
 
     public void Dispose() => Directory.Delete(SCRATCH_BASE_PATH, true);
 
-    public void VerifyFiles()
+    public void VerifyFiles(bool skipSoIndexes = false)
     {
         if (UseExtensionInsteadOfNameToVerify)
         {
@@ -53,7 +54,7 @@ public class TestBase : IDisposable
         }
         else
         {
-            VerifyFilesByName();
+            VerifyFilesByName(skipSoIndexes);
         }
     }
 
@@ -72,10 +73,23 @@ public class TestBase : IDisposable
         }
     }
 
-    protected void VerifyFilesByName()
+    private void VerifyFilesByName(bool skipSoIndexes)
     {
         var extracted = Directory
             .EnumerateFiles(SCRATCH_FILES_PATH, "*.*", SearchOption.AllDirectories)
+            .Where(x =>
+            {
+                if (
+                    skipSoIndexes
+                    && Path.GetFileName(x)
+                        .EndsWith(SOZipIndex.INDEX_EXTENSION, StringComparison.OrdinalIgnoreCase)
+                )
+                {
+                    return false;
+                }
+
+                return true;
+            })
             .ToLookup(path => path.Substring(SCRATCH_FILES_PATH.Length));
         var original = Directory
             .EnumerateFiles(ORIGINAL_FILES_PATH, "*.*", SearchOption.AllDirectories)

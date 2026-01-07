@@ -34,6 +34,7 @@ internal class ZipCentralDirectoryEntry
     internal ulong Decompressed { get; set; }
     internal ushort Zip64HeaderOffset { get; set; }
     internal ulong HeaderOffset { get; }
+    internal string FileName => fileName;
 
     internal uint Write(Stream outputStream)
     {

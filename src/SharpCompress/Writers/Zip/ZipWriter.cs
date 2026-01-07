@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using SharpCompress.Common;
 using SharpCompress.Common.Zip;
 using SharpCompress.Common.Zip.Headers;
+using SharpCompress.Common.Zip.SOZip;
 using SharpCompress.Compressors;
 using SharpCompress.Compressors.BZip2;
 using SharpCompress.Compressors.Deflate;
@@ -27,12 +28,19 @@ public class ZipWriter : AbstractWriter
     private long streamPosition;
     private PpmdProperties? ppmdProps;
     private readonly bool isZip64;
+    private readonly bool enableSOZip;
+    private readonly int sozipChunkSize;
+    private readonly long sozipMinFileSize;
 
     public ZipWriter(Stream destination, ZipWriterOptions zipWriterOptions)
         : base(ArchiveType.Zip, zipWriterOptions)
     {
         zipComment = zipWriterOptions.ArchiveComment ?? string.Empty;
         isZip64 = zipWriterOptions.UseZip64;
+        enableSOZip = zipWriterOptions.EnableSOZip;
+        sozipChunkSize = zipWriterOptions.SOZipChunkSize;
+        sozipMinFileSize = zipWriterOptions.SOZipMinFileSize;
+
         if (destination.CanSeek)
         {
             streamPosition = destination.Position;
@@ -117,12 +125,21 @@ public class ZipWriter : AbstractWriter
 
         var headersize = (uint)WriteHeader(entryPath, options, entry, useZip64);
         streamPosition += headersize;
+
+        // Determine if SOZip should be used for this entry
+        var useSozip =
+            (options.EnableSOZip ?? enableSOZip)
+            && compression == ZipCompressionMethod.Deflate
+            && OutputStream.CanSeek;
+
         return new ZipWritingStream(
             this,
             OutputStream.NotNull(),
             entry,
             compression,
-            options.CompressionLevel ?? compressionLevel
+            options.CompressionLevel ?? compressionLevel,
+            useSozip,
+            useSozip ? sozipChunkSize : 0
         );
     }
 
@@ -304,6 +321,64 @@ public class ZipWriter : AbstractWriter
         OutputStream.Write(intBuf);
     }
 
+    private void WriteSozipIndexFile(
+        ZipCentralDirectoryEntry dataEntry,
+        SOZipDeflateStream sozipStream
+    )
+    {
+        var indexFileName = SOZipIndex.GetIndexFileName(dataEntry.FileName);
+
+        // Create the SOZip index
+        var index = new SOZipIndex(
+            chunkSize: sozipStream.ChunkSize,
+            uncompressedSize: sozipStream.UncompressedBytesWritten,
+            compressedSize: sozipStream.CompressedBytesWritten,
+            compressedOffsets: sozipStream.CompressedOffsets
+        );
+
+        var indexBytes = index.ToByteArray();
+
+        // Calculate CRC for index data
+        var crc = new CRC32();
+        crc.SlurpBlock(indexBytes, 0, indexBytes.Length);
+        var indexCrc = (uint)crc.Crc32Result;
+
+        // Write the index file as a stored (uncompressed) entry
+        var indexEntry = new ZipCentralDirectoryEntry(
+            ZipCompressionMethod.None,
+            indexFileName,
+            (ulong)streamPosition,
+            WriterOptions.ArchiveEncoding
+        )
+        {
+            ModificationTime = DateTime.Now,
+        };
+
+        // Write the local file header for index
+        var indexOptions = new ZipWriterEntryOptions { CompressionType = CompressionType.None };
+        var headerSize = (uint)WriteHeader(indexFileName, indexOptions, indexEntry, isZip64);
+        streamPosition += headerSize;
+
+        // Write the index data directly
+        OutputStream.Write(indexBytes, 0, indexBytes.Length);
+
+        // Finalize the index entry
+        indexEntry.Crc = indexCrc;
+        indexEntry.Compressed = (ulong)indexBytes.Length;
+        indexEntry.Decompressed = (ulong)indexBytes.Length;
+
+        if (OutputStream.CanSeek)
+        {
+            // Update the header with sizes and CRC
+            OutputStream.Position = (long)(indexEntry.HeaderOffset + 14);
+            WriteFooter(indexCrc, (uint)indexBytes.Length, (uint)indexBytes.Length);
+            OutputStream.Position = streamPosition + indexBytes.Length;
+        }
+
+        streamPosition += indexBytes.Length;
+        entries.Add(indexEntry);
+    }
+
     private void WriteEndRecord(ulong size)
     {
         var zip64EndOfCentralDirectoryNeeded =
@@ -385,7 +460,10 @@ public class ZipWriter : AbstractWriter
         private readonly ZipWriter writer;
         private readonly ZipCompressionMethod zipCompressionMethod;
         private readonly int compressionLevel;
+        private readonly bool useSozip;
+        private readonly int sozipChunkSize;
         private SharpCompressStream? counting;
+        private SOZipDeflateStream? sozipStream;
         private ulong decompressed;
 
         // Flag to prevent throwing exceptions on Dispose
@@ -397,7 +475,9 @@ public class ZipWriter : AbstractWriter
             Stream originalStream,
             ZipCentralDirectoryEntry entry,
             ZipCompressionMethod zipCompressionMethod,
-            int compressionLevel
+            int compressionLevel,
+            bool useSozip = false,
+            int sozipChunkSize = 0
         )
         {
             this.writer = writer;
@@ -406,6 +486,8 @@ public class ZipWriter : AbstractWriter
             this.entry = entry;
             this.zipCompressionMethod = zipCompressionMethod;
             this.compressionLevel = compressionLevel;
+            this.useSozip = useSozip;
+            this.sozipChunkSize = sozipChunkSize;
             writeStream = GetWriteStream(originalStream);
         }
 
@@ -435,6 +517,15 @@ public class ZipWriter : AbstractWriter
                 }
                 case ZipCompressionMethod.Deflate:
                 {
+                    if (useSozip && sozipChunkSize > 0)
+                    {
+                        sozipStream = new SOZipDeflateStream(
+                            counting,
+                            (CompressionLevel)compressionLevel,
+                            sozipChunkSize
+                        );
+                        return sozipStream;
+                    }
                     return new DeflateStream(
                         counting,
                         CompressionMode.Compress,
@@ -581,7 +672,18 @@ public class ZipWriter : AbstractWriter
                     writer.WriteFooter(entry.Crc, compressedvalue, decompressedvalue);
                     writer.streamPosition += (long)entry.Compressed + 16;
                 }
+
                 writer.entries.Add(entry);
+
+                // Write SOZip index file if SOZip was used and file meets minimum size
+                if (
+                    useSozip
+                    && sozipStream is not null
+                    && entry.Decompressed >= (ulong)writer.sozipMinFileSize
+                )
+                {
+                    writer.WriteSozipIndexFile(entry, sozipStream);
+                }
             }
         }
 

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using SharpCompress.Common.Zip.Headers;
+using SharpCompress.Common.Zip.SOZip;
 
 namespace SharpCompress.Common.Zip;
 
@@ -11,7 +12,7 @@ public class ZipEntry : Entry
 
     internal ZipEntry(ZipFilePart? filePart)
     {
-        if (filePart == null)
+        if (filePart is null)
         {
             return;
         }
@@ -88,4 +89,24 @@ public class ZipEntry : Entry
     public override int? Attrib => (int?)_filePart?.Header.ExternalFileAttributes;
 
     public string? Comment => _filePart?.Header.Comment;
+
+    /// <summary>
+    /// Gets a value indicating whether this entry has SOZip (Seek-Optimized ZIP) support.
+    /// A SOZip entry has an associated index file that enables random access within
+    /// the compressed data.
+    /// </summary>
+    public bool IsSozip => _filePart?.Header.Extra.Any(e => e.Type == ExtraDataType.SOZip) ?? false;
+
+    /// <summary>
+    /// Gets a value indicating whether this entry is a SOZip index file.
+    /// Index files are hidden files with a .sozip.idx extension that contain
+    /// offsets into the main compressed file.
+    /// </summary>
+    public bool IsSozipIndexFile => Key is not null && SOZipIndex.IsIndexFile(Key);
+
+    /// <summary>
+    /// Gets the SOZip extra field data, if present.
+    /// </summary>
+    internal SOZipExtraField? SOZipExtra =>
+        _filePart?.Header.Extra.OfType<SOZipExtraField>().FirstOrDefault();
 }
