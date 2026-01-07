@@ -299,9 +299,10 @@ public class ZipArchive : AbstractWritableArchive<ZipArchiveEntry, ZipVolume>
                 stream = new SharpCompressStream(stream, bufferSize: bufferSize);
             }
 
-            var header = headerFactory
-                .ReadStreamHeader(stream)
-                .FirstOrDefault(x => x.ZipHeaderType != ZipHeaderType.Split);
+            var header = await headerFactory
+                .ReadStreamHeaderAsync(stream)
+                .Where(x => x.ZipHeaderType != ZipHeaderType.Split)
+                .FirstOrDefaultAsync();
             if (header is null)
             {
                 return false;

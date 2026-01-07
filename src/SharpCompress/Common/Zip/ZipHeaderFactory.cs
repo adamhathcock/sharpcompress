@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using SharpCompress;
 using SharpCompress.Common.Zip.Headers;
 using SharpCompress.IO;
 
@@ -47,7 +48,7 @@ internal class ZipHeaderFactory
             {
                 var entryHeader = new LocalEntryHeader(_archiveEncoding);
                 await entryHeader.Read(reader);
-                LoadHeader(entryHeader, reader.BaseStream);
+                await LoadHeaderAsync(entryHeader, reader.BaseStream).ConfigureAwait(false);
 
                 _lastEntryHeader = entryHeader;
                 return entryHeader;
@@ -281,5 +282,83 @@ internal class ZipHeaderFactory
         }
 
         //}
+    }
+
+    /// <summary>
+    /// Loads encryption metadata and stream positioning for a header using async reads where needed.
+    /// </summary>
+    private async ValueTask LoadHeaderAsync(ZipFileEntry entryHeader, Stream stream)
+    {
+        if (FlagUtility.HasFlag(entryHeader.Flags, HeaderFlags.Encrypted))
+        {
+            if (
+                !entryHeader.IsDirectory
+                && entryHeader.CompressedSize == 0
+                && FlagUtility.HasFlag(entryHeader.Flags, HeaderFlags.UsePostDataDescriptor)
+            )
+            {
+                throw new NotSupportedException(
+                    "SharpCompress cannot currently read non-seekable Zip Streams with encrypted data that has been written in a non-seekable manner."
+                );
+            }
+
+            if (_password is null)
+            {
+                throw new CryptographicException("No password supplied for encrypted zip.");
+            }
+
+            entryHeader.Password = _password;
+
+            if (entryHeader.CompressionMethod == ZipCompressionMethod.WinzipAes)
+            {
+                var data = entryHeader.Extra.SingleOrDefault(x =>
+                    x.Type == ExtraDataType.WinZipAes
+                );
+                if (data != null)
+                {
+                    var keySize = (WinzipAesKeySize)data.DataBytes[4];
+
+                    var salt = new byte[WinzipAesEncryptionData.KeyLengthInBytes(keySize) / 2];
+                    var passwordVerifyValue = new byte[2];
+                    await stream.ReadExactAsync(salt, 0, salt.Length).ConfigureAwait(false);
+                    await stream.ReadExactAsync(passwordVerifyValue, 0, 2).ConfigureAwait(false);
+
+                    entryHeader.WinzipAesEncryptionData = new WinzipAesEncryptionData(
+                        keySize,
+                        salt,
+                        passwordVerifyValue,
+                        _password
+                    );
+
+                    entryHeader.CompressedSize -= (uint)(salt.Length + 2);
+                }
+            }
+        }
+
+        if (entryHeader.IsDirectory)
+        {
+            return;
+        }
+
+        switch (_mode)
+        {
+            case StreamingMode.Seekable:
+            {
+                entryHeader.DataStartPosition = stream.Position;
+                stream.Position += entryHeader.CompressedSize;
+                break;
+            }
+
+            case StreamingMode.Streaming:
+            {
+                entryHeader.PackedStream = stream;
+                break;
+            }
+
+            default:
+            {
+                throw new InvalidFormatException("Invalid StreamingMode");
+            }
+        }
     }
 }
