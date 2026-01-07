@@ -470,11 +470,35 @@ internal abstract class ZipFilePart : FilePart
                 {
                     throw new InvalidFormatException("No Winzip AES extra data found.");
                 }
+
                 if (data.Length != 7)
                 {
                     throw new InvalidFormatException("Winzip data length is not 7.");
                 }
-                throw new NotSupportedException("WinzipAes isn't supported for streaming");
+
+                var compressedMethod = BinaryPrimitives.ReadUInt16LittleEndian(data.DataBytes);
+
+                if (compressedMethod != 0x01 && compressedMethod != 0x02)
+                {
+                    throw new InvalidFormatException(
+                        "Unexpected vendor version number for WinZip AES metadata"
+                    );
+                }
+
+                var vendorId = BinaryPrimitives.ReadUInt16LittleEndian(data.DataBytes.AsSpan(2));
+                if (vendorId != 0x4541)
+                {
+                    throw new InvalidFormatException(
+                        "Unexpected vendor ID for WinZip AES metadata"
+                    );
+                }
+
+                return await CreateDecompressionStreamAsync(
+                    stream,
+                    (ZipCompressionMethod)
+                        BinaryPrimitives.ReadUInt16LittleEndian(data.DataBytes.AsSpan(5)),
+                    cancellationToken
+                );
             }
             default:
             {
