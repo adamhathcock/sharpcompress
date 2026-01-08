@@ -10,7 +10,7 @@ internal static class TarHeaderFactory
     internal static IEnumerable<TarHeader?> ReadHeader(
         StreamingMode mode,
         Stream stream,
-        ArchiveEncoding archiveEncoding
+        IArchiveEncoding archiveEncoding
     )
     {
         while (true)
