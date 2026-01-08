@@ -6,7 +6,7 @@ namespace SharpCompress.Common.Zip.Headers;
 
 internal class DirectoryEntryHeader : ZipFileEntry
 {
-    public DirectoryEntryHeader(ArchiveEncoding archiveEncoding)
+    public DirectoryEntryHeader(IArchiveEncoding archiveEncoding)
         : base(ZipHeaderType.DirectoryEntry, archiveEncoding) { }
 
     internal override void Read(BinaryReader reader)
@@ -72,8 +72,8 @@ internal class DirectoryEntryHeader : ZipFileEntry
 
         if (Flags.HasFlag(HeaderFlags.Efs))
         {
-            Name = ArchiveEncoding.DecodeUTF8(name);
-            Comment = ArchiveEncoding.DecodeUTF8(comment);
+            Name = ArchiveEncoding.Decode(name, EncodingType.UTF8);
+            Comment = ArchiveEncoding.Decode(comment, EncodingType.UTF8);
         }
         else
         {

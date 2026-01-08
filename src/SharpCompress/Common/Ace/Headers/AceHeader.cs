@@ -31,13 +31,13 @@ namespace SharpCompress.Common.Ace.Headers
             (byte)'*',
         ];
 
-        public AceHeader(ArchiveEncoding archiveEncoding, AceHeaderType type)
+        public AceHeader(IArchiveEncoding archiveEncoding, AceHeaderType type)
         {
             AceHeaderType = type;
             ArchiveEncoding = archiveEncoding;
         }
 
-        public ArchiveEncoding ArchiveEncoding { get; }
+        public IArchiveEncoding ArchiveEncoding { get; }
         public AceHeaderType AceHeaderType { get; }
 
         public ushort HeaderFlags { get; set; }

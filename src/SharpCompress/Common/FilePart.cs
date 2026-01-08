@@ -6,9 +6,9 @@ namespace SharpCompress.Common;
 
 public abstract class FilePart
 {
-    protected FilePart(ArchiveEncoding archiveEncoding) => ArchiveEncoding = archiveEncoding;
+    protected FilePart(IArchiveEncoding archiveEncoding) => ArchiveEncoding = archiveEncoding;
 
-    internal ArchiveEncoding ArchiveEncoding { get; }
+    internal IArchiveEncoding ArchiveEncoding { get; }
 
     internal abstract string? FilePartName { get; }
     public int Index { get; set; }

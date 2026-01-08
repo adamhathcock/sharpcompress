@@ -113,38 +113,26 @@ using (var archive = RarArchive.Open("Test.rar"))
 }
 ```
 
-### Extract solid Rar or 7Zip archives with manual progress reporting
+### Extract solid Rar or 7Zip archives with progress reporting
 
 `ExtractAllEntries` only works for solid archives (Rar) or 7Zip archives. For optimal performance with these archive types, use this method:
 
 ```C#
-using (var archive = RarArchive.Open("archive.rar")) // Must be solid Rar or 7Zip
+using SharpCompress.Common;
+using SharpCompress.Readers;
+
+var progress = new Progress<ProgressReport>(report =>
 {
-    if (archive.IsSolid || archive.Type == ArchiveType.SevenZip)
+    Console.WriteLine($"Extracting {report.EntryPath}: {report.PercentComplete}%");
+});
+
+using (var archive = RarArchive.Open("archive.rar", new ReaderOptions { Progress = progress })) // Must be solid Rar or 7Zip
+{
+    archive.WriteToDirectory(@"D:\output", new ExtractionOptions()
     {
-        // Calculate total size for progress reporting
-        double totalSize = archive.Entries.Where(e => !e.IsDirectory).Sum(e => e.Size);
-        long completed = 0;
-
-        using (var reader = archive.ExtractAllEntries())
-        {
-            while (reader.MoveToNextEntry())
-            {
-                if (!reader.Entry.IsDirectory)
-                {
-                    reader.WriteEntryToDirectory(@"D:\output", new ExtractionOptions()
-                    {
-                        ExtractFullPath = true,
-                        Overwrite = true
-                    });
-
-                    completed += reader.Entry.Size;
-                    double progress = completed / totalSize;
-                    Console.WriteLine($"Progress: {progress:P}");
-                }
-            }
-        }
-    }
+        ExtractFullPath = true,
+        Overwrite = true
+    });
 }
 ```
 

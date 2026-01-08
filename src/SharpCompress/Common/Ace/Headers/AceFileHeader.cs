@@ -46,7 +46,7 @@ namespace SharpCompress.Common.Ace.Headers
             }
         }
 
-        public AceFileHeader(ArchiveEncoding archiveEncoding)
+        public AceFileHeader(IArchiveEncoding archiveEncoding)
             : base(archiveEncoding, AceHeaderType.FILE) { }
 
         /// <summary>

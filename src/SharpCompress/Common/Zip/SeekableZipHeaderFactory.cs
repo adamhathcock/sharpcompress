@@ -16,7 +16,7 @@ internal sealed class SeekableZipHeaderFactory : ZipHeaderFactory
     private const int MAX_SEARCH_LENGTH_FOR_EOCD = 65557;
     private bool _zip64;
 
-    internal SeekableZipHeaderFactory(string? password, ArchiveEncoding archiveEncoding)
+    internal SeekableZipHeaderFactory(string? password, IArchiveEncoding archiveEncoding)
         : base(StreamingMode.Seekable, password, archiveEncoding) { }
 
     internal async IAsyncEnumerable<ZipHeader> ReadSeekableHeaderAsync(Stream stream)

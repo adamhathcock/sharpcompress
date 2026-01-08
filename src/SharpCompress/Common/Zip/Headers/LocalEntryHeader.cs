@@ -54,7 +54,7 @@ internal class LocalEntryHeader(ArchiveEncoding archiveEncoding)
 
         if (Flags.HasFlag(HeaderFlags.Efs))
         {
-            Name = ArchiveEncoding.DecodeUTF8(name);
+            Name = ArchiveEncoding.Decode(name, EncodingType.UTF8);
         }
         else
         {
