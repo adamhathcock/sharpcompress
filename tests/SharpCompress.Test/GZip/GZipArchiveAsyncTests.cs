@@ -16,7 +16,11 @@ public class GZipArchiveAsyncTests : ArchiveTests
     [Fact]
     public async ValueTask GZip_Archive_Generic_Async()
     {
+#if NETFRAMEWORK
         using (Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.gz")))
+#else
+        await using (Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.gz")))
+#endif
         using (var archive = ArchiveFactory.Open(stream))
         {
             var entry = archive.Entries.First();
@@ -38,8 +42,12 @@ public class GZipArchiveAsyncTests : ArchiveTests
     [Fact]
     public async ValueTask GZip_Archive_Async()
     {
+#if NETFRAMEWORK
         using (Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.gz")))
-        using (var archive = GZipArchive.Open(stream))
+#else
+        await using (Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.gz")))
+#endif
+        await using (var archive = GZipArchive.Open(stream))
         {
             var entry = archive.Entries.First();
             await entry.WriteToFileAsync(Path.Combine(SCRATCH_FILES_PATH, entry.Key.NotNull()));
@@ -61,8 +69,12 @@ public class GZipArchiveAsyncTests : ArchiveTests
     public async ValueTask GZip_Archive_NoAdd_Async()
     {
         var jpg = Path.Combine(ORIGINAL_FILES_PATH, "jpg", "test.jpg");
+#if NETFRAMEWORK
         using Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.gz"));
-        using var archive = GZipArchive.Open(stream);
+#else
+        await using Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.gz"));
+#endif
+        await using var archive = GZipArchive.Open(stream);
         Assert.Throws<InvalidFormatException>(() => archive.AddEntry("jpg\\test.jpg", jpg));
         await archive.SaveToAsync(Path.Combine(SCRATCH_FILES_PATH, "Tar.tar.gz"));
     }
@@ -71,34 +83,55 @@ public class GZipArchiveAsyncTests : ArchiveTests
     public async ValueTask GZip_Archive_Multiple_Reads_Async()
     {
         var inputStream = new MemoryStream();
-        using (var fileStream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.gz")))
+#if NETFRAMEWORK
+        using (Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.gz")))
+#else
+        await using (Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.gz")))
+#endif
         {
-            await fileStream.CopyToAsync(inputStream);
+            await stream.CopyToAsync(inputStream);
             inputStream.Position = 0;
         }
-        using var archive = GZipArchive.Open(inputStream);
+
+        await using var archive = GZipArchive.Open(inputStream);
         var archiveEntry = archive.Entries.First();
 
         MemoryStream tarStream;
+#if NETFRAMEWORK
         using (var entryStream = await archiveEntry.OpenEntryStreamAsync())
+#else
+        await using (var entryStream = await archiveEntry.OpenEntryStreamAsync())
+#endif
         {
             tarStream = new MemoryStream();
             await entryStream.CopyToAsync(tarStream);
         }
         var size = tarStream.Length;
+#if NETFRAMEWORK
         using (var entryStream = await archiveEntry.OpenEntryStreamAsync())
+#else
+        await using (var entryStream = await archiveEntry.OpenEntryStreamAsync())
+#endif
         {
             tarStream = new MemoryStream();
             await entryStream.CopyToAsync(tarStream);
         }
         Assert.Equal(size, tarStream.Length);
+#if NETFRAMEWORK
         using (var entryStream = await archiveEntry.OpenEntryStreamAsync())
+#else
+        await using (var entryStream = await archiveEntry.OpenEntryStreamAsync())
+#endif
         {
             var result = TarArchive.IsTarFile(entryStream);
             Assert.True(result);
         }
         Assert.Equal(size, tarStream.Length);
+#if NETFRAMEWORK
         using (var entryStream = await archiveEntry.OpenEntryStreamAsync())
+#else
+        await using (var entryStream = await archiveEntry.OpenEntryStreamAsync())
+#endif
         {
             tarStream = new MemoryStream();
             await entryStream.CopyToAsync(tarStream);
