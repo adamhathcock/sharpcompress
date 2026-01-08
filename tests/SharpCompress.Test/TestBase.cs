@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using SharpCompress.Readers;
 using Xunit;
 
@@ -10,15 +11,16 @@ namespace SharpCompress.Test;
 
 public class TestBase : IDisposable
 {
-    private readonly string SOLUTION_BASE_PATH;
-    protected readonly string TEST_ARCHIVES_PATH;
-    protected readonly string ORIGINAL_FILES_PATH;
-    protected readonly string MISC_TEST_FILES_PATH;
-    private readonly string SCRATCH_BASE_PATH;
-    protected readonly string SCRATCH_FILES_PATH;
-    protected readonly string SCRATCH2_FILES_PATH;
+    private static readonly string SOLUTION_BASE_PATH;
+    public static readonly string TEST_ARCHIVES_PATH;
+    public static readonly string ORIGINAL_FILES_PATH;
+    public static readonly string MISC_TEST_FILES_PATH;
+    private static readonly string SCRATCH_BASE_PATH;
 
-    protected TestBase()
+    private static readonly string SCRATCH_DIRECTORY;
+    private static readonly string SCRATCH2_DIRECTORY;
+
+    static TestBase()
     {
         var index = AppDomain.CurrentDomain.BaseDirectory.IndexOf(
             "SharpCompress.Test",
@@ -31,19 +33,32 @@ public class TestBase : IDisposable
         ORIGINAL_FILES_PATH = Path.Combine(SOLUTION_BASE_PATH, "TestArchives", "Original");
         MISC_TEST_FILES_PATH = Path.Combine(SOLUTION_BASE_PATH, "TestArchives", "MiscTest");
 
-        SCRATCH_BASE_PATH = Path.Combine(
-            SOLUTION_BASE_PATH,
-            "TestArchives",
-            Guid.NewGuid().ToString()
-        );
-        SCRATCH_FILES_PATH = Path.Combine(SCRATCH_BASE_PATH, "Scratch");
-        SCRATCH2_FILES_PATH = Path.Combine(SCRATCH_BASE_PATH, "Scratch2");
+        SCRATCH_BASE_PATH = Path.Combine(SOLUTION_BASE_PATH, "TestArchives");
+        SCRATCH_DIRECTORY = Path.Combine(SCRATCH_BASE_PATH, "Scratch");
+        SCRATCH2_DIRECTORY = Path.Combine(SCRATCH_BASE_PATH, "Scratch2");
+
+        Directory.CreateDirectory(SCRATCH_DIRECTORY);
+        Directory.CreateDirectory(SCRATCH2_DIRECTORY);
+    }
+
+    private readonly Guid _testGuid = Guid.NewGuid();
+    protected readonly string SCRATCH_FILES_PATH;
+    protected readonly string SCRATCH2_FILES_PATH;
+
+    protected TestBase()
+    {
+        SCRATCH_FILES_PATH = Path.Combine(SCRATCH_DIRECTORY, _testGuid.ToString());
+        SCRATCH2_FILES_PATH = Path.Combine(SCRATCH2_DIRECTORY, _testGuid.ToString());
 
         Directory.CreateDirectory(SCRATCH_FILES_PATH);
         Directory.CreateDirectory(SCRATCH2_FILES_PATH);
     }
 
-    public void Dispose() => Directory.Delete(SCRATCH_BASE_PATH, true);
+    public void Dispose()
+    {
+        Directory.Delete(SCRATCH_FILES_PATH, true);
+        Directory.Delete(SCRATCH2_FILES_PATH, true);
+    }
 
     public void VerifyFiles()
     {

@@ -103,7 +103,7 @@ public class TarWriter : AbstractWriter
         header.Write(OutputStream);
     }
 
-    public override async Task WriteDirectoryAsync(
+    public override async ValueTask WriteDirectoryAsync(
         string directoryName,
         DateTime? modificationTime,
         CancellationToken cancellationToken = default
@@ -134,14 +134,14 @@ public class TarWriter : AbstractWriter
         PadTo512(size.Value);
     }
 
-    public override async Task WriteAsync(
+    public override async ValueTask WriteAsync(
         string filename,
         Stream source,
         DateTime? modificationTime,
         CancellationToken cancellationToken = default
     ) => await WriteAsync(filename, source, modificationTime, null, cancellationToken);
 
-    public async Task WriteAsync(
+    public async ValueTask WriteAsync(
         string filename,
         Stream source,
         DateTime? modificationTime,

@@ -1,14 +1,13 @@
-using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using SharpCompress.Common;
 using SharpCompress.IO;
 using SharpCompress.Readers;
 
 namespace SharpCompress.Archives;
 
-public abstract class AbstractArchive<TEntry, TVolume> : IArchive
+public abstract class AbstractArchive<TEntry, TVolume> : IArchive, IAsyncArchive
     where TEntry : IArchiveEntry
     where TVolume : IVolume
 {
@@ -26,6 +25,12 @@ public abstract class AbstractArchive<TEntry, TVolume> : IArchive
         _sourceStream = sourceStream;
         _lazyVolumes = new LazyReadOnlyCollection<TVolume>(LoadVolumes(_sourceStream));
         _lazyEntries = new LazyReadOnlyCollection<TEntry>(LoadEntries(Volumes));
+        _lazyVolumesAsync = new LazyAsyncReadOnlyCollection<TVolume>(
+            LoadVolumesAsync(_sourceStream)
+        );
+        _lazyEntriesAsync = new LazyAsyncReadOnlyCollection<TEntry>(
+            LoadEntriesAsync(_lazyVolumesAsync)
+        );
     }
 
     internal AbstractArchive(ArchiveType type)
@@ -34,18 +39,15 @@ public abstract class AbstractArchive<TEntry, TVolume> : IArchive
         ReaderOptions = new();
         _lazyVolumes = new LazyReadOnlyCollection<TVolume>(Enumerable.Empty<TVolume>());
         _lazyEntries = new LazyReadOnlyCollection<TEntry>(Enumerable.Empty<TEntry>());
+        _lazyVolumesAsync = new LazyAsyncReadOnlyCollection<TVolume>(
+            AsyncEnumerableEx.Empty<TVolume>()
+        );
+        _lazyEntriesAsync = new LazyAsyncReadOnlyCollection<TEntry>(
+            AsyncEnumerableEx.Empty<TEntry>()
+        );
     }
 
     public ArchiveType Type { get; }
-
-    private static Stream CheckStreams(Stream stream)
-    {
-        if (!stream.CanSeek || !stream.CanRead)
-        {
-            throw new ArchiveException("Archive streams must be Readable and Seekable");
-        }
-        return stream;
-    }
 
     /// <summary>
     /// Returns an ReadOnlyCollection of all the RarArchiveEntries across the one or many parts of the RarArchive.
@@ -71,6 +73,19 @@ public abstract class AbstractArchive<TEntry, TVolume> : IArchive
 
     protected abstract IEnumerable<TVolume> LoadVolumes(SourceStream sourceStream);
     protected abstract IEnumerable<TEntry> LoadEntries(IEnumerable<TVolume> volumes);
+
+    protected virtual IAsyncEnumerable<TVolume> LoadVolumesAsync(SourceStream sourceStream) =>
+        LoadVolumes(sourceStream).ToAsyncEnumerable();
+
+    protected virtual async IAsyncEnumerable<TEntry> LoadEntriesAsync(
+        IAsyncEnumerable<TVolume> volumes
+    )
+    {
+        foreach (var item in LoadEntries(await volumes.ToListAsync()))
+        {
+            yield return item;
+        }
+    }
 
     IEnumerable<IArchiveEntry> IArchive.Entries => Entries.Cast<IArchiveEntry>();
 
@@ -118,6 +133,7 @@ public abstract class AbstractArchive<TEntry, TVolume> : IArchive
     }
 
     protected abstract IReader CreateReaderForSolidExtraction();
+    protected abstract ValueTask<IAsyncReader> CreateReaderForSolidExtractionAsync();
 
     /// <summary>
     /// Archive is SOLID (this means the Archive saved bytes by reusing information which helps for archives containing many small files).
@@ -140,4 +156,67 @@ public abstract class AbstractArchive<TEntry, TVolume> : IArchive
             return Entries.All(x => x.IsComplete);
         }
     }
+
+    #region Async Support
+
+    private readonly LazyAsyncReadOnlyCollection<TVolume> _lazyVolumesAsync;
+    private readonly LazyAsyncReadOnlyCollection<TEntry> _lazyEntriesAsync;
+
+    public virtual async ValueTask DisposeAsync()
+    {
+        if (!_disposed)
+        {
+            await foreach (var v in _lazyVolumesAsync)
+            {
+                v.Dispose();
+            }
+            foreach (var v in _lazyEntriesAsync.GetLoaded().Cast<Entry>())
+            {
+                v.Close();
+            }
+            _sourceStream?.Dispose();
+
+            _disposed = true;
+        }
+    }
+
+    private async ValueTask EnsureEntriesLoadedAsync()
+    {
+        await _lazyEntriesAsync.EnsureFullyLoaded();
+        await _lazyVolumesAsync.EnsureFullyLoaded();
+    }
+
+    public virtual IAsyncEnumerable<TEntry> EntriesAsync => _lazyEntriesAsync;
+    IAsyncEnumerable<IArchiveEntry> IAsyncArchive.EntriesAsync =>
+        EntriesAsync.Cast<TEntry, IArchiveEntry>();
+
+    public IAsyncEnumerable<IVolume> VolumesAsync => _lazyVolumesAsync.Cast<TVolume, IVolume>();
+
+    public async ValueTask<IAsyncReader> ExtractAllEntriesAsync()
+    {
+        if (!IsSolid && Type != ArchiveType.SevenZip)
+        {
+            throw new SharpCompressException(
+                "ExtractAllEntries can only be used on solid archives or 7Zip archives (which require random access)."
+            );
+        }
+        await EnsureEntriesLoadedAsync();
+        return await CreateReaderForSolidExtractionAsync();
+    }
+
+    public virtual ValueTask<bool> IsSolidAsync() => new(false);
+
+    public async ValueTask<bool> IsCompleteAsync()
+    {
+        await EnsureEntriesLoadedAsync();
+        return await EntriesAsync.All(x => x.IsComplete);
+    }
+
+    public async ValueTask<long> TotalSizeAsync() =>
+        await EntriesAsync.Aggregate(0L, (total, cf) => total + cf.CompressedSize);
+
+    public async ValueTask<long> TotalUncompressSizeAsync() =>
+        await EntriesAsync.Aggregate(0L, (total, cf) => total + cf.Size);
+
+    #endregion
 }

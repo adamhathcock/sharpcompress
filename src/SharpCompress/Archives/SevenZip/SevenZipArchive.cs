@@ -106,6 +106,70 @@ public class SevenZipArchive : AbstractArchive<SevenZipArchiveEntry, SevenZipVol
     }
 
     /// <summary>
+    /// Opens a SevenZipArchive asynchronously from a stream.
+    /// </summary>
+    /// <param name="stream"></param>
+    /// <param name="readerOptions"></param>
+    /// <param name="cancellationToken"></param>
+    public static ValueTask<IAsyncArchive> OpenAsync(
+        Stream stream,
+        ReaderOptions? readerOptions = null,
+        CancellationToken cancellationToken = default
+    )
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        return new(Open(stream, readerOptions));
+    }
+
+    /// <summary>
+    /// Opens a SevenZipArchive asynchronously from a FileInfo.
+    /// </summary>
+    /// <param name="fileInfo"></param>
+    /// <param name="readerOptions"></param>
+    /// <param name="cancellationToken"></param>
+    public static ValueTask<IAsyncArchive> OpenAsync(
+        FileInfo fileInfo,
+        ReaderOptions? readerOptions = null,
+        CancellationToken cancellationToken = default
+    )
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        return new(Open(fileInfo, readerOptions));
+    }
+
+    /// <summary>
+    /// Opens a SevenZipArchive asynchronously from multiple streams.
+    /// </summary>
+    /// <param name="streams"></param>
+    /// <param name="readerOptions"></param>
+    /// <param name="cancellationToken"></param>
+    public static ValueTask<IAsyncArchive> OpenAsync(
+        IReadOnlyList<Stream> streams,
+        ReaderOptions? readerOptions = null,
+        CancellationToken cancellationToken = default
+    )
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        return new(Open(streams, readerOptions));
+    }
+
+    /// <summary>
+    /// Opens a SevenZipArchive asynchronously from multiple FileInfo objects.
+    /// </summary>
+    /// <param name="fileInfos"></param>
+    /// <param name="readerOptions"></param>
+    /// <param name="cancellationToken"></param>
+    public static ValueTask<IAsyncArchive> OpenAsync(
+        IReadOnlyList<FileInfo> fileInfos,
+        ReaderOptions? readerOptions = null,
+        CancellationToken cancellationToken = default
+    )
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        return new(Open(fileInfos, readerOptions));
+    }
+
+    /// <summary>
     /// Constructor with a SourceStream able to handle FileInfo and Streams.
     /// </summary>
     /// <param name="sourceStream"></param>
@@ -200,6 +264,9 @@ public class SevenZipArchive : AbstractArchive<SevenZipArchiveEntry, SevenZipVol
 
     protected override IReader CreateReaderForSolidExtraction() =>
         new SevenZipReader(ReaderOptions, this);
+
+    protected override ValueTask<IAsyncReader> CreateReaderForSolidExtractionAsync() =>
+        new(new SevenZipReader(ReaderOptions, this));
 
     public override bool IsSolid =>
         Entries

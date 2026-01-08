@@ -132,7 +132,7 @@ public sealed class XZBlock : XZReadOnlyStream
         _paddingSkipped = true;
     }
 
-    private async Task SkipPaddingAsync(CancellationToken cancellationToken = default)
+    private async ValueTask SkipPaddingAsync(CancellationToken cancellationToken = default)
     {
         var bytes = (BaseStream.Position - _startPosition) % 4;
         if (bytes > 0)
@@ -158,7 +158,7 @@ public sealed class XZBlock : XZReadOnlyStream
         _crcChecked = true;
     }
 
-    private async Task CheckCrcAsync(CancellationToken cancellationToken = default)
+    private async ValueTask CheckCrcAsync(CancellationToken cancellationToken = default)
     {
         var crc = new byte[_checkSize];
         await BaseStream.ReadAsync(crc, 0, _checkSize, cancellationToken).ConfigureAwait(false);
@@ -194,7 +194,7 @@ public sealed class XZBlock : XZReadOnlyStream
         HeaderIsLoaded = true;
     }
 
-    private async Task LoadHeaderAsync(CancellationToken cancellationToken = default)
+    private async ValueTask LoadHeaderAsync(CancellationToken cancellationToken = default)
     {
         await ReadHeaderSizeAsync(cancellationToken).ConfigureAwait(false);
         var headerCache = await CacheHeaderAsync(cancellationToken).ConfigureAwait(false);
@@ -218,7 +218,7 @@ public sealed class XZBlock : XZReadOnlyStream
         }
     }
 
-    private async Task ReadHeaderSizeAsync(CancellationToken cancellationToken = default)
+    private async ValueTask ReadHeaderSizeAsync(CancellationToken cancellationToken = default)
     {
         var buffer = new byte[1];
         await BaseStream.ReadAsync(buffer, 0, 1, cancellationToken).ConfigureAwait(false);
@@ -249,7 +249,7 @@ public sealed class XZBlock : XZReadOnlyStream
         return blockHeaderWithoutCrc;
     }
 
-    private async Task<byte[]> CacheHeaderAsync(CancellationToken cancellationToken = default)
+    private async ValueTask<byte[]> CacheHeaderAsync(CancellationToken cancellationToken = default)
     {
         var blockHeaderWithoutCrc = new byte[BlockHeaderSize - 4];
         blockHeaderWithoutCrc[0] = _blockHeaderSizeByte;

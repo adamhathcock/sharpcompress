@@ -162,7 +162,7 @@ public class ZipWriter : AbstractWriter
         WriteDirectoryEntry(normalizedName, options);
     }
 
-    public override Task WriteDirectoryAsync(
+    public override async ValueTask WriteDirectoryAsync(
         string directoryName,
         DateTime? modificationTime,
         CancellationToken cancellationToken = default
@@ -170,7 +170,7 @@ public class ZipWriter : AbstractWriter
     {
         // Synchronous implementation is sufficient for directory entries
         WriteDirectory(directoryName, modificationTime);
-        return Task.CompletedTask;
+        await Task.CompletedTask.ConfigureAwait(false);
     }
 
     private void WriteDirectoryEntry(string directoryPath, ZipWriterEntryOptions options)

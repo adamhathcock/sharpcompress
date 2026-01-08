@@ -25,4 +25,10 @@ internal class ZStandardFactory : Factory
         string? password = null,
         int bufferSize = 65536
     ) => ZStandardStream.IsZStandard(stream);
+
+    public override ValueTask<bool> IsArchiveAsync(
+        Stream stream,
+        string? password = null,
+        int bufferSize = ReaderOptions.DefaultBufferSize
+    ) => new(IsArchive(stream, password, bufferSize));
 }

@@ -41,7 +41,7 @@ public class XZHeader
         ProcessStreamFlags();
     }
 
-    public async Task ProcessAsync(CancellationToken cancellationToken = default)
+    public async ValueTask ProcessAsync(CancellationToken cancellationToken = default)
     {
         CheckMagicBytes(await _reader.ReadBytesAsync(6, cancellationToken).ConfigureAwait(false));
         await ProcessStreamFlagsAsync(cancellationToken).ConfigureAwait(false);
@@ -65,7 +65,7 @@ public class XZHeader
         }
     }
 
-    private async Task ProcessStreamFlagsAsync(CancellationToken cancellationToken = default)
+    private async ValueTask ProcessStreamFlagsAsync(CancellationToken cancellationToken = default)
     {
         var streamFlags = await _reader.ReadBytesAsync(2, cancellationToken).ConfigureAwait(false);
         var crc = await _reader

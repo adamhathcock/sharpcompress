@@ -26,7 +26,7 @@ public class SharpCompressStreamAsyncTests
     }
 
     [Fact]
-    public async Task BufferReadAsyncTest()
+    public async ValueTask BufferReadAsyncTest()
     {
         byte[] data = new byte[0x100000];
         byte[] test = new byte[0x1000];
@@ -55,7 +55,7 @@ public class SharpCompressStreamAsyncTests
     }
 
     [Fact]
-    public async Task BufferReadAndSeekAsyncTest()
+    public async ValueTask BufferReadAndSeekAsyncTest()
     {
         byte[] data = new byte[0x100000];
         byte[] test = new byte[0x1000];
@@ -90,7 +90,7 @@ public class SharpCompressStreamAsyncTests
     }
 
     [Fact]
-    public async Task MultipleAsyncReadsTest()
+    public async ValueTask MultipleAsyncReadsTest()
     {
         byte[] data = new byte[0x100000];
         byte[] test1 = new byte[0x800];
@@ -115,7 +115,7 @@ public class SharpCompressStreamAsyncTests
     }
 
     [Fact]
-    public async Task LargeBufferAsyncReadTest()
+    public async ValueTask LargeBufferAsyncReadTest()
     {
         byte[] data = new byte[0x200000];
         byte[] test = new byte[0x8000];

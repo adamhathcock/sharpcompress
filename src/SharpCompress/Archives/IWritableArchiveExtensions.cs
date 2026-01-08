@@ -44,14 +44,14 @@ public static class IWritableArchiveExtensions
         writableArchive.SaveTo(stream, options);
     }
 
-    public static Task SaveToAsync(
+    public static ValueTask SaveToAsync(
         this IWritableArchive writableArchive,
         string filePath,
         WriterOptions options,
         CancellationToken cancellationToken = default
     ) => writableArchive.SaveToAsync(new FileInfo(filePath), options, cancellationToken);
 
-    public static async Task SaveToAsync(
+    public static async ValueTask SaveToAsync(
         this IWritableArchive writableArchive,
         FileInfo fileInfo,
         WriterOptions options,

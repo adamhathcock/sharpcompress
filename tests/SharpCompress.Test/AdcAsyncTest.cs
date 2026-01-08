@@ -8,7 +8,7 @@ namespace SharpCompress.Test;
 public class AdcAsyncTest : TestBase
 {
     [Fact]
-    public async Task TestAdcStreamAsyncWholeChunk()
+    public async ValueTask TestAdcStreamAsyncWholeChunk()
     {
         using var decFs = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "adc_decompressed.bin"));
         var decompressed = new byte[decFs.Length];
@@ -24,7 +24,7 @@ public class AdcAsyncTest : TestBase
     }
 
     [Fact]
-    public async Task TestAdcStreamAsync()
+    public async ValueTask TestAdcStreamAsync()
     {
         using var decFs = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "adc_decompressed.bin"));
         var decompressed = new byte[decFs.Length];
@@ -46,7 +46,7 @@ public class AdcAsyncTest : TestBase
     }
 
     [Fact]
-    public async Task TestAdcStreamAsyncWithCancellation()
+    public async ValueTask TestAdcStreamAsyncWithCancellation()
     {
         using var cmpFs = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "adc_compressed.bin"));
         using var decStream = new ADCStream(cmpFs);

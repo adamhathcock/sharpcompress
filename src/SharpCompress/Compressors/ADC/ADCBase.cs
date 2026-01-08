@@ -104,7 +104,7 @@ public static class ADCBase
     /// <param name="bufferSize">Max size for decompressed data</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>Result containing bytes read and decompressed data</returns>
-    public static async Task<AdcDecompressResult> DecompressAsync(
+    public static async ValueTask<AdcDecompressResult> DecompressAsync(
         byte[] input,
         int bufferSize = 262144,
         CancellationToken cancellationToken = default
@@ -117,7 +117,7 @@ public static class ADCBase
     /// <param name="bufferSize">Max size for decompressed data</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>Result containing bytes read and decompressed data</returns>
-    public static async Task<AdcDecompressResult> DecompressAsync(
+    public static async ValueTask<AdcDecompressResult> DecompressAsync(
         Stream input,
         int bufferSize = 262144,
         CancellationToken cancellationToken = default

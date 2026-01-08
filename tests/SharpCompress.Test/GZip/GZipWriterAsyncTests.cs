@@ -13,7 +13,7 @@ public class GZipWriterAsyncTests : WriterTests
         : base(ArchiveType.GZip) => UseExtensionInsteadOfNameToVerify = true;
 
     [Fact]
-    public async Task GZip_Writer_Generic_Async()
+    public async ValueTask GZip_Writer_Generic_Async()
     {
         using (
             Stream stream = File.Open(
@@ -33,7 +33,7 @@ public class GZipWriterAsyncTests : WriterTests
     }
 
     [Fact]
-    public async Task GZip_Writer_Async()
+    public async ValueTask GZip_Writer_Async()
     {
         using (
             Stream stream = File.Open(
@@ -61,7 +61,7 @@ public class GZipWriterAsyncTests : WriterTests
         });
 
     [Fact]
-    public async Task GZip_Writer_Entry_Path_With_Dir_Async()
+    public async ValueTask GZip_Writer_Entry_Path_With_Dir_Async()
     {
         using (
             Stream stream = File.Open(

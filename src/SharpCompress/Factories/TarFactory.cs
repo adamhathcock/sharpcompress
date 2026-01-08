@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using SharpCompress.Archives;
 using SharpCompress.Archives.Tar;
 using SharpCompress.Common;
@@ -59,6 +61,12 @@ public class TarFactory
         int bufferSize = ReaderOptions.DefaultBufferSize
     ) => TarArchive.IsTarFile(stream);
 
+    public override ValueTask<bool> IsArchiveAsync(
+        Stream stream,
+        string? password = null,
+        int bufferSize = ReaderOptions.DefaultBufferSize
+    ) => new(IsArchive(stream, password, bufferSize));
+
     #endregion
 
     #region IArchiveFactory
@@ -68,8 +76,22 @@ public class TarFactory
         TarArchive.Open(stream, readerOptions);
 
     /// <inheritdoc/>
+    public ValueTask<IAsyncArchive> OpenAsync(
+        Stream stream,
+        ReaderOptions? readerOptions = null,
+        CancellationToken cancellationToken = default
+    ) => TarArchive.OpenAsync(stream, readerOptions, cancellationToken);
+
+    /// <inheritdoc/>
     public IArchive Open(FileInfo fileInfo, ReaderOptions? readerOptions = null) =>
         TarArchive.Open(fileInfo, readerOptions);
+
+    /// <inheritdoc/>
+    public ValueTask<IAsyncArchive> OpenAsync(
+        FileInfo fileInfo,
+        ReaderOptions? readerOptions = null,
+        CancellationToken cancellationToken = default
+    ) => TarArchive.OpenAsync(fileInfo, readerOptions, cancellationToken);
 
     #endregion
 
@@ -80,8 +102,22 @@ public class TarFactory
         TarArchive.Open(streams, readerOptions);
 
     /// <inheritdoc/>
+    public ValueTask<IAsyncArchive> OpenAsync(
+        IReadOnlyList<Stream> streams,
+        ReaderOptions? readerOptions = null,
+        CancellationToken cancellationToken = default
+    ) => TarArchive.OpenAsync(streams, readerOptions, cancellationToken);
+
+    /// <inheritdoc/>
     public IArchive Open(IReadOnlyList<FileInfo> fileInfos, ReaderOptions? readerOptions = null) =>
         TarArchive.Open(fileInfos, readerOptions);
+
+    /// <inheritdoc/>
+    public ValueTask<IAsyncArchive> OpenAsync(
+        IReadOnlyList<FileInfo> fileInfos,
+        ReaderOptions? readerOptions = null,
+        CancellationToken cancellationToken = default
+    ) => TarArchive.OpenAsync(fileInfos, readerOptions, cancellationToken);
 
     #endregion
 
@@ -234,6 +270,17 @@ public class TarFactory
     public IReader OpenReader(Stream stream, ReaderOptions? options) =>
         TarReader.Open(stream, options);
 
+    /// <inheritdoc/>
+    public ValueTask<IAsyncReader> OpenReaderAsync(
+        Stream stream,
+        ReaderOptions? options,
+        CancellationToken cancellationToken = default
+    )
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        return new(TarReader.Open(stream, options));
+    }
+
     #endregion
 
     #region IWriterFactory
@@ -241,6 +288,17 @@ public class TarFactory
     /// <inheritdoc/>
     public IWriter Open(Stream stream, WriterOptions writerOptions) =>
         new TarWriter(stream, new TarWriterOptions(writerOptions));
+
+    /// <inheritdoc/>
+    public ValueTask<IWriter> OpenAsync(
+        Stream stream,
+        WriterOptions writerOptions,
+        CancellationToken cancellationToken = default
+    )
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        return new(Open(stream, writerOptions));
+    }
 
     #endregion
 

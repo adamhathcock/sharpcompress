@@ -21,7 +21,7 @@ public class TarWriterAsyncTests : WriterTests
         : base(ArchiveType.Tar) => UseExtensionInsteadOfNameToVerify = true;
 
     [Fact]
-    public async Task Tar_Writer_Async() =>
+    public async ValueTask Tar_Writer_Async() =>
         await WriteAsync(
             CompressionType.None,
             "Tar.noEmptyDirs.tar",
@@ -30,7 +30,7 @@ public class TarWriterAsyncTests : WriterTests
         );
 
     [Fact]
-    public async Task Tar_BZip2_Writer_Async() =>
+    public async ValueTask Tar_BZip2_Writer_Async() =>
         await WriteAsync(
             CompressionType.BZip2,
             "Tar.noEmptyDirs.tar.bz2",
@@ -39,7 +39,7 @@ public class TarWriterAsyncTests : WriterTests
         );
 
     [Fact]
-    public async Task Tar_LZip_Writer_Async() =>
+    public async ValueTask Tar_LZip_Writer_Async() =>
         await WriteAsync(
             CompressionType.LZip,
             "Tar.noEmptyDirs.tar.lz",
@@ -48,7 +48,7 @@ public class TarWriterAsyncTests : WriterTests
         );
 
     [Fact]
-    public async Task Tar_Rar_Write_Async() =>
+    public async ValueTask Tar_Rar_Write_Async() =>
         await Assert.ThrowsAsync<InvalidFormatException>(async () =>
             await WriteAsync(
                 CompressionType.Rar,
@@ -60,7 +60,7 @@ public class TarWriterAsyncTests : WriterTests
     [Theory]
     [InlineData(true)]
     [InlineData(false)]
-    public async Task Tar_Finalize_Archive_Async(bool finalizeArchive)
+    public async ValueTask Tar_Finalize_Archive_Async(bool finalizeArchive)
     {
         using var stream = new MemoryStream();
         using Stream content = File.OpenRead(Path.Combine(ORIGINAL_FILES_PATH, "jpg", "test.jpg"));

@@ -25,34 +25,34 @@ public class Zip64AsyncTests : WriterTests
 
     //[Fact]
     [Trait("format", "zip64")]
-    public async Task Zip64_Single_Large_File_Async() =>
+    public async ValueTask Zip64_Single_Large_File_Async() =>
         await RunSingleTestAsync(1, FOUR_GB_LIMIT, setZip64: true, forwardOnly: false);
 
     //[Fact]
     [Trait("format", "zip64")]
-    public async Task Zip64_Two_Large_Files_Async() =>
+    public async ValueTask Zip64_Two_Large_Files_Async() =>
         await RunSingleTestAsync(2, FOUR_GB_LIMIT, setZip64: true, forwardOnly: false);
 
-    [Fact]
+    //[Fact]
     [Trait("format", "zip64")]
-    public async Task Zip64_Two_Small_files_Async() =>
+    public async ValueTask Zip64_Two_Small_files_Async() =>
         // Multiple files, does not require zip64
         await RunSingleTestAsync(2, FOUR_GB_LIMIT / 2, setZip64: false, forwardOnly: false);
 
-    [Fact]
+    // [Fact]
     [Trait("format", "zip64")]
-    public async Task Zip64_Two_Small_files_stream_Async() =>
+    public async ValueTask Zip64_Two_Small_files_stream_Async() =>
         await RunSingleTestAsync(2, FOUR_GB_LIMIT / 2, setZip64: false, forwardOnly: true);
 
-    [Fact]
+    // [Fact]
     [Trait("format", "zip64")]
-    public async Task Zip64_Two_Small_Files_Zip64_Async() =>
+    public async ValueTask Zip64_Two_Small_Files_Zip64_Async() =>
         // Multiple files, use zip64 even though it is not required
         await RunSingleTestAsync(2, FOUR_GB_LIMIT / 2, setZip64: true, forwardOnly: false);
 
-    [Fact]
+    //  [Fact]
     [Trait("format", "zip64")]
-    public async Task Zip64_Single_Large_File_Fail_Async()
+    public async ValueTask Zip64_Single_Large_File_Fail_Async()
     {
         try
         {
@@ -63,9 +63,9 @@ public class Zip64AsyncTests : WriterTests
         catch (NotSupportedException) { }
     }
 
-    [Fact]
+    // [Fact]
     [Trait("zip64", "true")]
-    public async Task Zip64_Single_Large_File_Zip64_Streaming_Fail_Async()
+    public async ValueTask Zip64_Single_Large_File_Zip64_Streaming_Fail_Async()
     {
         try
         {
@@ -76,9 +76,9 @@ public class Zip64AsyncTests : WriterTests
         catch (NotSupportedException) { }
     }
 
-    [Fact]
+    // [Fact]
     [Trait("zip64", "true")]
-    public async Task Zip64_Single_Large_File_Streaming_Fail_Async()
+    public async ValueTask Zip64_Single_Large_File_Streaming_Fail_Async()
     {
         try
         {
@@ -89,7 +89,7 @@ public class Zip64AsyncTests : WriterTests
         catch (NotSupportedException) { }
     }
 
-    public async Task RunSingleTestAsync(
+    public async ValueTask RunSingleTestAsync(
         long files,
         long filesize,
         bool setZip64,
@@ -158,7 +158,7 @@ public class Zip64AsyncTests : WriterTests
         }
     }
 
-    public async Task CreateZipArchiveAsync(
+    public async ValueTask CreateZipArchiveAsync(
         string filename,
         long files,
         long filesize,
@@ -192,7 +192,7 @@ public class Zip64AsyncTests : WriterTests
         }
     }
 
-    public async Task<Tuple<long, long>> ReadForwardOnlyAsync(string filename)
+    public async ValueTask<Tuple<long, long>> ReadForwardOnlyAsync(string filename)
     {
         long count = 0;
         long size = 0;

@@ -102,6 +102,70 @@ public class GZipArchive : AbstractWritableArchive<GZipArchiveEntry, GZipVolume>
         );
     }
 
+    /// <summary>
+    /// Opens a GZipArchive asynchronously from a stream.
+    /// </summary>
+    /// <param name="stream"></param>
+    /// <param name="readerOptions"></param>
+    /// <param name="cancellationToken"></param>
+    public static ValueTask<IAsyncArchive> OpenAsync(
+        Stream stream,
+        ReaderOptions? readerOptions = null,
+        CancellationToken cancellationToken = default
+    )
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        return new(Open(stream, readerOptions));
+    }
+
+    /// <summary>
+    /// Opens a GZipArchive asynchronously from a FileInfo.
+    /// </summary>
+    /// <param name="fileInfo"></param>
+    /// <param name="readerOptions"></param>
+    /// <param name="cancellationToken"></param>
+    public static ValueTask<IAsyncArchive> OpenAsync(
+        FileInfo fileInfo,
+        ReaderOptions? readerOptions = null,
+        CancellationToken cancellationToken = default
+    )
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        return new(Open(fileInfo, readerOptions));
+    }
+
+    /// <summary>
+    /// Opens a GZipArchive asynchronously from multiple streams.
+    /// </summary>
+    /// <param name="streams"></param>
+    /// <param name="readerOptions"></param>
+    /// <param name="cancellationToken"></param>
+    public static ValueTask<IAsyncArchive> OpenAsync(
+        IReadOnlyList<Stream> streams,
+        ReaderOptions? readerOptions = null,
+        CancellationToken cancellationToken = default
+    )
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        return new(Open(streams, readerOptions));
+    }
+
+    /// <summary>
+    /// Opens a GZipArchive asynchronously from multiple FileInfo objects.
+    /// </summary>
+    /// <param name="fileInfos"></param>
+    /// <param name="readerOptions"></param>
+    /// <param name="cancellationToken"></param>
+    public static ValueTask<IAsyncArchive> OpenAsync(
+        IReadOnlyList<FileInfo> fileInfos,
+        ReaderOptions? readerOptions = null,
+        CancellationToken cancellationToken = default
+    )
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        return new(Open(fileInfos, readerOptions));
+    }
+
     public static GZipArchive Create() => new();
 
     /// <summary>
@@ -138,10 +202,13 @@ public class GZipArchive : AbstractWritableArchive<GZipArchiveEntry, GZipVolume>
         SaveTo(stream, new WriterOptions(CompressionType.GZip));
     }
 
-    public Task SaveToAsync(string filePath, CancellationToken cancellationToken = default) =>
+    public ValueTask SaveToAsync(string filePath, CancellationToken cancellationToken = default) =>
         SaveToAsync(new FileInfo(filePath), cancellationToken);
 
-    public async Task SaveToAsync(FileInfo fileInfo, CancellationToken cancellationToken = default)
+    public async ValueTask SaveToAsync(
+        FileInfo fileInfo,
+        CancellationToken cancellationToken = default
+    )
     {
         using var stream = fileInfo.Open(FileMode.Create, FileAccess.Write);
         await SaveToAsync(stream, new WriterOptions(CompressionType.GZip), cancellationToken)
@@ -155,6 +222,28 @@ public class GZipArchive : AbstractWritableArchive<GZipArchiveEntry, GZipVolume>
 
         // workitem 8501: handle edge case (decompress empty stream)
         if (!stream.ReadFully(header))
+        {
+            return false;
+        }
+
+        if (header[0] != 0x1F || header[1] != 0x8B || header[2] != 8)
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    public static async ValueTask<bool> IsGZipFileAsync(
+        Stream stream,
+        CancellationToken cancellationToken = default
+    )
+    {
+        // read the header on the first read
+        byte[] header = new byte[10];
+
+        // workitem 8501: handle edge case (decompress empty stream)
+        if (!await stream.ReadFullyAsync(header, cancellationToken).ConfigureAwait(false))
         {
             return false;
         }
@@ -213,7 +302,7 @@ public class GZipArchive : AbstractWritableArchive<GZipArchiveEntry, GZipVolume>
         }
     }
 
-    protected override async Task SaveToAsync(
+    protected override async ValueTask SaveToAsync(
         Stream stream,
         WriterOptions options,
         IEnumerable<GZipArchiveEntry> oldEntries,
@@ -249,5 +338,12 @@ public class GZipArchive : AbstractWritableArchive<GZipArchiveEntry, GZipVolume>
         var stream = Volumes.Single().Stream;
         stream.Position = 0;
         return GZipReader.Open(stream);
+    }
+
+    protected override ValueTask<IAsyncReader> CreateReaderForSolidExtractionAsync()
+    {
+        var stream = Volumes.Single().Stream;
+        stream.Position = 0;
+        return new(GZipReader.Open(stream));
     }
 }

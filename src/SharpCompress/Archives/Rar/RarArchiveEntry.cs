@@ -92,7 +92,9 @@ public class RarArchiveEntry : RarEntry, IArchiveEntry
         return stream;
     }
 
-    public async Task<Stream> OpenEntryStreamAsync(CancellationToken cancellationToken = default)
+    public async ValueTask<Stream> OpenEntryStreamAsync(
+        CancellationToken cancellationToken = default
+    )
     {
         RarStream stream;
         if (IsRarV3)

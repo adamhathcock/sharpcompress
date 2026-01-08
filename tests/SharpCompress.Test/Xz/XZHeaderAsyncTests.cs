@@ -9,7 +9,7 @@ namespace SharpCompress.Test.Xz;
 public class XzHeaderAsyncTests : XzTestsBase
 {
     [Fact]
-    public async Task ChecksMagicNumberAsync()
+    public async ValueTask ChecksMagicNumberAsync()
     {
         var bytes = (byte[])Compressed.Clone();
         bytes[3]++;
@@ -24,7 +24,7 @@ public class XzHeaderAsyncTests : XzTestsBase
     }
 
     [Fact]
-    public async Task CorruptHeaderThrowsAsync()
+    public async ValueTask CorruptHeaderThrowsAsync()
     {
         var bytes = (byte[])Compressed.Clone();
         bytes[8]++;
@@ -39,7 +39,7 @@ public class XzHeaderAsyncTests : XzTestsBase
     }
 
     [Fact]
-    public async Task BadVersionIfCrcOkButStreamFlagUnknownAsync()
+    public async ValueTask BadVersionIfCrcOkButStreamFlagUnknownAsync()
     {
         var bytes = (byte[])Compressed.Clone();
         byte[] streamFlags = [0x00, 0xF4];
@@ -57,7 +57,7 @@ public class XzHeaderAsyncTests : XzTestsBase
     }
 
     [Fact]
-    public async Task ProcessesBlockCheckTypeAsync()
+    public async ValueTask ProcessesBlockCheckTypeAsync()
     {
         var br = new BinaryReader(CompressedStream);
         var header = new XZHeader(br);
@@ -66,7 +66,7 @@ public class XzHeaderAsyncTests : XzTestsBase
     }
 
     [Fact]
-    public async Task CanCalculateBlockCheckSizeAsync()
+    public async ValueTask CanCalculateBlockCheckSizeAsync()
     {
         var br = new BinaryReader(CompressedStream);
         var header = new XZHeader(br);
@@ -75,7 +75,7 @@ public class XzHeaderAsyncTests : XzTestsBase
     }
 
     [Fact]
-    public async Task ProcessesStreamHeaderFromFactoryAsync()
+    public async ValueTask ProcessesStreamHeaderFromFactoryAsync()
     {
         var header = await XZHeader.FromStreamAsync(CompressedStream).ConfigureAwait(false);
         Assert.Equal(CheckType.CRC64, header.BlockCheckType);

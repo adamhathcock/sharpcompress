@@ -400,7 +400,7 @@ internal class ZlibBaseStream : Stream, IStreamStack
         }
     }
 
-    private async Task finishAsync(CancellationToken cancellationToken = default)
+    private async ValueTask finishAsync(CancellationToken cancellationToken = default)
     {
         if (_z is null)
         {
@@ -646,7 +646,9 @@ internal class ZlibBaseStream : Stream, IStreamStack
         return _encoding.GetString(buffer, 0, buffer.Length);
     }
 
-    private async Task<string> ReadZeroTerminatedStringAsync(CancellationToken cancellationToken)
+    private async ValueTask<string> ReadZeroTerminatedStringAsync(
+        CancellationToken cancellationToken
+    )
     {
         var list = new List<byte>();
         var done = false;
@@ -729,7 +731,9 @@ internal class ZlibBaseStream : Stream, IStreamStack
         return totalBytesRead;
     }
 
-    private async Task<int> _ReadAndValidateGzipHeaderAsync(CancellationToken cancellationToken)
+    private async ValueTask<int> _ReadAndValidateGzipHeaderAsync(
+        CancellationToken cancellationToken
+    )
     {
         var totalBytesRead = 0;
 

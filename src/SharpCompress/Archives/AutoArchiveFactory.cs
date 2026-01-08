@@ -1,12 +1,14 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 using SharpCompress.Common;
 using SharpCompress.Readers;
 
 namespace SharpCompress.Archives;
 
-class AutoArchiveFactory : IArchiveFactory
+internal class AutoArchiveFactory : IArchiveFactory
 {
     public string Name => nameof(AutoArchiveFactory);
 
@@ -20,11 +22,30 @@ class AutoArchiveFactory : IArchiveFactory
         int bufferSize = ReaderOptions.DefaultBufferSize
     ) => throw new NotSupportedException();
 
+    public ValueTask<bool> IsArchiveAsync(
+        Stream stream,
+        string? password = null,
+        int bufferSize = ReaderOptions.DefaultBufferSize,
+        CancellationToken cancellationToken = default
+    ) => throw new NotSupportedException();
+
     public FileInfo? GetFilePart(int index, FileInfo part1) => throw new NotSupportedException();
 
     public IArchive Open(Stream stream, ReaderOptions? readerOptions = null) =>
         ArchiveFactory.Open(stream, readerOptions);
 
+    public async ValueTask<IAsyncArchive> OpenAsync(
+        Stream stream,
+        ReaderOptions? readerOptions = null,
+        CancellationToken cancellationToken = default
+    ) => await ArchiveFactory.OpenAsync(stream, readerOptions, cancellationToken);
+
     public IArchive Open(FileInfo fileInfo, ReaderOptions? readerOptions = null) =>
         ArchiveFactory.Open(fileInfo, readerOptions);
+
+    public async ValueTask<IAsyncArchive> OpenAsync(
+        FileInfo fileInfo,
+        ReaderOptions? readerOptions = null,
+        CancellationToken cancellationToken = default
+    ) => await ArchiveFactory.OpenAsync(fileInfo, readerOptions, cancellationToken);
 }

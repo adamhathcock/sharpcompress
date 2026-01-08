@@ -24,7 +24,7 @@ public class XzIndexAsyncTests : XzTestsBase
     }
 
     [Fact]
-    public async Task ThrowsIfHasNoIndexMarkerAsync()
+    public async ValueTask ThrowsIfHasNoIndexMarkerAsync()
     {
         using Stream badStream = new MemoryStream([1, 2, 3, 4, 5]);
         var br = new BinaryReader(badStream);
@@ -35,7 +35,7 @@ public class XzIndexAsyncTests : XzTestsBase
     }
 
     [Fact]
-    public async Task ReadsNoRecordAsync()
+    public async ValueTask ReadsNoRecordAsync()
     {
         var br = new BinaryReader(CompressedEmptyStream);
         var index = new XZIndex(br, false);
@@ -44,7 +44,7 @@ public class XzIndexAsyncTests : XzTestsBase
     }
 
     [Fact]
-    public async Task ReadsOneRecordAsync()
+    public async ValueTask ReadsOneRecordAsync()
     {
         var br = new BinaryReader(CompressedStream);
         var index = new XZIndex(br, false);
@@ -53,7 +53,7 @@ public class XzIndexAsyncTests : XzTestsBase
     }
 
     [Fact]
-    public async Task ReadsMultipleRecordsAsync()
+    public async ValueTask ReadsMultipleRecordsAsync()
     {
         var br = new BinaryReader(CompressedIndexedStream);
         var index = new XZIndex(br, false);
@@ -62,7 +62,7 @@ public class XzIndexAsyncTests : XzTestsBase
     }
 
     [Fact]
-    public async Task ReadsFirstRecordAsync()
+    public async ValueTask ReadsFirstRecordAsync()
     {
         var br = new BinaryReader(CompressedStream);
         var index = new XZIndex(br, false);
@@ -71,7 +71,7 @@ public class XzIndexAsyncTests : XzTestsBase
     }
 
     [Fact]
-    public async Task SkipsPaddingAsync()
+    public async ValueTask SkipsPaddingAsync()
     {
         // Index with 3-byte padding.
         using Stream badStream = new MemoryStream([

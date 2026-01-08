@@ -1,5 +1,7 @@
 using System.Collections.Generic;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 using SharpCompress.Readers;
 
 namespace SharpCompress.Factories;
@@ -40,6 +42,20 @@ public interface IFactory
         Stream stream,
         string? password = null,
         int bufferSize = ReaderOptions.DefaultBufferSize
+    );
+
+    /// <summary>
+    /// Returns true if the stream represents an archive of the format defined by this type asynchronously.
+    /// </summary>
+    /// <param name="stream">A stream, pointing to the beginning of the archive.</param>
+    /// <param name="password">optional password</param>
+    /// <param name="bufferSize">buffer size for reading</param>
+    /// <param name="cancellationToken">cancellation token</param>
+    ValueTask<bool> IsArchiveAsync(
+        Stream stream,
+        string? password = null,
+        int bufferSize = ReaderOptions.DefaultBufferSize,
+        CancellationToken cancellationToken = default
     );
 
     /// <summary>

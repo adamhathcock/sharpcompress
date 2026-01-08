@@ -48,7 +48,7 @@ public abstract class AbstractWriter(ArchiveType type, WriterOptions writerOptio
 
     public abstract void Write(string filename, Stream source, DateTime? modificationTime);
 
-    public virtual async Task WriteAsync(
+    public virtual async ValueTask WriteAsync(
         string filename,
         Stream source,
         DateTime? modificationTime,
@@ -63,7 +63,7 @@ public abstract class AbstractWriter(ArchiveType type, WriterOptions writerOptio
 
     public abstract void WriteDirectory(string directoryName, DateTime? modificationTime);
 
-    public virtual async Task WriteDirectoryAsync(
+    public virtual async ValueTask WriteDirectoryAsync(
         string directoryName,
         DateTime? modificationTime,
         CancellationToken cancellationToken = default

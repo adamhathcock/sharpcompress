@@ -68,7 +68,7 @@ internal class RarStream : Stream, IStreamStack
         _position = 0;
     }
 
-    public async Task InitializeAsync(CancellationToken cancellationToken = default)
+    public async ValueTask InitializeAsync(CancellationToken cancellationToken = default)
     {
         fetch = true;
         await unpack.DoUnpackAsync(fileHeader, readStream, this, cancellationToken);

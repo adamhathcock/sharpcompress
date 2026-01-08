@@ -142,7 +142,7 @@ public sealed class XZStream : XZReadOnlyStream, IStreamStack
         HeaderIsRead = true;
     }
 
-    private async Task ReadHeaderAsync(CancellationToken cancellationToken = default)
+    private async ValueTask ReadHeaderAsync(CancellationToken cancellationToken = default)
     {
         Header = await XZHeader
             .FromStreamAsync(BaseStream, cancellationToken)
@@ -153,7 +153,7 @@ public sealed class XZStream : XZReadOnlyStream, IStreamStack
 
     private void ReadIndex() => Index = XZIndex.FromStream(BaseStream, true);
 
-    private async Task ReadIndexAsync(CancellationToken cancellationToken = default) =>
+    private async ValueTask ReadIndexAsync(CancellationToken cancellationToken = default) =>
         Index = await XZIndex
             .FromStreamAsync(BaseStream, true, cancellationToken)
             .ConfigureAwait(false);
@@ -162,7 +162,7 @@ public sealed class XZStream : XZReadOnlyStream, IStreamStack
     private void ReadFooter() => Footer = XZFooter.FromStream(BaseStream);
 
     // TODO verify footer
-    private async Task ReadFooterAsync(CancellationToken cancellationToken = default) =>
+    private async ValueTask ReadFooterAsync(CancellationToken cancellationToken = default) =>
         Footer = await XZFooter
             .FromStreamAsync(BaseStream, cancellationToken)
             .ConfigureAwait(false);
@@ -202,7 +202,7 @@ public sealed class XZStream : XZReadOnlyStream, IStreamStack
         return bytesRead;
     }
 
-    private async Task<int> ReadBlocksAsync(
+    private async ValueTask<int> ReadBlocksAsync(
         byte[] buffer,
         int offset,
         int count,

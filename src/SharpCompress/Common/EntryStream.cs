@@ -56,7 +56,7 @@ public class EntryStream : Stream, IStreamStack
     /// <summary>
     /// Asynchronously skip the rest of the entry stream.
     /// </summary>
-    public async Task SkipEntryAsync(CancellationToken cancellationToken = default)
+    public async ValueTask SkipEntryAsync(CancellationToken cancellationToken = default)
     {
         await this.SkipAsync(cancellationToken).ConfigureAwait(false);
         _completed = true;

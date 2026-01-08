@@ -11,7 +11,7 @@ public class ZipWriterAsyncTests : WriterTests
         : base(ArchiveType.Zip) { }
 
     [Fact]
-    public async Task Zip_Deflate_Write_Async() =>
+    public async ValueTask Zip_Deflate_Write_Async() =>
         await WriteAsync(
             CompressionType.Deflate,
             "Zip.deflate.noEmptyDirs.zip",
@@ -20,7 +20,7 @@ public class ZipWriterAsyncTests : WriterTests
         );
 
     [Fact]
-    public async Task Zip_BZip2_Write_Async() =>
+    public async ValueTask Zip_BZip2_Write_Async() =>
         await WriteAsync(
             CompressionType.BZip2,
             "Zip.bzip2.noEmptyDirs.zip",
@@ -29,7 +29,7 @@ public class ZipWriterAsyncTests : WriterTests
         );
 
     [Fact]
-    public async Task Zip_None_Write_Async() =>
+    public async ValueTask Zip_None_Write_Async() =>
         await WriteAsync(
             CompressionType.None,
             "Zip.none.noEmptyDirs.zip",
@@ -38,7 +38,7 @@ public class ZipWriterAsyncTests : WriterTests
         );
 
     [Fact]
-    public async Task Zip_LZMA_Write_Async() =>
+    public async ValueTask Zip_LZMA_Write_Async() =>
         await WriteAsync(
             CompressionType.LZMA,
             "Zip.lzma.noEmptyDirs.zip",
@@ -47,7 +47,7 @@ public class ZipWriterAsyncTests : WriterTests
         );
 
     [Fact]
-    public async Task Zip_PPMd_Write_Async() =>
+    public async ValueTask Zip_PPMd_Write_Async() =>
         await WriteAsync(
             CompressionType.PPMd,
             "Zip.ppmd.noEmptyDirs.zip",
@@ -56,7 +56,7 @@ public class ZipWriterAsyncTests : WriterTests
         );
 
     [Fact]
-    public async Task Zip_Rar_Write_Async() =>
+    public async ValueTask Zip_Rar_Write_Async() =>
         await Assert.ThrowsAsync<InvalidFormatException>(async () =>
             await WriteAsync(
                 CompressionType.Rar,

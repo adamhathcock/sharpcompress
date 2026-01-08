@@ -1,7 +1,9 @@
 using System;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 using SharpCompress.Common;
+using SharpCompress.IO;
 using SharpCompress.Readers;
 using SharpCompress.Readers.Zip;
 using SharpCompress.Test.Mocks;
@@ -14,11 +16,11 @@ public class ZipReaderAsyncTests : ReaderTests
     public ZipReaderAsyncTests() => UseExtensionInsteadOfNameToVerify = true;
 
     [Fact]
-    public async Task Issue_269_Double_Skip_Async()
+    public async ValueTask Issue_269_Double_Skip_Async()
     {
         var path = Path.Combine(TEST_ARCHIVES_PATH, "PrePostHeaders.zip");
         using Stream stream = new ForwardOnlyStream(File.OpenRead(path));
-        using var reader = ReaderFactory.Open(stream);
+        await using var reader = await ReaderFactory.OpenAsync(new AsyncOnlyStream(stream));
         var count = 0;
         while (await reader.MoveToNextEntryAsync())
         {
@@ -34,36 +36,36 @@ public class ZipReaderAsyncTests : ReaderTests
     }
 
     [Fact]
-    public async Task Zip_Zip64_Streamed_Read_Async() =>
+    public async ValueTask Zip_Zip64_Streamed_Read_Async() =>
         await ReadAsync("Zip.zip64.zip", CompressionType.Deflate);
 
     [Fact]
-    public async Task Zip_ZipX_Streamed_Read_Async() =>
+    public async ValueTask Zip_ZipX_Streamed_Read_Async() =>
         await ReadAsync("Zip.zipx", CompressionType.LZMA);
 
     [Fact]
-    public async Task Zip_BZip2_Streamed_Read_Async() =>
+    public async ValueTask Zip_BZip2_Streamed_Read_Async() =>
         await ReadAsync("Zip.bzip2.dd.zip", CompressionType.BZip2);
 
     [Fact]
-    public async Task Zip_BZip2_Read_Async() =>
+    public async ValueTask Zip_BZip2_Read_Async() =>
         await ReadAsync("Zip.bzip2.zip", CompressionType.BZip2);
 
     [Fact]
-    public async Task Zip_Deflate_Streamed2_Read_Async() =>
+    public async ValueTask Zip_Deflate_Streamed2_Read_Async() =>
         await ReadAsync("Zip.deflate.dd-.zip", CompressionType.Deflate);
 
     [Fact]
-    public async Task Zip_Deflate_Streamed_Read_Async() =>
+    public async ValueTask Zip_Deflate_Streamed_Read_Async() =>
         await ReadAsync("Zip.deflate.dd.zip", CompressionType.Deflate);
 
     [Fact]
-    public async Task Zip_Deflate_Streamed_Skip_Async()
+    public async ValueTask Zip_Deflate_Streamed_Skip_Async()
     {
         using Stream stream = new ForwardOnlyStream(
             File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.dd.zip"))
         );
-        using var reader = ReaderFactory.Open(stream);
+        await using var reader = await ReaderFactory.OpenAsync(new AsyncOnlyStream(stream));
         var x = 0;
         while (await reader.MoveToNextEntryAsync())
         {
@@ -82,39 +84,39 @@ public class ZipReaderAsyncTests : ReaderTests
     }
 
     [Fact]
-    public async Task Zip_Deflate_Read_Async() =>
+    public async ValueTask Zip_Deflate_Read_Async() =>
         await ReadAsync("Zip.deflate.zip", CompressionType.Deflate);
 
     [Fact]
-    public async Task Zip_Deflate64_Read_Async() =>
+    public async ValueTask Zip_Deflate64_Read_Async() =>
         await ReadAsync("Zip.deflate64.zip", CompressionType.Deflate64);
 
     [Fact]
-    public async Task Zip_LZMA_Streamed_Read_Async() =>
+    public async ValueTask Zip_LZMA_Streamed_Read_Async() =>
         await ReadAsync("Zip.lzma.dd.zip", CompressionType.LZMA);
 
     [Fact]
-    public async Task Zip_LZMA_Read_Async() =>
+    public async ValueTask Zip_LZMA_Read_Async() =>
         await ReadAsync("Zip.lzma.zip", CompressionType.LZMA);
 
     [Fact]
-    public async Task Zip_PPMd_Streamed_Read_Async() =>
+    public async ValueTask Zip_PPMd_Streamed_Read_Async() =>
         await ReadAsync("Zip.ppmd.dd.zip", CompressionType.PPMd);
 
     [Fact]
-    public async Task Zip_PPMd_Read_Async() =>
+    public async ValueTask Zip_PPMd_Read_Async() =>
         await ReadAsync("Zip.ppmd.zip", CompressionType.PPMd);
 
     [Fact]
-    public async Task Zip_None_Read_Async() =>
+    public async ValueTask Zip_None_Read_Async() =>
         await ReadAsync("Zip.none.zip", CompressionType.None);
 
     [Fact]
-    public async Task Zip_Deflate_NoEmptyDirs_Read_Async() =>
+    public async ValueTask Zip_Deflate_NoEmptyDirs_Read_Async() =>
         await ReadAsync("Zip.deflate.noEmptyDirs.zip", CompressionType.Deflate);
 
     [Fact]
-    public async Task Zip_BZip2_PkwareEncryption_Read_Async()
+    public async ValueTask Zip_BZip2_PkwareEncryption_Read_Async()
     {
         using (
             Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Zip.bzip2.pkware.zip"))
@@ -137,12 +139,12 @@ public class ZipReaderAsyncTests : ReaderTests
     }
 
     [Fact]
-    public async Task Zip_Reader_Disposal_Test_Async()
+    public async ValueTask Zip_Reader_Disposal_Test_Async()
     {
         using var stream = new TestStream(
             File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.dd.zip"))
         );
-        using (var reader = ReaderFactory.Open(stream))
+        await using (var reader = await ReaderFactory.OpenAsync(new AsyncOnlyStream(stream)))
         {
             while (await reader.MoveToNextEntryAsync())
             {
@@ -159,12 +161,14 @@ public class ZipReaderAsyncTests : ReaderTests
     }
 
     [Fact]
-    public async Task Zip_Reader_Disposal_Test2_Async()
+    public async ValueTask Zip_Reader_Disposal_Test2_Async()
     {
         using var stream = new TestStream(
-            File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.dd.zip"))
+            new AsyncOnlyStream(
+                File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.dd.zip"))
+            )
         );
-        var reader = ReaderFactory.Open(stream);
+        await using var reader = await ReaderFactory.OpenAsync(stream);
         while (await reader.MoveToNextEntryAsync())
         {
             if (!reader.Entry.IsDirectory)
@@ -179,12 +183,12 @@ public class ZipReaderAsyncTests : ReaderTests
     }
 
     [Fact]
-    public async Task Zip_LZMA_WinzipAES_Read_Async() =>
+    public async ValueTask Zip_LZMA_WinzipAES_Read_Async() =>
         await Assert.ThrowsAsync<NotSupportedException>(async () =>
         {
             using (
-                Stream stream = File.OpenRead(
-                    Path.Combine(TEST_ARCHIVES_PATH, "Zip.lzma.WinzipAES.zip")
+                Stream stream = new AsyncOnlyStream(
+                    File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Zip.lzma.WinzipAES.zip"))
                 )
             )
             using (var reader = ZipReader.Open(stream, new ReaderOptions { Password = "test" }))
@@ -205,11 +209,11 @@ public class ZipReaderAsyncTests : ReaderTests
         });
 
     [Fact]
-    public async Task Zip_Deflate_WinzipAES_Read_Async()
+    public async ValueTask Zip_Deflate_WinzipAES_Read_Async()
     {
         using (
-            Stream stream = File.OpenRead(
-                Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.WinzipAES.zip")
+            Stream stream = new AsyncOnlyStream(
+                File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.WinzipAES.zip"))
             )
         )
         using (var reader = ZipReader.Open(stream, new ReaderOptions { Password = "test" }))
@@ -230,10 +234,14 @@ public class ZipReaderAsyncTests : ReaderTests
     }
 
     [Fact]
-    public async Task Zip_Deflate_ZipCrypto_Read_Async()
+    public async ValueTask Zip_Deflate_ZipCrypto_Read_Async()
     {
         var count = 0;
-        using (Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "zipcrypto.zip")))
+        using (
+            Stream stream = new AsyncOnlyStream(
+                File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "zipcrypto.zip"))
+            )
+        )
         using (var reader = ZipReader.Open(stream, new ReaderOptions { Password = "test" }))
         {
             while (await reader.MoveToNextEntryAsync())

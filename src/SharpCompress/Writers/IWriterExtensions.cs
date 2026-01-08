@@ -59,14 +59,14 @@ public static class IWriterExtensions
         writer.WriteDirectory(directoryName, null);
 
     // Async extensions
-    public static Task WriteAsync(
+    public static ValueTask WriteAsync(
         this IWriter writer,
         string entryPath,
         Stream source,
         CancellationToken cancellationToken = default
     ) => writer.WriteAsync(entryPath, source, null, cancellationToken);
 
-    public static async Task WriteAsync(
+    public static async ValueTask WriteAsync(
         this IWriter writer,
         string entryPath,
         FileInfo source,
@@ -83,14 +83,14 @@ public static class IWriterExtensions
             .ConfigureAwait(false);
     }
 
-    public static Task WriteAsync(
+    public static ValueTask WriteAsync(
         this IWriter writer,
         string entryPath,
         string source,
         CancellationToken cancellationToken = default
     ) => writer.WriteAsync(entryPath, new FileInfo(source), cancellationToken);
 
-    public static Task WriteAllAsync(
+    public static ValueTask WriteAllAsync(
         this IWriter writer,
         string directory,
         string searchPattern = "*",
@@ -98,7 +98,7 @@ public static class IWriterExtensions
         CancellationToken cancellationToken = default
     ) => writer.WriteAllAsync(directory, searchPattern, null, option, cancellationToken);
 
-    public static async Task WriteAllAsync(
+    public static async ValueTask WriteAllAsync(
         this IWriter writer,
         string directory,
         string searchPattern = "*",
@@ -125,7 +125,7 @@ public static class IWriterExtensions
         }
     }
 
-    public static Task WriteDirectoryAsync(
+    public static ValueTask WriteDirectoryAsync(
         this IWriter writer,
         string directoryName,
         CancellationToken cancellationToken = default
