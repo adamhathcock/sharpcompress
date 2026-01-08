@@ -50,7 +50,7 @@ public class RarFactory : Factory, IArchiveFactory, IMultiArchiveFactory, IReade
         RarArchive.Open(stream, readerOptions);
 
     /// <inheritdoc/>
-    public Task<IArchive> OpenAsync(
+    public Task<IArchiveAsync> OpenAsync(
         Stream stream,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
@@ -61,7 +61,7 @@ public class RarFactory : Factory, IArchiveFactory, IMultiArchiveFactory, IReade
         RarArchive.Open(fileInfo, readerOptions);
 
     /// <inheritdoc/>
-    public Task<IArchive> OpenAsync(
+    public Task<IArchiveAsync> OpenAsync(
         FileInfo fileInfo,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
@@ -76,7 +76,7 @@ public class RarFactory : Factory, IArchiveFactory, IMultiArchiveFactory, IReade
         RarArchive.Open(streams, readerOptions);
 
     /// <inheritdoc/>
-    public Task<IArchive> OpenAsync(
+    public Task<IArchiveAsync> OpenAsync(
         IReadOnlyList<Stream> streams,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
@@ -87,7 +87,7 @@ public class RarFactory : Factory, IArchiveFactory, IMultiArchiveFactory, IReade
         RarArchive.Open(fileInfos, readerOptions);
 
     /// <inheritdoc/>
-    public Task<IArchive> OpenAsync(
+    public Task<IArchiveAsync> OpenAsync(
         IReadOnlyList<FileInfo> fileInfos,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default

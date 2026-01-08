@@ -65,7 +65,7 @@ public class GZipFactory
         GZipArchive.Open(stream, readerOptions);
 
     /// <inheritdoc/>
-    public Task<IArchive> OpenAsync(
+    public Task<IArchiveAsync> OpenAsync(
         Stream stream,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
@@ -76,7 +76,7 @@ public class GZipFactory
         GZipArchive.Open(fileInfo, readerOptions);
 
     /// <inheritdoc/>
-    public Task<IArchive> OpenAsync(
+    public Task<IArchiveAsync> OpenAsync(
         FileInfo fileInfo,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
@@ -91,7 +91,7 @@ public class GZipFactory
         GZipArchive.Open(streams, readerOptions);
 
     /// <inheritdoc/>
-    public Task<IArchive> OpenAsync(
+    public Task<IArchiveAsync> OpenAsync(
         IReadOnlyList<Stream> streams,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
@@ -102,7 +102,7 @@ public class GZipFactory
         GZipArchive.Open(fileInfos, readerOptions);
 
     /// <inheritdoc/>
-    public Task<IArchive> OpenAsync(
+    public Task<IArchiveAsync> OpenAsync(
         IReadOnlyList<FileInfo> fileInfos,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default

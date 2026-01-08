@@ -34,7 +34,7 @@ class AutoArchiveFactory : IArchiveFactory
     public IArchive Open(Stream stream, ReaderOptions? readerOptions = null) =>
         ArchiveFactory.Open(stream, readerOptions);
 
-    public Task<IArchive> OpenAsync(
+    public Task<IArchiveAsync> OpenAsync(
         Stream stream,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
@@ -43,7 +43,7 @@ class AutoArchiveFactory : IArchiveFactory
     public IArchive Open(FileInfo fileInfo, ReaderOptions? readerOptions = null) =>
         ArchiveFactory.Open(fileInfo, readerOptions);
 
-    public Task<IArchive> OpenAsync(
+    public Task<IArchiveAsync> OpenAsync(
         FileInfo fileInfo,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default

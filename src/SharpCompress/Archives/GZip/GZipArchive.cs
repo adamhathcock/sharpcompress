@@ -108,7 +108,7 @@ public class GZipArchive : AbstractWritableArchive<GZipArchiveEntry, GZipVolume>
     /// <param name="stream"></param>
     /// <param name="readerOptions"></param>
     /// <param name="cancellationToken"></param>
-    public static async Task<IArchive> OpenAsync(
+    public static async Task<IArchiveAsync> OpenAsync(
         Stream stream,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
@@ -124,7 +124,7 @@ public class GZipArchive : AbstractWritableArchive<GZipArchiveEntry, GZipVolume>
     /// <param name="fileInfo"></param>
     /// <param name="readerOptions"></param>
     /// <param name="cancellationToken"></param>
-    public static async Task<IArchive> OpenAsync(
+    public static async Task<IArchiveAsync> OpenAsync(
         FileInfo fileInfo,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
@@ -140,7 +140,7 @@ public class GZipArchive : AbstractWritableArchive<GZipArchiveEntry, GZipVolume>
     /// <param name="streams"></param>
     /// <param name="readerOptions"></param>
     /// <param name="cancellationToken"></param>
-    public static async Task<IArchive> OpenAsync(
+    public static async Task<IArchiveAsync> OpenAsync(
         IReadOnlyList<Stream> streams,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
@@ -156,7 +156,7 @@ public class GZipArchive : AbstractWritableArchive<GZipArchiveEntry, GZipVolume>
     /// <param name="fileInfos"></param>
     /// <param name="readerOptions"></param>
     /// <param name="cancellationToken"></param>
-    public static async Task<IArchive> OpenAsync(
+    public static async Task<IArchiveAsync> OpenAsync(
         IReadOnlyList<FileInfo> fileInfos,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default

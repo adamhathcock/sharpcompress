@@ -66,8 +66,15 @@ public abstract class AbstractArchive<TEntry, TVolume> : IArchive, IArchiveAsync
     protected abstract IEnumerable<TEntry> LoadEntries(IEnumerable<TVolume> volumes);
 
 
-    protected abstract IAsyncEnumerable<TVolume> LoadVolumesAsync(SourceStream sourceStream);
-    protected abstract IAsyncEnumerable<TEntry> LoadEntriesAsync(IAsyncEnumerable<TVolume> volumes);
+    protected virtual IAsyncEnumerable<TVolume> LoadVolumesAsync(SourceStream sourceStream) => LoadVolumes(sourceStream).ToAsyncEnumerable();
+
+    protected virtual async IAsyncEnumerable<TEntry> LoadEntriesAsync(IAsyncEnumerable<TVolume> volumes)
+    {
+        foreach (var item in LoadEntries(await volumes.ToListAsync()) )
+        {
+            yield return item;
+        }
+    }
     IEnumerable<IArchiveEntry> IArchive.Entries => Entries.Cast<IArchiveEntry>();
 
     IEnumerable<IVolume> IArchive.Volumes => _lazyVolumes.Cast<IVolume>();
@@ -184,7 +191,8 @@ public abstract class AbstractArchive<TEntry, TVolume> : IArchive, IArchiveAsync
     }
 
 
-    protected abstract ValueTask<IReader> CreateReaderForSolidExtractionAsync();
+    protected virtual ValueTask<IReader> CreateReaderForSolidExtractionAsync() =>
+        new (CreateReaderForSolidExtraction());
 
     public virtual ValueTask<bool> IsSolidAsync()  => new (false);
 
