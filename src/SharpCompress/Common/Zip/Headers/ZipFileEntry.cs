@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace SharpCompress.Common.Zip.Headers;
 
-internal abstract class ZipFileEntry(ZipHeaderType type, ArchiveEncoding archiveEncoding)
+internal abstract class ZipFileEntry(ZipHeaderType type, IArchiveEncoding archiveEncoding)
     : ZipHeader(type)
 {
     internal bool IsDirectory
@@ -26,7 +26,7 @@ internal abstract class ZipFileEntry(ZipHeaderType type, ArchiveEncoding archive
 
     internal Stream? PackedStream { get; set; }
 
-    internal ArchiveEncoding ArchiveEncoding { get; } = archiveEncoding;
+    internal IArchiveEncoding ArchiveEncoding { get; } = archiveEncoding;
 
     internal string? Name { get; set; }
 

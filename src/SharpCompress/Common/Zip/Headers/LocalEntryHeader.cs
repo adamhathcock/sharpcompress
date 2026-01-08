@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 
 namespace SharpCompress.Common.Zip.Headers;
 
-internal class LocalEntryHeader(ArchiveEncoding archiveEncoding)
+internal class LocalEntryHeader(IArchiveEncoding archiveEncoding)
     : ZipFileEntry(ZipHeaderType.LocalEntry, archiveEncoding)
 {
     internal override void Read(BinaryReader reader)
