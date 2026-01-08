@@ -153,7 +153,7 @@ public class ZipTypesLevelsWithCrcRatioAsyncTests : ArchiveTests
         using var archive = ZipArchive.Open(zipStream);
 
         var entry = archive.Entries.Single(e => !e.IsDirectory);
-        using var entryStream = entry.OpenEntryStream();
+        using var entryStream = await entry.OpenEntryStreamAsync();
         using var extractedStream = new MemoryStream();
         await entryStream.CopyToAsync(extractedStream);
 
@@ -208,7 +208,7 @@ public class ZipTypesLevelsWithCrcRatioAsyncTests : ArchiveTests
         using var archive = ZipArchive.Open(zipStream);
 
         var entry = archive.Entries.Single(e => !e.IsDirectory);
-        using var entryStream = entry.OpenEntryStream();
+        using var entryStream = await entry.OpenEntryStreamAsync();
         using var extractedStream = new MemoryStream();
         await entryStream.CopyToAsync(extractedStream);
 
@@ -254,7 +254,7 @@ public class ZipTypesLevelsWithCrcRatioAsyncTests : ArchiveTests
             );
 
             var expected = expectedFiles[entry.Key!];
-            using var entryStream = entry.OpenEntryStream();
+            using var entryStream = await entry.OpenEntryStreamAsync();
             using var extractedStream = new MemoryStream();
             await entryStream.CopyToAsync(extractedStream);
 

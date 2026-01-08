@@ -22,8 +22,8 @@ public class GZipReaderAsyncTests : ReaderTests
     {
         //read only as GZip item
         using Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.gz"));
-        using var reader = GZipReader.Open(new SharpCompressStream(stream));
-        while (reader.MoveToNextEntry())
+        await using var reader = await ReaderFactory.OpenAsync(new AsyncOnlyStream(stream));
+        while (await reader.MoveToNextEntryAsync())
         {
             Assert.NotEqual(0, reader.Entry.Size);
             Assert.NotEqual(0, reader.Entry.Crc);
@@ -31,7 +31,7 @@ public class GZipReaderAsyncTests : ReaderTests
             // Use async overload for reading the entry
             if (!reader.Entry.IsDirectory)
             {
-                using var entryStream = reader.OpenEntryStream();
+                using var entryStream = await reader.OpenEntryStreamAsync();
                 using var ms = new MemoryStream();
                 await entryStream.CopyToAsync(ms);
             }

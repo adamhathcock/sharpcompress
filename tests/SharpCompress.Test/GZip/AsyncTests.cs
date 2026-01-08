@@ -164,13 +164,13 @@ public class AsyncTests : TestBase
     {
         var testArchive = Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.gz");
         using var stream = File.OpenRead(testArchive);
-        using var reader = ReaderFactory.Open(stream);
+        await using var reader = await ReaderFactory.OpenAsync(new AsyncOnlyStream(stream));
 
-        while (reader.MoveToNextEntry())
+        while (await reader.MoveToNextEntryAsync())
         {
             if (!reader.Entry.IsDirectory)
             {
-                using var entryStream = reader.OpenEntryStream();
+                using var entryStream = await reader.OpenEntryStreamAsync();
                 var buffer = new byte[4096];
                 var totalRead = 0;
                 int bytesRead;

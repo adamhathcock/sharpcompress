@@ -75,12 +75,12 @@ public class TarReaderAsyncTests : ReaderTests
         using (Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.bz2")))
         using (var reader = TarReader.Open(stream))
         {
-            while (reader.MoveToNextEntry())
+            while (await reader.MoveToNextEntryAsync())
             {
                 if (!reader.Entry.IsDirectory)
                 {
                     Assert.Equal(CompressionType.BZip2, reader.Entry.CompressionType);
-                    using var entryStream = reader.OpenEntryStream();
+                    using var entryStream = await reader.OpenEntryStreamAsync();
                     var file = Path.GetFileName(reader.Entry.Key);
                     var folder =
                         Path.GetDirectoryName(reader.Entry.Key)
@@ -92,7 +92,7 @@ public class TarReaderAsyncTests : ReaderTests
                     }
                     var destinationFileName = Path.Combine(destdir, file.NotNull());
 
-                    using var fs = File.OpenWrite(destinationFileName);
+                    using var fs = File.Create(destinationFileName);
                     await entryStream.CopyToAsync(fs);
                 }
             }
@@ -220,8 +220,11 @@ public class TarReaderAsyncTests : ReaderTests
         using Stream stream = File.OpenRead(
             Path.Combine(TEST_ARCHIVES_PATH, "TarWithSymlink.tar.gz")
         );
-        using var reader = TarReader.Open(stream);
-        while (reader.MoveToNextEntry())
+        await using var reader = await ReaderFactory.OpenAsync(
+            new AsyncOnlyStream(stream),
+            new ReaderOptions { LookForHeader = true }
+        );
+        while (await reader.MoveToNextEntryAsync())
         {
             if (reader.Entry.IsDirectory)
             {

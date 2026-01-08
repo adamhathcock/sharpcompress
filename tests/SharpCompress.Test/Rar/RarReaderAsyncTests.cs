@@ -46,7 +46,7 @@ public class RarReaderAsyncTests : ReaderTests
             )
         )
         {
-            while (reader.MoveToNextEntry())
+            while (await reader.MoveToNextEntryAsync())
             {
                 await reader.WriteEntryToDirectoryAsync(
                     SCRATCH_FILES_PATH,
@@ -79,7 +79,7 @@ public class RarReaderAsyncTests : ReaderTests
                 )
             )
             {
-                while (reader.MoveToNextEntry())
+                while (await reader.MoveToNextEntryAsync())
                 {
                     await reader.WriteEntryToDirectoryAsync(
                         SCRATCH_FILES_PATH,
@@ -127,7 +127,7 @@ public class RarReaderAsyncTests : ReaderTests
             .ToList();
         using (var reader = RarReader.Open(streams))
         {
-            while (reader.MoveToNextEntry())
+            while (await reader.MoveToNextEntryAsync())
             {
                 await reader.WriteEntryToDirectoryAsync(
                     SCRATCH_FILES_PATH,
@@ -277,7 +277,7 @@ public class RarReaderAsyncTests : ReaderTests
         using (var stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Rar.jpeg.jpg")))
         using (var reader = RarReader.Open(stream, new ReaderOptions { LookForHeader = true }))
         {
-            while (reader.MoveToNextEntry())
+            while (await reader.MoveToNextEntryAsync())
             {
                 Assert.Equal(CompressionType.Rar, reader.Entry.CompressionType);
                 await reader.WriteEntryToDirectoryAsync(

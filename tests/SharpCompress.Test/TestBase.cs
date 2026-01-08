@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using SharpCompress.Readers;
 using Xunit;
 
@@ -32,11 +33,7 @@ public class TestBase : IDisposable
         ORIGINAL_FILES_PATH = Path.Combine(SOLUTION_BASE_PATH, "TestArchives", "Original");
         MISC_TEST_FILES_PATH = Path.Combine(SOLUTION_BASE_PATH, "TestArchives", "MiscTest");
 
-        SCRATCH_BASE_PATH = Path.Combine(
-            SOLUTION_BASE_PATH,
-            "TestArchives",
-            Guid.NewGuid().ToString()
-        );
+        SCRATCH_BASE_PATH = Path.Combine(SOLUTION_BASE_PATH, "TestArchives");
         SCRATCH_DIRECTORY = Path.Combine(SCRATCH_BASE_PATH, "Scratch");
         SCRATCH2_DIRECTORY = Path.Combine(SCRATCH_BASE_PATH, "Scratch2");
 

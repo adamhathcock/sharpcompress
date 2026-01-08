@@ -80,25 +80,25 @@ public class GZipArchiveAsyncTests : ArchiveTests
         var archiveEntry = archive.Entries.First();
 
         MemoryStream tarStream;
-        using (var entryStream = archiveEntry.OpenEntryStream())
+        using (var entryStream = await archiveEntry.OpenEntryStreamAsync())
         {
             tarStream = new MemoryStream();
             await entryStream.CopyToAsync(tarStream);
         }
         var size = tarStream.Length;
-        using (var entryStream = archiveEntry.OpenEntryStream())
+        using (var entryStream = await archiveEntry.OpenEntryStreamAsync())
         {
             tarStream = new MemoryStream();
             await entryStream.CopyToAsync(tarStream);
         }
         Assert.Equal(size, tarStream.Length);
-        using (var entryStream = archiveEntry.OpenEntryStream())
+        using (var entryStream = await archiveEntry.OpenEntryStreamAsync())
         {
             var result = TarArchive.IsTarFile(entryStream);
             Assert.True(result);
         }
         Assert.Equal(size, tarStream.Length);
-        using (var entryStream = archiveEntry.OpenEntryStream())
+        using (var entryStream = await archiveEntry.OpenEntryStreamAsync())
         {
             tarStream = new MemoryStream();
             await entryStream.CopyToAsync(tarStream);

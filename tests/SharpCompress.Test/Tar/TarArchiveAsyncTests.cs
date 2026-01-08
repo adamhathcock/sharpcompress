@@ -54,7 +54,7 @@ public class TarArchiveAsyncTests : ArchiveTests
             {
                 Assert.Equal(
                     "dummy filecontent",
-                    await new StreamReader(entry.OpenEntryStream()).ReadLineAsync()
+                    await new StreamReader(await entry.OpenEntryStreamAsync()).ReadLineAsync()
                 );
             }
         }
@@ -98,7 +98,7 @@ public class TarArchiveAsyncTests : ArchiveTests
             {
                 Assert.Equal(
                     "dummy filecontent",
-                    await new StreamReader(entry.OpenEntryStream()).ReadLineAsync()
+                    await new StreamReader(await entry.OpenEntryStreamAsync()).ReadLineAsync()
                 );
             }
         }
@@ -211,7 +211,7 @@ public class TarArchiveAsyncTests : ArchiveTests
             {
                 ++numberOfEntries;
 
-                using var tarEntryStream = entry.OpenEntryStream();
+                using var tarEntryStream = await entry.OpenEntryStreamAsync();
                 using var testFileStream = new MemoryStream();
                 await tarEntryStream.CopyToAsync(testFileStream);
                 Assert.Equal(testBytes.Length, testFileStream.Length);
