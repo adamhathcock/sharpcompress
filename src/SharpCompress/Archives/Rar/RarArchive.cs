@@ -67,7 +67,13 @@ public class RarArchive : AbstractArchive<RarArchiveEntry, RarVolume>
         return new StreamRarArchiveVolume(sourceStream, ReaderOptions, i++).AsEnumerable();
     }
 
-    protected override IReader CreateReaderForSolidExtraction()
+    protected override IReader CreateReaderForSolidExtraction() =>
+        CreateReaderForSolidExtractionInternal();
+
+    protected override ValueTask<IReaderAsync> CreateReaderForSolidExtractionAsync() =>
+        new(CreateReaderForSolidExtractionInternal());
+
+    private RarReader CreateReaderForSolidExtractionInternal()
     {
         if (this.IsMultipartVolume())
         {

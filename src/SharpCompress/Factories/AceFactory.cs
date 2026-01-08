@@ -27,18 +27,21 @@ namespace SharpCompress.Factories
             Stream stream,
             string? password = null,
             int bufferSize = ReaderOptions.DefaultBufferSize
-        )
-        {
-            return AceHeader.IsArchive(stream);
-        }
+        ) => AceHeader.IsArchive(stream);
 
         public IReader OpenReader(Stream stream, ReaderOptions? options) =>
             AceReader.Open(stream, options);
 
-        public ValueTask<IReader> OpenReaderAsync(
+        public ValueTask<IReaderAsync> OpenReaderAsync(
             Stream stream,
             ReaderOptions? options,
             CancellationToken cancellationToken = default
-        ) => new(OpenReader(stream, options));
+        ) => new(AceReader.Open(stream, options));
+
+        public override ValueTask<bool> IsArchiveAsync(
+            Stream stream,
+            string? password = null,
+            int bufferSize = ReaderOptions.DefaultBufferSize
+        ) => new(IsArchive(stream, password, bufferSize));
     }
 }

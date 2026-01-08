@@ -265,6 +265,9 @@ public class SevenZipArchive : AbstractArchive<SevenZipArchiveEntry, SevenZipVol
     protected override IReader CreateReaderForSolidExtraction() =>
         new SevenZipReader(ReaderOptions, this);
 
+    protected override ValueTask<IReaderAsync> CreateReaderForSolidExtractionAsync() =>
+        new(new SevenZipReader(ReaderOptions, this));
+
     public override bool IsSolid =>
         Entries
             .Where(x => !x.IsDirectory)

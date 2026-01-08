@@ -9,6 +9,7 @@ using SharpCompress.Common;
 using SharpCompress.Compressors;
 using SharpCompress.Compressors.Deflate;
 using SharpCompress.Readers;
+using SharpCompress.Test.Mocks;
 using SharpCompress.Writers;
 using Xunit;
 
@@ -25,7 +26,7 @@ public class AsyncTests : TestBase
 #else
         await using var stream = File.OpenRead(testArchive);
 #endif
-        using var reader = ReaderFactory.Open(stream);
+        await using var reader = await ReaderFactory.OpenAsync(new AsyncOnlyStream(stream));
 
         await reader.WriteAllToDirectoryAsync(
             SCRATCH_FILES_PATH,
@@ -50,9 +51,9 @@ public class AsyncTests : TestBase
 #else
         await using var stream = File.OpenRead(testArchive);
 #endif
-        using var reader = ReaderFactory.Open(stream);
+        await using var reader = await ReaderFactory.OpenAsync(new AsyncOnlyStream(stream));
 
-        while (reader.MoveToNextEntry())
+        while (await reader.MoveToNextEntryAsync())
         {
             if (!reader.Entry.IsDirectory)
             {
@@ -118,7 +119,10 @@ public class AsyncTests : TestBase
 
         var testArchive = Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.gz");
         using var stream = File.OpenRead(testArchive);
-        using var reader = ReaderFactory.Open(stream);
+        await using var reader = await ReaderFactory.OpenAsync(
+            new AsyncOnlyStream(stream),
+            cancellationToken: cts.Token
+        );
 
         await reader.WriteAllToDirectoryAsync(
             SCRATCH_FILES_PATH,

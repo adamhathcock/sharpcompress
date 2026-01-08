@@ -70,7 +70,7 @@ public class GZipReaderAsyncTests : ReaderTests
             bufferSize: options.BufferSize
         );
         using var testStream = new TestStream(protectedStream);
-        using (var reader = ReaderFactory.Open(testStream, options))
+        await using (var reader = await ReaderFactory.OpenAsync(testStream, options, default))
         {
             await UseReaderAsync(reader, expectedCompression);
             protectedStream.ThrowOnDispose = false;
@@ -82,9 +82,9 @@ public class GZipReaderAsyncTests : ReaderTests
         Assert.True(options.LeaveStreamOpen != testStream.IsDisposed, message);
     }
 
-    private async Task UseReaderAsync(IReader reader, CompressionType expectedCompression)
+    private async Task UseReaderAsync(IReaderAsync reader, CompressionType expectedCompression)
     {
-        while (reader.MoveToNextEntry())
+        while (await reader.MoveToNextEntryAsync())
         {
             if (!reader.Entry.IsDirectory)
             {

@@ -81,6 +81,12 @@ public class ZipFactory
         return false;
     }
 
+    public override ValueTask<bool> IsArchiveAsync(
+        Stream stream,
+        string? password = null,
+        int bufferSize = ReaderOptions.DefaultBufferSize
+    ) => new(IsArchive(stream, password, bufferSize));
+
     /// <inheritdoc/>
     public override async ValueTask<bool> IsArchiveAsync(
         Stream stream,
@@ -189,14 +195,14 @@ public class ZipFactory
         ZipReader.Open(stream, options);
 
     /// <inheritdoc/>
-    public ValueTask<IReader> OpenReaderAsync(
+    public ValueTask<IReaderAsync> OpenReaderAsync(
         Stream stream,
         ReaderOptions? options,
         CancellationToken cancellationToken = default
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
-        return new(OpenReader(stream, options));
+        return new(ZipReader.Open(stream, options));
     }
 
     #endregion

@@ -647,11 +647,11 @@ public class RarArchiveAsyncTests : ArchiveTests
     {
         testArchive = Path.Combine(TEST_ARCHIVES_PATH, testArchive);
         using var stream = File.OpenRead(testArchive);
-        using var archive = ArchiveFactory.Open(stream);
-        Assert.True(archive.IsSolid);
-        using (var reader = archive.ExtractAllEntries())
+        await using var archive = await ArchiveFactory.OpenAsync(stream);
+        Assert.True(await archive.IsSolidAsync());
+        await using (var reader = await archive.ExtractAllEntriesAsync())
         {
-            while (reader.MoveToNextEntry())
+            while (await reader.MoveToNextEntryAsync())
             {
                 if (!reader.Entry.IsDirectory)
                 {
@@ -665,7 +665,7 @@ public class RarArchiveAsyncTests : ArchiveTests
         }
         VerifyFiles();
 
-        foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
+        await foreach (var entry in archive.EntriesAsync.Where(entry => !entry.IsDirectory))
         {
             await entry.WriteToDirectoryAsync(
                 SCRATCH_FILES_PATH,

@@ -30,7 +30,7 @@ public static class IArchiveAsyncExtensions
             // For solid archives (Rar, 7Zip), use the optimized reader-based approach
             if (await archive.IsSolidAsync() || archive.Type == ArchiveType.SevenZip)
             {
-                using var reader = await archive.ExtractAllEntriesAsync();
+                await using var reader = await archive.ExtractAllEntriesAsync();
                 await reader.WriteAllToDirectoryAsync(
                     destinationDirectory,
                     options,

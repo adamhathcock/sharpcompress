@@ -92,9 +92,10 @@ public class WriterTests : TestBase
 
             readerOptions.ArchiveEncoding.Default = encoding ?? Encoding.Default;
 
-            using var reader = ReaderFactory.Open(
-                SharpCompressStream.Create(stream, leaveOpen: true),
-                readerOptions
+            await using var reader = await ReaderFactory.OpenAsync(
+                new AsyncOnlyStream(SharpCompressStream.Create(stream, leaveOpen: true)),
+                readerOptions,
+                cancellationToken
             );
             await reader.WriteAllToDirectoryAsync(
                 SCRATCH_FILES_PATH,

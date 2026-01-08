@@ -145,7 +145,13 @@ public abstract class ReaderTests : TestBase
             bufferSize: options.BufferSize
         );
         using var testStream = new TestStream(protectedStream);
-        using (var reader = ReaderFactory.Open(testStream, options))
+        await using (
+            var reader = await ReaderFactory.OpenAsync(
+                new AsyncOnlyStream(testStream),
+                options,
+                cancellationToken
+            )
+        )
         {
             await UseReaderAsync(reader, expectedCompression, cancellationToken);
             protectedStream.ThrowOnDispose = false;
@@ -158,7 +164,7 @@ public abstract class ReaderTests : TestBase
     }
 
     public async Task UseReaderAsync(
-        IReader reader,
+        IReaderAsync reader,
         CompressionType? expectedCompression,
         CancellationToken cancellationToken = default
     )

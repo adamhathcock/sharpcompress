@@ -67,6 +67,12 @@ public class RarFactory : Factory, IArchiveFactory, IMultiArchiveFactory, IReade
         CancellationToken cancellationToken = default
     ) => RarArchive.OpenAsync(fileInfo, readerOptions, cancellationToken);
 
+    public override ValueTask<bool> IsArchiveAsync(
+        Stream stream,
+        string? password = null,
+        int bufferSize = ReaderOptions.DefaultBufferSize
+    ) => new(IsArchive(stream, password, bufferSize));
+
     #endregion
 
     #region IMultiArchiveFactory
@@ -102,14 +108,14 @@ public class RarFactory : Factory, IArchiveFactory, IMultiArchiveFactory, IReade
         RarReader.Open(stream, options);
 
     /// <inheritdoc/>
-    public ValueTask<IReader> OpenReaderAsync(
+    public ValueTask<IReaderAsync> OpenReaderAsync(
         Stream stream,
         ReaderOptions? options,
         CancellationToken cancellationToken = default
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
-        return new(OpenReader(stream, options));
+        return new(RarReader.Open(stream, options));
     }
 
     #endregion

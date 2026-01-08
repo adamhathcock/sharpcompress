@@ -592,4 +592,11 @@ public class ZipArchive : AbstractWritableArchive<ZipArchiveEntry, ZipVolume>
         ((IStreamStack)stream).StackSeek(0);
         return ZipReader.Open(stream, ReaderOptions, Entries);
     }
+
+    protected override ValueTask<IReaderAsync> CreateReaderForSolidExtractionAsync()
+    {
+        var stream = Volumes.Single().Stream;
+        stream.Position = 0;
+        return new(ZipReader.Open(stream));
+    }
 }

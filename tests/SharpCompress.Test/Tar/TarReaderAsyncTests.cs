@@ -23,9 +23,9 @@ public class TarReaderAsyncTests : ReaderTests
         using Stream stream = new ForwardOnlyStream(
             File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar"))
         );
-        using var reader = ReaderFactory.Open(stream);
+        await using var reader = await ReaderFactory.OpenAsync(new AsyncOnlyStream(stream));
         var x = 0;
-        while (reader.MoveToNextEntry())
+        while (await reader.MoveToNextEntryAsync())
         {
             if (!reader.Entry.IsDirectory)
             {
@@ -182,14 +182,16 @@ public class TarReaderAsyncTests : ReaderTests
     {
         var archiveFullPath = Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar");
         using Stream stream = File.OpenRead(archiveFullPath);
-        using var reader = ReaderFactory.Open(stream);
+        await using var reader = await ReaderFactory.OpenAsync(new AsyncOnlyStream(stream));
         var memoryStream = new MemoryStream();
 
-        Assert.True(reader.MoveToNextEntry());
-        Assert.True(reader.MoveToNextEntry());
+        Assert.True(await reader.MoveToNextEntryAsync());
+        Assert.True(await reader.MoveToNextEntryAsync());
         await reader.WriteEntryToAsync(memoryStream);
         stream.Close();
-        Assert.Throws<IncompleteArchiveException>(() => reader.MoveToNextEntry());
+        await Assert.ThrowsAsync<IncompleteArchiveException>(async () =>
+            await reader.MoveToNextEntryAsync()
+        );
     }
 
     [Fact]
@@ -197,14 +199,16 @@ public class TarReaderAsyncTests : ReaderTests
     {
         var archiveFullPath = Path.Combine(TEST_ARCHIVES_PATH, "TarCorrupted.tar");
         using Stream stream = File.OpenRead(archiveFullPath);
-        using var reader = ReaderFactory.Open(stream);
+        await using var reader = await ReaderFactory.OpenAsync(new AsyncOnlyStream(stream));
         var memoryStream = new MemoryStream();
 
-        Assert.True(reader.MoveToNextEntry());
-        Assert.True(reader.MoveToNextEntry());
+        Assert.True(await reader.MoveToNextEntryAsync());
+        Assert.True(await reader.MoveToNextEntryAsync());
         await reader.WriteEntryToAsync(memoryStream);
         stream.Close();
-        Assert.Throws<IncompleteArchiveException>(() => reader.MoveToNextEntry());
+        await Assert.ThrowsAsync<IncompleteArchiveException>(async () =>
+            await reader.MoveToNextEntryAsync()
+        );
     }
 
 #if LINUX

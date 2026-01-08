@@ -71,6 +71,12 @@ public class GZipFactory
         CancellationToken cancellationToken = default
     ) => GZipArchive.OpenAsync(stream, readerOptions, cancellationToken);
 
+    public override ValueTask<bool> IsArchiveAsync(
+        Stream stream,
+        string? password = null,
+        int bufferSize = ReaderOptions.DefaultBufferSize
+    ) => new(IsArchive(stream, password, bufferSize));
+
     /// <inheritdoc/>
     public IArchive Open(FileInfo fileInfo, ReaderOptions? readerOptions = null) =>
         GZipArchive.Open(fileInfo, readerOptions);
@@ -147,14 +153,14 @@ public class GZipFactory
         GZipReader.Open(stream, options);
 
     /// <inheritdoc/>
-    public ValueTask<IReader> OpenReaderAsync(
+    public ValueTask<IReaderAsync> OpenReaderAsync(
         Stream stream,
         ReaderOptions? options,
         CancellationToken cancellationToken = default
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
-        return new(OpenReader(stream, options));
+        return new(GZipReader.Open(stream, options));
     }
 
     #endregion

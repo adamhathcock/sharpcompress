@@ -366,4 +366,11 @@ public class TarArchive : AbstractWritableArchive<TarArchiveEntry, TarVolume>
         stream.Position = 0;
         return TarReader.Open(stream);
     }
+
+    protected override ValueTask<IReaderAsync> CreateReaderForSolidExtractionAsync()
+    {
+        var stream = Volumes.Single().Stream;
+        stream.Position = 0;
+        return new(TarReader.Open(stream));
+    }
 }

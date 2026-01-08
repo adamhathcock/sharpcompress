@@ -336,4 +336,11 @@ public class GZipArchive : AbstractWritableArchive<GZipArchiveEntry, GZipVolume>
         stream.Position = 0;
         return GZipReader.Open(stream);
     }
+
+    protected override ValueTask<IReaderAsync> CreateReaderForSolidExtractionAsync()
+    {
+        var stream = Volumes.Single().Stream;
+        stream.Position = 0;
+        return new(GZipReader.Open(stream));
+    }
 }

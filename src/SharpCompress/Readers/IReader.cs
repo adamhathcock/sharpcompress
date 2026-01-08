@@ -18,6 +18,28 @@ public interface IReader : IDisposable
     /// <param name="writableStream"></param>
     void WriteEntryTo(Stream writableStream);
 
+    bool Cancelled { get; }
+    void Cancel();
+
+    /// <summary>
+    /// Moves to the next entry by reading more data from the underlying stream.  This skips if data has not been read.
+    /// </summary>
+    /// <returns></returns>
+    bool MoveToNextEntry();
+
+    /// <summary>
+    /// Opens the current entry as a stream that will decompress as it is read.
+    /// Read the entire stream or use SkipEntry on EntryStream.
+    /// </summary>
+    EntryStream OpenEntryStream();
+}
+
+public interface IReaderAsync : IAsyncDisposable
+{
+    ArchiveType ArchiveType { get; }
+
+    IEntry Entry { get; }
+
     /// <summary>
     /// Decompresses the current entry to the stream asynchronously.  This cannot be called twice for the current entry.
     /// </summary>
@@ -29,23 +51,11 @@ public interface IReader : IDisposable
     void Cancel();
 
     /// <summary>
-    /// Moves to the next entry by reading more data from the underlying stream.  This skips if data has not been read.
-    /// </summary>
-    /// <returns></returns>
-    bool MoveToNextEntry();
-
-    /// <summary>
     /// Moves to the next entry asynchronously by reading more data from the underlying stream.  This skips if data has not been read.
     /// </summary>
     /// <param name="cancellationToken"></param>
     /// <returns></returns>
     Task<bool> MoveToNextEntryAsync(CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Opens the current entry as a stream that will decompress as it is read.
-    /// Read the entire stream or use SkipEntry on EntryStream.
-    /// </summary>
-    EntryStream OpenEntryStream();
 
     /// <summary>
     /// Opens the current entry asynchronously as a stream that will decompress as it is read.

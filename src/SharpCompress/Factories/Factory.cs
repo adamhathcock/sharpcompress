@@ -59,6 +59,12 @@ public abstract class Factory : IFactory
         int bufferSize = ReaderOptions.DefaultBufferSize
     );
 
+    public abstract ValueTask<bool> IsArchiveAsync(
+        Stream stream,
+        string? password = null,
+        int bufferSize = ReaderOptions.DefaultBufferSize
+    );
+
     /// <inheritdoc/>
     public virtual ValueTask<bool> IsArchiveAsync(
         Stream stream,
@@ -105,5 +111,35 @@ public abstract class Factory : IFactory
         }
 
         return false;
+    }
+
+    internal virtual async ValueTask<(bool, IReaderAsync?)> TryOpenReaderAsync(
+        SharpCompressStream stream,
+        ReaderOptions options,
+        CancellationToken cancellationToken
+    )
+    {
+        if (this is IReaderFactory readerFactory)
+        {
+            long pos = ((IStreamStack)stream).GetPosition();
+
+            if (
+                await IsArchiveAsync(
+                    stream,
+                    options.Password,
+                    options.BufferSize,
+                    cancellationToken
+                )
+            )
+            {
+                ((IStreamStack)stream).StackSeek(pos);
+                return (
+                    true,
+                    await readerFactory.OpenReaderAsync(stream, options, cancellationToken)
+                );
+            }
+        }
+
+        return (false, null);
     }
 }

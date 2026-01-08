@@ -133,6 +133,7 @@ public abstract class AbstractArchive<TEntry, TVolume> : IArchive, IArchiveAsync
     }
 
     protected abstract IReader CreateReaderForSolidExtraction();
+    protected abstract ValueTask<IReaderAsync> CreateReaderForSolidExtractionAsync();
 
     /// <summary>
     /// Archive is SOLID (this means the Archive saved bytes by reusing information which helps for archives containing many small files).
@@ -191,7 +192,7 @@ public abstract class AbstractArchive<TEntry, TVolume> : IArchive, IArchiveAsync
 
     public IAsyncEnumerable<IVolume> VolumesAsync => _lazyVolumesAsync.Cast<TVolume, IVolume>();
 
-    public async ValueTask<IReader> ExtractAllEntriesAsync()
+    public async ValueTask<IReaderAsync> ExtractAllEntriesAsync()
     {
         if (!IsSolid && Type != ArchiveType.SevenZip)
         {
@@ -202,9 +203,6 @@ public abstract class AbstractArchive<TEntry, TVolume> : IArchive, IArchiveAsync
         await EnsureEntriesLoadedAsync();
         return await CreateReaderForSolidExtractionAsync();
     }
-
-    protected virtual ValueTask<IReader> CreateReaderForSolidExtractionAsync() =>
-        new(CreateReaderForSolidExtraction());
 
     public virtual ValueTask<bool> IsSolidAsync() => new(false);
 

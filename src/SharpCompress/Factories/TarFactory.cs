@@ -61,6 +61,12 @@ public class TarFactory
         int bufferSize = ReaderOptions.DefaultBufferSize
     ) => TarArchive.IsTarFile(stream);
 
+    public override ValueTask<bool> IsArchiveAsync(
+        Stream stream,
+        string? password = null,
+        int bufferSize = ReaderOptions.DefaultBufferSize
+    ) => new(IsArchive(stream, password, bufferSize));
+
     #endregion
 
     #region IArchiveFactory
@@ -265,14 +271,14 @@ public class TarFactory
         TarReader.Open(stream, options);
 
     /// <inheritdoc/>
-    public ValueTask<IReader> OpenReaderAsync(
+    public ValueTask<IReaderAsync> OpenReaderAsync(
         Stream stream,
         ReaderOptions? options,
         CancellationToken cancellationToken = default
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
-        return new(OpenReader(stream, options));
+        return new(TarReader.Open(stream, options));
     }
 
     #endregion

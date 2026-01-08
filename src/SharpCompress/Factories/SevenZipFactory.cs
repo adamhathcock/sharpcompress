@@ -62,6 +62,12 @@ public class SevenZipFactory : Factory, IArchiveFactory, IMultiArchiveFactory
         CancellationToken cancellationToken = default
     ) => SevenZipArchive.OpenAsync(fileInfo, readerOptions, cancellationToken);
 
+    public override ValueTask<bool> IsArchiveAsync(
+        Stream stream,
+        string? password = null,
+        int bufferSize = ReaderOptions.DefaultBufferSize
+    ) => new(IsArchive(stream, password, bufferSize));
+
     #endregion
 
     #region IMultiArchiveFactory

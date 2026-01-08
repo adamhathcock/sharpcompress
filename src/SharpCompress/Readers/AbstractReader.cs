@@ -12,17 +12,13 @@ namespace SharpCompress.Readers;
 /// <summary>
 /// A generic push reader that reads unseekable comrpessed streams.
 /// </summary>
-public abstract class AbstractReader<TEntry, TVolume> : IReader
+public abstract class AbstractReader<TEntry, TVolume> : IReader, IReaderAsync
     where TEntry : Entry
     where TVolume : Volume
 {
     private bool _completed;
     private IEnumerator<TEntry>? _entriesForCurrentReadStream;
-
-    /// <summary>
-    /// Holds the async entry enumerator when the reader is operating in an async-only mode.
-    /// </summary>
-    private IAsyncEnumerator<TEntry>? _asyncEntriesForCurrentReadStream;
+    private IAsyncEnumerator<TEntry>? _entriesForCurrentReadStreamAsync;
     private bool _wroteCurrentEntry;
 
     internal AbstractReader(ReaderOptions options, ArchiveType archiveType)
@@ -43,19 +39,31 @@ public abstract class AbstractReader<TEntry, TVolume> : IReader
     /// <summary>
     /// Current file entry (from either sync or async enumeration).
     /// </summary>
-    public TEntry Entry =>
-        _entriesForCurrentReadStream?.Current
-        ?? _asyncEntriesForCurrentReadStream?.Current
-        ?? throw new InvalidOperationException("No current entry is available.");
+    public TEntry Entry
+    {
+        get
+        {
+            if (_entriesForCurrentReadStreamAsync is not null)
+            {
+                return _entriesForCurrentReadStreamAsync.Current;
+            }
+            return _entriesForCurrentReadStream.NotNull().Current;
+        }
+    }
 
     #region IDisposable Members
 
     public virtual void Dispose()
     {
         _entriesForCurrentReadStream?.Dispose();
-        if (_asyncEntriesForCurrentReadStream is IDisposable disposable)
+        Volume?.Dispose();
+    }
+
+    public virtual async ValueTask DisposeAsync()
+    {
+        if (_entriesForCurrentReadStreamAsync is not null)
         {
-            disposable.Dispose();
+            await _entriesForCurrentReadStreamAsync.DisposeAsync();
         }
         Volume?.Dispose();
     }
@@ -79,7 +87,7 @@ public abstract class AbstractReader<TEntry, TVolume> : IReader
 
     public bool MoveToNextEntry()
     {
-        if (_asyncEntriesForCurrentReadStream is not null)
+        if (_entriesForCurrentReadStreamAsync is not null)
         {
             throw new InvalidOperationException(
                 $"{nameof(MoveToNextEntry)} cannot be used after {nameof(MoveToNextEntryAsync)} has been used."
@@ -120,17 +128,16 @@ public abstract class AbstractReader<TEntry, TVolume> : IReader
         {
             throw new ReaderCancelledException("Reader has been cancelled.");
         }
-        if (_entriesForCurrentReadStream is null && _asyncEntriesForCurrentReadStream is null)
+        if (_entriesForCurrentReadStreamAsync is null)
         {
-            return await LoadStreamForReadingAsync(RequestInitialStream(), cancellationToken)
-                .ConfigureAwait(false);
+            return await LoadStreamForReadingAsync(RequestInitialStream());
         }
         if (!_wroteCurrentEntry)
         {
             await SkipEntryAsync(cancellationToken).ConfigureAwait(false);
         }
         _wroteCurrentEntry = false;
-        if (await NextEntryForCurrentStreamAsync(cancellationToken).ConfigureAwait(false))
+        if (await NextEntryForCurrentStreamAsync(cancellationToken))
         {
             return true;
         }
@@ -140,7 +147,7 @@ public abstract class AbstractReader<TEntry, TVolume> : IReader
 
     protected bool LoadStreamForReading(Stream stream)
     {
-        if (_asyncEntriesForCurrentReadStream is not null)
+        if (_entriesForCurrentReadStreamAsync is not null)
         {
             throw new InvalidOperationException(
                 $"{nameof(LoadStreamForReading)} cannot be used after {nameof(LoadStreamForReadingAsync)} has been used."
@@ -159,21 +166,12 @@ public abstract class AbstractReader<TEntry, TVolume> : IReader
         return _entriesForCurrentReadStream.MoveNext();
     }
 
-    /// <summary>
-    /// Loads the stream for reading entries asynchronously, using an async entry enumerator when available.
-    /// </summary>
-    protected async Task<bool> LoadStreamForReadingAsync(
-        Stream stream,
-        CancellationToken cancellationToken = default
-    )
+    protected async ValueTask<bool> LoadStreamForReadingAsync(Stream stream)
     {
-        // Always reset the previous async enumerator so that a new stream can be loaded cleanly.
-        if (_asyncEntriesForCurrentReadStream is IDisposable disposable)
+        if (_entriesForCurrentReadStreamAsync is not null)
         {
-            disposable.Dispose();
+            await _entriesForCurrentReadStreamAsync.DisposeAsync();
         }
-        _asyncEntriesForCurrentReadStream = null;
-
         if (stream is null || !stream.CanRead)
         {
             throw new MultipartStreamRequiredException(
@@ -182,16 +180,8 @@ public abstract class AbstractReader<TEntry, TVolume> : IReader
                     + "'. A new readable stream is required.  Use Cancel if it was intended."
             );
         }
-
-        var entriesAsync = GetEntriesAsync(stream);
-        if (entriesAsync is null)
-        {
-            _entriesForCurrentReadStream = GetEntries(stream).GetEnumerator();
-            return _entriesForCurrentReadStream.MoveNext();
-        }
-
-        _asyncEntriesForCurrentReadStream = entriesAsync.GetAsyncEnumerator(cancellationToken);
-        return await _asyncEntriesForCurrentReadStream.MoveNextAsync().ConfigureAwait(false);
+        _entriesForCurrentReadStreamAsync = GetEntriesAsync(stream).GetAsyncEnumerator();
+        return await _entriesForCurrentReadStreamAsync.MoveNextAsync();
     }
 
     protected virtual Stream RequestInitialStream() =>
@@ -200,16 +190,19 @@ public abstract class AbstractReader<TEntry, TVolume> : IReader
     internal virtual bool NextEntryForCurrentStream() =>
         _entriesForCurrentReadStream.NotNull().MoveNext();
 
+    internal virtual ValueTask<bool> NextEntryForCurrentStreamAsync() =>
+        _entriesForCurrentReadStreamAsync.NotNull().MoveNextAsync();
+
     /// <summary>
     /// Moves the current async enumerator to the next entry.
     /// </summary>
     internal virtual ValueTask<bool> NextEntryForCurrentStreamAsync(
-        CancellationToken cancellationToken = default
+        CancellationToken cancellationToken
     )
     {
-        if (_asyncEntriesForCurrentReadStream is not null)
+        if (_entriesForCurrentReadStreamAsync is not null)
         {
-            return _asyncEntriesForCurrentReadStream.MoveNextAsync();
+            return _entriesForCurrentReadStreamAsync.MoveNextAsync();
         }
 
         return new ValueTask<bool>(NextEntryForCurrentStream());
@@ -217,10 +210,14 @@ public abstract class AbstractReader<TEntry, TVolume> : IReader
 
     protected abstract IEnumerable<TEntry> GetEntries(Stream stream);
 
-    /// <summary>
-    /// Optionally returns an async entry sequence for formats that support true async header parsing.
-    /// </summary>
-    protected virtual IAsyncEnumerable<TEntry>? GetEntriesAsync(Stream stream) => null;
+    protected virtual async IAsyncEnumerable<TEntry> GetEntriesAsync(Stream stream)
+    {
+        await Task.CompletedTask;
+        foreach (var entry in GetEntries(stream))
+        {
+            yield return entry;
+        }
+    }
 
     #region Entry Skip/Write
 
@@ -441,4 +438,5 @@ public abstract class AbstractReader<TEntry, TVolume> : IReader
     #endregion
 
     IEntry IReader.Entry => Entry;
+    IEntry IReaderAsync.Entry => Entry;
 }

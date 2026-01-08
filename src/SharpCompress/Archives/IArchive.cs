@@ -18,7 +18,7 @@ public interface IArchiveAsync : IAsyncDisposable
     /// This is primarily for SOLID Rar Archives or 7Zip Archives as they need to be
     /// extracted sequentially for the best performance.
     /// </summary>
-    ValueTask<IReader> ExtractAllEntriesAsync();
+    ValueTask<IReaderAsync> ExtractAllEntriesAsync();
 
     /// <summary>
     /// Archive is SOLID (this means the Archive saved bytes by reusing information which helps for archives containing many small files).

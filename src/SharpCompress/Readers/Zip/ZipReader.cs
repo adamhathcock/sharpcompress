@@ -98,7 +98,7 @@ public class ZipReader : AbstractReader<ZipEntry, ZipVolume>
     /// <summary>
     /// Returns entries asynchronously for streams that only support async reads.
     /// </summary>
-    protected override IAsyncEnumerable<ZipEntry>? GetEntriesAsync(Stream stream) =>
+    protected override IAsyncEnumerable<ZipEntry> GetEntriesAsync(Stream stream) =>
         new ZipEntryAsyncEnumerable(_headerFactory, stream);
 
     /// <summary>
