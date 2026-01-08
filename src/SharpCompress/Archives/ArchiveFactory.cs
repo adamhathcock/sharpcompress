@@ -294,7 +294,7 @@ public static class ArchiveFactory
         );
     }
 
-    private static ValueTask<T> FindFactoryAsync<T>(
+    private static async ValueTask<T> FindFactoryAsync<T>(
         FileInfo finfo,
         CancellationToken cancellationToken
     )
@@ -302,7 +302,7 @@ public static class ArchiveFactory
     {
         finfo.NotNull(nameof(finfo));
         using Stream stream = finfo.OpenRead();
-        return FindFactoryAsync<T>(stream, cancellationToken);
+        return await FindFactoryAsync<T>(stream, cancellationToken);
     }
 
     private static async ValueTask<T> FindFactoryAsync<T>(
