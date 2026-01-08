@@ -15,6 +15,9 @@
     <PackageVersion Include="xunit.runner.visualstudio" Version="3.1.5" />
     <GlobalPackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" />
     <GlobalPackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" />
-    <GlobalPackageReference Include="Microsoft.VisualStudio.Threading.Analyzers" Version="17.14.15" />
+    <GlobalPackageReference
+      Include="Microsoft.VisualStudio.Threading.Analyzers"
+      Version="17.14.15"
+    />
   </ItemGroup>
 </Project>
