@@ -110,7 +110,7 @@ SharpCompress supports multiple archive and compression formats:
 - **Archive Formats**: Zip, Tar, 7Zip, Rar (read-only)
 - **Compression**: DEFLATE, BZip2, LZMA/LZMA2, PPMd, ZStandard (decompress only), Deflate64 (decompress only)
 - **Combined Formats**: Tar.GZip, Tar.BZip2, Tar.LZip, Tar.XZ, Tar.ZStandard
-- See FORMATS.md for complete format support matrix
+- See [docs/FORMATS.md](docs/FORMATS.md) for complete format support matrix
 
 ### Stream Handling Rules
 - **Disposal**: As of version 0.21, SharpCompress closes wrapped streams by default
