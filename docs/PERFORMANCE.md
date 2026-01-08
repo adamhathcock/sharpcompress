@@ -554,4 +554,3 @@ Console.WriteLine($"Memory used: {(afterMem - beforeMem) / 1024 / 1024}MB");
 
 - [PERFORMANCE.md](USAGE.md) - Usage examples with performance considerations
 - [FORMATS.md](FORMATS.md) - Format-specific performance notes
-- [TROUBLESHOOTING.md](TROUBLESHOOTING.md) - Solving common issues

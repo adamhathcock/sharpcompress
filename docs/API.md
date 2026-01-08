@@ -487,4 +487,3 @@ using (var reader = ReaderFactory.Open(stream))
 - [USAGE.md](USAGE.md) - Complete code examples
 - [FORMATS.md](FORMATS.md) - Supported formats
 - [PERFORMANCE.md](PERFORMANCE.md) - API selection guide
-- [ERRORS.md](ERRORS.md) - Exception handling

@@ -607,5 +607,4 @@ var options = new ReaderOptions
 
 ## Related Documentation
 
-- [TROUBLESHOOTING.md](TROUBLESHOOTING.md#garbled-filenames) - Encoding troubleshooting
 - [USAGE.md](USAGE.md#extract-zip-which-has-non-utf8-encoded-filenamycp932) - Usage examples

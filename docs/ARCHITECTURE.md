@@ -655,6 +655,5 @@ public void Archive_Extraction_Works()
 
 ## Related Documentation
 
-- [CONTRIBUTING.md](CONTRIBUTING.md) - How to contribute
 - [AGENTS.md](../AGENTS.md) - Development guidelines
 - [FORMATS.md](FORMATS.md) - Supported formats
